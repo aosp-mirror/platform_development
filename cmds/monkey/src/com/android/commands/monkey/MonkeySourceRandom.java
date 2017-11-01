@@ -165,13 +165,13 @@ public class MonkeySourceRandom implements MonkeyEventSource {
 
         // if the user request was > 100%, reject it
         if (userSum > 100.0f) {
-            System.err.println("** Event weights > 100%");
+            Logger.err.println("** Event weights > 100%");
             return false;
         }
 
         // if the user specified all of the weights, then they need to be 100%
         if (defaultCount == 0 && (userSum < 99.9f || userSum > 100.1f)) {
-            System.err.println("** Event weights != 100%");
+            Logger.err.println("** Event weights != 100%");
             return false;
         }
 
@@ -190,9 +190,9 @@ public class MonkeySourceRandom implements MonkeyEventSource {
 
         // if verbose, show factors
         if (mVerbose > 0) {
-            System.out.println("// Event percentages:");
+            Logger.out.println("// Event percentages:");
             for (int i = 0; i < FACTORZ_COUNT; ++i) {
-                System.out.println("//   " + i + ": " + mFactors[i] + "%");
+                Logger.out.println("//   " + i + ": " + mFactors[i] + "%");
             }
         }
 
@@ -218,7 +218,7 @@ public class MonkeySourceRandom implements MonkeyEventSource {
                 return true;
             }
         }
-        System.err.println("** " + catName + " has no physical keys but with factor " + factor + "%.");
+        Logger.err.println("** " + catName + " has no physical keys but with factor " + factor + "%.");
         return false;
     }
 

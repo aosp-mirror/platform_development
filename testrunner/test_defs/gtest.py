@@ -49,7 +49,19 @@ class GTestSuite(test_suite.AbstractTestSuite):
       options: command line options
       adb: adb interface
     """
-    shell_cmd = adb.PreviewShellCommand(self.GetTargetExecPath())
+
+    test_class = "*"
+    test_method = "*"
+    if options.test_class is not None:
+      test_class = options.test_class.lstrip()
+    if options.test_method is not None:
+      test_method = options.test_method.lstrip()
+    filter_arg = ""
+    if test_class != "*" or test_method != "*":
+      filter_arg = "--gtest_filter=%s.%s" % (test_class, test_method)
+
+    shell_cmd = adb.PreviewShellCommand(
+        " ".join((self.GetTargetExecPath(), filter_arg)))
     logger.Log(shell_cmd)
     if not options.preview:
       # gtest will log to test results to stdout, so no need to do any

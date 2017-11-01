@@ -69,6 +69,11 @@
                 android:layout_marginStart="6dp"
                 android:text="@string/rotation_animation_jumpcut"
                 />
+            <RadioButton
+                android:id="@+id/seamless"
+                android:layout_marginStart="6dp"
+                android:text="@string/rotation_animation_seamless"
+               />
         </RadioGroup>
     </LinearLayout>
 </LinearLayout>

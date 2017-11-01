@@ -34,6 +34,11 @@ rm platform-tools/adb
 rm platform-tools/fastboot
 bin/adb.exe                             strip platform-tools/adb.exe
 bin/fastboot.exe                        strip platform-tools/fastboot.exe
+
+rm platform-tools/e2fsdroid
+rm platform-tools/mke2fs
+bin/mke2fs.exe                          strip platform-tools/mke2fs.exe
+
 bin/AdbWinUsbApi.dll                          platform-tools/AdbWinUsbApi.dll
 bin/AdbWinApi.dll                             platform-tools/AdbWinApi.dll
 prebuilts/gcc/linux-x86/host/x86_64-w64-mingw32-4.8/x86_64-w64-mingw32/lib32/libwinpthread-1.dll platform-tools/libwinpthread-1.dll
@@ -59,17 +64,26 @@ bin/etc1tool.exe                       strip platform-tools/etc1tool.exe
 # at build-time. Packaging will later change that to the actual build-tools
 # revision as specified in the source.properties.
 
+# Needed by all binaries compiled by mingw32-64
+prebuilts/gcc/linux-x86/host/x86_64-w64-mingw32-4.8/x86_64-w64-mingw32/lib32/libwinpthread-1.dll strip build-tools/${PLATFORM_NAME}/libwinpthread-1.dll
+
 rm build-tools/${PLATFORM_NAME}/aapt
 bin/aapt.exe                            strip build-tools/${PLATFORM_NAME}/aapt.exe
 
 rm build-tools/${PLATFORM_NAME}/aapt2
 bin/aapt2.exe                           strip build-tools/${PLATFORM_NAME}/aapt2.exe
 
+rm build-tools/${PLATFORM_NAME}/lib64/libaapt2_jni.so
+lib/libaapt2_jni.dll                    strip build-tools/${PLATFORM_NAME}/libaapt2_jni.dll
+
 rm build-tools/${PLATFORM_NAME}/split-select
 bin/split-select.exe                    strip build-tools/${PLATFORM_NAME}/split-select.exe
 
 rm build-tools/${PLATFORM_NAME}/aidl
 bin/aidl.exe                            strip build-tools/${PLATFORM_NAME}/aidl.exe
+
+rm build-tools/${PLATFORM_NAME}/apksigner
+tools/apksig/etc/apksigner.bat                build-tools/${PLATFORM_NAME}/apksigner.bat
 
 rm build-tools/${PLATFORM_NAME}/zipalign
 bin/zipalign.exe                        strip build-tools/${PLATFORM_NAME}/zipalign.exe

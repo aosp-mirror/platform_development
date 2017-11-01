@@ -18,8 +18,8 @@
     <string name="welcome_message">Welcome to Network Connect!
         Click FETCH to fetch the first 500 characters of raw HTML from www.google.com.
     </string>
-
     <string name="fetch_text">Fetch</string>
     <string name="clear_text">Clear</string>
     <string name="connection_error">Connection error.</string>
+    <string name="fetch_cancelled">Fetch cancelled.</string>
 </resources>

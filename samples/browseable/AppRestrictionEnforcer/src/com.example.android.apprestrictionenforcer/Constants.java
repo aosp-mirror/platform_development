@@ -21,7 +21,6 @@ public interface Constants {
     /**
      * Package name of the AppRestrictionSchema sample.
      */
-    public static final String PACKAGE_NAME_APP_RESTRICTION_SCHEMA
-            = "com.example.android.apprestrictionschema";
+    String PACKAGE_NAME_APP_RESTRICTION_SCHEMA = "com.example.android.apprestrictionschema";
 
 }

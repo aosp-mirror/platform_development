@@ -21,6 +21,7 @@ import static com.example.android.vault.VaultProvider.DEFAULT_DOCUMENT_ID;
 
 import android.content.ContentProviderClient;
 import android.database.Cursor;
+import android.os.Bundle;
 import android.provider.DocumentsContract.Document;
 import android.test.AndroidTestCase;
 
@@ -69,15 +70,15 @@ public class VaultProviderTest extends AndroidTestCase {
                 dirdir, MIME_TYPE_DEFAULT, "dirdirfile");
 
         // verify everything is in place
-        c = mProvider.queryChildDocuments(DEFAULT_DOCUMENT_ID, null, null);
+        c = mProvider.queryChildDocuments(DEFAULT_DOCUMENT_ID, null, (Bundle) null);
         assertContains(c, "file", "dir");
-        c = mProvider.queryChildDocuments(dir, null, null);
+        c = mProvider.queryChildDocuments(dir, null, (Bundle) null);
         assertContains(c, "dirfile", "dirdir");
 
         // should remove children and parent ref
         mProvider.deleteDocument(dir);
 
-        c = mProvider.queryChildDocuments(DEFAULT_DOCUMENT_ID, null, null);
+        c = mProvider.queryChildDocuments(DEFAULT_DOCUMENT_ID, null, (Bundle) null);
         assertContains(c, "file");
 
         mProvider.queryDocument(file, null);

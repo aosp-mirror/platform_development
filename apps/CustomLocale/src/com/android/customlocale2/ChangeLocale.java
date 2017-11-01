@@ -19,7 +19,7 @@ package com.android.customlocale2;
 
 import java.util.Locale;
 
-import android.app.ActivityManagerNative;
+import android.app.ActivityManager;
 import android.app.IActivityManager;
 import android.content.res.Configuration;
 import android.os.RemoteException;
@@ -45,7 +45,7 @@ public final class ChangeLocale {
         }
 
         try {
-            IActivityManager am = ActivityManagerNative.getDefault();
+            IActivityManager am = ActivityManager.getService();
             Configuration config = am.getConfiguration();
 
             Locale loc = null;

@@ -15,7 +15,8 @@
 -->
 
 <resources>
-
+    <string name="caption_overlay_activity_hello_text">Hello, World!</string>
+    <string name="caption_overlay_activity_fish_text">Thanks for All the Fish!</string>
     <string name="launch_settings_adjacent">Launch settings adjacent</string>
     <string name="launch_new_task_single">Launch new task, single allowed</string>
     <string name="launch_new_task_multiple">Launch new task, multiple allowed</string>

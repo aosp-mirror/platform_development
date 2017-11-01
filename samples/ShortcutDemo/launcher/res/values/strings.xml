@@ -15,4 +15,6 @@
 -->
 
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <add-resource type="string" name="pin_shortcut_message"/>
+    <string name="pin_shortcut_message">Do you want to add this shortcut?</string>
 </resources>

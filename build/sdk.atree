@@ -44,23 +44,24 @@ development/sdk/plat_tools_source.properties  platform-tools/source.properties
 # host tools from out/host/$(HOST_OS)-$(HOST_ARCH)/
 bin/adb                                 strip platform-tools/adb
 bin/fastboot                            strip platform-tools/fastboot
+bin/mke2fs                              strip platform-tools/mke2fs
+bin/e2fsdroid                           strip platform-tools/e2fsdroid
 bin/sqlite3                             strip platform-tools/sqlite3
 bin/dmtracedump                         strip platform-tools/dmtracedump
 bin/etc1tool                            strip platform-tools/etc1tool
 bin/hprof-conv                          strip platform-tools/hprof-conv
 
 
-# API database for tools such as lint
-prebuilts/sdk/sdk-annotations/api-versions.xml    platform-tools/api/api-versions.xml
-
-# API annotations database for lint
-prebuilts/sdk/sdk-annotations/annotations.zip   platform-tools/api/annotations.zip
-
 # systrace
 external/chromium-trace/catapult/                                         platform-tools/systrace/catapult/
 external/chromium-trace/systrace.py                                       platform-tools/systrace/systrace.py
 external/chromium-trace/NOTICE                                            platform-tools/systrace/NOTICE
 external/chromium-trace/UPSTREAM_REVISION                                 platform-tools/systrace/UPSTREAM_REVISION
+
+# Compatibility: moved to platform but also leave them in platform-tools for a little
+# longer until all active Gradle plugins have support for looking in both places
+development/sdk/generated-api-versions.xml    platform-tools/api/api-versions.xml
+prebuilts/sdk/sdk-annotations/annotations.zip   platform-tools/api/annotations.zip
 
 ##############################################################################
 # Build Tools Component
@@ -129,23 +130,22 @@ prebuilts/sdk/renderscript/lib/x86_64/librsjni.so         build-tools/${PLATFORM
 prebuilts/sdk/renderscript/lib/x86_64/libblasV8.so        build-tools/${PLATFORM_NAME}/renderscript/lib/blas/x86_64/libblasV8.so
 prebuilts/sdk/renderscript/lib/x86_64/librsrt_x86_64.bc   build-tools/${PLATFORM_NAME}/renderscript/lib/bc/x86_64/libclcore.bc
 
+# apksigner
+bin/apksigner                                 build-tools/${PLATFORM_NAME}/apksigner
+framework/apksigner.jar                       build-tools/${PLATFORM_NAME}/lib/apksigner.jar
+
 # dx
 bin/dx                                        build-tools/${PLATFORM_NAME}/dx
 framework/dx.jar                              build-tools/${PLATFORM_NAME}/lib/dx.jar
 bin/dexdump                                   build-tools/${PLATFORM_NAME}/dexdump
 
 # multi-dex
-prebuilts/sdk/tools/lib/shrinkedAndroid.jar   build-tools/${PLATFORM_NAME}/lib/shrinkedAndroid.jar
-dalvik/dx/etc/mainDexClasses.rules            build-tools/${PLATFORM_NAME}/mainDexClasses.rules
+${OUT_DIR}/host/common/obj/JAVA_LIBRARIES/shrinkedAndroid_intermediates/shrinkedAndroid.jar  build-tools/${PLATFORM_NAME}/lib/shrinkedAndroid.jar
+dalvik/dx/etc/mainDexClasses.rules                                                           build-tools/${PLATFORM_NAME}/mainDexClasses.rules
+dalvik/dx/etc/mainDexClassesNoAapt.rules                                                     build-tools/${PLATFORM_NAME}/mainDexClassesNoAapt.rules
 
-# Jack & Jill
-prebuilts/sdk/tools/jacks/jack-${JACK_SDKTOOL_VERSION}.jar                build-tools/${PLATFORM_NAME}/jack.jar
-prebuilts/sdk/tools/jills/jill-${JACK_SDKTOOL_VERSION}.jar                build-tools/${PLATFORM_NAME}/jill.jar
-
-# The Jack reporter tool for code coverage
-prebuilts/sdk/tools/jack-jacoco-reporter.jar                              build-tools/${PLATFORM_NAME}/jack-jacoco-reporter.jar
-prebuilts/sdk/tools/jack-coverage-plugin.jar                              build-tools/${PLATFORM_NAME}/jack-coverage-plugin.jar
-
+# Lambda stubs for use by javac
+${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/core-lambda-stubs_intermediates/classes.jar       build-tools/${PLATFORM_NAME}/core-lambda-stubs.jar
 
 ##############################################################################
 # Platform Component
@@ -196,8 +196,14 @@ development/tools/templates/ic_launcher_mdpi.png            platforms/${PLATFORM
 development/tools/templates/ic_launcher_hdpi.png            platforms/${PLATFORM_NAME}/templates/ic_launcher_hdpi.png
 development/tools/templates/ic_launcher_xhdpi.png           platforms/${PLATFORM_NAME}/templates/ic_launcher_xhdpi.png
 
+# API database for tools such as lint
+development/sdk/generated-api-versions.xml  platforms/${PLATFORM_NAME}/data/api-versions.xml
+
+# API annotations database for lint
+prebuilts/sdk/sdk-annotations/annotations.zip platforms/${PLATFORM_NAME}/data/annotations.zip
+
 # Eclipse Editors support
-framework/layoutlib.jar                   platforms/${PLATFORM_NAME}/data/layoutlib.jar
+framework/layoutlib-legacy.jar            platforms/${PLATFORM_NAME}/data/layoutlib.jar
 frameworks/base/core/res/res              platforms/${PLATFORM_NAME}/data/res
 docs/activity_actions.txt                 platforms/${PLATFORM_NAME}/data/activity_actions.txt
 docs/broadcast_actions.txt                platforms/${PLATFORM_NAME}/data/broadcast_actions.txt
@@ -210,7 +216,7 @@ docs/features.txt                         platforms/${PLATFORM_NAME}/data/featur
 ${FONT_OUT}                       platforms/${PLATFORM_NAME}/data/fonts
 
 # timezone data for layoutlib
-bionic/libc/zoneinfo/tzdata       platforms/${PLATFORM_NAME}/data/tzdata
+system/timezone/output_data/iana/tzdata   platforms/${PLATFORM_NAME}/data/tzdata
 
 # NOTICE files are copied by build/core/Makefile from sdk.git
 development/sdk/sdk_files_NOTICE.txt      platforms/${PLATFORM_NAME}/templates/NOTICE.txt
@@ -223,7 +229,8 @@ development/sdk/sdk_files_NOTICE.txt      platforms/${PLATFORM_NAME}/skins/NOTIC
 ##############################################################################
 
 # System images + Kernel
-system.img                                 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/system.img
+system-qemu.img                                 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/system.img
+vendor-qemu.img                                 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/vendor.img
 ramdisk.img                                system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/ramdisk.img
 userdata.img                               system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/userdata.img
 system/build.prop                          system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/build.prop
@@ -283,7 +290,7 @@ developers/build/prebuilts/gradle/TextSwitcher/                              sam
 developers/build/prebuilts/gradle/HorizontalPaging/                          samples/${PLATFORM_NAME}/ui/HorizontalPaging
 developers/build/prebuilts/gradle/ActionBarCompat-Styled/                    samples/${PLATFORM_NAME}/ui/ActionBarCompat-Styled
 developers/build/prebuilts/gradle/ActionBarCompat-ListPopupMenu/             samples/${PLATFORM_NAME}/ui/ActionBarCompat-ListPopupMenu
-developers/build/prebuilts/gradle/ActionBarCompat-ShareActionProvider/       samples/${PLATFORM_NAME}/ui/ActionBarCompat-ShareActionProvider
+developers/build/prebuilts/gradle/ShareActionProvider/                       samples/${PLATFORM_NAME}/ui/ShareActionProvider
 developers/build/prebuilts/gradle/ActionBarCompat-Basic/                     samples/${PLATFORM_NAME}/ui/ActionBarCompat-Basic
 developers/build/prebuilts/gradle/BasicNotifications/                        samples/${PLATFORM_NAME}/ui/BasicNotifications
 developers/build/prebuilts/gradle/CustomNotifications/                       samples/${PLATFORM_NAME}/ui/CustomNotifications
@@ -348,6 +355,9 @@ developers/build/prebuilts/gradle/DirectShare                                sam
 developers/build/prebuilts/gradle/MidiScope                                  samples/${PLATFORM_NAME}/media/MidiScope
 developers/build/prebuilts/gradle/MidiSynth                                  samples/${PLATFORM_NAME}/media/MidiSynth
 developers/build/prebuilts/gradle/AsymmetricFingerprintDialog                samples/${PLATFORM_NAME}/security/AsymmetricFingerprintDialog
+developers/build/prebuilts/gradle/AppShortcuts                               samples/${PLATFORM_NAME}/system/AppShortcuts
+developers/build/prebuilts/gradle/CommitContentSampleApp                     samples/${PLATFORM_NAME}/input/keyboard/CommitContentSampleApp
+developers/build/prebuilts/gradle/CommitContentSampleIME                     samples/${PLATFORM_NAME}/input/keyboard/CommitContentSampleIME
 
 developers/build/prebuilts/androidtv                                         samples/${PLATFORM_NAME}/androidtv
 
@@ -434,152 +444,7 @@ development/sdk/sdk_files_NOTICE.txt           samples/${PLATFORM_NAME}/NOTICE.t
 # empty add-on folder with just a readme copied from sdk.git
 sdk/files/README_add-ons.txt add-ons/README.txt
 
-
-##############################################################################
-# Extra Component: Support
-##############################################################################
-
-development/sdk/support_source.properties                                                         extras/android/support/source.properties
-development/sdk/support_README.txt                                                                extras/android/support/README.txt
-development/sdk/sdk_files_NOTICE.txt                                                              extras/android/support/NOTICE.txt
-
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-annotations_intermediates/android-support-annotations.jar extras/android/support/annotations/android-support-annotations.jar
-
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-v4_intermediates/android-support-v4.jar    extras/android/support/v4/android-support-v4.jar
-frameworks/support/compat                                                                         extras/android/support/compat/src
-frameworks/support/core-ui                                                                        extras/android/support/core-ui/src
-frameworks/support/core-utils                                                                     extras/android/support/core-utils/src
-frameworks/support/fragment                                                                       extras/android/support/fragment/src
-frameworks/support/media-compat                                                                   extras/android/support/media-compat/src
-frameworks/support/samples/Support4Demos                                                                 extras/android/support/samples/Support4Demos
-frameworks/support/samples/SupportAppNavigation                                                          extras/android/support/samples/SupportAppNavigation
-
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-v13_intermediates/android-support-v13.jar  extras/android/support/v13/android-support-v13.jar
-frameworks/support/v13                                                                            extras/android/support/v13/src
-frameworks/support/samples/Support13Demos                                                                extras/android/support/samples/Support13Demos
-
-frameworks/support/v7/gridlayout/README.txt                                                       extras/android/support/v7/gridlayout/README.txt
-frameworks/support/v7/gridlayout/.project                                                         extras/android/support/v7/gridlayout/.project
-frameworks/support/v7/gridlayout/.classpath                                                       extras/android/support/v7/gridlayout/.classpath
-frameworks/support/v7/gridlayout/AndroidManifest.xml                                              extras/android/support/v7/gridlayout/AndroidManifest.xml
-frameworks/support/v7/gridlayout/project.properties                                               extras/android/support/v7/gridlayout/project.properties
-frameworks/support/v7/gridlayout/res                                                              extras/android/support/v7/gridlayout/res
-frameworks/support/v7/gridlayout/src/.readme                                                      extras/android/support/v7/gridlayout/src/.readme
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-gridlayout_intermediates/android-support-v7-gridlayout.jar    extras/android/support/v7/gridlayout/libs/android-support-v7-gridlayout.jar
-
-frameworks/support/v7/appcompat/README.txt                                                        extras/android/support/v7/appcompat/README.txt
-frameworks/support/v7/appcompat/.project                                                          extras/android/support/v7/appcompat/.project
-frameworks/support/v7/appcompat/.classpath                                                        extras/android/support/v7/appcompat/.classpath
-frameworks/support/v7/appcompat/AndroidManifest.xml                                               extras/android/support/v7/appcompat/AndroidManifest.xml
-frameworks/support/v7/appcompat/project.properties                                                extras/android/support/v7/appcompat/project.properties
-frameworks/support/v7/appcompat/res                                                               extras/android/support/v7/appcompat/res
-frameworks/support/v7/appcompat/res-public                                                        extras/android/support/v7/appcompat/res-public
-frameworks/support/v7/appcompat/src/.readme                                                       extras/android/support/v7/appcompat/src/.readme
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-appcompat_intermediates/android-support-v7-appcompat.jar    extras/android/support/v7/appcompat/libs/android-support-v7-appcompat.jar
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-v4_intermediates/android-support-v4.jar                        extras/android/support/v7/appcompat/libs/android-support-v4.jar
-
-frameworks/multidex/library/README.txt                                                            extras/android/support/multidex/library/README.txt
-frameworks/multidex/library/.project                                                              extras/android/support/multidex/library/.project
-frameworks/multidex/library/.classpath                                                            extras/android/support/multidex/library/.classpath
-frameworks/multidex/library/AndroidManifest.xml                                                   extras/android/support/multidex/library/AndroidManifest.xml
-frameworks/multidex/library/project.properties                                                    extras/android/support/multidex/library/project.properties
-frameworks/multidex/library/src/.readme                                                           extras/android/support/multidex/library/src/.readme
-frameworks/multidex/library/res/.readme                                                           extras/android/support/multidex/library/res/.readme
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-multidex_intermediates/android-support-multidex.jar              extras/android/support/multidex/library/libs/android-support-multidex.jar
-${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android-support-multidex_intermediates/classes.jack                         extras/android/support/multidex/library/libs/android-support-multidex.jack
-
-frameworks/multidex/instrumentation/README.txt                                                         extras/android/support/multidex/instrumentation/README.txt
-frameworks/multidex/instrumentation/.project                                                           extras/android/support/multidex/instrumentation/.project
-frameworks/multidex/instrumentation/.classpath                                                         extras/android/support/multidex/instrumentation/.classpath
-frameworks/multidex/instrumentation/AndroidManifest.xml                                                extras/android/support/multidex/instrumentation/AndroidManifest.xml
-frameworks/multidex/instrumentation/project.properties                                                 extras/android/support/multidex/instrumentation/project.properties
-frameworks/multidex/instrumentation/src/.readme                                                        extras/android/support/multidex/instrumentation/src/.readme
-frameworks/multidex/instrumentation/res/.readme                                                        extras/android/support/multidex/instrumentation/res/.readme
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-multidex-instrumentation_intermediates/android-support-multidex-instrumentation.jar      extras/android/support/multidex/instrumentation/libs/android-support-multidex-instrumentation.jar
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-multidex_intermediates/android-support-multidex.jar                                      extras/android/support/multidex/instrumentation/libs/android-support-multidex.jar
-${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android-support-multidex_intermediates/classes.jack                                                 extras/android/support/multidex/instrumentation/libs/android-support-multidex.jack
-
-frameworks/support/v7/mediarouter/README.txt                                                       extras/android/support/v7/mediarouter/README.txt
-frameworks/support/v7/mediarouter/.project                                                         extras/android/support/v7/mediarouter/.project
-frameworks/support/v7/mediarouter/.classpath                                                       extras/android/support/v7/mediarouter/.classpath
-frameworks/support/v7/mediarouter/AndroidManifest.xml                                              extras/android/support/v7/mediarouter/AndroidManifest.xml
-frameworks/support/v7/mediarouter/project.properties                                               extras/android/support/v7/mediarouter/project.properties
-frameworks/support/v7/mediarouter/res                                                              extras/android/support/v7/mediarouter/res
-frameworks/support/v7/mediarouter/src/.readme                                                      extras/android/support/v7/mediarouter/src/.readme
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-mediarouter_intermediates/android-support-v7-mediarouter.jar    extras/android/support/v7/mediarouter/libs/android-support-v7-mediarouter.jar
-
-frameworks/support/samples/Support7Demos                                                                 extras/android/support/samples/Support7Demos
-
-frameworks/support/v7/palette/README.txt                                                          extras/android/support/v7/palette/README.txt
-frameworks/support/v7/palette/.project                                                            extras/android/support/v7/palette/.project
-frameworks/support/v7/palette/.classpath                                                          extras/android/support/v7/palette/.classpath
-frameworks/support/v7/palette/src/main/AndroidManifest.xml                                        extras/android/support/v7/palette/AndroidManifest.xml
-frameworks/support/v7/palette/project.properties                                                  extras/android/support/v7/palette/project.properties
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-palette_intermediates/android-support-v7-palette.jar    extras/android/support/v7/palette/libs/android-support-v7-palette.jar
-
-frameworks/support/v7/cardview/AndroidManifest.xml                                              extras/android/support/v7/cardview/AndroidManifest.xml
-frameworks/support/v7/cardview/res                                                              extras/android/support/v7/cardview/res
-frameworks/support/v7/cardview/src/.readme                                                      extras/android/support/v7/cardview/src/.readme
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-cardview_intermediates/android-support-v7-cardview.jar    extras/android/support/v7/cardview/libs/android-support-v7-cardview.jar
-
-
-# TODO: add .project, .classpath, etc.
-frameworks/support/v7/recyclerview/README.txt                                                     extras/android/support/v7/recyclerview/README.txt
-frameworks/support/v7/recyclerview/AndroidManifest.xml                                            extras/android/support/v7/recyclerview/AndroidManifest.xml
-frameworks/support/v7/recyclerview/res                                                            extras/android/support/v7/recyclerview/res
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-recyclerview_intermediates/android-support-v7-recyclerview.jar    extras/android/support/v7/recyclerview/libs/android-support-v7-recyclerview.jar
-
-frameworks/support/v17/leanback/README.txt                                                        extras/android/support/v17/leanback/README.txt
-frameworks/support/v17/leanback/.project                                                          extras/android/support/v17/leanback/.project
-frameworks/support/v17/leanback/.classpath                                                        extras/android/support/v17/leanback/.classpath
-frameworks/support/v17/leanback/AndroidManifest.xml                                               extras/android/support/v17/leanback/AndroidManifest.xml
-frameworks/support/v17/leanback/project.properties                                                extras/android/support/v17/leanback/project.properties
-frameworks/support/v17/leanback/res                                                               extras/android/support/v17/leanback/res
-frameworks/support/v17/leanback/src/.readme                                                       extras/android/support/v17/leanback/src/.readme
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-v17-leanback_intermediates/android-support-v17-leanback.jar    extras/android/support/v17/leanback/libs/android-support-v17-leanback.jar
-
-frameworks/support/design/AndroidManifest.xml                                                     extras/android/support/design/AndroidManifest.xml
-frameworks/support/design/res                                                                     extras/android/support/design/res
-frameworks/support/design/res-public                                                              extras/android/support/design/res-public
-frameworks/support/design/src/.readme                                                             extras/android/support/design/src/.readme
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-design_intermediates/android-support-design.jar    extras/android/support/design/libs/android-support-design.jar
-
-frameworks/support/percent/AndroidManifest.xml                                                     extras/android/support/percent/AndroidManifest.xml
-frameworks/support/percent/res                                                                     extras/android/support/percent/res
-frameworks/support/percent/src/.readme                                                             extras/android/support/percent/src/.readme
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-percent_intermediates/android-support-percent.jar    extras/android/support/percent/libs/android-support-percent.jar
-
-frameworks/support/customtabs/AndroidManifest.xml                                                     extras/android/support/customtabs/AndroidManifest.xml
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-customtabs_intermediates/android-support-customtabs.jar    extras/android/support/customtabs/libs/android-support-customtabs.jar
-
-frameworks/support/v7/preference/AndroidManifest.xml                                               extras/android/support/v7/preference/AndroidManifest.xml
-frameworks/support/v7/preference/res                                                               extras/android/support/v7/preference/res
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-v7-preference_intermediates/android-support-v7-preference.jar    extras/android/support/v7/preference/libs/android-support-v7-preference.jar
-
-frameworks/support/v14/preference/AndroidManifest.xml                                              extras/android/support/v14/preference/AndroidManifest.xml
-frameworks/support/v14/preference/res                                                              extras/android/support/v14/preference/res
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-v14-preference_intermediates/android-support-v14-preference.jar    extras/android/support/v14/preference/libs/android-support-v14-preference.jar
-
-frameworks/support/v17/preference-leanback/AndroidManifest.xml                                     extras/android/support/v17/preference-leanback/AndroidManifest.xml
-frameworks/support/v17/preference-leanback/res                                                     extras/android/support/v17/preference-leanback/res
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-v17-preference-leanback_intermediates/android-support-v17-preference-leanback.jar    extras/android/support/v17/preference-leanback/libs/android-support-v17-preference-leanback.jar
-
-frameworks/support/recommendation/AndroidManifest.xml                                              extras/android/support/recommendation/AndroidManifest.xml
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-recommendation_intermediates/android-support-recommendation.jar    extras/android/support/recommendation/libs/android-support-recommendation.jar
-
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-vectordrawable_intermediates/android-support-vectordrawable.jar    extras/android/support/graphics/drawable/libs/android-support-vectordrawable.jar
-
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-animatedvectordrawable_intermediates/android-support-animatedvectordrawable.jar    extras/android/support/graphics/drawable/libs/android-support-animatedvectordrawable.jar
-
-frameworks/support/transition/AndroidManifest.xml                                     extras/android/support/transition/AndroidManifest.xml
-frameworks/support/transition/res                                                     extras/android/support/transition/res
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-transition_intermediates/android-support-transition.jar    extras/android/support/transition/libs/android-support-transition.jar
-
-frameworks/support/documents-archive/AndroidManifest.xml                                     extras/android/support/documents-archive/AndroidManifest.xml
-${OUT_DIR}/target/common/obj/PACKAGING/android-support-documents-archive_intermediates/android-support-documents-archive.jar    extras/android/support/documents-archive/libs/android-support-documents-archive.jar
-
 ##############################################################################
 # Tests Component
 ##############################################################################
-framework/layoutlib-tests.jar tests/libtests/layoutlib-tests.jar
 system/app/EmulatorSmokeTests/EmulatorSmokeTests.apk tests/emulator-test-apps/EmulatorSmokeTests.apk

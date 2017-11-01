@@ -1,0 +1,229 @@
+//
+// Copyright (C) 2016 The Android Open Source Project
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+cc_defaults {
+    name: "header-checker-defaults",
+
+    defaults: [
+        "clang-defaults",
+    ],
+
+    cflags: [
+        "-Wall",
+        "-Werror",
+        "-DGOOGLE_PROTOBUF_NO_RTTI",
+        "-UNDEBUG"
+    ],
+
+    cppflags: [
+        "-std=c++14",
+    ],
+
+    target: {
+        windows: {
+            enabled: false
+        }
+    }
+}
+
+cc_defaults {
+    name: "header-checker-lib-defaults",
+
+    static_libs: [
+        "libclangToolingCore",
+        "libclangTooling",
+        "libclangFrontendTool",
+        "libclangFrontend",
+        "libclangDriver",
+        "libclangIndex",
+        "libclangSerialization",
+        "libclangCodeGen",
+        "libclangRewriteFrontend",
+        "libclangRewrite",
+        "libclangParse",
+        "libclangSema",
+        "libclangStaticAnalyzerFrontend",
+        "libclangStaticAnalyzerCheckers",
+        "libclangStaticAnalyzerMPIChecker",
+        "libclangStaticAnalyzerCore",
+        "libclangAnalysis",
+        "libclangEdit",
+        "libclangAST",
+        "libclangLex",
+        "libclangBasic",
+        "libLLVMIRReader",
+        "libLLVMAsmParser",
+        "libLLVMAsmPrinter",
+        "libLLVMBitReader",
+        "libLLVMBitWriter",
+        "libLLVMMC",
+        "libLLVMMCParser",
+        "libLLVMCore",
+        "libLLVMOption",
+        "libLLVMProfileData",
+        "libLLVMObject",
+        "libLLVMMCDisassembler",
+        "libLLVMSupport",
+    ],
+
+    shared_libs: [
+        "libprotobuf-cpp-full",
+    ],
+}
+
+cc_defaults {
+    name: "header-abi-linker-lib-defaults",
+
+    static_libs: [
+        "libheader-abi-util",
+        "libLLVMObject",
+        "libLLVMBitReader",
+        "libLLVMMC",
+        "libLLVMMCParser",
+        "libLLVMCore",
+        "libLLVMSupport",
+    ],
+
+    shared_libs: [
+        "libprotobuf-cpp-full",
+    ],
+}
+
+cc_library_static {
+    name: "libheader-checker-proto",
+    host_supported: true,
+    export_include_dirs: ["."],
+
+    srcs: [
+        "proto/abi_dump.proto",
+        "proto/abi_diff.proto",
+    ],
+
+    proto: {
+        export_proto_headers: true,
+        type: "full",
+    },
+
+    cflags: [
+        "-Wall",
+        "-Werror",
+        "-Wcast-qual",
+        "-Wno-long-long",
+        "-Wno-unused-parameter",
+    ],
+}
+
+cc_binary_host {
+    name: "header-abi-dumper",
+
+    defaults: [
+        "header-checker-defaults",
+        "header-checker-lib-defaults",
+    ],
+
+    srcs: [
+        "header-abi-dumper/src/*.cpp",
+    ],
+
+    static_libs: [
+        "libheader-abi-util",
+        "libheader-checker-proto",
+    ],
+}
+
+cc_binary_host {
+    name: "header-abi-linker",
+
+    defaults: [
+        "header-checker-defaults",
+        "header-abi-linker-lib-defaults",
+    ],
+
+    srcs: [
+        "header-abi-linker/src/*.cpp",
+    ],
+
+    static_libs: [
+        "libheader-checker-proto",
+    ],
+}
+
+cc_binary_host {
+    name: "header-abi-diff",
+
+    defaults: [
+        "header-checker-defaults",
+        "header-abi-linker-lib-defaults",
+    ],
+
+    srcs: [
+        "header-abi-diff/src/*.cpp",
+    ],
+
+    static_libs: [
+        "libheader-checker-proto",
+    ],
+}
+
+cc_binary_host {
+    name: "merge-abi-diff",
+
+    defaults: [
+        "header-checker-defaults",
+        "header-abi-linker-lib-defaults",
+    ],
+
+    srcs: [
+        "merge-abi-diff/src/*.cpp",
+    ],
+
+    static_libs: [
+        "libheader-checker-proto",
+    ],
+}
+
+cc_library_static {
+    name: "libheader-abi-util",
+    defaults: [
+        "header-checker-defaults",
+    ],
+    host_supported: true,
+    export_include_dirs: ["header-abi-util/include"],
+
+    srcs: [
+        "header-abi-util/src/*.cpp"
+    ],
+    static_libs: [
+        "libLLVMObject",
+        "libLLVMBitReader",
+        "libLLVMMC",
+        "libLLVMMCParser",
+        "libLLVMCore",
+        "libLLVMSupport",
+        "libheader-checker-proto",
+    ],
+
+    shared_libs: [
+        "libprotobuf-cpp-full",
+    ],
+
+
+    cflags: [
+        "-Wcast-qual",
+        "-Wno-long-long",
+        "-Wno-unused-parameter",
+    ],
+}

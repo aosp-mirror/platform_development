@@ -254,7 +254,8 @@
         </activity>
 
         <activity android:name=".app.RotationAnimation"
-                android:label="@string/activity_rotation_animation">
+                android:label="@string/activity_rotation_animation"
+                android:rotationAnimation="crossfade">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -594,6 +595,18 @@
             </intent-filter>
         </activity>
 
+        <service android:name=".app.JobWorkService"
+            android:permission="android.permission.BIND_JOB_SERVICE"/>
+
+        <activity android:name=".app.JobWorkServiceActivity"
+            android:label="@string/activity_job_work_service"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <service android:name=".app.ForegroundService" />
         <service android:name=".app.ForegroundService2" />
 
@@ -779,6 +792,15 @@
         <service android:name=".app.NotifyingService" />
 
         <activity android:name=".app.NotifyingController" android:label="App/Notification/Notifying Service Controller">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <service android:name=".app.NotificationBackgroundService" />
+        <activity android:name=".app.NotificationBackgroundService$Controller"
+                  android:label="App/Notification/Background Service">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -2708,6 +2730,13 @@
         </activity>
 
         <activity android:name=".view.PointerShapes" android:label="Views/Pointer shapes">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".view.Tooltips" android:label="Views/Tooltips">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />

@@ -22,7 +22,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Locale;
 
-import android.app.ActivityManagerNative;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.IActivityManager;
@@ -261,7 +261,7 @@ public class CustomLocaleActivity extends ListActivity {
 
     private void displayCurrentLocale() {
         try {
-            IActivityManager am = ActivityManagerNative.getDefault();
+            IActivityManager am = ActivityManager.getService();
             Configuration config = am.getConfiguration();
 
             if (config.locale != null) {

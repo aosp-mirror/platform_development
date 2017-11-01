@@ -81,17 +81,11 @@ public class AppRestrictionSchemaFragment extends Fragment implements View.OnCli
         mTextNumber = (TextView) view.findViewById(R.id.your_number);
         mTextRank = (TextView) view.findViewById(R.id.your_rank);
         mTextApprovals = (TextView) view.findViewById(R.id.approvals_you_have);
-        View bundleSeparator = view.findViewById(R.id.bundle_separator);
-        View bundleArraySeparator = view.findViewById(R.id.bundle_array_separator);
         mTextItems = (TextView) view.findViewById(R.id.your_items);
         mButtonSayHello.setOnClickListener(this);
         if (BUNDLE_SUPPORTED) {
-            bundleSeparator.setVisibility(View.VISIBLE);
-            bundleArraySeparator.setVisibility(View.VISIBLE);
             mTextItems.setVisibility(View.VISIBLE);
         } else {
-            bundleSeparator.setVisibility(View.GONE);
-            bundleArraySeparator.setVisibility(View.GONE);
             mTextItems.setVisibility(View.GONE);
         }
     }

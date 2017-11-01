@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 The Android Open Source Project
+ * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,55 +16,42 @@
 
 package com.example.android.networkconnect;
 
-import android.os.AsyncTask;
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.util.TypedValue;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-
-import com.example.android.common.logger.Log;
-import com.example.android.common.logger.LogFragment;
-import com.example.android.common.logger.LogWrapper;
-import com.example.android.common.logger.MessageOnlyLogFilter;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import android.widget.TextView;
 
 /**
- * Sample application demonstrating how to connect to the network and fetch raw
- * HTML. It uses AsyncTask to do the fetch on a background thread. To establish
- * the network connection, it uses HttpURLConnection.
+ * Sample Activity demonstrating how to connect to the network and fetch raw
+ * HTML. It uses a Fragment that encapsulates the network operations on an AsyncTask.
  *
- * This sample uses the logging framework to display log output in the log
- * fragment (LogFragment).
+ * This sample uses a TextView to display output.
  */
-public class MainActivity extends FragmentActivity {
+public class MainActivity extends FragmentActivity implements DownloadCallback {
 
-    public static final String TAG = "Network Connect";
-
-    // Reference to the fragment showing events, so we can clear it with a button
+    // Reference to the TextView showing fetched data, so we can clear it with a button
     // as necessary.
-    private LogFragment mLogFragment;
+    private TextView mDataText;
+
+    // Keep a reference to the NetworkFragment which owns the AsyncTask object
+    // that is used to execute network ops.
+    private NetworkFragment mNetworkFragment;
+
+    // Boolean telling us whether a download is in progress, so we don't trigger overlapping
+    // downloads with consecutive button clicks.
+    private boolean mDownloading = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.sample_main);
-
-        // Initialize text fragment that displays intro text.
-        SimpleTextFragment introFragment = (SimpleTextFragment)
-                    getSupportFragmentManager().findFragmentById(R.id.intro_fragment);
-        introFragment.setText(R.string.welcome_message);
-        introFragment.getTextView().setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16.0f);
-
-        // Initialize the logging framework.
-        initializeLogging();
+        mDataText = (TextView) findViewById(R.id.data_text);
+        mNetworkFragment = NetworkFragment.getInstance(getSupportFragmentManager(), "https://www.google.com");
     }
 
     @Override
@@ -79,111 +66,65 @@ public class MainActivity extends FragmentActivity {
             // When the user clicks FETCH, fetch the first 500 characters of
             // raw HTML from www.google.com.
             case R.id.fetch_action:
-                new DownloadTask().execute("http://www.google.com");
+                startDownload();
                 return true;
-            // Clear the log view fragment.
+            // Clear the text and cancel download.
             case R.id.clear_action:
-              mLogFragment.getLogView().setText("");
-              return true;
+                finishDownloading();
+                mDataText.setText("");
+                return true;
         }
         return false;
     }
 
-    /**
-     * Implementation of AsyncTask, to fetch the data in the background away from
-     * the UI thread.
-     */
-    private class DownloadTask extends AsyncTask<String, Void, String> {
-
-        @Override
-        protected String doInBackground(String... urls) {
-            try {
-                return loadFromNetwork(urls[0]);
-            } catch (IOException e) {
-              return getString(R.string.connection_error);
-            }
-        }
-
-        /**
-         * Uses the logging framework to display the output of the fetch
-         * operation in the log fragment.
-         */
-        @Override
-        protected void onPostExecute(String result) {
-          Log.i(TAG, result);
+    private void startDownload() {
+        if (!mDownloading && mNetworkFragment != null) {
+            // Execute the async download.
+            mNetworkFragment.startDownload();
+            mDownloading = true;
         }
     }
 
-    /** Initiates the fetch operation. */
-    private String loadFromNetwork(String urlString) throws IOException {
-        InputStream stream = null;
-        String str ="";
-
-        try {
-            stream = downloadUrl(urlString);
-            str = readIt(stream, 500);
-       } finally {
-           if (stream != null) {
-               stream.close();
-            }
+    @Override
+    public void updateFromDownload(String result) {
+        if (result != null) {
+            mDataText.setText(result);
+        } else {
+            mDataText.setText(getString(R.string.connection_error));
         }
-        return str;
     }
 
-    /**
-     * Given a string representation of a URL, sets up a connection and gets
-     * an input stream.
-     * @param urlString A string representation of a URL.
-     * @return An InputStream retrieved from a successful HttpURLConnection.
-     * @throws java.io.IOException
-     */
-    private InputStream downloadUrl(String urlString) throws IOException {
-        // BEGIN_INCLUDE(get_inputstream)
-        URL url = new URL(urlString);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setReadTimeout(10000 /* milliseconds */);
-        conn.setConnectTimeout(15000 /* milliseconds */);
-        conn.setRequestMethod("GET");
-        conn.setDoInput(true);
-        // Start the query
-        conn.connect();
-        InputStream stream = conn.getInputStream();
-        return stream;
-        // END_INCLUDE(get_inputstream)
+    @Override
+    public NetworkInfo getActiveNetworkInfo() {
+        ConnectivityManager connectivityManager =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+        return networkInfo;
     }
 
-    /** Reads an InputStream and converts it to a String.
-     * @param stream InputStream containing HTML from targeted site.
-     * @param len Length of string that this method returns.
-     * @return String concatenated according to len parameter.
-     * @throws java.io.IOException
-     * @throws java.io.UnsupportedEncodingException
-     */
-    private String readIt(InputStream stream, int len) throws IOException, UnsupportedEncodingException {
-        Reader reader = null;
-        reader = new InputStreamReader(stream, "UTF-8");
-        char[] buffer = new char[len];
-        reader.read(buffer);
-        return new String(buffer);
+    @Override
+    public void finishDownloading() {
+        mDownloading = false;
+        if (mNetworkFragment != null) {
+            mNetworkFragment.cancelDownload();
+        }
     }
 
-    /** Create a chain of targets that will receive log data */
-    public void initializeLogging() {
-
-        // Using Log, front-end to the logging chain, emulates
-        // android.util.log method signatures.
-
-        // Wraps Android's native log framework
-        LogWrapper logWrapper = new LogWrapper();
-        Log.setLogNode(logWrapper);
-
-        // A filter that strips out everything except the message text.
-        MessageOnlyLogFilter msgFilter = new MessageOnlyLogFilter();
-        logWrapper.setNext(msgFilter);
-
-        // On screen logging via a fragment with a TextView.
-        mLogFragment =
-                (LogFragment) getSupportFragmentManager().findFragmentById(R.id.log_fragment);
-        msgFilter.setNext(mLogFragment.getLogView());
+    @Override
+    public void onProgressUpdate(int progressCode, int percentComplete) {
+        switch(progressCode) {
+            // You can add UI behavior for progress updates here.
+            case Progress.ERROR:
+                break;
+            case Progress.CONNECT_SUCCESS:
+                break;
+            case Progress.GET_INPUT_STREAM_SUCCESS:
+                break;
+            case Progress.PROCESS_INPUT_STREAM_IN_PROGRESS:
+                mDataText.setText("" + percentComplete + "%");
+                break;
+            case Progress.PROCESS_INPUT_STREAM_SUCCESS:
+                break;
+        }
     }
 }

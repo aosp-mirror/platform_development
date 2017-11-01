@@ -1,0 +1,12 @@
+EI_CLASS	32
+EI_DATA		Little-Endian
+E_MACHINE	EM_ARM
+DT_NEEDED	libdl.so
+DT_NEEDED	libm.so
+EXP_SYMBOL	fclose
+EXP_SYMBOL	fopen
+EXP_SYMBOL	fread
+IMP_SYMBOL	dlclose
+IMP_SYMBOL	dlopen
+IMP_SYMBOL	cos
+IMP_SYMBOL	sin

@@ -129,7 +129,7 @@ public class SchedulerFragment extends Fragment {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            Alarm alarm = intent.getParcelableExtra(AlarmIntentService.ALARM_KEY);
+            Alarm alarm = AlarmUtil.readAlarm(intent.getExtras());
             mAlarmAdapter.deleteAlarm(alarm);
         }
     }

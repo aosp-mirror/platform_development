@@ -16,14 +16,17 @@
 
 package com.example.android.basicandroidkeystore;
 
+import com.example.android.common.logger.Log;
+
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 import android.security.KeyPairGeneratorSpec;
+import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyProperties;
 import android.support.v4.app.Fragment;
 import android.util.Base64;
 import android.view.MenuItem;
-
-import com.example.android.common.logger.Log;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -39,6 +42,7 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
+import java.security.spec.AlgorithmParameterSpec;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
@@ -46,7 +50,7 @@ import javax.security.auth.x500.X500Principal;
 
 public class BasicAndroidKeyStoreFragment extends Fragment {
 
-    public static final String TAG = "BasicAndroidKeyStoreFragment";
+    public static final String TAG = "KeyStoreFragment";
 
     // BEGIN_INCLUDE(values)
 
@@ -159,36 +163,54 @@ public class BasicAndroidKeyStoreFragment extends Fragment {
         end.add(Calendar.YEAR, 1);
         //END_INCLUDE(create_valid_dates)
 
-
-        // BEGIN_INCLUDE(create_spec)
-        // The KeyPairGeneratorSpec object is how parameters for your key pair are passed
-        // to the KeyPairGenerator.  For a fun home game, count how many classes in this sample
-        // start with the phrase "KeyPair".
-        KeyPairGeneratorSpec spec =
-                new KeyPairGeneratorSpec.Builder(context)
-                        // You'll use the alias later to retrieve the key.  It's a key for the key!
-                        .setAlias(mAlias)
-                                // The subject used for the self-signed certificate of the generated pair
-                        .setSubject(new X500Principal("CN=" + mAlias))
-                                // The serial number used for the self-signed certificate of the
-                                // generated pair.
-                        .setSerialNumber(BigInteger.valueOf(1337))
-                                // Date range of validity for the generated pair.
-                        .setStartDate(start.getTime())
-                        .setEndDate(end.getTime())
-                        .build();
-        // END_INCLUDE(create_spec)
-
         // BEGIN_INCLUDE(create_keypair)
         // Initialize a KeyPair generator using the the intended algorithm (in this example, RSA
         // and the KeyStore.  This example uses the AndroidKeyStore.
         KeyPairGenerator kpGenerator = KeyPairGenerator
                 .getInstance(SecurityConstants.TYPE_RSA,
                         SecurityConstants.KEYSTORE_PROVIDER_ANDROID_KEYSTORE);
-        kpGenerator.initialize(spec);
-        KeyPair kp = kpGenerator.generateKeyPair();
-        Log.d(TAG, "Public Key is: " + kp.getPublic().toString());
         // END_INCLUDE(create_keypair)
+
+        // BEGIN_INCLUDE(create_spec)
+        // The KeyPairGeneratorSpec object is how parameters for your key pair are passed
+        // to the KeyPairGenerator.
+        AlgorithmParameterSpec spec;
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            // Below Android M, use the KeyPairGeneratorSpec.Builder.
+
+            spec = new KeyPairGeneratorSpec.Builder(context)
+                    // You'll use the alias later to retrieve the key.  It's a key for the key!
+                    .setAlias(mAlias)
+                    // The subject used for the self-signed certificate of the generated pair
+                    .setSubject(new X500Principal("CN=" + mAlias))
+                    // The serial number used for the self-signed certificate of the
+                    // generated pair.
+                    .setSerialNumber(BigInteger.valueOf(1337))
+                    // Date range of validity for the generated pair.
+                    .setStartDate(start.getTime())
+                    .setEndDate(end.getTime())
+                    .build();
+
+
+        } else {
+            // On Android M or above, use the KeyGenparameterSpec.Builder and specify permitted
+            // properties  and restrictions of the key.
+            spec = new KeyGenParameterSpec.Builder(mAlias, KeyProperties.PURPOSE_SIGN)
+                    .setCertificateSubject(new X500Principal("CN=" + mAlias))
+                    .setDigests(KeyProperties.DIGEST_SHA256)
+                    .setSignaturePaddings(KeyProperties.SIGNATURE_PADDING_RSA_PKCS1)
+                    .setCertificateSerialNumber(BigInteger.valueOf(1337))
+                    .setCertificateNotBefore(start.getTime())
+                    .setCertificateNotAfter(end.getTime())
+                    .build();
+        }
+
+        kpGenerator.initialize(spec);
+
+        KeyPair kp = kpGenerator.generateKeyPair();
+        // END_INCLUDE(create_spec)
+        Log.d(TAG, "Public Key is: " + kp.getPublic().toString());
     }
 
     /**

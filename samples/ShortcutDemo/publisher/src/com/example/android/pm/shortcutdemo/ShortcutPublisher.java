@@ -31,6 +31,9 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.content.pm.ShortcutInfoCompat;
+import android.support.v4.content.pm.ShortcutManagerCompat;
+import android.support.v4.graphics.drawable.IconCompat;
 import android.text.format.Time;
 import android.util.ArrayMap;
 import android.util.Log;
@@ -45,6 +48,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
@@ -101,19 +105,19 @@ public class ShortcutPublisher extends Activity {
     private List<ShortcutInfo> getAllShortcuts() {
         final Map<String, ShortcutInfo> map = new ArrayMap<>();
         for (ShortcutInfo si : mShortcutManager.getManifestShortcuts()) {
-            if (!si.getActivity().equals(mMyActivity)) continue;
+            if (!Objects.equals(si.getActivity(), mMyActivity)) continue;
             if (!map.containsKey(si.getId())) {
                 map.put(si.getId(), si);
             }
         }
         for (ShortcutInfo si : mShortcutManager.getDynamicShortcuts()) {
-            if (!si.getActivity().equals(mMyActivity)) continue;
+            if (!Objects.equals(si.getActivity(), mMyActivity)) continue;
             if (!map.containsKey(si.getId())) {
                 map.put(si.getId(), si);
             }
         }
         for (ShortcutInfo si : mShortcutManager.getPinnedShortcuts()) {
-            if (!si.getActivity().equals(mMyActivity)) continue;
+            if (!Objects.equals(si.getActivity(), mMyActivity)) continue;
             if (!map.containsKey(si.getId())) {
                 map.put(si.getId(), si);
             }
@@ -153,7 +157,7 @@ public class ShortcutPublisher extends Activity {
         }
     }
 
-    private static void showToast(Context context, String message) {
+    public static void showToast(Context context, String message) {
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
     }
 
@@ -187,7 +191,28 @@ public class ShortcutPublisher extends Activity {
         final int i = sRandom.nextInt(sIntentList.size());
         b.setShortLabel(sIntentList.get(i).first);
         b.setIntent(new Intent(Intent.ACTION_VIEW, Uri.parse(sIntentList.get(i).second)));
-        b.setIcon(Icon.createWithResource(context, R.drawable.icon2));
+
+        if (sRandom.nextBoolean()) {
+            b.setIcon(Icon.createWithResource(context, R.drawable.icon2));
+        } else {
+            b.setIcon(Icon.createWithBitmap(BitmapFactory.decodeResource(context.getResources(),
+                    R.drawable.icon_large_2)));
+        }
+        return b;
+    }
+
+    public static ShortcutInfoCompat.Builder addRandomIntents(Context context,
+            ShortcutInfoCompat.Builder b) {
+        final int i = sRandom.nextInt(sIntentList.size());
+        b.setShortLabel(sIntentList.get(i).first);
+        b.setIntent(new Intent(Intent.ACTION_VIEW, Uri.parse(sIntentList.get(i).second)));
+
+        if (sRandom.nextBoolean()) {
+            b.setIcon(IconCompat.createWithResource(context, R.drawable.icon2));
+        } else {
+            b.setIcon(IconCompat.createWithBitmap(
+                    BitmapFactory.decodeResource(context.getResources(), R.drawable.icon_large_2)));
+        }
         return b;
     }
 
@@ -258,7 +283,7 @@ public class ShortcutPublisher extends Activity {
         for (ShortcutInfo si : getAllShortcuts()) {
             if (SETUP_SHORTCUT_ID.equals(si.getId())) continue;
             if (si.isImmutable()) continue;
-            if (!si.getActivity().equals(mMyActivity)) continue;
+            if (!Objects.equals(si.getActivity(), mMyActivity)) continue;
             updateList.add(addRandomIntents(this, new ShortcutInfo.Builder(this, si.getId()))
                     .build());
         }
@@ -290,6 +315,31 @@ public class ShortcutPublisher extends Activity {
                         .addRemoteInput(ri)
                         .build());
         getSystemService(NotificationManager.class).notify(0, nb.build());
+    }
+
+    // event handler
+    public void onRequestPinPressed(View v) {
+        requestPinShortcut(this);
+    }
+
+    public static void requestPinShortcut(Context context) {
+        if (!ShortcutManagerCompat.isRequestPinShortcutSupported(context)) {
+            showToast(context, "requestPinShortcut() is not supported by launcher");
+            return;
+        }
+        final ShortcutInfoCompat si = addRandomIntents(
+                context, new ShortcutInfoCompat.Builder(context,
+                        "shortcut-" + System.currentTimeMillis()))
+                .build();
+        final PendingIntent resultIntent = PendingIntent.getBroadcast(context, 0,
+                new Intent(context, RequestPinShortcutResultReceiver.class),
+                PendingIntent.FLAG_UPDATE_CURRENT);
+
+        ShortcutPublisher.callApi(context, () -> {
+            ShortcutManagerCompat.requestPinShortcut(context,
+                    si, resultIntent.getIntentSender());
+            return true;
+        });
     }
 
     class MyAdapter extends ShortcutAdapter {

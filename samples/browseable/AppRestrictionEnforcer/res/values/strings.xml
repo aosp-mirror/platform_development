@@ -22,8 +22,6 @@
     <string name="status_need_reinstall">AppRestrictionSchema needs reinstalling.</string>
     <string name="unhide">Activate AppRestrictionSchema</string>
     <string name="allow_saying_hello">Allow AppRestrictionSchema to say hello: </string>
-    <string name="allowed">Allowed</string>
-    <string name="disallowed">Disallowed</string>
     <string name="profile_name">AppRestrictionEnforcer </string>
     <string name="message">Message: </string>
     <string name="number">Number: </string>

@@ -1,0 +1,169 @@
+syntax = "proto2";
+
+package abi_dump;
+
+enum AccessSpecifier {
+  public_access = 1;
+  private_access = 2;
+  protected_access = 3;
+}
+
+enum RecordKind {
+  struct_kind = 1;
+  class_kind = 2;
+  union_kind = 3;
+}
+
+message BasicNamedAndTypedDecl {
+  // The TypedDecl's name.
+  optional string name = 1;
+  optional uint64 size = 2 [default = 0];
+  optional uint32 alignment = 3 [default = 0];
+  optional string referenced_type = 4;
+  optional string source_file = 5;
+  optional string linker_set_key = 6;
+}
+
+message ArrayType {
+  optional BasicNamedAndTypedDecl type_info = 1;
+}
+
+message PointerType {
+  optional BasicNamedAndTypedDecl type_info = 1;
+}
+
+message QualifiedType {
+  optional BasicNamedAndTypedDecl type_info = 1;
+  optional bool is_const = 6;
+  optional bool is_volatile = 7;
+  optional bool is_restricted = 8;
+}
+
+message BuiltinType {
+  optional BasicNamedAndTypedDecl type_info = 1;
+  optional bool is_unsigned = 2;
+  optional bool is_integral = 3;
+}
+
+message LvalueReferenceType {
+  optional BasicNamedAndTypedDecl type_info = 1;
+}
+
+message RvalueReferenceType {
+  optional BasicNamedAndTypedDecl type_info = 1;
+}
+
+message FunctionDecl {
+  // Return type reference
+  optional string return_type = 1;
+  optional string function_name = 2;
+  optional string source_file = 3;
+  repeated ParamDecl parameters = 4;
+  optional TemplateInfo template_info = 5;
+  optional string linker_set_key = 6;
+  optional AccessSpecifier access = 7 [default = public_access];
+}
+
+message ParamDecl {
+  optional string referenced_type = 1;
+  optional bool default_arg = 2;
+}
+
+message RecordFieldDecl {
+  // For future additions.
+  optional string referenced_type = 1;
+  optional uint64 field_offset = 2;
+  optional string field_name = 3;
+  optional AccessSpecifier access = 4 [default = public_access];
+}
+
+message EnumFieldDecl {
+  optional int64 enum_field_value = 1; // assumption: fits int64
+  optional string name = 3;
+}
+
+message TemplateInfo {
+  repeated TemplateElement elements = 1;
+}
+
+message TemplateElement {
+  optional string referenced_type = 1;
+}
+
+message CXXBaseSpecifier {
+  optional string referenced_type = 1;
+  optional bool is_virtual = 2;
+  optional AccessSpecifier access = 3;
+}
+
+message VTableComponent {
+  enum Kind {
+    VCallOffset = 0;
+    VBaseOffset = 1;
+    OffsetToTop = 2;
+    RTTI = 3;
+    FunctionPointer = 4;
+    CompleteDtorPointer = 5;
+    DeletingDtorPointer = 6;
+    UnusedFunctionPointer = 7;
+  }
+  optional Kind kind = 1;
+  optional string mangled_component_name = 2 [default = ""];
+  // Maintain backwards compatibility. Builds don't break while updating
+  // reference dumps. TODO: b/63081517
+  optional uint64 value = 3 [default = 0];
+  optional int64 component_value = 4 [default = 0];
+}
+
+message VTableLayout {
+  repeated VTableComponent vtable_components = 1;
+}
+
+message RecordType {
+  optional BasicNamedAndTypedDecl type_info = 1;
+  repeated RecordFieldDecl fields = 2;
+  repeated CXXBaseSpecifier base_specifiers = 3;
+  optional TemplateInfo template_info = 5;
+  optional VTableLayout vtable_layout = 7;
+  optional AccessSpecifier access = 8 [default = public_access];
+  optional bool is_anonymous = 9;
+  optional RecordKind record_kind = 10 [default = struct_kind];
+}
+
+message EnumType {
+  optional BasicNamedAndTypedDecl type_info = 1;
+  optional string underlying_type = 2;
+  repeated EnumFieldDecl enum_fields = 3;
+  optional AccessSpecifier access = 4 [default = public_access];
+}
+
+message GlobalVarDecl {
+  optional string name = 1;
+  optional string source_file = 2;
+  optional string linker_set_key = 3;
+  optional string referenced_type = 4;
+  optional AccessSpecifier access = 5 [default = public_access];
+}
+
+message ElfFunction {
+  optional string name = 1;
+}
+
+message ElfObject {
+  optional string name = 1;
+}
+
+message TranslationUnit {
+  repeated RecordType record_types = 1;
+  repeated EnumType enum_types = 2;
+  repeated PointerType pointer_types = 3;
+  repeated LvalueReferenceType lvalue_reference_types = 4;
+  repeated RvalueReferenceType rvalue_reference_types = 5;
+  repeated BuiltinType builtin_types = 6;
+  repeated QualifiedType qualified_types = 7;
+  repeated ArrayType array_types = 8;
+  repeated FunctionDecl functions = 9;
+  repeated GlobalVarDecl global_vars = 10;
+  repeated ElfFunction elf_functions = 11;
+  repeated ElfObject elf_objects = 12;
+}

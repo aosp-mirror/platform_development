@@ -15,12 +15,17 @@
  */
 package com.example.android.shortcutsample;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ShortcutInfo;
+import android.content.pm.ShortcutManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.content.pm.ShortcutManagerCompat;
+import android.util.ArraySet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,6 +39,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class Main extends ListActivity implements OnClickListener {
     static final String TAG = "ShortcutSample";
@@ -46,6 +52,10 @@ public class Main extends ListActivity implements OnClickListener {
     private MyAdapter mAdapter;
 
     private ShortcutHelper mHelper;
+    private ShortcutManager mShortcutManager;
+
+    // @GuardedBy("sVisibleInstances")
+    private static final Set<Main> sVisibleInstances = new ArraySet<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +64,7 @@ public class Main extends ListActivity implements OnClickListener {
         setContentView(R.layout.main);
 
         mHelper = new ShortcutHelper(this);
+        mShortcutManager = getSystemService(ShortcutManager.class);
 
         mHelper.maybeRestoreAllDynamicShortcuts();
 
@@ -61,7 +72,9 @@ public class Main extends ListActivity implements OnClickListener {
 
         if (ACTION_ADD_WEBSITE.equals(getIntent().getAction())) {
             // Invoked via the manifest shortcut.
-            addWebSite();
+            addWebSite(/* forPin=*/ false, /* forResult= */ false);
+        } else if (Intent.ACTION_CREATE_SHORTCUT.equals(getIntent().getAction())) {
+            addWebSite(/* forPin=*/ true, /* forResult= */ true);
         }
 
         mAdapter = new MyAdapter(this.getApplicationContext());
@@ -69,20 +82,41 @@ public class Main extends ListActivity implements OnClickListener {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
+    protected void onStart() {
+        super.onStart();
         refreshList();
+        synchronized (sVisibleInstances) {
+            sVisibleInstances.add(this);
+        }
+        findViewById(R.id.request_new_pin_shortcut).setVisibility(
+                ShortcutManagerCompat.isRequestPinShortcutSupported(this)
+                        ? View.VISIBLE : View.GONE);
+    }
+
+    @Override
+    protected void onStop() {
+        synchronized (sVisibleInstances) {
+            sVisibleInstances.remove(this);
+        }
+        super.onStop();
     }
 
     /**
      * Handle the add button.
      */
     public void onAddPressed(View v) {
-        addWebSite();
+        addWebSite(/* forPin=*/ false, /* forResult= */ false);
     }
 
-    private void addWebSite() {
-        Log.i(TAG, "addWebSite");
+    /**
+     * Handle the add button.
+     */
+    public void onRequestNewPinPressed(View v) {
+        addWebSite(/* forPin=*/ true, /* forResult= */ false);
+    }
+
+    private void addWebSite(boolean forPin, boolean forResult) {
+        Log.i(TAG, "addWebSite forPin=" + forPin);
 
         // This is important.  This allows the launcher to build a prediction model.
         mHelper.reportShortcutUsed(ID_ADD_WEBSITE);
@@ -93,31 +127,53 @@ public class Main extends ListActivity implements OnClickListener {
         editUri.setInputType(EditorInfo.TYPE_TEXT_VARIATION_URI);
 
         new AlertDialog.Builder(this)
-                .setTitle("Add new website")
+                .setTitle(forPin ? "Create pin shortcut for website" : "Add new website")
                 .setMessage("Type URL of a website")
                 .setView(editUri)
                 .setPositiveButton("Add", (dialog, whichButton) -> {
                     final String url = editUri.getText().toString().trim();
                     if (url.length() > 0) {
-                        addUriAsync(url);
+                        addUriAsync(url, forPin, forResult);
+                    }
+                })
+                .setOnCancelListener((dialog) -> {
+                    if (forResult) {
+                        setResult(Activity.RESULT_CANCELED);
+                        finish();
                     }
                 })
                 .show();
     }
 
-    private void addUriAsync(String uri) {
-        new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                mHelper.addWebSiteShortcut(uri);
-                return null;
-            }
+    private void addUriAsync(String uri, boolean forPin, boolean forResult) {
+        if (forResult) {
+            new AsyncTask<Void, Void, ShortcutInfo>() {
+                @Override
+                protected ShortcutInfo doInBackground(Void... params) {
+                    return mHelper.createShortcutForUrl(uri);
+                }
 
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                refreshList();
-            }
-        }.execute();
+                @Override
+                protected void onPostExecute(ShortcutInfo shortcut) {
+                    setResult(Activity.RESULT_OK,
+                            mShortcutManager.createShortcutResultIntent(shortcut));
+                    finish();
+                }
+            }.execute();
+        } else {
+            new AsyncTask<Void, Void, Void>() {
+                @Override
+                protected Void doInBackground(Void... params) {
+                    mHelper.addWebSiteShortcut(uri, forPin);
+                    return null;
+                }
+
+                @Override
+                protected void onPostExecute(Void aVoid) {
+                    refreshList();
+                }
+            }.execute();
+        }
     }
 
     private void refreshList() {
@@ -141,6 +197,11 @@ public class Main extends ListActivity implements OnClickListener {
                 mHelper.removeShortcut(shortcut);
                 refreshList();
                 break;
+            case R.id.request_pin:
+                // This is an update case, so just pass the ID.
+                mHelper.requestPinShortcut(shortcut.getId());
+                refreshList();
+                break;
         }
     }
 
@@ -149,6 +210,11 @@ public class Main extends ListActivity implements OnClickListener {
     private String getType(ShortcutInfo shortcut) {
         final StringBuilder sb = new StringBuilder();
         String sep = "";
+        if (shortcut.isDeclaredInManifest()) {
+            sb.append(sep);
+            sb.append("Manifest");
+            sep = ", ";
+        }
         if (shortcut.isDynamic()) {
             sb.append(sep);
             sb.append("Dynamic");
@@ -233,17 +299,32 @@ public class Main extends ListActivity implements OnClickListener {
             final TextView line2 = (TextView) view.findViewById(R.id.line2);
 
             line1.setText(shortcut.getLongLabel());
-
             line2.setText(getType(shortcut));
 
             final Button remove = (Button) view.findViewById(R.id.remove);
             final Button disable = (Button) view.findViewById(R.id.disable);
+            final Button requestPin = (Button) view.findViewById(R.id.request_pin);
 
             disable.setText(
                     shortcut.isEnabled() ? R.string.disable_shortcut : R.string.enable_shortcut);
 
+            remove.setVisibility(shortcut.isImmutable() ? View.GONE : View.VISIBLE);
+            disable.setVisibility(shortcut.isImmutable() ? View.GONE : View.VISIBLE);
+            requestPin.setVisibility(
+                    ShortcutManagerCompat.isRequestPinShortcutSupported(mContext)
+                            ? View.VISIBLE : View.GONE);
+
             remove.setOnClickListener(Main.this);
             disable.setOnClickListener(Main.this);
+            requestPin.setOnClickListener(Main.this);
+        }
+    }
+
+    public static void refreshAllInstances() {
+        synchronized (sVisibleInstances) {
+            for (Main instance : sVisibleInstances) {
+                instance.refreshList();
+            }
         }
     }
 }

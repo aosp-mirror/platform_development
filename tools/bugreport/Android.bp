@@ -1,0 +1,11 @@
+// Copyright 2006 The Android Open Source Project
+//
+
+java_binary_host {
+    name: "BugReport",
+    wrapper: "bugreport",
+    manifest: "manifest-library.mf",
+    srcs: ["src/**/*.java"],
+    java_resource_dirs: ["resources"],
+    static_libs: ["jsilver"],
+}

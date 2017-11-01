@@ -1,0 +1,362 @@
+#!/usr/bin/env python2.7
+
+import argparse
+import datetime
+import os
+import re
+import subprocess
+import sys
+import threading
+import time
+
+QUIET = False
+
+# ANSI escape sequences
+if sys.stdout.isatty():
+  BOLD = "\033[1m"
+  RED = "\033[91m" + BOLD
+  GREEN = "\033[92m" + BOLD
+  YELLOW = "\033[93m" + BOLD
+  UNDERLINE = "\033[4m"
+  ENDCOLOR = "\033[0m"
+  CLEARLINE = "\033[K"
+  STDOUT_IS_TTY = True
+else:
+  BOLD = ""
+  RED = ""
+  GREEN = ""
+  YELLOW = ""
+  UNDERLINE = ""
+  ENDCOLOR = ""
+  CLEARLINE = ""
+  STDOUT_IS_TTY = False
+
+def PrintStatus(s):
+  """Prints a bold underlined status message"""
+  sys.stdout.write("\n")
+  sys.stdout.write(BOLD)
+  sys.stdout.write(UNDERLINE)
+  sys.stdout.write(s)
+  sys.stdout.write(ENDCOLOR)
+  sys.stdout.write("\n")
+
+
+def PrintCommand(cmd, env=None):
+  """Prints a bold line of a shell command that is being run"""
+  if not QUIET:
+    sys.stdout.write(BOLD)
+    if env:
+      for k,v in env.iteritems():
+        if " " in v and "\"" not in v:
+          sys.stdout.write("%s=\"%s\" " % (k, v.replace("\"", "\\\"")))
+        else:
+          sys.stdout.write("%s=%s " % (k, v))
+    sys.stdout.write(" ".join(cmd))
+    sys.stdout.write(ENDCOLOR)
+    sys.stdout.write("\n")
+
+
+class ExecutionException(Exception):
+  """Thrown to cleanly abort operation."""
+  def __init__(self,*args,**kwargs):
+    Exception.__init__(self,*args,**kwargs)
+
+
+class Adb(object):
+  """Encapsulates adb functionality."""
+
+  def __init__(self):
+    """Initialize adb."""
+    self._command = ["adb"]
+
+
+  def Exec(self, cmd, stdout=None, stderr=None):
+    """Runs an adb command, and prints that command to stdout.
+
+      Raises:
+        ExecutionException: if the adb command returned an error.
+
+      Example:
+        adb.Exec("shell", "ls") will run "adb shell ls"
+    """
+    cmd = self._command + cmd
+    PrintCommand(cmd)
+    result = subprocess.call(cmd, stdout=stdout, stderr=stderr)
+    if result:
+      raise ExecutionException("adb: %s returned %s" % (cmd, result))
+
+
+  def WaitForDevice(self):
+    """Waits for the android device to be available on usb with adbd running."""
+    self.Exec(["wait-for-device"])
+
+
+  def Run(self, cmd, stdout=None, stderr=None):
+    """Waits for the device, and then runs a command.
+
+      Raises:
+        ExecutionException: if the adb command returned an error.
+
+      Example:
+        adb.Run("shell", "ls") will run "adb shell ls"
+    """
+    self.WaitForDevice()
+    self.Exec(cmd, stdout=stdout, stderr=stderr)
+
+
+  def Get(self, cmd):
+    """Waits for the device, and then runs a command, returning the output.
+
+      Raises:
+        ExecutionException: if the adb command returned an error.
+
+      Example:
+        adb.Get(["shell", "ls"]) will run "adb shell ls"
+    """
+    self.WaitForDevice()
+    cmd = self._command + cmd
+    PrintCommand(cmd)
+    try:
+      text = subprocess.check_output(cmd)
+      return text.strip()
+    except subprocess.CalledProcessError as ex:
+      raise ExecutionException("adb: %s returned %s" % (cmd, ex.returncode))
+
+
+  def Shell(self, cmd, stdout=None, stderr=None):
+    """Runs an adb shell command
+      Args:
+        cmd: The command to run.
+
+      Raises:
+        ExecutionException: if the adb command returned an error.
+
+      Example:
+        adb.Shell(["ls"]) will run "adb shell ls"
+    """
+    cmd = ["shell"] + cmd
+    self.Run(cmd, stdout=stdout, stderr=stderr)
+
+
+  def GetProp(self, name):
+    """Gets a system property from the device."""
+    return self.Get(["shell", "getprop", name])
+
+
+  def Reboot(self):
+    """Reboots the device, and waits for boot to complete."""
+    # Reboot
+    self.Run(["reboot"])
+    # Wait until it comes back on adb
+    self.WaitForDevice()
+    # Poll until the system says it's booted
+    while self.GetProp("sys.boot_completed") != "1":
+      time.sleep(2)
+    # Dismiss the keyguard
+    self.Shell(["wm", "dismiss-keyguard"]);
+
+  def GetBatteryProperties(self):
+    """A dict of the properties from adb shell dumpsys battery"""
+    def ConvertVal(s):
+      if s == "true":
+        return True
+      elif s == "false":
+        return False
+      else:
+        try:
+          return int(s)
+        except ValueError:
+          return s
+    text = self.Get(["shell", "dumpsys", "battery"])
+    lines = [line.strip() for line in text.split("\n")][1:]
+    lines = [[s.strip() for s in line.split(":", 1)] for line in lines]
+    lines = [(k,ConvertVal(v)) for k,v in lines]
+    return dict(lines)
+
+  def GetBatteryLevel(self):
+    """Returns the battery level"""
+    return self.GetBatteryProperties()["level"]
+
+
+
+def CurrentTimestamp():
+  """Returns the current time in a format suitable for filenames."""
+  return datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+
+
+def ParseOptions():
+  """Parse the command line options.
+
+    Returns an argparse options object.
+  """
+  parser = argparse.ArgumentParser(description="Run monkeys and collect the results.")
+  parser.add_argument("--dir", action="store",
+                      help="output directory for results of monkey runs")
+  parser.add_argument("--events", action="store", type=int, default=125000,
+                      help="number of events per monkey run")
+  parser.add_argument("-p", action="append", dest="packages",
+                      help="package to use (default is a set of system-wide packages")
+  parser.add_argument("--runs", action="store", type=int, default=10000000,
+                      help="number of monkey runs to perform")
+  parser.add_argument("--type", choices=["crash", "anr"],
+                      help="only stop on errors of the given type (crash or anr)")
+  parser.add_argument("--description", action="store",
+                      help="only stop if the error description contains DESCRIPTION")
+
+  options = parser.parse_args()
+  
+  if not options.dir:
+    options.dir = "monkeys-%s" % CurrentTimestamp()
+
+  if not options.packages:
+    options.packages = [
+        "com.google.android.deskclock",
+        "com.android.calculator2",
+        "com.google.android.contacts",
+        "com.android.launcher",
+        "com.google.android.launcher",
+        "com.android.mms",
+        "com.google.android.apps.messaging",
+        "com.android.phone",
+        "com.google.android.dialer",
+        "com.android.providers.downloads.ui",
+        "com.android.settings",
+        "com.google.android.calendar",
+        "com.google.android.GoogleCamera",
+        "com.google.android.apps.photos",
+        "com.google.android.gms",
+        "com.google.android.setupwizard",
+        "com.google.android.googlequicksearchbox",
+        "com.google.android.packageinstaller",
+        "com.google.android.apps.nexuslauncher"
+      ]
+
+  return options
+
+
+adb = Adb()
+
+def main():
+  """Main entry point."""
+
+  def LogcatThreadFunc():
+    logcatProcess.communicate()
+
+  options = ParseOptions()
+
+  # Set up the device a little bit
+  PrintStatus("Setting up the device")
+  adb.Run(["root"])
+  time.sleep(2)
+  adb.WaitForDevice()
+  adb.Run(["remount"])
+  time.sleep(2)
+  adb.WaitForDevice()
+  adb.Shell(["echo ro.audio.silent=1 > /data/local.prop"])
+  adb.Shell(["chmod 644 /data/local.prop"])
+
+  # Figure out how many leading zeroes we need.
+  pattern = "%%0%dd" % len(str(options.runs-1))
+
+  # Make the output directory
+  if os.path.exists(options.dir) and not os.path.isdir(options.dir):
+    sys.stderr.write("Output directory already exists and is not a directory: %s\n"
+        % options.dir)
+    sys.exit(1)
+  elif not os.path.exists(options.dir):
+    os.makedirs(options.dir)
+
+  # Run the tests
+  for run in range(1, options.runs+1):
+    PrintStatus("Run %d of %d: %s" % (run, options.runs,
+        datetime.datetime.now().strftime("%A, %B %d %Y %I:%M %p")))
+
+    # Reboot and wait for 30 seconds to let the system quiet down so the
+    # log isn't polluted with all the boot completed crap.
+    if True:
+      adb.Reboot()
+      PrintCommand(["sleep", "30"])
+      time.sleep(30)
+
+    # Monkeys can outrun the battery, so if it's getting low, pause to
+    # let it charge.
+    if True:
+      targetBatteryLevel = 20
+      while True:
+        level = adb.GetBatteryLevel()
+        if level > targetBatteryLevel:
+          break
+        print "Battery level is %d%%.  Pausing to let it charge above %d%%." % (
+            level, targetBatteryLevel)
+        time.sleep(60)
+
+    filebase = os.path.sep.join((options.dir, pattern % run))
+    bugreportFilename = filebase + "-bugreport.txt"
+    monkeyFilename = filebase + "-monkey.txt"
+    logcatFilename = filebase + "-logcat.txt"
+    htmlFilename = filebase + ".html"
+
+    monkeyFile = file(monkeyFilename, "w")
+    logcatFile = file(logcatFilename, "w")
+    bugreportFile = None
+
+    # Clear the log, then start logcat
+    adb.Shell(["logcat", "-c", "-b", "main,system,events,crash"])
+    cmd = ["adb", "logcat", "-b", "main,system,events,crash"]
+    PrintCommand(cmd)
+    logcatProcess = subprocess.Popen(cmd, stdout=logcatFile, stderr=None)
+    logcatThread = threading.Thread(target=LogcatThreadFunc)
+    logcatThread.start()
+
+    # Run monkeys
+    cmd = [
+        "monkey",
+        "-c", "android.intent.category.LAUNCHER",
+        "--ignore-security-exceptions",
+        "--monitor-native-crashes",
+        "-v", "-v", "-v"
+      ]
+    for pkg in options.packages:
+      cmd.append("-p")
+      cmd.append(pkg)
+    if options.type == "anr":
+      cmd.append("--ignore-crashes")
+      cmd.append("--ignore-native-crashes")
+    if options.type == "crash":
+      cmd.append("--ignore-timeouts")
+    if options.description:
+      cmd.append("--match-description")
+      cmd.append("'" + options.description + "'")
+    cmd.append(str(options.events))
+    try:
+      adb.Shell(cmd, stdout=monkeyFile, stderr=monkeyFile)
+      needReport = False
+    except ExecutionException:
+      # Monkeys failed, take a bugreport
+      bugreportFile = file(bugreportFilename, "w")
+      adb.Shell(["bugreport"], stdout=bugreportFile, stderr=None)
+      needReport = True
+    finally:
+      monkeyFile.close()
+      try:
+        logcatProcess.terminate()
+      except OSError:
+        pass # it must have died on its own
+      logcatThread.join()
+      logcatFile.close()
+      if bugreportFile:
+        bugreportFile.close()
+    
+    if needReport:
+      # Generate the html
+      cmd = ["bugreport", "--monkey", monkeyFilename, "--html", htmlFilename,
+          "--logcat", logcatFilename, bugreportFilename]
+      PrintCommand(cmd)
+      result = subprocess.call(cmd)
+
+
+
+if __name__ == "__main__":
+  main()
+
+# vim: set ts=2 sw=2 sts=2 expandtab nocindent autoindent:

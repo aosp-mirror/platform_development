@@ -1,0 +1,18 @@
+LIBC {
+  global:
+    _Z10HiddenBase;
+    _Z6fooray; # introduced=23
+    _ZN5test35BeginET_T0_i; # introduced-arm=17 introduced-arm64=21 introduced-mips=17 introduced-mips64=21 introduced-x86=17 introduced-x86_64=21
+    _ZN5Stack4pushET_; # introduced-arm=17 introduced-arm64=21 introduced-mips=17 introduced-mips64=21 introduced-x86=17 introduced-x86_64=21
+    _ZN5test310double_byeE; # var introduced=23
+		local:
+    *;
+};
+
+LIBC_PRIVATE {
+  global:
+};
+
+LIBC_DEPRECATED {
+  global:
+};

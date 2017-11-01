@@ -1,0 +1,109 @@
+p, li, td, th, h1, h2, h3 {
+	line-height: 1.6;
+}
+
+#control {
+	background-color: #eefaff;
+	border: 1px solid #3399ff;
+	border-collapse: collapse;
+	margin: 0px 0px 20px 0px;
+	width: 100%;
+}
+
+#control td {
+	padding: 3px;
+}
+
+#control_menu:link {
+	display: block;
+	width: 5em;
+	height: 20pt;
+	text-align: center;
+	line-height: 20pt;
+	color: #ffffff;
+	background-color: #3399ff;
+	position: fixed;
+	top: 0px;
+	right: 0px;
+}
+
+#control_menu:visited {
+	color: #ffffff;
+}
+
+#control_menu:hover {
+	color: #ffffff;
+	background-color: #0000ff;
+}
+
+.menu {
+	list-style-type: none;
+	margin: 0px;
+	padding: 0px;
+}
+
+.menu li {
+	display: inline;
+	padding: 0px 1em 0px 0px;
+}
+
+a:link {
+	color: #2244ff;
+	text-decoration: none;
+	font-family: monospace;
+}
+
+a:visited {
+	color: #2244ff;
+	text-decoration: none;
+}
+
+a:hover {
+	color: #ff3322;
+	text-decoration: underline;
+}
+
+a:active {
+	color: #ff3322;
+	text-decoration: underline;
+}
+
+#module_table {
+	border-collapse: collapse;
+}
+
+#module_tbody td,
+#module_tbody th {
+	border: 1px solid #dddddd;
+	padding: 3px 20px;
+	vertical-align: top;
+}
+
+#module_tbody th {
+	background-color: #eeeeee;
+}
+
+#module_tbody h1,
+#module_tbody h2,
+#module_tbody p {
+	font-size: 100%;
+	margin: 0px;
+	padding: 0px;
+}
+
+#module_tbody ol,
+#module_tbody ul {
+	margin: .3em 0px;
+	padding: 0px 0px 0px 2em;
+}
+
+#module_tbody tr:target {
+	background-color: #fffff0;
+	transition: background-color 800ms ease;
+}
+
+#module_tbody p.module_src_dir {
+	font-family: monospace;
+	font-size: 80%;
+	color: #aaaaaa;
+}

@@ -60,6 +60,7 @@ public class BluetoothChatService {
     private ConnectThread mConnectThread;
     private ConnectedThread mConnectedThread;
     private int mState;
+    private int mNewState;
 
     // Constants that indicate the current connection state
     public static final int STATE_NONE = 0;       // we're doing nothing
@@ -76,20 +77,20 @@ public class BluetoothChatService {
     public BluetoothChatService(Context context, Handler handler) {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         mState = STATE_NONE;
+        mNewState = mState;
         mHandler = handler;
     }
 
     /**
-     * Set the current state of the chat connection
-     *
-     * @param state An integer defining the current connection state
+     * Update UI title according to the current state of the chat connection
      */
-    private synchronized void setState(int state) {
-        Log.d(TAG, "setState() " + mState + " -> " + state);
-        mState = state;
+    private synchronized void updateUserInterfaceTitle() {
+        mState = getState();
+        Log.d(TAG, "updateUserInterfaceTitle() " + mNewState + " -> " + mState);
+        mNewState = mState;
 
         // Give the new state to the Handler so the UI Activity can update
-        mHandler.obtainMessage(Constants.MESSAGE_STATE_CHANGE, state, -1).sendToTarget();
+        mHandler.obtainMessage(Constants.MESSAGE_STATE_CHANGE, mNewState, -1).sendToTarget();
     }
 
     /**
@@ -118,8 +119,6 @@ public class BluetoothChatService {
             mConnectedThread = null;
         }
 
-        setState(STATE_LISTEN);
-
         // Start the thread to listen on a BluetoothServerSocket
         if (mSecureAcceptThread == null) {
             mSecureAcceptThread = new AcceptThread(true);
@@ -129,6 +128,8 @@ public class BluetoothChatService {
             mInsecureAcceptThread = new AcceptThread(false);
             mInsecureAcceptThread.start();
         }
+        // Update UI title
+        updateUserInterfaceTitle();
     }
 
     /**
@@ -157,7 +158,8 @@ public class BluetoothChatService {
         // Start the thread to connect with the given device
         mConnectThread = new ConnectThread(device, secure);
         mConnectThread.start();
-        setState(STATE_CONNECTING);
+        // Update UI title
+        updateUserInterfaceTitle();
     }
 
     /**
@@ -202,8 +204,8 @@ public class BluetoothChatService {
         bundle.putString(Constants.DEVICE_NAME, device.getName());
         msg.setData(bundle);
         mHandler.sendMessage(msg);
-
-        setState(STATE_CONNECTED);
+        // Update UI title
+        updateUserInterfaceTitle();
     }
 
     /**
@@ -231,7 +233,9 @@ public class BluetoothChatService {
             mInsecureAcceptThread.cancel();
             mInsecureAcceptThread = null;
         }
-        setState(STATE_NONE);
+        mState = STATE_NONE;
+        // Update UI title
+        updateUserInterfaceTitle();
     }
 
     /**
@@ -263,6 +267,10 @@ public class BluetoothChatService {
         msg.setData(bundle);
         mHandler.sendMessage(msg);
 
+        mState = STATE_NONE;
+        // Update UI title
+        updateUserInterfaceTitle();
+
         // Start the service over to restart listening mode
         BluetoothChatService.this.start();
     }
@@ -277,6 +285,10 @@ public class BluetoothChatService {
         bundle.putString(Constants.TOAST, "Device connection was lost");
         msg.setData(bundle);
         mHandler.sendMessage(msg);
+
+        mState = STATE_NONE;
+        // Update UI title
+        updateUserInterfaceTitle();
 
         // Start the service over to restart listening mode
         BluetoothChatService.this.start();
@@ -309,6 +321,7 @@ public class BluetoothChatService {
                 Log.e(TAG, "Socket Type: " + mSocketType + "listen() failed", e);
             }
             mmServerSocket = tmp;
+            mState = STATE_LISTEN;
         }
 
         public void run() {
@@ -396,6 +409,7 @@ public class BluetoothChatService {
                 Log.e(TAG, "Socket Type: " + mSocketType + "create() failed", e);
             }
             mmSocket = tmp;
+            mState = STATE_CONNECTING;
         }
 
         public void run() {
@@ -465,6 +479,7 @@ public class BluetoothChatService {
 
             mmInStream = tmpIn;
             mmOutStream = tmpOut;
+            mState = STATE_CONNECTED;
         }
 
         public void run() {
@@ -484,8 +499,6 @@ public class BluetoothChatService {
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);
                     connectionLost();
-                    // Start the service over to restart listening mode
-                    BluetoothChatService.this.start();
                     break;
                 }
             }

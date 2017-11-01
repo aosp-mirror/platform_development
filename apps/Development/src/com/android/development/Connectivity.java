@@ -18,7 +18,6 @@
 package com.android.development;
 
 import android.app.Activity;
-import android.app.ActivityManagerNative;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;

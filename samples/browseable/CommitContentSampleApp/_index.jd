@@ -1,0 +1,11 @@
+
+page.tags="CommitContentSampleApp"
+sample.group=Input
+@jd:body
+
+<p>
+            
+                This sample demonstrates how to write an application which accepts rich content
+                (such as images) sent from a keyboard using the Commit Content API.
+            
+        </p>

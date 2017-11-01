@@ -19,6 +19,7 @@ import adb
 import argparse
 import logging
 import os
+import re
 import subprocess
 import sys
 
@@ -31,6 +32,15 @@ def get_gdbserver_path(root, arch):
         return path.format(root, arch, "64", "64")
     else:
         return path.format(root, arch, "", "")
+
+
+def get_tracer_pid(device, pid):
+    if pid is None:
+        return 0
+
+    line, _ = device.shell(["grep", "-e", "^TracerPid:", "/proc/{}/status".format(pid)])
+    tracer_pid = re.sub('TracerPid:\t(.*)\n', r'\1', line)
+    return int(tracer_pid)
 
 
 def parse_args():
@@ -50,7 +60,7 @@ def parse_args():
 
     parser.add_argument(
         "--port", nargs="?", default="5039",
-        help="override the port used on the host")
+        help="override the port used on the host [default: 5039]")
     parser.add_argument(
         "--user", nargs="?", default="root",
         help="user to run commands as on the device [default: root]")
@@ -58,28 +68,12 @@ def parse_args():
     return parser.parse_args()
 
 
-def dump_var(root, variable):
-    make_args = ["make", "CALLED_FROM_SETUP=true",
-                 "BUILD_SYSTEM={}/build/core".format(root),
-                 "--no-print-directory", "-f",
-                 "{}/build/core/config.mk".format(root),
-                 "dumpvar-{}".format(variable)]
-
-    # subprocess cwd argument does not change the PWD shell variable, but
-    # dumpvar.mk uses PWD to create an absolute path, so we need to set it.
-    saved_pwd = os.environ['PWD']
-    os.environ['PWD'] = root
-    make_output = subprocess.check_output(make_args, cwd=root)
-    os.environ['PWD'] = saved_pwd
-    return make_output.splitlines()[0]
-
-
-def verify_device(root, props):
-    names = set([props["ro.build.product"], props["ro.product.device"]])
-    target_device = dump_var(root, "TARGET_DEVICE")
-    if target_device not in names:
-        msg = "TARGET_DEVICE ({}) does not match attached device ({})"
-        sys.exit(msg.format(target_device, ", ".join(names)))
+def verify_device(root, device):
+    name = device.get_prop("ro.product.name")
+    target_device = os.environ["TARGET_PRODUCT"]
+    if target_device != name:
+        msg = "TARGET_PRODUCT ({}) does not match attached device ({})"
+        sys.exit(msg.format(target_device, name))
 
 
 def get_remote_pid(device, process_name):
@@ -123,6 +117,8 @@ def handle_switches(args, sysroot):
     pid = None
     run_cmd = None
 
+    args.su_cmd = ["su", args.user] if args.user else []
+
     if args.target_pid:
         # Fetch the binary using the PID later.
         pid = args.target_pid
@@ -132,16 +128,22 @@ def handle_switches(args, sysroot):
     elif args.run_cmd:
         if not args.run_cmd[0]:
             sys.exit("empty command passed to -r")
-        if not args.run_cmd[0].startswith("/"):
-            sys.exit("commands passed to -r must use absolute paths")
         run_cmd = args.run_cmd
+        if not run_cmd[0].startswith("/"):
+            try:
+                run_cmd[0] = gdbrunner.find_executable_path(device, args.run_cmd[0],
+                                                            run_as_cmd=args.su_cmd)
+            except RuntimeError:
+              sys.exit("Could not find executable '{}' passed to -r, "
+                       "please provide an absolute path.".format(args.run_cmd[0]))
+
         binary_file, local = gdbrunner.find_file(device, run_cmd[0], sysroot,
-                                                 user=args.user)
+                                                 run_as_cmd=args.su_cmd)
     if binary_file is None:
         assert pid is not None
         try:
             binary_file, local = gdbrunner.find_binary(device, pid, sysroot,
-                                                       user=args.user)
+                                                       run_as_cmd=args.su_cmd)
         except adb.ShellError:
             sys.exit("failed to pull binary for PID {}".format(pid))
 
@@ -150,6 +152,7 @@ def handle_switches(args, sysroot):
                         " symbols may not be available.".format(sysroot))
 
     return (binary_file, pid, run_cmd)
+
 
 def generate_gdb_script(sysroot, binary_file, is64bit, port, connect_timeout=5):
     # Generate a gdb script.
@@ -208,19 +211,24 @@ end
 
 
 def main():
+    required_env = ["ANDROID_BUILD_TOP",
+                    "ANDROID_PRODUCT_OUT", "TARGET_PRODUCT"]
+    for env in required_env:
+        if env not in os.environ:
+            sys.exit(
+                "Environment variable '{}' not defined, have you run lunch?".format(env))
+
     args = parse_args()
     device = args.device
 
     if device is None:
         sys.exit("ERROR: Failed to find device.")
 
-    props = device.get_props()
-
     root = os.environ["ANDROID_BUILD_TOP"]
-    sysroot = dump_var(root, "abs-TARGET_OUT_UNSTRIPPED")
+    sysroot = os.path.join(os.environ["ANDROID_PRODUCT_OUT"], "symbols")
 
     # Make sure the environment matches the attached device.
-    verify_device(root, props)
+    verify_device(root, device)
 
     debug_socket = "/data/local/tmp/debug_socket"
     pid = None
@@ -236,13 +244,19 @@ def main():
         # Make sure we have the linker
         ensure_linker(device, sysroot, is64bit)
 
-        # Start gdbserver.
-        gdbserver_local_path = get_gdbserver_path(root, arch)
-        gdbserver_remote_path = "/data/local/tmp/{}-gdbserver".format(arch)
-        gdbrunner.start_gdbserver(
-            device, gdbserver_local_path, gdbserver_remote_path,
-            target_pid=pid, run_cmd=run_cmd, debug_socket=debug_socket,
-            port=args.port, user=args.user)
+        tracer_pid = get_tracer_pid(device, pid)
+        if tracer_pid == 0:
+            # Start gdbserver.
+            gdbserver_local_path = get_gdbserver_path(root, arch)
+            gdbserver_remote_path = "/data/local/tmp/{}-gdbserver".format(arch)
+            gdbrunner.start_gdbserver(
+                device, gdbserver_local_path, gdbserver_remote_path,
+                target_pid=pid, run_cmd=run_cmd, debug_socket=debug_socket,
+                port=args.port, run_as_cmd=args.su_cmd)
+        else:
+            print "Connecting to tracing pid {} using local port {}".format(tracer_pid, args.port)
+            gdbrunner.forward_gdbserver_port(device, local=args.port,
+                                             remote="tcp:{}".format(args.port))
 
         # Generate a gdb script.
         gdb_commands = generate_gdb_script(sysroot=sysroot,

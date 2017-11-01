@@ -21,20 +21,22 @@
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
-    <fragment
-        android:name="com.example.android.networkconnect.SimpleTextFragment"
-        android:id="@+id/intro_fragment"
+    <TextView
+        android:id="@+id/intro_text"
         android:layout_weight="1"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:textSize="16sp"
+        android:text="@string/welcome_message"
+        android:freezesText="true"/>
     <View
         android:layout_width="fill_parent"
         android:layout_height="1dp"
         android:background="@android:color/darker_gray"/>
-    <fragment
-        android:name="com.example.android.common.logger.LogFragment"
-        android:id="@+id/log_fragment"
+    <TextView
+        android:id="@+id/data_text"
         android:layout_weight="1"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:freezesText="true"/>
 </LinearLayout>

@@ -1,0 +1,45 @@
+apply plugin: 'java'
+
+repositories {
+    maven { url '../../../prebuilts/tools/common/m2/repository' }
+    maven { url '../../../prebuilts/gradle-plugin'}
+}
+
+/*
+ * With the build server you are given two env variables.
+ * The OUT_DIR is a temporary directory you can use to put things during the build.
+ * The DIST_DIR is where you want to save things from the build.
+ *
+ * The build server will copy the contents of DIST_DIR to somewhere and make it available.
+ */
+if (System.env.DIST_DIR != null && System.env.OUT_DIR != null) {
+    buildDir = new File(System.env.OUT_DIR + '/gradle/checkcolor').getCanonicalFile()
+    project.ext.distDir = new File(System.env.DIST_DIR).getCanonicalFile()
+
+    // the build server does not pass the build number so we infer it from the last folder of the dist path.
+    ext.buildNumber = project.ext.distDir.getName()
+} else {
+    buildDir = file("${project.rootDir}/../../../out/host/gradle/checkcolor")
+    project.ext.distDir = file("${project.rootDir}/../../../out/dist")
+}
+
+sourceCompatibility = 1.8
+
+dependencies {
+    compile 'com.android.tools.lint:lint-api:24.3.1'
+    compile 'com.android.tools.lint:lint-checks:24.3.1'
+    testCompile 'junit:junit:4.11'
+    testCompile 'com.android.tools.lint:lint:24.3.1'
+    testCompile 'com.android.tools.lint:lint-tests:24.3.1'
+    testCompile 'com.android.tools:testutils:24.3.1'
+}
+
+jar {
+    destinationDir project.ext.distDir
+
+    manifest {
+        attributes("Lint-Registry": "com.google.checkcolor.lint.HardcodedColorIssueRegistry")
+    }
+}
+
+defaultTasks 'assemble'

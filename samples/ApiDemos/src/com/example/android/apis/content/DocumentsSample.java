@@ -301,9 +301,9 @@ public class DocumentsSample extends Activity {
             }
 
             // Create some documents
-            Uri pic = DocumentsContract.createDocument(cr, doc, "image/png", "pic.png");
-            Uri dir = DocumentsContract.createDocument(cr, doc, Document.MIME_TYPE_DIR, "my dir");
-            Uri dirPic = DocumentsContract.createDocument(cr, dir, "image/png", "pic2.png");
+            Uri pic = createDocument(cr, doc, "image/png", "pic.png");
+            Uri dir = createDocument(cr, doc, Document.MIME_TYPE_DIR, "my dir");
+            Uri dirPic = createDocument(cr, dir, "image/png", "pic2.png");
 
             log("created " + pic);
             log("created " + dir);
@@ -322,13 +322,13 @@ public class DocumentsSample extends Activity {
             }
 
             // And delete the first pic
-            if (DocumentsContract.deleteDocument(cr, pic)) {
+            if (deleteDocument(cr, pic)) {
                 log("deleted untouched pic");
             } else {
                 log("FAILED TO DELETE PIC");
             }
         } else if (requestCode == CODE_RENAME) {
-            final Uri newUri = DocumentsContract.renameDocument(cr, uri, "MEOW.TEST");
+            final Uri newUri = renameDocument(cr, uri, "MEOW.TEST");
             log("rename result=" + newUri);
 
             InputStream is = null;
@@ -340,6 +340,33 @@ public class DocumentsSample extends Activity {
             } finally {
                 closeQuietly(is);
             }
+        }
+    }
+
+    private Uri createDocument(ContentResolver resolver, Uri documentUri, String mimeType,
+            String displayName) {
+        Uri uri;
+        try {
+            uri = DocumentsContract.createDocument(resolver, documentUri, mimeType, displayName);
+        } catch (Exception e) {
+            uri = null;
+        }
+        return uri;
+    }
+
+    private boolean deleteDocument(ContentResolver resolver, Uri documentUri) {
+        try {
+            return DocumentsContract.deleteDocument(resolver, documentUri);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private Uri renameDocument(ContentResolver resolver, Uri uri, String newName) {
+        try {
+            return DocumentsContract.renameDocument(resolver, uri, newName);
+        } catch (Exception e) {
+            return null;
         }
     }
 

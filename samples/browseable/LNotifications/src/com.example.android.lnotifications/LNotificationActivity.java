@@ -16,65 +16,74 @@
 
 package com.example.android.lnotifications;
 
-import android.app.ActionBar;
-import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.os.Bundle;
+import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
+
+import static com.example.android.lnotifications.R.id.pager;
 
 /**
  * Launcher Activity for the L Notification samples application.
  */
-public class LNotificationActivity extends Activity {
+public class LNotificationActivity extends FragmentActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notification);
-        setTitle(R.string.title_lnotification_activity);
-        ActionBar actionBar = getActionBar();
 
-        // Use ViewPager in the support library where possible.
-        // At this time, the support library for L is not ready so using the deprecated method
-        // to create tabs.
-        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
-        ActionBar.Tab tabHeadsUpNotification = actionBar.newTab().setText("Heads Up");
-        ActionBar.Tab tabVisibilityMetadata = actionBar.newTab().setText("Visibility");
-        ActionBar.Tab tabOtherMetadata = actionBar.newTab().setText("Others");
-        tabHeadsUpNotification.setTabListener(new FragmentTabListener(HeadsUpNotificationFragment
-                .newInstance()));
-        tabVisibilityMetadata.setTabListener(new FragmentTabListener(VisibilityMetadataFragment
-                .newInstance()));
-        tabOtherMetadata.setTabListener(new FragmentTabListener(OtherMetadataFragment.newInstance
-                ()));
-        actionBar.addTab(tabHeadsUpNotification, 0);
-        actionBar.addTab(tabVisibilityMetadata, 1);
-        actionBar.addTab(tabOtherMetadata, 2);
+        // Show 3 tabs with the different notification options.
+        ViewPager viewPager = (ViewPager) findViewById(pager);
+        TabLayout tabs = (TabLayout) findViewById(R.id.tabs);
+
+        NotificationsPagerAdapter pagerAdapter =
+                new NotificationsPagerAdapter(getSupportFragmentManager());
+        viewPager.setAdapter(pagerAdapter);
+        tabs.setupWithViewPager(viewPager);
     }
 
-    /**
-     * TabListener that replaces a Fragment when a tab is clicked.
-     */
-    private static class FragmentTabListener implements ActionBar.TabListener {
-        public Fragment fragment;
+    private static class NotificationsPagerAdapter extends FragmentPagerAdapter {
 
-        public FragmentTabListener(Fragment fragment) {
-            this.fragment = fragment;
+        NotificationsPagerAdapter(FragmentManager fm) {
+            super(fm);
         }
 
         @Override
-        public void onTabReselected(ActionBar.Tab tab, FragmentTransaction ft) {
-            //do nothing.
+        public Fragment getItem(int position) {
+            switch (position) {
+                case 0:
+                    return HeadsUpNotificationFragment.newInstance();
+                case 1:
+                    return VisibilityMetadataFragment.newInstance();
+                case 2:
+                    return OtherMetadataFragment.newInstance();
+                default:
+                    break;
+            }
+            return null;
         }
 
         @Override
-        public void onTabSelected(ActionBar.Tab tab, FragmentTransaction ft) {
-            ft.replace(R.id.container, fragment);
+        public int getCount() {
+            return 3;
         }
 
         @Override
-        public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction ft) {
-            ft.remove(fragment);
+        public CharSequence getPageTitle(int position) {
+            switch (position) {
+                case 0:
+                    return "Heads Up";
+                case 1:
+                    return "Visibility";
+                case 2:
+                    return "Others";
+                default:
+                    return super.getPageTitle(position);
+            }
         }
     }
 }

@@ -79,17 +79,6 @@ class ArgumentParser(argparse.ArgumentParser):
         return result
 
 
-def get_run_as_cmd(user, cmd):
-    """Generate a run-as or su command depending on user."""
-
-    if user is None:
-        return cmd
-    elif user == "root":
-        return ["su", "0"] + cmd
-    else:
-        return ["run-as", user] + cmd
-
-
 def get_processes(device):
     """Return a dict from process name to list of running PIDs on the device."""
 
@@ -146,7 +135,7 @@ def get_pids(device, process_name):
 
 
 def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
-                    target_pid, run_cmd, debug_socket, port, user=None):
+                    target_pid, run_cmd, debug_socket, port, run_as_cmd=None):
     """Start gdbserver in the background and forward necessary ports.
 
     Args:
@@ -157,7 +146,7 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
         run_cmd: Command to run on the device.
         debug_socket: Device path to place gdbserver unix domain socket.
         port: Host port to forward the debug_socket to.
-        user: Device user to run gdbserver as.
+        run_as_cmd: run-as or su command to prepend to commands.
 
     Returns:
         Popen handle to the `adb shell` process gdbserver was started with.
@@ -178,10 +167,10 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
     else:
         gdbserver_cmd += run_cmd
 
-    device.forward("tcp:{}".format(port),
-                   "localfilesystem:{}".format(debug_socket))
-    atexit.register(lambda: device.forward_remove("tcp:{}".format(port)))
-    gdbserver_cmd = get_run_as_cmd(user, gdbserver_cmd)
+    forward_gdbserver_port(device, local=port, remote="localfilesystem:{}".format(debug_socket))
+
+    if run_as_cmd:
+        gdbserver_cmd = run_as_cmd + gdbserver_cmd
 
     gdbserver_output_path = os.path.join(tempfile.gettempdir(),
                                          "gdbclient.log")
@@ -191,7 +180,13 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
                               stderr=gdbserver_output)
 
 
-def find_file(device, executable_path, sysroot, user=None):
+def forward_gdbserver_port(device, local, remote):
+    """Forwards local TCP port `port` to `remote` via `adb forward`."""
+    device.forward("tcp:{}".format(local), remote)
+    atexit.register(lambda: device.forward_remove("tcp:{}".format(local)))
+
+
+def find_file(device, executable_path, sysroot, run_as_cmd=None):
     """Finds a device executable file.
 
     This function first attempts to find the local file which will
@@ -202,7 +197,7 @@ def find_file(device, executable_path, sysroot, user=None):
       device: the AndroidDevice object to use.
       executable_path: absolute path to the executable or symlink.
       sysroot: absolute path to the built symbol sysroot.
-      user: if necessary, the user to download the file as.
+      run_as_cmd: if necessary, run-as or su command to prepend
 
     Returns:
       A tuple containing (<open file object>, <was found locally>).
@@ -231,8 +226,11 @@ def find_file(device, executable_path, sysroot, user=None):
         file_name = "gdbclient-binary-{}".format(os.getppid())
         remote_temp_path = "/data/local/tmp/{}".format(file_name)
         local_path = os.path.join(tempfile.gettempdir(), file_name)
-        cmd = get_run_as_cmd(user,
-                             ["cat", executable_path, ">", remote_temp_path])
+
+        cmd = ["cat", executable_path, ">", remote_temp_path]
+        if run_as_cmd:
+            cmd = run_as_cmd + cmd
+
         try:
             device.shell(cmd)
         except adb.ShellError:
@@ -246,10 +244,37 @@ def find_file(device, executable_path, sysroot, user=None):
             return (open(path, "r"), found_locally)
     raise RuntimeError('Could not find executable {}'.format(executable_path))
 
+def find_executable_path(device, executable_name, run_as_cmd=None):
+    """Find a device executable from its name
 
-def find_binary(device, pid, sysroot, user=None):
+    This function calls which on the device to retrieve the absolute path of
+    the executable.
+
+    Args:
+      device: the AndroidDevice object to use.
+      executable_name: the name of the executable to find.
+      run_as_cmd: if necessary, run-as or su command to prepend
+
+    Returns:
+      The absolute path of the executable.
+
+    Raises:
+      RuntimeError: could not find the executable.
+    """
+    cmd = ["which", executable_name]
+    if run_as_cmd:
+        cmd = run_as_cmd + cmd
+
+    try:
+        output, _ = device.shell(cmd)
+        return adb.split_lines(output)[0]
+    except adb.ShellError:
+        raise  RuntimeError("Could not find executable '{}' on "
+                            "device".format(executable_name))
+
+def find_binary(device, pid, sysroot, run_as_cmd=None):
     """Finds a device executable file corresponding to |pid|."""
-    return find_file(device, "/proc/{}/exe".format(pid), sysroot, user)
+    return find_file(device, "/proc/{}/exe".format(pid), sysroot, run_as_cmd)
 
 
 def get_binary_arch(binary_file):
@@ -315,4 +340,3 @@ def start_gdb(gdb_path, gdb_commands, gdb_flags=None):
             pass
 
     os.unlink(gdb_script_path)
-

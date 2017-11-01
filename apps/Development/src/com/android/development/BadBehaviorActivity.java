@@ -17,7 +17,7 @@
 package com.android.development;
 
 import android.app.Activity;
-import android.app.ActivityManagerNative;
+import android.app.ActivityManager;
 import android.app.IActivityController;
 import android.app.IActivityManager;
 import android.app.Service;
@@ -82,7 +82,7 @@ public class BadBehaviorActivity extends Activity {
 
         public boolean activityStarting(Intent intent, String pkg) {
             try {
-                ActivityManagerNative.getDefault().setActivityController(null, false);
+                ActivityManager.getService().setActivityController(null, false);
             } catch (RemoteException e) {
                 Log.e(TAG, "Can't call IActivityManager.setActivityController", e);
             }
@@ -241,7 +241,7 @@ public class BadBehaviorActivity extends Activity {
                 Intent intent = new Intent(BadBehaviorActivity.this, BadBehaviorActivity.class);
                 Log.i(TAG, "ANR system pressed -- about to engage");
                 try {
-                    ActivityManagerNative.getDefault().setActivityController(
+                    ActivityManager.getService().setActivityController(
                         new BadController(20000), false);
                 } catch (RemoteException e) {
                     Log.e(TAG, "Can't call IActivityManager.setActivityController", e);
@@ -256,7 +256,7 @@ public class BadBehaviorActivity extends Activity {
                 Intent intent = new Intent(BadBehaviorActivity.this, BadBehaviorActivity.class);
                 Log.i(TAG, "Wedge system pressed -- about to engage");
                 try {
-                    ActivityManagerNative.getDefault().setActivityController(
+                    ActivityManager.getService().setActivityController(
                         new BadController(300000), false);
                 } catch (RemoteException e) {
                     Log.e(TAG, "Can't call IActivityManager.setActivityController", e);

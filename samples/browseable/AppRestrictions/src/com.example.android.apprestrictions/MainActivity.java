@@ -120,12 +120,10 @@ public class MainActivity extends Activity {
      *
      * This flag is used by {@code GetRestrictionsReceiver} to determine if a custom app
      * restriction activity should be used.
-     *
-     * @param view
      */
     public void onCustomClicked(View view) {
         final SharedPreferences.Editor editor =
                 PreferenceManager.getDefaultSharedPreferences(this).edit();
-        editor.putBoolean(CUSTOM_CONFIG_KEY, mCustomConfig.isChecked()).commit();
+        editor.putBoolean(CUSTOM_CONFIG_KEY, mCustomConfig.isChecked()).apply();
     }
 }
