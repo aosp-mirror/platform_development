@@ -59,7 +59,7 @@ public class MonkeyFlipEvent extends MonkeyEvent {
     @Override
     public int injectEvent(IWindowManager iwm, IActivityManager iam, int verbose) {
         if (verbose > 0) {
-            System.out.println(":Sending Flip keyboardOpen=" + mKeyboardOpen);
+            Logger.out.println(":Sending Flip keyboardOpen=" + mKeyboardOpen);
         }
 
         // inject flip event
@@ -69,7 +69,7 @@ public class MonkeyFlipEvent extends MonkeyEvent {
             f.close();
             return MonkeyEvent.INJECT_SUCCESS;
         } catch (IOException e) {
-            System.out.println("Got IOException performing flip" + e);
+            Logger.out.println("Got IOException performing flip" + e);
             return MonkeyEvent.INJECT_FAIL;
         }
     }

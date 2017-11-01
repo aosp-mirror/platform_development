@@ -1,0 +1,9 @@
+Description:
+This project is used to build a lint library to detect the hardcoded
+colors. One example of hardcoded color is:
+
+  <color name="hardcoded_color">#FFFFFF</color>
+
+Project lives in prebuilts/checkcolor will use this lib and hook up
+to presubmit, so it could detects whether hardcoded colors have been
+added in a CL.

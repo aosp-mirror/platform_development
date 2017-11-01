@@ -29,6 +29,17 @@
                 <category android:name="android.intent.category.HOME" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="PinShortcutConfirm"
+            android:theme="@android:style/Theme.Material.Dialog"
+            android:noHistory="true"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            >
+            <intent-filter>
+                <action android:name="android.content.pm.action.CONFIRM_PIN_SHORTCUT" />
+            </intent-filter>
+        </activity>
         <activity android:name="PackageShortcutActivity"
             android:theme="@android:style/Theme.Holo.Light.Dialog">
         </activity>

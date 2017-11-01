@@ -17,7 +17,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.android.shortcutsample">
 
-    <uses-sdk android:minSdkVersion="25" />
+    <uses-sdk android:minSdkVersion="25" android:targetSdkVersion="26" />
 
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -32,11 +32,21 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.CREATE_SHORTCUT" />
+            </intent-filter>
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts"/>
         </activity>
-        <receiver android:name="MyReceiver">
+        <receiver android:name="MyReceiver"
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.LOCALE_CHANGED" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
     </application>

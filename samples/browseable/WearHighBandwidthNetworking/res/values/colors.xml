@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright 2016 Google Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<resources>
+    <!-- Colors for primary UI elements -->
+    <item name="primary" type="color">@color/indigo</item>
+    <item name="primary_dark" type="color">@color/indigo_40b</item>
+    <item name="primary_accent" type="color">@color/indigo_100b</item>
+    <item name="window_background" type="color">@color/indigo_15b</item>
+
+    <item name="text_primary" type="color">#CCBBBBBB</item>
+    <item name="text_dark" type="color">#CC000000</item>
+
+    <item name="white_80a" type="color">#CCFFFFFF</item>
+    <item name="white_70a" type="color">#B3FFFFFF</item>
+    <item name="white_60a" type="color">#99FFFFFF</item>
+    <item name="white_50a" type="color">#80FFFFFF</item>
+
+    <!-- Material Design Indigo 500 palette for wearables -->
+    <item name="indigo" type="color">#FF3F51B5</item>
+    <item name="indigo_100b" type="color">#FF8093FF</item>
+    <item name="indigo_65b" type="color">#FF3A4AA6</item>
+    <item name="indigo_40b" type="color">#FF242E66</item>
+    <item name="indigo_30b" type="color">#FF000B4D</item>
+    <item name="indigo_15b" type="color">#FF000626</item>
+
+    <!-- Alert overlay colors -->
+    <item name="connectivity_indicator_text" type="color">#9d9d9d</item>
+    <item name="connectivity_indicator_bg" type="color">#434343</item>
+</resources>

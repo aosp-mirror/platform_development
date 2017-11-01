@@ -99,13 +99,13 @@ public abstract class MonkeyUtils {
             if (mValidPackages.size() > 0) {
                 Iterator<String> it = mValidPackages.iterator();
                 while (it.hasNext()) {
-                    System.out.println(":AllowPackage: " + it.next());
+                    Logger.out.println(":AllowPackage: " + it.next());
                 }
             }
             if (mInvalidPackages.size() > 0) {
                 Iterator<String> it = mInvalidPackages.iterator();
                 while (it.hasNext()) {
-                    System.out.println(":DisallowPackage: " + it.next());
+                    Logger.out.println(":DisallowPackage: " + it.next());
                 }
             }
         }

@@ -20,6 +20,7 @@ import android.app.Activity;
 import android.app.admin.DevicePolicyManager;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -85,9 +86,16 @@ public class StatusFragment extends Fragment implements View.OnClickListener {
     private void updateUi(Activity activity) {
         PackageManager packageManager = activity.getPackageManager();
         try {
+            int packageFlags;
+            if (Build.VERSION.SDK_INT < 24) {
+                //noinspection deprecation
+                packageFlags = PackageManager.GET_UNINSTALLED_PACKAGES;
+            } else {
+                packageFlags = PackageManager.MATCH_UNINSTALLED_PACKAGES;
+            }
             ApplicationInfo info = packageManager.getApplicationInfo(
                     Constants.PACKAGE_NAME_APP_RESTRICTION_SCHEMA,
-                    PackageManager.GET_UNINSTALLED_PACKAGES);
+                    packageFlags);
             DevicePolicyManager devicePolicyManager =
                     (DevicePolicyManager) activity.getSystemService(Activity.DEVICE_POLICY_SERVICE);
             if ((info.flags & ApplicationInfo.FLAG_INSTALLED) != 0) {

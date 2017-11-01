@@ -1,0 +1,618 @@
+<html>
+<head>
+
+<title>ANR</title>
+
+<style>
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  display: flex;
+  flex-direction: column;
+  background-color: #eee;
+}
+
+.TopNav {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+}
+
+h1 {
+  font-size: 18pt;
+  margin: 0;
+  padding: 8px 16px 8px 16px;
+  flex: 1 1 auto;
+}
+
+h2 {
+  font-family: sans-serif;
+}
+
+a:link.
+a:visited {
+  color: #008;
+}
+
+a:hover {
+  color: #004;
+}
+
+a:active {
+  color: #00e;
+}
+
+.TopRightNav {
+  flex: 0 0 auto;
+  font-size: 10pt;
+  align-items: baseline;
+}
+
+.TopRightNav:last-child {
+  padding-right: 16px;
+}
+
+.TopRightNav input {
+  margin-left: 12px;
+}
+
+.Page {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: row;
+}
+
+ul.LeftNav {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: scroll;
+}
+
+.LeftNavSection ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.LeftNav li {
+  padding: 4px 16px 4px 16px;
+  font-size: 10pt;
+}
+
+.LeftNavPid {
+  font-size: 9pt;
+  color: #555;
+}
+
+.Content {
+  flex: 1 1 auto;
+  background-color: #fff;
+  overflow: scroll;
+}
+
+table.TriageInfo {
+  font-size: inherit;
+  padding-left: 12px;
+  margin: 0;
+}
+
+table.TriageInfo th {
+  white-space: nowrap;
+  padding: 2px 8px 2px 0;
+}
+
+table.TriageInfo th,
+table.TriageInfo td {
+  text-align: left;
+  vertical-align: top;
+}
+
+.Explanation {
+  font-size: 9pt;
+  font-family: sans-serif;
+  font-weight: normal;
+  color: #999;
+}
+
+.TriageHeader h2 {
+  margin: 8px 0 8px 0;
+  padding-left: 12px;
+}
+
+.Panel {
+  display: none;
+  padding: 24px;
+  font-family: monospace;
+  font-size: 10pt;
+}
+
+.Panel table {
+  font-size: 10pt;
+}
+
+.Panel > h2 {
+  box-shadow: 3px 3px 15px #888;
+  padding: 8px 8px 8px 20px;
+  margin-top: 40px;
+}
+
+.Panel > h2:first-child {
+  margin: 0 0 16px 0;
+}
+
+.Process,
+.TriageHeader {
+  box-shadow: 3px 3px 15px #888;
+  padding: 8px;
+  margin-bottom: 24px;
+}
+
+.ProcessCmdLine,
+.ProcessInfo {
+  margin-left: 12px;
+}
+
+.Thread {
+  margin: 16px 0 0 12px;
+  padding-left: 10px;
+}
+
+.ThreadBlocked {
+  border-left: 2px solid red;
+  padding-left: 8px;
+}
+
+.ThreadBinder {
+  border-left: 2px solid green;
+  padding-left: 8px;
+}
+
+.ThreadInteresting {
+  border-left: 2px solid blue;
+  padding-left: 8px;
+}
+
+.ThreadName {
+  font-weight: bold;
+}
+
+.ThreadTid {
+  font-weight: normal;
+  color: #999;
+}
+
+.ThreadInfo {
+  margin: 4px 0 0 2px;
+  color: #999;
+}
+
+.ThreadExtras {
+}
+
+.Extra {
+  display: none;
+}
+
+.ThreadStack {
+  margin-top: 4px;
+}
+
+.ThreadStack td {
+  padding: 0;
+  vertical-align: top;
+}
+
+.ThreadStack td.FrameType {
+  padding: 0 8px 0 0;
+}
+
+.FrameLock {
+  margin: 2px 0 1px 16px;
+  font:size: 9pt;
+}
+
+.NativeFrame {
+  display: none;
+}
+
+.FrameUnimportant {
+  color: #999;
+}
+
+.FrameImportant {
+  color: black;
+}
+
+.LogcatLines {
+}
+
+.LogcatLine {
+  font-size: 9pt;
+  vertical-align: top;
+  display: flex;
+}
+
+.LogcatBufferBegin {
+  flex: 0 0 auto;
+  white-space: pre;
+  margin-left: 8px;
+  font-style: italic;
+}
+
+.LogcatHeader {
+  flex: 0 0 auto;
+  white-space: pre;
+  margin-left: 8px;
+}
+
+.LogcatTag {
+}
+
+.LogcatText {
+  color: #444;
+}
+
+.LogcatData {
+  flex: 1 1 auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.LogLevelE .LogcatHeader,
+.LogLevelE .LogcatTag,
+.LogLevelE .LogcatText {
+  color: #800;
+}
+
+.LogcatMarkerSpacer {
+  flex: 0 0 2px;
+}
+
+.LogcatMarkerAnr {
+  flex: 0 0 2px;
+  background-color: #00f;
+}
+
+.LogcatMarkerBugreport {
+  flex: 0 0 2px;
+  background-color: #000;
+}
+
+.InterestingLogcatLineInfo {
+}
+
+
+</style>
+
+<script type="text/javascript">
+/**
+ * Navigate to the panel with the id _panel_id_.
+ */
+var currentPanel = null;
+function nav(panel_id) {
+  if (currentPanel != null) {
+    currentPanel.style.display = "none";
+  }
+  currentPanel = document.getElementById(panel_id);
+  currentPanel.style.display = "block";
+  window.setTimeout(function() {
+    currentPanel.focus();
+  }, 0);
+  
+  currentPanel.focus();
+}
+
+/**
+ * Toggle the display of the native java stack frames.
+ */
+function show_native() {
+  var checkbox = document.getElementById("checkbox_show_native");
+  var display = checkbox.checked ? "table-row" : "none";
+  replaceCssStyleRule(".NativeFrame", "display: " + display + ";");
+}
+
+/**
+ * Toggle the display of extras.
+ */
+function extras() {
+  var checkbox = document.getElementById("checkbox_extras");
+  var display = checkbox.checked ? "block" : "none";
+  replaceCssStyleRule(".Extra", "display: " + display + ";");
+}
+
+/**
+ * Get a CSS Style rule for the given selector.
+ */
+function replaceCssStyleRule(selector, text) {
+  var stylesheet = document.styleSheets[0];
+  for (var i=0; i<stylesheet.cssRules.length; i++) {
+    if (stylesheet.cssRules[i].selectorText == selector) {
+      stylesheet.deleteRule(i);
+      break;
+    }
+  }
+  stylesheet.insertRule(selector + " { " + text + " }", i);
+}
+
+/**
+ * In the log panel, scroll to the log line with the given lineno.
+ */
+function scroll_to_log_line(lineno) {
+  var id = "logcat_line_" + lineno;
+  var element = document.getElementById(id);
+  if (element != null) {
+    element.scrollIntoView();
+  }
+}
+
+</script>
+
+<?cs def:render_tids(tid, sysTid) ?><?cs
+  if:tid >= 0 ?>tid=<?cs var:tid ?><?cs /if
+  ?><?cs if:sysTid >= 0 ?><?cs if:tid >= 0 ?> <?cs /if ?>sysTid=<?cs var:sysTid ?><?cs /if
+?><?cs /def ?>
+
+<?cs def:render_thread(thread) ?>
+  <div class="Thread <?cs if:thread.blocked
+        ?>ThreadBlocked<?cs
+      elif:thread.binder
+        ?>ThreadBinder<?cs
+      elif:thread.interesting
+        ?>ThreadInteresting<?cs
+      /if ?>">
+    <!-- binder=<?cs var:thread.binder ?> -->
+    <div class="ThreadName"><?cs var:thread.name ?> <span class="ThreadTid">(<?cs call:render_tids(thread.tid, thread.sysTid) ?>)</span></div>
+    <div class="ThreadInfo">
+      <?cs if:thread.runnable ?>
+        <div>Runnable</div>
+      <?cs /if ?>
+      <?cs if:thread.outboundBinderCall ?>
+        <div>Outbound binder call: <?cs var:thread.outboundBinderCall ?></div>
+      <?cs /if ?>
+      <?cs if:thread.inboundBinderCall ?>
+        <div>Inbound binder call: <?cs var:thread.inboundBinderCall ?></div>
+      <?cs /if ?>
+      <?cs if:thread.heldMutexes ?>
+        <div class="ThreadHeldMutexes">Held mutexes: <?cs var:thread.heldMutexes ?></div>
+      <?cs /if ?>
+      <div class="ThreadExtras Extra">
+        VM State: <?cs var:thread.vmState ?><br>
+        Priority: <?cs var:thread.priority ?><br>
+        <?cs if:thread.daemon ?><?cs var:thread.daemon ?><br><?cs /if ?>
+        <?cs each:attr = thread.attributes ?>
+          <?cs var:attr ?><br>
+        <?cs /each ?>
+      </div>
+    </div>
+    <table class="ThreadStack">
+      <?cs each:frame = thread.frames ?>
+        <tr class="<?cs if: frame.frameType == 'native' || frame.frameType == 'kernel' ?>NativeFrame<?cs /if ?>">
+        <?cs if:frame.frameType == "native" ?>
+          <td class="FrameType"><span class="FrameUnimportant">native</span></td>
+          <td><span class="FrameImportant"><?cs var:frame.symbol ?></span><span class="FrameUnimportant"><?cs if:frame.offset >= 0 ?>+<?cs var:frame.offset ?><?cs /if ?> <?cs var:frame.library ?></span></td>
+        <?cs elif:frame.frameType == "kernel" ?>
+          <td class="FrameType"><span class="FrameUnimportant">kernel</span></td>
+          <td><span class="FrameImportant"><?cs var:frame.syscall ?></span><span class="FrameUnimportant">+<?cs var:frame.offset0 ?> / <?cs var: frame.offset1 ?></span></td>
+        <?cs elif:frame.frameType == "java" ?>
+          <td class="FrameType"><span class="FrameUnimportant"><?cs var:frame.language ?></span></td>
+          <td><span class="FrameImportant"><?cs if:frame.packageName ?><?cs
+            var:frame.packageName ?>.<?cs /if ?><?cs var:frame.className ?>.<?cs
+            var:frame.methodName ?></span>
+            <?cs if:frame.sourceFile ?><span class="FrameUnimportant"><?cs var:frame.sourceFile
+              ?><?cs if:frame.sourceLine ?>:<?cs var:frame.sourceLine ?><?cs /if
+            ?></span><?cs /if ?>
+            <?cs each:lock = frame.locks ?>
+              <div class="FrameLock"><span class="FrameUnimportant"><?cs var:lock.type ?>
+                <?cs if:lock.className ?>on a
+                  <?cs if:lock.packageName ?><?cs var:lock.packageName ?>.<?cs /if ?><?cs var:lock.className ?> (0x<?cs var:lock.address ?>)
+                  <?cs if:lock.threadId >= 0 ?>held by thread
+                    <?cs if:lock.threadName ?>
+                      "<?cs var:lock.threadName ?>" (<?cs call:render_tids(lock.threadId, lock.threadSysTid) ?>)
+                    <?cs else ?>
+                      tid <?cs var:lock.threadId ?>
+                    <?cs /if ?>
+                  <?cs /if ?>
+                <?cs else ?>
+                  on an unknown object
+                <?cs /if ?></span>
+            <?cs /each ?>
+            </td>
+        <?cs else ?>
+          <td class="FrameType"></td>
+          <td><span class="FrameUnimportant"><?cs var:frame.text ?></span></td>
+        <?cs /if ?>
+        </tr>
+      <?cs /each ?>
+    </table>
+  </div>
+<?cs /def ?>
+
+<?cs def:render_process(process) ?>
+  <div class="Process">
+    <div class="ProcessCmdLine"><b>Process:</b> <?cs var: process.cmdLine ?></div>
+    <div class="ProcessInfo">
+      <b>PID:</b> <?cs var: process.pid ?><br>
+      <div class="Extra">
+        <b>Timestamp:</b> <?cs var: process.date ?><br>
+      </div>
+    </div>
+
+    <?cs each:thread = process.threads ?>
+      <?cs call:render_thread(thread) ?>
+    <?cs /each ?>
+  </div>
+<?cs /def ?>
+
+</head>
+
+<body onload="nav('panel_triage')">
+<div class="TopNav">
+  <h1>ANR</h1>
+  <div class="TopRightNav">
+    <input type="checkbox" id="checkbox_show_native" onclick="javascript:show_native()">
+    <label for="checkbox_show_native">native</label>
+
+    <input type="checkbox" id="checkbox_extras" onclick="javascript:extras()">
+    <label for="checkbox_extras">extras</label>
+  </div>
+</div>
+
+<div class="Page">
+
+<ul class="LeftNav">
+  <li><a href="javascript:nav('panel_triage');">Triage</a></li>
+  <li><a href="javascript:nav('panel_logcat');">Logcat</a></li>
+<!--  <li><a href="javascript:nav('panel_cpu_info');">CPU Info</a></li> -->
+  <?cs if:subcount(monkey.processes) > 0 ?>
+    <li class="LeftNavSection">
+      Monkey ANR Stack Traces
+      <ul>
+        <?cs each:process = monkey.processes ?>
+          <li><a href="javascript:nav('panel_<?cs var:process.panelId ?>');"><?cs var:process.cmdLine ?></a> <span class="LeftNavPid">(pid <?cs var:process.pid ?>)</span></li>
+        <?cs /each ?>
+      </ul>
+    </li>
+  <?cs /if ?>
+  <?cs if:subcount(vmTracesLastAnr.processes) > 0 ?>
+    <li class="LeftNavSection">
+      Last ANR Stack Traces
+      <ul>
+        <?cs each:process = vmTracesLastAnr.processes ?>
+          <li><a href="javascript:nav('panel_<?cs var:process.panelId ?>');"><?cs var:process.cmdLine ?></a> <span class="LeftNavPid">(pid <?cs var:process.pid ?>)</span></li>
+        <?cs /each ?>
+      </ul>
+    </li>
+  <?cs /if ?>
+  <?cs if:subcount(vmTracesJustNow.processes) > 0 ?>
+    <li class="LeftNavSection">
+      Stack Traces Just Now
+      <ul>
+        <?cs each:process = vmTracesJustNow.processes ?>
+          <li><a href="javascript:nav('panel_<?cs var:process.panelId ?>');"><?cs var:process.cmdLine ?></a> <span class="LeftNavPid">(pid <?cs var:process.pid ?>)</span></li>
+        <?cs /each ?>
+      </ul>
+    </li>
+  <?cs /if ?>
+</ul> <!-- class="LeftNav" -->
+
+<div class="Content">
+
+<div class="Panel" id="panel_triage" style="display: block;">
+  <h2>ANR Triage</h2>
+  <div class="TriageHeader">
+    <table class="TriageInfo">
+    <tr><th>Process Name: </th><td><?cs var: triage.processName ?></tr>
+    <tr><th>PID:</th><td><?cs var:triage.pid ?></td></tr>
+    <tr><th>Active Component:</th><td><?cs var: triage.componentPackage ?>/<?cs var:triage.componentClass ?></tr>
+    <tr><th>Reason:</th><td><?cs var:triage.reason ?></td></tr>
+    </table>
+    <?cs call:render_thread(triage.mainThread) ?>
+  </div>
+
+  <?cs if:subcount(triage.deadlockedProcesses) > 0 ?>
+    <h2>Deadlocked Threads
+    <div class="Explanation">
+      Deadlocked threads are blocked on each other, either via a set of java object locks
+      or binder calls.
+    </div>
+    </h2>
+
+    <?cs each:process = triage.deadlockedProcesses ?>
+      <?cs call:render_process(process) ?>
+    <?cs /each ?>
+  <?cs /if ?>
+
+  <?cs if:subcount(triage.interestingProcesses) > 0 ?>
+    <h2>Active Processes &amp; Threads
+    <div class="Explanation">
+      "Active" processes are processes that have or one or more
+      threads that are runnable, not blocked in an event loop or thread pool, with a
+      certain set of VM threads excluded as well.
+    </div>
+    </h2>
+
+    <?cs each:process = triage.interestingProcesses ?>
+      <?cs call:render_process(process) ?>
+    <?cs /each ?>
+  <?cs /if ?>
+
+</div>
+
+<div class="Panel" id="panel_logcat">
+  <div class="Logcat">
+    <h2>Interesting Log Lines</h2>
+    <?cs if:subcount(logcat.interesting) ?>
+      <div class="InterestingLogcatLines">
+        <?cs each:line = logcat.interesting ?>
+          <div class="InterestingLogcatLine">
+            <a href="javascript:scroll_to_log_line(<?cs var:line.lineno ?>)">
+              <div class="LogcatLine">
+                <?cs if:line.bufferBegin ?>
+                  <div class="LogcatBufferBegin"><?cs var:line.rawText ?></div>
+                <?cs else ?>
+                  <div class="LogcatHeader"><?cs var:line.header ?></div>
+                  <div class="LogcatData"><?cs var:line.tag ?>: <?cs var:line.text ?></span></div>
+                <?cs /if ?>
+              </div>
+            </a>
+          </div>
+        <?cs /each ?>
+      </div>
+    <?cs /if ?>
+    <h2>Logcat</h2>
+
+    <div class="LogcatLines">
+        <?cs each:line = logcat.lines ?>
+          <div class="LogcatLine LogLevel<?cs var:line.level ?>"
+              id="logcat_line_<?cs var:line.lineno ?>">
+            <div class="<?cs if:line.regionAnr ?>LogcatMarkerAnr<?cs else ?>LogcatMarkerSpacer<?cs /if ?>"></div>
+            <div class="<?cs if:line.regionBugreport ?>LogcatMarkerBugreport<?cs else ?>LogcatMarkerSpacer<?cs /if ?>"></div>
+            <?cs if:line.bufferBegin ?>
+              <div class="LogcatBufferBegin"><?cs var:line.rawText ?></div>
+            <?cs else ?>
+              <div class="LogcatHeader"
+                <?cs if:line.title ?>title="<?cs var:line.title ?>" <?cs /if ?>
+                ><?cs var:line.header ?></div>
+              <div class="LogcatData"><span class="LogcatTag"><?cs var:line.tag ?></span><span class="LogcatText">: <?cs var:line.text ?></span></div>
+            <?cs /if ?>
+          </div>
+        <?cs /each ?>
+    </div>
+  </div>
+</div>
+
+<div class="Panel" id="panel_cpu_info">
+CPU Info
+</div>
+
+<?cs each:process = monkey.processes ?>
+  <div class="Panel" id="panel_<?cs var:process.panelId ?>">
+    <?cs call:render_process(process) ?>
+  </div> <!-- Panel -->
+<?cs /each ?>
+
+<?cs each:process = vmTracesLastAnr.processes ?>
+  <div class="Panel" id="panel_<?cs var:process.panelId ?>">
+    <?cs call:render_process(process) ?>
+  </div> <!-- Panel -->
+<?cs /each ?>
+
+<?cs each:process = vmTracesJustNow.processes ?>
+  <div class="Panel" id="panel_<?cs var:process.panelId ?>">
+    <?cs call:render_process(process) ?>
+  </div> <!-- Panel -->
+<?cs /each ?>
+
+
+</div> <!-- class="Content" -->
+
+</div> <!-- class="Page" -->
+</body>
+</html>
+
+<!-- vim: set ts=2 sw=2 sts=2 nocindent: -->

@@ -42,6 +42,15 @@
         />
     </LinearLayout>
     <Button
+        android:id="@+id/request_pin"
+        android:text="@string/request_pin_shortcut"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:visibility="visible"
+        style="@android:style/Widget.Material.Button.Borderless"/>
+    <Button
         android:id="@+id/remove"
         android:text="@string/remove_shortcut"
         android:layout_width="wrap_content"

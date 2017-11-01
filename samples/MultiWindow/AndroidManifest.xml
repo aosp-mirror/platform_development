@@ -17,6 +17,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.android.multiwindow">
     <application android:label="Multi Window">
+        <activity android:name=".CaptionOverlayActivity"
+                android:label="Caption Overlay"
+                android:resizeableActivity="true"
+                android:theme="@android:style/Theme.Holo.Light">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
         <activity android:name=".LaunchingAdjacentActivity"
             android:label="Launch Adjacent">
             <intent-filter>

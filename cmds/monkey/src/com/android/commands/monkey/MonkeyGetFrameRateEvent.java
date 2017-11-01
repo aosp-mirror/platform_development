@@ -114,7 +114,7 @@ public class MonkeyGetFrameRateEvent extends MonkeyEvent {
             p = Runtime.getRuntime().exec(GET_FRAMERATE_CMD);
             int status = p.waitFor();
             if (status != 0) {
-                System.err.println(String.format("// Shell command %s status was %s",
+                Logger.err.println(String.format("// Shell command %s status was %s",
                         GET_FRAMERATE_CMD, status));
             }
             result = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -135,8 +135,8 @@ public class MonkeyGetFrameRateEvent extends MonkeyEvent {
                 }
             }
         } catch (Exception e) {
-            System.err.println("// Exception from " + GET_FRAMERATE_CMD + ":");
-            System.err.println(e.toString());
+            Logger.err.println("// Exception from " + GET_FRAMERATE_CMD + ":");
+            Logger.err.println(e.toString());
         } finally {
             try {
                 if (result != null) {
@@ -146,7 +146,7 @@ public class MonkeyGetFrameRateEvent extends MonkeyEvent {
                     p.destroy();
                 }
             } catch (IOException e) {
-                System.err.println(e.toString());
+                Logger.err.println(e.toString());
             }
         }
         return MonkeyEvent.INJECT_SUCCESS;

@@ -34,12 +34,12 @@ public class MonkeyWaitEvent extends MonkeyEvent {
     @Override
     public int injectEvent(IWindowManager iwm, IActivityManager iam, int verbose) {
         if (verbose > 1) {
-            System.out.println("Wait Event for " + mWaitTime + " milliseconds");
+            Logger.out.println("Wait Event for " + mWaitTime + " milliseconds");
         }
         try {
             Thread.sleep(mWaitTime);
         } catch (InterruptedException e1) {
-            System.out.println("** Monkey interrupted in sleep.");
+            Logger.out.println("** Monkey interrupted in sleep.");
             return MonkeyEvent.INJECT_FAIL;
         }
 

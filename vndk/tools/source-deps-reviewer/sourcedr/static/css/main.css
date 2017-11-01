@@ -1,0 +1,26 @@
+h3, h4 {
+    display: inline-block;
+}
+
+pre {
+    white-space: pre-wrap;       /* Since CSS 2.1 */
+    white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+    white-space: -pre-wrap;      /* Opera 4-6 */
+    white-space: -o-pre-wrap;    /* Opera 7 */
+    word-wrap: break-word;       /* Internet Explorer 5.5+ */
+    background-color: #ffffff;
+    margin: 0;
+}
+
+@media (min-width: 768px) {
+    .modal-xl {
+        width: 90%;
+        max-width:1200px;
+    }
+}
+
+.affix {
+  top:50px;
+  right:0;
+  position:fixed;
+}

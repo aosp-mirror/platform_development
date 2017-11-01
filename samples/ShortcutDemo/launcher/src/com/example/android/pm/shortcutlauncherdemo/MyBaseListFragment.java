@@ -33,6 +33,7 @@ import android.util.ArrayMap;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.util.Arrays;
 import java.util.List;
 
 public abstract class MyBaseListFragment extends ListFragment {
@@ -122,33 +123,41 @@ public abstract class MyBaseListFragment extends ListFragment {
     private final LauncherApps.Callback mLauncherCallback = new LauncherApps.Callback() {
         @Override
         public void onPackageRemoved(String packageName, UserHandle user) {
+            Log.i(Global.TAG, "onPackageRemoved: package=" + packageName + " on " + user);
             refreshList();
         }
 
         @Override
         public void onPackageAdded(String packageName, UserHandle user) {
+            Log.i(Global.TAG, "onPackageAdded: package=" + packageName + " on " + user);
             refreshList();
         }
 
         @Override
         public void onPackageChanged(String packageName, UserHandle user) {
+            Log.i(Global.TAG, "onPackageChanged: package=" + packageName + " on " + user);
             refreshList();
         }
 
         @Override
         public void onPackagesAvailable(String[] packageNames, UserHandle user, boolean replacing) {
+            Log.i(Global.TAG, "onPackagesAvailable: package=" + Arrays.asList(packageNames)
+                    + " on " + user);
             refreshList();
         }
 
         @Override
         public void onPackagesUnavailable(String[] packageNames, UserHandle user,
                 boolean replacing) {
+            Log.i(Global.TAG, "onPackagesUnavailable: package=" + Arrays.asList(packageNames)
+                    + " on " + user);
             refreshList();
         }
 
         @Override
         public void onShortcutsChanged(String packageName,
                 List<ShortcutInfo> shortcuts, UserHandle user) {
+            Log.i(Global.TAG, "onShortcutsChanged: package=" + packageName + " on " + user);
             refreshList();
         }
     };

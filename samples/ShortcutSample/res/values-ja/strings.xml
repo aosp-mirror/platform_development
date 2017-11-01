@@ -22,4 +22,6 @@
     <string name="remove_shortcut">削除</string>
     <string name="disable_shortcut">無効</string>
     <string name="enable_shortcut">有効</string>
+    <string name="request_new_pin_shortcut">新規ピン要求</string>
+    <string name="request_pin_shortcut">ピン要求</string>
 </resources>

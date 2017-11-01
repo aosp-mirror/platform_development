@@ -1,0 +1,14 @@
+Description
+------------
+privapp_permissions.py - command-line tool for generating
+a list of signature|privileged permissions that are requested by
+privileged apps.
+
+Used for generating an initial version of privapp-permissions.xml file
+
+Usage
+------------
+. build/envsetup.sh
+lunch product_combo
+m -j32
+development/tools/privapp_permissions/privapp_permissions.py

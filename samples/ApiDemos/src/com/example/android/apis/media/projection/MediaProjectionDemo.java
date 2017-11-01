@@ -88,6 +88,13 @@ public class MediaProjectionDemo extends Activity {
         s.setSelection(0);
 
         mToggle = (ToggleButton) findViewById(R.id.screen_sharing_toggle);
+        mToggle.setSaveEnabled(false);
+    }
+
+    @Override
+    protected void onStop() {
+        stopScreenSharing();
+        super.onStop();
     }
 
     @Override
@@ -140,6 +147,7 @@ public class MediaProjectionDemo extends Activity {
         if (mToggle.isChecked()) {
             mToggle.setChecked(false);
         }
+
         mScreenSharing = false;
         if (mVirtualDisplay != null) {
             mVirtualDisplay.release();

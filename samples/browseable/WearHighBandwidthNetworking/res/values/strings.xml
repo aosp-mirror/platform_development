@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright 2016 Google Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<resources>
+    <string name="app_name">Wear High Bandwidth Networking</string>
+
+    <string name="network_fast">Network Fast</string>
+    <string name="network_slow">Network Slow</string>
+    <string name="network_disconnected">Disconnected</string>
+    <string name="network_connecting">Connecting</string>
+
+    <string name="info_request_network">To use this sample, ensure that you have removed saved Wi-Fi networks and the device is unplugged</string>
+    <string name="info_release_network">A high-bandwidth network is now available</string>
+    <string name="info_add_wifi">No high-bandwidth network is available. You must add a Wi-Fi network to continue</string>
+
+    <string name="button_request_network">Request High-bandwidth Network</string>
+    <string name="button_release_network">Release High-bandwidth Network</string>
+    <string name="button_add_wifi">Add Wi-Fi Network</string>
+</resources>

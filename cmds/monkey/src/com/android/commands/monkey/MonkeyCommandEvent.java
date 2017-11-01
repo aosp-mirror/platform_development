@@ -40,10 +40,10 @@ public class MonkeyCommandEvent extends MonkeyEvent {
             try {
                 java.lang.Process p = Runtime.getRuntime().exec(mCmd);
                 int status = p.waitFor();
-                System.err.println("// Shell command " + mCmd + " status was " + status);
+                Logger.err.println("// Shell command " + mCmd + " status was " + status);
             } catch (Exception e) {
-                System.err.println("// Exception from " + mCmd + ":");
-                System.err.println(e.toString());
+                Logger.err.println("// Exception from " + mCmd + ":");
+                Logger.err.println(e.toString());
             }
         }
         return MonkeyEvent.INJECT_SUCCESS;

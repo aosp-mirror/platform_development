@@ -129,7 +129,7 @@ public class MonkeyPermissionUtil {
                     continue;
                 }
                 for (String perm : info.requestedPermissions) {
-                    PermissionInfo pi = mPm.getPermissionInfo(perm, 0);
+                    PermissionInfo pi = mPm.getPermissionInfo(perm, "shell", 0);
                     if (pi != null && shouldTargetPermission(info.packageName, pi)) {
                         permissions.add(pi);
                     }
@@ -139,7 +139,7 @@ public class MonkeyPermissionUtil {
                 }
             }
         } catch (RemoteException re) {
-            System.err.println("** Failed talking with package manager!");
+            Logger.err.println("** Failed talking with package manager!");
             return false;
         }
         if (!mPermissionMap.isEmpty()) {
@@ -149,9 +149,9 @@ public class MonkeyPermissionUtil {
     }
 
     public void dump() {
-        System.out.println("// Targeted packages and permissions:");
+        Logger.out.println("// Targeted packages and permissions:");
         for (Map.Entry<String, List<PermissionInfo>> e : mPermissionMap.entrySet()) {
-            System.out.println(String.format("//  + Using %s", e.getKey()));
+            Logger.out.println(String.format("//  + Using %s", e.getKey()));
             for (PermissionInfo pi : e.getValue()) {
                 String name = pi.name;
                 if (name != null) {
@@ -165,7 +165,7 @@ public class MonkeyPermissionUtil {
                         group = group.substring(PERMISSION_GROUP_PREFIX.length());
                     }
                 }
-                System.out.println(String.format("//    Permission: %s [%s]", name, group));
+                Logger.out.println(String.format("//    Permission: %s [%s]", name, group));
             }
         }
     }

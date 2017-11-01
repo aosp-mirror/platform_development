@@ -1,0 +1,5 @@
+{
+  "libA": { "path": ["system/core/libA"],  "installed": ["out/target/product/generic_arm64/system/lib64/libA.so"] },
+  "libB": { "path": ["frameworks/base/libB"],  "installed": ["out/target/product/generic_arm64/system/lib64/libB.so"] },
+  "libC": { "path": ["frameworks/base/libC"],  "installed": ["out/target/product/generic_arm64/system/lib64/libC.so", "out/target/product/generic_arm64/system/lib64/hw/libC.so"] }
+}

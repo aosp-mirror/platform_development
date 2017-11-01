@@ -1,0 +1,6 @@
+{
+  "a.h:2:dlopen(\"libx.so\",": [
+     ["libx.so"],
+     ["a.h:2:dlopen(\"libx.so\","]
+  ]
+}

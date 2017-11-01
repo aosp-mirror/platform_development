@@ -29,6 +29,7 @@ import android.os.ServiceManager;
 import android.os.UserHandle;
 import android.view.accessibility.AccessibilityInteractionClient;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.view.accessibility.AccessibilityWindowInfo;
 
 import com.android.commands.monkey.MonkeySourceNetwork.CommandQueue;
 import com.android.commands.monkey.MonkeySourceNetwork.MonkeyCommand;
@@ -140,14 +141,14 @@ public class MonkeySourceNetworkViews {
         int connectionId = sUiTestAutomationBridge.getConnectionId();
         AccessibilityInteractionClient client = AccessibilityInteractionClient.getInstance();
         return client.findAccessibilityNodeInfoByAccessibilityId(connectionId, windowId, viewId,
-                false, 0);
+                false, 0, null);
     }
 
     private static AccessibilityNodeInfo getNodeByViewId(String viewId) throws MonkeyViewException {
         int connectionId = sUiTestAutomationBridge.getConnectionId();
         AccessibilityInteractionClient client = AccessibilityInteractionClient.getInstance();
         List<AccessibilityNodeInfo> infos = client.findAccessibilityNodeInfosByViewId(
-                connectionId, AccessibilityNodeInfo.ACTIVE_WINDOW_ID,
+                connectionId, AccessibilityWindowInfo.ACTIVE_WINDOW_ID,
                 AccessibilityNodeInfo.ROOT_NODE_ID, viewId);
         return (!infos.isEmpty()) ? infos.get(0) : null;
     }
@@ -261,7 +262,7 @@ public class MonkeySourceNetworkViews {
                 int connectionId = sUiTestAutomationBridge.getConnectionId();
                 List<AccessibilityNodeInfo> nodes = AccessibilityInteractionClient.getInstance()
                     .findAccessibilityNodeInfosByText(connectionId,
-                            AccessibilityNodeInfo.ACTIVE_WINDOW_ID,
+                            AccessibilityWindowInfo.ACTIVE_WINDOW_ID,
                             AccessibilityNodeInfo.ROOT_NODE_ID, text);
                 ViewIntrospectionCommand idGetter = new GetAccessibilityIds();
                 List<String> emptyArgs = new ArrayList<String>();

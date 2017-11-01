@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2016 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="0.5"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:tooltipText="@string/tooltips_container_tooltip">
+
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:textSize="20sp"
+                android:text="@string/tooltips_description" />
+
+        <TextView
+                android:id="@+id/tooltips_code"
+                android:background="#ccc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:padding="10dp"
+                android:textSize="16sp"
+                android:text="@string/tooltips_code_label" />
+
+        <TextView
+                android:background="#ccc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:padding="10dp"
+                android:textSize="16sp"
+                android:text="@string/tooltips_resource_label"
+                android:tooltipText="@string/tooltips_resource_tooltip" />
+
+        <TextView
+                android:background="#ccc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:padding="10dp"
+                android:textSize="16sp"
+                android:text="@string/tooltips_long_label"
+                android:tooltipText="@string/tooltips_long_tooltip" />
+
+        <TextView
+                android:background="#ccc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:layout_gravity="start|center_vertical"
+                android:padding="10dp"
+                android:textSize="16sp"
+                android:text="@string/tooltips_edge_label"
+                android:tooltipText="@string/tooltips_edge_tooltip" />
+
+        <View
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"/>
+
+        <TextView
+                android:background="#ccc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:padding="10dp"
+                android:textSize="16sp"
+                android:text="@string/tooltips_above_label"
+                android:tooltipText="@string/tooltips_above_tooltip" />
+    </LinearLayout>
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="0.5"
+            android:orientation="vertical">
+
+        <TextView
+                android:background="#ccc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:padding="10dp"
+                android:gravity="center"
+                android:textSize="16sp"
+                android:text="@string/tooltips_wide_label"
+                android:tooltipText="@string/tooltips_wide_tooltip" />
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+            <TextView
+                    android:background="#ccc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_margin="4dp"
+                    android:padding="10dp"
+                    android:gravity="center"
+                    android:textSize="16sp"
+                    android:text="@string/tooltips_tall_label"
+                    android:tooltipText="@string/tooltips_tall_tooltip" />
+
+            <TextView
+                    android:background="#ccc"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    android:padding="10dp"
+                    android:gravity="center"
+                    android:textSize="16sp"
+                    android:text="@string/tooltips_large_label"
+                    android:tooltipText="@string/tooltips_large_tooltip" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

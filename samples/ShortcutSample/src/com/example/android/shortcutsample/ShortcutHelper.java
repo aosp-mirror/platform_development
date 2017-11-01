@@ -25,6 +25,8 @@ import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.PersistableBundle;
+import android.support.v4.content.pm.ShortcutInfoCompat;
+import android.support.v4.content.pm.ShortcutManagerCompat;
 import android.util.Log;
 
 import java.io.BufferedInputStream;
@@ -83,24 +85,24 @@ public class ShortcutHelper {
     }
 
     /**
-     * Return all mutable shortcuts from this app self.
+     * Return all shortcuts from this app self.
      */
     public List<ShortcutInfo> getShortcuts() {
-        // Load mutable dynamic shortcuts and pinned shortcuts and put them into a single list
-        // removing duplicates.
-
         final List<ShortcutInfo> ret = new ArrayList<>();
         final HashSet<String> seenKeys = new HashSet<>();
 
-        // Check existing shortcuts shortcuts
+        for (ShortcutInfo shortcut : mShortcutManager.getManifestShortcuts()) {
+            ret.add(shortcut);
+            seenKeys.add(shortcut.getId());
+        }
         for (ShortcutInfo shortcut : mShortcutManager.getDynamicShortcuts()) {
-            if (!shortcut.isImmutable()) {
+            if (!seenKeys.contains(shortcut.getId())) {
                 ret.add(shortcut);
                 seenKeys.add(shortcut.getId());
             }
         }
         for (ShortcutInfo shortcut : mShortcutManager.getPinnedShortcuts()) {
-            if (!shortcut.isImmutable() && !seenKeys.contains(shortcut.getId())) {
+            if (!seenKeys.contains(shortcut.getId())) {
                 ret.add(shortcut);
                 seenKeys.add(shortcut.getId());
             }
@@ -156,8 +158,9 @@ public class ShortcutHelper {
         }.execute();
     }
 
-    private ShortcutInfo createShortcutForUrl(String urlAsString) {
+    public ShortcutInfo createShortcutForUrl(String urlAsString) {
         Log.i(TAG, "createShortcutForUrl: " + urlAsString);
+        urlAsString = normalizeUrl(urlAsString);
 
         final ShortcutInfo.Builder b = new ShortcutInfo.Builder(mContext, urlAsString);
 
@@ -201,12 +204,16 @@ public class ShortcutHelper {
         }
     }
 
-    public void addWebSiteShortcut(String urlAsString) {
-        final String uriFinal = urlAsString;
-        callShortcutManager(() -> {
-            final ShortcutInfo shortcut = createShortcutForUrl(normalizeUrl(uriFinal));
-            return mShortcutManager.addDynamicShortcuts(Arrays.asList(shortcut));
-        });
+    public void addWebSiteShortcut(String urlAsString, boolean forPin) {
+        final ShortcutInfo shortcut = createShortcutForUrl(urlAsString);
+
+        if (forPin) {
+            callShortcutManager(() -> mShortcutManager.requestPinShortcut(
+                    shortcut, MyReceiver.getPinRequestAcceptedIntent(mContext).getIntentSender()));
+        } else {
+            callShortcutManager(() ->
+                mShortcutManager.addDynamicShortcuts(Arrays.asList(shortcut)));
+        }
     }
 
     public void removeShortcut(ShortcutInfo shortcut) {
@@ -219,6 +226,12 @@ public class ShortcutHelper {
 
     public void enableShortcut(ShortcutInfo shortcut) {
         mShortcutManager.enableShortcuts(Arrays.asList(shortcut.getId()));
+    }
+
+    public void requestPinShortcut(String id) {
+        ShortcutManagerCompat.requestPinShortcut(mContext,
+                new ShortcutInfoCompat.Builder(mContext, id).build(),
+                MyReceiver.getPinRequestAcceptedIntent(mContext).getIntentSender());
     }
 
     private Bitmap fetchFavicon(Uri uri) {

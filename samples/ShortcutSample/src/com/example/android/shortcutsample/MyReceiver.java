@@ -15,13 +15,18 @@
  */
 package com.example.android.shortcutsample;
 
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
 public class MyReceiver extends BroadcastReceiver {
     private static final String TAG = Main.TAG;
+
+    private static final String ACTION_PIN_REQUEST_ACCEPTED =
+            "MyReceiver.ACTION_PIN_REQUEST_ACCEPTED";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -30,6 +35,16 @@ public class MyReceiver extends BroadcastReceiver {
             // Refresh all shortcut to update the labels.
             // (Right now shortcut labels don't contain localized strings though.)
             new ShortcutHelper(context).refreshShortcuts(/*force=*/ true);
+        } else if (ACTION_PIN_REQUEST_ACCEPTED.equals(intent.getAction())) {
+            Utils.showToast(context, "Pin request accepted.");
+            Main.refreshAllInstances();
         }
+    }
+
+    public static PendingIntent getPinRequestAcceptedIntent(Context context) {
+        final Intent intent = new Intent(ACTION_PIN_REQUEST_ACCEPTED);
+        intent.setComponent(new ComponentName(context, MyReceiver.class));
+
+        return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 }
