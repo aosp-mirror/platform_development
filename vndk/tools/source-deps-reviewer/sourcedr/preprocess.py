@@ -168,7 +168,6 @@ class CodeSearch(object):
         return cs
 
     def __init__(self, android_root, index_path):
-        android_root = os.path.expanduser(android_root)
         self.android_root = os.path.abspath(android_root)
         self.env = dict(os.environ)
         self.env["CSEARCHINDEX"] = os.path.abspath(index_path)
