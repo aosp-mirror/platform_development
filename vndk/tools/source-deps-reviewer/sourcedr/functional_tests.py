@@ -19,16 +19,22 @@ app.config['TESTING'] = True
 ANDROID_ROOT = 'sourcedr/test'
 
 
-class TestPreprocess(unittest.TestCase):
-    def test_prepare(self):
+class PreprocessTest(unittest.TestCase):
+    def tearDown(self):
         data_utils.remove_data()
+        try:
+            os.remove('csearchindex')
+        except IOError:
+            pass
+
+    def test_preprocess(self):
         engine = CodeSearch.create_default(android_root=ANDROID_ROOT)
         engine.build_index()
         engine.find(patterns=['dlopen'], is_regexs=[False])
         self.assertTrue(os.path.exists(data_utils.data_path))
 
 
-class TestViews(flask_testing.TestCase):
+class ViewTest(flask_testing.TestCase):
     def create_app(self):
         # TODO: This refers to `sourcedr.server.args`.  This should be removed
         # in the upcoming refactor process.
@@ -42,6 +48,10 @@ class TestViews(flask_testing.TestCase):
 
     def tearDown(self):
         data_utils.remove_data()
+        try:
+            os.remove('csearchindex')
+        except IOError:
+            pass
 
     def test_get_file(self):
         test_arg = 'example.c'
