@@ -6,12 +6,13 @@ import sourcedr.codesearch
 import re
 
 
-class CodeSearch(sourcedr.codesearch.CodeSearch):
-    @staticmethod
-    def create_default(android_root, index_path='csearchindex'):
-        cs = CodeSearch(android_root, index_path)
-        cs.add_default_filters()
-        return cs
+class ReviewDB(sourcedr.codesearch.CodeSearch):
+    def __init__(self, android_root, index_path):
+        self._cs = sourcedr.codesearch.CodeSearch(android_root, index_path)
+        self._cs.add_default_filters()
+
+    def build_index(self):
+        self._cs.build_index()
 
     # patterns and is_regexs are lists
     def find(self, patterns, is_regexs):
@@ -21,19 +22,19 @@ class CodeSearch(sourcedr.codesearch.CodeSearch):
         for pattern, is_regex in zip(patterns, is_regexs):
             if not is_regex:
                 pattern = re.escape(pattern)
-            raw_grep = self.raw_grep(pattern)
+            raw_grep = self._cs.raw_grep(pattern)
             if raw_grep == b'':
                 continue
-            processed += self.process_grep(raw_grep, pattern, is_regex)
+            processed += self._cs.process_grep(raw_grep, pattern, is_regex)
         self.to_json(processed)
 
     def add_pattern(self, pattern, is_regex):
         if not is_regex:
             pattern = re.escape(pattern)
-        raw_grep = self.raw_grep(pattern)
+        raw_grep = self._cs.raw_grep(pattern)
         if raw_grep == b'':
             return
-        processed = self.process_grep(raw_grep, pattern, is_regex)
+        processed = self._cs.process_grep(raw_grep, pattern, is_regex)
         self.add_to_json(processed)
 
     def to_json(self, processed):
@@ -64,11 +65,3 @@ class CodeSearch(sourcedr.codesearch.CodeSearch):
             data[line] = ([], [])
 
         save_data(data)
-
-if __name__ == '__main__':
-    # Initialize a codeSearch engine for the directory 'test'
-    engine = CodeSearch.create_default('sourcedr/test', 'csearchindex')
-    # Build the index file for the directory
-    engine.build_index()
-    # This sets up the search engine and save it to database
-    engine.find(patterns=['dlopen'], is_regexs=[False])

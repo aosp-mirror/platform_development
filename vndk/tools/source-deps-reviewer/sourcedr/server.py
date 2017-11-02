@@ -13,7 +13,7 @@ from flask import Flask, jsonify, render_template, request
 from sourcedr.data_utils import (
     data_exist, init_pattern, load_data, load_pattern, patterns_exist,
     save_data, save_new_pattern)
-from sourcedr.preprocess import CodeSearch
+from sourcedr.review_db import ReviewDB
 
 # for Python compatability
 if sys.version_info < (3,):
@@ -177,10 +177,10 @@ def main():
 
     global args, engine
     args = parser.parse_args()
-    # a CodeSearch engine must be initialized with the
+    # a ReviewDB engine must be initialized with the
     # root of the directory and the path of the csearch index file
-    engine = CodeSearch.create_default(args.android_root, args.index_path)
     args.android_root = os.path.expanduser(args.android_root)
+    engine = ReviewDB(args.android_root, args.index_path)
 
     print('Be careful that previous data files will merge with new data files.')
     print('Delete previous data files(data.json, patterns) if you want ' +

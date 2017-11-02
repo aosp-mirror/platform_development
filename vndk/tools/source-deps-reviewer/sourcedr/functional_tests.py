@@ -10,7 +10,7 @@ from sourcedr import data_utils
 from sourcedr.map import (
     load_build_dep_file_from_path, load_review_data,
     link_build_dep_and_review_data)
-from sourcedr.preprocess import CodeSearch
+from sourcedr.review_db import ReviewDB
 from sourcedr.server import app, args
 
 
@@ -18,17 +18,16 @@ app.config['TESTING'] = True
 
 ANDROID_ROOT = 'sourcedr/test'
 
+CSEARCH_INDEX_FILE = 'csearchindex'
 
-class PreprocessTest(unittest.TestCase):
+
+class ReviewDBTest(unittest.TestCase):
     def tearDown(self):
         data_utils.remove_data()
-        try:
-            os.remove('csearchindex')
-        except IOError:
-            pass
+        os.remove(CSEARCH_INDEX_FILE)
 
     def test_preprocess(self):
-        engine = CodeSearch.create_default(android_root=ANDROID_ROOT)
+        engine = ReviewDB(ANDROID_ROOT, CSEARCH_INDEX_FILE)
         engine.build_index()
         engine.find(patterns=['dlopen'], is_regexs=[False])
         self.assertTrue(os.path.exists(data_utils.data_path))
@@ -42,14 +41,14 @@ class ViewTest(flask_testing.TestCase):
         return app
 
     def setUp(self):
-        engine = CodeSearch.create_default(android_root=ANDROID_ROOT)
+        engine = ReviewDB(ANDROID_ROOT, CSEARCH_INDEX_FILE)
         engine.build_index()
         engine.find(patterns=['dlopen'], is_regexs=[False])
 
     def tearDown(self):
         data_utils.remove_data()
         try:
-            os.remove('csearchindex')
+            os.remove(CSEARCH_INDEX_FILE)
         except IOError:
             pass
 
