@@ -2,22 +2,23 @@
 
 import json
 import os
+import shutil
 import unittest
 
 import flask_testing
 
 from sourcedr import data_utils
+from sourcedr.codesearch import CodeSearch
 from sourcedr.map import (
     load_build_dep_file_from_path, load_review_data,
     link_build_dep_and_review_data)
+from sourcedr.project import Project
 from sourcedr.review_db import ReviewDB
-from sourcedr.server import app, args
+from sourcedr.server import create_app
 
-
-app.config['TESTING'] = True
 
 ANDROID_ROOT = 'sourcedr/test'
-
+PROJECT_DIR = 'unittest_sourcedr_data'
 CSEARCH_INDEX_FILE = 'csearchindex'
 
 
@@ -27,30 +28,29 @@ class ReviewDBTest(unittest.TestCase):
         os.remove(CSEARCH_INDEX_FILE)
 
     def test_preprocess(self):
-        engine = ReviewDB(ANDROID_ROOT, CSEARCH_INDEX_FILE)
-        engine.build_index()
+        codesearch = CodeSearch(ANDROID_ROOT, CSEARCH_INDEX_FILE)
+        codesearch.build_index()
+        engine = ReviewDB(codesearch)
         engine.find(patterns=['dlopen'], is_regexs=[False])
         self.assertTrue(os.path.exists(data_utils.data_path))
 
 
 class ViewTest(flask_testing.TestCase):
     def create_app(self):
-        # TODO: This refers to `sourcedr.server.args`.  This should be removed
-        # in the upcoming refactor process.
-        args.android_root = ANDROID_ROOT
+        project = Project(ANDROID_ROOT, PROJECT_DIR)
+        project.update_csearch_index(True)
+        app = create_app(project)
+        app.config['TESTING'] = True
+        self.app = app
         return app
 
     def setUp(self):
-        engine = ReviewDB(ANDROID_ROOT, CSEARCH_INDEX_FILE)
-        engine.build_index()
+        engine = self.app.config.project.review_db
         engine.find(patterns=['dlopen'], is_regexs=[False])
 
     def tearDown(self):
         data_utils.remove_data()
-        try:
-            os.remove(CSEARCH_INDEX_FILE)
-        except IOError:
-            pass
+        shutil.rmtree(PROJECT_DIR)
 
     def test_get_file(self):
         test_arg = 'example.c'

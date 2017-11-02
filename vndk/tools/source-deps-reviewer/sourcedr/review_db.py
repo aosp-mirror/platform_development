@@ -6,13 +6,9 @@ import sourcedr.codesearch
 import re
 
 
-class ReviewDB(sourcedr.codesearch.CodeSearch):
-    def __init__(self, android_root, index_path):
-        self._cs = sourcedr.codesearch.CodeSearch(android_root, index_path)
-        self._cs.add_default_filters()
-
-    def build_index(self):
-        self._cs.build_index()
+class ReviewDB(object):
+    def __init__(self, codesearch):
+        self._cs = codesearch
 
     # patterns and is_regexs are lists
     def find(self, patterns, is_regexs):
