@@ -10,7 +10,7 @@ import contextlib
 import os
 
 from sourcedr.codesearch import CodeSearch
-from sourcedr.data_utils import (init_pattern, load_pattern, patterns_exist)
+from sourcedr.pattern_db import PatternDB
 from sourcedr.review_db import ReviewDB
 
 
@@ -23,11 +23,20 @@ class Project(object):
         self.project_dir = os.path.abspath(project_dir)
         self._tmp_dir = os.path.join(self.project_dir, 'tmp')
 
+        os.makedirs(self.project_dir, exist_ok=True)
+        os.makedirs(self._tmp_dir, exist_ok=True)
+
         self.csearch_index_path = os.path.join(self._tmp_dir, 'csearchindex')
         self.codesearch = CodeSearch(self.android_root, self.csearch_index_path)
         self.codesearch.add_default_filters()
 
-        self.review_db = ReviewDB(self.codesearch)
+        review_db_path = os.path.join(self.project_dir, ReviewDB.DEFAULT_NAME)
+        self.review_db = ReviewDB(review_db_path, self.codesearch)
+
+        pattern_db_path = os.path.join(self.project_dir, PatternDB.DEFAULT_NAME)
+        if not os.path.exists(pattern_db_path):
+            PatternDB.create_default_database(pattern_db_path)
+        self.pattern_db = PatternDB(pattern_db_path)
 
 
     def update_csearch_index(self, remove_existing_index):
@@ -44,11 +53,5 @@ class Project(object):
 
     def update_review_db(self):
         """Update the entries in the review database."""
-
-        # TODO: Remove patterns_exist() and load_pattern() after refactoring
-        # pattern database code.
-        if not patterns_exist():
-            init_pattern('\\bdlopen\\b', is_regex=True)
-        patterns, is_regexs = load_pattern()
-
+        patterns, is_regexs = self.pattern_db.load()
         self.review_db.find(patterns, is_regexs)

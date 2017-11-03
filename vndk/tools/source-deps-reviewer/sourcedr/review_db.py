@@ -1,14 +1,22 @@
 #!/usr/bin/env python3
 
-from sourcedr.data_utils import (data_exist, load_data, merge, save_data)
-import sourcedr.codesearch
-
+import json
+import os
 import re
 
 
 class ReviewDB(object):
-    def __init__(self, codesearch):
+    DEFAULT_NAME = 'review_db.json'
+
+
+    def __init__(self, path, codesearch):
+        self.path = path
         self._cs = codesearch
+        try:
+            self.data = self._load_data()
+        except FileNotFoundError:
+            self.data = {}
+
 
     # patterns and is_regexs are lists
     def find(self, patterns, is_regexs):
@@ -24,6 +32,7 @@ class ReviewDB(object):
             processed += self._cs.process_grep(raw_grep, pattern, is_regex)
         self.to_json(processed)
 
+
     def add_pattern(self, pattern, is_regex):
         if not is_regex:
             pattern = re.escape(pattern)
@@ -33,9 +42,9 @@ class ReviewDB(object):
         processed = self._cs.process_grep(raw_grep, pattern, is_regex)
         self.add_to_json(processed)
 
+
     def to_json(self, processed):
         data = {}
-        suspect = set()
         patt = re.compile('([^:]+):(\\d+):(.*)$')
         for line in processed.decode('utf-8').split('\n'):
             match = patt.match(line)
@@ -44,15 +53,16 @@ class ReviewDB(object):
             data[line] = ([], [])
 
         # if old data exists, perform merge
-        if data_exist():
-            old_data = load_data()
-            data = merge(old_data, data)
+        if os.path.exists(self.path):
+            data.update(self._load_data())
 
-        save_data(data)
+        self._save_data(data)
+        self.data = self._load_data()
 
-    def add_to_json(self,processed):
+
+    def add_to_json(self, processed):
         # Load all matched grep.
-        data = load_data()
+        data = self._load_data()
         patt = re.compile('([^:]+):(\\d+):(.*)$')
         for line in processed.decode('utf-8').split('\n'):
             match = patt.match(line)
@@ -60,4 +70,20 @@ class ReviewDB(object):
                 continue
             data[line] = ([], [])
 
-        save_data(data)
+        self._save_data(data)
+        self.data = self._load_data()
+
+
+    def add_label(self, label, deps, codes):
+        self.data[label] = (deps, codes)
+        self._save_data(self.data)
+
+
+    def _save_data(self, data):
+        with open(self.path, 'w') as data_fp:
+            json.dump(data, data_fp, sort_keys=True, indent=4)
+
+
+    def _load_data(self):
+        with open(self.path, 'r') as data_fp:
+            return json.load(data_fp)

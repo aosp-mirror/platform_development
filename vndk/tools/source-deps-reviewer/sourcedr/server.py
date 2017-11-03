@@ -10,8 +10,6 @@ import re
 from flask import (
     Blueprint, Flask, current_app, jsonify, render_template, request)
 
-from sourcedr.data_utils import (
-    load_data, load_pattern, save_data, save_new_pattern)
 from sourcedr.project import Project
 
 
@@ -38,17 +36,20 @@ def check(codes, android_root):
 
 @codereview.route('/get_started')
 def _get_started():
-    android_root = current_app.config.project.android_root
+    project = current_app.config.project
+    android_root = project.android_root
+    review_db = project.review_db
+
     lst, done= [], []
-    for key, item in sorted(data.items()):
+    for key, item in sorted(review_db.data.items()):
         lst.append(key)
         if item[0]:
             done.append(all(check(item[1], android_root)))
         else:
             done.append(False)
 
-    pattern_lst = load_pattern()[0]
-    abs_path = os.path.abspath(current_app.config.project.android_root)
+    pattern_lst = project.pattern_db.load()[0]
+    abs_path = os.path.abspath(android_root)
 
     return jsonify(lst=json.dumps(lst),
                    done=json.dumps(done),
@@ -58,13 +59,16 @@ def _get_started():
 
 @codereview.route('/load_file')
 def _load_file():
-    android_root = current_app.config.project.android_root
+    project = current_app.config.project
+    android_root = project.android_root
+    review_db = project.review_db
+
     path = request.args.get('path')
 
-    if path not in data.keys():
+    if path not in review_db.data.keys():
         print('No such entry', path)
         return jsonify(result='')
-    deps, codes = data[path]
+    deps, codes = review_db.data[path]
 
     return jsonify(deps=json.dumps(deps), codes=json.dumps(codes),
                    okays=json.dumps(check(codes, android_root)))
@@ -88,9 +92,11 @@ def _save_all():
     label = request.args.get('label')
     deps = json.loads(request.args.get('deps'))
     codes = json.loads(request.args.get('codes'))
-    data[label] = (deps, codes)
-    # save update to file
-    save_data(data)
+
+    project = current_app.config.project
+    review_db = project.review_db
+    review_db.add_label(label, deps, codes)
+
     return jsonify(result='done')
 
 
@@ -101,10 +107,9 @@ def _add_pattern():
     is_regex = request.args.get('is_regex')
     engine = current_app.config.project.review_db
     engine.add_pattern(patt, is_regex)
-    # update the data
-    global data
-    data = load_data()
-    save_new_pattern(patt, is_regex)
+
+    project = current_app.config.project
+    project.pattern_db.save_new_pattern(patt, is_regex)
     return jsonify(result='done')
 
 
@@ -160,20 +165,13 @@ def create_app(project):
     app = Flask(__name__)
     app.register_blueprint(codereview)
     app.config.project = project
-
-    @app.before_first_request
-    def _run_on_start():
-        # load data first for better efficiency
-        global data
-        data = load_data()
-
     return app
 
 
 def _parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('android_root')
-    parser.add_argument('--project-dir', default='.sourcedr_data')
+    parser.add_argument('--project-dir', default='sourcedr_data')
     parser.add_argument('--rebuild-csearch-index', action='store_true',
                         help='Re-build the existing csearch index file')
     return parser.parse_args()

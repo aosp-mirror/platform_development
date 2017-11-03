@@ -2,12 +2,11 @@
 
 import json
 import os
-import shutil
+import tempfile
 import unittest
 
 import flask_testing
 
-from sourcedr import data_utils
 from sourcedr.codesearch import CodeSearch
 from sourcedr.map import (
     load_build_dep_file_from_path, load_review_data,
@@ -17,40 +16,46 @@ from sourcedr.review_db import ReviewDB
 from sourcedr.server import create_app
 
 
-ANDROID_ROOT = 'sourcedr/test'
+ANDROID_ROOT = os.path.join(os.path.dirname(__file__), '..', 'sourcedr', 'test')
 PROJECT_DIR = 'unittest_sourcedr_data'
-CSEARCH_INDEX_FILE = 'csearchindex'
 
 
 class ReviewDBTest(unittest.TestCase):
+    def setUp(self):
+        self.csearch_index_path = 'csearchindex'
+        self.review_db_path = ReviewDB.DEFAULT_NAME
+
     def tearDown(self):
-        data_utils.remove_data()
-        os.remove(CSEARCH_INDEX_FILE)
+        os.remove(self.csearch_index_path)
+        os.remove(self.review_db_path)
 
     def test_preprocess(self):
-        codesearch = CodeSearch(ANDROID_ROOT, CSEARCH_INDEX_FILE)
+        codesearch = CodeSearch(ANDROID_ROOT, self.csearch_index_path)
         codesearch.build_index()
-        engine = ReviewDB(codesearch)
-        engine.find(patterns=['dlopen'], is_regexs=[False])
-        self.assertTrue(os.path.exists(data_utils.data_path))
+        review_db = ReviewDB(ReviewDB.DEFAULT_NAME, codesearch)
+        review_db.find(patterns=['dlopen'], is_regexs=[False])
+        self.assertTrue(os.path.exists(ReviewDB.DEFAULT_NAME))
 
 
 class ViewTest(flask_testing.TestCase):
     def create_app(self):
-        project = Project(ANDROID_ROOT, PROJECT_DIR)
+        self.tmp_dir = tempfile.TemporaryDirectory(prefix='test_sourcedr_data-')
+
+        project = Project(ANDROID_ROOT, self.tmp_dir.name)
         project.update_csearch_index(True)
+        self.project = project
+
         app = create_app(project)
         app.config['TESTING'] = True
         self.app = app
         return app
 
     def setUp(self):
-        engine = self.app.config.project.review_db
-        engine.find(patterns=['dlopen'], is_regexs=[False])
+        review_db = self.project.review_db
+        review_db.find(patterns=['dlopen'], is_regexs=[False])
 
     def tearDown(self):
-        data_utils.remove_data()
-        shutil.rmtree(PROJECT_DIR)
+        self.tmp_dir.cleanup()
 
     def test_get_file(self):
         test_arg = 'example.c'
@@ -67,7 +72,7 @@ class ViewTest(flask_testing.TestCase):
                                    query_string=dict(path=test_arg))
         deps = json.loads(response.json['deps'])
         codes = json.loads(response.json['codes'])
-        with open(data_utils.data_path, 'r') as f:
+        with open(self.project.review_db.path, 'r') as f:
             cdata = json.load(f)
 
         self.assertEqual(deps, cdata[test_arg][0])
@@ -82,40 +87,35 @@ class ViewTest(flask_testing.TestCase):
             'codes': json.dumps(['arr_0', 'arr_1'])
         }
         response = self.client.get('/save_all', query_string=test_arg)
-        cdata = data_utils.load_data()
+        cdata = ReviewDB(self.project.review_db.path, None).data
         self.assertEqual(['this_is_a_test.so'],  cdata[test_arg['label']][0])
         self.assertEqual(['arr_0', 'arr_1'], cdata[test_arg['label']][1])
 
 
 class MapTest(unittest.TestCase):
-    def setUp(self):
-        # TODO: Remove this global variable hacks after refactoring process.
-        self.old_data_path = data_utils.data_path
-        data_utils.data_path = 'sourcedr/test/map/data.json'
-
-    def tearDown(self):
-        # TODO: Remove this global variable hacks after refactoring process.
-        data_utils.data_path = self.old_data_path
+    DEP_PATH = os.path.join('sourcedr', 'test', 'map', 'build_dep.json')
+    REVIEW_DB_PATH = os.path.join('sourcedr', 'test', 'map', 'data.json')
 
     def test_load_build_dep_file(self):
-        dep = load_build_dep_file_from_path('sourcedr/test/map/build_dep.json')
+        dep = load_build_dep_file_from_path(self.DEP_PATH)
 
         self.assertIn('liba.so', dep)
         self.assertIn('libb.so', dep)
         self.assertIn('libc.so', dep)
 
-        self.assertSetEqual({'a.h', 'a1.c', 'a1.o', 'a2.c', 'a2.o'}, dep['liba.so'])
+        self.assertSetEqual({'a.h', 'a1.c', 'a1.o', 'a2.c', 'a2.o'},
+                            dep['liba.so'])
         self.assertSetEqual({'a.h', 'b.c', 'b.o'}, dep['libb.so'])
         self.assertSetEqual(set(), dep['libc.so'])
 
     def test_load_review_data(self):
-        data = load_review_data()
+        data = load_review_data(self.REVIEW_DB_PATH)
         self.assertIn('a.h', data)
         self.assertEqual(['libx.so'], data['a.h'])
 
     def test_link_build_dep_and_review_data(self):
-        dep = load_build_dep_file_from_path('sourcedr/test/map/build_dep.json')
-        data = load_review_data()
+        dep = load_build_dep_file_from_path(self.DEP_PATH)
+        data = load_review_data(self.REVIEW_DB_PATH)
         result = link_build_dep_and_review_data(dep, data)
 
         self.assertIn('liba.so', result)
