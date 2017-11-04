@@ -8,6 +8,11 @@ cc_binary_host {
 
     srcs: ["etc1tool.cpp"],
 
+    cflags: [
+        "-Wall",
+        "-Werror",
+    ],
+
     static_libs: [
         "libexpat",
         "libpng",
