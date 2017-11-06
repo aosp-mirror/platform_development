@@ -11,13 +11,36 @@ from sourcedr.codesearch import CodeSearch
 from sourcedr.map import (
     load_build_dep_file_from_path, load_review_data,
     link_build_dep_and_review_data)
-from sourcedr.project import Project
+from sourcedr.project import Config, Project
 from sourcedr.review_db import ReviewDB
 from sourcedr.server import create_app
 
 
 ANDROID_ROOT = os.path.join(os.path.dirname(__file__), '..', 'sourcedr', 'test')
 PROJECT_DIR = 'unittest_sourcedr_data'
+
+
+class ConfigTest(unittest.TestCase):
+    CONFIG_PATH = os.path.join(ANDROID_ROOT, 'project', Config.DEFAULT_NAME)
+
+
+    def test_load(self):
+        config = Config(self.CONFIG_PATH)
+        config.load()
+        self.assertEqual('path/to/android/src', config.source_dir)
+
+
+    def test_save(self):
+        with tempfile.TemporaryDirectory(prefix='test_sourcedr_') as tmp_dir:
+            config_path = Config.get_default_path(tmp_dir)
+            config = Config(config_path)
+            config.source_dir = 'path/to/android/src'
+            config.save()
+            with open(config_path, 'r') as actual_fp:
+                actual = actual_fp.read().strip()
+        with open(self.CONFIG_PATH, 'r') as expected_fp:
+            expected = expected_fp.read().strip()
+        self.assertEqual(actual, expected)
 
 
 class ReviewDBTest(unittest.TestCase):
@@ -39,9 +62,9 @@ class ReviewDBTest(unittest.TestCase):
 
 class ViewTest(flask_testing.TestCase):
     def create_app(self):
-        self.tmp_dir = tempfile.TemporaryDirectory(prefix='test_sourcedr_data-')
-
-        project = Project(ANDROID_ROOT, self.tmp_dir.name)
+        self.tmp_dir = tempfile.TemporaryDirectory(prefix='test_sourcedr_')
+        project = Project.get_or_create_project_dir(
+                self.tmp_dir.name, ANDROID_ROOT)
         project.update_csearch_index(True)
         self.project = project
 

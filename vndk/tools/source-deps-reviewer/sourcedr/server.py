@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import argparse
 import collections
 import functools
 import json
@@ -9,8 +8,6 @@ import re
 
 from flask import (
     Blueprint, Flask, current_app, jsonify, render_template, request)
-
-from sourcedr.project import Project
 
 
 codereview = Blueprint('codereview', '__name__', 'templates')
@@ -166,27 +163,3 @@ def create_app(project):
     app.register_blueprint(codereview)
     app.config.project = project
     return app
-
-
-def _parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('android_root')
-    parser.add_argument('--project-dir', default='sourcedr_data')
-    parser.add_argument('--rebuild-csearch-index', action='store_true',
-                        help='Re-build the existing csearch index file')
-    return parser.parse_args()
-
-
-def main():
-    args = _parse_args()
-
-    project = Project(os.path.expanduser(args.android_root),
-                      os.path.expanduser(args.project_dir))
-    project.update_csearch_index(args.rebuild_csearch_index)
-    project.update_review_db()
-
-    app = create_app(project)
-    app.run()
-
-if __name__=='__main__':
-    main()
