@@ -3,12 +3,13 @@
 """This command maps source file review results to compiled binaries.
 """
 
-from sourcedr.data_utils import load_data
-
 import argparse
 import collections
 import json
 import os
+import sys
+
+from sourcedr.review_db import ReviewDB
 
 
 def load_build_dep_file(fp):
@@ -49,10 +50,10 @@ def load_build_dep_file_from_path(path):
         return load_build_dep_file(fp)
 
 
-def load_review_data():
+def load_review_data(path):
     table = collections.defaultdict(list)
-    data = load_data()
-    for key, item in data.items():
+    review_db = ReviewDB(path, None)
+    for key, item in review_db.data.items():
         table[key.split(':')[0]] += item[0]
     return table
 
@@ -77,6 +78,7 @@ def main():
     # Parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('input', help='Build dependency file')
+    parser.add_argument('--project-dir', default='.sourcedr_data')
     parser.add_argument('-o', '--output', required=True)
     args = parser.parse_args()
 
@@ -89,7 +91,7 @@ def main():
         sys.exit(1)
 
     # Load review data
-    table = load_review_data()
+    table = load_review_data(os.path.join(args.project_dir, ReviewDB.FILENAME))
 
     # Link build dependency file and review data
     res = link_build_dep_and_review_data(dep, table)
