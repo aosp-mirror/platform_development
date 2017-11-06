@@ -5,7 +5,7 @@
 import argparse
 import sys
 
-from sourcedr.commands import init, scan, review
+from sourcedr.commands import collect, init, scan, review
 
 
 def main():
@@ -21,6 +21,7 @@ def main():
     _register_subcmd('init', init.init_argparse)
     _register_subcmd('scan', scan.init_argparse)
     _register_subcmd('review', review.init_argparse)
+    _register_subcmd('collect', collect.init_argparse)
 
     args = parser.parse_args()
 
