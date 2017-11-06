@@ -18,8 +18,8 @@ class Project(object):
     """SourceDR project configuration files and databases.
     """
 
-    def __init__(self, android_root, project_dir):
-        self.android_root = os.path.abspath(android_root)
+    def __init__(self, source_dir, project_dir):
+        self.source_dir = os.path.abspath(source_dir)
         self.project_dir = os.path.abspath(project_dir)
         self._tmp_dir = os.path.join(self.project_dir, 'tmp')
 
@@ -27,7 +27,7 @@ class Project(object):
         os.makedirs(self._tmp_dir, exist_ok=True)
 
         self.csearch_index_path = os.path.join(self._tmp_dir, 'csearchindex')
-        self.codesearch = CodeSearch(self.android_root, self.csearch_index_path)
+        self.codesearch = CodeSearch(self.source_dir, self.csearch_index_path)
         self.codesearch.add_default_filters()
 
         review_db_path = os.path.join(self.project_dir, ReviewDB.DEFAULT_NAME)
