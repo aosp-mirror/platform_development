@@ -1,0 +1,21 @@
+rule cc
+  command = gcc -c -o $out $in -MMD -MF $out.d
+  deps = gcc
+  depfile = $out.d
+
+rule ld
+  command = gcc  -o $out $in
+
+build liba.so: ld a1.o a2.o
+
+build libb.so: ld b.o
+
+build libc.so: ld c.o
+
+build a1.o: cc a1.c
+
+build a2.o: cc a2.c
+
+build b.o: cc b.c
+
+build c.o: cc c.c

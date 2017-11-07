@@ -1,0 +1,5 @@
+a = original
+
+include sub.ninja
+
+build out2 : phony prebuilt_out2

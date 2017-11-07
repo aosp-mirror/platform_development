@@ -1,11 +1,19 @@
 #!/usr/bin/env python3
 
 
+import os
+
+
 class PatternDB(object):
     """Pattern database for patterns to be searched in the source tree.
     """
 
     DEFAULT_NAME = 'pattern_db.csv'
+
+
+    @classmethod
+    def get_default_path(cls, project_dir):
+        return os.path.join(project_dir, cls.DEFAULT_NAME)
 
 
     @classmethod
