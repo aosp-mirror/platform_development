@@ -16,9 +16,6 @@ import os
 import re
 import subprocess
 
-from sourcedr.config import (
-    FILE_EXT_BLACK_LIST, FILE_NAME_BLACK_LIST, PATH_PATTERN_BLACK_LIST)
-
 
 class ClikeFilter(object):
     def __init__(self, skip_literals=True, skip_comments=True):
@@ -168,13 +165,41 @@ class BpFilter(object):
                 span.append(m.span())
         return span
 
+class PathFilter(object):
+    def __init__(self, file_ext_black_list=tuple(),
+                 file_name_black_list=tuple(),
+                 path_component_black_list=tuple()):
+        self.file_ext_black_list = set(
+                x.encode('utf-8') for x in file_ext_black_list)
+        self.file_name_black_list = set(
+                x.encode('utf-8') for x in file_name_black_list)
+        self.path_component_black_list = set(
+                x.encode('utf-8') for x in path_component_black_list)
+
+    def should_skip(self, path):
+        file_name = os.path.basename(path)
+        file_ext = os.path.splitext(file_name)[1]
+
+        if file_ext.lower() in self.file_ext_black_list:
+            return True
+        if file_name in self.file_name_black_list:
+            return True
+        return any(patt in path for patt in self.path_component_black_list)
+
 class CodeSearch(object):
-    def __init__(self, root_dir, index_file_path):
+    DEFAULT_NAME = 'csearchindex'
+
+    @classmethod
+    def get_default_path(cls, project_dir):
+        return os.path.join(project_dir, 'tmp', cls.DEFAULT_NAME)
+
+    def __init__(self, root_dir, index_file_path, path_filter=None):
+        self.path = os.path.abspath(index_file_path)
         self._root_dir = os.path.abspath(root_dir)
-        self._index_file_path = os.path.abspath(index_file_path)
         self._env = dict(os.environ)
-        self._env['CSEARCHINDEX'] = self._index_file_path
+        self._env['CSEARCHINDEX'] = self.path
         self._filters = {}
+        self._path_filter = PathFilter() if path_filter is None else path_filter
 
     def _run_cindex(self, options):
         subprocess.check_call(['cindex'] + options, env=self._env,
@@ -182,8 +207,8 @@ class CodeSearch(object):
                               stderr=subprocess.DEVNULL)
 
     def _run_csearch(self, options):
-        if not os.path.exists(self._index_file_path):
-            raise ValueError('Failed to find ' + self._index_file_path)
+        if not os.path.exists(self.path):
+            raise ValueError('Failed to find ' + self.path)
         return subprocess.check_output(['csearch'] + options, env=self._env,
                                        cwd=self._root_dir,
                                        stderr=subprocess.DEVNULL)
@@ -199,7 +224,11 @@ class CodeSearch(object):
         self.add_filter(MkFilter(skip_literals, skip_comments))
         self.add_filter(BpFilter(skip_literals, skip_comments))
 
-    def build_index(self):
+    def build_index(self, remove_existing_index=True):
+        if remove_existing_index and os.path.exists(self.path):
+            with contextlib.suppress(FileNotFoundError):
+                os.remove(self.path)
+        os.makedirs(os.path.dirname(self.path), exist_ok=True)
         self._run_cindex([self._root_dir])
 
     def _sanitize_code(self, file_path):
@@ -246,15 +275,7 @@ class CodeSearch(object):
             line_no = match.group(2)
             code = match.group(3)
 
-            file_name = os.path.basename(file_path)
-            file_ext = os.path.splitext(file_name)[1]
-
-            # Check file name.
-            if file_ext.lower() in FILE_EXT_BLACK_LIST:
-                continue
-            if file_name in FILE_NAME_BLACK_LIST:
-                continue
-            if any(patt in file_path for patt in PATH_PATTERN_BLACK_LIST):
+            if self._path_filter.should_skip(file_path):
                 continue
 
             abs_file_path = os.path.join(self._root_dir.encode('utf-8'),

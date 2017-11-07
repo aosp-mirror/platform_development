@@ -9,6 +9,11 @@ class ReviewDB(object):
     DEFAULT_NAME = 'review_db.json'
 
 
+    @classmethod
+    def get_default_path(cls, project_dir):
+        return os.path.join(project_dir, cls.DEFAULT_NAME)
+
+
     def __init__(self, path, codesearch):
         self.path = path
         self._cs = codesearch
