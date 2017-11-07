@@ -16,12 +16,6 @@ class PatternDB(object):
         return os.path.join(project_dir, cls.DEFAULT_NAME)
 
 
-    @classmethod
-    def create_default_database(cls, path):
-        with open(path, 'w') as f:
-            f.write('1,\\bdlopen\\b\n')
-
-
     def __init__(self, path):
         self.path = path
         self.data = self._load()
