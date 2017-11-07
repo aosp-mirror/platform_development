@@ -1,0 +1,8 @@
+rule cc
+  command = gcc -c -o $outs $ins
+
+build foo.o: cc foo.c
+
+build bar.o: cc bar.c
+
+default foo.o bar.o
