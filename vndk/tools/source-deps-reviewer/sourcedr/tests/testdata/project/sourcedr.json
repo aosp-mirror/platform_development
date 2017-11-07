@@ -1,0 +1,6 @@
+{
+  "source_dir": "path/to/android/src",
+  "file_ext_blacklist": [],
+  "file_name_blacklist": [],
+  "path_component_blacklist": []
+}

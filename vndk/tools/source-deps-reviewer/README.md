@@ -35,28 +35,27 @@ It can be found at https://github.com/PrismJS/prism
 
 ## Usage
 
-```
-sourcedr [-h] [--android-root ANDROID_ROOT] [--index-path INDEX_PATH]
-         [--skip-literals] [--skip-comments]
-```
-This tool reads the pattern file named *patterns*.
-
-You can edit it directly before executing the command.
-
-pattern file format:
-```
-is_regex,pattern
-```
-
-default pattern file:
+Initialize a project:
 
 ```
-0,dlopen
+sourcedr init --source-dir [android-src] [project-dir]
 ```
 
-open browser at [localhost:5000](localhost:5000).
+Scan the codebase:
 
-You can customize settings by editing `config.py`
+```
+sourcedr scan
+```
+
+If there are occurrences that are not reviewed, then review the occurrences
+with:
+
+```
+sourcedr review
+```
+
+Open browser and visit [http://localhost:5000](http://localhost:5000).
+
 
 ## Testing
 
