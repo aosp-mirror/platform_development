@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import argparse
 import collections
 import functools
 import json
@@ -10,46 +9,44 @@ import re
 from flask import (
     Blueprint, Flask, current_app, jsonify, render_template, request)
 
-from sourcedr.project import Project
-
 
 codereview = Blueprint('codereview', '__name__', 'templates')
 
 
 # whether the code segment is exactly in file
-def same(fl, code, android_root):
-    fl = os.path.join(android_root, fl)
+def same(fl, code, source_dir):
+    fl = os.path.join(source_dir, fl)
     with open(fl, 'r') as f:
         fc = f.read()
         return code in fc
 
 
 # check if the file needes to be reiewed again
-def check(codes, android_root):
+def check(codes, source_dir):
     ret = []
     for item in codes:
         fl = item.split(':')[0]
         code = item[len(fl) + 1:]
-        ret.append(same(fl, code, android_root))
+        ret.append(same(fl, code, source_dir))
     return ret
 
 
 @codereview.route('/get_started')
 def _get_started():
     project = current_app.config.project
-    android_root = project.android_root
+    source_dir = project.source_dir
     review_db = project.review_db
 
     lst, done= [], []
     for key, item in sorted(review_db.data.items()):
         lst.append(key)
         if item[0]:
-            done.append(all(check(item[1], android_root)))
+            done.append(all(check(item[1], source_dir)))
         else:
             done.append(False)
 
     pattern_lst = project.pattern_db.load()[0]
-    abs_path = os.path.abspath(android_root)
+    abs_path = os.path.abspath(source_dir)
 
     return jsonify(lst=json.dumps(lst),
                    done=json.dumps(done),
@@ -60,7 +57,7 @@ def _get_started():
 @codereview.route('/load_file')
 def _load_file():
     project = current_app.config.project
-    android_root = project.android_root
+    source_dir = project.source_dir
     review_db = project.review_db
 
     path = request.args.get('path')
@@ -71,13 +68,13 @@ def _load_file():
     deps, codes = review_db.data[path]
 
     return jsonify(deps=json.dumps(deps), codes=json.dumps(codes),
-                   okays=json.dumps(check(codes, android_root)))
+                   okays=json.dumps(check(codes, source_dir)))
 
 
 @codereview.route('/get_file')
 def _get_file():
     path = request.args.get('path')
-    path = os.path.join(current_app.config.project.android_root, path)
+    path = os.path.join(current_app.config.project.source_dir, path)
 
     if not os.path.exists(path):
         return jsonify(result='No such file')
@@ -166,27 +163,3 @@ def create_app(project):
     app.register_blueprint(codereview)
     app.config.project = project
     return app
-
-
-def _parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('android_root')
-    parser.add_argument('--project-dir', default='sourcedr_data')
-    parser.add_argument('--rebuild-csearch-index', action='store_true',
-                        help='Re-build the existing csearch index file')
-    return parser.parse_args()
-
-
-def main():
-    args = _parse_args()
-
-    project = Project(os.path.expanduser(args.android_root),
-                      os.path.expanduser(args.project_dir))
-    project.update_csearch_index(args.rebuild_csearch_index)
-    project.update_review_db()
-
-    app = create_app(project)
-    app.run()
-
-if __name__=='__main__':
-    main()

@@ -1,0 +1,3 @@
+a = changed
+
+build out1 : phony prebuilt_out1

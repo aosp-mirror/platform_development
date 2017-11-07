@@ -5,16 +5,16 @@
 
 import argparse
 import collections
+import itertools
 import json
 import os
 import sys
 
+from sourcedr import ninja
 from sourcedr.review_db import ReviewDB
 
 
-def load_build_dep_file(fp):
-    graph = json.load(fp)
-
+def load_build_dep_graph(graph):
     # Collect all shared libraries
     shared_libs = set()
     for key, value in graph.items():
@@ -45,6 +45,22 @@ def load_build_dep_file(fp):
     return dep
 
 
+def load_build_dep_ninja(ninja_path, work_dir, ninja_deps=None):
+    manifest = ninja.Parser().parse(ninja_path, 'utf-8', ninja_deps)
+    graph = collections.defaultdict(set)
+    for build in manifest.builds:
+        for path in itertools.chain(build.explicit_outs, build.implicit_outs):
+            ins = graph[path]
+            ins.update(build.explicit_ins)
+            ins.update(build.implicit_ins)
+            ins.update(build.depfile_implicit_ins)
+    return load_build_dep_graph(graph)
+
+
+def load_build_dep_file(fp):
+    return load_build_dep_graph(json.load(fp))
+
+
 def load_build_dep_file_from_path(path):
     with open(path, 'r') as fp:
         return load_build_dep_file(fp)
@@ -72,33 +88,3 @@ def link_build_dep_and_review_data(dep, table):
             except KeyError:
                 pass
     return res
-
-
-def main():
-    # Parse arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument('input', help='Build dependency file')
-    parser.add_argument('--project-dir', default='.sourcedr_data')
-    parser.add_argument('-o', '--output', required=True)
-    args = parser.parse_args()
-
-    # Load build dependency file
-    try:
-        dep = load_build_dep_file_from_path(args.input)
-    except IOError:
-        print('error: Failed to open build dependency file:', args.input,
-              file=sys.stderr)
-        sys.exit(1)
-
-    # Load review data
-    table = load_review_data(os.path.join(args.project_dir, ReviewDB.FILENAME))
-
-    # Link build dependency file and review data
-    res = link_build_dep_and_review_data(dep, table)
-
-    # Write the output file
-    with open(args.output, 'w') as f:
-        json.dump(res, f, sort_keys=True, indent=4)
-
-if __name__ == '__main__':
-    main()

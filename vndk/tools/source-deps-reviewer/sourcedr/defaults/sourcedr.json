@@ -1,0 +1,37 @@
+{
+  "source_dir": "",
+  "file_ext_blacklist": [
+    ".1",
+    ".ac",
+    ".cmake",
+    ".html",
+    ".info",
+    ".la",
+    ".m4",
+    ".map",
+    ".md",
+    ".py",
+    ".rst",
+    ".sh",
+    ".sym",
+    ".txt",
+    ".xml"
+  ],
+  "file_name_blacklist": [
+    "CHANGES.0",
+    "ChangeLog",
+    "config.h.in",
+    "configure",
+    "configure.in",
+    "configure.linaro",
+    "libtool"
+  ],
+  "path_component_blacklist": [
+    ".git",
+    ".repo",
+    "autom4te.cache",
+    "binutils",
+    "dejagnu",
+    "llvm/Config/Config"
+  ]
+}

@@ -1,0 +1,3 @@
+build explicit_out1 explicit_out2 | implicit_out1 implicit_out2 : phony explicit_in1 explicit_in2 | implicit_in1 implicit_in2 || order_only1 order_only2
+  a = 1
+  b = 2

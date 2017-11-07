@@ -1,0 +1,15 @@
+rule cc
+  command = gcc -c -o $out $in -MMD -MF $out.d
+  deps = gcc
+  depfile = $out.d
+
+rule ld
+  command = gcc -o $out $in
+
+build example.o: cc example.c
+
+build example.so: ld example.o
+
+build dlopen/test.o: cc dlopen/test.c 
+
+build dlopen/test.so: ld dlopen/test.o
