@@ -1373,11 +1373,11 @@ class ELFLinker(object):
             return lib.is_ndk
 
         sp_ndk = self.compute_sp_ndk()
-        sp_ndk_closure = self.compute_closure(sp_ndk, is_ndk)
+        sp_ndk_closure = self.compute_deps_closure(sp_ndk, is_ndk)
         sp_ndk_indirect = sp_ndk_closure - sp_ndk
 
         sp_hal = self.compute_predefined_sp_hal()
-        sp_hal_closure = self.compute_closure(sp_hal, is_ndk)
+        sp_hal_closure = self.compute_deps_closure(sp_hal, is_ndk)
 
         def is_aosp_lib(lib):
             return (not generic_refs or \
@@ -1517,7 +1517,7 @@ class ELFLinker(object):
                 return True
             return is_aosp_lib(lib)
 
-        sp_hal_dep = self.compute_closure(sp_hal, is_not_sp_hal_dep)
+        sp_hal_dep = self.compute_deps_closure(sp_hal, is_not_sp_hal_dep)
         sp_hal_dep -= sp_hal
 
         # Find VNDK-SP libs.
@@ -1547,7 +1547,7 @@ class ELFLinker(object):
             return lib.is_ll_ndk or lib.is_sp_ndk or lib in vndk_sp or \
                    lib in fwk_only_rs
 
-        vndk_sp_indirect = self.compute_closure(
+        vndk_sp_indirect = self.compute_deps_closure(
                 vndk_sp, is_not_vndk_sp_indirect)
         vndk_sp_indirect -= vndk_sp
 
@@ -1560,7 +1560,7 @@ class ELFLinker(object):
         # Find dependencies of unused predefined VNDK-SP libs.
         def is_not_vndk_sp_indirect_unused(lib):
             return is_not_vndk_sp_indirect(lib) or lib in vndk_sp_indirect
-        vndk_sp_unused_deps = self.compute_closure(
+        vndk_sp_unused_deps = self.compute_deps_closure(
                 vndk_sp_unused, is_not_vndk_sp_indirect_unused)
         vndk_sp_unused_deps -= vndk_sp_unused
 
@@ -1599,7 +1599,7 @@ class ELFLinker(object):
                 vndk_sp_indirect.add(lib)
 
             # Add the dependencies to vndk_sp_indirect if they are not vndk_sp.
-            closure = self.compute_closure(
+            closure = self.compute_deps_closure(
                     {lib}, lambda lib: lib not in vndk_sp_indirect_unused)
             closure.remove(lib)
             vndk_sp_indirect_unused.difference_update(closure)
@@ -1700,7 +1700,7 @@ class ELFLinker(object):
         while candidates:
             candidates = collect_vndk(candidates)
 
-        vndk_indirect = self.compute_closure(vndk, is_not_vndk)
+        vndk_indirect = self.compute_deps_closure(vndk, is_not_vndk)
         vndk_indirect -= vndk
 
         def is_vndk(lib):
@@ -1732,14 +1732,16 @@ class ELFLinker(object):
         def is_not_ll_ndk_indirect(lib):
             return lib.is_ll_ndk or is_vndk_sp(lib) or is_vndk(lib)
 
-        ll_ndk_indirect = self.compute_closure(ll_ndk, is_not_ll_ndk_indirect)
+        ll_ndk_indirect = self.compute_deps_closure(
+                ll_ndk, is_not_ll_ndk_indirect)
         ll_ndk_indirect -= ll_ndk
 
         def is_not_sp_ndk_indirect(lib):
             return lib.is_ll_ndk or lib.is_sp_ndk or lib in ll_ndk_indirect or \
                    is_vndk_sp(lib) or is_vndk(lib)
 
-        sp_ndk_indirect = self.compute_closure(sp_ndk, is_not_sp_ndk_indirect)
+        sp_ndk_indirect = self.compute_deps_closure(
+                sp_ndk, is_not_sp_ndk_indirect)
         sp_ndk_indirect -= sp_ndk
 
         # Return the VNDK classifications.
@@ -1782,8 +1784,6 @@ class ELFLinker(object):
     @classmethod
     def compute_deps_closure(cls, root_set, is_excluded):
         return cls._compute_closure(root_set, is_excluded, lambda x: x.deps)
-
-    compute_closure = compute_deps_closure
 
     @classmethod
     def compute_users_closure(cls, root_set, is_excluded):
