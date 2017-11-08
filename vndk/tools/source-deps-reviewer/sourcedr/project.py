@@ -102,8 +102,6 @@ class Project(object):
 
         # Pattern database file
         pattern_db_path = PatternDB.get_default_path(project_dir)
-        if not os.path.exists(pattern_db_path):
-            PatternDB.create_default_database(pattern_db_path)
         self.pattern_db = PatternDB(pattern_db_path)
 
         # Sanity checks
