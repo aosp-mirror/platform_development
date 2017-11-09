@@ -267,7 +267,7 @@ See test_defs.xsd for more information.
     package="com.example.android.apis.tests" />
 
 <test name="bluetooth"
-    build_path="packages/apps/Bluetooth/tests"
+    build_path="packages/apps/Bluetooth/tests/unit"
     package="com.android.bluetooth.tests"
     runner="android.support.test.runner.AndroidJUnitRunner"
     continuous="true" />
