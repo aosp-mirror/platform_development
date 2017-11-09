@@ -1106,12 +1106,6 @@ class ELFLinker(object):
         self._add_lib_to_lookup_dict(lib)
         return lib
 
-    def rename_lib(self, lib, new_partition, new_path):
-        self._remove_lib_from_lookup_dict(lib)
-        lib.path = new_path
-        lib.partition = new_partition
-        self._add_lib_to_lookup_dict(lib)
-
     def add_dlopen_dep(self, src_path, dst_path):
         for elf_class in (ELF.ELFCLASS32, ELF.ELFCLASS64):
             src = self.get_lib_in_elf_class(elf_class, src_path)
@@ -1420,68 +1414,30 @@ class ELFLinker(object):
         return SPLibResult(sp_hal, sp_hal_dep, vndk_sp_hal, sp_ndk,
                            sp_ndk_indirect, vndk_sp_both)
 
-    def _po_sorted(self, lib_set, get_successors):
-        result = []
-        visited = set()
-        def traverse(lib):
-            for succ in get_successors(lib):
-                if succ in lib_set and succ not in visited:
-                    visited.add(succ)
-                    traverse(succ)
-            result.append(lib)
-        for lib in lib_set:
-            if lib not in visited:
-                visited.add(lib)
-                traverse(lib)
-        return result
-
-    def _deps_po_sorted(self, lib_set):
-        return self._po_sorted(lib_set, lambda x: x.deps_all)
-
-    def _users_po_sorted(self, lib_set):
-        return self._po_sorted(lib_set, lambda x: x.users_all)
-
     def normalize_partition_tags(self, sp_hals, generic_refs):
-        system_libs = set(self.lib_pt[PT_SYSTEM].values())
-        system_libs_po = self._deps_po_sorted(system_libs)
-
         def is_system_lib_or_sp_hal(lib):
             return lib.is_system_lib() or lib in sp_hals
 
-        for lib in system_libs_po:
+        for lib in self.lib_pt[PT_SYSTEM].values():
             if all(is_system_lib_or_sp_hal(dep) for dep in lib.deps_all):
-                # Good system lib.  Do nothing.
                 continue
-            if not generic_refs or generic_refs.refs.get(lib.path):
-                # If lib is in AOSP generic reference, then we assume that the
-                # non-SP-HAL dependencies are errors.  Emit errors and remove
-                # the dependencies.
-                for dep in list(lib.deps_needed_all):
-                    if not is_system_lib_or_sp_hal(dep):
-                        print('error: {}: system exe/lib must not depend on '
-                              'vendor lib {}.  Assume such dependency does '
-                              'not exist.'.format(lib.path, dep.path),
-                              file=sys.stderr)
-                        lib.hide_needed_dep(dep)
-                for dep in list(lib.deps_dlopen_all):
-                    if not is_system_lib_or_sp_hal(dep):
-                        print('error: {}: system exe/lib must not dlopen() '
-                              'vendor lib {}.  Assume such dependency does '
-                              'not exist.'.format(lib.path, dep.path),
-                              file=sys.stderr)
-                        lib.hide_dlopen_dep(dep)
-            else:
-                # If lib is not in AOSP generic reference, then we assume that
-                # lib must be moved to vendor partition.
-                for dep in lib.deps_all:
-                    if not is_system_lib_or_sp_hal(dep):
-                        print('warning: {}: system exe/lib must not depend on '
-                              'vendor lib {}.  Assuming {} should be placed in '
-                              'vendor partition.'
-                              .format(lib.path, dep.path, lib.path),
-                              file=sys.stderr)
-                new_path = lib.path.replace('/system/', '/vendor/')
-                self.rename_lib(lib, PT_VENDOR, new_path)
+            # If a system module is depending on a vendor shared library and
+            # such shared library is not a SP-HAL library, then emit an error
+            # and hide the dependency.
+            for dep in list(lib.deps_needed_all):
+                if not is_system_lib_or_sp_hal(dep):
+                    print('error: {}: system exe/lib must not depend on '
+                          'vendor lib {}.  Assume such dependency does '
+                          'not exist.'.format(lib.path, dep.path),
+                          file=sys.stderr)
+                    lib.hide_needed_dep(dep)
+            for dep in list(lib.deps_dlopen_all):
+                if not is_system_lib_or_sp_hal(dep):
+                    print('error: {}: system exe/lib must not dlopen() '
+                          'vendor lib {}.  Assume such dependency does '
+                          'not exist.'.format(lib.path, dep.path),
+                          file=sys.stderr)
+                    lib.hide_dlopen_dep(dep)
 
     @staticmethod
     def _parse_action_on_ineligible_lib(arg):
@@ -2429,7 +2385,7 @@ class DepsInsightCommand(VNDKCommandBase):
                 args.action_ineligible_vndk)
 
         # Serialize data.
-        strs, mods = self.serialize_data(list(graph.all_libs), vndk_lib,
+        strs, mods = self.serialize_data(list(graph.all_libs()), vndk_lib,
                                          module_info)
 
         # Generate output files.
