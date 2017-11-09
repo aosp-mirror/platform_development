@@ -33,6 +33,6 @@ cc_binary_host {
     ],
 
     shared_libs: [
-        "libLLVM",
+        "libLLVM_android",
     ],
 }
