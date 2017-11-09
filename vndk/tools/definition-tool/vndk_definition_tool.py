@@ -893,15 +893,18 @@ class ELFResolver(object):
 
 
 class ELFLinkData(object):
-    NEEDED = 0  # Dependencies recorded in DT_NEEDED entries.
-    DLOPEN = 1  # Dependencies introduced by dlopen().
-
     def __init__(self, partition, path, elf, tag_bit):
         self.partition = partition
         self.path = path
         self.elf = elf
-        self._deps = (set(), set())
-        self._users = (set(), set())
+        self.deps_needed = set()
+        self.deps_needed_hidden = set()
+        self.deps_dlopen = set()
+        self.deps_dlopen_hidden = set()
+        self.users_needed = set()
+        self.users_needed_hidden = set()
+        self.users_dlopen = set()
+        self.users_dlopen_hidden = set()
         self.imported_ext_symbols = collections.defaultdict(set)
         self._tag_bit = tag_bit
         self.unresolved_symbols = set()
@@ -936,67 +939,85 @@ class ELFLinkData(object):
     def is_fwk_only_rs(self):
         return TaggedDict.is_fwk_only_rs(self._tag_bit)
 
-    def add_dep(self, dst, ty):
-        self._deps[ty].add(dst)
-        dst._users[ty].add(self)
+    def add_needed_dep(self, dst):
+        assert dst not in self.deps_needed_hidden
+        assert self not in dst.users_needed_hidden
+        self.deps_needed.add(dst)
+        dst.users_needed.add(self)
 
-    def remove_dep(self, dst, ty):
-        self._deps[ty].remove(dst)
-        dst._users[ty].remove(self)
+    def add_dlopen_dep(self, dst):
+        assert dst not in self.deps_dlopen_hidden
+        assert self not in dst.users_dlopen_hidden
+        self.deps_dlopen.add(dst)
+        dst.users_dlopen.add(self)
+
+    def hide_needed_dep(self, dst):
+        self.deps_needed.remove(dst)
+        dst.users_needed.remove(self)
+        self.deps_needed_hidden.add(dst)
+        dst.users_needed_hidden.add(self)
+
+    def hide_dlopen_dep(self, dst):
+        self.deps_dlopen.remove(dst)
+        dst.users_dlopen.remove(self)
+        self.deps_dlopen_hidden.add(dst)
+        dst.users_dlopen_hidden.add(self)
 
     @property
     def num_deps(self):
         """Get the number of dependencies.  If a library is linked by both
         NEEDED and DLOPEN relationship, then it will be counted twice."""
-        return sum(len(deps) for deps in self._deps)
+        return (len(self.deps_needed) + len(self.deps_needed_hidden) +
+                len(self.deps_dlopen) + len(self.deps_dlopen_hidden))
 
     @property
-    def deps(self):
-        return itertools.chain.from_iterable(self._deps)
+    def deps_all(self):
+        return itertools.chain(self.deps_needed, self.deps_needed_hidden,
+                               self.deps_dlopen, self.deps_dlopen_hidden)
 
     @property
-    def deps_with_type(self):
-        dt_deps = zip(self._deps[self.NEEDED], itertools.repeat(self.NEEDED))
-        dl_deps = zip(self._deps[self.DLOPEN], itertools.repeat(self.DLOPEN))
-        return itertools.chain(dt_deps, dl_deps)
+    def deps_good(self):
+        return itertools.chain(self.deps_needed, self.deps_dlopen)
 
     @property
-    def dt_deps(self):
-        return self._deps[self.NEEDED]
+    def deps_needed_all(self):
+        return itertools.chain(self.deps_needed, self.deps_needed_hidden)
 
     @property
-    def dl_deps(self):
-        return self._deps[self.DLOPEN]
+    def deps_dlopen_all(self):
+        return itertools.chain(self.deps_dlopen, self.deps_dlopen_hidden)
 
     @property
     def num_users(self):
         """Get the number of users.  If a library is linked by both NEEDED and
         DLOPEN relationship, then it will be counted twice."""
-        return sum(len(users) for users in self._users)
+        return (len(self.users_needed) + len(self.users_needed_hidden) +
+                len(self.users_dlopen) + len(self.users_dlopen_hidden))
 
     @property
-    def users(self):
-        return itertools.chain.from_iterable(self._users)
+    def users_all(self):
+        return itertools.chain(self.users_needed, self.users_needed_hidden,
+                               self.users_dlopen, self.users_dlopen_hidden)
 
     @property
-    def users_with_type(self):
-        dt_users = zip(self._users[self.NEEDED], itertools.repeat(self.NEEDED))
-        dl_users = zip(self._users[self.DLOPEN], itertools.repeat(self.DLOPEN))
-        return itertools.chain(dt_users, dl_users)
+    def users_good(self):
+        return itertools.chain(self.users_needed, self.users_dlopen)
 
     @property
-    def dt_users(self):
-        return self._users[self.NEEDED]
+    def users_needed_all(self):
+        return itertools.chain(self.users_needed, self.users_needed_hidden)
 
     @property
-    def dl_users(self):
-        return self._users[self.DLOPEN]
+    def users_dlopen_all(self):
+        return itertools.chain(self.users_dlopen, self.users_dlopen_hidden)
 
     def has_dep(self, dst):
-        return any(dst in deps for deps in self._deps)
+        return (dst in self.deps_needed or dst in self.deps_needed_hidden or
+                dst in self.deps_dlopen or dst in self.deps_dlopen_hidden)
 
     def has_user(self, dst):
-        return any(dst in users for users in self._users)
+        return (dst in self.users_needed or dst in self.users_needed_hidden or
+                dst in self.users_dlopen or dst in self.users_dlopen_hidden)
 
     def is_system_lib(self):
         return self.partition == PT_SYSTEM
@@ -1091,12 +1112,12 @@ class ELFLinker(object):
         lib.partition = new_partition
         self._add_lib_to_lookup_dict(lib)
 
-    def add_dep(self, src_path, dst_path, ty):
+    def add_dlopen_dep(self, src_path, dst_path):
         for elf_class in (ELF.ELFCLASS32, ELF.ELFCLASS64):
             src = self.get_lib_in_elf_class(elf_class, src_path)
             dst = self.get_lib_in_elf_class(elf_class, dst_path)
             if src and dst:
-                src.add_dep(dst, ty)
+                src.add_dlopen_dep(dst)
                 return
         print('error: cannot add dependency from {} to {}.'
               .format(src_path, dst_path), file=sys.stderr)
@@ -1176,8 +1197,7 @@ class ELFLinker(object):
             for line in f:
                 match = patt.match(line)
                 if match:
-                    self.add_dep(match.group(1), match.group(2),
-                                 ELFLinkData.DLOPEN)
+                    self.add_dlopen_dep(match.group(1), match.group(2))
 
     def _find_exported_symbol(self, symbol, libs):
         """Find the shared library with the exported symbol."""
@@ -1211,7 +1231,7 @@ class ELFLinker(object):
                       .format(lib.path, dt_needed, candidates), file=sys.stderr)
                 lib.unresolved_dt_needed.append(dt_needed)
                 continue
-            lib.add_dep(dep, ELFLinkData.NEEDED)
+            lib.add_needed_dep(dep)
             imported_libs.append(dep)
         return imported_libs
 
@@ -1368,16 +1388,18 @@ class ELFLinker(object):
         """Find all SP-NDK libraries."""
         return set(lib for lib in self.all_libs() if lib.is_sp_ndk)
 
-    def compute_sp_lib(self, generic_refs):
+    def compute_sp_lib(self, generic_refs, ignore_hidden_deps=False):
         def is_ndk(lib):
             return lib.is_ndk
 
         sp_ndk = self.compute_sp_ndk()
-        sp_ndk_closure = self.compute_deps_closure(sp_ndk, is_ndk)
+        sp_ndk_closure = self.compute_deps_closure(
+                sp_ndk, is_ndk, ignore_hidden_deps)
         sp_ndk_indirect = sp_ndk_closure - sp_ndk
 
         sp_hal = self.compute_predefined_sp_hal()
-        sp_hal_closure = self.compute_deps_closure(sp_hal, is_ndk)
+        sp_hal_closure = self.compute_deps_closure(
+                sp_hal, is_ndk, ignore_hidden_deps)
 
         def is_aosp_lib(lib):
             return (not generic_refs or \
@@ -1414,10 +1436,10 @@ class ELFLinker(object):
         return result
 
     def _deps_po_sorted(self, lib_set):
-        return self._po_sorted(lib_set, lambda x: x.deps)
+        return self._po_sorted(lib_set, lambda x: x.deps_all)
 
     def _users_po_sorted(self, lib_set):
-        return self._po_sorted(lib_set, lambda x: x.users)
+        return self._po_sorted(lib_set, lambda x: x.users_all)
 
     def normalize_partition_tags(self, sp_hals, generic_refs):
         system_libs = set(self.lib_pt[PT_SYSTEM].values())
@@ -1427,31 +1449,31 @@ class ELFLinker(object):
             return lib.is_system_lib() or lib in sp_hals
 
         for lib in system_libs_po:
-            if all(is_system_lib_or_sp_hal(dep) for dep in lib.deps):
+            if all(is_system_lib_or_sp_hal(dep) for dep in lib.deps_all):
                 # Good system lib.  Do nothing.
                 continue
             if not generic_refs or generic_refs.refs.get(lib.path):
                 # If lib is in AOSP generic reference, then we assume that the
                 # non-SP-HAL dependencies are errors.  Emit errors and remove
                 # the dependencies.
-                for dep in list(lib.dt_deps):
+                for dep in list(lib.deps_needed_all):
                     if not is_system_lib_or_sp_hal(dep):
                         print('error: {}: system exe/lib must not depend on '
                               'vendor lib {}.  Assume such dependency does '
                               'not exist.'.format(lib.path, dep.path),
                               file=sys.stderr)
-                        lib.remove_dep(dep, ELFLinkData.NEEDED)
-                for dep in list(lib.dl_deps):
+                        lib.hide_needed_dep(dep)
+                for dep in list(lib.deps_dlopen_all):
                     if not is_system_lib_or_sp_hal(dep):
                         print('error: {}: system exe/lib must not dlopen() '
                               'vendor lib {}.  Assume such dependency does '
                               'not exist.'.format(lib.path, dep.path),
                               file=sys.stderr)
-                        lib.remove_dep(dep, ELFLinkData.DLOPEN)
+                        lib.hide_dlopen_dep(dep)
             else:
                 # If lib is not in AOSP generic reference, then we assume that
                 # lib must be moved to vendor partition.
-                for dep in lib.deps:
+                for dep in lib.deps_all:
                     if not is_system_lib_or_sp_hal(dep):
                         print('warning: {}: system exe/lib must not depend on '
                               'vendor lib {}.  Assuming {} should be placed in '
@@ -1517,7 +1539,7 @@ class ELFLinker(object):
                 return True
             return is_aosp_lib(lib)
 
-        sp_hal_dep = self.compute_deps_closure(sp_hal, is_not_sp_hal_dep)
+        sp_hal_dep = self.compute_deps_closure(sp_hal, is_not_sp_hal_dep, True)
         sp_hal_dep -= sp_hal
 
         # Find VNDK-SP libs.
@@ -1529,7 +1551,7 @@ class ELFLinker(object):
                 self._parse_action_on_ineligible_lib(action_ineligible_vndk_sp)
         vndk_sp = set()
         for lib in itertools.chain(sp_hal, sp_hal_dep):
-            for dep in lib.deps:
+            for dep in lib.deps_all:
                 if is_not_vndk_sp(dep):
                     continue
                 if dep in predefined_vndk_sp:
@@ -1548,7 +1570,7 @@ class ELFLinker(object):
                    lib in fwk_only_rs
 
         vndk_sp_indirect = self.compute_deps_closure(
-                vndk_sp, is_not_vndk_sp_indirect)
+                vndk_sp, is_not_vndk_sp_indirect, True)
         vndk_sp_indirect -= vndk_sp
 
         # Find unused predefined VNDK-SP libs.
@@ -1561,7 +1583,7 @@ class ELFLinker(object):
         def is_not_vndk_sp_indirect_unused(lib):
             return is_not_vndk_sp_indirect(lib) or lib in vndk_sp_indirect
         vndk_sp_unused_deps = self.compute_deps_closure(
-                vndk_sp_unused, is_not_vndk_sp_indirect_unused)
+                vndk_sp_unused, is_not_vndk_sp_indirect_unused, True)
         vndk_sp_unused_deps -= vndk_sp_unused
 
         vndk_sp_indirect_unused = set(lib for lib in predefined_vndk_sp_indirect
@@ -1600,7 +1622,7 @@ class ELFLinker(object):
 
             # Add the dependencies to vndk_sp_indirect if they are not vndk_sp.
             closure = self.compute_deps_closure(
-                    {lib}, lambda lib: lib not in vndk_sp_indirect_unused)
+                    {lib}, lambda lib: lib not in vndk_sp_indirect_unused, True)
             closure.remove(lib)
             vndk_sp_indirect_unused.difference_update(closure)
             vndk_sp_indirect.update(closure)
@@ -1626,7 +1648,7 @@ class ELFLinker(object):
             result = set()
             for lib in libs:
                 exts = set(lib.imported_ext_symbols.keys())
-                for dep in lib.deps:
+                for dep in lib.deps_all:
                     if not is_vndk_sp_public(dep):
                         continue
                     if dep in vndk_sp_ext or dep in vndk_sp_indirect_ext:
@@ -1672,7 +1694,7 @@ class ELFLinker(object):
         def collect_vndk(vendor_libs):
             next_vendor_libs = set()
             for lib in vendor_libs:
-                for dep in lib.deps:
+                for dep in lib.deps_all:
                     if is_vndk_sp_unused(dep):
                         relabel_vndk_sp_as_used(dep)
                         continue
@@ -1700,7 +1722,7 @@ class ELFLinker(object):
         while candidates:
             candidates = collect_vndk(candidates)
 
-        vndk_indirect = self.compute_deps_closure(vndk, is_not_vndk)
+        vndk_indirect = self.compute_deps_closure(vndk, is_not_vndk, True)
         vndk_indirect -= vndk
 
         def is_vndk(lib):
@@ -1733,7 +1755,7 @@ class ELFLinker(object):
             return lib.is_ll_ndk or is_vndk_sp(lib) or is_vndk(lib)
 
         ll_ndk_indirect = self.compute_deps_closure(
-                ll_ndk, is_not_ll_ndk_indirect)
+                ll_ndk, is_not_ll_ndk_indirect, True)
         ll_ndk_indirect -= ll_ndk
 
         def is_not_sp_ndk_indirect(lib):
@@ -1741,7 +1763,7 @@ class ELFLinker(object):
                    is_vndk_sp(lib) or is_vndk(lib)
 
         sp_ndk_indirect = self.compute_deps_closure(
-                sp_ndk, is_not_sp_ndk_indirect)
+                sp_ndk, is_not_sp_ndk_indirect, True)
         sp_ndk_indirect -= sp_ndk
 
         # Return the VNDK classifications.
@@ -1782,12 +1804,18 @@ class ELFLinker(object):
         return closure
 
     @classmethod
-    def compute_deps_closure(cls, root_set, is_excluded):
-        return cls._compute_closure(root_set, is_excluded, lambda x: x.deps)
+    def compute_deps_closure(cls, root_set, is_excluded,
+                             ignore_hidden_deps=False):
+        get_successors = (lambda x: x.deps_good) if ignore_hidden_deps else \
+                         (lambda x: x.deps_all)
+        return cls._compute_closure(root_set, is_excluded, get_successors)
 
     @classmethod
-    def compute_users_closure(cls, root_set, is_excluded):
-        return cls._compute_closure(root_set, is_excluded, lambda x: x.users)
+    def compute_users_closure(cls, root_set, is_excluded,
+                              ignore_hidden_users=False):
+        get_successors = (lambda x: x.users_good) if ignore_hidden_users else \
+                         (lambda x: x.users_all)
+        return cls._compute_closure(root_set, is_excluded, get_successors)
 
     @staticmethod
     def _create_internal(scan_elf_files, system_dirs, system_dirs_as_vendor,
@@ -2145,7 +2173,7 @@ class VNDKCommand(VNDKCommandBase):
         for lib in lib_set.values():
             if not lib.num_users:
                 continue
-            if all((user.partition != partition for user in lib.users)):
+            if all((user.partition != partition for user in lib.users_all)):
                 print(error_msg.format(lib.path), file=sys.stderr)
 
     def _warn_incorrect_partition(self, graph):
@@ -2325,21 +2353,11 @@ class DepsInsightCommand(VNDKCommandBase):
         parser.add_argument(
                 '--output', '-o', help='output directory')
 
-    def main(self, args):
-        generic_refs, graph, tagged_paths = self.create_from_args(args)
-
-        module_info = ModuleInfo.load_from_path_or_default(args.module_info)
-
-        # Compute vndk heuristics.
-        vndk_lib = graph.compute_degenerated_vndk(
-                generic_refs, tagged_paths, args.action_ineligible_vndk_sp,
-                args.action_ineligible_vndk)
-
-        # Serialize data.
+    @staticmethod
+    def serialize_data(libs, vndk_lib, module_info):
         strs = []
         strs_dict = dict()
 
-        libs = list(graph.all_libs())
         libs.sort(key=lambda lib: lib.path)
         libs_dict = {lib: i for i, lib in enumerate(libs)}
 
@@ -2356,7 +2374,7 @@ class DepsInsightCommand(VNDKCommandBase):
             return [libs_dict[lib] for lib in sorted(libs)]
 
         def collect_deps(lib):
-            queue = list(lib.deps)
+            queue = list(lib.deps_all)
             visited = set(queue)
             visited.add(lib)
             deps = []
@@ -2366,7 +2384,7 @@ class DepsInsightCommand(VNDKCommandBase):
                 # Collect dependencies for next queue.
                 next_queue = []
                 for lib in queue:
-                    for dep in lib.deps:
+                    for dep in lib.deps_all:
                         if dep not in visited:
                             next_queue.append(dep)
                             visited.add(dep)
@@ -2395,8 +2413,24 @@ class DepsInsightCommand(VNDKCommandBase):
                          32 if lib.elf.is_32bit else 64,
                          collect_tags(lib),
                          collect_deps(lib),
-                         collect_path_sorted_lib_idxs(lib.users),
+                         collect_path_sorted_lib_idxs(lib.users_all),
                          collect_source_dir_paths(lib)])
+
+        return (strs, mods)
+
+    def main(self, args):
+        generic_refs, graph, tagged_paths = self.create_from_args(args)
+
+        module_info = ModuleInfo.load_from_path_or_default(args.module_info)
+
+        # Compute vndk heuristics.
+        vndk_lib = graph.compute_degenerated_vndk(
+                generic_refs, tagged_paths, args.action_ineligible_vndk_sp,
+                args.action_ineligible_vndk)
+
+        # Serialize data.
+        strs, mods = self.serialize_data(list(graph.all_libs), vndk_lib,
+                                         module_info)
 
         # Generate output files.
         makedirs(args.output, exist_ok=True)
@@ -2454,11 +2488,11 @@ class DepsCommand(ELFGraphCommand):
 
                 data = []
                 if args.revert:
-                    for assoc_lib in sorted(lib.users):
+                    for assoc_lib in sorted(lib.users_all):
                         data.append((assoc_lib.path,
                                      collect_symbols(assoc_lib, lib)))
                 else:
-                    for assoc_lib in sorted(lib.deps):
+                    for assoc_lib in sorted(lib.deps_all):
                         data.append((assoc_lib.path,
                                      collect_symbols(lib, assoc_lib)))
                 results.append((name, data))
@@ -2639,7 +2673,7 @@ class CheckDepCommand(CheckDepCommandBase):
                               file=sys.stderr)
 
             # Check whether vendor modules depend on ineligible libs.
-            for dep in lib.deps:
+            for dep in lib.deps_all:
                 if dep not in vendor_libs and dep not in eligible_libs:
                     num_errors += 1
                     bad_deps.add(dep)
@@ -2688,7 +2722,7 @@ class CheckEligibleListCommand(CheckDepCommandBase):
         delimiter = ''
         for lib in sorted(eligible_libs):
             bad_deps = []
-            for dep in lib.deps:
+            for dep in lib.deps_all:
                 if dep not in eligible_libs and dep not in indirect_libs:
                     print('error: eligible lib "{}" should not depend on '
                           'non-eligible lib "{}".'.format(lib.path, dep.path),
@@ -2702,7 +2736,7 @@ class CheckEligibleListCommand(CheckDepCommandBase):
         # Check the libbinder dependencies.
         for lib in sorted(eligible_libs):
             bad_deps = []
-            for dep in lib.deps:
+            for dep in lib.deps_all:
                 if os.path.basename(dep.path) == 'libbinder.so':
                     print('error: eligible lib "{}" should not depend on '
                           'libbinder.so.'.format(lib.path), file=sys.stderr)
@@ -2773,7 +2807,7 @@ class DepGraphCommand(ELFGraphCommand):
                 'depends': [],
                 'violates': [],
             }
-            for dep in lib.deps:
+            for dep in lib.deps_all:
                 if self._check_if_allowed(tag,
                         self._get_tag_from_lib(dep, tagged_paths)):
                     lib_item['depends'].append(dep.path)
