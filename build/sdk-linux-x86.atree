@@ -28,10 +28,10 @@ lib64/libc++.so                                        strip platform-tools/lib6
 # revision as specified in the source.properties.
 
 
-lib64/libLLVM.so                                       strip build-tools/${PLATFORM_NAME}/lib64/libLLVM.so
+lib64/libLLVM_android.so                               strip build-tools/${PLATFORM_NAME}/lib64/libLLVM_android.so
 lib64/libbcc.so                                        strip build-tools/${PLATFORM_NAME}/lib64/libbcc.so
 lib64/libbcinfo.so                                     strip build-tools/${PLATFORM_NAME}/lib64/libbcinfo.so
-lib64/libclang.so                                      strip build-tools/${PLATFORM_NAME}/lib64/libclang.so
+lib64/libclang_android.so                              strip build-tools/${PLATFORM_NAME}/lib64/libclang_android.so
 lib64/libc++.so                                        strip build-tools/${PLATFORM_NAME}/lib64/libc++.so
 lib64/libaapt2_jni.so                                  strip build-tools/${PLATFORM_NAME}/lib64/libaapt2_jni.so
 
