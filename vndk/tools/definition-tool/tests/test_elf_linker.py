@@ -1,65 +1,14 @@
 #!/usr/bin/env python3
 
-from __future__ import print_function
-
 import os
 import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 import unittest
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from compat import StringIO
-from vndk_definition_tool import (ELF, ELFLinker, GenericRefs, PT_SYSTEM,
-                                  PT_VENDOR)
-
-
-class GraphBuilder(object):
-    _PARTITION_NAMES = {
-        PT_SYSTEM: 'system',
-        PT_VENDOR: 'vendor',
-    }
-
-    _LIB_DIRS = {
-        ELF.ELFCLASS32: 'lib',
-        ELF.ELFCLASS64: 'lib64',
-    }
-
-    def __init__(self):
-        self.graph = ELFLinker()
-
-    def add_lib(self, partition, klass, name, dt_needed=[],
-                exported_symbols=set(), imported_symbols=set(),
-                extra_dir=None):
-        """Create and add a shared library to ELFLinker."""
-
-        lib_dir = os.path.join('/', self._PARTITION_NAMES[partition],
-                               self._LIB_DIRS[klass])
-        if extra_dir:
-            lib_dir = os.path.join(lib_dir, extra_dir)
-
-        path = os.path.join(lib_dir, name + '.so')
-
-        elf = ELF(klass, ELF.ELFDATA2LSB, dt_needed=dt_needed,
-                  exported_symbols=exported_symbols,
-                  imported_symbols=imported_symbols)
-
-        node = self.graph.add_lib(partition, path, elf)
-        setattr(self, name + '_' + elf.elf_class_name, node)
-        return node
-
-    def add_multilib(self, partition, name, dt_needed=[],
-                     exported_symbols=set(), imported_symbols=set(),
-                     extra_dir=None):
-        """Add 32-bit / 64-bit shared libraries to ELFLinker."""
-        return (
-            self.add_lib(partition, ELF.ELFCLASS32, name, dt_needed,
-                         exported_symbols, imported_symbols, extra_dir),
-            self.add_lib(partition, ELF.ELFCLASS64, name, dt_needed,
-                         exported_symbols, imported_symbols, extra_dir)
-        )
-
-    def resolve(self):
-        self.graph.resolve_deps()
+from utils import GraphBuilder
+from vndk_definition_tool import (ELF, GenericRefs, PT_SYSTEM, PT_VENDOR)
 
 
 class ELFLinkerTest(unittest.TestCase):
@@ -147,18 +96,18 @@ class ELFLinkerTest(unittest.TestCase):
         # Check the dependencies of libc.so.
         node = gb.graph.get_lib('/system/lib/libc.so')
         self.assertEqual(['/system/lib/libdl.so', '/system/lib/libm.so'],
-                         self._get_paths_from_nodes(node.deps))
+                         self._get_paths_from_nodes(node.deps_all))
 
         # Check the dependencies of libRS.so.
         node = gb.graph.get_lib('/system/lib64/libRS.so')
         self.assertEqual(['/system/lib64/libdl.so'],
-                         self._get_paths_from_nodes(node.deps))
+                         self._get_paths_from_nodes(node.deps_all))
 
         # Check the dependencies of libEGL.so.
         node = gb.graph.get_lib('/vendor/lib64/libEGL.so')
         self.assertEqual(['/system/lib64/libc.so', '/system/lib64/libcutils.so',
                           '/system/lib64/libdl.so'],
-                         self._get_paths_from_nodes(node.deps))
+                         self._get_paths_from_nodes(node.deps_all))
 
     def test_linked_symbols(self):
         gb = self._create_normal_graph()
@@ -217,21 +166,21 @@ class ELFLinkerTest(unittest.TestCase):
         # Check the users of libc.so.
         node = graph.get_lib('/system/lib/libc.so')
         self.assertEqual(['/system/lib/libcutils.so', '/vendor/lib/libEGL.so'],
-                         self._get_paths_from_nodes(node.users))
+                         self._get_paths_from_nodes(node.users_all))
 
         # Check the users of libdl.so.
         node = graph.get_lib('/system/lib/libdl.so')
         self.assertEqual(['/system/lib/libRS.so', '/system/lib/libc.so',
                           '/system/lib/libcutils.so', '/vendor/lib/libEGL.so'],
-                         self._get_paths_from_nodes(node.users))
+                         self._get_paths_from_nodes(node.users_all))
 
         # Check the users of libRS.so.
         node = graph.get_lib('/system/lib64/libRS.so')
-        self.assertEqual([], self._get_paths_from_nodes(node.users))
+        self.assertEqual([], self._get_paths_from_nodes(node.users_all))
 
         # Check the users of libEGL.so.
         node = graph.get_lib('/vendor/lib64/libEGL.so')
-        self.assertEqual([], self._get_paths_from_nodes(node.users))
+        self.assertEqual([], self._get_paths_from_nodes(node.users_all))
 
     def test_compute_predefined_sp_hal(self):
         gb = GraphBuilder()
