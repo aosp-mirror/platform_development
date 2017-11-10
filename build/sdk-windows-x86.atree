@@ -99,11 +99,11 @@ bin/llvm-rs-cc.exe                      strip build-tools/${PLATFORM_NAME}/llvm-
 # libc++.so not needed on Windows.
 rm build-tools/${PLATFORM_NAME}/lib64/libc++.so
 
-rm build-tools/${PLATFORM_NAME}/lib64/libLLVM.so
-lib/libLLVM.dll                         strip build-tools/${PLATFORM_NAME}/libLLVM.dll
+rm build-tools/${PLATFORM_NAME}/lib64/libLLVM_android.so
+lib/libLLVM_android.dll                 strip build-tools/${PLATFORM_NAME}/libLLVM_android.dll
 
-rm build-tools/${PLATFORM_NAME}/lib64/libclang.so
-lib/libclang.dll                        strip build-tools/${PLATFORM_NAME}/libclang.dll
+rm build-tools/${PLATFORM_NAME}/lib64/libclang_android.so
+lib/libclang_android.dll                strip build-tools/${PLATFORM_NAME}/libclang_android.dll
 
 #bcc not yet compiled on windows
 
