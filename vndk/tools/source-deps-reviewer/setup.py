@@ -11,10 +11,12 @@ setup(
     packages=['sourcedr'],
     package_data={
         'sourcedr': [
-            'static/prism/js/prism.js',
-            'static/prism/css/prism.css',
-            'static/js/main.js',
+            'defaults/pattern_db.csv',
+            'defaults/sourcedr.json',
             'static/css/main.css',
+            'static/js/main.js',
+            'static/prism/css/prism.css',
+            'static/prism/js/prism.js',
         ],
     },
     install_requires=['flask'],
@@ -25,8 +27,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'sourcedr = sourcedr.server:main',
-            'sourcedr-map = sourcedr.map:main'
+            'sourcedr = sourcedr.commands:main',
         ],
     }
 )
