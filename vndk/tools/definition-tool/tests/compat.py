@@ -39,3 +39,19 @@ if sys.version_info >= (3, 0):
     from io import StringIO
 else:
     from StringIO import StringIO
+
+
+try:
+    from unittest.mock import patch
+except ImportError:
+    import contextlib
+    @contextlib.contextmanager
+    def patch(target, mock):
+        obj, attr = target.rsplit('.')
+        obj = __import__(obj)
+        original_value = getattr(obj, attr)
+        setattr(obj, attr, mock)
+        try:
+            yield
+        finally:
+            setattr(obj, attr, original_value)

@@ -260,6 +260,7 @@ class AndroidDevice(object):
     def __init__(self, serial, product=None, adb_path='adb'):
         self.serial = serial
         self.product = product
+        self.adb_path = adb_path
         self.adb_cmd = [adb_path]
 
         if self.serial is not None:
