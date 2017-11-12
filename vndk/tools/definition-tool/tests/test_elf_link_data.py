@@ -19,35 +19,37 @@ class ELFLinkDataTest(unittest.TestCase):
         self.w = ELFLinkData(PT_SYSTEM, '/system/lib/libw.so', None, 0)
         self.v = ELFLinkData(PT_VENDOR, '/vendor/lib/libv.so', None, 0)
 
-        self.x.add_dep(self.y, ELFLinkData.NEEDED)
-        self.x.add_dep(self.z, ELFLinkData.DLOPEN)
+        self.x.add_needed_dep(self.y)
+        self.x.add_dlopen_dep(self.z)
 
-        self.z.add_dep(self.w, ELFLinkData.NEEDED)
-        self.z.add_dep(self.w, ELFLinkData.DLOPEN)
+        self.z.add_needed_dep(self.w)
+        self.z.add_dlopen_dep(self.w)
 
     def test_add_dep_and_accessors(self):
-        self.assertIn(self.y, self.x.dt_deps)
-        self.assertIn(self.x, self.y.dt_users)
-        self.assertNotIn(self.y, self.x.dl_deps)
-        self.assertNotIn(self.x, self.y.dl_users)
+        self.assertIn(self.y, self.x.deps_needed_all)
+        self.assertIn(self.x, self.y.users_needed_all)
+        self.assertNotIn(self.y, self.x.deps_dlopen_all)
+        self.assertNotIn(self.x, self.y.users_dlopen_all)
 
-        self.assertIn(self.z, self.x.dl_deps)
-        self.assertIn(self.x, self.z.dl_users)
-        self.assertNotIn(self.z, self.x.dt_deps)
-        self.assertNotIn(self.x, self.z.dt_users)
+        self.assertIn(self.z, self.x.deps_dlopen_all)
+        self.assertIn(self.x, self.z.users_dlopen_all)
+        self.assertNotIn(self.z, self.x.deps_needed_all)
+        self.assertNotIn(self.x, self.z.users_needed_all)
 
     def test_remove_dep(self):
-        self.assertIn(self.y, self.x.dt_deps)
-        self.assertIn(self.x, self.y.dt_users)
+        self.assertIn(self.y, self.x.deps_needed_all)
+        self.assertIn(self.x, self.y.users_needed_all)
 
         with self.assertRaises(KeyError):
-            self.x.remove_dep(self.y, ELFLinkData.DLOPEN)
-        self.assertIn(self.y, self.x.dt_deps)
-        self.assertIn(self.x, self.y.dt_users)
+            self.x.hide_dlopen_dep(self.y)
+        self.assertIn(self.y, self.x.deps_needed_all)
+        self.assertIn(self.x, self.y.users_needed_all)
 
-        self.x.remove_dep(self.y, ELFLinkData.NEEDED)
-        self.assertNotIn(self.y, self.x.dt_deps)
-        self.assertNotIn(self.x, self.y.dt_users)
+        self.x.hide_needed_dep(self.y)
+        self.assertIn(self.y, self.x.deps_needed_hidden)
+        self.assertIn(self.x, self.y.users_needed_hidden)
+        self.assertNotIn(self.y, self.x.deps_needed)
+        self.assertNotIn(self.x, self.y.users_needed)
 
     def test_num_deps(self):
         self.assertEqual(2, self.x.num_deps)

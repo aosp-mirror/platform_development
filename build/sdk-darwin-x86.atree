@@ -28,10 +28,10 @@ lib/libc++.dylib                                      strip platform-tools/lib/l
 # revision as specified in the source.properties.
 
 
-lib64/libLLVM.dylib                                     strip build-tools/${PLATFORM_NAME}/lib64/libLLVM.dylib
+lib64/libLLVM_android.dylib                             strip build-tools/${PLATFORM_NAME}/lib64/libLLVM_android.dylib
 lib64/libbcc.dylib                                      strip build-tools/${PLATFORM_NAME}/lib64/libbcc.dylib
 lib64/libbcinfo.dylib                                   strip build-tools/${PLATFORM_NAME}/lib64/libbcinfo.dylib
-lib64/libclang.dylib                                    strip build-tools/${PLATFORM_NAME}/lib64/libclang.dylib
+lib64/libclang_android.dylib                            strip build-tools/${PLATFORM_NAME}/lib64/libclang_android.dylib
 lib64/libc++.dylib                                      strip build-tools/${PLATFORM_NAME}/lib64/libc++.dylib
 lib64/libaapt2_jni.dylib                                strip build-tools/${PLATFORM_NAME}/lib64/libaapt2_jni.dylib
 
