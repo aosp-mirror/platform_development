@@ -86,6 +86,9 @@ def get_processes(device):
     # busybox truncates the output, and very long package names like
     # com.exampleisverylongtoolongbyfar.plasma exceed the limit.
     #
+    # API 26 use toybox instead of toolbox for ps and needs -A to list
+    # all processes.
+    #
     # Perform the check for this on the device to avoid an adb roundtrip
     # Some devices might not have readlink or which, so we need to handle
     # this as well.
@@ -95,10 +98,12 @@ def get_processes(device):
 
     ps_script = """
         if $(ls /system/bin/readlink >/dev/null 2>&1); then
-          if [ $(readlink /system/bin/ps) == "toolbox" ]; then
-            ps;
-          else
+          if [ $(readlink /system/bin/ps) == "busybox" ]; then
             ps -w;
+          elif [ $(readlink /system/bin/ps) == "toybox" ]; then
+            ps -A;
+          else
+            ps;
           fi
         else
           ps;
