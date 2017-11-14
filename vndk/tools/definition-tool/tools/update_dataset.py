@@ -67,8 +67,12 @@ def main():
         reader = csv.reader(fp)
         header = next(reader)
         data = dict()
+        regex_patterns = []
         for path, tag, comments in reader:
-            data[path] = [path, tag, comments]
+            if path.startswith('[regex]'):
+                regex_patterns.append([path, tag, comments])
+            else:
+                data[path] = [path, tag, comments]
 
     # Delete non-existing libraries.
     installed_paths = load_install_paths(args.module_info)
@@ -99,6 +103,9 @@ def main():
     for name in vndk:
         update_tag('/system/${LIB}/' + name + '.so', 'VNDK')
         update_tag('/system/${LIB}/vndk/' + name + '.so', 'VNDK')
+
+    for regex in regex_patterns:
+        data[regex[0]] = regex
 
     # Write updated eligible list file.
     with open(args.output, 'w') as fp:
