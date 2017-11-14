@@ -700,17 +700,27 @@ class TaggedDict(object):
         self._path_tag = dict()
         for tag in self.TAGS:
             setattr(self, tag, set())
+        self._regex_patterns = []
 
     def add(self, tag, lib):
         lib_set = getattr(self, tag)
         lib_set.add(lib)
         self._path_tag[lib] = tag
 
+    def add_regex(self, tag, pattern):
+        self._regex_patterns.append((re.compile(pattern), tag))
+
     def get_path_tag(self, lib):
         try:
             return self._path_tag[lib]
         except KeyError:
-            return self.get_path_tag_default(lib)
+            pass
+
+        for pattern, tag in self._regex_patterns:
+            if pattern.match(lib):
+                return tag
+
+        return self.get_path_tag_default(lib)
 
     def get_path_tag_default(self, lib):
         raise NotImplementedError()
@@ -749,6 +759,10 @@ class TaggedDict(object):
     @staticmethod
     def is_fwk_only_rs(tag_bit):
         return bool(tag_bit & TaggedDict.FWK_ONLY_RS)
+
+    @staticmethod
+    def is_sp_hal(tag_bit):
+        return bool(tag_bit & TaggedDict.SP_HAL)
 
 
 class TaggedPathDict(TaggedDict):
@@ -793,6 +807,9 @@ class TaggedPathDict(TaggedDict):
             yield pattern
 
     def add(self, tag, path):
+        if path.startswith('[regex]'):
+            super(TaggedPathDict, self).add_regex(tag, path[7:])
+            return
         for path in self._enumerate_paths(path):
             super(TaggedPathDict, self).add(tag, path)
 
@@ -800,7 +817,17 @@ class TaggedPathDict(TaggedDict):
         return 'vnd_only' if path.startswith('/vendor') else 'fwk_only'
 
 
-class TaggedLibDict(TaggedDict):
+class TaggedLibDict(object):
+    def __init__(self):
+        self._path_tag = dict()
+        for tag in TaggedDict.TAGS:
+            setattr(self, tag, set())
+
+    def add(self, tag, lib):
+        lib_set = getattr(self, tag)
+        lib_set.add(lib)
+        self._path_tag[lib] = tag
+
     @staticmethod
     def create_from_graph(graph, tagged_paths, generic_refs=None):
         d = TaggedLibDict()
@@ -817,6 +844,12 @@ class TaggedLibDict(TaggedDict):
             else:
                 d.add('vnd_only', lib)
         return d
+
+    def get_path_tag(self, lib):
+        try:
+            return self._path_tag[lib]
+        except KeyError:
+            return self.get_path_tag_default(lib)
 
     def get_path_tag_default(self, lib):
         return 'vnd_only' if lib.path.startswith('/vendor') else 'fwk_only'
@@ -938,6 +971,10 @@ class ELFLinkData(object):
     @property
     def is_fwk_only_rs(self):
         return TaggedDict.is_fwk_only_rs(self._tag_bit)
+
+    @property
+    def is_sp_hal(self):
+        return TaggedDict.is_sp_hal(self._tag_bit)
 
     def add_needed_dep(self, dst):
         assert dst not in self.deps_needed_hidden
@@ -1353,30 +1390,9 @@ class ELFLinker(object):
         self._resolve_elf_class_deps(ELF.ELFCLASS32, generic_refs)
         self._resolve_elf_class_deps(ELF.ELFCLASS64, generic_refs)
 
-    def compute_path_matched_lib(self, path_patterns):
-        patt = re.compile('|'.join('(?:' + p + ')' for p in path_patterns))
-        return set(lib for lib in self.all_libs() if patt.match(lib.path))
-
     def compute_predefined_sp_hal(self):
         """Find all same-process HALs."""
-        path_patterns = (
-            # OpenGL-related
-            '^/vendor/.*/libEGL_.*\\.so$',
-            '^/vendor/.*/libGLES_.*\\.so$',
-            '^/vendor/.*/libGLESv1_CM_.*\\.so$',
-            '^/vendor/.*/libGLESv2_.*\\.so$',
-            '^/vendor/.*/libGLESv3_.*\\.so$',
-            # Vulkan
-            '^/vendor/.*/vulkan.*\\.so$',
-            # libRSDriver
-            '^.*/android\\.hardware\\.renderscript@1\\.0-impl\\.so$',
-            '^/vendor/.*/libPVRRS\\.so$',
-            '^/vendor/.*/libRSDriver.*\\.so$',
-            # Gralloc mapper
-            '^.*/gralloc\\..*\\.so$',
-            '^.*/android\\.hardware\\.graphics\\.mapper@\\d+\\.\\d+-impl\\.so$',
-        )
-        return self.compute_path_matched_lib(path_patterns)
+        return set(lib for lib in self.all_libs() if lib.is_sp_hal)
 
     def compute_sp_ndk(self):
         """Find all SP-NDK libraries."""
