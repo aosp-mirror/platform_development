@@ -1,0 +1,116 @@
+#!/bin/bash -ex
+usage () {
+    echo "Create a Mixed Build archive with the given GSI and device archives."
+    echo
+    echo "Usage: $0 gsi_build_dir device_build_dir out_dir [check_tool]"
+    echo
+    echo "gsi_build_dir is the path to the GSI build"
+    echo "    eg. aosp_arm64_ab-userdebug."
+    echo "device_build_dir is the path to the device build"
+    echo "    eg. sailfish-user."
+    echo "out_dir is the path to where the new build will be placed."
+    echo "check_tool is the path to the checkvintf executable that will be"
+    echo "    used to verify the compatibility of the given images. Optional."
+}
+
+readonly GSI_DIR="$1"
+readonly DEVICE_DIR="$2"
+readonly DIST_DIR="$3"
+readonly CHECK_TOOL="$4"
+readonly TEMP_DIR=$(mktemp -d "/tmp/$(basename $0)_XXXXXXXX")
+
+# Print error message and exit.
+# Usage: exit_badparam message
+#
+# message is a string to be displayed before exit.
+exit_badparam () {
+    echo "ERROR: $1" >&2
+    usage
+    exit 1
+}
+
+cleanup_and_exit () {
+    rm -rf "$TEMP_DIR"
+    exit $?
+}
+
+trap cleanup_and_exit EXIT
+
+readonly GSI_TARGET_FILES_ARCHIVE="$(find "$GSI_DIR" -name "*-target_files-*.zip" -print)"
+if [[ ! -f "$GSI_TARGET_FILES_ARCHIVE" ]]; then
+    exit_badparam "Could not find GSI target_files archive in $GSI_DIR."
+fi
+
+readonly DEVICE_ARCHIVE="$(find "$DEVICE_DIR" -name "*-img-*.zip" -print)"
+if [[ ! -f "$DEVICE_ARCHIVE" ]]; then
+    exit_badparam "Could not find GSI img archive in $DEVICE_DIR."
+fi
+
+readonly DEVICE_TARGET_FILES_ARCHIVE="$(find "$DEVICE_DIR" -name "*-target_files-*.zip" -print)"
+if [[ ! -f "$DEVICE_ARCHIVE" ]]; then
+    exit_badparam "Could not find GSI target_files archive in $DEVICE_DIR."
+fi
+
+if [[ $# -lt 3 ]]; then
+    exit_badparam "Unexpected number of arguments"
+fi
+
+readonly DEVICE_ARTIFACTS_DIR="$TEMP_DIR"/device_archive_artifacts
+readonly DEVICE_IMAGES_DIR="$DEVICE_ARTIFACTS_DIR"/IMAGES
+readonly GSI_ARTIFACTS_DIR="$TEMP_DIR"/gsi_artifacts
+readonly GSI_IMAGES_DIR="$GSI_ARTIFACTS_DIR"/IMAGES
+
+###
+# Uncompress the archives.
+mkdir -p "$GSI_ARTIFACTS_DIR"
+# Get the GSI images and meta data.
+unzip "$GSI_TARGET_FILES_ARCHIVE" \
+  IMAGES/system.img IMAGES/vbmeta.img META/system_matrix.xml META/system_manifest.xml \
+  -d "$GSI_ARTIFACTS_DIR"
+
+mkdir -p "$DEVICE_IMAGES_DIR"
+# Get the device images.
+unzip "$DEVICE_ARCHIVE" -d "$DEVICE_IMAGES_DIR"
+# Get the device meta data.
+unzip "$DEVICE_TARGET_FILES_ARCHIVE" \
+  META/vendor_matrix.xml META/vendor_manifest.xml \
+  -d "$DEVICE_ARTIFACTS_DIR"
+
+###
+# Check compatibility between the GSI compatibility vs the device.
+if [[ -f "$CHECK_TOOL" ]]; then
+    "$CHECK_TOOL" \
+        "$DEVICE_ARTIFACTS_DIR"/META/vendor_manifest.xml \
+        "$GSI_ARTIFACTS_DIR"/META/system_matrix.xml
+    "$CHECK_TOOL" \
+        "$GSI_ARTIFACTS_DIR"/META/system_manifest.xml \
+        "$DEVICE_ARTIFACTS_DIR"/META/vendor_matrix.xml
+fi
+
+###
+# Overwrite artifacts in the device archive to create the Mixed Build artifacts.
+cp "$GSI_IMAGES_DIR"/system.img "$DEVICE_IMAGES_DIR"/
+
+# Only override vbmeta if it is already present since fastboot update will try
+# to flash whatever is in the archive.
+if [[ -f "$DEVICE_IMAGES_DIR"/vbmeta.img ]]; then
+    cp "$GSI_IMAGES_DIR"/vbmeta.img "$DEVICE_IMAGES_DIR"/
+fi
+
+###
+# Create the Mixed Build archive.
+(
+    cd "$DEVICE_IMAGES_DIR"
+    zip -r mixed.zip ./*
+)
+
+###
+# Archive the artifacts.
+if [ -n "$DIST_DIR" ]; then
+    mkdir -p "$DIST_DIR" || true
+fi
+# Archive all the device artifacts.
+cp -R "$DEVICE_DIR"/* "$DIST_DIR"
+# Overwrite the image archive with the Mixed Build archive.
+OUT_ARCHIVE="$DIST_DIR"/"$(basename $DEVICE_ARCHIVE)"
+cp "$DEVICE_IMAGES_DIR"/mixed.zip "$OUT_ARCHIVE"
