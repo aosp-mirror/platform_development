@@ -168,6 +168,7 @@ ${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/org.apache.http.legacy_intermediates
 ${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android_uiautomator_intermediates/javalib.jar     platforms/${PLATFORM_NAME}/uiautomator.jar
 # Test APIs
 ${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android.test.mock.stubs_intermediates/javalib.jar   platforms/${PLATFORM_NAME}/optional/android.test.mock.jar
+${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android.test.base.stubs_intermediates/javalib.jar   platforms/${PLATFORM_NAME}/optional/android.test.base.jar
 ${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android.test.runner.stubs_intermediates/javalib.jar platforms/${PLATFORM_NAME}/optional/android.test.runner.jar
 
 # the aidl precompiled include
