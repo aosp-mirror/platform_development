@@ -38,11 +38,6 @@
         android:text="My Source">
     </Button>
 
-    <Button android:id="@+id/replace"
-        android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:text="Replace">
-    </Button>
-
     <Button android:id="@+id/uninstall"
         android:layout_width="wrap_content" android:layout_height="wrap_content"
         android:text="Uninstall">
