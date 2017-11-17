@@ -46,7 +46,10 @@ import java.io.InputStream;
 
 
 /**
- * Demonstration of styled text resources.
+ * Demonstration of package installation and uninstallation using the original (non-Session)
+ * package installation API that uses {@link Intent#ACTION_INSTALL_PACKAGE}.
+ *
+ * @see InstallApkSessionApi for a demo of the newer Session API.
  */
 public class InstallApk extends Activity {
     static final int REQUEST_INSTALL = 1;
