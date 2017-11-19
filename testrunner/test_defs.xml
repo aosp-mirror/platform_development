@@ -60,6 +60,7 @@ See test_defs.xsd for more information.
 <test name="frameworks-location"
     build_path="frameworks/base/location/tests/locationtests"
     package="com.android.frameworks.locationtests"
+    runner="android.support.test.runner.AndroidJUnitRunner"
     coverage_target="framework"
     continuous="true" />
 
