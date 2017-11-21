@@ -3,6 +3,7 @@
 import os
 import unittest
 import sys
+import tempfile
 
 import_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 import_path = os.path.abspath(os.path.join(import_path, 'utils'))
@@ -14,8 +15,9 @@ from utils import SOURCE_ABI_DUMP_EXT
 from utils import TARGET_ARCHS
 from utils import get_build_var
 from utils import make_library
-from utils import find_lib_lsdump
 from module import Module
+from gen_all import make_and_copy_reference_dumps
+from gen_all import DEFAULT_CFLAGS
 
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 INPUT_DIR = os.path.join(SCRIPT_DIR, 'input')
@@ -26,6 +28,12 @@ class MyTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.maxDiff = None
+
+    def get_reference_dump_path(self, name, target_arch):
+        ref_dump_dir = os.path.join(REF_DUMP_DIR, target_arch)
+        ref_dump_path = os.path.join(ref_dump_dir,
+                                     name + SOURCE_ABI_DUMP_EXT)
+        return ref_dump_path
 
     def run_and_compare(self, input_path, expected_path, cflags=[]):
         with open(expected_path, 'r') as f:
@@ -47,27 +55,40 @@ class MyTest(unittest.TestCase):
 
     def run_and_compare_abi_diff(self, old_dump, new_dump, lib, arch,
                                  expected_return_code, flags=[]) :
-      actual_output = run_abi_diff(old_dump, new_dump, arch, lib, flags)
-      self.assertEqual(actual_output, expected_return_code)
+        actual_output = run_abi_diff(old_dump, new_dump, arch, lib, flags)
+        self.assertEqual(actual_output, expected_return_code)
 
-    def prepare_and_run_abi_diff(self, old_lib, new_lib,
+    def prepare_and_run_abi_diff(self, old_ref_dump_path, new_ref_dump_path,
                                  target_arch, expected_return_code, flags=[]):
-        ref_dump_dir = os.path.join(REF_DUMP_DIR, target_arch)
-        old_ref_dump_path = os.path.join(ref_dump_dir,
-                                         old_lib + SOURCE_ABI_DUMP_EXT)
-
-        new_ref_dump_path = os.path.join(ref_dump_dir,
-                                         new_lib + SOURCE_ABI_DUMP_EXT)
-
         self.run_and_compare_abi_diff(old_ref_dump_path, new_ref_dump_path,
-                                      new_lib, target_arch,
-                                      expected_return_code, flags)
+                                      'test', target_arch, expected_return_code,
+                                      flags)
+
+    def create_ref_dump(self, name, dir_name, target_arch):
+        module_bare = Module.get_test_module_by_name(name)
+        module = Module.mutate_module_for_arch(module_bare, target_arch)
+        return make_and_copy_reference_dumps(module, DEFAULT_CFLAGS,
+                                             dir_name)
+
+    def get_or_create_ref_dump(self, name, target_arch, dir_name, create):
+        if create == True:
+            return self.create_ref_dump(name, dir_name, target_arch)
+        return self.get_reference_dump_path(name, target_arch)
 
     def prepare_and_run_abi_diff_all_archs(self, old_lib, new_lib,
-                                           expected_return_code, flags=[]):
-        for target_arch in TARGET_ARCHS:
-            self.prepare_and_run_abi_diff(old_lib, new_lib, target_arch,
-                                          expected_return_code, flags)
+                                           expected_return_code, flags=[],
+                                           create=True):
+        with tempfile.TemporaryDirectory() as tmp:
+            for target_arch in TARGET_ARCHS:
+                old_ref_dump_path = self.get_or_create_ref_dump(old_lib,
+                                                                target_arch,
+                                                                tmp, False)
+                new_ref_dump_path = self.get_or_create_ref_dump(new_lib,
+                                                                target_arch,
+                                                                tmp, create)
+                self.prepare_and_run_abi_diff(old_ref_dump_path,
+                                              new_ref_dump_path, target_arch,
+                                              expected_return_code, flags)
 
     def test_func_decl_no_args(self):
         self.run_and_compare_name_c_cpp('func_decl_no_args.h')
@@ -157,7 +178,8 @@ class MyTest(unittest.TestCase):
 
     def test_libgolden_cpp_fabricated_function_ast_removed_diff(self):
         self.prepare_and_run_abi_diff_all_archs(
-            "libgolden_cpp_fabricated_function_ast_removed", "libgolden_cpp", 0)
+            "libgolden_cpp_fabricated_function_ast_removed", "libgolden_cpp", 0,
+            [], False)
 
     def test_libgolden_cpp_member_fake_diff(self):
         self.prepare_and_run_abi_diff_all_archs(

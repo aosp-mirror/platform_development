@@ -43,7 +43,7 @@ def copy_reference_dump(lib_path, reference_dump_dir_stem,
     with open(reference_dump_path, 'w') as f:
         f.write(output_content)
     print('Created abi dump at ', reference_dump_path)
-    return 1
+    return reference_dump_path
 
 def copy_reference_dump_content(lib_name, output_content,
                                 reference_dump_dir_stem,
@@ -57,7 +57,7 @@ def copy_reference_dump_content(lib_name, output_content,
     with open(reference_dump_path, 'w') as f:
         f.write(output_content)
     print('Created abi dump at ', reference_dump_path)
-    return 1
+    return reference_dump_path
 
 def read_output_content(output_path, replace_str):
     with open(output_path, 'r') as f:
