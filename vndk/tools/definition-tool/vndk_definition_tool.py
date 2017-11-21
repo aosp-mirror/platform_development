@@ -1144,21 +1144,36 @@ class ELFLinker(object):
         return lib
 
     def add_dlopen_dep(self, src_path, dst_path):
+        num_matches = 0
         for elf_class in (ELF.ELFCLASS32, ELF.ELFCLASS64):
-            src = self.get_lib_in_elf_class(elf_class, src_path)
-            dst = self.get_lib_in_elf_class(elf_class, dst_path)
-            if src and dst:
+            srcs = self._get_libs_in_elf_class(elf_class, src_path)
+            dsts = self._get_libs_in_elf_class(elf_class, dst_path)
+            for src, dst in itertools.product(srcs, dsts):
                 src.add_dlopen_dep(dst)
-                return
-        print('error: cannot add dependency from {} to {}.'
-              .format(src_path, dst_path), file=sys.stderr)
+                num_matches += 1
+        if num_matches == 0:
+            print('error: Failed to add dlopen dependency from {} to {}.'
+                  .format(src_path, dst_path), file=sys.stderr)
 
-    def get_lib_in_elf_class(self, elf_class, path, default=None):
-        for partition in range(NUM_PARTITIONS):
-            res = self.lib_pt[partition].get_lib_dict(elf_class).get(path)
-            if res:
-                return res
-        return default
+    def _get_libs_in_elf_class(self, elf_class, path):
+        result = set()
+        if '${LIB}' in path:
+            lib_dir = 'lib' if elf_class == ELF.ELFCLASS32 else 'lib64'
+            path = path.replace('${LIB}', lib_dir)
+        if path.startswith('[regex]'):
+            patt = re.compile(path[7:])
+            for partition in range(NUM_PARTITIONS):
+                lib_set = self.lib_pt[partition].get_lib_dict(elf_class)
+                for path ,lib in lib_set.items():
+                    if patt.match(path):
+                        result.add(lib)
+        else:
+            for partition in range(NUM_PARTITIONS):
+                lib_set = self.lib_pt[partition].get_lib_dict(elf_class)
+                lib = lib_set.get(path)
+                if lib:
+                    result.add(lib)
+        return result
 
     def get_lib(self, path):
         for lib_set in self.lib_pt:
@@ -1222,7 +1237,7 @@ class ELFLinker(object):
             else:
                 self.add_lib(partition, short_path, elf)
 
-    def load_extra_deps(self, path):
+    def add_dlopen_deps(self, path):
         patt = re.compile('([^:]*):\\s*(.*)')
         with open(path, 'r') as f:
             for line in f:
@@ -1812,7 +1827,7 @@ class ELFLinker(object):
 
         if extra_deps:
             for path in extra_deps:
-                graph.load_extra_deps(path)
+                graph.add_dlopen_deps(path)
 
         graph.resolve_deps(generic_refs)
 
@@ -2112,7 +2127,7 @@ class VNDKCommandBase(ELFGraphCommand):
             script_dir = os.path.dirname(os.path.abspath(__file__))
             minimum_dlopen_deps = os.path.join(script_dir, 'datasets',
                                                'minimum_dlopen_deps.txt')
-            graph.load_extra_deps(minimum_dlopen_deps)
+            graph.add_dlopen_deps(minimum_dlopen_deps)
 
         return (generic_refs, graph, tagged_paths)
 
