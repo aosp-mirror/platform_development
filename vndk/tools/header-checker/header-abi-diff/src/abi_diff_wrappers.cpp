@@ -20,6 +20,8 @@
 
 namespace abi_diff_wrappers {
 
+using abi_util::AbiElementMap;
+
 static bool IsAccessDownGraded(abi_util::AccessSpecifierIR old_access,
                                abi_util::AccessSpecifierIR new_access) {
   bool access_downgraded = false;
@@ -57,14 +59,16 @@ void DiffWrapperBase::CompareEnumFields(
     const std::vector<abi_util::EnumFieldIR> &old_fields,
     const std::vector<abi_util::EnumFieldIR> &new_fields,
     abi_util::EnumTypeDiffIR *enum_type_diff_ir) {
-  std::map<std::string, const abi_util::EnumFieldIR *> old_fields_map;
-  std::map<std::string, const abi_util::EnumFieldIR *> new_fields_map;
+  AbiElementMap<const abi_util::EnumFieldIR *> old_fields_map;
+  AbiElementMap<const abi_util::EnumFieldIR *> new_fields_map;
   abi_util::AddToMap(&old_fields_map, old_fields,
-                     [](const abi_util::EnumFieldIR *f)
-                     {return f->GetName();});
+                     [](const abi_util::EnumFieldIR *f) {return f->GetName();},
+                     [](const abi_util::EnumFieldIR *f) {return f;});
+
   abi_util::AddToMap(&new_fields_map, new_fields,
-                     [](const abi_util::EnumFieldIR *f)
-                     {return f->GetName();});
+                     [](const abi_util::EnumFieldIR *f) {return f->GetName();},
+                     [](const abi_util::EnumFieldIR *f) {return f;});
+
   std::vector<const abi_util::EnumFieldIR *> removed_fields =
       abi_util::FindRemovedElements(old_fields_map, new_fields_map);
 
@@ -184,23 +188,27 @@ DiffWrapperBase::CompareRecordFields(
     abi_util::DiffMessageIR::DiffKind diff_kind) {
   std::pair<std::vector<abi_util::RecordFieldDiffIR>,
   std::vector<const abi_util::RecordFieldIR *>> diffed_and_removed_fields;
-  std::map<std::string, const abi_util::RecordFieldIR *> old_fields_map;
-  std::map<std::string, const abi_util::RecordFieldIR *> new_fields_map;
+  AbiElementMap<const abi_util::RecordFieldIR *> old_fields_map;
+  AbiElementMap<const abi_util::RecordFieldIR *> new_fields_map;
   std::map<uint64_t, const abi_util::RecordFieldIR *> old_fields_offset_map;
   std::map<uint64_t, const abi_util::RecordFieldIR *> new_fields_offset_map;
 
-  abi_util::AddToMap(&old_fields_map, old_fields,
-                     [](const abi_util::RecordFieldIR *f)
-                     {return f->GetName();});
-  abi_util::AddToMap(&new_fields_map, new_fields,
-                     [](const abi_util::RecordFieldIR *f)
-                     {return f->GetName();});
-  abi_util::AddToMap(&old_fields_offset_map, old_fields,
-                     [](const abi_util::RecordFieldIR *f)
-                     {return f->GetOffset();});
-  abi_util::AddToMap(&new_fields_offset_map, new_fields,
-                     [](const abi_util::RecordFieldIR *f)
-                     {return f->GetOffset();});
+  abi_util::AddToMap(
+      &old_fields_map, old_fields,
+      [](const abi_util::RecordFieldIR *f) {return f->GetName();},
+      [](const abi_util::RecordFieldIR *f) {return f;});
+  abi_util::AddToMap(
+      &new_fields_map, new_fields,
+      [](const abi_util::RecordFieldIR *f) {return f->GetName();},
+      [](const abi_util::RecordFieldIR *f) {return f;});
+  abi_util::AddToMap(
+      &old_fields_offset_map, old_fields,
+      [](const abi_util::RecordFieldIR *f) {return f->GetOffset();},
+      [](const abi_util::RecordFieldIR *f) {return f;});
+  abi_util::AddToMap(
+      &new_fields_offset_map, new_fields,
+      [](const abi_util::RecordFieldIR *f) {return f->GetOffset();},
+      [](const abi_util::RecordFieldIR *f) {return f;});
   // If a field is removed from the map field_name -> offset see if another
   // field is present at the same offset and compare the size and type etc,
   // remove it from the removed fields if they're compatible.
@@ -522,9 +530,9 @@ DiffStatus DiffWrapperBase::CompareAndDumpTypeDiff(
     }
     type_queue->push_back(old_type_str);
   }
-  std::map<std::string, const abi_util::TypeIR *>::const_iterator old_it =
+  AbiElementMap<const abi_util::TypeIR *>::const_iterator old_it =
       old_types_.find(old_type_str);
-  std::map<std::string, const abi_util::TypeIR *>::const_iterator new_it =
+  AbiElementMap<const abi_util::TypeIR *>::const_iterator new_it =
       new_types_.find(new_type_str);
   if (old_it == old_types_.end() || new_it == new_types_.end()) {
     // Do a simple string comparison.

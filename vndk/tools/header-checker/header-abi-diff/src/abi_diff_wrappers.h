@@ -28,6 +28,8 @@
 
 namespace abi_diff_wrappers {
 
+using abi_util::AbiElementMap;
+
 template <typename T, typename F>
 static bool IgnoreSymbol(const T *element,
                          const std::set<std::string> &ignored_symbols,
@@ -50,8 +52,8 @@ class DiffWrapperBase {
  protected:
   DiffWrapperBase(
       abi_util::IRDiffDumper *ir_diff_dumper,
-      const std::map<std::string, const abi_util::TypeIR *> &old_types,
-      const std::map<std::string, const abi_util::TypeIR *> &new_types,
+      const AbiElementMap<const abi_util::TypeIR *> &old_types,
+      const AbiElementMap<const abi_util::TypeIR *> &new_types,
       std::set<std::string> *type_cache)
       : ir_diff_dumper_(ir_diff_dumper),
         old_types_(old_types), new_types_(new_types),
@@ -157,8 +159,8 @@ class DiffWrapperBase {
                  std::deque<std::string> *type_queue = nullptr);
  protected:
   abi_util::IRDiffDumper *ir_diff_dumper_;
-  const std::map<std::string, const abi_util::TypeIR *> &old_types_;
-  const std::map<std::string, const abi_util::TypeIR *> &new_types_;
+  const AbiElementMap<const abi_util::TypeIR *> &old_types_;
+  const AbiElementMap<const abi_util::TypeIR *> &new_types_;
   std::set<std::string> *type_cache_;
 };
 
@@ -167,8 +169,8 @@ class DiffWrapper : public DiffWrapperBase {
  public:
   DiffWrapper(const T *oldp, const T *newp,
               abi_util::IRDiffDumper *ir_diff_dumper,
-              const std::map<std::string, const abi_util::TypeIR *> &old_types,
-              const std::map<std::string, const abi_util::TypeIR *> &new_types,
+              const AbiElementMap<const abi_util::TypeIR *> &old_types,
+              const AbiElementMap<const abi_util::TypeIR *> &new_types,
               std::set<std::string> *type_cache)
       : DiffWrapperBase(ir_diff_dumper, old_types, new_types, type_cache),
         oldp_(oldp), newp_(newp) { }

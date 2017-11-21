@@ -31,7 +31,7 @@ class ELFLinkerVNDKTest(unittest.TestCase):
         with patch('sys.stderr', stderr):
             gb.graph.normalize_partition_tags(set(), None)
 
-        self.assertRegex(
+        self.assertRegexpMatches(
                 stderr.getvalue(),
                 'error: .*: system exe/lib must not depend on vendor lib .*.  '
                 'Assume such dependency does not exist.')
