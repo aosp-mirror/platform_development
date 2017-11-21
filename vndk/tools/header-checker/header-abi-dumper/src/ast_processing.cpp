@@ -33,7 +33,6 @@ HeaderASTVisitor::HeaderASTVisitor(
     clang::MangleContext *mangle_contextp,
     clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *compiler_instance_p,
-    const std::string &current_file_name,
     const std::set<std::string> &exported_headers,
     const clang::Decl *tu_decl,
     std::set<std::string> *type_cache,
@@ -41,7 +40,6 @@ HeaderASTVisitor::HeaderASTVisitor(
   : mangle_contextp_(mangle_contextp),
     ast_contextp_(ast_contextp),
     cip_(compiler_instance_p),
-    current_file_name_(current_file_name),
     exported_headers_(exported_headers),
     tu_decl_(tu_decl),
     type_cache_(type_cache),
@@ -167,14 +165,14 @@ bool HeaderASTVisitor::TraverseDecl(clang::Decl *decl) {
 }
 
 HeaderASTConsumer::HeaderASTConsumer(
-    const std::string &file_name,
     clang::CompilerInstance *compiler_instancep,
     const std::string &out_dump_name,
-    const std::set<std::string> &exported_headers)
-  : file_name_(file_name),
-    cip_(compiler_instancep),
+    const std::set<std::string> &exported_headers,
+    abi_util::TextFormatIR text_format)
+  : cip_(compiler_instancep),
     out_dump_name_(out_dump_name),
-    exported_headers_(exported_headers) { }
+    exported_headers_(exported_headers),
+    text_format_(text_format){ }
 
 void HeaderASTConsumer::HandleTranslationUnit(clang::ASTContext &ctx) {
   clang::PrintingPolicy policy(ctx.getPrintingPolicy());
@@ -188,10 +186,9 @@ void HeaderASTConsumer::HandleTranslationUnit(clang::ASTContext &ctx) {
       ctx.createMangleContext());
   std::set<std::string> type_cache;
   std::unique_ptr<abi_util::IRDumper> ir_dumper =
-      abi_util::IRDumper::CreateIRDumper("protobuf", out_dump_name_);
-  HeaderASTVisitor v(mangle_contextp.get(), &ctx, cip_, file_name_,
-                     exported_headers_, translation_unit, &type_cache,
-                     ir_dumper.get());
+      abi_util::IRDumper::CreateIRDumper(text_format_, out_dump_name_);
+  HeaderASTVisitor v(mangle_contextp.get(), &ctx, cip_, exported_headers_,
+                     translation_unit, &type_cache, ir_dumper.get());
   if (!v.TraverseDecl(translation_unit) || !ir_dumper->Dump()) {
     llvm::errs() << "Serialization to ostream failed\n";
     ::exit(1);
