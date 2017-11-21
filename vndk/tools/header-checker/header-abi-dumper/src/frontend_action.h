@@ -15,6 +15,8 @@
 #ifndef FRONTEND_ACTION_H_
 #define FRONTEND_ACTION_H_
 
+#include <ir_representation.h>
+
 #include <clang/Frontend/FrontendAction.h>
 #include <llvm/ADT/StringRef.h>
 
@@ -30,13 +32,15 @@ namespace clang {
 
 class HeaderCheckerFrontendAction : public clang::ASTFrontendAction {
  private:
-  std::string dump_name_;
+  const std::string &dump_name_;
   const std::set<std::string> &exported_headers_;
+  abi_util::TextFormatIR text_format_;
 
  public:
   HeaderCheckerFrontendAction(
       const std::string &dump_name,
-      const std::set<std::string> &exported_headers);
+      const std::set<std::string> &exported_headers,
+      abi_util::TextFormatIR text_format);
 
  protected:
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(
