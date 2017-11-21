@@ -270,11 +270,17 @@ class ProtobufIRDumper : public IRDumper, public IRToProtobufConverter {
 
   bool AddGlobalVarIR(const GlobalVarIR *);
 
+  bool AddElfFunctionIR(const ElfFunctionIR *);
+
+  bool AddElfObjectIR(const ElfObjectIR *);
+
  public:
   ProtobufIRDumper(const std::string &dump_path)
       : IRDumper(dump_path), tu_ptr_(new abi_dump::TranslationUnit()) { }
 
-  bool AddLinkableMessageIR(const LinkableMessageIR *);
+  bool AddLinkableMessageIR(const LinkableMessageIR *) override;
+
+  bool AddElfSymbolMessageIR(const ElfSymbolIR *) override;
 
   bool Dump() override;
 
@@ -288,44 +294,35 @@ class ProtobufIRDumper : public IRDumper, public IRToProtobufConverter {
 class ProtobufTextFormatToIRReader : public TextFormatToIRReader {
  public:
 
-  virtual bool ReadDump() override;
+  ProtobufTextFormatToIRReader(const std::set<std::string> *exported_headers)
+      : TextFormatToIRReader(exported_headers) { }
 
-  ProtobufTextFormatToIRReader(const std::string &dump_path)
-      : TextFormatToIRReader(dump_path) { }
+  bool ReadDump(const std::string &dump_file) override;
 
  private:
-  std::vector<FunctionIR> ReadFunctions(
-       const abi_dump::TranslationUnit &tu);
+  void ReadFunctions(const abi_dump::TranslationUnit &tu);
 
-  std::vector<GlobalVarIR> ReadGlobalVariables(
-       const abi_dump::TranslationUnit &tu);
+  void ReadGlobalVariables(const abi_dump::TranslationUnit &tu);
 
-  std::vector<EnumTypeIR> ReadEnumTypes(const abi_dump::TranslationUnit &tu);
+  void ReadEnumTypes(const abi_dump::TranslationUnit &tu);
 
-  std::vector<RecordTypeIR> ReadRecordTypes(
-      const abi_dump::TranslationUnit &tu);
+  void ReadRecordTypes(const abi_dump::TranslationUnit &tu);
 
-  std::vector<PointerTypeIR> ReadPointerTypes(
-       const abi_dump::TranslationUnit &tu);
+  void ReadPointerTypes(const abi_dump::TranslationUnit &tu);
 
-  std::vector<BuiltinTypeIR> ReadBuiltinTypes(
-       const abi_dump::TranslationUnit &tu);
+  void ReadBuiltinTypes(const abi_dump::TranslationUnit &tu);
 
-  std::vector<QualifiedTypeIR> ReadQualifiedTypes(
-       const abi_dump::TranslationUnit &tu);
+  void ReadQualifiedTypes(const abi_dump::TranslationUnit &tu);
 
-  std::vector<ArrayTypeIR> ReadArrayTypes(const abi_dump::TranslationUnit &tu);
+  void ReadArrayTypes(const abi_dump::TranslationUnit &tu);
 
-  std::vector<LvalueReferenceTypeIR> ReadLvalueReferenceTypes(
-       const abi_dump::TranslationUnit &tu);
+  void ReadLvalueReferenceTypes(const abi_dump::TranslationUnit &tu);
 
-  std::vector<RvalueReferenceTypeIR> ReadRvalueReferenceTypes(
-       const abi_dump::TranslationUnit &tu);
+  void ReadRvalueReferenceTypes(const abi_dump::TranslationUnit &tu);
 
-  std::vector<ElfFunctionIR> ReadElfFunctions (
-      const abi_dump::TranslationUnit &tu);
+  void ReadElfFunctions (const abi_dump::TranslationUnit &tu);
 
-  std::vector<ElfObjectIR> ReadElfObjects (const abi_dump::TranslationUnit &tu);
+  void ReadElfObjects (const abi_dump::TranslationUnit &tu);
 
   void ReadTypeInfo(const abi_dump::BasicNamedAndTypedDecl &type_info,
                     TypeIR *typep);
