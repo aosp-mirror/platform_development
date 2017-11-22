@@ -280,7 +280,7 @@ Path,Tag,Comments
 /system/${LIB}/librs_jni.so,FWK-ONLY,
 /system/${LIB}/librtp_jni.so,FWK-ONLY,
 /system/${LIB}/libschedulerservicehidl.so,FWK-ONLY,
-/system/${LIB}/libselinux.so,FWK-ONLY,
+/system/${LIB}/libselinux.so,FWK-ONLY,"libselinux will be VNDK in the future but not in O-MR1"
 /system/${LIB}/libsensor.so,FWK-ONLY,
 /system/${LIB}/libsensorservice.so,FWK-ONLY,
 /system/${LIB}/libsensorservicehidl.so,FWK-ONLY,
