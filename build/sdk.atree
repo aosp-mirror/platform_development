@@ -46,6 +46,7 @@ bin/adb                                 strip platform-tools/adb
 bin/fastboot                            strip platform-tools/fastboot
 bin/mke2fs                              strip platform-tools/mke2fs
 bin/e2fsdroid                           strip platform-tools/e2fsdroid
+bin/make_f2fs                           strip platform-tools/make_f2fs
 bin/sqlite3                             strip platform-tools/sqlite3
 bin/dmtracedump                         strip platform-tools/dmtracedump
 bin/etc1tool                            strip platform-tools/etc1tool
