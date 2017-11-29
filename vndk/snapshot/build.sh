@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 #
 # Copyright (C) 2017 The Android Open Source Project
 #
@@ -15,13 +15,17 @@
 # limitations under the License.
 #
 
-TARGET_BUILD_VARIANT=userdebug
+export TARGET_BUILD_VARIANT=user
+export BOARD_VNDK_VERSION=current
 
-echo "-----Source build/envsetup.sh"
-source build/envsetup.sh
+echo "-----Generating VNDK snapshot for arm64-armv8-a"
+make -j vndk dist TARGET_PRODUCT=aosp_arm64_ab
 
-echo "-----Generating VNDK snapshot for arm, arm64"
-make -j vndk dist TARGET_PRODUCT=aosp_arm64_ab TARGET_BUILD_VARIANT=$TARGET_BUILD_VARIANT BOARD_VNDK_VERSION=current
+echo "-----Generating VNDK snapshot for arm-armv7-a-neon"
+make -j vndk dist TARGET_PRODUCT=aosp_arm
 
-echo "-----Generating VNDK snapshot for x86, x86_64"
-make -j vndk dist TARGET_PRODUCT=aosp_x86_64 TARGET_BUILD_VARIANT=$TARGET_BUILD_VARIANT BOARD_VNDK_VERSION=current
+echo "-----Generating VNDK snapshot for x86_64-x86_64"
+make -j vndk dist TARGET_PRODUCT=aosp_x86_64
+
+echo "-----Generating VNDK snapshot for x86-x86"
+make -j vndk dist TARGET_PRODUCT=aosp_x86
