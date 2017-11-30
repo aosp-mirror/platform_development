@@ -110,7 +110,7 @@ if [ -n "$DIST_DIR" ]; then
     mkdir -p "$DIST_DIR" || true
 fi
 # Archive all the device artifacts.
-cp -R "$DEVICE_DIR"/* "$DIST_DIR"
+rsync -av --exclude='logs' "$DEVICE_DIR"/* "$DIST_DIR"
 # Overwrite the image archive with the Mixed Build archive.
 OUT_ARCHIVE="$DIST_DIR"/"$(basename $DEVICE_ARCHIVE)"
 cp "$DEVICE_IMAGES_DIR"/mixed.zip "$OUT_ARCHIVE"
