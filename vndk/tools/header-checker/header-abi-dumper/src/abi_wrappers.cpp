@@ -143,6 +143,29 @@ bool ABIWrapper::CreateBasicNamedAndTypedDecl(clang::QualType qual_type,
       ir_dumper_->AddLinkableMessageIR(typep.get());
 }
 
+std::string RecordDeclWrapper::GetMangledRTTI(
+    const clang::CXXRecordDecl *cxx_record_decl) {
+  clang::QualType qual_type =
+      cxx_record_decl->getTypeForDecl()->getCanonicalTypeInternal();
+  llvm::SmallString<256> uid;
+  llvm::raw_svector_ostream out(uid);
+  mangle_contextp_->mangleCXXRTTI(qual_type, out);
+  return uid.str();
+}
+
+std::string ABIWrapper::GetTypeUniqueId(const clang::TagDecl *tag_decl) {
+  clang::QualType qual_type =
+      tag_decl->getTypeForDecl()->getCanonicalTypeInternal();
+  // We need to mangle type names for C++ contexts.
+  if (!tag_decl->isExternCContext() && ast_contextp_->getLangOpts().CPlusPlus) {
+    llvm::SmallString<256> uid;
+    llvm::raw_svector_ostream out(uid);
+    mangle_contextp_->mangleCXXRTTIName(qual_type, out);
+    return uid.str();
+  }
+  return ABIWrapper::QualTypeToString(qual_type);
+}
+
 // CreateBasicNamedAndTypedDecl creates a BasicNamedAndTypedDecl : that'll
 // include all the generic information a basic type will have:
 // abi_dump::BasicNamedAndTypedDecl. Other methods fill in more specific
@@ -564,8 +587,7 @@ abi_util::VTableComponentIR RecordDeclWrapper::SetupRecordVTableComponent(
         const clang::CXXRecordDecl *rtti_decl =
             vtable_component.getRTTIDecl();
         assert(rtti_decl != nullptr);
-        mangled_component_name =
-            ABIWrapper::GetTypeLinkageName(rtti_decl->getTypeForDecl());
+        mangled_component_name = GetMangledRTTI(rtti_decl);
       }
       break;
     case clang::VTableComponent::CK_FunctionPointer:
@@ -663,6 +685,7 @@ bool RecordDeclWrapper::SetupRecordInfo(abi_util::RecordTypeIR *record_declp,
     previous_record_stages_ = record_qual_type_str;
     record_declp->SetLinkerSetKey(record_qual_type_str);
   }
+  record_declp->SetUniqueId(GetTypeUniqueId(record_decl_));
   record_declp->SetAccess(AccessClangToIR(record_decl_->getAccess()));
   return SetupRecordFields(record_declp, source_file) &&
       SetupCXXRecordInfo(record_declp, source_file);
@@ -727,6 +750,7 @@ bool EnumDeclWrapper::SetupEnum(abi_util::EnumTypeIR *enum_type,
   enum_type->SetSourceFile(source_file);
   enum_type->SetUnderlyingType(QualTypeToString(enum_decl_->getIntegerType()));
   enum_type->SetAccess(AccessClangToIR(enum_decl_->getAccess()));
+  enum_type->SetUniqueId(GetTypeUniqueId(enum_decl_));
   return SetupEnumFields(enum_type) &&
       CreateBasicNamedAndTypedDecl(enum_decl_->getIntegerType(), "");
 }
