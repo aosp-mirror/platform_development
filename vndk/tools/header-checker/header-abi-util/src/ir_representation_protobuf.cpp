@@ -218,9 +218,6 @@ void ProtobufTextFormatToIRReader::ReadBuiltinTypes(
     ReadTypeInfo(builtin_type_protobuf.type_info(), &builtin_type_ir);
     builtin_type_ir.SetSignedness(builtin_type_protobuf.is_unsigned());
     builtin_type_ir.SetIntegralType(builtin_type_protobuf.is_integral());
-    if (!IsPresentInExportedHeaders(builtin_type_ir, exported_headers_)) {
-      continue;
-    }
     builtin_types_.insert(
         {builtin_type_ir.GetLinkerSetKey(), std::move(builtin_type_ir)});
   }
