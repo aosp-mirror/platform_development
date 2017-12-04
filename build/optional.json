@@ -10,6 +10,11 @@
     "manifest": false
   },
   {
+    "name": "android.test.base",
+    "jar": "android.test.base.jar",
+    "manifest": false
+  },
+  {
     "name": "android.test.runner",
     "jar": "android.test.runner.jar",
     "manifest": false
