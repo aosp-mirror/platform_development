@@ -154,6 +154,8 @@ RecordTypeIR ProtobufTextFormatToIRReader::RecordTypeProtobufToIR(
   // Base Specifiers
   record_type_ir.SetCXXBaseSpecifiers(RecordCXXBaseSpecifiersProtobufToIR(
       record_type_protobuf.base_specifiers()));
+  record_type_ir.SetRecordKind(
+      RecordKindProtobufToIR(record_type_protobuf.record_kind()));
 
   return record_type_ir;
 }

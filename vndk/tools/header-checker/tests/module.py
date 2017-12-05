@@ -316,6 +316,16 @@ TEST_MODULES = [
         arch = '',
         api = 'current',
     ),
+   Module(
+        name = 'libreproducability',
+        srcs = ['integration/c_and_cpp/reproducability.c',
+                ],
+        version_script = 'integration/c_and_cpp/repro_map.txt',
+        export_include_dirs = ['integration/c_and_cpp/include'],
+        cflags = [],
+        arch = '',
+        api = 'current',
+    ),
 ]
 
 TEST_MODULES = { m.name: m for m in TEST_MODULES }

@@ -9,12 +9,14 @@ import_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 import_path = os.path.abspath(os.path.join(import_path, 'utils'))
 sys.path.insert(1, import_path)
 
+from utils import read_output_content
 from utils import run_header_abi_dumper
 from utils import run_abi_diff
 from utils import SOURCE_ABI_DUMP_EXT
 from utils import TARGET_ARCHS
 from utils import get_build_var
 from utils import make_library
+from utils import AOSP_DIR
 from module import Module
 from gen_all import make_and_copy_reference_dumps
 from gen_all import DEFAULT_CFLAGS
@@ -89,6 +91,20 @@ class MyTest(unittest.TestCase):
                 self.prepare_and_run_abi_diff(old_ref_dump_path,
                                               new_ref_dump_path, target_arch,
                                               expected_return_code, flags)
+
+    def prepare_and_absolute_diff_all_archs(self, old_lib, new_lib,
+                                            flags=[], create=True):
+        with tempfile.TemporaryDirectory() as tmp:
+            for target_arch in TARGET_ARCHS:
+                old_ref_dump_path = self.get_or_create_ref_dump(old_lib,
+                                                                target_arch,
+                                                                tmp, False)
+                new_ref_dump_path = self.get_or_create_ref_dump(new_lib,
+                                                                target_arch,
+                                                                tmp, create)
+                self.assertEqual(
+                    read_output_content(old_ref_dump_path, AOSP_DIR),
+                    read_output_content(new_ref_dump_path, AOSP_DIR))
 
     def test_func_decl_no_args(self):
         self.run_and_compare_name_c_cpp('func_decl_no_args.h')
@@ -197,6 +213,10 @@ class MyTest(unittest.TestCase):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp",
             "libgolden_cpp_unreferenced_elf_symbol_removed", 16)
+
+    def test_libreproducability(self):
+        self.prepare_and_absolute_diff_all_archs("libreproducability",
+                                                 "libreproducability")
 
 
 if __name__ == '__main__':
