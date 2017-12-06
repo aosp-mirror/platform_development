@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2017 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.android.intentplayground">
+    <uses-permission android:name="android.permission.REORDER_TASKS" />
+    <application
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity
+            android:name=".LauncherActivity"
+            android:launchMode="singleInstance"
+            android:documentLaunchMode="always">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".SingleTopActivity"
+            android:launchMode="singleTop" />
+        <activity
+            android:name=".SingleInstanceActivity"
+            android:launchMode="singleInstance" />
+        <activity
+            android:name=".SingleTaskActivity"
+            android:launchMode="singleTask" />
+        <activity
+            android:name=".TaskAffinity1Activity"
+            android:launchMode="standard"
+            android:allowTaskReparenting="true"
+            android:taskAffinity=".t1" />
+        <activity
+            android:name=".TaskAffinity2Activity"
+            android:launchMode="standard"
+            android:allowTaskReparenting="true"
+            android:taskAffinity=".t2" />
+        <activity
+            android:name=".TaskAffinity3Activity"
+            android:launchMode="standard"
+            android:allowTaskReparenting="true"
+            android:taskAffinity=".t3" />
+        <activity
+            android:name=".ClearTaskOnLaunchActivity"
+            android:launchMode="standard"
+            android:clearTaskOnLaunch="true"
+            android:allowTaskReparenting="true"
+            android:taskAffinity=".t2" />
+        <activity
+            android:name=".DocumentLaunchIntoActivity"
+            android:documentLaunchMode="intoExisting" />
+        <activity
+            android:name=".DocumentLaunchAlwaysActivity"
+            android:documentLaunchMode="always" />
+        <activity
+            android:name=".DocumentLaunchNeverActivity"
+            android:documentLaunchMode="never" />
+        <activity
+            android:name=".NoHistoryActivity"
+            android:noHistory="true" />
+    </application>
+</manifest>

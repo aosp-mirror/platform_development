@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2017 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/build_intent_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="@dimen/smallMargin"
+    android:layout_marginLeft="@dimen/smallMargin"
+    android:layout_marginRight="@dimen/smallMargin"
+    android:layout_marginStart="@dimen/smallMargin"
+    android:layout_marginTop="@dimen/smallMargin"
+    android:background="@drawable/card_background"
+    android:elevation="@dimen/cardElevation"
+    android:orientation="vertical"
+    android:padding="@dimen/medMargin">
+
+    <TextView
+        android:id="@+id/build_intent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/build_intent"
+        android:textAppearance="@style/title" />
+
+    <TextView
+        android:id="@+id/flags_hint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/build_intent_caption" />
+
+    <LinearLayout
+        android:id="@+id/build_intent_flags"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="@dimen/smallMargin"
+        android:paddingTop="@dimen/smallMargin" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dividerHeight"
+        android:layout_marginVertical="@dimen/smallMargin"
+        android:background="@drawable/divider" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="@dimen/smallMargin"
+        android:text="@string/target_activity" />
+
+    <RadioGroup
+        android:id="@+id/radioGroup_launchMode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:checkedButton="@+id/radio_launchMode_standard"
+        android:orientation="vertical" />
+
+    <Button
+        android:id="@+id/launch_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="launchActivity"
+        android:text="@string/launch_activity_button" />
+</LinearLayout>
