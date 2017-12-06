@@ -418,11 +418,11 @@ See test_defs.xsd for more information.
     description="SystemUI jank tests" />
 
 <test name="systemui-notification"
-    build_path="frameworks/base/services/tests/notification"
-    package="com.android.frameworks.tests.notification"
+    build_path="frameworks/base/services/tests/uiservicestests"
+    package="com.android.frameworks.tests.uiservices"
     runner="android.testing.TestableInstrumentation"
     continuous="true"
-    description="SystemUI Notification tests" />
+    description="SystemUI Services tests" />
 
 <test name="systemui-functional-notification"
     build_path="platform_testing/tests/functional/notificationtests"
