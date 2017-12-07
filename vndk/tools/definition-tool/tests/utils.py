@@ -6,7 +6,8 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from compat import StringIO
-from vndk_definition_tool import (ELF, ELFLinker, PT_SYSTEM, PT_VENDOR)
+from vndk_definition_tool import (
+        ELF, ELFLinker, PT_SYSTEM, PT_VENDOR, VNDKLibDir)
 
 
 class GraphBuilder(object):
@@ -66,5 +67,9 @@ class GraphBuilder(object):
                          exported_symbols, imported_symbols, extra_dir)
         )
 
-    def resolve(self):
+    def resolve(self, vndk_lib_dirs=None, ro_vndk_version=None):
+        if vndk_lib_dirs is not None:
+            self.graph.vndk_lib_dirs = vndk_lib_dirs
+        if ro_vndk_version is not None:
+            self.graph.ro_vndk_version = ro_vndk_version
         self.graph.resolve_deps()
