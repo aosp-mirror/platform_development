@@ -88,6 +88,25 @@ inline abi_dump::RecordKind RecordKindIRToProtobuf(
   assert(false);
 }
 
+inline RecordTypeIR::RecordKind RecordKindProtobufToIR(
+    abi_dump::RecordKind kind) {
+  switch (kind) {
+    case abi_dump::RecordKind::struct_kind:
+      return RecordTypeIR::struct_kind;
+
+    case abi_dump::RecordKind::class_kind:
+      return RecordTypeIR::class_kind;
+
+    case abi_dump::RecordKind::union_kind:
+      return RecordTypeIR::union_kind;
+
+    default:
+      return RecordTypeIR::struct_kind;
+  }
+  // Should not be reached
+  assert(false);
+}
+
 inline abi_dump::VTableComponent::Kind VTableComponentKindIRToProtobuf(
     VTableComponentIR::Kind kind) {
   switch (kind) {
