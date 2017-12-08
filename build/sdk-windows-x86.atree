@@ -39,6 +39,10 @@ rm platform-tools/e2fsdroid
 rm platform-tools/mke2fs
 bin/mke2fs.exe                          strip platform-tools/mke2fs.exe
 
+rm platform-tools/sload_f2fs
+rm platform-tools/make_f2fs
+bin/make_f2fs.exe                       strip platform-tools/make_f2fs.exe
+
 bin/AdbWinUsbApi.dll                          platform-tools/AdbWinUsbApi.dll
 bin/AdbWinApi.dll                             platform-tools/AdbWinApi.dll
 prebuilts/gcc/linux-x86/host/x86_64-w64-mingw32-4.8/x86_64-w64-mingw32/lib32/libwinpthread-1.dll platform-tools/libwinpthread-1.dll
