@@ -2069,16 +2069,6 @@ class ELFLinker(object):
                 system_dirs_ignored, vendor_dirs, vendor_dirs_as_system,
                 vendor_dirs_ignored, extra_deps, generic_refs, tagged_paths)
 
-    @staticmethod
-    def create_from_dump(system_dirs=None, system_dirs_as_vendor=None,
-                         system_dirs_ignored=None, vendor_dirs=None,
-                         vendor_dirs_as_system=None, vendor_dirs_ignored=None,
-                         extra_deps=None, generic_refs=None, tagged_paths=None):
-        return ELFLinker._create_internal(
-                scan_elf_dump_files, system_dirs, system_dirs_as_vendor,
-                system_dirs_ignored, vendor_dirs, vendor_dirs_as_system,
-                vendor_dirs_ignored, extra_deps, generic_refs, tagged_paths)
-
 
 #------------------------------------------------------------------------------
 # Generic Reference
