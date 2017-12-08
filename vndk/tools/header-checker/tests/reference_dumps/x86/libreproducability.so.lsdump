@@ -1,0 +1,34 @@
+record_types {
+  type_info {
+    name: "ShouldRepro"
+    size: 4
+    alignment: 4
+    referenced_type: "ShouldRepro"
+    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/reproducability_c.h"
+    linker_set_key: "ShouldRepro"
+  }
+  fields {
+    referenced_type: "int"
+    field_offset: 0
+    field_name: "a"
+    access: public_access
+  }
+  access: public_access
+  is_anonymous: true
+  record_kind: struct_kind
+}
+builtin_types {
+  type_info {
+    name: "int"
+    size: 4
+    alignment: 4
+    referenced_type: "int"
+    source_file: ""
+    linker_set_key: "int"
+  }
+  is_unsigned: false
+  is_integral: true
+}
+elf_functions {
+  name: "repro"
+}
