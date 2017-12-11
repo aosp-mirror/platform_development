@@ -18,24 +18,32 @@ EXPORTED_HEADERS_DIR = (
                  'tests'),
 )
 
-SOURCE_ABI_DUMP_EXT = ".so.lsdump"
+SO_EXT = '.so'
+SOURCE_ABI_DUMP_EXT_END = '.lsdump'
+SOURCE_ABI_DUMP_EXT = SO_EXT + SOURCE_ABI_DUMP_EXT_END
 
 TARGET_ARCHS = ['arm', 'arm64', 'x86', 'x86_64', 'mips', 'mips64']
 
 def get_reference_dump_dir(reference_dump_dir_stem,
-                            reference_dump_dir_insertion, lib_arch):
+                           reference_dump_dir_insertion, lib_arch):
     reference_dump_dir = os.path.join(reference_dump_dir_stem, lib_arch)
     reference_dump_dir = os.path.join(reference_dump_dir,
                                       reference_dump_dir_insertion)
     return reference_dump_dir
 
-def copy_reference_dump(lib_path, reference_dump_dir_stem,
-                        reference_dump_dir_insertion, lib_arch):
-    if lib_path is None:
-        return 0
-    reference_dump_dir = get_reference_dump_dir(reference_dump_dir_stem,
+
+def copy_reference_dumps(lib_paths, reference_dir_stem,
+                         reference_dump_dir_insertion, lib_arch):
+    reference_dump_dir = get_reference_dump_dir(reference_dir_stem,
                                                 reference_dump_dir_insertion,
                                                 lib_arch)
+    num_created = 0
+    for lib_path in lib_paths:
+        copy_reference_dump(lib_path, reference_dump_dir)
+        num_created += 1
+    return num_created
+
+def copy_reference_dump(lib_path, reference_dump_dir):
     reference_dump_path = os.path.join(reference_dump_dir,
                                        os.path.basename(lib_path))
     os.makedirs(os.path.dirname(reference_dump_path), exist_ok=True)
@@ -43,7 +51,7 @@ def copy_reference_dump(lib_path, reference_dump_dir_stem,
     with open(reference_dump_path, 'w') as f:
         f.write(output_content)
     print('Created abi dump at ', reference_dump_path)
-    return 1
+    return reference_dump_path
 
 def copy_reference_dump_content(lib_name, output_content,
                                 reference_dump_dir_stem,
@@ -57,7 +65,7 @@ def copy_reference_dump_content(lib_name, output_content,
     with open(reference_dump_path, 'w') as f:
         f.write(output_content)
     print('Created abi dump at ', reference_dump_path)
-    return 1
+    return reference_dump_path
 
 def read_output_content(output_path, replace_str):
     with open(output_path, 'r') as f:
@@ -104,14 +112,14 @@ def make_library(lib_name):
     make_cmd = ['make', '-j', lib_name]
     subprocess.check_call(make_cmd, cwd=AOSP_DIR)
 
-def find_lib_lsdump(lib_name, target_arch, target_arch_variant,
-                    target_cpu_variant):
+def find_lib_lsdumps(target_arch, target_arch_variant,
+                     target_cpu_variant, soong_dir):
     """ Find the lsdump corresponding to lib_name for the given arch parameters
         if it exists"""
     assert 'ANDROID_PRODUCT_OUT' in os.environ
     cpu_variant = '_' + target_cpu_variant
     arch_variant = '_' + target_arch_variant
-
+    lsdump_paths = []
     if target_cpu_variant == 'generic' or target_cpu_variant is None or\
         target_cpu_variant == '':
         cpu_variant = ''
@@ -120,16 +128,16 @@ def find_lib_lsdump(lib_name, target_arch, target_arch_variant,
         arch_variant = ''
 
     target_dir = 'android_' + target_arch + arch_variant +\
-    cpu_variant + '_shared_core'
-    soong_dir = os.path.join(AOSP_DIR, 'out', 'soong', '.intermediates')
-    expected_lsdump_name = lib_name + SOURCE_ABI_DUMP_EXT
+    cpu_variant + '_vendor_shared'
     for base, dirnames, filenames in os.walk(soong_dir):
         for filename in filenames:
-            if filename == expected_lsdump_name:
+            name, ext = os.path.splitext(filename)
+            sofile, soext = os.path.splitext(name)
+            if ext == SOURCE_ABI_DUMP_EXT_END and soext == SO_EXT :
                 path = os.path.join(base, filename)
                 if target_dir in os.path.dirname(path):
-                    return path
-    return None
+                    lsdump_paths.append(path)
+    return lsdump_paths
 
 def run_abi_diff(old_test_dump_path, new_test_dump_path, arch, lib_name,
                  flags=[]):
