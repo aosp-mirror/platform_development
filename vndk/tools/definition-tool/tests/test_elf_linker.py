@@ -9,7 +9,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from compat import StringIO, patch
 from utils import GraphBuilder
-from vndk_definition_tool import (ELF, GenericRefs, PT_SYSTEM, PT_VENDOR)
+from vndk_definition_tool import (
+    ELF, ELFLinker, GenericRefs, PT_SYSTEM, PT_VENDOR, VNDKLibDir)
+
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 class ELFLinkerTest(unittest.TestCase):
@@ -375,6 +379,86 @@ class ELFLinkerTest(unittest.TestCase):
             self.assertNotIn(libc_path, vndk_sp_hal)
             self.assertNotIn(libc_path, sp_ndk)
             self.assertNotIn(libc_path, sp_ndk_indirect)
+
+
+    def test_link_vndk_ver_dirs(self):
+        gb = GraphBuilder()
+
+        libc_32, libc_64 = gb.add_multilib(PT_SYSTEM, 'libc')
+
+        libvndk_a_32, libvndk_a_64 = gb.add_multilib(
+                PT_SYSTEM, 'libvndk_a', extra_dir='vndk-28',
+                dt_needed=['libc.so', 'libvndk_b.so', 'libvndk_sp_b.so'])
+
+        libvndk_b_32, libvndk_b_64 = gb.add_multilib(
+                PT_SYSTEM, 'libvndk_b', extra_dir='vndk-28',
+                dt_needed=['libc.so', 'libvndk_sp_b.so'])
+
+        libvndk_c_32, libvndk_c_64 = gb.add_multilib(
+                PT_VENDOR, 'libvndk_c', extra_dir='vndk-28',
+                dt_needed=['libc.so', 'libvndk_d.so', 'libvndk_sp_d.so'])
+
+        libvndk_d_32, libvndk_d_64 = gb.add_multilib(
+                PT_VENDOR, 'libvndk_d', extra_dir='vndk-28',
+                dt_needed=['libc.so', 'libvndk_sp_d.so'])
+
+        libvndk_sp_a_32, libvndk_sp_a_64 = gb.add_multilib(
+                PT_SYSTEM, 'libvndk_sp_a', extra_dir='vndk-sp-28',
+                dt_needed=['libc.so', 'libvndk_sp_b.so'])
+
+        libvndk_sp_b_32, libvndk_sp_b_64 = gb.add_multilib(
+                PT_SYSTEM, 'libvndk_sp_b', extra_dir='vndk-sp-28',
+                dt_needed=['libc.so'])
+
+        libvndk_sp_c_32, libvndk_sp_c_64 = gb.add_multilib(
+                PT_VENDOR, 'libvndk_sp_c', extra_dir='vndk-sp-28',
+                dt_needed=['libc.so', 'libvndk_sp_d.so'])
+
+        libvndk_sp_d_32, libvndk_sp_d_64 = gb.add_multilib(
+                PT_VENDOR, 'libvndk_sp_d', extra_dir='vndk-sp-28',
+                dt_needed=['libc.so'])
+
+        gb.resolve(VNDKLibDir.create_from_version('28'), '28')
+
+        # 32-bit shared libraries
+        self.assertIn(libc_32, libvndk_a_32.deps_all)
+        self.assertIn(libc_32, libvndk_b_32.deps_all)
+        self.assertIn(libc_32, libvndk_c_32.deps_all)
+        self.assertIn(libc_32, libvndk_d_32.deps_all)
+        self.assertIn(libc_32, libvndk_sp_a_32.deps_all)
+        self.assertIn(libc_32, libvndk_sp_b_32.deps_all)
+        self.assertIn(libc_32, libvndk_sp_c_32.deps_all)
+        self.assertIn(libc_32, libvndk_sp_d_32.deps_all)
+
+        self.assertIn(libvndk_b_32, libvndk_a_32.deps_all)
+        self.assertIn(libvndk_sp_b_32, libvndk_a_32.deps_all)
+        self.assertIn(libvndk_sp_b_32, libvndk_b_32.deps_all)
+        self.assertIn(libvndk_sp_b_32, libvndk_sp_a_32.deps_all)
+
+        self.assertIn(libvndk_d_32, libvndk_c_32.deps_all)
+        self.assertIn(libvndk_sp_d_32, libvndk_c_32.deps_all)
+        self.assertIn(libvndk_sp_d_32, libvndk_d_32.deps_all)
+        self.assertIn(libvndk_sp_d_32, libvndk_sp_c_32.deps_all)
+
+        # 64-bit shared libraries
+        self.assertIn(libc_64, libvndk_a_64.deps_all)
+        self.assertIn(libc_64, libvndk_b_64.deps_all)
+        self.assertIn(libc_64, libvndk_c_64.deps_all)
+        self.assertIn(libc_64, libvndk_d_64.deps_all)
+        self.assertIn(libc_64, libvndk_sp_a_64.deps_all)
+        self.assertIn(libc_64, libvndk_sp_b_64.deps_all)
+        self.assertIn(libc_64, libvndk_sp_c_64.deps_all)
+        self.assertIn(libc_64, libvndk_sp_d_64.deps_all)
+
+        self.assertIn(libvndk_b_64, libvndk_a_64.deps_all)
+        self.assertIn(libvndk_sp_b_64, libvndk_a_64.deps_all)
+        self.assertIn(libvndk_sp_b_64, libvndk_b_64.deps_all)
+        self.assertIn(libvndk_sp_b_64, libvndk_sp_a_64.deps_all)
+
+        self.assertIn(libvndk_d_64, libvndk_c_64.deps_all)
+        self.assertIn(libvndk_sp_d_64, libvndk_c_64.deps_all)
+        self.assertIn(libvndk_sp_d_64, libvndk_d_64.deps_all)
+        self.assertIn(libvndk_sp_d_64, libvndk_sp_c_64.deps_all)
 
 
 class ELFLinkerDlopenDepsTest(unittest.TestCase):
