@@ -19,9 +19,8 @@
 # Makes sure VNDK snapshots include all required prebuilts and config files.
 #
 # Local usage:
-#   First generate VNDK snapshots with development/vndk/snapshot/build.sh or
-#   fetch VNDK snapshot build artifacts to $ANDROID_BUILD_TOP/out/dist,
-#   then run this script.
+#   First, generate VNDK snapshots with development/vndk/snapshot/build.sh or
+#   fetch VNDK snapshot build artifacts to $DIST_DIR, then run this script.
 
 set -euo pipefail
 
@@ -41,7 +40,16 @@ script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ANDROID_BUILD_TOP=$(dirname $(dirname $(dirname $script_dir)))
 echo "ANDROID_BUILD_TOP: $ANDROID_BUILD_TOP"
 
-DIST_DIR=$ANDROID_BUILD_TOP/out/dist
+OUT_DIR=${OUT_DIR:-}
+DIST_DIR=${DIST_DIR:-}
+if [[ -z $DIST_DIR ]]; then
+    if [[ -z $OUT_DIR ]]; then
+        DIST_DIR=$ANDROID_BUILD_TOP/out/dist
+    else
+        DIST_DIR=$OUT_DIR/dist
+    fi
+fi
+
 SNAPSHOT_TOP=$DIST_DIR/android-vndk-snapshot
 SNAPSHOT_TEMPFILE=$DIST_DIR/snapshot_libs.txt
 SYSTEM_TEMPFILE=$DIST_DIR/system_libs.txt
@@ -51,10 +59,15 @@ NC='\033[0m'
 PASS="::: PASS :::"
 FAIL="${RED}::: FAIL :::${NC}"
 
-if [ -d $SNAPSHOT_TOP ]; then
-    echo 'Removing pre-existing $DIST_DIR/android-vndk-snapshot/'
-    rm -rf $SNAPSHOT_TOP
-fi
+
+
+function remove_unzipped_snapshot {
+    if [ -d $SNAPSHOT_TOP ]; then
+        echo "Removing $SNAPSHOT_TOP"
+        rm -rf $SNAPSHOT_TOP
+    fi
+}
+
 
 #######################################
 # Compares the list of VNDK-core and VNDK-SP
@@ -103,7 +116,7 @@ function compare_vndk_libs() {
     ls -1 $snapshot_dir > $SNAPSHOT_TEMPFILE
     find $system_dir -type f | xargs -n 1 -I file bash -c "basename file" | sort > $SYSTEM_TEMPFILE
 
-    echo "Comparing libs for VNDK = $vndk_type and ARCH = $arch"
+    echo "Comparing libs for VNDK=$vndk_type and ARCH=$arch"
     (diff --old-line-format="Only found in VNDK snapshot: %L" --new-line-format="Only found in system/lib*: %L" \
       --unchanged-line-format="" $SNAPSHOT_TEMPFILE $SYSTEM_TEMPFILE && echo $PASS) \
     || (echo -e $FAIL; exit 1)
@@ -165,8 +178,10 @@ function run_test_cases() {
 # Cleanup
 #######################################
 function cleanup {
+    echo "[Cleanup]"
+    remove_unzipped_snapshot
     echo "[Cleanup] Removing temp files..."
-    rm -rf $SNAPSHOT_TEMPFILE $SYSTEM_TEMPFILE
+    rm -f $SNAPSHOT_TEMPFILE $SYSTEM_TEMPFILE
 }
 trap cleanup EXIT
 
@@ -174,6 +189,7 @@ trap cleanup EXIT
 #######################################
 # Run testcases
 #######################################
+remove_unzipped_snapshot
 for arch in "${ARCHS[@]}"; do
     echo -e "\n::::::::: Running testcases for ARCH=$arch :::::::::"
     run_test_cases $arch

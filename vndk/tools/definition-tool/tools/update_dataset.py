@@ -98,11 +98,63 @@ def main():
         update_tag('/system/${LIB}/' + name + '.so', 'LL-NDK')
 
     for name in vndk_sp:
+        update_tag('/system/${LIB}/' + name + '.so', 'VNDK-SP')
         update_tag('/system/${LIB}/vndk-sp/' + name + '.so', 'VNDK-SP')
 
     for name in vndk:
         update_tag('/system/${LIB}/' + name + '.so', 'VNDK')
         update_tag('/system/${LIB}/vndk/' + name + '.so', 'VNDK')
+
+    # Workaround for SP-NDK
+    libs = [
+        'libEGL',
+        'libGLESv1_CM',
+        'libGLESv2',
+        'libGLESv3',
+        'libnativewindow',
+        'libsync',
+        'libvulkan',
+    ]
+    for name in libs:
+        update_tag('/system/${LIB}/' + name + '.so', 'SP-NDK')
+
+    # Workaround for FWK-ONLY-RS
+    libs = [
+        'libft2',
+        'libmediandk',
+    ]
+    for name in libs:
+        update_tag('/system/${LIB}/' + name + '.so', 'FWK-ONLY-RS')
+
+    # Workaround for VNDK-SP-Indirect
+    libs = [
+        'libbacktrace',
+        'liblzma',
+        'libunwind',
+        'libunwindstack',
+    ]
+    for name in libs:
+        update_tag('/system/${LIB}/' + name + '.so', 'VNDK-SP-Indirect')
+        update_tag('/system/${LIB}/vndk-sp/' + name + '.so', 'VNDK-SP-Indirect')
+
+    # Workaround for VNDK-SP-Indirect-Private
+    libs = [
+        'libblas',
+        'libcompiler_rt',
+    ]
+    for name in libs:
+        update_tag('/system/${LIB}/' + name + '.so', 'VNDK-SP-Indirect-Private')
+        update_tag('/system/${LIB}/vndk-sp/' + name + '.so',
+                   'VNDK-SP-Indirect-Private')
+
+    # Workaround for LL-NDK-Indirect
+    libs = [
+        'ld-android',
+        'libc_malloc_debug',
+        'libnetd_client',
+    ]
+    for name in libs:
+        update_tag('/system/${LIB}/' + name + '.so', 'LL-NDK-Indirect')
 
     for regex in regex_patterns:
         data[regex[0]] = regex
