@@ -85,6 +85,30 @@ static llvm::cl::opt<bool> allow_unreferenced_changes(
                    " APIs."),
     llvm::cl::Optional, llvm::cl::cat(header_checker_category));
 
+static llvm::cl::opt<abi_util::TextFormatIR> text_format_old(
+    "text-format-old", llvm::cl::desc("Specify text format of old abi dump"),
+    llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
+                                "ProtobufTextFormat","ProtobufTextFormat"),
+                     clEnumValEnd),
+    llvm::cl::init(abi_util::TextFormatIR::ProtobufTextFormat),
+    llvm::cl::cat(header_checker_category));
+
+static llvm::cl::opt<abi_util::TextFormatIR> text_format_new(
+    "text-format-new", llvm::cl::desc("Specify text format of new abi dump"),
+    llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
+                                "ProtobufTextFormat", "ProtobugTextFormat"),
+                     clEnumValEnd),
+    llvm::cl::init(abi_util::TextFormatIR::ProtobufTextFormat),
+    llvm::cl::cat(header_checker_category));
+
+static llvm::cl::opt<abi_util::TextFormatIR> text_format_diff(
+    "text-format-diff", llvm::cl::desc("Specify text format of abi-diff"),
+    llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
+                                "ProtobufTextFormat", "ProtobufTextFormat"),
+                     clEnumValEnd),
+    llvm::cl::init(abi_util::TextFormatIR::ProtobufTextFormat),
+    llvm::cl::cat(header_checker_category));
+
 static std::set<std::string> LoadIgnoredSymbols(std::string &symbol_list_path) {
   std::ifstream symbol_ifstream(symbol_list_path);
   std::set<std::string> ignored_symbols;
@@ -100,14 +124,14 @@ static std::set<std::string> LoadIgnoredSymbols(std::string &symbol_list_path) {
 }
 
 int main(int argc, const char **argv) {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
   llvm::cl::ParseCommandLineOptions(argc, argv, "header-checker");
   std::set<std::string> ignored_symbols;
   if (llvm::sys::fs::exists(ignore_symbol_list)) {
     ignored_symbols = LoadIgnoredSymbols(ignore_symbol_list);
   }
   HeaderAbiDiff judge(lib_name, arch, old_dump, new_dump, compatibility_report,
-                      ignored_symbols, check_all_apis);
+                      ignored_symbols, check_all_apis, text_format_old,
+                      text_format_new, text_format_diff);
 
   abi_util::CompatibilityStatusIR status = judge.GenerateCompatibilityReport();
 

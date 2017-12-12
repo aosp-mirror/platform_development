@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="dialogWidth">@android:dimen/dialog_min_width_major</dimen>
+    <dimen name="smallMargin">8dp</dimen>
+    <dimen name="medMargin">16dp</dimen>
+    <dimen name="fullMargin">24dp</dimen>
+    <dimen name="blockMargin">32dp</dimen>
+    <dimen name="cardElevation">2dp</dimen>
+    <dimen name="titleText">20sp</dimen>
+    <dimen name="regularText">16sp</dimen>
+    <dimen name="smallText">12sp</dimen>
+    <dimen name="listItem">48dp</dimen>
+    <dimen name="listIcon">48dp</dimen>
+    <dimen name="listControl">24dp</dimen>
+    <dimen name="listLabelTextBox">24dp</dimen>
+    <dimen name="dividerHeight">1dp</dimen>
+</resources>

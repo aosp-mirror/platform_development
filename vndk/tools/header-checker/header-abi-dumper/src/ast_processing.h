@@ -38,7 +38,6 @@ class HeaderASTVisitor
   HeaderASTVisitor(clang::MangleContext *mangle_contextp,
                    clang::ASTContext *ast_contextp,
                    const clang::CompilerInstance *compiler_instance_p,
-                   const std::string &current_file_name,
                    const std::set<std::string> &exported_headers,
                    const clang::Decl *tu_decl,
                    std::set<std::string> *type_cache,
@@ -63,7 +62,6 @@ class HeaderASTVisitor
   clang::MangleContext *mangle_contextp_;
   clang::ASTContext *ast_contextp_;
   const clang::CompilerInstance *cip_;
-  const std::string current_file_name_;
   const std::set<std::string> &exported_headers_;
   // To optimize recursion into only exported abi.
   const clang::Decl *tu_decl_;
@@ -76,18 +74,18 @@ class HeaderASTVisitor
 
 class HeaderASTConsumer : public clang::ASTConsumer {
  public:
-  HeaderASTConsumer(const std::string &file_name,
-                    clang::CompilerInstance *compiler_instancep,
+  HeaderASTConsumer(clang::CompilerInstance *compiler_instancep,
                     const std::string &out_dump_name,
-                    const std::set<std::string> &exported_headers);
+                    const std::set<std::string> &exported_headers,
+                    abi_util::TextFormatIR text_format);
 
   void HandleTranslationUnit(clang::ASTContext &ctx) override;
 
  private:
-  std::string file_name_;
   clang::CompilerInstance *cip_;
-  std::string out_dump_name_;
+  const std::string &out_dump_name_;
   const std::set<std::string> &exported_headers_;
+  abi_util::TextFormatIR text_format_;
 };
 
 #endif // AST_PROCESSING_H_
