@@ -2,13 +2,18 @@
 
 import os
 import sys
+import tempfile
 import unittest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from compat import StringIO
+from compat import StringIO, patch
 from utils import GraphBuilder
-from vndk_definition_tool import (ELF, GenericRefs, PT_SYSTEM, PT_VENDOR)
+from vndk_definition_tool import (
+    ELF, ELFLinker, GenericRefs, PT_SYSTEM, PT_VENDOR, VNDKLibDir)
+
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 class ELFLinkerTest(unittest.TestCase):
@@ -41,8 +46,10 @@ class ELFLinkerTest(unittest.TestCase):
         gb.resolve()
         return gb
 
+
     def _get_paths_from_nodes(self, nodes):
         return sorted([node.path for node in nodes])
+
 
     def test_get_lib(self):
         gb = self._create_normal_graph()
@@ -61,6 +68,7 @@ class ELFLinkerTest(unittest.TestCase):
         self.assertEqual('/vendor/lib64/libEGL.so', node.path)
 
         self.assertEqual(None, graph.get_lib('/no/such/path.so'))
+
 
     def test_map_paths_to_libs(self):
         gb = self._create_normal_graph()
@@ -81,6 +89,7 @@ class ELFLinkerTest(unittest.TestCase):
         self.assertEqual(['/system/lib64/libdl.so'],
                          self._get_paths_from_nodes(nodes))
 
+
     def test_elf_class_and_partitions(self):
         gb = self._create_normal_graph()
         graph = gb.graph
@@ -88,6 +97,7 @@ class ELFLinkerTest(unittest.TestCase):
         self.assertEqual(5, len(graph.lib_pt[PT_SYSTEM].lib64))
         self.assertEqual(1, len(graph.lib_pt[PT_VENDOR].lib32))
         self.assertEqual(1, len(graph.lib_pt[PT_VENDOR].lib64))
+
 
     def test_deps(self):
         gb = self._create_normal_graph()
@@ -108,6 +118,7 @@ class ELFLinkerTest(unittest.TestCase):
         self.assertEqual(['/system/lib64/libc.so', '/system/lib64/libcutils.so',
                           '/system/lib64/libdl.so'],
                          self._get_paths_from_nodes(node.deps_all))
+
 
     def test_linked_symbols(self):
         gb = self._create_normal_graph()
@@ -149,6 +160,7 @@ class ELFLinkerTest(unittest.TestCase):
             self.assertIs(libc, libEGL.linked_symbols['fclose'])
             self.assertIs(libc, libEGL.linked_symbols['fopen'])
 
+
     def test_unresolved_symbols(self):
         gb = GraphBuilder()
         gb.add_lib(PT_SYSTEM, ELF.ELFCLASS64, 'libfoo', dt_needed=[],
@@ -158,6 +170,7 @@ class ELFLinkerTest(unittest.TestCase):
 
         lib = gb.graph.get_lib('/system/lib64/libfoo.so')
         self.assertEqual({'__does_not_exist'}, lib.unresolved_symbols)
+
 
     def test_users(self):
         gb = self._create_normal_graph()
@@ -181,6 +194,7 @@ class ELFLinkerTest(unittest.TestCase):
         # Check the users of libEGL.so.
         node = graph.get_lib('/vendor/lib64/libEGL.so')
         self.assertEqual([], self._get_paths_from_nodes(node.users_all))
+
 
     def test_compute_predefined_sp_hal(self):
         gb = GraphBuilder()
@@ -258,6 +272,7 @@ class ELFLinkerTest(unittest.TestCase):
             # Check that un-related libraries are not SP-HALs.
             self.assertNotIn('/system/' + lib + '/libfoo.so', sp_hals)
             self.assertNotIn('/vendor/' + lib + '/libfoo.so', sp_hals)
+
 
     def test_compute_sp_lib(self):
         # Create graph.
@@ -364,6 +379,184 @@ class ELFLinkerTest(unittest.TestCase):
             self.assertNotIn(libc_path, vndk_sp_hal)
             self.assertNotIn(libc_path, sp_ndk)
             self.assertNotIn(libc_path, sp_ndk_indirect)
+
+
+    def test_link_vndk_ver_dirs(self):
+        gb = GraphBuilder()
+
+        libc_32, libc_64 = gb.add_multilib(PT_SYSTEM, 'libc')
+
+        libvndk_a_32, libvndk_a_64 = gb.add_multilib(
+                PT_SYSTEM, 'libvndk_a', extra_dir='vndk-28',
+                dt_needed=['libc.so', 'libvndk_b.so', 'libvndk_sp_b.so'])
+
+        libvndk_b_32, libvndk_b_64 = gb.add_multilib(
+                PT_SYSTEM, 'libvndk_b', extra_dir='vndk-28',
+                dt_needed=['libc.so', 'libvndk_sp_b.so'])
+
+        libvndk_c_32, libvndk_c_64 = gb.add_multilib(
+                PT_VENDOR, 'libvndk_c', extra_dir='vndk-28',
+                dt_needed=['libc.so', 'libvndk_d.so', 'libvndk_sp_d.so'])
+
+        libvndk_d_32, libvndk_d_64 = gb.add_multilib(
+                PT_VENDOR, 'libvndk_d', extra_dir='vndk-28',
+                dt_needed=['libc.so', 'libvndk_sp_d.so'])
+
+        libvndk_sp_a_32, libvndk_sp_a_64 = gb.add_multilib(
+                PT_SYSTEM, 'libvndk_sp_a', extra_dir='vndk-sp-28',
+                dt_needed=['libc.so', 'libvndk_sp_b.so'])
+
+        libvndk_sp_b_32, libvndk_sp_b_64 = gb.add_multilib(
+                PT_SYSTEM, 'libvndk_sp_b', extra_dir='vndk-sp-28',
+                dt_needed=['libc.so'])
+
+        libvndk_sp_c_32, libvndk_sp_c_64 = gb.add_multilib(
+                PT_VENDOR, 'libvndk_sp_c', extra_dir='vndk-sp-28',
+                dt_needed=['libc.so', 'libvndk_sp_d.so'])
+
+        libvndk_sp_d_32, libvndk_sp_d_64 = gb.add_multilib(
+                PT_VENDOR, 'libvndk_sp_d', extra_dir='vndk-sp-28',
+                dt_needed=['libc.so'])
+
+        gb.resolve(VNDKLibDir.create_from_version('28'), '28')
+
+        # 32-bit shared libraries
+        self.assertIn(libc_32, libvndk_a_32.deps_all)
+        self.assertIn(libc_32, libvndk_b_32.deps_all)
+        self.assertIn(libc_32, libvndk_c_32.deps_all)
+        self.assertIn(libc_32, libvndk_d_32.deps_all)
+        self.assertIn(libc_32, libvndk_sp_a_32.deps_all)
+        self.assertIn(libc_32, libvndk_sp_b_32.deps_all)
+        self.assertIn(libc_32, libvndk_sp_c_32.deps_all)
+        self.assertIn(libc_32, libvndk_sp_d_32.deps_all)
+
+        self.assertIn(libvndk_b_32, libvndk_a_32.deps_all)
+        self.assertIn(libvndk_sp_b_32, libvndk_a_32.deps_all)
+        self.assertIn(libvndk_sp_b_32, libvndk_b_32.deps_all)
+        self.assertIn(libvndk_sp_b_32, libvndk_sp_a_32.deps_all)
+
+        self.assertIn(libvndk_d_32, libvndk_c_32.deps_all)
+        self.assertIn(libvndk_sp_d_32, libvndk_c_32.deps_all)
+        self.assertIn(libvndk_sp_d_32, libvndk_d_32.deps_all)
+        self.assertIn(libvndk_sp_d_32, libvndk_sp_c_32.deps_all)
+
+        # 64-bit shared libraries
+        self.assertIn(libc_64, libvndk_a_64.deps_all)
+        self.assertIn(libc_64, libvndk_b_64.deps_all)
+        self.assertIn(libc_64, libvndk_c_64.deps_all)
+        self.assertIn(libc_64, libvndk_d_64.deps_all)
+        self.assertIn(libc_64, libvndk_sp_a_64.deps_all)
+        self.assertIn(libc_64, libvndk_sp_b_64.deps_all)
+        self.assertIn(libc_64, libvndk_sp_c_64.deps_all)
+        self.assertIn(libc_64, libvndk_sp_d_64.deps_all)
+
+        self.assertIn(libvndk_b_64, libvndk_a_64.deps_all)
+        self.assertIn(libvndk_sp_b_64, libvndk_a_64.deps_all)
+        self.assertIn(libvndk_sp_b_64, libvndk_b_64.deps_all)
+        self.assertIn(libvndk_sp_b_64, libvndk_sp_a_64.deps_all)
+
+        self.assertIn(libvndk_d_64, libvndk_c_64.deps_all)
+        self.assertIn(libvndk_sp_d_64, libvndk_c_64.deps_all)
+        self.assertIn(libvndk_sp_d_64, libvndk_d_64.deps_all)
+        self.assertIn(libvndk_sp_d_64, libvndk_sp_c_64.deps_all)
+
+
+class ELFLinkerDlopenDepsTest(unittest.TestCase):
+    def test_add_dlopen_deps(self):
+        gb = GraphBuilder()
+        liba = gb.add_lib32(PT_SYSTEM, 'liba')
+        libb = gb.add_lib32(PT_SYSTEM, 'libb')
+        gb.resolve()
+
+        with tempfile.NamedTemporaryFile(mode='w') as tmp_file:
+            tmp_file.write('/system/lib/liba.so: /system/lib/libb.so')
+            tmp_file.seek(0)
+            gb.graph.add_dlopen_deps(tmp_file.name)
+
+        self.assertIn(libb, liba.deps_dlopen)
+        self.assertIn(liba, libb.users_dlopen)
+
+        self.assertNotIn(libb, liba.deps_needed)
+        self.assertNotIn(liba, libb.users_needed)
+
+
+    def test_add_dlopen_deps_lib_subst(self):
+        gb = GraphBuilder()
+        liba_32, liba_64 = gb.add_multilib(PT_SYSTEM, 'liba')
+        libb_32, libb_64 = gb.add_multilib(PT_SYSTEM, 'libb')
+        gb.resolve()
+
+        with tempfile.NamedTemporaryFile(mode='w') as tmp_file:
+            tmp_file.write('/system/${LIB}/liba.so: /system/${LIB}/libb.so')
+            tmp_file.seek(0)
+            gb.graph.add_dlopen_deps(tmp_file.name)
+
+        self.assertIn(libb_32, liba_32.deps_dlopen)
+        self.assertIn(liba_32, libb_32.users_dlopen)
+
+        self.assertIn(libb_64, liba_64.deps_dlopen)
+        self.assertIn(liba_64, libb_64.users_dlopen)
+
+
+    def test_add_dlopen_deps_lib_subset_single_bitness(self):
+        gb = GraphBuilder()
+        liba_32, liba_64 = gb.add_multilib(PT_SYSTEM, 'liba')
+        libb_32 = gb.add_lib32(PT_SYSTEM, 'libb')
+        gb.resolve()
+
+        with tempfile.NamedTemporaryFile(mode='w') as tmp_file:
+            tmp_file.write('/system/${LIB}/libb.so: /system/${LIB}/liba.so')
+            tmp_file.seek(0)
+
+            stderr = StringIO()
+            with patch('sys.stderr', stderr):
+                gb.graph.add_dlopen_deps(tmp_file.name)
+
+            self.assertEqual('', stderr.getvalue())
+
+        self.assertIn(liba_32, libb_32.deps_dlopen)
+        self.assertIn(libb_32, liba_32.users_dlopen)
+
+        self.assertEqual(0, len(liba_64.users_dlopen))
+
+
+    def test_add_dlopen_deps_regex(self):
+        gb = GraphBuilder()
+        liba = gb.add_lib32(PT_SYSTEM, 'liba')
+        libb = gb.add_lib32(PT_SYSTEM, 'libb')
+        gb.resolve()
+
+        with tempfile.NamedTemporaryFile(mode='w') as tmp_file:
+            tmp_file.write('[regex].*libb\\.so: [regex].*/${LIB}/liba\\.so')
+            tmp_file.seek(0)
+
+            stderr = StringIO()
+            with patch('sys.stderr', stderr):
+                gb.graph.add_dlopen_deps(tmp_file.name)
+
+            self.assertEqual('', stderr.getvalue())
+
+        self.assertIn(liba, libb.deps_dlopen)
+        self.assertIn(libb, liba.users_dlopen)
+
+
+    def test_add_dlopen_deps_error(self):
+        gb = GraphBuilder()
+        liba = gb.add_lib32(PT_SYSTEM, 'liba')
+        libb = gb.add_lib32(PT_SYSTEM, 'libb')
+        gb.resolve()
+
+        with tempfile.NamedTemporaryFile(mode='w') as tmp_file:
+            tmp_file.write('/system/lib/libc.so: /system/lib/libd.so')
+            tmp_file.seek(0)
+
+            stderr = StringIO()
+            with patch('sys.stderr', stderr):
+                gb.graph.add_dlopen_deps(tmp_file.name)
+
+            self.assertRegexpMatches(
+                    stderr.getvalue(),
+                    'error: Failed to add dlopen dependency from .* to .*\\.\n')
 
 
 if __name__ == '__main__':

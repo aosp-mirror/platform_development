@@ -5,6 +5,7 @@ import re
 BUFFER_BEGIN = re.compile("^--------- beginning of (.*)$")
 BUFFER_SWITCH = re.compile("^--------- switch to (.*)$")
 HEADER = re.compile("^\\[ (\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d.\\d\\d\\d) +(.+?): *(\\d+): *(\\d+) *([EWIDV])/(.*?) *\\]$")
+HEADER_TYPE2 = re.compile("^(\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d.\\d\\d\\d) *(\\d+) *(\\d+) *([EWIDV]) ([^ :]*?): (.*?)$")
 CHATTY_IDENTICAL = re.compile("^.* identical (\\d+) lines$")
 
 STATE_BEGIN = 0
@@ -133,6 +134,25 @@ def ParseLogcatInner(f, processes, duration=None):
       previous = logLine
       logLine.process = processes.FindPid(logLine.pid, logLine.uid)
       state = STATE_HEADER
+      continue
+
+    m = HEADER_TYPE2.match(line)
+    if m:
+      if logLine:
+        yield logLine
+      logLine = LogLine(
+            buf=buf,
+            timestamp=m.group(1),
+            uid="0",
+            pid=m.group(2),
+            tid=m.group(3),
+            level=m.group(4),
+            tag=m.group(5),
+            text=m.group(6)
+          )
+      previous = logLine
+      logLine.process = processes.FindPid(logLine.pid, logLine.uid)
+      state = STATE_BEGIN
       continue
 
     if not len(line):

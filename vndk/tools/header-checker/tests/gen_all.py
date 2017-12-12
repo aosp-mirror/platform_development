@@ -21,10 +21,12 @@ DEFAULT_CFLAGS = ['-x', 'c++', '-std=c++11']
 
 FILE_EXTENSIONS = ['h', 'hpp', 'hxx', 'cpp', 'cc', 'c']
 
-def make_and_copy_reference_dumps(module, default_cflags):
+def make_and_copy_reference_dumps(module, default_cflags,
+                                  reference_dump_dir=REFERENCE_DUMP_DIR):
     lsdump_content = module.make_lsdump(default_cflags)
-    copy_reference_dump_content(module.get_name(), lsdump_content,
-                                REFERENCE_DUMP_DIR, '', module.get_arch())
+    return copy_reference_dump_content(module.get_name(), lsdump_content,
+                                       reference_dump_dir, '',
+                                       module.get_arch())
 
 def main():
     patt = re.compile(
