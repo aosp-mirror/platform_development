@@ -21,6 +21,9 @@ record_types {
   }
   access: public_access
   record_kind: class_kind
+  tag_info {
+    unique_id: "_ZTS10HiddenBase"
+  }
 }
 record_types {
   type_info {
@@ -51,7 +54,7 @@ record_types {
     }
     vtable_components {
       kind: RTTI
-      mangled_component_name: "test2::HelloAgain"
+      mangled_component_name: "_ZTIN5test210HelloAgainE"
       component_value: 0
     }
     vtable_components {
@@ -72,6 +75,9 @@ record_types {
   }
   access: public_access
   record_kind: struct_kind
+  tag_info {
+    unique_id: "_ZTSN5test210HelloAgainE"
+  }
 }
 record_types {
   type_info {
@@ -101,6 +107,9 @@ record_types {
   }
   access: public_access
   record_kind: struct_kind
+  tag_info {
+    unique_id: "_ZTSN5test38ByeAgainIdEE"
+  }
 }
 record_types {
   type_info {
@@ -130,6 +139,9 @@ record_types {
   }
   access: public_access
   record_kind: struct_kind
+  tag_info {
+    unique_id: "_ZTSN5test38ByeAgainIfEE"
+  }
 }
 record_types {
   type_info {
@@ -148,6 +160,9 @@ record_types {
   }
   access: public_access
   record_kind: class_kind
+  tag_info {
+    unique_id: "_ZTSN5test35OuterE"
+  }
 }
 record_types {
   type_info {
@@ -166,6 +181,9 @@ record_types {
   }
   access: private_access
   record_kind: class_kind
+  tag_info {
+    unique_id: "_ZTSN5test35Outer5InnerE"
+  }
 }
 record_types {
   type_info {
@@ -185,6 +203,9 @@ record_types {
   access: public_access
   is_anonymous: true
   record_kind: struct_kind
+  tag_info {
+    unique_id: "Hello::(anonymous)::(anonymous)"
+  }
 }
 record_types {
   type_info {
@@ -216,6 +237,9 @@ record_types {
   access: public_access
   is_anonymous: true
   record_kind: struct_kind
+  tag_info {
+    unique_id: "Hello::(anonymous)"
+  }
 }
 record_types {
   type_info {
@@ -264,6 +288,9 @@ record_types {
   }
   access: public_access
   record_kind: struct_kind
+  tag_info {
+    unique_id: "Hello"
+  }
 }
 record_types {
   type_info {
@@ -304,7 +331,7 @@ record_types {
     }
     vtable_components {
       kind: RTTI
-      mangled_component_name: "CPPHello"
+      mangled_component_name: "_ZTI8CPPHello"
       component_value: 0
     }
     vtable_components {
@@ -325,6 +352,9 @@ record_types {
   }
   access: public_access
   record_kind: struct_kind
+  tag_info {
+    unique_id: "_ZTS8CPPHello"
+  }
 }
 record_types {
   type_info {
@@ -348,6 +378,9 @@ record_types {
   }
   access: public_access
   record_kind: class_kind
+  tag_info {
+    unique_id: "_ZTS4ListIfE"
+  }
 }
 record_types {
   type_info {
@@ -378,6 +411,9 @@ record_types {
   }
   access: public_access
   record_kind: class_kind
+  tag_info {
+    unique_id: "_ZTSN4ListIfE5_NodeE"
+  }
 }
 record_types {
   type_info {
@@ -401,6 +437,9 @@ record_types {
   }
   access: public_access
   record_kind: class_kind
+  tag_info {
+    unique_id: "_ZTS4ListIiE"
+  }
 }
 enum_types {
   type_info {
@@ -421,6 +460,9 @@ enum_types {
     name: "Foo_s::foosbat"
   }
   access: public_access
+  tag_info {
+    unique_id: "_ZTS5Foo_s"
+  }
 }
 enum_types {
   type_info {
@@ -441,6 +483,9 @@ enum_types {
     name: "test3::Kind::kind2"
   }
   access: public_access
+  tag_info {
+    unique_id: "_ZTSN5test34KindE"
+  }
 }
 enum_types {
   type_info {
@@ -457,6 +502,9 @@ enum_types {
     name: "CPPHello::Bla::BLA"
   }
   access: public_access
+  tag_info {
+    unique_id: "_ZTSN8CPPHello3BlaE"
+  }
 }
 pointer_types {
   type_info {
