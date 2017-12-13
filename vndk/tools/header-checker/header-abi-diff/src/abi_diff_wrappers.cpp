@@ -97,7 +97,7 @@ DiffStatus DiffWrapperBase::CompareEnumTypes(
     const abi_util::EnumTypeIR *old_type, const abi_util::EnumTypeIR *new_type,
      std::deque<std::string> *type_queue,
      abi_util::DiffMessageIR::DiffKind diff_kind) {
-  if (old_type->GetName() != new_type->GetName()) {
+  if (old_type->GetUniqueId() != new_type->GetUniqueId()) {
     return DiffStatus::direct_diff;
   }
   auto enum_type_diff_ir = std::make_unique<abi_util::EnumTypeDiffIR>();
@@ -301,7 +301,7 @@ DiffStatus DiffWrapperBase::CompareRecordTypes(
     abi_util::DiffMessageIR::DiffKind diff_kind) {
   auto record_type_diff_ir = std::make_unique<abi_util::RecordTypeDiffIR>();
   // Compare names.
-  if (old_type->GetName() != new_type->GetName()) {
+  if (old_type->GetUniqueId() != new_type->GetUniqueId()) {
     // Do not dump anything since the record types themselves are fundamentally
     // different.
     return DiffStatus::direct_diff;

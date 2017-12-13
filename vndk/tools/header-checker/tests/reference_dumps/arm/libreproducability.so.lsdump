@@ -14,8 +14,10 @@ record_types {
     access: public_access
   }
   access: public_access
-  is_anonymous: true
   record_kind: struct_kind
+  tag_info {
+    unique_id: "_ZTS11ShouldRepro"
+  }
 }
 builtin_types {
   type_info {
