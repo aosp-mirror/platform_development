@@ -21,7 +21,7 @@ record_types {
     }
     vtable_components {
       kind: RTTI
-      mangled_component_name: "Test"
+      mangled_component_name: "_ZTI4Test"
       component_value: 0
     }
     vtable_components {
@@ -32,6 +32,9 @@ record_types {
   }
   access: public_access
   record_kind: class_kind
+  tag_info {
+    unique_id: "_ZTS4Test"
+  }
 }
 record_types {
   type_info {
@@ -61,7 +64,7 @@ record_types {
     }
     vtable_components {
       kind: RTTI
-      mangled_component_name: "TestChild"
+      mangled_component_name: "_ZTI9TestChild"
       component_value: 0
     }
     vtable_components {
@@ -72,6 +75,9 @@ record_types {
   }
   access: public_access
   record_kind: class_kind
+  tag_info {
+    unique_id: "_ZTS9TestChild"
+  }
 }
 pointer_types {
   type_info {

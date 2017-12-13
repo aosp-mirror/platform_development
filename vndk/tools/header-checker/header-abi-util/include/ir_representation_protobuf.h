@@ -186,6 +186,9 @@ class IRToProtobufConverter {
   static bool AddVTableLayout(
       abi_dump::RecordType *record_protobuf, const RecordTypeIR *record_ir);
 
+  static bool AddTagTypeInfo(abi_dump::TagType *tag_type_protobuf,
+                             const TagTypeIR *tag_type_ir);
+
   static bool AddEnumFields(abi_dump::EnumType *enum_protobuf,
                             const EnumTypeIR *enum_ir);
  public:
