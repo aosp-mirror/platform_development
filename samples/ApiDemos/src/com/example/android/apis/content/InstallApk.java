@@ -24,7 +24,9 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -88,7 +90,8 @@ public class InstallApk extends Activity {
     private OnClickListener mUnknownSourceListener = new OnClickListener() {
         public void onClick(View v) {
             Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
-            intent.setData(Uri.fromFile(prepareApk("HelloActivity.apk")));
+            intent.setData(getApkUri("HelloActivity.apk"));
+            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             startActivity(intent);
         }
     };
@@ -96,7 +99,8 @@ public class InstallApk extends Activity {
     private OnClickListener mMySourceListener = new OnClickListener() {
         public void onClick(View v) {
             Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
-            intent.setData(Uri.fromFile(prepareApk("HelloActivity.apk")));
+            intent.setData(getApkUri("HelloActivity.apk"));
+            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             intent.putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true);
             intent.putExtra(Intent.EXTRA_RETURN_RESULT, true);
             intent.putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME,
@@ -124,20 +128,37 @@ public class InstallApk extends Activity {
         }
     };
 
-    private File prepareApk(String assetName) {
+    /**
+     * Returns a Uri pointing to the APK to install.
+     */
+    private Uri getApkUri(String assetName) {
+        // Before N, a MODE_WORLD_READABLE file could be passed via the ACTION_INSTALL_PACKAGE
+        // Intent. Since N, MODE_WORLD_READABLE files are forbidden, and a FileProvider is
+        // recommended.
+        boolean useFileProvider = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N;
+
         // Copy the given asset out into a file so that it can be installed.
         // Returns the path to the file.
+        String tempFilename = "tmp.apk";
         byte[] buffer = new byte[16384];
+        int fileMode = useFileProvider ? Context.MODE_PRIVATE : Context.MODE_WORLD_READABLE;
+
         try (InputStream is = getAssets().open(assetName);
-            FileOutputStream fout = openFileOutput("tmp.apk", Context.MODE_WORLD_READABLE)) {
+            FileOutputStream fout = openFileOutput(tempFilename, fileMode)) {
             int n;
             while ((n=is.read(buffer)) >= 0) {
                 fout.write(buffer, 0, n);
             }
         } catch (IOException e) {
-            Log.i("InstallApk", "Failed transferring", e);
+            Log.i("InstallApk", "Failed to write temporary APK file", e);
         }
 
-        return getFileStreamPath("tmp.apk");
+        if (useFileProvider) {
+            File toInstall = new File(this.getFilesDir(), tempFilename);
+            return FileProvider.getUriForFile(
+                    this, "com.example.android.apis.installapkprovider", toInstall);
+        } else {
+            return Uri.fromFile(getFileStreamPath(tempFilename));
+        }
     }
 }
