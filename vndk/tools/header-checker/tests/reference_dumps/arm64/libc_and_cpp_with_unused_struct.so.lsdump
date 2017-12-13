@@ -1,47 +1,5 @@
 record_types {
   type_info {
-    name: "UnusedStruct"
-    size: 4
-    alignment: 4
-    referenced_type: "UnusedStruct"
-    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_and_cpp.h"
-    linker_set_key: "UnusedStruct"
-  }
-  fields {
-    referenced_type: "int"
-    field_offset: 0
-    field_name: "mUnusedMember"
-    access: public_access
-  }
-  access: public_access
-  record_kind: struct_kind
-}
-record_types {
-  type_info {
-    name: "Foo"
-    size: 16
-    alignment: 8
-    referenced_type: "Foo"
-    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_and_cpp.h"
-    linker_set_key: "Foo"
-  }
-  fields {
-    referenced_type: "int *"
-    field_offset: 0
-    field_name: "a_"
-    access: private_access
-  }
-  fields {
-    referenced_type: "int *"
-    field_offset: 64
-    field_name: "b_"
-    access: private_access
-  }
-  access: public_access
-  record_kind: class_kind
-}
-record_types {
-  type_info {
     name: "Cinner"
     size: 4
     alignment: 4
@@ -57,6 +15,9 @@ record_types {
   }
   access: public_access
   record_kind: struct_kind
+  tag_info {
+    unique_id: "Cinner"
+  }
 }
 record_types {
   type_info {
@@ -81,25 +42,56 @@ record_types {
   }
   access: public_access
   record_kind: struct_kind
-}
-pointer_types {
-  type_info {
-    name: "int *"
-    size: 8
-    alignment: 8
-    referenced_type: "int"
-    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_and_cpp.h"
-    linker_set_key: "int *"
+  tag_info {
+    unique_id: "Cstruct"
   }
 }
-pointer_types {
+record_types {
   type_info {
-    name: "Foo *"
-    size: 8
+    name: "Foo"
+    size: 16
     alignment: 8
     referenced_type: "Foo"
     source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_and_cpp.h"
-    linker_set_key: "Foo *"
+    linker_set_key: "Foo"
+  }
+  fields {
+    referenced_type: "int *"
+    field_offset: 0
+    field_name: "a_"
+    access: private_access
+  }
+  fields {
+    referenced_type: "int *"
+    field_offset: 64
+    field_name: "b_"
+    access: private_access
+  }
+  access: public_access
+  record_kind: class_kind
+  tag_info {
+    unique_id: "_ZTS3Foo"
+  }
+}
+record_types {
+  type_info {
+    name: "UnusedStruct"
+    size: 4
+    alignment: 4
+    referenced_type: "UnusedStruct"
+    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_and_cpp.h"
+    linker_set_key: "UnusedStruct"
+  }
+  fields {
+    referenced_type: "int"
+    field_offset: 0
+    field_name: "mUnusedMember"
+    access: public_access
+  }
+  access: public_access
+  record_kind: struct_kind
+  tag_info {
+    unique_id: "_ZTS12UnusedStruct"
   }
 }
 pointer_types {
@@ -132,6 +124,26 @@ pointer_types {
     linker_set_key: "Cstruct **"
   }
 }
+pointer_types {
+  type_info {
+    name: "Foo *"
+    size: 8
+    alignment: 8
+    referenced_type: "Foo"
+    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_and_cpp.h"
+    linker_set_key: "Foo *"
+  }
+}
+pointer_types {
+  type_info {
+    name: "int *"
+    size: 8
+    alignment: 8
+    referenced_type: "int"
+    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_and_cpp.h"
+    linker_set_key: "int *"
+  }
+}
 builtin_types {
   type_info {
     name: "int"
@@ -157,6 +169,17 @@ builtin_types {
   is_integral: false
 }
 functions {
+  return_type: "void"
+  function_name: "CFunction"
+  source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
+  parameters {
+    referenced_type: "Cstruct **"
+    default_arg: false
+  }
+  linker_set_key: "CFunction"
+  access: public_access
+}
+functions {
   return_type: "Foo"
   function_name: "foo"
   source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_and_cpp.h"
@@ -169,17 +192,6 @@ functions {
     default_arg: false
   }
   linker_set_key: "_Z3fooPiS_"
-  access: public_access
-}
-functions {
-  return_type: "void"
-  function_name: "CFunction"
-  source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
-  parameters {
-    referenced_type: "Cstruct **"
-    default_arg: false
-  }
-  linker_set_key: "CFunction"
   access: public_access
 }
 elf_functions {

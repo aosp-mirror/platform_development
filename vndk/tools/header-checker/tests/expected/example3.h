@@ -21,6 +21,9 @@ record_types {
   }
   access: public_access
   record_kind: class_kind
+  tag_info {
+    unique_id: "_ZTS10HiddenBase"
+  }
 }
 builtin_types {
   type_info {

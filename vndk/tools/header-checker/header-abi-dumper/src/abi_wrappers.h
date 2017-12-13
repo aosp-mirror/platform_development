@@ -44,6 +44,7 @@ class ABIWrapper {
 
   static std::string GetMangledNameDecl(const clang::NamedDecl *decl,
                                         clang::MangleContext *mangle_context);
+
  protected:
   abi_dump::AccessSpecifier AccessClangToDump(
       const clang::AccessSpecifier sp);
@@ -76,6 +77,7 @@ class ABIWrapper {
   std::unique_ptr<abi_util::TypeIR> SetTypeKind(const clang::QualType qtype,
                                                 const std::string &source_file);
 
+  std::string GetTypeUniqueId(const clang::TagDecl *tag_decl);
 
  protected:
   const clang::CompilerInstance *cip_;
@@ -118,6 +120,9 @@ class RecordDeclWrapper : public ABIWrapper {
 
   bool SetupRecordVTable(abi_util::RecordTypeIR *record_declp,
                          const clang::CXXRecordDecl *cxx_record_decl);
+
+  std::string GetMangledRTTI(const clang::CXXRecordDecl *cxx_record_decl);
+
   abi_util::VTableComponentIR SetupRecordVTableComponent(
       const clang::VTableComponent &vtable_component);
 
