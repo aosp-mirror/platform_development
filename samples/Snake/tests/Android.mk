@@ -3,7 +3,7 @@ include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := $(call all-subdir-java-files)
 
-LOCAL_JAVA_LIBRARIES := android.test.runner
+LOCAL_JAVA_LIBRARIES := android.test.runner android.test.base.stubs
 
 LOCAL_STATIC_JAVA_LIBRARIES := junit
 
