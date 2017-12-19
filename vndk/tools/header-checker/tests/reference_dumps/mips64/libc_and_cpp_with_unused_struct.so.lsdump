@@ -16,7 +16,7 @@ record_types {
   access: public_access
   record_kind: struct_kind
   tag_info {
-    unique_id: "Cinner"
+    unique_id: "_ZTS6Cinner"
   }
 }
 record_types {
@@ -43,7 +43,7 @@ record_types {
   access: public_access
   record_kind: struct_kind
   tag_info {
-    unique_id: "Cstruct"
+    unique_id: "_ZTS7Cstruct"
   }
 }
 record_types {
