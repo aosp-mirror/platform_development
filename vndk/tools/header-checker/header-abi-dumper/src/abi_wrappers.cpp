@@ -156,14 +156,10 @@ std::string RecordDeclWrapper::GetMangledRTTI(
 std::string ABIWrapper::GetTypeUniqueId(const clang::TagDecl *tag_decl) {
   clang::QualType qual_type =
       tag_decl->getTypeForDecl()->getCanonicalTypeInternal();
-  // We need to mangle type names for C++ contexts.
-  if (!tag_decl->isExternCContext() && ast_contextp_->getLangOpts().CPlusPlus) {
-    llvm::SmallString<256> uid;
-    llvm::raw_svector_ostream out(uid);
-    mangle_contextp_->mangleCXXRTTIName(qual_type, out);
-    return uid.str();
-  }
-  return ABIWrapper::QualTypeToString(qual_type);
+  llvm::SmallString<256> uid;
+  llvm::raw_svector_ostream out(uid);
+  mangle_contextp_->mangleCXXRTTIName(qual_type, out);
+  return uid.str();
 }
 
 // CreateBasicNamedAndTypedDecl creates a BasicNamedAndTypedDecl : that'll
