@@ -126,7 +126,6 @@ class GenBuildFile(object):
         Args:
           prebuilt: string, name of ETC prebuilt object
         """
-
         etc_path = find(self._install_dir, prebuilt)[0]
         etc_sub_path = etc_path[etc_path.index('/') + 1:]
 
@@ -194,6 +193,36 @@ class GenBuildFile(object):
           prebuilt: string, name of prebuilt object
           is_vndk_sp: bool, True if prebuilt is a VNDK_SP lib
         """
+        def get_notice_file(prebuilt):
+            """Returns build rule for notice file (attribute 'notice').
+
+            Args:
+              prebuilt: string, name of prebuilt object
+            """
+            notice = ''
+            notice_file_name = '{}.txt'.format(prebuilt)
+            notices_dir = os.path.join(self._install_dir, 'NOTICE_FILES')
+            notice_files = find(notices_dir, [notice_file_name])
+            if len(notice_files) > 0:
+                notice = '{ind}notice: "{notice_file_path}",\n'.format(
+                    ind=self.INDENT,
+                    notice_file_path=os.path.join(
+                        'NOTICE_FILES', notice_files[0]))
+            return notice
+
+        def get_rel_install_path(prebuilt):
+            """Returns build rule for 'relative_install_path'.
+
+            Args:
+              prebuilt: string, name of prebuilt object
+            """
+            rel_install_path = ''
+            if prebuilt in self.RELATIVE_INSTALL_PATHS:
+                path = self.RELATIVE_INSTALL_PATHS[prebuilt]
+                rel_install_path += ('{ind}relative_install_path: "{path}",\n'
+                                     .format(ind=self.INDENT, path=path))
+            return rel_install_path
+
         def get_arch_srcs(prebuilt):
             """Returns build rule for arch specific srcs.
 
@@ -225,19 +254,6 @@ class GenBuildFile(object):
             arch_srcs += '{ind}}},\n'.format(ind=self.INDENT)
             return arch_srcs
 
-        def get_rel_install_path(prebuilt):
-            """Returns build rule for 'relative_install_path'.
-
-            Args:
-              prebuilt: string, name of prebuilt object
-            """
-            rel_install_path = ''
-            if prebuilt in self.RELATIVE_INSTALL_PATHS:
-                path = self.RELATIVE_INSTALL_PATHS[prebuilt]
-                rel_install_path += ('{ind}relative_install_path: "{path}",\n'
-                                     .format(ind=self.INDENT, path=path))
-            return rel_install_path
-
         name = os.path.splitext(prebuilt)[0]
         vendor_available = 'false' if prebuilt in self._vndk_private else 'true'
         if is_vndk_sp:
@@ -245,8 +261,9 @@ class GenBuildFile(object):
                 ind=self.INDENT)
         else:
             vndk_sp = ''
-        arch_srcs = get_arch_srcs(prebuilt)
+        notice = get_notice_file(prebuilt)
         rel_install_path = get_rel_install_path(prebuilt)
+        arch_srcs = get_arch_srcs(prebuilt)
 
         return ('vndk_prebuilt_shared {{\n'
                 '{ind}name: "{name}",\n'
@@ -256,6 +273,7 @@ class GenBuildFile(object):
                 '{ind}{ind}enabled: true,\n'
                 '{vndk_sp}'
                 '{ind}}},\n'
+                '{notice}'
                 '{rel_install_path}'
                 '{arch_srcs}'
                 '}}\n'.format(
@@ -264,6 +282,7 @@ class GenBuildFile(object):
                     ver=self._vndk_version,
                     vendor_available=vendor_available,
                     vndk_sp=vndk_sp,
+                    notice=notice,
                     rel_install_path=rel_install_path,
                     arch_srcs=arch_srcs))
 

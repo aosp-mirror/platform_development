@@ -85,6 +85,16 @@ def remove_old_snapshot(install_dir):
 
 
 def install_snapshot(branch, build, install_dir):
+    """Installs VNDK snapshot build artifacts to prebuilts/vndk/v{version}.
+
+    1) Fetch build artifacts from Android Build server or from local DIST_DIR
+    2) Unzip build artifacts
+
+    Args:
+      branch: string or None, branch name of build artifacts
+      build: string or None, build number of build artifacts
+      install_dir: string, directory to install VNDK snapshot
+    """
     artifact_pattern = 'android-vndk-*.zip'
 
     try:
@@ -125,16 +135,36 @@ def install_snapshot(branch, build, install_dir):
             shutil.rmtree(tempdir)
 
 
+def gather_notice_files():
+    """Gathers all NOTICE files to a new NOTICE_FILES directory.
+
+    Create a new NOTICE_FILES directory under install_dir and copy to it
+    all NOTICE files in arch-*/NOTICE_FILES.
+    """
+    notices_dir_name = 'NOTICE_FILES'
+    logger().info('Creating {} directory...'.format(notices_dir_name))
+    os.makedirs(notices_dir_name)
+    for arch_dir in glob.glob('arch-*'):
+        notices_dir_per_arch = os.path.join(arch_dir, notices_dir_name)
+        if os.path.isdir(notices_dir_per_arch):
+            for notice_file in glob.glob(
+                '{}/*.txt'.format(notices_dir_per_arch)):
+                if not os.path.isfile(os.path.join(notices_dir_name,
+                    os.path.basename(notice_file))):
+                    shutil.copy(notice_file, notices_dir_name)
+            shutil.rmtree(notices_dir_per_arch)
+
+
 def update_buildfiles(buildfile_generator):
-    logger().info('Updating Android.mk')
+    logger().info('Updating Android.mk...')
     buildfile_generator.generate_android_mk()
 
-    logger().info('Updating Android.bp')
+    logger().info('Updating Android.bp...')
     buildfile_generator.generate_android_bp()
 
 
 def commit(branch, build, version):
-    logger().info('Making commit')
+    logger().info('Making commit...')
     check_call(['git', 'add', '.'])
     message = textwrap.dedent("""\
         Update VNDK snapshot v{version} to build {build}.
@@ -203,6 +233,7 @@ def main():
 
     remove_old_snapshot(install_dir)
     install_snapshot(args.branch, args.build, install_dir)
+    gather_notice_files()
 
     buildfile_generator = GenBuildFile(install_dir, vndk_version)
     update_buildfiles(buildfile_generator)
