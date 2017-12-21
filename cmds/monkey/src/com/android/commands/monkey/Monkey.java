@@ -44,6 +44,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -51,6 +54,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Application that injects random key events and other actions into the system.
@@ -239,6 +244,10 @@ public class Monkey {
     private static final File TOMBSTONES_PATH = new File("/data/tombstones");
 
     private static final String TOMBSTONE_PREFIX = "tombstone_";
+
+    /** Example: "pid: 5379, tid: 8345, name: RenderThread  >>> com.google.android.gms.ui <<<" */
+    private static final Pattern TOMBSTONE_PROCESS_PATTERN =
+            Pattern.compile("^pid: (\\d+).*\\>\\>\\> (.*) \\<\\<\\<$");
 
     private HashSet<Long> mTombstones = null;
 
@@ -1293,6 +1302,7 @@ public class Monkey {
                 newStones.add(f.lastModified());
                 if (mTombstones == null || !mTombstones.contains(f.lastModified())) {
                     result = true;
+                    printNativeCrashFromTombstone(Paths.get(TOMBSTONES_PATH.getPath(), t));
                     Logger.out.println("** New tombstone found: " + f.getAbsolutePath()
                                        + ", size: " + f.length());
                 }
@@ -1303,6 +1313,24 @@ public class Monkey {
         mTombstones = newStones;
 
         return result;
+    }
+
+    private void printNativeCrashFromTombstone(Path path) {
+        try {
+            List<String> lines = Files.readAllLines(path);
+            for (String line : lines) {
+                final Matcher matcher = TOMBSTONE_PROCESS_PATTERN.matcher(line);
+                if (!matcher.matches())
+                    continue;
+                final String pid = matcher.group(1);
+                final String process = matcher.group(2);
+                Logger.out.println("// CRASH: " + process + " (pid " + pid + ")");
+                return;
+            }
+            Logger.err.println("Process not found in tombstone file.");
+        } catch (IOException e) {
+            Logger.err.println("Failed to read tombstone file: " + e.toString());
+        }
     }
 
     /**
