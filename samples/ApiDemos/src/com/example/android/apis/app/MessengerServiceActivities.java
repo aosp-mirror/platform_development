@@ -21,16 +21,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class MessengerServiceActivities {
+
+// BEGIN_INCLUDE(bind)
     /**
      * Example of binding and unbinding to the remote service.
      * This demonstrates the implementation of a service which the client will
-     * bind to, interacting with it through an aidl interface.</p>
+     * bind to, interacting with it through an aidl interface.
      * 
-     * <p>Note that this is implemented as an inner class only keep the sample
+     * Note that this is implemented as an inner class only keep the sample
      * all together; typically this code would appear in some separate class.
      */
     public static class Binding extends Activity {
-// BEGIN_INCLUDE(bind)
         /** Messenger for communicating with service. */
         Messenger mService = null;
         /** Flag indicating whether we have called bind on the service. */
