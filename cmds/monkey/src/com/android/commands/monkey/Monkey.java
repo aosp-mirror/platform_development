@@ -54,8 +54,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Application that injects random key events and other actions into the system.
@@ -245,9 +243,7 @@ public class Monkey {
 
     private static final String TOMBSTONE_PREFIX = "tombstone_";
 
-    /** Example: "pid: 5379, tid: 8345, name: RenderThread  >>> com.google.android.gms.ui <<<" */
-    private static final Pattern TOMBSTONE_PROCESS_PATTERN =
-            Pattern.compile("^pid: (\\d+).*\\>\\>\\> (.*) \\<\\<\\<$");
+    private static int NUM_READ_TOMBSTONE_RETRIES = 5;
 
     private HashSet<Long> mTombstones = null;
 
@@ -1302,7 +1298,7 @@ public class Monkey {
                 newStones.add(f.lastModified());
                 if (mTombstones == null || !mTombstones.contains(f.lastModified())) {
                     result = true;
-                    printNativeCrashFromTombstone(Paths.get(TOMBSTONES_PATH.getPath(), t));
+                    waitForTombstoneToBeWritten(Paths.get(TOMBSTONES_PATH.getPath(), t));
                     Logger.out.println("** New tombstone found: " + f.getAbsolutePath()
                                        + ", size: " + f.length());
                 }
@@ -1315,21 +1311,32 @@ public class Monkey {
         return result;
     }
 
-    private void printNativeCrashFromTombstone(Path path) {
+    /**
+     * Wait for the given tombstone file to be completely written.
+     *
+     * @param path The path of the tombstone file.
+     */
+    private void waitForTombstoneToBeWritten(Path path) {
+        boolean isWritten = false;
         try {
-            List<String> lines = Files.readAllLines(path);
-            for (String line : lines) {
-                final Matcher matcher = TOMBSTONE_PROCESS_PATTERN.matcher(line);
-                if (!matcher.matches())
-                    continue;
-                final String pid = matcher.group(1);
-                final String process = matcher.group(2);
-                Logger.out.println("// CRASH: " + process + " (pid " + pid + ")");
-                return;
+            // Ensure file is done writing by sleeping and comparing the previous and current size
+            for (int i = 0; i < NUM_READ_TOMBSTONE_RETRIES; i++) {
+                long size = Files.size(path);
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) { }
+                if (size > 0 && Files.size(path) == size) {
+                    //File size is bigger than 0 and hasn't changed
+                    isWritten = true;
+                    break;
+                }
             }
-            Logger.err.println("Process not found in tombstone file.");
         } catch (IOException e) {
-            Logger.err.println("Failed to read tombstone file: " + e.toString());
+            Logger.err.println("Failed to get tombstone file size: " + e.toString());
+        }
+        if (!isWritten) {
+            Logger.err.println("Incomplete tombstone file.");
+            return;
         }
     }
 
