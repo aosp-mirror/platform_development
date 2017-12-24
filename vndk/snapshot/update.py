@@ -26,24 +26,14 @@ import sys
 import tempfile
 import textwrap
 
+import utils
+
+from check_gpl_license import GPLChecker
 from gen_buildfiles import GenBuildFile
 
-ANDROID_BUILD_TOP = os.getenv('ANDROID_BUILD_TOP')
-if not ANDROID_BUILD_TOP:
-    print('Error: Missing ANDROID_BUILD_TOP env variable. Please run '
-          '\'. build/envsetup.sh; lunch <build target>\'. Exiting script.')
-    sys.exit(1)
-
-DIST_DIR = os.getenv('DIST_DIR')
-if not DIST_DIR:
-    OUT_DIR = os.getenv('OUT_DIR')
-    if OUT_DIR:
-        DIST_DIR = os.path.realpath(os.path.join(OUT_DIR, 'dist'))
-    else:
-        DIST_DIR = os.path.realpath(os.path.join(ANDROID_BUILD_TOP, 'out/dist'))
-
-PREBUILTS_VNDK_DIR = os.path.realpath(
-    os.path.join(ANDROID_BUILD_TOP, 'prebuilts/vndk'))
+ANDROID_BUILD_TOP = utils.get_android_build_top()
+DIST_DIR = utils.get_dist_dir(utils.get_out_dir(ANDROID_BUILD_TOP))
+PREBUILTS_VNDK_DIR = utils.join_realpath(ANDROID_BUILD_TOP, 'prebuilts/vndk')
 
 
 def logger():
@@ -85,6 +75,16 @@ def remove_old_snapshot(install_dir):
 
 
 def install_snapshot(branch, build, install_dir):
+    """Installs VNDK snapshot build artifacts to prebuilts/vndk/v{version}.
+
+    1) Fetch build artifacts from Android Build server or from local DIST_DIR
+    2) Unzip build artifacts
+
+    Args:
+      branch: string or None, branch name of build artifacts
+      build: string or None, build number of build artifacts
+      install_dir: string, directory to install VNDK snapshot
+    """
     artifact_pattern = 'android-vndk-*.zip'
 
     try:
@@ -93,21 +93,23 @@ def install_snapshot(branch, build, install_dir):
             artifact_dir = tempdir
 
             os.chdir(tempdir)
-            logger().info('Fetching {pattern} from {branch} (bid: {build})'
+            logger().info(
+                'Fetching {pattern} from {branch} (bid: {build})'
                 .format(pattern=artifact_pattern, branch=branch, build=build))
             fetch_artifact(branch, build, artifact_pattern)
 
             manifest_pattern = 'manifest_{}.xml'.format(build)
             manifest_name = 'manifest.xml'
-            logger().info('Fetching {file} from {branch} (bid: {build})'.format(
-                file=manifest_pattern, branch=branch, build=build))
+            logger().info(
+                'Fetching {file} from {branch} (bid: {build})'.format(
+                    file=manifest_pattern, branch=branch, build=build))
             fetch_artifact(branch, build, manifest_pattern, manifest_name)
             shutil.move(manifest_name, install_dir)
 
             os.chdir(install_dir)
         else:
-            logger().info('Fetching local VNDK snapshot from {}'.format(
-                DIST_DIR))
+            logger().info(
+                'Fetching local VNDK snapshot from {}'.format(DIST_DIR))
             artifact_dir = DIST_DIR
 
         artifacts = glob.glob(os.path.join(artifact_dir, artifact_pattern))
@@ -125,16 +127,45 @@ def install_snapshot(branch, build, install_dir):
             shutil.rmtree(tempdir)
 
 
+def gather_notice_files():
+    """Gathers all NOTICE files to a new NOTICE_FILES directory.
+
+    Create a new NOTICE_FILES directory under install_dir and copy to it
+    all NOTICE files in arch-*/NOTICE_FILES.
+    """
+    notices_dir_name = 'NOTICE_FILES'
+    logger().info('Creating {} directory...'.format(notices_dir_name))
+    os.makedirs(notices_dir_name)
+    for arch_dir in glob.glob('arch-*'):
+        notices_dir_per_arch = os.path.join(arch_dir, notices_dir_name)
+        if os.path.isdir(notices_dir_per_arch):
+            for notice_file in glob.glob(
+                    '{}/*.txt'.format(notices_dir_per_arch)):
+                if not os.path.isfile(
+                        os.path.join(notices_dir_name,
+                                     os.path.basename(notice_file))):
+                    shutil.copy(notice_file, notices_dir_name)
+            shutil.rmtree(notices_dir_per_arch)
+
+
 def update_buildfiles(buildfile_generator):
-    logger().info('Updating Android.mk')
+    logger().info('Updating Android.mk...')
     buildfile_generator.generate_android_mk()
 
-    logger().info('Updating Android.bp')
+    logger().info('Updating Android.bp...')
     buildfile_generator.generate_android_bp()
 
 
+def check_gpl_license(license_checker):
+    try:
+        license_checker.check_gpl_projects()
+    except ValueError as error:
+        print '***CANNOT INSTALL VNDK SNAPSHOT***', error
+        raise
+
+
 def commit(branch, build, version):
-    logger().info('Making commit')
+    logger().info('Making commit...')
     check_call(['git', 'add', '.'])
     message = textwrap.dedent("""\
         Update VNDK snapshot v{version} to build {build}.
@@ -156,7 +187,7 @@ def get_args():
         help=('Fetch local VNDK snapshot artifacts from DIST_DIR instead of '
               'Android Build server.'))
     parser.add_argument(
-        '--use-current-branch',action='store_true',
+        '--use-current-branch', action='store_true',
         help='Perform the update in the current branch. Do not repo start.')
     parser.add_argument(
         '-v', '--verbose', action='count', default=0,
@@ -203,11 +234,14 @@ def main():
 
     remove_old_snapshot(install_dir)
     install_snapshot(args.branch, args.build, install_dir)
+    gather_notice_files()
 
     buildfile_generator = GenBuildFile(install_dir, vndk_version)
     update_buildfiles(buildfile_generator)
 
     if not args.local:
+        license_checker = GPLChecker(install_dir, ANDROID_BUILD_TOP)
+        check_gpl_license(license_checker)
         commit(args.branch, args.build, vndk_version)
 
 

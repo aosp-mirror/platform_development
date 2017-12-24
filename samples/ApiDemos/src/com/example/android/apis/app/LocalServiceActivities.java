@@ -79,18 +79,18 @@ public class LocalServiceActivities {
 
     // ----------------------------------------------------------------------
 
+// BEGIN_INCLUDE(bind)
     /**
      * Example of binding and unbinding to the local service.
      * This demonstrates the implementation of a service which the client will
-     * bind to, receiving an object through which it can communicate with the service.</p>
+     * bind to, receiving an object through which it can communicate with the service.
      * 
-     * <p>Note that this is implemented as an inner class only keep the sample
+     * Note that this is implemented as an inner class only keep the sample
      * all together; typically this code would appear in some separate class.
      */
     public static class Binding extends Activity {
         private boolean mIsBound;
 
-// BEGIN_INCLUDE(bind)
         private LocalService mBoundService;
         
         private ServiceConnection mConnection = new ServiceConnection() {
