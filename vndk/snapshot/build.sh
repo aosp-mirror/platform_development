@@ -22,13 +22,13 @@ echo "-----Generating VNDK snapshot for arm64-armv8-a"
 make -j vndk dist TARGET_PRODUCT=aosp_arm64_ab
 
 echo "-----Generating VNDK snapshot for arm-armv7-a-neon"
-make -j vndk dist TARGET_PRODUCT=aosp_arm
+make -j vndk dist TARGET_PRODUCT=aosp_arm_ab
 
 echo "-----Generating VNDK snapshot for x86_64-x86_64"
-make -j vndk dist TARGET_PRODUCT=aosp_x86_64
+make -j vndk dist TARGET_PRODUCT=aosp_x86_64_ab
 
 echo "-----Generating VNDK snapshot for x86-x86"
-make -j vndk dist TARGET_PRODUCT=aosp_x86
+make -j vndk dist TARGET_PRODUCT=aosp_x86_ab
 
 echo "-----Running tests"
 source development/vndk/snapshot/test.sh all
