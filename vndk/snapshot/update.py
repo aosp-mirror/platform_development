@@ -20,6 +20,7 @@ import argparse
 import glob
 import logging
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -148,6 +149,22 @@ def gather_notice_files():
             shutil.rmtree(notices_dir_per_arch)
 
 
+def revise_ld_config_txt():
+    """Replaces unversioned VNDK directories with versioned ones.
+
+    Unversioned VNDK directories: /system/${LIB}/vndk[-sp]
+    Versioned VNDK directories: /system/${LIB}/vndk[-sp]${VNDK_VER}
+    """
+    re_pattern = '(system\/\${LIB}\/vndk(?:-sp)?)([:/]|$)'
+    VNDK_INSTALL_DIR_RE = re.compile(re_pattern, flags=re.MULTILINE)
+    ld_config_txt_paths = glob.glob('arch-*/configs/ld.config*')
+    for ld_config_file in ld_config_txt_paths:
+        with open(ld_config_file, 'r') as file:
+            revised = VNDK_INSTALL_DIR_RE.sub(r'\1${VNDK_VER}\2', file.read())
+        with open(ld_config_file, 'w') as file:
+            file.write(revised)
+
+
 def update_buildfiles(buildfile_generator):
     logger().info('Updating Android.mk...')
     buildfile_generator.generate_android_mk()
@@ -235,6 +252,10 @@ def main():
     remove_old_snapshot(install_dir)
     install_snapshot(args.branch, args.build, install_dir)
     gather_notice_files()
+
+    # Post-process ld.config.txt for O-MR1
+    if vndk_version == '27':
+        revise_ld_config_txt()
 
     buildfile_generator = GenBuildFile(install_dir, vndk_version)
     update_buildfiles(buildfile_generator)
