@@ -18,6 +18,7 @@ python_binary_host {
     "gsi_util.py",
     "gsi_util/*.py",
     "gsi_util/commands/*.py",
+    "gsi_util/dumpers/*.py",
     "gsi_util/mounters/*.py",
     "gsi_util/utils/*.py",
   ],
