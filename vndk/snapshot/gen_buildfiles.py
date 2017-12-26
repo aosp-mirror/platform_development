@@ -15,6 +15,7 @@
 # limitations under the License.
 #
 
+import glob
 import os
 import sys
 
@@ -128,7 +129,8 @@ class GenBuildFile(object):
         Args:
           prebuilt: string, name of ETC prebuilt object
         """
-        etc_path = utils.find(self._install_dir, prebuilt)[0]
+        etc_pattern = 'arch-*/configs/{}*'.format(os.path.splitext(prebuilt)[0])
+        etc_path = glob.glob(etc_pattern)[0]
         etc_sub_path = etc_path[etc_path.index('/') + 1:]
 
         return (
