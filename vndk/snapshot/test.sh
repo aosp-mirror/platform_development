@@ -90,11 +90,11 @@ function compare_vndk_libs() {
     if [[ $arch == 'arm64' ]]; then
         product='generic_arm64_ab'
     elif [[ $arch == 'arm' ]]; then
-        product='generic'
+        product='generic_arm_ab'
     elif [[ $arch == 'x86_64' ]]; then
-        product='generic_x86_64'
+        product='generic_x86_64_ab'
     elif [[ $arch == 'x86' ]]; then
-        product='generic_x86'
+        product='generic_x86_ab'
     fi
 
     if [[ ${arch:-2:length} =~ '64' ]]; then
@@ -144,6 +144,7 @@ function run_test_cases() {
     config_files=(
         'ld.config.txt'
         'llndk.libraries.txt'
+        'module_paths.txt'
         'vndkcore.libraries.txt'
         'vndkprivate.libraries.txt'
         'vndksp.libraries.txt')
@@ -160,6 +161,7 @@ function run_test_cases() {
     echo "[Test] Checking directory structure of snapshot"
     directories=(
         'configs/'
+        'NOTICE_FILES/'
         'shared/vndk-core/'
         'shared/vndk-sp/')
     for sub_dir in "${directories[@]}"; do
