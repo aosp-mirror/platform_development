@@ -168,6 +168,17 @@ class VNDKLibDirTest(unittest.TestCase):
         self.assertIn('29', vndk_lib_dirs)
 
 
+    def test_create_from_dirs_versioned_32bit_only(self):
+        input_dir = os.path.join(
+                SCRIPT_DIR, 'testdata', 'test_vndk_lib_dir', 'vndk_32')
+
+        vndk_lib_dirs = VNDKLibDir.create_from_dirs(
+                [os.path.join(input_dir, 'system')],
+                [os.path.join(input_dir, 'vendor')])
+
+        self.assertIn('28', vndk_lib_dirs)
+
+
     def test_get_property(self):
         property_file = StringIO('ro.vndk.version=example\n')
         ans = VNDKLibDir._get_property(property_file, 'ro.vndk.version')
