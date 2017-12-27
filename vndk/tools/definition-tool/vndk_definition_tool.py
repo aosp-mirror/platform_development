@@ -1018,10 +1018,13 @@ class VNDKLibDir(list):
             for base_dir in base_dirs:
                 for lib_dir in ('lib', 'lib64'):
                     lib_dir_path = os.path.join(base_dir, lib_dir)
-                    for name in os.listdir(lib_dir_path):
-                        version = cls.extract_version_from_name(name)
-                        if version:
-                            versions.add(version)
+                    try:
+                        for name in os.listdir(lib_dir_path):
+                            version = cls.extract_version_from_name(name)
+                            if version:
+                                versions.add(version)
+                    except FileNotFoundError:
+                        pass
             return versions
 
         versions = set()
