@@ -515,7 +515,7 @@ public class MonkeySourceScript implements MonkeyEventSource {
                                 .setEventTime(eventTime).addPointer(0, x, y, 1, 5);
                 mQ.addLast(e);
 
-                for (int i = 0; i < stepCount; ++i) {
+                for (int i = 0; i < stepCount-1; ++i) {
                     x += xStep;
                     y += yStep;
                     eventTime = SystemClock.uptimeMillis();
@@ -523,10 +523,14 @@ public class MonkeySourceScript implements MonkeyEventSource {
                         .setEventTime(eventTime).addPointer(0, x, y, 1, 5);
                     mQ.addLast(e);
                 }
+                eventTime = SystemClock.uptimeMillis();
+                e = new MonkeyTouchEvent(MotionEvent.ACTION_MOVE).setDownTime(downTime)
+                    .setEventTime(eventTime).addPointer(0, xEnd, yEnd, 1, 5);
+                mQ.addLast(e);
 
                 eventTime = SystemClock.uptimeMillis();
                 e = new MonkeyTouchEvent(MotionEvent.ACTION_UP).setDownTime(downTime)
-                    .setEventTime(eventTime).addPointer(0, x, y, 1, 5);
+                    .setEventTime(eventTime).addPointer(0, xEnd, yEnd, 1, 5);
                 mQ.addLast(e);
             }
         }
