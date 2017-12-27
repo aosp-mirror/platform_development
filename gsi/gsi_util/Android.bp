@@ -17,6 +17,7 @@ python_binary_host {
   srcs: [
     "gsi_util.py",
     "gsi_util/*.py",
+    "gsi_util/checkers/*.py",
     "gsi_util/commands/*.py",
     "gsi_util/dumpers/*.py",
     "gsi_util/mounters/*.py",
@@ -25,6 +26,7 @@ python_binary_host {
   required: [
     "adb",
     "avbtool",
+    "checkvintf",
     "simg2img",
   ],
   version: {

@@ -28,7 +28,7 @@ class GsiUtil(object):
 
   # Adds gsi_util COMMAND here.
   # TODO(bowgotsai): auto collect from gsi_util/commands/*.py
-  _COMMANDS = ['flash_gsi', 'pull', 'dump', 'hello']
+  _COMMANDS = ['flash_gsi', 'pull', 'dump', 'check_compat', 'hello']
 
   _LOGGING_FORMAT = '%(message)s'
   _LOGGING_LEVEL = logging.WARNING
