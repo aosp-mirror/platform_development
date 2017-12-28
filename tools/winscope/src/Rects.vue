@@ -24,7 +24,7 @@
 
 <script>
 
-import jsonProtoDefs from '../proto/frameworks/base/core/proto/android/server/windowmanagertrace.proto'
+import jsonProtoDefs from 'frameworks/base/core/proto/android/server/windowmanagertrace.proto'
 import protobuf from 'protobufjs'
 
 var protoDefs = protobuf.Root.fromJSON(jsonProtoDefs);
