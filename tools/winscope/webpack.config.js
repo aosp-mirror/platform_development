@@ -44,7 +44,7 @@ module.exports = {
         test: /\.proto$/,
         loader: 'proto-loader',
         options: {
-          paths: [path.resolve(__dirname, './proto'),]
+          paths: [path.resolve(__dirname, '../../..')]
         }
       },
       {
@@ -59,7 +59,11 @@ module.exports = {
   resolve: {
     alias: {
       'vue$': 'vue/dist/vue.esm.js'
-    }
+    },
+    modules: [
+      'node_modules',
+      path.resolve(__dirname, '../../..')
+    ],
   },
   resolveLoader: {
     modules: [
