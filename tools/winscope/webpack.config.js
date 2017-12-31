@@ -16,12 +16,13 @@
 
 var path = require('path')
 var webpack = require('webpack')
+var HtmlWebpackPlugin = require('html-webpack-plugin')
+var HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin')
 
 module.exports = {
   entry: './src/main.js',
   output: {
     path: path.resolve(__dirname, './dist'),
-    publicPath: '/dist/',
     filename: 'build.js'
   },
   module: {
@@ -44,7 +45,7 @@ module.exports = {
         test: /\.proto$/,
         loader: 'proto-loader',
         options: {
-          paths: [path.resolve(__dirname, './proto'),]
+          paths: [path.resolve(__dirname, '../../..')]
         }
       },
       {
@@ -57,9 +58,10 @@ module.exports = {
     ]
   },
   resolve: {
-    alias: {
-      'vue$': 'vue/dist/vue.esm.js'
-    }
+    modules: [
+      'node_modules',
+      path.resolve(__dirname, '../../..')
+    ],
   },
   resolveLoader: {
     modules: [
@@ -77,7 +79,9 @@ module.exports = {
   devtool: '#eval-source-map'
 }
 
-if (process.env.NODE_ENV === 'production') {
+var prod = (process.env.NODE_ENV === 'production');
+
+if (prod) {
   module.exports.devtool = '#source-map'
   // http://vue-loader.vuejs.org/en/workflow/production.html
   module.exports.plugins = (module.exports.plugins || []).concat([
@@ -97,3 +101,11 @@ if (process.env.NODE_ENV === 'production') {
     })
   ])
 }
+
+module.exports.plugins = (module.exports.plugins || []).concat([
+  new HtmlWebpackPlugin({
+    inlineSource: prod ? '.(js|css)' : false,
+    template: 'src/index_template.html'
+  }),
+  new HtmlWebpackInlineSourcePlugin(),
+]);
