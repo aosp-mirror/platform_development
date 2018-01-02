@@ -296,8 +296,9 @@ class ELFLinkerTest(unittest.TestCase):
                         dt_needed=['libc.so', 'libcutils.so'])
 
         # SP-NDK
-        gb.add_multilib(PT_SYSTEM, 'libEGL',
-                        dt_needed=['libc.so', 'libutils.so'])
+        libEGL_32, libEGL_64 = \
+                gb.add_multilib(PT_SYSTEM, 'libEGL',
+                                dt_needed=['libc.so', 'libutils.so'])
 
         # SP-HAL dependencies
         gb.add_multilib(PT_VENDOR, 'libllvm_vendor_dep')
@@ -310,11 +311,16 @@ class ELFLinkerTest(unittest.TestCase):
                         dt_needed=['libhidlbase.so', 'libsp_both_vs.so'])
 
         # SP-HAL
-        gb.add_multilib(PT_VENDOR, 'libEGL_chipset', extra_dir='egl',
-                        dt_needed=['libc.so', 'libllvm_vendor.so',
-                                   'libhidlmemory.so'])
+        libEGL_chipset_32, libEGL_chipset_64 = \
+                gb.add_multilib(PT_VENDOR, 'libEGL_chipset', extra_dir='egl',
+                                dt_needed=['libc.so', 'libllvm_vendor.so',
+                                           'libhidlmemory.so'])
 
         gb.resolve()
+
+        # Add dlopen() dependencies from libEGL to libEGL_chipset.
+        libEGL_32.add_dlopen_dep(libEGL_chipset_32)
+        libEGL_64.add_dlopen_dep(libEGL_chipset_64)
 
         # Create generic reference.
         class MockGenericRefs(object):

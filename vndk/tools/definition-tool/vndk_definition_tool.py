@@ -1646,13 +1646,16 @@ class ELFLinker(object):
         return set(lib for lib in self.all_libs() if lib.is_sp_ndk)
 
     def compute_sp_lib(self, generic_refs, ignore_hidden_deps=False):
-        def is_ndk(lib):
-            return lib.is_ndk
+        def is_ndk_or_sp_hal(lib):
+            return lib.is_ndk or lib.is_sp_hal
 
         sp_ndk = self.compute_sp_ndk()
         sp_ndk_closure = self.compute_deps_closure(
-                sp_ndk, is_ndk, ignore_hidden_deps)
+                sp_ndk, is_ndk_or_sp_hal, ignore_hidden_deps)
         sp_ndk_indirect = sp_ndk_closure - sp_ndk
+
+        def is_ndk(lib):
+            return lib.is_ndk
 
         sp_hal = self.compute_predefined_sp_hal()
         sp_hal_closure = self.compute_deps_closure(
@@ -1978,8 +1981,8 @@ class ELFLinker(object):
         ll_ndk_indirect -= ll_ndk
 
         def is_not_sp_ndk_indirect(lib):
-            return lib.is_ll_ndk or lib.is_sp_ndk or lib in ll_ndk_indirect or \
-                   is_vndk_sp(lib) or is_vndk(lib)
+            return lib.is_ll_ndk or lib.is_sp_ndk or lib.is_sp_hal or \
+                   lib in ll_ndk_indirect or is_vndk_sp(lib) or is_vndk(lib)
 
         sp_ndk_indirect = self.compute_deps_closure(
                 sp_ndk, is_not_sp_ndk_indirect, True)
