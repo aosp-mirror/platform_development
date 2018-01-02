@@ -1393,8 +1393,8 @@ class ELFLinker(object):
                 src.add_dlopen_dep(dst)
                 num_matches += 1
         if num_matches == 0:
-            print('error: Failed to add dlopen dependency from {} to {}.'
-                  .format(src_path, dst_path), file=sys.stderr)
+            raise ValueError('Failed to add dlopen dependency from {} to {}'
+                             .format(src_path, dst_path))
 
     def _get_libs_in_elf_class(self, elf_class, path):
         result = set()
@@ -1480,11 +1480,16 @@ class ELFLinker(object):
 
     def add_dlopen_deps(self, path):
         patt = re.compile('([^:]*):\\s*(.*)')
-        with open(path, 'r') as f:
-            for line in f:
+        with open(path, 'r') as dlopen_dep_file:
+            for line_no, line in enumerate(dlopen_dep_file, start=1):
                 match = patt.match(line)
-                if match:
+                if not match:
+                    continue
+                try:
                     self.add_dlopen_dep(match.group(1), match.group(2))
+                except ValueError as e:
+                    print('error:{}:{}: {}.'.format(path, line_no, e),
+                          file=sys.stderr)
 
     def _find_exported_symbol(self, symbol, libs):
         """Find the shared library with the exported symbol."""

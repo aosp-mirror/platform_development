@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import re
 import sys
 import tempfile
 import unittest
@@ -556,7 +557,8 @@ class ELFLinkerDlopenDepsTest(unittest.TestCase):
 
             self.assertRegexpMatches(
                     stderr.getvalue(),
-                    'error: Failed to add dlopen dependency from .* to .*\\.\n')
+                    'error:' + re.escape(tmp_file.name) + ':1: ' +
+                    'Failed to add dlopen dependency from .* to .*\\.\n')
 
 
 if __name__ == '__main__':
