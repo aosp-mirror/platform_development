@@ -55,5 +55,9 @@ class SuperSpeaker {
 
   virtual ~SuperSpeaker() { }
  private:
+#if GOLDEN_CHANGE_MEMBER_NAME_SAME_OFFSET
+  int mSpeakderId_;
+#else
   int mSpeakderId;
+#endif
 };

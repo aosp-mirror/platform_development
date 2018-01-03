@@ -214,27 +214,24 @@ DiffWrapperBase::CompareRecordFields(
   // remove it from the removed fields if they're compatible.
   std::vector<const abi_util::RecordFieldIR *> removed_fields =
       abi_util::FindRemovedElements(old_fields_map, new_fields_map);
-  uint32_t i = 0;
-  for (auto &&removed_field : removed_fields) {
-    // For the removed field, get the corresponding offset from the old map.
-    // Compare the fields from old map and new map if there's a direct diff,
-    // continue, otherwise remove that field from the removed fields map.
-    uint64_t old_field_offset = removed_field->GetOffset();
-    auto corresponding_field_at_same_offset =
-        new_fields_offset_map.find(old_field_offset);
-    // Correctly reported as removed.
-    if (corresponding_field_at_same_offset == new_fields_offset_map.end()) {
-      continue;
-    }
-    auto comparison_result = CompareCommonRecordFields(
-        removed_field, corresponding_field_at_same_offset->second,
-        type_queue, diff_kind);
-    if (comparison_result != nullptr) {
-      continue;
-    }
-    removed_fields.erase(removed_fields.begin() + i);
-    i++;
-  }
+  auto predicate =
+      [&](const abi_util::RecordFieldIR *removed_field) {
+        uint64_t old_field_offset = removed_field->GetOffset();
+        auto corresponding_field_at_same_offset =
+            new_fields_offset_map.find(old_field_offset);
+        // Correctly reported as removed, so do not remove.
+        if (corresponding_field_at_same_offset == new_fields_offset_map.end()) {
+          return false;
+        }
+        auto comparison_result = CompareCommonRecordFields(
+            removed_field, corresponding_field_at_same_offset->second,
+            type_queue, diff_kind);
+        // No actual diff, so remove it.
+        return (comparison_result == nullptr);
+      };
+  removed_fields.erase(
+      std::remove_if(removed_fields.begin(), removed_fields.end(), predicate),
+      removed_fields.end());
   diffed_and_removed_fields.second = std::move(removed_fields);
   std::vector<std::pair<
       const abi_util::RecordFieldIR *, const abi_util::RecordFieldIR *>> cf =
