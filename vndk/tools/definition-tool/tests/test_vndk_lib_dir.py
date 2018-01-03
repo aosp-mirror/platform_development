@@ -15,6 +15,11 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 class VNDKLibDirTest(unittest.TestCase):
+    def test_create_vndk_dir_suffix(self):
+        self.assertEqual('', VNDKLibDir.create_vndk_dir_suffix('current'))
+        self.assertEqual('-28', VNDKLibDir.create_vndk_dir_suffix('28'))
+
+
     def test_create_vndk_sp_dir_name(self):
         self.assertEqual(
                 'vndk-sp', VNDKLibDir.create_vndk_sp_dir_name('current'))
