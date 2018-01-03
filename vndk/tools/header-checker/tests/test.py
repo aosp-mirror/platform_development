@@ -218,6 +218,11 @@ class MyTest(unittest.TestCase):
         self.prepare_and_absolute_diff_all_archs("libreproducability",
                                                  "libreproducability")
 
+    def test_libgolden_cpp_member_name_changed(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp",
+            "libgolden_cpp_member_name_changed", 0)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1393,8 +1393,8 @@ class ELFLinker(object):
                 src.add_dlopen_dep(dst)
                 num_matches += 1
         if num_matches == 0:
-            print('error: Failed to add dlopen dependency from {} to {}.'
-                  .format(src_path, dst_path), file=sys.stderr)
+            raise ValueError('Failed to add dlopen dependency from {} to {}'
+                             .format(src_path, dst_path))
 
     def _get_libs_in_elf_class(self, elf_class, path):
         result = set()
@@ -1480,11 +1480,16 @@ class ELFLinker(object):
 
     def add_dlopen_deps(self, path):
         patt = re.compile('([^:]*):\\s*(.*)')
-        with open(path, 'r') as f:
-            for line in f:
+        with open(path, 'r') as dlopen_dep_file:
+            for line_no, line in enumerate(dlopen_dep_file, start=1):
                 match = patt.match(line)
-                if match:
+                if not match:
+                    continue
+                try:
                     self.add_dlopen_dep(match.group(1), match.group(2))
+                except ValueError as e:
+                    print('error:{}:{}: {}.'.format(path, line_no, e),
+                          file=sys.stderr)
 
     def _find_exported_symbol(self, symbol, libs):
         """Find the shared library with the exported symbol."""
@@ -1641,13 +1646,16 @@ class ELFLinker(object):
         return set(lib for lib in self.all_libs() if lib.is_sp_ndk)
 
     def compute_sp_lib(self, generic_refs, ignore_hidden_deps=False):
-        def is_ndk(lib):
-            return lib.is_ndk
+        def is_ndk_or_sp_hal(lib):
+            return lib.is_ndk or lib.is_sp_hal
 
         sp_ndk = self.compute_sp_ndk()
         sp_ndk_closure = self.compute_deps_closure(
-                sp_ndk, is_ndk, ignore_hidden_deps)
+                sp_ndk, is_ndk_or_sp_hal, ignore_hidden_deps)
         sp_ndk_indirect = sp_ndk_closure - sp_ndk
+
+        def is_ndk(lib):
+            return lib.is_ndk
 
         sp_hal = self.compute_predefined_sp_hal()
         sp_hal_closure = self.compute_deps_closure(
@@ -1973,8 +1981,8 @@ class ELFLinker(object):
         ll_ndk_indirect -= ll_ndk
 
         def is_not_sp_ndk_indirect(lib):
-            return lib.is_ll_ndk or lib.is_sp_ndk or lib in ll_ndk_indirect or \
-                   is_vndk_sp(lib) or is_vndk(lib)
+            return lib.is_ll_ndk or lib.is_sp_ndk or lib.is_sp_hal or \
+                   lib in ll_ndk_indirect or is_vndk_sp(lib) or is_vndk(lib)
 
         sp_ndk_indirect = self.compute_deps_closure(
                 sp_ndk, is_not_sp_ndk_indirect, True)
