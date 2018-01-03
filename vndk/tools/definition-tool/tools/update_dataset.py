@@ -57,6 +57,8 @@ def main():
                         help='out/soong/make_vars-$(TARGET).mk')
     parser.add_argument('--module-info', required=True,
                         help='out/target/product/$(TARGET)/module-info.json')
+    parser.add_argument('--delete-removed-entries', action='store_true',
+                        help='Delete removed shared libs')
     args = parser.parse_args()
 
     # Load libraries from `out/soong/make_vars-$(TARGET).mk`.
@@ -76,11 +78,12 @@ def main():
 
     # Delete non-existing libraries.
     installed_paths = load_install_paths(args.module_info)
-    data = {
-        path: row
-        for path, row in data.items()
-        if path in installed_paths
-    }
+
+    if args.delete_removed_entries:
+        data = { path: row for path, row in data.items()
+                           if path in installed_paths }
+    else:
+        data = { path: row for path, row in data.items() }
 
     # Reset all /system/${LIB} libraries to FWK-ONLY.
     for path, row in data.items():
