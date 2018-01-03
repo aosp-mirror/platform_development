@@ -187,6 +187,7 @@ def main():
     libs = [
         'libblas',
         'libcompiler_rt',
+        'android.hidl.memory@1.0-impl'
     ]
     prefix_core = '/system/${LIB}/'
     prefix_vendor = '/system/${LIB}/vndk-sp${VNDK_VER}/'
