@@ -191,6 +191,7 @@ export default {
 
         try {
           var decoded = filetype.protoType.decode(buffer);
+          decoded = filetype.protoType.toObject(decoded, {enums: String, defaults: true});
           var transformed = filetype.transform(decoded);
         } catch (ex) {
           this.title = this.filename + " (loading " + filetype.name + "):" + ex;
