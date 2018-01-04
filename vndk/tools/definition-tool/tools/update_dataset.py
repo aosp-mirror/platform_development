@@ -35,6 +35,7 @@ def load_install_paths(module_info_path):
         data = json.load(fp)
 
     result = set()
+    name_path_dict = {}
     patt = re.compile(
             '.*[\\\\/]target[\\\\/]product[\\\\/][^\\\\/]+([\\\\/].*)$')
     for name, module in data.items():
@@ -46,8 +47,16 @@ def load_install_paths(module_info_path):
             path = path.replace(os.path.sep, '/')
             path = path.replace('/lib/', '/${LIB}/')
             path = path.replace('/lib64/', '/${LIB}/')
+            path = re.sub('/vndk-sp(?:-[^/$]*)/', '/vndk-sp${VNDK_VER}/', path)
+            path = re.sub('/vndk(?:-[^/$]*)/', '/vndk${VNDK_VER}/', path)
             result.add(path)
-    return result
+
+            if name.endswith('_32'):
+                name = name[0:-3]
+
+            name_path_dict[name] = path
+
+    return (result, name_path_dict)
 
 def main():
     parser =argparse.ArgumentParser()
@@ -57,6 +66,8 @@ def main():
                         help='out/soong/make_vars-$(TARGET).mk')
     parser.add_argument('--module-info', required=True,
                         help='out/target/product/$(TARGET)/module-info.json')
+    parser.add_argument('--delete-removed-entries', action='store_true',
+                        help='Delete removed shared libs')
     args = parser.parse_args()
 
     # Load libraries from `out/soong/make_vars-$(TARGET).mk`.
@@ -75,12 +86,13 @@ def main():
                 data[path] = [path, tag, comments]
 
     # Delete non-existing libraries.
-    installed_paths = load_install_paths(args.module_info)
-    data = {
-        path: row
-        for path, row in data.items()
-        if path in installed_paths
-    }
+    installed_paths, name_path_dict = load_install_paths(args.module_info)
+
+    if args.delete_removed_entries:
+        data = { path: row for path, row in data.items()
+                           if path in installed_paths }
+    else:
+        data = { path: row for path, row in data.items() }
 
     # Reset all /system/${LIB} libraries to FWK-ONLY.
     for path, row in data.items():
@@ -94,16 +106,47 @@ def main():
         except KeyError:
             data[path] = [path, tag, '']
 
+    prefix_core = '/system/${LIB}/'
     for name in llndk:
-        update_tag('/system/${LIB}/' + name + '.so', 'LL-NDK')
+        try:
+            path = name_path_dict[name]
+            assert path.startswith(prefix_core)
+            name = path[len(prefix_core):]
+        except KeyError:
+            name = name + '.so'
+        update_tag('/system/${LIB}/' + name, 'LL-NDK')
 
+    def find_name(name, name_path_dict, prefix_core, prefix_vendor):
+        try:
+            path = name_path_dict[name + '.vendor']
+            assert path.startswith(prefix_vendor)
+            name_vendor = path[len(prefix_vendor):]
+        except KeyError:
+            name_vendor = name + '.so'
+
+        try:
+            path = name_path_dict[name]
+            assert path.startswith(prefix_core)
+            name_core = path[len(prefix_core):]
+        except KeyError:
+            name_core = name + '.so'
+
+        assert name_core == name_vendor
+        return name_core
+
+    prefix_core = '/system/${LIB}/'
+    prefix_vendor = '/system/${LIB}/vndk-sp${VNDK_VER}/'
     for name in vndk_sp:
-        update_tag('/system/${LIB}/' + name + '.so', 'VNDK-SP')
-        update_tag('/system/${LIB}/vndk-sp/' + name + '.so', 'VNDK-SP')
+        name = find_name(name, name_path_dict, prefix_core, prefix_vendor)
+        update_tag(prefix_core + name, 'VNDK-SP')
+        update_tag(prefix_vendor + name, 'VNDK-SP')
 
+    prefix_core = '/system/${LIB}/'
+    prefix_vendor = '/system/${LIB}/vndk${VNDK_VER}/'
     for name in vndk:
-        update_tag('/system/${LIB}/' + name + '.so', 'VNDK')
-        update_tag('/system/${LIB}/vndk/' + name + '.so', 'VNDK')
+        name = find_name(name, name_path_dict, prefix_core, prefix_vendor)
+        update_tag(prefix_core + name, 'VNDK')
+        update_tag(prefix_vendor + name, 'VNDK')
 
     # Workaround for SP-NDK
     libs = [
@@ -133,19 +176,25 @@ def main():
         'libunwind',
         'libunwindstack',
     ]
+    prefix_core = '/system/${LIB}/'
+    prefix_vendor = '/system/${LIB}/vndk-sp${VNDK_VER}/'
     for name in libs:
-        update_tag('/system/${LIB}/' + name + '.so', 'VNDK-SP-Indirect')
-        update_tag('/system/${LIB}/vndk-sp/' + name + '.so', 'VNDK-SP-Indirect')
+        name = find_name(name, name_path_dict, prefix_core, prefix_vendor)
+        update_tag(prefix_core + name, 'VNDK-SP-Indirect')
+        update_tag(prefix_vendor + name, 'VNDK-SP-Indirect')
 
     # Workaround for VNDK-SP-Indirect-Private
     libs = [
         'libblas',
         'libcompiler_rt',
+        'android.hidl.memory@1.0-impl'
     ]
+    prefix_core = '/system/${LIB}/'
+    prefix_vendor = '/system/${LIB}/vndk-sp${VNDK_VER}/'
     for name in libs:
-        update_tag('/system/${LIB}/' + name + '.so', 'VNDK-SP-Indirect-Private')
-        update_tag('/system/${LIB}/vndk-sp/' + name + '.so',
-                   'VNDK-SP-Indirect-Private')
+        name = find_name(name, name_path_dict, prefix_core, prefix_vendor)
+        update_tag(prefix_core + name, 'VNDK-SP-Indirect-Private')
+        update_tag(prefix_vendor + name, 'VNDK-SP-Indirect-Private')
 
     # Workaround for LL-NDK-Indirect
     libs = [

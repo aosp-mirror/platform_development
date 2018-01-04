@@ -108,14 +108,40 @@ class TaggedDictTest(unittest.TestCase):
 
 class TaggedPathDictTest(unittest.TestCase):
     def test_enumerate_paths(self):
+        tagged_paths = TaggedPathDict()
+
         self.assertEqual(
                 ['/system/lib/libc.so'],
-                list(TaggedPathDict._enumerate_paths('/system/lib/libc.so')))
+                list(tagged_paths._enumerate_paths('/system/lib/libc.so')))
 
         self.assertEqual(
                 ['/system/lib/libc.so', '/system/lib64/libc.so'],
-                list(TaggedPathDict._enumerate_paths('/system/${LIB}/libc.so')))
+                list(tagged_paths._enumerate_paths('/system/${LIB}/libc.so')))
 
+        self.assertEqual(
+                ['/system/lib/vndk/libutils.so',
+                 '/system/lib64/vndk/libutils.so'],
+                list(tagged_paths._enumerate_paths(
+                    '/system/${LIB}/vndk${VNDK_VER}/libutils.so')))
+
+        tagged_paths = TaggedPathDict(['current', '27', '28'])
+
+        self.assertEqual(
+                ['/system/lib/vndk/libutils.so',
+                 '/system/lib64/vndk/libutils.so',
+                 '/system/lib/vndk-27/libutils.so',
+                 '/system/lib64/vndk-27/libutils.so',
+                 '/system/lib/vndk-28/libutils.so',
+                 '/system/lib64/vndk-28/libutils.so'],
+                list(tagged_paths._enumerate_paths(
+                    '/system/${LIB}/vndk${VNDK_VER}/libutils.so')))
+
+        self.assertEqual(
+                ['/system/lib/vndk/libutils.so',
+                 '/system/lib/vndk-27/libutils.so',
+                 '/system/lib/vndk-28/libutils.so'],
+                list(tagged_paths._enumerate_paths(
+                    '/system/lib/vndk${VNDK_VER}/libutils.so')))
 
     def test_load_from_csv_empty(self):
         try:
@@ -417,8 +443,8 @@ class TaggedLibDictTest(unittest.TestCase):
 
         self.lib_vnd_only = self.graph.add('/vendor/lib/lib_vnd_only.so')
 
-        self.tagged_libs = \
-                TaggedLibDict.create_from_graph(self.graph, self.tagged_paths)
+        self.tagged_libs = TaggedLibDict.create_from_graph(
+                self.graph, self.tagged_paths)
 
 
     def test_create_from_graph(self):
