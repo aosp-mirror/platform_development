@@ -29,24 +29,69 @@ ABIWrapper::ABIWrapper(
     clang::MangleContext *mangle_contextp,
     clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *cip,
-    std::set<std::string> *type_cache,
     abi_util::IRDumper *ir_dumper,
-    std::map<const clang::Decl *, std::string> &decl_to_source_cache)
+    ast_util::ASTCaches *ast_caches)
   : cip_(cip),
     mangle_contextp_(mangle_contextp),
     ast_contextp_(ast_contextp),
-    type_cache_(type_cache),
     ir_dumper_(ir_dumper),
-    decl_to_source_file_cache_(decl_to_source_cache) { }
+    ast_caches_(ast_caches) { }
 
 std::string ABIWrapper::GetCachedDeclSourceFile(
     const clang::Decl *decl, const clang::CompilerInstance *cip) {
   assert(decl != nullptr);
-  auto result = decl_to_source_file_cache_.find(decl);
-  if (result == decl_to_source_file_cache_.end()) {
+  auto result = ast_caches_->decl_to_source_file_cache_.find(decl);
+  if (result == ast_caches_->decl_to_source_file_cache_.end()) {
     return GetDeclSourceFile(decl, cip);
   }
   return result->second;
+}
+
+static const clang::RecordDecl *GetAnonymousRecord(clang::QualType type) {
+  const clang::Type *type_ptr = type.getTypePtr();
+  assert(type_ptr != nullptr);
+  if (!type_ptr->isRecordType()) {
+    return nullptr;
+  }
+  const clang::TagDecl *tag_decl = type_ptr->getAsTagDecl();
+  if (!tag_decl) {
+    return nullptr;
+  }
+  const clang::RecordDecl *record_decl =
+      llvm::dyn_cast<clang::RecordDecl>(tag_decl);
+
+  if (record_decl != nullptr && (!record_decl->hasNameForLinkage() ||
+      record_decl->isAnonymousStructOrUnion())) {
+    return record_decl;
+  }
+  return nullptr;
+}
+
+static const clang::EnumDecl *GetAnonymousEnum(
+    const clang::QualType qual_type) {
+  const clang::Type *type_ptr = qual_type.getTypePtr();
+  assert(type_ptr != nullptr);
+  const clang::TagDecl *tag_decl = type_ptr->getAsTagDecl();
+  if (!tag_decl) {
+    return nullptr;
+  }
+  const clang::EnumDecl *enum_decl = llvm::dyn_cast<clang::EnumDecl>(tag_decl);
+  if (!enum_decl || enum_decl->hasNameForLinkage()) {
+    return nullptr;
+  }
+  return enum_decl;
+}
+
+static bool IsAnonTagType(clang::QualType qual_type) {
+  return GetAnonymousEnum(qual_type) || GetAnonymousRecord(qual_type);
+}
+
+std::string ABIWrapper::GetKeyForTypeId(clang::QualType qual_type,
+                                        const std::string *anon_identifier) {
+  if (anon_identifier && IsAnonTagType(qual_type)) {
+    return *anon_identifier;
+  }
+  return QualTypeToString(qual_type);
 }
 
 std::string ABIWrapper::GetDeclSourceFile(const clang::Decl *decl,
@@ -104,20 +149,23 @@ clang::QualType ABIWrapper::GetReferencedType(const clang::QualType qual_type) {
 
 bool ABIWrapper::CreateExtendedType(
     clang::QualType qual_type,
-    abi_util::TypeIR *typep) {
-  std::string type_name = QualTypeToString(qual_type);
-  if (!type_cache_->insert(type_name).second) {
+    abi_util::TypeIR *typep,
+    const std::string *anon_type_identifier) {
+  const std::string &type_key = GetKeyForTypeId(qual_type,
+                                                anon_type_identifier);
+  if (!ast_caches_->type_cache_.insert(type_key).second) {
     return true;
   }
   const clang::QualType canonical_type = qual_type.getCanonicalType();
-  return CreateBasicNamedAndTypedDecl(canonical_type, typep, "");
+  return CreateBasicNamedAndTypedDecl(canonical_type, typep, "",
+                                      anon_type_identifier);
 }
 
 //This overload takes in a qualtype and adds its information to the abi-dump on
 //its own.
-bool ABIWrapper::CreateBasicNamedAndTypedDecl(clang::QualType qual_type,
-                                              const std::string &source_file) {
-  std::string type_name = QualTypeToString(qual_type);
+bool ABIWrapper::CreateBasicNamedAndTypedDecl(
+    clang::QualType qual_type, const std::string &source_file) {
+  const std::string &type_key = GetKeyForTypeId(qual_type);
   const clang::QualType canonical_type = qual_type.getCanonicalType();
   const clang::Type *base_type = canonical_type.getTypePtr();
   bool is_ptr = base_type->isPointerType();
@@ -127,7 +175,8 @@ bool ABIWrapper::CreateBasicNamedAndTypedDecl(clang::QualType qual_type,
   bool has_referenced_type =
       is_ptr || is_reference || is_array ||
       canonical_type.hasLocalQualifiers() || is_builtin;
-  if (!has_referenced_type || !type_cache_->insert(type_name).second) {
+  if (!has_referenced_type ||
+      !ast_caches_->type_cache_.insert(type_key).second) {
     return true;
   }
   // Do something similar to what is being done right now. Create an object
@@ -168,7 +217,8 @@ std::string ABIWrapper::GetTypeUniqueId(const clang::TagDecl *tag_decl) {
 // information, eg: RecordDecl, EnumDecl.
 bool ABIWrapper::CreateBasicNamedAndTypedDecl(
     clang::QualType canonical_type,
-    abi_util::TypeIR *typep, const std::string &source_file) {
+    abi_util::TypeIR *typep, const std::string &source_file,
+    const std::string *anon_identifier) {
   // Cannot determine the size and alignment for template parameter dependent
   // types as well as incomplete types.
   const clang::Type *base_type = canonical_type.getTypePtr();
@@ -184,14 +234,19 @@ bool ABIWrapper::CreateBasicNamedAndTypedDecl(
     typep->SetSize(size);
     typep->SetAlignment(alignment);
   }
-  typep->SetName(QualTypeToString(canonical_type));
-  typep->SetLinkerSetKey(QualTypeToString(canonical_type));
+  std::string canonical_type_name = QualTypeToString(canonical_type);
+  typep->SetName(canonical_type_name);
+  typep->SetLinkerSetKey(canonical_type_name);
   // default values are false, we don't set them since explicitly doing that
   // makes the abi dumps more verbose.
   // This type has a reference type if its a pointer / reference OR it has CVR
   // qualifiers.
   clang::QualType referenced_type = GetReferencedType(canonical_type);
-  typep->SetReferencedType(QualTypeToString(referenced_type));
+  typep->SetReferencedType(
+      ast_caches_->GetTypeId(GetKeyForTypeId(referenced_type,
+                                             anon_identifier)));
+  typep->SetSelfType(ast_caches_->GetTypeId(GetKeyForTypeId(canonical_type,
+                                                            anon_identifier)));
   // Create the type for referenced type.
   return CreateBasicNamedAndTypedDecl(referenced_type, source_file);
 }
@@ -285,28 +340,14 @@ bool ABIWrapper::SetupTemplateArguments(
     }
     clang::QualType type = arg.getAsType();
     template_info.AddTemplateElement(
-        abi_util::TemplateElementIR(QualTypeToString(type)));
+        abi_util::TemplateElementIR(
+            ast_caches_->GetTypeId(GetKeyForTypeId(type))));
     if (!CreateBasicNamedAndTypedDecl(type, source_file)) {
       return false;
     }
   }
   ta->SetTemplateInfo(std::move(template_info));
   return true;
-}
-
-static const clang::EnumDecl *GetAnonymousEnum(
-    const clang::QualType qual_type) {
-  const clang::Type *type_ptr = qual_type.getTypePtr();
-  assert(type_ptr != nullptr);
-  const clang::TagDecl *tag_decl = type_ptr->getAsTagDecl();
-  if (!tag_decl) {
-    return nullptr;
-  }
-  const clang::EnumDecl *enum_decl = llvm::dyn_cast<clang::EnumDecl>(tag_decl);
-  if (!enum_decl || enum_decl->hasNameForLinkage()) {
-    return nullptr;
-  }
-  return enum_decl;
 }
 
 std::string ABIWrapper::QualTypeToString(
@@ -325,11 +366,10 @@ FunctionDeclWrapper::FunctionDeclWrapper(
     clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *compiler_instance_p,
     const clang::FunctionDecl *decl,
-    std::set<std::string> *type_cache,
     abi_util::IRDumper *ir_dumper,
-    std::map<const clang::Decl *, std::string> &decl_to_source_cache)
-  : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p,
-               type_cache, ir_dumper, decl_to_source_cache),
+    ast_util::ASTCaches *ast_caches)
+  : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p, ir_dumper,
+               ast_caches),
     function_decl_(decl) { }
 
 bool FunctionDeclWrapper::SetupThisParameter(abi_util::FunctionIR *functionp,
@@ -350,8 +390,8 @@ bool FunctionDeclWrapper::SetupFunctionParameter(
   if (!CreateBasicNamedAndTypedDecl(qual_type, source_file)) {
     return false;
   }
-  functionp->AddParameter(abi_util::ParamIR(QualTypeToString(qual_type),
-                                            has_default_arg));
+  functionp->AddParameter(abi_util::ParamIR(
+      ast_caches_->GetTypeId(GetKeyForTypeId(qual_type)), has_default_arg));
   return true;
 }
 
@@ -382,11 +422,13 @@ bool FunctionDeclWrapper::SetupFunction(abi_util::FunctionIR *functionp,
                                         const std::string &source_file)  {
   // Go through all the parameters in the method and add them to the fields.
   // Also get the fully qualfied name.
-  functionp->SetSourceFile(source_file);
+  // TODO: Change this to get the complete function signature
   functionp->SetName(function_decl_->getQualifiedNameAsString());
+  functionp->SetSourceFile(source_file);
   clang::QualType return_type = function_decl_->getReturnType();
 
-  functionp->SetReturnType(QualTypeToString(return_type));
+  functionp->SetReturnType(
+      ast_caches_->GetTypeId(GetKeyForTypeId(return_type)));
   functionp->SetAccess(AccessClangToIR(function_decl_->getAccess()));
   return CreateBasicNamedAndTypedDecl(return_type, source_file) &&
       SetupFunctionParameters(functionp, source_file) &&
@@ -427,41 +469,18 @@ RecordDeclWrapper::RecordDeclWrapper(
     clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *compiler_instance_p,
     const clang::RecordDecl *decl,
-    std::set<std::string> *type_cache,
     abi_util::IRDumper *ir_dumper,
-    std::map<const clang::Decl *, std::string> &decl_to_source_cache,
-    const std::string &previous_record_stages)
-  : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p,
-               type_cache, ir_dumper, decl_to_source_cache),
+    const std::string &previous_record_stages, ast_util::ASTCaches *ast_caches)
+  : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p, ir_dumper,
+               ast_caches),
     record_decl_(decl), previous_record_stages_(previous_record_stages) { }
 
 bool RecordDeclWrapper::CreateAnonymousRecord(
     const clang::RecordDecl *record_decl, const std::string &linker_set_key) {
   RecordDeclWrapper record_decl_wrapper(mangle_contextp_, ast_contextp_, cip_,
-                                        record_decl, type_cache_, ir_dumper_,
-                                        decl_to_source_file_cache_,
-                                        linker_set_key);
+                                        record_decl, ir_dumper_,
+                                        linker_set_key, ast_caches_);
   return record_decl_wrapper.GetRecordDecl();
-}
-
-static const clang::RecordDecl *GetAnonymousRecord(clang::QualType type) {
-  const clang::Type *type_ptr = type.getTypePtr();
-  assert(type_ptr != nullptr);
-  if (!type_ptr->isRecordType()) {
-    return nullptr;
-  }
-  const clang::TagDecl *tag_decl = type_ptr->getAsTagDecl();
-  if (!tag_decl) {
-    return nullptr;
-  }
-  const clang::RecordDecl *record_decl =
-      llvm::dyn_cast<clang::RecordDecl>(tag_decl);
-
-  if (record_decl != nullptr && (!record_decl->hasNameForLinkage() ||
-      record_decl->isAnonymousStructOrUnion())) {
-    return record_decl;
-  }
-  return nullptr;
 }
 
 bool RecordDeclWrapper::SetupRecordFields(abi_util::RecordTypeIR *recordp,
@@ -472,31 +491,32 @@ bool RecordDeclWrapper::SetupRecordFields(abi_util::RecordTypeIR *recordp,
       ast_contextp_->getASTRecordLayout(record_decl_);
   while (field != record_decl_->field_end()) {
     clang::QualType field_type = field->getType();
+    std::string key_for_type_id = GetKeyForTypeId(field_type);
     if (!CreateBasicNamedAndTypedDecl(field_type, source_file)) {
       llvm::errs() << "Creation of Type failed\n";
       return false;
     }
-    std::string field_type_str = QualTypeToString(field_type);
     std::string field_name = field->getName();
     // Handle anoymous structs / unions as fields.
     if (const clang::RecordDecl *anon_record_decl =
         GetAnonymousRecord(field_type)) {
       // We need to create a unique linker set key for anonymous structs / enums
       // since clang just names them with fully_qualified_scope::anonymous.
-      field_type_str =
+      std::string field_type_str =
           previous_record_stages_ + "::(anonymous)" +
           std::to_string(field_index);
+      key_for_type_id = GetKeyForTypeId(field_type, &field_type_str);
       if (!CreateAnonymousRecord(anon_record_decl, field_type_str)) {
       return false;
       }
     } else if (const clang::EnumDecl *enum_decl =
                GetAnonymousEnum(field_type)) {
       // Handle anonymous enums.
-      field_type_str = QualTypeToString(enum_decl->getIntegerType());
+      key_for_type_id = GetKeyForTypeId(enum_decl->getIntegerType());
     }
     uint64_t field_offset = record_layout.getFieldOffset(field_index);
     recordp->AddRecordField(abi_util::RecordFieldIR(
-        field_name, field_type_str, field_offset,
+        field_name, ast_caches_->GetTypeId(key_for_type_id), field_offset,
         AccessClangToIR(field->getAccess())));
     field++;
     field_index++;
@@ -517,8 +537,9 @@ bool RecordDeclWrapper::SetupCXXBases(
     bool is_virtual = base_class->isVirtual();
     abi_util::AccessSpecifierIR access =
         AccessClangToIR(base_class->getAccessSpecifier());
-    cxxp->AddCXXBaseSpecifier(abi_util::CXXBaseSpecifierIR(name, is_virtual,
-                                                           access));
+    cxxp->AddCXXBaseSpecifier(
+        abi_util::CXXBaseSpecifierIR(ast_caches_->GetTypeId(GetKeyForTypeId(base_class->getType())), is_virtual,
+                                     access));
     base_class++;
   }
   return true;
@@ -668,7 +689,7 @@ bool RecordDeclWrapper::SetupRecordInfo(abi_util::RecordTypeIR *record_declp,
     return false;
   }
   clang::QualType qual_type = basic_type->getCanonicalTypeInternal();
-  if (!CreateExtendedType(qual_type, record_declp)) {
+  if (!CreateExtendedType(qual_type, record_declp, &previous_record_stages_)) {
     return false;
   }
   std::string record_qual_type_str = QualTypeToString(qual_type);
@@ -706,6 +727,12 @@ bool RecordDeclWrapper::GetRecordDecl() {
     llvm::errs() << "Setting up CXX Bases / Template Info failed\n";
     return false;
   }
+  if ((abi_decl->GetReferencedType() == "") ||
+      (abi_decl->GetSelfType() == "")) {
+    // The only way to have an empty referenced / self type is when the type was
+    // cached, don't add the record.
+    return true;
+  }
   return ir_dumper_->AddLinkableMessageIR(abi_decl.get());
 }
 
@@ -713,12 +740,10 @@ EnumDeclWrapper::EnumDeclWrapper(
     clang::MangleContext *mangle_contextp,
     clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *compiler_instance_p,
-    const clang::EnumDecl *decl,
-    std::set<std::string> *type_cache,
-    abi_util::IRDumper *ir_dumper,
-    std::map<const clang::Decl *, std::string> &decl_to_source_cache)
-  : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p,
-               type_cache, ir_dumper, decl_to_source_cache),
+    const clang::EnumDecl *decl, abi_util::IRDumper *ir_dumper,
+    ast_util::ASTCaches *ast_caches)
+  : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p, ir_dumper,
+               ast_caches),
     enum_decl_(decl) { }
 
 bool EnumDeclWrapper::SetupEnumFields(abi_util::EnumTypeIR *enump) {
@@ -744,7 +769,8 @@ bool EnumDeclWrapper::SetupEnum(abi_util::EnumTypeIR *enum_type,
     return false;
   }
   enum_type->SetSourceFile(source_file);
-  enum_type->SetUnderlyingType(QualTypeToString(enum_decl_->getIntegerType()));
+  enum_type->SetUnderlyingType(
+      ast_caches_->GetTypeId(GetKeyForTypeId(enum_decl_->getIntegerType())));
   enum_type->SetAccess(AccessClangToIR(enum_decl_->getAccess()));
   enum_type->SetUniqueId(GetTypeUniqueId(enum_decl_));
   return SetupEnumFields(enum_type) &&
@@ -766,11 +792,10 @@ GlobalVarDeclWrapper::GlobalVarDeclWrapper(
     clang::MangleContext *mangle_contextp,
     clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *compiler_instance_p,
-    const clang::VarDecl *decl,std::set<std::string> *type_cache,
-    abi_util::IRDumper *ir_dumper,
-    std::map<const clang::Decl *, std::string> &decl_to_source_cache)
-  : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p, type_cache,
-               ir_dumper, decl_to_source_cache),
+    const clang::VarDecl *decl, abi_util::IRDumper *ir_dumper,
+    ast_util::ASTCaches *ast_caches)
+  : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p, ir_dumper,
+               ast_caches),
     global_var_decl_(decl) { }
 
 bool GlobalVarDeclWrapper::SetupGlobalVar(
@@ -787,7 +812,7 @@ bool GlobalVarDeclWrapper::SetupGlobalVar(
   global_varp->SetName(global_var_decl_->getQualifiedNameAsString());
   global_varp->SetLinkerSetKey(mangled_name);
   global_varp->SetReferencedType(
-      QualTypeToString(global_var_decl_->getType()));
+      ast_caches_->GetTypeId(GetKeyForTypeId(global_var_decl_->getType())));
   return true;
 }
 

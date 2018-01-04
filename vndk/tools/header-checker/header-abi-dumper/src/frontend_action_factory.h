@@ -24,13 +24,13 @@ class HeaderCheckerFrontendActionFactory
     : public clang::tooling::FrontendActionFactory {
  private:
   const std::string &dump_name_;
-  const std::set<std::string> &exported_headers_;
+  std::set<std::string> &exported_headers_;
   abi_util::TextFormatIR text_format_;
 
  public:
   HeaderCheckerFrontendActionFactory(
       const std::string &dump_name,
-      const std::set<std::string> &exported_headers,
+      std::set<std::string> &exported_headers,
       abi_util::TextFormatIR text_format);
 
   clang::FrontendAction *create() override;

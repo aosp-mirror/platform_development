@@ -368,6 +368,7 @@ bool IRToProtobufConverter::AddTypeInfo(
   type_info->set_size(typep->GetSize());
   type_info->set_alignment(typep->GetAlignment());
   type_info->set_referenced_type(typep->GetReferencedType());
+  type_info->set_self_type(typep->GetSelfType());
   return true;
 }
 
