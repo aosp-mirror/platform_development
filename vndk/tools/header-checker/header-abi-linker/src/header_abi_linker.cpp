@@ -95,7 +95,7 @@ class HeaderAbiLinker {
                        std::set<std::string> *link_set,
                        std::set<std::string> *regex_matched_link_set,
                        const std::regex *vs_regex,
-                       const std::map<std::string, T> &src,
+                       const abi_util::AbiElementMap<T> &src,
                        bool use_version_script);
 
   bool ParseVersionScriptFiles();
@@ -275,7 +275,7 @@ template <typename T>
 inline bool HeaderAbiLinker::LinkDecl(
     abi_util::IRDumper *dst, std::set<std::string> *link_set,
     std::set<std::string> *regex_matched_link_set, const std::regex *vs_regex,
-    const  std::map<std::string, T> &src, bool use_version_script) {
+    const  abi_util::AbiElementMap<T> &src, bool use_version_script) {
   assert(dst != nullptr);
   assert(link_set != nullptr);
   for (auto &&element : src) {

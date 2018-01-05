@@ -720,6 +720,7 @@ bool RecordDeclWrapper::SetupCXXRecordInfo(
       SetupRecordVTable(record_declp, cxx_record_decl);
 }
 
+// TODO: Can we use clang's ODR hash to do faster ODR checking ?
 bool RecordDeclWrapper::GetRecordDecl() {
   auto abi_decl = std::make_unique<abi_util::RecordTypeIR>();
   std::string source_file = GetCachedDeclSourceFile(record_decl_, cip_);

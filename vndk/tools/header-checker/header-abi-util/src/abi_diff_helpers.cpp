@@ -536,29 +536,25 @@ static DiffStatus CompareDistinctKindMessages(
 }
 
 DiffStatus AbiDiffHelper::CompareAndDumpTypeDiff(
-    const std::string &old_type_str, const std::string &new_type_str,
+    const std::string &old_type_id, const std::string &new_type_id,
     std::deque<std::string> *type_queue,
     abi_util::DiffMessageIR::DiffKind diff_kind) {
-  // If either of the types are not found in their respective maps, the type
-  // was not exposed in a public header and we do a simple string comparison.
-  // Any diff found using a simple string comparison will be a direct diff.
 
   // Check the map for type ids which have already been compared
   // These types have already been diffed, return without further comparison.
-  if (!type_cache_->insert(old_type_str + new_type_str).second) {
+  if (!type_cache_->insert(old_type_id + new_type_id).second) {
     return DiffStatus::no_diff;
   } else {
-    TypeQueueCheckAndPushBack(type_queue, old_type_str);
+    TypeQueueCheckAndPushBack(type_queue, old_type_id);
   }
   AbiElementMap<const abi_util::TypeIR *>::const_iterator old_it =
-      old_types_.find(old_type_str);
+      old_types_.find(old_type_id);
   AbiElementMap<const abi_util::TypeIR *>::const_iterator new_it =
-      new_types_.find(new_type_str);
+      new_types_.find(new_type_id);
   if (old_it == old_types_.end() || new_it == new_types_.end()) {
-    // Do a simple string comparison.
     TypeQueueCheckAndPop(type_queue);
-    return (old_type_str == new_type_str) ?
-        DiffStatus::no_diff : DiffStatus::direct_diff;
+    // One of the types were hidden, we cannot compare further.
+    return DiffStatus::no_diff;
   }
   abi_util::LinkableMessageKind old_kind =
       old_it->second->GetKind();

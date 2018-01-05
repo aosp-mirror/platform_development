@@ -9,6 +9,8 @@
 // message format specific dumpers.
 namespace abi_util {
 
+using MergeStatus = TextFormatToIRReader::MergeStatus;
+
 enum DiffStatus {
   // There was no diff found while comparing types.
   no_diff = 0,
@@ -42,19 +44,22 @@ class AbiDiffHelper {
       const AbiElementMap<const abi_util::TypeIR *> &old_types,
       const AbiElementMap<const abi_util::TypeIR *> &new_types,
       std::set<std::string> *type_cache,
-      abi_util::IRDiffDumper *ir_diff_dumper = nullptr)
+      abi_util::IRDiffDumper *ir_diff_dumper = nullptr,
+      AbiElementMap<MergeStatus> *local_to_global_type_id_map = nullptr)
       : old_types_(old_types), new_types_(new_types),
-        type_cache_(type_cache), ir_diff_dumper_(ir_diff_dumper) { }
+        type_cache_(type_cache), ir_diff_dumper_(ir_diff_dumper),
+        local_to_global_type_id_map_(local_to_global_type_id_map) { }
 
-  DiffStatus CompareAndDumpTypeDiff(const std::string &old_type_str,
-                                    const std::string &new_type_str,
-                                    std::deque<std::string> *type_queue,
-                                    abi_util::IRDiffDumper::DiffKind diff_kind);
+  DiffStatus CompareAndDumpTypeDiff(
+      const std::string &old_type_str, const std::string &new_type_str,
+      std::deque<std::string> *type_queue = nullptr,
+      abi_util::IRDiffDumper::DiffKind diff_kind = DiffMessageIR::Unreferenced);
 
   DiffStatus CompareAndDumpTypeDiff(
       const abi_util::TypeIR *old_type, const abi_util::TypeIR *new_type,
-      abi_util::LinkableMessageKind kind, std::deque<std::string> *type_queue,
-      abi_util::IRDiffDumper::DiffKind diff_kind);
+      abi_util::LinkableMessageKind kind,
+      std::deque<std::string> *type_queue = nullptr,
+      abi_util::IRDiffDumper::DiffKind diff_kind = DiffMessageIR::Unreferenced);
 
 
   DiffStatus CompareRecordTypes(const abi_util::RecordTypeIR *old_type,
@@ -150,6 +155,7 @@ class AbiDiffHelper {
   const AbiElementMap<const abi_util::TypeIR *> &new_types_;
   std::set<std::string> *type_cache_ = nullptr;
   abi_util::IRDiffDumper *ir_diff_dumper_ = nullptr;
+  AbiElementMap<MergeStatus> *local_to_global_type_id_map_ = nullptr;
 };
 
 } // namespace abi_util
