@@ -168,7 +168,9 @@ int main(int argc, const char **argv) {
     unreferenced_change_str += " This MIGHT be an ABI breaking change due to";
     unreferenced_change_str += " internal typecasts.";
   }
-  if (!suppress_local_warnings && status) {
+  bool suppress_extending_warnings =
+      allow_extensions && (status & abi_util::CompatibilityStatusIR::Extension);
+  if (!suppress_local_warnings && !suppress_extending_warnings && status) {
     llvm::errs() << "******************************************************\n"
                  << error_or_warning_str
                  << "VNDK library: "
