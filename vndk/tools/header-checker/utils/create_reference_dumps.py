@@ -36,8 +36,8 @@ def main():
     # Parse command line options.
     parser = argparse.ArgumentParser()
     parser.add_argument('--version', help='VNDK version')
-    parser.add_argument('-ref-dump-dir', help='directory to copy reference abi \
-                        dumps into')
+    parser.add_argument('-ref-dump-dir',
+                        help='directory to copy reference abi dumps into')
     args = parser.parse_args()
     num_processed = 0
     soong_dir = os.path.join(AOSP_DIR, 'out', 'soong', '.intermediates')

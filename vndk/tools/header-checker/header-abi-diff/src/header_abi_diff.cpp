@@ -123,6 +123,9 @@ static std::set<std::string> LoadIgnoredSymbols(std::string &symbol_list_path) {
   return ignored_symbols;
 }
 
+static const char kWarn[] = "\033[36;1mwarning: \033[0m";
+static const char kError[] = "\033[31;1merror: \033[0m";
+
 int main(int argc, const char **argv) {
   llvm::cl::ParseCommandLineOptions(argc, argv, "header-checker");
   std::set<std::string> ignored_symbols;
@@ -137,15 +140,16 @@ int main(int argc, const char **argv) {
 
   std::string status_str = "";
   std::string unreferenced_change_str = "";
-  std::string error_or_warning_str = "\033[36;1mwarning: \033[0m";
+  std::string error_or_warning_str = kWarn;
+
   switch (status) {
     case abi_util::CompatibilityStatusIR::Incompatible:
-      error_or_warning_str = "\033[31;1merror: \033[0m";
+      error_or_warning_str = kError;
       status_str = "INCOMPATIBLE CHANGES";
       break;
     case abi_util::CompatibilityStatusIR::ElfIncompatible:
       if (elf_unreferenced_symbol_errors) {
-        error_or_warning_str = "\033[31;1merror: \033[0m";
+        error_or_warning_str = kError;
       }
       status_str = "ELF Symbols not referenced by exported headers removed";
       break;
