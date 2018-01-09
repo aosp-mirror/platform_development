@@ -100,12 +100,13 @@ def install_snapshot(branch, build, install_dir):
             fetch_artifact(branch, build, artifact_pattern)
 
             manifest_pattern = 'manifest_{}.xml'.format(build)
-            manifest_name = 'manifest.xml'
+            manifest_name = utils.MANIFEST_FILE_NAME
             logger().info(
                 'Fetching {file} from {branch} (bid: {build})'.format(
                     file=manifest_pattern, branch=branch, build=build))
             fetch_artifact(branch, build, manifest_pattern, manifest_name)
-            shutil.move(manifest_name, install_dir)
+            shutil.move(manifest_name,
+                        os.path.join(install_dir, utils.COMMON_DIR_PATH))
 
             os.chdir(install_dir)
         else:
@@ -128,25 +129,23 @@ def install_snapshot(branch, build, install_dir):
             shutil.rmtree(tempdir)
 
 
-def gather_notice_files():
-    """Gathers all NOTICE files to a new NOTICE_FILES directory.
+def gather_notice_files(install_dir):
+    """Gathers all NOTICE files to a common NOTICE_FILES directory."""
 
-    Create a new NOTICE_FILES directory under install_dir and copy to it
-    all NOTICE files in arch-*/NOTICE_FILES.
-    """
-    notices_dir_name = 'NOTICE_FILES'
-    logger().info('Creating {} directory...'.format(notices_dir_name))
-    os.makedirs(notices_dir_name)
-    for arch_dir in glob.glob('arch-*'):
-        notices_dir_per_arch = os.path.join(arch_dir, notices_dir_name)
-        if os.path.isdir(notices_dir_per_arch):
+    common_notices_dir = utils.NOTICE_FILES_DIR_PATH
+    logger().info('Creating {} directory...'.format(common_notices_dir))
+    os.makedirs(common_notices_dir)
+    for variant in utils.get_snapshot_variants(install_dir):
+        notices_dir_per_variant = os.path.join(variant,
+                                               utils.NOTICE_FILES_DIR_NAME)
+        if os.path.isdir(notices_dir_per_variant):
             for notice_file in glob.glob(
-                    '{}/*.txt'.format(notices_dir_per_arch)):
+                    '{}/*.txt'.format(notices_dir_per_variant)):
                 if not os.path.isfile(
-                        os.path.join(notices_dir_name,
+                        os.path.join(common_notices_dir,
                                      os.path.basename(notice_file))):
-                    shutil.copy(notice_file, notices_dir_name)
-            shutil.rmtree(notices_dir_per_arch)
+                    shutil.copy(notice_file, common_notices_dir)
+            shutil.rmtree(notices_dir_per_variant)
 
 
 def revise_ld_config_txt():
@@ -157,7 +156,8 @@ def revise_ld_config_txt():
     """
     re_pattern = '(system\/\${LIB}\/vndk(?:-sp)?)([:/]|$)'
     VNDK_INSTALL_DIR_RE = re.compile(re_pattern, flags=re.MULTILINE)
-    ld_config_txt_paths = glob.glob('arch-*/configs/ld.config*')
+    ld_config_txt_paths = glob.glob(
+        os.path.join(utils.CONFIG_DIR_PATH_PATTERN, 'ld.config*'))
     for ld_config_file in ld_config_txt_paths:
         with open(ld_config_file, 'r') as file:
             revised = VNDK_INSTALL_DIR_RE.sub(r'\1${VNDK_VER}\2', file.read())
@@ -166,10 +166,10 @@ def revise_ld_config_txt():
 
 
 def update_buildfiles(buildfile_generator):
-    logger().info('Updating Android.mk...')
+    logger().info('Generating Android.mk file...')
     buildfile_generator.generate_android_mk()
 
-    logger().info('Updating Android.bp...')
+    logger().info('Generating Android.bp files...')
     buildfile_generator.generate_android_bp()
 
 
@@ -250,8 +250,9 @@ def main():
         start_branch(args.build)
 
     remove_old_snapshot(install_dir)
+    os.makedirs(utils.COMMON_DIR_PATH)
     install_snapshot(args.branch, args.build, install_dir)
-    gather_notice_files()
+    gather_notice_files(install_dir)
 
     # Post-process ld.config.txt for O-MR1
     if vndk_version == '27':
