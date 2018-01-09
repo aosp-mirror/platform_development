@@ -16,8 +16,22 @@
 #
 """Utility functions for VNDK snapshot."""
 
+import glob
 import os
+import re
 import sys
+
+# Global Keys
+#   All paths are relative to install_dir: prebuilts/vndk/v{version}
+COMMON_DIR_NAME = 'common'
+COMMON_DIR_PATH = COMMON_DIR_NAME
+ANDROID_MK_PATH = os.path.join(COMMON_DIR_PATH, 'Android.mk')
+CONFIG_DIR_PATH_PATTERN = '*/configs'
+MANIFEST_FILE_NAME = 'manifest.xml'
+MANIFEST_FILE_PATH = os.path.join(COMMON_DIR_PATH, MANIFEST_FILE_NAME)
+MODULE_PATHS_FILE_NAME = 'module_paths.txt'
+NOTICE_FILES_DIR_NAME = 'NOTICE_FILES'
+NOTICE_FILES_DIR_PATH = os.path.join(COMMON_DIR_PATH, NOTICE_FILES_DIR_NAME)
 
 
 def get_android_build_top():
@@ -46,16 +60,42 @@ def get_dist_dir(out_dir):
     return _get_dir_from_env('DIST_DIR', join_realpath(out_dir, 'dist'))
 
 
+def get_snapshot_variants(install_dir):
+    """Returns a list of VNDK snapshot variants under install_dir.
+
+    Args:
+      install_dir: string, absolute path of prebuilts/vndk/v{version}
+    """
+    variants = []
+    for file in glob.glob('{}/*'.format(install_dir)):
+        basename = os.path.basename(file)
+        if os.path.isdir(file) and basename != COMMON_DIR_NAME:
+            variants.append(basename)
+    return variants
+
+
 def arch_from_path(path):
-    """Extracts arch from given VNDK snapshot path.
+    """Extracts arch of prebuilts from path relative to install_dir.
 
     Args:
       path: string, path relative to prebuilts/vndk/v{version}
 
     Returns:
-      arch string, (e.g., "arm" or "arm64" or "x86" or "x86_64")
+      string, arch of prebuilt (e.g., 'arm' or 'arm64' or 'x86' or 'x86_64')
     """
-    return path.split('/')[0].split('-')[1]
+    return path.split('/')[1].split('-')[1]
+
+
+def variant_from_path(path):
+    """Extracts VNDK snapshot variant from path relative to install_dir.
+
+    Args:
+      path: string, path relative to prebuilts/vndk/v{version}
+
+    Returns:
+      string, VNDK snapshot variant (e.g. 'arm64')
+    """
+    return path.split('/')[0]
 
 
 def find(path, names):
