@@ -157,6 +157,9 @@ int main(int argc, const char **argv) {
       break;
   }
   if (status & abi_util::CompatibilityStatusIR::Extension) {
+    if (!allow_extensions) {
+      error_or_warning_str = kError;
+    }
     status_str = "EXTENDING CHANGES";
   }
   if (status & abi_util::CompatibilityStatusIR::UnreferencedChanges) {
