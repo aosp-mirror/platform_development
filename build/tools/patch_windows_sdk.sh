@@ -86,7 +86,10 @@ fi
 
 # Just to make it easier on the build servers, we want fastboot and adb
 # (and its DLLs) next to the new SDK.
-for i in fastboot.exe adb.exe AdbWinApi.dll AdbWinUsbApi.dll; do
+for i in fastboot.exe adb.exe; do
     cp -f $V $WIN_OUT_DIR/host/windows-x86/bin/$i $TEMP_SDK_DIR/../$i
 done
 
+for i in AdbWinApi.dll AdbWinUsbApi.dll; do
+    cp -f $V $WIN_OUT_DIR/host/windows-x86/lib/$i $TEMP_SDK_DIR/../$i
+done

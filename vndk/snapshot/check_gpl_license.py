@@ -30,8 +30,8 @@ class GPLChecker(object):
     Makes sure that the current source tree have the sources for all GPL
     prebuilt libraries in a specified VNDK snapshot version.
     """
-    MANIFEST_XML = 'manifest.xml'
-    MODULE_PATHS_TXT = 'module_paths.txt'
+    MANIFEST_XML = utils.MANIFEST_FILE_NAME
+    MODULE_PATHS_TXT = utils.MODULE_PATHS_FILE_NAME
 
     def __init__(self, install_dir, android_build_top):
         """GPLChecker constructor.
@@ -43,12 +43,14 @@ class GPLChecker(object):
         """
         self._android_build_top = android_build_top
         self._install_dir = install_dir
-        self._manifest_file = os.path.join(install_dir, self.MANIFEST_XML)
-        self._notice_files_dir = os.path.join(install_dir, 'NOTICE_FILES')
+        self._manifest_file = os.path.join(install_dir,
+                                           utils.MANIFEST_FILE_PATH)
+        self._notice_files_dir = os.path.join(install_dir,
+                                              utils.NOTICE_FILES_DIR_PATH)
 
         if not os.path.isfile(self._manifest_file):
-            raise RuntimeError('{manifest} not found in {install_dir}'.format(
-                manifest=self.MANIFEST_XML, install_dir=install_dir))
+            raise RuntimeError('{manifest} not found at {manifest_file}'.format(
+                manifest=self.MANIFEST_XML, manifest_file=self._manifest_file))
 
     def _parse_module_paths(self):
         """Parses the module_path.txt files into a dictionary,
