@@ -11,15 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Implementation of gsi_util command 'dump'."""
 
 import argparse
 import logging
 import sys
 
-from gsi_util.dumpers.dumper import Dumper
-from gsi_util.mounters.composite_mounter import CompositeMounter
+from gsi_util.commands.common import image_sources
+from gsi_util.dumpers import dumper
 
 
 class DumpReporter(object):
@@ -75,7 +74,7 @@ class DumpReporter(object):
 
 
 def do_list_dump(_):
-  for info in Dumper.get_all_dump_list():
+  for info in dumper.Dumper.get_all_dump_list():
     print info.info_name
 
 
@@ -85,19 +84,14 @@ def do_dump(args):
   if not args.system and not args.vendor:
     sys.exit('Without system nor vendor.')
 
-  mounter = CompositeMounter()
-  if args.system:
-    mounter.add_by_mount_target('system', args.system)
-  if args.vendor:
-    mounter.add_by_mount_target('vendor', args.vendor)
-
   logging.debug('Info name list: %s', args.INFO_NAME)
-  dump_list = Dumper.make_dump_list_by_name_list(args.INFO_NAME) if len(
-      args.INFO_NAME) else Dumper.get_all_dump_list()
+  dump_list = dumper.Dumper.make_dump_list_by_name_list(args.INFO_NAME) if len(
+      args.INFO_NAME) else dumper.Dumper.get_all_dump_list()
 
+  mounter = image_sources.create_composite_mounter_by_args(args)
   with mounter as file_accessor:
-    dumper = Dumper(file_accessor)
-    dump_result_dict = dumper.dump(dump_list)
+    d = dumper.Dumper(file_accessor)
+    dump_result_dict = d.dump(dump_list)
 
   # reserved for output to a file
   os = sys.stdout
@@ -109,17 +103,9 @@ def do_dump(args):
   logging.info('==== DONE ====')
 
 
-DUMP_DESCRIPTION = """'dump' command dumps information from given image
+_DUMP_DESCRIPTION = ("""'dump' command dumps information from given image
 
 You must assign at least one image source by SYSTEM and/or VENDOR.
-Image source could be:
-
- adb[:SERIAL_NUM]: form the device which be connected with adb
-  image file name: from the given image file, e.g. the file name of a GSI.
-                   If a image file is assigned to be the source of system
-                   image, gsu_util will detect system-as-root automatically.
-      folder name: from the given folder, e.g. the system/vendor folder in an
-                   Android build out folder.
 
 You could use command 'list_dump' to query all info names:
 
@@ -136,7 +122,7 @@ Here are some other usage examples:
 
     $ ./gsi_util.py dump --system adb --vendor adb
     $ ./gsi_util.py dump --system system.img --show-unknown
-    $ ./gsi_util.py dump --system my/out/folder/system"""
+    $ ./gsi_util.py dump --system my/out/folder/system""")
 
 
 def setup_command_args(parser):
@@ -149,17 +135,14 @@ def setup_command_args(parser):
   dump_parser = parser.add_parser(
       'dump',
       help='dump information from given image',
-      description=DUMP_DESCRIPTION,
+      description=_DUMP_DESCRIPTION,
       formatter_class=argparse.RawTextHelpFormatter)
-  dump_parser.add_argument(
-      '--system', type=str, help='system image file name, folder name or "adb"')
-  dump_parser.add_argument(
-      '--vendor', type=str, help='vendor image file name, folder name or "adb"')
   dump_parser.add_argument(
       '-u',
       '--show-unknown',
       action='store_true',
       help='force display the dump info items in list which does not exist')
+  image_sources.add_argument_group(dump_parser)
   dump_parser.add_argument(
       'INFO_NAME',
       type=str,
