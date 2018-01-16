@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <item name="android.content.SharedPreferences java.lang.String getString(java.lang.String, java.lang.String)">
+    <annotation name="org.jetbrains.annotations.Contract">
+      <val name="value" val="&quot;_,!null-&gt;!null&quot;" />
+    </annotation>
+  </item>
+  <item name="android.content.SharedPreferences java.util.Set&lt;java.lang.String&gt; getStringSet(java.lang.String, java.util.Set&lt;java.lang.String&gt;)">
+    <annotation name="org.jetbrains.annotations.Contract">
+      <val name="value" val="&quot;_,!null-&gt;!null&quot;" />
+    </annotation>
+  </item>
+</root>
+
