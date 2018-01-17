@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <item name="android.support.design.widget.Snackbar.Duration">
+    <annotation name="android.support.annotation.IntDef">
+      <val name="value" val="{android.support.design.widget.Snackbar.LENGTH_INDEFINITE, android.support.design.widget.Snackbar.LENGTH_SHORT, android.support.design.widget.Snackbar.LENGTH_LONG}" />
+    </annotation>
+  </item>
+</root>
+

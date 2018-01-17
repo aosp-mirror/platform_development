@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <item name="android.text.TextUtils boolean isEmpty(java.lang.CharSequence)">
+    <annotation name="org.jetbrains.annotations.Contract">
+      <val name="value" val="&quot;null-&gt;true&quot;" />
+    </annotation>
+  </item>
+  <item name="android.text.TextUtils boolean stringOrSpannedString(java.lang.CharSequence)">
+    <annotation name="org.jetbrains.annotations.Contract">
+      <val name="value" val="&quot;null&gt;null;!null&gt;!null&quot;" />
+    </annotation>
+  </item>
+</root>
+
