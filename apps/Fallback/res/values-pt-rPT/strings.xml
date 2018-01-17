@@ -18,5 +18,5 @@
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="appTitle" msgid="161410001913116606">"Fallback"</string>
     <string name="title" msgid="8156274565006125136">"Acção não suportada"</string>
-    <string name="error" msgid="6539615832923362301">"Esta acção ainda não é suportada."</string>
+    <string name="error" msgid="6539615832923362301">"Esta ação ainda não é suportada."</string>
 </resources>
