@@ -136,6 +136,7 @@ class GenBuildFile(object):
                 bpfile.write(self._gen_bp_phony(variant))
                 bpfile.write('\n')
                 bpfile.write('\n'.join(vndk_core_buildrules))
+                bpfile.write('\n')
                 bpfile.write('\n'.join(vndk_sp_buildrules))
 
     def _gen_autogen_msg(self, comment_char):

@@ -1,6 +1,6 @@
 buildscript {
-    ext.gradle_version = '3.1.0-alpha06'
-    ext.studio_version = '26.1.0-alpha06'
+    ext.gradle_version = '3.1.0-alpha08'
+    ext.studio_version = '26.1.0-alpha08'
     ext.kotlin_version = '1.2.10'
     repositories {
         google()
