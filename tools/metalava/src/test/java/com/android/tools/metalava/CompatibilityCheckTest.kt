@@ -25,8 +25,8 @@ CompatibilityCheckTest : DriverTest() {
         check(
             checkCompatibility = true,
             warnings = """
-                TESTROOT/load-api.txt:2: warning: Class test.pkg.MyTest1 changed class/interface declaration [ChangedClass:23]
-                TESTROOT/load-api.txt:4: warning: Class test.pkg.MyTest2 changed class/interface declaration [ChangedClass:23]
+                TESTROOT/load-api.txt:2: error: Class test.pkg.MyTest1 changed class/interface declaration [ChangedClass:23]
+                TESTROOT/load-api.txt:4: error: Class test.pkg.MyTest2 changed class/interface declaration [ChangedClass:23]
                 """,
             compatibilityMode = false,
             previousApi = """
@@ -62,8 +62,8 @@ CompatibilityCheckTest : DriverTest() {
         check(
             checkCompatibility = true,
             warnings = """
-                TESTROOT/load-api.txt:2: warning: Class test.pkg.MyTest1 changed class/interface declaration [ChangedClass:23]
-                TESTROOT/load-api.txt:4: warning: Class test.pkg.MyTest2 changed class/interface declaration [ChangedClass:23]
+                TESTROOT/load-api.txt:2: error: Class test.pkg.MyTest1 changed class/interface declaration [ChangedClass:23]
+                TESTROOT/load-api.txt:4: error: Class test.pkg.MyTest2 changed class/interface declaration [ChangedClass:23]
                 """,
             compatibilityMode = false,
             previousApi = """
@@ -99,9 +99,9 @@ CompatibilityCheckTest : DriverTest() {
         check(
             checkCompatibility = true,
             warnings = """
-                TESTROOT/previous-api.txt:3: warning: Removed method test.pkg.MyTest1.method [RemovedMethod:9]
-                TESTROOT/previous-api.txt:4: warning: Removed field test.pkg.MyTest1.field [RemovedField:10]
-                TESTROOT/previous-api.txt:6: warning: Removed class test.pkg.MyTest2 [RemovedClass:8]
+                TESTROOT/previous-api.txt:3: error: Removed method test.pkg.MyTest1.method [RemovedMethod:9]
+                TESTROOT/previous-api.txt:4: error: Removed field test.pkg.MyTest1.field [RemovedField:10]
+                TESTROOT/previous-api.txt:6: error: Removed class test.pkg.MyTest2 [RemovedClass:8]
                 """,
             compatibilityMode = false,
             previousApi = """
@@ -138,12 +138,12 @@ CompatibilityCheckTest : DriverTest() {
         check(
             checkCompatibility = true,
             warnings = """
-                TESTROOT/load-api.txt:5: warning: Attempted to remove @Nullable annotation from method test.pkg.MyTest.convert3 [InvalidNullConversion:40]
-                TESTROOT/load-api.txt:5: warning: Attempted to remove @Nullable annotation from parameter arg1 in test.pkg.MyTest.convert3 [InvalidNullConversion:40]
-                TESTROOT/load-api.txt:6: warning: Attempted to remove @NonNull annotation from method test.pkg.MyTest.convert4 [InvalidNullConversion:40]
-                TESTROOT/load-api.txt:6: warning: Attempted to remove @NonNull annotation from parameter arg1 in test.pkg.MyTest.convert4 [InvalidNullConversion:40]
-                TESTROOT/load-api.txt:7: warning: Attempted to change parameter from @Nullable to @NonNull: incompatible change for parameter arg1 in test.pkg.MyTest.convert5 [InvalidNullConversion:40]
-                TESTROOT/load-api.txt:8: warning: Attempted to change method return from @NonNull to @Nullable: incompatible change for method test.pkg.MyTest.convert6 [InvalidNullConversion:40]
+                TESTROOT/load-api.txt:5: error: Attempted to remove @Nullable annotation from method test.pkg.MyTest.convert3 [InvalidNullConversion:40]
+                TESTROOT/load-api.txt:5: error: Attempted to remove @Nullable annotation from parameter arg1 in test.pkg.MyTest.convert3 [InvalidNullConversion:40]
+                TESTROOT/load-api.txt:6: error: Attempted to remove @NonNull annotation from method test.pkg.MyTest.convert4 [InvalidNullConversion:40]
+                TESTROOT/load-api.txt:6: error: Attempted to remove @NonNull annotation from parameter arg1 in test.pkg.MyTest.convert4 [InvalidNullConversion:40]
+                TESTROOT/load-api.txt:7: error: Attempted to change parameter from @Nullable to @NonNull: incompatible change for parameter arg1 in test.pkg.MyTest.convert5 [InvalidNullConversion:40]
+                TESTROOT/load-api.txt:8: error: Attempted to change method return from @NonNull to @Nullable: incompatible change for method test.pkg.MyTest.convert6 [InvalidNullConversion:40]
                 """,
             compatibilityMode = false,
             outputKotlinStyleNulls = false,
@@ -192,8 +192,12 @@ CompatibilityCheckTest : DriverTest() {
         check(
             checkCompatibility = true,
             warnings = """
-                    src/test/pkg/Outer.kt:6: warning: Attempted to change method return from @NonNull to @Nullable: incompatible change for method test.pkg.Outer.method2 [InvalidNullConversion:40]
-                    src/test/pkg/Outer.kt:3: warning: Attempted to change method return from @NonNull to @Nullable: incompatible change for method test.pkg.Outer.Inner.method2 [InvalidNullConversion:40]
+                src/test/pkg/Outer.kt:2: error: Attempted to change parameter from @Nullable to @NonNull: incompatible change for parameter string in test.pkg.Outer.Inner.method3 [InvalidNullConversion:40]
+                src/test/pkg/Outer.kt:3: error: Attempted to change method return from @NonNull to @Nullable: incompatible change for method test.pkg.Outer.Inner.method2 [InvalidNullConversion:40]
+                src/test/pkg/Outer.kt:3: error: Attempted to change parameter from @Nullable to @NonNull: incompatible change for parameter string in test.pkg.Outer.Inner.method2 [InvalidNullConversion:40]
+                src/test/pkg/Outer.kt:5: error: Attempted to change parameter from @Nullable to @NonNull: incompatible change for parameter string in test.pkg.Outer.method3 [InvalidNullConversion:40]
+                src/test/pkg/Outer.kt:6: error: Attempted to change method return from @NonNull to @Nullable: incompatible change for method test.pkg.Outer.method2 [InvalidNullConversion:40]
+                src/test/pkg/Outer.kt:6: error: Attempted to change parameter from @Nullable to @NonNull: incompatible change for parameter string in test.pkg.Outer.method2 [InvalidNullConversion:40]
                 """,
             compatibilityMode = false,
             inputKotlinStyleNulls = true,
@@ -234,14 +238,99 @@ CompatibilityCheckTest : DriverTest() {
                 package test.pkg {
                   public final class Outer {
                     ctor public Outer();
-                    method public final String? method1(String, String?);
-                    method public final String? method2(String, String?);
-                    method public final String method3(String?, String);
+                    method public final String? method1(String string, String? maybeString);
+                    method public final String? method2(String string, String? maybeString);
+                    method public final String method3(String? maybeString, String string);
                   }
                   public static final class Outer.Inner {
                     ctor public Outer.Inner();
-                    method public final String? method2(String, String?);
-                    method public final String method3(String?, String);
+                    method public final String? method2(String string, String? maybeString);
+                    method public final String method3(String? maybeString, String string);
+                  }
+                }
+                """
+        )
+    }
+
+    @Test
+    fun `Java Parameter Name Change`() {
+        check(
+            checkCompatibility = true,
+            warnings = """
+                src/test/pkg/JavaClass.java:1: error: Attempted to change parameter name from secondParameter to newName in method test.pkg.JavaClass.method2 [ParameterNameChange:41]
+                src/test/pkg/JavaClass.java:2: error: Attempted to remove parameter name from parameter newName in test.pkg.JavaClass.method1 in method test.pkg.JavaClass.method1 [ParameterNameChange:41]
+                """,
+            compatibilityMode = false,
+            previousApi = """
+                package test.pkg {
+                  public class JavaClass {
+                    ctor public JavaClass();
+                    method public String method1(String parameterName);
+                    method public String method2(String firstParameter, String secondParameter);
+                  }
+                }
+                """,
+            sourceFiles = *arrayOf(
+                java(
+                    """
+                    package test.pkg;
+                    import android.support.annotation.ParameterName;
+
+                    public class JavaClass {
+                        public String method1(String newName) { return null; }
+                        public String method2(@ParameterName("firstParameter") String s, @ParameterName("newName") String prevName) { return null; }
+                    }
+                    """
+                ),
+                supportParameterName
+            ),
+            api = """
+                package test.pkg {
+                  public class JavaClass {
+                    ctor public JavaClass();
+                    method public String! method1(String!);
+                    method public String! method2(String! firstParameter, String! newName);
+                  }
+                }
+                """,
+            extraArguments = arrayOf("--hide-package", "android.support.annotation")
+        )
+    }
+
+    @Test
+    fun `Kotlin Parameter Name Change`() {
+        check(
+            checkCompatibility = true,
+            warnings = """
+                src/test/pkg/KotlinClass.kt:1: error: Attempted to change parameter name from prevName to newName in method test.pkg.KotlinClass.method1 [ParameterNameChange:41]
+                """,
+            compatibilityMode = false,
+            inputKotlinStyleNulls = true,
+            outputKotlinStyleNulls = true,
+            previousApi = """
+                package test.pkg {
+                  public final class KotlinClass {
+                    ctor public KotlinClass();
+                    method public final String? method1(String prevName);
+                  }
+                }
+                """,
+            sourceFiles = *arrayOf(
+                kotlin(
+                    """
+                    package test.pkg
+
+                    class KotlinClass {
+                        fun method1(newName: String): String? = null
+                    }
+                    """
+                )
+            ),
+            api = """
+                package test.pkg {
+                  public final class KotlinClass {
+                    ctor public KotlinClass();
+                    method public final String? method1(String newName);
                   }
                 }
                 """

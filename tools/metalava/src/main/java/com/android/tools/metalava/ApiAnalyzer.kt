@@ -763,7 +763,7 @@ class ApiAnalyzer(
 
     fun handleStripping() {
         // TODO: Switch to visitor iteration
-        val stubPackages = options.stubPackages
+        //val stubPackages = options.stubPackages
         val stubImportPackages = options.stubImportPackages
         handleStripping(stubImportPackages)
     }

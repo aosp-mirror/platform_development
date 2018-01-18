@@ -146,6 +146,7 @@ public class Errors {
 
     // Stuff I've added
     public static final Error INVALID_NULL_CONVERSION = new Error(40, WARNING);
+    public static final Error PARAMETER_NAME_CHANGE = new Error(41, WARNING);
 
 
     // Errors in javadoc generation
@@ -214,6 +215,15 @@ public class Errors {
             }
         }
         return false;
+    }
+
+    // Set error severity for all the compatibility related checks
+    public static void enforceCompatibility() {
+        for (Error e : sErrors) {
+            if (e.code >= Errors.PARSE_ERROR.code && e.code <= Errors.PARAMETER_NAME_CHANGE.code) {
+                e.setLevel(ERROR);
+            }
+        }
     }
 
     // Primary needed by unit tests; ensure that a previous test doesn't influence
