@@ -223,7 +223,9 @@ open class PsiMethodItem(
             val name = psiMethod.name
             val commentText = javadoc(psiMethod)
             val modifiers = modifiers(codebase, psiMethod, commentText)
-            val parameters = psiMethod.parameterList.parameters.map { PsiParameterItem.create(codebase, it) }
+            val parameters = psiMethod.parameterList.parameters.mapIndexed { index, parameter ->
+                PsiParameterItem.create(codebase, parameter, index)
+            }
             val returnType = codebase.getType(psiMethod.returnType!!)
             val method = PsiMethodItem(
                 codebase = codebase,

@@ -77,7 +77,8 @@ class PsiConstructorItem(
                 }
                 if (curr is PsiExpressionStatement && curr.expression is PsiMethodCallExpression &&
                     curr.expression.firstChild?.lastChild is PsiKeyword &&
-                    curr.expression.firstChild?.lastChild?.text == "super") {
+                    curr.expression.firstChild?.lastChild?.text == "super"
+                ) {
                     val resolved = (curr.expression as PsiMethodCallExpression).resolveMethod()
                     if (resolved is PsiMethod) {
                         val superConstructor = codebase.findMethod(resolved)
@@ -139,7 +140,9 @@ class PsiConstructorItem(
             val name = psiMethod.name
             val commentText = javadoc(psiMethod)
             val modifiers = modifiers(codebase, psiMethod, commentText)
-            val parameters = psiMethod.parameterList.parameters.map { PsiParameterItem.create(codebase, it) }
+            val parameters = psiMethod.parameterList.parameters.mapIndexed { index, parameter ->
+                PsiParameterItem.create(codebase, parameter, index)
+            }
 
             val constructor = PsiConstructorItem(
                 codebase = codebase,

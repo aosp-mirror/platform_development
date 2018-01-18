@@ -195,7 +195,7 @@ class CodebaseComparator {
                         item1.name().compareTo((item2 as FieldItem).name())
                     }
                     is ParameterItem -> {
-                        item1.name().compareTo((item2 as ParameterItem).name())
+                        item1.parameterIndex.compareTo((item2 as ParameterItem).parameterIndex)
                     }
                     is AnnotationItem -> {
                         (item1.qualifiedName() ?: "").compareTo((item2 as AnnotationItem).qualifiedName() ?: "")

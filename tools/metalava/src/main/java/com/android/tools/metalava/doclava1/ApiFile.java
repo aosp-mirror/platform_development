@@ -630,11 +630,14 @@ public class ApiFile {
 
             String name = null;
             token = tokenizer.requireToken();
+            String publicName;
             if (isIdent(token)) {
                 name = token;
+                publicName = name;
                 token = tokenizer.requireToken();
             } else {
-                name = "arg" + (++index);
+                name = "arg" + (index + 1);
+                publicName = null;
             }
             if (",".equals(token)) {
                 token = tokenizer.requireToken();
@@ -643,7 +646,7 @@ public class ApiFile {
                 throw new ApiParseException("expected , found " + token, tokenizer.getLine());
             }
 
-            method.addParameter(new TextParameterItem(api, method, name, type,
+            method.addParameter(new TextParameterItem(api, method, name, publicName, index, type,
                     typeInfo,
                     type.endsWith("..."),
                     tokenizer.pos(),
@@ -651,6 +654,7 @@ public class ApiFile {
             if (type.endsWith("...")) {
                 method.setVarargs(true);
             }
+            index++;
         }
     }
 

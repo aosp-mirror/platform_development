@@ -294,5 +294,9 @@ abstract class PsiItem(
         fun modifiers(codebase: PsiBasedCodebase, element: PsiModifierListOwner, documentation: String): PsiModifierItem {
             return PsiModifierItem.create(codebase, element, documentation)
         }
+
+        fun isKotlin(element: PsiElement): Boolean {
+            return element.language.id == "kotlin"
+        }
     }
 }

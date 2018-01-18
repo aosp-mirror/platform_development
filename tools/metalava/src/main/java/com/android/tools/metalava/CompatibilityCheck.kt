@@ -39,7 +39,6 @@ class CompatibilityCheck : ComparisonVisitor() {
     override fun compare(old: Item, new: Item) {
         // Should not remove nullness information
         // Can't change information incompatibly
-
         val oldNullnessAnnotation = findNullnessAnnotation(old)
         if (oldNullnessAnnotation != null) {
             val newNullnessAnnotation = findNullnessAnnotation(new)
@@ -72,6 +71,22 @@ class CompatibilityCheck : ComparisonVisitor() {
                     }
                 }
             }
+        }
+    }
+
+    override fun compare(old: ParameterItem, new: ParameterItem) {
+        val prevName = old.publicName() ?: return
+        val newName = new.publicName()
+        if (newName == null) {
+            reporter.report(
+                Errors.PARAMETER_NAME_CHANGE, new,
+                "Attempted to remove parameter name from ${describe(new)} in ${describe(new.containingMethod())}"
+            )
+        } else if (newName != prevName) {
+            reporter.report(
+                Errors.PARAMETER_NAME_CHANGE, new,
+                "Attempted to change parameter name from $prevName to $newName in ${describe(new.containingMethod())}"
+            )
         }
     }
 

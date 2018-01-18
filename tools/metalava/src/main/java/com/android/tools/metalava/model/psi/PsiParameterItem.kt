@@ -26,6 +26,7 @@ class PsiParameterItem(
     override val codebase: PsiBasedCodebase,
     private val psiParameter: PsiParameter,
     private val name: String,
+    override val parameterIndex: Int,
     modifiers: PsiModifierItem,
     documentation: String,
     private val type: PsiTypeItem
@@ -38,6 +39,24 @@ class PsiParameterItem(
     lateinit var containingMethod: PsiMethodItem
 
     override fun name(): String = name
+
+    override fun publicName(): String? {
+        if (isKotlin(psiParameter)) {
+            if (name == "\$receiver") {
+                return null
+            }
+            return name
+        } else {
+            // Java: Look for @ParameterName annotation
+            val annotation = modifiers.annotations().firstOrNull { it.isParameterName() }
+            if (annotation != null) {
+                return annotation.attributes().firstOrNull()?.value?.value()?.toString()
+            }
+        }
+
+        return null
+    }
+
     override fun type(): TypeItem = type
     override fun containingMethod(): MethodItem = containingMethod
 
@@ -45,11 +64,11 @@ class PsiParameterItem(
         if (this === other) {
             return true
         }
-        return other is ParameterItem && name == other.name() && containingMethod == other.containingMethod()
+        return other is ParameterItem && parameterIndex == other.parameterIndex && containingMethod == other.containingMethod()
     }
 
     override fun hashCode(): Int {
-        return name.hashCode()
+        return parameterIndex
     }
 
     override fun toString(): String = "parameter ${name()}"
@@ -57,9 +76,10 @@ class PsiParameterItem(
     companion object {
         fun create(
             codebase: PsiBasedCodebase,
-            psiParameter: PsiParameter
+            psiParameter: PsiParameter,
+            parameterIndex: Int
         ): PsiParameterItem {
-            val name = psiParameter.name ?: "arg${psiParameter.parameterIndex()}"
+            val name = psiParameter.name ?: "arg${psiParameter.parameterIndex() + 1}"
             val commentText = "" // no javadocs on individual parameters
             val modifiers = modifiers(codebase, psiParameter, commentText)
             val type = codebase.getType(psiParameter.type)
@@ -67,6 +87,7 @@ class PsiParameterItem(
                 codebase = codebase,
                 psiParameter = psiParameter,
                 name = name,
+                parameterIndex = parameterIndex,
                 documentation = commentText,
                 modifiers = modifiers,
                 type = type
@@ -83,6 +104,7 @@ class PsiParameterItem(
                 codebase = codebase,
                 psiParameter = original.psiParameter,
                 name = original.name,
+                parameterIndex = original.parameterIndex,
                 documentation = original.documentation,
                 modifiers = PsiModifierItem.create(codebase, original.modifiers),
                 type = PsiTypeItem.create(codebase, original.type)

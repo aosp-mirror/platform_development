@@ -372,12 +372,12 @@ class StubWriter(
 
     private fun writeConstructorBody(constructor: MethodItem?, superConstructor: MethodItem?) {
         // Find any constructor in parent that we can compile against
-        superConstructor?.let { superConstructor ->
-            val parameters = superConstructor.parameters()
-            val invokeOnThis = constructor != null && constructor.containingClass() == superConstructor.containingClass()
+        superConstructor?.let { it ->
+            val parameters = it.parameters()
+            val invokeOnThis = constructor != null && constructor.containingClass() == it.containingClass()
             if (invokeOnThis || parameters.isNotEmpty()) {
                 val includeCasts = parameters.isNotEmpty() &&
-                        superConstructor.containingClass().constructors().filter { filterReference.test(it) }.size > 1
+                        it.containingClass().constructors().filter { filterReference.test(it) }.size > 1
                 if (invokeOnThis) {
                     writer.print("this(")
                 } else {
@@ -539,7 +539,8 @@ class StubWriter(
             appendModifiers(parameter, false)
             writer.print(parameter.type().toString())
             writer.print(' ')
-            writer.print(parameter.name())
+            val name = parameter.publicName() ?: parameter.name()
+            writer.print(name)
         }
         writer.print(")")
     }

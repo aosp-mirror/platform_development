@@ -173,7 +173,7 @@ class ApiFromTextTest : DriverTest() {
                   @android.support.annotation.UiThread public class MyTest {
                     ctor public MyTest();
                     method @android.support.annotation.IntRange(from=10, to=20) public int clamp(int);
-                    method public java.lang.Double? convert(java.lang.Float);
+                    method public java.lang.Double? convert(java.lang.Float myPublicName);
                     field public java.lang.Number? myNumber;
                   }
                 }
