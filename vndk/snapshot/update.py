@@ -148,21 +148,25 @@ def gather_notice_files(install_dir):
             shutil.rmtree(notices_dir_per_variant)
 
 
-def revise_ld_config_txt():
-    """Replaces unversioned VNDK directories with versioned ones.
+def revise_ld_config_txt_if_needed(vndk_version):
+    """For O-MR1, replaces unversioned VNDK directories with versioned ones.
 
     Unversioned VNDK directories: /system/${LIB}/vndk[-sp]
-    Versioned VNDK directories: /system/${LIB}/vndk[-sp]${VNDK_VER}
+    Versioned VNDK directories: /system/${LIB}/vndk[-sp]-27
+
+    Args:
+      vndk_version: string, version of VNDK snapshot
     """
-    re_pattern = '(system\/\${LIB}\/vndk(?:-sp)?)([:/]|$)'
-    VNDK_INSTALL_DIR_RE = re.compile(re_pattern, flags=re.MULTILINE)
-    ld_config_txt_paths = glob.glob(
-        os.path.join(utils.CONFIG_DIR_PATH_PATTERN, 'ld.config*'))
-    for ld_config_file in ld_config_txt_paths:
-        with open(ld_config_file, 'r') as file:
-            revised = VNDK_INSTALL_DIR_RE.sub(r'\1${VNDK_VER}\2', file.read())
-        with open(ld_config_file, 'w') as file:
-            file.write(revised)
+    if vndk_version == '27':
+        re_pattern = '(system\/\${LIB}\/vndk(?:-sp)?)([:/]|$)'
+        VNDK_INSTALL_DIR_RE = re.compile(re_pattern, flags=re.MULTILINE)
+        ld_config_txt_paths = glob.glob(
+            os.path.join(utils.CONFIG_DIR_PATH_PATTERN, 'ld.config*'))
+        for ld_config_file in ld_config_txt_paths:
+            with open(ld_config_file, 'r') as file:
+                revised = VNDK_INSTALL_DIR_RE.sub(r'\1-27\2', file.read())
+            with open(ld_config_file, 'w') as file:
+                file.write(revised)
 
 
 def update_buildfiles(buildfile_generator):
@@ -253,10 +257,7 @@ def main():
     os.makedirs(utils.COMMON_DIR_PATH)
     install_snapshot(args.branch, args.build, install_dir)
     gather_notice_files(install_dir)
-
-    # Post-process ld.config.txt for O-MR1
-    if vndk_version == '27':
-        revise_ld_config_txt()
+    revise_ld_config_txt_if_needed(vndk_version)
 
     buildfile_generator = GenBuildFile(install_dir, vndk_version)
     update_buildfiles(buildfile_generator)
