@@ -29,6 +29,17 @@ interface ParameterItem : Item {
     /** The containing method */
     fun containingMethod(): MethodItem
 
+    /** Index of this parameter in the parameter list (0-based) */
+    val parameterIndex: Int
+
+    /**
+     * The public name of this parameter. In Kotlin, names are part of the
+     * public API; in Java they are not. In Java, you can annotate a
+     * parameter with {@literal @ParameterName("foo")} to name the parameter
+     * something (potentially different from the actual code parameter name).
+     */
+    fun publicName(): String?
+
     override fun parent(): MethodItem? = containingMethod()
 
     override fun accept(visitor: ItemVisitor) {

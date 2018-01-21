@@ -18,6 +18,7 @@
 
 package com.android.tools.metalava
 
+import org.junit.Ignore
 import org.junit.Test
 
 class ApiFileTest : DriverTest() {
@@ -81,6 +82,37 @@ class ApiFileTest : DriverTest() {
     }
 
     @Test
+    fun `Parameter Names in Java`() {
+        // Java code which explicitly specifies parameter names
+        check(
+            sourceFiles = *arrayOf(
+                java(
+                    """
+                    package test.pkg;
+                    import android.support.annotation.ParameterName;
+
+                    public class Foo {
+                        public void foo(int javaParameter1, @ParameterName("publicParameterName") int javaParameter2) {
+                        }
+                    }
+                    """
+                ),
+                supportParameterName
+            ),
+            api = """
+                    package test.pkg {
+                      public class Foo {
+                        ctor public Foo();
+                        method public void foo(int, int publicParameterName);
+                      }
+                    }
+                 """,
+            extraArguments = arrayOf("--hide-package", "android.support.annotation"),
+            checkDoclava1 = false /* doesn't support parameter names */
+        )
+    }
+
+    @Test
     fun `Basic Kotlin class`() {
         check(
             sourceFiles = *arrayOf(
@@ -110,18 +142,58 @@ class ApiFileTest : DriverTest() {
             api = """
                 package test.pkg {
                   public final class Kotlin extends test.pkg.Parent {
-                    ctor public Kotlin(java.lang.String, int);
+                    ctor public Kotlin(java.lang.String property1, int arg2);
                     method public final java.lang.String getProperty1();
                     method public final java.lang.String getProperty2();
-                    method public final void otherMethod(boolean, int);
-                    method public final void setProperty2(java.lang.String);
+                    method public final void otherMethod(boolean ok, int times);
+                    method public final void setProperty2(java.lang.String p);
                     field public int someField2;
                   }
                   public class Parent {
                     ctor public Parent();
                     method public java.lang.String method();
-                    method public java.lang.String method2(boolean, java.lang.Boolean);
-                    method public int method3(java.lang.Integer, int);
+                    method public java.lang.String method2(boolean value, java.lang.Boolean value);
+                    method public int method3(java.lang.Integer value, int value2);
+                  }
+                }
+                """,
+            checkDoclava1 = false /* doesn't support Kotlin... */
+        )
+    }
+
+    @Ignore("Still broken: UAST is missing reified methods, and some missing symbol resolution")
+    @Test
+    fun `Kotlin Reified Methods`() {
+        check(
+            sourceFiles = *arrayOf(
+                java("""
+                    package test.pkg;
+
+                    public class Context {
+                        @SuppressWarnings("unchecked")
+                        public final <T> T getSystemService(Class<T> serviceClass) {
+                            return null;
+                        }
+                    }
+                    """),
+                kotlin(
+                    """
+                    package test.pkg
+
+                    inline fun <reified T> Context.systemService1() = getSystemService(T::class.java)
+                    inline fun Context.systemService2() = getSystemService(String::class.java)
+                    """
+                )
+            ),
+            api = """
+                package test.pkg {
+                  public class Context {
+                    ctor public Context();
+                    method public final <T> T getSystemService(java.lang.Class<T>);
+                  }
+                  public final class _java_Kt {
+                    ctor public _java_Kt();
+                    method public static final error.NonExistentClass systemService2(test.pkg.Context);
                   }
                 }
                 """,
@@ -217,37 +289,37 @@ class ApiFileTest : DriverTest() {
                 supportNullableSource
             ),
             api = """
-                    package androidx.util {
-                      public class NonNullableJavaPair<F, S> {
-                        ctor public NonNullableJavaPair(F, S);
-                        field public final F first;
-                        field public final S second;
-                      }
-                      public final class NonNullableKotlinPair<F, S> {
-                        ctor public NonNullableKotlinPair(F, S);
-                        method public final F getFirst();
-                        method public final S getSecond();
-                      }
-                      public class NullableJavaPair<F, S> {
-                        ctor public NullableJavaPair(F?, S?);
-                        field public final F? first;
-                        field public final S? second;
-                      }
-                      public final class NullableKotlinPair<F, S> {
-                        ctor public NullableKotlinPair(F?, S?);
-                        method public final F? getFirst();
-                        method public final S? getSecond();
-                      }
-                      public class PlatformJavaPair<F, S> {
-                        ctor public PlatformJavaPair(F!, S!);
-                        field public final F! first;
-                        field public final S! second;
-                      }
-                      public final class TestKt {
-                        ctor public TestKt();
-                        method public static final <F, S> F! component1(androidx.util.PlatformJavaPair<F,S>);
-                      }
-                    }
+                package androidx.util {
+                  public class NonNullableJavaPair<F, S> {
+                    ctor public NonNullableJavaPair(F, S);
+                    field public final F first;
+                    field public final S second;
+                  }
+                  public final class NonNullableKotlinPair<F, S> {
+                    ctor public NonNullableKotlinPair(F first, S second);
+                    method public final F getFirst();
+                    method public final S getSecond();
+                  }
+                  public class NullableJavaPair<F, S> {
+                    ctor public NullableJavaPair(F?, S?);
+                    field public final F? first;
+                    field public final S? second;
+                  }
+                  public final class NullableKotlinPair<F, S> {
+                    ctor public NullableKotlinPair(F? first, S? second);
+                    method public final F? getFirst();
+                    method public final S? getSecond();
+                  }
+                  public class PlatformJavaPair<F, S> {
+                    ctor public PlatformJavaPair(F!, S!);
+                    field public final F! first;
+                    field public final S! second;
+                  }
+                  public final class TestKt {
+                    ctor public TestKt();
+                    method public static final <F, S> F! component1(androidx.util.PlatformJavaPair<F,S>);
+                  }
+                }
                 """,
             extraArguments = arrayOf("--hide-package", "android.support.annotation"),
             checkDoclava1 = false /* doesn't support Kotlin... */
@@ -712,11 +784,11 @@ class ApiFileTest : DriverTest() {
             ),
 
             warnings = """
-                        src/test/pkg/Foo.java:8: warning: Method test.pkg.Foo.method1(): @Deprecated annotation (present) and @deprecated doc tag (not present) do not match [DeprecationMismatch:113]
-                        src/test/pkg/Foo.java:7: warning: Method test.pkg.Foo.method2(): @Deprecated annotation (present) and @deprecated doc tag (not present) do not match [DeprecationMismatch:113]
-                        src/test/pkg/Foo.java:6: warning: Class test.pkg.Foo.Inner1: @Deprecated annotation (present) and @deprecated doc tag (not present) do not match [DeprecationMismatch:113]
-                        src/test/pkg/Foo.java:5: warning: Class test.pkg.Foo.Inner2: @Deprecated annotation (present) and @deprecated doc tag (not present) do not match [DeprecationMismatch:113]
                         src/test/pkg/Foo.java:4: warning: Class test.pkg.Foo.Inner3: @Deprecated annotation (present) and @deprecated doc tag (not present) do not match [DeprecationMismatch:113]
+                        src/test/pkg/Foo.java:5: warning: Class test.pkg.Foo.Inner2: @Deprecated annotation (present) and @deprecated doc tag (not present) do not match [DeprecationMismatch:113]
+                        src/test/pkg/Foo.java:6: warning: Class test.pkg.Foo.Inner1: @Deprecated annotation (present) and @deprecated doc tag (not present) do not match [DeprecationMismatch:113]
+                        src/test/pkg/Foo.java:7: warning: Method test.pkg.Foo.method2(): @Deprecated annotation (present) and @deprecated doc tag (not present) do not match [DeprecationMismatch:113]
+                        src/test/pkg/Foo.java:8: warning: Method test.pkg.Foo.method1(): @Deprecated annotation (present) and @deprecated doc tag (not present) do not match [DeprecationMismatch:113]
                         """,
 
             api = """
@@ -1881,9 +1953,9 @@ class ApiFileTest : DriverTest() {
                     src/test/pkg1/Usage.java:1: warning: Parameter myargs references hidden type class test.pkg1.Class9. [HiddenTypeParameter:121]
                     src/test/pkg1/Usage.java:2: warning: Parameter myargs references hidden type class test.pkg1.Class8. [HiddenTypeParameter:121]
                     src/test/pkg1/Usage.java:3: warning: Parameter list references hidden type class test.pkg1.Class7. [HiddenTypeParameter:121]
-                    src/test/pkg1/Usage.java:6: warning: Field Usage.myClass1 references hidden type test.pkg1.Class3. [HiddenTypeParameter:121]
-                    src/test/pkg1/Usage.java:5: warning: Field Usage.myClass2 references hidden type class test.pkg1.Class4. [HiddenTypeParameter:121]
                     src/test/pkg1/Usage.java:4: warning: Field Usage.myClass3 references hidden type class test.pkg1.Class5. [HiddenTypeParameter:121]
+                    src/test/pkg1/Usage.java:5: warning: Field Usage.myClass2 references hidden type class test.pkg1.Class4. [HiddenTypeParameter:121]
+                    src/test/pkg1/Usage.java:6: warning: Field Usage.myClass1 references hidden type test.pkg1.Class3. [HiddenTypeParameter:121]
                     """,
             api = """
                     package test.pkg1 {

@@ -227,12 +227,20 @@ class SignatureWriter(
 
     private fun writeParameterList(method: MethodItem) {
         writer.print("(")
+        val emitParameterNames = compatibility.parameterNames
         method.parameters().asSequence().forEachIndexed { i, parameter ->
             if (i > 0) {
                 writer.print(", ")
             }
             writeModifiers(parameter)
             writeType(parameter.type(), parameter.modifiers)
+            if (emitParameterNames) {
+                val name = parameter.publicName()
+                if (name != null) {
+                    writer.print(" ")
+                    writer.print(name)
+                }
+            }
         }
         writer.print(")")
     }

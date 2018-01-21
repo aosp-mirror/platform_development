@@ -25,6 +25,8 @@ class TextParameterItem(
     codebase: Codebase,
     private val containingMethod: TextMethodItem,
     private var name: String,
+    private var publicName: String?,
+    override val parameterIndex: Int,
     var typeName: String,
     private var type: TextTypeItem,
     var vararg: Boolean,
@@ -42,25 +44,19 @@ class TextParameterItem(
     }
 
     override var included: Boolean = true
-
-    override fun type(): TextTypeItem {
-        return type
-    }
-
-    override fun name(): String {
-        return name
-    }
-
+    override fun type(): TextTypeItem = type
+    override fun name(): String = name
+    override fun publicName(): String? = publicName
     override fun containingMethod(): MethodItem = containingMethod
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is ParameterItem) return false
 
-        return name() == other.name()
+        return parameterIndex == other.parameterIndex
     }
 
-    override fun hashCode(): Int = name().hashCode()
+    override fun hashCode(): Int = parameterIndex
 
-    override fun toString(): String = name
+    override fun toString(): String = "parameter ${name()}"
 }

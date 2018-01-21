@@ -153,5 +153,10 @@ class Compatibility(
      */
     var skipInheritedInterfaceMethods: Boolean = compat
 
+    /**
+     * Whether to include parameter names in the signature file
+     */
+    val parameterNames: Boolean = true
+
     // Other examples: sometimes we sort by qualified name, sometimes by full name
 }

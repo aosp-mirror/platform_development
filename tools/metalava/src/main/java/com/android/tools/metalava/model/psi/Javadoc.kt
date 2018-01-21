@@ -184,13 +184,13 @@ fun trimDocIndent(existingDoc: String): String {
             }
 }
 
-fun insertInto(existingDoc: String, newText: String, offset: Int): String {
+fun insertInto(existingDoc: String, newText: String, initialOffset: Int): String {
     // TODO: Insert "." between existing documentation and new documentation, if necessary.
 
-    val offset = if (offset > 4 && existingDoc.regionMatches(offset - 4, "\n * ", 0, 4, false)) {
-        offset - 4
+    val offset = if (initialOffset > 4 && existingDoc.regionMatches(initialOffset - 4, "\n * ", 0, 4, false)) {
+        initialOffset - 4
     } else {
-        offset
+        initialOffset
     }
     val index = existingDoc.indexOf('\n')
     val prefixWithStar = index == -1 || existingDoc[index + 1] == '*' ||

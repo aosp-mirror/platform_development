@@ -82,7 +82,8 @@ abstract class DriverTest {
             val name = file.name
             if (name.startsWith("kotlin-stdlib") ||
                 name.startsWith("kotlin-reflect") ||
-                name.startsWith("kotlin-script-runtime")) {
+                name.startsWith("kotlin-script-runtime")
+            ) {
                 paths.add(file.path)
             }
         }
@@ -374,7 +375,8 @@ abstract class DriverTest {
         val kotlinPath = findKotlinStdlibPath()
         val kotlinPathArgs =
             if (kotlinPath.isNotEmpty() &&
-                sourceList.asSequence().any { it.endsWith(DOT_KT) }) {
+                sourceList.asSequence().any { it.endsWith(DOT_KT) }
+            ) {
                 arrayOf("--classpath", kotlinPath.joinToString(separator = File.pathSeparator) { it })
             } else {
                 emptyArray()
@@ -453,7 +455,10 @@ abstract class DriverTest {
         if (warnings != null) {
             assertEquals(
                 warnings.trimIndent().trim(),
-                reportedWarnings.toString().replace(project.path, "TESTROOT").replace(project.canonicalPath, "TESTROOT").trim()
+                reportedWarnings.toString().replace(project.path, "TESTROOT").replace(
+                    project.canonicalPath,
+                    "TESTROOT"
+                ).split("\n").sorted().joinToString(separator = "\n").trim()
             )
         }
 
@@ -490,7 +495,8 @@ abstract class DriverTest {
             if (!supportAnnotationsDir.isDirectory) {
                 fail("Couldn't find $supportAnnotationsDir: Is the pwd set to the root of the metalava source code?")
             }
-            val supportAnnotations = gatherSources(listOf(supportAnnotationsDir)).map { it.path }.toList().toTypedArray()
+            val supportAnnotations =
+                gatherSources(listOf(supportAnnotationsDir)).map { it.path }.toList().toTypedArray()
 
             val extraAnnotationsDir = File("stub-annotations/src/main/java")
             if (!extraAnnotationsDir.isDirectory) {
@@ -505,7 +511,8 @@ abstract class DriverTest {
                         "-d", project.path, *generated,
                         *supportAnnotations, *extraAnnotations
                     )
-                )) {
+                )
+            ) {
                 fail("Couldn't compile stub file -- compilation problems")
                 return
             }
@@ -519,7 +526,8 @@ abstract class DriverTest {
         }
 
         if (CHECK_OLD_DOCLAVA_TOO && checkDoclava1 && signatureSource == null &&
-            api != null && apiFile != null) {
+            api != null && apiFile != null
+        ) {
             apiFile.delete()
             checkSignaturesWithDoclava1(
                 api, "-api", apiFile, apiFile, sourceList, sourcePath, packages, androidJar,
@@ -528,7 +536,8 @@ abstract class DriverTest {
         }
 
         if (CHECK_OLD_DOCLAVA_TOO && checkDoclava1 && signatureSource == null &&
-            exactApi != null && exactApiFile != null) {
+            exactApi != null && exactApiFile != null
+        ) {
             exactApiFile.delete()
             checkSignaturesWithDoclava1(
                 exactApi, "-exactApi", exactApiFile, exactApiFile, sourceList, sourcePath,
@@ -537,7 +546,8 @@ abstract class DriverTest {
         }
 
         if (CHECK_OLD_DOCLAVA_TOO && checkDoclava1 && signatureSource == null
-            && removedApi != null && removedApiFile != null) {
+            && removedApi != null && removedApiFile != null
+        ) {
             removedApiFile.delete()
             checkSignaturesWithDoclava1(
                 removedApi, "-removedApi", removedApiFile, removedApiFile, sourceList,
@@ -652,7 +662,8 @@ abstract class DriverTest {
                     "com.google.doclava.Doclava",
                     *args
                 )
-            )) {
+            )
+        ) {
             return
         }
 
@@ -681,18 +692,26 @@ abstract class DriverTest {
     }
 
     companion object {
+        private val apiLevel = "27"
+
         private val latestAndroidPlatform: String
-            get() = "android-25"
+            get() = "android-$apiLevel"
 
         private val sdk: File
-            get() = File(System.getenv("ANDROID_HOME"))
+            get() = File(
+                System.getenv("ANDROID_HOME")
+                        ?: error("You must set \$ANDROID_HOME before running tests")
+            )
 
         fun getPlatformFile(path: String): File {
-            val latestAndroidPlatform = latestAndroidPlatform
+            val localFile = File("../../../prebuilts/sdk/$apiLevel/android.jar")
+            if (localFile.exists()) {
+                return localFile
+            }
             val file = FileUtils.join(sdk, SdkConstants.FD_PLATFORMS, latestAndroidPlatform, path)
             if (!file.exists()) {
                 throw IllegalArgumentException(
-                    "File \"$path\" not found in platform $latestAndroidPlatform"
+                    "File \"$path\" not found in platform ${latestAndroidPlatform}"
                 )
             }
             return file
@@ -843,6 +862,22 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 public @interface Nullable {
 }
                 """
+)
+
+val supportParameterName: TestFile = java(
+    """
+package android.support.annotation;
+import java.lang.annotation.*;
+import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.SOURCE;
+@SuppressWarnings("WeakerAccess")
+@Retention(SOURCE)
+@Target({METHOD, PARAMETER, FIELD})
+public @interface ParameterName {
+    String value();
+}
+
+"""
 )
 
 val uiThreadSource: TestFile = java(

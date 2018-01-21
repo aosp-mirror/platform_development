@@ -589,8 +589,8 @@ class AnnotationsMerger(
         }
     }
 
-    private fun removeFiltered(value: String): String {
-        var value = value
+    private fun removeFiltered(originalValue: String): String {
+        var value = originalValue
         assert(apiFilter != null)
         if (value.startsWith("{")) {
             value = value.substring(1)
@@ -601,8 +601,8 @@ class AnnotationsMerger(
         value = value.trim { it <= ' ' }
         val sb = StringBuilder(value.length)
         sb.append('{')
-        for (fqn in Splitter.on(',').omitEmptyStrings().trimResults().split(value)) {
-            val fqn = unescapeXml(fqn)
+        for (escaped in Splitter.on(',').omitEmptyStrings().trimResults().split(value)) {
+            val fqn = unescapeXml(escaped)
             if (fqn.startsWith("\"")) {
                 continue
             }

@@ -412,7 +412,13 @@ class Options(
 
                 ARG_MIGRATE_NULLNESS -> migrateNulls = true
 
-                ARG_CHECK_COMPATIBILITY -> checkCompatibility = true
+                ARG_CHECK_COMPATIBILITY -> {
+                    checkCompatibility = true
+
+                    // Normally some compatibility changes are warnings but when you
+                    // explicitly check compatibility, turn them all into errors
+                    Errors.enforceCompatibility()
+                }
 
                 ARG_ANNOTATION_COVERAGE_STATS -> dumpAnnotationStatistics = true
                 ARG_ANNOTATION_COVERAGE_OF -> mutableAnnotationCoverageOf.add(

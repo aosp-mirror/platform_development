@@ -1275,6 +1275,37 @@ class StubsTest : DriverTest() {
     }
 
     @Test
+    fun `Parameter Names in Java`() {
+        // Java code which explicitly specifies parameter names: make sure stub uses
+        // parameter name
+        checkStubs(
+            sourceFiles = *arrayOf(
+                java(
+                    """
+                    package test.pkg;
+                    import android.support.annotation.ParameterName;
+
+                    public class Foo {
+                        public void foo(int javaParameter1, @ParameterName("publicParameterName") int javaParameter2) {
+                        }
+                    }
+                    """
+                ),
+                supportParameterName
+            ),
+            source = """
+                package test.pkg;
+                @SuppressWarnings({"unchecked", "deprecation", "all"})
+                public class Foo {
+                public Foo() { throw new RuntimeException("Stub!"); }
+                public void foo(int javaParameter1, int publicParameterName) { throw new RuntimeException("Stub!"); }
+                }
+                 """,
+            checkDoclava1 = false /* doesn't support parameter names */
+        )
+    }
+
+    @Test
     fun `Arguments to super constructors`() {
         // When overriding constructors we have to supply arguments
         checkStubs(
