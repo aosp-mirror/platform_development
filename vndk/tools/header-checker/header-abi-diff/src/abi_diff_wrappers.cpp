@@ -65,7 +65,12 @@ bool DiffWrapper<abi_util::GlobalVarIR>::DumpDiff(
   DiffStatus access_diff = (oldp_->GetAccess() == newp_->GetAccess()) ?
       DiffStatus::no_diff : DiffStatus::direct_diff;
   if ((type_diff | access_diff) & DiffStatus::direct_diff) {
-    abi_util::GlobalVarDiffIR global_var_diff_ir(oldp_, newp_);
+    abi_util::GlobalVarIR old_global_var = *oldp_;
+    abi_util::GlobalVarIR new_global_var = *newp_;
+    ReplaceTypeIdsWithTypeNames(old_types_, &old_global_var);
+    ReplaceTypeIdsWithTypeNames(new_types_, &new_global_var);
+    abi_util::GlobalVarDiffIR global_var_diff_ir(&old_global_var,
+                                                 &new_global_var);
     global_var_diff_ir.SetName(oldp_->GetName());
     return ir_diff_dumper_->AddDiffMessageIR(&global_var_diff_ir,
                                              Unwind(&type_queue), diff_kind);
@@ -92,7 +97,11 @@ bool DiffWrapper<abi_util::FunctionIR>::DumpDiff(
   if ((param_diffs == DiffStatus::direct_diff ||
        return_type_diff == DiffStatus::direct_diff) ||
       (oldp_->GetAccess() != newp_->GetAccess())) {
-    abi_util::FunctionDiffIR function_diff_ir(oldp_, newp_);
+    abi_util::FunctionIR old_function = *oldp_;
+    abi_util::FunctionIR new_function = *newp_;
+    ReplaceTypeIdsWithTypeNames(old_types_, &old_function);
+    ReplaceTypeIdsWithTypeNames(new_types_, &new_function);
+    abi_util::FunctionDiffIR function_diff_ir(&old_function, &new_function);
     function_diff_ir.SetName(oldp_->GetName());
     return ir_diff_dumper_->AddDiffMessageIR(&function_diff_ir,
                                              Unwind(&type_queue), diff_kind);

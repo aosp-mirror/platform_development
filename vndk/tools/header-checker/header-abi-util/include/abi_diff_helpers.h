@@ -102,6 +102,19 @@ class AbiDiffHelper {
                               std::deque<std::string> *type_queue,
                               abi_util::IRDiffDumper::DiffKind diff_kind);
 
+  void ReplaceRemovedFieldTypeIdsWithTypeNames(
+    std::vector<abi_util::RecordFieldIR *> *removed_fields);
+
+  void ReplaceDiffedFieldTypeIdsWithTypeNames(
+      abi_util::RecordFieldDiffIR *diffed_field);
+
+  std::vector<std::pair<abi_util::RecordFieldIR, abi_util::RecordFieldIR>>
+  FixupDiffedFieldTypeIds(
+      const std::vector<abi_util::RecordFieldDiffIR> &field_diffs);
+
+  std::vector<abi_util::RecordFieldIR>FixupRemovedFieldTypeIds(
+    const std::vector<const abi_util::RecordFieldIR *> &fields_removed);
+
   DiffStatusPair<std::unique_ptr<abi_util::RecordFieldDiffIR>>
   CompareCommonRecordFields(
     const abi_util::RecordFieldIR *old_field,
@@ -157,6 +170,9 @@ class AbiDiffHelper {
   abi_util::IRDiffDumper *ir_diff_dumper_ = nullptr;
   AbiElementMap<MergeStatus> *local_to_global_type_id_map_ = nullptr;
 };
+
+void ReplaceTypeIdsWithTypeNames(
+    const AbiElementMap<const TypeIR *> &type_graph, LinkableMessageIR *lm);
 
 } // namespace abi_util
 #endif

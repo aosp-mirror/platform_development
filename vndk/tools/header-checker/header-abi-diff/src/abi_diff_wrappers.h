@@ -36,6 +36,7 @@ static bool IgnoreSymbol(const T *element,
 
 template <typename T>
 class DiffWrapper : public AbiDiffHelper {
+
  public:
   DiffWrapper(const T *oldp, const T *newp,
               abi_util::IRDiffDumper *ir_diff_dumper,
@@ -44,7 +45,9 @@ class DiffWrapper : public AbiDiffHelper {
               std::set<std::string> *type_cache)
       : AbiDiffHelper(old_types, new_types, type_cache, ir_diff_dumper),
         oldp_(oldp), newp_(newp) { }
+
   bool DumpDiff(abi_util::IRDiffDumper::DiffKind diff_kind);
+
  private:
   const T *oldp_;
   const T *newp_;

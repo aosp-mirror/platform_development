@@ -1104,7 +1104,6 @@ class RecordFieldDiffIR {
     return new_field_;
   }
 
- protected:
   const RecordFieldIR *old_field_;
   const RecordFieldIR *new_field_;
 };
