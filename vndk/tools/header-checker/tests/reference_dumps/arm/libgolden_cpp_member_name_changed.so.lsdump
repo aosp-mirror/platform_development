@@ -11,7 +11,7 @@ record_types {
   fields {
     referenced_type: "type-2"
     field_offset: 32
-    field_name: "mSpeakderId"
+    field_name: "mSpeakderId_"
     access: private_access
   }
   vtable_layout {
@@ -118,13 +118,13 @@ record_types {
   fields {
     referenced_type: "type-6"
     field_offset: 64
-    field_name: "speaker_uint_t"
+    field_name: "speaker_uint_t_"
     access: public_access
   }
   fields {
     referenced_type: "type-7"
     field_offset: 96
-    field_name: "speaker_float_star"
+    field_name: "speaker_float_star_"
     access: public_access
   }
   base_specifiers {
@@ -196,10 +196,6 @@ enum_types {
   enum_fields {
     enum_field_value: 4
     name: "SuperSpeaker::Volume::Lower"
-  }
-  enum_fields {
-    enum_field_value: 5
-    name: "SuperSpeaker::Volume::LouderThanLoudest"
   }
   access: private_access
   tag_info {

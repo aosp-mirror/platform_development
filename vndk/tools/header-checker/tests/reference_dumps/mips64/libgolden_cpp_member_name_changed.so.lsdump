@@ -1,8 +1,8 @@
 record_types {
   type_info {
     name: "SuperSpeaker"
-    size: 8
-    alignment: 4
+    size: 16
+    alignment: 8
     referenced_type: "type-1"
     source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
     linker_set_key: "SuperSpeaker"
@@ -10,8 +10,8 @@ record_types {
   }
   fields {
     referenced_type: "type-2"
-    field_offset: 32
-    field_name: "mSpeakderId"
+    field_offset: 64
+    field_name: "mSpeakderId_"
     access: private_access
   }
   vtable_layout {
@@ -55,8 +55,8 @@ record_types {
 record_types {
   type_info {
     name: "HighVolumeSpeaker"
-    size: 8
-    alignment: 4
+    size: 16
+    alignment: 8
     referenced_type: "type-11"
     source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h"
     linker_set_key: "HighVolumeSpeaker"
@@ -108,8 +108,8 @@ record_types {
 record_types {
   type_info {
     name: "LowVolumeSpeaker"
-    size: 16
-    alignment: 4
+    size: 24
+    alignment: 8
     referenced_type: "type-5"
     source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
     linker_set_key: "LowVolumeSpeaker"
@@ -117,14 +117,14 @@ record_types {
   }
   fields {
     referenced_type: "type-6"
-    field_offset: 64
-    field_name: "speaker_uint_t"
+    field_offset: 96
+    field_name: "speaker_uint_t_"
     access: public_access
   }
   fields {
     referenced_type: "type-7"
-    field_offset: 96
-    field_name: "speaker_float_star"
+    field_offset: 128
+    field_name: "speaker_float_star_"
     access: public_access
   }
   base_specifiers {
@@ -197,10 +197,6 @@ enum_types {
     enum_field_value: 4
     name: "SuperSpeaker::Volume::Lower"
   }
-  enum_fields {
-    enum_field_value: 5
-    name: "SuperSpeaker::Volume::LouderThanLoudest"
-  }
   access: private_access
   tag_info {
     unique_id: "_ZTSN12SuperSpeaker6VolumeE"
@@ -209,8 +205,8 @@ enum_types {
 pointer_types {
   type_info {
     name: "SuperSpeaker *"
-    size: 4
-    alignment: 4
+    size: 8
+    alignment: 8
     referenced_type: "type-1"
     source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
     linker_set_key: "SuperSpeaker *"
@@ -220,8 +216,8 @@ pointer_types {
 pointer_types {
   type_info {
     name: "HighVolumeSpeaker *"
-    size: 4
-    alignment: 4
+    size: 8
+    alignment: 8
     referenced_type: "type-11"
     source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h"
     linker_set_key: "HighVolumeSpeaker *"
@@ -231,8 +227,8 @@ pointer_types {
 pointer_types {
   type_info {
     name: "float *"
-    size: 4
-    alignment: 4
+    size: 8
+    alignment: 8
     referenced_type: "type-3"
     source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
     linker_set_key: "float *"
@@ -242,8 +238,8 @@ pointer_types {
 pointer_types {
   type_info {
     name: "LowVolumeSpeaker *"
-    size: 4
-    alignment: 4
+    size: 8
+    alignment: 8
     referenced_type: "type-5"
     source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
     linker_set_key: "LowVolumeSpeaker *"
