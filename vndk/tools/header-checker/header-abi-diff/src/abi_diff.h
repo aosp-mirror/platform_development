@@ -16,13 +16,6 @@
 
 #include <ir_representation.h>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-parameter"
-#pragma clang diagnostic ignored "-Wnested-anon-types"
-#include "proto/abi_dump.pb.h"
-#include "proto/abi_diff.pb.h"
-#pragma clang diagnostic pop
-
 #include <string>
 #include <vector>
 
@@ -67,7 +60,9 @@ class HeaderAbiDiff {
       const AbiElementMap<const T *> &new_elements_map,
       const AbiElementMap<const abi_util::ElfSymbolIR *> *old_elf_map,
       const AbiElementMap<const abi_util::ElfSymbolIR *> *new_elf_map,
-      abi_util::IRDiffDumper *ir_diff_dumper);
+      abi_util::IRDiffDumper *ir_diff_dumper,
+      const AbiElementMap<const abi_util::TypeIR *> &old_types_map,
+      const AbiElementMap<const abi_util::TypeIR *> &new_types_map);
 
   bool CollectElfSymbols(
       const AbiElementMap<const abi_util::ElfSymbolIR *> &old_symbols,
@@ -85,7 +80,8 @@ class HeaderAbiDiff {
       const AbiElementMap<const T *> &new_elements_map,
       const AbiElementMap<const abi_util::ElfSymbolIR *> *elf_map,
       abi_util::IRDiffDumper *ir_diff_dumper,
-      abi_util::IRDiffDumper::DiffKind diff_kind);
+      abi_util::IRDiffDumper::DiffKind diff_kind,
+      const AbiElementMap<const abi_util::TypeIR *> &types_map);
 
   template <typename T>
   bool PopulateCommonElements(
@@ -109,7 +105,12 @@ class HeaderAbiDiff {
       std::vector<const T *> &elements,
       const AbiElementMap<const abi_util::ElfSymbolIR *> *elf_map,
       abi_util::IRDiffDumper *ir_diff_dumper,
-      abi_util::IRDiffDumper::DiffKind diff_kind);
+      abi_util::IRDiffDumper::DiffKind diff_kind,
+      const AbiElementMap<const abi_util::TypeIR *> &old_types_map);
+
+  std::pair<AbiElementMap<const abi_util::EnumTypeIR *>,
+            AbiElementMap<const abi_util::RecordTypeIR *>>
+  ExtractUserDefinedTypes(const abi_util::TextFormatToIRReader *tu);
 
   bool CollectUserDefinedTypes(
       const abi_util::TextFormatToIRReader *old_tu,
@@ -120,8 +121,8 @@ class HeaderAbiDiff {
 
   template <typename T>
   bool CollectUserDefinedTypesInternal(
-      const AbiElementMap<T> &old_ud_types,
-      const AbiElementMap<T> &new_ud_types,
+      const AbiElementMap<const T*> &old_ud_types_map,
+      const AbiElementMap<const T*> &new_ud_types_map,
       const AbiElementMap<const abi_util::TypeIR *> &old_types_map,
       const AbiElementMap<const abi_util::TypeIR *> &new_types_map,
       abi_util::IRDiffDumper *ir_diff_dumper);

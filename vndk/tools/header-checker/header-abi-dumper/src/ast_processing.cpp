@@ -35,15 +35,15 @@ HeaderASTVisitor::HeaderASTVisitor(
     const clang::CompilerInstance *compiler_instance_p,
     const std::set<std::string> &exported_headers,
     const clang::Decl *tu_decl,
-    std::set<std::string> *type_cache,
-    abi_util::IRDumper *ir_dumper)
+    abi_util::IRDumper *ir_dumper,
+    ast_util::ASTCaches *ast_caches)
   : mangle_contextp_(mangle_contextp),
     ast_contextp_(ast_contextp),
     cip_(compiler_instance_p),
     exported_headers_(exported_headers),
     tu_decl_(tu_decl),
-    type_cache_(type_cache),
-    ir_dumper_(ir_dumper) { }
+    ir_dumper_(ir_dumper),
+    ast_caches_(ast_caches) { }
 
 bool HeaderASTVisitor::VisitRecordDecl(const clang::RecordDecl *decl) {
   // Skip forward declarations, dependent records. Also skip anonymous records
@@ -55,8 +55,7 @@ bool HeaderASTVisitor::VisitRecordDecl(const clang::RecordDecl *decl) {
     return true;
   }
   RecordDeclWrapper record_decl_wrapper(
-      mangle_contextp_, ast_contextp_, cip_, decl, type_cache_,
-      ir_dumper_, decl_to_source_file_cache_, "");
+      mangle_contextp_, ast_contextp_, cip_, decl, ir_dumper_, "", ast_caches_);
   return record_decl_wrapper.GetRecordDecl();
 }
 
@@ -67,8 +66,7 @@ bool HeaderASTVisitor::VisitEnumDecl(const clang::EnumDecl *decl) {
     return true;
   }
   EnumDeclWrapper enum_decl_wrapper(
-      mangle_contextp_, ast_contextp_, cip_, decl, type_cache_,
-      ir_dumper_, decl_to_source_file_cache_);
+      mangle_contextp_, ast_contextp_, cip_, decl, ir_dumper_, ast_caches_);
   return enum_decl_wrapper.GetEnumDecl();
  }
 
@@ -93,6 +91,9 @@ static bool AddMangledFunctions(const abi_util::FunctionIR *function,
 }
 
 static bool ShouldSkipFunctionDecl(const clang::FunctionDecl *decl) {
+  if (!decl->getDefinition()) {
+    return true;
+  }
   if (const clang::CXXMethodDecl *method_decl =
       llvm::dyn_cast<clang::CXXMethodDecl>(decl)) {
     if (method_decl->getParent()->getTypeForDecl()->isDependentType()) {
@@ -115,9 +116,8 @@ bool HeaderASTVisitor::VisitFunctionDecl(const clang::FunctionDecl *decl) {
     return true;
   }
   FunctionDeclWrapper function_decl_wrapper(mangle_contextp_, ast_contextp_,
-                                            cip_, decl, type_cache_,
-                                            ir_dumper_,
-                                            decl_to_source_file_cache_);
+                                            cip_, decl, ir_dumper_,
+                                            ast_caches_);
   auto function_wrapper = function_decl_wrapper.GetFunctionDecl();
   // Destructors and Constructors can have more than 1 symbol generated from the
   // same Decl.
@@ -139,9 +139,8 @@ bool HeaderASTVisitor::VisitVarDecl(const clang::VarDecl *decl) {
     return true;
   }
   GlobalVarDeclWrapper global_var_decl_wrapper(mangle_contextp_, ast_contextp_,
-                                               cip_, decl, type_cache_,
-                                               ir_dumper_,
-                                               decl_to_source_file_cache_);
+                                               cip_, decl, ir_dumper_,
+                                               ast_caches_);
   return  global_var_decl_wrapper.GetGlobalVarDecl();
 }
 
@@ -155,10 +154,18 @@ bool HeaderASTVisitor::TraverseDecl(clang::Decl *decl) {
     return true;
   }
   std::string source_file = ABIWrapper::GetDeclSourceFile(decl, cip_);
-  decl_to_source_file_cache_.insert(std::make_pair(decl, source_file));
+  ast_caches_->decl_to_source_file_cache_.insert(
+      std::make_pair(decl, source_file));
   // If no exported headers are specified we assume the whole AST is exported.
   if ((decl != tu_decl_) && AreHeadersExported(exported_headers_) &&
       (exported_headers_.find(source_file) == exported_headers_.end())) {
+    return true;
+  }
+  // If at all we're looking at the source file's AST decl node, it should be a
+  // function decl node.
+  if ((decl != tu_decl_) &&
+      (source_file == ast_caches_->translation_unit_source_) &&
+      !decl->isFunctionOrFunctionTemplate()) {
     return true;
   }
   return RecursiveASTVisitor<HeaderASTVisitor>::TraverseDecl(decl);
@@ -167,7 +174,7 @@ bool HeaderASTVisitor::TraverseDecl(clang::Decl *decl) {
 HeaderASTConsumer::HeaderASTConsumer(
     clang::CompilerInstance *compiler_instancep,
     const std::string &out_dump_name,
-    const std::set<std::string> &exported_headers,
+    std::set<std::string> &exported_headers,
     abi_util::TextFormatIR text_format)
   : cip_(compiler_instancep),
     out_dump_name_(out_dump_name),
@@ -184,11 +191,17 @@ void HeaderASTConsumer::HandleTranslationUnit(clang::ASTContext &ctx) {
   clang::TranslationUnitDecl *translation_unit = ctx.getTranslationUnitDecl();
   std::unique_ptr<clang::MangleContext> mangle_contextp(
       ctx.createMangleContext());
-  std::set<std::string> type_cache;
+  const std::string &translation_unit_source =
+      ABIWrapper::GetDeclSourceFile(translation_unit, cip_);
+  ast_util::ASTCaches ast_caches(translation_unit_source);
+  if (!exported_headers_.empty()) {
+    exported_headers_.insert(translation_unit_source);
+  }
   std::unique_ptr<abi_util::IRDumper> ir_dumper =
       abi_util::IRDumper::CreateIRDumper(text_format_, out_dump_name_);
   HeaderASTVisitor v(mangle_contextp.get(), &ctx, cip_, exported_headers_,
-                     translation_unit, &type_cache, ir_dumper.get());
+                     translation_unit, ir_dumper.get(), &ast_caches);
+
   if (!v.TraverseDecl(translation_unit) || !ir_dumper->Dump()) {
     llvm::errs() << "Serialization to ostream failed\n";
     ::exit(1);
