@@ -22,6 +22,7 @@ message BasicNamedAndTypedDecl {
   optional string referenced_type = 4;
   optional string source_file = 5;
   optional string linker_set_key = 6;
+  optional string self_type = 7;
 }
 
 message ArrayType {

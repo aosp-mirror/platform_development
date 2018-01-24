@@ -15,13 +15,8 @@
 #ifndef ABI_WRAPPERS_H_
 #define ABI_WRAPPERS_H_
 
+#include "ast_util.h"
 #include <ir_representation.h>
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-parameter"
-#pragma clang diagnostic ignored "-Wnested-anon-types"
-#include "proto/abi_dump.pb.h"
-#pragma clang diagnostic pop
 
 #include <clang/AST/AST.h>
 #include <clang/AST/ASTConsumer.h>
@@ -35,9 +30,8 @@ class ABIWrapper {
   ABIWrapper(clang::MangleContext *mangle_contextp,
              clang::ASTContext *ast_contextp,
              const clang::CompilerInstance *cip,
-             std::set<std::string> *type_cache,
              abi_util::IRDumper *ir_dumper,
-             std::map<const clang::Decl *, std::string> &decl_to_source_cache);
+             ast_util::ASTCaches *ast_caches);
 
   static std::string GetDeclSourceFile(const clang::Decl *decl,
                                        const clang::CompilerInstance *cip);
@@ -46,10 +40,11 @@ class ABIWrapper {
                                         clang::MangleContext *mangle_context);
 
  protected:
-  abi_dump::AccessSpecifier AccessClangToDump(
-      const clang::AccessSpecifier sp);
   std::string GetCachedDeclSourceFile(const clang::Decl *decl,
                                       const clang::CompilerInstance *cip);
+
+  std::string GetKeyForTypeId(clang::QualType qual_type,
+                              const std::string *anon_identifier = nullptr);
 
   bool SetupTemplateArguments(const clang::TemplateArgumentList *tl,
                               abi_util::TemplatedArtifactIR *ta,
@@ -62,13 +57,13 @@ class ABIWrapper {
   bool CreateBasicNamedAndTypedDecl(clang::QualType,
                                     const std::string &source_file);
   bool CreateBasicNamedAndTypedDecl(
-      clang::QualType canonical_type,
-      abi_util::TypeIR *typep,
-      const std::string &source_file);
+      clang::QualType canonical_type, abi_util::TypeIR *typep,
+      const std::string &source_file,
+      const std::string *anon_identifier = nullptr);
 
   bool CreateExtendedType(
-      clang::QualType canonical_type,
-      abi_util::TypeIR *typep);
+      clang::QualType canonical_type, abi_util::TypeIR *typep,
+      const std::string *anon_identifier = nullptr);
 
   clang::QualType GetReferencedType(const clang::QualType qual_type);
 
@@ -83,9 +78,8 @@ class ABIWrapper {
   const clang::CompilerInstance *cip_;
   clang::MangleContext *mangle_contextp_;
   clang::ASTContext *ast_contextp_;
-  std::set<std::string> *type_cache_;
   abi_util::IRDumper *ir_dumper_;
-  std::map<const clang::Decl *, std::string> &decl_to_source_file_cache_;
+  ast_util::ASTCaches *ast_caches_;
 };
 
 class RecordDeclWrapper : public ABIWrapper {
@@ -93,10 +87,9 @@ class RecordDeclWrapper : public ABIWrapper {
   RecordDeclWrapper(
       clang::MangleContext *mangle_contextp, clang::ASTContext *ast_contextp,
       const clang::CompilerInstance *compiler_instance_p,
-      const clang::RecordDecl *decl, std::set<std::string> *type_cache,
-      abi_util::IRDumper *ir_dumper,
-      std::map<const clang::Decl *, std::string> &decl_to_source_cache_,
-      const std::string &previous_record_stages);
+      const clang::RecordDecl *record_decl, abi_util::IRDumper *ir_dumper,
+      const std::string &previous_record_stages,
+      ast_util::ASTCaches *ast_caches);
 
   bool GetRecordDecl();
 
@@ -138,9 +131,8 @@ class FunctionDeclWrapper : public ABIWrapper {
   FunctionDeclWrapper(
       clang::MangleContext *mangle_contextp, clang::ASTContext *ast_contextp,
       const clang::CompilerInstance *compiler_instance_p,
-      const clang::FunctionDecl *decl, std::set<std::string> *type_cache,
-      abi_util::IRDumper *ir_dumper,
-      std::map<const clang::Decl *, std::string> &decl_to_source_cache_);
+      const clang::FunctionDecl *decl, abi_util::IRDumper *ir_dumper,
+      ast_util::ASTCaches *ast_caches);
 
   std::unique_ptr<abi_util::FunctionIR> GetFunctionDecl();
 
@@ -172,9 +164,8 @@ class EnumDeclWrapper : public ABIWrapper {
   EnumDeclWrapper(
       clang::MangleContext *mangle_contextp, clang::ASTContext *ast_contextp,
       const clang::CompilerInstance *compiler_instance_p,
-      const clang::EnumDecl *decl,
-      std::set<std::string> *type_cache, abi_util::IRDumper *ir_dumper,
-      std::map<const clang::Decl *, std::string> &decl_to_source_cache_);
+      const clang::EnumDecl *decl, abi_util::IRDumper *ir_dumper,
+      ast_util::ASTCaches *ast_caches);
 
   bool GetEnumDecl();
 
@@ -193,9 +184,8 @@ class GlobalVarDeclWrapper : public ABIWrapper {
   GlobalVarDeclWrapper(
       clang::MangleContext *mangle_contextp, clang::ASTContext *ast_contextp,
       const clang::CompilerInstance *compiler_instance_p,
-      const clang::VarDecl *decl,
-      std::set<std::string> *type_cache, abi_util::IRDumper *ir_dumper,
-      std::map<const clang::Decl *, std::string> &decl_to_source_cache_);
+      const clang::VarDecl *decl, abi_util::IRDumper *ir_dumper,
+      ast_util::ASTCaches *ast_caches);
 
   bool GetGlobalVarDecl();
 
