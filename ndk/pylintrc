@@ -1,5 +1,0 @@
-[MESSAGES CONTROL]
-disable=fixme,design,locally-disabled,too-many-lines
-
-[VARIABLES]
-dummy-variables-rgx=_|dummy
