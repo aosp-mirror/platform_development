@@ -115,8 +115,8 @@ class ELFLinkerVNDKTest(unittest.TestCase):
         self.assertNotIn(libvnd_bad, vndk_sets.vndk_sp)
 
 
-    def test_sp_ndk_indirect_without_sp_hal(self):
-        """Check the computation of sp_ndk_indirect excludes sp_hal."""
+    def test_ll_ndk_indirect_without_sp_hal(self):
+        """Check the computation of ll_ndk_indirect excludes sp_hal."""
 
         gb = GraphBuilder()
         libEGL = gb.add_lib32(PT_SYSTEM, 'libEGL',
@@ -131,11 +131,11 @@ class ELFLinkerVNDKTest(unittest.TestCase):
 
         vndk_sets = gb.graph.compute_degenerated_vndk(None)
 
-        self.assertIn(libEGL, vndk_sets.sp_ndk)
-        self.assertIn(libEGL_dep, vndk_sets.sp_ndk_indirect)
+        self.assertIn(libEGL, vndk_sets.ll_ndk)
+        self.assertIn(libEGL_dep, vndk_sets.ll_ndk_indirect)
         self.assertIn(libEGL_chipset, vndk_sets.sp_hal)
 
-        self.assertNotIn(libEGL_chipset, vndk_sets.sp_ndk_indirect)
+        self.assertNotIn(libEGL_chipset, vndk_sets.ll_ndk_indirect)
 
 
 if __name__ == '__main__':

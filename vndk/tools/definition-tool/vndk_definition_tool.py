@@ -906,7 +906,7 @@ class DexFileReader(object):
 class TaggedDict(object):
     def _define_tag_constants(local_ns):
         tag_list = [
-            'll_ndk', 'll_ndk_indirect', 'sp_ndk', 'sp_ndk_indirect',
+            'll_ndk', 'll_ndk_indirect',
             'vndk_sp', 'vndk_sp_indirect', 'vndk_sp_indirect_private',
             'vndk',
             'fwk_only', 'fwk_only_rs',
@@ -926,10 +926,10 @@ class TaggedDict(object):
     _define_tag_constants(locals())
     del _define_tag_constants
 
-    NDK = LL_NDK | SP_NDK
-
     _TAG_ALIASES = {
         'hl_ndk': 'fwk_only',  # Treat HL-NDK as FWK-ONLY.
+        'sp_ndk': 'll_ndk',
+        'sp_ndk_indirect': 'll_ndk_indirect',
         'vndk_indirect': 'vndk',  # Legacy
         'vndk_sp_hal': 'vndk_sp',  # Legacy
         'vndk_sp_both': 'vndk_sp',  # Legacy
@@ -944,25 +944,22 @@ class TaggedDict(object):
         return tag
 
     _LL_NDK_VIS = {'ll_ndk', 'll_ndk_indirect'}
-    _SP_NDK_VIS = {'ll_ndk', 'll_ndk_indirect', 'sp_ndk', 'sp_ndk_indirect'}
-    _VNDK_SP_VIS = {'ll_ndk', 'sp_ndk', 'vndk_sp', 'vndk_sp_indirect',
+    _VNDK_SP_VIS = {'ll_ndk', 'vndk_sp', 'vndk_sp_indirect',
                     'vndk_sp_indirect_private', 'fwk_only_rs'}
-    _FWK_ONLY_VIS = {'ll_ndk', 'll_ndk_indirect', 'sp_ndk', 'sp_ndk_indirect',
+    _FWK_ONLY_VIS = {'ll_ndk', 'll_ndk_indirect',
                      'vndk_sp', 'vndk_sp_indirect', 'vndk_sp_indirect_private',
                      'vndk', 'fwk_only', 'fwk_only_rs', 'sp_hal'}
-    _SP_HAL_VIS = {'ll_ndk', 'sp_ndk', 'vndk_sp', 'sp_hal', 'sp_hal_dep'}
+    _SP_HAL_VIS = {'ll_ndk', 'vndk_sp', 'sp_hal', 'sp_hal_dep'}
 
     _TAG_VISIBILITY = {
         'll_ndk': _LL_NDK_VIS,
         'll_ndk_indirect': _LL_NDK_VIS,
-        'sp_ndk': _SP_NDK_VIS,
-        'sp_ndk_indirect': _SP_NDK_VIS,
 
         'vndk_sp': _VNDK_SP_VIS,
         'vndk_sp_indirect': _VNDK_SP_VIS,
         'vndk_sp_indirect_private': _VNDK_SP_VIS,
 
-        'vndk': {'ll_ndk', 'sp_ndk', 'vndk_sp', 'vndk_sp_indirect', 'vndk'},
+        'vndk': {'ll_ndk', 'vndk_sp', 'vndk_sp_indirect', 'vndk'},
 
         'fwk_only': _FWK_ONLY_VIS,
         'fwk_only_rs': _FWK_ONLY_VIS,
@@ -970,13 +967,13 @@ class TaggedDict(object):
         'sp_hal': _SP_HAL_VIS,
         'sp_hal_dep': _SP_HAL_VIS,
 
-        'vnd_only': {'ll_ndk', 'sp_ndk', 'vndk_sp', 'vndk_sp_indirect',
+        'vnd_only': {'ll_ndk', 'vndk_sp', 'vndk_sp_indirect',
                      'vndk', 'sp_hal', 'sp_hal_dep', 'vnd_only'},
 
         'remove': set(),
     }
 
-    del _LL_NDK_VIS, _SP_NDK_VIS, _VNDK_SP_VIS, _FWK_ONLY_VIS, _SP_HAL_VIS
+    del _LL_NDK_VIS, _VNDK_SP_VIS, _FWK_ONLY_VIS, _SP_HAL_VIS
 
     @classmethod
     def is_tag_visible(cls, from_tag, to_tag):
@@ -1025,16 +1022,8 @@ class TaggedDict(object):
                                    self.get_path_tag(to_lib))
 
     @staticmethod
-    def is_ndk(tag_bit):
-        return bool(tag_bit & TaggedDict.NDK)
-
-    @staticmethod
     def is_ll_ndk(tag_bit):
         return bool(tag_bit & TaggedDict.LL_NDK)
-
-    @staticmethod
-    def is_sp_ndk(tag_bit):
-        return bool(tag_bit & TaggedDict.SP_NDK)
 
     @staticmethod
     def is_vndk_sp(tag_bit):
@@ -1198,7 +1187,7 @@ NUM_PARTITIONS = 2
 
 SPLibResult = collections.namedtuple(
         'SPLibResult',
-        'sp_hal sp_hal_dep vndk_sp_hal sp_ndk sp_ndk_indirect '
+        'sp_hal sp_hal_dep vndk_sp_hal ll_ndk ll_ndk_indirect '
         'vndk_sp_both')
 
 
@@ -1483,16 +1472,8 @@ class ELFLinkData(object):
         self.linked_symbols = dict()
 
     @property
-    def is_ndk(self):
-        return TaggedDict.is_ndk(self._tag_bit)
-
-    @property
     def is_ll_ndk(self):
         return TaggedDict.is_ll_ndk(self._tag_bit)
-
-    @property
-    def is_sp_ndk(self):
-        return TaggedDict.is_sp_ndk(self._tag_bit)
 
     @property
     def is_vndk_sp(self):
@@ -1614,7 +1595,7 @@ def sorted_lib_path_list(libs):
     return libs
 
 _VNDK_RESULT_FIELD_NAMES = (
-        'll_ndk', 'll_ndk_indirect', 'sp_ndk', 'sp_ndk_indirect',
+        'll_ndk', 'll_ndk_indirect',
         'vndk_sp', 'vndk_sp_unused', 'vndk_sp_indirect',
         'vndk_sp_indirect_unused', 'vndk_sp_indirect_private', 'vndk',
         'vndk_indirect', 'fwk_only', 'fwk_only_rs', 'sp_hal', 'sp_hal_dep',
@@ -1947,28 +1928,25 @@ class ELFLinker(object):
         """Find all same-process HALs."""
         return set(lib for lib in self.all_libs() if lib.is_sp_hal)
 
-    def compute_sp_ndk(self):
-        """Find all SP-NDK libraries."""
-        return set(lib for lib in self.all_libs() if lib.is_sp_ndk)
 
     def compute_sp_lib(self, generic_refs, ignore_hidden_deps=False):
-        def is_ndk_or_sp_hal(lib):
-            return lib.is_ndk or lib.is_sp_hal
+        def is_ll_ndk_or_sp_hal(lib):
+            return lib.is_ll_ndk or lib.is_sp_hal
 
-        sp_ndk = self.compute_sp_ndk()
-        sp_ndk_closure = self.compute_deps_closure(
-                sp_ndk, is_ndk_or_sp_hal, ignore_hidden_deps)
-        sp_ndk_indirect = sp_ndk_closure - sp_ndk
+        ll_ndk = set(lib for lib in self.all_libs() if lib.is_ll_ndk)
+        ll_ndk_closure = self.compute_deps_closure(
+                ll_ndk, is_ll_ndk_or_sp_hal, ignore_hidden_deps)
+        ll_ndk_indirect = ll_ndk_closure - ll_ndk
 
-        def is_ndk(lib):
-            return lib.is_ndk
+        def is_ll_ndk(lib):
+            return lib.is_ll_ndk
 
         sp_hal = self.compute_predefined_sp_hal()
         sp_hal_closure = self.compute_deps_closure(
-                sp_hal, is_ndk, ignore_hidden_deps)
+                sp_hal, is_ll_ndk, ignore_hidden_deps)
 
         def is_aosp_lib(lib):
-            return (not generic_refs or \
+            return (not generic_refs or
                     generic_refs.classify_lib(lib) != GenericRefs.NEW_LIB)
 
         vndk_sp_hal = set()
@@ -1979,12 +1957,12 @@ class ELFLinker(object):
             else:
                 sp_hal_dep.add(lib)
 
-        vndk_sp_both = sp_ndk_indirect & vndk_sp_hal
-        sp_ndk_indirect -= vndk_sp_both
+        vndk_sp_both = ll_ndk_indirect & vndk_sp_hal
+        ll_ndk_indirect -= vndk_sp_both
         vndk_sp_hal -= vndk_sp_both
 
-        return SPLibResult(sp_hal, sp_hal_dep, vndk_sp_hal, sp_ndk,
-                           sp_ndk_indirect, vndk_sp_both)
+        return SPLibResult(sp_hal, sp_hal_dep, vndk_sp_hal, ll_ndk,
+                           ll_ndk_indirect, vndk_sp_both)
 
     def normalize_partition_tags(self, sp_hals, generic_refs):
         def is_system_lib_or_sp_hal(lib):
@@ -2029,9 +2007,8 @@ class ELFLinker(object):
     def compute_degenerated_vndk(self, generic_refs, tagged_paths=None,
                                  action_ineligible_vndk_sp='warn',
                                  action_ineligible_vndk='warn'):
-        # Find LL-NDK and SP-NDK libs.
+        # Find LL-NDK libs.
         ll_ndk = set(lib for lib in self.all_libs() if lib.is_ll_ndk)
-        sp_ndk = set(lib for lib in self.all_libs() if lib.is_sp_ndk)
 
         # Find pre-defined libs.
         fwk_only_rs = set(lib for lib in self.all_libs() if lib.is_fwk_only_rs)
@@ -2063,7 +2040,7 @@ class ELFLinker(object):
             return generic_refs.has_same_name_lib(lib)
 
         def is_not_sp_hal_dep(lib):
-            if lib.is_ll_ndk or lib.is_sp_ndk or lib in sp_hal:
+            if lib.is_ll_ndk or lib in sp_hal:
                 return True
             return is_aosp_lib(lib)
 
@@ -2072,8 +2049,7 @@ class ELFLinker(object):
 
         # Find VNDK-SP libs.
         def is_not_vndk_sp(lib):
-            return lib.is_ll_ndk or lib.is_sp_ndk or lib in sp_hal or \
-                   lib in sp_hal_dep
+            return lib.is_ll_ndk or lib in sp_hal or lib in sp_hal_dep
 
         follow_ineligible_vndk_sp, warn_ineligible_vndk_sp = \
                 self._parse_action_on_ineligible_lib(action_ineligible_vndk_sp)
@@ -2094,8 +2070,7 @@ class ELFLinker(object):
 
         # Find VNDK-SP-Indirect libs.
         def is_not_vndk_sp_indirect(lib):
-            return lib.is_ll_ndk or lib.is_sp_ndk or lib in vndk_sp or \
-                   lib in fwk_only_rs
+            return lib.is_ll_ndk or lib in vndk_sp or lib in fwk_only_rs
 
         vndk_sp_indirect = self.compute_deps_closure(
                 vndk_sp, is_not_vndk_sp_indirect, True)
@@ -2195,8 +2170,7 @@ class ELFLinker(object):
             return result
 
         def is_not_vndk_sp_indirect(lib):
-            return lib.is_ll_ndk or lib.is_sp_ndk or lib in vndk_sp or \
-                   lib in fwk_only_rs
+            return lib.is_ll_ndk or lib in vndk_sp or lib in fwk_only_rs
 
         candidates = collect_vndk_sp_indirect_ext(vndk_sp_ext)
         while candidates:
@@ -2206,8 +2180,7 @@ class ELFLinker(object):
         # Find VNDK libs (a.k.a. system shared libs directly used by vendor
         # partition.)
         def is_not_vndk(lib):
-            if lib.is_ll_ndk or lib.is_sp_ndk or is_vndk_sp_public(lib) or \
-               lib in fwk_only_rs:
+            if lib.is_ll_ndk or is_vndk_sp_public(lib) or lib in fwk_only_rs:
                 return True
             return lib.partition != PT_SYSTEM
 
@@ -2278,28 +2251,19 @@ class ELFLinker(object):
             vndk_ext |= candidates
             candidates = collect_vndk_ext(candidates)
 
-        # Compute LL-NDK-Indirect and SP-NDK-Indirect.
+        # Compute LL-NDK-Indirect.
         def is_not_ll_ndk_indirect(lib):
-            return lib.is_ll_ndk or is_vndk_sp(lib) or is_vndk(lib)
+            return lib.is_ll_ndk or lib.is_sp_hal or is_vndk_sp(lib) or \
+                   is_vndk_sp(lib) or is_vndk(lib)
 
         ll_ndk_indirect = self.compute_deps_closure(
                 ll_ndk, is_not_ll_ndk_indirect, True)
         ll_ndk_indirect -= ll_ndk
 
-        def is_not_sp_ndk_indirect(lib):
-            return lib.is_ll_ndk or lib.is_sp_ndk or lib.is_sp_hal or \
-                   lib in ll_ndk_indirect or is_vndk_sp(lib) or is_vndk(lib)
-
-        sp_ndk_indirect = self.compute_deps_closure(
-                sp_ndk, is_not_sp_ndk_indirect, True)
-        sp_ndk_indirect -= sp_ndk
-
         # Return the VNDK classifications.
         return VNDKResult(
                 ll_ndk=ll_ndk,
                 ll_ndk_indirect=ll_ndk_indirect,
-                sp_ndk=sp_ndk,
-                sp_ndk_indirect=sp_ndk_indirect,
                 vndk_sp=vndk_sp,
                 vndk_sp_indirect=vndk_sp_indirect,
                 # vndk_sp_indirect_private=vndk_sp_indirect_private,
@@ -3004,7 +2968,7 @@ class DepsCommand(ELFGraphCommand):
         parser.add_argument('--module-info')
 
     def main(self, args):
-        generic_refs, graph, tagged_paths, vndk_lib_dirs  = \
+        generic_refs, graph, tagged_paths, vndk_lib_dirs = \
                 self.create_from_args(args)
 
         module_info = ModuleInfo.load_from_path_or_default(args.module_info)
@@ -3100,7 +3064,7 @@ class DepsClosureCommand(ELFGraphCommand):
         # Define the exclusion filter.
         if args.exclude_ndk:
             def is_excluded_libs(lib):
-                return lib.is_ndk or lib in excluded_libs
+                return lib.is_ll_ndk or lib in excluded_libs
         else:
             def is_excluded_libs(lib):
                 return lib in excluded_libs
@@ -3217,7 +3181,7 @@ class ApkDepsCommand(ELFGraphCommand):
                     print('\t' + path)
 
     def main(self, args):
-        generic_refs, graph, tagged_paths, vndk_lib_dirs  = \
+        generic_refs, graph, tagged_paths, vndk_lib_dirs = \
                 self.create_from_args(args)
 
         libnames = self.build_lib_names_dict(graph)
@@ -3257,9 +3221,8 @@ class CheckDepCommand(CheckDepCommandBase):
 
         vendor_libs = set(graph.lib_pt[PT_VENDOR].values())
 
-        eligible_libs = (tagged_libs.ll_ndk | tagged_libs.sp_ndk | \
-                         tagged_libs.vndk_sp | tagged_libs.vndk_sp_indirect | \
-                         tagged_libs.vndk)
+        eligible_libs = (tagged_libs.ll_ndk | tagged_libs.vndk_sp |
+                         tagged_libs.vndk_sp_indirect | tagged_libs.vndk)
 
         delimiter = ''
         for lib in sorted(vendor_libs):
@@ -3267,7 +3230,7 @@ class CheckDepCommand(CheckDepCommandBase):
 
             # Check whether vendor modules depend on extended NDK symbols.
             for dep, symbols in lib.imported_ext_symbols.items():
-                if dep.is_ndk:
+                if dep.is_ll_ndk:
                     num_errors += 1
                     bad_deps.add(dep)
                     for symbol in symbols:
@@ -3316,14 +3279,12 @@ class CheckEligibleListCommand(CheckDepCommandBase):
         """Check whether eligible sets are self-contained."""
         num_errors = 0
 
-        indirect_libs = (tagged_libs.ll_ndk_indirect | \
-                         tagged_libs.sp_ndk_indirect | \
-                         tagged_libs.vndk_sp_indirect_private | \
+        indirect_libs = (tagged_libs.ll_ndk_indirect |
+                         tagged_libs.vndk_sp_indirect_private |
                          tagged_libs.fwk_only_rs)
 
-        eligible_libs = (tagged_libs.ll_ndk | tagged_libs.sp_ndk | \
-                         tagged_libs.vndk_sp | tagged_libs.vndk_sp_indirect | \
-                         tagged_libs.vndk)
+        eligible_libs = (tagged_libs.ll_ndk | tagged_libs.vndk_sp |
+                         tagged_libs.vndk_sp_indirect | tagged_libs.vndk)
 
         # Check eligible vndk is self-contained.
         delimiter = ''

@@ -148,19 +148,6 @@ def main():
         update_tag(prefix_core + name, 'VNDK')
         update_tag(prefix_vendor + name, 'VNDK')
 
-    # Workaround for SP-NDK
-    libs = [
-        'libEGL',
-        'libGLESv1_CM',
-        'libGLESv2',
-        'libGLESv3',
-        'libnativewindow',
-        'libsync',
-        'libvulkan',
-    ]
-    for name in libs:
-        update_tag('/system/${LIB}/' + name + '.so', 'SP-NDK')
-
     # Workaround for FWK-ONLY-RS
     libs = [
         'libft2',
