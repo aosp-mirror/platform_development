@@ -438,7 +438,7 @@ AbiDiffHelper::FixupDiffedFieldTypeIds(
   for (auto &field_diff : field_diffs) {
     diffed_fields_dup.emplace_back(*(field_diff.old_field_),
                                    *(field_diff.new_field_));
-    auto it = diffed_fields_dup[diffed_fields_dup.size() - 1];
+    auto &it = diffed_fields_dup[diffed_fields_dup.size() - 1];
     abi_util::RecordFieldIR &old_field = it.first;
     abi_util::RecordFieldIR &new_field = it.second;
     old_field.SetReferencedType(
