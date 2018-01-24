@@ -52,119 +52,7 @@ public class ForegroundService extends Service {
     static final String ACTION_BACKGROUND = "com.example.android.apis.BACKGROUND";
     static final String ACTION_BACKGROUND_WAKELOCK = "com.example.android.apis.BACKGROUND_WAKELOCK";
 
- // BEGIN_INCLUDE(foreground_compatibility)
-    private static final Class<?>[] mSetForegroundSignature = new Class[] {
-        boolean.class};
-    private static final Class<?>[] mStartForegroundSignature = new Class[] {
-        int.class, Notification.class};
-    private static final Class<?>[] mStopForegroundSignature = new Class[] {
-        boolean.class};
-    
     private NotificationManager mNM;
-    private Method mSetForeground;
-    private Method mStartForeground;
-    private Method mStopForeground;
-    private Object[] mSetForegroundArgs = new Object[1];
-    private Object[] mStartForegroundArgs = new Object[2];
-    private Object[] mStopForegroundArgs = new Object[1];
-    
-    void invokeMethod(Method method, Object[] args) {
-        try {
-            method.invoke(this, args);
-        } catch (InvocationTargetException e) {
-            // Should not happen.
-            Log.w("ApiDemos", "Unable to invoke method", e);
-        } catch (IllegalAccessException e) {
-            // Should not happen.
-            Log.w("ApiDemos", "Unable to invoke method", e);
-        }
-    }
-    
-    /**
-     * This is a wrapper around the new startForeground method, using the older
-     * APIs if it is not available.
-     */
-    void startForegroundCompat(int id, Notification notification) {
-        // If we have the new startForeground API, then use it.
-        if (mStartForeground != null) {
-            mStartForegroundArgs[0] = Integer.valueOf(id);
-            mStartForegroundArgs[1] = notification;
-            invokeMethod(mStartForeground, mStartForegroundArgs);
-            return;
-        }
-        
-        // Fall back on the old API.
-        mSetForegroundArgs[0] = Boolean.TRUE;
-        invokeMethod(mSetForeground, mSetForegroundArgs);
-        mNM.notify(id, notification);
-    }
-    
-    /**
-     * This is a wrapper around the new stopForeground method, using the older
-     * APIs if it is not available.
-     */
-    void stopForegroundCompat(int id) {
-        // If we have the new stopForeground API, then use it.
-        if (mStopForeground != null) {
-            mStopForegroundArgs[0] = Boolean.TRUE;
-            invokeMethod(mStopForeground, mStopForegroundArgs);
-            return;
-        }
-        
-        // Fall back on the old API.  Note to cancel BEFORE changing the
-        // foreground state, since we could be killed at that point.
-        mNM.cancel(id);
-        mSetForegroundArgs[0] = Boolean.FALSE;
-        invokeMethod(mSetForeground, mSetForegroundArgs);
-    }
-    
-    @Override
-    public void onCreate() {
-        mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-        try {
-            mStartForeground = getClass().getMethod("startForeground",
-                    mStartForegroundSignature);
-            mStopForeground = getClass().getMethod("stopForeground",
-                    mStopForegroundSignature);
-            return;
-        } catch (NoSuchMethodException e) {
-            // Running on an older platform.
-            mStartForeground = mStopForeground = null;
-        }
-        try {
-            mSetForeground = getClass().getMethod("setForeground",
-                    mSetForegroundSignature);
-        } catch (NoSuchMethodException e) {
-            throw new IllegalStateException(
-                    "OS doesn't have Service.startForeground OR Service.setForeground!");
-        }
-    }
-
-    @Override
-    public void onDestroy() {
-        handleDestroy();
-        // Make sure our notification is gone.
-        stopForegroundCompat(R.string.foreground_service_started);
-    }
-// END_INCLUDE(foreground_compatibility)
-
-// BEGIN_INCLUDE(start_compatibility)
-    // This is the old onStart method that will be called on the pre-2.0
-    // platform.  On 2.0 or later we override onStartCommand() so this
-    // method will not be called.
-    @Override
-    public void onStart(Intent intent, int startId) {
-        handleCommand(intent);
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        handleCommand(intent);
-        // We want this service to continue running until it is explicitly
-        // stopped, so return sticky.
-        return START_STICKY;
-    }
-// END_INCLUDE(start_compatibility)
 
     private PowerManager.WakeLock mWakeLock;
     private Handler mHandler = new Handler();
@@ -175,7 +63,20 @@ public class ForegroundService extends Service {
         }
     };
 
-    void handleCommand(Intent intent) {
+    @Override
+    public void onCreate() {
+        mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+    }
+
+    @Override
+    public void onDestroy() {
+        handleDestroy();
+        // Make sure our notification is gone.
+        stopForeground(R.string.foreground_service_started);
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
         if (ACTION_FOREGROUND.equals(intent.getAction())
                 || ACTION_FOREGROUND_WAKELOCK.equals(intent.getAction())) {
             // In this sample, we'll use the same text for the ticker and the expanded notification
@@ -194,11 +95,11 @@ public class ForegroundService extends Service {
                     .setContentIntent(contentIntent)  // The intent to send when clicked
                     .build();
 
-            startForegroundCompat(R.string.foreground_service_started, notification);
-            
+            startForeground(R.string.foreground_service_started, notification);
+
         } else if (ACTION_BACKGROUND.equals(intent.getAction())
                 || ACTION_BACKGROUND_WAKELOCK.equals(intent.getAction())) {
-            stopForegroundCompat(R.string.foreground_service_started);
+            stopForeground(R.string.foreground_service_started);
         }
 
         if (ACTION_FOREGROUND_WAKELOCK.equals(intent.getAction())
@@ -214,6 +115,10 @@ public class ForegroundService extends Service {
 
         mHandler.removeCallbacks(mPulser);
         mPulser.run();
+
+        // We want this service to continue running until it is explicitly
+        // stopped, so return sticky.
+        return START_STICKY;
     }
 
     void releaseWakeLock() {
