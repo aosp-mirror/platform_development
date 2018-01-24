@@ -413,7 +413,7 @@ See test_defs.xsd for more information.
 <test name="systemui-jank"
     build_path="platform_testing/tests/jank/UbSystemUiJankTests"
     package="android.platform.systemui.tests.jank"
-    runner="android.test.InstrumentationTestRunner"
+    runner="android.support.test.runner.AndroidJUnitRunner "
     continuous="true"
     description="SystemUI jank tests" />
 
