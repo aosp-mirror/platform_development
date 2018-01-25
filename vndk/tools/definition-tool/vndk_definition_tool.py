@@ -882,8 +882,21 @@ class DexFileReader(object):
 
 
     @classmethod
-    def enumerate_dex_strings_apk(cls, apk_file):
-        with zipfile.ZipFile(apk_file, 'r') as zip_file:
+    def _read_first_bytes(cls, apk_file, num_bytes):
+        try:
+            with open(apk_file, 'rb') as fp:
+                return fp.read(num_bytes)
+        except IOError:
+            return b''
+
+    @classmethod
+    def is_zipfile(cls, apk_file_path):
+        magic = cls._read_first_bytes(apk_file_path, 2)
+        return magic == b'PK' and zipfile.is_zipfile(apk_file_path)
+
+    @classmethod
+    def enumerate_dex_strings_apk(cls, apk_file_path):
+        with zipfile.ZipFile(apk_file_path, 'r') as zip_file:
             for name in cls.generate_classes_dex_names():
                 try:
                     with zip_file.open(name) as dex_file:
@@ -3186,7 +3199,7 @@ class ApkDepsCommand(ELFGraphCommand):
 
     def scan_apk_deps(self, libnames, system_dirs, vendor_dirs):
         for ap, path in self._enumerate_paths(system_dirs, vendor_dirs):
-            if not zipfile.is_zipfile(path):
+            if not DexFileReader.is_zipfile(path):
                 continue
             libs = set()
             strs = set(DexFileReader.enumerate_dex_strings_apk(path))
