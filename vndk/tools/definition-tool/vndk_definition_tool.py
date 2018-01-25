@@ -778,6 +778,18 @@ class ELF(object):
         elf._parse_from_dump_buf(buf)
         return elf
 
+    def is_jni_lib(self):
+        """Test whether the ELF file looks like a JNI library."""
+        for name in ['libnativehelper.so', 'libandroid_runtime.so']:
+            if name in self.dt_needed:
+                return True
+        for symbol in itertools.chain(self.imported_symbols,
+                                      self.exported_symbols):
+            if symbol.startswith('JNI_') or symbol.startswith('Java_') or \
+               symbol == 'jniRegisterNativeMethods':
+                return True
+        return False
+
 
 #------------------------------------------------------------------------------
 # APK / Dex File Reader
@@ -3139,10 +3151,21 @@ class ApkDepsCommand(ELFGraphCommand):
             if ext != lib_ext:
                 continue
 
+            if not lib.elf.is_jni_lib():
+                continue
+
             names[name].add(lib)
             names[root].add(lib)
+
             if root.startswith('lib') and len(root) > min_name_len:
-                names[root[3:]].add(lib)
+                # FIXME: libandroid.so is a JNI lib.  However, many apps have
+                # "android" as a constant string literal, thus "android" is
+                # skipped here to reduce the false positives.
+                #
+                # Note: It is fine to exclude libandroid.so because it is only
+                # a user of JNI and it does not define any JNI methods.
+                if root != 'libandroid':
+                    names[root[3:]].add(lib)
         return names
 
     def _enumerate_partition_paths(self, partition, root):
