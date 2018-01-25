@@ -211,7 +211,7 @@ record_types {
   is_anonymous: true
   record_kind: struct_kind
   tag_info {
-    unique_id: "_ZTSN5HelloUt1_Ut_E"
+    unique_id: "Hello::(anonymous)::(anonymous)"
   }
 }
 record_types {
@@ -246,7 +246,7 @@ record_types {
   is_anonymous: true
   record_kind: struct_kind
   tag_info {
-    unique_id: "_ZTSN5HelloUt1_E"
+    unique_id: "Hello::(anonymous)"
   }
 }
 record_types {
@@ -298,7 +298,7 @@ record_types {
   access: public_access
   record_kind: struct_kind
   tag_info {
-    unique_id: "_ZTS5Hello"
+    unique_id: "Hello"
   }
 }
 record_types {
