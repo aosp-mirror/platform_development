@@ -401,6 +401,13 @@ functions {
   linker_set_key: "_ZN17HighVolumeSpeaker6ListenEv"
   access: public_access
 }
+global_vars {
+  name: "HighVolumeSpeaker::global_unprotected_id"
+  source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h"
+  linker_set_key: "_ZN17HighVolumeSpeaker21global_unprotected_idE"
+  referenced_type: "type-2"
+  access: public_access
+}
 elf_functions {
   name: "_Z26test_virtual_function_callP12SuperSpeaker"
 }
