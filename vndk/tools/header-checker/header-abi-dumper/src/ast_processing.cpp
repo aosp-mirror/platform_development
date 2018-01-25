@@ -51,7 +51,8 @@ bool HeaderASTVisitor::VisitRecordDecl(const clang::RecordDecl *decl) {
   if (!decl->isThisDeclarationADefinition() ||
       decl->getTypeForDecl()->isDependentType() ||
       decl->isAnonymousStructOrUnion() ||
-      !decl->hasNameForLinkage()) {
+      !decl->hasNameForLinkage() ||
+      !decl->isExternallyVisible()) {
     return true;
   }
   RecordDeclWrapper record_decl_wrapper(
