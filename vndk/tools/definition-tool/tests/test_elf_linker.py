@@ -282,33 +282,32 @@ class ELFLinkerTest(unittest.TestCase):
         # LL-NDK (should be excluded from result)
         gb.add_multilib(PT_SYSTEM, 'libc')
 
-        # SP-Both VNDK-SP
+        libEGL_32, libEGL_64 = \
+                gb.add_multilib(PT_SYSTEM, 'libEGL',
+                                dt_needed=['libc.so', 'libutils.so'])
+
+        # LL-NDK dependencies
+        gb.add_multilib(PT_SYSTEM, 'libutils',
+                        dt_needed=['libc.so', 'libcutils.so'])
+
+        # VNDK-SP used by both LL-NDK and SP-HAL
         gb.add_multilib(PT_SYSTEM, 'libsp_both_vs')
 
-        # SP-NDK VNDK-SP
+        # VNDK-SP used by LL-NDK
         gb.add_multilib(PT_SYSTEM, 'libcutils_dep', dt_needed=['libc.so'])
         gb.add_multilib(PT_SYSTEM, 'libcutils',
                         dt_needed=['libc.so', 'libcutils_dep.so',
                                    'libsp_both_vs.so'])
 
-        # SP-NDK dependencies
-        gb.add_multilib(PT_SYSTEM, 'libutils',
-                        dt_needed=['libc.so', 'libcutils.so'])
-
-        # SP-NDK
-        libEGL_32, libEGL_64 = \
-                gb.add_multilib(PT_SYSTEM, 'libEGL',
-                                dt_needed=['libc.so', 'libutils.so'])
+        # VNDK-SP used by SP-HAL
+        gb.add_multilib(PT_SYSTEM, 'libhidlbase')
+        gb.add_multilib(PT_SYSTEM, 'libhidlmemory',
+                        dt_needed=['libhidlbase.so', 'libsp_both_vs.so'])
 
         # SP-HAL dependencies
         gb.add_multilib(PT_VENDOR, 'libllvm_vendor_dep')
         gb.add_multilib(PT_VENDOR, 'libllvm_vendor',
                         dt_needed=['libc.so', 'libllvm_vendor_dep.so'])
-
-        # SP-HAL VNDK-SP
-        gb.add_multilib(PT_SYSTEM, 'libhidlbase')
-        gb.add_multilib(PT_SYSTEM, 'libhidlmemory',
-                        dt_needed=['libhidlbase.so', 'libsp_both_vs.so'])
 
         # SP-HAL
         libEGL_chipset_32, libEGL_chipset_64 = \
@@ -334,34 +333,37 @@ class ELFLinkerTest(unittest.TestCase):
         self.assertEqual(2 * 1, len(sp_lib.sp_hal))
         self.assertEqual(2 * 2, len(sp_lib.sp_hal_dep))
         self.assertEqual(2 * 2, len(sp_lib.vndk_sp_hal))
-        self.assertEqual(2 * 1, len(sp_lib.sp_ndk))
-        self.assertEqual(2 * 3, len(sp_lib.sp_ndk_indirect))
+        self.assertEqual(2 * 2, len(sp_lib.ll_ndk))
+        self.assertEqual(2 * 3, len(sp_lib.ll_ndk_indirect))
         self.assertEqual(2 * 1, len(sp_lib.vndk_sp_both))
 
         sp_hal = self._get_paths_from_nodes(sp_lib.sp_hal)
         sp_hal_dep = self._get_paths_from_nodes(sp_lib.sp_hal_dep)
         vndk_sp_hal = self._get_paths_from_nodes(sp_lib.vndk_sp_hal)
 
-        sp_ndk = self._get_paths_from_nodes(sp_lib.sp_ndk)
-        sp_ndk_indirect = self._get_paths_from_nodes(sp_lib.sp_ndk_indirect)
+        ll_ndk = self._get_paths_from_nodes(sp_lib.ll_ndk)
+        ll_ndk_indirect = self._get_paths_from_nodes(sp_lib.ll_ndk_indirect)
 
         vndk_sp_both = self._get_paths_from_nodes(sp_lib.vndk_sp_both)
 
         for lib_dir in ('lib', 'lib64'):
-            # SP-Both
+            # VNDK-SP used by both LL-NDK and SP-HAL
             self.assertIn('/system/{}/libsp_both_vs.so'.format(lib_dir),
                           vndk_sp_both)
 
-            # SP-NDK dependencies
+            # VNDK-SP used by LL-NDK
             self.assertIn('/system/{}/libcutils.so'.format(lib_dir),
-                          sp_ndk_indirect)
+                          ll_ndk_indirect)
             self.assertIn('/system/{}/libcutils_dep.so'.format(lib_dir),
-                          sp_ndk_indirect)
+                          ll_ndk_indirect)
             self.assertIn('/system/{}/libutils.so'.format(lib_dir),
-                          sp_ndk_indirect)
+                          ll_ndk_indirect)
 
-            # SP-NDK
-            self.assertIn('/system/{}/libEGL.so'.format(lib_dir), sp_ndk)
+            # VNDK-SP used by SP-HAL
+            self.assertIn('/system/{}/libhidlbase.so'.format(lib_dir),
+                          vndk_sp_hal)
+            self.assertIn('/system/{}/libhidlmemory.so'.format(lib_dir),
+                          vndk_sp_hal)
 
             # SP-HAL dependencies
             self.assertIn('/vendor/{}/libllvm_vendor.so'.format(lib_dir),
@@ -369,23 +371,20 @@ class ELFLinkerTest(unittest.TestCase):
             self.assertIn('/vendor/{}/libllvm_vendor_dep.so'.format(lib_dir),
                           sp_hal_dep)
 
-            # SP-HAL VNDK-SP
-            self.assertIn('/system/{}/libhidlbase.so'.format(lib_dir),
-                          vndk_sp_hal)
-            self.assertIn('/system/{}/libhidlmemory.so'.format(lib_dir),
-                          vndk_sp_hal)
-
             # SP-HAL
             self.assertIn('/vendor/{}/egl/libEGL_chipset.so'.format(lib_dir),
                           sp_hal)
 
-            # LL-NDK must be excluded.
+            # LL-NDK
+            self.assertIn('/system/{}/libEGL.so'.format(lib_dir), ll_ndk)
+            self.assertIn('/system/{}/libc.so'.format(lib_dir), ll_ndk)
+
+            # LL-NDK must not in sp_hal, sp_hal_dep, and vndk_sp_hal.
             libc_path = '/system/{}/libc.so'.format(lib_dir)
             self.assertNotIn(libc_path, sp_hal)
             self.assertNotIn(libc_path, sp_hal_dep)
             self.assertNotIn(libc_path, vndk_sp_hal)
-            self.assertNotIn(libc_path, sp_ndk)
-            self.assertNotIn(libc_path, sp_ndk_indirect)
+            self.assertNotIn(libc_path, ll_ndk_indirect)
 
 
     def test_link_vndk_ver_dirs(self):
