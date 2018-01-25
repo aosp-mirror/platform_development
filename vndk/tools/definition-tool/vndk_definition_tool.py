@@ -59,7 +59,7 @@ else:
             res = super(Py3Bytes, self).__getitem__(key)
             if type(key) == int:
                 return ord(res)
-            return res
+            return Py3Bytes(res)
 
     def get_py3_bytes(buf):
         return Py3Bytes(buf)
@@ -905,23 +905,49 @@ class DexFileReader(object):
                 except KeyError:
                     break
 
+    @classmethod
+    def is_vdex_file(cls, vdex_file_path):
+        return vdex_file_path.endswith('.vdex')
+
+    VdexHeader = create_struct('VdexHeader', (
+        ('magic', '4s'),
+        ('version', '4s'),
+        ('number_of_dex_files', 'I'),
+        ('dex_size', 'I'),
+        ('verifier_deps_size', 'I'),
+        ('quickening_info_size', 'I'),
+    ))
 
     @classmethod
-    def dump_dex_file(cls, dex_file):
-        dex_file_stat = os.fstat(dex_file.fileno())
-        if not dex_file_stat.st_size:
-            raise ValueError('empty file')
+    def enumerate_dex_strings_vdex_buf(cls, buf):
+        buf = get_py3_bytes(buf)
+        vdex_header = cls.VdexHeader.unpack_from(buf, offset=0)
 
-        with mmap(dex_file.fileno(), dex_file_stat.st_size,
-                  access=ACCESS_READ) as buf:
-            for s in cls.enumerate_dex_strings_buf(buf):
-                print(repr(s))
+        quickening_table_off_size = 0
+        if vdex_header.version > b'010\x00':
+            quickening_table_off_size = 4
 
+        # Skip vdex file header size
+        offset = cls.VdexHeader.struct_size
+
+        # Skip dex file checksums size
+        offset += 4 * vdex_header.number_of_dex_files
+
+        for i in range(vdex_header.number_of_dex_files):
+            # Skip quickening_table_off size
+            offset += quickening_table_off_size
+
+            dex_header = cls.Header.unpack_from(buf, offset)
+            dex_file_end = offset + dex_header.file_size
+            dex_file_buf = buf[offset:dex_file_end]
+            for s in cls.enumerate_dex_strings_buf(dex_file_buf):
+                yield s
+            offset = (dex_file_end + 3) // 4 * 4
 
     @classmethod
-    def dump_apk_file(cls, apk_file):
-        for s in cls.enumerate_dex_strings_apk(apk_file):
-            print(repr(s))
+    def enumerate_dex_strings_vdex(cls, vdex_file_path):
+            with open(vdex_file_path, 'rb') as vdex_file:
+                return cls.enumerate_dex_strings_vdex_buf(vdex_file.read())
 
 
 #------------------------------------------------------------------------------
@@ -3198,13 +3224,23 @@ class ApkDepsCommand(ELFGraphCommand):
                 yield (ap, path)
 
     def scan_apk_deps(self, libnames, system_dirs, vendor_dirs):
+        results = []
+
         for ap, path in self._enumerate_paths(system_dirs, vendor_dirs):
-            if not DexFileReader.is_zipfile(path):
+            # Read the dex file from various file formats
+            if DexFileReader.is_zipfile(path):
+                strs = set(DexFileReader.enumerate_dex_strings_apk(path))
+            elif DexFileReader.is_vdex_file(path):
+                strs = set(DexFileReader.enumerate_dex_strings_vdex(path))
+            else:
                 continue
-            libs = set()
-            strs = set(DexFileReader.enumerate_dex_strings_apk(path))
+
+            # Skip the file that does not call System.loadLibrary()
             if 'loadLibrary' not in strs:
                 continue
+
+            # Collect libraries from string tables
+            libs = set()
             for string in strs:
                 try:
                     libs.update(libnames[string])
@@ -3212,9 +3248,10 @@ class ApkDepsCommand(ELFGraphCommand):
                     pass
 
             if libs:
-                print(ap)
-                for path in sorted_lib_path_list(libs):
-                    print('\t' + path)
+                results.append((ap, sorted_lib_path_list(libs)))
+
+        results.sort()
+        return results
 
     def main(self, args):
         generic_refs, graph, tagged_paths, vndk_lib_dirs = \
@@ -3222,7 +3259,11 @@ class ApkDepsCommand(ELFGraphCommand):
 
         libnames = self.build_lib_names_dict(graph)
 
-        self.scan_apk_deps(libnames, args.system, args.vendor)
+        for ap, paths in self.scan_apk_deps(libnames, args.system, args.vendor):
+            print(ap)
+            for path in paths:
+                print('\t' + path)
+
         return 0
 
 
