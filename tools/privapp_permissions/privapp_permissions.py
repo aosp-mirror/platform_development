@@ -318,8 +318,8 @@ class Resources(object):
                 priv_app_dir = self.adb.pull('/system/priv-app/')
             except subprocess.CalledProcessError:
                 raise MissingResourceError(
-                    'Directory "%s" could not be located on device "%s".' %
-                    (device_apk, self.adb.serial))
+                    'Directory "/system/priv-app" could not be pulled from on '
+                    'device "%s".' % self.adb.serial)
 
         return get_output('find %s -name "*.apk"' % priv_app_dir).split()
 
@@ -426,7 +426,6 @@ def create_permission_file(resources):
             results[pkg_name] = sorted(priv_perms)
 
     print_xml(results, apps_redefine_base)
-    return True
 
 
 def print_xml(results, apps_redefine_base, fd=sys.stdout):
