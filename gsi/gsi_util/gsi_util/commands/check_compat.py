@@ -17,7 +17,7 @@ import argparse
 import logging
 
 from gsi_util.checkers.checker import Checker
-from gsi_util.mounters.composite_mounter import CompositeMounter
+from gsi_util.commands.common import image_sources
 
 
 class CheckReporter(object):
@@ -67,15 +67,11 @@ def do_check_compat(args):
   logging.info('==== CHECK_COMPAT ====')
   logging.info('  system=%s vendor=%s', args.system, args.vendor)
 
-  # args.system and args.vendor are required
-  mounter = CompositeMounter()
-  mounter.add_by_mount_target('system', args.system)
-  mounter.add_by_mount_target('vendor', args.vendor)
-
   logging.debug('Checking ID list: %s', args.ID)
   check_list = Checker.make_check_list_with_ids(args.ID) if len(
       args.ID) else Checker.get_all_check_list()
 
+  mounter = image_sources.create_composite_mounter_by_args(args)
   with mounter as file_accessor:
     checker = Checker(file_accessor)
     check_result = checker.check(check_list)
@@ -88,17 +84,9 @@ def do_check_compat(args):
   logging.info('==== DONE ====')
 
 
-DUMP_DESCRIPTION = """'check_compat' command checks compatibility images
+_CHECK_COMPAT_DESC = """'check_compat' command checks compatibility images
 
-You must assign at least one image source by SYSTEM and/or VENDOR.
-Image source could be:
-
- adb[:SERIAL_NUM]: form the device which be connected with adb
-  image file name: from the given image file, e.g. the file name of a GSI.
-                   If a image file is assigned to be the source of system
-                   image, gsu_util will detect system-as-root automatically.
-      folder name: from the given folder, e.g. the system/vendor folder in an
-                   Android build out folder.
+You must assign both image sources by SYSTEM and VENDOR.
 
 You could use command 'list_check' to query all IDs:
 
@@ -121,22 +109,17 @@ def setup_command_args(parser):
   check_compat_parser = parser.add_parser(
       'check_compat',
       help='checks compatibility between a system and a vendor',
-      description=DUMP_DESCRIPTION,
+      description=_CHECK_COMPAT_DESC,
       formatter_class=argparse.RawTextHelpFormatter)
   check_compat_parser.add_argument(
-      '--system',
-      type=str,
-      required=True,
-      help='system image file name, folder name or "adb"')
-  check_compat_parser.add_argument(
-      '--vendor',
-      type=str,
-      required=True,
-      help='vendor image file name, folder name or "adb"')
-  check_compat_parser.add_argument(
+      '-s',
       '--only-summary',
       action='store_true',
       help='only output the summary result')
+  image_sources.add_argument_group(
+      check_compat_parser,
+      required_system=True,
+      required_vendor=True)
   check_compat_parser.add_argument(
       'ID',
       type=str,

@@ -18,7 +18,7 @@ import logging
 import shutil
 import sys
 
-from gsi_util.mounters.composite_mounter import CompositeMounter
+from gsi_util.commands.common import image_sources
 
 
 def do_pull(args):
@@ -30,12 +30,7 @@ def do_pull(args):
 
   source, dest = args.SOURCE, args.DEST
 
-  mounter = CompositeMounter()
-  if args.system:
-    mounter.add_by_mount_target('system', args.system)
-  if args.vendor:
-    mounter.add_by_mount_target('vendor', args.vendor)
-
+  mounter = image_sources.create_composite_mounter_by_args(args)
   with mounter as file_accessor:
     with file_accessor.prepare_file(source) as filename:
       if not filename:
@@ -47,18 +42,9 @@ def do_pull(args):
   logging.info('==== DONE ====')
 
 
-DUMP_DESCRIPTION = """'pull' command pulls a file from the give image.
+_PULL_DESCRIPTION = ("""'pull' command pulls a file from the give image.
 
 You must assign at least one image source by SYSTEM and/or VENDOR.
-Image source could be:
-
- adb[:SERIAL_NUM]: pull the file form the device which be connected with adb
-  image file name: pull the file from the given image file, e.g. the file name
-                   of a GSI.
-                   If a image file is assigned to be the source of system
-                   image, gsu_util will detect system-as-root automatically.
-      folder name: pull the file from the given folder, e.g. the system/vendor
-                   folder in a Android build out folder.
 
 SOURCE is the full path file name to pull, which must start with '/' and
 includes the mount point. ex.
@@ -71,28 +57,25 @@ Some usage examples:
     $ ./gsi_util.py pull --system adb:AB0123456789 /system/manifest.xml
     $ ./gsi_util.py pull --vendor adb /vendor/compatibility_matrix.xml
     $ ./gsi_util.py pull --system system.img /system/build.prop
-    $ ./gsi_util.py pull --system my/out/folder/system /system/build.prop"""
+    $ ./gsi_util.py pull --system my/out/folder/system /system/build.prop""")
 
 
 def setup_command_args(parser):
   # command 'pull'
-  dump_parser = parser.add_parser(
+  pull_parser = parser.add_parser(
       'pull',
       help='pull a file from the given image',
-      description=DUMP_DESCRIPTION,
+      description=_PULL_DESCRIPTION,
       formatter_class=argparse.RawTextHelpFormatter)
-  dump_parser.add_argument(
-      '--system', type=str, help='system image file name, folder name or "adb"')
-  dump_parser.add_argument(
-      '--vendor', type=str, help='vendor image file name, folder name or "adb"')
-  dump_parser.add_argument(
+  image_sources.add_argument_group(pull_parser)
+  pull_parser.add_argument(
       'SOURCE',
       type=str,
       help='the full path file name in given image to be pull')
-  dump_parser.add_argument(
+  pull_parser.add_argument(
       'DEST',
       nargs='?',
       default='.',
       type=str,
       help='the file name or directory to save the pulled file (default: .)')
-  dump_parser.set_defaults(func=do_pull)
+  pull_parser.set_defaults(func=do_pull)
