@@ -18,6 +18,7 @@ The ImageMounter implements the abstract calss BaseMounter,
 It can get files from an image file. e.g., system.img or vendor.img.
 """
 
+import errno
 import logging
 import os
 import shutil
