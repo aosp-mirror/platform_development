@@ -22,7 +22,7 @@ of $OUT folder in an Android build environment.
 import logging
 import os
 
-import base_mounter
+from gsi_util.mounters import base_mounter
 
 
 class _FolderFileAccessor(base_mounter.BaseFileAccessor):
