@@ -28,11 +28,12 @@ template <>
 bool DiffWrapper<abi_util::RecordTypeIR>::DumpDiff(
     abi_util::DiffMessageIR::DiffKind diff_kind) {
   std::deque<std::string> type_queue;
-  if (oldp_->GetName() != newp_->GetName()) {
+  if (oldp_->GetUniqueId() != newp_->GetUniqueId()) {
     llvm::errs() << "Comparing two different unreferenced records\n";
     return false;
   }
-  if (!type_cache_->insert(oldp_->GetName()).second) {
+  if (!type_cache_->insert(
+      oldp_->GetSelfType() + newp_->GetSelfType()).second) {
     return true;
   }
   CompareRecordTypes(oldp_, newp_, &type_queue, diff_kind);
@@ -43,11 +44,12 @@ template <>
 bool DiffWrapper<abi_util::EnumTypeIR>::DumpDiff(
     abi_util::DiffMessageIR::DiffKind diff_kind) {
   std::deque<std::string> type_queue;
-  if (oldp_->GetName() != newp_->GetName()) {
+  if (oldp_->GetUniqueId() != newp_->GetUniqueId()) {
     llvm::errs() << "Comparing two different unreferenced enums\n";
     return false;
   }
-  if (!type_cache_->insert(oldp_->GetName()).second) {
+  if (!type_cache_->insert(
+      oldp_->GetSelfType() + newp_->GetSelfType()).second) {
     return true;
   }
   CompareEnumTypes(oldp_, newp_, &type_queue, diff_kind);
