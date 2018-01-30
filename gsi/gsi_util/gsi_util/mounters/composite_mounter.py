@@ -29,10 +29,10 @@ mounted. See _MounterFactory.create_by_mount_target() for the detail.
 import logging
 import os
 
-from adb_mounter import AdbMounter
-import base_mounter
-from folder_mounter import FolderMounter
-from image_mounter import ImageMounter
+from gsi_util.mounters import adb_mounter
+from gsi_util.mounters import base_mounter
+from gsi_util.mounters import folder_mounter
+from gsi_util.mounters import image_mounter
 
 
 class _MounterFactory(object):
@@ -61,17 +61,17 @@ class _MounterFactory(object):
 
     if mount_target == 'adb' or mount_target.startswith('adb:'):
       (_, _, serial_num) = mount_target.partition(':')
-      return AdbMounter(serial_num)
+      return adb_mounter.AdbMounter(serial_num)
 
     path_prefix = '/{}/'.format(partition)
 
     if os.path.isdir(mount_target):
-      return FolderMounter(mount_target, path_prefix)
+      return folder_mounter.FolderMounter(mount_target, path_prefix)
 
     if os.path.isfile(mount_target):
       if partition == 'system':
-        path_prefix = ImageMounter.DETECT_SYSTEM_AS_ROOT
-      return ImageMounter(mount_target, path_prefix)
+        path_prefix = image_mounter.ImageMounter.DETECT_SYSTEM_AS_ROOT
+      return image_mounter.ImageMounter(mount_target, path_prefix)
 
     raise ValueError('Unknown target "{}"'.format(mount_target))
 

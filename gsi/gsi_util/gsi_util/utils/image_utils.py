@@ -21,21 +21,3 @@ from gsi_util.utils.cmd_utils import run_command
 def unsparse(output_filename, input_filename):
   logging.debug('Unsparsing %s...', input_filename)
   run_command(['simg2img', input_filename, output_filename])
-
-
-def mount(mount_point, image_filename):
-  logging.debug('Mounting...')
-  run_command(
-      ['mount', '-t', 'ext4', '-o', 'loop', image_filename, mount_point],
-      sudo=True)
-
-
-def unmount(mount_point):
-  logging.debug('Unmounting...')
-  run_command(['umount', '-l', mount_point], sudo=True, raise_on_error=False)
-
-
-def copy_file(dest, src):
-  run_command(['cp', src, dest], sudo=True)
-  # This is a hack to give access permission without root
-  run_command(['chmod', '+444', dest], sudo=True)
