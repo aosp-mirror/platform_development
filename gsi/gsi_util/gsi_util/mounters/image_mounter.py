@@ -11,20 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Provides class ImageMounter.
 
-The ImageMounter implements the abstract calss BaseMounter,
+The ImageMounter implements the abstract class BaseMounter,
 It can get files from an image file. e.g., system.img or vendor.img.
 """
 
+import errno
 import logging
 import os
 import shutil
 import tempfile
 
-import gsi_util.mounters.base_mounter as base_mounter
-import gsi_util.utils.image_utils as image_utils
+from gsi_util.mounters import base_mounter
+from gsi_util.utils import debugfs
+from gsi_util.utils import image_utils
 
 
 class _ImageFileAccessor(base_mounter.BaseFileAccessor):
@@ -39,24 +40,24 @@ class _ImageFileAccessor(base_mounter.BaseFileAccessor):
       if exc.errno != errno.EEXIST:
         raise
 
-  def __init__(self, path_prefix, mount_point, temp_dir):
+  def __init__(self, path_prefix, raw_image_file, temp_dir):
     super(_ImageFileAccessor, self).__init__(path_prefix)
-    self._mount_point = mount_point
+    self._raw_image_file = raw_image_file
     self._temp_dir = temp_dir
 
   # override
   def _handle_prepare_file(self, filename_in_storage):
-    mount_filename = os.path.join(self._mount_point, filename_in_storage)
-    filename = os.path.join(self._temp_dir, filename_in_storage)
-    logging.info('Prepare file %s -> %s', filename_in_storage, filename)
-    if not os.path.isfile(mount_filename):
+    filespec = os.path.join('/', filename_in_storage)
+    out_file = os.path.join(self._temp_dir, filename_in_storage)
+    logging.info('Prepare file %s -> %s', filename_in_storage, out_file)
+
+    self._make_parent_dirs(out_file)
+
+    if not debugfs.dump(self._raw_image_file, filespec, out_file):
       logging.error('File does not exist: %s', filename_in_storage)
       return None
 
-    self._make_parent_dirs(filename)
-    image_utils.copy_file(filename, mount_filename)
-
-    return base_mounter.MounterFile(filename)
+    return base_mounter.MounterFile(out_file)
 
 
 class ImageMounter(base_mounter.BaseMounter):
@@ -71,24 +72,30 @@ class ImageMounter(base_mounter.BaseMounter):
     self._path_prefix = path_prefix
 
   @classmethod
-  def _detect_system_as_root(cls, mount_point):
-    """Returns True if the image layout on mount_point is system-as-root."""
-    logging.debug('Checking system-as-root on mount point %s...', mount_point)
+  def _detect_system_as_root(cls, raw_image_file):
+    """Returns True if the image layout of raw_image_file is system-as-root."""
+    logging.debug('Checking system-as-root in %s...', raw_image_file)
 
     system_without_root = True
     for filename in cls._SYSTEM_FILES:
-      if not os.path.isfile(os.path.join(mount_point, filename)):
+      file_spec = os.path.join('/', filename)
+      if debugfs.get_type(raw_image_file, file_spec) != 'regular':
         system_without_root = False
         break
 
     system_as_root = True
     for filename in cls._SYSTEM_FILES:
-      if not os.path.isfile(os.path.join(mount_point, 'system', filename)):
+      file_spec = os.path.join('/system', filename)
+      if debugfs.get_type(raw_image_file, file_spec) != 'regular':
         system_as_root = False
         break
 
     ret = system_as_root and not system_without_root
-    logging.debug('  Result=%s', ret)
+    logging.debug(
+        'Checked system-as-root=%s system_without_root=%s result=%s',
+        system_as_root,
+        system_without_root,
+        ret)
     return ret
 
   # override
@@ -99,16 +106,11 @@ class ImageMounter(base_mounter.BaseMounter):
     unsparsed_filename = unsparsed_file.name
     image_utils.unsparse(unsparsed_filename, self._image_filename)
 
-    # Mount it
-    mount_point = tempfile.mkdtemp()
-    logging.debug('Create a temp mount point %s', mount_point)
-    image_utils.mount(mount_point, unsparsed_filename)
-
     # detect system-as-root if need
     path_prefix = self._path_prefix
     if path_prefix == self.DETECT_SYSTEM_AS_ROOT:
       path_prefix = '/' if self._detect_system_as_root(
-          mount_point) else '/system/'
+          unsparsed_filename) else '/system/'
 
     # Create a temp dir for the target of copying file from image
     temp_dir = tempfile.mkdtemp()
@@ -116,10 +118,9 @@ class ImageMounter(base_mounter.BaseMounter):
 
     # Keep data to be removed on __exit__
     self._unsparsed_file = unsparsed_file
-    self._mount_point = mount_point
     self._temp_dir = tempfile.mkdtemp()
 
-    return _ImageFileAccessor(path_prefix, mount_point, temp_dir)
+    return _ImageFileAccessor(path_prefix, unsparsed_filename, temp_dir)
 
   # override
   def _handle_unmount(self):
@@ -127,11 +128,6 @@ class ImageMounter(base_mounter.BaseMounter):
       logging.debug('Removing temp dir: %s', self._temp_dir)
       shutil.rmtree(self._temp_dir)
       del self._temp_dir
-
-    if hasattr(self, '_mount_point'):
-      image_utils.unmount(self._mount_point)
-      shutil.rmtree(self._mount_point)
-      del self._mount_point
 
     if hasattr(self, '_unsparsed_file'):
       # will also delete the temp file implicitly
