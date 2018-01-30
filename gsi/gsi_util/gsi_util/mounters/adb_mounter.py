@@ -24,8 +24,8 @@ import os
 import shutil
 import tempfile
 
-import gsi_util.mounters.base_mounter as base_mounter
-import gsi_util.utils.adb_utils as adb_utils
+from gsi_util.mounters import base_mounter
+from gsi_util.utils import adb_utils
 
 
 class _AdbFileAccessor(base_mounter.BaseFileAccessor):
