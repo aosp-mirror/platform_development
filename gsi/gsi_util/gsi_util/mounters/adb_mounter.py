@@ -29,6 +29,7 @@ from gsi_util.utils import adb_utils
 
 
 class _AdbFileAccessor(base_mounter.BaseFileAccessor):
+  """Provides file access over an adb connection."""
 
   def __init__(self, temp_dir, serial_num):
     super(_AdbFileAccessor, self).__init__()
@@ -64,6 +65,7 @@ class AdbMounter(base_mounter.BaseMounter):
   def __init__(self, serial_num=None):
     super(AdbMounter, self).__init__()
     self._serial_num = serial_num
+    self._temp_dir = None
 
   # override
   def _handle_mount(self):
@@ -76,7 +78,7 @@ class AdbMounter(base_mounter.BaseMounter):
 
   # override
   def _handle_unmount(self):
-    if hasattr(self, '_temp_dir'):
-      logging.debug('Remove temp dir: %s', self._temp_dir)
+    if self._temp_dir:
+      logging.debug('Removing temp dir: %s', self._temp_dir)
       shutil.rmtree(self._temp_dir)
-      del self._temp_dir
+      self._temp_dir = None

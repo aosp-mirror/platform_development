@@ -17,23 +17,25 @@
 
 import logging
 
-from gsi_util.utils.cmd_utils import run_command
+from gsi_util.utils import cmd_utils
 
 
 def checkvintf(manifest, matrix):
-  """call checkvintf.
+  """Invokes host command 'checkvintf' to do VINTF check.
+
+  Usage of the command: checkvintf <manifest.xml> <matrix.xml>.
 
   Args:
-    manifest: manifest file
-    matrix: matrix file
+    manifest: the manifest XML file.
+    matrix: the matrix XML file.
 
   Returns:
-    A tuple with (check_result, error_message)
+    A tuple of (result_ok, stderr).
   """
   logging.debug('checkvintf %s %s...', manifest, matrix)
 
-  # 'read_stdout=True' to disable output
-  (returncode, _, stderrdata) = run_command(
+  # Uses 'read_stdout' and 'read_stderr' to disable output.
+  returncode, _, stderrdata = cmd_utils.run_command(
       ['checkvintf', manifest, matrix],
       raise_on_error=False,
       read_stdout=True,
