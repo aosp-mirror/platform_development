@@ -348,6 +348,7 @@
     <string name="alarm_controller">This demonstrates how to schedule and handle
         one-shot and repeating alarms.</string>
     <string name="one_shot_alarm">One Shot Alarm</string>
+    <string name="one_shot_while_idle_alarm">One Shot While-Idle Alarm</string>
     <string name="start_repeating_alarm">Start Repeating Alarm</string>
     <string name="stop_repeating_alarm">Stop Repeating Alarm</string>
     <string name="one_shot_scheduled">One-shot alarm will go off in 30 seconds based on
