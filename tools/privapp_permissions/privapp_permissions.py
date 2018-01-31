@@ -483,7 +483,7 @@ def extract_pkg_and_requested_permissions(aapt, apk_path):
     package_name = None
     raw_lines = txt.split('\n')
     for line in raw_lines:
-        regex = r"uses-permission: name='([\S]+)'"
+        regex = r"uses-permission.*: name='([\S]+)'"
         matches = re.search(regex, line)
         if matches:
             name = matches.group(1)
