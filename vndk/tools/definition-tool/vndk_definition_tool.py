@@ -2474,6 +2474,86 @@ class GenericRefs(object):
 
 
 #------------------------------------------------------------------------------
+# APK Dep
+#------------------------------------------------------------------------------
+def _build_lib_names_dict(graph, min_name_len=6, lib_ext='.so'):
+    names = collections.defaultdict(set)
+    for lib in graph.all_libs():
+        name = os.path.basename(lib.path)
+        root, ext = os.path.splitext(name)
+
+        if ext != lib_ext:
+            continue
+
+        if not lib.elf.is_jni_lib():
+            continue
+
+        names[name].add(lib)
+        names[root].add(lib)
+
+        if root.startswith('lib') and len(root) > min_name_len:
+            # FIXME: libandroid.so is a JNI lib.  However, many apps have
+            # "android" as a constant string literal, thus "android" is
+            # skipped here to reduce the false positives.
+            #
+            # Note: It is fine to exclude libandroid.so because it is only
+            # a user of JNI and it does not define any JNI methods.
+            if root != 'libandroid':
+                names[root[3:]].add(lib)
+    return names
+
+
+def _enumerate_partition_paths(partition, root):
+    prefix_len = len(root) + 1
+    for base, dirs, files in os.walk(root):
+        for filename in files:
+            path = os.path.join(base, filename)
+            android_path = posixpath.join('/', partition, path[prefix_len:])
+            yield (android_path, path)
+
+
+def _enumerate_paths(system_dirs, vendor_dirs):
+    for root in system_dirs:
+        for ap, path in _enumerate_partition_paths('system', root):
+            yield (ap, path)
+    for root in vendor_dirs:
+        for ap, path in _enumerate_partition_paths('vendor', root):
+            yield (ap, path)
+
+
+def scan_apk_dep(graph, system_dirs, vendor_dirs):
+    libnames = _build_lib_names_dict(graph)
+    results = []
+
+    for ap, path in _enumerate_paths(system_dirs, vendor_dirs):
+        # Read the dex file from various file formats
+        if DexFileReader.is_zipfile(path):
+            strs = set(DexFileReader.enumerate_dex_strings_apk(path))
+        elif DexFileReader.is_vdex_file(path):
+            strs = set(DexFileReader.enumerate_dex_strings_vdex(path))
+        else:
+            continue
+
+        # Skip the file that does not call System.loadLibrary()
+        if 'loadLibrary' not in strs:
+            continue
+
+        # Collect libraries from string tables
+        libs = set()
+        for string in strs:
+            try:
+                libs.update(libnames[string])
+            except KeyError:
+                pass
+
+        if libs:
+            results.append((ap, sorted_lib_path_list(libs)))
+
+    results.sort()
+    return results
+
+
+#------------------------------------------------------------------------------
 # Module Info
 #------------------------------------------------------------------------------
 
@@ -3181,101 +3261,35 @@ class ApkDepsCommand(ELFGraphCommand):
     def add_argparser_options(self, parser):
         super(ApkDepsCommand, self).add_argparser_options(parser)
 
-    def build_lib_names_dict(self, graph, min_name_len=6, lib_ext='.so'):
-        names = collections.defaultdict(set)
-        for lib in graph.all_libs():
-            name = os.path.basename(lib.path)
-            root, ext = os.path.splitext(name)
-
-            if ext != lib_ext:
-                continue
-
-            if not lib.elf.is_jni_lib():
-                continue
-
-            names[name].add(lib)
-            names[root].add(lib)
-
-            if root.startswith('lib') and len(root) > min_name_len:
-                # FIXME: libandroid.so is a JNI lib.  However, many apps have
-                # "android" as a constant string literal, thus "android" is
-                # skipped here to reduce the false positives.
-                #
-                # Note: It is fine to exclude libandroid.so because it is only
-                # a user of JNI and it does not define any JNI methods.
-                if root != 'libandroid':
-                    names[root[3:]].add(lib)
-        return names
-
-    def _enumerate_partition_paths(self, partition, root):
-        prefix_len = len(root) + 1
-        for base, dirs, files in os.walk(root):
-            for filename in files:
-                path = os.path.join(base, filename)
-                android_path = posixpath.join('/', partition, path[prefix_len:])
-                yield (android_path, path)
-
-    def _enumerate_paths(self, system_dirs, vendor_dirs):
-        for root in system_dirs:
-            for ap, path in self._enumerate_partition_paths('system', root):
-                yield (ap, path)
-        for root in vendor_dirs:
-            for ap, path in self._enumerate_partition_paths('vendor', root):
-                yield (ap, path)
-
-    def scan_apk_deps(self, libnames, system_dirs, vendor_dirs):
-        results = []
-
-        for ap, path in self._enumerate_paths(system_dirs, vendor_dirs):
-            # Read the dex file from various file formats
-            if DexFileReader.is_zipfile(path):
-                strs = set(DexFileReader.enumerate_dex_strings_apk(path))
-            elif DexFileReader.is_vdex_file(path):
-                strs = set(DexFileReader.enumerate_dex_strings_vdex(path))
-            else:
-                continue
-
-            # Skip the file that does not call System.loadLibrary()
-            if 'loadLibrary' not in strs:
-                continue
-
-            # Collect libraries from string tables
-            libs = set()
-            for string in strs:
-                try:
-                    libs.update(libnames[string])
-                except KeyError:
-                    pass
-
-            if libs:
-                results.append((ap, sorted_lib_path_list(libs)))
-
-        results.sort()
-        return results
-
     def main(self, args):
         generic_refs, graph, tagged_paths, vndk_lib_dirs = \
                 self.create_from_args(args)
 
-        libnames = self.build_lib_names_dict(graph)
+        apk_deps = scan_apk_dep(graph, args.system, args.vendor)
 
-        for ap, paths in self.scan_apk_deps(libnames, args.system, args.vendor):
-            print(ap)
-            for path in paths:
-                print('\t' + path)
+        for apk_path, dep_paths in apk_deps:
+            print(apk_path)
+            for dep_path in dep_paths:
+                print('\t' + dep_path)
 
         return 0
 
 
 class CheckDepCommandBase(ELFGraphCommand):
+    def __init__(self, *args, **kwargs):
+        super(CheckDepCommandBase, self).__init__(*args, **kwargs)
+        self.delimiter = ''
+
     def add_argparser_options(self, parser):
         super(CheckDepCommandBase, self).add_argparser_options(parser)
-
         parser.add_argument('--module-info')
 
-    @staticmethod
-    def _dump_dep(lib, bad_deps, module_info, delimiter):
-        print(delimiter, end='')
+    def _print_delimiter(self):
+        print(self.delimiter, end='')
+        self.delimiter = '\n'
+
+    def _dump_dep(self, lib, bad_deps, module_info):
+        self._print_delimiter()
         print(lib.path)
         for module_path in module_info.get_module_path(lib.path):
             print('\tMODULE_PATH:', module_path)
@@ -3286,11 +3300,27 @@ class CheckDepCommandBase(ELFGraphCommand):
             for symbol in lib.get_dep_linked_symbols(dep):
                 print('\t\t' + symbol)
 
+    def _dump_apk_dep(self, apk_path, bad_deps, module_info):
+        self._print_delimiter()
+        print(apk_path)
+        for module_path in module_info.get_module_path(apk_path):
+            print('\tMODULE_PATH:', module_path)
+        for dep_path in sorted(bad_deps):
+            print('\t' + dep_path)
+            for module_path in module_info.get_module_path(dep_path):
+                print('\t\tMODULE_PATH:', module_path)
+
 
 class CheckDepCommand(CheckDepCommandBase):
     def __init__(self):
         super(CheckDepCommand, self).__init__(
                 'check-dep', help='Check the eligible dependencies')
+
+    def add_argparser_options(self, parser):
+        super(CheckDepCommand, self).add_argparser_options(parser)
+
+        parser.add_argument('--check-apk', action='store_true',
+                            help='Check JNI dependencies in APK files')
 
     def _check_vendor_dep(self, graph, tagged_libs, module_info):
         """Check whether vendor libs are depending on non-eligible libs."""
@@ -3301,7 +3331,6 @@ class CheckDepCommand(CheckDepCommandBase):
         eligible_libs = (tagged_libs.ll_ndk | tagged_libs.vndk_sp |
                          tagged_libs.vndk_sp_indirect | tagged_libs.vndk)
 
-        delimiter = ''
         for lib in sorted(vendor_libs):
             bad_deps = set()
 
@@ -3326,9 +3355,33 @@ class CheckDepCommand(CheckDepCommandBase):
                           file=sys.stderr)
 
             if bad_deps:
-                self._dump_dep(lib, bad_deps, module_info, delimiter)
-                delimiter = '\n'
+                self._dump_dep(lib, bad_deps, module_info)
 
+        return num_errors
+
+    def _check_apk_dep(self, graph, system_dirs, vendor_dirs, module_info):
+        num_errors = 0
+
+        def is_in_system_partition(path):
+            return path.startswith('/system/') or \
+                   path.startswith('/product/') or \
+                   path.startswith('/oem/')
+
+        apk_deps = scan_apk_dep(graph, system_dirs, vendor_dirs)
+
+        for apk_path, dep_paths in apk_deps:
+            apk_in_system = is_in_system_partition(apk_path)
+            bad_deps = []
+            for dep_path in dep_paths:
+                dep_in_system = is_in_system_partition(dep_path)
+                if apk_in_system != dep_in_system:
+                    bad_deps.append(dep_path)
+                    print('error: apk "{}" has cross-partition dependency '
+                          'lib "{}".'.format(apk_path, dep_path),
+                          file=sys.stderr)
+                    num_errors += 1
+            if bad_deps:
+                self._dump_apk_dep(apk_path, sorted(bad_deps), module_info)
         return num_errors
 
     def main(self, args):
@@ -3343,6 +3396,10 @@ class CheckDepCommand(CheckDepCommandBase):
         module_info = ModuleInfo.load_from_path_or_default(args.module_info)
 
         num_errors = self._check_vendor_dep(graph, tagged_libs, module_info)
+
+        if args.check_apk:
+            num_errors += self._check_apk_dep(graph, args.system, args.vendor,
+                                              module_info)
 
         return 0 if num_errors == 0 else 1
 
@@ -3364,7 +3421,6 @@ class CheckEligibleListCommand(CheckDepCommandBase):
                          tagged_libs.vndk_sp_indirect | tagged_libs.vndk)
 
         # Check eligible vndk is self-contained.
-        delimiter = ''
         for lib in sorted(eligible_libs):
             bad_deps = []
             for dep in lib.deps_all:
@@ -3375,8 +3431,7 @@ class CheckEligibleListCommand(CheckDepCommandBase):
                     bad_deps.append(dep)
                     num_errors += 1
             if bad_deps:
-                self._dump_dep(lib, bad_deps, module_info, delimiter)
-                delimiter = '\n'
+                self._dump_dep(lib, bad_deps, module_info)
 
         # Check the libbinder dependencies.
         for lib in sorted(eligible_libs):
@@ -3388,8 +3443,7 @@ class CheckEligibleListCommand(CheckDepCommandBase):
                     bad_deps.append(dep)
                     num_errors += 1
             if bad_deps:
-                self._dump_dep(lib, bad_deps, module_info, delimiter)
-                delimiter = '\n'
+                self._dump_dep(lib, bad_deps, module_info)
 
         return num_errors
 

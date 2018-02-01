@@ -12,8 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Provide namedtuple CheckResultItem."""
+"""A namedtuple to store a check result."""
 
 from collections import namedtuple
 
-CheckResultItem = namedtuple('CheckResultItem', 'name result message')
+
+CheckResultItem = namedtuple('CheckResultItem', 'title result_ok stderr')
+"""The tuple to represent a check result.
+
+  Props:
+    title: A string to summarize the underlying check.
+      e.g., 'SEPolicy check', 'Binder bitness check', etc.
+    result_ok: True if the check passed, false otherwise.
+    stderr: The stderr of the underlying executed command(s).
+"""
