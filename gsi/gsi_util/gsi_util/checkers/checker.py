@@ -21,6 +21,7 @@ Two major functionalities:
 
 from collections import namedtuple
 
+from gsi_util.checkers import sepolicy_checker
 from gsi_util.checkers import vintf_checker
 
 CheckListItem = namedtuple('CheckListItem', 'check_item checker_class')
@@ -29,6 +30,7 @@ CheckListItem = namedtuple('CheckListItem', 'check_item checker_class')
 # list to the caller.
 _CHECK_LIST = (
     CheckListItem('vintf', vintf_checker.VintfChecker),
+    CheckListItem('sepolicy', sepolicy_checker.SepolicyChecker),
 )
 
 
