@@ -12,31 +12,67 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Provides class VintfChecker."""
+"""Runs Treble compatibility check between /system and /vendor.
 
-from gsi_util.checkers.check_result import CheckResultItem
-import gsi_util.utils.vintf_utils as vintf_utils
+One of the major goal of project Treble is to do system-only OTA across
+major Android releases (e.g., O -> P). VINTF check is to ensure a given
+system.img can work well on a vendor.img, including HALs versions match,
+kernel version match, SEPolicy version match, etc. See the following link
+for more details:
+
+  https://source.android.com/devices/architecture/vintf/
+"""
+
+from gsi_util.checkers import check_result
+from gsi_util.utils import vintf_utils
 
 
-class VintfChecker(object):
+class VintfChecker(object):   # pylint: disable=too-few-public-methods
+  """The checker to perform VINTF check between /system and /vendor."""
 
-  _SYSTEM_MANIFEST_XML = '/system/manifest.xml'
-  _VENDOR_MATRIX_XML = '/vendor/compatibility_matrix.xml'
-  _REQUIRED_FILES = [_SYSTEM_MANIFEST_XML, _VENDOR_MATRIX_XML]
+  # A dict to specify required VINTF checks.
+  # Each item is a tuple containing a (manifest, matrix) pair for the match
+  # check.
+  _REQUIRED_CHECKS = {
+      'Framework manifest match': ('/system/manifest.xml',
+                                   '/vendor/compatibility_matrix.xml'),
+      'Device manifest match': ('/vendor/manifest.xml',
+                                '/system/compatibility_matrix.xml'),
+  }
 
   def __init__(self, file_accessor):
+    """Inits a VINTF checker with a given file_accessor.
+
+    Args:
+      file_accessor: Provides file access to get files that are installed
+      on /system and /vendor partition of a device.
+    """
     self._file_accessor = file_accessor
 
   def check(self):
-    fa = self._file_accessor
+    """Performs the Treble VINTF compatibility check.
 
-    with fa.prepare_multi_files(self._REQUIRED_FILES) as [manifest, matrix]:
-      if not manifest:
-        raise RuntimeError('Cannot open manifest file: {}'.format(
-            self._SYSTEM_MANIFEST_XML))
-      if not matrix:
-        raise RuntimeError('Cannot open matrix file: {}'.format(
-            self._VENDOR_MATRIX_XML))
+    Returns:
+      A list of check_result.CheckResultItem() tuples.
 
-      result, error_message = vintf_utils.checkvintf(manifest, matrix)
-      return [CheckResultItem('checkvintf', result, error_message)]
+    Raises:
+      RuntimeError: An error occurred when accessing required files.
+    """
+    check_result_items = []
+
+    for title in self._REQUIRED_CHECKS:
+      manifest_filename, matrix_filename = self._REQUIRED_CHECKS[title]
+
+      with self._file_accessor.prepare_multi_files(
+          [manifest_filename, matrix_filename]) as [manifest, matrix]:
+        if not manifest:
+          raise RuntimeError('Failed to open: {}'.format(manifest_filename))
+        if not matrix:
+          raise RuntimeError('Failed to open: {}'.format(matrix_filename))
+
+        # Runs the check item and appends the result.
+        result_ok, stderr = vintf_utils.checkvintf(manifest, matrix)
+        check_result_items.append(
+            check_result.CheckResultItem(title, result_ok, stderr))
+
+    return check_result_items
