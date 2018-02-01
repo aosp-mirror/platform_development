@@ -12,46 +12,86 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Provide class Checker and maintain the checking list."""
+"""class Checker implementation.
+
+Two major functionalities:
+  1. Gets full or partial check list.
+  2. Runs a given check list and returns the results.
+"""
 
 from collections import namedtuple
 
-from gsi_util.checkers.vintf_checker import VintfChecker
+from gsi_util.checkers import vintf_checker
 
-CheckListItem = namedtuple('CheckListItem', 'id checker_class')
+CheckListItem = namedtuple('CheckListItem', 'check_item checker_class')
 
-_CHECK_LIST = [
-    CheckListItem('checkvintf', VintfChecker),
-]
+# Uses a tuple to prevent functions in this module from returning a mutable
+# list to the caller.
+_CHECK_LIST = (
+    CheckListItem('vintf', vintf_checker.VintfChecker),
+)
 
 
 class Checker(object):
-  """Implement methods and utils to checking compatibility a FileAccessor."""
+  """The main checker to maintain and run a full or partial check list."""
 
   def __init__(self, file_accessor):
+    """Inits a checker with a given file_accessor.
+
+    Args:
+      file_accessor: Provides file access for the checker to retrieve
+        required files for a given check item. e.g., getting compatibility
+        matrix files for VINTF compatibility check, getting SEPolicy files
+        for SEPolicy merge test.
+    """
     self._file_accessor = file_accessor
 
   def check(self, check_list):
+    """Runs all check items specified in the check_list.
+
+    Args:
+      check_list: A list of CheckListItem() containing multiple checkers.
+
+    Returns:
+      A list of CheckResultItem(), by concatenating the check results of
+      each item in the check_list. Note that one CheckListItem() might
+      generate more than one CheckResultItem()s. e.g., Three check list
+      items in the check_list might return five check result items.
+    """
     check_result_items = []
 
-    for x in check_list:
-      checker = x.checker_class(self._file_accessor)
-      check_result_items += checker.check()
+    for check_item in check_list:
+      the_checker = check_item.checker_class(self._file_accessor)
+      # A checker might return multiple CheckResultItem()s.
+      check_result_items += the_checker.check()
 
     return check_result_items
 
   @staticmethod
-  def make_check_list_with_ids(ids):
+  def make_check_list(check_items):
+    """Returns a list of CheckListItem() by the given item names.
+
+    Args:
+      check_items: A list of CheckListItem().
+
+    Raises:
+      RuntimeError: When any input check_item is unknown or duplicated.
+    """
     check_list = []
-    for check_id in ids:
-      # Find the first item matched check_id
-      matched_check_item = next((x for x in _CHECK_LIST if x.id == check_id),
-                                None)
-      if not matched_check_item:
-        raise RuntimeError('Unknown check ID: "{}"'.format(check_id))
-      check_list.append(matched_check_item)
+
+    for check_item in check_items:
+      matched_items = [x for x in _CHECK_LIST if x.check_item == check_item]
+      if not matched_items:
+        raise RuntimeError('Unknown check item: {}'.format(check_item))
+      # Checks there is exactly one match.
+      if len(matched_items) != 1:
+        raise RuntimeError(
+            'Duplicated check items: {} in the check list'.format(check_item))
+      check_list.append(matched_items[0])  # Appends the only matched item.
+
     return check_list
 
   @staticmethod
   def get_all_check_list():
+    """Returns the default check list, which contains full check items."""
     return _CHECK_LIST
