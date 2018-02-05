@@ -1146,8 +1146,16 @@ class RecordTypeDiffIR : public DiffMessageIR {
     fields_removed_ = std::move(fields_removed);
   }
 
+  void SetFieldsAdded(std::vector<const RecordFieldIR *> &&fields_added) {
+    fields_added_ = std::move(fields_added);
+  }
+
   const std::vector<const RecordFieldIR *> &GetFieldsRemoved() const {
     return fields_removed_;
+  }
+
+  const std::vector<const RecordFieldIR *> &GetFieldsAdded() const {
+    return fields_added_;
   }
 
   void SetVTableLayoutDiff(std::unique_ptr<VTableLayoutDiffIR> &&vtable_diffs) {
@@ -1191,6 +1199,7 @@ class RecordTypeDiffIR : public DiffMessageIR {
   std::unique_ptr<VTableLayoutDiffIR> vtable_diffs_;
   std::vector<RecordFieldDiffIR> field_diffs_;
   std::vector<const RecordFieldIR *> fields_removed_;
+  std::vector<const RecordFieldIR *> fields_added_;
   std::unique_ptr<AccessSpecifierDiffIR> access_diff_;
   std::unique_ptr<CXXBaseSpecifierDiffIR> base_specifier_diffs_;
   // Template Diffs are not needed since they will show up in the linker set
