@@ -15,6 +15,7 @@ import argparse
 import csv
 import datetime
 import multiprocessing
+import multiprocessing.pool
 import os
 import re
 import subprocess
@@ -227,7 +228,8 @@ def filter_exclusion_list(projects, exclusion_file):
   return filtered
 
 
-def get_all_projects_stats(upstream_source_tree, downstream_source_tree,
+def get_all_projects_stats(upstream_source_tree,
+                           downstream_source_tree,
                            exclusion_file):
   """Finds the stats of all project in a source tree.
 
@@ -239,47 +241,76 @@ def get_all_projects_stats(upstream_source_tree, downstream_source_tree,
     exclusion_file: A string with the path to the exclusion file.
 
   Returns:
-    A dict of matching upstream and downstream projects
+    A list of dicts of matching upstream and downstream projects
     including stats for projects that matches.
   """
-  all_project_stats = []
+  upstream_projects, downstream_projects = map(
+    lambda t: get_projects_with_filter(t, exclusion_file),
+    (upstream_source_tree, downstream_source_tree),
+  )
 
-  upstream_projects = get_projects(upstream_source_tree)
-  downstream_projects = get_projects(downstream_source_tree)
+  return multiprocessing.pool.ThreadPool(
+    processes=multiprocessing.cpu_count()
+  ).map(
+    lambda match: stats_from_match(
+      upstream_projects,
+      downstream_projects,
+      match,
+    ),
+    match_projects(upstream_projects, downstream_projects),
+  )
 
-  upstream_projects = filter_exclusion_list(upstream_projects, exclusion_file)
-  downstream_projects = filter_exclusion_list(downstream_projects,
-                                              exclusion_file)
 
-  project_matches = match_projects(upstream_projects, downstream_projects)
+def stats_from_match(upstream_projects, downstream_projects, match):
+  """Finds the stats of a single match of two projects.
 
-  for match in project_matches:
-    upstream_project_name = match['upstream']
-    downstream_project_name = match['downstream']
-    project_stats = get_project_stats(
-        upstream_projects.get(upstream_project_name, None),
-        downstream_projects.get(downstream_project_name, None))
-    status = ''
+  Args:
+    upstream_projects: list of dicts obtained from get_project_stats
+    downstream_projects: list of dicts obtained from get_project_stats
+    match: a single match dict obtained from match_projects
+
+  Returns:
+    A dict of stats for this particular match
+  """
+
+  def display_status(upstream_project_name,
+                      downstream_project_name,
+                      project_stats):
     if not upstream_project_name:
-      status = 'Downstream Only Projects'
+      return 'Downstream Only Projects'
     elif not downstream_project_name:
-      status = 'Upstream Only Projects'
+      return 'Upstream Only Projects'
     elif project_stats['file'] == 0:
-      status = 'Intact Projects'
+      return 'Intact Projects'
     elif upstream_project_name == downstream_project_name:
-      status = 'Modified Projects'
-    else:
-      status = 'Forked Projects'
+      return 'Modified Projects'
+    return 'Forked Projects'
 
-    project_stats['status'] = status
-    project_stats['upstream'] = upstream_project_name
-    project_stats['downstream'] = downstream_project_name
-    project_stats['downstream_path'] = downstream_projects.get(
-        downstream_project_name)
+  upstream_project_name = match['upstream']
+  downstream_project_name = match['downstream']
 
-    all_project_stats.append(project_stats)
+  project_stats = get_project_stats(
+    upstream_projects.get(upstream_project_name),
+    downstream_projects.get(downstream_project_name),
+  )
+  project_stats.update({
+    'status': display_status(
+      upstream_project_name,
+      downstream_project_name,
+      project_stats
+    ),
+    'downstream_path': downstream_projects.get(downstream_project_name)
+  })
+  project_stats.update(match)
+  return project_stats
 
-  return all_project_stats
+
+def get_projects_with_filter(source_tree, exclusion_file):
+  """ Helper function to get projects with an exclusion file filter applied."""
+  return filter_exclusion_list(
+    get_projects(source_tree),
+    exclusion_file,
+  )
 
 
 def find_root_commits_in_path(path):
