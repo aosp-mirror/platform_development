@@ -45,7 +45,10 @@ module.exports = {
         test: /\.proto$/,
         loader: 'proto-loader',
         options: {
-          paths: [path.resolve(__dirname, '../../..')]
+          paths: [
+            path.resolve(__dirname, '../../..'),
+            path.resolve(__dirname, '../../../external/protobuf/src')
+          ]
         }
       },
       {
