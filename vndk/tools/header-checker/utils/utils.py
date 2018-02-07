@@ -22,6 +22,9 @@ SO_EXT = '.so'
 SOURCE_ABI_DUMP_EXT_END = '.lsdump'
 SOURCE_ABI_DUMP_EXT = SO_EXT + SOURCE_ABI_DUMP_EXT_END
 
+DEFAULT_CPPFLAGS = ['-x', 'c++', '-std=c++11']
+DEFAULT_CFLAGS = ['-std=gnu99']
+
 TARGET_ARCHS = ['arm', 'arm64', 'x86', 'x86_64', 'mips', 'mips64']
 
 def get_reference_dump_dir(reference_dump_dir_stem,
@@ -85,11 +88,17 @@ def run_header_abi_dumper(input_path, remove_absolute_paths, cflags=[],
 
 def run_header_abi_dumper_on_file(input_path, output_path,
                                   export_include_dirs = [], cflags =[]):
+    input_name, input_ext = os.path.splitext(input_path)
     cmd = ['header-abi-dumper', '-o', output_path, input_path,]
     for dir in export_include_dirs:
         cmd += ['-I', dir]
     cmd += ['--']
     cmd += cflags
+    if input_ext == '.cpp' or input_ext == '.cc' or input_ext == '.h':
+        cmd += DEFAULT_CPPFLAGS
+    else:
+        cmd += DEFAULT_CFLAGS
+
     for dir in BUILTIN_HEADERS_DIR:
         cmd += ['-isystem', dir]
     # export includes imply local includes

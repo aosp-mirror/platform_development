@@ -14,7 +14,6 @@ from utils import (
         run_abi_diff, run_header_abi_dumper)
 from module import Module
 from gen_all import make_and_copy_reference_dumps
-from gen_all import DEFAULT_CFLAGS
 
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 INPUT_DIR = os.path.join(SCRIPT_DIR, 'input')
@@ -64,7 +63,7 @@ class MyTest(unittest.TestCase):
     def create_ref_dump(self, name, dir_name, target_arch):
         module_bare = Module.get_test_module_by_name(name)
         module = Module.mutate_module_for_arch(module_bare, target_arch)
-        return make_and_copy_reference_dumps(module, DEFAULT_CFLAGS,
+        return make_and_copy_reference_dumps(module, [],
                                              dir_name)
 
     def get_or_create_ref_dump(self, name, target_arch, dir_name, create):
@@ -134,6 +133,12 @@ class MyTest(unittest.TestCase):
         self.prepare_and_run_abi_diff_all_archs(
             "libc_and_cpp", "libc_and_cpp_with_unused_struct", 1,
             ['-check-all-apis'])
+
+    def test_libc_and_cpp_with_unused_struct_and_libc_and_cpp_with_unused_cstruct(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libc_and_cpp_with_unused_struct",
+            "libc_and_cpp_with_unused_cstruct", 0,
+            ['-check-all-apis', '-allow-unreferenced-changes'])
 
     def test_libc_and_cpp_and_libc_and_cpp_with_unused_struct_check_all_advice(
         self):
