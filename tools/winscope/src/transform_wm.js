@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-import {transform, nanos_to_string} from './transform.js'
+import {transform, nanos_to_string, get_visible_chip} from './transform.js'
 
 function transform_window(entry) {
+  var chips = [];
   var renderIdentifier = (id) => shortenComponentName(id.title) + "@" + id.hashCode;
+  var visible = entry.windowContainer.visible;
   function transform_rect(rect, label) {
     var r = rect || {};
     return {
@@ -28,9 +30,14 @@ function transform_window(entry) {
         label,
     }
   }
-
   var name = renderIdentifier(entry.identifier)
   var rect = transform_rect(entry.frame, name);
+
+  if (visible) {
+    chips.push(get_visible_chip());
+  } else {
+    rect = undefined;
+  }
 
   return transform({
     obj: entry,
@@ -38,7 +45,9 @@ function transform_window(entry) {
     name,
     children: [],
     rect,
-    highlight: rect
+    highlight: rect,
+    chips: chips,
+    visible: visible,
   });
 }
 
