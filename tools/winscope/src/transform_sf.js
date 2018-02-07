@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-import {transform, nanos_to_string} from './transform.js'
+import {transform, nanos_to_string, get_visible_chip} from './transform.js'
 
 const FLAG_HIDDEN = 0x1;
-var VISIBLE_CHIP = {short: 'V', long: "visible", class: 'default'};
 var RELATIVE_Z_CHIP = {short: 'RelZ',
     long: "Is relative Z-ordered to another surface",
     class: 'warn'};
@@ -48,7 +47,7 @@ function transform_layer(layer, {parentHidden}) {
   var visible = (layer.activeBuffer || layer.type === 'ColorLayer')
       && !hidden && layer.color.a > 0;
   if (visible) {
-    chips.push(VISIBLE_CHIP);
+    chips.push(get_visible_chip());
   } else {
     rect = undefined;
   }
