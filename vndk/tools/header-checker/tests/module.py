@@ -137,6 +137,17 @@ TEST_MODULES = [
         api = 'current',
     ),
     Module(
+        name = 'libc_and_cpp_with_unused_cstruct',
+        srcs = ['integration/c_and_cpp/source1.cpp',
+                'integration/c_and_cpp/source2.c',
+                ],
+        version_script = 'integration/c_and_cpp/map.txt',
+        export_include_dirs = ['integration/c_and_cpp/include'],
+        cflags = ['-DINCLUDE_UNUSED_STRUCTS=1', '-DMAKE_UNUSED_STRUCT_C=1'],
+        arch = '',
+        api = 'current',
+    ),
+    Module(
         name = 'libgolden_cpp',
         srcs = ['integration/cpp/gold/golden_1.cpp',
                 'integration/cpp/gold/high_volume_speaker.cpp',
