@@ -147,4 +147,9 @@ function nanos_to_string(elapsedRealtimeNanos) {
 	return parts.reverse().join('');
 }
 
-export {transform, transform_json, nanos_to_string};
+ // Returns a UI element used highlight a visible entry.
+ function get_visible_chip() {
+	return {short: 'V', long: "visible", class: 'default'};
+ }
+
+export {transform, transform_json, nanos_to_string, get_visible_chip};

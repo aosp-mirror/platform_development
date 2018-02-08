@@ -98,7 +98,7 @@ HeaderAbiDiff::ExtractUserDefinedTypes(
   AbiElementMap<const abi_util::RecordTypeIR *> record_types;
   // Iterate through the ODRListMap, if there is more than 1 element in the
   // list, we cannot really unique the type by name, so skip it. If not, add a
-  // map entry ODRListMapKey -> const Record(Enum)TypeIR *.
+  // map entry UniqueId -> const Record(Enum)TypeIR *.
   for (auto &it : tu->GetODRListMap()) {
     auto &odr_list = it.second;
     if (odr_list.size() != 1) {
@@ -107,12 +107,14 @@ HeaderAbiDiff::ExtractUserDefinedTypes(
     const abi_util::TypeIR *type = *(odr_list.begin());
     switch (type->GetKind()) {
       case abi_util::RecordTypeKind:
-        record_types.emplace(type->GetLinkerSetKey(),
-                             static_cast<const abi_util::RecordTypeIR *>(type));
+        record_types.emplace(
+            static_cast<const abi_util::RecordTypeIR *>(type)->GetUniqueId(),
+            static_cast<const abi_util::RecordTypeIR *>(type));
         break;
       case abi_util::EnumTypeKind:
-        enum_types.emplace(type->GetLinkerSetKey(),
-                           static_cast<const abi_util::EnumTypeIR *>(type));
+        enum_types.emplace(
+            static_cast<const abi_util::EnumTypeIR *>(type)->GetUniqueId(),
+            static_cast<const abi_util::EnumTypeIR *>(type));
         break;
       default:
         // Only user defined types should have ODR list entries.

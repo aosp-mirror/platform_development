@@ -17,7 +17,7 @@ record_types {
   access: public_access
   record_kind: struct_kind
   tag_info {
-    unique_id: "_ZTS11ShouldRepro"
+    unique_id: "ShouldRepro"
   }
 }
 builtin_types {
