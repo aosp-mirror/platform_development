@@ -3,6 +3,8 @@
 import tempfile
 import os
 import subprocess
+import gzip
+import shutil
 
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 AOSP_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, *['..'] * 5))
@@ -48,11 +50,11 @@ def copy_reference_dumps(lib_paths, reference_dir_stem,
 
 def copy_reference_dump(lib_path, reference_dump_dir):
     reference_dump_path = os.path.join(reference_dump_dir,
-                                       os.path.basename(lib_path))
+                                       os.path.basename(lib_path)) + '.gz'
     os.makedirs(os.path.dirname(reference_dump_path), exist_ok=True)
     output_content = read_output_content(lib_path, AOSP_DIR)
-    with open(reference_dump_path, 'w') as f:
-        f.write(output_content)
+    with gzip.open(reference_dump_path, 'wb') as f:
+        f.write(bytes(output_content, 'utf-8'))
     print('Created abi dump at ', reference_dump_path)
     return reference_dump_path
 
@@ -67,6 +69,7 @@ def copy_reference_dump_content(lib_name, output_content,
     os.makedirs(os.path.dirname(reference_dump_path), exist_ok=True)
     with open(reference_dump_path, 'w') as f:
         f.write(output_content)
+
     print('Created abi dump at ', reference_dump_path)
     return reference_dump_path
 
