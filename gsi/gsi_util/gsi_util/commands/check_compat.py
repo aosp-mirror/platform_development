@@ -163,8 +163,7 @@ def setup_command_args(parser):
       help='only output the summary result')
   image_sources.add_argument_group(
       check_compat_parser,
-      required_system=True,
-      required_vendor=True)
+      required_images=['system', 'vendor'])
   check_compat_parser.add_argument(
       'CHECK_ITEM',
       type=str,
