@@ -13,9 +13,11 @@
 # limitations under the License.
 """Provide common implementation of image sources."""
 
+import logging
+
 from gsi_util.mounters import composite_mounter
 
-_DESCRIPTION = """The image sources to be mount targets.
+_DESCRIPTION = """The image sources to be mounted targets.
 
 An image source could be:
 
@@ -29,25 +31,37 @@ An image source could be:
 
 
 def create_composite_mounter_by_args(args):
+  """Creates a CompositeMounter by the images in given args."""
+
+  logging.info('Mount images...')
   mounter = composite_mounter.CompositeMounter()
-  if args.system:
-    mounter.add_by_mount_target('system', args.system)
-  if args.vendor:
-    mounter.add_by_mount_target('vendor', args.vendor)
+  for partition in composite_mounter.SUPPORTED_PARTITIONS:
+    image_source = vars(args)[partition]
+    if image_source:
+      logging.info('  %s=%s', partition, image_source)
+      mounter.add_by_mount_target(partition, image_source)
+
+  if mounter.is_empty():
+    raise RuntimeError('Must give at least one image source.')
+
   return mounter
 
 
-def add_argument_group(parser, required_system=False, required_vendor=False):
-  """Add a argument group into the given parser for image sources."""
+def add_argument_group(parser, required_images=None):
+  """Add a argument group into the given parser for image sources.
+
+  Args:
+    parser: The parser to be added the argument group.
+    required_images: A list contains the required images. e.g.
+      ['system', 'vendor']. Default is no required images.
+  """
+  # To avoid pylint W0102
+  required_images = required_images or []
 
   group = parser.add_argument_group('image sources', _DESCRIPTION)
-  group.add_argument(
-      '--system',
-      type=str,
-      required=required_system,
-      help='system image file name, folder name or "adb"')
-  group.add_argument(
-      '--vendor',
-      type=str,
-      required=required_vendor,
-      help='vendor image file name, folder name or "adb"')
+  for partition in composite_mounter.SUPPORTED_PARTITIONS:
+    group.add_argument(
+        '--' + partition,
+        type=str,
+        required=partition in required_images,
+        help='{} image file name, folder name or "adb"'.format(partition))

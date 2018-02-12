@@ -34,10 +34,10 @@ from gsi_util.mounters import base_mounter
 from gsi_util.mounters import folder_mounter
 from gsi_util.mounters import image_mounter
 
+SUPPORTED_PARTITIONS = ['system', 'vendor', 'odm']
+
 
 class _MounterFactory(object):
-
-  _SUPPORTED_PARTITIONS = ['system', 'vendor']
 
   @classmethod
   def create_by_mount_target(cls, mount_target, partition):
@@ -56,7 +56,7 @@ class _MounterFactory(object):
     Raises:
       ValueError: partiton is not support or mount_target is not exist.
     """
-    if partition not in cls._SUPPORTED_PARTITIONS:
+    if partition not in SUPPORTED_PARTITIONS:
       raise ValueError('Wrong partition name "{}"'.format(partition))
 
     if mount_target == 'adb' or mount_target.startswith('adb:'):
@@ -102,6 +102,9 @@ class CompositeMounter(base_mounter.BaseMounter):
   def __init__(self):
     super(CompositeMounter, self).__init__()
     self._mounters = []
+
+  def is_empty(self):
+    return not self._mounters
 
   # override
   def _handle_mount(self):

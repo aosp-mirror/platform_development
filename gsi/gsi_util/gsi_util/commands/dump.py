@@ -80,9 +80,6 @@ def do_list_dump(_):
 
 def do_dump(args):
   logging.info('==== DUMP ====')
-  logging.info('  system=%s vendor=%s', args.system, args.vendor)
-  if not args.system and not args.vendor:
-    sys.exit('Without system nor vendor.')
 
   logging.debug('Info name list: %s', args.INFO_NAME)
   dump_list = dumper.Dumper.make_dump_list_by_name_list(args.INFO_NAME) if len(
@@ -105,7 +102,7 @@ def do_dump(args):
 
 _DUMP_DESCRIPTION = ("""'dump' command dumps information from given image
 
-You must assign at least one image source by SYSTEM and/or VENDOR.
+You must assign at least one image source.
 
 You could use command 'list_dump' to query all info names:
 
