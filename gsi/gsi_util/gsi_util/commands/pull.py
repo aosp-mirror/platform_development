@@ -23,10 +23,6 @@ from gsi_util.commands.common import image_sources
 
 def do_pull(args):
   logging.info('==== PULL ====')
-  logging.info('  system=%s vendor=%s', args.system, args.vendor)
-
-  if not args.system and not args.vendor:
-    sys.exit('Without system nor vendor.')
 
   source, dest = args.SOURCE, args.DEST
 
@@ -44,7 +40,7 @@ def do_pull(args):
 
 _PULL_DESCRIPTION = ("""'pull' command pulls a file from the give image.
 
-You must assign at least one image source by SYSTEM and/or VENDOR.
+You must assign at least one image source.
 
 SOURCE is the full path file name to pull, which must start with '/' and
 includes the mount point. ex.
