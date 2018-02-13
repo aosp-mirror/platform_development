@@ -1,0 +1,805 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2018 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+"""This module implements a Android.bp parser."""
+
+import collections
+import glob
+import itertools
+import os
+import re
+import sys
+
+
+#------------------------------------------------------------------------------
+# Python 2 compatibility
+#------------------------------------------------------------------------------
+
+if sys.version_info >= (3,):
+    py3_chr = chr  # pylint: disable=invalid-name
+else:
+    def py3_chr(codepoint):
+        """Convert an integer character codepoint into a utf-8 string."""
+        return unichr(codepoint).encode('utf-8')
+
+try:
+    from enum import Enum
+except ImportError:
+    class _Enum(object):  # pylint: disable=too-few-public-methods
+        """A name-value pair for each enumeration."""
+
+        __slot__ = ('name', 'value')
+
+
+        def __init__(self, name, value):
+            """Create a name-value pair."""
+            self.name = name
+            self.value = value
+
+
+        def __repr__(self):
+            """Return the name of the enumeration."""
+            return self.name
+
+
+    class _EnumMeta(type):  # pylint: disable=too-few-public-methods
+        """Metaclass for Enum base class."""
+
+        def __new__(mcs, name, bases, attrs):
+            """Collects enumerations from attributes of the derived classes."""
+            enums = []
+            new_attrs = {'_enums': enums}
+
+            for key, value in attrs.iteritems():
+                if key.startswith('_'):
+                    new_attrs[key] = value
+                else:
+                    item = _Enum(key, value)
+                    enums.append(item)
+                    new_attrs[key] = item
+
+            return type.__new__(mcs, name, bases, new_attrs)
+
+
+        def __iter__(cls):
+            """Iterate the list of enumerations."""
+            return iter(cls._enums)
+
+
+    class Enum(object):  # pylint: disable=too-few-public-methods
+        """Enum base class."""
+        __metaclass__ = _EnumMeta
+
+
+#------------------------------------------------------------------------------
+# Lexer
+#------------------------------------------------------------------------------
+
+class Token(Enum):  # pylint: disable=too-few-public-methods
+    """Token enumerations."""
+
+    EOF = 0
+
+    IDENT = 1
+    LPAREN = 2
+    RPAREN = 3
+    LBRACKET = 4
+    RBRACKET = 5
+    LBRACE = 6
+    RBRACE = 7
+    COLON = 8
+    ASSIGN = 9
+    ASSIGNPLUS = 10
+    PLUS = 11
+    COMMA = 12
+    STRING = 13
+
+    COMMENT = 14
+    SPACE = 15
+
+
+class LexerError(ValueError):
+    """Lexer error exception class."""
+
+    def __init__(self, buf, pos, message):
+        """Create a lexer error exception object."""
+        super(LexerError, self).__init__(message)
+        self.message = message
+        self.line, self.column = Lexer.compute_line_column(buf, pos)
+
+
+    def __str__(self):
+        """Convert lexer error to string representation."""
+        return 'LexerError: {}:{}: {}'.format(
+            self.line, self.column, self.message)
+
+
+class Lexer(object):
+    """Lexer to tokenize the input string."""
+
+    def __init__(self, buf, offset=0):
+        """Tokenize the source code in buf starting from offset.
+
+        Args:
+            buf (string) The source code to be tokenized.
+            offset (int) The position to start.
+        """
+
+        self.buf = buf
+
+        self.start = None
+        self.end = offset
+        self.token = None
+        self.literal = None
+
+        self._next()
+
+
+    def consume(self, *tokens):
+        """Consume one or more token."""
+
+        for token in tokens:
+            if token == self.token:
+                self._next()
+            else:
+                raise LexerError(self.buf, self.start,
+                                 'unexpected token ' + self.token.name)
+
+
+    def _next(self):
+        """Read next non-comment non-space token."""
+
+        buf_len = len(self.buf)
+        while self.end < buf_len:
+            self.start = self.end
+            self.token, self.end, self.literal = self.lex(self.buf, self.start)
+            if self.token != Token.SPACE and self.token != Token.COMMENT:
+                return
+
+        self.start = self.end
+        self.token = Token.EOF
+        self.literal = None
+
+
+    @staticmethod
+    def compute_line_column(buf, pos):
+        """Compute the line number and the column number of a given position in
+        the buffer."""
+
+        prior = buf[0:pos]
+        newline_pos = prior.rfind('\n')
+        if newline_pos == -1:
+            return (1, pos + 1)
+        return (prior.count('\n') + 1, pos - newline_pos)
+
+
+    UNICODE_CHARS_PATTERN = re.compile('[^\\\\\\n"]+')
+
+
+    ESCAPE_CHAR_TABLE = {
+        'a': '\a', 'b': '\b', 'f': '\f', 'n': '\n', 'r': '\r', 't': '\t',
+        'v': '\v', '\\': '\\', '\'': '\'', '\"': '\"',
+    }
+
+
+    OCT_TABLE = {str(i) for i in range(8)}
+
+
+    @staticmethod
+    def decode_oct(buf, offset, start, end):
+        """Read characters from buf[start:end] and interpret them as an octal
+        integer."""
+
+        if end > len(buf):
+            raise LexerError(buf, offset, 'bad octal escape sequence')
+        try:
+            codepoint = int(buf[start:end], 8)
+        except ValueError:
+            raise LexerError(buf, offset, 'bad octal escape sequence')
+        if codepoint > 0xff:
+            raise LexerError(buf, offset, 'bad octal escape sequence')
+        return codepoint
+
+
+    @staticmethod
+    def decode_hex(buf, offset, start, end):
+        """Read characters from buf[start:end] and interpret them as a
+        hexadecimal integer."""
+
+        if end > len(buf):
+            raise LexerError(buf, offset, 'bad hex escape sequence')
+        try:
+            return int(buf[start:end], 16)
+        except ValueError:
+            raise LexerError(buf, offset, 'bad hex escape sequence')
+
+
+    @classmethod
+    def lex_interpreted_string(cls, buf, offset):
+        """Tokenize a golang interpreted string.
+
+        Args:
+            buf (str)    The source code buffer.
+            offset (int) The position to find a golang interpreted string
+                         literal.
+
+        Returns:
+            A tuple with the end of matched buffer and the interpreted string
+            literal.
+        """
+
+        buf_len = len(buf)
+        pos = offset + 1
+        literal = ''
+        while pos < buf_len:
+            # Match unicode characters
+            match = cls.UNICODE_CHARS_PATTERN.match(buf, pos)
+            if match:
+                literal += match.group(0)
+                pos = match.end()
+            # Read the next character
+            try:
+                char = buf[pos]
+            except IndexError:
+                raise LexerError(buf, pos,
+                                 'unclosed interpreted string literal')
+            if char == '\\':
+                # Escape sequences
+                try:
+                    char = buf[pos + 1]
+                except IndexError:
+                    raise LexerError(buf, pos, 'bad escape sequence')
+                if char in cls.OCT_TABLE:
+                    literal += chr(cls.decode_oct(buf, pos, pos + 1, pos + 4))
+                    pos += 4
+                elif char == 'x':
+                    literal += chr(cls.decode_hex(buf, pos, pos + 2, pos + 4))
+                    pos += 4
+                elif char == 'u':
+                    literal += py3_chr(
+                        cls.decode_hex(buf, pos, pos + 2, pos + 6))
+                    pos += 6
+                elif char == 'U':
+                    literal += py3_chr(
+                        cls.decode_hex(buf, pos, pos + 2, pos + 10))
+                    pos += 10
+                else:
+                    try:
+                        literal += cls.ESCAPE_CHAR_TABLE[char]
+                        pos += 2
+                    except KeyError:
+                        raise LexerError(buf, pos, 'bad escape sequence')
+                continue
+            if char == '"':
+                # End of string literal
+                return (pos + 1, literal)
+            raise LexerError(buf, pos, 'unclosed interpreted string literal')
+
+
+    @classmethod
+    def lex_string(cls, buf, offset):
+        """Tokenize a golang string literal.
+
+        Args:
+            buf (str)    The source code buffer.
+            offset (int) The position to find a golang string literal.
+
+        Returns:
+            A tuple with the end of matched buffer and the interpreted string
+            literal.
+        """
+
+        char = buf[offset]
+        if char == '`':
+            try:
+                end = buf.index('`', offset + 1)
+                return (end + 1, buf[offset + 1 : end])
+            except ValueError:
+                raise LexerError(buf, len(buf), 'unclosed raw string literal')
+        if char == '"':
+            return cls.lex_interpreted_string(buf, offset)
+        raise LexerError(buf, offset, 'no string literal start character')
+
+
+    LEXER_PATTERNS = (
+        (Token.IDENT, '[A-Za-z_][0-9A-Za-z_]*'),
+        (Token.LPAREN, '\\('),
+        (Token.RPAREN, '\\)'),
+        (Token.LBRACKET, '\\['),
+        (Token.RBRACKET, '\\]'),
+        (Token.LBRACE, '\\{'),
+        (Token.RBRACE, '\\}'),
+        (Token.COLON, ':'),
+        (Token.ASSIGN, '='),
+        (Token.ASSIGNPLUS, '\\+='),
+        (Token.PLUS, '\\+'),
+        (Token.COMMA, ','),
+        (Token.STRING, '["`]'),
+
+        (Token.COMMENT,
+         '/(?:(?:/[^\\n]*)|(?:\\*(?:(?:[^*]*)|(?:\\*+[^/*]))*\\*+/))'),
+        (Token.SPACE, '\\s+'),
+    )
+
+
+    LEXER_MATCHER = re.compile('|'.join(
+        '(' + pattern + ')' for _, pattern in LEXER_PATTERNS))
+
+
+    @classmethod
+    def lex(cls, buf, offset):
+        """Tokenize a token from buf[offset].
+
+        Args:
+            buf (string) The source code buffer.
+            offset (int) The position to find and tokenize a token.
+
+        Return:
+            A tuple with three elements.  The first element is the token id.
+            The second element is the end of the token.  The third element is
+            the value for strings or identifiers.
+        """
+
+        match = cls.LEXER_MATCHER.match(buf, offset)
+        if not match:
+            raise LexerError(buf, offset, 'unknown token')
+        token = cls.LEXER_PATTERNS[match.lastindex - 1][0]
+
+        if token == Token.STRING:
+            end, literal = cls.lex_string(buf, offset)
+        else:
+            end = match.end()
+            literal = buf[offset:end] if token == Token.IDENT else None
+
+        return (token, end, literal)
+
+
+#------------------------------------------------------------------------------
+# AST
+#------------------------------------------------------------------------------
+
+class Expr(object):  # pylint: disable=too-few-public-methods
+    """Base class for all expressions."""
+
+    def eval(self, env):
+        """Evaluate the expression under an environment."""
+        raise NotImplementedError()
+
+
+class String(Expr, str):
+    """String constant literal."""
+
+    def eval(self, env):
+        """Evaluate the string expression under an environment."""
+        return self
+
+
+class Bool(Expr):  # pylint: disable=too-few-public-methods
+    """Boolean constant literal."""
+
+    __slots__ = ('value',)
+
+
+    def __init__(self, value):
+        """Create a boolean constant literal."""
+        self.value = value
+
+
+    def __repr__(self):
+        """Convert a boolean constant literal to string representation."""
+        return repr(self.value)
+
+
+    def __bool__(self):
+        """Convert boolean constant literal to Python bool type."""
+        return self.value
+
+    __nonzero__ = __bool__
+
+
+    def __eq__(self, rhs):
+        """Compare whether two instances are equal."""
+        return self.value == rhs.value
+
+
+    def __hash__(self):
+        """Compute the hashed value."""
+        return hash(self.value)
+
+
+    def eval(self, env):
+        """Evaluate the boolean expression under an environment."""
+        return self
+
+
+class VarRef(Expr):  # pylint: disable=too-few-public-methods
+    """A reference to a variable."""
+
+    def __init__(self, name, value):
+        """Create a variable reference with a name and the value under static
+        scoping."""
+        self.name = name
+        self.value = value
+
+
+    def __repr__(self):
+        """Convert a variable reference to string representation."""
+        return self.name
+
+
+    def eval(self, env):
+        """Evaluate the identifier under an environment."""
+        if self.value is None:
+            return env[self.name].eval(env)
+        return self.value.eval(env)
+
+
+class List(Expr, list):
+    """List expression."""
+
+    def eval(self, env):
+        """Evaluate list elements under an environment."""
+        return List(item.eval(env) for item in self)
+
+
+class Dict(Expr, collections.OrderedDict):
+    """Dictionary expression."""
+
+    def __repr__(self):
+        attrs = ', '.join(key + ': ' + repr(value)
+                          for key, value in self.items())
+        return '{' + attrs + '}'
+
+
+    def eval(self, env):
+        """Evaluate dictionary values under an environment."""
+        return Dict((key, value.eval(env)) for key, value in self.items())
+
+
+class Concat(Expr):  # pylint: disable=too-few-public-methods
+    """List/string concatenation operator."""
+
+    __slots__ = ('lhs', 'rhs')
+
+
+    def __init__(self, lhs, rhs):
+        """Create a list concatenation expression."""
+        self.lhs = lhs
+        self.rhs = rhs
+
+
+    def __repr__(self):
+        return '(' + repr(self.lhs) + ' + ' + repr(self.rhs) + ')'
+
+
+    def eval(self, env):
+        """Evaluate list concatenation operator under an environment."""
+        lhs = self.lhs.eval(env)
+        rhs = self.rhs.eval(env)
+        if isinstance(lhs, List) and isinstance(rhs, List):
+            return List(itertools.chain(lhs, rhs))
+        if isinstance(lhs, String) and isinstance(rhs, String):
+            return String(lhs + rhs)
+        raise TypeError('bad concatenation')
+
+
+#------------------------------------------------------------------------------
+# Parser
+#------------------------------------------------------------------------------
+
+class ParseError(ValueError):
+    """Parser error exception class."""
+
+    def __init__(self, lexer, message):
+        """Create a parser error exception object."""
+        super(ParseError, self).__init__(message)
+        self.message = message
+        self.line, self.column = \
+            Lexer.compute_line_column(lexer.buf, lexer.start)
+
+
+    def __str__(self):
+        """Convert parser error to string representation."""
+        return 'ParseError: {}:{}: {}'.format(
+            self.line, self.column, self.message)
+
+
+class Parser(object):
+    """Parser to parse Android.bp files."""
+
+    def __init__(self, lexer, inherited_env=None):
+        """Initialize the parser with the lexer."""
+        self.lexer = lexer
+
+        self.var_defs = []
+        self.vars = {} if inherited_env is None else dict(inherited_env)
+        self.modules = []
+
+
+    def parse(self):
+        """Parse AST from tokens."""
+        lexer = self.lexer
+        while lexer.token != Token.EOF:
+            if lexer.token == Token.IDENT:
+                ident = self.parse_ident_lvalue()
+                if lexer.token in {Token.ASSIGN, Token.ASSIGNPLUS}:
+                    self.parse_assign(ident, lexer.token)
+                elif lexer.token in {Token.LBRACE, Token.LPAREN}:
+                    self.parse_module_definition(ident)
+                else:
+                    raise ParseError(lexer,
+                                     'unexpected token ' + lexer.token.name)
+            else:
+                raise ParseError(lexer, 'unexpected token ' + lexer.token.name)
+        lexer.consume(Token.EOF)
+
+
+    def create_var_ref(self, name):
+        """Create a variable reference."""
+        return VarRef(name, self.vars.get(name))
+
+
+    def define_var(self, name, value):
+        """Define a variable."""
+        self.var_defs.append((name, value))
+        self.vars[name] = value
+
+
+    def parse_assign(self, ident, assign_token):
+        """Parse an assignment statement."""
+        lexer = self.lexer
+        lexer.consume(assign_token)
+        value = self.parse_expression()
+        if assign_token == Token.ASSIGNPLUS:
+            value = Concat(self.create_var_ref(ident), value)
+        self.define_var(ident, value)
+
+
+    def parse_module_definition(self, module_ident):
+        """Parse a module definition."""
+        properties = self.parse_dict()
+        self.modules.append((module_ident, properties))
+
+
+    def parse_ident_lvalue(self):
+        """Parse an identifier as an l-value."""
+        ident = self.lexer.literal
+        self.lexer.consume(Token.IDENT)
+        return ident
+
+
+    def parse_ident_rvalue(self):
+        """Parse an identifier as a r-value.
+
+        Returns:
+            Returns VarRef if the literal is not 'true' nor 'false'.
+
+            Returns Bool(true/false) if the literal is either 'true' or 'false'.
+        """
+        lexer = self.lexer
+        if lexer.literal in {'true', 'false'}:
+            result = Bool(lexer.literal == 'true')
+        else:
+            result = self.create_var_ref(lexer.literal)
+        lexer.consume(Token.IDENT)
+        return result
+
+
+    def parse_string(self):
+        """Parse a string."""
+        lexer = self.lexer
+        string = String(lexer.literal)
+        lexer.consume(Token.STRING)
+        return string
+
+
+    def parse_operand(self):
+        """Parse an operand."""
+        lexer = self.lexer
+        token = lexer.token
+        if token == Token.STRING:
+            return self.parse_string()
+        if token == Token.IDENT:
+            return self.parse_ident_rvalue()
+        if token == Token.LBRACKET:
+            return self.parse_list()
+        if token == Token.LBRACE:
+            return self.parse_dict()
+        if token == Token.LPAREN:
+            lexer.consume(Token.LPAREN)
+            operand = self.parse_expression()
+            lexer.consume(Token.RPAREN)
+            return operand
+        raise ParseError(lexer, 'unexpected token ' + token.name)
+
+
+    def parse_expression(self):
+        """Parse an expression."""
+        lexer = self.lexer
+        expr = self.parse_operand()
+        while lexer.token == Token.PLUS:
+            lexer.consume(Token.PLUS)
+            expr = Concat(expr, self.parse_operand())
+        return expr
+
+
+    def parse_list(self):
+        """Parse a list."""
+        result = List()
+        lexer = self.lexer
+        lexer.consume(Token.LBRACKET)
+        while lexer.token != Token.RBRACKET:
+            result.append(self.parse_expression())
+            if lexer.token == Token.COMMA:
+                lexer.consume(Token.COMMA)
+        lexer.consume(Token.RBRACKET)
+        return result
+
+
+    def parse_dict(self):
+        """Parse a dict."""
+        result = Dict()
+        lexer = self.lexer
+
+        is_func_syntax = lexer.token == Token.LPAREN
+        if is_func_syntax:
+            lexer.consume(Token.LPAREN)
+        else:
+            lexer.consume(Token.LBRACE)
+
+        while lexer.token != Token.RBRACE and lexer.token != Token.RPAREN:
+            if lexer.token != Token.IDENT:
+                raise ParseError(lexer, 'unexpected token ' + lexer.token.name)
+            key = self.parse_ident_lvalue()
+
+            if lexer.token == Token.ASSIGN:
+                lexer.consume(Token.ASSIGN)
+            else:
+                lexer.consume(Token.COLON)
+
+            value = self.parse_expression()
+            result[key] = value
+
+            if lexer.token == Token.COMMA:
+                lexer.consume(Token.COMMA)
+
+        if is_func_syntax:
+            lexer.consume(Token.RPAREN)
+        else:
+            lexer.consume(Token.RBRACE)
+
+        return result
+
+
+class RecursiveParser(object):
+    """This is a recursive parser which will parse blueprint files
+    recursively."""
+
+    def __init__(self):
+        self.visited = set()
+        self.modules = []
+
+
+    @staticmethod
+    def glob_sub_files(pattern, sub_file_name):
+        """List the sub file paths that match with the pattern with
+        wildcards."""
+
+        for path in glob.glob(pattern):
+            if os.path.isfile(path) and os.path.basename(path) == sub_file_name:
+                yield path
+                continue
+
+            sub_file_path = os.path.join(path, sub_file_name)
+            if os.path.isfile(sub_file_path):
+                yield sub_file_path
+
+
+    @classmethod
+    def find_sub_files_from_env(cls, rootdir, env,
+                                default_sub_name='Android.bp'):
+        """Find the sub files from the names specified in build, subdirs, and
+        optional_subdirs."""
+
+        subs = []
+
+        if 'build' in env:
+            subs.extend(os.path.join(rootdir, filename)
+                        for filename in env['build'].eval(env))
+
+        sub_name = env['subname'] if 'subname' in env else default_sub_name
+
+        if 'subdirs' in env:
+            for path in env['subdirs'].eval(env):
+                subs.extend(
+                    cls.glob_sub_files(os.path.join(rootdir, path), sub_name))
+
+        if 'optional_subdirs' in env:
+            for path in env['optional_subdirs'].eval(env):
+                subs.extend(
+                    cls.glob_sub_files(os.path.join(rootdir, path), sub_name))
+
+        return subs
+
+
+    @staticmethod
+    def _parse_one_file(path, env):
+        with open(path, 'r') as bp_file:
+            content = bp_file.read()
+        parser = Parser(Lexer(content), env)
+        parser.parse()
+        return (parser.modules, parser.vars)
+
+
+    def _parse_file(self, path, env, evaluate):
+        """Parse blueprint files recursively."""
+
+        self.visited.add(os.path.abspath(path))
+
+        modules, sub_env = self._parse_one_file(path, env)
+        if evaluate:
+            modules = [(ident, attrs.eval(env)) for ident, attrs in modules]
+        self.modules += modules
+
+        rootdir = os.path.dirname(path)
+
+        sub_file_paths = self.find_sub_files_from_env(rootdir, sub_env)
+
+        sub_env.pop('build', None)
+        sub_env.pop('subdirs', None)
+        sub_env.pop('optional_subdirs', None)
+
+        for sub_file_path in sub_file_paths:
+            if os.path.abspath(sub_file_path) not in self.visited:
+                self._parse_file(sub_file_path, sub_env, evaluate)
+
+
+    def parse_file(self, path, env=None, evaluate=True):
+        """Parse blueprint files recursively."""
+        self._parse_file(path, {} if env is None else env, evaluate)
+
+
+#------------------------------------------------------------------------------
+# Transformation
+#------------------------------------------------------------------------------
+
+def evaluate_default(attrs, default_attrs):
+    """Add default attributes if the keys do not exist."""
+    for key, value in default_attrs.items():
+        if key not in attrs:
+            attrs[key] = value
+        else:
+            attrs_value = attrs[key]
+            if isinstance(value, Dict) and isinstance(attrs_value, Dict):
+                attrs[key] = evaluate_default(attrs_value, value)
+    return attrs
+
+
+def evaluate_defaults(modules):
+    """Add default attributes to all modules if the keys do not exist."""
+    mods = {}
+    for ident, attrs in modules:
+        mods[attrs['name']] = (ident, attrs)
+    for i, (ident, attrs) in enumerate(modules):
+        defaults = attrs.get('defaults')
+        if defaults is None:
+            continue
+        for default in defaults:
+            attrs = evaluate_default(attrs, mods[default][1])
+        modules[i] = (ident, attrs)
+    return modules
