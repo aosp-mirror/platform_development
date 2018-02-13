@@ -31,6 +31,14 @@ $(full_target): PRIVATE_FRAMEWORK_RES_PACKAGE := $(framework_res_package)
 
 $(full_target): PRIVATE_CLASS_INTERMEDIATES_DIR := $(classes_dir)
 
+# Disable all warnings. For one, stubs are auto-generated and lack annotations currently. Second,
+# any warnings should have been emitted for the stub sources.
+ifeq (true,$(RUN_ERROR_PRONE))
+$(full_target): PRIVATE_ERRORPRONE_FLAGS := -XepDisableAllChecks
+else
+$(full_target): PRIVATE_ERRORPRONE_FLAGS :=
+endif
+
 $(full_src_target): $(stub_timestamp)
 	@echo Packaging SDK Stub sources: $@
 	$(hide) cd $(PRIVATE_INTERMEDIATES_DIR) && zip -rq $(notdir $@) $(notdir $(PRIVATE_SRC_DIR))
@@ -53,8 +61,9 @@ $(full_target): $(stub_timestamp) $(framework_res_package) $(ZIPTIME)
 	$(hide) $(ACP) libcore/NOTICE $(PRIVATE_CLASS_INTERMEDIATES_DIR)/NOTICES/libcore-NOTICE
 	$(hide) $(ACP) libcore/ojluni/NOTICE $(PRIVATE_CLASS_INTERMEDIATES_DIR)/NOTICES/ojluni-NOTICE
 	$(hide) find $(PRIVATE_SRC_DIR) -name "*.java" > \
-        $(PRIVATE_INTERMEDIATES_DIR)/java-source-list
-	$(hide) $(TARGET_JAVAC) -source 1.8 -target 1.8 -encoding UTF-8 -bootclasspath "" \
+	$(PRIVATE_INTERMEDIATES_DIR)/java-source-list
+	$(hide) $(TARGET_JAVAC) $(PRIVATE_ERRORPRONE_FLAGS) \
+			-source 1.8 -target 1.8 -encoding UTF-8 -bootclasspath "" \
 			-g -d $(PRIVATE_CLASS_INTERMEDIATES_DIR) \
 			\@$(PRIVATE_INTERMEDIATES_DIR)/java-source-list \
 		|| ( rm -rf $(PRIVATE_CLASS_INTERMEDIATES_DIR) ; exit 41 )
