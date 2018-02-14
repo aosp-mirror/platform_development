@@ -34,9 +34,10 @@ message RecordTypeDiff {
   optional string type_stack = 2;
   optional TypeInfoDiff type_info_diff = 3;
   repeated abi_dump.RecordFieldDecl fields_removed = 4;
-  repeated RecordFieldDeclDiff fields_diff = 5;
-  optional CXXBaseSpecifierDiff bases_diff = 6;
-  optional VTableLayoutDiff vtable_layout_diff = 7;
+  repeated abi_dump.RecordFieldDecl fields_added = 5;
+  repeated RecordFieldDeclDiff fields_diff = 6;
+  optional CXXBaseSpecifierDiff bases_diff = 7;
+  optional VTableLayoutDiff vtable_layout_diff = 8;
 }
 
 message UnderlyingTypeDiff {
