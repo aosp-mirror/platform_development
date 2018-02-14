@@ -160,6 +160,18 @@ TEST_MODULES = [
         api = 'current',
     ),
     Module(
+        name = 'libgolden_cpp_odr',
+        srcs = ['integration/cpp/gold/golden_1.cpp',
+                'integration/cpp/gold/high_volume_speaker.cpp',
+                'integration/cpp/gold/low_volume_speaker.cpp',
+                ],
+        version_script = 'integration/cpp/gold/map.txt',
+        export_include_dirs = ['integration/cpp/gold/include'],
+        cflags = ['-DTEST_ODR'],
+        arch = '',
+        api = 'current',
+    ),
+    Module(
         name = 'libgolden_cpp_add_function',
         srcs = ['integration/cpp/gold/golden_1.cpp',
                 'integration/cpp/gold/high_volume_speaker.cpp',
