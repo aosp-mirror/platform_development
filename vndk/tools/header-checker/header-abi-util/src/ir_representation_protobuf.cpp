@@ -732,16 +732,21 @@ bool IRDiffToProtobufConverter::AddBaseSpecifierDiffs(
   return true;
 }
 
-bool IRDiffToProtobufConverter::AddRecordFieldsRemoved(
+bool IRDiffToProtobufConverter::AddRecordFields(
     abi_diff::RecordTypeDiff *record_diff_protobuf,
-    const std::vector<const RecordFieldIR *> &record_fields_removed_ir) {
-  for (auto &&record_field_ir : record_fields_removed_ir) {
-    abi_dump::RecordFieldDecl *field_removed =
-        record_diff_protobuf->add_fields_removed();
-    if (field_removed == nullptr) {
+    const std::vector<const RecordFieldIR *> &record_fields_ir,
+    bool field_removed) {
+  for (auto &&record_field_ir : record_fields_ir) {
+    abi_dump::RecordFieldDecl *field = nullptr;
+    if (field_removed) {
+      field = record_diff_protobuf->add_fields_removed();
+    } else {
+      field = record_diff_protobuf->add_fields_added();
+    }
+    if (field == nullptr) {
       return false;
     }
-    SetIRToProtobufRecordField(field_removed, record_field_ir);
+    SetIRToProtobufRecordField(field, record_field_ir);
   }
   return true;
 }
@@ -809,10 +814,12 @@ abi_diff::RecordTypeDiff IRDiffToProtobufConverter::ConvertRecordTypeDiffIR(
     }
   }
   // Field diffs
-  if (!AddRecordFieldsRemoved(&record_type_diff_protobuf,
-                               record_type_diff_ir->GetFieldsRemoved()) ||
+  if (!AddRecordFields(&record_type_diff_protobuf,
+                       record_type_diff_ir->GetFieldsRemoved(), true) ||
+      !AddRecordFields(&record_type_diff_protobuf,
+                       record_type_diff_ir->GetFieldsAdded(), false) ||
       !AddRecordFieldDiffs(&record_type_diff_protobuf,
-                            record_type_diff_ir->GetFieldDiffs())) {
+                           record_type_diff_ir->GetFieldDiffs())) {
     llvm::errs() << "Record Field diff could not be added\n";
     ::exit(1);
   }
