@@ -273,15 +273,15 @@ AbiDiffHelper::CompareCommonRecordFields(
   return std::make_pair(field_diff_status, nullptr);
 }
 
-DiffStatusPair<std::pair<std::vector<abi_util::RecordFieldDiffIR>,
-                         std::vector<const abi_util::RecordFieldIR *>>>
+
+GenericFieldDiffInfo<RecordFieldIR, RecordFieldDiffIR>
 AbiDiffHelper::CompareRecordFields(
     const std::vector<abi_util::RecordFieldIR> &old_fields,
     const std::vector<abi_util::RecordFieldIR> &new_fields,
     std::deque<std::string> *type_queue,
     abi_util::DiffMessageIR::DiffKind diff_kind) {
-  std::pair<std::vector<abi_util::RecordFieldDiffIR>,
-      std::vector<const abi_util::RecordFieldIR *>> diffed_and_removed_fields;
+  GenericFieldDiffInfo<RecordFieldIR, RecordFieldDiffIR>
+      diffed_removed_added_fields;
   AbiElementMap<const abi_util::RecordFieldIR *> old_fields_map;
   AbiElementMap<const abi_util::RecordFieldIR *> new_fields_map;
   std::map<uint64_t, const abi_util::RecordFieldIR *> old_fields_offset_map;
@@ -309,13 +309,18 @@ AbiDiffHelper::CompareRecordFields(
   DiffStatus final_diff_status = DiffStatus::no_diff;
   std::vector<const abi_util::RecordFieldIR *> removed_fields =
       abi_util::FindRemovedElements(old_fields_map, new_fields_map);
+
+  std::vector<const abi_util::RecordFieldIR *> added_fields =
+      abi_util::FindRemovedElements(new_fields_map, old_fields_map);
+
   auto predicate =
-      [&](const abi_util::RecordFieldIR *removed_field) {
+      [&](const abi_util::RecordFieldIR *removed_field,
+          std::map<uint64_t, const abi_util::RecordFieldIR *> &field_off_map) {
         uint64_t old_field_offset = removed_field->GetOffset();
         auto corresponding_field_at_same_offset =
-            new_fields_offset_map.find(old_field_offset);
+            field_off_map.find(old_field_offset);
         // Correctly reported as removed, so do not remove.
-        if (corresponding_field_at_same_offset == new_fields_offset_map.end()) {
+        if (corresponding_field_at_same_offset == field_off_map.end()) {
           return false;
         }
         auto comparison_result = CompareCommonRecordFields(
@@ -324,11 +329,21 @@ AbiDiffHelper::CompareRecordFields(
         // No actual diff, so remove it.
         return (comparison_result.second == nullptr);
       };
-  removed_fields.erase(
-      std::remove_if(removed_fields.begin(), removed_fields.end(), predicate),
-      removed_fields.end());
 
-  diffed_and_removed_fields.second = std::move(removed_fields);
+  removed_fields.erase(
+      std::remove_if(
+          removed_fields.begin(), removed_fields.end(),
+          std::bind(predicate, std::placeholders::_1, new_fields_offset_map)),
+      removed_fields.end());
+  added_fields.erase(
+      std::remove_if(
+          added_fields.begin(), added_fields.end(),
+          std::bind(predicate, std::placeholders::_1, old_fields_offset_map)),
+      added_fields.end());
+
+  diffed_removed_added_fields.removed_fields_ = std::move(removed_fields);
+  diffed_removed_added_fields.added_fields_ = std::move(added_fields);
+
   std::vector<std::pair<
       const abi_util::RecordFieldIR *, const abi_util::RecordFieldIR *>> cf =
       abi_util::FindCommonElements(old_fields_map, new_fields_map);
@@ -343,17 +358,18 @@ AbiDiffHelper::CompareRecordFields(
         common_field_diff_exists = true;
     }
     if (diffed_field_ptr.second != nullptr) {
-      diffed_and_removed_fields.first.emplace_back(
+      diffed_removed_added_fields.diffed_fields_.emplace_back(
           std::move(*(diffed_field_ptr.second.release())));
     }
   }
-  if (diffed_and_removed_fields.first.size() != 0 ||
-      diffed_and_removed_fields.second.size() != 0) {
+  if (diffed_removed_added_fields.diffed_fields_.size() != 0 ||
+      diffed_removed_added_fields.removed_fields_.size() != 0) {
     final_diff_status = DiffStatus::direct_diff;
   } else if (common_field_diff_exists) {
     final_diff_status = DiffStatus::indirect_diff;
   }
-  return std::make_pair(final_diff_status, diffed_and_removed_fields);
+  diffed_removed_added_fields.diff_status_ = final_diff_status;
+  return diffed_removed_added_fields;
 }
 
 bool AbiDiffHelper::CompareBaseSpecifiers(
@@ -418,14 +434,15 @@ static std::vector<const T*> ConvertToConstPtrVector(
   return cptr_vec;
 }
 
-std::vector<abi_util::RecordFieldIR> AbiDiffHelper::FixupRemovedFieldTypeIds(
-    const std::vector<const abi_util::RecordFieldIR *> &removed_fields) {
+static std::vector<abi_util::RecordFieldIR> FixupRemovedFieldTypeIds(
+    const std::vector<const abi_util::RecordFieldIR *> &removed_fields,
+    const AbiElementMap<const abi_util::TypeIR *> &old_types) {
   std::vector<abi_util::RecordFieldIR> removed_fields_dup;
   for (auto &removed_field : removed_fields) {
     removed_fields_dup.emplace_back(*removed_field);
     RecordFieldIR &it = removed_fields_dup[removed_fields_dup.size() -1];
     it.SetReferencedType(
-        ConvertTypeIdToString(old_types_, it.GetReferencedType()));
+        ConvertTypeIdToString(old_types, it.GetReferencedType()));
   }
   return removed_fields_dup;
 }
@@ -492,8 +509,7 @@ DiffStatus AbiDiffHelper::CompareRecordTypes(
       CompareRecordFields(old_fields_dup, new_fields_dup,
                           type_queue, diff_kind);
   // TODO: combine this with base class diffs as well.
-  final_diff_status = final_diff_status | field_status_and_diffs.first;
-  auto field_diffs = field_status_and_diffs.second;
+  final_diff_status = final_diff_status | field_status_and_diffs.diff_status_;
 
   std::vector<abi_util::CXXBaseSpecifierIR> old_bases = old_type->GetBases();
   std::vector<abi_util::CXXBaseSpecifierIR> new_bases = new_type->GetBases();
@@ -510,25 +526,35 @@ DiffStatus AbiDiffHelper::CompareRecordTypes(
     // Make copies of the fields removed and diffed, since we have to change
     // type ids -> type strings.
     std::vector<std::pair<RecordFieldIR, RecordFieldIR>> field_diff_dups =
-        FixupDiffedFieldTypeIds(field_diffs.first);
+        FixupDiffedFieldTypeIds(field_status_and_diffs.diffed_fields_);
     std::vector<abi_util::RecordFieldDiffIR> field_diffs_fixed =
         ConvertToDiffContainerVector<abi_util::RecordFieldDiffIR,
                                      abi_util::RecordFieldIR>(field_diff_dups);
 
     std::vector<abi_util::RecordFieldIR> field_removed_dups =
-        FixupRemovedFieldTypeIds(field_diffs.second);
+        FixupRemovedFieldTypeIds(field_status_and_diffs.removed_fields_,
+                                 old_types_);
     std::vector<const abi_util::RecordFieldIR *> fields_removed_fixed =
         ConvertToConstPtrVector(field_removed_dups);
 
+    std::vector<abi_util::RecordFieldIR> field_added_dups =
+        FixupRemovedFieldTypeIds(field_status_and_diffs.added_fields_,
+                                 new_types_);
+    std::vector<const abi_util::RecordFieldIR *> fields_added_fixed =
+        ConvertToConstPtrVector(field_added_dups);
+
     record_type_diff_ir->SetFieldDiffs(std::move(field_diffs_fixed));
     record_type_diff_ir->SetFieldsRemoved(std::move(fields_removed_fixed));
+    record_type_diff_ir->SetFieldsAdded(std::move(fields_added_fixed));
+
     if (record_type_diff_ir->DiffExists() &&
         !ir_diff_dumper_->AddDiffMessageIR(record_type_diff_ir.get(),
                                            Unwind(type_queue), diff_kind)) {
       llvm::errs() << "AddDiffMessage on record type failed\n";
       ::exit(1);
-    } // No need to add a dump for an extension since records can't be "extended".
-  }
+    }
+  } // Records cannot be 'extended' compatibly, without a certain amount of
+    // risk.
   CompareTemplateInfo(old_type->GetTemplateElements(),
                       new_type->GetTemplateElements(),
                       type_queue, diff_kind);
