@@ -36,6 +36,14 @@ static inline DiffStatus operator& (DiffStatus f, DiffStatus s) {
 template <typename T>
 using DiffStatusPair = std::pair<DiffStatus, T>;
 
+template <typename GenericField, typename GenericFieldDiff>
+struct GenericFieldDiffInfo {
+  DiffStatus diff_status_;
+  std::vector<GenericFieldDiff> diffed_fields_;
+  std::vector<const GenericField *> removed_fields_;
+  std::vector<const GenericField *> added_fields_;
+};
+
 std::string Unwind(const std::deque<std::string> *type_queue);
 
 class AbiDiffHelper {
@@ -112,9 +120,6 @@ class AbiDiffHelper {
   FixupDiffedFieldTypeIds(
       const std::vector<abi_util::RecordFieldDiffIR> &field_diffs);
 
-  std::vector<abi_util::RecordFieldIR>FixupRemovedFieldTypeIds(
-    const std::vector<const abi_util::RecordFieldIR *> &fields_removed);
-
   DiffStatusPair<std::unique_ptr<abi_util::RecordFieldDiffIR>>
   CompareCommonRecordFields(
     const abi_util::RecordFieldIR *old_field,
@@ -122,9 +127,8 @@ class AbiDiffHelper {
     std::deque<std::string> *type_queue,
     abi_util::IRDiffDumper::DiffKind diff_kind);
 
-  DiffStatusPair<std::pair<std::vector<abi_util::RecordFieldDiffIR>,
-      std::vector<const abi_util::RecordFieldIR *>>>
-  CompareRecordFields(
+  GenericFieldDiffInfo<abi_util::RecordFieldIR, abi_util::RecordFieldDiffIR>
+      CompareRecordFields(
       const std::vector<abi_util::RecordFieldIR> &old_fields,
       const std::vector<abi_util::RecordFieldIR> &new_fields,
       std::deque<std::string> *type_queue,

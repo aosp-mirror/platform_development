@@ -242,9 +242,10 @@ class IRDiffToProtobufConverter {
     abi_diff::CXXBaseSpecifierDiff *base_specifier_diff_protobuf,
     const CXXBaseSpecifierDiffIR *base_specifier_diff_ir);
 
-  static bool AddRecordFieldsRemoved(
+  static bool AddRecordFields(
     abi_diff::RecordTypeDiff *record_diff_protobuf,
-    const std::vector<const RecordFieldIR *> &record_fields_removed_ir);
+    const std::vector<const RecordFieldIR *> &record_fields_removed_ir,
+    bool removed);
 
   static bool AddRecordFieldDiffs(
     abi_diff::RecordTypeDiff *record_diff_protobuf,
