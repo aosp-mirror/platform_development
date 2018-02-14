@@ -150,6 +150,11 @@ class MyTest(unittest.TestCase):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp", "libgolden_cpp_return_type_diff", 8)
 
+    def test_libgolden_cpp_add_odr(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp", "libgolden_cpp_odr", 0,
+            ['-check-all-apis', '-allow-unreferenced-changes'])
+
     def test_libgolden_cpp_add_function(self):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp", "libgolden_cpp_add_function", 4)
