@@ -1,4 +1,5 @@
 #include<abstract_class.h>
+#include<additional_odr.h>
 
 SuperSpeaker *SuperSpeaker::CreateSuperSpeaker(int id) {
   // :)
