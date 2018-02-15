@@ -31,18 +31,15 @@ LOCAL_SRC_FILES:= \
     native.cpp
 
 # All of the shared libraries we link against.
-LOCAL_SHARED_LIBRARIES := \
-    liblog
+LOCAL_LDLIBS := -llog
 
 # No static libraries.
 LOCAL_STATIC_LIBRARIES :=
 
-# Also need the JNI headers.
-LOCAL_C_INCLUDES += \
-    $(JNI_H_INCLUDE)
-
 LOCAL_CFLAGS := -Wall -Werror
 
-LOCAL_CXX_STL := none
+LOCAL_NDK_STL_VARIANT := none
+
+LOCAL_SDK_VERSION := current
 
 include $(BUILD_SHARED_LIBRARY)
