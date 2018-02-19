@@ -62,6 +62,9 @@
         instead of programmatically.</string>
     <string name="screen_orientation">Screen Orientation</string>
 
+    <string name="activity_picture_in_picture">App/Activity/Picture in Picture</string>
+    <string name="enter_picture_in_picture">Enter picture-in-picture mode</string>
+
     <string name="activity_translucent">App/Activity/Translucent</string>
     <string name="translucent_background">Example of how you can make an
             activity have a translucent background, compositing over
