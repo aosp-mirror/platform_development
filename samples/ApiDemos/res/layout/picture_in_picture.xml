@@ -15,18 +15,18 @@
   ~ limitations under the License.
   -->
 
-<!-- Demonstrates implementation of a DeviceAdmin. -->
-
+<!-- Demonstrates implementation of picture-in-picture. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:padding="4dip"
+    android:orientation="vertical"
+    android:padding="4dp"
     android:gravity="center_horizontal"
-    android:layout_width="match_parent" android:layout_height="match_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <Button android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/enter_pip"
         android:text="@string/enter_picture_in_picture">
-
     </Button>
 </LinearLayout>
 
