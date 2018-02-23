@@ -826,7 +826,8 @@ class DexFileReader(object):
 
 
     Header = create_struct('Header', (
-        ('magic', '8s'),
+        ('magic', '4s'),
+        ('version', '4s'),
         ('checksum', 'I'),
         ('signature', '20s'),
         ('file_size', 'I'),
@@ -865,19 +866,34 @@ class DexFileReader(object):
 
 
     @classmethod
-    def enumerate_dex_strings_buf(cls, buf):
+    def enumerate_dex_strings_buf(cls, buf, offset=0, data_offset=None):
         buf = get_py3_bytes(buf)
-        header = cls.Header.unpack_from(buf, offset=0)
+        header = cls.Header.unpack_from(buf, offset=offset)
+
+        if data_offset is None:
+            if header.magic == b'dex\n':
+                # In the standard dex file, the data_offset is the offset of
+                # the dex header.
+                data_offset = offset
+            else:
+                # In the compact dex file, the data_offset is sum of the offset
+                # of the dex header and header.data_off.
+                data_offset = offset + header.data_off
 
         StringId = cls.StringId
         struct_size = StringId.struct_size
 
-        offset_start = header.string_ids_off
+        offset_start = offset + header.string_ids_off
         offset_end = offset_start + header.string_ids_size * struct_size
 
         for offset in range(offset_start, offset_end, struct_size):
             offset = StringId.unpack_from(buf, offset).string_data_off
+            offset += data_offset
+
+            # Skip the ULEB128 integer for UTF-16 string length
             offset += cls.extract_uleb128(buf, offset)[1]
+
+            # Extract the string
             yield cls.extract_dex_string(buf, offset)
 
 
@@ -914,6 +930,7 @@ class DexFileReader(object):
         ('version', '4s'),
         ('number_of_dex_files', 'I'),
         ('dex_size', 'I'),
+        # ('dex_shared_data_size', 'I'),  # >= 016
         ('verifier_deps_size', 'I'),
         ('quickening_info_size', 'I'),
     ))
@@ -930,24 +947,36 @@ class DexFileReader(object):
         # Skip vdex file header size
         offset = cls.VdexHeader.struct_size
 
+        # Skip `dex_shared_data_size`
+        if vdex_header.version >= b'016\x00':
+            offset += 4
+
         # Skip dex file checksums size
         offset += 4 * vdex_header.number_of_dex_files
+
+        # Skip this vdex file if there is no dex file section
+        if vdex_header.dex_size == 0:
+            return
 
         for i in range(vdex_header.number_of_dex_files):
             # Skip quickening_table_off size
             offset += quickening_table_off_size
 
+            # Check the dex file magic
+            dex_magic = buf[offset:offset + 4]
+            if dex_magic != b'dex\n' and dex_magic != b'cdex':
+                raise ValueError('bad dex file offset {}'.format(offset))
+
             dex_header = cls.Header.unpack_from(buf, offset)
             dex_file_end = offset + dex_header.file_size
-            dex_file_buf = buf[offset:dex_file_end]
-            for s in cls.enumerate_dex_strings_buf(dex_file_buf):
+            for s in cls.enumerate_dex_strings_buf(buf, offset):
                 yield s
             offset = (dex_file_end + 3) // 4 * 4
 
     @classmethod
     def enumerate_dex_strings_vdex(cls, vdex_file_path):
-            with open(vdex_file_path, 'rb') as vdex_file:
-                return cls.enumerate_dex_strings_vdex_buf(vdex_file.read())
+        with open(vdex_file_path, 'rb') as vdex_file:
+            return cls.enumerate_dex_strings_vdex_buf(vdex_file.read())
 
 
 #------------------------------------------------------------------------------
@@ -2527,11 +2556,14 @@ def scan_apk_dep(graph, system_dirs, vendor_dirs):
 
     for ap, path in _enumerate_paths(system_dirs, vendor_dirs):
         # Read the dex file from various file formats
-        if DexFileReader.is_zipfile(path):
-            strs = set(DexFileReader.enumerate_dex_strings_apk(path))
-        elif DexFileReader.is_vdex_file(path):
-            strs = set(DexFileReader.enumerate_dex_strings_vdex(path))
-        else:
+        try:
+            if DexFileReader.is_zipfile(path):
+                strs = set(DexFileReader.enumerate_dex_strings_apk(path))
+            elif DexFileReader.is_vdex_file(path):
+                strs = set(DexFileReader.enumerate_dex_strings_vdex(path))
+            else:
+                continue
+        except FileNotFoundError:
             continue
 
         # Skip the file that does not call System.loadLibrary()
