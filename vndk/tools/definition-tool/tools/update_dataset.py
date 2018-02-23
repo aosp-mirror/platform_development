@@ -183,6 +183,20 @@ def main():
     for regex in regex_patterns:
         data[regex[0]] = regex
 
+    # Workaround for libclang_rt.asan
+    prefix = 'libclang_rt.asan'
+    if any(name.startswith(prefix) for name in llndk):
+        for path in list(data.keys()):
+            if os.path.basename(path).startswith(prefix):
+                update_tag(path, 'LL-NDK')
+
+    # Workaround for libclang_rt.ubsan_standalone
+    prefix = 'libclang_rt.ubsan_standalone'
+    if any(name.startswith(prefix) for name in vndk):
+        for path in list(data.keys()):
+            if os.path.basename(path).startswith(prefix):
+                update_tag(path, 'VNDK')
+
     # Write updated eligible list file.
     with open(args.output, 'w') as fp:
         writer = csv.writer(fp, lineterminator='\n')
