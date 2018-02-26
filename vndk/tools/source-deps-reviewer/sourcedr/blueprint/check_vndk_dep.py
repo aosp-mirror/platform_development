@@ -47,7 +47,7 @@ def _is_vndk_sp(module):
 def _is_vendor(module):
     """Get the `vendor` module property."""
     try:
-        return bool(module['vendor'])
+        return module.get('vendor', False) or module.get('proprietary', False)
     except KeyError:
         return False
 
