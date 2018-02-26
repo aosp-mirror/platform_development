@@ -89,7 +89,9 @@ def _build_module_dict(modules):
     llndk_libs = {}
 
     for rule, module in modules:
-        name = module['name']
+        name = module.get('name')
+        if name is None:
+            continue
 
         if rule == 'llndk_library':
             llndk_libs[name] = (rule, module)

@@ -794,7 +794,9 @@ def evaluate_defaults(modules):
     """Add default attributes to all modules if the keys do not exist."""
     mods = {}
     for ident, attrs in modules:
-        mods[attrs['name']] = (ident, attrs)
+        name = attrs.get('name')
+        if name is not None:
+            mods[name] = (ident, attrs)
     for i, (ident, attrs) in enumerate(modules):
         defaults = attrs.get('defaults')
         if defaults is None:
