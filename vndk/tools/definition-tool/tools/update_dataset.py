@@ -17,6 +17,7 @@ def load_make_vars(path):
         ('SOONG_LLNDK_LIBRARIES', set()),
         ('SOONG_VNDK_SAMEPROCESS_LIBRARIES', set()),
         ('SOONG_VNDK_CORE_LIBRARIES', set()),
+        ('SOONG_VNDK_PRIVATE_LIBRARIES', set()),
     ])
 
     assign_len = len(' := ')
@@ -71,7 +72,7 @@ def main():
     args = parser.parse_args()
 
     # Load libraries from `out/soong/make_vars-$(TARGET).mk`.
-    llndk, vndk_sp, vndk = load_make_vars(args.make_vars)
+    llndk, vndk_sp, vndk, vndk_private = load_make_vars(args.make_vars)
 
     # Load eligible list csv file.
     with open(args.tag_file, 'r') as fp:
@@ -134,19 +135,33 @@ def main():
         assert name_core == name_vendor
         return name_core
 
+    # VNDK-SP and VNDK-SP-Indirect-Private
     prefix_core = '/system/${LIB}/'
     prefix_vendor = '/system/${LIB}/vndk-sp${VNDK_VER}/'
-    for name in vndk_sp:
+
+    for name in (vndk_sp - vndk_private):
         name = find_name(name, name_path_dict, prefix_core, prefix_vendor)
         update_tag(prefix_core + name, 'VNDK-SP')
         update_tag(prefix_vendor + name, 'VNDK-SP')
 
+    for name in (vndk_sp & vndk_private):
+        name = find_name(name, name_path_dict, prefix_core, prefix_vendor)
+        update_tag(prefix_core + name, 'VNDK-SP-Indirect-Private')
+        update_tag(prefix_vendor + name, 'VNDK-SP-Indirect-Private')
+
+    # VNDK and VNDK-Indirect
     prefix_core = '/system/${LIB}/'
     prefix_vendor = '/system/${LIB}/vndk${VNDK_VER}/'
-    for name in vndk:
+
+    for name in (vndk - vndk_private):
         name = find_name(name, name_path_dict, prefix_core, prefix_vendor)
         update_tag(prefix_core + name, 'VNDK')
         update_tag(prefix_vendor + name, 'VNDK')
+
+    for name in (vndk & vndk_private):
+        name = find_name(name, name_path_dict, prefix_core, prefix_vendor)
+        update_tag(prefix_core + name, 'VNDK-Indirect')
+        update_tag(prefix_vendor + name, 'VNDK-Indirect')
 
     # Workaround for FWK-ONLY-RS
     libs = [
@@ -155,33 +170,6 @@ def main():
     ]
     for name in libs:
         update_tag('/system/${LIB}/' + name + '.so', 'FWK-ONLY-RS')
-
-    # Workaround for VNDK-SP-Indirect
-    libs = [
-        'libbacktrace',
-        'liblzma',
-        'libunwind',
-        'libunwindstack',
-    ]
-    prefix_core = '/system/${LIB}/'
-    prefix_vendor = '/system/${LIB}/vndk-sp${VNDK_VER}/'
-    for name in libs:
-        name = find_name(name, name_path_dict, prefix_core, prefix_vendor)
-        update_tag(prefix_core + name, 'VNDK-SP-Indirect')
-        update_tag(prefix_vendor + name, 'VNDK-SP-Indirect')
-
-    # Workaround for VNDK-SP-Indirect-Private
-    libs = [
-        'libblas',
-        'libcompiler_rt',
-        'android.hidl.memory@1.0-impl'
-    ]
-    prefix_core = '/system/${LIB}/'
-    prefix_vendor = '/system/${LIB}/vndk-sp${VNDK_VER}/'
-    for name in libs:
-        name = find_name(name, name_path_dict, prefix_core, prefix_vendor)
-        update_tag(prefix_core + name, 'VNDK-SP-Indirect-Private')
-        update_tag(prefix_vendor + name, 'VNDK-SP-Indirect-Private')
 
     # Workaround for LL-NDK-Indirect
     libs = [
@@ -194,6 +182,20 @@ def main():
 
     for regex in regex_patterns:
         data[regex[0]] = regex
+
+    # Workaround for libclang_rt.asan
+    prefix = 'libclang_rt.asan'
+    if any(name.startswith(prefix) for name in llndk):
+        for path in list(data.keys()):
+            if os.path.basename(path).startswith(prefix):
+                update_tag(path, 'LL-NDK')
+
+    # Workaround for libclang_rt.ubsan_standalone
+    prefix = 'libclang_rt.ubsan_standalone'
+    if any(name.startswith(prefix) for name in vndk):
+        for path in list(data.keys()):
+            if os.path.basename(path).startswith(prefix):
+                update_tag(path, 'VNDK')
 
     # Write updated eligible list file.
     with open(args.output, 'w') as fp:
