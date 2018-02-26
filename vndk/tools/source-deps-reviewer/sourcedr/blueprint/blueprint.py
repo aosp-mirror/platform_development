@@ -108,9 +108,10 @@ class Token(Enum):  # pylint: disable=too-few-public-methods
     PLUS = 11
     COMMA = 12
     STRING = 13
+    INTEGER = 14
 
-    COMMENT = 14
-    SPACE = 15
+    COMMENT = 15
+    SPACE = 16
 
 
 class LexerError(ValueError):
@@ -330,6 +331,7 @@ class Lexer(object):
         (Token.PLUS, '\\+'),
         (Token.COMMA, ','),
         (Token.STRING, '["`]'),
+        (Token.INTEGER, '-{0,1}[0-9]+'),
 
         (Token.COMMENT,
          '/(?:(?:/[^\\n]*)|(?:\\*(?:(?:[^*]*)|(?:\\*+[^/*]))*\\*+/))'),
@@ -364,7 +366,10 @@ class Lexer(object):
             end, literal = cls.lex_string(buf, offset)
         else:
             end = match.end()
-            literal = buf[offset:end] if token == Token.IDENT else None
+            if token in {Token.IDENT, Token.INTEGER}:
+                literal = buf[offset:end]
+            else:
+                literal = None
 
         return (token, end, literal)
 
@@ -427,6 +432,49 @@ class Bool(Expr):  # pylint: disable=too-few-public-methods
         return self
 
 
+class Integer(Expr):  # pylint: disable=too-few-public-methods
+    """Integer constant literal."""
+
+    __slots__ = ('value',)
+
+
+    def __init__(self, value):
+        """Create an integer constant literal."""
+        self.value = value
+
+
+    def __repr__(self):
+        """Convert an integer constant literal to string representation."""
+        return repr(self.value)
+
+
+    def __bool__(self):
+        """Convert an integer constant literal to Python bool type."""
+        return bool(self.value)
+
+    __nonzero__ = __bool__
+
+
+    def __int__(self):
+        """Convert an integer constant literal to Python int type."""
+        return self.value
+
+
+    def __eq__(self, rhs):
+        """Compare whether two instances are equal."""
+        return self.value == rhs.value
+
+
+    def __hash__(self):
+        """Compute the hashed value."""
+        return hash(self.value)
+
+
+    def eval(self, env):
+        """Evaluate the integer expression under an environment."""
+        return self
+
+
 class VarRef(Expr):  # pylint: disable=too-few-public-methods
     """A reference to a variable."""
 
@@ -472,13 +520,13 @@ class Dict(Expr, collections.OrderedDict):
 
 
 class Concat(Expr):  # pylint: disable=too-few-public-methods
-    """List/string concatenation operator."""
+    """List/string/integer plus operator."""
 
     __slots__ = ('lhs', 'rhs')
 
 
     def __init__(self, lhs, rhs):
-        """Create a list concatenation expression."""
+        """Create a list/string/integer plus expression."""
         self.lhs = lhs
         self.rhs = rhs
 
@@ -488,14 +536,16 @@ class Concat(Expr):  # pylint: disable=too-few-public-methods
 
 
     def eval(self, env):
-        """Evaluate list concatenation operator under an environment."""
+        """Evaluate list/string/integer plus operator under an environment."""
         lhs = self.lhs.eval(env)
         rhs = self.rhs.eval(env)
         if isinstance(lhs, List) and isinstance(rhs, List):
             return List(itertools.chain(lhs, rhs))
         if isinstance(lhs, String) and isinstance(rhs, String):
             return String(lhs + rhs)
-        raise TypeError('bad concatenation')
+        if isinstance(lhs, Integer) and isinstance(rhs, Integer):
+            return Integer(int(lhs) + int(rhs))
+        raise TypeError('bad plus operands')
 
 
 #------------------------------------------------------------------------------
@@ -608,6 +658,14 @@ class Parser(object):
         return string
 
 
+    def parse_integer(self):
+        """Parse an integer."""
+        lexer = self.lexer
+        integer = Integer(int(lexer.literal))
+        lexer.consume(Token.INTEGER)
+        return integer
+
+
     def parse_operand(self):
         """Parse an operand."""
         lexer = self.lexer
@@ -616,6 +674,8 @@ class Parser(object):
             return self.parse_string()
         if token == Token.IDENT:
             return self.parse_ident_rvalue()
+        if token == Token.INTEGER:
+            return self.parse_integer()
         if token == Token.LBRACKET:
             return self.parse_list()
         if token == Token.LBRACE:
