@@ -135,7 +135,7 @@ def main():
         assert name_core == name_vendor
         return name_core
 
-    # VNDK-SP and VNDK-SP-Indirect-Private
+    # VNDK-SP and VNDK-SP-Private
     prefix_core = '/system/${LIB}/'
     prefix_vendor = '/system/${LIB}/vndk-sp${VNDK_VER}/'
 
@@ -146,10 +146,10 @@ def main():
 
     for name in (vndk_sp & vndk_private):
         name = find_name(name, name_path_dict, prefix_core, prefix_vendor)
-        update_tag(prefix_core + name, 'VNDK-SP-Indirect-Private')
-        update_tag(prefix_vendor + name, 'VNDK-SP-Indirect-Private')
+        update_tag(prefix_core + name, 'VNDK-SP-Private')
+        update_tag(prefix_vendor + name, 'VNDK-SP-Private')
 
-    # VNDK and VNDK-Indirect
+    # VNDK and VNDK-Private
     prefix_core = '/system/${LIB}/'
     prefix_vendor = '/system/${LIB}/vndk${VNDK_VER}/'
 
@@ -160,8 +160,8 @@ def main():
 
     for name in (vndk & vndk_private):
         name = find_name(name, name_path_dict, prefix_core, prefix_vendor)
-        update_tag(prefix_core + name, 'VNDK-Indirect')
-        update_tag(prefix_vendor + name, 'VNDK-Indirect')
+        update_tag(prefix_core + name, 'VNDK-Private')
+        update_tag(prefix_vendor + name, 'VNDK-Private')
 
     # Workaround for FWK-ONLY-RS
     libs = [
@@ -171,14 +171,14 @@ def main():
     for name in libs:
         update_tag('/system/${LIB}/' + name + '.so', 'FWK-ONLY-RS')
 
-    # Workaround for LL-NDK-Indirect
+    # Workaround for LL-NDK-Private
     libs = [
         'ld-android',
         'libc_malloc_debug',
         'libnetd_client',
     ]
     for name in libs:
-        update_tag('/system/${LIB}/' + name + '.so', 'LL-NDK-Indirect')
+        update_tag('/system/${LIB}/' + name + '.so', 'LL-NDK-Private')
 
     for regex in regex_patterns:
         data[regex[0]] = regex
