@@ -771,7 +771,7 @@ class RecursiveParser(object):
 
 
     @classmethod
-    def find_sub_files_from_env(cls, rootdir, env,
+    def find_sub_files_from_env(cls, rootdir, env, use_subdirs,
                                 default_sub_name='Android.bp'):
         """Find the sub files from the names specified in build, subdirs, and
         optional_subdirs."""
@@ -781,24 +781,23 @@ class RecursiveParser(object):
         if 'build' in env:
             subs.extend(os.path.join(rootdir, filename)
                         for filename in env['build'].eval(env))
+        if use_subdirs:
+            sub_name = env['subname'] if 'subname' in env else default_sub_name
 
-        sub_name = env['subname'] if 'subname' in env else default_sub_name
-
-        if 'subdirs' in env:
-            for path in env['subdirs'].eval(env):
-                subs.extend(
-                    cls.glob_sub_files(os.path.join(rootdir, path), sub_name))
-
-        if 'optional_subdirs' in env:
-            for path in env['optional_subdirs'].eval(env):
-                subs.extend(
-                    cls.glob_sub_files(os.path.join(rootdir, path), sub_name))
-
+            if 'subdirs' in env:
+                for path in env['subdirs'].eval(env):
+                    subs.extend(cls.glob_sub_files(os.path.join(rootdir, path),
+                                                   sub_name))
+            if 'optional_subdirs' in env:
+                for path in env['optional_subdirs'].eval(env):
+                    subs.extend(cls.glob_sub_files(os.path.join(rootdir, path),
+                                                   sub_name))
         return subs
 
 
     @staticmethod
-    def _parse_one_file(path, env):
+    def _read_file(path, env):
+        """Read a blueprint file and return modules and the environment."""
         with open(path, 'r') as bp_file:
             content = bp_file.read()
         parser = Parser(Lexer(content), env)
@@ -807,18 +806,25 @@ class RecursiveParser(object):
 
 
     def _parse_file(self, path, env, evaluate):
-        """Parse blueprint files recursively."""
-
-        self.visited.add(os.path.abspath(path))
-
-        modules, sub_env = self._parse_one_file(path, env)
+        """Parse a blueprint file and append to self.modules."""
+        modules, sub_env = self._read_file(path, env)
         if evaluate:
             modules = [(ident, attrs.eval(env)) for ident, attrs in modules]
         self.modules += modules
+        return sub_env
+
+
+    def _parse_file_recursive(self, path, env, evaluate, use_subdirs):
+        """Parse a blueprint file and recursively."""
+
+        self.visited.add(os.path.abspath(path))
+
+        sub_env = self._parse_file(path, env, evaluate)
 
         rootdir = os.path.dirname(path)
 
-        sub_file_paths = self.find_sub_files_from_env(rootdir, sub_env)
+        sub_file_paths = self.find_sub_files_from_env(rootdir, sub_env,
+                                                      use_subdirs)
 
         sub_env.pop('build', None)
         sub_env.pop('subdirs', None)
@@ -826,12 +832,60 @@ class RecursiveParser(object):
 
         for sub_file_path in sub_file_paths:
             if os.path.abspath(sub_file_path) not in self.visited:
-                self._parse_file(sub_file_path, sub_env, evaluate)
+                self._parse_file_recursive(sub_file_path, sub_env, evaluate,
+                                           use_subdirs)
+        return sub_env
+
+
+    def _scan_and_parse_all_file_recursive(self, filename, path, env, evaluate):
+        """Scan all files with the specified name and parse them."""
+
+        rootdir = os.path.dirname(path)
+        envs = [(rootdir, env)]
+        assert env is not None
+
+        # Scan directories for all blueprint files
+        for basedir, dirnames, filenames in os.walk(rootdir):
+            # Drop irrelevant environments
+            while not basedir.startswith(envs[-1][0]):
+                envs.pop()
+
+            # Filter sub directories
+            new_dirnames = []
+            for name in dirnames:
+                if name in {'.git', '.repo'}:
+                    continue
+                if basedir == rootdir and name == 'out':
+                    continue
+                new_dirnames.append(name)
+            dirnames[:] = new_dirnames
+
+            # Parse blueprint files
+            if filename in filenames:
+                try:
+                    path = os.path.join(basedir, filename)
+                    sys.stdout.flush()
+                    sub_env = self._parse_file_recursive(path, envs[-1][1],
+                                                         evaluate, False)
+                    assert sub_env is not None
+                    envs.append((basedir, sub_env))
+                except IOError:
+                    pass
 
 
     def parse_file(self, path, env=None, evaluate=True):
         """Parse blueprint files recursively."""
-        self._parse_file(path, {} if env is None else env, evaluate)
+
+        if env is None:
+            env = {}
+
+        sub_env = self._read_file(path, env)[1]
+
+        if 'subdirs' in sub_env or 'optional_subdirs' in sub_env:
+            self._parse_file_recursive(path, env, evaluate, True)
+        else:
+            self._scan_and_parse_all_file_recursive('Android.bp', path, env,
+                                                    evaluate)
 
 
 #------------------------------------------------------------------------------
