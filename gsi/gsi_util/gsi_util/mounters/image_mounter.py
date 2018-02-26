@@ -64,7 +64,7 @@ class ImageMounter(base_mounter.BaseMounter):
   """Provides a file accessor which can access files in the given image file."""
 
   DETECT_SYSTEM_AS_ROOT = 'detect-system-as-root'
-  _SYSTEM_FILES = ['compatibility_matrix.xml', 'build.prop', 'manifest.xml']
+  _SYSTEM_FILES = ['compatibility_matrix.xml', 'build.prop']
 
   def __init__(self, image_filename, path_prefix):
     super(ImageMounter, self).__init__()
