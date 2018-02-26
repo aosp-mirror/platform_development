@@ -892,6 +892,46 @@ class RecursiveParser(object):
 # Transformation
 #------------------------------------------------------------------------------
 
+def _build_named_modules_dict(modules):
+    """Build a name-to-module dict."""
+    named_modules = {}
+    for i, (ident, attrs) in enumerate(modules):
+        name = attrs.get('name')
+        if name is not None:
+            named_modules[name] = [ident, attrs, i]
+    return named_modules
+
+
+def _po_sorted_modules(modules, named_modules):
+    """Sort modules in post order."""
+    modules = [(ident, attrs, i) for i, (ident, attrs) in enumerate(modules)]
+
+    # Build module dependency graph.
+    edges = {}
+    for ident, attrs, module_id in modules:
+        defaults = attrs.get('defaults')
+        if defaults:
+            edges[module_id] = set(
+                named_modules[default][2] for default in defaults)
+
+    # Traverse module graph in post order.
+    post_order = []
+    visited = set()
+
+    def _traverse(module_id):
+        visited.add(module_id)
+        for next_module_id in edges.get(module_id, []):
+            if next_module_id not in visited:
+                _traverse(next_module_id)
+        post_order.append(modules[module_id])
+
+    for module_id in range(len(modules)):
+        if module_id not in visited:
+            _traverse(module_id)
+
+    return post_order
+
+
 def evaluate_default(attrs, default_attrs):
     """Add default attributes if the keys do not exist."""
     for key, value in default_attrs.items():
@@ -906,16 +946,9 @@ def evaluate_default(attrs, default_attrs):
 
 def evaluate_defaults(modules):
     """Add default attributes to all modules if the keys do not exist."""
-    mods = {}
-    for ident, attrs in modules:
-        name = attrs.get('name')
-        if name is not None:
-            mods[name] = (ident, attrs)
-    for i, (ident, attrs) in enumerate(modules):
-        defaults = attrs.get('defaults')
-        if defaults is None:
-            continue
-        for default in defaults:
-            attrs = evaluate_default(attrs, mods[default][1])
+    named_modules = _build_named_modules_dict(modules)
+    for ident, attrs, i in _po_sorted_modules(modules, named_modules):
+        for default in attrs.get('defaults', []):
+            attrs = evaluate_default(attrs, named_modules[default][1])
         modules[i] = (ident, attrs)
     return modules

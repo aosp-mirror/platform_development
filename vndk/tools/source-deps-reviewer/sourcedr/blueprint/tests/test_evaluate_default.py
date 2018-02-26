@@ -131,5 +131,92 @@ class EvaluateDefaultsTest(unittest.TestCase):
             self.fail('modules without names must not cause KeyErrors')
 
 
+    def test_evaluate_recursive(self):
+        """Test whether evaluate_defaults() can evaluate defaults
+        recursively."""
+
+        modules = [
+            ('cc_defaults', {
+                'name': 'libfoo-defaults',
+                'defaults': ['libtest-defaults'],
+                'a': 'libfoo_default_a',
+                'b': 'libfoo_default_b',
+            }),
+            ('cc_defaults', {
+                'name': 'libbar-defaults',
+                'a': 'libbar_default_a',
+                'b': 'libbar_default_b',
+                'c': 'libbar_default_c',
+                'd': 'libbar_default_d',
+            }),
+            ('cc_defaults', {
+                'name': 'libtest-defaults',
+                'a': 'libtest_default_a',
+                'b': 'libtest_default_b',
+                'c': 'libtest_default_c',
+                'e': 'libtest_default_e',
+            }),
+            ('cc_library', {
+                'name': 'libfoo',
+                'defaults': ['libfoo-defaults', 'libbar-defaults'],
+                'a': 'specified_a',
+            }),
+        ]
+
+        modules = evaluate_defaults(modules)
+
+        module = modules[-1][1]
+        self.assertEqual(module['name'], 'libfoo')
+        self.assertEqual(module['a'], 'specified_a')
+        self.assertEqual(module['b'], 'libfoo_default_b')
+        self.assertEqual(module['c'], 'libtest_default_c')
+        self.assertEqual(module['d'], 'libbar_default_d')
+        self.assertEqual(module['e'], 'libtest_default_e')
+
+
+    def test_evaluate_recursive_diamond(self):
+        """Test whether evaluate_defaults() can evaluate diamond defaults
+        recursively."""
+
+        modules = [
+            ('cc_defaults', {
+                'name': 'libfoo-defaults',
+                'defaults': ['libtest-defaults'],
+                'a': 'libfoo_default_a',
+                'b': 'libfoo_default_b',
+            }),
+            ('cc_defaults', {
+                'name': 'libbar-defaults',
+                'defaults': ['libtest-defaults'],
+                'a': 'libbar_default_a',
+                'b': 'libbar_default_b',
+                'c': 'libbar_default_c',
+                'd': 'libbar_default_d',
+            }),
+            ('cc_defaults', {
+                'name': 'libtest-defaults',
+                'a': 'libtest_default_a',
+                'b': 'libtest_default_b',
+                'c': 'libtest_default_c',
+                'e': 'libtest_default_e',
+            }),
+            ('cc_library', {
+                'name': 'libfoo',
+                'defaults': ['libfoo-defaults', 'libbar-defaults'],
+                'a': 'specified_a',
+            }),
+        ]
+
+        modules = evaluate_defaults(modules)
+
+        module = modules[-1][1]
+        self.assertEqual(module['name'], 'libfoo')
+        self.assertEqual(module['a'], 'specified_a')
+        self.assertEqual(module['b'], 'libfoo_default_b')
+        self.assertEqual(module['c'], 'libtest_default_c')
+        self.assertEqual(module['d'], 'libbar_default_d')
+        self.assertEqual(module['e'], 'libtest_default_e')
+
+
 if __name__ == '__main__':
     unittest.main()
