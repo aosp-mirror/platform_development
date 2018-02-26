@@ -101,11 +101,13 @@ def main():
             row[1] = 'FWK-ONLY'
 
     # Update tags.
-    def update_tag(path, tag):
+    def update_tag(path, tag, comments=None):
         try:
             data[path][1] = tag
+            if comments is not None:
+                data[path][2] = comments
         except KeyError:
-            data[path] = [path, tag, '']
+            data[path] = [path, tag, comments if comments is not None else '']
 
     prefix_core = '/system/${LIB}/'
     for name in llndk:
@@ -182,6 +184,25 @@ def main():
 
     for regex in regex_patterns:
         data[regex[0]] = regex
+
+    # Workaround for extra VNDK-SP-Private.  The extra VNDK-SP-Private shared
+    # libraries are VNDK-SP-Private when BOARD_VNDK_VERSION is set but are not
+    # VNDK-SP-Private when BOARD_VNDK_VERSION is set.
+    libs = [
+        'libdexfile',
+    ]
+
+    prefix_core = '/system/${LIB}/'
+    prefix_vendor = '/system/${LIB}/vndk-sp${VNDK_VER}/'
+
+    for name in libs:
+        assert name not in vndk_sp
+        assert name not in vndk_private
+        name = find_name(name, name_path_dict, prefix_core, prefix_vendor)
+        update_tag(prefix_core + name, 'VNDK-SP-Private',
+                   'Workaround for degenerated VDNK')
+        update_tag(prefix_vendor + name, 'VNDK-SP-Private',
+                   'Workaround for degenerated VDNK')
 
     # Workaround for libclang_rt.asan
     prefix = 'libclang_rt.asan'
