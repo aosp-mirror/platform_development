@@ -761,13 +761,13 @@ class RecursiveParser(object):
         wildcards."""
 
         for path in glob.glob(pattern):
-            if os.path.isfile(path) and os.path.basename(path) == sub_file_name:
-                yield path
-                continue
-
-            sub_file_path = os.path.join(path, sub_file_name)
-            if os.path.isfile(sub_file_path):
-                yield sub_file_path
+            if os.path.isfile(path):
+                if os.path.basename(path) == sub_file_name:
+                    yield path
+            else:
+                sub_file_path = os.path.join(path, sub_file_name)
+                if os.path.isfile(sub_file_path):
+                    yield sub_file_path
 
 
     @classmethod
