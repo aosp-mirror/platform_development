@@ -100,24 +100,17 @@ def main():
         if posixpath.dirname(path) == '/system/${LIB}':
             row[1] = 'FWK-ONLY'
 
-    # Update tags.
-    def update_tag(path, tag):
+    # Helper function to update the tag and the comments of an entry
+    def update_tag(path, tag, comments=None):
         try:
             data[path][1] = tag
+            if comments is not None:
+                data[path][2] = comments
         except KeyError:
-            data[path] = [path, tag, '']
+            data[path] = [path, tag, comments if comments is not None else '']
 
-    prefix_core = '/system/${LIB}/'
-    for name in llndk:
-        try:
-            path = name_path_dict[name]
-            assert path.startswith(prefix_core)
-            name = path[len(prefix_core):]
-        except KeyError:
-            name = name + '.so'
-        update_tag('/system/${LIB}/' + name, 'LL-NDK')
-
-    def find_name(name, name_path_dict, prefix_core, prefix_vendor):
+    # Helper function to find the subdir and the module name
+    def get_subdir_and_name(name, name_path_dict, prefix_core, prefix_vendor):
         try:
             path = name_path_dict[name + '.vendor']
             assert path.startswith(prefix_vendor)
@@ -135,33 +128,48 @@ def main():
         assert name_core == name_vendor
         return name_core
 
-    # VNDK-SP and VNDK-SP-Indirect-Private
+    # Update LL-NDK tags
+    prefix_core = '/system/${LIB}/'
+    for name in llndk:
+        try:
+            path = name_path_dict[name]
+            assert path.startswith(prefix_core)
+            name = path[len(prefix_core):]
+        except KeyError:
+            name = name + '.so'
+        update_tag('/system/${LIB}/' + name, 'LL-NDK')
+
+    # Update VNDK-SP and VNDK-SP-Private tags
     prefix_core = '/system/${LIB}/'
     prefix_vendor = '/system/${LIB}/vndk-sp${VNDK_VER}/'
 
     for name in (vndk_sp - vndk_private):
-        name = find_name(name, name_path_dict, prefix_core, prefix_vendor)
+        name = get_subdir_and_name(name, name_path_dict, prefix_core,
+                                   prefix_vendor)
         update_tag(prefix_core + name, 'VNDK-SP')
         update_tag(prefix_vendor + name, 'VNDK-SP')
 
     for name in (vndk_sp & vndk_private):
-        name = find_name(name, name_path_dict, prefix_core, prefix_vendor)
-        update_tag(prefix_core + name, 'VNDK-SP-Indirect-Private')
-        update_tag(prefix_vendor + name, 'VNDK-SP-Indirect-Private')
+        name = get_subdir_and_name(name, name_path_dict, prefix_core,
+                                   prefix_vendor)
+        update_tag(prefix_core + name, 'VNDK-SP-Private')
+        update_tag(prefix_vendor + name, 'VNDK-SP-Private')
 
-    # VNDK and VNDK-Indirect
+    # Update VNDK and VNDK-Private tags
     prefix_core = '/system/${LIB}/'
     prefix_vendor = '/system/${LIB}/vndk${VNDK_VER}/'
 
     for name in (vndk - vndk_private):
-        name = find_name(name, name_path_dict, prefix_core, prefix_vendor)
+        name = get_subdir_and_name(name, name_path_dict, prefix_core,
+                                   prefix_vendor)
         update_tag(prefix_core + name, 'VNDK')
         update_tag(prefix_vendor + name, 'VNDK')
 
     for name in (vndk & vndk_private):
-        name = find_name(name, name_path_dict, prefix_core, prefix_vendor)
-        update_tag(prefix_core + name, 'VNDK-Indirect')
-        update_tag(prefix_vendor + name, 'VNDK-Indirect')
+        name = get_subdir_and_name(name, name_path_dict, prefix_core,
+                                   prefix_vendor)
+        update_tag(prefix_core + name, 'VNDK-Private')
+        update_tag(prefix_vendor + name, 'VNDK-Private')
 
     # Workaround for FWK-ONLY-RS
     libs = [
@@ -171,17 +179,34 @@ def main():
     for name in libs:
         update_tag('/system/${LIB}/' + name + '.so', 'FWK-ONLY-RS')
 
-    # Workaround for LL-NDK-Indirect
+    # Workaround for LL-NDK-Private
     libs = [
         'ld-android',
         'libc_malloc_debug',
         'libnetd_client',
     ]
     for name in libs:
-        update_tag('/system/${LIB}/' + name + '.so', 'LL-NDK-Indirect')
+        update_tag('/system/${LIB}/' + name + '.so', 'LL-NDK-Private')
 
-    for regex in regex_patterns:
-        data[regex[0]] = regex
+    # Workaround for extra VNDK-SP-Private.  The extra VNDK-SP-Private shared
+    # libraries are VNDK-SP-Private when BOARD_VNDK_VERSION is set but are not
+    # VNDK-SP-Private when BOARD_VNDK_VERSION is set.
+    libs = [
+        'libdexfile',
+    ]
+
+    prefix_core = '/system/${LIB}/'
+    prefix_vendor = '/system/${LIB}/vndk-sp${VNDK_VER}/'
+
+    for name in libs:
+        assert name not in vndk_sp
+        assert name not in vndk_private
+        name = get_subdir_and_name(name, name_path_dict, prefix_core,
+                                   prefix_vendor)
+        update_tag(prefix_core + name, 'VNDK-SP-Private',
+                   'Workaround for degenerated VDNK')
+        update_tag(prefix_vendor + name, 'VNDK-SP-Private',
+                   'Workaround for degenerated VDNK')
 
     # Workaround for libclang_rt.asan
     prefix = 'libclang_rt.asan'
@@ -197,7 +222,11 @@ def main():
             if os.path.basename(path).startswith(prefix):
                 update_tag(path, 'VNDK')
 
-    # Write updated eligible list file.
+    # Merge regular expression patterns into final dataset
+    for regex in regex_patterns:
+        data[regex[0]] = regex
+
+    # Write updated eligible list file
     with open(args.output, 'w') as fp:
         writer = csv.writer(fp, lineterminator='\n')
         writer.writerow(header)
