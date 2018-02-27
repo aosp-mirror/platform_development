@@ -20,7 +20,7 @@
 
 import unittest
 
-from blueprint import Bool, Concat, Dict, Expr, List, String, VarRef
+from blueprint import Bool, Concat, Dict, Expr, Integer, List, String, VarRef
 
 
 #------------------------------------------------------------------------------
@@ -89,6 +89,65 @@ class BoolTest(unittest.TestCase):
 
         self.assertEqual('False', repr(Bool(False)))
         self.assertEqual('True', repr(Bool(True)))
+
+
+#------------------------------------------------------------------------------
+# Integer
+#------------------------------------------------------------------------------
+
+class IntegerTest(unittest.TestCase):
+    """Unit tests for the Integer class."""
+
+    def test_int(self):
+        """Test Integer.__init__(), Integer.__bool__(), Integer.__int__(), and
+        Integer.eval() methods."""
+
+        expr = Integer(0)
+        self.assertFalse(bool(expr))
+        self.assertEqual(0, int(expr))
+        self.assertEqual(0, int(expr.eval({})))
+
+        expr = Integer(1)
+        self.assertTrue(bool(expr))
+        self.assertEqual(1, int(expr))
+        self.assertEqual(1, int(expr.eval({})))
+
+        expr = Integer(2)
+        self.assertTrue(bool(expr))
+        self.assertEqual(2, int(expr))
+        self.assertEqual(2, int(expr.eval({})))
+
+
+    def test_equal(self):
+        """Test Integer.__eq__() method."""
+
+        expr_zero1 = Integer(0)
+        expr_zero2 = Integer(0)
+        expr_one1 = Integer(1)
+        expr_one2 = Integer(1)
+
+        self.assertIsNot(expr_zero1, expr_zero2)
+        self.assertEqual(expr_zero1, expr_zero2)
+
+        self.assertIsNot(expr_one1, expr_one2)
+        self.assertEqual(expr_one1, expr_one2)
+
+
+    def test_hash(self):
+        """Test Integer.__hash__() method."""
+
+        expr_zero = Integer(0)
+        expr_one = Integer(1)
+
+        self.assertEqual(hash(Integer(False)), hash(expr_zero))
+        self.assertEqual(hash(Integer(True)), hash(expr_one))
+
+
+    def test_repr(self):
+        """Test Integer.__repr__() method."""
+
+        self.assertEqual('0', repr(Integer(0)))
+        self.assertEqual('1', repr(Integer(1)))
 
 
 #------------------------------------------------------------------------------

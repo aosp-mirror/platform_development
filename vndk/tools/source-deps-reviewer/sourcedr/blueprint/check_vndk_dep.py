@@ -47,7 +47,7 @@ def _is_vndk_sp(module):
 def _is_vendor(module):
     """Get the `vendor` module property."""
     try:
-        return bool(module['vendor'])
+        return module.get('vendor', False) or module.get('proprietary', False)
     except KeyError:
         return False
 
@@ -87,17 +87,28 @@ def _build_module_dict(modules):
     """Build module dictionaries that map module names to modules."""
     all_libs = {}
     llndk_libs = {}
+
     for rule, module in modules:
-        name = module['name']
+        name = module.get('name')
+        if name is None:
+            continue
+
         if rule == 'llndk_library':
             llndk_libs[name] = (rule, module)
         if rule in {'llndk_library', 'ndk_library'}:
             continue
+
         if rule.endswith('_library') or \
            rule.endswith('_library_shared') or \
            rule.endswith('_library_static') or \
            rule.endswith('_headers'):
             all_libs[name] = (rule, module)
+
+        if rule == 'hidl_interface':
+            all_libs[name] = (rule, module)
+            all_libs[name + '-adapter-helper'] = (rule, module)
+            module['vendor_available'] = True
+
     return (all_libs, llndk_libs)
 
 
