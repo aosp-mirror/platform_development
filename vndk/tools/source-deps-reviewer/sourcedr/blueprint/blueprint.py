@@ -108,9 +108,10 @@ class Token(Enum):  # pylint: disable=too-few-public-methods
     PLUS = 11
     COMMA = 12
     STRING = 13
+    INTEGER = 14
 
-    COMMENT = 14
-    SPACE = 15
+    COMMENT = 15
+    SPACE = 16
 
 
 class LexerError(ValueError):
@@ -330,6 +331,7 @@ class Lexer(object):
         (Token.PLUS, '\\+'),
         (Token.COMMA, ','),
         (Token.STRING, '["`]'),
+        (Token.INTEGER, '-{0,1}[0-9]+'),
 
         (Token.COMMENT,
          '/(?:(?:/[^\\n]*)|(?:\\*(?:(?:[^*]*)|(?:\\*+[^/*]))*\\*+/))'),
@@ -364,7 +366,10 @@ class Lexer(object):
             end, literal = cls.lex_string(buf, offset)
         else:
             end = match.end()
-            literal = buf[offset:end] if token == Token.IDENT else None
+            if token in {Token.IDENT, Token.INTEGER}:
+                literal = buf[offset:end]
+            else:
+                literal = None
 
         return (token, end, literal)
 
@@ -427,6 +432,49 @@ class Bool(Expr):  # pylint: disable=too-few-public-methods
         return self
 
 
+class Integer(Expr):  # pylint: disable=too-few-public-methods
+    """Integer constant literal."""
+
+    __slots__ = ('value',)
+
+
+    def __init__(self, value):
+        """Create an integer constant literal."""
+        self.value = value
+
+
+    def __repr__(self):
+        """Convert an integer constant literal to string representation."""
+        return repr(self.value)
+
+
+    def __bool__(self):
+        """Convert an integer constant literal to Python bool type."""
+        return bool(self.value)
+
+    __nonzero__ = __bool__
+
+
+    def __int__(self):
+        """Convert an integer constant literal to Python int type."""
+        return self.value
+
+
+    def __eq__(self, rhs):
+        """Compare whether two instances are equal."""
+        return self.value == rhs.value
+
+
+    def __hash__(self):
+        """Compute the hashed value."""
+        return hash(self.value)
+
+
+    def eval(self, env):
+        """Evaluate the integer expression under an environment."""
+        return self
+
+
 class VarRef(Expr):  # pylint: disable=too-few-public-methods
     """A reference to a variable."""
 
@@ -472,13 +520,13 @@ class Dict(Expr, collections.OrderedDict):
 
 
 class Concat(Expr):  # pylint: disable=too-few-public-methods
-    """List/string concatenation operator."""
+    """List/string/integer plus operator."""
 
     __slots__ = ('lhs', 'rhs')
 
 
     def __init__(self, lhs, rhs):
-        """Create a list concatenation expression."""
+        """Create a list/string/integer plus expression."""
         self.lhs = lhs
         self.rhs = rhs
 
@@ -488,14 +536,16 @@ class Concat(Expr):  # pylint: disable=too-few-public-methods
 
 
     def eval(self, env):
-        """Evaluate list concatenation operator under an environment."""
+        """Evaluate list/string/integer plus operator under an environment."""
         lhs = self.lhs.eval(env)
         rhs = self.rhs.eval(env)
         if isinstance(lhs, List) and isinstance(rhs, List):
             return List(itertools.chain(lhs, rhs))
         if isinstance(lhs, String) and isinstance(rhs, String):
             return String(lhs + rhs)
-        raise TypeError('bad concatenation')
+        if isinstance(lhs, Integer) and isinstance(rhs, Integer):
+            return Integer(int(lhs) + int(rhs))
+        raise TypeError('bad plus operands')
 
 
 #------------------------------------------------------------------------------
@@ -608,6 +658,14 @@ class Parser(object):
         return string
 
 
+    def parse_integer(self):
+        """Parse an integer."""
+        lexer = self.lexer
+        integer = Integer(int(lexer.literal))
+        lexer.consume(Token.INTEGER)
+        return integer
+
+
     def parse_operand(self):
         """Parse an operand."""
         lexer = self.lexer
@@ -616,6 +674,8 @@ class Parser(object):
             return self.parse_string()
         if token == Token.IDENT:
             return self.parse_ident_rvalue()
+        if token == Token.INTEGER:
+            return self.parse_integer()
         if token == Token.LBRACKET:
             return self.parse_list()
         if token == Token.LBRACE:
@@ -701,17 +761,17 @@ class RecursiveParser(object):
         wildcards."""
 
         for path in glob.glob(pattern):
-            if os.path.isfile(path) and os.path.basename(path) == sub_file_name:
-                yield path
-                continue
-
-            sub_file_path = os.path.join(path, sub_file_name)
-            if os.path.isfile(sub_file_path):
-                yield sub_file_path
+            if os.path.isfile(path):
+                if os.path.basename(path) == sub_file_name:
+                    yield path
+            else:
+                sub_file_path = os.path.join(path, sub_file_name)
+                if os.path.isfile(sub_file_path):
+                    yield sub_file_path
 
 
     @classmethod
-    def find_sub_files_from_env(cls, rootdir, env,
+    def find_sub_files_from_env(cls, rootdir, env, use_subdirs,
                                 default_sub_name='Android.bp'):
         """Find the sub files from the names specified in build, subdirs, and
         optional_subdirs."""
@@ -721,24 +781,23 @@ class RecursiveParser(object):
         if 'build' in env:
             subs.extend(os.path.join(rootdir, filename)
                         for filename in env['build'].eval(env))
+        if use_subdirs:
+            sub_name = env['subname'] if 'subname' in env else default_sub_name
 
-        sub_name = env['subname'] if 'subname' in env else default_sub_name
-
-        if 'subdirs' in env:
-            for path in env['subdirs'].eval(env):
-                subs.extend(
-                    cls.glob_sub_files(os.path.join(rootdir, path), sub_name))
-
-        if 'optional_subdirs' in env:
-            for path in env['optional_subdirs'].eval(env):
-                subs.extend(
-                    cls.glob_sub_files(os.path.join(rootdir, path), sub_name))
-
+            if 'subdirs' in env:
+                for path in env['subdirs'].eval(env):
+                    subs.extend(cls.glob_sub_files(os.path.join(rootdir, path),
+                                                   sub_name))
+            if 'optional_subdirs' in env:
+                for path in env['optional_subdirs'].eval(env):
+                    subs.extend(cls.glob_sub_files(os.path.join(rootdir, path),
+                                                   sub_name))
         return subs
 
 
     @staticmethod
-    def _parse_one_file(path, env):
+    def _read_file(path, env):
+        """Read a blueprint file and return modules and the environment."""
         with open(path, 'r') as bp_file:
             content = bp_file.read()
         parser = Parser(Lexer(content), env)
@@ -747,18 +806,25 @@ class RecursiveParser(object):
 
 
     def _parse_file(self, path, env, evaluate):
-        """Parse blueprint files recursively."""
-
-        self.visited.add(os.path.abspath(path))
-
-        modules, sub_env = self._parse_one_file(path, env)
+        """Parse a blueprint file and append to self.modules."""
+        modules, sub_env = self._read_file(path, env)
         if evaluate:
             modules = [(ident, attrs.eval(env)) for ident, attrs in modules]
         self.modules += modules
+        return sub_env
+
+
+    def _parse_file_recursive(self, path, env, evaluate, use_subdirs):
+        """Parse a blueprint file and recursively."""
+
+        self.visited.add(os.path.abspath(path))
+
+        sub_env = self._parse_file(path, env, evaluate)
 
         rootdir = os.path.dirname(path)
 
-        sub_file_paths = self.find_sub_files_from_env(rootdir, sub_env)
+        sub_file_paths = self.find_sub_files_from_env(rootdir, sub_env,
+                                                      use_subdirs)
 
         sub_env.pop('build', None)
         sub_env.pop('subdirs', None)
@@ -766,17 +832,105 @@ class RecursiveParser(object):
 
         for sub_file_path in sub_file_paths:
             if os.path.abspath(sub_file_path) not in self.visited:
-                self._parse_file(sub_file_path, sub_env, evaluate)
+                self._parse_file_recursive(sub_file_path, sub_env, evaluate,
+                                           use_subdirs)
+        return sub_env
+
+
+    def _scan_and_parse_all_file_recursive(self, filename, path, env, evaluate):
+        """Scan all files with the specified name and parse them."""
+
+        rootdir = os.path.dirname(path)
+        envs = [(rootdir, env)]
+        assert env is not None
+
+        # Scan directories for all blueprint files
+        for basedir, dirnames, filenames in os.walk(rootdir):
+            # Drop irrelevant environments
+            while not basedir.startswith(envs[-1][0]):
+                envs.pop()
+
+            # Filter sub directories
+            new_dirnames = []
+            for name in dirnames:
+                if name in {'.git', '.repo'}:
+                    continue
+                if basedir == rootdir and name == 'out':
+                    continue
+                new_dirnames.append(name)
+            dirnames[:] = new_dirnames
+
+            # Parse blueprint files
+            if filename in filenames:
+                try:
+                    path = os.path.join(basedir, filename)
+                    sys.stdout.flush()
+                    sub_env = self._parse_file_recursive(path, envs[-1][1],
+                                                         evaluate, False)
+                    assert sub_env is not None
+                    envs.append((basedir, sub_env))
+                except IOError:
+                    pass
 
 
     def parse_file(self, path, env=None, evaluate=True):
         """Parse blueprint files recursively."""
-        self._parse_file(path, {} if env is None else env, evaluate)
+
+        if env is None:
+            env = {}
+
+        sub_env = self._read_file(path, env)[1]
+
+        if 'subdirs' in sub_env or 'optional_subdirs' in sub_env:
+            self._parse_file_recursive(path, env, evaluate, True)
+        else:
+            self._scan_and_parse_all_file_recursive('Android.bp', path, env,
+                                                    evaluate)
 
 
 #------------------------------------------------------------------------------
 # Transformation
 #------------------------------------------------------------------------------
+
+def _build_named_modules_dict(modules):
+    """Build a name-to-module dict."""
+    named_modules = {}
+    for i, (ident, attrs) in enumerate(modules):
+        name = attrs.get('name')
+        if name is not None:
+            named_modules[name] = [ident, attrs, i]
+    return named_modules
+
+
+def _po_sorted_modules(modules, named_modules):
+    """Sort modules in post order."""
+    modules = [(ident, attrs, i) for i, (ident, attrs) in enumerate(modules)]
+
+    # Build module dependency graph.
+    edges = {}
+    for ident, attrs, module_id in modules:
+        defaults = attrs.get('defaults')
+        if defaults:
+            edges[module_id] = set(
+                named_modules[default][2] for default in defaults)
+
+    # Traverse module graph in post order.
+    post_order = []
+    visited = set()
+
+    def _traverse(module_id):
+        visited.add(module_id)
+        for next_module_id in edges.get(module_id, []):
+            if next_module_id not in visited:
+                _traverse(next_module_id)
+        post_order.append(modules[module_id])
+
+    for module_id in range(len(modules)):
+        if module_id not in visited:
+            _traverse(module_id)
+
+    return post_order
+
 
 def evaluate_default(attrs, default_attrs):
     """Add default attributes if the keys do not exist."""
@@ -792,14 +946,9 @@ def evaluate_default(attrs, default_attrs):
 
 def evaluate_defaults(modules):
     """Add default attributes to all modules if the keys do not exist."""
-    mods = {}
-    for ident, attrs in modules:
-        mods[attrs['name']] = (ident, attrs)
-    for i, (ident, attrs) in enumerate(modules):
-        defaults = attrs.get('defaults')
-        if defaults is None:
-            continue
-        for default in defaults:
-            attrs = evaluate_default(attrs, mods[default][1])
+    named_modules = _build_named_modules_dict(modules)
+    for ident, attrs, i in _po_sorted_modules(modules, named_modules):
+        for default in attrs.get('defaults', []):
+            attrs = evaluate_default(attrs, named_modules[default][1])
         modules[i] = (ident, attrs)
     return modules
