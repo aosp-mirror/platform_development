@@ -13,6 +13,8 @@
     let strsData, mods, tagIds;
     let domPathInput, domFuzzyMatch;
     let domTBody;
+    let domPlaceholder = null;
+    let placeholderVisible = false;
 
     //--------------------------------------------------------------------------
     // DOM Helper Functions
@@ -160,8 +162,12 @@
     }
 
     Module.prototype.showDom = function () {
+        hidePlaceholder();
         if (this.visible) {
             return;
+        }
+        if (this.dom === null) {
+            this.createDom();
         }
         domTBody.appendChild(this.dom);
         this.visible = true;
@@ -317,8 +323,8 @@
         domTBody.id = 'module_tbody';
 
         createTableHeaderDom(domTBody);
-        createAllModulesDom();
-        showAllModules();
+
+        showPlaceholder();
 
         let domTable  = domNewElem('table', domTBody);
         domTable.id = 'module_table';
@@ -342,9 +348,31 @@
         parent.appendChild(domTr);
     }
 
-    function createAllModulesDom() {
-        for (let mod of mods) {
-            mod.createDom();
+    function createPlaceholder() {
+        let domTd = domNewElem('td');
+        domTd.setAttribute('colspan', 4);
+        domTd.setAttribute('id', 'no_module_placeholder');
+        domTd.appendChild(domNewText(
+            'No modules are selected.  Click the menu to select modules by ' +
+            'names or categories.'));
+        domPlaceholder = domNewElem('tr', domTd);
+    }
+
+    function showPlaceholder() {
+        if (placeholderVisible) {
+            return;
+        }
+        placeholderVisible = true;
+        if (domPlaceholder === null) {
+            createPlaceholder();
+        }
+        domTBody.appendChild(domPlaceholder);
+    }
+
+    function hidePlaceholder() {
+        if (placeholderVisible) {
+            domTBody.removeChild(domPlaceholder);
+            placeholderVisible = false;
         }
     }
 
@@ -352,6 +380,7 @@
         for (let mod of mods) {
             mod.hideDom();
         }
+        showPlaceholder();
     }
 
     function showAllModules() {
