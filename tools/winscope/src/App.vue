@@ -90,7 +90,7 @@ var protoDefs = protobuf.Root.fromJSON(jsonProtoDefs)
 var TraceMessage = protoDefs.lookupType(
   "com.android.server.wm.proto.WindowManagerTraceFileProto");
 var ServiceMessage = protoDefs.lookupType(
-  "com.android.server.wm.proto.WindowManagerServiceProto");
+  "com.android.server.wm.proto.WindowManagerServiceDumpProto");
 var LayersMessage = protoDefs.lookupType("android.surfaceflinger.LayersProto");
 var LayersTraceMessage = protoDefs.lookupType("android.surfaceflinger.LayersTraceFileProto");
 
