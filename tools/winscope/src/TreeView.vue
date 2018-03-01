@@ -36,7 +36,7 @@ var protoDefs = protobuf.Root.fromJSON(jsonProtoDefs);
 var TraceMessage = protoDefs.lookupType(
   "com.android.server.wm.proto.WindowManagerTraceFileProto");
 var ServiceMessage = protoDefs.lookupType(
-  "com.android.server.wm.proto.WindowManagerServiceProto");
+  "com.android.server.wm.proto.WindowManagerServiceDumpProto");
 
 export default {
   name: 'tree-view',
