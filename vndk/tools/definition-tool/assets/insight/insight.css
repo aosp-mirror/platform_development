@@ -70,6 +70,7 @@ a:active {
 
 #module_table {
 	border-collapse: collapse;
+	width: 100%;
 }
 
 #module_tbody td,
@@ -106,4 +107,10 @@ a:active {
 	font-family: monospace;
 	font-size: 80%;
 	color: #aaaaaa;
+}
+
+#no_module_placeholder {
+	font-style: italic;
+	font-family: sans-serif;
+	text-align: center;
 }
