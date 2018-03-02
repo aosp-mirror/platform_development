@@ -5,9 +5,10 @@ import os
 import subprocess
 import gzip
 import shutil
+import time
 
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
-AOSP_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, *['..'] * 5))
+AOSP_DIR = os.getenv('ANDROID_BUILD_TOP')
 
 BUILTIN_HEADERS_DIR = (
     os.path.join(AOSP_DIR, 'bionic', 'libc', 'include'),
@@ -23,6 +24,8 @@ EXPORTED_HEADERS_DIR = (
 SO_EXT = '.so'
 SOURCE_ABI_DUMP_EXT_END = '.lsdump'
 SOURCE_ABI_DUMP_EXT = SO_EXT + SOURCE_ABI_DUMP_EXT_END
+COMPRESSED_SOURCE_ABI_DUMP_EXT = SOURCE_ABI_DUMP_EXT + '.gz'
+VENDOR_SUFFIX = '.vendor'
 
 DEFAULT_CPPFLAGS = ['-x', 'c++', '-std=c++11']
 DEFAULT_CFLAGS = ['-std=gnu99']
@@ -119,19 +122,37 @@ def run_header_abi_linker(output_path, inputs, version_script, api, arch):
         with open(output_path, 'r') as f:
             return read_output_content(output_path, AOSP_DIR)
 
-def make_library(lib_name):
-    # Create reference dumps for integration tests
-    make_cmd = ['make', '-j', lib_name]
+def make_tree(product):
+    # To aid creation of reference dumps.
+    make_cmd = ['build/soong/soong_ui.bash', '--make-mode', '-j',
+                'vndk_package', 'TARGET_PRODUCT=' + product]
     subprocess.check_call(make_cmd, cwd=AOSP_DIR)
 
+def make_targets(targets, product):
+    make_cmd = ['build/soong/soong_ui.bash', '--make-mode', '-j']
+    for target in targets:
+        make_cmd.append(target)
+    make_cmd.append('TARGET_PRODUCT=' + product)
+    subprocess.check_call(make_cmd, cwd=AOSP_DIR, stdout=subprocess.DEVNULL,
+                          stderr=subprocess.STDOUT)
+
+def make_libraries(libs, product):
+    # To aid creation of reference dumps. Makes lib.vendor for the current
+    # configuration.
+    lib_targets = []
+    for lib in libs:
+        lib_targets.append(lib + VENDOR_SUFFIX)
+    make_targets(lib_targets, product)
+
 def find_lib_lsdumps(target_arch, target_arch_variant,
-                     target_cpu_variant, soong_dir):
+                     target_cpu_variant, lsdump_paths,
+                     core_or_vendor_shared_str, libs):
     """ Find the lsdump corresponding to lib_name for the given arch parameters
         if it exists"""
     assert 'ANDROID_PRODUCT_OUT' in os.environ
     cpu_variant = '_' + target_cpu_variant
     arch_variant = '_' + target_arch_variant
-    lsdump_paths = []
+    arch_lsdump_paths = []
     if target_cpu_variant == 'generic' or target_cpu_variant is None or\
         target_cpu_variant == '':
         cpu_variant = ''
@@ -140,16 +161,16 @@ def find_lib_lsdumps(target_arch, target_arch_variant,
         arch_variant = ''
 
     target_dir = 'android_' + target_arch + arch_variant +\
-    cpu_variant + '_vendor_shared'
-    for base, dirnames, filenames in os.walk(soong_dir):
-        for filename in filenames:
-            name, ext = os.path.splitext(filename)
-            sofile, soext = os.path.splitext(name)
-            if ext == SOURCE_ABI_DUMP_EXT_END and soext == SO_EXT :
-                path = os.path.join(base, filename)
-                if target_dir in os.path.dirname(path):
-                    lsdump_paths.append(path)
-    return lsdump_paths
+        cpu_variant + core_or_vendor_shared_str
+    for path in lsdump_paths:
+        filename = os.path.basename(path)
+        name, _ = os.path.splitext(filename)
+        sofile, _ = os.path.splitext(name)
+        if target_dir in path:
+            if libs and sofile not in libs:
+                continue
+            arch_lsdump_paths.append(os.path.join(AOSP_DIR, path.strip()))
+    return arch_lsdump_paths
 
 def run_abi_diff(old_test_dump_path, new_test_dump_path, arch, lib_name,
                  flags=[]):
@@ -167,14 +188,25 @@ def run_abi_diff(old_test_dump_path, new_test_dump_path, arch, lib_name,
     return 0
 
 
-def get_build_var(name):
-    """Get build system variable for the launched target."""
-    if 'ANDROID_PRODUCT_OUT' not in os.environ:
+def get_build_vars_for_product(names, product=None):
+    build_vars_list = []
+    """ Get build system variable for the launched target."""
+    if product is None and 'ANDROID_PRODUCT_OUT' not in os.environ:
         return None
-
-    cmd = ['build/soong/soong_ui.bash', '--dumpvar-mode', name]
+    cmd = ''
+    if product is not None:
+        cmd += 'source build/envsetup.sh>/dev/null && lunch>/dev/null ' + product + '&&'
+    cmd += ' build/soong/soong_ui.bash --dumpvars-mode -vars \"'
+    for name in names:
+        cmd += name + ' '
+    cmd += '\"'
 
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE, cwd=AOSP_DIR)
+                            stderr=subprocess.DEVNULL, cwd=AOSP_DIR, shell=True)
     out, err = proc.communicate()
-    return out.decode('utf-8').strip()
+
+    build_vars = out.decode('utf-8').strip().split('\n')
+    for build_var in build_vars:
+      key, _, value = build_var.partition('=')
+      build_vars_list.append(value.replace('\'', ''))
+    return build_vars_list
