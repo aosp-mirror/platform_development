@@ -67,6 +67,7 @@ public class DefaultActivity extends Activity {
         PackageManager pm = getPackageManager();
         ComponentName name = new ComponentName(this, DefaultActivity.class);
         pm.setComponentEnabledSetting(name, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, 0);
+        Settings.Secure.putInt(getContentResolver(),Settings.Secure.ADB_ENABLED, 1);
 
         // terminate the activity.
         finish();
