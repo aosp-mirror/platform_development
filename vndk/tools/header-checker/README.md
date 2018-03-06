@@ -45,30 +45,15 @@
 
   As an example, these steps could be followed to create reference abi-dumps :
 
-  $ cd $(ANDROID_BUILD_TOP); lunch aosp_arm64; make -j64
-  $ python3 utils/create_reference_dumps.py --vndk-list vndk_list -ref-dump-dir \
-    $(ANDROID_BUILD_TOP)/prebuilts/abi-dumps/vndk --version current
+  $python3 create_reference_dumps.py;
 
-    --vndk_list : file containing a list of the libraries whose
-    reference dumps are to be created, seperated by \n. For eg:
-    vndk_list:
-    libtinyxml2
-    libziparchive
-    libc++
+  This creates reference dumps for arm, arm64, x86, x86_64 for all vndk shared
+  libraries.
 
-    --version: This is the version of the vndk being built.
+  If one wanted to create references for a specific library, they could do it
+  with the following command:
 
-    This will create corresponding .lsdump files at
-    $(ANDROID_BUILD_TOP)/prebuilts/abi-dumps/vndk/arm(64)/current/source-based
+  $python3 create_reference_dumps.py -l libfoo, this will create reference dumps
 
-  gzip the reference dumps produced :
-     $ cd $(ANDROID_BUILD_TOP)/prebuilts/abi-dumps/vndk/arm(64)/current/source-based;
-     $ gzip *.lsdump;
-
-  The same procedure should also be followed for ll-ndk libraries, listing them
-  in a seperate file and running create_reference_dumps.py with -ref-dump-dir
-  set to $(ANDROID_BUILD_TOP)/prebuilts/abi-dumps/ndk.
-
-  On subsequent arm based builds, header-abi-diff will report warnings on
-  abi-breakages and changes to exported apis.
+  for libfoo, assuming libfoo is a vndk / llndk library.
 
