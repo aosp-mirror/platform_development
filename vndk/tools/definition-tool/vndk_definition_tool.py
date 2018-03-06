@@ -3356,11 +3356,30 @@ class CheckDepCommand(CheckDepCommandBase):
         super(CheckDepCommand, self).__init__(
                 'check-dep', help='Check the eligible dependencies')
 
+
     def add_argparser_options(self, parser):
         super(CheckDepCommand, self).add_argparser_options(parser)
 
-        parser.add_argument('--check-apk', action='store_true',
-                            help='Check JNI dependencies in APK files')
+        group = parser.add_mutually_exclusive_group()
+
+        group.add_argument('--check-apk', action='store_true', default=False,
+                           help='Check JNI dependencies in APK files')
+
+        group.add_argument('--no-check-apk', action='store_false',
+                           dest='check_apk',
+                           help='Do not check JNI dependencies in APK files')
+
+        group = parser.add_mutually_exclusive_group()
+
+        group.add_argument('--check-dt-needed-ordering',
+                           action='store_true', default=True,
+                           help='Check ordering of DT_NEEDED entries')
+
+        group.add_argument('--no-check-dt-needed-ordering',
+                           action='store_false',
+                           dest='check_dt_needed_ordering',
+                           help='Do not check ordering of DT_NEEDED entries')
+
 
     def _check_vendor_dep(self, graph, tagged_libs, module_info):
         """Check whether vendor libs are depending on non-eligible libs."""
@@ -3399,6 +3418,33 @@ class CheckDepCommand(CheckDepCommandBase):
 
         return num_errors
 
+
+    def _check_dt_needed_ordering(self, graph, module_info):
+        """Check DT_NEEDED entries order of all libraries"""
+
+        num_errors = 0
+
+        def _is_libc_prior_to_libdl(lib):
+            dt_needed = lib.elf.dt_needed
+            try:
+                return dt_needed.index('libc.so') < dt_needed.index('libdl.so')
+            except ValueError:
+                return True
+
+        for lib in sorted(graph.all_libs()):
+            if _is_libc_prior_to_libdl(lib):
+                continue
+
+            print('error: The ordering of DT_NEEDED entries in "{}" may be '
+                  'problematic.  libc.so must be prior to libdl.so.  '
+                  'But found: {}.'
+                  .format(lib.path, lib.elf.dt_needed), file=sys.stderr)
+
+            num_errors += 1
+
+        return num_errors
+
+
     def _check_apk_dep(self, graph, system_dirs, vendor_dirs, module_info):
         num_errors = 0
 
@@ -3424,6 +3470,7 @@ class CheckDepCommand(CheckDepCommandBase):
                 self._dump_apk_dep(apk_path, sorted(bad_deps), module_info)
         return num_errors
 
+
     def main(self, args):
         generic_refs, graph, tagged_paths, vndk_lib_dirs = \
                 self.create_from_args(args)
@@ -3437,6 +3484,9 @@ class CheckDepCommand(CheckDepCommandBase):
 
         num_errors = self._check_vendor_dep(graph, tagged_libs, module_info)
 
+        if args.check_dt_needed_ordering:
+            num_errors += self._check_dt_needed_ordering(graph, module_info)
+
         if args.check_apk:
             num_errors += self._check_apk_dep(graph, args.system, args.vendor,
                                               module_info)
@@ -3448,6 +3498,7 @@ class CheckEligibleListCommand(CheckDepCommandBase):
     def __init__(self):
         super(CheckEligibleListCommand, self).__init__(
                 'check-eligible-list', help='Check the eligible list')
+
 
     def _check_eligible_vndk_dep(self, graph, tagged_libs, module_info):
         """Check whether eligible sets are self-contained."""
@@ -3486,6 +3537,7 @@ class CheckEligibleListCommand(CheckDepCommandBase):
                 self._dump_dep(lib, bad_deps, module_info)
 
         return num_errors
+
 
     def main(self, args):
         generic_refs, graph, tagged_paths, vndk_lib_dirs = \
