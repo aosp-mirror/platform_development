@@ -196,8 +196,17 @@ class IRToProtobufConverter {
 
   static abi_dump::RecordType ConvertRecordTypeIR(const RecordTypeIR *recordp);
 
-  static bool AddFunctionParameters(abi_dump::FunctionDecl *function_protobuf,
-                                    const FunctionIR *function_ir);
+  static abi_dump::FunctionType ConvertFunctionTypeIR (
+      const FunctionTypeIR *function_typep);
+
+  template <typename CFunctionLikeMessage>
+  static bool AddFunctionParametersAndSetReturnType(
+      CFunctionLikeMessage *function_like_protobuf,
+      const CFunctionLikeIR *cfunction_like_ir);
+
+  template <typename CFunctionLikeMessage>
+  static bool AddFunctionParameters(CFunctionLikeMessage *function_protobuf,
+                                    const CFunctionLikeIR *cfunction_like_ir);
 
   static abi_dump::FunctionDecl ConvertFunctionIR(const FunctionIR *functionp);
 
@@ -287,6 +296,8 @@ class ProtobufIRDumper : public IRDumper, public IRToProtobufConverter {
   bool AddArrayTypeIR(const ArrayTypeIR *);
 
   bool AddBuiltinTypeIR(const BuiltinTypeIR *);
+
+  bool AddFunctionTypeIR(const FunctionTypeIR *function_typep);
 
   // Functions and global variables.
   bool AddFunctionIR(const FunctionIR *);
