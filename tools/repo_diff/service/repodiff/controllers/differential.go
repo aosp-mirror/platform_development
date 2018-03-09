@@ -33,11 +33,13 @@ func ExecuteDifferentials(config e.ApplicationConfig) error {
 	}
 
 	for _, target := range config.DiffTargets {
+		fmt.Printf("Processing differential from %s to %s\n", target.Upstream.Branch, target.Downstream.Branch)
+		err = clearOutputDirectory(config)
 		commitCSV, projectCSV, err := runPyScript(config, target)
 		if err != nil {
 			return errors.Wrap(err, "Error running python differential script")
 		}
-		err = TransferScriptOutputToDownstream(projectCSV, commitCSV)
+		err = TransferScriptOutputToDownstream(target, projectCSV, commitCSV)
 		if err != nil {
 			return errors.Wrap(err, "Error transferring script output to downstream")
 		}
@@ -51,6 +53,14 @@ func createWorkingPath(folderPath string) error {
 
 func printFunctionDuration(fnLabel string, start time.Time) {
 	fmt.Printf("Finished '%s' in %s\n", fnLabel, time.Now().Sub(start))
+}
+
+func clearOutputDirectory(config e.ApplicationConfig) error {
+	return exec.Command(
+		"/bin/sh",
+		"-c",
+		fmt.Sprintf("rm -rf %s/*", config.OutputDirectory),
+	).Run()
 }
 
 func setupCommand(pyScript string, config e.ApplicationConfig, target e.DiffTarget) *exec.Cmd {
@@ -105,12 +115,12 @@ func diffTarget(pyScript string, config e.ApplicationConfig, target e.DiffTarget
 }
 
 // SBL need to add test coverage here
-func TransferScriptOutputToDownstream(projectCSVFile, commitCSVFile string) error {
+func TransferScriptOutputToDownstream(target e.DiffTarget, projectCSVFile, commitCSVFile string) error {
 	diffRows, commitRows, err := readCSVFiles(projectCSVFile, commitCSVFile)
 	if err != nil {
 		return err
 	}
-	return persistEntities(diffRows, commitRows)
+	return persistEntities(target, diffRows, commitRows)
 }
 
 func readCSVFiles(projectCSVFile, commitCSVFile string) ([]e.DiffRow, []e.CommitRow, error) {
@@ -125,13 +135,21 @@ func readCSVFiles(projectCSVFile, commitCSVFile string) ([]e.DiffRow, []e.Commit
 	return diffRows, commitRows, nil
 }
 
-func persistEntities(diffRows []e.DiffRow, commitRows []e.CommitRow) error {
-	err := persistDiffRowsDownstream(diffRows)
+func persistEntities(target e.DiffTarget, diffRows []e.DiffRow, commitRows []e.CommitRow) error {
+	sourceRepo, err := repositories.NewSourceRepository()
+	if err != nil {
+		return errors.Wrap(err, "Error initializing Source Repository")
+	}
+	mappedTarget, err := sourceRepo.DiffTargetToMapped(target)
+	if err != nil {
+		return errors.Wrap(err, "Error mapping diff targets; a race condition is possible")
+	}
+	err = persistDiffRowsDownstream(mappedTarget, diffRows)
 	if err != nil {
 		return errors.Wrap(err, "Error persisting diff rows")
 	}
 
-	err = persistCommitRowsDownstream(commitRows)
+	err = persistCommitRowsDownstream(mappedTarget, commitRows)
 	if err != nil {
 		return errors.Wrap(err, "Error persist commit rows")
 	}
@@ -188,8 +206,8 @@ func toCommitRows(entities []interface{}) ([]e.CommitRow, error) {
 	return commitRows, nil
 }
 
-func persistDiffRowsDownstream(diffRows []e.DiffRow) error {
-	p, err := repositories.NewProjectRepository()
+func persistDiffRowsDownstream(mappedTarget e.MappedDiffTarget, diffRows []e.DiffRow) error {
+	p, err := repositories.NewProjectRepository(mappedTarget)
 	if err != nil {
 		return errors.Wrap(err, "Error instantiating a new project repository")
 	}
@@ -200,8 +218,8 @@ func persistDiffRowsDownstream(diffRows []e.DiffRow) error {
 	return nil
 }
 
-func persistCommitRowsDownstream(commitRows []e.CommitRow) error {
-	c, err := repositories.NewCommitRepository()
+func persistCommitRowsDownstream(mappedTarget e.MappedDiffTarget, commitRows []e.CommitRow) error {
+	c, err := repositories.NewCommitRepository(mappedTarget)
 	if err != nil {
 		return errors.Wrap(err, "Error instantiating a new commit repository")
 	}

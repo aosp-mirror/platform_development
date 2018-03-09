@@ -15,6 +15,7 @@ type ApplicationConfig struct {
 	AndroidProjectDir string       `json:"android_project_dir"`
 	DiffScript        string       `json:"diff_script"`
 	DiffTargets       []DiffTarget `json:"diff_targets"`
+	Port              int          `json:"port"`
 }
 
 type DiffRow struct {
@@ -36,4 +37,14 @@ type CommitRow struct {
 	DownstreamProject string
 	Author            string
 	Subject           string
+}
+
+type MappedDiffTarget struct {
+	UpstreamTarget   int16
+	DownstreamTarget int16
+}
+
+type StatusMessage struct {
+	JobStatus string
+	Meta      string
 }

@@ -1,5 +1,7 @@
 
 CREATE TABLE project_differential (
+  upstream_target_id SMALLINT NOT NULL,
+  downstream_target_id SMALLINT NOT NULL,
   timestamp BIGINT NOT NULL,
   uuid BINARY(16) NOT NULL,
   row_index INT NOT NULL,
@@ -12,5 +14,5 @@ CREATE TABLE project_differential (
   line_deletions INT NOT NULL,
   line_changes INT NOT NULL,
   commits_not_upstreamed INT NOT NULL,
-  PRIMARY KEY (timestamp, uuid, row_index)
+  PRIMARY KEY (upstream_target_id, downstream_target_id, timestamp, uuid, row_index)
 );

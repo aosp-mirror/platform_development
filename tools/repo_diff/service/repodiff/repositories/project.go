@@ -13,7 +13,8 @@ import (
 )
 
 type project struct {
-	db *sql.DB
+	db     *sql.DB
+	target e.MappedDiffTarget
 }
 
 func (p project) InsertDiffRows(diffRows []e.DiffRow) error {
@@ -21,6 +22,8 @@ func (p project) InsertDiffRows(diffRows []e.DiffRow) error {
 		repoSQL.SingleTransactionInsert(
 			p.db,
 			`INSERT INTO project_differential (
+				upstream_target_id,
+				downstream_target_id,
 				timestamp,
 				uuid,
 				row_index,
@@ -32,8 +35,11 @@ func (p project) InsertDiffRows(diffRows []e.DiffRow) error {
 				line_deletions,
 				line_changes,
 				commits_not_upstreamed
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-			mappers.DiffRowsToPersistCols(diffRows),
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			mappers.PrependMappedDiffTarget(
+				p.target,
+				mappers.DiffRowsToPersistCols(diffRows),
+			),
 		),
 		"Error inserting rows into project_differential",
 	)
@@ -43,15 +49,19 @@ func (p project) GetMostRecentOuterKey() (int64, uuid.UUID, error) {
 	var timestamp int64
 	var uuidBytes []byte
 	err := p.db.QueryRow(
-		`SELECT timestamp, uuid FROM project_differential WHERE timestamp=(
-			SELECT MAX(timestamp) FROM project_differential
+		`SELECT timestamp, uuid FROM project_differential WHERE upstream_target_id = ? AND downstream_target_id = ? AND timestamp=(
+			SELECT MAX(timestamp) FROM project_differential WHERE upstream_target_id = ? AND downstream_target_id = ?
 		) LIMIT 1`,
+		p.target.UpstreamTarget,
+		p.target.DownstreamTarget,
+		p.target.UpstreamTarget,
+		p.target.DownstreamTarget,
 	).Scan(
 		&timestamp,
 		&uuidBytes,
 	)
 	if err != nil {
-		return 0, constants.NullUUID(), errors.Wrap(err, "Error querying latest timestamp")
+		return 0, constants.NullUUID(), err
 	}
 	u, err := uuid.FromBytes(uuidBytes)
 	if err != nil {
@@ -62,7 +72,11 @@ func (p project) GetMostRecentOuterKey() (int64, uuid.UUID, error) {
 
 func (p project) GetMostRecentDifferentials() ([]e.DiffRow, error) {
 	timestamp, uid, err := p.GetMostRecentOuterKey()
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
 	if err != nil {
+		// TODO this doesn't handle empty case properly
 		return nil, err
 	}
 	var errMapping error
@@ -81,7 +95,26 @@ func (p project) GetMostRecentDifferentials() ([]e.DiffRow, error) {
 				d,
 			)
 		},
-		"SELECT * FROM project_differential WHERE timestamp = ? AND uuid = ?",
+		`SELECT
+		  timestamp,
+			uuid,
+			row_index,
+			downstream_project,
+			upstream_project,
+			status,
+			files_changed,
+			line_insertions,
+			line_deletions,
+			line_changes,
+			commits_not_upstreamed
+		FROM project_differential
+		WHERE
+		  upstream_target_id = ?
+			AND downstream_target_id = ?
+			AND timestamp = ?
+			AND uuid = ?`,
+		p.target.UpstreamTarget,
+		p.target.DownstreamTarget,
 		timestamp,
 		string(uid.Bytes()),
 	)
@@ -94,9 +127,10 @@ func (p project) GetMostRecentDifferentials() ([]e.DiffRow, error) {
 	return diffRows, nil
 }
 
-func NewProjectRepository() (project, error) {
+func NewProjectRepository(target e.MappedDiffTarget) (project, error) {
 	db, err := repoSQL.GetDBConnectionPool()
 	return project{
-		db: db,
+		db:     db,
+		target: target,
 	}, errors.Wrap(err, "Could not establish a database connection")
 }
