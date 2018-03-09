@@ -515,11 +515,21 @@ abi_dump::ElfFunction IRToProtobufConverter::ConvertElfFunctionIR(
   return elf_function_protobuf;
 }
 
+template <typename CFunctionLikeMessage>
+bool IRToProtobufConverter::AddFunctionParametersAndSetReturnType(
+    CFunctionLikeMessage *function_like_protobuf,
+    const CFunctionLikeIR *cfunction_like_ir) {
+  function_like_protobuf->set_return_type(cfunction_like_ir->GetReturnType());
+  return AddFunctionParameters(function_like_protobuf, cfunction_like_ir);
+}
+
+template <typename CFunctionLikeMessage>
 bool IRToProtobufConverter::AddFunctionParameters(
-    abi_dump::FunctionDecl *function_protobuf,
-    const FunctionIR *function_ir) {
-  for (auto &&parameter : function_ir->GetParameters()) {
-    abi_dump::ParamDecl *added_parameter = function_protobuf->add_parameters();
+    CFunctionLikeMessage *function_like_protobuf,
+    const CFunctionLikeIR *cfunction_like_ir) {
+  for (auto &&parameter : cfunction_like_ir->GetParameters()) {
+    abi_dump::ParamDecl *added_parameter =
+        function_like_protobuf->add_parameters();
     if (!added_parameter) {
       return false;
     }
@@ -530,6 +540,18 @@ bool IRToProtobufConverter::AddFunctionParameters(
   return true;
 }
 
+abi_dump::FunctionType IRToProtobufConverter::ConvertFunctionTypeIR (
+    const FunctionTypeIR *function_typep) {
+  abi_dump::FunctionType added_function_type;
+  if (!AddTypeInfo(added_function_type.mutable_type_info(), function_typep) ||
+      !AddFunctionParametersAndSetReturnType(&added_function_type,
+                                             function_typep)) {
+    llvm::errs() << "Could not convert FunctionTypeIR to protobuf\n";
+    ::exit(1);
+  }
+  return added_function_type;
+}
+
 abi_dump::FunctionDecl IRToProtobufConverter::ConvertFunctionIR(
     const FunctionIR *functionp) {
   abi_dump::FunctionDecl added_function;
@@ -537,8 +559,7 @@ abi_dump::FunctionDecl IRToProtobufConverter::ConvertFunctionIR(
   added_function.set_linker_set_key(functionp->GetLinkerSetKey());
   added_function.set_source_file(functionp->GetSourceFile());
   added_function.set_function_name(functionp->GetName());
-  added_function.set_return_type(functionp->GetReturnType());
-  if (!AddFunctionParameters(&added_function, functionp) ||
+  if (!AddFunctionParametersAndSetReturnType(&added_function, functionp) ||
       !(functionp->GetTemplateElements().size() ?
       AddTemplateInformation(added_function.mutable_template_info(), functionp)
       : true)) {
@@ -948,6 +969,8 @@ bool ProtobufIRDumper::AddLinkableMessageIR (const LinkableMessageIR *lm) {
           static_cast<const RvalueReferenceTypeIR*>(lm));
     case BuiltinTypeKind:
       return AddBuiltinTypeIR(static_cast<const BuiltinTypeIR*>(lm));
+    case FunctionTypeKind:
+      return AddFunctionTypeIR(static_cast<const FunctionTypeIR*>(lm));
     case GlobalVarKind:
       return AddGlobalVarIR(static_cast<const GlobalVarIR*>(lm));
     case FunctionKind:
@@ -990,6 +1013,15 @@ bool ProtobufIRDumper::AddRecordTypeIR(const RecordTypeIR *recordp) {
     return false;
   }
   *added_record_type = ConvertRecordTypeIR(recordp);
+  return true;
+}
+
+bool ProtobufIRDumper::AddFunctionTypeIR(const FunctionTypeIR *function_typep) {
+  abi_dump::FunctionType *added_function_type = tu_ptr_->add_function_types();
+  if (!added_function_type) {
+    return false;
+  }
+  *added_function_type = ConvertFunctionTypeIR(function_typep);
   return true;
 }
 

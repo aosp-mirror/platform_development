@@ -345,7 +345,9 @@ MergeStatus TextFormatToIRReader::MergeReferencingTypeInternalAndUpdateParent(
       // We maintain a rollback id to have contiguous type ids.
       max_type_id_ = old_max_type_id;
       // Try finding the referenced_type is referred to by any referencing type
-      // of the same kind in the parent graph.
+      // of the same kind in the parent graph. It is safe to call this on the
+      // added_node, since the referenced_type in the added_node would have been
+      // modified by the MergeReferencingTypeInternal call.
       auto it = parent_map->find(GetReferencedTypeMapKey(added_node));
       if (it == parent_map->end()) {
         // There was no counterpart found for the added_node's type Kind referencing
