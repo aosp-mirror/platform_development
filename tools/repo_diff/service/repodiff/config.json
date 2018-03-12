@@ -1,0 +1,17 @@
+{
+    "android_project_dir": "/ssd850/slobdell_projects/android/",
+    "output_directory": "/ssd850/slobdell_projects/repo_output",
+    "diff_script": "development/tools/repo_diff/repo_diff_android.py",
+    "diff_targets": [
+        {
+            "upstream": {
+                "url": "persistent-https://android.googlesource.com/platform/manifest/",
+                "branch": "nougat-dev"
+            },
+            "downstream": {
+                "url": "persistent-https://android.googlesource.com/platform/manifest/",
+                "branch": "master"
+            }
+        }
+    ]
+}
