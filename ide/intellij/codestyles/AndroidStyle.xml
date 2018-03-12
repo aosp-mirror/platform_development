@@ -19,6 +19,8 @@
     <value>
       <package name="android" withSubpackages="true" static="true" />
       <emptyLine />
+      <package name="androidx" withSubpackages="true" static="true" />
+      <emptyLine />
       <package name="com.android" withSubpackages="true" static="true" />
       <emptyLine />
       <package name="dalvik" withSubpackages="true" static="true" />
@@ -42,6 +44,8 @@
       <package name="" withSubpackages="true" static="true" />
       <emptyLine />
       <package name="android" withSubpackages="true" static="false" />
+      <emptyLine />
+      <package name="androidx" withSubpackages="true" static="false" />
       <emptyLine />
       <package name="com.android" withSubpackages="true" static="false" />
       <emptyLine />
