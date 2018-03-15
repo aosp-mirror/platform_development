@@ -47,6 +47,12 @@ def find_and_copy_lib_lsdumps(target, soong_dir, ref_dump_dir_stem,
                               core_or_vendor_shared_str,
                               libs, lsdump_paths):
     assert(target.primary_arch != '')
+    target_arch_variant_str = ''
+    # if TARGET_ARCH == TARGET_ARCH_VARIANT, soong makes targetArchVariant empty
+    # this is the case for aosp_x86_64_ab and aosp_x86
+    if target.arch_variant != target.arch:
+        target_arch_variant_str = '_' + target.arch_variant
+
     arch_lsdump_paths = find_lib_lsdumps(target.arch, target.arch_variant,
                                          target.cpu_variant, lsdump_paths,
                                          core_or_vendor_shared_str,
@@ -55,7 +61,7 @@ def find_and_copy_lib_lsdumps(target, soong_dir, ref_dump_dir_stem,
     # reference  directory.
     return copy_reference_dumps(arch_lsdump_paths, ref_dump_dir_stem,
                                 ref_dump_dir_insertion,
-                                target.arch + '_' + target.arch_variant)
+                                target.arch + target_arch_variant_str)
 
 def get_ref_dump_dir_stem(args, vndk_or_ndk, product, platform_vndk_version):
     version = args.version
@@ -63,11 +69,12 @@ def get_ref_dump_dir_stem(args, vndk_or_ndk, product, platform_vndk_version):
       version = platform_vndk_version
     if version != '' and version[0].isdigit() == False :
         version = 'current'
-    primary_arch =\
-        get_build_vars_for_product(['TARGET_ARCH'], product)[0]
+    binder_bitness = '64'
+    if get_build_vars_for_product(['BINDER32BIT'], product)[0] == 'true':
+        binder_bitness = '32'
     ref_dump_dir_stem = os.path.join(args.ref_dump_dir, vndk_or_ndk)
     ref_dump_dir_stem = os.path.join(ref_dump_dir_stem, version)
-    ref_dump_dir_stem = os.path.join(ref_dump_dir_stem, primary_arch)
+    ref_dump_dir_stem = os.path.join(ref_dump_dir_stem, binder_bitness)
 
     return ref_dump_dir_stem
 
@@ -88,8 +95,8 @@ def find_and_remove_path(root_path, file_name=None):
             ' -exec rm -rf {} \;'
         subprocess.check_call(remove_cmd_str, cwd=AOSP_DIR, shell=True)
     else:
-        remove_cmd_str = 'rm -rf ' + root_path
-        subprocess.check_call(remove_cmd_str, cwd=AOSP_DIR, shell=True)
+        remove_cmd_str = 'rm -rf *'
+        subprocess.check_call(remove_cmd_str, cwd=root_path, shell=True)
 
 def remove_references_for_all_arches_and_variants(args):
     print('Removing reference dumps...')
