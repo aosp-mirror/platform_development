@@ -775,6 +775,14 @@ inline std::string GetODRListMapKey(const RecordTypeIR *record_type_ir) {
   return record_type_ir->GetUniqueId() + record_type_ir->GetSourceFile();
 }
 
+inline std::string GetODRListMapKey(const EnumTypeIR *enum_type_ir) {
+  return enum_type_ir->GetUniqueId() + enum_type_ir->GetSourceFile();
+}
+
+inline std::string GetODRListMapKey(const FunctionTypeIR *function_type_ir) {
+  return function_type_ir->GetLinkerSetKey();
+}
+
 // The map that is being updated maps special_key -> Type / Function/ GlobVar
 // This special key is needed to distinguish what is being referenced.
 template <typename T>
@@ -783,8 +791,7 @@ typename AbiElementMap<T>::iterator AddToMapAndTypeGraph(
     AbiElementMap<const TypeIR *> *type_graph) {
   auto it = map_to_update->emplace(GetReferencedTypeMapKey(element),
                                    std::move(element));
-  type_graph->emplace(it.first->second.GetSelfType(),
-                                 &(it.first->second));
+  type_graph->emplace(it.first->second.GetSelfType(), &(it.first->second));
   return it.first;
 }
 
@@ -818,6 +825,10 @@ class TextFormatToIRReader {
 
   const AbiElementMap<RecordTypeIR> &GetRecordTypes() const {
     return record_types_;
+  }
+
+  const AbiElementMap<FunctionTypeIR> &GetFunctionTypes() const {
+    return function_types_;
   }
 
   const AbiElementMap<EnumTypeIR> &GetEnumTypes() const {
@@ -904,8 +915,7 @@ class TextFormatToIRReader {
   MergeStatus MergeReferencingTypeInternalAndUpdateParent(
       const TextFormatToIRReader &addend, const T *addend_node,
       AbiElementMap<MergeStatus> *local_to_global_type_id_map,
-      AbiElementMap<T> *parent_map,
-      const std::string  &updated_self_type_id);
+      AbiElementMap<T> *parent_map, const std::string  &updated_self_type_id);
 
   MergeStatus DoesUDTypeODRViolationExist(
     const TypeIR *ud_type, const TextFormatToIRReader &addend,
@@ -925,8 +935,23 @@ class TextFormatToIRReader {
     const TextFormatToIRReader &addend, const TypeIR *addend_node,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map);
 
+  template <typename T>
+  std::pair<MergeStatus, typename AbiElementMap<T>::iterator>
+  UpdateUDTypeAccounting(
+    const T *addend_node, const TextFormatToIRReader &addend,
+    AbiElementMap<MergeStatus> *local_to_global_type_id_map,
+    AbiElementMap<T> *specific_type_map);
+
   MergeStatus MergeTypeInternal(
     const TypeIR *addend_node, const TextFormatToIRReader &addend,
+    AbiElementMap<MergeStatus> *local_to_global_type_id_map);
+
+  void MergeCFunctionLikeDeps(
+    const TextFormatToIRReader &addend, CFunctionLikeIR *cfunction_like_ir,
+    AbiElementMap<MergeStatus> *local_to_global_type_id_map);
+
+  MergeStatus MergeFunctionType(
+    const FunctionTypeIR *addend_node, const TextFormatToIRReader &addend,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map);
 
   MergeStatus MergeEnumType(
@@ -1009,6 +1034,7 @@ class TextFormatToIRReader {
   AbiElementMap<FunctionIR> functions_;
   AbiElementMap<GlobalVarIR> global_variables_;
   AbiElementMap<RecordTypeIR> record_types_;
+  AbiElementMap<FunctionTypeIR> function_types_;
   AbiElementMap<EnumTypeIR> enum_types_;
   // These maps which contain generic referring types as values are used while
   // looking up whether in the parent graph, a particular reffering type refers

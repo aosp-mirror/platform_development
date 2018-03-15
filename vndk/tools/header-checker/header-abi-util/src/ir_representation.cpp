@@ -153,8 +153,11 @@ MergeStatus TextFormatToIRReader::IsTypeNodePresent(
       break;
     case EnumTypeKind:
       unique_type_id =
-          static_cast<const EnumTypeIR *>(
-              addend_node)->GetUniqueId() + addend_node->GetSourceFile();
+          GetODRListMapKey(static_cast<const EnumTypeIR *>(addend_node));
+      break;
+    case FunctionTypeKind:
+      unique_type_id =
+          GetODRListMapKey(static_cast<const FunctionTypeIR *>(addend_node));
       break;
     default:
       // We add the type proactively.
@@ -164,12 +167,6 @@ MergeStatus TextFormatToIRReader::IsTypeNodePresent(
   // added by returning MergeStatus with was_newly_added_ = true.
   return DoesUDTypeODRViolationExist(
       addend_node, addend, unique_type_id, local_to_global_type_id_map);
-}
-
-void TextFormatToIRReader::UpdateTextFormatToIRReaderTypeGraph(
-    const TypeIR *addend_node, const std::string &added_type_id,
-    AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
-
 }
 
 // This method merges the type referenced by 'references_type' into the parent
@@ -247,30 +244,41 @@ void TextFormatToIRReader::MergeRecordDependencies(
   MergeRecordTemplateElements(addend, added_node, local_to_global_type_id_map);
 }
 
+template <typename T>
+std::pair<MergeStatus, typename AbiElementMap<T>::iterator>
+TextFormatToIRReader::UpdateUDTypeAccounting(
+    const T *addend_node, const TextFormatToIRReader &addend,
+    AbiElementMap<MergeStatus> *local_to_global_type_id_map,
+    AbiElementMap<T> *specific_type_map) {
+  std::string added_type_id = AllocateNewTypeId();
+  // Add the ud-type with type-id to the type_graph_, since if there are generic
+  // reference types which refer to the record being added, they'll need to find
+  // it's id in the map.
+  // Add ud-type to the parent graph.
+  T added_type_ir = *addend_node;
+  added_type_ir.SetSelfType(added_type_id);
+  added_type_ir.SetReferencedType(added_type_id);
+  auto it = AddToMapAndTypeGraph(std::move(added_type_ir), specific_type_map,
+                                 &type_graph_);
+  // Add to faciliate ODR checking.
+  const std::string &key = GetODRListMapKey(&(it->second));
+  MergeStatus type_merge_status = MergeStatus(true, added_type_id);
+  AddToODRListMap(key, &(it->second));
+  local_to_global_type_id_map->emplace(addend_node->GetSelfType(),
+                                       type_merge_status);
+  return {type_merge_status, it};
+}
 // This method is necessarily going to have a was_newly_merged_ = true in its
 // MergeStatus return. So it necessarily merges a new RecordType.
 MergeStatus TextFormatToIRReader::MergeRecordAndDependencies(
   const RecordTypeIR *addend_node, const TextFormatToIRReader &addend,
-    AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
-  // Copy the record to the parent TextFormatReader.
-  std::string added_type_id = AllocateNewTypeId();
-  // Add the record with type-id to the types_graph_, since if there are generic
-  // reference types which refer to the record being added, they'll need to find
-  // it's id in the map.
-  // Add record to the parent graph.
-  RecordTypeIR record_type_ir = *addend_node;
-  record_type_ir.SetSelfType(added_type_id);
-  record_type_ir.SetReferencedType(added_type_id);
-  auto it = AddToMapAndTypeGraph(std::move(record_type_ir), &record_types_,
-                                 &type_graph_);
-  // Add to faciliate ODR checking.
-  const std::string &key = GetODRListMapKey(&(it->second));
-  MergeStatus record_merge_status = MergeStatus(true, added_type_id);
-  AddToODRListMap(key, &(it->second));
-  local_to_global_type_id_map->emplace(addend_node->GetSelfType(),
-                                       record_merge_status);
+  AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
+  auto merge_status_and_it =
+      UpdateUDTypeAccounting(addend_node, addend, local_to_global_type_id_map,
+                             &record_types_);
+  auto it = merge_status_and_it.second;
   MergeRecordDependencies(addend, &(it->second), local_to_global_type_id_map);
-  return record_merge_status;
+  return merge_status_and_it.first;
 }
 
 void TextFormatToIRReader::MergeEnumDependencies(
@@ -295,21 +303,23 @@ void TextFormatToIRReader::MergeEnumDependencies(
 MergeStatus TextFormatToIRReader::MergeEnumType(
     const EnumTypeIR *addend_node, const TextFormatToIRReader &addend,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
-
-  std::string added_type_id = AllocateNewTypeId();
-  EnumTypeIR enum_type_ir = *addend_node;
-  enum_type_ir.SetSelfType(added_type_id);
-  enum_type_ir.SetReferencedType(added_type_id);
-  auto it = AddToMapAndTypeGraph(std::move(enum_type_ir), &enum_types_,
-                                 &type_graph_);
-  // Add to faciliate ODR checking.
-  std::string key = it->second.GetUniqueId() + it->second.GetSourceFile();
-  AddToODRListMap(key, &(it->second));
-  MergeStatus enum_merge_status = MergeStatus(true, added_type_id);
-  local_to_global_type_id_map->emplace(addend_node->GetSelfType(),
-                                       enum_merge_status);
+  auto merge_status_and_it =
+      UpdateUDTypeAccounting(addend_node, addend, local_to_global_type_id_map,
+                             &enum_types_);
+  auto it = merge_status_and_it.second;
   MergeEnumDependencies(addend, &(it->second), local_to_global_type_id_map);
-  return enum_merge_status;
+  return merge_status_and_it.first;
+}
+
+MergeStatus TextFormatToIRReader::MergeFunctionType(
+    const FunctionTypeIR *addend_node, const TextFormatToIRReader &addend,
+    AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
+  auto merge_status_and_it =
+      UpdateUDTypeAccounting(addend_node, addend, local_to_global_type_id_map,
+                             &function_types_);
+  auto it = merge_status_and_it.second;
+  MergeCFunctionLikeDeps(addend, &(it->second), local_to_global_type_id_map);
+  return merge_status_and_it.first;
 }
 
 template <typename T>
@@ -437,15 +447,16 @@ MergeStatus TextFormatToIRReader::MergeTypeInternal(
     case EnumTypeKind:
       return MergeEnumType(static_cast<const EnumTypeIR *>(
           addend_node), addend, local_to_global_type_id_map);
+    case FunctionTypeKind:
+      return MergeFunctionType(static_cast<const FunctionTypeIR *>(
+          addend_node), addend, local_to_global_type_id_map);
     default:
-        return MergeGenericReferringType(addend, addend_node,
-                                          local_to_global_type_id_map);
+      return MergeGenericReferringType(addend, addend_node,
+                                       local_to_global_type_id_map);
   }
   assert(0);
 }
 
-// TODO: TextFormatToIRReader addend should really be const, since we aren't going to
-// modify it, since we need to do ODR checking
 MergeStatus TextFormatToIRReader::MergeType(
     const TypeIR *addend_node,
     const TextFormatToIRReader &addend,
@@ -460,7 +471,7 @@ MergeStatus TextFormatToIRReader::MergeType(
     }
 
     MergeStatus merge_status = IsTypeNodePresent(addend_node, addend,
-                                             local_to_global_type_id_map);
+                                                 local_to_global_type_id_map);
     if (!merge_status.was_newly_added_) {
       return merge_status;
     }
@@ -469,24 +480,31 @@ MergeStatus TextFormatToIRReader::MergeType(
     return merge_status;
 }
 
-void TextFormatToIRReader::MergeFunctionDeps(
-    FunctionIR *added_node, const TextFormatToIRReader &addend,
+void TextFormatToIRReader::MergeCFunctionLikeDeps(
+    const TextFormatToIRReader &addend, CFunctionLikeIR *cfunction_like_ir,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
-  // Merge the return type first.
-  auto ret_type_it = addend.type_graph_.find(added_node->GetReturnType());
+ // Merge the return type first.
+  auto ret_type_it =
+      addend.type_graph_.find(cfunction_like_ir->GetReturnType());
   if (ret_type_it == addend.type_graph_.end()) {
-      // Hidden types aren't officially added to the parent since there is
-      // nothing actually backing it. We assign a type-id.
-      added_node->SetReturnType(AllocateNewTypeId());
+    // Hidden types aren't officially added to the parent since there is
+    // nothing actually backing it. We assign a type-id.
+    cfunction_like_ir->SetReturnType(AllocateNewTypeId());
   } else {
     MergeStatus ret_merge_status = MergeType(ret_type_it->second, addend,
                                              local_to_global_type_id_map);
-    added_node->SetReturnType(ret_merge_status.type_id_);
+    cfunction_like_ir->SetReturnType(ret_merge_status.type_id_);
   }
   // Merge and fix parameters.
-  for (auto &param : added_node->GetParameters()) {
+  for (auto &param : cfunction_like_ir->GetParameters()) {
     MergeReferencingTypeInternal(addend, &param, local_to_global_type_id_map);
   }
+}
+
+void TextFormatToIRReader::MergeFunctionDeps(
+    FunctionIR *added_node, const TextFormatToIRReader &addend,
+    AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
+  MergeCFunctionLikeDeps(addend, added_node, local_to_global_type_id_map);
   // Merge and fix template parameters
   for (auto &template_element : added_node->GetTemplateElements()) {
     MergeReferencingTypeInternal(addend, &template_element,

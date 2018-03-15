@@ -59,6 +59,7 @@ bool ProtobufTextFormatToIRReader::ReadDump(const std::string &dump_file) {
 
   ReadEnumTypes(tu);
   ReadRecordTypes(tu);
+  ReadFunctionTypes(tu);
   ReadArrayTypes(tu);
   ReadPointerTypes(tu);
   ReadQualifiedTypes(tu);
@@ -81,6 +82,16 @@ TemplateInfoIR ProtobufTextFormatToIRReader::TemplateInfoProtobufToIR(
   return template_info_ir;
 }
 
+template< typename T>
+static void SetupCFunctionLikeIR(const T &cfunction_like_protobuf,
+                                 CFunctionLikeIR *cfunction_like_ir) {
+  cfunction_like_ir->SetReturnType(cfunction_like_protobuf.return_type());
+  for (auto &&parameter: cfunction_like_protobuf.parameters()) {
+    ParamIR param_ir(parameter.referenced_type(), parameter.default_arg());
+    cfunction_like_ir->AddParameter(std::move(param_ir));
+  }
+}
+
 FunctionIR ProtobufTextFormatToIRReader::FunctionProtobufToIR(
     const abi_dump::FunctionDecl &function_protobuf) {
   FunctionIR function_ir;
@@ -98,6 +109,14 @@ FunctionIR ProtobufTextFormatToIRReader::FunctionProtobufToIR(
   function_ir.SetTemplateInfo(
       TemplateInfoProtobufToIR(function_protobuf.template_info()));
   return function_ir;
+}
+
+FunctionTypeIR ProtobufTextFormatToIRReader::FunctionTypeProtobufToIR(
+    const abi_dump::FunctionType &function_type_protobuf) {
+  FunctionTypeIR function_type_ir;
+  ReadTypeInfo(function_type_protobuf.type_info(), &function_type_ir);
+  SetupCFunctionLikeIR(function_type_protobuf, &function_type_ir);
+  return function_type_ir;
 }
 
 VTableLayoutIR ProtobufTextFormatToIRReader::VTableLayoutProtobufToIR(
@@ -307,6 +326,21 @@ void ProtobufTextFormatToIRReader::ReadRecordTypes(
     }
     auto it = AddToMapAndTypeGraph(std::move(record_type_ir), &record_types_,
                                    &type_graph_);
+    const std::string &key = GetODRListMapKey(&(it->second));
+    AddToODRListMap(key, &(it->second));
+  }
+}
+
+void ProtobufTextFormatToIRReader::ReadFunctionTypes(
+    const abi_dump::TranslationUnit &tu) {
+  for (auto &&function_type_protobuf : tu.function_types()) {
+    FunctionTypeIR function_type_ir =
+        FunctionTypeProtobufToIR(function_type_protobuf);
+    if (!IsPresentInExportedHeaders(function_type_ir, exported_headers_)) {
+      continue;
+    }
+    auto it = AddToMapAndTypeGraph(std::move(function_type_ir),
+                                   &function_types_, &type_graph_);
     const std::string &key = GetODRListMapKey(&(it->second));
     AddToODRListMap(key, &(it->second));
   }

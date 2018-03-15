@@ -322,6 +322,8 @@ bool HeaderAbiLinker::LinkTypes(const abi_util::TextFormatToIRReader *reader,
                   nullptr, reader->GetRecordTypes(), false) &&
       LinkDecl(ir_dumper, &types_set_, nullptr,
                nullptr, reader->GetEnumTypes(), false) &&
+      LinkDecl(ir_dumper, &types_set_, nullptr, nullptr,
+               reader->GetFunctionTypes(), false) &&
       LinkDecl(ir_dumper, &types_set_, nullptr,
                nullptr, reader->GetBuiltinTypes(), false) &&
       LinkDecl(ir_dumper, &types_set_, nullptr,

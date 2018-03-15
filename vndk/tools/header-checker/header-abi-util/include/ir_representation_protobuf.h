@@ -342,6 +342,8 @@ class ProtobufTextFormatToIRReader : public TextFormatToIRReader {
 
   void ReadRecordTypes(const abi_dump::TranslationUnit &tu);
 
+  void ReadFunctionTypes(const abi_dump::TranslationUnit &tu);
+
   void ReadPointerTypes(const abi_dump::TranslationUnit &tu);
 
   void ReadBuiltinTypes(const abi_dump::TranslationUnit &tu);
@@ -362,6 +364,9 @@ class ProtobufTextFormatToIRReader : public TextFormatToIRReader {
                     TypeIR *typep);
 
   FunctionIR FunctionProtobufToIR(const abi_dump::FunctionDecl &);
+
+  FunctionTypeIR FunctionTypeProtobufToIR(
+      const abi_dump::FunctionType &function_type_protobuf);
 
   RecordTypeIR RecordTypeProtobufToIR(
        const abi_dump::RecordType &record_type_protobuf);
