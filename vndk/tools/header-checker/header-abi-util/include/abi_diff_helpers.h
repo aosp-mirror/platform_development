@@ -110,6 +110,11 @@ class AbiDiffHelper {
                               std::deque<std::string> *type_queue,
                               abi_util::IRDiffDumper::DiffKind diff_kind);
 
+  DiffStatus CompareFunctionTypes(const abi_util::FunctionTypeIR *old_type,
+                                  const abi_util::FunctionTypeIR *new_type,
+                                  std::deque<std::string> *type_queue,
+                                  abi_util::DiffMessageIR::DiffKind diff_kind);
+
   void ReplaceRemovedFieldTypeIdsWithTypeNames(
     std::vector<abi_util::RecordFieldIR *> *removed_fields);
 
