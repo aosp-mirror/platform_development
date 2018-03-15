@@ -72,7 +72,7 @@ class RunCommandTest(unittest.TestCase):
                                    log_stderr=True)
     self.assertEqual((3, None, None), result)
     self.assertEqual(
-        ('ERROR', 'Executed command: %r (ret: %d)' % (error_cmd, 3)),
+        ('INFO', 'Executed command: %r (ret: %d)' % (error_cmd, 3)),
         self._log_entries[0])
     self.assertEqual(('ERROR', "  stderr: '123\\n456\\n'"),
                      self._log_entries[1])
@@ -83,7 +83,7 @@ class RunCommandTest(unittest.TestCase):
                                    log_stdout=True, log_stderr=True)
     self.assertEqual((5, None, None), result)
     self.assertEqual(
-        ('ERROR', 'Executed command: %r (ret: %d)' % (error_cmd, 5)),
+        ('INFO', 'Executed command: %r (ret: %d)' % (error_cmd, 5)),
         self._log_entries[0])
     self.assertEqual(('ERROR', "  stdout: 'foo\\nbar\\n'"),
                      self._log_entries[1])
