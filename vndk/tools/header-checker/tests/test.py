@@ -73,15 +73,15 @@ class MyTest(unittest.TestCase):
 
     def prepare_and_run_abi_diff_all_archs(self, old_lib, new_lib,
                                            expected_return_code, flags=[],
-                                           create=True):
+                                           create_old=False, create_new=True):
         with tempfile.TemporaryDirectory() as tmp:
             for target_arch in TARGET_ARCHS:
                 old_ref_dump_path = self.get_or_create_ref_dump(old_lib,
                                                                 target_arch,
-                                                                tmp, False)
+                                                                tmp, create_old)
                 new_ref_dump_path = self.get_or_create_ref_dump(new_lib,
                                                                 target_arch,
-                                                                tmp, create)
+                                                                tmp, create_new)
                 self.prepare_and_run_abi_diff(old_ref_dump_path,
                                               new_ref_dump_path, target_arch,
                                               expected_return_code, flags)
@@ -227,6 +227,13 @@ class MyTest(unittest.TestCase):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp",
             "libgolden_cpp_member_name_changed", 0)
+
+    def test_libgolden_cpp_member_function_pointer_changed(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp_function_pointer",
+            "libgolden_cpp_function_pointer_parameter_added", 8, [], False,
+            False)
+
 
 
 if __name__ == '__main__':
