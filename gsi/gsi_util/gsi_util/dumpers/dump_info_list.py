@@ -32,13 +32,20 @@ DumpInfoListItem = namedtuple('DumpInfoListItem',
 # The total list of all possible dump info.
 # It will be output by the order of the list.
 DUMP_LIST = [
-    DumpInfoListItem('system_build_id', SYSTEM_BUILD_PROP_DUMPER, 'ro.build.display.id'),
+    # System
+    DumpInfoListItem('system_fingerprint', SYSTEM_BUILD_PROP_DUMPER, 'ro.build.fingerprint'),
     DumpInfoListItem('system_sdk_ver', SYSTEM_BUILD_PROP_DUMPER, 'ro.build.version.sdk'),
+    DumpInfoListItem('system_vndk_ver', SYSTEM_BUILD_PROP_DUMPER, 'ro.vndk.version'),
     DumpInfoListItem('system_security_patch_level', SYSTEM_BUILD_PROP_DUMPER, 'ro.build.version.security_patch'),
     DumpInfoListItem('system_kernel_sepolicy_ver', SYSTEM_MATRIX_DUMPER, './sepolicy/kernel-sepolicy-version'),
     DumpInfoListItem('system_support_sepolicy_ver', SYSTEM_MATRIX_DUMPER, './sepolicy/sepolicy-version'),
     DumpInfoListItem('system_avb_ver', SYSTEM_MATRIX_DUMPER, './avb/vbmeta-version'),
+    # Vendor
     DumpInfoListItem('vendor_fingerprint', VENDOR_BUILD_PROP_DUMPER, 'ro.vendor.build.fingerprint'),
+    DumpInfoListItem('vendor_vndk_ver', VENDOR_BUILD_PROP_DUMPER, 'ro.vndk.version'),
+    DumpInfoListItem('vendor_security_patch_level', SYSTEM_BUILD_PROP_DUMPER, 'ro.vendor.build.version.security_patch'),
     DumpInfoListItem('vendor_low_ram', VENDOR_BUILD_PROP_DUMPER, 'ro.config.low_ram'),
     DumpInfoListItem('vendor_zygote', VENDOR_DEFAULT_PROP_DUMPER, 'ro.zygote'),
+    DumpInfoListItem('vendor_oem_unlock_supported', VENDOR_DEFAULT_PROP_DUMPER, 'oem_unlock_supported'),
+    DumpInfoListItem('vendor_adb_secure', VENDOR_DEFAULT_PROP_DUMPER, 'ro.adb.secure'),
 ]  # pyformat: disable
