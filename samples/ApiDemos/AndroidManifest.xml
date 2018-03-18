@@ -298,6 +298,38 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.MaxAspectRatio$Square"
+                  android:label="@string/activity_max_aspect_ratio_square"
+                  android:resizeableActivity="false"
+                  android:theme="@android:style/Theme.DeviceDefault.Settings"
+                  android:maxAspectRatio="1">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.MaxAspectRatio$SixteenToNine"
+            android:label="@string/activity_max_aspect_ratio_16to9"
+            android:resizeableActivity="false"
+            android:theme="@android:style/Theme.DeviceDefault.Settings"
+            android:maxAspectRatio="1.77777778">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.MaxAspectRatio$Any"
+            android:label="@string/activity_max_aspect_ratio_any"
+            android:resizeableActivity="true"
+            android:theme="@android:style/Theme.DeviceDefault.Settings">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".app.PresentationActivity"
                 android:label="@string/activity_presentation">
             <intent-filter>
