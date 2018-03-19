@@ -49,11 +49,12 @@ class _AdbFileAccessor(base_mounter.BaseFileAccessor):
   # override
   def _handle_prepare_file(self, filename_in_storage):
     filename = os.path.join(self._temp_dir, filename_in_storage)
-    logging.info('Prepare file %s -> %s', filename_in_storage, filename)
+    logging.info('_AdbFileAccessor: Prepare file %s -> %s',
+                 filename_in_storage, filename)
 
     self._make_parent_dirs(filename)
     if not adb_utils.pull(filename, filename_in_storage, self._serial_num):
-      logging.error('Fail to prepare file: %s', filename_in_storage)
+      logging.info('  Fail to prepare file: %s', filename_in_storage)
       return None
 
     return base_mounter.MounterFile(filename)

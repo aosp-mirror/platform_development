@@ -34,9 +34,10 @@ class _FolderFileAccessor(base_mounter.BaseFileAccessor):
   # override
   def _handle_prepare_file(self, filename_in_storage):
     filename = os.path.join(self._folder_dir, filename_in_storage)
-    logging.debug('Prepare file %s -> %s', filename_in_storage, filename)
+    logging.info('_FolderFileAccessor: Prepare file %s -> %s',
+                 filename_in_storage, filename)
     if not os.path.isfile(filename):
-      logging.error('File is not exist: %s', filename_in_storage)
+      logging.info('  File is not exist: %s', filename_in_storage)
       return None
     return base_mounter.MounterFile(filename)
 
