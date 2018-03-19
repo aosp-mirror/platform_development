@@ -56,11 +56,6 @@ def run_command(command, read_stdout=False, read_stderr=False,
     else:
       command = ['sudo'] + command
 
-  if kwargs.get('shell'):
-    command_in_log = command
-  else:
-    command_in_log = ' '.join(arg for arg in command)
-
   if read_stdout or log_stdout:
     assert kwargs.get('stdout') in [None, PIPE]
     kwargs['stdout'] = PIPE
@@ -76,9 +71,14 @@ def run_command(command, read_stdout=False, read_stderr=False,
   else:
     proc.wait()  # no need to communicate; just wait.
 
-  log_level = logging.ERROR if proc.returncode != 0 else logging.INFO
-  logging.log(log_level, 'Executed command: %r (ret: %d)',
+  if kwargs.get('shell'):
+    command_in_log = command
+  else:
+    command_in_log = ' '.join(arg for arg in command)
+  logging.log(logging.INFO, 'Executed command: %r (ret: %d)',
               command_in_log, proc.returncode)
+
+  log_level = logging.ERROR if proc.returncode != 0 else logging.INFO
   if log_stdout:
     logging.log(log_level, '  stdout: %r', stdout)
   if log_stderr:
