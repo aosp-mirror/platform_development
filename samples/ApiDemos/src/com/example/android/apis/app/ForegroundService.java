@@ -17,15 +17,18 @@
 package com.example.android.apis.app;
 
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -33,6 +36,9 @@ import android.widget.Button;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+
+
+
 
 // Need the following import to get access to the app resources, since this
 // class is in a sub-package.
@@ -168,6 +174,8 @@ public class ForegroundService extends Service {
             button.setOnClickListener(mForegroundListener2);
             button = (Button)findViewById(R.id.stop_2);
             button.setOnClickListener(mStopListener2);
+            button = (Button)findViewById(R.id.start_foreground_2_alarm);
+            button.setOnClickListener(mForegroundAlarmListener);
         }
 
         private OnClickListener mForegroundListener = new OnClickListener() {
@@ -214,6 +222,22 @@ public class ForegroundService extends Service {
                 Intent intent = new Intent(ForegroundService.ACTION_FOREGROUND);
                 intent.setClass(Controller.this, ForegroundService2.class);
                 startService(intent);
+            }
+        };
+
+        private OnClickListener mForegroundAlarmListener = new OnClickListener() {
+            public void onClick(View v) {
+                final Context ctx = Controller.this;
+
+                final Intent intent = new Intent(ForegroundService.ACTION_FOREGROUND);
+                intent.setClass(ctx, ForegroundService2.class);
+
+                PendingIntent pi = PendingIntent.getForegroundService(ctx, 0, intent, 0);
+                AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
+                am.setExact(AlarmManager.ELAPSED_REALTIME,
+                        SystemClock.elapsedRealtime() + 15_000,
+                        pi);
+                Log.i("ForegroundService", "Starting service in 15 seconds");
             }
         };
 
