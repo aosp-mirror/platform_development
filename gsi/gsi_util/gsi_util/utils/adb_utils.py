@@ -39,6 +39,6 @@ def pull(local_filename, remote_filename, serial_num=None):
 
   # 'read_stdout=True' to disable output
   (returncode, _, _) = run_command(
-      command, raise_on_error=False, read_stdout=True, log_stdout=True)
+      command, raise_on_error=False, read_stdout=True)
 
   return returncode == 0

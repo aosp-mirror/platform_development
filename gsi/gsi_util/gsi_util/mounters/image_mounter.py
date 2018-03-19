@@ -49,12 +49,13 @@ class _ImageFileAccessor(base_mounter.BaseFileAccessor):
   def _handle_prepare_file(self, filename_in_storage):
     filespec = os.path.join('/', filename_in_storage)
     out_file = os.path.join(self._temp_dir, filename_in_storage)
-    logging.info('Prepare file %s -> %s', filename_in_storage, out_file)
+    logging.info('_ImageFileAccessor: Prepare file %s -> %s',
+                 filename_in_storage, out_file)
 
     self._make_parent_dirs(out_file)
 
     if not debugfs.dump(self._raw_image_file, filespec, out_file):
-      logging.error('File does not exist: %s', filename_in_storage)
+      logging.info('  File does not exist: %s', filename_in_storage)
       return None
 
     return base_mounter.MounterFile(out_file)
