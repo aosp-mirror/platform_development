@@ -65,7 +65,8 @@ class GsiUtil(object):
       args.func(args)
     except Exception as e:
       logging.error('%s: %s', argv[0], e.message)
-      logging.exception(e)
+      if args.debug:
+        logging.exception(e)
       sys.exit(1)
 
 
