@@ -13,6 +13,7 @@ android.hardware.audio.common@2.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.audio.common@2.0-util,True,False,True,cc_library_shared
 android.hardware.audio.common@4.0,True,False,True,hidl_interface
 android.hardware.audio.common@4.0-adapter-helper,True,False,True,hidl_interface
+android.hardware.audio.common@4.0-util,True,False,True,cc_library_shared
 android.hardware.audio.effect@2.0,True,False,True,hidl_interface
 android.hardware.audio.effect@2.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.audio.effect@4.0,True,False,True,hidl_interface
@@ -31,6 +32,8 @@ android.hardware.automotive.vehicle@2.0,True,False,True,hidl_interface
 android.hardware.automotive.vehicle@2.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.biometrics.fingerprint@2.1,True,False,True,hidl_interface
 android.hardware.biometrics.fingerprint@2.1-adapter-helper,True,False,True,hidl_interface
+android.hardware.bluetooth.a2dp@1.0,True,False,True,hidl_interface
+android.hardware.bluetooth.a2dp@1.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.bluetooth@1.0,True,False,True,hidl_interface
 android.hardware.bluetooth@1.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.boot@1.0,True,False,True,hidl_interface
@@ -243,8 +246,12 @@ android.hidl.token@1.0-adapter-helper,True,False,True,hidl_interface
 android.hidl.token@1.0-utils,True,False,True,cc_library
 android.system.net.netd@1.0,True,False,True,hidl_interface
 android.system.net.netd@1.0-adapter-helper,True,False,True,hidl_interface
+android.system.net.netd@1.1,True,False,True,hidl_interface
+android.system.net.netd@1.1-adapter-helper,True,False,True,hidl_interface
 android.system.wifi.keystore@1.0,True,False,True,hidl_interface
 android.system.wifi.keystore@1.0-adapter-helper,True,False,True,hidl_interface
+hardware.google.media.c2@1.0,False,False,True,hidl_interface
+hardware.google.media.c2@1.0-adapter-helper,False,False,True,hidl_interface
 hidl.tests.vendor@1.0,False,False,True,hidl_interface
 hidl.tests.vendor@1.0-adapter-helper,False,False,True,hidl_interface
 hidl.tests.vendor@1.1,False,False,True,hidl_interface
@@ -383,7 +390,7 @@ libunwindstack,True,True,True,cc_library
 libusb,False,False,True,cc_library
 libusbhost,True,False,True,cc_library
 libutils,True,True,True,cc_library
-libutilscallstack,True,True,False,cc_library
+libutilscallstack,True,True,True,cc_library
 libvixl-arm,True,False,True,cc_library
 libvixl-arm64,True,False,True,cc_library
 libvorbisidec,True,False,True,cc_library

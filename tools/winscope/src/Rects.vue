@@ -29,9 +29,9 @@ import protobuf from 'protobufjs'
 
 var protoDefs = protobuf.Root.fromJSON(jsonProtoDefs);
 var TraceMessage = protoDefs.lookupType(
-  "com.android.server.wm.proto.WindowManagerTraceFileProto");
+  "com.android.server.wm.WindowManagerTraceFileProto");
 var ServiceMessage = protoDefs.lookupType(
-  "com.android.server.wm.proto.WindowManagerServiceDumpProto");
+  "com.android.server.wm.WindowManagerServiceDumpProto");
 
 export default {
   name: 'rects',

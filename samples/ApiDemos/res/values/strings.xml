@@ -332,6 +332,7 @@
     <string name="start_service_background">Start Service Background</string>
     <string name="start_service_background_wakelock">Start Service Background w/Wakelock</string>
     <string name="start_service_foreground_2">Start Service Foreground 2</string>
+    <string name="start_service_foreground_2_alarm">Start Service Foreground 2 Via Alarm</string>
 
     <string name="activity_isolated_service_controller">App/Service/Isolated Service Controller</string>
     <string name="isolated_service_controller">This demonstrates the use of android:isolatedProcess
