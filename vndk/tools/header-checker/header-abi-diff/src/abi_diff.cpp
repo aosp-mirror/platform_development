@@ -116,6 +116,8 @@ HeaderAbiDiff::ExtractUserDefinedTypes(
             static_cast<const abi_util::EnumTypeIR *>(type)->GetUniqueId(),
             static_cast<const abi_util::EnumTypeIR *>(type));
         break;
+      case abi_util::FunctionTypeKind:
+        continue;
       default:
         // Only user defined types should have ODR list entries.
         assert(0);

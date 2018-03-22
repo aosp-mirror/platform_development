@@ -60,4 +60,11 @@ class SuperSpeaker {
 #else
   int mSpeakderId;
 #endif
+#if GOLDEN_FUNCTION_POINTER
+#if GOLDEN_FUNCTION_POINTER_ADD_PARAM
+  SuperSpeaker * (*speaker_fp)(int, char, int);
+#else
+  SuperSpeaker * (*speaker_fp)(int, char);
+#endif
+#endif
 };

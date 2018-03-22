@@ -59,6 +59,7 @@ bool ProtobufTextFormatToIRReader::ReadDump(const std::string &dump_file) {
 
   ReadEnumTypes(tu);
   ReadRecordTypes(tu);
+  ReadFunctionTypes(tu);
   ReadArrayTypes(tu);
   ReadPointerTypes(tu);
   ReadQualifiedTypes(tu);
@@ -81,6 +82,16 @@ TemplateInfoIR ProtobufTextFormatToIRReader::TemplateInfoProtobufToIR(
   return template_info_ir;
 }
 
+template< typename T>
+static void SetupCFunctionLikeIR(const T &cfunction_like_protobuf,
+                                 CFunctionLikeIR *cfunction_like_ir) {
+  cfunction_like_ir->SetReturnType(cfunction_like_protobuf.return_type());
+  for (auto &&parameter: cfunction_like_protobuf.parameters()) {
+    ParamIR param_ir(parameter.referenced_type(), parameter.default_arg());
+    cfunction_like_ir->AddParameter(std::move(param_ir));
+  }
+}
+
 FunctionIR ProtobufTextFormatToIRReader::FunctionProtobufToIR(
     const abi_dump::FunctionDecl &function_protobuf) {
   FunctionIR function_ir;
@@ -98,6 +109,14 @@ FunctionIR ProtobufTextFormatToIRReader::FunctionProtobufToIR(
   function_ir.SetTemplateInfo(
       TemplateInfoProtobufToIR(function_protobuf.template_info()));
   return function_ir;
+}
+
+FunctionTypeIR ProtobufTextFormatToIRReader::FunctionTypeProtobufToIR(
+    const abi_dump::FunctionType &function_type_protobuf) {
+  FunctionTypeIR function_type_ir;
+  ReadTypeInfo(function_type_protobuf.type_info(), &function_type_ir);
+  SetupCFunctionLikeIR(function_type_protobuf, &function_type_ir);
+  return function_type_ir;
 }
 
 VTableLayoutIR ProtobufTextFormatToIRReader::VTableLayoutProtobufToIR(
@@ -312,6 +331,21 @@ void ProtobufTextFormatToIRReader::ReadRecordTypes(
   }
 }
 
+void ProtobufTextFormatToIRReader::ReadFunctionTypes(
+    const abi_dump::TranslationUnit &tu) {
+  for (auto &&function_type_protobuf : tu.function_types()) {
+    FunctionTypeIR function_type_ir =
+        FunctionTypeProtobufToIR(function_type_protobuf);
+    if (!IsPresentInExportedHeaders(function_type_ir, exported_headers_)) {
+      continue;
+    }
+    auto it = AddToMapAndTypeGraph(std::move(function_type_ir),
+                                   &function_types_, &type_graph_);
+    const std::string &key = GetODRListMapKey(&(it->second));
+    AddToODRListMap(key, &(it->second));
+  }
+}
+
 void ProtobufTextFormatToIRReader::ReadEnumTypes(
     const abi_dump::TranslationUnit &tu) {
   for (auto &&enum_type_protobuf : tu.enum_types()) {
@@ -515,11 +549,21 @@ abi_dump::ElfFunction IRToProtobufConverter::ConvertElfFunctionIR(
   return elf_function_protobuf;
 }
 
+template <typename CFunctionLikeMessage>
+bool IRToProtobufConverter::AddFunctionParametersAndSetReturnType(
+    CFunctionLikeMessage *function_like_protobuf,
+    const CFunctionLikeIR *cfunction_like_ir) {
+  function_like_protobuf->set_return_type(cfunction_like_ir->GetReturnType());
+  return AddFunctionParameters(function_like_protobuf, cfunction_like_ir);
+}
+
+template <typename CFunctionLikeMessage>
 bool IRToProtobufConverter::AddFunctionParameters(
-    abi_dump::FunctionDecl *function_protobuf,
-    const FunctionIR *function_ir) {
-  for (auto &&parameter : function_ir->GetParameters()) {
-    abi_dump::ParamDecl *added_parameter = function_protobuf->add_parameters();
+    CFunctionLikeMessage *function_like_protobuf,
+    const CFunctionLikeIR *cfunction_like_ir) {
+  for (auto &&parameter : cfunction_like_ir->GetParameters()) {
+    abi_dump::ParamDecl *added_parameter =
+        function_like_protobuf->add_parameters();
     if (!added_parameter) {
       return false;
     }
@@ -530,6 +574,18 @@ bool IRToProtobufConverter::AddFunctionParameters(
   return true;
 }
 
+abi_dump::FunctionType IRToProtobufConverter::ConvertFunctionTypeIR (
+    const FunctionTypeIR *function_typep) {
+  abi_dump::FunctionType added_function_type;
+  if (!AddTypeInfo(added_function_type.mutable_type_info(), function_typep) ||
+      !AddFunctionParametersAndSetReturnType(&added_function_type,
+                                             function_typep)) {
+    llvm::errs() << "Could not convert FunctionTypeIR to protobuf\n";
+    ::exit(1);
+  }
+  return added_function_type;
+}
+
 abi_dump::FunctionDecl IRToProtobufConverter::ConvertFunctionIR(
     const FunctionIR *functionp) {
   abi_dump::FunctionDecl added_function;
@@ -537,8 +593,7 @@ abi_dump::FunctionDecl IRToProtobufConverter::ConvertFunctionIR(
   added_function.set_linker_set_key(functionp->GetLinkerSetKey());
   added_function.set_source_file(functionp->GetSourceFile());
   added_function.set_function_name(functionp->GetName());
-  added_function.set_return_type(functionp->GetReturnType());
-  if (!AddFunctionParameters(&added_function, functionp) ||
+  if (!AddFunctionParametersAndSetReturnType(&added_function, functionp) ||
       !(functionp->GetTemplateElements().size() ?
       AddTemplateInformation(added_function.mutable_template_info(), functionp)
       : true)) {
@@ -948,6 +1003,8 @@ bool ProtobufIRDumper::AddLinkableMessageIR (const LinkableMessageIR *lm) {
           static_cast<const RvalueReferenceTypeIR*>(lm));
     case BuiltinTypeKind:
       return AddBuiltinTypeIR(static_cast<const BuiltinTypeIR*>(lm));
+    case FunctionTypeKind:
+      return AddFunctionTypeIR(static_cast<const FunctionTypeIR*>(lm));
     case GlobalVarKind:
       return AddGlobalVarIR(static_cast<const GlobalVarIR*>(lm));
     case FunctionKind:
@@ -990,6 +1047,15 @@ bool ProtobufIRDumper::AddRecordTypeIR(const RecordTypeIR *recordp) {
     return false;
   }
   *added_record_type = ConvertRecordTypeIR(recordp);
+  return true;
+}
+
+bool ProtobufIRDumper::AddFunctionTypeIR(const FunctionTypeIR *function_typep) {
+  abi_dump::FunctionType *added_function_type = tu_ptr_->add_function_types();
+  if (!added_function_type) {
+    return false;
+  }
+  *added_function_type = ConvertFunctionTypeIR(function_typep);
   return true;
 }
 
