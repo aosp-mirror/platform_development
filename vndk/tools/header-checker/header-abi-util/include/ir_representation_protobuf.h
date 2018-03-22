@@ -196,8 +196,17 @@ class IRToProtobufConverter {
 
   static abi_dump::RecordType ConvertRecordTypeIR(const RecordTypeIR *recordp);
 
-  static bool AddFunctionParameters(abi_dump::FunctionDecl *function_protobuf,
-                                    const FunctionIR *function_ir);
+  static abi_dump::FunctionType ConvertFunctionTypeIR (
+      const FunctionTypeIR *function_typep);
+
+  template <typename CFunctionLikeMessage>
+  static bool AddFunctionParametersAndSetReturnType(
+      CFunctionLikeMessage *function_like_protobuf,
+      const CFunctionLikeIR *cfunction_like_ir);
+
+  template <typename CFunctionLikeMessage>
+  static bool AddFunctionParameters(CFunctionLikeMessage *function_protobuf,
+                                    const CFunctionLikeIR *cfunction_like_ir);
 
   static abi_dump::FunctionDecl ConvertFunctionIR(const FunctionIR *functionp);
 
@@ -288,6 +297,8 @@ class ProtobufIRDumper : public IRDumper, public IRToProtobufConverter {
 
   bool AddBuiltinTypeIR(const BuiltinTypeIR *);
 
+  bool AddFunctionTypeIR(const FunctionTypeIR *function_typep);
+
   // Functions and global variables.
   bool AddFunctionIR(const FunctionIR *);
 
@@ -331,6 +342,8 @@ class ProtobufTextFormatToIRReader : public TextFormatToIRReader {
 
   void ReadRecordTypes(const abi_dump::TranslationUnit &tu);
 
+  void ReadFunctionTypes(const abi_dump::TranslationUnit &tu);
+
   void ReadPointerTypes(const abi_dump::TranslationUnit &tu);
 
   void ReadBuiltinTypes(const abi_dump::TranslationUnit &tu);
@@ -351,6 +364,9 @@ class ProtobufTextFormatToIRReader : public TextFormatToIRReader {
                     TypeIR *typep);
 
   FunctionIR FunctionProtobufToIR(const abi_dump::FunctionDecl &);
+
+  FunctionTypeIR FunctionTypeProtobufToIR(
+      const abi_dump::FunctionType &function_type_protobuf);
 
   RecordTypeIR RecordTypeProtobufToIR(
        const abi_dump::RecordType &record_type_protobuf);

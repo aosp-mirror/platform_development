@@ -54,6 +54,12 @@ message RvalueReferenceType {
   optional BasicNamedAndTypedDecl type_info = 1;
 }
 
+message FunctionType {
+  optional BasicNamedAndTypedDecl type_info = 1;
+  optional string return_type = 2;
+  repeated ParamDecl parameters = 3;
+}
+
 message FunctionDecl {
   // Return type reference
   optional string return_type = 1;
@@ -169,6 +175,7 @@ message TranslationUnit {
   repeated BuiltinType builtin_types = 6;
   repeated QualifiedType qualified_types = 7;
   repeated ArrayType array_types = 8;
+  repeated FunctionType function_types = 13;
   repeated FunctionDecl functions = 9;
   repeated GlobalVarDecl global_vars = 10;
   repeated ElfFunction elf_functions = 11;
