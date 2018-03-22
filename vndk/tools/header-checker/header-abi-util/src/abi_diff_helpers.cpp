@@ -466,6 +466,32 @@ AbiDiffHelper::FixupDiffedFieldTypeIds(
   return diffed_fields_dup;
 }
 
+DiffStatus AbiDiffHelper::CompareFunctionTypes(
+    const abi_util::FunctionTypeIR *old_type,
+    const abi_util::FunctionTypeIR *new_type,
+    std::deque<std::string> *type_queue,
+    abi_util::DiffMessageIR::DiffKind diff_kind) {
+  DiffStatus param_diffs = CompareFunctionParameters(old_type->GetParameters(),
+                                                     new_type->GetParameters(),
+                                                     type_queue, diff_kind);
+  DiffStatus return_type_diff =
+      CompareAndDumpTypeDiff(old_type->GetReturnType(),
+                             new_type->GetReturnType(),
+                             type_queue, diff_kind);
+
+  if (param_diffs == DiffStatus::direct_diff ||
+      return_type_diff == DiffStatus::direct_diff) {
+    return DiffStatus::direct_diff;
+  }
+
+  if (param_diffs == DiffStatus::indirect_diff ||
+      return_type_diff == DiffStatus::indirect_diff) {
+    return DiffStatus::indirect_diff;
+  }
+
+  return  DiffStatus::no_diff;
+}
+
 DiffStatus AbiDiffHelper::CompareRecordTypes(
     const abi_util::RecordTypeIR *old_type,
     const abi_util::RecordTypeIR *new_type,
@@ -709,6 +735,13 @@ DiffStatus AbiDiffHelper::CompareAndDumpTypeDiff(
     return CompareRecordTypes(
         static_cast<const abi_util::RecordTypeIR *>(old_type),
         static_cast<const abi_util::RecordTypeIR *>(new_type),
+        type_queue, diff_kind);
+  }
+
+  if (kind == abi_util::LinkableMessageKind::FunctionTypeKind) {
+    return CompareFunctionTypes(
+        static_cast<const abi_util::FunctionTypeIR *>(old_type),
+        static_cast<const abi_util::FunctionTypeIR *>(new_type),
         type_queue, diff_kind);
   }
   return DiffStatus::no_diff;
