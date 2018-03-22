@@ -24,6 +24,7 @@ java_defaults {
     ],
     no_standard_libs: true,
     system_modules: "none",
+    java_version: "1.8",
 }
 
 java_library_static {
