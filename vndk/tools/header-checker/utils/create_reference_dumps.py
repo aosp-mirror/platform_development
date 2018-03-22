@@ -63,17 +63,23 @@ def find_and_copy_lib_lsdumps(target, soong_dir, ref_dump_dir_stem,
                                 ref_dump_dir_insertion,
                                 target.arch + target_arch_variant_str)
 
-def get_ref_dump_dir_stem(args, vndk_or_ndk, product, platform_vndk_version):
-    version = args.version
+def choose_vndk_version(args_version, platform_vndk_version,
+                        board_vndk_version):
+    version = args_version
     if version is None:
-      version = platform_vndk_version
-    if version != '' and version[0].isdigit() == False :
-        version = 'current'
+        # This logic is to be kept in sync with the references directory logic
+        # in build/soong/library.go .
+        version = platform_vndk_version
+        if board_vndk_version != 'current' and board_vndk_version != '':
+            version = board_vndk_version
+    return version
+
+def get_ref_dump_dir_stem(args, vndk_or_ndk, product, chosen_vndk_version):
     binder_bitness = '64'
     if get_build_vars_for_product(['BINDER32BIT'], product)[0] == 'true':
         binder_bitness = '32'
     ref_dump_dir_stem = os.path.join(args.ref_dump_dir, vndk_or_ndk)
-    ref_dump_dir_stem = os.path.join(ref_dump_dir_stem, version)
+    ref_dump_dir_stem = os.path.join(ref_dump_dir_stem, chosen_vndk_version)
     ref_dump_dir_stem = os.path.join(ref_dump_dir_stem, binder_bitness)
 
     return ref_dump_dir_stem
@@ -88,35 +94,37 @@ def make_libs_for_all_arches_and_variants(libs):
             print('making all libs for product: ', product)
             make_tree(product)
 
-def find_and_remove_path(root_path, file_name=None):
+def find_and_remove_path(root_path, chosen_vndk_version, file_name=None):
     if file_name is not None:
         print('removing', file_name, 'from root', root_path)
         remove_cmd_str = 'find ' + root_path + ' -name ' + file_name +\
             ' -exec rm -rf {} \;'
         subprocess.check_call(remove_cmd_str, cwd=AOSP_DIR, shell=True)
     else:
-        remove_cmd_str = 'rm -rf *'
+        remove_cmd_str = 'rm -rf ' + chosen_vndk_version
         subprocess.check_call(remove_cmd_str, cwd=root_path, shell=True)
 
-def remove_references_for_all_arches_and_variants(args):
+def remove_references_for_all_arches_and_variants(args, chosen_vndk_version):
     print('Removing reference dumps...')
     libs = args.libs
     for product in PRODUCTS:
         if libs:
             for lib in libs:
-                find_and_remove_path(args.ref_dump_dir,
+                find_and_remove_path(args.ref_dump_dir, chosen_vndk_version,
                                      lib + COMPRESSED_SOURCE_ABI_DUMP_EXT)
         else:
-            find_and_remove_path(os.path.join(args.ref_dump_dir, 'ndk'))
-            find_and_remove_path(os.path.join(args.ref_dump_dir, 'vndk'))
+            find_and_remove_path(os.path.join(args.ref_dump_dir, 'ndk'),
+                                 chosen_vndk_version)
+            find_and_remove_path(os.path.join(args.ref_dump_dir, 'vndk'),
+                                 chosen_vndk_version)
 
 
 def create_source_abi_reference_dumps(soong_dir, args, product,
-                                      platform_vndk_version):
+                                      chosen_vndk_version):
     ref_dump_dir_stem_vndk =\
-        get_ref_dump_dir_stem(args, 'vndk', product, platform_vndk_version)
+        get_ref_dump_dir_stem(args, 'vndk', product, chosen_vndk_version)
     ref_dump_dir_stem_ndk =\
-        get_ref_dump_dir_stem(args, 'ndk', product, platform_vndk_version)
+        get_ref_dump_dir_stem(args, 'ndk', product, chosen_vndk_version)
     ref_dump_dir_insertion = 'source-based'
     num_libs_copied = 0
     lsdump_paths_file = get_lsdump_paths_file(product)
@@ -156,16 +164,20 @@ def main():
     soong_dir = os.path.join(AOSP_DIR, 'out', 'soong', '.intermediates')
     # Remove reference dumps specified by libs / all of them if none specified,
     # so that we may build those libraries succesfully.
-    remove_references_for_all_arches_and_variants(args)
+    vndk_versions = get_build_vars_for_product(['PLATFORM_VNDK_VERSION',
+                                                'BOARD_VNDK_VERSION'])
+    platform_vndk_version = vndk_versions[0]
+    board_vndk_version = vndk_versions[1]
+    chosen_vndk_version = \
+        choose_vndk_version(args.version, platform_vndk_version,
+                           board_vndk_version)
+    remove_references_for_all_arches_and_variants(args, chosen_vndk_version)
     # make all the libs specified / the entire vndk_package if none specified
     if (args.no_make_lib == False):
         make_libs_for_all_arches_and_variants(args.libs)
-
-    platform_vndk_version =\
-        get_build_vars_for_product(['PLATFORM_VNDK_VERSION'])[0]
     for product in PRODUCTS:
         num_processed += create_source_abi_reference_dumps(
-            soong_dir, args, product, platform_vndk_version)
+            soong_dir, args, product, chosen_vndk_version)
     print()
     end = time.time()
     print('msg: Processed', num_processed, 'libraries in ', (end - start) / 60)
