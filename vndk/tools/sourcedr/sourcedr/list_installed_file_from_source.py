@@ -3,6 +3,7 @@
 import argparse
 import itertools
 import os
+import posixpath
 import re
 
 try:
@@ -24,8 +25,14 @@ def _parse_args():
                         help='ninja file encoding')
 
     # Options
-    parser.add_argument('--out-dir', default='out',
-                        help='path to output directory')
+    parser.add_argument(
+            '--out-dir', default='out', help='path to output directory')
+    parser.add_argument(
+            '--installed-filter', default='system',
+            help='path filter for installed files (w.r.t. device root)')
+    parser.add_argument(
+            '--source-filter', default='vendor:device',
+            help='path filter for source files (w.r.t. source root)')
 
     return parser.parse_args()
 
@@ -43,10 +50,20 @@ def _load_manifest_from_args(args):
 def main():
     args = _parse_args()
 
-    out_pattern = re.compile(re.escape(args.out_dir) + '/')
-    system_out_pattern = re.compile(
-            re.escape(args.out_dir) + '/target/product/[^/]+/system/')
-    vendor_src_pattern = re.compile('(?:vendor)|(?:device)/')
+    out_dir = posixpath.normpath(args.out_dir)
+
+    out_pattern = re.compile(re.escape(out_dir) + '/')
+
+    installed_dirs = '|'.join('(?:' + re.escape(posixpath.normpath(path)) + ')'
+                              for path in args.installed_filter.split(':'))
+
+    installed_filter = re.compile(
+        re.escape(out_dir) + '/target/product/[^/]+/' +
+        '(?:' + installed_dirs + ')')
+
+    source_filter = re.compile(
+        '|'.join('(?:' + re.escape(posixpath.normpath(path)) + ')'
+                 for path in args.source_filter.split(':')))
 
     manifest = _load_manifest_from_args(args)
 
@@ -62,18 +79,17 @@ def main():
     outs_from_vendor_cache = {}
 
     def _are_inputs_from_vendor(build):
-        # Check whether the input files are matched by vendor_src_pattern first.
+        # Check whether the input files are matched by source_filter first.
         gen_paths = []
         paths = itertools.chain(
             build.explicit_ins, build.implicit_ins, build.depfile_implicit_ins)
         for path in paths:
-            if vendor_src_pattern.match(path):
+            if source_filter.match(path):
                 return True
             if out_pattern.match(path):
                 gen_paths.append(path)
 
-        # Check whether the input files transitively depend on
-        # vendor_src_pattern.
+        # Check whether the input files transitively depend on source_filter.
         for path in gen_paths:
             if is_from_vendor(path):
                 return True
@@ -89,17 +105,17 @@ def main():
         if build:
             matched = _are_inputs_from_vendor(build)
         else:
-            matched = bool(vendor_src_pattern.match(path))
+            matched = bool(source_filter.match(path))
         outs_from_vendor_cache[out_path] = matched
         return matched
 
-    bad_paths = [
+    matched_paths = [
         path for path in outs
-        if system_out_pattern.match(path) and is_from_vendor(path)]
+        if installed_filter.match(path) and is_from_vendor(path)]
 
-    bad_paths.sort()
+    matched_paths.sort()
 
-    for path in bad_paths:
+    for path in matched_paths:
         print(path)
 
 
