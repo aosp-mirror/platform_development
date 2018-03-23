@@ -17,17 +17,36 @@
 from collections import namedtuple
 import logging
 import os
+import shlex
 import subprocess
+import sys
 
 
 CommandResult = namedtuple('CommandResult', 'returncode stdoutdata, stderrdata')
 PIPE = subprocess.PIPE
+
+_LOCAL_BIN_PATH = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])),
+                               'bin')
+
+
+def _update_command_for_local(command, kwargs):
+  if kwargs.get('shell', False):
+    # do nothing for shell commands
+    return
+
+  prog = command[0]
+  local_prog = os.path.join(_LOCAL_BIN_PATH, prog)
+  if os.path.isfile(local_prog) and os.access(local_prog, os.X_OK):
+    logging.debug('Using local executable: %s', local_prog)
+    command[0] = local_prog
 
 
 def run_command(command, read_stdout=False, read_stderr=False,
                 log_stdout=False, log_stderr=False,
                 raise_on_error=True, sudo=False, **kwargs):
   """Runs a command and returns the results.
+
+    The method tries to use the executable in bin/ firstly.
 
   Args:
     command: A sequence of command arguments or else a single string.
@@ -50,6 +69,8 @@ def run_command(command, read_stdout=False, read_stderr=False,
     OSError: Not such a command to execute, raised by subprocess.Popen().
     subprocess.CalledProcessError: The return code of the command is nonzero.
   """
+  _update_command_for_local(command, kwargs)
+
   if sudo and os.getuid() != 0:
     if kwargs.pop('shell', False):
       command = ['sudo', 'sh', '-c', command]

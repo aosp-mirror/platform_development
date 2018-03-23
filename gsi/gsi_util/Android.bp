@@ -28,6 +28,7 @@ python_binary_host {
     "adb",
     "avbtool",
     "checkvintf",
+    "secilc",
     "simg2img",
   ],
   version: {
