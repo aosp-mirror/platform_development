@@ -37,6 +37,8 @@ REQUIRED_ITEMS = [
     RequiredItem('bin/checkvintf', 'bin/checkvintf'),
     RequiredItem('lib64/libbase.so', 'lib64/libbase.so'),
     RequiredItem('lib64/liblog.so', 'lib64/liblog.so'),
+    RequiredItem('bin/secilc', 'bin/secilc'),
+    RequiredItem('lib64/libsepol.so', 'lib64/libsepol.so'),
     RequiredItem('bin/simg2img', 'bin/simg2img'),
     RequiredItem('lib64/libc++.so', 'lib64/libc++.so'),
 ]  # pyformat: disable
