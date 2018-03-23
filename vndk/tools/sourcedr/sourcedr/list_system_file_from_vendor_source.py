@@ -5,27 +5,50 @@ import itertools
 import os
 import re
 
+try:
+    import cPickle as pickle  # Python 2
+except ImportError:
+    import pickle  # Python 3
+
 import ninja
 
 
 def _parse_args():
     parser = argparse.ArgumentParser()
+
+    # Ninja input file options
     parser.add_argument('input_file', help='input ninja file')
+    parser.add_argument('--ninja-deps', help='.ninja_deps file')
+    parser.add_argument('--cwd', help='working directory for ninja')
     parser.add_argument('--encoding', default='utf-8',
                         help='ninja file encoding')
-    parser.add_argument('--ninja-deps', help='.ninja_deps file')
+
+    # Options
+    parser.add_argument('--out-dir', default='out',
+                        help='path to output directory')
 
     return parser.parse_args()
+
+
+def _load_manifest_from_args(args):
+    input_file = args.input_file
+
+    if input_file.endswith('.pickle'):
+        with open(input_file, 'rb') as pickle_file:
+            return pickle.load(pickle_file)
+
+    return Parser(args.cwd).parse(input_file, args.encoding, args.ninja_deps)
 
 
 def main():
     args = _parse_args()
 
-    system_out_pattern = re.compile('out/target/product/[^/]+/system/')
+    out_pattern = re.compile(re.escape(args.out_dir) + '/')
+    system_out_pattern = re.compile(
+            re.escape(args.out_dir) + '/target/product/[^/]+/system/')
     vendor_src_pattern = re.compile('(?:vendor)|(?:device)/')
 
-    manifest = ninja.Parser().parse(
-        args.input_file, args.encoding, args.ninja_deps)
+    manifest = _load_manifest_from_args(args)
 
     # Build lookup map
     outs = {}
@@ -46,7 +69,7 @@ def main():
         for path in paths:
             if vendor_src_pattern.match(path):
                 return True
-            if path.startswith('out/'):
+            if out_pattern.match(path):
                 gen_paths.append(path)
 
         # Check whether the input files transitively depend on
@@ -72,7 +95,7 @@ def main():
 
     bad_paths = [
         path for path in outs
-        if is_from_vendor(path) and system_out_pattern.match(path)]
+        if system_out_pattern.match(path) and is_from_vendor(path)]
 
     bad_paths.sort()
 

@@ -12,13 +12,10 @@ import re
 import struct
 import sys
 
-DEBUG_ALLOC = False
-
-if DEBUG_ALLOC:
-    try:
-        import tracemalloc
-    except ImportError:
-        DEBUG_ALLOC = False
+try:
+    import cPickle as pickle  # Python 2
+except ImportError:
+    import pickle  # Python 3
 
 try:
     from cStringIO import StringIO  # Python 2
@@ -985,60 +982,102 @@ class DepFileParser(object):
         return self._path_deps
 
 
-def main():
-    # Parse command line options
+def _parse_args():
+    """Parse command line options."""
+
     parser = argparse.ArgumentParser()
-    parser.add_argument('input_file', help='input ninja file')
-    parser.add_argument('--encoding', default='utf-8',
-                        help='ninja file encoding')
-    parser.add_argument('--ninja-deps', help='.ninja_deps file')
+    subparsers = parser.add_subparsers(dest='command')
+
+    def _register_input_file_args(parser):
+        parser.add_argument('input_file', help='input ninja file')
+        parser.add_argument('--ninja-deps', help='.ninja_deps file')
+        parser.add_argument('--cwd', help='working directory for ninja')
+        parser.add_argument('--encoding', default='utf-8',
+                            help='ninja file encoding')
+
+    # dump sub-command
+    parser_dump = subparsers.add_parser('dump', help='dump dependency graph')
+    _register_input_file_args(parser_dump)
+    parser_dump.add_argument('-o', '--output', help='output file')
+
+    # pickle sub-command
+    parser_pickle = subparsers.add_parser(
+            'pickle', help='serialize dependency graph with pickle')
+    _register_input_file_args(parser_pickle)
+    parser_pickle.add_argument('-o', '--output', required=True,
+                               help='output file')
+
+    # Parse arguments and check sub-command
     args = parser.parse_args()
+    if args.command is None:
+        parser.print_help()
+        sys.exit(1)
 
-    if DEBUG_ALLOC:
-        tracemalloc.start(25)
-        tc_start = tracemalloc.take_snapshot()
+    return args
 
-    # Parse ninja file
-    manifest = Parser().parse(args.input_file, args.encoding, args.ninja_deps)
 
-    if DEBUG_ALLOC:
-        tc_end = tracemalloc.take_snapshot()
+def load_manifest_from_args(args):
+    """Load the input manifest specified by command line options."""
+    return Parser(args.cwd).parse(args.input_file, args.encoding,
+                                  args.ninja_deps)
+
+
+def dump_manifest(manifest, file):
+    """Dump a manifest to a text file."""
 
     for rule in manifest.rules:
-        print('rule', rule.name)
+        print('rule', rule.name, file=file)
 
     for build in manifest.builds:
-        print('build')
+        print('build', file=file)
         for path in build.explicit_outs:
-            print('  explicit_out:', path)
+            print('  explicit_out:', path, file=file)
         for path in build.implicit_outs:
-            print('  implicit_out:', path)
+            print('  implicit_out:', path, file=file)
         for path in build.explicit_ins:
-            print('  explicit_in:', path)
+            print('  explicit_in:', path, file=file)
         for path in build.implicit_ins:
-            print('  implicit_in:', path)
+            print('  implicit_in:', path, file=file)
         for path in build.prerequisites:
-            print('  prerequisites:', path)
+            print('  prerequisites:', path, file=file)
         for path in build.depfile_implicit_ins:
-            print('  depfile_implicit_in:', path)
+            print('  depfile_implicit_in:', path, file=file)
 
     for pool in manifest.pools:
-        print('pool', pool.name)
+        print('pool', pool.name, file=file)
 
     for default in manifest.defaults:
-        print('default')
+        print('default', file=file)
         for path in default.outs:
-            print('  out:', path)
+            print('  out:', path, file=file)
 
-    if DEBUG_ALLOC:
-        top_stats = tc_end.compare_to(tc_start, 'traceback')
-        with open('tracemalloc.log', 'w') as fp:
-            for s in top_stats:
-                print('', file=fp)
-                print('========================================', file=fp)
-                print(s, file=fp)
-                for line in s.traceback.format():
-                    print(line, file=fp)
+
+def command_dump_main(args):
+    """Main function for the dump sub-command"""
+    if args.output is None:
+        dump_manifest(load_manifest_from_args(args), sys.stdout)
+    else:
+        with open(args.output, 'w') as output_file:
+            dump_manifest(load_manifest_from_args(args), output_file)
+
+
+def command_pickle_main(args):
+    """Main function for the pickle sub-command"""
+    with open(args.output, 'wb') as output_file:
+        pickle.dump(load_manifest_from_args(args), output_file)
+
+
+def main():
+    """Main function for the executable"""
+    args = _parse_args()
+    if args.command == 'dump':
+        command_dump_main(args)
+    elif args.command == 'pickle':
+        command_pickle_main(args)
+    else:
+        raise KeyError('unknown command ' + args.command)
+
 
 if __name__ == '__main__':
-    main()
+    import ninja
+    ninja.main()
