@@ -157,6 +157,7 @@ bool ABIWrapper::CreateExtendedType(
     return true;
   }
   const clang::QualType canonical_type = qual_type.getCanonicalType();
+  // The source file is going to be set later anyway.
   return CreateBasicNamedAndTypedDecl(canonical_type, typep, "",
                                       anon_type_identifier);
 }
@@ -172,24 +173,28 @@ bool ABIWrapper::CreateBasicNamedAndTypedDecl(
   bool is_reference = base_type->isReferenceType();
   bool is_array = base_type->isArrayType();
   bool is_builtin = base_type->isBuiltinType();
-  bool has_referenced_type =
+  bool should_continue_with_recursive_type_creation =
       is_ptr || is_reference || is_array ||
-      canonical_type.hasLocalQualifiers() || is_builtin;
-  if (!has_referenced_type ||
+      canonical_type.hasLocalQualifiers() || is_builtin ||
+      base_type->isFunctionType();
+  if (!should_continue_with_recursive_type_creation ||
       !ast_caches_->type_cache_.insert(type_key).second) {
     return true;
   }
   // Do something similar to what is being done right now. Create an object
   // extending Type and return a pointer to that and pass it to CreateBasic...
   // CreateBasic...(qualtype, Type *) fills in size, alignemnt etc.
-  std::unique_ptr<abi_util::TypeIR> typep = SetTypeKind(canonical_type,
-                                                        source_file);
-  if (!base_type->isVoidType() && !typep) {
+  auto type_and_status = SetTypeKind(canonical_type, source_file);
+  std::unique_ptr<abi_util::TypeIR> typep = std::move(type_and_status.typep_);
+  if (!base_type->isVoidType() && type_and_status.should_create_type_ &&
+      !typep) {
+    llvm::errs() << "nullptr with valid type while creating basic type\n";
     return false;
   }
-  return CreateBasicNamedAndTypedDecl(canonical_type, typep.get(),
-                                      source_file) &&
-      ir_dumper_->AddLinkableMessageIR(typep.get());
+  return type_and_status.should_create_type_ ?
+      CreateBasicNamedAndTypedDecl(canonical_type, typep.get(),
+                                   source_file) &&
+      ir_dumper_->AddLinkableMessageIR(typep.get()) : true;
 }
 
 std::string RecordDeclWrapper::GetMangledRTTI(
@@ -260,7 +265,10 @@ std::string ABIWrapper::GetTypeLinkageName(const clang::Type *typep)  {
   return QualTypeToString(qt);
 }
 
-std::unique_ptr<abi_util::TypeIR> ABIWrapper::SetTypeKind(
+// This method returns a TypeAndCreationStatus object. This object contains a
+// type and information to tell the clients of this method whether the caller
+// should continue creating the type.
+TypeAndCreationStatus ABIWrapper::SetTypeKind(
     const clang::QualType canonical_type, const std::string &source_file) {
   if (canonical_type.hasLocalQualifiers()) {
     auto qual_type_ir =
@@ -269,44 +277,54 @@ std::unique_ptr<abi_util::TypeIR> ABIWrapper::SetTypeKind(
     qual_type_ir->SetRestrictedness(canonical_type.isRestrictQualified());
     qual_type_ir->SetVolatility(canonical_type.isVolatileQualified());
     qual_type_ir->SetSourceFile(source_file);
-    return qual_type_ir;
+    return TypeAndCreationStatus(std::move(qual_type_ir));
   }
   const clang::Type *type_ptr = canonical_type.getTypePtr();
   if (type_ptr->isPointerType()) {
     auto pointer_type_ir = std::make_unique<abi_util::PointerTypeIR>();
     pointer_type_ir->SetSourceFile(source_file);
-    return pointer_type_ir;
+    return TypeAndCreationStatus(std::move(pointer_type_ir));
   }
   if (type_ptr->isLValueReferenceType()) {
     auto lvalue_reference_type_ir =
         std::make_unique<abi_util::LvalueReferenceTypeIR>();
     lvalue_reference_type_ir->SetSourceFile(source_file);
-    return lvalue_reference_type_ir;
+    return TypeAndCreationStatus(std::move(lvalue_reference_type_ir));
   }
   if (type_ptr->isRValueReferenceType()) {
    auto rvalue_reference_type_ir =
        std::make_unique<abi_util::RvalueReferenceTypeIR>();
    rvalue_reference_type_ir->SetSourceFile(source_file);
-   return rvalue_reference_type_ir;
+   return TypeAndCreationStatus(std::move(rvalue_reference_type_ir));
   }
   if (type_ptr->isArrayType()) {
     auto array_type_ir = std::make_unique<abi_util::ArrayTypeIR>();
     array_type_ir->SetSourceFile(source_file);
-    return array_type_ir;
+    return TypeAndCreationStatus(std::move(array_type_ir));
   }
   if (type_ptr->isEnumeralType()) {
-    return std::make_unique<abi_util::EnumTypeIR>();
+    return TypeAndCreationStatus(std::make_unique<abi_util::EnumTypeIR>());
   }
   if (type_ptr->isRecordType()) {
-    return std::make_unique<abi_util::RecordTypeIR>();
+    return TypeAndCreationStatus(std::make_unique<abi_util::RecordTypeIR>());
   }
   if (type_ptr->isBuiltinType()) {
     auto builtin_type_ir = std::make_unique<abi_util::BuiltinTypeIR>();
     builtin_type_ir->SetSignedness(type_ptr->isUnsignedIntegerType());
     builtin_type_ir->SetIntegralType(type_ptr->isIntegralType(*ast_contextp_));
-    return builtin_type_ir;
+    return TypeAndCreationStatus(std::move(builtin_type_ir));
   }
-  return nullptr;
+  if (auto &&func_type_ptr =
+      llvm::dyn_cast<const clang::FunctionType>(type_ptr)) {
+    FunctionTypeWrapper function_type_wrapper(mangle_contextp_, ast_contextp_,
+                                              cip_, func_type_ptr, ir_dumper_,
+                                              ast_caches_, source_file);
+    if (!function_type_wrapper.GetFunctionType()) {
+      llvm::errs() << "FunctionType could not be created\n";
+      ::exit(1);
+    }
+  }
+  return TypeAndCreationStatus(nullptr, false);
 }
 
 std::string ABIWrapper::GetMangledNameDecl(
@@ -346,6 +364,7 @@ bool ABIWrapper::SetupTemplateArguments(
         abi_util::TemplateElementIR(
             ast_caches_->GetTypeId(GetKeyForTypeId(type))));
     if (!CreateBasicNamedAndTypedDecl(type, source_file)) {
+      llvm::errs() << "Setting up template arguments failed\n";
       return false;
     }
   }
@@ -362,6 +381,48 @@ std::string ABIWrapper::QualTypeToString(
     return salty_qt.getAsString();
   }
   return clang::TypeName::getFullyQualifiedName(salty_qt, *ast_contextp_);
+}
+
+FunctionTypeWrapper::FunctionTypeWrapper(
+    clang::MangleContext *mangle_contextp, clang::ASTContext *ast_contextp,
+    const clang::CompilerInstance *compiler_instance_p,
+    const clang::FunctionType *function_type, abi_util::IRDumper *ir_dumper,
+    ast_util::ASTCaches *ast_caches, const std::string &source_file)
+  : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p, ir_dumper,
+               ast_caches), function_type_(function_type),
+    source_file_(source_file) { }
+
+bool FunctionTypeWrapper::SetupFunctionType(
+    abi_util::FunctionTypeIR *function_type_ir) {
+  // Add ReturnType
+  function_type_ir->SetReturnType(
+      ast_caches_->GetTypeId(GetKeyForTypeId(function_type_->getReturnType())));
+  function_type_ir->SetSourceFile(source_file_);
+  const clang::FunctionProtoType *function_pt =
+      llvm::dyn_cast<clang::FunctionProtoType>(function_type_);
+  if (!function_pt) {
+    return true;
+  }
+  for (unsigned i = 0, e = function_pt->getNumParams(); i != e; ++i) {
+    clang::QualType param_type = function_pt->getParamType(i);
+    if (!SetupFunctionParameter(function_type_ir, param_type, false,
+                                source_file_)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool FunctionTypeWrapper::GetFunctionType() {
+  auto abi_decl = std::make_unique<abi_util::FunctionTypeIR>();
+  clang::QualType canonical_type = function_type_->getCanonicalTypeInternal();
+  if (!CreateBasicNamedAndTypedDecl(canonical_type, abi_decl.get(), "",
+                                    nullptr)) {
+    llvm::errs() << "Couldn't create (function type) extended type\n";
+    return false;
+  }
+  return SetupFunctionType(abi_decl.get()) &&
+      ir_dumper_->AddLinkableMessageIR(abi_decl.get());
 }
 
 FunctionDeclWrapper::FunctionDeclWrapper(
@@ -387,10 +448,11 @@ bool FunctionDeclWrapper::SetupThisParameter(abi_util::FunctionIR *functionp,
   return SetupFunctionParameter(functionp, this_type, false, source_file);
 }
 
-bool FunctionDeclWrapper::SetupFunctionParameter(
-    abi_util::FunctionIR *functionp, const clang::QualType qual_type,
+bool ABIWrapper::SetupFunctionParameter(
+    abi_util::CFunctionLikeIR *functionp, const clang::QualType qual_type,
     bool has_default_arg, const std::string &source_file) {
   if (!CreateBasicNamedAndTypedDecl(qual_type, source_file)) {
+    llvm::errs() << "Setting up function parameter failed\n";
     return false;
   }
   functionp->AddParameter(abi_util::ParamIR(
@@ -405,6 +467,7 @@ bool FunctionDeclWrapper::SetupFunctionParameters(
       function_decl_->param_begin();
   // If this is a CXXMethodDecl, we need to add the "this" pointer.
   if (!SetupThisParameter(functionp, source_file)) {
+    llvm::errs() << "Setting up 'this' parameter failed\n";
     return false;
   }
 
@@ -510,6 +573,7 @@ bool RecordDeclWrapper::SetupRecordFields(abi_util::RecordTypeIR *recordp,
           std::to_string(field_index);
       key_for_type_id = GetKeyForTypeId(field_type, &field_type_str);
       if (!CreateAnonymousRecord(anon_record_decl, field_type_str)) {
+      llvm::errs() << "Creation of anonymous record failed\n";
       return false;
       }
     } else if (const clang::EnumDecl *enum_decl =
@@ -541,8 +605,9 @@ bool RecordDeclWrapper::SetupCXXBases(
     abi_util::AccessSpecifierIR access =
         AccessClangToIR(base_class->getAccessSpecifier());
     cxxp->AddCXXBaseSpecifier(
-        abi_util::CXXBaseSpecifierIR(ast_caches_->GetTypeId(GetKeyForTypeId(base_class->getType())), is_virtual,
-                                     access));
+        abi_util::CXXBaseSpecifierIR(
+            ast_caches_->GetTypeId(GetKeyForTypeId(base_class->getType())),
+            is_virtual, access));
     base_class++;
   }
   return true;
