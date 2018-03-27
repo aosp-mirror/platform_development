@@ -84,12 +84,12 @@ def get_ref_dump_dir_stem(args, vndk_or_ndk, product, chosen_vndk_version):
 
     return ref_dump_dir_stem
 
-def make_libs_for_all_arches_and_variants(libs):
+def make_libs_for_all_arches_and_variants(libs, llndk_mode):
     for product in PRODUCTS:
         get_lsdump_paths_file(product)
         if libs:
             print('making libs for product:', product)
-            make_libraries(libs, product)
+            make_libraries(libs, product, llndk_mode)
         else:
             print('making all libs for product: ', product)
             make_tree(product)
@@ -154,6 +154,8 @@ def main():
     parser.add_argument('--version', help='VNDK version')
     parser.add_argument('--no-make-lib', help='no m -j lib.vendor while \
                         creating reference', default=False, action='store_true')
+    parser.add_argument('--llndk', help='The libs specified by -l are llndk',
+                        default=False, action='store_true')
     parser.add_argument('-libs', help='libs to create references for',
                         action='append')
     parser.add_argument('-ref-dump-dir',
@@ -174,7 +176,7 @@ def main():
     remove_references_for_all_arches_and_variants(args, chosen_vndk_version)
     # make all the libs specified / the entire vndk_package if none specified
     if (args.no_make_lib == False):
-        make_libs_for_all_arches_and_variants(args.libs)
+        make_libs_for_all_arches_and_variants(args.libs, args.llndk)
     for product in PRODUCTS:
         num_processed += create_source_abi_reference_dumps(
             soong_dir, args, product, chosen_vndk_version)
