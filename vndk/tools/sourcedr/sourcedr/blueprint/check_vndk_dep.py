@@ -110,7 +110,9 @@ def main():
               file=sys.stderr)
 
     if all_bad_deps:
-        sys.exit(1)
+        # Note: Exit with 2 so that it is easier to distinguish bad
+        # dependencies from unexpected Python exceptions.
+        sys.exit(2)
 
 
 if __name__ == '__main__':
