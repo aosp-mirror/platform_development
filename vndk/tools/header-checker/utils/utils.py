@@ -125,7 +125,7 @@ def run_header_abi_linker(output_path, inputs, version_script, api, arch):
 def make_tree(product):
     # To aid creation of reference dumps.
     make_cmd = ['build/soong/soong_ui.bash', '--make-mode', '-j',
-                'vndk_package', 'TARGET_PRODUCT=' + product]
+                'vndk', 'TARGET_PRODUCT=' + product]
     subprocess.check_call(make_cmd, cwd=AOSP_DIR)
 
 def make_targets(targets, product):
