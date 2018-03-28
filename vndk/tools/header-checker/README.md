@@ -83,6 +83,8 @@ For more command line options, run `header-abi-diff --help`.
 
 `utils/create_reference_dumps.py` may be used to create reference ABI dumps.
 
+#For VNDK libraries
+
 For example, the command below creates reference ABI dumps for all VNDK shared
 libraries on arm, arm64, x86, and x86_64 architectures:
 
@@ -96,7 +98,16 @@ To create reference ABI dumps for a specific library, run the command below:
 $ python3 create_reference_dumps.py -l libfoo
 ```
 
-This will create reference dumps for `libfoo`, assuming `libfoo` is a VNDK or
-LLNDK library.
+This will create reference dumps for `libfoo`, assuming `libfoo` is a VNDK
+library.
+
+# For LLNDK libraries
+
+```
+$ python3 create_reference_dumps.py -l libfoo --llndk
+```
+This will create reference dumps for `libfoo`, assuming `libfoo` is an LLNDK
+library.
+
 
 For more command line options, run `utils/create_reference_dumps.py --help`.
