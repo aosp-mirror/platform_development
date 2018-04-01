@@ -183,15 +183,15 @@ int main(int argc, const char **argv) {
                  << "******************************************************\n";
   }
 
-  if ((allow_extensions &&
+  if (!advice_only && ((!allow_extensions &&
       (status & abi_util::CompatibilityStatusIR::Extension)) ||
-      (allow_unreferenced_changes &&
+      (!allow_unreferenced_changes &&
       (status & abi_util::CompatibilityStatusIR::UnreferencedChanges)) ||
-      (allow_unreferenced_elf_symbol_changes &&
+      (!allow_unreferenced_elf_symbol_changes &&
       (status & abi_util::CompatibilityStatusIR::ElfIncompatible)) ||
-      advice_only) {
-    return abi_util::CompatibilityStatusIR::Compatible;
+      (status & abi_util::CompatibilityStatusIR::Incompatible))) {
+    return status;
   }
 
-  return status;
+  return abi_util::CompatibilityStatusIR::Compatible;
 }

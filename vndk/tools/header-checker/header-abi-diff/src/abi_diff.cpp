@@ -105,11 +105,15 @@ HeaderAbiDiff::ExtractUserDefinedTypes(
       continue;
     }
     const abi_util::TypeIR *type = *(odr_list.begin());
+    const abi_util::RecordTypeIR *record_type = nullptr;
     switch (type->GetKind()) {
       case abi_util::RecordTypeKind:
+        record_type = static_cast<const abi_util::RecordTypeIR *>(type);
+        if (record_type->IsAnonymous()) {
+          continue;
+        }
         record_types.emplace(
-            static_cast<const abi_util::RecordTypeIR *>(type)->GetUniqueId(),
-            static_cast<const abi_util::RecordTypeIR *>(type));
+            record_type->GetUniqueId(), record_type);
         break;
       case abi_util::EnumTypeKind:
         enum_types.emplace(
