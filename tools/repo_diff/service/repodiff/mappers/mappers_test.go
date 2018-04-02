@@ -71,3 +71,59 @@ func makeDiffRow(status, lineChanges, filesChanged int) e.DiffRow {
 		DBInsertTimestamp: 1519427445,
 	}
 }
+
+func TestGetAuthorTechAreaUnknown(t *testing.T) {
+	fakeAuthor := "arthur.digby.sellers@google.com"
+	techArea := GetAuthorTechArea(fakeAuthor)
+	assert.Equal(t, "Unknown", techArea, "Author tech area should be unknown")
+}
+
+func TestGetAuthorTechAreaKnown(t *testing.T) {
+	fakeAuthor := "jeffrey.lebowski@google.com"
+	techArea := GetAuthorTechArea(fakeAuthor)
+	assert.Equal(t, "Build", techArea, "Jeffrey Lebowski is on the Build team")
+}
+
+func TestCommitRowsToTopCommitter(t *testing.T) {
+	fakeCommitRows := []e.CommitRow{
+		e.CommitRow{
+			Date:              "2018/03/20",
+			Commit:            "540eecd728a407e4b31a38f4ea9416dea7d05c0c",
+			DownstreamProject: "platform/tools/external/gradle",
+			Author:            "jeffrey.lebowski@google.com",
+			Subject:           "Hand off the briefcase",
+		},
+		e.CommitRow{
+			Date:              "2018/03/19",
+			Commit:            "ea999655a8af4b7d6a8033d1c864ca87617d0ede",
+			DownstreamProject: "platform/tools/external/gradle",
+			Author:            "brandt@google.com",
+			Subject:           "We Just Don't Know",
+		},
+		e.CommitRow{
+			Date:              "2018/03/19",
+			Commit:            "4cc9725c953f57f8abe63b729e26125feac1be4e",
+			DownstreamProject: "platform/tools/external/gradle",
+			Author:            "jeffrey.lebowski@google.com",
+			Subject:           "Take any rug in the house",
+		},
+	}
+	aggregated := CommitRowsToTopCommitter(fakeCommitRows)
+	expected := [][]interface{}{
+		[]interface{}{
+			1,
+			"jeffrey.lebowski@google.com",
+			2,
+			0,
+			"Build",
+		},
+		[]interface{}{
+			2,
+			"brandt@google.com",
+			1,
+			0,
+			"Unknown",
+		},
+	}
+	assert.Equal(t, expected, aggregated, "Rows should be equal")
+}

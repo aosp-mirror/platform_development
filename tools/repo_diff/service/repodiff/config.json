@@ -1,17 +1,62 @@
 {
-    "android_project_dir": "/ssd850/slobdell_projects/android/",
-    "output_directory": "/ssd850/slobdell_projects/repo_output",
-    "diff_script": "development/tools/repo_diff/repo_diff_android.py",
+    "android_project_dir": "/ssd850/tmp/development/tools/repo_diff/",
+    "output_directory": "/ssd850/slobdell_projects/app_output",
+    "diff_script": "repo_diff_android.py",
     "diff_targets": [
         {
             "upstream": {
-                "url": "persistent-https://android.googlesource.com/platform/manifest/",
-                "branch": "nougat-dev"
+                "url": "https://keystone-samsung-slsi-review.googlesource.com/platform/vendor/pdk/generic/fs/manifest/",
+                "branch": "p-keystone-samsung-slsi-incoming"
             },
             "downstream": {
-                "url": "persistent-https://android.googlesource.com/platform/manifest/",
-                "branch": "master"
+                "url": "https://keystone-samsung-slsi-review.googlesource.com/platform/vendor/pdk/generic/fs/manifest/",
+                "branch": "p-keystone-samsung-slsi"
+            }
+        },
+        {
+            "upstream": {
+
+                "url": "https://keystone-qcom.googlesource.com/platform/manifest",
+                "branch": "p-fs-release"
+            },
+            "downstream": {
+                "url": "https://keystone-mtk.googlesource.com/platform/manifest",
+                "branch": "p-keystone-mtk"
+            }
+        },
+        {
+            "upstream": {
+
+                "url": "https://keystone-qcom.googlesource.com/platform/manifest",
+                "branch": "p-fs-release"
+            },
+            "downstream": {
+                "url": "https://keystone-qcom.googlesource.com/platform/manifest",
+                "branch": "p-keystone-qcom"
+            }
+        },
+        {
+            "upstream": {
+
+                "url": "https://keystone-qcom.googlesource.com/platform/manifest",
+                "branch": "qcom-LA.UM.7.3-incoming"
+            },
+            "downstream": {
+                "url": "https://keystone-qcom.googlesource.com/platform/manifest",
+                "branch": "p-keystone-qcom"
+            }
+        },
+        {
+            "upstream": {
+
+                "url": "https://keystone-qcom.googlesource.com/platform/manifest",
+                "branch": "qcom-LA.UM.7.2-incoming"
+            },
+            "downstream": {
+                "url": "https://keystone-qcom.googlesource.com/platform/manifest",
+                "branch": "p-keystone-qcom"
             }
         }
-    ]
+    ],
+    "port": 7683
 }

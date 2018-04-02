@@ -15,6 +15,11 @@ func init() {
 	clearProjectTable()
 }
 
+var testDiffTarget = e.MappedDiffTarget{
+	UpstreamTarget:   int16(1),
+	DownstreamTarget: int16(1),
+}
+
 func getProjectRowCount() int {
 	db, _ := repoSQL.GetDBConnectionPool()
 	var count int
@@ -32,7 +37,7 @@ func TestInsertDiffRows(t *testing.T) {
 
 	assert.Equal(t, 0, getProjectRowCount(), "Rows should start empty")
 
-	p, err := repositories.NewProjectRepository()
+	p, err := repositories.NewProjectRepository(testDiffTarget)
 	assert.Equal(t, nil, err, "Error should not be nil")
 
 	fixtures := fakeFixtures()
@@ -42,7 +47,7 @@ func TestInsertDiffRows(t *testing.T) {
 
 func TestGetMostRecentOuterKey(t *testing.T) {
 	defer clearProjectTable()
-	p, _ := repositories.NewProjectRepository()
+	p, _ := repositories.NewProjectRepository(testDiffTarget)
 	p.InsertDiffRows(fakeFixtures())
 
 	var oldTimestamp int64 = 1519333790
@@ -55,14 +60,14 @@ func TestGetMostRecentOuterKey(t *testing.T) {
 func TestGetMostRecentOuterKeyEmpty(t *testing.T) {
 	assert.Equal(t, 0, getProjectRowCount(), "Database shoudl start empty")
 
-	p, _ := repositories.NewProjectRepository()
+	p, _ := repositories.NewProjectRepository(testDiffTarget)
 	_, _, err := p.GetMostRecentOuterKey()
 	assert.NotEqual(t, nil, err, "Error should be returned when database is empty")
 }
 
 func TestGetMostRecentDifferentials(t *testing.T) {
 	defer clearProjectTable()
-	p, _ := repositories.NewProjectRepository()
+	p, _ := repositories.NewProjectRepository(testDiffTarget)
 	dateNow := utils.TimestampToDate(utils.TimestampSeconds())
 	fixtures := fakeFixtures()
 
@@ -88,4 +93,11 @@ func TestGetMostRecentDifferentials(t *testing.T) {
 	// not concerned about direct comparison
 	expected.DBInsertTimestamp = d.DBInsertTimestamp
 	assert.Equal(t, expected, d, "Results should be equal")
+}
+
+func TestGetMostRecentDifferentialsEmpty(t *testing.T) {
+	p, _ := repositories.NewProjectRepository(testDiffTarget)
+	rows, err := p.GetMostRecentDifferentials()
+	assert.Equal(t, nil, err, "Error should be nil")
+	assert.Equal(t, 0, len(rows))
 }

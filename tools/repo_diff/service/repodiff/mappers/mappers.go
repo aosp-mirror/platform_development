@@ -1,7 +1,9 @@
 package mappers
 
 import (
+	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
 	"fmt"
 	"strconv"
 
@@ -83,6 +85,17 @@ func diffRowToDenormalizedCols(d e.DiffRow, rowIndex int) []interface{} {
 	}
 }
 
+func commitRowToDenormalizedCols(commitRow e.CommitRow, rowIndex int) []interface{} {
+	return []interface{}{
+		rowIndex,
+		commitRow.Commit,
+		commitRow.DownstreamProject,
+		commitRow.Author,
+		commitRow.Subject,
+		GetAuthorTechArea(commitRow.Author),
+	}
+}
+
 func diffRowToPersistCols(d e.DiffRow, uuidBytes string, timestamp int64, rowIndex int) []interface{} {
 	return []interface{}{
 		timestamp,
@@ -136,6 +149,62 @@ func DiffRowsToDenormalizedCols(diffRows []e.DiffRow) [][]interface{} {
 		)
 	}
 	return rows
+}
+
+func CommitRowsToDenormalizedCols(commitRows []e.CommitRow) [][]interface{} {
+	rows := make([][]interface{}, len(commitRows))
+	for i, commitRow := range commitRows {
+		rows[i] = commitRowToDenormalizedCols(
+			commitRow,
+			i,
+		)
+	}
+	return rows
+}
+
+func CommitRowsToTopCommitter(commitRows []e.CommitRow) [][]interface{} {
+	return aggregateToTopCommitterRows(
+		groupCommitRowsByAuthor(commitRows),
+	)
+}
+
+func aggregateToTopCommitterRows(authorToRows map[string][]e.CommitRow) [][]interface{} {
+	var rows [][]interface{}
+	surrogateID := 1
+	for author, rowsThisAuthor := range authorToRows {
+		columns := []interface{}{
+			surrogateID,
+			author,
+			len(rowsThisAuthor),
+			0, // line changes 0 for now, try to support later
+			GetAuthorTechArea(author),
+		}
+		rows = append(
+			rows,
+			columns,
+		)
+		surrogateID++
+	}
+	return rows
+}
+
+func groupCommitRowsByAuthor(commitRows []e.CommitRow) map[string][]e.CommitRow {
+	authorToRows := make(map[string][]e.CommitRow)
+	for _, c := range commitRows {
+		key := c.Author
+		if _, keyExists := authorToRows[key]; !keyExists {
+			authorToRows[key] = nil
+		}
+	}
+
+	for _, c := range commitRows {
+		key := c.Author
+		authorToRows[key] = append(
+			authorToRows[key],
+			c,
+		)
+	}
+	return authorToRows
 }
 
 func DiffRowsToAggregateChangesOverTime(diffRows []e.DiffRow) [][]interface{} {
@@ -215,4 +284,70 @@ func SQLRowToDiffRow(iterRow *sql.Rows) (e.DiffRow, error) {
 	)
 	d.Date = utils.TimestampToDate(d.DBInsertTimestamp)
 	return d, err
+}
+
+func SQLRowToCommitRow(iterRow *sql.Rows) (e.CommitRow, error) {
+	var c e.CommitRow
+	var uuidBytes []byte
+	var rowIndex int
+	var timestamp int64
+	err := iterRow.Scan(
+		&timestamp,
+		&uuidBytes,
+		&rowIndex,
+		&c.Commit,
+		&c.DownstreamProject,
+		&c.Author,
+		&c.Subject,
+	)
+	c.Date = utils.TimestampToDate(timestamp)
+	return c, err
+}
+
+// SBL needs test coverage
+func PrependMappedDiffTarget(target e.MappedDiffTarget, rowsOfCols [][]interface{}) [][]interface{} {
+	remapped := make([][]interface{}, len(rowsOfCols))
+	prefix := []interface{}{
+		target.UpstreamTarget,
+		target.DownstreamTarget,
+	}
+	for i, row := range rowsOfCols {
+		remapped[i] = append(
+			prefix,
+			row...,
+		)
+	}
+	return remapped
+}
+
+func AppendDiffTarget(target e.DiffTarget, rowsOfCols [][]interface{}) [][]interface{} {
+	remapped := make([][]interface{}, len(rowsOfCols))
+	suffix := []interface{}{
+		target.Upstream.URL,
+		target.Upstream.Branch,
+		target.Downstream.URL,
+		target.Downstream.Branch,
+	}
+	for i, row := range rowsOfCols {
+		remapped[i] = append(
+			row,
+			suffix...,
+		)
+	}
+	return remapped
+}
+
+func SHA256HexDigest(s string) string {
+	byteArray := sha256.Sum256([]byte(s))
+	return hex.EncodeToString(
+		byteArray[:],
+	)
+}
+
+func GetAuthorTechArea(authorEMail string) string {
+	techAreaIndex, ok := constants.AuthorHashToTechIndex[SHA256HexDigest(authorEMail)]
+	if !ok {
+		return constants.TechAreaDisplay[constants.Unknown]
+	}
+	return constants.TechAreaDisplay[techAreaIndex]
 }
