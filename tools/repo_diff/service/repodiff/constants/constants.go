@@ -15,6 +15,13 @@ const (
 	StatusForked         = 5
 )
 
+const (
+	JobStatusNotStarted = "Not Started"
+	JobStatusRunning    = "Running"
+	JobStatusFailed     = "Failed"
+	JobStatusComplete   = "Completed"
+)
+
 var StatusToDisplay = map[int]string{
 	StatusIntact:         "Intact Projects",
 	StatusDownstreamOnly: "Downstream Only Projects",

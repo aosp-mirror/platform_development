@@ -19,3 +19,16 @@ func fakeFixtures() []e.DiffRow {
 		},
 	}
 }
+
+func fakeCommitFixtures() []e.CommitRow {
+	return []e.CommitRow{
+		e.CommitRow{
+			Date:              "2018/02/20",
+			Commit:            "61d5e61b6b6dfbf52d0d433759da964db31cc106",
+			DownstreamProject: "platform/vendor/unbundled_google/packages/Ears",
+			Author:            "slobdell@google.com",
+			// Actual commit subject!
+			Subject: "Import translations. DO NOT MERGE",
+		},
+	}
+}
