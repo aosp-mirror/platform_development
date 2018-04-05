@@ -52,8 +52,9 @@ class ABIWrapper {
   std::string GetCachedDeclSourceFile(const clang::Decl *decl,
                                       const clang::CompilerInstance *cip);
 
-  std::string GetKeyForTypeId(clang::QualType qual_type,
-                              const std::string *anon_identifier = nullptr);
+  std::string GetKeyForTypeId(clang::QualType qual_type);
+
+  std::string TypeNameWithFinalDestination(clang::QualType qual_type);
 
   bool SetupTemplateArguments(const clang::TemplateArgumentList *tl,
                               abi_util::TemplatedArtifactIR *ta,
@@ -70,16 +71,15 @@ class ABIWrapper {
 
   bool CreateBasicNamedAndTypedDecl(clang::QualType,
                                     const std::string &source_file);
-  bool CreateBasicNamedAndTypedDecl(
-      clang::QualType canonical_type, abi_util::TypeIR *typep,
-      const std::string &source_file,
-      const std::string *anon_identifier = nullptr);
 
-  bool CreateExtendedType(
-      clang::QualType canonical_type, abi_util::TypeIR *typep,
-      const std::string *anon_identifier = nullptr);
+  bool CreateBasicNamedAndTypedDecl(clang::QualType canonical_type,
+                                    abi_util::TypeIR *typep,
+                                    const std::string &source_file);
 
-  clang::QualType GetReferencedType(const clang::QualType qual_type);
+  bool CreateExtendedType(clang::QualType canonical_type,
+                          abi_util::TypeIR *typep);
+
+  bool CreateAnonymousRecord(const clang::RecordDecl *decl);
 
   std::string GetTypeLinkageName(const clang::Type *typep);
 
@@ -102,14 +102,12 @@ class RecordDeclWrapper : public ABIWrapper {
       clang::MangleContext *mangle_contextp, clang::ASTContext *ast_contextp,
       const clang::CompilerInstance *compiler_instance_p,
       const clang::RecordDecl *record_decl, abi_util::IRDumper *ir_dumper,
-      const std::string &previous_record_stages,
       ast_util::ASTCaches *ast_caches);
 
   bool GetRecordDecl();
 
  private:
   const clang::RecordDecl *record_decl_;
-  std::string previous_record_stages_;
 
  private:
   bool SetupRecordInfo(abi_util::RecordTypeIR *type,
@@ -135,9 +133,6 @@ class RecordDeclWrapper : public ABIWrapper {
 
   bool SetupCXXRecordInfo(abi_util::RecordTypeIR *record_declp,
                           const std::string &source_file);
-
-  bool CreateAnonymousRecord(
-      const clang::RecordDecl *decl, const std::string &linker_set_key);
 };
 
 class FunctionDeclWrapper : public ABIWrapper {

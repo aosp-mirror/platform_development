@@ -56,7 +56,7 @@ bool HeaderASTVisitor::VisitRecordDecl(const clang::RecordDecl *decl) {
     return true;
   }
   RecordDeclWrapper record_decl_wrapper(
-      mangle_contextp_, ast_contextp_, cip_, decl, ir_dumper_, "", ast_caches_);
+      mangle_contextp_, ast_contextp_, cip_, decl, ir_dumper_, ast_caches_);
   return record_decl_wrapper.GetRecordDecl();
 }
 
