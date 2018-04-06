@@ -71,12 +71,19 @@ public class ModuleCache {
         Preconditions.checkState(indexes != null, "You must call init() first.");
         Preconditions.checkNotNull(moduleName);
 
-        String makeFile = indexes.getMakeFile(moduleName);
-        if (makeFile == null) {
+        String makeFileName = indexes.getMakeFile(moduleName);
+        if (makeFileName == null) {
             logger.warning("Unable to find make file for module: " + moduleName);
             return null;
         }
-        return getAndCacheByDir(new File(makeFile).getParentFile());
+
+        File makeFile = new File(makeFileName);
+        if (!makeFile.exists()) {
+            logger.warning("Unable to find make file for module: " + moduleName);
+            return null;
+        }
+
+        return getAndCacheByDir(makeFile.getParentFile());
     }
 
     private void putModule(File moduleDir, Module module) throws IOException {
