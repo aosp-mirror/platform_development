@@ -193,12 +193,12 @@ record_types {
 }
 record_types {
   type_info {
-    name: "Hello::(anonymous)::(anonymous)"
+    name: "Hello::(anonymous)::(anonymous) at /development/vndk/tools/header-checker/tests/input/example1.h:22:5"
     size: 4
     alignment: 4
     referenced_type: "type-22"
     source_file: "/development/vndk/tools/header-checker/tests/input/example1.h"
-    linker_set_key: "Hello::(anonymous)5::(anonymous)2"
+    linker_set_key: "Hello::(anonymous)::(anonymous) at /development/vndk/tools/header-checker/tests/input/example1.h:22:5"
     self_type: "type-22"
   }
   fields {
@@ -216,12 +216,12 @@ record_types {
 }
 record_types {
   type_info {
-    name: "Hello::(anonymous)"
+    name: "Hello::(anonymous) at /development/vndk/tools/header-checker/tests/input/example1.h:19:3"
     size: 12
     alignment: 4
     referenced_type: "type-21"
     source_file: "/development/vndk/tools/header-checker/tests/input/example1.h"
-    linker_set_key: "Hello::(anonymous)5"
+    linker_set_key: "Hello::(anonymous) at /development/vndk/tools/header-checker/tests/input/example1.h:19:3"
     self_type: "type-21"
   }
   fields {

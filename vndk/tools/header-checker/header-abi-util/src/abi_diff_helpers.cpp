@@ -323,6 +323,7 @@ AbiDiffHelper::CompareRecordFields(
         if (corresponding_field_at_same_offset == field_off_map.end()) {
           return false;
         }
+
         auto comparison_result = CompareCommonRecordFields(
             removed_field, corresponding_field_at_same_offset->second,
             type_queue, diff_kind);
@@ -395,23 +396,33 @@ bool AbiDiffHelper::CompareBaseSpecifiers(
   return true;
 }
 
-void AbiDiffHelper::CompareTemplateInfo(
+DiffStatus AbiDiffHelper::CompareTemplateInfo(
     const std::vector<abi_util::TemplateElementIR> &old_template_elements,
     const std::vector<abi_util::TemplateElementIR> &new_template_elements,
     std::deque<std::string> *type_queue,
     abi_util::DiffMessageIR::DiffKind diff_kind) {
   uint32_t old_template_size = old_template_elements.size();
   uint32_t i = 0;
+  if (old_template_size != new_template_elements.size()) {
+    return DiffStatus::direct_diff;
+  }
+  DiffStatus final_diff_status = DiffStatus::no_diff;
   while (i < old_template_size) {
     const abi_util::TemplateElementIR &old_template_element =
         old_template_elements[i];
     const abi_util::TemplateElementIR &new_template_element =
         new_template_elements[i];
-    CompareAndDumpTypeDiff(old_template_element.GetReferencedType(),
-                           new_template_element.GetReferencedType(),
-                           type_queue, diff_kind);
+    auto template_element_diff =
+        CompareAndDumpTypeDiff(old_template_element.GetReferencedType(),
+                               new_template_element.GetReferencedType(),
+                               type_queue, diff_kind);
+    if (template_element_diff &
+        (DiffStatus::direct_diff | DiffStatus::indirect_diff)) {
+      final_diff_status = template_element_diff;
+    }
     i++;
   }
+  return final_diff_status;
 }
 
 template <typename DiffContainer, typename T>
@@ -530,7 +541,6 @@ DiffStatus AbiDiffHelper::CompareRecordTypes(
   }
   auto &old_fields_dup = old_type->GetFields();
   auto &new_fields_dup = new_type->GetFields();
-
   auto field_status_and_diffs =
       CompareRecordFields(old_fields_dup, new_fields_dup,
                           type_queue, diff_kind);
@@ -581,9 +591,10 @@ DiffStatus AbiDiffHelper::CompareRecordTypes(
     }
   } // Records cannot be 'extended' compatibly, without a certain amount of
     // risk.
-  CompareTemplateInfo(old_type->GetTemplateElements(),
-                      new_type->GetTemplateElements(),
-                      type_queue, diff_kind);
+  final_diff_status = final_diff_status |
+      CompareTemplateInfo(old_type->GetTemplateElements(),
+                          new_type->GetTemplateElements(),
+                          type_queue, diff_kind);
 
   return
       (final_diff_status &

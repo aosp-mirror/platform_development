@@ -37,7 +37,7 @@ void ProtobufTextFormatToIRReader::ReadTypeInfo(
     const abi_dump::BasicNamedAndTypedDecl &type_info,
     TypeIR *typep) {
   typep->SetLinkerSetKey(type_info.linker_set_key());
-  typep->SetName(type_info.linker_set_key());
+  typep->SetName(type_info.name());
   typep->SetSourceFile(type_info.source_file());
   typep->SetReferencedType(type_info.referenced_type());
   typep->SetSelfType(type_info.self_type());
