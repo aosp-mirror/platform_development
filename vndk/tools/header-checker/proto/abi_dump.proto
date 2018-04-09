@@ -74,6 +74,7 @@ message FunctionDecl {
 message ParamDecl {
   optional string referenced_type = 1;
   optional bool default_arg = 2;
+  optional bool is_this_ptr = 3;
 }
 
 message RecordFieldDecl {

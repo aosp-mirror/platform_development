@@ -802,6 +802,7 @@ functions {
   parameters {
     referenced_type: "type-7"
     default_arg: false
+    is_this_ptr: true
   }
   linker_set_key: "_ZN5test210HelloAgainD2Ev"
   access: public_access
@@ -813,6 +814,7 @@ functions {
   parameters {
     referenced_type: "type-7"
     default_arg: false
+    is_this_ptr: true
   }
   linker_set_key: "_ZN5test210HelloAgainD1Ev"
   access: public_access
@@ -824,6 +826,7 @@ functions {
   parameters {
     referenced_type: "type-7"
     default_arg: false
+    is_this_ptr: true
   }
   linker_set_key: "_ZN5test210HelloAgainD0Ev"
   access: public_access
@@ -835,6 +838,7 @@ functions {
   parameters {
     referenced_type: "type-3"
     default_arg: true
+    is_this_ptr: false
   }
   linker_set_key: "_ZN5test33EndEf"
   access: public_access
@@ -846,6 +850,7 @@ functions {
   parameters {
     referenced_type: "type-26"
     default_arg: false
+    is_this_ptr: true
   }
   linker_set_key: "_ZN8CPPHello5againEv"
   access: public_access
@@ -857,6 +862,7 @@ functions {
   parameters {
     referenced_type: "type-26"
     default_arg: false
+    is_this_ptr: true
   }
   linker_set_key: "_ZN8CPPHelloC2Ev"
   access: public_access
@@ -868,6 +874,7 @@ functions {
   parameters {
     referenced_type: "type-26"
     default_arg: false
+    is_this_ptr: true
   }
   linker_set_key: "_ZN8CPPHelloC1Ev"
   access: public_access
@@ -879,6 +886,7 @@ functions {
   parameters {
     referenced_type: "type-26"
     default_arg: false
+    is_this_ptr: true
   }
   linker_set_key: "_ZN8CPPHello9test_enumEv"
   access: public_access
@@ -890,14 +898,17 @@ functions {
   parameters {
     referenced_type: "type-28"
     default_arg: false
+    is_this_ptr: false
   }
   parameters {
     referenced_type: "type-29"
     default_arg: false
+    is_this_ptr: false
   }
   parameters {
     referenced_type: "type-30"
     default_arg: false
+    is_this_ptr: false
   }
   linker_set_key: "_Z3boo8CPPHelloPiPf"
   access: public_access
@@ -909,10 +920,12 @@ functions {
   parameters {
     referenced_type: "type-33"
     default_arg: false
+    is_this_ptr: true
   }
   parameters {
     referenced_type: "type-34"
     default_arg: false
+    is_this_ptr: false
   }
   linker_set_key: "_ZN4ListIfE5_NodeC2ERKf"
   access: public_access
@@ -924,10 +937,12 @@ functions {
   parameters {
     referenced_type: "type-33"
     default_arg: false
+    is_this_ptr: true
   }
   parameters {
     referenced_type: "type-34"
     default_arg: false
+    is_this_ptr: false
   }
   linker_set_key: "_ZN4ListIfE5_NodeC1ERKf"
   access: public_access
@@ -939,6 +954,7 @@ functions {
   parameters {
     referenced_type: "type-33"
     default_arg: false
+    is_this_ptr: true
   }
   linker_set_key: "_ZN4ListIfE5_NodeD2Ev"
   access: public_access
@@ -950,6 +966,7 @@ functions {
   parameters {
     referenced_type: "type-33"
     default_arg: false
+    is_this_ptr: true
   }
   linker_set_key: "_ZN4ListIfE5_NodeD1Ev"
   access: public_access
@@ -961,14 +978,17 @@ functions {
   parameters {
     referenced_type: "type-31"
     default_arg: false
+    is_this_ptr: false
   }
   parameters {
     referenced_type: "type-39"
     default_arg: false
+    is_this_ptr: false
   }
   parameters {
     referenced_type: "type-12"
     default_arg: false
+    is_this_ptr: false
   }
   template_info {
     elements {
