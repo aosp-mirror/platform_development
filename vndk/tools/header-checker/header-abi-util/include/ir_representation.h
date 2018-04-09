@@ -608,15 +608,21 @@ class GlobalVarIR: public LinkableMessageIR , public ReferencesOtherType {
 
 class ParamIR : public ReferencesOtherType {
  public:
-  ParamIR(const std::string &type, bool is_default) :
-    ReferencesOtherType(type) , is_default_(is_default) {}
+  ParamIR(const std::string &type, bool is_default, bool is_this_ptr) :
+    ReferencesOtherType(type) , is_default_(is_default),
+    is_this_ptr_(is_this_ptr) {}
 
   bool GetIsDefault() const {
     return is_default_;
   }
 
+  bool GetIsThisPtr() const {
+    return is_this_ptr_;
+  }
+
  protected:
   bool is_default_ = false;
+  bool is_this_ptr_ = false;
 };
 
 class CFunctionLikeIR {
