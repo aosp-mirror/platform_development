@@ -360,6 +360,7 @@ functions {
   parameters {
     referenced_type: "type-7"
     default_arg: false
+    is_this_ptr: true
   }
   linker_set_key: "_ZN5test210HelloAgainD2Ev"
   access: public_access
@@ -371,6 +372,7 @@ functions {
   parameters {
     referenced_type: "type-7"
     default_arg: false
+    is_this_ptr: true
   }
   linker_set_key: "_ZN5test210HelloAgainD1Ev"
   access: public_access
@@ -382,6 +384,7 @@ functions {
   parameters {
     referenced_type: "type-7"
     default_arg: false
+    is_this_ptr: true
   }
   linker_set_key: "_ZN5test210HelloAgainD0Ev"
   access: public_access
@@ -393,6 +396,7 @@ functions {
   parameters {
     referenced_type: "type-3"
     default_arg: true
+    is_this_ptr: false
   }
   linker_set_key: "_ZN5test33EndEf"
   access: public_access
