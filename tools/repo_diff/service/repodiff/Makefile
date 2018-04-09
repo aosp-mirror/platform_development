@@ -41,6 +41,7 @@ endif
 
 bootstrap:
 	./tools/setup_go_path_symlink.sh
+	cd $(GOPATH)/src/repodiff
 	go get github.com/GoogleCloudPlatform/cloudsql-proxy/cmd/cloud_sql_proxy
 	dep ensure
 	go build;

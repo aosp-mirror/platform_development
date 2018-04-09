@@ -6,26 +6,161 @@ import (
 
 	"github.com/pkg/errors"
 
-	e "repodiff/entities"
+	ent "repodiff/entities"
 	"repodiff/mappers"
 	repoSQL "repodiff/persistence/sql"
 )
 
-type denormalizer struct {
-	db           *sql.DB
-	target       e.DiffTarget
-	mappedTarget e.MappedDiffTarget
+type GlobalDenormalizer struct {
+	db *sql.DB
 }
 
-func (d denormalizer) DenormalizeToRecentView(diffRows []e.DiffRow) error {
+type ScopedDenormalizer struct {
+	db           *sql.DB
+	target       ent.DiffTarget
+	mappedTarget ent.MappedDiffTarget
+}
+
+func (g GlobalDenormalizer) DenormalizeToTopCommitter() error {
+	table := "denormalized_view_top_committer"
+	if _, err := g.db.Exec(
+		fmt.Sprintf(
+			"TRUNCATE TABLE %s",
+			table,
+		),
+	); err != nil {
+		return err
+	}
+	_, err := g.db.Exec(
+		fmt.Sprintf(
+			`INSERT INTO %s (
+					upstream_target_id,
+					downstream_target_id,
+					surrogate_id,
+					committer,
+					commits,
+					line_changes,
+					tech_area,
+					upstream_url,
+					upstream_branch,
+					downstream_url,
+					downstream_branch
+				) (
+					SELECT
+						upstream_target_id,
+						downstream_target_id,
+						@rn:=@rn+1 AS surrogate_id,
+						committer,
+						commits,
+						line_changes,
+						tech_area,
+						upstream_url,
+						upstream_branch,
+						downstream_url,
+						downstream_branch
+					FROM (
+						SELECT upstream_target_id,
+							downstream_target_id,
+							author as committer,
+							tech_area,
+							COUNT(*) AS commits,
+							SUM(0) AS line_changes,
+							upstream_url,
+							upstream_branch,
+							downstream_url,
+							downstream_branch
+						FROM denormalized_view_recent_commit GROUP BY
+							author,
+							tech_area,
+							upstream_target_id,
+							downstream_target_id,
+							upstream_url,
+							upstream_branch,
+							downstream_url,
+							downstream_branch ORDER BY upstream_target_id,
+							downstream_target_id
+						) t1,
+						(SELECT @rn:=0) t2
+					)`,
+			table,
+		),
+	)
+	return err
+}
+
+func (g GlobalDenormalizer) DenormalizeToTopTechArea() error {
+	table := "denormalized_view_top_tech_area"
+	if _, err := g.db.Exec(
+		fmt.Sprintf(
+			"TRUNCATE TABLE %s",
+			table,
+		),
+	); err != nil {
+		return err
+	}
+	_, err := g.db.Exec(
+		fmt.Sprintf(
+			`INSERT INTO %s (
+					upstream_target_id,
+					downstream_target_id,
+					surrogate_id,
+					tech_area,
+					commits,
+					line_changes,
+					upstream_url,
+					upstream_branch,
+					downstream_url,
+					downstream_branch
+				) (
+					SELECT
+						upstream_target_id,
+						downstream_target_id,
+						@rn:=@rn+1 AS surrogate_id,
+						tech_area,
+						commits,
+						line_changes,
+						upstream_url,
+						upstream_branch,
+						downstream_url,
+						downstream_branch FROM (
+							SELECT
+								upstream_target_id,
+								downstream_target_id,
+								tech_area,
+								COUNT(*) AS commits,
+								SUM(0) AS line_changes,
+								upstream_url,
+								upstream_branch,
+								downstream_url,
+								downstream_branch
+							FROM denormalized_view_recent_commit GROUP BY
+								tech_area,
+								upstream_target_id,
+								downstream_target_id,
+								upstream_url,
+								upstream_branch,
+								downstream_url,
+								downstream_branch
+							ORDER BY
+								upstream_target_id,
+								downstream_target_id
+						) t1,
+						(SELECT @rn:=0) t2
+					)`,
+			table,
+		),
+	)
+	return err
+}
+
+func (s ScopedDenormalizer) DenormalizeToRecentView(diffRows []ent.DiffRow) error {
 	table := "denormalized_view_recent_project"
-	err := d.deleteExistingView(table)
-	if err != nil {
+	if err := s.deleteExistingView(table); err != nil {
 		return err
 	}
 	return errors.Wrap(
 		repoSQL.SingleTransactionInsert(
-			d.db,
+			s.db,
 			fmt.Sprintf(
 				`INSERT INTO %s (
 					upstream_target_id,
@@ -47,7 +182,7 @@ func (d denormalizer) DenormalizeToRecentView(diffRows []e.DiffRow) error {
 				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 				table,
 			),
-			d.rowsWithScopedIndices(
+			s.rowsWithScopedIndices(
 				mappers.DiffRowsToDenormalizedCols(diffRows),
 			),
 		),
@@ -55,23 +190,30 @@ func (d denormalizer) DenormalizeToRecentView(diffRows []e.DiffRow) error {
 	)
 }
 
-func NewDenormalizerRepository(target e.DiffTarget, mappedTarget e.MappedDiffTarget) (denormalizer, error) {
+func NewGlobalDenormalizerRepository() (GlobalDenormalizer, error) {
 	db, err := repoSQL.GetDBConnectionPool()
-	return denormalizer{
+	return GlobalDenormalizer{
+		db: db,
+	}, errors.Wrap(err, "Could not establish a database connection")
+}
+
+func NewScopedDenormalizerRepository(target ent.DiffTarget, mappedTarget ent.MappedDiffTarget) (ScopedDenormalizer, error) {
+	db, err := repoSQL.GetDBConnectionPool()
+	return ScopedDenormalizer{
 		db:           db,
 		target:       cleanedDiffTarget(target),
 		mappedTarget: mappedTarget,
 	}, errors.Wrap(err, "Could not establish a database connection")
 }
 
-func (d denormalizer) DenormalizeToChangesOverTime(diffRows []e.DiffRow) error {
+func (s ScopedDenormalizer) DenormalizeToChangesOverTime(diffRows []ent.DiffRow) error {
 	// This query only inserts a single row into the database.  If it becomes problematic, this
 	// could become more efficient without the prepared statement embedded in the SingleTransactionInsert
 	// function
 	table := "denormalized_view_changes_over_time"
 	return errors.Wrap(
 		repoSQL.SingleTransactionInsert(
-			d.db,
+			s.db,
 			fmt.Sprintf(
 				`INSERT IGNORE INTO %s (
 					upstream_target_id,
@@ -87,7 +229,7 @@ func (d denormalizer) DenormalizeToChangesOverTime(diffRows []e.DiffRow) error {
 				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 				table,
 			),
-			d.rowsWithScopedIndices(
+			s.rowsWithScopedIndices(
 				mappers.DiffRowsToAggregateChangesOverTime(diffRows),
 			),
 		),
@@ -95,15 +237,14 @@ func (d denormalizer) DenormalizeToChangesOverTime(diffRows []e.DiffRow) error {
 	)
 }
 
-func (d denormalizer) DenormalizeToRecentCommits(commitRows []e.CommitRow) error {
+func (s ScopedDenormalizer) DenormalizeToRecentCommits(commitRows []ent.CommitRow) error {
 	table := "denormalized_view_recent_commit"
-	err := d.deleteExistingView(table)
-	if err != nil {
+	if err := s.deleteExistingView(table); err != nil {
 		return err
 	}
 	return errors.Wrap(
 		repoSQL.SingleTransactionInsert(
-			d.db,
+			s.db,
 			fmt.Sprintf(
 				`INSERT INTO %s (
 					upstream_target_id,
@@ -121,49 +262,15 @@ func (d denormalizer) DenormalizeToRecentCommits(commitRows []e.CommitRow) error
 				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 				table,
 			),
-			d.rowsWithScopedIndices(
+			s.rowsWithScopedIndices(
 				mappers.CommitRowsToDenormalizedCols(commitRows),
 			),
 		),
 		errorMessageForTable(table),
 	)
 }
-
-func (d denormalizer) DenormalizeToTopCommitter(commitRows []e.CommitRow) error {
-	table := "denormalized_view_top_committer"
-	err := d.deleteExistingView(table)
-	if err != nil {
-		return err
-	}
-	return errors.Wrap(
-		repoSQL.SingleTransactionInsert(
-			d.db,
-			fmt.Sprintf(
-				`INSERT INTO %s (
-					upstream_target_id,
-					downstream_target_id,
-					surrogate_id,
-					committer,
-					commits,
-					line_changes,
-					tech_area,
-					upstream_url,
-					upstream_branch,
-					downstream_url,
-					downstream_branch
-				) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-				table,
-			),
-			d.rowsWithScopedIndices(
-				mappers.CommitRowsToTopCommitter(commitRows),
-			),
-		),
-		errorMessageForTable(table),
-	)
-}
-
-func (d denormalizer) deleteExistingView(tableName string) error {
-	_, err := d.db.Exec(
+func (s ScopedDenormalizer) deleteExistingView(tableName string) error {
+	_, err := s.db.Exec(
 		fmt.Sprintf(
 			`DELETE FROM %s
 			WHERE
@@ -171,17 +278,17 @@ func (d denormalizer) deleteExistingView(tableName string) error {
 				AND downstream_target_id = ?`,
 			tableName,
 		),
-		d.mappedTarget.UpstreamTarget,
-		d.mappedTarget.DownstreamTarget,
+		s.mappedTarget.UpstreamTarget,
+		s.mappedTarget.DownstreamTarget,
 	)
 	return err
 }
 
-func (d denormalizer) rowsWithScopedIndices(rowsOfCols [][]interface{}) [][]interface{} {
+func (s ScopedDenormalizer) rowsWithScopedIndices(rowsOfCols [][]interface{}) [][]interface{} {
 	return mappers.PrependMappedDiffTarget(
-		d.mappedTarget,
+		s.mappedTarget,
 		mappers.AppendDiffTarget(
-			d.target,
+			s.target,
 			rowsOfCols,
 		),
 	)
