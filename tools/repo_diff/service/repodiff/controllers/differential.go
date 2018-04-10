@@ -10,7 +10,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	e "repodiff/entities"
+	ent "repodiff/entities"
 	"repodiff/interactors"
 	"repodiff/mappers"
 	"repodiff/persistence/filesystem"
@@ -26,10 +26,15 @@ var expectedOutputFilenames = []string{
 // While each target is executed synchronously, the differential script is already multi-threaded
 // across all of the local machine's cores, so there is no benefit to parallelizing multiple differential
 // targets
-func ExecuteDifferentials(config e.ApplicationConfig) error {
+func ExecuteDifferentials(config ent.ApplicationConfig) error {
 	err := createWorkingPath(config.OutputDirectory)
 	if err != nil {
 		return errors.Wrap(err, "Could not create working path")
+	}
+
+	commonManifest, err := defineCommonManifest(config)
+	if err != nil {
+		return err
 	}
 
 	for _, target := range config.DiffTargets {
@@ -39,12 +44,40 @@ func ExecuteDifferentials(config e.ApplicationConfig) error {
 		if err != nil {
 			return errors.Wrap(err, "Error running python differential script")
 		}
-		err = TransferScriptOutputToDownstream(target, projectCSV, commitCSV)
+		err = TransferScriptOutputToDownstream(config, target, projectCSV, commitCSV, commonManifest)
 		if err != nil {
 			return errors.Wrap(err, "Error transferring script output to downstream")
 		}
 	}
 	return nil
+}
+
+func defineCommonManifest(config ent.ApplicationConfig) (*ent.ManifestFile, error) {
+	workingDirectory := filepath.Join(config.OutputDirectory, "common_upstream")
+	if err := createWorkingPath(workingDirectory); err != nil {
+		return nil, err
+	}
+	cmd := exec.Command(
+		"bash",
+		"-c",
+		fmt.Sprintf(
+			"repo init -u %s -b %s",
+			config.CommonUpstream.URL,
+			config.CommonUpstream.Branch,
+		),
+	)
+	cmd.Dir = workingDirectory
+	if _, err := cmd.Output(); err != nil {
+		return nil, err
+	}
+
+	var manifest ent.ManifestFile
+	err := filesystem.ReadXMLAsEntity(
+		// the output of repo init will generate a manifest file at this location
+		filepath.Join(workingDirectory, ".repo/manifest.xml"),
+		&manifest,
+	)
+	return &manifest, err
 }
 
 func createWorkingPath(folderPath string) error {
@@ -55,7 +88,7 @@ func printFunctionDuration(fnLabel string, start time.Time) {
 	fmt.Printf("Finished '%s' in %s\n", fnLabel, time.Now().Sub(start))
 }
 
-func clearOutputDirectory(config e.ApplicationConfig) error {
+func clearOutputDirectory(config ent.ApplicationConfig) error {
 	return exec.Command(
 		"/bin/sh",
 		"-c",
@@ -63,7 +96,7 @@ func clearOutputDirectory(config e.ApplicationConfig) error {
 	).Run()
 }
 
-func setupCommand(pyScript string, config e.ApplicationConfig, target e.DiffTarget) *exec.Cmd {
+func setupCommand(pyScript string, config ent.ApplicationConfig, target ent.DiffTarget) *exec.Cmd {
 	cmd := exec.Command(
 		"python",
 		pyScript,
@@ -80,7 +113,7 @@ func setupCommand(pyScript string, config e.ApplicationConfig, target e.DiffTarg
 	return cmd
 }
 
-func runPyScript(config e.ApplicationConfig, target e.DiffTarget) (projectCSV string, commitCSV string, err error) {
+func runPyScript(config ent.ApplicationConfig, target ent.DiffTarget) (projectCSV string, commitCSV string, err error) {
 	pyScript := filepath.Join(
 		config.AndroidProjectDir,
 		config.DiffScript,
@@ -91,14 +124,14 @@ func runPyScript(config e.ApplicationConfig, target e.DiffTarget) (projectCSV st
 		return "", "", err
 	}
 	outFilesAfter := filesystem.FindFnamesInDir(config.OutputDirectory, expectedOutputFilenames...)
-	newFiles := interactors.Difference(outFilesBefore, outFilesAfter)
+	newFiles := interactors.DistinctValues(outFilesBefore, outFilesAfter)
 	if len(newFiles) != 2 {
-		return "", "", errors.New("Expected 1 new output file. A race condition exists")
+		return "", "", errors.New("Expected 1 new output filent. A race condition exists")
 	}
 	return newFiles[0], newFiles[1], nil
 }
 
-func diffTarget(pyScript string, config e.ApplicationConfig, target e.DiffTarget) error {
+func diffTarget(pyScript string, config ent.ApplicationConfig, target ent.DiffTarget) error {
 	defer printFunctionDuration("Run Differential", time.Now())
 	cmd := setupCommand(pyScript, config, target)
 
@@ -115,15 +148,53 @@ func diffTarget(pyScript string, config e.ApplicationConfig, target e.DiffTarget
 }
 
 // SBL need to add test coverage here
-func TransferScriptOutputToDownstream(target e.DiffTarget, projectCSVFile, commitCSVFile string) error {
+func TransferScriptOutputToDownstream(
+	config ent.ApplicationConfig,
+	target ent.DiffTarget,
+	projectCSVFile, commitCSVFile string,
+	common *ent.ManifestFile) error {
+
 	diffRows, commitRows, err := readCSVFiles(projectCSVFile, commitCSVFile)
 	if err != nil {
 		return err
 	}
-	return persistEntities(target, diffRows, commitRows)
+
+	manifestFileGroup, err := loadTargetManifests(config, common)
+	if err != nil {
+		return err
+	}
+	analyzedDiffRows, analyzedCommitRows := interactors.ApplyApplicationMutations(
+		diffRows,
+		commitRows,
+		manifestFileGroup,
+	)
+	return persistEntities(target, analyzedDiffRows, analyzedCommitRows)
 }
 
-func readCSVFiles(projectCSVFile, commitCSVFile string) ([]e.DiffRow, []e.CommitRow, error) {
+func loadTargetManifests(config ent.ApplicationConfig, common *ent.ManifestFile) (*ent.ManifestFileGroup, error) {
+	var upstream, downstream ent.ManifestFile
+	dirToLoadAddress := map[string]*ent.ManifestFile{
+		"upstream":   &upstream,
+		"downstream": &downstream,
+	}
+
+	for dir, addr := range dirToLoadAddress {
+		if err := filesystem.ReadXMLAsEntity(
+			filepath.Join(config.OutputDirectory, dir, ".repo/manifest.xml"),
+			addr,
+		); err != nil {
+			return nil, err
+		}
+	}
+
+	return &ent.ManifestFileGroup{
+		Common:     *common,
+		Upstream:   upstream,
+		Downstream: downstream,
+	}, nil
+}
+
+func readCSVFiles(projectCSVFile, commitCSVFile string) ([]ent.DiffRow, []ent.CommitRow, error) {
 	diffRows, err := csvFileToDiffRows(projectCSVFile)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Error converting CSV file to entities")
@@ -135,7 +206,7 @@ func readCSVFiles(projectCSVFile, commitCSVFile string) ([]e.DiffRow, []e.Commit
 	return diffRows, commitRows, nil
 }
 
-func persistEntities(target e.DiffTarget, diffRows []e.DiffRow, commitRows []e.CommitRow) error {
+func persistEntities(target ent.DiffTarget, diffRows []ent.AnalyzedDiffRow, commitRows []ent.AnalyzedCommitRow) error {
 	sourceRepo, err := repositories.NewSourceRepository()
 	if err != nil {
 		return errors.Wrap(err, "Error initializing Source Repository")
@@ -156,7 +227,7 @@ func persistEntities(target e.DiffTarget, diffRows []e.DiffRow, commitRows []e.C
 	return nil
 }
 
-func csvFileToDiffRows(csvFile string) ([]e.DiffRow, error) {
+func csvFileToDiffRows(csvFile string) ([]ent.DiffRow, error) {
 	entities, err := filesystem.CSVFileToEntities(
 		csvFile,
 		func(cols []string) (interface{}, error) {
@@ -169,10 +240,10 @@ func csvFileToDiffRows(csvFile string) ([]e.DiffRow, error) {
 	return toDiffRows(entities)
 }
 
-func toDiffRows(entities []interface{}) ([]e.DiffRow, error) {
-	diffRows := make([]e.DiffRow, len(entities))
+func toDiffRows(entities []interface{}) ([]ent.DiffRow, error) {
+	diffRows := make([]ent.DiffRow, len(entities))
 	for i, entity := range entities {
-		diffRow, ok := entity.(*e.DiffRow)
+		diffRow, ok := entity.(*ent.DiffRow)
 		if !ok {
 			return nil, errors.New("Error casting to DiffRow")
 		}
@@ -181,7 +252,7 @@ func toDiffRows(entities []interface{}) ([]e.DiffRow, error) {
 	return diffRows, nil
 }
 
-func csvFileToCommitRows(csvFile string) ([]e.CommitRow, error) {
+func csvFileToCommitRows(csvFile string) ([]ent.CommitRow, error) {
 	entities, err := filesystem.CSVFileToEntities(
 		csvFile,
 		func(cols []string) (interface{}, error) {
@@ -194,10 +265,10 @@ func csvFileToCommitRows(csvFile string) ([]e.CommitRow, error) {
 	return toCommitRows(entities)
 }
 
-func toCommitRows(entities []interface{}) ([]e.CommitRow, error) {
-	commitRows := make([]e.CommitRow, len(entities))
+func toCommitRows(entities []interface{}) ([]ent.CommitRow, error) {
+	commitRows := make([]ent.CommitRow, len(entities))
 	for i, entity := range entities {
-		commitRow, ok := entity.(*e.CommitRow)
+		commitRow, ok := entity.(*ent.CommitRow)
 		if !ok {
 			return nil, errors.New("Error casting to CommitRow")
 		}
@@ -206,7 +277,7 @@ func toCommitRows(entities []interface{}) ([]e.CommitRow, error) {
 	return commitRows, nil
 }
 
-func persistDiffRowsDownstream(mappedTarget e.MappedDiffTarget, diffRows []e.DiffRow) error {
+func persistDiffRowsDownstream(mappedTarget ent.MappedDiffTarget, diffRows []ent.AnalyzedDiffRow) error {
 	p, err := repositories.NewProjectRepository(mappedTarget)
 	if err != nil {
 		return errors.Wrap(err, "Error instantiating a new project repository")
@@ -218,7 +289,7 @@ func persistDiffRowsDownstream(mappedTarget e.MappedDiffTarget, diffRows []e.Dif
 	return nil
 }
 
-func persistCommitRowsDownstream(mappedTarget e.MappedDiffTarget, commitRows []e.CommitRow) error {
+func persistCommitRowsDownstream(mappedTarget ent.MappedDiffTarget, commitRows []ent.AnalyzedCommitRow) error {
 	c, err := repositories.NewCommitRepository(mappedTarget)
 	if err != nil {
 		return errors.Wrap(err, "Error instantiating a new commit repository")

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	c "repodiff/constants"
 	e "repodiff/entities"
 )
 
@@ -46,7 +47,7 @@ func TestCSVLineToCommitRow(t *testing.T) {
 
 func TestDiffRowsToAggregateChangesOverTime(t *testing.T) {
 	rows := DiffRowsToAggregateChangesOverTime(
-		[]e.DiffRow{
+		[]e.AnalyzedDiffRow{
 			makeDiffRow(3, 1, 2),
 			makeDiffRow(3, 3, 4),
 			makeDiffRow(2, 7, 6),
@@ -63,12 +64,15 @@ func TestDiffRowsToAggregateChangesOverTime(t *testing.T) {
 	assert.Equal(t, expected, cols, "Columns should be equal")
 }
 
-func makeDiffRow(status, lineChanges, filesChanged int) e.DiffRow {
-	return e.DiffRow{
-		DiffStatus:        status,
-		LineChanges:       lineChanges,
-		FilesChanged:      filesChanged,
-		DBInsertTimestamp: 1519427445,
+func makeDiffRow(status, lineChanges, filesChanged int) e.AnalyzedDiffRow {
+	return e.AnalyzedDiffRow{
+		DiffRow: e.DiffRow{
+			DiffStatus:        status,
+			LineChanges:       lineChanges,
+			FilesChanged:      filesChanged,
+			DBInsertTimestamp: 1519427445,
+		},
+		Type: c.Empty,
 	}
 }
 

@@ -153,7 +153,7 @@ func (g GlobalDenormalizer) DenormalizeToTopTechArea() error {
 	return err
 }
 
-func (s ScopedDenormalizer) DenormalizeToRecentView(diffRows []ent.DiffRow) error {
+func (s ScopedDenormalizer) DenormalizeToRecentView(diffRows []ent.AnalyzedDiffRow) error {
 	table := "denormalized_view_recent_project"
 	if err := s.deleteExistingView(table); err != nil {
 		return err
@@ -175,11 +175,12 @@ func (s ScopedDenormalizer) DenormalizeToRecentView(diffRows []ent.DiffRow) erro
 					line_deletions,
 					line_changes,
 					commits_not_upstreamed,
+					project_type,
 					upstream_url,
 					upstream_branch,
 					downstream_url,
 					downstream_branch
-				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 				table,
 			),
 			s.rowsWithScopedIndices(
@@ -206,7 +207,7 @@ func NewScopedDenormalizerRepository(target ent.DiffTarget, mappedTarget ent.Map
 	}, errors.Wrap(err, "Could not establish a database connection")
 }
 
-func (s ScopedDenormalizer) DenormalizeToChangesOverTime(diffRows []ent.DiffRow) error {
+func (s ScopedDenormalizer) DenormalizeToChangesOverTime(diffRows []ent.AnalyzedDiffRow) error {
 	// This query only inserts a single row into the database.  If it becomes problematic, this
 	// could become more efficient without the prepared statement embedded in the SingleTransactionInsert
 	// function
@@ -237,7 +238,7 @@ func (s ScopedDenormalizer) DenormalizeToChangesOverTime(diffRows []ent.DiffRow)
 	)
 }
 
-func (s ScopedDenormalizer) DenormalizeToRecentCommits(commitRows []ent.CommitRow) error {
+func (s ScopedDenormalizer) DenormalizeToRecentCommits(commitRows []ent.AnalyzedCommitRow) error {
 	table := "denormalized_view_recent_commit"
 	if err := s.deleteExistingView(table); err != nil {
 		return err
@@ -255,11 +256,12 @@ func (s ScopedDenormalizer) DenormalizeToRecentCommits(commitRows []ent.CommitRo
 					author,
 					subject,
 					tech_area,
+					project_type,
 					upstream_url,
 					upstream_branch,
 					downstream_url,
 					downstream_branch
-				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 				table,
 			),
 			s.rowsWithScopedIndices(

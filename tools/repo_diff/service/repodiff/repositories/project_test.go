@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	c "repodiff/constants"
 	e "repodiff/entities"
 	repoSQL "repodiff/persistence/sql"
 	"repodiff/repositories"
@@ -77,16 +78,19 @@ func TestGetMostRecentDifferentials(t *testing.T) {
 	assert.Equal(t, nil, err, "Error should not be nil")
 	assert.Equal(t, 1, len(diffRows), "1 result should exist")
 
-	expected := e.DiffRow{
-		Date:                 dateNow,
-		DownstreamProject:    "platform/vendor/unbundled_google/packages/Ears",
-		UpstreamProject:      "platform/vendor/unbundled_google/packages/Ears",
-		DiffStatus:           3,
-		FilesChanged:         34,
-		LineInsertions:       8,
-		LineDeletions:        25,
-		LineChanges:          32,
-		CommitsNotUpstreamed: 0,
+	expected := e.AnalyzedDiffRow{
+		DiffRow: e.DiffRow{
+			Date:                 dateNow,
+			DownstreamProject:    "platform/vendor/unbundled_google/packages/Ears",
+			UpstreamProject:      "platform/vendor/unbundled_google/packages/Ears",
+			DiffStatus:           3,
+			FilesChanged:         34,
+			LineInsertions:       8,
+			LineDeletions:        25,
+			LineChanges:          32,
+			CommitsNotUpstreamed: 0,
+		},
+		Type: c.Empty,
 	}
 	d := diffRows[0]
 
