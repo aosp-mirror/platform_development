@@ -486,18 +486,19 @@ bool FunctionDeclWrapper::SetupThisParameter(abi_util::FunctionIR *functionp,
     return true;
   }
   clang::QualType this_type = cxx_method_decl->getThisType(*ast_contextp_);
-  return SetupFunctionParameter(functionp, this_type, false, source_file);
+  return SetupFunctionParameter(functionp, this_type, false, source_file, true);
 }
 
 bool ABIWrapper::SetupFunctionParameter(
     abi_util::CFunctionLikeIR *functionp, const clang::QualType qual_type,
-    bool has_default_arg, const std::string &source_file) {
+    bool has_default_arg, const std::string &source_file, bool is_this_ptr) {
   if (!CreateBasicNamedAndTypedDecl(qual_type, source_file)) {
     llvm::errs() << "Setting up function parameter failed\n";
     return false;
   }
   functionp->AddParameter(abi_util::ParamIR(
-      ast_caches_->GetTypeId(GetKeyForTypeId(qual_type)), has_default_arg));
+      ast_caches_->GetTypeId(GetKeyForTypeId(qual_type)), has_default_arg,
+      is_this_ptr));
   return true;
 }
 

@@ -87,7 +87,8 @@ static void SetupCFunctionLikeIR(const T &cfunction_like_protobuf,
                                  CFunctionLikeIR *cfunction_like_ir) {
   cfunction_like_ir->SetReturnType(cfunction_like_protobuf.return_type());
   for (auto &&parameter: cfunction_like_protobuf.parameters()) {
-    ParamIR param_ir(parameter.referenced_type(), parameter.default_arg());
+    ParamIR param_ir(parameter.referenced_type(), parameter.default_arg(),
+                     false);
     cfunction_like_ir->AddParameter(std::move(param_ir));
   }
 }
@@ -102,7 +103,8 @@ FunctionIR ProtobufTextFormatToIRReader::FunctionProtobufToIR(
   function_ir.SetSourceFile(function_protobuf.source_file());
   // Set parameters
   for (auto &&parameter: function_protobuf.parameters()) {
-    ParamIR param_ir(parameter.referenced_type(), parameter.default_arg());
+    ParamIR param_ir(parameter.referenced_type(), parameter.default_arg(),
+                     parameter.is_this_ptr());
     function_ir.AddParameter(std::move(param_ir));
   }
   // Set Template info
@@ -570,6 +572,7 @@ bool IRToProtobufConverter::AddFunctionParameters(
     added_parameter->set_referenced_type(
         parameter.GetReferencedType());
     added_parameter->set_default_arg(parameter.GetIsDefault());
+    added_parameter->set_is_this_ptr(parameter.GetIsThisPtr());
   }
   return true;
 }
