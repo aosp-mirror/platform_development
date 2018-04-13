@@ -596,5 +596,11 @@ class LexerTest(unittest.TestCase):
         lexer.consume(Token.EOF)
 
 
+    def test_lexer_path(self):
+        """Test the path attribute of the Lexer object."""
+        lexer = Lexer('content', path='test_path')
+        self.assertEqual(lexer.path, 'test_path')
+
+
 if __name__ == '__main__':
     unittest.main()
