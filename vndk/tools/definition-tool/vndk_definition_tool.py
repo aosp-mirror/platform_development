@@ -3418,7 +3418,7 @@ class CheckDepCommand(CheckDepCommandBase):
         group = parser.add_mutually_exclusive_group()
 
         group.add_argument('--check-dt-needed-ordering',
-                           action='store_true', default=True,
+                           action='store_true', default=False,
                            help='Check ordering of DT_NEEDED entries')
 
         group.add_argument('--no-check-dt-needed-ordering',
