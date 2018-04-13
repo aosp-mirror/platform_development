@@ -446,4 +446,3 @@ sdk/files/README_add-ons.txt add-ons/README.txt
 ##############################################################################
 # Tests Component
 ##############################################################################
-system/app/EmulatorSmokeTests/EmulatorSmokeTests.apk tests/emulator-test-apps/EmulatorSmokeTests.apk
