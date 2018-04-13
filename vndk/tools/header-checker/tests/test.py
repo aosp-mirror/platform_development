@@ -231,8 +231,8 @@ class MyTest(unittest.TestCase):
     def test_libgolden_cpp_member_function_pointer_changed(self):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp_function_pointer",
-            "libgolden_cpp_function_pointer_parameter_added", 8, [], False,
-            False)
+            "libgolden_cpp_function_pointer_parameter_added", 8, [], True,
+            True)
 
 
 
