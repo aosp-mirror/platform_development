@@ -21,6 +21,8 @@ from __future__ import print_function
 import argparse
 import csv
 import itertools
+import os
+import re
 import sys
 
 import vndk
@@ -32,10 +34,14 @@ def _parse_args():
     parser.add_argument('root_bp',
                         help='path to Android.bp in ANDROID_BUILD_TOP')
     parser.add_argument('-o', '--output', help='path to output file')
+    parser.add_argument('--exclude',
+                        help='regular expression for the excluded directories')
+    parser.add_argument('--select',
+                        help='regular expression for the selected directories')
     return parser.parse_args()
 
 
-def print_vndk_module_csv(output_file, module_dicts):
+def print_vndk_module_csv(output_file, module_dicts, root_dir, exclude, select):
     """Print vndk module list to output file."""
 
     all_libs = module_dicts.all_libs
@@ -46,10 +52,17 @@ def print_vndk_module_csv(output_file, module_dicts):
     module_names = sorted(set(
         itertools.chain(vndk_libs, vndk_sp_libs, vendor_available_libs)))
 
+    root_dir_prefix_len = len(root_dir) + 1
+
     writer = csv.writer(output_file, lineterminator='\n')
     writer.writerow(('name', 'vndk', 'vndk_sp', 'vendor_available', 'rule'))
     for name in module_names:
         rule = all_libs[name].rule
+        path = all_libs[name].get_property('_path')[root_dir_prefix_len:]
+        if select and not select.match(path):
+            continue
+        if exclude and exclude.match(path):
+            continue
         if '_header' not in rule and '_static' not in rule and \
                 rule != 'toolchain_library':
             writer.writerow((name,
@@ -64,13 +77,22 @@ def main():
 
     args = _parse_args()
 
+    # Convert select/exclude regular expressions
+    select = re.compile(args.select) if args.select else None
+    exclude = re.compile(args.exclude) if args.exclude else None
+
+    # Parse Blueprint files and get VNDK libs
     module_dicts = vndk.ModuleClassifier.create_from_root_bp(args.root_bp)
+
+    root_dir = os.path.dirname(args.root_bp)
 
     if args.output:
         with open(args.output, 'w') as output_file:
-            print_vndk_module_csv(output_file, module_dicts)
+            print_vndk_module_csv(
+                output_file, module_dicts, root_dir, exclude, select)
     else:
-        print_vndk_module_csv(sys.stdout, module_dicts)
+        print_vndk_module_csv(
+            sys.stdout, module_dicts, root_dir, exclude, select)
 
 
 if __name__ == '__main__':
