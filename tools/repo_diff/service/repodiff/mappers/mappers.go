@@ -162,51 +162,6 @@ func CommitRowsToDenormalizedCols(commitRows []e.CommitRow) [][]interface{} {
 	return rows
 }
 
-func CommitRowsToTopCommitter(commitRows []e.CommitRow) [][]interface{} {
-	return aggregateToTopCommitterRows(
-		groupCommitRowsByAuthor(commitRows),
-	)
-}
-
-func aggregateToTopCommitterRows(authorToRows map[string][]e.CommitRow) [][]interface{} {
-	var rows [][]interface{}
-	surrogateID := 1
-	for author, rowsThisAuthor := range authorToRows {
-		columns := []interface{}{
-			surrogateID,
-			author,
-			len(rowsThisAuthor),
-			0, // line changes 0 for now, try to support later
-			GetAuthorTechArea(author),
-		}
-		rows = append(
-			rows,
-			columns,
-		)
-		surrogateID++
-	}
-	return rows
-}
-
-func groupCommitRowsByAuthor(commitRows []e.CommitRow) map[string][]e.CommitRow {
-	authorToRows := make(map[string][]e.CommitRow)
-	for _, c := range commitRows {
-		key := c.Author
-		if _, keyExists := authorToRows[key]; !keyExists {
-			authorToRows[key] = nil
-		}
-	}
-
-	for _, c := range commitRows {
-		key := c.Author
-		authorToRows[key] = append(
-			authorToRows[key],
-			c,
-		)
-	}
-	return authorToRows
-}
-
 func DiffRowsToAggregateChangesOverTime(diffRows []e.DiffRow) [][]interface{} {
 	if len(diffRows) == 0 {
 		return nil

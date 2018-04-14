@@ -31,7 +31,7 @@ func denormalizeViewRecentProjectForTarget(target e.DiffTarget) error {
 	if err != nil {
 		return err
 	}
-	denormalizeRepo, err := repositories.NewDenormalizerRepository(target, mappedTarget)
+	denormalizeRepo, err := repositories.NewScopedDenormalizerRepository(target, mappedTarget)
 	if err != nil {
 		return err
 	}
@@ -50,8 +50,7 @@ func denormalizeViewRecentProjectForTarget(target e.DiffTarget) error {
 
 func denormalizeDiffRows(config e.ApplicationConfig) error {
 	for _, target := range config.DiffTargets {
-		err := denormalizeDiffRowsForTarget(target)
-		if err != nil {
+		if err := denormalizeDiffRowsForTarget(target); err != nil {
 			return err
 		}
 	}
@@ -63,7 +62,7 @@ func denormalizeDiffRowsForTarget(target e.DiffTarget) error {
 	if err != nil {
 		return err
 	}
-	denormalizeRepo, err := repositories.NewDenormalizerRepository(target, mappedTarget)
+	denormalizeRepo, err := repositories.NewScopedDenormalizerRepository(target, mappedTarget)
 	if err != nil {
 		return err
 	}
@@ -90,12 +89,22 @@ func getMappedTarget(target e.DiffTarget) (e.MappedDiffTarget, error) {
 
 func denormalizeViewRecentCommit(config e.ApplicationConfig) error {
 	for _, target := range config.DiffTargets {
-		err := denormalizeCommitRows(target)
-		if err != nil {
+		if err := denormalizeCommitRows(target); err != nil {
 			return err
 		}
 	}
-	return nil
+	return denormalizeViewRecentCommitGlobal()
+}
+
+func denormalizeViewRecentCommitGlobal() error {
+	denormalizeRepo, err := repositories.NewGlobalDenormalizerRepository()
+	if err != nil {
+		return err
+	}
+	if err := denormalizeRepo.DenormalizeToTopCommitter(); err != nil {
+		return err
+	}
+	return denormalizeRepo.DenormalizeToTopTechArea()
 }
 
 func denormalizeCommitRows(target e.DiffTarget) error {
@@ -103,7 +112,7 @@ func denormalizeCommitRows(target e.DiffTarget) error {
 	if err != nil {
 		return err
 	}
-	denormalizeRepo, err := repositories.NewDenormalizerRepository(target, mappedTarget)
+	denormalizeRepo, err := repositories.NewScopedDenormalizerRepository(target, mappedTarget)
 	if err != nil {
 		return err
 	}
@@ -116,9 +125,5 @@ func denormalizeCommitRows(target e.DiffTarget) error {
 	if err != nil {
 		return err
 	}
-	err = denormalizeRepo.DenormalizeToRecentCommits(commitRows)
-	if err != nil {
-		return err
-	}
-	return denormalizeRepo.DenormalizeToTopCommitter(commitRows)
+	return denormalizeRepo.DenormalizeToRecentCommits(commitRows)
 }
