@@ -1233,6 +1233,52 @@ class TaggedLibDict(object):
         return 'vnd_only' if lib.path.startswith('/vendor') else 'fwk_only'
 
 
+class LibProperties(object):
+    Properties = collections.namedtuple(
+            'Properties', 'vndk vndk_sp vendor_available rule')
+
+
+    def __init__(self, csv_file=None):
+        self.modules = {}
+
+        if csv_file:
+            reader = csv.reader(csv_file)
+
+            header = next(reader)
+            assert header == ['name', 'vndk', 'vndk_sp', 'vendor_available',
+                              'rule'], repr(header)
+
+            for name, vndk, vndk_sp, vendor_available, rule in reader:
+                self.modules[name] = self.Properties(
+                        vndk == 'True', vndk_sp == 'True',
+                        vendor_available == 'True', rule)
+
+
+    @classmethod
+    def load_from_path_or_default(cls, path):
+        if not path:
+            return LibProperties()
+
+        try:
+            with open(path, 'r') as csv_file:
+                return LibProperties(csv_file)
+        except FileNotFoundError:
+            return LibProperties()
+
+
+    def get(self, name):
+        try:
+            return self.modules[name]
+        except KeyError:
+            return self.Properties(False, False, False, None)
+
+
+    @staticmethod
+    def get_lib_properties_file_path(tag_file_path):
+        root, ext = os.path.splitext(tag_file_path)
+        return root + '-properties' + ext
+
+
 #------------------------------------------------------------------------------
 # ELF Linker
 #------------------------------------------------------------------------------
@@ -3372,7 +3418,7 @@ class CheckDepCommand(CheckDepCommandBase):
         group = parser.add_mutually_exclusive_group()
 
         group.add_argument('--check-dt-needed-ordering',
-                           action='store_true', default=True,
+                           action='store_true', default=False,
                            help='Check ordering of DT_NEEDED entries')
 
         group.add_argument('--no-check-dt-needed-ordering',
@@ -3381,7 +3427,8 @@ class CheckDepCommand(CheckDepCommandBase):
                            help='Do not check ordering of DT_NEEDED entries')
 
 
-    def _check_vendor_dep(self, graph, tagged_libs, module_info):
+    def _check_vendor_dep(self, graph, tagged_libs, lib_properties,
+                          module_info):
         """Check whether vendor libs are depending on non-eligible libs."""
         num_errors = 0
 
@@ -3409,9 +3456,29 @@ class CheckDepCommand(CheckDepCommandBase):
                 if dep not in vendor_libs and dep not in eligible_libs:
                     num_errors += 1
                     bad_deps.add(dep)
-                    print('error: vendor lib "{}" depends on non-eligible '
-                          'lib "{}".'.format(lib.path, dep.path),
-                          file=sys.stderr)
+
+                    dep_name = os.path.splitext(os.path.basename(dep.path))[0]
+                    dep_properties = lib_properties.get(dep_name)
+                    if not dep_properties.vendor_available:
+                        print('error: vendor lib "{}" depends on non-eligible '
+                              'lib "{}".'.format(lib.path, dep.path),
+                              file=sys.stderr)
+                    elif dep_properties.vndk_sp:
+                        print('error: vendor lib "{}" depends on vndk-sp "{}" '
+                              'but it must be copied to '
+                              '/system/lib[64]/vndk-sp.'
+                              .format(lib.path, dep.path),
+                              file=sys.stderr)
+                    elif dep_properties.vndk:
+                        print('error: vendor lib "{}" depends on vndk "{}" but '
+                              'it must be copied to /system/lib[64]/vndk.'
+                              .format(lib.path, dep.path),
+                              file=sys.stderr)
+                    else:
+                        print('error: vendor lib "{}" depends on '
+                              'vendor_available "{}" but it must be copied to '
+                              '/vendor/lib[64].'.format(lib.path, dep.path),
+                              file=sys.stderr)
 
             if bad_deps:
                 self._dump_dep(lib, bad_deps, module_info)
@@ -3482,7 +3549,13 @@ class CheckDepCommand(CheckDepCommandBase):
 
         module_info = ModuleInfo.load_from_path_or_default(args.module_info)
 
-        num_errors = self._check_vendor_dep(graph, tagged_libs, module_info)
+        lib_properties_path = \
+                LibProperties.get_lib_properties_file_path(args.tag_file)
+        lib_properties = \
+                LibProperties.load_from_path_or_default(lib_properties_path)
+
+        num_errors = self._check_vendor_dep(graph, tagged_libs, lib_properties,
+                                            module_info)
 
         if args.check_dt_needed_ordering:
             num_errors += self._check_dt_needed_ordering(graph, module_info)

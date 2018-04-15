@@ -14,7 +14,6 @@ from utils import (make_libraries, make_tree, find_lib_lsdumps,
                    make_targets)
 
 PRODUCTS = ['aosp_arm_ab', 'aosp_arm64_ab', 'aosp_x86_ab', 'aosp_x86_64_ab']
-FIND_LSDUMPS_TARGET = 'findlsdumps'
 SOONG_DIR = os.path.join(AOSP_DIR, 'out', 'soong', '.intermediates')
 
 class Target(object):
@@ -41,8 +40,7 @@ def get_lsdump_paths_from_out(product):
     lsdump_paths_file = os.path.join(AOSP_DIR, build_vars[0],'target',
                                      'product', build_vars[1],
                                      'lsdump_paths.txt')
-    if os.path.exists(lsdump_paths_file) == False:
-        make_targets([FIND_LSDUMPS_TARGET], product)
+    assert(os.path.exists(lsdump_paths_file) == True)
     lsdump_paths = dict()
     with open(lsdump_paths_file) as f:
         for path in f.read().split(' '):
