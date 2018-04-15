@@ -133,7 +133,7 @@ class LexerError(ValueError):
 class Lexer(object):
     """Lexer to tokenize the input string."""
 
-    def __init__(self, buf, offset=0):
+    def __init__(self, buf, offset=0, path=None):
         """Tokenize the source code in buf starting from offset.
 
         Args:
@@ -147,6 +147,7 @@ class Lexer(object):
         self.end = offset
         self.token = None
         self.literal = None
+        self.path = path
 
         self._next()
 
@@ -623,6 +624,7 @@ class Parser(object):
     def parse_module_definition(self, module_ident):
         """Parse a module definition."""
         properties = self.parse_dict()
+        properties['_path'] = String(self.lexer.path)
         self.modules.append((module_ident, properties))
 
 
@@ -750,7 +752,13 @@ class RecursiveParser(object):
     """This is a recursive parser which will parse blueprint files
     recursively."""
 
+
+    # Default Blueprint file name
+    _DEFAULT_SUB_NAME = 'Android.bp'
+
+
     def __init__(self):
+        """Initialize a recursive parser."""
         self.visited = set()
         self.modules = []
 
@@ -772,7 +780,7 @@ class RecursiveParser(object):
 
     @classmethod
     def find_sub_files_from_env(cls, rootdir, env, use_subdirs,
-                                default_sub_name='Android.bp'):
+                                default_sub_name=_DEFAULT_SUB_NAME):
         """Find the sub files from the names specified in build, subdirs, and
         optional_subdirs."""
 
@@ -800,7 +808,7 @@ class RecursiveParser(object):
         """Read a blueprint file and return modules and the environment."""
         with open(path, 'r') as bp_file:
             content = bp_file.read()
-        parser = Parser(Lexer(content), env)
+        parser = Parser(Lexer(content, path=path), env)
         parser.parse()
         return (parser.modules, parser.vars)
 
@@ -873,7 +881,8 @@ class RecursiveParser(object):
                     pass
 
 
-    def parse_file(self, path, env=None, evaluate=True):
+    def parse_file(self, path, env=None, evaluate=True,
+                   default_sub_name=_DEFAULT_SUB_NAME):
         """Parse blueprint files recursively."""
 
         if env is None:
@@ -884,8 +893,8 @@ class RecursiveParser(object):
         if 'subdirs' in sub_env or 'optional_subdirs' in sub_env:
             self._parse_file_recursive(path, env, evaluate, True)
         else:
-            self._scan_and_parse_all_file_recursive('Android.bp', path, env,
-                                                    evaluate)
+            self._scan_and_parse_all_file_recursive(
+                default_sub_name, path, env, evaluate)
 
 
 #------------------------------------------------------------------------------

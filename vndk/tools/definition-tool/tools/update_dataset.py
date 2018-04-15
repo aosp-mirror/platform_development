@@ -184,6 +184,7 @@ def main():
         'ld-android',
         'libc_malloc_debug',
         'libnetd_client',
+        'libtextclassifier_hash',
     ]
     for name in libs:
         update_tag('/system/${LIB}/' + name + '.so', 'LL-NDK-Private')
