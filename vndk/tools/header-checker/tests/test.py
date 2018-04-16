@@ -167,10 +167,14 @@ class MyTest(unittest.TestCase):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp", "libgolden_cpp_add_global_variable", 4)
 
+    def test_libgolden_cpp_change_global_var_access(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp_add_global_variable",
+            "libgolden_cpp_add_global_variable_private", 8)
+
     def test_libgolden_cpp_parameter_type_diff(self):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp", "libgolden_cpp_parameter_type_diff", 8)
-
 
     def test_libgolden_cpp_with_vtable_diff(self):
         self.prepare_and_run_abi_diff_all_archs("libgolden_cpp",

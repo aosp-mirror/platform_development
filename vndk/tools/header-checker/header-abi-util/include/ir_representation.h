@@ -259,8 +259,8 @@ class CXXBaseSpecifierIR : public ReferencesOtherType {
   }
 
  protected:
-  bool is_virtual_;
-  AccessSpecifierIR access_;
+  bool is_virtual_ = false;
+  AccessSpecifierIR access_ = AccessSpecifierIR::PublicAccess;
 };
 
 class TemplateElementIR : public ReferencesOtherType {
@@ -334,7 +334,7 @@ class RecordFieldIR : public ReferencesOtherType {
  protected:
   std::string name_;
   uint64_t offset_ = 0;
-  AccessSpecifierIR access_;
+  AccessSpecifierIR access_ = AccessSpecifierIR::PublicAccess;
 };
 
 class RecordTypeIR: public TypeIR, public TemplatedArtifactIR,
@@ -420,8 +420,8 @@ class RecordTypeIR: public TypeIR, public TemplatedArtifactIR,
   std::vector<RecordFieldIR> fields_;
   VTableLayoutIR vtable_layout_;
   std::vector<CXXBaseSpecifierIR> bases_;
-  AccessSpecifierIR access_;
-  bool is_anonymous_;
+  AccessSpecifierIR access_ = AccessSpecifierIR::PublicAccess;
+  bool is_anonymous_ = false;
   RecordKind record_kind_;
 };
 
@@ -482,7 +482,7 @@ class EnumTypeIR : public TypeIR, public TagTypeIR {
  protected:
   std::vector<EnumFieldIR> fields_;
   std::string underlying_type_;
-  AccessSpecifierIR access_;
+  AccessSpecifierIR access_ = AccessSpecifierIR::PublicAccess;
 };
 
 class ArrayTypeIR : public TypeIR {
@@ -593,6 +593,10 @@ class GlobalVarIR: public LinkableMessageIR , public ReferencesOtherType {
     return name_;
   }
 
+  void SetAccess(AccessSpecifierIR access) {
+    access_ = access;
+  }
+
   AccessSpecifierIR GetAccess() const {
     return access_;
   }
@@ -603,7 +607,7 @@ class GlobalVarIR: public LinkableMessageIR , public ReferencesOtherType {
 
  protected:
   std::string name_;
-  AccessSpecifierIR access_;
+  AccessSpecifierIR access_ = AccessSpecifierIR::PublicAccess;
 };
 
 class ParamIR : public ReferencesOtherType {
@@ -684,7 +688,7 @@ class FunctionIR : public LinkableMessageIR, public TemplatedArtifactIR,
  protected:
   std::string linkage_name_;
   std::string name_;
-  AccessSpecifierIR access_;
+  AccessSpecifierIR access_ = AccessSpecifierIR::PublicAccess;
 };
 
 class ElfSymbolIR {
