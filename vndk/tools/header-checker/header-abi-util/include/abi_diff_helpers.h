@@ -158,7 +158,7 @@ class AbiDiffHelper {
       const abi_util::VTableComponentIR &old_component,
       const abi_util::VTableComponentIR &new_component);
 
-  void CompareTemplateInfo(
+  DiffStatus CompareTemplateInfo(
       const std::vector<abi_util::TemplateElementIR> &old_template_elements,
       const std::vector<abi_util::TemplateElementIR> &new_template_elements,
       std::deque<std::string> *type_queue,
