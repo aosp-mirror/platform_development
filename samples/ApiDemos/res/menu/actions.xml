@@ -17,18 +17,23 @@
     <item android:id="@+id/action_search"
           android:icon="@android:drawable/ic_menu_search"
           android:title="@string/action_bar_search"
+          android:alphabeticShortcut="s"
+          android:alphabeticModifiers="ALT"
           android:showAsAction="ifRoom"
           android:actionViewClass="android.widget.SearchView" />
     <item android:id="@+id/action_add"
           android:icon="@android:drawable/ic_menu_add"
-          android:title="@string/action_bar_add" />
+          android:title="@string/action_bar_add"
+          android:alphabeticShortcut="a" />
     <item android:id="@+id/action_edit"
           android:icon="@android:drawable/ic_menu_edit"
           android:showAsAction="always"
-          android:title="@string/action_bar_edit" />
+          android:title="@string/action_bar_edit"
+          android:alphabeticShortcut="e" />
     <item android:id="@+id/action_share"
           android:icon="@android:drawable/ic_menu_share"
           android:title="@string/action_bar_share"
+          android:alphabeticShortcut="s"
           android:showAsAction="ifRoom" />
     <item android:id="@+id/action_sort"
           android:icon="@android:drawable/ic_menu_sort_by_size"
@@ -38,10 +43,14 @@
             <item android:id="@+id/action_sort_size"
                   android:icon="@android:drawable/ic_menu_sort_by_size"
                   android:title="@string/action_bar_sort_size"
+                  android:alphabeticShortcut="s"
+                  android:alphabeticModifiers="CTRL|SHIFT"
                   android:onClick="onSort" />
             <item android:id="@+id/action_sort_alpha"
                   android:icon="@android:drawable/ic_menu_sort_alphabetically"
                   android:title="@string/action_bar_sort_alpha"
+                  android:alphabeticShortcut="a"
+                  android:alphabeticModifiers="CTRL|SHIFT"
                   android:onClick="onSort" />
         </menu>
     </item>
