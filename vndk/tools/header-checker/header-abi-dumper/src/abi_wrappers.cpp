@@ -894,6 +894,7 @@ bool GlobalVarDeclWrapper::SetupGlobalVar(
   global_varp->SetSourceFile(source_file);
   global_varp->SetName(global_var_decl_->getQualifiedNameAsString());
   global_varp->SetLinkerSetKey(mangled_name);
+  global_varp->SetAccess(AccessClangToIR(global_var_decl_->getAccess()));
   global_varp->SetReferencedType(
       ast_caches_->GetTypeId(GetKeyForTypeId(global_var_decl_->getType())));
   return true;
