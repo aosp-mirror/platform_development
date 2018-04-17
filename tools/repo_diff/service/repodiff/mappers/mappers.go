@@ -70,7 +70,7 @@ func batchToInts(intStrings ...string) ([]int, error) {
 	return ints, nil
 }
 
-func diffRowToDenormalizedCols(d e.DiffRow, rowIndex int) []interface{} {
+func diffRowToDenormalizedCols(d e.AnalyzedDiffRow, rowIndex int) []interface{} {
 	return []interface{}{
 		rowIndex,
 		d.Date,
@@ -82,10 +82,11 @@ func diffRowToDenormalizedCols(d e.DiffRow, rowIndex int) []interface{} {
 		d.LineDeletions,
 		d.LineChanges,
 		d.CommitsNotUpstreamed,
+		constants.ProjectTypeToDisplay[d.Type],
 	}
 }
 
-func commitRowToDenormalizedCols(commitRow e.CommitRow, rowIndex int) []interface{} {
+func commitRowToDenormalizedCols(commitRow e.AnalyzedCommitRow, rowIndex int) []interface{} {
 	return []interface{}{
 		rowIndex,
 		commitRow.Commit,
@@ -93,10 +94,11 @@ func commitRowToDenormalizedCols(commitRow e.CommitRow, rowIndex int) []interfac
 		commitRow.Author,
 		commitRow.Subject,
 		GetAuthorTechArea(commitRow.Author),
+		constants.ProjectTypeToDisplay[commitRow.Type],
 	}
 }
 
-func diffRowToPersistCols(d e.DiffRow, uuidBytes string, timestamp int64, rowIndex int) []interface{} {
+func diffRowToPersistCols(d e.AnalyzedDiffRow, uuidBytes string, timestamp int64, rowIndex int) []interface{} {
 	return []interface{}{
 		timestamp,
 		uuidBytes,
@@ -109,10 +111,11 @@ func diffRowToPersistCols(d e.DiffRow, uuidBytes string, timestamp int64, rowInd
 		d.LineDeletions,
 		d.LineChanges,
 		d.CommitsNotUpstreamed,
+		d.Type,
 	}
 }
 
-func commitRowToPersistCols(c e.CommitRow, uuidBytes string, timestamp int64, rowIndex int) []interface{} {
+func commitRowToPersistCols(c e.AnalyzedCommitRow, uuidBytes string, timestamp int64, rowIndex int) []interface{} {
 	return []interface{}{
 		timestamp,
 		uuidBytes,
@@ -121,10 +124,11 @@ func commitRowToPersistCols(c e.CommitRow, uuidBytes string, timestamp int64, ro
 		c.DownstreamProject,
 		c.Author,
 		c.Subject,
+		c.Type,
 	}
 }
 
-func DiffRowsToPersistCols(diffRows []e.DiffRow) [][]interface{} {
+func DiffRowsToPersistCols(diffRows []e.AnalyzedDiffRow) [][]interface{} {
 	uid := uuid.NewV4()
 	ts := utils.TimestampSeconds()
 
@@ -140,7 +144,7 @@ func DiffRowsToPersistCols(diffRows []e.DiffRow) [][]interface{} {
 	return rows
 }
 
-func DiffRowsToDenormalizedCols(diffRows []e.DiffRow) [][]interface{} {
+func DiffRowsToDenormalizedCols(diffRows []e.AnalyzedDiffRow) [][]interface{} {
 	rows := make([][]interface{}, len(diffRows))
 	for i, diffRow := range diffRows {
 		rows[i] = diffRowToDenormalizedCols(
@@ -151,7 +155,7 @@ func DiffRowsToDenormalizedCols(diffRows []e.DiffRow) [][]interface{} {
 	return rows
 }
 
-func CommitRowsToDenormalizedCols(commitRows []e.CommitRow) [][]interface{} {
+func CommitRowsToDenormalizedCols(commitRows []e.AnalyzedCommitRow) [][]interface{} {
 	rows := make([][]interface{}, len(commitRows))
 	for i, commitRow := range commitRows {
 		rows[i] = commitRowToDenormalizedCols(
@@ -162,7 +166,7 @@ func CommitRowsToDenormalizedCols(commitRows []e.CommitRow) [][]interface{} {
 	return rows
 }
 
-func DiffRowsToAggregateChangesOverTime(diffRows []e.DiffRow) [][]interface{} {
+func DiffRowsToAggregateChangesOverTime(diffRows []e.AnalyzedDiffRow) [][]interface{} {
 	if len(diffRows) == 0 {
 		return nil
 	}
@@ -170,7 +174,7 @@ func DiffRowsToAggregateChangesOverTime(diffRows []e.DiffRow) [][]interface{} {
 		utils.TimestampToDatastudioDatetime(diffRows[0].DBInsertTimestamp),
 		getSumOfAttribute(
 			diffRows,
-			func(d e.DiffRow) int {
+			func(d e.AnalyzedDiffRow) int {
 				if d.DiffStatus == constants.StatusModified {
 					return 1
 				}
@@ -179,13 +183,13 @@ func DiffRowsToAggregateChangesOverTime(diffRows []e.DiffRow) [][]interface{} {
 		),
 		getSumOfAttribute(
 			diffRows,
-			func(d e.DiffRow) int {
+			func(d e.AnalyzedDiffRow) int {
 				return d.LineChanges
 			},
 		),
 		getSumOfAttribute(
 			diffRows,
-			func(d e.DiffRow) int {
+			func(d e.AnalyzedDiffRow) int {
 				return d.FilesChanged
 			},
 		),
@@ -196,7 +200,7 @@ func DiffRowsToAggregateChangesOverTime(diffRows []e.DiffRow) [][]interface{} {
 	return rows
 }
 
-func getSumOfAttribute(diffRows []e.DiffRow, getAttr func(e.DiffRow) int) int {
+func getSumOfAttribute(diffRows []e.AnalyzedDiffRow, getAttr func(e.AnalyzedDiffRow) int) int {
 	var sum int
 	for _, d := range diffRows {
 		sum += getAttr(d)
@@ -204,7 +208,7 @@ func getSumOfAttribute(diffRows []e.DiffRow, getAttr func(e.DiffRow) int) int {
 	return sum
 }
 
-func CommitRowsToPersistCols(commitRows []e.CommitRow) [][]interface{} {
+func CommitRowsToPersistCols(commitRows []e.AnalyzedCommitRow) [][]interface{} {
 	uid := uuid.NewV4()
 	ts := utils.TimestampSeconds()
 
@@ -220,8 +224,8 @@ func CommitRowsToPersistCols(commitRows []e.CommitRow) [][]interface{} {
 	return rows
 }
 
-func SQLRowToDiffRow(iterRow *sql.Rows) (e.DiffRow, error) {
-	var d e.DiffRow
+func SQLRowToDiffRow(iterRow *sql.Rows) (e.AnalyzedDiffRow, error) {
+	var d e.AnalyzedDiffRow
 	var uuidBytes []byte
 	var rowIndex int
 	err := iterRow.Scan(
@@ -236,13 +240,14 @@ func SQLRowToDiffRow(iterRow *sql.Rows) (e.DiffRow, error) {
 		&d.LineDeletions,
 		&d.LineChanges,
 		&d.CommitsNotUpstreamed,
+		&d.Type,
 	)
 	d.Date = utils.TimestampToDate(d.DBInsertTimestamp)
 	return d, err
 }
 
-func SQLRowToCommitRow(iterRow *sql.Rows) (e.CommitRow, error) {
-	var c e.CommitRow
+func SQLRowToCommitRow(iterRow *sql.Rows) (e.AnalyzedCommitRow, error) {
+	var c e.AnalyzedCommitRow
 	var uuidBytes []byte
 	var rowIndex int
 	var timestamp int64
@@ -254,6 +259,7 @@ func SQLRowToCommitRow(iterRow *sql.Rows) (e.CommitRow, error) {
 		&c.DownstreamProject,
 		&c.Author,
 		&c.Subject,
+		&c.Type,
 	)
 	c.Date = utils.TimestampToDate(timestamp)
 	return c, err

@@ -6,8 +6,13 @@ import (
 
 type simpleSet map[string]bool
 
+func (s simpleSet) Contains(other string) bool {
+	enabled, exists := s[other]
+	return exists && enabled
+}
+
 // Returns the different of two slices of strings; effectively a set arithmetic operation on two slices of strings
-func Difference(slice1, slice2 []string) []string {
+func DistinctValues(slice1, slice2 []string) []string {
 	sets := []simpleSet{
 		sliceToSimpleSet(slice1),
 		sliceToSimpleSet(slice2),
@@ -26,6 +31,28 @@ func Difference(slice1, slice2 []string) []string {
 	}
 	sort.Strings(exclusiveValues)
 	return exclusiveValues
+}
+
+func SetSubtract(add, negate []string) []string {
+	toRemove := sliceToSimpleSet(negate)
+	var result []string
+	for _, a := range add {
+		if !toRemove.Contains(a) {
+			result = append(result, a)
+		}
+	}
+	return result
+}
+
+func SetUnion(slice1, slice2 []string) []string {
+	return allKeys(
+		sliceToSimpleSet(
+			append(
+				slice1,
+				slice2...,
+			),
+		),
+	)
 }
 
 func sliceToSimpleSet(s []string) simpleSet {

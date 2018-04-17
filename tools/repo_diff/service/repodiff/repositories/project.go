@@ -17,7 +17,7 @@ type project struct {
 	target e.MappedDiffTarget
 }
 
-func (p project) InsertDiffRows(diffRows []e.DiffRow) error {
+func (p project) InsertDiffRows(diffRows []e.AnalyzedDiffRow) error {
 	return errors.Wrap(
 		repoSQL.SingleTransactionInsert(
 			p.db,
@@ -34,8 +34,9 @@ func (p project) InsertDiffRows(diffRows []e.DiffRow) error {
 				line_insertions,
 				line_deletions,
 				line_changes,
-				commits_not_upstreamed
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				commits_not_upstreamed,
+				project_type
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 			mappers.PrependMappedDiffTarget(
 				p.target,
 				mappers.DiffRowsToPersistCols(diffRows),
@@ -70,7 +71,7 @@ func (p project) GetMostRecentOuterKey() (int64, uuid.UUID, error) {
 	return timestamp, u, nil
 }
 
-func (p project) GetMostRecentDifferentials() ([]e.DiffRow, error) {
+func (p project) GetMostRecentDifferentials() ([]e.AnalyzedDiffRow, error) {
 	timestamp, uid, err := p.GetMostRecentOuterKey()
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -81,7 +82,7 @@ func (p project) GetMostRecentDifferentials() ([]e.DiffRow, error) {
 	}
 	var errMapping error
 
-	var diffRows []e.DiffRow
+	var diffRows []e.AnalyzedDiffRow
 	errSelect := repoSQL.Select(
 		p.db,
 		func(row *sql.Rows) {
@@ -106,7 +107,8 @@ func (p project) GetMostRecentDifferentials() ([]e.DiffRow, error) {
 			line_insertions,
 			line_deletions,
 			line_changes,
-			commits_not_upstreamed
+			commits_not_upstreamed,
+			project_type
 		FROM project_differential
 		WHERE
 		  upstream_target_id = ?

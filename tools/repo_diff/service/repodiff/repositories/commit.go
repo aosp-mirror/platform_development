@@ -17,7 +17,7 @@ type commit struct {
 	target e.MappedDiffTarget
 }
 
-func (c commit) InsertCommitRows(commitRows []e.CommitRow) error {
+func (c commit) InsertCommitRows(commitRows []e.AnalyzedCommitRow) error {
 	return errors.Wrap(
 		repoSQL.SingleTransactionInsert(
 			c.db,
@@ -30,8 +30,9 @@ func (c commit) InsertCommitRows(commitRows []e.CommitRow) error {
 				commit_,
 				downstream_project,
 				author,
-				subject
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				subject,
+				project_type
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 			mappers.PrependMappedDiffTarget(
 				c.target,
 				mappers.CommitRowsToPersistCols(commitRows),
@@ -66,7 +67,7 @@ func (c commit) GetMostRecentOuterKey() (int64, uuid.UUID, error) {
 	return timestamp, u, nil
 }
 
-func (c commit) GetMostRecentCommits() ([]e.CommitRow, error) {
+func (c commit) GetMostRecentCommits() ([]e.AnalyzedCommitRow, error) {
 	timestamp, uid, err := c.GetMostRecentOuterKey()
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -76,7 +77,7 @@ func (c commit) GetMostRecentCommits() ([]e.CommitRow, error) {
 	}
 	var errMapping error
 
-	var commitRows []e.CommitRow
+	var commitRows []e.AnalyzedCommitRow
 	errSelect := repoSQL.Select(
 		c.db,
 		func(row *sql.Rows) {
@@ -97,7 +98,8 @@ func (c commit) GetMostRecentCommits() ([]e.CommitRow, error) {
 			commit_,
 			downstream_project,
 			author,
-			subject
+			subject,
+			project_type
 		FROM project_commit
 		WHERE
 		  upstream_target_id = ?

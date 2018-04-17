@@ -30,6 +30,18 @@ var StatusToDisplay = map[int]string{
 	StatusForked:         "Forked Projects",
 }
 
+type ProjectType int
+
+var Empty ProjectType = 0
+var DifferentialSpecific ProjectType = 1
+var Global ProjectType = 2
+
+var ProjectTypeToDisplay = map[ProjectType]string{
+	Empty:                "Empty",
+	DifferentialSpecific: "Differential Specific",
+	Global:               "Global",
+}
+
 var displayToStatus map[string]int
 
 func makeDisplayToStatus() map[string]int {

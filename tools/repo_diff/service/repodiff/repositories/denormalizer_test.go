@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	c "repodiff/constants"
 	e "repodiff/entities"
 	repoSQL "repodiff/persistence/sql"
 	"repodiff/repositories"
@@ -74,15 +75,17 @@ func TestDenormalizeToRecentCommits(t *testing.T) {
 	tableName := "denormalized_view_recent_commit"
 	defer clearTable(tableName)
 	d, _ := repositories.NewScopedDenormalizerRepository(fakeTarget, fakeMappedTarget)
-	fixture := e.CommitRow{
-		Date:              "2018/02/20",
-		Commit:            "61d5e61b6b6dfbf52d0d433759da964db31cc106",
-		DownstreamProject: "platform/vendor/unbundled_google/packages/Ears",
-		Author:            "slobdell@google.com",
-		// Actual commit subject!
-		Subject: "Import translations. DO NOT MERGE",
+	fixture := e.AnalyzedCommitRow{
+		CommitRow: e.CommitRow{
+			Date:              "2018/02/20",
+			Commit:            "61d5e61b6b6dfbf52d0d433759da964db31cc106",
+			DownstreamProject: "platform/vendor/unbundled_google/packages/Ears",
+			Author:            "slobdell@google.com",
+			// Actual commit subject!
+			Subject: "Import translations. DO NOT MERGE",
+		},
 	}
-	fixtures := []e.CommitRow{
+	fixtures := []e.AnalyzedCommitRow{
 		fixture,
 	}
 	err := d.DenormalizeToRecentCommits(fixtures)
@@ -96,27 +99,36 @@ func TestDenormalizeToTopCommitter(t *testing.T) {
 	defer clearTable("denormalized_view_recent_commit")
 	defer clearTable("project_commit")
 
-	fakeCommitRows := []e.CommitRow{
-		e.CommitRow{
-			Date:              "2018/03/20",
-			Commit:            "540eecd728a407e4b31a38f4ea9416dea7d05c0c",
-			DownstreamProject: "platform/tools/external/gradle",
-			Author:            "jeffrey.lebowski@google.com",
-			Subject:           "Hand off the briefcase",
+	fakeCommitRows := []e.AnalyzedCommitRow{
+		e.AnalyzedCommitRow{
+			CommitRow: e.CommitRow{
+				Date:              "2018/03/20",
+				Commit:            "540eecd728a407e4b31a38f4ea9416dea7d05c0c",
+				DownstreamProject: "platform/tools/external/gradle",
+				Author:            "jeffrey.lebowski@google.com",
+				Subject:           "Hand off the briefcase",
+			},
+			Type: c.Empty,
 		},
-		e.CommitRow{
-			Date:              "2018/03/19",
-			Commit:            "ea999655a8af4b7d6a8033d1c864ca87617d0ede",
-			DownstreamProject: "platform/tools/external/gradle",
-			Author:            "brandt@google.com",
-			Subject:           "We Just Don't Know",
+		e.AnalyzedCommitRow{
+			CommitRow: e.CommitRow{
+				Date:              "2018/03/19",
+				Commit:            "ea999655a8af4b7d6a8033d1c864ca87617d0ede",
+				DownstreamProject: "platform/tools/external/gradle",
+				Author:            "brandt@google.com",
+				Subject:           "We Just Don't Know",
+			},
+			Type: c.Empty,
 		},
-		e.CommitRow{
-			Date:              "2018/03/19",
-			Commit:            "4cc9725c953f57f8abe63b729e26125feac1be4e",
-			DownstreamProject: "platform/tools/external/gradle",
-			Author:            "jeffrey.lebowski@google.com",
-			Subject:           "Take any rug in the house",
+		e.AnalyzedCommitRow{
+			CommitRow: e.CommitRow{
+				Date:              "2018/03/19",
+				Commit:            "4cc9725c953f57f8abe63b729e26125feac1be4e",
+				DownstreamProject: "platform/tools/external/gradle",
+				Author:            "jeffrey.lebowski@google.com",
+				Subject:           "Take any rug in the house",
+			},
+			Type: c.Empty,
 		},
 	}
 	commitRepo, err := repositories.NewCommitRepository(fakeMappedTarget)
@@ -141,27 +153,36 @@ func TestDenormalizeToTopTechArea(t *testing.T) {
 	defer clearTable(tableName)
 	defer clearTable("denormalized_view_recent_commit")
 	defer clearTable("project_commit")
-	fakeCommitRows := []e.CommitRow{
-		e.CommitRow{
-			Date:              "2018/03/20",
-			Commit:            "540eecd728a407e4b31a38f4ea9416dea7d05c0c",
-			DownstreamProject: "platform/tools/external/gradle",
-			Author:            "jeffrey.lebowski@google.com",
-			Subject:           "Hand off the briefcase",
+	fakeCommitRows := []e.AnalyzedCommitRow{
+		e.AnalyzedCommitRow{
+			CommitRow: e.CommitRow{
+				Date:              "2018/03/20",
+				Commit:            "540eecd728a407e4b31a38f4ea9416dea7d05c0c",
+				DownstreamProject: "platform/tools/external/gradle",
+				Author:            "jeffrey.lebowski@google.com",
+				Subject:           "Hand off the briefcase",
+			},
+			Type: c.Empty,
 		},
-		e.CommitRow{
-			Date:              "2018/03/19",
-			Commit:            "ea999655a8af4b7d6a8033d1c864ca87617d0ede",
-			DownstreamProject: "platform/tools/external/gradle",
-			Author:            "brandt@google.com",
-			Subject:           "We Just Don't Know",
+		e.AnalyzedCommitRow{
+			CommitRow: e.CommitRow{
+				Date:              "2018/03/19",
+				Commit:            "ea999655a8af4b7d6a8033d1c864ca87617d0ede",
+				DownstreamProject: "platform/tools/external/gradle",
+				Author:            "brandt@google.com",
+				Subject:           "We Just Don't Know",
+			},
+			Type: c.Empty,
 		},
-		e.CommitRow{
-			Date:              "2018/03/19",
-			Commit:            "4cc9725c953f57f8abe63b729e26125feac1be4e",
-			DownstreamProject: "platform/tools/external/gradle",
-			Author:            "jeffrey.lebowski@google.com",
-			Subject:           "Take any rug in the house",
+		e.AnalyzedCommitRow{
+			CommitRow: e.CommitRow{
+				Date:              "2018/03/19",
+				Commit:            "4cc9725c953f57f8abe63b729e26125feac1be4e",
+				DownstreamProject: "platform/tools/external/gradle",
+				Author:            "jeffrey.lebowski@google.com",
+				Subject:           "Take any rug in the house",
+			},
+			Type: c.Empty,
 		},
 	}
 	commitRepo, err := repositories.NewCommitRepository(fakeMappedTarget)
