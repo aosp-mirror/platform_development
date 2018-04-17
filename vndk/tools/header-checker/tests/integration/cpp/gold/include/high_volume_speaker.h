@@ -21,6 +21,9 @@ class HighVolumeSpeaker : public SuperSpeaker {
   int AddedFunction();
 #endif
 #if GOLDEN_ADD_GLOBVAR
+#if GOLDEN_ADD_GLOBVAR_PRIVATE
+ private:
+#endif
   static int global_unprotected_id;
 #endif
 };

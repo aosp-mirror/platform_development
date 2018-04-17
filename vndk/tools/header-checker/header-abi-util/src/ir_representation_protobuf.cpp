@@ -210,6 +210,7 @@ void ProtobufTextFormatToIRReader::ReadGlobalVariables(
   for (auto &&global_variable_protobuf : tu.global_vars()) {
     GlobalVarIR global_variable_ir;
     global_variable_ir.SetName(global_variable_protobuf.name());
+    global_variable_ir.SetAccess(AccessProtobufToIR(global_variable_protobuf.access()));
     global_variable_ir.SetSourceFile(global_variable_protobuf.source_file());
     global_variable_ir.SetReferencedType(
         global_variable_protobuf.referenced_type());

@@ -208,6 +208,18 @@ TEST_MODULES = [
         api = 'current',
     ),
     Module(
+        name = 'libgolden_cpp_add_global_variable_private',
+        srcs = ['integration/cpp/gold/golden_1.cpp',
+                'integration/cpp/gold/high_volume_speaker.cpp',
+                'integration/cpp/gold/low_volume_speaker.cpp',
+                ],
+        version_script = 'integration/cpp/gold/map_added_globvar.txt',
+        export_include_dirs = ['integration/cpp/gold/include'],
+        cflags = ['-DGOLDEN_ADD_GLOBVAR=1', '-DGOLDEN_ADD_GLOBVAR_PRIVATE'],
+        arch = '',
+        api = 'current',
+    ),
+    Module(
         name = 'libgolden_cpp_return_type_diff',
         srcs = ['integration/cpp/gold/golden_1.cpp',
                 'integration/cpp/gold/high_volume_speaker.cpp',

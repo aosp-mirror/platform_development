@@ -95,6 +95,10 @@ static bool ShouldSkipFunctionDecl(const clang::FunctionDecl *decl) {
   if (!decl->getDefinition()) {
     return true;
   }
+  if (decl->getLinkageAndVisibility().getLinkage() !=
+      clang::Linkage::ExternalLinkage) {
+    return true;
+  }
   if (const clang::CXXMethodDecl *method_decl =
       llvm::dyn_cast<clang::CXXMethodDecl>(decl)) {
     if (method_decl->getParent()->getTypeForDecl()->isDependentType()) {
