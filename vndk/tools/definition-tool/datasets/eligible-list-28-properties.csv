@@ -310,13 +310,13 @@ libhidlcache,True,False,True,cc_library
 libhidlmemory,True,True,True,cc_library
 libhidltransport,True,True,True,cc_library
 libhwbinder,True,True,True,cc_library
-libhwbinder_nolto,True,True,True,cc_library
+libhwbinder_noltopgo,True,True,True,cc_library
 libion,True,True,True,cc_library
 libjpeg,True,False,True,cc_library
 libkeymaster4,False,False,True,cc_library_shared
 libkeymaster4support,False,False,True,cc_library
 libkeymaster_messages,True,False,True,cc_library_shared
-libkeymaster_portable,True,False,True,cc_library_shared
+libkeymaster_portable,True,False,True,cc_library
 liblayers_proto,False,False,True,cc_library_shared
 libldacBT_abr,True,False,True,cc_library_shared
 libldacBT_enc,True,False,True,cc_library_shared
@@ -342,7 +342,7 @@ libprotobuf-cpp-full,True,False,True,cc_library_shared
 libprotobuf-cpp-full-rtti,False,False,True,cc_library_shared
 libprotobuf-cpp-lite,True,False,True,cc_library
 libprotobuf-cpp-lite-rtti,False,False,True,cc_library_shared
-libpuresoftkeymasterdevice,True,False,True,cc_library_shared
+libpuresoftkeymasterdevice,True,False,True,cc_library
 libradio_metadata,True,False,True,cc_library_shared
 libselinux,True,False,True,cc_library
 libsoftkeymasterdevice,True,False,True,cc_library
