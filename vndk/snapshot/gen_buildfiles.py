@@ -45,7 +45,6 @@ class GenBuildFile(object):
         ... (other {SNAPSHOT_VARIANT}/ directories)
         common/
             Android.mk
-            manifest.xml
             NOTICE_FILES/
                 (license files, e.g. libfoo.so.txt)
     """
@@ -297,13 +296,13 @@ class GenBuildFile(object):
             variant_path = os.path.join(self._install_dir, variant)
             src_paths = utils.find(variant_path, [prebuilt])
             for src in sorted(src_paths):
-                arch_srcs += (
-                    '{ind}{ind}{arch}: {{\n'
-                    '{ind}{ind}{ind}srcs: ["{src}"],\n'
-                    '{ind}{ind}}},\n'.format(
-                        ind=self.INDENT,
-                        arch=utils.arch_from_path(os.path.join(variant, src)),
-                        src=src))
+                arch_srcs += ('{ind}{ind}{arch}: {{\n'
+                              '{ind}{ind}{ind}srcs: ["{src}"],\n'
+                              '{ind}{ind}}},\n'.format(
+                                  ind=self.INDENT,
+                                  arch=utils.arch_from_path(
+                                      os.path.join(variant, src)),
+                                  src=src))
             arch_srcs += '{ind}}},\n'.format(ind=self.INDENT)
             return arch_srcs
 
