@@ -63,7 +63,8 @@ class ABIWrapper {
   bool SetupFunctionParameter(abi_util::CFunctionLikeIR *functionp,
                               const clang::QualType qual_type,
                               bool has_default_arg,
-                              const std::string &source_file);
+                              const std::string &source_file,
+                              bool is_this_parameter = false);
 
   std::string QualTypeToString(const clang::QualType &sweet_qt);
 
