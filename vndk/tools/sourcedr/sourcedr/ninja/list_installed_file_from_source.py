@@ -37,16 +37,6 @@ def _parse_args():
     return parser.parse_args()
 
 
-def _load_manifest_from_args(args):
-    input_file = args.input_file
-
-    if input_file.endswith('.pickle'):
-        with open(input_file, 'rb') as pickle_file:
-            return pickle.load(pickle_file)
-
-    return Parser(args.cwd).parse(input_file, args.encoding, args.ninja_deps)
-
-
 def main():
     args = _parse_args()
 
@@ -65,7 +55,7 @@ def main():
         '|'.join('(?:' + re.escape(posixpath.normpath(path)) + ')'
                  for path in args.source_filter.split(':')))
 
-    manifest = _load_manifest_from_args(args)
+    manifest = ninja.load_manifest_from_args(args)
 
     # Build lookup map
     outs = {}
