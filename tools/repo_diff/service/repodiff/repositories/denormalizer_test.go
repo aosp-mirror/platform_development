@@ -32,11 +32,6 @@ func init() {
 	clearTable("denormalized_view_changes_over_time")
 }
 
-func clearTable(tableName string) {
-	db, _ := repoSQL.GetDBConnectionPool()
-	db.Exec(fmt.Sprintf("TRUNCATE TABLE %s", tableName))
-}
-
 func getRowCountAtTable(tableName string) int {
 	db, _ := repoSQL.GetDBConnectionPool()
 	var count int

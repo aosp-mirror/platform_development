@@ -10,11 +10,13 @@ import (
 	e "repodiff/entities"
 	"repodiff/mappers"
 	repoSQL "repodiff/persistence/sql"
+	"repodiff/utils"
 )
 
 type project struct {
-	db     *sql.DB
-	target e.MappedDiffTarget
+	db                 *sql.DB
+	target             e.MappedDiffTarget
+	timestampGenerator func() e.RepoTimestamp
 }
 
 func (p project) InsertDiffRows(diffRows []e.AnalyzedDiffRow) error {
@@ -39,7 +41,7 @@ func (p project) InsertDiffRows(diffRows []e.AnalyzedDiffRow) error {
 			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 			mappers.PrependMappedDiffTarget(
 				p.target,
-				mappers.DiffRowsToPersistCols(diffRows),
+				mappers.DiffRowsToPersistCols(diffRows, p.timestampGenerator()),
 			),
 		),
 		"Error inserting rows into project_differential",
@@ -132,7 +134,8 @@ func (p project) GetMostRecentDifferentials() ([]e.AnalyzedDiffRow, error) {
 func NewProjectRepository(target e.MappedDiffTarget) (project, error) {
 	db, err := repoSQL.GetDBConnectionPool()
 	return project{
-		db:     db,
-		target: target,
+		db:                 db,
+		target:             target,
+		timestampGenerator: utils.TimestampSeconds,
 	}, errors.Wrap(err, "Could not establish a database connection")
 }

@@ -99,7 +99,7 @@ func commitRowToDenormalizedCols(commitRow e.AnalyzedCommitRow, rowIndex int) []
 	}
 }
 
-func diffRowToPersistCols(d e.AnalyzedDiffRow, uuidBytes string, timestamp int64, rowIndex int) []interface{} {
+func diffRowToPersistCols(d e.AnalyzedDiffRow, uuidBytes string, timestamp e.RepoTimestamp, rowIndex int) []interface{} {
 	return []interface{}{
 		timestamp,
 		uuidBytes,
@@ -116,7 +116,7 @@ func diffRowToPersistCols(d e.AnalyzedDiffRow, uuidBytes string, timestamp int64
 	}
 }
 
-func commitRowToPersistCols(c e.AnalyzedCommitRow, uuidBytes string, timestamp int64, rowIndex int) []interface{} {
+func commitRowToPersistCols(c e.AnalyzedCommitRow, uuidBytes string, timestamp e.RepoTimestamp, rowIndex int) []interface{} {
 	return []interface{}{
 		timestamp,
 		uuidBytes,
@@ -129,16 +129,15 @@ func commitRowToPersistCols(c e.AnalyzedCommitRow, uuidBytes string, timestamp i
 	}
 }
 
-func DiffRowsToPersistCols(diffRows []e.AnalyzedDiffRow) [][]interface{} {
+func DiffRowsToPersistCols(diffRows []e.AnalyzedDiffRow, timestamp e.RepoTimestamp) [][]interface{} {
 	uid := uuid.NewV4()
-	ts := utils.TimestampSeconds()
 
 	rows := make([][]interface{}, len(diffRows))
 	for i, diffRow := range diffRows {
 		rows[i] = diffRowToPersistCols(
 			diffRow,
 			string(uid.Bytes()),
-			ts,
+			timestamp,
 			i,
 		)
 	}
@@ -172,7 +171,7 @@ func DiffRowsToAggregateChangesOverTime(diffRows []e.AnalyzedDiffRow) [][]interf
 		return nil
 	}
 	cols := []interface{}{
-		utils.TimestampToDatastudioDatetime(diffRows[0].DBInsertTimestamp),
+		utils.TimestampToDatastudioDatetime(e.RepoTimestamp(diffRows[0].DBInsertTimestamp)),
 		getSumOfAttribute(
 			diffRows,
 			func(d e.AnalyzedDiffRow) int {
@@ -209,16 +208,15 @@ func getSumOfAttribute(diffRows []e.AnalyzedDiffRow, getAttr func(e.AnalyzedDiff
 	return sum
 }
 
-func CommitRowsToPersistCols(commitRows []e.AnalyzedCommitRow) [][]interface{} {
+func CommitRowsToPersistCols(commitRows []e.AnalyzedCommitRow, timestamp e.RepoTimestamp) [][]interface{} {
 	uid := uuid.NewV4()
-	ts := utils.TimestampSeconds()
 
 	rows := make([][]interface{}, len(commitRows))
 	for i, commitRow := range commitRows {
 		rows[i] = commitRowToPersistCols(
 			commitRow,
 			string(uid.Bytes()),
-			ts,
+			timestamp,
 			i,
 		)
 	}
@@ -243,7 +241,7 @@ func SQLRowToDiffRow(iterRow *sql.Rows) (e.AnalyzedDiffRow, error) {
 		&d.CommitsNotUpstreamed,
 		&d.Type,
 	)
-	d.Date = utils.TimestampToDate(d.DBInsertTimestamp)
+	d.Date = utils.TimestampToDate(e.RepoTimestamp(d.DBInsertTimestamp))
 	return d, err
 }
 
@@ -251,7 +249,7 @@ func SQLRowToCommitRow(iterRow *sql.Rows) (e.AnalyzedCommitRow, error) {
 	var c e.AnalyzedCommitRow
 	var uuidBytes []byte
 	var rowIndex int
-	var timestamp int64
+	var timestamp e.RepoTimestamp
 	err := iterRow.Scan(
 		&timestamp,
 		&uuidBytes,

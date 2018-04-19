@@ -127,3 +127,5 @@ type ManifestFileGroup struct {
 	Upstream   ManifestFile
 	Downstream ManifestFile
 }
+
+type RepoTimestamp int64

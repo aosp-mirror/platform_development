@@ -98,10 +98,10 @@ func Select(db *sql.DB, rowHandler handleRowFn, query string, args ...interface{
 		query,
 		args...,
 	)
-	defer rows.Close()
 	if err != nil {
 		return err
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		rowHandler(rows)
