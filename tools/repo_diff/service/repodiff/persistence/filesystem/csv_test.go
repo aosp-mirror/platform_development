@@ -1,6 +1,7 @@
 package filesystem
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -26,4 +27,37 @@ func TestNonExistentFile(t *testing.T) {
 		func(columns []string) {},
 	)
 	assert.NotEqual(t, err, nil, "CSV Error should be generated")
+}
+
+func TestWriteCSVToFile(t *testing.T) {
+	outputPath := "testdata/generate.csv"
+	defer os.Remove(outputPath)
+
+	header := []string{
+		"col1",
+		"col2",
+	}
+	rowsOfCols := [][]string{
+		[]string{
+			"line1_val1",
+			"line1_val2",
+		},
+		[]string{
+			"line2_val1",
+			"line2_val2",
+		},
+	}
+	err := WriteCSVToFile(header, rowsOfCols, outputPath)
+	assert.Equal(t, err, nil, "Error should not be generated")
+
+	var reconstituted [][]string
+	err = GenerateCSVLines(
+		outputPath,
+		func(columns []string) {
+			assert.Equal(t, 2, len(columns), "Initial CSV ColumnCount")
+			reconstituted = append(reconstituted, columns)
+		},
+	)
+	assert.Equal(t, nil, err, "No error should exist reading created CSV")
+	assert.Equal(t, rowsOfCols, reconstituted, "Reconstituted should equal original")
 }
