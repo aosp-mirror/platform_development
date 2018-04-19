@@ -59,17 +59,35 @@ def load_install_paths(module_info_path):
 
     return (result, name_path_dict)
 
-def main():
-    parser =argparse.ArgumentParser()
+def _is_stale_module(path, installed_paths):
+    if path in installed_paths:
+        return False
+    # libclang_rt.asan-${arch}-android and
+    # libclang_rt.ubsan_standalone-${arch}-android may vary between different
+    # architectures.
+    if posixpath.basename(path).startswith('libclang_rt'):
+        return False
+    return True
+
+def remove_stale_modules(data, installed_paths):
+    result = {}
+    for path, row in data.items():
+        if not _is_stale_module(path, installed_paths):
+            result[path] = row
+    return result
+
+def _parse_args():
+    parser = argparse.ArgumentParser()
     parser.add_argument('tag_file')
     parser.add_argument('-o', '--output', required=True)
     parser.add_argument('--make-vars', required=True,
                         help='out/soong/make_vars-$(TARGET).mk')
     parser.add_argument('--module-info', required=True,
                         help='out/target/product/$(TARGET)/module-info.json')
-    parser.add_argument('--delete-removed-entries', action='store_true',
-                        help='Delete removed shared libs')
-    args = parser.parse_args()
+    return parser.parse_args()
+
+def main():
+    args = _parse_args()
 
     # Load libraries from `out/soong/make_vars-$(TARGET).mk`.
     llndk, vndk_sp, vndk, vndk_private = load_make_vars(args.make_vars)
@@ -88,12 +106,7 @@ def main():
 
     # Delete non-existing libraries.
     installed_paths, name_path_dict = load_install_paths(args.module_info)
-
-    if args.delete_removed_entries:
-        data = { path: row for path, row in data.items()
-                           if path in installed_paths }
-    else:
-        data = { path: row for path, row in data.items() }
+    data = remove_stale_modules(data, installed_paths)
 
     # Reset all /system/${LIB} libraries to FWK-ONLY.
     for path, row in data.items():
