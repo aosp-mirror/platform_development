@@ -40,9 +40,14 @@ endif
 
 
 bootstrap:
+	mkdir -p $(GOPATH)/src
 	./tools/setup_go_path_symlink.sh
 	cd $(GOPATH)/src/repodiff
+	# include $GOPATH/bin as part of system path
+	grep -q -F 'export PATH=$$PATH:$$GOPATH/bin' ~/.bashrc || echo 'export PATH=$$PATH:$$GOPATH/bin' >> ~/.bashrc
+	source ~/.bashrc
 	go get github.com/GoogleCloudPlatform/cloudsql-proxy/cmd/cloud_sql_proxy
+	go get github.com/golang/dep/cmd/dep
 	dep ensure
 	go build;
 
