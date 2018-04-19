@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
-from sourcedr import ninja
+import ninja
 
 import os
 import unittest
 
 
 TEST_DIR = os.path.abspath(os.path.dirname(__file__))
-TEST_DATA_DIR = os.path.join(TEST_DIR, 'testdata', 'ninja')
+TEST_DATA_DIR = os.path.join(TEST_DIR, 'testdata')
 
 ENCODING = 'utf-8'
 
