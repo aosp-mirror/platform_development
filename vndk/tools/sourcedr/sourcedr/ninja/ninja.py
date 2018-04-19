@@ -1018,6 +1018,15 @@ def _parse_args():
 
 def load_manifest_from_args(args):
     """Load the input manifest specified by command line options."""
+
+    input_file = args.input_file
+
+    # If the input file name ends with `.pickle`, load it with pickle.load().
+    if input_file.endswith('.pickle'):
+        with open(input_file, 'rb') as pickle_file:
+            return pickle.load(pickle_file)
+
+    # Parse the ninja file
     return Parser(args.cwd).parse(args.input_file, args.encoding,
                                   args.ninja_deps)
 
