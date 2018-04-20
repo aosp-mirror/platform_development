@@ -72,14 +72,27 @@ These are common queries:
 * `-g` or `--gerrit` specifies the URL of the Gerrit Code Review website.
   *(required)*
 
-* `-b` or `--branch` specifies the local topic branch name that will be passed
-  to `repo start`.
+* `-b` or `--branch` specifies the local branch name that will be passed to
+  `repo start`.
 
 * `-j` or `--parallel` specifies the number of parallel threads while pulling
   change lists.
 
 * `-n` or `--limits` specifies the maximum number of change lists.  (default:
   1000)
+
+* `-m` or `--merge` specifies the method to pick the merge commits.  (default:
+  `merge-ff-only`)
+
+* `-p` or `--pick` specifies the method to pick the non-merge commits.
+  (default: `pick`)
+
+  * `pick` maps to `git cherry-pick --allow-empty`
+  * `merge` maps to `git merge --no-edit`
+  * `merge-ff-only` maps to `git merge --no-edit --ff-only`
+  * `merge-no-ff` maps to `git merge --no-edit --no-ff`
+  * `reset` maps to `git reset --hard`
+  * `checkout` maps to `git checkout`
 
 
 ## Examples
