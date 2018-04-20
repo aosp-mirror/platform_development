@@ -260,6 +260,7 @@ _MERGE_COMMANDS = {
     'merge-ff-only': ['git', 'merge', '--no-edit', '--ff-only'],
     'merge-no-ff': ['git', 'merge', '--no-edit', '--no-ff'],
     'reset': ['git', 'reset', '--hard'],
+    'checkout': ['git', 'checkout'],
 }
 
 

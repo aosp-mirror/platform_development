@@ -81,6 +81,15 @@ These are common queries:
 * `-n` or `--limits` specifies the maximum number of change lists.  (default:
   1000)
 
+* `-m` or `--merge` specifies the method to pick the merge commits.  (default:
+  `merge-ff-only`)
+
+  * `merge` maps to `git merge --no-edit`
+  * `merge-ff-only` maps to `git merge --no-edit --ff-only`
+  * `merge-no-ff` maps to `git merge --no-edit --no-ff`
+  * `reset` maps to `git reset --hard`
+  * `checkout` maps to `git checkout`
+
 
 ## Examples
 
