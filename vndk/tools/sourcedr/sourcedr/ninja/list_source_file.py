@@ -37,21 +37,6 @@ def _parse_args():
     return parser.parse_args()
 
 
-def _load_manifest_from_args(args):
-    """Load the ninja file specified in the command line arguments."""
-
-    input_file = args.input_file
-
-    # If the input file name ends with `.pickle`, load it with pickle.load().
-    if input_file.endswith('.pickle'):
-        with open(input_file, 'rb') as pickle_file:
-            return pickle.load(pickle_file)
-
-    # Parse the ninja file
-    ninja_parser = ninja.Parser(args.cwd)
-    return ninja_parser.parse(input_file, args.encoding, args.ninja_deps)
-
-
 def collect_source_files(graph, start, out_dir_pattern, out_host_dir_pattern):
     """Collect the transitive dependencies of a target."""
 
@@ -112,7 +97,7 @@ def main():
     installed_filter = re.compile(
         '|'.join('(?:' + p + ')' for p in installed_filter))
 
-    manifest = _load_manifest_from_args(args)
+    manifest = ninja.load_manifest_from_args(args)
 
     # Build lookup map
     graph = {}
