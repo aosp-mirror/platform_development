@@ -72,8 +72,8 @@ These are common queries:
 * `-g` or `--gerrit` specifies the URL of the Gerrit Code Review website.
   *(required)*
 
-* `-b` or `--branch` specifies the local topic branch name that will be passed
-  to `repo start`.
+* `-b` or `--branch` specifies the local branch name that will be passed to
+  `repo start`.
 
 * `-j` or `--parallel` specifies the number of parallel threads while pulling
   change lists.

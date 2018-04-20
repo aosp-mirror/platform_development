@@ -41,6 +41,11 @@ except ImportError:
     from urllib2 import HTTPBasicAuthHandler, build_opener  # PY2
 
 try:
+    from __builtin__ import raw_input as input  # PY2
+except ImportError:
+    pass
+
+try:
     from shlex import quote as _sh_quote  # PY3.3
 except ImportError:
     # Shell language simple string pattern.  If a string matches this pattern,
@@ -94,6 +99,18 @@ else:
     def write_bytes(data, file):  # PY3
         """Write bytes to a file."""
         file.buffer.write(data)
+
+
+def _confirm(question, default, file=sys.stderr):
+    """Prompt a yes/no question and convert the answer to a boolean value."""
+    answers = {'': default, 'y': True, 'yes': True, 'n': False, 'no': False}
+    suffix = '[Y/n] ' if default else ' [y/N] '
+    while True:
+        file.write(question + suffix)
+        file.flush()
+        ans = answers.get(input().lower())
+        if ans is not None:
+            return ans
 
 
 class ChangeList(object):
@@ -269,7 +286,8 @@ def build_pull_commands(change, branch_name, merge_opt):
     to subprocess.run()."""
 
     cmds = []
-    cmds.append(['repo', 'start', branch_name])
+    if branch_name is not None:
+        cmds.append(['repo', 'start', branch_name])
     cmds.append(['git', 'fetch', change.fetch_url, change.fetch_ref])
     if change.is_merge():
         cmds.append(_MERGE_COMMANDS[merge_opt] + ['FETCH_HEAD'])
@@ -293,7 +311,7 @@ def _sh_quote_commands(cmds):
 def _main_bash(args):
     """Print the bash command to pull the change lists."""
 
-    branch_name = _get_topic_branch_from_args(args)
+    branch_name = _get_local_branch_name_from_args(args)
 
     manifest_path = _get_manifest_xml_from_args(args)
     project_dirs = build_project_name_to_directory_dict(manifest_path)
@@ -330,7 +348,7 @@ def _do_pull_change_lists_for_project(task):
 def _main_pull(args):
     """Pull the change lists."""
 
-    branch_name = _get_topic_branch_from_args(args)
+    branch_name = _get_local_branch_name_from_args(args)
 
     manifest_path = _get_manifest_xml_from_args(args)
     project_dirs = build_project_name_to_directory_dict(manifest_path)
@@ -397,7 +415,7 @@ def _parse_args():
                         help='Method to pull merge commits')
 
     parser.add_argument('-b', '--branch',
-                        help='Topic branch name to start with')
+                        help='Local branch name for `repo start`')
 
     parser.add_argument('-j', '--parallel', default=1, type=int,
                         help='Number of parallel running commands')
@@ -419,10 +437,11 @@ def _get_change_lists_from_args(args):
                               args.limits)
 
 
-def _get_topic_branch_from_args(args):
-    """Get the topic branch name from args."""
-    if not args.branch:
-        print('error: --branch must be specified')
+def _get_local_branch_name_from_args(args):
+    """Get the local branch name from args."""
+    if not args.branch and not _confirm(
+            'Do you want to continue without local branch name?', False):
+        print('error: `-b` or `--branch` must be specified', file=sys.stderr)
         sys.exit(1)
     return args.branch
 
