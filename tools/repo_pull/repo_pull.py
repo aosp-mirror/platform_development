@@ -281,7 +281,18 @@ _MERGE_COMMANDS = {
 }
 
 
-def build_pull_commands(change, branch_name, merge_opt):
+# Git commands for non-merge commits
+_PICK_COMMANDS = {
+    'pick': ['git', 'cherry-pick', '--allow-empty'],
+    'merge': ['git', 'merge', '--no-edit'],
+    'merge-ff-only': ['git', 'merge', '--no-edit', '--ff-only'],
+    'merge-no-ff': ['git', 'merge', '--no-edit', '--no-ff'],
+    'reset': ['git', 'reset', '--hard'],
+    'checkout': ['git', 'checkout'],
+}
+
+
+def build_pull_commands(change, branch_name, merge_opt, pick_opt):
     """Build command lines for each change.  The command lines will be passed
     to subprocess.run()."""
 
@@ -292,7 +303,7 @@ def build_pull_commands(change, branch_name, merge_opt):
     if change.is_merge():
         cmds.append(_MERGE_COMMANDS[merge_opt] + ['FETCH_HEAD'])
     else:
-        cmds.append(['git', 'cherry-pick', '--allow-empty', 'FETCH_HEAD'])
+        cmds.append(_PICK_COMMANDS[pick_opt] + ['FETCH_HEAD'])
     return cmds
 
 
@@ -323,7 +334,8 @@ def _main_bash(args):
         for change in changes:
             cmds = []
             cmds.append(['pushd', change.project_dir])
-            cmds.extend(build_pull_commands(change, branch_name, args.merge))
+            cmds.extend(build_pull_commands(
+                change, branch_name, args.merge, args.pick))
             cmds.append(['popd'])
             print(_sh_quote_commands(cmds))
 
@@ -334,11 +346,13 @@ def _do_pull_change_lists_for_project(task):
 
     branch_name = task_opts['branch_name']
     merge_opt = task_opts['merge_opt']
+    pick_opt = task_opts['pick_opt']
 
     for i, change in enumerate(changes):
         cwd = change.project_dir
         print(change.commit_sha1[0:10], i + 1, cwd)
-        for cmd in build_pull_commands(change, branch_name, merge_opt):
+        cmds = build_pull_commands(change, branch_name, merge_opt, pick_opt)
+        for cmd in cmds:
             proc = run(cmd, cwd=cwd, stderr=PIPE)
             if proc.returncode != 0:
                 return (change, changes[i + 1:], cmd, proc.stderr)
@@ -361,6 +375,7 @@ def _main_pull(args):
     task_opts = {
         'branch_name': branch_name,
         'merge_opt': args.merge,
+        'pick_opt': args.pick,
     }
 
     # Run the commands to pull the change lists
@@ -410,8 +425,13 @@ def _parse_args():
                         help='Max number of change lists')
 
     parser.add_argument('-m', '--merge',
-                        choices=_MERGE_COMMANDS.keys(),
+                        choices=sorted(_MERGE_COMMANDS.keys()),
                         default='merge-ff-only',
+                        help='Method to pull merge commits')
+
+    parser.add_argument('-p', '--pick',
+                        choices=sorted(_PICK_COMMANDS.keys()),
+                        default='pick',
                         help='Method to pull merge commits')
 
     parser.add_argument('-b', '--branch',

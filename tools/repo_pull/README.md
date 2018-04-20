@@ -84,6 +84,10 @@ These are common queries:
 * `-m` or `--merge` specifies the method to pick the merge commits.  (default:
   `merge-ff-only`)
 
+* `-p` or `--pick` specifies the method to pick the non-merge commits.
+  (default: `pick`)
+
+  * `pick` maps to `git cherry-pick --allow-empty`
   * `merge` maps to `git merge --no-edit`
   * `merge-ff-only` maps to `git merge --no-edit --ff-only`
   * `merge-no-ff` maps to `git merge --no-edit --no-ff`
