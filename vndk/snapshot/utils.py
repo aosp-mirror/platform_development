@@ -19,6 +19,7 @@
 import glob
 import os
 import re
+import subprocess
 import sys
 
 # Global Keys
@@ -28,7 +29,6 @@ COMMON_DIR_PATH = COMMON_DIR_NAME
 ANDROID_MK_PATH = os.path.join(COMMON_DIR_PATH, 'Android.mk')
 CONFIG_DIR_PATH_PATTERN = '*/configs'
 MANIFEST_FILE_NAME = 'manifest.xml'
-MANIFEST_FILE_PATH = os.path.join(COMMON_DIR_PATH, MANIFEST_FILE_NAME)
 MODULE_PATHS_FILE_NAME = 'module_paths.txt'
 NOTICE_FILES_DIR_NAME = 'NOTICE_FILES'
 NOTICE_FILES_DIR_PATH = os.path.join(COMMON_DIR_PATH, NOTICE_FILES_DIR_NAME)
@@ -113,3 +113,21 @@ def find(path, names):
                 rel_to_root = abspath.replace(os.path.abspath(path), '')
                 found.append(rel_to_root[1:])  # strip leading /
     return found
+
+
+def fetch_artifact(branch, build, pattern, destination='.'):
+    """Fetches build artifacts from Android Build server.
+
+    Args:
+      branch: string, branch to pull build artifacts from
+      build: string, build number to pull build artifacts from
+      pattern: string, pattern of build artifact file name
+      destination: string, destination to pull build artifact to
+    """
+    fetch_artifact_path = '/google/data/ro/projects/android/fetch_artifact'
+    cmd = [
+        fetch_artifact_path, '--branch', branch, '--target=vndk', '--bid',
+        build, pattern, destination
+    ]
+    print 'Running `{}`'.format(' '.join(cmd))
+    subprocess.check_call(cmd)
