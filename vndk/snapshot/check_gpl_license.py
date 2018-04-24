@@ -18,7 +18,9 @@
 import argparse
 import glob
 import os
+import shutil
 import subprocess
+import tempfile
 import xml.etree.ElementTree as xml_tree
 
 import utils
@@ -33,7 +35,7 @@ class GPLChecker(object):
     MANIFEST_XML = utils.MANIFEST_FILE_NAME
     MODULE_PATHS_TXT = utils.MODULE_PATHS_FILE_NAME
 
-    def __init__(self, install_dir, android_build_top):
+    def __init__(self, install_dir, android_build_top, temp_artifact_dir):
         """GPLChecker constructor.
 
         Args:
@@ -43,14 +45,16 @@ class GPLChecker(object):
         """
         self._android_build_top = android_build_top
         self._install_dir = install_dir
-        self._manifest_file = os.path.join(install_dir,
-                                           utils.MANIFEST_FILE_PATH)
+        self._manifest_file = os.path.join(temp_artifact_dir,
+                                           self.MANIFEST_XML)
         self._notice_files_dir = os.path.join(install_dir,
                                               utils.NOTICE_FILES_DIR_PATH)
 
         if not os.path.isfile(self._manifest_file):
-            raise RuntimeError('{manifest} not found at {manifest_file}'.format(
-                manifest=self.MANIFEST_XML, manifest_file=self._manifest_file))
+            raise RuntimeError(
+                '{manifest} not found at {manifest_file}'.format(
+                    manifest=self.MANIFEST_XML,
+                    manifest_file=self._manifest_file))
 
     def _parse_module_paths(self):
         """Parses the module_path.txt files into a dictionary,
@@ -115,8 +119,8 @@ class GPLChecker(object):
 
         notice_files = glob.glob('{}/*'.format(self._notice_files_dir))
         if len(notice_files) == 0:
-            raise RuntimeError(
-                'No license files found in {}'.format(self._notice_files_dir))
+            raise RuntimeError('No license files found in {}'.format(
+                self._notice_files_dir))
 
         gpl_projects = []
         pattern = 'GENERAL PUBLIC LICENSE'
@@ -173,6 +177,8 @@ def get_args():
     parser.add_argument(
         'vndk_version', type=int,
         help='VNDK snapshot version to check, e.g. "27".')
+    parser.add_argument('-b', '--branch', help='Branch to pull manifest from.')
+    parser.add_argument('--build', help='Build number to pull manifest from.')
     return parser.parse_args()
 
 
@@ -194,12 +200,25 @@ def main():
             'Please provide valid VNDK version. {} does not exist.'
             .format(install_dir))
 
-    license_checker = GPLChecker(install_dir, ANDROID_BUILD_TOP)
+    temp_artifact_dir = tempfile.mkdtemp()
+    os.chdir(temp_artifact_dir)
+    manifest_pattern = 'manifest_{}.xml'.format(args.build)
+    print 'Fetching {file} from {branch} (bid: {build})'.format(
+        file=manifest_pattern, branch=args.branch, build=args.build)
+    manifest_dest = os.path.join(temp_artifact_dir, utils.MANIFEST_FILE_NAME)
+    utils.fetch_artifact(args.branch, args.build, manifest_pattern,
+                         manifest_dest)
+
+    license_checker = GPLChecker(install_dir, ANDROID_BUILD_TOP,
+                                 temp_artifact_dir)
     try:
         license_checker.check_gpl_projects()
     except ValueError as error:
         print error
         raise
+    finally:
+        print 'Deleting temp_artifact_dir: {}'.format(temp_artifact_dir)
+        shutil.rmtree(temp_artifact_dir)
 
 
 if __name__ == '__main__':
