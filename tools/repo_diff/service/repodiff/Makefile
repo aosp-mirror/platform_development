@@ -14,15 +14,22 @@ DOCKER_CANONICAL_ID=$(DOCKER_CONTAINER_REGISTRY)/$(GOOGLE_PROJECT_ID)/$(DOCKER_I
 
 PORT_HTTP="80"
 GCE_ZONE="us-west1-a"
+GCE_IMAGE_PROJECT="ubuntu-os-cloud"
+GCE_IMAGE_FAMILY="ubuntu-1604-lts"
+
+TMP_CREDENTIAL_FNAME=service_account_credentials.json
 
 # https://cloud.google.com/compute/docs/machine-types
-GCE_MACHINE_TYPE="n1-standard-16"
+GCE_MACHINE_TYPE="n1-standard-64"
 
 PROJECT_NAME="auto-diff-android-branches"
 REMOTE_MACHINE_NAME=mithalop5
 FIREWALL_NAME=public-http-access
 DISK_SIZE=500GB
 RUN_COMMAND_REMOTE=gcloud compute --project $(PROJECT_NAME) ssh --zone $(GCE_ZONE) "$(REMOTE_MACHINE_NAME)" --command
+SCP_TO_HOST=gcloud compute --project $(PROJECT_NAME) scp --zone $(GCE_ZONE)
+SERVICE_ACCOUNT_ID=repo-reader
+SERVICE_ACCOUNT=$(SERVICE_ACCOUNT_ID)@$(PROJECT_NAME).iam.gserviceaccount.com
 
 ifeq ($(ROLE),prod)
 	GCP_DB_USER=$(GCP_DB_USER_PROD)
@@ -42,14 +49,13 @@ endif
 bootstrap:
 	mkdir -p $(GOPATH)/src
 	./tools/setup_go_path_symlink.sh
-	cd $(GOPATH)/src/repodiff
 	# include $GOPATH/bin as part of system path
 	grep -q -F 'export PATH=$$PATH:$$GOPATH/bin' ~/.bashrc || echo 'export PATH=$$PATH:$$GOPATH/bin' >> ~/.bashrc
 	source ~/.bashrc
-	go get github.com/GoogleCloudPlatform/cloudsql-proxy/cmd/cloud_sql_proxy
-	go get github.com/golang/dep/cmd/dep
-	dep ensure
-	go build;
+	cd $(GOPATH)/src/repodiff; go get github.com/GoogleCloudPlatform/cloudsql-proxy/cmd/cloud_sql_proxy; \
+		go get github.com/golang/dep/cmd/dep; \
+		dep ensure; \
+		go build
 
 run:
 	go build;
@@ -99,23 +105,35 @@ ssh:
 	 gcloud compute --project $(PROJECT_NAME) ssh --zone $(GCE_ZONE) $(REMOTE_MACHINE_NAME)
 
 deploy:
+	gcloud config set project $(PROJECT_NAME)
 	@echo "Starting docker image build"
 	make build_container_image
 	@echo "Creating machine if it doesn't already exist"
-	gcloud beta compute instances create-with-container $(REMOTE_MACHINE_NAME) \
-		--container-image $(DOCKER_CANONICAL_ID) \
-		--tags $(DOCKER_TAG_NAME) \
+	gcloud compute instances create $(REMOTE_MACHINE_NAME) \
 		--machine-type $(GCE_MACHINE_TYPE) \
 		--boot-disk-size $(DISK_SIZE) \
-		--scopes https://www.googleapis.com/auth/source.read_only \
+		--scopes https://www.googleapis.com/auth/source.read_only,https://www.googleapis.com/auth/compute \
 		--zone $(GCE_ZONE) \
+		--local-ssd interface=nvme \
+		--metadata-from-file startup-script=remote_scripts/gce_startup.sh \
+		--metadata AUTHOR=$(USER),SERVICE_ACCOUNT=$(SERVICE_ACCOUNT),GOOGLE_PROJECT_ID=$(GOOGLE_PROJECT_ID) \
+		--image-project $(GCE_IMAGE_PROJECT) \
+		--image-family $(GCE_IMAGE_FAMILY) \
+		--min-cpu-platform skylake \
+		--service-account $(SERVICE_ACCOUNT) \
 		2>/dev/null || true
 	@echo "Hackily waiting a bit for instance to start up"
-	@sleep 10
+	@sleep 30
+	./tools/clear_service_account_keys.py $(SERVICE_ACCOUNT)
+	gcloud iam service-accounts keys create $(TMP_CREDENTIAL_FNAME) --iam-account $(SERVICE_ACCOUNT)
+	$(RUN_COMMAND_REMOTE) 'mkdir -p /tmp/scripts'
+	$(SCP_TO_HOST) remote_scripts/* "$(REMOTE_MACHINE_NAME)":/tmp/scripts/
+	$(SCP_TO_HOST) $(TMP_CREDENTIAL_FNAME) "$(REMOTE_MACHINE_NAME)":/tmp/
+	rm $(TMP_CREDENTIAL_FNAME)
 	@echo "Stopping all existing docker images"
 	$(RUN_COMMAND_REMOTE) 'docker stop $$(docker ps -a -q)' 2>/dev/null || true
 	docker image save $(DOCKER_CANONICAL_ID) -o transferrable_docker_image.tar \
-		&& gcloud compute --project $(PROJECT_NAME) scp --zone $(GCE_ZONE) transferrable_docker_image.tar "$(REMOTE_MACHINE_NAME)":~/transferred_docker_image.tar \
+	  && $(SCP_TO_HOST) transferrable_docker_image.tar "$(REMOTE_MACHINE_NAME)":~/transferred_docker_image.tar \
     && $(RUN_COMMAND_REMOTE) 'docker load -i transferred_docker_image.tar' \
     && $(RUN_COMMAND_REMOTE) 'docker run -d --rm -p $(DOCKER_TARGET_PORT):$(DOCKER_TARGET_PORT) $(DOCKER_CANONICAL_ID)' \
 		&& gcloud compute firewall-rules create $(FIREWALL_NAME) --allow tcp:$(DOCKER_TARGET_PORT) 2>/dev/null || true \
@@ -127,7 +145,7 @@ output_instance_url:
 	@echo "Monitor progress at http://"$(shell (gcloud compute instances list | grep $(REMOTE_MACHINE_NAME) | awk -F ' ' '{print $$5}')):$(DOCKER_TARGET_PORT)/health
 
 destroy:
-	gcloud compute instances delete $(REMOTE_MACHINE_NAME)
+	gcloud compute instances delete $(REMOTE_MACHINE_NAME) --zone $(GCE_ZONE) --quiet
 
 ############## DOCKER DEPLOYMENT
 build_container_image:
