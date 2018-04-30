@@ -1,6 +1,6 @@
 {
-    "android_project_dir": "/ssd850/tmp/development/tools/repo_diff/",
-    "output_directory": "/ssd850/slobdell_projects/app_output",
+    "android_project_dir": "/app/pytools/",
+    "output_directory": "/app/output",
     "diff_script": "repo_diff_android.py",
     "common_upstream": {
       "url": "https://keystone-qcom.googlesource.com/platform/manifest",
