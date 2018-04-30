@@ -5,19 +5,19 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	c "repodiff/constants"
-	e "repodiff/entities"
+	cst "repodiff/constants"
+	ent "repodiff/entities"
 	"repodiff/persistence/filesystem"
 )
 
 func TestProjectNamesToType(t *testing.T) {
-	var common, downstream, upstream e.ManifestFile
+	var common, downstream, upstream ent.ManifestFile
 	filesystem.ReadXMLAsEntity("testdata/common_manifest.xml", &common)
 	filesystem.ReadXMLAsEntity("testdata/downstream_manifest.xml", &downstream)
 	filesystem.ReadXMLAsEntity("testdata/upstream_manifest.xml", &upstream)
 
 	nameToType := ProjectNamesToType(
-		e.ManifestFileGroup{
+		&ent.ManifestFileGroup{
 			Common:     common,
 			Upstream:   upstream,
 			Downstream: downstream,
@@ -27,7 +27,7 @@ func TestProjectNamesToType(t *testing.T) {
 
 	distinctCount := 0
 	for _, projectType := range nameToType {
-		if projectType == c.DifferentialSpecific {
+		if projectType == cst.DifferentialSpecific {
 			distinctCount++
 		}
 	}

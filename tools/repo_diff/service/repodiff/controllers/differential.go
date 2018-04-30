@@ -199,7 +199,7 @@ func readCSVFiles(projectCSVFile, commitCSVFile string) ([]ent.DiffRow, []ent.Co
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Error converting CSV file to entities")
 	}
-	commitRows, err := csvFileToCommitRows(commitCSVFile)
+	commitRows, err := CSVFileToCommitRows(commitCSVFile)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Error converting CSV file to entities")
 	}
@@ -252,7 +252,7 @@ func toDiffRows(entities []interface{}) ([]ent.DiffRow, error) {
 	return diffRows, nil
 }
 
-func csvFileToCommitRows(csvFile string) ([]ent.CommitRow, error) {
+func CSVFileToCommitRows(csvFile string) ([]ent.CommitRow, error) {
 	entities, err := filesystem.CSVFileToEntities(
 		csvFile,
 		func(cols []string) (interface{}, error) {
