@@ -1,10 +1,14 @@
 package interactors
 
 import (
+	"regexp"
 	"sort"
+	"strings"
 )
 
 type simpleSet map[string]bool
+
+var unicode = regexp.MustCompile("[^\x00-\x7F]+")
 
 func (s simpleSet) Contains(other string) bool {
 	enabled, exists := s[other]
@@ -45,7 +49,7 @@ func SetSubtract(add, negate []string) []string {
 }
 
 func SetUnion(slice1, slice2 []string) []string {
-	return allKeys(
+	union := allKeys(
 		sliceToSimpleSet(
 			append(
 				slice1,
@@ -53,6 +57,8 @@ func SetUnion(slice1, slice2 []string) []string {
 			),
 		),
 	)
+	sort.Strings(union)
+	return union
 }
 
 func sliceToSimpleSet(s []string) simpleSet {
@@ -86,4 +92,24 @@ func allKeys(sets ...simpleSet) []string {
 		}
 	}
 	return keys
+}
+
+func FilterNoUnicode(s string) string {
+	badCharacters := sliceToSimpleSet(
+		unicode.FindAllString(s, -1),
+	)
+	if len(badCharacters) == 0 {
+		return s
+	}
+	validCharacters := make([]string, 0, len(s))
+	for _, rune_ := range s {
+		char := string(rune_)
+		if !badCharacters.Contains(char) {
+			validCharacters = append(validCharacters, char)
+		}
+	}
+	return strings.Join(
+		validCharacters,
+		"",
+	)
 }
