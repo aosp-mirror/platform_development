@@ -90,3 +90,23 @@ func TestSetUnion(t *testing.T) {
 	union := SetUnion(s1, s2)
 	assert.Equal(t, expected, union, "Union of s2 and s1")
 }
+
+func TestFilterNoUnicodeWithUnicode(t *testing.T) {
+	regressionStr := "Move to AGP 3.0.0 stable 😁"
+	assert.Equal(
+		t,
+		"Move to AGP 3.0.0 stable ",
+		FilterNoUnicode(regressionStr),
+		"Function should filter out unicode characters",
+	)
+}
+
+func TestFilterNoUnicodeWithNoUnicode(t *testing.T) {
+	validStr := "I'm a regular string with no whacky unicode chars"
+	assert.Equal(
+		t,
+		validStr,
+		FilterNoUnicode(validStr),
+		"No change should occur",
+	)
+}

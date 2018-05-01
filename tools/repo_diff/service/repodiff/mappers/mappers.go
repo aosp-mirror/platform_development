@@ -12,6 +12,7 @@ import (
 
 	"repodiff/constants"
 	e "repodiff/entities"
+	"repodiff/interactors"
 	"repodiff/utils"
 )
 
@@ -123,7 +124,7 @@ func commitRowToPersistCols(c e.AnalyzedCommitRow, uuidBytes string, timestamp i
 		c.Commit,
 		c.DownstreamProject,
 		c.Author,
-		c.Subject,
+		interactors.FilterNoUnicode(c.Subject),
 		c.Type,
 	}
 }
