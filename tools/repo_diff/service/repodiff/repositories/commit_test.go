@@ -5,13 +5,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	ent "repodiff/entities"
 	repoSQL "repodiff/persistence/sql"
 	"repodiff/repositories"
 	"repodiff/utils"
 )
 
 func init() {
-	clearCommitTable()
+	clearTableBeforeAfterTest("project_commit")()
 }
 
 func getCommitRowCount() int {
@@ -21,13 +22,8 @@ func getCommitRowCount() int {
 	return count
 }
 
-func clearCommitTable() {
-	db, _ := repoSQL.GetDBConnectionPool()
-	db.Exec("TRUNCATE TABLE project_commit")
-}
-
 func TestInsertCommitRows(t *testing.T) {
-	defer clearCommitTable()
+	defer clearTableBeforeAfterTest("project_commit")()
 
 	assert.Equal(t, 0, getCommitRowCount(), "Rows should start empty")
 
@@ -41,20 +37,20 @@ func TestInsertCommitRows(t *testing.T) {
 }
 
 func TestCommitGetMostRecentOuterKey(t *testing.T) {
-	defer clearCommitTable()
+	defer clearTableBeforeAfterTest("project_commit")()
 	c, _ := repositories.NewCommitRepository(fakeMappedTarget)
 	fixtures := fakeCommitFixtures()
 	err := c.InsertCommitRows(fixtures)
 	assert.Equal(t, nil, err, "Eroror should be nil")
 
-	var oldTimestamp int64 = 1519333790
+	var oldTimestamp ent.RepoTimestamp = 1519333790
 	timestamp, uid, _ := c.GetMostRecentOuterKey()
-	assert.True(t, timestamp > oldTimestamp, "Insert timestamp should be greater than old")
+	assert.True(t, ent.RepoTimestamp(timestamp) > oldTimestamp, "Insert timestamp should be greater than old")
 	assert.Equal(t, 36, len(uid.String()), "Valid UUID should be generated")
 }
 
 func TestGetMostRecentCommits(t *testing.T) {
-	defer clearCommitTable()
+	defer clearTableBeforeAfterTest("project_commit")()
 
 	c, _ := repositories.NewCommitRepository(fakeMappedTarget)
 	dateNow := utils.TimestampToDate(utils.TimestampSeconds())
@@ -73,4 +69,47 @@ func TestGetMostRecentCommitsEmpty(t *testing.T) {
 	rows, err := c.GetMostRecentCommits()
 	assert.Equal(t, nil, err, "Error should be nil")
 	assert.Equal(t, 0, len(rows))
+}
+
+func TestGetFirstSeenTimestamp(t *testing.T) {
+	defer clearTableBeforeAfterTest("project_commit")()
+	c, _ := repositories.NewCommitRepository(fakeMappedTarget)
+	fixtures := fakeCommitFixtures()
+	oldFakeTimestamp := ent.RepoTimestamp(1)
+	c.WithTimestampGenerator(
+		func() ent.RepoTimestamp { return oldFakeTimestamp },
+	).InsertCommitRows(fixtures)
+
+	newFakeTimestamp := ent.RepoTimestamp(2)
+	c.WithTimestampGenerator(
+		func() ent.RepoTimestamp { return newFakeTimestamp },
+	).InsertCommitRows(fixtures)
+
+	commitHashes := []string{
+		"61d5e61b6b6dfbf52d0d433759da964db31cc106",
+	}
+	commitToTimestamp, err := c.GetFirstSeenTimestamp(commitHashes)
+	assert.Equal(t, nil, err, "Error should be nil")
+	assert.Equal(t, len(commitHashes), len(commitToTimestamp), "Length of returned values")
+	assert.Equal(t, oldFakeTimestamp, commitToTimestamp["61d5e61b6b6dfbf52d0d433759da964db31cc106"], "Expected returned timestamp")
+}
+
+func TestGetFirstSeenTimestampEmpty(t *testing.T) {
+	c, _ := repositories.NewCommitRepository(fakeMappedTarget)
+	commitToTimestamp, err := c.GetFirstSeenTimestamp([]string{})
+	assert.Equal(t, nil, err, "Error should be nil")
+	assert.Equal(t, 0, len(commitToTimestamp), "Length of returned values")
+}
+
+func TestGetFirstSeenTimestampMutateReturned(t *testing.T) {
+	c, _ := repositories.NewCommitRepository(fakeMappedTarget)
+	commitToTimestamp, _ := c.GetFirstSeenTimestamp([]string{})
+	commitToTimestamp["some_key"] = ent.RepoTimestamp(0)
+}
+
+func TestGetFirstSeenTimestampNonExistent(t *testing.T) {
+	c, _ := repositories.NewCommitRepository(fakeMappedTarget)
+	nonExistentHash := "ae8e745ba09f61ddfa46ed6bba54c4bd07b2e93b"
+	_, err := c.GetFirstSeenTimestamp([]string{nonExistentHash})
+	assert.NotEqual(t, nil, err, "Error should be generated")
 }

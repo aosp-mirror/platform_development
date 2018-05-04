@@ -1,14 +1,16 @@
 package repositories_test
 
 import (
-	c "repodiff/constants"
-	e "repodiff/entities"
+	"fmt"
+	cst "repodiff/constants"
+	ent "repodiff/entities"
+	repoSQL "repodiff/persistence/sql"
 )
 
-func fakeFixtures() []e.AnalyzedDiffRow {
-	return []e.AnalyzedDiffRow{
-		e.AnalyzedDiffRow{
-			DiffRow: e.DiffRow{
+func fakeFixtures() []ent.AnalyzedDiffRow {
+	return []ent.AnalyzedDiffRow{
+		ent.AnalyzedDiffRow{
+			DiffRow: ent.DiffRow{
 				Date:                 "2018/02/20",
 				DownstreamProject:    "platform/vendor/unbundled_google/packages/Ears",
 				UpstreamProject:      "platform/vendor/unbundled_google/packages/Ears",
@@ -19,15 +21,15 @@ func fakeFixtures() []e.AnalyzedDiffRow {
 				LineChanges:          32,
 				CommitsNotUpstreamed: 0,
 			},
-			Type: c.Empty,
+			Type: cst.Empty,
 		},
 	}
 }
 
-func fakeCommitFixtures() []e.AnalyzedCommitRow {
-	return []e.AnalyzedCommitRow{
-		e.AnalyzedCommitRow{
-			CommitRow: e.CommitRow{
+func fakeCommitFixtures() []ent.AnalyzedCommitRow {
+	return []ent.AnalyzedCommitRow{
+		ent.AnalyzedCommitRow{
+			CommitRow: ent.CommitRow{
 				Date:              "2018/02/20",
 				Commit:            "61d5e61b6b6dfbf52d0d433759da964db31cc106",
 				DownstreamProject: "platform/vendor/unbundled_google/packages/Ears",
@@ -35,7 +37,21 @@ func fakeCommitFixtures() []e.AnalyzedCommitRow {
 				// Actual commit subject!
 				Subject: "Import translations. DO NOT MERGE",
 			},
-			Type: c.Empty,
+			Type: cst.Empty,
 		},
 	}
+}
+
+func clearTableBeforeAfterTest(tableName string) func() {
+	clearTable(tableName)
+	return func() {
+		clearTable(tableName)
+	}
+}
+
+func clearTable(tableName string) {
+	db, _ := repoSQL.GetDBConnectionPool()
+	db.Exec(
+		fmt.Sprintf("TRUNCATE TABLE %s", tableName),
+	)
 }

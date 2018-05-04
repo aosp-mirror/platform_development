@@ -4,54 +4,70 @@ import (
 	"fmt"
 	"repodiff/constants"
 	"repodiff/controllers"
-	e "repodiff/entities"
+	ent "repodiff/entities"
 	"repodiff/handlers"
 	"repodiff/persistence/filesystem"
 )
 
 const configFile = "config.json"
 
+type controllerFunc func(ent.ApplicationConfig) error
+
 func main() {
 	appConfig, err := loadConfig()
 	if err != nil {
 		panic(formattedError(err))
 	}
-	statusChannel := make(chan e.StatusMessage)
+	statusChannel := make(chan ent.StatusMessage)
 	go handlers.StartHTTP(appConfig.Port, statusChannel)
 	go run(appConfig, statusChannel)
 	select {}
 }
 
-func run(appConfig e.ApplicationConfig, statusChannel chan e.StatusMessage) {
-	statusChannel <- e.StatusMessage{
+func run(appConfig ent.ApplicationConfig, statusChannel chan ent.StatusMessage) {
+	statusChannel <- ent.StatusMessage{
 		JobStatus: constants.JobStatusRunning,
 	}
-	err := controllers.ExecuteDifferentials(appConfig)
-	if err != nil {
-		statusChannel <- e.StatusMessage{
-			JobStatus: constants.JobStatusFailed,
-			Meta:      formattedError(err),
+
+	for _, controllerFn := range getEnabledControllers() {
+		if err := controllerFn(appConfig); err != nil {
+			topLevelErrorHandle(err, statusChannel)
+			return
 		}
-		fmt.Println(formattedError(err))
-		return
 	}
-	err = controllers.DenormalizeData(appConfig)
-	if err != nil {
-		statusChannel <- e.StatusMessage{
-			JobStatus: constants.JobStatusFailed,
-			Meta:      formattedError(err),
-		}
-		fmt.Println(formattedError(err))
-		return
-	}
-	statusChannel <- e.StatusMessage{
+	statusChannel <- ent.StatusMessage{
 		JobStatus: constants.JobStatusComplete,
 	}
-	fmt.Println("Finished")
 }
 
-func loadConfig() (e.ApplicationConfig, error) {
-	var appConfig e.ApplicationConfig
+func getEnabledControllers() []controllerFunc {
+	enabled := getEnabledOperations()
+	return []controllerFunc{
+		disabledFnNullified(controllers.ExecuteDifferentials, enabled.Diff),
+		disabledFnNullified(controllers.DenormalizeData, enabled.Denorm),
+		disabledFnNullified(controllers.GenerateCommitReport, enabled.Report),
+	}
+}
+
+func disabledFnNullified(original controllerFunc, enabled bool) controllerFunc {
+	if enabled {
+		return original
+	}
+	return func(ent.ApplicationConfig) error {
+		return nil
+	}
+}
+
+func topLevelErrorHandle(err error, statusChannel chan ent.StatusMessage) {
+	statusChannel <- ent.StatusMessage{
+		JobStatus: constants.JobStatusFailed,
+		Meta:      formattedError(err),
+	}
+	fmt.Println(formattedError(err))
+}
+
+func loadConfig() (ent.ApplicationConfig, error) {
+	var appConfig ent.ApplicationConfig
 	err := filesystem.ReadFileAsJson(configFile, &appConfig)
 	if err != nil {
 		return appConfig, err

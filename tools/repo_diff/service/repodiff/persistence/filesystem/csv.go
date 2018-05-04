@@ -42,3 +42,19 @@ func GenerateCSVLines(filePath string, handler lineHandler) error {
 	}
 	return nil
 }
+
+func WriteCSVToFile(headerCols []string, rowsOfCols [][]string, filepath string) error {
+	file, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	if err := writer.Write(headerCols); err != nil {
+		return err
+	}
+	return writer.WriteAll(rowsOfCols)
+}

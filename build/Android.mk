@@ -130,7 +130,7 @@ $(HOST_OUT)/development/sdk/generated-api-versions.xml: $(android_jar_full_targe
 	$(JAVA) -cp $(api_gen_classpath) \
 	  com.android.apigenerator.Main \
 	  --pattern $(TOPDIR)prebuilts/tools/common/api-versions/android-%/android.jar \
-	  --pattern $(TOPDIR)prebuilts/sdk/%/android.jar \
+	  --pattern $(TOPDIR)prebuilts/sdk/%/public/android.jar \
 	  --current-version $(PLATFORM_SDK_VERSION) \
 	  --current-codename $(PLATFORM_VERSION_CODENAME) \
 	  --current-jar $(android_jar_full_target) \
