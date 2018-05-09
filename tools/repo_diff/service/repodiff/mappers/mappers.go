@@ -87,7 +87,7 @@ func diffRowToDenormalizedCols(d e.AnalyzedDiffRow, rowIndex int) []interface{} 
 	}
 }
 
-func commitRowToDenormalizedCols(commitRow e.AnalyzedCommitRow, rowIndex int) []interface{} {
+func commitRowToDenormalizedCols(commitRow e.AnalyzedCommitRow, firstSeen e.RepoTimestamp, rowIndex int) []interface{} {
 	return []interface{}{
 		rowIndex,
 		commitRow.Commit,
@@ -96,6 +96,7 @@ func commitRowToDenormalizedCols(commitRow e.AnalyzedCommitRow, rowIndex int) []
 		commitRow.Subject,
 		GetAuthorTechArea(commitRow.Author),
 		constants.ProjectTypeToDisplay[commitRow.Type],
+		utils.TimestampToDataStudioDatetime(firstSeen),
 	}
 }
 
@@ -155,11 +156,12 @@ func DiffRowsToDenormalizedCols(diffRows []e.AnalyzedDiffRow) [][]interface{} {
 	return rows
 }
 
-func CommitRowsToDenormalizedCols(commitRows []e.AnalyzedCommitRow) [][]interface{} {
+func CommitRowsToDenormalizedCols(commitRows []e.AnalyzedCommitRow, commitToTimestamp map[string]e.RepoTimestamp) [][]interface{} {
 	rows := make([][]interface{}, len(commitRows))
 	for i, commitRow := range commitRows {
 		rows[i] = commitRowToDenormalizedCols(
 			commitRow,
+			commitToTimestamp[commitRow.Commit],
 			i,
 		)
 	}
@@ -171,7 +173,7 @@ func DiffRowsToAggregateChangesOverTime(diffRows []e.AnalyzedDiffRow) [][]interf
 		return nil
 	}
 	cols := []interface{}{
-		utils.TimestampToDatastudioDatetime(e.RepoTimestamp(diffRows[0].DBInsertTimestamp)),
+		utils.TimestampToDataStudioDatetime(e.RepoTimestamp(diffRows[0].DBInsertTimestamp)),
 		getSumOfAttribute(
 			diffRows,
 			func(d e.AnalyzedDiffRow) int {

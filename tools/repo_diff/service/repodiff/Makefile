@@ -13,7 +13,7 @@ DOCKER_REPLICA_COUNT="1"
 DOCKER_CANONICAL_ID=$(DOCKER_CONTAINER_REGISTRY)/$(GOOGLE_PROJECT_ID)/$(DOCKER_IMAGE_NAME):$(DOCKER_TAG_NAME)
 
 PORT_HTTP="80"
-GCE_ZONE="us-west1-a"
+GCE_ZONE="us-west1-b"
 GCE_IMAGE_PROJECT="ubuntu-os-cloud"
 GCE_IMAGE_FAMILY="ubuntu-1604-lts"
 
@@ -123,8 +123,9 @@ deploy:
 		--service-account $(SERVICE_ACCOUNT) \
 		2>/dev/null || true
 	@echo "Hackily waiting a bit for instance to start up"
-	@sleep 30
-	./tools/clear_service_account_keys.py $(SERVICE_ACCOUNT)
+	# TODO(slobdell) need to add a mechanism to block until startup script has completed
+	@sleep 60
+	./tools/clear_service_account_keys.py $(SERVICE_ACCOUNT) 2>/dev/null || true
 	gcloud iam service-accounts keys create $(TMP_CREDENTIAL_FNAME) --iam-account $(SERVICE_ACCOUNT)
 	$(RUN_COMMAND_REMOTE) 'mkdir -p /tmp/scripts'
 	$(SCP_TO_HOST) remote_scripts/* "$(REMOTE_MACHINE_NAME)":/tmp/scripts/
