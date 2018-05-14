@@ -398,6 +398,32 @@ TEST_MODULES = [
         arch = '',
         api = 'current',
     ),
+    Module(
+        name = 'libgolden_cpp_internal_public_struct',
+        srcs = ['integration/cpp/gold/golden_1.cpp',
+                'integration/cpp/gold/high_volume_speaker.cpp',
+                'integration/cpp/gold/low_volume_speaker.cpp',
+                ],
+        version_script = 'integration/cpp/gold/map.txt',
+        export_include_dirs = ['integration/cpp/gold/include'],
+        cflags = ['-DGOLDEN_WITH_INTERNAL_STRUCT',
+                  '-DGOLDEN_WITH_PUBLIC_INTERNAL_STRUCT'],
+        arch = '',
+        api = 'current',
+    ),
+    Module(
+        name = 'libgolden_cpp_internal_private_struct',
+        srcs = ['integration/cpp/gold/golden_1.cpp',
+                'integration/cpp/gold/high_volume_speaker.cpp',
+                'integration/cpp/gold/low_volume_speaker.cpp',
+                ],
+        version_script = 'integration/cpp/gold/map.txt',
+        export_include_dirs = ['integration/cpp/gold/include'],
+        cflags = ['-DGOLDEN_WITH_INTERNAL_STRUCT'],
+        arch = '',
+        api = 'current',
+    ),
+
 ]
 
 TEST_MODULES = { m.name: m for m in TEST_MODULES }

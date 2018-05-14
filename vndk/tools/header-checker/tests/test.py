@@ -238,6 +238,17 @@ class MyTest(unittest.TestCase):
             "libgolden_cpp_function_pointer_parameter_added", 8, [], True,
             True)
 
+    def test_libgolden_cpp_internal_struct_access_upgraded(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp_internal_private_struct",
+            "libgolden_cpp_internal_public_struct", 0, [], True,
+            True)
+
+    def test_libgolden_cpp_internal_struct_access_downgraded(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp_internal_public_struct",
+            "libgolden_cpp_internal_private_struct", 8, [], True,
+            True)
 
 
 if __name__ == '__main__':

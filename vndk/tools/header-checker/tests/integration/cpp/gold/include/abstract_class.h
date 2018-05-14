@@ -60,6 +60,7 @@ class SuperSpeaker {
 #else
   int mSpeakderId;
 #endif
+
 #if GOLDEN_FUNCTION_POINTER
 #if GOLDEN_FUNCTION_POINTER_ADD_PARAM
   SuperSpeaker * (*speaker_fp)(int, char, int);
@@ -67,4 +68,17 @@ class SuperSpeaker {
   SuperSpeaker * (*speaker_fp)(int, char);
 #endif
 #endif
+
+#if GOLDEN_WITH_INTERNAL_STRUCT
+#ifdef GOLDEN_WITH_PUBLIC_INTERNAL_STRUCT
+ public:
+#else
+ private:
+#endif
+  struct InternalStruct {
+    int internal;
+  };
+ private:
+  InternalStruct a;
+#endif // GOLDEN_WITH_INTERNAL_STRUCT
 };
