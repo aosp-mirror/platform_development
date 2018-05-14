@@ -1360,7 +1360,7 @@
 
         <!-- A FileProvider for passing the APK to be installed to the system. -->
         <provider
-            android:name="android.support.v4.content.FileProvider"
+            android:name="androidx.core.content.FileProvider"
             android:authorities="com.example.android.apis.installapkprovider"
             android:exported="false"
             android:grantUriPermissions="true">
