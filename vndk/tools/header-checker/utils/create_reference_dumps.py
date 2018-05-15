@@ -155,11 +155,11 @@ def create_source_abi_reference_dumps(args, product,
         assert(target.primary_arch != '')
         num_libs_copied += find_and_copy_lib_lsdumps(
             target, ref_dump_dir_stem_vndk, ref_dump_dir_insertion,
-            '_vendor_shared/', args.libs, lsdump_paths)
+            '_vendor_shared', args.libs, lsdump_paths)
 
         num_libs_copied += find_and_copy_lib_lsdumps(
             target, ref_dump_dir_stem_ndk, ref_dump_dir_insertion,
-            '_core_shared/', args.libs, lsdump_paths)
+            '_core_shared', args.libs, lsdump_paths)
 
     return num_libs_copied
 
