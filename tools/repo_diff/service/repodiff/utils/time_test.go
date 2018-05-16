@@ -20,7 +20,7 @@ func TestTimestampToDate(t *testing.T) {
 	assert.Equal(t, "2018-02-22", TimestampToDate(timestamp), "Date conversion")
 }
 
-func TestTimestampToDatastudioDatetime(t *testing.T) {
+func TestTimestampToDataStudioDatetime(t *testing.T) {
 	var timestamp ent.RepoTimestamp = 1519322647
-	assert.Equal(t, "2018022210", TimestampToDatastudioDatetime(timestamp), "Datetime conversion")
+	assert.Equal(t, "2018022210", TimestampToDataStudioDatetime(timestamp), "Datetime conversion")
 }

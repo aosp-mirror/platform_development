@@ -17,7 +17,7 @@ func TimestampToDate(timestamp ent.RepoTimestamp) string {
 }
 
 // Formats a timestamp into a datetime acceptable for MySQL
-func TimestampToDatastudioDatetime(timestamp ent.RepoTimestamp) string {
+func TimestampToDataStudioDatetime(timestamp ent.RepoTimestamp) string {
 	asTime := t.Unix(int64(timestamp), 0)
 	return fmt.Sprintf(
 		"%04d%02d%02d%02d",

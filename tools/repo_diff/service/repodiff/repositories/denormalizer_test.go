@@ -12,6 +12,8 @@ import (
 	"repodiff/repositories"
 )
 
+const arbitraryTimestamp = e.RepoTimestamp(1525978906)
+
 var fakeTarget = e.DiffTarget{
 	Upstream: e.Project{
 		URL:    "https://keystone-qcom.googlesource.com/platform/manifest",
@@ -83,7 +85,12 @@ func TestDenormalizeToRecentCommits(t *testing.T) {
 	fixtures := []e.AnalyzedCommitRow{
 		fixture,
 	}
-	err := d.DenormalizeToRecentCommits(fixtures)
+	err := d.DenormalizeToRecentCommits(
+		fixtures,
+		map[string]e.RepoTimestamp{
+			"61d5e61b6b6dfbf52d0d433759da964db31cc106": arbitraryTimestamp,
+		},
+	)
 	assert.Equal(t, nil, err, "Error should be nil")
 	assert.Equal(t, len(fixtures), getRowCountAtTable(tableName), "Rows should be inserted")
 }
@@ -133,7 +140,14 @@ func TestDenormalizeToTopCommitter(t *testing.T) {
 
 	scopedD, _ := repositories.NewScopedDenormalizerRepository(fakeTarget, fakeMappedTarget)
 
-	err = scopedD.DenormalizeToRecentCommits(fakeCommitRows)
+	err = scopedD.DenormalizeToRecentCommits(
+		fakeCommitRows,
+		map[string]e.RepoTimestamp{
+			"540eecd728a407e4b31a38f4ea9416dea7d05c0c": arbitraryTimestamp,
+			"ea999655a8af4b7d6a8033d1c864ca87617d0ede": arbitraryTimestamp,
+			"4cc9725c953f57f8abe63b729e26125feac1be4e": arbitraryTimestamp,
+		},
+	)
 	assert.Equal(t, nil, err, "Error should be nil")
 	assert.Equal(t, 3, getRowCountAtTable("denormalized_view_recent_commit"), "Rows should be inserted")
 
@@ -187,7 +201,14 @@ func TestDenormalizeToTopTechArea(t *testing.T) {
 
 	scopedD, _ := repositories.NewScopedDenormalizerRepository(fakeTarget, fakeMappedTarget)
 
-	err = scopedD.DenormalizeToRecentCommits(fakeCommitRows)
+	err = scopedD.DenormalizeToRecentCommits(
+		fakeCommitRows,
+		map[string]e.RepoTimestamp{
+			"540eecd728a407e4b31a38f4ea9416dea7d05c0c": arbitraryTimestamp,
+			"ea999655a8af4b7d6a8033d1c864ca87617d0ede": arbitraryTimestamp,
+			"4cc9725c953f57f8abe63b729e26125feac1be4e": arbitraryTimestamp,
+		},
+	)
 	assert.Equal(t, nil, err, "Error should be nil")
 	assert.Equal(t, 3, getRowCountAtTable("denormalized_view_recent_commit"), "Rows should be inserted")
 

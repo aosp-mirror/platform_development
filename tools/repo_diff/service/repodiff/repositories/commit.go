@@ -15,6 +15,20 @@ import (
 	"repodiff/utils"
 )
 
+type NullCommit struct {
+	originalErr error
+}
+
+func (n NullCommit) InsertCommitRows(commitRows []e.AnalyzedCommitRow) error {
+	return n.originalErr
+}
+func (n NullCommit) GetFirstSeenTimestamp(commitHashes []string, nullTimestamp e.RepoTimestamp) (map[string]e.RepoTimestamp, error) {
+	return nil, n.originalErr
+}
+func (n NullCommit) GetMostRecentCommits() ([]e.AnalyzedCommitRow, error) {
+	return nil, n.originalErr
+}
+
 type Commit struct {
 	db                 *sql.DB
 	target             e.MappedDiffTarget
@@ -135,7 +149,7 @@ func (c Commit) GetMostRecentCommits() ([]e.AnalyzedCommitRow, error) {
 	return commitRows, nil
 }
 
-func (c Commit) GetFirstSeenTimestamp(commitHashes []string) (map[string]e.RepoTimestamp, error) {
+func (c Commit) GetFirstSeenTimestamp(commitHashes []string, nullTimestamp e.RepoTimestamp) (map[string]e.RepoTimestamp, error) {
 	if len(commitHashes) == 0 {
 		return map[string]e.RepoTimestamp{}, nil
 	}
@@ -165,18 +179,21 @@ func (c Commit) GetFirstSeenTimestamp(commitHashes []string) (map[string]e.RepoT
 			FROM project_commit
 				WHERE upstream_target_id = ?
 					AND downstream_target_id = ?
-					AND commit_ IN(?)
+					AND commit_ IN(?`+strings.Repeat(",?", len(commitHashes)-1)+`)
 				GROUP BY commit_
 		`,
-		c.target.UpstreamTarget,
-		c.target.DownstreamTarget,
-		strings.Join(commitHashes, ", "),
+		append(
+			[]interface{}{
+				c.target.UpstreamTarget,
+				c.target.DownstreamTarget,
+			},
+			asInterfaceSlice(commitHashes)...,
+		)...,
 	)
 	if err := interactors.AnyError(errSelect, errMapping); err != nil {
 		return nil, err
-	} else if len(commitToTimestamp) != len(commitHashes) {
-		return nil, errors.New("Not all input commit hashes exist")
 	}
+	mutateEmptyValues(commitToTimestamp, commitHashes, nullTimestamp)
 	return commitToTimestamp, nil
 }
 
@@ -187,4 +204,26 @@ func NewCommitRepository(target e.MappedDiffTarget) (Commit, error) {
 		target:             target,
 		timestampGenerator: utils.TimestampSeconds,
 	}, errors.Wrap(err, "Could not establish a database connection")
+}
+
+func NewNullObject(originalErr error) NullCommit {
+	return NullCommit{
+		originalErr: originalErr,
+	}
+}
+
+func mutateEmptyValues(existing map[string]e.RepoTimestamp, shouldExist []string, defaultValue e.RepoTimestamp) {
+	for _, key := range shouldExist {
+		if _, ok := existing[key]; !ok {
+			existing[key] = defaultValue
+		}
+	}
+}
+
+func asInterfaceSlice(strings []string) []interface{} {
+	casted := make([]interface{}, len(strings))
+	for i, s := range strings {
+		casted[i] = s
+	}
+	return casted
 }

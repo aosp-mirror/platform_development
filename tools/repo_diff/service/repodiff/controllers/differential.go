@@ -164,9 +164,11 @@ func TransferScriptOutputToDownstream(
 		return err
 	}
 	analyzedDiffRows, analyzedCommitRows := interactors.ApplyApplicationMutations(
-		diffRows,
-		commitRows,
-		manifestFileGroup,
+		interactors.AppProcessingParameters{
+			DiffRows:   diffRows,
+			CommitRows: commitRows,
+			Manifests:  manifestFileGroup,
+		},
 	)
 	return persistEntities(target, analyzedDiffRows, analyzedCommitRows)
 }
@@ -220,11 +222,11 @@ func persistEntities(target ent.DiffTarget, diffRows []ent.AnalyzedDiffRow, comm
 		return errors.Wrap(err, "Error persisting diff rows")
 	}
 
-	err = persistCommitRowsDownstream(mappedTarget, commitRows)
-	if err != nil {
-		return errors.Wrap(err, "Error persist commit rows")
-	}
-	return nil
+	return MaybeNullObjectCommitRepository(
+		mappedTarget,
+	).InsertCommitRows(
+		commitRows,
+	)
 }
 
 func csvFileToDiffRows(csvFile string) ([]ent.DiffRow, error) {
@@ -283,18 +285,6 @@ func persistDiffRowsDownstream(mappedTarget ent.MappedDiffTarget, diffRows []ent
 		return errors.Wrap(err, "Error instantiating a new project repository")
 	}
 	err = p.InsertDiffRows(diffRows)
-	if err != nil {
-		return errors.Wrap(err, "Error inserting rows from controller")
-	}
-	return nil
-}
-
-func persistCommitRowsDownstream(mappedTarget ent.MappedDiffTarget, commitRows []ent.AnalyzedCommitRow) error {
-	c, err := repositories.NewCommitRepository(mappedTarget)
-	if err != nil {
-		return errors.Wrap(err, "Error instantiating a new commit repository")
-	}
-	err = c.InsertCommitRows(commitRows)
 	if err != nil {
 		return errors.Wrap(err, "Error inserting rows from controller")
 	}

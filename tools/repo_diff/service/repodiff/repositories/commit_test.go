@@ -88,7 +88,8 @@ func TestGetFirstSeenTimestamp(t *testing.T) {
 	commitHashes := []string{
 		"61d5e61b6b6dfbf52d0d433759da964db31cc106",
 	}
-	commitToTimestamp, err := c.GetFirstSeenTimestamp(commitHashes)
+	nullTimestamp := ent.RepoTimestamp(0)
+	commitToTimestamp, err := c.GetFirstSeenTimestamp(commitHashes, nullTimestamp)
 	assert.Equal(t, nil, err, "Error should be nil")
 	assert.Equal(t, len(commitHashes), len(commitToTimestamp), "Length of returned values")
 	assert.Equal(t, oldFakeTimestamp, commitToTimestamp["61d5e61b6b6dfbf52d0d433759da964db31cc106"], "Expected returned timestamp")
@@ -96,20 +97,26 @@ func TestGetFirstSeenTimestamp(t *testing.T) {
 
 func TestGetFirstSeenTimestampEmpty(t *testing.T) {
 	c, _ := repositories.NewCommitRepository(fakeMappedTarget)
-	commitToTimestamp, err := c.GetFirstSeenTimestamp([]string{})
+	nullTimestamp := ent.RepoTimestamp(0)
+	commitToTimestamp, err := c.GetFirstSeenTimestamp([]string{}, nullTimestamp)
 	assert.Equal(t, nil, err, "Error should be nil")
 	assert.Equal(t, 0, len(commitToTimestamp), "Length of returned values")
 }
 
 func TestGetFirstSeenTimestampMutateReturned(t *testing.T) {
 	c, _ := repositories.NewCommitRepository(fakeMappedTarget)
-	commitToTimestamp, _ := c.GetFirstSeenTimestamp([]string{})
+	nullTimestamp := ent.RepoTimestamp(0)
+	commitToTimestamp, _ := c.GetFirstSeenTimestamp([]string{}, nullTimestamp)
 	commitToTimestamp["some_key"] = ent.RepoTimestamp(0)
 }
 
 func TestGetFirstSeenTimestampNonExistent(t *testing.T) {
 	c, _ := repositories.NewCommitRepository(fakeMappedTarget)
 	nonExistentHash := "ae8e745ba09f61ddfa46ed6bba54c4bd07b2e93b"
-	_, err := c.GetFirstSeenTimestamp([]string{nonExistentHash})
-	assert.NotEqual(t, nil, err, "Error should be generated")
+	nullTimestamp := ent.RepoTimestamp(123)
+	nonExistentHashes := []string{nonExistentHash}
+	commitToTimestamp, err := c.GetFirstSeenTimestamp(nonExistentHashes, nullTimestamp)
+	assert.Equal(t, nil, err, "Error should not be generated")
+	assert.Equal(t, len(nonExistentHashes), len(commitToTimestamp), "Fetched results should match the length of the input")
+	assert.Equal(t, nullTimestamp, commitToTimestamp[nonExistentHash], "Populated value should equal the input null timestamp")
 }

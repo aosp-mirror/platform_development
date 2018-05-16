@@ -5,10 +5,20 @@ import (
 	ent "repodiff/entities"
 )
 
-func ApplyApplicationMutations(diffRows []ent.DiffRow, commitRows []ent.CommitRow, manifests *ent.ManifestFileGroup) ([]ent.AnalyzedDiffRow, []ent.AnalyzedCommitRow) {
-	projectNameToType := ProjectNamesToType(manifests)
-	return diffRowsToAnalyzed(diffRows, projectNameToType),
-		commitRowsToAnalyzed(commitRows, projectNameToType)
+// AppProcessingParameters defines all possible inputs that are necessary
+// prior to applying any application business logic. Any outputs should
+// be derived from purely deterministic means; As such, the interactors
+// package should be 100% testable and free of any error return types
+type AppProcessingParameters struct {
+	DiffRows   []ent.DiffRow
+	CommitRows []ent.CommitRow
+	Manifests  *ent.ManifestFileGroup
+}
+
+func ApplyApplicationMutations(p AppProcessingParameters) ([]ent.AnalyzedDiffRow, []ent.AnalyzedCommitRow) {
+	projectNameToType := ProjectNamesToType(p.Manifests)
+	return diffRowsToAnalyzed(p.DiffRows, projectNameToType),
+		commitRowsToAnalyzed(p.CommitRows, projectNameToType)
 }
 
 func commitRowsToAnalyzed(commitRows []ent.CommitRow, projectNameToType TypeMap) []ent.AnalyzedCommitRow {
