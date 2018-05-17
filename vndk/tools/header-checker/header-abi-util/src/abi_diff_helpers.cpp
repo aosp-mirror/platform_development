@@ -518,7 +518,7 @@ DiffStatus AbiDiffHelper::CompareRecordTypes(
   }
   DiffStatus final_diff_status = DiffStatus::no_diff;
   record_type_diff_ir->SetName(old_type->GetName());
-  if (old_type->GetAccess() != new_type->GetAccess()) {
+  if (IsAccessDownGraded(old_type->GetAccess(), new_type->GetAccess())) {
     final_diff_status = DiffStatus::indirect_diff;
     record_type_diff_ir->SetAccessDiff(
         std::make_unique<abi_util::AccessSpecifierDiffIR>(
