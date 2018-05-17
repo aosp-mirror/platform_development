@@ -97,6 +97,9 @@ dalvik/dx/etc/dx.bat                          build-tools/${PLATFORM_NAME}/dx.ba
 rm build-tools/${PLATFORM_NAME}/dexdump
 bin/dexdump.exe                         strip build-tools/${PLATFORM_NAME}/dexdump.exe
 
+rm build-tools/${PLATFORM_NAME}/d8
+prebuilts/r8/d8.bat build-tools/${PLATFORM_NAME}/d8.bat
+
 rm build-tools/${PLATFORM_NAME}/llvm-rs-cc
 bin/llvm-rs-cc.exe                      strip build-tools/${PLATFORM_NAME}/llvm-rs-cc.exe
 
