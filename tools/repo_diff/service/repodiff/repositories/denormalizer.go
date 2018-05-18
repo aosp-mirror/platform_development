@@ -238,7 +238,7 @@ func (s ScopedDenormalizer) DenormalizeToChangesOverTime(diffRows []ent.Analyzed
 	)
 }
 
-func (s ScopedDenormalizer) DenormalizeToRecentCommits(commitRows []ent.AnalyzedCommitRow) error {
+func (s ScopedDenormalizer) DenormalizeToRecentCommits(commitRows []ent.AnalyzedCommitRow, commitToTimestamp map[string]ent.RepoTimestamp) error {
 	table := "denormalized_view_recent_commit"
 	if err := s.deleteExistingView(table); err != nil {
 		return err
@@ -257,20 +257,22 @@ func (s ScopedDenormalizer) DenormalizeToRecentCommits(commitRows []ent.Analyzed
 					subject,
 					tech_area,
 					project_type,
+					first_seen_datastudio_datetime,
 					upstream_url,
 					upstream_branch,
 					downstream_url,
 					downstream_branch
-				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 				table,
 			),
 			s.rowsWithScopedIndices(
-				mappers.CommitRowsToDenormalizedCols(commitRows),
+				mappers.CommitRowsToDenormalizedCols(commitRows, commitToTimestamp),
 			),
 		),
 		errorMessageForTable(table),
 	)
 }
+
 func (s ScopedDenormalizer) deleteExistingView(tableName string) error {
 	_, err := s.db.Exec(
 		fmt.Sprintf(

@@ -24,7 +24,7 @@ import android.content.pm.ShortcutInfo;
 import android.content.pm.ShortcutManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.content.pm.ShortcutManagerCompat;
+import androidx.core.content.pm.ShortcutManagerCompat;
 import android.util.ArraySet;
 import android.util.Log;
 import android.view.LayoutInflater;

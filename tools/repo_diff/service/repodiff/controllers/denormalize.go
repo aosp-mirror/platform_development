@@ -4,6 +4,7 @@ import (
 	e "repodiff/entities"
 	"repodiff/interactors"
 	"repodiff/repositories"
+	"repodiff/utils"
 )
 
 func DenormalizeData(config e.ApplicationConfig) error {
@@ -125,5 +126,23 @@ func denormalizeCommitRows(target e.DiffTarget) error {
 	if err != nil {
 		return err
 	}
-	return denormalizeRepo.DenormalizeToRecentCommits(commitRows)
+	commitToTimestamp, err := MaybeNullObjectCommitRepository(
+		mappedTarget,
+	).GetFirstSeenTimestamp(
+		extractCommitHashes(commitRows),
+		utils.TimestampSeconds(),
+	)
+	if err != nil {
+		return err
+	}
+
+	return denormalizeRepo.DenormalizeToRecentCommits(commitRows, commitToTimestamp)
+}
+
+func extractCommitHashes(commitRows []e.AnalyzedCommitRow) []string {
+	hashes := make([]string, len(commitRows))
+	for i, row := range commitRows {
+		hashes[i] = row.Commit
+	}
+	return hashes
 }
