@@ -43,7 +43,9 @@ function transform_window(entry) {
     obj: entry,
     kind: 'window',
     name,
-    children: [],
+    children: [
+      [entry.childWindows, transform_window]
+    ],
     rect,
     highlight: rect,
     chips: chips,
