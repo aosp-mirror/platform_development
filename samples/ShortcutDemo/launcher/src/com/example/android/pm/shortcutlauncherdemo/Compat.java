@@ -19,7 +19,7 @@ import android.content.Context;
 import android.content.pm.LauncherApps;
 import android.os.UserHandle;
 import android.os.UserManager;
-import android.support.v4.os.BuildCompat;
+import androidx.core.os.BuildCompat;
 
 import java.util.List;
 
