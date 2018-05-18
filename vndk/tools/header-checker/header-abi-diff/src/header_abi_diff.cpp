@@ -170,7 +170,13 @@ int main(int argc, const char **argv) {
   }
   bool suppress_extending_warnings =
       allow_extensions && (status & abi_util::CompatibilityStatusIR::Extension);
-  if (!suppress_local_warnings && !suppress_extending_warnings && status) {
+
+  bool suppress_elf_warnings =
+      allow_unreferenced_elf_symbol_changes &&
+      (status & abi_util::CompatibilityStatusIR::ElfIncompatible);
+
+  if (!suppress_local_warnings && !suppress_extending_warnings &&
+      !suppress_elf_warnings && status) {
     llvm::errs() << "******************************************************\n"
                  << error_or_warning_str
                  << "VNDK library: "
