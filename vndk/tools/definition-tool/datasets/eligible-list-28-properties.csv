@@ -291,7 +291,7 @@ libdiskconfig,True,False,True,cc_library
 libdng_sdk,False,False,True,cc_library
 libdrm,False,False,True,cc_library
 libdumpstateutil,True,False,True,cc_library_shared
-libeffectsconfig,False,False,True,cc_library_shared
+libeffectsconfig,False,False,True,cc_library
 libevent,True,False,True,cc_library
 libexif,True,False,True,cc_library_shared
 libexpat,True,False,True,cc_library
@@ -329,6 +329,7 @@ libnetutils,True,False,True,cc_library_shared
 libnl,True,False,True,cc_library
 libopus,True,False,True,cc_library_shared
 libpagemap,True,False,True,cc_library
+libpcap,False,False,True,cc_library
 libpcre2,True,False,True,cc_library
 libperfmgr,False,False,True,cc_library
 libpiex,True,False,True,cc_library_shared
@@ -409,7 +410,6 @@ libstagefright_xmlparser,True,False,True,cc_library_shared
 libsuspend,True,False,True,cc_library
 libsysutils,True,False,True,cc_library_shared
 libtextclassifier_hash,False,False,True,cc_library_shared
-libtimestats_proto,False,False,True,cc_library_shared
 libtinyalsa,True,False,True,cc_library
 libtinyxml2,True,False,True,cc_library
 libui,True,False,True,cc_library_shared
