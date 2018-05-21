@@ -55,5 +55,30 @@ class SuperSpeaker {
 
   virtual ~SuperSpeaker() { }
  private:
+#if GOLDEN_CHANGE_MEMBER_NAME_SAME_OFFSET
+  int mSpeakderId_;
+#else
   int mSpeakderId;
+#endif
+
+#if GOLDEN_FUNCTION_POINTER
+#if GOLDEN_FUNCTION_POINTER_ADD_PARAM
+  SuperSpeaker * (*speaker_fp)(int, char, int);
+#else
+  SuperSpeaker * (*speaker_fp)(int, char);
+#endif
+#endif
+
+#if GOLDEN_WITH_INTERNAL_STRUCT
+#ifdef GOLDEN_WITH_PUBLIC_INTERNAL_STRUCT
+ public:
+#else
+ private:
+#endif
+  struct InternalStruct {
+    int internal;
+  };
+ private:
+  InternalStruct a;
+#endif // GOLDEN_WITH_INTERNAL_STRUCT
 };

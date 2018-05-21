@@ -1,8 +1,0 @@
-android_dlopen_ext
-dl_iterate_phdr
-dladdr
-dlclose
-dlerror
-dlopen
-dlsym
-dlvsym

@@ -15,6 +15,11 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 class VNDKLibDirTest(unittest.TestCase):
+    def test_create_vndk_dir_suffix(self):
+        self.assertEqual('', VNDKLibDir.create_vndk_dir_suffix('current'))
+        self.assertEqual('-28', VNDKLibDir.create_vndk_dir_suffix('28'))
+
+
     def test_create_vndk_sp_dir_name(self):
         self.assertEqual(
                 'vndk-sp', VNDKLibDir.create_vndk_sp_dir_name('current'))
@@ -166,6 +171,17 @@ class VNDKLibDirTest(unittest.TestCase):
 
         self.assertIn('28', vndk_lib_dirs)
         self.assertIn('29', vndk_lib_dirs)
+
+
+    def test_create_from_dirs_versioned_32bit_only(self):
+        input_dir = os.path.join(
+                SCRIPT_DIR, 'testdata', 'test_vndk_lib_dir', 'vndk_32')
+
+        vndk_lib_dirs = VNDKLibDir.create_from_dirs(
+                [os.path.join(input_dir, 'system')],
+                [os.path.join(input_dir, 'vendor')])
+
+        self.assertIn('28', vndk_lib_dirs)
 
 
     def test_get_property(self):

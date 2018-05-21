@@ -1,0 +1,3 @@
+cc_library {
+    name: "libfoo",
+}

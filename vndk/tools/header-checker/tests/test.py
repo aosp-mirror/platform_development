@@ -9,17 +9,11 @@ import_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 import_path = os.path.abspath(os.path.join(import_path, 'utils'))
 sys.path.insert(1, import_path)
 
-from utils import read_output_content
-from utils import run_header_abi_dumper
-from utils import run_abi_diff
-from utils import SOURCE_ABI_DUMP_EXT
-from utils import TARGET_ARCHS
-from utils import get_build_var
-from utils import make_library
-from utils import AOSP_DIR
+from utils import (
+        AOSP_DIR, SOURCE_ABI_DUMP_EXT, TARGET_ARCHS, read_output_content,
+        run_abi_diff, run_header_abi_dumper)
 from module import Module
 from gen_all import make_and_copy_reference_dumps
-from gen_all import DEFAULT_CFLAGS
 
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 INPUT_DIR = os.path.join(SCRIPT_DIR, 'input')
@@ -69,7 +63,7 @@ class MyTest(unittest.TestCase):
     def create_ref_dump(self, name, dir_name, target_arch):
         module_bare = Module.get_test_module_by_name(name)
         module = Module.mutate_module_for_arch(module_bare, target_arch)
-        return make_and_copy_reference_dumps(module, DEFAULT_CFLAGS,
+        return make_and_copy_reference_dumps(module, [],
                                              dir_name)
 
     def get_or_create_ref_dump(self, name, target_arch, dir_name, create):
@@ -79,15 +73,15 @@ class MyTest(unittest.TestCase):
 
     def prepare_and_run_abi_diff_all_archs(self, old_lib, new_lib,
                                            expected_return_code, flags=[],
-                                           create=True):
+                                           create_old=False, create_new=True):
         with tempfile.TemporaryDirectory() as tmp:
             for target_arch in TARGET_ARCHS:
                 old_ref_dump_path = self.get_or_create_ref_dump(old_lib,
                                                                 target_arch,
-                                                                tmp, False)
+                                                                tmp, create_old)
                 new_ref_dump_path = self.get_or_create_ref_dump(new_lib,
                                                                 target_arch,
-                                                                tmp, create)
+                                                                tmp, create_new)
                 self.prepare_and_run_abi_diff(old_ref_dump_path,
                                               new_ref_dump_path, target_arch,
                                               expected_return_code, flags)
@@ -140,6 +134,12 @@ class MyTest(unittest.TestCase):
             "libc_and_cpp", "libc_and_cpp_with_unused_struct", 1,
             ['-check-all-apis'])
 
+    def test_libc_and_cpp_with_unused_struct_and_libc_and_cpp_with_unused_cstruct(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libc_and_cpp_with_unused_struct",
+            "libc_and_cpp_with_unused_cstruct", 0,
+            ['-check-all-apis', '-allow-unreferenced-changes'])
+
     def test_libc_and_cpp_and_libc_and_cpp_with_unused_struct_check_all_advice(
         self):
         self.prepare_and_run_abi_diff_all_archs(
@@ -149,6 +149,11 @@ class MyTest(unittest.TestCase):
     def test_libgolden_cpp_return_type_diff(self):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp", "libgolden_cpp_return_type_diff", 8)
+
+    def test_libgolden_cpp_add_odr(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp", "libgolden_cpp_odr", 0,
+            ['-check-all-apis', '-allow-unreferenced-changes'])
 
     def test_libgolden_cpp_add_function(self):
         self.prepare_and_run_abi_diff_all_archs(
@@ -162,10 +167,14 @@ class MyTest(unittest.TestCase):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp", "libgolden_cpp_add_global_variable", 4)
 
+    def test_libgolden_cpp_change_global_var_access(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp_add_global_variable",
+            "libgolden_cpp_add_global_variable_private", 8)
+
     def test_libgolden_cpp_parameter_type_diff(self):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp", "libgolden_cpp_parameter_type_diff", 8)
-
 
     def test_libgolden_cpp_with_vtable_diff(self):
         self.prepare_and_run_abi_diff_all_archs("libgolden_cpp",
@@ -217,6 +226,29 @@ class MyTest(unittest.TestCase):
     def test_libreproducability(self):
         self.prepare_and_absolute_diff_all_archs("libreproducability",
                                                  "libreproducability")
+
+    def test_libgolden_cpp_member_name_changed(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp",
+            "libgolden_cpp_member_name_changed", 0)
+
+    def test_libgolden_cpp_member_function_pointer_changed(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp_function_pointer",
+            "libgolden_cpp_function_pointer_parameter_added", 8, [], True,
+            True)
+
+    def test_libgolden_cpp_internal_struct_access_upgraded(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp_internal_private_struct",
+            "libgolden_cpp_internal_public_struct", 0, [], True,
+            True)
+
+    def test_libgolden_cpp_internal_struct_access_downgraded(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp_internal_public_struct",
+            "libgolden_cpp_internal_private_struct", 8, [], True,
+            True)
 
 
 if __name__ == '__main__':

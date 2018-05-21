@@ -22,6 +22,7 @@ message BasicNamedAndTypedDecl {
   optional string referenced_type = 4;
   optional string source_file = 5;
   optional string linker_set_key = 6;
+  optional string self_type = 7;
 }
 
 message ArrayType {
@@ -53,6 +54,12 @@ message RvalueReferenceType {
   optional BasicNamedAndTypedDecl type_info = 1;
 }
 
+message FunctionType {
+  optional BasicNamedAndTypedDecl type_info = 1;
+  optional string return_type = 2;
+  repeated ParamDecl parameters = 3;
+}
+
 message FunctionDecl {
   // Return type reference
   optional string return_type = 1;
@@ -67,6 +74,7 @@ message FunctionDecl {
 message ParamDecl {
   optional string referenced_type = 1;
   optional bool default_arg = 2;
+  optional bool is_this_ptr = 3;
 }
 
 message RecordFieldDecl {
@@ -119,6 +127,10 @@ message VTableLayout {
   repeated VTableComponent vtable_components = 1;
 }
 
+message TagType {
+  optional string unique_id = 1 [default = ""];
+}
+
 message RecordType {
   optional BasicNamedAndTypedDecl type_info = 1;
   repeated RecordFieldDecl fields = 2;
@@ -128,6 +140,7 @@ message RecordType {
   optional AccessSpecifier access = 8 [default = public_access];
   optional bool is_anonymous = 9;
   optional RecordKind record_kind = 10 [default = struct_kind];
+  optional TagType tag_info = 11;
 }
 
 message EnumType {
@@ -135,6 +148,7 @@ message EnumType {
   optional string underlying_type = 2;
   repeated EnumFieldDecl enum_fields = 3;
   optional AccessSpecifier access = 4 [default = public_access];
+  optional TagType tag_info = 5;
 }
 
 message GlobalVarDecl {
@@ -162,6 +176,7 @@ message TranslationUnit {
   repeated BuiltinType builtin_types = 6;
   repeated QualifiedType qualified_types = 7;
   repeated ArrayType array_types = 8;
+  repeated FunctionType function_types = 13;
   repeated FunctionDecl functions = 9;
   repeated GlobalVarDecl global_vars = 10;
   repeated ElfFunction elf_functions = 11;

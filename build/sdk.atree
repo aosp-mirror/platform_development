@@ -142,6 +142,10 @@ bin/dx                                        build-tools/${PLATFORM_NAME}/dx
 framework/dx.jar                              build-tools/${PLATFORM_NAME}/lib/dx.jar
 bin/dexdump                                   build-tools/${PLATFORM_NAME}/dexdump
 
+# d8
+prebuilts/r8/d8-master.jar                    build-tools/${PLATFORM_NAME}/lib/d8.jar
+prebuilts/r8/d8                               build-tools/${PLATFORM_NAME}/d8
+
 # multi-dex
 ${OUT_DIR}/host/common/obj/JAVA_LIBRARIES/shrinkedAndroid_intermediates/shrinkedAndroid.jar  build-tools/${PLATFORM_NAME}/lib/shrinkedAndroid.jar
 dalvik/dx/etc/mainDexClasses.rules                                                           build-tools/${PLATFORM_NAME}/mainDexClasses.rules
@@ -165,9 +169,9 @@ ${OUT_DIR}/target/common/obj/PACKAGING/android_jar_intermediates/android.jar    
 ${OUT_DIR}/target/common/obj/PACKAGING/android_jar_intermediates/android-stubs-src.jar        platforms/${PLATFORM_NAME}/android-stubs-src.jar
 # optional API files.
 development/build/optional.json                                                               platforms/${PLATFORM_NAME}/optional/optional.json
-${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/org.apache.http.legacy_intermediates/javalib.jar  platforms/${PLATFORM_NAME}/optional/org.apache.http.legacy.jar
+${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/org.apache.http.legacy_intermediates/classes.jar  platforms/${PLATFORM_NAME}/optional/org.apache.http.legacy.jar
 # deprecated APIs
-${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android_uiautomator_intermediates/javalib.jar     platforms/${PLATFORM_NAME}/uiautomator.jar
+${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android_uiautomator_intermediates/classes.jar     platforms/${PLATFORM_NAME}/uiautomator.jar
 
 # the aidl precompiled include
 obj/framework.aidl                                                                            platforms/${PLATFORM_NAME}/framework.aidl

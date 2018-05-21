@@ -1,7 +1,13 @@
 #if INCLUDE_UNUSED_STRUCTS
+#if MAKE_UNUSED_STRUCT_C
+extern "C" {
+#endif
 struct UnusedStruct {
   int mUnusedMember;
 };
+#if MAKE_UNUSED_STRUCT_C
+}
+#endif
 #endif
 
 class Foo {

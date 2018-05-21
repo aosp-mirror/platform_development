@@ -9,6 +9,7 @@ LOCAL_SRC_FILES := $(call all-subdir-java-files) \
                 src/com/android/development/IRemoteService.aidl \
 
 LOCAL_PACKAGE_NAME := Development
+LOCAL_PRIVATE_PLATFORM_APIS := true
 LOCAL_CERTIFICATE := platform
 
 include $(BUILD_PACKAGE)

@@ -179,5 +179,36 @@ class ELFTest(unittest.TestCase):
             check_parse_dump_file_result(ELF.load_dump(f.name))
 
 
+class ELFJniLibTest(unittest.TestCase):
+    def test_lib_deps(self):
+        elf = ELF(dt_needed=['libnativehelper.so'])
+        self.assertTrue(elf.is_jni_lib())
+
+        elf = ELF(dt_needed=['libandroid_runtime.so'])
+        self.assertTrue(elf.is_jni_lib())
+
+        elf = ELF(dt_needed=['libc.so'])
+        self.assertFalse(elf.is_jni_lib())
+
+    def test_jni_symbols(self):
+        elf = ELF(imported_symbols={'JNI_CreateJavaVM'})
+        self.assertTrue(elf.is_jni_lib())
+
+        elf = ELF(exported_symbols={'JNI_CreateJavaVM'})
+        self.assertTrue(elf.is_jni_lib())
+
+        elf = ELF(imported_symbols={'Java_com_example_Example_test'})
+        self.assertTrue(elf.is_jni_lib())
+
+        elf = ELF(exported_symbols={'Java_com_example_Example_test'})
+        self.assertTrue(elf.is_jni_lib())
+
+        elf = ELF(imported_symbols={'printf'})
+        self.assertFalse(elf.is_jni_lib())
+
+        elf = ELF(exported_symbols={'printf'})
+        self.assertFalse(elf.is_jni_lib())
+
+
 if __name__ == '__main__':
     unittest.main()

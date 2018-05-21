@@ -30,8 +30,9 @@ exit_badparam () {
 }
 
 cleanup_and_exit () {
+    readonly result="$?"
     rm -rf "$TEMP_DIR"
-    exit $?
+    exit "$result"
 }
 
 trap cleanup_and_exit EXIT

@@ -3,12 +3,13 @@ record_types {
     name: "Test"
     size: 16
     alignment: 8
-    referenced_type: "Test"
+    referenced_type: "type-1"
     source_file: "/development/vndk/tools/header-checker/tests/input/example4.h"
     linker_set_key: "Test"
+    self_type: "type-1"
   }
   fields {
-    referenced_type: "int"
+    referenced_type: "type-2"
     field_offset: 64
     field_name: "c"
     access: private_access
@@ -21,7 +22,7 @@ record_types {
     }
     vtable_components {
       kind: RTTI
-      mangled_component_name: "Test"
+      mangled_component_name: "_ZTI4Test"
       component_value: 0
     }
     vtable_components {
@@ -32,24 +33,28 @@ record_types {
   }
   access: public_access
   record_kind: class_kind
+  tag_info {
+    unique_id: "_ZTS4Test"
+  }
 }
 record_types {
   type_info {
     name: "TestChild"
     size: 16
     alignment: 8
-    referenced_type: "TestChild"
+    referenced_type: "type-3"
     source_file: "/development/vndk/tools/header-checker/tests/input/example4.h"
     linker_set_key: "TestChild"
+    self_type: "type-3"
   }
   fields {
-    referenced_type: "int"
+    referenced_type: "type-2"
     field_offset: 96
     field_name: "d"
     access: private_access
   }
   base_specifiers {
-    referenced_type: "Test"
+    referenced_type: "type-1"
     is_virtual: false
     access: public_access
   }
@@ -61,7 +66,7 @@ record_types {
     }
     vtable_components {
       kind: RTTI
-      mangled_component_name: "TestChild"
+      mangled_component_name: "_ZTI9TestChild"
       component_value: 0
     }
     vtable_components {
@@ -72,25 +77,8 @@ record_types {
   }
   access: public_access
   record_kind: class_kind
-}
-pointer_types {
-  type_info {
-    name: "Test *"
-    size: 8
-    alignment: 8
-    referenced_type: "Test"
-    source_file: "/development/vndk/tools/header-checker/tests/input/example4.h"
-    linker_set_key: "Test *"
-  }
-}
-pointer_types {
-  type_info {
-    name: "TestChild *"
-    size: 8
-    alignment: 8
-    referenced_type: "TestChild"
-    source_file: "/development/vndk/tools/header-checker/tests/input/example4.h"
-    linker_set_key: "TestChild *"
+  tag_info {
+    unique_id: "_ZTS9TestChild"
   }
 }
 builtin_types {
@@ -98,32 +86,11 @@ builtin_types {
     name: "int"
     size: 4
     alignment: 4
-    referenced_type: "int"
+    referenced_type: "type-2"
     source_file: ""
     linker_set_key: "int"
+    self_type: "type-2"
   }
   is_unsigned: false
   is_integral: true
-}
-functions {
-  return_type: "int"
-  function_name: "Test::foo"
-  source_file: "/development/vndk/tools/header-checker/tests/input/example4.h"
-  parameters {
-    referenced_type: "Test *"
-    default_arg: false
-  }
-  linker_set_key: "_ZN4Test3fooEv"
-  access: private_access
-}
-functions {
-  return_type: "int"
-  function_name: "TestChild::foo"
-  source_file: "/development/vndk/tools/header-checker/tests/input/example4.h"
-  parameters {
-    referenced_type: "TestChild *"
-    default_arg: false
-  }
-  linker_set_key: "_ZN9TestChild3fooEv"
-  access: private_access
 }
