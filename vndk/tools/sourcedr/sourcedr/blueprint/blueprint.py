@@ -825,7 +825,7 @@ class RecursiveParser(object):
     def _parse_file_recursive(self, path, env, evaluate, use_subdirs):
         """Parse a blueprint file and recursively."""
 
-        self.visited.add(os.path.abspath(path))
+        self.visited.add(path)
 
         sub_env = self._parse_file(path, env, evaluate)
 
@@ -839,7 +839,7 @@ class RecursiveParser(object):
         sub_env.pop('optional_subdirs', None)
 
         for sub_file_path in sub_file_paths:
-            if os.path.abspath(sub_file_path) not in self.visited:
+            if sub_file_path not in self.visited:
                 self._parse_file_recursive(sub_file_path, sub_env, evaluate,
                                            use_subdirs)
         return sub_env
@@ -849,6 +849,8 @@ class RecursiveParser(object):
         """Scan all files with the specified name and parse them."""
 
         rootdir = os.path.dirname(path)
+        assert rootdir, 'rootdir is empty but must be non-empty'
+
         envs = [(rootdir, env)]
         assert env is not None
 
@@ -887,6 +889,8 @@ class RecursiveParser(object):
 
         if env is None:
             env = {}
+
+        path = os.path.abspath(path)
 
         sub_env = self._read_file(path, env)[1]
 
