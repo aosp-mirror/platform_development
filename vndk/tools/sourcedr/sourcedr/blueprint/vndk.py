@@ -21,7 +21,7 @@ correctness of dependencies."""
 
 import copy
 
-from blueprint import RecursiveParser, evaluate_defaults
+from blueprint import RecursiveParser, evaluate_defaults, fill_module_namespaces
 
 
 class Module(object):
@@ -137,12 +137,16 @@ class ModuleClassifier(object):
             self.vendor_available_libs[name] = module
 
 
-    def _add_modules_from_parsed_pairs(self, parsed_items):
+    def _add_modules_from_parsed_pairs(self, parsed_items, namespaces):
         """Add modules from the parsed (rule, attrs) pairs."""
 
         for rule, attrs in parsed_items:
             name = attrs.get('name')
             if name is None:
+                continue
+
+            namespace = attrs.get('_namespace')
+            if namespace not in namespaces:
                 continue
 
             if rule == 'llndk_library':
@@ -169,19 +173,22 @@ class ModuleClassifier(object):
                 continue
 
 
-    def parse_root_bp(self, root_bp_path):
+    def parse_root_bp(self, root_bp_path, namespaces=None):
         """Parse blueprint files and add module definitions."""
+
+        namespaces = {''} if namespaces is None else set(namespaces)
 
         parser = RecursiveParser()
         parser.parse_file(root_bp_path)
         parsed_items = evaluate_defaults(parser.modules)
+        parsed_items = fill_module_namespaces(root_bp_path, parsed_items)
 
-        self._add_modules_from_parsed_pairs(parsed_items)
+        self._add_modules_from_parsed_pairs(parsed_items, namespaces)
 
 
     @classmethod
-    def create_from_root_bp(cls, root_bp_path):
+    def create_from_root_bp(cls, root_bp_path, namespaces=None):
         """Create a ModuleClassifier from a root blueprint file."""
         result = cls()
-        result.parse_root_bp(root_bp_path)
+        result.parse_root_bp(root_bp_path, namespaces)
         return result

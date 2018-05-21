@@ -965,3 +965,31 @@ def evaluate_defaults(modules):
             attrs = evaluate_default(attrs, named_modules[default][1])
         modules[i] = (ident, attrs)
     return modules
+
+
+def fill_module_namespaces(root_bp, modules):
+    """Collect soong_namespace definition and set a `_namespace` property to
+    each module definitions."""
+
+    # Collect all namespaces
+    rootdir = os.path.dirname(os.path.abspath(root_bp))
+    namespaces = {rootdir}
+    for ident, attrs in modules:
+        if ident == 'soong_namespace':
+            namespaces.add(os.path.dirname(attrs['_path']))
+
+    # Build a path matcher for module namespaces
+    namespaces = sorted(namespaces, reverse=True)
+    path_matcher = re.compile(
+        '|'.join('(' + re.escape(x) + '/.*)' for x in namespaces))
+
+    # Trim the root directory prefix
+    rootdir_prefix_len = len(rootdir) + 1
+    namespaces = [path[rootdir_prefix_len:] for path in namespaces]
+
+    # Fill in module namespaces
+    for ident, attrs in modules:
+        match = path_matcher.match(attrs['_path'])
+        attrs['_namespace'] = namespaces[match.lastindex - 1]
+
+    return modules
