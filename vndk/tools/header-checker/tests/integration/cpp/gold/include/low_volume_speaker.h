@@ -16,6 +16,10 @@
 #define CLASS_MEMBERS \
     unsigned int speaker_uint_t;\
     const float *const_speaker_float_star;
+#elif GOLDEN_CHANGE_MEMBER_NAME_SAME_OFFSET
+#define CLASS_MEMBERS \
+    unsigned int speaker_uint_t_;\
+    float *speaker_float_star_;
 #else
 #define CLASS_MEMBERS \
     unsigned int speaker_uint_t; \

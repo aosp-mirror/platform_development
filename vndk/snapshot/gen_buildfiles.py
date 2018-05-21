@@ -15,20 +15,46 @@
 # limitations under the License.
 #
 
+import glob
 import os
 import sys
 
+import utils
+
 
 class GenBuildFile(object):
-    """Generates Android.mk and Android.bp for prebuilts/vndk/v{version}."""
+    """Generates Android.mk and Android.bp for VNDK snapshot.
 
+    VNDK snapshot directory structure under prebuilts/vndk/v{version}:
+        {SNAPSHOT_VARIANT}/
+            Android.bp
+            arch-{TARGET_ARCH}-{TARGET_ARCH_VARIANT}/
+                shared/
+                    vndk-core/
+                        (VNDK-core libraries, e.g. libbinder.so)
+                    vndk-sp/
+                        (VNDK-SP libraries, e.g. libc++.so)
+            arch-{TARGET_2ND_ARCH}-{TARGET_2ND_ARCH_VARIANT}/
+                shared/
+                    vndk-core/
+                        (VNDK-core libraries, e.g. libbinder.so)
+                    vndk-sp/
+                        (VNDK-SP libraries, e.g. libc++.so)
+            configs/
+                (various *.txt configuration files, e.g. ld.config.*.txt)
+        ... (other {SNAPSHOT_VARIANT}/ directories)
+        common/
+            Android.mk
+            NOTICE_FILES/
+                (license files, e.g. libfoo.so.txt)
+    """
     INDENT = '    '
-    ETC_LIST = ['ld.config.txt', 'llndk.libraries.txt', 'vndksp.libraries.txt']
+    ETC_MODULES = [
+        'ld.config.txt', 'llndk.libraries.txt', 'vndksp.libraries.txt'
+    ]
 
     # TODO(b/70312118): Parse from soong build system
-    RELATIVE_INSTALL_PATHS = {
-        'android.hidl.memory@1.0-impl.so': 'hw'
-    }
+    RELATIVE_INSTALL_PATHS = {'android.hidl.memory@1.0-impl.so': 'hw'}
 
     def __init__(self, install_dir, vndk_version):
         """GenBuildFile constructor.
@@ -40,35 +66,49 @@ class GenBuildFile(object):
         """
         self._install_dir = install_dir
         self._vndk_version = vndk_version
-        self._mkfile = os.path.join(install_dir, 'Android.mk')
-        self._bpfile = os.path.join(install_dir, 'Android.bp')
+        self._etc_paths = self._get_etc_paths()
+        self._snapshot_variants = utils.get_snapshot_variants(install_dir)
+        self._mkfile = os.path.join(install_dir, utils.ANDROID_MK_PATH)
         self._vndk_core = self._parse_lib_list('vndkcore.libraries.txt')
-        self._vndk_sp = self._parse_lib_list('vndksp.libraries.txt')
+        self._vndk_sp = self._parse_lib_list(
+            os.path.basename(self._etc_paths['vndksp.libraries.txt']))
         self._vndk_private = self._parse_lib_list('vndkprivate.libraries.txt')
 
+    def _get_etc_paths(self):
+        """Returns a map of relative file paths for each ETC module."""
+
+        etc_paths = dict()
+        for etc_module in self.ETC_MODULES:
+            etc_pattern = '{}*'.format(os.path.splitext(etc_module)[0])
+            etc_path = glob.glob(
+                os.path.join(self._install_dir, utils.CONFIG_DIR_PATH_PATTERN,
+                             etc_pattern))[0]
+            rel_etc_path = etc_path.replace(self._install_dir, '')[1:]
+            etc_paths[etc_module] = rel_etc_path
+        return etc_paths
+
     def _parse_lib_list(self, txt_filename):
-        """Returns a sorted union list of libraries found in provided filenames.
+        """Returns a map of VNDK library lists per VNDK snapshot variant.
 
         Args:
-          txt_filename: string, file name in VNDK snapshot
-        """
-        prebuilt_list = []
-        txts = find(self._install_dir, [txt_filename])
-        for txt in txts:
-            path_to_txt = os.path.join(self._install_dir, txt)
-            with open(path_to_txt, 'r') as f:
-                prebuilts = f.read().strip().split('\n')
-                for prebuilt in prebuilts:
-                    if prebuilt not in prebuilt_list:
-                        prebuilt_list.append(prebuilt)
+          txt_filename: string, name of snapshot config file
 
-        return sorted(prebuilt_list)
+        Returns:
+          dict, e.g. {'arm64': ['libfoo.so', 'libbar.so', ...], ...}
+        """
+        lib_map = dict()
+        for txt_path in utils.find(self._install_dir, [txt_filename]):
+            variant = utils.variant_from_path(txt_path)
+            abs_path_of_txt = os.path.join(self._install_dir, txt_path)
+            with open(abs_path_of_txt, 'r') as f:
+                lib_map[variant] = f.read().strip().split('\n')
+        return lib_map
 
     def generate_android_mk(self):
         """Autogenerates Android.mk."""
 
         etc_buildrules = []
-        for prebuilt in self.ETC_LIST:
+        for prebuilt in self.ETC_MODULES:
             etc_buildrules.append(self._gen_etc_prebuilt(prebuilt))
 
         with open(self._mkfile, 'w') as mkfile:
@@ -80,43 +120,48 @@ class GenBuildFile(object):
             mkfile.write('\n')
 
     def generate_android_bp(self):
-        """Autogenerates Android.bp."""
+        """Autogenerates Android.bp file for each VNDK snapshot variant."""
 
-        vndk_core_buildrules = self._gen_vndk_shared_prebuilts(
-            self._vndk_core, False)
-        vndk_sp_buildrules = self._gen_vndk_shared_prebuilts(
-            self._vndk_sp, True)
+        for variant in self._snapshot_variants:
+            bpfile = os.path.join(self._install_dir, variant, 'Android.bp')
+            vndk_core_buildrules = self._gen_vndk_shared_prebuilts(
+                self._vndk_core[variant], variant, False)
+            vndk_sp_buildrules = self._gen_vndk_shared_prebuilts(
+                self._vndk_sp[variant], variant, True)
 
-        with open(self._bpfile, 'w') as bpfile:
-            bpfile.write(self._gen_autogen_msg('/'))
-            bpfile.write('\n')
-            bpfile.write(self._gen_bp_phony())
-            bpfile.write('\n')
-            bpfile.write('\n'.join(vndk_core_buildrules))
-            bpfile.write('\n'.join(vndk_sp_buildrules))
+            with open(bpfile, 'w') as bpfile:
+                bpfile.write(self._gen_autogen_msg('/'))
+                bpfile.write('\n')
+                bpfile.write(self._gen_bp_phony(variant))
+                bpfile.write('\n')
+                bpfile.write('\n'.join(vndk_core_buildrules))
+                bpfile.write('\n')
+                bpfile.write('\n'.join(vndk_sp_buildrules))
 
     def _gen_autogen_msg(self, comment_char):
         return ('{0}{0} THIS FILE IS AUTOGENERATED BY '
                 'development/vndk/snapshot/gen_buildfiles.py\n'
                 '{0}{0} DO NOT EDIT\n'.format(comment_char))
 
-    def _get_versioned_name(self, prebuilt, is_etc):
+    def _get_versioned_name(self, prebuilt, variant, is_etc):
         """Returns the VNDK version-specific module name for a given prebuilt.
 
         The VNDK version-specific module name is defined as follows:
-        For a VNDK shared library: "libfoo.so" -> "libfoo.vndk.{version}.vendor"
-        For an ETC text file: "foo.txt" -> "foo.{version}.txt"
+        For a VNDK shared lib: 'libfoo.so'
+                            -> 'libfoo.vndk.{version}.{variant}.vendor'
+        For an ETC module: 'foo.txt' -> 'foo.{version}.txt'
 
         Args:
           prebuilt: string, name of the prebuilt object
+          variant: string, VNDK snapshot variant (e.g. 'arm64')
           is_etc: bool, True if the LOCAL_MODULE_CLASS of prebuilt is 'ETC'
         """
         name, ext = os.path.splitext(prebuilt)
         if is_etc:
             versioned_name = '{}.{}{}'.format(name, self._vndk_version, ext)
         else:
-            versioned_name = '{}.vndk.{}.vendor'.format(
-                name, self._vndk_version)
+            versioned_name = '{}.vndk.{}.{}.vendor'.format(
+                name, self._vndk_version, variant)
 
         return versioned_name
 
@@ -126,36 +171,37 @@ class GenBuildFile(object):
         Args:
           prebuilt: string, name of ETC prebuilt object
         """
-
-        etc_path = find(self._install_dir, prebuilt)[0]
+        etc_path = self._etc_paths[prebuilt]
         etc_sub_path = etc_path[etc_path.index('/') + 1:]
 
-        return (
-            '#######################################\n'
-            '# {prebuilt}\n'
-            'include $(CLEAR_VARS)\n'
-            'LOCAL_MODULE := {versioned_name}\n'
-            'LOCAL_SRC_FILES := arch-$(TARGET_ARCH)-$(TARGET_ARCH_VARIANT)/'
-            '{etc_sub_path}\n'
-            'LOCAL_MODULE_CLASS := ETC\n'
-            'LOCAL_MODULE_PATH := $(TARGET_OUT_ETC)\n'
-            'LOCAL_MODULE_STEM := $(LOCAL_MODULE)\n'
-            'include $(BUILD_PREBUILT)\n'.format(
-                prebuilt=prebuilt,
-                versioned_name=self._get_versioned_name(prebuilt, True),
-                etc_sub_path=etc_sub_path))
+        return ('#######################################\n'
+                '# {prebuilt}\n'
+                'include $(CLEAR_VARS)\n'
+                'LOCAL_MODULE := {versioned_name}\n'
+                'LOCAL_SRC_FILES := ../$(TARGET_ARCH)/{etc_sub_path}\n'
+                'LOCAL_MODULE_CLASS := ETC\n'
+                'LOCAL_MODULE_PATH := $(TARGET_OUT_ETC)\n'
+                'LOCAL_MODULE_STEM := $(LOCAL_MODULE)\n'
+                'include $(BUILD_PREBUILT)\n'.format(
+                    prebuilt=prebuilt,
+                    versioned_name=self._get_versioned_name(
+                        prebuilt, None, True),
+                    etc_sub_path=etc_sub_path))
 
-    def _gen_bp_phony(self):
-        """Generates build rule for phony package 'vndk_v{version}'."""
+    def _gen_bp_phony(self, variant):
+        """Generates build rule for phony package 'vndk_v{ver}_{variant}'.
 
+        Args:
+          variant: string, VNDK snapshot variant (e.g. 'arm64')
+        """
         required = []
+        for prebuilts in (self._vndk_core[variant], self._vndk_sp[variant]):
+            for prebuilt in prebuilts:
+                required.append(
+                    self._get_versioned_name(prebuilt, variant, False))
 
-        for prebuilts_list in (self._vndk_core, self._vndk_sp):
-            for prebuilt in prebuilts_list:
-                required.append(self._get_versioned_name(prebuilt, False))
-
-        for prebuilt in self.ETC_LIST:
-            required.append(self._get_versioned_name(prebuilt, True))
+        for prebuilt in self.ETC_MODULES:
+            required.append(self._get_versioned_name(prebuilt, None, True))
 
         required_str = ['"{}",'.format(prebuilt) for prebuilt in required]
         required_formatted = '\n{ind}{ind}'.format(
@@ -167,63 +213,54 @@ class GenBuildFile(object):
                                   required_formatted=required_formatted))
 
         return ('phony {{\n'
-                '{ind}name: "vndk_v{ver}",\n'
+                '{ind}name: "vndk_v{ver}_{variant}",\n'
                 '{required_buildrule}'
                 '}}\n'.format(
                     ind=self.INDENT,
                     ver=self._vndk_version,
+                    variant=variant,
                     required_buildrule=required_buildrule))
 
-    def _gen_vndk_shared_prebuilts(self, prebuilts, is_vndk_sp):
+    def _gen_vndk_shared_prebuilts(self, prebuilts, variant, is_vndk_sp):
         """Returns list of build rules for given prebuilts.
 
         Args:
           prebuilts: list of VNDK shared prebuilts
+          variant: string, VNDK snapshot variant (e.g. 'arm64')
           is_vndk_sp: bool, True if prebuilts are VNDK_SP libs
         """
         build_rules = []
         for prebuilt in prebuilts:
             build_rules.append(
-                self._gen_vndk_shared_prebuilt(prebuilt, is_vndk_sp))
+                self._gen_vndk_shared_prebuilt(prebuilt, variant, is_vndk_sp))
         return build_rules
 
-    def _gen_vndk_shared_prebuilt(self, prebuilt, is_vndk_sp):
+    def _gen_vndk_shared_prebuilt(self, prebuilt, variant, is_vndk_sp):
         """Returns build rule for given prebuilt.
 
         Args:
           prebuilt: string, name of prebuilt object
+          variant: string, VNDK snapshot variant (e.g. 'arm64')
           is_vndk_sp: bool, True if prebuilt is a VNDK_SP lib
         """
-        def get_arch_srcs(prebuilt):
-            """Returns build rule for arch specific srcs.
 
-            e.g.,
-            arch: {
-                arm: {
-                    srcs: ["..."]
-                },
-                arm64: {
-
-                },
-                ...
-            }
+        def get_notice_file(prebuilt):
+            """Returns build rule for notice file (attribute 'notice').
 
             Args:
               prebuilt: string, name of prebuilt object
             """
-            arch_srcs = '{ind}arch: {{\n'.format(ind=self.INDENT)
-            src_paths = find(self._install_dir, [prebuilt])
-            # if len(src_paths) < 4:
-            #     print prebuilt, src_paths
-            for src in sorted(src_paths):
-                arch_srcs += ('{ind}{ind}{arch}: {{\n'
-                              '{ind}{ind}{ind}srcs: ["{src}"],\n'
-                              '{ind}{ind}}},\n'.format(
-                                  ind=self.INDENT,
-                                  arch=arch_from_path(src),
-                                  src=src))
-            arch_srcs += '{ind}}},\n'.format(ind=self.INDENT)
-            return arch_srcs
+            notice = ''
+            notice_file_name = '{}.txt'.format(prebuilt)
+            notices_dir = os.path.join(self._install_dir,
+                                       utils.NOTICE_FILES_DIR_PATH)
+            notice_files = utils.find(notices_dir, [notice_file_name])
+            if len(notice_files) > 0:
+                notice = '{ind}notice: "{notice_file_path}",\n'.format(
+                    ind=self.INDENT,
+                    notice_file_path=os.path.join(
+                        '..', utils.NOTICE_FILES_DIR_PATH, notice_files[0]))
+            return notice
 
         def get_rel_install_path(prebuilt):
             """Returns build rule for 'relative_install_path'.
@@ -238,24 +275,59 @@ class GenBuildFile(object):
                                      .format(ind=self.INDENT, path=path))
             return rel_install_path
 
+        def get_arch_srcs(prebuilt, variant):
+            """Returns build rule for arch specific srcs.
+
+            e.g.,
+                arch: {
+                    arm: {
+                        srcs: ["..."]
+                    },
+                    arm64: {
+                        srcs: ["..."]
+                    },
+                }
+
+            Args:
+              prebuilt: string, name of prebuilt object
+              variant: string, VNDK snapshot variant (e.g. 'arm64')
+            """
+            arch_srcs = '{ind}arch: {{\n'.format(ind=self.INDENT)
+            variant_path = os.path.join(self._install_dir, variant)
+            src_paths = utils.find(variant_path, [prebuilt])
+            for src in sorted(src_paths):
+                arch_srcs += ('{ind}{ind}{arch}: {{\n'
+                              '{ind}{ind}{ind}srcs: ["{src}"],\n'
+                              '{ind}{ind}}},\n'.format(
+                                  ind=self.INDENT,
+                                  arch=utils.arch_from_path(
+                                      os.path.join(variant, src)),
+                                  src=src))
+            arch_srcs += '{ind}}},\n'.format(ind=self.INDENT)
+            return arch_srcs
+
         name = os.path.splitext(prebuilt)[0]
-        vendor_available = 'false' if prebuilt in self._vndk_private else 'true'
+        vendor_available = str(
+            prebuilt not in self._vndk_private[variant]).lower()
         if is_vndk_sp:
             vndk_sp = '{ind}{ind}support_system_process: true,\n'.format(
                 ind=self.INDENT)
         else:
             vndk_sp = ''
-        arch_srcs = get_arch_srcs(prebuilt)
+        notice = get_notice_file(prebuilt)
         rel_install_path = get_rel_install_path(prebuilt)
+        arch_srcs = get_arch_srcs(prebuilt, variant)
 
         return ('vndk_prebuilt_shared {{\n'
                 '{ind}name: "{name}",\n'
                 '{ind}version: "{ver}",\n'
+                '{ind}target_arch: "{target_arch}",\n'
                 '{ind}vendor_available: {vendor_available},\n'
                 '{ind}vndk: {{\n'
                 '{ind}{ind}enabled: true,\n'
                 '{vndk_sp}'
                 '{ind}}},\n'
+                '{notice}'
                 '{rel_install_path}'
                 '{arch_srcs}'
                 '}}\n'.format(
@@ -263,38 +335,11 @@ class GenBuildFile(object):
                     name=name,
                     ver=self._vndk_version,
                     vendor_available=vendor_available,
+                    target_arch=variant,
                     vndk_sp=vndk_sp,
+                    notice=notice,
                     rel_install_path=rel_install_path,
                     arch_srcs=arch_srcs))
-
-
-def find(path, names):
-    """Finds a list of files in a directory that match the given names.
-
-    Args:
-      path: string, absolute path of directory from which to find files
-      names: list of strings, names of the files to find
-    """
-    found = []
-    for root, _, files in os.walk(path):
-        for file_name in sorted(files):
-            if file_name in names:
-                abspath = os.path.abspath(os.path.join(root, file_name))
-                rel_to_root = abspath.replace(os.path.abspath(path), '')
-                found.append(rel_to_root[1:])  # strip leading /
-    return found
-
-
-def arch_from_path(path):
-    """Extracts archfrom given VNDK snapshot path.
-
-    Args:
-      path: string, path relative to prebuilts/vndk/v{version}
-
-    Returns:
-      arch string, (e.g., "arm" or "arm64" or "x86" or "x86_64")
-    """
-    return path.split('/')[0].split('-')[1]
 
 
 def main():
@@ -303,13 +348,9 @@ def main():
     Note: VNDK snapshot must be already installed under
       prebuilts/vndk/v{version}.
     """
-    ANDROID_BUILD_TOP = os.getenv('ANDROID_BUILD_TOP')
-    if not ANDROID_BUILD_TOP:
-        print('Error: Missing ANDROID_BUILD_TOP env variable. Please run '
-              '\'. build/envsetup.sh; lunch <build target>\'. Exiting script.')
-        sys.exit(1)
-    PREBUILTS_VNDK_DIR = os.path.realpath(
-        os.path.join(ANDROID_BUILD_TOP, 'prebuilts/vndk'))
+    ANDROID_BUILD_TOP = utils.get_android_build_top()
+    PREBUILTS_VNDK_DIR = utils.join_realpath(ANDROID_BUILD_TOP,
+                                             'prebuilts/vndk')
 
     vndk_version = 27  # set appropriately
     install_dir = os.path.join(PREBUILTS_VNDK_DIR, 'v{}'.format(vndk_version))

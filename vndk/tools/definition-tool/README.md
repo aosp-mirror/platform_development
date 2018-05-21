@@ -75,7 +75,7 @@ it with `--vendor` option.  For example:
 
     python3 vndk_definition_tool.py vndk \
         --system ${ANDROID_PRODUCT_OUT}/system \
-        --system-dir-igored vendor \
+        --system-dir-ignored vendor \
         --vendor ${ANDROID_PRODUCT_OUT}/system/vendor \
         # ...
 

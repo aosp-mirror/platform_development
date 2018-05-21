@@ -100,26 +100,11 @@ def find(upstream, downstream, working_dir):
     A set of downstream commits missing upstream.
   """
 
-  commits_not_upstreamed = set()
   revlist_output = git(['-C', working_dir, 'rev-list', '--no-merges',
                         '%s..%s' % (upstream, downstream)])
   downstream_only_commits = set(revlist_output.splitlines())
-  insertion_commits = set()
-
-  # If there are no downstream-only commits there's no point in
-  # futher filtering
-  if downstream_only_commits:
-    insertion_commits = find_insertion_commits(upstream, downstream,
-                                               working_dir)
-
-  # The commits that are only downstream and are visible in 'git blame' are the
-  # ones that insert lines in the diff between upstream and downstream.
-  commits_not_upstreamed.update(
-      downstream_only_commits.intersection(insertion_commits))
-
-  # TODO(diegowilson) add commits that deleted lines
-
-  return commits_not_upstreamed
+  # TODO(slobdell b/78283222) resolve commits not upstreamed that are purely reverts
+  return downstream_only_commits
 
 
 def main():

@@ -1,6 +1,0 @@
-dl_unwind_find_exidx
-dladdr
-dlclose
-dlerror
-dlopen
-dlsym

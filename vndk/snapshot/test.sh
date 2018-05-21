@@ -22,11 +22,11 @@
 #   First, generate VNDK snapshots with development/vndk/snapshot/build.sh or
 #   fetch VNDK snapshot build artifacts to $DIST_DIR, then run this script.
 
-set -euo pipefail
+set -eo pipefail
 
 if [ "$#" -ne 1 ]; then
-    echo "Usage: \"$0 all\" to test all four arch snapshots at once."
-    echo "Usage: \"$0 TARGET_ARCH\" to test for a VNDK snapshot of a specific arch."
+    echo "Usage: \"$0 all\" to test all four VNDK snapshot variants at once."
+    echo "Usage: \"$0 TARGET_ARCH\" to test a VNDK snapshot of a specific arch."
     exit 1
 fi
 
@@ -50,6 +50,10 @@ if [[ -z $DIST_DIR ]]; then
     fi
 fi
 
+# Get PLATFORM_VNDK_VERSION
+source "$ANDROID_BUILD_TOP/build/envsetup.sh" >/dev/null
+PLATFORM_VNDK_VERSION=`get_build_var PLATFORM_VNDK_VERSION`
+
 SNAPSHOT_TOP=$DIST_DIR/android-vndk-snapshot
 SNAPSHOT_TEMPFILE=$DIST_DIR/snapshot_libs.txt
 SYSTEM_TEMPFILE=$DIST_DIR/system_libs.txt
@@ -58,7 +62,6 @@ RED='\033[0;31m'
 NC='\033[0m'
 PASS="::: PASS :::"
 FAIL="${RED}::: FAIL :::${NC}"
-
 
 
 function remove_unzipped_snapshot {
@@ -76,50 +79,78 @@ function remove_unzipped_snapshot {
 #
 # Arguments:
 #   $1: vndk_type: string, one of [vndk-core, vndk-sp]
-#   $2: arch: string, one of [arm, arm64, x86, x86_64]
+#   $2: target_arch: string, one of [arm, arm64, x86, x86_64]
 #######################################
 function compare_vndk_libs() {
     local vndk_type=$1
-    local arch=$2
+    local target_arch=$2
+    local target_arch_2nd=''
     local product
     local bitness
     local snapshot_dir
+    local snapshot_dir_2nd
+    local vndk_dir_suffix
     local system_vndk_dir
-    local system_dir
+    local system_lib_dir
+    local system_lib_dir_2nd
 
-    if [[ $arch == 'arm64' ]]; then
+    if [[ $target_arch == 'arm64' ]]; then
         product='generic_arm64_ab'
-    elif [[ $arch == 'arm' ]]; then
-        product='generic'
-    elif [[ $arch == 'x86_64' ]]; then
-        product='generic_x86_64'
-    elif [[ $arch == 'x86' ]]; then
-        product='generic_x86'
+        target_arch_2nd='arm'
+    elif [[ $target_arch == 'arm' ]]; then
+        product='generic_arm_ab'
+    elif [[ $target_arch == 'x86_64' ]]; then
+        product='generic_x86_64_ab'
+        target_arch_2nd='x86'
+    elif [[ $target_arch == 'x86' ]]; then
+        product='generic_x86_ab'
     fi
 
-    if [[ ${arch:-2:length} =~ '64' ]]; then
+    if [[ ${target_arch:-2:length} =~ '64' ]]; then
         bitness='64'
     else
         bitness=''
     fi
 
-    snapshot_dir=$SNAPSHOT_TOP/arch-$arch*/shared/$vndk_type
-
-    if [[ $vndk_type == 'vndk-core' ]]; then
-        system_vndk_dir='vndk'
+    if [[ -z $PLATFORM_VNDK_VERSION ]]; then
+        vndk_dir_suffix=""
     else
-        system_vndk_dir='vndk-sp'
+        vndk_dir_suffix="-$PLATFORM_VNDK_VERSION"
     fi
 
-    system_dir=$ANDROID_BUILD_TOP/out/target/product/$product/system/lib$bitness/$system_vndk_dir
+    if [[ $vndk_type == 'vndk-core' ]]; then
+        system_vndk_dir="vndk${vndk_dir_suffix}"
+    else
+        system_vndk_dir="vndk-sp${vndk_dir_suffix}"
+    fi
 
-    ls -1 $snapshot_dir > $SNAPSHOT_TEMPFILE
-    find $system_dir -type f | xargs -n 1 -I file bash -c "basename file" | sort > $SYSTEM_TEMPFILE
+    function diff_vndk_dirs() {
+        local snapshot=$1
+        local system=$2
+        local local_module_target_arch=$3
 
-    echo "Comparing libs for VNDK=$vndk_type and ARCH=$arch"
-    (diff --old-line-format="Only found in VNDK snapshot: %L" --new-line-format="Only found in system/lib*: %L" \
-      --unchanged-line-format="" $SNAPSHOT_TEMPFILE $SYSTEM_TEMPFILE && echo $PASS) \
-    || (echo -e $FAIL; exit 1)
+        ls -1 $snapshot > $SNAPSHOT_TEMPFILE
+        find $system -type f | xargs -n 1 -I file bash -c "basename file" | sort > $SYSTEM_TEMPFILE
+
+        echo "Comparing libs for VNDK=$vndk_type, SNAPSHOT_VARIANT=$target_arch, ARCH=$local_module_target_arch"
+        echo "Snapshot dir: $snapshot"
+        echo "System dir: $system"
+        (diff --old-line-format="Only found in VNDK snapshot: %L" \
+              --new-line-format="Only found in /system/lib*: %L" \
+              --unchanged-line-format="" \
+              $SNAPSHOT_TEMPFILE $SYSTEM_TEMPFILE && echo $PASS) \
+        || (echo -e $FAIL; exit 1)
+    }
+
+    snapshot_dir=$SNAPSHOT_TOP/$target_arch/arch-$target_arch-*/shared/$vndk_type
+    system_lib_dir=$ANDROID_BUILD_TOP/out/target/product/$product/system/lib$bitness/$system_vndk_dir
+    diff_vndk_dirs $snapshot_dir $system_lib_dir $target_arch
+
+    if [[ -n $target_arch_2nd ]]; then
+        snapshot_dir_2nd=$SNAPSHOT_TOP/$target_arch/arch-$target_arch_2nd-*/shared/$vndk_type
+        system_lib_dir_2nd=$ANDROID_BUILD_TOP/out/target/product/$product/system/lib/$system_vndk_dir
+        diff_vndk_dirs $snapshot_dir_2nd $system_lib_dir_2nd $target_arch_2nd
+    fi
 }
 
 
@@ -132,23 +163,32 @@ function compare_vndk_libs() {
 function run_test_cases() {
     local arch=$1
     local snapshot_zip=$DIST_DIR/android-vndk-$arch.zip
+    local snapshot_variant_top=$SNAPSHOT_TOP/$arch
 
     echo "[Setup] Unzipping \"android-vndk-$arch.zip\""
     unzip -q $snapshot_zip -d $SNAPSHOT_TOP
 
-    echo "[Test] Comparing VNDK-core and VNDK-SP libs in snapshot vs system/lib*"
+    echo "[Test] Comparing VNDK-core and VNDK-SP libs in snapshot vs /system/lib*"
     compare_vndk_libs 'vndk-core' $arch
     compare_vndk_libs 'vndk-sp' $arch
 
     echo "[Test] Checking required config files are present"
+
+    if [[ -z $PLATFORM_VNDK_VERSION ]]; then
+        config_file_suffix=""
+    else
+        config_file_suffix=".$PLATFORM_VNDK_VERSION"
+    fi
+
     config_files=(
-        'ld.config.txt'
-        'llndk.libraries.txt'
-        'vndkcore.libraries.txt'
-        'vndkprivate.libraries.txt'
-        'vndksp.libraries.txt')
+        "ld.config$config_file_suffix.txt"
+        "llndk.libraries$config_file_suffix.txt"
+        "vndksp.libraries$config_file_suffix.txt"
+        "vndkcore.libraries.txt"
+        "vndkprivate.libraries.txt"
+        "module_paths.txt")
     for config_file in "${config_files[@]}"; do
-        config_file_abs_path=$SNAPSHOT_TOP/arch-$arch*/configs/$config_file
+        config_file_abs_path=$snapshot_variant_top/configs/$config_file
         if [ ! -e $config_file_abs_path ]; then
             echo -e "$FAIL The file \"$config_file_abs_path\" was not found in snapshot."
             exit 1
@@ -160,10 +200,9 @@ function run_test_cases() {
     echo "[Test] Checking directory structure of snapshot"
     directories=(
         'configs/'
-        'shared/vndk-core/'
-        'shared/vndk-sp/')
+        'NOTICE_FILES/')
     for sub_dir in "${directories[@]}"; do
-        dir_abs_path=$SNAPSHOT_TOP/arch-$arch*/$sub_dir
+        dir_abs_path=$snapshot_variant_top/$sub_dir
         if [ ! -d $dir_abs_path ]; then
             echo -e "$FAIL The directory \"$dir_abs_path\" was not found in snapshot."
             exit 1

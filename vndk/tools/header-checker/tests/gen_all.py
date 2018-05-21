@@ -16,12 +16,9 @@ SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 INPUT_DIR = os.path.join(SCRIPT_DIR, 'input')
 EXPECTED_DIR = os.path.join(SCRIPT_DIR, 'expected')
 REFERENCE_DUMP_DIR = os.path.join(SCRIPT_DIR, 'reference_dumps')
-
-DEFAULT_CFLAGS = ['-x', 'c++', '-std=c++11']
-
 FILE_EXTENSIONS = ['h', 'hpp', 'hxx', 'cpp', 'cc', 'c']
 
-def make_and_copy_reference_dumps(module, default_cflags,
+def make_and_copy_reference_dumps(module, default_cflags=[],
                                   reference_dump_dir=REFERENCE_DUMP_DIR):
     lsdump_content = module.make_lsdump(default_cflags)
     return copy_reference_dump_content(module.get_name(), lsdump_content,
@@ -45,15 +42,14 @@ def main():
             output_path = os.path.join(EXPECTED_DIR, input_rel_path)
 
             print('generating', output_path, '...')
-            output_content = run_header_abi_dumper(input_path, True,
-                                                   DEFAULT_CFLAGS)
+            output_content = run_header_abi_dumper(input_path, True)
 
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
             with open(output_path, 'w') as f:
                 f.write(output_content)
     modules = Module.get_test_modules()
     for module in modules:
-        make_and_copy_reference_dumps(module, DEFAULT_CFLAGS)
+        make_and_copy_reference_dumps(module)
 
     return 0
 

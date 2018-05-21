@@ -17,8 +17,6 @@ from vndk_definition_tool import TaggedDict, TaggedPathDict, TaggedLibDict, \
 _TEST_DATA = '''Path,Tag
 /system/lib/lib_ll_ndk.so,ll-ndk
 /system/lib/lib_ll_ndk_indirect.so,ll-ndk-indirect
-/system/lib/lib_sp_ndk.so,sp-ndk
-/system/lib/lib_sp_ndk_indirect.so,sp-ndk-indirect
 /system/lib/lib_vndk_sp.so,vndk-sp
 /system/lib/lib_vndk_sp_indirect.so,vndk-sp-indirect
 /system/lib/lib_vndk_sp_indirect_private.so,vndk-sp-indirect-private
@@ -66,39 +64,33 @@ class TaggedDictTest(unittest.TestCase):
         self._check_tag_visibility(d, 'll_ndk', visible_tags)
         self._check_tag_visibility(d, 'll_ndk_indirect', visible_tags)
 
-        # SP-NDK
-        visible_tags = {'ll_ndk', 'll_ndk_indirect',
-                        'sp_ndk', 'sp_ndk_indirect'}
-        self._check_tag_visibility(d, 'sp_ndk', visible_tags)
-        self._check_tag_visibility(d, 'sp_ndk_indirect', visible_tags)
-
         # VNDK-SP
-        visible_tags = {'ll_ndk', 'sp_ndk', 'vndk_sp', 'vndk_sp_indirect',
+        visible_tags = {'ll_ndk', 'vndk_sp', 'vndk_sp_indirect',
                         'vndk_sp_indirect_private', 'fwk_only_rs'}
         self._check_tag_visibility(d, 'vndk_sp', visible_tags)
         self._check_tag_visibility(d, 'vndk_sp_indirect', visible_tags)
         self._check_tag_visibility(d, 'vndk_sp_indirect_private', visible_tags)
 
         # VNDK
-        visible_tags = {'ll_ndk', 'sp_ndk', 'vndk_sp', 'vndk_sp_indirect',
+        visible_tags = {'ll_ndk', 'vndk_sp', 'vndk_sp_indirect',
                         'vndk'}
         self._check_tag_visibility(d, 'vndk', visible_tags)
 
         # FWK-ONLY
-        visible_tags = {'ll_ndk', 'll_ndk_indirect', 'sp_ndk',
-                        'sp_ndk_indirect', 'vndk_sp', 'vndk_sp_indirect',
+        visible_tags = {'ll_ndk', 'll_ndk_indirect',
+                        'vndk_sp', 'vndk_sp_indirect',
                         'vndk_sp_indirect_private', 'vndk', 'fwk_only',
                         'fwk_only_rs', 'sp_hal'}
         self._check_tag_visibility(d, 'fwk_only', visible_tags)
         self._check_tag_visibility(d, 'fwk_only_rs', visible_tags)
 
         # SP-HAL
-        visible_tags = {'ll_ndk', 'sp_ndk', 'vndk_sp', 'sp_hal', 'sp_hal_dep'}
+        visible_tags = {'ll_ndk', 'vndk_sp', 'sp_hal', 'sp_hal_dep'}
         self._check_tag_visibility(d, 'sp_hal', visible_tags)
         self._check_tag_visibility(d, 'sp_hal_dep', visible_tags)
 
         # VND-ONLY
-        visible_tags = {'ll_ndk', 'sp_ndk', 'vndk_sp', 'vndk_sp_indirect',
+        visible_tags = {'ll_ndk', 'vndk_sp', 'vndk_sp_indirect',
                         'vndk', 'sp_hal', 'sp_hal_dep', 'vnd_only'}
         self._check_tag_visibility(d, 'vnd_only', visible_tags)
 
@@ -108,14 +100,40 @@ class TaggedDictTest(unittest.TestCase):
 
 class TaggedPathDictTest(unittest.TestCase):
     def test_enumerate_paths(self):
+        tagged_paths = TaggedPathDict()
+
         self.assertEqual(
                 ['/system/lib/libc.so'],
-                list(TaggedPathDict._enumerate_paths('/system/lib/libc.so')))
+                list(tagged_paths._enumerate_paths('/system/lib/libc.so')))
 
         self.assertEqual(
                 ['/system/lib/libc.so', '/system/lib64/libc.so'],
-                list(TaggedPathDict._enumerate_paths('/system/${LIB}/libc.so')))
+                list(tagged_paths._enumerate_paths('/system/${LIB}/libc.so')))
 
+        self.assertEqual(
+                ['/system/lib/vndk/libutils.so',
+                 '/system/lib64/vndk/libutils.so'],
+                list(tagged_paths._enumerate_paths(
+                    '/system/${LIB}/vndk${VNDK_VER}/libutils.so')))
+
+        tagged_paths = TaggedPathDict(['current', '27', '28'])
+
+        self.assertEqual(
+                ['/system/lib/vndk/libutils.so',
+                 '/system/lib64/vndk/libutils.so',
+                 '/system/lib/vndk-27/libutils.so',
+                 '/system/lib64/vndk-27/libutils.so',
+                 '/system/lib/vndk-28/libutils.so',
+                 '/system/lib64/vndk-28/libutils.so'],
+                list(tagged_paths._enumerate_paths(
+                    '/system/${LIB}/vndk${VNDK_VER}/libutils.so')))
+
+        self.assertEqual(
+                ['/system/lib/vndk/libutils.so',
+                 '/system/lib/vndk-27/libutils.so',
+                 '/system/lib/vndk-28/libutils.so'],
+                list(tagged_paths._enumerate_paths(
+                    '/system/lib/vndk${VNDK_VER}/libutils.so')))
 
     def test_load_from_csv_empty(self):
         try:
@@ -147,8 +165,6 @@ class TaggedPathDictTest(unittest.TestCase):
         # Paths
         self.assertIn('/system/lib/lib_ll_ndk.so', d.ll_ndk)
         self.assertIn('/system/lib/lib_ll_ndk_indirect.so', d.ll_ndk_indirect)
-        self.assertIn('/system/lib/lib_sp_ndk.so', d.sp_ndk)
-        self.assertIn('/system/lib/lib_sp_ndk_indirect.so', d.sp_ndk_indirect)
         self.assertIn('/system/lib/lib_vndk_sp.so', d.vndk_sp)
         self.assertIn('/system/lib/lib_vndk_sp_indirect.so', d.vndk_sp_indirect)
         self.assertIn('/system/lib/lib_vndk_sp_indirect_private.so',
@@ -197,9 +213,6 @@ class TaggedPathDictTest(unittest.TestCase):
         self.assertEqual('ll_ndk', d.get_path_tag('/system/lib/lib_ll_ndk.so'))
         self.assertEqual('ll_ndk_indirect',
                          d.get_path_tag('/system/lib/lib_ll_ndk_indirect.so'))
-        self.assertEqual('sp_ndk', d.get_path_tag('/system/lib/lib_sp_ndk.so'))
-        self.assertEqual('sp_ndk_indirect',
-                         d.get_path_tag('/system/lib/lib_sp_ndk_indirect.so'))
         self.assertEqual('vndk_sp',
                          d.get_path_tag('/system/lib/lib_vndk_sp.so'))
         self.assertEqual('vndk_sp_indirect',
@@ -266,19 +279,6 @@ class TaggedPathDictTest(unittest.TestCase):
         }
         self._check_path_visibility(d, all_paths, from_paths, visible_paths)
 
-        # SP-NDK
-        from_paths = {
-            '/system/lib/lib_sp_ndk.so',
-            '/system/lib/lib_sp_ndk_indirect.so',
-        }
-        visible_paths = {
-            '/system/lib/lib_ll_ndk.so',
-            '/system/lib/lib_ll_ndk_indirect.so',
-            '/system/lib/lib_sp_ndk.so',
-            '/system/lib/lib_sp_ndk_indirect.so',
-        }
-        self._check_path_visibility(d, all_paths, from_paths, visible_paths)
-
         # VNDK-SP
         from_paths = {
             '/system/lib/lib_vndk_sp.so',
@@ -287,7 +287,6 @@ class TaggedPathDictTest(unittest.TestCase):
         }
         visible_paths = {
             '/system/lib/lib_ll_ndk.so',
-            '/system/lib/lib_sp_ndk.so',
             '/system/lib/lib_vndk_sp.so',
             '/system/lib/lib_vndk_sp_indirect.so',
             '/system/lib/lib_vndk_sp_indirect_private.so',
@@ -301,7 +300,6 @@ class TaggedPathDictTest(unittest.TestCase):
         }
         visible_paths = {
             '/system/lib/lib_ll_ndk.so',
-            '/system/lib/lib_sp_ndk.so',
             '/system/lib/lib_vndk_sp.so',
             '/system/lib/lib_vndk_sp_indirect.so',
             '/system/lib/lib_vndk.so',
@@ -316,8 +314,6 @@ class TaggedPathDictTest(unittest.TestCase):
         visible_paths = {
             '/system/lib/lib_ll_ndk.so',
             '/system/lib/lib_ll_ndk_indirect.so',
-            '/system/lib/lib_sp_ndk.so',
-            '/system/lib/lib_sp_ndk_indirect.so',
             '/system/lib/lib_vndk_sp.so',
             '/system/lib/lib_vndk_sp_indirect.so',
             '/system/lib/lib_vndk_sp_indirect_private.so',
@@ -335,7 +331,6 @@ class TaggedPathDictTest(unittest.TestCase):
         }
         visible_paths = {
             '/system/lib/lib_ll_ndk.so',
-            '/system/lib/lib_sp_ndk.so',
             '/system/lib/lib_vndk_sp.so',
             '/vendor/lib/lib_sp_hal.so',
             '/vendor/lib/lib_sp_hal_dep.so',
@@ -348,7 +343,6 @@ class TaggedPathDictTest(unittest.TestCase):
         }
         visible_paths = {
             '/system/lib/lib_ll_ndk.so',
-            '/system/lib/lib_sp_ndk.so',
             '/system/lib/lib_vndk_sp.so',
             '/system/lib/lib_vndk_sp_indirect.so',
             '/system/lib/lib_vndk.so',
@@ -397,10 +391,6 @@ class TaggedLibDictTest(unittest.TestCase):
         self.lib_ll_ndk_indirect = \
                 self.graph.add('/system/lib/lib_ll_ndk_indirect.so')
 
-        self.lib_sp_ndk = self.graph.add('/system/lib/lib_sp_ndk.so')
-        self.lib_sp_ndk_indirect = \
-                self.graph.add('/system/lib/lib_sp_ndk_indirect.so')
-
         self.lib_vndk_sp = self.graph.add('/system/lib/lib_vndk_sp.so')
         self.lib_vndk_sp_indirect = \
                 self.graph.add('/system/lib/lib_vndk_sp_indirect.so')
@@ -417,18 +407,14 @@ class TaggedLibDictTest(unittest.TestCase):
 
         self.lib_vnd_only = self.graph.add('/vendor/lib/lib_vnd_only.so')
 
-        self.tagged_libs = \
-                TaggedLibDict.create_from_graph(self.graph, self.tagged_paths)
+        self.tagged_libs = TaggedLibDict.create_from_graph(
+                self.graph, self.tagged_paths)
 
 
     def test_create_from_graph(self):
         self.assertIn(self.lib_ll_ndk, self.tagged_libs.ll_ndk)
         self.assertIn(self.lib_ll_ndk_indirect,
                       self.tagged_libs.ll_ndk_indirect)
-        self.assertIn(self.lib_sp_ndk, self.tagged_libs.sp_ndk)
-        self.assertIn(self.lib_sp_ndk_indirect,
-                      self.tagged_libs.sp_ndk_indirect)
-
         self.assertIn(self.lib_vndk_sp, self.tagged_libs.vndk_sp)
         self.assertIn(self.lib_vndk_sp_indirect,
                       self.tagged_libs.vndk_sp_indirect)
@@ -451,9 +437,6 @@ class TaggedLibDictTest(unittest.TestCase):
         self.assertEqual('ll_ndk', d.get_path_tag(self.lib_ll_ndk))
         self.assertEqual('ll_ndk_indirect',
                          d.get_path_tag(self.lib_ll_ndk_indirect))
-        self.assertEqual('sp_ndk', d.get_path_tag(self.lib_sp_ndk))
-        self.assertEqual('sp_ndk_indirect',
-                         d.get_path_tag(self.lib_sp_ndk_indirect))
         self.assertEqual('vndk_sp', d.get_path_tag(self.lib_vndk_sp))
         self.assertEqual('vndk_sp_indirect',
                          d.get_path_tag(self.lib_vndk_sp_indirect))

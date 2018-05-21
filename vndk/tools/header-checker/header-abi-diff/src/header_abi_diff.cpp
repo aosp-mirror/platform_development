@@ -123,6 +123,9 @@ static std::set<std::string> LoadIgnoredSymbols(std::string &symbol_list_path) {
   return ignored_symbols;
 }
 
+static const char kWarn[] = "\033[36;1mwarning: \033[0m";
+static const char kError[] = "\033[31;1merror: \033[0m";
+
 int main(int argc, const char **argv) {
   llvm::cl::ParseCommandLineOptions(argc, argv, "header-checker");
   std::set<std::string> ignored_symbols;
@@ -137,15 +140,16 @@ int main(int argc, const char **argv) {
 
   std::string status_str = "";
   std::string unreferenced_change_str = "";
-  std::string error_or_warning_str = "\033[36;1mwarning: \033[0m";
+  std::string error_or_warning_str = kWarn;
+
   switch (status) {
     case abi_util::CompatibilityStatusIR::Incompatible:
-      error_or_warning_str = "\033[31;1merror: \033[0m";
+      error_or_warning_str = kError;
       status_str = "INCOMPATIBLE CHANGES";
       break;
     case abi_util::CompatibilityStatusIR::ElfIncompatible:
       if (elf_unreferenced_symbol_errors) {
-        error_or_warning_str = "\033[31;1merror: \033[0m";
+        error_or_warning_str = kError;
       }
       status_str = "ELF Symbols not referenced by exported headers removed";
       break;
@@ -153,6 +157,9 @@ int main(int argc, const char **argv) {
       break;
   }
   if (status & abi_util::CompatibilityStatusIR::Extension) {
+    if (!allow_extensions) {
+      error_or_warning_str = kError;
+    }
     status_str = "EXTENDING CHANGES";
   }
   if (status & abi_util::CompatibilityStatusIR::UnreferencedChanges) {
@@ -161,7 +168,15 @@ int main(int argc, const char **argv) {
     unreferenced_change_str += " This MIGHT be an ABI breaking change due to";
     unreferenced_change_str += " internal typecasts.";
   }
-  if (!suppress_local_warnings && status) {
+  bool suppress_extending_warnings =
+      allow_extensions && (status & abi_util::CompatibilityStatusIR::Extension);
+
+  bool suppress_elf_warnings =
+      allow_unreferenced_elf_symbol_changes &&
+      (status & abi_util::CompatibilityStatusIR::ElfIncompatible);
+
+  if (!suppress_local_warnings && !suppress_extending_warnings &&
+      !suppress_elf_warnings && status) {
     llvm::errs() << "******************************************************\n"
                  << error_or_warning_str
                  << "VNDK library: "
@@ -174,15 +189,15 @@ int main(int argc, const char **argv) {
                  << "******************************************************\n";
   }
 
-  if ((allow_extensions &&
+  if (!advice_only && ((!allow_extensions &&
       (status & abi_util::CompatibilityStatusIR::Extension)) ||
-      (allow_unreferenced_changes &&
+      (!allow_unreferenced_changes &&
       (status & abi_util::CompatibilityStatusIR::UnreferencedChanges)) ||
-      (allow_unreferenced_elf_symbol_changes &&
+      (!allow_unreferenced_elf_symbol_changes &&
       (status & abi_util::CompatibilityStatusIR::ElfIncompatible)) ||
-      advice_only) {
-    return abi_util::CompatibilityStatusIR::Compatible;
+      (status & abi_util::CompatibilityStatusIR::Incompatible))) {
+    return status;
   }
 
-  return status;
+  return abi_util::CompatibilityStatusIR::Compatible;
 }

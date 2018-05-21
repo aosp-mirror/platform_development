@@ -56,19 +56,11 @@ $(HOST_OUT)/development/samples/%_source.properties : $(TOPDIR)development/sampl
 
 # ===== SDK jar file of stubs =====
 # A.k.a the "current" version of the public SDK (android.jar inside the SDK package).
-sdk_stub_name := android_stubs_current
-stub_timestamp := $(OUT_DOCS)/api-stubs-timestamp
-include $(LOCAL_PATH)/build_android_stubs.mk
+full_target := $(call intermediates-dir-for,JAVA_LIBRARIES,android_stubs_current,,COMMON)/classes.jar
+full_src_target := $(OUT_DOCS)/api-stubs-docs-stubs.srcjar
 
 .PHONY: android_stubs
 android_stubs: $(full_target) $(full_src_target)
-
-# The real rules create a javalib.jar that contains a classes.dex file.  This
-# code is never going to be run anywhere, so just make a copy of the file.
-# The package installation stuff doesn't know about this file, so nobody will
-# ever be able to write a rule that installs it to a device.
-$(dir $(full_target))javalib.jar: $(full_target)
-	$(copy-file-to-target)
 
 # android.jar is what we put in the SDK package.
 android_jar_intermediates := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/android_jar_intermediates
@@ -90,10 +82,10 @@ ALL_SDK_FILES += $(android_jar_src_target)
 # ====================================================
 
 # The uiautomator stubs
-ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android_uiautomator_intermediates/javalib.jar
+ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android_uiautomator_intermediates/classes.jar
 
 # org.apache.http.legacy.jar stubs
-ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/org.apache.http.legacy_intermediates/javalib.jar
+ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/org.apache.http.legacy_intermediates/classes.jar
 
 # core-lambda-stubs
 ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/core-lambda-stubs_intermediates/classes.jar
@@ -103,7 +95,7 @@ ALL_SDK_FILES += $(HOST_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/shrinkedAndroid
 
 # $(1): the Java library name
 define _package_sdk_library
-$(eval _psm_build_module := $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/$(1)_intermediates/javalib.jar)
+$(eval _psm_build_module := $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/$(1)_intermediates/classes.jar)
 $(eval _psm_packaging_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/$(1)_intermediates/$(1).jar)
 $(_psm_packaging_target) : $(_psm_build_module)
 	@echo "Package $(1).jar: $$@"
@@ -133,17 +125,14 @@ $(HOST_OUT)/development/sdk/generated-api-versions.xml: $(android_jar_full_targe
 	$(JAVA) -cp $(api_gen_classpath) \
 	  com.android.apigenerator.Main \
 	  --pattern $(TOPDIR)prebuilts/tools/common/api-versions/android-%/android.jar \
-	  --pattern $(TOPDIR)prebuilts/sdk/%/android.jar \
+	  --pattern $(TOPDIR)prebuilts/sdk/%/public/android.jar \
 	  --current-version $(PLATFORM_SDK_VERSION) \
 	  --current-codename $(PLATFORM_VERSION_CODENAME) \
 	  --current-jar $(android_jar_full_target) \
 	  $@
 
-
 # ============ System SDK ============
-sdk_stub_name := android_system_stubs_current
-stub_timestamp := $(OUT_DOCS)/system-api-stubs-timestamp
-include $(LOCAL_PATH)/build_android_stubs.mk
+full_target := $(call intermediates-dir-for,JAVA_LIBRARIES,android_system_stubs_current,,COMMON)/classes.jar
 
 .PHONY: android_system_stubs
 android_system_stubs: $(full_target)
@@ -152,9 +141,7 @@ android_system_stubs: $(full_target)
 $(call dist-for-goals,sdk win_sdk,$(full_target):android_system.jar)
 
 # ============ Test SDK ============
-sdk_stub_name := android_test_stubs_current
-stub_timestamp := $(OUT_DOCS)/test-api-stubs-timestamp
-include $(LOCAL_PATH)/build_android_stubs.mk
+full_target := $(call intermediates-dir-for,JAVA_LIBRARIES,android_test_stubs_current,,COMMON)/classes.jar
 
 .PHONY: android_test_stubs
 android_test_stubs: $(full_target)
