@@ -94,6 +94,8 @@ def _parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('root_bp',
                         help='path to Android.bp in ANDROID_BUILD_TOP')
+    parser.add_argument('--namespace', action='append', default=[''],
+                        help='extra module namespaces')
     return parser.parse_args()
 
 
@@ -102,7 +104,8 @@ def main():
 
     args = _parse_args()
 
-    module_dicts = vndk.ModuleClassifier.create_from_root_bp(args.root_bp)
+    module_dicts = vndk.ModuleClassifier.create_from_root_bp(
+        args.root_bp, args.namespace)
 
     all_bad_deps = _check_modules_deps(module_dicts)
     for name, bad_deps in all_bad_deps:

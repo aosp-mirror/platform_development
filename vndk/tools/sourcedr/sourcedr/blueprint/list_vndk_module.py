@@ -38,6 +38,8 @@ def _parse_args():
                         help='regular expression for the excluded directories')
     parser.add_argument('--select',
                         help='regular expression for the selected directories')
+    parser.add_argument('--namespace', action='append', default=[''],
+                        help='extra module namespaces')
     return parser.parse_args()
 
 
@@ -82,7 +84,8 @@ def main():
     exclude = re.compile(args.exclude) if args.exclude else None
 
     # Parse Blueprint files and get VNDK libs
-    module_dicts = vndk.ModuleClassifier.create_from_root_bp(args.root_bp)
+    module_dicts = vndk.ModuleClassifier.create_from_root_bp(
+        args.root_bp, args.namespace)
 
     root_dir = os.path.dirname(args.root_bp)
 
