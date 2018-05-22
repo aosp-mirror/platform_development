@@ -23,7 +23,9 @@ include $(CLEAR_VARS)
 
 LOCAL_PACKAGE_NAME := ShortcutDemo
 
-LOCAL_STATIC_JAVA_LIBRARIES = android-support-v4
+LOCAL_USE_AAPT2 := true
+
+LOCAL_STATIC_ANDROID_LIBRARIES = androidx.legacy_legacy-support-v4
 
 LOCAL_MODULE_TAGS := samples tests
 
@@ -45,7 +47,9 @@ include $(CLEAR_VARS)
 
 LOCAL_PACKAGE_NAME := ShortcutDemo2
 
-LOCAL_STATIC_JAVA_LIBRARIES = android-support-v4
+LOCAL_USE_AAPT2 := true
+
+LOCAL_STATIC_ANDROID_LIBRARIES = androidx.legacy_legacy-support-v4
 
 LOCAL_MODULE_TAGS := samples tests
 
