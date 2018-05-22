@@ -41,6 +41,8 @@ def update_eligible_list_properties(path, build_top):
 
     cmd = [sys.executable, LIST_VNDK_MODULE]
     cmd.extend(['--exclude', '(?:device/)|(?:vendor/)'])
+    cmd.extend(['--namespace', 'hardware/google/av'])
+    cmd.extend(['--namespace', 'hardware/google/interfaces'])
     cmd.extend(['-o', tmp_path])
     cmd.append(os.path.join(build_top, 'Android.bp'))
 
