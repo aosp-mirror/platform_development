@@ -329,8 +329,9 @@ SymbolRef ELFSharedObject<ELFT>::matchValueToSymbol(
     const std::string ClassName(Vtablep->getDemangledName().substr(pos));
     for (const SymbolRef &Symbol : SymVec) {
         StringRef SymbolName = UnWrap(Symbol.getName());
-        if (SymbolName.str().find(ClassName) != std::string::npos)
+        if (demangle(SymbolName.str()).find(ClassName) != std::string::npos) {
             return Symbol;
+        }
     }
     // Return the 1st Symbol by default.
     return SymVec[0];
