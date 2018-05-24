@@ -8,9 +8,6 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 LOCAL_RESOURCE_DIR := $(LOCAL_PATH)/res
 
-LOCAL_STATIC_ANDROID_LIBRARIES := \
-    android-support-v13
-
 LOCAL_USE_AAPT2 := true
 
 LOCAL_PACKAGE_NAME := IntentPlayground
