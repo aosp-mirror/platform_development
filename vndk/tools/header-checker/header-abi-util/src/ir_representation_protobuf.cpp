@@ -1179,11 +1179,6 @@ CompatibilityStatusIR ProtobufIRDiffDumper::GetCompatibilityStatusIR() {
     return CompatibilityStatusIR::Incompatible;
   }
 
-  if(diff_tu_->removed_elf_functions().size() != 0 ||
-     diff_tu_->removed_elf_objects().size() != 0) {
-    return CompatibilityStatusIR::ElfIncompatible;
-  }
-
   CompatibilityStatusIR combined_status = CompatibilityStatusIR::Compatible;
 
   if (diff_tu_->enum_type_extension_diffs().size() != 0 ||
@@ -1201,6 +1196,11 @@ CompatibilityStatusIR ProtobufIRDiffDumper::GetCompatibilityStatusIR() {
       diff_tu_->unreferenced_enum_types_added().size()) {
     combined_status =
         combined_status | CompatibilityStatusIR::UnreferencedChanges;
+  }
+
+  if(diff_tu_->removed_elf_functions().size() != 0 ||
+     diff_tu_->removed_elf_objects().size() != 0) {
+    combined_status = combined_status | CompatibilityStatusIR::ElfIncompatible;
   }
 
   return combined_status;
