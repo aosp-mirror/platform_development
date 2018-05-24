@@ -66,6 +66,7 @@ android.hardware.cas@1.0,True,False,True,hidl_interface
 android.hardware.cas@1.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.configstore-utils,True,False,True,cc_library_shared
 android.hardware.configstore@1.0,True,False,True,hidl_interface
+android.hardware.configstore@1.1,True,False,True,hidl_interface
 android.hardware.configstore@1.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.confirmationui-support-lib,True,False,True,cc_library
 android.hardware.confirmationui@1.0,True,False,True,hidl_interface
