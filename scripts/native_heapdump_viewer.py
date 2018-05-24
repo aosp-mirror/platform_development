@@ -86,9 +86,10 @@ native_heap = args[0]
 re_map = re.compile("(?P<start>[0-9a-f]+)-(?P<end>[0-9a-f]+) .... (?P<offset>[0-9a-f]+) [0-9a-f]+:[0-9a-f]+ [0-9]+ +(?P<name>.*)")
 
 class Backtrace:
-    def __init__(self, is_zygote, size, frames):
+    def __init__(self, is_zygote, size, num_allocs, frames):
         self.is_zygote = is_zygote
         self.size = size
+        self.num_allocs = num_allocs
         self.frames = frames
 
 class Mapping:
@@ -105,18 +106,43 @@ class FrameDescription:
         self.library = library
 
 
+def GetVersion(native_heap):
+  """Get the version of the native heap dump."""
+
+  re_line = re.compile("Android\s+Native\s+Heap\s+Dump\s+(?P<version>v\d+\.\d+)\s*$")
+  matched = 0
+  for line in open(native_heap, "r"):
+    m = re_line.match(line)
+    if m:
+      return m.group('version')
+  return None
+
+version = GetVersion(native_heap)
+if not version or version == "v1.0":
+  # Version v1.0 was produced by a buggy version of malloc debug where the
+  # num field was set incorrectly.
+  num_field_valid = False
+else:
+  num_field_valid = True
+
 backtraces = []
 mappings = []
 
 for line in open(native_heap, "r"):
+    # Format of line:
+    #   z 0  sz       50  num    1  bt 000000000000a100 000000000000b200
     parts = line.split()
     if len(parts) > 7 and parts[0] == "z" and parts[2] == "sz":
         is_zygote = parts[1] != "1"
         size = int(parts[3])
+        if num_field_valid:
+          num_allocs = int(parts[5])
+        else:
+          num_allocs = 1
         frames = map(lambda x: int(x, 16), parts[7:])
         if reverse_frames:
             frames = list(reversed(frames))
-        backtraces.append(Backtrace(is_zygote, size, frames))
+        backtraces.append(Backtrace(is_zygote, size, num_allocs, frames))
         continue
 
     m = re_map.match(line)
@@ -209,16 +235,17 @@ class AddrInfo:
         self.addr = addr
         self.size = 0
         self.number = 0
+        self.num_allocs = 0
         self.children = {}
 
-    def addStack(self, size, stack):
-        self.size += size
-        self.number += 1
+    def addStack(self, size, num_allocs, stack):
+        self.size += size * num_allocs
+        self.number += num_allocs
         if len(stack) > 0:
             child = stack[0]
             if not (child.addr in self.children):
                 self.children[child.addr] = child
-            self.children[child.addr].addStack(size, stack[1:])
+            self.children[child.addr].addStack(size, num_allocs, stack[1:])
 
 zygote = AddrInfo("ZYGOTE")
 app = AddrInfo("APP")
@@ -272,9 +299,9 @@ for backtrace in backtraces:
         stack.append(AddrInfo("%x" % addr))
     stack.reverse()
     if backtrace.is_zygote:
-        zygote.addStack(backtrace.size, stack)
+        zygote.addStack(backtrace.size, backtrace.num_allocs, stack)
     else:
-        app.addStack(backtrace.size, stack)
+        app.addStack(backtrace.size, backtrace.num_allocs, stack)
 
 html_header = """
 <!DOCTYPE html>
