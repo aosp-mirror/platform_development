@@ -189,7 +189,8 @@ TEST_MODULES = [
                 'integration/cpp/gold/high_volume_speaker.cpp',
                 'integration/cpp/gold/low_volume_speaker.cpp',
                 ],
-        version_script = 'integration/cpp/gold/map_add_function.txt',
+        version_script = \
+            'integration/cpp/gold/map_add_function_elf_symbol.txt',
         export_include_dirs = ['integration/cpp/gold/include'],
         cflags = ['-DGOLDEN_ADD_FUNCTION=1', '-DADD_UNEXPORTED_ELF_SYMBOL'],
         arch = '',
