@@ -159,6 +159,11 @@ class MyTest(unittest.TestCase):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp", "libgolden_cpp_add_function", 4)
 
+    def test_libgolden_cpp_add_function_allow_extension(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp", "libgolden_cpp_add_function", 0,
+            ['-allow-extensions'])
+
     def test_libgolden_cpp_add_function_and_elf_symbol(self):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp", "libgolden_cpp_add_function_and_unexported_elf",
