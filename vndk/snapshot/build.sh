@@ -18,16 +18,22 @@
 export TARGET_BUILD_VARIANT=user
 export BOARD_VNDK_VERSION=current
 
-echo "-----Generating VNDK snapshot for arm64-armv8-a"
-make -j vndk dist TARGET_PRODUCT=aosp_arm64_ab
+echo "-----Generating VNDK snapshot for arm64"
+make -j vndk dist TARGET_PRODUCT=aosp_arm64
 
-echo "-----Generating VNDK snapshot for arm-armv7-a-neon"
+echo "-----Generating VNDK snapshot for arm, 64-bit binder"
+make -j vndk dist TARGET_PRODUCT=aosp_arm
+
+echo "-----Generating VNDK snapshot for arm, 32-bit binder"
 make -j vndk dist TARGET_PRODUCT=aosp_arm_ab
 
-echo "-----Generating VNDK snapshot for x86_64-x86_64"
-make -j vndk dist TARGET_PRODUCT=aosp_x86_64_ab
+echo "-----Generating VNDK snapshot for x86_64"
+make -j vndk dist TARGET_PRODUCT=aosp_x86_64
 
-echo "-----Generating VNDK snapshot for x86-x86"
+echo "-----Generating VNDK snapshot for x86, 64-bit binder"
+make -j vndk dist TARGET_PRODUCT=aosp_x86
+
+echo "-----Generating VNDK snapshot for x86, 32-bit binder"
 make -j vndk dist TARGET_PRODUCT=aosp_x86_ab
 
 echo "-----Running tests"
