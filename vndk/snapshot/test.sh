@@ -24,52 +24,100 @@
 
 set -eo pipefail
 
-if [ "$#" -ne 1 ]; then
-    echo "Usage: \"$0 all\" to test all four VNDK snapshot variants at once."
-    echo "Usage: \"$0 TARGET_ARCH\" to test a VNDK snapshot of a specific arch."
+if [[ "$#" -ne 1 ]]; then
+    echo "Usage: \"$0 all\" to test all VNDK snapshot variants at once."
+    echo "       \"$0 \$TARGET_PRODUCT\" to test a specific VNDK snapshot."
     exit 1
 fi
 
-if [[ $1 == 'all' ]]; then
-    ARCHS=('arm' 'arm64' 'x86' 'x86_64')
+if [[ "$1" == 'all' ]]; then
+    readonly TARGET_PRODUCTS=('aosp_arm' 'aosp_arm_ab' 'aosp_arm64' 'aosp_x86' 'aosp_x86_ab' 'aosp_x86_64')
 else
-    ARCHS=($1)
+    readonly TARGET_PRODUCTS=($1)
 fi
 
-script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-ANDROID_BUILD_TOP=$(dirname $(dirname $(dirname $script_dir)))
-echo "ANDROID_BUILD_TOP: $ANDROID_BUILD_TOP"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly ANDROID_BUILD_TOP=$(dirname $(dirname $(dirname "${script_dir}")))
+echo "ANDROID_BUILD_TOP: "${ANDROID_BUILD_TOP}""
 
 OUT_DIR=${OUT_DIR:-}
 DIST_DIR=${DIST_DIR:-}
-if [[ -z $DIST_DIR ]]; then
-    if [[ -z $OUT_DIR ]]; then
-        DIST_DIR=$ANDROID_BUILD_TOP/out/dist
+if [[ -z "${DIST_DIR}" ]]; then
+    if [[ -z "${OUT_DIR}" ]]; then
+        DIST_DIR="${ANDROID_BUILD_TOP}"/out/dist
     else
-        DIST_DIR=$OUT_DIR/dist
+        DIST_DIR="${OUT_DIR}"/dist
     fi
 fi
 
 # Get PLATFORM_VNDK_VERSION
-source "$ANDROID_BUILD_TOP/build/envsetup.sh" >/dev/null
-PLATFORM_VNDK_VERSION=`get_build_var PLATFORM_VNDK_VERSION`
+source ""${ANDROID_BUILD_TOP}"/build/envsetup.sh" >/dev/null
+readonly PLATFORM_VNDK_VERSION="$(get_build_var PLATFORM_VNDK_VERSION)"
 
-SNAPSHOT_TOP=$DIST_DIR/android-vndk-snapshot
-SNAPSHOT_TEMPFILE=$DIST_DIR/snapshot_libs.txt
-SYSTEM_TEMPFILE=$DIST_DIR/system_libs.txt
+readonly TEMP_DIR="$(mktemp -d /tmp/"$(basename $0)"_XXXXXXXX)"
+readonly SNAPSHOT_TOP="${TEMP_DIR}"/android-vndk-snapshot
+readonly SNAPSHOT_TEMPFILE="${TEMP_DIR}"/snapshot_libs.txt
+readonly SYSTEM_TEMPFILE="${TEMP_DIR}"/system_libs.txt
+readonly BINDER_32_DIRNAME='binder32'
 
-RED='\033[0;31m'
-NC='\033[0m'
-PASS="::: PASS :::"
-FAIL="${RED}::: FAIL :::${NC}"
+readonly RED='\033[0;31m'
+readonly NC='\033[0m'
+readonly PASS="::: PASS :::"
+readonly FAIL=""${RED}"::: FAIL :::"${NC}""
 
 
-function remove_unzipped_snapshot {
-    if [ -d $SNAPSHOT_TOP ]; then
-        echo "Removing $SNAPSHOT_TOP"
-        rm -rf $SNAPSHOT_TOP
-    fi
+function set_vars() {
+    TARGET_PRODUCT="$1"
+    ARCH=''
+    PRODUCT_OUT=''
+    BITNESS_SUFFIX=''
+    BINDER_BITNESS_PATH=''
+    TARGET_2ND_ARCH=''
+    case "$1" in
+        aosp_arm64)
+            ARCH='arm64'
+            PRODUCT_OUT='generic_arm64'
+            BITNESS_SUFFIX='64'
+            TARGET_2ND_ARCH='arm'
+            ;;
+        aosp_arm)
+            ARCH='arm'
+            PRODUCT_OUT='generic'
+            ;;
+        aosp_arm_ab)
+            ARCH='arm'
+            PRODUCT_OUT='generic_arm_ab'
+            BINDER_BITNESS_PATH="${BINDER_32_DIRNAME}"
+            ;;
+        aosp_x86_64)
+            ARCH='x86_64'
+            PRODUCT_OUT='generic_x86_64'
+            BITNESS_SUFFIX='64'
+            TARGET_2ND_ARCH='x86'
+            ;;
+        aosp_x86)
+            ARCH='x86'
+            PRODUCT_OUT='generic_x86'
+            ;;
+        aosp_x86_ab)
+            ARCH='x86'
+            PRODUCT_OUT='generic_x86'
+            BINDER_BITNESS_PATH="${BINDER_32_DIRNAME}"
+            ;;
+        *)
+            echo "Unrecognized \$TARGET_PRODUCT: "$1""
+            exit 1
+            ;;
+    esac
 }
+
+
+function cleanup {
+    echo "[Cleanup]"
+    echo "Removing TEMP_DIR: "${TEMP_DIR}""
+    rm -rf ""${TEMP_DIR}""
+}
+trap cleanup EXIT
 
 
 #######################################
@@ -78,160 +126,127 @@ function remove_unzipped_snapshot {
 # under $PRODUCT_OUT/system/lib*
 #
 # Arguments:
-#   $1: vndk_type: string, one of [vndk-core, vndk-sp]
-#   $2: target_arch: string, one of [arm, arm64, x86, x86_64]
+#   $1: vndk_type: one of [vndk-core, vndk-sp]
 #######################################
 function compare_vndk_libs() {
-    local vndk_type=$1
-    local target_arch=$2
-    local target_arch_2nd=''
-    local product
-    local bitness
-    local snapshot_dir
-    local snapshot_dir_2nd
+    local vndk_type="$1"
     local vndk_dir_suffix
     local system_vndk_dir
+    local snapshot_dir
+    local snapshot_dir_2nd
     local system_lib_dir
     local system_lib_dir_2nd
 
-    if [[ $target_arch == 'arm64' ]]; then
-        product='generic_arm64_ab'
-        target_arch_2nd='arm'
-    elif [[ $target_arch == 'arm' ]]; then
-        product='generic_arm_ab'
-    elif [[ $target_arch == 'x86_64' ]]; then
-        product='generic_x86_64_ab'
-        target_arch_2nd='x86'
-    elif [[ $target_arch == 'x86' ]]; then
-        product='generic_x86_ab'
-    fi
-
-    if [[ ${target_arch:-2:length} =~ '64' ]]; then
-        bitness='64'
-    else
-        bitness=''
-    fi
-
-    if [[ -z $PLATFORM_VNDK_VERSION ]]; then
+    if [[ -z "${PLATFORM_VNDK_VERSION}" ]]; then
         vndk_dir_suffix=""
     else
-        vndk_dir_suffix="-$PLATFORM_VNDK_VERSION"
+        vndk_dir_suffix="-${PLATFORM_VNDK_VERSION}"
     fi
 
-    if [[ $vndk_type == 'vndk-core' ]]; then
+    if [[ "${vndk_type}" == 'vndk-core' ]]; then
         system_vndk_dir="vndk${vndk_dir_suffix}"
     else
         system_vndk_dir="vndk-sp${vndk_dir_suffix}"
     fi
 
     function diff_vndk_dirs() {
-        local snapshot=$1
-        local system=$2
-        local local_module_target_arch=$3
+        local snapshot="$1"
+        local system="$2"
+        local target_arch="$3"
 
-        ls -1 $snapshot > $SNAPSHOT_TEMPFILE
-        find $system -type f | xargs -n 1 -I file bash -c "basename file" | sort > $SYSTEM_TEMPFILE
+        ls -1 ${snapshot} > "${SNAPSHOT_TEMPFILE}"
+        find "${system}" -type f | xargs -n 1 -I file bash -c "basename file" | sort > "${SYSTEM_TEMPFILE}"
 
-        echo "Comparing libs for VNDK=$vndk_type, SNAPSHOT_VARIANT=$target_arch, ARCH=$local_module_target_arch"
-        echo "Snapshot dir: $snapshot"
-        echo "System dir: $system"
+        echo "Comparing libs for TARGET_PRODUCT="${TARGET_PRODUCT}", VNDK="${vndk_type}", ARCH="${target_arch}""
+        echo "Snapshot dir:" ${snapshot}
+        echo "System dir: "${system}""
         (diff --old-line-format="Only found in VNDK snapshot: %L" \
               --new-line-format="Only found in /system/lib*: %L" \
               --unchanged-line-format="" \
-              $SNAPSHOT_TEMPFILE $SYSTEM_TEMPFILE && echo $PASS) \
-        || (echo -e $FAIL; exit 1)
+              "${SNAPSHOT_TEMPFILE}" "${SYSTEM_TEMPFILE}" && echo "${PASS}") \
+        || (echo -e "${FAIL}"; exit 1)
     }
 
-    snapshot_dir=$SNAPSHOT_TOP/$target_arch/arch-$target_arch-*/shared/$vndk_type
-    system_lib_dir=$ANDROID_BUILD_TOP/out/target/product/$product/system/lib$bitness/$system_vndk_dir
-    diff_vndk_dirs $snapshot_dir $system_lib_dir $target_arch
+    if [[ -n "${BINDER_BITNESS_PATH}" ]]; then
+        snapshot_dir="${SNAPSHOT_TOP}"/"${ARCH}"/"${BINDER_BITNESS_PATH}"/arch-"${ARCH}"-*/shared/"${vndk_type}"
+    else
+        snapshot_dir="${SNAPSHOT_TOP}"/"${ARCH}"/arch-"${ARCH}"-*/shared/"${vndk_type}"
+    fi
 
-    if [[ -n $target_arch_2nd ]]; then
-        snapshot_dir_2nd=$SNAPSHOT_TOP/$target_arch/arch-$target_arch_2nd-*/shared/$vndk_type
-        system_lib_dir_2nd=$ANDROID_BUILD_TOP/out/target/product/$product/system/lib/$system_vndk_dir
-        diff_vndk_dirs $snapshot_dir_2nd $system_lib_dir_2nd $target_arch_2nd
+    system_lib_dir="${ANDROID_BUILD_TOP}"/out/target/product/"${PRODUCT_OUT}"/system/lib"${BITNESS_SUFFIX}"/"${system_vndk_dir}"
+    diff_vndk_dirs "${snapshot_dir}" $system_lib_dir "${ARCH}"
+
+    if [[ -n "${TARGET_2ND_ARCH}" ]]; then
+        snapshot_dir_2nd="${SNAPSHOT_TOP}"/"${ARCH}"/arch-"${TARGET_2ND_ARCH}"-*/shared/"${vndk_type}"
+        system_lib_dir_2nd="${ANDROID_BUILD_TOP}"/out/target/product/"${PRODUCT_OUT}"/system/lib/"${system_vndk_dir}"
+        diff_vndk_dirs "${snapshot_dir_2nd}" "${system_lib_dir_2nd}" "${TARGET_2ND_ARCH}"
     fi
 }
 
 
 #######################################
-# Executes testcases against VNDK snapshot of specified arch
+# Executes tests against VNDK snapshot of
+# specified $TARGET_PRODUCT
 #
 # Arguments:
-#   $1: arch: string, one of [arm, arm64, x86, x86_64]
+#   $1: TARGET_PRODUCT
 #######################################
-function run_test_cases() {
-    local arch=$1
-    local snapshot_zip=$DIST_DIR/android-vndk-$arch.zip
-    local snapshot_variant_top=$SNAPSHOT_TOP/$arch
+function run_tests() {
+    set_vars "$1"
+    local snapshot_zip="${DIST_DIR}"/android-vndk-"${TARGET_PRODUCT}".zip
+    local snapshot_variant_top="${SNAPSHOT_TOP}"/"${ARCH}"
 
-    echo "[Setup] Unzipping \"android-vndk-$arch.zip\""
-    unzip -q $snapshot_zip -d $SNAPSHOT_TOP
+    echo "[Setup] Unzipping \"android-vndk-"${TARGET_PRODUCT}".zip\""
+    unzip -qn "${snapshot_zip}" -d "${SNAPSHOT_TOP}"
 
     echo "[Test] Comparing VNDK-core and VNDK-SP libs in snapshot vs /system/lib*"
-    compare_vndk_libs 'vndk-core' $arch
-    compare_vndk_libs 'vndk-sp' $arch
+    compare_vndk_libs 'vndk-core'
+    compare_vndk_libs 'vndk-sp'
 
     echo "[Test] Checking required config files are present"
-
-    if [[ -z $PLATFORM_VNDK_VERSION ]]; then
+    if [[ -z "${PLATFORM_VNDK_VERSION}" ]]; then
         config_file_suffix=""
     else
-        config_file_suffix=".$PLATFORM_VNDK_VERSION"
+        config_file_suffix=".${PLATFORM_VNDK_VERSION}"
     fi
 
     config_files=(
-        "ld.config$config_file_suffix.txt"
-        "llndk.libraries$config_file_suffix.txt"
-        "vndksp.libraries$config_file_suffix.txt"
+        "ld.config"${config_file_suffix}".txt"
+        "llndk.libraries"${config_file_suffix}".txt"
+        "vndksp.libraries"${config_file_suffix}".txt"
         "vndkcore.libraries.txt"
         "vndkprivate.libraries.txt"
         "module_paths.txt")
     for config_file in "${config_files[@]}"; do
-        config_file_abs_path=$snapshot_variant_top/configs/$config_file
-        if [ ! -e $config_file_abs_path ]; then
-            echo -e "$FAIL The file \"$config_file_abs_path\" was not found in snapshot."
+        config_file_abs_path="${snapshot_variant_top}"/configs/"${config_file}"
+        if [[ ! -e "${config_file_abs_path}" ]]; then
+            echo -e ""${FAIL}" The file \""${config_file_abs_path}"\" was not found in snapshot."
             exit 1
         else
-            echo "$PASS Found $config_file"
+            echo ""${PASS}" Found "${config_file}""
         fi
     done
 
     echo "[Test] Checking directory structure of snapshot"
     directories=(
-        'configs/'
-        'NOTICE_FILES/')
+        "configs/"
+        "NOTICE_FILES/")
     for sub_dir in "${directories[@]}"; do
-        dir_abs_path=$snapshot_variant_top/$sub_dir
-        if [ ! -d $dir_abs_path ]; then
-            echo -e "$FAIL The directory \"$dir_abs_path\" was not found in snapshot."
+        dir_abs_path="${snapshot_variant_top}"/"${sub_dir}"
+        if [[ ! -d "${dir_abs_path}" ]]; then
+            echo -e ""${FAIL}" The directory \""${dir_abs_path}"\" was not found in snapshot."
             exit 1
         else
-            echo "$PASS Found $sub_dir"
+            echo ""${PASS}" Found "${sub_dir}""
         fi
     done
 }
 
 
-#######################################
-# Cleanup
-#######################################
-function cleanup {
-    echo "[Cleanup]"
-    remove_unzipped_snapshot
-    echo "[Cleanup] Removing temp files..."
-    rm -f $SNAPSHOT_TEMPFILE $SYSTEM_TEMPFILE
-}
-trap cleanup EXIT
-
-
-#######################################
-# Run testcases
-#######################################
-remove_unzipped_snapshot
-for arch in "${ARCHS[@]}"; do
-    echo -e "\n::::::::: Running testcases for ARCH=$arch :::::::::"
-    run_test_cases $arch
+# Run tests for each target product
+for target_product in "${TARGET_PRODUCTS[@]}"; do
+    echo -e "\n::::::::: Running tests for TARGET_PRODUCT="${target_product}" :::::::::"
+    run_tests "${target_product}"
 done
 
-echo "All tests passed!"
+echo "Done. All tests passed!"
