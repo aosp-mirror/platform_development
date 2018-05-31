@@ -2,8 +2,16 @@
 usage () {
     echo "Create a Mixed Build archive with the given GSI and device archives."
     echo
-    echo "Usage: $0 gsi_build_dir device_build_dir out_dir [check_tool]"
+    echo "Usage: $0 [-v <vendor_version>] [-m <modify_system_image_path>] "
+    echo "    gsi_build_dir device_build_dir out_dir [check_tool]"
     echo
+    echo "Options -v and -m must precede positional arguments."
+    echo
+    echo "vendor_version is the version of the vendor image when the mixed"
+    echo "    build is inter branch. Optional."
+    echo "    eg. 8.1.0 for a mixed build of GSI and O-MR1 vendor image."
+    echo "modify_system_image_path is the path to the script that modifies the"
+    echo "    system image for an inter branch build target. Optional."
     echo "gsi_build_dir is the path to the GSI build"
     echo "    eg. aosp_arm64_ab-userdebug."
     echo "device_build_dir is the path to the device build"
@@ -12,12 +20,6 @@ usage () {
     echo "check_tool is the path to the checkvintf executable that will be"
     echo "    used to verify the compatibility of the given images. Optional."
 }
-
-readonly GSI_DIR="$1"
-readonly DEVICE_DIR="$2"
-readonly DIST_DIR="$3"
-readonly CHECK_TOOL="$4"
-readonly TEMP_DIR=$(mktemp -d "/tmp/$(basename $0)_XXXXXXXX")
 
 # Print error message and exit.
 # Usage: exit_badparam message
@@ -37,6 +39,43 @@ cleanup_and_exit () {
 
 trap cleanup_and_exit EXIT
 
+while getopts :v:m: opt; do
+    case "$opt" in
+        v)
+            readonly VENDOR_VERSION="$OPTARG"
+            ;;
+        m)
+            readonly MODIFY_SYSTEM_SCRIPT="$OPTARG"
+            ;;
+        \?)
+            exit_badparam "Invalid options: -"$OPTARG""
+            ;;
+        :)
+            exit_badparam "Option -"$OPTARG" requires an argument."
+            ;;
+    esac
+done
+
+if [[ "$OPTIND" -gt 1 && "$OPTIND" -lt 5 ]]; then
+    exit_badparam "Options -v and -m must be set together."
+fi
+
+shift "$((OPTIND-1))"
+
+if [[ ! -z "${MODIFY_SYSTEM_SCRIPT+x}" && ! -f "$MODIFY_SYSTEM_SCRIPT" ]]; then
+    exit_badparam "Script not found: "$MODIFY_SYSTEM_SCRIPT""
+fi
+
+if [[ $# -lt 3 ]]; then
+    exit_badparam "Unexpected number of arguments"
+fi
+
+readonly GSI_DIR="$1"
+readonly DEVICE_DIR="$2"
+readonly DIST_DIR="$3"
+readonly CHECK_TOOL="$4"
+readonly TEMP_DIR="$(mktemp -d /tmp/"$(basename $0)"_XXXXXXXX)"
+
 readonly GSI_TARGET_FILES_ARCHIVE="$(find "$GSI_DIR" -name "*-target_files-*.zip" -print)"
 if [[ ! -f "$GSI_TARGET_FILES_ARCHIVE" ]]; then
     exit_badparam "Could not find GSI target_files archive in $GSI_DIR."
@@ -44,16 +83,12 @@ fi
 
 readonly DEVICE_ARCHIVE="$(find "$DEVICE_DIR" -name "*-img-*.zip" -print)"
 if [[ ! -f "$DEVICE_ARCHIVE" ]]; then
-    exit_badparam "Could not find GSI img archive in $DEVICE_DIR."
+    exit_badparam "Could not find device img archive in $DEVICE_DIR."
 fi
 
 readonly DEVICE_TARGET_FILES_ARCHIVE="$(find "$DEVICE_DIR" -name "*-target_files-*.zip" -print)"
 if [[ ! -f "$DEVICE_ARCHIVE" ]]; then
-    exit_badparam "Could not find GSI target_files archive in $DEVICE_DIR."
-fi
-
-if [[ $# -lt 3 ]]; then
-    exit_badparam "Unexpected number of arguments"
+    exit_badparam "Could not find device target_files archive in $DEVICE_DIR."
 fi
 
 readonly DEVICE_ARTIFACTS_DIR="$TEMP_DIR"/device_archive_artifacts
@@ -61,12 +96,15 @@ readonly DEVICE_IMAGES_DIR="$DEVICE_ARTIFACTS_DIR"/IMAGES
 readonly GSI_ARTIFACTS_DIR="$TEMP_DIR"/gsi_artifacts
 readonly GSI_IMAGES_DIR="$GSI_ARTIFACTS_DIR"/IMAGES
 
+readonly SPL_PROPERTY_NAME="ro.build.version.security_patch"
+readonly SYSTEM_BUILD_PROP="SYSTEM/build.prop"
+
 ###
 # Uncompress the archives.
 mkdir -p "$GSI_ARTIFACTS_DIR"
 # Get the GSI images and meta data.
 unzip "$GSI_TARGET_FILES_ARCHIVE" \
-  IMAGES/system.img IMAGES/vbmeta.img META/system_matrix.xml META/system_manifest.xml \
+  IMAGES/system.img IMAGES/vbmeta.img META/system_matrix.xml META/system_manifest.xml "$SYSTEM_BUILD_PROP" \
   -d "$GSI_ARTIFACTS_DIR"
 
 mkdir -p "$DEVICE_IMAGES_DIR"
@@ -74,7 +112,7 @@ mkdir -p "$DEVICE_IMAGES_DIR"
 unzip "$DEVICE_ARCHIVE" -d "$DEVICE_IMAGES_DIR"
 # Get the device meta data.
 unzip "$DEVICE_TARGET_FILES_ARCHIVE" \
-  META/vendor_matrix.xml META/vendor_manifest.xml \
+  META/vendor_matrix.xml META/vendor_manifest.xml "$SYSTEM_BUILD_PROP" \
   -d "$DEVICE_ARTIFACTS_DIR"
 
 ###
@@ -86,6 +124,31 @@ if [[ -f "$CHECK_TOOL" ]]; then
     "$CHECK_TOOL" \
         "$GSI_ARTIFACTS_DIR"/META/system_manifest.xml \
         "$DEVICE_ARTIFACTS_DIR"/META/vendor_matrix.xml
+fi
+
+###
+# Modify system.img if vendor version is provided.
+if [[ ! -z "${VENDOR_VERSION+x}" ]]; then
+    # Create copy of GSI target files package that can be modified
+    # since the original $GSI_TARGET_FILES_ARCHIVE is a symlink to
+    # prebuilt files in cache
+    cp "$GSI_TARGET_FILES_ARCHIVE" "$TEMP_DIR"
+    readonly COPY_GSI_TARGET_FILES_ARCHIVE="$TEMP_DIR"/"$(basename "$GSI_TARGET_FILES_ARCHIVE")"
+
+    # Check compatibility of security patch level
+    readonly SYSTEM_SPL=$(sed -n -r "s/^"$SPL_PROPERTY_NAME"=(.*)$/\1/p" "$GSI_ARTIFACTS_DIR"/"$SYSTEM_BUILD_PROP")
+    readonly VENDOR_SPL=$(sed -n -r "s/^"$SPL_PROPERTY_NAME"=(.*)$/\1/p" "$DEVICE_ARTIFACTS_DIR"/"$SYSTEM_BUILD_PROP")
+    declare -a args
+    args=(-v "$VENDOR_VERSION" "$COPY_GSI_TARGET_FILES_ARCHIVE")
+    if [[ "$SYSTEM_SPL" != "$VENDOR_SPL" ]]; then
+        echo "Security patch level mismatch detected..."
+        echo "  SPL of system: "$SYSTEM_SPL""
+        echo "  SPL of vendor: "$VENDOR_SPL""
+        args+=("$VENDOR_SPL")
+    fi
+    "$MODIFY_SYSTEM_SCRIPT" "${args[@]}"
+    # Replace system.img with newly modified system.img
+    unzip -o "$COPY_GSI_TARGET_FILES_ARCHIVE" IMAGES/system.img -d "$GSI_ARTIFACTS_DIR"
 fi
 
 ###
@@ -111,7 +174,8 @@ if [ -n "$DIST_DIR" ]; then
     mkdir -p "$DIST_DIR" || true
 fi
 # Archive all the device artifacts.
-rsync -av --exclude='logs' "$DEVICE_DIR"/* "$DIST_DIR"
+rsync --archive --verbose --copy-links --exclude='logs' \
+  "$DEVICE_DIR"/* "$DIST_DIR"
 # Overwrite the image archive with the Mixed Build archive.
 OUT_ARCHIVE="$DIST_DIR"/"$(basename $DEVICE_ARCHIVE)"
 cp "$DEVICE_IMAGES_DIR"/mixed.zip "$OUT_ARCHIVE"
