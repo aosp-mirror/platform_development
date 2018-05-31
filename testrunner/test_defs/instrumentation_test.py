@@ -155,7 +155,8 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
             runner_name=self.GetRunnerName(),
             timeout_time=60*60,
             instrumentation_args=instrumentation_args,
-            user=options.user)
+            user=options.user,
+            no_hidden_api_checks=options.no_hidden_api_checks)
       except errors.InstrumentationError, errors.DeviceUnresponsiveError:
         return
       self._PrintTestResults(test_results)
@@ -172,12 +173,13 @@ class InstrumentationTestSuite(test_suite.AbstractTestSuite):
 
     else:
       self._CheckInstrumentationInstalled(adb)
-      adb.StartInstrumentationNoResults(package_name=self.GetPackageName(),
-                                        runner_name=self.GetRunnerName(),
-                                        raw_mode=options.raw_mode,
-                                        instrumentation_args=
-                                        instrumentation_args,
-                                        user=options.user)
+      adb.StartInstrumentationNoResults(
+          package_name=self.GetPackageName(),
+          runner_name=self.GetRunnerName(),
+          raw_mode=options.raw_mode,
+          instrumentation_args=instrumentation_args,
+          user=options.user,
+          no_hidden_api_checks=options.no_hidden_api_checks)
 
   def _CheckInstrumentationInstalled(self, adb):
     if not adb.IsInstrumentationInstalled(self.GetPackageName(),
