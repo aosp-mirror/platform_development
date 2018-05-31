@@ -184,6 +184,19 @@ TEST_MODULES = [
         api = 'current',
     ),
     Module(
+        name = 'libgolden_cpp_add_function_and_unexported_elf',
+        srcs = ['integration/cpp/gold/golden_1.cpp',
+                'integration/cpp/gold/high_volume_speaker.cpp',
+                'integration/cpp/gold/low_volume_speaker.cpp',
+                ],
+        version_script = \
+            'integration/cpp/gold/map_add_function_elf_symbol.txt',
+        export_include_dirs = ['integration/cpp/gold/include'],
+        cflags = ['-DGOLDEN_ADD_FUNCTION=1', '-DADD_UNEXPORTED_ELF_SYMBOL'],
+        arch = '',
+        api = 'current',
+    ),
+    Module(
         name = 'libgolden_cpp_change_function_access',
         srcs = ['integration/cpp/gold/golden_1.cpp',
                 'integration/cpp/gold/high_volume_speaker.cpp',

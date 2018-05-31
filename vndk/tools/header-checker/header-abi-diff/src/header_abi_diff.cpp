@@ -126,6 +126,16 @@ static std::set<std::string> LoadIgnoredSymbols(std::string &symbol_list_path) {
 static const char kWarn[] = "\033[36;1mwarning: \033[0m";
 static const char kError[] = "\033[31;1merror: \033[0m";
 
+bool ShouldEmitWarningMessage(abi_util::CompatibilityStatusIR status) {
+  return (!allow_extensions &&
+      (status & abi_util::CompatibilityStatusIR::Extension)) ||
+      (!allow_unreferenced_changes &&
+      (status & abi_util::CompatibilityStatusIR::UnreferencedChanges)) ||
+      (!allow_unreferenced_elf_symbol_changes &&
+      (status & abi_util::CompatibilityStatusIR::ElfIncompatible)) ||
+      (status & abi_util::CompatibilityStatusIR::Incompatible);
+}
+
 int main(int argc, const char **argv) {
   llvm::cl::ParseCommandLineOptions(argc, argv, "header-checker");
   std::set<std::string> ignored_symbols;
@@ -168,9 +178,10 @@ int main(int argc, const char **argv) {
     unreferenced_change_str += " This MIGHT be an ABI breaking change due to";
     unreferenced_change_str += " internal typecasts.";
   }
-  bool suppress_extending_warnings =
-      allow_extensions && (status & abi_util::CompatibilityStatusIR::Extension);
-  if (!suppress_local_warnings && !suppress_extending_warnings && status) {
+
+  bool should_emit_warning_message = ShouldEmitWarningMessage(status);
+
+  if (should_emit_warning_message) {
     llvm::errs() << "******************************************************\n"
                  << error_or_warning_str
                  << "VNDK library: "
@@ -183,13 +194,7 @@ int main(int argc, const char **argv) {
                  << "******************************************************\n";
   }
 
-  if (!advice_only && ((!allow_extensions &&
-      (status & abi_util::CompatibilityStatusIR::Extension)) ||
-      (!allow_unreferenced_changes &&
-      (status & abi_util::CompatibilityStatusIR::UnreferencedChanges)) ||
-      (!allow_unreferenced_elf_symbol_changes &&
-      (status & abi_util::CompatibilityStatusIR::ElfIncompatible)) ||
-      (status & abi_util::CompatibilityStatusIR::Incompatible))) {
+  if (!advice_only && should_emit_warning_message) {
     return status;
   }
 
