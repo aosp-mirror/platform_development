@@ -92,22 +92,18 @@ def get_ref_dump_dir_stem(args, vndk_or_ndk, product, chosen_vndk_version):
     return ref_dump_dir_stem
 
 def make_libs_for_product(libs, llndk_mode, product):
+    print('making libs for product:', product)
     if libs:
-        print('making libs for product:', product)
         make_libraries(libs, product, llndk_mode)
     else:
-        print('making all libs for product: ', product)
         make_tree(product)
 
-def find_and_remove_path(root_path, chosen_vndk_version, file_name=None):
+def find_and_remove_path(root_path, file_name=None):
     if file_name is not None:
-        print('removing', file_name, 'from root', root_path)
-        remove_cmd_str = 'find ' + root_path + ' -name ' + file_name +\
-            ' -exec rm -rf {} \;'
-        subprocess.check_call(remove_cmd_str, cwd=AOSP_DIR, shell=True)
-    else:
-        remove_cmd_str = 'rm -rf ' + root_path
-        subprocess.check_call(remove_cmd_str, shell=True)
+        root_path = os.path.join(root_path, 'source-based', file_name)
+    remove_cmd_str = 'rm -rf ' + root_path
+    print('removing', root_path)
+    subprocess.check_call(remove_cmd_str, shell=True)
 
 def remove_references_for_all_arches_and_variants(args, product, targets,
                                                   chosen_vndk_version):
@@ -116,21 +112,24 @@ def remove_references_for_all_arches_and_variants(args, product, targets,
     for target in targets:
         if target.arch ==  '' or target.arch_variant == '':
             continue
-        if libs:
-            for lib in libs:
-                find_and_remove_path(args.ref_dump_dir, chosen_vndk_version,
-                                     lib + COMPRESSED_SOURCE_ABI_DUMP_EXT)
-        else:
-            dir_to_remove = os.path.join(
+        dir_to_remove_vndk = os.path.join(
                 get_ref_dump_dir_stem(args, 'vndk', product,
                                       chosen_vndk_version),
                 get_lib_arch_str(target))
-            find_and_remove_path(dir_to_remove, chosen_vndk_version)
-            dir_to_remove = os.path.join(
+        dir_to_remove_ndk = os.path.join(
                 get_ref_dump_dir_stem(args, 'ndk', product,
                                       chosen_vndk_version),
                 get_lib_arch_str(target))
-            find_and_remove_path(dir_to_remove, chosen_vndk_version)
+
+        if libs:
+            for lib in libs:
+                find_and_remove_path(dir_to_remove_vndk,
+                                     lib + COMPRESSED_SOURCE_ABI_DUMP_EXT)
+                find_and_remove_path(dir_to_remove_ndk,
+                                     lib + COMPRESSED_SOURCE_ABI_DUMP_EXT)
+        else:
+            find_and_remove_path(dir_to_remove_vndk)
+            find_and_remove_path(dir_to_remove_ndk)
 
 def add_to_path_dict(path, dictionary, libs=[]):
     name, lsdump_ext = os.path.splitext(path)
