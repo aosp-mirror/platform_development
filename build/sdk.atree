@@ -134,6 +134,10 @@ bin/dx                                        build-tools/${PLATFORM_NAME}/dx
 framework/dx.jar                              build-tools/${PLATFORM_NAME}/lib/dx.jar
 bin/dexdump                                   build-tools/${PLATFORM_NAME}/dexdump
 
+# d8
+prebuilts/r8/d8-master.jar                    build-tools/${PLATFORM_NAME}/lib/d8.jar
+prebuilts/r8/d8                               build-tools/${PLATFORM_NAME}/d8
+
 # multi-dex
 ${OUT_DIR}/host/common/obj/JAVA_LIBRARIES/shrinkedAndroid_intermediates/shrinkedAndroid.jar  build-tools/${PLATFORM_NAME}/lib/shrinkedAndroid.jar
 dalvik/dx/etc/mainDexClasses.rules                                                           build-tools/${PLATFORM_NAME}/mainDexClasses.rules
@@ -231,7 +235,7 @@ development/sdk/sdk_files_NOTICE.txt      platforms/${PLATFORM_NAME}/skins/NOTIC
 system-qemu.img                                 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/system.img
 vendor-qemu.img                                 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/vendor.img
 ramdisk.img                                system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/ramdisk.img
-userdata.img                               system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/userdata.img
+data/misc                                        system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/data/misc
 system/build.prop                          system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/build.prop
 
 # Note: the kernel image is handled by sdk-android-<abi>.atree now.
