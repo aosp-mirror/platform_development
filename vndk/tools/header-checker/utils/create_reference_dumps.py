@@ -13,7 +13,8 @@ from utils import (make_libraries, make_tree, find_lib_lsdumps,
                    SOURCE_ABI_DUMP_EXT, SOURCE_ABI_DUMP_EXT_END, SO_EXT,
                    make_targets)
 
-PRODUCTS = ['aosp_arm_ab', 'aosp_arm64_ab', 'aosp_x86_ab', 'aosp_x86_64_ab']
+PRODUCTS = ['aosp_arm_ab', 'aosp_arm', 'aosp_arm64', 'aosp_x86_ab', 'aosp_x86',
+            'aosp_x86_64']
 SOONG_DIR = os.path.join(AOSP_DIR, 'out', 'soong', '.intermediates')
 
 class Target(object):
@@ -47,15 +48,18 @@ def get_lsdump_paths_from_out(product):
             add_to_path_dict(path, lsdump_paths)
     return lsdump_paths
 
-def find_and_copy_lib_lsdumps(target, ref_dump_dir_stem, ref_dump_dir_insertion,
-                              core_or_vendor_shared_str, libs, lsdump_paths):
+def get_lib_arch_str(target):
     assert(target.primary_arch != '')
     target_arch_variant_str = ''
     # if TARGET_ARCH == TARGET_ARCH_VARIANT, soong makes targetArchVariant empty
     # this is the case for aosp_x86_64_ab and aosp_x86
     if target.arch_variant != target.arch:
         target_arch_variant_str = '_' + target.arch_variant
+    return target.arch + target_arch_variant_str
 
+
+def find_and_copy_lib_lsdumps(target, ref_dump_dir_stem, ref_dump_dir_insertion,
+                              core_or_vendor_shared_str, libs, lsdump_paths):
     arch_lsdump_paths = find_lib_lsdumps(target.arch, target.arch_variant,
                                          target.cpu_variant, lsdump_paths,
                                          core_or_vendor_shared_str,
@@ -64,7 +68,7 @@ def find_and_copy_lib_lsdumps(target, ref_dump_dir_stem, ref_dump_dir_insertion,
     # reference  directory.
     return copy_reference_dumps(arch_lsdump_paths, ref_dump_dir_stem,
                                 ref_dump_dir_insertion,
-                                target.arch + target_arch_variant_str)
+                                get_lib_arch_str(target))
 
 def choose_vndk_version(args_version, platform_vndk_version,
                         board_vndk_version):
@@ -87,38 +91,45 @@ def get_ref_dump_dir_stem(args, vndk_or_ndk, product, chosen_vndk_version):
 
     return ref_dump_dir_stem
 
-def make_libs_for_all_arches_and_variants(libs, llndk_mode):
-    for product in PRODUCTS:
-        if libs:
-            print('making libs for product:', product)
-            make_libraries(libs, product, llndk_mode)
-        else:
-            print('making all libs for product: ', product)
-            make_tree(product)
-
-def find_and_remove_path(root_path, chosen_vndk_version, file_name=None):
-    if file_name is not None:
-        print('removing', file_name, 'from root', root_path)
-        remove_cmd_str = 'find ' + root_path + ' -name ' + file_name +\
-            ' -exec rm -rf {} \;'
-        subprocess.check_call(remove_cmd_str, cwd=AOSP_DIR, shell=True)
+def make_libs_for_product(libs, llndk_mode, product):
+    print('making libs for product:', product)
+    if libs:
+        make_libraries(libs, product, llndk_mode)
     else:
-        remove_cmd_str = 'rm -rf ' + chosen_vndk_version
-        subprocess.check_call(remove_cmd_str, cwd=root_path, shell=True)
+        make_tree(product)
 
-def remove_references_for_all_arches_and_variants(args, chosen_vndk_version):
+def find_and_remove_path(root_path, file_name=None):
+    if file_name is not None:
+        root_path = os.path.join(root_path, 'source-based', file_name)
+    remove_cmd_str = 'rm -rf ' + root_path
+    print('removing', root_path)
+    subprocess.check_call(remove_cmd_str, shell=True)
+
+def remove_references_for_all_arches_and_variants(args, product, targets,
+                                                  chosen_vndk_version):
     print('Removing reference dumps...')
     libs = args.libs
-    for product in PRODUCTS:
+    for target in targets:
+        if target.arch ==  '' or target.arch_variant == '':
+            continue
+        dir_to_remove_vndk = os.path.join(
+                get_ref_dump_dir_stem(args, 'vndk', product,
+                                      chosen_vndk_version),
+                get_lib_arch_str(target))
+        dir_to_remove_ndk = os.path.join(
+                get_ref_dump_dir_stem(args, 'ndk', product,
+                                      chosen_vndk_version),
+                get_lib_arch_str(target))
+
         if libs:
             for lib in libs:
-                find_and_remove_path(args.ref_dump_dir, chosen_vndk_version,
+                find_and_remove_path(dir_to_remove_vndk,
+                                     lib + COMPRESSED_SOURCE_ABI_DUMP_EXT)
+                find_and_remove_path(dir_to_remove_ndk,
                                      lib + COMPRESSED_SOURCE_ABI_DUMP_EXT)
         else:
-            find_and_remove_path(os.path.join(args.ref_dump_dir, 'ndk'),
-                                 chosen_vndk_version)
-            find_and_remove_path(os.path.join(args.ref_dump_dir, 'vndk'),
-                                 chosen_vndk_version)
+            find_and_remove_path(dir_to_remove_vndk)
+            find_and_remove_path(dir_to_remove_ndk)
 
 def add_to_path_dict(path, dictionary, libs=[]):
     name, lsdump_ext = os.path.splitext(path)
@@ -140,14 +151,15 @@ def search_for_lsdump_paths(soong_dir, libs):
     return lsdump_paths
 
 def create_source_abi_reference_dumps(args, product,
-                                      chosen_vndk_version, lsdump_paths):
+                                      chosen_vndk_version, lsdump_paths,
+                                      targets):
     ref_dump_dir_stem_vndk =\
         get_ref_dump_dir_stem(args, 'vndk', product, chosen_vndk_version)
     ref_dump_dir_stem_ndk =\
         get_ref_dump_dir_stem(args, 'ndk', product, chosen_vndk_version)
     ref_dump_dir_insertion = 'source-based'
     num_libs_copied = 0
-    for target in [Target(True, product), Target(False, product)]:
+    for target in targets:
         if target.arch ==  '' or target.arch_variant == '':
             continue
         print('Creating dumps for target_arch:', target.arch, 'and variant ',
@@ -176,6 +188,8 @@ def main():
                         default=False, action='store_true')
     parser.add_argument('-libs', help='libs to create references for',
                         action='append')
+    parser.add_argument('-products', help='products to create references for',
+                        action='append')
     parser.add_argument('-ref-dump-dir',
                         help='directory to copy reference abi dumps into',
                         default=os.path.join(AOSP_DIR,'prebuilts/abi-dumps'))
@@ -190,14 +204,18 @@ def main():
     chosen_vndk_version = \
         choose_vndk_version(args.version, platform_vndk_version,
                            board_vndk_version)
-    remove_references_for_all_arches_and_variants(args, chosen_vndk_version)
-    # make all the libs specified / the 'vndk' target if none specified
-    if (args.no_make_lib == False):
-        make_libs_for_all_arches_and_variants(args.libs, args.llndk)
-    for product in PRODUCTS:
+    if args.products is None:
+      args.products = PRODUCTS
+    for product in args.products:
+        targets = [Target(True, product), Target(False, product)]
+        remove_references_for_all_arches_and_variants(args, product, targets,
+                                                      chosen_vndk_version)
+        # make all the libs specified / the 'vndk' target if none specified
+        if (args.no_make_lib == False):
+            make_libs_for_product(args.libs, args.llndk, product)
         lsdump_paths = get_lsdump_paths(product, args.libs)
         num_processed += create_source_abi_reference_dumps(
-            args, product, chosen_vndk_version, lsdump_paths)
+            args, product, chosen_vndk_version, lsdump_paths, targets)
     print()
     end = time.time()
     print('msg: Processed', num_processed, 'libraries in ', (end - start) / 60,
