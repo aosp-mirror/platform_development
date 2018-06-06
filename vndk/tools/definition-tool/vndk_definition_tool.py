@@ -998,6 +998,8 @@ class DexFileReader(object):
             VdexHeader = cls.VdexHeader16
         elif version == b'019\x00':
             VdexHeader = cls.VdexHeader19
+        else:
+            raise ValueError('unknown vdex version ' + repr(version))
 
         vdex_header = VdexHeader.unpack_from(buf, offset=0)
 
