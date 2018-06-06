@@ -20,6 +20,8 @@
 
 from __future__ import print_function
 
+from gerrit import create_url_opener_from_args, query_change_lists
+
 import argparse
 import collections
 import itertools
@@ -29,16 +31,6 @@ import os
 import re
 import sys
 import xml.dom.minidom
-
-try:
-    from urllib.parse import urlencode  # PY3
-except ImportError:
-    from urllib import urlencode  # PY2
-
-try:
-    from urllib.request import HTTPBasicAuthHandler, build_opener  # PY3
-except ImportError:
-    from urllib2 import HTTPBasicAuthHandler, build_opener  # PY2
 
 try:
     from __builtin__ import raw_input as input  # PY2
@@ -165,54 +157,6 @@ def build_project_name_to_directory_dict(manifest_path):
         else:
             project_dirs[name] = name
     return project_dirs
-
-
-def load_auth(cookie_file_path):
-    """Load username and password from .gitcookies and return an
-    HTTPBasicAuthHandler."""
-    auth_handler = HTTPBasicAuthHandler()
-    with open(cookie_file_path, 'r') as cookie_file:
-        for lineno, line in enumerate(cookie_file, start=1):
-            if line.startswith('#HttpOnly_'):
-                line = line[len('#HttpOnly_'):]
-            if not line or line[0] == '#':
-                continue
-            row = line.split('\t')
-            if len(row) != 7:
-                continue
-            domain = row[0]
-            cookie = row[6]
-            sep = cookie.find('=')
-            if sep == -1:
-                continue
-            username = cookie[0:sep]
-            password = cookie[sep + 1:]
-            auth_handler.add_password(domain, domain, username, password)
-    return auth_handler
-
-
-def query_change_lists(gerrit, query_string, gitcookies, limits):
-    """Query change lists."""
-    data = [
-        ('q', query_string),
-        ('o', 'CURRENT_REVISION'),
-        ('o', 'CURRENT_COMMIT'),
-        ('n', str(limits)),
-    ]
-    url = gerrit + '/a/changes/?' + urlencode(data)
-
-    auth_handler = load_auth(gitcookies)
-    opener = build_opener(auth_handler)
-
-    response_file = opener.open(url)
-    try:
-        # Trim cross site script inclusion (XSSI) protector
-        data = response_file.read().decode('utf-8')[4:]
-
-        # Parse responsed JSON
-        return json.loads(data)
-    finally:
-        response_file.close()
 
 
 def group_and_sort_change_lists(change_lists, project_dirs):
@@ -453,8 +397,8 @@ def _get_manifest_xml_from_args(args):
 
 def _get_change_lists_from_args(args):
     """Query the change lists by args."""
-    return query_change_lists(args.gerrit, args.query, args.gitcookies,
-                              args.limits)
+    url_opener = create_url_opener_from_args(args)
+    return query_change_lists(url_opener, args.gerrit, args.query, args.limits)
 
 
 def _get_local_branch_name_from_args(args):

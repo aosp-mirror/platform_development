@@ -20,113 +20,12 @@
 
 from __future__ import print_function
 
+from gerrit import create_url_opener_from_args, query_change_lists, set_review
+
 import argparse
-import collections
-import itertools
 import json
-import multiprocessing
 import os
-import re
 import sys
-import xml.dom.minidom
-
-try:
-    from urllib.parse import urlencode  # PY3
-except ImportError:
-    from urllib import urlencode  # PY2
-
-try:
-    from urllib.request import (
-        HTTPBasicAuthHandler, Request, build_opener)  # PY3
-except ImportError:
-    from urllib2 import HTTPBasicAuthHandler, Request, build_opener  # PY2
-
-
-def load_auth(cookie_file_path):
-    """Load username and password from .gitcookies and return an
-    HTTPBasicAuthHandler."""
-    auth_handler = HTTPBasicAuthHandler()
-    with open(cookie_file_path, 'r') as cookie_file:
-        for lineno, line in enumerate(cookie_file, start=1):
-            if line.startswith('#HttpOnly_'):
-                line = line[len('#HttpOnly_'):]
-            if not line or line[0] == '#':
-                continue
-            row = line.split('\t')
-            if len(row) != 7:
-                continue
-            domain = row[0]
-            cookie = row[6]
-            sep = cookie.find('=')
-            if sep == -1:
-                continue
-            username = cookie[0:sep]
-            password = cookie[sep + 1:]
-            auth_handler.add_password(domain, domain, username, password)
-    return auth_handler
-
-
-def _decode_xssi_json(data):
-    """Trim XSSI protector and decode JSON objects."""
-    # Trim cross site script inclusion (XSSI) protector
-    data = data.decode('utf-8')[4:]
-    # Parse JSON objects
-    return json.loads(data)
-
-
-def query_change_lists(gerrit, query_string, gitcookies, limits):
-    """Query change lists."""
-    data = [
-        ('q', query_string),
-        ('o', 'CURRENT_REVISION'),
-        ('o', 'CURRENT_COMMIT'),
-        ('n', str(limits)),
-    ]
-    url = gerrit + '/a/changes/?' + urlencode(data)
-
-    auth_handler = load_auth(gitcookies)
-    opener = build_opener(auth_handler)
-
-    response_file = opener.open(url)
-    try:
-        return _decode_xssi_json(response_file.read())
-    finally:
-        response_file.close()
-
-
-def set_review(gerrit, gitcookies, change_id, labels, message):
-    """Set review votes to a change list."""
-
-    url = '{}/a/changes/{}/revisions/current/review'.format(gerrit, change_id)
-
-    auth_handler = load_auth(gitcookies)
-    opener = build_opener(auth_handler)
-
-    data = {}
-    if labels:
-        data['labels'] = labels
-    if message:
-        data['message'] = message
-    data = json.dumps(data).encode('utf-8')
-
-    headers = {
-        'Content-Type': 'application/json; charset=UTF-8',
-    }
-
-    request = Request(url, data, headers)
-    response_file = opener.open(request)
-    try:
-        res_code = response_file.getcode()
-        res_json = _decode_xssi_json(response_file.read())
-        return (res_code, res_json)
-    finally:
-        response_file.close()
-
-
-def _get_change_lists_from_args(args):
-    """Query the change lists by args."""
-    return query_change_lists(args.gerrit, args.query, args.gitcookies,
-                              args.limits)
 
 
 def _get_labels_from_args(args):
@@ -208,8 +107,12 @@ def main():
     # Convert label arguments
     labels = _get_labels_from_args(args)
 
+    # Load authentication credentials
+    url_opener = create_url_opener_from_args(args)
+
     # Retrieve change lists
-    change_lists = _get_change_lists_from_args(args)
+    change_lists = query_change_lists(
+        url_opener, args.gerrit, args.query, args.limits)
     if not change_lists:
         print('error: No matching change lists.', file=sys.stderr)
         sys.exit(1)
@@ -225,8 +128,7 @@ def main():
     for change in change_lists:
         try:
             res_code, res_json = set_review(
-                args.gerrit, args.gitcookies, change['id'], labels,
-                args.message)
+                url_opener, args.gerrit, change['id'], labels, args.message)
         except HTTPError as e:
             res_code = e.code
             res_json = None
