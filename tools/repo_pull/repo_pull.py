@@ -116,8 +116,19 @@ class ChangeList(object):
         self.number = change_list['_number']
 
         self.fetch = fetch
-        self.fetch_url = fetch['http']['url']
-        self.fetch_ref = fetch['http']['ref']
+
+        fetch_git = None
+        for protocol in ('http', 'sso', 'rpc'):
+            fetch_git = fetch.get(protocol)
+            if fetch_git:
+                break
+
+        if not fetch_git:
+            raise ValueError(
+                'unknown fetch protocols: ' + str(list(fetch.keys())))
+
+        self.fetch_url = fetch_git['url']
+        self.fetch_ref = fetch_git['ref']
 
         self.commit_sha1 = commit_sha1
         self.commit = commit
