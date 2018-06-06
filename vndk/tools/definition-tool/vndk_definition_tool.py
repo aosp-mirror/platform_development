@@ -1582,10 +1582,13 @@ class VNDKLibDir(list):
         """Read ro.vendor.version property from vendor partitions."""
         for vendor_dir in vendor_dirs:
             path = os.path.join(vendor_dir, 'default.prop')
-            with open(path, 'r') as property_file:
-                result = cls._get_property(property_file, 'ro.vndk.version')
-                if result is not None:
-                    return result
+            try:
+                with open(path, 'r') as property_file:
+                    result = cls._get_property(property_file, 'ro.vndk.version')
+                    if result is not None:
+                        return result
+            except FileNotFoundError:
+                pass
         return None
 
 
