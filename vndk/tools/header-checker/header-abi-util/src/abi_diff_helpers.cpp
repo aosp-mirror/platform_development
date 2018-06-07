@@ -786,6 +786,9 @@ DiffStatus AbiDiffHelper::CompareAndDumpTypeDiff(
   if (old_it == old_types_.end() || new_it == new_types_.end()) {
     TypeQueueCheckAndPop(type_queue);
     // One of the types were hidden, we cannot compare further.
+    if (diff_policy_options_.consider_opaque_types_different_) {
+      return DiffStatus::opaque_diff;
+    }
     return DiffStatus::no_diff;
   }
   abi_util::LinkableMessageKind old_kind =
@@ -800,6 +803,11 @@ DiffStatus AbiDiffHelper::CompareAndDumpTypeDiff(
                                          old_kind, type_queue, diff_kind);
   }
   TypeQueueCheckAndPop(type_queue);
+  if (diff_policy_options_.consider_opaque_types_different_ &&
+      diff_status == DiffStatus::opaque_diff &&
+      (old_it->second->GetName() != new_it->second->GetName())) {
+    return DiffStatus::direct_diff;
+  }
   return diff_status;
 }
 

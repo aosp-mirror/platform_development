@@ -123,7 +123,9 @@ MergeStatus TextFormatToIRReader::DoesUDTypeODRViolationExist(
     return MergeStatus(true, "");
   }
   std::set<std::string> type_cache;
-  AbiDiffHelper diff_helper(type_graph_, addend.type_graph_, &type_cache,
+  DiffPolicyOptions diff_policy_options(false) ;
+  AbiDiffHelper diff_helper(type_graph_, addend.type_graph_,
+                            diff_policy_options, &type_cache,
                             nullptr, local_to_global_type_id_map_);
   for (auto &contender_ud : it->second) {
     if (diff_helper.CompareAndDumpTypeDiff(contender_ud->GetSelfType(),
