@@ -19,6 +19,7 @@
 from __future__ import print_function
 
 import argparse
+import base64
 import json
 import os
 import sys
@@ -154,6 +155,19 @@ def set_review(url_opener, gerrit_url, change_id, labels, message):
         res_code = response_file.getcode()
         res_json = _decode_xssi_json(response_file.read())
         return (res_code, res_json)
+    finally:
+        response_file.close()
+
+
+def get_patch(url_opener, gerrit_url, change_id, revision_id='current'):
+    """Download the patch file."""
+
+    url = '{}/a/changes/{}/revisions/{}/patch'.format(
+        gerrit_url, change_id, revision_id)
+
+    response_file = url_opener.open(url)
+    try:
+        return base64.b64decode(response_file.read())
     finally:
         response_file.close()
 
