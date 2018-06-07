@@ -998,6 +998,8 @@ class DexFileReader(object):
             VdexHeader = cls.VdexHeader16
         elif version == b'019\x00':
             VdexHeader = cls.VdexHeader19
+        else:
+            raise ValueError('unknown vdex version ' + repr(version))
 
         vdex_header = VdexHeader.unpack_from(buf, offset=0)
 
@@ -1580,10 +1582,13 @@ class VNDKLibDir(list):
         """Read ro.vendor.version property from vendor partitions."""
         for vendor_dir in vendor_dirs:
             path = os.path.join(vendor_dir, 'default.prop')
-            with open(path, 'r') as property_file:
-                result = cls._get_property(property_file, 'ro.vndk.version')
-                if result is not None:
-                    return result
+            try:
+                with open(path, 'r') as property_file:
+                    result = cls._get_property(property_file, 'ro.vndk.version')
+                    if result is not None:
+                        return result
+            except FileNotFoundError:
+                pass
         return None
 
 
