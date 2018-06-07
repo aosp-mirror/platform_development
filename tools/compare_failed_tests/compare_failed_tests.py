@@ -20,7 +20,9 @@ ATTRS_TO_SHOW = ['Result::Build.build_model',
                  'Result.suite_name',
                  'Result.suite_plan',
                  'Result.suite_build_number',
-                 'Result.start_display']
+                 'Result.start_display',
+                 'Result::Build.build_abis_32',
+                 'Result::Build.build_abis_64',]
 
 
 def parse_attrib_path(attrib_path):
@@ -90,7 +92,7 @@ def get_result(test_result, module_name, testcase_name, test_name):
   if test_name not in tests:
     return NO_DATA
 
-  return tests[test_name]
+  return ', '.join([x + ': ' + y for x, y in tests[test_name].items()])
 
 
 def read_test_result_xml(test_result_path):
@@ -106,37 +108,38 @@ def read_test_result_xml(test_result_path):
   test_result['modules'] = modules
 
   for module in root.iter('Module'):
-    module_name = '|'.join([module.attrib['name'], module.attrib['abi']])
+    abi = module.attrib['abi']
 
-    if module_name in modules:
-      print 'WARNING: Duplicate module: ' + module_name
+    module_name = module.attrib['name']
 
-    testcases = collections.OrderedDict()
-    modules[module_name] = testcases
+    if not module_name in modules:
+      modules[module_name] = collections.OrderedDict()
+
+    testcases = modules[module_name]
 
     for testcase in module.iter('TestCase'):
       testcase_name = testcase.attrib['name']
 
-      if testcase_name in testcases:
-        print 'WARNING: Duplicate testcase: ' + testcase_name
+      if not testcase_name in testcases:
+        testcases[testcase_name] = collections.OrderedDict()
 
-      tests = collections.OrderedDict()
-      testcases[testcase_name] = tests
+      tests = testcases[testcase_name]
 
       for test in testcase.iter('Test'):
         test_name = test.attrib['name']
 
-        if test_name in tests:
-          print 'WARNING: Duplicate test: ' + test_name
+        if not test_name in tests:
+          tests[test_name] = collections.OrderedDict()
 
-        result = test.attrib['result']
-        tests[test_name] = result
+        if abi in tests[test_name]:
+          print '[WARNING] duplicated test:', test_name
+
+        tests[test_name][abi] = test.attrib['result']
 
   return test_result
 
 
-def compare_failed_tests(test_result_a, test_result_b,
-                         csvfile, only_failed_both):
+def compare_failed_tests(test_result_a, test_result_b, csvfile):
   """Do the comparison.
 
   Given two test result dicts (A and B), list all failed test in A and display
@@ -146,7 +149,6 @@ def compare_failed_tests(test_result_a, test_result_b,
     test_result_a: the dict returned from read_test_result(test_result_a.xml)
     test_result_b: the dict returned from read_test_result(test_result_b.xml)
     csvfile: a opened file
-    only_failed_both: only display tests those failed in both test results
 
   Returns:
     string: diff report, summary
@@ -166,13 +168,12 @@ def compare_failed_tests(test_result_a, test_result_b,
       testcase_sub_summary = ''
 
       for test_name, result in tests.iteritems():
-        if result == FAIL:
+        if FAIL in result.values():
           result_b = get_result(
               test_result_b, module_name, testcase_name, test_name)
 
-          if not only_failed_both or result_b == FAIL:
-            testcase_sub_summary += '    ' + test_name + ': ' + result_b + '\n'
-            writer.writerow([module_name, testcase_name, test_name, result_b])
+          testcase_sub_summary += '    ' + test_name + ': ' + result_b + '\n'
+          writer.writerow([module_name, testcase_name, test_name, result_b])
 
       if testcase_sub_summary:
         module_sub_summary = '  ' + testcase_name + '\n' + testcase_sub_summary
@@ -189,8 +190,6 @@ def main():
   parser.add_argument('test_result_a', help='path to first test_result.xml')
   parser.add_argument('test_result_b', help='path to second test_result.xml')
   parser.add_argument('--csv', default='diff.csv', help='path to csv output')
-  parser.add_argument('--only-failed-both', action='store_true',
-                      help='only list tests failed in both test_result.xml')
 
   args = parser.parse_args()
 
@@ -200,8 +199,7 @@ def main():
   print_test_infos(test_result_a, test_result_b)
 
   with open(args.csv, 'w') as csvfile:
-    summary = compare_failed_tests(test_result_a, test_result_b, csvfile,
-                                   args.only_failed_both)
+    summary = compare_failed_tests(test_result_a, test_result_b, csvfile)
 
     print summary
 
