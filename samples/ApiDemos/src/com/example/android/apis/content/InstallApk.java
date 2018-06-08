@@ -21,32 +21,29 @@ package com.example.android.apis.content;
 import com.example.android.apis.R;
 
 import android.app.Activity;
-import android.content.ContentProvider;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ContentProvider.PipeDataWriter;
-import android.content.res.AssetFileDescriptor;
-import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.ParcelFileDescriptor;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 
 /**
- * Demonstration of styled text resources.
+ * Demonstration of package installation and uninstallation using the original (non-Session)
+ * package installation API that uses {@link Intent#ACTION_INSTALL_PACKAGE}.
+ *
+ * @see InstallApkSessionApi for a demo of the newer Session API.
  */
 public class InstallApk extends Activity {
     static final int REQUEST_INSTALL = 1;
@@ -63,8 +60,6 @@ public class InstallApk extends Activity {
         button.setOnClickListener(mUnknownSourceListener);
         button = (Button)findViewById(R.id.my_source);
         button.setOnClickListener(mMySourceListener);
-        button = (Button)findViewById(R.id.replace);
-        button.setOnClickListener(mReplaceListener);
         button = (Button)findViewById(R.id.uninstall);
         button.setOnClickListener(mUninstallListener);
         button = (Button)findViewById(R.id.uninstall_result);
@@ -95,7 +90,8 @@ public class InstallApk extends Activity {
     private OnClickListener mUnknownSourceListener = new OnClickListener() {
         public void onClick(View v) {
             Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
-            intent.setData(Uri.fromFile(prepareApk("HelloActivity.apk")));
+            intent.setData(getApkUri("HelloActivity.apk"));
+            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             startActivity(intent);
         }
     };
@@ -103,22 +99,10 @@ public class InstallApk extends Activity {
     private OnClickListener mMySourceListener = new OnClickListener() {
         public void onClick(View v) {
             Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
-            intent.setData(Uri.fromFile(prepareApk("HelloActivity.apk")));
+            intent.setData(getApkUri("HelloActivity.apk"));
+            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             intent.putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true);
             intent.putExtra(Intent.EXTRA_RETURN_RESULT, true);
-            intent.putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME,
-                    getApplicationInfo().packageName);
-            startActivityForResult(intent, REQUEST_INSTALL);
-        }
-    };
-
-    private OnClickListener mReplaceListener = new OnClickListener() {
-        public void onClick(View v) {
-            Intent intent = new Intent(Intent.ACTION_INSTALL_PACKAGE);
-            intent.setData(Uri.fromFile(prepareApk("HelloActivity.apk")));
-            intent.putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true);
-            intent.putExtra(Intent.EXTRA_RETURN_RESULT, true);
-            intent.putExtra(Intent.EXTRA_ALLOW_REPLACE, true);
             intent.putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME,
                     getApplicationInfo().packageName);
             startActivityForResult(intent, REQUEST_INSTALL);
@@ -144,36 +128,37 @@ public class InstallApk extends Activity {
         }
     };
 
-    private File prepareApk(String assetName) {
+    /**
+     * Returns a Uri pointing to the APK to install.
+     */
+    private Uri getApkUri(String assetName) {
+        // Before N, a MODE_WORLD_READABLE file could be passed via the ACTION_INSTALL_PACKAGE
+        // Intent. Since N, MODE_WORLD_READABLE files are forbidden, and a FileProvider is
+        // recommended.
+        boolean useFileProvider = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N;
+
         // Copy the given asset out into a file so that it can be installed.
         // Returns the path to the file.
-        byte[] buffer = new byte[8192];
-        InputStream is = null;
-        FileOutputStream fout = null;
-        try {
-            is = getAssets().open(assetName);
-            fout = openFileOutput("tmp.apk", Context.MODE_WORLD_READABLE);
+        String tempFilename = "tmp.apk";
+        byte[] buffer = new byte[16384];
+        int fileMode = useFileProvider ? Context.MODE_PRIVATE : Context.MODE_WORLD_READABLE;
+
+        try (InputStream is = getAssets().open(assetName);
+            FileOutputStream fout = openFileOutput(tempFilename, fileMode)) {
             int n;
             while ((n=is.read(buffer)) >= 0) {
                 fout.write(buffer, 0, n);
             }
         } catch (IOException e) {
-            Log.i("InstallApk", "Failed transferring", e);
-        } finally {
-            try {
-                if (is != null) {
-                    is.close();
-                }
-            } catch (IOException e) {
-            }
-            try {
-                if (fout != null) {
-                    fout.close();
-                }
-            } catch (IOException e) {
-            }
+            Log.i("InstallApk", "Failed to write temporary APK file", e);
         }
 
-        return getFileStreamPath("tmp.apk");
+        if (useFileProvider) {
+            File toInstall = new File(this.getFilesDir(), tempFilename);
+            return FileProvider.getUriForFile(
+                    this, "com.example.android.apis.installapkprovider", toInstall);
+        } else {
+            return Uri.fromFile(getFileStreamPath(tempFilename));
+        }
     }
 }

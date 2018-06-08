@@ -14,8 +14,8 @@
      limitations under the License.
 -->
 
-<!-- Demonstrates starting and stopping a local service.
-     See corresponding Java code com.android.sdk.app.LocalSerice.java. -->
+
+<!-- Demonstrates installing and uninstalling packages. -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="vertical" android:padding="4dip"
     android:gravity="center_horizontal"
@@ -36,11 +36,6 @@
     <Button android:id="@+id/my_source"
         android:layout_width="wrap_content" android:layout_height="wrap_content"
         android:text="My Source">
-    </Button>
-
-    <Button android:id="@+id/replace"
-        android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:text="Replace">
     </Button>
 
     <Button android:id="@+id/uninstall"
