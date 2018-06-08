@@ -22,6 +22,11 @@ from __future__ import print_function
 
 from gerrit import create_url_opener_from_args, query_change_lists, set_review
 
+try:
+    from urllib.error import HTTPError  # PY3
+except ImportError:
+    from urllib2 import HTTPError  # PY2
+
 import argparse
 import json
 import os
