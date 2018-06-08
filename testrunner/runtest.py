@@ -183,6 +183,10 @@ class TestRunner(object):
                       " and will install all packages built.  This is"
                       " useful when the test path has a lot of apks but you"
                       " only care about one.")
+    parser.add_option("--no-hidden-api-checks", dest="no_hidden_api_checks",
+                      default=False, action="store_true",
+                      help="Disable hidden API checks in instrumentation"
+                      " tests.")
     group = optparse.OptionGroup(
         parser, "Targets", "Use these options to direct tests to a specific "
         "Android target")
