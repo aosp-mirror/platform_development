@@ -25,9 +25,11 @@ import os
 import sys
 
 try:
-    from urllib.request import HTTPBasicAuthHandler, build_opener  # PY3
+    from urllib.request import (
+        HTTPBasicAuthHandler, Request, build_opener)  # PY3
 except ImportError:
-    from urllib2 import HTTPBasicAuthHandler, build_opener  # PY2
+    from urllib2 import (
+        HTTPBasicAuthHandler, Request, build_opener)  # PY2
 
 try:
     from urllib.parse import urlencode, urlparse  # PY3
