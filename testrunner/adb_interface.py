@@ -176,7 +176,8 @@ class AdbInterface:
 
   def StartInstrumentationForPackage(
       self, package_name, runner_name, timeout_time=60*10,
-      no_window_animation=False, instrumentation_args={}, user=None):
+      no_window_animation=False, instrumentation_args={}, user=None,
+      no_hidden_api_checks=False):
     """Run instrumentation test for given package and runner.
 
     Equivalent to StartInstrumentation, except instrumentation path is
@@ -186,11 +187,13 @@ class AdbInterface:
     return self.StartInstrumentation(instrumentation_path, timeout_time=timeout_time,
                                      no_window_animation=no_window_animation,
                                      instrumentation_args=instrumentation_args,
-                                     user=user)
+                                     user=user,
+                                     no_hidden_api_checks=no_hidden_api_checks)
 
   def StartInstrumentation(
       self, instrumentation_path, timeout_time=60*10, no_window_animation=False,
-      profile=False, instrumentation_args={}, user=None):
+      profile=False, instrumentation_args={}, user=None,
+      no_hidden_api_checks=False):
 
     """Runs an instrumentation class on the target.
 
@@ -232,7 +235,7 @@ class AdbInterface:
         instrumentation_path, no_window_animation=no_window_animation,
         profile=profile, raw_mode=True,
         instrumentation_args=instrumentation_args,
-        user=user)
+        user=user, no_hidden_api_checks=no_hidden_api_checks)
     logger.Log(command_string)
     (test_results, inst_finished_bundle) = (
         am_instrument_parser.ParseAmInstrumentOutput(
@@ -258,7 +261,8 @@ class AdbInterface:
 
   def StartInstrumentationNoResults(
       self, package_name, runner_name, no_window_animation=False,
-      raw_mode=False, instrumentation_args={}, user=None):
+      raw_mode=False, instrumentation_args={}, user=None,
+      no_hidden_api_checks=False):
     """Runs instrumentation and dumps output to stdout.
 
     Equivalent to StartInstrumentation, but will dump instrumentation
@@ -268,18 +272,19 @@ class AdbInterface:
     adb_command_string = self.PreviewInstrumentationCommand(
         package_name, runner_name, no_window_animation=no_window_animation,
         raw_mode=raw_mode, instrumentation_args=instrumentation_args,
-        user=user)
+        user=user, no_hidden_api_checks=no_hidden_api_checks)
     logger.Log(adb_command_string)
     run_command.RunCommand(adb_command_string, return_output=False)
 
   def PreviewInstrumentationCommand(
       self, package_name, runner_name, no_window_animation=False,
-      raw_mode=False, instrumentation_args={}, user=None):
+      raw_mode=False, instrumentation_args={}, user=None,
+      no_hidden_api_checks=False):
     """Returns a string of adb command that will be executed."""
     inst_command_string = self._BuildInstrumentationCommand(
         package_name, runner_name, no_window_animation=no_window_animation,
         raw_mode=raw_mode, instrumentation_args=instrumentation_args,
-        user=user)
+        user=user, no_hidden_api_checks=no_hidden_api_checks)
     return self.PreviewShellCommand(inst_command_string)
 
   def PreviewShellCommand(self, cmd):
@@ -287,18 +292,23 @@ class AdbInterface:
 
   def _BuildInstrumentationCommand(
       self, package, runner_name, no_window_animation=False, profile=False,
-      raw_mode=True, instrumentation_args={}, user=None):
+      raw_mode=True, instrumentation_args={}, user=None,
+      no_hidden_api_checks=False):
     instrumentation_path = "%s/%s" % (package, runner_name)
 
     return self._BuildInstrumentationCommandPath(
         instrumentation_path, no_window_animation=no_window_animation,
         profile=profile, raw_mode=raw_mode,
-        instrumentation_args=instrumentation_args, user=user)
+        instrumentation_args=instrumentation_args, user=user,
+        no_hidden_api_checks=no_hidden_api_checks)
 
   def _BuildInstrumentationCommandPath(
       self, instrumentation_path, no_window_animation=False, profile=False,
-      raw_mode=True, instrumentation_args={}, user=None):
+      raw_mode=True, instrumentation_args={}, user=None,
+      no_hidden_api_checks=False):
     command_string = "am instrument"
+    if no_hidden_api_checks:
+      command_string += " --no-hidden-api-checks"
     if user:
       command_string += " --user %s" % user
     if no_window_animation:
