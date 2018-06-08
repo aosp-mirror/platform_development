@@ -85,6 +85,14 @@ static llvm::cl::opt<bool> allow_unreferenced_changes(
                    " APIs."),
     llvm::cl::Optional, llvm::cl::cat(header_checker_category));
 
+static llvm::cl::opt<bool> consider_opaque_types_different(
+    "consider-opaque-types-different",
+    llvm::cl::desc("Consider opaque types with different names as different"
+                   " .This should not be used while comparing C++ library"
+                   " ABIs"),
+    llvm::cl::Optional, llvm::cl::cat(header_checker_category));
+
+
 static llvm::cl::opt<abi_util::TextFormatIR> text_format_old(
     "text-format-old", llvm::cl::desc("Specify text format of old abi dump"),
     llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
@@ -142,9 +150,11 @@ int main(int argc, const char **argv) {
   if (llvm::sys::fs::exists(ignore_symbol_list)) {
     ignored_symbols = LoadIgnoredSymbols(ignore_symbol_list);
   }
+  abi_util::DiffPolicyOptions diff_policy_options(
+      consider_opaque_types_different);
   HeaderAbiDiff judge(lib_name, arch, old_dump, new_dump, compatibility_report,
-                      ignored_symbols, check_all_apis, text_format_old,
-                      text_format_new, text_format_diff);
+                      ignored_symbols, diff_policy_options, check_all_apis,
+                      text_format_old, text_format_new, text_format_diff);
 
   abi_util::CompatibilityStatusIR status = judge.GenerateCompatibilityReport();
 

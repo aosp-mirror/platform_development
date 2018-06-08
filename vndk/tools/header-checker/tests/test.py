@@ -146,6 +146,13 @@ class MyTest(unittest.TestCase):
             "libc_and_cpp", "libc_and_cpp_with_unused_struct", 0,
             ['-check-all-apis', '-advice-only'])
 
+    def test_libc_and_cpp_opaque_pointer_diff(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libc_and_cpp_with_opaque_ptr_a",
+            "libc_and_cpp_with_opaque_ptr_b", 8,
+            ['-consider-opaque-types-different'], True,
+            True)
+
     def test_libgolden_cpp_return_type_diff(self):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp", "libgolden_cpp_return_type_diff", 8)

@@ -905,10 +905,12 @@ class DexFileReader(object):
         except IOError:
             return b''
 
+
     @classmethod
     def is_zipfile(cls, apk_file_path):
         magic = cls._read_first_bytes(apk_file_path, 2)
         return magic == b'PK' and zipfile.is_zipfile(apk_file_path)
+
 
     @classmethod
     def enumerate_dex_strings_apk(cls, apk_file_path):
@@ -921,42 +923,109 @@ class DexFileReader(object):
                 except KeyError:
                     break
 
+
     @classmethod
     def is_vdex_file(cls, vdex_file_path):
         return vdex_file_path.endswith('.vdex')
 
-    VdexHeader = create_struct('VdexHeader', (
+
+    # VdexHeader 0
+    VdexHeader0 = create_struct('VdexHeader0', (
         ('magic', '4s'),
-        ('version', '4s'),
+        ('vdex_version', '4s'),
+    ))
+
+
+    # VdexHeader 1 - 15
+    VdexHeader1 = create_struct('VdexHeader1', (
+        ('magic', '4s'),
+        ('vdex_version', '4s'),
         ('number_of_dex_files', 'I'),
         ('dex_size', 'I'),
-        # ('dex_shared_data_size', 'I'),  # >= 016
         ('verifier_deps_size', 'I'),
         ('quickening_info_size', 'I'),
+        # checksums
     ))
+
+
+    # VdexHeader 16 - 18
+    VdexHeader16 = create_struct('VdexHeader16', (
+        ('magic', '4s'),
+        ('vdex_version', '4s'),
+        ('number_of_dex_files', 'I'),
+        ('dex_size', 'I'),
+        ('dex_shared_data_size', 'I'),
+        ('verifier_deps_size', 'I'),
+        ('quickening_info_size', 'I'),
+        # checksums
+    ))
+
+
+    # VdexHeader 19
+    VdexHeader19 = create_struct('VdexHeader19', (
+        ('magic', '4s'),
+        ('vdex_version', '4s'),
+        ('dex_section_version', '4s'),
+        ('number_of_dex_files', 'I'),
+        ('verifier_deps_size', 'I'),
+        # checksums
+    ))
+
+
+    DexSectionHeader = create_struct('DexSectionHeader', (
+        ('dex_size', 'I'),
+        ('dex_shared_data_size', 'I'),
+        ('quickening_info_size', 'I'),
+    ))
+
 
     @classmethod
     def enumerate_dex_strings_vdex_buf(cls, buf):
         buf = get_py3_bytes(buf)
-        vdex_header = cls.VdexHeader.unpack_from(buf, offset=0)
 
-        quickening_table_off_size = 0
-        if vdex_header.version > b'010\x00':
-            quickening_table_off_size = 4
+        magic, version = struct.unpack_from('4s4s', buf)
 
-        # Skip vdex file header size
-        offset = cls.VdexHeader.struct_size
+        # Check the vdex file magic word
+        if magic != b'vdex':
+            raise ValueError('bad vdex magic word')
 
-        # Skip `dex_shared_data_size`
-        if vdex_header.version >= b'016\x00':
-            offset += 4
+        # Parse vdex file header (w.r.t. version)
+        if version == b'000\x00':
+            VdexHeader = cls.VdexHeader0
+        elif version >= b'001\x00' and version < b'016\x00':
+            VdexHeader = cls.VdexHeader1
+        elif version >= b'016\x00' and version < b'019\x00':
+            VdexHeader = cls.VdexHeader16
+        elif version == b'019\x00':
+            VdexHeader = cls.VdexHeader19
+        else:
+            raise ValueError('unknown vdex version ' + repr(version))
 
-        # Skip dex file checksums size
-        offset += 4 * vdex_header.number_of_dex_files
+        vdex_header = VdexHeader.unpack_from(buf, offset=0)
 
         # Skip this vdex file if there is no dex file section
-        if vdex_header.dex_size == 0:
-            return
+        if vdex_header.vdex_version < b'019\x00':
+            if vdex_header.dex_size == 0:
+                return
+        else:
+            if vdex_header.dex_section_version == b'000\x00':
+                return
+
+        # Skip vdex file header struct
+        offset = VdexHeader.struct_size
+
+        # Skip dex file checksums struct
+        offset += 4 * vdex_header.number_of_dex_files
+
+        # Skip dex section header struct
+        if vdex_header.vdex_version >= b'019\x00':
+            offset += cls.DexSectionHeader.struct_size
+
+        # Calculate the quickening table offset
+        if vdex_header.vdex_version >= b'012\x00':
+            quickening_table_off_size = 4
+        else:
+            quickening_table_off_size = 0
 
         for i in range(vdex_header.number_of_dex_files):
             # Skip quickening_table_off size
@@ -971,7 +1040,10 @@ class DexFileReader(object):
             dex_file_end = offset + dex_header.file_size
             for s in cls.enumerate_dex_strings_buf(buf, offset):
                 yield s
+
+            # Align to the end of the dex file
             offset = (dex_file_end + 3) // 4 * 4
+
 
     @classmethod
     def enumerate_dex_strings_vdex(cls, vdex_file_path):
@@ -1510,10 +1582,13 @@ class VNDKLibDir(list):
         """Read ro.vendor.version property from vendor partitions."""
         for vendor_dir in vendor_dirs:
             path = os.path.join(vendor_dir, 'default.prop')
-            with open(path, 'r') as property_file:
-                result = cls._get_property(property_file, 'ro.vndk.version')
-                if result is not None:
-                    return result
+            try:
+                with open(path, 'r') as property_file:
+                    result = cls._get_property(property_file, 'ro.vndk.version')
+                    if result is not None:
+                        return result
+            except FileNotFoundError:
+                pass
         return None
 
 
@@ -2619,6 +2694,9 @@ def scan_apk_dep(graph, system_dirs, vendor_dirs):
                 continue
         except FileNotFoundError:
             continue
+        except:
+            print('error: Failed to parse', path, file=sys.stderr)
+            raise
 
         # Skip the file that does not call System.loadLibrary()
         if 'loadLibrary' not in strs:

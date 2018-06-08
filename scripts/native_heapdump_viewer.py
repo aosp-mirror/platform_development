@@ -322,7 +322,9 @@ label {
     font-family: Roboto Mono,monospace;
     cursor: pointer
 }
-</style></head><body>Native allocation HTML viewer<ol>
+</style></head><body>Native allocation HTML viewer<br><br>
+Click on an individual line to expand/collapse to see the details of the
+allocation data<ol>
 """
 html_footer = "</ol></body></html>"
 
