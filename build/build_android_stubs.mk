@@ -39,6 +39,13 @@ else
 $(full_target): PRIVATE_ERRORPRONE_FLAGS :=
 endif
 
+ifneq ($(filter metalava%,$(sdk_stub_name)),)
+$(full_target): $(HOST_OUT_JAVA_LIBRARIES)/stub-annotations$(COMMON_JAVA_PACKAGE_SUFFIX)
+$(full_target): PRIVATE_METALAVA_CLASSPATH := -classpath $(HOST_OUT_JAVA_LIBRARIES)/stub-annotations$(COMMON_JAVA_PACKAGE_SUFFIX)
+else
+$(full_target): PRIVATE_METALAVA_CLASSPATH :=
+endif
+
 $(full_src_target): $(stub_timestamp)
 	@echo Packaging SDK Stub sources: $@
 	$(hide) cd $(PRIVATE_INTERMEDIATES_DIR) && zip -rq $(notdir $@) $(notdir $(PRIVATE_SRC_DIR))
@@ -63,7 +70,7 @@ $(full_target): $(stub_timestamp) $(framework_res_package) $(ZIPTIME)
 	$(hide) find $(PRIVATE_SRC_DIR) -name "*.java" > \
 	$(PRIVATE_INTERMEDIATES_DIR)/java-source-list
 	$(hide) $(TARGET_JAVAC) $(PRIVATE_ERRORPRONE_FLAGS) \
-			-source 1.8 -target 1.8 -encoding UTF-8 -bootclasspath "" \
+			-source 1.8 -target 1.8 -encoding UTF-8 -bootclasspath "" $(PRIVATE_METALAVA_CLASSPATH) \
 			-g -d $(PRIVATE_CLASS_INTERMEDIATES_DIR) \
 			\@$(PRIVATE_INTERMEDIATES_DIR)/java-source-list \
 		|| ( rm -rf $(PRIVATE_CLASS_INTERMEDIATES_DIR) ; exit 41 )
