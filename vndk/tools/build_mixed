@@ -127,6 +127,7 @@ unzip "$DEVICE_TARGET_FILES_ARCHIVE" \
 ###
 # Check compatibility between the system and device.
 if [[ -f "$CHECK_TOOL" ]]; then
+    chmod 755 "$CHECK_TOOL"
     "$CHECK_TOOL" \
         "$DEVICE_ARTIFACTS_DIR"/META/vendor_manifest.xml \
         "$SYSTEM_ARTIFACTS_DIR"/META/system_matrix.xml
