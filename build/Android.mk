@@ -95,23 +95,7 @@ include $(LOCAL_PATH)/build_android_stubs.mk
 .PHONY: metalava_android_stubs
 metalava_android_stubs: $(full_target) $(full_src_target)
 
-# android.jar is what we put in the SDK package.
-android_jar_intermediates := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/metalava_android_jar_intermediates
-android_jar_full_target := $(android_jar_intermediates)/metalava-android.jar
-android_jar_src_target := $(android_jar_intermediates)/metalava-android-stubs-src.jar
-
-$(android_jar_full_target): $(full_target)
-	@echo Package SDK Stubs: $@
-	$(copy-file-to-target)
-
-$(android_jar_src_target): $(full_src_target)
-	@echo Package SDK Stubs Source: $@
-	$(hide)mkdir -p $(dir $@)
-	$(hide)$(ACP) $< $@
-
-ALL_SDK_FILES += $(android_jar_full_target)
-ALL_SDK_FILES += $(android_jar_src_target)
-
+$(call dist-for-goals,sdk win_sdk,$(full_target):metalava_android.jar)
 # ====================================================
 
 # The uiautomator stubs
