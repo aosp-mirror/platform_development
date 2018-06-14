@@ -17,6 +17,7 @@
 """Utility functions for VNDK snapshot."""
 
 import glob
+import logging
 import os
 import re
 import subprocess
@@ -32,6 +33,24 @@ MANIFEST_FILE_NAME = 'manifest.xml'
 MODULE_PATHS_FILE_NAME = 'module_paths.txt'
 NOTICE_FILES_DIR_NAME = 'NOTICE_FILES'
 NOTICE_FILES_DIR_PATH = os.path.join(COMMON_DIR_PATH, NOTICE_FILES_DIR_NAME)
+
+
+def logger(name):
+    return logging.getLogger(name)
+
+
+def set_logging_config(verbose_level):
+    verbose_map = (logging.WARNING, logging.INFO, logging.DEBUG)
+    verbosity = min(verbose_level, 2)
+    logging.basicConfig(
+        format='%(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
+        level=verbose_map[verbosity])
+
+
+def check_call(cmd, logger=None):
+    logger = logger or logging
+    logger.debug('Running `{}`'.format(' '.join(cmd)))
+    subprocess.check_call(cmd)
 
 
 def get_android_build_top():
@@ -129,5 +148,4 @@ def fetch_artifact(branch, build, pattern, destination='.'):
         fetch_artifact_path, '--branch', branch, '--target=vndk', '--bid',
         build, pattern, destination
     ]
-    print 'Running `{}`'.format(' '.join(cmd))
-    subprocess.check_call(cmd)
+    check_call(cmd, logger(__name__))
