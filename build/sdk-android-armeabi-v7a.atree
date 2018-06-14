@@ -15,7 +15,7 @@
 #
 
 # Copy the ARMv7 specific kernel image to .../kernel-qemu
-prebuilts/qemu-kernel/arm64/3.18/kernel-qemu2 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/kernel-ranchu-64
+prebuilts/qemu-kernel/arm64/4.4/kernel-qemu2 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/kernel-ranchu-64
 
 # version files for the SDK updater, from development.git
 ${HOST_OUT}/development/sys-img-${TARGET_CPU_ABI}/images_armeabi-v7a_source.properties system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/source.properties
