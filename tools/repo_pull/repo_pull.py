@@ -74,8 +74,8 @@ except ImportError:
         try:
             stdout, stderr = proc.communicate(input)
         except:
-            process.kill()
-            process.wait()
+            proc.kill()
+            proc.wait()
             raise
         returncode = proc.wait()
 
