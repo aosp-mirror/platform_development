@@ -17,7 +17,8 @@
 if [[ $1 =~ ^[0-9]+$ ]] ; then
     PID="$1"
 elif [ "$1" ] ; then
-    PIDLIST="$(pid $1)"
+    # Try --exact first, and fallback to nonexact if we find nothing.
+    PIDLIST="$(pid --exact $1 || pid $1)"
     if [[ $PIDLIST =~ ^[0-9]+$ ]] ; then
         PID="$PIDLIST"
     elif [ "$PIDLIST" ] ; then
