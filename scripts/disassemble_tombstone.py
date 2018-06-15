@@ -55,7 +55,7 @@ def Disassemble(line_generator):
   #
   # It's easiest to nest register processing in the codeblock search loop.
   register_list_re = re.compile('^pid: ')
-  codeblock_re = re.compile('^code around ([a-z0-9]+)')
+  codeblock_re = re.compile('^code around ([a-z0-9]+)|memory near (pc)')
   register_text = {}
   for line in line_generator:
     yield line
@@ -65,8 +65,9 @@ def Disassemble(line_generator):
         yield output
     code_match = codeblock_re.search(line)
     if code_match:
+      code_reg = ''.join(code_match.groups(''))
       for output in ProcessCodeBlock(
-          abi, tools, code_match.group(1), register_text, line_generator):
+          abi, tools, code_reg, register_text, line_generator):
         yield output
 
 
@@ -138,6 +139,12 @@ def ProcessCodeBlock(abi, tools, register_name, register_text, line_generator):
   subprocess.check_call(tools.Assemble([
       '-o', object_file.name, scratch_file.name]))
   scratch_file.close()
+
+  # Work around ARM data tagging: rename $d to $t.
+  if abi.startswith('arm'):
+    subprocess.check_call(
+        ['sed', '-i', '-e', "s/\\x00\\x24\\x64\\x00/\\x00\\x24\\x71\\x00/", object_file.name])
+
   linked_file = tempfile.NamedTemporaryFile(suffix='.o')
   cmd = tools.Link([
       '-Ttext', '0x' + start_address, '-o', linked_file.name, object_file.name])
