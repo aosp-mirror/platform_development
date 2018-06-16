@@ -3,18 +3,19 @@ LOCAL_PATH := $(call my-dir)
 # ===== SDK source.property files =====
 
 # Add all files to be generated from the source.prop templates to the SDK pre-requisites
-ALL_SDK_FILES += $(patsubst \
-                   $(TOPDIR)development/sdk/%_source.prop_template, \
-                   $(HOST_OUT)/development/sdk/%_source.properties, \
-                   $(wildcard $(TOPDIR)development/sdk/*_source.prop_template)) \
-                 $(patsubst \
-                   $(TOPDIR)development/samples/%_source.prop_template, \
-                   $(HOST_OUT)/development/samples/%_source.properties, \
-                   $(wildcard $(TOPDIR)development/samples/*_source.prop_template)) \
-                 $(patsubst \
+sdk_props := $(patsubst \
+               $(TOPDIR)development/sdk/%_source.prop_template, \
+               $(HOST_OUT)/development/sdk/%_source.properties, \
+               $(wildcard $(TOPDIR)development/sdk/*_source.prop_template))
+sample_props := $(patsubst \
+                  $(TOPDIR)development/samples/%_source.prop_template, \
+                  $(HOST_OUT)/development/samples/%_source.properties, \
+                  $(wildcard $(TOPDIR)development/samples/*_source.prop_template))
+sys_img_props := $(patsubst \
                    $(TOPDIR)development/sys-img/%_source.prop_template, \
                    $(HOST_OUT)/development/sys-img-$(TARGET_CPU_ABI)/%_source.properties, \
                    $(wildcard $(TOPDIR)development/sys-img/*_source.prop_template))
+ALL_SDK_FILES += $(sdk_props) $(sample_props) $(sys_img_props)
 
 # Rule to convert a source.prop template into the desired source.property
 # This needs to vary based on the CPU ABI for the system-image files.
@@ -24,7 +25,7 @@ ALL_SDK_FILES += $(patsubst \
 # - ${PLATFORM_VERSION_CODENAME} e.g. "REL" (transformed into "") or "Cupcake"
 # - ${TARGET_ARCH}               e.g. "arm", "x86", "mips" and their 64-bit variants.
 # - ${TARGET_CPU_ABI}            e.g. "armeabi", "x86", "mips" and their 64-bit variants.
-$(HOST_OUT)/development/sys-img-$(TARGET_CPU_ABI)/%_source.properties : $(TOPDIR)development/sys-img/%_source.prop_template
+$(sys_img_props) : $(HOST_OUT)/development/sys-img-$(TARGET_CPU_ABI)/%_source.properties : $(TOPDIR)development/sys-img/%_source.prop_template
 	@echo Generate $@
 	$(hide) mkdir -p $(dir $@)
 	$(hide) sed \
@@ -35,7 +36,7 @@ $(HOST_OUT)/development/sys-img-$(TARGET_CPU_ABI)/%_source.properties : $(TOPDIR
 		-e 's/$${TARGET_CPU_ABI}/$(TARGET_CPU_ABI)/' \
 		$< > $@ && sed -i -e '/^AndroidVersion.CodeName=\s*$$/d' $@
 
-$(HOST_OUT)/development/sdk/%_source.properties : $(TOPDIR)development/sdk/%_source.prop_template
+$(sdk_props) : $(HOST_OUT)/development/sdk/%_source.properties : $(TOPDIR)development/sdk/%_source.prop_template
 	@echo Generate $@
 	$(hide) mkdir -p $(dir $@)
 	$(hide) sed \
@@ -44,7 +45,7 @@ $(HOST_OUT)/development/sdk/%_source.properties : $(TOPDIR)development/sdk/%_sou
 		-e 's/$${PLATFORM_VERSION_CODENAME}/$(subst REL,,$(PLATFORM_VERSION_CODENAME))/' \
 		$< > $@ && sed -i -e '/^AndroidVersion.CodeName=\s*$$/d' $@
 
-$(HOST_OUT)/development/samples/%_source.properties : $(TOPDIR)development/samples/%_source.prop_template
+$(sample_props) : $(HOST_OUT)/development/samples/%_source.properties : $(TOPDIR)development/samples/%_source.prop_template
 	@echo Generate $@
 	$(hide) mkdir -p $(dir $@)
 	$(hide) sed\
