@@ -105,13 +105,57 @@ class GPLChecker(object):
           git_project_path: string, path relative to ANDROID_BUILD_TOP
         """
         path = utils.join_realpath(self._android_build_top, git_project_path)
-        try:
-            cmd = ['git', '-C', path, 'rev-list', 'HEAD..{}'.format(revision)]
-            utils.check_call(cmd, logger)
+
+        def _check_rev_list(revision):
+            """Checks whether revision is reachable from HEAD of git project."""
+
+            logger.info('Checking if revision {rev} exists in {proj}'.format(
+                rev=revision, proj=git_project_path))
+            try:
+                cmd = [
+                    'git', '-C', path, 'rev-list', 'HEAD..{}'.format(revision)
+                ]
+                output = utils.check_output(cmd, logger).strip()
+            except subprocess.CalledProcessError as error:
+                logger.error('Error: {}'.format(error))
+                return False
+            else:
+                if output:
+                    logger.debug(
+                        '{proj} does not have the following revisions: {rev}'.
+                        format(proj=git_project_path, rev=output))
+                    return False
+                else:
+                    logger.info(
+                        'Found revision {rev} in project {proj}'.format(
+                            rev=revision, proj=git_project_path))
             return True
-        except subprocess.CalledProcessError as error:
-            logger.error('Error: {}'.format(error))
-            return False
+
+        if not _check_rev_list(revision):
+            # VNDK snapshots built from a *-release branch will have merge
+            # CLs in the manifest because the *-dev branch is merged to the
+            # *-release branch periodically. In order to extract the
+            # revision relevant to the source of the git_project_path,
+            # we fetch the *-release branch and get the revision of the
+            # parent commit with FETCH_HEAD^2.
+            logger.info(
+                'Checking if the parent of revision {rev} exists in {proj}'.
+                format(rev=revision, proj=git_project_path))
+            try:
+                cmd = ['git', '-C', path, 'fetch', 'goog', revision]
+                utils.check_call(cmd, logger)
+                cmd = ['git', '-C', path, 'rev-parse', 'FETCH_HEAD^2']
+                parent_revision = utils.check_output(cmd, logger).strip()
+            except subprocess.CalledProcessError as error:
+                logger.error(
+                    'Failed to get parent of revision {rev}: {err}'.format(
+                        rev=revision, err=error))
+                raise
+            else:
+                if not _check_rev_list(parent_revision):
+                    return False
+
+        return True
 
     def check_gpl_projects(self):
         """Checks that all GPL projects have released sources.

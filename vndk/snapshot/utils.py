@@ -53,6 +53,14 @@ def check_call(cmd, logger=None):
     subprocess.check_call(cmd)
 
 
+def check_output(cmd, logger=None):
+    logger = logger or logging
+    logger.debug('Running `{}`'.format(' '.join(cmd)))
+    output = subprocess.check_output(cmd)
+    logger.debug('Output: `{}`'.format(output))
+    return output
+
+
 def get_android_build_top():
     ANDROID_BUILD_TOP = os.getenv('ANDROID_BUILD_TOP')
     if not ANDROID_BUILD_TOP:
