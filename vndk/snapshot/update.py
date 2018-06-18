@@ -33,7 +33,6 @@ from check_gpl_license import GPLChecker
 from gen_buildfiles import GenBuildFile
 
 ANDROID_BUILD_TOP = utils.get_android_build_top()
-DIST_DIR = utils.get_dist_dir(utils.get_out_dir(ANDROID_BUILD_TOP))
 PREBUILTS_VNDK_DIR = utils.join_realpath(ANDROID_BUILD_TOP, 'prebuilts/vndk')
 
 logger = utils.logger(__name__)
@@ -59,15 +58,16 @@ def remove_old_snapshot(install_dir):
             sys.exit(1)
 
 
-def install_snapshot(branch, build, install_dir, temp_artifact_dir):
+def install_snapshot(branch, build, local_dir, install_dir, temp_artifact_dir):
     """Installs VNDK snapshot build artifacts to prebuilts/vndk/v{version}.
 
-    1) Fetch build artifacts from Android Build server or from local DIST_DIR
+    1) Fetch build artifacts from Android Build server or from local_dir
     2) Unzip build artifacts
 
     Args:
       branch: string or None, branch name of build artifacts
       build: string or None, build number of build artifacts
+      local_dir: string or None, local dir to pull artifacts from
       install_dir: string, directory to install VNDK snapshot
       temp_artifact_dir: string, temp directory to hold build artifacts fetched
         from Android Build server. For 'local' option, is set to None.
@@ -88,19 +88,14 @@ def install_snapshot(branch, build, install_dir, temp_artifact_dir):
                              utils.MANIFEST_FILE_NAME)
 
         os.chdir(install_dir)
-    else:
-        logger.info('Fetching local VNDK snapshot from {}'.format(DIST_DIR))
-        artifact_dir = DIST_DIR
+    elif local_dir:
+        logger.info('Fetching local VNDK snapshot from {}'.format(local_dir))
+        artifact_dir = local_dir
 
     artifacts = glob.glob(os.path.join(artifact_dir, artifact_pattern))
-    artifact_cnt = len(artifacts)
-    if artifact_cnt < 4:
-        raise RuntimeError(
-            'Expected four android-vndk-*.zip files in {path}. Instead '
-            'found {cnt}.'.format(path=artifact_dir, cnt=artifact_cnt))
     for artifact in artifacts:
         logger.info('Unzipping VNDK snapshot: {}'.format(artifact))
-        utils.check_call(['unzip', '-q', artifact, '-d', install_dir], logger)
+        utils.check_call(['unzip', '-qn', artifact, '-d', install_dir], logger)
 
 
 def gather_notice_files(install_dir):
@@ -182,9 +177,9 @@ def get_args():
     parser.add_argument('--build', help='Build number to pull.')
     parser.add_argument(
         '--local',
-        action='store_true',
-        help=('Fetch local VNDK snapshot artifacts from DIST_DIR instead of '
-              'Android Build server.'))
+        help=('Fetch local VNDK snapshot artifacts from specified local '
+              'directory instead of Android Build server. '
+              'Example: --local=/path/to/local/dir'))
     parser.add_argument(
         '--use-current-branch',
         action='store_true',
@@ -207,10 +202,10 @@ def main():
             raise ValueError(
                 'When --local option is set, --branch or --build cannot be '
                 'specified.')
-        elif not os.path.isdir(DIST_DIR):
+        elif not os.path.isdir(args.local):
             raise RuntimeError(
-                'The --local option is set, but DIST_DIR={} does not exist.'.
-                format(DIST_DIR))
+                'The specified local directory, {}, does not exist.'.format(
+                    args.local))
     else:
         if not (args.build and args.branch):
             raise ValueError(
@@ -241,7 +236,7 @@ def main():
         temp_artifact_dir = tempfile.mkdtemp()
 
     try:
-        install_snapshot(args.branch, args.build, install_dir,
+        install_snapshot(args.branch, args.build, args.local, install_dir,
                          temp_artifact_dir)
         gather_notice_files(install_dir)
         revise_ld_config_txt_if_needed(vndk_version)
