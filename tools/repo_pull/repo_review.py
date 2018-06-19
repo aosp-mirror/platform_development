@@ -20,17 +20,17 @@
 
 from __future__ import print_function
 
-from gerrit import create_url_opener_from_args, query_change_lists, set_review
+import argparse
+import json
+import os
+import sys
 
 try:
     from urllib.error import HTTPError  # PY3
 except ImportError:
     from urllib2 import HTTPError  # PY2
 
-import argparse
-import json
-import os
-import sys
+from gerrit import create_url_opener_from_args, query_change_lists, set_review
 
 
 def _get_labels_from_args(args):
@@ -48,6 +48,7 @@ def _get_labels_from_args(args):
     return labels
 
 
+# pylint: disable=redefined-builtin
 def _print_change_lists(change_lists, file=sys.stdout):
     """Print matching change lists for each projects."""
     change_lists = sorted(
@@ -134,8 +135,8 @@ def main():
         try:
             res_code, res_json = set_review(
                 url_opener, args.gerrit, change['id'], labels, args.message)
-        except HTTPError as e:
-            res_code = e.code
+        except HTTPError as error:
+            res_code = error.code
             res_json = None
 
         if res_code != 200:
