@@ -21,10 +21,10 @@ Gerrit."""
 
 from __future__ import print_function
 
-from gerrit import create_url_opener_from_args, query_change_lists, get_patch
-
 import argparse
 import os
+
+from gerrit import create_url_opener_from_args, query_change_lists, get_patch
 
 
 def _parse_args():
@@ -45,6 +45,7 @@ def _parse_args():
 
 
 def main():
+    """Main function"""
     args = _parse_args()
 
     # Query change lists
@@ -57,8 +58,8 @@ def main():
     num_changes_width = len(str(num_changes))
     for i, change in enumerate(change_lists, start=1):
         print('{:>{}}/{} | {} {}'.format(
-                i, num_changes_width, num_changes, change['_number'],
-                change['subject']))
+            i, num_changes_width, num_changes, change['_number'],
+            change['subject']))
 
         patch_file = get_patch(url_opener, args.gerrit, change['id'])
         with open('{}.patch'.format(change['_number']), 'wb') as output_file:
