@@ -16,6 +16,8 @@
 # limitations under the License.
 #
 
+"""Gerrit Restful API client library."""
+
 from __future__ import print_function
 
 import argparse
@@ -32,8 +34,10 @@ except ImportError:
         HTTPBasicAuthHandler, Request, build_opener)  # PY2
 
 try:
+    # pylint: disable=ungrouped-imports
     from urllib.parse import urlencode, urlparse  # PY3
 except ImportError:
+    # pylint: disable=ungrouped-imports
     from urllib import urlencode  # PY2
     from urlparse import urlparse  # PY2
 
@@ -41,7 +45,7 @@ except ImportError:
 def load_auth_credentials_from_file(cookie_file):
     """Load credentials from an opened .gitcookies file."""
     credentials = {}
-    for lineno, line in enumerate(cookie_file, start=1):
+    for line in cookie_file:
         if line.startswith('#HttpOnly_'):
             line = line[len('#HttpOnly_'):]
 
@@ -192,6 +196,7 @@ def _parse_args():
 
 
 def main():
+    """Main function"""
     args = _parse_args()
 
     # Query change lists
