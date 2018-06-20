@@ -1051,6 +1051,15 @@ class DexFileReader(object):
             return cls.enumerate_dex_strings_vdex_buf(vdex_file.read())
 
 
+    @classmethod
+    def enumerate_dex_strings(cls, path):
+        if cls.is_zipfile(path):
+            return DexFileReader.enumerate_dex_strings_apk(path)
+        if cls.is_vdex_file(path):
+            return DexFileReader.enumerate_dex_strings_vdex(path)
+        return None
+
+
 #------------------------------------------------------------------------------
 # TaggedDict
 #------------------------------------------------------------------------------
@@ -2688,12 +2697,10 @@ def scan_apk_dep(graph, system_dirs, vendor_dirs):
     for ap, path in _enumerate_paths(system_dirs, vendor_dirs):
         # Read the dex file from various file formats
         try:
-            if DexFileReader.is_zipfile(path):
-                strs = set(DexFileReader.enumerate_dex_strings_apk(path))
-            elif DexFileReader.is_vdex_file(path):
-                strs = set(DexFileReader.enumerate_dex_strings_vdex(path))
-            else:
+            dex_string_iter = DexFileReader.enumerate_dex_strings(path)
+            if dex_string_iter is None:
                 continue
+            strings = set(dex_string_iter)
         except FileNotFoundError:
             continue
         except:
@@ -2701,12 +2708,12 @@ def scan_apk_dep(graph, system_dirs, vendor_dirs):
             raise
 
         # Skip the file that does not call System.loadLibrary()
-        if 'loadLibrary' not in strs:
+        if 'loadLibrary' not in strings:
             continue
 
         # Collect libraries from string tables
         libs = set()
-        for string in strs:
+        for string in strings:
             try:
                 libs.update(libnames[string])
             except KeyError:
@@ -3647,6 +3654,27 @@ class CheckDepCommand(CheckDepCommandBase):
         return 0 if num_errors == 0 else 1
 
 
+class DumpDexStringCommand(Command):
+    def __init__(self):
+        super(DumpDexStringCommand, self).__init__(
+                'dump-dex-string',
+                help='Dump string literals defined in a dex file')
+
+
+    def add_argparser_options(self, parser):
+        super(DumpDexStringCommand, self).add_argparser_options(parser)
+
+        parser.add_argument('dex_file', help='path to an input dex file')
+
+
+    def main(self, args):
+        for string in DexFileReader.enumerate_dex_strings(args.dex_file):
+            try:
+                print(string)
+            except (UnicodeEncodeError, UnicodeDecodeError):
+                print(repr(string))
+
+
 class CheckEligibleListCommand(CheckDepCommandBase):
     def __init__(self):
         super(CheckEligibleListCommand, self).__init__(
@@ -3814,6 +3842,7 @@ def main():
     register_subcmd(CheckDepCommand())
     register_subcmd(CheckEligibleListCommand())
     register_subcmd(DepGraphCommand())
+    register_subcmd(DumpDexStringCommand())
 
     args = parser.parse_args()
     if not args.subcmd:
