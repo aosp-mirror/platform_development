@@ -2666,6 +2666,8 @@ def _enumerate_partition_paths(partition, root):
     for base, dirs, files in os.walk(root):
         for filename in files:
             path = os.path.join(base, filename)
+            if not is_accessible(path):
+                continue
             android_path = posixpath.join('/', partition, path[prefix_len:])
             yield (android_path, path)
 
