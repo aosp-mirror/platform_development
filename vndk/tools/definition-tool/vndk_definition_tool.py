@@ -799,15 +799,7 @@ class DexFileReader(object):
     @classmethod
     def extract_dex_string(cls, buf, offset=0):
         end = buf.find(b'\0', offset)
-        res = buf[offset:] if end == -1 else buf[offset:end]
-        return res.decode('mutf-8', 'ignore')
-
-    if sys.version_info < (3,):
-        _extract_dex_string = extract_dex_string
-
-        @classmethod
-        def extract_dex_string(cls, buf, offset=0):
-            return cls._extract_dex_string(buf, offset).encode('utf-8')
+        return buf[offset:] if end == -1 else buf[offset:end]
 
 
     @classmethod
@@ -2700,7 +2692,13 @@ def scan_apk_dep(graph, system_dirs, vendor_dirs):
             dex_string_iter = DexFileReader.enumerate_dex_strings(path)
             if dex_string_iter is None:
                 continue
-            strings = set(dex_string_iter)
+
+            strings = set()
+            for string in dex_string_iter:
+                try:
+                    strings.add(string.decode('mutf-8'))
+                except UnicodeDecodeError:
+                    pass
         except FileNotFoundError:
             continue
         except:

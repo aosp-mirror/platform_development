@@ -77,8 +77,8 @@ class DexFileTest(unittest.TestCase):
 
             strs = set(DexFileReader.enumerate_dex_strings_buf(buf))
 
-            self.assertIn('hello', strs)
-            self.assertIn('world', strs)
+            self.assertIn(b'hello', strs)
+            self.assertIn(b'world', strs)
 
 
     def test_enumerate_dex_strings_apk(self):
@@ -96,10 +96,10 @@ class DexFileTest(unittest.TestCase):
 
             strs = set(DexFileReader.enumerate_dex_strings_apk(zip_file))
 
-            self.assertIn('hello', strs)
-            self.assertIn('world', strs)
-            self.assertIn('foo', strs)
-            self.assertIn('bar', strs)
+            self.assertIn(b'hello', strs)
+            self.assertIn(b'world', strs)
+            self.assertIn(b'foo', strs)
+            self.assertIn(b'bar', strs)
 
 
 if __name__ == '__main__':
