@@ -11,7 +11,7 @@ import zipfile
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from compat import TemporaryDirectory
-from vndk_definition_tool import DexFileReader
+from vndk_definition_tool import DexFileReader, UnicodeSurrogateDecodeError
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 INPUT_DIR = os.path.join(SCRIPT_DIR, 'testdata', 'test_dex_file')
@@ -40,6 +40,28 @@ class ModifiedUTF8Test(unittest.TestCase):
         self.assertEqual(u'\u7fff', b'\xe7\xbf\xbf'.decode('mutf-8'))
         self.assertEqual(u'\U00010400',
                          b'\xed\xa0\x81\xed\xb0\x80'.decode('mutf-8'))
+
+
+    def test_decode(self):
+        # Low surrogate does not come after high surrogate
+        with self.assertRaises(UnicodeSurrogateDecodeError):
+            b'\xed\xa0\x81\x40'.decode('mutf-8')
+
+        # Low surrogate without prior high surrogate
+        with self.assertRaises(UnicodeSurrogateDecodeError):
+            b'\xed\xb0\x80\x40'.decode('mutf-8')
+
+        # Unexpected end after high surrogate
+        with self.assertRaises(UnicodeSurrogateDecodeError):
+            b'\xed\xa0\x81'.decode('mutf-8')
+
+        # Unexpected end after low surrogate
+        with self.assertRaises(UnicodeSurrogateDecodeError):
+            b'\xed\xb0\x80'.decode('mutf-8')
+
+        # Out-of-order surrogate
+        with self.assertRaises(UnicodeSurrogateDecodeError):
+            b'\xed\xb0\x80\xed\xa0\x81'.decode('mutf-8')
 
 
 class DexFileTest(unittest.TestCase):

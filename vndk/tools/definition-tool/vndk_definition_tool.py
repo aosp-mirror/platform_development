@@ -82,6 +82,10 @@ except ImportError:
 # Modified UTF-8 Encoder and Decoder
 #------------------------------------------------------------------------------
 
+class UnicodeSurrogateDecodeError(UnicodeDecodeError):
+    pass
+
+
 def encode_mutf8(input, errors='strict'):
     i = 0
     res = io.BytesIO()
@@ -130,6 +134,9 @@ def decode_mutf8(input, errors='strict'):
     def raise_error(start, reason):
         raise UnicodeDecodeError('mutf-8', input, start, i + 1, reason)
 
+    def raise_surrogate_error(start, reason):
+        raise UnicodeSurrogateDecodeError('mutf-8', input, start, i + 1, reason)
+
     for i, byte in enumerate_bytes(input):
         if (byte & 0x80) == 0x00:
             if num_next > 0:
@@ -160,14 +167,15 @@ def decode_mutf8(input, errors='strict'):
         if num_next == 0:
             if code >= 0xd800 and code <= 0xdbff:  # High surrogate
                 if code_surrogate is not None:
-                    raise_error(start_surrogate, 'invalid high surrogate')
+                    raise_surrogate_error(
+                        start_surrogate, 'invalid high surrogate')
                 code_surrogate = code
                 start_surrogate = start
                 continue
 
             if code >= 0xdc00 and code <= 0xdfff:  # Low surrogate
                 if code_surrogate is None:
-                    raise_error(start, 'invalid low surrogate')
+                    raise_surrogate_error(start, 'invalid low surrogate')
                 code = ((code_surrogate & 0x3f) << 10) | (code & 0x3f) + 0x10000
                 code_surrogate = None
                 start_surrogate = None
@@ -177,7 +185,7 @@ def decode_mutf8(input, errors='strict'):
                     code_surrogate = None
                     start_surrogate = None
                 else:
-                    raise_error(start_surrogate, 'illegal surrogate')
+                    raise_surrogate_error(start_surrogate, 'illegal surrogate')
 
             res.write(create_chr(code))
 
@@ -185,7 +193,7 @@ def decode_mutf8(input, errors='strict'):
     if num_next > 0:
         raise_error(start, 'unexpected end')
     if code_surrogate is not None:
-        raise_error(start_surrogate, 'unexpected end')
+        raise_surrogate_error(start_surrogate, 'unexpected end')
 
     return (res.getvalue(), i)
 
@@ -2697,7 +2705,7 @@ def scan_apk_dep(graph, system_dirs, vendor_dirs):
             for string in dex_string_iter:
                 try:
                     strings.add(string.decode('mutf-8'))
-                except UnicodeDecodeError:
+                except UnicodeSurrogateDecodeError:
                     pass
         except FileNotFoundError:
             continue
