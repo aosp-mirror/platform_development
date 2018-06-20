@@ -15,11 +15,15 @@
 # limitations under the License.
 #
 
+import argparse
 import glob
+import logging
 import os
 import sys
 
 import utils
+
+logger = utils.logger(__name__)
 
 
 class GenBuildFile(object):
@@ -342,6 +346,21 @@ class GenBuildFile(object):
                     arch_srcs=arch_srcs))
 
 
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        'vndk_version',
+        type=int,
+        help='VNDK snapshot version to install, e.g. "27".')
+    parser.add_argument(
+        '-v',
+        '--verbose',
+        action='count',
+        default=0,
+        help='Increase output verbosity, e.g. "-v", "-vv".')
+    return parser.parse_args()
+
+
 def main():
     """For local testing purposes.
 
@@ -352,12 +371,20 @@ def main():
     PREBUILTS_VNDK_DIR = utils.join_realpath(ANDROID_BUILD_TOP,
                                              'prebuilts/vndk')
 
-    vndk_version = 27  # set appropriately
+    args = get_args()
+    vndk_version = args.vndk_version
     install_dir = os.path.join(PREBUILTS_VNDK_DIR, 'v{}'.format(vndk_version))
+    if not os.path.isdir(install_dir):
+        raise ValueError(
+            'Please provide valid VNDK version. {} does not exist.'
+            .format(install_dir))
+    utils.set_logging_config(args.verbose)
 
     buildfile_generator = GenBuildFile(install_dir, vndk_version)
     buildfile_generator.generate_android_mk()
     buildfile_generator.generate_android_bp()
+
+    logger.info('Done.')
 
 
 if __name__ == '__main__':
