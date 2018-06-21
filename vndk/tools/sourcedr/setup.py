@@ -8,7 +8,11 @@ setup(
     description='Shared Libs Deps Review Tool',
     url='https://android.googlesource.com/platform/development/+'
         '/master/vndk/tools/source-deps-reviewer/',
-    packages=['sourcedr'],
+    packages=[
+        'blueprint'
+        'ninja',
+        'sourcedr',
+    ],
     package_data={
         'sourcedr': [
             'defaults/pattern_db.csv',

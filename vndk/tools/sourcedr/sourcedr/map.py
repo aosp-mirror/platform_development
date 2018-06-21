@@ -10,7 +10,7 @@ import json
 import os
 import sys
 
-from sourcedr import ninja
+from ninja import ninja
 from sourcedr.review_db import ReviewDB
 
 
