@@ -1,9 +1,0 @@
-{
-  "liba.so": ["libb.so", "libc.so", "a1.o", "a2.o"],
-  "libb.so": ["b.o"],
-  "libc.so": ["c.o"],
-  "a1.o": ["a.h", "a1.c"],
-  "a2.o": ["a.h", "a2.c"],
-  "b.o": ["a.h", "b.c"],
-  "c.o": ["c.c"]
-}
