@@ -271,7 +271,8 @@ def main():
         logging.error('Error: {}'.format(error))
         raise
     finally:
-        logging.info('Deleting temp_artifact_dir: {}'.format(temp_artifact_dir))
+        logging.info(
+            'Deleting temp_artifact_dir: {}'.format(temp_artifact_dir))
         shutil.rmtree(temp_artifact_dir)
 
     logging.info('Done.')
