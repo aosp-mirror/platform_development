@@ -26,8 +26,6 @@ import xml.etree.ElementTree as xml_tree
 
 import utils
 
-logger = utils.logger(__name__)
-
 
 class GPLChecker(object):
     """Checks that all GPL projects in a VNDK snapshot have released sources.
@@ -109,24 +107,24 @@ class GPLChecker(object):
         def _check_rev_list(revision):
             """Checks whether revision is reachable from HEAD of git project."""
 
-            logger.info('Checking if revision {rev} exists in {proj}'.format(
+            logging.info('Checking if revision {rev} exists in {proj}'.format(
                 rev=revision, proj=git_project_path))
             try:
                 cmd = [
                     'git', '-C', path, 'rev-list', 'HEAD..{}'.format(revision)
                 ]
-                output = utils.check_output(cmd, logger).strip()
+                output = utils.check_output(cmd).strip()
             except subprocess.CalledProcessError as error:
-                logger.error('Error: {}'.format(error))
+                logging.error('Error: {}'.format(error))
                 return False
             else:
                 if output:
-                    logger.debug(
+                    logging.debug(
                         '{proj} does not have the following revisions: {rev}'.
                         format(proj=git_project_path, rev=output))
                     return False
                 else:
-                    logger.info(
+                    logging.info(
                         'Found revision {rev} in project {proj}'.format(
                             rev=revision, proj=git_project_path))
             return True
@@ -138,16 +136,16 @@ class GPLChecker(object):
             # revision relevant to the source of the git_project_path,
             # we fetch the *-release branch and get the revision of the
             # parent commit with FETCH_HEAD^2.
-            logger.info(
+            logging.info(
                 'Checking if the parent of revision {rev} exists in {proj}'.
                 format(rev=revision, proj=git_project_path))
             try:
                 cmd = ['git', '-C', path, 'fetch', 'goog', revision]
-                utils.check_call(cmd, logger)
+                utils.check_call(cmd)
                 cmd = ['git', '-C', path, 'rev-parse', 'FETCH_HEAD^2']
-                parent_revision = utils.check_output(cmd, logger).strip()
+                parent_revision = utils.check_output(cmd).strip()
             except subprocess.CalledProcessError as error:
-                logger.error(
+                logging.error(
                     'Failed to get parent of revision {rev}: {err}'.format(
                         rev=revision, err=error))
                 raise
@@ -163,7 +161,7 @@ class GPLChecker(object):
         Raises:
           ValueError: There are GPL projects with unreleased sources.
         """
-        logger.info('Starting license check for GPL projects...')
+        logging.info('Starting license check for GPL projects...')
 
         notice_files = glob.glob('{}/*'.format(self._notice_files_dir))
         if len(notice_files) == 0:
@@ -180,10 +178,10 @@ class GPLChecker(object):
                     gpl_projects.append(lib_name)
 
         if not gpl_projects:
-            logger.info('No GPL projects found.')
+            logging.info('No GPL projects found.')
             return
 
-        logger.info('GPL projects found: {}'.format(', '.join(gpl_projects)))
+        logging.info('GPL projects found: {}'.format(', '.join(gpl_projects)))
 
         module_paths = self._parse_module_paths()
         manifest_projects = self._parse_manifest()
@@ -210,14 +208,14 @@ class GPLChecker(object):
                     format(lib=lib, module_paths=self.MODULE_PATHS_TXT))
 
         if released_projects:
-            logger.info('Released GPL projects: {}'.format(released_projects))
+            logging.info('Released GPL projects: {}'.format(released_projects))
 
         if unreleased_projects:
             raise ValueError(
                 ('FAIL: The following GPL projects have NOT been released in '
                  'current tree: {}'.format(unreleased_projects)))
 
-        logger.info('PASS: All GPL projects have source in current tree.')
+        logging.info('PASS: All GPL projects have source in current tree.')
 
 
 def get_args():
@@ -260,7 +258,7 @@ def main():
     os.chdir(temp_artifact_dir)
     manifest_pattern = 'manifest_{}.xml'.format(args.build)
     manifest_dest = os.path.join(temp_artifact_dir, utils.MANIFEST_FILE_NAME)
-    logger.info('Fetching {file} from {branch} (bid: {build})'.format(
+    logging.info('Fetching {file} from {branch} (bid: {build})'.format(
         file=manifest_pattern, branch=args.branch, build=args.build))
     utils.fetch_artifact(args.branch, args.build, manifest_pattern,
                          manifest_dest)
@@ -270,13 +268,13 @@ def main():
     try:
         license_checker.check_gpl_projects()
     except ValueError as error:
-        logger.error('Error: {}'.format(error))
+        logging.error('Error: {}'.format(error))
         raise
     finally:
-        logger.info('Deleting temp_artifact_dir: {}'.format(temp_artifact_dir))
+        logging.info('Deleting temp_artifact_dir: {}'.format(temp_artifact_dir))
         shutil.rmtree(temp_artifact_dir)
 
-    logger.info('Done.')
+    logging.info('Done.')
 
 
 if __name__ == '__main__':

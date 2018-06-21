@@ -35,10 +35,6 @@ NOTICE_FILES_DIR_NAME = 'NOTICE_FILES'
 NOTICE_FILES_DIR_PATH = os.path.join(COMMON_DIR_PATH, NOTICE_FILES_DIR_NAME)
 
 
-def logger(name):
-    return logging.getLogger(name)
-
-
 def set_logging_config(verbose_level):
     verbose_map = (logging.WARNING, logging.INFO, logging.DEBUG)
     verbosity = min(verbose_level, 2)
@@ -47,17 +43,15 @@ def set_logging_config(verbose_level):
         level=verbose_map[verbosity])
 
 
-def check_call(cmd, logger=None):
-    logger = logger or logging
-    logger.debug('Running `{}`'.format(' '.join(cmd)))
+def check_call(cmd):
+    logging.debug('Running `{}`'.format(' '.join(cmd)))
     subprocess.check_call(cmd)
 
 
-def check_output(cmd, logger=None):
-    logger = logger or logging
-    logger.debug('Running `{}`'.format(' '.join(cmd)))
+def check_output(cmd):
+    logging.debug('Running `{}`'.format(' '.join(cmd)))
     output = subprocess.check_output(cmd)
-    logger.debug('Output: `{}`'.format(output))
+    logging.debug('Output: `{}`'.format(output))
     return output
 
 
@@ -156,4 +150,4 @@ def fetch_artifact(branch, build, pattern, destination='.'):
         fetch_artifact_path, '--branch', branch, '--target=vndk', '--bid',
         build, pattern, destination
     ]
-    check_call(cmd, logger(__name__))
+    check_call(cmd)

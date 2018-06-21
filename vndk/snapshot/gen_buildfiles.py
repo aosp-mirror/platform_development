@@ -23,8 +23,6 @@ import sys
 
 import utils
 
-logger = utils.logger(__name__)
-
 
 class GenBuildFile(object):
     """Generates Android.mk and Android.bp for VNDK snapshot.
@@ -384,7 +382,7 @@ def main():
     buildfile_generator.generate_android_mk()
     buildfile_generator.generate_android_bp()
 
-    logger.info('Done.')
+    logging.info('Done.')
 
 
 if __name__ == '__main__':
