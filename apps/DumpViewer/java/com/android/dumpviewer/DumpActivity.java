@@ -20,10 +20,14 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.Settings;
+import android.provider.Settings.Global;
 import android.text.Editable;
+import android.text.Layout;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -70,12 +74,19 @@ public class DumpActivity extends AppCompatActivity {
     private Button mNextButton;
     private Button mPrevButton;
 
+    private Button mOpenButton;
+    private Button mCloseButton;
+
+    private ViewGroup mHeader1;
+
     private AsyncTask<Void, Void, String> mRunningTask;
 
     private SharedPreferences mPrefs;
     private History mCommandHistory;
     private History mRegexpHistory;
     private History mSearchHistory;
+
+    private long mLastCollapseTime;
 
     private static final List<String> DEFAULT_COMMANDS = Arrays.asList(new String[]{
             "dumpsys activity",
@@ -132,7 +143,8 @@ public class DumpActivity extends AppCompatActivity {
         mWebView = findViewById(R.id.webview);
         mWebView.getSettings().setBuiltInZoomControls(true);
         mWebView.getSettings().setLoadWithOverviewMode(true);
-//        mWebView.getSettings().setUseWideViewPort(true);
+
+        mHeader1 = findViewById(R.id.header1);
 
         mExecuteButton = findViewById(R.id.start);
         mExecuteButton.setOnClickListener(this::onStartClicked);
@@ -140,6 +152,11 @@ public class DumpActivity extends AppCompatActivity {
         mNextButton.setOnClickListener(this::onFindNextClicked);
         mPrevButton = findViewById(R.id.find_prev);
         mPrevButton.setOnClickListener(this::onFindPrevClicked);
+
+        mOpenButton = findViewById(R.id.open_header);
+        mOpenButton.setOnClickListener(this::onOpenHeaderClicked);
+        mCloseButton = findViewById(R.id.close_header);
+        mCloseButton.setOnClickListener(this::onCloseHeaderClicked);
 
         mAcCommandLine = findViewById(R.id.commandline);
         mAcAfterContext = findViewById(R.id.afterContext);
@@ -187,6 +204,14 @@ public class DumpActivity extends AppCompatActivity {
         mExecuteButton.setEnabled(canExecute);
         mNextButton.setEnabled(canSearch);
         mPrevButton.setEnabled(canSearch);
+
+        if (mHeader1.getVisibility() == View.VISIBLE) {
+            mCloseButton.setVisibility(View.VISIBLE);
+            mOpenButton.setVisibility(View.GONE);
+        } else {
+            mOpenButton.setVisibility(View.VISIBLE);
+            mCloseButton.setVisibility(View.GONE);
+        }
     }
 
     private void saveSharePrefs() {
@@ -229,6 +254,11 @@ public class DumpActivity extends AppCompatActivity {
     }
 
     private void showAutocompleteDropDown(View view, boolean hasFocus) {
+        if ((System.currentTimeMillis() - mLastCollapseTime) < 300) {
+            // Hack: We don't want to open the pop up because the focus changed because of
+            // collapsing, so we suppress it.
+            return;
+        }
         if (hasFocus) {
             final AutoCompleteTextView target = (AutoCompleteTextView) view;
             if (!target.isPopupShowing()) {
@@ -300,7 +330,6 @@ public class DumpActivity extends AppCompatActivity {
                 }
             }
             sb.append("</pre></body></html>\n");
-//            mWebView.getSettings().setUseWideViewPort(!noWrap);
 
             mWebView.loadData(sb.toString(), "text/html", null);
         });
@@ -323,6 +352,20 @@ public class DumpActivity extends AppCompatActivity {
 
     public void onFindPrevClicked(View v) {
         doFindNextOrPrev(false);
+    }
+
+    private void onOpenHeaderClicked(View v) {
+        toggleHeader();
+    }
+
+    private void onCloseHeaderClicked(View v) {
+        mLastCollapseTime = System.currentTimeMillis();
+        toggleHeader();
+    }
+
+    private void toggleHeader() {
+        mHeader1.setVisibility(mHeader1.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+        refreshUi();
     }
 
     String mLastQuery;
@@ -373,6 +416,10 @@ public class DumpActivity extends AppCompatActivity {
 
         @Override
         protected String doInBackground(Void... voids) {
+            if (Settings.Global.getInt(getContentResolver(), Global.ADB_ENABLED, 0) != 1) {
+                return "Please enable ADB (aka \"USB Debugging\" in developer options)";
+            }
+
             final ByteArrayOutputStream out = new ByteArrayOutputStream(1024 * 1024);
             try {
                 try (InputStream is = dump(command)) {
