@@ -2694,6 +2694,13 @@ def scan_apk_dep(graph, system_dirs, vendor_dirs):
     libnames = _build_lib_names_dict(graph)
     results = []
 
+    if str is bytes:
+        def decode(string):  # PY2
+            return string.decode('mutf-8').encode('utf-8')
+    else:
+        def decode(string):  # PY3
+            return string.decode('mutf-8')
+
     for ap, path in _enumerate_paths(system_dirs, vendor_dirs):
         # Read the dex file from various file formats
         try:
@@ -2704,7 +2711,7 @@ def scan_apk_dep(graph, system_dirs, vendor_dirs):
             strings = set()
             for string in dex_string_iter:
                 try:
-                    strings.add(string.decode('mutf-8'))
+                    strings.add(decode(string))
                 except UnicodeSurrogateDecodeError:
                     pass
         except FileNotFoundError:
