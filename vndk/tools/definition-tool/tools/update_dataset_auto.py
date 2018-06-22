@@ -13,8 +13,7 @@ UPDATE_DATASET = os.path.abspath(os.path.join(
     __file__, '..', 'update_dataset.py'))
 
 LIST_VNDK_MODULE = os.path.abspath(os.path.join(
-    __file__, '..', '..', '..', 'sourcedr', 'sourcedr', 'blueprint',
-    'list_vndk_module.py'))
+    __file__, '..', '..', '..', 'sourcedr', 'blueprint', 'list_vndk_module.py'))
 
 
 def update_eligible_list(path, make_vars, module_info):
