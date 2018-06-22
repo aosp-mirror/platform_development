@@ -33,7 +33,8 @@
         android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning|flagNoFullscreen"
         android:maxLines="1"
         android:scrollHorizontally="true"
-        />
+        android:selectAllOnFocus="true"
+    />
     <LinearLayout android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -42,7 +43,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="grep -B"
+            android:text="egrep -B"
             />
         <AutoCompleteTextView
             android:id="@+id/beforeContext"
@@ -51,10 +52,11 @@
             android:dropDownWidth="64sp"
             android:text="0"
             android:inputType="text"
-        android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning|flagNoFullscreen"
+            android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning|flagNoFullscreen"
             android:maxLines="1"
             android:scrollHorizontally="true"
-            />
+            android:selectAllOnFocus="true"
+        />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -67,20 +69,10 @@
             android:dropDownWidth="64sp"
             android:text="0"
             android:inputType="text"
-        android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning|flagNoFullscreen"
+            android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning|flagNoFullscreen"
             android:maxLines="1"
             android:scrollHorizontally="true"
-            />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="-E"
-            />
-        <CheckBox
-            android:id="@+id/extended_pattern"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="true"
+            android:selectAllOnFocus="true"
             />
         <TextView
             android:layout_width="wrap_content"
@@ -100,9 +92,10 @@
             android:text=""
             android:layout_weight="1"
             android:inputType="text"
-        android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning|flagNoFullscreen"
+            android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning|flagNoFullscreen"
             android:maxLines="1"
             android:scrollHorizontally="true"
+            android:selectAllOnFocus="true"
             />
     </LinearLayout>
     <LinearLayout android:layout_width="match_parent"
@@ -121,9 +114,10 @@
             android:layout_height="wrap_content"
             android:text="0"
             android:inputType="text"
-        android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning|flagNoFullscreen"
+            android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning|flagNoFullscreen"
             android:maxLines="1"
             android:scrollHorizontally="true"
+            android:selectAllOnFocus="true"
             />
         <TextView
             android:layout_width="wrap_content"
@@ -136,19 +130,29 @@
             android:layout_height="wrap_content"
             android:text="0"
             android:inputType="text"
-        android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning|flagNoFullscreen"
+            android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning|flagNoFullscreen"
             android:maxLines="1"
             android:scrollHorizontally="true"
+            android:selectAllOnFocus="true"
             />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="jump to last"
+            android:text="to last"
             />
         <CheckBox
             android:id="@+id/scroll_to_bottm"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
+        <!--<TextView-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:text="wrap"-->
+        <!--/>-->
+        <!--<CheckBox-->
+            <!--android:id="@+id/wrap_lines"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content" />-->
         <Button
             android:id="@+id/start"
             android:layout_width="wrap_content"
@@ -175,9 +179,10 @@
             android:text=""
             android:layout_weight="1"
             android:inputType="text"
-        android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning|flagNoFullscreen"
+            android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning|flagNoFullscreen"
             android:maxLines="1"
             android:scrollHorizontally="true"
+            android:selectAllOnFocus="true"
             />
         <Button
             android:id="@+id/find_next"
