@@ -20,10 +20,14 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.Settings;
+import android.provider.Settings.Global;
 import android.text.Editable;
+import android.text.Layout;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -63,7 +67,6 @@ public class DumpActivity extends AppCompatActivity {
     private AutoCompleteTextView mAcTail;
     private AutoCompleteTextView mAcPattern;
     private AutoCompleteTextView mAcSearchQuery;
-    private CheckBox mExtendedGrep;
     private CheckBox mIgnoreCaseGrep;
     private CheckBox mShowLast;
 
@@ -71,12 +74,19 @@ public class DumpActivity extends AppCompatActivity {
     private Button mNextButton;
     private Button mPrevButton;
 
+    private Button mOpenButton;
+    private Button mCloseButton;
+
+    private ViewGroup mHeader1;
+
     private AsyncTask<Void, Void, String> mRunningTask;
 
     private SharedPreferences mPrefs;
     private History mCommandHistory;
     private History mRegexpHistory;
     private History mSearchHistory;
+
+    private long mLastCollapseTime;
 
     private static final List<String> DEFAULT_COMMANDS = Arrays.asList(new String[]{
             "dumpsys activity",
@@ -133,7 +143,8 @@ public class DumpActivity extends AppCompatActivity {
         mWebView = findViewById(R.id.webview);
         mWebView.getSettings().setBuiltInZoomControls(true);
         mWebView.getSettings().setLoadWithOverviewMode(true);
-        mWebView.getSettings().setUseWideViewPort(true);
+
+        mHeader1 = findViewById(R.id.header1);
 
         mExecuteButton = findViewById(R.id.start);
         mExecuteButton.setOnClickListener(this::onStartClicked);
@@ -141,6 +152,11 @@ public class DumpActivity extends AppCompatActivity {
         mNextButton.setOnClickListener(this::onFindNextClicked);
         mPrevButton = findViewById(R.id.find_prev);
         mPrevButton.setOnClickListener(this::onFindPrevClicked);
+
+        mOpenButton = findViewById(R.id.open_header);
+        mOpenButton.setOnClickListener(this::onOpenHeaderClicked);
+        mCloseButton = findViewById(R.id.close_header);
+        mCloseButton.setOnClickListener(this::onCloseHeaderClicked);
 
         mAcCommandLine = findViewById(R.id.commandline);
         mAcAfterContext = findViewById(R.id.afterContext);
@@ -150,7 +166,6 @@ public class DumpActivity extends AppCompatActivity {
         mAcPattern = findViewById(R.id.pattern);
         mAcSearchQuery = findViewById(R.id.search);
 
-        mExtendedGrep = findViewById(R.id.extended_pattern);
         mIgnoreCaseGrep = findViewById(R.id.ignore_case);
         mShowLast = findViewById(R.id.scroll_to_bottm);
 
@@ -177,6 +192,8 @@ public class DumpActivity extends AppCompatActivity {
         });
         refreshHistory();
 
+        loadSharePrefs();
+
         refreshUi();
     }
 
@@ -187,6 +204,26 @@ public class DumpActivity extends AppCompatActivity {
         mExecuteButton.setEnabled(canExecute);
         mNextButton.setEnabled(canSearch);
         mPrevButton.setEnabled(canSearch);
+
+        if (mHeader1.getVisibility() == View.VISIBLE) {
+            mCloseButton.setVisibility(View.VISIBLE);
+            mOpenButton.setVisibility(View.GONE);
+        } else {
+            mOpenButton.setVisibility(View.VISIBLE);
+            mCloseButton.setVisibility(View.GONE);
+        }
+    }
+
+    private void saveSharePrefs() {
+    }
+
+    private void loadSharePrefs() {
+    }
+
+    @Override
+    protected void onPause() {
+        saveSharePrefs();
+        super.onPause();
     }
 
     private void setupAutocomplete(AutoCompleteTextView target, List<String> values) {
@@ -195,7 +232,7 @@ public class DumpActivity extends AppCompatActivity {
 
     private void setupAutocomplete(AutoCompleteTextView target, String... values) {
         final ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_dropdown_item_1line, values);
+                R.layout.dropdown_item_1, values);
         target.setAdapter(adapter);
         target.setOnClickListener((v) -> ((AutoCompleteTextView) v).showDropDown());
         target.setOnFocusChangeListener(this::showAutocompleteDropDown);
@@ -217,6 +254,11 @@ public class DumpActivity extends AppCompatActivity {
     }
 
     private void showAutocompleteDropDown(View view, boolean hasFocus) {
+        if ((System.currentTimeMillis() - mLastCollapseTime) < 300) {
+            // Hack: We don't want to open the pop up because the focus changed because of
+            // collapsing, so we suppress it.
+            return;
+        }
         if (hasFocus) {
             final AutoCompleteTextView target = (AutoCompleteTextView) view;
             if (!target.isPopupShowing()) {
@@ -259,8 +301,11 @@ public class DumpActivity extends AppCompatActivity {
     private void setText(String text) {
         Log.v(TAG, "Trying to set string to webview: length=" + text.length());
         mHandler.post(() -> {
+            // TODO Don't do it on the main thread.
             final StringBuilder sb = new StringBuilder(text.length() * 2);
-            sb.append("<html><body style=\"white-space: nowrap;\"><pre>\n");
+            sb.append("<html><body");
+            sb.append(" style=\"white-space: nowrap;\"");
+            sb.append("><pre>\n");
             char c;
             for (int i = 0; i < text.length(); i++) {
                 c = text.charAt(i);
@@ -309,6 +354,20 @@ public class DumpActivity extends AppCompatActivity {
         doFindNextOrPrev(false);
     }
 
+    private void onOpenHeaderClicked(View v) {
+        toggleHeader();
+    }
+
+    private void onCloseHeaderClicked(View v) {
+        mLastCollapseTime = System.currentTimeMillis();
+        toggleHeader();
+    }
+
+    private void toggleHeader() {
+        mHeader1.setVisibility(mHeader1.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+        refreshUi();
+    }
+
     String mLastQuery;
 
     private void doFindNextOrPrev(boolean next) {
@@ -349,6 +408,7 @@ public class DumpActivity extends AppCompatActivity {
 
     private class Dumper extends AsyncTask<Void, Void, String> {
         final String command;
+        final AtomicBoolean mTimedOut = new AtomicBoolean();
 
         public Dumper(String command) {
             this.command = command;
@@ -356,6 +416,10 @@ public class DumpActivity extends AppCompatActivity {
 
         @Override
         protected String doInBackground(Void... voids) {
+            if (Settings.Global.getInt(getContentResolver(), Global.ADB_ENABLED, 0) != 1) {
+                return "Please enable ADB (aka \"USB Debugging\" in developer options)";
+            }
+
             final ByteArrayOutputStream out = new ByteArrayOutputStream(1024 * 1024);
             try {
                 try (InputStream is = dump(command)) {
@@ -372,7 +436,12 @@ public class DumpActivity extends AppCompatActivity {
                     }
                 }
             } catch (Exception e) {
-                setMessage("Caught exception: %s\n%s", e.getMessage(), Log.getStackTraceString(e));
+                if (mTimedOut.get()) {
+                    setMessage("Command timed out");
+                } else {
+                    setMessage("Caught exception: %s\n%s", e.getMessage(),
+                            Log.getStackTraceString(e));
+                }
                 return null;
             }
 
@@ -395,39 +464,38 @@ public class DumpActivity extends AppCompatActivity {
                 }
             }
         }
-    }
 
-    private InputStream dump(String originalCommand)
-            throws IOException {
-        final String commandLine = buildCommandLine(originalCommand);
-        setText("Running: " + commandLine);
+        private InputStream dump(String originalCommand)
+                throws IOException {
+            final String commandLine = buildCommandLine(originalCommand);
+            setText("Running: " + commandLine);
 
-        final Process p = Runtime.getRuntime().exec(new String[]{"/bin/sh", "-c", commandLine});
-        final InputStream in = p.getInputStream();
+            final Process p = Runtime.getRuntime().exec(new String[]{"/bin/sh", "-c", commandLine});
+            final InputStream in = p.getInputStream();
 
-        final AtomicBoolean timedOut = new AtomicBoolean();
-        final AtomicReference<Throwable> th = new AtomicReference<>();
-        new Thread(() -> {
-            try {
-                Log.v(TAG, "Waiting for process: " + p);
-                timedOut.set(!p.waitFor(2, TimeUnit.SECONDS));
-                if (timedOut.get()) {
-                    setText(String.format("Command %s timed out", commandLine));
-                    try {
-                        p.destroyForcibly();
-                        in.close();
-                    } catch (Exception ignore) {
+            final AtomicReference<Throwable> th = new AtomicReference<>();
+            new Thread(() -> {
+                try {
+                    Log.v(TAG, "Waiting for process: " + p);
+                    mTimedOut.set(!p.waitFor(30, TimeUnit.SECONDS));
+                    if (mTimedOut.get()) {
+                        setText(String.format("Command %s timed out", commandLine));
+                        try {
+                            p.destroyForcibly();
+                            in.close();
+                        } catch (Exception ignore) {
+                        }
+                    } else {
+                        Log.v(TAG, String.format("Command %s finished with code %d", commandLine,
+                                p.exitValue()));
                     }
-                } else {
-                    Log.v(TAG, String.format("Command %s finished with code %d", commandLine,
-                            p.exitValue()));
+                } catch (Exception e) {
+                    th.set(e);
                 }
-            } catch (Exception e) {
-                th.set(e);
-            }
-        }).start();
+            }).start();
 
-        return in;
+            return in;
+        }
     }
 
     private static final Pattern sLogcat = Pattern.compile("^logcat(\\s|$)");
@@ -449,14 +517,11 @@ public class DumpActivity extends AppCompatActivity {
 
         // Don't trim regexp. Sometimes you want to search for spaces.
         final String regexp = mAcPattern.getText().toString();
-        final boolean extended = mExtendedGrep.isChecked();
         final boolean ignoreCase = mIgnoreCaseGrep.isChecked();
 
         if (regexp.length() > 0) {
             sb.append(" | grep");
-            if (extended) {
-                sb.append(" -E");
-            }
+            sb.append(" -E");
             if (ignoreCase) {
                 sb.append(" -i");
             }
