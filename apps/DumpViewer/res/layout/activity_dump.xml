@@ -20,146 +20,153 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    app:layout_scrollFlags="scroll|enterAlways"
     android:padding="8dip"
+    android:animateLayoutChanges="true"
     >
-    <AutoCompleteTextView
-        android:id="@+id/commandline"
+    <LinearLayout
+        android:id="@+id/header1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="dumpsys [SERVICE], logcat -b crash, etc"
-        android:text=""
-        android:inputType="text"
-        android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning|flagNoFullscreen"
-        android:maxLines="1"
-        android:scrollHorizontally="true"
-        android:selectAllOnFocus="true"
-    />
-    <LinearLayout android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_scrollFlags="scroll|enterAlways"
+        android:orientation="vertical"
         >
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="egrep -B"
-            />
         <AutoCompleteTextView
-            android:id="@+id/beforeContext"
-            android:layout_width="32sp"
+            android:id="@+id/commandline"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:dropDownWidth="64sp"
-            android:text="0"
+            android:hint="dumpsys [SERVICE], logcat -b crash, etc"
+            android:text=""
             android:inputType="text"
             android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning|flagNoFullscreen"
             android:maxLines="1"
             android:scrollHorizontally="true"
             android:selectAllOnFocus="true"
         />
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="-A"
+            android:orientation="horizontal"
+            app:layout_scrollFlags="scroll|enterAlways"
+            >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="egrep -B"
+                />
+            <AutoCompleteTextView
+                android:id="@+id/beforeContext"
+                android:layout_width="32sp"
+                android:layout_height="wrap_content"
+                android:dropDownWidth="64sp"
+                android:text="0"
+                android:inputType="text"
+                android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning|flagNoFullscreen"
+                android:maxLines="1"
+                android:scrollHorizontally="true"
+                android:selectAllOnFocus="true"
             />
-        <AutoCompleteTextView
-            android:id="@+id/afterContext"
-            android:layout_width="32sp"
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-A"
+                />
+            <AutoCompleteTextView
+                android:id="@+id/afterContext"
+                android:layout_width="32sp"
+                android:layout_height="wrap_content"
+                android:dropDownWidth="64sp"
+                android:text="0"
+                android:inputType="text"
+                android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning|flagNoFullscreen"
+                android:maxLines="1"
+                android:scrollHorizontally="true"
+                android:selectAllOnFocus="true"
+                />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-i"
+                />
+            <CheckBox
+                android:id="@+id/ignore_case"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <AutoCompleteTextView
+                android:id="@+id/pattern"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content"
+                android:dropDownWidth="320sp"
+                android:hint="regexp"
+                android:text=""
+                android:layout_weight="1"
+                android:inputType="text"
+                android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning|flagNoFullscreen"
+                android:maxLines="1"
+                android:scrollHorizontally="true"
+                android:selectAllOnFocus="true"
+                />
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:dropDownWidth="64sp"
-            android:text="0"
-            android:inputType="text"
-            android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning|flagNoFullscreen"
-            android:maxLines="1"
-            android:scrollHorizontally="true"
-            android:selectAllOnFocus="true"
-            />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="-i"
-            />
-        <CheckBox
-            android:id="@+id/ignore_case"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-        <AutoCompleteTextView
-            android:id="@+id/pattern"
-            android:layout_width="0dip"
-            android:layout_height="wrap_content"
-            android:dropDownWidth="320sp"
-            android:hint="regexp"
-            android:text=""
-            android:layout_weight="1"
-            android:inputType="text"
-            android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning|flagNoFullscreen"
-            android:maxLines="1"
-            android:scrollHorizontally="true"
-            android:selectAllOnFocus="true"
-            />
-    </LinearLayout>
-    <LinearLayout android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_scrollFlags="scroll|enterAlways"
-        >
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="head"
-            />
-        <AutoCompleteTextView
-            android:id="@+id/head"
-            android:layout_width="64sp"
-            android:layout_height="wrap_content"
-            android:text="0"
-            android:inputType="text"
-            android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning|flagNoFullscreen"
-            android:maxLines="1"
-            android:scrollHorizontally="true"
-            android:selectAllOnFocus="true"
-            />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="tail"
-            />
-        <AutoCompleteTextView
-            android:id="@+id/tail"
-            android:layout_width="64sp"
-            android:layout_height="wrap_content"
-            android:text="0"
-            android:inputType="text"
-            android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning|flagNoFullscreen"
-            android:maxLines="1"
-            android:scrollHorizontally="true"
-            android:selectAllOnFocus="true"
-            />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="to last"
-            />
-        <CheckBox
-            android:id="@+id/scroll_to_bottm"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-        <!--<TextView-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:text="wrap"-->
-        <!--/>-->
-        <!--<CheckBox-->
-            <!--android:id="@+id/wrap_lines"-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content" />-->
-        <Button
-            android:id="@+id/start"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Go"
-            android:layout_weight="1"
-            />
+            android:orientation="horizontal"
+            app:layout_scrollFlags="scroll|enterAlways"
+            >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="head"
+                />
+            <AutoCompleteTextView
+                android:id="@+id/head"
+                android:layout_width="64sp"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:inputType="text"
+                android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning|flagNoFullscreen"
+                android:maxLines="1"
+                android:scrollHorizontally="true"
+                android:selectAllOnFocus="true"
+                />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="tail"
+                />
+            <AutoCompleteTextView
+                android:id="@+id/tail"
+                android:layout_width="64sp"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:inputType="text"
+                android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning|flagNoFullscreen"
+                android:maxLines="1"
+                android:scrollHorizontally="true"
+                android:selectAllOnFocus="true"
+                />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="to last"
+                />
+            <CheckBox
+                android:id="@+id/scroll_to_bottm"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <!--<TextView-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:text="wrap"-->
+            <!--/>-->
+            <!--<CheckBox-->
+                <!--android:id="@+id/wrap_lines"-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content" />-->
+            <Button
+                android:id="@+id/start"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Go"
+                android:layout_weight="1"
+                />
+        </LinearLayout>
     </LinearLayout>
     <LinearLayout android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -198,6 +205,18 @@
             android:text="Prev"
             android:layout_weight="0"
             />
+        <Button
+            android:id="@+id/close_header"
+            android:layout_width="38sp"
+            android:layout_height="wrap_content"
+            android:text="△"
+        />
+        <Button
+            android:id="@+id/open_header"
+            android:layout_width="38sp"
+            android:layout_height="wrap_content"
+            android:text="▽"
+        />
     </LinearLayout>
     <WebView
         android:id="@+id/webview"
@@ -206,184 +225,3 @@
         android:layout_weight="1"
         />
 </LinearLayout>
-
-    <!--
-<android.support.design.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <android.support.design.widget.AppBarLayout
-        android:id="@+id/appbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:theme="@style/ThemeOverlay.AppCompat.ActionBar">
-
-        <LinearLayout android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_scrollFlags="scroll|enterAlways"
-            android:padding="8dip"
-            >
-            <AutoCompleteTextView
-                android:id="@+id/commandline"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-            android:inputType="text"
-        android:imeOptions="flagForceAscii|actionGo|flagNoPersonalizedLearning"
-        android:maxLines="1"
-        android:scrollHorizontally="true"
-                android:hint="dumpsys [SERVICE], logcat -b crash, etc"
-                android:text=""
-            />
-            <LinearLayout android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                app:layout_scrollFlags="scroll|enterAlways"
-                >
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="grep -B"
-                    />
-                <AutoCompleteTextView
-                    android:id="@+id/beforeContext"
-                    android:layout_width="32sp"
-                    android:layout_height="wrap_content"
-                    android:dropDownWidth="64sp"
-                    android:text="0"
-                    />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="-A"
-                    />
-                <AutoCompleteTextView
-                    android:id="@+id/afterContext"
-                    android:layout_width="32sp"
-                    android:layout_height="wrap_content"
-                    android:dropDownWidth="64sp"
-                    android:text="0"
-                    />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="-E"
-                    />
-                <CheckBox
-                    android:id="@+id/extended_pattern"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="-i"
-                    />
-                <CheckBox
-                    android:id="@+id/ignore_case"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-                <AutoCompleteTextView
-                    android:id="@+id/pattern"
-                    android:layout_width="0dip"
-                    android:layout_height="wrap_content"
-                    android:hint="regexp"
-                    android:text=""
-                    android:layout_weight="1"
-                    />
-            </LinearLayout>
-            <LinearLayout android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                app:layout_scrollFlags="scroll|enterAlways"
-                >
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="head"
-                    />
-                <AutoCompleteTextView
-                    android:id="@+id/head"
-                    android:layout_width="64sp"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="tail"
-                    />
-                <AutoCompleteTextView
-                    android:id="@+id/tail"
-                    android:layout_width="64sp"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="jump to last"
-                    />
-                <CheckBox
-                    android:id="@+id/scroll_to_bottm"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-                <Button
-                    android:id="@+id/start"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Execute"
-                    android:layout_weight="1"
-                />
-            </LinearLayout>
-            <LinearLayout android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                app:layout_scrollFlags="scroll|enterAlways"
-                >
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Search"
-                    />
-                <AutoCompleteTextView
-                    android:id="@+id/search"
-                    android:layout_width="64sp"
-                    android:layout_height="wrap_content"
-                    android:text=""
-                    android:layout_weight="1"
-                    />
-                <Button
-                    android:id="@+id/find_next"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Next"
-                    android:layout_weight="0"
-                    />
-                <Button
-                    android:id="@+id/find_prev"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Prev"
-                    android:layout_weight="0"
-                    />
-            </LinearLayout>
-        </LinearLayout>
-    </android.support.design.widget.AppBarLayout>
-
-    <android.support.v4.widget.NestedScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="fill_vertical"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-        <WebView
-            android:id="@+id/webview"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            />
-    </android.support.v4.widget.NestedScrollView>
-
-</android.support.design.widget.CoordinatorLayout>
--->
