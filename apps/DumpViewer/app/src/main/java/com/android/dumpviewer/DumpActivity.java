@@ -15,7 +15,10 @@
  */
 package com.android.dumpviewer;
 
+import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -23,9 +26,9 @@ import android.os.Handler;
 import android.provider.Settings;
 import android.provider.Settings.Global;
 import android.text.Editable;
-import android.text.Layout;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
@@ -35,18 +38,28 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.TextView;
+
+import com.android.dumpviewer.R.id;
+import com.android.dumpviewer.pickers.PackageNamePicker;
+import com.android.dumpviewer.pickers.PickerActivity;
+import com.android.dumpviewer.pickers.ProcessNamePicker;
+import com.android.dumpviewer.utils.Exec;
+import com.android.dumpviewer.utils.GrepHelper;
+import com.android.dumpviewer.utils.History;
+import com.android.dumpviewer.utils.Utils;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class DumpActivity extends AppCompatActivity {
@@ -56,6 +69,8 @@ public class DumpActivity extends AppCompatActivity {
     private static final String SHARED_PREF_NAME = "prefs";
 
     private static final int MAX_RESULT_SIZE = 1 * 1024 * 1024;
+
+    private static final int CODE_MULTI_PICKER = 1;
 
     private final Handler mHandler = new Handler();
 
@@ -77,6 +92,9 @@ public class DumpActivity extends AppCompatActivity {
     private Button mOpenButton;
     private Button mCloseButton;
 
+    private Button mMultiPickerButton;
+    private Button mRePickerButton;
+
     private ViewGroup mHeader1;
 
     private AsyncTask<Void, Void, String> mRunningTask;
@@ -87,6 +105,8 @@ public class DumpActivity extends AppCompatActivity {
     private History mSearchHistory;
 
     private long mLastCollapseTime;
+
+    private GrepHelper mGrepHelper;
 
     private static final List<String> DEFAULT_COMMANDS = Arrays.asList(new String[]{
             "dumpsys activity",
@@ -133,12 +153,20 @@ public class DumpActivity extends AppCompatActivity {
 
     private InputMethodManager mImm;
 
+    private EditText mLastFocusedEditBox;
+
+    private boolean mDoScrollWebView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dump);
 
+        mGrepHelper = GrepHelper.getHelper();
+
         mImm = getSystemService(InputMethodManager.class);
+
+        ((TextView) findViewById(R.id.grep_label)).setText(mGrepHelper.getCommandName());
 
         mWebView = findViewById(R.id.webview);
         mWebView.getSettings().setBuiltInZoomControls(true);
@@ -158,6 +186,11 @@ public class DumpActivity extends AppCompatActivity {
         mCloseButton = findViewById(R.id.close_header);
         mCloseButton.setOnClickListener(this::onCloseHeaderClicked);
 
+        mMultiPickerButton = findViewById(id.multi_picker);
+        mMultiPickerButton.setOnClickListener(this::onMultiPickerClicked);
+        mRePickerButton = findViewById(id.re_picker);
+        mRePickerButton.setOnClickListener(this::onRePickerClicked);
+
         mAcCommandLine = findViewById(R.id.commandline);
         mAcAfterContext = findViewById(R.id.afterContext);
         mAcBeforeContext = findViewById(R.id.beforeContext);
@@ -168,7 +201,6 @@ public class DumpActivity extends AppCompatActivity {
 
         mIgnoreCaseGrep = findViewById(R.id.ignore_case);
         mShowLast = findViewById(R.id.scroll_to_bottm);
-
 
         mPrefs = getSharedPreferences(SHARED_PREF_NAME, Context.MODE_PRIVATE);
         mCommandHistory = new History(mPrefs, "command_history", MAX_HISTORY_SIZE);
@@ -182,6 +214,10 @@ public class DumpActivity extends AppCompatActivity {
         setupAutocomplete(mAcAfterContext, "0", "1", "2", "3", "5", "10");
         setupAutocomplete(mAcHead, "0", "100", "1000", "2000");
         setupAutocomplete(mAcTail, "0", "100", "1000", "2000");
+
+        mAcCommandLine.setOnKeyListener(this::onAutocompleteKey);
+        mAcPattern.setOnKeyListener(this::onAutocompleteKey);
+        mAcSearchQuery.setOnKeyListener(this::onAutocompleteKey);
 
         mWebView.setWebViewClient(new WebViewClient() {
             @Override
@@ -226,6 +262,17 @@ public class DumpActivity extends AppCompatActivity {
         super.onPause();
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (requestCode == CODE_MULTI_PICKER) {
+            if (resultCode == Activity.RESULT_OK) {
+                insertPickedString(PickerActivity.getSelectedString(data));
+            }
+            return;
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
     private void setupAutocomplete(AutoCompleteTextView target, List<String> values) {
         setupAutocomplete(target, values.toArray(new String[values.size()]));
     }
@@ -235,7 +282,7 @@ public class DumpActivity extends AppCompatActivity {
                 R.layout.dropdown_item_1, values);
         target.setAdapter(adapter);
         target.setOnClickListener((v) -> ((AutoCompleteTextView) v).showDropDown());
-        target.setOnFocusChangeListener(this::showAutocompleteDropDown);
+        target.setOnFocusChangeListener(this::onAutocompleteFocusChanged);
         target.addTextChangedListener(
                 new TextWatcher() {
                     @Override
@@ -253,18 +300,42 @@ public class DumpActivity extends AppCompatActivity {
                 });
     }
 
-    private void showAutocompleteDropDown(View view, boolean hasFocus) {
+    public boolean onAutocompleteKey(View view, int keyCode, KeyEvent keyevent) {
+        if (keyevent.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
+            if (view == mAcSearchQuery) {
+                doFindNextOrPrev(true);
+            } else {
+                doStartCommand();
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private void onAutocompleteFocusChanged(View v, boolean hasFocus) {
         if ((System.currentTimeMillis() - mLastCollapseTime) < 300) {
             // Hack: We don't want to open the pop up because the focus changed because of
             // collapsing, so we suppress it.
             return;
         }
         if (hasFocus) {
-            final AutoCompleteTextView target = (AutoCompleteTextView) view;
-            if (!target.isPopupShowing()) {
-                target.showDropDown();
+            if (v == mAcCommandLine || v == mAcPattern || v == mAcSearchQuery) {
+                mLastFocusedEditBox = (EditText) v;
             }
+            final AutoCompleteTextView target = (AutoCompleteTextView) v;
+            Utils.sMainHandler.post(() -> {
+                if (!isDestroyed() && !target.isPopupShowing()) {
+                    try {
+                        target.showDropDown();
+                    } catch (Exception e) {
+                    }
+                }
+            });
         }
+    }
+
+    private void insertPickedString(String s) {
+        insertText((mLastFocusedEditBox != null ? mLastFocusedEditBox :  mAcCommandLine), s);
     }
 
     private void hideIme() {
@@ -294,7 +365,7 @@ public class DumpActivity extends AppCompatActivity {
         return mAcCommandLine.getText().toString().trim();
     }
 
-    private void setMessage(String format, Object... args) {
+    private void setText(String format, Object... args) {
         mHandler.post(() -> setText(String.format(format, args)));
     }
 
@@ -310,6 +381,9 @@ public class DumpActivity extends AppCompatActivity {
             for (int i = 0; i < text.length(); i++) {
                 c = text.charAt(i);
                 switch (c) {
+                    case '\n':
+                        sb.append("<br>");
+                        break;
                     case '<':
                         sb.append("&lt;");
                         break;
@@ -325,6 +399,9 @@ public class DumpActivity extends AppCompatActivity {
                     case '"':
                         sb.append("&quot;");
                         break;
+                    case '#':
+                        sb.append("%23");
+                        break;
                     default:
                         sb.append(c);
                 }
@@ -335,7 +412,18 @@ public class DumpActivity extends AppCompatActivity {
         });
     }
 
+    private void insertText(EditText edit, String value) {
+        final int start = Math.max(edit.getSelectionStart(), 0);
+        final int end = Math.max(edit.getSelectionEnd(), 0);
+        edit.getText().replace(Math.min(start, end), Math.max(start, end),
+                value, 0, value.length());
+    }
+
     private void onContentLoaded() {
+        if (!mDoScrollWebView) {
+            return;
+        }
+        mDoScrollWebView = false;
         if (mShowLast == null) {
             return;
         }
@@ -368,6 +456,14 @@ public class DumpActivity extends AppCompatActivity {
         refreshUi();
     }
 
+    private void onRePickerClicked(View view) {
+        showRegexpPicker();
+    }
+
+    private void onMultiPickerClicked(View view) {
+        showMultiPicker();
+    }
+
     String mLastQuery;
 
     private void doFindNextOrPrev(boolean next) {
@@ -388,6 +484,10 @@ public class DumpActivity extends AppCompatActivity {
     }
 
     public void onStartClicked(View v) {
+        doStartCommand();
+    }
+
+    public void doStartCommand() {
         if (mRunningTask != null) {
             mRunningTask.cancel(true);
         }
@@ -422,7 +522,12 @@ public class DumpActivity extends AppCompatActivity {
 
             final ByteArrayOutputStream out = new ByteArrayOutputStream(1024 * 1024);
             try {
-                try (InputStream is = dump(command)) {
+                try (InputStream is = Exec.runForStream(
+                        buildCommandLine(command),
+                        DumpActivity.this::setText,
+                        () -> mTimedOut.set(true),
+                        (e) -> {throw new RuntimeException(e.getMessage(), e);},
+                        30)) {
                     final byte[] buf = new byte[1024 * 16];
                     int read;
                     int written = 0;
@@ -437,9 +542,9 @@ public class DumpActivity extends AppCompatActivity {
                 }
             } catch (Exception e) {
                 if (mTimedOut.get()) {
-                    setMessage("Command timed out");
+                    setText("Command timed out");
                 } else {
-                    setMessage("Caught exception: %s\n%s", e.getMessage(),
+                    setText("Caught exception: %s\n%s", e.getMessage(),
                             Log.getStackTraceString(e));
                 }
                 return null;
@@ -460,42 +565,12 @@ public class DumpActivity extends AppCompatActivity {
                 if (s.length() == 0) {
                     setText("[No result]");
                 } else {
+                    mDoScrollWebView = true;
                     setText(s);
                 }
             }
         }
 
-        private InputStream dump(String originalCommand)
-                throws IOException {
-            final String commandLine = buildCommandLine(originalCommand);
-            setText("Running: " + commandLine);
-
-            final Process p = Runtime.getRuntime().exec(new String[]{"/bin/sh", "-c", commandLine});
-            final InputStream in = p.getInputStream();
-
-            final AtomicReference<Throwable> th = new AtomicReference<>();
-            new Thread(() -> {
-                try {
-                    Log.v(TAG, "Waiting for process: " + p);
-                    mTimedOut.set(!p.waitFor(30, TimeUnit.SECONDS));
-                    if (mTimedOut.get()) {
-                        setText(String.format("Command %s timed out", commandLine));
-                        try {
-                            p.destroyForcibly();
-                            in.close();
-                        } catch (Exception ignore) {
-                        }
-                    } else {
-                        Log.v(TAG, String.format("Command %s finished with code %d", commandLine,
-                                p.exitValue()));
-                    }
-                } catch (Exception e) {
-                    th.set(e);
-                }
-            }).start();
-
-            return in;
-        }
     }
 
     private static final Pattern sLogcat = Pattern.compile("^logcat(\\s|$)");
@@ -520,21 +595,8 @@ public class DumpActivity extends AppCompatActivity {
         final boolean ignoreCase = mIgnoreCaseGrep.isChecked();
 
         if (regexp.length() > 0) {
-            sb.append(" | grep");
-            sb.append(" -E");
-            if (ignoreCase) {
-                sb.append(" -i");
-            }
-            if (before > 0) {
-                sb.append(" -B");
-                sb.append(before);
-            }
-            if (after > 0) {
-                sb.append(" -A");
-                sb.append(after);
-            }
-            sb.append(" -- ");
-            sb.append(Utils.shellEscape(regexp));
+            sb.append(" | ");
+            mGrepHelper.buildCommand(sb, regexp, before, after, ignoreCase);
         }
         if (head > 0) {
             sb.append(" | head -n ");
@@ -546,5 +608,64 @@ public class DumpActivity extends AppCompatActivity {
         }
         sb.append(" 2>&1");
         return sb.toString();
+    }
+
+    // Show regex picker
+    private void showRegexpPicker() {
+        AlertDialog.Builder builderSingle = new AlertDialog.Builder(this);
+        builderSingle.setTitle("Insert meta character");
+
+        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(this,
+                android.R.layout.select_dialog_item, mGrepHelper.getMetaCharacters());
+
+        builderSingle.setNegativeButton("cancel", (dialog, which) -> {
+            dialog.dismiss();
+        });
+
+        builderSingle.setAdapter(arrayAdapter, (dialog, which) -> {
+            final String item = arrayAdapter.getItem(which);
+            // Only use the first token
+            final String[] vals = item.split(" ");
+
+            insertText(mAcPattern, vals[0]);
+            dialog.dismiss();
+        });
+        builderSingle.show();
+    }
+
+    private static final String[] sMultiPickerTargets = {
+            "Package name",
+//            "Process name", // Not implemented yet.
+    };
+
+    private void showMultiPicker() {
+        AlertDialog.Builder builderSingle = new AlertDialog.Builder(this);
+        builderSingle.setTitle("Find and insert...");
+
+        final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(this,
+                android.R.layout.select_dialog_item, sMultiPickerTargets);
+
+        builderSingle.setNegativeButton("cancel", (dialog, which) -> {
+            dialog.dismiss();
+        });
+
+        builderSingle.setAdapter(arrayAdapter, (dialog, which) -> {
+            Class<?> activity;
+            switch (which) {
+                case 0:
+                    activity = PackageNamePicker.class;
+                    break;
+                case 1:
+                    activity = ProcessNamePicker.class;
+                    break;
+                default:
+                    throw new RuntimeException("BUG: Unknown item selected");
+            }
+            final Intent i = new Intent().setComponent(new ComponentName(this, activity));
+            startActivityForResult(i, CODE_MULTI_PICKER);
+
+            dialog.dismiss();
+        });
+        builderSingle.show();
     }
 }

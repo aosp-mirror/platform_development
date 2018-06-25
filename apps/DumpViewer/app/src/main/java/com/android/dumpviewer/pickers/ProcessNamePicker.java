@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+/*
  * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +12,12 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- -->
-<resources>
-    <string name="app_name">DumpViewer</string>
-</resources>
+ */
+package com.android.dumpviewer.pickers;
+
+public class ProcessNamePicker extends PickerActivity {
+    @Override
+    protected String[] getList() {
+        return new String[0];
+    }
+}
