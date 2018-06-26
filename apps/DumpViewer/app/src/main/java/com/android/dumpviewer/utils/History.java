@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.dumpviewer;
+package com.android.dumpviewer.utils;
 
 import android.content.SharedPreferences;
 import android.text.TextUtils;

@@ -13,11 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.dumpviewer;
+package com.android.dumpviewer.utils;
+
+import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
+import android.widget.Toast;
+
+import com.android.dumpviewer.DumpActivity;
 
 import java.util.regex.Pattern;
 
 public class Utils {
+    public static final String TAG = DumpActivity.TAG;
+
+    public static Handler sMainHandler = new Handler(Looper.getMainLooper());
+
     private Utils() {
     }
 
@@ -46,5 +57,9 @@ public class Utils {
         } catch (NumberFormatException e) {
             return defValue;
         }
+    }
+
+    public static void toast(Context context, String message) {
+        sMainHandler.post(() -> Toast.makeText(context, message, Toast.LENGTH_SHORT));
     }
 }
