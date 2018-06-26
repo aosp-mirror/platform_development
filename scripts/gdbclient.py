@@ -192,7 +192,7 @@ def target_remote_with_retry(target, timeout_seconds):
   end_time = time.time() + timeout_seconds
   while True:
     try:
-      gdb.execute("target remote " + target)
+      gdb.execute("target extended-remote " + target)
       return True
     except gdb.error as e:
       time_left = end_time - time.time()
