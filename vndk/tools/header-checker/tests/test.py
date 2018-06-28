@@ -267,6 +267,11 @@ class MyTest(unittest.TestCase):
             "libgolden_cpp_internal_private_struct", 8, [], True,
             True)
 
+    def test_libgolden_cpp_inheritance_type_changed(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp", "libgolden_cpp_inheritance_type_changed", 8, [],
+            True, True)
+
 
 if __name__ == '__main__':
     unittest.main()
