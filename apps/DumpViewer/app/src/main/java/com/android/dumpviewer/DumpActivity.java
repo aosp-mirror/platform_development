@@ -117,6 +117,7 @@ public class DumpActivity extends AppCompatActivity {
             "dumpsys activity starter",
             "dumpsys activity processes",
             "dumpsys activity recents",
+            "dumpsys activity lastanr-traces",
             "dumpsys alarm",
             "dumpsys appops",
             "dumpsys backup",
