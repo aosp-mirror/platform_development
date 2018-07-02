@@ -209,12 +209,34 @@ DiffStatus AbiDiffHelper::CompareEnumTypes(
   return DiffStatus::no_diff;
 }
 
+static std::string RemoveThunkInfoFromMangledName(const std::string &name) {
+  if (name.find("_ZTv") != 0 && name.find("_ZTh") != 0 &&
+      name.find("_ZTc") != 0) {
+    return name;
+  }
+  size_t base_name_pos = name.find("N");
+  if (base_name_pos == std::string::npos) {
+    return name;
+  }
+  return "_Z" + name.substr(base_name_pos);
+}
+
 bool AbiDiffHelper::CompareVTableComponents(
     const abi_util::VTableComponentIR &old_component,
     const abi_util::VTableComponentIR &new_component) {
-  return old_component.GetName() == new_component.GetName() &&
-      old_component.GetValue() == new_component.GetValue() &&
-      old_component.GetKind() == new_component.GetKind();
+  // Vtable components in prebuilts/abi-dumps/vndk/28 don't have thunk info.
+  if (old_component.GetName() != new_component.GetName()) {
+    if (RemoveThunkInfoFromMangledName(old_component.GetName()) ==
+        RemoveThunkInfoFromMangledName(new_component.GetName())) {
+      llvm::errs() << "WARNING: Ignore difference between "
+                   << old_component.GetName() << " and "
+                   << new_component.GetName() << "\n";
+    } else {
+      return false;
+    }
+  }
+  return old_component.GetValue() == new_component.GetValue() &&
+         old_component.GetKind() == new_component.GetKind();
 }
 
 bool AbiDiffHelper::CompareVTables(

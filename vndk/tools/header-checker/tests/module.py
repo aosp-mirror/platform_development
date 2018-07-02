@@ -458,7 +458,18 @@ TEST_MODULES = [
         arch = '',
         api = 'current',
     ),
-
+    Module(
+        name = 'libgolden_cpp_inheritance_type_changed',
+        srcs = ['integration/cpp/gold/golden_1.cpp',
+                'integration/cpp/gold/high_volume_speaker.cpp',
+                'integration/cpp/gold/low_volume_speaker.cpp',
+                ],
+        version_script = 'integration/cpp/gold/map.txt',
+        export_include_dirs = ['integration/cpp/gold/include'],
+        cflags = ['-DGOLDEN_CHANGE_INHERITANCE_TYPE'],
+        arch = '',
+        api = 'current',
+    ),
 ]
 
 TEST_MODULES = { m.name: m for m in TEST_MODULES }
