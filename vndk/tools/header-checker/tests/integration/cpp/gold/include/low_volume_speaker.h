@@ -26,7 +26,11 @@
     float *speaker_float_star;
 #endif
 
+#if GOLDEN_CHANGE_INHERITANCE_TYPE
+class LowVolumeSpeaker : public virtual SuperSpeaker {
+#else
 class LowVolumeSpeaker : public SuperSpeaker {
+#endif
  public:
   virtual void Speak() override;
   virtual LISTEN_RETURN_TYPE Listen() override;
