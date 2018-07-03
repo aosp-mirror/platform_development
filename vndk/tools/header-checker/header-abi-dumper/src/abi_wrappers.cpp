@@ -633,6 +633,8 @@ bool RecordDeclWrapper::SetupCXXBases(
   return true;
 }
 
+typedef std::map<uint64_t, clang::ThunkInfo> ThunkMap;
+
 bool RecordDeclWrapper::SetupRecordVTable(
     abi_util::RecordTypeIR *record_declp,
     const clang::CXXRecordDecl *cxx_record_decl) {
@@ -654,18 +656,29 @@ bool RecordDeclWrapper::SetupRecordVTable(
   }
   const clang::VTableLayout &vtable_layout =
       itanium_vtable_contextp->getVTableLayout(cxx_record_decl);
+  ThunkMap thunk_map(vtable_layout.vtable_thunk_begin(),
+                     vtable_layout.vtable_thunk_end());
   abi_util::VTableLayoutIR vtable_ir_layout;
-  for (const auto &vtable_component : vtable_layout.vtable_components()) {
-    abi_util::VTableComponentIR added_component=
-        SetupRecordVTableComponent(vtable_component);
+
+  uint64_t index = 0;
+  for (auto vtable_component : vtable_layout.vtable_components()) {
+    clang::ThunkInfo thunk_info;
+    ThunkMap::iterator it = thunk_map.find(index);
+    if (it != thunk_map.end()) {
+      thunk_info = it->second;
+    }
+    abi_util::VTableComponentIR added_component =
+        SetupRecordVTableComponent(vtable_component, thunk_info);
     vtable_ir_layout.AddVTableComponent(std::move(added_component));
+    index++;
   }
   record_declp->SetVTableLayout(std::move(vtable_ir_layout));
   return true;
 }
 
 abi_util::VTableComponentIR RecordDeclWrapper::SetupRecordVTableComponent(
-    const clang::VTableComponent &vtable_component) {
+    const clang::VTableComponent &vtable_component,
+    const clang::ThunkInfo &thunk_info) {
   abi_util::VTableComponentIR::Kind kind =
       abi_util::VTableComponentIR::Kind::RTTI;
   std::string mangled_component_name = "";
@@ -673,6 +686,7 @@ abi_util::VTableComponentIR RecordDeclWrapper::SetupRecordVTableComponent(
   int64_t value = 0;
   clang::VTableComponent::Kind clang_component_kind =
       vtable_component.getKind();
+
   switch (clang_component_kind) {
     case clang::VTableComponent::CK_VCallOffset:
       kind = abi_util::VTableComponentIR::Kind::VCallOffset;
@@ -706,22 +720,36 @@ abi_util::VTableComponentIR RecordDeclWrapper::SetupRecordVTableComponent(
         switch (clang_component_kind) {
           case clang::VTableComponent::CK_FunctionPointer:
             kind = abi_util::VTableComponentIR::Kind::FunctionPointer;
-            mangled_component_name = GetMangledNameDecl(method_decl,
-                                                        mangle_contextp_);
-              break;
-          case clang::VTableComponent::CK_CompleteDtorPointer:
-            kind = abi_util::VTableComponentIR::Kind::CompleteDtorPointer;
-            mangle_contextp_->mangleCXXDtor(
-                vtable_component.getDestructorDecl(),
-                clang::CXXDtorType::Dtor_Complete, ostream);
+            if (thunk_info.isEmpty()) {
+              mangle_contextp_->mangleName(method_decl, ostream);
+            } else {
+              mangle_contextp_->mangleThunk(method_decl, thunk_info, ostream);
+            }
             ostream.flush();
             break;
+          case clang::VTableComponent::CK_CompleteDtorPointer:
           case clang::VTableComponent::CK_DeletingDtorPointer:
-            kind = abi_util::VTableComponentIR::Kind::DeletingDtorPointer;
-            mangle_contextp_->mangleCXXDtor(
-                vtable_component.getDestructorDecl(),
-                clang::CXXDtorType::Dtor_Deleting, ostream);
-            ostream.flush();
+            {
+              clang::CXXDtorType dtor_type;
+              if (clang_component_kind ==
+                  clang::VTableComponent::CK_CompleteDtorPointer) {
+                dtor_type = clang::CXXDtorType::Dtor_Complete;
+                kind = abi_util::VTableComponentIR::Kind::CompleteDtorPointer;
+              } else {
+                dtor_type = clang::CXXDtorType::Dtor_Deleting;
+                kind = abi_util::VTableComponentIR::Kind::DeletingDtorPointer;
+              }
+
+              if (thunk_info.isEmpty()) {
+                mangle_contextp_->mangleCXXDtor(
+                    vtable_component.getDestructorDecl(), dtor_type, ostream);
+              } else {
+                mangle_contextp_->mangleCXXDtorThunk(
+                    vtable_component.getDestructorDecl(), dtor_type,
+                    thunk_info.This, ostream);
+              }
+              ostream.flush();
+            }
             break;
           case clang::VTableComponent::CK_UnusedFunctionPointer:
             kind = abi_util::VTableComponentIR::Kind::UnusedFunctionPointer;

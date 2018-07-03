@@ -129,8 +129,9 @@ class RecordDeclWrapper : public ABIWrapper {
 
   std::string GetMangledRTTI(const clang::CXXRecordDecl *cxx_record_decl);
 
-  abi_util::VTableComponentIR SetupRecordVTableComponent(
-      const clang::VTableComponent &vtable_component);
+  abi_util::VTableComponentIR
+  SetupRecordVTableComponent(const clang::VTableComponent &vtable_component,
+                             const clang::ThunkInfo &thunk_info);
 
   bool SetupCXXRecordInfo(abi_util::RecordTypeIR *record_declp,
                           const std::string &source_file);
