@@ -30,14 +30,14 @@ try:
 except ImportError:
     from urllib2 import HTTPError  # PY2
 
-from gerrit import create_url_opener_from_args, query_change_lists, set_review
+from gerrit import (
+    create_url_opener_from_args, query_change_lists, set_review, abandon)
 
 
 def _get_labels_from_args(args):
     """Collect and check labels from args."""
     if not args.label:
-        print('error: --label must be specified', file=sys.stderr)
-        sys.exit(1)
+        return None
     labels = {}
     for (name, value) in args.label:
         try:
@@ -98,6 +98,8 @@ def _parse_args():
                         help='Labels to be added')
     parser.add_argument('-m', '--message', help='Review message')
 
+    parser.add_argument('--abandon', help='Abandon a CL with a message')
+
     return parser.parse_args()
 
 
@@ -105,10 +107,36 @@ _SEP_SPLIT = '=' * 79
 _SEP = '-' * 79
 
 
+def _report_error(change, res_code, res_json):
+    """Print the error message"""
+    change_id = change['change_id']
+    project = change['project']
+    revision_sha1 = change['current_revision']
+    revision = change['revisions'][revision_sha1]
+    subject = revision['commit']['subject']
+
+    print(_SEP_SPLIT, file=sys.stderr)
+    print('Project:', project, file=sys.stderr)
+    print('Change-Id:', change_id, file=sys.stderr)
+    print('Subject:', subject, file=sys.stderr)
+    print('HTTP status code:', res_code, file=sys.stderr)
+    if res_json:
+        print(_SEP, file=sys.stderr)
+        json.dump(res_json, sys.stderr, indent=4,
+                  separators=(', ', ': '))
+        print(file=sys.stderr)
+    print(_SEP_SPLIT, file=sys.stderr)
+
+
 def main():
     """Set review labels to selected change lists"""
 
     args = _parse_args()
+
+    # Check the command line options
+    if args.label is None and args.message is None and args.abandon is None:
+        print('error: Either --label, --message, or --abandon must be ',
+              'specified', file=sys.stderr)
 
     # Convert label arguments
     labels = _get_labels_from_args(args)
@@ -132,33 +160,29 @@ def main():
     # Post review votes
     has_error = False
     for change in change_lists:
-        try:
-            res_code, res_json = set_review(
-                url_opener, args.gerrit, change['id'], labels, args.message)
-        except HTTPError as error:
-            res_code = error.code
-            res_json = None
+        if args.label or args.message:
+            try:
+                res_code, res_json = set_review(
+                    url_opener, args.gerrit, change['id'], labels, args.message)
+            except HTTPError as error:
+                res_code = error.code
+                res_json = None
 
-        if res_code != 200:
-            has_error = True
+            if res_code != 200:
+                has_error = True
+                _report_error(change, res_code, res_json)
 
-            change_id = change['change_id']
-            project = change['project']
-            revision_sha1 = change['current_revision']
-            revision = change['revisions'][revision_sha1]
-            subject = revision['commit']['subject']
+        if args.abandon:
+            try:
+                res_code, res_json = abandon(
+                    url_opener, args.gerrit, change['id'], args.abandon)
+            except HTTPError as error:
+                res_code = error.code
+                res_json = None
 
-            print(_SEP_SPLIT, file=sys.stderr)
-            print('Project:', project, file=sys.stderr)
-            print('Change-Id:', change_id, file=sys.stderr)
-            print('Subject:', subject, file=sys.stderr)
-            print('HTTP status code:', res_code, file=sys.stderr)
-            if res_json:
-                print(_SEP, file=sys.stderr)
-                json.dump(res_json, sys.stderr, indent=4,
-                          separators=(', ', ': '))
-                print(file=sys.stderr)
-            print(_SEP_SPLIT, file=sys.stderr)
+            if res_code != 200:
+                has_error = True
+                _report_error(change, res_code, res_json)
 
     if has_error:
         sys.exit(1)
