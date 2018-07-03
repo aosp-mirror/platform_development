@@ -165,6 +165,30 @@ def set_review(url_opener, gerrit_url, change_id, labels, message):
         response_file.close()
 
 
+def abandon(url_opener, gerrit_url, change_id, message):
+    """Abandon a change list."""
+
+    url = '{}/a/changes/{}/abandon'.format(gerrit_url, change_id)
+
+    data = {}
+    if message:
+        data['message'] = message
+    data = json.dumps(data).encode('utf-8')
+
+    headers = {
+        'Content-Type': 'application/json; charset=UTF-8',
+    }
+
+    request = Request(url, data, headers)
+    response_file = url_opener.open(request)
+    try:
+        res_code = response_file.getcode()
+        res_json = _decode_xssi_json(response_file.read())
+        return (res_code, res_json)
+    finally:
+        response_file.close()
+
+
 def get_patch(url_opener, gerrit_url, change_id, revision_id='current'):
     """Download the patch file."""
 
