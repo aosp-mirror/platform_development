@@ -96,7 +96,7 @@ if [[ ! -f "$DEVICE_ARCHIVE" ]]; then
 fi
 
 readonly DEVICE_TARGET_FILES_ARCHIVE="$(find "$DEVICE_DIR" -name "*-target_files-*.zip" -print)"
-if [[ ! -f "$DEVICE_ARCHIVE" ]]; then
+if [[ ! -f "$DEVICE_TARGET_FILES_ARCHIVE" ]]; then
     exit_badparam "Could not find device target_files archive in $DEVICE_DIR."
 fi
 
