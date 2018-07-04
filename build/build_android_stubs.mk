@@ -39,9 +39,13 @@ else
 $(full_target): PRIVATE_ERRORPRONE_FLAGS :=
 endif
 
-ifneq ($(filter metalava%,$(sdk_stub_name)),)
+my_use_metalava := $(filter metalava%,$(sdk_stub_name))
+$(warning $(sdk_stub_name) $(my_use_metalava))
+
+ifdef my_use_metalava
 $(full_target): $(HOST_OUT_JAVA_LIBRARIES)/stub-annotations$(COMMON_JAVA_PACKAGE_SUFFIX)
 $(full_target): PRIVATE_METALAVA_CLASSPATH := -classpath $(HOST_OUT_JAVA_LIBRARIES)/stub-annotations$(COMMON_JAVA_PACKAGE_SUFFIX)
+$(full_target): $(HOST_OUT_JAVA_LIBRARIES)/metalava.jar
 else
 $(full_target): PRIVATE_METALAVA_CLASSPATH :=
 endif
@@ -74,6 +78,10 @@ $(full_target): $(stub_timestamp) $(framework_res_package) $(ZIPTIME)
 			-g -d $(PRIVATE_CLASS_INTERMEDIATES_DIR) \
 			\@$(PRIVATE_INTERMEDIATES_DIR)/java-source-list \
 		|| ( rm -rf $(PRIVATE_CLASS_INTERMEDIATES_DIR) ; exit 41 )
+ifdef my_use_metalava
+	$(hide) $(JAVA) -jar $(HOST_OUT_JAVA_LIBRARIES)/metalava.jar \
+	    --no-banner --rewrite-annotations $(PRIVATE_CLASS_INTERMEDIATES_DIR)
+endif
 	$(hide) if [ ! -f $(PRIVATE_FRAMEWORK_RES_PACKAGE) ]; then \
 		echo Missing file $(PRIVATE_FRAMEWORK_RES_PACKAGE); \
 		rm -rf $(PRIVATE_CLASS_INTERMEDIATES_DIR); \
