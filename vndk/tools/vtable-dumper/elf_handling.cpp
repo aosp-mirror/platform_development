@@ -226,7 +226,7 @@ VTable *ELFSharedObject<ELFT>::identifyVTable(uint64_t RelOffset) {
     if (It != mVTables.begin() && It->getStartAddr() != RelOffset) {
         It--;
     }
-    if (It->getEndAddr() >= RelOffset) {
+    if (It->getStartAddr() <= RelOffset && It->getEndAddr() > RelOffset) {
         return &(*It);
     }
     return nullptr;
@@ -342,7 +342,7 @@ uint64_t ELFSharedObject<ELFT>::identifyAddend(uint64_t ROffset) {
     for (const SectionRef &Section : mProgBitSectionRefs) {
         uint64_t Begin = Section.getAddress();
         uint64_t End = Section.getAddress() + Section.getSize();
-        if (ROffset >= Begin && ROffset <= End) {
+        if (ROffset >= Begin && ROffset < End) {
             return getAddendFromSection(Section, ROffset - Begin);
         }
     }
