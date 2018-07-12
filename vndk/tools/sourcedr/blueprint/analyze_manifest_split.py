@@ -22,6 +22,7 @@ import argparse
 import collections
 import os
 import re
+import sys
 import xml.dom.minidom
 
 from blueprint import RecursiveParser, evaluate_defaults, fill_module_namespaces
@@ -140,9 +141,16 @@ def main():
     root_dir = os.path.dirname(os.path.abspath(args.blueprint))
     root_prefix_len = len(root_dir) + 1
 
+    has_error = False
+
     for rule, attrs in parse_blueprint(args.blueprint):
         path = _get_property(attrs, '_path')[root_prefix_len:]
         project = dir_matcher.find(path)
+        if project is None:
+            print('error: Path {!r} does not belong to any git projects.'
+                  .format(path), file=sys.stderr)
+            has_error = True
+            continue
         git_projects[project].add_module(path, rule, attrs)
 
     # Print output
@@ -157,6 +165,8 @@ def main():
         _dump_module_set('vendor_only', modules.vendor_only)
         _dump_module_set('both', modules.both)
 
+    if has_error:
+        sys.exit(2)
 
 if __name__ == '__main__':
     main()
