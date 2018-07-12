@@ -24,8 +24,10 @@ import tempfile
 
 """Test vndk vtable dumper"""
 
-NDK_VERSION = 'r11'
+NDK_VERSION = 'r16'
 API_LEVEL = 'android-24'
+
+LLVM_PREBUILTS_VERSION = 'clang-4691093'
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 VNDK_VTABLE_DUMPER = 'vndk-vtable-dumper'
@@ -54,7 +56,7 @@ def get_prebuilts_gcc(android_build_top, arch, gcc_version):
 def get_prebuilts_clang(android_build_top):
     """Get the path to prebuilt gcc for the current platform"""
     return os.path.join(android_build_top, 'prebuilts', 'clang', 'host',
-                        get_prebuilts_host(), 'clang-stable')
+                        get_prebuilts_host(), LLVM_PREBUILTS_VERSION)
 
 def get_prebuilts_ndk(android_build_top, subdirs):
     """Get the path to prebuilt ndk  for the current platform and API level"""
