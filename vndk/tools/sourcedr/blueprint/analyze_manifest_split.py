@@ -28,6 +28,9 @@ import xml.dom.minidom
 from blueprint import RecursiveParser, evaluate_defaults, fill_module_namespaces
 
 
+_GROUPS = ['system_only', 'vendor_only', 'both']
+
+
 def parse_manifest_xml(manifest_path):
     """Build a dictionary that maps directories into projects."""
     dir_project_dict = {}
@@ -116,8 +119,15 @@ def _parse_args():
                         help='Path to root Android.bp')
     parser.add_argument('-m', '--manifest', required=True,
                         help='Path to repo manifest xml file')
-    parser.add_argument('--skip-no-overlaps', action='store_true',
-                        help='Skip projects without overlaps')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--skip-no-overlaps', action='store_true',
+                       help='Skip projects without overlaps')
+    group.add_argument('--has-group', choices=_GROUPS,
+                       help='List projects that some modules are in the group')
+    group.add_argument('--only-has-group', choices=_GROUPS,
+                       help='List projects that all modules are in the group')
+    group.add_argument('--without-group', choices=_GROUPS,
+                       help='List projects that no modules are in the group')
     return parser.parse_args()
 
 
@@ -154,16 +164,35 @@ def main():
         git_projects[project].add_module(path, rule, attrs)
 
     # Print output
+    total_projects = 0
     for project, modules in sorted(git_projects.items()):
-        if args.skip_no_overlaps and (int(len(modules.system_only) > 0) +
-                                      int(len(modules.vendor_only) > 0) +
-                                      int(len(modules.both) > 0)) <= 1:
-            continue
+        if args.skip_no_overlaps:
+            if (int(len(modules.system_only) > 0) +
+                int(len(modules.vendor_only) > 0) +
+                int(len(modules.both) > 0)) <= 1:
+                continue
+        elif args.has_group:
+            if not getattr(modules, args.has_group):
+                continue
+        elif args.only_has_group:
+            if any(getattr(modules, group)
+                   for group in _GROUPS if group != args.only_has_group):
+                continue
+            if not getattr(modules, args.only_has_group):
+                continue
+        elif args.without_group:
+            if getattr(modules, args.without_group):
+                continue
+
         print(project, len(modules.system_only), len(modules.vendor_only),
               len(modules.both))
         _dump_module_set('system_only', modules.system_only)
         _dump_module_set('vendor_only', modules.vendor_only)
         _dump_module_set('both', modules.both)
+
+        total_projects += 1
+
+    print('Total:', total_projects)
 
     if has_error:
         sys.exit(2)
