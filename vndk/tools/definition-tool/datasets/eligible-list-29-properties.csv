@@ -30,6 +30,8 @@ android.hardware.automotive.evs@1.0,True,False,True,hidl_interface
 android.hardware.automotive.evs@1.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.automotive.vehicle@2.0,True,False,True,hidl_interface
 android.hardware.automotive.vehicle@2.0-adapter-helper,True,False,True,hidl_interface
+android.hardware.biometrics.face@1.0,True,False,True,hidl_interface
+android.hardware.biometrics.face@1.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.biometrics.fingerprint@2.1,True,False,True,hidl_interface
 android.hardware.biometrics.fingerprint@2.1-adapter-helper,True,False,True,hidl_interface
 android.hardware.bluetooth.a2dp@1.0,True,False,True,hidl_interface
@@ -140,6 +142,8 @@ android.hardware.power@1.1,True,False,True,hidl_interface
 android.hardware.power@1.1-adapter-helper,True,False,True,hidl_interface
 android.hardware.power@1.2,True,False,True,hidl_interface
 android.hardware.power@1.2-adapter-helper,True,False,True,hidl_interface
+android.hardware.power@1.3,False,False,True,hidl_interface
+android.hardware.power@1.3-adapter-helper,False,False,True,hidl_interface
 android.hardware.radio.config@1.0,True,False,True,hidl_interface
 android.hardware.radio.config@1.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.radio.deprecated@1.0,True,False,True,hidl_interface
@@ -185,6 +189,8 @@ android.hardware.tests.multithread@1.0,False,False,True,hidl_interface
 android.hardware.tests.multithread@1.0-adapter-helper,False,False,True,hidl_interface
 android.hardware.tests.pointer@1.0,False,False,True,hidl_interface
 android.hardware.tests.pointer@1.0-adapter-helper,False,False,True,hidl_interface
+android.hardware.tests.safeunion@1.0,False,False,True,hidl_interface
+android.hardware.tests.safeunion@1.0-adapter-helper,False,False,True,hidl_interface
 android.hardware.tests.trie@1.0,False,False,True,hidl_interface
 android.hardware.tests.trie@1.0-adapter-helper,False,False,True,hidl_interface
 android.hardware.tetheroffload.config@1.0,True,False,True,hidl_interface
@@ -435,8 +441,6 @@ libusb,False,False,True,cc_library
 libusbhost,True,False,True,cc_library
 libutils,True,True,True,cc_library
 libutilscallstack,True,True,True,cc_library
-libv4l2_c2componentstore,False,False,True,cc_library_shared
-libv4l2_codec2_arcva_factory,False,False,True,cc_library_shared
 libvixl-arm,True,False,True,cc_library
 libvixl-arm64,True,False,True,cc_library
 libvorbisidec,True,False,True,cc_library
