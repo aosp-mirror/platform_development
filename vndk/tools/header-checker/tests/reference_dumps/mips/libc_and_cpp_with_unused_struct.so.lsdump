@@ -186,6 +186,7 @@ functions {
   parameters {
     referenced_type: "type-7"
     default_arg: false
+    is_this_ptr: false
   }
   linker_set_key: "CFunction"
   access: public_access
@@ -197,10 +198,12 @@ functions {
   parameters {
     referenced_type: "type-9"
     default_arg: false
+    is_this_ptr: false
   }
   parameters {
     referenced_type: "type-9"
     default_arg: false
+    is_this_ptr: false
   }
   linker_set_key: "_Z3fooPiS_"
   access: public_access
