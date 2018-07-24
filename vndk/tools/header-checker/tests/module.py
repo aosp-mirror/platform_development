@@ -470,6 +470,15 @@ TEST_MODULES = [
         arch = '',
         api = 'current',
     ),
+    Module(
+        name = 'libinline_pure',
+        srcs = ['integration/cpp/inline_pure/inline_pure.cpp'],
+        export_include_dirs = ['integration/cpp/inline_pure/include'],
+        version_script = '',
+        cflags = [],
+        arch = '',
+        api = 'current',
+    ),
 ]
 
 TEST_MODULES = { m.name: m for m in TEST_MODULES }
