@@ -686,6 +686,8 @@ abi_util::VTableComponentIR RecordDeclWrapper::SetupRecordVTableComponent(
   int64_t value = 0;
   clang::VTableComponent::Kind clang_component_kind =
       vtable_component.getKind();
+  bool is_inlined = false;
+  bool is_pure = false;
 
   switch (clang_component_kind) {
     case clang::VTableComponent::CK_VCallOffset:
@@ -717,6 +719,8 @@ abi_util::VTableComponentIR RecordDeclWrapper::SetupRecordVTableComponent(
         const clang::CXXMethodDecl *method_decl =
             vtable_component.getFunctionDecl();
         assert(method_decl != nullptr);
+        is_inlined = method_decl->isInlined() ||  method_decl->hasInlineBody();
+        is_pure = method_decl->isPure();
         switch (clang_component_kind) {
           case clang::VTableComponent::CK_FunctionPointer:
             kind = abi_util::VTableComponentIR::Kind::FunctionPointer;
@@ -762,7 +766,8 @@ abi_util::VTableComponentIR RecordDeclWrapper::SetupRecordVTableComponent(
     default:
       break;
   }
-  return abi_util::VTableComponentIR(mangled_component_name, kind, value);
+  return abi_util::VTableComponentIR(mangled_component_name, kind, value,
+                                     is_inlined, is_pure);
 }
 
 bool RecordDeclWrapper::SetupTemplateInfo(

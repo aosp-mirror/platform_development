@@ -19,31 +19,43 @@ record_types {
       kind: OffsetToTop
       mangled_component_name: ""
       component_value: 0
+      is_inlined: false
+      is_pure: false
     }
     vtable_components {
       kind: RTTI
       mangled_component_name: "_ZTI12SuperSpeaker"
       component_value: 0
+      is_inlined: false
+      is_pure: false
     }
     vtable_components {
       kind: FunctionPointer
       mangled_component_name: "_ZN12SuperSpeaker5SpeakEv"
       component_value: 0
+      is_inlined: false
+      is_pure: true
     }
     vtable_components {
       kind: FunctionPointer
       mangled_component_name: "_ZN12SuperSpeaker6ListenEv"
       component_value: 0
+      is_inlined: false
+      is_pure: true
     }
     vtable_components {
       kind: CompleteDtorPointer
       mangled_component_name: "_ZN12SuperSpeakerD1Ev"
       component_value: 0
+      is_inlined: true
+      is_pure: false
     }
     vtable_components {
       kind: DeletingDtorPointer
       mangled_component_name: "_ZN12SuperSpeakerD0Ev"
       component_value: 0
+      is_inlined: true
+      is_pure: false
     }
   }
   access: public_access
@@ -72,31 +84,43 @@ record_types {
       kind: OffsetToTop
       mangled_component_name: ""
       component_value: 0
+      is_inlined: false
+      is_pure: false
     }
     vtable_components {
       kind: RTTI
       mangled_component_name: "_ZTI17HighVolumeSpeaker"
       component_value: 0
+      is_inlined: false
+      is_pure: false
     }
     vtable_components {
       kind: FunctionPointer
       mangled_component_name: "_ZN17HighVolumeSpeaker5SpeakEv"
       component_value: 0
+      is_inlined: false
+      is_pure: false
     }
     vtable_components {
       kind: FunctionPointer
       mangled_component_name: "_ZN17HighVolumeSpeaker6ListenEv"
       component_value: 0
+      is_inlined: false
+      is_pure: false
     }
     vtable_components {
       kind: CompleteDtorPointer
       mangled_component_name: "_ZN17HighVolumeSpeakerD1Ev"
       component_value: 0
+      is_inlined: true
+      is_pure: false
     }
     vtable_components {
       kind: DeletingDtorPointer
       mangled_component_name: "_ZN17HighVolumeSpeakerD0Ev"
       component_value: 0
+      is_inlined: true
+      is_pure: false
     }
   }
   access: public_access
@@ -137,31 +161,43 @@ record_types {
       kind: OffsetToTop
       mangled_component_name: ""
       component_value: 0
+      is_inlined: false
+      is_pure: false
     }
     vtable_components {
       kind: RTTI
       mangled_component_name: "_ZTI16LowVolumeSpeaker"
       component_value: 0
+      is_inlined: false
+      is_pure: false
     }
     vtable_components {
       kind: FunctionPointer
       mangled_component_name: "_ZN16LowVolumeSpeaker5SpeakEv"
       component_value: 0
+      is_inlined: false
+      is_pure: false
     }
     vtable_components {
       kind: FunctionPointer
       mangled_component_name: "_ZN16LowVolumeSpeaker6ListenEv"
       component_value: 0
+      is_inlined: false
+      is_pure: false
     }
     vtable_components {
       kind: CompleteDtorPointer
       mangled_component_name: "_ZN16LowVolumeSpeakerD1Ev"
       component_value: 0
+      is_inlined: true
+      is_pure: false
     }
     vtable_components {
       kind: DeletingDtorPointer
       mangled_component_name: "_ZN16LowVolumeSpeakerD0Ev"
       component_value: 0
+      is_inlined: true
+      is_pure: false
     }
   }
   access: public_access
@@ -305,6 +341,7 @@ functions {
   parameters {
     referenced_type: "type-9"
     default_arg: false
+    is_this_ptr: true
   }
   linker_set_key: "_ZN12SuperSpeaker11SpeakLouderEv"
   access: public_access
@@ -316,6 +353,7 @@ functions {
   parameters {
     referenced_type: "type-2"
     default_arg: false
+    is_this_ptr: false
   }
   linker_set_key: "_ZN12SuperSpeaker18CreateSuperSpeakerEi"
   access: public_access
@@ -327,6 +365,7 @@ functions {
   parameters {
     referenced_type: "type-9"
     default_arg: false
+    is_this_ptr: true
   }
   linker_set_key: "_ZN12SuperSpeaker9SpeakLoudEv"
   access: public_access
@@ -338,6 +377,7 @@ functions {
   parameters {
     referenced_type: "type-9"
     default_arg: false
+    is_this_ptr: true
   }
   linker_set_key: "_ZN12SuperSpeakerD2Ev"
   access: public_access
@@ -349,6 +389,7 @@ functions {
   parameters {
     referenced_type: "type-4"
     default_arg: false
+    is_this_ptr: true
   }
   linker_set_key: "_ZN16LowVolumeSpeaker5SpeakEv"
   access: public_access
@@ -360,6 +401,7 @@ functions {
   parameters {
     referenced_type: "type-4"
     default_arg: false
+    is_this_ptr: true
   }
   linker_set_key: "_ZN16LowVolumeSpeaker6ListenEv"
   access: public_access
@@ -371,10 +413,12 @@ functions {
   parameters {
     referenced_type: "type-12"
     default_arg: false
+    is_this_ptr: true
   }
   parameters {
     referenced_type: "type-3"
     default_arg: false
+    is_this_ptr: false
   }
   linker_set_key: "_ZN17HighVolumeSpeaker11BadPracticeEf"
   access: public_access
@@ -386,6 +430,7 @@ functions {
   parameters {
     referenced_type: "type-12"
     default_arg: false
+    is_this_ptr: true
   }
   linker_set_key: "_ZN17HighVolumeSpeaker13AddedFunctionEv"
   access: public_access
@@ -397,6 +442,7 @@ functions {
   parameters {
     referenced_type: "type-12"
     default_arg: false
+    is_this_ptr: true
   }
   linker_set_key: "_ZN17HighVolumeSpeaker5SpeakEv"
   access: public_access
@@ -408,6 +454,7 @@ functions {
   parameters {
     referenced_type: "type-12"
     default_arg: false
+    is_this_ptr: true
   }
   linker_set_key: "_ZN17HighVolumeSpeaker6ListenEv"
   access: public_access

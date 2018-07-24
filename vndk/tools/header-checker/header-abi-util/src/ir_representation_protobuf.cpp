@@ -128,7 +128,9 @@ VTableLayoutIR ProtobufTextFormatToIRReader::VTableLayoutProtobufToIR(
     VTableComponentIR vtable_component_ir(
         vtable_component.mangled_component_name(),
         VTableComponentKindProtobufToIR(vtable_component.kind()),
-        vtable_component.component_value());
+        vtable_component.component_value(),
+        vtable_component.is_inlined(),
+        vtable_component.is_pure());
     vtable_layout_ir.AddVTableComponent(std::move(vtable_component_ir));
   }
   return vtable_layout_ir;
@@ -484,6 +486,9 @@ static bool SetIRToProtobufVTableLayout(
     added_vtable_component->set_component_value(vtable_component_ir.GetValue());
     added_vtable_component->set_mangled_component_name(
         vtable_component_ir.GetName());
+    added_vtable_component->set_is_inlined(
+        vtable_component_ir.GetIsInlined());
+    added_vtable_component->set_is_pure(vtable_component_ir.GetIsPure());
   }
   return true;
 }
