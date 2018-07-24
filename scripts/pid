@@ -28,12 +28,10 @@ fi
 
 if [ $EXACT == 1 ]; then
     PIDS="$(adb shell pidof $EXE)"
-    RC=$?
 else
-    PIDS=$(adb shell "ps -o PID,NAME | tail -n +1 | grep $EXE | tr -s ' ' | cut -f2 -d' '")
-    [ -n "$PIDS" ]
-    RC=$?
+    PIDS="$(adb shell pgrep -f $EXE)"
 fi
+RC=$?
 
 for PID in $PIDS; do
     echo $PID
