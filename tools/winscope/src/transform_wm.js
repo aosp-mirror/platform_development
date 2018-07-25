@@ -31,7 +31,7 @@ function transform_window(entry) {
     }
   }
   var name = renderIdentifier(entry.identifier)
-  var rect = transform_rect(entry.windowFrames.frame, name);
+  var rect = transform_rect((entry.windowFrames || entry).frame, name);
 
   if (visible) {
     chips.push(get_visible_chip());
