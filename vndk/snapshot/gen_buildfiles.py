@@ -15,7 +15,9 @@
 # limitations under the License.
 #
 
+import argparse
 import glob
+import logging
 import os
 import sys
 
@@ -26,7 +28,7 @@ class GenBuildFile(object):
     """Generates Android.mk and Android.bp for VNDK snapshot.
 
     VNDK snapshot directory structure under prebuilts/vndk/v{version}:
-        {SNAPSHOT_VARIANT}/
+        {SNAPSHOT_ARCH}/
             Android.bp
             arch-{TARGET_ARCH}-{TARGET_ARCH_VARIANT}/
                 shared/
@@ -40,9 +42,15 @@ class GenBuildFile(object):
                         (VNDK-core libraries, e.g. libbinder.so)
                     vndk-sp/
                         (VNDK-SP libraries, e.g. libc++.so)
+            binder32/
+                (This directory is newly introduced in v28 (Android P) to hold
+                prebuilts built for 32-bit binder interface.)
+                Android.bp
+                arch-{TARGET_ARCH}-{TARGE_ARCH_VARIANT}/
+                    ...
             configs/
                 (various *.txt configuration files, e.g. ld.config.*.txt)
-        ... (other {SNAPSHOT_VARIANT}/ directories)
+        ... (other {SNAPSHOT_ARCH}/ directories)
         common/
             Android.mk
             NOTICE_FILES/
@@ -67,7 +75,7 @@ class GenBuildFile(object):
         self._install_dir = install_dir
         self._vndk_version = vndk_version
         self._etc_paths = self._get_etc_paths()
-        self._snapshot_variants = utils.get_snapshot_variants(install_dir)
+        self._snapshot_archs = utils.get_snapshot_archs(install_dir)
         self._mkfile = os.path.join(install_dir, utils.ANDROID_MK_PATH)
         self._vndk_core = self._parse_lib_list('vndkcore.libraries.txt')
         self._vndk_sp = self._parse_lib_list(
@@ -88,7 +96,7 @@ class GenBuildFile(object):
         return etc_paths
 
     def _parse_lib_list(self, txt_filename):
-        """Returns a map of VNDK library lists per VNDK snapshot variant.
+        """Returns a map of VNDK library lists per VNDK snapshot arch.
 
         Args:
           txt_filename: string, name of snapshot config file
@@ -98,15 +106,17 @@ class GenBuildFile(object):
         """
         lib_map = dict()
         for txt_path in utils.find(self._install_dir, [txt_filename]):
-            variant = utils.variant_from_path(txt_path)
+            arch = utils.snapshot_arch_from_path(txt_path)
             abs_path_of_txt = os.path.join(self._install_dir, txt_path)
             with open(abs_path_of_txt, 'r') as f:
-                lib_map[variant] = f.read().strip().split('\n')
+                lib_map[arch] = f.read().strip().split('\n')
         return lib_map
 
     def generate_android_mk(self):
         """Autogenerates Android.mk."""
 
+        logging.info('Generating Android.mk for snapshot v{}'.format(
+            self._vndk_version))
         etc_buildrules = []
         for prebuilt in self.ETC_MODULES:
             etc_buildrules.append(self._gen_etc_prebuilt(prebuilt))
@@ -119,49 +129,104 @@ class GenBuildFile(object):
             mkfile.write('\n\n'.join(etc_buildrules))
             mkfile.write('\n')
 
+        logging.info('Successfully generated {}'.format(self._mkfile))
+
     def generate_android_bp(self):
-        """Autogenerates Android.bp file for each VNDK snapshot variant."""
+        """Autogenerates Android.bp."""
 
-        for variant in self._snapshot_variants:
-            bpfile = os.path.join(self._install_dir, variant, 'Android.bp')
+        def gen_for_variant(arch, is_binder32=False):
+            """Generates Android.bp file for specified VNDK snapshot variant.
+
+            A VNDK snapshot variant is defined by the TARGET_ARCH and binder
+            bitness. Example snapshot variants:
+                vndk_v{ver}_arm:            {arch: arm, binder: 64-bit}
+                vndk_v{ver}_arm_binder32:   {arch: arm, binder: 32-bit}
+
+            Args:
+              arch: string, VNDK snapshot arch (e.g. 'arm64')
+              is_binder32: bool, True if binder interface is 32-bit
+            """
+            binder32_suffix = '_{}'.format(
+                utils.BINDER32) if is_binder32 else ''
+            logging.info('Generating Android.bp for vndk_v{}_{}{}'.format(
+                self._vndk_version, arch, binder32_suffix))
+
+            variant_subpath = arch
+            # For O-MR1 snapshot (v27), 32-bit binder prebuilts are not
+            # isolated in separate 'binder32' subdirectory.
+            if is_binder32 and self._vndk_version >= 28:
+                variant_subpath = os.path.join(arch, utils.BINDER32)
+            bpfile_path = os.path.join(self._install_dir, variant_subpath,
+                                       'Android.bp')
+
             vndk_core_buildrules = self._gen_vndk_shared_prebuilts(
-                self._vndk_core[variant], variant, False)
+                self._vndk_core[arch], arch, is_binder32=is_binder32)
             vndk_sp_buildrules = self._gen_vndk_shared_prebuilts(
-                self._vndk_sp[variant], variant, True)
+                self._vndk_sp[arch],
+                arch,
+                is_vndk_sp=True,
+                is_binder32=is_binder32)
 
-            with open(bpfile, 'w') as bpfile:
+            with open(bpfile_path, 'w') as bpfile:
                 bpfile.write(self._gen_autogen_msg('/'))
                 bpfile.write('\n')
-                bpfile.write(self._gen_bp_phony(variant))
+                bpfile.write(self._gen_bp_phony(arch, is_binder32))
                 bpfile.write('\n')
                 bpfile.write('\n'.join(vndk_core_buildrules))
                 bpfile.write('\n')
                 bpfile.write('\n'.join(vndk_sp_buildrules))
+
+            logging.info('Successfully generated {}'.format(bpfile_path))
+
+        if self._vndk_version == 27:
+            # For O-MR1 snapshot (v27), 32-bit binder prebuilts are not
+            # isolated in separate 'binder32' subdirectory.
+            for arch in self._snapshot_archs:
+                if arch in ('arm', 'x86'):
+                    gen_for_variant(arch, is_binder32=True)
+                else:
+                    gen_for_variant(arch)
+            return
+
+        for arch in self._snapshot_archs:
+            if os.path.isdir(
+                    os.path.join(self._install_dir, arch, utils.BINDER32)):
+                gen_for_variant(arch, is_binder32=True)
+            gen_for_variant(arch)
 
     def _gen_autogen_msg(self, comment_char):
         return ('{0}{0} THIS FILE IS AUTOGENERATED BY '
                 'development/vndk/snapshot/gen_buildfiles.py\n'
                 '{0}{0} DO NOT EDIT\n'.format(comment_char))
 
-    def _get_versioned_name(self, prebuilt, variant, is_etc):
+    def _get_versioned_name(self,
+                            prebuilt,
+                            arch,
+                            is_etc=False,
+                            is_binder32=False):
         """Returns the VNDK version-specific module name for a given prebuilt.
 
         The VNDK version-specific module name is defined as follows:
         For a VNDK shared lib: 'libfoo.so'
-                            -> 'libfoo.vndk.{version}.{variant}.vendor'
+            if binder is 32-bit:
+                'libfoo.vndk.{version}.{arch}.binder32.vendor'
+            else:
+                'libfoo.vndk.{version}.{arch}.vendor'
         For an ETC module: 'foo.txt' -> 'foo.{version}.txt'
 
         Args:
           prebuilt: string, name of the prebuilt object
-          variant: string, VNDK snapshot variant (e.g. 'arm64')
+          arch: string, VNDK snapshot arch (e.g. 'arm64')
           is_etc: bool, True if the LOCAL_MODULE_CLASS of prebuilt is 'ETC'
+          is_binder32: bool, True if binder interface is 32-bit
         """
         name, ext = os.path.splitext(prebuilt)
         if is_etc:
             versioned_name = '{}.{}{}'.format(name, self._vndk_version, ext)
         else:
-            versioned_name = '{}.vndk.{}.{}.vendor'.format(
-                name, self._vndk_version, variant)
+            binder_suffix = '.{}'.format(utils.BINDER32) if is_binder32 else ''
+            versioned_name = '{}.vndk.{}.{}{}.vendor'.format(
+                name, self._vndk_version, arch, binder_suffix)
 
         return versioned_name
 
@@ -185,23 +250,27 @@ class GenBuildFile(object):
                 'include $(BUILD_PREBUILT)\n'.format(
                     prebuilt=prebuilt,
                     versioned_name=self._get_versioned_name(
-                        prebuilt, None, True),
+                        prebuilt, None, is_etc=True),
                     etc_sub_path=etc_sub_path))
 
-    def _gen_bp_phony(self, variant):
-        """Generates build rule for phony package 'vndk_v{ver}_{variant}'.
+    def _gen_bp_phony(self, arch, is_binder32=False):
+        """Generates build rule for phony package 'vndk_v{ver}_{arch}'.
 
         Args:
-          variant: string, VNDK snapshot variant (e.g. 'arm64')
+          arch: string, VNDK snapshot arch (e.g. 'arm64')
+          is_binder32: bool, True if binder interface is 32-bit
         """
         required = []
-        for prebuilts in (self._vndk_core[variant], self._vndk_sp[variant]):
+        for prebuilts in (self._vndk_core[arch], self._vndk_sp[arch]):
             for prebuilt in prebuilts:
                 required.append(
-                    self._get_versioned_name(prebuilt, variant, False))
+                    self._get_versioned_name(
+                        prebuilt, arch, is_binder32=is_binder32))
 
         for prebuilt in self.ETC_MODULES:
-            required.append(self._get_versioned_name(prebuilt, None, True))
+            required.append(
+                self._get_versioned_name(
+                    prebuilt, None, is_etc=True, is_binder32=is_binder32))
 
         required_str = ['"{}",'.format(prebuilt) for prebuilt in required]
         required_formatted = '\n{ind}{ind}'.format(
@@ -211,37 +280,53 @@ class GenBuildFile(object):
                               '{ind}],\n'.format(
                                   ind=self.INDENT,
                                   required_formatted=required_formatted))
+        binder_suffix = '_{}'.format(utils.BINDER32) if is_binder32 else ''
 
         return ('phony {{\n'
-                '{ind}name: "vndk_v{ver}_{variant}",\n'
+                '{ind}name: "vndk_v{ver}_{arch}{binder_suffix}",\n'
                 '{required_buildrule}'
                 '}}\n'.format(
                     ind=self.INDENT,
                     ver=self._vndk_version,
-                    variant=variant,
+                    arch=arch,
+                    binder_suffix=binder_suffix,
                     required_buildrule=required_buildrule))
 
-    def _gen_vndk_shared_prebuilts(self, prebuilts, variant, is_vndk_sp):
+    def _gen_vndk_shared_prebuilts(self,
+                                   prebuilts,
+                                   arch,
+                                   is_vndk_sp=False,
+                                   is_binder32=False):
         """Returns list of build rules for given prebuilts.
 
         Args:
           prebuilts: list of VNDK shared prebuilts
-          variant: string, VNDK snapshot variant (e.g. 'arm64')
+          arch: string, VNDK snapshot arch (e.g. 'arm64')
           is_vndk_sp: bool, True if prebuilts are VNDK_SP libs
+          is_binder32: bool, True if binder interface is 32-bit
         """
         build_rules = []
         for prebuilt in prebuilts:
             build_rules.append(
-                self._gen_vndk_shared_prebuilt(prebuilt, variant, is_vndk_sp))
+                self._gen_vndk_shared_prebuilt(
+                    prebuilt,
+                    arch,
+                    is_vndk_sp=is_vndk_sp,
+                    is_binder32=is_binder32))
         return build_rules
 
-    def _gen_vndk_shared_prebuilt(self, prebuilt, variant, is_vndk_sp):
+    def _gen_vndk_shared_prebuilt(self,
+                                  prebuilt,
+                                  arch,
+                                  is_vndk_sp=False,
+                                  is_binder32=False):
         """Returns build rule for given prebuilt.
 
         Args:
           prebuilt: string, name of prebuilt object
-          variant: string, VNDK snapshot variant (e.g. 'arm64')
+          arch: string, VNDK snapshot arch (e.g. 'arm64')
           is_vndk_sp: bool, True if prebuilt is a VNDK_SP lib
+          is_binder32: bool, True if binder interface is 32-bit
         """
 
         def get_notice_file(prebuilt):
@@ -252,14 +337,16 @@ class GenBuildFile(object):
             """
             notice = ''
             notice_file_name = '{}.txt'.format(prebuilt)
-            notices_dir = os.path.join(self._install_dir,
-                                       utils.NOTICE_FILES_DIR_PATH)
-            notice_files = utils.find(notices_dir, [notice_file_name])
+            notice_dir = os.path.join(self._install_dir,
+                                      utils.NOTICE_FILES_DIR_PATH)
+            notice_files = utils.find(notice_dir, [notice_file_name])
             if len(notice_files) > 0:
+                notice_dir_relpath = os.path.relpath(
+                    os.path.join(notice_dir), src_root)
                 notice = '{ind}notice: "{notice_file_path}",\n'.format(
                     ind=self.INDENT,
-                    notice_file_path=os.path.join(
-                        '..', utils.NOTICE_FILES_DIR_PATH, notice_files[0]))
+                    notice_file_path=os.path.join(notice_dir_relpath,
+                                                  notice_files[0]))
             return notice
 
         def get_rel_install_path(prebuilt):
@@ -275,7 +362,7 @@ class GenBuildFile(object):
                                      .format(ind=self.INDENT, path=path))
             return rel_install_path
 
-        def get_arch_srcs(prebuilt, variant):
+        def get_arch_srcs(prebuilt, arch):
             """Returns build rule for arch specific srcs.
 
             e.g.,
@@ -290,38 +377,53 @@ class GenBuildFile(object):
 
             Args:
               prebuilt: string, name of prebuilt object
-              variant: string, VNDK snapshot variant (e.g. 'arm64')
+              arch: string, VNDK snapshot arch (e.g. 'arm64')
             """
             arch_srcs = '{ind}arch: {{\n'.format(ind=self.INDENT)
-            variant_path = os.path.join(self._install_dir, variant)
-            src_paths = utils.find(variant_path, [prebuilt])
+            src_paths = utils.find(src_root, [prebuilt])
+            # filter out paths under 'binder32' subdirectory
+            src_paths = filter(lambda src: not src.startswith(utils.BINDER32),
+                               src_paths)
+
             for src in sorted(src_paths):
                 arch_srcs += ('{ind}{ind}{arch}: {{\n'
                               '{ind}{ind}{ind}srcs: ["{src}"],\n'
                               '{ind}{ind}}},\n'.format(
                                   ind=self.INDENT,
-                                  arch=utils.arch_from_path(
-                                      os.path.join(variant, src)),
+                                  arch=utils.prebuilt_arch_from_path(
+                                      os.path.join(arch, src)),
                                   src=src))
             arch_srcs += '{ind}}},\n'.format(ind=self.INDENT)
             return arch_srcs
 
+        src_root = os.path.join(self._install_dir, arch)
+        # For O-MR1 snapshot (v27), 32-bit binder prebuilts are not
+        # isolated in separate 'binder32' subdirectory.
+        if is_binder32 and self._vndk_version >= 28:
+            src_root = os.path.join(src_root, utils.BINDER32)
+
         name = os.path.splitext(prebuilt)[0]
         vendor_available = str(
-            prebuilt not in self._vndk_private[variant]).lower()
+            prebuilt not in self._vndk_private[arch]).lower()
+
+        vndk_sp = ''
         if is_vndk_sp:
             vndk_sp = '{ind}{ind}support_system_process: true,\n'.format(
                 ind=self.INDENT)
-        else:
-            vndk_sp = ''
+
         notice = get_notice_file(prebuilt)
         rel_install_path = get_rel_install_path(prebuilt)
-        arch_srcs = get_arch_srcs(prebuilt, variant)
+        arch_srcs = get_arch_srcs(prebuilt, arch)
+
+        binder32bit = ''
+        if is_binder32:
+            binder32bit = '{ind}binder32bit: true,\n'.format(ind=self.INDENT)
 
         return ('vndk_prebuilt_shared {{\n'
                 '{ind}name: "{name}",\n'
                 '{ind}version: "{ver}",\n'
                 '{ind}target_arch: "{target_arch}",\n'
+                '{binder32bit}'
                 '{ind}vendor_available: {vendor_available},\n'
                 '{ind}vndk: {{\n'
                 '{ind}{ind}enabled: true,\n'
@@ -334,12 +436,28 @@ class GenBuildFile(object):
                     ind=self.INDENT,
                     name=name,
                     ver=self._vndk_version,
+                    target_arch=arch,
+                    binder32bit=binder32bit,
                     vendor_available=vendor_available,
-                    target_arch=variant,
                     vndk_sp=vndk_sp,
                     notice=notice,
                     rel_install_path=rel_install_path,
                     arch_srcs=arch_srcs))
+
+
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        'vndk_version',
+        type=int,
+        help='VNDK snapshot version to install, e.g. "27".')
+    parser.add_argument(
+        '-v',
+        '--verbose',
+        action='count',
+        default=0,
+        help='Increase output verbosity, e.g. "-v", "-vv".')
+    return parser.parse_args()
 
 
 def main():
@@ -352,12 +470,20 @@ def main():
     PREBUILTS_VNDK_DIR = utils.join_realpath(ANDROID_BUILD_TOP,
                                              'prebuilts/vndk')
 
-    vndk_version = 27  # set appropriately
+    args = get_args()
+    vndk_version = args.vndk_version
     install_dir = os.path.join(PREBUILTS_VNDK_DIR, 'v{}'.format(vndk_version))
+    if not os.path.isdir(install_dir):
+        raise ValueError(
+            'Please provide valid VNDK version. {} does not exist.'
+            .format(install_dir))
+    utils.set_logging_config(args.verbose)
 
     buildfile_generator = GenBuildFile(install_dir, vndk_version)
     buildfile_generator.generate_android_mk()
     buildfile_generator.generate_android_bp()
+
+    logging.info('Done.')
 
 
 if __name__ == '__main__':

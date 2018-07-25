@@ -82,6 +82,10 @@ except ImportError:
 # Modified UTF-8 Encoder and Decoder
 #------------------------------------------------------------------------------
 
+class UnicodeSurrogateDecodeError(UnicodeDecodeError):
+    pass
+
+
 def encode_mutf8(input, errors='strict'):
     i = 0
     res = io.BytesIO()
@@ -130,6 +134,9 @@ def decode_mutf8(input, errors='strict'):
     def raise_error(start, reason):
         raise UnicodeDecodeError('mutf-8', input, start, i + 1, reason)
 
+    def raise_surrogate_error(start, reason):
+        raise UnicodeSurrogateDecodeError('mutf-8', input, start, i + 1, reason)
+
     for i, byte in enumerate_bytes(input):
         if (byte & 0x80) == 0x00:
             if num_next > 0:
@@ -160,14 +167,15 @@ def decode_mutf8(input, errors='strict'):
         if num_next == 0:
             if code >= 0xd800 and code <= 0xdbff:  # High surrogate
                 if code_surrogate is not None:
-                    raise_error(start_surrogate, 'invalid high surrogate')
+                    raise_surrogate_error(
+                        start_surrogate, 'invalid high surrogate')
                 code_surrogate = code
                 start_surrogate = start
                 continue
 
             if code >= 0xdc00 and code <= 0xdfff:  # Low surrogate
                 if code_surrogate is None:
-                    raise_error(start, 'invalid low surrogate')
+                    raise_surrogate_error(start, 'invalid low surrogate')
                 code = ((code_surrogate & 0x3f) << 10) | (code & 0x3f) + 0x10000
                 code_surrogate = None
                 start_surrogate = None
@@ -177,7 +185,7 @@ def decode_mutf8(input, errors='strict'):
                     code_surrogate = None
                     start_surrogate = None
                 else:
-                    raise_error(start_surrogate, 'illegal surrogate')
+                    raise_surrogate_error(start_surrogate, 'illegal surrogate')
 
             res.write(create_chr(code))
 
@@ -185,7 +193,7 @@ def decode_mutf8(input, errors='strict'):
     if num_next > 0:
         raise_error(start, 'unexpected end')
     if code_surrogate is not None:
-        raise_error(start_surrogate, 'unexpected end')
+        raise_surrogate_error(start_surrogate, 'unexpected end')
 
     return (res.getvalue(), i)
 
@@ -799,15 +807,7 @@ class DexFileReader(object):
     @classmethod
     def extract_dex_string(cls, buf, offset=0):
         end = buf.find(b'\0', offset)
-        res = buf[offset:] if end == -1 else buf[offset:end]
-        return res.decode('mutf-8', 'ignore')
-
-    if sys.version_info < (3,):
-        _extract_dex_string = extract_dex_string
-
-        @classmethod
-        def extract_dex_string(cls, buf, offset=0):
-            return cls._extract_dex_string(buf, offset).encode('utf-8')
+        return buf[offset:] if end == -1 else buf[offset:end]
 
 
     @classmethod
@@ -905,10 +905,12 @@ class DexFileReader(object):
         except IOError:
             return b''
 
+
     @classmethod
     def is_zipfile(cls, apk_file_path):
         magic = cls._read_first_bytes(apk_file_path, 2)
         return magic == b'PK' and zipfile.is_zipfile(apk_file_path)
+
 
     @classmethod
     def enumerate_dex_strings_apk(cls, apk_file_path):
@@ -921,42 +923,109 @@ class DexFileReader(object):
                 except KeyError:
                     break
 
+
     @classmethod
     def is_vdex_file(cls, vdex_file_path):
         return vdex_file_path.endswith('.vdex')
 
-    VdexHeader = create_struct('VdexHeader', (
+
+    # VdexHeader 0
+    VdexHeader0 = create_struct('VdexHeader0', (
         ('magic', '4s'),
-        ('version', '4s'),
+        ('vdex_version', '4s'),
+    ))
+
+
+    # VdexHeader 1 - 15
+    VdexHeader1 = create_struct('VdexHeader1', (
+        ('magic', '4s'),
+        ('vdex_version', '4s'),
         ('number_of_dex_files', 'I'),
         ('dex_size', 'I'),
-        # ('dex_shared_data_size', 'I'),  # >= 016
         ('verifier_deps_size', 'I'),
         ('quickening_info_size', 'I'),
+        # checksums
     ))
+
+
+    # VdexHeader 16 - 18
+    VdexHeader16 = create_struct('VdexHeader16', (
+        ('magic', '4s'),
+        ('vdex_version', '4s'),
+        ('number_of_dex_files', 'I'),
+        ('dex_size', 'I'),
+        ('dex_shared_data_size', 'I'),
+        ('verifier_deps_size', 'I'),
+        ('quickening_info_size', 'I'),
+        # checksums
+    ))
+
+
+    # VdexHeader 19
+    VdexHeader19 = create_struct('VdexHeader19', (
+        ('magic', '4s'),
+        ('vdex_version', '4s'),
+        ('dex_section_version', '4s'),
+        ('number_of_dex_files', 'I'),
+        ('verifier_deps_size', 'I'),
+        # checksums
+    ))
+
+
+    DexSectionHeader = create_struct('DexSectionHeader', (
+        ('dex_size', 'I'),
+        ('dex_shared_data_size', 'I'),
+        ('quickening_info_size', 'I'),
+    ))
+
 
     @classmethod
     def enumerate_dex_strings_vdex_buf(cls, buf):
         buf = get_py3_bytes(buf)
-        vdex_header = cls.VdexHeader.unpack_from(buf, offset=0)
 
-        quickening_table_off_size = 0
-        if vdex_header.version > b'010\x00':
-            quickening_table_off_size = 4
+        magic, version = struct.unpack_from('4s4s', buf)
 
-        # Skip vdex file header size
-        offset = cls.VdexHeader.struct_size
+        # Check the vdex file magic word
+        if magic != b'vdex':
+            raise ValueError('bad vdex magic word')
 
-        # Skip `dex_shared_data_size`
-        if vdex_header.version >= b'016\x00':
-            offset += 4
+        # Parse vdex file header (w.r.t. version)
+        if version == b'000\x00':
+            VdexHeader = cls.VdexHeader0
+        elif version >= b'001\x00' and version < b'016\x00':
+            VdexHeader = cls.VdexHeader1
+        elif version >= b'016\x00' and version < b'019\x00':
+            VdexHeader = cls.VdexHeader16
+        elif version == b'019\x00':
+            VdexHeader = cls.VdexHeader19
+        else:
+            raise ValueError('unknown vdex version ' + repr(version))
 
-        # Skip dex file checksums size
-        offset += 4 * vdex_header.number_of_dex_files
+        vdex_header = VdexHeader.unpack_from(buf, offset=0)
 
         # Skip this vdex file if there is no dex file section
-        if vdex_header.dex_size == 0:
-            return
+        if vdex_header.vdex_version < b'019\x00':
+            if vdex_header.dex_size == 0:
+                return
+        else:
+            if vdex_header.dex_section_version == b'000\x00':
+                return
+
+        # Skip vdex file header struct
+        offset = VdexHeader.struct_size
+
+        # Skip dex file checksums struct
+        offset += 4 * vdex_header.number_of_dex_files
+
+        # Skip dex section header struct
+        if vdex_header.vdex_version >= b'019\x00':
+            offset += cls.DexSectionHeader.struct_size
+
+        # Calculate the quickening table offset
+        if vdex_header.vdex_version >= b'012\x00':
+            quickening_table_off_size = 4
+        else:
+            quickening_table_off_size = 0
 
         for i in range(vdex_header.number_of_dex_files):
             # Skip quickening_table_off size
@@ -971,12 +1040,24 @@ class DexFileReader(object):
             dex_file_end = offset + dex_header.file_size
             for s in cls.enumerate_dex_strings_buf(buf, offset):
                 yield s
+
+            # Align to the end of the dex file
             offset = (dex_file_end + 3) // 4 * 4
+
 
     @classmethod
     def enumerate_dex_strings_vdex(cls, vdex_file_path):
         with open(vdex_file_path, 'rb') as vdex_file:
             return cls.enumerate_dex_strings_vdex_buf(vdex_file.read())
+
+
+    @classmethod
+    def enumerate_dex_strings(cls, path):
+        if cls.is_zipfile(path):
+            return DexFileReader.enumerate_dex_strings_apk(path)
+        if cls.is_vdex_file(path):
+            return DexFileReader.enumerate_dex_strings_vdex(path)
+        return None
 
 
 #------------------------------------------------------------------------------
@@ -1510,10 +1591,13 @@ class VNDKLibDir(list):
         """Read ro.vendor.version property from vendor partitions."""
         for vendor_dir in vendor_dirs:
             path = os.path.join(vendor_dir, 'default.prop')
-            with open(path, 'r') as property_file:
-                result = cls._get_property(property_file, 'ro.vndk.version')
-                if result is not None:
-                    return result
+            try:
+                with open(path, 'r') as property_file:
+                    result = cls._get_property(property_file, 'ro.vndk.version')
+                    if result is not None:
+                        return result
+            except FileNotFoundError:
+                pass
         return None
 
 
@@ -2591,6 +2675,8 @@ def _enumerate_partition_paths(partition, root):
     for base, dirs, files in os.walk(root):
         for filename in files:
             path = os.path.join(base, filename)
+            if not is_accessible(path):
+                continue
             android_path = posixpath.join('/', partition, path[prefix_len:])
             yield (android_path, path)
 
@@ -2608,25 +2694,39 @@ def scan_apk_dep(graph, system_dirs, vendor_dirs):
     libnames = _build_lib_names_dict(graph)
     results = []
 
+    if str is bytes:
+        def decode(string):  # PY2
+            return string.decode('mutf-8').encode('utf-8')
+    else:
+        def decode(string):  # PY3
+            return string.decode('mutf-8')
+
     for ap, path in _enumerate_paths(system_dirs, vendor_dirs):
         # Read the dex file from various file formats
         try:
-            if DexFileReader.is_zipfile(path):
-                strs = set(DexFileReader.enumerate_dex_strings_apk(path))
-            elif DexFileReader.is_vdex_file(path):
-                strs = set(DexFileReader.enumerate_dex_strings_vdex(path))
-            else:
+            dex_string_iter = DexFileReader.enumerate_dex_strings(path)
+            if dex_string_iter is None:
                 continue
+
+            strings = set()
+            for string in dex_string_iter:
+                try:
+                    strings.add(decode(string))
+                except UnicodeSurrogateDecodeError:
+                    pass
         except FileNotFoundError:
             continue
+        except:
+            print('error: Failed to parse', path, file=sys.stderr)
+            raise
 
         # Skip the file that does not call System.loadLibrary()
-        if 'loadLibrary' not in strs:
+        if 'loadLibrary' not in strings:
             continue
 
         # Collect libraries from string tables
         libs = set()
-        for string in strs:
+        for string in strings:
             try:
                 libs.update(libnames[string])
             except KeyError:
@@ -3567,6 +3667,27 @@ class CheckDepCommand(CheckDepCommandBase):
         return 0 if num_errors == 0 else 1
 
 
+class DumpDexStringCommand(Command):
+    def __init__(self):
+        super(DumpDexStringCommand, self).__init__(
+                'dump-dex-string',
+                help='Dump string literals defined in a dex file')
+
+
+    def add_argparser_options(self, parser):
+        super(DumpDexStringCommand, self).add_argparser_options(parser)
+
+        parser.add_argument('dex_file', help='path to an input dex file')
+
+
+    def main(self, args):
+        for string in DexFileReader.enumerate_dex_strings(args.dex_file):
+            try:
+                print(string)
+            except (UnicodeEncodeError, UnicodeDecodeError):
+                print(repr(string))
+
+
 class CheckEligibleListCommand(CheckDepCommandBase):
     def __init__(self):
         super(CheckEligibleListCommand, self).__init__(
@@ -3734,6 +3855,7 @@ def main():
     register_subcmd(CheckDepCommand())
     register_subcmd(CheckEligibleListCommand())
     register_subcmd(DepGraphCommand())
+    register_subcmd(DumpDexStringCommand())
 
     args = parser.parse_args()
     if not args.subcmd:

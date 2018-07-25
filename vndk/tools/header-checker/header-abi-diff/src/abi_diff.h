@@ -20,6 +20,7 @@
 #include <vector>
 
 using abi_util::AbiElementMap;
+using abi_util::DiffPolicyOptions;
 
 class HeaderAbiDiff {
  public:
@@ -27,12 +28,15 @@ class HeaderAbiDiff {
                 const std::string &old_dump, const std::string &new_dump,
                 const std::string &compatibility_report,
                 const std::set<std::string> &ignored_symbols,
+                const DiffPolicyOptions &diff_policy_options,
                 bool check_all_apis, abi_util::TextFormatIR text_format_old,
                 abi_util::TextFormatIR text_format_new,
                 abi_util::TextFormatIR text_format_diff)
       : lib_name_(lib_name), arch_(arch), old_dump_(old_dump),
         new_dump_(new_dump), cr_(compatibility_report),
-        ignored_symbols_(ignored_symbols), check_all_apis_(check_all_apis),
+        ignored_symbols_(ignored_symbols),
+        diff_policy_options_(diff_policy_options),
+        check_all_apis_(check_all_apis),
         text_format_old_(text_format_old), text_format_new_(text_format_new),
         text_format_diff_(text_format_diff) { }
 
@@ -134,6 +138,7 @@ class HeaderAbiDiff {
   const std::string &new_dump_;
   const std::string &cr_;
   const std::set<std::string> &ignored_symbols_;
+  const DiffPolicyOptions &diff_policy_options_;
   bool check_all_apis_;
   std::set<std::string> type_cache_;
   abi_util::TextFormatIR text_format_old_;

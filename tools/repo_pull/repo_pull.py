@@ -30,17 +30,10 @@ import re
 import sys
 import xml.dom.minidom
 
-try:
-    from urllib.parse import urlencode  # PY3
-except ImportError:
-    from urllib import urlencode  # PY2
+from gerrit import create_url_opener_from_args, query_change_lists
 
 try:
-    from urllib.request import HTTPBasicAuthHandler, build_opener  # PY3
-except ImportError:
-    from urllib2 import HTTPBasicAuthHandler, build_opener  # PY2
-
-try:
+    # pylint: disable=redefined-builtin
     from __builtin__ import raw_input as input  # PY2
 except ImportError:
     pass
@@ -52,9 +45,9 @@ except ImportError:
     # it doesn't have to be quoted.
     _SHELL_SIMPLE_PATTERN = re.compile('^[a-zA-Z90-9_./-]+$')
 
-    def _sh_quote(s):
+    def _sh_quote(txt):
         """Quote a string if it contains special characters."""
-        return s if _SHELL_SIMPLE_PATTERN.match(s) else json.dumps(s)
+        return txt if _SHELL_SIMPLE_PATTERN.match(txt) else json.dumps(txt)
 
 try:
     from subprocess import PIPE, run  # PY3.5
@@ -62,6 +55,9 @@ except ImportError:
     from subprocess import CalledProcessError, PIPE, Popen
 
     class CompletedProcess(object):
+        """Process execution result returned by subprocess.run()."""
+        # pylint: disable=too-few-public-methods
+
         def __init__(self, args, returncode, stdout, stderr):
             self.args = args
             self.returncode = returncode
@@ -69,21 +65,23 @@ except ImportError:
             self.stderr = stderr
 
     def run(*args, **kwargs):
+        """Run a command with subprocess.Popen() and redirect input/output."""
+
         check = kwargs.pop('check', False)
 
         try:
-            input = kwargs.pop('input')
+            stdin = kwargs.pop('input')
             assert 'stdin' not in kwargs
             kwargs['stdin'] = PIPE
         except KeyError:
-            input = None
+            stdin = None
 
         proc = Popen(*args, **kwargs)
         try:
-            stdout, stderr = proc.communicate(input)
+            stdout, stderr = proc.communicate(stdin)
         except:
-            process.kill()
-            process.wait()
+            proc.kill()
+            proc.wait()
             raise
         returncode = proc.wait()
 
@@ -91,18 +89,22 @@ except ImportError:
             raise CalledProcessError(returncode, args, stdout)
         return CompletedProcess(args, returncode, stdout, stderr)
 
+
 if bytes is str:
     def write_bytes(data, file):  # PY2
         """Write bytes to a file."""
+        # pylint: disable=redefined-builtin
         file.write(data)
 else:
     def write_bytes(data, file):  # PY3
         """Write bytes to a file."""
+        # pylint: disable=redefined-builtin
         file.buffer.write(data)
 
 
 def _confirm(question, default, file=sys.stderr):
     """Prompt a yes/no question and convert the answer to a boolean value."""
+    # pylint: disable=redefined-builtin
     answers = {'': default, 'y': True, 'yes': True, 'n': False, 'no': False}
     suffix = '[Y/n] ' if default else ' [y/N] '
     while True:
@@ -115,17 +117,31 @@ def _confirm(question, default, file=sys.stderr):
 
 class ChangeList(object):
     """A ChangeList to be checked out."""
+    # pylint: disable=too-few-public-methods,too-many-instance-attributes
 
     def __init__(self, project, project_dir, fetch, commit_sha1, commit,
                  change_list):
         """Initialize a ChangeList instance."""
+        # pylint: disable=too-many-arguments
+
         self.project = project
         self.project_dir = project_dir
         self.number = change_list['_number']
 
         self.fetch = fetch
-        self.fetch_url = fetch['http']['url']
-        self.fetch_ref = fetch['http']['ref']
+
+        fetch_git = None
+        for protocol in ('http', 'sso', 'rpc'):
+            fetch_git = fetch.get(protocol)
+            if fetch_git:
+                break
+
+        if not fetch_git:
+            raise ValueError(
+                'unknown fetch protocols: ' + str(list(fetch.keys())))
+
+        self.fetch_url = fetch_git['url']
+        self.fetch_ref = fetch_git['ref']
 
         self.commit_sha1 = commit_sha1
         self.commit = commit
@@ -151,7 +167,7 @@ def find_manifest_xml(dir_path):
     raise ValueError('.repo dir not found')
 
 
-def build_project_name_to_directory_dict(manifest_path):
+def build_project_name_dir_dict(manifest_path):
     """Build the mapping from Gerrit project name to source tree project
     directory path."""
     project_dirs = {}
@@ -167,54 +183,6 @@ def build_project_name_to_directory_dict(manifest_path):
     return project_dirs
 
 
-def load_auth(cookie_file_path):
-    """Load username and password from .gitcookies and return an
-    HTTPBasicAuthHandler."""
-    auth_handler = HTTPBasicAuthHandler()
-    with open(cookie_file_path, 'r') as cookie_file:
-        for lineno, line in enumerate(cookie_file, start=1):
-            if line.startswith('#HttpOnly_'):
-                line = line[len('#HttpOnly_'):]
-            if not line or line[0] == '#':
-                continue
-            row = line.split('\t')
-            if len(row) != 7:
-                continue
-            domain = row[0]
-            cookie = row[6]
-            sep = cookie.find('=')
-            if sep == -1:
-                continue
-            username = cookie[0:sep]
-            password = cookie[sep + 1:]
-            auth_handler.add_password(domain, domain, username, password)
-    return auth_handler
-
-
-def query_change_lists(gerrit, query_string, gitcookies, limits):
-    """Query change lists."""
-    data = [
-        ('q', query_string),
-        ('o', 'CURRENT_REVISION'),
-        ('o', 'CURRENT_COMMIT'),
-        ('n', str(limits)),
-    ]
-    url = gerrit + '/a/changes/?' + urlencode(data)
-
-    auth_handler = load_auth(gitcookies)
-    opener = build_opener(auth_handler)
-
-    response_file = opener.open(url)
-    try:
-        # Trim cross site script inclusion (XSSI) protector
-        data = response_file.read().decode('utf-8')[4:]
-
-        # Parse responsed JSON
-        return json.loads(data)
-    finally:
-        response_file.close()
-
-
 def group_and_sort_change_lists(change_lists, project_dirs):
     """Build a dict that maps projects to a list of topologically sorted change
     lists."""
@@ -222,9 +190,13 @@ def group_and_sort_change_lists(change_lists, project_dirs):
     # Build a dict that map projects to dicts that map commits to changes.
     projects = collections.defaultdict(dict)
     for change_list in change_lists:
+        commit_sha1 = None
         for commit_sha1, value in change_list['revisions'].items():
             fetch = value['fetch']
             commit = value['commit']
+
+        if not commit_sha1:
+            raise ValueError('bad revision')
 
         project = change_list['project']
         project_dir = project_dirs[project]
@@ -242,17 +214,17 @@ def group_and_sort_change_lists(change_lists, project_dirs):
         visited_changes = set()
         sorted_changes = []
 
-        def post_order_traverse(change):
+        def _post_order_traverse(change):
             visited_changes.add(change)
             for parent in change.parents:
                 parent_change = changes.get(parent['commit'])
                 if parent_change and parent_change not in visited_changes:
-                    post_order_traverse(parent_change)
+                    _post_order_traverse(parent_change)
             sorted_changes.append(change)
 
         for change in sorted(changes.values(), key=lambda x: x.number):
             if change not in visited_changes:
-                post_order_traverse(change)
+                _post_order_traverse(change)
 
         return sorted_changes
 
@@ -325,7 +297,7 @@ def _main_bash(args):
     branch_name = _get_local_branch_name_from_args(args)
 
     manifest_path = _get_manifest_xml_from_args(args)
-    project_dirs = build_project_name_to_directory_dict(manifest_path)
+    project_dirs = build_project_name_dir_dict(manifest_path)
 
     change_lists = _get_change_lists_from_args(args)
     change_list_groups = group_and_sort_change_lists(change_lists, project_dirs)
@@ -359,13 +331,32 @@ def _do_pull_change_lists_for_project(task):
     return None
 
 
+def _print_pull_failures(failures, file=sys.stderr):
+    """Print pull failures and tracebacks."""
+    # pylint: disable=redefined-builtin
+
+    separator = '=' * 78
+    separator_sub = '-' * 78
+
+    print(separator, file=file)
+    for failed_change, skipped_changes, cmd, errors in failures:
+        print('PROJECT:', failed_change.project, file=file)
+        print('FAILED COMMIT:', failed_change.commit_sha1, file=file)
+        for change in skipped_changes:
+            print('PENDING COMMIT:', change.commit_sha1, file=file)
+        print(separator_sub, file=sys.stderr)
+        print('FAILED COMMAND:', _sh_quote_command(cmd), file=file)
+        write_bytes(errors, file=sys.stderr)
+        print(separator, file=sys.stderr)
+
+
 def _main_pull(args):
     """Pull the change lists."""
 
     branch_name = _get_local_branch_name_from_args(args)
 
     manifest_path = _get_manifest_xml_from_args(args)
-    project_dirs = build_project_name_to_directory_dict(manifest_path)
+    project_dirs = build_project_name_dir_dict(manifest_path)
 
     # Collect change lists
     change_lists = _get_change_lists_from_args(args)
@@ -388,21 +379,9 @@ def _main_pull(args):
                            zip(change_list_groups, itertools.repeat(task_opts)))
 
     # Print failures and tracebacks
-    failed_results = [result for result in results if result]
-    if failed_results:
-        _SEPARATOR = '=' * 78
-        _SEPARATOR_SUB = '-' * 78
-
-        print(_SEPARATOR, file=sys.stderr)
-        for failed_change, skipped_changes, cmd, errors in failed_results:
-            print('PROJECT:', failed_change.project, file=sys.stderr)
-            print('FAILED COMMIT:', failed_change.commit_sha1, file=sys.stderr)
-            for change in skipped_changes:
-                print('PENDING COMMIT:', change.commit_sha1, file=sys.stderr)
-            print(_SEPARATOR_SUB, file=sys.stderr)
-            print('FAILED COMMAND:', _sh_quote_command(cmd), file=sys.stderr)
-            write_bytes(errors, file=sys.stderr)
-            print(_SEPARATOR, file=sys.stderr)
+    failures = [result for result in results if result]
+    if failures:
+        _print_pull_failures(failures)
         sys.exit(1)
 
 
@@ -453,8 +432,8 @@ def _get_manifest_xml_from_args(args):
 
 def _get_change_lists_from_args(args):
     """Query the change lists by args."""
-    return query_change_lists(args.gerrit, args.query, args.gitcookies,
-                              args.limits)
+    url_opener = create_url_opener_from_args(args)
+    return query_change_lists(url_opener, args.gerrit, args.query, args.limits)
 
 
 def _get_local_branch_name_from_args(args):
@@ -467,6 +446,7 @@ def _get_local_branch_name_from_args(args):
 
 
 def main():
+    """Main function"""
     args = _parse_args()
     if args.command == 'json':
         _main_json(args)

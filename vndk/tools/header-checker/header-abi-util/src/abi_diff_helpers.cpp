@@ -209,12 +209,34 @@ DiffStatus AbiDiffHelper::CompareEnumTypes(
   return DiffStatus::no_diff;
 }
 
+static std::string RemoveThunkInfoFromMangledName(const std::string &name) {
+  if (name.find("_ZTv") != 0 && name.find("_ZTh") != 0 &&
+      name.find("_ZTc") != 0) {
+    return name;
+  }
+  size_t base_name_pos = name.find("N");
+  if (base_name_pos == std::string::npos) {
+    return name;
+  }
+  return "_Z" + name.substr(base_name_pos);
+}
+
 bool AbiDiffHelper::CompareVTableComponents(
     const abi_util::VTableComponentIR &old_component,
     const abi_util::VTableComponentIR &new_component) {
-  return old_component.GetName() == new_component.GetName() &&
-      old_component.GetValue() == new_component.GetValue() &&
-      old_component.GetKind() == new_component.GetKind();
+  // Vtable components in prebuilts/abi-dumps/vndk/28 don't have thunk info.
+  if (old_component.GetName() != new_component.GetName()) {
+    if (RemoveThunkInfoFromMangledName(old_component.GetName()) ==
+        RemoveThunkInfoFromMangledName(new_component.GetName())) {
+      llvm::errs() << "WARNING: Ignore difference between "
+                   << old_component.GetName() << " and "
+                   << new_component.GetName() << "\n";
+    } else {
+      return false;
+    }
+  }
+  return old_component.GetValue() == new_component.GetValue() &&
+         old_component.GetKind() == new_component.GetKind();
 }
 
 bool AbiDiffHelper::CompareVTables(
@@ -786,6 +808,9 @@ DiffStatus AbiDiffHelper::CompareAndDumpTypeDiff(
   if (old_it == old_types_.end() || new_it == new_types_.end()) {
     TypeQueueCheckAndPop(type_queue);
     // One of the types were hidden, we cannot compare further.
+    if (diff_policy_options_.consider_opaque_types_different_) {
+      return DiffStatus::opaque_diff;
+    }
     return DiffStatus::no_diff;
   }
   abi_util::LinkableMessageKind old_kind =
@@ -800,6 +825,11 @@ DiffStatus AbiDiffHelper::CompareAndDumpTypeDiff(
                                          old_kind, type_queue, diff_kind);
   }
   TypeQueueCheckAndPop(type_queue);
+  if (diff_policy_options_.consider_opaque_types_different_ &&
+      diff_status == DiffStatus::opaque_diff &&
+      (old_it->second->GetName() != new_it->second->GetName())) {
+    return DiffStatus::direct_diff;
+  }
   return diff_status;
 }
 

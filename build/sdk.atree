@@ -64,7 +64,7 @@ external/chromium-trace/UPSTREAM_REVISION                                 platfo
 # Compatibility: moved to platform but also leave them in platform-tools for a little
 # longer until all active Gradle plugins have support for looking in both places
 development/sdk/generated-api-versions.xml    platform-tools/api/api-versions.xml
-prebuilts/sdk/sdk-annotations/annotations.zip   platform-tools/api/annotations.zip
+${OUT_DIR}/target/common/obj/PACKAGING/metalava-api-stubs-docs_annotations.zip   platform-tools/api/annotations.zip
 
 ##############################################################################
 # Build Tools Component
@@ -143,7 +143,7 @@ framework/dx.jar                              build-tools/${PLATFORM_NAME}/lib/d
 bin/dexdump                                   build-tools/${PLATFORM_NAME}/dexdump
 
 # d8
-prebuilts/r8/d8-master.jar                    build-tools/${PLATFORM_NAME}/lib/d8.jar
+prebuilts/r8/buildtools/d8-master.jar         build-tools/${PLATFORM_NAME}/lib/d8.jar
 prebuilts/r8/d8                               build-tools/${PLATFORM_NAME}/d8
 
 # multi-dex
@@ -165,11 +165,12 @@ ${HOST_OUT}/development/sdk/platform_source.properties                          
 sdk/sdk-build.prop                                                                            platforms/${PLATFORM_NAME}/build.prop
 
 # Main Public API jar
-${OUT_DIR}/target/common/obj/PACKAGING/android_jar_intermediates/android.jar                  platforms/${PLATFORM_NAME}/android.jar
-${OUT_DIR}/target/common/obj/PACKAGING/android_jar_intermediates/android-stubs-src.jar        platforms/${PLATFORM_NAME}/android-stubs-src.jar
+${OUT_DIR}/target/common/obj/PACKAGING/metalava_android_jar_intermediates/metalava-android.jar            platforms/${PLATFORM_NAME}/android.jar
+${OUT_DIR}/target/common/obj/PACKAGING/metalava_android_jar_intermediates/metalava-android-stubs-src.jar  platforms/${PLATFORM_NAME}/android-stubs-src.jar
+
 # optional API files.
 development/build/optional.json                                                               platforms/${PLATFORM_NAME}/optional/optional.json
-${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/org.apache.http.legacy_intermediates/classes.jar  platforms/${PLATFORM_NAME}/optional/org.apache.http.legacy.jar
+${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/org.apache.http.legacy.stubs_intermediates/classes.jar  platforms/${PLATFORM_NAME}/optional/org.apache.http.legacy.jar
 # deprecated APIs
 ${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android_uiautomator_intermediates/classes.jar     platforms/${PLATFORM_NAME}/uiautomator.jar
 
@@ -208,6 +209,7 @@ development/sdk/generated-api-versions.xml  platforms/${PLATFORM_NAME}/data/api-
 
 # API annotations database for lint
 prebuilts/sdk/sdk-annotations/annotations.zip platforms/${PLATFORM_NAME}/data/annotations.zip
+${OUT_DIR}/target/common/obj/PACKAGING/metalava-api-stubs-docs_annotations.zip platforms/${PLATFORM_NAME}/data/annotations.zip
 
 # Eclipse Editors support
 framework/layoutlib-legacy.jar            platforms/${PLATFORM_NAME}/data/layoutlib.jar

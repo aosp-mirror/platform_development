@@ -146,6 +146,13 @@ class MyTest(unittest.TestCase):
             "libc_and_cpp", "libc_and_cpp_with_unused_struct", 0,
             ['-check-all-apis', '-advice-only'])
 
+    def test_libc_and_cpp_opaque_pointer_diff(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libc_and_cpp_with_opaque_ptr_a",
+            "libc_and_cpp_with_opaque_ptr_b", 8,
+            ['-consider-opaque-types-different'], True,
+            True)
+
     def test_libgolden_cpp_return_type_diff(self):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp", "libgolden_cpp_return_type_diff", 8)
@@ -158,6 +165,16 @@ class MyTest(unittest.TestCase):
     def test_libgolden_cpp_add_function(self):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp", "libgolden_cpp_add_function", 4)
+
+    def test_libgolden_cpp_add_function_allow_extension(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp", "libgolden_cpp_add_function", 0,
+            ['-allow-extensions'])
+
+    def test_libgolden_cpp_add_function_and_elf_symbol(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp", "libgolden_cpp_add_function_and_unexported_elf",
+            4)
 
     def test_libgolden_cpp_change_function_access(self):
         self.prepare_and_run_abi_diff_all_archs(
@@ -249,6 +266,17 @@ class MyTest(unittest.TestCase):
             "libgolden_cpp_internal_public_struct",
             "libgolden_cpp_internal_private_struct", 8, [], True,
             True)
+
+    def test_libgolden_cpp_inheritance_type_changed(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp", "libgolden_cpp_inheritance_type_changed", 8, [],
+            True, True)
+
+    def test_libinline_pure(self):
+        self.prepare_and_absolute_diff_all_archs(
+            "libinline_pure",
+            "libinline_pure",
+        )
 
 
 if __name__ == '__main__':

@@ -31,10 +31,10 @@ record_types {
     name: "Cstruct"
     size: 16
     alignment: 8
-    referenced_type: "type-6"
+    referenced_type: "type-5"
     source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
     linker_set_key: "Cstruct"
-    self_type: "type-6"
+    self_type: "type-5"
   }
   fields {
     referenced_type: "type-3"
@@ -43,7 +43,7 @@ record_types {
     access: public_access
   }
   fields {
-    referenced_type: "type-7"
+    referenced_type: "type-6"
     field_offset: 64
     field_name: "b"
     access: public_access
@@ -59,10 +59,10 @@ record_types {
     name: "Cinner"
     size: 4
     alignment: 4
-    referenced_type: "type-8"
+    referenced_type: "type-7"
     source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
     linker_set_key: "Cinner"
-    self_type: "type-8"
+    self_type: "type-7"
   }
   fields {
     referenced_type: "type-3"
@@ -103,10 +103,10 @@ pointer_types {
     name: "Cstruct **"
     size: 8
     alignment: 8
-    referenced_type: "type-5"
+    referenced_type: "type-4"
     source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
     linker_set_key: "Cstruct **"
-    self_type: "type-4"
+    self_type: "type-8"
   }
 }
 pointer_types {
@@ -114,10 +114,10 @@ pointer_types {
     name: "Cstruct *"
     size: 8
     alignment: 8
-    referenced_type: "type-6"
+    referenced_type: "type-5"
     source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
     linker_set_key: "Cstruct *"
-    self_type: "type-5"
+    self_type: "type-4"
   }
 }
 pointer_types {
@@ -125,10 +125,10 @@ pointer_types {
     name: "Cinner *"
     size: 8
     alignment: 8
-    referenced_type: "type-8"
+    referenced_type: "type-7"
     source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
     linker_set_key: "Cinner *"
-    self_type: "type-7"
+    self_type: "type-6"
   }
 }
 builtin_types {
@@ -162,8 +162,9 @@ functions {
   function_name: "CFunction"
   source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
   parameters {
-    referenced_type: "type-4"
+    referenced_type: "type-8"
     default_arg: false
+    is_this_ptr: false
   }
   linker_set_key: "CFunction"
   access: public_access
@@ -175,10 +176,12 @@ functions {
   parameters {
     referenced_type: "type-2"
     default_arg: false
+    is_this_ptr: false
   }
   parameters {
     referenced_type: "type-2"
     default_arg: false
+    is_this_ptr: false
   }
   linker_set_key: "_Z3fooPiS_"
   access: public_access

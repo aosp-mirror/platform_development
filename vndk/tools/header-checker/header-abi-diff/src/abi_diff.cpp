@@ -360,7 +360,9 @@ bool HeaderAbiDiff::DumpDiffElements(
     }
     abi_diff_wrappers::DiffWrapper<T> diff_wrapper(old_element, new_element,
                                                    ir_diff_dumper, old_types,
-                                                   new_types, &type_cache_);
+                                                   new_types,
+                                                   diff_policy_options_,
+                                                   &type_cache_);
     if (!diff_wrapper.DumpDiff(diff_kind)) {
       llvm::errs() << "Failed to diff elements\n";
       return false;
