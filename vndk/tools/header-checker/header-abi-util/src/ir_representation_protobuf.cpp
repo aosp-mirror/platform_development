@@ -128,7 +128,9 @@ VTableLayoutIR ProtobufTextFormatToIRReader::VTableLayoutProtobufToIR(
     VTableComponentIR vtable_component_ir(
         vtable_component.mangled_component_name(),
         VTableComponentKindProtobufToIR(vtable_component.kind()),
-        vtable_component.component_value());
+        vtable_component.component_value(),
+        vtable_component.is_inlined(),
+        vtable_component.is_pure());
     vtable_layout_ir.AddVTableComponent(std::move(vtable_component_ir));
   }
   return vtable_layout_ir;
@@ -484,6 +486,9 @@ static bool SetIRToProtobufVTableLayout(
     added_vtable_component->set_component_value(vtable_component_ir.GetValue());
     added_vtable_component->set_mangled_component_name(
         vtable_component_ir.GetName());
+    added_vtable_component->set_is_inlined(
+        vtable_component_ir.GetIsInlined());
+    added_vtable_component->set_is_pure(vtable_component_ir.GetIsPure());
   }
   return true;
 }
@@ -1179,11 +1184,6 @@ CompatibilityStatusIR ProtobufIRDiffDumper::GetCompatibilityStatusIR() {
     return CompatibilityStatusIR::Incompatible;
   }
 
-  if(diff_tu_->removed_elf_functions().size() != 0 ||
-     diff_tu_->removed_elf_objects().size() != 0) {
-    return CompatibilityStatusIR::ElfIncompatible;
-  }
-
   CompatibilityStatusIR combined_status = CompatibilityStatusIR::Compatible;
 
   if (diff_tu_->enum_type_extension_diffs().size() != 0 ||
@@ -1201,6 +1201,11 @@ CompatibilityStatusIR ProtobufIRDiffDumper::GetCompatibilityStatusIR() {
       diff_tu_->unreferenced_enum_types_added().size()) {
     combined_status =
         combined_status | CompatibilityStatusIR::UnreferencedChanges;
+  }
+
+  if(diff_tu_->removed_elf_functions().size() != 0 ||
+     diff_tu_->removed_elf_objects().size() != 0) {
+    combined_status = combined_status | CompatibilityStatusIR::ElfIncompatible;
   }
 
   return combined_status;

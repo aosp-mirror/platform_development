@@ -19,6 +19,8 @@ enum DiffStatus {
   // There was a diff found, however it need not be added as a part of a diff
   // message, since it would have already been noted elsewhere.
   indirect_diff = 2,
+
+  opaque_diff = 3,
 };
 
 static inline DiffStatus operator| (DiffStatus f,DiffStatus s) {
@@ -46,16 +48,24 @@ struct GenericFieldDiffInfo {
 
 std::string Unwind(const std::deque<std::string> *type_queue);
 
+struct DiffPolicyOptions {
+  DiffPolicyOptions(bool consider_opaque_types_different) :
+    consider_opaque_types_different_(consider_opaque_types_different) { }
+  bool consider_opaque_types_different_ = false;
+};
+
 class AbiDiffHelper {
  public:
   AbiDiffHelper(
       const AbiElementMap<const abi_util::TypeIR *> &old_types,
       const AbiElementMap<const abi_util::TypeIR *> &new_types,
+      const DiffPolicyOptions &diff_policy_options,
       std::set<std::string> *type_cache,
       abi_util::IRDiffDumper *ir_diff_dumper = nullptr,
       AbiElementMap<MergeStatus> *local_to_global_type_id_map = nullptr)
       : old_types_(old_types), new_types_(new_types),
-        type_cache_(type_cache), ir_diff_dumper_(ir_diff_dumper),
+        diff_policy_options_(diff_policy_options), type_cache_(type_cache),
+        ir_diff_dumper_(ir_diff_dumper),
         local_to_global_type_id_map_(local_to_global_type_id_map) { }
 
   DiffStatus CompareAndDumpTypeDiff(
@@ -175,6 +185,7 @@ class AbiDiffHelper {
  protected:
   const AbiElementMap<const abi_util::TypeIR *> &old_types_;
   const AbiElementMap<const abi_util::TypeIR *> &new_types_;
+  const DiffPolicyOptions &diff_policy_options_;
   std::set<std::string> *type_cache_ = nullptr;
   abi_util::IRDiffDumper *ir_diff_dumper_ = nullptr;
   AbiElementMap<MergeStatus> *local_to_global_type_id_map_ = nullptr;

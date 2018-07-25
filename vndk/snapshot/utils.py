@@ -17,6 +17,7 @@
 """Utility functions for VNDK snapshot."""
 
 import glob
+import logging
 import os
 import re
 import subprocess
@@ -32,6 +33,27 @@ MANIFEST_FILE_NAME = 'manifest.xml'
 MODULE_PATHS_FILE_NAME = 'module_paths.txt'
 NOTICE_FILES_DIR_NAME = 'NOTICE_FILES'
 NOTICE_FILES_DIR_PATH = os.path.join(COMMON_DIR_PATH, NOTICE_FILES_DIR_NAME)
+BINDER32 = 'binder32'
+
+
+def set_logging_config(verbose_level):
+    verbose_map = (logging.WARNING, logging.INFO, logging.DEBUG)
+    verbosity = min(verbose_level, 2)
+    logging.basicConfig(
+        format='%(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
+        level=verbose_map[verbosity])
+
+
+def check_call(cmd):
+    logging.debug('Running `{}`'.format(' '.join(cmd)))
+    subprocess.check_call(cmd)
+
+
+def check_output(cmd):
+    logging.debug('Running `{}`'.format(' '.join(cmd)))
+    output = subprocess.check_output(cmd)
+    logging.debug('Output: `{}`'.format(output))
+    return output
 
 
 def get_android_build_top():
@@ -60,21 +82,21 @@ def get_dist_dir(out_dir):
     return _get_dir_from_env('DIST_DIR', join_realpath(out_dir, 'dist'))
 
 
-def get_snapshot_variants(install_dir):
-    """Returns a list of VNDK snapshot variants under install_dir.
+def get_snapshot_archs(install_dir):
+    """Returns a list of VNDK snapshot arch flavors under install_dir.
 
     Args:
       install_dir: string, absolute path of prebuilts/vndk/v{version}
     """
-    variants = []
+    archs = []
     for file in glob.glob('{}/*'.format(install_dir)):
         basename = os.path.basename(file)
         if os.path.isdir(file) and basename != COMMON_DIR_NAME:
-            variants.append(basename)
-    return variants
+            archs.append(basename)
+    return archs
 
 
-def arch_from_path(path):
+def prebuilt_arch_from_path(path):
     """Extracts arch of prebuilts from path relative to install_dir.
 
     Args:
@@ -86,14 +108,14 @@ def arch_from_path(path):
     return path.split('/')[1].split('-')[1]
 
 
-def variant_from_path(path):
-    """Extracts VNDK snapshot variant from path relative to install_dir.
+def snapshot_arch_from_path(path):
+    """Extracts VNDK snapshot arch from path relative to install_dir.
 
     Args:
       path: string, path relative to prebuilts/vndk/v{version}
 
     Returns:
-      string, VNDK snapshot variant (e.g. 'arm64')
+      string, VNDK snapshot arch (e.g. 'arm64')
     """
     return path.split('/')[0]
 
@@ -129,5 +151,4 @@ def fetch_artifact(branch, build, pattern, destination='.'):
         fetch_artifact_path, '--branch', branch, '--target=vndk', '--bid',
         build, pattern, destination
     ]
-    print 'Running `{}`'.format(' '.join(cmd))
-    subprocess.check_call(cmd)
+    check_call(cmd)

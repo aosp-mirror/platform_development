@@ -1,0 +1,44 @@
+#!/bin/bash
+# Copyright (C) 2018 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Get backtraces for a process.
+if [[ $1 =~ ^[0-9]+$ ]] ; then
+    PID="$1"
+elif [ "$1" ] ; then
+    # Try --exact first, and fallback to nonexact if we find nothing.
+    PIDLIST="$(pid --exact $1 || pid $1)"
+    if [[ $PIDLIST =~ ^[0-9]+$ ]] ; then
+        PID="$PIDLIST"
+    elif [ "$PIDLIST" ] ; then
+        echo "more than one process: $1"
+    else
+        echo "no such process: $1"
+    fi
+else
+    echo "usage: stacks [pid|process name]"
+fi
+
+if [ "$PID" ] ; then
+    # Use `debuggerd -j` on java processes.
+    if adb shell readlink /proc/$PID/exe | egrep -q '^/system/bin/app_process' ; then
+        # But not the zygote.
+        if ! adb shell cat /proc/$PID/cmdline | egrep -q '^zygote'; then
+            adb shell debuggerd -j $PID
+            exit $?
+        fi
+    fi
+
+    adb shell debuggerd -b $PID
+fi

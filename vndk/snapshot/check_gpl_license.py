@@ -17,6 +17,7 @@
 
 import argparse
 import glob
+import logging
 import os
 import shutil
 import subprocess
@@ -57,7 +58,7 @@ class GPLChecker(object):
                     manifest_file=self._manifest_file))
 
     def _parse_module_paths(self):
-        """Parses the module_path.txt files into a dictionary,
+        """Parses the module_paths.txt files into a dictionary,
 
         Returns:
           module_paths: dict, e.g. {libfoo.so: some/path/here}
@@ -102,12 +103,57 @@ class GPLChecker(object):
           git_project_path: string, path relative to ANDROID_BUILD_TOP
         """
         path = utils.join_realpath(self._android_build_top, git_project_path)
-        try:
-            subprocess.check_call(
-                ['git', '-C', path, 'rev-list', 'HEAD..{}'.format(revision)])
+
+        def _check_rev_list(revision):
+            """Checks whether revision is reachable from HEAD of git project."""
+
+            logging.info('Checking if revision {rev} exists in {proj}'.format(
+                rev=revision, proj=git_project_path))
+            try:
+                cmd = [
+                    'git', '-C', path, 'rev-list', 'HEAD..{}'.format(revision)
+                ]
+                output = utils.check_output(cmd).strip()
+            except subprocess.CalledProcessError as error:
+                logging.error('Error: {}'.format(error))
+                return False
+            else:
+                if output:
+                    logging.debug(
+                        '{proj} does not have the following revisions: {rev}'.
+                        format(proj=git_project_path, rev=output))
+                    return False
+                else:
+                    logging.info(
+                        'Found revision {rev} in project {proj}'.format(
+                            rev=revision, proj=git_project_path))
             return True
-        except subprocess.CalledProcessError:
-            return False
+
+        if not _check_rev_list(revision):
+            # VNDK snapshots built from a *-release branch will have merge
+            # CLs in the manifest because the *-dev branch is merged to the
+            # *-release branch periodically. In order to extract the
+            # revision relevant to the source of the git_project_path,
+            # we fetch the *-release branch and get the revision of the
+            # parent commit with FETCH_HEAD^2.
+            logging.info(
+                'Checking if the parent of revision {rev} exists in {proj}'.
+                format(rev=revision, proj=git_project_path))
+            try:
+                cmd = ['git', '-C', path, 'fetch', 'goog', revision]
+                utils.check_call(cmd)
+                cmd = ['git', '-C', path, 'rev-parse', 'FETCH_HEAD^2']
+                parent_revision = utils.check_output(cmd).strip()
+            except subprocess.CalledProcessError as error:
+                logging.error(
+                    'Failed to get parent of revision {rev}: {err}'.format(
+                        rev=revision, err=error))
+                raise
+            else:
+                if not _check_rev_list(parent_revision):
+                    return False
+
+        return True
 
     def check_gpl_projects(self):
         """Checks that all GPL projects have released sources.
@@ -115,7 +161,7 @@ class GPLChecker(object):
         Raises:
           ValueError: There are GPL projects with unreleased sources.
         """
-        print 'Starting license check for GPL projects...'
+        logging.info('Starting license check for GPL projects...')
 
         notice_files = glob.glob('{}/*'.format(self._notice_files_dir))
         if len(notice_files) == 0:
@@ -132,10 +178,10 @@ class GPLChecker(object):
                     gpl_projects.append(lib_name)
 
         if not gpl_projects:
-            print 'No GPL projects found.'
+            logging.info('No GPL projects found.')
             return
 
-        print 'GPL projects found:', ', '.join(gpl_projects)
+        logging.info('GPL projects found: {}'.format(', '.join(gpl_projects)))
 
         module_paths = self._parse_module_paths()
         manifest_projects = self._parse_manifest()
@@ -162,23 +208,30 @@ class GPLChecker(object):
                     format(lib=lib, module_paths=self.MODULE_PATHS_TXT))
 
         if released_projects:
-            print 'Released GPL projects:', released_projects
+            logging.info('Released GPL projects: {}'.format(released_projects))
 
         if unreleased_projects:
             raise ValueError(
                 ('FAIL: The following GPL projects have NOT been released in '
                  'current tree: {}'.format(unreleased_projects)))
 
-        print 'PASS: All GPL projects have source in current tree.'
+        logging.info('PASS: All GPL projects have source in current tree.')
 
 
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        'vndk_version', type=int,
+        'vndk_version',
+        type=int,
         help='VNDK snapshot version to check, e.g. "27".')
     parser.add_argument('-b', '--branch', help='Branch to pull manifest from.')
     parser.add_argument('--build', help='Build number to pull manifest from.')
+    parser.add_argument(
+        '-v',
+        '--verbose',
+        action='count',
+        default=0,
+        help='Increase output verbosity, e.g. "-v", "-vv".')
     return parser.parse_args()
 
 
@@ -199,13 +252,14 @@ def main():
         raise ValueError(
             'Please provide valid VNDK version. {} does not exist.'
             .format(install_dir))
+    utils.set_logging_config(args.verbose)
 
     temp_artifact_dir = tempfile.mkdtemp()
     os.chdir(temp_artifact_dir)
     manifest_pattern = 'manifest_{}.xml'.format(args.build)
-    print 'Fetching {file} from {branch} (bid: {build})'.format(
-        file=manifest_pattern, branch=args.branch, build=args.build)
     manifest_dest = os.path.join(temp_artifact_dir, utils.MANIFEST_FILE_NAME)
+    logging.info('Fetching {file} from {branch} (bid: {build})'.format(
+        file=manifest_pattern, branch=args.branch, build=args.build))
     utils.fetch_artifact(args.branch, args.build, manifest_pattern,
                          manifest_dest)
 
@@ -214,11 +268,14 @@ def main():
     try:
         license_checker.check_gpl_projects()
     except ValueError as error:
-        print error
+        logging.error('Error: {}'.format(error))
         raise
     finally:
-        print 'Deleting temp_artifact_dir: {}'.format(temp_artifact_dir)
+        logging.info(
+            'Deleting temp_artifact_dir: {}'.format(temp_artifact_dir))
         shutil.rmtree(temp_artifact_dir)
+
+    logging.info('Done.')
 
 
 if __name__ == '__main__':

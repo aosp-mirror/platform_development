@@ -21,119 +21,23 @@
 from __future__ import print_function
 
 import argparse
-import collections
-import itertools
 import json
-import multiprocessing
 import os
-import re
 import sys
-import xml.dom.minidom
 
 try:
-    from urllib.parse import urlencode  # PY3
+    from urllib.error import HTTPError  # PY3
 except ImportError:
-    from urllib import urlencode  # PY2
+    from urllib2 import HTTPError  # PY2
 
-try:
-    from urllib.request import (
-        HTTPBasicAuthHandler, Request, build_opener)  # PY3
-except ImportError:
-    from urllib2 import HTTPBasicAuthHandler, Request, build_opener  # PY2
-
-
-def load_auth(cookie_file_path):
-    """Load username and password from .gitcookies and return an
-    HTTPBasicAuthHandler."""
-    auth_handler = HTTPBasicAuthHandler()
-    with open(cookie_file_path, 'r') as cookie_file:
-        for lineno, line in enumerate(cookie_file, start=1):
-            if line.startswith('#HttpOnly_'):
-                line = line[len('#HttpOnly_'):]
-            if not line or line[0] == '#':
-                continue
-            row = line.split('\t')
-            if len(row) != 7:
-                continue
-            domain = row[0]
-            cookie = row[6]
-            sep = cookie.find('=')
-            if sep == -1:
-                continue
-            username = cookie[0:sep]
-            password = cookie[sep + 1:]
-            auth_handler.add_password(domain, domain, username, password)
-    return auth_handler
-
-
-def _decode_xssi_json(data):
-    """Trim XSSI protector and decode JSON objects."""
-    # Trim cross site script inclusion (XSSI) protector
-    data = data.decode('utf-8')[4:]
-    # Parse JSON objects
-    return json.loads(data)
-
-
-def query_change_lists(gerrit, query_string, gitcookies, limits):
-    """Query change lists."""
-    data = [
-        ('q', query_string),
-        ('o', 'CURRENT_REVISION'),
-        ('o', 'CURRENT_COMMIT'),
-        ('n', str(limits)),
-    ]
-    url = gerrit + '/a/changes/?' + urlencode(data)
-
-    auth_handler = load_auth(gitcookies)
-    opener = build_opener(auth_handler)
-
-    response_file = opener.open(url)
-    try:
-        return _decode_xssi_json(response_file.read())
-    finally:
-        response_file.close()
-
-
-def set_review(gerrit, gitcookies, change_id, labels, message):
-    """Set review votes to a change list."""
-
-    url = '{}/a/changes/{}/revisions/current/review'.format(gerrit, change_id)
-
-    auth_handler = load_auth(gitcookies)
-    opener = build_opener(auth_handler)
-
-    data = {}
-    if labels:
-        data['labels'] = labels
-    if message:
-        data['message'] = message
-    data = json.dumps(data).encode('utf-8')
-
-    headers = {
-        'Content-Type': 'application/json; charset=UTF-8',
-    }
-
-    request = Request(url, data, headers)
-    response_file = opener.open(request)
-    try:
-        res_code = response_file.getcode()
-        res_json = _decode_xssi_json(response_file.read())
-        return (res_code, res_json)
-    finally:
-        response_file.close()
-
-
-def _get_change_lists_from_args(args):
-    """Query the change lists by args."""
-    return query_change_lists(args.gerrit, args.query, args.gitcookies,
-                              args.limits)
+from gerrit import (
+    create_url_opener_from_args, query_change_lists, set_review, abandon)
 
 
 def _get_labels_from_args(args):
     """Collect and check labels from args."""
     if not args.label:
-        print('error: --label must be specified', file=sys.stderr)
-        sys.exit(1)
+        return None
     labels = {}
     for (name, value) in args.label:
         try:
@@ -144,6 +48,7 @@ def _get_labels_from_args(args):
     return labels
 
 
+# pylint: disable=redefined-builtin
 def _print_change_lists(change_lists, file=sys.stdout):
     """Print matching change lists for each projects."""
     change_lists = sorted(
@@ -193,6 +98,8 @@ def _parse_args():
                         help='Labels to be added')
     parser.add_argument('-m', '--message', help='Review message')
 
+    parser.add_argument('--abandon', help='Abandon a CL with a message')
+
     return parser.parse_args()
 
 
@@ -200,16 +107,46 @@ _SEP_SPLIT = '=' * 79
 _SEP = '-' * 79
 
 
+def _report_error(change, res_code, res_json):
+    """Print the error message"""
+    change_id = change['change_id']
+    project = change['project']
+    revision_sha1 = change['current_revision']
+    revision = change['revisions'][revision_sha1]
+    subject = revision['commit']['subject']
+
+    print(_SEP_SPLIT, file=sys.stderr)
+    print('Project:', project, file=sys.stderr)
+    print('Change-Id:', change_id, file=sys.stderr)
+    print('Subject:', subject, file=sys.stderr)
+    print('HTTP status code:', res_code, file=sys.stderr)
+    if res_json:
+        print(_SEP, file=sys.stderr)
+        json.dump(res_json, sys.stderr, indent=4,
+                  separators=(', ', ': '))
+        print(file=sys.stderr)
+    print(_SEP_SPLIT, file=sys.stderr)
+
+
 def main():
     """Set review labels to selected change lists"""
 
     args = _parse_args()
 
+    # Check the command line options
+    if args.label is None and args.message is None and args.abandon is None:
+        print('error: Either --label, --message, or --abandon must be ',
+              'specified', file=sys.stderr)
+
     # Convert label arguments
     labels = _get_labels_from_args(args)
 
+    # Load authentication credentials
+    url_opener = create_url_opener_from_args(args)
+
     # Retrieve change lists
-    change_lists = _get_change_lists_from_args(args)
+    change_lists = query_change_lists(
+        url_opener, args.gerrit, args.query, args.limits)
     if not change_lists:
         print('error: No matching change lists.', file=sys.stderr)
         sys.exit(1)
@@ -223,34 +160,29 @@ def main():
     # Post review votes
     has_error = False
     for change in change_lists:
-        try:
-            res_code, res_json = set_review(
-                args.gerrit, args.gitcookies, change['id'], labels,
-                args.message)
-        except HTTPError as e:
-            res_code = e.code
-            res_json = None
+        if args.label or args.message:
+            try:
+                res_code, res_json = set_review(
+                    url_opener, args.gerrit, change['id'], labels, args.message)
+            except HTTPError as error:
+                res_code = error.code
+                res_json = None
 
-        if res_code != 200:
-            has_error = True
+            if res_code != 200:
+                has_error = True
+                _report_error(change, res_code, res_json)
 
-            change_id = change['change_id']
-            project = change['project']
-            revision_sha1 = change['current_revision']
-            revision = change['revisions'][revision_sha1]
-            subject = revision['commit']['subject']
+        if args.abandon:
+            try:
+                res_code, res_json = abandon(
+                    url_opener, args.gerrit, change['id'], args.abandon)
+            except HTTPError as error:
+                res_code = error.code
+                res_json = None
 
-            print(_SEP_SPLIT, file=sys.stderr)
-            print('Project:', project, file=sys.stderr)
-            print('Change-Id:', change_id, file=sys.stderr)
-            print('Subject:', subject, file=sys.stderr)
-            print('HTTP status code:', res_code, file=sys.stderr)
-            if res_json:
-                print(_SEP, file=sys.stderr)
-                json.dump(res_json, sys.stderr, indent=4,
-                          separators=(', ', ': '))
-                print(file=sys.stderr)
-            print(_SEP_SPLIT, file=sys.stderr)
+            if res_code != 200:
+                has_error = True
+                _report_error(change, res_code, res_json)
 
     if has_error:
         sys.exit(1)
