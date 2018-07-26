@@ -214,12 +214,12 @@ ${OUT_DIR}/target/common/obj/PACKAGING/metalava-api-stubs-docs_annotations.zip p
 # Eclipse Editors support
 framework/layoutlib-legacy.jar            platforms/${PLATFORM_NAME}/data/layoutlib.jar
 frameworks/base/core/res/res              platforms/${PLATFORM_NAME}/data/res
-docs/activity_actions.txt                 platforms/${PLATFORM_NAME}/data/activity_actions.txt
-docs/broadcast_actions.txt                platforms/${PLATFORM_NAME}/data/broadcast_actions.txt
-docs/service_actions.txt                  platforms/${PLATFORM_NAME}/data/service_actions.txt
-docs/categories.txt                       platforms/${PLATFORM_NAME}/data/categories.txt
-docs/widgets.txt                          platforms/${PLATFORM_NAME}/data/widgets.txt
-docs/features.txt                         platforms/${PLATFORM_NAME}/data/features.txt
+docs/offline-sdk/activity_actions.txt                 platforms/${PLATFORM_NAME}/data/activity_actions.txt
+docs/offline-sdk/broadcast_actions.txt                platforms/${PLATFORM_NAME}/data/broadcast_actions.txt
+docs/offline-sdk/service_actions.txt                  platforms/${PLATFORM_NAME}/data/service_actions.txt
+docs/offline-sdk/categories.txt                       platforms/${PLATFORM_NAME}/data/categories.txt
+docs/offline-sdk/widgets.txt                          platforms/${PLATFORM_NAME}/data/widgets.txt
+docs/offline-sdk/features.txt                         platforms/${PLATFORM_NAME}/data/features.txt
 
 # fonts for layoutlib.
 ${FONT_OUT}                       platforms/${PLATFORM_NAME}/data/fonts
