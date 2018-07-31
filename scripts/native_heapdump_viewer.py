@@ -21,6 +21,7 @@ import os.path
 import re
 import subprocess
 import sys
+import zipfile
 
 class Args:
   _usage = """
@@ -41,6 +42,8 @@ Usage:
       [--reverse]: reverse the backtraces (start the tree from the leaves)
       [--symbols SYMBOL_DIR] SYMBOL_DIR is the directory containing the .so files with symbols.
                  Defaults to $ANDROID_PRODUCT_OUT/symbols
+      [--app-symbols SYMBOL_DIR] SYMBOL_DIR is the directory containing the app APK and so files.
+                 Defaults to the current directory.
    This outputs a file with lines of the form:
 
       5831776  29.09% 100.00%    10532     71b07bc0b0 /system/lib64/libandroid_runtime.so Typeface_createFromArray frameworks/base/core/jni/android/graphics/Typeface.cpp:68
@@ -60,13 +63,17 @@ Usage:
       self.symboldir = product_out + "/symbols"
     else:
       self.symboldir = "./symbols"
+    self.app_symboldir = ""
 
     i = 1
     extra_args = []
     while i < len(sys.argv):
       if sys.argv[i] == "--symbols":
         i += 1
-        self.symboldir = args[i]
+        self.symboldir = sys.argv[i] + "/"
+      elif sys.argv[i] == "--app-symbols":
+        i += 1
+        self.app_symboldir = sys.argv[i] + "/"
       elif sys.argv[i] == "--verbose":
         self.verbose = True
       elif sys.argv[i] == "--html":
@@ -166,7 +173,37 @@ def GetNumFieldValid(native_heap):
   else:
     return True
 
-def ParseNativeHeap(native_heap, reverse_frames, num_field_valid):
+def GetMappingFromOffset(mapping, app_symboldir):
+  """
+  If the input mapping is a zip file, translate the contained uncompressed files and add mapping
+  entries.
+
+  This is done to handle symbols for the uncompressed .so files inside APKs. With the replaced
+  mappings, the script looks up the .so files as separate files.
+  """
+  basename = os.path.basename(mapping.name)
+  zip_name = app_symboldir + basename
+  if os.path.isfile(zip_name):
+    opened_zip = zipfile.ZipFile(zip_name)
+    if opened_zip:
+      # For all files in the zip, add mappings for the internal files.
+      for file_info in opened_zip.infolist():
+        # Only add stored files since it doesn't make sense to have PC into compressed ones.
+        if file_info.compress_type == zipfile.ZIP_STORED:
+          zip_header_entry_size = 30
+          data_offset = (file_info.header_offset
+              + zip_header_entry_size
+              + len(file_info.filename)
+              + len(file_info.extra)
+              + len(file_info.comment))
+          end_offset = data_offset + file_info.file_size
+          if mapping.offset >= data_offset and mapping.offset < end_offset:
+            mapping.name = file_info.filename
+            mapping.offset = data_offset - mapping.offset
+            break
+  return mapping
+
+def ParseNativeHeap(native_heap, reverse_frames, num_field_valid, app_symboldir):
   """Parse the native heap into backtraces, maps.
 
   Returns two lists, the first is a list of all of the backtraces, the
@@ -198,12 +235,14 @@ def ParseNativeHeap(native_heap, reverse_frames, num_field_valid):
       #   720de01000-720ded7000 r-xp 00000000 fd:00 495  /system/lib64/libc.so
       m = re_map.match(line)
       if m:
+        # Offset of mapping start
         start = int(m.group('start'), 16)
+        # Offset of mapping end
         end = int(m.group('end'), 16)
+        # Offset within file that is mapped
         offset = int(m.group('offset'), 16)
         name = m.group('name')
-        mappings.append(Mapping(start, end, offset, name))
-
+        mappings.append(GetMappingFromOffset(Mapping(start, end, offset, name), app_symboldir))
   return backtraces, mappings
 
 def FindMapping(mappings, addr):
@@ -227,7 +266,7 @@ def FindMapping(mappings, addr):
       return mappings[mid]
 
 
-def ResolveAddrs(html_output, symboldir, backtraces, mappings):
+def ResolveAddrs(html_output, symboldir, app_symboldir, backtraces, mappings):
   """Resolve address libraries and offsets.
 
   addr_offsets maps addr to .so file offset
@@ -259,7 +298,9 @@ def ResolveAddrs(html_output, symboldir, backtraces, mappings):
     print "Resolving symbols using directory %s..." % symboldir
 
   for lib in addrs_by_lib:
-    sofile = symboldir + lib
+    sofile = app_symboldir + lib
+    if not os.path.isfile(sofile):
+      sofile = symboldir + lib
     if os.path.isfile(sofile):
       file_offset = 0
       result = subprocess.check_output(["objdump", "-w", "-j", ".text", "-h", sofile])
@@ -393,9 +434,11 @@ def main():
 
   num_field_valid = GetNumFieldValid(args.native_heap)
 
-  backtraces, mappings = ParseNativeHeap(args.native_heap, args.reverse_frames, num_field_valid)
+  backtraces, mappings = ParseNativeHeap(args.native_heap, args.reverse_frames, num_field_valid,
+      args.app_symboldir)
   # Resolve functions and line numbers
-  resolved_addrs = ResolveAddrs(args.html_output, args.symboldir, backtraces, mappings)
+  resolved_addrs = ResolveAddrs(args.html_output, args.symboldir, args.app_symboldir, backtraces,
+      mappings)
 
   app = AddrInfo("APP")
   zygote = AddrInfo("ZYGOTE")
