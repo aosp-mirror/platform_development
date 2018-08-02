@@ -47,17 +47,21 @@ using llvm::Error;
 using llvm::make_unique;
 
 static std::string demangle(const std::string &MangledName) {
-     char *Str = __cxxabiv1::__cxa_demangle(
-             MangledName.c_str(),
-             nullptr,
-             0,
-             nullptr);
-     if (Str) {
-         std::string DemangledString(Str);
-         free(Str);
-         return DemangledString;
-     }
-     return "";
+    // If demangling result is NULL then MangledName may be __cxa_pure_virtual
+    // or __cxa_deleted_virtual or other C symbol names.
+    // __cxa_pure_virtual indicates a pure virtual function and
+    // __cxa_deleted_virtual indicates a deleted virtual function. (though
+    // this is very unlikely to happen)
+    // What we do here is to return MangledName when we cannot demangle it,
+    // assuming undemangable names are C symbols that don't need demangling.
+    char *Str = abi::__cxa_demangle(MangledName.c_str(), nullptr, nullptr,
+                                    nullptr);
+    if (Str) {
+        std::string DemangledName(Str);
+        free(Str);
+        return DemangledName;
+    }
+    return MangledName;
 }
 
 SharedObject::~SharedObject() {}
@@ -281,13 +285,9 @@ bool ELFSharedObject<ELFT>::absoluteRelocation(
     }
     SymbolRef Symbol = *Symi;
     uint64_t RelOffset = Relocation.getOffset();
-    StringRef SymbolName = UnWrap(Symbol.getName());
-    std::string DemangledName = demangle(SymbolName.str());
-    if (!DemangledName.empty()) {
-        Vtablep->addVFunction(SymbolName.str(), DemangledName, RelOffset);
-        return true;
-    }
-    return false;
+    std::string SymbolName(UnWrap(Symbol.getName()).str());
+    Vtablep->addVFunction(SymbolName, demangle(SymbolName), RelOffset);
+    return true;
 }
 
 template <typename ELFT>
@@ -312,13 +312,9 @@ bool ELFSharedObject<ELFT>::relativeRelocation(
         return false;
     }
     SymbolRef Symbol = matchValueToSymbol(It->second, Vtablep);
-    StringRef SymbolName = UnWrap(Symbol.getName());
-    std::string DemangledName = demangle(SymbolName.str());
-    if (!DemangledName.empty()) {
-        Vtablep->addVFunction(SymbolName.str(), DemangledName, RelOffset);
-        return true;
-    }
-    return false;
+    std::string SymbolName(UnWrap(Symbol.getName()).str());
+    Vtablep->addVFunction(SymbolName, demangle(SymbolName), RelOffset);
+    return true;
 }
 
 template <typename ELFT>
