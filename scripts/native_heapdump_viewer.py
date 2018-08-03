@@ -198,8 +198,12 @@ def GetMappingFromOffset(mapping, app_symboldir):
               + len(file_info.comment))
           end_offset = data_offset + file_info.file_size
           if mapping.offset >= data_offset and mapping.offset < end_offset:
+            # Round up the data_offset to the nearest page since the .so must be aligned.
+            so_file_alignment = 4096
+            data_offset += so_file_alignment - 1;
+            data_offset -= data_offset % so_file_alignment;
             mapping.name = file_info.filename
-            mapping.offset = data_offset - mapping.offset
+            mapping.offset -= data_offset
             break
   return mapping
 
