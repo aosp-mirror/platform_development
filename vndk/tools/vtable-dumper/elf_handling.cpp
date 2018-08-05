@@ -18,18 +18,24 @@
 
 #include <cxxabi.h>
 
-using llvm::ELF::ELFDATA2MSB;
+using llvm::ELF::EM_386;
+using llvm::ELF::EM_X86_64;
 using llvm::ELF::EM_ARM;
+using llvm::ELF::EM_AARCH64;
 using llvm::ELF::EM_MIPS;
-using llvm::ELF::R_AARCH64_ABS64;
-using llvm::ELF::R_AARCH64_RELATIVE;
-using llvm::ELF::R_ARM_ABS32;
-using llvm::ELF::R_ARM_RELATIVE;
+
+using llvm::ELF::R_386_32;
+using llvm::ELF::R_386_RELATIVE;
 using llvm::ELF::R_X86_64_64;
 using llvm::ELF::R_X86_64_RELATIVE;
+using llvm::ELF::R_ARM_ABS32;
+using llvm::ELF::R_ARM_RELATIVE;
+using llvm::ELF::R_AARCH64_ABS64;
+using llvm::ELF::R_AARCH64_RELATIVE;
 using llvm::ELF::R_MIPS_64;
 using llvm::ELF::R_MIPS_REL32;
 using llvm::ELF::R_MIPS_NONE;
+
 using llvm::ELF::SHT_PROGBITS;
 using llvm::ELF::SHT_REL;
 using llvm::ELF::SHT_RELA;
@@ -47,20 +53,23 @@ using llvm::Error;
 using llvm::make_unique;
 
 static std::string demangle(const std::string &MangledName) {
-     char *Str = __cxxabiv1::__cxa_demangle(
-             MangledName.c_str(),
-             nullptr,
-             0,
-             nullptr);
-     if (Str) {
-         std::string DemangledString(Str);
-         free(Str);
-         return DemangledString;
-     }
-     return "";
+    // If demangling result is NULL then MangledName may be __cxa_pure_virtual
+    // or __cxa_deleted_virtual or other C symbol names.
+    // __cxa_pure_virtual indicates a pure virtual function and
+    // __cxa_deleted_virtual indicates a deleted virtual function. (though
+    // this is very unlikely to happen)
+    // What we do here is to return MangledName when we cannot demangle it,
+    // assuming undemangable names are C symbols that don't need demangling.
+    char *Str = abi::__cxa_demangle(MangledName.c_str(), nullptr, nullptr,
+                                    nullptr);
+    if (Str) {
+        std::string DemangledName(Str);
+        free(Str);
+        return DemangledName;
+    }
+    return MangledName;
 }
 
-SharedObject::~SharedObject() {}
 
 template <typename ELFT>
 static std::unique_ptr<SharedObject> createELFSharedObject(
@@ -68,7 +77,7 @@ static std::unique_ptr<SharedObject> createELFSharedObject(
     return make_unique<ELFSharedObject<ELFT>>(Objfile);
 }
 
-static std::unique_ptr<SharedObject>createELFObjFile(const ObjectFile *Obj) {
+static std::unique_ptr<SharedObject> createELFObjFile(const ObjectFile *Obj) {
     if (const ELF32LEObjectFile *Objfile = dyn_cast<ELF32LEObjectFile>(Obj))
         return createELFSharedObject(Objfile);
     if (const ELF32BEObjectFile *Objfile = dyn_cast<ELF32BEObjectFile>(Obj))
@@ -80,6 +89,8 @@ static std::unique_ptr<SharedObject>createELFObjFile(const ObjectFile *Obj) {
 
     return nullptr;
 }
+
+SharedObject::~SharedObject() {}
 
 std::unique_ptr<SharedObject> SharedObject::create(const ObjectFile *Obj) {
     std::unique_ptr<SharedObject> res(createELFObjFile(Obj));
@@ -246,27 +257,38 @@ void ELFSharedObject<ELFT>::relocateSym(
             relativeRelocation(Relocation, Section, Vtablep);
         }
     } else {
-        switch(Relocation.getType()) {
-            case R_AARCH64_RELATIVE:
-            case R_X86_64_RELATIVE:
-            case R_ARM_RELATIVE:
-            {
-                // The return value is ignored since failure to relocate
-                // does not mean a fatal error. It might be that the dynsym /
-                // symbol-table does not have enough information to get the
-                // symbol name. Like-wise for absolute relocations.
-                relativeRelocation(Relocation, Section, Vtablep);
+        bool IsAbsoluteRelocation = false;
+        bool IsRelativeRelocation = false;
+        uint32_t RelocationType = Relocation.getType();
+        switch (ElfHeader->e_machine) {
+            case EM_ARM:
+                IsAbsoluteRelocation = RelocationType == R_ARM_ABS32;
+                IsRelativeRelocation = RelocationType == R_ARM_RELATIVE;
                 break;
-            }
-            case R_AARCH64_ABS64:
-            case R_X86_64_64:
-            case R_ARM_ABS32:
-            {
-                absoluteRelocation(Relocation, Vtablep);
+            case EM_AARCH64:
+                IsAbsoluteRelocation = RelocationType == R_AARCH64_ABS64;
+                IsRelativeRelocation = RelocationType == R_AARCH64_RELATIVE;
                 break;
-            }
+            case EM_386:
+                IsAbsoluteRelocation = RelocationType == R_386_32;
+                IsRelativeRelocation = RelocationType == R_386_RELATIVE;
+                break;
+            case EM_X86_64:
+                IsAbsoluteRelocation = RelocationType == R_X86_64_64;
+                IsRelativeRelocation = RelocationType == R_X86_64_RELATIVE;
+                break;
             default:
                 break;
+        }
+        // The return value is ignored since failure to relocate
+        // does not mean a fatal error. It might be that the dynsym /
+        // symbol-table does not have enough information to get the
+        // symbol name. Like-wise for absolute relocations.
+        if (IsAbsoluteRelocation) {
+            absoluteRelocation(Relocation, Vtablep);
+        }
+        if (IsRelativeRelocation) {
+            relativeRelocation(Relocation, Section, Vtablep);
         }
     }
 }
@@ -281,13 +303,9 @@ bool ELFSharedObject<ELFT>::absoluteRelocation(
     }
     SymbolRef Symbol = *Symi;
     uint64_t RelOffset = Relocation.getOffset();
-    StringRef SymbolName = UnWrap(Symbol.getName());
-    std::string DemangledName = demangle(SymbolName.str());
-    if (!DemangledName.empty()) {
-        Vtablep->addVFunction(SymbolName.str(), DemangledName, RelOffset);
-        return true;
-    }
-    return false;
+    std::string SymbolName(UnWrap(Symbol.getName()).str());
+    Vtablep->addVFunction(SymbolName, demangle(SymbolName), RelOffset);
+    return true;
 }
 
 template <typename ELFT>
@@ -312,13 +330,9 @@ bool ELFSharedObject<ELFT>::relativeRelocation(
         return false;
     }
     SymbolRef Symbol = matchValueToSymbol(It->second, Vtablep);
-    StringRef SymbolName = UnWrap(Symbol.getName());
-    std::string DemangledName = demangle(SymbolName.str());
-    if (!DemangledName.empty()) {
-        Vtablep->addVFunction(SymbolName.str(), DemangledName, RelOffset);
-        return true;
-    }
-    return false;
+    std::string SymbolName(UnWrap(Symbol.getName()).str());
+    Vtablep->addVFunction(SymbolName, demangle(SymbolName), RelOffset);
+    return true;
 }
 
 template <typename ELFT>
