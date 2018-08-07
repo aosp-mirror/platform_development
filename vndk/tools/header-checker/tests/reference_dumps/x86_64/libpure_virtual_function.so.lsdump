@@ -1,10 +1,10 @@
 record_types {
   type_info {
     name: "PureVirtualBase"
-    size: 4
-    alignment: 4
+    size: 8
+    alignment: 8
     referenced_type: "type-1"
-    source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/inline_pure/include/header1.h"
+    source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/pure_virtual/include/header1.h"
     linker_set_key: "PureVirtualBase"
     self_type: "type-1"
   }
@@ -13,42 +13,36 @@ record_types {
       kind: OffsetToTop
       mangled_component_name: ""
       component_value: 0
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: RTTI
       mangled_component_name: "_ZTI15PureVirtualBase"
       component_value: 0
-      is_inlined: false
       is_pure: false
+    }
+    vtable_components {
+      kind: CompleteDtorPointer
+      mangled_component_name: "_ZN15PureVirtualBaseD1Ev"
+      component_value: 0
+      is_pure: true
+    }
+    vtable_components {
+      kind: DeletingDtorPointer
+      mangled_component_name: "_ZN15PureVirtualBaseD0Ev"
+      component_value: 0
+      is_pure: true
     }
     vtable_components {
       kind: FunctionPointer
       mangled_component_name: "_ZN15PureVirtualBase8foo_pureEv"
       component_value: 0
-      is_inlined: false
       is_pure: true
     }
     vtable_components {
       kind: FunctionPointer
-      mangled_component_name: "_ZN15PureVirtualBase9foo_pure2Ev"
+      mangled_component_name: "_ZN15PureVirtualBase11foo_virtualEv"
       component_value: 0
-      is_inlined: false
-      is_pure: true
-    }
-    vtable_components {
-      kind: FunctionPointer
-      mangled_component_name: "_ZN15PureVirtualBase10foo_inlineEv"
-      component_value: 0
-      is_inlined: true
-      is_pure: false
-    }
-    vtable_components {
-      kind: FunctionPointer
-      mangled_component_name: "_ZN15PureVirtualBase14foo_not_inlineEv"
-      component_value: 0
-      is_inlined: false
       is_pure: false
     }
   }
@@ -61,10 +55,10 @@ record_types {
 record_types {
   type_info {
     name: "DerivedBar"
-    size: 4
-    alignment: 4
+    size: 8
+    alignment: 8
     referenced_type: "type-4"
-    source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/inline_pure/include/header1.h"
+    source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/pure_virtual/include/header1.h"
     linker_set_key: "DerivedBar"
     self_type: "type-4"
   }
@@ -78,43 +72,37 @@ record_types {
       kind: OffsetToTop
       mangled_component_name: ""
       component_value: 0
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: RTTI
       mangled_component_name: "_ZTI10DerivedBar"
       component_value: 0
-      is_inlined: false
+      is_pure: false
+    }
+    vtable_components {
+      kind: CompleteDtorPointer
+      mangled_component_name: "_ZN10DerivedBarD1Ev"
+      component_value: 0
+      is_pure: false
+    }
+    vtable_components {
+      kind: DeletingDtorPointer
+      mangled_component_name: "_ZN10DerivedBarD0Ev"
+      component_value: 0
       is_pure: false
     }
     vtable_components {
       kind: FunctionPointer
       mangled_component_name: "_ZN10DerivedBar8foo_pureEv"
       component_value: 0
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: FunctionPointer
-      mangled_component_name: "_ZN15PureVirtualBase9foo_pure2Ev"
+      mangled_component_name: "_ZN10DerivedBar11foo_virtualEv"
       component_value: 0
-      is_inlined: false
       is_pure: true
-    }
-    vtable_components {
-      kind: FunctionPointer
-      mangled_component_name: "_ZN10DerivedBar10foo_inlineEv"
-      component_value: 0
-      is_inlined: false
-      is_pure: false
-    }
-    vtable_components {
-      kind: FunctionPointer
-      mangled_component_name: "_ZN10DerivedBar14foo_not_inlineEv"
-      component_value: 0
-      is_inlined: true
-      is_pure: false
     }
   }
   access: public_access
@@ -126,10 +114,10 @@ record_types {
 pointer_types {
   type_info {
     name: "PureVirtualBase *"
-    size: 4
-    alignment: 4
+    size: 8
+    alignment: 8
     referenced_type: "type-1"
-    source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/inline_pure/include/header1.h"
+    source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/pure_virtual/include/header1.h"
     linker_set_key: "PureVirtualBase *"
     self_type: "type-3"
   }
@@ -137,10 +125,10 @@ pointer_types {
 pointer_types {
   type_info {
     name: "DerivedBar *"
-    size: 4
-    alignment: 4
+    size: 8
+    alignment: 8
     referenced_type: "type-4"
-    source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/inline_pure/include/header1.h"
+    source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/pure_virtual/include/header1.h"
     linker_set_key: "DerivedBar *"
     self_type: "type-5"
   }
