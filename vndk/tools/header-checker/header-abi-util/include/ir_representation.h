@@ -202,9 +202,8 @@ class VTableComponentIR {
   };
 
   VTableComponentIR(const std::string &name, Kind kind, int64_t value,
-                    bool is_inlined, bool is_pure)
-      : component_name_(name), kind_(kind), value_(value),
-        is_inlined_(is_inlined), is_pure_(is_pure) { }
+                    bool is_pure)
+      : component_name_(name), kind_(kind), value_(value), is_pure_(is_pure) { }
 
   VTableComponentIR() { }
 
@@ -220,10 +219,6 @@ class VTableComponentIR {
     return component_name_;
   }
 
-  bool GetIsInlined() const {
-    return is_inlined_;
-  }
-
   bool GetIsPure() const {
     return is_pure_;
   }
@@ -232,7 +227,6 @@ class VTableComponentIR {
   std::string component_name_;
   Kind kind_;
   int64_t value_ = 0;
-  bool is_inlined_;
   bool is_pure_;
 };
 
