@@ -30,12 +30,6 @@ public class Layers extends GraphicsActivity {
     }
 
     private static class SampleView extends View {
-        private static final int LAYER_FLAGS = Canvas.MATRIX_SAVE_FLAG |
-                                            Canvas.CLIP_SAVE_FLAG |
-                                            Canvas.HAS_ALPHA_LAYER_SAVE_FLAG |
-                                            Canvas.FULL_COLOR_LAYER_SAVE_FLAG |
-                                            Canvas.CLIP_TO_LAYER_SAVE_FLAG;
-
         private Paint mPaint;
 
         public SampleView(Context context) {
@@ -51,7 +45,7 @@ public class Layers extends GraphicsActivity {
 
             canvas.translate(10, 10);
 
-            canvas.saveLayerAlpha(0, 0, 200, 200, 0x88, LAYER_FLAGS);
+            canvas.saveLayerAlpha(0, 0, 200, 200, 0x88);
 
             mPaint.setColor(Color.RED);
             canvas.drawCircle(75, 75, 75, mPaint);
