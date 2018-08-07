@@ -36,11 +36,10 @@ public class Development extends LauncherActivity
     protected void onSortResultList(List<ResolveInfo> results) {
         super.onSortResultList(results);
         Intent settingsIntent = new Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS);
-        List<ResolveInfo> topItems = getPackageManager().queryIntentActivities(
-                settingsIntent, PackageManager.MATCH_DEFAULT_ONLY);
-        if (topItems != null) {
-            super.onSortResultList(topItems);
-            results.addAll(0, topItems);
+        //In API 26, there are multiplte developer settings activities, choose the one with highest priority
+        ResolveInfo topItem = getPackageManager().resolveActivity(settingsIntent, PackageManager.MATCH_DEFAULT_ONLY);
+        if (topItem != null) {
+            results.add(0, topItem);
         }
     }
 }

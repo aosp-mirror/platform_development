@@ -101,14 +101,6 @@ prebuilts/sdk/renderscript/lib/arm/librsjni.so        build-tools/${PLATFORM_NAM
 prebuilts/sdk/renderscript/lib/arm/libblasV8.so       build-tools/${PLATFORM_NAME}/renderscript/lib/blas/armeabi-v7a/libblasV8.so
 prebuilts/sdk/renderscript/lib/arm/librsrt_arm.bc     build-tools/${PLATFORM_NAME}/renderscript/lib/bc/armeabi-v7a/libclcore.bc
 
-prebuilts/sdk/renderscript/lib/mips/libc.so            build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/mips/libc.so
-prebuilts/sdk/renderscript/lib/mips/libm.so            build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/mips/libm.so
-prebuilts/sdk/renderscript/lib/mips/libcompiler_rt.a   build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/mips/libcompiler_rt.a
-prebuilts/sdk/renderscript/lib/mips/libRSSupport.so    build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/mips/libRSSupport.so
-prebuilts/sdk/renderscript/lib/mips/librsjni.so        build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/mips/librsjni.so
-prebuilts/sdk/renderscript/lib/mips/libblasV8.so       build-tools/${PLATFORM_NAME}/renderscript/lib/blas/mips/libblasV8.so
-prebuilts/sdk/renderscript/lib/mips/librsrt_mips.bc    build-tools/${PLATFORM_NAME}/renderscript/lib/bc/mips/libclcore.bc
-
 prebuilts/sdk/renderscript/lib/x86/libc.so            build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/x86/libc.so
 prebuilts/sdk/renderscript/lib/x86/libm.so            build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/x86/libm.so
 prebuilts/sdk/renderscript/lib/x86/libcompiler_rt.a   build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/x86/libcompiler_rt.a
@@ -173,6 +165,10 @@ development/build/optional.json                                                 
 ${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/org.apache.http.legacy.stubs_intermediates/classes.jar  platforms/${PLATFORM_NAME}/optional/org.apache.http.legacy.jar
 # deprecated APIs
 ${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android_uiautomator_intermediates/classes.jar     platforms/${PLATFORM_NAME}/uiautomator.jar
+# Test APIs
+${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android.test.mock.stubs_intermediates/classes.jar   platforms/${PLATFORM_NAME}/optional/android.test.mock.jar
+${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android.test.base.stubs_intermediates/classes.jar   platforms/${PLATFORM_NAME}/optional/android.test.base.jar
+${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android.test.runner.stubs_intermediates/classes.jar platforms/${PLATFORM_NAME}/optional/android.test.runner.jar
 
 # the aidl precompiled include
 obj/framework.aidl                                                                            platforms/${PLATFORM_NAME}/framework.aidl
@@ -241,7 +237,7 @@ development/sdk/sdk_files_NOTICE.txt      platforms/${PLATFORM_NAME}/skins/NOTIC
 system-qemu.img                                 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/system.img
 vendor-qemu.img                                 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/vendor.img
 ramdisk.img                                system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/ramdisk.img
-userdata.img                               system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/userdata.img
+data/misc                                        system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/data/misc
 system/build.prop                          system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/build.prop
 
 # Note: the kernel image is handled by sdk-android-<abi>.atree now.
@@ -456,4 +452,3 @@ sdk/files/README_add-ons.txt add-ons/README.txt
 ##############################################################################
 # Tests Component
 ##############################################################################
-system/app/EmulatorSmokeTests/EmulatorSmokeTests.apk tests/emulator-test-apps/EmulatorSmokeTests.apk

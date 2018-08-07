@@ -5,6 +5,8 @@
     <application
         android:label="@string/app_label"
         android:icon="@drawable/ic_lock_lock">
+        <uses-library android:name="android.test.runner" />
+
         <provider
             android:name=".VaultProvider"
             android:authorities="com.example.android.vault.provider"

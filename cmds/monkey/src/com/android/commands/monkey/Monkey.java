@@ -44,6 +44,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -239,6 +242,8 @@ public class Monkey {
     private static final File TOMBSTONES_PATH = new File("/data/tombstones");
 
     private static final String TOMBSTONE_PREFIX = "tombstone_";
+
+    private static int NUM_READ_TOMBSTONE_RETRIES = 5;
 
     private HashSet<Long> mTombstones = null;
 
@@ -1293,6 +1298,7 @@ public class Monkey {
                 newStones.add(f.lastModified());
                 if (mTombstones == null || !mTombstones.contains(f.lastModified())) {
                     result = true;
+                    waitForTombstoneToBeWritten(Paths.get(TOMBSTONES_PATH.getPath(), t));
                     Logger.out.println("** New tombstone found: " + f.getAbsolutePath()
                                        + ", size: " + f.length());
                 }
@@ -1303,6 +1309,35 @@ public class Monkey {
         mTombstones = newStones;
 
         return result;
+    }
+
+    /**
+     * Wait for the given tombstone file to be completely written.
+     *
+     * @param path The path of the tombstone file.
+     */
+    private void waitForTombstoneToBeWritten(Path path) {
+        boolean isWritten = false;
+        try {
+            // Ensure file is done writing by sleeping and comparing the previous and current size
+            for (int i = 0; i < NUM_READ_TOMBSTONE_RETRIES; i++) {
+                long size = Files.size(path);
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) { }
+                if (size > 0 && Files.size(path) == size) {
+                    //File size is bigger than 0 and hasn't changed
+                    isWritten = true;
+                    break;
+                }
+            }
+        } catch (IOException e) {
+            Logger.err.println("Failed to get tombstone file size: " + e.toString());
+        }
+        if (!isWritten) {
+            Logger.err.println("Incomplete tombstone file.");
+            return;
+        }
     }
 
     /**

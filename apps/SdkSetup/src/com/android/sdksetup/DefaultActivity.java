@@ -25,6 +25,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.os.ServiceManager;
+import android.os.Build;
 import android.provider.Settings;
 
 /**
@@ -37,29 +38,34 @@ public class DefaultActivity extends Activity {
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
 
-        // Add a persistent setting to allow other apps to know the device has been provisioned.
-        Settings.Global.putInt(getContentResolver(), Settings.Global.DEVICE_PROVISIONED, 1);
+        // Edit Settings only for Emulator
+        if (Build.IS_EMULATOR) {
+            // Add a persistent setting to allow other apps to know the device has been provisioned.
+            Settings.Global.putInt(getContentResolver(), Settings.Global.DEVICE_PROVISIONED, 1);
 
-        Settings.Secure.putInt(getContentResolver(), Settings.Secure.USER_SETUP_COMPLETE, 1);
+            Settings.Secure.putInt(getContentResolver(), Settings.Secure.USER_SETUP_COMPLETE, 1);
 
-        // Disables a dialog shown on adb install execution.
-        Settings.Global.putInt(getContentResolver(), Settings.Global.PACKAGE_VERIFIER_INCLUDE_ADB, 0);
+            // Disables a dialog shown on adb install execution.
+            Settings.Global.putInt(getContentResolver(), Settings.Global.PACKAGE_VERIFIER_INCLUDE_ADB, 0);
 
-        // Enable the GPS.
-        // Not needed since this SDK will contain the Settings app.
-        Settings.Secure.putString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED,
-                LocationManager.GPS_PROVIDER);
+            // Enable the GPS.
+            // Not needed since this SDK will contain the Settings app.
+            Settings.Secure.putString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED,
+                    LocationManager.GPS_PROVIDER);
 
-        // enable install from non market
-        Settings.Global.putInt(getContentResolver(), Settings.Global.INSTALL_NON_MARKET_APPS, 1);
+            // enable install from non market
+            Settings.Global.putInt(getContentResolver(), Settings.Global.INSTALL_NON_MARKET_APPS, 1);
 
-        // provision the backup manager.
-        IBackupManager bm = IBackupManager.Stub.asInterface(
-                ServiceManager.getService(Context.BACKUP_SERVICE));
-        if (bm != null) {
-            try {
-                bm.setBackupProvisioned(true);
-            } catch (RemoteException e) {
+            Settings.Secure.putInt(getContentResolver(),Settings.Secure.ADB_ENABLED, 1);
+
+            // provision the backup manager.
+            IBackupManager bm = IBackupManager.Stub.asInterface(
+                    ServiceManager.getService(Context.BACKUP_SERVICE));
+            if (bm != null) {
+                try {
+                    bm.setBackupProvisioned(true);
+                } catch (RemoteException e) {
+                }
             }
         }
 
@@ -67,7 +73,6 @@ public class DefaultActivity extends Activity {
         PackageManager pm = getPackageManager();
         ComponentName name = new ComponentName(this, DefaultActivity.class);
         pm.setComponentEnabledSetting(name, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, 0);
-        Settings.Secure.putInt(getContentResolver(),Settings.Secure.ADB_ENABLED, 1);
 
         // terminate the activity.
         finish();
