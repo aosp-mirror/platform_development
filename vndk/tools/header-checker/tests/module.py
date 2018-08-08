@@ -471,9 +471,9 @@ TEST_MODULES = [
         api = 'current',
     ),
     Module(
-        name = 'libinline_pure',
-        srcs = ['integration/cpp/inline_pure/inline_pure.cpp'],
-        export_include_dirs = ['integration/cpp/inline_pure/include'],
+        name = 'libpure_virtual_function',
+        srcs = ['integration/cpp/pure_virtual/pure_virtual_function.cpp'],
+        export_include_dirs = ['integration/cpp/pure_virtual/include'],
         version_script = '',
         cflags = [],
         arch = '',

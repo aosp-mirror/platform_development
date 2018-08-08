@@ -19,42 +19,36 @@ record_types {
       kind: OffsetToTop
       mangled_component_name: ""
       component_value: 0
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: RTTI
       mangled_component_name: "_ZTI12SuperSpeaker"
       component_value: 0
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: FunctionPointer
       mangled_component_name: "_ZN12SuperSpeaker5SpeakEv"
       component_value: 0
-      is_inlined: false
       is_pure: true
     }
     vtable_components {
       kind: FunctionPointer
       mangled_component_name: "_ZN12SuperSpeaker6ListenEv"
       component_value: 0
-      is_inlined: false
       is_pure: true
     }
     vtable_components {
       kind: CompleteDtorPointer
       mangled_component_name: "_ZN12SuperSpeakerD1Ev"
       component_value: 0
-      is_inlined: true
       is_pure: false
     }
     vtable_components {
       kind: DeletingDtorPointer
       mangled_component_name: "_ZN12SuperSpeakerD0Ev"
       component_value: 0
-      is_inlined: true
       is_pure: false
     }
   }
@@ -84,42 +78,36 @@ record_types {
       kind: OffsetToTop
       mangled_component_name: ""
       component_value: 0
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: RTTI
       mangled_component_name: "_ZTI17HighVolumeSpeaker"
       component_value: 0
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: FunctionPointer
       mangled_component_name: "_ZN17HighVolumeSpeaker5SpeakEv"
       component_value: 0
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: FunctionPointer
       mangled_component_name: "_ZN17HighVolumeSpeaker6ListenEv"
       component_value: 0
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: CompleteDtorPointer
       mangled_component_name: "_ZN17HighVolumeSpeakerD1Ev"
       component_value: 0
-      is_inlined: true
       is_pure: false
     }
     vtable_components {
       kind: DeletingDtorPointer
       mangled_component_name: "_ZN17HighVolumeSpeakerD0Ev"
       component_value: 0
-      is_inlined: true
       is_pure: false
     }
   }
@@ -161,112 +149,96 @@ record_types {
       kind: VBaseOffset
       mangled_component_name: ""
       component_value: 24
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: OffsetToTop
       mangled_component_name: ""
       component_value: 0
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: RTTI
       mangled_component_name: "_ZTI16LowVolumeSpeaker"
       component_value: 0
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: FunctionPointer
       mangled_component_name: "_ZN16LowVolumeSpeaker5SpeakEv"
       component_value: 0
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: FunctionPointer
       mangled_component_name: "_ZN16LowVolumeSpeaker6ListenEv"
       component_value: 0
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: CompleteDtorPointer
       mangled_component_name: "_ZN16LowVolumeSpeakerD1Ev"
       component_value: 0
-      is_inlined: true
       is_pure: false
     }
     vtable_components {
       kind: DeletingDtorPointer
       mangled_component_name: "_ZN16LowVolumeSpeakerD0Ev"
       component_value: 0
-      is_inlined: true
       is_pure: false
     }
     vtable_components {
       kind: VCallOffset
       mangled_component_name: ""
       component_value: -24
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: VCallOffset
       mangled_component_name: ""
       component_value: -24
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: VCallOffset
       mangled_component_name: ""
       component_value: -24
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: OffsetToTop
       mangled_component_name: ""
       component_value: -24
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: RTTI
       mangled_component_name: "_ZTI16LowVolumeSpeaker"
       component_value: 0
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: FunctionPointer
       mangled_component_name: "_ZTv0_n24_N16LowVolumeSpeaker5SpeakEv"
       component_value: 0
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: FunctionPointer
       mangled_component_name: "_ZTv0_n32_N16LowVolumeSpeaker6ListenEv"
       component_value: 0
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: CompleteDtorPointer
       mangled_component_name: "_ZTv0_n40_N16LowVolumeSpeakerD1Ev"
       component_value: 0
-      is_inlined: true
       is_pure: false
     }
     vtable_components {
       kind: DeletingDtorPointer
       mangled_component_name: "_ZTv0_n40_N16LowVolumeSpeakerD0Ev"
       component_value: 0
-      is_inlined: true
       is_pure: false
     }
   }

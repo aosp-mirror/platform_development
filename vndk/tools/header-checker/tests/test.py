@@ -272,10 +272,10 @@ class MyTest(unittest.TestCase):
             "libgolden_cpp", "libgolden_cpp_inheritance_type_changed", 8, [],
             True, True)
 
-    def test_libinline_pure(self):
+    def test_libpure_virtual_function(self):
         self.prepare_and_absolute_diff_all_archs(
-            "libinline_pure",
-            "libinline_pure",
+            "libpure_virtual_function",
+            "libpure_virtual_function",
         )
 
 
