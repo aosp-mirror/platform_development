@@ -67,14 +67,6 @@ fi
 
 shift "$((OPTIND-1))"
 
-if [[ ! -z "${MODIFY_SYSTEM_SCRIPT+x}" && ! -f "$MODIFY_SYSTEM_SCRIPT" ]]; then
-    exit_badparam "Script not found: "$MODIFY_SYSTEM_SCRIPT""
-fi
-
-if [[ ! -z "${OVERRIDE_VBMETA_IMAGE_PATH+x}" && ! -f "$OVERRIDE_VBMETA_IMAGE_PATH" ]]; then
-    exit_badparam "Specified vbmeta.img not found: "$OVERRIDE_VBMETA_IMAGE_PATH""
-fi
-
 if [[ $# -lt 3 ]]; then
     exit_badparam "Unexpected number of arguments"
 fi
@@ -98,6 +90,14 @@ fi
 readonly DEVICE_TARGET_FILES_ARCHIVE="$(find "$DEVICE_DIR" -name "*-target_files-*.zip" -print)"
 if [[ ! -f "$DEVICE_TARGET_FILES_ARCHIVE" ]]; then
     exit_badparam "Could not find device target_files archive in $DEVICE_DIR."
+fi
+
+if [[ ! -z "${MODIFY_SYSTEM_SCRIPT+x}" && ! -f "$MODIFY_SYSTEM_SCRIPT" ]]; then
+    exit_badparam "Script not found: "$MODIFY_SYSTEM_SCRIPT""
+fi
+
+if [[ ! -z "${OVERRIDE_VBMETA_IMAGE_PATH+x}" && ! -f "$OVERRIDE_VBMETA_IMAGE_PATH" ]]; then
+    exit_badparam "Specified vbmeta.img not found: "$OVERRIDE_VBMETA_IMAGE_PATH""
 fi
 
 readonly DEVICE_ARTIFACTS_DIR="$TEMP_DIR"/device_archive_artifacts
