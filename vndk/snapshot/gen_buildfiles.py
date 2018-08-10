@@ -119,6 +119,12 @@ class GenBuildFile(object):
             self._vndk_version))
         etc_buildrules = []
         for prebuilt in self.ETC_MODULES:
+            # Starting from P (VNDK version >= 28), ld.config.VER.txt is not
+            # installed as a prebuilt but is built and installed from the
+            # source tree at the time the VNDK snapshot is installed to the
+            # system.img.
+            if prebuilt == 'ld.config.txt' and self._vndk_version >= 28:
+                continue
             etc_buildrules.append(self._gen_etc_prebuilt(prebuilt))
 
         with open(self._mkfile, 'w') as mkfile:
