@@ -297,26 +297,30 @@ def CallAddr2LineForSet(lib, unique_addrs):
   child = _PIPE_ADDR2LINE_CACHE.GetProcess(cmd)
 
   for addr in addrs:
-    child.stdin.write("0x%s\n" % addr)
-    child.stdin.flush()
-    records = []
-    first = True
-    while True:
-      symbol = child.stdout.readline().strip()
-      if symbol == "??":
-        symbol = None
-      location = child.stdout.readline().strip()
-      if location == "??:0" or location == "??:?":
-        location = None
-      if symbol is None and location is None:
-        break
-      records.append((symbol, location))
-      if first:
-        # Write a blank line as a sentinel so we know when to stop
-        # reading inlines from the output.
-        # The blank line will cause addr2line to emit "??\n??:0\n".
-        child.stdin.write("\n")
-        first = False
+    try:
+      child.stdin.write("0x%s\n" % addr)
+      child.stdin.flush()
+      records = []
+      first = True
+      while True:
+        symbol = child.stdout.readline().strip()
+        if symbol == "??":
+          symbol = None
+        location = child.stdout.readline().strip()
+        if location == "??:0" or location == "??:?":
+          location = None
+        if symbol is None and location is None:
+          break
+        records.append((symbol, location))
+        if first:
+          # Write a blank line as a sentinel so we know when to stop
+          # reading inlines from the output.
+          # The blank line will cause addr2line to emit "??\n??:0\n".
+          child.stdin.write("\n")
+          first = False
+    except IOError as e:
+      # Remove the / in front of the library name to match other output.
+      records = [(None, lib[1:] + "  ***Error: " + str(e))]
     result[addr] = records
     addr_cache[addr] = records
   return result
