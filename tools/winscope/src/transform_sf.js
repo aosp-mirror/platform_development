@@ -159,6 +159,7 @@ function transform_layers_entry(entry) {
       [[entry.layers], transform_layers],
     ],
     timestamp: entry.elapsedRealtimeNanos,
+    stableId: 'entry',
   });
 }
 

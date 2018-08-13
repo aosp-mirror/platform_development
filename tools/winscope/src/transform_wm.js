@@ -182,6 +182,7 @@ function transform_entry(entry) {
       [[entry.windowManagerService.policy], transform_policy],
     ],
     timestamp: entry.elapsedRealtimeNanos,
+    stableId: 'entry',
   });
 }
 
