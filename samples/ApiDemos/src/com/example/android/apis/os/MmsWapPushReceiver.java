@@ -22,11 +22,11 @@ import android.content.Intent;
 import android.provider.Telephony;
 import android.util.Log;
 
-import com.google.android.mms.ContentType;
-import com.google.android.mms.pdu.GenericPdu;
-import com.google.android.mms.pdu.NotificationInd;
-import com.google.android.mms.pdu.PduHeaders;
-import com.google.android.mms.pdu.PduParser;
+import com.example.android.mmslib.ContentType;
+import com.example.android.mmslib.pdu.GenericPdu;
+import com.example.android.mmslib.pdu.NotificationInd;
+import com.example.android.mmslib.pdu.PduHeaders;
+import com.example.android.mmslib.pdu.PduParser;
 
 /**
  * Receiver for MMS WAP push

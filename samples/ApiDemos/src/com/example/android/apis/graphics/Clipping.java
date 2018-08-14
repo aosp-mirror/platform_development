@@ -81,28 +81,7 @@ public class Clipping extends GraphicsActivity {
             mPath.reset();
             canvas.clipPath(mPath); // makes the clip empty
             mPath.addCircle(50, 50, 50, Path.Direction.CCW);
-            canvas.clipPath(mPath, Region.Op.REPLACE);
-            drawScene(canvas);
-            canvas.restore();
-
-            canvas.save();
-            canvas.translate(160, 160);
-            canvas.clipRect(0, 0, 60, 60);
-            canvas.clipRect(40, 40, 100, 100, Region.Op.UNION);
-            drawScene(canvas);
-            canvas.restore();
-
-            canvas.save();
-            canvas.translate(10, 310);
-            canvas.clipRect(0, 0, 60, 60);
-            canvas.clipRect(40, 40, 100, 100, Region.Op.XOR);
-            drawScene(canvas);
-            canvas.restore();
-
-            canvas.save();
-            canvas.translate(160, 310);
-            canvas.clipRect(0, 0, 60, 60);
-            canvas.clipRect(40, 40, 100, 100, Region.Op.REVERSE_DIFFERENCE);
+            canvas.clipPath(mPath);
             drawScene(canvas);
             canvas.restore();
         }
