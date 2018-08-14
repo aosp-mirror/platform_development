@@ -25,7 +25,7 @@ cc_defaults {
         "-Wall",
         "-Werror",
         "-DGOOGLE_PROTOBUF_NO_RTTI",
-        "-UNDEBUG"
+        "-UNDEBUG",
     ],
 
     cppflags: [
@@ -34,78 +34,13 @@ cc_defaults {
 
     target: {
         windows: {
-            enabled: false
-        }
-    }
+            enabled: false,
+        },
+    },
 }
 
-cc_defaults {
-    name: "header-checker-lib-defaults",
-
-    static_libs: [
-        "libclangToolingCore",
-        "libclangTooling",
-        "libclangFrontendTool",
-        "libclangFrontend",
-        "libclangDriver",
-        "libclangIndex",
-        "libclangSerialization",
-        "libclangCodeGen",
-        "libclangRewriteFrontend",
-        "libclangRewrite",
-        "libclangParse",
-        "libclangSema",
-        "libclangStaticAnalyzerFrontend",
-        "libclangStaticAnalyzerCheckers",
-        "libclangStaticAnalyzerMPIChecker",
-        "libclangStaticAnalyzerCore",
-        "libclangAnalysis",
-        "libclangEdit",
-        "libclangAST",
-        "libclangLex",
-        "libclangBasic",
-        "libLLVMIRReader",
-        "libLLVMAsmParser",
-        "libLLVMAsmPrinter",
-        "libLLVMBitReader",
-        "libLLVMBitWriter",
-        "libLLVMMC",
-        "libLLVMMCParser",
-        "libLLVMCore",
-        "libLLVMOption",
-        "libLLVMProfileData",
-        "libLLVMObject",
-        "libLLVMMCDisassembler",
-        "libLLVMSupport",
-    ],
-
-    shared_libs: [
-        "libprotobuf-cpp-full",
-    ],
-}
-
-cc_defaults {
-    name: "header-abi-linker-lib-defaults",
-
-    static_libs: [
-        "libheader-abi-util",
-        "libLLVMObject",
-        "libLLVMBitReader",
-        "libLLVMMC",
-        "libLLVMMCParser",
-        "libLLVMCore",
-        "libLLVMSupport",
-    ],
-
-    shared_libs: [
-        "libprotobuf-cpp-full",
-    ],
-}
-
-cc_library_static {
+cc_library_host_static {
     name: "libheader-checker-proto",
-    host_supported: true,
-    export_include_dirs: ["."],
 
     srcs: [
         "proto/abi_dump.proto",
@@ -124,6 +59,14 @@ cc_library_static {
         "-Wno-long-long",
         "-Wno-unused-parameter",
     ],
+
+    export_include_dirs: ["."],
+
+    target: {
+        windows: {
+            enabled: false,
+        },
+    },
 }
 
 cc_binary_host {
@@ -131,16 +74,69 @@ cc_binary_host {
 
     defaults: [
         "header-checker-defaults",
-        "header-checker-lib-defaults",
     ],
 
     srcs: [
-        "header-abi-dumper/src/*.cpp",
+        "header-abi-dumper/src/abi_wrappers.cpp",
+        "header-abi-dumper/src/ast_processing.cpp",
+        "header-abi-dumper/src/fixed_argv.cpp",
+        "header-abi-dumper/src/frontend_action.cpp",
+        "header-abi-dumper/src/frontend_action_factory.cpp",
+        "header-abi-dumper/src/header_checker.cpp",
+        "header-abi-dumper/src/workaround_fortify.cpp",
+        "header-abi-dumper/src/workaround_openmp.cpp",
     ],
 
     static_libs: [
         "libheader-abi-util",
         "libheader-checker-proto",
+        "libclangToolingCore",
+        "libclangTooling",
+        "libclangFrontendTool",
+        "libclangFrontend",
+        "libclangDriver",
+        "libclangIndex",
+        "libclangSerialization",
+        "libclangCodeGen",
+        "libclangParse",
+        "libclangSema",
+        "libclangAnalysis",
+        "libclangEdit",
+        "libclangAST",
+        "libclangLex",
+        "libclangBasic",
+        "libLLVMBitReader",
+        "libLLVMBitWriter",
+        "libLLVMMC",
+        "libLLVMMCParser",
+        "libLLVMCore",
+        "libLLVMOption",
+        "libLLVMProfileData",
+        "libLLVMObject",
+        "libLLVMSupport",
+    ],
+
+    shared_libs: [
+        "libprotobuf-cpp-full",
+    ],
+}
+
+cc_defaults {
+    name: "header-abi-linker-defaults",
+
+    static_libs: [
+        "libheader-abi-util",
+        "libheader-checker-proto",
+        "libLLVMObject",
+        "libLLVMBitReader",
+        "libLLVMMC",
+        "libLLVMMCParser",
+        "libLLVMCore",
+        "libLLVMSupport",
+    ],
+
+    shared_libs: [
+        "libprotobuf-cpp-full",
     ],
 }
 
@@ -149,15 +145,11 @@ cc_binary_host {
 
     defaults: [
         "header-checker-defaults",
-        "header-abi-linker-lib-defaults",
+        "header-abi-linker-defaults",
     ],
 
     srcs: [
-        "header-abi-linker/src/*.cpp",
-    ],
-
-    static_libs: [
-        "libheader-checker-proto",
+        "header-abi-linker/src/header_abi_linker.cpp",
     ],
 }
 
@@ -166,15 +158,13 @@ cc_binary_host {
 
     defaults: [
         "header-checker-defaults",
-        "header-abi-linker-lib-defaults",
+        "header-abi-linker-defaults",
     ],
 
     srcs: [
-        "header-abi-diff/src/*.cpp",
-    ],
-
-    static_libs: [
-        "libheader-checker-proto",
+        "header-abi-diff/src/abi_diff.cpp",
+        "header-abi-diff/src/abi_diff_wrappers.cpp",
+        "header-abi-diff/src/header_abi_diff.cpp",
     ],
 }
 
@@ -183,36 +173,31 @@ cc_binary_host {
 
     defaults: [
         "header-checker-defaults",
-        "header-abi-linker-lib-defaults",
+        "header-abi-linker-defaults",
     ],
 
     srcs: [
-        "merge-abi-diff/src/*.cpp",
-    ],
-
-    static_libs: [
-        "libheader-checker-proto",
+        "merge-abi-diff/src/merge_abi_diff.cpp",
     ],
 }
 
-cc_library_static {
+cc_library_host_static {
     name: "libheader-abi-util",
+
     defaults: [
         "header-checker-defaults",
     ],
-    host_supported: true,
-    export_include_dirs: ["header-abi-util/include"],
 
     srcs: [
-        "header-abi-util/src/*.cpp"
+        "header-abi-util/src/abi_diff_helpers.cpp",
+        "header-abi-util/src/collect_exported_headers.cpp",
+        "header-abi-util/src/ir_representation.cpp",
+        "header-abi-util/src/ir_representation_protobuf.cpp",
+        "header-abi-util/src/so_file_parser.cpp",
+        "header-abi-util/src/version_script_parser.cpp",
     ],
+
     static_libs: [
-        "libLLVMObject",
-        "libLLVMBitReader",
-        "libLLVMMC",
-        "libLLVMMCParser",
-        "libLLVMCore",
-        "libLLVMSupport",
         "libheader-checker-proto",
     ],
 
@@ -220,10 +205,11 @@ cc_library_static {
         "libprotobuf-cpp-full",
     ],
 
-
     cflags: [
         "-Wcast-qual",
         "-Wno-long-long",
         "-Wno-unused-parameter",
     ],
+
+    export_include_dirs: ["header-abi-util/include"],
 }
