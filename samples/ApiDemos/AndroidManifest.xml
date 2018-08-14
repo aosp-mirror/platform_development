@@ -39,7 +39,11 @@
     <uses-permission android:name="android.permission.TRANSMIT_IR" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
-
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES"/>
+    <!-- Required for drawing overlay windows (TYPE_SYSTEM_ALERT, TYPE_APPLICATION_OVERLAY) -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
 
     <!-- For android.media.audiofx.Visualizer -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -276,6 +280,50 @@
 
         <activity android:name=".app.ScreenOrientation"
                   android:label="@string/activity_screen_orientation">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.PictureInPicture"
+                  android:label="@string/activity_picture_in_picture"
+                  android:resizeableActivity="true"
+                  android:supportsPictureInPicture="true"
+                  android:configChanges=
+                    "screenSize|smallestScreenSize|screenLayout|orientation">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.MaxAspectRatio$Square"
+                  android:label="@string/activity_max_aspect_ratio_square"
+                  android:resizeableActivity="false"
+                  android:theme="@android:style/Theme.DeviceDefault.Settings"
+                  android:maxAspectRatio="1">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.MaxAspectRatio$SixteenToNine"
+            android:label="@string/activity_max_aspect_ratio_16to9"
+            android:resizeableActivity="false"
+            android:theme="@android:style/Theme.DeviceDefault.Settings"
+            android:maxAspectRatio="1.77777778">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.MaxAspectRatio$Any"
+            android:label="@string/activity_max_aspect_ratio_any"
+            android:resizeableActivity="true"
+            android:theme="@android:style/Theme.DeviceDefault.Settings">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -1307,6 +1355,30 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <!-- A FileProvider for passing the APK to be installed to the system. -->
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="com.example.android.apis.installapkprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <activity android:name=".content.InstallApkSessionApi"
+                android:label="@string/activity_install_apk_session_api"
+                android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+            <intent-filter>
+                <action android:exported="true"
+                        android:name="com.example.android.apis.content.SESSION_API_PACKAGE_INSTALLED" />
             </intent-filter>
         </activity>
 
@@ -2499,6 +2571,13 @@
         </activity>
 
         <activity android:name=".view.NumberPickerActivity" android:label="Views/Number Picker">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".view.OverlayWindowActivity" android:label="Views/Overlay Window">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.SAMPLE_CODE" />

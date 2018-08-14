@@ -53,35 +53,30 @@ record_types {
       kind: OffsetToTop
       mangled_component_name: ""
       component_value: 0
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: RTTI
       mangled_component_name: "_ZTIN5test210HelloAgainE"
       component_value: 0
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: FunctionPointer
       mangled_component_name: "_ZN5test210HelloAgain5againEv"
       component_value: 0
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: CompleteDtorPointer
       mangled_component_name: "_ZN5test210HelloAgainD1Ev"
       component_value: 0
-      is_inlined: true
       is_pure: false
     }
     vtable_components {
       kind: DeletingDtorPointer
       mangled_component_name: "_ZN5test210HelloAgainD0Ev"
       component_value: 0
-      is_inlined: true
       is_pure: false
     }
   }
@@ -348,35 +343,30 @@ record_types {
       kind: OffsetToTop
       mangled_component_name: ""
       component_value: 0
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: RTTI
       mangled_component_name: "_ZTI8CPPHello"
       component_value: 0
-      is_inlined: false
       is_pure: false
     }
     vtable_components {
       kind: FunctionPointer
       mangled_component_name: "_ZN8CPPHello5againEv"
       component_value: 0
-      is_inlined: true
       is_pure: false
     }
     vtable_components {
       kind: CompleteDtorPointer
       mangled_component_name: "_ZN8CPPHelloD1Ev"
       component_value: 0
-      is_inlined: true
       is_pure: false
     }
     vtable_components {
       kind: DeletingDtorPointer
       mangled_component_name: "_ZN8CPPHelloD0Ev"
       component_value: 0
-      is_inlined: true
       is_pure: false
     }
   }

@@ -62,6 +62,12 @@
         instead of programmatically.</string>
     <string name="screen_orientation">Screen Orientation</string>
 
+    <string name="activity_picture_in_picture">App/Activity/Picture in Picture</string>
+    <string name="activity_max_aspect_ratio_square">App/Activity/Max Aspect Ratio/1:1</string>
+    <string name="activity_max_aspect_ratio_16to9">App/Activity/Max Aspect Ratio/16:9</string>
+    <string name="activity_max_aspect_ratio_any">App/Activity/Max Aspect Ratio/Any</string>
+    <string name="enter_picture_in_picture">Enter picture-in-picture mode</string>
+
     <string name="activity_translucent">App/Activity/Translucent</string>
     <string name="translucent_background">Example of how you can make an
             activity have a translucent background, compositing over
@@ -326,6 +332,7 @@
     <string name="start_service_background">Start Service Background</string>
     <string name="start_service_background_wakelock">Start Service Background w/Wakelock</string>
     <string name="start_service_foreground_2">Start Service Foreground 2</string>
+    <string name="start_service_foreground_2_alarm">Start Service Foreground 2 Via Alarm</string>
 
     <string name="activity_isolated_service_controller">App/Service/Isolated Service Controller</string>
     <string name="isolated_service_controller">This demonstrates the use of android:isolatedProcess
@@ -348,6 +355,7 @@
     <string name="alarm_controller">This demonstrates how to schedule and handle
         one-shot and repeating alarms.</string>
     <string name="one_shot_alarm">One Shot Alarm</string>
+    <string name="one_shot_while_idle_alarm">One Shot While-Idle Alarm</string>
     <string name="start_repeating_alarm">Start Repeating Alarm</string>
     <string name="stop_repeating_alarm">Stop Repeating Alarm</string>
     <string name="one_shot_scheduled">One-shot alarm will go off in 30 seconds based on
@@ -492,6 +500,7 @@
     <string name="activity_media_content_observer">Content/Provider/Media Content Observer</string>
 
     <string name="activity_install_apk">Content/Packages/Install Apk</string>
+    <string name="activity_install_apk_session_api">Content/Packages/Install Apk using Session API</string>
 
     <string name="ir_send">Send IR</string>
     <string name="ir_get_freqs">Get Carrier Frequencies</string>

@@ -690,7 +690,7 @@ public class GameView extends View {
                     255, 63, 255, 63,
                     0, 255, 0, 0);
 
-            canvas.save(Canvas.MATRIX_SAVE_FLAG);
+            canvas.save();
             canvas.translate(mPositionX, mPositionY);
             canvas.rotate(mHeadingAngle * TO_DEGREES);
             canvas.drawPath(mPath, mPaint);
