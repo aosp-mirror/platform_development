@@ -15,8 +15,8 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
 #pragma clang diagnostic ignored "-Wnested-anon-types"
-#include "proto/abi_dump.pb.h"
-#include "proto/abi_diff.pb.h"
+#include "abi_dump.pb.h"
+#include "abi_diff.pb.h"
 #pragma clang diagnostic pop
 
 #include <header_abi_util.h>
