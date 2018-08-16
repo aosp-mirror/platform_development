@@ -1,6 +1,6 @@
 syntax = "proto2";
 
-import "development/vndk/tools/header-checker/proto/abi_dump.proto";
+import "abi_dump.proto";
 
 package abi_diff;
 
