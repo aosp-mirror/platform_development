@@ -119,13 +119,11 @@ class ChangeList(object):
     """A ChangeList to be checked out."""
     # pylint: disable=too-few-public-methods,too-many-instance-attributes
 
-    def __init__(self, project, project_dir, fetch, commit_sha1, commit,
-                 change_list):
+    def __init__(self, project, fetch, commit_sha1, commit, change_list):
         """Initialize a ChangeList instance."""
         # pylint: disable=too-many-arguments
 
         self.project = project
-        self.project_dir = project_dir
         self.number = change_list['_number']
 
         self.fetch = fetch
@@ -183,7 +181,7 @@ def build_project_name_dir_dict(manifest_path):
     return project_dirs
 
 
-def group_and_sort_change_lists(change_lists, project_dirs):
+def group_and_sort_change_lists(change_lists):
     """Build a dict that maps projects to a list of topologically sorted change
     lists."""
 
@@ -199,7 +197,6 @@ def group_and_sort_change_lists(change_lists, project_dirs):
             raise ValueError('bad revision')
 
         project = change_list['project']
-        project_dir = project_dirs[project]
 
         project_changes = projects[project]
         if commit_sha1 in project_changes:
@@ -207,7 +204,7 @@ def group_and_sort_change_lists(change_lists, project_dirs):
                 commit_sha1, project))
 
         project_changes[commit_sha1] = ChangeList(
-            project, project_dir, fetch, commit_sha1, commit, change_list)
+            project, fetch, commit_sha1, commit, change_list)
 
     # Sort all change lists in a project in post ordering.
     def _sort_project_change_lists(changes):
@@ -300,12 +297,13 @@ def _main_bash(args):
     project_dirs = build_project_name_dir_dict(manifest_path)
 
     change_lists = _get_change_lists_from_args(args)
-    change_list_groups = group_and_sort_change_lists(change_lists, project_dirs)
+    change_list_groups = group_and_sort_change_lists(change_lists)
 
     for changes in change_list_groups:
         for change in changes:
+            project_dir = project_dirs.get(change.project, change.project)
             cmds = []
-            cmds.append(['pushd', change.project_dir])
+            cmds.append(['pushd', project_dir])
             cmds.extend(build_pull_commands(
                 change, branch_name, args.merge, args.pick))
             cmds.append(['popd'])
@@ -319,9 +317,16 @@ def _do_pull_change_lists_for_project(task):
     branch_name = task_opts['branch_name']
     merge_opt = task_opts['merge_opt']
     pick_opt = task_opts['pick_opt']
+    project_dirs = task_opts['project_dirs']
 
     for i, change in enumerate(changes):
-        cwd = change.project_dir
+        try:
+            cwd = project_dirs[change.project]
+        except KeyError:
+            err_msg = 'error: project "{}" cannot be found in manifest.xml\n'
+            err_msg = err_msg.format(change.project).encode('utf-8')
+            return (change, changes[i + 1:], [], err_msg)
+
         print(change.commit_sha1[0:10], i + 1, cwd)
         cmds = build_pull_commands(change, branch_name, merge_opt, pick_opt)
         for cmd in cmds:
@@ -360,13 +365,14 @@ def _main_pull(args):
 
     # Collect change lists
     change_lists = _get_change_lists_from_args(args)
-    change_list_groups = group_and_sort_change_lists(change_lists, project_dirs)
+    change_list_groups = group_and_sort_change_lists(change_lists)
 
     # Build the options list for tasks
     task_opts = {
         'branch_name': branch_name,
         'merge_opt': args.merge,
         'pick_opt': args.pick,
+        'project_dirs': project_dirs,
     }
 
     # Run the commands to pull the change lists
