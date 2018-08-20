@@ -14,6 +14,7 @@
 
 #include <abi_diff_helpers.h>
 #include <ir_representation.h>
+#include <ir_representation_json.h>
 #include <ir_representation_protobuf.h>
 
 #pragma clang diagnostic push
@@ -40,8 +41,9 @@ std::unique_ptr<IRDumper> IRDumper::CreateIRDumper(
   switch (text_format) {
     case TextFormatIR::ProtobufTextFormat:
       return std::make_unique<ProtobufIRDumper>(dump_path);
+    case TextFormatIR::Json:
+      return std::make_unique<JsonIRDumper>(dump_path);
     default:
-      // Nothing else is supported yet.
       llvm::errs() << "Text format not supported yet\n";
       return nullptr;
   }
