@@ -39,36 +39,6 @@ cc_defaults {
     },
 }
 
-cc_library_host_static {
-    name: "libheader-checker-proto",
-
-    srcs: [
-        "proto/abi_dump.proto",
-        "proto/abi_diff.proto",
-    ],
-
-    proto: {
-        export_proto_headers: true,
-        type: "full",
-    },
-
-    cflags: [
-        "-Wall",
-        "-Werror",
-        "-Wcast-qual",
-        "-Wno-long-long",
-        "-Wno-unused-parameter",
-    ],
-
-    export_include_dirs: ["."],
-
-    target: {
-        windows: {
-            enabled: false,
-        },
-    },
-}
-
 cc_binary_host {
     name: "header-abi-dumper",
 
