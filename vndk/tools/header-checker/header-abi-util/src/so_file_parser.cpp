@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <header_abi_util.h>
+#include <ir_representation.h>
 
 #include <llvm/Object/ELFObjectFile.h>
 #include <llvm/Object/Binary.h>
@@ -44,24 +45,34 @@ static inline T UnWrap(llvm::Expected<T> ValueOrError) {
 }
 
 template<typename T>
-const std::set<std::string> &ELFSoFileParser<T>::GetFunctions() const {
+const std::map<std::string, abi_util::ElfFunctionIR> &
+ELFSoFileParser<T>::GetFunctions() const {
   return functions_;
 }
 
 template<typename T>
-const std::set<std::string> &ELFSoFileParser<T>::GetGlobVars() const {
+const std::map<std::string, abi_util::ElfObjectIR> &
+ELFSoFileParser<T>::GetGlobVars() const {
   return globvars_;
 }
 
 template<typename T>
 bool ELFSoFileParser<T>::IsSymbolExported(const Elf_Sym *elf_sym) const {
-
   unsigned char visibility = elf_sym->getVisibility();
   unsigned char binding = elf_sym->getBinding();
-
   return (binding == STB_GLOBAL || binding == STB_WEAK) &&
-      (visibility == STV_DEFAULT ||
-       visibility == STV_PROTECTED);
+         (visibility == STV_DEFAULT || visibility == STV_PROTECTED);
+}
+
+static abi_util::ElfSymbolIR::ElfSymbolBinding
+LLVMToIRSymbolBinding(unsigned char binding) {
+  switch (binding) {
+    case STB_GLOBAL:
+      return abi_util::ElfSymbolIR::ElfSymbolBinding::Global;
+    case STB_WEAK:
+      return abi_util::ElfSymbolIR::ElfSymbolBinding::Weak;
+  }
+  assert(0);
 }
 
 template<typename T>
@@ -74,12 +85,15 @@ void ELFSoFileParser<T>::GetSymbols() {
     if (!IsSymbolExported(elf_sym) || elf_sym->isUndefined()) {
       continue;
     }
+    abi_util::ElfSymbolIR::ElfSymbolBinding symbol_binding =
+        LLVMToIRSymbolBinding(elf_sym->getBinding());
     llvm::object::SymbolRef::Type type = UnWrap(symbol_it.getType());
     std::string symbol_name = UnWrap(symbol_it.getName());
     if (type == llvm::object::SymbolRef::Type::ST_Function) {
-      functions_.insert(symbol_name);
+      functions_.emplace(symbol_name,
+                         ElfFunctionIR(symbol_name, symbol_binding));
     } else if (type == llvm::object::SymbolRef::Type::ST_Data) {
-      globvars_.insert(symbol_name);
+      globvars_.emplace(symbol_name, ElfObjectIR(symbol_name, symbol_binding));
     }
   }
 }
