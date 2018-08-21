@@ -410,7 +410,6 @@ development/samples/LceDemo                    samples/${PLATFORM_NAME}/legacy/L
 development/samples/LunarLander                samples/${PLATFORM_NAME}/legacy/LunarLander
 development/samples/MultiResolution            samples/${PLATFORM_NAME}/legacy/MultiResolution
 development/samples/NotePad                    samples/${PLATFORM_NAME}/legacy/NotePad
-development/samples/RandomMusicPlayer          samples/${PLATFORM_NAME}/legacy/RandomMusicPlayer
 development/samples/SpellChecker/SampleSpellCheckerService samples/${PLATFORM_NAME}/legacy/SpellChecker/SampleSpellCheckerService
 development/samples/SpellChecker/HelloSpellChecker         samples/${PLATFORM_NAME}/legacy/SpellChecker/HelloSpellChecker
 development/samples/SampleSyncAdapter          samples/${PLATFORM_NAME}/legacy/SampleSyncAdapter
