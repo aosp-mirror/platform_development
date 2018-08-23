@@ -35,6 +35,3 @@ make -j vndk dist TARGET_PRODUCT=aosp_x86
 
 echo "-----Generating VNDK snapshot for x86, 32-bit binder"
 make -j vndk dist TARGET_PRODUCT=aosp_x86_ab
-
-echo "-----Running tests"
-source development/vndk/snapshot/test.sh all
