@@ -84,6 +84,15 @@ enum LinkableMessageKind {
   GlobalVarKind
 };
 
+template <typename K, typename V>
+std::map<V, K> CreateInverseMap(const std::map<K, V> &m) {
+  std::map<V, K> inverse_map;
+  for (auto it : m) {
+    inverse_map[it.second] = it.first;
+  }
+  return inverse_map;
+}
+
 class LinkableMessageIR {
  public:
   const std::string &GetLinkerSetKey() const {
@@ -1065,6 +1074,9 @@ class TextFormatToIRReader {
     augend->insert(std::make_move_iterator(addend.begin()),
                    std::make_move_iterator(addend.end()));
   }
+
+  bool IsLinkableMessageInExportedHeaders(
+      const LinkableMessageIR *linkable_message) const;
 
   AbiElementList<RecordTypeIR> record_types_list_;
   AbiElementMap<FunctionIR> functions_;
