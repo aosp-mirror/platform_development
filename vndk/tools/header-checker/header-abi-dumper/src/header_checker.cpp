@@ -55,6 +55,7 @@ static llvm::cl::opt<abi_util::TextFormatIR> text_format(
     "text-format", llvm::cl::desc("Specify text format of abi dump"),
     llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
                                 "ProtobufTextFormat", "ProtobufTextFormat"),
+                     clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON"),
                      clEnumValEnd),
     llvm::cl::init(abi_util::TextFormatIR::ProtobufTextFormat),
     llvm::cl::cat(header_checker_category));

@@ -39,6 +39,7 @@ using AbiElementList = std::list<T>;
 
 enum TextFormatIR {
   ProtobufTextFormat = 0,
+  Json = 1,
 };
 
 enum CompatibilityStatusIR {
