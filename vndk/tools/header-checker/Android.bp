@@ -60,6 +60,7 @@ cc_binary_host {
     static_libs: [
         "libheader-abi-util",
         "libheader-checker-proto",
+        "libjsoncpp",
         "libclangToolingCore",
         "libclangTooling",
         "libclangFrontendTool",
@@ -97,6 +98,7 @@ cc_defaults {
     static_libs: [
         "libheader-abi-util",
         "libheader-checker-proto",
+        "libjsoncpp",
         "libLLVMObject",
         "libLLVMBitReader",
         "libLLVMMC",
@@ -162,6 +164,7 @@ cc_library_host_static {
         "header-abi-util/src/abi_diff_helpers.cpp",
         "header-abi-util/src/collect_exported_headers.cpp",
         "header-abi-util/src/ir_representation.cpp",
+        "header-abi-util/src/ir_representation_json.cpp",
         "header-abi-util/src/ir_representation_protobuf.cpp",
         "header-abi-util/src/so_file_parser.cpp",
         "header-abi-util/src/version_script_parser.cpp",
@@ -169,6 +172,7 @@ cc_library_host_static {
 
     static_libs: [
         "libheader-checker-proto",
+        "libjsoncpp",
     ],
 
     shared_libs: [
