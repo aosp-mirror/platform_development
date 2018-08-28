@@ -18,7 +18,7 @@
 # Platform Tools Component
 ##############################################################################
 
-lib/libc++.dylib                                      strip platform-tools/lib/libc++.dylib
+lib64/libc++.dylib                                      strip platform-tools/lib64/libc++.dylib
 
 ##############################################################################
 # Build Tools Component
