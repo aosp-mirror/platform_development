@@ -1187,13 +1187,13 @@ stack:
          0000007f6e605170  000000000000001a  
          0000007f6e605178  0000000000000001  
          0000007f6e605180  0000007f834c7000  [anon:libc_malloc]
-         0000007f6e605188  0000000012d70700  /dev/ashmem/dalvik-main space (deleted)
-         0000007f6e605190  0000000012d60450  /dev/ashmem/dalvik-main space (deleted)
+         0000007f6e605188  0000000012d70700  [anon:dalvik-main space]
+         0000007f6e605190  0000000012d60450  [anon:dalvik-main space]
          0000007f6e605198  0000000000000000  
          0000007f6e6051a0  00000000704e2bc8  /data/dalvik-cache/arm64/system@framework@boot.art
-         0000007f6e6051a8  0000000012d60450  /dev/ashmem/dalvik-main space (deleted)
-         0000007f6e6051b0  0000000012d60470  /dev/ashmem/dalvik-main space (deleted)
-         0000007f6e6051b8  0000000012d70700  /dev/ashmem/dalvik-main space (deleted)
+         0000007f6e6051a8  0000000012d60450  [anon:dalvik-main space]
+         0000007f6e6051b0  0000000012d60470  [anon:dalvik-main space]
+         0000007f6e6051b8  0000000012d70700  [anon:dalvik-main space]
          0000007f6e6051c0  00000000704e2f88  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f6e6051c8  0000000073defb94  /data/dalvik-cache/arm64/system@framework@boot.oat
          0000007f6e6051d0  0000007f6e605860  [stack:9188]
@@ -1201,42 +1201,42 @@ stack:
          0000007f6e6051e0  0000000000000014  
          0000007f6e6051e8  0000007f830232a8  /system/lib64/libart.so (art::JniMethodStart(art::Thread*))
          0000007f6e6051f0  0000007f834c7000  [anon:libc_malloc]
-         0000007f6e6051f8  00000000771bd190  /dev/ashmem/dalvik-zygote space (deleted)
-         0000007f6e605200  0000000012d60330  /dev/ashmem/dalvik-main space (deleted)
+         0000007f6e6051f8  00000000771bd190  [anon:dalvik-zygote space]
+         0000007f6e605200  0000000012d60330  [anon:dalvik-main space]
          0000007f6e605208  0000000000000000  
-         0000007f6e605210  0000000012d61200  /dev/ashmem/dalvik-main space (deleted)
-         0000007f6e605218  0000000012d59280  /dev/ashmem/dalvik-main space (deleted)
-         0000007f6e605220  0000000012d59280  /dev/ashmem/dalvik-main space (deleted)
+         0000007f6e605210  0000000012d61200  [anon:dalvik-main space]
+         0000007f6e605218  0000000012d59280  [anon:dalvik-main space]
+         0000007f6e605220  0000000012d59280  [anon:dalvik-main space]
          0000007f6e605228  0000000073df5ffc  /data/dalvik-cache/arm64/system@framework@boot.oat
          0000007f6e605230  00000000704e4fc8  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f6e605238  0000000070ffa818  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f6e605240  0000000000430000  
          0000007f6e605248  0000000000550000  
          0000007f6e605250  0000000100430000  
-         0000007f6e605258  0000000012d60450  /dev/ashmem/dalvik-main space (deleted)
+         0000007f6e605258  0000000012d60450  [anon:dalvik-main space]
     #00  0000007f6e605260  0000000070faec98  /data/dalvik-cache/arm64/system@framework@boot.art
          ........  ........
     #01  0000007f6e605260  0000000070faec98  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f6e605268  0000000100000000  
          0000007f6e605270  0000000070e66cb8  /data/dalvik-cache/arm64/system@framework@boot.art
-         0000007f6e605278  0000000012d70680  /dev/ashmem/dalvik-main space (deleted)
-         0000007f6e605280  0000000012d64330  /dev/ashmem/dalvik-main space (deleted)
+         0000007f6e605278  0000000012d70680  [anon:dalvik-main space]
+         0000007f6e605280  0000000012d64330  [anon:dalvik-main space]
          0000007f6e605288  0000000070ffa218  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f6e605290  00000000705099c8  /data/dalvik-cache/arm64/system@framework@boot.art
-         0000007f6e605298  00000000771bd190  /dev/ashmem/dalvik-zygote space (deleted)
-         0000007f6e6052a0  0000000012d60330  /dev/ashmem/dalvik-main space (deleted)
+         0000007f6e605298  00000000771bd190  [anon:dalvik-zygote space]
+         0000007f6e6052a0  0000000012d60330  [anon:dalvik-main space]
          0000007f6e6052a8  0000000000000000  
-         0000007f6e6052b0  0000000012d61200  /dev/ashmem/dalvik-main space (deleted)
-         0000007f6e6052b8  0000000012d59280  /dev/ashmem/dalvik-main space (deleted)
-         0000007f6e6052c0  0000000012d59280  /dev/ashmem/dalvik-main space (deleted)
+         0000007f6e6052b0  0000000012d61200  [anon:dalvik-main space]
+         0000007f6e6052b8  0000000012d59280  [anon:dalvik-main space]
+         0000007f6e6052c0  0000000012d59280  [anon:dalvik-main space]
          0000007f6e6052c8  0000000000000000  
          0000007f6e6052d0  0000007f6e605860  [stack:9188]
          0000007f6e6052d8  0000000073f54c54  /data/dalvik-cache/arm64/system@framework@boot.oat
          0000007f6e6052e0  00000000705099c8  /data/dalvik-cache/arm64/system@framework@boot.art
-         0000007f6e6052e8  00000000771bd190  /dev/ashmem/dalvik-zygote space (deleted)
-         0000007f6e6052f0  0000000012d60330  /dev/ashmem/dalvik-main space (deleted)
+         0000007f6e6052e8  00000000771bd190  [anon:dalvik-zygote space]
+         0000007f6e6052f0  0000000012d60330  [anon:dalvik-main space]
          0000007f6e6052f8  0000000070ffa218  /data/dalvik-cache/arm64/system@framework@boot.art
-         0000007f6e605300  0000000012d64330  /dev/ashmem/dalvik-main space (deleted)
+         0000007f6e605300  0000000012d64330  [anon:dalvik-main space]
          0000007f6e605308  00000000740ce098  /data/dalvik-cache/arm64/system@framework@boot.oat
          0000007f6e605310  0000007f70ffa218  
          0000007f6e605318  00000000703a9900  /data/dalvik-cache/arm64/system@framework@boot.art
@@ -1244,8 +1244,8 @@ stack:
          0000007f6e605328  000000000000001c  
          0000007f6e605330  0000000070ffa298  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f6e605338  0000000070535ac8  /data/dalvik-cache/arm64/system@framework@boot.art
-         0000007f6e605340  0000000012d60330  /dev/ashmem/dalvik-main space (deleted)
-         0000007f6e605348  0000000012d60330  /dev/ashmem/dalvik-main space (deleted)
+         0000007f6e605340  0000000012d60330  [anon:dalvik-main space]
+         0000007f6e605348  0000000012d60330  [anon:dalvik-main space]
          0000007f6e605350  0000000000000000  
          0000007f6e605358  00000000740ce1dc  /data/dalvik-cache/arm64/system@framework@boot.oat
 
@@ -1628,20 +1628,20 @@ memory near sp:
     0000007f6e605330 0000000070ffa298 0000000070535ac8  
 
 memory map: (fault address prefixed with --->)
-    0000000012c00000-0000000012e00fff rw-  2101248  /dev/ashmem/dalvik-main space (deleted)
-    0000000012e01000-0000000032bfffff ---  534769664  /dev/ashmem/dalvik-main space (deleted)
-    0000000032c00000-0000000032c00fff rw-     4096  /dev/ashmem/dalvik-main space (deleted)
-    0000000032c01000-0000000052bfffff ---  536866816  /dev/ashmem/dalvik-main space (deleted)
+    0000000012c00000-0000000012e00fff rw-  2101248  [anon:dalvik-main space]
+    0000000012e01000-0000000032bfffff ---  534769664  [anon:dalvik-main space]
+    0000000032c00000-0000000032c00fff rw-     4096  [anon:dalvik-main space]
+    0000000032c01000-0000000052bfffff ---  536866816  [anon:dalvik-main space]
     0000000070329000-0000000071098fff rw-  14090240  /data/dalvik-cache/arm64/system@framework@boot.art
     0000000071099000-0000000073bd2fff r--  45326336  /data/dalvik-cache/arm64/system@framework@boot.oat
     0000000073bd3000-00000000771bafff r-x  56524800  /data/dalvik-cache/arm64/system@framework@boot.oat
     00000000771bb000-00000000771bbfff rw-     4096  /data/dalvik-cache/arm64/system@framework@boot.oat
-    00000000771bc000-0000000078fe8fff rw-  31641600  /dev/ashmem/dalvik-zygote space (deleted)
-    0000000078fe9000-0000000078fe9fff rw-     4096  /dev/ashmem/dalvik-non moving space (deleted)
-    0000000078fea000-000000007900bfff rw-   139264  /dev/ashmem/dalvik-non moving space (deleted)
-    000000007900c000-000000007a9bcfff ---  26939392  /dev/ashmem/dalvik-non moving space (deleted)
-    000000007a9bd000-000000007b1bbfff rw-  8384512  /dev/ashmem/dalvik-non moving space (deleted)
-    000000007b1bc000-000000009b1bbfff rw-  536870912  /dev/ashmem/dalvik-large object space (deleted)
+    00000000771bc000-0000000078fe8fff rw-  31641600  [anon:dalvik-zygote space]
+    0000000078fe9000-0000000078fe9fff rw-     4096  [anon:dalvik-non moving space]
+    0000000078fea000-000000007900bfff rw-   139264  [anon:dalvik-non moving space]
+    000000007900c000-000000007a9bcfff ---  26939392  [anon:dalvik-non moving space]
+    000000007a9bd000-000000007b1bbfff rw-  8384512  [anon:dalvik-non moving space]
+    000000007b1bc000-000000009b1bbfff rw-  536870912  [anon:dalvik-large object space]
     0000005593b77000-0000005593b85fff r-x    61440  /system/bin/app_process64_xposed
     0000005593b95000-0000005593b96fff r--     8192  /system/bin/app_process64_xposed
     0000005593b97000-0000005593b97fff rw-     4096  /system/bin/app_process64_xposed
@@ -1658,8 +1658,8 @@ memory map: (fault address prefixed with --->)
     0000007f6f3bb000-0000007f6f492fff r--   884736  /data/dalvik-cache/arm64/system@priv-app@SecMediaProvider@SecMediaProvider.apk@classes.dex
     0000007f6f493000-0000007f6f5b4fff r-x  1187840  /data/dalvik-cache/arm64/system@priv-app@SecMediaProvider@SecMediaProvider.apk@classes.dex
     0000007f6f5b5000-0000007f6f5b5fff rw-     4096  /data/dalvik-cache/arm64/system@priv-app@SecMediaProvider@SecMediaProvider.apk@classes.dex
-    0000007f6f5b6000-0000007f6fdb5fff rw-  8388608  /dev/ashmem/dalvik-allocspace main rosalloc space mark-bitmap 3 (deleted)
-    0000007f6fdb6000-0000007f705b5fff rw-  8388608  /dev/ashmem/dalvik-allocspace main rosalloc space live-bitmap 3 (deleted)
+    0000007f6f5b6000-0000007f6fdb5fff rw-  8388608  [anon:dalvik-allocspace main rosalloc space mark-bitmap 3]
+    0000007f6fdb6000-0000007f705b5fff rw-  8388608  [anon:dalvik-allocspace main rosalloc space live-bitmap 3]
     0000007f705b6000-0000007f769b5fff ---  104857600  
     0000007f769b6000-0000007f769c2fff r-x    53248  /system/lib64/librs_jni.so
     0000007f769c3000-0000007f769d1fff ---    61440  
@@ -1920,7 +1920,7 @@ memory map: (fault address prefixed with --->)
     0000007f7c8e6000-0000007f7c8e6fff ---     4096  
     0000007f7c8e7000-0000007f7c8e7fff ---     4096  
     0000007f7c8e8000-0000007f7c9e3fff rw-  1032192  [stack:9181]
-    0000007f7c9e4000-0000007f7ca03fff rw-   131072  /dev/ashmem/dalvik-rosalloc page map (deleted)
+    0000007f7c9e4000-0000007f7ca03fff rw-   131072  [anon:dalvik-rosalloc page map]
     0000007f7ca04000-0000007f7ca60fff r--   380928  /data/dalvik-cache/arm64/system@framework@XposedBridge.jar@classes.dex (deleted)
     0000007f7ca61000-0000007f7cacafff r-x   434176  /data/dalvik-cache/arm64/system@framework@XposedBridge.jar@classes.dex (deleted)
     0000007f7cacb000-0000007f7cacbfff rw-     4096  /data/dalvik-cache/arm64/system@framework@XposedBridge.jar@classes.dex (deleted)
@@ -1930,31 +1930,31 @@ memory map: (fault address prefixed with --->)
     0000007f7dd2a000-0000007f7dd2cfff r--    12288  /system/lib64/libjavacore.so
     0000007f7dd2d000-0000007f7dd2ffff rw-    12288  /system/lib64/libjavacore.so
     0000007f7dd30000-0000007f7dd30fff rw-     4096  
-    0000007f7dd31000-0000007f7de8efff rw-  1433600  /dev/ashmem/dalvik-indirect ref table (deleted)
-    0000007f7de8f000-0000007f7dfecfff rw-  1433600  /dev/ashmem/dalvik-indirect ref table (deleted)
-    0000007f7dfed000-0000007f7efeefff rw-  16785408  /dev/ashmem/dalvik-live stack (deleted)
-    0000007f7efef000-0000007f7fff0fff rw-  16785408  /dev/ashmem/dalvik-allocation stack (deleted)
-    0000007f7fff1000-0000007f80070fff rw-   524288  /dev/ashmem/dalvik-mark stack (deleted)
-    0000007f80071000-0000007f80d7cfff rw-  13680640  /dev/ashmem/dalvik-card table (deleted)
-    0000007f80d7d000-0000007f80e7cfff rw-  1048576  /dev/ashmem/dalvik-large object free list space allocation info map (deleted)
-    0000007f80e7d000-0000007f8167cfff rw-  8388608  /dev/ashmem/dalvik-allocspace main rosalloc space 1 mark-bitmap 2 (deleted)
-    0000007f8167d000-0000007f81e7cfff rw-  8388608  /dev/ashmem/dalvik-allocspace main rosalloc space 1 live-bitmap 2 (deleted)
+    0000007f7dd31000-0000007f7de8efff rw-  1433600  [anon:dalvik-indirect ref table]
+    0000007f7de8f000-0000007f7dfecfff rw-  1433600  [anon:dalvik-indirect ref table]
+    0000007f7dfed000-0000007f7efeefff rw-  16785408  [anon:dalvik-live stack]
+    0000007f7efef000-0000007f7fff0fff rw-  16785408  [anon:dalvik-allocation stack]
+    0000007f7fff1000-0000007f80070fff rw-   524288  [anon:dalvik-mark stack]
+    0000007f80071000-0000007f80d7cfff rw-  13680640  [anon:dalvik-card table]
+    0000007f80d7d000-0000007f80e7cfff rw-  1048576  [anon:dalvik-large object free list space allocation info map]
+    0000007f80e7d000-0000007f8167cfff rw-  8388608  [anon:dalvik-allocspace main rosalloc space 1 mark-bitmap 2]
+    0000007f8167d000-0000007f81e7cfff rw-  8388608  [anon:dalvik-allocspace main rosalloc space 1 live-bitmap 2]
     0000007f81f43000-0000007f81f44fff rw-     8192  
-    0000007f81f45000-0000007f81f48fff rw-    16384  /dev/ashmem/dalvik-indirect ref table (deleted)
+    0000007f81f45000-0000007f81f48fff rw-    16384  [anon:dalvik-indirect ref table]
     0000007f81f49000-0000007f81f4cfff rw-    16384  
-    0000007f81f4d000-0000007f81f50fff rw-    16384  /dev/ashmem/dalvik-indirect ref table (deleted)
-    0000007f81f51000-0000007f81f54fff rw-    16384  /dev/ashmem/dalvik-indirect ref table (deleted)
+    0000007f81f4d000-0000007f81f50fff rw-    16384  [anon:dalvik-indirect ref table]
+    0000007f81f51000-0000007f81f54fff rw-    16384  [anon:dalvik-indirect ref table]
     0000007f81f55000-0000007f81f58fff rw-    16384  
     0000007f81f59000-0000007f81f59fff ---     4096  
     0000007f81f5a000-0000007f81f5afff ---     4096  
     0000007f81f5b000-0000007f8205cfff rw-  1056768  [stack:9180]
-    0000007f8205d000-0000007f82060fff rw-    16384  /dev/ashmem/dalvik-indirect ref table (deleted)
+    0000007f8205d000-0000007f82060fff rw-    16384  [anon:dalvik-indirect ref table]
     0000007f82061000-0000007f8215efff r--  1040384  /dev/binder
     0000007f8215f000-0000007f82160fff rw-     8192  
     0000007f82161000-0000007f82161fff ---     4096  
     0000007f82162000-0000007f82162fff ---     4096  
     0000007f82163000-0000007f82264fff rw-  1056768  [stack:9179]
-    0000007f82265000-0000007f82268fff rw-    16384  /dev/ashmem/dalvik-indirect ref table (deleted)
+    0000007f82265000-0000007f82268fff rw-    16384  [anon:dalvik-indirect ref table]
     0000007f82269000-0000007f82269fff ---     4096  
     0000007f8226a000-0000007f8226afff ---     4096  
     0000007f8226b000-0000007f8236cfff rw-  1056768  [stack:9178]
@@ -1962,50 +1962,50 @@ memory map: (fault address prefixed with --->)
     0000007f823d5000-0000007f823e3fff ---    61440  
     0000007f823e4000-0000007f823e4fff r--     4096  /system/lib64/libknoxvpnfdsender.so
     0000007f823e5000-0000007f823e5fff rw-     4096  /system/lib64/libknoxvpnfdsender.so
-    0000007f823e7000-0000007f823eafff rw-    16384  /dev/ashmem/dalvik-indirect ref table (deleted)
+    0000007f823e7000-0000007f823eafff rw-    16384  [anon:dalvik-indirect ref table]
     0000007f823eb000-0000007f823ecfff rw-     8192  
-    0000007f823ed000-0000007f823f0fff rw-    16384  /dev/ashmem/dalvik-indirect ref table (deleted)
+    0000007f823ed000-0000007f823f0fff rw-    16384  [anon:dalvik-indirect ref table]
     0000007f823f1000-0000007f823f2fff rw-     8192  
-    0000007f823f3000-0000007f823f6fff rw-    16384  /dev/ashmem/dalvik-indirect ref table (deleted)
+    0000007f823f3000-0000007f823f6fff rw-    16384  [anon:dalvik-indirect ref table]
     0000007f823f7000-0000007f823f8fff rw-     8192  
-    0000007f823f9000-0000007f823fcfff rw-    16384  /dev/ashmem/dalvik-indirect ref table (deleted)
+    0000007f823f9000-0000007f823fcfff rw-    16384  [anon:dalvik-indirect ref table]
     0000007f823fd000-0000007f823fefff rw-     8192  
     0000007f823ff000-0000007f82406fff rw-    32768  /data/data/com.android.providers.media/databases/external.db-shm
     0000007f82407000-0000007f82419fff r--    77824  /system/priv-app/SecMediaProvider/SecMediaProvider.apk
     0000007f8241a000-0000007f8241afff r--     4096  /data/dalvik-cache/arm64/system@priv-app@SecMediaProvider@SecMediaProvider.apk@classes.dex
     0000007f8241b000-0000007f8241bfff r--     4096  /system/priv-app/SecMediaProvider/SecMediaProvider.apk
     0000007f8241c000-0000007f8246cfff r--   331776  /system/priv-app/SecDownloadProvider/SecDownloadProvider.apk
-    0000007f8246d000-0000007f82470fff rw-    16384  /dev/ashmem/dalvik-indirect ref table (deleted)
+    0000007f8246d000-0000007f82470fff rw-    16384  [anon:dalvik-indirect ref table]
     0000007f82471000-0000007f82471fff ---     4096  
     0000007f82472000-0000007f82472fff ---     4096  
     0000007f82473000-0000007f8256efff rw-  1032192  [stack:9176]
     0000007f8256f000-0000007f8256ffff ---     4096  
     0000007f82570000-0000007f82570fff ---     4096  
     0000007f82571000-0000007f8266cfff rw-  1032192  [stack:9175]
-    0000007f8266d000-0000007f8266dfff rw-     4096  /dev/ashmem/dalvik-Heap thread pool worker thread 6 (deleted)
-    0000007f8266e000-0000007f8266efff ---     4096  /dev/ashmem/dalvik-Heap thread pool worker thread 6 (deleted)
-    0000007f8266f000-0000007f8276cfff rw-  1040384  /dev/ashmem/dalvik-Heap thread pool worker thread 6 (deleted)
-    0000007f8276d000-0000007f8276dfff rw-     4096  /dev/ashmem/dalvik-Heap thread pool worker thread 5 (deleted)
-    0000007f8276e000-0000007f8276efff ---     4096  /dev/ashmem/dalvik-Heap thread pool worker thread 5 (deleted)
-    0000007f8276f000-0000007f8286cfff rw-  1040384  /dev/ashmem/dalvik-Heap thread pool worker thread 5 (deleted)
-    0000007f8286d000-0000007f8286dfff rw-     4096  /dev/ashmem/dalvik-Heap thread pool worker thread 4 (deleted)
-    0000007f8286e000-0000007f8286efff ---     4096  /dev/ashmem/dalvik-Heap thread pool worker thread 4 (deleted)
-    0000007f8286f000-0000007f8296cfff rw-  1040384  /dev/ashmem/dalvik-Heap thread pool worker thread 4 (deleted)
-    0000007f8296d000-0000007f8296dfff rw-     4096  /dev/ashmem/dalvik-Heap thread pool worker thread 3 (deleted)
-    0000007f8296e000-0000007f8296efff ---     4096  /dev/ashmem/dalvik-Heap thread pool worker thread 3 (deleted)
-    0000007f8296f000-0000007f82a6cfff rw-  1040384  /dev/ashmem/dalvik-Heap thread pool worker thread 3 (deleted)
-    0000007f82a6d000-0000007f82a6dfff rw-     4096  /dev/ashmem/dalvik-Heap thread pool worker thread 2 (deleted)
-    0000007f82a6e000-0000007f82a6efff ---     4096  /dev/ashmem/dalvik-Heap thread pool worker thread 2 (deleted)
-    0000007f82a6f000-0000007f82b6cfff rw-  1040384  /dev/ashmem/dalvik-Heap thread pool worker thread 2 (deleted)
-    0000007f82b6d000-0000007f82b6dfff rw-     4096  /dev/ashmem/dalvik-Heap thread pool worker thread 1 (deleted)
-    0000007f82b6e000-0000007f82b6efff ---     4096  /dev/ashmem/dalvik-Heap thread pool worker thread 1 (deleted)
-    0000007f82b6f000-0000007f82c6cfff rw-  1040384  /dev/ashmem/dalvik-Heap thread pool worker thread 1 (deleted)
-    0000007f82c6d000-0000007f82c6dfff rw-     4096  /dev/ashmem/dalvik-Heap thread pool worker thread 0 (deleted)
-    0000007f82c6e000-0000007f82c6efff ---     4096  /dev/ashmem/dalvik-Heap thread pool worker thread 0 (deleted)
-    0000007f82c6f000-0000007f82d6cfff rw-  1040384  /dev/ashmem/dalvik-Heap thread pool worker thread 0 (deleted)
-    0000007f82d6d000-0000007f82df4fff rw-   557056  /dev/ashmem/dalvik-allocspace non moving space mark-bitmap 4 (deleted)
-    0000007f82df5000-0000007f82e7cfff rw-   557056  /dev/ashmem/dalvik-allocspace non moving space live-bitmap 4 (deleted)
-    0000007f82e7d000-0000007f82f7cfff rw-  1048576  /dev/ashmem/dalvik-allocspace zygote / non moving space mark-bitmap 0 (deleted)
+    0000007f8266d000-0000007f8266dfff rw-     4096  [anon:dalvik-Heap thread pool worker thread 6]
+    0000007f8266e000-0000007f8266efff ---     4096  [anon:dalvik-Heap thread pool worker thread 6]
+    0000007f8266f000-0000007f8276cfff rw-  1040384  [anon:dalvik-Heap thread pool worker thread 6]
+    0000007f8276d000-0000007f8276dfff rw-     4096  [anon:dalvik-Heap thread pool worker thread 5]
+    0000007f8276e000-0000007f8276efff ---     4096  [anon:dalvik-Heap thread pool worker thread 5]
+    0000007f8276f000-0000007f8286cfff rw-  1040384  [anon:dalvik-Heap thread pool worker thread 5]
+    0000007f8286d000-0000007f8286dfff rw-     4096  [anon:dalvik-Heap thread pool worker thread 4]
+    0000007f8286e000-0000007f8286efff ---     4096  [anon:dalvik-Heap thread pool worker thread 4]
+    0000007f8286f000-0000007f8296cfff rw-  1040384  [anon:dalvik-Heap thread pool worker thread 4]
+    0000007f8296d000-0000007f8296dfff rw-     4096  [anon:dalvik-Heap thread pool worker thread 3]
+    0000007f8296e000-0000007f8296efff ---     4096  [anon:dalvik-Heap thread pool worker thread 3]
+    0000007f8296f000-0000007f82a6cfff rw-  1040384  [anon:dalvik-Heap thread pool worker thread 3]
+    0000007f82a6d000-0000007f82a6dfff rw-     4096  [anon:dalvik-Heap thread pool worker thread 2]
+    0000007f82a6e000-0000007f82a6efff ---     4096  [anon:dalvik-Heap thread pool worker thread 2]
+    0000007f82a6f000-0000007f82b6cfff rw-  1040384  [anon:dalvik-Heap thread pool worker thread 2]
+    0000007f82b6d000-0000007f82b6dfff rw-     4096  [anon:dalvik-Heap thread pool worker thread 1]
+    0000007f82b6e000-0000007f82b6efff ---     4096  [anon:dalvik-Heap thread pool worker thread 1]
+    0000007f82b6f000-0000007f82c6cfff rw-  1040384  [anon:dalvik-Heap thread pool worker thread 1]
+    0000007f82c6d000-0000007f82c6dfff rw-     4096  [anon:dalvik-Heap thread pool worker thread 0]
+    0000007f82c6e000-0000007f82c6efff ---     4096  [anon:dalvik-Heap thread pool worker thread 0]
+    0000007f82c6f000-0000007f82d6cfff rw-  1040384  [anon:dalvik-Heap thread pool worker thread 0]
+    0000007f82d6d000-0000007f82df4fff rw-   557056  [anon:dalvik-allocspace non moving space mark-bitmap 4]
+    0000007f82df5000-0000007f82e7cfff rw-   557056  [anon:dalvik-allocspace non moving space live-bitmap 4]
+    0000007f82e7d000-0000007f82f7cfff rw-  1048576  [anon:dalvik-allocspace zygote / non moving space mark-bitmap 0]
     0000007f82f7d000-0000007f833defff r-x  4595712  /system/lib64/libart.so
     0000007f833df000-0000007f833edfff ---    61440  
     0000007f833ee000-0000007f833fbfff r--    57344  /system/lib64/libart.so
@@ -2018,34 +2018,34 @@ memory map: (fault address prefixed with --->)
     0000007f83c0e000-0000007f83c1dfff ---    65536  
     0000007f83c1e000-0000007f83c1efff r--     4096  /system/lib64/libxposed_art.so
     0000007f83c1f000-0000007f83c1ffff rw-     4096  /system/lib64/libxposed_art.so
-    0000007f83c20000-0000007f83c23fff rw-    16384  /dev/ashmem/dalvik-indirect ref table (deleted)
+    0000007f83c20000-0000007f83c23fff rw-    16384  [anon:dalvik-indirect ref table]
     0000007f83c24000-0000007f83c24fff r--     4096  /data/dalvik-cache/arm64/system@priv-app@SecDownloadProvider@SecDownloadProvider.apk@classes.dex
     0000007f83c25000-0000007f83c25fff r--     4096  /system/priv-app/SecDownloadProvider/SecDownloadProvider.apk
-    0000007f83c26000-0000007f83c29fff rw-    16384  /dev/ashmem/dalvik-indirect ref table (deleted)
+    0000007f83c26000-0000007f83c29fff rw-    16384  [anon:dalvik-indirect ref table]
     0000007f83c2a000-0000007f83c2bfff rw-     8192  
-    0000007f83c2c000-0000007f83c2ffff rw-    16384  /dev/ashmem/dalvik-indirect ref table (deleted)
+    0000007f83c2c000-0000007f83c2ffff rw-    16384  [anon:dalvik-indirect ref table]
     0000007f83c30000-0000007f83c31fff rw-     8192  
     0000007f83c32000-0000007f83c32fff r--     4096  /data/dalvik-cache/arm64/system@framework@XposedBridge.jar@classes.dex (deleted)
     0000007f83c33000-0000007f83c33fff r--     4096  [anon:linker_alloc]
-    0000007f83c34000-0000007f83c37fff rw-    16384  /dev/ashmem/dalvik-indirect ref table (deleted)
-    0000007f83c38000-0000007f83c39fff rw-     8192  /dev/ashmem/dalvik-mark sweep sweep array free buffer (deleted)
-    0000007f83c3a000-0000007f83c3bfff rw-     8192  /dev/ashmem/dalvik-mark sweep sweep array free buffer (deleted)
-    0000007f83c3c000-0000007f83c3dfff rw-     8192  /dev/ashmem/dalvik-mark sweep sweep array free buffer (deleted)
-    0000007f83c3e000-0000007f83c3ffff rw-     8192  /dev/ashmem/dalvik-mark sweep sweep array free buffer (deleted)
-    0000007f83c40000-0000007f83c41fff rw-     8192  /dev/ashmem/dalvik-mark sweep sweep array free buffer (deleted)
-    0000007f83c42000-0000007f83c43fff rw-     8192  /dev/ashmem/dalvik-mark sweep sweep array free buffer (deleted)
-    0000007f83c44000-0000007f83c63fff rw-   131072  /dev/ashmem/dalvik-large marked objects (deleted)
-    0000007f83c64000-0000007f83c83fff rw-   131072  /dev/ashmem/dalvik-large live objects (deleted)
-    0000007f83c84000-0000007f83ca3fff rw-   131072  /dev/ashmem/dalvik-rosalloc page map (deleted)
-    0000007f83ca4000-0000007f83ca7fff rw-    16384  /dev/ashmem/dalvik-indirect ref table (deleted)
-    0000007f83ca8000-0000007f83cabfff rw-    16384  /dev/ashmem/dalvik-indirect ref table (deleted)
-    0000007f83cac000-0000007f83caffff rw-    16384  /dev/ashmem/dalvik-indirect ref table (deleted)
-    0000007f83cb0000-0000007f83cb3fff rw-    16384  /dev/ashmem/dalvik-indirect ref table (deleted)
-    0000007f83cb4000-0000007f83cb7fff rw-    16384  /dev/ashmem/dalvik-indirect ref table (deleted)
-    0000007f83cb8000-0000007f83cbbfff rw-    16384  /dev/ashmem/dalvik-indirect ref table (deleted)
-    0000007f83cbc000-0000007f83cbffff rw-    16384  /dev/ashmem/dalvik-indirect ref table (deleted)
+    0000007f83c34000-0000007f83c37fff rw-    16384  [anon:dalvik-indirect ref table]
+    0000007f83c38000-0000007f83c39fff rw-     8192  [anon:dalvik-mark sweep sweep array free buffer]
+    0000007f83c3a000-0000007f83c3bfff rw-     8192  [anon:dalvik-mark sweep sweep array free buffer]
+    0000007f83c3c000-0000007f83c3dfff rw-     8192  [anon:dalvik-mark sweep sweep array free buffer]
+    0000007f83c3e000-0000007f83c3ffff rw-     8192  [anon:dalvik-mark sweep sweep array free buffer]
+    0000007f83c40000-0000007f83c41fff rw-     8192  [anon:dalvik-mark sweep sweep array free buffer]
+    0000007f83c42000-0000007f83c43fff rw-     8192  [anon:dalvik-mark sweep sweep array free buffer]
+    0000007f83c44000-0000007f83c63fff rw-   131072  [anon:dalvik-large marked objects]
+    0000007f83c64000-0000007f83c83fff rw-   131072  [anon:dalvik-large live objects]
+    0000007f83c84000-0000007f83ca3fff rw-   131072  [anon:dalvik-rosalloc page map]
+    0000007f83ca4000-0000007f83ca7fff rw-    16384  [anon:dalvik-indirect ref table]
+    0000007f83ca8000-0000007f83cabfff rw-    16384  [anon:dalvik-indirect ref table]
+    0000007f83cac000-0000007f83caffff rw-    16384  [anon:dalvik-indirect ref table]
+    0000007f83cb0000-0000007f83cb3fff rw-    16384  [anon:dalvik-indirect ref table]
+    0000007f83cb4000-0000007f83cb7fff rw-    16384  [anon:dalvik-indirect ref table]
+    0000007f83cb8000-0000007f83cbbfff rw-    16384  [anon:dalvik-indirect ref table]
+    0000007f83cbc000-0000007f83cbffff rw-    16384  [anon:dalvik-indirect ref table]
     0000007f83cc0000-0000007f83cc3fff rw-    16384  
-    0000007f83cc4000-0000007f83dc3fff rw-  1048576  /dev/ashmem/dalvik-allocspace zygote / non moving space live-bitmap 0 (deleted)
+    0000007f83cc4000-0000007f83dc3fff rw-  1048576  [anon:dalvik-allocspace zygote / non moving space live-bitmap 0]
     0000007f83dc4000-0000007f83dc4fff r--     4096  /data/dalvik-cache/arm64/system@framework@boot.oat
     0000007f83dc5000-0000007f83dfafff r--   221184  /data/dalvik-cache/arm64/system@framework@boot.art
     0000007f83dfb000-0000007f83e04fff r-x    40960  /system/lib64/libbacktrace_libc++.so
@@ -2552,8 +2552,8 @@ stack:
          0000007fdbe906a0  0000000000000000  
          0000007fdbe906a8  0000000000000000  
          0000007fdbe906b0  0000000000000000  
-         0000007fdbe906b8  0000000012c26d20  /dev/ashmem/dalvik-main space (deleted)
-         0000007fdbe906c0  0000000012c0e850  /dev/ashmem/dalvik-main space (deleted)
+         0000007fdbe906b8  0000000012c26d20  [anon:dalvik-main space]
+         0000007fdbe906c0  0000000012c0e850  [anon:dalvik-main space]
          0000007fdbe906c8  0000000000000000  
          0000007fdbe906d0  00000000000026f7  
          0000007fdbe906d8  0000000000000000  
@@ -2565,11 +2565,11 @@ stack:
          0000007fdbe90708  0000000000550000  
          0000007fdbe90710  0000007f00550000  
          0000007fdbe90718  0000007f00430000  
-         0000007fdbe90720  0000000012c27370  /dev/ashmem/dalvik-main space (deleted)
+         0000007fdbe90720  0000000012c27370  [anon:dalvik-main space]
          0000007fdbe90728  0000000075ac0b30  /data/dalvik-cache/arm64/system@framework@boot.oat
          0000007fdbe90730  000000000000005d  
          0000007fdbe90738  83912a6d48ea586e  
-         0000007fdbe90740  0000000012c27370  /dev/ashmem/dalvik-main space (deleted)
+         0000007fdbe90740  0000000012c27370  [anon:dalvik-main space]
          0000007fdbe90748  0000000075ac0b44  /data/dalvik-cache/arm64/system@framework@boot.oat
          0000007fdbe90750  000000000000005d  
          0000007fdbe90758  0000000000550000  
@@ -2583,7 +2583,7 @@ stack:
          0000007fdbe90840  0000007f775141c0  [anon:libc_malloc]
          0000007fdbe90848  0000007f834953c0  [anon:libc_malloc]
          0000007fdbe90850  0000007f834ab000  [anon:libc_malloc]
-         0000007fdbe90858  0000000012d34580  /dev/ashmem/dalvik-main space (deleted)
+         0000007fdbe90858  0000000012d34580  [anon:dalvik-main space]
          0000007fdbe90860  000000007061e908  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007fdbe90868  0000000073bdd2e8  /data/dalvik-cache/arm64/system@framework@boot.oat
     #04  0000007fdbe90870  00000000000606b6  
@@ -2594,11 +2594,11 @@ stack:
          0000007fdbe90898  000000010000007f  
          0000007fdbe908a0  0000000970ee4990  
          0000007fdbe908a8  0000000000000001  
-         0000007fdbe908b0  0000000012c0e850  /dev/ashmem/dalvik-main space (deleted)
-         0000007fdbe908b8  0000000012d34580  /dev/ashmem/dalvik-main space (deleted)
+         0000007fdbe908b0  0000000012c0e850  [anon:dalvik-main space]
+         0000007fdbe908b8  0000000012d34580  [anon:dalvik-main space]
          0000007fdbe908c0  000000007061e908  /data/dalvik-cache/arm64/system@framework@boot.art
-         0000007fdbe908c8  0000000012c26d20  /dev/ashmem/dalvik-main space (deleted)
-         0000007fdbe908d0  0000000012c0e850  /dev/ashmem/dalvik-main space (deleted)
+         0000007fdbe908c8  0000000012c26d20  [anon:dalvik-main space]
+         0000007fdbe908d0  0000000012c0e850  [anon:dalvik-main space]
          0000007fdbe908d8  0000000000000000  
          0000007fdbe908e0  00000000000026f7  
          0000007fdbe908e8  0000000000000000  
@@ -2618,10 +2618,10 @@ stack:
          0000007fdbe90958  7fffffff000023ca  
          0000007fdbe90960  0000000000000000  
          0000007fdbe90968  000000007061d4c8  /data/dalvik-cache/arm64/system@framework@boot.art
-         0000007fdbe90970  0000000012c8ab20  /dev/ashmem/dalvik-main space (deleted)
+         0000007fdbe90970  0000000012c8ab20  [anon:dalvik-main space]
          0000007fdbe90978  0000000000000000  
          0000007fdbe90980  0000000000000000  
-         0000007fdbe90988  0000000012c26d20  /dev/ashmem/dalvik-main space (deleted)
+         0000007fdbe90988  0000000012c26d20  [anon:dalvik-main space]
 
 memory near x1:
     0000007fdbe90710 0000007f00550000 0000007f00430000  
@@ -3022,7 +3022,7 @@ backtrace:
 
 stack:
          0000007f82d6c900  0000007f834ce910  [anon:libc_malloc]
-         0000007f82d6c908  0000007f82d6cb60  /dev/ashmem/dalvik-Heap thread pool worker thread 0 (deleted)
+         0000007f82d6c908  0000007f82d6cb60  [anon:dalvik-Heap thread pool worker thread 0]
          0000007f82d6c910  0000007f77511140  [anon:libc_malloc]
          0000007f82d6c918  0000007f83294134  /system/lib64/libart.so (art::ThreadPool::GetTask(art::Thread*))
          0000007f82d6c920  0000007f8310265c  /system/lib64/libart.so (art::Task::Finalize())
@@ -3043,19 +3043,19 @@ stack:
          0000007f82d6c998  0000007f83455100  [anon:libc_malloc]
          0000007f82d6c9a0  0000000000430000  
          0000007f82d6c9a8  0043000000550000  
-         0000007f82d6c9b0  0000007f82d6ca60  /dev/ashmem/dalvik-Heap thread pool worker thread 0 (deleted)
+         0000007f82d6c9b0  0000007f82d6ca60  [anon:dalvik-Heap thread pool worker thread 0]
          0000007f82d6c9b8  0000007f83045808  /system/lib64/libart.so (art::Barrier::Wait(art::Thread*)+40)
          0000007f82d6c9c0  0000007f8348d6f0  [anon:libc_malloc]
          0000007f82d6c9c8  83912a6d48ea586e  
-         0000007f82d6c9d0  0000007f82d6ca60  /dev/ashmem/dalvik-Heap thread pool worker thread 0 (deleted)
+         0000007f82d6c9d0  0000007f82d6ca60  [anon:dalvik-Heap thread pool worker thread 0]
          0000007f82d6c9d8  0000007f83045824  /system/lib64/libart.so (art::Barrier::Wait(art::Thread*)+68)
-         0000007f82d6c9e0  0000007f82d6ca90  /dev/ashmem/dalvik-Heap thread pool worker thread 0 (deleted)
+         0000007f82d6c9e0  0000007f82d6ca90  [anon:dalvik-Heap thread pool worker thread 0]
          0000007f82d6c9e8  0000007f83294338  /system/lib64/libart.so (art::ThreadPoolWorker::Run()+128)
          0000007f82d6c9f0  0000007f8348d600  [anon:libc_malloc]
          0000007f82d6c9f8  83912a6d48ea586e  
-    #00  0000007f82d6ca00  0000007f82d6ca90  /dev/ashmem/dalvik-Heap thread pool worker thread 0 (deleted)
+    #00  0000007f82d6ca00  0000007f82d6ca90  [anon:dalvik-Heap thread pool worker thread 0]
          ........  ........
-    #01  0000007f82d6ca00  0000007f82d6ca90  /dev/ashmem/dalvik-Heap thread pool worker thread 0 (deleted)
+    #01  0000007f82d6ca00  0000007f82d6ca90  [anon:dalvik-Heap thread pool worker thread 0]
          0000007f82d6ca08  0000007f8329436c  /system/lib64/libart.so (art::ThreadPoolWorker::Run()+180)
          0000007f82d6ca10  0000007f8348d600  [anon:libc_malloc]
          0000007f82d6ca18  0000007f7c05a800  [anon:libc_malloc]
@@ -3073,19 +3073,19 @@ stack:
          0000007f82d6ca78  0000000000000000  
          0000007f82d6ca80  0000007f834ce910  [anon:libc_malloc]
          0000007f82d6ca88  83912a6d48ea586e  
-    #02  0000007f82d6ca90  0000007f82d6caf0  /dev/ashmem/dalvik-Heap thread pool worker thread 0 (deleted)
+    #02  0000007f82d6ca90  0000007f82d6caf0  [anon:dalvik-Heap thread pool worker thread 0]
          0000007f82d6ca98  0000007f83295120  /system/lib64/libart.so (art::ThreadPoolWorker::Callback(void*)+92)
          0000007f82d6caa0  0000007f77511140  [anon:libc_malloc]
          0000007f82d6caa8  0000007f83455100  [anon:libc_malloc]
          0000007f82d6cab0  0000007f834ce910  [anon:libc_malloc]
-         0000007f82d6cab8  0000007f82d6cb60  /dev/ashmem/dalvik-Heap thread pool worker thread 0 (deleted)
+         0000007f82d6cab8  0000007f82d6cb60  [anon:dalvik-Heap thread pool worker thread 0]
          0000007f82d6cac0  0000007f77511140  [anon:libc_malloc]
          0000007f82d6cac8  0000007f77511170  [anon:libc_malloc]
          0000007f82d6cad0  0000007f832950c4  /system/lib64/libart.so (art::ThreadPoolWorker::Callback(void*))
          0000007f82d6cad8  0000007f834ce980  [anon:libc_malloc]
          0000007f82d6cae0  0000007fdbe90368  [stack]
          0000007f82d6cae8  0000007f83373d40  /system/lib64/libart.so
-    #03  0000007f82d6caf0  0000007f82d6cb30  /dev/ashmem/dalvik-Heap thread pool worker thread 0 (deleted)
+    #03  0000007f82d6caf0  0000007f82d6cb30  [anon:dalvik-Heap thread pool worker thread 0]
          0000007f82d6caf8  0000007f87073324  /system/lib64/libc.so (__pthread_start(void*)+56)
          0000007f82d6cb00  0000007f834ce900  [anon:libc_malloc]
          0000007f82d6cb08  0000007f834ce980  [anon:libc_malloc]
@@ -3093,13 +3093,13 @@ stack:
          0000007f82d6cb18  0000007f83e20000  
          0000007f82d6cb20  0000007f00000000  
          0000007f82d6cb28  0000000000002000  
-    #04  0000007f82d6cb30  0000007f82d6cb50  /dev/ashmem/dalvik-Heap thread pool worker thread 0 (deleted)
+    #04  0000007f82d6cb30  0000007f82d6cb50  [anon:dalvik-Heap thread pool worker thread 0]
          0000007f82d6cb38  0000007f8706f708  /system/lib64/libc.so (__start_thread+20)
          0000007f82d6cb40  00000000000023ca  
          0000007f82d6cb48  0000007f87385e30  /system/bin/linker64
     #05  0000007f82d6cb50  0000000000000000  
          0000007f82d6cb58  0000000000000000  
-         0000007f82d6cb60  0000007f82d6cb60  /dev/ashmem/dalvik-Heap thread pool worker thread 0 (deleted)
+         0000007f82d6cb60  0000007f82d6cb60  [anon:dalvik-Heap thread pool worker thread 0]
          0000007f82d6cb68  0000007f834ce900  [anon:libc_malloc]
          0000007f82d6cb70  0000000000000000  
          0000007f82d6cb78  0000000000000000  
@@ -3493,7 +3493,7 @@ backtrace:
 
 stack:
          0000007f82c6c900  0000007f834cec10  [anon:libc_malloc]
-         0000007f82c6c908  0000007f82c6cb60  /dev/ashmem/dalvik-Heap thread pool worker thread 1 (deleted)
+         0000007f82c6c908  0000007f82c6cb60  [anon:dalvik-Heap thread pool worker thread 1]
          0000007f82c6c910  0000007f775ba280  [anon:libc_malloc]
          0000007f82c6c918  0000007f83294134  /system/lib64/libart.so (art::ThreadPool::GetTask(art::Thread*))
          0000007f82c6c920  0000007f8310265c  /system/lib64/libart.so (art::Task::Finalize())
@@ -3514,19 +3514,19 @@ stack:
          0000007f82c6c998  0000007f83455100  [anon:libc_malloc]
          0000007f82c6c9a0  0000000000430000  
          0000007f82c6c9a8  0043000000550000  
-         0000007f82c6c9b0  0000007f82c6ca60  /dev/ashmem/dalvik-Heap thread pool worker thread 1 (deleted)
+         0000007f82c6c9b0  0000007f82c6ca60  [anon:dalvik-Heap thread pool worker thread 1]
          0000007f82c6c9b8  0000007f83045808  /system/lib64/libart.so (art::Barrier::Wait(art::Thread*)+40)
          0000007f82c6c9c0  0000007f8348d6f0  [anon:libc_malloc]
          0000007f82c6c9c8  83912a6d48ea586e  
-         0000007f82c6c9d0  0000007f82c6ca60  /dev/ashmem/dalvik-Heap thread pool worker thread 1 (deleted)
+         0000007f82c6c9d0  0000007f82c6ca60  [anon:dalvik-Heap thread pool worker thread 1]
          0000007f82c6c9d8  0000007f83045824  /system/lib64/libart.so (art::Barrier::Wait(art::Thread*)+68)
-         0000007f82c6c9e0  0000007f82c6ca90  /dev/ashmem/dalvik-Heap thread pool worker thread 1 (deleted)
+         0000007f82c6c9e0  0000007f82c6ca90  [anon:dalvik-Heap thread pool worker thread 1]
          0000007f82c6c9e8  0000007f83294338  /system/lib64/libart.so (art::ThreadPoolWorker::Run()+128)
          0000007f82c6c9f0  0000007f8348d600  [anon:libc_malloc]
          0000007f82c6c9f8  83912a6d48ea586e  
-    #00  0000007f82c6ca00  0000007f82c6ca90  /dev/ashmem/dalvik-Heap thread pool worker thread 1 (deleted)
+    #00  0000007f82c6ca00  0000007f82c6ca90  [anon:dalvik-Heap thread pool worker thread 1]
          ........  ........
-    #01  0000007f82c6ca00  0000007f82c6ca90  /dev/ashmem/dalvik-Heap thread pool worker thread 1 (deleted)
+    #01  0000007f82c6ca00  0000007f82c6ca90  [anon:dalvik-Heap thread pool worker thread 1]
          0000007f82c6ca08  0000007f8329436c  /system/lib64/libart.so (art::ThreadPoolWorker::Run()+180)
          0000007f82c6ca10  0000007f8348d600  [anon:libc_malloc]
          0000007f82c6ca18  0000007f834ab800  [anon:libc_malloc]
@@ -3544,19 +3544,19 @@ stack:
          0000007f82c6ca78  0000000000000000  
          0000007f82c6ca80  0000007f834cec10  [anon:libc_malloc]
          0000007f82c6ca88  83912a6d48ea586e  
-    #02  0000007f82c6ca90  0000007f82c6caf0  /dev/ashmem/dalvik-Heap thread pool worker thread 1 (deleted)
+    #02  0000007f82c6ca90  0000007f82c6caf0  [anon:dalvik-Heap thread pool worker thread 1]
          0000007f82c6ca98  0000007f83295120  /system/lib64/libart.so (art::ThreadPoolWorker::Callback(void*)+92)
          0000007f82c6caa0  0000007f775ba280  [anon:libc_malloc]
          0000007f82c6caa8  0000007f83455100  [anon:libc_malloc]
          0000007f82c6cab0  0000007f834cec10  [anon:libc_malloc]
-         0000007f82c6cab8  0000007f82c6cb60  /dev/ashmem/dalvik-Heap thread pool worker thread 1 (deleted)
+         0000007f82c6cab8  0000007f82c6cb60  [anon:dalvik-Heap thread pool worker thread 1]
          0000007f82c6cac0  0000007f775ba280  [anon:libc_malloc]
          0000007f82c6cac8  0000007f775ba2b0  [anon:libc_malloc]
          0000007f82c6cad0  0000007f832950c4  /system/lib64/libart.so (art::ThreadPoolWorker::Callback(void*))
          0000007f82c6cad8  0000007f834cec80  [anon:libc_malloc]
          0000007f82c6cae0  0000007fdbe90368  [stack]
          0000007f82c6cae8  0000007f83373d40  /system/lib64/libart.so
-    #03  0000007f82c6caf0  0000007f82c6cb30  /dev/ashmem/dalvik-Heap thread pool worker thread 1 (deleted)
+    #03  0000007f82c6caf0  0000007f82c6cb30  [anon:dalvik-Heap thread pool worker thread 1]
          0000007f82c6caf8  0000007f87073324  /system/lib64/libc.so (__pthread_start(void*)+56)
          0000007f82c6cb00  0000007f834cec00  [anon:libc_malloc]
          0000007f82c6cb08  0000007f834cec80  [anon:libc_malloc]
@@ -3564,13 +3564,13 @@ stack:
          0000007f82c6cb18  0000007f83e1e000  
          0000007f82c6cb20  0000007f00000000  
          0000007f82c6cb28  0000000000002000  
-    #04  0000007f82c6cb30  0000007f82c6cb50  /dev/ashmem/dalvik-Heap thread pool worker thread 1 (deleted)
+    #04  0000007f82c6cb30  0000007f82c6cb50  [anon:dalvik-Heap thread pool worker thread 1]
          0000007f82c6cb38  0000007f8706f708  /system/lib64/libc.so (__start_thread+20)
          0000007f82c6cb40  00000000000023ca  
          0000007f82c6cb48  0000007f87385e30  /system/bin/linker64
     #05  0000007f82c6cb50  0000000000000000  
          0000007f82c6cb58  0000000000000000  
-         0000007f82c6cb60  0000007f82c6cb60  /dev/ashmem/dalvik-Heap thread pool worker thread 1 (deleted)
+         0000007f82c6cb60  0000007f82c6cb60  [anon:dalvik-Heap thread pool worker thread 1]
          0000007f82c6cb68  0000007f834cec00  [anon:libc_malloc]
          0000007f82c6cb70  0000000000000000  
          0000007f82c6cb78  0000000000000000  
@@ -3964,7 +3964,7 @@ backtrace:
 
 stack:
          0000007f82b6c900  0000007f834ce310  [anon:libc_malloc]
-         0000007f82b6c908  0000007f82b6cb60  /dev/ashmem/dalvik-Heap thread pool worker thread 2 (deleted)
+         0000007f82b6c908  0000007f82b6cb60  [anon:dalvik-Heap thread pool worker thread 2]
          0000007f82b6c910  0000007f775ba300  [anon:libc_malloc]
          0000007f82b6c918  0000007f83294134  /system/lib64/libart.so (art::ThreadPool::GetTask(art::Thread*))
          0000007f82b6c920  0000007f8310265c  /system/lib64/libart.so (art::Task::Finalize())
@@ -3985,19 +3985,19 @@ stack:
          0000007f82b6c998  0000007f83455100  [anon:libc_malloc]
          0000007f82b6c9a0  0000000000430000  
          0000007f82b6c9a8  0043000000550000  
-         0000007f82b6c9b0  0000007f82b6ca60  /dev/ashmem/dalvik-Heap thread pool worker thread 2 (deleted)
+         0000007f82b6c9b0  0000007f82b6ca60  [anon:dalvik-Heap thread pool worker thread 2]
          0000007f82b6c9b8  0000007f83045808  /system/lib64/libart.so (art::Barrier::Wait(art::Thread*)+40)
          0000007f82b6c9c0  0000007f8348d6f0  [anon:libc_malloc]
          0000007f82b6c9c8  83912a6d48ea586e  
-         0000007f82b6c9d0  0000007f82b6ca60  /dev/ashmem/dalvik-Heap thread pool worker thread 2 (deleted)
+         0000007f82b6c9d0  0000007f82b6ca60  [anon:dalvik-Heap thread pool worker thread 2]
          0000007f82b6c9d8  0000007f83045824  /system/lib64/libart.so (art::Barrier::Wait(art::Thread*)+68)
-         0000007f82b6c9e0  0000007f82b6ca90  /dev/ashmem/dalvik-Heap thread pool worker thread 2 (deleted)
+         0000007f82b6c9e0  0000007f82b6ca90  [anon:dalvik-Heap thread pool worker thread 2]
          0000007f82b6c9e8  0000007f83294338  /system/lib64/libart.so (art::ThreadPoolWorker::Run()+128)
          0000007f82b6c9f0  0000007f8348d600  [anon:libc_malloc]
          0000007f82b6c9f8  83912a6d48ea586e  
-    #00  0000007f82b6ca00  0000007f82b6ca90  /dev/ashmem/dalvik-Heap thread pool worker thread 2 (deleted)
+    #00  0000007f82b6ca00  0000007f82b6ca90  [anon:dalvik-Heap thread pool worker thread 2]
          ........  ........
-    #01  0000007f82b6ca00  0000007f82b6ca90  /dev/ashmem/dalvik-Heap thread pool worker thread 2 (deleted)
+    #01  0000007f82b6ca00  0000007f82b6ca90  [anon:dalvik-Heap thread pool worker thread 2]
          0000007f82b6ca08  0000007f8329436c  /system/lib64/libart.so (art::ThreadPoolWorker::Run()+180)
          0000007f82b6ca10  0000007f8348d600  [anon:libc_malloc]
          0000007f82b6ca18  0000007f7c05e800  [anon:libc_malloc]
@@ -4015,19 +4015,19 @@ stack:
          0000007f82b6ca78  0000000000000000  
          0000007f82b6ca80  0000007f834ce310  [anon:libc_malloc]
          0000007f82b6ca88  83912a6d48ea586e  
-    #02  0000007f82b6ca90  0000007f82b6caf0  /dev/ashmem/dalvik-Heap thread pool worker thread 2 (deleted)
+    #02  0000007f82b6ca90  0000007f82b6caf0  [anon:dalvik-Heap thread pool worker thread 2]
          0000007f82b6ca98  0000007f83295120  /system/lib64/libart.so (art::ThreadPoolWorker::Callback(void*)+92)
          0000007f82b6caa0  0000007f775ba300  [anon:libc_malloc]
          0000007f82b6caa8  0000007f83455100  [anon:libc_malloc]
          0000007f82b6cab0  0000007f834ce310  [anon:libc_malloc]
-         0000007f82b6cab8  0000007f82b6cb60  /dev/ashmem/dalvik-Heap thread pool worker thread 2 (deleted)
+         0000007f82b6cab8  0000007f82b6cb60  [anon:dalvik-Heap thread pool worker thread 2]
          0000007f82b6cac0  0000007f775ba300  [anon:libc_malloc]
          0000007f82b6cac8  0000007f775ba330  [anon:libc_malloc]
          0000007f82b6cad0  0000007f832950c4  /system/lib64/libart.so (art::ThreadPoolWorker::Callback(void*))
          0000007f82b6cad8  0000007f834ce380  [anon:libc_malloc]
          0000007f82b6cae0  0000007fdbe90368  [stack]
          0000007f82b6cae8  0000007f83373d40  /system/lib64/libart.so
-    #03  0000007f82b6caf0  0000007f82b6cb30  /dev/ashmem/dalvik-Heap thread pool worker thread 2 (deleted)
+    #03  0000007f82b6caf0  0000007f82b6cb30  [anon:dalvik-Heap thread pool worker thread 2]
          0000007f82b6caf8  0000007f87073324  /system/lib64/libc.so (__pthread_start(void*)+56)
          0000007f82b6cb00  0000007f834ce300  [anon:libc_malloc]
          0000007f82b6cb08  0000007f834ce380  [anon:libc_malloc]
@@ -4035,13 +4035,13 @@ stack:
          0000007f82b6cb18  0000007f83e18000  
          0000007f82b6cb20  0000007f00000000  
          0000007f82b6cb28  0000000000002000  
-    #04  0000007f82b6cb30  0000007f82b6cb50  /dev/ashmem/dalvik-Heap thread pool worker thread 2 (deleted)
+    #04  0000007f82b6cb30  0000007f82b6cb50  [anon:dalvik-Heap thread pool worker thread 2]
          0000007f82b6cb38  0000007f8706f708  /system/lib64/libc.so (__start_thread+20)
          0000007f82b6cb40  00000000000023ca  
          0000007f82b6cb48  0000007f87385e30  /system/bin/linker64
     #05  0000007f82b6cb50  0000000000000000  
          0000007f82b6cb58  0000000000000000  
-         0000007f82b6cb60  0000007f82b6cb60  /dev/ashmem/dalvik-Heap thread pool worker thread 2 (deleted)
+         0000007f82b6cb60  0000007f82b6cb60  [anon:dalvik-Heap thread pool worker thread 2]
          0000007f82b6cb68  0000007f834ce300  [anon:libc_malloc]
          0000007f82b6cb70  0000000000000000  
          0000007f82b6cb78  0000000000000000  
@@ -4435,7 +4435,7 @@ backtrace:
 
 stack:
          0000007f82a6c900  0000007f834ce610  [anon:libc_malloc]
-         0000007f82a6c908  0000007f82a6cb60  /dev/ashmem/dalvik-Heap thread pool worker thread 3 (deleted)
+         0000007f82a6c908  0000007f82a6cb60  [anon:dalvik-Heap thread pool worker thread 3]
          0000007f82a6c910  0000007f775ba440  [anon:libc_malloc]
          0000007f82a6c918  0000007f83294134  /system/lib64/libart.so (art::ThreadPool::GetTask(art::Thread*))
          0000007f82a6c920  0000007f8310265c  /system/lib64/libart.so (art::Task::Finalize())
@@ -4456,19 +4456,19 @@ stack:
          0000007f82a6c998  0000007f83455100  [anon:libc_malloc]
          0000007f82a6c9a0  0000000000430000  
          0000007f82a6c9a8  0043000000550000  
-         0000007f82a6c9b0  0000007f82a6ca60  /dev/ashmem/dalvik-Heap thread pool worker thread 3 (deleted)
+         0000007f82a6c9b0  0000007f82a6ca60  [anon:dalvik-Heap thread pool worker thread 3]
          0000007f82a6c9b8  0000007f83045808  /system/lib64/libart.so (art::Barrier::Wait(art::Thread*)+40)
          0000007f82a6c9c0  0000007f8348d6f0  [anon:libc_malloc]
          0000007f82a6c9c8  83912a6d48ea586e  
-         0000007f82a6c9d0  0000007f82a6ca60  /dev/ashmem/dalvik-Heap thread pool worker thread 3 (deleted)
+         0000007f82a6c9d0  0000007f82a6ca60  [anon:dalvik-Heap thread pool worker thread 3]
          0000007f82a6c9d8  0000007f83045824  /system/lib64/libart.so (art::Barrier::Wait(art::Thread*)+68)
-         0000007f82a6c9e0  0000007f82a6ca90  /dev/ashmem/dalvik-Heap thread pool worker thread 3 (deleted)
+         0000007f82a6c9e0  0000007f82a6ca90  [anon:dalvik-Heap thread pool worker thread 3]
          0000007f82a6c9e8  0000007f83294338  /system/lib64/libart.so (art::ThreadPoolWorker::Run()+128)
          0000007f82a6c9f0  0000007f8348d600  [anon:libc_malloc]
          0000007f82a6c9f8  83912a6d48ea586e  
-    #00  0000007f82a6ca00  0000007f82a6ca90  /dev/ashmem/dalvik-Heap thread pool worker thread 3 (deleted)
+    #00  0000007f82a6ca00  0000007f82a6ca90  [anon:dalvik-Heap thread pool worker thread 3]
          ........  ........
-    #01  0000007f82a6ca00  0000007f82a6ca90  /dev/ashmem/dalvik-Heap thread pool worker thread 3 (deleted)
+    #01  0000007f82a6ca00  0000007f82a6ca90  [anon:dalvik-Heap thread pool worker thread 3]
          0000007f82a6ca08  0000007f8329436c  /system/lib64/libart.so (art::ThreadPoolWorker::Run()+180)
          0000007f82a6ca10  0000007f8348d600  [anon:libc_malloc]
          0000007f82a6ca18  0000007f7c05c800  [anon:libc_malloc]
@@ -4486,19 +4486,19 @@ stack:
          0000007f82a6ca78  0000000000000000  
          0000007f82a6ca80  0000007f834ce610  [anon:libc_malloc]
          0000007f82a6ca88  83912a6d48ea586e  
-    #02  0000007f82a6ca90  0000007f82a6caf0  /dev/ashmem/dalvik-Heap thread pool worker thread 3 (deleted)
+    #02  0000007f82a6ca90  0000007f82a6caf0  [anon:dalvik-Heap thread pool worker thread 3]
          0000007f82a6ca98  0000007f83295120  /system/lib64/libart.so (art::ThreadPoolWorker::Callback(void*)+92)
          0000007f82a6caa0  0000007f775ba440  [anon:libc_malloc]
          0000007f82a6caa8  0000007f83455100  [anon:libc_malloc]
          0000007f82a6cab0  0000007f834ce610  [anon:libc_malloc]
-         0000007f82a6cab8  0000007f82a6cb60  /dev/ashmem/dalvik-Heap thread pool worker thread 3 (deleted)
+         0000007f82a6cab8  0000007f82a6cb60  [anon:dalvik-Heap thread pool worker thread 3]
          0000007f82a6cac0  0000007f775ba440  [anon:libc_malloc]
          0000007f82a6cac8  0000007f775ba470  [anon:libc_malloc]
          0000007f82a6cad0  0000007f832950c4  /system/lib64/libart.so (art::ThreadPoolWorker::Callback(void*))
          0000007f82a6cad8  0000007f834ce680  [anon:libc_malloc]
          0000007f82a6cae0  0000007fdbe90368  [stack]
          0000007f82a6cae8  0000007f83373d40  /system/lib64/libart.so
-    #03  0000007f82a6caf0  0000007f82a6cb30  /dev/ashmem/dalvik-Heap thread pool worker thread 3 (deleted)
+    #03  0000007f82a6caf0  0000007f82a6cb30  [anon:dalvik-Heap thread pool worker thread 3]
          0000007f82a6caf8  0000007f87073324  /system/lib64/libc.so (__pthread_start(void*)+56)
          0000007f82a6cb00  0000007f834ce600  [anon:libc_malloc]
          0000007f82a6cb08  0000007f834ce680  [anon:libc_malloc]
@@ -4506,13 +4506,13 @@ stack:
          0000007f82a6cb18  0000007f83e1c000  
          0000007f82a6cb20  0000007f00000000  
          0000007f82a6cb28  0000000000002000  
-    #04  0000007f82a6cb30  0000007f82a6cb50  /dev/ashmem/dalvik-Heap thread pool worker thread 3 (deleted)
+    #04  0000007f82a6cb30  0000007f82a6cb50  [anon:dalvik-Heap thread pool worker thread 3]
          0000007f82a6cb38  0000007f8706f708  /system/lib64/libc.so (__start_thread+20)
          0000007f82a6cb40  00000000000023ca  
          0000007f82a6cb48  0000007f87385e30  /system/bin/linker64
     #05  0000007f82a6cb50  0000000000000000  
          0000007f82a6cb58  0000000000000000  
-         0000007f82a6cb60  0000007f82a6cb60  /dev/ashmem/dalvik-Heap thread pool worker thread 3 (deleted)
+         0000007f82a6cb60  0000007f82a6cb60  [anon:dalvik-Heap thread pool worker thread 3]
          0000007f82a6cb68  0000007f834ce600  [anon:libc_malloc]
          0000007f82a6cb70  0000000000000000  
          0000007f82a6cb78  0000000000000000  
@@ -4906,7 +4906,7 @@ backtrace:
 
 stack:
          0000007f8296c900  0000007f834cef10  [anon:libc_malloc]
-         0000007f8296c908  0000007f8296cb60  /dev/ashmem/dalvik-Heap thread pool worker thread 4 (deleted)
+         0000007f8296c908  0000007f8296cb60  [anon:dalvik-Heap thread pool worker thread 4]
          0000007f8296c910  0000007f775ba4c0  [anon:libc_malloc]
          0000007f8296c918  0000007f83294134  /system/lib64/libart.so (art::ThreadPool::GetTask(art::Thread*))
          0000007f8296c920  0000007f8310265c  /system/lib64/libart.so (art::Task::Finalize())
@@ -4927,19 +4927,19 @@ stack:
          0000007f8296c998  0000007f83455100  [anon:libc_malloc]
          0000007f8296c9a0  0000000000430000  
          0000007f8296c9a8  0043000000550000  
-         0000007f8296c9b0  0000007f8296ca60  /dev/ashmem/dalvik-Heap thread pool worker thread 4 (deleted)
+         0000007f8296c9b0  0000007f8296ca60  [anon:dalvik-Heap thread pool worker thread 4]
          0000007f8296c9b8  0000007f83045808  /system/lib64/libart.so (art::Barrier::Wait(art::Thread*)+40)
          0000007f8296c9c0  0000007f8348d6f0  [anon:libc_malloc]
          0000007f8296c9c8  83912a6d48ea586e  
-         0000007f8296c9d0  0000007f8296ca60  /dev/ashmem/dalvik-Heap thread pool worker thread 4 (deleted)
+         0000007f8296c9d0  0000007f8296ca60  [anon:dalvik-Heap thread pool worker thread 4]
          0000007f8296c9d8  0000007f83045824  /system/lib64/libart.so (art::Barrier::Wait(art::Thread*)+68)
-         0000007f8296c9e0  0000007f8296ca90  /dev/ashmem/dalvik-Heap thread pool worker thread 4 (deleted)
+         0000007f8296c9e0  0000007f8296ca90  [anon:dalvik-Heap thread pool worker thread 4]
          0000007f8296c9e8  0000007f83294338  /system/lib64/libart.so (art::ThreadPoolWorker::Run()+128)
          0000007f8296c9f0  0000007f8348d600  [anon:libc_malloc]
          0000007f8296c9f8  83912a6d48ea586e  
-    #00  0000007f8296ca00  0000007f8296ca90  /dev/ashmem/dalvik-Heap thread pool worker thread 4 (deleted)
+    #00  0000007f8296ca00  0000007f8296ca90  [anon:dalvik-Heap thread pool worker thread 4]
          ........  ........
-    #01  0000007f8296ca00  0000007f8296ca90  /dev/ashmem/dalvik-Heap thread pool worker thread 4 (deleted)
+    #01  0000007f8296ca00  0000007f8296ca90  [anon:dalvik-Heap thread pool worker thread 4]
          0000007f8296ca08  0000007f8329436c  /system/lib64/libart.so (art::ThreadPoolWorker::Run()+180)
          0000007f8296ca10  0000007f8348d600  [anon:libc_malloc]
          0000007f8296ca18  0000007f834af000  [anon:libc_malloc]
@@ -4957,19 +4957,19 @@ stack:
          0000007f8296ca78  0000000000000000  
          0000007f8296ca80  0000007f834cef10  [anon:libc_malloc]
          0000007f8296ca88  83912a6d48ea586e  
-    #02  0000007f8296ca90  0000007f8296caf0  /dev/ashmem/dalvik-Heap thread pool worker thread 4 (deleted)
+    #02  0000007f8296ca90  0000007f8296caf0  [anon:dalvik-Heap thread pool worker thread 4]
          0000007f8296ca98  0000007f83295120  /system/lib64/libart.so (art::ThreadPoolWorker::Callback(void*)+92)
          0000007f8296caa0  0000007f775ba4c0  [anon:libc_malloc]
          0000007f8296caa8  0000007f83455100  [anon:libc_malloc]
          0000007f8296cab0  0000007f834cef10  [anon:libc_malloc]
-         0000007f8296cab8  0000007f8296cb60  /dev/ashmem/dalvik-Heap thread pool worker thread 4 (deleted)
+         0000007f8296cab8  0000007f8296cb60  [anon:dalvik-Heap thread pool worker thread 4]
          0000007f8296cac0  0000007f775ba4c0  [anon:libc_malloc]
          0000007f8296cac8  0000007f775ba4f0  [anon:libc_malloc]
          0000007f8296cad0  0000007f832950c4  /system/lib64/libart.so (art::ThreadPoolWorker::Callback(void*))
          0000007f8296cad8  0000007f834cef80  [anon:libc_malloc]
          0000007f8296cae0  0000007fdbe90368  [stack]
          0000007f8296cae8  0000007f83373d40  /system/lib64/libart.so
-    #03  0000007f8296caf0  0000007f8296cb30  /dev/ashmem/dalvik-Heap thread pool worker thread 4 (deleted)
+    #03  0000007f8296caf0  0000007f8296cb30  [anon:dalvik-Heap thread pool worker thread 4]
          0000007f8296caf8  0000007f87073324  /system/lib64/libc.so (__pthread_start(void*)+56)
          0000007f8296cb00  0000007f834cef00  [anon:libc_malloc]
          0000007f8296cb08  0000007f834cef80  [anon:libc_malloc]
@@ -4977,13 +4977,13 @@ stack:
          0000007f8296cb18  0000007f83e1a000  
          0000007f8296cb20  0000007f00000000  
          0000007f8296cb28  0000000000002000  
-    #04  0000007f8296cb30  0000007f8296cb50  /dev/ashmem/dalvik-Heap thread pool worker thread 4 (deleted)
+    #04  0000007f8296cb30  0000007f8296cb50  [anon:dalvik-Heap thread pool worker thread 4]
          0000007f8296cb38  0000007f8706f708  /system/lib64/libc.so (__start_thread+20)
          0000007f8296cb40  00000000000023ca  
          0000007f8296cb48  0000007f87385e30  /system/bin/linker64
     #05  0000007f8296cb50  0000000000000000  
          0000007f8296cb58  0000000000000000  
-         0000007f8296cb60  0000007f8296cb60  /dev/ashmem/dalvik-Heap thread pool worker thread 4 (deleted)
+         0000007f8296cb60  0000007f8296cb60  [anon:dalvik-Heap thread pool worker thread 4]
          0000007f8296cb68  0000007f834cef00  [anon:libc_malloc]
          0000007f8296cb70  0000000000000000  
          0000007f8296cb78  0000000000000000  
@@ -5377,7 +5377,7 @@ backtrace:
 
 stack:
          0000007f8286c900  0000007f834d0d10  [anon:libc_malloc]
-         0000007f8286c908  0000007f8286cb60  /dev/ashmem/dalvik-Heap thread pool worker thread 5 (deleted)
+         0000007f8286c908  0000007f8286cb60  [anon:dalvik-Heap thread pool worker thread 5]
          0000007f8286c910  0000007f775ba5c0  [anon:libc_malloc]
          0000007f8286c918  0000007f83294134  /system/lib64/libart.so (art::ThreadPool::GetTask(art::Thread*))
          0000007f8286c920  0000007f8310265c  /system/lib64/libart.so (art::Task::Finalize())
@@ -5398,19 +5398,19 @@ stack:
          0000007f8286c998  0000007f83455100  [anon:libc_malloc]
          0000007f8286c9a0  0000000000430000  
          0000007f8286c9a8  0043000000550000  
-         0000007f8286c9b0  0000007f8286ca60  /dev/ashmem/dalvik-Heap thread pool worker thread 5 (deleted)
+         0000007f8286c9b0  0000007f8286ca60  [anon:dalvik-Heap thread pool worker thread 5]
          0000007f8286c9b8  0000007f83045808  /system/lib64/libart.so (art::Barrier::Wait(art::Thread*)+40)
          0000007f8286c9c0  0000007f8348d6f0  [anon:libc_malloc]
          0000007f8286c9c8  83912a6d48ea586e  
-         0000007f8286c9d0  0000007f8286ca60  /dev/ashmem/dalvik-Heap thread pool worker thread 5 (deleted)
+         0000007f8286c9d0  0000007f8286ca60  [anon:dalvik-Heap thread pool worker thread 5]
          0000007f8286c9d8  0000007f83045824  /system/lib64/libart.so (art::Barrier::Wait(art::Thread*)+68)
-         0000007f8286c9e0  0000007f8286ca90  /dev/ashmem/dalvik-Heap thread pool worker thread 5 (deleted)
+         0000007f8286c9e0  0000007f8286ca90  [anon:dalvik-Heap thread pool worker thread 5]
          0000007f8286c9e8  0000007f83294338  /system/lib64/libart.so (art::ThreadPoolWorker::Run()+128)
          0000007f8286c9f0  0000007f8348d600  [anon:libc_malloc]
          0000007f8286c9f8  83912a6d48ea586e  
-    #00  0000007f8286ca00  0000007f8286ca90  /dev/ashmem/dalvik-Heap thread pool worker thread 5 (deleted)
+    #00  0000007f8286ca00  0000007f8286ca90  [anon:dalvik-Heap thread pool worker thread 5]
          ........  ........
-    #01  0000007f8286ca00  0000007f8286ca90  /dev/ashmem/dalvik-Heap thread pool worker thread 5 (deleted)
+    #01  0000007f8286ca00  0000007f8286ca90  [anon:dalvik-Heap thread pool worker thread 5]
          0000007f8286ca08  0000007f8329436c  /system/lib64/libart.so (art::ThreadPoolWorker::Run()+180)
          0000007f8286ca10  0000007f8348d600  [anon:libc_malloc]
          0000007f8286ca18  0000007f834b1800  [anon:libc_malloc]
@@ -5428,19 +5428,19 @@ stack:
          0000007f8286ca78  0000000000000000  
          0000007f8286ca80  0000007f834d0d10  [anon:libc_malloc]
          0000007f8286ca88  83912a6d48ea586e  
-    #02  0000007f8286ca90  0000007f8286caf0  /dev/ashmem/dalvik-Heap thread pool worker thread 5 (deleted)
+    #02  0000007f8286ca90  0000007f8286caf0  [anon:dalvik-Heap thread pool worker thread 5]
          0000007f8286ca98  0000007f83295120  /system/lib64/libart.so (art::ThreadPoolWorker::Callback(void*)+92)
          0000007f8286caa0  0000007f775ba5c0  [anon:libc_malloc]
          0000007f8286caa8  0000007f83455100  [anon:libc_malloc]
          0000007f8286cab0  0000007f834d0d10  [anon:libc_malloc]
-         0000007f8286cab8  0000007f8286cb60  /dev/ashmem/dalvik-Heap thread pool worker thread 5 (deleted)
+         0000007f8286cab8  0000007f8286cb60  [anon:dalvik-Heap thread pool worker thread 5]
          0000007f8286cac0  0000007f775ba5c0  [anon:libc_malloc]
          0000007f8286cac8  0000007f775ba5f0  [anon:libc_malloc]
          0000007f8286cad0  0000007f832950c4  /system/lib64/libart.so (art::ThreadPoolWorker::Callback(void*))
          0000007f8286cad8  0000007f834d0d80  [anon:libc_malloc]
          0000007f8286cae0  0000007fdbe90368  [stack]
          0000007f8286cae8  0000007f83373d40  /system/lib64/libart.so
-    #03  0000007f8286caf0  0000007f8286cb30  /dev/ashmem/dalvik-Heap thread pool worker thread 5 (deleted)
+    #03  0000007f8286caf0  0000007f8286cb30  [anon:dalvik-Heap thread pool worker thread 5]
          0000007f8286caf8  0000007f87073324  /system/lib64/libc.so (__pthread_start(void*)+56)
          0000007f8286cb00  0000007f834d0d00  [anon:libc_malloc]
          0000007f8286cb08  0000007f834d0d80  [anon:libc_malloc]
@@ -5448,13 +5448,13 @@ stack:
          0000007f8286cb18  0000007f83cc2000  
          0000007f8286cb20  0000007f00000000  
          0000007f8286cb28  0000000000002000  
-    #04  0000007f8286cb30  0000007f8286cb50  /dev/ashmem/dalvik-Heap thread pool worker thread 5 (deleted)
+    #04  0000007f8286cb30  0000007f8286cb50  [anon:dalvik-Heap thread pool worker thread 5]
          0000007f8286cb38  0000007f8706f708  /system/lib64/libc.so (__start_thread+20)
          0000007f8286cb40  00000000000023ca  
          0000007f8286cb48  0000007f87385e30  /system/bin/linker64
     #05  0000007f8286cb50  0000000000000000  
          0000007f8286cb58  0000000000000000  
-         0000007f8286cb60  0000007f8286cb60  /dev/ashmem/dalvik-Heap thread pool worker thread 5 (deleted)
+         0000007f8286cb60  0000007f8286cb60  [anon:dalvik-Heap thread pool worker thread 5]
          0000007f8286cb68  0000007f834d0d00  [anon:libc_malloc]
          0000007f8286cb70  0000000000000000  
          0000007f8286cb78  0000000000000000  
@@ -5848,40 +5848,40 @@ backtrace:
 
 stack:
          0000007f8276c900  0000007f834d1010  [anon:libc_malloc]
-         0000007f8276c908  0000007f8276cb60  /dev/ashmem/dalvik-Heap thread pool worker thread 6 (deleted)
+         0000007f8276c908  0000007f8276cb60  [anon:dalvik-Heap thread pool worker thread 6]
          0000007f8276c910  0000007f775ba640  [anon:libc_malloc]
          0000007f8276c918  0000007f83294134  /system/lib64/libart.so (art::ThreadPool::GetTask(art::Thread*))
          0000007f8276c920  0000007f8310265c  /system/lib64/libart.so (art::Task::Finalize())
          0000007f8276c928  0000007f775ba640  [anon:libc_malloc]
          0000007f8276c930  0000007fdbe90368  [stack]
-         0000007f8276c938  0000007f8276ca7c  /dev/ashmem/dalvik-Heap thread pool worker thread 6 (deleted)
+         0000007f8276c938  0000007f8276ca7c  [anon:dalvik-Heap thread pool worker thread 6]
          0000007f8276c940  0000000100000000  
-         0000007f8276c948  0000007f8276ca90  /dev/ashmem/dalvik-Heap thread pool worker thread 6 (deleted)
-         0000007f8276c950  0000007f8276cab0  /dev/ashmem/dalvik-Heap thread pool worker thread 6 (deleted)
+         0000007f8276c948  0000007f8276ca90  [anon:dalvik-Heap thread pool worker thread 6]
+         0000007f8276c950  0000007f8276cab0  [anon:dalvik-Heap thread pool worker thread 6]
          0000007f8276c958  000000000000002e  
-         0000007f8276c960  0000007f8276ca80  /dev/ashmem/dalvik-Heap thread pool worker thread 6 (deleted)
+         0000007f8276c960  0000007f8276ca80  [anon:dalvik-Heap thread pool worker thread 6]
          0000007f8276c968  0000007f83349b70  /system/lib64/libart.so
          0000007f8276c970  0000007f83348c10  /system/lib64/libart.so
          0000007f8276c978  0000007f83348af0  /system/lib64/libart.so
-         0000007f8276c980  0000007f8276c9e0  /dev/ashmem/dalvik-Heap thread pool worker thread 6 (deleted)
+         0000007f8276c980  0000007f8276c9e0  [anon:dalvik-Heap thread pool worker thread 6]
          0000007f8276c988  0000007f8328c770  /system/lib64/libart.so (art::Thread::Attach(char const*, bool, _jobject*, bool)+252)
          0000007f8276c990  0000007f833fb000  /system/lib64/libart.so
          0000007f8276c998  0000007f83455100  [anon:libc_malloc]
          0000007f8276c9a0  0000007f00430000  
          0000007f8276c9a8  0043000000550000  
-         0000007f8276c9b0  0000007f8276ca60  /dev/ashmem/dalvik-Heap thread pool worker thread 6 (deleted)
+         0000007f8276c9b0  0000007f8276ca60  [anon:dalvik-Heap thread pool worker thread 6]
          0000007f8276c9b8  0000007f83045808  /system/lib64/libart.so (art::Barrier::Wait(art::Thread*)+40)
          0000007f8276c9c0  0000007f8348d6f0  [anon:libc_malloc]
          0000007f8276c9c8  0000007f7c060800  [anon:libc_malloc]
          0000007f8276c9d0  0000007f8348d738  [anon:libc_malloc]
          0000007f8276c9d8  0000007f8348d700  [anon:libc_malloc]
-         0000007f8276c9e0  0000007f8276ca90  /dev/ashmem/dalvik-Heap thread pool worker thread 6 (deleted)
+         0000007f8276c9e0  0000007f8276ca90  [anon:dalvik-Heap thread pool worker thread 6]
          0000007f8276c9e8  0000007f83294338  /system/lib64/libart.so (art::ThreadPoolWorker::Run()+128)
          0000007f8276c9f0  0000007f8348d600  [anon:libc_malloc]
          0000007f8276c9f8  83912a6d48ea586e  
-    #00  0000007f8276ca00  0000007f8276ca90  /dev/ashmem/dalvik-Heap thread pool worker thread 6 (deleted)
+    #00  0000007f8276ca00  0000007f8276ca90  [anon:dalvik-Heap thread pool worker thread 6]
          ........  ........
-    #01  0000007f8276ca00  0000007f8276ca90  /dev/ashmem/dalvik-Heap thread pool worker thread 6 (deleted)
+    #01  0000007f8276ca00  0000007f8276ca90  [anon:dalvik-Heap thread pool worker thread 6]
          0000007f8276ca08  0000007f8329436c  /system/lib64/libart.so (art::ThreadPoolWorker::Run()+180)
          0000007f8276ca10  0000007f8348d600  [anon:libc_malloc]
          0000007f8276ca18  0000007f7c060800  [anon:libc_malloc]
@@ -5899,19 +5899,19 @@ stack:
          0000007f8276ca78  0000000000000000  
          0000007f8276ca80  0000007f834d1010  [anon:libc_malloc]
          0000007f8276ca88  83912a6d48ea586e  
-    #02  0000007f8276ca90  0000007f8276caf0  /dev/ashmem/dalvik-Heap thread pool worker thread 6 (deleted)
+    #02  0000007f8276ca90  0000007f8276caf0  [anon:dalvik-Heap thread pool worker thread 6]
          0000007f8276ca98  0000007f83295120  /system/lib64/libart.so (art::ThreadPoolWorker::Callback(void*)+92)
          0000007f8276caa0  0000007f775ba640  [anon:libc_malloc]
          0000007f8276caa8  0000007f83455100  [anon:libc_malloc]
          0000007f8276cab0  0000007f834d1010  [anon:libc_malloc]
-         0000007f8276cab8  0000007f8276cb60  /dev/ashmem/dalvik-Heap thread pool worker thread 6 (deleted)
+         0000007f8276cab8  0000007f8276cb60  [anon:dalvik-Heap thread pool worker thread 6]
          0000007f8276cac0  0000007f775ba640  [anon:libc_malloc]
          0000007f8276cac8  0000007f775ba670  [anon:libc_malloc]
          0000007f8276cad0  0000007f832950c4  /system/lib64/libart.so (art::ThreadPoolWorker::Callback(void*))
          0000007f8276cad8  0000007f834d1080  [anon:libc_malloc]
          0000007f8276cae0  0000007fdbe90368  [stack]
          0000007f8276cae8  0000007f83373d40  /system/lib64/libart.so
-    #03  0000007f8276caf0  0000007f8276cb30  /dev/ashmem/dalvik-Heap thread pool worker thread 6 (deleted)
+    #03  0000007f8276caf0  0000007f8276cb30  [anon:dalvik-Heap thread pool worker thread 6]
          0000007f8276caf8  0000007f87073324  /system/lib64/libc.so (__pthread_start(void*)+56)
          0000007f8276cb00  0000007f834d1000  [anon:libc_malloc]
          0000007f8276cb08  0000007f834d1080  [anon:libc_malloc]
@@ -5919,13 +5919,13 @@ stack:
          0000007f8276cb18  0000007f83cc0000  
          0000007f8276cb20  0000007f00000000  
          0000007f8276cb28  0000000000002000  
-    #04  0000007f8276cb30  0000007f8276cb50  /dev/ashmem/dalvik-Heap thread pool worker thread 6 (deleted)
+    #04  0000007f8276cb30  0000007f8276cb50  [anon:dalvik-Heap thread pool worker thread 6]
          0000007f8276cb38  0000007f8706f708  /system/lib64/libc.so (__start_thread+20)
          0000007f8276cb40  00000000000023ca  
          0000007f8276cb48  0000007f87385e30  /system/bin/linker64
     #05  0000007f8276cb50  0000000000000000  
          0000007f8276cb58  0000000000000000  
-         0000007f8276cb60  0000007f8276cb60  /dev/ashmem/dalvik-Heap thread pool worker thread 6 (deleted)
+         0000007f8276cb60  0000007f8276cb60  [anon:dalvik-Heap thread pool worker thread 6]
          0000007f8276cb68  0000007f834d1000  [anon:libc_malloc]
          0000007f8276cb70  0000000000000000  
          0000007f8276cb78  0000000000000000  
@@ -6848,7 +6848,7 @@ stack:
          0000007f8256e330  0000007f8256e4c0  [stack:9176]
          0000007f8256e338  ffffff80ffffffd8  
          0000007f8256e340  0000007f8256e574  [stack:9176]
-         0000007f8256e348  00000000833641d8  /dev/ashmem/dalvik-large object space (deleted)
+         0000007f8256e348  00000000833641d8  [anon:dalvik-large object space]
          0000007f8256e350  ffffffff00000208  
          0000007f8256e358  0000007f8256e570  [stack:9176]
          0000007f8256e360  0000000000000004  
@@ -7526,7 +7526,7 @@ stack:
          0000007f8236c710  0000007f834bb800  [anon:libc_malloc]
          0000007f8236c718  0000000070f40720  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f8236c720  0000000070e15998  /data/dalvik-cache/arm64/system@framework@boot.art
-         0000007f8236c728  0000000012c02040  /dev/ashmem/dalvik-main space (deleted)
+         0000007f8236c728  0000000012c02040  [anon:dalvik-main space]
          0000007f8236c730  0000000071159a6c  /data/dalvik-cache/arm64/system@framework@boot.oat
          0000007f8236c738  0000007f833ff100  
          0000007f8236c740  0000007f8236c860  [stack:9178]
@@ -7540,7 +7540,7 @@ stack:
          0000007f8236c780  0000000070f40720  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f8236c788  0000000070f40720  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f8236c790  0000000070e15998  /data/dalvik-cache/arm64/system@framework@boot.art
-         0000007f8236c798  0000000012c02040  /dev/ashmem/dalvik-main space (deleted)
+         0000007f8236c798  0000000012c02040  [anon:dalvik-main space]
          0000007f8236c7a0  0000000071159a6c  /data/dalvik-cache/arm64/system@framework@boot.oat
          0000007f8236c7a8  0000007f833ff100  
          0000007f8236c7b0  0000007f8236cac0  [stack:9178]
@@ -7552,7 +7552,7 @@ stack:
          0000007f8236c7e0  0000000000000000  
          0000007f8236c7e8  0000007f834bb800  [anon:libc_malloc]
          0000007f8236c7f0  0000000070e15998  /data/dalvik-cache/arm64/system@framework@boot.art
-         0000007f8236c7f8  0000000012c280a0  /dev/ashmem/dalvik-main space (deleted)
+         0000007f8236c7f8  0000000012c280a0  [anon:dalvik-main space]
          0000007f8236c800  00000000704b1448  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f8236c808  0000007f8236c998  [stack:9178]
          0000007f8236c810  0000007f8236cae0  [stack:9178]
@@ -7980,12 +7980,12 @@ stack:
          0000007f822646f8  0000007f00000000  
          0000007f82264700  0000000000000001  
          0000007f82264708  00000000706746c8  /data/dalvik-cache/arm64/system@framework@boot.art
-         0000007f82264710  0000000012c5e040  /dev/ashmem/dalvik-main space (deleted)
+         0000007f82264710  0000000012c5e040  [anon:dalvik-main space]
          0000007f82264718  0000000075d495dc  /data/dalvik-cache/arm64/system@framework@boot.oat
          0000007f82264720  00000000706746c8  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f82264728  0000000070e160e0  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f82264730  0000000070e15958  /data/dalvik-cache/arm64/system@framework@boot.art
-         0000007f82264738  0000000012c02040  /dev/ashmem/dalvik-main space (deleted)
+         0000007f82264738  0000000012c02040  [anon:dalvik-main space]
 
 memory near x0:
     0000007f8341ab70 0000007f77510d60 0000000000000000  
@@ -8391,19 +8391,19 @@ stack:
          0000007f8205c778  0000000073c6f6cc  /data/dalvik-cache/arm64/system@framework@boot.oat
          0000007f8205c780  70e15958704a7208  
          0000007f8205c788  0000000073c6e640  /data/dalvik-cache/arm64/system@framework@boot.oat
-         0000007f8205c790  0000007f704a6dc8  /dev/ashmem/dalvik-allocspace main rosalloc space live-bitmap 3 (deleted)
+         0000007f8205c790  0000007f704a6dc8  [anon:dalvik-allocspace main rosalloc space live-bitmap 3]
          0000007f8205c798  00000000704a7248  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f8205c7a0  0000000000000001  
          0000007f8205c7a8  0000000070e15958  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f8205c7b0  0000007f8205c998  [stack:9180]
          0000007f8205c7b8  0000000073c6f83c  /data/dalvik-cache/arm64/system@framework@boot.oat
-         0000007f8205c7c0  0000007f704a7248  /dev/ashmem/dalvik-allocspace main rosalloc space live-bitmap 3 (deleted)
+         0000007f8205c7c0  0000007f704a7248  [anon:dalvik-allocspace main rosalloc space live-bitmap 3]
          0000007f8205c7c8  0000007f83348af0  /system/lib64/libart.so
          0000007f8205c7d0  0000007f8205c7f0  [stack:9180]
          0000007f8205c7d8  0000007f850e32a4  /system/lib64/libc++.so (operator new(unsigned long)+40)
          0000007f8205c7e0  0000000000000000  
          0000007f8205c7e8  0000000070e15958  /data/dalvik-cache/arm64/system@framework@boot.art
-         0000007f8205c7f0  0000000012c28160  /dev/ashmem/dalvik-main space (deleted)
+         0000007f8205c7f0  0000000012c28160  [anon:dalvik-main space]
          0000007f8205c7f8  00000000704b1448  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f8205c800  0000007f8205c998  [stack:9180]
          0000007f8205c808  0000007f8205cae0  [stack:9180]
@@ -9340,7 +9340,7 @@ stack:
          0000007f7c8e55a8  0000000000004000  
          0000007f7c8e55b0  0000007f83420d00  [anon:libc_malloc]
          0000007f7c8e55b8  000000000000000f  
-         0000007f7c8e55c0  0000007f81f45000  /dev/ashmem/dalvik-indirect ref table (deleted)
+         0000007f7c8e55c0  0000007f81f45000  [anon:dalvik-indirect ref table]
          0000007f7c8e55c8  0000007f8341a1e0  [anon:libc_malloc]
          0000007f7c8e55d0  0000007f7c8e5680  [stack:9182]
          0000007f7c8e55d8  0000007f8312d564  /system/lib64/libart.so (art::gc::Heap::DoPendingTransitionOrTrim()+132)
@@ -9358,14 +9358,14 @@ stack:
          0000007f7c8e5638  0000007f834bd000  [anon:libc_malloc]
          0000007f7c8e5640  0000000000000008  
          0000007f7c8e5648  0000007f83227c20  /system/lib64/libart.so (art::Monitor::MonitorExit(art::Thread*, art::mirror::Object*)+372)
-         0000007f7c8e5650  00000000834bd000  /dev/ashmem/dalvik-large object space (deleted)
+         0000007f7c8e5650  00000000834bd000  [anon:dalvik-large object space]
          0000007f7c8e5658  0000007f8348c000  [anon:libc_malloc]
     #00  0000007f7c8e5660  0000007f7c8e5680  [stack:9182]
          ........  ........
     #01  0000007f7c8e5660  0000007f7c8e5680  [stack:9182]
          0000007f7c8e5668  0000007f8312d650  /system/lib64/libart.so (art::gc::Heap::DoPendingTransitionOrTrim()+368)
          0000007f7c8e5670  0000000000000004  
-         0000007f7c8e5678  000000003b99faf8  /dev/ashmem/dalvik-main space (deleted)
+         0000007f7c8e5678  000000003b99faf8  [anon:dalvik-main space]
     #02  0000007f7c8e5680  0000007f7c8e5860  [stack:9182]
          0000007f7c8e5688  0000000073bd364c  /data/dalvik-cache/arm64/system@framework@boot.oat
          0000007f7c8e5690  000000000000005e  
@@ -9415,7 +9415,7 @@ stack:
          0000007f7c8e57f0  70e0d618704a7488  
          0000007f7c8e57f8  83912a6d48ea586e  
          0000007f7c8e5800  0000000070e15988  /data/dalvik-cache/arm64/system@framework@boot.art
-         0000007f7c8e5808  0000000012c281c0  /dev/ashmem/dalvik-main space (deleted)
+         0000007f7c8e5808  0000000012c281c0  [anon:dalvik-main space]
          0000007f7c8e5810  00000000704b1448  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f7c8e5818  0000000073c84600  /data/dalvik-cache/arm64/system@framework@boot.oat
          0000007f7c8e5820  00000000704b1448  /data/dalvik-cache/arm64/system@framework@boot.art
@@ -10630,7 +10630,7 @@ stack:
          0000007f7c6e37f0  70e15968704a7348  
          0000007f7c6e37f8  83912a6d48ea586e  
          0000007f7c6e3800  0000000070e15968  /data/dalvik-cache/arm64/system@framework@boot.art
-         0000007f7c6e3808  0000000012c28220  /dev/ashmem/dalvik-main space (deleted)
+         0000007f7c6e3808  0000000012c28220  [anon:dalvik-main space]
          0000007f7c6e3810  00000000704b1448  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f7c6e3818  0000000073c84600  /data/dalvik-cache/arm64/system@framework@boot.oat
          0000007f7c6e3820  00000000704b1448  /data/dalvik-cache/arm64/system@framework@boot.art
@@ -10939,13 +10939,13 @@ stack:
          0000007f79a4c310  00000000704b3208  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f79a4c318  0000000000000030  
          0000007f79a4c320  0000000000000030  
-         0000007f79a4c328  0000000012d3f1f0  /dev/ashmem/dalvik-main space (deleted)
-         0000007f79a4c330  0000000012d3f1c0  /dev/ashmem/dalvik-main space (deleted)
+         0000007f79a4c328  0000000012d3f1f0  [anon:dalvik-main space]
+         0000007f79a4c330  0000000012d3f1c0  [anon:dalvik-main space]
          0000007f79a4c338  0000000070e09968  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f79a4c340  00000000704b3048  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f79a4c348  0000000073c86b2c  /data/dalvik-cache/arm64/system@framework@boot.oat
-         0000007f79a4c350  0000007f704b3048  /dev/ashmem/dalvik-allocspace main rosalloc space live-bitmap 3 (deleted)
-         0000007f79a4c358  0000000012d3f1c0  /dev/ashmem/dalvik-main space (deleted)
+         0000007f79a4c350  0000007f704b3048  [anon:dalvik-allocspace main rosalloc space live-bitmap 3]
+         0000007f79a4c358  0000000012d3f1c0  [anon:dalvik-main space]
          0000007f79a4c360  0000007f79a4c3a0  [stack:9186]
          0000007f79a4c368  0000007f870baa4c  /system/lib64/libc.so (arena_run_split_remove+96)
          0000007f79a4c370  0000000000000007  
@@ -10982,7 +10982,7 @@ stack:
          0000007f79a4c458  0000000000000000  
          0000007f79a4c460  0000000000000000  
          0000007f79a4c468  00000000ffffffff  
-         0000007f79a4c470  0000000012d3f1c0  /dev/ashmem/dalvik-main space (deleted)
+         0000007f79a4c470  0000000012d3f1c0  [anon:dalvik-main space]
          0000007f79a4c478  0000000000000000  
          0000007f79a4c480  00000000ffffffff  
          0000007f79a4c488  0000000000000000  
@@ -11023,11 +11023,11 @@ stack:
          0000007f79a4c648  0000000100000000  
          0000007f79a4c650  0000000070ee4990  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f79a4c658  0000000000000001  
-         0000007f79a4c660  0000000012d3f1c0  /dev/ashmem/dalvik-main space (deleted)
+         0000007f79a4c660  0000000012d3f1c0  [anon:dalvik-main space]
          0000007f79a4c668  0000000000000000  
          0000007f79a4c670  000000007061e908  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f79a4c678  00000000ffffffff  
-         0000007f79a4c680  0000000012d3f1c0  /dev/ashmem/dalvik-main space (deleted)
+         0000007f79a4c680  0000000012d3f1c0  [anon:dalvik-main space]
          0000007f79a4c688  0000000000000000  
          0000007f79a4c690  00000000ffffffff  
          0000007f79a4c698  0000000000000000  
@@ -11461,15 +11461,15 @@ stack:
          0000007f79846350  0000000000000004  
          0000007f79846358  0000007f83044ddc  /system/lib64/libart.so (art_quick_resolution_trampoline+92)
          0000007f79846360  000000000000005c  
-         0000007f79846368  0000000012d31c40  /dev/ashmem/dalvik-main space (deleted)
+         0000007f79846368  0000000012d31c40  [anon:dalvik-main space]
          0000007f79846370  0000007f834c4800  [anon:libc_malloc]
-         0000007f79846378  0000000012d49880  /dev/ashmem/dalvik-main space (deleted)
-         0000007f79846380  0000000012c6d180  /dev/ashmem/dalvik-main space (deleted)
+         0000007f79846378  0000000012d49880  [anon:dalvik-main space]
+         0000007f79846380  0000000012c6d180  [anon:dalvik-main space]
          0000007f79846388  00000000000493e0  
-         0000007f79846390  0000000012d4a060  /dev/ashmem/dalvik-main space (deleted)
-         0000007f79846398  0000000012d2f7c0  /dev/ashmem/dalvik-main space (deleted)
+         0000007f79846390  0000000012d4a060  [anon:dalvik-main space]
+         0000007f79846398  0000000012d2f7c0  [anon:dalvik-main space]
          0000007f798463a0  0000000000000001  
-         0000007f798463a8  0000000012c6d100  /dev/ashmem/dalvik-main space (deleted)
+         0000007f798463a8  0000000012c6d100  [anon:dalvik-main space]
          0000007f798463b0  0000007f79846ab0  [stack:9187]
          0000007f798463b8  0000007f83349b70  /system/lib64/libart.so
          0000007f798463c0  0000007f83348c10  /system/lib64/libart.so
@@ -11495,19 +11495,19 @@ stack:
          0000007f79846450  0000000000000000  
          0000007f79846458  0000000000000000  
          0000007f79846460  0000000000000000  
-         0000007f79846468  0000000012d49880  /dev/ashmem/dalvik-main space (deleted)
-         0000007f79846470  0000000012d4b040  /dev/ashmem/dalvik-main space (deleted)
+         0000007f79846468  0000000012d49880  [anon:dalvik-main space]
+         0000007f79846470  0000000012d4b040  [anon:dalvik-main space]
          0000007f79846478  0000000000000000  
          0000007f79846480  00000000000493e0  
          0000007f79846488  0000000000000000  
          0000007f79846490  0000007f79846ab0  [stack:9187]
          0000007f79846498  0000007f83349b70  /system/lib64/libart.so
          0000007f798464a0  0000007f83348c10  /system/lib64/libart.so
-         0000007f798464a8  0000000012d4b040  /dev/ashmem/dalvik-main space (deleted)
+         0000007f798464a8  0000000012d4b040  [anon:dalvik-main space]
          0000007f798464b0  00000000000a9aac  
-         0000007f798464b8  0000000012c6d180  /dev/ashmem/dalvik-main space (deleted)
+         0000007f798464b8  0000000012c6d180  [anon:dalvik-main space]
          0000007f798464c0  00000000000a9aac  
-         0000007f798464c8  0000000012c6d100  /dev/ashmem/dalvik-main space (deleted)
+         0000007f798464c8  0000000012c6d100  [anon:dalvik-main space]
          0000007f798464d0  0000000000000004  
          0000007f798464d8  000000007460f414  /data/dalvik-cache/arm64/system@framework@boot.oat
          0000007f798464e0  000000007058fd08  /data/dalvik-cache/arm64/system@framework@boot.art
@@ -11526,7 +11526,7 @@ stack:
          0000007f798465f0  0000007f835c78e0  [anon:libc_malloc]
          0000007f798465f8  0000007f83496440  [anon:libc_malloc]
          0000007f79846600  0000007f834c4800  [anon:libc_malloc]
-         0000007f79846608  0000000012c6d180  /dev/ashmem/dalvik-main space (deleted)
+         0000007f79846608  0000000012c6d180  [anon:dalvik-main space]
          0000007f79846610  000000007061e908  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f79846618  0000000073bdd2e8  /data/dalvik-cache/arm64/system@framework@boot.oat
     #04  0000007f79846620  00000000000606cc  
@@ -11537,11 +11537,11 @@ stack:
          0000007f79846648  0000000100000000  
          0000007f79846650  0000000070ee4990  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f79846658  0000000000000001  
-         0000007f79846660  0000000012d4b040  /dev/ashmem/dalvik-main space (deleted)
-         0000007f79846668  0000000012c6d180  /dev/ashmem/dalvik-main space (deleted)
+         0000007f79846660  0000000012d4b040  [anon:dalvik-main space]
+         0000007f79846668  0000000012c6d180  [anon:dalvik-main space]
          0000007f79846670  000000007061e908  /data/dalvik-cache/arm64/system@framework@boot.art
-         0000007f79846678  0000000012d49880  /dev/ashmem/dalvik-main space (deleted)
-         0000007f79846680  0000000012d4b040  /dev/ashmem/dalvik-main space (deleted)
+         0000007f79846678  0000000012d49880  [anon:dalvik-main space]
+         0000007f79846680  0000000012d4b040  [anon:dalvik-main space]
          0000007f79846688  0000000000000000  
          0000007f79846690  00000000000493e0  
          0000007f79846698  0000000000000000  
@@ -11564,7 +11564,7 @@ stack:
          0000007f79846720  00000000706169c8  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f79846728  0000000000000000  
          0000007f79846730  0000000000000000  
-         0000007f79846738  0000000012d49880  /dev/ashmem/dalvik-main space (deleted)
+         0000007f79846738  0000000012d49880  [anon:dalvik-main space]
 
 memory near x1:
     0000007f798464c0 00000000000a9aac 0000000012c6d100  
@@ -11967,16 +11967,16 @@ stack:
          0000007f6e805310  00000000704b3208  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f6e805318  0000000000000030  
          0000007f6e805320  0000000000000030  
-         0000007f6e805328  0000000012d6f070  /dev/ashmem/dalvik-main space (deleted)
-         0000007f6e805330  0000000012d6f040  /dev/ashmem/dalvik-main space (deleted)
+         0000007f6e805328  0000000012d6f070  [anon:dalvik-main space]
+         0000007f6e805330  0000000012d6f040  [anon:dalvik-main space]
          0000007f6e805338  0000000070e09968  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f6e805340  00000000704b3048  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f6e805348  0000000073c86b2c  /data/dalvik-cache/arm64/system@framework@boot.oat
-         0000007f6e805350  0000007f704b3048  /dev/ashmem/dalvik-allocspace main rosalloc space live-bitmap 3 (deleted)
-         0000007f6e805358  0000000012d6f040  /dev/ashmem/dalvik-main space (deleted)
+         0000007f6e805350  0000007f704b3048  [anon:dalvik-allocspace main rosalloc space live-bitmap 3]
+         0000007f6e805358  0000000012d6f040  [anon:dalvik-main space]
          0000007f6e805360  0000000071159fac  /data/dalvik-cache/arm64/system@framework@boot.oat
          0000007f6e805368  00000000704b3088  /data/dalvik-cache/arm64/system@framework@boot.art
-         0000007f6e805370  0000000012d6f070  /dev/ashmem/dalvik-main space (deleted)
+         0000007f6e805370  0000000012d6f070  [anon:dalvik-main space]
          0000007f6e805378  0000000070e09968  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f6e805380  0000007f6e805528  [stack:9189]
          0000007f6e805388  0000000073cb4550  /data/dalvik-cache/arm64/system@framework@boot.oat
@@ -11985,7 +11985,7 @@ stack:
          0000007f6e8053a0  0000007f6e805480  [stack:9189]
          0000007f6e8053a8  0000007f831df4fc  /system/lib64/libart.so (art::JNI::DeleteLocalRef(_JNIEnv*, _jobject*)+608)
          0000007f6e8053b0  0000007f77664540  [anon:libc_malloc]
-         0000007f6e8053b8  0000000012d6f040  /dev/ashmem/dalvik-main space (deleted)
+         0000007f6e8053b8  0000000012d6f040  [anon:dalvik-main space]
          0000007f6e8053c0  0000007f7c065000  [anon:libc_malloc]
          0000007f6e8053c8  0000000000000001  
          0000007f6e8053d0  0000007f6e805430  [stack:9189]
@@ -12010,7 +12010,7 @@ stack:
          0000007f6e805458  0000000000000000  
          0000007f6e805460  0000000000000000  
          0000007f6e805468  00000000ffffffff  
-         0000007f6e805470  0000000012d6f040  /dev/ashmem/dalvik-main space (deleted)
+         0000007f6e805470  0000000012d6f040  [anon:dalvik-main space]
          0000007f6e805478  0000000000000000  
          0000007f6e805480  00000000ffffffff  
          0000007f6e805488  0000000000000000  
@@ -12051,11 +12051,11 @@ stack:
          0000007f6e805648  0000000100000000  
          0000007f6e805650  0000000070ee4990  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f6e805658  0000000000000001  
-         0000007f6e805660  0000000012d6f040  /dev/ashmem/dalvik-main space (deleted)
+         0000007f6e805660  0000000012d6f040  [anon:dalvik-main space]
          0000007f6e805668  0000000000000000  
          0000007f6e805670  000000007061e908  /data/dalvik-cache/arm64/system@framework@boot.art
          0000007f6e805678  00000000ffffffff  
-         0000007f6e805680  0000000012d6f040  /dev/ashmem/dalvik-main space (deleted)
+         0000007f6e805680  0000000012d6f040  [anon:dalvik-main space]
          0000007f6e805688  0000000000000000  
          0000007f6e805690  00000000ffffffff  
          0000007f6e805698  0000000000000000  
@@ -12538,7 +12538,7 @@ stack:
          df4a09a8  df4a0a58  [stack:4066]
          df4a09ac  00000002
          df4a09b0  df4a09c4  [stack:4066]
-         df4a09b4  ef5a8548  /dev/ashmem/dalvik-LinearAlloc (deleted)
+         df4a09b4  ef5a8548  [anon:dalvik-LinearAlloc]
          df4a09b8  ffffffff
          df4a09bc  e02c8900  /data/app/com.rovio.ABstellapop-1/oat/x86/base.odex
          df4a09c0  eba35c00  [anon:libc_malloc]
@@ -12656,7 +12656,7 @@ stack:
          df4a0f34  000023a1
          df4a0f38  df4a0f60  [stack:4066]
          df4a0f3c  df4a0f5c  [stack:4066]
-         df4a0f40  ef5a55d8  /dev/ashmem/dalvik-LinearAlloc (deleted)
+         df4a0f40  ef5a55d8  [anon:dalvik-LinearAlloc]
          df4a0f44  ea136c80  [anon:libc_malloc]
          df4a0f48  f3f494b4  /system/lib/libart.so (artQuickResolutionTrampoline+1508)
          df4a0f4c  df4a0fe0  [stack:4066]
@@ -12670,12 +12670,12 @@ stack:
          ........  ........
     #09  df4a0f8c  f40ea140  [anon:libc_malloc]
          df4a0f90  000023a1
-         df4a0f94  ef5a55d8  /dev/ashmem/dalvik-LinearAlloc (deleted)
+         df4a0f94  ef5a55d8  [anon:dalvik-LinearAlloc]
          df4a0f98  00000001
          df4a0f9c  df4a0fe0  [stack:4066]
          df4a0fa0  f4039ab8  /system/lib/libart.so
          df4a0fa4  00000001
-         df4a0fa8  12d79040  /dev/ashmem/dalvik-main space (deleted)
+         df4a0fa8  12d79040  [anon:dalvik-main space]
          df4a0fac  f6a43ee8  /system/lib/libEGL.so
          df4a0fb0  eba35c00  [anon:libc_malloc]
          df4a0fb4  00000001
@@ -12687,25 +12687,25 @@ stack:
          ........  ........
     #10  df4a103c  000023a1
          df4a1040  0000000b
-         df4a1044  ef5a55d8  /dev/ashmem/dalvik-LinearAlloc (deleted)
+         df4a1044  ef5a55d8  [anon:dalvik-LinearAlloc]
          df4a1048  eba35c00  [anon:libc_malloc]
          df4a104c  70b86250  /data/dalvik-cache/x86/system@framework@boot.art
          df4a1050  743790c0  /data/dalvik-cache/x86/system@framework@boot.oat
          df4a1054  00430000
          df4a1058  960b50d7
-         df4a105c  12d79040  /dev/ashmem/dalvik-main space (deleted)
+         df4a105c  12d79040  [anon:dalvik-main space]
          df4a1060  708e53c8  /data/dalvik-cache/x86/system@framework@boot.art
-         df4a1064  12c04a80  /dev/ashmem/dalvik-main space (deleted)
+         df4a1064  12c04a80  [anon:dalvik-main space]
          df4a1068  e0bf8651  /data/app/com.rovio.ABstellapop-1/oat/x86/base.odex
-    #11  df4a106c  ef5a55d8  /dev/ashmem/dalvik-LinearAlloc (deleted)
+    #11  df4a106c  ef5a55d8  [anon:dalvik-LinearAlloc]
          df4a1070  df4a108c  [stack:4066]
-         df4a1074  12d79040  /dev/ashmem/dalvik-main space (deleted)
+         df4a1074  12d79040  [anon:dalvik-main space]
          df4a1078  f3a1c7de  /system/lib/libart.so (art_quick_resolution_trampoline+78)
          df4a107c  70b861b0  /data/dalvik-cache/x86/system@framework@boot.art
-         df4a1080  12d79040  /dev/ashmem/dalvik-main space (deleted)
+         df4a1080  12d79040  [anon:dalvik-main space]
          df4a1084  eba35c00  [anon:libc_malloc]
          df4a1088  df4a108c  [stack:4066]
-         df4a108c  ef5a55d8  /dev/ashmem/dalvik-LinearAlloc (deleted)
+         df4a108c  ef5a55d8  [anon:dalvik-LinearAlloc]
          df4a1090  0000ff00
          df4a1094  00000000
          df4a1098  65640030
@@ -12842,18 +12842,18 @@ code around eip:
 
 memory map: (fault address prefixed with --->)
 --->Fault address falls at 00000000 before any mapped regions
-    12c00000-12e06fff rw-         0    207000  /dev/ashmem/dalvik-main space (deleted)
-    12e07000-1ebfffff ---    207000   bdf9000  /dev/ashmem/dalvik-main space (deleted)
-    32c00000-32c00fff rw-         0      1000  /dev/ashmem/dalvik-main space 1 (deleted)
-    32c01000-3ebfffff ---      1000   bfff000  /dev/ashmem/dalvik-main space 1 (deleted)
+    12c00000-12e06fff rw-         0    207000  [anon:dalvik-main space]
+    12e07000-1ebfffff ---    207000   bdf9000  [anon:dalvik-main space]
+    32c00000-32c00fff rw-         0      1000  [anon:dalvik-main space 1]
+    32c01000-3ebfffff ---      1000   bfff000  [anon:dalvik-main space 1]
     701e5000-70bc1fff rw-         0    9dd000  /data/dalvik-cache/x86/system@framework@boot.art
     70bc2000-72a8cfff r--         0   1ecb000  /data/dalvik-cache/x86/system@framework@boot.oat
     72a8d000-7479efff r-x   1ecb000   1d12000  /data/dalvik-cache/x86/system@framework@boot.oat (load base 0x72a8d000)
     7479f000-7479ffff rw-   3bdd000      1000  /data/dalvik-cache/x86/system@framework@boot.oat
-    747a0000-74a6afff rw-         0    2cb000  /dev/ashmem/dalvik-zygote space (deleted)
-    74a6b000-74a6bfff rw-         0      1000  /dev/ashmem/dalvik-non moving space (deleted)
-    74a6c000-77fa0fff ---      1000   3535000  /dev/ashmem/dalvik-non moving space (deleted)
-    77fa1000-7879ffff rw-   3536000    7ff000  /dev/ashmem/dalvik-non moving space (deleted)
+    747a0000-74a6afff rw-         0    2cb000  [anon:dalvik-zygote space]
+    74a6b000-74a6bfff rw-         0      1000  [anon:dalvik-non moving space]
+    74a6c000-77fa0fff ---      1000   3535000  [anon:dalvik-non moving space]
+    77fa1000-7879ffff rw-   3536000    7ff000  [anon:dalvik-non moving space]
     db1d6000-db5befff rw-         0    3e9000  /dev/ashmem/gralloc-1232.40 (deleted)
     db5bf000-db5bffff ---    3e9000      1000  /dev/ashmem/gralloc-1232.40 (deleted)
     db5c0000-db5c0fff ---         0      1000  [anon:libc_malloc]
@@ -12876,11 +12876,11 @@ memory map: (fault address prefixed with --->)
     de7a4000-de7ddfff r-x         0     3a000  /data/app/com.rovio.ABstellapop-1/lib/x86/libs3eSkynest.so
     de7de000-de7defff r--     39000      1000  /data/app/com.rovio.ABstellapop-1/lib/x86/libs3eSkynest.so
     de7df000-de7dffff rw-     3a000      1000  /data/app/com.rovio.ABstellapop-1/lib/x86/libs3eSkynest.so
-    de7e1000-de9d5fff rw-         0    1f5000  /dev/ashmem/dalvik-large object space allocation (deleted)
+    de7e1000-de9d5fff rw-         0    1f5000  [anon:dalvik-large object space allocation]
     de9d6000-dedbefff rw-         0    3e9000  /dev/ashmem/gralloc-1232.35 (deleted)
     dedbf000-dedbffff ---    3e9000      1000  /dev/ashmem/gralloc-1232.35 (deleted)
-    dedc0000-df1a8fff rw-         0    3e9000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    df1a9000-df39dfff rw-         0    1f5000  /dev/ashmem/dalvik-large object space allocation (deleted)
+    dedc0000-df1a8fff rw-         0    3e9000  [anon:dalvik-large object space allocation]
+    df1a9000-df39dfff rw-         0    1f5000  [anon:dalvik-large object space allocation]
     df39e000-df39efff ---         0      1000
     df39f000-df39ffff ---         0      1000
     df3a0000-df4a2fff rw-         0    103000  [stack:4066]
@@ -12892,8 +12892,8 @@ memory map: (fault address prefixed with --->)
     dfb6b000-e0554fff r--         0    9ea000  /data/app/com.rovio.ABstellapop-1/oat/x86/base.odex
     e0555000-e0f06fff r-x    9ea000    9b2000  /data/app/com.rovio.ABstellapop-1/oat/x86/base.odex (load base 0x9ea000)
     e0f07000-e0f07fff rw-   139c000      1000  /data/app/com.rovio.ABstellapop-1/oat/x86/base.odex
-    e0f08000-e1707fff rw-         0    800000  /dev/ashmem/dalvik-allocspace main rosalloc space mark-bitmap 3 (deleted)
-    e1708000-e1f07fff rw-         0    800000  /dev/ashmem/dalvik-allocspace main rosalloc space live-bitmap 3 (deleted)
+    e0f08000-e1707fff rw-         0    800000  [anon:dalvik-allocspace main rosalloc space mark-bitmap 3]
+    e1708000-e1f07fff rw-         0    800000  [anon:dalvik-allocspace main rosalloc space live-bitmap 3]
     e1f08000-e8307fff ---         0   6400000
     e8308000-e832bfff r--         0     24000  /system/usr/hyphen-data/hyph-nn.hyb
     e832c000-e834ffff r--         0     24000  /system/usr/hyphen-data/hyph-nb.hyb
@@ -12959,9 +12959,9 @@ memory map: (fault address prefixed with --->)
     ea0f3000-ea0f5fff r--     79000      3000  /system/lib/libmedia_jni.so
     ea0f6000-ea0f6fff rw-     7c000      1000  /system/lib/libmedia_jni.so
     ea0f7000-ea0f7fff rw-         0      1000
-    ea0f8000-ea0fbfff rw-         0      4000  /dev/ashmem/dalvik-large object space allocation (deleted)
+    ea0f8000-ea0fbfff rw-         0      4000  [anon:dalvik-large object space allocation]
     ea100000-ea13ffff rw-         0     40000  [anon:libc_malloc]
-    ea157000-ea15bfff rw-         0      5000  /dev/ashmem/dalvik-large object space allocation (deleted)
+    ea157000-ea15bfff rw-         0      5000  [anon:dalvik-large object space allocation]
     ea161000-ea162fff r-x         0      2000  /system/lib/libwebviewchromium_loader.so (BuildId: 7ac66444f1de2d1fb5c6c78daa75261b)
     ea163000-ea163fff r--      1000      1000  /system/lib/libwebviewchromium_loader.so
     ea164000-ea164fff rw-      2000      1000  /system/lib/libwebviewchromium_loader.so
@@ -12969,48 +12969,48 @@ memory map: (fault address prefixed with --->)
     ea16d000-ea180fff r-x         0     14000  /system/lib/libandroid.so (BuildId: 4d02959a3d6b4d99b08e798dd9f6874c)
     ea181000-ea182fff r--     13000      2000  /system/lib/libandroid.so
     ea183000-ea183fff rw-     15000      1000  /system/lib/libandroid.so
-    ea184000-ea188fff rw-         0      5000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    ea189000-ea199fff rw-         0     11000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    ea19a000-ea1aafff rw-         0     11000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    ea1ab000-ea1bbfff rw-         0     11000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    ea1bc000-ea1ccfff rw-         0     11000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    ea1cd000-ea1ddfff rw-         0     11000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    ea1de000-ea1eefff rw-         0     11000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    ea1ef000-ea1fffff rw-         0     11000  /dev/ashmem/dalvik-large object space allocation (deleted)
+    ea184000-ea188fff rw-         0      5000  [anon:dalvik-large object space allocation]
+    ea189000-ea199fff rw-         0     11000  [anon:dalvik-large object space allocation]
+    ea19a000-ea1aafff rw-         0     11000  [anon:dalvik-large object space allocation]
+    ea1ab000-ea1bbfff rw-         0     11000  [anon:dalvik-large object space allocation]
+    ea1bc000-ea1ccfff rw-         0     11000  [anon:dalvik-large object space allocation]
+    ea1cd000-ea1ddfff rw-         0     11000  [anon:dalvik-large object space allocation]
+    ea1de000-ea1eefff rw-         0     11000  [anon:dalvik-large object space allocation]
+    ea1ef000-ea1fffff rw-         0     11000  [anon:dalvik-large object space allocation]
     ea200000-ea27ffff rw-         0     80000  [anon:libc_malloc]
-    ea280000-ea284fff rw-         0      5000  /dev/ashmem/dalvik-large object space allocation (deleted)
+    ea280000-ea284fff rw-         0      5000  [anon:dalvik-large object space allocation]
     ea285000-ea2bffff r--    f01000     3b000  /system/framework/framework-res.apk
     ea2c0000-ea2fffff rw-         0     40000  [anon:libc_malloc]
     ea300000-ea300fff r-x         0      1000  /system/lib/libjnigraphics.so (BuildId: 6b7923ce8a8738a5d195ec34cd35bbcb)
     ea301000-ea301fff r--         0      1000  /system/lib/libjnigraphics.so (BuildId: 6b7923ce8a8738a5d195ec34cd35bbcb)
     ea302000-ea302fff rw-      1000      1000  /system/lib/libjnigraphics.so
-    ea303000-ea307fff rw-         0      5000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    ea308000-ea30bfff rw-         0      4000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    ea30c000-ea30ffff rw-         0      4000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    ea310000-ea320fff rw-         0     11000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    ea321000-ea32afff rw-         0      a000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    ea32b000-ea334fff rw-         0      a000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    ea335000-ea33dfff rw-         0      9000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    ea33f000-ea342fff rw-         0      4000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    ea343000-ea346fff rw-         0      4000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    ea347000-ea34afff rw-         0      4000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    ea34b000-ea350fff rw-         0      6000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    ea351000-ea35dfff rw-         0      d000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    ea35e000-ea367fff rw-         0      a000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    ea368000-ea371fff rw-         0      a000  /dev/ashmem/dalvik-large object space allocation (deleted)
+    ea303000-ea307fff rw-         0      5000  [anon:dalvik-large object space allocation]
+    ea308000-ea30bfff rw-         0      4000  [anon:dalvik-large object space allocation]
+    ea30c000-ea30ffff rw-         0      4000  [anon:dalvik-large object space allocation]
+    ea310000-ea320fff rw-         0     11000  [anon:dalvik-large object space allocation]
+    ea321000-ea32afff rw-         0      a000  [anon:dalvik-large object space allocation]
+    ea32b000-ea334fff rw-         0      a000  [anon:dalvik-large object space allocation]
+    ea335000-ea33dfff rw-         0      9000  [anon:dalvik-large object space allocation]
+    ea33f000-ea342fff rw-         0      4000  [anon:dalvik-large object space allocation]
+    ea343000-ea346fff rw-         0      4000  [anon:dalvik-large object space allocation]
+    ea347000-ea34afff rw-         0      4000  [anon:dalvik-large object space allocation]
+    ea34b000-ea350fff rw-         0      6000  [anon:dalvik-large object space allocation]
+    ea351000-ea35dfff rw-         0      d000  [anon:dalvik-large object space allocation]
+    ea35e000-ea367fff rw-         0      a000  [anon:dalvik-large object space allocation]
+    ea368000-ea371fff rw-         0      a000  [anon:dalvik-large object space allocation]
     ea373000-ea373fff r--         0      1000  /system/usr/hyphen-data/hyph-und-ethi.hyb
-    ea374000-ea378fff rw-         0      5000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    ea379000-ea37dfff rw-         0      5000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    ea37e000-ea381fff rw-         0      4000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    ea382000-ea385fff rw-         0      4000  /dev/ashmem/dalvik-large object space allocation (deleted)
+    ea374000-ea378fff rw-         0      5000  [anon:dalvik-large object space allocation]
+    ea379000-ea37dfff rw-         0      5000  [anon:dalvik-large object space allocation]
+    ea37e000-ea381fff rw-         0      4000  [anon:dalvik-large object space allocation]
+    ea382000-ea385fff rw-         0      4000  [anon:dalvik-large object space allocation]
     ea386000-ea3fefff r--         0     79000  /system/usr/share/zoneinfo/tzdata
     ea3ff000-eb9fffff r--         0   1601000  /system/usr/icu/icudt55l.dat
     eba00000-eba3ffff rw-         0     40000  [anon:libc_malloc]
-    eba40000-eba43fff rw-         0      4000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    eba44000-eba47fff rw-         0      4000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    eba48000-eba4cfff rw-         0      5000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    eba4d000-eba51fff rw-         0      5000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    eba52000-eba56fff rw-         0      5000  /dev/ashmem/dalvik-large object space allocation (deleted)
+    eba40000-eba43fff rw-         0      4000  [anon:dalvik-large object space allocation]
+    eba44000-eba47fff rw-         0      4000  [anon:dalvik-large object space allocation]
+    eba48000-eba4cfff rw-         0      5000  [anon:dalvik-large object space allocation]
+    eba4d000-eba51fff rw-         0      5000  [anon:dalvik-large object space allocation]
+    eba52000-eba56fff rw-         0      5000  [anon:dalvik-large object space allocation]
     eba57000-eba60fff r--         0      a000  /system/fonts/CarroisGothicSC-Regular.ttf
     eba61000-eba7dfff r--         0     1d000  /system/fonts/DancingScript-Bold.ttf
     eba7e000-eba9afff r--         0     1d000  /system/fonts/DancingScript-Regular.ttf
@@ -13154,11 +13154,11 @@ memory map: (fault address prefixed with --->)
     eda40000-eda40fff r--         0      1000  [anon:linker_alloc]
     eda41000-eda42fff r--         0      2000  /system/fonts/NotoSansBuginese-Regular.ttf
     eda43000-eda5ffff r--         0     1d000  /system/fonts/NotoNaskhArabic-Regular.ttf
-    eda60000-eda7ffff rw-         0     20000  /dev/ashmem/dalvik-LinearAlloc (deleted)
+    eda60000-eda7ffff rw-         0     20000  [anon:dalvik-LinearAlloc]
     eda80000-edabffff rw-         0     40000  [anon:libc_malloc]
     edac0000-edac0fff r--         0      1000  [anon:linker_alloc]
     edac1000-edac5fff r--         0      5000  /system/fonts/NotoSansHebrew-Regular.ttf
-    edac6000-edac9fff rw-         0      4000  /dev/ashmem/dalvik-large object space allocation (deleted)
+    edac6000-edac9fff rw-         0      4000  [anon:dalvik-large object space allocation]
     edaca000-edacafff r--         0      1000
     edb00000-edb8bfff rw-         0     8c000  [anon:libc_malloc]
     edb8c000-edb8cfff ---         0      1000  [anon:libc_malloc]
@@ -13174,7 +13174,7 @@ memory map: (fault address prefixed with --->)
     edeb8000-edeb8fff r--     29000      1000  /data/app/com.rovio.ABstellapop-1/lib/x86/libs3eFacebookV4.so
     edeb9000-edeb9fff rw-     2a000      1000  /data/app/com.rovio.ABstellapop-1/lib/x86/libs3eFacebookV4.so
     edeba000-edebefff rw-         0      5000
-    edebf000-ededefff rw-         0     20000  /dev/ashmem/dalvik-rosalloc page map (deleted)
+    edebf000-ededefff rw-         0     20000  [anon:dalvik-rosalloc page map]
     ededf000-ef4dffff r--         0   1601000  /system/usr/icu/icudt55l.dat
     ef4e0000-ef53bfff r-x         0     5c000  /system/lib/libjavacore.so (BuildId: f8848f951f1a39306c7708ce0d094bc1) (load base 0x2000)
     ef53c000-ef53cfff ---         0      1000
@@ -13191,7 +13191,7 @@ memory map: (fault address prefixed with --->)
     ef595000-ef595fff ---         0      1000
     ef596000-ef596fff r--      1000      1000  /data/app/com.rovio.ABstellapop-1/lib/x86/libs3eSplashScreen.so
     ef597000-ef597fff rw-      2000      1000  /data/app/com.rovio.ABstellapop-1/lib/x86/libs3eSplashScreen.so
-    ef598000-ef5b7fff rw-         0     20000  /dev/ashmem/dalvik-LinearAlloc (deleted)
+    ef598000-ef5b7fff rw-         0     20000  [anon:dalvik-LinearAlloc]
     ef5ba000-ef5d0fff r-x         0     17000  /data/app/com.rovio.ABstellapop-1/lib/x86/libs3eGooglePlayGames.so
     ef5d1000-ef5d1fff ---         0      1000
     ef5d2000-ef5d2fff r--     17000      1000  /data/app/com.rovio.ABstellapop-1/lib/x86/libs3eGooglePlayGames.so
@@ -13207,23 +13207,23 @@ memory map: (fault address prefixed with --->)
     ef5e2000-ef618fff r-x         0     37000  /system/lib/libgceframebufferconfig.so (BuildId: 0054245384b5889c62b4493f5d0bdf5e)
     ef619000-ef619fff r--     36000      1000  /system/lib/libgceframebufferconfig.so
     ef61a000-ef61afff rw-     37000      1000  /system/lib/libgceframebufferconfig.so
-    ef61b000-ef77dfff rw-         0    163000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    ef77e000-ef77ffff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    ef61b000-ef77dfff rw-         0    163000  [anon:dalvik-large object space allocation]
+    ef77e000-ef77ffff rw-         0      2000  [anon:dalvik-indirect ref table]
     ef780000-ef7bffff rw-         0     40000  [anon:libc_malloc]
-    ef7c0000-ef887fff rw-         0     c8000  /dev/ashmem/dalvik-indirect ref table (deleted)
-    ef888000-ef94ffff rw-         0     c8000  /dev/ashmem/dalvik-indirect ref table (deleted)
-    ef950000-ef950fff rw-         0      1000  /dev/ashmem/dalvik-mark sweep sweep array free buffer (deleted)
-    ef951000-ef951fff rw-         0      1000  /dev/ashmem/dalvik-mark sweep sweep array free buffer (deleted)
-    ef952000-f0152fff rw-         0    801000  /dev/ashmem/dalvik-live stack (deleted)
-    f0153000-f0953fff rw-         0    801000  /dev/ashmem/dalvik-allocation stack (deleted)
-    f0954000-f0993fff rw-         0     40000  /dev/ashmem/dalvik-mark stack (deleted)
-    f0994000-f164bfff rw-         0    cb8000  /dev/ashmem/dalvik-card table (deleted)
-    f164c000-f166bfff rw-         0     20000  /dev/ashmem/dalvik-large marked objects (deleted)
-    f166c000-f168bfff rw-         0     20000  /dev/ashmem/dalvik-large live objects (deleted)
-    f168c000-f1e8bfff rw-         0    800000  /dev/ashmem/dalvik-allocspace main rosalloc space 1 mark-bitmap 2 (deleted)
-    f1e8c000-f268bfff rw-         0    800000  /dev/ashmem/dalvik-allocspace main rosalloc space 1 live-bitmap 2 (deleted)
-    f268c000-f26abfff rw-         0     20000  /dev/ashmem/dalvik-rosalloc page map (deleted)
-    f26ac000-f26adfff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    ef7c0000-ef887fff rw-         0     c8000  [anon:dalvik-indirect ref table]
+    ef888000-ef94ffff rw-         0     c8000  [anon:dalvik-indirect ref table]
+    ef950000-ef950fff rw-         0      1000  [anon:dalvik-mark sweep sweep array free buffer]
+    ef951000-ef951fff rw-         0      1000  [anon:dalvik-mark sweep sweep array free buffer]
+    ef952000-f0152fff rw-         0    801000  [anon:dalvik-live stack]
+    f0153000-f0953fff rw-         0    801000  [anon:dalvik-allocation stack]
+    f0954000-f0993fff rw-         0     40000  [anon:dalvik-mark stack]
+    f0994000-f164bfff rw-         0    cb8000  [anon:dalvik-card table]
+    f164c000-f166bfff rw-         0     20000  [anon:dalvik-large marked objects]
+    f166c000-f168bfff rw-         0     20000  [anon:dalvik-large live objects]
+    f168c000-f1e8bfff rw-         0    800000  [anon:dalvik-allocspace main rosalloc space 1 mark-bitmap 2]
+    f1e8c000-f268bfff rw-         0    800000  [anon:dalvik-allocspace main rosalloc space 1 live-bitmap 2]
+    f268c000-f26abfff rw-         0     20000  [anon:dalvik-rosalloc page map]
+    f26ac000-f26adfff rw-         0      2000  [anon:dalvik-indirect ref table]
     f26ae000-f26aefff r--         0      1000  [anon:linker_alloc]
     f26af000-f26b1fff r-x         0      3000  /data/app/com.rovio.ABstellapop-1/lib/x86/libs3eAppsFlyer.so
     f26b2000-f26b2fff r--      2000      1000  /data/app/com.rovio.ABstellapop-1/lib/x86/libs3eAppsFlyer.so
@@ -13263,11 +13263,11 @@ memory map: (fault address prefixed with --->)
     f29d9000-f29d9fff rw-         0      1000  [anon:linker_alloc_128]
     f29da000-f29dafff ---         0      1000
     f29db000-f29dcfff rw-         0      2000  [anon:thread signal stack]
-    f29dd000-f29defff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    f29dd000-f29defff rw-         0      2000  [anon:dalvik-indirect ref table]
     f29df000-f29dffff r--         0      1000
-    f29e0000-f29e1fff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
-    f29e2000-f29fafff rw-         0     19000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    f29fb000-f2a31fff rw-         0     37000  /dev/ashmem/dalvik-large object space allocation (deleted)
+    f29e0000-f29e1fff rw-         0      2000  [anon:dalvik-indirect ref table]
+    f29e2000-f29fafff rw-         0     19000  [anon:dalvik-large object space allocation]
+    f29fb000-f2a31fff rw-         0     37000  [anon:dalvik-large object space allocation]
     f2a32000-f2a32fff ---         0      1000
     f2a33000-f2a33fff ---         0      1000
     f2a34000-f2b30fff rw-         0     fd000  [stack:4063]
@@ -13278,11 +13278,11 @@ memory map: (fault address prefixed with --->)
     f2baa000-f2baafff r--         0      1000
     f2bab000-f2babfff ---         0      1000
     f2bac000-f2badfff rw-         0      2000  [anon:thread signal stack]
-    f2bae000-f2baffff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    f2bae000-f2baffff rw-         0      2000  [anon:dalvik-indirect ref table]
     f2bb0000-f2bb0fff ---         0      1000
     f2bb1000-f2bb1fff ---         0      1000
     f2bb2000-f2caefff rw-         0     fd000  [stack:4062]
-    f2caf000-f2cb0fff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    f2caf000-f2cb0fff rw-         0      2000  [anon:dalvik-indirect ref table]
     f2cb1000-f2cb1fff ---         0      1000
     f2cb2000-f2cb3fff rw-         0      2000  [anon:thread signal stack]
     f2cb4000-f2cb4fff ---         0      1000
@@ -13300,36 +13300,36 @@ memory map: (fault address prefixed with --->)
     f2ebd000-f2ebdfff ---         0      1000
     f2ebe000-f2ebefff ---         0      1000
     f2ebf000-f2fc1fff rw-         0    103000  [stack:4053]
-    f2fc2000-f2fc3fff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    f2fc2000-f2fc3fff rw-         0      2000  [anon:dalvik-indirect ref table]
     f2fc4000-f2fc4fff ---         0      1000
     f2fc5000-f2fc5fff ---         0      1000
     f2fc6000-f30c8fff rw-         0    103000  [stack:4052]
-    f30c9000-f30cafff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    f30c9000-f30cafff rw-         0      2000  [anon:dalvik-indirect ref table]
     f30cb000-f30cbfff ---         0      1000
     f30cc000-f30ccfff ---         0      1000
     f30cd000-f31cffff rw-         0    103000  [stack:4051]
-    f31d0000-f31d1fff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    f31d0000-f31d1fff rw-         0      2000  [anon:dalvik-indirect ref table]
     f31d2000-f31d2fff ---         0      1000
     f31d3000-f31d3fff ---         0      1000
     f31d4000-f32d6fff rw-         0    103000  [stack:4050]
-    f32d7000-f32d8fff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
-    f32d9000-f32dafff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    f32d7000-f32d8fff rw-         0      2000  [anon:dalvik-indirect ref table]
+    f32d9000-f32dafff rw-         0      2000  [anon:dalvik-indirect ref table]
     f32db000-f32dbfff ---         0      1000
     f32dc000-f32ddfff rw-         0      2000  [anon:thread signal stack]
     f32de000-f32defff ---         0      1000
     f32df000-f32dffff ---         0      1000
     f32e0000-f33dcfff rw-         0     fd000  [stack:4049]
-    f33dd000-f33defff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    f33dd000-f33defff rw-         0      2000  [anon:dalvik-indirect ref table]
     f33df000-f33dffff ---         0      1000
     f33e0000-f33e1fff rw-         0      2000  [anon:thread signal stack]
     f33e2000-f33e2fff ---         0      1000
     f33e3000-f33e3fff ---         0      1000
     f33e4000-f34e0fff rw-         0     fd000  [stack:4048]
-    f34e1000-f34e1fff rw-         0      1000  /dev/ashmem/dalvik-mod union bitmap (deleted)
-    f34e2000-f35d6fff rw-         0     f5000  /dev/ashmem/dalvik-allocspace non moving space mark-bitmap 4 (deleted)
-    f35d7000-f36cbfff rw-         0     f5000  /dev/ashmem/dalvik-allocspace non moving space live-bitmap 4 (deleted)
-    f36cc000-f37cbfff rw-         0    100000  /dev/ashmem/dalvik-allocspace zygote / non moving space mark-bitmap 0 (deleted)
-    f37cc000-f38cbfff rw-         0    100000  /dev/ashmem/dalvik-allocspace zygote / non moving space live-bitmap 0 (deleted)
+    f34e1000-f34e1fff rw-         0      1000  [anon:dalvik-mod union bitmap]
+    f34e2000-f35d6fff rw-         0     f5000  [anon:dalvik-allocspace non moving space mark-bitmap 4]
+    f35d7000-f36cbfff rw-         0     f5000  [anon:dalvik-allocspace non moving space live-bitmap 4]
+    f36cc000-f37cbfff rw-         0    100000  [anon:dalvik-allocspace zygote / non moving space mark-bitmap 0]
+    f37cc000-f38cbfff rw-         0    100000  [anon:dalvik-allocspace zygote / non moving space live-bitmap 0]
     f38cc000-f38e8fff r--    9dd000     1d000  /data/dalvik-cache/x86/system@framework@boot.art
     f38e9000-f38e9fff r-x         0      1000  /system/lib/libsigchain.so (BuildId: c68fe06104678512830047a4a9a11070)
     f38ea000-f38eafff r--         0      1000  /system/lib/libsigchain.so (BuildId: c68fe06104678512830047a4a9a11070)
@@ -13340,7 +13340,7 @@ memory map: (fault address prefixed with --->)
     f403d000-f403dfff rw-    750000      1000  /system/lib/libart.so
     f403e000-f403ffff rw-         0      2000
     f4040000-f413ffff rw-         0    100000  [anon:libc_malloc]
-    f4140000-f4140fff rw-         0      1000  /dev/ashmem/dalvik-mark sweep sweep array free buffer (deleted)
+    f4140000-f4140fff rw-         0      1000  [anon:dalvik-mark sweep sweep array free buffer]
     f4141000-f4142fff r--         0      2000
     f4143000-f4162fff r--         0     20000  /dev/__properties__
     f4163000-f4163fff rw-         0      1000  [anon:linker_alloc_vector]
@@ -13713,8 +13713,8 @@ stack:
     #02  fff2a9d0  00000008
          fff2a9d4  c0186201
          fff2a9d8  fff2a9f8  [stack]
-         fff2a9dc  12c5d130  /dev/ashmem/dalvik-main space (deleted)
-         fff2a9e0  12cba300  /dev/ashmem/dalvik-main space (deleted)
+         fff2a9dc  12c5d130  [anon:dalvik-main space]
+         fff2a9e0  12cba300  [anon:dalvik-main space]
          fff2a9e4  00016269
          fff2a9e8  00000000
          fff2a9ec  f4043324  [anon:libc_malloc]
@@ -13782,10 +13782,10 @@ stack:
          fff2ab88  00430000
          fff2ab8c  00000002
          fff2ab90  f40f4500  [anon:libc_malloc]
-         fff2ab94  12ce4280  /dev/ashmem/dalvik-main space (deleted)
+         fff2ab94  12ce4280  [anon:dalvik-main space]
          fff2ab98  eba05080  [anon:libc_malloc]
-         fff2ab9c  12ce4280  /dev/ashmem/dalvik-main space (deleted)
-         fff2aba0  12c04f00  /dev/ashmem/dalvik-main space (deleted)
+         fff2ab9c  12ce4280  [anon:dalvik-main space]
+         fff2aba0  12c04f00  [anon:dalvik-main space]
          fff2aba4  00000008
          fff2aba8  705557c8  /data/dalvik-cache/x86/system@framework@boot.art
          fff2abac  73ba49c5  /data/dalvik-cache/x86/system@framework@boot.oat
@@ -13795,14 +13795,14 @@ stack:
          fff2abbc  fff2abe0  [stack]
          fff2abc0  fff2abe4  [stack]
          fff2abc4  00000000
-         fff2abc8  12ce4280  /dev/ashmem/dalvik-main space (deleted)
+         fff2abc8  12ce4280  [anon:dalvik-main space]
          fff2abcc  73be10f3  /data/dalvik-cache/x86/system@framework@boot.oat
          fff2abd0  70b84ab8  /data/dalvik-cache/x86/system@framework@boot.art
          fff2abd4  fff2b0b4  [stack]
          fff2abd8  00000003
-         fff2abdc  12c04f00  /dev/ashmem/dalvik-main space (deleted)
-         fff2abe0  12ce4280  /dev/ashmem/dalvik-main space (deleted)
-         fff2abe4  12ce42a0  /dev/ashmem/dalvik-main space (deleted)
+         fff2abdc  12c04f00  [anon:dalvik-main space]
+         fff2abe0  12ce4280  [anon:dalvik-main space]
+         fff2abe4  12ce42a0  [anon:dalvik-main space]
          fff2abe8  00000006
          fff2abec  ffffffff
 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
@@ -14168,7 +14168,7 @@ stack:
          72da6ec6  06858b00
          72da6eca  8bfd43f8
          72da6ece  0001c8b0
-         72da6ed2  75f68500  /dev/ashmem/dalvik-non moving space (deleted)
+         72da6ed2  75f68500  [anon:dalvik-non moving space]
          72da6ed6  06b58b6d
          72da6eda  8bfd43f8
          72da6ede  5578b8ce
@@ -14307,7 +14307,7 @@ stack:
          706f1280  7077a010  /data/dalvik-cache/x86/system@framework@boot.art
          706f1284  00000000
          706f1288  00000216
-         706f128c  12ca3ce0  /dev/ashmem/dalvik-main space (deleted)
+         706f128c  12ca3ce0  [anon:dalvik-main space]
          706f1290  00000006
          706f1294  00000000
          706f1298  7073deb0  /data/dalvik-cache/x86/system@framework@boot.art
@@ -14448,15 +14448,15 @@ stack:
          f30c864c  72da6977  /data/dalvik-cache/x86/system@framework@boot.oat
          ........  ........
     #06  70725388  70408380  /data/dalvik-cache/x86/system@framework@boot.art
-         7072538c  12ca7e20  /dev/ashmem/dalvik-main space (deleted)
+         7072538c  12ca7e20  [anon:dalvik-main space]
          70725390  7075f3d8  /data/dalvik-cache/x86/system@framework@boot.art
          70725394  00000000
          70725398  704097e8  /data/dalvik-cache/x86/system@framework@boot.art
-         7072539c  12ca7e80  /dev/ashmem/dalvik-main space (deleted)
+         7072539c  12ca7e80  [anon:dalvik-main space]
          707253a0  7075f5b0  /data/dalvik-cache/x86/system@framework@boot.art
          707253a4  4f40d9f6
          707253a8  70417d68  /data/dalvik-cache/x86/system@framework@boot.art
-         707253ac  12ca7d60  /dev/ashmem/dalvik-main space (deleted)
+         707253ac  12ca7d60  [anon:dalvik-main space]
          707253b0  70760d20  /data/dalvik-cache/x86/system@framework@boot.art
          707253b4  00000000
          707253b8  70725128  /data/dalvik-cache/x86/system@framework@boot.art
@@ -15410,52 +15410,52 @@ code around rip:
     00007f2bf9faba60 fffa64c8e8c789d8 00000000801f0fc3  .....d..........
 
 memory map:
-    00000000'12c00000-00000000'12e06fff rw-         0    207000  /dev/ashmem/dalvik-main space (deleted)
-    00000000'12e07000-00000000'13006fff rw-    207000    200000  /dev/ashmem/dalvik-main space (deleted)
-    00000000'13007000-00000000'16bfffff ---    407000   3bf9000  /dev/ashmem/dalvik-main space (deleted)
-    00000000'16c00000-00000000'16c00fff rw-         0      1000  /dev/ashmem/dalvik-main space 1 (deleted)
-    00000000'16c01000-00000000'1abfffff ---      1000   3fff000  /dev/ashmem/dalvik-main space 1 (deleted)
-    00000000'400cc000-00000000'400e4fff rw-         0     19000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'40211000-00000000'40217fff rw-         0      7000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'4033e000-00000000'40344fff rw-         0      7000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'40585000-00000000'40588fff rw-         0      4000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'405fa000-00000000'405fefff rw-         0      5000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'4060c000-00000000'40612fff rw-         0      7000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'40626000-00000000'4062cfff rw-         0      7000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'40699000-00000000'4069ffff rw-         0      7000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'407a2000-00000000'407a8fff rw-         0      7000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'407a9000-00000000'407affff rw-         0      7000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'40983000-00000000'4098bfff rw-         0      9000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'4098c000-00000000'40992fff rw-         0      7000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'40adc000-00000000'40ae4fff rw-         0      9000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'40ae5000-00000000'40af5fff rw-         0     11000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'40af6000-00000000'40b6bfff rw-         0     76000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'40b79000-00000000'40b7dfff rw-         0      5000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'40b8f000-00000000'40b94fff rw-         0      6000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'40b99000-00000000'40ba2fff rw-         0      a000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'40fa0000-00000000'40fa6fff rw-         0      7000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'40ff0000-00000000'40ff3fff rw-         0      4000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'4108f000-00000000'410a2fff rw-         0     14000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'4112a000-00000000'41137fff rw-         0      e000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'41439000-00000000'41442fff rw-         0      a000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'41465000-00000000'4146bfff rw-         0      7000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'414fe000-00000000'41504fff rw-         0      7000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'41505000-00000000'41856fff rw-         0    352000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'418db000-00000000'418e1fff rw-         0      7000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'4198f000-00000000'41992fff rw-         0      4000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'419e9000-00000000'419f5fff rw-         0      d000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'41ba4000-00000000'41ba7fff rw-         0      4000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'41d72000-00000000'41d78fff rw-         0      7000  /dev/ashmem/dalvik-large object space allocation (deleted)
-    00000000'41d79000-00000000'4241bfff rw-         0    6a3000  /dev/ashmem/dalvik-large object space allocation (deleted)
+    00000000'12c00000-00000000'12e06fff rw-         0    207000  [anon:dalvik-main space]
+    00000000'12e07000-00000000'13006fff rw-    207000    200000  [anon:dalvik-main space]
+    00000000'13007000-00000000'16bfffff ---    407000   3bf9000  [anon:dalvik-main space]
+    00000000'16c00000-00000000'16c00fff rw-         0      1000  [anon:dalvik-main space 1]
+    00000000'16c01000-00000000'1abfffff ---      1000   3fff000  [anon:dalvik-main space 1]
+    00000000'400cc000-00000000'400e4fff rw-         0     19000  [anon:dalvik-large object space allocation]
+    00000000'40211000-00000000'40217fff rw-         0      7000  [anon:dalvik-large object space allocation]
+    00000000'4033e000-00000000'40344fff rw-         0      7000  [anon:dalvik-large object space allocation]
+    00000000'40585000-00000000'40588fff rw-         0      4000  [anon:dalvik-large object space allocation]
+    00000000'405fa000-00000000'405fefff rw-         0      5000  [anon:dalvik-large object space allocation]
+    00000000'4060c000-00000000'40612fff rw-         0      7000  [anon:dalvik-large object space allocation]
+    00000000'40626000-00000000'4062cfff rw-         0      7000  [anon:dalvik-large object space allocation]
+    00000000'40699000-00000000'4069ffff rw-         0      7000  [anon:dalvik-large object space allocation]
+    00000000'407a2000-00000000'407a8fff rw-         0      7000  [anon:dalvik-large object space allocation]
+    00000000'407a9000-00000000'407affff rw-         0      7000  [anon:dalvik-large object space allocation]
+    00000000'40983000-00000000'4098bfff rw-         0      9000  [anon:dalvik-large object space allocation]
+    00000000'4098c000-00000000'40992fff rw-         0      7000  [anon:dalvik-large object space allocation]
+    00000000'40adc000-00000000'40ae4fff rw-         0      9000  [anon:dalvik-large object space allocation]
+    00000000'40ae5000-00000000'40af5fff rw-         0     11000  [anon:dalvik-large object space allocation]
+    00000000'40af6000-00000000'40b6bfff rw-         0     76000  [anon:dalvik-large object space allocation]
+    00000000'40b79000-00000000'40b7dfff rw-         0      5000  [anon:dalvik-large object space allocation]
+    00000000'40b8f000-00000000'40b94fff rw-         0      6000  [anon:dalvik-large object space allocation]
+    00000000'40b99000-00000000'40ba2fff rw-         0      a000  [anon:dalvik-large object space allocation]
+    00000000'40fa0000-00000000'40fa6fff rw-         0      7000  [anon:dalvik-large object space allocation]
+    00000000'40ff0000-00000000'40ff3fff rw-         0      4000  [anon:dalvik-large object space allocation]
+    00000000'4108f000-00000000'410a2fff rw-         0     14000  [anon:dalvik-large object space allocation]
+    00000000'4112a000-00000000'41137fff rw-         0      e000  [anon:dalvik-large object space allocation]
+    00000000'41439000-00000000'41442fff rw-         0      a000  [anon:dalvik-large object space allocation]
+    00000000'41465000-00000000'4146bfff rw-         0      7000  [anon:dalvik-large object space allocation]
+    00000000'414fe000-00000000'41504fff rw-         0      7000  [anon:dalvik-large object space allocation]
+    00000000'41505000-00000000'41856fff rw-         0    352000  [anon:dalvik-large object space allocation]
+    00000000'418db000-00000000'418e1fff rw-         0      7000  [anon:dalvik-large object space allocation]
+    00000000'4198f000-00000000'41992fff rw-         0      4000  [anon:dalvik-large object space allocation]
+    00000000'419e9000-00000000'419f5fff rw-         0      d000  [anon:dalvik-large object space allocation]
+    00000000'41ba4000-00000000'41ba7fff rw-         0      4000  [anon:dalvik-large object space allocation]
+    00000000'41d72000-00000000'41d78fff rw-         0      7000  [anon:dalvik-large object space allocation]
+    00000000'41d79000-00000000'4241bfff rw-         0    6a3000  [anon:dalvik-large object space allocation]
     00000000'708a8000-00000000'71592fff rw-         0    ceb000  /data/dalvik-cache/x86_64/system@framework@boot.art
     00000000'71593000-00000000'73466fff r--         0   1ed4000  /data/dalvik-cache/x86_64/system@framework@boot.oat
     00000000'73467000-00000000'753c0fff r-x   1ed4000   1f5a000  /data/dalvik-cache/x86_64/system@framework@boot.oat (load base 0x73467000)
     00000000'753c1000-00000000'753c1fff rw-   3e2e000      1000  /data/dalvik-cache/x86_64/system@framework@boot.oat
-    00000000'753c2000-00000000'754a5fff rw-         0     e4000  /dev/ashmem/dalvik-zygote space (deleted)
-    00000000'754a6000-00000000'754a6fff rw-         0      1000  /dev/ashmem/dalvik-non moving space (deleted)
-    00000000'754a7000-00000000'754affff rw-      1000      9000  /dev/ashmem/dalvik-non moving space (deleted)
-    00000000'754b0000-00000000'78fc2fff ---      a000   3b13000  /dev/ashmem/dalvik-non moving space (deleted)
-    00000000'78fc3000-00000000'793c1fff rw-   3b1d000    3ff000  /dev/ashmem/dalvik-non moving space (deleted)
+    00000000'753c2000-00000000'754a5fff rw-         0     e4000  [anon:dalvik-zygote space]
+    00000000'754a6000-00000000'754a6fff rw-         0      1000  [anon:dalvik-non moving space]
+    00000000'754a7000-00000000'754affff rw-      1000      9000  [anon:dalvik-non moving space]
+    00000000'754b0000-00000000'78fc2fff ---      a000   3b13000  [anon:dalvik-non moving space]
+    00000000'78fc3000-00000000'793c1fff rw-   3b1d000    3ff000  [anon:dalvik-non moving space]
     00000335'5962f000-00000335'5963ffff ---         0     11000
     00000335'59640000-00000335'5965ffff rw-         0     20000
     00000335'59660000-00000335'5968efff ---         0     2f000
@@ -15548,7 +15548,7 @@ memory map:
     00007f2b'e3ec2000-00007f2b'e3ec2fff ---         0      1000
     00007f2b'e3ec3000-00007f2b'e3fbffff rw-         0     fd000  [stack:2291]
     00007f2b'e3fc0000-00007f2b'e40bffff rw-         0    100000  [anon:libc_malloc]
-    00007f2b'e40db000-00007f2b'e40fafff rw-         0     20000  /dev/ashmem/dalvik-LinearAlloc (deleted)
+    00007f2b'e40db000-00007f2b'e40fafff rw-         0     20000  [anon:dalvik-LinearAlloc]
     00007f2b'e40fb000-00007f2b'e40fbfff ---         0      1000
     00007f2b'e40fc000-00007f2b'e40fcfff ---         0      1000
     00007f2b'e40fd000-00007f2b'e41fffff rw-         0    103000  [stack:2290]
@@ -15557,7 +15557,7 @@ memory map:
     00007f2b'e4257000-00007f2b'e4258fff rw-         0      2000  [anon:thread signal stack]
     00007f2b'e4259000-00007f2b'e4259fff ---         0      1000
     00007f2b'e425a000-00007f2b'e425bfff rw-         0      2000  [stack:2298]
-    00007f2b'e425c000-00007f2b'e427bfff rw-         0     20000  /dev/ashmem/dalvik-LinearAlloc (deleted)
+    00007f2b'e425c000-00007f2b'e427bfff rw-         0     20000  [anon:dalvik-LinearAlloc]
     00007f2b'e427c000-00007f2b'e427cfff ---         0      1000
     00007f2b'e427d000-00007f2b'e427dfff ---         0      1000
     00007f2b'e427e000-00007f2b'e4380fff rw-         0    103000  [stack:2289]
@@ -15568,40 +15568,40 @@ memory map:
     00007f2b'e44c1000-00007f2b'e44c1fff ---         0      1000
     00007f2b'e44c2000-00007f2b'e45bffff rw-         0     fe000  [stack:2287]
     00007f2b'e45c0000-00007f2b'e46bffff rw-         0    100000  [anon:libc_malloc]
-    00007f2b'e46c0000-00007f2b'e46c1fff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    00007f2b'e46c0000-00007f2b'e46c1fff rw-         0      2000  [anon:dalvik-indirect ref table]
     00007f2b'e46c2000-00007f2b'e46c2fff ---         0      1000
     00007f2b'e46c3000-00007f2b'e46c4fff rw-         0      2000  [anon:thread signal stack]
     00007f2b'e46c5000-00007f2b'e46c5fff ---         0      1000
     00007f2b'e46c6000-00007f2b'e46c7fff rw-         0      2000  [anon:thread signal stack]
-    00007f2b'e46c8000-00007f2b'e46c9fff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
-    00007f2b'e46ca000-00007f2b'e46cbfff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    00007f2b'e46c8000-00007f2b'e46c9fff rw-         0      2000  [anon:dalvik-indirect ref table]
+    00007f2b'e46ca000-00007f2b'e46cbfff rw-         0      2000  [anon:dalvik-indirect ref table]
     00007f2b'e46cc000-00007f2b'e46ccfff ---         0      1000
     00007f2b'e46cd000-00007f2b'e46cefff rw-         0      2000  [anon:thread signal stack]
     00007f2b'e46cf000-00007f2b'e46cffff ---         0      1000
     00007f2b'e46d0000-00007f2b'e46d1fff rw-         0      2000  [anon:thread signal stack]
     00007f2b'e46d2000-00007f2b'e46d2fff ---         0      1000
     00007f2b'e46d3000-00007f2b'e46d4fff rw-         0      2000  [anon:thread signal stack]
-    00007f2b'e46d5000-00007f2b'e46d6fff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
-    00007f2b'e46d7000-00007f2b'e46d8fff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    00007f2b'e46d5000-00007f2b'e46d6fff rw-         0      2000  [anon:dalvik-indirect ref table]
+    00007f2b'e46d7000-00007f2b'e46d8fff rw-         0      2000  [anon:dalvik-indirect ref table]
     00007f2b'e46d9000-00007f2b'e46d9fff ---         0      1000
     00007f2b'e46da000-00007f2b'e46dbfff rw-         0      2000  [anon:thread signal stack]
     00007f2b'e46dc000-00007f2b'e46dcfff ---         0      1000
     00007f2b'e46dd000-00007f2b'e46defff rw-         0      2000  [anon:thread signal stack]
-    00007f2b'e46df000-00007f2b'e46e0fff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    00007f2b'e46df000-00007f2b'e46e0fff rw-         0      2000  [anon:dalvik-indirect ref table]
     00007f2b'e46e1000-00007f2b'e46e1fff ---         0      1000
     00007f2b'e46e2000-00007f2b'e46e2fff ---         0      1000
     00007f2b'e46e3000-00007f2b'e47dffff rw-         0     fd000  [stack:2286]
-    00007f2b'e47e0000-00007f2b'e47fffff rw-         0     20000  /dev/ashmem/dalvik-LinearAlloc (deleted)
+    00007f2b'e47e0000-00007f2b'e47fffff rw-         0     20000  [anon:dalvik-LinearAlloc]
     00007f2b'e4800000-00007f2b'e483ffff rw-         0     40000  [anon:libc_malloc]
     00007f2b'e4840000-00007f2b'e4840fff ---         0      1000
     00007f2b'e4841000-00007f2b'e4842fff rw-         0      2000  [anon:thread signal stack]
     00007f2b'e4843000-00007f2b'e4843fff ---         0      1000
     00007f2b'e4844000-00007f2b'e4845fff rw-         0      2000  [anon:thread signal stack]
     00007f2b'e4846000-00007f2b'e484dfff rw-         0      8000  /data/data/com.android.browser/databases/browser2.db-shm
-    00007f2b'e484e000-00007f2b'e484ffff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    00007f2b'e484e000-00007f2b'e484ffff rw-         0      2000  [anon:dalvik-indirect ref table]
     00007f2b'e4850000-00007f2b'e4850fff ---         0      1000
     00007f2b'e4851000-00007f2b'e4852fff rw-         0      2000  [anon:thread signal stack]
-    00007f2b'e4853000-00007f2b'e4854fff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    00007f2b'e4853000-00007f2b'e4854fff rw-         0      2000  [anon:dalvik-indirect ref table]
     00007f2b'e4855000-00007f2b'e4857fff r-x         0      3000  /system/lib64/hw/gralloc.default.so
     00007f2b'e4858000-00007f2b'e4858fff r--      2000      1000  /system/lib64/hw/gralloc.default.so
     00007f2b'e4859000-00007f2b'e4859fff rw-      3000      1000  /system/lib64/hw/gralloc.default.so
@@ -15617,7 +15617,7 @@ memory map:
     00007f2b'e486f000-00007f2b'e486ffff rw-      5000      1000  /system/lib64/hw/gralloc.goldfish.so
     00007f2b'e4870000-00007f2b'e4870fff ---         0      1000
     00007f2b'e4871000-00007f2b'e4872fff rw-         0      2000  [anon:thread signal stack]
-    00007f2b'e4873000-00007f2b'e4874fff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    00007f2b'e4873000-00007f2b'e4874fff rw-         0      2000  [anon:dalvik-indirect ref table]
     00007f2b'e4875000-00007f2b'e4875fff ---         0      1000
     00007f2b'e4876000-00007f2b'e4877fff rw-         0      2000  [anon:thread signal stack]
     00007f2b'e4878000-00007f2b'e4878fff ---         0      1000
@@ -15627,7 +15627,7 @@ memory map:
     00007f2b'e4978000-00007f2b'e4979fff rw-         0      2000  [anon:thread signal stack]
     00007f2b'e497a000-00007f2b'e497afff ---         0      1000
     00007f2b'e497b000-00007f2b'e4a78fff rw-         0     fe000  [stack:2284]
-    00007f2b'e4a79000-00007f2b'e4a7afff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    00007f2b'e4a79000-00007f2b'e4a7afff rw-         0      2000  [anon:dalvik-indirect ref table]
     00007f2b'e4a7b000-00007f2b'e4a7bfff ---         0      1000
     00007f2b'e4a7c000-00007f2b'e4a7dfff rw-         0      2000  [anon:thread signal stack]
     00007f2b'e4a7e000-00007f2b'e4a7efff ---         0      1000
@@ -15636,7 +15636,7 @@ memory map:
     00007f2b'e4b7d000-00007f2b'e4b7dfff ---         0      1000
     00007f2b'e4b7e000-00007f2b'e4b7ffff rw-         0      2000  [anon:thread signal stack]
     00007f2b'e4b80000-00007f2b'e4bbffff rw-         0     40000  [anon:libc_malloc]
-    00007f2b'e4bc1000-00007f2b'e4bc2fff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    00007f2b'e4bc1000-00007f2b'e4bc2fff rw-         0      2000  [anon:dalvik-indirect ref table]
     00007f2b'e4bc3000-00007f2b'e4bc3fff ---         0      1000
     00007f2b'e4bc4000-00007f2b'e4cc1fff rw-         0     fe000  [stack:2282]
     00007f2b'e4cc2000-00007f2b'e4cc2fff ---         0      1000
@@ -15648,25 +15648,25 @@ memory map:
     00007f2b'e4ec0000-00007f2b'e4efffff rw-         0     40000  [anon:libc_malloc]
     00007f2b'e4f00000-00007f2b'e4f00fff ---         0      1000
     00007f2b'e4f01000-00007f2b'e4f02fff rw-         0      2000  [anon:thread signal stack]
-    00007f2b'e4f03000-00007f2b'e4f04fff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    00007f2b'e4f03000-00007f2b'e4f04fff rw-         0      2000  [anon:dalvik-indirect ref table]
     00007f2b'e4f05000-00007f2b'e4f05fff ---         0      1000
     00007f2b'e4f06000-00007f2b'e4f07fff rw-         0      2000  [anon:thread signal stack]
-    00007f2b'e4f08000-00007f2b'e4f09fff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    00007f2b'e4f08000-00007f2b'e4f09fff rw-         0      2000  [anon:dalvik-indirect ref table]
     00007f2b'e4f0a000-00007f2b'e4f0afff ---         0      1000
     00007f2b'e4f0b000-00007f2b'e4f0cfff rw-         0      2000  [anon:thread signal stack]
-    00007f2b'e4f0d000-00007f2b'e4f0efff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    00007f2b'e4f0d000-00007f2b'e4f0efff rw-         0      2000  [anon:dalvik-indirect ref table]
     00007f2b'e4f0f000-00007f2b'e4f0ffff ---         0      1000
     00007f2b'e4f10000-00007f2b'e4f10fff ---         0      1000
     00007f2b'e4f11000-00007f2b'e500dfff rw-         0     fd000  [stack:2279]
     00007f2b'e500e000-00007f2b'e500efff ---         0      1000
     00007f2b'e500f000-00007f2b'e5010fff rw-         0      2000  [anon:thread signal stack]
-    00007f2b'e5011000-00007f2b'e5012fff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    00007f2b'e5011000-00007f2b'e5012fff rw-         0      2000  [anon:dalvik-indirect ref table]
     00007f2b'e5013000-00007f2b'e5013fff ---         0      1000
     00007f2b'e5014000-00007f2b'e5014fff ---         0      1000
     00007f2b'e5015000-00007f2b'e5111fff rw-         0     fd000  [stack:2278]
     00007f2b'e5112000-00007f2b'e5112fff ---         0      1000
     00007f2b'e5113000-00007f2b'e5114fff rw-         0      2000  [anon:thread signal stack]
-    00007f2b'e5115000-00007f2b'e5116fff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    00007f2b'e5115000-00007f2b'e5116fff rw-         0      2000  [anon:dalvik-indirect ref table]
     00007f2b'e5117000-00007f2b'e5117fff ---         0      1000
     00007f2b'e5118000-00007f2b'e5118fff ---         0      1000
     00007f2b'e5119000-00007f2b'e5215fff rw-         0     fd000  [stack:2277]
@@ -15705,7 +15705,7 @@ memory map:
     00007f2b'e5f36000-00007f2b'e5f36fff ---         0      1000
     00007f2b'e5f37000-00007f2b'e5f37fff ---         0      1000
     00007f2b'e5f38000-00007f2b'e603afff rw-         0    103000  [stack:2270]
-    00007f2b'e603b000-00007f2b'e603cfff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    00007f2b'e603b000-00007f2b'e603cfff rw-         0      2000  [anon:dalvik-indirect ref table]
     00007f2b'e603d000-00007f2b'e61fefff r--         0    1c2000  /system/app/webview/oat/x86_64/webview.odex
     00007f2b'e61ff000-00007f2b'e6358fff r-x    1c2000    15a000  /system/app/webview/oat/x86_64/webview.odex (load base 0x1c2000)
     00007f2b'e6359000-00007f2b'e6359fff rw-    31c000      1000  /system/app/webview/oat/x86_64/webview.odex
@@ -15748,8 +15748,8 @@ memory map:
     00007f2b'e7208000-00007f2b'e7208fff ---         0      1000
     00007f2b'e7209000-00007f2b'e7209fff ---         0      1000
     00007f2b'e720a000-00007f2b'e7306fff rw-         0     fd000  [stack:2257]
-    00007f2b'e7307000-00007f2b'e7386fff rw-         0     80000  /dev/ashmem/dalvik-jit-code-cache (deleted)
-    00007f2b'e7387000-00007f2b'e7506fff rwx     80000    180000  /dev/ashmem/dalvik-jit-code-cache (deleted)
+    00007f2b'e7307000-00007f2b'e7386fff rw-         0     80000  [anon:dalvik-jit-code-cache]
+    00007f2b'e7387000-00007f2b'e7506fff rwx     80000    180000  [anon:dalvik-jit-code-cache]
     00007f2b'e7507000-00007f2b'e7a75fff r-x         0    56f000  /system/lib64/libart-compiler.so
     00007f2b'e7a76000-00007f2b'e7a76fff ---         0      1000
     00007f2b'e7a77000-00007f2b'e7ab9fff r--    56f000     43000  /system/lib64/libart-compiler.so
@@ -15775,9 +15775,9 @@ memory map:
     00007f2b'ee005000-00007f2b'ee006fff rw-         0      2000  [anon:thread signal stack]
     00007f2b'ee007000-00007f2b'ee007fff ---         0      1000
     00007f2b'ee008000-00007f2b'ee009fff rw-         0      2000  [anon:thread signal stack]
-    00007f2b'ee00a000-00007f2b'ee00bfff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
-    00007f2b'ee00c000-00007f2b'ee00dfff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
-    00007f2b'ee00e000-00007f2b'ee00ffff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    00007f2b'ee00a000-00007f2b'ee00bfff rw-         0      2000  [anon:dalvik-indirect ref table]
+    00007f2b'ee00c000-00007f2b'ee00dfff rw-         0      2000  [anon:dalvik-indirect ref table]
+    00007f2b'ee00e000-00007f2b'ee00ffff rw-         0      2000  [anon:dalvik-indirect ref table]
     00007f2b'ee010000-00007f2b'ee010fff ---         0      1000
     00007f2b'ee011000-00007f2b'ee012fff rw-         0      2000  [anon:thread signal stack]
     00007f2b'ee013000-00007f2b'ee01bfff r--    2a3000      9000  /system/app/Browser/Browser.apk
@@ -15795,7 +15795,7 @@ memory map:
     00007f2b'ee5e1000-00007f2b'ee5e1fff rw-     1b000      1000  /system/lib64/libandroid.so
     00007f2b'ee5e2000-00007f2b'ee67ffff r--    ff3000     9e000  /system/framework/framework-res.apk
     00007f2b'ee680000-00007f2b'ee73ffff rw-         0     c0000  [anon:libc_malloc]
-    00007f2b'ee740000-00007f2b'ee741fff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    00007f2b'ee740000-00007f2b'ee741fff rw-         0      2000  [anon:dalvik-indirect ref table]
     00007f2b'ee742000-00007f2b'ee76cfff r-x         0     2b000  /system/lib64/egl/libGLES_android.so
     00007f2b'ee76d000-00007f2b'ee76efff r--     2a000      2000  /system/lib64/egl/libGLES_android.so
     00007f2b'ee76f000-00007f2b'ee76ffff rw-     2c000      1000  /system/lib64/egl/libGLES_android.so
@@ -15985,13 +15985,13 @@ memory map:
     00007f2b'f2040000-00007f2b'f2040fff r--         0      1000  [anon:linker_alloc]
     00007f2b'f2041000-00007f2b'f2042fff r--         0      2000  /system/fonts/NotoSansBuhid-Regular.ttf
     00007f2b'f2043000-00007f2b'f205ffff r--         0     1d000  /system/fonts/NotoNaskhArabic-Bold.ttf
-    00007f2b'f2060000-00007f2b'f207ffff rw-         0     20000  /dev/ashmem/dalvik-LinearAlloc (deleted)
+    00007f2b'f2060000-00007f2b'f207ffff rw-         0     20000  [anon:dalvik-LinearAlloc]
     00007f2b'f2080000-00007f2b'f20bffff rw-         0     40000  [anon:libc_malloc]
     00007f2b'f20c0000-00007f2b'f20dcfff r--         0     1d000  /system/fonts/NotoNaskhArabic-Regular.ttf
     00007f2b'f20dd000-00007f2b'f20ddfff rw-         0      1000
     00007f2b'f20de000-00007f2b'f20defff ---         0      1000
     00007f2b'f20df000-00007f2b'f20e0fff rw-         0      2000  [anon:thread signal stack]
-    00007f2b'f20e1000-00007f2b'f20e2fff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    00007f2b'f20e1000-00007f2b'f20e2fff rw-         0      2000  [anon:dalvik-indirect ref table]
     00007f2b'f20e3000-00007f2b'f20e3fff ---         0      1000
     00007f2b'f20e4000-00007f2b'f20e5fff rw-         0      2000  [anon:thread signal stack]
     00007f2b'f20e6000-00007f2b'f20e6fff ---         0      1000
@@ -16000,45 +16000,45 @@ memory map:
     00007f2b'f20ea000-00007f2b'f20ebfff rw-         0      2000  [anon:thread signal stack]
     00007f2b'f20ec000-00007f2b'f20ecfff ---         0      1000
     00007f2b'f20ed000-00007f2b'f20eefff rw-         0      2000  [anon:thread signal stack]
-    00007f2b'f20ef000-00007f2b'f20f0fff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
-    00007f2b'f20f1000-00007f2b'f20f1fff rw-         0      1000  /dev/ashmem/dalvik-Jit thread pool worker thread 0 (deleted)
-    00007f2b'f20f2000-00007f2b'f20f2fff ---      1000      1000  /dev/ashmem/dalvik-Jit thread pool worker thread 0 (deleted)
-    00007f2b'f20f3000-00007f2b'f21f0fff rw-      2000     fe000  /dev/ashmem/dalvik-Jit thread pool worker thread 0 (deleted)
+    00007f2b'f20ef000-00007f2b'f20f0fff rw-         0      2000  [anon:dalvik-indirect ref table]
+    00007f2b'f20f1000-00007f2b'f20f1fff rw-         0      1000  [anon:dalvik-Jit thread pool worker thread 0]
+    00007f2b'f20f2000-00007f2b'f20f2fff ---      1000      1000  [anon:dalvik-Jit thread pool worker thread 0]
+    00007f2b'f20f3000-00007f2b'f21f0fff rw-      2000     fe000  [anon:dalvik-Jit thread pool worker thread 0]
     00007f2b'f21f1000-00007f2b'f22e4fff r-x         0     f4000  /system/lib64/libvixl.so (BuildId: 89dc2162d431d3d40e6765d1f9241b44)
     00007f2b'f22e5000-00007f2b'f22e9fff r--     f3000      5000  /system/lib64/libvixl.so
     00007f2b'f22ea000-00007f2b'f22eafff rw-     f8000      1000  /system/lib64/libvixl.so
     00007f2b'f22eb000-00007f2b'f22f0fff rw-         0      6000
-    00007f2b'f22f1000-00007f2b'f23f0fff rw-         0    100000  /dev/ashmem/dalvik-allocspace main rosalloc space mark-bitmap 3 (deleted)
-    00007f2b'f23f1000-00007f2b'f24f0fff rw-         0    100000  /dev/ashmem/dalvik-allocspace main rosalloc space live-bitmap 3 (deleted)
+    00007f2b'f22f1000-00007f2b'f23f0fff rw-         0    100000  [anon:dalvik-allocspace main rosalloc space mark-bitmap 3]
+    00007f2b'f23f1000-00007f2b'f24f0fff rw-         0    100000  [anon:dalvik-allocspace main rosalloc space live-bitmap 3]
     00007f2b'f24f1000-00007f2b'f3af0fff r--         0   1600000  /system/usr/icu/icudt55l.dat
-    00007f2b'f3af1000-00007f2b'f3b10fff rw-         0     20000  /dev/ashmem/dalvik-LinearAlloc (deleted)
+    00007f2b'f3af1000-00007f2b'f3b10fff rw-         0     20000  [anon:dalvik-LinearAlloc]
     00007f2b'f3b11000-00007f2b'f3b70fff r-x         0     60000  /system/lib64/libjavacore.so
     00007f2b'f3b71000-00007f2b'f3b71fff ---         0      1000
     00007f2b'f3b72000-00007f2b'f3b73fff r--     60000      2000  /system/lib64/libjavacore.so
     00007f2b'f3b74000-00007f2b'f3b76fff rw-     62000      3000  /system/lib64/libjavacore.so
     00007f2b'f3b77000-00007f2b'f3b77fff rw-         0      1000
-    00007f2b'f3b78000-00007f2b'f3c3ffff rw-         0     c8000  /dev/ashmem/dalvik-indirect ref table (deleted)
-    00007f2b'f3c40000-00007f2b'f3d07fff rw-         0     c8000  /dev/ashmem/dalvik-indirect ref table (deleted)
-    00007f2b'f3d08000-00007f2b'f4508fff rw-         0    801000  /dev/ashmem/dalvik-live stack (deleted)
-    00007f2b'f4509000-00007f2b'f4d09fff rw-         0    801000  /dev/ashmem/dalvik-allocation stack (deleted)
-    00007f2b'f4d0a000-00007f2b'f4d49fff rw-         0     40000  /dev/ashmem/dalvik-mark stack (deleted)
-    00007f2b'f4d4a000-00007f2b'f5a19fff rw-         0    cd0000  /dev/ashmem/dalvik-card table (deleted)
-    00007f2b'f5a1a000-00007f2b'f5a39fff rw-         0     20000  /dev/ashmem/dalvik-large marked objects (deleted)
-    00007f2b'f5a3a000-00007f2b'f5a59fff rw-         0     20000  /dev/ashmem/dalvik-large live objects (deleted)
-    00007f2b'f5a5a000-00007f2b'f5b59fff rw-         0    100000  /dev/ashmem/dalvik-allocspace main rosalloc space 1 mark-bitmap 2 (deleted)
-    00007f2b'f5b5a000-00007f2b'f5c59fff rw-         0    100000  /dev/ashmem/dalvik-allocspace main rosalloc space 1 live-bitmap 2 (deleted)
-    00007f2b'f5c5a000-00007f2b'f5c5bfff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
-    00007f2b'f5c5c000-00007f2b'f5c5dfff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
-    00007f2b'f5c5e000-00007f2b'f5c5ffff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
-    00007f2b'f5c60000-00007f2b'f5d5cfff rw-         0     fd000  /dev/ashmem/dalvik-allocspace non moving space mark-bitmap 4 (deleted)
-    00007f2b'f5d5d000-00007f2b'f5e59fff rw-         0     fd000  /dev/ashmem/dalvik-allocspace non moving space live-bitmap 4 (deleted)
-    00007f2b'f5e5a000-00007f2b'f5f59fff rw-         0    100000  /dev/ashmem/dalvik-allocspace zygote / non moving space mark-bitmap 0 (deleted)
-    00007f2b'f5f5a000-00007f2b'f6059fff rw-         0    100000  /dev/ashmem/dalvik-allocspace zygote / non moving space live-bitmap 0 (deleted)
+    00007f2b'f3b78000-00007f2b'f3c3ffff rw-         0     c8000  [anon:dalvik-indirect ref table]
+    00007f2b'f3c40000-00007f2b'f3d07fff rw-         0     c8000  [anon:dalvik-indirect ref table]
+    00007f2b'f3d08000-00007f2b'f4508fff rw-         0    801000  [anon:dalvik-live stack]
+    00007f2b'f4509000-00007f2b'f4d09fff rw-         0    801000  [anon:dalvik-allocation stack]
+    00007f2b'f4d0a000-00007f2b'f4d49fff rw-         0     40000  [anon:dalvik-mark stack]
+    00007f2b'f4d4a000-00007f2b'f5a19fff rw-         0    cd0000  [anon:dalvik-card table]
+    00007f2b'f5a1a000-00007f2b'f5a39fff rw-         0     20000  [anon:dalvik-large marked objects]
+    00007f2b'f5a3a000-00007f2b'f5a59fff rw-         0     20000  [anon:dalvik-large live objects]
+    00007f2b'f5a5a000-00007f2b'f5b59fff rw-         0    100000  [anon:dalvik-allocspace main rosalloc space 1 mark-bitmap 2]
+    00007f2b'f5b5a000-00007f2b'f5c59fff rw-         0    100000  [anon:dalvik-allocspace main rosalloc space 1 live-bitmap 2]
+    00007f2b'f5c5a000-00007f2b'f5c5bfff rw-         0      2000  [anon:dalvik-indirect ref table]
+    00007f2b'f5c5c000-00007f2b'f5c5dfff rw-         0      2000  [anon:dalvik-indirect ref table]
+    00007f2b'f5c5e000-00007f2b'f5c5ffff rw-         0      2000  [anon:dalvik-indirect ref table]
+    00007f2b'f5c60000-00007f2b'f5d5cfff rw-         0     fd000  [anon:dalvik-allocspace non moving space mark-bitmap 4]
+    00007f2b'f5d5d000-00007f2b'f5e59fff rw-         0     fd000  [anon:dalvik-allocspace non moving space live-bitmap 4]
+    00007f2b'f5e5a000-00007f2b'f5f59fff rw-         0    100000  [anon:dalvik-allocspace zygote / non moving space mark-bitmap 0]
+    00007f2b'f5f5a000-00007f2b'f6059fff rw-         0    100000  [anon:dalvik-allocspace zygote / non moving space live-bitmap 0]
     00007f2b'f605a000-00007f2b'f607ffff r--    ceb000     26000  /data/dalvik-cache/x86_64/system@framework@boot.art
     00007f2b'f6080000-00007f2b'f60bffff rw-         0     40000  [anon:libc_malloc]
     00007f2b'f60c0000-00007f2b'f60c3fff r--         0      4000  /system/fonts/NotoSansArmenian-Regular.ttf
     00007f2b'f60c4000-00007f2b'f60c4fff rw-         0      1000  [anon:linker_alloc_vector]
-    00007f2b'f60c5000-00007f2b'f60c6fff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    00007f2b'f60c5000-00007f2b'f60c6fff rw-         0      2000  [anon:dalvik-indirect ref table]
     00007f2b'f60c7000-00007f2b'f60c7fff ---         0      1000
     00007f2b'f60c8000-00007f2b'f60c9fff rw-         0      2000  [anon:thread signal stack]
     00007f2b'f60ca000-00007f2b'f60cafff ---         0      1000
@@ -16049,20 +16049,20 @@ memory map:
     00007f2b'f67fd000-00007f2b'f67fffff rw-         0      3000
     00007f2b'f6800000-00007f2b'f6abffff rw-         0    2c0000  [anon:libc_malloc]
     00007f2b'f6ac0000-00007f2b'f6ac1fff r--         0      2000  /system/fonts/NotoSansBuginese-Regular.ttf
-    00007f2b'f6ac2000-00007f2b'f6ac3fff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
-    00007f2b'f6ac4000-00007f2b'f6ac5fff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
+    00007f2b'f6ac2000-00007f2b'f6ac3fff rw-         0      2000  [anon:dalvik-indirect ref table]
+    00007f2b'f6ac4000-00007f2b'f6ac5fff rw-         0      2000  [anon:dalvik-indirect ref table]
     00007f2b'f6ac6000-00007f2b'f6ac6fff ---         0      1000
     00007f2b'f6ac7000-00007f2b'f6ac8fff rw-         0      2000  [anon:thread signal stack]
-    00007f2b'f6ac9000-00007f2b'f6accfff rw-         0      4000  /dev/ashmem/dalvik-rosalloc page map (deleted)
-    00007f2b'f6acd000-00007f2b'f6acefff rw-         0      2000  /dev/ashmem/dalvik-indirect ref table (deleted)
-    00007f2b'f6acf000-00007f2b'f6ad0fff rw-         0      2000  /dev/ashmem/dalvik-mark sweep sweep array free buffer (deleted)
-    00007f2b'f6ad1000-00007f2b'f6ad2fff rw-         0      2000  /dev/ashmem/dalvik-mark sweep sweep array free buffer (deleted)
-    00007f2b'f6ad3000-00007f2b'f6ad4fff rw-         0      2000  /dev/ashmem/dalvik-mark sweep sweep array free buffer (deleted)
-    00007f2b'f6ad5000-00007f2b'f6ad8fff rw-         0      4000  /dev/ashmem/dalvik-rosalloc page map (deleted)
+    00007f2b'f6ac9000-00007f2b'f6accfff rw-         0      4000  [anon:dalvik-rosalloc page map]
+    00007f2b'f6acd000-00007f2b'f6acefff rw-         0      2000  [anon:dalvik-indirect ref table]
+    00007f2b'f6acf000-00007f2b'f6ad0fff rw-         0      2000  [anon:dalvik-mark sweep sweep array free buffer]
+    00007f2b'f6ad1000-00007f2b'f6ad2fff rw-         0      2000  [anon:dalvik-mark sweep sweep array free buffer]
+    00007f2b'f6ad3000-00007f2b'f6ad4fff rw-         0      2000  [anon:dalvik-mark sweep sweep array free buffer]
+    00007f2b'f6ad5000-00007f2b'f6ad8fff rw-         0      4000  [anon:dalvik-rosalloc page map]
     00007f2b'f6ad9000-00007f2b'f6ad9fff r--      c000      1000  /system/app/webview/webview.apk
     00007f2b'f6ada000-00007f2b'f6adafff r--         0      1000  [anon:linker_alloc]
     00007f2b'f6adb000-00007f2b'f6adbfff rw-         0      1000  [anon:linker_alloc_32]
-    00007f2b'f6adc000-00007f2b'f6adcfff rw-         0      1000  /dev/ashmem/dalvik-mod union bitmap (deleted)
+    00007f2b'f6adc000-00007f2b'f6adcfff rw-         0      1000  [anon:dalvik-mod union bitmap]
     00007f2b'f6add000-00007f2b'f6addfff r-x         0      1000  /system/lib64/libsigchain.so
     00007f2b'f6ade000-00007f2b'f6adefff r--         0      1000  /system/lib64/libsigchain.so
     00007f2b'f6adf000-00007f2b'f6adffff rw-      1000      1000  /system/lib64/libsigchain.so
@@ -16501,7 +16501,7 @@ stack:
          00007fff139c2f68  00007f2bfa37c015  /system/lib64/libbinder.so (android::Parcel::continueWrite(unsigned long)+869)
          00007fff139c2f70  0000000000000006
          00007fff139c2f78  00007f2bfa37beee  /system/lib64/libbinder.so (android::Parcel::continueWrite(unsigned long)+574)
-         00007fff139c2f80  0000000012e32040  /dev/ashmem/dalvik-main space (deleted)
+         00007fff139c2f80  0000000012e32040  [anon:dalvik-main space]
          00007fff139c2f88  0000000000000048
          00007fff139c2f90  00007fff139c3088  [stack]
          00007fff139c2f98  00007fff139c3088  [stack]
@@ -16509,8 +16509,8 @@ stack:
     #05  00007fff139c2fe0  0000000000000000
          00007fff139c2fe8  00007f2bedffe200  [anon:libc_malloc]
          00007fff139c2ff0  0000000000000000
-         00007fff139c2ff8  0000000012ca2a00  /dev/ashmem/dalvik-main space (deleted)
-         00007fff139c3000  0000000012c9c3c0  /dev/ashmem/dalvik-main space (deleted)
+         00007fff139c2ff8  0000000012ca2a00  [anon:dalvik-main space]
+         00007fff139c3000  0000000012c9c3c0  [anon:dalvik-main space]
          00007fff139c3008  00007fff139c3088  [stack]
          00007fff139c3010  00007fff139c3020  [stack]
          00007fff139c3018  00007f2bf9de19e2  /system/lib64/libgui.so (android::BpDisplayEventConnection::requestNextVsync()+82)
@@ -16537,15 +16537,15 @@ stack:
          00007fff139c3128  00007f2bf65de5e8  /system/lib64/libart.so (art::StackVisitor::WalkStack(bool)+264)
          00007fff139c3130  00007f2bf6812240  [anon:libc_malloc]
          00007fff139c3138  0000000000000001
-         00007fff139c3140  0000000012ca2a00  /dev/ashmem/dalvik-main space (deleted)
+         00007fff139c3140  0000000012ca2a00  [anon:dalvik-main space]
          00007fff139c3148  00007f2bfa253ec3  /system/lib64/libandroid_runtime.so
     #09  00007fff139c3150  00000000000000bc
          00007fff139c3158  00007f2bf9fe5b3a  /system/lib64/libc.so (je_free+42)
          00007fff139c3160  00007f2bedffe1c0  [anon:libc_malloc]
          00007fff139c3168  00007f2bedffe1c0  [anon:libc_malloc]
          00007fff139c3170  0000000000000001
-         00007fff139c3178  0000000012ca2a00  /dev/ashmem/dalvik-main space (deleted)
-         00007fff139c3180  0000000012c9c3c0  /dev/ashmem/dalvik-main space (deleted)
+         00007fff139c3178  0000000012ca2a00  [anon:dalvik-main space]
+         00007fff139c3180  0000000012c9c3c0  [anon:dalvik-main space]
          00007fff139c3188  00007f2bedffe1c0  [anon:libc_malloc]
          00007fff139c3190  0000000000000001
          00007fff139c3198  000000007381ea0e  /data/dalvik-cache/x86_64/system@framework@boot.oat
@@ -16564,7 +16564,7 @@ stack:
          00007fff139c3200  000000003f000000
          00007fff139c3208  00007f2bedffe1c0  [anon:libc_malloc]
          00007fff139c3210  0000000000000001
-         00007fff139c3218  0000000012ca2a00  /dev/ashmem/dalvik-main space (deleted)
+         00007fff139c3218  0000000012ca2a00  [anon:dalvik-main space]
 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 pid: 2251, tid: 2256, name: Jit thread pool  >>> com.android.browser <<<
     rax fffffffffffffe00  rbx 00007f2bf0048638  rcx ffffffffffffffff  rdx 0000000000000000
@@ -16584,12 +16584,12 @@ backtrace:
     #06 pc 000000000001ce55  /system/lib64/libc.so (__bionic_clone+53)
 
 stack:
-         00007f2bf21f0218  00007f2bf21f0290  /dev/ashmem/dalvik-Jit thread pool worker thread 0 (deleted)
+         00007f2bf21f0218  00007f2bf21f0290  [anon:dalvik-Jit thread pool worker thread 0]
          00007f2bf21f0220  0000000000000000
          00007f2bf21f0228  00007f2bf0042000  [anon:libc_malloc]
          00007f2bf21f0230  00007f2bf6802e58  [anon:libc_malloc]
-         00007f2bf21f0238  00007f2bf21f0284  /dev/ashmem/dalvik-Jit thread pool worker thread 0 (deleted)
-         00007f2bf21f0240  00007f2bf21f0288  /dev/ashmem/dalvik-Jit thread pool worker thread 0 (deleted)
+         00007f2bf21f0238  00007f2bf21f0284  [anon:dalvik-Jit thread pool worker thread 0]
+         00007f2bf21f0240  00007f2bf21f0288  [anon:dalvik-Jit thread pool worker thread 0]
          00007f2bf21f0248  00007f2bf9faa42f  /system/lib64/libc.so (pthread_setname_np+303)
          00007f2bf21f0250  00007f2bf6802e40  [anon:libc_malloc]
          00007f2bf21f0258  00007f2bf65f04ee  /system/lib64/libart.so (art::Thread::InitStringEntryPoints()+542)
@@ -16599,20 +16599,20 @@ stack:
          00007f2bf21f0278  fa0b7e1782291062
          00007f2bf21f0280  0000000000000001
          00007f2bf21f0288  00007f2bfa024a00
-         00007f2bf21f0290  00007f2bf21f02d0  /dev/ashmem/dalvik-Jit thread pool worker thread 0 (deleted)
+         00007f2bf21f0290  00007f2bf21f02d0  [anon:dalvik-Jit thread pool worker thread 0]
     #00  00007f2bf21f0298  00007f2bf624d1ce  /system/lib64/libart.so (art::ConditionVariable::WaitHoldingLocks(art::Thread*)+622)
     #01  00007f2bf21f02a0  0000000000000000
          00007f2bf21f02a8  00007f2bee695fa0  [anon:libc_malloc]
-         00007f2bf21f02b0  00007f2bf21f0310  /dev/ashmem/dalvik-Jit thread pool worker thread 0 (deleted)
-         00007f2bf21f02b8  00007f2bf21f0320  /dev/ashmem/dalvik-Jit thread pool worker thread 0 (deleted)
+         00007f2bf21f02b0  00007f2bf21f0310  [anon:dalvik-Jit thread pool worker thread 0]
+         00007f2bf21f02b8  00007f2bf21f0320  [anon:dalvik-Jit thread pool worker thread 0]
          00007f2bf21f02c0  0000000000000000
          00007f2bf21f02c8  00007f2b00000001
          00007f2bf21f02d0  00007f2bf0048668  [anon:libc_malloc]
          00007f2bf21f02d8  00007f2b00000000
          00007f2bf21f02e0  00007f2bf0042000  [anon:libc_malloc]
          00007f2bf21f02e8  00000000f21f0344
-         00007f2bf21f02f0  00007f2bf21f0360  /dev/ashmem/dalvik-Jit thread pool worker thread 0 (deleted)
-         00007f2bf21f02f8  00007f2bf21f0320  /dev/ashmem/dalvik-Jit thread pool worker thread 0 (deleted)
+         00007f2bf21f02f0  00007f2bf21f0360  [anon:dalvik-Jit thread pool worker thread 0]
+         00007f2bf21f02f8  00007f2bf21f0320  [anon:dalvik-Jit thread pool worker thread 0]
          00007f2bf21f0300  00007f2bf6802e40  [anon:libc_malloc]
          00007f2bf21f0308  00000001f21f0331
          00007f2bf21f0310  0000000000000001
@@ -16626,12 +16626,12 @@ stack:
          00007f2bf21f03b8  00007f2bfa4552c0
          00007f2bf21f03c0  0000000000000002
          00007f2bf21f03c8  00007f2bee706c00  [anon:libc_malloc]
-         00007f2bf21f03d0  00007f2bf21f0440  /dev/ashmem/dalvik-Jit thread pool worker thread 0 (deleted)
+         00007f2bf21f03d0  00007f2bf21f0440  [anon:dalvik-Jit thread pool worker thread 0]
          00007f2bf21f03d8  00007f2bf660e542  /system/lib64/libart.so (art::ThreadPoolWorker::Callback(void*)+66)
     #03  00007f2bf21f03e0  0000000000002000
          00007f2bf21f03e8  0000000000000000
-         00007f2bf21f03f0  00007f2bf21f0440  /dev/ashmem/dalvik-Jit thread pool worker thread 0 (deleted)
-         00007f2bf21f03f8  00007f2bf21f04c0  /dev/ashmem/dalvik-Jit thread pool worker thread 0 (deleted)
+         00007f2bf21f03f0  00007f2bf21f0440  [anon:dalvik-Jit thread pool worker thread 0]
+         00007f2bf21f03f8  00007f2bf21f04c0  [anon:dalvik-Jit thread pool worker thread 0]
          00007f2bf21f0400  00007f2bfa4552c0
          00007f2bf21f0408  00007f2bf9fa7eff  /system/lib64/libc.so (__pthread_start(void*)+47)
     #04  00007f2bf21f0410  0000000000000000
@@ -16644,7 +16644,7 @@ stack:
          00007f2bf21f0448  00007f2be7306440  [stack:2257]
          00007f2bf21f0450  000008cb000008d0
          00007f2bf21f0458  0000000000000000
-         00007f2bf21f0460  00007f2bf20f1000  /dev/ashmem/dalvik-Jit thread pool worker thread 0 (deleted)
+         00007f2bf21f0460  00007f2bf20f1000  [anon:dalvik-Jit thread pool worker thread 0]
          00007f2bf21f0468  00000000000ff440
          00007f2bf21f0470  0000000000001000
          00007f2bf21f0478  0000000000000000
@@ -16738,7 +16738,7 @@ stack:
          00007f2be7306428  00007f2bf9f4c6ec  /system/lib64/libc.so (__start_thread+12)
     #05  00007f2be7306430  00007f2bf9fa7ed0  /system/lib64/libc.so (__pthread_start(void*))
          00007f2be7306438  00007f2bf9f3fe56  /system/lib64/libc.so (__bionic_clone+54)
-    #06  00007f2be7306440  00007f2bf21f0440  /dev/ashmem/dalvik-Jit thread pool worker thread 0 (deleted)
+    #06  00007f2be7306440  00007f2bf21f0440  [anon:dalvik-Jit thread pool worker thread 0]
          00007f2be7306448  00007f2be7207440  [stack:2258]
          00007f2be7306450  000008cb000008d1
          00007f2be7306458  00007f2b00000000
@@ -16812,7 +16812,7 @@ stack:
          00007f2be7207150  0000004300000043
          00007f2be7207158  00007f2bf86ba000  /system/lib64/libnetd_client.so
          00007f2be7207160  00007f2bf680d140  [anon:libc_malloc]
-         00007f2be7207168  0000000012c890a0  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be7207168  0000000012c890a0  [anon:dalvik-main space]
          00007f2be7207170  00007f2bf6a59520  [anon:libc_malloc]
          00007f2be7207178  00007f2bf67fcdc0  /system/lib64/libart.so
          00007f2be7207180  00007f2bf006c800  [anon:libc_malloc]
@@ -16917,8 +16917,8 @@ stack:
     #02  00007f2be7107f20  00000001e7108270
          00007f2be7107f28  00007f2be7107f01  [stack:2259]
          00007f2be7107f30  0000000000000000
-         00007f2be7107f38  0000000012e63100  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be7107f40  0000000012e63160  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be7107f38  0000000012e63100  [anon:dalvik-main space]
+         00007f2be7107f40  0000000012e63160  [anon:dalvik-main space]
          00007f2be7107f48  00007f2bfa024a00
          00007f2be7107f50  0000000071297300  /data/dalvik-cache/x86_64/system@framework@boot.art
          00007f2be7107f58  0000000800000000
@@ -16928,7 +16928,7 @@ stack:
          00007f2be7107f78  00007f2bf200b7e0  [anon:libc_malloc]
          00007f2be7107f80  00007f2bf0042a00  [anon:libc_malloc]
          00007f2be7107f88  0000000070f09810  /data/dalvik-cache/x86_64/system@framework@boot.art
-         00007f2be7107f90  0000000012e63160  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be7107f90  0000000012e63160  [anon:dalvik-main space]
          00007f2be7107f98  00007f2bf0042a00  [anon:libc_malloc]
          ........  ........
     #03  00007f2be7107fd0  00007f2be7108270  [stack:2259]
@@ -16940,11 +16940,11 @@ stack:
          00007f2be7108000  0000000071188fe0  /data/dalvik-cache/x86_64/system@framework@boot.art
          00007f2be7108008  0000000071188fe0  /data/dalvik-cache/x86_64/system@framework@boot.art
          00007f2be7108010  0000000070f09810  /data/dalvik-cache/x86_64/system@framework@boot.art
-         00007f2be7108018  0000000012e63160  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be7108018  0000000012e63160  [anon:dalvik-main space]
          00007f2be7108020  00007f2bfa024a00
          00007f2be7108028  000000007346754a  /data/dalvik-cache/x86_64/system@framework@boot.oat
     #04  00007f2be7108030  0000000070f09810  /data/dalvik-cache/x86_64/system@framework@boot.art
-         00007f2be7108038  0000000012e63160  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be7108038  0000000012e63160  [anon:dalvik-main space]
          00007f2be7108040  00000000714b93a8  /data/dalvik-cache/x86_64/system@framework@boot.art
          00007f2be7108048  0000000000000000
          00007f2be7108050  71188fe000000001
@@ -16957,7 +16957,7 @@ stack:
          00007f2be7108088  0000000071188fe0  /data/dalvik-cache/x86_64/system@framework@boot.art
          00007f2be7108090  0000000071188fe0  /data/dalvik-cache/x86_64/system@framework@boot.art
          00007f2be7108098  0000000070f09810  /data/dalvik-cache/x86_64/system@framework@boot.art
-         00007f2be71080a0  0000000012e63160  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be71080a0  0000000012e63160  [anon:dalvik-main space]
          00007f2be71080a8  00007f2bfa024a00
 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 pid: 2251, tid: 2260, name: FinalizerDaemon  >>> com.android.browser <<<
@@ -17027,7 +17027,7 @@ stack:
          00007f2be7002e90  0000000000000006
          00007f2be7002e98  00007f2bf0043e00  [anon:libc_malloc]
          ........  ........
-    #03  00007f2be7002ed0  0000000012e63100  /dev/ashmem/dalvik-main space (deleted)
+    #03  00007f2be7002ed0  0000000012e63100  [anon:dalvik-main space]
          00007f2be7002ed8  fa0b7e1782291062
          00007f2be7002ee0  00007f2be7003270  [stack:2260]
          00007f2be7002ee8  00007f2bf0043e00  [anon:libc_malloc]
@@ -17196,7 +17196,7 @@ stack:
          00007f2be6df8e70  00007f2b0000004b
          00007f2be6df8e78  00007f2bf6884800  [anon:libc_malloc]
          00007f2be6df8e80  00007f2be6df8ed0  [stack:2262]
-         00007f2be6df8e88  00000000138851e9  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be6df8e88  00000000138851e9  [anon:dalvik-main space]
          00007f2be6df8e90  00007f2bf6a75000  [anon:libc_malloc]
          00007f2be6df8e98  00007f2bf9fc6008  /system/lib64/libc.so (je_arena_dalloc_bin_junked_locked+632)
          00007f2be6df8ea0  00000002002005de
@@ -17270,7 +17270,7 @@ stack:
          00007f2be6bf61c0  0000000000000000
          00007f2be6bf61c8  0000000000000000
          00007f2be6bf61d0  0000000000000000
-         00007f2be6bf61d8  00007f2bf6010001  /dev/ashmem/dalvik-allocspace zygote / non moving space live-bitmap 0 (deleted)
+         00007f2be6bf61d8  00007f2bf6010001  [anon:dalvik-allocspace zygote / non moving space live-bitmap 0]
          00007f2be6bf61e0  00007f2bfa375580  /system/lib64/libbinder.so (android::IPCThreadState::freeBuffer(android::Parcel*, unsigned char const*, unsigned long, unsigned long long const*, unsigned long, void*))
          00007f2be6bf61e8  00007f2bf0048a80  [anon:libc_malloc]
          00007f2be6bf61f0  0000000000000000
@@ -17390,7 +17390,7 @@ stack:
          00007f2be6af71c0  0000000000000000
          00007f2be6af71c8  0000000000000000
          00007f2be6af71d0  0000000000000000
-         00007f2be6af71d8  00007f2bf6010001  /dev/ashmem/dalvik-allocspace zygote / non moving space live-bitmap 0 (deleted)
+         00007f2be6af71d8  00007f2bf6010001  [anon:dalvik-allocspace zygote / non moving space live-bitmap 0]
          00007f2be6af71e0  00007f2bfa375580  /system/lib64/libbinder.so (android::IPCThreadState::freeBuffer(android::Parcel*, unsigned char const*, unsigned long, unsigned long long const*, unsigned long, void*))
          00007f2be6af71e8  00007f2bf0049380  [anon:libc_malloc]
          00007f2be6af71f0  0000000000000000
@@ -17512,7 +17512,7 @@ stack:
          00007f2be6586d28  00000000714b9338  /data/dalvik-cache/x86_64/system@framework@boot.art
          00007f2be6586d30  00000000714b9300  /data/dalvik-cache/x86_64/system@framework@boot.art
          00007f2be6586d38  00007f2be6586dd0  [stack:2267]
-         00007f2be6586d40  00007f2bf3b0dfc0  /dev/ashmem/dalvik-LinearAlloc (deleted)
+         00007f2be6586d40  00007f2bf3b0dfc0  [anon:dalvik-LinearAlloc]
          00007f2be6586d48  00007f2bf6706b67  /system/lib64/libart.so (artQuickResolutionTrampoline+1479)
          00007f2be6586d50  00007f2be6586f10  [stack:2267]
          00007f2be6586d58  00007f2bf2024000  [anon:libc_malloc]
@@ -17523,7 +17523,7 @@ stack:
          00007f2be6586d80  00007f2be6586e00  [stack:2267]
          00007f2be6586d88  00007f2bfa3c1909  /system/lib64/libutils.so (android::Looper::pollInner(int)+153)
     #02  00007f2be6586d90  0000000200000000
-         00007f2be6586d98  0000000012e23730  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be6586d98  0000000012e23730  [anon:dalvik-main space]
          00007f2be6586da0  0000000000000000
          00007f2be6586da8  0000000212e23730
          00007f2be6586db0  0000000000000001
@@ -17541,11 +17541,11 @@ stack:
          ........  ........
     #03  00007f2be6586f00  00007f2bf6818880  [anon:libc_malloc]
          00007f2be6586f08  00007f2bedfc9740  [anon:libc_malloc]
-         00007f2be6586f10  0000000012d37040  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be6586f18  0000000012d37040  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be6586f10  0000000012d37040  [anon:dalvik-main space]
+         00007f2be6586f18  0000000012d37040  [anon:dalvik-main space]
          00007f2be6586f20  0000000000000000
          00007f2be6586f28  00007f2bfa269856  /system/lib64/libandroid_runtime.so (android::NativeMessageQueue::pollOnce(_JNIEnv*, _jobject*, int)+38)
-    #04  00007f2be6586f30  0000000012d37040  /dev/ashmem/dalvik-main space (deleted)
+    #04  00007f2be6586f30  0000000012d37040  [anon:dalvik-main space]
          00007f2be6586f38  0000000000000001
          00007f2be6586f40  0000000000000000
          00007f2be6586f48  0000000073467828  /data/dalvik-cache/x86_64/system@framework@boot.oat
@@ -17564,7 +17564,7 @@ stack:
          00007f2be6586fb0  0000000000000000
          00007f2be6586fb8  0000000000000001
          00007f2be6586fc0  0000000000000000
-         00007f2be6586fc8  0000000012d37040  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be6586fc8  0000000012d37040  [anon:dalvik-main space]
 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 pid: 2251, tid: 2268, name: pool-1-thread-1  >>> com.android.browser <<<
     rax fffffffffffffdfc  rbx 00007f2bf6818798  rcx ffffffffffffffff  rdx 0000000000000003
@@ -17586,7 +17586,7 @@ stack:
          00007f2be64819f0  00007f2be6481a20  [stack:2268]
          00007f2be64819f8  00007f2bf68be200  [anon:libc_malloc]
          00007f2be6481a00  00007f2be6481ac0  [stack:2268]
-         00007f2be6481a08  0000000012c22b70  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be6481a08  0000000012c22b70  [anon:dalvik-main space]
          00007f2be6481a10  0001f02800000060
          00007f2be6481a18  000000000000f000
          00007f2be6481a20  00007f2be669a348  /system/app/Browser/oat/x86_64/Browser.odex
@@ -17619,7 +17619,7 @@ stack:
     #02  00007f2be6481b80  0000000100000001
          00007f2be6481b88  00007f2be6481b01  [stack:2268]
          00007f2be6481b90  00007f2be6481bac  [stack:2268]
-         00007f2be6481b98  0000000012c05360  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be6481b98  0000000012c05360  [anon:dalvik-main space]
          00007f2be6481ba0  0000000000000000
          00007f2be6481ba8  710e5a9000000001
          00007f2be6481bb0  00000000714d8860  /data/dalvik-cache/x86_64/system@framework@boot.art
@@ -17629,7 +17629,7 @@ stack:
          00007f2be6481bd0  00007f2b00000001
          00007f2be6481bd8  00007f2bf2024a00  [anon:libc_malloc]
          00007f2be6481be0  0000004300000043
-         00007f2be6481be8  0000000012c04c00  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be6481be8  0000000012c04c00  [anon:dalvik-main space]
          00007f2be6481bf0  00007f2bf67f4010  /system/lib64/libart.so
          00007f2be6481bf8  00007f2bf2024a00  [anon:libc_malloc]
          ........  ........
@@ -17639,16 +17639,16 @@ stack:
          00007f2be6481c48  00007f2bf2024a00  [anon:libc_malloc]
          00007f2be6481c50  000000000000ea60
          00007f2be6481c58  0000000000000000
-         00007f2be6481c60  0000000012d2f1c0  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be6481c68  0000000012c05d00  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be6481c70  0000000012c05d00  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be6481c60  0000000012d2f1c0  [anon:dalvik-main space]
+         00007f2be6481c68  0000000012c05d00  [anon:dalvik-main space]
+         00007f2be6481c70  0000000012c05d00  [anon:dalvik-main space]
          00007f2be6481c78  0000000000000000
          00007f2be6481c80  0000000000000000
          00007f2be6481c88  0000000073467828  /data/dalvik-cache/x86_64/system@framework@boot.oat
-    #04  00007f2be6481c90  0000000012d2f1c0  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be6481c98  0000000012d2f1c0  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be6481ca0  0000000012c05d00  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be6481ca8  0000000012c05cb0  /dev/ashmem/dalvik-main space (deleted)
+    #04  00007f2be6481c90  0000000012d2f1c0  [anon:dalvik-main space]
+         00007f2be6481c98  0000000012d2f1c0  [anon:dalvik-main space]
+         00007f2be6481ca0  0000000012c05d00  [anon:dalvik-main space]
+         00007f2be6481ca8  0000000012c05cb0  [anon:dalvik-main space]
          00007f2be6481cb0  00000000714b9418  /data/dalvik-cache/x86_64/system@framework@boot.art
          00007f2be6481cb8  0000000000000000
          00007f2be6481cc0  12c05d0000000001
@@ -17658,9 +17658,9 @@ stack:
          00007f2be6481ce0  0000000000000000
          00007f2be6481ce8  0000000000000000
          00007f2be6481cf0  0000000000000000
-         00007f2be6481cf8  0000000012d2f1c0  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be6481d00  0000000012c05d00  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be6481d08  0000000012c05d00  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be6481cf8  0000000012d2f1c0  [anon:dalvik-main space]
+         00007f2be6481d00  0000000012c05d00  [anon:dalvik-main space]
+         00007f2be6481d08  0000000012c05d00  [anon:dalvik-main space]
 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 pid: 2251, tid: 2269, name: pool-2-thread-1  >>> com.android.browser <<<
     rax fffffffffffffe00  rbx 00007f2bf6818498  rcx ffffffffffffffff  rdx 0000000000000003
@@ -17735,16 +17735,16 @@ stack:
          00007f2be668bd08  00007f2bee846600  [anon:libc_malloc]
          00007f2be668bd10  0000000000000000
          00007f2be668bd18  0000000000000000
-         00007f2be668bd20  0000000012d3c100  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be668bd28  0000000012d321d0  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be668bd30  0000000012d321d0  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be668bd20  0000000012d3c100  [anon:dalvik-main space]
+         00007f2be668bd28  0000000012d321d0  [anon:dalvik-main space]
+         00007f2be668bd30  0000000012d321d0  [anon:dalvik-main space]
          00007f2be668bd38  0000000000000000
          00007f2be668bd40  0000000000000000
          00007f2be668bd48  0000000073467828  /data/dalvik-cache/x86_64/system@framework@boot.oat
-    #04  00007f2be668bd50  0000000012d3c100  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be668bd58  0000000012d3c100  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be668bd60  0000000012d321d0  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be668bd68  0000000012ca0080  /dev/ashmem/dalvik-main space (deleted)
+    #04  00007f2be668bd50  0000000012d3c100  [anon:dalvik-main space]
+         00007f2be668bd58  0000000012d3c100  [anon:dalvik-main space]
+         00007f2be668bd60  0000000012d321d0  [anon:dalvik-main space]
+         00007f2be668bd68  0000000012ca0080  [anon:dalvik-main space]
          00007f2be668bd70  00000000714b9418  /data/dalvik-cache/x86_64/system@framework@boot.art
          00007f2be668bd78  0000000000000000
          00007f2be668bd80  12d321d000000001
@@ -17754,9 +17754,9 @@ stack:
          00007f2be668bda0  0000000040200000
          00007f2be668bda8  0000000000000000
          00007f2be668bdb0  0000000000000000
-         00007f2be668bdb8  0000000012d3c100  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be668bdc0  0000000012d321d0  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be668bdc8  0000000012d321d0  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be668bdb8  0000000012d3c100  [anon:dalvik-main space]
+         00007f2be668bdc0  0000000012d321d0  [anon:dalvik-main space]
+         00007f2be668bdc8  0000000012d321d0  [anon:dalvik-main space]
 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 pid: 2251, tid: 2270, name: AsyncTask #1  >>> com.android.browser <<<
     rax fffffffffffffe00  rbx 00007f2bedffed18  rcx ffffffffffffffff  rdx 0000000000000000
@@ -17785,7 +17785,7 @@ stack:
          00007f2be6039b08  00007f2be6039b60  [stack:2270]
          00007f2be6039b10  00007f2be6039b40  [stack:2270]
          00007f2be6039b18  00007f2bf65f6290  /system/lib64/libart.so (art::Thread::DecodeJObject(_jobject*) const+240)
-         00007f2be6039b20  00007f2bf3b0a7d0  /dev/ashmem/dalvik-LinearAlloc (deleted)
+         00007f2be6039b20  00007f2bf3b0a7d0  [anon:dalvik-LinearAlloc]
          00007f2be6039b28  00000001f6701332
          00007f2be6039b30  0000000000000001
          00007f2be6039b38  00007f2bf6702943  /system/lib64/libart.so (art::QuickArgumentVisitor::VisitArguments() (.constprop.254)+275)
@@ -17831,16 +17831,16 @@ stack:
          00007f2be6039d08  00007f2bf2099600  [anon:libc_malloc]
          00007f2be6039d10  0000000000000000
          00007f2be6039d18  0000000000000000
-         00007f2be6039d20  0000000012de2b80  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be6039d28  0000000012da1ff0  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be6039d30  0000000012da1ff0  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be6039d20  0000000012de2b80  [anon:dalvik-main space]
+         00007f2be6039d28  0000000012da1ff0  [anon:dalvik-main space]
+         00007f2be6039d30  0000000012da1ff0  [anon:dalvik-main space]
          00007f2be6039d38  0000000000000000
          00007f2be6039d40  0000000000000000
          00007f2be6039d48  0000000073467828  /data/dalvik-cache/x86_64/system@framework@boot.oat
     #04  00007f2be6039d50  00000000712e14a0  /data/dalvik-cache/x86_64/system@framework@boot.art
          00007f2be6039d58  00007f2bf623657d  /system/lib64/libart.so (art_quick_resolution_trampoline+141)
-         00007f2be6039d60  00007f2bf3b0a958  /dev/ashmem/dalvik-LinearAlloc (deleted)
-         00007f2be6039d68  0000000012e29040  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be6039d60  00007f2bf3b0a958  [anon:dalvik-LinearAlloc]
+         00007f2be6039d68  0000000012e29040  [anon:dalvik-main space]
          00007f2be6039d70  00000000714b9418  /data/dalvik-cache/x86_64/system@framework@boot.art
          00007f2be6039d78  0000000000000000
          00007f2be6039d80  12da1ff000000001
@@ -17850,9 +17850,9 @@ stack:
          00007f2be6039da0  0000000000000000
          00007f2be6039da8  0000000000000000
          00007f2be6039db0  0000000000000000
-         00007f2be6039db8  0000000012de2b80  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be6039dc0  0000000012da1ff0  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be6039dc8  0000000012da1ff0  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be6039db8  0000000012de2b80  [anon:dalvik-main space]
+         00007f2be6039dc0  0000000012da1ff0  [anon:dalvik-main space]
+         00007f2be6039dc8  0000000012da1ff0  [anon:dalvik-main space]
 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 pid: 2251, tid: 2272, name: DnsConfigServic  >>> com.android.browser <<<
     rax fffffffffffffffc  rbx 00007f2be5848230  rcx ffffffffffffffff  rdx 0000000000000020
@@ -18003,7 +18003,7 @@ stack:
          00007f2be5644160  0000000000000258
          00007f2be5644168  0000000000000000
          00007f2be5644170  00007f2bf68338e0  [anon:libc_malloc]
-         00007f2be5644178  00000000138851e9  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be5644178  00000000138851e9  [anon:dalvik-main space]
          00007f2be5644180  00007f2bf681bfa8  [anon:libc_malloc]
          00007f2be5644188  00007f2be3cd3230  [anon:libc_malloc]
          00007f2be5644190  00007f2be5644200  [stack:2274]
@@ -18011,9 +18011,9 @@ stack:
          00007f2be56441a0  00007f2bea7a2a40
          00007f2be56441a8  00007f2be81e3522  /system/app/webview/webview.apk
     #02  00007f2be56441b0  00000000000002da
-         00007f2be56441b8  00000000138851e9  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be56441b8  00000000138851e9  [anon:dalvik-main space]
          00007f2be56441c0  0000000000000082
-         00007f2be56441c8  00000000138851e9  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be56441c8  00000000138851e9  [anon:dalvik-main space]
          00007f2be56441d0  0000000000000000
          00007f2be56441d8  00007f2bf681bf40  [anon:libc_malloc]
          00007f2be56441e0  00007f2be5644310  [stack:2274]
@@ -18896,10 +18896,10 @@ stack:
          00007f2be437fef8  00007f2bedf42a00  [anon:libc_malloc]
          00007f2be437ff00  0000000000000000
          00007f2be437ff08  0000000000000000
-         00007f2be437ff10  0000000012c87890  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be437ff10  0000000012c87890  [anon:dalvik-main space]
          00007f2be437ff18  0000000000000000
          00007f2be437ff20  0000000000000000
-         00007f2be437ff28  00007f2be47f32c8  /dev/ashmem/dalvik-LinearAlloc (deleted)
+         00007f2be437ff28  00007f2be47f32c8  [anon:dalvik-LinearAlloc]
          00007f2be437ff30  0000000000000000
          00007f2be437ff38  0000000073467828  /data/dalvik-cache/x86_64/system@framework@boot.oat
     #04  00007f2be437ff40  00007f2be448f000  [anon:libc_malloc]
@@ -18915,7 +18915,7 @@ stack:
          00007f2be437ff90  0000000000000000
          00007f2be437ff98  0000000000000000
          00007f2be437ffa0  0000000000000000
-         00007f2be437ffa8  0000000012c87890  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be437ffa8  0000000012c87890  [anon:dalvik-main space]
          00007f2be437ffb0  0000000000000000
          00007f2be437ffb8  0000000000000000
 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
@@ -18982,8 +18982,8 @@ stack:
          00007f2be41fedc0  0000000000000001
          00007f2be41fedc8  0000000082291062
          00007f2be41fedd0  000000007138ace8  /data/dalvik-cache/x86_64/system@framework@boot.art
-         00007f2be41fedd8  0000000012c77000  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be41fede0  0000000012c9e0c0  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be41fedd8  0000000012c77000  [anon:dalvik-main space]
+         00007f2be41fede0  0000000012c9e0c0  [anon:dalvik-main space]
          00007f2be41fede8  00007f2be4608400  [anon:libc_malloc]
          ........  ........
     #03  00007f2be41fee20  0000000000000019
@@ -18992,16 +18992,16 @@ stack:
          00007f2be41fee38  00007f2be4608400  [anon:libc_malloc]
          00007f2be41fee40  0000000000000000
          00007f2be41fee48  0000000000000000
-         00007f2be41fee50  0000000012c9bc40  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be41fee58  0000000012c87bf0  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be41fee60  0000000012c87bf0  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be41fee50  0000000012c9bc40  [anon:dalvik-main space]
+         00007f2be41fee58  0000000012c87bf0  [anon:dalvik-main space]
+         00007f2be41fee60  0000000012c87bf0  [anon:dalvik-main space]
          00007f2be41fee68  0000000000000000
          00007f2be41fee70  0000000000000000
          00007f2be41fee78  0000000073467828  /data/dalvik-cache/x86_64/system@framework@boot.oat
-    #04  00007f2be41fee80  0000000012c9bc40  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be41fee88  0000000012c9bc40  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be41fee90  0000000012c87bf0  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be41fee98  0000000012c77f60  /dev/ashmem/dalvik-main space (deleted)
+    #04  00007f2be41fee80  0000000012c9bc40  [anon:dalvik-main space]
+         00007f2be41fee88  0000000012c9bc40  [anon:dalvik-main space]
+         00007f2be41fee90  0000000012c87bf0  [anon:dalvik-main space]
+         00007f2be41fee98  0000000012c77f60  [anon:dalvik-main space]
          00007f2be41feea0  00000000714b9418  /data/dalvik-cache/x86_64/system@framework@boot.art
          00007f2be41feea8  0000000000000000
          00007f2be41feeb0  12c87bf000000001
@@ -19011,9 +19011,9 @@ stack:
          00007f2be41feed0  0000000000000000
          00007f2be41feed8  0000000000000000
          00007f2be41feee0  0000000000000000
-         00007f2be41feee8  0000000012c9bc40  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be41feef0  0000000012c87bf0  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be41feef8  0000000012c87bf0  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be41feee8  0000000012c9bc40  [anon:dalvik-main space]
+         00007f2be41feef0  0000000012c87bf0  [anon:dalvik-main space]
+         00007f2be41feef8  0000000012c87bf0  [anon:dalvik-main space]
 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 pid: 2251, tid: 2291, name: Thread-149  >>> com.android.browser <<<
     rax fffffffffffffe00  rbx 00007f2be3fbe5c0  rcx ffffffffffffffff  rdx 0000000000000002
@@ -19212,7 +19212,7 @@ stack:
          00007f2be3b9fb20  0000000000000000
          00007f2be3b9fb28  00007f2be66a5600  /system/app/Browser/oat/x86_64/Browser.odex
          00007f2be3b9fb30  00007f2be3b9fb50  [stack:2294]
-         00007f2be3b9fb38  00007f2be42602d0  /dev/ashmem/dalvik-LinearAlloc (deleted)
+         00007f2be3b9fb38  00007f2be42602d0  [anon:dalvik-LinearAlloc]
          00007f2be3b9fb40  00007f2be6727b98  /system/app/Browser/oat/x86_64/Browser.odex
     #00  00007f2be3b9fb48  00007f2bf624d1ce  /system/lib64/libart.so (art::ConditionVariable::WaitHoldingLocks(art::Thread*)+622)
     #01  00007f2be3b9fb50  0000000000000000
@@ -19243,40 +19243,40 @@ stack:
          00007f2be3b9fc80  0000000000000000
          00007f2be3b9fc88  00430000f6506bda
          00007f2be3b9fc90  0000000200000001
-         00007f2be3b9fc98  0000000012e29140  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be3b9fc98  0000000012e29140  [anon:dalvik-main space]
          00007f2be3b9fca0  0000000000000000
          00007f2be3b9fca8  00000000747121ec  /data/dalvik-cache/x86_64/system@framework@boot.oat
          00007f2be3b9fcb0  000000007138aff8  /data/dalvik-cache/x86_64/system@framework@boot.art
          00007f2be3b9fcb8  00007f2be4608e00  [anon:libc_malloc]
          ........  ........
-    #03  00007f2be3b9fcf0  0000000012e29140  /dev/ashmem/dalvik-main space (deleted)
+    #03  00007f2be3b9fcf0  0000000012e29140  [anon:dalvik-main space]
          00007f2be3b9fcf8  0000004400000001
-         00007f2be3b9fd00  0000000012ccd370  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be3b9fd00  0000000012ccd370  [anon:dalvik-main space]
          00007f2be3b9fd08  00007f2be4608e00  [anon:libc_malloc]
          00007f2be3b9fd10  0000000000000000
          00007f2be3b9fd18  0000000000000000
-         00007f2be3b9fd20  0000000012c9b520  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be3b9fd28  0000000012c9c240  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be3b9fd30  0000000012c9c240  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be3b9fd20  0000000012c9b520  [anon:dalvik-main space]
+         00007f2be3b9fd28  0000000012c9c240  [anon:dalvik-main space]
+         00007f2be3b9fd30  0000000012c9c240  [anon:dalvik-main space]
          00007f2be3b9fd38  0000000000000000
          00007f2be3b9fd40  0000000000000000
          00007f2be3b9fd48  0000000073467828  /data/dalvik-cache/x86_64/system@framework@boot.oat
-    #04  00007f2be3b9fd50  0000000012e29140  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be3b9fd58  0000000012e26500  /dev/ashmem/dalvik-main space (deleted)
+    #04  00007f2be3b9fd50  0000000012e29140  [anon:dalvik-main space]
+         00007f2be3b9fd58  0000000012e26500  [anon:dalvik-main space]
          00007f2be3b9fd60  0000000071389430  /data/dalvik-cache/x86_64/system@framework@boot.art
          00007f2be3b9fd68  0000000073f39abc  /data/dalvik-cache/x86_64/system@framework@boot.oat
          00007f2be3b9fd70  00000000714b9418  /data/dalvik-cache/x86_64/system@framework@boot.art
          00007f2be3b9fd78  0000000000000000
          00007f2be3b9fd80  12c9c24000000001
          00007f2be3b9fd88  00007f2b00000000
-         00007f2be3b9fd90  0000000012ca8a30  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be3b9fd90  0000000012ca8a30  [anon:dalvik-main space]
          00007f2be3b9fd98  0000000000000000
          00007f2be3b9fda0  0000000000000000
          00007f2be3b9fda8  0000000000000000
          00007f2be3b9fdb0  0000000000000000
-         00007f2be3b9fdb8  0000000012c9b520  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be3b9fdc0  0000000012c9c240  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be3b9fdc8  0000000012c9c240  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be3b9fdb8  0000000012c9b520  [anon:dalvik-main space]
+         00007f2be3b9fdc0  0000000012c9c240  [anon:dalvik-main space]
+         00007f2be3b9fdc8  0000000012c9c240  [anon:dalvik-main space]
 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 pid: 2251, tid: 2296, name: JavaBridge  >>> com.android.browser <<<
     rax fffffffffffffffc  rbx 00007f2bf68904a0  rcx ffffffffffffffff  rdx 0000000000000010
@@ -19335,18 +19335,18 @@ stack:
          ........  ........
     #03  00007f2be221ef00  00007f2bedffe580  [anon:libc_malloc]
          00007f2be221ef08  00007f2be3d18680  [anon:libc_malloc]
-         00007f2be221ef10  0000000012c830d0  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be221ef18  0000000012c830d0  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be221ef10  0000000012c830d0  [anon:dalvik-main space]
+         00007f2be221ef18  0000000012c830d0  [anon:dalvik-main space]
          00007f2be221ef20  0000000000000000
          00007f2be221ef28  00007f2bfa269856  /system/lib64/libandroid_runtime.so (android::NativeMessageQueue::pollOnce(_JNIEnv*, _jobject*, int)+38)
-    #04  00007f2be221ef30  0000000012c830d0  /dev/ashmem/dalvik-main space (deleted)
+    #04  00007f2be221ef30  0000000012c830d0  [anon:dalvik-main space]
          00007f2be221ef38  0000000000000001
          00007f2be221ef40  0000000000000000
          00007f2be221ef48  0000000073467828  /data/dalvik-cache/x86_64/system@framework@boot.oat
     #05  00007f2be221ef50  0000000000000000
-         00007f2be221ef58  0000000012c02070  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be221ef60  0000000012c01160  /dev/ashmem/dalvik-main space (deleted)
-         00007f2be221ef68  0000000012c01100  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be221ef58  0000000012c02070  [anon:dalvik-main space]
+         00007f2be221ef60  0000000012c01160  [anon:dalvik-main space]
+         00007f2be221ef68  0000000012c01100  [anon:dalvik-main space]
          00007f2be221ef70  000000007150ba48  /data/dalvik-cache/x86_64/system@framework@boot.art
          00007f2be221ef78  0000000000000000
          00007f2be221ef80  12c830d000000001
@@ -19358,7 +19358,7 @@ stack:
          00007f2be221efb0  0000000000000000
          00007f2be221efb8  0000000000000001
          00007f2be221efc0  0000000000000000
-         00007f2be221efc8  0000000012c830d0  /dev/ashmem/dalvik-main space (deleted)
+         00007f2be221efc8  0000000012c830d0  [anon:dalvik-main space]
 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 pid: 2251, tid: 2297, name: SimpleCacheWork  >>> com.android.browser <<<
     rax fffffffffffffe00  rbx 00007f2be3cfcab0  rcx ffffffffffffffff  rdx 0000000000000016
