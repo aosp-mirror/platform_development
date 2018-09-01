@@ -702,14 +702,30 @@ class ElfSymbolIR {
  public:
   enum ElfSymbolKind {
     ElfFunctionKind,
-    ElfObjectKind
+    ElfObjectKind,
+  };
+
+  enum ElfSymbolBinding {
+    Weak,
+    Global,
+  };
+
+  enum ElfSymbolVisibility {
+    Default,
+    Protected,
   };
 
   const std::string GetName() const {
     return name_;
   }
 
-  ElfSymbolIR(const std::string &name) : name_(name) { }
+  ElfSymbolBinding GetBinding() const {
+    return binding_;
+  }
+
+
+  ElfSymbolIR(const std::string &name, ElfSymbolBinding binding)
+      : name_(name), binding_(binding) { }
 
   virtual ElfSymbolKind GetKind() const = 0;
 
@@ -717,15 +733,17 @@ class ElfSymbolIR {
 
  protected:
   std::string name_;
+  ElfSymbolBinding binding_;
 };
 
-class ElfFunctionIR : public ElfSymbolIR{
+class ElfFunctionIR : public ElfSymbolIR {
  public:
   ElfSymbolKind GetKind() const override {
     return ElfFunctionKind;
   }
 
-  ElfFunctionIR(const std::string &name) : ElfSymbolIR(name) { }
+  ElfFunctionIR(const std::string &name, ElfSymbolBinding binding)
+      : ElfSymbolIR(name, binding) { }
 };
 
 class ElfObjectIR : public ElfSymbolIR {
@@ -734,7 +752,8 @@ class ElfObjectIR : public ElfSymbolIR {
     return ElfObjectKind;
   }
 
-  ElfObjectIR(const std::string &name) : ElfSymbolIR(name) { }
+  ElfObjectIR(const std::string &name, ElfSymbolBinding binding)
+      : ElfSymbolIR(name, binding) { }
 };
 
 class IRDumper {

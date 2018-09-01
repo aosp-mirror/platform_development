@@ -44,6 +44,31 @@ inline abi_diff::CompatibilityStatus CompatibilityStatusIRToProtobuf(
   return abi_diff::CompatibilityStatus::COMPATIBLE;
 }
 
+inline abi_dump::ElfSymbolBinding ElfSymbolBindingIRToProtobuf(
+    ElfSymbolIR::ElfSymbolBinding binding) {
+  switch(binding) {
+    case ElfSymbolIR::ElfSymbolBinding::Global:
+      return abi_dump::ElfSymbolBinding::Global;
+    case ElfSymbolIR::ElfSymbolBinding::Weak:
+      return abi_dump::ElfSymbolBinding::Weak;
+  }
+  // We skip symbols of all other Bindings
+  // TODO: Add all bindings, don't leave out info
+  assert(0);
+}
+
+inline ElfSymbolIR::ElfSymbolBinding ElfSymbolBindingProtobufToIR(
+    abi_dump::ElfSymbolBinding binding) {
+  switch(binding) {
+    case abi_dump::ElfSymbolBinding::Global:
+      return ElfSymbolIR::ElfSymbolBinding::Global;
+    case abi_dump::ElfSymbolBinding::Weak:
+      return ElfSymbolIR::ElfSymbolBinding::Weak;
+  }
+  // We skip symbols of all other Bindings
+  assert(0);
+}
+
 inline abi_dump::AccessSpecifier AccessIRToProtobuf(AccessSpecifierIR access) {
   switch (access) {
     case AccessSpecifierIR::ProtectedAccess:

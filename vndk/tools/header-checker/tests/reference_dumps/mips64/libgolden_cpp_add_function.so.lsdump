@@ -443,49 +443,65 @@ functions {
 }
 elf_functions {
   name: "_Z26test_virtual_function_callP12SuperSpeaker"
+  binding: Global
 }
 elf_functions {
   name: "_ZN12NotReferenced"
+  binding: Global
 }
 elf_functions {
   name: "_ZN12SuperSpeaker11SpeakLouderEv"
+  binding: Global
 }
 elf_functions {
   name: "_ZN12SuperSpeaker18CreateSuperSpeakerEi"
+  binding: Global
 }
 elf_functions {
   name: "_ZN12SuperSpeaker9SpeakLoudEv"
+  binding: Global
 }
 elf_functions {
   name: "_ZN12SuperSpeakerD2Ev"
+  binding: Global
 }
 elf_functions {
   name: "_ZN16LowVolumeSpeaker5SpeakEv"
+  binding: Global
 }
 elf_functions {
   name: "_ZN16LowVolumeSpeaker6ListenEv"
+  binding: Global
 }
 elf_functions {
   name: "_ZN16LowVolumeSpeakerD0Ev"
+  binding: Global
 }
 elf_functions {
   name: "_ZN17HighVolumeSpeaker11BadPracticeEf"
+  binding: Global
 }
 elf_functions {
   name: "_ZN17HighVolumeSpeaker13AddedFunctionEv"
+  binding: Global
 }
 elf_functions {
   name: "_ZN17HighVolumeSpeaker5SpeakEv"
+  binding: Global
 }
 elf_functions {
   name: "_ZN17HighVolumeSpeaker6ListenEv"
+  binding: Global
 }
 elf_functions {
   name: "_ZN17HighVolumeSpeakerD0Ev"
+  binding: Global
 }
 elf_objects {
   name: "_ZTV16LowVolumeSpeaker"
+  binding: Global
 }
 elf_objects {
   name: "_ZTV17HighVolumeSpeaker"
+  binding: Global
 }

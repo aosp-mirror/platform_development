@@ -106,7 +106,8 @@ void VersionScriptParser::AddToVars(std::string &symbol) {
   if (symbol.find("*") != std::string::npos) {
     globvar_regexs_.insert(symbol);
   } else {
-    globvars_.insert(symbol);
+    globvars_.emplace(
+        symbol, ElfObjectIR(symbol, ElfSymbolIR::ElfSymbolBinding::Global));
   }
 }
 
@@ -114,7 +115,8 @@ void VersionScriptParser::AddToFunctions(std::string &symbol) {
   if (symbol.find("*") != std::string::npos) {
     function_regexs_.insert(symbol);
   } else {
-    functions_.insert(symbol);
+    functions_.emplace(
+        symbol, ElfFunctionIR(symbol, ElfSymbolIR::ElfSymbolBinding::Global));
   }
 }
 
@@ -169,11 +171,12 @@ bool VersionScriptParser::ParseInnerBlock(std::ifstream &symbol_ifstream) {
   return true;
 }
 
-const std::set<std::string> &VersionScriptParser::GetFunctions() {
+const std::map<std::string, ElfFunctionIR> &
+VersionScriptParser::GetFunctions() {
   return functions_;
 }
 
-const std::set<std::string> &VersionScriptParser::GetGlobVars() {
+const std::map<std::string, ElfObjectIR> &VersionScriptParser::GetGlobVars() {
   return globvars_;
 }
 
