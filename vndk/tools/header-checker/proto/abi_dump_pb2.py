@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='abi_dump',
   syntax='proto2',
   serialized_options=None,
-  serialized_pb=_b('\n\x0e\x61\x62i_dump.proto\x12\x08\x61\x62i_dump\"\xa6\x01\n\x16\x42\x61sicNamedAndTypedDecl\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0f\n\x04size\x18\x02 \x01(\x04:\x01\x30\x12\x14\n\talignment\x18\x03 \x01(\r:\x01\x30\x12\x17\n\x0freferenced_type\x18\x04 \x01(\t\x12\x13\n\x0bsource_file\x18\x05 \x01(\t\x12\x16\n\x0elinker_set_key\x18\x06 \x01(\t\x12\x11\n\tself_type\x18\x07 \x01(\t\"@\n\tArrayType\x12\x33\n\ttype_info\x18\x01 \x01(\x0b\x32 .abi_dump.BasicNamedAndTypedDecl\"B\n\x0bPointerType\x12\x33\n\ttype_info\x18\x01 \x01(\x0b\x32 .abi_dump.BasicNamedAndTypedDecl\"\x82\x01\n\rQualifiedType\x12\x33\n\ttype_info\x18\x01 \x01(\x0b\x32 .abi_dump.BasicNamedAndTypedDecl\x12\x10\n\x08is_const\x18\x06 \x01(\x08\x12\x13\n\x0bis_volatile\x18\x07 \x01(\x08\x12\x15\n\ris_restricted\x18\x08 \x01(\x08\"l\n\x0b\x42uiltinType\x12\x33\n\ttype_info\x18\x01 \x01(\x0b\x32 .abi_dump.BasicNamedAndTypedDecl\x12\x13\n\x0bis_unsigned\x18\x02 \x01(\x08\x12\x13\n\x0bis_integral\x18\x03 \x01(\x08\"J\n\x13LvalueReferenceType\x12\x33\n\ttype_info\x18\x01 \x01(\x0b\x32 .abi_dump.BasicNamedAndTypedDecl\"J\n\x13RvalueReferenceType\x12\x33\n\ttype_info\x18\x01 \x01(\x0b\x32 .abi_dump.BasicNamedAndTypedDecl\"\x81\x01\n\x0c\x46unctionType\x12\x33\n\ttype_info\x18\x01 \x01(\x0b\x32 .abi_dump.BasicNamedAndTypedDecl\x12\x13\n\x0breturn_type\x18\x02 \x01(\t\x12\'\n\nparameters\x18\x03 \x03(\x0b\x32\x13.abi_dump.ParamDecl\"\xf9\x01\n\x0c\x46unctionDecl\x12\x13\n\x0breturn_type\x18\x01 \x01(\t\x12\x15\n\rfunction_name\x18\x02 \x01(\t\x12\x13\n\x0bsource_file\x18\x03 \x01(\t\x12\'\n\nparameters\x18\x04 \x03(\x0b\x32\x13.abi_dump.ParamDecl\x12-\n\rtemplate_info\x18\x05 \x01(\x0b\x32\x16.abi_dump.TemplateInfo\x12\x16\n\x0elinker_set_key\x18\x06 \x01(\t\x12\x38\n\x06\x61\x63\x63\x65ss\x18\x07 \x01(\x0e\x32\x19.abi_dump.AccessSpecifier:\rpublic_access\"N\n\tParamDecl\x12\x17\n\x0freferenced_type\x18\x01 \x01(\t\x12\x13\n\x0b\x64\x65\x66\x61ult_arg\x18\x02 \x01(\x08\x12\x13\n\x0bis_this_ptr\x18\x03 \x01(\x08\"\x8e\x01\n\x0fRecordFieldDecl\x12\x17\n\x0freferenced_type\x18\x01 \x01(\t\x12\x14\n\x0c\x66ield_offset\x18\x02 \x01(\x04\x12\x12\n\nfield_name\x18\x03 \x01(\t\x12\x38\n\x06\x61\x63\x63\x65ss\x18\x04 \x01(\x0e\x32\x19.abi_dump.AccessSpecifier:\rpublic_access\"7\n\rEnumFieldDecl\x12\x18\n\x10\x65num_field_value\x18\x01 \x01(\x03\x12\x0c\n\x04name\x18\x03 \x01(\t\";\n\x0cTemplateInfo\x12+\n\x08\x65lements\x18\x01 \x03(\x0b\x32\x19.abi_dump.TemplateElement\"*\n\x0fTemplateElement\x12\x17\n\x0freferenced_type\x18\x01 \x01(\t\"j\n\x10\x43XXBaseSpecifier\x12\x17\n\x0freferenced_type\x18\x01 \x01(\t\x12\x12\n\nis_virtual\x18\x02 \x01(\x08\x12)\n\x06\x61\x63\x63\x65ss\x18\x03 \x01(\x0e\x32\x19.abi_dump.AccessSpecifier\"\xcf\x02\n\x0fVTableComponent\x12,\n\x04kind\x18\x01 \x01(\x0e\x32\x1e.abi_dump.VTableComponent.Kind\x12 \n\x16mangled_component_name\x18\x02 \x01(\t:\x00\x12\x10\n\x05value\x18\x03 \x01(\x04:\x01\x30\x12\x1a\n\x0f\x63omponent_value\x18\x04 \x01(\x03:\x01\x30\x12\x16\n\x07is_pure\x18\x06 \x01(\x08:\x05\x66\x61lse\"\xa5\x01\n\x04Kind\x12\x0f\n\x0bVCallOffset\x10\x00\x12\x0f\n\x0bVBaseOffset\x10\x01\x12\x0f\n\x0bOffsetToTop\x10\x02\x12\x08\n\x04RTTI\x10\x03\x12\x13\n\x0f\x46unctionPointer\x10\x04\x12\x17\n\x13\x43ompleteDtorPointer\x10\x05\x12\x17\n\x13\x44\x65letingDtorPointer\x10\x06\x12\x19\n\x15UnusedFunctionPointer\x10\x07\"D\n\x0cVTableLayout\x12\x34\n\x11vtable_components\x18\x01 \x03(\x0b\x32\x19.abi_dump.VTableComponent\"\x1e\n\x07TagType\x12\x13\n\tunique_id\x18\x01 \x01(\t:\x00\"\xac\x03\n\nRecordType\x12\x33\n\ttype_info\x18\x01 \x01(\x0b\x32 .abi_dump.BasicNamedAndTypedDecl\x12)\n\x06\x66ields\x18\x02 \x03(\x0b\x32\x19.abi_dump.RecordFieldDecl\x12\x33\n\x0f\x62\x61se_specifiers\x18\x03 \x03(\x0b\x32\x1a.abi_dump.CXXBaseSpecifier\x12-\n\rtemplate_info\x18\x05 \x01(\x0b\x32\x16.abi_dump.TemplateInfo\x12-\n\rvtable_layout\x18\x07 \x01(\x0b\x32\x16.abi_dump.VTableLayout\x12\x38\n\x06\x61\x63\x63\x65ss\x18\x08 \x01(\x0e\x32\x19.abi_dump.AccessSpecifier:\rpublic_access\x12\x14\n\x0cis_anonymous\x18\t \x01(\x08\x12\x36\n\x0brecord_kind\x18\n \x01(\x0e\x32\x14.abi_dump.RecordKind:\x0bstruct_kind\x12#\n\x08tag_info\x18\x0b \x01(\x0b\x32\x11.abi_dump.TagType\"\xe5\x01\n\x08\x45numType\x12\x33\n\ttype_info\x18\x01 \x01(\x0b\x32 .abi_dump.BasicNamedAndTypedDecl\x12\x17\n\x0funderlying_type\x18\x02 \x01(\t\x12,\n\x0b\x65num_fields\x18\x03 \x03(\x0b\x32\x17.abi_dump.EnumFieldDecl\x12\x38\n\x06\x61\x63\x63\x65ss\x18\x04 \x01(\x0e\x32\x19.abi_dump.AccessSpecifier:\rpublic_access\x12#\n\x08tag_info\x18\x05 \x01(\x0b\x32\x11.abi_dump.TagType\"\x9d\x01\n\rGlobalVarDecl\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x13\n\x0bsource_file\x18\x02 \x01(\t\x12\x16\n\x0elinker_set_key\x18\x03 \x01(\t\x12\x17\n\x0freferenced_type\x18\x04 \x01(\t\x12\x38\n\x06\x61\x63\x63\x65ss\x18\x05 \x01(\x0e\x32\x19.abi_dump.AccessSpecifier:\rpublic_access\"\x1b\n\x0b\x45lfFunction\x12\x0c\n\x04name\x18\x01 \x01(\t\"\x19\n\tElfObject\x12\x0c\n\x04name\x18\x01 \x01(\t\"\xfc\x04\n\x0fTranslationUnit\x12*\n\x0crecord_types\x18\x01 \x03(\x0b\x32\x14.abi_dump.RecordType\x12&\n\nenum_types\x18\x02 \x03(\x0b\x32\x12.abi_dump.EnumType\x12,\n\rpointer_types\x18\x03 \x03(\x0b\x32\x15.abi_dump.PointerType\x12=\n\x16lvalue_reference_types\x18\x04 \x03(\x0b\x32\x1d.abi_dump.LvalueReferenceType\x12=\n\x16rvalue_reference_types\x18\x05 \x03(\x0b\x32\x1d.abi_dump.RvalueReferenceType\x12,\n\rbuiltin_types\x18\x06 \x03(\x0b\x32\x15.abi_dump.BuiltinType\x12\x30\n\x0fqualified_types\x18\x07 \x03(\x0b\x32\x17.abi_dump.QualifiedType\x12(\n\x0b\x61rray_types\x18\x08 \x03(\x0b\x32\x13.abi_dump.ArrayType\x12.\n\x0e\x66unction_types\x18\r \x03(\x0b\x32\x16.abi_dump.FunctionType\x12)\n\tfunctions\x18\t \x03(\x0b\x32\x16.abi_dump.FunctionDecl\x12,\n\x0bglobal_vars\x18\n \x03(\x0b\x32\x17.abi_dump.GlobalVarDecl\x12,\n\relf_functions\x18\x0b \x03(\x0b\x32\x15.abi_dump.ElfFunction\x12(\n\x0b\x65lf_objects\x18\x0c \x03(\x0b\x32\x13.abi_dump.ElfObject*N\n\x0f\x41\x63\x63\x65ssSpecifier\x12\x11\n\rpublic_access\x10\x01\x12\x12\n\x0eprivate_access\x10\x02\x12\x14\n\x10protected_access\x10\x03*=\n\nRecordKind\x12\x0f\n\x0bstruct_kind\x10\x01\x12\x0e\n\nclass_kind\x10\x02\x12\x0e\n\nunion_kind\x10\x03')
+  serialized_pb=_b('\n\x0e\x61\x62i_dump.proto\x12\x08\x61\x62i_dump\"\xa6\x01\n\x16\x42\x61sicNamedAndTypedDecl\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0f\n\x04size\x18\x02 \x01(\x04:\x01\x30\x12\x14\n\talignment\x18\x03 \x01(\r:\x01\x30\x12\x17\n\x0freferenced_type\x18\x04 \x01(\t\x12\x13\n\x0bsource_file\x18\x05 \x01(\t\x12\x16\n\x0elinker_set_key\x18\x06 \x01(\t\x12\x11\n\tself_type\x18\x07 \x01(\t\"@\n\tArrayType\x12\x33\n\ttype_info\x18\x01 \x01(\x0b\x32 .abi_dump.BasicNamedAndTypedDecl\"B\n\x0bPointerType\x12\x33\n\ttype_info\x18\x01 \x01(\x0b\x32 .abi_dump.BasicNamedAndTypedDecl\"\x82\x01\n\rQualifiedType\x12\x33\n\ttype_info\x18\x01 \x01(\x0b\x32 .abi_dump.BasicNamedAndTypedDecl\x12\x10\n\x08is_const\x18\x06 \x01(\x08\x12\x13\n\x0bis_volatile\x18\x07 \x01(\x08\x12\x15\n\ris_restricted\x18\x08 \x01(\x08\"l\n\x0b\x42uiltinType\x12\x33\n\ttype_info\x18\x01 \x01(\x0b\x32 .abi_dump.BasicNamedAndTypedDecl\x12\x13\n\x0bis_unsigned\x18\x02 \x01(\x08\x12\x13\n\x0bis_integral\x18\x03 \x01(\x08\"J\n\x13LvalueReferenceType\x12\x33\n\ttype_info\x18\x01 \x01(\x0b\x32 .abi_dump.BasicNamedAndTypedDecl\"J\n\x13RvalueReferenceType\x12\x33\n\ttype_info\x18\x01 \x01(\x0b\x32 .abi_dump.BasicNamedAndTypedDecl\"\x81\x01\n\x0c\x46unctionType\x12\x33\n\ttype_info\x18\x01 \x01(\x0b\x32 .abi_dump.BasicNamedAndTypedDecl\x12\x13\n\x0breturn_type\x18\x02 \x01(\t\x12\'\n\nparameters\x18\x03 \x03(\x0b\x32\x13.abi_dump.ParamDecl\"\xf9\x01\n\x0c\x46unctionDecl\x12\x13\n\x0breturn_type\x18\x01 \x01(\t\x12\x15\n\rfunction_name\x18\x02 \x01(\t\x12\x13\n\x0bsource_file\x18\x03 \x01(\t\x12\'\n\nparameters\x18\x04 \x03(\x0b\x32\x13.abi_dump.ParamDecl\x12-\n\rtemplate_info\x18\x05 \x01(\x0b\x32\x16.abi_dump.TemplateInfo\x12\x16\n\x0elinker_set_key\x18\x06 \x01(\t\x12\x38\n\x06\x61\x63\x63\x65ss\x18\x07 \x01(\x0e\x32\x19.abi_dump.AccessSpecifier:\rpublic_access\"N\n\tParamDecl\x12\x17\n\x0freferenced_type\x18\x01 \x01(\t\x12\x13\n\x0b\x64\x65\x66\x61ult_arg\x18\x02 \x01(\x08\x12\x13\n\x0bis_this_ptr\x18\x03 \x01(\x08\"\x8e\x01\n\x0fRecordFieldDecl\x12\x17\n\x0freferenced_type\x18\x01 \x01(\t\x12\x14\n\x0c\x66ield_offset\x18\x02 \x01(\x04\x12\x12\n\nfield_name\x18\x03 \x01(\t\x12\x38\n\x06\x61\x63\x63\x65ss\x18\x04 \x01(\x0e\x32\x19.abi_dump.AccessSpecifier:\rpublic_access\"7\n\rEnumFieldDecl\x12\x18\n\x10\x65num_field_value\x18\x01 \x01(\x03\x12\x0c\n\x04name\x18\x03 \x01(\t\";\n\x0cTemplateInfo\x12+\n\x08\x65lements\x18\x01 \x03(\x0b\x32\x19.abi_dump.TemplateElement\"*\n\x0fTemplateElement\x12\x17\n\x0freferenced_type\x18\x01 \x01(\t\"j\n\x10\x43XXBaseSpecifier\x12\x17\n\x0freferenced_type\x18\x01 \x01(\t\x12\x12\n\nis_virtual\x18\x02 \x01(\x08\x12)\n\x06\x61\x63\x63\x65ss\x18\x03 \x01(\x0e\x32\x19.abi_dump.AccessSpecifier\"\xcf\x02\n\x0fVTableComponent\x12,\n\x04kind\x18\x01 \x01(\x0e\x32\x1e.abi_dump.VTableComponent.Kind\x12 \n\x16mangled_component_name\x18\x02 \x01(\t:\x00\x12\x10\n\x05value\x18\x03 \x01(\x04:\x01\x30\x12\x1a\n\x0f\x63omponent_value\x18\x04 \x01(\x03:\x01\x30\x12\x16\n\x07is_pure\x18\x06 \x01(\x08:\x05\x66\x61lse\"\xa5\x01\n\x04Kind\x12\x0f\n\x0bVCallOffset\x10\x00\x12\x0f\n\x0bVBaseOffset\x10\x01\x12\x0f\n\x0bOffsetToTop\x10\x02\x12\x08\n\x04RTTI\x10\x03\x12\x13\n\x0f\x46unctionPointer\x10\x04\x12\x17\n\x13\x43ompleteDtorPointer\x10\x05\x12\x17\n\x13\x44\x65letingDtorPointer\x10\x06\x12\x19\n\x15UnusedFunctionPointer\x10\x07\"D\n\x0cVTableLayout\x12\x34\n\x11vtable_components\x18\x01 \x03(\x0b\x32\x19.abi_dump.VTableComponent\"\x1e\n\x07TagType\x12\x13\n\tunique_id\x18\x01 \x01(\t:\x00\"\xac\x03\n\nRecordType\x12\x33\n\ttype_info\x18\x01 \x01(\x0b\x32 .abi_dump.BasicNamedAndTypedDecl\x12)\n\x06\x66ields\x18\x02 \x03(\x0b\x32\x19.abi_dump.RecordFieldDecl\x12\x33\n\x0f\x62\x61se_specifiers\x18\x03 \x03(\x0b\x32\x1a.abi_dump.CXXBaseSpecifier\x12-\n\rtemplate_info\x18\x05 \x01(\x0b\x32\x16.abi_dump.TemplateInfo\x12-\n\rvtable_layout\x18\x07 \x01(\x0b\x32\x16.abi_dump.VTableLayout\x12\x38\n\x06\x61\x63\x63\x65ss\x18\x08 \x01(\x0e\x32\x19.abi_dump.AccessSpecifier:\rpublic_access\x12\x14\n\x0cis_anonymous\x18\t \x01(\x08\x12\x36\n\x0brecord_kind\x18\n \x01(\x0e\x32\x14.abi_dump.RecordKind:\x0bstruct_kind\x12#\n\x08tag_info\x18\x0b \x01(\x0b\x32\x11.abi_dump.TagType\"\xe5\x01\n\x08\x45numType\x12\x33\n\ttype_info\x18\x01 \x01(\x0b\x32 .abi_dump.BasicNamedAndTypedDecl\x12\x17\n\x0funderlying_type\x18\x02 \x01(\t\x12,\n\x0b\x65num_fields\x18\x03 \x03(\x0b\x32\x17.abi_dump.EnumFieldDecl\x12\x38\n\x06\x61\x63\x63\x65ss\x18\x04 \x01(\x0e\x32\x19.abi_dump.AccessSpecifier:\rpublic_access\x12#\n\x08tag_info\x18\x05 \x01(\x0b\x32\x11.abi_dump.TagType\"\x9d\x01\n\rGlobalVarDecl\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x13\n\x0bsource_file\x18\x02 \x01(\t\x12\x16\n\x0elinker_set_key\x18\x03 \x01(\t\x12\x17\n\x0freferenced_type\x18\x04 \x01(\t\x12\x38\n\x06\x61\x63\x63\x65ss\x18\x05 \x01(\x0e\x32\x19.abi_dump.AccessSpecifier:\rpublic_access\"H\n\x0b\x45lfFunction\x12\x0c\n\x04name\x18\x01 \x01(\t\x12+\n\x07\x62inding\x18\x02 \x01(\x0e\x32\x1a.abi_dump.ElfSymbolBinding\"F\n\tElfObject\x12\x0c\n\x04name\x18\x01 \x01(\t\x12+\n\x07\x62inding\x18\x02 \x01(\x0e\x32\x1a.abi_dump.ElfSymbolBinding\"\xfc\x04\n\x0fTranslationUnit\x12*\n\x0crecord_types\x18\x01 \x03(\x0b\x32\x14.abi_dump.RecordType\x12&\n\nenum_types\x18\x02 \x03(\x0b\x32\x12.abi_dump.EnumType\x12,\n\rpointer_types\x18\x03 \x03(\x0b\x32\x15.abi_dump.PointerType\x12=\n\x16lvalue_reference_types\x18\x04 \x03(\x0b\x32\x1d.abi_dump.LvalueReferenceType\x12=\n\x16rvalue_reference_types\x18\x05 \x03(\x0b\x32\x1d.abi_dump.RvalueReferenceType\x12,\n\rbuiltin_types\x18\x06 \x03(\x0b\x32\x15.abi_dump.BuiltinType\x12\x30\n\x0fqualified_types\x18\x07 \x03(\x0b\x32\x17.abi_dump.QualifiedType\x12(\n\x0b\x61rray_types\x18\x08 \x03(\x0b\x32\x13.abi_dump.ArrayType\x12.\n\x0e\x66unction_types\x18\r \x03(\x0b\x32\x16.abi_dump.FunctionType\x12)\n\tfunctions\x18\t \x03(\x0b\x32\x16.abi_dump.FunctionDecl\x12,\n\x0bglobal_vars\x18\n \x03(\x0b\x32\x17.abi_dump.GlobalVarDecl\x12,\n\relf_functions\x18\x0b \x03(\x0b\x32\x15.abi_dump.ElfFunction\x12(\n\x0b\x65lf_objects\x18\x0c \x03(\x0b\x32\x13.abi_dump.ElfObject*N\n\x0f\x41\x63\x63\x65ssSpecifier\x12\x11\n\rpublic_access\x10\x01\x12\x12\n\x0eprivate_access\x10\x02\x12\x14\n\x10protected_access\x10\x03*=\n\nRecordKind\x12\x0f\n\x0bstruct_kind\x10\x01\x12\x0e\n\nclass_kind\x10\x02\x12\x0e\n\nunion_kind\x10\x03*(\n\x10\x45lfSymbolBinding\x12\n\n\x06Global\x10\x01\x12\x08\n\x04Weak\x10\x02')
 )
 
 _ACCESSSPECIFIER = _descriptor.EnumDescriptor(
@@ -44,8 +44,8 @@ _ACCESSSPECIFIER = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=3563,
-  serialized_end=3641,
+  serialized_start=3653,
+  serialized_end=3731,
 )
 _sym_db.RegisterEnumDescriptor(_ACCESSSPECIFIER)
 
@@ -71,18 +71,43 @@ _RECORDKIND = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=3643,
-  serialized_end=3704,
+  serialized_start=3733,
+  serialized_end=3794,
 )
 _sym_db.RegisterEnumDescriptor(_RECORDKIND)
 
 RecordKind = enum_type_wrapper.EnumTypeWrapper(_RECORDKIND)
+_ELFSYMBOLBINDING = _descriptor.EnumDescriptor(
+  name='ElfSymbolBinding',
+  full_name='abi_dump.ElfSymbolBinding',
+  filename=None,
+  file=DESCRIPTOR,
+  values=[
+    _descriptor.EnumValueDescriptor(
+      name='Global', index=0, number=1,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='Weak', index=1, number=2,
+      serialized_options=None,
+      type=None),
+  ],
+  containing_type=None,
+  serialized_options=None,
+  serialized_start=3796,
+  serialized_end=3836,
+)
+_sym_db.RegisterEnumDescriptor(_ELFSYMBOLBINDING)
+
+ElfSymbolBinding = enum_type_wrapper.EnumTypeWrapper(_ELFSYMBOLBINDING)
 public_access = 1
 private_access = 2
 protected_access = 3
 struct_kind = 1
 class_kind = 2
 union_kind = 3
+Global = 1
+Weak = 2
 
 
 _VTABLECOMPONENT_KIND = _descriptor.EnumDescriptor(
@@ -1127,6 +1152,13 @@ _ELFFUNCTION = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='binding', full_name='abi_dump.ElfFunction.binding', index=1,
+      number=2, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=1,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -1140,7 +1172,7 @@ _ELFFUNCTION = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=2868,
-  serialized_end=2895,
+  serialized_end=2940,
 )
 
 
@@ -1158,6 +1190,13 @@ _ELFOBJECT = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='binding', full_name='abi_dump.ElfObject.binding', index=1,
+      number=2, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=1,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -1170,8 +1209,8 @@ _ELFOBJECT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2897,
-  serialized_end=2922,
+  serialized_start=2942,
+  serialized_end=3012,
 )
 
 
@@ -1285,8 +1324,8 @@ _TRANSLATIONUNIT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2925,
-  serialized_end=3561,
+  serialized_start=3015,
+  serialized_end=3651,
 )
 
 _ARRAYTYPE.fields_by_name['type_info'].message_type = _BASICNAMEDANDTYPEDDECL
@@ -1319,6 +1358,8 @@ _ENUMTYPE.fields_by_name['enum_fields'].message_type = _ENUMFIELDDECL
 _ENUMTYPE.fields_by_name['access'].enum_type = _ACCESSSPECIFIER
 _ENUMTYPE.fields_by_name['tag_info'].message_type = _TAGTYPE
 _GLOBALVARDECL.fields_by_name['access'].enum_type = _ACCESSSPECIFIER
+_ELFFUNCTION.fields_by_name['binding'].enum_type = _ELFSYMBOLBINDING
+_ELFOBJECT.fields_by_name['binding'].enum_type = _ELFSYMBOLBINDING
 _TRANSLATIONUNIT.fields_by_name['record_types'].message_type = _RECORDTYPE
 _TRANSLATIONUNIT.fields_by_name['enum_types'].message_type = _ENUMTYPE
 _TRANSLATIONUNIT.fields_by_name['pointer_types'].message_type = _POINTERTYPE
@@ -1358,6 +1399,7 @@ DESCRIPTOR.message_types_by_name['ElfObject'] = _ELFOBJECT
 DESCRIPTOR.message_types_by_name['TranslationUnit'] = _TRANSLATIONUNIT
 DESCRIPTOR.enum_types_by_name['AccessSpecifier'] = _ACCESSSPECIFIER
 DESCRIPTOR.enum_types_by_name['RecordKind'] = _RECORDKIND
+DESCRIPTOR.enum_types_by_name['ElfSymbolBinding'] = _ELFSYMBOLBINDING
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 BasicNamedAndTypedDecl = _reflection.GeneratedProtocolMessageType('BasicNamedAndTypedDecl', (_message.Message,), dict(

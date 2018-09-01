@@ -160,12 +160,19 @@ message GlobalVarDecl {
   optional AccessSpecifier access = 5 [default = public_access];
 }
 
+enum ElfSymbolBinding {
+  Global = 1;
+  Weak = 2;
+}
+
 message ElfFunction {
   optional string name = 1;
+  optional ElfSymbolBinding binding = 2;
 }
 
 message ElfObject {
   optional string name = 1;
+  optional ElfSymbolBinding binding = 2;
 }
 
 message TranslationUnit {
