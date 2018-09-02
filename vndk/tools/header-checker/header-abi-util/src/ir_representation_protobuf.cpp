@@ -367,7 +367,9 @@ void ProtobufTextFormatToIRReader::ReadEnumTypes(
 void ProtobufTextFormatToIRReader::ReadElfFunctions(
     const abi_dump::TranslationUnit &tu) {
   for (auto &&elf_function : tu.elf_functions()) {
-    ElfFunctionIR elf_function_ir(elf_function.name());
+    ElfFunctionIR elf_function_ir(
+        elf_function.name(),
+        ElfSymbolBindingProtobufToIR(elf_function.binding()));
     elf_functions_.insert(
         {elf_function_ir.GetName(), std::move(elf_function_ir)});
   }
@@ -376,7 +378,8 @@ void ProtobufTextFormatToIRReader::ReadElfFunctions(
 void ProtobufTextFormatToIRReader::ReadElfObjects(
     const abi_dump::TranslationUnit &tu) {
   for (auto &&elf_object : tu.elf_objects()) {
-    ElfObjectIR elf_object_ir(elf_object.name());
+    ElfObjectIR elf_object_ir(
+        elf_object.name(), ElfSymbolBindingProtobufToIR(elf_object.binding()));
     elf_objects_.insert(
         {elf_object_ir.GetName(), std::move(elf_object_ir)});
   }
@@ -621,7 +624,7 @@ static bool SetIRToProtobufEnumField(
 }
 
 bool IRToProtobufConverter::AddEnumFields(abi_dump::EnumType *enum_protobuf,
-                                     const EnumTypeIR *enum_ir) {
+                                          const EnumTypeIR *enum_ir) {
   for (auto &&field : enum_ir->GetFields()) {
     abi_dump::EnumFieldDecl *enum_fieldp = enum_protobuf->add_enum_fields();
     if (!SetIRToProtobufEnumField(enum_fieldp, &field)) {
@@ -1025,6 +1028,8 @@ bool ProtobufIRDumper::AddElfFunctionIR(const ElfFunctionIR *elf_function) {
     return false;
   }
   added_elf_function->set_name(elf_function->GetName());
+  added_elf_function->set_binding(
+      ElfSymbolBindingIRToProtobuf(elf_function->GetBinding()));
   return true;
 }
 
@@ -1034,6 +1039,8 @@ bool ProtobufIRDumper::AddElfObjectIR(const ElfObjectIR *elf_object) {
     return false;
   }
   added_elf_object->set_name(elf_object->GetName());
+  added_elf_object->set_binding(
+      ElfSymbolBindingIRToProtobuf(elf_object->GetBinding()));
   return true;
 }
 
@@ -1508,4 +1515,4 @@ bool ProtobufIRDiffDumper::Dump() {
   return google::protobuf::TextFormat::Print(*diff_tu_.get(), &text_os);
 }
 
-} //abi_util
+}  // namespace abi_util
