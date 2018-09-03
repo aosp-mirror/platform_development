@@ -278,6 +278,10 @@ class MyTest(unittest.TestCase):
             "libpure_virtual_function",
         )
 
+    def test_libc_and_cpp_in_json(self):
+        self.prepare_and_absolute_diff_all_archs(
+            "libgolden_cpp_json", "libgolden_cpp_json")
+
 
 if __name__ == '__main__':
     unittest.main()
