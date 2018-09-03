@@ -70,7 +70,7 @@ else:
         for i, byte in enumerate(iterable):
             yield (i, ord(byte))
 
-    FileNotFoundError = OSError
+    FileNotFoundError = EnvironmentError
 
 try:
     from sys import intern
