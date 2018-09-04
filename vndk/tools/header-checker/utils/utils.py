@@ -112,11 +112,14 @@ def run_header_abi_dumper_on_file(input_path, output_path,
         cmd += ['-I', dir]
     subprocess.check_call(cmd)
 
-def run_header_abi_linker(output_path, inputs, version_script, api, arch):
+def run_header_abi_linker(output_path, inputs, version_script, api, arch,
+                          output_format=None):
     """Link inputs, taking version_script into account"""
     with tempfile.TemporaryDirectory() as tmp:
         cmd = ['header-abi-linker', '-o', output_path, '-v', version_script,
                '-api', api, '-arch', arch]
+        if output_format:
+            cmd += ['-output-format', output_format]
         cmd += inputs
         subprocess.check_call(cmd)
         with open(output_path, 'r') as f:

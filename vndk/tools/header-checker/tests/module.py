@@ -35,7 +35,7 @@ def relative_to_abs_path_list(relative_path_list):
 
 class Module(object):
     def __init__(self, name, arch, srcs, version_script, cflags,
-                 export_include_dirs, api):
+                 export_include_dirs, api, output_format=None):
         self.name = name
         self.arch = arch
         self.srcs = relative_to_abs_path_list(srcs)
@@ -46,6 +46,7 @@ class Module(object):
             self.arch_cflags = ARCH_TARGET_CFLAGS.get(self.arch)
         self.export_include_dirs = relative_to_abs_path_list(export_include_dirs)
         self.api = api
+        self.output_format = output_format
 
     def get_name(self):
         return self.name
@@ -68,6 +69,9 @@ class Module(object):
     def get_api(self):
         return self.api
 
+    def get_output_format(self):
+        return self.output_format
+
     def make_lsdump(self, default_cflags):
         """ For each source file, produce a .sdump file, and link them to form
             an lsump file"""
@@ -82,7 +86,8 @@ class Module(object):
                     self.cflags + self.arch_cflags + default_cflags)
             return run_header_abi_linker(output_lsdump, dumps_to_link,
                                          self.version_script, self.api,
-                                         self.arch)
+                                         self.arch, self.output_format)
+
     @staticmethod
     def mutate_module_for_arch(module, target_arch):
         name = module.get_name()
@@ -91,8 +96,9 @@ class Module(object):
         cflags = module.get_cflags()
         export_include_dirs = module.get_export_include_dirs()
         api = module.get_api()
+        output_format = module.get_output_format()
         return Module(name, target_arch, srcs, version_script, cflags,
-                      export_include_dirs, api)
+                      export_include_dirs, api, output_format)
 
     @staticmethod
     def mutate_module_for_all_arches(module):
@@ -478,6 +484,19 @@ TEST_MODULES = [
         cflags = [],
         arch = '',
         api = 'current',
+    ),
+    Module(
+        name = 'libgolden_cpp_json',
+        srcs = ['integration/cpp/gold/golden_1.cpp',
+                'integration/cpp/gold/high_volume_speaker.cpp',
+                'integration/cpp/gold/low_volume_speaker.cpp',
+                ],
+        version_script = 'integration/cpp/gold/map.txt',
+        export_include_dirs = ['integration/cpp/gold/include'],
+        cflags = [],
+        arch = '',
+        api = 'current',
+        output_format = 'Json'
     ),
 ]
 
