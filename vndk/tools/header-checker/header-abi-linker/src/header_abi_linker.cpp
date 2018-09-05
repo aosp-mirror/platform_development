@@ -389,7 +389,23 @@ bool HeaderAbiLinker::ParseSoFile() {
   return true;
 }
 
+// Hide irrelevant command line options defined in LLVM libraries.
+static void HideIrrelevantCommandLineOptions() {
+  llvm::StringMap<llvm::cl::Option *> &map = llvm::cl::getRegisteredOptions();
+  for (llvm::StringMapEntry<llvm::cl::Option *> &p : map) {
+    if (p.second->Category == &header_linker_category) {
+      continue;
+    }
+    if (p.first().startswith("help")) {
+      continue;
+    }
+    p.second->setHiddenFlag(llvm::cl::Hidden);
+  }
+}
+
 int main(int argc, const char **argv) {
+  HideIrrelevantCommandLineOptions();
+
   llvm::cl::ParseCommandLineOptions(argc, argv, "header-linker");
   if (so_file.empty() && version_script.empty()) {
     llvm::errs() << "One of -so or -v needs to be specified\n";
