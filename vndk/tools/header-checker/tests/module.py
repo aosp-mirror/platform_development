@@ -35,7 +35,7 @@ def relative_to_abs_path_list(relative_path_list):
 
 class Module(object):
     def __init__(self, name, arch, srcs, version_script, cflags,
-                 export_include_dirs, api, output_format=None):
+                 export_include_dirs, api, dumper_flags=[], linker_flags=[]):
         self.name = name
         self.arch = arch
         self.srcs = relative_to_abs_path_list(srcs)
@@ -46,7 +46,8 @@ class Module(object):
             self.arch_cflags = ARCH_TARGET_CFLAGS.get(self.arch)
         self.export_include_dirs = relative_to_abs_path_list(export_include_dirs)
         self.api = api
-        self.output_format = output_format
+        self.dumper_flags = dumper_flags
+        self.linker_flags = linker_flags
 
     def get_name(self):
         return self.name
@@ -69,8 +70,11 @@ class Module(object):
     def get_api(self):
         return self.api
 
-    def get_output_format(self):
-        return self.output_format
+    def get_dumper_flags(self):
+        return self.dumper_flags
+
+    def get_linker_flags(self):
+        return self.linker_flags
 
     def make_lsdump(self, default_cflags):
         """ For each source file, produce a .sdump file, and link them to form
@@ -83,10 +87,11 @@ class Module(object):
                 dumps_to_link.append(output_path)
                 run_header_abi_dumper_on_file(
                     src, output_path, self.export_include_dirs,
-                    self.cflags + self.arch_cflags + default_cflags)
+                    self.cflags + self.arch_cflags + default_cflags,
+                    self.dumper_flags)
             return run_header_abi_linker(output_lsdump, dumps_to_link,
                                          self.version_script, self.api,
-                                         self.arch, self.output_format)
+                                         self.arch, self.linker_flags)
 
     @staticmethod
     def mutate_module_for_arch(module, target_arch):
@@ -96,9 +101,10 @@ class Module(object):
         cflags = module.get_cflags()
         export_include_dirs = module.get_export_include_dirs()
         api = module.get_api()
-        output_format = module.get_output_format()
+        dumper_flags = module.get_dumper_flags()
+        linker_flags = module.get_linker_flags()
         return Module(name, target_arch, srcs, version_script, cflags,
-                      export_include_dirs, api, output_format)
+                      export_include_dirs, api, dumper_flags, linker_flags)
 
     @staticmethod
     def mutate_module_for_all_arches(module):
@@ -496,7 +502,8 @@ TEST_MODULES = [
         cflags = [],
         arch = '',
         api = 'current',
-        output_format = 'Json'
+        dumper_flags = ['-output-format', 'Json'],
+        linker_flags = ['-input-format', 'Json', '-output-format', 'Json']
     ),
 ]
 

@@ -93,11 +93,12 @@ def run_header_abi_dumper(input_path, remove_absolute_paths, cflags=[],
                 return f.read()
 
 def run_header_abi_dumper_on_file(input_path, output_path,
-                                  export_include_dirs = [], cflags =[]):
+                                  export_include_dirs=[], cflags=[], flags=[]):
     input_name, input_ext = os.path.splitext(input_path)
     cmd = ['header-abi-dumper', '-o', output_path, input_path,]
     for dir in export_include_dirs:
         cmd += ['-I', dir]
+    cmd += flags
     cmd += ['--']
     cmd += cflags
     if input_ext == '.cpp' or input_ext == '.cc' or input_ext == '.h':
@@ -113,13 +114,12 @@ def run_header_abi_dumper_on_file(input_path, output_path,
     subprocess.check_call(cmd)
 
 def run_header_abi_linker(output_path, inputs, version_script, api, arch,
-                          output_format=None):
+                          flags=[]):
     """Link inputs, taking version_script into account"""
     with tempfile.TemporaryDirectory() as tmp:
         cmd = ['header-abi-linker', '-o', output_path, '-v', version_script,
                '-api', api, '-arch', arch]
-        if output_format:
-            cmd += ['-output-format', output_format]
+        cmd += flags
         cmd += inputs
         subprocess.check_call(cmd)
         with open(output_path, 'r') as f:
