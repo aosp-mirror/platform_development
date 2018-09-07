@@ -128,6 +128,23 @@ def _report_error(change, res_code, res_json):
     print(_SEP_SPLIT, file=sys.stderr)
 
 
+def _process(change, func, *args, **kwargs):
+    """Process a Gerrit request."""
+    expected_http_code = kwargs.get('expected_http_code', 200)
+
+    try:
+        res_code, res_json = func(*args)
+    except HTTPError as error:
+        res_code = error.code
+        res_json = None
+
+    if res_code != expected_http_code:
+        _report_error(change, res_code, res_json)
+        return False
+
+    return True
+
+
 def main():
     """Set review labels to selected change lists"""
 
@@ -161,28 +178,11 @@ def main():
     has_error = False
     for change in change_lists:
         if args.label or args.message:
-            try:
-                res_code, res_json = set_review(
-                    url_opener, args.gerrit, change['id'], labels, args.message)
-            except HTTPError as error:
-                res_code = error.code
-                res_json = None
-
-            if res_code != 200:
-                has_error = True
-                _report_error(change, res_code, res_json)
-
+            _process(change, set_review, url_opener, args.gerrit, change['id'],
+                     labels, args.message)
         if args.abandon:
-            try:
-                res_code, res_json = abandon(
-                    url_opener, args.gerrit, change['id'], args.abandon)
-            except HTTPError as error:
-                res_code = error.code
-                res_json = None
-
-            if res_code != 200:
-                has_error = True
-                _report_error(change, res_code, res_json)
+            _process(change, abandon, url_opener, args.gerrit, change['id'],
+                     args.abandon)
 
     if has_error:
         sys.exit(1)
