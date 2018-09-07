@@ -138,6 +138,23 @@ def query_change_lists(url_opener, gerrit, query_string, limits):
         response_file.close()
 
 
+def _make_json_post_request(url_opener, url, data, method='POST'):
+    data = json.dumps(data).encode('utf-8')
+    headers = {
+        'Content-Type': 'application/json; charset=UTF-8',
+    }
+
+    request = Request(url, data, headers)
+    request.get_method = lambda: method
+    response_file = url_opener.open(request)
+    try:
+        res_code = response_file.getcode()
+        res_json = _decode_xssi_json(response_file.read())
+        return (res_code, res_json)
+    finally:
+        response_file.close()
+
+
 def set_review(url_opener, gerrit_url, change_id, labels, message):
     """Set review votes to a change list."""
 
@@ -149,20 +166,8 @@ def set_review(url_opener, gerrit_url, change_id, labels, message):
         data['labels'] = labels
     if message:
         data['message'] = message
-    data = json.dumps(data).encode('utf-8')
 
-    headers = {
-        'Content-Type': 'application/json; charset=UTF-8',
-    }
-
-    request = Request(url, data, headers)
-    response_file = url_opener.open(request)
-    try:
-        res_code = response_file.getcode()
-        res_json = _decode_xssi_json(response_file.read())
-        return (res_code, res_json)
-    finally:
-        response_file.close()
+    return _make_json_post_request(url_opener, url, data)
 
 
 def abandon(url_opener, gerrit_url, change_id, message):
@@ -173,20 +178,8 @@ def abandon(url_opener, gerrit_url, change_id, message):
     data = {}
     if message:
         data['message'] = message
-    data = json.dumps(data).encode('utf-8')
 
-    headers = {
-        'Content-Type': 'application/json; charset=UTF-8',
-    }
-
-    request = Request(url, data, headers)
-    response_file = url_opener.open(request)
-    try:
-        res_code = response_file.getcode()
-        res_json = _decode_xssi_json(response_file.read())
-        return (res_code, res_json)
-    finally:
-        response_file.close()
+    return _make_json_post_request(url_opener, url, data)
 
 
 def get_patch(url_opener, gerrit_url, change_id, revision_id='current'):
