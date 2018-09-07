@@ -182,6 +182,42 @@ def abandon(url_opener, gerrit_url, change_id, message):
     return _make_json_post_request(url_opener, url, data)
 
 
+def set_topic(url_opener, gerrit_url, change_id, name):
+    """Set the topic name."""
+
+    url = '{}/a/changes/{}/topic'.format(gerrit_url, change_id)
+    data = {'topic': name}
+    return _make_json_post_request(url_opener, url, data, method='PUT')
+
+
+def delete_topic(url_opener, gerrit_url, change_id):
+    """Delete the topic name."""
+
+    url = '{}/a/changes/{}/topic'.format(gerrit_url, change_id)
+    request = Request(url)
+    request.get_method = lambda: 'DELETE'
+    response_file = url_opener.open(request)
+    try:
+        return (response_file.getcode(), response_file.read())
+    finally:
+        response_file.close()
+
+
+def set_hashtags(url_opener, gerrit_url, change_id, add_tags=None,
+                 remove_tags=None):
+    """Add or remove hash tags."""
+
+    url = '{}/a/changes/{}/hashtags'.format(gerrit_url, change_id)
+
+    data = {}
+    if add_tags:
+        data['add'] = add_tags
+    if remove_tags:
+        data['remove'] = remove_tags
+
+    return _make_json_post_request(url_opener, url, data)
+
+
 def get_patch(url_opener, gerrit_url, change_id, revision_id='current'):
     """Download the patch file."""
 
