@@ -68,8 +68,10 @@
 	<classpathentry kind="src" path="frameworks/base/services/backup/java"/>
 	<classpathentry kind="src" path="frameworks/base/services/devicepolicy/java"/>
 	<classpathentry kind="src" path="frameworks/base/services/appwidget/java"/>
+	<classpathentry kind="src" path="frameworks/base/services/tests/servicestests/src"/>
 	<classpathentry kind="src" path="frameworks/base/telecomm/java"/>
 	<classpathentry kind="src" path="frameworks/base/telephony/java"/>
+	<classpathentry kind="src" path="frameworks/base/test-base/src"/>
 	<classpathentry kind="src" path="frameworks/base/test-runner/src"/>
 	<classpathentry kind="src" path="frameworks/base/wifi/java"/>
 	<classpathentry kind="src" path="frameworks/ex/camera2/public/src"/>
@@ -149,6 +151,7 @@
 	<classpathentry kind="src" path="external/libphonenumber/internal/prefixmapper/src"/>
 	<classpathentry kind="src" path="external/libphonenumber/java/src"/>
 	<classpathentry kind="src" path="external/libphonenumber/libphonenumber/src"/>
+	<classpathentry kind="src" path="external/mockito/src/main/java"/>
 	<classpathentry kind="src" path="external/mp4parser/isoparser/src/main/java"/>
 	<classpathentry kind="src" path="external/nist-sip/java"/>
 	<classpathentry kind="src" path="external/objenesis/main/src"/>
