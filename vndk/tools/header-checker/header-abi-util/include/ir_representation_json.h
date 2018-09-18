@@ -85,10 +85,6 @@ class IRToJsonConverter {
 
   static JsonObject ConvertRvalueReferenceTypeIR(
       const RvalueReferenceTypeIR *rvalue_reference_typep);
-
-  static JsonObject ConvertElfFunctionIR(const ElfFunctionIR *elf_function_ir);
-
-  static JsonObject ConvertElfObjectIR(const ElfObjectIR *elf_object_ir);
 };
 
 class JsonIRDumper : public IRDumper, public IRToJsonConverter {
