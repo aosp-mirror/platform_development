@@ -36,7 +36,7 @@ class JsonObject : public Json::Value {
 class IRToJsonConverter {
  private:
   static void AddTemplateInfo(JsonObject &type_decl,
-                              const abi_util::TemplatedArtifactIR *template_ir);
+                              const TemplatedArtifactIR *template_ir);
 
   // BasicNamedAndTypedDecl
   static void AddTypeInfo(JsonObject &type_decl, const TypeIR *type_ir);
@@ -50,7 +50,7 @@ class IRToJsonConverter {
   static void AddVTableLayout(JsonObject &record_type,
                               const RecordTypeIR *record_ir);
 
-  static void AddTagTypeInfo(JsonObject &tag_type,
+  static void AddTagTypeInfo(JsonObject &type_decl,
                              const TagTypeIR *tag_type_ir);
 
   static void AddEnumFields(JsonObject &enum_type, const EnumTypeIR *enum_ir);
