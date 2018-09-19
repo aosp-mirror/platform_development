@@ -19,6 +19,7 @@
 
 #include <cstdlib>
 #include <fstream>
+#include <sstream>
 #include <string>
 
 namespace abi_util {
@@ -394,10 +395,40 @@ bool JsonIRDumper::AddElfSymbolMessageIR(const ElfSymbolIR *elf_symbol_ir) {
   return true;
 }
 
-bool JsonIRDumper::Dump() {
-  std::ofstream output(dump_path_);
+static std::string DumpJson(const JsonObject &obj) {
+  std::ostringstream output_stream;
   Json::StyledStreamWriter writer(/* indentation */ " ");
-  writer.write(output, translation_unit_);
+  writer.write(output_stream, obj);
+  return output_stream.str();
+}
+
+static void WriteTailTrimmedLinesToFile(const std::string &path,
+                                        const std::string &output_string) {
+  std::ofstream output_file(path);
+  size_t line_start = 0;
+  while (line_start < output_string.size()) {
+    size_t trailing_space_start = line_start;
+    size_t index;
+    for (index = line_start;
+         index < output_string.size() && output_string[index] != '\n';
+         index++) {
+      if (output_string[index] != ' ') {
+        trailing_space_start = index + 1;
+      }
+    }
+    // Only write this line if this line contains non-whitespace characters.
+    if (trailing_space_start != line_start) {
+      output_file.write(output_string.data() + line_start,
+                        trailing_space_start - line_start);
+      output_file.write("\n", 1);
+    }
+    line_start = index + 1;
+  }
+}
+
+bool JsonIRDumper::Dump() {
+  std::string output_string = DumpJson(translation_unit_);
+  WriteTailTrimmedLinesToFile(dump_path_, output_string);
   return true;
 }
 
