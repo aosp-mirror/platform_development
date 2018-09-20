@@ -110,6 +110,7 @@ android_system_stubs: $(full_target)
 
 # Build and store the android_system.jar.
 $(call dist-for-goals,sdk win_sdk,$(full_target):android_system.jar)
+$(call dist-for-goals,sdk win_sdk,$(full_target):apistubs/android/system/android.jar)
 
 # ============ Test SDK ============
 full_target := $(call intermediates-dir-for,JAVA_LIBRARIES,android_test_stubs_current,,COMMON)/classes.jar
@@ -119,3 +120,4 @@ android_test_stubs: $(full_target)
 
 # Build and store the android_test.jar.
 $(call dist-for-goals,sdk win_sdk,$(full_target):android_test.jar)
+$(call dist-for-goals,sdk win_sdk,$(full_target):apistubs/android/test/android.jar)
