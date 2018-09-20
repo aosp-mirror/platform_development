@@ -19,6 +19,7 @@
 
 #include <cstdlib>
 #include <fstream>
+#include <sstream>
 #include <string>
 
 namespace abi_util {
@@ -92,26 +93,23 @@ ElfSymbolBindingIRToJson(ElfSymbolIR::ElfSymbolBinding binding) {
 }
 
 void IRToJsonConverter::AddTemplateInfo(
-    JsonObject &type_decl, const abi_util::TemplatedArtifactIR *template_ir) {
-  Json::Value &elements = type_decl["template_info"];
-  elements = JsonArray();
+    JsonObject &type_decl, const TemplatedArtifactIR *template_ir) {
+  Json::Value &args = type_decl["template_args"];
+  args = JsonArray();
   for (auto &&template_element_ir : template_ir->GetTemplateElements()) {
-    Json::Value &element = elements.append(JsonObject());
-    element["referenced_type"] = template_element_ir.GetReferencedType();
+    args.append(template_element_ir.GetReferencedType());
   }
 }
 
 void IRToJsonConverter::AddTypeInfo(JsonObject &type_decl,
                                     const TypeIR *type_ir) {
-  Json::Value &type_info = type_decl["type_info"];
-  type_info = JsonObject();
-  type_info["linker_set_key"] = type_ir->GetLinkerSetKey();
-  type_info["source_file"] = type_ir->GetSourceFile();
-  type_info["name"] = type_ir->GetName();
-  type_info["size"] = Json::UInt64(type_ir->GetSize());
-  type_info["alignment"] = type_ir->GetAlignment();
-  type_info["referenced_type"] = type_ir->GetReferencedType();
-  type_info["self_type"] = type_ir->GetSelfType();
+  type_decl["linker_set_key"] = type_ir->GetLinkerSetKey();
+  type_decl["source_file"] = type_ir->GetSourceFile();
+  type_decl["name"] = type_ir->GetName();
+  type_decl["size"] = Json::UInt64(type_ir->GetSize());
+  type_decl["alignment"] = type_ir->GetAlignment();
+  type_decl["referenced_type"] = type_ir->GetReferencedType();
+  type_decl["self_type"] = type_ir->GetSelfType();
 }
 
 static JsonObject ConvertRecordFieldIR(const RecordFieldIR *record_field_ir) {
@@ -151,33 +149,30 @@ void IRToJsonConverter::AddBaseSpecifiers(JsonObject &record_type,
 }
 
 static JsonObject
-ConvertVTableLayoutIR(const VTableLayoutIR &vtable_layout_ir) {
-  JsonObject vtable_layout;
-  Json::Value &vtable_components = vtable_layout["vtable_components"];
-  vtable_components = JsonArray();
-  for (auto &&vtable_component_ir : vtable_layout_ir.GetVTableComponents()) {
-    Json::Value &vtable_component = vtable_components.append(JsonObject());
-    vtable_component["kind"] =
-        VTableComponentKindIRToJson(vtable_component_ir.GetKind());
-    vtable_component["component_value"] =
-        Json::Int64(vtable_component_ir.GetValue());
-    vtable_component["mangled_component_name"] = vtable_component_ir.GetName();
-    vtable_component["is_pure"] = vtable_component_ir.GetIsPure();
-  }
-  return vtable_layout;
+ConvertVTableComponentIR(const VTableComponentIR &vtable_component_ir) {
+  JsonObject vtable_component;
+  vtable_component["kind"] =
+      VTableComponentKindIRToJson(vtable_component_ir.GetKind());
+  vtable_component["component_value"] =
+      Json::Int64(vtable_component_ir.GetValue());
+  vtable_component["mangled_component_name"] = vtable_component_ir.GetName();
+  vtable_component["is_pure"] = vtable_component_ir.GetIsPure();
+  return vtable_component;
 }
 
 void IRToJsonConverter::AddVTableLayout(JsonObject &record_type,
                                         const RecordTypeIR *record_ir) {
-  const VTableLayoutIR &vtable_layout_ir = record_ir->GetVTableLayout();
-  record_type["vtable_layout"] = ConvertVTableLayoutIR(vtable_layout_ir);
+  Json::Value &vtable_components = record_type["vtable_components"];
+  vtable_components = JsonArray();
+  for (auto &&vtable_component_ir :
+       record_ir->GetVTableLayout().GetVTableComponents()) {
+    vtable_components.append(ConvertVTableComponentIR(vtable_component_ir));
+  }
 }
 
-void IRToJsonConverter::AddTagTypeInfo(JsonObject &record_type,
-                                       const abi_util::TagTypeIR *tag_type_ir) {
-  Json::Value &tag_type = record_type["tag_info"];
-  tag_type = JsonObject();
-  tag_type["unique_id"] = tag_type_ir->GetUniqueId();
+void IRToJsonConverter::AddTagTypeInfo(JsonObject &type_decl,
+                                       const TagTypeIR *tag_type_ir) {
+  type_decl["unique_id"] = tag_type_ir->GetUniqueId();
 }
 
 JsonObject IRToJsonConverter::ConvertRecordTypeIR(const RecordTypeIR *recordp) {
@@ -394,10 +389,40 @@ bool JsonIRDumper::AddElfSymbolMessageIR(const ElfSymbolIR *elf_symbol_ir) {
   return true;
 }
 
-bool JsonIRDumper::Dump() {
-  std::ofstream output(dump_path_);
+static std::string DumpJson(const JsonObject &obj) {
+  std::ostringstream output_stream;
   Json::StyledStreamWriter writer(/* indentation */ " ");
-  writer.write(output, translation_unit_);
+  writer.write(output_stream, obj);
+  return output_stream.str();
+}
+
+static void WriteTailTrimmedLinesToFile(const std::string &path,
+                                        const std::string &output_string) {
+  std::ofstream output_file(path);
+  size_t line_start = 0;
+  while (line_start < output_string.size()) {
+    size_t trailing_space_start = line_start;
+    size_t index;
+    for (index = line_start;
+         index < output_string.size() && output_string[index] != '\n';
+         index++) {
+      if (output_string[index] != ' ') {
+        trailing_space_start = index + 1;
+      }
+    }
+    // Only write this line if this line contains non-whitespace characters.
+    if (trailing_space_start != line_start) {
+      output_file.write(output_string.data() + line_start,
+                        trailing_space_start - line_start);
+      output_file.write("\n", 1);
+    }
+    line_start = index + 1;
+  }
+}
+
+bool JsonIRDumper::Dump() {
+  std::string output_string = DumpJson(translation_unit_);
+  WriteTailTrimmedLinesToFile(dump_path_, output_string);
   return true;
 }
 
