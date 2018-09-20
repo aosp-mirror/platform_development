@@ -40,6 +40,7 @@ android.hardware.bluetooth@1.0,True,False,True,hidl_interface
 android.hardware.bluetooth@1.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.boot@1.0,True,False,True,hidl_interface
 android.hardware.boot@1.0-adapter-helper,True,False,True,hidl_interface
+android.hardware.boot@1.0-impl,False,False,True,cc_library_shared
 android.hardware.broadcastradio@1.0,True,False,True,hidl_interface
 android.hardware.broadcastradio@1.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.broadcastradio@1.1,True,False,True,hidl_interface
@@ -56,10 +57,14 @@ android.hardware.camera.device@3.3,True,False,True,hidl_interface
 android.hardware.camera.device@3.3-adapter-helper,True,False,True,hidl_interface
 android.hardware.camera.device@3.4,True,False,True,hidl_interface
 android.hardware.camera.device@3.4-adapter-helper,True,False,True,hidl_interface
+android.hardware.camera.device@3.5,True,False,True,hidl_interface
+android.hardware.camera.device@3.5-adapter-helper,True,False,True,hidl_interface
 android.hardware.camera.metadata@3.2,True,False,True,hidl_interface
 android.hardware.camera.metadata@3.2-adapter-helper,True,False,True,hidl_interface
 android.hardware.camera.metadata@3.3,True,False,True,hidl_interface
 android.hardware.camera.metadata@3.3-adapter-helper,True,False,True,hidl_interface
+android.hardware.camera.metadata@3.4,True,False,True,hidl_interface
+android.hardware.camera.metadata@3.4-adapter-helper,True,False,True,hidl_interface
 android.hardware.camera.provider@2.4,True,False,True,hidl_interface
 android.hardware.camera.provider@2.4-adapter-helper,True,False,True,hidl_interface
 android.hardware.cas.native@1.0,True,False,True,hidl_interface
@@ -71,6 +76,8 @@ android.hardware.configstore@1.0,True,False,True,hidl_interface
 android.hardware.configstore@1.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.configstore@1.1,True,False,True,hidl_interface
 android.hardware.configstore@1.1-adapter-helper,True,False,True,hidl_interface
+android.hardware.configstore@1.2,True,False,True,hidl_interface
+android.hardware.configstore@1.2-adapter-helper,True,False,True,hidl_interface
 android.hardware.confirmationui-support-lib,True,False,True,cc_library
 android.hardware.confirmationui@1.0,True,False,True,hidl_interface
 android.hardware.confirmationui@1.0-adapter-helper,True,False,True,hidl_interface
@@ -82,6 +89,8 @@ android.hardware.drm@1.1,True,False,True,hidl_interface
 android.hardware.drm@1.1-adapter-helper,True,False,True,hidl_interface
 android.hardware.dumpstate@1.0,True,False,True,hidl_interface
 android.hardware.dumpstate@1.0-adapter-helper,True,False,True,hidl_interface
+android.hardware.fastboot@1.0,True,False,True,hidl_interface
+android.hardware.fastboot@1.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.gatekeeper@1.0,True,False,True,hidl_interface
 android.hardware.gatekeeper@1.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.gnss@1.0,True,False,True,hidl_interface
@@ -106,6 +115,8 @@ android.hardware.graphics.mapper@2.0,True,True,True,hidl_interface
 android.hardware.graphics.mapper@2.0-adapter-helper,True,True,True,hidl_interface
 android.hardware.graphics.mapper@2.1,True,True,True,hidl_interface
 android.hardware.graphics.mapper@2.1-adapter-helper,True,True,True,hidl_interface
+android.hardware.health.filesystem@1.0,True,False,True,hidl_interface
+android.hardware.health.filesystem@1.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.health@1.0,True,False,True,hidl_interface
 android.hardware.health@1.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.health@2.0,True,False,True,hidl_interface
@@ -120,6 +131,8 @@ android.hardware.light@2.0,True,False,True,hidl_interface
 android.hardware.light@2.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.media.bufferpool@1.0,True,False,True,hidl_interface
 android.hardware.media.bufferpool@1.0-adapter-helper,True,False,True,hidl_interface
+android.hardware.media.bufferpool@2.0,True,False,True,hidl_interface
+android.hardware.media.bufferpool@2.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.media.omx@1.0,True,False,True,hidl_interface
 android.hardware.media.omx@1.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.media@1.0,True,False,True,hidl_interface
@@ -142,8 +155,8 @@ android.hardware.power@1.1,True,False,True,hidl_interface
 android.hardware.power@1.1-adapter-helper,True,False,True,hidl_interface
 android.hardware.power@1.2,True,False,True,hidl_interface
 android.hardware.power@1.2-adapter-helper,True,False,True,hidl_interface
-android.hardware.power@1.3,False,False,True,hidl_interface
-android.hardware.power@1.3-adapter-helper,False,False,True,hidl_interface
+android.hardware.power@1.3,True,False,True,hidl_interface
+android.hardware.power@1.3-adapter-helper,True,False,True,hidl_interface
 android.hardware.radio.config@1.0,True,False,True,hidl_interface
 android.hardware.radio.config@1.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.radio.deprecated@1.0,True,False,True,hidl_interface
@@ -154,12 +167,16 @@ android.hardware.radio@1.1,True,False,True,hidl_interface
 android.hardware.radio@1.1-adapter-helper,True,False,True,hidl_interface
 android.hardware.radio@1.2,True,False,True,hidl_interface
 android.hardware.radio@1.2-adapter-helper,True,False,True,hidl_interface
+android.hardware.radio@1.3,True,False,True,hidl_interface
+android.hardware.radio@1.3-adapter-helper,True,False,True,hidl_interface
 android.hardware.renderscript@1.0,True,True,True,hidl_interface
 android.hardware.renderscript@1.0-adapter-helper,True,True,True,hidl_interface
 android.hardware.secure_element@1.0,True,False,True,hidl_interface
 android.hardware.secure_element@1.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.sensors@1.0,True,False,True,hidl_interface
 android.hardware.sensors@1.0-adapter-helper,True,False,True,hidl_interface
+android.hardware.sensors@2.0,True,False,True,hidl_interface
+android.hardware.sensors@2.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.soundtrigger@2.0,True,False,True,hidl_interface
 android.hardware.soundtrigger@2.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.soundtrigger@2.0-core,True,False,True,cc_library_shared
@@ -223,6 +240,8 @@ android.hardware.weaver@1.0,True,False,True,hidl_interface
 android.hardware.weaver@1.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.wifi.hostapd@1.0,True,False,True,hidl_interface
 android.hardware.wifi.hostapd@1.0-adapter-helper,True,False,True,hidl_interface
+android.hardware.wifi.hostapd@1.1,True,False,True,hidl_interface
+android.hardware.wifi.hostapd@1.1-adapter-helper,True,False,True,hidl_interface
 android.hardware.wifi.offload@1.0,True,False,True,hidl_interface
 android.hardware.wifi.offload@1.0-adapter-helper,True,False,True,hidl_interface
 android.hardware.wifi.supplicant@1.0,True,False,True,hidl_interface
@@ -235,6 +254,8 @@ android.hardware.wifi@1.1,True,False,True,hidl_interface
 android.hardware.wifi@1.1-adapter-helper,True,False,True,hidl_interface
 android.hardware.wifi@1.2,True,False,True,hidl_interface
 android.hardware.wifi@1.2-adapter-helper,True,False,True,hidl_interface
+android.hardware.wifi@1.3,True,False,True,hidl_interface
+android.hardware.wifi@1.3-adapter-helper,True,False,True,hidl_interface
 android.hidl.allocator@1.0,True,False,True,hidl_interface
 android.hidl.allocator@1.0-adapter-helper,True,False,True,hidl_interface
 android.hidl.base@1.0,True,False,True,hidl_interface
@@ -259,8 +280,12 @@ android.system.net.netd@1.0,True,False,True,hidl_interface
 android.system.net.netd@1.0-adapter-helper,True,False,True,hidl_interface
 android.system.net.netd@1.1,True,False,True,hidl_interface
 android.system.net.netd@1.1-adapter-helper,True,False,True,hidl_interface
+android.system.suspend@1.0,True,False,True,hidl_interface
+android.system.suspend@1.0-adapter-helper,True,False,True,hidl_interface
 android.system.wifi.keystore@1.0,True,False,True,hidl_interface
 android.system.wifi.keystore@1.0-adapter-helper,True,False,True,hidl_interface
+hardware.google.light@1.0,False,False,True,hidl_interface
+hardware.google.light@1.0-adapter-helper,False,False,True,hidl_interface
 hardware.google.media.c2@1.0,False,False,True,hidl_interface
 hardware.google.media.c2@1.0-adapter-helper,False,False,True,hidl_interface
 hardware.google.pixelstats@1.0,False,False,True,hidl_interface
@@ -279,7 +304,7 @@ libaudioutils,True,False,True,cc_library
 libbacktrace,True,True,False,cc_library
 libbase,True,True,True,cc_library
 libbcinfo,True,True,True,cc_library_shared
-libbinder,True,False,True,cc_library
+libbinder,True,False,True,cc_library_shared
 libbindercallbacks,False,False,True,cc_library_shared
 libbinderwrapper,False,False,True,cc_library_shared
 libblas,True,True,False,cc_library_shared
@@ -312,6 +337,7 @@ libexif,True,False,True,cc_library_shared
 libexpat,True,False,True,cc_library
 libfmq,True,False,True,cc_library_shared
 libgatekeeper,True,False,True,cc_library_shared
+libgflags,False,False,True,cc_library
 libgtest_prod,False,False,True,cc_library
 libgui,True,False,False,cc_library_shared
 libhardware,True,True,True,cc_library_shared
@@ -326,6 +352,7 @@ libhwbinder,True,True,True,cc_library
 libhwbinder_noltopgo,True,True,True,cc_library
 libion,True,True,True,cc_library
 libjpeg,True,False,True,cc_library
+libjsoncpp,False,False,True,cc_library
 libkeymaster4,False,False,True,cc_library_shared
 libkeymaster4support,False,False,True,cc_library
 libkeymaster_messages,True,False,True,cc_library_shared
@@ -367,6 +394,7 @@ libsqlite,True,False,True,cc_library
 libssl,True,False,True,cc_library
 libstagefright_amrnb_common,True,False,True,cc_library_shared
 libstagefright_bufferpool@1.0,False,False,True,cc_library
+libstagefright_bufferpool@2.0,False,False,True,cc_library
 libstagefright_bufferqueue_helper,True,False,True,cc_library_shared
 libstagefright_ccodec_utils,False,False,True,cc_library_shared
 libstagefright_codec2,False,False,True,cc_library_shared
@@ -419,7 +447,7 @@ libstagefright_soft_g711dec,True,False,True,cc_library_shared
 libstagefright_soft_gsmdec,True,False,True,cc_library_shared
 libstagefright_soft_hevcdec,True,False,True,cc_library_shared
 libstagefright_soft_mp3dec,True,False,True,cc_library_shared
-libstagefright_soft_mpeg2dec,True,False,True,cc_library_shared
+libstagefright_soft_mpeg2dec,False,False,True,cc_library_shared
 libstagefright_soft_mpeg4dec,True,False,True,cc_library_shared
 libstagefright_soft_mpeg4enc,True,False,True,cc_library_shared
 libstagefright_soft_opusdec,True,False,True,cc_library_shared
@@ -429,7 +457,6 @@ libstagefright_soft_vpxdec,True,False,True,cc_library_shared
 libstagefright_soft_vpxenc,True,False,True,cc_library_shared
 libstagefright_soft_xaacdec,False,False,True,cc_library_shared
 libstagefright_xmlparser,True,False,True,cc_library_shared
-libsuspend,True,False,True,cc_library
 libsysutils,True,False,True,cc_library_shared
 libtextclassifier_hash,False,False,True,cc_library_shared
 libtinyalsa,True,False,True,cc_library
