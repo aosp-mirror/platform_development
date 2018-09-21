@@ -23,16 +23,6 @@
 
 namespace abi_util {
 
-static bool IsPresentInExportedHeaders(
-    const LinkableMessageIR &linkable_message,
-    const std::set<std::string> *exported_headers) {
-  if (exported_headers == nullptr || exported_headers->empty()) {
-    return true;
-  }
-  return exported_headers->find(linkable_message.GetSourceFile())
-      != exported_headers->end();
-}
-
 void ProtobufTextFormatToIRReader::ReadTypeInfo(
     const abi_dump::BasicNamedAndTypedDecl &type_info,
     TypeIR *typep) {
@@ -217,7 +207,7 @@ void ProtobufTextFormatToIRReader::ReadGlobalVariables(
         global_variable_protobuf.referenced_type());
     global_variable_ir.SetLinkerSetKey(
         global_variable_protobuf.linker_set_key());
-    if (!IsPresentInExportedHeaders(global_variable_ir, exported_headers_)) {
+    if (!IsLinkableMessageInExportedHeaders(&global_variable_ir)) {
       continue;
     }
     global_variables_.insert(
@@ -230,7 +220,7 @@ void ProtobufTextFormatToIRReader::ReadPointerTypes(
   for (auto &&pointer_type_protobuf : tu.pointer_types()) {
     PointerTypeIR pointer_type_ir;
     ReadTypeInfo(pointer_type_protobuf.type_info(), &pointer_type_ir);
-    if (!IsPresentInExportedHeaders(pointer_type_ir, exported_headers_)) {
+    if (!IsLinkableMessageInExportedHeaders(&pointer_type_ir)) {
       continue;
     }
     AddToMapAndTypeGraph(std::move(pointer_type_ir), &pointer_types_,
@@ -259,7 +249,7 @@ void ProtobufTextFormatToIRReader::ReadQualifiedTypes(
     qualified_type_ir.SetVolatility(qualified_type_protobuf.is_volatile());
     qualified_type_ir.SetRestrictedness(
         qualified_type_protobuf.is_restricted());
-    if (!IsPresentInExportedHeaders(qualified_type_ir, exported_headers_)) {
+    if (!IsLinkableMessageInExportedHeaders(&qualified_type_ir)) {
       continue;
     }
     AddToMapAndTypeGraph(std::move(qualified_type_ir), &qualified_types_,
@@ -272,7 +262,7 @@ void ProtobufTextFormatToIRReader::ReadArrayTypes(
   for (auto &&array_type_protobuf : tu.array_types()) {
     ArrayTypeIR array_type_ir;
     ReadTypeInfo(array_type_protobuf.type_info(), &array_type_ir);
-    if (!IsPresentInExportedHeaders(array_type_ir, exported_headers_)) {
+    if (!IsLinkableMessageInExportedHeaders(&array_type_ir)) {
       continue;
     }
     AddToMapAndTypeGraph(std::move(array_type_ir), &array_types_,
@@ -286,8 +276,7 @@ void ProtobufTextFormatToIRReader::ReadLvalueReferenceTypes(
     LvalueReferenceTypeIR lvalue_reference_type_ir;
     ReadTypeInfo(lvalue_reference_type_protobuf.type_info(),
                  &lvalue_reference_type_ir);
-    if (!IsPresentInExportedHeaders(lvalue_reference_type_ir,
-                                    exported_headers_)) {
+    if (!IsLinkableMessageInExportedHeaders(&lvalue_reference_type_ir)) {
       continue;
     }
     AddToMapAndTypeGraph(std::move(lvalue_reference_type_ir),
@@ -301,8 +290,7 @@ void ProtobufTextFormatToIRReader::ReadRvalueReferenceTypes(
     RvalueReferenceTypeIR rvalue_reference_type_ir;
     ReadTypeInfo(rvalue_reference_type_protobuf.type_info(),
                  &rvalue_reference_type_ir);
-    if (!IsPresentInExportedHeaders(rvalue_reference_type_ir,
-                                    exported_headers_)) {
+    if (!IsLinkableMessageInExportedHeaders(&rvalue_reference_type_ir)) {
       continue;
     }
     AddToMapAndTypeGraph(std::move(rvalue_reference_type_ir),
@@ -314,7 +302,7 @@ void ProtobufTextFormatToIRReader::ReadFunctions(
     const abi_dump::TranslationUnit &tu) {
   for (auto &&function_protobuf : tu.functions()) {
     FunctionIR function_ir = FunctionProtobufToIR(function_protobuf);
-    if (!IsPresentInExportedHeaders(function_ir, exported_headers_)) {
+    if (!IsLinkableMessageInExportedHeaders(&function_ir)) {
       continue;
     }
     functions_.insert({function_ir.GetLinkerSetKey(), std::move(function_ir)});
@@ -325,7 +313,7 @@ void ProtobufTextFormatToIRReader::ReadRecordTypes(
     const abi_dump::TranslationUnit &tu) {
   for (auto &&record_type_protobuf : tu.record_types()) {
     RecordTypeIR record_type_ir = RecordTypeProtobufToIR(record_type_protobuf);
-    if (!IsPresentInExportedHeaders(record_type_ir, exported_headers_)) {
+    if (!IsLinkableMessageInExportedHeaders(&record_type_ir)) {
       continue;
     }
     auto it = AddToMapAndTypeGraph(std::move(record_type_ir), &record_types_,
@@ -340,7 +328,7 @@ void ProtobufTextFormatToIRReader::ReadFunctionTypes(
   for (auto &&function_type_protobuf : tu.function_types()) {
     FunctionTypeIR function_type_ir =
         FunctionTypeProtobufToIR(function_type_protobuf);
-    if (!IsPresentInExportedHeaders(function_type_ir, exported_headers_)) {
+    if (!IsLinkableMessageInExportedHeaders(&function_type_ir)) {
       continue;
     }
     auto it = AddToMapAndTypeGraph(std::move(function_type_ir),
@@ -354,7 +342,7 @@ void ProtobufTextFormatToIRReader::ReadEnumTypes(
     const abi_dump::TranslationUnit &tu) {
   for (auto &&enum_type_protobuf : tu.enum_types()) {
     EnumTypeIR enum_type_ir = EnumTypeProtobufToIR(enum_type_protobuf);
-    if (!IsPresentInExportedHeaders(enum_type_ir, exported_headers_)) {
+    if (!IsLinkableMessageInExportedHeaders(&enum_type_ir)) {
       continue;
     }
     auto it = AddToMapAndTypeGraph(std::move(enum_type_ir), &enum_types_,
