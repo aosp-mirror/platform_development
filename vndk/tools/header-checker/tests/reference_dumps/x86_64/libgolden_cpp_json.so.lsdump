@@ -4,25 +4,20 @@
  [
   {
    "alignment" : 4,
-   "is_integral" : false,
-   "is_unsigned" : false,
    "linker_set_key" : "float",
    "name" : "float",
    "referenced_type" : "type-3",
    "self_type" : "type-3",
-   "size" : 4,
-   "source_file" : ""
+   "size" : 4
   },
   {
    "alignment" : 4,
    "is_integral" : true,
-   "is_unsigned" : false,
    "linker_set_key" : "int",
    "name" : "int",
    "referenced_type" : "type-2",
    "self_type" : "type-2",
-   "size" : 4,
-   "source_file" : ""
+   "size" : 4
   },
   {
    "alignment" : 4,
@@ -32,72 +27,54 @@
    "name" : "unsigned int",
    "referenced_type" : "type-6",
    "self_type" : "type-6",
-   "size" : 4,
-   "source_file" : ""
+   "size" : 4
   },
   {
-   "alignment" : 0,
-   "is_integral" : false,
-   "is_unsigned" : false,
    "linker_set_key" : "void",
    "name" : "void",
    "referenced_type" : "type-10",
-   "self_type" : "type-10",
-   "size" : 0,
-   "source_file" : ""
+   "self_type" : "type-10"
   }
  ],
  "elf_functions" :
  [
   {
-   "binding" : "global",
    "name" : "_Z26test_virtual_function_callP12SuperSpeaker"
   },
   {
-   "binding" : "global",
    "name" : "_ZN12NotReferenced"
   },
   {
-   "binding" : "global",
    "name" : "_ZN12SuperSpeaker11SpeakLouderEv"
   },
   {
-   "binding" : "global",
    "name" : "_ZN12SuperSpeaker18CreateSuperSpeakerEi"
   },
   {
-   "binding" : "global",
    "name" : "_ZN12SuperSpeaker9SpeakLoudEv"
   },
   {
-   "binding" : "global",
    "name" : "_ZN16LowVolumeSpeaker5SpeakEv"
   },
   {
-   "binding" : "global",
    "name" : "_ZN16LowVolumeSpeaker6ListenEv"
   },
   {
-   "binding" : "global",
    "name" : "_ZN17HighVolumeSpeaker11BadPracticeEf"
   },
   {
-   "binding" : "global",
    "name" : "_ZN17HighVolumeSpeaker5SpeakEv"
   },
   {
-   "binding" : "global",
    "name" : "_ZN17HighVolumeSpeaker6ListenEv"
   }
  ],
  "elf_objects" :
  [
   {
-   "binding" : "global",
    "name" : "_ZTV16LowVolumeSpeaker"
   },
   {
-   "binding" : "global",
    "name" : "_ZTV17HighVolumeSpeaker"
   }
  ],
@@ -139,137 +116,110 @@
  "functions" :
  [
   {
-   "access" : "public",
    "function_name" : "SuperSpeaker::SpeakLouder",
    "linker_set_key" : "_ZN12SuperSpeaker11SpeakLouderEv",
    "parameters" :
    [
     {
-     "default_arg" : false,
      "is_this_ptr" : true,
      "referenced_type" : "type-9"
     }
    ],
    "return_type" : "type-10",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h",
-   "template_args" : []
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
   },
   {
-   "access" : "public",
    "function_name" : "SuperSpeaker::CreateSuperSpeaker",
    "linker_set_key" : "_ZN12SuperSpeaker18CreateSuperSpeakerEi",
    "parameters" :
    [
     {
-     "default_arg" : false,
-     "is_this_ptr" : false,
      "referenced_type" : "type-2"
     }
    ],
    "return_type" : "type-9",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h",
-   "template_args" : []
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
   },
   {
-   "access" : "public",
    "function_name" : "SuperSpeaker::SpeakLoud",
    "linker_set_key" : "_ZN12SuperSpeaker9SpeakLoudEv",
    "parameters" :
    [
     {
-     "default_arg" : false,
      "is_this_ptr" : true,
      "referenced_type" : "type-9"
     }
    ],
    "return_type" : "type-8",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h",
-   "template_args" : []
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
   },
   {
-   "access" : "public",
    "function_name" : "LowVolumeSpeaker::Speak",
    "linker_set_key" : "_ZN16LowVolumeSpeaker5SpeakEv",
    "parameters" :
    [
     {
-     "default_arg" : false,
      "is_this_ptr" : true,
      "referenced_type" : "type-4"
     }
    ],
    "return_type" : "type-10",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h",
-   "template_args" : []
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
   },
   {
-   "access" : "public",
    "function_name" : "LowVolumeSpeaker::Listen",
    "linker_set_key" : "_ZN16LowVolumeSpeaker6ListenEv",
    "parameters" :
    [
     {
-     "default_arg" : false,
      "is_this_ptr" : true,
      "referenced_type" : "type-4"
     }
    ],
    "return_type" : "type-10",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h",
-   "template_args" : []
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
   },
   {
-   "access" : "public",
    "function_name" : "HighVolumeSpeaker::BadPractice",
    "linker_set_key" : "_ZN17HighVolumeSpeaker11BadPracticeEf",
    "parameters" :
    [
     {
-     "default_arg" : false,
      "is_this_ptr" : true,
      "referenced_type" : "type-12"
     },
     {
-     "default_arg" : false,
-     "is_this_ptr" : false,
      "referenced_type" : "type-3"
     }
    ],
    "return_type" : "type-12",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h",
-   "template_args" : []
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h"
   },
   {
-   "access" : "public",
    "function_name" : "HighVolumeSpeaker::Speak",
    "linker_set_key" : "_ZN17HighVolumeSpeaker5SpeakEv",
    "parameters" :
    [
     {
-     "default_arg" : false,
      "is_this_ptr" : true,
      "referenced_type" : "type-12"
     }
    ],
    "return_type" : "type-10",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h",
-   "template_args" : []
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h"
   },
   {
-   "access" : "public",
    "function_name" : "HighVolumeSpeaker::Listen",
    "linker_set_key" : "_ZN17HighVolumeSpeaker6ListenEv",
    "parameters" :
    [
     {
-     "default_arg" : false,
      "is_this_ptr" : true,
      "referenced_type" : "type-12"
     }
    ],
    "return_type" : "type-10",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h",
-   "template_args" : []
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h"
   }
  ],
  "global_vars" : [],
@@ -317,9 +267,7 @@
  "record_types" :
  [
   {
-   "access" : "public",
    "alignment" : 8,
-   "base_specifiers" : [],
    "fields" :
    [
     {
@@ -329,7 +277,6 @@
      "referenced_type" : "type-2"
     }
    ],
-   "is_anonymous" : false,
    "linker_set_key" : "SuperSpeaker",
    "name" : "SuperSpeaker",
    "record_kind" : "class",
@@ -337,61 +284,42 @@
    "self_type" : "type-1",
    "size" : 16,
    "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h",
-   "template_args" : [],
    "unique_id" : "_ZTS12SuperSpeaker",
    "vtable_components" :
    [
     {
-     "component_value" : 0,
-     "is_pure" : false,
-     "kind" : "offset_to_top",
-     "mangled_component_name" : ""
+     "kind" : "offset_to_top"
     },
     {
-     "component_value" : 0,
-     "is_pure" : false,
      "kind" : "rtti",
      "mangled_component_name" : "_ZTI12SuperSpeaker"
     },
     {
-     "component_value" : 0,
      "is_pure" : true,
-     "kind" : "function_pointer",
      "mangled_component_name" : "_ZN12SuperSpeaker5SpeakEv"
     },
     {
-     "component_value" : 0,
      "is_pure" : true,
-     "kind" : "function_pointer",
      "mangled_component_name" : "_ZN12SuperSpeaker6ListenEv"
     },
     {
-     "component_value" : 0,
-     "is_pure" : false,
      "kind" : "complete_dtor_pointer",
      "mangled_component_name" : "_ZN12SuperSpeakerD1Ev"
     },
     {
-     "component_value" : 0,
-     "is_pure" : false,
      "kind" : "deleting_dtor_pointer",
      "mangled_component_name" : "_ZN12SuperSpeakerD0Ev"
     }
    ]
   },
   {
-   "access" : "public",
    "alignment" : 8,
    "base_specifiers" :
    [
     {
-     "access" : "public",
-     "is_virtual" : false,
      "referenced_type" : "type-1"
     }
    ],
-   "fields" : [],
-   "is_anonymous" : false,
    "linker_set_key" : "HighVolumeSpeaker",
    "name" : "HighVolumeSpeaker",
    "record_kind" : "class",
@@ -399,75 +327,53 @@
    "self_type" : "type-11",
    "size" : 16,
    "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h",
-   "template_args" : [],
    "unique_id" : "_ZTS17HighVolumeSpeaker",
    "vtable_components" :
    [
     {
-     "component_value" : 0,
-     "is_pure" : false,
-     "kind" : "offset_to_top",
-     "mangled_component_name" : ""
+     "kind" : "offset_to_top"
     },
     {
-     "component_value" : 0,
-     "is_pure" : false,
      "kind" : "rtti",
      "mangled_component_name" : "_ZTI17HighVolumeSpeaker"
     },
     {
-     "component_value" : 0,
-     "is_pure" : false,
-     "kind" : "function_pointer",
      "mangled_component_name" : "_ZN17HighVolumeSpeaker5SpeakEv"
     },
     {
-     "component_value" : 0,
-     "is_pure" : false,
-     "kind" : "function_pointer",
      "mangled_component_name" : "_ZN17HighVolumeSpeaker6ListenEv"
     },
     {
-     "component_value" : 0,
-     "is_pure" : false,
      "kind" : "complete_dtor_pointer",
      "mangled_component_name" : "_ZN17HighVolumeSpeakerD1Ev"
     },
     {
-     "component_value" : 0,
-     "is_pure" : false,
      "kind" : "deleting_dtor_pointer",
      "mangled_component_name" : "_ZN17HighVolumeSpeakerD0Ev"
     }
    ]
   },
   {
-   "access" : "public",
    "alignment" : 8,
    "base_specifiers" :
    [
     {
-     "access" : "public",
-     "is_virtual" : false,
      "referenced_type" : "type-1"
     }
    ],
    "fields" :
    [
     {
-     "access" : "public",
      "field_name" : "speaker_uint_t",
      "field_offset" : 96,
      "referenced_type" : "type-6"
     },
     {
-     "access" : "public",
      "field_name" : "speaker_float_star",
      "field_offset" : 128,
      "referenced_type" : "type-7"
     }
    ],
-   "is_anonymous" : false,
    "linker_set_key" : "LowVolumeSpeaker",
    "name" : "LowVolumeSpeaker",
    "record_kind" : "class",
@@ -475,43 +381,27 @@
    "self_type" : "type-5",
    "size" : 24,
    "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h",
-   "template_args" : [],
    "unique_id" : "_ZTS16LowVolumeSpeaker",
    "vtable_components" :
    [
     {
-     "component_value" : 0,
-     "is_pure" : false,
-     "kind" : "offset_to_top",
-     "mangled_component_name" : ""
+     "kind" : "offset_to_top"
     },
     {
-     "component_value" : 0,
-     "is_pure" : false,
      "kind" : "rtti",
      "mangled_component_name" : "_ZTI16LowVolumeSpeaker"
     },
     {
-     "component_value" : 0,
-     "is_pure" : false,
-     "kind" : "function_pointer",
      "mangled_component_name" : "_ZN16LowVolumeSpeaker5SpeakEv"
     },
     {
-     "component_value" : 0,
-     "is_pure" : false,
-     "kind" : "function_pointer",
      "mangled_component_name" : "_ZN16LowVolumeSpeaker6ListenEv"
     },
     {
-     "component_value" : 0,
-     "is_pure" : false,
      "kind" : "complete_dtor_pointer",
      "mangled_component_name" : "_ZN16LowVolumeSpeakerD1Ev"
     },
     {
-     "component_value" : 0,
-     "is_pure" : false,
      "kind" : "deleting_dtor_pointer",
      "mangled_component_name" : "_ZN16LowVolumeSpeakerD0Ev"
     }
