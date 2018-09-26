@@ -35,6 +35,9 @@ static const std::map<AccessSpecifierIR, std::string> access_ir_to_json{
 static const std::map<std::string, AccessSpecifierIR>
     access_json_to_ir(CreateInverseMap(access_ir_to_json));
 
+static const AccessSpecifierIR default_access_ir =
+    AccessSpecifierIR::PublicAccess;
+
 static const std::map<RecordTypeIR::RecordKind, std::string>
     record_kind_ir_to_json{
   {RecordTypeIR::RecordKind::struct_kind, "struct"},
@@ -44,6 +47,9 @@ static const std::map<RecordTypeIR::RecordKind, std::string>
 
 static const std::map<std::string, RecordTypeIR::RecordKind>
     record_kind_json_to_ir(CreateInverseMap(record_kind_ir_to_json));
+
+static const RecordTypeIR::RecordKind default_record_kind_ir =
+    RecordTypeIR::RecordKind::struct_kind;
 
 static const std::map<VTableComponentIR::Kind, std::string>
     vtable_component_kind_ir_to_json{
@@ -61,6 +67,9 @@ static const std::map<std::string, VTableComponentIR::Kind>
     vtable_component_kind_json_to_ir(
         CreateInverseMap(vtable_component_kind_ir_to_json));
 
+static const VTableComponentIR::Kind default_vtable_component_kind_ir =
+    VTableComponentIR::Kind::FunctionPointer;
+
 static const std::map<ElfSymbolIR::ElfSymbolBinding, std::string>
     elf_symbol_binding_ir_to_json{
   {ElfSymbolIR::ElfSymbolBinding::Weak, "weak"},
@@ -70,6 +79,9 @@ static const std::map<ElfSymbolIR::ElfSymbolBinding, std::string>
 static const std::map<std::string, ElfSymbolIR::ElfSymbolBinding>
     elf_symbol_binding_json_to_ir(
         CreateInverseMap(elf_symbol_binding_ir_to_json));
+
+static const ElfSymbolIR::ElfSymbolBinding default_elf_symbol_binding_ir =
+    ElfSymbolIR::ElfSymbolBinding::Global;
 
 // If m contains k, this function returns the value.
 // Otherwise, it prints error_msg and exits.
@@ -84,141 +96,155 @@ static inline const V &FindInMap(const std::map<K, V> &m, const K &k,
   return it->second;
 }
 
-static inline const std::string &AccessIRToJson(AccessSpecifierIR access) {
-  return FindInMap(access_ir_to_json, access,
-                   "Failed to convert AccessSpecifierIR to JSON");
+static const JsonObject json_empty_object;
+static const JsonArray json_empty_array;
+static const Json::Value json_0(0);
+static const Json::Value json_false(false);
+static const Json::Value json_empty_string("");
+
+void JsonObject::Set(const std::string &key, bool value) {
+  SetOmissible(key, value, false);
 }
 
-static inline AccessSpecifierIR AccessJsonToIR(const std::string &access) {
-  return FindInMap(access_json_to_ir, access,
-                   "Failed to convert JSON to AccessSpecifierIR");
+void JsonObject::Set(const std::string &key, uint64_t value) {
+  SetOmissible<Json::UInt64>(key, value, 0);
 }
 
-static inline const std::string &
-RecordKindIRToJson(RecordTypeIR::RecordKind kind) {
-  return FindInMap(record_kind_ir_to_json, kind,
-                   "Failed to convert RecordKind to JSON");
+void JsonObject::Set(const std::string &key, int64_t value) {
+  SetOmissible<Json::Int64>(key, value, 0);
 }
 
-static inline RecordTypeIR::RecordKind
-RecordKindJsonToIR(const std::string &kind) {
-  return FindInMap(record_kind_json_to_ir, kind,
-                   "Failed to convert JSON to RecordKind");
+void JsonObject::Set(const std::string &key, const std::string &value) {
+  SetOmissible<const std::string &>(key, value, "");
 }
 
-static inline const std::string &
-VTableComponentKindIRToJson(VTableComponentIR::Kind kind) {
-  return FindInMap(vtable_component_kind_ir_to_json, kind,
-                   "Failed to convert VTableComponentIR::Kind to JSON");
+void JsonObject::Set(const std::string &key, const JsonArray &value) {
+  SetOmissible(key, value, json_empty_array);
 }
 
-static inline VTableComponentIR::Kind
-VTableComponentKindJsonToIR(const std::string &kind) {
-  return FindInMap(vtable_component_kind_json_to_ir, kind,
-                   "Failed to convert JSON to VTableComponentIR::Kind");
+static void AddAccess(JsonObject &type_decl, AccessSpecifierIR value) {
+  if (value != default_access_ir) {
+    type_decl.Set("access",
+                  FindInMap(access_ir_to_json, value,
+                            "Failed to convert AccessSpecifierIR to JSON"));
+  }
 }
 
-static inline const std::string &
-ElfSymbolBindingIRToJson(ElfSymbolIR::ElfSymbolBinding binding) {
-  return FindInMap(elf_symbol_binding_ir_to_json, binding,
-                   "Failed to convert ElfSymbolBinding to JSON");
+static void AddRecordKind(JsonObject &record_type,
+                          RecordTypeIR::RecordKind value) {
+  if (value != default_record_kind_ir) {
+    record_type.Set("record_kind",
+                    FindInMap(record_kind_ir_to_json, value,
+                              "Failed to convert RecordKind to JSON"));
+  }
 }
 
-static inline ElfSymbolIR::ElfSymbolBinding
-ElfSymbolBindingJsonToIR(const std::string &binding) {
-  return FindInMap(elf_symbol_binding_json_to_ir, binding,
-                   "Failed to convert JSON to ElfSymbolBinding");
+static void AddVtableComponentKind(JsonObject &vtable_component,
+                                   VTableComponentIR::Kind value) {
+  if (value != default_vtable_component_kind_ir) {
+    vtable_component.Set(
+        "kind", FindInMap(vtable_component_kind_ir_to_json, value,
+                          "Failed to convert VTableComponentIR::Kind to JSON"));
+  }
+}
+
+static void AddElfSymbolBinding(JsonObject &elf_symbol,
+                                ElfSymbolIR::ElfSymbolBinding value) {
+  if (value != default_elf_symbol_binding_ir) {
+    elf_symbol.Set("binding",
+                   FindInMap(elf_symbol_binding_ir_to_json, value,
+                             "Failed to convert ElfSymbolBinding to JSON"));
+  }
 }
 
 void IRToJsonConverter::AddTemplateInfo(
     JsonObject &type_decl, const TemplatedArtifactIR *template_ir) {
-  Json::Value &args = type_decl["template_args"];
-  args = JsonArray();
+  JsonArray args;
   for (auto &&template_element_ir : template_ir->GetTemplateElements()) {
     args.append(template_element_ir.GetReferencedType());
   }
+  type_decl.Set("template_args", args);
 }
 
 void IRToJsonConverter::AddTypeInfo(JsonObject &type_decl,
                                     const TypeIR *type_ir) {
-  type_decl["linker_set_key"] = type_ir->GetLinkerSetKey();
-  type_decl["source_file"] = type_ir->GetSourceFile();
-  type_decl["name"] = type_ir->GetName();
-  type_decl["size"] = Json::UInt64(type_ir->GetSize());
-  type_decl["alignment"] = type_ir->GetAlignment();
-  type_decl["referenced_type"] = type_ir->GetReferencedType();
-  type_decl["self_type"] = type_ir->GetSelfType();
+  type_decl.Set("linker_set_key", type_ir->GetLinkerSetKey());
+  type_decl.Set("source_file", type_ir->GetSourceFile());
+  type_decl.Set("name", type_ir->GetName());
+  type_decl.Set("size", (uint64_t)type_ir->GetSize());
+  type_decl.Set("alignment", (uint64_t)type_ir->GetAlignment());
+  type_decl.Set("referenced_type", type_ir->GetReferencedType());
+  type_decl.Set("self_type", type_ir->GetSelfType());
 }
 
 static JsonObject ConvertRecordFieldIR(const RecordFieldIR *record_field_ir) {
   JsonObject record_field;
-  record_field["field_name"] = record_field_ir->GetName();
-  record_field["referenced_type"] = record_field_ir->GetReferencedType();
-  record_field["access"] = AccessIRToJson(record_field_ir->GetAccess());
-  record_field["field_offset"] = Json::UInt64(record_field_ir->GetOffset());
+  record_field.Set("field_name", record_field_ir->GetName());
+  record_field.Set("referenced_type", record_field_ir->GetReferencedType());
+  AddAccess(record_field, record_field_ir->GetAccess());
+  record_field.Set("field_offset", (uint64_t)record_field_ir->GetOffset());
   return record_field;
 }
 
 void IRToJsonConverter::AddRecordFields(JsonObject &record_type,
                                         const RecordTypeIR *record_ir) {
-  Json::Value &fields = record_type["fields"];
-  fields = JsonArray();
+  JsonArray fields;
   for (auto &&field_ir : record_ir->GetFields()) {
     fields.append(ConvertRecordFieldIR(&field_ir));
   }
+  record_type.Set("fields", fields);
 }
 
 static JsonObject
 ConvertBaseSpecifierIR(const CXXBaseSpecifierIR &base_specifier_ir) {
   JsonObject base_specifier;
-  base_specifier["referenced_type"] = base_specifier_ir.GetReferencedType();
-  base_specifier["is_virtual"] = base_specifier_ir.IsVirtual();
-  base_specifier["access"] = AccessIRToJson(base_specifier_ir.GetAccess());
+  base_specifier.Set("referenced_type", base_specifier_ir.GetReferencedType());
+  base_specifier.Set("is_virtual", base_specifier_ir.IsVirtual());
+  AddAccess(base_specifier, base_specifier_ir.GetAccess());
   return base_specifier;
 }
 
 void IRToJsonConverter::AddBaseSpecifiers(JsonObject &record_type,
                                           const RecordTypeIR *record_ir) {
-  Json::Value &base_specifiers = record_type["base_specifiers"];
-  base_specifiers = JsonArray();
+  JsonArray base_specifiers;
   for (auto &&base_ir : record_ir->GetBases()) {
     base_specifiers.append(ConvertBaseSpecifierIR(base_ir));
   }
+  record_type.Set("base_specifiers", base_specifiers);
 }
 
 static JsonObject
 ConvertVTableComponentIR(const VTableComponentIR &vtable_component_ir) {
   JsonObject vtable_component;
-  vtable_component["kind"] =
-      VTableComponentKindIRToJson(vtable_component_ir.GetKind());
-  vtable_component["component_value"] =
-      Json::Int64(vtable_component_ir.GetValue());
-  vtable_component["mangled_component_name"] = vtable_component_ir.GetName();
-  vtable_component["is_pure"] = vtable_component_ir.GetIsPure();
+  AddVtableComponentKind(vtable_component, vtable_component_ir.GetKind());
+  vtable_component.Set("component_value",
+                       (int64_t)vtable_component_ir.GetValue());
+  vtable_component.Set("mangled_component_name", vtable_component_ir.GetName());
+  vtable_component.Set("is_pure", vtable_component_ir.GetIsPure());
   return vtable_component;
 }
 
 void IRToJsonConverter::AddVTableLayout(JsonObject &record_type,
                                         const RecordTypeIR *record_ir) {
-  Json::Value &vtable_components = record_type["vtable_components"];
-  vtable_components = JsonArray();
+  JsonArray vtable_components;
   for (auto &&vtable_component_ir :
        record_ir->GetVTableLayout().GetVTableComponents()) {
     vtable_components.append(ConvertVTableComponentIR(vtable_component_ir));
   }
+  record_type.Set("vtable_components", vtable_components);
 }
 
 void IRToJsonConverter::AddTagTypeInfo(JsonObject &type_decl,
                                        const TagTypeIR *tag_type_ir) {
-  type_decl["unique_id"] = tag_type_ir->GetUniqueId();
+  type_decl.Set("unique_id", tag_type_ir->GetUniqueId());
 }
 
 JsonObject IRToJsonConverter::ConvertRecordTypeIR(const RecordTypeIR *recordp) {
   JsonObject record_type;
 
-  record_type["access"] = AccessIRToJson(recordp->GetAccess());
-  record_type["record_kind"] = RecordKindIRToJson(recordp->GetRecordKind());
-  record_type["is_anonymous"] = recordp->IsAnonymous();
+  AddAccess(record_type, recordp->GetAccess());
+  AddRecordKind(record_type, recordp->GetRecordKind());
+  record_type.Set("is_anonymous", recordp->IsAnonymous());
   AddTypeInfo(record_type, recordp);
   AddRecordFields(record_type, recordp);
   AddBaseSpecifiers(record_type, recordp);
@@ -230,20 +256,21 @@ JsonObject IRToJsonConverter::ConvertRecordTypeIR(const RecordTypeIR *recordp) {
 
 void IRToJsonConverter::AddFunctionParametersAndSetReturnType(
     JsonObject &function, const CFunctionLikeIR *cfunction_like_ir) {
-  function["return_type"] = cfunction_like_ir->GetReturnType();
+  function.Set("return_type", cfunction_like_ir->GetReturnType());
   AddFunctionParameters(function, cfunction_like_ir);
 }
 
 void IRToJsonConverter::AddFunctionParameters(
     JsonObject &function, const CFunctionLikeIR *cfunction_like_ir) {
-  Json::Value &parameters = function["parameters"];
-  parameters = JsonArray();
+  JsonArray parameters;
   for (auto &&parameter_ir : cfunction_like_ir->GetParameters()) {
-    Json::Value &parameter = parameters.append(JsonObject());
-    parameter["referenced_type"] = parameter_ir.GetReferencedType();
-    parameter["default_arg"] = parameter_ir.GetIsDefault();
-    parameter["is_this_ptr"] = parameter_ir.GetIsThisPtr();
+    JsonObject parameter;
+    parameter.Set("referenced_type", parameter_ir.GetReferencedType());
+    parameter.Set("default_arg", parameter_ir.GetIsDefault());
+    parameter.Set("is_this_ptr", parameter_ir.GetIsThisPtr());
+    parameters.append(parameter);
   }
+  function.Set("parameters", parameters);
 }
 
 JsonObject
@@ -256,10 +283,10 @@ IRToJsonConverter::ConvertFunctionTypeIR(const FunctionTypeIR *function_typep) {
 
 JsonObject IRToJsonConverter::ConvertFunctionIR(const FunctionIR *functionp) {
   JsonObject function;
-  function["access"] = AccessIRToJson(functionp->GetAccess());
-  function["linker_set_key"] = functionp->GetLinkerSetKey();
-  function["source_file"] = functionp->GetSourceFile();
-  function["function_name"] = functionp->GetName();
+  AddAccess(function, functionp->GetAccess());
+  function.Set("linker_set_key", functionp->GetLinkerSetKey());
+  function.Set("source_file", functionp->GetSourceFile());
+  function.Set("function_name", functionp->GetName());
   AddFunctionParametersAndSetReturnType(function, functionp);
   AddTemplateInfo(function, functionp);
   return function;
@@ -267,24 +294,24 @@ JsonObject IRToJsonConverter::ConvertFunctionIR(const FunctionIR *functionp) {
 
 static JsonObject ConvertEnumFieldIR(const EnumFieldIR *enum_field_ir) {
   JsonObject enum_field;
-  enum_field["name"] = enum_field_ir->GetName();
-  enum_field["enum_field_value"] = Json::Int64(enum_field_ir->GetValue());
+  enum_field.Set("name", enum_field_ir->GetName());
+  enum_field.Set("enum_field_value", (int64_t)enum_field_ir->GetValue());
   return enum_field;
 }
 
 void IRToJsonConverter::AddEnumFields(JsonObject &enum_type,
                                       const EnumTypeIR *enum_ir) {
-  Json::Value &enum_fields = enum_type["enum_fields"];
-  enum_fields = JsonArray();
+  JsonArray enum_fields;
   for (auto &&field : enum_ir->GetFields()) {
     enum_fields.append(ConvertEnumFieldIR(&field));
   }
+  enum_type.Set("enum_fields", enum_fields);
 }
 
 JsonObject IRToJsonConverter::ConvertEnumTypeIR(const EnumTypeIR *enump) {
   JsonObject enum_type;
-  enum_type["access"] = AccessIRToJson(enump->GetAccess());
-  enum_type["underlying_type"] = enump->GetUnderlyingType();
+  AddAccess(enum_type, enump->GetAccess());
+  enum_type.Set("underlying_type", enump->GetUnderlyingType());
   AddTypeInfo(enum_type, enump);
   AddEnumFields(enum_type, enump);
   AddTagTypeInfo(enum_type, enump);
@@ -294,11 +321,11 @@ JsonObject IRToJsonConverter::ConvertEnumTypeIR(const EnumTypeIR *enump) {
 JsonObject
 IRToJsonConverter::ConvertGlobalVarIR(const GlobalVarIR *global_varp) {
   JsonObject global_var;
-  global_var["referenced_type"] = global_varp->GetReferencedType();
-  global_var["source_file"] = global_varp->GetSourceFile();
-  global_var["name"] = global_varp->GetName();
-  global_var["linker_set_key"] = global_varp->GetLinkerSetKey();
-  global_var["access"] = AccessIRToJson(global_varp->GetAccess());
+  global_var.Set("referenced_type", global_varp->GetReferencedType());
+  global_var.Set("source_file", global_varp->GetSourceFile());
+  global_var.Set("name", global_varp->GetName());
+  global_var.Set("linker_set_key", global_varp->GetLinkerSetKey());
+  AddAccess(global_var, global_varp->GetAccess());
   return global_var;
 }
 
@@ -313,17 +340,17 @@ JsonObject
 IRToJsonConverter::ConvertQualifiedTypeIR(const QualifiedTypeIR *qualtypep) {
   JsonObject qualified_type;
   AddTypeInfo(qualified_type, qualtypep);
-  qualified_type["is_const"] = qualtypep->IsConst();
-  qualified_type["is_volatile"] = qualtypep->IsVolatile();
-  qualified_type["is_restricted"] = qualtypep->IsRestricted();
+  qualified_type.Set("is_const", qualtypep->IsConst());
+  qualified_type.Set("is_volatile", qualtypep->IsVolatile());
+  qualified_type.Set("is_restricted", qualtypep->IsRestricted());
   return qualified_type;
 }
 
 JsonObject
 IRToJsonConverter::ConvertBuiltinTypeIR(const BuiltinTypeIR *builtin_typep) {
   JsonObject builtin_type;
-  builtin_type["is_unsigned"] = builtin_typep->IsUnsigned();
-  builtin_type["is_integral"] = builtin_typep->IsIntegralType();
+  builtin_type.Set("is_unsigned", builtin_typep->IsUnsigned());
+  builtin_type.Set("is_integral", builtin_typep->IsIntegralType());
   AddTypeInfo(builtin_type, builtin_typep);
   return builtin_type;
 }
@@ -420,10 +447,10 @@ bool JsonIRDumper::AddElfSymbolMessageIR(const ElfSymbolIR *elf_symbol_ir) {
   default:
     return false;
   }
-  Json::Value &elf_symbol = translation_unit_[key].append(JsonObject());
-  elf_symbol["name"] = elf_symbol_ir->GetName();
-  elf_symbol["binding"] =
-      ElfSymbolBindingIRToJson(elf_symbol_ir->GetBinding());
+  JsonObject elf_symbol;
+  elf_symbol.Set("name", elf_symbol_ir->GetName());
+  AddElfSymbolBinding(elf_symbol, elf_symbol_ir->GetBinding());
+  translation_unit_[key].append(elf_symbol);
   return true;
 }
 
@@ -486,12 +513,6 @@ JsonIRDumper::JsonIRDumper(const std::string &dump_path)
   }
 }
 
-static const JsonObject json_empty_object;
-static const JsonArray json_empty_array;
-static const Json::Value json_0(0);
-static const Json::Value json_false(false);
-static const Json::Value json_empty_string("");
-
 JsonObjectRef::JsonObjectRef(const Json::Value &json_value, bool &ok)
     : object_(json_value.isObject() ? json_value : json_empty_object), ok_(ok) {
   if (!json_value.isObject()) {
@@ -553,6 +574,45 @@ JsonObjectRef JsonArrayRef<JsonObjectRef>::Iterator::operator*() const {
 
 template <> std::string JsonArrayRef<std::string>::Iterator::operator*() const {
   return array_[index_].asString();
+}
+
+static AccessSpecifierIR GetAccess(const JsonObjectRef &type_decl) {
+  std::string access(type_decl.GetString("access"));
+  if (access.empty()) {
+    return default_access_ir;
+  }
+  return FindInMap(access_json_to_ir, access,
+                   "Failed to convert JSON to AccessSpecifierIR");
+}
+
+static RecordTypeIR::RecordKind
+GetRecordKind(const JsonObjectRef &record_type) {
+  std::string kind(record_type.GetString("record_kind"));
+  if (kind.empty()) {
+    return default_record_kind_ir;
+  }
+  return FindInMap(record_kind_json_to_ir, kind,
+                   "Failed to convert JSON to RecordKind");
+}
+
+static VTableComponentIR::Kind
+GetVTableComponentKind(const JsonObjectRef &vtable_component) {
+  std::string kind(vtable_component.GetString("kind"));
+  if (kind.empty()) {
+    return default_vtable_component_kind_ir;
+  }
+  return FindInMap(vtable_component_kind_json_to_ir, kind,
+                   "Failed to convert JSON to VTableComponentIR::Kind");
+}
+
+static ElfSymbolIR::ElfSymbolBinding
+GetElfSymbolBinding(const JsonObjectRef &elf_symbol) {
+  std::string binding(elf_symbol.GetString("binding"));
+  if (binding.empty()) {
+    return default_elf_symbol_binding_ir;
+  }
+  return FindInMap(elf_symbol_binding_json_to_ir, binding,
+                   "Failed to convert JSON to ElfSymbolBinding");
 }
 
 bool JsonToIRReader::ReadDump(const std::string &dump_file) {
@@ -621,10 +681,9 @@ void JsonToIRReader::ReadTypeInfo(const JsonObjectRef &type_decl,
 void JsonToIRReader::ReadRecordFields(const JsonObjectRef &record_type,
                                       RecordTypeIR *record_ir) {
   for (auto &&field : record_type.GetObjects("fields")) {
-    RecordFieldIR record_field_ir(field.GetString("field_name"),
-                                  field.GetString("referenced_type"),
-                                  field.GetUint("field_offset"),
-                                  AccessJsonToIR(field.GetString("access")));
+    RecordFieldIR record_field_ir(
+        field.GetString("field_name"), field.GetString("referenced_type"),
+        field.GetUint("field_offset"), GetAccess(field));
     record_ir->AddRecordField(std::move(record_field_ir));
   }
 }
@@ -634,8 +693,7 @@ void JsonToIRReader::ReadBaseSpecifiers(const JsonObjectRef &record_type,
   for (auto &&base_specifier : record_type.GetObjects("base_specifiers")) {
     CXXBaseSpecifierIR record_base_ir(
         base_specifier.GetString("referenced_type"),
-        base_specifier.GetBool("is_virtual"),
-        AccessJsonToIR(base_specifier.GetString("access")));
+        base_specifier.GetBool("is_virtual"), GetAccess(base_specifier));
     record_ir->AddCXXBaseSpecifier(std::move(record_base_ir));
   }
 }
@@ -646,7 +704,7 @@ void JsonToIRReader::ReadVTableLayout(const JsonObjectRef &record_type,
   for (auto &&vtable_component : record_type.GetObjects("vtable_components")) {
     VTableComponentIR vtable_component_ir(
         vtable_component.GetString("mangled_component_name"),
-        VTableComponentKindJsonToIR(vtable_component.GetString("kind")),
+        GetVTableComponentKind(vtable_component),
         vtable_component.GetInt("component_value"),
         vtable_component.GetBool("is_pure"));
     vtable_layout_ir.AddVTableComponent(std::move(vtable_component_ir));
@@ -678,7 +736,7 @@ FunctionIR JsonToIRReader::FunctionJsonToIR(const JsonObjectRef &function) {
   FunctionIR function_ir;
   function_ir.SetLinkerSetKey(function.GetString("linker_set_key"));
   function_ir.SetName(function.GetString("function_name"));
-  function_ir.SetAccess(AccessJsonToIR(function.GetString("access")));
+  function_ir.SetAccess(GetAccess(function));
   function_ir.SetSourceFile(function.GetString("source_file"));
   ReadFunctionParametersAndReturnType(function, &function_ir);
   ReadTemplateInfo(function, &function_ir);
@@ -698,12 +756,11 @@ JsonToIRReader::RecordTypeJsonToIR(const JsonObjectRef &record_type) {
   RecordTypeIR record_type_ir;
   ReadTypeInfo(record_type, &record_type_ir);
   ReadTemplateInfo(record_type, &record_type_ir);
-  record_type_ir.SetAccess(AccessJsonToIR(record_type.GetString("access")));
+  record_type_ir.SetAccess(GetAccess(record_type));
   ReadVTableLayout(record_type, &record_type_ir);
   ReadRecordFields(record_type, &record_type_ir);
   ReadBaseSpecifiers(record_type, &record_type_ir);
-  record_type_ir.SetRecordKind(
-      RecordKindJsonToIR(record_type.GetString("record_kind")));
+  record_type_ir.SetRecordKind(GetRecordKind(record_type));
   record_type_ir.SetAnonymity(record_type.GetBool("is_anonymous"));
   ReadTagTypeInfo(record_type, &record_type_ir);
   return record_type_ir;
@@ -713,7 +770,7 @@ EnumTypeIR JsonToIRReader::EnumTypeJsonToIR(const JsonObjectRef &enum_type) {
   EnumTypeIR enum_type_ir;
   ReadTypeInfo(enum_type, &enum_type_ir);
   enum_type_ir.SetUnderlyingType(enum_type.GetString("underlying_type"));
-  enum_type_ir.SetAccess(AccessJsonToIR(enum_type.GetString("access")));
+  enum_type_ir.SetAccess(GetAccess(enum_type));
   ReadEnumFields(enum_type, &enum_type_ir);
   ReadTagTypeInfo(enum_type, &enum_type_ir);
   return enum_type_ir;
@@ -723,8 +780,7 @@ void JsonToIRReader::ReadGlobalVariables(const JsonObjectRef &tu) {
   for (auto &&global_variable : tu.GetObjects("global_vars")) {
     GlobalVarIR global_variable_ir;
     global_variable_ir.SetName(global_variable.GetString("name"));
-    global_variable_ir.SetAccess(
-        AccessJsonToIR(global_variable.GetString("access")));
+    global_variable_ir.SetAccess(GetAccess(global_variable));
     global_variable_ir.SetSourceFile(global_variable.GetString("source_file"));
     global_variable_ir.SetReferencedType(
         global_variable.GetString("referenced_type"));
@@ -863,9 +919,8 @@ void JsonToIRReader::ReadEnumTypes(const JsonObjectRef &tu) {
 
 void JsonToIRReader::ReadElfFunctions(const JsonObjectRef &tu) {
   for (auto &&elf_function : tu.GetObjects("elf_functions")) {
-    ElfFunctionIR elf_function_ir(
-        elf_function.GetString("name"),
-        ElfSymbolBindingJsonToIR(elf_function.GetString("binding")));
+    ElfFunctionIR elf_function_ir(elf_function.GetString("name"),
+                                  GetElfSymbolBinding(elf_function));
     elf_functions_.insert(
         {elf_function_ir.GetName(), std::move(elf_function_ir)});
   }
@@ -873,9 +928,8 @@ void JsonToIRReader::ReadElfFunctions(const JsonObjectRef &tu) {
 
 void JsonToIRReader::ReadElfObjects(const JsonObjectRef &tu) {
   for (auto &&elf_object : tu.GetObjects("elf_objects")) {
-    ElfObjectIR elf_object_ir(
-        elf_object.GetString("name"),
-        ElfSymbolBindingJsonToIR(elf_object.GetString("binding")));
+    ElfObjectIR elf_object_ir(elf_object.GetString("name"),
+                              GetElfSymbolBinding(elf_object));
     elf_objects_.insert({elf_object_ir.GetName(), std::move(elf_object_ir)});
   }
 }
