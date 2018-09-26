@@ -282,6 +282,12 @@ class MyTest(unittest.TestCase):
         self.prepare_and_absolute_diff_all_archs(
             "libgolden_cpp_json", "libgolden_cpp_json")
 
+    def test_libc_and_cpp_in_protobuf_and_json(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp", "libgolden_cpp_json", 0,
+            ["-input-format-old", "ProtobufTextFormat",
+             "-input-format-new", "Json"])
+
 
 if __name__ == '__main__':
     unittest.main()
