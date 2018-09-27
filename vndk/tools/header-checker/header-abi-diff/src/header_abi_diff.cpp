@@ -92,19 +92,20 @@ static llvm::cl::opt<bool> consider_opaque_types_different(
                    " ABIs"),
     llvm::cl::Optional, llvm::cl::cat(header_checker_category));
 
-
 static llvm::cl::opt<abi_util::TextFormatIR> text_format_old(
-    "text-format-old", llvm::cl::desc("Specify text format of old abi dump"),
+    "input-format-old", llvm::cl::desc("Specify input format of old abi dump"),
     llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
-                                "ProtobufTextFormat","ProtobufTextFormat"),
+                                "ProtobufTextFormat", "ProtobufTextFormat"),
+                     clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON"),
                      clEnumValEnd),
     llvm::cl::init(abi_util::TextFormatIR::ProtobufTextFormat),
     llvm::cl::cat(header_checker_category));
 
 static llvm::cl::opt<abi_util::TextFormatIR> text_format_new(
-    "text-format-new", llvm::cl::desc("Specify text format of new abi dump"),
+    "input-format-new", llvm::cl::desc("Specify input format of new abi dump"),
     llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
                                 "ProtobufTextFormat", "ProtobugTextFormat"),
+                     clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON"),
                      clEnumValEnd),
     llvm::cl::init(abi_util::TextFormatIR::ProtobufTextFormat),
     llvm::cl::cat(header_checker_category));

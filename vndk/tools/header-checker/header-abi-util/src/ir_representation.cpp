@@ -67,8 +67,9 @@ TextFormatToIRReader::CreateTextFormatToIRReader(
   switch (text_format) {
     case TextFormatIR::ProtobufTextFormat:
       return std::make_unique<ProtobufTextFormatToIRReader>(exported_headers);
+    case TextFormatIR::Json:
+      return std::make_unique<JsonToIRReader>(exported_headers);
     default:
-      // Nothing else is supported yet.
       llvm::errs() << "Text format not supported yet\n";
       return nullptr;
   }
