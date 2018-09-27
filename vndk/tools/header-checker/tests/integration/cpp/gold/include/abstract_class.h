@@ -25,7 +25,7 @@
 #if GOLDEN_ENUM_EXTENSION
 #define LOUD_SUPERLATIVES \
     Loudest = 3, \
-    Lower = 4,\
+    Lower = 0,\
     LouderThanLoudest = 5
 #elif GOLDEN_ENUM_DIFF
 #define LOUD_SUPERLATIVES \
@@ -33,7 +33,7 @@
 #else
 #define LOUD_SUPERLATIVES \
     Loudest = 3, \
-    Lower = 4
+    Lower = 0
 #endif
 
 class SuperSpeaker {
