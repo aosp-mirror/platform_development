@@ -212,7 +212,7 @@ enum_types {
     name: "SuperSpeaker::Volume::Loudest"
   }
   enum_fields {
-    enum_field_value: 4
+    enum_field_value: 0
     name: "SuperSpeaker::Volume::Lower"
   }
   enum_fields {
