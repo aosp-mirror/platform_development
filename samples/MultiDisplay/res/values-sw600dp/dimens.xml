@@ -16,11 +16,7 @@
   -->
 
 <resources>
-    <string name="app_name">MultiDisplay</string>
-    <string name="md_launcher">MD Launcher</string>
-    <string name="couldnt_launch">Couldn\'t launch the activity</string>
-    <string name="select_display">Select a display</string>
-    <string name="add_app_shortcut">Add app shortcut</string>
-    <string name="set_wallpaper">Set wallpaper</string>
-    <string name="new_instance">Request launch in new instance</string>
+    <dimen name="app_picker_width">400dp</dimen>
+    <dimen name="app_picker_height">400dp</dimen>
+    <dimen name="app_picker_fab_margin">60dp</dimen>
 </resources>

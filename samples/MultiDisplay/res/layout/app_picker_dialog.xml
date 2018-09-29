@@ -15,21 +15,20 @@
   ~ limitations under the License.
   -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:gravity="center">
+    android:layout_height="match_parent">
 
-    <ImageView
-        android:id="@+id/app_icon"
-        android:layout_width="@dimen/app_icon_width"
-        android:layout_height="@dimen/app_icon_height" />
-
-    <TextView
-        android:id="@+id/app_name"
+    <GridView
+        android:id="@+id/picker_app_grid"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:maxLines="1" />
-</LinearLayout>
+        android:layout_height="match_parent"
+        android:layout_marginTop="@dimen/app_grid_margin_top"
+        android:layout_marginStart="@dimen/app_grid_margin_left"
+        android:layout_marginEnd="@dimen/app_grid_margin_right"
+        android:columnWidth="@dimen/app_list_col_width"
+        android:verticalSpacing="@dimen/app_list_horizontal_spacing"
+        android:horizontalSpacing="@dimen/app_list_vertical_spacing"
+        android:numColumns="auto_fit" />
+</FrameLayout>
