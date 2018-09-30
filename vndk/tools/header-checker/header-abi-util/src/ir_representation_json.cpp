@@ -295,7 +295,8 @@ JsonObject IRToJsonConverter::ConvertFunctionIR(const FunctionIR *functionp) {
 static JsonObject ConvertEnumFieldIR(const EnumFieldIR *enum_field_ir) {
   JsonObject enum_field;
   enum_field.Set("name", enum_field_ir->GetName());
-  enum_field.Set("enum_field_value", (int64_t)enum_field_ir->GetValue());
+  // Never omit enum values.
+  enum_field["enum_field_value"] = Json::Int64(enum_field_ir->GetValue());
   return enum_field;
 }
 
