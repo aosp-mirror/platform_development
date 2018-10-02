@@ -78,7 +78,7 @@ LLVMToIRSymbolBinding(unsigned char binding) {
 template<typename T>
 void ELFSoFileParser<T>::GetSymbols() {
   assert(obj_ != nullptr);
-  for (auto symbol_it : obj_->symbols()) {
+  for (auto symbol_it : obj_->getDynamicSymbolIterators()) {
     const Elf_Sym *elf_sym =
           obj_->getSymbol(symbol_it.getRawDataRefImpl());
     assert (elf_sym != nullptr);
