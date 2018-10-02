@@ -85,6 +85,8 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Random;
 
+import static android.net.ConnectivityManager.CONNECTIVITY_ACTION;
+import static android.net.ConnectivityManager.INET_CONDITION_ACTION;
 import static android.net.NetworkCapabilities.*;
 
 public class Connectivity extends Activity {
@@ -153,8 +155,23 @@ public class Connectivity extends Activity {
     private static final String TEST_ALARM_CYCLE_EXTRA = "CONNECTIVITY_TEST_CYCLE_EXTRA";
     private static final String SCREEN_ON = "SCREEN_ON";
     private static final String SCREEN_OFF = "SCREEN_OFF";
+
+    private static final String NETWORK_CONDITIONS_MEASURED =
+            "android.net.conn.NETWORK_CONDITIONS_MEASURED";
+
+    private void logBroadcast(Intent intent) {
+        StringBuilder sb = new StringBuilder();
+        Bundle b = intent.getExtras();
+        for (String key : b.keySet()) {
+            sb.append(String.format(" %s=%s", key, b.get(key)));
+        }
+        Log.d(TAG, "Got broadcast " + intent.getAction() + " extras:" + sb.toString());
+    }
+
     public BroadcastReceiver mReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
+            logBroadcast(intent);
+
             if (intent.getAction().equals(CONNECTIVITY_TEST_ALARM)) {
                 String extra = (String)intent.getExtra(TEST_ALARM_EXTRA);
                 PowerManager pm = (PowerManager)context.getSystemService(Context.POWER_SERVICE);
@@ -465,7 +482,13 @@ public class Connectivity extends Activity {
         }
         onHttpRequestResults(null);
 
-        registerReceiver(mReceiver, new IntentFilter(CONNECTIVITY_TEST_ALARM));
+        IntentFilter broadcastFilter = new IntentFilter();
+        broadcastFilter.addAction(CONNECTIVITY_ACTION);
+        broadcastFilter.addAction(CONNECTIVITY_TEST_ALARM);
+        broadcastFilter.addAction(INET_CONDITION_ACTION);
+        broadcastFilter.addAction(NETWORK_CONDITIONS_MEASURED);
+
+        registerReceiver(mReceiver, broadcastFilter);
 
         mLinkStatsResults = (TextView)findViewById(R.id.stats);
         mLinkStatsResults.setVisibility(View.VISIBLE);
