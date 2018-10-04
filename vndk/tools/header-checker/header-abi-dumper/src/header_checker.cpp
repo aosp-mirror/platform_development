@@ -57,7 +57,7 @@ static llvm::cl::opt<abi_util::TextFormatIR> output_format(
                                 "ProtobufTextFormat", "ProtobufTextFormat"),
                      clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON"),
                      clEnumValEnd),
-    llvm::cl::init(abi_util::TextFormatIR::ProtobufTextFormat),
+    llvm::cl::init(abi_util::TextFormatIR::Json),
     llvm::cl::cat(header_checker_category));
 
 // Hide irrelevant command line options defined in LLVM libraries.

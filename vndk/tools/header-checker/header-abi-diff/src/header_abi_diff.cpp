@@ -98,16 +98,16 @@ static llvm::cl::opt<abi_util::TextFormatIR> text_format_old(
                                 "ProtobufTextFormat", "ProtobufTextFormat"),
                      clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON"),
                      clEnumValEnd),
-    llvm::cl::init(abi_util::TextFormatIR::ProtobufTextFormat),
+    llvm::cl::init(abi_util::TextFormatIR::Json),
     llvm::cl::cat(header_checker_category));
 
 static llvm::cl::opt<abi_util::TextFormatIR> text_format_new(
     "input-format-new", llvm::cl::desc("Specify input format of new abi dump"),
     llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
-                                "ProtobufTextFormat", "ProtobugTextFormat"),
+                                "ProtobufTextFormat", "ProtobufTextFormat"),
                      clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON"),
                      clEnumValEnd),
-    llvm::cl::init(abi_util::TextFormatIR::ProtobufTextFormat),
+    llvm::cl::init(abi_util::TextFormatIR::Json),
     llvm::cl::cat(header_checker_category));
 
 static llvm::cl::opt<abi_util::TextFormatIR> text_format_diff(
