@@ -16,6 +16,7 @@
 
 """Generates a human-interpretable view of a native heap dump from 'am dumpheap -n'."""
 
+import logging
 import os
 import os.path
 import re
@@ -320,11 +321,18 @@ def ResolveAddrs(html_output, symboldir, app_symboldir, backtraces, mappings):
 
       p = subprocess.Popen(["addr2line", "-C", "-j", ".text", "-e", sofile, "-f"], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
       result = p.communicate(input_addrs)[0]
+      addr2line_rc = p.returncode
+      if addr2line_rc and (addr2line_rc < 0):
+        logging.warn("addr2line on " + sofile + " terminated by signal " + str(-1 * addr2line_rc))
       splitted = result.split("\n")
       for x in range(0, len(addrs_by_lib[lib])):
-        function = splitted[2*x];
-        location = splitted[2*x+1];
-        resolved_addrs[addrs_by_lib[lib][x]] = FrameDescription(function, location, lib)
+        try:
+          function = splitted[2*x];
+          location = splitted[2*x+1];
+          resolved_addrs[addrs_by_lib[lib][x]] = FrameDescription(function, location, lib)
+        except Exception:
+          logging.warn("exception while resolving symbols", exc_info=True)
+          resolved_addrs[addrs_by_lib[lib][x]] = FrameDescription("---", "---", lib)
     else:
       if html_output == False:
         print "%s not found for symbol resolution" % lib
