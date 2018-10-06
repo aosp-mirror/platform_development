@@ -80,32 +80,17 @@ readonly DIST_DIR="$3"
 readonly CHECK_TOOL="$4"
 readonly TEMP_DIR="$(mktemp -d /tmp/"$(basename $0)"_XXXXXXXX)"
 
-# Retry command until a certain limit.
-# Usage: retry "command"
-retry () {
-    NEXT_WAIT_TIME=0
-    until ($1 && [[ -n "$($1)" ]]) || [[ $NEXT_WAIT_TIME -eq 4 ]]; do
-        sleep $(( ++NEXT_WAIT_TIME ))
-    done
-}
-
-command="find "$SYSTEM_DIR" -name "*-target_files-*.zip" -print"
-retry "$command"
-readonly SYSTEM_TARGET_FILES_ARCHIVE="$($command)"
+readonly SYSTEM_TARGET_FILES_ARCHIVE="$(find "$SYSTEM_DIR" -name "*-target_files-*.zip" -print)"
 if [[ ! -f "$SYSTEM_TARGET_FILES_ARCHIVE" ]]; then
     exit_badparam "Could not find system target files archive in $SYSTEM_DIR."
 fi
 
-command="find "$DEVICE_DIR" -name "*-img-*.zip" -print"
-retry "$command"
-readonly DEVICE_ARCHIVE="$($command)"
+readonly DEVICE_ARCHIVE="$(find "$DEVICE_DIR" -name "*-img-*.zip" -print)"
 if [[ ! -f "$DEVICE_ARCHIVE" ]]; then
     exit_badparam "Could not find device img archive in $DEVICE_DIR."
 fi
 
-command="find "$DEVICE_DIR" -name "*-target_files-*.zip" -print"
-retry "$command"
-readonly DEVICE_TARGET_FILES_ARCHIVE="$($command)"
+readonly DEVICE_TARGET_FILES_ARCHIVE="$(find "$DEVICE_DIR" -name "*-target_files-*.zip" -print)"
 if [[ ! -f "$DEVICE_TARGET_FILES_ARCHIVE" ]]; then
     exit_badparam "Could not find device target_files archive in $DEVICE_DIR."
 fi
