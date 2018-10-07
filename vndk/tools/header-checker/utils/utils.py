@@ -29,6 +29,7 @@ VENDOR_SUFFIX = '.vendor'
 
 DEFAULT_CPPFLAGS = ['-x', 'c++', '-std=c++11']
 DEFAULT_CFLAGS = ['-std=gnu99']
+DEFAULT_FORMAT = 'ProtobufTextFormat'
 
 TARGET_ARCHS = ['arm', 'arm64', 'x86', 'x86_64', 'mips', 'mips64']
 
@@ -99,6 +100,8 @@ def run_header_abi_dumper_on_file(input_path, output_path,
     for dir in export_include_dirs:
         cmd += ['-I', dir]
     cmd += flags
+    if '-output-format' not in flags:
+        cmd += ['-output-format', DEFAULT_FORMAT]
     cmd += ['--']
     cmd += cflags
     if input_ext == '.cpp' or input_ext == '.cc' or input_ext == '.h':
@@ -120,6 +123,10 @@ def run_header_abi_linker(output_path, inputs, version_script, api, arch,
         cmd = ['header-abi-linker', '-o', output_path, '-v', version_script,
                '-api', api, '-arch', arch]
         cmd += flags
+        if '-input-format' not in flags:
+            cmd += ['-input-format', DEFAULT_FORMAT]
+        if '-output-format' not in flags:
+            cmd += ['-output-format', DEFAULT_FORMAT]
         cmd += inputs
         subprocess.check_call(cmd)
         with open(output_path, 'r') as f:
@@ -182,6 +189,10 @@ def run_abi_diff(old_test_dump_path, new_test_dump_path, arch, lib_name,
         output_name = os.path.join(tmp, lib_name) + '.abidiff'
         abi_diff_cmd += ['-o', output_name]
         abi_diff_cmd += flags
+        if '-input-format-old' not in flags:
+            abi_diff_cmd += ['-input-format-old', DEFAULT_FORMAT]
+        if '-input-format-new' not in flags:
+            abi_diff_cmd += ['-input-format-new', DEFAULT_FORMAT]
         try:
             subprocess.check_call(abi_diff_cmd)
         except subprocess.CalledProcessError as err:

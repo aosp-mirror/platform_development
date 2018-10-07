@@ -41,7 +41,7 @@ cleanup_and_exit () {
 
 trap cleanup_and_exit EXIT
 
-while getopts :v:m:p: opt; do
+while getopts :v:m:p:t: opt; do
     case "$opt" in
         v)
             readonly VENDOR_VERSION="$OPTARG"
@@ -51,6 +51,9 @@ while getopts :v:m:p: opt; do
             ;;
         p)
             readonly OVERRIDE_VBMETA_IMAGE_PATH="$OPTARG"
+            ;;
+        t)
+            readonly OTATOOLS_ZIP="$OPTARG"
             ;;
         \?)
             exit_badparam "Invalid options: -"$OPTARG""
@@ -77,32 +80,17 @@ readonly DIST_DIR="$3"
 readonly CHECK_TOOL="$4"
 readonly TEMP_DIR="$(mktemp -d /tmp/"$(basename $0)"_XXXXXXXX)"
 
-# Retry command until a certain limit.
-# Usage: retry "command"
-retry () {
-    NEXT_WAIT_TIME=0
-    until ($1 && [[ -n "$($1)" ]]) || [[ $NEXT_WAIT_TIME -eq 4 ]]; do
-        sleep $(( ++NEXT_WAIT_TIME ))
-    done
-}
-
-command="find "$SYSTEM_DIR" -name "*-target_files-*.zip" -print"
-retry "$command"
-readonly SYSTEM_TARGET_FILES_ARCHIVE="$($command)"
+readonly SYSTEM_TARGET_FILES_ARCHIVE="$(find "$SYSTEM_DIR" -name "*-target_files-*.zip" -print)"
 if [[ ! -f "$SYSTEM_TARGET_FILES_ARCHIVE" ]]; then
     exit_badparam "Could not find system target files archive in $SYSTEM_DIR."
 fi
 
-command="find "$DEVICE_DIR" -name "*-img-*.zip" -print"
-retry "$command"
-readonly DEVICE_ARCHIVE="$($command)"
+readonly DEVICE_ARCHIVE="$(find "$DEVICE_DIR" -name "*-img-*.zip" -print)"
 if [[ ! -f "$DEVICE_ARCHIVE" ]]; then
     exit_badparam "Could not find device img archive in $DEVICE_DIR."
 fi
 
-command="find "$DEVICE_DIR" -name "*-target_files-*.zip" -print"
-retry "$command"
-readonly DEVICE_TARGET_FILES_ARCHIVE="$($command)"
+readonly DEVICE_TARGET_FILES_ARCHIVE="$(find "$DEVICE_DIR" -name "*-target_files-*.zip" -print)"
 if [[ ! -f "$DEVICE_TARGET_FILES_ARCHIVE" ]]; then
     exit_badparam "Could not find device target_files archive in $DEVICE_DIR."
 fi
@@ -119,6 +107,7 @@ readonly DEVICE_ARTIFACTS_DIR="$TEMP_DIR"/device_archive_artifacts
 readonly DEVICE_IMAGES_DIR="$DEVICE_ARTIFACTS_DIR"/IMAGES
 readonly SYSTEM_ARTIFACTS_DIR="$TEMP_DIR"/system_artifacts
 readonly SYSTEM_IMAGES_DIR="$SYSTEM_ARTIFACTS_DIR"/IMAGES
+readonly OTATOOLS_DIR="$TEMP_DIR"/otatools
 
 readonly SPL_PROPERTY_NAME="ro.build.version.security_patch"
 readonly SYSTEM_BUILD_PROP="SYSTEM/build.prop"
@@ -138,6 +127,15 @@ unzip "$DEVICE_ARCHIVE" -d "$DEVICE_IMAGES_DIR"
 unzip "$DEVICE_TARGET_FILES_ARCHIVE" \
   META/vendor_matrix.xml META/vendor_manifest.xml "$SYSTEM_BUILD_PROP" \
   -d "$DEVICE_ARTIFACTS_DIR"
+
+if [[ -f "$OTATOOLS_ZIP" ]]; then
+    # Uncompress otatools
+    mkdir -p "$OTATOOLS_DIR"
+    unzip "$OTATOOLS_ZIP" -d "$OTATOOLS_DIR"
+    # Set paths for using prebuilt host binaries.
+    export PATH="$OTATOOLS_DIR"/bin:"$PATH"
+    export LD_LIBRARY_PATH="$OTATOOLS_DIR"/lib64:"$LD_LIBRARY_PATH"
+fi
 
 ###
 # Check compatibility between the system and device.
