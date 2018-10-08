@@ -42,23 +42,29 @@ def get_reference_dump_dir(reference_dump_dir_stem,
 
 
 def copy_reference_dumps(lib_paths, reference_dir_stem,
-                         reference_dump_dir_insertion, lib_arch):
+                         reference_dump_dir_insertion, lib_arch, compress):
     reference_dump_dir = get_reference_dump_dir(reference_dir_stem,
                                                 reference_dump_dir_insertion,
                                                 lib_arch)
     num_created = 0
     for lib_path in lib_paths:
-        copy_reference_dump(lib_path, reference_dump_dir)
+        copy_reference_dump(lib_path, reference_dump_dir, compress)
         num_created += 1
     return num_created
 
-def copy_reference_dump(lib_path, reference_dump_dir):
-    reference_dump_path = os.path.join(reference_dump_dir,
-                                       os.path.basename(lib_path)) + '.gz'
+def copy_reference_dump(lib_path, reference_dump_dir, compress):
+    reference_dump_path = os.path.join(
+        reference_dump_dir, os.path.basename(lib_path))
+    if compress:
+        reference_dump_path += '.gz'
     os.makedirs(os.path.dirname(reference_dump_path), exist_ok=True)
     output_content = read_output_content(lib_path, AOSP_DIR)
-    with gzip.open(reference_dump_path, 'wb') as f:
-        f.write(bytes(output_content, 'utf-8'))
+    if compress:
+        with gzip.open(reference_dump_path, 'wb') as f:
+            f.write(bytes(output_content, 'utf-8'))
+    else:
+        with open(reference_dump_path, 'wb') as f:
+            f.write(bytes(output_content, 'utf-8'))
     print('Created abi dump at ', reference_dump_path)
     return reference_dump_path
 
