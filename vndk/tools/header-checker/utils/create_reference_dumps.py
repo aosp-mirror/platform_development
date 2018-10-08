@@ -59,7 +59,8 @@ def get_lib_arch_str(target):
 
 
 def find_and_copy_lib_lsdumps(target, ref_dump_dir_stem, ref_dump_dir_insertion,
-                              core_or_vendor_shared_str, libs, lsdump_paths):
+                              core_or_vendor_shared_str, libs, lsdump_paths,
+                              compress):
     arch_lsdump_paths = find_lib_lsdumps(target.arch, target.arch_variant,
                                          target.cpu_variant, lsdump_paths,
                                          core_or_vendor_shared_str,
@@ -68,7 +69,7 @@ def find_and_copy_lib_lsdumps(target, ref_dump_dir_stem, ref_dump_dir_insertion,
     # reference  directory.
     return copy_reference_dumps(arch_lsdump_paths, ref_dump_dir_stem,
                                 ref_dump_dir_insertion,
-                                get_lib_arch_str(target))
+                                get_lib_arch_str(target), compress)
 
 def choose_vndk_version(args_version, platform_vndk_version,
                         board_vndk_version):
@@ -167,11 +168,11 @@ def create_source_abi_reference_dumps(args, product,
         assert(target.primary_arch != '')
         num_libs_copied += find_and_copy_lib_lsdumps(
             target, ref_dump_dir_stem_vndk, ref_dump_dir_insertion,
-            '_vendor_shared', args.libs, lsdump_paths)
+            '_vendor_shared', args.libs, lsdump_paths, args.compress)
 
         num_libs_copied += find_and_copy_lib_lsdumps(
             target, ref_dump_dir_stem_ndk, ref_dump_dir_insertion,
-            '_core_shared', args.libs, lsdump_paths)
+            '_core_shared', args.libs, lsdump_paths, args.compress)
 
     return num_libs_copied
 
@@ -193,6 +194,8 @@ def main():
     parser.add_argument('-ref-dump-dir',
                         help='directory to copy reference abi dumps into',
                         default=os.path.join(AOSP_DIR,'prebuilts/abi-dumps'))
+    parser.add_argument('--compress', action='store_true',
+                        help='compress reference dump with gzip')
     args = parser.parse_args()
     num_processed = 0
     # Remove reference dumps specified by libs / all of them if none specified,
