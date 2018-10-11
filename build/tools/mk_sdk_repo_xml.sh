@@ -40,6 +40,10 @@ if [[ ! -x $(which sha1sum) ]]; then
   error "Missing tool: sha1sum (Linux: apt-get install coreutils; Mac: port install md5sha1sum)"
 fi
 
+if [[ -z "$XMLLINT" ]]; then
+  XMLLINT=xmllint
+fi
+
 # Parse input params
 OUT="$1"
 [[ -z "$OUT" ]] && error "Missing output.xml name."
@@ -54,7 +58,7 @@ shift
 # This will be something like "http://schemas.android.com/sdk/android/addon/3"
 XMLNS=$(sed -n '/xmlns:sdk="/s/.*"\(.*\)".*/\1/p' "$SCHEMA")
 [[ -z "$XMLNS" ]] && error "Failed to find xmlns:sdk in $SCHEMA."
-echo "## Using xmlns:sdk=$XMLNS"
+#echo "## Using xmlns:sdk=$XMLNS"
 
 # Extract the schema version number from the XMLNS, e.g. it would extract "3"
 XSD_VERSION="${XMLNS##*/}"
@@ -63,7 +67,7 @@ XSD_VERSION="${XMLNS##*/}"
 # which name starts with "sdk-" (e.g. sdk-repository, sdk-addon)
 ROOT=$(sed -n -e '/xsd:element.*name="sdk-/s/.*name="\(sdk-[^"]*\)".*/\1/p' "$SCHEMA")
 [[ -z "$ROOT" ]] && error "Failed to find root element in $SCHEMA."
-echo "## Using root element $ROOT"
+#echo "## Using root element $ROOT"
 
 # Generate XML header
 cat > "$OUT" <<EOFH
@@ -415,7 +419,7 @@ while [[ -n "$1" ]]; do
     fi
 
     # Generate archive info
-    echo "## Add $TYPE/$OS archive $SRC"
+    #echo "## Add $TYPE/$OS archive $SRC"
     if [[ $( uname ) == "Darwin" ]]; then
       SIZE=$( stat -f %z "$SRC" )
     else
@@ -461,6 +465,5 @@ done
 # Generate XML footer
 echo "</sdk:$ROOT>" >> "$OUT"
 
-echo "## Validate XML against schema"
-xmllint --schema $SCHEMA "$OUT"
-
+#echo "## Validate XML against schema"
+$XMLLINT --noout --schema $SCHEMA "$OUT"

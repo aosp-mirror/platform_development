@@ -6,6 +6,8 @@ SDK_REPO_DEPS       :=
 SDK_REPO_XML_ARGS   :=
 SDK_EXTRAS_DEPS     :=
 SDK_EXTRAS_XML_ARGS :=
+SDK_SYSIMG_DEPS     :=
+SDK_SYSIMG_XML_ARGS :=
 
 # Define the name of a package zip file to generate
 # $1=OS (e.g. linux-x86, windows, etc)
@@ -97,15 +99,27 @@ endef
 # $4=package to create, must be "sources"
 #
 define mk-sdk-repo-sources
-$(call sdk-repo-pkg-zip,$(2),$(3),$(4)): $(3) $(HOST_OUT)/development/sdk/source_source.properties
+$(call sdk-repo-pkg-zip,$(2),$(3),$(4)): $(3) development/build/tools/mk_sources_zip.py $(HOST_OUT)/development/sdk/source_source.properties
 	@echo "Building SDK sources package"
-	$(hide) $(TOPDIR)development/build/tools/mk_sources_zip.py --exec-zip \
+	development/build/tools/mk_sources_zip.py --exec-zip \
 	            $(HOST_OUT)/development/sdk/source_source.properties \
-	            $(call sdk-repo-pkg-zip,$(2),$(3),$(4)) \
-	            $(TOPDIR).
+	            $$@ .
 $(call dist-for-goals, sdk_repo, $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
 $(1) += $(4) $(2) \
     $(call sdk-repo-pkg-zip,$(2),$(3),$(4)):$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
+endef
+
+# Defines the rule to build an XML file for a package.
+#
+# $1=output file
+# $2=schema file
+# $3=deps
+# $4=args
+define mk-sdk-repo-xml
+$(1): $$(XMLLINT) development/build/tools/mk_sdk_repo_xml.sh $(2) $(3)
+	XMLLINT=$$(XMLLINT) development/build/tools/mk_sdk_repo_xml.sh $$@ $(2) $(4)
+
+$$(call dist-for-goals,sdk_repo,$(1))
 endef
 
 # -----------------------------------------------------------------
@@ -158,19 +172,19 @@ endif
 SDK_REPO_XSD := \
     $(lastword \
       $(wildcard \
-        $(TOPDIR)prebuilts/devtools/repository/sdk-repository-*.xsd \
+        prebuilts/devtools/repository/sdk-repository-*.xsd \
     ))
 
 SDK_ADDON_XSD := \
     $(lastword \
       $(wildcard \
-        $(TOPDIR)prebuilts/devtools/repository/sdk-addon-*.xsd \
+        prebuilts/devtools/repository/sdk-addon-*.xsd \
     ))
 
 SDK_SYSIMG_XSD := \
     $(lastword \
       $(wildcard \
-        $(TOPDIR)prebuilts/devtools/repository/sdk-sys-img-*.xsd \
+        prebuilts/devtools/repository/sdk-sys-img-*.xsd \
     ))
 
 
@@ -192,11 +206,10 @@ $(call dist-for-goals, sdk_repo, $(RENAMED_ADDON_ZIP))
 
 SDK_ADDON_XML := $(dir $(ADDON_SDK_ZIP))/addon.xml
 
-$(SDK_ADDON_XML): $(ADDON_SDK_ZIP)
-	$(hide) $(TOPDIR)development/build/tools/mk_sdk_repo_xml.sh \
-	            $(SDK_ADDON_XML) $(SDK_ADDON_XSD) add-on $(HOST_OS) $(RENAMED_ADDON_ZIP)
+$(eval $(call mk-sdk-repo-xml,$(SDK_ADDON_XML),$(SDK_ADDON_XSD),$(ADDON_SDK_ZIP),add-on $(HOST_OS) $(RENAMED_ADDON_ZIP)))
 
-$(call dist-for-goals, sdk_repo, $(SDK_ADDON_XML))
+SDK_ADDON_XML :=
+RENAMED_ADDON_ZIP :=
 
 endif
 
@@ -212,11 +225,10 @@ $(call dist-for-goals, sdk_repo, $(RENAMED_ADDON_IMG_ZIP))
 
 SDK_ADDON_IMG_XML := $(dir $(ADDON_SDK_ZIP))/addon-sys-img.xml
 
-$(SDK_ADDON_IMG_XML): $(ADDON_SDK_IMG_ZIP)
-	$(hide) $(TOPDIR)development/build/tools/mk_sdk_repo_xml.sh \
-	            $(SDK_ADDON_IMG_XML) $(SDK_SYSIMG_XSD) system-image $(HOST_OS) $(RENAMED_ADDON_IMG_ZIP)
+$(eval $(call mk-sdk-repo-xml,$(SDK_ADDON_IMG_XML),$(SDK_SYSIMG_XSD),$(ADDON_SDK_IMG_ZIP),system-image $(HOST_OS) $(RENAMED_ADDON_IMG_ZIP)))
 
-$(call dist-for-goals, sdk_repo, $(SDK_ADDON_IMG_XML))
+SDK_ADDON_IMG_XML :=
+RENAMED_ADDON_IMG_ZIP :=
 
 endif
 endif
@@ -229,51 +241,42 @@ SDK_EXTRAS_XML := $(MAIN_SDK_DIR)/repo-extras.xml
 SDK_SYSIMG_XML := $(MAIN_SDK_DIR)/repo-sys-img.xml
 
 ifneq ($(SDK_REPO_XML_ARGS),)
-
-$(SDK_REPO_XML): $(SDK_REPO_DEPS)
-	$(hide) $(TOPDIR)development/build/tools/mk_sdk_repo_xml.sh \
-	            $(SDK_REPO_XML) $(SDK_REPO_XSD) $(SDK_REPO_XML_ARGS)
-
-$(call dist-for-goals, sdk_repo, $(SDK_REPO_XML))
-
+$(eval $(call mk-sdk-repo-xml,$(SDK_REPO_XML),$(SDK_REPO_XSD),$(SDK_REPO_DEPS),$(SDK_REPO_XML_ARGS)))
 else
-
-$(SDK_REPO_XML): ;
-
+SDK_REPO_XML :=
 endif
 
 
 ifneq ($(SDK_EXTRAS_XML_ARGS),)
-
-$(SDK_EXTRAS_XML): $(SDK_EXTRAS_DEPS)
-	$(hide) $(TOPDIR)development/build/tools/mk_sdk_repo_xml.sh \
-	            $(SDK_EXTRAS_XML) $(SDK_ADDON_XSD) $(SDK_EXTRAS_XML_ARGS)
-
-$(call dist-for-goals, sdk_repo, $(SDK_EXTRAS_XML))
-
+$(eval $(call mk-sdk-repo-xml,$(SDK_EXTRAS_XML),$(SDK_ADDON_XSD),$(SDK_EXTRAS_DEPS),$(SDK_EXTRAS_XML_ARGS)))
 else
-
-$(SDK_EXTRAS_XML): ;
-
+SDK_EXTRAS_XML :=
 endif
 
 
 ifneq ($(SDK_SYSIMG_XML_ARGS),)
-
-$(SDK_SYSIMG_XML): $(SDK_SYSIMG_DEPS)
-	$(hide) $(TOPDIR)development/build/tools/mk_sdk_repo_xml.sh \
-	            $(SDK_SYSIMG_XML) $(SDK_SYSIMG_XSD) $(SDK_SYSIMG_XML_ARGS)
-
-$(call dist-for-goals, sdk_repo, $(SDK_SYSIMG_XML))
-
+$(eval $(call mk-sdk-repo-xml,$(SDK_SYSIMG_XML),$(SDK_SYSIMG_XSD),$(SDK_SYSIMG_DEPS),$(SDK_SYSIMG_XML_ARGS)))
 else
-
-$(SDK_SYSIMG_XML): ;
-
+SDK_SYSIMG_XML :=
 endif
 
 # -----------------------------------------------------------------
 
 sdk_repo: $(SDK_REPO_DEPS) $(SDK_REPO_XML) $(SDK_EXTRAS_XML) $(SDK_SYSIMG_XML)
-	@echo "Packing of SDK repository done"
 
+SDK_REPO_DEPS :=
+SDK_REPO_XML :=
+SDK_REPO_XML_ARGS :=
+SDK_EXTRAS_DEPS :=
+SDK_EXTRAS_XML :=
+SDK_EXTRAS_XML_ARGS :=
+SDK_SYSIMG_DEPS :=
+SDK_SYSIMG_XML :=
+SDK_SYSIMG_XML_ARGS :=
+
+mk-sdk-repo-pkg-1 :=
+mk-sdk-repo-pkg-2 :=
+mk-sdk-repo-pkg-3 :=
+mk-sdk-repo-sources :=
+mk-sdk-repo-xml :=
+sdk-repo-pkg-zip :=
