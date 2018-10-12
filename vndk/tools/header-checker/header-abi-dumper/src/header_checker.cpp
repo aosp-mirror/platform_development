@@ -55,8 +55,7 @@ static llvm::cl::opt<abi_util::TextFormatIR> output_format(
     "output-format", llvm::cl::desc("Specify format of output dump file"),
     llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
                                 "ProtobufTextFormat", "ProtobufTextFormat"),
-                     clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON"),
-                     clEnumValEnd),
+                     clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON")),
     llvm::cl::init(abi_util::TextFormatIR::Json),
     llvm::cl::cat(header_checker_category));
 
@@ -84,14 +83,22 @@ int main(int argc, const char **argv) {
 
   // Create compilation database from command line arguments after "--".
   std::unique_ptr<clang::tooling::CompilationDatabase> compilations;
-
   {
     // loadFromCommandLine() may alter argc and argv, thus access fixed_argv
     // through FixedArgvAccess.
     FixedArgvAccess raw(fixed_argv);
-    compilations.reset(
+
+    std::string cmdline_error_msg;
+    compilations =
         clang::tooling::FixedCompilationDatabase::loadFromCommandLine(
-            raw.argc_, raw.argv_));
+            raw.argc_, raw.argv_, cmdline_error_msg);
+
+    // Check whether we can create compilation database and deduce compiler
+    // options from command line options.
+    if (!compilations) {
+      llvm::errs() << "ERROR: " << cmdline_error_msg << "\n";
+      ::exit(1);
+    }
   }
 
   // Parse the command line options.
@@ -101,13 +108,6 @@ int main(int argc, const char **argv) {
   // Input header file existential check.
   if (!llvm::sys::fs::exists(header_file)) {
     llvm::errs() << "ERROR: Header file \"" << header_file << "\" not found\n";
-    ::exit(1);
-  }
-
-  // Check whether we can create compilation database and deduce compiler
-  // options from command line options.
-  if (!compilations) {
-    llvm::errs() << "ERROR: Clang compilation options not specified.\n";
     ::exit(1);
   }
 
