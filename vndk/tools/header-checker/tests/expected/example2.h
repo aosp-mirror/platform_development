@@ -209,11 +209,11 @@ enum_types {
   underlying_type: "type-9"
   enum_fields {
     enum_field_value: 10
-    name: "Foo_s::foosball"
+    name: "foosball"
   }
   enum_fields {
     enum_field_value: 11
-    name: "Foo_s::foosbat"
+    name: "foosbat"
   }
   access: public_access
   tag_info {
@@ -233,11 +233,11 @@ enum_types {
   underlying_type: "type-9"
   enum_fields {
     enum_field_value: 24
-    name: "test3::Kind::kind1"
+    name: "test3::kind1"
   }
   enum_fields {
     enum_field_value: 2312
-    name: "test3::Kind::kind2"
+    name: "test3::kind2"
   }
   access: public_access
   tag_info {

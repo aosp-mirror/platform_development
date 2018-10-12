@@ -70,8 +70,7 @@ static llvm::cl::opt<abi_util::TextFormatIR> input_format(
     "input-format", llvm::cl::desc("Specify format of input dump files"),
     llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
                                 "ProtobufTextFormat", "ProtobufTextFormat"),
-                     clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON"),
-                     clEnumValEnd),
+                     clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON")),
     llvm::cl::init(abi_util::TextFormatIR::Json),
     llvm::cl::cat(header_linker_category));
 
@@ -79,8 +78,7 @@ static llvm::cl::opt<abi_util::TextFormatIR> output_format(
     "output-format", llvm::cl::desc("Specify format of output dump file"),
     llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
                                 "ProtobufTextFormat", "ProtobufTextFormat"),
-                     clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON"),
-                     clEnumValEnd),
+                     clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON")),
     llvm::cl::init(abi_util::TextFormatIR::Json),
     llvm::cl::cat(header_linker_category));
 
