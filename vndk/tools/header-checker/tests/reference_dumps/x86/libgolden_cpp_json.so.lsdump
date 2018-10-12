@@ -87,19 +87,19 @@
    [
     {
      "enum_field_value" : 1,
-     "name" : "SuperSpeaker::Volume::Loud"
+     "name" : "SuperSpeaker::Loud"
     },
     {
      "enum_field_value" : 2,
-     "name" : "SuperSpeaker::Volume::Louder"
+     "name" : "SuperSpeaker::Louder"
     },
     {
      "enum_field_value" : 3,
-     "name" : "SuperSpeaker::Volume::Loudest"
+     "name" : "SuperSpeaker::Loudest"
     },
     {
      "enum_field_value" : 0,
-     "name" : "SuperSpeaker::Volume::Lower"
+     "name" : "SuperSpeaker::Lower"
     }
    ],
    "linker_set_key" : "SuperSpeaker::Volume",
