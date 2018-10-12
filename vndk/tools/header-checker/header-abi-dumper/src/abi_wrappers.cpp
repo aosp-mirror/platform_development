@@ -18,7 +18,7 @@
 
 #include <limits.h>
 #include <stdlib.h>
-#include <clang/AST/QualTypeNames.h>
+#include <clang/Tooling/Core/QualTypeNames.h>
 #include <clang/Index/CodegenNameGenerator.h>
 
 #include <string>
@@ -422,8 +422,7 @@ std::string ABIWrapper::QualTypeToString(
   if (salty_qt.getTypePtr()->isDependentType()) {
     return salty_qt.getAsString();
   }
-  return clang::TypeName::getFullyQualifiedName(
-      salty_qt, *ast_contextp_, ast_contextp_->getPrintingPolicy());
+  return clang::TypeName::getFullyQualifiedName(salty_qt, *ast_contextp_);
 }
 
 FunctionTypeWrapper::FunctionTypeWrapper(
@@ -657,9 +656,8 @@ bool RecordDeclWrapper::SetupRecordVTable(
   }
   const clang::VTableLayout &vtable_layout =
       itanium_vtable_contextp->getVTableLayout(cxx_record_decl);
-  llvm::ArrayRef<clang::VTableLayout::VTableThunkTy> thunks =
-      vtable_layout.vtable_thunks();
-  ThunkMap thunk_map(thunks.begin(), thunks.end());
+  ThunkMap thunk_map(vtable_layout.vtable_thunk_begin(),
+                     vtable_layout.vtable_thunk_end());
   abi_util::VTableLayoutIR vtable_ir_layout;
 
   uint64_t index = 0;
