@@ -30,7 +30,6 @@ using llvm::object::ObjectFile;
 using llvm::object::ELFObjectFile;
 using llvm::object::ELFFile;
 using llvm::object::ELFType;
-using llvm::object::ELFDataTypeTypedefHelper;
 
 namespace abi_util {
 

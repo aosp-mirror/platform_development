@@ -198,12 +198,12 @@ record_types {
 }
 record_types {
   type_info {
-    name: "Hello::(anonymous)::(anonymous) at /development/vndk/tools/header-checker/tests/input/example1.h:22:5"
+    name: "Hello::(anonymous struct at /development/vndk/tools/header-checker/tests/input/example1.h:19:3)::(anonymous struct at /development/vndk/tools/header-checker/tests/input/example1.h:22:5) at /development/vndk/tools/header-checker/tests/input/example1.h:22:5"
     size: 4
     alignment: 4
     referenced_type: "type-22"
     source_file: "/development/vndk/tools/header-checker/tests/input/example1.h"
-    linker_set_key: "Hello::(anonymous)::(anonymous) at /development/vndk/tools/header-checker/tests/input/example1.h:22:5"
+    linker_set_key: "Hello::(anonymous struct at /development/vndk/tools/header-checker/tests/input/example1.h:19:3)::(anonymous struct at /development/vndk/tools/header-checker/tests/input/example1.h:22:5) at /development/vndk/tools/header-checker/tests/input/example1.h:22:5"
     self_type: "type-22"
   }
   fields {
@@ -216,17 +216,17 @@ record_types {
   is_anonymous: true
   record_kind: struct_kind
   tag_info {
-    unique_id: "Hello::(anonymous)::(anonymous)"
+    unique_id: "Hello::(anonymous struct at /development/vndk/tools/header-checker/tests/input/example1.h:19:3)::(anonymous struct at /development/vndk/tools/header-checker/tests/input/example1.h:22:5)"
   }
 }
 record_types {
   type_info {
-    name: "Hello::(anonymous) at /development/vndk/tools/header-checker/tests/input/example1.h:19:3"
+    name: "Hello::(anonymous struct at /development/vndk/tools/header-checker/tests/input/example1.h:19:3) at /development/vndk/tools/header-checker/tests/input/example1.h:19:3"
     size: 12
     alignment: 4
     referenced_type: "type-21"
     source_file: "/development/vndk/tools/header-checker/tests/input/example1.h"
-    linker_set_key: "Hello::(anonymous) at /development/vndk/tools/header-checker/tests/input/example1.h:19:3"
+    linker_set_key: "Hello::(anonymous struct at /development/vndk/tools/header-checker/tests/input/example1.h:19:3) at /development/vndk/tools/header-checker/tests/input/example1.h:19:3"
     self_type: "type-21"
   }
   fields {
@@ -251,7 +251,7 @@ record_types {
   is_anonymous: true
   record_kind: struct_kind
   tag_info {
-    unique_id: "Hello::(anonymous)"
+    unique_id: "Hello::(anonymous struct at /development/vndk/tools/header-checker/tests/input/example1.h:19:3)"
   }
 }
 record_types {
@@ -477,11 +477,11 @@ enum_types {
   underlying_type: "type-9"
   enum_fields {
     enum_field_value: 10
-    name: "Foo_s::foosball"
+    name: "foosball"
   }
   enum_fields {
     enum_field_value: 11
-    name: "Foo_s::foosbat"
+    name: "foosbat"
   }
   access: public_access
   tag_info {
@@ -501,11 +501,11 @@ enum_types {
   underlying_type: "type-9"
   enum_fields {
     enum_field_value: 24
-    name: "test3::Kind::kind1"
+    name: "test3::kind1"
   }
   enum_fields {
     enum_field_value: 2312
-    name: "test3::Kind::kind2"
+    name: "test3::kind2"
   }
   access: public_access
   tag_info {
@@ -525,7 +525,7 @@ enum_types {
   underlying_type: "type-9"
   enum_fields {
     enum_field_value: 1
-    name: "CPPHello::Bla::BLA"
+    name: "CPPHello::BLA"
   }
   access: public_access
   tag_info {

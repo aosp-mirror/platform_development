@@ -18,17 +18,20 @@ cc_defaults {
     name: "header-checker-defaults",
 
     defaults: [
-        "clang-defaults",
+        "llvm-build-host-tools-defaults",
     ],
 
     cflags: [
         "-Wall",
         "-Werror",
+        "-Wno-unused-parameter",
         "-DGOOGLE_PROTOBUF_NO_RTTI",
         "-UNDEBUG",
     ],
 
     cppflags: [
+        "-fno-exceptions",
+        "-fno-rtti",
         "-std=c++14",
     ],
 
@@ -37,6 +40,9 @@ cc_defaults {
             enabled: false,
         },
     },
+
+    compile_multilib: "64",
+    stl: "none",
 }
 
 cc_binary_host {
@@ -61,54 +67,32 @@ cc_binary_host {
         "libheader-abi-util",
         "libheader-checker-proto",
         "libjsoncpp",
-        "libclangToolingCore",
-        "libclangTooling",
-        "libclangFrontendTool",
-        "libclangFrontend",
-        "libclangDriver",
-        "libclangIndex",
-        "libclangSerialization",
-        "libclangCodeGen",
-        "libclangParse",
-        "libclangSema",
-        "libclangAnalysis",
-        "libclangEdit",
-        "libclangAST",
-        "libclangLex",
-        "libclangBasic",
-        "libLLVMBitReader",
-        "libLLVMBitWriter",
-        "libLLVMMC",
-        "libLLVMMCParser",
-        "libLLVMCore",
-        "libLLVMOption",
-        "libLLVMProfileData",
-        "libLLVMObject",
-        "libLLVMSupport",
     ],
 
     shared_libs: [
         "libprotobuf-cpp-full",
+        "libLLVM_host",
+        "libclang_cxx_host",
+        "libc++_host",
     ],
 }
 
 cc_defaults {
     name: "header-abi-linker-defaults",
 
+    defaults: ["header-checker-defaults"],
+
     static_libs: [
         "libheader-abi-util",
         "libheader-checker-proto",
         "libjsoncpp",
-        "libLLVMObject",
-        "libLLVMBitReader",
-        "libLLVMMC",
-        "libLLVMMCParser",
-        "libLLVMCore",
-        "libLLVMSupport",
     ],
 
     shared_libs: [
         "libprotobuf-cpp-full",
+        "libLLVM_host",
+        "libclang_cxx_host",
+        "libc++_host",
     ],
 }
 
@@ -176,6 +160,8 @@ cc_library_host_static {
     ],
 
     shared_libs: [
+        "libLLVM_host",
+        "libc++_host",
         "libprotobuf-cpp-full",
     ],
 
