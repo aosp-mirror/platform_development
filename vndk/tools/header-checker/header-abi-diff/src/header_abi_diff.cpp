@@ -87,17 +87,15 @@ static llvm::cl::opt<bool> allow_unreferenced_changes(
 
 static llvm::cl::opt<bool> consider_opaque_types_different(
     "consider-opaque-types-different",
-    llvm::cl::desc("Consider opaque types with different names as different"
-                   " .This should not be used while comparing C++ library"
-                   " ABIs"),
+    llvm::cl::desc("Consider opaque types with different names as different. "
+                   "This should not be used while comparing C++ library ABIs"),
     llvm::cl::Optional, llvm::cl::cat(header_checker_category));
 
 static llvm::cl::opt<abi_util::TextFormatIR> text_format_old(
     "input-format-old", llvm::cl::desc("Specify input format of old abi dump"),
     llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
                                 "ProtobufTextFormat", "ProtobufTextFormat"),
-                     clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON"),
-                     clEnumValEnd),
+                     clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON")),
     llvm::cl::init(abi_util::TextFormatIR::Json),
     llvm::cl::cat(header_checker_category));
 
@@ -105,16 +103,14 @@ static llvm::cl::opt<abi_util::TextFormatIR> text_format_new(
     "input-format-new", llvm::cl::desc("Specify input format of new abi dump"),
     llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
                                 "ProtobufTextFormat", "ProtobufTextFormat"),
-                     clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON"),
-                     clEnumValEnd),
+                     clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON")),
     llvm::cl::init(abi_util::TextFormatIR::Json),
     llvm::cl::cat(header_checker_category));
 
 static llvm::cl::opt<abi_util::TextFormatIR> text_format_diff(
     "text-format-diff", llvm::cl::desc("Specify text format of abi-diff"),
     llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
-                                "ProtobufTextFormat", "ProtobufTextFormat"),
-                     clEnumValEnd),
+                                "ProtobufTextFormat", "ProtobufTextFormat")),
     llvm::cl::init(abi_util::TextFormatIR::ProtobufTextFormat),
     llvm::cl::cat(header_checker_category));
 
