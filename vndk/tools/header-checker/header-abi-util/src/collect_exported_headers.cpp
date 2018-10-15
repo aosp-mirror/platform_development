@@ -51,7 +51,6 @@ bool CollectExportedHeaderSet(const std::string &dir_name,
   llvm::sys::fs::recursive_directory_iterator walker(dir_name, ec);
   // Default construction - end of directory.
   llvm::sys::fs::recursive_directory_iterator end;
-  llvm::sys::fs::file_status status;
   for ( ; walker != end; walker.increment(ec)) {
     if (ec) {
       llvm::errs() << "Failed to walk dir : " << dir_name << "\n";
@@ -68,14 +67,14 @@ bool CollectExportedHeaderSet(const std::string &dir_name,
       walker.no_push();
       continue;
     }
-
-    if (walker->status(status)) {
+    llvm::ErrorOr<llvm::sys::fs::basic_file_status> status =  walker->status();
+    if (!status) {
       llvm::errs() << "Failed to stat file : " << file_path << "\n";
       return false;
     }
 
-    if ((status.type() != llvm::sys::fs::file_type::symlink_file) &&
-        !llvm::sys::fs::is_regular_file(status)) {
+    if ((status->type() != llvm::sys::fs::file_type::symlink_file) &&
+        (status->type() != llvm::sys::fs::file_type::regular_file)) {
       // Ignore non regular files, except symlinks.
       continue;
     }

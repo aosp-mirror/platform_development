@@ -201,19 +201,19 @@ enum_types {
   underlying_type: "type-9"
   enum_fields {
     enum_field_value: 1
-    name: "SuperSpeaker::Volume::Loud"
+    name: "SuperSpeaker::Loud"
   }
   enum_fields {
     enum_field_value: 2
-    name: "SuperSpeaker::Volume::Louder"
+    name: "SuperSpeaker::Louder"
   }
   enum_fields {
     enum_field_value: 3
-    name: "SuperSpeaker::Volume::Loudest"
+    name: "SuperSpeaker::Loudest"
   }
   enum_fields {
     enum_field_value: 0
-    name: "SuperSpeaker::Volume::Lower"
+    name: "SuperSpeaker::Lower"
   }
   access: private_access
   tag_info {
