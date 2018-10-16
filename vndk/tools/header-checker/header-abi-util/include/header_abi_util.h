@@ -17,22 +17,11 @@
 
 #include "ir_representation.h"
 
-#include <llvm/Object/ELFObjectFile.h>
-#include <llvm/Object/ELFTypes.h>
-#include <llvm/Object/SymbolSize.h>
-#include <llvm/Support/Endian.h>
-#include <llvm/Support/raw_ostream.h>
-
 #include <map>
 #include <regex>
 #include <set>
 #include <string>
 #include <vector>
-
-using llvm::object::ObjectFile;
-using llvm::object::ELFObjectFile;
-using llvm::object::ELFFile;
-using llvm::object::ELFType;
 
 namespace abi_util {
 
@@ -40,7 +29,6 @@ std::string RealPath(const std::string &path);
 
 std::set<std::string> CollectAllExportedHeaders(
     const std::vector<std::string> &exported_header_dirs);
-
 
 inline std::string FindAndReplace(const std::string &candidate_str,
                                   const std::string &find_str,
@@ -50,40 +38,6 @@ inline std::string FindAndReplace(const std::string &candidate_str,
   std::regex match_expr(find_str);
   return std::regex_replace(candidate_str, match_expr, replace_str);
 }
-
-class SoFileParser {
- public:
-  virtual ~SoFileParser() {}
-
-  static std::unique_ptr<SoFileParser> Create(const ObjectFile *obj);
-  virtual const std::map<std::string, ElfFunctionIR> &GetFunctions() const = 0;
-  virtual const std::map<std::string, ElfObjectIR> &GetGlobVars() const = 0;
-  virtual void GetSymbols() = 0;
-};
-
-template<typename T>
-class ELFSoFileParser : public SoFileParser {
- private:
-  LLVM_ELF_IMPORT_TYPES_ELFT(T)
-  typedef ELFFile<T> ELFO;
-  typedef typename ELFO::Elf_Sym Elf_Sym;
-
- public:
-  ELFSoFileParser(const ELFObjectFile<T> *obj) : obj_(obj) {}
-  ~ELFSoFileParser() override {}
-
-  const std::map<std::string, ElfFunctionIR> &GetFunctions() const override;
-  const std::map<std::string, ElfObjectIR> &GetGlobVars() const override;
-  void GetSymbols() override;
-
- private:
-  const ELFObjectFile<T> *obj_;
-  std::map<std::string, abi_util::ElfFunctionIR> functions_;
-  std::map<std::string, abi_util::ElfObjectIR> globvars_;
-
- private:
-  bool IsSymbolExported(const Elf_Sym *elf_sym) const;
-};
 
 template <typename T, typename K>
 std::vector<T> FindRemovedElements(

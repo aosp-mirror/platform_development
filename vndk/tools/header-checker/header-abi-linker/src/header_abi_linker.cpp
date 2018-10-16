@@ -14,6 +14,7 @@
 
 #include "header_abi_util.h"
 #include "ir_representation.h"
+#include "so_file_parser.h"
 #include "version_script_parser.h"
 
 #include <llvm/Support/CommandLine.h>

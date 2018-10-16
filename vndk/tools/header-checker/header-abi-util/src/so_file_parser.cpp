@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "header_abi_util.h"
+#include "so_file_parser.h"
+
 #include "ir_representation.h"
 
 #include <llvm/Object/Binary.h>
