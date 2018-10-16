@@ -16,7 +16,7 @@
 #include "abi_wrappers.h"
 
 #include <clang/Lex/Token.h>
-#include <clang/Tooling/Core/QualTypeNames.h>
+#include <clang/AST/QualTypeNames.h>
 #include <clang/Index/CodegenNameGenerator.h>
 
 #include <fstream>
