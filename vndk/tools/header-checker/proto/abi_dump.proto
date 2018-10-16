@@ -86,7 +86,7 @@ message RecordFieldDecl {
 }
 
 message EnumFieldDecl {
-  optional int64 enum_field_value = 1; // assumption: fits int64
+  optional int64 enum_field_value = 1;  // assumption: fits int64
   optional string name = 3;
 }
 

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "ast_processing.h"
+
 #include "abi_wrappers.h"
 
 #include <clang/Lex/Token.h>
@@ -37,13 +38,13 @@ HeaderASTVisitor::HeaderASTVisitor(
     const clang::Decl *tu_decl,
     abi_util::IRDumper *ir_dumper,
     ast_util::ASTCaches *ast_caches)
-  : mangle_contextp_(mangle_contextp),
-    ast_contextp_(ast_contextp),
-    cip_(compiler_instance_p),
-    exported_headers_(exported_headers),
-    tu_decl_(tu_decl),
-    ir_dumper_(ir_dumper),
-    ast_caches_(ast_caches) { }
+    : mangle_contextp_(mangle_contextp),
+      ast_contextp_(ast_contextp),
+      cip_(compiler_instance_p),
+      exported_headers_(exported_headers),
+      tu_decl_(tu_decl),
+      ir_dumper_(ir_dumper),
+      ast_caches_(ast_caches) {}
 
 bool HeaderASTVisitor::VisitRecordDecl(const clang::RecordDecl *decl) {
   // Skip forward declarations, dependent records. Also skip anonymous records
@@ -69,7 +70,7 @@ bool HeaderASTVisitor::VisitEnumDecl(const clang::EnumDecl *decl) {
   EnumDeclWrapper enum_decl_wrapper(
       mangle_contextp_, ast_contextp_, cip_, decl, ir_dumper_, ast_caches_);
   return enum_decl_wrapper.GetEnumDecl();
- }
+}
 
 static bool MutateFunctionWithLinkageName(const abi_util::FunctionIR *function,
                                           abi_util::IRDumper *ir_dumper,
@@ -120,9 +121,8 @@ bool HeaderASTVisitor::VisitFunctionDecl(const clang::FunctionDecl *decl) {
   if (ShouldSkipFunctionDecl(decl)) {
     return true;
   }
-  FunctionDeclWrapper function_decl_wrapper(mangle_contextp_, ast_contextp_,
-                                            cip_, decl, ir_dumper_,
-                                            ast_caches_);
+  FunctionDeclWrapper function_decl_wrapper(
+      mangle_contextp_, ast_contextp_, cip_, decl, ir_dumper_, ast_caches_);
   auto function_wrapper = function_decl_wrapper.GetFunctionDecl();
   // Destructors and Constructors can have more than 1 symbol generated from the
   // same Decl.
@@ -138,15 +138,14 @@ bool HeaderASTVisitor::VisitFunctionDecl(const clang::FunctionDecl *decl) {
 }
 
 bool HeaderASTVisitor::VisitVarDecl(const clang::VarDecl *decl) {
-  if(!decl->hasGlobalStorage()||
-     decl->getType().getTypePtr()->isDependentType()) {
+  if (!decl->hasGlobalStorage() ||
+      decl->getType().getTypePtr()->isDependentType()) {
     // Non global / static variable declarations don't need to be dumped.
     return true;
   }
-  GlobalVarDeclWrapper global_var_decl_wrapper(mangle_contextp_, ast_contextp_,
-                                               cip_, decl, ir_dumper_,
-                                               ast_caches_);
-  return  global_var_decl_wrapper.GetGlobalVarDecl();
+  GlobalVarDeclWrapper global_var_decl_wrapper(
+      mangle_contextp_, ast_contextp_, cip_, decl, ir_dumper_, ast_caches_);
+  return global_var_decl_wrapper.GetGlobalVarDecl();
 }
 
 static bool AreHeadersExported(const std::set<std::string> &exported_headers) {
@@ -181,10 +180,10 @@ HeaderASTConsumer::HeaderASTConsumer(
     const std::string &out_dump_name,
     std::set<std::string> &exported_headers,
     abi_util::TextFormatIR text_format)
-  : cip_(compiler_instancep),
-    out_dump_name_(out_dump_name),
-    exported_headers_(exported_headers),
-    text_format_(text_format){ }
+    : cip_(compiler_instancep),
+      out_dump_name_(out_dump_name),
+      exported_headers_(exported_headers),
+      text_format_(text_format) {}
 
 void HeaderASTConsumer::HandleTranslationUnit(clang::ASTContext &ctx) {
   clang::PrintingPolicy policy(ctx.getPrintingPolicy());

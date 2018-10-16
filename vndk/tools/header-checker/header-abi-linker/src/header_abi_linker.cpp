@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <header_abi_util.h>
-#include <ir_representation.h>
+#include "header_abi_util.h"
+#include "ir_representation.h"
 
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/raw_ostream.h>
 
-#include <memory>
-#include <mutex>
 #include <fstream>
 #include <functional>
 #include <iostream>
+#include <memory>
+#include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
@@ -92,9 +92,9 @@ class HeaderAbiLinker {
       const std::string &linked_dump,
       const std::string &arch,
       const std::string &api)
-    : dump_files_(dump_files), exported_header_dirs_(exported_header_dirs),
-    version_script_(version_script), so_file_(so_file),
-    out_dump_name_(linked_dump), arch_(arch), api_(api) {};
+      : dump_files_(dump_files), exported_header_dirs_(exported_header_dirs),
+        version_script_(version_script), so_file_(so_file),
+        out_dump_name_(linked_dump), arch_(arch), api_(api) {}
 
   bool LinkAndDump();
 
@@ -278,8 +278,7 @@ static std::regex CreateRegexMatchExprFromSet(
 
 template <typename T>
 bool HeaderAbiLinker::LinkDecl(
-    abi_util::IRDumper *dst,
-    const abi_util::AbiElementMap<T> &src,
+    abi_util::IRDumper *dst, const abi_util::AbiElementMap<T> &src,
     const std::function<bool(const std::string &)> &symbol_filter) {
   assert(dst != nullptr);
   for (auto &&element : src) {
@@ -345,8 +344,8 @@ bool HeaderAbiLinker::LinkGlobalVars(
 }
 
 bool HeaderAbiLinker::ParseVersionScriptFiles() {
-  abi_util::VersionScriptParser version_script_parser(version_script_, arch_,
-                                                      api_);
+  abi_util::VersionScriptParser version_script_parser(
+      version_script_, arch_, api_);
   if (!version_script_parser.Parse()) {
     llvm::errs() << "Failed to parse version script\n";
     return false;

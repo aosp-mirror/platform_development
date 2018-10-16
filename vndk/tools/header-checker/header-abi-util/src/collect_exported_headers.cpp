@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <header_abi_util.h>
+#include "header_abi_util.h"
 
-#include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/Path.h>
+#include <llvm/Support/raw_ostream.h>
 
 #include <set>
 #include <string>
@@ -25,16 +25,13 @@
 namespace abi_util {
 
 static bool ShouldSkipFile(llvm::StringRef &file_name) {
- // Ignore swap files and hidden files / dirs. Do not recurse into them too.
-  // We should also not look at source files. Many projects include source
-  // files in their exports.
-  if (file_name.empty() || file_name.startswith(".") ||
-      file_name.endswith(".swp") || file_name.endswith(".swo") ||
-      file_name.endswith("#") || file_name.endswith(".cpp") ||
-      file_name.endswith(".cc") || file_name.endswith(".c")) {
-    return true;
-  }
-  return false;
+  // Ignore swap files, hidden files, and hidden directories. Do not recurse
+  // into hidden directories either. We should also not look at source files.
+  // Many projects include source files in their exports.
+  return (file_name.empty() || file_name.startswith(".") ||
+          file_name.endswith(".swp") || file_name.endswith(".swo") ||
+          file_name.endswith("#") || file_name.endswith(".cpp") ||
+          file_name.endswith(".cc") || file_name.endswith(".c"));
 }
 
 std::string RealPath(const std::string &path) {
@@ -67,7 +64,8 @@ bool CollectExportedHeaderSet(const std::string &dir_name,
       walker.no_push();
       continue;
     }
-    llvm::ErrorOr<llvm::sys::fs::basic_file_status> status =  walker->status();
+
+    llvm::ErrorOr<llvm::sys::fs::basic_file_status> status = walker->status();
     if (!status) {
       llvm::errs() << "Failed to stat file : " << file_path << "\n";
       return false;
@@ -96,4 +94,4 @@ std::set<std::string> CollectAllExportedHeaders(
   return exported_headers;
 }
 
-} // namespace abi_util
+}  // namespace abi_util

@@ -22,8 +22,8 @@ HeaderCheckerFrontendActionFactory::HeaderCheckerFrontendActionFactory(
     const std::string &dump_name,
     std::set<std::string> &exported_headers,
     abi_util::TextFormatIR text_format)
-  : dump_name_(dump_name), exported_headers_(exported_headers),
-    text_format_(text_format) { }
+    : dump_name_(dump_name), exported_headers_(exported_headers),
+      text_format_(text_format) {}
 
 clang::FrontendAction *HeaderCheckerFrontendActionFactory::create() {
   return new HeaderCheckerFrontendAction(dump_name_, exported_headers_,

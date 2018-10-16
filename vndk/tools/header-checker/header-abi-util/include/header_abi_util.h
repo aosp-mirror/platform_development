@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <ir_representation.h>
+#ifndef HEADER_ABI_UTIL_H_
+#define HEADER_ABI_UTIL_H_
+
+#include "ir_representation.h"
 
 #include <llvm/Object/ELFObjectFile.h>
 #include <llvm/Object/ELFTypes.h>
@@ -40,7 +43,6 @@ std::set<std::string> CollectAllExportedHeaders(
 
 class VersionScriptParser {
  public:
-
   enum LineScope {
     global,
     local,
@@ -60,7 +62,6 @@ class VersionScriptParser {
   const std::set<std::string> &GetGlobVarRegexs();
 
  private:
-
   bool ParseInnerBlock(std::ifstream &symbol_ifstream);
 
   LineScope GetLineScope(std::string &line, LineScope scope);
@@ -101,28 +102,30 @@ inline std::string FindAndReplace(const std::string &candidate_str,
 
 
 class SoFileParser {
-public:
-    static std::unique_ptr<SoFileParser> Create(const ObjectFile *obj);
-    virtual const std::map<std::string, ElfFunctionIR> &GetFunctions() const = 0;
-    virtual const std::map<std::string, ElfObjectIR> &GetGlobVars() const = 0;
-    virtual ~SoFileParser() {};
-    virtual void GetSymbols() = 0;
+ public:
+  virtual ~SoFileParser() {}
+
+  static std::unique_ptr<SoFileParser> Create(const ObjectFile *obj);
+  virtual const std::map<std::string, ElfFunctionIR> &GetFunctions() const = 0;
+  virtual const std::map<std::string, ElfObjectIR> &GetGlobVars() const = 0;
+  virtual void GetSymbols() = 0;
 };
 
 template<typename T>
 class ELFSoFileParser : public SoFileParser {
- public:
-  const std::map<std::string, ElfFunctionIR> &GetFunctions() const override;
-
-  const std::map<std::string, ElfObjectIR> &GetGlobVars() const override;
-
+ private:
   LLVM_ELF_IMPORT_TYPES_ELFT(T)
   typedef ELFFile<T> ELFO;
   typedef typename ELFO::Elf_Sym Elf_Sym;
 
+ public:
   ELFSoFileParser(const ELFObjectFile<T> *obj) : obj_(obj) {}
-  virtual ~ELFSoFileParser() override {};
+  ~ELFSoFileParser() override {}
+
+  const std::map<std::string, ElfFunctionIR> &GetFunctions() const override;
+  const std::map<std::string, ElfObjectIR> &GetGlobVars() const override;
   void GetSymbols() override;
+
  private:
   const ELFObjectFile<T> *obj_;
   std::map<std::string, abi_util::ElfFunctionIR> functions_;
@@ -138,11 +141,11 @@ std::vector<T> FindRemovedElements(
     const std::map<K, T> &new_elements_map) {
   std::vector<T> removed_elements;
   for (auto &&map_element : old_elements_map) {
-      auto element_key = map_element.first;
-      auto new_element = new_elements_map.find(element_key);
-      if (new_element == new_elements_map.end()) {
-        removed_elements.emplace_back(map_element.second);
-      }
+    auto element_key = map_element.first;
+    auto new_element = new_elements_map.find(element_key);
+    if (new_element == new_elements_map.end()) {
+      removed_elements.emplace_back(map_element.second);
+    }
   }
   return removed_elements;
 }
@@ -190,4 +193,6 @@ std::vector<std::pair<T, T>> FindCommonElements(
   return common_elements;
 }
 
-} // namespace abi_util
+}  // namespace abi_util
+
+#endif  // HEADER_ABI_UTIL_H_

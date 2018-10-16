@@ -14,8 +14,7 @@
 
 #include "fixed_argv.h"
 #include "frontend_action_factory.h"
-
-#include <header_abi_util.h>
+#include "header_abi_util.h"
 
 #include <clang/Frontend/FrontendActions.h>
 #include <clang/Tooling/CommonOptionsParser.h>

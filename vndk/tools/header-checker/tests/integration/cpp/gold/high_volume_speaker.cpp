@@ -1,6 +1,6 @@
 #include <high_volume_speaker.h>
 
-void HighVolumeSpeaker::Speak() { }
+void HighVolumeSpeaker::Speak() {}
 
 HighVolumeSpeaker *HighVolumeSpeaker::BadPractice(BP_PARAMETER_TYPE id) {
   return nullptr;

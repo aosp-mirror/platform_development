@@ -15,7 +15,8 @@
 #ifndef FRONTEND_ACTION_FACTORY_H_
 #define FRONTEND_ACTION_FACTORY_H_
 
-#include <ir_representation.h>
+#include "ir_representation.h"
+
 #include <clang/Tooling/Tooling.h>
 
 #include <vector>
