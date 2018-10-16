@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "header_abi_util.h"
+#include "version_script_parser.h"
 
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/FileSystem.h>
