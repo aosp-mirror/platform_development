@@ -60,7 +60,6 @@ cc_binary_host {
         "header-abi-dumper/src/frontend_action_factory.cpp",
         "header-abi-dumper/src/header_checker.cpp",
         "header-abi-dumper/src/workaround_fortify.cpp",
-        "header-abi-dumper/src/workaround_openmp.cpp",
     ],
 
     static_libs: [
