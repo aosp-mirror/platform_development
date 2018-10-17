@@ -16,7 +16,7 @@
 #define AST_PROCESSING_H_
 
 #include "ast_util.h"
-#include <ir_representation.h>
+#include "ir_representation.h"
 
 #include <clang/AST/AST.h>
 #include <clang/AST/ASTConsumer.h>
@@ -82,4 +82,4 @@ class HeaderASTConsumer : public clang::ASTConsumer {
   abi_util::TextFormatIR text_format_;
 };
 
-#endif // AST_PROCESSING_H_
+#endif  // AST_PROCESSING_H_

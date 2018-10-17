@@ -11,10 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#ifndef IR_PROTOBUF_
-#define IR_PROTOBUF_
 
-#include <ir_representation.h>
+#ifndef IR_REPRESENTATION_PROTOBUF_H_
+#define IR_REPRESENTATION_PROTOBUF_H_
+
+#include "ir_representation.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
@@ -33,7 +34,7 @@ namespace abi_util {
 
 inline abi_diff::CompatibilityStatus CompatibilityStatusIRToProtobuf(
     CompatibilityStatusIR status) {
-  switch(status) {
+  switch (status) {
     case CompatibilityStatusIR::Incompatible:
       return abi_diff::CompatibilityStatus::INCOMPATIBLE;
     case CompatibilityStatusIR::Extension:
@@ -46,7 +47,7 @@ inline abi_diff::CompatibilityStatus CompatibilityStatusIRToProtobuf(
 
 inline abi_dump::ElfSymbolBinding ElfSymbolBindingIRToProtobuf(
     ElfSymbolIR::ElfSymbolBinding binding) {
-  switch(binding) {
+  switch (binding) {
     case ElfSymbolIR::ElfSymbolBinding::Global:
       return abi_dump::ElfSymbolBinding::Global;
     case ElfSymbolIR::ElfSymbolBinding::Weak:
@@ -59,7 +60,7 @@ inline abi_dump::ElfSymbolBinding ElfSymbolBindingIRToProtobuf(
 
 inline ElfSymbolIR::ElfSymbolBinding ElfSymbolBindingProtobufToIR(
     abi_dump::ElfSymbolBinding binding) {
-  switch(binding) {
+  switch (binding) {
     case abi_dump::ElfSymbolBinding::Global:
       return ElfSymbolIR::ElfSymbolBinding::Global;
     case abi_dump::ElfSymbolBinding::Weak:
@@ -197,7 +198,7 @@ inline VTableComponentIR::Kind VTableComponentKindProtobufToIR(
 class IRToProtobufConverter {
  private:
   static bool AddTemplateInformation(
-    abi_dump::TemplateInfo *ti, const abi_util::TemplatedArtifactIR *ta);
+      abi_dump::TemplateInfo *ti, const abi_util::TemplatedArtifactIR *ta);
 
   static bool AddTypeInfo(
       abi_dump::BasicNamedAndTypedDecl *type_info, const TypeIR *typep);
@@ -216,6 +217,7 @@ class IRToProtobufConverter {
 
   static bool AddEnumFields(abi_dump::EnumType *enum_protobuf,
                             const EnumTypeIR *enum_ir);
+
  public:
   static abi_dump::EnumType ConvertEnumTypeIR(const EnumTypeIR *enump);
 
@@ -265,29 +267,30 @@ class IRToProtobufConverter {
 
 class IRDiffToProtobufConverter {
  private:
-  static bool AddTypeInfoDiff(abi_diff::TypeInfoDiff *type_info_diff_protobuf,
-                              const TypeDiffIR *type_diff_ir);
+  static bool AddTypeInfoDiff(
+      abi_diff::TypeInfoDiff *type_info_diff_protobuf,
+      const TypeDiffIR *type_diff_ir);
 
   static bool AddVTableLayoutDiff(
-    abi_diff::VTableLayoutDiff *vtable_layout_diff_protobuf,
-    const VTableLayoutDiffIR *vtable_layout_diff_ir);
+      abi_diff::VTableLayoutDiff *vtable_layout_diff_protobuf,
+      const VTableLayoutDiffIR *vtable_layout_diff_ir);
 
   static bool AddBaseSpecifierDiffs(
-    abi_diff::CXXBaseSpecifierDiff *base_specifier_diff_protobuf,
-    const CXXBaseSpecifierDiffIR *base_specifier_diff_ir);
+      abi_diff::CXXBaseSpecifierDiff *base_specifier_diff_protobuf,
+      const CXXBaseSpecifierDiffIR *base_specifier_diff_ir);
 
   static bool AddRecordFields(
-    abi_diff::RecordTypeDiff *record_diff_protobuf,
-    const std::vector<const RecordFieldIR *> &record_fields_removed_ir,
-    bool removed);
+      abi_diff::RecordTypeDiff *record_diff_protobuf,
+      const std::vector<const RecordFieldIR *> &record_fields_removed_ir,
+      bool removed);
 
   static bool AddRecordFieldDiffs(
-    abi_diff::RecordTypeDiff *record_diff_protobuf,
-    const std::vector<RecordFieldDiffIR> &record_field_diff_ir);
+      abi_diff::RecordTypeDiff *record_diff_protobuf,
+      const std::vector<RecordFieldDiffIR> &record_field_diff_ir);
 
   static bool AddEnumUnderlyingTypeDiff(
-    abi_diff::UnderlyingTypeDiff *underlying_type_diff_protobuf,
-    const std::pair<std::string, std::string> *underlying_type_diff_ir);
+      abi_diff::UnderlyingTypeDiff *underlying_type_diff_protobuf,
+      const std::pair<std::string, std::string> *underlying_type_diff_ir);
 
  public:
   static abi_diff::RecordTypeDiff ConvertRecordTypeDiffIR(
@@ -335,7 +338,9 @@ class ProtobufIRDumper : public IRDumper, public IRToProtobufConverter {
 
  public:
   ProtobufIRDumper(const std::string &dump_path)
-      : IRDumper(dump_path), tu_ptr_(new abi_dump::TranslationUnit()) { }
+      : IRDumper(dump_path), tu_ptr_(new abi_dump::TranslationUnit()) {}
+
+  ~ProtobufIRDumper() override {}
 
   bool AddLinkableMessageIR(const LinkableMessageIR *) override;
 
@@ -343,18 +348,19 @@ class ProtobufIRDumper : public IRDumper, public IRToProtobufConverter {
 
   bool Dump() override;
 
-  ~ProtobufIRDumper() override { }
-
  private:
   std::unique_ptr<abi_dump::TranslationUnit> tu_ptr_;
 };
 
 
 class ProtobufTextFormatToIRReader : public TextFormatToIRReader {
- public:
+ private:
+  template <typename T>
+  using RepeatedPtrField = google::protobuf::RepeatedPtrField<T>;
 
+ public:
   ProtobufTextFormatToIRReader(const std::set<std::string> *exported_headers)
-      : TextFormatToIRReader(exported_headers) { }
+      : TextFormatToIRReader(exported_headers) {}
 
   bool ReadDump(const std::string &dump_file) override;
 
@@ -381,9 +387,9 @@ class ProtobufTextFormatToIRReader : public TextFormatToIRReader {
 
   void ReadRvalueReferenceTypes(const abi_dump::TranslationUnit &tu);
 
-  void ReadElfFunctions (const abi_dump::TranslationUnit &tu);
+  void ReadElfFunctions(const abi_dump::TranslationUnit &tu);
 
-  void ReadElfObjects (const abi_dump::TranslationUnit &tu);
+  void ReadElfObjects(const abi_dump::TranslationUnit &tu);
 
   void ReadTypeInfo(const abi_dump::BasicNamedAndTypedDecl &type_info,
                     TypeIR *typep);
@@ -394,32 +400,34 @@ class ProtobufTextFormatToIRReader : public TextFormatToIRReader {
       const abi_dump::FunctionType &function_type_protobuf);
 
   RecordTypeIR RecordTypeProtobufToIR(
-       const abi_dump::RecordType &record_type_protobuf);
+      const abi_dump::RecordType &record_type_protobuf);
 
   std::vector<RecordFieldIR> RecordFieldsProtobufToIR(
-    const google::protobuf::RepeatedPtrField<abi_dump::RecordFieldDecl> &rfp);
+      const RepeatedPtrField<abi_dump::RecordFieldDecl> &rfp);
 
   std::vector<CXXBaseSpecifierIR> RecordCXXBaseSpecifiersProtobufToIR(
-    const google::protobuf::RepeatedPtrField<abi_dump::CXXBaseSpecifier> &rbs);
+      const RepeatedPtrField<abi_dump::CXXBaseSpecifier> &rbs);
 
   std::vector<EnumFieldIR> EnumFieldsProtobufToIR(
-       const google::protobuf::RepeatedPtrField<abi_dump::EnumFieldDecl> &efp);
+      const RepeatedPtrField<abi_dump::EnumFieldDecl> &efp);
 
   EnumTypeIR EnumTypeProtobufToIR(
-       const abi_dump::EnumType &enum_type_protobuf);
+      const abi_dump::EnumType &enum_type_protobuf);
 
   VTableLayoutIR VTableLayoutProtobufToIR(
-    const abi_dump::VTableLayout &vtable_layout_protobuf);
+      const abi_dump::VTableLayout &vtable_layout_protobuf);
 
   TemplateInfoIR TemplateInfoProtobufToIR(
-       const abi_dump::TemplateInfo &template_info_protobuf);
+      const abi_dump::TemplateInfo &template_info_protobuf);
 };
 
 class ProtobufIRDiffDumper : public IRDiffDumper {
  public:
   ProtobufIRDiffDumper(const std::string &dump_path)
       : IRDiffDumper(dump_path),
-        diff_tu_(new abi_diff::TranslationUnitDiff()) { }
+        diff_tu_(new abi_diff::TranslationUnitDiff()) {}
+
+  ~ProtobufIRDiffDumper() override {}
 
   bool AddDiffMessageIR(const DiffMessageIR *, const std::string &type_stack,
                         DiffKind diff_kind) override;
@@ -437,9 +445,7 @@ class ProtobufIRDiffDumper : public IRDiffDumper {
 
   bool Dump() override;
 
-   CompatibilityStatusIR GetCompatibilityStatusIR() override;
-
-   ~ProtobufIRDiffDumper() override { }
+  CompatibilityStatusIR GetCompatibilityStatusIR() override;
 
  private:
   // User defined types.
@@ -474,6 +480,6 @@ class ProtobufIRDiffDumper : public IRDiffDumper {
   std::unique_ptr<abi_diff::TranslationUnitDiff> diff_tu_;
 };
 
-} // abi_util
+}  // namespace abi_util
 
-#endif // IR_PROTOBUF_
+#endif  // IR_REPRESENTATION_PROTOBUF_H_

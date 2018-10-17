@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef ABI_DIFF_WRAPPERS_H
-#define ABI_DIFF_WRAPPERS_H
+#ifndef ABI_DIFF_WRAPPERS_H_
+#define ABI_DIFF_WRAPPERS_H_
 
-#include <abi_diff_helpers.h>
-#include <ir_representation.h>
+#include "abi_diff_helpers.h"
+#include "ir_representation.h"
 
 #include <deque>
 
@@ -30,13 +30,11 @@ template <typename T, typename F>
 static bool IgnoreSymbol(const T *element,
                          const std::set<std::string> &ignored_symbols,
                          F func) {
-  return ignored_symbols.find(func(element)) !=
-      ignored_symbols.end();
+  return ignored_symbols.find(func(element)) != ignored_symbols.end();
 }
 
 template <typename T>
 class DiffWrapper : public AbiDiffHelper {
-
  public:
   DiffWrapper(const T *oldp, const T *newp,
               abi_util::IRDiffDumper *ir_diff_dumper,
@@ -45,7 +43,8 @@ class DiffWrapper : public AbiDiffHelper {
               const abi_util::DiffPolicyOptions &diff_policy_options,
               std::set<std::string> *type_cache)
       : AbiDiffHelper(old_types, new_types, diff_policy_options, type_cache,
-                      ir_diff_dumper), oldp_(oldp), newp_(newp) { }
+                      ir_diff_dumper),
+        oldp_(oldp), newp_(newp) {}
 
   bool DumpDiff(abi_util::IRDiffDumper::DiffKind diff_kind);
 
@@ -54,6 +53,6 @@ class DiffWrapper : public AbiDiffHelper {
   const T *newp_;
 };
 
-} // abi_diff_wrappers
+}  // namespace abi_diff_wrappers
 
-#endif // ABI_DIFF_WRAPPERS_H
+#endif  // ABI_DIFF_WRAPPERS_H_

@@ -15,7 +15,7 @@
 #ifndef FRONTEND_ACTION_H_
 #define FRONTEND_ACTION_H_
 
-#include <ir_representation.h>
+#include "ir_representation.h"
 
 #include <clang/Frontend/FrontendAction.h>
 #include <llvm/ADT/StringRef.h>

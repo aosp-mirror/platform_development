@@ -11,10 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#ifndef IR_JSON_
-#define IR_JSON_
 
-#include <ir_representation.h>
+#ifndef IR_REPRESENTATION_JSON_H_
+#define IR_REPRESENTATION_JSON_H_
+
+#include "ir_representation.h"
 
 #include <json/value.h>
 
@@ -118,13 +119,13 @@ class JsonIRDumper : public IRDumper, public IRToJsonConverter {
  public:
   JsonIRDumper(const std::string &dump_path);
 
+  ~JsonIRDumper() override {}
+
   bool AddLinkableMessageIR(const LinkableMessageIR *) override;
 
   bool AddElfSymbolMessageIR(const ElfSymbolIR *) override;
 
   bool Dump() override;
-
-  ~JsonIRDumper() override {}
 
  private:
   JsonObject translation_unit_;
@@ -281,6 +282,7 @@ class JsonToIRReader : public TextFormatToIRReader {
 
   static EnumTypeIR EnumTypeJsonToIR(const JsonObjectRef &enum_type);
 };
-} // namespace abi_util
 
-#endif // IR_JSON_
+}  // namespace abi_util
+
+#endif  // IR_REPRESENTATION_JSON_H_

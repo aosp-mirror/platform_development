@@ -12,20 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <ir_representation_protobuf.h>
+#include "ir_representation_protobuf.h"
 
 #include <llvm/Support/raw_ostream.h>
 
 #include <fstream>
 #include <iostream>
-#include <string>
 #include <memory>
+#include <string>
 
 namespace abi_util {
 
 void ProtobufTextFormatToIRReader::ReadTypeInfo(
-    const abi_dump::BasicNamedAndTypedDecl &type_info,
-    TypeIR *typep) {
+    const abi_dump::BasicNamedAndTypedDecl &type_info, TypeIR *typep) {
   typep->SetLinkerSetKey(type_info.linker_set_key());
   typep->SetName(type_info.name());
   typep->SetSourceFile(type_info.source_file());
@@ -72,7 +71,7 @@ TemplateInfoIR ProtobufTextFormatToIRReader::TemplateInfoProtobufToIR(
   return template_info_ir;
 }
 
-template< typename T>
+template <typename T>
 static void SetupCFunctionLikeIR(const T &cfunction_like_protobuf,
                                  CFunctionLikeIR *cfunction_like_ir) {
   cfunction_like_ir->SetReturnType(cfunction_like_protobuf.return_type());
@@ -387,8 +386,7 @@ bool IRToProtobufConverter::AddTemplateInformation(
 }
 
 bool IRToProtobufConverter::AddTypeInfo(
-    abi_dump::BasicNamedAndTypedDecl *type_info,
-    const TypeIR *typep) {
+    abi_dump::BasicNamedAndTypedDecl *type_info, const TypeIR *typep) {
   if (!type_info || !typep) {
     llvm::errs() << "Typeinfo not valid\n";
     return false;
@@ -522,8 +520,8 @@ abi_dump::RecordType IRToProtobufConverter::ConvertRecordTypeIR(
       !AddVTableLayout(&added_record_type, recordp) ||
       !AddTagTypeInfo(added_record_type.mutable_tag_info(), recordp) ||
       !(recordp->GetTemplateElements().size() ?
-       AddTemplateInformation(added_record_type.mutable_template_info(),
-                              recordp) : true)) {
+        AddTemplateInformation(added_record_type.mutable_template_info(),
+                               recordp) : true)) {
     llvm::errs() << "Template information could not be added\n";
     ::exit(1);
   }
@@ -837,8 +835,8 @@ abi_diff::RecordTypeDiff IRDiffToProtobufConverter::ConvertRecordTypeDiffIR(
     abi_diff::TypeInfoDiff *type_info_diff =
         record_type_diff_protobuf.mutable_type_info_diff();
     if (!AddTypeInfoDiff(type_info_diff, type_diff_ir)) {
-        llvm::errs() << "RecordType could not be converted\n";
-       ::exit(1);
+      llvm::errs() << "RecordType could not be converted\n";
+      ::exit(1);
     }
   }
   // If vtables differ.
@@ -856,7 +854,7 @@ abi_diff::RecordTypeDiff IRDiffToProtobufConverter::ConvertRecordTypeDiffIR(
   // If base specifiers differ.
   const CXXBaseSpecifierDiffIR *base_specifier_diff_ir =
       record_type_diff_ir->GetBaseSpecifiers();
-  if ( base_specifier_diff_ir != nullptr) {
+  if (base_specifier_diff_ir != nullptr) {
     abi_diff::CXXBaseSpecifierDiff *base_specifier_diff_protobuf =
         record_type_diff_protobuf.mutable_bases_diff();
     if (!AddBaseSpecifierDiffs(base_specifier_diff_protobuf,
@@ -926,9 +924,9 @@ abi_diff::EnumTypeDiff IRDiffToProtobufConverter::ConvertEnumTypeDiffIR(
   const std::pair<std::string, std::string> *underlying_type_diff =
       enum_type_diff_ir->GetUnderlyingTypeDiff();
   if ((underlying_type_diff != nullptr &&
-      !AddEnumUnderlyingTypeDiff(
-          enum_type_diff_protobuf.mutable_underlying_type_diff(),
-          underlying_type_diff)) ||
+       !AddEnumUnderlyingTypeDiff(
+           enum_type_diff_protobuf.mutable_underlying_type_diff(),
+           underlying_type_diff)) ||
       !AddEnumFields(enum_type_diff_protobuf.mutable_fields_removed(),
                      enum_type_diff_ir->GetFieldsRemoved()) ||
       !AddEnumFields(enum_type_diff_protobuf.mutable_fields_added(),
@@ -970,12 +968,10 @@ abi_diff::FunctionDeclDiff IRDiffToProtobufConverter::ConvertFunctionDiffIR(
     llvm::errs() << "Function diff could not be added\n";
     ::exit(1);
   }
-  *old_function =
-      IRToProtobufConverter::ConvertFunctionIR(
-          function_diff_ir->GetOldFunction());
-  *new_function =
-      IRToProtobufConverter::ConvertFunctionIR(
-          function_diff_ir->GetNewFunction());
+  *old_function = IRToProtobufConverter::ConvertFunctionIR(
+      function_diff_ir->GetOldFunction());
+  *new_function = IRToProtobufConverter::ConvertFunctionIR(
+      function_diff_ir->GetNewFunction());
   return function_diff;
 }
 
@@ -1195,8 +1191,8 @@ CompatibilityStatusIR ProtobufIRDiffDumper::GetCompatibilityStatusIR() {
         combined_status | CompatibilityStatusIR::UnreferencedChanges;
   }
 
-  if(diff_tu_->removed_elf_functions().size() != 0 ||
-     diff_tu_->removed_elf_objects().size() != 0) {
+  if (diff_tu_->removed_elf_functions().size() != 0 ||
+      diff_tu_->removed_elf_objects().size() != 0) {
     combined_status = combined_status | CompatibilityStatusIR::ElfIncompatible;
   }
 
@@ -1208,38 +1204,33 @@ void ProtobufIRDiffDumper::AddCompatibilityStatusIR(
   diff_tu_->set_compatibility_status(CompatibilityStatusIRToProtobuf(status));
 }
 
-bool ProtobufIRDiffDumper::AddDiffMessageIR(
-    const DiffMessageIR *message,
-    const std::string &type_stack,
-    DiffKind diff_kind) {
+bool ProtobufIRDiffDumper::AddDiffMessageIR(const DiffMessageIR *message,
+                                            const std::string &type_stack,
+                                            DiffKind diff_kind) {
   switch (message->Kind()) {
     case RecordTypeKind:
       return AddRecordTypeDiffIR(
-          static_cast<const RecordTypeDiffIR *>(message),
-          type_stack, diff_kind);
+          static_cast<const RecordTypeDiffIR *>(message), type_stack,
+          diff_kind);
     case EnumTypeKind:
       return AddEnumTypeDiffIR(
-          static_cast<const EnumTypeDiffIR *>(message),
-          type_stack, diff_kind);
+          static_cast<const EnumTypeDiffIR *>(message), type_stack, diff_kind);
     case GlobalVarKind:
       return AddGlobalVarDiffIR(
-          static_cast<const GlobalVarDiffIR*>(message),
-          type_stack, diff_kind);
+          static_cast<const GlobalVarDiffIR*>(message), type_stack, diff_kind);
     case FunctionKind:
       return AddFunctionDiffIR(
-          static_cast<const FunctionDiffIR*>(message),
-          type_stack, diff_kind);
+          static_cast<const FunctionDiffIR*>(message), type_stack, diff_kind);
     default:
       break;
   }
-  llvm::errs() << "Dump Diff attempted on something not a user defined type" <<
-                   "/ function / global variable\n";
+  llvm::errs() << "Dump Diff attempted on something not a user defined type / "
+               << "function / global variable\n";
   return false;
 }
 
 bool ProtobufIRDiffDumper::AddLinkableMessageIR(
-    const LinkableMessageIR *message,
-    DiffKind diff_kind) {
+    const LinkableMessageIR *message, DiffKind diff_kind) {
   switch (message->GetKind()) {
     case RecordTypeKind:
       return AddLoneRecordTypeDiffIR(
@@ -1256,13 +1247,13 @@ bool ProtobufIRDiffDumper::AddLinkableMessageIR(
     default:
       break;
   }
-  llvm::errs() << "Dump Diff attempted on something not a user defined type" <<
-                   "/ function / global variable\n";
+  llvm::errs() << "Dump Diff attempted on something not a user defined type / "
+               << "function / global variable\n";
   return false;
 }
 
-bool ProtobufIRDiffDumper::AddElfSymbolMessageIR (const ElfSymbolIR *elf_symbol,
-                                                  DiffKind diff_kind) {
+bool ProtobufIRDiffDumper::AddElfSymbolMessageIR(const ElfSymbolIR *elf_symbol,
+                                                 DiffKind diff_kind) {
   switch (elf_symbol->GetKind()) {
     case ElfSymbolIR::ElfFunctionKind:
       return AddElfFunctionIR(static_cast<const ElfFunctionIR *>(elf_symbol),
@@ -1280,7 +1271,7 @@ bool ProtobufIRDiffDumper::AddElfSymbolMessageIR (const ElfSymbolIR *elf_symbol,
 bool ProtobufIRDiffDumper::AddElfFunctionIR(
     const ElfFunctionIR *elf_function_ir, DiffKind diff_kind) {
   abi_dump::ElfFunction *added_elf_function = nullptr;
-  switch(diff_kind) {
+  switch (diff_kind) {
     case DiffKind::Removed:
       added_elf_function = diff_tu_->add_removed_elf_functions();
       break;
@@ -1302,7 +1293,7 @@ bool ProtobufIRDiffDumper::AddElfFunctionIR(
 bool ProtobufIRDiffDumper::AddElfObjectIR(
     const ElfObjectIR *elf_object_ir, DiffKind diff_kind) {
   abi_dump::ElfObject *added_elf_object = nullptr;
-  switch(diff_kind) {
+  switch (diff_kind) {
     case DiffKind::Removed:
       added_elf_object = diff_tu_->add_removed_elf_objects();
       break;
@@ -1322,8 +1313,7 @@ bool ProtobufIRDiffDumper::AddElfObjectIR(
 }
 
 bool ProtobufIRDiffDumper::AddLoneRecordTypeDiffIR(
-    const RecordTypeIR *record_type_ir,
-    DiffKind diff_kind) {
+    const RecordTypeIR *record_type_ir, DiffKind diff_kind) {
   abi_dump::RecordType *added_record_type = nullptr;
   switch (diff_kind) {
     case DiffKind::Removed:
@@ -1348,8 +1338,7 @@ bool ProtobufIRDiffDumper::AddLoneRecordTypeDiffIR(
 }
 
 bool ProtobufIRDiffDumper::AddLoneFunctionDiffIR(
-    const FunctionIR *function_ir,
-    DiffKind diff_kind) {
+    const FunctionIR *function_ir, DiffKind diff_kind) {
   abi_dump::FunctionDecl *added_function = nullptr;
   switch (diff_kind) {
     case DiffKind::Removed:
@@ -1409,8 +1398,7 @@ bool ProtobufIRDiffDumper::AddLoneGlobalVarDiffIR(
 }
 
 bool ProtobufIRDiffDumper::AddRecordTypeDiffIR(
-    const RecordTypeDiffIR *record_diff_ir,
-    const std::string &type_stack,
+    const RecordTypeDiffIR *record_diff_ir, const std::string &type_stack,
     DiffKind diff_kind) {
   abi_diff::RecordTypeDiff *added_record_type_diff = nullptr;
   switch (diff_kind) {
@@ -1482,8 +1470,7 @@ bool ProtobufIRDiffDumper::AddEnumTypeDiffIR(const EnumTypeDiffIR *enum_diff_ir,
 }
 
 bool ProtobufIRDiffDumper::AddGlobalVarDiffIR(
-    const GlobalVarDiffIR *global_var_diff_ir,
-    const std::string &type_stack,
+    const GlobalVarDiffIR *global_var_diff_ir, const std::string &type_stack,
     DiffKind diff_kind) {
   abi_diff::GlobalVarDeclDiff *added_global_var_diff =
       diff_tu_->add_global_var_diffs();
