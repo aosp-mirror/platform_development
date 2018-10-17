@@ -71,8 +71,8 @@ message FunctionDeclDiff {
 message GlobalVarDeclDiff {
   optional string type_stack = 1;
   optional string name = 2;
-  optional abi_dump.GlobalVarDecl old = 3; // Old global var
-  optional abi_dump.GlobalVarDecl new = 4; // New global var
+  optional abi_dump.GlobalVarDecl old = 3;  // Old global var
+  optional abi_dump.GlobalVarDecl new = 4;  // New global var
 }
 
 message TranslationUnitDiff {

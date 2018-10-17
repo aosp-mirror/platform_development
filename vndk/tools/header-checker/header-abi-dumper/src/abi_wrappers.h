@@ -16,7 +16,7 @@
 #define ABI_WRAPPERS_H_
 
 #include "ast_util.h"
-#include <ir_representation.h>
+#include "ir_representation.h"
 
 #include <clang/AST/AST.h>
 #include <clang/AST/ASTConsumer.h>
@@ -28,10 +28,10 @@ namespace abi_wrapper {
 
 struct TypeAndCreationStatus {
   std::unique_ptr<abi_util::TypeIR> typep_;
-  bool should_create_type_; // Whether the type is to be created.
+  bool should_create_type_;  // Whether the type is to be created.
   TypeAndCreationStatus(std::unique_ptr<abi_util::TypeIR> &&typep,
                         bool should_create_type = true)
-      : typep_(std::move(typep)), should_create_type_(should_create_type) { }
+      : typep_(std::move(typep)), should_create_type_(should_create_type) {}
 };
 
 class ABIWrapper {
@@ -162,7 +162,6 @@ class FunctionDeclWrapper : public ABIWrapper {
 
   bool SetupThisParameter(abi_util::FunctionIR *functionp,
                           const std::string &source_file);
-
 };
 
 class FunctionTypeWrapper : public ABIWrapper {
@@ -215,11 +214,12 @@ class GlobalVarDeclWrapper : public ABIWrapper {
 
  private:
   const clang::VarDecl *global_var_decl_;
+
  private:
   bool SetupGlobalVar(abi_util::GlobalVarIR *global_varp,
                       const std::string &source_file);
 };
 
-} //end namespace abi_wrapper
+}  // namespace abi_wrapper
 
-#endif // ABI_WRAPPERS_H_
+#endif  // ABI_WRAPPERS_H_

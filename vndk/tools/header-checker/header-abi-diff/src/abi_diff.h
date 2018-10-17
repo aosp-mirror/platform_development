@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "abi_diff_wrappers.h"
+#ifndef ABI_DIFF_H_
+#define ABI_DIFF_H_
 
-#include <ir_representation.h>
+#include "abi_diff_wrappers.h"
+#include "ir_representation.h"
 
 #include <string>
 #include <vector>
@@ -38,7 +40,7 @@ class HeaderAbiDiff {
         diff_policy_options_(diff_policy_options),
         check_all_apis_(check_all_apis),
         text_format_old_(text_format_old), text_format_new_(text_format_new),
-        text_format_diff_(text_format_diff) { }
+        text_format_diff_(text_format_diff) {}
 
   abi_util::CompatibilityStatusIR GenerateCompatibilityReport();
 
@@ -50,13 +52,13 @@ class HeaderAbiDiff {
 
   template <typename T, typename ElfSymbolType>
   bool CollectDynsymExportables(
-    const AbiElementMap<T> &old_exportables,
-    const AbiElementMap<T> &new_exportables,
-    const AbiElementMap<ElfSymbolType> &old_elf_symbols,
-    const AbiElementMap<ElfSymbolType> &new_elf_symbols,
-    const AbiElementMap<const abi_util::TypeIR *> &old_types_map,
-    const AbiElementMap<const abi_util::TypeIR *> &new_types_map,
-    abi_util::IRDiffDumper *ir_diff_dumper);
+      const AbiElementMap<T> &old_exportables,
+      const AbiElementMap<T> &new_exportables,
+      const AbiElementMap<ElfSymbolType> &old_elf_symbols,
+      const AbiElementMap<ElfSymbolType> &new_elf_symbols,
+      const AbiElementMap<const abi_util::TypeIR *> &old_types_map,
+      const AbiElementMap<const abi_util::TypeIR *> &new_types_map,
+      abi_util::IRDiffDumper *ir_diff_dumper);
 
   template <typename T>
   bool Collect(
@@ -145,3 +147,5 @@ class HeaderAbiDiff {
   abi_util::TextFormatIR text_format_new_;
   abi_util::TextFormatIR text_format_diff_;
 };
+
+#endif  // ABI_DIFF_H_

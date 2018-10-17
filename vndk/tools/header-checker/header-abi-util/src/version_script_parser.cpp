@@ -12,27 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <header_abi_util.h>
+#include "version_script_parser.h"
 
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/Path.h>
 
-#include <memory>
 #include <fstream>
 #include <iostream>
-#include <set>
-#include <unordered_set>
-#include <string>
-#include <vector>
+#include <memory>
 #include <regex>
+#include <set>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
 namespace abi_util {
 
 #define FUTURE_API 10000
 
-std::unordered_set<std::string> AllArches({"arm", "arm64", "x86", "x86_64",
-                                        "mips", "mips64"});
+std::unordered_set<std::string> AllArches({
+    "arm", "arm64", "x86", "x86_64", "mips", "mips64"});
 
 static bool StringContains(const std::string &line,
                            const std::string &substring) {
@@ -53,8 +53,8 @@ static bool LineSatisfiesArch(const std::string &line,
 
 VersionScriptParser::VersionScriptParser(const std::string &version_script,
                                          const std::string &arch,
-                                         const std::string &api) :
-  version_script_(version_script), arch_(arch), api_(ApiStrToInt(api)) { }
+                                         const std::string &api)
+    : version_script_(version_script), arch_(arch), api_(ApiStrToInt(api)) {}
 
 int VersionScriptParser::ApiStrToInt(const std::string &api) {
   // Follow what build/soong/cc/gen_stub_libs.py does.
@@ -90,7 +90,7 @@ bool VersionScriptParser::SymbolInArchAndApiVersion(const std::string &line,
   }
   // If the arch specific tag / version specific tag was found and the api level
   // required was greater than the api level offered.
-  return (matched_api <=0 || api >= matched_api);
+  return (matched_api <= 0 || api >= matched_api);
 }
 
 bool VersionScriptParser::SymbolExported(const std::string &line,
@@ -121,7 +121,7 @@ void VersionScriptParser::AddToFunctions(std::string &symbol) {
 }
 
 bool VersionScriptParser::ParseSymbolLine(const std::string &line) {
-  //The symbol lies before the ; and the tags are after ;
+  // The symbol lies before the ';' and the tags are after ';'
   std::string::size_type pos = line.find(";");
   if (pos == std::string::npos) {
     llvm::errs() << "Couldn't find end of symbol" << line <<"\n";
@@ -194,22 +194,22 @@ bool VersionScriptParser::Parse() {
     llvm::errs() << "Failed to open version script file\n";
     return false;
   }
-  std::string line = "";
 
+  std::string line;
   while (std::getline(symbol_ifstream, line)) {
     // Skip comment lines.
     if (line.c_str()[0] == '#') {
       continue;
     }
     if (StringContains(line, "{")) {
-
       if ((StringContains(line, "PRIVATE"))) {
         continue;
       }
       ParseInnerBlock(symbol_ifstream);
     }
   }
+
   return true;
 }
 
-} // namespace abi_util
+}  // namespace abi_util

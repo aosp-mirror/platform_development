@@ -14,11 +14,11 @@
 
 #include "abi_diff.h"
 
-#include <fstream>
-
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/raw_ostream.h>
+
+#include <fstream>
 
 static llvm::cl::OptionCategory header_checker_category(
     "header-abi-diff options");
@@ -132,13 +132,13 @@ static const char kWarn[] = "\033[36;1mwarning: \033[0m";
 static const char kError[] = "\033[31;1merror: \033[0m";
 
 bool ShouldEmitWarningMessage(abi_util::CompatibilityStatusIR status) {
-  return (!allow_extensions &&
-      (status & abi_util::CompatibilityStatusIR::Extension)) ||
-      (!allow_unreferenced_changes &&
-      (status & abi_util::CompatibilityStatusIR::UnreferencedChanges)) ||
-      (!allow_unreferenced_elf_symbol_changes &&
-      (status & abi_util::CompatibilityStatusIR::ElfIncompatible)) ||
-      (status & abi_util::CompatibilityStatusIR::Incompatible);
+  return ((!allow_extensions &&
+           (status & abi_util::CompatibilityStatusIR::Extension)) ||
+          (!allow_unreferenced_changes &&
+           (status & abi_util::CompatibilityStatusIR::UnreferencedChanges)) ||
+          (!allow_unreferenced_elf_symbol_changes &&
+           (status & abi_util::CompatibilityStatusIR::ElfIncompatible)) ||
+          (status & abi_util::CompatibilityStatusIR::Incompatible));
 }
 
 int main(int argc, const char **argv) {
@@ -196,7 +196,7 @@ int main(int argc, const char **argv) {
                  << "'s ABI has "
                  << status_str
                  << unreferenced_change_str
-                 << " Please check compatiblity report at : "
+                 << " Please check compatiblity report at: "
                  << compatibility_report << "\n"
                  << "******************************************************\n";
   }

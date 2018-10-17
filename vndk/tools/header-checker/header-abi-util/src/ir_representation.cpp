@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <abi_diff_helpers.h>
-#include <ir_representation.h>
-#include <ir_representation_json.h>
-#include <ir_representation_protobuf.h>
+#include "ir_representation.h"
+
+#include "abi_diff_helpers.h"
+#include "ir_representation_json.h"
+#include "ir_representation_protobuf.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
@@ -30,7 +31,6 @@
 
 #include <string>
 #include <memory>
-
 
 namespace abi_util {
 
@@ -75,9 +75,8 @@ TextFormatToIRReader::CreateTextFormatToIRReader(
   }
 }
 
-void TextFormatToIRReader::AddToODRListMap(
-    const std::string &key,
-    const TypeIR *value) {
+void TextFormatToIRReader::AddToODRListMap(const std::string &key,
+                                           const TypeIR *value) {
   auto map_it = odr_list_map_.find(key);
   if (map_it == odr_list_map_.end()) {
     odr_list_map_.emplace(key, std::list<const TypeIR *>({value}));
@@ -113,9 +112,9 @@ MergeStatus TextFormatToIRReader::DoesUDTypeODRViolationExist(
     const TypeIR *ud_type, const TextFormatToIRReader &addend,
     const std::string ud_type_unique_id_and_source,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map_) {
-  // Per entry in the map :
+  // Per entry in the map:
   // /-----------------------------------------------------------------------\
-  // | UDType->UniqueTagId + UdType->source File => list(const UDTypeIR *)|
+  // | UDType->UniqueTagId + UdType->source File => list(const UDTypeIR *)   |
   // \-----------------------------------------------------------------------/
   auto it = odr_list_map_.find(ud_type_unique_id_and_source);
   if (it == odr_list_map_.end()) {
@@ -132,17 +131,16 @@ MergeStatus TextFormatToIRReader::DoesUDTypeODRViolationExist(
                             nullptr, local_to_global_type_id_map_);
   for (auto &contender_ud : it->second) {
     if (diff_helper.CompareAndDumpTypeDiff(contender_ud->GetSelfType(),
-                                           ud_type->GetSelfType())
-        == DiffStatus::no_diff) {
-      local_to_global_type_id_map_->emplace(ud_type->GetSelfType(),
-                                            MergeStatus(
-                                                false,
-                                                contender_ud->GetSelfType()));
+                                           ud_type->GetSelfType()) ==
+        DiffStatus::no_diff) {
+      local_to_global_type_id_map_->emplace(
+          ud_type->GetSelfType(),
+          MergeStatus(false, contender_ud->GetSelfType()));
       return MergeStatus(false, contender_ud->GetSelfType());
     }
   }
 #ifdef DEBUG
-  llvm::errs() << "ODR violation detected for :" << ud_type->GetName() << "\n";
+  llvm::errs() << "ODR violation detected for: " << ud_type->GetName() << "\n";
 #endif
   return MergeStatus(true, (*(it->second.begin()))->GetSelfType());
 }
@@ -151,7 +149,7 @@ MergeStatus TextFormatToIRReader::IsTypeNodePresent(
     const TypeIR *addend_node, const TextFormatToIRReader &addend,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
   std::string unique_type_id;
-  switch(addend_node->GetKind()) {
+  switch (addend_node->GetKind()) {
     case RecordTypeKind:
       unique_type_id =
           GetODRListMapKey(static_cast<const RecordTypeIR *>(addend_node));
@@ -181,41 +179,42 @@ MergeStatus TextFormatToIRReader::MergeReferencingTypeInternal(
     const TextFormatToIRReader &addend,
     ReferencesOtherType *references_type,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
-    // First look in the local_to_global_type_id_map for the referenced type's
-    // id.
-    const std::string &referenced_type_id =
-        references_type->GetReferencedType();
-    auto local_to_global_it = local_to_global_type_id_map->find(
-        referenced_type_id);
-    if (local_to_global_it != local_to_global_type_id_map->end()) {
-      // The type was already added to the parent graph. So change the
-      // referenced type to the global type id.
-      references_type->SetReferencedType(local_to_global_it->second.type_id_);
-      return local_to_global_it->second;
-    }
-    // If that did not go through, look at the addend's type_map_ and get the
-    // TypeIR* and call MergeType on it.
-    auto local_type_it = addend.type_graph_.find(referenced_type_id);
-    if (local_type_it != addend.type_graph_.end()) {
-      // We don't care about merge_status.was_newly_added since we wouldn't have
-      // gotten this far if we weren't adding this.
-      MergeStatus merge_status =
-          MergeType(local_type_it->second, addend,
-                    local_to_global_type_id_map);
-      const std::string &global_type_id = merge_status.type_id_;
-      references_type->SetReferencedType(global_type_id);
-      return merge_status;
-    }
-    // The referenced type was hidden, so just set it to type-hidden.
-   const std::string &hidden_type_id = AllocateNewTypeId();
-   references_type->SetReferencedType(hidden_type_id);
-   return MergeStatus(true, hidden_type_id);
+  // First look in the local_to_global_type_id_map for the referenced type's
+  // id.
+  const std::string &referenced_type_id =
+      references_type->GetReferencedType();
+  auto local_to_global_it = local_to_global_type_id_map->find(
+      referenced_type_id);
+  if (local_to_global_it != local_to_global_type_id_map->end()) {
+    // The type was already added to the parent graph. So change the
+    // referenced type to the global type id.
+    references_type->SetReferencedType(local_to_global_it->second.type_id_);
+    return local_to_global_it->second;
+  }
+
+  // If that did not go through, look at the addend's type_map_ and get the
+  // TypeIR* and call MergeType on it.
+  auto local_type_it = addend.type_graph_.find(referenced_type_id);
+  if (local_type_it != addend.type_graph_.end()) {
+    // We don't care about merge_status.was_newly_added since we wouldn't have
+    // gotten this far if we weren't adding this.
+    MergeStatus merge_status =
+        MergeType(local_type_it->second, addend, local_to_global_type_id_map);
+    const std::string &global_type_id = merge_status.type_id_;
+    references_type->SetReferencedType(global_type_id);
+    return merge_status;
+  }
+
+  // The referenced type was hidden, so just set it to type-hidden.
+  const std::string &hidden_type_id = AllocateNewTypeId();
+  references_type->SetReferencedType(hidden_type_id);
+  return MergeStatus(true, hidden_type_id);
 }
 
 void TextFormatToIRReader::MergeRecordFields(
     const TextFormatToIRReader &addend, RecordTypeIR *added_node,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
-  for(auto &field : added_node->GetFields()) {
+  for (auto &field : added_node->GetFields()) {
     MergeReferencingTypeInternal(addend, &field, local_to_global_type_id_map);
   }
 }
@@ -223,7 +222,7 @@ void TextFormatToIRReader::MergeRecordFields(
 void TextFormatToIRReader::MergeRecordCXXBases(
     const TextFormatToIRReader &addend, RecordTypeIR *added_node,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
-  for(auto &base : added_node->GetBases()) {
+  for (auto &base : added_node->GetBases()) {
     MergeReferencingTypeInternal(addend, &base, local_to_global_type_id_map);
   }
 }
@@ -231,9 +230,9 @@ void TextFormatToIRReader::MergeRecordCXXBases(
 void TextFormatToIRReader::MergeRecordTemplateElements(
     const TextFormatToIRReader &addend, RecordTypeIR *added_node,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
-  for(auto &template_element : added_node->GetTemplateElements()) {
-    MergeReferencingTypeInternal(addend, &template_element,
-                         local_to_global_type_id_map);
+  for (auto &template_element : added_node->GetTemplateElements()) {
+    MergeReferencingTypeInternal(
+        addend, &template_element, local_to_global_type_id_map);
   }
 }
 
@@ -331,60 +330,61 @@ template <typename T>
 MergeStatus TextFormatToIRReader::MergeReferencingTypeInternalAndUpdateParent(
     const TextFormatToIRReader &addend, const T *addend_node,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map,
-    AbiElementMap<T> *parent_map, const std::string  &updated_self_type_id) {
-    MergeStatus merge_status;
-    uint64_t old_max_type_id = max_type_id_;
-    // Create copy of addend_node
-      T added_node =
-          *(addend_node);
-      added_node.SetSelfType(updated_self_type_id);
-      // The merge status returned is the merge status of the referenced type.
-      merge_status = MergeReferencingTypeInternal(addend, &added_node,
-                                                  local_to_global_type_id_map);
-      if (merge_status.was_newly_added_) {
-        // Emplace to map (type-referenced -> Referencing type)
-        AddToMapAndTypeGraph(std::move(added_node), parent_map,
-                             &type_graph_);
-        return MergeStatus(true, updated_self_type_id);
-      }
-      // The type that the added_node references was not newly added to the parent
-      // graph. However, we still might need to add the added_node to the parent
-      // graph, since for the particular 'Kind' of the added_node, it may not be
-      // present in the parent graph. This will be determined by looking at the
-      // appropriate 'type-referenced' -> TypeElement map in the parent for the
-      // type-id returned by the MergeStatus. If the map doesn't have an entry for
-      // the type-id returned by the MergeStatus, the added_type is not present in
-      // the parent graph and needs to be 'newly' added. We also need to modify the
-      // global type id in the local_to_global_type_id map. The added_node should
-      // already have it's self_type and referenced_type fields fixed up.
-      // We maintain a rollback id to have contiguous type ids.
-      max_type_id_ = old_max_type_id;
-      // Try finding the referenced_type is referred to by any referencing type
-      // of the same kind in the parent graph. It is safe to call this on the
-      // added_node, since the referenced_type in the added_node would have been
-      // modified by the MergeReferencingTypeInternal call.
-      auto it = parent_map->find(GetReferencedTypeMapKey(added_node));
-      if (it == parent_map->end()) {
-        // There was no counterpart found for the added_node's type Kind referencing
-        // the referenced type, so we added it to the parent and also updated the
-        // local_to_global_type_id_map's global_id value.
-        AddToMapAndTypeGraph(std::move(added_node), parent_map,
-                             &type_graph_);
+    AbiElementMap<T> *parent_map, const std::string &updated_self_type_id) {
+  MergeStatus merge_status;
+  uint64_t old_max_type_id = max_type_id_;
+  // Create copy of addend_node
+  T added_node = *(addend_node);
+  added_node.SetSelfType(updated_self_type_id);
+  // The merge status returned is the merge status of the referenced type.
+  merge_status = MergeReferencingTypeInternal(addend, &added_node,
+                                              local_to_global_type_id_map);
+  if (merge_status.was_newly_added_) {
+    // Emplace to map (type-referenced -> Referencing type)
+    AddToMapAndTypeGraph(std::move(added_node), parent_map, &type_graph_);
+    return MergeStatus(true, updated_self_type_id);
+  }
 
-        merge_status = MergeStatus(true, updated_self_type_id);
-        return merge_status;
-      }
-      // Update local_to_global_type_id map's MergeStatus.was_newly_added  value for
-      // this key with false since this was node was not newly added.
-      // We never remove anything from the local_to_global_type_id_map, what's
-      // the point ? Since you store the decision of whether the type was newly
-      // added or not. It's global type id is the type-id of the element found
-      // in the parent map which refers to the added_node's modified
-      // referenced_type.
-      merge_status = MergeStatus(false, it->second.GetSelfType());
-      (*local_to_global_type_id_map)[addend_node->GetSelfType()] =
-          merge_status;
-      return merge_status;
+  // The type that the added_node references was not newly added to the parent
+  // graph. However, we still might need to add the added_node to the parent
+  // graph, since for the particular 'Kind' of the added_node, it may not be
+  // present in the parent graph. This will be determined by looking at the
+  // appropriate 'type-referenced' -> TypeElement map in the parent for the
+  // type-id returned by the MergeStatus. If the map doesn't have an entry for
+  // the type-id returned by the MergeStatus, the added_type is not present in
+  // the parent graph and needs to be 'newly' added. We also need to modify the
+  // global type id in the local_to_global_type_id map. The added_node should
+  // already have it's self_type and referenced_type fields fixed up.
+  // We maintain a rollback id to have contiguous type ids.
+  max_type_id_ = old_max_type_id;
+
+  // Try finding the referenced_type is referred to by any referencing type
+  // of the same kind in the parent graph. It is safe to call this on the
+  // added_node, since the referenced_type in the added_node would have been
+  // modified by the MergeReferencingTypeInternal call.
+  auto it = parent_map->find(GetReferencedTypeMapKey(added_node));
+  if (it == parent_map->end()) {
+    // There was no counterpart found for the added_node's type Kind referencing
+    // the referenced type, so we added it to the parent and also updated the
+    // local_to_global_type_id_map's global_id value.
+    AddToMapAndTypeGraph(std::move(added_node), parent_map,
+                         &type_graph_);
+
+    merge_status = MergeStatus(true, updated_self_type_id);
+    return merge_status;
+  }
+
+  // Update local_to_global_type_id map's MergeStatus.was_newly_added value for
+  // this key with false since this was node was not newly added.
+  // We never remove anything from the local_to_global_type_id_map, what's
+  // the point ? Since you store the decision of whether the type was newly
+  // added or not. It's global type id is the type-id of the element found
+  // in the parent map which refers to the added_node's modified
+  // referenced_type.
+  merge_status = MergeStatus(false, it->second.GetSelfType());
+  (*local_to_global_type_id_map)[addend_node->GetSelfType()] = merge_status;
+
+  return merge_status;
 }
 
 MergeStatus TextFormatToIRReader::MergeReferencingType(
@@ -439,7 +439,7 @@ MergeStatus TextFormatToIRReader::MergeGenericReferringType(
 MergeStatus TextFormatToIRReader::MergeTypeInternal(
     const TypeIR *addend_node, const TextFormatToIRReader &addend,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
-  switch(addend_node->GetKind()) {
+  switch (addend_node->GetKind()) {
     case BuiltinTypeKind:
       return IsBuiltinTypeNodePresent(
           static_cast<const BuiltinTypeIR *>(addend_node), addend,
@@ -466,29 +466,28 @@ MergeStatus TextFormatToIRReader::MergeType(
     const TypeIR *addend_node,
     const TextFormatToIRReader &addend,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
-    // Check if the addend type is already in the parent graph. Since we're
-    // going to traverse all the dependencies add whichever ones are not in the
-    // parent graph. This does not add the node itself though.
-    auto type_it =
-        local_to_global_type_id_map->find(addend_node->GetSelfType());
-    if (type_it != local_to_global_type_id_map->end()) {
-      return type_it->second;
-    }
+  // Check if the addend type is already in the parent graph. Since we're
+  // going to traverse all the dependencies add whichever ones are not in the
+  // parent graph. This does not add the node itself though.
+  auto type_it = local_to_global_type_id_map->find(addend_node->GetSelfType());
+  if (type_it != local_to_global_type_id_map->end()) {
+    return type_it->second;
+  }
 
-    MergeStatus merge_status = IsTypeNodePresent(addend_node, addend,
-                                                 local_to_global_type_id_map);
-    if (!merge_status.was_newly_added_) {
-      return merge_status;
-    }
-    merge_status = MergeTypeInternal(addend_node, addend,
-                                     local_to_global_type_id_map);
+  MergeStatus merge_status = IsTypeNodePresent(
+      addend_node, addend, local_to_global_type_id_map);
+  if (!merge_status.was_newly_added_) {
     return merge_status;
+  }
+  merge_status = MergeTypeInternal(
+      addend_node, addend, local_to_global_type_id_map);
+  return merge_status;
 }
 
 void TextFormatToIRReader::MergeCFunctionLikeDeps(
     const TextFormatToIRReader &addend, CFunctionLikeIR *cfunction_like_ir,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
- // Merge the return type first.
+  // Merge the return type first.
   auto ret_type_it =
       addend.type_graph_.find(cfunction_like_ir->GetReturnType());
   if (ret_type_it == addend.type_graph_.end()) {
@@ -585,5 +584,5 @@ bool TextFormatToIRReader::IsLinkableMessageInExportedHeaders(
   return exported_headers_->find(linkable_message->GetSourceFile()) !=
          exported_headers_->end();
 }
-} // namespace abi_util
 
+}  // namespace abi_util
