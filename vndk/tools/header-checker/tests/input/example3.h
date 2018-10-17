@@ -6,4 +6,4 @@ class HiddenBase {
   float seek;
 };
 
-#endif //EXAMPLE3_H
+#endif  // EXAMPLE3_H_

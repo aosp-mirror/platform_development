@@ -12,36 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <header_abi_util.h>
-#include <ir_representation.h>
+#include "so_file_parser.h"
 
-#include <llvm/Object/ELFObjectFile.h>
+#include "ir_representation.h"
+
 #include <llvm/Object/Binary.h>
+#include <llvm/Object/ELFObjectFile.h>
 #include <llvm/Object/ELFTypes.h>
 #include <llvm/Object/SymbolSize.h>
 
-using llvm::object::ELF32LEObjectFile;
-using llvm::object::ELF32BEObjectFile;
-using llvm::object::ELF64LEObjectFile;
-using llvm::object::ELF64BEObjectFile;
-using llvm::dyn_cast;
+using llvm::ELF::STB_GLOBAL;
+using llvm::ELF::STB_WEAK;
 using llvm::ELF::STV_DEFAULT;
 using llvm::ELF::STV_PROTECTED;
-using llvm::ELF::STB_WEAK;
-using llvm::ELF::STB_GLOBAL;
+using llvm::dyn_cast;
+using llvm::object::ELF32BEObjectFile;
+using llvm::object::ELF32LEObjectFile;
+using llvm::object::ELF64BEObjectFile;
+using llvm::object::ELF64LEObjectFile;
 
 namespace abi_util {
 
 template <typename T>
 static inline T UnWrap(llvm::Expected<T> ValueOrError) {
-    if (!ValueOrError) {
-      llvm::errs() << "\nError: "
-               << llvm::toString(ValueOrError.takeError())
-               << ".\n";
-      llvm::errs().flush();
-      exit(1);
-    }
-    return std::move(ValueOrError.get());
+  if (!ValueOrError) {
+    llvm::errs() << "\nError: " << llvm::toString(ValueOrError.takeError())
+                 << ".\n";
+    llvm::errs().flush();
+    exit(1);
+  }
+  return std::move(ValueOrError.get());
 }
 
 template<typename T>
@@ -79,8 +79,7 @@ template<typename T>
 void ELFSoFileParser<T>::GetSymbols() {
   assert(obj_ != nullptr);
   for (auto symbol_it : obj_->getDynamicSymbolIterators()) {
-    const Elf_Sym *elf_sym =
-          obj_->getSymbol(symbol_it.getRawDataRefImpl());
+    const Elf_Sym *elf_sym = obj_->getSymbol(symbol_it.getRawDataRefImpl());
     assert (elf_sym != nullptr);
     if (!IsSymbolExported(elf_sym) || elf_sym->isUndefined()) {
       continue;
@@ -106,7 +105,7 @@ static std::unique_ptr<SoFileParser> CreateELFSoFileParser(
 
 std::unique_ptr<SoFileParser> SoFileParser::Create(
     const llvm::object::ObjectFile *objfile) {
-   // Little-endian 32-bit
+  // Little-endian 32-bit
   if (const ELF32LEObjectFile *ELFObj = dyn_cast<ELF32LEObjectFile>(objfile)) {
     return CreateELFSoFileParser(ELFObj);
   }
@@ -128,5 +127,4 @@ std::unique_ptr<SoFileParser> SoFileParser::Create(
   return nullptr;
 }
 
-} // namespace abi_util
-
+}  // namespace abi_util
