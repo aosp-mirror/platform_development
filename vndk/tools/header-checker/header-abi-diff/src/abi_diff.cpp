@@ -14,7 +14,7 @@
 
 #include "abi_diff.h"
 
-#include <header_abi_util.h>
+#include "header_abi_util.h"
 
 #include <llvm/Support/raw_ostream.h>
 
@@ -140,14 +140,14 @@ bool HeaderAbiDiff::CollectUserDefinedTypes(
   auto old_enums_and_records_extracted = ExtractUserDefinedTypes(old_tu);
   auto new_enums_and_records_extracted = ExtractUserDefinedTypes(new_tu);
 
-  return CollectUserDefinedTypesInternal(
-      old_enums_and_records_extracted.second,
-      new_enums_and_records_extracted.second, old_types_map,
-      new_types_map, ir_diff_dumper) &&
-      CollectUserDefinedTypesInternal(old_enums_and_records_extracted.first,
-                                      new_enums_and_records_extracted.first,
-                                      old_types_map, new_types_map,
-                                      ir_diff_dumper);
+  return (CollectUserDefinedTypesInternal(
+              old_enums_and_records_extracted.second,
+              new_enums_and_records_extracted.second, old_types_map,
+              new_types_map, ir_diff_dumper) &&
+          CollectUserDefinedTypesInternal(
+              old_enums_and_records_extracted.first,
+              new_enums_and_records_extracted.first,
+              old_types_map, new_types_map, ir_diff_dumper));
 }
 
 template <typename T>
@@ -158,11 +158,11 @@ bool HeaderAbiDiff::CollectUserDefinedTypesInternal(
     const AbiElementMap<const abi_util::TypeIR *> &new_types_map,
     abi_util::IRDiffDumper *ir_diff_dumper) {
 
-  return Collect(old_ud_types_map, new_ud_types_map, nullptr, nullptr,
-                 ir_diff_dumper, old_types_map, new_types_map) &&
-      PopulateCommonElements(old_ud_types_map, new_ud_types_map, old_types_map,
-                             new_types_map, ir_diff_dumper,
-                             abi_util::DiffMessageIR::Unreferenced);
+  return (Collect(old_ud_types_map, new_ud_types_map, nullptr, nullptr,
+                  ir_diff_dumper, old_types_map, new_types_map) &&
+          PopulateCommonElements(old_ud_types_map, new_ud_types_map,
+                                 old_types_map, new_types_map, ir_diff_dumper,
+                                 abi_util::DiffMessageIR::Unreferenced));
 }
 
 template <typename T, typename ElfSymbolType>
@@ -210,12 +210,12 @@ bool HeaderAbiDiff::CollectDynsymExportables(
   return true;
 }
 
-// Collect added and removed Elements. The elf set is needed since some symbols
-// might not have meta-data about them collected through the AST. For eg: if a
-// function Foo is defined in an assembly file on target A, but in a c/c++ file
-// on target B, foo does not have meta-data surrounding it when building target
-// A, this does not mean it is not in the ABI + API of the library.
-
+// Collect the added and removed elements. The ELF maps are needed because the
+// metadata for some symbols might be absent from AST.  For example, if a
+// function Foo() is defined in an assembly file on target A, but in a C/C++
+// file on target B. Even though Foo() does not have metadata surrounding it
+// when building target A, it doesn't mean that Foo() is not a part of the ABI
+// of the library.
 template <typename T>
 bool HeaderAbiDiff::Collect(
     const AbiElementMap<const T*> &old_elements_map,
@@ -226,12 +226,11 @@ bool HeaderAbiDiff::Collect(
     const AbiElementMap<const abi_util::TypeIR *> &old_types_map,
     const AbiElementMap<const abi_util::TypeIR *> &new_types_map) {
   if (!PopulateRemovedElements(
-      old_elements_map, new_elements_map, new_elf_map, ir_diff_dumper,
-      abi_util::DiffMessageIR::Removed, old_types_map) ||
-      !PopulateRemovedElements(new_elements_map, old_elements_map, old_elf_map,
-                               ir_diff_dumper,
-                               abi_util::IRDiffDumper::DiffKind::Added,
-                               new_types_map)) {
+          old_elements_map, new_elements_map, new_elf_map, ir_diff_dumper,
+          abi_util::DiffMessageIR::Removed, old_types_map) ||
+      !PopulateRemovedElements(
+          new_elements_map, old_elements_map, old_elf_map, ir_diff_dumper,
+          abi_util::IRDiffDumper::DiffKind::Added, new_types_map)) {
     llvm::errs() << "Populating functions in report failed\n";
     return false;
   }
@@ -248,10 +247,10 @@ bool HeaderAbiDiff::CollectElfSymbols(
   std::vector<const abi_util::ElfSymbolIR *> added_elements =
       abi_util::FindRemovedElements(new_symbols, old_symbols);
 
-  return PopulateElfElements(removed_elements, ir_diff_dumper,
-                             abi_util::IRDiffDumper::DiffKind::Removed) &&
-         PopulateElfElements(added_elements, ir_diff_dumper,
-                             abi_util::IRDiffDumper::DiffKind::Added);
+  return (PopulateElfElements(removed_elements, ir_diff_dumper,
+                              abi_util::IRDiffDumper::DiffKind::Removed) &&
+          PopulateElfElements(added_elements, ir_diff_dumper,
+                              abi_util::IRDiffDumper::DiffKind::Added));
 }
 
 bool HeaderAbiDiff::PopulateElfElements(
@@ -358,11 +357,10 @@ bool HeaderAbiDiff::DumpDiffElements(
         [](const T *e) {return e->GetLinkerSetKey();})) {
       continue;
     }
-    abi_diff_wrappers::DiffWrapper<T> diff_wrapper(old_element, new_element,
-                                                   ir_diff_dumper, old_types,
-                                                   new_types,
-                                                   diff_policy_options_,
-                                                   &type_cache_);
+
+    abi_diff_wrappers::DiffWrapper<T> diff_wrapper(
+        old_element, new_element, ir_diff_dumper, old_types, new_types,
+        diff_policy_options_, &type_cache_);
     if (!diff_wrapper.DumpDiff(diff_kind)) {
       llvm::errs() << "Failed to diff elements\n";
       return false;

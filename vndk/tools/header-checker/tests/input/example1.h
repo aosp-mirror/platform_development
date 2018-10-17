@@ -36,7 +36,7 @@ struct CPPHello : private HelloAgain, public ByeAgain<float_type> {
   const int cpp_foo;
   cfloat_type cpp_bar;
   virtual int again() { return 0; }
-  CPPHello() : cpp_foo(20), cpp_bar(1.234) { }
+  CPPHello() : cpp_foo(20), cpp_bar(1.234) {}
   enum Bla{BLA = 1};
   int test_enum() {return CPPHello::BLA;}
 };
@@ -57,7 +57,7 @@ public:
 public:
   StackNode(T t, StackNode* next = nullptr)
     : value_(static_cast<T&&>(t)),
-      next_(next) { }
+      next_(next) {}
 };
 
 template<typename T>
@@ -66,7 +66,7 @@ private:
   StackNode<T>* head_;
 
 public:
-  Stack() : head_(nullptr) { }
+  Stack() : head_(nullptr) {}
 
   void push(T t) {
     head_ = new StackNode<T>(static_cast<T&&>(t), head_);

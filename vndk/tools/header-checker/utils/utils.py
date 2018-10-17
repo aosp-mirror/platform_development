@@ -73,7 +73,7 @@ def copy_reference_dump(lib_path, reference_dump_dir, compress):
     else:
         with open(reference_dump_path, 'wb') as f:
             f.write(bytes(output_content, 'utf-8'))
-    print('Created abi dump at ', reference_dump_path)
+    print('Created abi dump at', reference_dump_path)
     return reference_dump_path
 
 
@@ -89,7 +89,7 @@ def copy_reference_dump_content(lib_name, output_content,
     with open(reference_dump_path, 'w') as f:
         f.write(output_content)
 
-    print('Created abi dump at ', reference_dump_path)
+    print('Created abi dump at', reference_dump_path)
     return reference_dump_path
 
 
@@ -129,7 +129,7 @@ def run_header_abi_dumper_on_file(input_path, output_path,
 
     for dir in BUILTIN_HEADERS_DIR:
         cmd += ['-isystem', dir]
-    # export includes imply local includes
+    # The export include dirs imply local include dirs.
     for dir in export_include_dirs:
         cmd += ['-I', dir]
     subprocess.check_call(cmd)

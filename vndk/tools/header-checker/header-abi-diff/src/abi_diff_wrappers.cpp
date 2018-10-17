@@ -14,7 +14,7 @@
 
 #include "abi_diff_wrappers.h"
 
-#include <header_abi_util.h>
+#include "header_abi_util.h"
 
 #include <llvm/Support/raw_ostream.h>
 
@@ -33,7 +33,7 @@ bool DiffWrapper<abi_util::RecordTypeIR>::DumpDiff(
     return false;
   }
   if (!type_cache_->insert(
-      oldp_->GetSelfType() + newp_->GetSelfType()).second) {
+          oldp_->GetSelfType() + newp_->GetSelfType()).second) {
     return true;
   }
   CompareRecordTypes(oldp_, newp_, &type_queue, diff_kind);
@@ -85,13 +85,13 @@ bool DiffWrapper<abi_util::FunctionIR>::DumpDiff(
     abi_util::DiffMessageIR::DiffKind diff_kind) {
   std::deque<std::string> type_queue;
   type_queue.push_back(oldp_->GetName());
-  DiffStatus param_diffs = CompareFunctionParameters(oldp_->GetParameters(),
-                                                     newp_->GetParameters(),
-                                                     &type_queue, diff_kind);
-  DiffStatus return_type_diff =
-      CompareAndDumpTypeDiff(oldp_->GetReturnType(),
-                             newp_->GetReturnType(),
-                             &type_queue, diff_kind);
+
+  DiffStatus param_diffs = CompareFunctionParameters(
+      oldp_->GetParameters(), newp_->GetParameters(), &type_queue, diff_kind);
+
+  DiffStatus return_type_diff = CompareAndDumpTypeDiff(
+      oldp_->GetReturnType(), newp_->GetReturnType(), &type_queue, diff_kind);
+
   CompareTemplateInfo(oldp_->GetTemplateElements(),
                       newp_->GetTemplateElements(),
                       &type_queue, diff_kind);
@@ -111,4 +111,4 @@ bool DiffWrapper<abi_util::FunctionIR>::DumpDiff(
   return true;
 }
 
-} // abi_diff_wrappers
+}  // namespace abi_diff_wrappers
