@@ -3,12 +3,8 @@
 
 SELFNAME=$0
 
-function getAbsolutePath() {
-    readlink -e $1
-}
-
 function printUsage() {
-    echo "  $SELFNAME             check coding style for HEAD in this git"
+    echo "  $SELFNAME             check coding style for HEAD in this git repository"
     echo "  $SELFNAME -h          show this message"
 }
 
