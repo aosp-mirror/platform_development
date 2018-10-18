@@ -11,8 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#ifndef AST_UTIL
-#define AST_UTIL
+
+#ifndef AST_UTIL_H_
+#define AST_UTIL_H_
 
 #include <clang/AST/AST.h>
 
@@ -24,9 +25,8 @@ namespace ast_util {
 constexpr static char type_id_prefix[] = "type-";
 
 struct ASTCaches {
-
   ASTCaches(const std::string &translation_unit_source)
-      : translation_unit_source_(translation_unit_source) { };
+      : translation_unit_source_(translation_unit_source) {}
 
   std::string GetTypeId(const std::string &qual_type) {
     auto type_id_it = qual_type_to_type_id_cache_.find(qual_type);
@@ -45,5 +45,6 @@ struct ASTCaches {
   uint64_t max_type_id_ = 0;
 };
 
-}
-#endif
+}  // namespace ast_util
+
+#endif  // AST_UTIL_H_

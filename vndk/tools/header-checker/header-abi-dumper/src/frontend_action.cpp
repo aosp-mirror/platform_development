@@ -12,24 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "frontend_action.h"
 
 #include "ast_processing.h"
-#include "frontend_action.h"
-#include <header_abi_util.h>
-#include <ir_representation.h>
+#include "header_abi_util.h"
+#include "ir_representation.h"
 
 #include <clang/AST/ASTConsumer.h>
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Lex/Preprocessor.h>
+
 #include <llvm/ADT/STLExtras.h>
-#include <llvm/Support/FileSystem.h>
-#include <llvm/Support/Path.h>
 
 HeaderCheckerFrontendAction::HeaderCheckerFrontendAction(
     const std::string &dump_name, std::set<std::string> &exported_headers,
     abi_util::TextFormatIR text_format)
-  : dump_name_(dump_name), exported_headers_(exported_headers),
-    text_format_(text_format) { }
+    : dump_name_(dump_name), exported_headers_(exported_headers),
+      text_format_(text_format) {}
 
 std::unique_ptr<clang::ASTConsumer>
 HeaderCheckerFrontendAction::CreateASTConsumer(clang::CompilerInstance &ci,

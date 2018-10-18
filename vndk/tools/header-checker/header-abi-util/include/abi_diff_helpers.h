@@ -1,7 +1,21 @@
-#ifndef ABI_DIFF_HELPERS
-#define ABI_DIFF_HELPERS
+// Copyright (C) 2018 The Android Open Source Project
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-#include <ir_representation.h>
+#ifndef ABI_DIFF_HELPERS_H_
+#define ABI_DIFF_HELPERS_H_
+
+#include "ir_representation.h"
 
 #include <deque>
 
@@ -23,13 +37,13 @@ enum DiffStatus {
   opaque_diff = 3,
 };
 
-static inline DiffStatus operator| (DiffStatus f,DiffStatus s) {
+static inline DiffStatus operator|(DiffStatus f,DiffStatus s) {
   return static_cast<DiffStatus>(
       static_cast<std::underlying_type<DiffStatus>::type>(f) |
       static_cast<std::underlying_type<DiffStatus>::type>(s));
 }
 
-static inline DiffStatus operator& (DiffStatus f, DiffStatus s) {
+static inline DiffStatus operator&(DiffStatus f, DiffStatus s) {
   return static_cast<DiffStatus>(
       static_cast<std::underlying_type<DiffStatus>::type>(f) &
       static_cast<std::underlying_type<DiffStatus>::type>(s));
@@ -49,9 +63,10 @@ struct GenericFieldDiffInfo {
 std::string Unwind(const std::deque<std::string> *type_queue);
 
 struct DiffPolicyOptions {
-  DiffPolicyOptions(bool consider_opaque_types_different) :
-    consider_opaque_types_different_(consider_opaque_types_different) { }
-  bool consider_opaque_types_different_ = false;
+  DiffPolicyOptions(bool consider_opaque_types_different)
+      : consider_opaque_types_different_(consider_opaque_types_different) {}
+
+  bool consider_opaque_types_different_;
 };
 
 class AbiDiffHelper {
@@ -66,7 +81,7 @@ class AbiDiffHelper {
       : old_types_(old_types), new_types_(new_types),
         diff_policy_options_(diff_policy_options), type_cache_(type_cache),
         ir_diff_dumper_(ir_diff_dumper),
-        local_to_global_type_id_map_(local_to_global_type_id_map) { }
+        local_to_global_type_id_map_(local_to_global_type_id_map) {}
 
   DiffStatus CompareAndDumpTypeDiff(
       const std::string &old_type_str, const std::string &new_type_str,
@@ -110,10 +125,11 @@ class AbiDiffHelper {
 
   DiffStatus CompareBuiltinTypes(const abi_util::BuiltinTypeIR *old_type,
                                  const abi_util::BuiltinTypeIR *new_type);
+
   static void CompareEnumFields(
-    const std::vector<abi_util::EnumFieldIR> &old_fields,
-    const std::vector<abi_util::EnumFieldIR> &new_fields,
-    abi_util::EnumTypeDiffIR *enum_type_diff_ir);
+      const std::vector<abi_util::EnumFieldIR> &old_fields,
+      const std::vector<abi_util::EnumFieldIR> &new_fields,
+      abi_util::EnumTypeDiffIR *enum_type_diff_ir);
 
   DiffStatus CompareEnumTypes(const abi_util::EnumTypeIR *old_type,
                               const abi_util::EnumTypeIR *new_type,
@@ -126,7 +142,7 @@ class AbiDiffHelper {
                                   abi_util::DiffMessageIR::DiffKind diff_kind);
 
   void ReplaceRemovedFieldTypeIdsWithTypeNames(
-    std::vector<abi_util::RecordFieldIR *> *removed_fields);
+      std::vector<abi_util::RecordFieldIR *> *removed_fields);
 
   void ReplaceDiffedFieldTypeIdsWithTypeNames(
       abi_util::RecordFieldDiffIR *diffed_field);
@@ -137,10 +153,10 @@ class AbiDiffHelper {
 
   DiffStatusPair<std::unique_ptr<abi_util::RecordFieldDiffIR>>
   CompareCommonRecordFields(
-    const abi_util::RecordFieldIR *old_field,
-    const abi_util::RecordFieldIR *new_field,
-    std::deque<std::string> *type_queue,
-    abi_util::IRDiffDumper::DiffKind diff_kind);
+      const abi_util::RecordFieldIR *old_field,
+      const abi_util::RecordFieldIR *new_field,
+      std::deque<std::string> *type_queue,
+      abi_util::IRDiffDumper::DiffKind diff_kind);
 
   GenericFieldDiffInfo<abi_util::RecordFieldIR, abi_util::RecordFieldDiffIR>
       CompareRecordFields(
@@ -182,17 +198,19 @@ class AbiDiffHelper {
   bool AddToDiff(DiffType *mutable_diff, const DiffElement *oldp,
                  const DiffElement *newp,
                  std::deque<std::string> *type_queue = nullptr);
+
  protected:
   const AbiElementMap<const abi_util::TypeIR *> &old_types_;
   const AbiElementMap<const abi_util::TypeIR *> &new_types_;
   const DiffPolicyOptions &diff_policy_options_;
-  std::set<std::string> *type_cache_ = nullptr;
-  abi_util::IRDiffDumper *ir_diff_dumper_ = nullptr;
-  AbiElementMap<MergeStatus> *local_to_global_type_id_map_ = nullptr;
+  std::set<std::string> *type_cache_;
+  abi_util::IRDiffDumper *ir_diff_dumper_;
+  AbiElementMap<MergeStatus> *local_to_global_type_id_map_;
 };
 
 void ReplaceTypeIdsWithTypeNames(
     const AbiElementMap<const TypeIR *> &type_graph, LinkableMessageIR *lm);
 
-} // namespace abi_util
-#endif
+}  // namespace abi_util
+
+#endif  // ABI_DIFF_HELPERS_H_
