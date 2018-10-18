@@ -81,28 +81,34 @@ int main(int argc, const char **argv) {
   FixedArgvRegistry::Apply(fixed_argv);
 
   // Create compilation database from command line arguments after "--".
+  std::string cmdline_error_msg;
   std::unique_ptr<clang::tooling::CompilationDatabase> compilations;
   {
     // loadFromCommandLine() may alter argc and argv, thus access fixed_argv
     // through FixedArgvAccess.
     FixedArgvAccess raw(fixed_argv);
 
-    std::string cmdline_error_msg;
     compilations =
         clang::tooling::FixedCompilationDatabase::loadFromCommandLine(
             raw.argc_, raw.argv_, cmdline_error_msg);
-
-    // Check whether we can create compilation database and deduce compiler
-    // options from command line options.
-    if (!compilations) {
-      llvm::errs() << "ERROR: " << cmdline_error_msg << "\n";
-      ::exit(1);
-    }
   }
 
-  // Parse the command line options.
+  // Parse the command line options
   llvm::cl::ParseCommandLineOptions(
       fixed_argv.GetArgc(), fixed_argv.GetArgv(), "header-checker");
+
+  // Print an error message if we failed to create the compilation database
+  // from the command line arguments. This check is intentionally performed
+  // after `llvm::cl::ParseCommandLineOptions()` so that `-help` can work
+  // without `--`.
+  if (!compilations) {
+    if (cmdline_error_msg.empty()) {
+      llvm::errs() << "ERROR: Failed to parse clang command line options\n";
+    } else {
+      llvm::errs() << "ERROR: " << cmdline_error_msg << "\n";
+    }
+    ::exit(1);
+  }
 
   // Input header file existential check.
   if (!llvm::sys::fs::exists(header_file)) {
