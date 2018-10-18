@@ -810,6 +810,7 @@ DiffStatus AbiDiffHelper::CompareAndDumpTypeDiff(
       old_types_.find(old_type_id);
   AbiElementMap<const abi_util::TypeIR *>::const_iterator new_it =
       new_types_.find(new_type_id);
+
   if (old_it == old_types_.end() || new_it == new_types_.end()) {
     TypeQueueCheckAndPop(type_queue);
     // One of the types were hidden, we cannot compare further.
@@ -830,11 +831,16 @@ DiffStatus AbiDiffHelper::CompareAndDumpTypeDiff(
   }
 
   TypeQueueCheckAndPop(type_queue);
+
   if (diff_policy_options_.consider_opaque_types_different_ &&
-      diff_status == DiffStatus::opaque_diff &&
-      (old_it->second->GetName() != new_it->second->GetName())) {
-    return DiffStatus::direct_diff;
+      diff_status == DiffStatus::opaque_diff) {
+    // If `-considered-opaque-types-different` is specified and the comparison
+    // of `referenced_type` results in `opaque_diff`, then check the type name
+    // at this level.
+    return (old_it->second->GetName() == new_it->second->GetName() ?
+            DiffStatus::no_diff : DiffStatus::direct_diff);
   }
+
   return diff_status;
 }
 

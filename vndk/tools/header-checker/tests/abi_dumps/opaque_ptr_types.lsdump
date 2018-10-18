@@ -1,0 +1,29 @@
+{
+ "elf_objects" :
+ [
+  {
+   "name" : "test"
+  }
+ ],
+ "global_vars" :
+ [
+  {
+   "linker_set_key" : "test",
+   "name" : "test",
+   "referenced_type" : "type-1",
+   "source_file" : "opaque_ptr_types.h"
+  }
+ ],
+ "pointer_types" :
+ [
+  {
+   "alignment" : 8,
+   "linker_set_key" : "OpaqueType *",
+   "name" : "OpaqueType *",
+   "referenced_type" : "type-2",
+   "self_type" : "type-1",
+   "size" : 8,
+   "source_file" : "opaque_ptr_types.h"
+  }
+ ]
+}
