@@ -277,6 +277,14 @@ class MyTest(unittest.TestCase):
             ["-input-format-old", "ProtobufTextFormat",
              "-input-format-new", "Json"])
 
+    def test_opaque_type_self_diff(self):
+        lsdump = os.path.join(
+            SCRIPT_DIR, "abi_dumps", "opaque_ptr_types.lsdump")
+        self.run_and_compare_abi_diff(
+            lsdump, lsdump, "libexample", "arm64", 0,
+            ["-input-format-old", "Json", "-input-format-new", "Json",
+             "-consider-opaque-types-different"])
+
 
 if __name__ == '__main__':
     unittest.main()
