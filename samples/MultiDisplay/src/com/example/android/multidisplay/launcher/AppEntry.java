@@ -25,6 +25,10 @@ import android.graphics.drawable.Drawable;
 /** An entry that represents a single activity that can be launched. */
 public  class AppEntry {
 
+    private String mLabel;
+    private Drawable mIcon;
+    private Intent mLaunchIntent;
+
     AppEntry(ResolveInfo info, PackageManager packageManager) {
         mLabel = info.loadLabel(packageManager).toString();
         mIcon = info.loadIcon(packageManager);
@@ -43,12 +47,12 @@ public  class AppEntry {
 
     Intent getLaunchIntent() { return mLaunchIntent; }
 
+    ComponentName getComponentName() {
+        return mLaunchIntent.getComponent();
+    }
+
     @Override
     public String toString() {
         return mLabel;
     }
-
-    private String mLabel;
-    private Drawable mIcon;
-    private Intent mLaunchIntent;
 }
