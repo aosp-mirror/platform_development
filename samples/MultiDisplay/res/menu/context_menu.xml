@@ -15,12 +15,9 @@
   ~ limitations under the License.
   -->
 
-<resources>
-    <string name="app_name">MultiDisplay</string>
-    <string name="md_launcher">MD Launcher</string>
-    <string name="couldnt_launch">Couldn\'t launch the activity</string>
-    <string name="select_display">Select a display</string>
-    <string name="add_app_shortcut">Add app shortcut</string>
-    <string name="set_wallpaper">Set wallpaper</string>
-    <string name="new_instance">Request launch in new instance</string>
-</resources>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/add_app_shortcut"
+          android:title="@string/add_app_shortcut" />
+    <item android:id="@+id/set_wallpaper"
+          android:title="@string/set_wallpaper" />
+</menu>

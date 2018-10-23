@@ -16,11 +16,13 @@
   -->
 
 <resources>
-    <string name="app_name">MultiDisplay</string>
-    <string name="md_launcher">MD Launcher</string>
-    <string name="couldnt_launch">Couldn\'t launch the activity</string>
-    <string name="select_display">Select a display</string>
-    <string name="add_app_shortcut">Add app shortcut</string>
-    <string name="set_wallpaper">Set wallpaper</string>
-    <string name="new_instance">Request launch in new instance</string>
+    <style name="LauncherTheme" parent="Theme.AppCompat.Light.NoActionBar" >
+        <item name="android:windowShowWallpaper">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:colorBackgroundCacheHint">@null</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
 </resources>

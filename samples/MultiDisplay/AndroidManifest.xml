@@ -22,7 +22,10 @@
         android:label="@string/app_name">
         <activity
             android:name=".launcher.LauncherActivity"
-            android:label="@string/md_launcher">
+            android:label="@string/md_launcher"
+            android:theme="@style/LauncherTheme"
+            android:launchMode="singleTop"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|colorMode|density">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.HOME" />

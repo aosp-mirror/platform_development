@@ -22,6 +22,11 @@ LOCAL_MODULE_TAGS := samples
 # Only compile source java files in this apk.
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
+LOCAL_STATIC_ANDROID_LIBRARIES += \
+    androidx.design_design \
+    androidx.lifecycle_lifecycle-livedata \
+    androidx.lifecycle_lifecycle-viewmodel
+
 LOCAL_PACKAGE_NAME := MultiDisplay
 
 LOCAL_SDK_VERSION := current

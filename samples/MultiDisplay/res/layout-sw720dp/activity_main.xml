@@ -50,14 +50,14 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/mtrl_background_scrim"
-        android:visibility="invisible" />
-
+        android:visibility="invisible"/>
 
     <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="@dimen/app_picker_width"
+        android:layout_height="@dimen/app_picker_height"
         android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/app_picker_fab_margin">
+        android:layout_marginEnd="@dimen/app_picker_fab_margin"
+        android:layout_marginBottom="@dimen/app_picker_fab_margin">
 
         <include layout="@layout/app_picker_layout"/>
     </FrameLayout>
