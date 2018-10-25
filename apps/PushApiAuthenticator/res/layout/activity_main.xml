@@ -18,7 +18,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#EE6161"
+    android:background="#CE9191"
     android:orientation="vertical"
     android:fillViewport="false">
 
@@ -156,7 +156,7 @@
 
         <RadioGroup
             android:layout_width="match_parent"
-            android:layout_height="280dp"
+            android:layout_height="wrap_content"
             android:id="@+id/optionsGroup"
             android:layout_below="@+id/textView11"
             android:layout_alignParentLeft="true">
@@ -215,6 +215,20 @@
                 android:layout_height="wrap_content"
                 android:text="REMOVE ACCOUNT"
                 android:id="@+id/removeAccount"
+                android:checked="false" />
+
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ENABLE_COMPONENT"
+                android:id="@+id/enableComponent"
+                android:checked="false" />
+
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DISABLE_COMPONENT"
+                android:id="@+id/disableComponent"
                 android:checked="false" />
 
         </RadioGroup>
