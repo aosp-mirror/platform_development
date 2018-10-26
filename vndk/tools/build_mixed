@@ -2,16 +2,19 @@
 usage () {
     echo "Create a Mixed Build archive with the given system and device archives."
     echo
-    echo "Usage: $0 [-v <vendor_version>] [-m <modify_system_image_path>] [-p <override_vbmeta_image_path>]"
+    echo "Usage: $0 [-v <vendor_version>] [-m <modify_system_image_path>]"
+    echo "    [-t <prebuilt_otatools_path>] [-p <override_vbmeta_image_path>]"
     echo "    system_build_dir device_build_dir out_dir [check_tool]"
     echo
-    echo "Options -v, -m, -p must precede positional arguments."
+    echo "Options -v, -m, -t, -p must precede positional arguments."
     echo
     echo "vendor_version is the version of the vendor image when Keymaster v3"
     echo "    related modifications to the system image is necessary. Optional."
     echo "    eg. 8.1.0 for a mixed build of GSI and O-MR1 vendor image."
     echo "modify_system_image_path is the path to the script that modifies the"
     echo "    system image, needed for Keymaster v3. Optional."
+    echo "prebuilt_otatools_path is the path to otatools.zip file that has all"
+    echo "    required host binaries to modify system image. Optional."
     echo "override_vbmeta_image_path is the path to a vbmeta.img to use"
     echo "    to override the existing vbmeta.img of device. Optional."
     echo "system_build_dir is the path to the system build"
@@ -131,7 +134,7 @@ unzip "$DEVICE_TARGET_FILES_ARCHIVE" \
 if [[ -f "$OTATOOLS_ZIP" ]]; then
     # Uncompress otatools
     mkdir -p "$OTATOOLS_DIR"
-    unzip "$OTATOOLS_ZIP" -d "$OTATOOLS_DIR"
+    unzip "$OTATOOLS_ZIP" bin/* lib64/* -d "$OTATOOLS_DIR"
     # Set paths for using prebuilt host binaries.
     export PATH="$OTATOOLS_DIR"/bin:"$PATH"
     export LD_LIBRARY_PATH="$OTATOOLS_DIR"/lib64:"$LD_LIBRARY_PATH"
