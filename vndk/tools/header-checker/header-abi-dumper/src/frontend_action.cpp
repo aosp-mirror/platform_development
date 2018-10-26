@@ -15,6 +15,7 @@
 #include "frontend_action.h"
 
 #include "ast_processing.h"
+#include "diagnostic_consumer.h"
 #include "header_abi_util.h"
 #include "ir_representation.h"
 
@@ -25,15 +26,29 @@
 #include <llvm/ADT/STLExtras.h>
 
 HeaderCheckerFrontendAction::HeaderCheckerFrontendAction(
-    const std::string &dump_name, std::set<std::string> &exported_headers,
-    abi_util::TextFormatIR text_format)
-    : dump_name_(dump_name), exported_headers_(exported_headers),
-      text_format_(text_format) {}
+    HeaderCheckerOptions &options)
+    : options_(options) {}
 
 std::unique_ptr<clang::ASTConsumer>
 HeaderCheckerFrontendAction::CreateASTConsumer(clang::CompilerInstance &ci,
                                                llvm::StringRef header_file) {
   // Create AST consumers.
-  return llvm::make_unique<HeaderASTConsumer>(&ci, dump_name_,
-                                              exported_headers_, text_format_);
+  return llvm::make_unique<HeaderASTConsumer>(&ci, options_);
+}
+
+bool HeaderCheckerFrontendAction::BeginInvocation(clang::CompilerInstance &ci) {
+  if (options_.suppress_errors_) {
+    clang::DiagnosticsEngine &diagnostics = ci.getDiagnostics();
+    diagnostics.setClient(
+        new HeaderCheckerDiagnosticConsumer(diagnostics.takeClient()),
+        /* ShouldOwnClient */ true);
+  }
+  return true;
+}
+
+bool HeaderCheckerFrontendAction::BeginSourceFileAction(
+    clang::CompilerInstance &ci) {
+  ci.getPreprocessor().SetSuppressIncludeNotFoundError(
+      options_.suppress_errors_);
+  return true;
 }
