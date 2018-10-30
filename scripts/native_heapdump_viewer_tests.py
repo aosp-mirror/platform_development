@@ -27,7 +27,7 @@ class NativeHeapdumpViewerTest(unittest.TestCase):
 
   def CreateTmpFile(self, contents):
     fd, self._tmp_file_name = tempfile.mkstemp()
-    os.write(fd, contents)
+    os.write(fd, contents.encode())
     os.close(fd)
     return self._tmp_file_name
 
@@ -36,7 +36,7 @@ class NativeHeapdumpViewerTest(unittest.TestCase):
       try:
         os.unlink(self._tmp_file_name)
       except Exception:
-        print "Failed to delete " + heap
+        print("Failed to delete %s" % (heap))
 
 class GetNumFieldValidTest(NativeHeapdumpViewerTest):
   _map_data = """
@@ -180,4 +180,4 @@ END
     self.assertEqual("/system/lib64/libutils.so", mappings[1].name)
 
 if __name__ == '__main__':
-  unittest.main()
+  unittest.main(verbosity=2)

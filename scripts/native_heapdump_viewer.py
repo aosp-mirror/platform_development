@@ -82,13 +82,13 @@ Usage:
       elif sys.argv[i] == "--reverse":
         self.reverse_frames = True
       elif sys.argv[i][0] == '-':
-        print "Invalid option " + sys.argv[i]
+        print("Invalid option %s" % (sys.argv[i]))
       else:
         extra_args.append(sys.argv[i])
       i += 1
 
     if len(extra_args) != 1:
-      print self._usage
+      print(self._usage)
       sys.exit(1)
 
     self.native_heap = extra_args[0]
@@ -118,10 +118,11 @@ def GetVersion(native_heap):
 
   re_line = re.compile("Android\s+Native\s+Heap\s+Dump\s+(?P<version>v\d+\.\d+)\s*$")
   matched = 0
-  for line in open(native_heap, "r"):
-    m = re_line.match(line)
-    if m:
-      return m.group('version')
+  with open(native_heap, "r") as f:
+    for line in f:
+      m = re_line.match(line)
+      if m:
+        return m.group('version')
   return None
 
 def GetNumFieldValidByParsingLines(native_heap):
@@ -143,24 +144,25 @@ def GetNumFieldValidByParsingLines(native_heap):
   re_line = re.compile("z\s+(?P<zygote>\d+)\s+sz\s+(?P<size>\d+)\s+num\s+(?P<num_allocations>\d+)")
   matched = 0
   backtrace_size = 0
-  for line in open(native_heap, "r"):
-    if backtrace_size == 0:
-      m = re_backtrace.match(line)
-      if m:
-        backtrace_size = int(m.group('backtrace_size'))
-    parts = line.split()
-    if len(parts) > 7 and parts[0] == "z" and parts[2] == "sz":
-      m = re_line.match(line)
-      if m:
-        num_allocations = int(m.group('num_allocations'))
-        if num_allocations == backtrace_size:
-          # At least three lines must match this pattern before
-          # considering this the old buggy version of malloc debug.
-          matched += 1
-          if matched == 3:
-            return False
-        else:
-          return True
+  with open(native_heap, "r") as f:
+    for line in f:
+      if backtrace_size == 0:
+        m = re_backtrace.match(line)
+        if m:
+          backtrace_size = int(m.group('backtrace_size'))
+      parts = line.split()
+      if len(parts) > 7 and parts[0] == "z" and parts[2] == "sz":
+        m = re_line.match(line)
+        if m:
+          num_allocations = int(m.group('num_allocations'))
+          if num_allocations == backtrace_size:
+            # At least three lines must match this pattern before
+            # considering this the old buggy version of malloc debug.
+            matched += 1
+            if matched == 3:
+              return False
+          else:
+            return True
   return matched == 0
 
 def GetNumFieldValid(native_heap):
@@ -220,34 +222,35 @@ def ParseNativeHeap(native_heap, reverse_frames, num_field_valid, app_symboldir)
 
   re_map = re.compile("(?P<start>[0-9a-f]+)-(?P<end>[0-9a-f]+) .... (?P<offset>[0-9a-f]+) [0-9a-f]+:[0-9a-f]+ [0-9]+ +(?P<name>.*)")
 
-  for line in open(native_heap, "r"):
-    # Format of line:
-    #   z 0  sz       50  num    1  bt 000000000000a100 000000000000b200
-    parts = line.split()
-    if len(parts) > 7 and parts[0] == "z" and parts[2] == "sz":
-      is_zygote = parts[1] != "1"
-      size = int(parts[3])
-      if num_field_valid:
-        num_allocs = int(parts[5])
+  with open(native_heap, "r") as f:
+    for line in f:
+      # Format of line:
+      #   z 0  sz       50  num    1  bt 000000000000a100 000000000000b200
+      parts = line.split()
+      if len(parts) > 7 and parts[0] == "z" and parts[2] == "sz":
+        is_zygote = parts[1] != "1"
+        size = int(parts[3])
+        if num_field_valid:
+          num_allocs = int(parts[5])
+        else:
+          num_allocs = 1
+        frames = list(map(lambda x: int(x, 16), parts[7:]))
+        if reverse_frames:
+          frames = list(reversed(frames))
+        backtraces.append(Backtrace(is_zygote, size, num_allocs, frames))
       else:
-        num_allocs = 1
-      frames = map(lambda x: int(x, 16), parts[7:])
-      if reverse_frames:
-        frames = list(reversed(frames))
-      backtraces.append(Backtrace(is_zygote, size, num_allocs, frames))
-    else:
-      # Parse map line:
-      #   720de01000-720ded7000 r-xp 00000000 fd:00 495  /system/lib64/libc.so
-      m = re_map.match(line)
-      if m:
-        # Offset of mapping start
-        start = int(m.group('start'), 16)
-        # Offset of mapping end
-        end = int(m.group('end'), 16)
-        # Offset within file that is mapped
-        offset = int(m.group('offset'), 16)
-        name = m.group('name')
-        mappings.append(GetMappingFromOffset(Mapping(start, end, offset, name), app_symboldir))
+        # Parse map line:
+        #   720de01000-720ded7000 r-xp 00000000 fd:00 495  /system/lib64/libc.so
+        m = re_map.match(line)
+        if m:
+          # Offset of mapping start
+          start = int(m.group('start'), 16)
+          # Offset of mapping end
+          end = int(m.group('end'), 16)
+          # Offset within file that is mapped
+          offset = int(m.group('offset'), 16)
+          name = m.group('name')
+          mappings.append(GetMappingFromOffset(Mapping(start, end, offset, name), app_symboldir))
   return backtraces, mappings
 
 def FindMapping(mappings, addr):
@@ -300,7 +303,7 @@ def ResolveAddrs(html_output, symboldir, app_symboldir, backtraces, mappings):
 
   # Resolve functions and line numbers.
   if html_output == False:
-    print "Resolving symbols using directory %s..." % symboldir
+    print("Resolving symbols using directory %s..." % symboldir)
 
   for lib in addrs_by_lib:
     sofile = app_symboldir + lib
@@ -335,7 +338,7 @@ def ResolveAddrs(html_output, symboldir, app_symboldir, backtraces, mappings):
           resolved_addrs[addrs_by_lib[lib][x]] = FrameDescription("---", "---", lib)
     else:
       if html_output == False:
-        print "%s not found for symbol resolution" % lib
+        print("%s not found for symbol resolution" % lib)
 
       fd = FrameDescription("???", "???", lib)
       for addr in addrs_by_lib[lib]:
@@ -374,7 +377,7 @@ def Display(resolved_addrs, indent, total, parent_total, node):
   parent_percent = 0
   if parent_total != 0:
     parent_percent = 100 * node.size / float(parent_total)
-  print "%9d %6.2f%% %6.2f%% %8d %s%s %s %s %s" % (node.size, total_percent, parent_percent, node.number, indent, node.addr, fd.library, fd.function, fd.location)
+  print("%9d %6.2f%% %6.2f%% %8d %s%s %s %s %s" % (node.size, total_percent, parent_percent, node.number, indent, node.addr, fd.library, fd.function, fd.location))
   children = sorted(node.children.values(), key=lambda x: x.size, reverse=True)
   for child in children:
     Display(resolved_addrs, indent + "  ", total, node.size, child)
@@ -395,23 +398,23 @@ def DisplayHtml(verbose, resolved_addrs, total, node, extra, label_count):
   label = label.replace("<", "&lt;")
   label = label.replace(">", "&gt;")
   children = sorted(node.children.values(), key=lambda x: x.size, reverse=True)
-  print '<li>'
+  print('<li>')
   if len(children) > 0:
-    print '<label for="' + str(label_count) + '">' + label + '</label>'
-    print '<input type="checkbox" id="' + str(label_count) + '"/>'
-    print '<ol>'
+    print('<label for="' + str(label_count) + '">' + label + '</label>')
+    print('<input type="checkbox" id="' + str(label_count) + '"/>')
+    print('<ol>')
     label_count += 1
     for child in children:
       label_count = DisplayHtml(verbose, resolved_addrs, total, child, "", label_count)
-    print '</ol>'
+    print('</ol>')
   else:
-    print label
-  print '</li>'
+    print(label)
+  print('</li>')
 
   return label_count
 
 def CreateHtml(verbose, app, zygote, resolved_addrs):
-  print """
+  print("""
 <!DOCTYPE html>
 <html><head><style>
 li input {
@@ -433,13 +436,13 @@ label {
 </style></head><body>Native allocation HTML viewer<br><br>
 Click on an individual line to expand/collapse to see the details of the
 allocation data<ol>
-"""
+""")
 
   label_count = 0
   label_count = DisplayHtml(verbose, resolved_addrs, app.size, app, "app ", label_count)
   if zygote.size > 0:
     DisplayHtml(verbose, resolved_addrs, zygote.size, zygote, "zygote ", label_count)
-  print "</ol></body></html>"
+  print("</ol></body></html>")
 
 def main():
   args = Args()
@@ -468,12 +471,12 @@ def main():
   if args.html_output:
     CreateHtml(args.verbose, app, zygote, resolved_addrs)
   else:
-    print ""
-    print "%9s %6s %6s %8s    %s %s %s %s" % ("BYTES", "%TOTAL", "%PARENT", "COUNT", "ADDR", "LIBRARY", "FUNCTION", "LOCATION")
+    print("")
+    print("%9s %6s %6s %8s    %s %s %s %s" % ("BYTES", "%TOTAL", "%PARENT", "COUNT", "ADDR", "LIBRARY", "FUNCTION", "LOCATION"))
     Display(resolved_addrs, "", app.size, app.size + zygote.size, app)
-    print ""
+    print("")
     Display(resolved_addrs, "", zygote.size, app.size + zygote.size, zygote)
-    print ""
+    print("")
 
 if __name__ == '__main__':
   main()
