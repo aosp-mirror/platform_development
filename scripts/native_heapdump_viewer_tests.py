@@ -180,4 +180,4 @@ END
     self.assertEqual("/system/lib64/libutils.so", mappings[1].name)
 
 if __name__ == '__main__':
-  unittest.main()
+  unittest.main(verbosity=2)
