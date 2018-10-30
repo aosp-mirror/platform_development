@@ -1,0 +1,10 @@
+{
+  "presubmit": [
+    {
+      "name": "python-native_heapdump_viewer_test"
+    },
+    {
+      "name": "python-symbol_test"
+    }
+  ]
+}
