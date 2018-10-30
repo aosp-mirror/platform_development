@@ -28,8 +28,11 @@ import signal
 import subprocess
 import unittest
 
-ANDROID_BUILD_TOP = str(os.environ["ANDROID_BUILD_TOP"])
-if not ANDROID_BUILD_TOP:
+try:
+  ANDROID_BUILD_TOP = str(os.environ["ANDROID_BUILD_TOP"])
+  if not ANDROID_BUILD_TOP:
+    ANDROID_BUILD_TOP = "."
+except:
   ANDROID_BUILD_TOP = "."
 
 def FindSymbolsDir():
@@ -550,6 +553,7 @@ class FindToolchainTests(unittest.TestCase):
     ARCH = abi
     FindToolchain() # Will throw on failure.
 
+  @unittest.skipIf(ANDROID_BUILD_TOP == '.', 'Test only supported in an Android tree.')
   def test_toolchains_found(self):
     self.assert_toolchain_found("arm")
     self.assert_toolchain_found("arm64")
