@@ -28,18 +28,24 @@ import signal
 import subprocess
 import unittest
 
-ANDROID_BUILD_TOP = os.environ["ANDROID_BUILD_TOP"]
-if not ANDROID_BUILD_TOP:
+try:
+  ANDROID_BUILD_TOP = str(os.environ["ANDROID_BUILD_TOP"])
+  if not ANDROID_BUILD_TOP:
+    ANDROID_BUILD_TOP = "."
+except:
   ANDROID_BUILD_TOP = "."
 
 def FindSymbolsDir():
   saveddir = os.getcwd()
   os.chdir(ANDROID_BUILD_TOP)
+  stream = None
   try:
     cmd = "build/soong/soong_ui.bash --dumpvar-mode --abs TARGET_OUT_UNSTRIPPED"
     stream = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True).stdout
-    return os.path.join(ANDROID_BUILD_TOP, stream.read().strip())
+    return os.path.join(ANDROID_BUILD_TOP, str(stream.read().strip()))
   finally:
+    if stream is not None:
+        stream.close()
     os.chdir(saveddir)
 
 SYMBOLS_DIR = FindSymbolsDir()
@@ -166,7 +172,7 @@ def FindToolchain():
 
   _CACHED_TOOLCHAIN = toolchain
   _CACHED_TOOLCHAIN_ARCH = ARCH
-  print "Using %s toolchain from: %s" % (_CACHED_TOOLCHAIN_ARCH, _CACHED_TOOLCHAIN)
+  print("Using %s toolchain from: %s" % (_CACHED_TOOLCHAIN_ARCH, _CACHED_TOOLCHAIN))
   return _CACHED_TOOLCHAIN
 
 
@@ -547,6 +553,7 @@ class FindToolchainTests(unittest.TestCase):
     ARCH = abi
     FindToolchain() # Will throw on failure.
 
+  @unittest.skipIf(ANDROID_BUILD_TOP == '.', 'Test only supported in an Android tree.')
   def test_toolchains_found(self):
     self.assert_toolchain_found("arm")
     self.assert_toolchain_found("arm64")
@@ -717,7 +724,13 @@ class SetArchTests(unittest.TestCase):
   def test_no_abi(self):
     global ARCH
 
-    self.assertRaisesRegexp(Exception, "Could not determine arch from input, use --arch=XXX to specify it", SetAbi, [])
+    # Python2 vs Python3 compatibility: Python3 warns on Regexp deprecation, but Regex
+    #                                   does not provide that name.
+    if not hasattr(unittest.TestCase, 'assertRaisesRegex'):
+      unittest.TestCase.assertRaisesRegex = getattr(unittest.TestCase, 'assertRaisesRegexp')
+    self.assertRaisesRegex(Exception,
+                           "Could not determine arch from input, use --arch=XXX to specify it",
+                           SetAbi, [])
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(verbosity=2)
