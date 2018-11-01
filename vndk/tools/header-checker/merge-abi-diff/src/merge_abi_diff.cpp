@@ -139,7 +139,7 @@ int main(int argc, const char **argv) {
                  << "VNDK Abi "
                  << status_str
                  << ":"
-                 << " Please check compatiblity report at : "
+                 << " Please check compatibility report at : "
                  << merged_diff_report << "\n"
                  << "******************************************************\n";
   }
