@@ -196,7 +196,7 @@ int main(int argc, const char **argv) {
                  << "'s ABI has "
                  << status_str
                  << unreferenced_change_str
-                 << " Please check compatiblity report at: "
+                 << " Please check compatibility report at: "
                  << compatibility_report << "\n"
                  << "******************************************************\n";
   }
