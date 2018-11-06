@@ -22,6 +22,10 @@ function main() {
     local PARAMS=" --config_xml $ANDROID_BUILD_TOP/prebuilts/checkstyle/android-style.xml"
     $ANDROID_BUILD_TOP/prebuilts/checkstyle/checkstyle.py $PARAMS
 
+    #C++ check, no-op if no C, C++ files.
+    $ANDROID_BUILD_TOP/prebuilts/clang/host/linux-x86/clang-stable/bin/git-clang-format \
+            --commit HEAD^ --style file --extensions c,h,cc,cpp
+
     #commit message equal or less then 65 char for each line (suggested by lorenzo@20180625)
     local MSG=`git rev-list --format=%B --max-count=1 HEAD`
     local i=1
