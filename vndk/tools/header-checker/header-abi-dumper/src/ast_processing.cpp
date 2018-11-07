@@ -47,6 +47,10 @@ HeaderASTVisitor::HeaderASTVisitor(
       ast_caches_(ast_caches) {}
 
 bool HeaderASTVisitor::VisitRecordDecl(const clang::RecordDecl *decl) {
+  // Avoid segmentation fault in getASTRecordLayout.
+  if (decl->isInvalidDecl()) {
+    return true;
+  }
   // Skip forward declarations, dependent records. Also skip anonymous records
   // as they will be traversed through record fields.
   if (!decl->isThisDeclarationADefinition() ||
@@ -176,14 +180,8 @@ bool HeaderASTVisitor::TraverseDecl(clang::Decl *decl) {
 }
 
 HeaderASTConsumer::HeaderASTConsumer(
-    clang::CompilerInstance *compiler_instancep,
-    const std::string &out_dump_name,
-    std::set<std::string> &exported_headers,
-    abi_util::TextFormatIR text_format)
-    : cip_(compiler_instancep),
-      out_dump_name_(out_dump_name),
-      exported_headers_(exported_headers),
-      text_format_(text_format) {}
+    clang::CompilerInstance *compiler_instancep, HeaderCheckerOptions &options)
+    : cip_(compiler_instancep), options_(options) {}
 
 void HeaderASTConsumer::HandleTranslationUnit(clang::ASTContext &ctx) {
   clang::PrintingPolicy policy(ctx.getPrintingPolicy());
@@ -198,13 +196,15 @@ void HeaderASTConsumer::HandleTranslationUnit(clang::ASTContext &ctx) {
   const std::string &translation_unit_source =
       ABIWrapper::GetDeclSourceFile(translation_unit, cip_);
   ast_util::ASTCaches ast_caches(translation_unit_source);
-  if (!exported_headers_.empty()) {
-    exported_headers_.insert(translation_unit_source);
+  if (!options_.exported_headers_.empty()) {
+    options_.exported_headers_.insert(translation_unit_source);
   }
   std::unique_ptr<abi_util::IRDumper> ir_dumper =
-      abi_util::IRDumper::CreateIRDumper(text_format_, out_dump_name_);
-  HeaderASTVisitor v(mangle_contextp.get(), &ctx, cip_, exported_headers_,
-                     translation_unit, ir_dumper.get(), &ast_caches);
+      abi_util::IRDumper::CreateIRDumper(options_.text_format_,
+                                         options_.dump_name_);
+  HeaderASTVisitor v(mangle_contextp.get(), &ctx, cip_,
+                     options_.exported_headers_, translation_unit,
+                     ir_dumper.get(), &ast_caches);
 
   if (!v.TraverseDecl(translation_unit) || !ir_dumper->Dump()) {
     llvm::errs() << "Serialization to ostream failed\n";
