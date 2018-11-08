@@ -19,7 +19,7 @@ except KeyError:
 BUILTIN_HEADERS_DIR = (
     os.path.join(AOSP_DIR, 'bionic', 'libc', 'include'),
     os.path.join(AOSP_DIR, 'external', 'libcxx', 'include'),
-    os.path.join(AOSP_DIR, 'prebuilts', 'sdk', 'renderscript', 'clang-include'),
+    os.path.join(AOSP_DIR, 'prebuilts', 'clang-tools', 'linux-x86', 'clang-headers'),
 )
 
 EXPORTED_HEADERS_DIR = (
