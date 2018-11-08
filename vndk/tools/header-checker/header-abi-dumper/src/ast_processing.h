@@ -30,10 +30,10 @@
 class HeaderASTVisitor
     : public clang::RecursiveASTVisitor<HeaderASTVisitor> {
  public:
-  HeaderASTVisitor(clang::MangleContext *mangle_contextp,
+  HeaderASTVisitor(const HeaderCheckerOptions &options,
+                   clang::MangleContext *mangle_contextp,
                    clang::ASTContext *ast_contextp,
                    const clang::CompilerInstance *compiler_instance_p,
-                   const std::set<std::string> &exported_headers,
                    const clang::Decl *tu_decl,
                    abi_util::IRDumper *ir_dumper,
                    ast_util::ASTCaches *ast_caches);
@@ -49,15 +49,15 @@ class HeaderASTVisitor
   bool TraverseDecl(clang::Decl *decl);
 
   // Enable recursive traversal of template instantiations.
-  bool shouldVisitTemplateInstantiations() const {
-    return true;
-  }
+  bool shouldVisitTemplateInstantiations() const { return true; }
 
  private:
+  bool ShouldSkipFunctionDecl(const clang::FunctionDecl *decl);
+
+  const HeaderCheckerOptions &options_;
   clang::MangleContext *mangle_contextp_;
   clang::ASTContext *ast_contextp_;
   const clang::CompilerInstance *cip_;
-  const std::set<std::string> &exported_headers_;
   // To optimize recursion into only exported abi.
   const clang::Decl *tu_decl_;
   abi_util::IRDumper *ir_dumper_;

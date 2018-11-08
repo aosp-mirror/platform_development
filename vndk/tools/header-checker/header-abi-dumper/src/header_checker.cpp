@@ -57,6 +57,12 @@ static llvm::cl::opt<bool> suppress_errors(
     llvm::cl::desc("Suppress preprocess and semantic errors"),
     llvm::cl::Optional, llvm::cl::cat(header_checker_category));
 
+static llvm::cl::opt<bool> dump_function_declarations(
+    "dump-function-declarations",
+    llvm::cl::desc("Output the functions declared but not defined in the input "
+                   "file"),
+    llvm::cl::Optional, llvm::cl::cat(header_checker_category));
+
 static llvm::cl::opt<abi_util::TextFormatIR> output_format(
     "output-format", llvm::cl::desc("Specify format of output dump file"),
     llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
@@ -130,8 +136,9 @@ int main(int argc, const char **argv) {
 
   // Initialize clang tools and run front-end action.
   std::vector<std::string> header_files{ header_file };
-  HeaderCheckerOptions options(out_dump, std::move(exported_headers),
-                               output_format, suppress_errors);
+  HeaderCheckerOptions options(abi_util::RealPath(header_file), out_dump,
+                               std::move(exported_headers), output_format,
+                               dump_function_declarations, suppress_errors);
 
   clang::tooling::ClangTool tool(*compilations, header_files);
   std::unique_ptr<clang::tooling::FrontendActionFactory> factory(
