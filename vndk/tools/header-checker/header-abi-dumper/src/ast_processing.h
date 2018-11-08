@@ -16,7 +16,7 @@
 #define AST_PROCESSING_H_
 
 #include "ast_util.h"
-#include "ir_representation.h"
+#include "header_checker.h"
 
 #include <clang/AST/AST.h>
 #include <clang/AST/ASTConsumer.h>
@@ -69,17 +69,13 @@ class HeaderASTVisitor
 class HeaderASTConsumer : public clang::ASTConsumer {
  public:
   HeaderASTConsumer(clang::CompilerInstance *compiler_instancep,
-                    const std::string &out_dump_name,
-                    std::set<std::string> &exported_headers,
-                    abi_util::TextFormatIR text_format);
+                    HeaderCheckerOptions &options);
 
   void HandleTranslationUnit(clang::ASTContext &ctx) override;
 
  private:
   clang::CompilerInstance *cip_;
-  const std::string &out_dump_name_;
-  std::set<std::string> &exported_headers_;
-  abi_util::TextFormatIR text_format_;
+  HeaderCheckerOptions &options_;
 };
 
 #endif  // AST_PROCESSING_H_
