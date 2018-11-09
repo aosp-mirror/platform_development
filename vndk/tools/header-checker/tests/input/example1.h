@@ -37,6 +37,7 @@ struct CPPHello : private HelloAgain, public ByeAgain<float_type> {
   cfloat_type cpp_bar;
   virtual int again() { return 0; }
   CPPHello() : cpp_foo(20), cpp_bar(1.234) {}
+  CPPHello(CPPHello &) = delete;
   enum Bla{BLA = 1};
   int test_enum() {return CPPHello::BLA;}
 };
