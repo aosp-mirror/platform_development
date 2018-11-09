@@ -97,21 +97,17 @@ class MyTest(unittest.TestCase):
                     read_output_content(old_ref_dump_path, AOSP_DIR),
                     read_output_content(new_ref_dump_path, AOSP_DIR))
 
-    def test_func_decl_no_args(self):
-        self.run_and_compare_name_c_cpp('func_decl_no_args.h')
+    def test_example1_cpp(self):
+        self.run_and_compare_name_cpp('example1.cpp')
 
-    def test_func_decl_one_arg(self):
-        self.run_and_compare_name_c_cpp('func_decl_one_arg.h')
-
-    def test_func_decl_two_args(self):
-        self.run_and_compare_name_c_cpp('func_decl_two_args.h')
-
-    def test_func_decl_one_arg_ret(self):
-        self.run_and_compare_name_c_cpp('func_decl_one_arg_ret.h')
-
-    def test_example1(self):
+    def test_example1_h(self):
         self.run_and_compare_name_cpp('example1.h')
+
+    def test_example2_h(self):
         self.run_and_compare_name_cpp('example2.h')
+
+    def test_example3_h(self):
+        self.run_and_compare_name_cpp('example3.h')
 
     def test_libc_and_cpp(self):
         self.prepare_and_run_abi_diff_all_archs(
