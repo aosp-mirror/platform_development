@@ -17,6 +17,6 @@
 package com.example.android.intentplayground;
 
 /**
- * An activity with documentLaunch="intoExisting" set in AndroidManifest.xml
+ * An activity with documentLaunch="intoExisting" set in AndroidManifest.xml.
  */
 public class DocumentLaunchIntoActivity extends BaseActivity {}

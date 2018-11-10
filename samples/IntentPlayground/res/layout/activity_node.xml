@@ -34,7 +34,7 @@
             android:id="@+id/color_label"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:src="@drawable/card_background"
+            android:src="@drawable/label_background"
             android:tint="@color/defaultTint" />
 
         <TextView
