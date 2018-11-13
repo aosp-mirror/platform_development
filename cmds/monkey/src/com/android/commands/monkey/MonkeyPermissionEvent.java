@@ -16,13 +16,13 @@
 
 package com.android.commands.monkey;
 
+import android.app.ActivityManager;
 import android.app.IActivityManager;
 import android.content.pm.IPackageManager;
 import android.content.pm.PackageManager;
 import android.content.pm.PermissionInfo;
 import android.os.RemoteException;
 import android.os.ServiceManager;
-import android.os.UserHandle;
 import android.view.IWindowManager;
 
 public class MonkeyPermissionEvent extends MonkeyEvent {
@@ -38,17 +38,18 @@ public class MonkeyPermissionEvent extends MonkeyEvent {
     @Override
     public int injectEvent(IWindowManager iwm, IActivityManager iam, int verbose) {
         IPackageManager pm = IPackageManager.Stub.asInterface(ServiceManager.getService("package"));
+        int currentUser = ActivityManager.getCurrentUser();
         try {
             // determine if we should grant or revoke permission
-            int perm = pm.checkPermission(mPermissionInfo.name, mPkg, UserHandle.myUserId());
+            int perm = pm.checkPermission(mPermissionInfo.name, mPkg, currentUser);
             boolean grant = perm == PackageManager.PERMISSION_DENIED;
             // log before calling pm in case we hit an error
             Logger.out.println(String.format(":Permission %s %s to package %s",
                     grant ? "grant" : "revoke", mPermissionInfo.name, mPkg));
             if (grant) {
-                pm.grantRuntimePermission(mPkg, mPermissionInfo.name, UserHandle.myUserId());
+                pm.grantRuntimePermission(mPkg, mPermissionInfo.name, currentUser);
             } else {
-                pm.revokeRuntimePermission(mPkg, mPermissionInfo.name, UserHandle.myUserId());
+                pm.revokeRuntimePermission(mPkg, mPermissionInfo.name, currentUser);
             }
             return MonkeyEvent.INJECT_SUCCESS;
         } catch (RemoteException re) {
