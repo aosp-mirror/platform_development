@@ -222,19 +222,22 @@ def main():
         update_tag(prefix_vendor + name, 'VNDK-SP-Private',
                    'Workaround for degenerated VDNK')
 
-    # Workaround for libclang_rt.asan
-    prefix = 'libclang_rt.asan'
-    if any(name.startswith(prefix) for name in llndk):
-        for path in list(data.keys()):
-            if os.path.basename(path).startswith(prefix):
-                update_tag(path, 'LL-NDK')
-
-    # Workaround for libclang_rt.ubsan_standalone
-    prefix = 'libclang_rt.ubsan_standalone'
-    if any(name.startswith(prefix) for name in vndk):
-        for path in list(data.keys()):
-            if os.path.basename(path).startswith(prefix):
-                update_tag(path, 'VNDK')
+    # Workaround for libclang_rt.*.so
+    lib_sets = {
+        'LL-NDK': llndk,
+        'VNDK': vndk,
+    }
+    prefixes = {
+        'libclang_rt.asan': 'LL-NDK',
+        'libclang_rt.hwasan': 'LL-NDK',
+        'libclang_rt.scudo': 'VNDK',
+        'libclang_rt.ubsan_standalone': 'VNDK',
+    }
+    for prefix, tag in prefixes.items():
+        if any(name.startswith(prefix) for name in lib_sets[tag]):
+            for path in list(data.keys()):
+                if os.path.basename(path).startswith(prefix):
+                    update_tag(path, tag)
 
     # Merge regular expression patterns into final dataset
     for regex in regex_patterns:
