@@ -50,7 +50,8 @@ bool CollectExportedHeaderSet(const std::string &dir_name,
   llvm::sys::fs::recursive_directory_iterator end;
   for ( ; walker != end; walker.increment(ec)) {
     if (ec) {
-      llvm::errs() << "Failed to walk dir : " << dir_name << "\n";
+      llvm::errs() << "Failed to walk directory: " << dir_name << ": "
+                   << ec.message() << "\n";
       return false;
     }
 
@@ -67,7 +68,7 @@ bool CollectExportedHeaderSet(const std::string &dir_name,
 
     llvm::ErrorOr<llvm::sys::fs::basic_file_status> status = walker->status();
     if (!status) {
-      llvm::errs() << "Failed to stat file : " << file_path << "\n";
+      llvm::errs() << "Failed to stat file: " << file_path << "\n";
       return false;
     }
 
