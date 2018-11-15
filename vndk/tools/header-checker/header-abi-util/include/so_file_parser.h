@@ -17,9 +17,6 @@
 
 #include "ir_representation.h"
 
-#include <llvm/Object/ELFObjectFile.h>
-#include <llvm/Object/ELFTypes.h>
-
 #include <memory>
 #include <map>
 #include <string>
@@ -28,38 +25,13 @@ namespace abi_util {
 
 class SoFileParser {
  public:
+  static std::unique_ptr<SoFileParser> Create(const std::string &so_file_path);
+
   virtual ~SoFileParser() {}
 
-  static std::unique_ptr<SoFileParser> Create(
-      const llvm::object::ObjectFile *obj);
-
   virtual const std::map<std::string, ElfFunctionIR> &GetFunctions() const = 0;
+
   virtual const std::map<std::string, ElfObjectIR> &GetGlobVars() const = 0;
-  virtual void GetSymbols() = 0;
-};
-
-template<typename T>
-class ELFSoFileParser : public SoFileParser {
- private:
-  LLVM_ELF_IMPORT_TYPES_ELFT(T)
-  typedef llvm::object::ELFFile<T> ELFO;
-  typedef typename ELFO::Elf_Sym Elf_Sym;
-
- public:
-  ELFSoFileParser(const llvm::object::ELFObjectFile<T> *obj) : obj_(obj) {}
-  ~ELFSoFileParser() override {}
-
-  const std::map<std::string, ElfFunctionIR> &GetFunctions() const override;
-  const std::map<std::string, ElfObjectIR> &GetGlobVars() const override;
-  void GetSymbols() override;
-
- private:
-  const llvm::object::ELFObjectFile<T> *obj_;
-  std::map<std::string, abi_util::ElfFunctionIR> functions_;
-  std::map<std::string, abi_util::ElfObjectIR> globvars_;
-
- private:
-  bool IsSymbolExported(const Elf_Sym *elf_sym) const;
 };
 
 }  // namespace abi_util

@@ -106,9 +106,13 @@ class HeaderAbiLinker {
                 const abi_util::AbiElementMap<T> &src,
                 const std::function<bool(const std::string &)> &symbol_filter);
 
-  bool ParseVersionScriptFiles();
+  std::unique_ptr<abi_util::TextFormatToIRReader> ReadInputDumpFiles();
 
-  bool ParseSoFile();
+  bool ReadExportedSymbols();
+
+  bool ReadExportedSymbolsFromVersionScript();
+
+  bool ReadExportedSymbolsFromSharedObjectFile();
 
   bool LinkTypes(const abi_util::TextFormatToIRReader *ir_reader,
                  abi_util::IRDumper *ir_dumper);
@@ -119,8 +123,7 @@ class HeaderAbiLinker {
   bool LinkGlobalVars(const abi_util::TextFormatToIRReader *ir_reader,
                       abi_util::IRDumper *ir_dumper);
 
-  bool AddElfSymbols(abi_util::IRDumper *ir_dumper);
-
+  bool LinkExportedSymbols(abi_util::IRDumper *ir_dumper);
 
  private:
   const std::vector<std::string> &dump_files_;
@@ -142,23 +145,6 @@ class HeaderAbiLinker {
   std::regex globvars_vs_regex_;
 };
 
-template <typename T>
-static bool AddElfSymbols(abi_util::IRDumper *dst,
-                          const std::map<std::string, T> &symbols) {
-  for (auto &&symbol : symbols) {
-    if (!dst->AddElfSymbolMessageIR(&(symbol.second))) {
-      return false;
-    }
-  }
-  return true;
-}
-
-// To be called right after parsing the .so file / version script.
-bool HeaderAbiLinker::AddElfSymbols(abi_util::IRDumper *ir_dumper) {
-  return ::AddElfSymbols(ir_dumper, function_decl_map_) &&
-         ::AddElfSymbols(ir_dumper, globvar_decl_map_);
-}
-
 static void DeDuplicateAbiElementsThread(
     const std::vector<std::string> &dump_files,
     const std::set<std::string> *exported_headers,
@@ -167,6 +153,7 @@ static void DeDuplicateAbiElementsThread(
   std::unique_ptr<abi_util::TextFormatToIRReader> local_reader =
       abi_util::TextFormatToIRReader::CreateTextFormatToIRReader(
           input_format, exported_headers);
+
   auto begin_it = dump_files.begin();
   std::size_t num_sources = dump_files.size();
   while (1) {
@@ -188,36 +175,20 @@ static void DeDuplicateAbiElementsThread(
       local_reader->MergeGraphs(*reader);
     }
   }
+
   std::lock_guard<std::mutex> lock(*greader_lock);
   greader->MergeGraphs(*local_reader);
 }
 
-bool HeaderAbiLinker::LinkAndDump() {
-  // If the user specifies that a version script should be used, use that.
-  if (!so_file_.empty()) {
-    exported_headers_ =
-        abi_util::CollectAllExportedHeaders(exported_header_dirs_);
-    if (!ParseSoFile()) {
-      llvm::errs() << "Couldn't parse so file\n";
-      return false;
-    }
-  } else if (!ParseVersionScriptFiles()) {
-    llvm::errs() << "Failed to parse stub files for exported symbols\n";
-    return false;
-  }
-  std::unique_ptr<abi_util::IRDumper> ir_dumper =
-      abi_util::IRDumper::CreateIRDumper(output_format, out_dump_name_);
-  assert(ir_dumper != nullptr);
-  AddElfSymbols(ir_dumper.get());
-  // Create a reader, on which we never actually call ReadDump(), since multiple
-  // dump files are associated with it.
+std::unique_ptr<abi_util::TextFormatToIRReader>
+HeaderAbiLinker::ReadInputDumpFiles() {
   std::unique_ptr<abi_util::TextFormatToIRReader> greader =
       abi_util::TextFormatToIRReader::CreateTextFormatToIRReader(
           input_format, &exported_headers_);
+
   std::size_t max_threads = std::thread::hardware_concurrency();
   std::size_t num_threads = kSourcesPerBatchThread < dump_files_.size() ?
-                    std::min(dump_files_.size() / kSourcesPerBatchThread,
-                             max_threads) : 0;
+      std::min(dump_files_.size() / kSourcesPerBatchThread, max_threads) : 0;
   std::vector<std::thread> threads;
   std::atomic<std::size_t> cnt(0);
   std::mutex greader_lock;
@@ -232,16 +203,42 @@ bool HeaderAbiLinker::LinkAndDump() {
     thread.join();
   }
 
+  return greader;
+}
+
+bool HeaderAbiLinker::LinkAndDump() {
+  // Extract exported functions and variables from a shared lib or a version
+  // script.
+  if (!ReadExportedSymbols()) {
+    return false;
+  }
+
+  // Construct the list of exported headers for source location filtering.
+  exported_headers_ =
+      abi_util::CollectAllExportedHeaders(exported_header_dirs_);
+
+  // Read all input ABI dumps.
+  auto greader = ReadInputDumpFiles();
+
+  // Link input ABI dumps.
+  std::unique_ptr<abi_util::IRDumper> ir_dumper =
+      abi_util::IRDumper::CreateIRDumper(output_format, out_dump_name_);
+  assert(ir_dumper != nullptr);
+
+  LinkExportedSymbols(ir_dumper.get());
+
   if (!LinkTypes(greader.get(), ir_dumper.get()) ||
       !LinkFunctions(greader.get(), ir_dumper.get()) ||
       !LinkGlobalVars(greader.get(), ir_dumper.get())) {
     llvm::errs() << "Failed to link elements\n";
     return false;
   }
+
   if (!ir_dumper->Dump()) {
-    llvm::errs() << "Serialization to ostream failed\n";
+    llvm::errs() << "Failed to serialize the linked output to ostream\n";
     return false;
   }
+
   return true;
 }
 
@@ -345,15 +342,56 @@ bool HeaderAbiLinker::LinkGlobalVars(
   return LinkDecl(ir_dumper, reader->GetGlobalVariables(), symbol_filter);
 }
 
-bool HeaderAbiLinker::ParseVersionScriptFiles() {
+template <typename T>
+static bool LinkExportedSymbols(abi_util::IRDumper *dst,
+                                const std::map<std::string, T> &symbols) {
+  for (auto &&symbol : symbols) {
+    if (!dst->AddElfSymbolMessageIR(&(symbol.second))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// To be called right after parsing the .so file / version script.
+bool HeaderAbiLinker::LinkExportedSymbols(abi_util::IRDumper *ir_dumper) {
+  return ::LinkExportedSymbols(ir_dumper, function_decl_map_) &&
+         ::LinkExportedSymbols(ir_dumper, globvar_decl_map_);
+}
+
+bool HeaderAbiLinker::ReadExportedSymbols() {
+  if (!so_file_.empty()) {
+    if (!ReadExportedSymbolsFromSharedObjectFile()) {
+      llvm::errs() << "Failed to parse the shared library (.so file): "
+                   << so_file_ << "\n";
+      return false;
+    }
+    return true;
+  }
+
+  if (!version_script_.empty()) {
+    if (!ReadExportedSymbolsFromVersionScript()) {
+      llvm::errs() << "Failed to parse the version script: " << version_script_
+                   << "\n";
+      return false;
+    }
+    return true;
+  }
+
+  llvm::errs() << "Either shared lib or version script must be specified.\n";
+  return false;
+}
+
+bool HeaderAbiLinker::ReadExportedSymbolsFromVersionScript() {
   abi_util::VersionScriptParser version_script_parser(
       version_script_, arch_, api_);
   if (!version_script_parser.Parse()) {
-    llvm::errs() << "Failed to parse version script\n";
     return false;
   }
+
   function_decl_map_ = version_script_parser.GetFunctions();
   globvar_decl_map_ = version_script_parser.GetGlobVars();
+
   std::set<std::string> function_regexs =
       version_script_parser.GetFunctionRegexs();
   std::set<std::string> globvar_regexs =
@@ -363,27 +401,13 @@ bool HeaderAbiLinker::ParseVersionScriptFiles() {
   return true;
 }
 
-bool HeaderAbiLinker::ParseSoFile() {
-  auto Binary = llvm::object::createBinary(so_file_);
-
-  if (!Binary) {
-    llvm::errs() << "Couldn't really create object File \n";
-    return false;
-  }
-  llvm::object::ObjectFile *objfile =
-      llvm::dyn_cast<llvm::object::ObjectFile>(&(*Binary.get().getBinary()));
-  if (!objfile) {
-    llvm::errs() << "Not an object file\n";
-    return false;
-  }
-
+bool HeaderAbiLinker::ReadExportedSymbolsFromSharedObjectFile() {
   std::unique_ptr<abi_util::SoFileParser> so_parser =
-      abi_util::SoFileParser::Create(objfile);
-  if (so_parser == nullptr) {
-    llvm::errs() << "Couldn't create soFile Parser\n";
+      abi_util::SoFileParser::Create(so_file_);
+  if (!so_parser) {
     return false;
   }
-  so_parser->GetSymbols();
+
   function_decl_map_ = so_parser->GetFunctions();
   globvar_decl_map_ = so_parser->GetGlobVars();
   return true;
