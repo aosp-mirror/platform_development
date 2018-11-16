@@ -19,7 +19,8 @@ except KeyError:
 BUILTIN_HEADERS_DIR = (
     os.path.join(AOSP_DIR, 'bionic', 'libc', 'include'),
     os.path.join(AOSP_DIR, 'external', 'libcxx', 'include'),
-    os.path.join(AOSP_DIR, 'prebuilts', 'clang-tools', 'linux-x86', 'clang-headers'),
+    os.path.join(AOSP_DIR, 'prebuilts', 'clang-tools', 'linux-x86',
+                 'clang-headers'),
 )
 
 EXPORTED_HEADERS_DIR = (
@@ -37,8 +38,6 @@ DEFAULT_CPPFLAGS = ['-x', 'c++', '-std=c++11']
 DEFAULT_CFLAGS = ['-std=gnu99']
 DEFAULT_HEADER_FLAGS = ["-dump-function-declarations"]
 DEFAULT_FORMAT = 'ProtobufTextFormat'
-
-TARGET_ARCHS = ['arm', 'arm64', 'x86', 'x86_64', 'mips', 'mips64']
 
 
 def get_reference_dump_dir(reference_dump_dir_stem,
@@ -78,21 +77,6 @@ def copy_reference_dump(lib_path, reference_dump_dir, compress):
     return reference_dump_path
 
 
-def copy_reference_dump_content(file_name, output_content,
-                                reference_dump_dir_stem,
-                                reference_dump_dir_insertion, lib_arch):
-    reference_dump_dir = get_reference_dump_dir(reference_dump_dir_stem,
-                                                reference_dump_dir_insertion,
-                                                lib_arch)
-    reference_dump_path = os.path.join(reference_dump_dir, file_name)
-    os.makedirs(os.path.dirname(reference_dump_path), exist_ok=True)
-    with open(reference_dump_path, 'w') as f:
-        f.write(output_content)
-
-    print('Created abi dump at', reference_dump_path)
-    return reference_dump_path
-
-
 def read_output_content(output_path, replace_str):
     with open(output_path, 'r') as f:
         return f.read().replace(replace_str, '')
@@ -115,7 +99,7 @@ def run_header_abi_dumper_on_file(input_path, output_path,
                                   export_include_dirs=tuple(), cflags=tuple(),
                                   flags=tuple()):
     input_ext = os.path.splitext(input_path)[1]
-    cmd = ['header-abi-dumper', '-o', output_path, input_path,]
+    cmd = ['header-abi-dumper', '-o', output_path, input_path]
     for dir in export_include_dirs:
         cmd += ['-I', dir]
     cmd += flags
@@ -188,15 +172,15 @@ def find_lib_lsdumps(target_arch, target_arch_variant,
     cpu_variant = '_' + target_cpu_variant
     arch_variant = '_' + target_arch_variant
     arch_lsdump_paths = []
-    if target_cpu_variant == 'generic' or target_cpu_variant is None or\
-        target_cpu_variant == '':
+    if (target_cpu_variant == 'generic' or target_cpu_variant is None or
+            target_cpu_variant == ''):
         cpu_variant = ''
-    if target_arch_variant == target_arch or target_arch_variant is None or\
-        target_arch_variant == '':
+    if (target_arch_variant == target_arch or target_arch_variant is None or
+            target_arch_variant == ''):
         arch_variant = ''
 
-    target_dir = 'android_' + target_arch + arch_variant +\
-        cpu_variant + core_or_vendor_shared_str
+    target_dir = ('android_' + target_arch + arch_variant +
+                  cpu_variant + core_or_vendor_shared_str)
     for key in lsdump_paths:
         if libs and key not in libs:
             continue
@@ -245,7 +229,7 @@ def get_build_vars_for_product(names, product=None):
     out, err = proc.communicate()
 
     if proc.returncode != 0:
-        print ("error: %s" % err.decode('utf-8'), file=sys.stderr)
+        print("error: %s" % err.decode('utf-8'), file=sys.stderr)
         return None
 
     build_vars = out.decode('utf-8').strip().splitlines()

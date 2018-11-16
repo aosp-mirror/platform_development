@@ -9,11 +9,9 @@ import_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 import_path = os.path.abspath(os.path.join(import_path, 'utils'))
 sys.path.insert(1, import_path)
 
-from utils import (
-    AOSP_DIR, SOURCE_ABI_DUMP_EXT, TARGET_ARCHS, read_output_content,
-    run_abi_diff, run_header_abi_dumper)
+from utils import (AOSP_DIR, read_output_content, run_abi_diff,
+                   run_header_abi_dumper)
 from module import Module
-from gen_all import make_and_copy_reference_dumps
 
 
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -22,10 +20,36 @@ EXPECTED_DIR = os.path.join(SCRIPT_DIR, 'expected')
 REF_DUMP_DIR = os.path.join(SCRIPT_DIR, 'reference_dumps')
 
 
-class MyTest(unittest.TestCase):
+def make_and_copy_reference_dumps(module, reference_dump_dir=REF_DUMP_DIR):
+    output_content = module.make_dump()
+
+    dump_dir = os.path.join(reference_dump_dir, module.arch)
+    os.makedirs(dump_dir, exist_ok=True)
+
+    dump_path = os.path.join(dump_dir, module.get_dump_name())
+    with open(dump_path, 'w') as f:
+        f.write(output_content)
+
+    return dump_path
+
+
+class HeaderCheckerTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.maxDiff = None
+
+    def setUp(self):
+        self.tmp_dir = None
+
+    def tearDown(self):
+        if self.tmp_dir:
+            self.tmp_dir.cleanup()
+            self.tmp_dir = None
+
+    def get_tmp_dir(self):
+        if not self.tmp_dir:
+            self.tmp_dir = tempfile.TemporaryDirectory()
+        return self.tmp_dir.name
 
     def run_and_compare(self, input_path, expected_path, cflags=[]):
         with open(expected_path, 'r') as f:
@@ -53,43 +77,43 @@ class MyTest(unittest.TestCase):
     def prepare_and_run_abi_diff(self, old_ref_dump_path, new_ref_dump_path,
                                  target_arch, expected_return_code, flags=[]):
         self.run_and_compare_abi_diff(old_ref_dump_path, new_ref_dump_path,
-                                      'test', target_arch, expected_return_code,
-                                      flags)
+                                      'test', target_arch,
+                                      expected_return_code, flags)
 
-    def create_ref_dump(self, module_bare, dir_name, target_arch):
-        module = module_bare.mutate_for_arch(target_arch)
-        return make_and_copy_reference_dumps(module, [], dir_name)
-
-    def get_or_create_ref_dump(self, name, target_arch, dir_name, create):
-        module = Module.get_test_module_by_name(name)
-        if create == True:
-            return self.create_ref_dump(module, dir_name, target_arch)
-        return os.path.join(REF_DUMP_DIR, target_arch, module.get_dump_name())
+    def get_or_create_ref_dump(self, module, create):
+        if create:
+            return make_and_copy_reference_dumps(module, self.get_tmp_dir())
+        return os.path.join(REF_DUMP_DIR, module.arch, module.get_dump_name())
 
     def prepare_and_run_abi_diff_all_archs(self, old_lib, new_lib,
                                            expected_return_code, flags=[],
                                            create_old=False, create_new=True):
-        with tempfile.TemporaryDirectory() as tmp:
-            for target_arch in TARGET_ARCHS:
-                old_ref_dump_path = self.get_or_create_ref_dump(
-                    old_lib, target_arch, tmp, create_old)
-                new_ref_dump_path = self.get_or_create_ref_dump(
-                    new_lib, target_arch, tmp, create_new)
-                self.prepare_and_run_abi_diff(
-                    old_ref_dump_path, new_ref_dump_path, target_arch,
-                    expected_return_code, flags)
+        old_modules = Module.get_test_modules_by_name(old_lib)
+        new_modules = Module.get_test_modules_by_name(new_lib)
+        self.assertEqual(len(old_modules), len(new_modules))
 
-    def prepare_and_absolute_diff_all_archs(self, old_lib, new_lib,
-                                            flags=[], create=True):
-        with tempfile.TemporaryDirectory() as tmp:
-            for target_arch in TARGET_ARCHS:
-                old_ref_dump_path = self.get_or_create_ref_dump(
-                    old_lib, target_arch, tmp, False)
-                new_ref_dump_path = self.get_or_create_ref_dump(
-                    new_lib, target_arch, tmp, create)
-                self.assertEqual(
-                    read_output_content(old_ref_dump_path, AOSP_DIR),
-                    read_output_content(new_ref_dump_path, AOSP_DIR))
+        for old_module, new_module in zip(old_modules, new_modules):
+            self.assertEqual(old_module.arch, new_module.arch)
+            old_ref_dump_path = self.get_or_create_ref_dump(old_module,
+                                                            create_old)
+            new_ref_dump_path = self.get_or_create_ref_dump(new_module,
+                                                            create_new)
+            self.prepare_and_run_abi_diff(
+                old_ref_dump_path, new_ref_dump_path, new_module.arch,
+                expected_return_code, flags)
+
+    def prepare_and_absolute_diff_all_archs(self, old_lib, new_lib):
+        old_modules = Module.get_test_modules_by_name(old_lib)
+        new_modules = Module.get_test_modules_by_name(new_lib)
+        self.assertEqual(len(old_modules), len(new_modules))
+
+        for old_module, new_module in zip(old_modules, new_modules):
+            self.assertEqual(old_module.arch, new_module.arch)
+            old_ref_dump_path = self.get_or_create_ref_dump(old_module, False)
+            new_ref_dump_path = self.get_or_create_ref_dump(new_module, True)
+            self.assertEqual(
+                read_output_content(old_ref_dump_path, AOSP_DIR),
+                read_output_content(new_ref_dump_path, AOSP_DIR))
 
     def test_example1_cpp(self):
         self.run_and_compare_name_cpp('example1.cpp')
@@ -168,7 +192,8 @@ class MyTest(unittest.TestCase):
 
     def test_libgolden_cpp_add_function_and_elf_symbol(self):
         self.prepare_and_run_abi_diff_all_archs(
-            "libgolden_cpp", "libgolden_cpp_add_function_and_unexported_elf", 4)
+            "libgolden_cpp", "libgolden_cpp_add_function_and_unexported_elf",
+            4)
 
     def test_libgolden_cpp_fabricated_function_ast_removed_diff(self):
         self.prepare_and_run_abi_diff_all_archs(
@@ -244,7 +269,8 @@ class MyTest(unittest.TestCase):
     def test_libgolden_cpp_member_function_pointer_changed(self):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp_function_pointer",
-            "libgolden_cpp_function_pointer_parameter_added", 8, [], True, True)
+            "libgolden_cpp_function_pointer_parameter_added", 8, [],
+            True, True)
 
     def test_libgolden_cpp_internal_struct_access_upgraded(self):
         self.prepare_and_run_abi_diff_all_archs(
