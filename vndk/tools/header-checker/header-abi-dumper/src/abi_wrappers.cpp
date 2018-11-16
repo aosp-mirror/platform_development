@@ -364,7 +364,10 @@ TypeAndCreationStatus ABIWrapper::SetTypeKind(
   if (type_ptr->isRecordType()) {
     // If this record is anonymous, create it.
     const clang::RecordDecl *anon_record = GetAnonymousRecord(canonical_type);
-    if (anon_record && !CreateAnonymousRecord(anon_record)) {
+    // Avoid constructing RecordDeclWrapper with invalid record, which results
+    // in segmentation fault.
+    if (anon_record && !anon_record->isInvalidDecl() &&
+        !CreateAnonymousRecord(anon_record)) {
       llvm::errs() << "Anonymous record could not be created\n";
       ::exit(1);
     }
