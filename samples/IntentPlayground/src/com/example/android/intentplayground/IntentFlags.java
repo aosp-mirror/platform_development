@@ -32,6 +32,7 @@ enum IntentFlag {
     NEW_TASK ("FLAG_ACTIVITY_NEW_TASK", emptySet(), emptySet(), emptySet()),
     CLEAR_TASK ("FLAG_ACTIVITY_CLEAR_TASK", emptySet(), emptySet(), setOf(NEW_TASK)),
     CLEAR_TOP ("FLAG_ACTIVITY_CLEAR_TOP", setOf(SINGLE_TOP, NEW_TASK), emptySet(), emptySet()),
+    MATCH_EXTERNAL("FLAG_ACTIVITY_MATCH_EXTERNAL", emptySet(), emptySet(), emptySet()),
     MULTIPLE_TASK ("FLAG_ACTIVITY_MULTIPLE_TASK", emptySet(), emptySet(), setOf(NEW_TASK)),
     NEW_DOCUMENT ("FLAG_ACTIVITY_NEW_DOCUMENT", setOf(MULTIPLE_TASK), emptySet(),
             emptySet()),
