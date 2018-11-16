@@ -107,7 +107,12 @@ bool HeaderASTVisitor::ShouldSkipFunctionDecl(const clang::FunctionDecl *decl) {
   }
   if (const clang::CXXMethodDecl *method_decl =
       llvm::dyn_cast<clang::CXXMethodDecl>(decl)) {
-    if (method_decl->getParent()->getTypeForDecl()->isDependentType()) {
+    const clang::CXXRecordDecl *record_decl = method_decl->getParent();
+    // Avoid segmentation fault in getThunkInfo in getAllManglings.
+    if (method_decl->isVirtual() && record_decl->isInvalidDecl()) {
+      return true;
+    }
+    if (record_decl->getTypeForDecl()->isDependentType()) {
       return true;
     }
   }
