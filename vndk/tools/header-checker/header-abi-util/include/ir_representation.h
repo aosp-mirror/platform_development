@@ -933,18 +933,6 @@ class TextFormatToIRReader {
 
   virtual bool ReadDump(const std::string &dump_file) = 0;
 
-  template <typename Iterator>
-  bool ReadDumps(Iterator begin, Iterator end) {
-    Iterator it = begin;
-    while (it != end) {
-      if (!ReadDump(*it)) {
-        return false;
-      }
-      ++it;
-    }
-    return true;
-  }
-
   void Merge(TextFormatToIRReader &&addend) {
     MergeElements(&functions_, std::move(addend.functions_));
     MergeElements(&global_variables_, std::move(addend.global_variables_));
