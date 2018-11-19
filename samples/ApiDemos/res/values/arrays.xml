@@ -83,20 +83,6 @@
         <item>Every Sunday</item>
     </string-array>
     
-    <!-- Used in app/menu examples -->
-    <string-array name="entries_list_preference">
-        <item>Alpha Option 01</item>
-        <item>Beta Option 02</item>
-        <item>Charlie Option 03</item>  
-    </string-array>
-
-    <!-- Used in app/menu examples -->
-    <string-array name="entryvalues_list_preference">
-        <item>alpha</item>
-        <item>beta</item>
-        <item>charlie</item>  
-    </string-array>
-    
     <!-- Used in app/Sample Device Admin -->
     <string-array name="password_qualities">
         <item>Unspecified</item>
