@@ -4,9 +4,9 @@ usage () {
     echo
     echo "Usage: $0 [-v <vendor_version>] [-m <modify_system_image_path>]"
     echo "    [-t <prebuilt_otatools_path>] [-p <override_vbmeta_image_path>]"
-    echo "    system_build_dir device_build_dir out_dir [check_tool]"
+    echo "    [-s] system_build_dir device_build_dir out_dir [check_tool]"
     echo
-    echo "Options -v, -m, -t, -p must precede positional arguments."
+    echo "Options -v, -m, -t, -p, -s must precede positional arguments."
     echo
     echo "vendor_version is the version of the vendor image when Keymaster v3"
     echo "    related modifications to the system image is necessary. Optional."
@@ -17,6 +17,10 @@ usage () {
     echo "    required host binaries to modify system image. Optional."
     echo "override_vbmeta_image_path is the path to a vbmeta.img to use"
     echo "    to override the existing vbmeta.img of device. Optional."
+    echo "-s is used to fetch and flash both product.img and system.img from"
+    echo "    the system_build_dir for devices with a product partition."
+    echo "    By default, only system.img is flashed to the target device for"
+    echo "    independent system update. No parameter required. Optional"
     echo "system_build_dir is the path to the system build"
     echo "    eg. aosp_arm64_ab-userdebug."
     echo "device_build_dir is the path to the device build"
@@ -44,7 +48,7 @@ cleanup_and_exit () {
 
 trap cleanup_and_exit EXIT
 
-while getopts :v:m:p:t: opt; do
+while getopts :v:m:p:t:s opt; do
     case "$opt" in
         v)
             readonly VENDOR_VERSION="$OPTARG"
@@ -57,6 +61,9 @@ while getopts :v:m:p:t: opt; do
             ;;
         t)
             readonly OTATOOLS_ZIP="$OPTARG"
+            ;;
+        s)
+            readonly INCLUDE_PRODUCT=true
             ;;
         \?)
             exit_badparam "Invalid options: -"$OPTARG""
@@ -117,11 +124,23 @@ readonly SYSTEM_BUILD_PROP="SYSTEM/build.prop"
 
 ###
 # Uncompress the archives.
+declare -a EXTRACT_FILE_LIST
+EXTRACT_FILE_LIST=(
+    IMAGES/system.img \
+    IMAGES/vbmeta.img \
+    META/system_matrix.xml \
+    META/system_manifest.xml \
+    "$SYSTEM_BUILD_PROP" \
+)
+
+if [[ "$INCLUDE_PRODUCT" == true ]]; then
+  EXTRACT_FILE_LIST+=(IMAGES/product.img)
+fi
+
 mkdir -p "$SYSTEM_ARTIFACTS_DIR"
 # Get the system images and meta data.
-unzip "$SYSTEM_TARGET_FILES_ARCHIVE" \
-  IMAGES/system.img IMAGES/vbmeta.img META/system_matrix.xml META/system_manifest.xml "$SYSTEM_BUILD_PROP" \
-  -d "$SYSTEM_ARTIFACTS_DIR"
+# ${EXTRACT_FILE_LIST[*]} cannot be quoted to list each file for unzipping
+unzip "$SYSTEM_TARGET_FILES_ARCHIVE" ${EXTRACT_FILE_LIST[*]} -d "$SYSTEM_ARTIFACTS_DIR"
 
 mkdir -p "$DEVICE_IMAGES_DIR"
 # Get the device images.
@@ -180,6 +199,9 @@ fi
 ###
 # Overwrite artifacts in the device archive to create the Mixed Build artifacts.
 cp "$SYSTEM_IMAGES_DIR"/system.img "$DEVICE_IMAGES_DIR"/
+if [[ "$INCLUDE_PRODUCT" == true ]]; then
+  cp "$SYSTEM_IMAGES_DIR"/product.img "$DEVICE_IMAGES_DIR"/
+fi
 
 # Only override vbmeta if it is already present since fastboot update will try
 # to flash whatever is in the archive.
