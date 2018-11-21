@@ -189,9 +189,9 @@ public class LauncherActivity extends FragmentActivity implements AppPickedCallb
     }
 
     void launch(Intent launchIntent) {
+        launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         if (mNewInstanceCheckBox.isChecked()) {
-            launchIntent.addFlags(
-                    Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+            launchIntent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
         }
         final ActivityOptions options = ActivityOptions.makeBasic();
         if (mSelectedDisplayId != Display.INVALID_DISPLAY) {
