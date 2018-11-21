@@ -69,8 +69,8 @@ public class LauncherActivity extends FragmentActivity implements AppPickedCallb
         PopupMenu.OnMenuItemClickListener {
 
     private Spinner mDisplaySpinner;
-    private List<Display> mDisplayList;
-    private int mSelectedDisplayId;
+    private ArrayAdapter<DisplayItem> mDisplayAdapter;
+    private int mSelectedDisplayId = Display.INVALID_DISPLAY;
     private View mScrimView;
     private AppListAdapter mAppListAdapter;
     private AppListAdapter mPinnedAppListAdapter;
@@ -101,14 +101,18 @@ public class LauncherActivity extends FragmentActivity implements AppPickedCallb
         mDisplaySpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                mSelectedDisplayId = mDisplayList.get(i).getDisplayId();
+                mSelectedDisplayId = mDisplayAdapter.getItem(i).mId;
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {
-                mSelectedDisplayId = -1;
+                mSelectedDisplayId = Display.INVALID_DISPLAY;
             }
         });
+        mDisplayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item,
+                new ArrayList<DisplayItem>());
+        mDisplayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mDisplaySpinner.setAdapter(mDisplayAdapter);
 
         final ViewModelProvider viewModelProvider = new ViewModelProvider(getViewModelStore(),
                 new AndroidViewModelFactory((Application) getApplicationContext()));
@@ -209,44 +213,33 @@ public class LauncherActivity extends FragmentActivity implements AppPickedCallb
         }
     }
 
-    private void refreshDisplayPicker(View view) {
-        final WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
-        final int currentDisplayId = wm.getDefaultDisplay().getDisplayId();
-        final DisplayManager dm = (DisplayManager) getSystemService(Context.DISPLAY_SERVICE);
-        mDisplayList = Arrays.asList(dm.getDisplays());
-        final List<String> spinnerItems = new ArrayList<>();
+    private void refreshDisplayPicker() {
+        refreshDisplayPicker(mAppDrawerView);
+    }
 
-        int preferredDisplayPosition = -1;
-        int biggestId = -1, biggestPos = -1;
-        for (int i = 0; i < mDisplayList.size(); i++) {
-            final Display display = mDisplayList.get(i);
+    private void refreshDisplayPicker(View view) {
+        final int currentDisplayId = view.getDisplay().getDisplayId();
+        final DisplayManager dm = getSystemService(DisplayManager.class);
+        mDisplayAdapter.setNotifyOnChange(false);
+        mDisplayAdapter.clear();
+        mDisplayAdapter.add(new DisplayItem(Display.INVALID_DISPLAY, "Do not specify display"));
+
+        for (Display display : dm.getDisplays()) {
             final int id = display.getDisplayId();
             final boolean isDisplayPrivate = (display.getFlags() & Display.FLAG_PRIVATE) != 0;
             final boolean isCurrentDisplay = id == currentDisplayId;
-            if (isCurrentDisplay) {
-                preferredDisplayPosition = i;
-            }
             final StringBuilder sb = new StringBuilder();
-            if (isCurrentDisplay) {
-                sb.append("[Current display] ");
-            }
             sb.append(id).append(": ").append(display.getName());
             if (isDisplayPrivate) {
                 sb.append(" (private)");
             }
-            spinnerItems.add(sb.toString());
-            if (display.getDisplayId() > biggestId) {
-                biggestId = display.getDisplayId();
-                biggestPos = i;
+            if (isCurrentDisplay) {
+                sb.append(" [Current display]");
             }
+            mDisplayAdapter.add(new DisplayItem(id, sb.toString()));
         }
-        mSelectedDisplayId = mDisplayList.get(preferredDisplayPosition).getDisplayId();
 
-        final ArrayAdapter<String> displayAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item, spinnerItems);
-        displayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mDisplaySpinner.setAdapter(displayAdapter);
-        mDisplaySpinner.setSelection(preferredDisplayPosition);
+        mDisplayAdapter.notifyDataSetChanged();
     }
 
     /**
@@ -283,7 +276,7 @@ public class LauncherActivity extends FragmentActivity implements AppPickedCallb
             mAppDrawerView.setVisibility(View.VISIBLE);
             mScrimView.setVisibility(View.VISIBLE);
             mFab.setVisibility(View.INVISIBLE);
-            refreshDisplayPicker(null);
+            refreshDisplayPicker();
         } else {
             mAppDrawerShown = false;
             mScrimView.setVisibility(View.INVISIBLE);
@@ -306,5 +299,20 @@ public class LauncherActivity extends FragmentActivity implements AppPickedCallb
         final int radius = (int) Math.hypot((double) view.getWidth(), (double) view.getHeight());
         return ViewAnimationUtils.createCircularReveal(view, view.getRight(), view.getBottom(),
                 open ? 0 : radius, open ? radius : 0);
+    }
+
+    private static class DisplayItem {
+        final int mId;
+        final String mDescription;
+
+        DisplayItem(int displayId, String description) {
+            mId = displayId;
+            mDescription = description;
+        }
+
+        @Override
+        public String toString() {
+            return mDescription;
+        }
     }
 }
