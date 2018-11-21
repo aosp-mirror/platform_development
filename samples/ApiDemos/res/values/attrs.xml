@@ -15,12 +15,6 @@
 -->
 
 <resources>
-    <!-- These are the attributes that we want to retrieve from the theme
-         in app/PreferencesFromCode.java -->
-    <declare-styleable name="TogglePrefAttrs">
-        <attr name="android:preferenceLayoutChild" />
-    </declare-styleable>
-    
      <declare-styleable name="LabelView">
         <attr name="text" format="string" />
         <attr name="textColor" format="color" />
