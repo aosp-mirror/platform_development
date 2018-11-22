@@ -14,7 +14,7 @@
 
 #include "fake_decl_source.h"
 
-#include <clang/Lex/Lexer.h>
+#include <clang/Lex/Preprocessor.h>
 #include <clang/Sema/Lookup.h>
 
 FakeDeclSource::FakeDeclSource(const clang::CompilerInstance &ci) : ci_(ci) {}
@@ -90,10 +90,8 @@ FakeDeclSource::CreateDecl(clang::Sema::LookupNameKind kind,
         CreateCXXRecordDecl(name, decl_context);
     // If `<` follows the type name, the type must be a template.
     // Otherwise, the compiler takes it as a syntax error.
-    clang::Optional<clang::Token> next_token = clang::Lexer::findNextToken(
-        name_info.getLoc(), ci_.getASTContext().getSourceManager(),
-        ci_.getLangOpts());
-    if (next_token.hasValue() && next_token->is(clang::tok::less)) {
+    const clang::Token &next_token = ci_.getPreprocessor().LookAhead(0);
+    if (next_token.is(clang::tok::less)) {
       decl = CreateClassTemplateDecl(cxx_record_decl, decl_context);
     } else {
       decl = cxx_record_decl;
