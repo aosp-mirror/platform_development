@@ -77,7 +77,6 @@ public abstract class BaseActivity extends AppCompatActivity implements
         FragmentTransaction transaction = fragmentManager.beginTransaction()
                 .setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
         if (mode == Mode.LAUNCH) {
-            transaction.replace(R.id.fragment_container, new CurrentTaskFragment());
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 TreeFragment currentTaskFragment = new TreeFragment();
                 Bundle args = new Bundle();
