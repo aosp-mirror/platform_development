@@ -24,6 +24,7 @@
     <dimen name="regularText">16sp</dimen>
     <dimen name="smallText">12sp</dimen>
     <dimen name="listItem">48dp</dimen>
+    <dimen name="intentButtonSize">24dp</dimen>
     <dimen name="denseListItem">40dp</dimen>
     <dimen name="listIcon">48dp</dimen>
     <dimen name="listControl">24dp</dimen>
