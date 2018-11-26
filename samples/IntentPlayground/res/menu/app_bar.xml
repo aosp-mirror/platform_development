@@ -17,6 +17,10 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/app_bar_launch"
+        android:title="@string/launch_default_activities"/>
+
+    <item
         android:id="@+id/app_bar_test"
         android:icon="@drawable/icon_tests"
         android:iconTint="@color/white"
