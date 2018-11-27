@@ -26,7 +26,6 @@ import android.support.design.widget.FloatingActionButton;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import androidx.appcompat.app.AlertDialog;
@@ -153,13 +152,10 @@ public abstract class BaseActivity extends AppCompatActivity implements
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.app_bar_help:
-                showHelpDialog();
-                break;
             case R.id.app_bar_test:
                 runIntentTests();
                 break;
-            case R.id.app_bar_launch:
+            case R.id.app_bar_launch_default:
                 askToLaunchTasks();
                 break;
         }
@@ -213,37 +209,6 @@ public abstract class BaseActivity extends AppCompatActivity implements
     protected void runIntentTests() {
         startActivity(getPackageManager()
                 .getLaunchIntentForPackage("com.example.android.intentplayground.test"));
-    }
-
-    /**
-     * Creates and displays a help overlay on this activity.
-     */
-    protected void showHelpDialog() {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        LinearLayout container = findViewById(R.id.fragment_container);
-        container.setShowDividers(LinearLayout.SHOW_DIVIDER_NONE);
-        ShowcaseFragment demo = new ShowcaseFragment();
-        demo.addStep(R.string.help_step_one, R.id.task_tree_container, () -> {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-                TreeFragment frag = (TreeFragment) fragmentManager.findFragmentByTag(TREE_FRAGMENT);
-                if (frag != null) {
-                    frag.openTask(0);
-                    frag.openTask(1);
-                }
-            }
-        });
-        demo.addStep(R.string.help_step_two, R.id.intent_container);
-        demo.addStep(R.string.help_step_three, R.id.build_intent_container,
-                R.id.build_intent_view);
-        demo.addStep(R.string.help_step_four, R.id.fragment_container_bottom,
-                R.id.launch_button);
-        demo.setScroller(findViewById(R.id.scroll_container));
-        demo.setOnFinish(() -> container.setShowDividers(LinearLayout.SHOW_DIVIDER_MIDDLE));
-        fragmentManager.beginTransaction()
-                .add(R.id.root_container, demo)
-                .addToBackStack(null)
-                .setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out)
-                .commit();
     }
 
     protected Intent prepareLaunchForward() {

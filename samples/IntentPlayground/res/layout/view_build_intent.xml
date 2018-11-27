@@ -95,11 +95,4 @@
         android:layout_height="wrap_content"
         android:checkedButton="@+id/radio_launchMode_standard"
         android:orientation="vertical" />
-
-    <Button
-        android:id="@+id/launch_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="launchActivity"
-        android:text="@string/launch_activity_button" />
 </LinearLayout>
