@@ -25,7 +25,6 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.example.android.intentplayground.TaskInfo.ActivityInstanceInfoMirror;

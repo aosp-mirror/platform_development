@@ -16,13 +16,9 @@
 
 package com.example.android.intentplayground;
 
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -30,7 +26,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
-
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import java.util.ArrayList;
 
 /**
@@ -53,7 +52,7 @@ public abstract class BaseActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_main);
         if (BuildConfig.DEBUG) Log.d(getLocalClassName(), "onCreate()");
         // Setup action bar
-        Toolbar appBar = (Toolbar) findViewById(R.id.app_bar);
+        Toolbar appBar = findViewById(R.id.app_bar);
         setSupportActionBar(appBar);
         loadMode(Mode.LAUNCH);
     }
@@ -73,8 +72,8 @@ public abstract class BaseActivity extends AppCompatActivity implements
      */
     protected void loadMode(Mode mode) {
         Intent intent = getIntent();
-        ViewGroup container = (ViewGroup) findViewById(R.id.fragment_container);
-        FragmentManager fragmentManager = getFragmentManager();
+        ViewGroup container = findViewById(R.id.fragment_container);
+        FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction transaction = fragmentManager.beginTransaction()
                 .setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
         if (mode == Mode.LAUNCH) {
@@ -144,8 +143,8 @@ public abstract class BaseActivity extends AppCompatActivity implements
      * Creates and displays a help overlay on this activity.
      */
     protected void showHelpDialog() {
-        FragmentManager fragmentManager = getFragmentManager();
-        LinearLayout container = (LinearLayout) findViewById(R.id.fragment_container);
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        LinearLayout container = findViewById(R.id.fragment_container);
         container.setShowDividers(LinearLayout.SHOW_DIVIDER_NONE);
         ShowcaseFragment demo = new ShowcaseFragment();
         demo.addStep(R.string.help_step_one, R.id.task_tree_container, () -> {

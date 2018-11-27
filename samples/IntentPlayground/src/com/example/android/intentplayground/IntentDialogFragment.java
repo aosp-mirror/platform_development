@@ -16,9 +16,9 @@
 
 package com.example.android.intentplayground;
 
-import android.app.DialogFragment;
+
 import android.os.Bundle;
-import android.support.annotation.Nullable;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,6 +28,8 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
 
+import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,7 +73,7 @@ public class IntentDialogFragment extends DialogFragment {
         LinearLayout rootLayout = (LinearLayout) inflater
                 .inflate(R.layout.fragment_intent_dialog, container, false /* attachToRoot */);
         ListView flagsListView = rootLayout.findViewById(R.id.flag_list);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getActivity(),
                 R.layout.dialog_list_item, R.id.item, mFlags);
         flagsListView.setAdapter(adapter);
         rootLayout.findViewById(R.id.dialog_cancel).setOnClickListener(view -> {

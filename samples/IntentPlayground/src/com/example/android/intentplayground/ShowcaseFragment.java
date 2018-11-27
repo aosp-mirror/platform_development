@@ -15,16 +15,10 @@
  */
 package com.example.android.intentplayground;
 
-import android.app.Fragment;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.support.annotation.IdRes;
-import android.support.annotation.Nullable;
-import android.support.annotation.StringRes;
-import android.support.v4.view.PagerTitleStrip;
-import android.support.v4.view.ViewPager;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -33,6 +27,12 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ScrollView;
 
+import androidx.annotation.IdRes;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
+import androidx.fragment.app.Fragment;
+import androidx.viewpager.widget.PagerTitleStrip;
+import androidx.viewpager.widget.ViewPager;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -169,7 +169,7 @@ public class ShowcaseFragment extends Fragment {
      * Destroys this fragment.
      */
     public void cancel() {
-        getActivity().getFragmentManager().beginTransaction().remove(this).commit();
+        getActivity().getSupportFragmentManager().beginTransaction().remove(this).commit();
     }
 
     private void clearHighlight() {

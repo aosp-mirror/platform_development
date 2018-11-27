@@ -15,8 +15,6 @@
  */
 package com.example.android.intentplayground;
 
-import android.app.Activity;
-import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,6 +24,8 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentTransaction;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -34,7 +34,7 @@ import java.util.Locale;
  * A two-level adapter for tasks and the activities that they hold (represented by Node).
  */
 class ExpandableAdapter extends BaseExpandableListAdapter {
-    private Activity mActivity;
+    private FragmentActivity mActivity;
     private Node mTasks;
 
     /**
@@ -42,7 +42,7 @@ class ExpandableAdapter extends BaseExpandableListAdapter {
      * @param activity The activity that holds this adapter.
      * @param tasks The {@link Node} root of the task hierarchy.
      */
-    public ExpandableAdapter(Activity activity, Node tasks) {
+    public ExpandableAdapter(FragmentActivity activity, Node tasks) {
         mActivity = activity;
         mTasks = tasks;
     }
@@ -148,7 +148,7 @@ class ExpandableAdapter extends BaseExpandableListAdapter {
      * @param flags The flags to list.
      */
     private void showDialogWithFlags(String shortClassName, List<String> flags) {
-        FragmentTransaction transaction = mActivity.getFragmentManager().beginTransaction();
+        FragmentTransaction transaction = mActivity.getSupportFragmentManager().beginTransaction();
         IntentDialogFragment.newInstance(shortClassName, flags).show(transaction, "intentDialog");
     }
 

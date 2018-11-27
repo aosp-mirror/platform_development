@@ -16,8 +16,8 @@
 
 package com.example.android.intentplayground;
 
-import android.app.Fragment;
 import android.view.View;
+import androidx.fragment.app.Fragment;
 
 class BuildConfig {
     static final boolean DEBUG = true;
