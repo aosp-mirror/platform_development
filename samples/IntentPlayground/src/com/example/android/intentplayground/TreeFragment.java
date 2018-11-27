@@ -59,6 +59,9 @@ public class TreeFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         mViewModel = (new ViewModelProvider(getActivity(),
                 new ViewModelProvider.NewInstanceFactory())).get(BaseActivityViewModel.class);
+
+        mViewModel.getRefresh().observe(this, v -> this.onResumeHelper());
+
     }
 
     @Override
@@ -84,21 +87,6 @@ public class TreeFragment extends Fragment {
         recyclerView
                 .setLayoutManager(
                         new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
-    }
-
-    private void removeTask(int taskId) {
-        ActivityManager am = mActivity.getSystemService(ActivityManager.class);
-        am.getAppTasks().forEach(task -> {
-            if (task.getTaskInfo().persistentId == taskId) {
-                task.finishAndRemoveTask();
-            }
-        });
-        onResume(); // manually trigger UI refresh
-    }
-
-    private void moveTaskToFront(int taskId) {
-        ActivityManager am = mActivity.getSystemService(ActivityManager.class);
-        am.moveTaskToFront(taskId, 0);
     }
 
     /**

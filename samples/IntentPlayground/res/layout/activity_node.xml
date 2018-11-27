@@ -27,16 +27,5 @@
         android:layout_marginEnd="@dimen/smallMargin"
         android:layout_weight="1"
         android:text="@string/activity_name"
-        android:textAppearance="@style/normal" />
-
-    <ImageButton
-        android:id="@+id/intent_button"
-        style="?android:attr/borderlessButtonStyle"
-        android:layout_width="@dimen/intentButtonSize"
-        android:layout_height="@dimen/intentButtonSize"
-        android:src="@drawable/info_icon"
-        android:tint="@color/defaultTint"
-        android:tooltipText="@string/intent_button_tooltip"
-        android:contentDescription="@string/intent_button_description" />
-
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
 </LinearLayout>

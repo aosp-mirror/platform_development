@@ -17,6 +17,7 @@
 package com.example.android.intentplayground;
 
 
+import android.app.ActivityManager;
 import android.os.Bundle;
 
 import android.view.LayoutInflater;
@@ -30,6 +31,8 @@ import android.widget.ScrollView;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
+import androidx.lifecycle.ViewModelProvider;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,20 +42,26 @@ import java.util.List;
 public class IntentDialogFragment extends DialogFragment {
     private List<String> mFlags;
     private String mActivityName;
+    private int mTaskId;
+    private BaseActivityViewModel mViewModel;
     private static final String ARGUMENT_ACTIVITY_NAME = "activityName";
     private static final String ARGUMENT_FLAGS = "flags";
+    private static final String TASK_ID = "taskId";
 
     /**
      * Creates a new IntentDialogFragment to display the given flags.
+     *
      * @param activityName The name of the activity, also the title of the dialog.
-     * @param flags The list of flags to be displayed.
+     * @param flags        The list of flags to be displayed.
      * @return A new IntentDialogFragment.
      */
-    public static IntentDialogFragment newInstance(String activityName, List<String> flags) {
+    public static IntentDialogFragment newInstance(String activityName, List<String> flags,
+            int taskId) {
         IntentDialogFragment fragment = new IntentDialogFragment();
         Bundle args = new Bundle();
         args.putString(ARGUMENT_ACTIVITY_NAME, activityName);
         args.putStringArrayList(ARGUMENT_FLAGS, new ArrayList<>(flags));
+        args.putInt(TASK_ID, taskId);
         fragment.setArguments(args);
         return fragment;
     }
@@ -63,12 +72,15 @@ public class IntentDialogFragment extends DialogFragment {
         Bundle args = getArguments();
         mFlags = args.getStringArrayList(ARGUMENT_FLAGS);
         mActivityName = args.getString(ARGUMENT_ACTIVITY_NAME);
+        mTaskId = args.getInt(TASK_ID);
+        mViewModel = (new ViewModelProvider(getActivity(),
+                new ViewModelProvider.NewInstanceFactory())).get(BaseActivityViewModel.class);
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
-                             Bundle savedInstanceState) {
+            Bundle savedInstanceState) {
         getDialog().setTitle(mActivityName + getString(R.string.dialog_intent_flags));
         LinearLayout rootLayout = (LinearLayout) inflater
                 .inflate(R.layout.fragment_intent_dialog, container, false /* attachToRoot */);
@@ -79,6 +91,21 @@ public class IntentDialogFragment extends DialogFragment {
         rootLayout.findViewById(R.id.dialog_cancel).setOnClickListener(view -> {
             getDialog().dismiss();
         });
+
+        Button bringToFront = rootLayout.findViewById(R.id.move_task_to_front_button);
+        bringToFront.setOnClickListener(v -> {
+            moveTaskToFront(mTaskId);
+            getDialog().dismiss();
+            mViewModel.refresh();
+        });
+
+        Button removeTask = rootLayout.findViewById(R.id.kill_task_button);
+        removeTask.setOnClickListener(v -> {
+            removeTask(mTaskId);
+            getDialog().dismiss();
+            mViewModel.refresh();
+        });
+
         Button copyFlagsButton = rootLayout.findViewById(R.id.copy_flags_button);
         if (mFlags.get(0).equals("None")) {
             copyFlagsButton.setEnabled(false);
@@ -94,5 +121,19 @@ public class IntentDialogFragment extends DialogFragment {
             });
         }
         return rootLayout;
+    }
+
+    private void removeTask(int taskId) {
+        ActivityManager am = getActivity().getSystemService(ActivityManager.class);
+        am.getAppTasks().forEach(task -> {
+            if (task.getTaskInfo().persistentId == taskId) {
+                task.finishAndRemoveTask();
+            }
+        });
+    }
+
+    private void moveTaskToFront(int taskId) {
+        ActivityManager am = getActivity().getSystemService(ActivityManager.class);
+        am.moveTaskToFront(taskId, 0 /* flags */);
     }
 }

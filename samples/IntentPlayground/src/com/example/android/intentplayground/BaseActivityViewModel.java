@@ -25,12 +25,23 @@ public class BaseActivityViewModel extends ViewModel {
 
     private MutableLiveData<FabAction> mFabActions = new MutableLiveData<>();
 
+    private MutableLiveData<Object> mRefreshTree = new MutableLiveData<>();
+
+
     public void actOnFab(FabAction action) {
         mFabActions.setValue(action);
     }
 
     public LiveData<FabAction> getFabActions() {
         return mFabActions;
+    }
+
+    public LiveData<Object> getRefresh() {
+        return mRefreshTree;
+    }
+
+    public void refresh() {
+        mRefreshTree.setValue(new Object());
     }
 }
 

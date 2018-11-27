@@ -113,15 +113,9 @@ public class InlineAdapter extends RecyclerView.Adapter<TaskViewHolder> {
                         .inflate(R.layout.activity_node, mActivitiesLayout, false);
 
                 TextView activityName = activityView.findViewById(R.id.activity_name);
-                ImageButton intentButtonView = activityView.findViewById(R.id.intent_button);
 
                 activityName.setText(activity.mName.getShortClassName());
-
-                int color = activityView.getContext().getResources()
-                        .getColor(ColorManager.getColorForActivity(activity.mName),
-                                null /* theme */);
-                intentButtonView.setColorFilter(color);
-                intentButtonView.setOnClickListener(clickedView -> {
+                activityName.setOnClickListener(clickedView -> {
                     Intent intent = activity.getIntent();
                     List<String> flags;
                     if (intent != null) {
@@ -132,7 +126,8 @@ public class InlineAdapter extends RecyclerView.Adapter<TaskViewHolder> {
                     } else {
                         flags = Collections.singletonList("None");
                     }
-                    showDialogWithFlags(manager, activity.mName.getShortClassName(), flags);
+                    showDialogWithFlags(manager, activity.mName.getShortClassName(), flags,
+                            task.mTaskId);
                 });
 
 
@@ -152,8 +147,9 @@ public class InlineAdapter extends RecyclerView.Adapter<TaskViewHolder> {
          * @param flags          The flags to list.
          */
         private void showDialogWithFlags(FragmentManager manager,
-                String shortClassName, List<String> flags) {
-            IntentDialogFragment.newInstance(shortClassName, flags).show(manager, "intentDialog");
+                String shortClassName, List<String> flags, int taskId) {
+            IntentDialogFragment.newInstance(shortClassName, flags, taskId).show(manager,
+                    "intentDialog");
         }
     }
 }
