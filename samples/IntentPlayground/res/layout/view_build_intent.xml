@@ -15,17 +15,11 @@
 -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/build_intent_container"
+    android:id="@+id/build_intent_view"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginEnd="@dimen/smallMargin"
-    android:layout_marginLeft="@dimen/smallMargin"
-    android:layout_marginRight="@dimen/smallMargin"
-    android:layout_marginStart="@dimen/smallMargin"
-    android:layout_marginTop="@dimen/smallMargin"
+    android:layout_margin="@dimen/smallMargin"
     android:background="@drawable/card_background"
-    android:elevation="@dimen/cardElevation"
     android:orientation="vertical"
     android:padding="@dimen/medMargin">
 
@@ -43,12 +37,44 @@
         android:text="@string/build_intent_caption" />
 
     <LinearLayout
+        android:id="@+id/suggest_list_item"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/doubleListItem"
+        android:orientation="horizontal"
+        android:paddingTop="@dimen/smallMargin"
+        android:gravity="center_vertical">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_weight="1" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/suggest_enable_text"
+                android:textAppearance="@style/normal" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/suggest_description_text"
+                android:textAppearance="@style/caption" />
+        </LinearLayout>
+
+        <Switch
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:id="@+id/suggestion_switch"/>
+    </LinearLayout>
+
+    <LinearLayout
         android:id="@+id/build_intent_flags"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingBottom="@dimen/smallMargin"
-        android:paddingTop="@dimen/smallMargin" />
+        android:paddingBottom="@dimen/smallMargin"/>
 
     <View
         android:layout_width="match_parent"

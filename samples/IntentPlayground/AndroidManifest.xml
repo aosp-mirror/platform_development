@@ -16,7 +16,10 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.android.intentplayground">
+    <!-- Used to reorder tasks using android.app.ActivityManager.moveTaskToFront() -->
     <uses-permission android:name="android.permission.REORDER_TASKS" />
+    <!-- Used to display a persistent explanatory window while launching a series of activities -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <application
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -32,6 +35,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".RegularActivity" />
         <activity
             android:name=".SingleTopActivity"
             android:launchMode="singleTop" />
