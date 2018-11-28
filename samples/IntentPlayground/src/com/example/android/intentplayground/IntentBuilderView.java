@@ -40,6 +40,7 @@ import androidx.annotation.NonNull;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -128,19 +129,30 @@ public class IntentBuilderView extends FrameLayout implements View.OnClickListen
                 R.layout.section_header, R.id.header_title, R.layout.checkbox_list_item,
                 R.id.checkBox_item);
         // Add radios for activity combos
-        activityToFlags.forEach((activityInfo, manifestFlags) -> {
-            LinearLayout actRadio = (LinearLayout) mInflater
-                    .inflate(R.layout.activity_radio_list_item, null /* root */);
-            RadioButton rb = actRadio.findViewById(R.id.radio_launchMode);
-            rb.setText(activityInfo.name.substring(activityInfo.name.lastIndexOf('.') + 1));
-            rb.setTag(activityInfo);
-            ((TextView) actRadio.findViewById(R.id.activity_desc)).setText(
-                    manifestFlags.stream().collect(Collectors.joining("\n")));
-            rb.setOnClickListener(this);
-            activityRadios.addView(actRadio);
-        });
+        activityToFlags.entrySet().stream()
+                .sorted(Comparator.comparing(
+                        activityEntry -> nameOfActivityInfo(activityEntry.getKey())))
+                .forEach(activityEntry -> {
+                    ActivityInfo activityInfo = activityEntry.getKey();
+                    List<String> manifestFlags = activityEntry.getValue();
+
+                    LinearLayout actRadio = (LinearLayout) mInflater
+                            .inflate(R.layout.activity_radio_list_item, null /* root */);
+                    RadioButton rb = actRadio.findViewById(R.id.radio_launchMode);
+                    rb.setText(activityInfo.name.substring(activityInfo.name.lastIndexOf('.') + 1));
+                    rb.setTag(activityInfo);
+                    ((TextView) actRadio.findViewById(R.id.activity_desc)).setText(
+                            manifestFlags.stream().collect(Collectors.joining("\n")));
+                    rb.setOnClickListener(this);
+                    activityRadios.addView(actRadio);
+                });
         ((CompoundButton) mLayout.findViewById(R.id.suggestion_switch))
                 .setOnCheckedChangeListener(this);
+    }
+
+
+    private String nameOfActivityInfo(ActivityInfo activityInfo) {
+        return activityInfo.name.substring(activityInfo.name.lastIndexOf('.') + 1);
     }
 
     /**
