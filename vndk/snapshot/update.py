@@ -141,6 +141,9 @@ def update_buildfiles(buildfile_generator):
     logging.info('Generating Android.mk file...')
     buildfile_generator.generate_android_mk()
 
+    logging.info('Generating common/Android.bp file...')
+    buildfile_generator.generate_common_android_bp()
+
     logging.info('Generating Android.bp files...')
     buildfile_generator.generate_android_bp()
 
