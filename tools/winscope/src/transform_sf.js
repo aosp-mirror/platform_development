@@ -52,10 +52,6 @@ function transform_layer(layer, {parentHidden}) {
   } else {
     rect = undefined;
   }
-  var bounds = undefined;
-  if (layer.name.startsWith("Display Root#0")) {
-    bounds = {width: layer.size.w, height: layer.size.h};
-  }
   if (layer.zOrderRelativeOf !== -1) {
     chips.push(RELATIVE_Z_CHIP);
   }
@@ -77,7 +73,6 @@ function transform_layer(layer, {parentHidden}) {
       [layer.resolvedChildren, transform_layer_with_parent_hidden],
     ],
     rect,
-    bounds,
     highlight: rect,
     chips,
     visible,
