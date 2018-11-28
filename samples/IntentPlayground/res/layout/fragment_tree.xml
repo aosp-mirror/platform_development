@@ -32,6 +32,7 @@
         android:layout_marginTop="@dimen/medMargin"
         android:text="@string/task_tree_title"
         android:textAppearance="@style/title" />
+
     <LinearLayout
         android:id="@+id/task_tree"
         android:layout_width="match_parent"

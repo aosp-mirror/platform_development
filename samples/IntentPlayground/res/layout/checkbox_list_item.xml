@@ -13,11 +13,10 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<CheckBox
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<CheckBox xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/checkBox_item"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_weight="1"
-    android:text="@string/checkbox_placeholder"
+    android:layout_height="@dimen/denseListItem"
+    android:paddingStart="@dimen/fullMargin"
+    android:text="@string/placeholder"
     android:textAppearance="@style/normal" />

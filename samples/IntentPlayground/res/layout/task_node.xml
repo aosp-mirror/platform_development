@@ -14,8 +14,6 @@
      limitations under the License.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:gravity="center_vertical|left"
     android:layout_height="@dimen/listItem" >
@@ -26,7 +24,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/fullMargin"
         android:layout_weight="0"
-        android:text="@string/placeholder"
+        android:text="@string/task_num"
         android:textAppearance="@style/medium"
         android:textSize="@dimen/regularText" />
 
