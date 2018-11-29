@@ -150,7 +150,7 @@ endef
 
 ALL_SDK_FILES += $(HOST_OUT)/development/sdk/generated-api-versions.xml
 
-api_gen_jar := $(TOPDIR)prebuilts/tools/common/api-generator/api-generator-26.0.0.jar
+api_gen_jar := $(TOPDIR)prebuilts/tools/common/api-generator/api-generator-26.3.0.jar
 api_gen_deps := \
   $(TOPDIR)prebuilts/tools/common/m2/repository/net/sf/kxml/kxml2/2.3.0/kxml2-2.3.0.jar \
   $(TOPDIR)prebuilts/tools/common/m2/repository/org/ow2/asm/asm/5.0.4/asm-5.0.4.jar \
