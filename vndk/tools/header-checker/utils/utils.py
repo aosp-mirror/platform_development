@@ -78,14 +78,13 @@ def copy_reference_dump(lib_path, reference_dump_dir, compress):
     return reference_dump_path
 
 
-def copy_reference_dump_content(lib_name, output_content,
+def copy_reference_dump_content(file_name, output_content,
                                 reference_dump_dir_stem,
                                 reference_dump_dir_insertion, lib_arch):
     reference_dump_dir = get_reference_dump_dir(reference_dump_dir_stem,
                                                 reference_dump_dir_insertion,
                                                 lib_arch)
-    reference_dump_path = os.path.join(reference_dump_dir,
-                                       lib_name + SOURCE_ABI_DUMP_EXT)
+    reference_dump_path = os.path.join(reference_dump_dir, file_name)
     os.makedirs(os.path.dirname(reference_dump_path), exist_ok=True)
     with open(reference_dump_path, 'w') as f:
         f.write(output_content)
@@ -100,11 +99,12 @@ def read_output_content(output_path, replace_str):
 
 
 def run_header_abi_dumper(input_path, remove_absolute_paths, cflags=tuple(),
-                          export_include_dirs=EXPORTED_HEADERS_DIR):
+                          export_include_dirs=EXPORTED_HEADERS_DIR,
+                          flags=tuple()):
     with tempfile.TemporaryDirectory() as tmp:
         output_path = os.path.join(tmp, os.path.basename(input_path)) + '.dump'
         run_header_abi_dumper_on_file(input_path, output_path,
-                                      export_include_dirs, cflags)
+                                      export_include_dirs, cflags, flags)
         if remove_absolute_paths:
             return read_output_content(output_path, AOSP_DIR)
         with open(output_path, 'r') as f:

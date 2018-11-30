@@ -1,0 +1,113 @@
+{
+ "array_types" : [],
+ "builtin_types" : [],
+ "elf_functions" : [],
+ "elf_objects" : [],
+ "enum_types" : [],
+ "function_types" : [],
+ "functions" :
+ [
+  {
+   "function_name" : "inline_function",
+   "linker_set_key" : "_Z15inline_function10template_cIJ10template_dIJA_N11namespace_c1CEEEEE",
+   "parameters" :
+   [
+    {
+     "referenced_type" : "type-5"
+    }
+   ],
+   "return_type" : "type-4",
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/header/undeclared_types.h"
+  },
+  {
+   "access" : "private",
+   "function_name" : "InvalidClass::member_function",
+   "linker_set_key" : "_ZN12InvalidClass15member_functionE1E",
+   "parameters" :
+   [
+    {
+     "is_this_ptr" : true,
+     "referenced_type" : "type-8"
+    },
+    {
+     "referenced_type" : "type-9"
+    }
+   ],
+   "return_type" : "type-6",
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/header/undeclared_types.h"
+  }
+ ],
+ "global_vars" :
+ [
+  {
+   "linker_set_key" : "a",
+   "name" : "a",
+   "referenced_type" : "type-1",
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/header/undeclared_types.h"
+  },
+  {
+   "linker_set_key" : "b",
+   "name" : "b",
+   "referenced_type" : "type-2",
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/header/undeclared_types.h"
+  },
+  {
+   "linker_set_key" : "c",
+   "name" : "c",
+   "referenced_type" : "type-3",
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/header/undeclared_types.h"
+  },
+  {
+   "linker_set_key" : "template_in_macro",
+   "name" : "template_in_macro",
+   "referenced_type" : "type-11",
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/header/undeclared_types.h"
+  }
+ ],
+ "lvalue_reference_types" :
+ [
+  {
+   "alignment" : 8,
+   "linker_set_key" : "namespace_a::A &",
+   "name" : "namespace_a::A &",
+   "referenced_type" : "type-1",
+   "self_type" : "type-4",
+   "size" : 8,
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/header/undeclared_types.h"
+  }
+ ],
+ "pointer_types" :
+ [
+  {
+   "alignment" : 8,
+   "linker_set_key" : "InvalidClass *",
+   "name" : "InvalidClass *",
+   "referenced_type" : "type-7",
+   "self_type" : "type-8",
+   "size" : 8,
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/header/undeclared_types.h"
+  },
+  {
+   "alignment" : 8,
+   "linker_set_key" : "TemplateInMacro<F> *",
+   "name" : "TemplateInMacro<F> *",
+   "referenced_type" : "type-10",
+   "self_type" : "type-11",
+   "size" : 8,
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/header/undeclared_types.h"
+  }
+ ],
+ "qualified_types" :
+ [
+  {
+   "is_const" : true,
+   "linker_set_key" : "const namespace_b::template_b<const B *>",
+   "name" : "const namespace_b::template_b<const B *>",
+   "referenced_type" : "type-2",
+   "self_type" : "type-3",
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/header/undeclared_types.h"
+  }
+ ],
+ "record_types" : [],
+ "rvalue_reference_types" : []
+}
