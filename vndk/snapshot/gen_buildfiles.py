@@ -53,6 +53,7 @@ class GenBuildFile(object):
         ... (other {SNAPSHOT_ARCH}/ directories)
         common/
             Android.mk
+            Android.bp
             NOTICE_FILES/
                 (license files, e.g. libfoo.so.txt)
     """
@@ -77,10 +78,12 @@ class GenBuildFile(object):
         self._etc_paths = self._get_etc_paths()
         self._snapshot_archs = utils.get_snapshot_archs(install_dir)
         self._mkfile = os.path.join(install_dir, utils.ANDROID_MK_PATH)
+        self._common_bpfile = os.path.join(install_dir, utils.COMMON_BP_PATH)
         self._vndk_core = self._parse_lib_list('vndkcore.libraries.txt')
         self._vndk_sp = self._parse_lib_list(
             os.path.basename(self._etc_paths['vndksp.libraries.txt']))
         self._vndk_private = self._parse_lib_list('vndkprivate.libraries.txt')
+        self._modules_with_notice = self._get_modules_with_notice()
 
     def _get_etc_paths(self):
         """Returns a map of relative file paths for each ETC module."""
@@ -112,6 +115,13 @@ class GenBuildFile(object):
                 lib_map[arch] = f.read().strip().split('\n')
         return lib_map
 
+    def _get_modules_with_notice(self):
+        """Returns a list of modules that have associated notice files. """
+        notice_paths = glob.glob(
+            os.path.join(self._install_dir, utils.NOTICE_FILES_DIR_PATH,
+                         '*.txt'))
+        return [os.path.splitext(os.path.basename(p))[0] for p in notice_paths]
+
     def generate_android_mk(self):
         """Autogenerates Android.mk."""
 
@@ -136,6 +146,17 @@ class GenBuildFile(object):
             mkfile.write('\n')
 
         logging.info('Successfully generated {}'.format(self._mkfile))
+
+    def generate_common_android_bp(self):
+        """Autogenerates common/Android.bp."""
+
+        logging.info('Generating common/Android.bp for snapshot v{}'.format(
+            self._vndk_version))
+        with open(self._common_bpfile, 'w') as bpfile:
+            bpfile.write(self._gen_autogen_msg('/'))
+            for module in self._modules_with_notice:
+                bpfile.write('\n')
+                bpfile.write(self._gen_notice_filegroup(module))
 
     def generate_android_bp(self):
         """Autogenerates Android.bp."""
@@ -259,6 +280,30 @@ class GenBuildFile(object):
                         prebuilt, None, is_etc=True),
                     etc_sub_path=etc_sub_path))
 
+    def _gen_notice_filegroup(self, module):
+        """Generates a notice filegroup build rule for a given module.
+
+        Args:
+          notice: string, module name
+        """
+        return ('filegroup {{\n'
+                '{ind}name: "{filegroup_name}",\n'
+                '{ind}srcs: ["{notice_dir}/{module}.txt"],\n'
+                '}}\n'.format(
+                    ind=self.INDENT,
+                    filegroup_name=self._get_notice_filegroup_name(module),
+                    module=module,
+                    notice_dir=utils.NOTICE_FILES_DIR_NAME))
+
+    def _get_notice_filegroup_name(self, module):
+        """ Gets a notice filegroup module name for a given module.
+
+        Args:
+          notice: string, module name.
+        """
+        return 'vndk-v{ver}-{module}-notice'.format(
+            ver=self._vndk_version, module=module)
+
     def _gen_bp_phony(self, arch, is_binder32=False):
         """Generates build rule for phony package 'vndk_v{ver}_{arch}'.
 
@@ -342,17 +387,10 @@ class GenBuildFile(object):
               prebuilt: string, name of prebuilt object
             """
             notice = ''
-            notice_file_name = '{}.txt'.format(prebuilt)
-            notice_dir = os.path.join(self._install_dir,
-                                      utils.NOTICE_FILES_DIR_PATH)
-            notice_files = utils.find(notice_dir, [notice_file_name])
-            if len(notice_files) > 0:
-                notice_dir_relpath = os.path.relpath(
-                    os.path.join(notice_dir), src_root)
-                notice = '{ind}notice: "{notice_file_path}",\n'.format(
+            if prebuilt in self._modules_with_notice:
+                notice = '{ind}notice: ":{notice_filegroup}",\n'.format(
                     ind=self.INDENT,
-                    notice_file_path=os.path.join(notice_dir_relpath,
-                                                  notice_files[0]))
+                    notice_filegroup=self._get_notice_filegroup_name(prebuilt))
             return notice
 
         def get_rel_install_path(prebuilt):
@@ -487,6 +525,7 @@ def main():
 
     buildfile_generator = GenBuildFile(install_dir, vndk_version)
     buildfile_generator.generate_android_mk()
+    buildfile_generator.generate_common_android_bp()
     buildfile_generator.generate_android_bp()
 
     logging.info('Done.')
