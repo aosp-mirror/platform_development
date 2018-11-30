@@ -20,10 +20,9 @@ FILE_EXTENSIONS = ['h', 'hpp', 'hxx', 'cpp', 'cc', 'c']
 
 def make_and_copy_reference_dumps(module, default_cflags=[],
                                   reference_dump_dir=REFERENCE_DUMP_DIR):
-    lsdump_content = module.make_lsdump(default_cflags)
-    return copy_reference_dump_content(module.get_name(), lsdump_content,
-                                       reference_dump_dir, '',
-                                       module.get_arch())
+    lsdump_content = module.make_dump(default_cflags)
+    return copy_reference_dump_content(module.get_dump_name(), lsdump_content,
+                                       reference_dump_dir, '', module.arch)
 
 def main():
     patt = re.compile(
