@@ -64,7 +64,7 @@ external/chromium-trace/UPSTREAM_REVISION                                 platfo
 # Compatibility: moved to platform but also leave them in platform-tools for a little
 # longer until all active Gradle plugins have support for looking in both places
 development/sdk/generated-api-versions.xml    platform-tools/api/api-versions.xml
-prebuilts/sdk/sdk-annotations/annotations.zip   platform-tools/api/annotations.zip
+${OUT_DIR}/target/common/obj/PACKAGING/metalava-api-stubs_annotations.zip   platform-tools/api/annotations.zip
 
 ##############################################################################
 # Build Tools Component
@@ -91,7 +91,8 @@ frameworks/rs/script_api/include              build-tools/${PLATFORM_NAME}/rende
 external/clang/lib/Headers                    build-tools/${PLATFORM_NAME}/renderscript/clang-include
 external/clang/LICENSE.TXT                    build-tools/${PLATFORM_NAME}/renderscript/clang-include/LICENSE.TXT
 
-prebuilts/sdk/renderscript/lib/javalib.jar            build-tools/${PLATFORM_NAME}/renderscript/lib/renderscript-v8.jar
+prebuilts/sdk/renderscript/lib/javalib.jar            build-tools/${PLATFORM_NAME}/renderscript/lib/androidx-rs.jar
+prebuilts/sdk/renderscript/lib/javalib_legacy.jar     build-tools/${PLATFORM_NAME}/renderscript/lib/renderscript-v8.jar
 
 prebuilts/sdk/renderscript/lib/arm/libc.so            build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/armeabi-v7a/libc.so
 prebuilts/sdk/renderscript/lib/arm/libm.so            build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/armeabi-v7a/libm.so
@@ -135,7 +136,7 @@ framework/dx.jar                              build-tools/${PLATFORM_NAME}/lib/d
 bin/dexdump                                   build-tools/${PLATFORM_NAME}/dexdump
 
 # d8
-prebuilts/r8/d8-master.jar                    build-tools/${PLATFORM_NAME}/lib/d8.jar
+prebuilts/r8/buildtools/d8-master.jar         build-tools/${PLATFORM_NAME}/lib/d8.jar
 prebuilts/r8/d8                               build-tools/${PLATFORM_NAME}/d8
 
 # multi-dex
@@ -157,8 +158,9 @@ ${HOST_OUT}/development/sdk/platform_source.properties                          
 sdk/sdk-build.prop                                                                            platforms/${PLATFORM_NAME}/build.prop
 
 # Main Public API jar
-${OUT_DIR}/target/common/obj/PACKAGING/android_jar_intermediates/android.jar                  platforms/${PLATFORM_NAME}/android.jar
-${OUT_DIR}/target/common/obj/PACKAGING/android_jar_intermediates/android-stubs-src.jar        platforms/${PLATFORM_NAME}/android-stubs-src.jar
+${OUT_DIR}/target/common/obj/PACKAGING/metalava_android_jar_intermediates/metalava-android.jar            platforms/${PLATFORM_NAME}/android.jar
+${OUT_DIR}/target/common/obj/PACKAGING/metalava_android_jar_intermediates/metalava-android-stubs-src.jar  platforms/${PLATFORM_NAME}/android-stubs-src.jar
+
 # optional API files.
 development/build/optional.json                                                               platforms/${PLATFORM_NAME}/optional/optional.json
 ${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/org.apache.http.legacy_intermediates/javalib.jar  platforms/${PLATFORM_NAME}/optional/org.apache.http.legacy.jar
@@ -204,6 +206,7 @@ development/sdk/generated-api-versions.xml  platforms/${PLATFORM_NAME}/data/api-
 
 # API annotations database for lint
 prebuilts/sdk/sdk-annotations/annotations.zip platforms/${PLATFORM_NAME}/data/annotations.zip
+${OUT_DIR}/target/common/obj/PACKAGING/metalava-api-stubs_annotations.zip platforms/${PLATFORM_NAME}/data/annotations.zip
 
 # Eclipse Editors support
 framework/layoutlib-legacy.jar            platforms/${PLATFORM_NAME}/data/layoutlib.jar
@@ -235,6 +238,7 @@ development/sdk/sdk_files_NOTICE.txt      platforms/${PLATFORM_NAME}/skins/NOTIC
 system-qemu.img                                 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/system.img
 vendor-qemu.img                                 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/vendor.img
 ramdisk.img                                system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/ramdisk.img
+device/generic/goldfish/data/etc/userdata.img    system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/userdata.img
 data/misc                                        system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/data/misc
 system/build.prop                          system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/build.prop
 
