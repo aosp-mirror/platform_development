@@ -27,12 +27,6 @@ class MyTest(unittest.TestCase):
     def setUpClass(cls):
         cls.maxDiff = None
 
-    def get_reference_dump_path(self, name, target_arch):
-        ref_dump_dir = os.path.join(REF_DUMP_DIR, target_arch)
-        ref_dump_path = os.path.join(ref_dump_dir,
-                                     name + SOURCE_ABI_DUMP_EXT)
-        return ref_dump_path
-
     def run_and_compare(self, input_path, expected_path, cflags=[]):
         with open(expected_path, 'r') as f:
             expected_output = f.read()
@@ -62,15 +56,16 @@ class MyTest(unittest.TestCase):
                                       'test', target_arch, expected_return_code,
                                       flags)
 
-    def create_ref_dump(self, name, dir_name, target_arch):
-        module_bare = Module.get_test_module_by_name(name)
-        module = Module.mutate_module_for_arch(module_bare, target_arch)
+    def create_ref_dump(self, module_bare, dir_name, target_arch):
+        module = module_bare.mutate_for_arch(target_arch)
         return make_and_copy_reference_dumps(module, [], dir_name)
 
     def get_or_create_ref_dump(self, name, target_arch, dir_name, create):
+        module = Module.get_test_module_by_name(name)
         if create == True:
-            return self.create_ref_dump(name, dir_name, target_arch)
-        return self.get_reference_dump_path(name, target_arch)
+            return self.create_ref_dump(module, dir_name, target_arch)
+        return os.path.join(REF_DUMP_DIR, target_arch,
+                            module.get_dump_name() if module else name)
 
     def prepare_and_run_abi_diff_all_archs(self, old_lib, new_lib,
                                            expected_return_code, flags=[],
@@ -108,6 +103,14 @@ class MyTest(unittest.TestCase):
 
     def test_example3_h(self):
         self.run_and_compare_name_cpp('example3.h')
+
+    def test_undeclared_types_h(self):
+        self.prepare_and_absolute_diff_all_archs(
+            'undeclared_types.h', 'undeclared_types.h')
+
+    def test_known_issues_h(self):
+        self.prepare_and_absolute_diff_all_archs(
+            'known_issues.h', 'known_issues.h')
 
     def test_libc_and_cpp(self):
         self.prepare_and_run_abi_diff_all_archs(
@@ -211,8 +214,8 @@ class MyTest(unittest.TestCase):
 
     def test_libgolden_cpp_fabricated_function_ast_removed_diff(self):
         self.prepare_and_run_abi_diff_all_archs(
-            "libgolden_cpp_fabricated_function_ast_removed", "libgolden_cpp", 0,
-            [], False)
+            "libgolden_cpp_fabricated_function_ast_removed.so.lsdump",
+            "libgolden_cpp", 0, [], False)
 
     def test_libgolden_cpp_member_fake_diff(self):
         self.prepare_and_run_abi_diff_all_archs(
