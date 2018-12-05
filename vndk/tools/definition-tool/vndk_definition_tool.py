@@ -3325,6 +3325,10 @@ class DepsCommand(ELFGraphCommand):
                 '--symbols', action='store_true',
                 help='print symbols')
 
+        parser.add_argument(
+                '--path-filter',
+                help='filter paths by a regular expression')
+
         parser.add_argument('--module-info')
 
     def main(self, args):
@@ -3333,9 +3337,14 @@ class DepsCommand(ELFGraphCommand):
 
         module_info = ModuleInfo.load_from_path_or_default(args.module_info)
 
+        path_filter = re.compile(args.path_filter) if args.path_filter else None
+
         results = []
         for partition in range(NUM_PARTITIONS):
             for name, lib in graph.lib_pt[partition].items():
+                if path_filter and not path_filter.match(name):
+                    continue
+
                 if args.symbols:
                     def collect_symbols(user, definer):
                         return user.get_dep_linked_symbols(definer)
