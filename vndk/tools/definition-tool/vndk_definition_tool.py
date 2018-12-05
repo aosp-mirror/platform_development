@@ -1646,12 +1646,21 @@ class VNDKLibDir(list):
         return self.sorted_version(self)[0]
 
 
+# File path patterns for Android apps
+_APP_DIR_PATTERNS = re.compile('^(?:/[^/]+){1,2}/(?:priv-)?app/')
+
+
 class ELFResolver(object):
     def __init__(self, lib_set, default_search_path):
         self.lib_set = lib_set
         self.default_search_path = default_search_path
 
-    def get_candidates(self, name, dt_rpath=None, dt_runpath=None):
+    def get_candidates(self, requester, name, dt_rpath=None, dt_runpath=None):
+        # Search app-specific search paths.
+        if _APP_DIR_PATTERNS.match(requester):
+            yield os.path.join(os.path.dirname(requester), name)
+
+        # Search default search paths.
         if dt_rpath:
             for d in dt_rpath:
                 yield os.path.join(d, name)
@@ -1661,8 +1670,8 @@ class ELFResolver(object):
         for d in self.default_search_path:
             yield os.path.join(d, name)
 
-    def resolve(self, name, dt_rpath=None, dt_runpath=None):
-        for path in self.get_candidates(name, dt_rpath, dt_runpath):
+    def resolve(self, requester, name, dt_rpath=None, dt_runpath=None):
+        for path in self.get_candidates(requester, name, dt_rpath, dt_runpath):
             try:
                 return self.lib_set[path]
             except KeyError:
@@ -2019,11 +2028,11 @@ class ELFLinker(object):
     def _resolve_lib_dt_needed(self, lib, resolver):
         imported_libs = []
         for dt_needed in lib.elf.dt_needed:
-            dep = resolver.resolve(dt_needed, lib.elf.dt_rpath,
+            dep = resolver.resolve(lib.path, dt_needed, lib.elf.dt_rpath,
                                    lib.elf.dt_runpath)
             if not dep:
                 candidates = list(resolver.get_candidates(
-                    dt_needed, lib.elf.dt_rpath, lib.elf.dt_runpath))
+                    lib.path, dt_needed, lib.elf.dt_rpath, lib.elf.dt_runpath))
                 print('warning: {}: Missing needed library: {}  Tried: {}'
                       .format(lib.path, dt_needed, candidates), file=sys.stderr)
                 lib.unresolved_dt_needed.append(dt_needed)
@@ -2728,7 +2737,19 @@ def scan_apk_dep(graph, system_dirs, vendor_dirs):
         libs = set()
         for string in strings:
             try:
-                libs.update(libnames[string])
+                for dep_file in libnames[string]:
+                    match = _APP_DIR_PATTERNS.match(dep_file.path)
+
+                    # List the lib if it is not embedded in the app.
+                    if not match:
+                        libs.add(dep_file)
+                        continue
+
+                    # Only list the embedded lib if it is in the same app.
+                    common = os.path.commonprefix([ap, dep_file.path])
+                    if len(common) > len(match.group(0)):
+                        libs.add(dep_file)
+                        continue
             except KeyError:
                 pass
 
