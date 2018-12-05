@@ -3339,18 +3339,18 @@ class DepsCommand(ELFGraphCommand):
 
         path_filter = re.compile(args.path_filter) if args.path_filter else None
 
+        if args.symbols:
+            def collect_symbols(user, definer):
+                return user.get_dep_linked_symbols(definer)
+        else:
+            def collect_symbols(user, definer):
+                return ()
+
         results = []
         for partition in range(NUM_PARTITIONS):
             for name, lib in graph.lib_pt[partition].items():
                 if path_filter and not path_filter.match(name):
                     continue
-
-                if args.symbols:
-                    def collect_symbols(user, definer):
-                        return user.get_dep_linked_symbols(definer)
-                else:
-                    def collect_symbols(user, definer):
-                        return ()
 
                 data = []
                 if args.revert:
