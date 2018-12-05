@@ -519,7 +519,7 @@ class ELF(object):
         """Parse ELF image resides in the buffer"""
 
         # Check ELF ident.
-        if buf.size() < 8:
+        if len(buf) < 8:
             raise ELFError('bad ident')
 
         if buf[0:4] != ELF.ELF_MAGIC:
@@ -533,7 +533,7 @@ class ELF(object):
         if self.ei_data not in (ELF.ELFDATA2LSB, ELF.ELFDATA2MSB):
             raise ELFError('unknown endianness')
 
-        self.file_size = buf.size()
+        self.file_size = len(buf)
 
         # ELF structure definitions.
         endian_fmt = '<' if self.ei_data == ELF.ELFDATA2LSB else '>'
