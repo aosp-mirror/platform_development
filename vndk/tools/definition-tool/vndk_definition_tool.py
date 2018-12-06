@@ -519,7 +519,7 @@ class ELF(object):
         """Parse ELF image resides in the buffer"""
 
         # Check ELF ident.
-        if buf.size() < 8:
+        if len(buf) < 8:
             raise ELFError('bad ident')
 
         if buf[0:4] != ELF.ELF_MAGIC:
@@ -533,7 +533,7 @@ class ELF(object):
         if self.ei_data not in (ELF.ELFDATA2LSB, ELF.ELFDATA2MSB):
             raise ELFError('unknown endianness')
 
-        self.file_size = buf.size()
+        self.file_size = len(buf)
 
         # ELF structure definitions.
         endian_fmt = '<' if self.ei_data == ELF.ELFDATA2LSB else '>'
@@ -898,21 +898,6 @@ class DexFileReader(object):
 
 
     @classmethod
-    def _read_first_bytes(cls, apk_file, num_bytes):
-        try:
-            with open(apk_file, 'rb') as fp:
-                return fp.read(num_bytes)
-        except IOError:
-            return b''
-
-
-    @classmethod
-    def is_zipfile(cls, apk_file_path):
-        magic = cls._read_first_bytes(apk_file_path, 2)
-        return magic == b'PK' and zipfile.is_zipfile(apk_file_path)
-
-
-    @classmethod
     def enumerate_dex_strings_apk(cls, apk_file_path):
         with zipfile.ZipFile(apk_file_path, 'r') as zip_file:
             for name in cls.generate_classes_dex_names():
@@ -1053,7 +1038,7 @@ class DexFileReader(object):
 
     @classmethod
     def enumerate_dex_strings(cls, path):
-        if cls.is_zipfile(path):
+        if is_zipfile(path):
             return DexFileReader.enumerate_dex_strings_apk(path)
         if cls.is_vdex_file(path):
             return DexFileReader.enumerate_dex_strings_vdex(path)
@@ -1380,19 +1365,47 @@ def scan_accessible_files(root):
                 yield path
 
 
-def scan_elf_files(root):
+def is_zipfile(path):
+    # zipfile.is_zipfile() tries to find the zip header in the file.  But we
+    # only want to scan the zip file that starts with the magic word.  Thus,
+    # we read the magic word by ourselves.
+    try:
+        with open(path, 'rb') as fp:
+            if fp.read(2) != b'PK':
+                return False
+    except IOError:
+        return False
+
+    # Check whether this is a valid zip file.
+    return zipfile.is_zipfile(path)
+
+
+def scan_zip_file(zip_file_path):
+    """Scan all ELF files in a zip archive."""
+    with zipfile.ZipFile(zip_file_path, 'r') as zip_file:
+        for name in zip_file.namelist():
+            yield (os.path.join(zip_file_path, name),
+                   zip_file.open(name, 'r').read())
+
+
+def scan_elf_files(root, unzip_files=True):
+    """Scan all ELF files under a directory."""
     for path in scan_accessible_files(root):
+        # If this is a zip file and unzip_file is true, scan the ELF files in
+        # the zip file.
+        if unzip_files and is_zipfile(path):
+            for path, content in scan_zip_file(path):
+                try:
+                    yield (path, ELF.loads(content))
+                except ELFError:
+                    pass
+            continue
+
+        # Load ELF from the path.
         try:
             yield (path, ELF.load(path))
         except ELFError:
             pass
-
-
-def scan_elf_dump_files(root):
-    for path in scan_accessible_files(root):
-        if not path.endswith('.sym'):
-            continue
-        yield (path[0:-4], ELF.load_dump(path))
 
 
 PT_SYSTEM = 0
@@ -1646,12 +1659,21 @@ class VNDKLibDir(list):
         return self.sorted_version(self)[0]
 
 
+# File path patterns for Android apps
+_APP_DIR_PATTERNS = re.compile('^(?:/[^/]+){1,2}/(?:priv-)?app/')
+
+
 class ELFResolver(object):
     def __init__(self, lib_set, default_search_path):
         self.lib_set = lib_set
         self.default_search_path = default_search_path
 
-    def get_candidates(self, name, dt_rpath=None, dt_runpath=None):
+    def get_candidates(self, requester, name, dt_rpath=None, dt_runpath=None):
+        # Search app-specific search paths.
+        if _APP_DIR_PATTERNS.match(requester):
+            yield os.path.join(os.path.dirname(requester), name)
+
+        # Search default search paths.
         if dt_rpath:
             for d in dt_rpath:
                 yield os.path.join(d, name)
@@ -1661,8 +1683,8 @@ class ELFResolver(object):
         for d in self.default_search_path:
             yield os.path.join(d, name)
 
-    def resolve(self, name, dt_rpath=None, dt_runpath=None):
-        for path in self.get_candidates(name, dt_rpath, dt_runpath):
+    def resolve(self, requester, name, dt_rpath=None, dt_runpath=None):
+        for path in self.get_candidates(requester, name, dt_rpath, dt_runpath):
             try:
                 return self.lib_set[path]
             except KeyError:
@@ -1959,7 +1981,7 @@ class ELFLinker(object):
 
     def add_executables_in_dir(self, partition_name, partition, root,
                                alter_partition, alter_subdirs, ignored_subdirs,
-                               scan_elf_files):
+                               scan_elf_files, unzip_files):
         root = os.path.abspath(root)
         prefix_len = len(root) + 1
 
@@ -1968,7 +1990,7 @@ class ELFLinker(object):
         if ignored_subdirs:
             ignored_patt = ELFLinker._compile_path_matcher(root, ignored_subdirs)
 
-        for path, elf in scan_elf_files(root):
+        for path, elf in scan_elf_files(root, unzip_files):
             # Ignore ELF files with unknown machine ID (eg. DSP).
             if elf.e_machine not in ELF.ELF_MACHINES:
                 continue
@@ -2019,11 +2041,11 @@ class ELFLinker(object):
     def _resolve_lib_dt_needed(self, lib, resolver):
         imported_libs = []
         for dt_needed in lib.elf.dt_needed:
-            dep = resolver.resolve(dt_needed, lib.elf.dt_rpath,
+            dep = resolver.resolve(lib.path, dt_needed, lib.elf.dt_rpath,
                                    lib.elf.dt_runpath)
             if not dep:
                 candidates = list(resolver.get_candidates(
-                    dt_needed, lib.elf.dt_rpath, lib.elf.dt_runpath))
+                    lib.path, dt_needed, lib.elf.dt_rpath, lib.elf.dt_runpath))
                 print('warning: {}: Missing needed library: {}  Tried: {}'
                       .format(lib.path, dt_needed, candidates), file=sys.stderr)
                 lib.unresolved_dt_needed.append(dt_needed)
@@ -2532,7 +2554,7 @@ class ELFLinker(object):
                          system_dirs_ignored, vendor_dirs,
                          vendor_dirs_as_system, vendor_dirs_ignored,
                          extra_deps, generic_refs, tagged_paths,
-                         vndk_lib_dirs):
+                         vndk_lib_dirs, unzip_files):
         if vndk_lib_dirs is None:
             vndk_lib_dirs = VNDKLibDir.create_from_dirs(
                     system_dirs, vendor_dirs)
@@ -2541,17 +2563,17 @@ class ELFLinker(object):
 
         if system_dirs:
             for path in system_dirs:
-                graph.add_executables_in_dir('system', PT_SYSTEM, path,
-                                             PT_VENDOR, system_dirs_as_vendor,
-                                             system_dirs_ignored,
-                                             scan_elf_files)
+                graph.add_executables_in_dir(
+                        'system', PT_SYSTEM, path, PT_VENDOR,
+                        system_dirs_as_vendor, system_dirs_ignored,
+                        scan_elf_files, unzip_files)
 
         if vendor_dirs:
             for path in vendor_dirs:
-                graph.add_executables_in_dir('vendor', PT_VENDOR, path,
-                                             PT_SYSTEM, vendor_dirs_as_system,
-                                             vendor_dirs_ignored,
-                                             scan_elf_files)
+                graph.add_executables_in_dir(
+                        'vendor', PT_VENDOR, path, PT_SYSTEM,
+                        vendor_dirs_as_system, vendor_dirs_ignored,
+                        scan_elf_files, unzip_files)
 
         if extra_deps:
             for path in extra_deps:
@@ -2566,12 +2588,12 @@ class ELFLinker(object):
                system_dirs_ignored=None, vendor_dirs=None,
                vendor_dirs_as_system=None, vendor_dirs_ignored=None,
                extra_deps=None, generic_refs=None, tagged_paths=None,
-               vndk_lib_dirs=None):
+               vndk_lib_dirs=None, unzip_files=True):
         return ELFLinker._create_internal(
                 scan_elf_files, system_dirs, system_dirs_as_vendor,
                 system_dirs_ignored, vendor_dirs, vendor_dirs_as_system,
                 vendor_dirs_ignored, extra_deps, generic_refs, tagged_paths,
-                vndk_lib_dirs)
+                vndk_lib_dirs, unzip_files)
 
 
 #------------------------------------------------------------------------------
@@ -2728,7 +2750,19 @@ def scan_apk_dep(graph, system_dirs, vendor_dirs):
         libs = set()
         for string in strings:
             try:
-                libs.update(libnames[string])
+                for dep_file in libnames[string]:
+                    match = _APP_DIR_PATTERNS.match(dep_file.path)
+
+                    # List the lib if it is not embedded in the app.
+                    if not match:
+                        libs.add(dep_file)
+                        continue
+
+                    # Only list the embedded lib if it is in the same app.
+                    common = os.path.commonprefix([ap, dep_file.path])
+                    if len(common) > len(match.group(0)):
+                        libs.add(dep_file)
+                        continue
             except KeyError:
                 pass
 
@@ -2874,6 +2908,14 @@ class ELFGraphCommand(Command):
                 '--aosp-system',
                 help='compare with AOSP generic system image directory')
 
+        parser.add_argument(
+                '--unzip-files', action='store_true', default=True,
+                help='scan ELF files in zip files')
+
+        parser.add_argument(
+                '--no-unzip-files', action='store_false', dest='unzip_files',
+                help='do not scan ELF files in zip files')
+
         parser.add_argument('--tag-file', help='lib tag file')
 
     def get_generic_refs_from_args(self, args):
@@ -2918,7 +2960,8 @@ class ELFGraphCommand(Command):
                                  args.vendor_dir_ignored,
                                  args.load_extra_deps,
                                  generic_refs=generic_refs,
-                                 tagged_paths=tagged_paths)
+                                 tagged_paths=tagged_paths,
+                                 unzip_files=args.unzip_files)
 
         return (generic_refs, graph, tagged_paths, vndk_lib_dirs)
 
@@ -3282,6 +3325,10 @@ class DepsCommand(ELFGraphCommand):
                 '--symbols', action='store_true',
                 help='print symbols')
 
+        parser.add_argument(
+                '--path-filter',
+                help='filter paths by a regular expression')
+
         parser.add_argument('--module-info')
 
     def main(self, args):
@@ -3290,15 +3337,20 @@ class DepsCommand(ELFGraphCommand):
 
         module_info = ModuleInfo.load_from_path_or_default(args.module_info)
 
+        path_filter = re.compile(args.path_filter) if args.path_filter else None
+
+        if args.symbols:
+            def collect_symbols(user, definer):
+                return user.get_dep_linked_symbols(definer)
+        else:
+            def collect_symbols(user, definer):
+                return ()
+
         results = []
         for partition in range(NUM_PARTITIONS):
             for name, lib in graph.lib_pt[partition].items():
-                if args.symbols:
-                    def collect_symbols(user, definer):
-                        return user.get_dep_linked_symbols(definer)
-                else:
-                    def collect_symbols(user, definer):
-                        return ()
+                if path_filter and not path_filter.match(name):
+                    continue
 
                 data = []
                 if args.revert:
