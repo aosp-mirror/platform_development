@@ -241,8 +241,12 @@ def get_build_vars_for_product(names, product=None):
     cmd += '\"'
 
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                            stderr=subprocess.DEVNULL, cwd=AOSP_DIR, shell=True)
-    out, _ = proc.communicate()
+                            stderr=subprocess.PIPE, cwd=AOSP_DIR, shell=True)
+    out, err = proc.communicate()
+
+    if proc.returncode != 0:
+        print ("error: %s" % err.decode('utf-8'), file=sys.stderr)
+        return None
 
     build_vars = out.decode('utf-8').strip().splitlines()
 
