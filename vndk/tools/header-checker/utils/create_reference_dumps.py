@@ -3,13 +3,13 @@
 import argparse
 import collections
 import os
-import subprocess
+import shutil
 import time
 
 from utils import (
-    AOSP_DIR, COMPRESSED_SOURCE_ABI_DUMP_EXT, SOURCE_ABI_DUMP_EXT_END, SO_EXT,
-    copy_reference_dumps, find_lib_lsdumps, get_build_vars_for_product,
-    make_libraries, make_tree)
+    AOSP_DIR, COMPRESSED_SOURCE_ABI_DUMP_EXT, SOURCE_ABI_DUMP_EXT,
+    SOURCE_ABI_DUMP_EXT_END, SO_EXT, copy_reference_dumps, find_lib_lsdumps,
+    get_build_vars_for_product, make_libraries, make_tree)
 
 
 PRODUCTS_DEFAULT = ['aosp_arm_ab', 'aosp_arm', 'aosp_arm64', 'aosp_x86_ab',
@@ -110,14 +110,17 @@ def make_libs_for_product(libs, llndk_mode, product):
 def find_and_remove_path(root_path, file_name=None):
     if file_name is not None:
         root_path = os.path.join(root_path, 'source-based', file_name)
-    remove_cmd_str = 'rm -rf ' + root_path
-    print('removing', root_path)
-    subprocess.check_call(remove_cmd_str, shell=True)
+
+    if os.path.exists(root_path):
+        print('removing', root_path)
+        if os.path.isfile(root_path):
+            os.remove(root_path)
+        else:
+            shutil.rmtree(root_path)
 
 
 def remove_references_for_all_arches_and_variants(args, product, targets,
                                                   chosen_vndk_version):
-    print('Removing reference dumps...')
     libs = args.libs
     for target in targets:
         if target.arch == '' or target.arch_variant == '':
@@ -134,7 +137,11 @@ def remove_references_for_all_arches_and_variants(args, product, targets,
         if libs:
             for lib in libs:
                 find_and_remove_path(dir_to_remove_vndk,
+                                     lib + SOURCE_ABI_DUMP_EXT)
+                find_and_remove_path(dir_to_remove_vndk,
                                      lib + COMPRESSED_SOURCE_ABI_DUMP_EXT)
+                find_and_remove_path(dir_to_remove_ndk,
+                                     lib + SOURCE_ABI_DUMP_EXT)
                 find_and_remove_path(dir_to_remove_ndk,
                                      lib + COMPRESSED_SOURCE_ABI_DUMP_EXT)
         else:
