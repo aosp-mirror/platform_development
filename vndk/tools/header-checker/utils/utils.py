@@ -137,30 +137,30 @@ def run_header_abi_linker(output_path, inputs, version_script, api, arch,
     return read_output_content(output_path, AOSP_DIR)
 
 
-def make_tree(product):
+def make_tree(product, variant):
     # To aid creation of reference dumps.
     make_cmd = ['build/soong/soong_ui.bash', '--make-mode', '-j',
-                'vndk', 'findlsdumps', 'TARGET_PRODUCT=' + product]
+                'vndk', 'findlsdumps', 'TARGET_PRODUCT=' + product,
+                'TARGET_BUILD_VARIANT=' + variant]
     subprocess.check_call(make_cmd, cwd=AOSP_DIR)
 
 
-def make_targets(targets, product):
-    make_cmd = ['build/soong/soong_ui.bash', '--make-mode', '-j']
-    for target in targets:
-        make_cmd.append(target)
-    make_cmd.append('TARGET_PRODUCT=' + product)
+def make_targets(targets, product, variant):
+    make_cmd = ['build/soong/soong_ui.bash', '--make-mode', '-j',
+                'TARGET_PRODUCT=' + product, 'TARGET_BUILD_VARIANT=' + variant]
+    make_cmd += targets
     subprocess.check_call(make_cmd, cwd=AOSP_DIR, stdout=subprocess.DEVNULL,
                           stderr=subprocess.STDOUT)
 
 
-def make_libraries(libs, product, llndk_mode):
+def make_libraries(libs, product, variant, llndk_mode):
     # To aid creation of reference dumps. Makes lib.vendor for the current
     # configuration.
     lib_targets = []
     for lib in libs:
         lib = lib if llndk_mode else lib + VENDOR_SUFFIX
         lib_targets.append(lib)
-    make_targets(lib_targets, product)
+    make_targets(lib_targets, product, variant)
 
 
 def find_lib_lsdumps(target_arch, target_arch_variant,

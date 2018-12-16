@@ -99,12 +99,12 @@ def get_ref_dump_dir_stem(args, vndk_or_ndk, product, chosen_vndk_version):
     return ref_dump_dir_stem
 
 
-def make_libs_for_product(libs, llndk_mode, product):
-    print('making libs for product:', product)
+def make_libs_for_product(libs, llndk_mode, product, variant):
+    print('making libs for', product + '-' + variant)
     if libs:
-        make_libraries(libs, product, llndk_mode)
+        make_libraries(libs, product, variant, llndk_mode)
     else:
-        make_tree(product)
+        make_tree(product, variant)
 
 
 def find_and_remove_path(root_path, file_name=None):
@@ -219,7 +219,8 @@ def create_source_abi_reference_dumps_for_all_products(args):
         if not args.no_make_lib:
             # Build all the specified libs (or build the 'vndk' target if none
             # of them are specified.)
-            make_libs_for_product(args.libs, args.llndk, product)
+            make_libs_for_product(args.libs, args.llndk, product,
+                                  args.build_variant)
 
         lsdump_paths = get_lsdump_paths(product, args.libs)
         num_processed += create_source_abi_reference_dumps(
@@ -241,6 +242,8 @@ def _parse_args():
                         help='libs to create references for')
     parser.add_argument('-products', action='append',
                         help='products to create references for')
+    parser.add_argument('--build-variant', default='userdebug',
+                        help='build variant to create references for')
     parser.add_argument('--compress', action='store_true',
                         help='compress reference dump with gzip')
     parser.add_argument('-ref-dump-dir',
