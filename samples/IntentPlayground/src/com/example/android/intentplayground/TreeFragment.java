@@ -25,7 +25,10 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -33,23 +36,29 @@ import androidx.recyclerview.widget.RecyclerView;
  * This fragment displays a hierarchy of tasks and activities in an expandable list.
  */
 public class TreeFragment extends Fragment {
-
     public static final String TREE_NODE = "com.example.android.NODE_TREE";
     public static final String FRAGMENT_TITLE = "com.example.android.TREE_FRAGMENT_TITLE";
     private Activity mActivity;
-    private Node mTree;
     private String mTitle;
     private ViewGroup mContainer;
+    private BaseActivityViewModel mViewModel;
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
         Bundle args = getArguments();
         if (args != null) {
-            mTree = args.getParcelable(TREE_NODE);
             mTitle = args.getString(FRAGMENT_TITLE);
         }
         return inflater.inflate(R.layout.fragment_tree, container, false /* attachToRoot */);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        mViewModel = (new ViewModelProvider(getActivity(),
+                new ViewModelProvider.NewInstanceFactory())).get(BaseActivityViewModel.class);
     }
 
     @Override
@@ -62,11 +71,9 @@ public class TreeFragment extends Fragment {
         if (mTitle != null) {
             titleView.setText(mTitle);
         }
-        if (mTree != null) {
-            displayRecycler(mTree, recyclerView);
-        } else {
-            displayRecycler(TestBase.describeTaskHierarchy(mActivity), recyclerView);
-        }
+
+        displayRecycler(TestBase.describeTaskHierarchy(mActivity), recyclerView);
+        mViewModel.actOnFab(BaseActivityViewModel.FabAction.Show);
     }
 
     private void displayRecycler(Node root, RecyclerView recyclerView) {

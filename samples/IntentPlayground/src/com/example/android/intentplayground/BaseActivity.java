@@ -22,8 +22,8 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.util.Log;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
@@ -34,6 +34,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.ViewModelProvider;
 
 import java.util.ArrayList;
 
@@ -63,6 +64,31 @@ public abstract class BaseActivity extends AppCompatActivity implements
         appBar.setTitle(this.getClass().getSimpleName());
         setSupportActionBar(appBar);
 
+        FloatingActionButton launchButton = findViewById(R.id.launch_fab);
+        launchButton.setOnClickListener(l -> {
+            LaunchFragment fragment = new LaunchFragment();
+
+            getSupportFragmentManager().beginTransaction()
+                    .addToBackStack(null)
+                    .replace(R.id.fragment_container, fragment)
+                    .commit();
+        });
+
+        BaseActivityViewModel viewModel = (new ViewModelProvider(this,
+                new ViewModelProvider.NewInstanceFactory())).get(BaseActivityViewModel.class);
+
+        viewModel.getFabActions().observe(this, action -> {
+            switch (action) {
+                case Show:
+                    launchButton.show();
+                    break;
+                case Hide:
+                    launchButton.hide();
+                    break;
+            }
+        });
+
+
         loadMode(Mode.LAUNCH);
     }
 
@@ -81,32 +107,23 @@ public abstract class BaseActivity extends AppCompatActivity implements
      * @param mode The mode to display.
      */
     protected void loadMode(Mode mode) {
-        Intent intent = getIntent();
-        ViewGroup container = findViewById(R.id.fragment_container);
         FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction transaction = fragmentManager.beginTransaction()
-                .setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
-        if (mode == Mode.LAUNCH) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
+        if (fragmentManager.findFragmentById(R.id.fragment_container) == null) {
+            FragmentTransaction transaction = fragmentManager.beginTransaction()
+                    .setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
+            if (mode == Mode.LAUNCH) {
                 TreeFragment currentTaskFragment = new TreeFragment();
                 Bundle args = new Bundle();
                 args.putString(TreeFragment.FRAGMENT_TITLE,
                         getString(R.string.current_task_hierarchy_title));
                 currentTaskFragment.setArguments(args);
                 transaction.add(R.id.fragment_container, currentTaskFragment, TREE_FRAGMENT);
+                transaction.add(R.id.fragment_container, new IntentFragment());
+                transaction.commit();
+
+                mStatus = Mode.LAUNCH;
             }
-            transaction.add(R.id.fragment_container, new IntentFragment());
-            transaction.commit();
-            // Ensure IntentBuilderView is last by adding it to the container after commit()
-            transaction.runOnCommit(() -> {
-                IntentBuilderView builderView = new IntentBuilderView(this, mode);
-                builderView.setOnLaunchCallback(this::launchActivity);
-                View bottomAnchorView = new View(this);
-                bottomAnchorView.setId(R.id.fragment_container_bottom);
-                container.addView(builderView);
-                container.addView(bottomAnchorView);
-            });
-            mStatus = Mode.LAUNCH;
         }
     }
 
@@ -114,7 +131,10 @@ public abstract class BaseActivity extends AppCompatActivity implements
      * Launches activity with the selected options.
      */
     public void launchActivity(Intent intent) {
+        // If people press back we want them to see the overview rather than the launch fragment.
+        // To achieve this we pop the launchFragment from the stack when we go to the next activity.
         startActivity(intent);
+        getSupportFragmentManager().popBackStack();
     }
 
     @Override

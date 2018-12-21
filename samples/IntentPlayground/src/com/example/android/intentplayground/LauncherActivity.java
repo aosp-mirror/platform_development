@@ -37,6 +37,7 @@ import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 import static android.view.WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
 import static android.view.WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
+
 import static com.example.android.intentplayground.Node.newTaskNode;
 
 /**
@@ -64,6 +65,9 @@ public class LauncherActivity extends BaseActivity {
     @Override
     public void launchActivity(Intent intent) {
         startActivityForResult(intent, LAUNCH_REQUEST_CODE);
+        // If people press back we want them to see the overview rather than the launch fragment.
+        // To achieve this we pop the launchFragment from the stack when we go to the next activity.
+        getSupportFragmentManager().popBackStack();
     }
 
     @Override
