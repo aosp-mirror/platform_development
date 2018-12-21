@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2017 The Android Open Source Project
+<!-- Copyright (C) 2018 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -15,35 +15,36 @@
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:gravity="center_vertical|left"
-    android:layout_height="wrap_content" >
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal">
 
     <TextView
         android:id="@+id/task_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/smallMargin"
-        android:layout_weight="0"
+        android:layout_marginStart="@dimen/fullMargin"
         android:text="@string/task_num"
         android:textAppearance="@style/medium"
-        android:textSize="@dimen/regularText" />
+        android:textSize="@dimen/regularText"/>
 
     <TextView
         android:id="@+id/task_id"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="0"
         android:text="@string/placeholder"
         android:textAppearance="@style/medium"
-        android:textSize="@dimen/regularText" />
+        android:textSize="@dimen/regularText"/>
+  </LinearLayout>
 
-    <TextView
-        android:id="@+id/num_activities"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/medMargin"
-        android:layout_marginStart="@dimen/medMargin"
-        android:layout_weight="1"
-        android:text="@string/placeholder"
-        android:textSize="@dimen/smallText" />
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:gravity="end"
+      android:id="@+id/activity_node_container"/>
 </LinearLayout>
