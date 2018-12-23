@@ -16,20 +16,26 @@
 
 package com.example.android.intentplayground;
 
+import static com.example.android.intentplayground.Node.newTaskNode;
+
+import android.content.ComponentName;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
+
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.ViewModelProvider;
+
 import java.util.ArrayList;
 
 /**
@@ -39,10 +45,12 @@ public abstract class BaseActivity extends AppCompatActivity implements
         IntentBuilderView.OnLaunchCallback {
     public final static String EXTRA_LAUNCH_FORWARD = "com.example.android.launchForward";
     public final static String BUILDER_VIEW = "com.example.android.builderFragment";
-    public static final String TREE_FRAGMENT =  "com.example.android.treeFragment";
+    public static final String TREE_FRAGMENT = "com.example.android.treeFragment";
     public static final String EXPECTED_TREE_FRAGMENT = "com.example.android.expectedTreeFragment";
     public static final int LAUNCH_REQUEST_CODE = 0xEF;
+
     public enum Mode {LAUNCH, VERIFY, RESULT}
+
     public boolean userLeaveHintWasCalled = false;
     protected Mode mStatus = Mode.LAUNCH;
 
@@ -53,7 +61,34 @@ public abstract class BaseActivity extends AppCompatActivity implements
         if (BuildConfig.DEBUG) Log.d(getLocalClassName(), "onCreate()");
         // Setup action bar
         Toolbar appBar = findViewById(R.id.app_bar);
+        appBar.setTitle(this.getClass().getSimpleName());
         setSupportActionBar(appBar);
+
+        FloatingActionButton launchButton = findViewById(R.id.launch_fab);
+        launchButton.setOnClickListener(l -> {
+            LaunchFragment fragment = new LaunchFragment();
+
+            getSupportFragmentManager().beginTransaction()
+                    .addToBackStack(null)
+                    .replace(R.id.fragment_container, fragment)
+                    .commit();
+        });
+
+        BaseActivityViewModel viewModel = (new ViewModelProvider(this,
+                new ViewModelProvider.NewInstanceFactory())).get(BaseActivityViewModel.class);
+
+        viewModel.getFabActions().observe(this, action -> {
+            switch (action) {
+                case Show:
+                    launchButton.show();
+                    break;
+                case Hide:
+                    launchButton.hide();
+                    break;
+            }
+        });
+
+
         loadMode(Mode.LAUNCH);
     }
 
@@ -68,36 +103,27 @@ public abstract class BaseActivity extends AppCompatActivity implements
 
     /**
      * Initializes the UI for the specified {@link Mode}.
+     *
      * @param mode The mode to display.
      */
     protected void loadMode(Mode mode) {
-        Intent intent = getIntent();
-        ViewGroup container = findViewById(R.id.fragment_container);
         FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction transaction = fragmentManager.beginTransaction()
-                .setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
-        if (mode == Mode.LAUNCH) {
-            transaction.replace(R.id.fragment_container, new CurrentTaskFragment());
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
+        if (fragmentManager.findFragmentById(R.id.fragment_container) == null) {
+            FragmentTransaction transaction = fragmentManager.beginTransaction()
+                    .setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
+            if (mode == Mode.LAUNCH) {
                 TreeFragment currentTaskFragment = new TreeFragment();
                 Bundle args = new Bundle();
                 args.putString(TreeFragment.FRAGMENT_TITLE,
                         getString(R.string.current_task_hierarchy_title));
                 currentTaskFragment.setArguments(args);
                 transaction.add(R.id.fragment_container, currentTaskFragment, TREE_FRAGMENT);
+                transaction.add(R.id.fragment_container, new IntentFragment());
+                transaction.commit();
+
+                mStatus = Mode.LAUNCH;
             }
-            transaction.add(R.id.fragment_container, new IntentFragment());
-            transaction.commit();
-            // Ensure IntentBuilderView is last by adding it to the container after commit()
-            transaction.runOnCommit(() -> {
-                IntentBuilderView builderView = new IntentBuilderView(this, mode);
-                builderView.setOnLaunchCallback(this::launchActivity);
-                View bottomAnchorView = new View(this);
-                bottomAnchorView.setId(R.id.fragment_container_bottom);
-                container.addView(builderView);
-                container.addView(bottomAnchorView);
-            });
-            mStatus = Mode.LAUNCH;
         }
     }
 
@@ -105,7 +131,10 @@ public abstract class BaseActivity extends AppCompatActivity implements
      * Launches activity with the selected options.
      */
     public void launchActivity(Intent intent) {
+        // If people press back we want them to see the overview rather than the launch fragment.
+        // To achieve this we pop the launchFragment from the stack when we go to the next activity.
         startActivity(intent);
+        getSupportFragmentManager().popBackStack();
     }
 
     @Override
@@ -130,8 +159,55 @@ public abstract class BaseActivity extends AppCompatActivity implements
             case R.id.app_bar_test:
                 runIntentTests();
                 break;
+            case R.id.app_bar_launch:
+                askToLaunchTasks();
+                break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+
+    private void askToLaunchTasks() {
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setMessage(R.string.launch_explanation)
+                .setTitle(R.string.ask_to_launch)
+                .setPositiveButton(R.string.ask_to_launch_affirm, (dialogInterface, i) -> {
+                    setupTaskPreset().startActivities(TestBase.LaunchStyle.TASK_STACK_BUILDER);
+                    dialogInterface.dismiss();
+                })
+                .setNegativeButton(R.string.ask_to_launch_cancel, (dialogInterface, i) -> {
+                    dialogInterface.dismiss();
+                })
+                .create();
+        dialog.show();
+    }
+
+    protected TestBase setupTaskPreset() {
+        Node mRoot = Node.newRootNode();
+        // Describe initial setup of tasks
+        // create singleTask, singleInstance, and two documents in separate tasks
+        Node singleTask = newTaskNode()
+                .addChild(new Node(new ComponentName(this, SingleTaskActivity.class)));
+        Node docLaunchAlways = newTaskNode()
+                .addChild(new Node(new ComponentName(this, DocumentLaunchAlwaysActivity.class)));
+        Node docLaunchInto = newTaskNode()
+                .addChild(new Node(new ComponentName(this, DocumentLaunchIntoActivity.class)));
+        // Create three t0asks with three activities each, with affinity set
+        Node taskAffinity1 = newTaskNode()
+                .addChild(new Node(new ComponentName(this, TaskAffinity1Activity.class)))
+                .addChild(new Node(new ComponentName(this, TaskAffinity1Activity.class)))
+                .addChild(new Node(new ComponentName(this, TaskAffinity1Activity.class)));
+        Node taskAffinity2 = newTaskNode()
+                .addChild(new Node(new ComponentName(this, TaskAffinity2Activity.class)))
+                .addChild(new Node(new ComponentName(this, TaskAffinity2Activity.class)))
+                .addChild(new Node(new ComponentName(this, TaskAffinity2Activity.class)));
+        Node taskAffinity3 = newTaskNode()
+                .addChild(new Node(new ComponentName(this, TaskAffinity3Activity.class)))
+                .addChild(new Node(new ComponentName(this, TaskAffinity3Activity.class)))
+                .addChild(new Node(new ComponentName(this, TaskAffinity3Activity.class)));
+        mRoot.addChild(singleTask).addChild(docLaunchAlways).addChild(docLaunchInto)
+                .addChild(taskAffinity1).addChild(taskAffinity2).addChild(taskAffinity3);
+        return new TestBase(this, mRoot);
     }
 
     protected void runIntentTests() {
@@ -161,7 +237,7 @@ public abstract class BaseActivity extends AppCompatActivity implements
                 R.id.build_intent_view);
         demo.addStep(R.string.help_step_four, R.id.fragment_container_bottom,
                 R.id.launch_button);
-        demo.setScroller((ScrollView) findViewById(R.id.scroll_container));
+        demo.setScroller(findViewById(R.id.scroll_container));
         demo.setOnFinish(() -> container.setShowDividers(LinearLayout.SHOW_DIVIDER_MIDDLE));
         fragmentManager.beginTransaction()
                 .add(R.id.root_container, demo)

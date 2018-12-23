@@ -14,47 +14,69 @@
      limitations under the License.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
-    <LinearLayout
-        android:id="@+id/group_item"
-        android:layout_width="match_parent"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+  <LinearLayout
+      android:id="@+id/group_item"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal">
+
+    <TextView
+        android:id="@+id/task_label"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical" />
-    <LinearLayout
-        android:id="@+id/child_item"
-        android:layout_width="match_parent"
+        android:layout_weight="0"
+        android:layout_marginStart="@dimen/smallMargin"
+        android:text="@string/task_num"
+        android:textAppearance="@style/medium"
+        android:textSize="@dimen/regularText"/>
+
+    <TextView
+        android:id="@+id/task_id"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:visibility="gone"
-        android:paddingBottom="@dimen/medMargin" />
+        android:layout_weight="0"
+        android:text="@string/placeholder"
+        android:textAppearance="@style/medium"
+        android:textSize="@dimen/regularText"/>
+  </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/move_task_to_front_bar"
-        android:layout_width="match_parent"
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:gravity="end"
+      android:id="@+id/activity_node_container"/>
+
+  <LinearLayout
+      android:id="@+id/move_task_to_front_bar"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:paddingBottom="@dimen/smallMargin"
+      android:paddingStart="@dimen/smallMargin"
+      android:paddingEnd="@dimen/smallMargin"
+      android:gravity="end"
+      android:orientation="horizontal"
+      android:visibility="gone">
+
+    <Button
+        android:id="@+id/kill_task_button"
+        style="@style/flatButton"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:gravity="end"
-        android:orientation="horizontal"
-        android:paddingBottom="@dimen/medMargin"
-        android:paddingEnd="@dimen/smallMargin"
-        android:paddingStart="@dimen/smallMargin"
-        android:visibility="gone" >
+        android:layout_weight="0"
+        android:text="@string/kill_task_button"/>
 
-        <Button
-            android:id="@+id/kill_task_button"
-            style="@style/flatButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="0"
-            android:text="@string/kill_task_button" />
+    <Button
+        android:id="@+id/move_task_to_front_button"
+        style="@style/flatButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="0"
+        android:text="@string/move_to_front"/>
 
-        <Button
-            android:id="@+id/move_task_to_front_button"
-            style="@style/flatButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="0"
-            android:text="@string/move_to_front" />
-
-    </LinearLayout>
+  </LinearLayout>
 </LinearLayout>

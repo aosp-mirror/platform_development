@@ -88,4 +88,5 @@
     <string name="plural_activities_text">%d activities</string>
     <string name="new_task">NEW</string>
     <string name="run_intent_tests">Run Intent tests</string>
+    <string name="launch_default_activities">Launch Default Activities</string>
 </resources>

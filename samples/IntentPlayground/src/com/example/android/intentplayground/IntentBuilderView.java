@@ -23,6 +23,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,6 +52,7 @@ import java.util.stream.Collectors;
  */
 public class IntentBuilderView extends FrameLayout implements View.OnClickListener,
         CompoundButton.OnCheckedChangeListener {
+    private static final String TAG = "IntentBuilderView";
     protected final int TAG_FLAG = R.id.tag_flag;
     protected final int TAG_SUGGESTED = R.id.tag_suggested;
     protected ComponentName mActivityToLaunch;
@@ -241,12 +243,22 @@ public class IntentBuilderView extends FrameLayout implements View.OnClickListen
         clearSuggestions();
         List<String> suggestions = flag.getComplements().stream().map(IntentFlag::getName)
                 .collect(Collectors.toList());
-        getAllCheckBoxes().stream().filter(box ->
-                suggestions.contains(((IntentFlag) box.getTag(TAG_FLAG)).getName()))
-                .forEach(box -> {
-                    box.setButtonTintList(mSuggestTint);
-                    box.setTag(TAG_SUGGESTED, true);
-                });
+        getAllCheckBoxes().stream()
+            .filter(box -> hasSuggestion(suggestions, box))
+            .forEach(box -> {
+                box.setButtonTintList(mSuggestTint);
+                box.setTag(TAG_SUGGESTED, true);
+            });
+    }
+
+    private boolean hasSuggestion(List<String> suggestions, CheckBox box) {
+        IntentFlag flag = (IntentFlag) box.getTag(TAG_FLAG);
+        if (flag != null) {
+            return suggestions.contains(flag.getName());
+        } else {
+            Log.w(TAG, "Unknown flag: " + box.getText());
+            return false;
+        }
     }
 
     private void clearSuggestions() {
