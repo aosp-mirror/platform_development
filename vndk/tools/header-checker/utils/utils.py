@@ -147,7 +147,7 @@ def make_tree(product, variant):
 
 
 def make_targets(targets, product, variant):
-    make_cmd = ['build/soong/soong_ui.bash', '--make-mode', '-j',
+    make_cmd = ['build/soong/soong_ui.bash', '--make-mode', '-j', 'findlsdumps',
                 'TARGET_PRODUCT=' + product, 'TARGET_BUILD_VARIANT=' + variant]
     make_cmd += targets
     subprocess.check_call(make_cmd, cwd=AOSP_DIR, stdout=subprocess.DEVNULL,

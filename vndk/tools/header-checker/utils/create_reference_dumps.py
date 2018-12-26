@@ -35,13 +35,7 @@ class Target(object):
         self.cpu_variant = build_vars[3]
 
 
-def get_lsdump_paths(product, libs):
-    if libs is None:
-        return get_lsdump_paths_from_out(product)
-    return search_for_lsdump_paths(SOONG_DIR, libs)
-
-
-def get_lsdump_paths_from_out(product):
+def get_lsdump_paths(product):
     build_vars_to_fetch = ['OUT_DIR', 'TARGET_DEVICE']
     build_vars = get_build_vars_for_product(build_vars_to_fetch, product)
     lsdump_paths_file = os.path.join(
@@ -163,14 +157,6 @@ def add_to_path_dict(path, dictionary, libs=tuple()):
         dictionary[libname].append(path)
 
 
-def search_for_lsdump_paths(soong_dir, libs):
-    lsdump_paths = collections.defaultdict(list)
-    for root, _, files in os.walk(soong_dir):
-        for file in files:
-            add_to_path_dict(os.path.join(root, file), lsdump_paths, libs)
-    return lsdump_paths
-
-
 def create_source_abi_reference_dumps(args, product,
                                       chosen_vndk_version, lsdump_paths,
                                       targets):
@@ -226,7 +212,7 @@ def create_source_abi_reference_dumps_for_all_products(args):
             make_libs_for_product(args.libs, args.llndk, product,
                                   args.build_variant)
 
-        lsdump_paths = get_lsdump_paths(product, args.libs)
+        lsdump_paths = get_lsdump_paths(product)
         num_processed += create_source_abi_reference_dumps(
             args, product, chosen_vndk_version, lsdump_paths, targets)
 
