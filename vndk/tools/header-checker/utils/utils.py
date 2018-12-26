@@ -82,22 +82,23 @@ def read_output_content(output_path, replace_str):
         return f.read().replace(replace_str, '')
 
 
-def run_header_abi_dumper(input_path, remove_absolute_paths, cflags=tuple(),
+def run_header_abi_dumper(input_path, cflags=tuple(),
                           export_include_dirs=EXPORTED_HEADERS_DIR,
                           flags=tuple()):
+    """Run header-abi-dumper to dump ABI from `input_path` and return the
+    output."""
     with tempfile.TemporaryDirectory() as tmp:
         output_path = os.path.join(tmp, os.path.basename(input_path)) + '.dump'
         run_header_abi_dumper_on_file(input_path, output_path,
                                       export_include_dirs, cflags, flags)
-        if remove_absolute_paths:
-            return read_output_content(output_path, AOSP_DIR)
-        with open(output_path, 'r') as f:
-            return f.read()
+        return read_output_content(output_path, AOSP_DIR)
 
 
 def run_header_abi_dumper_on_file(input_path, output_path,
                                   export_include_dirs=tuple(), cflags=tuple(),
                                   flags=tuple()):
+    """Run header-abi-dumper to dump ABI from `input_path` and the output is
+    written to `output_path`."""
     input_ext = os.path.splitext(input_path)[1]
     cmd = ['header-abi-dumper', '-o', output_path, input_path]
     for dir in export_include_dirs:
