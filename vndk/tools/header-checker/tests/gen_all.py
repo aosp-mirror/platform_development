@@ -9,25 +9,18 @@ import_path = os.path.abspath(os.path.join(import_path, 'utils'))
 sys.path.insert(1, import_path)
 
 from utils import run_header_abi_dumper
-from utils import copy_reference_dump_content
 from module import Module
+from test import INPUT_DIR
+from test import EXPECTED_DIR
+from test import make_and_copy_reference_dumps
 
-SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
-INPUT_DIR = os.path.join(SCRIPT_DIR, 'input')
-EXPECTED_DIR = os.path.join(SCRIPT_DIR, 'expected')
-REFERENCE_DUMP_DIR = os.path.join(SCRIPT_DIR, 'reference_dumps')
 FILE_EXTENSIONS = ['h', 'hpp', 'hxx', 'cpp', 'cc', 'c']
 
-def make_and_copy_reference_dumps(module, default_cflags=[],
-                                  reference_dump_dir=REFERENCE_DUMP_DIR):
-    lsdump_content = module.make_dump(default_cflags)
-    return copy_reference_dump_content(module.get_dump_name(), lsdump_content,
-                                       reference_dump_dir, '', module.arch)
 
 def main():
     patt = re.compile(
-        '^.*\\.(?:' + \
-        '|'.join('(?:' + re.escape(ext) + ')' for ext in FILE_EXTENSIONS) + \
+        '^.*\\.(?:' +
+        '|'.join('(?:' + re.escape(ext) + ')' for ext in FILE_EXTENSIONS) +
         ')$')
     input_dir_prefix_len = len(INPUT_DIR) + 1
     for base, dirnames, filenames in os.walk(INPUT_DIR):
@@ -48,9 +41,10 @@ def main():
                 f.write(output_content)
     modules = Module.get_test_modules()
     for module in modules:
-        make_and_copy_reference_dumps(module)
+        print('Created abi dump at', make_and_copy_reference_dumps(module))
 
     return 0
+
 
 if __name__ == '__main__':
     sys.exit(main())
