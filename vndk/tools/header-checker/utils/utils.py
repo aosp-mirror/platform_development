@@ -164,31 +164,36 @@ def make_libraries(libs, product, variant, llndk_mode):
     make_targets(lib_targets, product, variant)
 
 
-def find_lib_lsdumps(target_arch, target_arch_variant,
-                     target_cpu_variant, lsdump_paths,
-                     core_or_vendor_shared_str, libs):
-    """ Find the lsdump corresponding to lib_name for the given arch parameters
-        if it exists"""
-    assert 'ANDROID_PRODUCT_OUT' in os.environ
-    cpu_variant = '_' + target_cpu_variant
-    arch_variant = '_' + target_arch_variant
-    arch_lsdump_paths = []
-    if (target_cpu_variant == 'generic' or target_cpu_variant is None or
-            target_cpu_variant == ''):
-        cpu_variant = ''
-    if (target_arch_variant == target_arch or target_arch_variant is None or
-            target_arch_variant == ''):
-        arch_variant = ''
+def get_module_variant_dir_name(arch, arch_variant, cpu_variant,
+                                variant_suffix):
+    """Create module variant directory name from the target architecture, the
+    target architecture variant, the target CPU variant, and a variant suffix
+    (e.g. `_core_shared`, `_vendor_shared`, etc)."""
 
-    target_dir = ('android_' + target_arch + arch_variant +
-                  cpu_variant + core_or_vendor_shared_str)
-    for key in lsdump_paths:
-        if libs and key not in libs:
+    if not arch_variant or arch_variant == arch:
+        arch_variant = ''
+    else:
+        arch_variant = '_' + arch_variant
+
+    if not cpu_variant or cpu_variant == 'generic':
+        cpu_variant = ''
+    else:
+        cpu_variant = '_' + cpu_variant
+
+    return 'android_' + arch + arch_variant + cpu_variant + variant_suffix
+
+
+def find_lib_lsdumps(module_variant_dir_name, lsdump_paths, libs):
+    """Find the lsdump corresponding to lib_name for the given module variant
+    if it exists."""
+    result = []
+    for lib_name, paths in lsdump_paths.items():
+        if libs and lib_name not in libs:
             continue
-        for path in lsdump_paths[key]:
-            if target_dir in path:
-                arch_lsdump_paths.append(os.path.join(AOSP_DIR, path.strip()))
-    return arch_lsdump_paths
+        for path in paths:
+            if module_variant_dir_name in path.split(os.path.sep):
+                result.append(os.path.join(AOSP_DIR, path.strip()))
+    return result
 
 
 def run_abi_diff(old_test_dump_path, new_test_dump_path, arch, lib_name,

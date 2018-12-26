@@ -9,7 +9,8 @@ import time
 from utils import (
     AOSP_DIR, COMPRESSED_SOURCE_ABI_DUMP_EXT, SOURCE_ABI_DUMP_EXT,
     SOURCE_ABI_DUMP_EXT_END, SO_EXT, copy_reference_dumps, find_lib_lsdumps,
-    get_build_vars_for_product, make_libraries, make_tree)
+    get_build_vars_for_product, get_module_variant_dir_name, make_libraries,
+    make_tree)
 
 
 PRODUCTS_DEFAULT = ['aosp_arm_ab', 'aosp_arm', 'aosp_arm64', 'aosp_x86_ab',
@@ -67,10 +68,13 @@ def get_lib_arch_str(target):
 def find_and_copy_lib_lsdumps(target, ref_dump_dir_stem, ref_dump_dir_insertion,
                               core_or_vendor_shared_str, libs, lsdump_paths,
                               compress):
-    arch_lsdump_paths = find_lib_lsdumps(target.arch, target.arch_variant,
-                                         target.cpu_variant, lsdump_paths,
-                                         core_or_vendor_shared_str,
-                                         libs)
+    module_variant_dir_name = get_module_variant_dir_name(
+        target.arch, target.arch_variant, target.cpu_variant,
+        core_or_vendor_shared_str)
+
+    arch_lsdump_paths = find_lib_lsdumps(
+        module_variant_dir_name, lsdump_paths, libs)
+
     # Copy the contents of the lsdump into their corresponding reference ABI
     # dumps directories.
     return copy_reference_dumps(arch_lsdump_paths, ref_dump_dir_stem,
