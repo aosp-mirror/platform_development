@@ -9,7 +9,8 @@ import time
 from utils import (
     AOSP_DIR, COMPRESSED_SOURCE_ABI_DUMP_EXT, SOURCE_ABI_DUMP_EXT,
     SOURCE_ABI_DUMP_EXT_END, SO_EXT, copy_reference_dumps, find_lib_lsdumps,
-    get_build_vars_for_product, make_libraries, make_tree)
+    get_build_vars_for_product, get_module_variant_dir_name, make_libraries,
+    make_tree)
 
 
 PRODUCTS_DEFAULT = ['aosp_arm_ab', 'aosp_arm', 'aosp_arm64', 'aosp_x86_ab',
@@ -64,13 +65,53 @@ def get_lib_arch_str(target):
     return target.arch + target_arch_variant_str
 
 
+# FIXME (b/121986692): Before aosp/858259 is merged, apex mutator adds
+# `_platform` suffix if the module is used by some apex modules. This
+# workaround searches for lsdump with and without `_platform`.
+_WORKAROUND_APEX_PLATFORM_LSDUMPS = True
+
+if _WORKAROUND_APEX_PLATFORM_LSDUMPS:
+    def _find_lib_lsdumps_workaround(dir_name, lsdump_paths, libs):
+        dir_name_platform = dir_name + '_platform'
+
+        matched_lsdump_paths = set(find_lib_lsdumps(
+            dir_name, lsdump_paths, libs))
+
+        matched_lsdump_paths_platform = set(find_lib_lsdumps(
+            dir_name_platform, lsdump_paths, libs))
+
+        # Pick the lsdump file with latest modification time if both of them
+        # exist.
+        matched_lsdump_paths_replaced = set(
+            path.replace(dir_name, dir_name_platform)
+            for path in matched_lsdump_paths)
+
+        both = matched_lsdump_paths_replaced & matched_lsdump_paths_platform
+
+        for path_platform in both:
+            path = path_platform.replace(dir_name_platform, dir_name)
+            if os.stat(path).st_mtime >= os.stat(path_platform).st_mtime:
+                matched_lsdump_paths_platform.remove(path_platform)
+            else:
+                matched_lsdump_paths.remove(path)
+
+        return sorted(matched_lsdump_paths | matched_lsdump_paths_platform)
+
+
 def find_and_copy_lib_lsdumps(target, ref_dump_dir_stem, ref_dump_dir_insertion,
                               core_or_vendor_shared_str, libs, lsdump_paths,
                               compress):
-    arch_lsdump_paths = find_lib_lsdumps(target.arch, target.arch_variant,
-                                         target.cpu_variant, lsdump_paths,
-                                         core_or_vendor_shared_str,
-                                         libs)
+    module_variant_dir_name = get_module_variant_dir_name(
+        target.arch, target.arch_variant, target.cpu_variant,
+        core_or_vendor_shared_str)
+
+    if _WORKAROUND_APEX_PLATFORM_LSDUMPS:
+        arch_lsdump_paths = _find_lib_lsdumps_workaround(
+            module_variant_dir_name, lsdump_paths, libs)
+    else:
+        arch_lsdump_paths = find_lib_lsdumps(
+            module_variant_dir_name, lsdump_paths, libs)
+
     # Copy the contents of the lsdump into their corresponding reference ABI
     # dumps directories.
     return copy_reference_dumps(arch_lsdump_paths, ref_dump_dir_stem,
