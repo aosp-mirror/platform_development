@@ -54,7 +54,7 @@ class HeaderCheckerTest(unittest.TestCase):
     def run_and_compare(self, input_path, expected_path, cflags=[]):
         with open(expected_path, 'r') as f:
             expected_output = f.read()
-        actual_output = run_header_abi_dumper(input_path, True, cflags)
+        actual_output = run_header_abi_dumper(input_path, cflags)
         self.assertEqual(actual_output, expected_output)
 
     def run_and_compare_name(self, name, cflags=[]):
