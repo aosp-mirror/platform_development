@@ -210,22 +210,24 @@ def run_abi_diff(old_test_dump_path, new_test_dump_path, arch, lib_name,
     return 0
 
 
-def get_build_vars_for_product(names, product=None):
+def get_build_vars_for_product(names, product=None, variant=None):
     """ Get build system variable for the launched target."""
 
     if product is None and 'ANDROID_PRODUCT_OUT' not in os.environ:
         return None
 
-    cmd = ''
-    if product is not None:
-        cmd += 'source build/envsetup.sh > /dev/null && '
-        cmd += 'lunch ' + product + ' > /dev/null && '
-    cmd += 'build/soong/soong_ui.bash --dumpvars-mode -vars \"'
-    cmd += ' '.join(names)
-    cmd += '\"'
+    env = os.environ.copy()
+    if product:
+        env['TARGET_PRODUCT'] = product
+    if variant:
+        env['TARGET_BUILD_VARIANT'] = variant
+    cmd = [
+        os.path.join('build', 'soong', 'soong_ui.bash'),
+        '--dumpvars-mode', '-vars', ' '.join(names),
+    ]
 
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE, cwd=AOSP_DIR, shell=True)
+                            stderr=subprocess.PIPE, cwd=AOSP_DIR, env=env)
     out, err = proc.communicate()
 
     if proc.returncode != 0:
