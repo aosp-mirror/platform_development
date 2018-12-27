@@ -27,30 +27,85 @@ var MISSING_LAYER = {short: 'MissingLayer',
     long: "This layer was referenced from the parent, but not present in the trace",
     class: 'error'};
 
-function transform_layer(layer, {parentHidden}) {
-  function transform_rect(layer) {
-    var pos = layer.position || {};
-    var size = layer.size || {};
+function transform_layer(layer, {parentBounds, parentHidden}) {
 
+  function get_bounds(layer) {
+    var size = layer.size || {w: 0, h: 0};
     return {
-        left: pos.x || 0,
-        right: pos.x + size.w || 0,
-        top: pos.y || 0,
-        bottom: pos.y + size.h || 0,
-        label: layer.name,
-        transform: layer.transform,
+      left: 0,
+      right: size.w,
+      top: 0,
+      bottom: size.h
+    };
+  }
+
+  function get_crop(layer, bounds) {
+    return layer.crop != undefined
+      && layer.crop.right > -1
+      && layer.crop.bottom > -1 ? layer.crop : bounds;
+  }
+
+  function intersect(bounds, crop) {
+    return {
+      left: Math.max(crop.left, bounds.left),
+      right: Math.min(crop.right, bounds.right),
+      top: Math.max(crop.top, bounds.top),
+      bottom: Math.min(crop.bottom, bounds.bottom),
+    };
+  }
+
+  function has_size(rect) {
+    return (rect.right - rect.left) > 0 && (rect.bottom - rect.top) > 0;
+  }
+
+  function offset_to(bounds, x, y) {
+    return {
+      left: bounds.left + x,
+      right: bounds.right + x,
+      top: bounds.top + y,
+      bottom: bounds.bottom + y
+    };
+  }
+
+  function transform_bounds(layer, parentBounds) {
+    var result = parentBounds;
+    var bounds = get_bounds(layer);
+    var crop = get_crop(layer, bounds);
+    if (has_size(bounds)) {
+      result = offset_to(intersect(bounds, crop), layer.position.x, layer.position.y)
     }
+    else if (has_size(crop)) {
+      result = offset_to(crop, layer.position.x, layer.position.y)
+    }
+    result.label = layer.name;
+    result.transform = layer.transform;
+    return result;
+  }
+
+  /**
+   * Checks if the layer is visible on screen accorindg to its type,
+   * active buffer content, alpha and visible regions.
+   *
+   * @param {layer} layer
+   * @returns if the layer is visible on screen or not
+   */
+  function is_visible(layer, visibleRect) {
+    var visible = (layer.activeBuffer || layer.type === 'ColorLayer')
+        && !hidden && layer.color.a > 0;
+    if (visibleRect != undefined) {
+      visible &= has_size(visibleRect);
+    }
+    return visible
   }
 
   var chips = [];
-  var rect = transform_rect(layer);
+  var rect = transform_bounds(layer, parentBounds);
   var hidden = (layer.flags & FLAG_HIDDEN) != 0 || parentHidden;
-  var visible = (layer.activeBuffer || layer.type === 'ColorLayer')
-      && !hidden && layer.color.a > 0;
+  var visible = is_visible(layer, rect);
   if (visible) {
     chips.push(get_visible_chip());
   } else {
-    rect = undefined;
+    rect = {left: 0, right: 0, top: 0, bottom: 0};
   }
   if (layer.zOrderRelativeOf !== -1) {
     chips.push(RELATIVE_Z_CHIP);
@@ -63,7 +118,7 @@ function transform_layer(layer, {parentHidden}) {
   }
 
   var transform_layer_with_parent_hidden =
-      (layer) => transform_layer(layer, {parentHidden: hidden});
+      (layer) => transform_layer(layer, {parentBounds: rect, parentHidden: hidden});
 
   return transform({
     obj: layer,
@@ -73,7 +128,7 @@ function transform_layer(layer, {parentHidden}) {
       [layer.resolvedChildren, transform_layer_with_parent_hidden],
     ],
     rect,
-    highlight: rect,
+    highlight: has_size(rect) ? rect: undefined,
     chips,
     visible,
   });
@@ -106,6 +161,7 @@ function transform_layers(layers) {
       idToItem[e.zOrderRelativeOf].zOrderRelativeParentOf = e.id;
     }
   });
+
   var roots = layers.layers.filter((e) => !isChild[e.id]);
 
   function foreachTree(nodes, fun) {
@@ -116,7 +172,10 @@ function transform_layers(layers) {
   }
 
   var idToTransformed = {};
-  var transformed_roots = roots.map(transform_layer);
+  var transformed_roots = roots.map((r) =>
+    transform_layer(r, {parentBounds: {left: 0, right: 0, top: 0, bottom: 0},
+      parentHidden: false}));
+
   foreachTree(transformed_roots, (n) => {
     idToTransformed[n.obj.id] = n;
   });
