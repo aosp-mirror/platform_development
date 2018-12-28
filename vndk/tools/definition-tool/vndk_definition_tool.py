@@ -3740,67 +3740,6 @@ class DumpDexStringCommand(Command):
                 print(repr(string))
 
 
-class CheckEligibleListCommand(CheckDepCommandBase):
-    def __init__(self):
-        super(CheckEligibleListCommand, self).__init__(
-                'check-eligible-list', help='Check the eligible list')
-
-
-    def _check_eligible_vndk_dep(self, graph, tagged_libs, module_info):
-        """Check whether eligible sets are self-contained."""
-        num_errors = 0
-
-        indirect_libs = (tagged_libs.ll_ndk_indirect |
-                         tagged_libs.vndk_sp_indirect_private |
-                         tagged_libs.fwk_only_rs)
-
-        eligible_libs = (tagged_libs.ll_ndk | tagged_libs.vndk_sp |
-                         tagged_libs.vndk_sp_indirect | tagged_libs.vndk)
-
-        # Check eligible vndk is self-contained.
-        for lib in sorted(eligible_libs):
-            bad_deps = []
-            for dep in lib.deps_all:
-                if dep not in eligible_libs and dep not in indirect_libs:
-                    print('error: eligible lib "{}" should not depend on '
-                          'non-eligible lib "{}".'.format(lib.path, dep.path),
-                          file=sys.stderr)
-                    bad_deps.append(dep)
-                    num_errors += 1
-            if bad_deps:
-                self._dump_dep(lib, bad_deps, module_info)
-
-        # Check the libbinder dependencies.
-        for lib in sorted(eligible_libs):
-            bad_deps = []
-            for dep in lib.deps_all:
-                if os.path.basename(dep.path) == 'libbinder.so':
-                    print('error: eligible lib "{}" should not depend on '
-                          'libbinder.so.'.format(lib.path), file=sys.stderr)
-                    bad_deps.append(dep)
-                    num_errors += 1
-            if bad_deps:
-                self._dump_dep(lib, bad_deps, module_info)
-
-        return num_errors
-
-
-    def main(self, args):
-        generic_refs, graph, tagged_paths, vndk_lib_dirs = \
-                self.create_from_args(args)
-
-        tagged_paths = TaggedPathDict.create_from_csv_path(
-                args.tag_file, vndk_lib_dirs)
-        tagged_libs = TaggedLibDict.create_from_graph(
-                graph, tagged_paths, generic_refs)
-
-        module_info = ModuleInfo.load_from_path_or_default(args.module_info)
-
-        num_errors = self._check_eligible_vndk_dep(graph, tagged_libs,
-                                                   module_info)
-        return 0 if num_errors == 0 else 1
-
-
 class DepGraphCommand(ELFGraphCommand):
     def __init__(self):
         super(DepGraphCommand, self).__init__(
@@ -3905,7 +3844,6 @@ def main():
     register_subcmd(DepsUnresolvedCommand())
     register_subcmd(ApkDepsCommand())
     register_subcmd(CheckDepCommand())
-    register_subcmd(CheckEligibleListCommand())
     register_subcmd(DepGraphCommand())
     register_subcmd(DumpDexStringCommand())
 
