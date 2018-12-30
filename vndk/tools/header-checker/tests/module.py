@@ -91,7 +91,7 @@ class SdumpModule(Module):
 
     def make_dump(self):
         return run_header_abi_dumper(
-            self.src, remove_absolute_paths=True, cflags=self.cflags,
+            self.src, cflags=self.cflags,
             export_include_dirs=self.export_include_dirs,
             flags=self.dumper_flags)
 

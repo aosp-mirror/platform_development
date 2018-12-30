@@ -82,22 +82,23 @@ def read_output_content(output_path, replace_str):
         return f.read().replace(replace_str, '')
 
 
-def run_header_abi_dumper(input_path, remove_absolute_paths, cflags=tuple(),
+def run_header_abi_dumper(input_path, cflags=tuple(),
                           export_include_dirs=EXPORTED_HEADERS_DIR,
                           flags=tuple()):
+    """Run header-abi-dumper to dump ABI from `input_path` and return the
+    output."""
     with tempfile.TemporaryDirectory() as tmp:
         output_path = os.path.join(tmp, os.path.basename(input_path)) + '.dump'
         run_header_abi_dumper_on_file(input_path, output_path,
                                       export_include_dirs, cflags, flags)
-        if remove_absolute_paths:
-            return read_output_content(output_path, AOSP_DIR)
-        with open(output_path, 'r') as f:
-            return f.read()
+        return read_output_content(output_path, AOSP_DIR)
 
 
 def run_header_abi_dumper_on_file(input_path, output_path,
                                   export_include_dirs=tuple(), cflags=tuple(),
                                   flags=tuple()):
+    """Run header-abi-dumper to dump ABI from `input_path` and the output is
+    written to `output_path`."""
     input_ext = os.path.splitext(input_path)[1]
     cmd = ['header-abi-dumper', '-o', output_path, input_path]
     for dir in export_include_dirs:
@@ -137,57 +138,62 @@ def run_header_abi_linker(output_path, inputs, version_script, api, arch,
     return read_output_content(output_path, AOSP_DIR)
 
 
-def make_tree(product):
+def make_tree(product, variant):
     # To aid creation of reference dumps.
     make_cmd = ['build/soong/soong_ui.bash', '--make-mode', '-j',
-                'vndk', 'findlsdumps', 'TARGET_PRODUCT=' + product]
+                'vndk', 'findlsdumps', 'TARGET_PRODUCT=' + product,
+                'TARGET_BUILD_VARIANT=' + variant]
     subprocess.check_call(make_cmd, cwd=AOSP_DIR)
 
 
-def make_targets(targets, product):
-    make_cmd = ['build/soong/soong_ui.bash', '--make-mode', '-j']
-    for target in targets:
-        make_cmd.append(target)
-    make_cmd.append('TARGET_PRODUCT=' + product)
+def make_targets(targets, product, variant):
+    make_cmd = ['build/soong/soong_ui.bash', '--make-mode', '-j',
+                'TARGET_PRODUCT=' + product, 'TARGET_BUILD_VARIANT=' + variant]
+    make_cmd += targets
     subprocess.check_call(make_cmd, cwd=AOSP_DIR, stdout=subprocess.DEVNULL,
                           stderr=subprocess.STDOUT)
 
 
-def make_libraries(libs, product, llndk_mode):
+def make_libraries(libs, product, variant, llndk_mode):
     # To aid creation of reference dumps. Makes lib.vendor for the current
     # configuration.
     lib_targets = []
     for lib in libs:
         lib = lib if llndk_mode else lib + VENDOR_SUFFIX
         lib_targets.append(lib)
-    make_targets(lib_targets, product)
+    make_targets(lib_targets, product, variant)
 
 
-def find_lib_lsdumps(target_arch, target_arch_variant,
-                     target_cpu_variant, lsdump_paths,
-                     core_or_vendor_shared_str, libs):
-    """ Find the lsdump corresponding to lib_name for the given arch parameters
-        if it exists"""
-    assert 'ANDROID_PRODUCT_OUT' in os.environ
-    cpu_variant = '_' + target_cpu_variant
-    arch_variant = '_' + target_arch_variant
-    arch_lsdump_paths = []
-    if (target_cpu_variant == 'generic' or target_cpu_variant is None or
-            target_cpu_variant == ''):
-        cpu_variant = ''
-    if (target_arch_variant == target_arch or target_arch_variant is None or
-            target_arch_variant == ''):
+def get_module_variant_dir_name(arch, arch_variant, cpu_variant,
+                                variant_suffix):
+    """Create module variant directory name from the target architecture, the
+    target architecture variant, the target CPU variant, and a variant suffix
+    (e.g. `_core_shared`, `_vendor_shared`, etc)."""
+
+    if not arch_variant or arch_variant == arch:
         arch_variant = ''
+    else:
+        arch_variant = '_' + arch_variant
 
-    target_dir = ('android_' + target_arch + arch_variant +
-                  cpu_variant + core_or_vendor_shared_str)
-    for key in lsdump_paths:
-        if libs and key not in libs:
+    if not cpu_variant or cpu_variant == 'generic':
+        cpu_variant = ''
+    else:
+        cpu_variant = '_' + cpu_variant
+
+    return 'android_' + arch + arch_variant + cpu_variant + variant_suffix
+
+
+def find_lib_lsdumps(module_variant_dir_name, lsdump_paths, libs):
+    """Find the lsdump corresponding to lib_name for the given module variant
+    if it exists."""
+    result = []
+    for lib_name, paths in lsdump_paths.items():
+        if libs and lib_name not in libs:
             continue
-        for path in lsdump_paths[key]:
-            if target_dir in path:
-                arch_lsdump_paths.append(os.path.join(AOSP_DIR, path.strip()))
-    return arch_lsdump_paths
+        for path in paths:
+            if module_variant_dir_name in path.split(os.path.sep):
+                result.append(os.path.join(AOSP_DIR, path.strip()))
+    return result
 
 
 def run_abi_diff(old_test_dump_path, new_test_dump_path, arch, lib_name,
@@ -210,22 +216,24 @@ def run_abi_diff(old_test_dump_path, new_test_dump_path, arch, lib_name,
     return 0
 
 
-def get_build_vars_for_product(names, product=None):
+def get_build_vars_for_product(names, product=None, variant=None):
     """ Get build system variable for the launched target."""
 
     if product is None and 'ANDROID_PRODUCT_OUT' not in os.environ:
         return None
 
-    cmd = ''
-    if product is not None:
-        cmd += 'source build/envsetup.sh > /dev/null && '
-        cmd += 'lunch ' + product + ' > /dev/null && '
-    cmd += 'build/soong/soong_ui.bash --dumpvars-mode -vars \"'
-    cmd += ' '.join(names)
-    cmd += '\"'
+    env = os.environ.copy()
+    if product:
+        env['TARGET_PRODUCT'] = product
+    if variant:
+        env['TARGET_BUILD_VARIANT'] = variant
+    cmd = [
+        os.path.join('build', 'soong', 'soong_ui.bash'),
+        '--dumpvars-mode', '-vars', ' '.join(names),
+    ]
 
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE, cwd=AOSP_DIR, shell=True)
+                            stderr=subprocess.PIPE, cwd=AOSP_DIR, env=env)
     out, err = proc.communicate()
 
     if proc.returncode != 0:
