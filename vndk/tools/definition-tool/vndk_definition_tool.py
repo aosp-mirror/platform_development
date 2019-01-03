@@ -314,21 +314,26 @@ class Elf_Sym(collections.namedtuple(
 
     SHN_UNDEF = 0
 
+
     @property
     def st_bind(self):
         return self.st_info >> 4
+
 
     @property
     def is_local(self):
         return self.st_bind == Elf_Sym.STB_LOCAL
 
+
     @property
     def is_global(self):
         return self.st_bind == Elf_Sym.STB_GLOBAL
 
+
     @property
     def is_weak(self):
         return self.st_bind == Elf_Sym.STB_WEAK
+
 
     @property
     def is_undef(self):
@@ -381,6 +386,7 @@ class ELF(object):
     EM_X86_64 = 62
     EM_AARCH64 = 183
 
+
     def _create_elf_machines(d):
         elf_machine_ids = {}
         for key, value in d.items():
@@ -400,13 +406,16 @@ class ELF(object):
                 return key
         raise KeyError(dst)
 
+
     @staticmethod
     def get_ei_class_from_name(name):
         return ELF._dict_find_key_by_value(ELF._ELF_CLASS_NAMES, name)
 
+
     @staticmethod
     def get_ei_data_from_name(name):
         return ELF._dict_find_key_by_value(ELF._ELF_DATA_NAMES, name)
+
 
     @staticmethod
     def get_e_machine_from_name(name):
@@ -440,40 +449,50 @@ class ELF(object):
         self.rw_seg_file_size = rw_seg_file_size
         self.rw_seg_mem_size = rw_seg_mem_size
 
+
     def __repr__(self):
         args = (a + '=' + repr(getattr(self, a)) for a in self.__slots__)
         return 'ELF(' + ', '.join(args) + ')'
 
+
     def __eq__(self, rhs):
         return all(getattr(self, a) == getattr(rhs, a) for a in self.__slots__)
+
 
     @property
     def elf_class_name(self):
         return self._ELF_CLASS_NAMES.get(self.ei_class, 'None')
 
+
     @property
     def elf_data_name(self):
         return self._ELF_DATA_NAMES.get(self.ei_data, 'None')
+
 
     @property
     def elf_machine_name(self):
         return self.ELF_MACHINES.get(self.e_machine, str(self.e_machine))
 
+
     @property
     def is_32bit(self):
         return self.ei_class == ELF.ELFCLASS32
+
 
     @property
     def is_64bit(self):
         return self.ei_class == ELF.ELFCLASS64
 
+
     @property
     def sorted_exported_symbols(self):
         return sorted(list(self.exported_symbols))
 
+
     @property
     def sorted_imported_symbols(self):
         return sorted(list(self.imported_symbols))
+
 
     def dump(self, file=None):
         """Print parsed ELF information to the file"""
@@ -498,6 +517,7 @@ class ELF(object):
         for symbol in self.sorted_imported_symbols:
             print('IMP_SYMBOL\t' + symbol, file=file)
 
+
     # Extract zero-terminated buffer slice.
     def _extract_zero_terminated_buf_slice(self, buf, offset):
         """Extract a zero-terminated buffer slice from the given offset"""
@@ -505,6 +525,7 @@ class ELF(object):
         if end == -1:
             return buf[offset:]
         return buf[offset:end]
+
 
     # Extract c-style interned string from the buffer.
     if sys.version_info >= (3, 0):
@@ -516,6 +537,7 @@ class ELF(object):
         def _extract_zero_terminated_str(self, buf, offset):
             """Extract a c-style string from the given buffer and offset"""
             return intern(self._extract_zero_terminated_buf_slice(buf, offset))
+
 
     def _parse_from_buf_internal(self, buf):
         """Parse ELF image resides in the buffer"""
@@ -695,12 +717,14 @@ class ELF(object):
                 elif not ent.is_local:
                     exp_symbols.add(symbol_name)
 
+
     def _parse_from_buf(self, buf):
         """Parse ELF image resides in the buffer"""
         try:
             self._parse_from_buf_internal(buf)
         except IndexError:
             raise ELFError('bad offset')
+
 
     def _parse_from_file(self, path):
         """Parse ELF image from the file path"""
@@ -710,6 +734,7 @@ class ELF(object):
                 raise ELFError('empty file')
             with mmap(f.fileno(), st.st_size, access=ACCESS_READ) as image:
                 self._parse_from_buf(image)
+
 
     def _parse_from_dump_lines(self, path, lines):
         patt = re.compile('^([A-Za-z_]+)\t+(.*)$')
@@ -752,15 +777,18 @@ class ELF(object):
                 print('error: {}: {}: unknown tag name: {}'
                       .format(path, line_no + 1, key), file=sys.stderr)
 
+
     def _parse_from_dump_file(self, path):
         """Load information from ELF dump file."""
         with open(path, 'r') as f:
             self._parse_from_dump_lines(path, f)
 
+
     def _parse_from_dump_buf(self, buf):
         """Load information from ELF dump buffer."""
         self._parse_from_dump_lines('<str:0x{:x}>'.format(id(buf)),
                                     buf.splitlines())
+
 
     @staticmethod
     def load(path):
@@ -769,12 +797,14 @@ class ELF(object):
         elf._parse_from_file(path)
         return elf
 
+
     @staticmethod
     def loads(buf):
         """Create an ELF instance from the buffer"""
         elf = ELF()
         elf._parse_from_buf(buf)
         return elf
+
 
     @staticmethod
     def load_dump(path):
@@ -783,12 +813,14 @@ class ELF(object):
         elf._parse_from_dump_file(path)
         return elf
 
+
     @staticmethod
     def load_dumps(buf):
         """Create an ELF instance from a dump file buffer"""
         elf = ELF()
         elf._parse_from_dump_buf(buf)
         return elf
+
 
     def is_jni_lib(self):
         """Test whether the ELF file looks like a JNI library."""
@@ -1077,6 +1109,7 @@ class TaggedDict(object):
     _define_tag_constants(locals())
     del _define_tag_constants
 
+
     _TAG_ALIASES = {
         'hl_ndk': 'fwk_only',  # Treat HL-NDK as FWK-ONLY.
         'sp_ndk': 'll_ndk',
@@ -1094,6 +1127,7 @@ class TaggedDict(object):
         'vndk_sp_private': 'vndk_sp_indirect_private',
     }
 
+
     @classmethod
     def _normalize_tag(cls, tag):
         tag = tag.lower().replace('-', '_')
@@ -1101,6 +1135,7 @@ class TaggedDict(object):
         if tag not in cls.TAGS:
             raise ValueError('unknown lib tag ' + tag)
         return tag
+
 
     _LL_NDK_VIS = {'ll_ndk', 'll_ndk_indirect'}
     _VNDK_SP_VIS = {'ll_ndk', 'vndk_sp', 'vndk_sp_indirect',
@@ -1134,9 +1169,11 @@ class TaggedDict(object):
 
     del _LL_NDK_VIS, _VNDK_SP_VIS, _FWK_ONLY_VIS, _SP_HAL_VIS
 
+
     @classmethod
     def is_tag_visible(cls, from_tag, to_tag):
         return to_tag in cls._TAG_VISIBILITY[from_tag]
+
 
     def __init__(self, vndk_lib_dirs=None):
         self._path_tag = dict()
@@ -1150,13 +1187,16 @@ class TaggedDict(object):
             self._vndk_suffixes = [VNDKLibDir.create_vndk_dir_suffix(version)
                                    for version in vndk_lib_dirs]
 
+
     def add(self, tag, lib):
         lib_set = getattr(self, tag)
         lib_set.add(lib)
         self._path_tag[lib] = tag
 
+
     def add_regex(self, tag, pattern):
         self._regex_patterns.append((re.compile(pattern), tag))
+
 
     def get_path_tag(self, lib):
         try:
@@ -1170,35 +1210,44 @@ class TaggedDict(object):
 
         return self.get_path_tag_default(lib)
 
+
     def get_path_tag_default(self, lib):
         raise NotImplementedError()
 
+
     def get_path_tag_bit(self, lib):
         return self.TAGS[self.get_path_tag(lib)]
+
 
     def is_path_visible(self, from_lib, to_lib):
         return self.is_tag_visible(self.get_path_tag(from_lib),
                                    self.get_path_tag(to_lib))
 
+
     @staticmethod
     def is_ll_ndk(tag_bit):
         return bool(tag_bit & TaggedDict.LL_NDK)
+
 
     @staticmethod
     def is_vndk_sp(tag_bit):
         return bool(tag_bit & TaggedDict.VNDK_SP)
 
+
     @staticmethod
     def is_vndk_sp_indirect(tag_bit):
         return bool(tag_bit & TaggedDict.VNDK_SP_INDIRECT)
+
 
     @staticmethod
     def is_vndk_sp_indirect_private(tag_bit):
         return bool(tag_bit & TaggedDict.VNDK_SP_INDIRECT_PRIVATE)
 
+
     @staticmethod
     def is_fwk_only_rs(tag_bit):
         return bool(tag_bit & TaggedDict.FWK_ONLY_RS)
+
 
     @staticmethod
     def is_sp_hal(tag_bit):
@@ -1227,16 +1276,19 @@ class TaggedPathDict(TaggedDict):
         for row in reader:
             self.add(self._normalize_tag(row[tag_col]), row[path_col])
 
+
     @staticmethod
     def create_from_csv(fp, vndk_lib_dirs=None):
         d = TaggedPathDict(vndk_lib_dirs)
         d.load_from_csv(fp)
         return d
 
+
     @staticmethod
     def create_from_csv_path(path, vndk_lib_dirs=None):
         with open(path, 'r') as fp:
             return TaggedPathDict.create_from_csv(fp, vndk_lib_dirs)
+
 
     def _enumerate_paths_with_lib(self, pattern):
         if '${LIB}' in pattern:
@@ -1244,6 +1296,7 @@ class TaggedPathDict(TaggedDict):
             yield pattern.replace('${LIB}', 'lib64')
         else:
             yield pattern
+
 
     def _enumerate_paths(self, pattern):
         if '${VNDK_VER}' not in pattern:
@@ -1255,12 +1308,14 @@ class TaggedPathDict(TaggedDict):
             for path in self._enumerate_paths_with_lib(pattern_with_suffix):
                 yield path
 
+
     def add(self, tag, path):
         if path.startswith('[regex]'):
             super(TaggedPathDict, self).add_regex(tag, path[7:])
             return
         for path in self._enumerate_paths(path):
             super(TaggedPathDict, self).add(tag, path)
+
 
     def get_path_tag_default(self, path):
         return 'vnd_only' if path.startswith('/vendor') else 'fwk_only'
@@ -1272,10 +1327,12 @@ class TaggedLibDict(object):
         for tag in TaggedDict.TAGS:
             setattr(self, tag, set())
 
+
     def add(self, tag, lib):
         lib_set = getattr(self, tag)
         lib_set.add(lib)
         self._path_tag[lib] = tag
+
 
     @staticmethod
     def create_from_graph(graph, tagged_paths, generic_refs=None):
@@ -1294,11 +1351,13 @@ class TaggedLibDict(object):
                 d.add('vnd_only', lib)
         return d
 
+
     def get_path_tag(self, lib):
         try:
             return self._path_tag[lib]
         except KeyError:
             return self.get_path_tag_default(lib)
+
 
     def get_path_tag_default(self, lib):
         return 'vnd_only' if lib.path.startswith('/vendor') else 'fwk_only'
@@ -1672,6 +1731,7 @@ class ELFResolver(object):
         self.lib_set = lib_set
         self.default_search_path = default_search_path
 
+
     def get_candidates(self, requester, name, dt_rpath=None, dt_runpath=None):
         # Search app-specific search paths.
         if _APP_DIR_PATTERNS.match(requester):
@@ -1686,6 +1746,7 @@ class ELFResolver(object):
                 yield os.path.join(d, name)
         for d in self.default_search_path:
             yield os.path.join(d, name)
+
 
     def resolve(self, requester, name, dt_rpath=None, dt_runpath=None):
         for path in self.get_candidates(requester, name, dt_rpath, dt_runpath):
@@ -1715,29 +1776,36 @@ class ELFLinkData(object):
         self.unresolved_dt_needed = []
         self.linked_symbols = dict()
 
+
     @property
     def is_ll_ndk(self):
         return TaggedDict.is_ll_ndk(self._tag_bit)
+
 
     @property
     def is_vndk_sp(self):
         return TaggedDict.is_vndk_sp(self._tag_bit)
 
+
     @property
     def is_vndk_sp_indirect(self):
         return TaggedDict.is_vndk_sp_indirect(self._tag_bit)
+
 
     @property
     def is_vndk_sp_indirect_private(self):
         return TaggedDict.is_vndk_sp_indirect_private(self._tag_bit)
 
+
     @property
     def is_fwk_only_rs(self):
         return TaggedDict.is_fwk_only_rs(self._tag_bit)
 
+
     @property
     def is_sp_hal(self):
         return TaggedDict.is_sp_hal(self._tag_bit)
+
 
     def add_needed_dep(self, dst):
         assert dst not in self.deps_needed_hidden
@@ -1745,11 +1813,13 @@ class ELFLinkData(object):
         self.deps_needed.add(dst)
         dst.users_needed.add(self)
 
+
     def add_dlopen_dep(self, dst):
         assert dst not in self.deps_dlopen_hidden
         assert self not in dst.users_dlopen_hidden
         self.deps_dlopen.add(dst)
         dst.users_dlopen.add(self)
+
 
     def hide_needed_dep(self, dst):
         self.deps_needed.remove(dst)
@@ -1757,11 +1827,13 @@ class ELFLinkData(object):
         self.deps_needed_hidden.add(dst)
         dst.users_needed_hidden.add(self)
 
+
     def hide_dlopen_dep(self, dst):
         self.deps_dlopen.remove(dst)
         dst.users_dlopen.remove(self)
         self.deps_dlopen_hidden.add(dst)
         dst.users_dlopen_hidden.add(self)
+
 
     @property
     def num_deps(self):
@@ -1770,22 +1842,27 @@ class ELFLinkData(object):
         return (len(self.deps_needed) + len(self.deps_needed_hidden) +
                 len(self.deps_dlopen) + len(self.deps_dlopen_hidden))
 
+
     @property
     def deps_all(self):
         return itertools.chain(self.deps_needed, self.deps_needed_hidden,
                                self.deps_dlopen, self.deps_dlopen_hidden)
 
+
     @property
     def deps_good(self):
         return itertools.chain(self.deps_needed, self.deps_dlopen)
+
 
     @property
     def deps_needed_all(self):
         return itertools.chain(self.deps_needed, self.deps_needed_hidden)
 
+
     @property
     def deps_dlopen_all(self):
         return itertools.chain(self.deps_dlopen, self.deps_dlopen_hidden)
+
 
     @property
     def num_users(self):
@@ -1794,33 +1871,41 @@ class ELFLinkData(object):
         return (len(self.users_needed) + len(self.users_needed_hidden) +
                 len(self.users_dlopen) + len(self.users_dlopen_hidden))
 
+
     @property
     def users_all(self):
         return itertools.chain(self.users_needed, self.users_needed_hidden,
                                self.users_dlopen, self.users_dlopen_hidden)
 
+
     @property
     def users_good(self):
         return itertools.chain(self.users_needed, self.users_dlopen)
+
 
     @property
     def users_needed_all(self):
         return itertools.chain(self.users_needed, self.users_needed_hidden)
 
+
     @property
     def users_dlopen_all(self):
         return itertools.chain(self.users_dlopen, self.users_dlopen_hidden)
+
 
     def has_dep(self, dst):
         return (dst in self.deps_needed or dst in self.deps_needed_hidden or
                 dst in self.deps_dlopen or dst in self.deps_dlopen_hidden)
 
+
     def has_user(self, dst):
         return (dst in self.users_needed or dst in self.users_needed_hidden or
                 dst in self.users_dlopen or dst in self.users_dlopen_hidden)
 
+
     def is_system_lib(self):
         return self.partition == PT_SYSTEM
+
 
     def get_dep_linked_symbols(self, dep):
         symbols = set()
@@ -1828,6 +1913,7 @@ class ELFLinkData(object):
             if exp_lib == dep:
                 symbols.add(symbol)
         return sorted(symbols)
+
 
     def __lt__(self, rhs):
         return self.path < rhs.path
@@ -1838,6 +1924,7 @@ def sorted_lib_path_list(libs):
     libs.sort()
     return libs
 
+
 _VNDK_RESULT_FIELD_NAMES = (
         'll_ndk', 'll_ndk_indirect',
         'vndk_sp', 'vndk_sp_unused', 'vndk_sp_indirect',
@@ -1847,6 +1934,7 @@ _VNDK_RESULT_FIELD_NAMES = (
         'extra_vendor_libs')
 
 VNDKResult = defaultnamedtuple('VNDKResult', _VNDK_RESULT_FIELD_NAMES, set())
+
 
 _SIMPLE_VNDK_RESULT_FIELD_NAMES = (
         'vndk_sp', 'vndk_sp_ext', 'extra_vendor_libs')
@@ -1859,11 +1947,14 @@ class ELFLibDict(defaultnamedtuple('ELFLibDict', ('lib32', 'lib64'), {})):
     def get_lib_dict(self, elf_class):
         return self[elf_class - 1]
 
+
     def add(self, path, lib):
         self.get_lib_dict(lib.elf.ei_class)[path] = lib
 
+
     def remove(self, lib):
         del self.get_lib_dict(lib.elf.ei_class)[lib.path]
+
 
     def get(self, path, default=None):
         for lib_set in self:
@@ -1872,11 +1963,14 @@ class ELFLibDict(defaultnamedtuple('ELFLibDict', ('lib32', 'lib64'), {})):
                 return res
         return default
 
+
     def keys(self):
         return itertools.chain(self.lib32.keys(), self.lib64.keys())
 
+
     def values(self):
         return itertools.chain(self.lib32.values(), self.lib64.values())
+
 
     def items(self):
         return itertools.chain(self.lib32.items(), self.lib64.items())
@@ -1903,17 +1997,21 @@ class ELFLinker(object):
 
         self.ro_vndk_version = ro_vndk_version
 
+
     def _add_lib_to_lookup_dict(self, lib):
         self.lib_pt[lib.partition].add(lib.path, lib)
 
+
     def _remove_lib_from_lookup_dict(self, lib):
         self.lib_pt[lib.partition].remove(lib)
+
 
     def add_lib(self, partition, path, elf):
         lib = ELFLinkData(partition, path, elf,
                           self.tagged_paths.get_path_tag_bit(path))
         self._add_lib_to_lookup_dict(lib)
         return lib
+
 
     def add_dlopen_dep(self, src_path, dst_path):
         num_matches = 0
@@ -1926,6 +2024,7 @@ class ELFLinker(object):
         if num_matches == 0:
             raise ValueError('Failed to add dlopen dependency from {} to {}'
                              .format(src_path, dst_path))
+
 
     def _get_libs_in_elf_class(self, elf_class, path):
         result = set()
@@ -1947,12 +2046,14 @@ class ELFLinker(object):
                     result.add(lib)
         return result
 
+
     def get_lib(self, path):
         for lib_set in self.lib_pt:
             lib = lib_set.get(path)
             if lib:
                 return lib
         return None
+
 
     def get_libs(self, paths, report_error=None):
         result = set()
@@ -1966,10 +2067,12 @@ class ELFLinker(object):
             result.add(lib)
         return result
 
+
     def all_libs(self):
         for lib_set in self.lib_pt:
             for lib in lib_set.values():
                 yield lib
+
 
     def _compute_lib_dict(self, elf_class):
         res = dict()
@@ -1977,11 +2080,13 @@ class ELFLinker(object):
             res.update(lib_pt.get_lib_dict(elf_class))
         return res
 
+
     @staticmethod
     def _compile_path_matcher(root, subdirs):
         dirs = [os.path.normpath(os.path.join(root, i)) for i in subdirs]
         patts = ['(?:' + re.escape(i) + os.sep + ')' for i in dirs]
         return re.compile('|'.join(patts))
+
 
     def add_executables_in_dir(self, partition_name, partition, root,
                                alter_partition, alter_subdirs, ignored_subdirs,
@@ -2011,6 +2116,7 @@ class ELFLinker(object):
             else:
                 self.add_lib(partition, short_path, elf)
 
+
     def add_dlopen_deps(self, path):
         patt = re.compile('([^:]*):\\s*(.*)')
         with open(path, 'r') as dlopen_dep_file:
@@ -2024,12 +2130,14 @@ class ELFLinker(object):
                     print('error:{}:{}: {}.'.format(path, line_no, e),
                           file=sys.stderr)
 
+
     def _find_exported_symbol(self, symbol, libs):
         """Find the shared library with the exported symbol."""
         for lib in libs:
             if symbol in lib.elf.exported_symbols:
                 return lib
         return None
+
 
     def _resolve_lib_imported_symbols(self, lib, imported_libs, generic_refs):
         """Resolve the imported symbols in a library."""
@@ -2043,6 +2151,7 @@ class ELFLinker(object):
                     ref_lib = generic_refs.refs.get(imported_lib.path)
                     if not ref_lib or not symbol in ref_lib.exported_symbols:
                         lib.imported_ext_symbols[imported_lib].add(symbol)
+
 
     def _resolve_lib_dt_needed(self, lib, resolver):
         imported_libs = []
@@ -2061,6 +2170,7 @@ class ELFLinker(object):
             imported_libs.append(dep)
         return imported_libs
 
+
     def _resolve_lib_deps(self, lib, resolver, generic_refs):
         # Resolve DT_NEEDED entries.
         imported_libs = self._resolve_lib_dt_needed(lib, resolver)
@@ -2076,6 +2186,7 @@ class ELFLinker(object):
         # Resolve imported symbols.
         self._resolve_lib_imported_symbols(lib, imported_libs, generic_refs)
 
+
     def _resolve_lib_set_deps(self, lib_set, resolver, generic_refs):
         for lib in lib_set:
             self._resolve_lib_deps(lib, resolver, generic_refs)
@@ -2087,6 +2198,7 @@ class ELFLinker(object):
             # To find violating dependencies to vendor partitions.
             '/vendor/' + lib_dir,
         ]
+
 
     def _get_vendor_search_paths(self, lib_dir, vndk_sp_dirs, vndk_dirs):
         vendor_lib_dirs = [
@@ -2212,6 +2324,7 @@ class ELFLinker(object):
         return SPLibResult(sp_hal, sp_hal_dep, vndk_sp_hal, ll_ndk,
                            ll_ndk_indirect, vndk_sp_both)
 
+
     def normalize_partition_tags(self, sp_hals, generic_refs):
         def is_system_lib_or_sp_hal(lib):
             return lib.is_system_lib() or lib in sp_hals
@@ -2237,6 +2350,7 @@ class ELFLinker(object):
                           file=sys.stderr)
                     lib.hide_dlopen_dep(dep)
 
+
     @staticmethod
     def _parse_action_on_ineligible_lib(arg):
         follow = False
@@ -2251,6 +2365,7 @@ class ELFLinker(object):
             else:
                 raise ValueError('unknown action \"{}\"'.format(flag))
         return (follow, warn)
+
 
     def compute_degenerated_vndk(self, generic_refs, tagged_paths=None,
                                  action_ineligible_vndk_sp='warn',
@@ -2529,6 +2644,7 @@ class ELFLinker(object):
             vndk_sp_indirect_ext=vndk_sp_indirect_ext,
             extra_vendor_libs=extra_vendor_libs)
 
+
     @staticmethod
     def _compute_closure(root_set, is_excluded, get_successors):
         closure = set(root_set)
@@ -2543,6 +2659,7 @@ class ELFLinker(object):
                     stack.append(succ)
         return closure
 
+
     @classmethod
     def compute_deps_closure(cls, root_set, is_excluded,
                              ignore_hidden_deps=False):
@@ -2550,12 +2667,14 @@ class ELFLinker(object):
                          (lambda x: x.deps_all)
         return cls._compute_closure(root_set, is_excluded, get_successors)
 
+
     @classmethod
     def compute_users_closure(cls, root_set, is_excluded,
                               ignore_hidden_users=False):
         get_successors = (lambda x: x.users_good) if ignore_hidden_users else \
                          (lambda x: x.users_all)
         return cls._compute_closure(root_set, is_excluded, get_successors)
+
 
     @staticmethod
     def _create_internal(scan_elf_files, system_dirs, system_dirs_as_vendor,
@@ -2591,6 +2710,7 @@ class ELFLinker(object):
 
         return graph
 
+
     @staticmethod
     def create(system_dirs=None, system_dirs_as_vendor=None,
                system_dirs_ignored=None, vendor_dirs=None,
@@ -2614,13 +2734,16 @@ class GenericRefs(object):
     EXPORT_SUPER_SET = 2
     MODIFIED = 3
 
+
     def __init__(self):
         self.refs = dict()
         self._lib_names = set()
 
+
     def add(self, path, elf):
         self.refs[path] = elf
         self._lib_names.add(os.path.basename(path))
+
 
     def _load_from_sym_dir(self, root):
         root = os.path.abspath(root)
@@ -2633,11 +2756,13 @@ class GenericRefs(object):
                 lib_path = '/' + path[prefix_len:-4]
                 self.add(lib_path, ELF.load_dump(path))
 
+
     @staticmethod
     def create_from_sym_dir(root):
         result = GenericRefs()
         result._load_from_sym_dir(root)
         return result
+
 
     def _load_from_image_dir(self, root, prefix):
         root = os.path.abspath(root)
@@ -2645,11 +2770,13 @@ class GenericRefs(object):
         for path, elf in scan_elf_files(root):
             self.add(os.path.join(prefix, path[root_len:]), elf)
 
+
     @staticmethod
     def create_from_image_dir(root, prefix):
         result = GenericRefs()
         result._load_from_image_dir(root, prefix)
         return result
+
 
     def classify_lib(self, lib):
         ref_lib = self.refs.get(lib.path)
@@ -2662,8 +2789,10 @@ class GenericRefs(object):
             return GenericRefs.EXPORT_SUPER_SET
         return GenericRefs.MODIFIED
 
+
     def is_equivalent_lib(self, lib):
         return self.classify_lib(lib) == GenericRefs.EXPORT_EQUAL
+
 
     def has_same_name_lib(self, lib):
         return os.path.basename(lib.path) in self._lib_names
@@ -2802,12 +2931,15 @@ class ModuleInfo(object):
         self._mods = {installed_path: sorted(src_dirs)
                       for installed_path, src_dirs in mods.items()}
 
+
     def get_module_path(self, installed_path):
         return self._mods.get(installed_path, [])
+
 
     @staticmethod
     def load(f):
         return ModuleInfo(json.load(f))
+
 
     @staticmethod
     def load_from_path_or_default(path):
@@ -2838,8 +2970,10 @@ class ELFDumpCommand(Command):
         super(ELFDumpCommand, self).__init__(
             'elfdump', help='Dump ELF .dynamic section')
 
+
     def add_argparser_options(self, parser):
         parser.add_argument('path', help='path to an ELF file')
+
 
     def main(self, args):
         try:
@@ -2856,11 +2990,13 @@ class CreateGenericRefCommand(Command):
         super(CreateGenericRefCommand, self).__init__(
             'create-generic-ref', help='Create generic references')
 
+
     def add_argparser_options(self, parser):
         parser.add_argument('dir')
 
         parser.add_argument('-o', '--output', required=True,
                             help='output directory')
+
 
     def main(self, args):
         root = os.path.abspath(args.dir)
@@ -2926,6 +3062,7 @@ class ELFGraphCommand(Command):
             '--tag-file', required=is_tag_file_required,
             help='lib tag file')
 
+
     def get_generic_refs_from_args(self, args):
         if args.load_generic_refs:
             return GenericRefs.create_from_sym_dir(args.load_generic_refs)
@@ -2933,6 +3070,7 @@ class ELFGraphCommand(Command):
             return GenericRefs.create_from_image_dir(
                 args.aosp_system, '/system')
         return None
+
 
     def _check_arg_dir_exists(self, arg_name, dirs):
         for path in dirs:
@@ -2945,9 +3083,11 @@ class ELFGraphCommand(Command):
                       .format(path, arg_name), file=sys.stderr)
                 sys.exit(1)
 
+
     def check_dirs_from_args(self, args):
         self._check_arg_dir_exists('--system', args.system)
         self._check_arg_dir_exists('--vendor', args.vendor)
+
 
     def create_from_args(self, args):
         self.check_dirs_from_args(args)
@@ -2992,6 +3132,7 @@ class VNDKCommandBase(ELFGraphCommand):
             help='action when a vendor lib/exe uses fwk-only libs '
                  '(option: follow,warn,ignore)')
 
+
     def create_from_args(self, args):
         """Create all essential data structures for VNDK computation."""
 
@@ -3012,6 +3153,7 @@ class VNDKCommand(VNDKCommandBase):
         super(VNDKCommand, self).__init__(
             'vndk', help='Compute VNDK libraries set')
 
+
     def add_argparser_options(self, parser):
         super(VNDKCommand, self).add_argparser_options(parser)
 
@@ -3031,12 +3173,14 @@ class VNDKCommand(VNDKCommandBase):
             '--file-size-output',
             help='output file for calculated file sizes')
 
+
     def _warn_incorrect_partition_lib_set(self, lib_set, partition, error_msg):
         for lib in lib_set.values():
             if not lib.num_users:
                 continue
             if all((user.partition != partition for user in lib.users_all)):
                 print(error_msg.format(lib.path), file=sys.stderr)
+
 
     def _warn_incorrect_partition(self, graph):
         self._warn_incorrect_partition_lib_set(
@@ -3048,6 +3192,7 @@ class VNDKCommand(VNDKCommandBase):
             graph.lib_pt[PT_SYSTEM], PT_SYSTEM,
             'warning: {}: This is a framework library with vendor-only '
             'usages.')
+
 
     @staticmethod
     def _extract_simple_vndk_result(vndk_result):
@@ -3069,6 +3214,7 @@ class VNDKCommand(VNDKCommandBase):
             getattr(results, tag).update(getattr(vndk_result, field_name))
         return results
 
+
     def _print_tags(self, vndk_lib, full, file=sys.stdout):
         if full:
             result_tags = _VNDK_RESULT_FIELD_NAMES
@@ -3083,6 +3229,7 @@ class VNDKCommand(VNDKCommandBase):
             tag += ':'
             for lib in sorted_lib_path_list(libs):
                 print(tag, lib, file=file)
+
 
     def _print_make(self, vndk_lib, file=sys.stdout):
         def get_module_name(path):
@@ -3112,6 +3259,7 @@ class VNDKCommand(VNDKCommandBase):
                                     format_module_names(extra_vendor_libs))
 
         file.write(template)
+
 
     def _print_file_size_output(self, graph, vndk_lib, file=sys.stderr):
         def collect_tags(lib):
@@ -3177,6 +3325,7 @@ class VNDKCommand(VNDKCommandBase):
         writer.writerow(SEPARATOR)
         writer.writerow(['Total', None] + calc_total_size(graph.all_libs()))
 
+
     def main(self, args):
         generic_refs, graph, tagged_paths, _ = self.create_from_args(args)
 
@@ -3206,6 +3355,7 @@ class DepsInsightCommand(VNDKCommandBase):
         super(DepsInsightCommand, self).__init__(
             'deps-insight', help='Generate HTML to show dependencies')
 
+
     def add_argparser_options(self, parser):
         super(DepsInsightCommand, self).add_argparser_options(parser)
 
@@ -3213,6 +3363,7 @@ class DepsInsightCommand(VNDKCommandBase):
 
         parser.add_argument('-o', '--output', required=True,
                             help='output directory')
+
 
     @staticmethod
     def serialize_data(libs, vndk_lib, module_info):
@@ -3279,6 +3430,7 @@ class DepsInsightCommand(VNDKCommandBase):
 
         return (strs, mods)
 
+
     def main(self, args):
         generic_refs, graph, tagged_paths, _ = self.create_from_args(args)
 
@@ -3316,6 +3468,7 @@ class DepsCommand(ELFGraphCommand):
         super(DepsCommand, self).__init__(
             'deps', help='Print binary dependencies for debugging')
 
+
     def add_argparser_options(self, parser):
         super(DepsCommand, self).add_argparser_options(parser)
 
@@ -3336,6 +3489,7 @@ class DepsCommand(ELFGraphCommand):
             help='filter paths by a regular expression')
 
         parser.add_argument('--module-info')
+
 
     def main(self, args):
         _, graph, _, _ = self.create_from_args(args)
@@ -3399,6 +3553,7 @@ class DepsClosureCommand(ELFGraphCommand):
         super(DepsClosureCommand, self).__init__(
             'deps-closure', help='Find transitive closure of dependencies')
 
+
     def add_argparser_options(self, parser):
         super(DepsClosureCommand, self).add_argparser_options(parser)
 
@@ -3416,6 +3571,7 @@ class DepsClosureCommand(ELFGraphCommand):
 
         parser.add_argument('--enumerate', action='store_true',
                             help='print closure for each lib instead of union')
+
 
     def print_deps_closure(self, root_libs, graph, is_excluded_libs,
                            is_reverted, indent):
@@ -3464,10 +3620,12 @@ class DepsUnresolvedCommand(ELFGraphCommand):
             'deps-unresolved',
             help='Show unresolved dt_needed entries or symbols')
 
+
     def add_argparser_options(self, parser):
         super(DepsUnresolvedCommand, self).add_argparser_options(parser)
         parser.add_argument('--module-info')
         parser.add_argument('--path-filter')
+
 
     def _dump_unresolved(self, lib, module_info, delimiter):
         if not lib.unresolved_symbols and not lib.unresolved_dt_needed:
@@ -3481,6 +3639,7 @@ class DepsUnresolvedCommand(ELFGraphCommand):
             print('\tUNRESOLVED_DT_NEEDED:', dt_needed)
         for symbol in sorted(lib.unresolved_symbols):
             print('\tUNRESOLVED_SYMBOL:', symbol)
+
 
     def main(self, args):
         _, graph, _, _ = self.create_from_args(args)
@@ -3502,6 +3661,7 @@ class ApkDepsCommand(ELFGraphCommand):
         super(ApkDepsCommand, self).__init__(
             'apk-deps', help='Print APK dependencies for debugging')
 
+
     def main(self, args):
         _, graph, _, _ = self.create_from_args(args)
 
@@ -3520,13 +3680,16 @@ class CheckDepCommandBase(ELFGraphCommand):
         super(CheckDepCommandBase, self).__init__(*args, **kwargs)
         self.delimiter = ''
 
+
     def add_argparser_options(self, parser):
         super(CheckDepCommandBase, self).add_argparser_options(parser)
         parser.add_argument('--module-info')
 
+
     def _print_delimiter(self):
         print(self.delimiter, end='')
         self.delimiter = '\n'
+
 
     def _dump_dep(self, lib, bad_deps, module_info):
         self._print_delimiter()
@@ -3539,6 +3702,7 @@ class CheckDepCommandBase(ELFGraphCommand):
                 print('\t\tMODULE_PATH:', module_path)
             for symbol in lib.get_dep_linked_symbols(dep):
                 print('\t\t' + symbol)
+
 
     def _dump_apk_dep(self, apk_path, bad_deps, module_info):
         self._print_delimiter()

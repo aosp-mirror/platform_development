@@ -41,10 +41,12 @@ class ELFDumpTest(unittest.TestCase):
 
         cls._build_fixtures(cls.target_name)
 
+
     @classmethod
     def tearDownClass(cls):
         if not test_dir_base:
             cls.tmp_dir.cleanup()
+
 
     @classmethod
     def _build_fixtures(cls, target_name):
@@ -97,6 +99,7 @@ class ELFDumpTest(unittest.TestCase):
                     ['-shared', '-lc', '-Wl,-rpath,/system/lib:/vendor/lib',
                      '-Wl,--enable-new-dtags'])
 
+
     def _remove_size_lines(self, lines):
         """Remove file size information because they may vary."""
         prefixes = (
@@ -109,6 +112,7 @@ class ELFDumpTest(unittest.TestCase):
         patt = re.compile('|'.join('(?:' + re.escape(x) +')' for x in prefixes))
         return [line for line in lines if not patt.match(line)]
 
+
     def _assert_equal_to_file(self, expected_file_name, actual):
         actual = actual.splitlines(True)
         expected_file_path = os.path.join(self.expected_dir, expected_file_name)
@@ -117,9 +121,11 @@ class ELFDumpTest(unittest.TestCase):
         self.assertEqual(self._remove_size_lines(expected),
                          self._remove_size_lines(actual))
 
+
     def _test_main_out(self):
         out_file = os.path.join(self.test_dir, 'main.out')
         self._assert_equal_to_file('main.out.txt', run_elf_dump(out_file))
+
 
     def _test_libtest(self, expected_file_name, lib_name):
         lib_file = os.path.join(self.test_dir, lib_name)

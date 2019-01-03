@@ -16,13 +16,16 @@ class GraphBuilder(object):
         PT_VENDOR: 'vendor',
     }
 
+
     _LIB_DIRS = {
         ELF.ELFCLASS32: 'lib',
         ELF.ELFCLASS64: 'lib64',
     }
 
+
     def __init__(self):
         self.graph = ELFLinker()
+
 
     def add_lib(self, partition, klass, name, dt_needed=[],
                 exported_symbols=set(), imported_symbols=set(),
@@ -44,17 +47,20 @@ class GraphBuilder(object):
         setattr(self, name + '_' + elf.elf_class_name, lib)
         return lib
 
+
     def add_lib32(self, partition, name, dt_needed=[],
                   exported_symbols=set(), imported_symbols=set(),
                   extra_dir=None):
         return self.add_lib(partition, ELF.ELFCLASS32, name, dt_needed,
                             exported_symbols, imported_symbols, extra_dir)
 
+
     def add_lib64(self, partition, name, dt_needed=[],
                   exported_symbols=set(), imported_symbols=set(),
                   extra_dir=None):
         return self.add_lib(partition, ELF.ELFCLASS64, name, dt_needed,
                             exported_symbols, imported_symbols, extra_dir)
+
 
     def add_multilib(self, partition, name, dt_needed=[],
                      exported_symbols=set(), imported_symbols=set(),
@@ -66,6 +72,7 @@ class GraphBuilder(object):
             self.add_lib(partition, ELF.ELFCLASS64, name, dt_needed,
                          exported_symbols, imported_symbols, extra_dir)
         )
+
 
     def resolve(self, vndk_lib_dirs=None, ro_vndk_version=None):
         if vndk_lib_dirs is not None:

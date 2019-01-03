@@ -10,6 +10,7 @@ import unittest
 
 from vndk_definition_tool import ELFResolver
 
+
 class ELFResolverTest(unittest.TestCase):
     def setUp(self):
         lib_set = {
@@ -23,6 +24,7 @@ class ELFResolverTest(unittest.TestCase):
         }
 
         self.resolver = ELFResolver(lib_set, ['/system/lib', '/vendor/lib'])
+
 
     def test_get_candidates(self):
         r = self.resolver

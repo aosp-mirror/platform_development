@@ -9,6 +9,7 @@ import re
 import subprocess
 import sys
 
+
 def detect_ndk_dir():
     ndk_dir = os.getenv('NDK')
     if not ndk_dir:
@@ -28,6 +29,7 @@ error:'''
 
     return ndk_dir
 
+
 def detect_api_level(ndk_dir):
     try:
         apis = []
@@ -42,6 +44,7 @@ def detect_api_level(ndk_dir):
     except IOError:
         raise ValueError('failed to find latest api')
 
+
 def detect_host():
     if sys.platform.startswith('linux'):
         return 'linux-x86_64'
@@ -49,14 +52,18 @@ def detect_host():
         return 'darwin-x86_64'
     raise NotImplementedError('unknown host platform')
 
+
 def get_gcc_dir(ndk_dir, arch, host):
     return os.path.join(ndk_dir, 'toolchains', arch, 'prebuilt', host)
+
 
 def get_clang_dir(ndk_dir, host):
     return os.path.join(ndk_dir, 'toolchains', 'llvm', 'prebuilt', host)
 
+
 def get_platform_dir(ndk_dir, api, subdirs):
     return os.path.join(ndk_dir, 'platforms', api, *subdirs)
+
 
 class Target(object):
     def __init__(self, name, triple, cflags, ldflags, gcc_toolchain_dir,
@@ -70,6 +77,7 @@ class Target(object):
         self.clang_dir = clang_dir
         self.ndk_include = ndk_include
         self.ndk_lib = ndk_lib
+
 
     def check_paths(self):
         def check_path(path):
@@ -88,6 +96,7 @@ class Target(object):
         success &= check_path(self.ndk_lib)
         return success
 
+
     def compile(self, obj_file, src_file, cflags):
         clang = os.path.join(self.clang_dir, 'bin', 'clang')
 
@@ -99,6 +108,7 @@ class Target(object):
         cmd.extend(cflags)
         cmd.extend(self.target_cflags)
         subprocess.check_call(cmd)
+
 
     def link(self, out_file, obj_files, ldflags):
         if '-shared' in ldflags:
@@ -123,6 +133,7 @@ class Target(object):
         if '-shared' not in ldflags:
             cmd.append('-Wl,-pie')
         subprocess.check_call(cmd)
+
 
 def create_targets(ndk_dir=None, api=None, host=None):
     if ndk_dir is None:
@@ -180,6 +191,7 @@ def create_targets(ndk_dir=None, api=None, host=None):
 
     return targets
 
+
 def main():
     parser = argparse.ArgumentParser(
             description='Dry-run NDK toolchain detection')
@@ -197,6 +209,7 @@ def main():
         sys.exit(1)
 
     print('succeed')
+
 
 if __name__ == '__main__':
     main()

@@ -18,6 +18,7 @@ class ModuleInfoTest(unittest.TestCase):
         m = ModuleInfo.load_from_path_or_default(None)
         self.assertEqual([], m.get_module_path('/system/lib64/libA.so'))
 
+
     def test_get_module_path(self):
         json_path = os.path.join(SCRIPT_DIR, 'testdata', 'test_module_info',
                                  'module-info.json')
