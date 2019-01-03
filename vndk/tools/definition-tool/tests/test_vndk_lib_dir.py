@@ -2,13 +2,11 @@
 
 import os
 import posixpath
-import sys
 import unittest
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from vndk_definition_tool import VNDKLibDir
 
-from compat import StringIO
-from vndk_definition_tool import ELF, VNDKLibDir
+from .compat import StringIO
 
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -219,7 +217,3 @@ class VNDKLibDirTest(unittest.TestCase):
         self.assertEqual(
             ['current', 'd', 'a', '10', '1'],
             VNDKLibDir.sorted_version(['1', '10', 'a', 'd', 'current']))
-
-
-if __name__ == '__main__':
-    unittest.main()

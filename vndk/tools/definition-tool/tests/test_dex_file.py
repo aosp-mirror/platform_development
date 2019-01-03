@@ -4,14 +4,12 @@ from __future__ import print_function
 
 import os
 import subprocess
-import sys
 import unittest
 import zipfile
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from compat import TemporaryDirectory
 from vndk_definition_tool import DexFileReader, UnicodeSurrogateDecodeError
+
+from .compat import TemporaryDirectory
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 INPUT_DIR = os.path.join(SCRIPT_DIR, 'testdata', 'test_dex_file')
@@ -122,7 +120,3 @@ class DexFileTest(unittest.TestCase):
             self.assertIn(b'world', strs)
             self.assertIn(b'foo', strs)
             self.assertIn(b'bar', strs)
-
-
-if __name__ == '__main__':
-    unittest.main()

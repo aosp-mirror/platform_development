@@ -3,13 +3,8 @@
 from __future__ import print_function
 
 import os
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-import argparse
 import unittest
 
-from compat import TemporaryDirectory, makedirs
 from vndk_definition_tool import GenericRefs
 
 
@@ -96,7 +91,3 @@ class GenericRefsTest(unittest.TestCase):
             MockLib('/vendor/lib/libc.so', {})))
         self.assertFalse(self.ref.has_same_name_lib(
             MockLib('/vendor/lib/lib_does_not_exist.so', {})))
-
-
-if __name__ == '__main__':
-    unittest.main()

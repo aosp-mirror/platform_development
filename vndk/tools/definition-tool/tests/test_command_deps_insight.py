@@ -2,16 +2,13 @@
 
 from __future__ import print_function
 
-import os
-import sys
 import unittest
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from compat import StringIO, patch
 from vndk_definition_tool import (
     DepsInsightCommand, ModuleInfo, PT_SYSTEM, PT_VENDOR)
-from utils import GraphBuilder
+
+from .compat import StringIO, patch
+from .utils import GraphBuilder
 
 
 class DepsInsightCommandTest(unittest.TestCase):
@@ -82,7 +79,3 @@ class DepsInsightCommandTest(unittest.TestCase):
         users = self._get_module_users(strs, mods, libvnd_bad.path)
         self.assertIn(libvndk.path, users)
         self.assertIn(libvndk_sp.path, users)
-
-
-if __name__ == '__main__':
-    unittest.main()

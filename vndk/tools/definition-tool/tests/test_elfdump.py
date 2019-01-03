@@ -2,17 +2,14 @@
 
 from __future__ import print_function
 
-import argparse
-import collections
-import difflib
 import os
 import re
 import subprocess
 import sys
 import unittest
 
-from compat import TemporaryDirectory, makedirs
-import ndk_toolchain
+from .compat import TemporaryDirectory, makedirs
+from .ndk_toolchain import create_targets
 
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -31,7 +28,7 @@ def run_elf_dump(path):
 class ELFDumpTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.targets = ndk_toolchain.create_targets()
+        cls.targets = create_targets()
 
         if test_dir_base:
             cls.test_dir_base = test_dir_base
@@ -167,26 +164,3 @@ def create_target_test(target_name):
 
 for target in ('arm', 'arm64', 'mips', 'mips64', 'x86', 'x86_64'):
     create_target_test(target)
-
-
-def main():
-    # Parse command line arguments.
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--test-dir', help='directory for temporary files')
-    parser.add_argument('--expected-dir', help='directory with expected output')
-    args, unittest_args = parser.parse_known_args()
-
-    # Convert command line options.
-    global expected_dir
-    global test_dir_base
-
-    if args.expected_dir:
-        expected_dir = args.expected_dir
-    if args.test_dir:
-        test_dir_base = args.test_dir
-
-    # Run unit test.
-    unittest.main(argv=[sys.argv[0]] + unittest_args)
-
-if __name__ == '__main__':
-    main()

@@ -2,15 +2,12 @@
 
 from __future__ import print_function
 
-import os
-import sys
 import unittest
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from vndk_definition_tool import (PT_SYSTEM, PT_VENDOR)
 
-from compat import StringIO, patch
-from vndk_definition_tool import (ELF, ELFLinker, PT_SYSTEM, PT_VENDOR)
-from utils import GraphBuilder
+from .compat import StringIO, patch
+from .utils import GraphBuilder
 
 
 class ELFLinkerVNDKTest(unittest.TestCase):
@@ -136,7 +133,3 @@ class ELFLinkerVNDKTest(unittest.TestCase):
         self.assertIn(libEGL_chipset, vndk_sets.sp_hal)
 
         self.assertNotIn(libEGL_chipset, vndk_sets.ll_ndk_indirect)
-
-
-if __name__ == '__main__':
-    unittest.main()

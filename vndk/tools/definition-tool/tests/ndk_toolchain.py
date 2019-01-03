@@ -2,7 +2,6 @@
 
 from __future__ import print_function
 
-import argparse
 import collections
 import os
 import re
@@ -190,26 +189,3 @@ def create_targets(ndk_dir=None, api=None, host=None):
         get_platform_dir(ndk_dir, api, ['arch-mips64', 'usr', 'lib64']))
 
     return targets
-
-
-def main():
-    parser = argparse.ArgumentParser(
-        description='Dry-run NDK toolchain detection')
-    parser.add_argument('--ndk-dir')
-    parser.add_argument('--api-level')
-    parser.add_argument('--host')
-    args = parser.parse_args()
-
-    targets = create_targets(args.ndk_dir, args.api_level, args.host)
-
-    success = True
-    for name, target in targets.items():
-        success &= target.check_paths()
-    if not success:
-        sys.exit(1)
-
-    print('succeed')
-
-
-if __name__ == '__main__':
-    main()

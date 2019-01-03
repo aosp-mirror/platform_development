@@ -2,10 +2,6 @@
 
 from __future__ import print_function
 
-import os
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 import unittest
 
 from vndk_definition_tool import ELFLinkData, PT_SYSTEM, PT_VENDOR
@@ -108,7 +104,3 @@ class ELFLinkDataTest(unittest.TestCase):
 
         self.assertEqual(['w', 'x', 'y', 'z'],
                          self.x.get_dep_linked_symbols(self.z))
-
-
-if __name__ == '__main__':
-    unittest.main()

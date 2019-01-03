@@ -2,15 +2,12 @@
 
 from __future__ import print_function
 
-import os
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 import tempfile
 import unittest
 
-from compat import StringIO
 from vndk_definition_tool import Elf_Sym, ELF
+
+from .compat import StringIO
 
 
 class ElfSymTest(unittest.TestCase):
@@ -223,7 +220,3 @@ class ELFJniLibTest(unittest.TestCase):
 
         elf = ELF(exported_symbols={'printf'})
         self.assertFalse(elf.is_jni_lib())
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -1,20 +1,14 @@
 #!/usr/bin/env python3
 
-import os
 import re
-import sys
 import tempfile
 import unittest
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from compat import StringIO, patch
-from utils import GraphBuilder
 from vndk_definition_tool import (
-    ELF, ELFLinker, GenericRefs, PT_SYSTEM, PT_VENDOR, VNDKLibDir)
+    ELF, GenericRefs, PT_SYSTEM, PT_VENDOR, VNDKLibDir)
 
-
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+from .compat import StringIO, patch
+from .utils import GraphBuilder
 
 
 class ELFLinkerTest(unittest.TestCase):
@@ -564,7 +558,3 @@ class ELFLinkerDlopenDepsTest(unittest.TestCase):
                 stderr.getvalue(),
                 'error:' + re.escape(tmp_file.name) + ':1: ' +
                 'Failed to add dlopen dependency from .* to .*\\.\n')
-
-
-if __name__ == '__main__':
-    unittest.main()

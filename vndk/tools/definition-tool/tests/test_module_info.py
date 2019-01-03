@@ -3,9 +3,6 @@
 from __future__ import print_function
 
 import os
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 import unittest
 
 from vndk_definition_tool import ModuleInfo
@@ -35,7 +32,3 @@ class ModuleInfoTest(unittest.TestCase):
 
         self.assertEqual(
             [], m.get_module_path('/system/lib64/libdoes_not_exist.so'))
-
-
-if __name__ == '__main__':
-    unittest.main()

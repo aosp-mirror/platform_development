@@ -2,16 +2,13 @@
 
 from __future__ import print_function
 
-import os
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 import tempfile
 import unittest
 
-from compat import StringIO
 from vndk_definition_tool import TaggedDict, TaggedPathDict, TaggedLibDict, \
                                  NUM_PARTITIONS, PT_SYSTEM, PT_VENDOR
+
+from .compat import StringIO
 
 
 _TEST_DATA = '''Path,Tag
@@ -459,7 +456,3 @@ class TaggedLibDictTest(unittest.TestCase):
         self.assertEqual('fwk_only', tag)
         tag = d.get_path_tag(MockELFLinkData('/vendor/lib/unknown.so'))
         self.assertEqual('vnd_only', tag)
-
-
-if __name__ == '__main__':
-    unittest.main()

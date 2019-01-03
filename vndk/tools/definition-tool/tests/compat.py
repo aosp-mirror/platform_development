@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-import os
+# pylint: disable=unused-import,import-error
+
 import sys
 
 
@@ -37,6 +38,7 @@ except ImportError:
 if sys.version_info >= (3, 0):
     from os import makedirs
 else:
+    import os
     def makedirs(path, exist_ok):
         if exist_ok and os.path.exists(path):
             return

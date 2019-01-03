@@ -1,13 +1,8 @@
 #!/usr/bin/env python3
 
 import os
-import sys
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from compat import StringIO
-from vndk_definition_tool import (
-        ELF, ELFLinker, PT_SYSTEM, PT_VENDOR, VNDKLibDir)
+from vndk_definition_tool import (ELF, ELFLinker, PT_SYSTEM, PT_VENDOR)
 
 
 class GraphBuilder(object):
