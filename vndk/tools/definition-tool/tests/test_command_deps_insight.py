@@ -71,7 +71,7 @@ class DepsInsightCommandTest(unittest.TestCase):
         self.assertNotIn(libvnd_bad, libvndk_sp.deps_good)
 
         strs, mods = DepsInsightCommand.serialize_data(
-                list(gb.graph.all_libs()), vndk_sets, ModuleInfo())
+            list(gb.graph.all_libs()), vndk_sets, ModuleInfo())
 
         deps = self._get_module_deps(strs, mods, libvndk.path)
         self.assertIn(libvnd_bad.path, deps)

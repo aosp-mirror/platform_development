@@ -34,7 +34,7 @@ class ModuleInfoTest(unittest.TestCase):
                          m.get_module_path('/system/lib64/hw/libC.so'))
 
         self.assertEqual(
-                [], m.get_module_path('/system/lib64/libdoes_not_exist.so'))
+            [], m.get_module_path('/system/lib64/libdoes_not_exist.so'))
 
 
 if __name__ == '__main__':

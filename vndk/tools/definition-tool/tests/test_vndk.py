@@ -32,9 +32,9 @@ class ELFLinkerVNDKTest(unittest.TestCase):
             gb.graph.normalize_partition_tags(set(), None)
 
         self.assertRegexpMatches(
-                stderr.getvalue(),
-                'error: .*: system exe/lib must not depend on vendor lib .*.  '
-                'Assume such dependency does not exist.')
+            stderr.getvalue(),
+            'error: .*: system exe/lib must not depend on vendor lib .*.  '
+            'Assume such dependency does not exist.')
 
         self.assertNotIn(libvnd, libfwk.deps_needed)
         self.assertNotIn(libfwk, libvnd.users_needed)

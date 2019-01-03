@@ -1926,21 +1926,23 @@ def sorted_lib_path_list(libs):
 
 
 _VNDK_RESULT_FIELD_NAMES = (
-        'll_ndk', 'll_ndk_indirect',
-        'vndk_sp', 'vndk_sp_unused', 'vndk_sp_indirect',
-        'vndk_sp_indirect_unused', 'vndk_sp_indirect_private', 'vndk',
-        'vndk_indirect', 'fwk_only', 'fwk_only_rs', 'sp_hal', 'sp_hal_dep',
-        'vnd_only', 'vndk_ext', 'vndk_sp_ext', 'vndk_sp_indirect_ext',
-        'extra_vendor_libs')
+    'll_ndk', 'll_ndk_indirect',
+    'vndk_sp', 'vndk_sp_unused', 'vndk_sp_indirect',
+    'vndk_sp_indirect_unused', 'vndk_sp_indirect_private', 'vndk',
+    'vndk_indirect', 'fwk_only', 'fwk_only_rs', 'sp_hal', 'sp_hal_dep',
+    'vnd_only', 'vndk_ext', 'vndk_sp_ext', 'vndk_sp_indirect_ext',
+    'extra_vendor_libs')
+
 
 VNDKResult = defaultnamedtuple('VNDKResult', _VNDK_RESULT_FIELD_NAMES, set())
 
 
 _SIMPLE_VNDK_RESULT_FIELD_NAMES = (
-        'vndk_sp', 'vndk_sp_ext', 'extra_vendor_libs')
+    'vndk_sp', 'vndk_sp_ext', 'extra_vendor_libs')
+
 
 SimpleVNDKResult = defaultnamedtuple(
-        'SimpleVNDKResult', _SIMPLE_VNDK_RESULT_FIELD_NAMES, set())
+    'SimpleVNDKResult', _SIMPLE_VNDK_RESULT_FIELD_NAMES, set())
 
 
 class ELFLibDict(defaultnamedtuple('ELFLibDict', ('lib32', 'lib64'), {})):

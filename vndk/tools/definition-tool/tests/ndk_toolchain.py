@@ -87,7 +87,7 @@ class Target(object):
             return False
 
         ld_exeutable = os.path.join(
-                self.gcc_toolchain_dir, 'bin', self.target_triple + '-ld')
+            self.gcc_toolchain_dir, 'bin', self.target_triple + '-ld')
 
         success = check_path(self.gcc_toolchain_dir)
         success &= check_path(ld_exeutable)
@@ -146,55 +146,55 @@ def create_targets(ndk_dir=None, api=None, host=None):
     targets = collections.OrderedDict()
 
     targets['arm'] = Target(
-            'arm', 'arm-linux-androideabi', [],[],
-            get_gcc_dir(ndk_dir, 'arm-linux-androideabi-4.9', host),
-            get_clang_dir(ndk_dir, host),
-            get_platform_dir(ndk_dir, api, ['arch-arm', 'usr', 'include']),
-            get_platform_dir(ndk_dir, api, ['arch-arm', 'usr', 'lib']))
+        'arm', 'arm-linux-androideabi', [], [],
+        get_gcc_dir(ndk_dir, 'arm-linux-androideabi-4.9', host),
+        get_clang_dir(ndk_dir, host),
+        get_platform_dir(ndk_dir, api, ['arch-arm', 'usr', 'include']),
+        get_platform_dir(ndk_dir, api, ['arch-arm', 'usr', 'lib']))
 
     targets['arm64'] = Target(
-            'arm64', 'aarch64-linux-android', [], [],
-            get_gcc_dir(ndk_dir, 'aarch64-linux-android-4.9', host),
-            get_clang_dir(ndk_dir, host),
-            get_platform_dir(ndk_dir, api, ['arch-arm64', 'usr', 'include']),
-            get_platform_dir(ndk_dir, api, ['arch-arm64', 'usr', 'lib']))
+        'arm64', 'aarch64-linux-android', [], [],
+        get_gcc_dir(ndk_dir, 'aarch64-linux-android-4.9', host),
+        get_clang_dir(ndk_dir, host),
+        get_platform_dir(ndk_dir, api, ['arch-arm64', 'usr', 'include']),
+        get_platform_dir(ndk_dir, api, ['arch-arm64', 'usr', 'lib']))
 
     targets['x86'] = Target(
-            'x86', 'i686-linux-android', ['-m32'], ['-m32'],
-            get_gcc_dir(ndk_dir, 'x86-4.9', host),
-            get_clang_dir(ndk_dir, host),
-            get_platform_dir(ndk_dir, api, ['arch-x86', 'usr', 'include']),
-            get_platform_dir(ndk_dir, api, ['arch-x86', 'usr', 'lib']))
+        'x86', 'i686-linux-android', ['-m32'], ['-m32'],
+        get_gcc_dir(ndk_dir, 'x86-4.9', host),
+        get_clang_dir(ndk_dir, host),
+        get_platform_dir(ndk_dir, api, ['arch-x86', 'usr', 'include']),
+        get_platform_dir(ndk_dir, api, ['arch-x86', 'usr', 'lib']))
 
     targets['x86_64'] = Target(
-            'x86_64', 'x86_64-linux-android', ['-m64'], ['-m64'],
-            get_gcc_dir(ndk_dir, 'x86_64-4.9', host),
-            get_clang_dir(ndk_dir, host),
-            get_platform_dir(ndk_dir, api, ['arch-x86_64', 'usr', 'include']),
-            get_platform_dir(ndk_dir, api, ['arch-x86_64', 'usr', 'lib64']))
+        'x86_64', 'x86_64-linux-android', ['-m64'], ['-m64'],
+        get_gcc_dir(ndk_dir, 'x86_64-4.9', host),
+        get_clang_dir(ndk_dir, host),
+        get_platform_dir(ndk_dir, api, ['arch-x86_64', 'usr', 'include']),
+        get_platform_dir(ndk_dir, api, ['arch-x86_64', 'usr', 'lib64']))
 
     targets['mips'] = Target(
-            'mips', 'mipsel-linux-android', [], [],
-            get_gcc_dir(ndk_dir, 'mipsel-linux-android-4.9', host),
-            get_clang_dir(ndk_dir, host),
-            get_platform_dir(ndk_dir, api, ['arch-mips', 'usr', 'include']),
-            get_platform_dir(ndk_dir, api, ['arch-mips', 'usr', 'lib']))
+        'mips', 'mipsel-linux-android', [], [],
+        get_gcc_dir(ndk_dir, 'mipsel-linux-android-4.9', host),
+        get_clang_dir(ndk_dir, host),
+        get_platform_dir(ndk_dir, api, ['arch-mips', 'usr', 'include']),
+        get_platform_dir(ndk_dir, api, ['arch-mips', 'usr', 'lib']))
 
     targets['mips64'] = Target(
-            'mips64', 'mips64el-linux-android',
-            ['-march=mips64el', '-mcpu=mips64r6'],
-            ['-march=mips64el', '-mcpu=mips64r6'],
-            get_gcc_dir(ndk_dir, 'mips64el-linux-android-4.9', host),
-            get_clang_dir(ndk_dir, host),
-            get_platform_dir(ndk_dir, api, ['arch-mips64', 'usr', 'include']),
-            get_platform_dir(ndk_dir, api, ['arch-mips64', 'usr', 'lib64']))
+        'mips64', 'mips64el-linux-android',
+        ['-march=mips64el', '-mcpu=mips64r6'],
+        ['-march=mips64el', '-mcpu=mips64r6'],
+        get_gcc_dir(ndk_dir, 'mips64el-linux-android-4.9', host),
+        get_clang_dir(ndk_dir, host),
+        get_platform_dir(ndk_dir, api, ['arch-mips64', 'usr', 'include']),
+        get_platform_dir(ndk_dir, api, ['arch-mips64', 'usr', 'lib64']))
 
     return targets
 
 
 def main():
     parser = argparse.ArgumentParser(
-            description='Dry-run NDK toolchain detection')
+        description='Dry-run NDK toolchain detection')
     parser.add_argument('--ndk-dir')
     parser.add_argument('--api-level')
     parser.add_argument('--host')

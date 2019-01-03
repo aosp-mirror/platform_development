@@ -393,36 +393,36 @@ class ELFLinkerTest(unittest.TestCase):
         libc_32, libc_64 = gb.add_multilib(PT_SYSTEM, 'libc')
 
         libvndk_a_32, libvndk_a_64 = gb.add_multilib(
-                PT_SYSTEM, 'libvndk_a', extra_dir='vndk-28',
-                dt_needed=['libc.so', 'libvndk_b.so', 'libvndk_sp_b.so'])
+            PT_SYSTEM, 'libvndk_a', extra_dir='vndk-28',
+            dt_needed=['libc.so', 'libvndk_b.so', 'libvndk_sp_b.so'])
 
         libvndk_b_32, libvndk_b_64 = gb.add_multilib(
-                PT_SYSTEM, 'libvndk_b', extra_dir='vndk-28',
-                dt_needed=['libc.so', 'libvndk_sp_b.so'])
+            PT_SYSTEM, 'libvndk_b', extra_dir='vndk-28',
+            dt_needed=['libc.so', 'libvndk_sp_b.so'])
 
         libvndk_c_32, libvndk_c_64 = gb.add_multilib(
-                PT_VENDOR, 'libvndk_c', extra_dir='vndk-28',
-                dt_needed=['libc.so', 'libvndk_d.so', 'libvndk_sp_d.so'])
+            PT_VENDOR, 'libvndk_c', extra_dir='vndk-28',
+            dt_needed=['libc.so', 'libvndk_d.so', 'libvndk_sp_d.so'])
 
         libvndk_d_32, libvndk_d_64 = gb.add_multilib(
-                PT_VENDOR, 'libvndk_d', extra_dir='vndk-28',
-                dt_needed=['libc.so', 'libvndk_sp_d.so'])
+            PT_VENDOR, 'libvndk_d', extra_dir='vndk-28',
+            dt_needed=['libc.so', 'libvndk_sp_d.so'])
 
         libvndk_sp_a_32, libvndk_sp_a_64 = gb.add_multilib(
-                PT_SYSTEM, 'libvndk_sp_a', extra_dir='vndk-sp-28',
-                dt_needed=['libc.so', 'libvndk_sp_b.so'])
+            PT_SYSTEM, 'libvndk_sp_a', extra_dir='vndk-sp-28',
+            dt_needed=['libc.so', 'libvndk_sp_b.so'])
 
         libvndk_sp_b_32, libvndk_sp_b_64 = gb.add_multilib(
-                PT_SYSTEM, 'libvndk_sp_b', extra_dir='vndk-sp-28',
-                dt_needed=['libc.so'])
+            PT_SYSTEM, 'libvndk_sp_b', extra_dir='vndk-sp-28',
+            dt_needed=['libc.so'])
 
         libvndk_sp_c_32, libvndk_sp_c_64 = gb.add_multilib(
-                PT_VENDOR, 'libvndk_sp_c', extra_dir='vndk-sp-28',
-                dt_needed=['libc.so', 'libvndk_sp_d.so'])
+            PT_VENDOR, 'libvndk_sp_c', extra_dir='vndk-sp-28',
+            dt_needed=['libc.so', 'libvndk_sp_d.so'])
 
         libvndk_sp_d_32, libvndk_sp_d_64 = gb.add_multilib(
-                PT_VENDOR, 'libvndk_sp_d', extra_dir='vndk-sp-28',
-                dt_needed=['libc.so'])
+            PT_VENDOR, 'libvndk_sp_d', extra_dir='vndk-sp-28',
+            dt_needed=['libc.so'])
 
         gb.resolve(VNDKLibDir.create_from_version('28'), '28')
 
@@ -561,9 +561,9 @@ class ELFLinkerDlopenDepsTest(unittest.TestCase):
                 gb.graph.add_dlopen_deps(tmp_file.name)
 
             self.assertRegexpMatches(
-                    stderr.getvalue(),
-                    'error:' + re.escape(tmp_file.name) + ':1: ' +
-                    'Failed to add dlopen dependency from .* to .*\\.\n')
+                stderr.getvalue(),
+                'error:' + re.escape(tmp_file.name) + ':1: ' +
+                'Failed to add dlopen dependency from .* to .*\\.\n')
 
 
 if __name__ == '__main__':

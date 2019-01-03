@@ -18,7 +18,7 @@ import ndk_toolchain
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 VNDK_DEF_TOOL = os.path.join(SCRIPT_DIR, '..', 'vndk_definition_tool.py')
 
-INPUT_DIR = os.path.join(SCRIPT_DIR ,'testdata', 'test_elfdump', 'input')
+INPUT_DIR = os.path.join(SCRIPT_DIR, 'testdata', 'test_elfdump', 'input')
 EXPECTED_DIR = os.path.join(SCRIPT_DIR, 'testdata', 'test_elfdump', 'expected')
 test_dir_base = None
 
@@ -155,14 +155,14 @@ def create_target_test(target_name):
 
     class_name = 'ELFDumpTest_' + target_name
     globals()[class_name] = type(
-            class_name, (ELFDumpTest,),
-            dict(test_main=test_main,
-                 test_libtest=test_libtest,
-                 test_libtest_rpath=test_libtest_rpath,
-                 test_libtest_rpath_multi=test_libtest_rpath_multi,
-                 test_libtest_runpath=test_libtest_runpath,
-                 test_libtest_runpath_multi=test_libtest_runpath_multi,
-                 target_name=target_name))
+        class_name, (ELFDumpTest,),
+        dict(test_main=test_main,
+             test_libtest=test_libtest,
+             test_libtest_rpath=test_libtest_rpath,
+             test_libtest_rpath_multi=test_libtest_rpath_multi,
+             test_libtest_runpath=test_libtest_runpath,
+             test_libtest_runpath_multi=test_libtest_runpath_multi,
+             target_name=target_name))
 
 
 for target in ('arm', 'arm64', 'mips', 'mips64', 'x86', 'x86_64'):
