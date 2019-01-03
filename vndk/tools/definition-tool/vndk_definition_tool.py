@@ -2877,7 +2877,7 @@ class CreateGenericRefCommand(Command):
 
 
 class ELFGraphCommand(Command):
-    def add_argparser_options(self, parser):
+    def add_argparser_options(self, parser, is_tag_file_required=None):
         parser.add_argument(
             '--load-extra-deps', action='append',
             help='load extra module dependencies')
@@ -2922,7 +2922,9 @@ class ELFGraphCommand(Command):
             '--no-unzip-files', action='store_false', dest='unzip_files',
             help='do not scan ELF files in zip files')
 
-        parser.add_argument('--tag-file', help='lib tag file')
+        parser.add_argument(
+            '--tag-file', required=is_tag_file_required,
+            help='lib tag file')
 
     def get_generic_refs_from_args(self, args):
         if args.load_generic_refs:
@@ -3743,53 +3745,66 @@ class DumpDexStringCommand(Command):
 class DepGraphCommand(ELFGraphCommand):
     def __init__(self):
         super(DepGraphCommand, self).__init__(
-            'dep-graph', help='Show the eligible dependencies graph')
+            'dep-graph', help='Visualize violating dependencies with HTML')
+
 
     def add_argparser_options(self, parser):
-        super(DepGraphCommand, self).add_argparser_options(parser)
+        super(DepGraphCommand, self).add_argparser_options(
+            parser, is_tag_file_required=True)
 
         parser.add_argument('-o', '--output', required=True,
                             help='output directory')
 
-    def _get_tag_from_lib(self, lib, tagged_paths):
-        tag_hierarchy = dict()
+
+    @staticmethod
+    def _create_tag_hierarchy():
+        hierarchy = dict()
         for tag in TaggedPathDict.TAGS:
             if tag in {'sp_hal', 'sp_hal_dep', 'vnd_only'}:
-                tag_hierarchy[tag] = 'vendor.private.{}'.format(tag)
+                hierarchy[tag] = 'vendor.private.{}'.format(tag)
             else:
                 vendor_visible = TaggedPathDict.is_tag_visible('vnd_only', tag)
                 pub = 'public' if vendor_visible else 'private'
-                tag_hierarchy[tag] = 'system.{}.{}'.format(pub, tag)
+                hierarchy[tag] = 'system.{}.{}'.format(pub, tag)
+        return hierarchy
 
-        return tag_hierarchy[tagged_paths.get_path_tag(lib.path)]
 
-    def _check_if_allowed(self, my_tag, other_tag):
-        my = my_tag.split('.')
-        other = other_tag.split('.')
-        if my[0] == 'system' and other[0] == 'vendor':
+    @staticmethod
+    def _get_lib_tag(hierarchy, tagged_paths, lib):
+        return hierarchy[tagged_paths.get_path_tag(lib.path)]
+
+
+    @staticmethod
+    def _is_dep_allowed(user_tag, dep_tag):
+        user_partition, _, _ = user_tag.split('.')
+        dep_partition, dep_visibility, _ = dep_tag.split('.')
+        if user_partition == 'system' and dep_partition == 'vendor':
             return False
-        if my[0] == 'vendor' and other[0] == 'system' \
-                             and other[1] == 'private':
-            return False
+        if user_partition == 'vendor' and dep_partition == 'system':
+            if dep_visibility == 'private':
+                return False
         return True
 
+
     def _get_dep_graph(self, graph, tagged_paths):
+        hierarchy = self._create_tag_hierarchy()
+
+        # Build data and violate_libs.
         data = []
-        violate_libs = dict()
-        system_libs = graph.lib_pt[PT_SYSTEM].values()
-        vendor_libs = graph.lib_pt[PT_VENDOR].values()
-        for lib in itertools.chain(system_libs, vendor_libs):
-            tag = self._get_tag_from_lib(lib, tagged_paths)
-            violate_count = 0
+        violate_libs = collections.defaultdict(list)
+
+        for lib in graph.all_libs():
+            lib_tag = self._get_lib_tag(hierarchy, tagged_paths, lib)
             lib_item = {
                 'name': lib.path,
-                'tag': tag,
+                'tag': lib_tag,
                 'depends': [],
                 'violates': [],
             }
+            violate_count = 0
             for dep in lib.deps_all:
-                if self._check_if_allowed(
-                        tag, self._get_tag_from_lib(dep, tagged_paths)):
+                dep_tag = self._get_lib_tag(hierarchy, tagged_paths, dep)
+                if self._is_dep_allowed(lib_tag, dep_tag):
                     lib_item['depends'].append(dep.path)
                 else:
                     lib_item['violates'].append([
@@ -3797,22 +3812,22 @@ class DepGraphCommand(ELFGraphCommand):
                     violate_count += 1
             lib_item['violate_count'] = violate_count
             if violate_count > 0:
-                if not tag in violate_libs:
-                    violate_libs[tag] = []
-                violate_libs[tag].append((lib.path, violate_count))
+                violate_libs[lib_tag].append((lib.path, violate_count))
             data.append(lib_item)
+
+        # Sort data and violate_libs.
+        data.sort(
+            key=lambda lib_item: (lib_item['tag'], lib_item['violate_count']))
+        for libs in violate_libs.values():
+            libs.sort(key=lambda violate_item: violate_item[1], reverse=True)
+
         return data, violate_libs
 
-    def main(self, args):
-        _, graph, tagged_paths, vndk_lib_dirs = self.create_from_args(args)
 
-        tagged_paths = TaggedPathDict.create_from_csv_path(
-            args.tag_file, vndk_lib_dirs)
+    def main(self, args):
+        _, graph, tagged_paths, _ = self.create_from_args(args)
+
         data, violate_libs = self._get_dep_graph(graph, tagged_paths)
-        data.sort(key=lambda lib_item: (lib_item['tag'],
-                                        lib_item['violate_count']))
-        for libs in violate_libs.values():
-            libs.sort(key=lambda libs: libs[1], reverse=True)
 
         makedirs(args.output, exist_ok=True)
         script_dir = os.path.dirname(os.path.abspath(__file__))
