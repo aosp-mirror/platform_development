@@ -40,7 +40,7 @@ class ModifiedUTF8Test(unittest.TestCase):
                          b'\xed\xa0\x81\xed\xb0\x80'.decode('mutf-8'))
 
 
-    def test_decode(self):
+    def test_decode_exception(self):
         # Low surrogate does not come after high surrogate
         with self.assertRaises(UnicodeSurrogateDecodeError):
             b'\xed\xa0\x81\x40'.decode('mutf-8')
