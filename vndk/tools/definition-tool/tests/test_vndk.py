@@ -69,7 +69,7 @@ class ELFLinkerVNDKTest(TestCase):
         """Check the computation of vndk without generic references."""
 
         gb = GraphBuilder()
-        libfwk = gb.add_lib32(PT_SYSTEM, 'libfwk')
+        gb.add_lib32(PT_SYSTEM, 'libfwk')
         libvndk = gb.add_lib32(PT_SYSTEM, 'libvndk', extra_dir='vndk')
         libvndk_sp = gb.add_lib32(PT_SYSTEM, 'libutils', extra_dir='vndk-sp')
         libvnd = gb.add_lib32(PT_VENDOR, 'libvnd',
@@ -89,15 +89,17 @@ class ELFLinkerVNDKTest(TestCase):
         """Check the computation of vndk without generic references."""
 
         gb = GraphBuilder()
-        libfwk = gb.add_lib32(PT_SYSTEM, 'libfwk')
-        libvndk = gb.add_lib32(PT_SYSTEM, 'libvndk',
-                               dt_needed=['libvnd_bad.so'], extra_dir='vndk')
-        libvndk_sp = gb.add_lib32(PT_SYSTEM, 'libutils',
-                                  dt_needed=['libvnd_bad.so'],
-                                  extra_dir='vndk-sp')
-        libvnd = gb.add_lib32(PT_VENDOR, 'libvnd',
-                              dt_needed=['libvndk.so', 'libutils.so'])
+
+        libvndk = gb.add_lib32(
+            PT_SYSTEM, 'libvndk', dt_needed=['libvnd_bad.so'],
+            extra_dir='vndk')
+
+        libvndk_sp = gb.add_lib32(
+            PT_SYSTEM, 'libutils', dt_needed=['libvnd_bad.so'],
+            extra_dir='vndk-sp')
+
         libvnd_bad = gb.add_lib32(PT_VENDOR, 'libvnd_bad', extra_dir='vndk-sp')
+
         gb.resolve()
 
         self.assertIn(libvnd_bad, libvndk.deps_all)

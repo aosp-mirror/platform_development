@@ -14,6 +14,7 @@ except ImportError:
 
     class TemporaryDirectory(object):
         def __init__(self, suffix='', prefix='tmp', dir=None):
+            # pylint: disable=redefined-builtin
             self.name = tempfile.mkdtemp(suffix, prefix, dir)
 
 
@@ -39,10 +40,12 @@ if sys.version_info >= (3, 0):
     from os import makedirs
 else:
     import os
+
+
     def makedirs(path, exist_ok):
         if exist_ok and os.path.exists(path):
             return
-        return os.makedirs(path)
+        os.makedirs(path)
 
 
 if sys.version_info >= (3, 0):

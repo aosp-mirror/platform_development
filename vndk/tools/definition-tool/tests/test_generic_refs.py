@@ -12,11 +12,13 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 class MockELF(object):
+    # pylint: disable=too-few-public-methods
     def __init__(self, exported_symbols):
         self.exported_symbols = exported_symbols
 
 
 class MockLib(object):
+    # pylint: disable=too-few-public-methods
     def __init__(self, path, exported_symbols):
         self.path = path
         self.elf = MockELF(exported_symbols)

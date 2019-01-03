@@ -95,7 +95,6 @@ class ELFLinkerTest(TestCase):
 
     def test_deps(self):
         gb = self._create_normal_graph()
-        graph = gb.graph
 
         # Check the dependencies of libc.so.
         node = gb.graph.get_lib('/system/lib/libc.so')
@@ -316,6 +315,7 @@ class ELFLinkerTest(TestCase):
 
         # Create generic reference.
         class MockGenericRefs(object):
+            # pylint: disable=too-few-public-methods
             def classify_lib(self, lib):
                 if 'libllvm_vendor' in lib.path:
                     return GenericRefs.NEW_LIB
@@ -541,8 +541,8 @@ class ELFLinkerDlopenDepsTest(TestCase):
 
     def test_add_dlopen_deps_error(self):
         gb = GraphBuilder()
-        liba = gb.add_lib32(PT_SYSTEM, 'liba')
-        libb = gb.add_lib32(PT_SYSTEM, 'libb')
+        gb.add_lib32(PT_SYSTEM, 'liba')
+        gb.add_lib32(PT_SYSTEM, 'libb')
         gb.resolve()
 
         with tempfile.NamedTemporaryFile(mode='w') as tmp_file:
