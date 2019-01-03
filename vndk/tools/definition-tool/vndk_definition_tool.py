@@ -2859,9 +2859,8 @@ class CreateGenericRefCommand(Command):
     def add_argparser_options(self, parser):
         parser.add_argument('dir')
 
-        parser.add_argument(
-            '--output', '-o', metavar='PATH', required=True,
-            help='output directory')
+        parser.add_argument('-o', '--output', required=True,
+                            help='output directory')
 
     def main(self, args):
         root = os.path.abspath(args.dir)
@@ -3210,7 +3209,8 @@ class DepsInsightCommand(VNDKCommandBase):
 
         parser.add_argument('--module-info')
 
-        parser.add_argument('--output', '-o', help='output directory')
+        parser.add_argument('-o', '--output', required=True,
+                            help='output directory')
 
     @staticmethod
     def serialize_data(libs, vndk_lib, module_info):
@@ -3748,7 +3748,8 @@ class DepGraphCommand(ELFGraphCommand):
     def add_argparser_options(self, parser):
         super(DepGraphCommand, self).add_argparser_options(parser)
 
-        parser.add_argument('--output', '-o', help='output directory')
+        parser.add_argument('-o', '--output', required=True,
+                            help='output directory')
 
     def _get_tag_from_lib(self, lib, tagged_paths):
         tag_hierarchy = dict()
