@@ -2,16 +2,15 @@
 
 import re
 import tempfile
-import unittest
 
 from vndk_definition_tool import (
     ELF, GenericRefs, PT_SYSTEM, PT_VENDOR, VNDKLibDir)
 
-from .compat import StringIO, patch
+from .compat import StringIO, TestCase, patch
 from .utils import GraphBuilder
 
 
-class ELFLinkerTest(unittest.TestCase):
+class ELFLinkerTest(TestCase):
     def _create_normal_graph(self):
         gb = GraphBuilder()
 
@@ -461,7 +460,7 @@ class ELFLinkerTest(unittest.TestCase):
         self.assertIn(libvndk_sp_d_64, libvndk_sp_c_64.deps_all)
 
 
-class ELFLinkerDlopenDepsTest(unittest.TestCase):
+class ELFLinkerDlopenDepsTest(TestCase):
     def test_add_dlopen_deps(self):
         gb = GraphBuilder()
         liba = gb.add_lib32(PT_SYSTEM, 'liba')
@@ -554,7 +553,7 @@ class ELFLinkerDlopenDepsTest(unittest.TestCase):
             with patch('sys.stderr', stderr):
                 gb.graph.add_dlopen_deps(tmp_file.name)
 
-            self.assertRegexpMatches(
+            self.assertRegex(
                 stderr.getvalue(),
                 'error:' + re.escape(tmp_file.name) + ':1: ' +
                 'Failed to add dlopen dependency from .* to .*\\.\n')

@@ -2,15 +2,13 @@
 
 from __future__ import print_function
 
-import unittest
-
 from vndk_definition_tool import (PT_SYSTEM, PT_VENDOR)
 
-from .compat import StringIO, patch
+from .compat import StringIO, TestCase, patch
 from .utils import GraphBuilder
 
 
-class ELFLinkerVNDKTest(unittest.TestCase):
+class ELFLinkerVNDKTest(TestCase):
     def test_normalize_partition_tags_bad_vendor_deps(self):
         """Check whether normalize_partition_tags() hides the dependencies from
         the system partition to the vendor partition if the dependencies are
@@ -28,7 +26,7 @@ class ELFLinkerVNDKTest(unittest.TestCase):
         with patch('sys.stderr', stderr):
             gb.graph.normalize_partition_tags(set(), None)
 
-        self.assertRegexpMatches(
+        self.assertRegex(
             stderr.getvalue(),
             'error: .*: system exe/lib must not depend on vendor lib .*.  '
             'Assume such dependency does not exist.')

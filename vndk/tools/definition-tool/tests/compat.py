@@ -67,3 +67,20 @@ except ImportError:
             yield
         finally:
             setattr(obj, attr, original_value)
+
+
+if sys.version_info >= (3, 2):
+    from unittest import TestCase
+else:
+    import unittest
+
+
+    class TestCase(unittest.TestCase):
+        def assertRegex(self, text, expected_regex, msg=None):
+            # pylint: disable=deprecated-method
+            self.assertRegexpMatches(text, expected_regex, msg)
+
+
+        def assertNotRegex(self, text, unexpected_regex, msg=None):
+            # pylint: disable=deprecated-method
+            self.assertNotRegexpMatches(text, unexpected_regex, msg)
