@@ -19,6 +19,8 @@ usage () {
     echo "    to override the existing vbmeta.img of device. Optional."
     echo "-s is used to fetch and flash both product.img and system.img from"
     echo "    the system_build_dir for devices with a product partition."
+    echo "    product.img will be removed if system_build_dir does not have"
+    echo "    product.img when -s option is declared."
     echo "    By default, only system.img is flashed to the target device for"
     echo "    independent system update. No parameter required. Optional"
     echo "system_build_dir is the path to the system build"
@@ -134,6 +136,7 @@ EXTRACT_FILE_LIST=(
 )
 
 if [[ "$INCLUDE_PRODUCT" == true ]]; then
+  unzip -l "$SYSTEM_TARGET_FILES_ARCHIVE" | grep -q IMAGES/product.img &&
   EXTRACT_FILE_LIST+=(IMAGES/product.img)
 fi
 
@@ -200,7 +203,13 @@ fi
 # Overwrite artifacts in the device archive to create the Mixed Build artifacts.
 cp "$SYSTEM_IMAGES_DIR"/system.img "$DEVICE_IMAGES_DIR"/
 if [[ "$INCLUDE_PRODUCT" == true ]]; then
-  cp "$SYSTEM_IMAGES_DIR"/product.img "$DEVICE_IMAGES_DIR"/
+  if [[ -f "$SYSTEM_IMAGES_DIR"/product.img ]]; then
+    cp "$SYSTEM_IMAGES_DIR"/product.img "$DEVICE_IMAGES_DIR"/
+  else
+    rm -f "$DEVICE_IMAGES_DIR"/product.img
+    # Removed product partition from required partition list
+    sed -i "/partition-exists=product$/d" "$DEVICE_IMAGES_DIR"/android-info.txt
+  fi
 fi
 
 # Only override vbmeta if it is already present since fastboot update will try
