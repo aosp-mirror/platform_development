@@ -4,14 +4,12 @@ from __future__ import print_function
 
 import os
 import subprocess
-import sys
 import unittest
 import zipfile
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from compat import TemporaryDirectory
 from vndk_definition_tool import DexFileReader, UnicodeSurrogateDecodeError
+
+from .compat import TemporaryDirectory
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 INPUT_DIR = os.path.join(SCRIPT_DIR, 'testdata', 'test_dex_file')
@@ -42,7 +40,7 @@ class ModifiedUTF8Test(unittest.TestCase):
                          b'\xed\xa0\x81\xed\xb0\x80'.decode('mutf-8'))
 
 
-    def test_decode(self):
+    def test_decode_exception(self):
         # Low surrogate does not come after high surrogate
         with self.assertRaises(UnicodeSurrogateDecodeError):
             b'\xed\xa0\x81\x40'.decode('mutf-8')
@@ -122,7 +120,3 @@ class DexFileTest(unittest.TestCase):
             self.assertIn(b'world', strs)
             self.assertIn(b'foo', strs)
             self.assertIn(b'bar', strs)
-
-
-if __name__ == '__main__':
-    unittest.main()
