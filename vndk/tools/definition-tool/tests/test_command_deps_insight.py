@@ -2,16 +2,13 @@
 
 from __future__ import print_function
 
-import os
-import sys
 import unittest
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from compat import StringIO, patch
 from vndk_definition_tool import (
     DepsInsightCommand, ModuleInfo, PT_SYSTEM, PT_VENDOR)
-from utils import GraphBuilder
+
+from .compat import StringIO, patch
+from .utils import GraphBuilder
 
 
 class DepsInsightCommandTest(unittest.TestCase):
@@ -48,41 +45,63 @@ class DepsInsightCommandTest(unittest.TestCase):
 
 
     def test_serialize_data_with_all_deps(self):
-        """compute_degenerated_vndk() should not remove bad dependencies from
-        the output of deps-insight.  This test checks the existance of bad
-        dependencies."""
+        # compute_degenerated_vndk() should not remove bad dependencies from
+        # the output of deps-insight.  This test checks the existance of bad
+        # dependencies.
 
         gb = GraphBuilder()
-        libfwk = gb.add_lib32(PT_SYSTEM, 'libfwk')
-        libvndk = gb.add_lib32(PT_SYSTEM, 'libvndk',
-                               dt_needed=['libvnd_bad.so'], extra_dir='vndk')
-        libvndk_sp = gb.add_lib32(PT_SYSTEM, 'libutils',
-                                  dt_needed=['libvnd_bad.so'],
-                                  extra_dir='vndk-sp')
-        libvnd = gb.add_lib32(PT_VENDOR, 'libvnd',
-                              dt_needed=['libvndk.so', 'libutils.so'])
-        libvnd_bad = gb.add_lib32(PT_VENDOR, 'libvnd_bad', extra_dir='vndk-sp')
+
+        libsystem = gb.add_lib32(PT_SYSTEM, 'libsystem')
+
+        libsystem2 = gb.add_lib32(
+            PT_SYSTEM, 'libsystem2', dt_needed=['libsystem.so'])
+
+        libvndk = gb.add_lib32(
+            PT_SYSTEM, 'libvndk', dt_needed=['libvendor_bad.so'],
+            extra_dir='vndk')
+
+        libvendor = gb.add_lib32(
+            PT_VENDOR, 'libvendor', dt_needed=['libvndk.so'])
+
+        libvendor_bad = gb.add_lib32(
+            PT_VENDOR, 'libvendor_bad', extra_dir='vndk')
+
         gb.resolve()
 
         with patch('sys.stderr', StringIO()):
             vndk_sets = gb.graph.compute_degenerated_vndk(set(), None)
 
-        self.assertNotIn(libvnd_bad, libvndk.deps_good)
-        self.assertNotIn(libvnd_bad, libvndk_sp.deps_good)
+        self.assertNotIn(libvendor_bad, libvndk.deps_good)
 
         strs, mods = DepsInsightCommand.serialize_data(
-                list(gb.graph.all_libs()), vndk_sets, ModuleInfo())
+            list(gb.graph.all_libs()), vndk_sets, ModuleInfo())
 
+        # libsystem
+        deps = self._get_module_deps(strs, mods, libsystem.path)
+        self.assertFalse(deps)
+        users = self._get_module_users(strs, mods, libsystem.path)
+        self.assertIn(libsystem2.path, users)
+
+        # libsystem2
+        deps = self._get_module_deps(strs, mods, libsystem2.path)
+        self.assertIn(libsystem.path, deps)
+        users = self._get_module_users(strs, mods, libsystem2.path)
+        self.assertFalse(users)
+
+        # libvndk
         deps = self._get_module_deps(strs, mods, libvndk.path)
-        self.assertIn(libvnd_bad.path, deps)
+        self.assertIn(libvendor_bad.path, deps)
+        users = self._get_module_users(strs, mods, libvndk.path)
+        self.assertIn(libvendor.path, users)
 
-        deps = self._get_module_deps(strs, mods, libvndk_sp.path)
-        self.assertIn(libvnd_bad.path, deps)
+        # libvendor
+        deps = self._get_module_deps(strs, mods, libvendor.path)
+        self.assertIn(libvndk.path, deps)
+        users = self._get_module_users(strs, mods, libvendor.path)
+        self.assertFalse(users)
 
-        users = self._get_module_users(strs, mods, libvnd_bad.path)
+        # libvendor_bad
+        deps = self._get_module_deps(strs, mods, libvendor_bad.path)
+        self.assertFalse(deps)
+        users = self._get_module_users(strs, mods, libvendor_bad.path)
         self.assertIn(libvndk.path, users)
-        self.assertIn(libvndk_sp.path, users)
-
-
-if __name__ == '__main__':
-    unittest.main()

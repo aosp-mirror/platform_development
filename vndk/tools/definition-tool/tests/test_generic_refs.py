@@ -3,13 +3,8 @@
 from __future__ import print_function
 
 import os
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-import argparse
 import unittest
 
-from compat import TemporaryDirectory, makedirs
 from vndk_definition_tool import GenericRefs
 
 
@@ -17,11 +12,13 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 class MockELF(object):
+    # pylint: disable=too-few-public-methods
     def __init__(self, exported_symbols):
         self.exported_symbols = exported_symbols
 
 
 class MockLib(object):
+    # pylint: disable=too-few-public-methods
     def __init__(self, path, exported_symbols):
         self.path = path
         self.elf = MockELF(exported_symbols)
@@ -38,6 +35,7 @@ class GenericRefsTest(unittest.TestCase):
                      MockELF({'fclose', 'fopen', 'fread', 'fwrite'}))
         self.ref.add('/system/lib64/libm.so',
                      MockELF({'cos', 'sin', 'tan'}))
+
 
     def test_create_from_sym_dir(self):
         input_dir = os.path.join(SCRIPT_DIR, 'testdata', 'test_generic_refs')
@@ -60,6 +58,7 @@ class GenericRefsTest(unittest.TestCase):
         self.assertEqual({'cos', 'sin', 'tan'},
                          g.refs['/system/lib64/libm.so'].exported_symbols)
 
+
     def test_classify_lib(self):
         libc_sub = MockLib('/system/lib/libc.so', {'fclose', 'fopen', 'fread'})
         libc_sup = MockLib('/system/lib/libc.so',
@@ -75,6 +74,7 @@ class GenericRefsTest(unittest.TestCase):
                          self.ref.classify_lib(libc_eq))
         self.assertEqual(GenericRefs.NEW_LIB, self.ref.classify_lib(libfoo))
 
+
     def test_is_equivalent_lib(self):
         libc_sub = MockLib('/system/lib/libc.so', {'fclose', 'fopen', 'fread'})
         libc_sup = MockLib('/system/lib/libc.so',
@@ -87,12 +87,9 @@ class GenericRefsTest(unittest.TestCase):
 
         self.assertTrue(self.ref.is_equivalent_lib(libc_eq))
 
+
     def test_has_same_name_lib(self):
         self.assertTrue(self.ref.has_same_name_lib(
             MockLib('/vendor/lib/libc.so', {})))
         self.assertFalse(self.ref.has_same_name_lib(
             MockLib('/vendor/lib/lib_does_not_exist.so', {})))
-
-
-if __name__ == '__main__':
-    unittest.main()
