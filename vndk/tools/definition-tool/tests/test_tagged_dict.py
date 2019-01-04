@@ -2,16 +2,13 @@
 
 from __future__ import print_function
 
-import os
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 import tempfile
 import unittest
 
-from compat import StringIO
 from vndk_definition_tool import TaggedDict, TaggedPathDict, TaggedLibDict, \
                                  NUM_PARTITIONS, PT_SYSTEM, PT_VENDOR
+
+from .compat import StringIO
 
 
 _TEST_DATA = '''Path,Tag
@@ -103,37 +100,38 @@ class TaggedPathDictTest(unittest.TestCase):
         tagged_paths = TaggedPathDict()
 
         self.assertEqual(
-                ['/system/lib/libc.so'],
-                list(tagged_paths._enumerate_paths('/system/lib/libc.so')))
+            ['/system/lib/libc.so'],
+            list(tagged_paths._enumerate_paths('/system/lib/libc.so')))
 
         self.assertEqual(
-                ['/system/lib/libc.so', '/system/lib64/libc.so'],
-                list(tagged_paths._enumerate_paths('/system/${LIB}/libc.so')))
+            ['/system/lib/libc.so', '/system/lib64/libc.so'],
+            list(tagged_paths._enumerate_paths('/system/${LIB}/libc.so')))
 
         self.assertEqual(
-                ['/system/lib/vndk/libutils.so',
-                 '/system/lib64/vndk/libutils.so'],
-                list(tagged_paths._enumerate_paths(
-                    '/system/${LIB}/vndk${VNDK_VER}/libutils.so')))
+            ['/system/lib/vndk/libutils.so',
+             '/system/lib64/vndk/libutils.so'],
+            list(tagged_paths._enumerate_paths(
+                '/system/${LIB}/vndk${VNDK_VER}/libutils.so')))
 
         tagged_paths = TaggedPathDict(['current', '27', '28'])
 
         self.assertEqual(
-                ['/system/lib/vndk/libutils.so',
-                 '/system/lib64/vndk/libutils.so',
-                 '/system/lib/vndk-27/libutils.so',
-                 '/system/lib64/vndk-27/libutils.so',
-                 '/system/lib/vndk-28/libutils.so',
-                 '/system/lib64/vndk-28/libutils.so'],
-                list(tagged_paths._enumerate_paths(
-                    '/system/${LIB}/vndk${VNDK_VER}/libutils.so')))
+            ['/system/lib/vndk/libutils.so',
+             '/system/lib64/vndk/libutils.so',
+             '/system/lib/vndk-27/libutils.so',
+             '/system/lib64/vndk-27/libutils.so',
+             '/system/lib/vndk-28/libutils.so',
+             '/system/lib64/vndk-28/libutils.so'],
+            list(tagged_paths._enumerate_paths(
+                '/system/${LIB}/vndk${VNDK_VER}/libutils.so')))
 
         self.assertEqual(
-                ['/system/lib/vndk/libutils.so',
-                 '/system/lib/vndk-27/libutils.so',
-                 '/system/lib/vndk-28/libutils.so'],
-                list(tagged_paths._enumerate_paths(
-                    '/system/lib/vndk${VNDK_VER}/libutils.so')))
+            ['/system/lib/vndk/libutils.so',
+             '/system/lib/vndk-27/libutils.so',
+             '/system/lib/vndk-28/libutils.so'],
+            list(tagged_paths._enumerate_paths(
+                '/system/lib/vndk${VNDK_VER}/libutils.so')))
+
 
     def test_load_from_csv_empty(self):
         try:
@@ -218,8 +216,8 @@ class TaggedPathDictTest(unittest.TestCase):
         self.assertEqual('vndk_sp_indirect',
                          d.get_path_tag('/system/lib/lib_vndk_sp_indirect.so'))
         self.assertEqual(
-                'vndk_sp_indirect_private',
-                d.get_path_tag('/system/lib/lib_vndk_sp_indirect_private.so'))
+            'vndk_sp_indirect_private',
+            d.get_path_tag('/system/lib/lib_vndk_sp_indirect_private.so'))
         self.assertEqual('vndk', d.get_path_tag('/system/lib/lib_vndk.so'))
         self.assertEqual('fwk_only',
                          d.get_path_tag('/system/lib/lib_fwk_only.so'))
@@ -368,17 +366,19 @@ class MockELFGraph(object):
     def __init__(self):
         self.lib_pt = [dict() for i in range(NUM_PARTITIONS)]
 
+
     def add(self, path):
         partition = PT_VENDOR if path.startswith('/vendor') else PT_SYSTEM
         lib = MockELFLinkData(path)
         self.lib_pt[partition][path] = lib
         return lib
 
+
     def compute_sp_lib(self, generic_refs=None):
         vendor_libs = self.lib_pt[PT_VENDOR].values()
         return MockSPLibResult(
-                set(v for v in vendor_libs if 'lib_sp_hal.so' in v.path),
-                set(v for v in vendor_libs if 'lib_sp_hal_dep.so' in v.path))
+            set(v for v in vendor_libs if 'lib_sp_hal.so' in v.path),
+            set(v for v in vendor_libs if 'lib_sp_hal_dep.so' in v.path))
 
 
 class TaggedLibDictTest(unittest.TestCase):
@@ -389,13 +389,13 @@ class TaggedLibDictTest(unittest.TestCase):
 
         self.lib_ll_ndk = self.graph.add('/system/lib/lib_ll_ndk.so')
         self.lib_ll_ndk_indirect = \
-                self.graph.add('/system/lib/lib_ll_ndk_indirect.so')
+            self.graph.add('/system/lib/lib_ll_ndk_indirect.so')
 
         self.lib_vndk_sp = self.graph.add('/system/lib/lib_vndk_sp.so')
         self.lib_vndk_sp_indirect = \
-                self.graph.add('/system/lib/lib_vndk_sp_indirect.so')
+            self.graph.add('/system/lib/lib_vndk_sp_indirect.so')
         self.lib_vndk_sp_indirect_private = \
-                self.graph.add('/system/lib/lib_vndk_sp_indirect_private.so')
+            self.graph.add('/system/lib/lib_vndk_sp_indirect_private.so')
 
         self.lib_vndk = self.graph.add('/system/lib/lib_vndk.so')
 
@@ -408,7 +408,7 @@ class TaggedLibDictTest(unittest.TestCase):
         self.lib_vnd_only = self.graph.add('/vendor/lib/lib_vnd_only.so')
 
         self.tagged_libs = TaggedLibDict.create_from_graph(
-                self.graph, self.tagged_paths)
+            self.graph, self.tagged_paths)
 
 
     def test_create_from_graph(self):
@@ -456,7 +456,3 @@ class TaggedLibDictTest(unittest.TestCase):
         self.assertEqual('fwk_only', tag)
         tag = d.get_path_tag(MockELFLinkData('/vendor/lib/unknown.so'))
         self.assertEqual('vnd_only', tag)
-
-
-if __name__ == '__main__':
-    unittest.main()
