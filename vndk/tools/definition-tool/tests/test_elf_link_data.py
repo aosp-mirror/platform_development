@@ -2,10 +2,6 @@
 
 from __future__ import print_function
 
-import os
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 import unittest
 
 from vndk_definition_tool import ELFLinkData, PT_SYSTEM, PT_VENDOR
@@ -25,6 +21,7 @@ class ELFLinkDataTest(unittest.TestCase):
         self.z.add_needed_dep(self.w)
         self.z.add_dlopen_dep(self.w)
 
+
     def test_add_dep_and_accessors(self):
         self.assertIn(self.y, self.x.deps_needed_all)
         self.assertIn(self.x, self.y.users_needed_all)
@@ -35,6 +32,7 @@ class ELFLinkDataTest(unittest.TestCase):
         self.assertIn(self.x, self.z.users_dlopen_all)
         self.assertNotIn(self.z, self.x.deps_needed_all)
         self.assertNotIn(self.x, self.z.users_needed_all)
+
 
     def test_remove_dep(self):
         self.assertIn(self.y, self.x.deps_needed_all)
@@ -51,6 +49,7 @@ class ELFLinkDataTest(unittest.TestCase):
         self.assertNotIn(self.y, self.x.deps_needed)
         self.assertNotIn(self.x, self.y.users_needed)
 
+
     def test_num_deps(self):
         self.assertEqual(2, self.x.num_deps)
         self.assertEqual(0, self.y.num_deps)
@@ -59,6 +58,7 @@ class ELFLinkDataTest(unittest.TestCase):
 
         # NEEDED and DLOPEN are counted twice.
         self.assertEqual(2, self.z.num_deps)
+
 
     def test_num_users(self):
         self.assertEqual(0, self.x.num_users)
@@ -69,11 +69,13 @@ class ELFLinkDataTest(unittest.TestCase):
         # NEEDED and DLOPEN are counted twice.
         self.assertEqual(2, self.w.num_users)
 
+
     def test_has_dep(self):
         self.assertTrue(self.x.has_dep(self.y))
         self.assertTrue(self.x.has_dep(self.z))
         self.assertFalse(self.x.has_dep(self.x))
         self.assertFalse(self.x.has_dep(self.w))
+
 
     def test_has_user(self):
         self.assertTrue(self.y.has_user(self.x))
@@ -81,9 +83,11 @@ class ELFLinkDataTest(unittest.TestCase):
         self.assertFalse(self.x.has_user(self.x))
         self.assertFalse(self.w.has_user(self.x))
 
+
     def test_is_system_lib(self):
         self.assertTrue(self.x.is_system_lib())
         self.assertFalse(self.v.is_system_lib())
+
 
     def test_get_dep_linked_symbols(self):
         self.x.linked_symbols['c'] = self.y
@@ -100,7 +104,3 @@ class ELFLinkDataTest(unittest.TestCase):
 
         self.assertEqual(['w', 'x', 'y', 'z'],
                          self.x.get_dep_linked_symbols(self.z))
-
-
-if __name__ == '__main__':
-    unittest.main()

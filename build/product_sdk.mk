@@ -34,7 +34,6 @@ PRODUCT_PACKAGES += \
 	apksigner \
 	bcc_compat \
 	bios.bin \
-	commons-compress-1.0 \
 	deployagent \
 	dexdump \
 	dmtracedump \

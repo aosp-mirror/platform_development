@@ -2,18 +2,13 @@
 
 from __future__ import print_function
 
-import os
-import sys
-import unittest
+from vndk_definition_tool import (PT_SYSTEM, PT_VENDOR)
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from compat import StringIO, patch
-from vndk_definition_tool import (ELF, ELFLinker, PT_SYSTEM, PT_VENDOR)
-from utils import GraphBuilder
+from .compat import StringIO, TestCase, patch
+from .utils import GraphBuilder
 
 
-class ELFLinkerVNDKTest(unittest.TestCase):
+class ELFLinkerVNDKTest(TestCase):
     def test_normalize_partition_tags_bad_vendor_deps(self):
         """Check whether normalize_partition_tags() hides the dependencies from
         the system partition to the vendor partition if the dependencies are
@@ -31,10 +26,10 @@ class ELFLinkerVNDKTest(unittest.TestCase):
         with patch('sys.stderr', stderr):
             gb.graph.normalize_partition_tags(set(), None)
 
-        self.assertRegexpMatches(
-                stderr.getvalue(),
-                'error: .*: system exe/lib must not depend on vendor lib .*.  '
-                'Assume such dependency does not exist.')
+        self.assertRegex(
+            stderr.getvalue(),
+            'error: .*: system exe/lib must not depend on vendor lib .*.  '
+            'Assume such dependency does not exist.')
 
         self.assertNotIn(libvnd, libfwk.deps_needed)
         self.assertNotIn(libfwk, libvnd.users_needed)
@@ -74,7 +69,7 @@ class ELFLinkerVNDKTest(unittest.TestCase):
         """Check the computation of vndk without generic references."""
 
         gb = GraphBuilder()
-        libfwk = gb.add_lib32(PT_SYSTEM, 'libfwk')
+        gb.add_lib32(PT_SYSTEM, 'libfwk')
         libvndk = gb.add_lib32(PT_SYSTEM, 'libvndk', extra_dir='vndk')
         libvndk_sp = gb.add_lib32(PT_SYSTEM, 'libutils', extra_dir='vndk-sp')
         libvnd = gb.add_lib32(PT_VENDOR, 'libvnd',
@@ -94,15 +89,17 @@ class ELFLinkerVNDKTest(unittest.TestCase):
         """Check the computation of vndk without generic references."""
 
         gb = GraphBuilder()
-        libfwk = gb.add_lib32(PT_SYSTEM, 'libfwk')
-        libvndk = gb.add_lib32(PT_SYSTEM, 'libvndk',
-                               dt_needed=['libvnd_bad.so'], extra_dir='vndk')
-        libvndk_sp = gb.add_lib32(PT_SYSTEM, 'libutils',
-                                  dt_needed=['libvnd_bad.so'],
-                                  extra_dir='vndk-sp')
-        libvnd = gb.add_lib32(PT_VENDOR, 'libvnd',
-                              dt_needed=['libvndk.so', 'libutils.so'])
+
+        libvndk = gb.add_lib32(
+            PT_SYSTEM, 'libvndk', dt_needed=['libvnd_bad.so'],
+            extra_dir='vndk')
+
+        libvndk_sp = gb.add_lib32(
+            PT_SYSTEM, 'libutils', dt_needed=['libvnd_bad.so'],
+            extra_dir='vndk-sp')
+
         libvnd_bad = gb.add_lib32(PT_VENDOR, 'libvnd_bad', extra_dir='vndk-sp')
+
         gb.resolve()
 
         self.assertIn(libvnd_bad, libvndk.deps_all)
@@ -136,7 +133,3 @@ class ELFLinkerVNDKTest(unittest.TestCase):
         self.assertIn(libEGL_chipset, vndk_sets.sp_hal)
 
         self.assertNotIn(libEGL_chipset, vndk_sets.ll_ndk_indirect)
-
-
-if __name__ == '__main__':
-    unittest.main()
