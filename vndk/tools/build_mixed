@@ -237,3 +237,5 @@ rsync --archive --verbose --copy-links --exclude='logs' \
 # Overwrite the image archive with the Mixed Build archive.
 OUT_ARCHIVE="$DIST_DIR"/"$(basename $DEVICE_ARCHIVE)"
 cp "$DEVICE_IMAGES_DIR"/mixed.zip "$OUT_ARCHIVE"
+# Overwrite android-info.txt with the updated one.
+cp "$DEVICE_IMAGES_DIR"/android-info.txt "$DIST_DIR"/
