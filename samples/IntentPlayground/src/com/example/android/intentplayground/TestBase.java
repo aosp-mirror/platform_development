@@ -80,7 +80,7 @@ public class TestBase {
                         tsb.startActivities();
                         Thread.sleep(500);
                     } catch (InterruptedException ie) {
-                        Log.e(LauncherActivity.TAG, ie.getMessage());
+                        Log.e(TAG, ie.getMessage());
                     }
                 });
                 break;
@@ -91,7 +91,7 @@ public class TestBase {
                     try {
                         Thread.sleep(500);
                     } catch (InterruptedException ie) {
-                        Log.e(LauncherActivity.TAG, ie.getMessage());
+                        Log.e(TAG, ie.getMessage());
                     }
                     ArrayList<Intent> nextIntents = new ArrayList<>(Arrays.asList(
                             tsb.getIntents()));
@@ -346,16 +346,6 @@ public class TestBase {
         } else if (shouldClearTask || isDocument || isSingleInstance || isSingleTask) {
             task.clearChildren();
         }
-    }
-
-    public static void clearRunningTasks(Context context) {
-        ComponentName launcher = new ComponentName(context, LauncherActivity.class);
-        context.getSystemService(ActivityManager.class).getAppTasks().stream()
-                .filter(task -> {
-                    ActivityManager.RecentTaskInfo info = task.getTaskInfo();
-                    return (info.baseActivity != null) && (!info.baseActivity.equals(launcher));
-                })
-                .forEach(ActivityManager.AppTask::finishAndRemoveTask);
     }
 
     public Context getContext() { return mContext; }

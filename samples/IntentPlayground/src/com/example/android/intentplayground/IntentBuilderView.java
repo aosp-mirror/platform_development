@@ -215,6 +215,11 @@ public class IntentBuilderView extends FrameLayout implements View.OnClickListen
     }
 
 
+    public boolean startForResult() {
+        RadioButton startNormal = mLayout.findViewById(R.id.start_normal);
+        return !startNormal.isChecked();
+    }
+
     @Override
     public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
         int buttonId = compoundButton.getId();
@@ -358,6 +363,6 @@ public class IntentBuilderView extends FrameLayout implements View.OnClickListen
      * button within this view.
      */
     public interface OnLaunchCallback {
-        void launchActivity(Intent intent);
+        void launchActivity(Intent intent, boolean forResult);
     }
 }

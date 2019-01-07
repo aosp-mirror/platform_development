@@ -50,6 +50,7 @@ public abstract class BaseActivity extends AppCompatActivity implements
     public static final String TREE_FRAGMENT = "com.example.android.treeFragment";
     public static final String EXPECTED_TREE_FRAGMENT = "com.example.android.expectedTreeFragment";
     public static final int LAUNCH_REQUEST_CODE = 0xEF;
+    private static final int LAUNCH_FOR_RESULT_ID = 1;
 
     public enum Mode {LAUNCH, VERIFY, RESULT}
 
@@ -155,10 +156,16 @@ public abstract class BaseActivity extends AppCompatActivity implements
     /**
      * Launches activity with the selected options.
      */
-    public void launchActivity(Intent intent) {
+    @Override
+    public void launchActivity(Intent intent, boolean forResult) {
+        if (forResult) {
+            startActivityForResult(intent, LAUNCH_FOR_RESULT_ID);
+        } else {
+            startActivity(intent);
+        }
+        
         // If people press back we want them to see the overview rather than the launch fragment.
         // To achieve this we pop the launchFragment from the stack when we go to the next activity.
-        startActivity(intent);
         getSupportFragmentManager().popBackStack();
     }
 

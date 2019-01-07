@@ -16,6 +16,7 @@
 
 package com.example.android.intentplayground;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -74,7 +75,9 @@ public class LaunchFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.app_bar_launch && mOnLaunchCallback != null) {
-            mOnLaunchCallback.launchActivity(mIntentBuilderView.currentIntent());
+            Intent intent = mIntentBuilderView.currentIntent();
+            boolean forResult = mIntentBuilderView.startForResult();
+            mOnLaunchCallback.launchActivity(mIntentBuilderView.currentIntent(), forResult);
         }
 
         return super.onOptionsItemSelected(item);
