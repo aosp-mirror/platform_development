@@ -207,6 +207,26 @@ public class DocumentsSample extends Activity {
         view.addView(button);
 
         button = new Button(context);
+        button.setText("GET_CONTENT */* with content query \"FILE\"");
+        button.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("*/*");
+                intent.putExtra(Intent.EXTRA_CONTENT_QUERY, "FILE");
+                if (multiple.isChecked()) {
+                    intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                }
+                if (localOnly.isChecked()) {
+                    intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+                }
+                startActivityForResult(Intent.createChooser(intent, "Kittens!"), CODE_READ);
+            }
+        });
+        view.addView(button);
+
+        button = new Button(context);
         button.setText("OPEN_DOC_TREE");
         button.setOnClickListener(new OnClickListener() {
             @Override
