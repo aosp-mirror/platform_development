@@ -89,11 +89,12 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
    * @param {layer} layer
    * @returns if the layer is visible on screen or not
    */
-  function is_visible(layer, visibleRect) {
+  function is_visible(layer) {
     var visible = (layer.activeBuffer || layer.type === 'ColorLayer')
-        && !hidden && layer.color.a > 0;
-    if (visibleRect != undefined) {
-      visible &= has_size(visibleRect);
+                  && !hidden && layer.color.a > 0;
+    if (visible && layer.visibleRegion != undefined) {
+      var isRectVisible = layer.visibleRegion.rect.some(has_size);
+      visible &= isRectVisible;
     }
     return visible
   }
@@ -101,7 +102,7 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
   var chips = [];
   var rect = transform_bounds(layer, parentBounds);
   var hidden = (layer.flags & FLAG_HIDDEN) != 0 || parentHidden;
-  var visible = is_visible(layer, rect);
+  var visible = is_visible(layer);
   if (visible) {
     chips.push(get_visible_chip());
   } else {
