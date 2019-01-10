@@ -407,7 +407,6 @@ development/samples/ApiDemos                   samples/${PLATFORM_NAME}/legacy/A
 development/samples/AppNavigation              samples/${PLATFORM_NAME}/legacy/AppNavigation
 development/samples/BackupRestore              samples/${PLATFORM_NAME}/legacy/BackupRestore
 development/samples/BasicGLSurfaceView         samples/${PLATFORM_NAME}/legacy/BasicGLSurfaceView
-development/samples/BluetoothHDP               samples/${PLATFORM_NAME}/legacy/BluetoothHDP
 development/samples/ContactManager             samples/${PLATFORM_NAME}/legacy/ContactManager
 development/samples/CrossCompatibility         samples/${PLATFORM_NAME}/legacy/CrossCompatibility
 development/samples/CubeLiveWallpaper          samples/${PLATFORM_NAME}/legacy/CubeLiveWallpaper
