@@ -75,8 +75,6 @@ public class IntentDialogFragment extends DialogFragment {
         mFlags = args.getStringArrayList(ARGUMENT_FLAGS);
         mActivityName = args.getString(ARGUMENT_ACTIVITY_NAME);
         mTaskId = args.getInt(TASK_ID);
-        BaseActivityViewModel viewModel = (new ViewModelProvider(getActivity(),
-                new ViewModelProvider.NewInstanceFactory())).get(BaseActivityViewModel.class);
     }
 
     @Nullable
