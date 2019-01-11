@@ -18,15 +18,14 @@ package com.example.android.intentplayground;
 
 import static com.example.android.intentplayground.Node.newTaskNode;
 
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.LinearLayout;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -35,7 +34,11 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.example.android.intentplayground.Tracking.Tracker;
+
 import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Implements the shared functionality for all of the other activities.
@@ -52,6 +55,14 @@ public abstract class BaseActivity extends AppCompatActivity implements
 
     public boolean userLeaveHintWasCalled = false;
     protected Mode mStatus = Mode.LAUNCH;
+
+    /**
+     * To display the task / activity overview in {@link TreeFragment} we track onResume and
+     * onDestroy calls in this global location. {@link BaseActivity} should delegate to
+     * {@link Tracker#onResume(Activity)} and {@link Tracker#onDestroy(Activity)} in it's respective
+     * lifecycle callbacks.
+     */
+    private static Tracker mTracker = new Tracker();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,10 +105,25 @@ public abstract class BaseActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
+        mTracker.onResume(this);
         Intent launchForward = prepareLaunchForward();
         if (launchForward != null) {
             startActivity(launchForward);
         }
+    }
+
+    @Override
+    protected  void onDestroy() {
+        super.onDestroy();
+        mTracker.onDestroy(this);
+    }
+
+    static void addTrackerListener(Consumer<List<Tracking.Task>> listener) {
+        mTracker.addListener(listener);
+    }
+
+    static void removeTrackerListener(Consumer<List<Tracking.Task>> listener) {
+        mTracker.removeListener(listener);
     }
 
     /**
@@ -142,7 +168,6 @@ public abstract class BaseActivity extends AppCompatActivity implements
         setIntent(intent);
     }
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.app_bar, menu);
@@ -161,7 +186,6 @@ public abstract class BaseActivity extends AppCompatActivity implements
         }
         return super.onOptionsItemSelected(item);
     }
-
 
     private void askToLaunchTasks() {
         AlertDialog dialog = new AlertDialog.Builder(this)
@@ -237,5 +261,4 @@ public abstract class BaseActivity extends AppCompatActivity implements
         super.onUserLeaveHint();
         userLeaveHintWasCalled = true;
     }
-
 }

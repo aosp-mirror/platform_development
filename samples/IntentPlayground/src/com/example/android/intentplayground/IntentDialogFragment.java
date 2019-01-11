@@ -19,7 +19,7 @@ package com.example.android.intentplayground;
 
 import android.app.ActivityManager;
 import android.os.Bundle;
-
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,6 +28,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
@@ -35,6 +36,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Shows a dialog with an activity name and a list of intent flags.
@@ -43,10 +45,10 @@ public class IntentDialogFragment extends DialogFragment {
     private List<String> mFlags;
     private String mActivityName;
     private int mTaskId;
-    private BaseActivityViewModel mViewModel;
     private static final String ARGUMENT_ACTIVITY_NAME = "activityName";
     private static final String ARGUMENT_FLAGS = "flags";
     private static final String TASK_ID = "taskId";
+    private static final String TAG = "IntentDialogFragment";
 
     /**
      * Creates a new IntentDialogFragment to display the given flags.
@@ -73,7 +75,7 @@ public class IntentDialogFragment extends DialogFragment {
         mFlags = args.getStringArrayList(ARGUMENT_FLAGS);
         mActivityName = args.getString(ARGUMENT_ACTIVITY_NAME);
         mTaskId = args.getInt(TASK_ID);
-        mViewModel = (new ViewModelProvider(getActivity(),
+        BaseActivityViewModel viewModel = (new ViewModelProvider(getActivity(),
                 new ViewModelProvider.NewInstanceFactory())).get(BaseActivityViewModel.class);
     }
 
@@ -96,14 +98,12 @@ public class IntentDialogFragment extends DialogFragment {
         bringToFront.setOnClickListener(v -> {
             moveTaskToFront(mTaskId);
             getDialog().dismiss();
-            mViewModel.refresh();
         });
 
         Button removeTask = rootLayout.findViewById(R.id.kill_task_button);
         removeTask.setOnClickListener(v -> {
             removeTask(mTaskId);
             getDialog().dismiss();
-            mViewModel.refresh();
         });
 
         Button copyFlagsButton = rootLayout.findViewById(R.id.copy_flags_button);
@@ -125,11 +125,20 @@ public class IntentDialogFragment extends DialogFragment {
 
     private void removeTask(int taskId) {
         ActivityManager am = getActivity().getSystemService(ActivityManager.class);
-        am.getAppTasks().forEach(task -> {
-            if (task.getTaskInfo().persistentId == taskId) {
-                task.finishAndRemoveTask();
-            }
-        });
+        List<ActivityManager.AppTask> appTasks = am.getAppTasks();
+
+        Optional<ActivityManager.AppTask> taskToKill = appTasks.stream().filter(
+                task -> task.getTaskInfo().persistentId == taskId)
+                .findFirst();
+
+        if (taskToKill.isPresent()) {
+            taskToKill.get().finishAndRemoveTask();
+        } else {
+            String errorMessage = "Task: " + taskId + " not found in recents, can't kill";
+            Log.e(TAG, errorMessage);
+            Toast.makeText(getContext(), errorMessage,
+                    Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void moveTaskToFront(int taskId) {

@@ -16,29 +16,9 @@
 
 package com.example.android.intentplayground;
 
-import android.app.ActivityManager;
-import android.app.AlertDialog;
-import android.content.ComponentName;
 import android.content.Intent;
-import android.graphics.PixelFormat;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
-import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.WindowManager;
-import android.view.WindowManager.LayoutParams;
-import android.widget.FrameLayout;
-import android.widget.TextView;
-
-import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
-import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
-import static android.view.WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
-import static android.view.WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
-
-import static com.example.android.intentplayground.Node.newTaskNode;
 
 /**
  * A singleInstance activity that is responsible for a launching a bootstrap stack of activities.

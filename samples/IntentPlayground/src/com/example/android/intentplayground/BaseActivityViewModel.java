@@ -20,12 +20,29 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import java.util.List;
+import java.util.function.Consumer;
+
 public class BaseActivityViewModel extends ViewModel {
-    enum FabAction {Show, Hide }
+    enum FabAction {Show, Hide}
 
-    private MutableLiveData<FabAction> mFabActions = new MutableLiveData<>();
+    private final MutableLiveData<FabAction> mFabActions;
 
-    private MutableLiveData<Object> mRefreshTree = new MutableLiveData<>();
+    /**
+     * Republish {@link BaseActivity#addTrackerListener(Consumer)} in a lifecycle safe manner.
+     * The {@link BaseActivity#addTrackerListener(Consumer)} that is registered in this class,
+     * forwards the value to this, to enjoy all the guarantees {@link import
+     * androidx.lifecycle.LiveData;} gives.
+     */
+    private final MutableLiveData<List<Tracking.Task>> mRefreshTree;
+    private final Consumer<List<Tracking.Task>> mTrackingListener;
+
+    public BaseActivityViewModel() {
+        mFabActions = new MutableLiveData<>();
+        mRefreshTree = new MutableLiveData<>();
+        mTrackingListener = tasks -> mRefreshTree.setValue(tasks);
+        BaseActivity.addTrackerListener(mTrackingListener);
+    }
 
 
     public void actOnFab(FabAction action) {
@@ -36,12 +53,17 @@ public class BaseActivityViewModel extends ViewModel {
         return mFabActions;
     }
 
-    public LiveData<Object> getRefresh() {
+    /**
+     * @return LiveData that publishes the new state of {@link com.android.server.wm.Task} and
+     * {@link android.app.Activity}-s whenever that state has been changed.
+     */
+    public LiveData<List<Tracking.Task>> getRefresh() {
         return mRefreshTree;
     }
 
-    public void refresh() {
-        mRefreshTree.setValue(new Object());
+    @Override
+    public void onCleared() {
+        BaseActivity.removeTrackerListener(mTrackingListener);
     }
 }
 
