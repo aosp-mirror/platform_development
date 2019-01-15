@@ -24,6 +24,17 @@ VENDOR_PATH_MAP = {
     'vendor/realtek' : 'Realtek'
 }
 
+def _get_relative_out_path_from_root(out_path):
+  """Given a path to a target out directory, get the relative path from the
+  Android root.
+
+  The module-info.json file paths are relative to the root source folder
+  ie. one directory before out."""
+  system_path = os.path.normpath(os.path.join(out_path, 'system'))
+  system_path_dirs = system_path.split(os.sep)
+  out_index = system_path_dirs.index("out")
+  return os.path.join(*system_path_dirs[out_index:])
+
 def system_files(path):
   """Returns an array of the files under /system, recursively, and ignoring
   symbolic-links"""
@@ -44,7 +55,7 @@ def system_files_to_package_map(path):
   """Returns a dictionary mapping from each file in the /system partition to its
   package, according to modules-info.json."""
   system_files_to_package_map = {}
-  system_prefix = os.path.join(path, 'system')
+  system_prefix = _get_relative_out_path_from_root(path)
   # Skip trailing '/'
   system_prefix_len = len(system_prefix) + 1
 
@@ -124,18 +135,36 @@ def main():
     else:
       packages[package] = [file]
 
+  with open(os.path.join(args.out1, 'module-info.json')) as module_info_json:
+    module_info = json.load(module_info_json)
+
   writer = csv.writer(sys.stdout, quoting = csv.QUOTE_NONNUMERIC,
                       delimiter = ',', lineterminator = '\n')
-  for package, files in packages.items():
+  for package, files in packages.iteritems():
     for file in files:
+      # Group sources of the deltas.
       if package in package_vendor_map:
         vendor = package_vendor_map[package]
       else:
         vendor = "--unknown--"
-      # Get file size
+      # Get file size.
       full_path = os.path.join(args.out1, 'system', file)
       size = os.stat(full_path).st_size
-      writer.writerow([vendor, package, file, size])
+      if package in module_info.keys():
+        module_path = module_info[package]['path']
+      else:
+        module_path = ''
+      writer.writerow([
+          # File that exists in out1 but not out2.
+          file,
+          # Module name that the file came from.
+          package,
+          # Path to the module.
+          module_path,
+          # File size.
+          size,
+          # Vendor owner.
+          vendor])
 
 if __name__ == '__main__':
   main()

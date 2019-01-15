@@ -201,19 +201,19 @@ enum_types {
   underlying_type: "type-6"
   enum_fields {
     enum_field_value: 1
-    name: "SuperSpeaker::Volume::Loud"
+    name: "SuperSpeaker::Loud"
   }
   enum_fields {
     enum_field_value: 2
-    name: "SuperSpeaker::Volume::Louder"
+    name: "SuperSpeaker::Louder"
   }
   enum_fields {
     enum_field_value: 3
-    name: "SuperSpeaker::Volume::Loudest"
+    name: "SuperSpeaker::Loudest"
   }
   enum_fields {
-    enum_field_value: 4
-    name: "SuperSpeaker::Volume::Lower"
+    enum_field_value: 0
+    name: "SuperSpeaker::Lower"
   }
   access: private_access
   tag_info {
@@ -414,37 +414,49 @@ functions {
 }
 elf_functions {
   name: "_Z26test_virtual_function_callP12SuperSpeaker"
+  binding: Global
 }
 elf_functions {
   name: "_ZN12NotReferenced"
+  binding: Global
 }
 elf_functions {
   name: "_ZN12SuperSpeaker11SpeakLouderEv"
+  binding: Global
 }
 elf_functions {
   name: "_ZN12SuperSpeaker18CreateSuperSpeakerEi"
+  binding: Global
 }
 elf_functions {
   name: "_ZN12SuperSpeaker9SpeakLoudEv"
+  binding: Global
 }
 elf_functions {
   name: "_ZN16LowVolumeSpeaker5SpeakEv"
+  binding: Global
 }
 elf_functions {
   name: "_ZN16LowVolumeSpeaker6ListenEv"
+  binding: Global
 }
 elf_functions {
   name: "_ZN17HighVolumeSpeaker11BadPracticeEf"
+  binding: Global
 }
 elf_functions {
   name: "_ZN17HighVolumeSpeaker5SpeakEv"
+  binding: Global
 }
 elf_functions {
   name: "_ZN17HighVolumeSpeaker6ListenEv"
+  binding: Global
 }
 elf_objects {
   name: "_ZTV16LowVolumeSpeaker"
+  binding: Global
 }
 elf_objects {
   name: "_ZTV17HighVolumeSpeaker"
+  binding: Global
 }

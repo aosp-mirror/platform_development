@@ -32,10 +32,9 @@ PRODUCT_PACKAGES += \
 	adb \
 	aidl \
 	apksigner \
-	zipalign \
 	bcc_compat \
 	bios.bin \
-	commons-compress-1.0 \
+	deployagent \
 	dexdump \
 	dmtracedump \
 	dx \
@@ -48,4 +47,5 @@ PRODUCT_PACKAGES += \
 	llvm-rs-cc \
 	sqlite3 \
 	vgabios-cirrus.bin \
-	split-select
+	split-select \
+	zipalign

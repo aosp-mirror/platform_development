@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-prebuilts/qemu-kernel/${TARGET_ARCH}/3.18/kernel-qemu2 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/kernel-ranchu
+prebuilts/qemu-kernel/${TARGET_ARCH}/4.4/kernel-qemu2 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/kernel-ranchu
 
 # version files for the SDK updater, from development.git
 ${HOST_OUT}/development/sys-img-${TARGET_CPU_ABI}/images_arm64-v8a_source.properties system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/source.properties

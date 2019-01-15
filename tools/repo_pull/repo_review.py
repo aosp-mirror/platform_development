@@ -31,7 +31,8 @@ except ImportError:
     from urllib2 import HTTPError  # PY2
 
 from gerrit import (
-    create_url_opener_from_args, query_change_lists, set_review, abandon)
+    abandon, create_url_opener_from_args, delete_topic, query_change_lists,
+    set_hashtags, set_review, set_topic)
 
 
 def _get_labels_from_args(args):
@@ -100,15 +101,41 @@ def _parse_args():
 
     parser.add_argument('--abandon', help='Abandon a CL with a message')
 
+    parser.add_argument('--add-hashtag', action='append', help='Add hashtag')
+    parser.add_argument('--remove-hashtag', action='append',
+                        help='Remove hashtag')
+    parser.add_argument('--delete-hashtag', action='append',
+                        help='Remove hashtag', dest='remove_hashtag')
+
+    parser.add_argument('--set-topic', help='Set topic name')
+    parser.add_argument('--delete-topic', action='store_true',
+                        help='Delete topic name')
+    parser.add_argument('--remove-topic', action='store_true',
+                        help='Delete topic name', dest='delete_topic')
+
     return parser.parse_args()
+
+
+def _has_task(args):
+    """Determine whether a task has been specified in the arguments."""
+    if args.label is not None or args.message is not None:
+        return True
+    if args.abandon is not None:
+        return True
+    if args.add_hashtag or args.remove_hashtag:
+        return True
+    if args.set_topic or args.delete_topic:
+        return True
+    return False
 
 
 _SEP_SPLIT = '=' * 79
 _SEP = '-' * 79
 
 
-def _report_error(change, res_code, res_json):
+def _print_error(change, res_code, res_json):
     """Print the error message"""
+
     change_id = change['change_id']
     project = change['project']
     revision_sha1 = change['current_revision']
@@ -128,15 +155,32 @@ def _report_error(change, res_code, res_json):
     print(_SEP_SPLIT, file=sys.stderr)
 
 
+def _do_task(change, func, *args, **kwargs):
+    """Process a task and report errors when necessary."""
+    try:
+        res_code, res_json = func(*args)
+    except HTTPError as error:
+        res_code = error.code
+        res_json = None
+
+    if res_code != kwargs.get('expected_http_code', 200):
+        _print_error(change, res_code, res_json)
+
+        errors = kwargs.get('errors')
+        if errors is not None:
+            errors['num_errors'] += 1
+
+
 def main():
     """Set review labels to selected change lists"""
 
+    # Parse and check the command line options
     args = _parse_args()
-
-    # Check the command line options
-    if args.label is None and args.message is None and args.abandon is None:
-        print('error: Either --label, --message, or --abandon must be ',
+    if not _has_task(args):
+        print('error: Either --label, --message, --abandon, --add-hashtag, '
+              '--remove-hashtag, --set-topic, or --delete-topic must be ',
               'specified', file=sys.stderr)
+        sys.exit(1)
 
     # Convert label arguments
     labels = _get_labels_from_args(args)
@@ -158,33 +202,26 @@ def main():
     _confirm('Do you want to continue?')
 
     # Post review votes
-    has_error = False
+    errors = {'num_errors': 0}
     for change in change_lists:
         if args.label or args.message:
-            try:
-                res_code, res_json = set_review(
-                    url_opener, args.gerrit, change['id'], labels, args.message)
-            except HTTPError as error:
-                res_code = error.code
-                res_json = None
-
-            if res_code != 200:
-                has_error = True
-                _report_error(change, res_code, res_json)
-
+            _do_task(change, set_review, url_opener, args.gerrit, change['id'],
+                     labels, args.message, errors=errors)
+        if args.add_hashtag or args.remove_hashtag:
+            _do_task(change, set_hashtags, url_opener, args.gerrit,
+                     change['id'], args.add_hashtag, args.remove_hashtag,
+                     errors=errors)
+        if args.set_topic:
+            _do_task(change, set_topic, url_opener, args.gerrit, change['id'],
+                     args.set_topic, errors=errors)
+        if args.delete_topic:
+            _do_task(change, delete_topic, url_opener, args.gerrit,
+                     change['id'], expected_http_code=204, errors=errors)
         if args.abandon:
-            try:
-                res_code, res_json = abandon(
-                    url_opener, args.gerrit, change['id'], args.abandon)
-            except HTTPError as error:
-                res_code = error.code
-                res_json = None
+            _do_task(change, abandon, url_opener, args.gerrit, change['id'],
+                     args.abandon, errors=errors)
 
-            if res_code != 200:
-                has_error = True
-                _report_error(change, res_code, res_json)
-
-    if has_error:
+    if errors['num_errors']:
         sys.exit(1)
 
 

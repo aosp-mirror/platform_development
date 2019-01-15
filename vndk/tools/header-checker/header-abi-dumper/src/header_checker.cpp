@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "header_checker.h"
+
 #include "fixed_argv.h"
 #include "frontend_action_factory.h"
-
-#include <header_abi_util.h>
+#include "header_abi_util.h"
 
 #include <clang/Frontend/FrontendActions.h>
 #include <clang/Tooling/CommonOptionsParser.h>
@@ -51,12 +52,23 @@ static llvm::cl::opt<bool> no_filter(
     "no-filter", llvm::cl::desc("Do not filter any abi"), llvm::cl::Optional,
     llvm::cl::cat(header_checker_category));
 
-static llvm::cl::opt<abi_util::TextFormatIR> text_format(
-    "text-format", llvm::cl::desc("Specify text format of abi dump"),
+static llvm::cl::opt<bool> suppress_errors(
+    "suppress-errors",
+    llvm::cl::desc("Suppress preprocess and semantic errors"),
+    llvm::cl::Optional, llvm::cl::cat(header_checker_category));
+
+static llvm::cl::opt<bool> dump_function_declarations(
+    "dump-function-declarations",
+    llvm::cl::desc("Output the functions declared but not defined in the input "
+                   "file"),
+    llvm::cl::Optional, llvm::cl::cat(header_checker_category));
+
+static llvm::cl::opt<abi_util::TextFormatIR> output_format(
+    "output-format", llvm::cl::desc("Specify format of output dump file"),
     llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
                                 "ProtobufTextFormat", "ProtobufTextFormat"),
-                     clEnumValEnd),
-    llvm::cl::init(abi_util::TextFormatIR::ProtobufTextFormat),
+                     clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON")),
+    llvm::cl::init(abi_util::TextFormatIR::Json),
     llvm::cl::cat(header_checker_category));
 
 // Hide irrelevant command line options defined in LLVM libraries.
@@ -73,7 +85,6 @@ static void HideIrrelevantCommandLineOptions() {
   }
 }
 
-
 int main(int argc, const char **argv) {
   HideIrrelevantCommandLineOptions();
 
@@ -82,31 +93,38 @@ int main(int argc, const char **argv) {
   FixedArgvRegistry::Apply(fixed_argv);
 
   // Create compilation database from command line arguments after "--".
+  std::string cmdline_error_msg;
   std::unique_ptr<clang::tooling::CompilationDatabase> compilations;
-
   {
     // loadFromCommandLine() may alter argc and argv, thus access fixed_argv
     // through FixedArgvAccess.
     FixedArgvAccess raw(fixed_argv);
-    compilations.reset(
+
+    compilations =
         clang::tooling::FixedCompilationDatabase::loadFromCommandLine(
-            raw.argc_, raw.argv_));
+            raw.argc_, raw.argv_, cmdline_error_msg);
   }
 
-  // Parse the command line options.
+  // Parse the command line options
   llvm::cl::ParseCommandLineOptions(
       fixed_argv.GetArgc(), fixed_argv.GetArgv(), "header-checker");
+
+  // Print an error message if we failed to create the compilation database
+  // from the command line arguments. This check is intentionally performed
+  // after `llvm::cl::ParseCommandLineOptions()` so that `-help` can work
+  // without `--`.
+  if (!compilations) {
+    if (cmdline_error_msg.empty()) {
+      llvm::errs() << "ERROR: Failed to parse clang command line options\n";
+    } else {
+      llvm::errs() << "ERROR: " << cmdline_error_msg << "\n";
+    }
+    ::exit(1);
+  }
 
   // Input header file existential check.
   if (!llvm::sys::fs::exists(header_file)) {
     llvm::errs() << "ERROR: Header file \"" << header_file << "\" not found\n";
-    ::exit(1);
-  }
-
-  // Check whether we can create compilation database and deduce compiler
-  // options from command line options.
-  if (!compilations) {
-    llvm::errs() << "ERROR: Clang compilation options not specified.\n";
     ::exit(1);
   }
 
@@ -118,11 +136,12 @@ int main(int argc, const char **argv) {
 
   // Initialize clang tools and run front-end action.
   std::vector<std::string> header_files{ header_file };
+  HeaderCheckerOptions options(abi_util::RealPath(header_file), out_dump,
+                               std::move(exported_headers), output_format,
+                               dump_function_declarations, suppress_errors);
 
   clang::tooling::ClangTool tool(*compilations, header_files);
   std::unique_ptr<clang::tooling::FrontendActionFactory> factory(
-      new HeaderCheckerFrontendActionFactory(out_dump, exported_headers,
-                                             text_format));
-
+      new HeaderCheckerFrontendActionFactory(options));
   return tool.run(factory.get());
 }

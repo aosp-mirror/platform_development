@@ -99,43 +99,8 @@ ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/core-lambda-s
 # shrinkedAndroid.jar for multidex support
 ALL_SDK_FILES += $(HOST_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/shrinkedAndroid_intermediates/shrinkedAndroid.jar
 
-# $(1): the Java library name
-define _package_sdk_library
-$(eval _psm_build_module := $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/$(1)_intermediates/classes.jar)
-$(eval _psm_packaging_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/$(1)_intermediates/$(1).jar)
-$(_psm_packaging_target) : $(_psm_build_module)
-	@echo "Package $(1).jar: $$@"
-	$$(copy-file-to-target)
-	@# Delete resource generated classes from the jar files.
-	$(hide) zip -d $$@ "*/R.class" "*/R\$$$$*.class" "*/Manifest.class" "*/Manifest\$$$$*.class" >/dev/null 2>&1 || true
-
-ALL_SDK_FILES += $(_psm_packaging_target)
-$(eval _psm_build_module :=)
-$(eval _psm_packaging_target :=)
-endef
-
 # ======= Lint API XML ===========
-
-ALL_SDK_FILES += $(HOST_OUT)/development/sdk/generated-api-versions.xml
-
-api_gen_jar := $(TOPDIR)prebuilts/tools/common/api-generator/api-generator-26.0.0.jar
-api_gen_deps := \
-  $(TOPDIR)prebuilts/tools/common/m2/repository/net/sf/kxml/kxml2/2.3.0/kxml2-2.3.0.jar \
-  $(TOPDIR)prebuilts/tools/common/m2/repository/org/ow2/asm/asm/5.0.4/asm-5.0.4.jar \
-  $(TOPDIR)prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/5.0.4/asm-tree-5.0.4.jar \
-  $(TOPDIR)prebuilts/tools/common/m2/repository/com/google/guava/guava/17.0/guava-17.0.jar
-api_gen_classpath := $(subst $(space),:,$(api_gen_jar) $(api_gen_deps))
-
-
-$(HOST_OUT)/development/sdk/generated-api-versions.xml: $(android_jar_full_target)
-	$(JAVA) -cp $(api_gen_classpath) \
-	  com.android.apigenerator.Main \
-	  --pattern $(TOPDIR)prebuilts/tools/common/api-versions/android-%/android.jar \
-	  --pattern $(TOPDIR)prebuilts/sdk/%/public/android.jar \
-	  --current-version $(PLATFORM_SDK_VERSION) \
-	  --current-codename $(PLATFORM_VERSION_CODENAME) \
-	  --current-jar $(android_jar_full_target) \
-	  $@
+ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/api-stubs-docs_generated-api-versions.xml
 
 # ============ System SDK ============
 full_target := $(call intermediates-dir-for,JAVA_LIBRARIES,android_system_stubs_current,,COMMON)/classes.jar
@@ -145,6 +110,7 @@ android_system_stubs: $(full_target)
 
 # Build and store the android_system.jar.
 $(call dist-for-goals,sdk win_sdk,$(full_target):android_system.jar)
+$(call dist-for-goals,sdk win_sdk,$(full_target):apistubs/android/system/android.jar)
 
 # ============ Test SDK ============
 full_target := $(call intermediates-dir-for,JAVA_LIBRARIES,android_test_stubs_current,,COMMON)/classes.jar
@@ -154,3 +120,4 @@ android_test_stubs: $(full_target)
 
 # Build and store the android_test.jar.
 $(call dist-for-goals,sdk win_sdk,$(full_target):android_test.jar)
+$(call dist-for-goals,sdk win_sdk,$(full_target):apistubs/android/test/android.jar)

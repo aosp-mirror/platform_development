@@ -27,7 +27,7 @@ class NativeHeapdumpViewerTest(unittest.TestCase):
 
   def CreateTmpFile(self, contents):
     fd, self._tmp_file_name = tempfile.mkstemp()
-    os.write(fd, contents)
+    os.write(fd, contents.encode())
     os.close(fd)
     return self._tmp_file_name
 
@@ -36,7 +36,7 @@ class NativeHeapdumpViewerTest(unittest.TestCase):
       try:
         os.unlink(self._tmp_file_name)
       except Exception:
-        print "Failed to delete " + heap
+        print("Failed to delete %s" % (heap))
 
 class GetNumFieldValidTest(NativeHeapdumpViewerTest):
   _map_data = """
@@ -108,7 +108,7 @@ z 0  sz   8300  num    5  bt 1300 2300 3300
 
   def test_backtrace_num_field_valid(self):
     heap = self.CreateTmpFile(self._backtrace_data)
-    backtraces, mapppings = native_heapdump_viewer.ParseNativeHeap(heap, False, True)
+    backtraces, mapppings = native_heapdump_viewer.ParseNativeHeap(heap, False, True, "")
     self.assertTrue(backtraces)
     self.assertEqual(2, len(backtraces))
 
@@ -124,7 +124,7 @@ z 0  sz   8300  num    5  bt 1300 2300 3300
 
   def test_backtrace_num_field_invalid(self):
     heap = self.CreateTmpFile(self._backtrace_data)
-    backtraces, mapppings = native_heapdump_viewer.ParseNativeHeap(heap, False, False)
+    backtraces, mapppings = native_heapdump_viewer.ParseNativeHeap(heap, False, False, "")
     self.assertTrue(backtraces)
     self.assertEqual(2, len(backtraces))
 
@@ -140,7 +140,7 @@ z 0  sz   8300  num    5  bt 1300 2300 3300
 
   def test_backtrace_reverse_field_valid(self):
     heap = self.CreateTmpFile(self._backtrace_data)
-    backtraces, mapppings = native_heapdump_viewer.ParseNativeHeap(heap, True, True)
+    backtraces, mapppings = native_heapdump_viewer.ParseNativeHeap(heap, True, True, "")
     self.assertTrue(backtraces)
     self.assertEqual(2, len(backtraces))
 
@@ -164,7 +164,7 @@ END
 """
 
     heap = self.CreateTmpFile(map_data)
-    backtraces, mappings = native_heapdump_viewer.ParseNativeHeap(heap, True, True)
+    backtraces, mappings = native_heapdump_viewer.ParseNativeHeap(heap, True, True, "")
 
     self.assertTrue(mappings)
     self.assertEqual(2, len(mappings))
@@ -180,4 +180,4 @@ END
     self.assertEqual("/system/lib64/libutils.so", mappings[1].name)
 
 if __name__ == '__main__':
-  unittest.main()
+  unittest.main(verbosity=2)

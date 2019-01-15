@@ -12,16 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <header_abi_util.h>
-#include <ir_representation.h>
+#include "header_abi_util.h"
+#include "ir_representation.h"
+#include "so_file_parser.h"
+#include "version_script_parser.h"
 
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/raw_ostream.h>
 
+#include <fstream>
+#include <functional>
+#include <iostream>
 #include <memory>
 #include <mutex>
-#include <fstream>
-#include <iostream>
 #include <string>
 #include <thread>
 #include <vector>
@@ -65,12 +68,20 @@ static llvm::cl::opt<std::string> so_file(
     "so", llvm::cl::desc("<path to so file>"), llvm::cl::Optional,
     llvm::cl::cat(header_linker_category));
 
-static llvm::cl::opt<abi_util::TextFormatIR> text_format(
-    "text-format", llvm::cl::desc("Specify text format of abi dumps"),
+static llvm::cl::opt<abi_util::TextFormatIR> input_format(
+    "input-format", llvm::cl::desc("Specify format of input dump files"),
     llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
                                 "ProtobufTextFormat", "ProtobufTextFormat"),
-                     clEnumValEnd),
-    llvm::cl::init(abi_util::TextFormatIR::ProtobufTextFormat),
+                     clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON")),
+    llvm::cl::init(abi_util::TextFormatIR::Json),
+    llvm::cl::cat(header_linker_category));
+
+static llvm::cl::opt<abi_util::TextFormatIR> output_format(
+    "output-format", llvm::cl::desc("Specify format of output dump file"),
+    llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
+                                "ProtobufTextFormat", "ProtobufTextFormat"),
+                     clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON")),
+    llvm::cl::init(abi_util::TextFormatIR::Json),
     llvm::cl::cat(header_linker_category));
 
 class HeaderAbiLinker {
@@ -83,24 +94,25 @@ class HeaderAbiLinker {
       const std::string &linked_dump,
       const std::string &arch,
       const std::string &api)
-    : dump_files_(dump_files), exported_header_dirs_(exported_header_dirs),
-    version_script_(version_script), so_file_(so_file),
-    out_dump_name_(linked_dump), arch_(arch), api_(api) {};
+      : dump_files_(dump_files), exported_header_dirs_(exported_header_dirs),
+        version_script_(version_script), so_file_(so_file),
+        out_dump_name_(linked_dump), arch_(arch), api_(api) {}
 
   bool LinkAndDump();
 
  private:
   template <typename T>
   bool LinkDecl(abi_util::IRDumper *dst,
-                       std::set<std::string> *link_set,
-                       std::set<std::string> *regex_matched_link_set,
-                       const std::regex *vs_regex,
-                       const abi_util::AbiElementMap<T> &src,
-                       bool use_version_script);
+                const abi_util::AbiElementMap<T> &src,
+                const std::function<bool(const std::string &)> &symbol_filter);
 
-  bool ParseVersionScriptFiles();
+  std::unique_ptr<abi_util::TextFormatToIRReader> ReadInputDumpFiles();
 
-  bool ParseSoFile();
+  bool ReadExportedSymbols();
+
+  bool ReadExportedSymbolsFromVersionScript();
+
+  bool ReadExportedSymbolsFromSharedObjectFile();
 
   bool LinkTypes(const abi_util::TextFormatToIRReader *ir_reader,
                  abi_util::IRDumper *ir_dumper);
@@ -111,8 +123,7 @@ class HeaderAbiLinker {
   bool LinkGlobalVars(const abi_util::TextFormatToIRReader *ir_reader,
                       abi_util::IRDumper *ir_dumper);
 
-  bool AddElfSymbols(abi_util::IRDumper *ir_dumper);
-
+  bool LinkExportedSymbols(abi_util::IRDumper *ir_dumper);
 
  private:
   const std::vector<std::string> &dump_files_;
@@ -124,9 +135,8 @@ class HeaderAbiLinker {
   const std::string &api_;
   // TODO: Add to a map of std::sets instead.
   std::set<std::string> exported_headers_;
-  std::set<std::string> types_set_;
-  std::set<std::string> function_decl_set_;
-  std::set<std::string> globvar_decl_set_;
+  std::map<std::string, abi_util::ElfFunctionIR> function_decl_map_;
+  std::map<std::string, abi_util::ElfObjectIR> globvar_decl_map_;
   // Version Script Regex Matching.
   std::set<std::string> functions_regex_matched_set;
   std::regex functions_vs_regex_;
@@ -135,25 +145,6 @@ class HeaderAbiLinker {
   std::regex globvars_vs_regex_;
 };
 
-template <typename T, typename Iterable>
-static bool AddElfSymbols(abi_util::IRDumper *dst, const Iterable &symbols) {
-  for (auto &&symbol : symbols) {
-    T elf_symbol(symbol);
-    if (!dst->AddElfSymbolMessageIR(&elf_symbol)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-// To be called right after parsing the .so file / version script.
-bool HeaderAbiLinker::AddElfSymbols(abi_util::IRDumper *ir_dumper) {
-  return ::AddElfSymbols<abi_util::ElfFunctionIR>(ir_dumper,
-                                                  function_decl_set_) &&
-      ::AddElfSymbols<abi_util::ElfObjectIR>(ir_dumper,
-                                             globvar_decl_set_);
-}
-
 static void DeDuplicateAbiElementsThread(
     const std::vector<std::string> &dump_files,
     const std::set<std::string> *exported_headers,
@@ -161,7 +152,8 @@ static void DeDuplicateAbiElementsThread(
     std::atomic<std::size_t> *cnt) {
   std::unique_ptr<abi_util::TextFormatToIRReader> local_reader =
       abi_util::TextFormatToIRReader::CreateTextFormatToIRReader(
-          text_format, exported_headers);
+          input_format, exported_headers);
+
   auto begin_it = dump_files.begin();
   std::size_t num_sources = dump_files.size();
   while (1) {
@@ -173,7 +165,7 @@ static void DeDuplicateAbiElementsThread(
     for (auto it = begin_it; it != begin_it + end; it++) {
       std::unique_ptr<abi_util::TextFormatToIRReader> reader =
           abi_util::TextFormatToIRReader::CreateTextFormatToIRReader(
-              text_format, exported_headers);
+              input_format, exported_headers);
       assert(reader != nullptr);
       if (!reader->ReadDump(*it)) {
         llvm::errs() << "ReadDump failed\n";
@@ -183,36 +175,20 @@ static void DeDuplicateAbiElementsThread(
       local_reader->MergeGraphs(*reader);
     }
   }
+
   std::lock_guard<std::mutex> lock(*greader_lock);
   greader->MergeGraphs(*local_reader);
 }
 
-bool HeaderAbiLinker::LinkAndDump() {
-  // If the user specifies that a version script should be used, use that.
-  if (!so_file_.empty()) {
-    exported_headers_ =
-        abi_util::CollectAllExportedHeaders(exported_header_dirs_);
-    if (!ParseSoFile()) {
-      llvm::errs() << "Couldn't parse so file\n";
-      return false;
-    }
-  } else if (!ParseVersionScriptFiles()) {
-    llvm::errs() << "Failed to parse stub files for exported symbols\n";
-    return false;
-  }
-  std::unique_ptr<abi_util::IRDumper> ir_dumper =
-      abi_util::IRDumper::CreateIRDumper(text_format, out_dump_name_);
-  assert(ir_dumper != nullptr);
-  AddElfSymbols(ir_dumper.get());
-  // Create a reader, on which we never actually call ReadDump(), since multiple
-  // dump files are associated with it.
+std::unique_ptr<abi_util::TextFormatToIRReader>
+HeaderAbiLinker::ReadInputDumpFiles() {
   std::unique_ptr<abi_util::TextFormatToIRReader> greader =
       abi_util::TextFormatToIRReader::CreateTextFormatToIRReader(
-          text_format, &exported_headers_);
+          input_format, &exported_headers_);
+
   std::size_t max_threads = std::thread::hardware_concurrency();
   std::size_t num_threads = kSourcesPerBatchThread < dump_files_.size() ?
-                    std::min(dump_files_.size() / kSourcesPerBatchThread,
-                             max_threads) : 0;
+      std::min(dump_files_.size() / kSourcesPerBatchThread, max_threads) : 0;
   std::vector<std::thread> threads;
   std::atomic<std::size_t> cnt(0);
   std::mutex greader_lock;
@@ -227,16 +203,42 @@ bool HeaderAbiLinker::LinkAndDump() {
     thread.join();
   }
 
+  return greader;
+}
+
+bool HeaderAbiLinker::LinkAndDump() {
+  // Extract exported functions and variables from a shared lib or a version
+  // script.
+  if (!ReadExportedSymbols()) {
+    return false;
+  }
+
+  // Construct the list of exported headers for source location filtering.
+  exported_headers_ =
+      abi_util::CollectAllExportedHeaders(exported_header_dirs_);
+
+  // Read all input ABI dumps.
+  auto greader = ReadInputDumpFiles();
+
+  // Link input ABI dumps.
+  std::unique_ptr<abi_util::IRDumper> ir_dumper =
+      abi_util::IRDumper::CreateIRDumper(output_format, out_dump_name_);
+  assert(ir_dumper != nullptr);
+
+  LinkExportedSymbols(ir_dumper.get());
+
   if (!LinkTypes(greader.get(), ir_dumper.get()) ||
       !LinkFunctions(greader.get(), ir_dumper.get()) ||
       !LinkGlobalVars(greader.get(), ir_dumper.get())) {
     llvm::errs() << "Failed to link elements\n";
     return false;
   }
+
   if (!ir_dumper->Dump()) {
-    llvm::errs() << "Serialization to ostream failed\n";
+    llvm::errs() << "Failed to serialize the linked output to ostream\n";
     return false;
   }
+
   return true;
 }
 
@@ -275,34 +277,21 @@ static std::regex CreateRegexMatchExprFromSet(
 
 template <typename T>
 bool HeaderAbiLinker::LinkDecl(
-    abi_util::IRDumper *dst, std::set<std::string> *link_set,
-    std::set<std::string> *regex_matched_link_set, const std::regex *vs_regex,
-    const  abi_util::AbiElementMap<T> &src, bool use_version_script_or_so) {
+    abi_util::IRDumper *dst, const abi_util::AbiElementMap<T> &src,
+    const std::function<bool(const std::string &)> &symbol_filter) {
   assert(dst != nullptr);
-  assert(link_set != nullptr);
   for (auto &&element : src) {
     // If we are not using a version script and exported headers are available,
     // filter out unexported abi.
     std::string source_file = element.second.GetSourceFile();
     // Builtin types will not have source file information.
     if (!exported_headers_.empty() && !source_file.empty() &&
-        exported_headers_.find(source_file) ==
-        exported_headers_.end()) {
+        exported_headers_.find(source_file) == exported_headers_.end()) {
       continue;
     }
-    const std::string &element_str = element.first;
-    // Check for the existence of the element in linked dump / symbol file.
-    if (use_version_script_or_so) {
-      std::set<std::string>::iterator it =
-          link_set->find(element_str);
-      if (it == link_set->end()) {
-        if (!QueryRegexMatches(regex_matched_link_set, vs_regex, element_str)) {
-          continue;
-        }
-      } else {
-        // We get a pre-filled link name set while using version script.
-        link_set->erase(*it); // Avoid multiple instances of the same symbol.
-      }
+    // Check for the existence of the element in version script / symbol file.
+    if (!symbol_filter(element.first)) {
+      continue;
     }
     if (!dst->AddLinkableMessageIR(&(element.second))) {
       llvm::errs() << "Failed to add element to linked dump\n";
@@ -315,60 +304,94 @@ bool HeaderAbiLinker::LinkDecl(
 bool HeaderAbiLinker::LinkTypes(const abi_util::TextFormatToIRReader *reader,
                                 abi_util::IRDumper *ir_dumper) {
   assert(reader != nullptr);
-  assert(ir_dumper != nullptr);
-  // Even if version scripts are available we take in types, since the symbols
-  // in the version script might reference a type exposed by the library.
-  return LinkDecl(ir_dumper, &types_set_, nullptr,
-                  nullptr, reader->GetRecordTypes(), false) &&
-      LinkDecl(ir_dumper, &types_set_, nullptr,
-               nullptr, reader->GetEnumTypes(), false) &&
-      LinkDecl(ir_dumper, &types_set_, nullptr, nullptr,
-               reader->GetFunctionTypes(), false) &&
-      LinkDecl(ir_dumper, &types_set_, nullptr,
-               nullptr, reader->GetBuiltinTypes(), false) &&
-      LinkDecl(ir_dumper, &types_set_, nullptr,
-               nullptr, reader->GetPointerTypes(), false) &&
-      LinkDecl(ir_dumper, &types_set_, nullptr,
-               nullptr, reader->GetRvalueReferenceTypes(), false) &&
-      LinkDecl(ir_dumper, &types_set_, nullptr,
-               nullptr, reader->GetLvalueReferenceTypes(), false) &&
-      LinkDecl(ir_dumper, &types_set_, nullptr,
-               nullptr, reader->GetArrayTypes(), false) &&
-      LinkDecl(ir_dumper, &types_set_, nullptr,
-               nullptr, reader->GetQualifiedTypes(), false);
+  auto no_filter = [](const std::string &symbol) { return true; };
+  return LinkDecl(ir_dumper, reader->GetRecordTypes(), no_filter) &&
+         LinkDecl(ir_dumper, reader->GetEnumTypes(), no_filter) &&
+         LinkDecl(ir_dumper, reader->GetFunctionTypes(), no_filter) &&
+         LinkDecl(ir_dumper, reader->GetBuiltinTypes(), no_filter) &&
+         LinkDecl(ir_dumper, reader->GetPointerTypes(), no_filter) &&
+         LinkDecl(ir_dumper, reader->GetRvalueReferenceTypes(), no_filter) &&
+         LinkDecl(ir_dumper, reader->GetLvalueReferenceTypes(), no_filter) &&
+         LinkDecl(ir_dumper, reader->GetArrayTypes(), no_filter) &&
+         LinkDecl(ir_dumper, reader->GetQualifiedTypes(), no_filter);
 }
 
 bool HeaderAbiLinker::LinkFunctions(
     const abi_util::TextFormatToIRReader *reader,
     abi_util::IRDumper *ir_dumper) {
-
   assert(reader != nullptr);
-  return LinkDecl(ir_dumper, &function_decl_set_,
-                  &functions_regex_matched_set, &functions_vs_regex_,
-                  reader->GetFunctions(),
-                  (!version_script_.empty() || !so_file_.empty()));
+  auto symbol_filter = [this](const std::string &linker_set_key) {
+    return function_decl_map_.find(linker_set_key) !=
+               function_decl_map_.end() ||
+           QueryRegexMatches(&functions_regex_matched_set, &functions_vs_regex_,
+                             linker_set_key);
+  };
+  return LinkDecl(ir_dumper, reader->GetFunctions(), symbol_filter);
 }
 
 bool HeaderAbiLinker::LinkGlobalVars(
     const abi_util::TextFormatToIRReader *reader,
     abi_util::IRDumper *ir_dumper) {
-
   assert(reader != nullptr);
-  return LinkDecl(ir_dumper, &globvar_decl_set_,
-                  &globvars_regex_matched_set, &globvars_vs_regex_,
-                  reader->GetGlobalVariables(),
-                  (!version_script.empty() || !so_file_.empty()));
+  auto symbol_filter = [this](const std::string &linker_set_key) {
+    return globvar_decl_map_.find(linker_set_key) !=
+               globvar_decl_map_.end() ||
+           QueryRegexMatches(&globvars_regex_matched_set, &globvars_vs_regex_,
+                             linker_set_key);
+  };
+  return LinkDecl(ir_dumper, reader->GetGlobalVariables(), symbol_filter);
 }
 
-bool HeaderAbiLinker::ParseVersionScriptFiles() {
-  abi_util::VersionScriptParser version_script_parser(version_script_, arch_,
-                                                      api_);
+template <typename T>
+static bool LinkExportedSymbols(abi_util::IRDumper *dst,
+                                const std::map<std::string, T> &symbols) {
+  for (auto &&symbol : symbols) {
+    if (!dst->AddElfSymbolMessageIR(&(symbol.second))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// To be called right after parsing the .so file / version script.
+bool HeaderAbiLinker::LinkExportedSymbols(abi_util::IRDumper *ir_dumper) {
+  return ::LinkExportedSymbols(ir_dumper, function_decl_map_) &&
+         ::LinkExportedSymbols(ir_dumper, globvar_decl_map_);
+}
+
+bool HeaderAbiLinker::ReadExportedSymbols() {
+  if (!so_file_.empty()) {
+    if (!ReadExportedSymbolsFromSharedObjectFile()) {
+      llvm::errs() << "Failed to parse the shared library (.so file): "
+                   << so_file_ << "\n";
+      return false;
+    }
+    return true;
+  }
+
+  if (!version_script_.empty()) {
+    if (!ReadExportedSymbolsFromVersionScript()) {
+      llvm::errs() << "Failed to parse the version script: " << version_script_
+                   << "\n";
+      return false;
+    }
+    return true;
+  }
+
+  llvm::errs() << "Either shared lib or version script must be specified.\n";
+  return false;
+}
+
+bool HeaderAbiLinker::ReadExportedSymbolsFromVersionScript() {
+  abi_util::VersionScriptParser version_script_parser(
+      version_script_, arch_, api_);
   if (!version_script_parser.Parse()) {
-    llvm::errs() << "Failed to parse version script\n";
     return false;
   }
-  function_decl_set_ = version_script_parser.GetFunctions();
-  globvar_decl_set_ = version_script_parser.GetGlobVars();
+
+  function_decl_map_ = version_script_parser.GetFunctions();
+  globvar_decl_map_ = version_script_parser.GetGlobVars();
+
   std::set<std::string> function_regexs =
       version_script_parser.GetFunctionRegexs();
   std::set<std::string> globvar_regexs =
@@ -378,33 +401,35 @@ bool HeaderAbiLinker::ParseVersionScriptFiles() {
   return true;
 }
 
-bool HeaderAbiLinker::ParseSoFile() {
- auto Binary = llvm::object::createBinary(so_file_);
-
-  if (!Binary) {
-    llvm::errs() << "Couldn't really create object File \n";
-    return false;
-  }
-  llvm::object::ObjectFile *objfile =
-      llvm::dyn_cast<llvm::object::ObjectFile>(&(*Binary.get().getBinary()));
-  if (!objfile) {
-    llvm::errs() << "Not an object file\n";
-    return false;
-  }
-
+bool HeaderAbiLinker::ReadExportedSymbolsFromSharedObjectFile() {
   std::unique_ptr<abi_util::SoFileParser> so_parser =
-      abi_util::SoFileParser::Create(objfile);
-  if (so_parser == nullptr) {
-    llvm::errs() << "Couldn't create soFile Parser\n";
+      abi_util::SoFileParser::Create(so_file_);
+  if (!so_parser) {
     return false;
   }
-  so_parser->GetSymbols();
-  function_decl_set_ = so_parser->GetFunctions();
-  globvar_decl_set_ = so_parser->GetGlobVars();
+
+  function_decl_map_ = so_parser->GetFunctions();
+  globvar_decl_map_ = so_parser->GetGlobVars();
   return true;
 }
 
+// Hide irrelevant command line options defined in LLVM libraries.
+static void HideIrrelevantCommandLineOptions() {
+  llvm::StringMap<llvm::cl::Option *> &map = llvm::cl::getRegisteredOptions();
+  for (llvm::StringMapEntry<llvm::cl::Option *> &p : map) {
+    if (p.second->Category == &header_linker_category) {
+      continue;
+    }
+    if (p.first().startswith("help")) {
+      continue;
+    }
+    p.second->setHiddenFlag(llvm::cl::Hidden);
+  }
+}
+
 int main(int argc, const char **argv) {
+  HideIrrelevantCommandLineOptions();
+
   llvm::cl::ParseCommandLineOptions(argc, argv, "header-linker");
   if (so_file.empty() && version_script.empty()) {
     llvm::errs() << "One of -so or -v needs to be specified\n";

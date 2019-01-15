@@ -2,13 +2,10 @@
 
 from __future__ import print_function
 
-import os
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 import unittest
 
 from vndk_definition_tool import ELFResolver
+
 
 class ELFResolverTest(unittest.TestCase):
     def setUp(self):
@@ -24,49 +21,72 @@ class ELFResolverTest(unittest.TestCase):
 
         self.resolver = ELFResolver(lib_set, ['/system/lib', '/vendor/lib'])
 
+
     def test_get_candidates(self):
         r = self.resolver
 
         self.assertEqual(
-                ['/system/lib/libx.so', '/vendor/lib/libx.so'],
-                list(r.get_candidates('libx.so')))
+            ['/system/lib/libx.so', '/vendor/lib/libx.so'],
+            list(r.get_candidates('/system/lib/libreq.so', 'libx.so')))
 
         self.assertEqual(
-                ['/C/libx.so', '/system/lib/libx.so', '/vendor/lib/libx.so'],
-                list(r.get_candidates('libx.so', ['/C'])))
+            ['/C/libx.so', '/system/lib/libx.so', '/vendor/lib/libx.so'],
+            list(r.get_candidates('/system/lib/libreq.so', 'libx.so', ['/C'])))
 
         self.assertEqual(
-                ['/C/libx.so', '/D/libx.so', '/system/lib/libx.so',
-                 '/vendor/lib/libx.so'],
-                list(r.get_candidates('libx.so', ['/C', '/D'])))
+            ['/C/libx.so', '/D/libx.so', '/system/lib/libx.so',
+             '/vendor/lib/libx.so'],
+            list(r.get_candidates('/system/lib/libreq.so', 'libx.so',
+                                  ['/C', '/D'])))
 
         self.assertEqual(
-                ['/E/libx.so', '/system/lib/libx.so', '/vendor/lib/libx.so'],
-                list(r.get_candidates('libx.so', None, ['/E'])))
+            ['/E/libx.so', '/system/lib/libx.so', '/vendor/lib/libx.so'],
+            list(r.get_candidates('/system/lib/libreq.so', 'libx.so', None,
+                                  ['/E'])))
 
         self.assertEqual(
-                ['/E/libx.so', '/F/libx.so', '/system/lib/libx.so',
-                 '/vendor/lib/libx.so'],
-                list(r.get_candidates('libx.so', None, ['/E', '/F'])))
+            ['/E/libx.so', '/F/libx.so', '/system/lib/libx.so',
+             '/vendor/lib/libx.so'],
+            list(r.get_candidates('/system/lib/libreq.so', 'libx.so', None,
+                                  ['/E', '/F'])))
 
         self.assertEqual(
-                ['/C/libx.so', '/D/libx.so', '/E/libx.so', '/F/libx.so',
-                 '/system/lib/libx.so', '/vendor/lib/libx.so'],
-                list(r.get_candidates('libx.so', ['/C', '/D'], ['/E', '/F'])))
+            ['/C/libx.so', '/D/libx.so', '/E/libx.so', '/F/libx.so',
+             '/system/lib/libx.so', '/vendor/lib/libx.so'],
+            list(r.get_candidates('/system/lib/libreq.so', 'libx.so',
+                                  ['/C', '/D'], ['/E', '/F'])))
+
+        # Test app-specific search paths.
+        self.assertEqual(
+            ['/system/app/example/lib/armeabi-v7a/libx.so',
+             '/C/libx.so', '/D/libx.so', '/E/libx.so', '/F/libx.so',
+             '/system/lib/libx.so', '/vendor/lib/libx.so'],
+            list(r.get_candidates(
+                '/system/app/example/lib/armeabi-v7a/libreq.so',
+                'libx.so',
+                ['/C', '/D'], ['/E', '/F'])))
+
 
     def test_resolve(self):
         r = self.resolver
-        self.assertEqual('a', r.resolve('liba.so'))
-        self.assertEqual('c', r.resolve('libc.so'))
+        self.assertEqual('a', r.resolve('/system/lib/libreq.so', 'liba.so'))
+        self.assertEqual('c', r.resolve('/system/lib/libreq.so', 'libc.so'))
 
-        self.assertEqual(None, r.resolve('libe.so'))
-        self.assertEqual('e', r.resolve('libe.so', dt_rpath=['/system/lib/hw']))
+        self.assertEqual(None, r.resolve('/system/lib/libreq.so', 'libe.so'))
         self.assertEqual(
-                'e', r.resolve('libe.so', dt_runpath=['/system/lib/hw']))
+            'e',
+            r.resolve('/system/lib/libreq.so', 'libe.so',
+                      dt_rpath=['/system/lib/hw']))
+        self.assertEqual(
+            'e',
+            r.resolve('/system/lib/libreq.so', 'libe.so',
+                      dt_runpath=['/system/lib/hw']))
 
-        self.assertEqual('a2', r.resolve('liba.so', dt_rpath=['/vendor/lib']))
-        self.assertEqual('a2', r.resolve('liba.so', dt_runpath=['/vendor/lib']))
-
-
-if __name__ == '__main__':
-    unittest.main()
+        self.assertEqual(
+            'a2',
+            r.resolve('/system/lib/libreq.so', 'liba.so',
+                      dt_rpath=['/vendor/lib']))
+        self.assertEqual(
+            'a2',
+            r.resolve('/system/lib/libreq.so', 'liba.so',
+                      dt_runpath=['/vendor/lib']))

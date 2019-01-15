@@ -6,6 +6,9 @@ LOCAL_MODULE_TAGS := samples
 # Only compile source java files in this apk.
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
+LOCAL_STATIC_ANDROID_LIBRARIES += \
+        android-support-v4
+
 LOCAL_PACKAGE_NAME := WiFiDirectDemo
 
 LOCAL_SDK_VERSION := current

@@ -19,7 +19,6 @@ package com.example.android.wifidirect;
 import android.app.Fragment;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.net.wifi.WpsInfo;
@@ -29,7 +28,7 @@ import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -228,8 +227,8 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 Log.d(WiFiDirectActivity.TAG, "Server: Socket opened");
                 Socket client = serverSocket.accept();
                 Log.d(WiFiDirectActivity.TAG, "Server: connection done");
-                final File f = new File(Environment.getExternalStorageDirectory() + "/"
-                        + context.getPackageName() + "/wifip2pshared-" + System.currentTimeMillis()
+                final File f = new File(context.getExternalFilesDir("received"),
+                        "wifip2pshared-" + System.currentTimeMillis()
                         + ".jpg");
 
                 File dirs = new File(f.getParent());
@@ -256,9 +255,16 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         protected void onPostExecute(String result) {
             if (result != null) {
                 statusText.setText("File copied - " + result);
+
+                File recvFile = new File(result);
+                Uri fileUri = FileProvider.getUriForFile(
+                                context,
+                                "com.example.android.wifidirect.fileprovider",
+                                recvFile);
                 Intent intent = new Intent();
                 intent.setAction(android.content.Intent.ACTION_VIEW);
-                intent.setDataAndType(Uri.parse("file://" + result), "image/*");
+                intent.setDataAndType(fileUri, "image/*");
+                intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 context.startActivity(intent);
             }
 

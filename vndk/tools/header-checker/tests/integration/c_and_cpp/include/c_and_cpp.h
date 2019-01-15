@@ -12,7 +12,7 @@ struct UnusedStruct {
 
 class Foo {
  public:
-  Foo(int *a, int *b) : a_(a), b_(b) { }
+  Foo(int *a, int *b) : a_(a), b_(b) {}
  private:
   int *a_;
   int *b_;

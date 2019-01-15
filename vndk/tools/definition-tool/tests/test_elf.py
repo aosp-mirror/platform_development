@@ -2,15 +2,13 @@
 
 from __future__ import print_function
 
-import os
-import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 import tempfile
 import unittest
 
-from compat import StringIO
 from vndk_definition_tool import Elf_Sym, ELF
+
+from .compat import StringIO
+
 
 class ElfSymTest(unittest.TestCase):
     def setUp(self):
@@ -19,20 +17,24 @@ class ElfSymTest(unittest.TestCase):
         self.sym_weak = Elf_Sym(0, 0, 4, 33, 0, 1)
         self.sym_undef = Elf_Sym(0, 0, 4, 16, 0, 0)
 
+
     def test_is_local(self):
         self.assertTrue(self.sym_local.is_local)
         self.assertFalse(self.sym_global.is_local)
         self.assertFalse(self.sym_weak.is_local)
+
 
     def test_is_global(self):
         self.assertFalse(self.sym_local.is_global)
         self.assertTrue(self.sym_global.is_global)
         self.assertFalse(self.sym_weak.is_global)
 
+
     def test_is_weak(self):
         self.assertFalse(self.sym_local.is_weak)
         self.assertFalse(self.sym_global.is_weak)
         self.assertTrue(self.sym_weak.is_weak)
+
 
     def test_is_undef(self):
         self.assertFalse(self.sym_global.is_undef)
@@ -44,11 +46,13 @@ class ELFTest(unittest.TestCase):
         self.assertEqual(ELF.ELFCLASS32, ELF.get_ei_class_from_name('32'))
         self.assertEqual(ELF.ELFCLASS64, ELF.get_ei_class_from_name('64'))
 
+
     def test_get_ei_data_from_name(self):
         self.assertEqual(ELF.ELFDATA2LSB,
                          ELF.get_ei_data_from_name('Little-Endian'))
         self.assertEqual(ELF.ELFDATA2MSB,
                          ELF.get_ei_data_from_name('Big-Endian'))
+
 
     def test_get_e_machine_from_name(self):
         self.assertEqual(0, ELF.get_e_machine_from_name('EM_NONE'))
@@ -58,6 +62,7 @@ class ELFTest(unittest.TestCase):
         self.assertEqual(62, ELF.get_e_machine_from_name('EM_X86_64'))
         self.assertEqual(183, ELF.get_e_machine_from_name('EM_AARCH64'))
 
+
     def test_repr(self):
         elf = ELF()
         self.assertEqual(elf, eval(repr(elf)))
@@ -66,6 +71,7 @@ class ELFTest(unittest.TestCase):
                   e_machine=183, dt_rpath=['a'], dt_runpath=['b'],
                   dt_needed=['c', 'd'], exported_symbols={'e', 'f', 'g'})
         self.assertEqual(elf, eval(repr(elf)))
+
 
     def test_class_name(self):
         self.assertEqual('None', ELF().elf_class_name)
@@ -80,12 +86,14 @@ class ELFTest(unittest.TestCase):
         self.assertFalse(elf.is_32bit)
         self.assertTrue(elf.is_64bit)
 
+
     def test_endianness(self):
         self.assertEqual('None', ELF().elf_data_name)
         self.assertEqual('Little-Endian',
                          ELF(None, ELF.ELFDATA2LSB).elf_data_name)
         self.assertEqual('Big-Endian',
                          ELF(None, ELF.ELFDATA2MSB).elf_data_name)
+
 
     def test_machine_name(self):
         self.assertEqual('EM_NONE', ELF(e_machine=0).elf_machine_name)
@@ -95,6 +103,7 @@ class ELFTest(unittest.TestCase):
         self.assertEqual('EM_X86_64', ELF(e_machine=62).elf_machine_name)
         self.assertEqual('EM_AARCH64', ELF(e_machine=183).elf_machine_name)
 
+
     def test_dt_rpath_runpath(self):
         elf = ELF()
         self.assertEqual([], elf.dt_rpath)
@@ -103,6 +112,7 @@ class ELFTest(unittest.TestCase):
         elf = ELF(None, None, 0, ['a'], ['b'])
         self.assertEqual(['a'], elf.dt_rpath)
         self.assertEqual(['b'], elf.dt_runpath)
+
 
     def test_dump(self):
         elf = ELF(ELF.ELFCLASS32, ELF.ELFDATA2LSB, 183, ['a'], ['b'],
@@ -129,6 +139,7 @@ class ELFTest(unittest.TestCase):
                          'IMP_SYMBOL\td\n'
                          'IMP_SYMBOL\te\n',
                          actual_output)
+
 
     def test_parse_dump_file(self):
         data = ('EI_CLASS\t64\n'
@@ -190,6 +201,7 @@ class ELFJniLibTest(unittest.TestCase):
         elf = ELF(dt_needed=['libc.so'])
         self.assertFalse(elf.is_jni_lib())
 
+
     def test_jni_symbols(self):
         elf = ELF(imported_symbols={'JNI_CreateJavaVM'})
         self.assertTrue(elf.is_jni_lib())
@@ -208,7 +220,3 @@ class ELFJniLibTest(unittest.TestCase):
 
         elf = ELF(exported_symbols={'printf'})
         self.assertFalse(elf.is_jni_lib())
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -86,7 +86,7 @@ message RecordFieldDecl {
 }
 
 message EnumFieldDecl {
-  optional int64 enum_field_value = 1; // assumption: fits int64
+  optional int64 enum_field_value = 1;  // assumption: fits int64
   optional string name = 3;
 }
 
@@ -160,12 +160,19 @@ message GlobalVarDecl {
   optional AccessSpecifier access = 5 [default = public_access];
 }
 
+enum ElfSymbolBinding {
+  Global = 1;
+  Weak = 2;
+}
+
 message ElfFunction {
   optional string name = 1;
+  optional ElfSymbolBinding binding = 2;
 }
 
 message ElfObject {
   optional string name = 1;
+  optional ElfSymbolBinding binding = 2;
 }
 
 message TranslationUnit {

@@ -54,6 +54,10 @@ bin/dmtracedump                         strip platform-tools/dmtracedump
 bin/etc1tool                            strip platform-tools/etc1tool
 bin/hprof-conv                          strip platform-tools/hprof-conv
 
+# fastdeploy
+system/framework/deployagent.jar        platform-tools/deployagent.jar
+system/bin/deployagent                  platform-tools/deployagent
+framework/deploypatchgenerator.jar      platform-tools/deploypatchgenerator.jar
 
 # systrace
 external/chromium-trace/catapult/                                         platform-tools/systrace/catapult/
@@ -63,7 +67,7 @@ external/chromium-trace/UPSTREAM_REVISION                                 platfo
 
 # Compatibility: moved to platform but also leave them in platform-tools for a little
 # longer until all active Gradle plugins have support for looking in both places
-development/sdk/generated-api-versions.xml    platform-tools/api/api-versions.xml
+${OUT_DIR}/target/common/obj/PACKAGING/api-stubs-docs_generated-api-versions.xml    platform-tools/api/api-versions.xml
 ${OUT_DIR}/target/common/obj/PACKAGING/api-stubs-docs_annotations.zip   platform-tools/api/annotations.zip
 
 ##############################################################################
@@ -91,7 +95,8 @@ frameworks/rs/script_api/include              build-tools/${PLATFORM_NAME}/rende
 external/clang/lib/Headers                    build-tools/${PLATFORM_NAME}/renderscript/clang-include
 external/clang/LICENSE.TXT                    build-tools/${PLATFORM_NAME}/renderscript/clang-include/LICENSE.TXT
 
-prebuilts/sdk/renderscript/lib/javalib.jar            build-tools/${PLATFORM_NAME}/renderscript/lib/renderscript-v8.jar
+prebuilts/sdk/renderscript/lib/javalib.jar            build-tools/${PLATFORM_NAME}/renderscript/lib/androidx-rs.jar
+prebuilts/sdk/renderscript/lib/javalib_legacy.jar     build-tools/${PLATFORM_NAME}/renderscript/lib/renderscript-v8.jar
 
 prebuilts/sdk/renderscript/lib/arm/libc.so            build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/armeabi-v7a/libc.so
 prebuilts/sdk/renderscript/lib/arm/libm.so            build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/armeabi-v7a/libm.so
@@ -201,7 +206,7 @@ development/tools/templates/ic_launcher_hdpi.png            platforms/${PLATFORM
 development/tools/templates/ic_launcher_xhdpi.png           platforms/${PLATFORM_NAME}/templates/ic_launcher_xhdpi.png
 
 # API database for tools such as lint
-development/sdk/generated-api-versions.xml  platforms/${PLATFORM_NAME}/data/api-versions.xml
+${OUT_DIR}/target/common/obj/PACKAGING/api-stubs-docs_generated-api-versions.xml  platforms/${PLATFORM_NAME}/data/api-versions.xml
 
 # API annotations database for lint
 prebuilts/sdk/sdk-annotations/annotations.zip platforms/${PLATFORM_NAME}/data/annotations.zip
@@ -237,6 +242,7 @@ development/sdk/sdk_files_NOTICE.txt      platforms/${PLATFORM_NAME}/skins/NOTIC
 system-qemu.img                                 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/system.img
 vendor-qemu.img                                 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/vendor.img
 ramdisk.img                                system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/ramdisk.img
+device/generic/goldfish/data/etc/userdata.img    system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/userdata.img
 data/misc                                        system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/data/misc
 system/build.prop                          system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/build.prop
 
@@ -397,7 +403,6 @@ development/samples/ApiDemos                   samples/${PLATFORM_NAME}/legacy/A
 development/samples/AppNavigation              samples/${PLATFORM_NAME}/legacy/AppNavigation
 development/samples/BackupRestore              samples/${PLATFORM_NAME}/legacy/BackupRestore
 development/samples/BasicGLSurfaceView         samples/${PLATFORM_NAME}/legacy/BasicGLSurfaceView
-development/samples/BluetoothHDP               samples/${PLATFORM_NAME}/legacy/BluetoothHDP
 development/samples/ContactManager             samples/${PLATFORM_NAME}/legacy/ContactManager
 development/samples/CrossCompatibility         samples/${PLATFORM_NAME}/legacy/CrossCompatibility
 development/samples/CubeLiveWallpaper          samples/${PLATFORM_NAME}/legacy/CubeLiveWallpaper
@@ -410,7 +415,6 @@ development/samples/LceDemo                    samples/${PLATFORM_NAME}/legacy/L
 development/samples/LunarLander                samples/${PLATFORM_NAME}/legacy/LunarLander
 development/samples/MultiResolution            samples/${PLATFORM_NAME}/legacy/MultiResolution
 development/samples/NotePad                    samples/${PLATFORM_NAME}/legacy/NotePad
-development/samples/RandomMusicPlayer          samples/${PLATFORM_NAME}/legacy/RandomMusicPlayer
 development/samples/SpellChecker/SampleSpellCheckerService samples/${PLATFORM_NAME}/legacy/SpellChecker/SampleSpellCheckerService
 development/samples/SpellChecker/HelloSpellChecker         samples/${PLATFORM_NAME}/legacy/SpellChecker/HelloSpellChecker
 development/samples/SampleSyncAdapter          samples/${PLATFORM_NAME}/legacy/SampleSyncAdapter
