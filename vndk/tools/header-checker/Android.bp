@@ -18,17 +18,20 @@ cc_defaults {
     name: "header-checker-defaults",
 
     defaults: [
-        "clang-defaults",
+        "llvm-build-host-tools-defaults",
     ],
 
     cflags: [
         "-Wall",
         "-Werror",
+        "-Wno-unused-parameter",
         "-DGOOGLE_PROTOBUF_NO_RTTI",
         "-UNDEBUG",
     ],
 
     cppflags: [
+        "-fno-exceptions",
+        "-fno-rtti",
         "-std=c++14",
     ],
 
@@ -37,6 +40,9 @@ cc_defaults {
             enabled: false,
         },
     },
+
+    compile_multilib: "64",
+    stl: "none",
 }
 
 cc_binary_host {
@@ -49,64 +55,44 @@ cc_binary_host {
     srcs: [
         "header-abi-dumper/src/abi_wrappers.cpp",
         "header-abi-dumper/src/ast_processing.cpp",
+        "header-abi-dumper/src/diagnostic_consumer.cpp",
+        "header-abi-dumper/src/fake_decl_source.cpp",
         "header-abi-dumper/src/fixed_argv.cpp",
         "header-abi-dumper/src/frontend_action.cpp",
         "header-abi-dumper/src/frontend_action_factory.cpp",
         "header-abi-dumper/src/header_checker.cpp",
-        "header-abi-dumper/src/workaround_fortify.cpp",
-        "header-abi-dumper/src/workaround_openmp.cpp",
     ],
 
     static_libs: [
         "libheader-abi-util",
         "libheader-checker-proto",
-        "libclangToolingCore",
-        "libclangTooling",
-        "libclangFrontendTool",
-        "libclangFrontend",
-        "libclangDriver",
-        "libclangIndex",
-        "libclangSerialization",
-        "libclangCodeGen",
-        "libclangParse",
-        "libclangSema",
-        "libclangAnalysis",
-        "libclangEdit",
-        "libclangAST",
-        "libclangLex",
-        "libclangBasic",
-        "libLLVMBitReader",
-        "libLLVMBitWriter",
-        "libLLVMMC",
-        "libLLVMMCParser",
-        "libLLVMCore",
-        "libLLVMOption",
-        "libLLVMProfileData",
-        "libLLVMObject",
-        "libLLVMSupport",
+        "libjsoncpp",
     ],
 
     shared_libs: [
         "libprotobuf-cpp-full",
+        "libLLVM_host",
+        "libclang_cxx_host",
+        "libc++_host",
     ],
 }
 
 cc_defaults {
     name: "header-abi-linker-defaults",
 
+    defaults: ["header-checker-defaults"],
+
     static_libs: [
         "libheader-abi-util",
         "libheader-checker-proto",
-        "libLLVMObject",
-        "libLLVMBitReader",
-        "libLLVMMC",
-        "libLLVMMCParser",
-        "libLLVMCore",
-        "libLLVMSupport",
+        "libjsoncpp",
     ],
 
     shared_libs: [
         "libprotobuf-cpp-full",
+        "libLLVM_host",
+        "libclang_cxx_host",
+        "libc++_host",
     ],
 }
 
@@ -162,6 +148,7 @@ cc_library_host_static {
         "header-abi-util/src/abi_diff_helpers.cpp",
         "header-abi-util/src/collect_exported_headers.cpp",
         "header-abi-util/src/ir_representation.cpp",
+        "header-abi-util/src/ir_representation_json.cpp",
         "header-abi-util/src/ir_representation_protobuf.cpp",
         "header-abi-util/src/so_file_parser.cpp",
         "header-abi-util/src/version_script_parser.cpp",
@@ -169,9 +156,12 @@ cc_library_host_static {
 
     static_libs: [
         "libheader-checker-proto",
+        "libjsoncpp",
     ],
 
     shared_libs: [
+        "libLLVM_host",
+        "libc++_host",
         "libprotobuf-cpp-full",
     ],
 

@@ -12,30 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <ir_representation_protobuf.h>
+#include "ir_representation_protobuf.h"
 
 #include <llvm/Support/raw_ostream.h>
 
 #include <fstream>
 #include <iostream>
-#include <string>
 #include <memory>
+#include <string>
 
 namespace abi_util {
 
-static bool IsPresentInExportedHeaders(
-    const LinkableMessageIR &linkable_message,
-    const std::set<std::string> *exported_headers) {
-  if (exported_headers == nullptr || exported_headers->empty()) {
-    return true;
-  }
-  return exported_headers->find(linkable_message.GetSourceFile())
-      != exported_headers->end();
-}
-
 void ProtobufTextFormatToIRReader::ReadTypeInfo(
-    const abi_dump::BasicNamedAndTypedDecl &type_info,
-    TypeIR *typep) {
+    const abi_dump::BasicNamedAndTypedDecl &type_info, TypeIR *typep) {
   typep->SetLinkerSetKey(type_info.linker_set_key());
   typep->SetName(type_info.name());
   typep->SetSourceFile(type_info.source_file());
@@ -82,7 +71,7 @@ TemplateInfoIR ProtobufTextFormatToIRReader::TemplateInfoProtobufToIR(
   return template_info_ir;
 }
 
-template< typename T>
+template <typename T>
 static void SetupCFunctionLikeIR(const T &cfunction_like_protobuf,
                                  CFunctionLikeIR *cfunction_like_ir) {
   cfunction_like_ir->SetReturnType(cfunction_like_protobuf.return_type());
@@ -217,7 +206,7 @@ void ProtobufTextFormatToIRReader::ReadGlobalVariables(
         global_variable_protobuf.referenced_type());
     global_variable_ir.SetLinkerSetKey(
         global_variable_protobuf.linker_set_key());
-    if (!IsPresentInExportedHeaders(global_variable_ir, exported_headers_)) {
+    if (!IsLinkableMessageInExportedHeaders(&global_variable_ir)) {
       continue;
     }
     global_variables_.insert(
@@ -230,7 +219,7 @@ void ProtobufTextFormatToIRReader::ReadPointerTypes(
   for (auto &&pointer_type_protobuf : tu.pointer_types()) {
     PointerTypeIR pointer_type_ir;
     ReadTypeInfo(pointer_type_protobuf.type_info(), &pointer_type_ir);
-    if (!IsPresentInExportedHeaders(pointer_type_ir, exported_headers_)) {
+    if (!IsLinkableMessageInExportedHeaders(&pointer_type_ir)) {
       continue;
     }
     AddToMapAndTypeGraph(std::move(pointer_type_ir), &pointer_types_,
@@ -259,7 +248,7 @@ void ProtobufTextFormatToIRReader::ReadQualifiedTypes(
     qualified_type_ir.SetVolatility(qualified_type_protobuf.is_volatile());
     qualified_type_ir.SetRestrictedness(
         qualified_type_protobuf.is_restricted());
-    if (!IsPresentInExportedHeaders(qualified_type_ir, exported_headers_)) {
+    if (!IsLinkableMessageInExportedHeaders(&qualified_type_ir)) {
       continue;
     }
     AddToMapAndTypeGraph(std::move(qualified_type_ir), &qualified_types_,
@@ -272,7 +261,7 @@ void ProtobufTextFormatToIRReader::ReadArrayTypes(
   for (auto &&array_type_protobuf : tu.array_types()) {
     ArrayTypeIR array_type_ir;
     ReadTypeInfo(array_type_protobuf.type_info(), &array_type_ir);
-    if (!IsPresentInExportedHeaders(array_type_ir, exported_headers_)) {
+    if (!IsLinkableMessageInExportedHeaders(&array_type_ir)) {
       continue;
     }
     AddToMapAndTypeGraph(std::move(array_type_ir), &array_types_,
@@ -286,8 +275,7 @@ void ProtobufTextFormatToIRReader::ReadLvalueReferenceTypes(
     LvalueReferenceTypeIR lvalue_reference_type_ir;
     ReadTypeInfo(lvalue_reference_type_protobuf.type_info(),
                  &lvalue_reference_type_ir);
-    if (!IsPresentInExportedHeaders(lvalue_reference_type_ir,
-                                    exported_headers_)) {
+    if (!IsLinkableMessageInExportedHeaders(&lvalue_reference_type_ir)) {
       continue;
     }
     AddToMapAndTypeGraph(std::move(lvalue_reference_type_ir),
@@ -301,8 +289,7 @@ void ProtobufTextFormatToIRReader::ReadRvalueReferenceTypes(
     RvalueReferenceTypeIR rvalue_reference_type_ir;
     ReadTypeInfo(rvalue_reference_type_protobuf.type_info(),
                  &rvalue_reference_type_ir);
-    if (!IsPresentInExportedHeaders(rvalue_reference_type_ir,
-                                    exported_headers_)) {
+    if (!IsLinkableMessageInExportedHeaders(&rvalue_reference_type_ir)) {
       continue;
     }
     AddToMapAndTypeGraph(std::move(rvalue_reference_type_ir),
@@ -314,7 +301,7 @@ void ProtobufTextFormatToIRReader::ReadFunctions(
     const abi_dump::TranslationUnit &tu) {
   for (auto &&function_protobuf : tu.functions()) {
     FunctionIR function_ir = FunctionProtobufToIR(function_protobuf);
-    if (!IsPresentInExportedHeaders(function_ir, exported_headers_)) {
+    if (!IsLinkableMessageInExportedHeaders(&function_ir)) {
       continue;
     }
     functions_.insert({function_ir.GetLinkerSetKey(), std::move(function_ir)});
@@ -325,7 +312,7 @@ void ProtobufTextFormatToIRReader::ReadRecordTypes(
     const abi_dump::TranslationUnit &tu) {
   for (auto &&record_type_protobuf : tu.record_types()) {
     RecordTypeIR record_type_ir = RecordTypeProtobufToIR(record_type_protobuf);
-    if (!IsPresentInExportedHeaders(record_type_ir, exported_headers_)) {
+    if (!IsLinkableMessageInExportedHeaders(&record_type_ir)) {
       continue;
     }
     auto it = AddToMapAndTypeGraph(std::move(record_type_ir), &record_types_,
@@ -340,7 +327,7 @@ void ProtobufTextFormatToIRReader::ReadFunctionTypes(
   for (auto &&function_type_protobuf : tu.function_types()) {
     FunctionTypeIR function_type_ir =
         FunctionTypeProtobufToIR(function_type_protobuf);
-    if (!IsPresentInExportedHeaders(function_type_ir, exported_headers_)) {
+    if (!IsLinkableMessageInExportedHeaders(&function_type_ir)) {
       continue;
     }
     auto it = AddToMapAndTypeGraph(std::move(function_type_ir),
@@ -354,7 +341,7 @@ void ProtobufTextFormatToIRReader::ReadEnumTypes(
     const abi_dump::TranslationUnit &tu) {
   for (auto &&enum_type_protobuf : tu.enum_types()) {
     EnumTypeIR enum_type_ir = EnumTypeProtobufToIR(enum_type_protobuf);
-    if (!IsPresentInExportedHeaders(enum_type_ir, exported_headers_)) {
+    if (!IsLinkableMessageInExportedHeaders(&enum_type_ir)) {
       continue;
     }
     auto it = AddToMapAndTypeGraph(std::move(enum_type_ir), &enum_types_,
@@ -367,7 +354,9 @@ void ProtobufTextFormatToIRReader::ReadEnumTypes(
 void ProtobufTextFormatToIRReader::ReadElfFunctions(
     const abi_dump::TranslationUnit &tu) {
   for (auto &&elf_function : tu.elf_functions()) {
-    ElfFunctionIR elf_function_ir(elf_function.name());
+    ElfFunctionIR elf_function_ir(
+        elf_function.name(),
+        ElfSymbolBindingProtobufToIR(elf_function.binding()));
     elf_functions_.insert(
         {elf_function_ir.GetName(), std::move(elf_function_ir)});
   }
@@ -376,7 +365,8 @@ void ProtobufTextFormatToIRReader::ReadElfFunctions(
 void ProtobufTextFormatToIRReader::ReadElfObjects(
     const abi_dump::TranslationUnit &tu) {
   for (auto &&elf_object : tu.elf_objects()) {
-    ElfObjectIR elf_object_ir(elf_object.name());
+    ElfObjectIR elf_object_ir(
+        elf_object.name(), ElfSymbolBindingProtobufToIR(elf_object.binding()));
     elf_objects_.insert(
         {elf_object_ir.GetName(), std::move(elf_object_ir)});
   }
@@ -396,8 +386,7 @@ bool IRToProtobufConverter::AddTemplateInformation(
 }
 
 bool IRToProtobufConverter::AddTypeInfo(
-    abi_dump::BasicNamedAndTypedDecl *type_info,
-    const TypeIR *typep) {
+    abi_dump::BasicNamedAndTypedDecl *type_info, const TypeIR *typep) {
   if (!type_info || !typep) {
     llvm::errs() << "Typeinfo not valid\n";
     return false;
@@ -531,8 +520,8 @@ abi_dump::RecordType IRToProtobufConverter::ConvertRecordTypeIR(
       !AddVTableLayout(&added_record_type, recordp) ||
       !AddTagTypeInfo(added_record_type.mutable_tag_info(), recordp) ||
       !(recordp->GetTemplateElements().size() ?
-       AddTemplateInformation(added_record_type.mutable_template_info(),
-                              recordp) : true)) {
+        AddTemplateInformation(added_record_type.mutable_template_info(),
+                               recordp) : true)) {
     llvm::errs() << "Template information could not be added\n";
     ::exit(1);
   }
@@ -621,7 +610,7 @@ static bool SetIRToProtobufEnumField(
 }
 
 bool IRToProtobufConverter::AddEnumFields(abi_dump::EnumType *enum_protobuf,
-                                     const EnumTypeIR *enum_ir) {
+                                          const EnumTypeIR *enum_ir) {
   for (auto &&field : enum_ir->GetFields()) {
     abi_dump::EnumFieldDecl *enum_fieldp = enum_protobuf->add_enum_fields();
     if (!SetIRToProtobufEnumField(enum_fieldp, &field)) {
@@ -846,8 +835,8 @@ abi_diff::RecordTypeDiff IRDiffToProtobufConverter::ConvertRecordTypeDiffIR(
     abi_diff::TypeInfoDiff *type_info_diff =
         record_type_diff_protobuf.mutable_type_info_diff();
     if (!AddTypeInfoDiff(type_info_diff, type_diff_ir)) {
-        llvm::errs() << "RecordType could not be converted\n";
-       ::exit(1);
+      llvm::errs() << "RecordType could not be converted\n";
+      ::exit(1);
     }
   }
   // If vtables differ.
@@ -865,7 +854,7 @@ abi_diff::RecordTypeDiff IRDiffToProtobufConverter::ConvertRecordTypeDiffIR(
   // If base specifiers differ.
   const CXXBaseSpecifierDiffIR *base_specifier_diff_ir =
       record_type_diff_ir->GetBaseSpecifiers();
-  if ( base_specifier_diff_ir != nullptr) {
+  if (base_specifier_diff_ir != nullptr) {
     abi_diff::CXXBaseSpecifierDiff *base_specifier_diff_protobuf =
         record_type_diff_protobuf.mutable_bases_diff();
     if (!AddBaseSpecifierDiffs(base_specifier_diff_protobuf,
@@ -935,9 +924,9 @@ abi_diff::EnumTypeDiff IRDiffToProtobufConverter::ConvertEnumTypeDiffIR(
   const std::pair<std::string, std::string> *underlying_type_diff =
       enum_type_diff_ir->GetUnderlyingTypeDiff();
   if ((underlying_type_diff != nullptr &&
-      !AddEnumUnderlyingTypeDiff(
-          enum_type_diff_protobuf.mutable_underlying_type_diff(),
-          underlying_type_diff)) ||
+       !AddEnumUnderlyingTypeDiff(
+           enum_type_diff_protobuf.mutable_underlying_type_diff(),
+           underlying_type_diff)) ||
       !AddEnumFields(enum_type_diff_protobuf.mutable_fields_removed(),
                      enum_type_diff_ir->GetFieldsRemoved()) ||
       !AddEnumFields(enum_type_diff_protobuf.mutable_fields_added(),
@@ -979,12 +968,10 @@ abi_diff::FunctionDeclDiff IRDiffToProtobufConverter::ConvertFunctionDiffIR(
     llvm::errs() << "Function diff could not be added\n";
     ::exit(1);
   }
-  *old_function =
-      IRToProtobufConverter::ConvertFunctionIR(
-          function_diff_ir->GetOldFunction());
-  *new_function =
-      IRToProtobufConverter::ConvertFunctionIR(
-          function_diff_ir->GetNewFunction());
+  *old_function = IRToProtobufConverter::ConvertFunctionIR(
+      function_diff_ir->GetOldFunction());
+  *new_function = IRToProtobufConverter::ConvertFunctionIR(
+      function_diff_ir->GetNewFunction());
   return function_diff;
 }
 
@@ -1025,6 +1012,8 @@ bool ProtobufIRDumper::AddElfFunctionIR(const ElfFunctionIR *elf_function) {
     return false;
   }
   added_elf_function->set_name(elf_function->GetName());
+  added_elf_function->set_binding(
+      ElfSymbolBindingIRToProtobuf(elf_function->GetBinding()));
   return true;
 }
 
@@ -1034,6 +1023,8 @@ bool ProtobufIRDumper::AddElfObjectIR(const ElfObjectIR *elf_object) {
     return false;
   }
   added_elf_object->set_name(elf_object->GetName());
+  added_elf_object->set_binding(
+      ElfSymbolBindingIRToProtobuf(elf_object->GetBinding()));
   return true;
 }
 
@@ -1200,8 +1191,8 @@ CompatibilityStatusIR ProtobufIRDiffDumper::GetCompatibilityStatusIR() {
         combined_status | CompatibilityStatusIR::UnreferencedChanges;
   }
 
-  if(diff_tu_->removed_elf_functions().size() != 0 ||
-     diff_tu_->removed_elf_objects().size() != 0) {
+  if (diff_tu_->removed_elf_functions().size() != 0 ||
+      diff_tu_->removed_elf_objects().size() != 0) {
     combined_status = combined_status | CompatibilityStatusIR::ElfIncompatible;
   }
 
@@ -1213,38 +1204,33 @@ void ProtobufIRDiffDumper::AddCompatibilityStatusIR(
   diff_tu_->set_compatibility_status(CompatibilityStatusIRToProtobuf(status));
 }
 
-bool ProtobufIRDiffDumper::AddDiffMessageIR(
-    const DiffMessageIR *message,
-    const std::string &type_stack,
-    DiffKind diff_kind) {
+bool ProtobufIRDiffDumper::AddDiffMessageIR(const DiffMessageIR *message,
+                                            const std::string &type_stack,
+                                            DiffKind diff_kind) {
   switch (message->Kind()) {
     case RecordTypeKind:
       return AddRecordTypeDiffIR(
-          static_cast<const RecordTypeDiffIR *>(message),
-          type_stack, diff_kind);
+          static_cast<const RecordTypeDiffIR *>(message), type_stack,
+          diff_kind);
     case EnumTypeKind:
       return AddEnumTypeDiffIR(
-          static_cast<const EnumTypeDiffIR *>(message),
-          type_stack, diff_kind);
+          static_cast<const EnumTypeDiffIR *>(message), type_stack, diff_kind);
     case GlobalVarKind:
       return AddGlobalVarDiffIR(
-          static_cast<const GlobalVarDiffIR*>(message),
-          type_stack, diff_kind);
+          static_cast<const GlobalVarDiffIR*>(message), type_stack, diff_kind);
     case FunctionKind:
       return AddFunctionDiffIR(
-          static_cast<const FunctionDiffIR*>(message),
-          type_stack, diff_kind);
+          static_cast<const FunctionDiffIR*>(message), type_stack, diff_kind);
     default:
       break;
   }
-  llvm::errs() << "Dump Diff attempted on something not a user defined type" <<
-                   "/ function / global variable\n";
+  llvm::errs() << "Dump Diff attempted on something not a user defined type / "
+               << "function / global variable\n";
   return false;
 }
 
 bool ProtobufIRDiffDumper::AddLinkableMessageIR(
-    const LinkableMessageIR *message,
-    DiffKind diff_kind) {
+    const LinkableMessageIR *message, DiffKind diff_kind) {
   switch (message->GetKind()) {
     case RecordTypeKind:
       return AddLoneRecordTypeDiffIR(
@@ -1261,13 +1247,13 @@ bool ProtobufIRDiffDumper::AddLinkableMessageIR(
     default:
       break;
   }
-  llvm::errs() << "Dump Diff attempted on something not a user defined type" <<
-                   "/ function / global variable\n";
+  llvm::errs() << "Dump Diff attempted on something not a user defined type / "
+               << "function / global variable\n";
   return false;
 }
 
-bool ProtobufIRDiffDumper::AddElfSymbolMessageIR (const ElfSymbolIR *elf_symbol,
-                                                  DiffKind diff_kind) {
+bool ProtobufIRDiffDumper::AddElfSymbolMessageIR(const ElfSymbolIR *elf_symbol,
+                                                 DiffKind diff_kind) {
   switch (elf_symbol->GetKind()) {
     case ElfSymbolIR::ElfFunctionKind:
       return AddElfFunctionIR(static_cast<const ElfFunctionIR *>(elf_symbol),
@@ -1285,7 +1271,7 @@ bool ProtobufIRDiffDumper::AddElfSymbolMessageIR (const ElfSymbolIR *elf_symbol,
 bool ProtobufIRDiffDumper::AddElfFunctionIR(
     const ElfFunctionIR *elf_function_ir, DiffKind diff_kind) {
   abi_dump::ElfFunction *added_elf_function = nullptr;
-  switch(diff_kind) {
+  switch (diff_kind) {
     case DiffKind::Removed:
       added_elf_function = diff_tu_->add_removed_elf_functions();
       break;
@@ -1307,7 +1293,7 @@ bool ProtobufIRDiffDumper::AddElfFunctionIR(
 bool ProtobufIRDiffDumper::AddElfObjectIR(
     const ElfObjectIR *elf_object_ir, DiffKind diff_kind) {
   abi_dump::ElfObject *added_elf_object = nullptr;
-  switch(diff_kind) {
+  switch (diff_kind) {
     case DiffKind::Removed:
       added_elf_object = diff_tu_->add_removed_elf_objects();
       break;
@@ -1327,8 +1313,7 @@ bool ProtobufIRDiffDumper::AddElfObjectIR(
 }
 
 bool ProtobufIRDiffDumper::AddLoneRecordTypeDiffIR(
-    const RecordTypeIR *record_type_ir,
-    DiffKind diff_kind) {
+    const RecordTypeIR *record_type_ir, DiffKind diff_kind) {
   abi_dump::RecordType *added_record_type = nullptr;
   switch (diff_kind) {
     case DiffKind::Removed:
@@ -1353,8 +1338,7 @@ bool ProtobufIRDiffDumper::AddLoneRecordTypeDiffIR(
 }
 
 bool ProtobufIRDiffDumper::AddLoneFunctionDiffIR(
-    const FunctionIR *function_ir,
-    DiffKind diff_kind) {
+    const FunctionIR *function_ir, DiffKind diff_kind) {
   abi_dump::FunctionDecl *added_function = nullptr;
   switch (diff_kind) {
     case DiffKind::Removed:
@@ -1414,8 +1398,7 @@ bool ProtobufIRDiffDumper::AddLoneGlobalVarDiffIR(
 }
 
 bool ProtobufIRDiffDumper::AddRecordTypeDiffIR(
-    const RecordTypeDiffIR *record_diff_ir,
-    const std::string &type_stack,
+    const RecordTypeDiffIR *record_diff_ir, const std::string &type_stack,
     DiffKind diff_kind) {
   abi_diff::RecordTypeDiff *added_record_type_diff = nullptr;
   switch (diff_kind) {
@@ -1487,8 +1470,7 @@ bool ProtobufIRDiffDumper::AddEnumTypeDiffIR(const EnumTypeDiffIR *enum_diff_ir,
 }
 
 bool ProtobufIRDiffDumper::AddGlobalVarDiffIR(
-    const GlobalVarDiffIR *global_var_diff_ir,
-    const std::string &type_stack,
+    const GlobalVarDiffIR *global_var_diff_ir, const std::string &type_stack,
     DiffKind diff_kind) {
   abi_diff::GlobalVarDeclDiff *added_global_var_diff =
       diff_tu_->add_global_var_diffs();
@@ -1508,4 +1490,4 @@ bool ProtobufIRDiffDumper::Dump() {
   return google::protobuf::TextFormat::Print(*diff_tu_.get(), &text_os);
 }
 
-} //abi_util
+}  // namespace abi_util

@@ -2,13 +2,11 @@
 
 import os
 import posixpath
-import sys
 import unittest
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from vndk_definition_tool import VNDKLibDir
 
-from compat import StringIO
-from vndk_definition_tool import ELF, VNDKLibDir
+from .compat import StringIO
 
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -22,92 +20,92 @@ class VNDKLibDirTest(unittest.TestCase):
 
     def test_create_vndk_sp_dir_name(self):
         self.assertEqual(
-                'vndk-sp', VNDKLibDir.create_vndk_sp_dir_name('current'))
+            'vndk-sp', VNDKLibDir.create_vndk_sp_dir_name('current'))
         self.assertEqual(
-                'vndk-sp-28', VNDKLibDir.create_vndk_sp_dir_name('28'))
+            'vndk-sp-28', VNDKLibDir.create_vndk_sp_dir_name('28'))
 
 
     def test_create_vndk_dir_name(self):
         self.assertEqual(
-                'vndk', VNDKLibDir.create_vndk_dir_name('current'))
+            'vndk', VNDKLibDir.create_vndk_dir_name('current'))
         self.assertEqual(
-                'vndk-28', VNDKLibDir.create_vndk_dir_name('28'))
+            'vndk-28', VNDKLibDir.create_vndk_dir_name('28'))
 
 
     def test_extract_vndk_version_from_name(self):
         self.assertEqual(
-                'current', VNDKLibDir.extract_version_from_name('vndk'))
+            'current', VNDKLibDir.extract_version_from_name('vndk'))
         self.assertEqual(
-                'current', VNDKLibDir.extract_version_from_name('vndk-sp'))
+            'current', VNDKLibDir.extract_version_from_name('vndk-sp'))
         self.assertEqual(
-                '28', VNDKLibDir.extract_version_from_name('vndk-28'))
+            '28', VNDKLibDir.extract_version_from_name('vndk-28'))
         self.assertEqual(
-                '28', VNDKLibDir.extract_version_from_name('vndk-sp-28'))
+            '28', VNDKLibDir.extract_version_from_name('vndk-sp-28'))
         self.assertEqual(
-                'p', VNDKLibDir.extract_version_from_name('vndk-p'))
+            'p', VNDKLibDir.extract_version_from_name('vndk-p'))
         self.assertEqual(
-                'p', VNDKLibDir.extract_version_from_name('vndk-sp-p'))
+            'p', VNDKLibDir.extract_version_from_name('vndk-sp-p'))
 
 
     def test_extract_vndk_version_from_path(self):
         ans = VNDKLibDir.extract_version_from_path(
-                '/system/lib64/vndk/libexample.so')
+            '/system/lib64/vndk/libexample.so')
         self.assertEqual('current', ans)
 
         ans = VNDKLibDir.extract_version_from_path(
-                '/system/lib64/vndk-sp/libexample.so')
+            '/system/lib64/vndk-sp/libexample.so')
         self.assertEqual('current', ans)
 
         ans = VNDKLibDir.extract_version_from_path(
-                '/system/lib64/vndk-28/libexample.so')
+            '/system/lib64/vndk-28/libexample.so')
         self.assertEqual('28', ans)
 
         ans = VNDKLibDir.extract_version_from_path(
-                '/system/lib64/vndk-sp-28/libexample.so')
+            '/system/lib64/vndk-sp-28/libexample.so')
         self.assertEqual('28', ans)
 
         ans = VNDKLibDir.extract_version_from_path(
-                '/system/lib64/vndk-p/libexample.so')
+            '/system/lib64/vndk-p/libexample.so')
         self.assertEqual('p', ans)
 
         ans = VNDKLibDir.extract_version_from_path(
-                '/system/lib64/vndk-sp-p/libexample.so')
+            '/system/lib64/vndk-sp-p/libexample.so')
         self.assertEqual('p', ans)
 
         ans = VNDKLibDir.extract_version_from_path(
-                '/system/lib64/vndk-sp-p/hw/libexample.so')
+            '/system/lib64/vndk-sp-p/hw/libexample.so')
         self.assertEqual('p', ans)
 
         ans = VNDKLibDir.extract_version_from_path(
-                '/system/lib64/libexample.so')
+            '/system/lib64/libexample.so')
         self.assertEqual(None, ans)
 
 
     def test_is_in_vndk_sp_dir(self):
         self.assertFalse(VNDKLibDir.is_in_vndk_sp_dir('/system/lib/liba.so'))
         self.assertFalse(
-                VNDKLibDir.is_in_vndk_sp_dir('/system/lib/vndk/liba.so'))
+            VNDKLibDir.is_in_vndk_sp_dir('/system/lib/vndk/liba.so'))
         self.assertFalse(
-                VNDKLibDir.is_in_vndk_sp_dir('/system/lib/vndk-28/liba.so'))
+            VNDKLibDir.is_in_vndk_sp_dir('/system/lib/vndk-28/liba.so'))
         self.assertFalse(
-                VNDKLibDir.is_in_vndk_sp_dir('/system/lib/vndk-spec/liba.so'))
+            VNDKLibDir.is_in_vndk_sp_dir('/system/lib/vndk-spec/liba.so'))
         self.assertTrue(
-                VNDKLibDir.is_in_vndk_sp_dir('/system/lib/vndk-sp/liba.so'))
+            VNDKLibDir.is_in_vndk_sp_dir('/system/lib/vndk-sp/liba.so'))
         self.assertTrue(
-                VNDKLibDir.is_in_vndk_sp_dir('/system/lib/vndk-sp-28/liba.so'))
+            VNDKLibDir.is_in_vndk_sp_dir('/system/lib/vndk-sp-28/liba.so'))
 
 
     def test_is_in_vndk_dir(self):
         self.assertFalse(VNDKLibDir.is_in_vndk_dir('/system/lib/liba.so'))
         self.assertTrue(VNDKLibDir.is_in_vndk_dir('/system/lib/vndk/liba.so'))
         self.assertTrue(
-                VNDKLibDir.is_in_vndk_dir('/system/lib/vndk-28/liba.so'))
+            VNDKLibDir.is_in_vndk_dir('/system/lib/vndk-28/liba.so'))
         self.assertTrue(
-                VNDKLibDir.is_in_vndk_dir('/system/lib/vndk-spec/liba.so'))
+            VNDKLibDir.is_in_vndk_dir('/system/lib/vndk-spec/liba.so'))
         self.assertFalse(
-                VNDKLibDir.is_in_vndk_dir('/system/lib/vndk-sp/liba.so'))
+            VNDKLibDir.is_in_vndk_dir('/system/lib/vndk-sp/liba.so'))
         self.assertFalse(
-                VNDKLibDir.is_in_vndk_dir('/system/lib/vndk-sp-28/liba.so'))
+            VNDKLibDir.is_in_vndk_dir('/system/lib/vndk-sp-28/liba.so'))
 
 
     def test_create_vndk_search_paths(self):
@@ -126,7 +124,7 @@ class VNDKLibDirTest(unittest.TestCase):
                 ]
 
                 vndk_sp_dirs, vndk_dirs = \
-                        VNDKLibDir.create_vndk_search_paths(lib_dir, version)
+                    VNDKLibDir.create_vndk_search_paths(lib_dir, version)
                 self.assertEqual(expected_vndk_sp, vndk_sp_dirs)
                 self.assertEqual(expected_vndk, vndk_dirs)
 
@@ -139,35 +137,34 @@ class VNDKLibDirTest(unittest.TestCase):
 
     def test_create_from_dirs_unversioned(self):
         input_dir = os.path.join(
-                SCRIPT_DIR, 'testdata', 'test_vndk_lib_dir',
-                'vndk_unversioned')
+            SCRIPT_DIR, 'testdata', 'test_vndk_lib_dir', 'vndk_unversioned')
 
         vndk_lib_dirs = VNDKLibDir.create_from_dirs(
-                [os.path.join(input_dir, 'system')],
-                [os.path.join(input_dir, 'vendor')])
+            [os.path.join(input_dir, 'system')],
+            [os.path.join(input_dir, 'vendor')])
 
         self.assertIn('current', vndk_lib_dirs)
 
 
     def test_create_from_dirs_versioned(self):
         input_dir = os.path.join(
-                SCRIPT_DIR, 'testdata', 'test_vndk_lib_dir', 'vndk_versioned')
+            SCRIPT_DIR, 'testdata', 'test_vndk_lib_dir', 'vndk_versioned')
 
         vndk_lib_dirs = VNDKLibDir.create_from_dirs(
-                [os.path.join(input_dir, 'system')],
-                [os.path.join(input_dir, 'vendor')])
+            [os.path.join(input_dir, 'system')],
+            [os.path.join(input_dir, 'vendor')])
 
         self.assertIn('28', vndk_lib_dirs)
 
 
     def test_create_from_dirs_versioned_multiple(self):
         input_dir = os.path.join(
-                SCRIPT_DIR, 'testdata', 'test_vndk_lib_dir',
-                'vndk_versioned_multiple')
+            SCRIPT_DIR, 'testdata', 'test_vndk_lib_dir',
+            'vndk_versioned_multiple')
 
         vndk_lib_dirs = VNDKLibDir.create_from_dirs(
-                [os.path.join(input_dir, 'system')],
-                [os.path.join(input_dir, 'vendor')])
+            [os.path.join(input_dir, 'system')],
+            [os.path.join(input_dir, 'vendor')])
 
         self.assertIn('28', vndk_lib_dirs)
         self.assertIn('29', vndk_lib_dirs)
@@ -175,11 +172,11 @@ class VNDKLibDirTest(unittest.TestCase):
 
     def test_create_from_dirs_versioned_32bit_only(self):
         input_dir = os.path.join(
-                SCRIPT_DIR, 'testdata', 'test_vndk_lib_dir', 'vndk_32')
+            SCRIPT_DIR, 'testdata', 'test_vndk_lib_dir', 'vndk_32')
 
         vndk_lib_dirs = VNDKLibDir.create_from_dirs(
-                [os.path.join(input_dir, 'system')],
-                [os.path.join(input_dir, 'vendor')])
+            [os.path.join(input_dir, 'system')],
+            [os.path.join(input_dir, 'vendor')])
 
         self.assertIn('28', vndk_lib_dirs)
 
@@ -196,8 +193,8 @@ class VNDKLibDirTest(unittest.TestCase):
 
     def test_get_ro_vndk_version(self):
         input_dir = os.path.join(
-                SCRIPT_DIR, 'testdata', 'test_vndk_lib_dir',
-                'vndk_versioned_multiple')
+            SCRIPT_DIR, 'testdata', 'test_vndk_lib_dir',
+            'vndk_versioned_multiple')
 
         vendor_dirs = [os.path.join(input_dir, 'vendor')]
 
@@ -206,22 +203,17 @@ class VNDKLibDirTest(unittest.TestCase):
 
     def test_sorted_versions(self):
         self.assertEqual(
-                ['20', '10', '2', '1'],
-                VNDKLibDir.sorted_version(['1', '2', '10', '20']))
+            ['20', '10', '2', '1'],
+            VNDKLibDir.sorted_version(['1', '2', '10', '20']))
 
         self.assertEqual(
-                ['b', 'a', '20', '10', '2', '1'],
-                VNDKLibDir.sorted_version(['1', '2', '10', '20', 'a', 'b']))
+            ['b', 'a', '20', '10', '2', '1'],
+            VNDKLibDir.sorted_version(['1', '2', '10', '20', 'a', 'b']))
 
         self.assertEqual(
-                ['a', '10b', '10', '2', '1'],
-                VNDKLibDir.sorted_version(['1', '2', '10', 'a', '10b']))
+            ['a', '10b', '10', '2', '1'],
+            VNDKLibDir.sorted_version(['1', '2', '10', 'a', '10b']))
 
         self.assertEqual(
-                ['current', 'd', 'a', '10', '1'],
-                VNDKLibDir.sorted_version(['1', '10', 'a', 'd', 'current']))
-
-
-
-if __name__ == '__main__':
-    unittest.main()
+            ['current', 'd', 'a', '10', '1'],
+            VNDKLibDir.sorted_version(['1', '10', 'a', 'd', 'current']))

@@ -17,6 +17,8 @@
 cc_library_host_static {
     name: "libheader-checker-proto",
 
+    defaults: ["llvm-build-host-tools-defaults"],
+
     srcs: [
         "abi_dump.proto",
         "abi_diff.proto",
@@ -27,6 +29,8 @@ cc_library_host_static {
         type: "full",
         canonical_path_from_root: false,
     },
+
+    shared_libs: ["libc++_host"],
 
     cflags: [
         "-Wall",
@@ -43,4 +47,7 @@ cc_library_host_static {
             enabled: false,
         },
     },
+
+    stl: "none",
+    compile_multilib: "64",
 }

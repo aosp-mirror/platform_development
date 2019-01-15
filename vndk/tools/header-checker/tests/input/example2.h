@@ -25,7 +25,7 @@ struct HelloAgain {
   virtual ~HelloAgain() {}
 };
 struct NowWeCrash;
-} // namespace test2
+}  // namespace test2
 
 enum Foo_s {
   foosball = 10,
@@ -77,6 +77,6 @@ class Outer {
 
 std::vector<int *> Dummy(int t);
 
-} // namespace test3
+}  // namespace test3
 
 #endif  // EXAMPLE2_H_

@@ -12,74 +12,93 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <header_abi_util.h>
+#include "so_file_parser.h"
 
-#include <llvm/Object/ELFObjectFile.h>
+#include "ir_representation.h"
+
 #include <llvm/Object/Binary.h>
+#include <llvm/Object/ELFObjectFile.h>
 #include <llvm/Object/ELFTypes.h>
 #include <llvm/Object/SymbolSize.h>
-
-using llvm::object::ELF32LEObjectFile;
-using llvm::object::ELF32BEObjectFile;
-using llvm::object::ELF64LEObjectFile;
-using llvm::object::ELF64BEObjectFile;
-using llvm::dyn_cast;
-using llvm::ELF::STV_DEFAULT;
-using llvm::ELF::STV_PROTECTED;
-using llvm::ELF::STB_WEAK;
-using llvm::ELF::STB_GLOBAL;
 
 namespace abi_util {
 
 template <typename T>
-static inline T UnWrap(llvm::Expected<T> ValueOrError) {
-    if (!ValueOrError) {
-      llvm::errs() << "\nError: "
-               << llvm::toString(ValueOrError.takeError())
-               << ".\n";
-      llvm::errs().flush();
-      exit(1);
-    }
-    return std::move(ValueOrError.get());
+static inline T UnWrap(llvm::Expected<T> value_or_error) {
+  if (!value_or_error) {
+    llvm::errs() << "\nerror: " << llvm::toString(value_or_error.takeError())
+                 << ".\n";
+    llvm::errs().flush();
+    exit(1);
+  }
+  return std::move(value_or_error.get());
+}
+
+static abi_util::ElfSymbolIR::ElfSymbolBinding
+LLVMToIRSymbolBinding(unsigned char binding) {
+  switch (binding) {
+    case llvm::ELF::STB_GLOBAL:
+      return abi_util::ElfSymbolIR::ElfSymbolBinding::Global;
+    case llvm::ELF::STB_WEAK:
+      return abi_util::ElfSymbolIR::ElfSymbolBinding::Weak;
+  }
+  assert(0);
 }
 
 template<typename T>
-const std::set<std::string> &ELFSoFileParser<T>::GetFunctions() const {
-  return functions_;
-}
+class ELFSoFileParser : public SoFileParser {
+ private:
+  LLVM_ELF_IMPORT_TYPES_ELFT(T)
+  typedef llvm::object::ELFFile<T> ELFO;
+  typedef typename ELFO::Elf_Sym Elf_Sym;
+
+ public:
+  ELFSoFileParser(const llvm::object::ELFObjectFile<T> *obj);
+
+  ~ELFSoFileParser() override {}
+
+  const std::map<std::string, ElfFunctionIR> &GetFunctions() const override {
+    return functions_;
+  }
+
+  const std::map<std::string, ElfObjectIR> &GetGlobVars() const override {
+    return globvars_;
+  }
+
+ private:
+  bool IsSymbolExported(const Elf_Sym *elf_sym) const {
+    unsigned char visibility = elf_sym->getVisibility();
+    unsigned char binding = elf_sym->getBinding();
+    return ((binding == llvm::ELF::STB_GLOBAL ||
+             binding == llvm::ELF::STB_WEAK) &&
+            (visibility == llvm::ELF::STV_DEFAULT ||
+             visibility == llvm::ELF::STV_PROTECTED));
+  }
+
+ private:
+  const llvm::object::ELFObjectFile<T> *obj_;
+  std::map<std::string, abi_util::ElfFunctionIR> functions_;
+  std::map<std::string, abi_util::ElfObjectIR> globvars_;
+};
 
 template<typename T>
-const std::set<std::string> &ELFSoFileParser<T>::GetGlobVars() const {
-  return globvars_;
-}
-
-template<typename T>
-bool ELFSoFileParser<T>::IsSymbolExported(const Elf_Sym *elf_sym) const {
-
-  unsigned char visibility = elf_sym->getVisibility();
-  unsigned char binding = elf_sym->getBinding();
-
-  return (binding == STB_GLOBAL || binding == STB_WEAK) &&
-      (visibility == STV_DEFAULT ||
-       visibility == STV_PROTECTED);
-}
-
-template<typename T>
-void ELFSoFileParser<T>::GetSymbols() {
-  assert(obj_ != nullptr);
-  for (auto symbol_it : obj_->symbols()) {
-    const Elf_Sym *elf_sym =
-          obj_->getSymbol(symbol_it.getRawDataRefImpl());
+ELFSoFileParser<T>::ELFSoFileParser(const llvm::object::ELFObjectFile<T> *obj) {
+  assert(obj != nullptr);
+  for (auto symbol_it : obj->getDynamicSymbolIterators()) {
+    const Elf_Sym *elf_sym = obj->getSymbol(symbol_it.getRawDataRefImpl());
     assert (elf_sym != nullptr);
     if (!IsSymbolExported(elf_sym) || elf_sym->isUndefined()) {
       continue;
     }
+    abi_util::ElfSymbolIR::ElfSymbolBinding symbol_binding =
+        LLVMToIRSymbolBinding(elf_sym->getBinding());
     llvm::object::SymbolRef::Type type = UnWrap(symbol_it.getType());
     std::string symbol_name = UnWrap(symbol_it.getName());
     if (type == llvm::object::SymbolRef::Type::ST_Function) {
-      functions_.insert(symbol_name);
+      functions_.emplace(symbol_name,
+                         ElfFunctionIR(symbol_name, symbol_binding));
     } else if (type == llvm::object::SymbolRef::Type::ST_Data) {
-      globvars_.insert(symbol_name);
+      globvars_.emplace(symbol_name, ElfObjectIR(symbol_name, symbol_binding));
     }
   }
 }
@@ -91,28 +110,43 @@ static std::unique_ptr<SoFileParser> CreateELFSoFileParser(
 }
 
 std::unique_ptr<SoFileParser> SoFileParser::Create(
-    const llvm::object::ObjectFile *objfile) {
-   // Little-endian 32-bit
-  if (const ELF32LEObjectFile *ELFObj = dyn_cast<ELF32LEObjectFile>(objfile)) {
-    return CreateELFSoFileParser(ELFObj);
+    const std::string &so_file_path) {
+  auto binary = llvm::object::createBinary(so_file_path);
+  if (!binary) {
+    return nullptr;
+  }
+
+  llvm::object::ObjectFile *obj_file =
+      llvm::dyn_cast<llvm::object::ObjectFile>(binary.get().getBinary());
+  if (!obj_file) {
+    return nullptr;
+  }
+
+  // Little-endian 32-bit
+  if (auto elf_obj_file =
+          llvm::dyn_cast<llvm::object::ELF32LEObjectFile>(obj_file)) {
+    return CreateELFSoFileParser(elf_obj_file);
   }
 
   // Big-endian 32-bit
-  if (const ELF32BEObjectFile *ELFObj = dyn_cast<ELF32BEObjectFile>(objfile)) {
-    return CreateELFSoFileParser(ELFObj);
+  if (auto elf_obj_file =
+          llvm::dyn_cast<llvm::object::ELF32BEObjectFile>(obj_file)) {
+    return CreateELFSoFileParser(elf_obj_file);
   }
 
   // Little-endian 64-bit
-  if (const ELF64LEObjectFile *ELFObj = dyn_cast<ELF64LEObjectFile>(objfile)) {
-    return CreateELFSoFileParser(ELFObj);
+  if (auto elf_obj_file =
+          llvm::dyn_cast<llvm::object::ELF64LEObjectFile>(obj_file)) {
+    return CreateELFSoFileParser(elf_obj_file);
   }
 
   // Big-endian 64-bit
-  if (const ELF64BEObjectFile *ELFObj = dyn_cast<ELF64BEObjectFile>(objfile)) {
-    return CreateELFSoFileParser(ELFObj);
+  if (auto elf_obj_file =
+          llvm::dyn_cast<llvm::object::ELF64BEObjectFile>(obj_file)) {
+    return CreateELFSoFileParser(elf_obj_file);
   }
+
   return nullptr;
 }
 
-} // namespace abi_util
-
+}  // namespace abi_util

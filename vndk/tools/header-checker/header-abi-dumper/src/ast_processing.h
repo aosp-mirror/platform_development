@@ -16,7 +16,7 @@
 #define AST_PROCESSING_H_
 
 #include "ast_util.h"
-#include <ir_representation.h>
+#include "header_checker.h"
 
 #include <clang/AST/AST.h>
 #include <clang/AST/ASTConsumer.h>
@@ -30,10 +30,10 @@
 class HeaderASTVisitor
     : public clang::RecursiveASTVisitor<HeaderASTVisitor> {
  public:
-  HeaderASTVisitor(clang::MangleContext *mangle_contextp,
+  HeaderASTVisitor(const HeaderCheckerOptions &options,
+                   clang::MangleContext *mangle_contextp,
                    clang::ASTContext *ast_contextp,
                    const clang::CompilerInstance *compiler_instance_p,
-                   const std::set<std::string> &exported_headers,
                    const clang::Decl *tu_decl,
                    abi_util::IRDumper *ir_dumper,
                    ast_util::ASTCaches *ast_caches);
@@ -49,15 +49,15 @@ class HeaderASTVisitor
   bool TraverseDecl(clang::Decl *decl);
 
   // Enable recursive traversal of template instantiations.
-  bool shouldVisitTemplateInstantiations() const {
-    return true;
-  }
+  bool shouldVisitTemplateInstantiations() const { return true; }
 
  private:
+  bool ShouldSkipFunctionDecl(const clang::FunctionDecl *decl);
+
+  const HeaderCheckerOptions &options_;
   clang::MangleContext *mangle_contextp_;
   clang::ASTContext *ast_contextp_;
   const clang::CompilerInstance *cip_;
-  const std::set<std::string> &exported_headers_;
   // To optimize recursion into only exported abi.
   const clang::Decl *tu_decl_;
   abi_util::IRDumper *ir_dumper_;
@@ -69,17 +69,13 @@ class HeaderASTVisitor
 class HeaderASTConsumer : public clang::ASTConsumer {
  public:
   HeaderASTConsumer(clang::CompilerInstance *compiler_instancep,
-                    const std::string &out_dump_name,
-                    std::set<std::string> &exported_headers,
-                    abi_util::TextFormatIR text_format);
+                    HeaderCheckerOptions &options);
 
   void HandleTranslationUnit(clang::ASTContext &ctx) override;
 
  private:
   clang::CompilerInstance *cip_;
-  const std::string &out_dump_name_;
-  std::set<std::string> &exported_headers_;
-  abi_util::TextFormatIR text_format_;
+  HeaderCheckerOptions &options_;
 };
 
-#endif // AST_PROCESSING_H_
+#endif  // AST_PROCESSING_H_

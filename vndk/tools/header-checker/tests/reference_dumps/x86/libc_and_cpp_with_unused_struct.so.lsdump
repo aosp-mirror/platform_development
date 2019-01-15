@@ -210,7 +210,9 @@ functions {
 }
 elf_functions {
   name: "CFunction"
+  binding: Global
 }
 elf_functions {
   name: "_Z3fooPiS_"
+  binding: Global
 }

@@ -14,11 +14,11 @@
 
 #include "abi_diff.h"
 
-#include <fstream>
-
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/raw_ostream.h>
+
+#include <fstream>
 
 static llvm::cl::OptionCategory header_checker_category(
     "header-abi-diff options");
@@ -87,33 +87,30 @@ static llvm::cl::opt<bool> allow_unreferenced_changes(
 
 static llvm::cl::opt<bool> consider_opaque_types_different(
     "consider-opaque-types-different",
-    llvm::cl::desc("Consider opaque types with different names as different"
-                   " .This should not be used while comparing C++ library"
-                   " ABIs"),
+    llvm::cl::desc("Consider opaque types with different names as different. "
+                   "This should not be used while comparing C++ library ABIs"),
     llvm::cl::Optional, llvm::cl::cat(header_checker_category));
 
-
 static llvm::cl::opt<abi_util::TextFormatIR> text_format_old(
-    "text-format-old", llvm::cl::desc("Specify text format of old abi dump"),
+    "input-format-old", llvm::cl::desc("Specify input format of old abi dump"),
     llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
-                                "ProtobufTextFormat","ProtobufTextFormat"),
-                     clEnumValEnd),
-    llvm::cl::init(abi_util::TextFormatIR::ProtobufTextFormat),
+                                "ProtobufTextFormat", "ProtobufTextFormat"),
+                     clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON")),
+    llvm::cl::init(abi_util::TextFormatIR::Json),
     llvm::cl::cat(header_checker_category));
 
 static llvm::cl::opt<abi_util::TextFormatIR> text_format_new(
-    "text-format-new", llvm::cl::desc("Specify text format of new abi dump"),
+    "input-format-new", llvm::cl::desc("Specify input format of new abi dump"),
     llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
-                                "ProtobufTextFormat", "ProtobugTextFormat"),
-                     clEnumValEnd),
-    llvm::cl::init(abi_util::TextFormatIR::ProtobufTextFormat),
+                                "ProtobufTextFormat", "ProtobufTextFormat"),
+                     clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON")),
+    llvm::cl::init(abi_util::TextFormatIR::Json),
     llvm::cl::cat(header_checker_category));
 
 static llvm::cl::opt<abi_util::TextFormatIR> text_format_diff(
     "text-format-diff", llvm::cl::desc("Specify text format of abi-diff"),
     llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
-                                "ProtobufTextFormat", "ProtobufTextFormat"),
-                     clEnumValEnd),
+                                "ProtobufTextFormat", "ProtobufTextFormat")),
     llvm::cl::init(abi_util::TextFormatIR::ProtobufTextFormat),
     llvm::cl::cat(header_checker_category));
 
@@ -135,13 +132,13 @@ static const char kWarn[] = "\033[36;1mwarning: \033[0m";
 static const char kError[] = "\033[31;1merror: \033[0m";
 
 bool ShouldEmitWarningMessage(abi_util::CompatibilityStatusIR status) {
-  return (!allow_extensions &&
-      (status & abi_util::CompatibilityStatusIR::Extension)) ||
-      (!allow_unreferenced_changes &&
-      (status & abi_util::CompatibilityStatusIR::UnreferencedChanges)) ||
-      (!allow_unreferenced_elf_symbol_changes &&
-      (status & abi_util::CompatibilityStatusIR::ElfIncompatible)) ||
-      (status & abi_util::CompatibilityStatusIR::Incompatible);
+  return ((!allow_extensions &&
+           (status & abi_util::CompatibilityStatusIR::Extension)) ||
+          (!allow_unreferenced_changes &&
+           (status & abi_util::CompatibilityStatusIR::UnreferencedChanges)) ||
+          (!allow_unreferenced_elf_symbol_changes &&
+           (status & abi_util::CompatibilityStatusIR::ElfIncompatible)) ||
+          (status & abi_util::CompatibilityStatusIR::Incompatible));
 }
 
 int main(int argc, const char **argv) {
@@ -199,7 +196,7 @@ int main(int argc, const char **argv) {
                  << "'s ABI has "
                  << status_str
                  << unreferenced_change_str
-                 << " Please check compatiblity report at : "
+                 << " Please check compatibility report at: "
                  << compatibility_report << "\n"
                  << "******************************************************\n";
   }

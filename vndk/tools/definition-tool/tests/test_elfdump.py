@@ -2,23 +2,20 @@
 
 from __future__ import print_function
 
-import argparse
-import collections
-import difflib
 import os
 import re
 import subprocess
 import sys
 import unittest
 
-from compat import TemporaryDirectory, makedirs
-import ndk_toolchain
+from .compat import TemporaryDirectory, makedirs
+from .ndk_toolchain import create_targets
 
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 VNDK_DEF_TOOL = os.path.join(SCRIPT_DIR, '..', 'vndk_definition_tool.py')
 
-INPUT_DIR = os.path.join(SCRIPT_DIR ,'testdata', 'test_elfdump', 'input')
+INPUT_DIR = os.path.join(SCRIPT_DIR, 'testdata', 'test_elfdump', 'input')
 EXPECTED_DIR = os.path.join(SCRIPT_DIR, 'testdata', 'test_elfdump', 'expected')
 test_dir_base = None
 
@@ -31,7 +28,7 @@ def run_elf_dump(path):
 class ELFDumpTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.targets = ndk_toolchain.create_targets()
+        cls.targets = create_targets()
 
         if test_dir_base:
             cls.test_dir_base = test_dir_base
@@ -41,10 +38,12 @@ class ELFDumpTest(unittest.TestCase):
 
         cls._build_fixtures(cls.target_name)
 
+
     @classmethod
     def tearDownClass(cls):
         if not test_dir_base:
             cls.tmp_dir.cleanup()
+
 
     @classmethod
     def _build_fixtures(cls, target_name):
@@ -97,6 +96,7 @@ class ELFDumpTest(unittest.TestCase):
                     ['-shared', '-lc', '-Wl,-rpath,/system/lib:/vendor/lib',
                      '-Wl,--enable-new-dtags'])
 
+
     def _remove_size_lines(self, lines):
         """Remove file size information because they may vary."""
         prefixes = (
@@ -109,6 +109,7 @@ class ELFDumpTest(unittest.TestCase):
         patt = re.compile('|'.join('(?:' + re.escape(x) +')' for x in prefixes))
         return [line for line in lines if not patt.match(line)]
 
+
     def _assert_equal_to_file(self, expected_file_name, actual):
         actual = actual.splitlines(True)
         expected_file_path = os.path.join(self.expected_dir, expected_file_name)
@@ -117,9 +118,11 @@ class ELFDumpTest(unittest.TestCase):
         self.assertEqual(self._remove_size_lines(expected),
                          self._remove_size_lines(actual))
 
+
     def _test_main_out(self):
         out_file = os.path.join(self.test_dir, 'main.out')
         self._assert_equal_to_file('main.out.txt', run_elf_dump(out_file))
+
 
     def _test_libtest(self, expected_file_name, lib_name):
         lib_file = os.path.join(self.test_dir, lib_name)
@@ -149,38 +152,15 @@ def create_target_test(target_name):
 
     class_name = 'ELFDumpTest_' + target_name
     globals()[class_name] = type(
-            class_name, (ELFDumpTest,),
-            dict(test_main=test_main,
-                 test_libtest=test_libtest,
-                 test_libtest_rpath=test_libtest_rpath,
-                 test_libtest_rpath_multi=test_libtest_rpath_multi,
-                 test_libtest_runpath=test_libtest_runpath,
-                 test_libtest_runpath_multi=test_libtest_runpath_multi,
-                 target_name=target_name))
+        class_name, (ELFDumpTest,),
+        dict(test_main=test_main,
+             test_libtest=test_libtest,
+             test_libtest_rpath=test_libtest_rpath,
+             test_libtest_rpath_multi=test_libtest_rpath_multi,
+             test_libtest_runpath=test_libtest_runpath,
+             test_libtest_runpath_multi=test_libtest_runpath_multi,
+             target_name=target_name))
 
 
 for target in ('arm', 'arm64', 'mips', 'mips64', 'x86', 'x86_64'):
     create_target_test(target)
-
-
-def main():
-    # Parse command line arguments.
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--test-dir', help='directory for temporary files')
-    parser.add_argument('--expected-dir', help='directory with expected output')
-    args, unittest_args = parser.parse_known_args()
-
-    # Convert command line options.
-    global expected_dir
-    global test_dir_base
-
-    if args.expected_dir:
-        expected_dir = args.expected_dir
-    if args.test_dir:
-        test_dir_base = args.test_dir
-
-    # Run unit test.
-    unittest.main(argv=[sys.argv[0]] + unittest_args)
-
-if __name__ == '__main__':
-    main()
