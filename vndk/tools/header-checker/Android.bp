@@ -32,7 +32,7 @@ cc_defaults {
     cppflags: [
         "-fno-exceptions",
         "-fno-rtti",
-        "-std=c++14",
+        "-std=c++17",
     ],
 
     target: {
@@ -146,11 +146,14 @@ cc_library_host_static {
 
     srcs: [
         "header-abi-util/src/abi_diff_helpers.cpp",
+        "header-abi-util/src/api_level.cpp",
         "header-abi-util/src/collect_exported_headers.cpp",
+        "header-abi-util/src/exported_symbol_set.cpp",
         "header-abi-util/src/ir_representation.cpp",
         "header-abi-util/src/ir_representation_json.cpp",
         "header-abi-util/src/ir_representation_protobuf.cpp",
         "header-abi-util/src/so_file_parser.cpp",
+        "header-abi-util/src/string_utils.cpp",
         "header-abi-util/src/version_script_parser.cpp",
     ],
 
@@ -172,4 +175,35 @@ cc_library_host_static {
     ],
 
     export_include_dirs: ["header-abi-util/include"],
+}
+
+cc_test_host {
+    name: "libheader-abi-util_test",
+
+    defaults: [
+        "header-checker-defaults",
+    ],
+
+    srcs: [
+        "header-abi-util/src/api_level_test.cpp",
+        "header-abi-util/src/exported_symbol_set_test.cpp",
+        "header-abi-util/src/string_utils_test.cpp",
+        "header-abi-util/src/version_script_parser_test.cpp",
+    ],
+
+    local_include_dirs: [
+        "header-abi-util/include",
+    ],
+
+    static_libs: [
+        "libgtest",
+        "libgtest_main",
+        "libheader-abi-util",
+    ],
+
+    shared_libs: [
+        "libc++_host",
+    ],
+
+    test_suites: ["general-tests"],
 }
