@@ -38,6 +38,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -63,7 +64,7 @@ public class IntentBuilderView extends FrameLayout implements View.OnClickListen
     private LinearLayout mLayout;
     private Context mContext;
     private LayoutInflater mInflater;
-    private OnLaunchCallback mLaunchCallback;
+    private List<RadioButton> mRadioButtons;
 
     /**
      * Constructs a new IntentBuilderView, in the specified mode.
@@ -128,7 +129,9 @@ public class IntentBuilderView extends FrameLayout implements View.OnClickListen
         fillCheckBoxLayout(flagBuilderLayout, FlagUtils.intentFlagsByCategory(),
                 R.layout.section_header, R.id.header_title, R.layout.checkbox_list_item,
                 R.id.checkBox_item);
+
         // Add radios for activity combos
+        List<RadioButton> radioButtons = new ArrayList<>();
         activityToFlags.entrySet().stream()
                 .sorted(Comparator.comparing(
                         activityEntry -> nameOfActivityInfo(activityEntry.getKey())))
@@ -145,9 +148,11 @@ public class IntentBuilderView extends FrameLayout implements View.OnClickListen
                             manifestFlags.stream().collect(Collectors.joining("\n")));
                     rb.setOnClickListener(this);
                     activityRadios.addView(actRadio);
+                    radioButtons.add(rb);
                 });
         ((CompoundButton) mLayout.findViewById(R.id.suggestion_switch))
                 .setOnCheckedChangeListener(this);
+        mRadioButtons = radioButtons;
     }
 
 
@@ -194,6 +199,8 @@ public class IntentBuilderView extends FrameLayout implements View.OnClickListen
             ActivityInfo tag = (ActivityInfo) view.getTag();
             mActivityToLaunch = new ComponentName(mContext,
                     getClass(tag.name.substring(tag.name.lastIndexOf(".") + 1)));
+            mRadioButtons.stream().filter(rb -> rb != view)
+                    .forEach(rb -> rb.setChecked(false));
         }
     }
 
