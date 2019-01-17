@@ -138,8 +138,8 @@ def revise_ld_config_txt_if_needed(vndk_version):
 
 
 def update_buildfiles(buildfile_generator):
-    logging.info('Generating Android.mk file...')
-    buildfile_generator.generate_android_mk()
+    logging.info('Generating root Android.bp file...')
+    buildfile_generator.generate_root_android_bp()
 
     logging.info('Generating common/Android.bp file...')
     buildfile_generator.generate_common_android_bp()
