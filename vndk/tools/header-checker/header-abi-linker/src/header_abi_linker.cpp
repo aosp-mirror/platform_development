@@ -133,15 +133,18 @@ class HeaderAbiLinker {
   const std::string &out_dump_name_;
   const std::string &arch_;
   const std::string &api_;
-  // TODO: Add to a map of std::sets instead.
+
   std::set<std::string> exported_headers_;
+
   std::map<std::string, abi_util::ElfFunctionIR> function_decl_map_;
   std::map<std::string, abi_util::ElfObjectIR> globvar_decl_map_;
+
   // Version Script Regex Matching.
-  std::set<std::string> functions_regex_matched_set;
+  std::set<std::string> functions_regex_matched_set_;
   std::regex functions_vs_regex_;
+
   // Version Script Regex Matching.
-  std::set<std::string> globvars_regex_matched_set;
+  std::set<std::string> globvars_regex_matched_set_;
   std::regex globvars_vs_regex_;
 };
 
@@ -323,8 +326,8 @@ bool HeaderAbiLinker::LinkFunctions(
   auto symbol_filter = [this](const std::string &linker_set_key) {
     return function_decl_map_.find(linker_set_key) !=
                function_decl_map_.end() ||
-           QueryRegexMatches(&functions_regex_matched_set, &functions_vs_regex_,
-                             linker_set_key);
+           QueryRegexMatches(&functions_regex_matched_set_,
+                             &functions_vs_regex_, linker_set_key);
   };
   return LinkDecl(ir_dumper, reader->GetFunctions(), symbol_filter);
 }
@@ -336,7 +339,7 @@ bool HeaderAbiLinker::LinkGlobalVars(
   auto symbol_filter = [this](const std::string &linker_set_key) {
     return globvar_decl_map_.find(linker_set_key) !=
                globvar_decl_map_.end() ||
-           QueryRegexMatches(&globvars_regex_matched_set, &globvars_vs_regex_,
+           QueryRegexMatches(&globvars_regex_matched_set_, &globvars_vs_regex_,
                              linker_set_key);
   };
   return LinkDecl(ir_dumper, reader->GetGlobalVariables(), symbol_filter);
@@ -429,15 +432,17 @@ static void HideIrrelevantCommandLineOptions() {
 
 int main(int argc, const char **argv) {
   HideIrrelevantCommandLineOptions();
-
   llvm::cl::ParseCommandLineOptions(argc, argv, "header-linker");
+
   if (so_file.empty() && version_script.empty()) {
     llvm::errs() << "One of -so or -v needs to be specified\n";
     return -1;
   }
+
   if (no_filter) {
     static_cast<std::vector<std::string> &>(exported_header_dirs).clear();
   }
+
   HeaderAbiLinker Linker(dump_files, exported_header_dirs, version_script,
                          so_file, linked_dump, arch, api);
 
