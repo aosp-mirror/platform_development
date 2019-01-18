@@ -28,13 +28,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/build_intent"
-        android:textAppearance="@style/title" />
+        android:textAppearance="@style/title"/>
 
     <TextView
         android:id="@+id/flags_hint"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/build_intent_caption" />
+        android:text="@string/build_intent_caption"/>
 
     <LinearLayout
         android:id="@+id/suggest_list_item"
@@ -48,19 +48,19 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_weight="1" >
+            android:layout_weight="1">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/suggest_enable_text"
-                android:textAppearance="@style/normal" />
+                android:textAppearance="@style/normal"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/suggest_description_text"
-                android:textAppearance="@style/caption" />
+                android:textAppearance="@style/caption"/>
         </LinearLayout>
 
         <Switch
@@ -80,26 +80,54 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/dividerHeight"
         android:layout_marginVertical="@dimen/smallMargin"
-        android:background="@drawable/divider" />
+        android:background="@drawable/divider"/>
 
     <TextView
         android:id="@+id/textView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginVertical="@dimen/smallMargin"
-        android:text="@string/target_activity" />
+        android:text="@string/target_activity"/>
 
     <RadioGroup
         android:id="@+id/radioGroup_launchMode"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:checkedButton="@+id/radio_launchMode_standard"
-        android:orientation="vertical" />
+        android:orientation="vertical"/>
 
-    <Button
-        android:id="@+id/launch_button"
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dividerHeight"
+        android:layout_marginVertical="@dimen/smallMargin"
+        android:background="@drawable/divider"/>
+
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:onClick="launchActivity"
-        android:text="@string/launch_activity_button" />
+        android:layout_marginVertical="@dimen/smallMargin"
+        android:text="@string/start_mode"/>
+
+    <RadioGroup
+        android:id="@+id/radioGroup_startMode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:checkedButton="@+id/radio_launchMode_standard"
+        android:orientation="vertical">
+
+        <RadioButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/fullMargin"
+            android:id="@+id/start_normal"
+            android:text="@string/start_normal"
+            android:checked="true"/>
+
+        <RadioButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/fullMargin"
+            android:id="@+id/start_for_result"
+            android:text="@string/start_for_result"/>
+    </RadioGroup>
 </LinearLayout>

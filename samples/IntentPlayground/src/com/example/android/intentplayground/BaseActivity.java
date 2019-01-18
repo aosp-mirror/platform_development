@@ -18,16 +18,14 @@ package com.example.android.intentplayground;
 
 import static com.example.android.intentplayground.Node.newTaskNode;
 
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -36,7 +34,11 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.example.android.intentplayground.Tracking.Tracker;
+
 import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Implements the shared functionality for all of the other activities.
@@ -48,11 +50,20 @@ public abstract class BaseActivity extends AppCompatActivity implements
     public static final String TREE_FRAGMENT = "com.example.android.treeFragment";
     public static final String EXPECTED_TREE_FRAGMENT = "com.example.android.expectedTreeFragment";
     public static final int LAUNCH_REQUEST_CODE = 0xEF;
+    private static final int LAUNCH_FOR_RESULT_ID = 1;
 
     public enum Mode {LAUNCH, VERIFY, RESULT}
 
     public boolean userLeaveHintWasCalled = false;
     protected Mode mStatus = Mode.LAUNCH;
+
+    /**
+     * To display the task / activity overview in {@link TreeFragment} we track onResume and
+     * onDestroy calls in this global location. {@link BaseActivity} should delegate to
+     * {@link Tracker#onResume(Activity)} and {@link Tracker#onDestroy(Activity)} in it's respective
+     * lifecycle callbacks.
+     */
+    private static Tracker mTracker = new Tracker();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,10 +106,25 @@ public abstract class BaseActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
+        mTracker.onResume(this);
         Intent launchForward = prepareLaunchForward();
         if (launchForward != null) {
             startActivity(launchForward);
         }
+    }
+
+    @Override
+    protected  void onDestroy() {
+        super.onDestroy();
+        mTracker.onDestroy(this);
+    }
+
+    static void addTrackerListener(Consumer<List<Tracking.Task>> listener) {
+        mTracker.addListener(listener);
+    }
+
+    static void removeTrackerListener(Consumer<List<Tracking.Task>> listener) {
+        mTracker.removeListener(listener);
     }
 
     /**
@@ -130,10 +156,16 @@ public abstract class BaseActivity extends AppCompatActivity implements
     /**
      * Launches activity with the selected options.
      */
-    public void launchActivity(Intent intent) {
+    @Override
+    public void launchActivity(Intent intent, boolean forResult) {
+        if (forResult) {
+            startActivityForResult(intent, LAUNCH_FOR_RESULT_ID);
+        } else {
+            startActivity(intent);
+        }
+        
         // If people press back we want them to see the overview rather than the launch fragment.
         // To achieve this we pop the launchFragment from the stack when we go to the next activity.
-        startActivity(intent);
         getSupportFragmentManager().popBackStack();
     }
 
@@ -142,7 +174,6 @@ public abstract class BaseActivity extends AppCompatActivity implements
         super.onNewIntent(intent);
         setIntent(intent);
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -153,19 +184,15 @@ public abstract class BaseActivity extends AppCompatActivity implements
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.app_bar_help:
-                showHelpDialog();
-                break;
             case R.id.app_bar_test:
                 runIntentTests();
                 break;
-            case R.id.app_bar_launch:
+            case R.id.app_bar_launch_default:
                 askToLaunchTasks();
                 break;
         }
         return super.onOptionsItemSelected(item);
     }
-
 
     private void askToLaunchTasks() {
         AlertDialog dialog = new AlertDialog.Builder(this)
@@ -215,37 +242,6 @@ public abstract class BaseActivity extends AppCompatActivity implements
                 .getLaunchIntentForPackage("com.example.android.intentplayground.test"));
     }
 
-    /**
-     * Creates and displays a help overlay on this activity.
-     */
-    protected void showHelpDialog() {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        LinearLayout container = findViewById(R.id.fragment_container);
-        container.setShowDividers(LinearLayout.SHOW_DIVIDER_NONE);
-        ShowcaseFragment demo = new ShowcaseFragment();
-        demo.addStep(R.string.help_step_one, R.id.task_tree_container, () -> {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-                TreeFragment frag = (TreeFragment) fragmentManager.findFragmentByTag(TREE_FRAGMENT);
-                if (frag != null) {
-                    frag.openTask(0);
-                    frag.openTask(1);
-                }
-            }
-        });
-        demo.addStep(R.string.help_step_two, R.id.intent_container);
-        demo.addStep(R.string.help_step_three, R.id.build_intent_container,
-                R.id.build_intent_view);
-        demo.addStep(R.string.help_step_four, R.id.fragment_container_bottom,
-                R.id.launch_button);
-        demo.setScroller(findViewById(R.id.scroll_container));
-        demo.setOnFinish(() -> container.setShowDividers(LinearLayout.SHOW_DIVIDER_MIDDLE));
-        fragmentManager.beginTransaction()
-                .add(R.id.root_container, demo)
-                .addToBackStack(null)
-                .setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out)
-                .commit();
-    }
-
     protected Intent prepareLaunchForward() {
         Intent intent = getIntent();
         Intent nextIntent = null;
@@ -272,5 +268,4 @@ public abstract class BaseActivity extends AppCompatActivity implements
         super.onUserLeaveHint();
         userLeaveHintWasCalled = true;
     }
-
 }

@@ -89,4 +89,7 @@
     <string name="new_task">NEW</string>
     <string name="run_intent_tests">Run Intent tests</string>
     <string name="launch_default_activities">Launch Default Activities</string>
+    <string name="start_mode">Select start mode</string>
+    <string name="start_normal">Start activity</string>
+    <string name="start_for_result">Start activity for result</string>
 </resources>
