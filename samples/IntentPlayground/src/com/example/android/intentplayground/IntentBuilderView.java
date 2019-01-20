@@ -27,7 +27,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.FrameLayout;
@@ -38,8 +37,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -62,14 +64,15 @@ public class IntentBuilderView extends FrameLayout implements View.OnClickListen
     private LinearLayout mLayout;
     private Context mContext;
     private LayoutInflater mInflater;
-    private OnLaunchCallback mLaunchCallback;
+    private List<RadioButton> mRadioButtons;
 
     /**
      * Constructs a new IntentBuilderView, in the specified mode.
+     *
      * @param context The context of the activity that holds this view.
-     * @param mode The mode to launch in (if null, default mode turns suggestions off). Passing
-     * {@link com.example.android.intentplayground.BaseActivity.Mode} will turn on suggestions
-     * by default.
+     * @param mode    The mode to launch in (if null, default mode turns suggestions off). Passing
+     *                {@link BaseActivity.Mode} will turn on suggestions
+     *                by default.
      */
     public IntentBuilderView(@NonNull Context context, BaseActivity.Mode mode) {
         super(context);
@@ -95,7 +98,7 @@ public class IntentBuilderView extends FrameLayout implements View.OnClickListen
         String fullName = mContext.getPackageName().concat(".").concat(name);
         try {
             return Class.forName(fullName);
-        }   catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
             if (BuildConfig.DEBUG) e.printStackTrace();
             throw new RuntimeException(e);
         }
@@ -126,34 +129,49 @@ public class IntentBuilderView extends FrameLayout implements View.OnClickListen
         fillCheckBoxLayout(flagBuilderLayout, FlagUtils.intentFlagsByCategory(),
                 R.layout.section_header, R.id.header_title, R.layout.checkbox_list_item,
                 R.id.checkBox_item);
+
         // Add radios for activity combos
-        activityToFlags.forEach((activityInfo, manifestFlags) -> {
-            LinearLayout actRadio = (LinearLayout) mInflater
-                    .inflate(R.layout.activity_radio_list_item, null /* root */);
-            RadioButton rb = actRadio.findViewById(R.id.radio_launchMode);
-            rb.setText(activityInfo.name.substring(activityInfo.name.lastIndexOf('.') + 1));
-            rb.setTag(activityInfo);
-            ((TextView) actRadio.findViewById(R.id.activity_desc)).setText(
-                    manifestFlags.stream().collect(Collectors.joining("\n")));
-            rb.setOnClickListener(this);
-            activityRadios.addView(actRadio);
-        });
-        mLayout.findViewById(R.id.launch_button).setOnClickListener(this);
+        List<RadioButton> radioButtons = new ArrayList<>();
+        activityToFlags.entrySet().stream()
+                .sorted(Comparator.comparing(
+                        activityEntry -> nameOfActivityInfo(activityEntry.getKey())))
+                .forEach(activityEntry -> {
+                    ActivityInfo activityInfo = activityEntry.getKey();
+                    List<String> manifestFlags = activityEntry.getValue();
+
+                    LinearLayout actRadio = (LinearLayout) mInflater
+                            .inflate(R.layout.activity_radio_list_item, null /* root */);
+                    RadioButton rb = actRadio.findViewById(R.id.radio_launchMode);
+                    rb.setText(activityInfo.name.substring(activityInfo.name.lastIndexOf('.') + 1));
+                    rb.setTag(activityInfo);
+                    ((TextView) actRadio.findViewById(R.id.activity_desc)).setText(
+                            manifestFlags.stream().collect(Collectors.joining("\n")));
+                    rb.setOnClickListener(this);
+                    activityRadios.addView(actRadio);
+                    radioButtons.add(rb);
+                });
         ((CompoundButton) mLayout.findViewById(R.id.suggestion_switch))
                 .setOnCheckedChangeListener(this);
+        mRadioButtons = radioButtons;
+    }
+
+
+    private String nameOfActivityInfo(ActivityInfo activityInfo) {
+        return activityInfo.name.substring(activityInfo.name.lastIndexOf('.') + 1);
     }
 
     /**
      * Fills the {@link ViewGroup} with a list separated by section
-     * @param layout The layout to fill
-     * @param categories A map of category names to list items within that category
+     *
+     * @param layout            The layout to fill
+     * @param categories        A map of category names to list items within that category
      * @param categoryLayoutRes the layout resource of the category header view
-     * @param categoryViewId the resource id of the category {@link TextView} within the layout
-     * @param itemLayoutRes the layout resource of the list item view
-     * @param itemViewId the resource id of the item {@link TextView} within the item layout
+     * @param categoryViewId    the resource id of the category {@link TextView} within the layout
+     * @param itemLayoutRes     the layout resource of the list item view
+     * @param itemViewId        the resource id of the item {@link TextView} within the item layout
      */
     private void fillCheckBoxLayout(ViewGroup layout, Map<String, List<String>> categories,
-            int categoryLayoutRes, int categoryViewId, int itemLayoutRes,int itemViewId) {
+            int categoryLayoutRes, int categoryViewId, int itemLayoutRes, int itemViewId) {
         layout.removeAllViews();
         for (String category : categories.keySet()) {
             View categoryLayout = mInflater.inflate(categoryLayoutRes, layout,
@@ -181,13 +199,12 @@ public class IntentBuilderView extends FrameLayout implements View.OnClickListen
             ActivityInfo tag = (ActivityInfo) view.getTag();
             mActivityToLaunch = new ComponentName(mContext,
                     getClass(tag.name.substring(tag.name.lastIndexOf(".") + 1)));
-        } else if (view instanceof Button && view.getId() == R.id.launch_button) {
-            // Handles click on Launch Button
-            mLaunchCallback.launchActivity(currentIntent());
+            mRadioButtons.stream().filter(rb -> rb != view)
+                    .forEach(rb -> rb.setChecked(false));
         }
     }
 
-    private Intent currentIntent() {
+    public Intent currentIntent() {
         LinearLayout flagBuilder = mLayout.findViewById(R.id.build_intent_flags);
         Intent intent = new Intent();
         // Gather flags from flag builder checkbox list
@@ -204,8 +221,10 @@ public class IntentBuilderView extends FrameLayout implements View.OnClickListen
         return intent;
     }
 
-    public void setOnLaunchCallback(OnLaunchCallback listener) {
-        mLaunchCallback = listener;
+
+    public boolean startForResult() {
+        RadioButton startNormal = mLayout.findViewById(R.id.start_normal);
+        return !startNormal.isChecked();
     }
 
     @Override
@@ -230,7 +249,9 @@ public class IntentBuilderView extends FrameLayout implements View.OnClickListen
             if (mVerifyMode) {
                 refreshConstraints();
                 getCheckedFlags().forEach(this::suggestFlags);
-            } else enableAllFlags();
+            } else {
+                enableAllFlags();
+            }
         }
     }
 
@@ -244,11 +265,11 @@ public class IntentBuilderView extends FrameLayout implements View.OnClickListen
         List<String> suggestions = flag.getComplements().stream().map(IntentFlag::getName)
                 .collect(Collectors.toList());
         getAllCheckBoxes().stream()
-            .filter(box -> hasSuggestion(suggestions, box))
-            .forEach(box -> {
-                box.setButtonTintList(mSuggestTint);
-                box.setTag(TAG_SUGGESTED, true);
-            });
+                .filter(box -> hasSuggestion(suggestions, box))
+                .forEach(box -> {
+                    box.setButtonTintList(mSuggestTint);
+                    box.setTag(TAG_SUGGESTED, true);
+                });
     }
 
     private boolean hasSuggestion(List<String> suggestions, CheckBox box) {
@@ -287,6 +308,7 @@ public class IntentBuilderView extends FrameLayout implements View.OnClickListen
 
     /**
      * Retrieve children of a certain type from a {@link ViewGroup}.
+     *
      * @param group the ViewGroup to retrieve children from.
      */
     protected static <T> List<T> childrenOfGroup(ViewGroup group, Class<T> viewType) {
@@ -300,6 +322,7 @@ public class IntentBuilderView extends FrameLayout implements View.OnClickListen
 
     /**
      * Selects the checkboxes for the given list of flags.
+     *
      * @param flags A list of mIntent flags to select.
      */
     public void selectFlags(List<String> flags) {
@@ -309,8 +332,10 @@ public class IntentBuilderView extends FrameLayout implements View.OnClickListen
             }
         });
     }
+
     /**
      * Selects the checkboxes for the given list of flags.
+     *
      * @param flags A list of mIntent flags to select.
      */
     public void selectFlags(Collection<IntentFlag> flags) {
@@ -345,6 +370,6 @@ public class IntentBuilderView extends FrameLayout implements View.OnClickListen
      * button within this view.
      */
     public interface OnLaunchCallback {
-        void launchActivity(Intent intent);
+        void launchActivity(Intent intent, boolean forResult);
     }
 }

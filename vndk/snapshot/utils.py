@@ -25,9 +25,9 @@ import sys
 
 # Global Keys
 #   All paths are relative to install_dir: prebuilts/vndk/v{version}
+ROOT_BP_PATH = 'Android.bp'
 COMMON_DIR_NAME = 'common'
 COMMON_DIR_PATH = COMMON_DIR_NAME
-ANDROID_MK_PATH = os.path.join(COMMON_DIR_PATH, 'Android.mk')
 COMMON_BP_PATH = os.path.join(COMMON_DIR_PATH, 'Android.bp')
 CONFIG_DIR_PATH_PATTERN = '*/configs'
 MANIFEST_FILE_NAME = 'manifest.xml'

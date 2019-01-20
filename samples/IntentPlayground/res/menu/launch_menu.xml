@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2018 The Android Open Source Project
+<!-- Copyright (C) 2019 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -25,13 +25,19 @@
         android:icon="@drawable/icon_tests"
         android:iconTint="@color/white"
         android:title="@string/run_intent_tests"
-        android:visible="true"
-        />
+        android:visible="true"/>
 
     <item
         android:id="@+id/app_bar_help"
         android:icon="@drawable/help_outline"
         android:title="@string/help_action"
         android:iconTint="@color/white"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/app_bar_launch"
+        android:icon="@drawable/icon_launch"
+        android:title="@string/launch_activity_button"
+        android:visible="true"
+        app:showAsAction="always"/>
 </menu>

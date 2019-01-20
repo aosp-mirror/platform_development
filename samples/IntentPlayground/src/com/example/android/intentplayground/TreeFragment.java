@@ -17,7 +17,6 @@
 package com.example.android.intentplayground;
 
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,6 +30,8 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.List;
 
 /**
  * This fragment displays a hierarchy of tasks and activities in an expandable list.
@@ -59,46 +60,36 @@ public class TreeFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         mViewModel = (new ViewModelProvider(getActivity(),
                 new ViewModelProvider.NewInstanceFactory())).get(BaseActivityViewModel.class);
+
+        mViewModel.getRefresh().observe(this, this::onResumeHelper);
+
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        mViewModel.actOnFab(BaseActivityViewModel.FabAction.Show);
+    }
+
+    private void onResumeHelper(List<Tracking.Task> tasks) {
         mActivity = getActivity();
         LinearLayout treeLayout = (LinearLayout) getView();
+
         TextView titleView = treeLayout.findViewById(R.id.task_tree_title);
         RecyclerView recyclerView = treeLayout.findViewById(R.id.tree_recycler);
         if (mTitle != null) {
             titleView.setText(mTitle);
         }
-
-        displayRecycler(TestBase.describeTaskHierarchy(mActivity), recyclerView);
-        mViewModel.actOnFab(BaseActivityViewModel.FabAction.Show);
+        displayRecycler(tasks, recyclerView);
     }
 
-    private void displayRecycler(Node root, RecyclerView recyclerView) {
+    private void displayRecycler(List<Tracking.Task> tasks, RecyclerView recyclerView) {
         recyclerView.setHasFixedSize(true);
         recyclerView.setNestedScrollingEnabled(false);
-        InlineAdapter adapter = new InlineAdapter(root, getActivity());
+        InlineAdapter adapter = new InlineAdapter(tasks, getActivity());
         recyclerView.setAdapter(adapter);
-        recyclerView
-                .setLayoutManager(
-                        new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
-    }
-
-    private void removeTask(int taskId) {
-        ActivityManager am = mActivity.getSystemService(ActivityManager.class);
-        am.getAppTasks().forEach(task -> {
-            if (task.getTaskInfo().persistentId == taskId) {
-                task.finishAndRemoveTask();
-            }
-        });
-        onResume(); // manually trigger UI refresh
-    }
-
-    private void moveTaskToFront(int taskId) {
-        ActivityManager am = mActivity.getSystemService(ActivityManager.class);
-        am.moveTaskToFront(taskId, 0);
+        recyclerView.setLayoutManager(
+                new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
     }
 
     /**

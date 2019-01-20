@@ -17,6 +17,7 @@
 package com.example.android.intentplayground;
 
 
+import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityManager.AppTask;
 import android.app.ActivityManager.RecentTaskInfo;
@@ -34,30 +35,30 @@ import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.android.intentplayground.InlineAdapter.TaskViewHolder;
+import com.example.android.intentplayground.Tracking.Task;
 
 import java.util.Collections;
 import java.util.List;
 
 public class InlineAdapter extends RecyclerView.Adapter<TaskViewHolder> {
 
-    private final List<Node> mTasks;
+    private final List<Task> mTasks;
     private int mCurrentTaskIndex;
     private FragmentActivity mActivity;
 
-    public InlineAdapter(Node tree, FragmentActivity activity) {
+    public InlineAdapter(List<Task> tasks, FragmentActivity activity) {
         this.mActivity = activity;
-        this.mTasks = tree.mChildren;
+        this.mTasks = tasks;
         this.mCurrentTaskIndex = indexOfRunningTask();
     }
 
     public int indexOfRunningTask() {
-        List<AppTask> appTasks = mActivity.getSystemService(ActivityManager.class).getAppTasks();
-        RecentTaskInfo currentTask = appTasks.get(0).getTaskInfo();
+        int currentTaskId = mActivity.getTaskId();
 
         int index = 0;
         for (int i = 0; i < mTasks.size(); i++) {
-            Node task = mTasks.get(i);
-            if (task.mTaskId == currentTask.id) {
+            Task task = mTasks.get(i);
+            if (task.id == currentTaskId) {
                 index = i;
                 break;
             }
@@ -98,30 +99,24 @@ public class InlineAdapter extends RecyclerView.Adapter<TaskViewHolder> {
             mActivitiesLayout = itemView.findViewById(R.id.activity_node_container);
         }
 
-        public void setTask(Node task, FragmentManager manager, boolean highLightRunningActivity) {
-            mTaskIdTextView.setText(task.mTaskId == Node.NEW_TASK_ID
+        public void setTask(Task task, FragmentManager manager, boolean highLightRunningActivity) {
+            mTaskIdTextView.setText(task.id == Node.NEW_TASK_ID
                     ? mTaskIdTextView.getContext().getString(R.string.new_task)
-                    : String.valueOf(task.mTaskId));
+                    : String.valueOf(task.id));
             int taskColor = mTaskIdTextView.getContext()
-                    .getResources().getColor(ColorManager.getColorForTask(task.mTaskId),
+                    .getResources().getColor(ColorManager.getColorForTask(task.id),
                             null /* theme */);
             mTaskIdTextView.setTextColor(taskColor);
 
             mActivitiesLayout.removeAllViews();
-            for (Node activity : task.mChildren) {
+            for (Activity activity : task.mActivities) {
                 View activityView = LayoutInflater.from(mActivitiesLayout.getContext())
                         .inflate(R.layout.activity_node, mActivitiesLayout, false);
 
                 TextView activityName = activityView.findViewById(R.id.activity_name);
-                ImageButton intentButtonView = activityView.findViewById(R.id.intent_button);
 
-                activityName.setText(activity.mName.getShortClassName());
-
-                int color = activityView.getContext().getResources()
-                        .getColor(ColorManager.getColorForActivity(activity.mName),
-                                null /* theme */);
-                intentButtonView.setColorFilter(color);
-                intentButtonView.setOnClickListener(clickedView -> {
+                activityName.setText(activity.getComponentName().getShortClassName());
+                activityName.setOnClickListener(clickedView -> {
                     Intent intent = activity.getIntent();
                     List<String> flags;
                     if (intent != null) {
@@ -132,7 +127,8 @@ public class InlineAdapter extends RecyclerView.Adapter<TaskViewHolder> {
                     } else {
                         flags = Collections.singletonList("None");
                     }
-                    showDialogWithFlags(manager, activity.mName.getShortClassName(), flags);
+                    showDialogWithFlags(manager, activity.getComponentName().getShortClassName(),
+                            flags, task.id);
                 });
 
 
@@ -152,8 +148,9 @@ public class InlineAdapter extends RecyclerView.Adapter<TaskViewHolder> {
          * @param flags          The flags to list.
          */
         private void showDialogWithFlags(FragmentManager manager,
-                String shortClassName, List<String> flags) {
-            IntentDialogFragment.newInstance(shortClassName, flags).show(manager, "intentDialog");
+                String shortClassName, List<String> flags, int taskId) {
+            IntentDialogFragment.newInstance(shortClassName, flags, taskId).show(manager,
+                    "intentDialog");
         }
     }
 }
