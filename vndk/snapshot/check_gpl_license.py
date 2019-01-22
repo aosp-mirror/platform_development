@@ -36,16 +36,23 @@ class GPLChecker(object):
     MANIFEST_XML = utils.MANIFEST_FILE_NAME
     MODULE_PATHS_TXT = utils.MODULE_PATHS_FILE_NAME
 
-    def __init__(self, install_dir, android_build_top, temp_artifact_dir):
+    def __init__(self, install_dir, android_build_top, temp_artifact_dir,
+                 remote_git):
         """GPLChecker constructor.
 
         Args:
           install_dir: string, absolute path to the prebuilts/vndk/v{version}
             directory where the build files will be generated.
           android_build_top: string, absolute path to ANDROID_BUILD_TOP
+          temp_artifact_dir: string, temp directory to hold build artifacts
+            fetched from Android Build server.
+          remote_git: string, remote name to fetch and check if the revision of
+            VNDK snapshot is included in the source if it is not in the current
+            git repository.
         """
         self._android_build_top = android_build_top
         self._install_dir = install_dir
+        self._remote_git = remote_git
         self._manifest_file = os.path.join(temp_artifact_dir,
                                            self.MANIFEST_XML)
         self._notice_files_dir = os.path.join(install_dir,
@@ -140,14 +147,16 @@ class GPLChecker(object):
                 'Checking if the parent of revision {rev} exists in {proj}'.
                 format(rev=revision, proj=git_project_path))
             try:
-                cmd = ['git', '-C', path, 'fetch', 'goog', revision]
+                cmd = ['git', '-C', path, 'fetch', self._remote_git, revision]
                 utils.check_call(cmd)
                 cmd = ['git', '-C', path, 'rev-parse', 'FETCH_HEAD^2']
                 parent_revision = utils.check_output(cmd).strip()
             except subprocess.CalledProcessError as error:
                 logging.error(
-                    'Failed to get parent of revision {rev}: {err}'.format(
-                        rev=revision, err=error))
+                    'Failed to get parent of revision {rev} from "{remote}": '
+                    '{err}'.format(
+                        rev=revision, remote=self._remote_git, err=error))
+                logging.error('Try --remote to manually set remote name')
                 raise
             else:
                 if not _check_rev_list(parent_revision):
@@ -227,6 +236,11 @@ def get_args():
     parser.add_argument('-b', '--branch', help='Branch to pull manifest from.')
     parser.add_argument('--build', help='Build number to pull manifest from.')
     parser.add_argument(
+        '--remote',
+        default='aosp',
+        help=('Remote name to fetch and check if the revision of VNDK snapshot '
+              'is included in the source to conform GPL license. default=aosp'))
+    parser.add_argument(
         '-v',
         '--verbose',
         action='count',
@@ -248,6 +262,7 @@ def main():
     args = get_args()
     vndk_version = args.vndk_version
     install_dir = os.path.join(PREBUILTS_VNDK_DIR, 'v{}'.format(vndk_version))
+    remote = args.remote
     if not os.path.isdir(install_dir):
         raise ValueError(
             'Please provide valid VNDK version. {} does not exist.'
@@ -264,7 +279,7 @@ def main():
                          manifest_dest)
 
     license_checker = GPLChecker(install_dir, ANDROID_BUILD_TOP,
-                                 temp_artifact_dir)
+                                 temp_artifact_dir, remote)
     try:
         license_checker.check_gpl_projects()
     except ValueError as error:

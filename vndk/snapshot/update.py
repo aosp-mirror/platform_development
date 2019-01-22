@@ -185,6 +185,11 @@ def get_args():
         action='store_true',
         help='Perform the update in the current branch. Do not repo start.')
     parser.add_argument(
+        '--remote',
+        default='aosp',
+        help=('Remote name to fetch and check if the revision of VNDK snapshot '
+              'is included in the source to conform GPL license. default=aosp'))
+    parser.add_argument(
         '-v',
         '--verbose',
         action='count',
@@ -250,7 +255,7 @@ def main():
 
         if not local:
             license_checker = GPLChecker(install_dir, ANDROID_BUILD_TOP,
-                                         temp_artifact_dir)
+                                         temp_artifact_dir, args.remote)
             check_gpl_license(license_checker)
             logging.info(
                 'Successfully updated VNDK snapshot v{}'.format(vndk_version))
