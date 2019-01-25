@@ -23,8 +23,20 @@
     <string name="secret">Shared Secret:</string>
     <string name="connect">Connect!</string>
     <string name="disconnect">Disconnect!</string>
+    <string name="proxyhost">HTTP proxy hostname</string>
+    <string name="proxyport">HTTP proxy port</string>
+
+    <string name="packages">Packages (comma separated):</string>
+    <string name="allowed">Allow</string>
+    <string name="disallowed">Disallow</string>
 
     <string name="connecting">ToyVPN is connecting...</string>
     <string name="connected">ToyVPN is connected!</string>
     <string name="disconnected">ToyVPN is disconnected!</string>
+    <string name="incomplete_proxy_settings">
+        Incomplete proxy settings. For HTTP proxy we require both hostname and port settings.
+    </string>
+    <string name="unknown_package_names">
+        Some of the specified package names do not correspond to any installed packages.
+    </string>
 </resources>
