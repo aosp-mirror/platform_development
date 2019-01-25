@@ -17,8 +17,9 @@
 package com.example.android.toyvpn;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.VpnService;
@@ -30,6 +31,8 @@ import android.util.Pair;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -101,17 +104,15 @@ public class ToyVpnService extends VpnService implements Handler.Callback {
         final SharedPreferences prefs = getSharedPreferences(ToyVpnClient.Prefs.NAME, MODE_PRIVATE);
         final String server = prefs.getString(ToyVpnClient.Prefs.SERVER_ADDRESS, "");
         final byte[] secret = prefs.getString(ToyVpnClient.Prefs.SHARED_SECRET, "").getBytes();
-        final int port;
-        try {
-            port = Integer.parseInt(prefs.getString(ToyVpnClient.Prefs.SERVER_PORT, ""));
-        } catch (NumberFormatException e) {
-            Log.e(TAG, "Bad port: " + prefs.getString(ToyVpnClient.Prefs.SERVER_PORT, null), e);
-            return;
-        }
-
-        // Kick off a connection.
+        final boolean allow = prefs.getBoolean(ToyVpnClient.Prefs.ALLOW, true);
+        final Set<String> packages =
+                prefs.getStringSet(ToyVpnClient.Prefs.PACKAGES, Collections.emptySet());
+        final int port = prefs.getInt(ToyVpnClient.Prefs.SERVER_PORT, 0);
+        final String proxyHost = prefs.getString(ToyVpnClient.Prefs.PROXY_HOSTNAME, "");
+        final int proxyPort = prefs.getInt(ToyVpnClient.Prefs.PROXY_PORT, 0);
         startConnection(new ToyVpnConnection(
-                this, mNextConnectionId.getAndIncrement(), server, port, secret));
+                this, mNextConnectionId.getAndIncrement(), server, port, secret,
+                proxyHost, proxyPort, allow, packages));
     }
 
     private void startConnection(final ToyVpnConnection connection) {
@@ -121,13 +122,11 @@ public class ToyVpnService extends VpnService implements Handler.Callback {
 
         // Handler to mark as connected once onEstablish is called.
         connection.setConfigureIntent(mConfigureIntent);
-        connection.setOnEstablishListener(new ToyVpnConnection.OnEstablishListener() {
-            public void onEstablish(ParcelFileDescriptor tunInterface) {
-                mHandler.sendEmptyMessage(R.string.connected);
+        connection.setOnEstablishListener(tunInterface -> {
+            mHandler.sendEmptyMessage(R.string.connected);
 
-                mConnectingThread.compareAndSet(thread, null);
-                setConnection(new Connection(thread, tunInterface));
-            }
+            mConnectingThread.compareAndSet(thread, null);
+            setConnection(new Connection(thread, tunInterface));
         });
         thread.start();
     }
@@ -159,7 +158,13 @@ public class ToyVpnService extends VpnService implements Handler.Callback {
     }
 
     private void updateForegroundNotification(final int message) {
-        startForeground(1, new Notification.Builder(this)
+        final String NOTIFICATION_CHANNEL_ID = "ToyVpn";
+        NotificationManager mNotificationManager = (NotificationManager) getSystemService(
+                NOTIFICATION_SERVICE);
+        mNotificationManager.createNotificationChannel(new NotificationChannel(
+                NOTIFICATION_CHANNEL_ID, NOTIFICATION_CHANNEL_ID,
+                NotificationManager.IMPORTANCE_DEFAULT));
+        startForeground(1, new Notification.Builder(this, NOTIFICATION_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_vpn)
                 .setContentText(getString(message))
                 .setContentIntent(mConfigureIntent)
