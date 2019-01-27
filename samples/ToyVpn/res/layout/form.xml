@@ -31,6 +31,30 @@
         <TextView style="@style/item" android:text="@string/secret"/>
         <EditText style="@style/item" android:id="@+id/secret" android:password="true"/>
 
+        <TextView style="@style/item" android:text="@string/proxyhost"/>
+        <EditText style="@style/item" android:id="@+id/proxyhost"/>
+
+        <TextView style="@style/item" android:text="@string/proxyport"/>
+        <EditText style="@style/item" android:id="@+id/proxyport" android:inputType="number"/>
+
+        <TextView style="@style/item" android:text="@string/packages"/>
+        <RadioGroup
+            style="@style/item"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <RadioButton
+                android:id="@+id/allowed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/allowed"/>
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/disallowed"/>
+        </RadioGroup>
+        <EditText style="@style/item" android:id="@+id/packages"/>
+
         <Button style="@style/item" android:id="@+id/connect" android:text="@string/connect"/>
         <Button style="@style/item" android:id="@+id/disconnect" android:text="@string/disconnect"/>
 
