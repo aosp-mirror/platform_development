@@ -1,4 +1,4 @@
-// Copyright (C) 2018 The Android Open Source Project
+// Copyright (C) 2019 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,31 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SO_FILE_PARSER_H_
-#define SO_FILE_PARSER_H_
+#include "api_level.h"
 
-#include "exported_symbol_set.h"
-#include "ir_representation.h"
+#include "string_utils.h"
 
-#include <memory>
-#include <map>
+#include <cassert>
 #include <string>
 
 
 namespace abi_util {
 
 
-class SoFileParser {
- public:
-  static std::unique_ptr<SoFileParser> Create(const std::string &so_file_path);
-
-  virtual ~SoFileParser() {}
-
-  virtual std::unique_ptr<ExportedSymbolSet> Parse() = 0;
-};
+std::optional<ApiLevel> ParseApiLevel(const std::string &api_level_str) {
+  if (api_level_str == "current") {
+    return FUTURE_API_LEVEL;
+  }
+  return ParseInt(api_level_str);
+}
 
 
 }  // namespace abi_util
-
-
-#endif  // SO_FILE_PARSER_H_

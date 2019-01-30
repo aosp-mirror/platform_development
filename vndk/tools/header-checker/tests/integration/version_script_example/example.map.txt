@@ -1,0 +1,17 @@
+LIBVERSION_SCRIPT_EXAMPLE_1.0 {
+  global:
+    test1;  # mytag
+    extern "C++" {
+      Test3::*;  # mytag
+    };
+  local:
+    *;
+};
+
+LIBVERSION_SCRIPT_EXAMPLE_PRIVATE {
+  global:
+    test2;
+    extern "C++" {
+      Test4::*;
+    };
+} LIBVERSION_SCRIPT_EXAMPLE_1.0;

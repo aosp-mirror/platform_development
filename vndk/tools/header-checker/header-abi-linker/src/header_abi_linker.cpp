@@ -52,8 +52,17 @@ static llvm::cl::opt<std::string> version_script(
     "v", llvm::cl::desc("<version_script>"), llvm::cl::Optional,
     llvm::cl::cat(header_linker_category));
 
+static llvm::cl::list<std::string> excluded_symbol_versions(
+    "exclude-symbol-version", llvm::cl::Optional,
+    llvm::cl::cat(header_linker_category));
+
+static llvm::cl::list<std::string> excluded_symbol_tags(
+    "exclude-symbol-tag", llvm::cl::Optional,
+    llvm::cl::cat(header_linker_category));
+
 static llvm::cl::opt<std::string> api(
     "api", llvm::cl::desc("<api>"), llvm::cl::Optional,
+    llvm::cl::init("current"),
     llvm::cl::cat(header_linker_category));
 
 static llvm::cl::opt<std::string> arch(
@@ -93,10 +102,14 @@ class HeaderAbiLinker {
       const std::string &so_file,
       const std::string &linked_dump,
       const std::string &arch,
-      const std::string &api)
+      const std::string &api,
+      const std::vector<std::string> &excluded_symbol_versions,
+      const std::vector<std::string> &excluded_symbol_tags)
       : dump_files_(dump_files), exported_header_dirs_(exported_header_dirs),
         version_script_(version_script), so_file_(so_file),
-        out_dump_name_(linked_dump), arch_(arch), api_(api) {}
+        out_dump_name_(linked_dump), arch_(arch), api_(api),
+        excluded_symbol_versions_(excluded_symbol_versions),
+        excluded_symbol_tags_(excluded_symbol_tags) {}
 
   bool LinkAndDump();
 
@@ -125,6 +138,18 @@ class HeaderAbiLinker {
 
   bool LinkExportedSymbols(abi_util::IRDumper *ir_dumper);
 
+  bool LinkExportedSymbols(abi_util::IRDumper *ir_dumper,
+                           const abi_util::ExportedSymbolSet &exported_symbols);
+
+  template <typename SymbolMap>
+  bool LinkExportedSymbols(abi_util::IRDumper *ir_dumper,
+                           const SymbolMap &symbols);
+
+  // Check whether a symbol name is considered as exported.  If both
+  // `shared_object_symbols_` and `version_script_symbols_` exists, the symbol
+  // name must pass the `HasSymbol()` test in both cases.
+  bool IsSymbolExported(const std::string &name) const;
+
  private:
   const std::vector<std::string> &dump_files_;
   const std::vector<std::string> &exported_header_dirs_;
@@ -133,19 +158,14 @@ class HeaderAbiLinker {
   const std::string &out_dump_name_;
   const std::string &arch_;
   const std::string &api_;
+  const std::vector<std::string> &excluded_symbol_versions_;
+  const std::vector<std::string> &excluded_symbol_tags_;
 
   std::set<std::string> exported_headers_;
 
-  std::map<std::string, abi_util::ElfFunctionIR> function_decl_map_;
-  std::map<std::string, abi_util::ElfObjectIR> globvar_decl_map_;
-
-  // Version Script Regex Matching.
-  std::set<std::string> functions_regex_matched_set_;
-  std::regex functions_vs_regex_;
-
-  // Version Script Regex Matching.
-  std::set<std::string> globvars_regex_matched_set_;
-  std::regex globvars_vs_regex_;
+  // Exported symbols
+  std::unique_ptr<abi_util::ExportedSymbolSet> shared_object_symbols_;
+  std::unique_ptr<abi_util::ExportedSymbolSet> version_script_symbols_;
 };
 
 static void DeDuplicateAbiElementsThread(
@@ -228,7 +248,9 @@ bool HeaderAbiLinker::LinkAndDump() {
       abi_util::IRDumper::CreateIRDumper(output_format, out_dump_name_);
   assert(ir_dumper != nullptr);
 
-  LinkExportedSymbols(ir_dumper.get());
+  if (!LinkExportedSymbols(ir_dumper.get())) {
+    return false;
+  }
 
   if (!LinkTypes(greader.get(), ir_dumper.get()) ||
       !LinkFunctions(greader.get(), ir_dumper.get()) ||
@@ -243,39 +265,6 @@ bool HeaderAbiLinker::LinkAndDump() {
   }
 
   return true;
-}
-
-static bool QueryRegexMatches(std::set<std::string> *regex_matched_link_set,
-                              const std::regex *vs_regex,
-                              const std::string &symbol) {
-  assert(regex_matched_link_set != nullptr);
-  assert(vs_regex != nullptr);
-  if (regex_matched_link_set->find(symbol) != regex_matched_link_set->end()) {
-    return false;
-  }
-  if (std::regex_search(symbol, *vs_regex)) {
-    regex_matched_link_set->insert(symbol);
-    return true;
-  }
-  return false;
-}
-
-static std::regex CreateRegexMatchExprFromSet(
-    const std::set<std::string> &link_set) {
-  std::string all_regex_match_str = "";
-  std::set<std::string>::iterator it = link_set.begin();
-  while (it != link_set.end()) {
-    std::string regex_match_str_find_glob =
-      abi_util::FindAndReplace(*it, "\\*", ".*");
-    all_regex_match_str += "(\\b" + regex_match_str_find_glob + "\\b)";
-    if (++it != link_set.end()) {
-      all_regex_match_str += "|";
-    }
-  }
-  if (all_regex_match_str == "") {
-    return std::regex();
-  }
-  return std::regex(all_regex_match_str);
 }
 
 template <typename T>
@@ -319,15 +308,22 @@ bool HeaderAbiLinker::LinkTypes(const abi_util::TextFormatToIRReader *reader,
          LinkDecl(ir_dumper, reader->GetQualifiedTypes(), no_filter);
 }
 
+bool HeaderAbiLinker::IsSymbolExported(const std::string &name) const {
+  if (shared_object_symbols_ && !shared_object_symbols_->HasSymbol(name)) {
+    return false;
+  }
+  if (version_script_symbols_ && !version_script_symbols_->HasSymbol(name)) {
+    return false;
+  }
+  return true;
+}
+
 bool HeaderAbiLinker::LinkFunctions(
     const abi_util::TextFormatToIRReader *reader,
     abi_util::IRDumper *ir_dumper) {
   assert(reader != nullptr);
   auto symbol_filter = [this](const std::string &linker_set_key) {
-    return function_decl_map_.find(linker_set_key) !=
-               function_decl_map_.end() ||
-           QueryRegexMatches(&functions_regex_matched_set_,
-                             &functions_vs_regex_, linker_set_key);
+    return IsSymbolExported(linker_set_key);
   };
   return LinkDecl(ir_dumper, reader->GetFunctions(), symbol_filter);
 }
@@ -337,18 +333,18 @@ bool HeaderAbiLinker::LinkGlobalVars(
     abi_util::IRDumper *ir_dumper) {
   assert(reader != nullptr);
   auto symbol_filter = [this](const std::string &linker_set_key) {
-    return globvar_decl_map_.find(linker_set_key) !=
-               globvar_decl_map_.end() ||
-           QueryRegexMatches(&globvars_regex_matched_set_, &globvars_vs_regex_,
-                             linker_set_key);
+    return IsSymbolExported(linker_set_key);
   };
   return LinkDecl(ir_dumper, reader->GetGlobalVariables(), symbol_filter);
 }
 
-template <typename T>
-static bool LinkExportedSymbols(abi_util::IRDumper *dst,
-                                const std::map<std::string, T> &symbols) {
+template <typename SymbolMap>
+bool HeaderAbiLinker::LinkExportedSymbols(abi_util::IRDumper *dst,
+                                          const SymbolMap &symbols) {
   for (auto &&symbol : symbols) {
+    if (!IsSymbolExported(symbol.first)) {
+      continue;
+    }
     if (!dst->AddElfSymbolMessageIR(&(symbol.second))) {
       return false;
     }
@@ -356,20 +352,37 @@ static bool LinkExportedSymbols(abi_util::IRDumper *dst,
   return true;
 }
 
-// To be called right after parsing the .so file / version script.
+bool HeaderAbiLinker::LinkExportedSymbols(
+    abi_util::IRDumper *ir_dumper,
+    const abi_util::ExportedSymbolSet &exported_symbols) {
+  return (LinkExportedSymbols(ir_dumper, exported_symbols.GetFunctions()) &&
+          LinkExportedSymbols(ir_dumper, exported_symbols.GetVars()));
+}
+
 bool HeaderAbiLinker::LinkExportedSymbols(abi_util::IRDumper *ir_dumper) {
-  return ::LinkExportedSymbols(ir_dumper, function_decl_map_) &&
-         ::LinkExportedSymbols(ir_dumper, globvar_decl_map_);
+  if (shared_object_symbols_) {
+    return LinkExportedSymbols(ir_dumper, *shared_object_symbols_);
+  }
+
+  if (version_script_symbols_) {
+    return LinkExportedSymbols(ir_dumper, *version_script_symbols_);
+  }
+
+  return false;
 }
 
 bool HeaderAbiLinker::ReadExportedSymbols() {
+  if (so_file_.empty() && version_script_.empty()) {
+    llvm::errs() << "Either shared lib or version script must be specified.\n";
+    return false;
+  }
+
   if (!so_file_.empty()) {
     if (!ReadExportedSymbolsFromSharedObjectFile()) {
       llvm::errs() << "Failed to parse the shared library (.so file): "
                    << so_file_ << "\n";
       return false;
     }
-    return true;
   }
 
   if (!version_script_.empty()) {
@@ -378,29 +391,40 @@ bool HeaderAbiLinker::ReadExportedSymbols() {
                    << "\n";
       return false;
     }
-    return true;
   }
 
-  llvm::errs() << "Either shared lib or version script must be specified.\n";
-  return false;
+  return true;
 }
 
 bool HeaderAbiLinker::ReadExportedSymbolsFromVersionScript() {
-  abi_util::VersionScriptParser version_script_parser(
-      version_script_, arch_, api_);
-  if (!version_script_parser.Parse()) {
+  std::optional<abi_util::ApiLevel> api_level = abi_util::ParseApiLevel(api_);
+  if (!api_level) {
+    llvm::errs() << "-api must be either \"current\" or an integer (e.g. 21)\n";
     return false;
   }
 
-  function_decl_map_ = version_script_parser.GetFunctions();
-  globvar_decl_map_ = version_script_parser.GetGlobVars();
+  std::ifstream stream(version_script_, std::ios_base::in);
+  if (!stream) {
+    llvm::errs() << "Failed to open version script file\n";
+    return false;
+  }
 
-  std::set<std::string> function_regexs =
-      version_script_parser.GetFunctionRegexs();
-  std::set<std::string> globvar_regexs =
-      version_script_parser.GetGlobVarRegexs();
-  functions_vs_regex_ = CreateRegexMatchExprFromSet(function_regexs);
-  globvars_vs_regex_ = CreateRegexMatchExprFromSet(globvar_regexs);
+  abi_util::VersionScriptParser parser;
+  parser.SetArch(arch_);
+  parser.SetApiLevel(api_level.value());
+  for (auto &&version : excluded_symbol_versions_) {
+    parser.AddExcludedSymbolVersion(version);
+  }
+  for (auto &&tag : excluded_symbol_tags_) {
+    parser.AddExcludedSymbolTag(tag);
+  }
+
+  version_script_symbols_ = parser.Parse(stream);
+  if (!version_script_symbols_) {
+    llvm::errs() << "Failed to parse version script file\n";
+    return false;
+  }
+
   return true;
 }
 
@@ -411,8 +435,12 @@ bool HeaderAbiLinker::ReadExportedSymbolsFromSharedObjectFile() {
     return false;
   }
 
-  function_decl_map_ = so_parser->GetFunctions();
-  globvar_decl_map_ = so_parser->GetGlobVars();
+  shared_object_symbols_ = so_parser->Parse();
+  if (!shared_object_symbols_) {
+    llvm::errs() << "Failed to parse shared object file\n";
+    return false;
+  }
+
   return true;
 }
 
@@ -444,11 +472,14 @@ int main(int argc, const char **argv) {
   }
 
   HeaderAbiLinker Linker(dump_files, exported_header_dirs, version_script,
-                         so_file, linked_dump, arch, api);
+                         so_file, linked_dump, arch, api,
+                         excluded_symbol_versions,
+                         excluded_symbol_tags);
 
   if (!Linker.LinkAndDump()) {
     llvm::errs() << "Failed to link and dump elements\n";
     return -1;
   }
+
   return 0;
 }
