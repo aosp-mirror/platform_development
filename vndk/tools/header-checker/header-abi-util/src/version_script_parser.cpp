@@ -14,202 +14,283 @@
 
 #include "version_script_parser.h"
 
-#include <llvm/Support/raw_ostream.h>
-#include <llvm/Support/FileSystem.h>
-#include <llvm/Support/Path.h>
+#include "exported_symbol_set.h"
+#include "string_utils.h"
 
-#include <fstream>
 #include <iostream>
 #include <memory>
 #include <regex>
 #include <set>
 #include <string>
-#include <unordered_set>
 #include <vector>
+
 
 namespace abi_util {
 
-#define FUTURE_API 10000
 
-std::unordered_set<std::string> AllArches({
-    "arm", "arm64", "x86", "x86_64", "mips", "mips64"});
+static constexpr char DEFAULT_ARCH[] = "arm64";
 
-static bool StringContains(const std::string &line,
-                           const std::string &substring) {
-  return (line.find(substring) != std::string::npos);
+
+inline std::string GetIntroducedArchTag(const std::string &arch) {
+  return "introduced-" + arch + "=";
 }
 
-static bool LineSatisfiesArch(const std::string &line,
-                              const std::string arch) {
-  bool has_arch_tags = false;
-  for (auto &&possible_arch : AllArches) {
-    if (StringContains(line, possible_arch)) {
-      has_arch_tags = true;
-      break;
+
+VersionScriptParser::VersionScriptParser()
+    : arch_(DEFAULT_ARCH), introduced_arch_tag_(GetIntroducedArchTag(arch_)),
+      api_level_(FUTURE_API_LEVEL), stream_(nullptr), line_no_(0) {}
+
+
+void VersionScriptParser::SetArch(const std::string &arch) {
+  arch_ = arch;
+  introduced_arch_tag_ = GetIntroducedArchTag(arch);
+}
+
+
+VersionScriptParser::ParsedTags VersionScriptParser::ParseSymbolTags(
+    const std::string &line) {
+  static const char *const POSSIBLE_ARCHES[] = {
+      "arm", "arm64", "x86", "x86_64", "mips", "mips64"};
+
+  ParsedTags result;
+
+  std::string_view line_view(line);
+  std::string::size_type comment_pos = line_view.find('#');
+  if (comment_pos == std::string::npos) {
+    return result;
+  }
+
+  std::string_view comment_line = line_view.substr(comment_pos + 1);
+  std::vector<std::string_view> tags = Split(comment_line, " \t");
+
+  bool has_introduced_arch_tags = false;
+
+  for (auto &&tag : tags) {
+    // Check excluded tags.
+    if (excluded_symbol_tags_.find(tag) != excluded_symbol_tags_.end()) {
+      result.has_excluded_tags_ = true;
+    }
+
+    // Check the var tag.
+    if (tag == "var") {
+      result.has_var_tag_ = true;
+      continue;
+    }
+
+    // Check arch tags.
+    if (tag == arch_) {
+      result.has_arch_tags_ = true;
+      result.has_current_arch_tag_ = true;
+      continue;
+    }
+
+    for (auto &&possible_arch : POSSIBLE_ARCHES) {
+      if (tag == possible_arch) {
+        result.has_arch_tags_ = true;
+        break;
+      }
+    }
+
+    // Check introduced tags.
+    if (StartsWith(tag, "introduced=")) {
+      std::optional<ApiLevel> intro = ParseApiLevel(
+          std::string(tag.substr(sizeof("introduced=") - 1)));
+      if (!intro) {
+        ReportError("Bad introduced tag: " + std::string(tag));
+      } else {
+        if (!has_introduced_arch_tags) {
+          result.has_introduced_tags_ = true;
+          result.introduced_ = intro.value();
+        }
+      }
+      continue;
+    }
+
+    if (StartsWith(tag, introduced_arch_tag_)) {
+      std::optional<ApiLevel> intro = ParseApiLevel(
+          std::string(tag.substr(introduced_arch_tag_.size())));
+      if (!intro) {
+        ReportError("Bad introduced tag " + std::string(tag));
+      } else {
+        has_introduced_arch_tags = true;
+        result.has_introduced_tags_ = true;
+        result.introduced_ = intro.value();
+      }
+      continue;
+    }
+
+    // Check future tags.
+    if (tag == "future") {
+      result.has_future_tag_ = true;
+      continue;
     }
   }
-  return (has_arch_tags && StringContains(line, arch)) || !has_arch_tags;
+
+  return result;
 }
 
-VersionScriptParser::VersionScriptParser(const std::string &version_script,
-                                         const std::string &arch,
-                                         const std::string &api)
-    : version_script_(version_script), arch_(arch), api_(ApiStrToInt(api)) {}
 
-int VersionScriptParser::ApiStrToInt(const std::string &api) {
-  // Follow what build/soong/cc/gen_stub_libs.py does.
-  if (api == "current") {
-    return FUTURE_API;
+bool VersionScriptParser::IsSymbolExported(
+    const VersionScriptParser::ParsedTags &tags) {
+  if (tags.has_excluded_tags_) {
+    return false;
   }
-  return std::stoi(api);
+
+  if (tags.has_arch_tags_ && !tags.has_current_arch_tag_) {
+    return false;
+  }
+
+  if (tags.has_future_tag_) {
+    return api_level_ == FUTURE_API_LEVEL;
+  }
+
+  if (tags.has_introduced_tags_) {
+    return api_level_ >= tags.introduced_;
+  }
+
+  return true;
 }
 
-bool VersionScriptParser::SymbolInArchAndApiVersion(const std::string &line,
-                                                    const std::string &arch,
-                                                    int api) {
-  // If the tags do not have an "introduced" requirement, the symbol is
-  // exported.
-  if (!StringContains(line, "introduced") && LineSatisfiesArch(line, arch)) {
+
+bool VersionScriptParser::ParseSymbolLine(const std::string &line,
+                                          bool is_in_extern_cpp) {
+  // The symbol name comes before the ';'.
+  std::string::size_type pos = line.find(";");
+  if (pos == std::string::npos) {
+    ReportError("No semicolon at the end of the symbol line: " + line);
+    return false;
+  }
+
+  std::string symbol(Trim(line.substr(0, pos)));
+
+  ParsedTags tags = ParseSymbolTags(line);
+  if (!IsSymbolExported(tags)) {
     return true;
   }
-  if (line == "future") {
-    return api == FUTURE_API;
+
+  if (is_in_extern_cpp) {
+    if (IsGlobPattern(symbol)) {
+      exported_symbols_->AddDemangledCppGlobPattern(symbol);
+    } else {
+      exported_symbols_->AddDemangledCppSymbol(symbol);
+    }
+    return true;
   }
-  const std::string regex_match_string1 = " *introduced-" + arch + "=([0-9]+)";
-  const std::string regex_match_string2 = " *introduced=([0-9]+)";
-  std::smatch matcher1;
-  std::smatch matcher2;
-  std::regex match_clause1(regex_match_string1);
-  std::regex match_clause2(regex_match_string2);
-  int matched_api = -1;
-  if (std::regex_search(line, matcher1, match_clause1)) {
-    matched_api = std::stoi(matcher1.str(1));
-  } else if ((std::regex_search(line, matcher2, match_clause2)) &&
-    LineSatisfiesArch(line, arch)) {
-    matched_api = std::stoi(matcher2.str(1));
+
+  if (IsGlobPattern(symbol)) {
+    exported_symbols_->AddGlobPattern(symbol);
+    return true;
   }
-  // If the arch specific tag / version specific tag was found and the api level
-  // required was greater than the api level offered.
-  return (matched_api <= 0 || api >= matched_api);
+
+  if (tags.has_var_tag_) {
+    exported_symbols_->AddVar(symbol, ElfSymbolIR::ElfSymbolBinding::Global);
+  } else {
+    exported_symbols_->AddFunction(symbol,
+                                   ElfSymbolIR::ElfSymbolBinding::Global);
+  }
+  return true;
 }
 
-bool VersionScriptParser::SymbolExported(const std::string &line,
-                                         const std::string &arch, int api) {
-  // Empty line means that the symbol is exported
-  if (line.empty() || SymbolInArchAndApiVersion(line, arch, api)) {
+
+bool VersionScriptParser::ParseVersionBlock(bool ignore_symbols) {
+  static const std::regex EXTERN_CPP_PATTERN(R"(extern\s*"[Cc]\+\+"\s*\{)");
+
+  LineScope scope = LineScope::GLOBAL;
+  bool is_in_extern_cpp = false;
+
+  while (true) {
+    std::string line;
+    if (!ReadLine(line)) {
+      break;
+    }
+
+    if (line.find("}") != std::string::npos) {
+      if (is_in_extern_cpp) {
+        is_in_extern_cpp = false;
+        continue;
+      }
+      return true;
+    }
+
+    // Check extern "c++"
+    if (std::regex_match(line, EXTERN_CPP_PATTERN)) {
+      is_in_extern_cpp = true;
+      continue;
+    }
+
+    // Check symbol visibility label
+    if (StartsWith(line, "local:")) {
+      scope = LineScope::LOCAL;
+      continue;
+    }
+    if (StartsWith(line, "global:")) {
+      scope = LineScope::GLOBAL;
+      continue;
+    }
+    if (scope != LineScope::GLOBAL) {
+      continue;
+    }
+
+    // Parse symbol line
+    if (!ignore_symbols) {
+      if (!ParseSymbolLine(line, is_in_extern_cpp)) {
+        return false;
+      }
+    }
+  }
+
+  ReportError("No matching closing parenthesis");
+  return false;
+}
+
+
+std::unique_ptr<ExportedSymbolSet> VersionScriptParser::Parse(
+    std::istream &stream) {
+  // Initialize the parser context
+  stream_ = &stream;
+  line_no_ = 0;
+  exported_symbols_.reset(new ExportedSymbolSet());
+
+  // Parse
+  while (true) {
+    std::string line;
+    if (!ReadLine(line)) {
+      break;
+    }
+
+    std::string::size_type lparen_pos = line.find("{");
+    if (lparen_pos == std::string::npos) {
+      ReportError("No version opening parenthesis" + line);
+      return nullptr;
+    }
+
+    std::string version(Trim(line.substr(0, lparen_pos - 1)));
+    bool exclude_symbol_version = (excluded_symbol_versions_.find(version) !=
+                                   excluded_symbol_versions_.end());
+
+    if (!ParseVersionBlock(exclude_symbol_version)) {
+      return nullptr;
+    }
+  }
+
+  return std::move(exported_symbols_);
+}
+
+
+bool VersionScriptParser::ReadLine(std::string &line) {
+  while (std::getline(*stream_, line)) {
+    ++line_no_;
+    line = std::string(Trim(line));
+    if (line.empty() || line[0] == '#') {
+      continue;
+    }
     return true;
   }
   return false;
 }
 
-void VersionScriptParser::AddToVars(std::string &symbol) {
-  if (symbol.find("*") != std::string::npos) {
-    globvar_regexs_.insert(symbol);
-  } else {
-    globvars_.emplace(
-        symbol, ElfObjectIR(symbol, ElfSymbolIR::ElfSymbolBinding::Global));
-  }
-}
 
-void VersionScriptParser::AddToFunctions(std::string &symbol) {
-  if (symbol.find("*") != std::string::npos) {
-    function_regexs_.insert(symbol);
-  } else {
-    functions_.emplace(
-        symbol, ElfFunctionIR(symbol, ElfSymbolIR::ElfSymbolBinding::Global));
-  }
-}
+VersionScriptParser::ErrorHandler::~ErrorHandler() {}
 
-bool VersionScriptParser::ParseSymbolLine(const std::string &line) {
-  // The symbol lies before the ';' and the tags are after ';'
-  std::string::size_type pos = line.find(";");
-  if (pos == std::string::npos) {
-    llvm::errs() << "Couldn't find end of symbol" << line <<"\n";
-    return false;
-  }
-  std::string symbol = line.substr(0, pos);
-  std::string::size_type last_space = symbol.find_last_of(' ');
-  symbol = symbol.substr(last_space + 1, pos);
-  std::string tags = line.substr(pos + 1);
-  if (SymbolExported(tags, arch_, api_)) {
-    if (StringContains(tags, "var")) {
-      AddToVars(symbol);
-    } else {
-      AddToFunctions(symbol);
-    }
-  }
-  return true;
-}
-
-typedef VersionScriptParser::LineScope LineScope;
-
-LineScope VersionScriptParser::GetLineScope(std::string &line,
-                                            LineScope scope) {
-  if (StringContains(line, "local:")) {
-    scope = LineScope::local;
-  }
-  return scope;
-}
-
-bool VersionScriptParser::ParseInnerBlock(std::ifstream &symbol_ifstream) {
-  std::string line = "";
-  LineScope scope = LineScope::global;
-
-  while (std::getline(symbol_ifstream, line)) {
-    if (line.find("}") != std::string::npos) {
-      break;
-    }
-    if (line.c_str()[0] == '#') {
-      continue;
-    }
-    scope = GetLineScope(line, scope);
-    if (scope != LineScope::global || StringContains(line, "global:")) {
-      continue;
-    }
-    ParseSymbolLine(line);
-  }
-  return true;
-}
-
-const std::map<std::string, ElfFunctionIR> &
-VersionScriptParser::GetFunctions() {
-  return functions_;
-}
-
-const std::map<std::string, ElfObjectIR> &VersionScriptParser::GetGlobVars() {
-  return globvars_;
-}
-
-const std::set<std::string> &VersionScriptParser::GetFunctionRegexs() {
-  return function_regexs_;
-}
-
-const std::set<std::string> &VersionScriptParser::GetGlobVarRegexs() {
-  return globvar_regexs_;
-}
-
-bool VersionScriptParser::Parse() {
-  std::ifstream symbol_ifstream(version_script_);
-  if (!symbol_ifstream.is_open()) {
-    llvm::errs() << "Failed to open version script file\n";
-    return false;
-  }
-
-  std::string line;
-  while (std::getline(symbol_ifstream, line)) {
-    // Skip comment lines.
-    if (line.c_str()[0] == '#') {
-      continue;
-    }
-    if (StringContains(line, "{")) {
-      if ((StringContains(line, "PRIVATE"))) {
-        continue;
-      }
-      ParseInnerBlock(symbol_ifstream);
-    }
-  }
-
-  return true;
-}
 
 }  // namespace abi_util

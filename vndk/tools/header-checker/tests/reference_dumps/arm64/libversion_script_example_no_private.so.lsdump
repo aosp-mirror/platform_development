@@ -1,0 +1,96 @@
+{
+ "array_types" : [],
+ "builtin_types" :
+ [
+  {
+   "linker_set_key" : "void",
+   "name" : "void",
+   "referenced_type" : "type-1",
+   "self_type" : "type-1"
+  }
+ ],
+ "elf_functions" :
+ [
+  {
+   "name" : "_ZN5Test34testEv"
+  },
+  {
+   "name" : "test1"
+  }
+ ],
+ "elf_objects" : [],
+ "enum_types" : [],
+ "function_types" : [],
+ "functions" :
+ [
+  {
+   "function_name" : "Test3::test",
+   "linker_set_key" : "_ZN5Test34testEv",
+   "parameters" :
+   [
+    {
+     "is_this_ptr" : true,
+     "referenced_type" : "type-3"
+    }
+   ],
+   "return_type" : "type-1",
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
+  },
+  {
+   "function_name" : "test1",
+   "linker_set_key" : "test1",
+   "return_type" : "type-1",
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
+  }
+ ],
+ "global_vars" : [],
+ "lvalue_reference_types" : [],
+ "pointer_types" :
+ [
+  {
+   "alignment" : 8,
+   "linker_set_key" : "Test3 *",
+   "name" : "Test3 *",
+   "referenced_type" : "type-2",
+   "self_type" : "type-3",
+   "size" : 8,
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
+  },
+  {
+   "alignment" : 8,
+   "linker_set_key" : "Test4 *",
+   "name" : "Test4 *",
+   "referenced_type" : "type-4",
+   "self_type" : "type-5",
+   "size" : 8,
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
+  }
+ ],
+ "qualified_types" : [],
+ "record_types" :
+ [
+  {
+   "alignment" : 1,
+   "linker_set_key" : "Test3",
+   "name" : "Test3",
+   "record_kind" : "class",
+   "referenced_type" : "type-2",
+   "self_type" : "type-2",
+   "size" : 1,
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/version_script_example/example.h",
+   "unique_id" : "_ZTS5Test3"
+  },
+  {
+   "alignment" : 1,
+   "linker_set_key" : "Test4",
+   "name" : "Test4",
+   "record_kind" : "class",
+   "referenced_type" : "type-4",
+   "self_type" : "type-4",
+   "size" : 1,
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/version_script_example/example.h",
+   "unique_id" : "_ZTS5Test4"
+  }
+ ],
+ "rvalue_reference_types" : []
+}
