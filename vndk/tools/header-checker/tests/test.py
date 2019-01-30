@@ -309,6 +309,25 @@ class HeaderCheckerTest(unittest.TestCase):
             ["-input-format-old", "Json", "-input-format-new", "Json",
              "-consider-opaque-types-different"])
 
+    def test_linker_shared_object_file_and_version_script(self):
+        base_dir = os.path.join(
+            SCRIPT_DIR, 'integration', 'version_script_example')
+
+        cases = [
+            'libversion_script_example',
+            'libversion_script_example_no_mytag',
+            'libversion_script_example_no_private',
+        ]
+
+        for module_name in cases:
+            module = Module.get_test_modules_by_name(module_name)[0]
+            example_lsdump_old = self.get_or_create_ref_dump(module, False)
+            example_lsdump_new = self.get_or_create_ref_dump(module, True)
+            self.run_and_compare_abi_diff(
+                example_lsdump_old, example_lsdump_new,
+                module_name, "arm64", 0,
+                ["-input-format-old", "Json", "-input-format-new", "Json"])
+
 
 if __name__ == '__main__':
     unittest.main()

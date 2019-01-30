@@ -499,6 +499,62 @@ TEST_MODULES = [
         dumper_flags=['-output-format', 'Json'],
         linker_flags=['-input-format', 'Json', '-output-format', 'Json']
     ),
+    LsdumpModule(
+        name='libversion_script_example',
+        arch='arm64',
+        srcs=[
+            'integration/version_script_example/example.cpp',
+        ],
+        version_script='integration/version_script_example/example.map.txt',
+        export_include_dirs=['integration/version_script_example'],
+        dumper_flags=['-output-format', 'Json'],
+        linker_flags=[
+            '-input-format', 'Json',
+            '-output-format', 'Json',
+            '-so', relative_to_abs_path(
+                'integration/version_script_example/prebuilts/' +
+                'libversion_script_example.so'
+            ),
+        ]
+    ),
+    LsdumpModule(
+        name='libversion_script_example_no_private',
+        arch='arm64',
+        srcs=[
+            'integration/version_script_example/example.cpp',
+        ],
+        version_script='integration/version_script_example/example.map.txt',
+        export_include_dirs=['integration/version_script_example'],
+        dumper_flags=['-output-format', 'Json'],
+        linker_flags=[
+            '-input-format', 'Json',
+            '-output-format', 'Json',
+            '-so', relative_to_abs_path(
+                'integration/version_script_example/prebuilts/' +
+                'libversion_script_example.so'
+            ),
+            '--exclude-symbol-version', 'LIBVERSION_SCRIPT_EXAMPLE_PRIVATE',
+        ]
+    ),
+    LsdumpModule(
+        name='libversion_script_example_no_mytag',
+        arch='arm64',
+        srcs=[
+            'integration/version_script_example/example.cpp',
+        ],
+        version_script='integration/version_script_example/example.map.txt',
+        export_include_dirs=['integration/version_script_example'],
+        dumper_flags=['-output-format', 'Json'],
+        linker_flags=[
+            '-input-format', 'Json',
+            '-output-format', 'Json',
+            '-so', relative_to_abs_path(
+                'integration/version_script_example/prebuilts/' +
+                'libversion_script_example.so'
+            ),
+            '--exclude-symbol-tag', 'mytag',
+        ]
+    ),
 ]
 
 TEST_MODULES = {m.name: m for m in TEST_MODULES}
