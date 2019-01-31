@@ -9,7 +9,7 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src)
 LOCAL_RESOURCE_DIR := $(LOCAL_PATH)/res
 
 LOCAL_STATIC_ANDROID_LIBRARIES := \
-    androidx.design_design \
+    com.google.android.material_material \
     androidx.appcompat_appcompat \
     androidx.recyclerview_recyclerview \
     androidx.lifecycle_lifecycle-livedata \
