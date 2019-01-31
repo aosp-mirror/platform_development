@@ -1,4 +1,4 @@
-// Copyright (C) 2018 The Android Open Source Project
+// Copyright (C) 2019 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,31 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SO_FILE_PARSER_H_
-#define SO_FILE_PARSER_H_
+#ifndef STRING_UTILS_H_
+#define STRING_UTILS_H_
 
-#include "exported_symbol_set.h"
-#include "ir_representation.h"
-
-#include <memory>
-#include <map>
+#include <optional>
 #include <string>
+#include <vector>
 
 
 namespace abi_util {
 
 
-class SoFileParser {
- public:
-  static std::unique_ptr<SoFileParser> Create(const std::string &so_file_path);
+std::string_view Trim(std::string_view s);
 
-  virtual ~SoFileParser() {}
+bool StartsWith(std::string_view s, std::string_view prefix);
 
-  virtual std::unique_ptr<ExportedSymbolSet> Parse() = 0;
-};
+bool EndsWith(std::string_view s, std::string_view suffix);
+
+std::vector<std::string_view> Split(std::string_view s,
+                                    std::string_view delim_chars);
+
+std::optional<int> ParseInt(const std::string &s);
+
+bool IsGlobPattern(std::string_view s);
 
 
 }  // namespace abi_util
 
 
-#endif  // SO_FILE_PARSER_H_
+#endif  // STRING_UTILS_H_
