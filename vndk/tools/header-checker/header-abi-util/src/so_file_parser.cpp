@@ -21,7 +21,9 @@
 #include <llvm/Object/ELFTypes.h>
 #include <llvm/Object/SymbolSize.h>
 
+
 namespace abi_util {
+
 
 template <typename T>
 static inline T UnWrap(llvm::Expected<T> value_or_error) {
@@ -34,6 +36,7 @@ static inline T UnWrap(llvm::Expected<T> value_or_error) {
   return std::move(value_or_error.get());
 }
 
+
 static abi_util::ElfSymbolIR::ElfSymbolBinding
 LLVMToIRSymbolBinding(unsigned char binding) {
   switch (binding) {
@@ -45,7 +48,8 @@ LLVMToIRSymbolBinding(unsigned char binding) {
   assert(0);
 }
 
-template<typename T>
+
+template <typename T>
 class ELFSoFileParser : public SoFileParser {
  private:
   LLVM_ELF_IMPORT_TYPES_ELFT(T)
@@ -57,12 +61,8 @@ class ELFSoFileParser : public SoFileParser {
 
   ~ELFSoFileParser() override {}
 
-  const std::map<std::string, ElfFunctionIR> &GetFunctions() const override {
-    return functions_;
-  }
-
-  const std::map<std::string, ElfObjectIR> &GetGlobVars() const override {
-    return globvars_;
+  std::unique_ptr<ExportedSymbolSet> Parse() override {
+    return std::move(exported_symbols_);
   }
 
  private:
@@ -77,37 +77,43 @@ class ELFSoFileParser : public SoFileParser {
 
  private:
   const llvm::object::ELFObjectFile<T> *obj_;
-  std::map<std::string, abi_util::ElfFunctionIR> functions_;
-  std::map<std::string, abi_util::ElfObjectIR> globvars_;
+  std::unique_ptr<ExportedSymbolSet> exported_symbols_;
 };
 
-template<typename T>
+
+template <typename T>
 ELFSoFileParser<T>::ELFSoFileParser(const llvm::object::ELFObjectFile<T> *obj) {
   assert(obj != nullptr);
+
+  exported_symbols_.reset(new ExportedSymbolSet());
+
   for (auto symbol_it : obj->getDynamicSymbolIterators()) {
     const Elf_Sym *elf_sym = obj->getSymbol(symbol_it.getRawDataRefImpl());
     assert (elf_sym != nullptr);
     if (!IsSymbolExported(elf_sym) || elf_sym->isUndefined()) {
       continue;
     }
+
     abi_util::ElfSymbolIR::ElfSymbolBinding symbol_binding =
         LLVMToIRSymbolBinding(elf_sym->getBinding());
-    llvm::object::SymbolRef::Type type = UnWrap(symbol_it.getType());
     std::string symbol_name = UnWrap(symbol_it.getName());
+
+    llvm::object::SymbolRef::Type type = UnWrap(symbol_it.getType());
     if (type == llvm::object::SymbolRef::Type::ST_Function) {
-      functions_.emplace(symbol_name,
-                         ElfFunctionIR(symbol_name, symbol_binding));
+      exported_symbols_->AddFunction(symbol_name, symbol_binding);
     } else if (type == llvm::object::SymbolRef::Type::ST_Data) {
-      globvars_.emplace(symbol_name, ElfObjectIR(symbol_name, symbol_binding));
+      exported_symbols_->AddVar(symbol_name, symbol_binding);
     }
   }
 }
 
-template<typename T>
+
+template <typename T>
 static std::unique_ptr<SoFileParser> CreateELFSoFileParser(
     const llvm::object::ELFObjectFile<T> *elfo) {
   return llvm::make_unique<ELFSoFileParser<T>>(elfo);
 }
+
 
 std::unique_ptr<SoFileParser> SoFileParser::Create(
     const std::string &so_file_path) {
@@ -148,5 +154,6 @@ std::unique_ptr<SoFileParser> SoFileParser::Create(
 
   return nullptr;
 }
+
 
 }  // namespace abi_util
