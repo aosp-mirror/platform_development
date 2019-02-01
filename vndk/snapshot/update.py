@@ -115,8 +115,10 @@ def gather_notice_files(install_dir):
             shutil.rmtree(notices_dir_per_arch)
 
 
-def revise_ld_config_txt_if_needed(vndk_version):
+def post_processe_files_if_needed(vndk_version):
     """For O-MR1, replaces unversioned VNDK directories with versioned ones.
+    Also, renames ld.config.txt, llndk.libraries.txt and vndksp.libraries.txt
+    files to have version suffix.
 
     Unversioned VNDK directories: /system/${LIB}/vndk[-sp]
     Versioned VNDK directories: /system/${LIB}/vndk[-sp]-27
@@ -124,6 +126,13 @@ def revise_ld_config_txt_if_needed(vndk_version):
     Args:
       vndk_version: int, version of VNDK snapshot
     """
+    def add_version_suffix(file_name):
+        logging.info('Rename {} to have version suffix'.format(vndk_version))
+        target_files = glob.glob(
+            os.path.join(utils.CONFIG_DIR_PATH_PATTERN, file_name))
+        for target_file in target_files:
+            name, ext = os.path.splitext(target_file)
+            os.rename(target_file, name + '.' + str(vndk_version) + ext)
     if vndk_version == 27:
         logging.info('Revising ld.config.txt for O-MR1...')
         re_pattern = '(system\/\${LIB}\/vndk(?:-sp)?)([:/]|$)'
@@ -136,10 +145,16 @@ def revise_ld_config_txt_if_needed(vndk_version):
             with open(ld_config_file, 'w') as file:
                 file.write(revised)
 
+        files_to_add_version_suffix = ('ld.config.txt',
+                                       'llndk.libraries.txt',
+                                       'vndksp.libraries.txt')
+        for file_to_rename in files_to_add_version_suffix:
+            add_version_suffix(file_to_rename)
+
 
 def update_buildfiles(buildfile_generator):
-    logging.info('Generating Android.mk file...')
-    buildfile_generator.generate_android_mk()
+    logging.info('Generating root Android.bp file...')
+    buildfile_generator.generate_root_android_bp()
 
     logging.info('Generating common/Android.bp file...')
     buildfile_generator.generate_common_android_bp()
@@ -184,6 +199,11 @@ def get_args():
         '--use-current-branch',
         action='store_true',
         help='Perform the update in the current branch. Do not repo start.')
+    parser.add_argument(
+        '--remote',
+        default='aosp',
+        help=('Remote name to fetch and check if the revision of VNDK snapshot '
+              'is included in the source to conform GPL license. default=aosp'))
     parser.add_argument(
         '-v',
         '--verbose',
@@ -243,14 +263,14 @@ def main():
         install_snapshot(args.branch, args.build, local, install_dir,
                          temp_artifact_dir)
         gather_notice_files(install_dir)
-        revise_ld_config_txt_if_needed(vndk_version)
+        post_processe_files_if_needed(vndk_version)
 
         buildfile_generator = GenBuildFile(install_dir, vndk_version)
         update_buildfiles(buildfile_generator)
 
         if not local:
             license_checker = GPLChecker(install_dir, ANDROID_BUILD_TOP,
-                                         temp_artifact_dir)
+                                         temp_artifact_dir, args.remote)
             check_gpl_license(license_checker)
             logging.info(
                 'Successfully updated VNDK snapshot v{}'.format(vndk_version))
