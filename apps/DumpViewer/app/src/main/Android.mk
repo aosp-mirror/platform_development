@@ -12,7 +12,6 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
         androidx.lifecycle_lifecycle-common \
 
 LOCAL_STATIC_ANDROID_LIBRARIES := \
-        androidx.design_design \
         androidx.lifecycle_lifecycle-runtime \
         androidx.percentlayout_percentlayout \
         androidx.transition_transition \

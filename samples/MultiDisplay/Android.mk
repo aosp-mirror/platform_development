@@ -23,7 +23,7 @@ LOCAL_MODULE_TAGS := samples
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 LOCAL_STATIC_ANDROID_LIBRARIES += \
-    androidx.design_design \
+    com.google.android.material_material \
     androidx.lifecycle_lifecycle-livedata \
     androidx.lifecycle_lifecycle-viewmodel
 
