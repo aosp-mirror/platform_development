@@ -94,37 +94,41 @@ external/clang/LICENSE.TXT                    build-tools/${PLATFORM_NAME}/rende
 prebuilts/sdk/renderscript/lib/javalib.jar            build-tools/${PLATFORM_NAME}/renderscript/lib/androidx-rs.jar
 prebuilts/sdk/renderscript/lib/javalib_legacy.jar     build-tools/${PLATFORM_NAME}/renderscript/lib/renderscript-v8.jar
 
-prebuilts/sdk/renderscript/lib/arm/libc.so            build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/armeabi-v7a/libc.so
-prebuilts/sdk/renderscript/lib/arm/libm.so            build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/armeabi-v7a/libm.so
-prebuilts/sdk/renderscript/lib/arm/libcompiler_rt.a   build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/armeabi-v7a/libcompiler_rt.a
-prebuilts/sdk/renderscript/lib/arm/libRSSupport.so    build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/armeabi-v7a/libRSSupport.so
-prebuilts/sdk/renderscript/lib/arm/librsjni.so        build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/armeabi-v7a/librsjni.so
-prebuilts/sdk/renderscript/lib/arm/libblasV8.so       build-tools/${PLATFORM_NAME}/renderscript/lib/blas/armeabi-v7a/libblasV8.so
-prebuilts/sdk/renderscript/lib/arm/librsrt_arm.bc     build-tools/${PLATFORM_NAME}/renderscript/lib/bc/armeabi-v7a/libclcore.bc
+prebuilts/sdk/renderscript/lib/arm/libc.so               build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/armeabi-v7a/libc.so
+prebuilts/sdk/renderscript/lib/arm/libm.so               build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/armeabi-v7a/libm.so
+prebuilts/sdk/renderscript/lib/arm/libcompiler_rt.a      build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/armeabi-v7a/libcompiler_rt.a
+prebuilts/sdk/renderscript/lib/arm/libRSSupport.so       build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/armeabi-v7a/libRSSupport.so
+prebuilts/sdk/renderscript/lib/arm/librsjni.so           build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/armeabi-v7a/librsjni.so
+prebuilts/sdk/renderscript/lib/arm/librsjni_androidx.so  build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/armeabi-v7a/librsjni_androidx.so
+prebuilts/sdk/renderscript/lib/arm/libblasV8.so          build-tools/${PLATFORM_NAME}/renderscript/lib/blas/armeabi-v7a/libblasV8.so
+prebuilts/sdk/renderscript/lib/arm/librsrt_arm.bc        build-tools/${PLATFORM_NAME}/renderscript/lib/bc/armeabi-v7a/libclcore.bc
 
-prebuilts/sdk/renderscript/lib/x86/libc.so            build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/x86/libc.so
-prebuilts/sdk/renderscript/lib/x86/libm.so            build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/x86/libm.so
-prebuilts/sdk/renderscript/lib/x86/libcompiler_rt.a   build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/x86/libcompiler_rt.a
-prebuilts/sdk/renderscript/lib/x86/libRSSupport.so    build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/x86/libRSSupport.so
-prebuilts/sdk/renderscript/lib/x86/librsjni.so        build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/x86/librsjni.so
-prebuilts/sdk/renderscript/lib/x86/libblasV8.so       build-tools/${PLATFORM_NAME}/renderscript/lib/blas/x86/libblasV8.so
-prebuilts/sdk/renderscript/lib/x86/librsrt_x86.bc     build-tools/${PLATFORM_NAME}/renderscript/lib/bc/x86/libclcore.bc
+prebuilts/sdk/renderscript/lib/x86/libc.so               build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/x86/libc.so
+prebuilts/sdk/renderscript/lib/x86/libm.so               build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/x86/libm.so
+prebuilts/sdk/renderscript/lib/x86/libcompiler_rt.a      build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/x86/libcompiler_rt.a
+prebuilts/sdk/renderscript/lib/x86/libRSSupport.so       build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/x86/libRSSupport.so
+prebuilts/sdk/renderscript/lib/x86/librsjni.so           build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/x86/librsjni.so
+prebuilts/sdk/renderscript/lib/x86/librsjni_androidx.so  build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/x86/librsjni_androidx.so
+prebuilts/sdk/renderscript/lib/x86/libblasV8.so          build-tools/${PLATFORM_NAME}/renderscript/lib/blas/x86/libblasV8.so
+prebuilts/sdk/renderscript/lib/x86/librsrt_x86.bc        build-tools/${PLATFORM_NAME}/renderscript/lib/bc/x86/libclcore.bc
 
 prebuilts/sdk/renderscript/lib/arm64/libc.so              build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/arm64-v8a/libc.so
 prebuilts/sdk/renderscript/lib/arm64/libm.so              build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/arm64-v8a/libm.so
 prebuilts/sdk/renderscript/lib/arm64/libcompiler_rt.a     build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/arm64-v8a/libcompiler_rt.a
 prebuilts/sdk/renderscript/lib/arm64/libRSSupport.so      build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/arm64-v8a/libRSSupport.so
 prebuilts/sdk/renderscript/lib/arm64/librsjni.so          build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/arm64-v8a/librsjni.so
+prebuilts/sdk/renderscript/lib/arm64/librsjni_androidx.so build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/arm64-v8a/librsjni_androidx.so
 prebuilts/sdk/renderscript/lib/arm64/libblasV8.so         build-tools/${PLATFORM_NAME}/renderscript/lib/blas/arm64-v8a/libblasV8.so
 prebuilts/sdk/renderscript/lib/arm64/librsrt_arm64.bc     build-tools/${PLATFORM_NAME}/renderscript/lib/bc/arm64-v8a/libclcore.bc
 
-prebuilts/sdk/renderscript/lib/x86_64/libc.so             build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/x86_64/libc.so
-prebuilts/sdk/renderscript/lib/x86_64/libm.so             build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/x86_64/libm.so
-prebuilts/sdk/renderscript/lib/x86_64/libcompiler_rt.a    build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/x86_64/libcompiler_rt.a
-prebuilts/sdk/renderscript/lib/x86_64/libRSSupport.so     build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/x86_64/libRSSupport.so
-prebuilts/sdk/renderscript/lib/x86_64/librsjni.so         build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/x86_64/librsjni.so
-prebuilts/sdk/renderscript/lib/x86_64/libblasV8.so        build-tools/${PLATFORM_NAME}/renderscript/lib/blas/x86_64/libblasV8.so
-prebuilts/sdk/renderscript/lib/x86_64/librsrt_x86_64.bc   build-tools/${PLATFORM_NAME}/renderscript/lib/bc/x86_64/libclcore.bc
+prebuilts/sdk/renderscript/lib/x86_64/libc.so               build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/x86_64/libc.so
+prebuilts/sdk/renderscript/lib/x86_64/libm.so               build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/x86_64/libm.so
+prebuilts/sdk/renderscript/lib/x86_64/libcompiler_rt.a      build-tools/${PLATFORM_NAME}/renderscript/lib/intermediates/x86_64/libcompiler_rt.a
+prebuilts/sdk/renderscript/lib/x86_64/libRSSupport.so       build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/x86_64/libRSSupport.so
+prebuilts/sdk/renderscript/lib/x86_64/librsjni.so           build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/x86_64/librsjni.so
+prebuilts/sdk/renderscript/lib/x86_64/librsjni_androidx.so  build-tools/${PLATFORM_NAME}/renderscript/lib/packaged/x86_64/librsjni_androidx.so
+prebuilts/sdk/renderscript/lib/x86_64/libblasV8.so          build-tools/${PLATFORM_NAME}/renderscript/lib/blas/x86_64/libblasV8.so
+prebuilts/sdk/renderscript/lib/x86_64/librsrt_x86_64.bc     build-tools/${PLATFORM_NAME}/renderscript/lib/bc/x86_64/libclcore.bc
 
 # apksigner
 bin/apksigner                                 build-tools/${PLATFORM_NAME}/apksigner
