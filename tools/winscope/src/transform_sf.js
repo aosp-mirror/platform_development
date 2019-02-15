@@ -40,9 +40,16 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
   }
 
   function get_crop(layer, bounds) {
-    return layer.crop != undefined
-      && layer.crop.right > -1
-      && layer.crop.bottom > -1 ? layer.crop : bounds;
+    if (layer.crop != undefined && layer.crop.right > -1 && layer.crop.bottom > -1) {
+      return {
+        left: layer.crop.left || 0,
+        right: layer.crop.right  || 0,
+        top: layer.crop.top || 0,
+        bottom: layer.crop.bottom || 0
+      };
+    } else {
+      return bounds;
+    }
   }
 
   function intersect(bounds, crop) {
@@ -55,7 +62,12 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
   }
 
   function has_size(rect) {
-    return (rect.right - rect.left) > 0 && (rect.bottom - rect.top) > 0;
+    var right = rect.right || 0;
+    var left = rect.left || 0;
+    var top = rect.top || 0;
+    var bottom = rect.bottom || 0;
+
+    return (right - left) > 0 && (bottom - top) > 0;
   }
 
   function offset_to(bounds, x, y) {
@@ -92,6 +104,17 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
     return result;
   }
 
+  function is_opaque(layer) {
+    return layer.color == undefined || (layer.color.a || 0) > 0;
+  }
+
+  function is_empty(region) {
+    return region == undefined ||
+        region.rect == undefined ||
+        region.rect.length == 0 ||
+        layer.visibleRegion.rect.every(function(r) { !has_size(r) } );
+  }
+
   /**
    * Checks if the layer is visible on screen accorindg to its type,
    * active buffer content, alpha and visible regions.
@@ -101,12 +124,9 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
    */
   function is_visible(layer) {
     var visible = (layer.activeBuffer || layer.type === 'ColorLayer')
-                  && !hidden && layer.color.a > 0;
-    if (visible && layer.visibleRegion != undefined) {
-      var isRectVisible = layer.visibleRegion.rect.some(has_size);
-      visible &= isRectVisible;
-    }
-    return visible
+                  && !hidden && is_opaque(layer);
+    visible &= !is_empty(layer.visibleRegion);
+    return visible;
   }
 
   var chips = [];
@@ -118,7 +138,7 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
   } else {
     rect = {left: 0, right: 0, top: 0, bottom: 0};
   }
-  if (layer.zOrderRelativeOf !== -1) {
+  if ((layer.zOrderRelativeOf || -1) !== -1) {
     chips.push(RELATIVE_Z_CHIP);
   }
   if (layer.zOrderRelativeParentOf !== undefined) {
@@ -168,7 +188,7 @@ function transform_layers(layers) {
         isChild[childId] = true;
       });
     }
-    if (e.zOrderRelativeOf !== -1) {
+    if ((e.zOrderRelativeOf || -1) !== -1) {
       idToItem[e.zOrderRelativeOf].zOrderRelativeParentOf = e.id;
     }
   });
