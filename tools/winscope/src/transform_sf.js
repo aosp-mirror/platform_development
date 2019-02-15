@@ -71,14 +71,24 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
     var result = parentBounds;
     var bounds = get_bounds(layer);
     var crop = get_crop(layer, bounds);
+    var position = {
+      x : (layer.position != undefined) ? layer.position.x || 0 : 0,
+      y : (layer.position != undefined) ? layer.position.y || 0 : 0,
+    }
     if (has_size(bounds)) {
-      result = offset_to(intersect(bounds, crop), layer.position.x, layer.position.y)
+      result = offset_to(intersect(bounds, crop), position.x, position.y)
     }
     else if (has_size(crop)) {
-      result = offset_to(crop, layer.position.x, layer.position.y)
+      result = offset_to(crop, position.x, position.y)
     }
     result.label = layer.name;
-    result.transform = layer.transform;
+    var transform = { 
+      dsdx: (layer.transform != undefined) ? layer.transform.dsdx || 0.0 : 0.0,
+      dtdx: (layer.transform != undefined) ? layer.transform.dtdx || 0.0 : 0.0,
+      dsdy: (layer.transform != undefined) ? layer.transform.dsdy || 0.0 : 0.0,
+      dtdy: (layer.transform != undefined) ? layer.transform.dtdy || 0.0 : 0.0
+    }
+    result.transform = transform
     return result;
   }
 
