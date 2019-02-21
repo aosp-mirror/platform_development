@@ -112,7 +112,7 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
     return region == undefined ||
         region.rect == undefined ||
         region.rect.length == 0 ||
-        layer.visibleRegion.rect.every(function(r) { !has_size(r) } );
+        region.rect.every(function(r) { return !has_size(r) } );
   }
 
   /**
