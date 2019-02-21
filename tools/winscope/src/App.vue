@@ -17,6 +17,10 @@
     <md-whiteframe md-tag="md-toolbar">
       <h1 class="md-title" style="flex: 1">{{title}}</h1>
 
+      <div>
+          <md-checkbox v-model="store.displayDefaults">Display defaults</md-checkbox>
+      </div>
+
       <input type="file" @change="onLoadFile" id="upload-file" v-show="false"/>
       <label class="md-button md-accent md-raised md-theme-default" for="upload-file">Open File</label>
 
@@ -155,6 +159,7 @@ export default {
       store: LocalStore('app', {
         flattened: false,
         onlyVisible: false,
+        displayDefaults: true
       }),
       FILE_TYPES,
       fileType: "auto",
@@ -191,7 +196,9 @@ export default {
 
         try {
           var decoded = filetype.protoType.decode(buffer);
-          decoded = filetype.protoType.toObject(decoded, {enums: String, defaults: true});
+          decoded = filetype.protoType.toObject(decoded, {
+              enums: String,
+              defaults: this.store.displayDefaults});
           var transformed = filetype.transform(decoded);
         } catch (ex) {
           this.title = this.filename + " (loading " + filetype.name + "):" + ex;
