@@ -38,10 +38,29 @@ PRODUCT_PACKAGES += \
 	dexdump \
 	dmtracedump \
 	dx \
-	emmalib \
 	etc1tool \
 	hprof-conv \
-	jython \
+	layoutlib-legacy \
+	libaapt2_jni \
+	llvm-rs-cc \
+	sqlite3 \
+	vgabios-cirrus.bin \
+	split-select \
+	zipalign
+
+PRODUCT_HOST_PACKAGES += \
+	aapt \
+	aapt2 \
+	adb \
+	aidl \
+	apksigner \
+	bcc_compat \
+	bios.bin \
+	dexdump \
+	dmtracedump \
+	dx \
+	etc1tool \
+	hprof-conv \
 	layoutlib-legacy \
 	libaapt2_jni \
 	llvm-rs-cc \
