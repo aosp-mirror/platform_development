@@ -72,6 +72,10 @@ def parse_args():
               ".vscode/launch.json configuration needed to connect the debugging " +
               "client to the server."))
 
+    parser.add_argument(
+        "--env", nargs=1, action="append", metavar="VAR=VALUE",
+        help="set environment variable when running a binary")
+
     return parser.parse_args()
 
 
@@ -307,13 +311,17 @@ def main():
 
         tracer_pid = get_tracer_pid(device, pid)
         if tracer_pid == 0:
+            cmd_prefix = args.su_cmd
+            if args.env:
+                cmd_prefix += ['env'] + [v[0] for v in args.env]
+
             # Start gdbserver.
             gdbserver_local_path = get_gdbserver_path(root, arch)
             gdbserver_remote_path = "/data/local/tmp/{}-gdbserver".format(arch)
             gdbrunner.start_gdbserver(
                 device, gdbserver_local_path, gdbserver_remote_path,
                 target_pid=pid, run_cmd=run_cmd, debug_socket=debug_socket,
-                port=args.port, run_as_cmd=args.su_cmd)
+                port=args.port, run_as_cmd=cmd_prefix)
         else:
             print "Connecting to tracing pid {} using local port {}".format(tracer_pid, args.port)
             gdbrunner.forward_gdbserver_port(device, local=args.port,
