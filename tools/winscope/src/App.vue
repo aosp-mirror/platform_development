@@ -18,7 +18,12 @@
       <h1 class="md-title" style="flex: 1">{{title}}</h1>
 
       <div>
-          <md-checkbox v-model="store.displayDefaults">Display defaults</md-checkbox>
+          <md-checkbox v-model="store.displayDefaults">Show default properties
+            <md-tooltip md-direction="bottom">
+              If checked, shows the value of all properties.
+              Otherwise, hides all properties whose value is the default for its data type.
+            </md-tooltip>
+          </md-checkbox>
       </div>
 
       <input type="file" @change="onLoadFile" id="upload-file" v-show="false"/>
