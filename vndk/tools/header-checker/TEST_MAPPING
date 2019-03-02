@@ -1,8 +1,0 @@
-{
-  "presubmit" : [
-    {
-      "name" : "libheader-abi-util_test",
-      "host" : true
-    }
-  ]
-}
