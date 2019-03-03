@@ -15,8 +15,10 @@
  */
 
 import {transform, nanos_to_string, get_visible_chip} from './transform.js'
+import {preprocess, get_transform_value} from './matrix_utils.js'
 
 const FLAG_HIDDEN = 0x1;
+
 var RELATIVE_Z_CHIP = {short: 'RelZ',
     long: "Is relative Z-ordered to another surface",
     class: 'warn'};
@@ -80,7 +82,7 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
   }
 
   function transform_bounds(layer, parentBounds) {
-    var result = parentBounds;
+    var result = parentBounds || { left: 0, right: 0, top: 0, bottom: 0 };
     var bounds = get_bounds(layer);
     var crop = get_crop(layer, bounds);
     var position = {
@@ -94,13 +96,7 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
       result = offset_to(crop, position.x, position.y)
     }
     result.label = layer.name;
-    var transform = { 
-      dsdx: (layer.transform != undefined) ? layer.transform.dsdx || 0.0 : 0.0,
-      dtdx: (layer.transform != undefined) ? layer.transform.dtdx || 0.0 : 0.0,
-      dsdy: (layer.transform != undefined) ? layer.transform.dsdy || 0.0 : 0.0,
-      dtdy: (layer.transform != undefined) ? layer.transform.dtdy || 0.0 : 0.0
-    }
-    result.transform = transform
+    result.transform = get_transform_value(layer.transform);
     return result;
   }
 
@@ -129,6 +125,8 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
     return visible;
   }
 
+  preprocess(layer);
+
   var chips = [];
   var rect = transform_bounds(layer, parentBounds);
   var hidden = (layer.flags & FLAG_HIDDEN) != 0 || parentHidden;
@@ -136,7 +134,7 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
   if (visible) {
     chips.push(get_visible_chip());
   } else {
-    rect = {left: 0, right: 0, top: 0, bottom: 0};
+    rect = undefined;
   }
   if ((layer.zOrderRelativeOf || -1) !== -1) {
     chips.push(RELATIVE_Z_CHIP);
@@ -159,7 +157,7 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
       [layer.resolvedChildren, transform_layer_with_parent_hidden],
     ],
     rect,
-    highlight: has_size(rect) ? rect: undefined,
+    highlight: rect,
     chips,
     visible,
   });
@@ -249,7 +247,7 @@ function transform_layers_entry(entry) {
 }
 
 function transform_layers_trace(entries) {
-  return transform({
+  var r = transform({
     obj: entries,
     kind: 'layerstrace',
     name: 'layerstrace',
@@ -257,6 +255,8 @@ function transform_layers_trace(entries) {
       [entries.entry, transform_layers_entry],
     ],
   });
+
+  return r;
 }
 
 export {transform_layers, transform_layers_trace};
