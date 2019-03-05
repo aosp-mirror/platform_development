@@ -5,6 +5,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import collections
 
 
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -138,30 +139,93 @@ def run_header_abi_linker(output_path, inputs, version_script, api, arch,
     return read_output_content(output_path, AOSP_DIR)
 
 
-def make_tree(product, variant):
-    # To aid creation of reference dumps.
-    make_cmd = ['build/soong/soong_ui.bash', '--make-mode', '-j',
-                'vndk', 'findlsdumps', 'TARGET_PRODUCT=' + product,
-                'TARGET_BUILD_VARIANT=' + variant]
-    subprocess.check_call(make_cmd, cwd=AOSP_DIR)
-
-
-def make_targets(targets, product, variant):
+def make_targets(product, variant, targets):
     make_cmd = ['build/soong/soong_ui.bash', '--make-mode', '-j',
                 'TARGET_PRODUCT=' + product, 'TARGET_BUILD_VARIANT=' + variant]
     make_cmd += targets
-    subprocess.check_call(make_cmd, cwd=AOSP_DIR, stdout=subprocess.DEVNULL,
-                          stderr=subprocess.STDOUT)
+    subprocess.check_call(make_cmd, cwd=AOSP_DIR)
 
 
-def make_libraries(libs, product, variant, llndk_mode):
-    # To aid creation of reference dumps. Makes lib.vendor for the current
-    # configuration.
-    lib_targets = []
-    for lib in libs:
-        lib = lib if llndk_mode else lib + VENDOR_SUFFIX
-        lib_targets.append(lib)
-    make_targets(lib_targets, product, variant)
+def make_tree(product, variant):
+    """Build all lsdump files."""
+    return make_targets(product, variant, ['findlsdumps'])
+
+
+def make_libraries(product, variant, targets, libs, llndk_mode):
+    """Build lsdump files for specific libs."""
+    lsdump_paths = read_lsdump_paths(product, variant, targets, build=True)
+    targets = []
+    for name in libs:
+        targets.extend(lsdump_paths[name].values())
+    make_targets(product, variant, targets)
+
+
+def get_lsdump_paths_file_path(product, variant):
+    """Get the path to lsdump_paths.txt."""
+    product_out = get_build_vars_for_product(
+        ['PRODUCT_OUT'], product, variant)[0]
+    return os.path.join(product_out, 'lsdump_paths.txt')
+
+
+def _is_sanitizer_variation(variation):
+    """Check whether the variation is introduced by a sanitizer."""
+    return variation in {'asan', 'hwasan', 'tsan', 'intOverflow', 'cfi', 'scs'}
+
+
+def _are_sanitizer_variations(variations):
+    """Check whether these variations are introduced by sanitizers."""
+    if isinstance(variations, str):
+        variations = [v for v in variations.split('_') if v]
+    return all(_is_sanitizer_variation(v) for v in variations)
+
+
+def _read_lsdump_paths(lsdump_paths_file_path, targets):
+    """Read lsdump path from lsdump_paths.txt for each libname and variant."""
+    lsdump_paths = collections.defaultdict(dict)
+    suffixes = collections.defaultdict(dict)
+
+    prefixes = []
+    prefixes.extend(get_module_variant_dir_name(
+        target.arch, target.arch_variant, target.cpu_variant, '_core_shared')
+        for target in targets)
+    prefixes.extend(get_module_variant_dir_name(
+        target.arch, target.arch_variant, target.cpu_variant, '_vendor_shared')
+        for target in targets)
+
+    with open(lsdump_paths_file_path, 'r') as lsdump_paths_file:
+        for line in lsdump_paths_file:
+            path = line.strip()
+            if not path:
+                continue
+            dirname, filename = os.path.split(path)
+            if not filename.endswith(SOURCE_ABI_DUMP_EXT):
+                continue
+            libname = filename[:-len(SOURCE_ABI_DUMP_EXT)]
+            if not libname:
+                continue
+            variant = os.path.basename(dirname)
+            if not variant:
+                continue
+            for prefix in prefixes:
+                if not variant.startswith(prefix):
+                    continue
+                new_suffix = variant[len(prefix):]
+                if not _are_sanitizer_variations(new_suffix):
+                    continue
+                old_suffix = suffixes[libname].get(prefix)
+                if not old_suffix or new_suffix > old_suffix:
+                    lsdump_paths[libname][prefix] = path
+                    suffixes[libname][prefix] = new_suffix
+    return lsdump_paths
+
+
+def read_lsdump_paths(product, variant, targets, build=True):
+    """Build lsdump_paths.txt and read the paths."""
+    lsdump_paths_file_path = get_lsdump_paths_file_path(product, variant)
+    if build:
+        make_targets(product, variant, [lsdump_paths_file_path])
+    lsdump_paths_file_abspath = os.path.join(AOSP_DIR, lsdump_paths_file_path)
+    return _read_lsdump_paths(lsdump_paths_file_abspath, targets)
 
 
 def get_module_variant_dir_name(arch, arch_variant, cpu_variant,
@@ -187,11 +251,11 @@ def find_lib_lsdumps(module_variant_dir_name, lsdump_paths, libs):
     """Find the lsdump corresponding to lib_name for the given module variant
     if it exists."""
     result = []
-    for lib_name, paths in lsdump_paths.items():
+    for lib_name, variations in lsdump_paths.items():
         if libs and lib_name not in libs:
             continue
-        for path in paths:
-            if module_variant_dir_name in path.split(os.path.sep):
+        for variation, path in variations.items():
+            if variation.startswith(module_variant_dir_name):
                 result.append(os.path.join(AOSP_DIR, path.strip()))
     return result
 
