@@ -15,7 +15,6 @@
  */
 
 import {transform, nanos_to_string, get_visible_chip} from './transform.js'
-import {preprocess, get_transform_value} from './matrix_utils.js'
 
 // Layer flags
 const FLAG_HIDDEN = 0x01;
@@ -99,7 +98,7 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
       result = offset_to(crop, position.x, position.y)
     }
     result.label = layer.name;
-    result.transform = get_transform_value(layer.transform);
+    result.transform = layer.transform;
     return result;
   }
 
@@ -143,8 +142,6 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
 
     layer.flags = verboseFlags.join('|') + " (" + layer.flags + ")";
   }
-
-  preprocess(layer);
 
   var chips = [];
   var rect = transform_bounds(layer, parentBounds);
