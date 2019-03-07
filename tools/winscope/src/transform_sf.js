@@ -17,7 +17,10 @@
 import {transform, nanos_to_string, get_visible_chip} from './transform.js'
 import {preprocess, get_transform_value} from './matrix_utils.js'
 
-const FLAG_HIDDEN = 0x1;
+// Layer flags
+const FLAG_HIDDEN = 0x01;
+const FLAG_OPAQUE = 0x02;
+const FLAG_SECURE = 0x80;
 
 var RELATIVE_Z_CHIP = {short: 'RelZ',
     long: "Is relative Z-ordered to another surface",
@@ -125,6 +128,22 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
     return visible;
   }
 
+  function postprocess_flags(layer) {
+    if (!layer.flags) return;
+    var verboseFlags = [];
+    if (layer.flags & FLAG_HIDDEN) {
+      verboseFlags.push("HIDDEN");
+    }
+    if (layer.flags & FLAG_OPAQUE) {
+      verboseFlags.push("OPAQUE");
+    }
+    if (layer.flags & FLAG_SECURE) {
+      verboseFlags.push("SECURE");
+    }
+
+    layer.flags = verboseFlags.join('|') + " (" + layer.flags + ")";
+  }
+
   preprocess(layer);
 
   var chips = [];
@@ -148,6 +167,8 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
 
   var transform_layer_with_parent_hidden =
       (layer) => transform_layer(layer, {parentBounds: rect, parentHidden: hidden});
+
+  postprocess_flags(layer);
 
   return transform({
     obj: layer,
