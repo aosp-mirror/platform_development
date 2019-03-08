@@ -195,10 +195,13 @@ function missingLayer(childId) {
 function transform_layers(layers) {
   var idToItem = {};
   var isChild = {}
-  layers.layers.forEach((e) => {
+
+  var layersList = layers.layers || [];
+
+  layersList.forEach((e) => {
     idToItem[e.id] = e;
   });
-  layers.layers.forEach((e) => {
+  layersList.forEach((e) => {
     e.resolvedChildren = [];
     if (Array.isArray(e.children)) {
       e.resolvedChildren = e.children.map(
@@ -212,7 +215,7 @@ function transform_layers(layers) {
     }
   });
 
-  var roots = layers.layers.filter((e) => !isChild[e.id]);
+  var roots = layersList.filter((e) => !isChild[e.id]);
 
   function foreachTree(nodes, fun) {
     nodes.forEach((n) => {
@@ -230,7 +233,7 @@ function transform_layers(layers) {
     idToTransformed[n.obj.id] = n;
   });
   var flattened = [];
-  layers.layers.forEach((e) => {
+  layersList.forEach((e) => {
     flattened.push(idToTransformed[e.id]);
   });
 
