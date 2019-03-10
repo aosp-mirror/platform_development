@@ -15,7 +15,6 @@
  */
 
 import {transform, nanos_to_string, get_visible_chip} from './transform.js'
-import {preprocess, get_transform_value} from './matrix_utils.js'
 
 // Layer flags
 const FLAG_HIDDEN = 0x01;
@@ -99,7 +98,7 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
       result = offset_to(crop, position.x, position.y)
     }
     result.label = layer.name;
-    result.transform = get_transform_value(layer.transform);
+    result.transform = layer.transform;
     return result;
   }
 
@@ -143,8 +142,6 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
 
     layer.flags = verboseFlags.join('|') + " (" + layer.flags + ")";
   }
-
-  preprocess(layer);
 
   var chips = [];
   var rect = transform_bounds(layer, parentBounds);
@@ -195,10 +192,13 @@ function missingLayer(childId) {
 function transform_layers(layers) {
   var idToItem = {};
   var isChild = {}
-  layers.layers.forEach((e) => {
+
+  var layersList = layers.layers || [];
+
+  layersList.forEach((e) => {
     idToItem[e.id] = e;
   });
-  layers.layers.forEach((e) => {
+  layersList.forEach((e) => {
     e.resolvedChildren = [];
     if (Array.isArray(e.children)) {
       e.resolvedChildren = e.children.map(
@@ -212,7 +212,7 @@ function transform_layers(layers) {
     }
   });
 
-  var roots = layers.layers.filter((e) => !isChild[e.id]);
+  var roots = layersList.filter((e) => !isChild[e.id]);
 
   function foreachTree(nodes, fun) {
     nodes.forEach((n) => {
@@ -230,7 +230,7 @@ function transform_layers(layers) {
     idToTransformed[n.obj.id] = n;
   });
   var flattened = [];
-  layers.layers.forEach((e) => {
+  layersList.forEach((e) => {
     flattened.push(idToTransformed[e.id]);
   });
 

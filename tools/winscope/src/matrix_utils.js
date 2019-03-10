@@ -14,190 +14,148 @@
  * limitations under the License.
  */
 
-const FLIP_H_VAL = 1; // (1 << 0)
-const FLIP_V_VAL = 2; // (1 << 1)
-const ROT_90_VAL = 4; // (1 << 2)
-const ROT_INVALID_VAL = 0x80;
-const TRANSLATE_VAL = 0x1;
-const ROTATE_VAL = 0x2;
-const SCALE_VAL = 0x4;
+/* transform type flags */
+const TRANSLATE_VAL   = 0x0001;
+const ROTATE_VAL      = 0x0002;
+const SCALE_VAL       = 0x0004;
 
-const ROT_INVALID = 'ROT_INVALID';
-const ROT_90 = 'ROT_90';
-const ROT_0 = 'ROT_0';
-const FLIP_V = 'FLIP_V';
-const FLIP_H = 'FLIP_H';
-const IDENTITY = 'IDENTITY';
-const SCALE = 'SCALE';
-const ROTATE = 'ROTATE';
-const TRANSLATE = 'TRANSLATE';
+/* orientation flags */
+const FLIP_H_VAL      = 0x0100; // (1 << 0 << 8)
+const FLIP_V_VAL      = 0x0200; // (1 << 1 << 8)
+const ROT_90_VAL      = 0x0400; // (1 << 2 << 8)
+const ROT_INVALID_VAL = 0x8000; // (0x80 << 8)
 
-function has_default_value(transform) {
-    return (transform.type || '').indexOf(ROT_INVALID) == -1 &&
-        (transform.type || '').indexOf(SCALE) == -1;
+function is_simple_transform(transform) {
+  return is_type_flag_clear(transform, ROT_INVALID_VAL|SCALE_VAL);
 }
 
-function preprocess(layer) {
-    /**
-     * Checks if the loaded file was a stored with ProtoBuf2 or Protobuf3
-     *
-     * Proto2 files don't have a Type for the transform object but all other
-     * fields of the transform are set.
-     *
-     * Proto3 has a type field for the transform but doesn't store default
-     * values (0 for transform type), also, the framework/native implementation
-     * doesn't write a transform in case it is an identity matrix.
-     *
-     * @param {*} layer A layer from the processed file
-     */
-    function is_proto2(layer) {
-        var transform = layer.transform || {};
-        return (transform.type == undefined) && (transform.dsdx != undefined);
+/**
+ * Converts a transform type into readable format.
+ * Adapted from the dump function from framework/native
+ *
+ * @param {*} transform Transform object ot be converter
+ */
+function format_transform_type(transform) {
+  if (is_type_flag_clear(transform, SCALE_VAL | ROTATE_VAL | TRANSLATE_VAL)) {
+    return "IDENTITY";
+  }
+
+  var type_flags = [];
+  if (is_type_flag_set(transform, SCALE_VAL)) {
+    type_flags.push("SCALE");
+  }
+  if (is_type_flag_set(transform, TRANSLATE_VAL)) {
+    type_flags.push("TRANSLATE");
+  }
+
+  if (is_type_flag_set(transform, ROT_INVALID_VAL)) {
+    type_flags.push("ROT_INVALID");
+  } else if (is_type_flag_set(transform, ROT_90_VAL|FLIP_V_VAL|FLIP_H_VAL)) {
+    type_flags.push("ROT_270");
+  } else if (is_type_flag_set(transform, FLIP_V_VAL|FLIP_H_VAL)) {
+    type_flags.push("ROT_180");
+  } else {
+    if (is_type_flag_set(transform, ROT_90_VAL)) {
+      type_flags.push("ROT_90");
     }
-
-    /**
-     * Ensures all values of the transform object are filled.
-     *
-     * Creates a new object to ensure the transform values are displayed in the
-     * correct order in the property list
-     * @param {*} transform A transform object
-     */
-    function fill_transform_data(transform) {
-        if (has_default_value(transform)) {
-            return {type: transform.type};
-        }
-
-        return {
-            dsdx: transform.dsdx || 0.0,
-            dtdx: transform.dtdx || 0.0,
-            dsdy: transform.dsdy || 0.0,
-            dtdy: transform.dtdy || 0.0,
-            type: transform.type
-        };
+    if (is_type_flag_set(transform, FLIP_V_VAL)) {
+      type_flags.push("FLIP_V");
     }
-
-    /**
-     * Converts a transform type into readable format.
-     * Adapted from the dump function from framework/native
-     *
-     * @param {*} transform Transform object ot be converter
-     */
-    function get_transform_type(transform) {
-        transform = transform || {};
-        var type = transform.type || 0;
-        var orient = type >> 8;
-        var type_flags = [];
-
-        if (orient & ROT_INVALID_VAL) {
-            type_flags.push(ROT_INVALID);
-        } else {
-            if (orient & ROT_90_VAL) {
-                type_flags.push(ROT_90);
-            } else {
-                type_flags.push(ROT_0);
-            }
-            if (orient & FLIP_V_VAL) {
-                type_flags.push(FLIP_V);
-            }
-            if (orient & FLIP_H_VAL) {
-                type_flags.push(FLIP_H);
-            }
-        }
-
-        if (!(type & (SCALE_VAL | ROTATE_VAL | TRANSLATE_VAL))) {
-            type_flags.push(IDENTITY);
-        }
-        if (type & SCALE_VAL) {
-            type_flags.push(SCALE);
-        }
-        if (type & ROTATE_VAL) {
-            type_flags.push(ROTATE);
-        }
-        if (type & TRANSLATE_VAL) {
-            type_flags.push(TRANSLATE);
-        }
-
-        if (type_flags.length == 0) {
-            throw "Unknown transform type " + type;
-        }
-
-        return type_flags.join(', ');
+    if (is_type_flag_set(transform, FLIP_H_VAL)) {
+      type_flags.push("FLIP_H");
     }
+  }
 
+  if (type_flags.length == 0) {
+    throw "Unknown transform type " + transform ;
+  }
 
-    if (is_proto2(layer)) {
-        return;
-    }
-
-    layer.original_type = layer.transform.type;
-    if (layer.transform == undefined) {
-        layer.transform = {}
-    }
-    layer.transform.type = get_transform_type(layer.transform);
-    layer.transform = fill_transform_data(layer.transform);
-
-    if (layer.requestedTransform != undefined) {
-        layer.requestedTransform.type = get_transform_type(layer.requestedTransform);
-        layer.requestedTransform = fill_transform_data(layer.requestedTransform);
-    }
-    if (layer.bufferTransform != undefined) {
-        layer.bufferTransform.type = get_transform_type(layer.bufferTransform);
-        layer.bufferTransform = fill_transform_data(layer.bufferTransform);
-    }
-    if (layer.effectiveTransform != undefined) {
-        layer.effectiveTransform.type = get_transform_type(layer.effectiveTransform);
-        layer.effectiveTransform = fill_transform_data(layer.effectiveTransform);
-    }
+  return type_flags.join(', ');
 }
 
-function get_transform_value(transform) {
-    var type = transform.type || '';
-    // Proto2 or ROT_INVALID or SCALE
-    if (type == '' || !has_default_value(transform)) {
-        return transform;
-    }
 
+/**
+ * Ensures all values of the transform object are set.
+ */
+function fill_transform_data(transform) {
+  function fill_simple_transform(transform) {
     // ROT_270 = ROT_90|FLIP_H|FLIP_V;
-    if (type.includes(ROT_90) && type.includes(FLIP_V) && type.includes(FLIP_H)) {
-        return {
-            dsdx: 0.0,
-            dtdx: -1.0,
-            dsdy: 1.0,
-            dtdy: 0.0
-        };
+    if (is_type_flag_set(transform, ROT_90_VAL|FLIP_V_VAL|FLIP_H_VAL)) {
+      transform.dsdx =  0.0;
+      transform.dtdx = -1.0;
+      transform.dsdy = 1.0;
+      transform.dtdy = 0.0;
+      return;
     }
 
     // ROT_180 = FLIP_H|FLIP_V;
-    if (type.includes(FLIP_V) && type.includes(FLIP_H)) {
-        return {
-            dsdx: -1.0,
-            dtdx: 0.0,
-            dsdy: 0.0,
-            dtdy: -1.0
-        };
+    if (is_type_flag_set(transform, FLIP_V_VAL|FLIP_H_VAL)) {
+      transform.dsdx = -1.0;
+      transform.dtdx = 0.0;
+      transform.dsdy = 0.0;
+      transform.dtdy = -1.0;
+      return;
     }
 
     // ROT_90
-    if (type.includes(ROT_90)) {
-        return {
-            dsdx: 0.0,
-            dtdx: 1.0,
-            dsdy: -1.0,
-            dtdy: 0.0
-        };
+    if (is_type_flag_set(transform, ROT_90_VAL)) {
+      transform.dsdx = 0.0;
+      transform.dtdx = 1.0;
+      transform.dsdy = -1.0;
+      transform.dtdy = 0.0;
+      return;
     }
 
-    // ROT_0
-    if (type.includes(ROT_0)) {
-        return {
-            dsdx: 1.0,
-            dtdx: 0.0,
-            dsdy: 0.0,
-            dtdy: 1.0
-        };
+    // IDENTITY
+    if (is_type_flag_clear(transform, SCALE_VAL | ROTATE_VAL)) {
+      transform.dsdx = 1.0;
+      transform.dtdx = 0.0;
+      transform.dsdy = 0.0;
+      transform.dtdy = 1.0;
+      return;
     }
 
-    throw "Unknown transform type " + type;
+    throw "Unknown transform type " + transform;
+  }
+
+  if (!transform) {
+    return;
+  }
+
+  /*
+  * Checks if the loaded file was a stored with ProtoBuf2 or Protobuf3
+  *
+  * Proto2 files don't have a Type for the transform object but all other
+  * fields of the transform are set.
+  *
+  * Proto3 has a type field for the transform but doesn't store default
+  * values (0 for transform type), also, the framework/native implementation
+  * doesn't write a transform in case it is an identity matrix.
+  */
+  if ((transform.type == undefined) && (transform.dsdx != undefined)) {
+    return;
+  }
+
+  if (is_simple_transform(transform)){
+    fill_simple_transform(transform);
+  }
+
+  transform.dsdx = transform.dsdx || 0.0;
+  transform.dtdx = transform.dtdx || 0.0;
+  transform.dsdy = transform.dsdy || 0.0;
+  transform.dtdy = transform.dtdy || 0.0;
 }
 
-export {preprocess, get_transform_value};
+function is_type_flag_set(transform, bits) {
+    transform = transform || {};
+    var type = transform.type || 0;
+    return (type & bits) === bits;
+}
+
+function is_type_flag_clear(transform, bits) {
+  transform = transform || {};
+  var type = transform.type || 0;
+  return (type & bits) === 0;
+}
+
+export {format_transform_type, fill_transform_data, is_simple_transform};
