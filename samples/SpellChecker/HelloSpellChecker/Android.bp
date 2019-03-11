@@ -1,0 +1,6 @@
+android_app {
+    name: "HelloSpellChecker",
+    srcs: ["**/*.java"],
+    // TODO: Change sdk version to 16
+    sdk_version: "current",
+}

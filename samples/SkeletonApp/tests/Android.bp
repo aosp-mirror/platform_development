@@ -1,0 +1,11 @@
+android_test {
+    name: "SkeletonAppTests",
+    srcs: ["**/*.java"],
+    libs: [
+        "android.test.runner.stubs",
+        "android.test.base.stubs",
+    ],
+    static_libs: ["junit"],
+    instrumentation_for: "SkeletonApp",
+    sdk_version: "current",
+}
