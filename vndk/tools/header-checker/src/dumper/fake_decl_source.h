@@ -12,9 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#ifndef HEADER_CHECKER_ABI_DUMPER_FAKE_DECL_SOURCE_H_
+#define HEADER_CHECKER_ABI_DUMPER_FAKE_DECL_SOURCE_H_
+
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Sema/ExternalSemaSource.h>
 #include <clang/Sema/Sema.h>
+
+
+namespace header_checker {
+namespace dumper {
 
 
 // This class creates fake declarations when the compiler queries for unknown
@@ -58,3 +65,10 @@ class FakeDeclSource : public clang::ExternalSemaSource {
   bool LookupUnqualified(clang::LookupResult &result,
                          clang::Scope *scope) override;
 };
+
+
+}  // namespace dumper
+}  // namespace header_checker
+
+
+#endif  // HEADER_CHECKER_ABI_DUMPER_FAKE_DECL_SOURCE_H_

@@ -16,7 +16,8 @@
 #define STL_UTILS_H_
 
 
-namespace abi_util {
+namespace header_checker {
+namespace utils {
 
 
 class FreeDeleter {
@@ -27,7 +28,8 @@ class FreeDeleter {
 };
 
 
-}  // namespace abi_util
+}  // namespace utils
+}  // namespace header_checker
 
 
 #endif  // STL_UTILS_

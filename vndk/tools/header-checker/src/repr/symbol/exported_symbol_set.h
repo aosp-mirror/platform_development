@@ -23,7 +23,8 @@
 #include <string>
 
 
-namespace abi_util {
+namespace header_checker {
+namespace repr {
 
 
 class ExportedSymbolSet {
@@ -94,7 +95,8 @@ class ExportedSymbolSet {
 };
 
 
-}  // namespace abi_util
+}  // namespace repr
+}  // namespace header_checker
 
 
 #endif  // EXPORTED_SYMBOL_SET_

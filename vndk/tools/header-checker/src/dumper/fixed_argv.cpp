@@ -15,4 +15,12 @@
 #include "dumper/fixed_argv.h"
 
 
+namespace header_checker {
+namespace dumper {
+
+
 FixedArgvRegistry *FixedArgvRegistry::head_ = nullptr;
+
+
+}  // dumper
+}  // header_checker

@@ -20,9 +20,12 @@
 #include <deque>
 
 
+namespace header_checker {
+namespace repr {
+
+
 // Classes which act as middle-men between clang AST parsing routines and
 // message format specific dumpers.
-namespace abi_util {
 
 using MergeStatus = TextFormatToIRReader::MergeStatus;
 
@@ -73,11 +76,11 @@ struct DiffPolicyOptions {
 class AbiDiffHelper {
  public:
   AbiDiffHelper(
-      const AbiElementMap<const abi_util::TypeIR *> &old_types,
-      const AbiElementMap<const abi_util::TypeIR *> &new_types,
+      const AbiElementMap<const TypeIR *> &old_types,
+      const AbiElementMap<const TypeIR *> &new_types,
       const DiffPolicyOptions &diff_policy_options,
       std::set<std::string> *type_cache,
-      abi_util::IRDiffDumper *ir_diff_dumper = nullptr,
+      IRDiffDumper *ir_diff_dumper = nullptr,
       AbiElementMap<MergeStatus> *local_to_global_type_id_map = nullptr)
       : old_types_(old_types), new_types_(new_types),
         diff_policy_options_(diff_policy_options), type_cache_(type_cache),
@@ -87,113 +90,113 @@ class AbiDiffHelper {
   DiffStatus CompareAndDumpTypeDiff(
       const std::string &old_type_str, const std::string &new_type_str,
       std::deque<std::string> *type_queue = nullptr,
-      abi_util::IRDiffDumper::DiffKind diff_kind = DiffMessageIR::Unreferenced);
+      IRDiffDumper::DiffKind diff_kind = DiffMessageIR::Unreferenced);
 
   DiffStatus CompareAndDumpTypeDiff(
-      const abi_util::TypeIR *old_type, const abi_util::TypeIR *new_type,
-      abi_util::LinkableMessageKind kind,
+      const TypeIR *old_type, const TypeIR *new_type,
+      LinkableMessageKind kind,
       std::deque<std::string> *type_queue = nullptr,
-      abi_util::IRDiffDumper::DiffKind diff_kind = DiffMessageIR::Unreferenced);
+      IRDiffDumper::DiffKind diff_kind = DiffMessageIR::Unreferenced);
 
 
-  DiffStatus CompareRecordTypes(const abi_util::RecordTypeIR *old_type,
-                                const abi_util::RecordTypeIR *new_type,
+  DiffStatus CompareRecordTypes(const RecordTypeIR *old_type,
+                                const RecordTypeIR *new_type,
                                 std::deque<std::string> *type_queue,
-                                abi_util::IRDiffDumper::DiffKind diff_kind);
+                                IRDiffDumper::DiffKind diff_kind);
 
-  DiffStatus CompareQualifiedTypes(const abi_util::QualifiedTypeIR *old_type,
-                                   const abi_util::QualifiedTypeIR *new_type,
+  DiffStatus CompareQualifiedTypes(const QualifiedTypeIR *old_type,
+                                   const QualifiedTypeIR *new_type,
                                    std::deque<std::string> *type_queue,
-                                   abi_util::IRDiffDumper::DiffKind diff_kind);
+                                   IRDiffDumper::DiffKind diff_kind);
 
-  DiffStatus ComparePointerTypes(const abi_util::PointerTypeIR *old_type,
-                                 const abi_util::PointerTypeIR *new_type,
+  DiffStatus ComparePointerTypes(const PointerTypeIR *old_type,
+                                 const PointerTypeIR *new_type,
                                  std::deque<std::string> *type_queue,
-                                 abi_util::IRDiffDumper::DiffKind diff_kind);
+                                 IRDiffDumper::DiffKind diff_kind);
 
   DiffStatus CompareLvalueReferenceTypes(
-      const abi_util::LvalueReferenceTypeIR *old_type,
-      const abi_util::LvalueReferenceTypeIR *new_type,
+      const LvalueReferenceTypeIR *old_type,
+      const LvalueReferenceTypeIR *new_type,
       std::deque<std::string> *type_queue,
-      abi_util::IRDiffDumper::DiffKind diff_kind);
+      IRDiffDumper::DiffKind diff_kind);
 
   DiffStatus CompareRvalueReferenceTypes(
-      const abi_util::RvalueReferenceTypeIR *old_type,
-      const abi_util::RvalueReferenceTypeIR *new_type,
+      const RvalueReferenceTypeIR *old_type,
+      const RvalueReferenceTypeIR *new_type,
       std::deque<std::string> *type_queue,
-      abi_util::IRDiffDumper::DiffKind diff_kind);
+      IRDiffDumper::DiffKind diff_kind);
 
 
-  DiffStatus CompareBuiltinTypes(const abi_util::BuiltinTypeIR *old_type,
-                                 const abi_util::BuiltinTypeIR *new_type);
+  DiffStatus CompareBuiltinTypes(const BuiltinTypeIR *old_type,
+                                 const BuiltinTypeIR *new_type);
 
   static void CompareEnumFields(
-      const std::vector<abi_util::EnumFieldIR> &old_fields,
-      const std::vector<abi_util::EnumFieldIR> &new_fields,
-      abi_util::EnumTypeDiffIR *enum_type_diff_ir);
+      const std::vector<EnumFieldIR> &old_fields,
+      const std::vector<EnumFieldIR> &new_fields,
+      EnumTypeDiffIR *enum_type_diff_ir);
 
-  DiffStatus CompareEnumTypes(const abi_util::EnumTypeIR *old_type,
-                              const abi_util::EnumTypeIR *new_type,
+  DiffStatus CompareEnumTypes(const EnumTypeIR *old_type,
+                              const EnumTypeIR *new_type,
                               std::deque<std::string> *type_queue,
-                              abi_util::IRDiffDumper::DiffKind diff_kind);
+                              IRDiffDumper::DiffKind diff_kind);
 
-  DiffStatus CompareFunctionTypes(const abi_util::FunctionTypeIR *old_type,
-                                  const abi_util::FunctionTypeIR *new_type,
+  DiffStatus CompareFunctionTypes(const FunctionTypeIR *old_type,
+                                  const FunctionTypeIR *new_type,
                                   std::deque<std::string> *type_queue,
-                                  abi_util::DiffMessageIR::DiffKind diff_kind);
+                                  DiffMessageIR::DiffKind diff_kind);
 
   void ReplaceRemovedFieldTypeIdsWithTypeNames(
-      std::vector<abi_util::RecordFieldIR *> *removed_fields);
+      std::vector<RecordFieldIR *> *removed_fields);
 
   void ReplaceDiffedFieldTypeIdsWithTypeNames(
-      abi_util::RecordFieldDiffIR *diffed_field);
+      RecordFieldDiffIR *diffed_field);
 
-  std::vector<std::pair<abi_util::RecordFieldIR, abi_util::RecordFieldIR>>
+  std::vector<std::pair<RecordFieldIR, RecordFieldIR>>
   FixupDiffedFieldTypeIds(
-      const std::vector<abi_util::RecordFieldDiffIR> &field_diffs);
+      const std::vector<RecordFieldDiffIR> &field_diffs);
 
-  DiffStatusPair<std::unique_ptr<abi_util::RecordFieldDiffIR>>
+  DiffStatusPair<std::unique_ptr<RecordFieldDiffIR>>
   CompareCommonRecordFields(
-      const abi_util::RecordFieldIR *old_field,
-      const abi_util::RecordFieldIR *new_field,
+      const RecordFieldIR *old_field,
+      const RecordFieldIR *new_field,
       std::deque<std::string> *type_queue,
-      abi_util::IRDiffDumper::DiffKind diff_kind);
+      IRDiffDumper::DiffKind diff_kind);
 
-  GenericFieldDiffInfo<abi_util::RecordFieldIR, abi_util::RecordFieldDiffIR>
+  GenericFieldDiffInfo<RecordFieldIR, RecordFieldDiffIR>
       CompareRecordFields(
-      const std::vector<abi_util::RecordFieldIR> &old_fields,
-      const std::vector<abi_util::RecordFieldIR> &new_fields,
+      const std::vector<RecordFieldIR> &old_fields,
+      const std::vector<RecordFieldIR> &new_fields,
       std::deque<std::string> *type_queue,
-      abi_util::IRDiffDumper::DiffKind diff_kind);
+      IRDiffDumper::DiffKind diff_kind);
 
   DiffStatus CompareFunctionParameters(
-      const std::vector<abi_util::ParamIR> &old_parameters,
-      const std::vector<abi_util::ParamIR> &new_parameters,
+      const std::vector<ParamIR> &old_parameters,
+      const std::vector<ParamIR> &new_parameters,
       std::deque<std::string> *type_queue,
-      abi_util::IRDiffDumper::DiffKind diff_kind);
+      IRDiffDumper::DiffKind diff_kind);
 
   bool CompareBaseSpecifiers(
-      const std::vector<abi_util::CXXBaseSpecifierIR> &old_base_specifiers,
-      const std::vector<abi_util::CXXBaseSpecifierIR> &new_base_specifiers,
+      const std::vector<CXXBaseSpecifierIR> &old_base_specifiers,
+      const std::vector<CXXBaseSpecifierIR> &new_base_specifiers,
       std::deque<std::string> *type_queue,
-      abi_util::IRDiffDumper::DiffKind diff_kind);
+      IRDiffDumper::DiffKind diff_kind);
 
-  bool CompareVTables(const abi_util::RecordTypeIR *old_record,
-                      const abi_util::RecordTypeIR *new_record);
+  bool CompareVTables(const RecordTypeIR *old_record,
+                      const RecordTypeIR *new_record);
 
   bool CompareVTableComponents(
-      const abi_util::VTableComponentIR &old_component,
-      const abi_util::VTableComponentIR &new_component);
+      const VTableComponentIR &old_component,
+      const VTableComponentIR &new_component);
 
   DiffStatus CompareTemplateInfo(
-      const std::vector<abi_util::TemplateElementIR> &old_template_elements,
-      const std::vector<abi_util::TemplateElementIR> &new_template_elements,
+      const std::vector<TemplateElementIR> &old_template_elements,
+      const std::vector<TemplateElementIR> &new_template_elements,
       std::deque<std::string> *type_queue,
-      abi_util::IRDiffDumper::DiffKind diff_kind);
+      IRDiffDumper::DiffKind diff_kind);
 
 
-  bool CompareSizeAndAlignment(const abi_util::TypeIR *old_ti,
-                               const abi_util::TypeIR *new_ti);
+  bool CompareSizeAndAlignment(const TypeIR *old_ti,
+                               const TypeIR *new_ti);
 
   template <typename DiffType, typename DiffElement>
   bool AddToDiff(DiffType *mutable_diff, const DiffElement *oldp,
@@ -201,17 +204,20 @@ class AbiDiffHelper {
                  std::deque<std::string> *type_queue = nullptr);
 
  protected:
-  const AbiElementMap<const abi_util::TypeIR *> &old_types_;
-  const AbiElementMap<const abi_util::TypeIR *> &new_types_;
+  const AbiElementMap<const TypeIR *> &old_types_;
+  const AbiElementMap<const TypeIR *> &new_types_;
   const DiffPolicyOptions &diff_policy_options_;
   std::set<std::string> *type_cache_;
-  abi_util::IRDiffDumper *ir_diff_dumper_;
+  IRDiffDumper *ir_diff_dumper_;
   AbiElementMap<MergeStatus> *local_to_global_type_id_map_;
 };
 
 void ReplaceTypeIdsWithTypeNames(
     const AbiElementMap<const TypeIR *> &type_graph, LinkableMessageIR *lm);
 
-}  // namespace abi_util
+
+}  // namespace repr
+}  // namespace header_checker
+
 
 #endif  // ABI_DIFF_HELPERS_H_

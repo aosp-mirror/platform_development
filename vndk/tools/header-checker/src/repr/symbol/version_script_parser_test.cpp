@@ -21,7 +21,8 @@
 #include <string>
 
 
-namespace abi_util {
+namespace header_checker {
+namespace repr {
 
 
 TEST(VersionScriptParserTest, SmokeTest) {
@@ -245,7 +246,7 @@ TEST(VersionScriptParserTest, ParseSymbolTagsIntroduced) {
   {
     VersionScriptParser parser;
     parser.SetArch("arm64");
-    parser.SetApiLevel(FUTURE_API_LEVEL);
+    parser.SetApiLevel(utils::FUTURE_API_LEVEL);
 
     std::istringstream stream(testdata);
     std::unique_ptr<ExportedSymbolSet> result(parser.Parse(stream));
@@ -427,4 +428,5 @@ TEST(VersionScriptParserTest, ParseGlobPattern) {
 }
 
 
-}  // namespace abi_util
+}  // namespace repr
+}  // namespace header_checker

@@ -32,6 +32,11 @@
 #include <stdlib.h>
 
 
+using namespace header_checker;
+using header_checker::repr::TextFormatIR;
+using header_checker::utils::CollectAllExportedHeaders;
+
+
 static constexpr std::size_t kSourcesPerBatchThread = 7;
 
 static llvm::cl::OptionCategory header_linker_category(
@@ -78,20 +83,20 @@ static llvm::cl::opt<std::string> so_file(
     "so", llvm::cl::desc("<path to so file>"), llvm::cl::Optional,
     llvm::cl::cat(header_linker_category));
 
-static llvm::cl::opt<abi_util::TextFormatIR> input_format(
+static llvm::cl::opt<TextFormatIR> input_format(
     "input-format", llvm::cl::desc("Specify format of input dump files"),
-    llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
+    llvm::cl::values(clEnumValN(TextFormatIR::ProtobufTextFormat,
                                 "ProtobufTextFormat", "ProtobufTextFormat"),
-                     clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON")),
-    llvm::cl::init(abi_util::TextFormatIR::Json),
+                     clEnumValN(TextFormatIR::Json, "Json", "JSON")),
+    llvm::cl::init(TextFormatIR::Json),
     llvm::cl::cat(header_linker_category));
 
-static llvm::cl::opt<abi_util::TextFormatIR> output_format(
+static llvm::cl::opt<TextFormatIR> output_format(
     "output-format", llvm::cl::desc("Specify format of output dump file"),
-    llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
+    llvm::cl::values(clEnumValN(TextFormatIR::ProtobufTextFormat,
                                 "ProtobufTextFormat", "ProtobufTextFormat"),
-                     clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON")),
-    llvm::cl::init(abi_util::TextFormatIR::Json),
+                     clEnumValN(TextFormatIR::Json, "Json", "JSON")),
+    llvm::cl::init(TextFormatIR::Json),
     llvm::cl::cat(header_linker_category));
 
 class HeaderAbiLinker {
@@ -116,11 +121,11 @@ class HeaderAbiLinker {
 
  private:
   template <typename T>
-  bool LinkDecl(abi_util::IRDumper *dst,
-                const abi_util::AbiElementMap<T> &src,
+  bool LinkDecl(repr::IRDumper *dst,
+                const repr::AbiElementMap<T> &src,
                 const std::function<bool(const std::string &)> &symbol_filter);
 
-  std::unique_ptr<abi_util::TextFormatToIRReader> ReadInputDumpFiles();
+  std::unique_ptr<repr::TextFormatToIRReader> ReadInputDumpFiles();
 
   bool ReadExportedSymbols();
 
@@ -128,22 +133,22 @@ class HeaderAbiLinker {
 
   bool ReadExportedSymbolsFromSharedObjectFile();
 
-  bool LinkTypes(const abi_util::TextFormatToIRReader *ir_reader,
-                 abi_util::IRDumper *ir_dumper);
+  bool LinkTypes(const repr::TextFormatToIRReader *ir_reader,
+                 repr::IRDumper *ir_dumper);
 
-  bool LinkFunctions(const abi_util::TextFormatToIRReader *ir_reader,
-                     abi_util::IRDumper *ir_dumper);
+  bool LinkFunctions(const repr::TextFormatToIRReader *ir_reader,
+                     repr::IRDumper *ir_dumper);
 
-  bool LinkGlobalVars(const abi_util::TextFormatToIRReader *ir_reader,
-                      abi_util::IRDumper *ir_dumper);
+  bool LinkGlobalVars(const repr::TextFormatToIRReader *ir_reader,
+                      repr::IRDumper *ir_dumper);
 
-  bool LinkExportedSymbols(abi_util::IRDumper *ir_dumper);
+  bool LinkExportedSymbols(repr::IRDumper *ir_dumper);
 
-  bool LinkExportedSymbols(abi_util::IRDumper *ir_dumper,
-                           const abi_util::ExportedSymbolSet &exported_symbols);
+  bool LinkExportedSymbols(repr::IRDumper *ir_dumper,
+                           const repr::ExportedSymbolSet &exported_symbols);
 
   template <typename SymbolMap>
-  bool LinkExportedSymbols(abi_util::IRDumper *ir_dumper,
+  bool LinkExportedSymbols(repr::IRDumper *ir_dumper,
                            const SymbolMap &symbols);
 
   // Check whether a symbol name is considered as exported.  If both
@@ -165,17 +170,18 @@ class HeaderAbiLinker {
   std::set<std::string> exported_headers_;
 
   // Exported symbols
-  std::unique_ptr<abi_util::ExportedSymbolSet> shared_object_symbols_;
-  std::unique_ptr<abi_util::ExportedSymbolSet> version_script_symbols_;
+  std::unique_ptr<repr::ExportedSymbolSet> shared_object_symbols_;
+
+  std::unique_ptr<repr::ExportedSymbolSet> version_script_symbols_;
 };
 
 static void DeDuplicateAbiElementsThread(
     const std::vector<std::string> &dump_files,
     const std::set<std::string> *exported_headers,
-    abi_util::TextFormatToIRReader *greader, std::mutex *greader_lock,
+    repr::TextFormatToIRReader *greader, std::mutex *greader_lock,
     std::atomic<std::size_t> *cnt) {
-  std::unique_ptr<abi_util::TextFormatToIRReader> local_reader =
-      abi_util::TextFormatToIRReader::CreateTextFormatToIRReader(
+  std::unique_ptr<repr::TextFormatToIRReader> local_reader =
+      repr::TextFormatToIRReader::CreateTextFormatToIRReader(
           input_format, exported_headers);
 
   auto begin_it = dump_files.begin();
@@ -187,8 +193,8 @@ static void DeDuplicateAbiElementsThread(
     }
     std::size_t end = std::min(i + kSourcesPerBatchThread, num_sources);
     for (auto it = begin_it; it != begin_it + end; it++) {
-      std::unique_ptr<abi_util::TextFormatToIRReader> reader =
-          abi_util::TextFormatToIRReader::CreateTextFormatToIRReader(
+      std::unique_ptr<repr::TextFormatToIRReader> reader =
+          repr::TextFormatToIRReader::CreateTextFormatToIRReader(
               input_format, exported_headers);
       assert(reader != nullptr);
       if (!reader->ReadDump(*it)) {
@@ -204,10 +210,10 @@ static void DeDuplicateAbiElementsThread(
   greader->MergeGraphs(*local_reader);
 }
 
-std::unique_ptr<abi_util::TextFormatToIRReader>
+std::unique_ptr<repr::TextFormatToIRReader>
 HeaderAbiLinker::ReadInputDumpFiles() {
-  std::unique_ptr<abi_util::TextFormatToIRReader> greader =
-      abi_util::TextFormatToIRReader::CreateTextFormatToIRReader(
+  std::unique_ptr<repr::TextFormatToIRReader> greader =
+      repr::TextFormatToIRReader::CreateTextFormatToIRReader(
           input_format, &exported_headers_);
 
   std::size_t max_threads = std::thread::hardware_concurrency();
@@ -238,15 +244,14 @@ bool HeaderAbiLinker::LinkAndDump() {
   }
 
   // Construct the list of exported headers for source location filtering.
-  exported_headers_ =
-      abi_util::CollectAllExportedHeaders(exported_header_dirs_);
+  exported_headers_ = CollectAllExportedHeaders(exported_header_dirs_);
 
   // Read all input ABI dumps.
   auto greader = ReadInputDumpFiles();
 
   // Link input ABI dumps.
-  std::unique_ptr<abi_util::IRDumper> ir_dumper =
-      abi_util::IRDumper::CreateIRDumper(output_format, out_dump_name_);
+  std::unique_ptr<repr::IRDumper> ir_dumper =
+      repr::IRDumper::CreateIRDumper(output_format, out_dump_name_);
   assert(ir_dumper != nullptr);
 
   if (!LinkExportedSymbols(ir_dumper.get())) {
@@ -270,7 +275,7 @@ bool HeaderAbiLinker::LinkAndDump() {
 
 template <typename T>
 bool HeaderAbiLinker::LinkDecl(
-    abi_util::IRDumper *dst, const abi_util::AbiElementMap<T> &src,
+    repr::IRDumper *dst, const repr::AbiElementMap<T> &src,
     const std::function<bool(const std::string &)> &symbol_filter) {
   assert(dst != nullptr);
   for (auto &&element : src) {
@@ -294,8 +299,8 @@ bool HeaderAbiLinker::LinkDecl(
   return true;
 }
 
-bool HeaderAbiLinker::LinkTypes(const abi_util::TextFormatToIRReader *reader,
-                                abi_util::IRDumper *ir_dumper) {
+bool HeaderAbiLinker::LinkTypes(const repr::TextFormatToIRReader *reader,
+                                repr::IRDumper *ir_dumper) {
   assert(reader != nullptr);
   auto no_filter = [](const std::string &symbol) { return true; };
   return LinkDecl(ir_dumper, reader->GetRecordTypes(), no_filter) &&
@@ -320,8 +325,8 @@ bool HeaderAbiLinker::IsSymbolExported(const std::string &name) const {
 }
 
 bool HeaderAbiLinker::LinkFunctions(
-    const abi_util::TextFormatToIRReader *reader,
-    abi_util::IRDumper *ir_dumper) {
+    const repr::TextFormatToIRReader *reader,
+    repr::IRDumper *ir_dumper) {
   assert(reader != nullptr);
   auto symbol_filter = [this](const std::string &linker_set_key) {
     return IsSymbolExported(linker_set_key);
@@ -330,8 +335,8 @@ bool HeaderAbiLinker::LinkFunctions(
 }
 
 bool HeaderAbiLinker::LinkGlobalVars(
-    const abi_util::TextFormatToIRReader *reader,
-    abi_util::IRDumper *ir_dumper) {
+    const repr::TextFormatToIRReader *reader,
+    repr::IRDumper *ir_dumper) {
   assert(reader != nullptr);
   auto symbol_filter = [this](const std::string &linker_set_key) {
     return IsSymbolExported(linker_set_key);
@@ -340,7 +345,7 @@ bool HeaderAbiLinker::LinkGlobalVars(
 }
 
 template <typename SymbolMap>
-bool HeaderAbiLinker::LinkExportedSymbols(abi_util::IRDumper *dst,
+bool HeaderAbiLinker::LinkExportedSymbols(repr::IRDumper *dst,
                                           const SymbolMap &symbols) {
   for (auto &&symbol : symbols) {
     if (!IsSymbolExported(symbol.first)) {
@@ -354,13 +359,13 @@ bool HeaderAbiLinker::LinkExportedSymbols(abi_util::IRDumper *dst,
 }
 
 bool HeaderAbiLinker::LinkExportedSymbols(
-    abi_util::IRDumper *ir_dumper,
-    const abi_util::ExportedSymbolSet &exported_symbols) {
+    repr::IRDumper *ir_dumper,
+    const repr::ExportedSymbolSet &exported_symbols) {
   return (LinkExportedSymbols(ir_dumper, exported_symbols.GetFunctions()) &&
           LinkExportedSymbols(ir_dumper, exported_symbols.GetVars()));
 }
 
-bool HeaderAbiLinker::LinkExportedSymbols(abi_util::IRDumper *ir_dumper) {
+bool HeaderAbiLinker::LinkExportedSymbols(repr::IRDumper *ir_dumper) {
   if (shared_object_symbols_) {
     return LinkExportedSymbols(ir_dumper, *shared_object_symbols_);
   }
@@ -398,7 +403,7 @@ bool HeaderAbiLinker::ReadExportedSymbols() {
 }
 
 bool HeaderAbiLinker::ReadExportedSymbolsFromVersionScript() {
-  std::optional<abi_util::ApiLevel> api_level = abi_util::ParseApiLevel(api_);
+  std::optional<utils::ApiLevel> api_level = utils::ParseApiLevel(api_);
   if (!api_level) {
     llvm::errs() << "-api must be either \"current\" or an integer (e.g. 21)\n";
     return false;
@@ -410,7 +415,7 @@ bool HeaderAbiLinker::ReadExportedSymbolsFromVersionScript() {
     return false;
   }
 
-  abi_util::VersionScriptParser parser;
+  repr::VersionScriptParser parser;
   parser.SetArch(arch_);
   parser.SetApiLevel(api_level.value());
   for (auto &&version : excluded_symbol_versions_) {
@@ -430,8 +435,8 @@ bool HeaderAbiLinker::ReadExportedSymbolsFromVersionScript() {
 }
 
 bool HeaderAbiLinker::ReadExportedSymbolsFromSharedObjectFile() {
-  std::unique_ptr<abi_util::SoFileParser> so_parser =
-      abi_util::SoFileParser::Create(so_file_);
+  std::unique_ptr<repr::SoFileParser> so_parser =
+      repr::SoFileParser::Create(so_file_);
   if (!so_parser) {
     return false;
   }

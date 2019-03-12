@@ -19,6 +19,10 @@
 #include <clang/Frontend/FrontendActions.h>
 
 
+namespace header_checker {
+namespace dumper {
+
+
 HeaderCheckerFrontendActionFactory::HeaderCheckerFrontendActionFactory(
     HeaderCheckerOptions &options)
     : options_(options) {}
@@ -26,3 +30,7 @@ HeaderCheckerFrontendActionFactory::HeaderCheckerFrontendActionFactory(
 clang::FrontendAction *HeaderCheckerFrontendActionFactory::create() {
   return new HeaderCheckerFrontendAction(options_);
 }
+
+
+}  // dumper
+}  // header_checker

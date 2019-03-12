@@ -21,7 +21,9 @@
 #include <string>
 
 
-namespace ast_util {
+namespace header_checker {
+namespace dumper {
+
 
 constexpr static char type_id_prefix[] = "type-";
 
@@ -46,6 +48,9 @@ struct ASTCaches {
   uint64_t max_type_id_ = 0;
 };
 
-}  // namespace ast_util
+
+}  // namespace dumper
+}  // namespace header_checker
+
 
 #endif  // AST_UTIL_H_

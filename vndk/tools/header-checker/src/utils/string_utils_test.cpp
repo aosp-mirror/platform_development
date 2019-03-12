@@ -17,7 +17,8 @@
 #include <gtest/gtest.h>
 
 
-namespace abi_util {
+namespace header_checker {
+namespace utils {
 
 
 TEST(StringUtilsTest, Trim) {
@@ -104,4 +105,5 @@ TEST(StringUtilsTest, IsGlobPattern) {
 }
 
 
-}  // namespace abi_util
+}  // namespace utils
+}  // namespace header_checker

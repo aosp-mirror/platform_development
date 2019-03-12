@@ -22,11 +22,12 @@
 #include <cxxabi.h>
 
 
-namespace abi_util {
+namespace header_checker {
+namespace repr {
 
 
 static inline bool IsCppSymbol(const std::string &name) {
-  return StartsWith(name, "_Z");
+  return utils::StartsWith(name, "_Z");
 }
 
 
@@ -74,7 +75,7 @@ bool ExportedSymbolSet::HasSymbol(const std::string &name) const {
   }
 
   if (IsCppSymbol(name) && HasDemangledCppSymbolsOrPatterns()) {
-    std::unique_ptr<char, FreeDeleter> demangled_name_c_str(
+    std::unique_ptr<char, utils::FreeDeleter> demangled_name_c_str(
         abi::__cxa_demangle(name.c_str(), nullptr, nullptr, nullptr));
 
     if (demangled_name_c_str) {
@@ -96,4 +97,5 @@ bool ExportedSymbolSet::HasSymbol(const std::string &name) const {
 }
 
 
-}  // namespace abi_util
+}  // namespace repr
+}  // namespace header_checker

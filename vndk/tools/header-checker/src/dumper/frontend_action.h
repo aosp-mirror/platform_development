@@ -31,6 +31,11 @@ namespace clang {
   class CompilerInstance;
 }  // namespace clang
 
+
+namespace header_checker {
+namespace dumper {
+
+
 class HeaderCheckerFrontendAction : public clang::ASTFrontendAction {
  private:
   HeaderCheckerOptions &options_;
@@ -45,5 +50,10 @@ class HeaderCheckerFrontendAction : public clang::ASTFrontendAction {
   bool BeginInvocation(clang::CompilerInstance &ci) override;
   bool BeginSourceFileAction(clang::CompilerInstance &ci) override;
 };
+
+
+}  // namespace dumper
+}  // namespace header_checker
+
 
 #endif  // FRONTEND_ACTION_H_

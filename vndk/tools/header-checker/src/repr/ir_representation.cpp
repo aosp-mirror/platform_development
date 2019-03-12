@@ -33,7 +33,10 @@
 #include <memory>
 
 
-namespace abi_util {
+
+namespace header_checker {
+namespace repr {
+
 
 using MergeStatus = TextFormatToIRReader::MergeStatus;
 
@@ -586,4 +589,6 @@ bool TextFormatToIRReader::IsLinkableMessageInExportedHeaders(
          exported_headers_->end();
 }
 
-}  // namespace abi_util
+
+}  // namespace repr
+}  // header_checker

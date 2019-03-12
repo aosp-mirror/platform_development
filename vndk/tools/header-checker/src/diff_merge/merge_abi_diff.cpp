@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "utils/header_abi_util.h"
-
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
 #pragma clang diagnostic ignored "-Wnested-anon-types"
@@ -36,39 +34,38 @@
 #include <stdlib.h>
 
 
-static llvm::cl::OptionCategory merge_abi_diff_category(
+static llvm::cl::OptionCategory merge_diff_category(
     "merge-abi-diff options");
 
 static llvm::cl::list<std::string> diff_report_list(
     llvm::cl::Positional, llvm::cl::desc("<diff-reports>"), llvm::cl::Required,
-    llvm::cl::cat(merge_abi_diff_category), llvm::cl::OneOrMore);
+    llvm::cl::cat(merge_diff_category), llvm::cl::OneOrMore);
 
 static llvm::cl::opt<std::string> merged_diff_report(
     "o", llvm::cl::desc("<merged-diff-report>"), llvm::cl::Required,
-    llvm::cl::cat(merge_abi_diff_category));
+    llvm::cl::cat(merge_diff_category));
 
 static llvm::cl::opt<bool> advice_only(
     "advice-only", llvm::cl::desc("Advisory mode only"), llvm::cl::Optional,
-    llvm::cl::cat(merge_abi_diff_category));
+    llvm::cl::cat(merge_diff_category));
 
 static llvm::cl::opt<bool> do_not_break_on_extensions(
     "allow-extensions",
     llvm::cl::desc("Do not return a non zero status on extensions"),
-    llvm::cl::Optional, llvm::cl::cat(merge_abi_diff_category));
+    llvm::cl::Optional, llvm::cl::cat(merge_diff_category));
 
-typedef abi_diff::CompatibilityStatus CompatibilityStatus;
-
-static bool IsStatusDowngraded(const CompatibilityStatus &old_status,
-                               const CompatibilityStatus &new_status) {
+static bool IsStatusDowngraded(
+    const abi_diff::CompatibilityStatus &old_status,
+    const abi_diff::CompatibilityStatus &new_status) {
   bool status_downgraded = false;
   switch (old_status) {
-    case CompatibilityStatus::EXTENSION:
-      if (new_status == CompatibilityStatus::INCOMPATIBLE) {
+    case abi_diff::CompatibilityStatus::EXTENSION:
+      if (new_status == abi_diff::CompatibilityStatus::INCOMPATIBLE) {
         status_downgraded = true;
       }
       break;
-    case CompatibilityStatus::COMPATIBLE:
-      if (new_status != CompatibilityStatus::COMPATIBLE) {
+    case abi_diff::CompatibilityStatus::COMPATIBLE:
+      if (new_status != abi_diff::CompatibilityStatus::COMPATIBLE) {
         status_downgraded = true;
       }
       break;
@@ -78,14 +75,14 @@ static bool IsStatusDowngraded(const CompatibilityStatus &old_status,
   return status_downgraded;
 }
 
-static CompatibilityStatus MergeDiffReports(
+static abi_diff::CompatibilityStatus MergeDiffReports(
     const std::vector<std::string> &diff_reports,
     const std::string &merged_diff_report) {
-
   abi_diff::MergedTranslationUnitDiff merged_tu_diff;
   std::ofstream text_output(merged_diff_report);
   google::protobuf::io::OstreamOutputStream text_os(&text_output);
-  CompatibilityStatus status = CompatibilityStatus::COMPATIBLE;
+  abi_diff::CompatibilityStatus status =
+      abi_diff::CompatibilityStatus::COMPATIBLE;
 
   for (auto &&i : diff_reports) {
     abi_diff::TranslationUnitDiff diff_tu;
@@ -101,7 +98,7 @@ static CompatibilityStatus MergeDiffReports(
       llvm::errs() << "Failed to add diff report to merged report\n";
       ::exit(1);
     }
-    CompatibilityStatus new_status = diff_tu.compatibility_status();
+    abi_diff::CompatibilityStatus new_status = diff_tu.compatibility_status();
     added_tu_diff->set_lib_name(diff_tu.lib_name());
     added_tu_diff->set_arch(diff_tu.arch());
     added_tu_diff->set_diff_report_path(i);
@@ -122,14 +119,14 @@ static CompatibilityStatus MergeDiffReports(
 int main(int argc, const char **argv) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
   llvm::cl::ParseCommandLineOptions(argc, argv, "merge-abi-diff");
-  CompatibilityStatus extension_or_incompatible =
+  abi_diff::CompatibilityStatus extension_or_incompatible =
       MergeDiffReports(diff_report_list, merged_diff_report);
   std::string status_str = "";
   switch (extension_or_incompatible) {
-    case CompatibilityStatus::INCOMPATIBLE:
+    case abi_diff::CompatibilityStatus::INCOMPATIBLE:
       status_str = "broken";
       break;
-    case CompatibilityStatus::EXTENSION:
+    case abi_diff::CompatibilityStatus::EXTENSION:
       status_str = "extended";
       break;
     default:
@@ -146,12 +143,12 @@ int main(int argc, const char **argv) {
   }
 
   if (do_not_break_on_extensions &&
-      extension_or_incompatible == CompatibilityStatus::EXTENSION) {
-      extension_or_incompatible = CompatibilityStatus::COMPATIBLE;
+      extension_or_incompatible == abi_diff::CompatibilityStatus::EXTENSION) {
+      extension_or_incompatible = abi_diff::CompatibilityStatus::COMPATIBLE;
   }
 
   if (!advice_only) {
     return extension_or_incompatible;
   }
-  return CompatibilityStatus::COMPATIBLE;
+  return abi_diff::CompatibilityStatus::COMPATIBLE;
 }

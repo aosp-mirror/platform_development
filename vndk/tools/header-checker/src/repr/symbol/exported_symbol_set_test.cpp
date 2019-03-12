@@ -19,7 +19,8 @@
 #include <gtest/gtest.h>
 
 
-namespace abi_util {
+namespace header_checker {
+namespace repr {
 
 
 TEST(ExportedSymbolSetTest, AddFunction) {
@@ -129,4 +130,5 @@ TEST(ExportedSymbolSetTest, HasSymbol) {
 }
 
 
-}  // namespace abi_util
+}  // namespace repr
+}  // namespace header_checker

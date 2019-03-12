@@ -28,9 +28,12 @@
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 
 
+namespace header_checker {
+namespace repr {
+
+
 // Classes which act as middle-men between clang AST parsing routines and
 // message format specific dumpers.
-namespace abi_util {
 
 inline abi_diff::CompatibilityStatus CompatibilityStatusIRToProtobuf(
     CompatibilityStatusIR status) {
@@ -198,7 +201,7 @@ inline VTableComponentIR::Kind VTableComponentKindProtobufToIR(
 class IRToProtobufConverter {
  private:
   static bool AddTemplateInformation(
-      abi_dump::TemplateInfo *ti, const abi_util::TemplatedArtifactIR *ta);
+      abi_dump::TemplateInfo *ti, const TemplatedArtifactIR *ta);
 
   static bool AddTypeInfo(
       abi_dump::BasicNamedAndTypedDecl *type_info, const TypeIR *typep);
@@ -480,6 +483,8 @@ class ProtobufIRDiffDumper : public IRDiffDumper {
   std::unique_ptr<abi_diff::TranslationUnitDiff> diff_tu_;
 };
 
-}  // namespace abi_util
+
+}  // namespace repr
+}  // namespace header_checker
 
 #endif  // IR_REPRESENTATION_PROTOBUF_H_

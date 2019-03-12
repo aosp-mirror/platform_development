@@ -20,9 +20,12 @@
 #include <json/value.h>
 
 
+namespace header_checker {
+namespace repr {
+
+
 // Classes which act as middle-men between clang AST parsing routines and
 // message format specific dumpers.
-namespace abi_util {
 
 // These classes wrap constructors of Json::Value.
 class JsonArray : public Json::Value {
@@ -284,6 +287,9 @@ class JsonToIRReader : public TextFormatToIRReader {
   static EnumTypeIR EnumTypeJsonToIR(const JsonObjectRef &enum_type);
 };
 
-}  // namespace abi_util
+
+}  // namespace repr
+}  // namespace header_checker
+
 
 #endif  // IR_REPRESENTATION_JSON_H_

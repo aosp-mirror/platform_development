@@ -22,7 +22,9 @@
 #include <vector>
 
 
-namespace abi_util {
+namespace header_checker {
+namespace utils {
+
 
 std::string RealPath(const std::string &path);
 
@@ -96,6 +98,9 @@ std::vector<std::pair<T, T>> FindCommonElements(
   return common_elements;
 }
 
-}  // namespace abi_util
+
+}  // namespace utils
+}  // namespace header_checker
+
 
 #endif  // HEADER_ABI_UTIL_H_

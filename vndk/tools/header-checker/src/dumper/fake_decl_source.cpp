@@ -18,6 +18,10 @@
 #include <clang/Sema/Lookup.h>
 
 
+namespace header_checker {
+namespace dumper {
+
+
 FakeDeclSource::FakeDeclSource(const clang::CompilerInstance &ci) : ci_(ci) {}
 
 clang::CXXRecordDecl *
@@ -199,3 +203,7 @@ bool FakeDeclSource::LookupUnqualified(clang::LookupResult &result,
   result.resolveKind();
   return true;
 }
+
+
+}  // dumper
+}  // header_checker

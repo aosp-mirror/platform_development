@@ -21,6 +21,12 @@
 #include <fstream>
 
 
+using header_checker::diff::HeaderAbiDiff;
+using header_checker::repr::CompatibilityStatusIR;
+using header_checker::repr::DiffPolicyOptions;
+using header_checker::repr::TextFormatIR;
+
+
 static llvm::cl::OptionCategory header_checker_category(
     "header-abi-diff options");
 
@@ -92,27 +98,27 @@ static llvm::cl::opt<bool> consider_opaque_types_different(
                    "This should not be used while comparing C++ library ABIs"),
     llvm::cl::Optional, llvm::cl::cat(header_checker_category));
 
-static llvm::cl::opt<abi_util::TextFormatIR> text_format_old(
+static llvm::cl::opt<TextFormatIR> text_format_old(
     "input-format-old", llvm::cl::desc("Specify input format of old abi dump"),
-    llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
+    llvm::cl::values(clEnumValN(TextFormatIR::ProtobufTextFormat,
                                 "ProtobufTextFormat", "ProtobufTextFormat"),
-                     clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON")),
-    llvm::cl::init(abi_util::TextFormatIR::Json),
+                     clEnumValN(TextFormatIR::Json, "Json", "JSON")),
+    llvm::cl::init(TextFormatIR::Json),
     llvm::cl::cat(header_checker_category));
 
-static llvm::cl::opt<abi_util::TextFormatIR> text_format_new(
+static llvm::cl::opt<TextFormatIR> text_format_new(
     "input-format-new", llvm::cl::desc("Specify input format of new abi dump"),
-    llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
+    llvm::cl::values(clEnumValN(TextFormatIR::ProtobufTextFormat,
                                 "ProtobufTextFormat", "ProtobufTextFormat"),
-                     clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON")),
-    llvm::cl::init(abi_util::TextFormatIR::Json),
+                     clEnumValN(TextFormatIR::Json, "Json", "JSON")),
+    llvm::cl::init(TextFormatIR::Json),
     llvm::cl::cat(header_checker_category));
 
-static llvm::cl::opt<abi_util::TextFormatIR> text_format_diff(
+static llvm::cl::opt<TextFormatIR> text_format_diff(
     "text-format-diff", llvm::cl::desc("Specify text format of abi-diff"),
-    llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
+    llvm::cl::values(clEnumValN(TextFormatIR::ProtobufTextFormat,
                                 "ProtobufTextFormat", "ProtobufTextFormat")),
-    llvm::cl::init(abi_util::TextFormatIR::ProtobufTextFormat),
+    llvm::cl::init(TextFormatIR::ProtobufTextFormat),
     llvm::cl::cat(header_checker_category));
 
 static std::set<std::string> LoadIgnoredSymbols(std::string &symbol_list_path) {
@@ -132,14 +138,14 @@ static std::set<std::string> LoadIgnoredSymbols(std::string &symbol_list_path) {
 static const char kWarn[] = "\033[36;1mwarning: \033[0m";
 static const char kError[] = "\033[31;1merror: \033[0m";
 
-bool ShouldEmitWarningMessage(abi_util::CompatibilityStatusIR status) {
+bool ShouldEmitWarningMessage(CompatibilityStatusIR status) {
   return ((!allow_extensions &&
-           (status & abi_util::CompatibilityStatusIR::Extension)) ||
+           (status & CompatibilityStatusIR::Extension)) ||
           (!allow_unreferenced_changes &&
-           (status & abi_util::CompatibilityStatusIR::UnreferencedChanges)) ||
+           (status & CompatibilityStatusIR::UnreferencedChanges)) ||
           (!allow_unreferenced_elf_symbol_changes &&
-           (status & abi_util::CompatibilityStatusIR::ElfIncompatible)) ||
-          (status & abi_util::CompatibilityStatusIR::Incompatible));
+           (status & CompatibilityStatusIR::ElfIncompatible)) ||
+          (status & CompatibilityStatusIR::Incompatible));
 }
 
 int main(int argc, const char **argv) {
@@ -148,24 +154,24 @@ int main(int argc, const char **argv) {
   if (llvm::sys::fs::exists(ignore_symbol_list)) {
     ignored_symbols = LoadIgnoredSymbols(ignore_symbol_list);
   }
-  abi_util::DiffPolicyOptions diff_policy_options(
+  DiffPolicyOptions diff_policy_options(
       consider_opaque_types_different);
   HeaderAbiDiff judge(lib_name, arch, old_dump, new_dump, compatibility_report,
                       ignored_symbols, diff_policy_options, check_all_apis,
                       text_format_old, text_format_new, text_format_diff);
 
-  abi_util::CompatibilityStatusIR status = judge.GenerateCompatibilityReport();
+  CompatibilityStatusIR status = judge.GenerateCompatibilityReport();
 
   std::string status_str = "";
   std::string unreferenced_change_str = "";
   std::string error_or_warning_str = kWarn;
 
   switch (status) {
-    case abi_util::CompatibilityStatusIR::Incompatible:
+    case CompatibilityStatusIR::Incompatible:
       error_or_warning_str = kError;
       status_str = "INCOMPATIBLE CHANGES";
       break;
-    case abi_util::CompatibilityStatusIR::ElfIncompatible:
+    case CompatibilityStatusIR::ElfIncompatible:
       if (elf_unreferenced_symbol_errors) {
         error_or_warning_str = kError;
       }
@@ -174,13 +180,13 @@ int main(int argc, const char **argv) {
     default:
       break;
   }
-  if (status & abi_util::CompatibilityStatusIR::Extension) {
+  if (status & CompatibilityStatusIR::Extension) {
     if (!allow_extensions) {
       error_or_warning_str = kError;
     }
     status_str = "EXTENDING CHANGES";
   }
-  if (status & abi_util::CompatibilityStatusIR::UnreferencedChanges) {
+  if (status & CompatibilityStatusIR::UnreferencedChanges) {
     unreferenced_change_str = ", changes in exported headers, which are";
     unreferenced_change_str += " not directly referenced by exported symbols.";
     unreferenced_change_str += " This MIGHT be an ABI breaking change due to";
@@ -206,5 +212,5 @@ int main(int argc, const char **argv) {
     return status;
   }
 
-  return abi_util::CompatibilityStatusIR::Compatible;
+  return CompatibilityStatusIR::Compatible;
 }

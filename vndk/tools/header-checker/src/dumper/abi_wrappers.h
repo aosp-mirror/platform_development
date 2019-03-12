@@ -25,23 +25,26 @@
 #include <clang/Frontend/CompilerInstance.h>
 
 
-namespace abi_wrapper {
+namespace header_checker {
+namespace dumper {
+
 
 struct TypeAndCreationStatus {
-  std::unique_ptr<abi_util::TypeIR> typep_;
+  std::unique_ptr<repr::TypeIR> typep_;
   bool should_create_type_;  // Whether the type is to be created.
-  TypeAndCreationStatus(std::unique_ptr<abi_util::TypeIR> &&typep,
+  TypeAndCreationStatus(std::unique_ptr<repr::TypeIR> &&typep,
                         bool should_create_type = true)
       : typep_(std::move(typep)), should_create_type_(should_create_type) {}
 };
+
 
 class ABIWrapper {
  public:
   ABIWrapper(clang::MangleContext *mangle_contextp,
              clang::ASTContext *ast_contextp,
              const clang::CompilerInstance *cip,
-             abi_util::IRDumper *ir_dumper,
-             ast_util::ASTCaches *ast_caches);
+             repr::IRDumper *ir_dumper,
+             ASTCaches *ast_caches);
 
   static std::string GetDeclSourceFile(const clang::Decl *decl,
                                        const clang::CompilerInstance *cip);
@@ -58,10 +61,10 @@ class ABIWrapper {
   std::string TypeNameWithFinalDestination(clang::QualType qual_type);
 
   bool SetupTemplateArguments(const clang::TemplateArgumentList *tl,
-                              abi_util::TemplatedArtifactIR *ta,
+                              repr::TemplatedArtifactIR *ta,
                               const std::string &source_file);
 
-  bool SetupFunctionParameter(abi_util::CFunctionLikeIR *functionp,
+  bool SetupFunctionParameter(repr::CFunctionLikeIR *functionp,
                               const clang::QualType qual_type,
                               bool has_default_arg,
                               const std::string &source_file,
@@ -75,11 +78,11 @@ class ABIWrapper {
                                     const std::string &source_file);
 
   bool CreateBasicNamedAndTypedDecl(clang::QualType canonical_type,
-                                    abi_util::TypeIR *typep,
+                                    repr::TypeIR *typep,
                                     const std::string &source_file);
 
   bool CreateExtendedType(clang::QualType canonical_type,
-                          abi_util::TypeIR *typep);
+                          repr::TypeIR *typep);
 
   bool CreateAnonymousRecord(const clang::RecordDecl *decl);
 
@@ -94,17 +97,18 @@ class ABIWrapper {
   const clang::CompilerInstance *cip_;
   clang::MangleContext *mangle_contextp_;
   clang::ASTContext *ast_contextp_;
-  abi_util::IRDumper *ir_dumper_;
-  ast_util::ASTCaches *ast_caches_;
+  repr::IRDumper *ir_dumper_;
+  ASTCaches *ast_caches_;
 };
+
 
 class RecordDeclWrapper : public ABIWrapper {
  public:
   RecordDeclWrapper(
       clang::MangleContext *mangle_contextp, clang::ASTContext *ast_contextp,
       const clang::CompilerInstance *compiler_instance_p,
-      const clang::RecordDecl *record_decl, abi_util::IRDumper *ir_dumper,
-      ast_util::ASTCaches *ast_caches);
+      const clang::RecordDecl *record_decl, repr::IRDumper *ir_dumper,
+      ASTCaches *ast_caches);
 
   bool GetRecordDecl();
 
@@ -112,69 +116,71 @@ class RecordDeclWrapper : public ABIWrapper {
   const clang::RecordDecl *record_decl_;
 
  private:
-  bool SetupRecordInfo(abi_util::RecordTypeIR *type,
+  bool SetupRecordInfo(repr::RecordTypeIR *type,
                        const std::string &source_file);
 
-  bool SetupRecordFields(abi_util::RecordTypeIR *record_declp,
+  bool SetupRecordFields(repr::RecordTypeIR *record_declp,
                          const std::string &source_file);
 
-  bool SetupCXXBases(abi_util::RecordTypeIR *cxxp,
+  bool SetupCXXBases(repr::RecordTypeIR *cxxp,
                      const clang::CXXRecordDecl *cxx_record_decl);
 
-  bool SetupTemplateInfo(abi_util::RecordTypeIR *record_declp,
+  bool SetupTemplateInfo(repr::RecordTypeIR *record_declp,
                          const clang::CXXRecordDecl *cxx_record_decl,
                          const std::string &source_file);
 
-  bool SetupRecordVTable(abi_util::RecordTypeIR *record_declp,
+  bool SetupRecordVTable(repr::RecordTypeIR *record_declp,
                          const clang::CXXRecordDecl *cxx_record_decl);
 
   std::string GetMangledRTTI(const clang::CXXRecordDecl *cxx_record_decl);
 
-  abi_util::VTableComponentIR
+  repr::VTableComponentIR
   SetupRecordVTableComponent(const clang::VTableComponent &vtable_component,
                              const clang::ThunkInfo &thunk_info);
 
-  bool SetupCXXRecordInfo(abi_util::RecordTypeIR *record_declp,
+  bool SetupCXXRecordInfo(repr::RecordTypeIR *record_declp,
                           const std::string &source_file);
 };
+
 
 class FunctionDeclWrapper : public ABIWrapper {
  public:
   FunctionDeclWrapper(
       clang::MangleContext *mangle_contextp, clang::ASTContext *ast_contextp,
       const clang::CompilerInstance *compiler_instance_p,
-      const clang::FunctionDecl *decl, abi_util::IRDumper *ir_dumper,
-      ast_util::ASTCaches *ast_caches);
+      const clang::FunctionDecl *decl, repr::IRDumper *ir_dumper,
+      ASTCaches *ast_caches);
 
-  std::unique_ptr<abi_util::FunctionIR> GetFunctionDecl();
+  std::unique_ptr<repr::FunctionIR> GetFunctionDecl();
 
  private:
   const clang::FunctionDecl *function_decl_;
 
  private:
-  bool SetupFunction(abi_util::FunctionIR *methodp,
+  bool SetupFunction(repr::FunctionIR *methodp,
                      const std::string &source_file);
 
-  bool SetupTemplateInfo(abi_util::FunctionIR *functionp,
+  bool SetupTemplateInfo(repr::FunctionIR *functionp,
                          const std::string &source_file);
 
-  bool SetupFunctionParameters(abi_util::FunctionIR *functionp,
+  bool SetupFunctionParameters(repr::FunctionIR *functionp,
                                const std::string &source_file);
 
-  bool SetupThisParameter(abi_util::FunctionIR *functionp,
+  bool SetupThisParameter(repr::FunctionIR *functionp,
                           const std::string &source_file);
 };
 
+
 class FunctionTypeWrapper : public ABIWrapper {
  private:
-  bool SetupFunctionType(abi_util::FunctionTypeIR *function_type_ir);
+  bool SetupFunctionType(repr::FunctionTypeIR *function_type_ir);
 
  public:
   FunctionTypeWrapper(
       clang::MangleContext *mangle_contextp, clang::ASTContext *ast_contextp,
       const clang::CompilerInstance *compiler_instance_p,
-      const clang::FunctionType *function_type, abi_util::IRDumper *ir_dumper,
-      ast_util::ASTCaches *ast_caches, const std::string &source_file);
+      const clang::FunctionType *function_type, repr::IRDumper *ir_dumper,
+      ASTCaches *ast_caches, const std::string &source_file);
 
   bool GetFunctionType();
 
@@ -183,13 +189,14 @@ class FunctionTypeWrapper : public ABIWrapper {
   const std::string &source_file_;
 };
 
+
 class EnumDeclWrapper : public ABIWrapper {
  public:
   EnumDeclWrapper(
       clang::MangleContext *mangle_contextp, clang::ASTContext *ast_contextp,
       const clang::CompilerInstance *compiler_instance_p,
-      const clang::EnumDecl *decl, abi_util::IRDumper *ir_dumper,
-      ast_util::ASTCaches *ast_caches);
+      const clang::EnumDecl *decl, repr::IRDumper *ir_dumper,
+      ASTCaches *ast_caches);
 
   bool GetEnumDecl();
 
@@ -197,19 +204,20 @@ class EnumDeclWrapper : public ABIWrapper {
   const clang::EnumDecl *enum_decl_;
 
  private:
-  bool SetupEnum(abi_util::EnumTypeIR *type,
+  bool SetupEnum(repr::EnumTypeIR *type,
                  const std::string &source_file);
 
-  bool SetupEnumFields(abi_util::EnumTypeIR *enump);
+  bool SetupEnumFields(repr::EnumTypeIR *enump);
 };
+
 
 class GlobalVarDeclWrapper : public ABIWrapper {
  public:
   GlobalVarDeclWrapper(
       clang::MangleContext *mangle_contextp, clang::ASTContext *ast_contextp,
       const clang::CompilerInstance *compiler_instance_p,
-      const clang::VarDecl *decl, abi_util::IRDumper *ir_dumper,
-      ast_util::ASTCaches *ast_caches);
+      const clang::VarDecl *decl, repr::IRDumper *ir_dumper,
+      ASTCaches *ast_caches);
 
   bool GetGlobalVarDecl();
 
@@ -217,10 +225,13 @@ class GlobalVarDeclWrapper : public ABIWrapper {
   const clang::VarDecl *global_var_decl_;
 
  private:
-  bool SetupGlobalVar(abi_util::GlobalVarIR *global_varp,
+  bool SetupGlobalVar(repr::GlobalVarIR *global_varp,
                       const std::string &source_file);
 };
 
-}  // namespace abi_wrapper
+
+}  // namespace dumper
+}  // namespace header_checker
+
 
 #endif  // ABI_WRAPPERS_H_

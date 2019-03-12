@@ -19,6 +19,10 @@
 #include <clang/Lex/LexDiagnostic.h>
 
 
+namespace header_checker {
+namespace dumper {
+
+
 HeaderCheckerDiagnosticConsumer::HeaderCheckerDiagnosticConsumer(
     std::unique_ptr<clang::DiagnosticConsumer> wrapped)
     : wrapped_(std::move(wrapped)) {}
@@ -63,3 +67,7 @@ void HeaderCheckerDiagnosticConsumer::HandleDiagnostic(
   DiagnosticConsumer::HandleDiagnostic(level, info);
   wrapped_->HandleDiagnostic(level, info);
 }
+
+
+}  // dumper
+}  // header_checker

@@ -20,7 +20,8 @@
 #include <vector>
 
 
-namespace abi_util {
+namespace header_checker {
+namespace utils {
 
 
 std::string_view Trim(std::string_view s);
@@ -37,7 +38,8 @@ std::optional<int> ParseInt(const std::string &s);
 bool IsGlobPattern(std::string_view s);
 
 
-}  // namespace abi_util
+}  // namespace utils
+}  // namespace header_checker
 
 
 #endif  // STRING_UTILS_H_

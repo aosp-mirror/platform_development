@@ -25,7 +25,8 @@
 #include <vector>
 
 
-namespace abi_util {
+namespace header_checker {
+namespace repr {
 
 
 static constexpr char DEFAULT_ARCH[] = "arm64";
@@ -38,7 +39,7 @@ inline std::string GetIntroducedArchTag(const std::string &arch) {
 
 VersionScriptParser::VersionScriptParser()
     : arch_(DEFAULT_ARCH), introduced_arch_tag_(GetIntroducedArchTag(arch_)),
-      api_level_(FUTURE_API_LEVEL), stream_(nullptr), line_no_(0) {}
+      api_level_(utils::FUTURE_API_LEVEL), stream_(nullptr), line_no_(0) {}
 
 
 void VersionScriptParser::SetArch(const std::string &arch) {
@@ -61,7 +62,7 @@ VersionScriptParser::ParsedTags VersionScriptParser::ParseSymbolTags(
   }
 
   std::string_view comment_line = line_view.substr(comment_pos + 1);
-  std::vector<std::string_view> tags = Split(comment_line, " \t");
+  std::vector<std::string_view> tags = utils::Split(comment_line, " \t");
 
   bool has_introduced_arch_tags = false;
 
@@ -92,8 +93,8 @@ VersionScriptParser::ParsedTags VersionScriptParser::ParseSymbolTags(
     }
 
     // Check introduced tags.
-    if (StartsWith(tag, "introduced=")) {
-      std::optional<ApiLevel> intro = ParseApiLevel(
+    if (utils::StartsWith(tag, "introduced=")) {
+      std::optional<utils::ApiLevel> intro = utils::ParseApiLevel(
           std::string(tag.substr(sizeof("introduced=") - 1)));
       if (!intro) {
         ReportError("Bad introduced tag: " + std::string(tag));
@@ -106,8 +107,8 @@ VersionScriptParser::ParsedTags VersionScriptParser::ParseSymbolTags(
       continue;
     }
 
-    if (StartsWith(tag, introduced_arch_tag_)) {
-      std::optional<ApiLevel> intro = ParseApiLevel(
+    if (utils::StartsWith(tag, introduced_arch_tag_)) {
+      std::optional<utils::ApiLevel> intro = utils::ParseApiLevel(
           std::string(tag.substr(introduced_arch_tag_.size())));
       if (!intro) {
         ReportError("Bad introduced tag " + std::string(tag));
@@ -141,7 +142,7 @@ bool VersionScriptParser::IsSymbolExported(
   }
 
   if (tags.has_future_tag_) {
-    return api_level_ == FUTURE_API_LEVEL;
+    return api_level_ == utils::FUTURE_API_LEVEL;
   }
 
   if (tags.has_introduced_tags_) {
@@ -161,7 +162,7 @@ bool VersionScriptParser::ParseSymbolLine(const std::string &line,
     return false;
   }
 
-  std::string symbol(Trim(line.substr(0, pos)));
+  std::string symbol(utils::Trim(line.substr(0, pos)));
 
   ParsedTags tags = ParseSymbolTags(line);
   if (!IsSymbolExported(tags)) {
@@ -169,7 +170,7 @@ bool VersionScriptParser::ParseSymbolLine(const std::string &line,
   }
 
   if (is_in_extern_cpp) {
-    if (IsGlobPattern(symbol)) {
+    if (utils::IsGlobPattern(symbol)) {
       exported_symbols_->AddDemangledCppGlobPattern(symbol);
     } else {
       exported_symbols_->AddDemangledCppSymbol(symbol);
@@ -177,7 +178,7 @@ bool VersionScriptParser::ParseSymbolLine(const std::string &line,
     return true;
   }
 
-  if (IsGlobPattern(symbol)) {
+  if (utils::IsGlobPattern(symbol)) {
     exported_symbols_->AddGlobPattern(symbol);
     return true;
   }
@@ -219,11 +220,11 @@ bool VersionScriptParser::ParseVersionBlock(bool ignore_symbols) {
     }
 
     // Check symbol visibility label
-    if (StartsWith(line, "local:")) {
+    if (utils::StartsWith(line, "local:")) {
       scope = LineScope::LOCAL;
       continue;
     }
-    if (StartsWith(line, "global:")) {
+    if (utils::StartsWith(line, "global:")) {
       scope = LineScope::GLOBAL;
       continue;
     }
@@ -264,7 +265,7 @@ std::unique_ptr<ExportedSymbolSet> VersionScriptParser::Parse(
       return nullptr;
     }
 
-    std::string version(Trim(line.substr(0, lparen_pos - 1)));
+    std::string version(utils::Trim(line.substr(0, lparen_pos - 1)));
     bool exclude_symbol_version = (excluded_symbol_versions_.find(version) !=
                                    excluded_symbol_versions_.end());
 
@@ -280,7 +281,7 @@ std::unique_ptr<ExportedSymbolSet> VersionScriptParser::Parse(
 bool VersionScriptParser::ReadLine(std::string &line) {
   while (std::getline(*stream_, line)) {
     ++line_no_;
-    line = std::string(Trim(line));
+    line = std::string(utils::Trim(line));
     if (line.empty() || line[0] == '#') {
       continue;
     }
@@ -293,4 +294,5 @@ bool VersionScriptParser::ReadLine(std::string &line) {
 VersionScriptParser::ErrorHandler::~ErrorHandler() {}
 
 
-}  // namespace abi_util
+}  // namespace repr
+}  // namespace header_checker

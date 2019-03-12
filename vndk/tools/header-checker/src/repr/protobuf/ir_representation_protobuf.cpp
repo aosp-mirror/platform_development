@@ -22,7 +22,9 @@
 #include <string>
 
 
-namespace abi_util {
+namespace header_checker {
+namespace repr {
+
 
 void ProtobufTextFormatToIRReader::ReadTypeInfo(
     const abi_dump::BasicNamedAndTypedDecl &type_info, TypeIR *typep) {
@@ -374,7 +376,7 @@ void ProtobufTextFormatToIRReader::ReadElfObjects(
 }
 
 bool IRToProtobufConverter::AddTemplateInformation(
-    abi_dump::TemplateInfo *ti, const abi_util::TemplatedArtifactIR *ta) {
+    abi_dump::TemplateInfo *ti, const TemplatedArtifactIR *ta) {
   for (auto &&template_element : ta->GetTemplateElements()) {
     abi_dump::TemplateElement *added_element = ti->add_elements();
     if (!added_element) {
@@ -498,7 +500,7 @@ bool IRToProtobufConverter::AddVTableLayout(
 
 bool IRToProtobufConverter::AddTagTypeInfo(
     abi_dump::TagType *tag_type_protobuf,
-    const abi_util::TagTypeIR *tag_type_ir) {
+    const TagTypeIR *tag_type_ir) {
   if (!tag_type_protobuf || !tag_type_ir) {
     return false;
   }
@@ -1491,4 +1493,6 @@ bool ProtobufIRDiffDumper::Dump() {
   return google::protobuf::TextFormat::Print(*diff_tu_.get(), &text_os);
 }
 
-}  // namespace abi_util
+
+}  // namespace repr
+}  // namespace header_checker

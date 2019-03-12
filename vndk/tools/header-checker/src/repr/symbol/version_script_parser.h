@@ -24,7 +24,8 @@
 #include <string>
 
 
-namespace abi_util {
+namespace header_checker {
+namespace repr {
 
 
 class VersionScriptParser {
@@ -43,7 +44,7 @@ class VersionScriptParser {
     unsigned has_excluded_tags_ : 1;
     unsigned has_future_tag_ : 1;
     unsigned has_var_tag_ : 1;
-    ApiLevel introduced_;
+    utils::ApiLevel introduced_;
 
 
    public:
@@ -68,7 +69,7 @@ class VersionScriptParser {
 
   void SetArch(const std::string &arch);
 
-  void SetApiLevel(ApiLevel api_level) {
+  void SetApiLevel(utils::ApiLevel api_level) {
     api_level_ = api_level;
   }
 
@@ -112,7 +113,7 @@ class VersionScriptParser {
 
   std::string arch_;
   std::string introduced_arch_tag_;
-  ApiLevel api_level_;
+  utils::ApiLevel api_level_;
 
   std::set<std::string, std::less<>> excluded_symbol_versions_;
   std::set<std::string, std::less<>> excluded_symbol_tags_;
@@ -124,7 +125,8 @@ class VersionScriptParser {
 };
 
 
-}  // namespace abi_util
+}  // namespace repr
+}  // namespace header_checker
 
 
 #endif  // VERSION_SCRIPT_PARSER_H_

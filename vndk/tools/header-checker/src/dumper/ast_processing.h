@@ -28,6 +28,10 @@
 #include <set>
 
 
+namespace header_checker {
+namespace dumper {
+
+
 class HeaderASTVisitor
     : public clang::RecursiveASTVisitor<HeaderASTVisitor> {
  public:
@@ -36,8 +40,8 @@ class HeaderASTVisitor
                    clang::ASTContext *ast_contextp,
                    const clang::CompilerInstance *compiler_instance_p,
                    const clang::Decl *tu_decl,
-                   abi_util::IRDumper *ir_dumper,
-                   ast_util::ASTCaches *ast_caches);
+                   repr::IRDumper *ir_dumper,
+                   ASTCaches *ast_caches);
 
   bool VisitRecordDecl(const clang::RecordDecl *decl);
 
@@ -61,11 +65,12 @@ class HeaderASTVisitor
   const clang::CompilerInstance *cip_;
   // To optimize recursion into only exported abi.
   const clang::Decl *tu_decl_;
-  abi_util::IRDumper *ir_dumper_;
+  repr::IRDumper *ir_dumper_;
   // We cache the source file an AST node corresponds to, to avoid repeated
   // calls to "realpath".
-  ast_util::ASTCaches *ast_caches_;
+  ASTCaches *ast_caches_;
 };
+
 
 class HeaderASTConsumer : public clang::ASTConsumer {
  public:
@@ -78,5 +83,10 @@ class HeaderASTConsumer : public clang::ASTConsumer {
   clang::CompilerInstance *cip_;
   HeaderCheckerOptions &options_;
 };
+
+
+}  // namespace dumper
+}  // namespace header_checker
+
 
 #endif  // AST_PROCESSING_H_

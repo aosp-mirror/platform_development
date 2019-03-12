@@ -21,19 +21,23 @@
 #include <string>
 
 
+namespace header_checker {
+namespace dumper {
+
+
 class HeaderCheckerOptions {
  public:
   std::string source_file_;
   std::string dump_name_;
   std::set<std::string> exported_headers_;
-  abi_util::TextFormatIR text_format_;
+  repr::TextFormatIR text_format_;
   bool dump_function_declarations_;
   bool suppress_errors_;
 
  public:
   HeaderCheckerOptions(std::string source_file, std::string dump_name,
                        std::set<std::string> exported_headers,
-                       abi_util::TextFormatIR text_format,
+                       repr::TextFormatIR text_format,
                        bool dump_function_declarations, bool suppress_errors)
       : source_file_(std::move(source_file)), dump_name_(std::move(dump_name)),
         exported_headers_(std::move(exported_headers)),
@@ -41,5 +45,10 @@ class HeaderCheckerOptions {
         dump_function_declarations_(dump_function_declarations),
         suppress_errors_(suppress_errors) {}
 };
+
+
+}  // namespace dumper
+}  // namespace header_checker
+
 
 #endif  // HEADER_CHECKER_H_

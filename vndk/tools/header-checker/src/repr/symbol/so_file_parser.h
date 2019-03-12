@@ -22,7 +22,8 @@
 #include <string>
 
 
-namespace abi_util {
+namespace header_checker {
+namespace repr {
 
 
 class SoFileParser {
@@ -35,7 +36,8 @@ class SoFileParser {
 };
 
 
-}  // namespace abi_util
+}  // namespace repr
+}  // namespace header_checker
 
 
 #endif  // SO_FILE_PARSER_H_

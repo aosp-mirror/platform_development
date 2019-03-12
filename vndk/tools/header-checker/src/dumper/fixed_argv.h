@@ -24,6 +24,10 @@
 #include <string.h>
 
 
+namespace header_checker {
+namespace dumper {
+
+
 class FixedArgvAccess;
 
 
@@ -129,6 +133,10 @@ class FixedArgvRegistry {
     }
   }
 };
+
+
+}  // namespace dumper
+}  // namespace header_checker
 
 
 #endif  // FIXED_ARGV_H_

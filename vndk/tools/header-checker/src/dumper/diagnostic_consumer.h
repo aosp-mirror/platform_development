@@ -18,6 +18,10 @@
 #include <clang/Basic/Diagnostic.h>
 
 
+namespace header_checker {
+namespace dumper {
+
+
 class HeaderCheckerDiagnosticConsumer : public clang::DiagnosticConsumer {
  private:
   std::unique_ptr<clang::DiagnosticConsumer> wrapped_;
@@ -34,5 +38,10 @@ class HeaderCheckerDiagnosticConsumer : public clang::DiagnosticConsumer {
   void HandleDiagnostic(clang::DiagnosticsEngine::Level level,
                         const clang::Diagnostic &info) override;
 };
+
+
+}  // namespace dumper
+}  // namespace header_checker
+
 
 #endif  // DIAGNOSTIC_CONSUMER_H_

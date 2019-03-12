@@ -25,7 +25,9 @@
 #include <string>
 
 
-namespace abi_util {
+namespace header_checker {
+namespace repr {
+
 
 // Conversion between IR enums and JSON strings.
 static const std::map<AccessSpecifierIR, std::string> access_ir_to_json{
@@ -937,4 +939,6 @@ void JsonToIRReader::ReadElfObjects(const JsonObjectRef &tu) {
   }
 }
 
-}  // namespace abi_util
+
+}  // namespace repr
+}  // header_checker

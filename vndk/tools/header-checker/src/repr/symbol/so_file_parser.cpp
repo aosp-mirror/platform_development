@@ -22,7 +22,8 @@
 #include <llvm/Object/SymbolSize.h>
 
 
-namespace abi_util {
+namespace header_checker {
+namespace repr {
 
 
 template <typename T>
@@ -37,13 +38,13 @@ static inline T UnWrap(llvm::Expected<T> value_or_error) {
 }
 
 
-static abi_util::ElfSymbolIR::ElfSymbolBinding
+static ElfSymbolIR::ElfSymbolBinding
 LLVMToIRSymbolBinding(unsigned char binding) {
   switch (binding) {
     case llvm::ELF::STB_GLOBAL:
-      return abi_util::ElfSymbolIR::ElfSymbolBinding::Global;
+      return ElfSymbolIR::ElfSymbolBinding::Global;
     case llvm::ELF::STB_WEAK:
-      return abi_util::ElfSymbolIR::ElfSymbolBinding::Weak;
+      return ElfSymbolIR::ElfSymbolBinding::Weak;
   }
   assert(0);
 }
@@ -94,7 +95,7 @@ ELFSoFileParser<T>::ELFSoFileParser(const llvm::object::ELFObjectFile<T> *obj) {
       continue;
     }
 
-    abi_util::ElfSymbolIR::ElfSymbolBinding symbol_binding =
+    ElfSymbolIR::ElfSymbolBinding symbol_binding =
         LLVMToIRSymbolBinding(elf_sym->getBinding());
     std::string symbol_name = UnWrap(symbol_it.getName());
 
@@ -156,4 +157,5 @@ std::unique_ptr<SoFileParser> SoFileParser::Create(
 }
 
 
-}  // namespace abi_util
+}  // namespace repr
+}  // namespace header_checker

@@ -27,6 +27,10 @@
 #include <llvm/ADT/STLExtras.h>
 
 
+namespace header_checker {
+namespace dumper {
+
+
 HeaderCheckerFrontendAction::HeaderCheckerFrontendAction(
     HeaderCheckerOptions &options)
     : options_(options) {}
@@ -57,3 +61,7 @@ bool HeaderCheckerFrontendAction::BeginSourceFileAction(
   }
   return true;
 }
+
+
+}  // dumper
+}  // header_checker

@@ -33,6 +33,17 @@
 #include <stdlib.h>
 
 
+using header_checker::dumper::FixedArgv;
+using header_checker::dumper::FixedArgvAccess;
+using header_checker::dumper::FixedArgvRegistry;
+using header_checker::dumper::HeaderCheckerFrontendActionFactory;
+using header_checker::dumper::HeaderCheckerOptions;
+using header_checker::repr::TextFormatIR;
+using header_checker::utils::CollectAllExportedHeaders;
+using header_checker::utils::RealPath;
+
+
+
 static llvm::cl::OptionCategory header_checker_category(
     "header-checker options");
 
@@ -64,12 +75,12 @@ static llvm::cl::opt<bool> dump_function_declarations(
                    "file"),
     llvm::cl::Optional, llvm::cl::cat(header_checker_category));
 
-static llvm::cl::opt<abi_util::TextFormatIR> output_format(
+static llvm::cl::opt<TextFormatIR> output_format(
     "output-format", llvm::cl::desc("Specify format of output dump file"),
-    llvm::cl::values(clEnumValN(abi_util::TextFormatIR::ProtobufTextFormat,
+    llvm::cl::values(clEnumValN(TextFormatIR::ProtobufTextFormat,
                                 "ProtobufTextFormat", "ProtobufTextFormat"),
-                     clEnumValN(abi_util::TextFormatIR::Json, "Json", "JSON")),
-    llvm::cl::init(abi_util::TextFormatIR::Json),
+                     clEnumValN(TextFormatIR::Json, "Json", "JSON")),
+    llvm::cl::init(TextFormatIR::Json),
     llvm::cl::cat(header_checker_category));
 
 // Hide irrelevant command line options defined in LLVM libraries.
@@ -131,13 +142,12 @@ int main(int argc, const char **argv) {
 
   std::set<std::string> exported_headers;
   if (!no_filter) {
-    exported_headers =
-        abi_util::CollectAllExportedHeaders(exported_header_dirs);
+    exported_headers = CollectAllExportedHeaders(exported_header_dirs);
   }
 
   // Initialize clang tools and run front-end action.
   std::vector<std::string> header_files{ header_file };
-  HeaderCheckerOptions options(abi_util::RealPath(header_file), out_dump,
+  HeaderCheckerOptions options(RealPath(header_file), out_dump,
                                std::move(exported_headers), output_format,
                                dump_function_declarations, suppress_errors);
 

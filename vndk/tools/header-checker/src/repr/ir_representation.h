@@ -26,9 +26,12 @@
 #include <vector>
 
 
+namespace header_checker {
+namespace repr {
+
+
 // Classes which act as middle-men between clang AST parsing routines and
 // message format specific dumpers.
-namespace abi_util {
 
 template <typename T>
 using AbiElementMap = std::map<std::string, T>;
@@ -1457,6 +1460,9 @@ class IRDiffDumper {
   const std::string &dump_path_;
 };
 
-}  // namespace abi_util
+
+}  // namespace repr
+}  // namespace header_checker
+
 
 #endif  // IR_REPRESENTATION_H_

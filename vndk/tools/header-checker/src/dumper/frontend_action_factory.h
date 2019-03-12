@@ -23,6 +23,10 @@
 #include <vector>
 
 
+namespace header_checker {
+namespace dumper {
+
+
 class HeaderCheckerFrontendActionFactory
     : public clang::tooling::FrontendActionFactory {
  private:
@@ -33,5 +37,10 @@ class HeaderCheckerFrontendActionFactory
 
   clang::FrontendAction *create() override;
 };
+
+
+}  // namespace dumper
+}  // namespace header_checker
+
 
 #endif  // FRONTEND_ACTION_FACTORY_H_

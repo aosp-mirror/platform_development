@@ -19,7 +19,8 @@
 #include <string>
 
 
-namespace abi_util {
+namespace header_checker {
+namespace utils {
 
 
 using ApiLevel = int;
@@ -31,7 +32,8 @@ constexpr ApiLevel FUTURE_API_LEVEL = 10000;
 std::optional<ApiLevel> ParseApiLevel(const std::string &api);
 
 
-}  // namespace abi_util
+}  // namespace utils
+}  // namespace header_checker
 
 
 #endif  // API_LEVEL_H_

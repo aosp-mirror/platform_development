@@ -25,18 +25,16 @@
 #include <string>
 
 
-using abi_wrapper::ABIWrapper;
-using abi_wrapper::FunctionDeclWrapper;
-using abi_wrapper::RecordDeclWrapper;
-using abi_wrapper::EnumDeclWrapper;
-using abi_wrapper::GlobalVarDeclWrapper;
+namespace header_checker {
+namespace dumper {
+
 
 HeaderASTVisitor::HeaderASTVisitor(
     const HeaderCheckerOptions &options, clang::MangleContext *mangle_contextp,
     clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *compiler_instance_p,
-    const clang::Decl *tu_decl, abi_util::IRDumper *ir_dumper,
-    ast_util::ASTCaches *ast_caches)
+    const clang::Decl *tu_decl, repr::IRDumper *ir_dumper,
+    ASTCaches *ast_caches)
     : options_(options), mangle_contextp_(mangle_contextp),
       ast_contextp_(ast_contextp), cip_(compiler_instance_p), tu_decl_(tu_decl),
       ir_dumper_(ir_dumper), ast_caches_(ast_caches) {}
@@ -71,17 +69,17 @@ bool HeaderASTVisitor::VisitEnumDecl(const clang::EnumDecl *decl) {
   return enum_decl_wrapper.GetEnumDecl();
 }
 
-static bool MutateFunctionWithLinkageName(const abi_util::FunctionIR *function,
-                                          abi_util::IRDumper *ir_dumper,
+static bool MutateFunctionWithLinkageName(const repr::FunctionIR *function,
+                                          repr::IRDumper *ir_dumper,
                                           std::string &linkage_name) {
-  auto added_function = std::make_unique<abi_util::FunctionIR>();
+  auto added_function = std::make_unique<repr::FunctionIR>();
   *added_function = *function;
   added_function->SetLinkerSetKey(linkage_name);
   return ir_dumper->AddLinkableMessageIR(added_function.get());
 }
 
-static bool AddMangledFunctions(const abi_util::FunctionIR *function,
-                                abi_util:: IRDumper *ir_dumper,
+static bool AddMangledFunctions(const repr::FunctionIR *function,
+                                repr:: IRDumper *ir_dumper,
                                 std::vector<std::string> &manglings) {
   for (auto &&mangling : manglings) {
     if (!MutateFunctionWithLinkageName(function, ir_dumper, mangling)) {
@@ -203,13 +201,13 @@ void HeaderASTConsumer::HandleTranslationUnit(clang::ASTContext &ctx) {
       ctx.createMangleContext());
   const std::string &translation_unit_source =
       ABIWrapper::GetDeclSourceFile(translation_unit, cip_);
-  ast_util::ASTCaches ast_caches(translation_unit_source);
+  ASTCaches ast_caches(translation_unit_source);
   if (!options_.exported_headers_.empty()) {
     options_.exported_headers_.insert(translation_unit_source);
   }
-  std::unique_ptr<abi_util::IRDumper> ir_dumper =
-      abi_util::IRDumper::CreateIRDumper(options_.text_format_,
-                                         options_.dump_name_);
+  std::unique_ptr<repr::IRDumper> ir_dumper =
+      repr::IRDumper::CreateIRDumper(options_.text_format_,
+                                     options_.dump_name_);
   HeaderASTVisitor v(options_, mangle_contextp.get(), &ctx, cip_,
                      translation_unit, ir_dumper.get(), &ast_caches);
 
@@ -218,3 +216,7 @@ void HeaderASTConsumer::HandleTranslationUnit(clang::ASTContext &ctx) {
     ::exit(1);
   }
 }
+
+
+}  // dumper
+}  // header_checker

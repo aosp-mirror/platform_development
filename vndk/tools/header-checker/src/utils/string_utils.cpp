@@ -19,7 +19,8 @@
 #include <utility>
 
 
-namespace abi_util {
+namespace header_checker {
+namespace utils {
 
 
 std::string_view Trim(std::string_view s) {
@@ -90,4 +91,5 @@ bool IsGlobPattern(std::string_view s) {
 }
 
 
-}  // namespace abi_util
+}  // namespace utils
+}  // namespace header_checker

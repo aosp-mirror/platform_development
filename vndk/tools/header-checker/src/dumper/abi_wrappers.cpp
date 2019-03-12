@@ -26,14 +26,16 @@
 #include <stdlib.h>
 
 
-using namespace abi_wrapper;
+namespace header_checker {
+namespace dumper {
+
 
 ABIWrapper::ABIWrapper(
     clang::MangleContext *mangle_contextp,
     clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *cip,
-    abi_util::IRDumper *ir_dumper,
-    ast_util::ASTCaches *ast_caches)
+    repr::IRDumper *ir_dumper,
+    ASTCaches *ast_caches)
     : cip_(cip),
       mangle_contextp_(mangle_contextp),
       ast_contextp_(ast_contextp),
@@ -150,22 +152,22 @@ std::string ABIWrapper::GetDeclSourceFile(const clang::Decl *decl,
   // belonging to the library.
   clang::SourceLocation expansion_location = sm.getExpansionLoc(location);
   llvm::StringRef file_name = sm.getFilename(expansion_location);
-  return abi_util::RealPath(file_name.str());
+  return utils::RealPath(file_name.str());
 }
 
-static abi_util::AccessSpecifierIR AccessClangToIR(
+static repr::AccessSpecifierIR AccessClangToIR(
     const clang::AccessSpecifier sp) {
   switch (sp) {
     case clang::AS_private: {
-      return abi_util::AccessSpecifierIR::PrivateAccess;
+      return repr::AccessSpecifierIR::PrivateAccess;
       break;
     }
     case clang::AS_protected: {
-      return abi_util::AccessSpecifierIR::ProtectedAccess;
+      return repr::AccessSpecifierIR::ProtectedAccess;
       break;
     }
     default: {
-      return abi_util::AccessSpecifierIR::PublicAccess;
+      return repr::AccessSpecifierIR::PublicAccess;
       break;
     }
   }
@@ -198,7 +200,7 @@ static clang::QualType GetReferencedType(const clang::QualType qual_type) {
 }
 
 bool ABIWrapper::CreateExtendedType(clang::QualType qual_type,
-                                    abi_util::TypeIR *typep) {
+                                    repr::TypeIR *typep) {
   const clang::QualType canonical_type = qual_type.getCanonicalType();
   // The source file is going to be set later anyway.
   return CreateBasicNamedAndTypedDecl(canonical_type, typep, "");
@@ -224,7 +226,7 @@ bool ABIWrapper::CreateBasicNamedAndTypedDecl(clang::QualType qual_type,
   // extending Type and return a pointer to that and pass it to CreateBasic...
   // CreateBasic...(qualtype, Type *) fills in size, alignemnt etc.
   auto type_and_status = SetTypeKind(canonical_type, source_file);
-  std::unique_ptr<abi_util::TypeIR> typep = std::move(type_and_status.typep_);
+  std::unique_ptr<repr::TypeIR> typep = std::move(type_and_status.typep_);
   if (!base_type->isVoidType() && type_and_status.should_create_type_ &&
       !typep) {
     llvm::errs() << "nullptr with valid type while creating basic type\n";
@@ -267,7 +269,7 @@ std::string ABIWrapper::GetTypeUniqueId(const clang::TagDecl *tag_decl) {
 // include all the generic information of a basic type. Other methods will
 // create more specific information, e.g. RecordDecl, EnumDecl.
 bool ABIWrapper::CreateBasicNamedAndTypedDecl(
-    clang::QualType canonical_type, abi_util::TypeIR *typep,
+    clang::QualType canonical_type, repr::TypeIR *typep,
     const std::string &source_file) {
   // Cannot determine the size and alignment for template parameter dependent
   // types as well as incomplete types.
@@ -313,7 +315,7 @@ TypeAndCreationStatus ABIWrapper::SetTypeKind(
     const clang::QualType canonical_type, const std::string &source_file) {
   if (canonical_type.hasLocalQualifiers()) {
     auto qual_type_ir =
-        std::make_unique<abi_util::QualifiedTypeIR>();
+        std::make_unique<repr::QualifiedTypeIR>();
     qual_type_ir->SetConstness(canonical_type.isConstQualified());
     qual_type_ir->SetRestrictedness(canonical_type.isRestrictQualified());
     qual_type_ir->SetVolatility(canonical_type.isVolatileQualified());
@@ -322,32 +324,32 @@ TypeAndCreationStatus ABIWrapper::SetTypeKind(
   }
   const clang::Type *type_ptr = canonical_type.getTypePtr();
   if (type_ptr->isPointerType()) {
-    auto pointer_type_ir = std::make_unique<abi_util::PointerTypeIR>();
+    auto pointer_type_ir = std::make_unique<repr::PointerTypeIR>();
     pointer_type_ir->SetSourceFile(source_file);
     return TypeAndCreationStatus(std::move(pointer_type_ir));
   }
   if (type_ptr->isLValueReferenceType()) {
     auto lvalue_reference_type_ir =
-        std::make_unique<abi_util::LvalueReferenceTypeIR>();
+        std::make_unique<repr::LvalueReferenceTypeIR>();
     lvalue_reference_type_ir->SetSourceFile(source_file);
     return TypeAndCreationStatus(std::move(lvalue_reference_type_ir));
   }
   if (type_ptr->isRValueReferenceType()) {
     auto rvalue_reference_type_ir =
-        std::make_unique<abi_util::RvalueReferenceTypeIR>();
+        std::make_unique<repr::RvalueReferenceTypeIR>();
     rvalue_reference_type_ir->SetSourceFile(source_file);
     return TypeAndCreationStatus(std::move(rvalue_reference_type_ir));
   }
   if (type_ptr->isArrayType()) {
-    auto array_type_ir = std::make_unique<abi_util::ArrayTypeIR>();
+    auto array_type_ir = std::make_unique<repr::ArrayTypeIR>();
     array_type_ir->SetSourceFile(source_file);
     return TypeAndCreationStatus(std::move(array_type_ir));
   }
   if (type_ptr->isEnumeralType()) {
-    return TypeAndCreationStatus(std::make_unique<abi_util::EnumTypeIR>());
+    return TypeAndCreationStatus(std::make_unique<repr::EnumTypeIR>());
   }
   if (type_ptr->isBuiltinType()) {
-    auto builtin_type_ir = std::make_unique<abi_util::BuiltinTypeIR>();
+    auto builtin_type_ir = std::make_unique<repr::BuiltinTypeIR>();
     builtin_type_ir->SetSignedness(type_ptr->isUnsignedIntegerType());
     builtin_type_ir->SetIntegralType(type_ptr->isIntegralType(*ast_contextp_));
     return TypeAndCreationStatus(std::move(builtin_type_ir));
@@ -397,9 +399,9 @@ std::string ABIWrapper::GetTagDeclQualifiedName(const clang::TagDecl *decl) {
 }
 
 bool ABIWrapper::SetupTemplateArguments(const clang::TemplateArgumentList *tl,
-                                        abi_util::TemplatedArtifactIR *ta,
+                                        repr::TemplatedArtifactIR *ta,
                                         const std::string &source_file) {
-  abi_util::TemplateInfoIR template_info;
+  repr::TemplateInfoIR template_info;
   for (int i = 0; i < tl->size(); i++) {
     const clang::TemplateArgument &arg = (*tl)[i];
     // TODO: More comprehensive checking needed.
@@ -408,7 +410,7 @@ bool ABIWrapper::SetupTemplateArguments(const clang::TemplateArgumentList *tl,
     }
     clang::QualType type = arg.getAsType();
     template_info.AddTemplateElement(
-        abi_util::TemplateElementIR(
+        repr::TemplateElementIR(
             ast_caches_->GetTypeId(GetKeyForTypeId(type))));
     if (!CreateBasicNamedAndTypedDecl(type, source_file)) {
       llvm::errs() << "Setting up template arguments failed\n";
@@ -433,15 +435,15 @@ std::string ABIWrapper::QualTypeToString(const clang::QualType &sweet_qt) {
 FunctionTypeWrapper::FunctionTypeWrapper(
     clang::MangleContext *mangle_contextp, clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *compiler_instance_p,
-    const clang::FunctionType *function_type, abi_util::IRDumper *ir_dumper,
-    ast_util::ASTCaches *ast_caches, const std::string &source_file)
+    const clang::FunctionType *function_type, repr::IRDumper *ir_dumper,
+    ASTCaches *ast_caches, const std::string &source_file)
     : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p, ir_dumper,
                  ast_caches),
       function_type_(function_type),
       source_file_(source_file) {}
 
 bool FunctionTypeWrapper::SetupFunctionType(
-    abi_util::FunctionTypeIR *function_type_ir) {
+    repr::FunctionTypeIR *function_type_ir) {
   // Add ReturnType
   function_type_ir->SetReturnType(
       ast_caches_->GetTypeId(GetKeyForTypeId(function_type_->getReturnType())));
@@ -462,7 +464,7 @@ bool FunctionTypeWrapper::SetupFunctionType(
 }
 
 bool FunctionTypeWrapper::GetFunctionType() {
-  auto abi_decl = std::make_unique<abi_util::FunctionTypeIR>();
+  auto abi_decl = std::make_unique<repr::FunctionTypeIR>();
   clang::QualType canonical_type = function_type_->getCanonicalTypeInternal();
   if (!CreateBasicNamedAndTypedDecl(canonical_type, abi_decl.get(), "")) {
     llvm::errs() << "Couldn't create (function type) extended type\n";
@@ -477,13 +479,13 @@ FunctionDeclWrapper::FunctionDeclWrapper(
     clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *compiler_instance_p,
     const clang::FunctionDecl *decl,
-    abi_util::IRDumper *ir_dumper,
-    ast_util::ASTCaches *ast_caches)
+    repr::IRDumper *ir_dumper,
+    ASTCaches *ast_caches)
     : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p, ir_dumper,
                  ast_caches),
       function_decl_(decl) {}
 
-bool FunctionDeclWrapper::SetupThisParameter(abi_util::FunctionIR *functionp,
+bool FunctionDeclWrapper::SetupThisParameter(repr::FunctionIR *functionp,
                                              const std::string &source_file) {
   const clang::CXXMethodDecl *cxx_method_decl =
       llvm::dyn_cast<clang::CXXMethodDecl>(function_decl_);
@@ -496,20 +498,20 @@ bool FunctionDeclWrapper::SetupThisParameter(abi_util::FunctionIR *functionp,
 }
 
 bool ABIWrapper::SetupFunctionParameter(
-    abi_util::CFunctionLikeIR *functionp, const clang::QualType qual_type,
+    repr::CFunctionLikeIR *functionp, const clang::QualType qual_type,
     bool has_default_arg, const std::string &source_file, bool is_this_ptr) {
   if (!CreateBasicNamedAndTypedDecl(qual_type, source_file)) {
     llvm::errs() << "Setting up function parameter failed\n";
     return false;
   }
-  functionp->AddParameter(abi_util::ParamIR(
+  functionp->AddParameter(repr::ParamIR(
       ast_caches_->GetTypeId(GetKeyForTypeId(qual_type)), has_default_arg,
       is_this_ptr));
   return true;
 }
 
 bool FunctionDeclWrapper::SetupFunctionParameters(
-    abi_util::FunctionIR *functionp,
+    repr::FunctionIR *functionp,
     const std::string &source_file) {
   clang::FunctionDecl::param_const_iterator param_it =
       function_decl_->param_begin();
@@ -532,7 +534,7 @@ bool FunctionDeclWrapper::SetupFunctionParameters(
   return true;
 }
 
-bool FunctionDeclWrapper::SetupFunction(abi_util::FunctionIR *functionp,
+bool FunctionDeclWrapper::SetupFunction(repr::FunctionIR *functionp,
                                         const std::string &source_file) {
   // Go through all the parameters in the method and add them to the fields.
   // Also get the fully qualfied name.
@@ -549,7 +551,7 @@ bool FunctionDeclWrapper::SetupFunction(abi_util::FunctionIR *functionp,
       SetupTemplateInfo(functionp, source_file);
 }
 
-bool FunctionDeclWrapper::SetupTemplateInfo(abi_util::FunctionIR *functionp,
+bool FunctionDeclWrapper::SetupTemplateInfo(repr::FunctionIR *functionp,
                                             const std::string &source_file) {
   switch (function_decl_->getTemplatedKind()) {
     case clang::FunctionDecl::TK_FunctionTemplateSpecialization: {
@@ -568,8 +570,8 @@ bool FunctionDeclWrapper::SetupTemplateInfo(abi_util::FunctionIR *functionp,
   return true;
 }
 
-std::unique_ptr<abi_util::FunctionIR> FunctionDeclWrapper::GetFunctionDecl() {
-  auto abi_decl = std::make_unique<abi_util::FunctionIR>();
+std::unique_ptr<repr::FunctionIR> FunctionDeclWrapper::GetFunctionDecl() {
+  auto abi_decl = std::make_unique<repr::FunctionIR>();
   std::string source_file = GetCachedDeclSourceFile(function_decl_, cip_);
   if (!SetupFunction(abi_decl.get(), source_file)) {
     return nullptr;
@@ -581,13 +583,13 @@ RecordDeclWrapper::RecordDeclWrapper(
     clang::MangleContext *mangle_contextp,
     clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *compiler_instance_p,
-    const clang::RecordDecl *decl, abi_util::IRDumper *ir_dumper,
-    ast_util::ASTCaches *ast_caches)
+    const clang::RecordDecl *decl, repr::IRDumper *ir_dumper,
+    ASTCaches *ast_caches)
     : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p, ir_dumper,
                  ast_caches),
       record_decl_(decl) {}
 
-bool RecordDeclWrapper::SetupRecordFields(abi_util::RecordTypeIR *recordp,
+bool RecordDeclWrapper::SetupRecordFields(repr::RecordTypeIR *recordp,
                                           const std::string &source_file) {
   clang::RecordDecl::field_iterator field = record_decl_->field_begin();
   uint32_t field_index = 0;
@@ -607,7 +609,7 @@ bool RecordDeclWrapper::SetupRecordFields(abi_util::RecordTypeIR *recordp,
     }
     std::string field_name = field->getName();
     uint64_t field_offset = record_layout.getFieldOffset(field_index);
-    recordp->AddRecordField(abi_util::RecordFieldIR(
+    recordp->AddRecordField(repr::RecordFieldIR(
         field_name, ast_caches_->GetTypeId(key_for_type_id), field_offset,
         AccessClangToIR(field->getAccess())));
     field++;
@@ -617,7 +619,7 @@ bool RecordDeclWrapper::SetupRecordFields(abi_util::RecordTypeIR *recordp,
 }
 
 bool RecordDeclWrapper::SetupCXXBases(
-    abi_util::RecordTypeIR *cxxp, const clang::CXXRecordDecl *cxx_record_decl) {
+    repr::RecordTypeIR *cxxp, const clang::CXXRecordDecl *cxx_record_decl) {
   if (!cxx_record_decl || !cxxp) {
     return false;
   }
@@ -626,10 +628,10 @@ bool RecordDeclWrapper::SetupCXXBases(
   while (base_class != cxx_record_decl->bases_end()) {
     std::string name = QualTypeToString(base_class->getType());
     bool is_virtual = base_class->isVirtual();
-    abi_util::AccessSpecifierIR access =
+    repr::AccessSpecifierIR access =
         AccessClangToIR(base_class->getAccessSpecifier());
     cxxp->AddCXXBaseSpecifier(
-        abi_util::CXXBaseSpecifierIR(
+        repr::CXXBaseSpecifierIR(
             ast_caches_->GetTypeId(GetKeyForTypeId(base_class->getType())),
             is_virtual, access));
     base_class++;
@@ -640,7 +642,7 @@ bool RecordDeclWrapper::SetupCXXBases(
 typedef std::map<uint64_t, clang::ThunkInfo> ThunkMap;
 
 bool RecordDeclWrapper::SetupRecordVTable(
-    abi_util::RecordTypeIR *record_declp,
+    repr::RecordTypeIR *record_declp,
     const clang::CXXRecordDecl *cxx_record_decl) {
   if (!cxx_record_decl || !record_declp) {
     return false;
@@ -663,7 +665,7 @@ bool RecordDeclWrapper::SetupRecordVTable(
   llvm::ArrayRef<clang::VTableLayout::VTableThunkTy> thunks =
       vtable_layout.vtable_thunks();
   ThunkMap thunk_map(thunks.begin(), thunks.end());
-  abi_util::VTableLayoutIR vtable_ir_layout;
+  repr::VTableLayoutIR vtable_ir_layout;
 
   uint64_t index = 0;
   for (auto vtable_component : vtable_layout.vtable_components()) {
@@ -672,7 +674,7 @@ bool RecordDeclWrapper::SetupRecordVTable(
     if (it != thunk_map.end()) {
       thunk_info = it->second;
     }
-    abi_util::VTableComponentIR added_component =
+    repr::VTableComponentIR added_component =
         SetupRecordVTableComponent(vtable_component, thunk_info);
     vtable_ir_layout.AddVTableComponent(std::move(added_component));
     index++;
@@ -681,11 +683,11 @@ bool RecordDeclWrapper::SetupRecordVTable(
   return true;
 }
 
-abi_util::VTableComponentIR RecordDeclWrapper::SetupRecordVTableComponent(
+repr::VTableComponentIR RecordDeclWrapper::SetupRecordVTableComponent(
     const clang::VTableComponent &vtable_component,
     const clang::ThunkInfo &thunk_info) {
-  abi_util::VTableComponentIR::Kind kind =
-      abi_util::VTableComponentIR::Kind::RTTI;
+  repr::VTableComponentIR::Kind kind =
+      repr::VTableComponentIR::Kind::RTTI;
   std::string mangled_component_name = "";
   llvm::raw_string_ostream ostream(mangled_component_name);
   int64_t value = 0;
@@ -695,20 +697,20 @@ abi_util::VTableComponentIR RecordDeclWrapper::SetupRecordVTableComponent(
 
   switch (clang_component_kind) {
     case clang::VTableComponent::CK_VCallOffset:
-      kind = abi_util::VTableComponentIR::Kind::VCallOffset;
+      kind = repr::VTableComponentIR::Kind::VCallOffset;
       value = vtable_component.getVCallOffset().getQuantity();
       break;
     case clang::VTableComponent::CK_VBaseOffset:
-      kind = abi_util::VTableComponentIR::Kind::VBaseOffset;
+      kind = repr::VTableComponentIR::Kind::VBaseOffset;
       value = vtable_component.getVBaseOffset().getQuantity();
       break;
     case clang::VTableComponent::CK_OffsetToTop:
-      kind = abi_util::VTableComponentIR::Kind::OffsetToTop;
+      kind = repr::VTableComponentIR::Kind::OffsetToTop;
       value = vtable_component.getOffsetToTop().getQuantity();
       break;
     case clang::VTableComponent::CK_RTTI:
       {
-        kind = abi_util::VTableComponentIR::Kind::RTTI;
+        kind = repr::VTableComponentIR::Kind::RTTI;
         const clang::CXXRecordDecl *rtti_decl =
             vtable_component.getRTTIDecl();
         assert(rtti_decl != nullptr);
@@ -726,7 +728,7 @@ abi_util::VTableComponentIR RecordDeclWrapper::SetupRecordVTableComponent(
         is_pure = method_decl->isPure();
         switch (clang_component_kind) {
           case clang::VTableComponent::CK_FunctionPointer:
-            kind = abi_util::VTableComponentIR::Kind::FunctionPointer;
+            kind = repr::VTableComponentIR::Kind::FunctionPointer;
             if (thunk_info.isEmpty()) {
               mangle_contextp_->mangleName(method_decl, ostream);
             } else {
@@ -741,10 +743,10 @@ abi_util::VTableComponentIR RecordDeclWrapper::SetupRecordVTableComponent(
               if (clang_component_kind ==
                   clang::VTableComponent::CK_CompleteDtorPointer) {
                 dtor_type = clang::CXXDtorType::Dtor_Complete;
-                kind = abi_util::VTableComponentIR::Kind::CompleteDtorPointer;
+                kind = repr::VTableComponentIR::Kind::CompleteDtorPointer;
               } else {
                 dtor_type = clang::CXXDtorType::Dtor_Deleting;
-                kind = abi_util::VTableComponentIR::Kind::DeletingDtorPointer;
+                kind = repr::VTableComponentIR::Kind::DeletingDtorPointer;
               }
 
               if (thunk_info.isEmpty()) {
@@ -759,7 +761,7 @@ abi_util::VTableComponentIR RecordDeclWrapper::SetupRecordVTableComponent(
             }
             break;
           case clang::VTableComponent::CK_UnusedFunctionPointer:
-            kind = abi_util::VTableComponentIR::Kind::UnusedFunctionPointer;
+            kind = repr::VTableComponentIR::Kind::UnusedFunctionPointer;
             break;
           default:
             break;
@@ -769,12 +771,12 @@ abi_util::VTableComponentIR RecordDeclWrapper::SetupRecordVTableComponent(
     default:
       break;
   }
-  return abi_util::VTableComponentIR(mangled_component_name, kind, value,
+  return repr::VTableComponentIR(mangled_component_name, kind, value,
                                      is_pure);
 }
 
 bool RecordDeclWrapper::SetupTemplateInfo(
-    abi_util::RecordTypeIR *record_declp,
+    repr::RecordTypeIR *record_declp,
     const clang::CXXRecordDecl *cxx_record_decl,
     const std::string &source_file) {
   assert(cxx_record_decl != nullptr);
@@ -791,20 +793,20 @@ bool RecordDeclWrapper::SetupTemplateInfo(
   return true;
 }
 
-bool RecordDeclWrapper::SetupRecordInfo(abi_util::RecordTypeIR *record_declp,
+bool RecordDeclWrapper::SetupRecordInfo(repr::RecordTypeIR *record_declp,
                                         const std::string &source_file) {
   if (!record_declp) {
     return false;
   }
   if (record_decl_->isStruct()) {
     record_declp->SetRecordKind(
-        abi_util::RecordTypeIR::RecordKind::struct_kind);
+        repr::RecordTypeIR::RecordKind::struct_kind);
   } else if (record_decl_->isClass()) {
     record_declp->SetRecordKind(
-        abi_util::RecordTypeIR::RecordKind::class_kind);
+        repr::RecordTypeIR::RecordKind::class_kind);
   } else {
     record_declp->SetRecordKind(
-        abi_util::RecordTypeIR::RecordKind::union_kind);
+        repr::RecordTypeIR::RecordKind::union_kind);
   }
 
   const clang::Type *basic_type = nullptr;
@@ -826,7 +828,7 @@ bool RecordDeclWrapper::SetupRecordInfo(abi_util::RecordTypeIR *record_declp,
       SetupCXXRecordInfo(record_declp, source_file);
 }
 
-bool RecordDeclWrapper::SetupCXXRecordInfo(abi_util::RecordTypeIR *record_declp,
+bool RecordDeclWrapper::SetupCXXRecordInfo(repr::RecordTypeIR *record_declp,
                                            const std::string &source_file) {
   const clang::CXXRecordDecl *cxx_record_decl =
       clang::dyn_cast<clang::CXXRecordDecl>(record_decl_);
@@ -840,7 +842,7 @@ bool RecordDeclWrapper::SetupCXXRecordInfo(abi_util::RecordTypeIR *record_declp,
 
 // TODO: Can we use clang's ODR hash to do faster ODR checking?
 bool RecordDeclWrapper::GetRecordDecl() {
-  auto abi_decl = std::make_unique<abi_util::RecordTypeIR>();
+  auto abi_decl = std::make_unique<repr::RecordTypeIR>();
   std::string source_file = GetCachedDeclSourceFile(record_decl_, cip_);
   if (!SetupRecordInfo(abi_decl.get(), source_file)) {
     llvm::errs() << "Setting up CXX Bases / Template Info failed\n";
@@ -859,13 +861,13 @@ EnumDeclWrapper::EnumDeclWrapper(
     clang::MangleContext *mangle_contextp,
     clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *compiler_instance_p,
-    const clang::EnumDecl *decl, abi_util::IRDumper *ir_dumper,
-    ast_util::ASTCaches *ast_caches)
+    const clang::EnumDecl *decl, repr::IRDumper *ir_dumper,
+    ASTCaches *ast_caches)
     : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p, ir_dumper,
                  ast_caches),
       enum_decl_(decl) {}
 
-bool EnumDeclWrapper::SetupEnumFields(abi_util::EnumTypeIR *enump) {
+bool EnumDeclWrapper::SetupEnumFields(repr::EnumTypeIR *enump) {
   if (!enump) {
     return false;
   }
@@ -873,13 +875,13 @@ bool EnumDeclWrapper::SetupEnumFields(abi_util::EnumTypeIR *enump) {
   while (enum_it != enum_decl_->enumerator_end()) {
     std::string name = enum_it->getQualifiedNameAsString();
     uint64_t field_value = enum_it->getInitVal().getExtValue();
-    enump->AddEnumField(abi_util::EnumFieldIR(name, field_value));
+    enump->AddEnumField(repr::EnumFieldIR(name, field_value));
     enum_it++;
   }
   return true;
 }
 
-bool EnumDeclWrapper::SetupEnum(abi_util::EnumTypeIR *enum_type,
+bool EnumDeclWrapper::SetupEnum(repr::EnumTypeIR *enum_type,
                                 const std::string &source_file) {
   std::string enum_name = GetTagDeclQualifiedName(enum_decl_);
   clang::QualType enum_qual_type =
@@ -897,7 +899,7 @@ bool EnumDeclWrapper::SetupEnum(abi_util::EnumTypeIR *enum_type,
 }
 
 bool EnumDeclWrapper::GetEnumDecl() {
-  auto abi_decl = std::make_unique<abi_util::EnumTypeIR>();
+  auto abi_decl = std::make_unique<repr::EnumTypeIR>();
   std::string source_file = GetCachedDeclSourceFile(enum_decl_, cip_);
 
   if (!SetupEnum(abi_decl.get(), source_file)) {
@@ -911,13 +913,13 @@ GlobalVarDeclWrapper::GlobalVarDeclWrapper(
     clang::MangleContext *mangle_contextp,
     clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *compiler_instance_p,
-    const clang::VarDecl *decl, abi_util::IRDumper *ir_dumper,
-    ast_util::ASTCaches *ast_caches)
+    const clang::VarDecl *decl, repr::IRDumper *ir_dumper,
+    ASTCaches *ast_caches)
     : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p, ir_dumper,
                  ast_caches),
       global_var_decl_(decl) {}
 
-bool GlobalVarDeclWrapper::SetupGlobalVar(abi_util::GlobalVarIR *global_varp,
+bool GlobalVarDeclWrapper::SetupGlobalVar(repr::GlobalVarIR *global_varp,
                                           const std::string &source_file) {
   // Temporary fix: clang segfaults on trying to mangle global variable which
   // is a dependent sized array type.
@@ -936,8 +938,12 @@ bool GlobalVarDeclWrapper::SetupGlobalVar(abi_util::GlobalVarIR *global_varp,
 }
 
 bool GlobalVarDeclWrapper::GetGlobalVarDecl() {
-  auto abi_decl = std::make_unique<abi_util::GlobalVarIR>();
+  auto abi_decl = std::make_unique<repr::GlobalVarIR>();
   std::string source_file = GetCachedDeclSourceFile(global_var_decl_, cip_);
   return SetupGlobalVar(abi_decl.get(), source_file) &&
       ir_dumper_->AddLinkableMessageIR(abi_decl.get());
 }
+
+
+}  // dumper
+}  // header_checker

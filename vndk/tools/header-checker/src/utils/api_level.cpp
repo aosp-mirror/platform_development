@@ -20,7 +20,8 @@
 #include <string>
 
 
-namespace abi_util {
+namespace header_checker {
+namespace utils {
 
 
 std::optional<ApiLevel> ParseApiLevel(const std::string &api_level_str) {
@@ -31,4 +32,5 @@ std::optional<ApiLevel> ParseApiLevel(const std::string &api_level_str) {
 }
 
 
-}  // namespace abi_util
+}  // namespace utils
+}  // namespace header_checker

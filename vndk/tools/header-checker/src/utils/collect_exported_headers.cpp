@@ -23,7 +23,9 @@
 #include <vector>
 
 
-namespace abi_util {
+namespace header_checker {
+namespace utils {
+
 
 static bool ShouldSkipFile(llvm::StringRef &file_name) {
   // Ignore swap files, hidden files, and hidden directories. Do not recurse
@@ -88,7 +90,7 @@ std::set<std::string> CollectAllExportedHeaders(
     const std::vector<std::string> &exported_header_dirs) {
   std::set<std::string> exported_headers;
   for (auto &&dir : exported_header_dirs) {
-    if (!abi_util::CollectExportedHeaderSet(dir, &exported_headers)) {
+    if (!CollectExportedHeaderSet(dir, &exported_headers)) {
       llvm::errs() << "Couldn't collect exported headers\n";
       ::exit(1);
     }
@@ -96,4 +98,5 @@ std::set<std::string> CollectAllExportedHeaders(
   return exported_headers;
 }
 
-}  // namespace abi_util
+}  // namespace utils
+}  // namespace header_checker
