@@ -776,6 +776,99 @@ class ElfObjectIR : public ElfSymbolIR {
   }
 };
 
+class ModuleIR {
+ public:
+  ModuleIR(const std::set<std::string> *exported_headers)
+      : exported_headers_(exported_headers) {}
+
+  const AbiElementMap<FunctionIR> &GetFunctions() const {
+    return functions_;
+  }
+
+  const AbiElementMap<GlobalVarIR> &GetGlobalVariables() const {
+    return global_variables_;
+  }
+
+  const AbiElementMap<RecordTypeIR> &GetRecordTypes() const {
+    return record_types_;
+  }
+
+  const AbiElementMap<FunctionTypeIR> &GetFunctionTypes() const {
+    return function_types_;
+  }
+
+  const AbiElementMap<EnumTypeIR> &GetEnumTypes() const {
+    return enum_types_;
+  }
+
+  const AbiElementMap<LvalueReferenceTypeIR> &GetLvalueReferenceTypes() const {
+    return lvalue_reference_types_;
+  }
+
+  const AbiElementMap<RvalueReferenceTypeIR> &GetRvalueReferenceTypes() const {
+    return rvalue_reference_types_;
+  }
+
+  const AbiElementMap<QualifiedTypeIR> &GetQualifiedTypes() const {
+    return qualified_types_;
+  }
+
+  const AbiElementMap<ArrayTypeIR> &GetArrayTypes() const {
+    return array_types_;
+  }
+
+  const AbiElementMap<PointerTypeIR> &GetPointerTypes() const {
+    return pointer_types_;
+  }
+
+  const AbiElementMap<BuiltinTypeIR> &GetBuiltinTypes() const {
+    return builtin_types_;
+  }
+
+  const AbiElementMap<ElfFunctionIR> &GetElfFunctions() const {
+    return elf_functions_;
+  }
+
+  const AbiElementMap<ElfObjectIR> &GetElfObjects() const {
+    return elf_objects_;
+  }
+
+  const AbiElementMap<const TypeIR *> &GetTypeGraph() const {
+    return type_graph_;
+  }
+
+  const AbiElementUnorderedMap<std::list<const TypeIR *>> &
+  GetODRListMap() const {
+    return odr_list_map_;
+  }
+
+ public:
+  AbiElementList<RecordTypeIR> record_types_list_;
+  AbiElementMap<FunctionIR> functions_;
+  AbiElementMap<GlobalVarIR> global_variables_;
+  AbiElementMap<RecordTypeIR> record_types_;
+  AbiElementMap<FunctionTypeIR> function_types_;
+  AbiElementMap<EnumTypeIR> enum_types_;
+  // These maps which contain generic referring types as values are used while
+  // looking up whether in the parent graph, a particular referring type refers
+  // to a certain type id. The mechanism is useful while trying to determine
+  // whether a generic referring type needs to be newly added to the parent
+  // graph or not.
+  AbiElementMap<PointerTypeIR> pointer_types_;
+  AbiElementMap<LvalueReferenceTypeIR> lvalue_reference_types_;
+  AbiElementMap<RvalueReferenceTypeIR> rvalue_reference_types_;
+  AbiElementMap<ArrayTypeIR> array_types_;
+  AbiElementMap<BuiltinTypeIR> builtin_types_;
+  AbiElementMap<QualifiedTypeIR> qualified_types_;
+  AbiElementMap<ElfFunctionIR> elf_functions_;
+  AbiElementMap<ElfObjectIR> elf_objects_;
+  // type-id -> LinkableMessageIR * map
+  AbiElementMap<const TypeIR *> type_graph_;
+  // maps unique_id + source_file -> const TypeIR *
+  AbiElementUnorderedMap<std::list<const TypeIR *>> odr_list_map_;
+  const std::set<std::string> *exported_headers_;
+};
+
 class IRDumper {
  public:
   IRDumper(const std::string &dump_path) : dump_path_(dump_path) {}
@@ -870,86 +963,93 @@ class TextFormatToIRReader {
 
  public:
   TextFormatToIRReader(const std::set<std::string> *exported_headers)
-      : exported_headers_(exported_headers) {}
+      : module_(new ModuleIR(exported_headers)) {}
 
   virtual ~TextFormatToIRReader() {}
 
   const AbiElementMap<FunctionIR> &GetFunctions() const {
-    return functions_;
+    return module_->functions_;
   }
 
   const AbiElementMap<GlobalVarIR> &GetGlobalVariables() const {
-    return global_variables_;
+    return module_->global_variables_;
   }
 
   const AbiElementMap<RecordTypeIR> &GetRecordTypes() const {
-    return record_types_;
+    return module_->record_types_;
   }
 
   const AbiElementMap<FunctionTypeIR> &GetFunctionTypes() const {
-    return function_types_;
+    return module_->function_types_;
   }
 
   const AbiElementMap<EnumTypeIR> &GetEnumTypes() const {
-    return enum_types_;
+    return module_->enum_types_;
   }
 
   const AbiElementMap<LvalueReferenceTypeIR> &GetLvalueReferenceTypes() const {
-    return lvalue_reference_types_;
+    return module_->lvalue_reference_types_;
   }
 
   const AbiElementMap<RvalueReferenceTypeIR> &GetRvalueReferenceTypes() const {
-    return rvalue_reference_types_;
+    return module_->rvalue_reference_types_;
   }
 
   const AbiElementMap<QualifiedTypeIR> &GetQualifiedTypes() const {
-    return qualified_types_;
+    return module_->qualified_types_;
   }
 
   const AbiElementMap<ArrayTypeIR> &GetArrayTypes() const {
-    return array_types_;
+    return module_->array_types_;
   }
 
   const AbiElementMap<PointerTypeIR> &GetPointerTypes() const {
-    return pointer_types_;
+    return module_->pointer_types_;
   }
 
   const AbiElementMap<BuiltinTypeIR> &GetBuiltinTypes() const {
-    return builtin_types_;
+    return module_->builtin_types_;
   }
 
   const AbiElementMap<ElfFunctionIR> &GetElfFunctions() const {
-    return elf_functions_;
+    return module_->elf_functions_;
   }
 
   const AbiElementMap<ElfObjectIR> &GetElfObjects() const {
-    return elf_objects_;
+    return module_->elf_objects_;
   }
 
   const AbiElementMap<const TypeIR *> &GetTypeGraph() const {
-    return type_graph_;
+    return module_->type_graph_;
   }
 
   const AbiElementUnorderedMap<std::list<const TypeIR *>> &
   GetODRListMap() const {
-    return odr_list_map_;
+    return module_->odr_list_map_;
   }
 
   virtual bool ReadDump(const std::string &dump_file) = 0;
 
   void Merge(TextFormatToIRReader &&addend) {
-    MergeElements(&functions_, std::move(addend.functions_));
-    MergeElements(&global_variables_, std::move(addend.global_variables_));
-    MergeElements(&record_types_, std::move(addend.record_types_));
-    MergeElements(&enum_types_, std::move(addend.enum_types_));
-    MergeElements(&pointer_types_, std::move(addend.pointer_types_));
-    MergeElements(&lvalue_reference_types_,
-                  std::move(addend.lvalue_reference_types_));
-    MergeElements(&rvalue_reference_types_,
-                  std::move(addend.rvalue_reference_types_));
-    MergeElements(&array_types_, std::move(addend.array_types_));
-    MergeElements(&builtin_types_, std::move(addend.builtin_types_));
-    MergeElements(&qualified_types_, std::move(addend.qualified_types_));
+    MergeElements(&module_->functions_, std::move(addend.module_->functions_));
+    MergeElements(&module_->global_variables_,
+                  std::move(addend.module_->global_variables_));
+    MergeElements(&module_->record_types_,
+                  std::move(addend.module_->record_types_));
+    MergeElements(&module_->enum_types_,
+                  std::move(addend.module_->enum_types_));
+    MergeElements(&module_->pointer_types_,
+                  std::move(addend.module_->pointer_types_));
+    MergeElements(&module_->lvalue_reference_types_,
+                  std::move(addend.module_->lvalue_reference_types_));
+    MergeElements(&module_->rvalue_reference_types_,
+                  std::move(addend.module_->rvalue_reference_types_));
+    MergeElements(&module_->array_types_,
+                  std::move(addend.module_->array_types_));
+    MergeElements(&module_->builtin_types_,
+                  std::move(addend.module_->builtin_types_));
+    MergeElements(&module_->qualified_types_,
+                  std::move(addend.module_->qualified_types_));
   }
 
   void AddToODRListMap(const std::string &key, const TypeIR *value);
@@ -1075,30 +1175,8 @@ class TextFormatToIRReader {
   bool IsLinkableMessageInExportedHeaders(
       const LinkableMessageIR *linkable_message) const;
 
-  AbiElementList<RecordTypeIR> record_types_list_;
-  AbiElementMap<FunctionIR> functions_;
-  AbiElementMap<GlobalVarIR> global_variables_;
-  AbiElementMap<RecordTypeIR> record_types_;
-  AbiElementMap<FunctionTypeIR> function_types_;
-  AbiElementMap<EnumTypeIR> enum_types_;
-  // These maps which contain generic referring types as values are used while
-  // looking up whether in the parent graph, a particular reffering type refers
-  // to a certain type id. The mechanism is useful while trying to determine
-  // whether a generic referring type needs to be newly added to the parent
-  // graph or not.
-  AbiElementMap<PointerTypeIR> pointer_types_;
-  AbiElementMap<LvalueReferenceTypeIR> lvalue_reference_types_;
-  AbiElementMap<RvalueReferenceTypeIR> rvalue_reference_types_;
-  AbiElementMap<ArrayTypeIR> array_types_;
-  AbiElementMap<BuiltinTypeIR> builtin_types_;
-  AbiElementMap<QualifiedTypeIR> qualified_types_;
-  AbiElementMap<ElfFunctionIR> elf_functions_;
-  AbiElementMap<ElfObjectIR> elf_objects_;
-  // type-id -> LinkableMessageIR * map
-  AbiElementMap<const TypeIR *> type_graph_;
-  // maps unique_id + source_file -> const TypeIR *
-  AbiElementUnorderedMap<std::list<const TypeIR *>> odr_list_map_;
-  const std::set<std::string> *exported_headers_;
+  std::unique_ptr<ModuleIR> module_;
+
   uint64_t max_type_id_ = 0;
 };
 

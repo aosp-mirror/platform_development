@@ -212,7 +212,7 @@ void ProtobufTextFormatToIRReader::ReadGlobalVariables(
     if (!IsLinkableMessageInExportedHeaders(&global_variable_ir)) {
       continue;
     }
-    global_variables_.insert(
+    module_->global_variables_.insert(
         {global_variable_ir.GetLinkerSetKey(), std::move(global_variable_ir)});
   }
 }
@@ -225,8 +225,8 @@ void ProtobufTextFormatToIRReader::ReadPointerTypes(
     if (!IsLinkableMessageInExportedHeaders(&pointer_type_ir)) {
       continue;
     }
-    AddToMapAndTypeGraph(std::move(pointer_type_ir), &pointer_types_,
-                         &type_graph_);
+    AddToMapAndTypeGraph(std::move(pointer_type_ir), &module_->pointer_types_,
+                         &module_->type_graph_);
   }
 }
 
@@ -237,8 +237,8 @@ void ProtobufTextFormatToIRReader::ReadBuiltinTypes(
     ReadTypeInfo(builtin_type_protobuf.type_info(), &builtin_type_ir);
     builtin_type_ir.SetSignedness(builtin_type_protobuf.is_unsigned());
     builtin_type_ir.SetIntegralType(builtin_type_protobuf.is_integral());
-    AddToMapAndTypeGraph(std::move(builtin_type_ir), &builtin_types_,
-                         &type_graph_);
+    AddToMapAndTypeGraph(std::move(builtin_type_ir), &module_->builtin_types_,
+                         &module_->type_graph_);
   }
 }
 
@@ -254,8 +254,8 @@ void ProtobufTextFormatToIRReader::ReadQualifiedTypes(
     if (!IsLinkableMessageInExportedHeaders(&qualified_type_ir)) {
       continue;
     }
-    AddToMapAndTypeGraph(std::move(qualified_type_ir), &qualified_types_,
-                         &type_graph_);
+    AddToMapAndTypeGraph(std::move(qualified_type_ir),
+                         &module_->qualified_types_, &module_->type_graph_);
   }
 }
 
@@ -267,8 +267,8 @@ void ProtobufTextFormatToIRReader::ReadArrayTypes(
     if (!IsLinkableMessageInExportedHeaders(&array_type_ir)) {
       continue;
     }
-    AddToMapAndTypeGraph(std::move(array_type_ir), &array_types_,
-                         &type_graph_);
+    AddToMapAndTypeGraph(std::move(array_type_ir), &module_->array_types_,
+                         &module_->type_graph_);
   }
 }
 
@@ -282,7 +282,8 @@ void ProtobufTextFormatToIRReader::ReadLvalueReferenceTypes(
       continue;
     }
     AddToMapAndTypeGraph(std::move(lvalue_reference_type_ir),
-                         &lvalue_reference_types_, &type_graph_);
+                         &module_->lvalue_reference_types_,
+                         &module_->type_graph_);
   }
 }
 
@@ -296,7 +297,8 @@ void ProtobufTextFormatToIRReader::ReadRvalueReferenceTypes(
       continue;
     }
     AddToMapAndTypeGraph(std::move(rvalue_reference_type_ir),
-                         &rvalue_reference_types_, &type_graph_);
+                         &module_->rvalue_reference_types_,
+                         &module_->type_graph_);
   }
 }
 
@@ -307,7 +309,8 @@ void ProtobufTextFormatToIRReader::ReadFunctions(
     if (!IsLinkableMessageInExportedHeaders(&function_ir)) {
       continue;
     }
-    functions_.insert({function_ir.GetLinkerSetKey(), std::move(function_ir)});
+    module_->functions_.insert(
+        {function_ir.GetLinkerSetKey(), std::move(function_ir)});
   }
 }
 
@@ -318,8 +321,9 @@ void ProtobufTextFormatToIRReader::ReadRecordTypes(
     if (!IsLinkableMessageInExportedHeaders(&record_type_ir)) {
       continue;
     }
-    auto it = AddToMapAndTypeGraph(std::move(record_type_ir), &record_types_,
-                                   &type_graph_);
+    auto it = AddToMapAndTypeGraph(std::move(record_type_ir),
+                                   &module_->record_types_,
+                                   &module_->type_graph_);
     const std::string &key = GetODRListMapKey(&(it->second));
     AddToODRListMap(key, &(it->second));
   }
@@ -334,7 +338,8 @@ void ProtobufTextFormatToIRReader::ReadFunctionTypes(
       continue;
     }
     auto it = AddToMapAndTypeGraph(std::move(function_type_ir),
-                                   &function_types_, &type_graph_);
+                                   &module_->function_types_,
+                                   &module_->type_graph_);
     const std::string &key = GetODRListMapKey(&(it->second));
     AddToODRListMap(key, &(it->second));
   }
@@ -347,8 +352,9 @@ void ProtobufTextFormatToIRReader::ReadEnumTypes(
     if (!IsLinkableMessageInExportedHeaders(&enum_type_ir)) {
       continue;
     }
-    auto it = AddToMapAndTypeGraph(std::move(enum_type_ir), &enum_types_,
-                                   &type_graph_);
+    auto it = AddToMapAndTypeGraph(std::move(enum_type_ir),
+                                   &module_->enum_types_,
+                                   &module_->type_graph_);
     AddToODRListMap(it->second.GetUniqueId() + it->second.GetSourceFile(),
                     (&it->second));
   }
@@ -360,7 +366,7 @@ void ProtobufTextFormatToIRReader::ReadElfFunctions(
     ElfFunctionIR elf_function_ir(
         elf_function.name(),
         ElfSymbolBindingProtobufToIR(elf_function.binding()));
-    elf_functions_.insert(
+    module_->elf_functions_.insert(
         {elf_function_ir.GetName(), std::move(elf_function_ir)});
   }
 }
@@ -370,7 +376,7 @@ void ProtobufTextFormatToIRReader::ReadElfObjects(
   for (auto &&elf_object : tu.elf_objects()) {
     ElfObjectIR elf_object_ir(
         elf_object.name(), ElfSymbolBindingProtobufToIR(elf_object.binding()));
-    elf_objects_.insert(
+    module_->elf_objects_.insert(
         {elf_object_ir.GetName(), std::move(elf_object_ir)});
   }
 }
