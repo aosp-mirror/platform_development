@@ -145,11 +145,11 @@ class IRReader {
   MergeStatus MergeReferencingTypeInternalAndUpdateParent(
       const IRReader &addend, const T *addend_node,
       AbiElementMap<MergeStatus> *local_to_global_type_id_map,
-      AbiElementMap<T> *parent_map, const std::string  &updated_self_type_id);
+      AbiElementMap<T> *parent_map, const std::string &updated_self_type_id);
 
   MergeStatus DoesUDTypeODRViolationExist(
       const TypeIR *ud_type, const IRReader &addend,
-      const std::string ud_type_unique_id,
+      const std::string &ud_type_unique_id,
       AbiElementMap<MergeStatus> *local_to_global_type_id_map_);
 
   MergeStatus MergeReferencingTypeInternal(
@@ -159,7 +159,7 @@ class IRReader {
   MergeStatus MergeReferencingType(
       const IRReader &addend, const TypeIR *addend_node,
       AbiElementMap<MergeStatus> *local_to_global_type_id_map,
-      const std::string  &updated_self_type_id);
+      const std::string &updated_self_type_id);
 
   MergeStatus MergeGenericReferringType(
       const IRReader &addend, const TypeIR *addend_node,
@@ -222,7 +222,7 @@ class IRReader {
 
   void MergeGlobalVariables(
       const IRReader &addend,
-      AbiElementMap<MergeStatus>  *local_to_global_type_id_map);
+      AbiElementMap<MergeStatus> *local_to_global_type_id_map);
 
   void MergeFunctionDeps(
       FunctionIR *added_node, const IRReader &addend,

@@ -86,7 +86,7 @@ MergeStatus IRReader::IsBuiltinTypeNodePresent(
 
 MergeStatus IRReader::DoesUDTypeODRViolationExist(
     const TypeIR *ud_type, const IRReader &addend,
-    const std::string ud_type_unique_id_and_source,
+    const std::string &ud_type_unique_id_and_source,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map_) {
   // Per entry in the map:
   // /-----------------------------------------------------------------------\
