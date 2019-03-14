@@ -15,9 +15,11 @@
 #include "repr/protobuf/ir_reader.h"
 
 #include "repr/ir_representation_internal.h"
+#include "repr/protobuf/api.h"
 #include "repr/protobuf/converter.h"
 
 #include <fstream>
+#include <memory>
 
 #include <google/protobuf/text_format.h>
 
@@ -367,6 +369,11 @@ void ProtobufIRReader::ReadElfObjects(const abi_dump::TranslationUnit &tu) {
     module_->elf_objects_.insert(
         {elf_object_ir.GetName(), std::move(elf_object_ir)});
   }
+}
+
+std::unique_ptr<IRReader> CreateProtobufIRReader(
+    const std::set<std::string> *exported_headers) {
+  return std::make_unique<ProtobufIRReader>(exported_headers);
 }
 
 

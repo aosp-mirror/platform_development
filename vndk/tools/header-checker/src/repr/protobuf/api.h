@@ -12,34 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "repr/ir_dumper.h"
-
-#include "repr/json/api.h"
-#include "repr/protobuf/api.h"
+#ifndef HEADER_CHECKER_REPR_PROTOBUF_API_H_
+#define HEADER_CHECKER_REPR_PROTOBUF_API_H_
 
 #include <memory>
+#include <set>
 #include <string>
-
-#include <llvm/Support/raw_ostream.h>
 
 
 namespace header_checker {
 namespace repr {
 
 
-std::unique_ptr<IRDumper> IRDumper::CreateIRDumper(
-    TextFormatIR text_format, const std::string &dump_path) {
-  switch (text_format) {
-    case TextFormatIR::ProtobufTextFormat:
-      return CreateProtobufIRDumper(dump_path);
-    case TextFormatIR::Json:
-      return CreateJsonIRDumper(dump_path);
-    default:
-      llvm::errs() << "Text format not supported yet\n";
-      return nullptr;
-  }
-}
+class IRDiffDumper;
+class IRDumper;
+class IRReader;
+
+
+std::unique_ptr<IRDumper> CreateProtobufIRDumper(const std::string &dump_path);
+
+std::unique_ptr<IRReader> CreateProtobufIRReader(
+    const std::set<std::string> *exported_headers);
+
+std::unique_ptr<IRDiffDumper> CreateProtobufIRDiffDumper(
+    const std::string &dump_path);
 
 
 }  // namespace repr
-}  // header_checker
+}  // namespace header_checker
+
+
+#endif  // HEADER_CHECKER_REPR_PROTOBUF_API_H_

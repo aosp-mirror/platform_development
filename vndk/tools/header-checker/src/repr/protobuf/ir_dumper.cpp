@@ -15,8 +15,10 @@
 #include "repr/protobuf/ir_dumper.h"
 
 #include "repr/protobuf/abi_dump.h"
+#include "repr/protobuf/api.h"
 
 #include <fstream>
+#include <memory>
 
 #include <llvm/Support/raw_ostream.h>
 
@@ -487,6 +489,10 @@ bool ProtobufIRDumper::Dump() {
   std::ofstream text_output(dump_path_);
   google::protobuf::io::OstreamOutputStream text_os(&text_output);
   return google::protobuf::TextFormat::Print(*tu_ptr_.get(), &text_os);
+}
+
+std::unique_ptr<IRDumper> CreateProtobufIRDumper(const std::string &dump_path) {
+  return std::make_unique<ProtobufIRDumper>(dump_path);
 }
 
 

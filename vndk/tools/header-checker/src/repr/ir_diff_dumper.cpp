@@ -15,7 +15,7 @@
 #include "repr/ir_diff_dumper.h"
 
 #include "repr/ir_representation.h"
-#include "repr/protobuf/ir_diff_dumper.h"
+#include "repr/protobuf/api.h"
 
 #include <memory>
 #include <string>
@@ -31,7 +31,7 @@ std::unique_ptr<IRDiffDumper> IRDiffDumper::CreateIRDiffDumper(
     TextFormatIR text_format, const std::string &dump_path) {
   switch (text_format) {
     case TextFormatIR::ProtobufTextFormat:
-      return std::make_unique<ProtobufIRDiffDumper>(dump_path);
+      return CreateProtobufIRDiffDumper(dump_path);
     default:
       // Nothing else is supported yet.
       llvm::errs() << "Text format not supported yet\n";

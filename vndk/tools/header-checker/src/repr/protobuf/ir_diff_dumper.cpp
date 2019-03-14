@@ -15,10 +15,12 @@
 #include "repr/protobuf/ir_diff_dumper.h"
 
 #include "repr/ir_diff_representation.h"
+#include "repr/protobuf/api.h"
 #include "repr/protobuf/converter.h"
 
-#include <string>
 #include <fstream>
+#include <memory>
+#include <string>
 
 #include <llvm/Support/raw_ostream.h>
 
@@ -364,6 +366,11 @@ bool ProtobufIRDiffDumper::Dump() {
   std::ofstream text_output(dump_path_);
   google::protobuf::io::OstreamOutputStream text_os(&text_output);
   return google::protobuf::TextFormat::Print(*diff_tu_.get(), &text_os);
+}
+
+std::unique_ptr<IRDiffDumper> CreateProtobufIRDiffDumper(
+    const std::string &dump_path) {
+  return std::make_unique<ProtobufIRDiffDumper>(dump_path);
 }
 
 

@@ -17,6 +17,7 @@
 #include "repr/ir_dumper.h"
 #include "repr/ir_reader.h"
 #include "repr/ir_representation_internal.h"
+#include "repr/json/api.h"
 #include "repr/json/converter.h"
 
 #include <json/reader.h>
@@ -424,6 +425,10 @@ JsonIRDumper::JsonIRDumper(const std::string &dump_path)
   for (auto key : keys) {
     translation_unit_[key] = JsonArray();
   }
+}
+
+std::unique_ptr<IRDumper> CreateJsonIRDumper(const std::string &dump_path) {
+  return std::make_unique<JsonIRDumper>(dump_path);
 }
 
 

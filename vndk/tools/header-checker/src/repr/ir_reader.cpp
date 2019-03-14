@@ -17,9 +17,8 @@
 #include "repr/abi_diff_helpers.h"
 #include "repr/ir_representation.h"
 #include "repr/ir_representation_internal.h"
-#include "repr/ir_diff_representation.h"
-#include "repr/json/ir_reader.h"
-#include "repr/protobuf/ir_reader.h"
+#include "repr/json/api.h"
+#include "repr/protobuf/api.h"
 
 #include <list>
 #include <memory>
@@ -41,9 +40,9 @@ IRReader::CreateIRReader(
     TextFormatIR text_format, const std::set<std::string> *exported_headers) {
   switch (text_format) {
     case TextFormatIR::ProtobufTextFormat:
-      return std::make_unique<ProtobufIRReader>(exported_headers);
+      return CreateProtobufIRReader(exported_headers);
     case TextFormatIR::Json:
-      return std::make_unique<JsonIRReader>(exported_headers);
+      return CreateJsonIRReader(exported_headers);
     default:
       llvm::errs() << "Text format not supported yet\n";
       return nullptr;

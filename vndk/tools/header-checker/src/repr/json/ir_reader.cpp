@@ -17,6 +17,7 @@
 #include "repr/ir_dumper.h"
 #include "repr/ir_reader.h"
 #include "repr/ir_representation_internal.h"
+#include "repr/json/api.h"
 #include "repr/json/converter.h"
 
 #include <json/reader.h>
@@ -476,6 +477,11 @@ void JsonIRReader::ReadElfObjects(const JsonObjectRef &tu) {
     module_->elf_objects_.insert(
         {elf_object_ir.GetName(), std::move(elf_object_ir)});
   }
+}
+
+std::unique_ptr<IRReader> CreateJsonIRReader(
+    const std::set<std::string> *exported_headers) {
+  return std::make_unique<JsonIRReader>(exported_headers);
 }
 
 
