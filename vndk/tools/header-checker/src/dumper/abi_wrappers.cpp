@@ -14,6 +14,8 @@
 
 #include "dumper/abi_wrappers.h"
 
+#include "repr/ir_dumper.h"
+#include "repr/ir_reader.h"
 #include "utils/header_abi_util.h"
 
 #include <clang/AST/QualTypeNames.h>

@@ -12,12 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-parameter"
-#pragma clang diagnostic ignored "-Wnested-anon-types"
-#include "abi_dump.pb.h"
-#include "abi_diff.pb.h"
-#pragma clang diagnostic pop
+#include "repr/protobuf/abi_diff.h"
+#include "repr/protobuf/abi_dump.h"
 
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>

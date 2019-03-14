@@ -1,4 +1,4 @@
-// Copyright (C) 2017 The Android Open Source Project
+// Copyright (C) 2019 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,28 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef IR_REPRESENTATION_PROTOBUF_H_
-#define IR_REPRESENTATION_PROTOBUF_H_
+#ifndef HEADER_CHECKER_PROTOBUF_CONVERTER_H_
+#define HEADER_CHECKER_PROTOBUF_CONVERTER_H_
 
+#include "repr/ir_diff_representation.h"
 #include "repr/ir_representation.h"
+#include "repr/protobuf/abi_diff.h"
+#include "repr/protobuf/abi_dump.h"
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-parameter"
-#pragma clang diagnostic ignored "-Wnested-anon-types"
-#include "abi_dump.pb.h"
-#include "abi_diff.pb.h"
-#pragma clang diagnostic pop
-
-#include <google/protobuf/text_format.h>
-#include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <llvm/Support/raw_ostream.h>
 
 
 namespace header_checker {
 namespace repr {
 
-
-// Classes which act as middle-men between clang AST parsing routines and
-// message format specific dumpers.
 
 inline abi_diff::CompatibilityStatus CompatibilityStatusIRToProtobuf(
     CompatibilityStatusIR status) {
@@ -309,182 +301,71 @@ class IRDiffToProtobufConverter {
       const GlobalVarDiffIR *global_var_diffp);
 };
 
-class ProtobufIRDumper : public IRDumper, public IRToProtobufConverter {
- private:
-  // Types
-  bool AddRecordTypeIR(const RecordTypeIR *);
-
-  bool AddEnumTypeIR(const EnumTypeIR *);
-
-  bool AddPointerTypeIR(const PointerTypeIR *);
-
-  bool AddQualifiedTypeIR(const QualifiedTypeIR *);
-
-  bool AddLvalueReferenceTypeIR(const LvalueReferenceTypeIR *);
-
-  bool AddRvalueReferenceTypeIR(const RvalueReferenceTypeIR *);
-
-  bool AddArrayTypeIR(const ArrayTypeIR *);
-
-  bool AddBuiltinTypeIR(const BuiltinTypeIR *);
-
-  bool AddFunctionTypeIR(const FunctionTypeIR *function_typep);
-
-  // Functions and global variables.
-  bool AddFunctionIR(const FunctionIR *);
-
-  bool AddGlobalVarIR(const GlobalVarIR *);
-
-  bool AddElfFunctionIR(const ElfFunctionIR *);
-
-  bool AddElfObjectIR(const ElfObjectIR *);
-
- public:
-  ProtobufIRDumper(const std::string &dump_path)
-      : IRDumper(dump_path), tu_ptr_(new abi_dump::TranslationUnit()) {}
-
-  ~ProtobufIRDumper() override {}
-
-  bool AddLinkableMessageIR(const LinkableMessageIR *) override;
-
-  bool AddElfSymbolMessageIR(const ElfSymbolIR *) override;
-
-  bool Dump() override;
-
- private:
-  std::unique_ptr<abi_dump::TranslationUnit> tu_ptr_;
-};
-
-
-class ProtobufTextFormatToIRReader : public TextFormatToIRReader {
- private:
-  template <typename T>
-  using RepeatedPtrField = google::protobuf::RepeatedPtrField<T>;
-
- public:
-  ProtobufTextFormatToIRReader(const std::set<std::string> *exported_headers)
-      : TextFormatToIRReader(exported_headers) {}
-
-  bool ReadDump(const std::string &dump_file) override;
-
- private:
-  void ReadFunctions(const abi_dump::TranslationUnit &tu);
-
-  void ReadGlobalVariables(const abi_dump::TranslationUnit &tu);
-
-  void ReadEnumTypes(const abi_dump::TranslationUnit &tu);
-
-  void ReadRecordTypes(const abi_dump::TranslationUnit &tu);
-
-  void ReadFunctionTypes(const abi_dump::TranslationUnit &tu);
-
-  void ReadPointerTypes(const abi_dump::TranslationUnit &tu);
-
-  void ReadBuiltinTypes(const abi_dump::TranslationUnit &tu);
-
-  void ReadQualifiedTypes(const abi_dump::TranslationUnit &tu);
-
-  void ReadArrayTypes(const abi_dump::TranslationUnit &tu);
-
-  void ReadLvalueReferenceTypes(const abi_dump::TranslationUnit &tu);
-
-  void ReadRvalueReferenceTypes(const abi_dump::TranslationUnit &tu);
-
-  void ReadElfFunctions(const abi_dump::TranslationUnit &tu);
-
-  void ReadElfObjects(const abi_dump::TranslationUnit &tu);
-
-  void ReadTypeInfo(const abi_dump::BasicNamedAndTypedDecl &type_info,
-                    TypeIR *typep);
-
-  FunctionIR FunctionProtobufToIR(const abi_dump::FunctionDecl &);
-
-  FunctionTypeIR FunctionTypeProtobufToIR(
-      const abi_dump::FunctionType &function_type_protobuf);
-
-  RecordTypeIR RecordTypeProtobufToIR(
-      const abi_dump::RecordType &record_type_protobuf);
-
-  std::vector<RecordFieldIR> RecordFieldsProtobufToIR(
-      const RepeatedPtrField<abi_dump::RecordFieldDecl> &rfp);
-
-  std::vector<CXXBaseSpecifierIR> RecordCXXBaseSpecifiersProtobufToIR(
-      const RepeatedPtrField<abi_dump::CXXBaseSpecifier> &rbs);
-
-  std::vector<EnumFieldIR> EnumFieldsProtobufToIR(
-      const RepeatedPtrField<abi_dump::EnumFieldDecl> &efp);
-
-  EnumTypeIR EnumTypeProtobufToIR(
-      const abi_dump::EnumType &enum_type_protobuf);
-
-  VTableLayoutIR VTableLayoutProtobufToIR(
-      const abi_dump::VTableLayout &vtable_layout_protobuf);
-
-  TemplateInfoIR TemplateInfoProtobufToIR(
-      const abi_dump::TemplateInfo &template_info_protobuf);
-};
-
-class ProtobufIRDiffDumper : public IRDiffDumper {
- public:
-  ProtobufIRDiffDumper(const std::string &dump_path)
-      : IRDiffDumper(dump_path),
-        diff_tu_(new abi_diff::TranslationUnitDiff()) {}
-
-  ~ProtobufIRDiffDumper() override {}
-
-  bool AddDiffMessageIR(const DiffMessageIR *, const std::string &type_stack,
-                        DiffKind diff_kind) override;
-
-  bool AddLinkableMessageIR(const LinkableMessageIR *,
-                            DiffKind diff_kind) override;
-
-  bool AddElfSymbolMessageIR(const ElfSymbolIR *, DiffKind diff_kind) override;
-
-  void AddLibNameIR(const std::string &name) override;
-
-  void AddArchIR(const std::string &arch) override;
-
-  void AddCompatibilityStatusIR(CompatibilityStatusIR status) override;
-
-  bool Dump() override;
-
-  CompatibilityStatusIR GetCompatibilityStatusIR() override;
-
- private:
-  // User defined types.
-  bool AddRecordTypeDiffIR(const RecordTypeDiffIR *,
-                           const std::string &type_stack, DiffKind diff_kind);
-
-  bool AddEnumTypeDiffIR(const EnumTypeDiffIR *,
-                         const std::string &type_stack, DiffKind diff_kind);
-
-  // Functions and global variables.
-  bool AddFunctionDiffIR(const FunctionDiffIR *,
-                         const std::string &type_stack, DiffKind diff_kind);
-
-  bool AddGlobalVarDiffIR(const GlobalVarDiffIR *,
-                          const std::string &type_stack, DiffKind diff_kind);
-
-  bool AddLoneRecordTypeDiffIR(const RecordTypeIR *, DiffKind diff_kind);
-
-  bool AddLoneEnumTypeDiffIR(const EnumTypeIR *, DiffKind diff_kind);
-
-  // Functions and global variables.
-  bool AddLoneFunctionDiffIR(const FunctionIR *, DiffKind diff_kind);
-
-  bool AddLoneGlobalVarDiffIR(const GlobalVarIR *, DiffKind diff_kind);
-
-  bool AddElfObjectIR(const ElfObjectIR *elf_object_ir, DiffKind diff_kind);
-
-  bool AddElfFunctionIR(const ElfFunctionIR *elf_function_ir,
-                        DiffKind diff_kind);
-
- protected:
-  std::unique_ptr<abi_diff::TranslationUnitDiff> diff_tu_;
-};
+inline void SetIRToProtobufRecordField(
+    abi_dump::RecordFieldDecl *record_field_protobuf,
+    const RecordFieldIR *record_field_ir) {
+  record_field_protobuf->set_field_name(record_field_ir->GetName());
+  record_field_protobuf->set_referenced_type(
+      record_field_ir->GetReferencedType());
+  record_field_protobuf->set_access(
+      AccessIRToProtobuf(record_field_ir->GetAccess()));
+  record_field_protobuf->set_field_offset(record_field_ir->GetOffset());
+}
+
+inline bool SetIRToProtobufBaseSpecifier(
+    abi_dump::CXXBaseSpecifier *base_specifier_protobuf,
+    const CXXBaseSpecifierIR &base_specifier_ir) {
+  if (!base_specifier_protobuf) {
+    llvm::errs() << "Protobuf base specifier not valid\n";
+    return false;
+  }
+  base_specifier_protobuf->set_referenced_type(
+      base_specifier_ir.GetReferencedType());
+  base_specifier_protobuf->set_is_virtual(
+      base_specifier_ir.IsVirtual());
+  base_specifier_protobuf->set_access(
+      AccessIRToProtobuf(base_specifier_ir.GetAccess()));
+  return true;
+}
+
+inline bool SetIRToProtobufVTableLayout(
+    abi_dump::VTableLayout *vtable_layout_protobuf,
+    const VTableLayoutIR &vtable_layout_ir) {
+  if (vtable_layout_protobuf == nullptr) {
+    llvm::errs() << "vtable layout protobuf not valid\n";
+    return false;
+  }
+  for (auto &&vtable_component_ir : vtable_layout_ir.GetVTableComponents()) {
+    abi_dump::VTableComponent *added_vtable_component =
+        vtable_layout_protobuf->add_vtable_components();
+    if (!added_vtable_component) {
+      llvm::errs() << "Couldn't add vtable component\n";
+      return false;
+    }
+    added_vtable_component->set_kind(
+        VTableComponentKindIRToProtobuf(vtable_component_ir.GetKind()));
+    added_vtable_component->set_component_value(vtable_component_ir.GetValue());
+    added_vtable_component->set_mangled_component_name(
+        vtable_component_ir.GetName());
+    added_vtable_component->set_is_pure(vtable_component_ir.GetIsPure());
+  }
+  return true;
+}
+
+inline bool SetIRToProtobufEnumField(
+    abi_dump::EnumFieldDecl *enum_field_protobuf,
+    const EnumFieldIR *enum_field_ir) {
+  if (enum_field_protobuf == nullptr) {
+    return true;
+  }
+  enum_field_protobuf->set_name(enum_field_ir->GetName());
+  enum_field_protobuf->set_enum_field_value(enum_field_ir->GetValue());
+  return true;
+}
 
 
 }  // namespace repr
 }  // namespace header_checker
 
-#endif  // IR_REPRESENTATION_PROTOBUF_H_
+
+#endif  // HEADER_CHECKER_PROTOBUF_CONVERTER_H_

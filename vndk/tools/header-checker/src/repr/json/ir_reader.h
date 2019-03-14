@@ -1,4 +1,4 @@
-// Copyright (C) 2018 The Android Open Source Project
+// Copyright (C) 2019 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef IR_REPRESENTATION_JSON_H_
-#define IR_REPRESENTATION_JSON_H_
+#ifndef HEADER_CHECKER_REPR_JSON_IR_READER_H_
+#define HEADER_CHECKER_REPR_JSON_IR_READER_H_
 
+#include "repr/ir_dumper.h"
+#include "repr/ir_reader.h"
 #include "repr/ir_representation.h"
 
 #include <json/value.h>
@@ -23,117 +25,6 @@
 namespace header_checker {
 namespace repr {
 
-
-// Classes which act as middle-men between clang AST parsing routines and
-// message format specific dumpers.
-
-// These classes wrap constructors of Json::Value.
-class JsonArray : public Json::Value {
- public:
-  JsonArray() : Json::Value(Json::ValueType::arrayValue) {}
-};
-
-class JsonObject : public Json::Value {
- public:
-  JsonObject() : Json::Value(Json::ValueType::objectValue) {}
-
-  // This method inserts the key-value pair if the value is not equal to the
-  // omissible value.
-  // Omit false.
-  void Set(const std::string &key, bool value);
-
-  // Omit 0.
-  void Set(const std::string &key, uint64_t value);
-
-  // Omit 0.
-  void Set(const std::string &key, int64_t value);
-
-  // Omit "".
-  void Set(const std::string &key, const std::string &value);
-
-  // Omit [].
-  void Set(const std::string &key, const JsonArray &value);
-
- private:
-  template <typename T>
-  inline void SetOmissible(const std::string &key, T value, T omissible_value) {
-    if (value != omissible_value) {
-      (*this)[key] = value;
-    } else {
-      removeMember(key);
-    }
-  }
-};
-
-class IRToJsonConverter {
- private:
-  static void AddTemplateInfo(JsonObject &type_decl,
-                              const TemplatedArtifactIR *template_ir);
-
-  // BasicNamedAndTypedDecl
-  static void AddTypeInfo(JsonObject &type_decl, const TypeIR *type_ir);
-
-  static void AddRecordFields(JsonObject &record_type,
-                              const RecordTypeIR *record_ir);
-
-  static void AddBaseSpecifiers(JsonObject &record_type,
-                                const RecordTypeIR *record_ir);
-
-  static void AddVTableLayout(JsonObject &record_type,
-                              const RecordTypeIR *record_ir);
-
-  static void AddTagTypeInfo(JsonObject &type_decl,
-                             const TagTypeIR *tag_type_ir);
-
-  static void AddEnumFields(JsonObject &enum_type, const EnumTypeIR *enum_ir);
-
- public:
-  static JsonObject ConvertEnumTypeIR(const EnumTypeIR *enump);
-
-  static JsonObject ConvertRecordTypeIR(const RecordTypeIR *recordp);
-
-  static JsonObject ConvertFunctionTypeIR(const FunctionTypeIR *function_typep);
-
-  static void AddFunctionParametersAndSetReturnType(
-      JsonObject &function, const CFunctionLikeIR *cfunction_like_ir);
-
-  static void AddFunctionParameters(JsonObject &function,
-                                    const CFunctionLikeIR *cfunction_like_ir);
-
-  static JsonObject ConvertFunctionIR(const FunctionIR *functionp);
-
-  static JsonObject ConvertGlobalVarIR(const GlobalVarIR *global_varp);
-
-  static JsonObject ConvertPointerTypeIR(const PointerTypeIR *pointerp);
-
-  static JsonObject ConvertQualifiedTypeIR(const QualifiedTypeIR *qualtypep);
-
-  static JsonObject ConvertBuiltinTypeIR(const BuiltinTypeIR *builtin_typep);
-
-  static JsonObject ConvertArrayTypeIR(const ArrayTypeIR *array_typep);
-
-  static JsonObject ConvertLvalueReferenceTypeIR(
-      const LvalueReferenceTypeIR *lvalue_reference_typep);
-
-  static JsonObject ConvertRvalueReferenceTypeIR(
-      const RvalueReferenceTypeIR *rvalue_reference_typep);
-};
-
-class JsonIRDumper : public IRDumper, public IRToJsonConverter {
- public:
-  JsonIRDumper(const std::string &dump_path);
-
-  ~JsonIRDumper() override {}
-
-  bool AddLinkableMessageIR(const LinkableMessageIR *) override;
-
-  bool AddElfSymbolMessageIR(const ElfSymbolIR *) override;
-
-  bool Dump() override;
-
- private:
-  JsonObject translation_unit_;
-};
 
 template <typename T> class JsonArrayRef;
 
@@ -292,4 +183,4 @@ class JsonToIRReader : public TextFormatToIRReader {
 }  // namespace header_checker
 
 
-#endif  // IR_REPRESENTATION_JSON_H_
+#endif  // HEADER_CHECKER_REPR_JSON_IR_READER_H_

@@ -16,6 +16,7 @@
 #define ABI_WRAPPERS_H_
 
 #include "dumper/ast_util.h"
+#include "repr/ir_dumper.h"
 #include "repr/ir_representation.h"
 
 #include <clang/AST/AST.h>

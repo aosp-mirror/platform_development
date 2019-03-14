@@ -15,6 +15,9 @@
 #ifndef ABI_DIFF_HELPERS_H_
 #define ABI_DIFF_HELPERS_H_
 
+#include "repr/ir_diff_dumper.h"
+#include "repr/ir_diff_representation.h"
+#include "repr/ir_reader.h"
 #include "repr/ir_representation.h"
 
 #include <deque>
@@ -41,7 +44,7 @@ enum DiffStatus {
   opaque_diff = 3,
 };
 
-static inline DiffStatus operator|(DiffStatus f,DiffStatus s) {
+static inline DiffStatus operator|(DiffStatus f, DiffStatus s) {
   return static_cast<DiffStatus>(
       static_cast<std::underlying_type<DiffStatus>::type>(f) |
       static_cast<std::underlying_type<DiffStatus>::type>(s));

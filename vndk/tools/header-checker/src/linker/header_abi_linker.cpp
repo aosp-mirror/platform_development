@@ -13,6 +13,8 @@
 // limitations under the License.
 
 #include "repr/ir_representation.h"
+#include "repr/ir_dumper.h"
+#include "repr/ir_reader.h"
 #include "repr/symbol/so_file_parser.h"
 #include "repr/symbol/version_script_parser.h"
 #include "utils/header_abi_util.h"

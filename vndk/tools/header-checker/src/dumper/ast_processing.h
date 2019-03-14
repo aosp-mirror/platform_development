@@ -17,6 +17,7 @@
 
 #include "dumper/ast_util.h"
 #include "dumper/header_checker.h"
+#include "repr/ir_dumper.h"
 
 #include <clang/AST/AST.h>
 #include <clang/AST/ASTConsumer.h>
