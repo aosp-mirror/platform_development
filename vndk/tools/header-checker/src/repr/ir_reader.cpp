@@ -33,17 +33,17 @@ namespace header_checker {
 namespace repr {
 
 
-using MergeStatus = TextFormatToIRReader::MergeStatus;
+using MergeStatus = IRReader::MergeStatus;
 
 
-std::unique_ptr<TextFormatToIRReader>
-TextFormatToIRReader::CreateTextFormatToIRReader(
+std::unique_ptr<IRReader>
+IRReader::CreateIRReader(
     TextFormatIR text_format, const std::set<std::string> *exported_headers) {
   switch (text_format) {
     case TextFormatIR::ProtobufTextFormat:
-      return std::make_unique<ProtobufTextFormatToIRReader>(exported_headers);
+      return std::make_unique<ProtobufIRReader>(exported_headers);
     case TextFormatIR::Json:
-      return std::make_unique<JsonToIRReader>(exported_headers);
+      return std::make_unique<JsonIRReader>(exported_headers);
     default:
       llvm::errs() << "Text format not supported yet\n";
       return nullptr;
@@ -51,8 +51,7 @@ TextFormatToIRReader::CreateTextFormatToIRReader(
 }
 
 
-void TextFormatToIRReader::AddToODRListMap(const std::string &key,
-                                           const TypeIR *value) {
+void IRReader::AddToODRListMap(const std::string &key, const TypeIR *value) {
   auto map_it = module_->odr_list_map_.find(key);
   if (map_it == module_->odr_list_map_.end()) {
     module_->odr_list_map_.emplace(key, std::list<const TypeIR *>({value}));
@@ -62,8 +61,8 @@ void TextFormatToIRReader::AddToODRListMap(const std::string &key,
 }
 
 
-MergeStatus TextFormatToIRReader::IsBuiltinTypeNodePresent(
-    const BuiltinTypeIR *builtin_type, const TextFormatToIRReader &addend,
+MergeStatus IRReader::IsBuiltinTypeNodePresent(
+    const BuiltinTypeIR *builtin_type, const IRReader &addend,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
   std::string builtin_linker_set_key = builtin_type->GetLinkerSetKey();
   auto builtin_it = module_->builtin_types_.find(builtin_linker_set_key);
@@ -86,8 +85,8 @@ MergeStatus TextFormatToIRReader::IsBuiltinTypeNodePresent(
 }
 
 
-MergeStatus TextFormatToIRReader::DoesUDTypeODRViolationExist(
-    const TypeIR *ud_type, const TextFormatToIRReader &addend,
+MergeStatus IRReader::DoesUDTypeODRViolationExist(
+    const TypeIR *ud_type, const IRReader &addend,
     const std::string ud_type_unique_id_and_source,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map_) {
   // Per entry in the map:
@@ -124,8 +123,8 @@ MergeStatus TextFormatToIRReader::DoesUDTypeODRViolationExist(
 }
 
 
-MergeStatus TextFormatToIRReader::IsTypeNodePresent(
-    const TypeIR *addend_node, const TextFormatToIRReader &addend,
+MergeStatus IRReader::IsTypeNodePresent(
+    const TypeIR *addend_node, const IRReader &addend,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
   std::string unique_type_id;
   switch (addend_node->GetKind()) {
@@ -155,8 +154,8 @@ MergeStatus TextFormatToIRReader::IsTypeNodePresent(
 // This method merges the type referenced by 'references_type' into the parent
 // graph. It also corrects the referenced_type field in the references_type
 // object passed and returns the merge status of the *referenced type*.
-MergeStatus TextFormatToIRReader::MergeReferencingTypeInternal(
-    const TextFormatToIRReader &addend,
+MergeStatus IRReader::MergeReferencingTypeInternal(
+    const IRReader &addend,
     ReferencesOtherType *references_type,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
   // First look in the local_to_global_type_id_map for the referenced type's
@@ -192,8 +191,8 @@ MergeStatus TextFormatToIRReader::MergeReferencingTypeInternal(
 }
 
 
-void TextFormatToIRReader::MergeRecordFields(
-    const TextFormatToIRReader &addend, RecordTypeIR *added_node,
+void IRReader::MergeRecordFields(
+    const IRReader &addend, RecordTypeIR *added_node,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
   for (auto &field : added_node->GetFields()) {
     MergeReferencingTypeInternal(addend, &field, local_to_global_type_id_map);
@@ -201,8 +200,8 @@ void TextFormatToIRReader::MergeRecordFields(
 }
 
 
-void TextFormatToIRReader::MergeRecordCXXBases(
-    const TextFormatToIRReader &addend, RecordTypeIR *added_node,
+void IRReader::MergeRecordCXXBases(
+    const IRReader &addend, RecordTypeIR *added_node,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
   for (auto &base : added_node->GetBases()) {
     MergeReferencingTypeInternal(addend, &base, local_to_global_type_id_map);
@@ -210,8 +209,8 @@ void TextFormatToIRReader::MergeRecordCXXBases(
 }
 
 
-void TextFormatToIRReader::MergeRecordTemplateElements(
-    const TextFormatToIRReader &addend, RecordTypeIR *added_node,
+void IRReader::MergeRecordTemplateElements(
+    const IRReader &addend, RecordTypeIR *added_node,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
   for (auto &template_element : added_node->GetTemplateElements()) {
     MergeReferencingTypeInternal(
@@ -220,8 +219,8 @@ void TextFormatToIRReader::MergeRecordTemplateElements(
 }
 
 
-void TextFormatToIRReader::MergeRecordDependencies(
-    const TextFormatToIRReader &addend, RecordTypeIR *added_node,
+void IRReader::MergeRecordDependencies(
+    const IRReader &addend, RecordTypeIR *added_node,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
   // First call MergeType on all its fields.
   MergeRecordFields(addend, added_node, local_to_global_type_id_map);
@@ -235,8 +234,8 @@ void TextFormatToIRReader::MergeRecordDependencies(
 
 template <typename T>
 std::pair<MergeStatus, typename AbiElementMap<T>::iterator>
-TextFormatToIRReader::UpdateUDTypeAccounting(
-    const T *addend_node, const TextFormatToIRReader &addend,
+IRReader::UpdateUDTypeAccounting(
+    const T *addend_node, const IRReader &addend,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map,
     AbiElementMap<T> *specific_type_map) {
   std::string added_type_id = AllocateNewTypeId();
@@ -261,8 +260,8 @@ TextFormatToIRReader::UpdateUDTypeAccounting(
 
 // This method is necessarily going to have a was_newly_merged_ = true in its
 // MergeStatus return. So it necessarily merges a new RecordType.
-MergeStatus TextFormatToIRReader::MergeRecordAndDependencies(
-  const RecordTypeIR *addend_node, const TextFormatToIRReader &addend,
+MergeStatus IRReader::MergeRecordAndDependencies(
+  const RecordTypeIR *addend_node, const IRReader &addend,
   AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
   auto merge_status_and_it =
       UpdateUDTypeAccounting(addend_node, addend, local_to_global_type_id_map,
@@ -273,8 +272,8 @@ MergeStatus TextFormatToIRReader::MergeRecordAndDependencies(
 }
 
 
-void TextFormatToIRReader::MergeEnumDependencies(
-    const TextFormatToIRReader &addend, EnumTypeIR *added_node,
+void IRReader::MergeEnumDependencies(
+    const IRReader &addend, EnumTypeIR *added_node,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
   const std::string underlying_type_id = added_node->GetUnderlyingType();
   // Get the underlying type, it nessarily has to be present in the addend's
@@ -293,8 +292,8 @@ void TextFormatToIRReader::MergeEnumDependencies(
 
 // This method is necessarily going to have a was_newly_merged_ = true in its
 // MergeStatus return. So it necessarily merges a new EnumType.
-MergeStatus TextFormatToIRReader::MergeEnumType(
-    const EnumTypeIR *addend_node, const TextFormatToIRReader &addend,
+MergeStatus IRReader::MergeEnumType(
+    const EnumTypeIR *addend_node, const IRReader &addend,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
   auto merge_status_and_it =
       UpdateUDTypeAccounting(addend_node, addend, local_to_global_type_id_map,
@@ -305,8 +304,8 @@ MergeStatus TextFormatToIRReader::MergeEnumType(
 }
 
 
-MergeStatus TextFormatToIRReader::MergeFunctionType(
-    const FunctionTypeIR *addend_node, const TextFormatToIRReader &addend,
+MergeStatus IRReader::MergeFunctionType(
+    const FunctionTypeIR *addend_node, const IRReader &addend,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
   auto merge_status_and_it =
       UpdateUDTypeAccounting(addend_node, addend, local_to_global_type_id_map,
@@ -318,8 +317,8 @@ MergeStatus TextFormatToIRReader::MergeFunctionType(
 
 
 template <typename T>
-MergeStatus TextFormatToIRReader::MergeReferencingTypeInternalAndUpdateParent(
-    const TextFormatToIRReader &addend, const T *addend_node,
+MergeStatus IRReader::MergeReferencingTypeInternalAndUpdateParent(
+    const IRReader &addend, const T *addend_node,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map,
     AbiElementMap<T> *parent_map, const std::string &updated_self_type_id) {
   MergeStatus merge_status;
@@ -380,8 +379,8 @@ MergeStatus TextFormatToIRReader::MergeReferencingTypeInternalAndUpdateParent(
 }
 
 
-MergeStatus TextFormatToIRReader::MergeReferencingType(
-    const TextFormatToIRReader &addend, const TypeIR *addend_node,
+MergeStatus IRReader::MergeReferencingType(
+    const IRReader &addend, const TypeIR *addend_node,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map,
     const std::string &updated_self_type_id) {
   switch (addend_node->GetKind()) {
@@ -419,8 +418,8 @@ MergeStatus TextFormatToIRReader::MergeReferencingType(
 
 // This method creates a new node for the addend node in the graph if MergeType
 // on the reference returned a MergeStatus with was_newly_added_ = true.
-MergeStatus TextFormatToIRReader::MergeGenericReferringType(
-    const TextFormatToIRReader &addend, const TypeIR *addend_node,
+MergeStatus IRReader::MergeGenericReferringType(
+    const IRReader &addend, const TypeIR *addend_node,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
   // First add the type 'pro-actively'. We need to do this since we'll need to
   // fill in 'referenced-type' fields in all this type's descendants and
@@ -434,8 +433,8 @@ MergeStatus TextFormatToIRReader::MergeGenericReferringType(
 }
 
 
-MergeStatus TextFormatToIRReader::MergeTypeInternal(
-    const TypeIR *addend_node, const TextFormatToIRReader &addend,
+MergeStatus IRReader::MergeTypeInternal(
+    const TypeIR *addend_node, const IRReader &addend,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
   switch (addend_node->GetKind()) {
     case BuiltinTypeKind:
@@ -461,9 +460,8 @@ MergeStatus TextFormatToIRReader::MergeTypeInternal(
 }
 
 
-MergeStatus TextFormatToIRReader::MergeType(
-    const TypeIR *addend_node,
-    const TextFormatToIRReader &addend,
+MergeStatus IRReader::MergeType(
+    const TypeIR *addend_node, const IRReader &addend,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
   // Check if the addend type is already in the parent graph. Since we're
   // going to traverse all the dependencies add whichever ones are not in the
@@ -484,8 +482,8 @@ MergeStatus TextFormatToIRReader::MergeType(
 }
 
 
-void TextFormatToIRReader::MergeCFunctionLikeDeps(
-    const TextFormatToIRReader &addend, CFunctionLikeIR *cfunction_like_ir,
+void IRReader::MergeCFunctionLikeDeps(
+    const IRReader &addend, CFunctionLikeIR *cfunction_like_ir,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
   // Merge the return type first.
   auto ret_type_it =
@@ -506,8 +504,8 @@ void TextFormatToIRReader::MergeCFunctionLikeDeps(
 }
 
 
-void TextFormatToIRReader::MergeFunctionDeps(
-    FunctionIR *added_node, const TextFormatToIRReader &addend,
+void IRReader::MergeFunctionDeps(
+    FunctionIR *added_node, const IRReader &addend,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
   MergeCFunctionLikeDeps(addend, added_node, local_to_global_type_id_map);
   // Merge and fix template parameters
@@ -525,8 +523,8 @@ static bool IsLinkableMessagePresent(const LinkableMessageIR *lm,
 }
 
 
-void TextFormatToIRReader::MergeFunction(
-    const FunctionIR *addend_node, const TextFormatToIRReader &addend,
+void IRReader::MergeFunction(
+    const FunctionIR *addend_node, const IRReader &addend,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
   const std::string &function_linkage_name = addend_node->GetLinkerSetKey();
   if (IsLinkableMessagePresent(addend_node, module_->functions_)) {
@@ -541,13 +539,13 @@ void TextFormatToIRReader::MergeFunction(
 }
 
 
-std::string TextFormatToIRReader::AllocateNewTypeId() {
+std::string IRReader::AllocateNewTypeId() {
   return "type-" + std::to_string(++max_type_id_);
 }
 
 
-void TextFormatToIRReader::MergeGlobalVariable(
-    const GlobalVarIR *addend_node, const TextFormatToIRReader &addend,
+void IRReader::MergeGlobalVariable(
+    const GlobalVarIR *addend_node, const IRReader &addend,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
   const std::string &global_variable_linkage_name =
       addend_node->GetLinkerSetKey();
@@ -563,7 +561,7 @@ void TextFormatToIRReader::MergeGlobalVariable(
 }
 
 
-void TextFormatToIRReader::MergeGraphs(const TextFormatToIRReader &addend) {
+void IRReader::MergeGraphs(const IRReader &addend) {
   // Iterate through nodes of addend reader and merge them.
   // Keep a merged types cache since if a type is merged, so will all of its
   // dependencies which weren't already merged.
@@ -583,7 +581,7 @@ void TextFormatToIRReader::MergeGraphs(const TextFormatToIRReader &addend) {
 }
 
 
-bool TextFormatToIRReader::IsLinkableMessageInExportedHeaders(
+bool IRReader::IsLinkableMessageInExportedHeaders(
     const LinkableMessageIR *linkable_message) const {
   if (module_->exported_headers_ == nullptr ||
       module_->exported_headers_->empty()) {

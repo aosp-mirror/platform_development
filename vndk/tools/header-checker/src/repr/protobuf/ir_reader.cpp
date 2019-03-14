@@ -26,7 +26,7 @@ namespace header_checker {
 namespace repr {
 
 
-void ProtobufTextFormatToIRReader::ReadTypeInfo(
+void ProtobufIRReader::ReadTypeInfo(
     const abi_dump::BasicNamedAndTypedDecl &type_info, TypeIR *typep) {
   typep->SetLinkerSetKey(type_info.linker_set_key());
   typep->SetName(type_info.name());
@@ -37,7 +37,7 @@ void ProtobufTextFormatToIRReader::ReadTypeInfo(
   typep->SetAlignment(type_info.alignment());
 }
 
-bool ProtobufTextFormatToIRReader::ReadDump(const std::string &dump_file) {
+bool ProtobufIRReader::ReadDump(const std::string &dump_file) {
   abi_dump::TranslationUnit tu;
   std::ifstream input(dump_file);
   google::protobuf::io::IstreamInputStream text_is(&input);
@@ -64,7 +64,7 @@ bool ProtobufTextFormatToIRReader::ReadDump(const std::string &dump_file) {
   return true;
 }
 
-TemplateInfoIR ProtobufTextFormatToIRReader::TemplateInfoProtobufToIR(
+TemplateInfoIR ProtobufIRReader::TemplateInfoProtobufToIR(
     const abi_dump::TemplateInfo &template_info_protobuf) {
   TemplateInfoIR template_info_ir;
   for (auto &&template_element : template_info_protobuf.elements()) {
@@ -85,7 +85,7 @@ static void SetupCFunctionLikeIR(const T &cfunction_like_protobuf,
   }
 }
 
-FunctionIR ProtobufTextFormatToIRReader::FunctionProtobufToIR(
+FunctionIR ProtobufIRReader::FunctionProtobufToIR(
     const abi_dump::FunctionDecl &function_protobuf) {
   FunctionIR function_ir;
   function_ir.SetReturnType(function_protobuf.return_type());
@@ -105,7 +105,7 @@ FunctionIR ProtobufTextFormatToIRReader::FunctionProtobufToIR(
   return function_ir;
 }
 
-FunctionTypeIR ProtobufTextFormatToIRReader::FunctionTypeProtobufToIR(
+FunctionTypeIR ProtobufIRReader::FunctionTypeProtobufToIR(
     const abi_dump::FunctionType &function_type_protobuf) {
   FunctionTypeIR function_type_ir;
   ReadTypeInfo(function_type_protobuf.type_info(), &function_type_ir);
@@ -113,7 +113,7 @@ FunctionTypeIR ProtobufTextFormatToIRReader::FunctionTypeProtobufToIR(
   return function_type_ir;
 }
 
-VTableLayoutIR ProtobufTextFormatToIRReader::VTableLayoutProtobufToIR(
+VTableLayoutIR ProtobufIRReader::VTableLayoutProtobufToIR(
     const abi_dump::VTableLayout &vtable_layout_protobuf) {
   VTableLayoutIR vtable_layout_ir;
   for (auto &&vtable_component : vtable_layout_protobuf.vtable_components()) {
@@ -127,8 +127,7 @@ VTableLayoutIR ProtobufTextFormatToIRReader::VTableLayoutProtobufToIR(
   return vtable_layout_ir;
 }
 
-std::vector<RecordFieldIR>
-ProtobufTextFormatToIRReader::RecordFieldsProtobufToIR(
+std::vector<RecordFieldIR> ProtobufIRReader::RecordFieldsProtobufToIR(
     const google::protobuf::RepeatedPtrField<abi_dump::RecordFieldDecl> &rfp) {
   std::vector<RecordFieldIR> record_type_fields_ir;
   for (auto &&field : rfp) {
@@ -141,7 +140,7 @@ ProtobufTextFormatToIRReader::RecordFieldsProtobufToIR(
 }
 
 std::vector<CXXBaseSpecifierIR>
-ProtobufTextFormatToIRReader::RecordCXXBaseSpecifiersProtobufToIR(
+ProtobufIRReader::RecordCXXBaseSpecifiersProtobufToIR(
     const google::protobuf::RepeatedPtrField<abi_dump::CXXBaseSpecifier> &rbs) {
   std::vector<CXXBaseSpecifierIR> record_type_bases_ir;
   for (auto &&base : rbs) {
@@ -153,7 +152,7 @@ ProtobufTextFormatToIRReader::RecordCXXBaseSpecifiersProtobufToIR(
   return record_type_bases_ir;
 }
 
-RecordTypeIR ProtobufTextFormatToIRReader::RecordTypeProtobufToIR(
+RecordTypeIR ProtobufIRReader::RecordTypeProtobufToIR(
     const abi_dump::RecordType &record_type_protobuf) {
   RecordTypeIR record_type_ir;
   ReadTypeInfo(record_type_protobuf.type_info(), &record_type_ir);
@@ -175,8 +174,7 @@ RecordTypeIR ProtobufTextFormatToIRReader::RecordTypeProtobufToIR(
   return record_type_ir;
 }
 
-std::vector<EnumFieldIR>
-ProtobufTextFormatToIRReader::EnumFieldsProtobufToIR(
+std::vector<EnumFieldIR> ProtobufIRReader::EnumFieldsProtobufToIR(
     const google::protobuf::RepeatedPtrField<abi_dump::EnumFieldDecl> &efp) {
   std::vector<EnumFieldIR> enum_type_fields_ir;
   for (auto &&field : efp) {
@@ -186,7 +184,7 @@ ProtobufTextFormatToIRReader::EnumFieldsProtobufToIR(
   return enum_type_fields_ir;
 }
 
-EnumTypeIR ProtobufTextFormatToIRReader::EnumTypeProtobufToIR(
+EnumTypeIR ProtobufIRReader::EnumTypeProtobufToIR(
     const abi_dump::EnumType &enum_type_protobuf) {
   EnumTypeIR enum_type_ir;
   ReadTypeInfo(enum_type_protobuf.type_info(), &enum_type_ir);
@@ -198,7 +196,7 @@ EnumTypeIR ProtobufTextFormatToIRReader::EnumTypeProtobufToIR(
   return enum_type_ir;
 }
 
-void ProtobufTextFormatToIRReader::ReadGlobalVariables(
+void ProtobufIRReader::ReadGlobalVariables(
     const abi_dump::TranslationUnit &tu) {
   for (auto &&global_variable_protobuf : tu.global_vars()) {
     GlobalVarIR global_variable_ir;
@@ -217,8 +215,7 @@ void ProtobufTextFormatToIRReader::ReadGlobalVariables(
   }
 }
 
-void ProtobufTextFormatToIRReader::ReadPointerTypes(
-    const abi_dump::TranslationUnit &tu) {
+void ProtobufIRReader::ReadPointerTypes(const abi_dump::TranslationUnit &tu) {
   for (auto &&pointer_type_protobuf : tu.pointer_types()) {
     PointerTypeIR pointer_type_ir;
     ReadTypeInfo(pointer_type_protobuf.type_info(), &pointer_type_ir);
@@ -230,8 +227,7 @@ void ProtobufTextFormatToIRReader::ReadPointerTypes(
   }
 }
 
-void ProtobufTextFormatToIRReader::ReadBuiltinTypes(
-    const abi_dump::TranslationUnit &tu) {
+void ProtobufIRReader::ReadBuiltinTypes(const abi_dump::TranslationUnit &tu) {
   for (auto &&builtin_type_protobuf : tu.builtin_types()) {
     BuiltinTypeIR builtin_type_ir;
     ReadTypeInfo(builtin_type_protobuf.type_info(), &builtin_type_ir);
@@ -242,8 +238,7 @@ void ProtobufTextFormatToIRReader::ReadBuiltinTypes(
   }
 }
 
-void ProtobufTextFormatToIRReader::ReadQualifiedTypes(
-    const abi_dump::TranslationUnit &tu) {
+void ProtobufIRReader::ReadQualifiedTypes(const abi_dump::TranslationUnit &tu) {
   for (auto &&qualified_type_protobuf : tu.qualified_types()) {
     QualifiedTypeIR qualified_type_ir;
     ReadTypeInfo(qualified_type_protobuf.type_info(), &qualified_type_ir);
@@ -259,8 +254,7 @@ void ProtobufTextFormatToIRReader::ReadQualifiedTypes(
   }
 }
 
-void ProtobufTextFormatToIRReader::ReadArrayTypes(
-    const abi_dump::TranslationUnit &tu) {
+void ProtobufIRReader::ReadArrayTypes(const abi_dump::TranslationUnit &tu) {
   for (auto &&array_type_protobuf : tu.array_types()) {
     ArrayTypeIR array_type_ir;
     ReadTypeInfo(array_type_protobuf.type_info(), &array_type_ir);
@@ -272,7 +266,7 @@ void ProtobufTextFormatToIRReader::ReadArrayTypes(
   }
 }
 
-void ProtobufTextFormatToIRReader::ReadLvalueReferenceTypes(
+void ProtobufIRReader::ReadLvalueReferenceTypes(
     const abi_dump::TranslationUnit &tu) {
   for (auto &&lvalue_reference_type_protobuf : tu.lvalue_reference_types()) {
     LvalueReferenceTypeIR lvalue_reference_type_ir;
@@ -287,7 +281,7 @@ void ProtobufTextFormatToIRReader::ReadLvalueReferenceTypes(
   }
 }
 
-void ProtobufTextFormatToIRReader::ReadRvalueReferenceTypes(
+void ProtobufIRReader::ReadRvalueReferenceTypes(
     const abi_dump::TranslationUnit &tu) {
   for (auto &&rvalue_reference_type_protobuf : tu.rvalue_reference_types()) {
     RvalueReferenceTypeIR rvalue_reference_type_ir;
@@ -302,8 +296,7 @@ void ProtobufTextFormatToIRReader::ReadRvalueReferenceTypes(
   }
 }
 
-void ProtobufTextFormatToIRReader::ReadFunctions(
-    const abi_dump::TranslationUnit &tu) {
+void ProtobufIRReader::ReadFunctions(const abi_dump::TranslationUnit &tu) {
   for (auto &&function_protobuf : tu.functions()) {
     FunctionIR function_ir = FunctionProtobufToIR(function_protobuf);
     if (!IsLinkableMessageInExportedHeaders(&function_ir)) {
@@ -314,8 +307,7 @@ void ProtobufTextFormatToIRReader::ReadFunctions(
   }
 }
 
-void ProtobufTextFormatToIRReader::ReadRecordTypes(
-    const abi_dump::TranslationUnit &tu) {
+void ProtobufIRReader::ReadRecordTypes(const abi_dump::TranslationUnit &tu) {
   for (auto &&record_type_protobuf : tu.record_types()) {
     RecordTypeIR record_type_ir = RecordTypeProtobufToIR(record_type_protobuf);
     if (!IsLinkableMessageInExportedHeaders(&record_type_ir)) {
@@ -329,8 +321,7 @@ void ProtobufTextFormatToIRReader::ReadRecordTypes(
   }
 }
 
-void ProtobufTextFormatToIRReader::ReadFunctionTypes(
-    const abi_dump::TranslationUnit &tu) {
+void ProtobufIRReader::ReadFunctionTypes(const abi_dump::TranslationUnit &tu) {
   for (auto &&function_type_protobuf : tu.function_types()) {
     FunctionTypeIR function_type_ir =
         FunctionTypeProtobufToIR(function_type_protobuf);
@@ -345,8 +336,7 @@ void ProtobufTextFormatToIRReader::ReadFunctionTypes(
   }
 }
 
-void ProtobufTextFormatToIRReader::ReadEnumTypes(
-    const abi_dump::TranslationUnit &tu) {
+void ProtobufIRReader::ReadEnumTypes(const abi_dump::TranslationUnit &tu) {
   for (auto &&enum_type_protobuf : tu.enum_types()) {
     EnumTypeIR enum_type_ir = EnumTypeProtobufToIR(enum_type_protobuf);
     if (!IsLinkableMessageInExportedHeaders(&enum_type_ir)) {
@@ -360,8 +350,7 @@ void ProtobufTextFormatToIRReader::ReadEnumTypes(
   }
 }
 
-void ProtobufTextFormatToIRReader::ReadElfFunctions(
-    const abi_dump::TranslationUnit &tu) {
+void ProtobufIRReader::ReadElfFunctions(const abi_dump::TranslationUnit &tu) {
   for (auto &&elf_function : tu.elf_functions()) {
     ElfFunctionIR elf_function_ir(
         elf_function.name(),
@@ -371,8 +360,7 @@ void ProtobufTextFormatToIRReader::ReadElfFunctions(
   }
 }
 
-void ProtobufTextFormatToIRReader::ReadElfObjects(
-    const abi_dump::TranslationUnit &tu) {
+void ProtobufIRReader::ReadElfObjects(const abi_dump::TranslationUnit &tu) {
   for (auto &&elf_object : tu.elf_objects()) {
     ElfObjectIR elf_object_ir(
         elf_object.name(), ElfSymbolBindingProtobufToIR(elf_object.binding()));

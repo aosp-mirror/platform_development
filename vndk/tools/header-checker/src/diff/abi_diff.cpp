@@ -30,11 +30,10 @@ namespace diff {
 
 
 repr::CompatibilityStatusIR HeaderAbiDiff::GenerateCompatibilityReport() {
-  using repr::TextFormatToIRReader;
-  std::unique_ptr<repr::TextFormatToIRReader> old_reader =
-      TextFormatToIRReader::CreateTextFormatToIRReader(text_format_old_);
-  std::unique_ptr<repr::TextFormatToIRReader> new_reader =
-      TextFormatToIRReader::CreateTextFormatToIRReader(text_format_new_);
+  std::unique_ptr<repr::IRReader> old_reader =
+      repr::IRReader::CreateIRReader(text_format_old_);
+  std::unique_ptr<repr::IRReader> new_reader =
+      repr::IRReader::CreateIRReader(text_format_new_);
   if (!old_reader || !new_reader || !old_reader->ReadDump(old_dump_) ||
       !new_reader->ReadDump(new_dump_)) {
     llvm::errs() << "Could not create Text Format readers\n";
@@ -52,8 +51,7 @@ repr::CompatibilityStatusIR HeaderAbiDiff::GenerateCompatibilityReport() {
 }
 
 repr::CompatibilityStatusIR HeaderAbiDiff::CompareTUs(
-    const repr::TextFormatToIRReader *old_tu,
-    const repr::TextFormatToIRReader *new_tu,
+    const repr::IRReader *old_tu, const repr::IRReader *new_tu,
     repr::IRDiffDumper *ir_diff_dumper) {
   // Collect all old and new types in maps, so that we can refer to them by
   // type name / linker_set_key later.
@@ -97,8 +95,7 @@ repr::CompatibilityStatusIR HeaderAbiDiff::CompareTUs(
 
 std::pair<AbiElementMap<const repr::EnumTypeIR *>,
           AbiElementMap<const repr::RecordTypeIR *>>
-HeaderAbiDiff::ExtractUserDefinedTypes(
-    const repr::TextFormatToIRReader *tu) {
+HeaderAbiDiff::ExtractUserDefinedTypes(const repr::IRReader *tu) {
   AbiElementMap<const repr::EnumTypeIR *> enum_types;
   AbiElementMap<const repr::RecordTypeIR *> record_types;
   // Iterate through the ODRListMap, if there is more than 1 element in the
@@ -136,8 +133,7 @@ HeaderAbiDiff::ExtractUserDefinedTypes(
 }
 
 bool HeaderAbiDiff::CollectUserDefinedTypes(
-    const repr::TextFormatToIRReader *old_tu,
-    const repr::TextFormatToIRReader *new_tu,
+    const repr::IRReader *old_tu, const repr::IRReader *new_tu,
     const AbiElementMap<const repr::TypeIR *> &old_types_map,
     const AbiElementMap<const repr::TypeIR *> &new_types_map,
     repr::IRDiffDumper *ir_diff_dumper) {

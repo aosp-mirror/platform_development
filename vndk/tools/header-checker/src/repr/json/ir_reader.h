@@ -111,10 +111,10 @@ JsonObjectRef JsonArrayRef<JsonObjectRef>::Iterator::operator*() const;
 
 template <> std::string JsonArrayRef<std::string>::Iterator::operator*() const;
 
-class JsonToIRReader : public TextFormatToIRReader {
+class JsonIRReader : public IRReader {
  public:
-  JsonToIRReader(const std::set<std::string> *exported_headers)
-      : TextFormatToIRReader(exported_headers) {}
+  JsonIRReader(const std::set<std::string> *exported_headers)
+      : IRReader(exported_headers) {}
 
   bool ReadDump(const std::string &dump_file) override;
 

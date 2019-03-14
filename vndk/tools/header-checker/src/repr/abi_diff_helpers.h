@@ -30,7 +30,7 @@ namespace repr {
 // Classes which act as middle-men between clang AST parsing routines and
 // message format specific dumpers.
 
-using MergeStatus = TextFormatToIRReader::MergeStatus;
+using MergeStatus = IRReader::MergeStatus;
 
 enum DiffStatus {
   // There was no diff found while comparing types.

@@ -31,15 +31,15 @@ namespace header_checker {
 namespace repr {
 
 
-class ProtobufTextFormatToIRReader : public TextFormatToIRReader {
+class ProtobufIRReader : public IRReader {
  private:
   template <typename T>
   using RepeatedPtrField = google::protobuf::RepeatedPtrField<T>;
 
 
  public:
-  ProtobufTextFormatToIRReader(const std::set<std::string> *exported_headers)
-      : TextFormatToIRReader(exported_headers) {}
+  ProtobufIRReader(const std::set<std::string> *exported_headers)
+      : IRReader(exported_headers) {}
 
 
   bool ReadDump(const std::string &dump_file) override;

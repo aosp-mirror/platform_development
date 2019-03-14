@@ -127,7 +127,7 @@ class HeaderAbiLinker {
                 const repr::AbiElementMap<T> &src,
                 const std::function<bool(const std::string &)> &symbol_filter);
 
-  std::unique_ptr<repr::TextFormatToIRReader> ReadInputDumpFiles();
+  std::unique_ptr<repr::IRReader> ReadInputDumpFiles();
 
   bool ReadExportedSymbols();
 
@@ -135,13 +135,12 @@ class HeaderAbiLinker {
 
   bool ReadExportedSymbolsFromSharedObjectFile();
 
-  bool LinkTypes(const repr::TextFormatToIRReader *ir_reader,
-                 repr::IRDumper *ir_dumper);
+  bool LinkTypes(const repr::IRReader *ir_reader, repr::IRDumper *ir_dumper);
 
-  bool LinkFunctions(const repr::TextFormatToIRReader *ir_reader,
+  bool LinkFunctions(const repr::IRReader *ir_reader,
                      repr::IRDumper *ir_dumper);
 
-  bool LinkGlobalVars(const repr::TextFormatToIRReader *ir_reader,
+  bool LinkGlobalVars(const repr::IRReader *ir_reader,
                       repr::IRDumper *ir_dumper);
 
   bool LinkExportedSymbols(repr::IRDumper *ir_dumper);
@@ -150,8 +149,7 @@ class HeaderAbiLinker {
                            const repr::ExportedSymbolSet &exported_symbols);
 
   template <typename SymbolMap>
-  bool LinkExportedSymbols(repr::IRDumper *ir_dumper,
-                           const SymbolMap &symbols);
+  bool LinkExportedSymbols(repr::IRDumper *ir_dumper, const SymbolMap &symbols);
 
   // Check whether a symbol name is considered as exported.  If both
   // `shared_object_symbols_` and `version_script_symbols_` exists, the symbol
@@ -180,11 +178,10 @@ class HeaderAbiLinker {
 static void DeDuplicateAbiElementsThread(
     const std::vector<std::string> &dump_files,
     const std::set<std::string> *exported_headers,
-    repr::TextFormatToIRReader *greader, std::mutex *greader_lock,
+    repr::IRReader *greader, std::mutex *greader_lock,
     std::atomic<std::size_t> *cnt) {
-  std::unique_ptr<repr::TextFormatToIRReader> local_reader =
-      repr::TextFormatToIRReader::CreateTextFormatToIRReader(
-          input_format, exported_headers);
+  std::unique_ptr<repr::IRReader> local_reader =
+      repr::IRReader::CreateIRReader(input_format, exported_headers);
 
   auto begin_it = dump_files.begin();
   std::size_t num_sources = dump_files.size();
@@ -195,9 +192,8 @@ static void DeDuplicateAbiElementsThread(
     }
     std::size_t end = std::min(i + kSourcesPerBatchThread, num_sources);
     for (auto it = begin_it; it != begin_it + end; it++) {
-      std::unique_ptr<repr::TextFormatToIRReader> reader =
-          repr::TextFormatToIRReader::CreateTextFormatToIRReader(
-              input_format, exported_headers);
+      std::unique_ptr<repr::IRReader> reader =
+          repr::IRReader::CreateIRReader(input_format, exported_headers);
       assert(reader != nullptr);
       if (!reader->ReadDump(*it)) {
         llvm::errs() << "ReadDump failed\n";
@@ -212,11 +208,10 @@ static void DeDuplicateAbiElementsThread(
   greader->MergeGraphs(*local_reader);
 }
 
-std::unique_ptr<repr::TextFormatToIRReader>
+std::unique_ptr<repr::IRReader>
 HeaderAbiLinker::ReadInputDumpFiles() {
-  std::unique_ptr<repr::TextFormatToIRReader> greader =
-      repr::TextFormatToIRReader::CreateTextFormatToIRReader(
-          input_format, &exported_headers_);
+  std::unique_ptr<repr::IRReader> greader =
+      repr::IRReader::CreateIRReader(input_format, &exported_headers_);
 
   std::size_t max_threads = std::thread::hardware_concurrency();
   std::size_t num_threads = kSourcesPerBatchThread < dump_files_.size() ?
@@ -301,7 +296,7 @@ bool HeaderAbiLinker::LinkDecl(
   return true;
 }
 
-bool HeaderAbiLinker::LinkTypes(const repr::TextFormatToIRReader *reader,
+bool HeaderAbiLinker::LinkTypes(const repr::IRReader *reader,
                                 repr::IRDumper *ir_dumper) {
   assert(reader != nullptr);
   auto no_filter = [](const std::string &symbol) { return true; };
@@ -327,8 +322,7 @@ bool HeaderAbiLinker::IsSymbolExported(const std::string &name) const {
 }
 
 bool HeaderAbiLinker::LinkFunctions(
-    const repr::TextFormatToIRReader *reader,
-    repr::IRDumper *ir_dumper) {
+    const repr::IRReader *reader, repr::IRDumper *ir_dumper) {
   assert(reader != nullptr);
   auto symbol_filter = [this](const std::string &linker_set_key) {
     return IsSymbolExported(linker_set_key);
@@ -337,8 +331,7 @@ bool HeaderAbiLinker::LinkFunctions(
 }
 
 bool HeaderAbiLinker::LinkGlobalVars(
-    const repr::TextFormatToIRReader *reader,
-    repr::IRDumper *ir_dumper) {
+    const repr::IRReader *reader, repr::IRDumper *ir_dumper) {
   assert(reader != nullptr);
   auto symbol_filter = [this](const std::string &linker_set_key) {
     return IsSymbolExported(linker_set_key);
