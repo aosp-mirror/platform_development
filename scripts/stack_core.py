@@ -377,7 +377,7 @@ class TraceConverter:
             index = area.rfind(".apk!")
             if index != -1:
               apk = area[0:index + 4]
-          if not apk:
+          if apk:
             lib_name, lib = self.GetLibFromApk(apk, so_offset)
         if not lib:
           lib = area
