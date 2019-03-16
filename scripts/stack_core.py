@@ -364,8 +364,21 @@ class TraceConverter:
         # a shared so that was loaded directly out of it. In that case,
         # extract the shared library and the name of the shared library.
         lib = None
-        if area.endswith(".apk") and so_offset:
-          lib_name, lib = self.GetLibFromApk(area, so_offset)
+        # The format of the map name:
+        #   Some.apk!libshared.so
+        # or
+        #   Some.apk
+        if so_offset:
+          # If it ends in apk, we are done.
+          apk = None
+          if area.endswith(".apk"):
+            apk = area
+          else:
+            index = area.rfind(".apk!")
+            if index != -1:
+              apk = area[0:index + 4]
+          if apk:
+            lib_name, lib = self.GetLibFromApk(apk, so_offset)
         if not lib:
           lib = area
           lib_name = None
