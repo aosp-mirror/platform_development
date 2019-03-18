@@ -153,6 +153,7 @@ cc_library_host_static {
         "src/repr/ir_diff_dumper.cpp",
         "src/repr/ir_dumper.cpp",
         "src/repr/ir_reader.cpp",
+        "src/repr/ir_representation.cpp",
         "src/repr/json/converter.cpp",
         "src/repr/json/ir_dumper.cpp",
         "src/repr/json/ir_reader.cpp",

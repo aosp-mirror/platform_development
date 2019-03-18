@@ -86,8 +86,6 @@ class IRReader {
                   std::move(addend.module_->qualified_types_));
   }
 
-  void AddToODRListMap(const std::string &key, const TypeIR *value);
-
   template <typename T>
   MergeStatus MergeReferencingTypeInternalAndUpdateParent(
       const IRReader &addend, const T *addend_node,
@@ -205,9 +203,6 @@ class IRReader {
     augend->insert(std::make_move_iterator(addend.begin()),
                    std::make_move_iterator(addend.end()));
   }
-
-  bool IsLinkableMessageInExportedHeaders(
-      const LinkableMessageIR *linkable_message) const;
 
   std::unique_ptr<ModuleIR> module_;
 

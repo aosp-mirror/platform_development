@@ -840,6 +840,48 @@ class ModuleIR {
     return odr_list_map_;
   }
 
+
+  void AddFunction(FunctionIR &&function);
+
+  void AddGlobalVariable(GlobalVarIR &&global_var);
+
+  void AddRecordType(RecordTypeIR &&record_type);
+
+  void AddFunctionType(FunctionTypeIR &&function_type);
+
+  void AddEnumType(EnumTypeIR &&enum_type);
+
+  void AddLvalueReferenceType(LvalueReferenceTypeIR &&lvalue_reference_type);
+
+  void AddRvalueReferenceType(RvalueReferenceTypeIR &&rvalue_reference_type);
+
+  void AddQualifiedType(QualifiedTypeIR &&qualified_type);
+
+  void AddArrayType(ArrayTypeIR &&array_type);
+
+  void AddPointerType(PointerTypeIR &&pointer_type);
+
+  void AddBuiltinType(BuiltinTypeIR &&builtin_type);
+
+  void AddElfFunction(ElfFunctionIR &&elf_function);
+
+  void AddElfObject(ElfObjectIR &&elf_object);
+
+  void AddToODRListMap(const std::string &key, const TypeIR *value) {
+    auto map_it = odr_list_map_.find(key);
+    if (map_it == odr_list_map_.end()) {
+      odr_list_map_.emplace(key, std::list<const TypeIR *>({value}));
+      return;
+    }
+    odr_list_map_[key].emplace_back(value);
+  }
+
+
+ private:
+  bool IsLinkableMessageInExportedHeaders(
+      const LinkableMessageIR *linkable_message) const;
+
+
  public:
   AbiElementList<RecordTypeIR> record_types_list_;
   AbiElementMap<FunctionIR> functions_;

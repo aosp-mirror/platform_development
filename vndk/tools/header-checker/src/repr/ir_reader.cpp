@@ -50,16 +50,6 @@ IRReader::CreateIRReader(
 }
 
 
-void IRReader::AddToODRListMap(const std::string &key, const TypeIR *value) {
-  auto map_it = module_->odr_list_map_.find(key);
-  if (map_it == module_->odr_list_map_.end()) {
-    module_->odr_list_map_.emplace(key, std::list<const TypeIR *>({value}));
-    return;
-  }
-  module_->odr_list_map_[key].emplace_back(value);
-}
-
-
 MergeStatus IRReader::IsBuiltinTypeNodePresent(
     const BuiltinTypeIR *builtin_type, const IRReader &addend,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
@@ -250,7 +240,7 @@ IRReader::UpdateUDTypeAccounting(
   // Add to faciliate ODR checking.
   const std::string &key = GetODRListMapKey(&(it->second));
   MergeStatus type_merge_status = MergeStatus(true, added_type_id);
-  AddToODRListMap(key, &(it->second));
+  module_->AddToODRListMap(key, &(it->second));
   local_to_global_type_id_map->emplace(addend_node->GetSelfType(),
                                        type_merge_status);
   return {type_merge_status, it};
@@ -577,17 +567,6 @@ void IRReader::MergeGraphs(const IRReader &addend) {
   for (auto &&global_var_ir : addend.module_->global_variables_) {
     MergeGlobalVariable(&global_var_ir.second, addend, &merged_types_cache);
   }
-}
-
-
-bool IRReader::IsLinkableMessageInExportedHeaders(
-    const LinkableMessageIR *linkable_message) const {
-  if (module_->exported_headers_ == nullptr ||
-      module_->exported_headers_->empty()) {
-    return true;
-  }
-  return module_->exported_headers_->find(linkable_message->GetSourceFile()) !=
-         module_->exported_headers_->end();
 }
 
 
