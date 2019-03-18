@@ -52,8 +52,8 @@ class HeaderAbiDiff {
 
  private:
   repr::CompatibilityStatusIR CompareTUs(
-      const repr::IRReader *old_tu,
-      const repr::IRReader *new_tu,
+      const repr::ModuleIR &old_tu,
+      const repr::ModuleIR &new_tu,
       repr::IRDiffDumper *ir_diff_dumper);
 
   template <typename T, typename ElfSymbolType>
@@ -122,11 +122,11 @@ class HeaderAbiDiff {
 
   std::pair<AbiElementMap<const repr::EnumTypeIR *>,
             AbiElementMap<const repr::RecordTypeIR *>>
-  ExtractUserDefinedTypes(const repr::IRReader *tu);
+  ExtractUserDefinedTypes(const repr::ModuleIR &tu);
 
   bool CollectUserDefinedTypes(
-      const repr::IRReader *old_tu,
-      const repr::IRReader *new_tu,
+      const repr::ModuleIR &old_tu,
+      const repr::ModuleIR &new_tu,
       const AbiElementMap<const repr::TypeIR *> &old_types_map,
       const AbiElementMap<const repr::TypeIR *> &new_types_map,
       repr::IRDiffDumper *ir_diff_dumper);

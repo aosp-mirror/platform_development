@@ -54,68 +54,15 @@ class IRReader {
 
   virtual ~IRReader() {}
 
-  const AbiElementMap<FunctionIR> &GetFunctions() const {
-    return module_->functions_;
-  }
-
-  const AbiElementMap<GlobalVarIR> &GetGlobalVariables() const {
-    return module_->global_variables_;
-  }
-
-  const AbiElementMap<RecordTypeIR> &GetRecordTypes() const {
-    return module_->record_types_;
-  }
-
-  const AbiElementMap<FunctionTypeIR> &GetFunctionTypes() const {
-    return module_->function_types_;
-  }
-
-  const AbiElementMap<EnumTypeIR> &GetEnumTypes() const {
-    return module_->enum_types_;
-  }
-
-  const AbiElementMap<LvalueReferenceTypeIR> &GetLvalueReferenceTypes() const {
-    return module_->lvalue_reference_types_;
-  }
-
-  const AbiElementMap<RvalueReferenceTypeIR> &GetRvalueReferenceTypes() const {
-    return module_->rvalue_reference_types_;
-  }
-
-  const AbiElementMap<QualifiedTypeIR> &GetQualifiedTypes() const {
-    return module_->qualified_types_;
-  }
-
-  const AbiElementMap<ArrayTypeIR> &GetArrayTypes() const {
-    return module_->array_types_;
-  }
-
-  const AbiElementMap<PointerTypeIR> &GetPointerTypes() const {
-    return module_->pointer_types_;
-  }
-
-  const AbiElementMap<BuiltinTypeIR> &GetBuiltinTypes() const {
-    return module_->builtin_types_;
-  }
-
-  const AbiElementMap<ElfFunctionIR> &GetElfFunctions() const {
-    return module_->elf_functions_;
-  }
-
-  const AbiElementMap<ElfObjectIR> &GetElfObjects() const {
-    return module_->elf_objects_;
-  }
-
-  const AbiElementMap<const TypeIR *> &GetTypeGraph() const {
-    return module_->type_graph_;
-  }
-
-  const AbiElementUnorderedMap<std::list<const TypeIR *>> &
-  GetODRListMap() const {
-    return module_->odr_list_map_;
-  }
-
   virtual bool ReadDump(const std::string &dump_file) = 0;
+
+  ModuleIR &GetModule() {
+    return *module_;
+  }
+
+  std::unique_ptr<ModuleIR> TakeModule() {
+    return std::move(module_);
+  }
 
   void Merge(IRReader &&addend) {
     MergeElements(&module_->functions_, std::move(addend.module_->functions_));

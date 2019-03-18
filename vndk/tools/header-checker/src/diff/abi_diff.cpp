@@ -42,7 +42,8 @@ repr::CompatibilityStatusIR HeaderAbiDiff::GenerateCompatibilityReport() {
   std::unique_ptr<repr::IRDiffDumper> ir_diff_dumper =
       repr::IRDiffDumper::CreateIRDiffDumper(text_format_diff_, cr_);
   repr::CompatibilityStatusIR status =
-      CompareTUs(old_reader.get(), new_reader.get(), ir_diff_dumper.get());
+      CompareTUs(old_reader->GetModule(), new_reader->GetModule(),
+                 ir_diff_dumper.get());
   if (!ir_diff_dumper->Dump()) {
     llvm::errs() << "Could not dump diff report\n";
     ::exit(1);
@@ -51,25 +52,25 @@ repr::CompatibilityStatusIR HeaderAbiDiff::GenerateCompatibilityReport() {
 }
 
 repr::CompatibilityStatusIR HeaderAbiDiff::CompareTUs(
-    const repr::IRReader *old_tu, const repr::IRReader *new_tu,
+    const repr::ModuleIR &old_tu, const repr::ModuleIR &new_tu,
     repr::IRDiffDumper *ir_diff_dumper) {
   // Collect all old and new types in maps, so that we can refer to them by
   // type name / linker_set_key later.
   const AbiElementMap<const repr::TypeIR *> old_types =
-      old_tu->GetTypeGraph();
+      old_tu.GetTypeGraph();
   const AbiElementMap<const repr::TypeIR *> new_types =
-      new_tu->GetTypeGraph();
+      new_tu.GetTypeGraph();
 
   // Collect fills in added, removed ,unsafe and safe function diffs.
-  if (!CollectDynsymExportables(old_tu->GetFunctions(), new_tu->GetFunctions(),
-                                old_tu->GetElfFunctions(),
-                                new_tu->GetElfFunctions(),
+  if (!CollectDynsymExportables(old_tu.GetFunctions(), new_tu.GetFunctions(),
+                                old_tu.GetElfFunctions(),
+                                new_tu.GetElfFunctions(),
                                 old_types, new_types,
                                 ir_diff_dumper) ||
-      !CollectDynsymExportables(old_tu->GetGlobalVariables(),
-                                new_tu->GetGlobalVariables(),
-                                old_tu->GetElfObjects(),
-                                new_tu->GetElfObjects(),
+      !CollectDynsymExportables(old_tu.GetGlobalVariables(),
+                                new_tu.GetGlobalVariables(),
+                                old_tu.GetElfObjects(),
+                                new_tu.GetElfObjects(),
                                 old_types, new_types,
                                 ir_diff_dumper)) {
     llvm::errs() << "Unable to collect dynsym exportables\n";
@@ -95,13 +96,13 @@ repr::CompatibilityStatusIR HeaderAbiDiff::CompareTUs(
 
 std::pair<AbiElementMap<const repr::EnumTypeIR *>,
           AbiElementMap<const repr::RecordTypeIR *>>
-HeaderAbiDiff::ExtractUserDefinedTypes(const repr::IRReader *tu) {
+HeaderAbiDiff::ExtractUserDefinedTypes(const repr::ModuleIR &tu) {
   AbiElementMap<const repr::EnumTypeIR *> enum_types;
   AbiElementMap<const repr::RecordTypeIR *> record_types;
   // Iterate through the ODRListMap, if there is more than 1 element in the
   // list, we cannot really unique the type by name, so skip it. If not, add a
   // map entry UniqueId -> const Record(Enum)TypeIR *.
-  for (auto &it : tu->GetODRListMap()) {
+  for (auto &it : tu.GetODRListMap()) {
     auto &odr_list = it.second;
     if (odr_list.size() != 1) {
       continue;
@@ -133,7 +134,7 @@ HeaderAbiDiff::ExtractUserDefinedTypes(const repr::IRReader *tu) {
 }
 
 bool HeaderAbiDiff::CollectUserDefinedTypes(
-    const repr::IRReader *old_tu, const repr::IRReader *new_tu,
+    const repr::ModuleIR &old_tu, const repr::ModuleIR &new_tu,
     const AbiElementMap<const repr::TypeIR *> &old_types_map,
     const AbiElementMap<const repr::TypeIR *> &new_types_map,
     repr::IRDiffDumper *ir_diff_dumper) {

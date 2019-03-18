@@ -135,13 +135,11 @@ class HeaderAbiLinker {
 
   bool ReadExportedSymbolsFromSharedObjectFile();
 
-  bool LinkTypes(const repr::IRReader *ir_reader, repr::IRDumper *ir_dumper);
+  bool LinkTypes(repr::ModuleIR &module, repr::IRDumper *ir_dumper);
 
-  bool LinkFunctions(const repr::IRReader *ir_reader,
-                     repr::IRDumper *ir_dumper);
+  bool LinkFunctions(repr::ModuleIR &module, repr::IRDumper *ir_dumper);
 
-  bool LinkGlobalVars(const repr::IRReader *ir_reader,
-                      repr::IRDumper *ir_dumper);
+  bool LinkGlobalVars(repr::ModuleIR &module, repr::IRDumper *ir_dumper);
 
   bool LinkExportedSymbols(repr::IRDumper *ir_dumper);
 
@@ -246,6 +244,8 @@ bool HeaderAbiLinker::LinkAndDump() {
   // Read all input ABI dumps.
   auto greader = ReadInputDumpFiles();
 
+  repr::ModuleIR &module = greader->GetModule();
+
   // Link input ABI dumps.
   std::unique_ptr<repr::IRDumper> ir_dumper =
       repr::IRDumper::CreateIRDumper(output_format, out_dump_name_);
@@ -255,9 +255,9 @@ bool HeaderAbiLinker::LinkAndDump() {
     return false;
   }
 
-  if (!LinkTypes(greader.get(), ir_dumper.get()) ||
-      !LinkFunctions(greader.get(), ir_dumper.get()) ||
-      !LinkGlobalVars(greader.get(), ir_dumper.get())) {
+  if (!LinkTypes(module, ir_dumper.get()) ||
+      !LinkFunctions(module, ir_dumper.get()) ||
+      !LinkGlobalVars(module, ir_dumper.get())) {
     llvm::errs() << "Failed to link elements\n";
     return false;
   }
@@ -296,19 +296,18 @@ bool HeaderAbiLinker::LinkDecl(
   return true;
 }
 
-bool HeaderAbiLinker::LinkTypes(const repr::IRReader *reader,
+bool HeaderAbiLinker::LinkTypes(repr::ModuleIR &module,
                                 repr::IRDumper *ir_dumper) {
-  assert(reader != nullptr);
   auto no_filter = [](const std::string &symbol) { return true; };
-  return LinkDecl(ir_dumper, reader->GetRecordTypes(), no_filter) &&
-         LinkDecl(ir_dumper, reader->GetEnumTypes(), no_filter) &&
-         LinkDecl(ir_dumper, reader->GetFunctionTypes(), no_filter) &&
-         LinkDecl(ir_dumper, reader->GetBuiltinTypes(), no_filter) &&
-         LinkDecl(ir_dumper, reader->GetPointerTypes(), no_filter) &&
-         LinkDecl(ir_dumper, reader->GetRvalueReferenceTypes(), no_filter) &&
-         LinkDecl(ir_dumper, reader->GetLvalueReferenceTypes(), no_filter) &&
-         LinkDecl(ir_dumper, reader->GetArrayTypes(), no_filter) &&
-         LinkDecl(ir_dumper, reader->GetQualifiedTypes(), no_filter);
+  return LinkDecl(ir_dumper, module.GetRecordTypes(), no_filter) &&
+         LinkDecl(ir_dumper, module.GetEnumTypes(), no_filter) &&
+         LinkDecl(ir_dumper, module.GetFunctionTypes(), no_filter) &&
+         LinkDecl(ir_dumper, module.GetBuiltinTypes(), no_filter) &&
+         LinkDecl(ir_dumper, module.GetPointerTypes(), no_filter) &&
+         LinkDecl(ir_dumper, module.GetRvalueReferenceTypes(), no_filter) &&
+         LinkDecl(ir_dumper, module.GetLvalueReferenceTypes(), no_filter) &&
+         LinkDecl(ir_dumper, module.GetArrayTypes(), no_filter) &&
+         LinkDecl(ir_dumper, module.GetQualifiedTypes(), no_filter);
 }
 
 bool HeaderAbiLinker::IsSymbolExported(const std::string &name) const {
@@ -321,22 +320,20 @@ bool HeaderAbiLinker::IsSymbolExported(const std::string &name) const {
   return true;
 }
 
-bool HeaderAbiLinker::LinkFunctions(
-    const repr::IRReader *reader, repr::IRDumper *ir_dumper) {
-  assert(reader != nullptr);
+bool HeaderAbiLinker::LinkFunctions(repr::ModuleIR &module,
+                                    repr::IRDumper *ir_dumper) {
   auto symbol_filter = [this](const std::string &linker_set_key) {
     return IsSymbolExported(linker_set_key);
   };
-  return LinkDecl(ir_dumper, reader->GetFunctions(), symbol_filter);
+  return LinkDecl(ir_dumper, module.GetFunctions(), symbol_filter);
 }
 
-bool HeaderAbiLinker::LinkGlobalVars(
-    const repr::IRReader *reader, repr::IRDumper *ir_dumper) {
-  assert(reader != nullptr);
+bool HeaderAbiLinker::LinkGlobalVars(repr::ModuleIR &module,
+                                     repr::IRDumper *ir_dumper) {
   auto symbol_filter = [this](const std::string &linker_set_key) {
     return IsSymbolExported(linker_set_key);
   };
-  return LinkDecl(ir_dumper, reader->GetGlobalVariables(), symbol_filter);
+  return LinkDecl(ir_dumper, module.GetGlobalVariables(), symbol_filter);
 }
 
 template <typename SymbolMap>
