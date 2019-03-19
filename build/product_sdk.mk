@@ -25,29 +25,10 @@
 # packaged in the SDK.
 #
 
-# Host tools and java libraries that are parts of the SDK.
 PRODUCT_PACKAGES += \
-	aapt \
-	aapt2 \
-	adb \
-	aidl \
-	apksigner \
-	bcc_compat \
-	bios.bin \
-	deployagent \
-	dexdump \
-	dmtracedump \
-	dx \
-	etc1tool \
-	hprof-conv \
-	layoutlib-legacy \
-	libaapt2_jni \
-	llvm-rs-cc \
-	sqlite3 \
-	vgabios-cirrus.bin \
-	split-select \
-	zipalign
+	deployagent
 
+# Host tools and java libraries that are parts of the SDK.
 PRODUCT_HOST_PACKAGES += \
 	aapt \
 	aapt2 \
