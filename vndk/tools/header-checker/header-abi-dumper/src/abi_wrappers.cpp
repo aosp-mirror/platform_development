@@ -490,7 +490,7 @@ bool FunctionDeclWrapper::SetupThisParameter(abi_util::FunctionIR *functionp,
   if (!cxx_method_decl || cxx_method_decl->isStatic()) {
     return true;
   }
-  clang::QualType this_type = cxx_method_decl->getThisType(*ast_contextp_);
+  clang::QualType this_type = cxx_method_decl->getThisType();
   return SetupFunctionParameter(functionp, this_type, false, source_file, true);
 }
 
