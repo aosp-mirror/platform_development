@@ -15,6 +15,7 @@
 #include "dumper/ast_processing.h"
 
 #include "dumper/abi_wrappers.h"
+#include "repr/ir_dumper.h"
 
 #include <clang/Lex/Token.h>
 #include <clang/AST/QualTypeNames.h>
@@ -33,11 +34,11 @@ HeaderASTVisitor::HeaderASTVisitor(
     const HeaderCheckerOptions &options, clang::MangleContext *mangle_contextp,
     clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *compiler_instance_p,
-    const clang::Decl *tu_decl, repr::IRDumper *ir_dumper,
+    const clang::Decl *tu_decl, repr::ModuleIR *module,
     ASTCaches *ast_caches)
     : options_(options), mangle_contextp_(mangle_contextp),
       ast_contextp_(ast_contextp), cip_(compiler_instance_p), tu_decl_(tu_decl),
-      ir_dumper_(ir_dumper), ast_caches_(ast_caches) {}
+      module_(module), ast_caches_(ast_caches) {}
 
 bool HeaderASTVisitor::VisitRecordDecl(const clang::RecordDecl *decl) {
   // Avoid segmentation fault in getASTRecordLayout.
@@ -54,7 +55,7 @@ bool HeaderASTVisitor::VisitRecordDecl(const clang::RecordDecl *decl) {
     return true;
   }
   RecordDeclWrapper record_decl_wrapper(
-      mangle_contextp_, ast_contextp_, cip_, decl, ir_dumper_, ast_caches_);
+      mangle_contextp_, ast_contextp_, cip_, decl, module_, ast_caches_);
   return record_decl_wrapper.GetRecordDecl();
 }
 
@@ -65,24 +66,24 @@ bool HeaderASTVisitor::VisitEnumDecl(const clang::EnumDecl *decl) {
     return true;
   }
   EnumDeclWrapper enum_decl_wrapper(
-      mangle_contextp_, ast_contextp_, cip_, decl, ir_dumper_, ast_caches_);
+      mangle_contextp_, ast_contextp_, cip_, decl, module_, ast_caches_);
   return enum_decl_wrapper.GetEnumDecl();
 }
 
 static bool MutateFunctionWithLinkageName(const repr::FunctionIR *function,
-                                          repr::IRDumper *ir_dumper,
+                                          repr::ModuleIR *module,
                                           std::string &linkage_name) {
   auto added_function = std::make_unique<repr::FunctionIR>();
   *added_function = *function;
   added_function->SetLinkerSetKey(linkage_name);
-  return ir_dumper->AddLinkableMessageIR(added_function.get());
+  return module->AddLinkableMessage(*added_function);
 }
 
 static bool AddMangledFunctions(const repr::FunctionIR *function,
-                                repr:: IRDumper *ir_dumper,
+                                repr:: ModuleIR *module,
                                 std::vector<std::string> &manglings) {
   for (auto &&mangling : manglings) {
-    if (!MutateFunctionWithLinkageName(function, ir_dumper, mangling)) {
+    if (!MutateFunctionWithLinkageName(function, module, mangling)) {
       return false;
     }
   }
@@ -131,18 +132,18 @@ bool HeaderASTVisitor::VisitFunctionDecl(const clang::FunctionDecl *decl) {
     return true;
   }
   FunctionDeclWrapper function_decl_wrapper(
-      mangle_contextp_, ast_contextp_, cip_, decl, ir_dumper_, ast_caches_);
+      mangle_contextp_, ast_contextp_, cip_, decl, module_, ast_caches_);
   auto function_wrapper = function_decl_wrapper.GetFunctionDecl();
   // Destructors and Constructors can have more than 1 symbol generated from the
   // same Decl.
   clang::index::CodegenNameGenerator cg(*ast_contextp_);
   std::vector<std::string> manglings = cg.getAllManglings(decl);
   if (!manglings.empty()) {
-    return AddMangledFunctions(function_wrapper.get(), ir_dumper_, manglings);
+    return AddMangledFunctions(function_wrapper.get(), module_, manglings);
   }
   std::string linkage_name =
       ABIWrapper::GetMangledNameDecl(decl, mangle_contextp_);
-  return MutateFunctionWithLinkageName(function_wrapper.get(), ir_dumper_,
+  return MutateFunctionWithLinkageName(function_wrapper.get(), module_,
                                        linkage_name);
 }
 
@@ -153,7 +154,7 @@ bool HeaderASTVisitor::VisitVarDecl(const clang::VarDecl *decl) {
     return true;
   }
   GlobalVarDeclWrapper global_var_decl_wrapper(
-      mangle_contextp_, ast_contextp_, cip_, decl, ir_dumper_, ast_caches_);
+      mangle_contextp_, ast_contextp_, cip_, decl, module_, ast_caches_);
   return global_var_decl_wrapper.GetGlobalVarDecl();
 }
 
@@ -205,14 +206,22 @@ void HeaderASTConsumer::HandleTranslationUnit(clang::ASTContext &ctx) {
   if (!options_.exported_headers_.empty()) {
     options_.exported_headers_.insert(translation_unit_source);
   }
+
+  std::unique_ptr<repr::ModuleIR> module(
+      new repr::ModuleIR(nullptr /*FIXME*/));
+
+  HeaderASTVisitor v(options_, mangle_contextp.get(), &ctx, cip_,
+                     translation_unit, module.get(), &ast_caches);
+  if (!v.TraverseDecl(translation_unit)) {
+    llvm::errs() << "ABI extraction failed\n";
+    ::exit(1);
+  }
+
   std::unique_ptr<repr::IRDumper> ir_dumper =
       repr::IRDumper::CreateIRDumper(options_.text_format_,
                                      options_.dump_name_);
-  HeaderASTVisitor v(options_, mangle_contextp.get(), &ctx, cip_,
-                     translation_unit, ir_dumper.get(), &ast_caches);
-
-  if (!v.TraverseDecl(translation_unit) || !ir_dumper->Dump()) {
-    llvm::errs() << "Serialization to ostream failed\n";
+  if (!ir_dumper->Dump(*module)) {
+    llvm::errs() << "Serialization failed\n";
     ::exit(1);
   }
 }

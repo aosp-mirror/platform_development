@@ -85,11 +85,12 @@ class JsonIRDumper : public IRDumper, public IRToJsonConverter {
 
   ~JsonIRDumper() override {}
 
+  bool Dump(const ModuleIR &module) override;
+
+ private:
   bool AddLinkableMessageIR(const LinkableMessageIR *) override;
 
   bool AddElfSymbolMessageIR(const ElfSymbolIR *) override;
-
-  bool Dump() override;
 
  private:
   JsonObject translation_unit_;

@@ -123,7 +123,7 @@ class HeaderAbiLinker {
 
  private:
   template <typename T>
-  bool LinkDecl(repr::IRDumper *dst,
+  bool LinkDecl(repr::ModuleIR *dst,
                 const repr::AbiElementMap<T> &src,
                 const std::function<bool(const std::string &)> &symbol_filter);
 
@@ -135,19 +135,20 @@ class HeaderAbiLinker {
 
   bool ReadExportedSymbolsFromSharedObjectFile();
 
-  bool LinkTypes(repr::ModuleIR &module, repr::IRDumper *ir_dumper);
+  bool LinkTypes(repr::ModuleIR &module, repr::ModuleIR *linked_module);
 
-  bool LinkFunctions(repr::ModuleIR &module, repr::IRDumper *ir_dumper);
+  bool LinkFunctions(repr::ModuleIR &module, repr::ModuleIR *linked_module);
 
-  bool LinkGlobalVars(repr::ModuleIR &module, repr::IRDumper *ir_dumper);
+  bool LinkGlobalVars(repr::ModuleIR &module, repr::ModuleIR *linked_module);
 
-  bool LinkExportedSymbols(repr::IRDumper *ir_dumper);
+  bool LinkExportedSymbols(repr::ModuleIR *linked_module);
 
-  bool LinkExportedSymbols(repr::IRDumper *ir_dumper,
+  bool LinkExportedSymbols(repr::ModuleIR *linked_module,
                            const repr::ExportedSymbolSet &exported_symbols);
 
   template <typename SymbolMap>
-  bool LinkExportedSymbols(repr::IRDumper *ir_dumper, const SymbolMap &symbols);
+  bool LinkExportedSymbols(repr::ModuleIR *linked_module,
+                           const SymbolMap &symbols);
 
   // Check whether a symbol name is considered as exported.  If both
   // `shared_object_symbols_` and `version_script_symbols_` exists, the symbol
@@ -247,22 +248,25 @@ bool HeaderAbiLinker::LinkAndDump() {
   repr::ModuleIR &module = greader->GetModule();
 
   // Link input ABI dumps.
-  std::unique_ptr<repr::IRDumper> ir_dumper =
-      repr::IRDumper::CreateIRDumper(output_format, out_dump_name_);
-  assert(ir_dumper != nullptr);
+  std::unique_ptr<repr::ModuleIR> linked_module(
+      new repr::ModuleIR(&exported_headers_));
 
-  if (!LinkExportedSymbols(ir_dumper.get())) {
+  if (!LinkExportedSymbols(linked_module.get())) {
     return false;
   }
 
-  if (!LinkTypes(module, ir_dumper.get()) ||
-      !LinkFunctions(module, ir_dumper.get()) ||
-      !LinkGlobalVars(module, ir_dumper.get())) {
+  if (!LinkTypes(module, linked_module.get()) ||
+      !LinkFunctions(module, linked_module.get()) ||
+      !LinkGlobalVars(module, linked_module.get())) {
     llvm::errs() << "Failed to link elements\n";
     return false;
   }
 
-  if (!ir_dumper->Dump()) {
+  // Dump the linked module.
+  std::unique_ptr<repr::IRDumper> ir_dumper =
+      repr::IRDumper::CreateIRDumper(output_format, out_dump_name_);
+  assert(ir_dumper != nullptr);
+  if (!ir_dumper->Dump(*linked_module)) {
     llvm::errs() << "Failed to serialize the linked output to ostream\n";
     return false;
   }
@@ -272,7 +276,7 @@ bool HeaderAbiLinker::LinkAndDump() {
 
 template <typename T>
 bool HeaderAbiLinker::LinkDecl(
-    repr::IRDumper *dst, const repr::AbiElementMap<T> &src,
+    repr::ModuleIR *dst, const repr::AbiElementMap<T> &src,
     const std::function<bool(const std::string &)> &symbol_filter) {
   assert(dst != nullptr);
   for (auto &&element : src) {
@@ -288,7 +292,7 @@ bool HeaderAbiLinker::LinkDecl(
     if (!symbol_filter(element.first)) {
       continue;
     }
-    if (!dst->AddLinkableMessageIR(&(element.second))) {
+    if (!dst->AddLinkableMessage(element.second)) {
       llvm::errs() << "Failed to add element to linked dump\n";
       return false;
     }
@@ -297,17 +301,17 @@ bool HeaderAbiLinker::LinkDecl(
 }
 
 bool HeaderAbiLinker::LinkTypes(repr::ModuleIR &module,
-                                repr::IRDumper *ir_dumper) {
+                                repr::ModuleIR *linked_module) {
   auto no_filter = [](const std::string &symbol) { return true; };
-  return LinkDecl(ir_dumper, module.GetRecordTypes(), no_filter) &&
-         LinkDecl(ir_dumper, module.GetEnumTypes(), no_filter) &&
-         LinkDecl(ir_dumper, module.GetFunctionTypes(), no_filter) &&
-         LinkDecl(ir_dumper, module.GetBuiltinTypes(), no_filter) &&
-         LinkDecl(ir_dumper, module.GetPointerTypes(), no_filter) &&
-         LinkDecl(ir_dumper, module.GetRvalueReferenceTypes(), no_filter) &&
-         LinkDecl(ir_dumper, module.GetLvalueReferenceTypes(), no_filter) &&
-         LinkDecl(ir_dumper, module.GetArrayTypes(), no_filter) &&
-         LinkDecl(ir_dumper, module.GetQualifiedTypes(), no_filter);
+  return LinkDecl(linked_module, module.GetRecordTypes(), no_filter) &&
+         LinkDecl(linked_module, module.GetEnumTypes(), no_filter) &&
+         LinkDecl(linked_module, module.GetFunctionTypes(), no_filter) &&
+         LinkDecl(linked_module, module.GetBuiltinTypes(), no_filter) &&
+         LinkDecl(linked_module, module.GetPointerTypes(), no_filter) &&
+         LinkDecl(linked_module, module.GetRvalueReferenceTypes(), no_filter) &&
+         LinkDecl(linked_module, module.GetLvalueReferenceTypes(), no_filter) &&
+         LinkDecl(linked_module, module.GetArrayTypes(), no_filter) &&
+         LinkDecl(linked_module, module.GetQualifiedTypes(), no_filter);
 }
 
 bool HeaderAbiLinker::IsSymbolExported(const std::string &name) const {
@@ -321,29 +325,29 @@ bool HeaderAbiLinker::IsSymbolExported(const std::string &name) const {
 }
 
 bool HeaderAbiLinker::LinkFunctions(repr::ModuleIR &module,
-                                    repr::IRDumper *ir_dumper) {
+                                    repr::ModuleIR *linked_module) {
   auto symbol_filter = [this](const std::string &linker_set_key) {
     return IsSymbolExported(linker_set_key);
   };
-  return LinkDecl(ir_dumper, module.GetFunctions(), symbol_filter);
+  return LinkDecl(linked_module, module.GetFunctions(), symbol_filter);
 }
 
 bool HeaderAbiLinker::LinkGlobalVars(repr::ModuleIR &module,
-                                     repr::IRDumper *ir_dumper) {
+                                     repr::ModuleIR *linked_module) {
   auto symbol_filter = [this](const std::string &linker_set_key) {
     return IsSymbolExported(linker_set_key);
   };
-  return LinkDecl(ir_dumper, module.GetGlobalVariables(), symbol_filter);
+  return LinkDecl(linked_module, module.GetGlobalVariables(), symbol_filter);
 }
 
 template <typename SymbolMap>
-bool HeaderAbiLinker::LinkExportedSymbols(repr::IRDumper *dst,
+bool HeaderAbiLinker::LinkExportedSymbols(repr::ModuleIR *dst,
                                           const SymbolMap &symbols) {
   for (auto &&symbol : symbols) {
     if (!IsSymbolExported(symbol.first)) {
       continue;
     }
-    if (!dst->AddElfSymbolMessageIR(&(symbol.second))) {
+    if (!dst->AddElfSymbol(symbol.second)) {
       return false;
     }
   }
@@ -351,19 +355,19 @@ bool HeaderAbiLinker::LinkExportedSymbols(repr::IRDumper *dst,
 }
 
 bool HeaderAbiLinker::LinkExportedSymbols(
-    repr::IRDumper *ir_dumper,
+    repr::ModuleIR *linked_module,
     const repr::ExportedSymbolSet &exported_symbols) {
-  return (LinkExportedSymbols(ir_dumper, exported_symbols.GetFunctions()) &&
-          LinkExportedSymbols(ir_dumper, exported_symbols.GetVars()));
+  return (LinkExportedSymbols(linked_module, exported_symbols.GetFunctions()) &&
+          LinkExportedSymbols(linked_module, exported_symbols.GetVars()));
 }
 
-bool HeaderAbiLinker::LinkExportedSymbols(repr::IRDumper *ir_dumper) {
+bool HeaderAbiLinker::LinkExportedSymbols(repr::ModuleIR *linked_module) {
   if (shared_object_symbols_) {
-    return LinkExportedSymbols(ir_dumper, *shared_object_symbols_);
+    return LinkExportedSymbols(linked_module, *shared_object_symbols_);
   }
 
   if (version_script_symbols_) {
-    return LinkExportedSymbols(ir_dumper, *version_script_symbols_);
+    return LinkExportedSymbols(linked_module, *version_script_symbols_);
   }
 
   return false;

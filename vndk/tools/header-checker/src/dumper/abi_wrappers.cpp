@@ -14,7 +14,6 @@
 
 #include "dumper/abi_wrappers.h"
 
-#include "repr/ir_dumper.h"
 #include "repr/ir_reader.h"
 #include "utils/header_abi_util.h"
 
@@ -36,12 +35,12 @@ ABIWrapper::ABIWrapper(
     clang::MangleContext *mangle_contextp,
     clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *cip,
-    repr::IRDumper *ir_dumper,
+    repr::ModuleIR *module,
     ASTCaches *ast_caches)
     : cip_(cip),
       mangle_contextp_(mangle_contextp),
       ast_contextp_(ast_contextp),
-      ir_dumper_(ir_dumper),
+      module_(module),
       ast_caches_(ast_caches) {}
 
 std::string ABIWrapper::GetCachedDeclSourceFile(
@@ -177,7 +176,7 @@ static repr::AccessSpecifierIR AccessClangToIR(
 
 bool ABIWrapper::CreateAnonymousRecord(const clang::RecordDecl *record_decl) {
   RecordDeclWrapper record_decl_wrapper(mangle_contextp_, ast_contextp_, cip_,
-                                        record_decl, ir_dumper_, ast_caches_);
+                                        record_decl, module_, ast_caches_);
   return record_decl_wrapper.GetRecordDecl();
 }
 
@@ -239,7 +238,7 @@ bool ABIWrapper::CreateBasicNamedAndTypedDecl(clang::QualType qual_type,
   }
   return (CreateBasicNamedAndTypedDecl(
               canonical_type, typep.get(), source_file) &&
-          ir_dumper_->AddLinkableMessageIR(typep.get()));
+          module_->AddLinkableMessage(*typep));
 }
 
 std::string RecordDeclWrapper::GetMangledRTTI(
@@ -359,7 +358,7 @@ TypeAndCreationStatus ABIWrapper::SetTypeKind(
   if (auto &&func_type_ptr =
           llvm::dyn_cast<const clang::FunctionType>(type_ptr)) {
     FunctionTypeWrapper function_type_wrapper(mangle_contextp_, ast_contextp_,
-                                              cip_, func_type_ptr, ir_dumper_,
+                                              cip_, func_type_ptr, module_,
                                               ast_caches_, source_file);
     if (!function_type_wrapper.GetFunctionType()) {
       llvm::errs() << "FunctionType could not be created\n";
@@ -437,9 +436,9 @@ std::string ABIWrapper::QualTypeToString(const clang::QualType &sweet_qt) {
 FunctionTypeWrapper::FunctionTypeWrapper(
     clang::MangleContext *mangle_contextp, clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *compiler_instance_p,
-    const clang::FunctionType *function_type, repr::IRDumper *ir_dumper,
+    const clang::FunctionType *function_type, repr::ModuleIR *module,
     ASTCaches *ast_caches, const std::string &source_file)
-    : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p, ir_dumper,
+    : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p, module,
                  ast_caches),
       function_type_(function_type),
       source_file_(source_file) {}
@@ -473,7 +472,7 @@ bool FunctionTypeWrapper::GetFunctionType() {
     return false;
   }
   return SetupFunctionType(abi_decl.get()) &&
-      ir_dumper_->AddLinkableMessageIR(abi_decl.get());
+      module_->AddLinkableMessage(*abi_decl);
 }
 
 FunctionDeclWrapper::FunctionDeclWrapper(
@@ -481,9 +480,9 @@ FunctionDeclWrapper::FunctionDeclWrapper(
     clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *compiler_instance_p,
     const clang::FunctionDecl *decl,
-    repr::IRDumper *ir_dumper,
+    repr::ModuleIR *module,
     ASTCaches *ast_caches)
-    : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p, ir_dumper,
+    : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p, module,
                  ast_caches),
       function_decl_(decl) {}
 
@@ -585,9 +584,9 @@ RecordDeclWrapper::RecordDeclWrapper(
     clang::MangleContext *mangle_contextp,
     clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *compiler_instance_p,
-    const clang::RecordDecl *decl, repr::IRDumper *ir_dumper,
+    const clang::RecordDecl *decl, repr::ModuleIR *module,
     ASTCaches *ast_caches)
-    : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p, ir_dumper,
+    : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p, module,
                  ast_caches),
       record_decl_(decl) {}
 
@@ -856,16 +855,16 @@ bool RecordDeclWrapper::GetRecordDecl() {
     // cached, don't add the record.
     return true;
   }
-  return ir_dumper_->AddLinkableMessageIR(abi_decl.get());
+  return module_->AddLinkableMessage(*abi_decl);
 }
 
 EnumDeclWrapper::EnumDeclWrapper(
     clang::MangleContext *mangle_contextp,
     clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *compiler_instance_p,
-    const clang::EnumDecl *decl, repr::IRDumper *ir_dumper,
+    const clang::EnumDecl *decl, repr::ModuleIR *module,
     ASTCaches *ast_caches)
-    : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p, ir_dumper,
+    : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p, module,
                  ast_caches),
       enum_decl_(decl) {}
 
@@ -908,16 +907,16 @@ bool EnumDeclWrapper::GetEnumDecl() {
     llvm::errs() << "Setting up Enum failed\n";
     return false;
   }
-  return ir_dumper_->AddLinkableMessageIR(abi_decl.get());
+  return module_->AddLinkableMessage(*abi_decl);
 }
 
 GlobalVarDeclWrapper::GlobalVarDeclWrapper(
     clang::MangleContext *mangle_contextp,
     clang::ASTContext *ast_contextp,
     const clang::CompilerInstance *compiler_instance_p,
-    const clang::VarDecl *decl, repr::IRDumper *ir_dumper,
+    const clang::VarDecl *decl, repr::ModuleIR *module,
     ASTCaches *ast_caches)
-    : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p, ir_dumper,
+    : ABIWrapper(mangle_contextp, ast_contextp, compiler_instance_p, module,
                  ast_caches),
       global_var_decl_(decl) {}
 
@@ -943,7 +942,7 @@ bool GlobalVarDeclWrapper::GetGlobalVarDecl() {
   auto abi_decl = std::make_unique<repr::GlobalVarIR>();
   std::string source_file = GetCachedDeclSourceFile(global_var_decl_, cip_);
   return SetupGlobalVar(abi_decl.get(), source_file) &&
-      ir_dumper_->AddLinkableMessageIR(abi_decl.get());
+      module_->AddLinkableMessage(*abi_decl);
 }
 
 

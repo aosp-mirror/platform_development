@@ -33,11 +33,14 @@ class IRDumper {
   static std::unique_ptr<IRDumper> CreateIRDumper(
       TextFormatIR text_format, const std::string &dump_path);
 
+  virtual bool Dump(const ModuleIR &module) = 0;
+
+ protected:
+  bool DumpModule(const ModuleIR &module);
+
   virtual bool AddLinkableMessageIR(const LinkableMessageIR *) = 0;
 
   virtual bool AddElfSymbolMessageIR(const ElfSymbolIR *) = 0;
-
-  virtual bool Dump() = 0;
 
  protected:
   const std::string &dump_path_;

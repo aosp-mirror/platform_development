@@ -841,6 +841,8 @@ class ModuleIR {
   }
 
 
+  bool AddLinkableMessage(const LinkableMessageIR &);
+
   void AddFunction(FunctionIR &&function);
 
   void AddGlobalVariable(GlobalVarIR &&global_var);
@@ -862,6 +864,8 @@ class ModuleIR {
   void AddPointerType(PointerTypeIR &&pointer_type);
 
   void AddBuiltinType(BuiltinTypeIR &&builtin_type);
+
+  bool AddElfSymbol(const ElfSymbolIR &);
 
   void AddElfFunction(ElfFunctionIR &&elf_function);
 

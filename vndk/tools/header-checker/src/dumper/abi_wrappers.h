@@ -16,7 +16,6 @@
 #define ABI_WRAPPERS_H_
 
 #include "dumper/ast_util.h"
-#include "repr/ir_dumper.h"
 #include "repr/ir_representation.h"
 
 #include <clang/AST/AST.h>
@@ -44,7 +43,7 @@ class ABIWrapper {
   ABIWrapper(clang::MangleContext *mangle_contextp,
              clang::ASTContext *ast_contextp,
              const clang::CompilerInstance *cip,
-             repr::IRDumper *ir_dumper,
+             repr::ModuleIR *module,
              ASTCaches *ast_caches);
 
   static std::string GetDeclSourceFile(const clang::Decl *decl,
@@ -98,7 +97,7 @@ class ABIWrapper {
   const clang::CompilerInstance *cip_;
   clang::MangleContext *mangle_contextp_;
   clang::ASTContext *ast_contextp_;
-  repr::IRDumper *ir_dumper_;
+  repr::ModuleIR *module_;
   ASTCaches *ast_caches_;
 };
 
@@ -108,7 +107,7 @@ class RecordDeclWrapper : public ABIWrapper {
   RecordDeclWrapper(
       clang::MangleContext *mangle_contextp, clang::ASTContext *ast_contextp,
       const clang::CompilerInstance *compiler_instance_p,
-      const clang::RecordDecl *record_decl, repr::IRDumper *ir_dumper,
+      const clang::RecordDecl *record_decl, repr::ModuleIR *module,
       ASTCaches *ast_caches);
 
   bool GetRecordDecl();
@@ -149,7 +148,7 @@ class FunctionDeclWrapper : public ABIWrapper {
   FunctionDeclWrapper(
       clang::MangleContext *mangle_contextp, clang::ASTContext *ast_contextp,
       const clang::CompilerInstance *compiler_instance_p,
-      const clang::FunctionDecl *decl, repr::IRDumper *ir_dumper,
+      const clang::FunctionDecl *decl, repr::ModuleIR *module,
       ASTCaches *ast_caches);
 
   std::unique_ptr<repr::FunctionIR> GetFunctionDecl();
@@ -180,7 +179,7 @@ class FunctionTypeWrapper : public ABIWrapper {
   FunctionTypeWrapper(
       clang::MangleContext *mangle_contextp, clang::ASTContext *ast_contextp,
       const clang::CompilerInstance *compiler_instance_p,
-      const clang::FunctionType *function_type, repr::IRDumper *ir_dumper,
+      const clang::FunctionType *function_type, repr::ModuleIR *module,
       ASTCaches *ast_caches, const std::string &source_file);
 
   bool GetFunctionType();
@@ -196,7 +195,7 @@ class EnumDeclWrapper : public ABIWrapper {
   EnumDeclWrapper(
       clang::MangleContext *mangle_contextp, clang::ASTContext *ast_contextp,
       const clang::CompilerInstance *compiler_instance_p,
-      const clang::EnumDecl *decl, repr::IRDumper *ir_dumper,
+      const clang::EnumDecl *decl, repr::ModuleIR *module,
       ASTCaches *ast_caches);
 
   bool GetEnumDecl();
@@ -217,7 +216,7 @@ class GlobalVarDeclWrapper : public ABIWrapper {
   GlobalVarDeclWrapper(
       clang::MangleContext *mangle_contextp, clang::ASTContext *ast_contextp,
       const clang::CompilerInstance *compiler_instance_p,
-      const clang::VarDecl *decl, repr::IRDumper *ir_dumper,
+      const clang::VarDecl *decl, repr::ModuleIR *module,
       ASTCaches *ast_caches);
 
   bool GetGlobalVarDecl();

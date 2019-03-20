@@ -24,6 +24,67 @@ namespace header_checker {
 namespace repr {
 
 
+template <typename T, typename U>
+static inline T CreateTemp(const U &lm) {
+  // Cast source const reference to destination const reference and then create
+  // a temporary copy.
+  return static_cast<const T &>(lm);
+}
+
+
+bool ModuleIR::AddLinkableMessage(const LinkableMessageIR &lm) {
+  switch (lm.GetKind()) {
+    case RecordTypeKind:
+      AddRecordType(CreateTemp<RecordTypeIR>(lm));
+      return true;
+    case EnumTypeKind:
+      AddEnumType(CreateTemp<EnumTypeIR>(lm));
+      return true;
+    case PointerTypeKind:
+      AddPointerType(CreateTemp<PointerTypeIR>(lm));
+      return true;
+    case QualifiedTypeKind:
+      AddQualifiedType(CreateTemp<QualifiedTypeIR>(lm));
+      return true;
+    case ArrayTypeKind:
+      AddArrayType(CreateTemp<ArrayTypeIR>(lm));
+      return true;
+    case LvalueReferenceTypeKind:
+      AddLvalueReferenceType(CreateTemp<LvalueReferenceTypeIR>(lm));
+      return true;
+    case RvalueReferenceTypeKind:
+      AddRvalueReferenceType(CreateTemp<RvalueReferenceTypeIR>(lm));
+      return true;
+    case BuiltinTypeKind:
+      AddBuiltinType(CreateTemp<BuiltinTypeIR>(lm));
+      return true;
+    case FunctionTypeKind:
+      AddFunctionType(CreateTemp<FunctionTypeIR>(lm));
+      return true;
+    case GlobalVarKind:
+      AddGlobalVariable(CreateTemp<GlobalVarIR>(lm));
+      return true;
+    case FunctionKind:
+      AddFunction(CreateTemp<FunctionIR>(lm));
+      return true;
+  }
+  return false;
+}
+
+
+bool ModuleIR::AddElfSymbol(const ElfSymbolIR &elf_symbol) {
+  switch (elf_symbol.GetKind()) {
+    case ElfSymbolIR::ElfFunctionKind:
+      AddElfFunction(CreateTemp<ElfFunctionIR>(elf_symbol));
+      return true;
+    case ElfSymbolIR::ElfObjectKind:
+      AddElfObject(CreateTemp<ElfObjectIR>(elf_symbol));
+      return true;
+  }
+  return false;
+}
+
+
 void ModuleIR::AddFunction(FunctionIR &&function) {
   if (!IsLinkableMessageInExportedHeaders(&function)) {
     return;

@@ -399,7 +399,8 @@ static void WriteTailTrimmedLinesToFile(const std::string &path,
   }
 }
 
-bool JsonIRDumper::Dump() {
+bool JsonIRDumper::Dump(const ModuleIR &module) {
+  DumpModule(module);
   std::string output_string = DumpJson(translation_unit_);
   WriteTailTrimmedLinesToFile(dump_path_, output_string);
   return true;

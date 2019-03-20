@@ -17,7 +17,6 @@
 
 #include "dumper/ast_util.h"
 #include "dumper/header_checker.h"
-#include "repr/ir_dumper.h"
 
 #include <clang/AST/AST.h>
 #include <clang/AST/ASTConsumer.h>
@@ -41,7 +40,7 @@ class HeaderASTVisitor
                    clang::ASTContext *ast_contextp,
                    const clang::CompilerInstance *compiler_instance_p,
                    const clang::Decl *tu_decl,
-                   repr::IRDumper *ir_dumper,
+                   repr::ModuleIR *module,
                    ASTCaches *ast_caches);
 
   bool VisitRecordDecl(const clang::RecordDecl *decl);
@@ -66,7 +65,7 @@ class HeaderASTVisitor
   const clang::CompilerInstance *cip_;
   // To optimize recursion into only exported abi.
   const clang::Decl *tu_decl_;
-  repr::IRDumper *ir_dumper_;
+  repr::ModuleIR *module_;
   // We cache the source file an AST node corresponds to, to avoid repeated
   // calls to "realpath".
   ASTCaches *ast_caches_;

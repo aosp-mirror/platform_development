@@ -483,8 +483,9 @@ bool ProtobufIRDumper::AddRvalueReferenceTypeIR(
   return true;
 }
 
-bool ProtobufIRDumper::Dump() {
+bool ProtobufIRDumper::Dump(const ModuleIR &module) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
+  DumpModule(module);
   assert( tu_ptr_.get() != nullptr);
   std::ofstream text_output(dump_path_);
   google::protobuf::io::OstreamOutputStream text_os(&text_output);
