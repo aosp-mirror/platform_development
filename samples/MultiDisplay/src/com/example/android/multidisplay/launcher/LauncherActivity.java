@@ -23,20 +23,17 @@ import android.animation.AnimatorListenerAdapter;
 import android.app.ActivityOptions;
 import android.app.AlertDialog;
 import android.app.Application;
-import android.content.Context;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.hardware.display.DisplayManager;
 import android.os.Bundle;
-import com.google.android.material.circularreveal.cardview.CircularRevealCardView;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import android.view.Display;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewAnimationUtils;
-import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
@@ -46,20 +43,18 @@ import android.widget.ImageButton;
 import android.widget.PopupMenu;
 import android.widget.Spinner;
 
-import com.example.android.multidisplay.R;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory;
+
+import com.example.android.multidisplay.R;
+import com.google.android.material.circularreveal.cardview.CircularRevealCardView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Main launcher activity. It's launch mode is configured as "singleTop" to allow showing on
@@ -188,6 +183,16 @@ public class LauncherActivity extends FragmentActivity implements AppPickedCallb
 
     public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+
+        if (Intent.ACTION_MAIN.equals(intent.getAction())) {
+            // Hide keyboard.
+            final View v = getWindow().peekDecorView();
+            if (v != null && v.getWindowToken() != null) {
+                getSystemService(InputMethodManager.class).hideSoftInputFromWindow(
+                        v.getWindowToken(), 0);
+            }
+        }
+
         // A new intent will bring the launcher to top. Hide the app drawer to reset the state.
         showAppDrawer(false);
     }
