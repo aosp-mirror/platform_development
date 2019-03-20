@@ -279,58 +279,6 @@ pointer_types {
 }
 builtin_types {
   type_info {
-    name: "int"
-    size: 4
-    alignment: 4
-    referenced_type: "type-2"
-    source_file: ""
-    linker_set_key: "int"
-    self_type: "type-2"
-  }
-  is_unsigned: false
-  is_integral: true
-}
-builtin_types {
-  type_info {
-    name: "float"
-    size: 4
-    alignment: 4
-    referenced_type: "type-3"
-    source_file: ""
-    linker_set_key: "float"
-    self_type: "type-3"
-  }
-  is_unsigned: false
-  is_integral: false
-}
-builtin_types {
-  type_info {
-    name: "void"
-    size: 0
-    alignment: 0
-    referenced_type: "type-7"
-    source_file: ""
-    linker_set_key: "void"
-    self_type: "type-7"
-  }
-  is_unsigned: false
-  is_integral: false
-}
-builtin_types {
-  type_info {
-    name: "unsigned int"
-    size: 4
-    alignment: 4
-    referenced_type: "type-9"
-    source_file: ""
-    linker_set_key: "unsigned int"
-    self_type: "type-9"
-  }
-  is_unsigned: true
-  is_integral: true
-}
-builtin_types {
-  type_info {
     name: "bool"
     size: 1
     alignment: 1
@@ -351,6 +299,58 @@ builtin_types {
     source_file: ""
     linker_set_key: "double"
     self_type: "type-14"
+  }
+  is_unsigned: false
+  is_integral: false
+}
+builtin_types {
+  type_info {
+    name: "float"
+    size: 4
+    alignment: 4
+    referenced_type: "type-3"
+    source_file: ""
+    linker_set_key: "float"
+    self_type: "type-3"
+  }
+  is_unsigned: false
+  is_integral: false
+}
+builtin_types {
+  type_info {
+    name: "int"
+    size: 4
+    alignment: 4
+    referenced_type: "type-2"
+    source_file: ""
+    linker_set_key: "int"
+    self_type: "type-2"
+  }
+  is_unsigned: false
+  is_integral: true
+}
+builtin_types {
+  type_info {
+    name: "unsigned int"
+    size: 4
+    alignment: 4
+    referenced_type: "type-9"
+    source_file: ""
+    linker_set_key: "unsigned int"
+    self_type: "type-9"
+  }
+  is_unsigned: true
+  is_integral: true
+}
+builtin_types {
+  type_info {
+    name: "void"
+    size: 0
+    alignment: 0
+    referenced_type: "type-7"
+    source_file: ""
+    linker_set_key: "void"
+    self_type: "type-7"
   }
   is_unsigned: false
   is_integral: false
@@ -401,7 +401,7 @@ functions {
     default_arg: false
     is_this_ptr: true
   }
-  linker_set_key: "_ZN5test210HelloAgainD2Ev"
+  linker_set_key: "_ZN5test210HelloAgainD0Ev"
   access: public_access
 }
 functions {
@@ -425,7 +425,61 @@ functions {
     default_arg: false
     is_this_ptr: true
   }
-  linker_set_key: "_ZN5test210HelloAgainD0Ev"
+  linker_set_key: "_ZN5test210HelloAgainD2Ev"
+  access: public_access
+}
+functions {
+  return_type: "type-12"
+  function_name: "test3::End"
+  source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+  parameters {
+    referenced_type: "type-3"
+    default_arg: true
+    is_this_ptr: false
+  }
+  linker_set_key: "_ZN5test33EndEf"
+  access: public_access
+}
+functions {
+  return_type: "type-12"
+  function_name: "test3::Begin"
+  source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+  parameters {
+    referenced_type: "type-3"
+    default_arg: false
+    is_this_ptr: false
+  }
+  parameters {
+    referenced_type: "type-2"
+    default_arg: false
+    is_this_ptr: false
+  }
+  parameters {
+    referenced_type: "type-2"
+    default_arg: false
+    is_this_ptr: false
+  }
+  template_info {
+    elements {
+      referenced_type: "type-3"
+    }
+    elements {
+      referenced_type: "type-2"
+    }
+  }
+  linker_set_key: "_ZN5test35BeginIfiEEbT_T0_i"
+  access: public_access
+}
+functions {
+  return_type: "type-21"
+  function_name: "test3::Dummy"
+  source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+  parameters {
+    referenced_type: "type-2"
+    default_arg: false
+    is_this_ptr: false
+  }
+  linker_set_key: "_ZN5test35DummyEi"
   access: public_access
 }
 functions {
@@ -462,58 +516,11 @@ functions {
   linker_set_key: "_ZN5test38ByeAgainIfE10method_fooEi"
   access: public_access
 }
-functions {
-  return_type: "type-12"
-  function_name: "test3::Begin"
+global_vars {
+  name: "__test_var"
   source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-  parameters {
-    referenced_type: "type-3"
-    default_arg: false
-    is_this_ptr: false
-  }
-  parameters {
-    referenced_type: "type-2"
-    default_arg: false
-    is_this_ptr: false
-  }
-  parameters {
-    referenced_type: "type-2"
-    default_arg: false
-    is_this_ptr: false
-  }
-  template_info {
-    elements {
-      referenced_type: "type-3"
-    }
-    elements {
-      referenced_type: "type-2"
-    }
-  }
-  linker_set_key: "_ZN5test35BeginIfiEEbT_T0_i"
-  access: public_access
-}
-functions {
-  return_type: "type-12"
-  function_name: "test3::End"
-  source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-  parameters {
-    referenced_type: "type-3"
-    default_arg: true
-    is_this_ptr: false
-  }
-  linker_set_key: "_ZN5test33EndEf"
-  access: public_access
-}
-functions {
-  return_type: "type-21"
-  function_name: "test3::Dummy"
-  source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-  parameters {
-    referenced_type: "type-2"
-    default_arg: false
-    is_this_ptr: false
-  }
-  linker_set_key: "_ZN5test35DummyEi"
+  linker_set_key: "_ZL10__test_var"
+  referenced_type: "type-11"
   access: public_access
 }
 global_vars {
@@ -524,10 +531,10 @@ global_vars {
   access: public_access
 }
 global_vars {
-  name: "__test_var"
+  name: "test3::double_bye"
   source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-  linker_set_key: "_ZL10__test_var"
-  referenced_type: "type-11"
+  linker_set_key: "_ZN5test310double_byeE"
+  referenced_type: "type-13"
   access: public_access
 }
 global_vars {
@@ -535,12 +542,5 @@ global_vars {
   source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
   linker_set_key: "_ZN5test38ByeAgainIfE11foo_foreverE"
   referenced_type: "type-2"
-  access: public_access
-}
-global_vars {
-  name: "test3::double_bye"
-  source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-  linker_set_key: "_ZN5test310double_byeE"
-  referenced_type: "type-13"
   access: public_access
 }
