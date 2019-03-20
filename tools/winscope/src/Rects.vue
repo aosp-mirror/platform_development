@@ -65,7 +65,7 @@ export default {
       var w = this.s(r.right) - this.s(r.left);
       var h = this.s(r.bottom) - this.s(r.top);
       var t = r.transform;
-      var tr = t ? `matrix(${t.dsdx}, ${t.dtdx}, ${t.dsdy}, ${t.dtdy}, 0, 0)` : '';
+      var tr = t ? `matrix(${t.dsdx}, ${t.dtdx}, ${t.dsdy}, ${t.dtdy}, ${this.s(t.tx)}, ${this.s(t.ty)})` : '';
       return `top: ${y}px; left: ${x}px; height: ${h}px; width: ${w}px;` +
              `transform: ${tr}; transform-origin: 0 0;`
     },

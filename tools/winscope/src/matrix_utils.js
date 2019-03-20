@@ -25,7 +25,26 @@ const FLIP_V_VAL      = 0x0200; // (1 << 1 << 8)
 const ROT_90_VAL      = 0x0400; // (1 << 2 << 8)
 const ROT_INVALID_VAL = 0x8000; // (0x80 << 8)
 
+function is_proto_2(transform) {
+  /*
+  * Checks if the loaded file was a stored with ProtoBuf2 or Protobuf3
+  *
+  * Proto2 files don't have a Type for the transform object but all other
+  * fields of the transform are set.
+  *
+  * Proto3 has a type field for the transform but doesn't store default
+  * values (0 for transform type), also, the framework/native implementation
+  * doesn't write a transform in case it is an identity matrix.
+  */
+  var propertyNames = Object.getOwnPropertyNames(transform);
+  return (!propertyNames.includes("type") && propertyNames.includes("dsdx"));
+}
+
 function is_simple_transform(transform) {
+  transform = transform || {};
+  if (is_proto_2(transform)) {
+    return false;
+  }
   return is_type_flag_clear(transform, ROT_INVALID_VAL|SCALE_VAL);
 }
 
@@ -36,6 +55,10 @@ function is_simple_transform(transform) {
  * @param {*} transform Transform object ot be converter
  */
 function format_transform_type(transform) {
+  if (is_proto_2(transform)) {
+    return "";
+  }
+
   if (is_type_flag_clear(transform, SCALE_VAL | ROTATE_VAL | TRANSLATE_VAL)) {
     return "IDENTITY";
   }
@@ -122,17 +145,7 @@ function fill_transform_data(transform) {
     return;
   }
 
-  /*
-  * Checks if the loaded file was a stored with ProtoBuf2 or Protobuf3
-  *
-  * Proto2 files don't have a Type for the transform object but all other
-  * fields of the transform are set.
-  *
-  * Proto3 has a type field for the transform but doesn't store default
-  * values (0 for transform type), also, the framework/native implementation
-  * doesn't write a transform in case it is an identity matrix.
-  */
-  if ((transform.type == undefined) && (transform.dsdx != undefined)) {
+  if (is_proto_2(transform)) {
     return;
   }
 
