@@ -28,19 +28,6 @@ record_types {
 }
 builtin_types {
   type_info {
-    name: "int"
-    size: 4
-    alignment: 4
-    referenced_type: "type-2"
-    source_file: ""
-    linker_set_key: "int"
-    self_type: "type-2"
-  }
-  is_unsigned: false
-  is_integral: true
-}
-builtin_types {
-  type_info {
     name: "float"
     size: 4
     alignment: 4
@@ -51,4 +38,17 @@ builtin_types {
   }
   is_unsigned: false
   is_integral: false
+}
+builtin_types {
+  type_info {
+    name: "int"
+    size: 4
+    alignment: 4
+    referenced_type: "type-2"
+    source_file: ""
+    linker_set_key: "int"
+    self_type: "type-2"
+  }
+  is_unsigned: false
+  is_integral: true
 }
