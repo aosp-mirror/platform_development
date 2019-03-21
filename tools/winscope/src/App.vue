@@ -235,6 +235,7 @@ export default {
 
             if (fieldProperties.type === 'TransformProto'){
               fill_transform_data(protoObj[fieldName]);
+              continue;
             }
 
             if (fieldProperties.resolvedType && fieldProperties.resolvedType.valuesById) {
