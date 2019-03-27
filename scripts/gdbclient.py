@@ -29,11 +29,11 @@ import textwrap
 import gdbrunner
 
 def get_gdbserver_path(root, arch):
-    path = "{}/prebuilts/misc/android-{}/gdbserver{}/gdbserver{}"
+    path = "{}/prebuilts/misc/gdbserver/android-{}/gdbserver{}"
     if arch.endswith("64"):
-        return path.format(root, arch, "64", "64")
+        return path.format(root, arch, "64")
     else:
-        return path.format(root, arch, "", "")
+        return path.format(root, arch, "")
 
 
 def get_tracer_pid(device, pid):
