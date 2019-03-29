@@ -1,4 +1,7 @@
 Path,Tag,Comments
+/apex/com.android.runtime/${LIB}/bionic/libc.so,LL-NDK,
+/apex/com.android.runtime/${LIB}/bionic/libdl.so,LL-NDK,
+/apex/com.android.runtime/${LIB}/bionic/libm.so,LL-NDK,
 /system/${LIB}/android.frameworks.cameraservice.common@2.0.so,VNDK,
 /system/${LIB}/android.frameworks.cameraservice.device@2.0.so,VNDK,
 /system/${LIB}/android.frameworks.cameraservice.service@2.0.so,VNDK,
