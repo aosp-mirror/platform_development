@@ -303,8 +303,6 @@ bool ABIWrapper::CreateBasicNamedAndTypedDecl(
   typep->SetName(type_name_with_destination);
   typep->SetLinkerSetKey(type_name_with_destination);
 
-  // Default values are false, we don't set them since explicitly doing that
-  // makes the ABI dumps more verbose.
   // This type has a reference type if its a pointer / reference OR it has CVR
   // qualifiers.
   clang::QualType referenced_type = GetReferencedType(canonical_type);
