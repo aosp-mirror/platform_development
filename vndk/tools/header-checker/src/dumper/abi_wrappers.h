@@ -86,8 +86,6 @@ class ABIWrapper {
 
   bool CreateAnonymousRecord(const clang::RecordDecl *decl);
 
-  std::string GetTypeLinkageName(const clang::Type *typep);
-
   TypeAndCreationStatus SetTypeKind(const clang::QualType qtype,
                                     const std::string &source_file);
 

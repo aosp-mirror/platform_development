@@ -303,12 +303,6 @@ bool ABIWrapper::CreateBasicNamedAndTypedDecl(
   return CreateBasicNamedAndTypedDecl(referenced_type, source_file);
 }
 
-std::string ABIWrapper::GetTypeLinkageName(const clang::Type *typep) {
-  assert(typep != nullptr);
-  clang::QualType qt = typep->getCanonicalTypeInternal();
-  return QualTypeToString(qt);
-}
-
 // This method returns a TypeAndCreationStatus object. This object contains a
 // type and information to tell the clients of this method whether the caller
 // should continue creating the type.
