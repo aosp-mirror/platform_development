@@ -117,8 +117,7 @@ bool ABIWrapper::SetupTemplateArguments(const clang::TemplateArgumentList *tl,
     }
     clang::QualType type = arg.getAsType();
     template_info.AddTemplateElement(
-        repr::TemplateElementIR(
-            ast_caches_->GetTypeId(GetKeyForTypeId(type))));
+        repr::TemplateElementIR(GetTypeId(type)));
     if (!CreateBasicNamedAndTypedDecl(type, source_file)) {
       llvm::errs() << "Setting up template arguments failed\n";
       return false;
@@ -136,8 +135,7 @@ bool ABIWrapper::SetupFunctionParameter(
     return false;
   }
   functionp->AddParameter(repr::ParamIR(
-      ast_caches_->GetTypeId(GetKeyForTypeId(qual_type)), has_default_arg,
-      is_this_ptr));
+      GetTypeId(qual_type), has_default_arg, is_this_ptr));
   return true;
 }
 
@@ -236,6 +234,10 @@ std::string ABIWrapper::TypeNameWithFinalDestination(
   return qual_type_name;
 }
 
+std::string ABIWrapper::GetTypeId(clang::QualType qual_type) {
+  return ast_caches_->GetTypeId(GetKeyForTypeId(qual_type));
+}
+
 std::string ABIWrapper::GetKeyForTypeId(clang::QualType qual_type) {
   clang::QualType canonical_qual_type = qual_type.getCanonicalType();
   clang::QualType final_destination_type =
@@ -306,10 +308,9 @@ bool ABIWrapper::CreateBasicNamedAndTypedDecl(
   // This type has a reference type if its a pointer / reference OR it has CVR
   // qualifiers.
   clang::QualType referenced_type = GetReferencedType(canonical_type);
-  typep->SetReferencedType(
-      ast_caches_->GetTypeId(GetKeyForTypeId(referenced_type)));
+  typep->SetReferencedType(GetTypeId(referenced_type));
 
-  typep->SetSelfType(ast_caches_->GetTypeId(GetKeyForTypeId(canonical_type)));
+  typep->SetSelfType(GetTypeId(canonical_type));
 
   // Create the type for referenced type.
   return CreateBasicNamedAndTypedDecl(referenced_type, source_file);
@@ -451,8 +452,7 @@ FunctionTypeWrapper::FunctionTypeWrapper(
 bool FunctionTypeWrapper::SetupFunctionType(
     repr::FunctionTypeIR *function_type_ir) {
   // Add ReturnType
-  function_type_ir->SetReturnType(
-      ast_caches_->GetTypeId(GetKeyForTypeId(function_type_->getReturnType())));
+  function_type_ir->SetReturnType(GetTypeId(function_type_->getReturnType()));
   function_type_ir->SetSourceFile(source_file_);
   const clang::FunctionProtoType *function_pt =
       llvm::dyn_cast<clang::FunctionProtoType>(function_type_);
@@ -541,8 +541,7 @@ bool FunctionDeclWrapper::SetupFunction(repr::FunctionIR *functionp,
   functionp->SetSourceFile(source_file);
   clang::QualType return_type = function_decl_->getReturnType();
 
-  functionp->SetReturnType(
-      ast_caches_->GetTypeId(GetKeyForTypeId(return_type)));
+  functionp->SetReturnType(GetTypeId(return_type));
   functionp->SetAccess(AccessClangToIR(function_decl_->getAccess()));
   return CreateBasicNamedAndTypedDecl(return_type, source_file) &&
       SetupFunctionParameters(functionp, source_file) &&
@@ -600,11 +599,9 @@ bool RecordDeclWrapper::SetupRecordFields(repr::RecordTypeIR *recordp,
       ast_contextp_->getASTRecordLayout(record_decl_);
   while (field != record_decl_->field_end()) {
     clang::QualType field_type = field->getType();
-    std::string key_for_type_id = GetKeyForTypeId(field_type);
-    if (const clang::EnumDecl *enum_decl =
-               GetAnonymousEnum(field_type)) {
+    if (const clang::EnumDecl *enum_decl = GetAnonymousEnum(field_type)) {
       // Handle anonymous enums.
-      key_for_type_id = GetKeyForTypeId(enum_decl->getIntegerType());
+      field_type = enum_decl->getIntegerType();
     }
     if (!CreateBasicNamedAndTypedDecl(field_type, source_file)) {
       llvm::errs() << "Creation of Type failed\n";
@@ -613,7 +610,7 @@ bool RecordDeclWrapper::SetupRecordFields(repr::RecordTypeIR *recordp,
     std::string field_name = field->getName();
     uint64_t field_offset = record_layout.getFieldOffset(field_index);
     recordp->AddRecordField(repr::RecordFieldIR(
-        field_name, ast_caches_->GetTypeId(key_for_type_id), field_offset,
+        field_name, GetTypeId(field_type), field_offset,
         AccessClangToIR(field->getAccess())));
     field++;
     field_index++;
@@ -632,10 +629,8 @@ bool RecordDeclWrapper::SetupCXXBases(
     bool is_virtual = base_class->isVirtual();
     repr::AccessSpecifierIR access =
         AccessClangToIR(base_class->getAccessSpecifier());
-    cxxp->AddCXXBaseSpecifier(
-        repr::CXXBaseSpecifierIR(
-            ast_caches_->GetTypeId(GetKeyForTypeId(base_class->getType())),
-            is_virtual, access));
+    cxxp->AddCXXBaseSpecifier(repr::CXXBaseSpecifierIR(
+        GetTypeId(base_class->getType()), is_virtual, access));
     base_class++;
   }
   return true;
@@ -906,8 +901,7 @@ bool EnumDeclWrapper::SetupEnum(repr::EnumTypeIR *enum_type,
     return false;
   }
   enum_type->SetSourceFile(source_file);
-  enum_type->SetUnderlyingType(
-      ast_caches_->GetTypeId(GetKeyForTypeId(enum_decl_->getIntegerType())));
+  enum_type->SetUnderlyingType(GetTypeId(enum_decl_->getIntegerType()));
   enum_type->SetAccess(AccessClangToIR(enum_decl_->getAccess()));
   enum_type->SetUniqueId(GetTypeUniqueId(enum_decl_));
   return SetupEnumFields(enum_type) &&
@@ -953,8 +947,7 @@ bool GlobalVarDeclWrapper::SetupGlobalVar(repr::GlobalVarIR *global_varp,
   global_varp->SetName(global_var_decl_->getQualifiedNameAsString());
   global_varp->SetLinkerSetKey(mangled_name);
   global_varp->SetAccess(AccessClangToIR(global_var_decl_->getAccess()));
-  global_varp->SetReferencedType(
-      ast_caches_->GetTypeId(GetKeyForTypeId(global_var_decl_->getType())));
+  global_varp->SetReferencedType(GetTypeId(global_var_decl_->getType()));
   return true;
 }
 
