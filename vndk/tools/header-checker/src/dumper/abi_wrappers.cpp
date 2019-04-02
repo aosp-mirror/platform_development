@@ -422,13 +422,6 @@ TypeAndCreationStatus ABIWrapper::SetTypeKind(
   return TypeAndCreationStatus(nullptr, false);
 }
 
-std::string ABIWrapper::GetTagDeclQualifiedName(const clang::TagDecl *decl) {
-  if (decl->getTypedefNameForAnonDecl()) {
-    return decl->getTypedefNameForAnonDecl()->getQualifiedNameAsString();
-  }
-  return decl->getQualifiedNameAsString();
-}
-
 std::string ABIWrapper::QualTypeToString(const clang::QualType &sweet_qt) {
   const clang::QualType salty_qt = sweet_qt.getCanonicalType();
   // clang::TypeName::getFullyQualifiedName removes the part of the type related
@@ -636,7 +629,6 @@ bool RecordDeclWrapper::SetupCXXBases(
   clang::CXXRecordDecl::base_class_const_iterator base_class =
       cxx_record_decl->bases_begin();
   while (base_class != cxx_record_decl->bases_end()) {
-    std::string name = QualTypeToString(base_class->getType());
     bool is_virtual = base_class->isVirtual();
     repr::AccessSpecifierIR access =
         AccessClangToIR(base_class->getAccessSpecifier());
@@ -908,7 +900,6 @@ bool EnumDeclWrapper::SetupEnumFields(repr::EnumTypeIR *enump) {
 
 bool EnumDeclWrapper::SetupEnum(repr::EnumTypeIR *enum_type,
                                 const std::string &source_file) {
-  std::string enum_name = GetTagDeclQualifiedName(enum_decl_);
   clang::QualType enum_qual_type =
       enum_decl_->getTypeForDecl()->getCanonicalTypeInternal();
   if (!CreateExtendedType(enum_qual_type, enum_type)) {

@@ -78,8 +78,6 @@ class ABIWrapper {
 
   std::string QualTypeToString(const clang::QualType &sweet_qt);
 
-  std::string GetTagDeclQualifiedName(const clang::TagDecl *decl);
-
   bool CreateBasicNamedAndTypedDecl(clang::QualType,
                                     const std::string &source_file);
 
