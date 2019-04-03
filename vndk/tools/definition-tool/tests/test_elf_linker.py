@@ -4,7 +4,7 @@ import re
 import tempfile
 
 from vndk_definition_tool import (
-    ELF, GenericRefs, PT_SYSTEM, PT_VENDOR, VNDKLibDir)
+    ELF, ELFLinker, GenericRefs, PT_SYSTEM, PT_VENDOR, VNDKLibDir)
 
 from .compat import StringIO, TestCase, patch
 from .utils import GraphBuilder
@@ -458,6 +458,51 @@ class ELFLinkerTest(TestCase):
         self.assertIn(libvndk_sp_d_64, libvndk_c_64.deps_all)
         self.assertIn(libvndk_sp_d_64, libvndk_d_64.deps_all)
         self.assertIn(libvndk_sp_d_64, libvndk_sp_c_64.deps_all)
+
+
+    def test_rewrite_apex_modules(self):
+        graph = ELFLinker()
+
+        libfoo = graph.add_lib(PT_SYSTEM, '/system/apex/foo/lib/libfoo.so',
+                               ELF(ELF.ELFCLASS32, ELF.ELFDATA2LSB))
+        libbar = graph.add_lib(PT_SYSTEM, '/system/apex/bar/lib/libbar.so',
+                               ELF(ELF.ELFCLASS32, ELF.ELFDATA2LSB))
+
+        graph.rewrite_apex_modules()
+
+        self.assertEqual(libfoo.path, '/apex/foo/lib/libfoo.so')
+        self.assertEqual(libbar.path, '/apex/bar/lib/libbar.so')
+
+
+    def test_link_apex_modules(self):
+        graph = ELFLinker()
+
+        libfoo = graph.add_lib(PT_SYSTEM, '/system/apex/foo/lib/libfoo.so',
+                               ELF(ELF.ELFCLASS32, ELF.ELFDATA2LSB))
+        libbar = graph.add_lib(PT_SYSTEM, '/system/lib/libbar.so',
+                               ELF(ELF.ELFCLASS32, ELF.ELFDATA2LSB,
+                                   dt_needed=['libfoo.so']))
+
+        graph.rewrite_apex_modules()
+        graph.resolve_deps()
+
+        self.assertIn(libfoo, libbar.deps_all)
+
+
+    def test_link_apex_bionic(self):
+        graph = ELFLinker()
+
+        libc = graph.add_lib(
+            PT_SYSTEM, '/system/apex/com.android.runtime/lib/bionic/libc.so',
+            ELF(ELF.ELFCLASS32, ELF.ELFDATA2LSB))
+        libbar = graph.add_lib(
+            PT_SYSTEM, '/system/lib/libbar.so',
+            ELF(ELF.ELFCLASS32, ELF.ELFDATA2LSB, dt_needed=['libc.so']))
+
+        graph.rewrite_apex_modules()
+        graph.resolve_deps()
+
+        self.assertIn(libc, libbar.deps_all)
 
 
 class ELFLinkerDlopenDepsTest(TestCase):
