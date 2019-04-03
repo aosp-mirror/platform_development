@@ -68,7 +68,7 @@
  [
   {
    "alignment" : 8,
-   "linker_set_key" : "namespace_a::A &",
+   "linker_set_key" : "_ZTIRN11namespace_a1AE",
    "name" : "namespace_a::A &",
    "referenced_type" : "type-1",
    "self_type" : "type-4",
@@ -80,7 +80,7 @@
  [
   {
    "alignment" : 8,
-   "linker_set_key" : "InvalidClass *",
+   "linker_set_key" : "_ZTIP12InvalidClass",
    "name" : "InvalidClass *",
    "referenced_type" : "type-7",
    "self_type" : "type-8",
@@ -89,7 +89,7 @@
   },
   {
    "alignment" : 8,
-   "linker_set_key" : "TemplateInMacro<F> *",
+   "linker_set_key" : "_ZTIP15TemplateInMacroIJ1FEE",
    "name" : "TemplateInMacro<F> *",
    "referenced_type" : "type-10",
    "self_type" : "type-11",
@@ -101,7 +101,7 @@
  [
   {
    "is_const" : true,
-   "linker_set_key" : "const namespace_b::template_b<const B *>",
+   "linker_set_key" : "_ZTIKN11namespace_b10template_bIJPKNS_1BEEEE",
    "name" : "const namespace_b::template_b<const B *>",
    "referenced_type" : "type-2",
    "self_type" : "type-3",
