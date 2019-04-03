@@ -16,6 +16,7 @@ import re
 import shutil
 import stat
 import struct
+import subprocess
 import sys
 import zipfile
 
@@ -76,6 +77,98 @@ try:
     from sys import intern
 except ImportError:
     pass
+
+try:
+    from tempfile import TemporaryDirectory
+except ImportError:
+    import shutil
+    import tempfile
+
+    class TemporaryDirectory(object):
+        def __init__(self, suffix='', prefix='tmp', dir=None):
+            # pylint: disable=redefined-builtin
+            self.name = tempfile.mkdtemp(suffix, prefix, dir)
+
+        def __del__(self):
+            self.cleanup()
+
+        def __enter__(self):
+            return self.name
+
+        def __exit__(self, exc, value, tb):
+            self.cleanup()
+
+        def cleanup(self):
+            if self.name:
+                shutil.rmtree(self.name)
+                self.name = None
+
+try:
+    from os import scandir
+except ImportError:
+    import stat
+    import os
+
+    class DirEntry(object):
+        def __init__(self, name, path):
+            self.name = name
+            self.path = path
+            self._stat = None
+            self._lstat = None
+
+        @staticmethod
+        def _stat_impl(path, follow_symlinks):
+            return os.stat(path) if follow_symlinks else os.lstat(path)
+
+        def stat(self, follow_symlinks=True):
+            attr = '_stat' if follow_symlinks else '_lstat'
+            stat_res = getattr(self, attr)
+            if stat_res is None:
+                stat_res = self._stat_impl(self.path, follow_symlinks)
+                setattr(self, attr, stat_res)
+            return stat_res
+
+        def is_dir(self, follow_symlinks=True):
+            try:
+                return stat.S_ISDIR(self.stat(follow_symlinks).st_mode)
+            except EnvironmentError:
+                return False
+
+        def is_file(self, follow_symlinks=True):
+            try:
+                return stat.S_ISREG(self.stat(follow_symlinks).st_mode)
+            except EnvironmentError:
+                return False
+
+        def is_symlink(self):
+            return stat.S_ISLNK(self.stat(follow_symlinks=False).st_mode)
+
+    def scandir(path):
+        for name in os.listdir(path):
+            yield DirEntry(name, os.path.join(path, name))
+
+
+#------------------------------------------------------------------------------
+# Print Function
+#------------------------------------------------------------------------------
+
+def print_sb(*args, **kwargs):
+    """A print function that supports both str and bytes."""
+    sep = kwargs.get('sep', ' ')
+    end = kwargs.get('end', '\n')
+    out_file = kwargs.get('file', sys.stdout)
+    for i, arg in enumerate(args):
+        if i > 0:
+            out_file.write(sep)
+        if isinstance(arg, str):
+            out_file.write(arg)
+        elif isinstance(arg, bytes):
+            out_file.flush()
+            out_file.buffer.write(arg)
+            out_file.flush()
+        else:
+            out_file.write(str(arg))
+    out_file.write(end)
 
 
 #------------------------------------------------------------------------------
@@ -1413,22 +1506,6 @@ class LibProperties(object):
 # ELF Linker
 #------------------------------------------------------------------------------
 
-def is_accessible(path):
-    try:
-        mode = os.stat(path).st_mode
-        return (mode & (stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)) != 0
-    except FileNotFoundError:
-        return False
-
-
-def scan_accessible_files(root):
-    for base, _, files in os.walk(root):
-        for filename in files:
-            path = os.path.join(base, filename)
-            if is_accessible(path):
-                yield path
-
-
 def is_zipfile(path):
     # zipfile.is_zipfile() tries to find the zip header in the file.  But we
     # only want to scan the zip file that starts with the magic word.  Thus,
@@ -1452,24 +1529,134 @@ def scan_zip_file(zip_file_path):
                    zip_file.open(name, 'r').read())
 
 
-def scan_elf_files(root, unzip_files=True):
-    """Scan all ELF files under a directory."""
-    for path in scan_accessible_files(root):
-        # If this is a zip file and unzip_file is true, scan the ELF files in
-        # the zip file.
-        if unzip_files and is_zipfile(path):
-            for path, content in scan_zip_file(path):
-                try:
-                    yield (path, ELF.loads(content))
-                except ELFError:
-                    pass
-            continue
+def dump_ext4_img(img_file_path, out_dir):
+    if ' ' in out_dir:
+        raise ValueError('out_dir must not have space character')
 
-        # Load ELF from the path.
-        try:
-            yield (path, ELF.load(path))
-        except ELFError:
-            pass
+    cmd = ['debugfs', img_file_path, '-R', 'rdump / ' + out_dir]
+
+    # Run the debugfs command.
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = proc.communicate()
+    if proc.returncode != 0:
+        raise subprocess.CalledProcessError(proc.returncode, cmd, stderr)
+
+    # Print error messages if they are not the ones that should be ignored.
+    for line in stderr.splitlines():
+        if line.startswith(b'debugfs '):
+            continue
+        if b'Operation not permitted while changing ownership of' in line:
+            continue
+        print_sb('error: debugfs:', line, file=sys.stderr)
+
+
+def is_accessible(path):
+    try:
+        mode = os.stat(path).st_mode
+        return (mode & (stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)) != 0
+    except FileNotFoundError:
+        return False
+
+
+def scan_ext4_image(img_file_path, mount_point, unzip_files):
+    """Scan all ELF files in the ext4 image."""
+    with TemporaryDirectory() as tmp_dir:
+        dump_ext4_img(img_file_path, tmp_dir)
+        for path, elf in scan_elf_files(tmp_dir, mount_point, unzip_files):
+            yield path, elf
+
+
+def scan_apex_dir(apex_collection_root, apex_dir, unzip_files):
+    # Read the manifest file.
+    manifest_file_path = os.path.join(apex_dir, 'apex_manifest.json')
+    try:
+        with open(manifest_file_path, 'r') as manifest_file:
+            manifest = json.load(manifest_file)
+    except FileNotFoundError:
+        print('error: Failed to find apex manifest: {}'
+              .format(manifest_file_path), file=sys.stderr)
+        return
+
+    # Read the module name.
+    try:
+        apex_name = manifest['name']
+    except KeyError:
+        print('error: Failed to read apex name from manifest: {}'
+              .format(manifest_file_path), file=sys.stderr)
+        return
+
+    # Scan the payload (or the flatten payload).
+    mount_point = os.path.join(apex_collection_root, apex_name)
+    img_file_path = os.path.join(apex_dir, 'apex_payload.img')
+    if os.path.exists(img_file_path):
+        for path, elf in scan_ext4_image(img_file_path, mount_point,
+                                         unzip_files):
+            yield path, elf
+    else:
+        for path, elf in scan_elf_files(apex_dir, mount_point, unzip_files):
+            yield path, elf
+
+
+def scan_apex_file(apex_collection_root, apex_zip_file, unzip_files):
+    with TemporaryDirectory() as tmp_dir:
+        with zipfile.ZipFile(apex_zip_file) as zip_file:
+            zip_file.extractall(tmp_dir)
+        for path, elf in scan_apex_dir(apex_collection_root, tmp_dir,
+                                       unzip_files):
+            yield path, elf
+
+
+def scan_apex_files(apex_collection_root, unzip_files):
+    for ent in scandir(apex_collection_root):
+        if ent.is_dir():
+            for path, elf in scan_apex_dir(apex_collection_root, ent.path,
+                                           unzip_files):
+                yield path, elf
+        elif ent.is_file() and ent.name.endswith('.apex'):
+            for path, elf in scan_apex_file(apex_collection_root, ent.path,
+                                            unzip_files):
+                yield path, elf
+
+
+def scan_elf_files(root, mount_point=None, unzip_files=True):
+    """Scan all ELF files under a directory."""
+
+    if mount_point:
+        root_prefix_len = len(root) + 1
+        def norm_path(path):
+            return os.path.join(mount_point, path[root_prefix_len:])
+    else:
+        def norm_path(path):
+            return path
+
+    for base, dirnames, filenames in os.walk(root):
+        if base == root and 'apex' in dirnames:
+            dirnames.remove('apex')
+            for path, elf in scan_apex_files(os.path.join(root, 'apex'),
+                                             unzip_files):
+                yield (path, elf)
+
+        for filename in filenames:
+            path = os.path.join(base, filename)
+            if not is_accessible(path):
+                continue
+
+
+            # If this is a zip file and unzip_file is true, scan the ELF files
+            # in the zip file.
+            if unzip_files and is_zipfile(path):
+                for path, content in scan_zip_file(path):
+                    try:
+                        yield (norm_path(path), ELF.loads(content))
+                    except ELFError:
+                        pass
+                continue
+
+            # Load ELF from the path.
+            try:
+                yield (norm_path(path), ELF.load(path))
+            except ELFError:
+                pass
 
 
 PT_SYSTEM = 0
@@ -1999,6 +2186,8 @@ class ELFLinker(object):
 
         self.ro_vndk_version = ro_vndk_version
 
+        self.apex_module_names = set()
+
 
     def _add_lib_to_lookup_dict(self, lib):
         self.lib_pt[lib.partition].add(lib.path, lib)
@@ -2006,6 +2195,12 @@ class ELFLinker(object):
 
     def _remove_lib_from_lookup_dict(self, lib):
         self.lib_pt[lib.partition].remove(lib)
+
+
+    def _rename_lib(self, lib, new_path):
+        self._remove_lib_from_lookup_dict(lib)
+        lib.path = new_path
+        self._add_lib_to_lookup_dict(lib)
 
 
     def add_lib(self, partition, path, elf):
@@ -2102,7 +2297,7 @@ class ELFLinker(object):
             ignored_patt = ELFLinker._compile_path_matcher(
                 root, ignored_subdirs)
 
-        for path, elf in scan_elf_files(root, unzip_files):
+        for path, elf in scan_elf_files(root, unzip_files=unzip_files):
             # Ignore ELF files with unknown machine ID (eg. DSP).
             if elf.e_machine not in ELF.ELF_MACHINES:
                 continue
@@ -2194,12 +2389,21 @@ class ELFLinker(object):
             self._resolve_lib_deps(lib, resolver, generic_refs)
 
 
+    def _get_apex_bionic_search_paths(self, lib_dir):
+        return ['/apex/com.android.runtime/' + lib_dir + '/bionic']
+
+
+    def _get_apex_search_paths(self, lib_dir):
+        return ['/apex/' + name + '/' + lib_dir
+                for name in sorted(self.apex_module_names)]
+
+
     def _get_system_search_paths(self, lib_dir):
-        return [
-            '/system/' + lib_dir,
-            # To find violating dependencies to vendor partitions.
-            '/vendor/' + lib_dir,
-        ]
+        apex_lib_dirs = (self._get_apex_search_paths(lib_dir) +
+                         self._get_apex_bionic_search_paths(lib_dir))
+        system_lib_dirs = ['/system/' + lib_dir, '/system/product/' + lib_dir]
+        vendor_lib_dirs = ['/vendor/' + lib_dir]
+        return apex_lib_dirs + system_lib_dirs + vendor_lib_dirs
 
 
     def _get_vendor_search_paths(self, lib_dir, vndk_sp_dirs, vndk_dirs):
@@ -2208,28 +2412,30 @@ class ELFLinker(object):
             '/vendor/' + lib_dir + '/egl',
             '/vendor/' + lib_dir,
         ]
-        system_lib_dirs = [
-            # For degenerated VNDK libs.
-            '/system/' + lib_dir,
-        ]
-        return vendor_lib_dirs + vndk_sp_dirs + vndk_dirs + system_lib_dirs
+        # For degenerated VNDK libs.
+        apex_lib_dirs = (self._get_apex_search_paths(lib_dir) +
+                         self._get_apex_bionic_search_paths(lib_dir))
+        system_lib_dirs = ['/system/' + lib_dir]
+        return (vendor_lib_dirs + vndk_sp_dirs + vndk_dirs + apex_lib_dirs +
+                system_lib_dirs)
 
 
     def _get_vndk_sp_search_paths(self, lib_dir, vndk_sp_dirs):
+        # To find missing dependencies or LL-NDK.
         fallback_lib_dirs = [
-            # To find missing VNDK-SP dependencies.
             '/vendor/' + lib_dir,
-            # To find missing VNDK-SP dependencies or LL-NDK.
             '/system/' + lib_dir,
         ]
+        fallback_lib_dirs += self._get_apex_search_paths(lib_dir)
+        fallback_lib_dirs += self._get_apex_bionic_search_paths(lib_dir)
         return vndk_sp_dirs + fallback_lib_dirs
 
 
     def _get_vndk_search_paths(self, lib_dir, vndk_sp_dirs, vndk_dirs):
-        fallback_lib_dirs = [
-            # To find missing VNDK dependencies or LL-NDK.
-            '/system/' + lib_dir,
-        ]
+        # To find missing dependencies or LL-NDK.
+        fallback_lib_dirs = ['/system/' + lib_dir]
+        fallback_lib_dirs += self._get_apex_search_paths(lib_dir)
+        fallback_lib_dirs += self._get_apex_bionic_search_paths(lib_dir)
         return vndk_sp_dirs + vndk_dirs + fallback_lib_dirs
 
 
@@ -2351,6 +2557,22 @@ class ELFLinker(object):
                           'not exist.'.format(lib.path, dep.path),
                           file=sys.stderr)
                     lib.hide_dlopen_dep(dep)
+
+
+    def rewrite_apex_modules(self):
+        """Rename ELF files under `/system/apex/${name}.apex` to
+        `/apex/${name}/...` and collect apex module names."""
+        APEX_PREFIX = '/system/apex/'
+        APEX_PREFIX_LEN = len(APEX_PREFIX)
+        for lib in list(self.all_libs()):
+            if not lib.path.startswith(APEX_PREFIX):
+                continue
+
+            apex_name_end = lib.path.find('/', APEX_PREFIX_LEN)
+            apex_name = lib.path[APEX_PREFIX_LEN:apex_name_end]
+            self.apex_module_names.add(apex_name)
+
+            self._rename_lib(lib, '/apex/' + lib.path[APEX_PREFIX_LEN:])
 
 
     @staticmethod
@@ -2708,6 +2930,7 @@ class ELFLinker(object):
             for path in extra_deps:
                 graph.add_dlopen_deps(path)
 
+        graph.rewrite_apex_modules()
         graph.resolve_deps(generic_refs)
 
         return graph
