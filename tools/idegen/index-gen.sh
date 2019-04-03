@@ -42,7 +42,16 @@ tmp_file=${root_dir}/tmp.txt
 dest_file=${root_dir}/module-index.txt
 
 echo "Generating index file $dest_file..."
-start=$(($(date +%s%N) / 1000000))
+
+[[ "$(uname -s)" == "Darwin" ]] && darwin=1 || darwin=0
+
+if [ $darwin == 1 ];
+then
+  start=$(($(date +%s) / 1000000))
+else
+  start=$(($(date +%s%N) / 1000000))
+fi
+
 find $root_dir -name '*.mk' \( ! -path "$root_dir/build*" -prune \) \
   \( -exec grep -H '^LOCAL_PACKAGE_NAME ' {} \; \
   -false -o -exec grep -H '^LOCAL_MODULE ' {} \; \) \
@@ -55,6 +64,12 @@ mv $dest_file $tmp_file
 grep -v "^$root_dir/vendor/google" $tmp_file > $dest_file
 
 rm $tmp_file
-end=$(($(date +%s%N) / 1000000))
+
+if [ $darwin == 1 ];
+then
+  end=$(($(date +%s) / 1000000))
+else
+  end=$(($(date +%s%N) / 1000000))
+fi
 elapse=$(($end - $start))
 echo "Took ${elapse}ms"
