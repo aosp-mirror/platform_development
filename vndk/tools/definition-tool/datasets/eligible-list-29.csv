@@ -1,4 +1,7 @@
 Path,Tag,Comments
+/apex/com.android.runtime/${LIB}/bionic/libc.so,LL-NDK,
+/apex/com.android.runtime/${LIB}/bionic/libdl.so,LL-NDK,
+/apex/com.android.runtime/${LIB}/bionic/libm.so,LL-NDK,
 /system/${LIB}/android.frameworks.cameraservice.common@2.0.so,VNDK,
 /system/${LIB}/android.frameworks.cameraservice.device@2.0.so,VNDK,
 /system/${LIB}/android.frameworks.cameraservice.service@2.0.so,VNDK,
@@ -455,6 +458,7 @@ Path,Tag,Comments
 /system/${LIB}/libstagefright_http_support.so,FWK-ONLY,
 /system/${LIB}/libstagefright_httplive.so,FWK-ONLY,
 /system/${LIB}/libstagefright_omx.so,VNDK,
+/system/${LIB}/libstagefright_omx_soft.so,VNDK,
 /system/${LIB}/libstagefright_omx_utils.so,VNDK,
 /system/${LIB}/libstagefright_soft_aacdec.so,VNDK,
 /system/${LIB}/libstagefright_soft_aacenc.so,VNDK,
@@ -735,6 +739,7 @@ Path,Tag,Comments
 /system/${LIB}/vndk${VNDK_VER}/libstagefright_flacdec.so,VNDK,
 /system/${LIB}/vndk${VNDK_VER}/libstagefright_foundation.so,VNDK,
 /system/${LIB}/vndk${VNDK_VER}/libstagefright_omx.so,VNDK,
+/system/${LIB}/vndk${VNDK_VER}/libstagefright_omx_soft.so,VNDK,
 /system/${LIB}/vndk${VNDK_VER}/libstagefright_omx_utils.so,VNDK,
 /system/${LIB}/vndk${VNDK_VER}/libstagefright_soft_aacdec.so,VNDK,
 /system/${LIB}/vndk${VNDK_VER}/libstagefright_soft_aacenc.so,VNDK,

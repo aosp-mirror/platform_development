@@ -372,6 +372,7 @@ libRSCpuRef,True,True,True,cc_library_shared
 libRSDriver,True,True,True,cc_library_shared
 libRS_internal,True,True,True,cc_library_shared
 libadf,True,False,True,cc_library
+libandroid_runtime_lazy,False,False,True,cc_library
 libasyncio,False,False,True,cc_library
 libaudioroute,True,False,True,cc_library_shared
 libaudioutils,True,False,True,cc_library
@@ -528,6 +529,7 @@ libstagefright_enc_common,True,False,True,cc_library
 libstagefright_flacdec,True,False,True,cc_library
 libstagefright_foundation,True,False,True,cc_library
 libstagefright_omx,True,False,True,cc_library_shared
+libstagefright_omx_soft,True,False,True,cc_library_shared
 libstagefright_omx_utils,True,False,True,cc_library_shared
 libstagefright_simple_c2component,False,False,True,cc_library_shared
 libstagefright_soft_aacdec,True,False,True,cc_library_shared
