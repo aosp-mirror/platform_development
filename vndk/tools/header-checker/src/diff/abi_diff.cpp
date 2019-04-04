@@ -32,13 +32,18 @@ namespace diff {
 repr::CompatibilityStatusIR HeaderAbiDiff::GenerateCompatibilityReport() {
   std::unique_ptr<repr::IRReader> old_reader =
       repr::IRReader::CreateIRReader(text_format_old_);
-  std::unique_ptr<repr::IRReader> new_reader =
-      repr::IRReader::CreateIRReader(text_format_new_);
-  if (!old_reader || !new_reader || !old_reader->ReadDump(old_dump_) ||
-      !new_reader->ReadDump(new_dump_)) {
-    llvm::errs() << "Could not create Text Format readers\n";
+  if (!old_reader || !old_reader->ReadDump(old_dump_)) {
+    llvm::errs() << "Failed to read old ABI dump: " << old_dump_ << "\n";
     ::exit(1);
   }
+
+  std::unique_ptr<repr::IRReader> new_reader =
+      repr::IRReader::CreateIRReader(text_format_new_);
+  if (!new_reader || !new_reader->ReadDump(new_dump_)) {
+    llvm::errs() << "Failed to read new ABI dump: " << new_dump_ << "\n";
+    ::exit(1);
+  }
+
   std::unique_ptr<repr::IRDiffDumper> ir_diff_dumper =
       repr::IRDiffDumper::CreateIRDiffDumper(text_format_diff_, cr_);
   repr::CompatibilityStatusIR status =
