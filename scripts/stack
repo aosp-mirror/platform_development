@@ -25,6 +25,7 @@ import symbol
 def main():
   parser = argparse.ArgumentParser(description='Parse and symbolize crashes')
   parser.add_argument('--arch', help='the target architecture')
+  parser.add_argument('--syms', '--symdir', help='the symbols directory')
   parser.add_argument('file',
                       metavar='FILE',
                       default='-',
@@ -37,6 +38,8 @@ def main():
 
   if args.arch:
     symbol.ARCH = args.arch
+  if args.syms:
+    symbol.SYMBOLS_DIR = args.syms
   if args.file == '-':
     print "Reading native crash info from stdin"
     f = sys.stdin
