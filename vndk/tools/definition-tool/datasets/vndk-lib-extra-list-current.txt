@@ -27,6 +27,7 @@ VNDK-core: libclang_rt.ubsan_standalone-x86_64-android.so
 
 LLNDK-private: ld-android.so
 LLNDK-private: libc_malloc_debug.so
+LLNDK-private: libdl_android.so
 LLNDK-private: libnetd_client.so
 LLNDK-private: libtextclassifier_hash.so
 

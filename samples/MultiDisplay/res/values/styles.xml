@@ -16,7 +16,7 @@
   -->
 
 <resources>
-    <style name="LauncherTheme" parent="Theme.AppCompat.Light.NoActionBar" >
+    <style name="LauncherTheme" parent="Theme.MaterialComponents.NoActionBar" >
         <item name="android:windowShowWallpaper">true</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowIsTranslucent">true</item>
