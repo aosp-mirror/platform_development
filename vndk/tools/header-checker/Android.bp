@@ -41,6 +41,10 @@ cc_defaults {
         },
     },
 
+    local_include_dirs: [
+        "src",
+    ],
+
     compile_multilib: "64",
     stl: "none",
 }
@@ -53,18 +57,18 @@ cc_binary_host {
     ],
 
     srcs: [
-        "header-abi-dumper/src/abi_wrappers.cpp",
-        "header-abi-dumper/src/ast_processing.cpp",
-        "header-abi-dumper/src/diagnostic_consumer.cpp",
-        "header-abi-dumper/src/fake_decl_source.cpp",
-        "header-abi-dumper/src/fixed_argv.cpp",
-        "header-abi-dumper/src/frontend_action.cpp",
-        "header-abi-dumper/src/frontend_action_factory.cpp",
-        "header-abi-dumper/src/header_checker.cpp",
+        "src/dumper/abi_wrappers.cpp",
+        "src/dumper/ast_processing.cpp",
+        "src/dumper/diagnostic_consumer.cpp",
+        "src/dumper/fake_decl_source.cpp",
+        "src/dumper/fixed_argv.cpp",
+        "src/dumper/frontend_action.cpp",
+        "src/dumper/frontend_action_factory.cpp",
+        "src/dumper/header_checker.cpp",
     ],
 
     static_libs: [
-        "libheader-abi-util",
+        "libheader-checker",
         "libheader-checker-proto",
         "libjsoncpp",
     ],
@@ -83,7 +87,7 @@ cc_defaults {
     defaults: ["header-checker-defaults"],
 
     static_libs: [
-        "libheader-abi-util",
+        "libheader-checker",
         "libheader-checker-proto",
         "libjsoncpp",
     ],
@@ -105,7 +109,7 @@ cc_binary_host {
     ],
 
     srcs: [
-        "header-abi-linker/src/header_abi_linker.cpp",
+        "src/linker/header_abi_linker.cpp",
     ],
 }
 
@@ -118,9 +122,9 @@ cc_binary_host {
     ],
 
     srcs: [
-        "header-abi-diff/src/abi_diff.cpp",
-        "header-abi-diff/src/abi_diff_wrappers.cpp",
-        "header-abi-diff/src/header_abi_diff.cpp",
+        "src/diff/abi_diff.cpp",
+        "src/diff/abi_diff_wrappers.cpp",
+        "src/diff/header_abi_diff.cpp",
     ],
 }
 
@@ -133,28 +137,36 @@ cc_binary_host {
     ],
 
     srcs: [
-        "merge-abi-diff/src/merge_abi_diff.cpp",
+        "src/diff_merge/merge_abi_diff.cpp",
     ],
 }
 
 cc_library_host_static {
-    name: "libheader-abi-util",
+    name: "libheader-checker",
 
     defaults: [
         "header-checker-defaults",
     ],
 
     srcs: [
-        "header-abi-util/src/abi_diff_helpers.cpp",
-        "header-abi-util/src/api_level.cpp",
-        "header-abi-util/src/collect_exported_headers.cpp",
-        "header-abi-util/src/exported_symbol_set.cpp",
-        "header-abi-util/src/ir_representation.cpp",
-        "header-abi-util/src/ir_representation_json.cpp",
-        "header-abi-util/src/ir_representation_protobuf.cpp",
-        "header-abi-util/src/so_file_parser.cpp",
-        "header-abi-util/src/string_utils.cpp",
-        "header-abi-util/src/version_script_parser.cpp",
+        "src/repr/abi_diff_helpers.cpp",
+        "src/repr/ir_diff_dumper.cpp",
+        "src/repr/ir_dumper.cpp",
+        "src/repr/ir_reader.cpp",
+        "src/repr/ir_representation.cpp",
+        "src/repr/json/converter.cpp",
+        "src/repr/json/ir_dumper.cpp",
+        "src/repr/json/ir_reader.cpp",
+        "src/repr/protobuf/converter.cpp",
+        "src/repr/protobuf/ir_diff_dumper.cpp",
+        "src/repr/protobuf/ir_dumper.cpp",
+        "src/repr/protobuf/ir_reader.cpp",
+        "src/repr/symbol/exported_symbol_set.cpp",
+        "src/repr/symbol/so_file_parser.cpp",
+        "src/repr/symbol/version_script_parser.cpp",
+        "src/utils/api_level.cpp",
+        "src/utils/collect_exported_headers.cpp",
+        "src/utils/string_utils.cpp",
     ],
 
     static_libs: [
@@ -173,32 +185,26 @@ cc_library_host_static {
         "-Wno-long-long",
         "-Wno-unused-parameter",
     ],
-
-    export_include_dirs: ["header-abi-util/include"],
 }
 
 cc_test_host {
-    name: "libheader-abi-util_test",
+    name: "header-checker-unittests",
 
     defaults: [
         "header-checker-defaults",
     ],
 
     srcs: [
-        "header-abi-util/src/api_level_test.cpp",
-        "header-abi-util/src/exported_symbol_set_test.cpp",
-        "header-abi-util/src/string_utils_test.cpp",
-        "header-abi-util/src/version_script_parser_test.cpp",
-    ],
-
-    local_include_dirs: [
-        "header-abi-util/include",
+        "src/repr/symbol/exported_symbol_set_test.cpp",
+        "src/repr/symbol/version_script_parser_test.cpp",
+        "src/utils/api_level_test.cpp",
+        "src/utils/string_utils_test.cpp",
     ],
 
     static_libs: [
         "libgtest",
         "libgtest_main",
-        "libheader-abi-util",
+        "libheader-checker",
     ],
 
     shared_libs: [

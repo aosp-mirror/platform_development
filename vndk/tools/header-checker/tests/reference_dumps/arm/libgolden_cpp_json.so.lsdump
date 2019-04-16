@@ -228,15 +228,6 @@
  [
   {
    "alignment" : 4,
-   "linker_set_key" : "SuperSpeaker *",
-   "name" : "SuperSpeaker *",
-   "referenced_type" : "type-1",
-   "self_type" : "type-9",
-   "size" : 4,
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
-  },
-  {
-   "alignment" : 4,
    "linker_set_key" : "HighVolumeSpeaker *",
    "name" : "HighVolumeSpeaker *",
    "referenced_type" : "type-11",
@@ -246,19 +237,28 @@
   },
   {
    "alignment" : 4,
-   "linker_set_key" : "float *",
-   "name" : "float *",
-   "referenced_type" : "type-3",
-   "self_type" : "type-7",
+   "linker_set_key" : "LowVolumeSpeaker *",
+   "name" : "LowVolumeSpeaker *",
+   "referenced_type" : "type-5",
+   "self_type" : "type-4",
    "size" : 4,
    "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
   },
   {
    "alignment" : 4,
-   "linker_set_key" : "LowVolumeSpeaker *",
-   "name" : "LowVolumeSpeaker *",
-   "referenced_type" : "type-5",
-   "self_type" : "type-4",
+   "linker_set_key" : "SuperSpeaker *",
+   "name" : "SuperSpeaker *",
+   "referenced_type" : "type-1",
+   "self_type" : "type-9",
+   "size" : 4,
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
+  },
+  {
+   "alignment" : 4,
+   "linker_set_key" : "float *",
+   "name" : "float *",
+   "referenced_type" : "type-3",
+   "self_type" : "type-7",
    "size" : 4,
    "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
   }
@@ -266,52 +266,6 @@
  "qualified_types" : [],
  "record_types" :
  [
-  {
-   "alignment" : 4,
-   "fields" :
-   [
-    {
-     "access" : "private",
-     "field_name" : "mSpeakderId",
-     "field_offset" : 32,
-     "referenced_type" : "type-2"
-    }
-   ],
-   "linker_set_key" : "SuperSpeaker",
-   "name" : "SuperSpeaker",
-   "record_kind" : "class",
-   "referenced_type" : "type-1",
-   "self_type" : "type-1",
-   "size" : 8,
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h",
-   "unique_id" : "_ZTS12SuperSpeaker",
-   "vtable_components" :
-   [
-    {
-     "kind" : "offset_to_top"
-    },
-    {
-     "kind" : "rtti",
-     "mangled_component_name" : "_ZTI12SuperSpeaker"
-    },
-    {
-     "is_pure" : true,
-     "mangled_component_name" : "_ZN12SuperSpeaker5SpeakEv"
-    },
-    {
-     "is_pure" : true,
-     "mangled_component_name" : "_ZN12SuperSpeaker6ListenEv"
-    },
-    {
-     "kind" : "complete_dtor_pointer",
-     "mangled_component_name" : "_ZN12SuperSpeakerD1Ev"
-    },
-    {
-     "kind" : "deleting_dtor_pointer",
-     "mangled_component_name" : "_ZN12SuperSpeakerD0Ev"
-    }
-   ]
-  },
   {
    "alignment" : 4,
    "base_specifiers" :
@@ -404,6 +358,52 @@
     {
      "kind" : "deleting_dtor_pointer",
      "mangled_component_name" : "_ZN16LowVolumeSpeakerD0Ev"
+    }
+   ]
+  },
+  {
+   "alignment" : 4,
+   "fields" :
+   [
+    {
+     "access" : "private",
+     "field_name" : "mSpeakderId",
+     "field_offset" : 32,
+     "referenced_type" : "type-2"
+    }
+   ],
+   "linker_set_key" : "SuperSpeaker",
+   "name" : "SuperSpeaker",
+   "record_kind" : "class",
+   "referenced_type" : "type-1",
+   "self_type" : "type-1",
+   "size" : 8,
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h",
+   "unique_id" : "_ZTS12SuperSpeaker",
+   "vtable_components" :
+   [
+    {
+     "kind" : "offset_to_top"
+    },
+    {
+     "kind" : "rtti",
+     "mangled_component_name" : "_ZTI12SuperSpeaker"
+    },
+    {
+     "is_pure" : true,
+     "mangled_component_name" : "_ZN12SuperSpeaker5SpeakEv"
+    },
+    {
+     "is_pure" : true,
+     "mangled_component_name" : "_ZN12SuperSpeaker6ListenEv"
+    },
+    {
+     "kind" : "complete_dtor_pointer",
+     "mangled_component_name" : "_ZN12SuperSpeakerD1Ev"
+    },
+    {
+     "kind" : "deleting_dtor_pointer",
+     "mangled_component_name" : "_ZN12SuperSpeakerD0Ev"
     }
    ]
   }
