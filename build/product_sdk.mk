@@ -25,8 +25,11 @@
 # packaged in the SDK.
 #
 
-# Host tools and java libraries that are parts of the SDK.
 PRODUCT_PACKAGES += \
+	deployagent
+
+# Host tools and java libraries that are parts of the SDK.
+PRODUCT_HOST_PACKAGES += \
 	aapt \
 	aapt2 \
 	adb \
@@ -34,14 +37,11 @@ PRODUCT_PACKAGES += \
 	apksigner \
 	bcc_compat \
 	bios.bin \
-	deployagent \
 	dexdump \
 	dmtracedump \
 	dx \
-	emmalib \
 	etc1tool \
 	hprof-conv \
-	jython \
 	layoutlib-legacy \
 	libaapt2_jni \
 	llvm-rs-cc \

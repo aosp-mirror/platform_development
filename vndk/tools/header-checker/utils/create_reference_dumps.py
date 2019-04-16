@@ -10,7 +10,7 @@ from utils import (
     AOSP_DIR, COMPRESSED_SOURCE_ABI_DUMP_EXT, SOURCE_ABI_DUMP_EXT,
     SOURCE_ABI_DUMP_EXT_END, SO_EXT, copy_reference_dumps, find_lib_lsdumps,
     get_build_vars_for_product, get_module_variant_dir_name, make_libraries,
-    make_tree)
+    make_tree, read_lsdump_paths)
 
 
 PRODUCTS_DEFAULT = ['aosp_arm_ab', 'aosp_arm', 'aosp_arm64', 'aosp_x86_ab',
@@ -35,26 +35,6 @@ class Target(object):
         self.cpu_variant = build_vars[3]
 
 
-def get_lsdump_paths(product, libs):
-    if libs is None:
-        return get_lsdump_paths_from_out(product)
-    return search_for_lsdump_paths(SOONG_DIR, libs)
-
-
-def get_lsdump_paths_from_out(product):
-    build_vars_to_fetch = ['OUT_DIR', 'TARGET_DEVICE']
-    build_vars = get_build_vars_for_product(build_vars_to_fetch, product)
-    lsdump_paths_file = os.path.join(
-        AOSP_DIR, build_vars[0], 'target', 'product', build_vars[1],
-        'lsdump_paths.txt')
-    assert os.path.exists(lsdump_paths_file)
-    lsdump_paths = collections.defaultdict(list)
-    with open(lsdump_paths_file) as f:
-        for path in f:
-            add_to_path_dict(path.rstrip(), lsdump_paths)
-    return lsdump_paths
-
-
 def get_lib_arch_str(target):
     assert target.primary_arch != ''
     target_arch_variant_str = ''
@@ -65,39 +45,6 @@ def get_lib_arch_str(target):
     return target.arch + target_arch_variant_str
 
 
-# FIXME (b/121986692): Before aosp/858259 is merged, apex mutator adds
-# `_platform` suffix if the module is used by some apex modules. This
-# workaround searches for lsdump with and without `_platform`.
-_WORKAROUND_APEX_PLATFORM_LSDUMPS = True
-
-if _WORKAROUND_APEX_PLATFORM_LSDUMPS:
-    def _find_lib_lsdumps_workaround(dir_name, lsdump_paths, libs):
-        dir_name_platform = dir_name + '_platform'
-
-        matched_lsdump_paths = set(find_lib_lsdumps(
-            dir_name, lsdump_paths, libs))
-
-        matched_lsdump_paths_platform = set(find_lib_lsdumps(
-            dir_name_platform, lsdump_paths, libs))
-
-        # Pick the lsdump file with latest modification time if both of them
-        # exist.
-        matched_lsdump_paths_replaced = set(
-            path.replace(dir_name, dir_name_platform)
-            for path in matched_lsdump_paths)
-
-        both = matched_lsdump_paths_replaced & matched_lsdump_paths_platform
-
-        for path_platform in both:
-            path = path_platform.replace(dir_name_platform, dir_name)
-            if os.stat(path).st_mtime >= os.stat(path_platform).st_mtime:
-                matched_lsdump_paths_platform.remove(path_platform)
-            else:
-                matched_lsdump_paths.remove(path)
-
-        return sorted(matched_lsdump_paths | matched_lsdump_paths_platform)
-
-
 def find_and_copy_lib_lsdumps(target, ref_dump_dir_stem, ref_dump_dir_insertion,
                               core_or_vendor_shared_str, libs, lsdump_paths,
                               compress):
@@ -105,12 +52,8 @@ def find_and_copy_lib_lsdumps(target, ref_dump_dir_stem, ref_dump_dir_insertion,
         target.arch, target.arch_variant, target.cpu_variant,
         core_or_vendor_shared_str)
 
-    if _WORKAROUND_APEX_PLATFORM_LSDUMPS:
-        arch_lsdump_paths = _find_lib_lsdumps_workaround(
-            module_variant_dir_name, lsdump_paths, libs)
-    else:
-        arch_lsdump_paths = find_lib_lsdumps(
-            module_variant_dir_name, lsdump_paths, libs)
+    arch_lsdump_paths = find_lib_lsdumps(
+        module_variant_dir_name, lsdump_paths, libs)
 
     # Copy the contents of the lsdump into their corresponding reference ABI
     # dumps directories.
@@ -140,10 +83,10 @@ def get_ref_dump_dir_stem(args, vndk_or_ndk, product, chosen_vndk_version):
     return ref_dump_dir_stem
 
 
-def make_libs_for_product(libs, llndk_mode, product, variant):
+def make_libs_for_product(libs, llndk_mode, product, variant, targets):
     print('making libs for', product + '-' + variant)
     if libs:
-        make_libraries(libs, product, variant, llndk_mode)
+        make_libraries(product, variant, targets, libs, llndk_mode)
     else:
         make_tree(product, variant)
 
@@ -200,14 +143,6 @@ def add_to_path_dict(path, dictionary, libs=tuple()):
         dictionary[libname].append(path)
 
 
-def search_for_lsdump_paths(soong_dir, libs):
-    lsdump_paths = collections.defaultdict(list)
-    for root, _, files in os.walk(soong_dir):
-        for file in files:
-            add_to_path_dict(os.path.join(root, file), lsdump_paths, libs)
-    return lsdump_paths
-
-
 def create_source_abi_reference_dumps(args, product,
                                       chosen_vndk_version, lsdump_paths,
                                       targets):
@@ -261,9 +196,11 @@ def create_source_abi_reference_dumps_for_all_products(args):
             # Build all the specified libs (or build the 'vndk' target if none
             # of them are specified.)
             make_libs_for_product(args.libs, args.llndk, product,
-                                  args.build_variant)
+                                  args.build_variant, targets)
 
-        lsdump_paths = get_lsdump_paths(product, args.libs)
+        lsdump_paths = read_lsdump_paths(product, args.build_variant, targets,
+                                         build=False)
+
         num_processed += create_source_abi_reference_dumps(
             args, product, chosen_vndk_version, lsdump_paths, targets)
 
