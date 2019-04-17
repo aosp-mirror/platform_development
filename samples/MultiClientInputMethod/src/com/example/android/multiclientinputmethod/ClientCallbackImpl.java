@@ -152,8 +152,11 @@ final class ClientCallbackImpl implements MultiClientInputMethodServiceDelegate.
             mDelegate.reportImeWindowTarget(
                     mClientId, targetWindowHandle, window.getWindow().getAttributes().token);
         }
-
         if (inputConnection == null || editorInfo == null) {
+            // deactivate previous client.
+            if (MultiClientInputMethod.sLastClientId != mClientId) {
+                mDelegate.setActive(MultiClientInputMethod.sLastClientId, false /* active */);
+            }
             // Dummy InputConnection case.
             if (window.getClientId() == mClientId) {
                 // Special hack for temporary focus changes (e.g. notification shade).
@@ -163,6 +166,9 @@ final class ClientCallbackImpl implements MultiClientInputMethodServiceDelegate.
                 window.onDummyStartInput(mClientId, targetWindowHandle);
             }
         } else {
+            if (MultiClientInputMethod.sLastClientId != mClientId) {
+                mDelegate.setActive(mClientId, true /* active */);
+            }
             window.onStartInput(mClientId, targetWindowHandle, inputConnection);
         }
 
@@ -184,6 +190,7 @@ final class ClientCallbackImpl implements MultiClientInputMethodServiceDelegate.
                 window.hide();
                 break;
         }
+        MultiClientInputMethod.sLastClientId = mClientId;
     }
 
     @Override
