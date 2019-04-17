@@ -28,6 +28,7 @@ import android.util.Log;
 public final class MultiClientInputMethod extends Service {
     private static final String TAG = "MultiClientInputMethod";
     private static final boolean DEBUG = false;
+    static int sLastClientId = MultiClientInputMethodServiceDelegate.INVALID_CLIENT_ID;
 
     SoftInputWindowManager mSoftInputWindowManager;
     MultiClientInputMethodServiceDelegate mDelegate;
