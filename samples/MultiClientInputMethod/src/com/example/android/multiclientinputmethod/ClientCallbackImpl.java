@@ -41,10 +41,13 @@ final class ClientCallbackImpl implements MultiClientInputMethodServiceDelegate.
     private final int mSelfReportedDisplayId;
     private final KeyEvent.DispatcherState mDispatcherState;
     private final Looper mLooper;
+    private final MultiClientInputMethod mInputMethod;
 
-    ClientCallbackImpl(MultiClientInputMethodServiceDelegate delegate,
+    ClientCallbackImpl(MultiClientInputMethod inputMethod,
+            MultiClientInputMethodServiceDelegate delegate,
             SoftInputWindowManager softInputWindowManager, int clientId, int uid, int pid,
             int selfReportedDisplayId) {
+        mInputMethod = inputMethod;
         mDelegate = delegate;
         mSoftInputWindowManager = softInputWindowManager;
         mClientId = clientId;
@@ -53,7 +56,9 @@ final class ClientCallbackImpl implements MultiClientInputMethodServiceDelegate.
         mSelfReportedDisplayId = selfReportedDisplayId;
         mDispatcherState = new KeyEvent.DispatcherState();
         // For simplicity, we use the main looper for this sample.
-        // To use other looper thread, make sure that the IME Window also runs on the same looper.
+        // To use other looper thread, make sure that the IME Window also runs on the same looper
+        // and introduce an appropriate synchronization mechanism instead of directly accessing
+        // MultiClientInputMethod#mLastClientId.
         mLooper = Looper.getMainLooper();
     }
 
@@ -154,8 +159,8 @@ final class ClientCallbackImpl implements MultiClientInputMethodServiceDelegate.
         }
         if (inputConnection == null || editorInfo == null) {
             // deactivate previous client.
-            if (MultiClientInputMethod.sLastClientId != mClientId) {
-                mDelegate.setActive(MultiClientInputMethod.sLastClientId, false /* active */);
+            if (mInputMethod.mLastClientId != mClientId) {
+                mDelegate.setActive(mInputMethod.mLastClientId, false /* active */);
             }
             // Dummy InputConnection case.
             if (window.getClientId() == mClientId) {
@@ -166,7 +171,7 @@ final class ClientCallbackImpl implements MultiClientInputMethodServiceDelegate.
                 window.onDummyStartInput(mClientId, targetWindowHandle);
             }
         } else {
-            if (MultiClientInputMethod.sLastClientId != mClientId) {
+            if (mInputMethod.mLastClientId != mClientId) {
                 mDelegate.setActive(mClientId, true /* active */);
             }
             window.onStartInput(mClientId, targetWindowHandle, inputConnection);
@@ -190,7 +195,7 @@ final class ClientCallbackImpl implements MultiClientInputMethodServiceDelegate.
                 window.hide();
                 break;
         }
-        MultiClientInputMethod.sLastClientId = mClientId;
+        mInputMethod.mLastClientId = mClientId;
     }
 
     @Override
