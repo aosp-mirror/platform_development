@@ -23,4 +23,5 @@
     <string name="add_app_shortcut">Add app shortcut</string>
     <string name="set_wallpaper">Set wallpaper</string>
     <string name="new_instance">Request launch in new instance</string>
+    <string name="wallpaper_description">Sample multidisplay wallpaper</string>
 </resources>
