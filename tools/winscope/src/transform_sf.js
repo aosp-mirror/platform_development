@@ -198,6 +198,7 @@ function missingLayer(childId) {
     name: "layer #" + childId,
     missing: true,
     zOrderRelativeOf: -1,
+    transform: {dsdx:1, dtdx:0, dsdy:0, dtdy:1},
   }
 }
 
