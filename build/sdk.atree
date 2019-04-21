@@ -180,7 +180,7 @@ ${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android.test.base.stubs_intermediate
 ${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android.test.runner.stubs_intermediates/classes.jar platforms/${PLATFORM_NAME}/optional/android.test.runner.jar
 
 # the aidl precompiled include
-obj/framework.aidl                                                                            platforms/${PLATFORM_NAME}/framework.aidl
+${OUT_DIR}/target/common/obj/PACKAGING/framework.aidl                                        platforms/${PLATFORM_NAME}/framework.aidl
 
 # emulator skins from sdk.git
 development/tools/emulator/skins/QVGA          platforms/${PLATFORM_NAME}/skins/QVGA
