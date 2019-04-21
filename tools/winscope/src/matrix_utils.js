@@ -135,6 +135,7 @@ function fill_transform_data(transform) {
       transform.dtdx = 0.0;
       transform.dsdy = 0.0;
       transform.dtdy = 1.0;
+      transform.type = 0;
       return;
     }
 
