@@ -57,6 +57,15 @@ public class ThemedNavBarKeyboard extends InputMethodService {
     private KeyboardLayoutView mLayout;
 
     @Override
+    public void onCreate() {
+        super.onCreate();
+        if (BuildCompat.EFFECTIVE_SDK_INT > Build.VERSION_CODES.P) {
+            // Disable contrast for extended navbar gradient.
+            getWindow().getWindow().setNavigationBarContrastEnforced(false);
+        }
+    }
+
+    @Override
     public View onCreateInputView() {
         mLayout = new KeyboardLayoutView(this, getWindow().getWindow());
         return mLayout;
