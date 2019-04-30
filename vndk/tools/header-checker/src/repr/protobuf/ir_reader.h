@@ -42,10 +42,9 @@ class ProtobufIRReader : public IRReader {
       : IRReader(exported_headers) {}
 
 
-  bool ReadDump(const std::string &dump_file) override;
-
-
  private:
+  bool ReadDumpImpl(const std::string &dump_file) override;
+
   void ReadFunctions(const abi_dump::TranslationUnit &tu);
 
   void ReadGlobalVariables(const abi_dump::TranslationUnit &tu);
