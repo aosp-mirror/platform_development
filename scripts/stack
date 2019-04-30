@@ -29,6 +29,7 @@ def main():
   parser.add_argument('file',
                       metavar='FILE',
                       default='-',
+                      nargs='?',  # Required for default.
                       help='should contain a stack trace in it somewhere the '
                            'tool will find that and re-print it with source '
                            'files and line numbers. If you don\'t pass FILE, '
