@@ -2200,6 +2200,7 @@ class ELFLinker(object):
     def _rename_lib(self, lib, new_path):
         self._remove_lib_from_lookup_dict(lib)
         lib.path = new_path
+        lib._tag_bit = self.tagged_paths.get_path_tag_bit(new_path)
         self._add_lib_to_lookup_dict(lib)
 
 
