@@ -1,5 +1,5 @@
 /system/${LIB}/libEGL.so:[regex]/vendor/${LIB}/egl/libEGL[A-Za-z0-9_-]*\.so
 /system/${LIB}/libEGL.so:[regex]/vendor/${LIB}/egl/libGLES[A-Za-z0-9_-]*\.so
-/system/${LIB}/libc.so:/system/${LIB}/libc_malloc_debug.so
-/system/${LIB}/libc.so:/system/${LIB}/libicuuc.so
-/system/${LIB}/libc.so:/system/${LIB}/libnetd_client.so
+/apex/com.android.runtime/${LIB}/bionic/libc.so:/apex/com.android.runtime/${LIB}/libc_malloc_debug.so
+/apex/com.android.runtime/${LIB}/bionic/libc.so:/apex/com.android.runtime/${LIB}/libicuuc.so
+/apex/com.android.runtime/${LIB}/bionic/libc.so:/system/${LIB}/libnetd_client.so
