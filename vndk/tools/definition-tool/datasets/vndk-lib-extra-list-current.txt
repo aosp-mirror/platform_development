@@ -43,8 +43,3 @@ SP-HAL: [regex]^/vendor/.*/libGLESv3_.*\.so$
 SP-HAL: [regex]^/vendor/.*/libPVRRS\.so$
 SP-HAL: [regex]^/vendor/.*/libRSDriver.*\.so$
 SP-HAL: [regex]^/vendor/.*/vulkan.*\.so$
-
-# Workaround for degenerated VDNK
-VNDK-SP-private: libartbase.so
-VNDK-SP-private: libdexfile.so
-VNDK-SP-private: libziparchive.so
