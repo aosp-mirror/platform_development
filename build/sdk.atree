@@ -249,6 +249,7 @@ ramdisk.img                                system-images/${PLATFORM_NAME}/${TARG
 device/generic/goldfish/data/etc/userdata.img    system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/userdata.img
 data/misc                                        system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/data/misc
 system/build.prop                          system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/build.prop
+VerifiedBootParams.textproto   system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/VerifiedBootParams.textproto
 
 # Note: the kernel image is handled by sdk-android-<abi>.atree now.
 
