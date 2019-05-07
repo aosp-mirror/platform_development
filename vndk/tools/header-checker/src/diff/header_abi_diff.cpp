@@ -121,6 +121,13 @@ static llvm::cl::opt<TextFormatIR> text_format_diff(
     llvm::cl::init(TextFormatIR::ProtobufTextFormat),
     llvm::cl::cat(header_checker_category));
 
+static llvm::cl::opt<bool> allow_adding_removing_weak_symbols(
+    "allow-adding-removing-weak-symbols",
+    llvm::cl::desc("Do not treat addition or removal of weak symbols as "
+                   "incompatible changes."),
+    llvm::cl::init(false), llvm::cl::Optional,
+    llvm::cl::cat(header_checker_category));
+
 static std::set<std::string> LoadIgnoredSymbols(std::string &symbol_list_path) {
   std::ifstream symbol_ifstream(symbol_list_path);
   std::set<std::string> ignored_symbols;
@@ -154,11 +161,11 @@ int main(int argc, const char **argv) {
   if (llvm::sys::fs::exists(ignore_symbol_list)) {
     ignored_symbols = LoadIgnoredSymbols(ignore_symbol_list);
   }
-  DiffPolicyOptions diff_policy_options(
-      consider_opaque_types_different);
+  DiffPolicyOptions diff_policy_options(consider_opaque_types_different);
   HeaderAbiDiff judge(lib_name, arch, old_dump, new_dump, compatibility_report,
-                      ignored_symbols, diff_policy_options, check_all_apis,
-                      text_format_old, text_format_new, text_format_diff);
+                      ignored_symbols, allow_adding_removing_weak_symbols,
+                      diff_policy_options, check_all_apis, text_format_old,
+                      text_format_new, text_format_diff);
 
   CompatibilityStatusIR status = judge.GenerateCompatibilityReport();
 
