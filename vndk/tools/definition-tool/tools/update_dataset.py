@@ -196,6 +196,7 @@ def main():
     libs = [
         'ld-android',
         'libc_malloc_debug',
+        'libdl_android',
         'libnetd_client',
         'libtextclassifier_hash',
     ]
