@@ -35,6 +35,8 @@ std::vector<std::string_view> Split(std::string_view s,
 
 std::optional<int> ParseInt(const std::string &s);
 
+bool ParseBool(const std::string &s);
+
 bool IsGlobPattern(std::string_view s);
 
 
