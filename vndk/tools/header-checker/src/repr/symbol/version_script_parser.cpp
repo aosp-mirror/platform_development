@@ -120,9 +120,15 @@ VersionScriptParser::ParsedTags VersionScriptParser::ParseSymbolTags(
       continue;
     }
 
-    // Check future tags.
+    // Check the future tag.
     if (tag == "future") {
       result.has_future_tag_ = true;
+      continue;
+    }
+
+    // Check the weak binding tag.
+    if (tag == "weak") {
+      result.has_weak_tag_ = true;
       continue;
     }
   }
@@ -183,11 +189,14 @@ bool VersionScriptParser::ParseSymbolLine(const std::string &line,
     return true;
   }
 
+  ElfSymbolIR::ElfSymbolBinding binding =
+      tags.has_weak_tag_ ? ElfSymbolIR::ElfSymbolBinding::Weak
+                         : ElfSymbolIR::ElfSymbolBinding::Global;
+
   if (tags.has_var_tag_) {
-    exported_symbols_->AddVar(symbol, ElfSymbolIR::ElfSymbolBinding::Global);
+    exported_symbols_->AddVar(symbol, binding);
   } else {
-    exported_symbols_->AddFunction(symbol,
-                                   ElfSymbolIR::ElfSymbolBinding::Global);
+    exported_symbols_->AddFunction(symbol, binding);
   }
   return true;
 }
