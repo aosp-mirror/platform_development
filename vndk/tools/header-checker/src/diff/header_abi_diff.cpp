@@ -14,8 +14,13 @@
 
 #include "diff/abi_diff.h"
 
+#include "utils/config_file.h"
+#include "utils/string_utils.h"
+
+#include <llvm/ADT/SmallString.h>
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/FileSystem.h>
+#include <llvm/Support/Path.h>
 #include <llvm/Support/raw_ostream.h>
 
 #include <fstream>
@@ -25,6 +30,9 @@ using header_checker::diff::HeaderAbiDiff;
 using header_checker::repr::CompatibilityStatusIR;
 using header_checker::repr::DiffPolicyOptions;
 using header_checker::repr::TextFormatIR;
+using header_checker::utils::ConfigFile;
+using header_checker::utils::ConfigParser;
+using header_checker::utils::ParseBool;
 
 
 static llvm::cl::OptionCategory header_checker_category(
@@ -68,10 +76,6 @@ static llvm::cl::opt<bool> check_all_apis(
     "check-all-apis",
     llvm::cl::desc("All apis, whether referenced or not, by exported symbols in"
                    " the dynsym table of a shared library are checked"),
-    llvm::cl::Optional, llvm::cl::cat(header_checker_category));
-
-static llvm::cl::opt<bool> suppress_local_warnings(
-    "suppress_local_warnings", llvm::cl::desc("suppress local warnings"),
     llvm::cl::Optional, llvm::cl::cat(header_checker_category));
 
 static llvm::cl::opt<bool> allow_extensions(
@@ -121,6 +125,13 @@ static llvm::cl::opt<TextFormatIR> text_format_diff(
     llvm::cl::init(TextFormatIR::ProtobufTextFormat),
     llvm::cl::cat(header_checker_category));
 
+static llvm::cl::opt<bool> allow_adding_removing_weak_symbols(
+    "allow-adding-removing-weak-symbols",
+    llvm::cl::desc("Do not treat addition or removal of weak symbols as "
+                   "incompatible changes."),
+    llvm::cl::init(false), llvm::cl::Optional,
+    llvm::cl::cat(header_checker_category));
+
 static std::set<std::string> LoadIgnoredSymbols(std::string &symbol_list_path) {
   std::ifstream symbol_ifstream(symbol_list_path);
   std::set<std::string> ignored_symbols;
@@ -133,6 +144,39 @@ static std::set<std::string> LoadIgnoredSymbols(std::string &symbol_list_path) {
     ignored_symbols.insert(line);
   }
   return ignored_symbols;
+}
+
+static std::string GetConfigFilePath(const std::string &dump_file_path) {
+  llvm::SmallString<128> config_file_path(dump_file_path);
+  llvm::sys::path::remove_filename(config_file_path);
+  llvm::sys::path::append(config_file_path, "config.ini");
+  return config_file_path.str();
+}
+
+static void ReadConfigFile(const std::string &config_file_path) {
+  ConfigFile cfg = ConfigParser::ParseFile(config_file_path);
+  if (cfg.HasSection("global")) {
+    for (auto &&[key, value] : cfg.GetSection("global")) {
+      bool value_bool = ParseBool(value);
+      if (key == "allow_adding_removing_weak_symbols") {
+        allow_adding_removing_weak_symbols = value_bool;
+      } else if (key == "advice_only") {
+        advice_only = value_bool;
+      } else if (key == "elf_unreferenced_symbol_errors") {
+        elf_unreferenced_symbol_errors = value_bool;
+      } else if (key == "check_all_apis") {
+        check_all_apis = value_bool;
+      } else if (key == "allow_extensions") {
+        allow_extensions = value_bool;
+      } else if (key == "allow_unreferenced_elf_symbol_changes") {
+        allow_unreferenced_elf_symbol_changes = value_bool;
+      } else if (key == "allow_unreferenced_changes") {
+        allow_unreferenced_changes = value_bool;
+      } else if (key == "consider_opaque_types_different") {
+        consider_opaque_types_different = value_bool;
+      }
+    }
+  }
 }
 
 static const char kWarn[] = "\033[36;1mwarning: \033[0m";
@@ -150,15 +194,20 @@ bool ShouldEmitWarningMessage(CompatibilityStatusIR status) {
 
 int main(int argc, const char **argv) {
   llvm::cl::ParseCommandLineOptions(argc, argv, "header-checker");
+
+  ReadConfigFile(GetConfigFilePath(old_dump));
+
   std::set<std::string> ignored_symbols;
   if (llvm::sys::fs::exists(ignore_symbol_list)) {
     ignored_symbols = LoadIgnoredSymbols(ignore_symbol_list);
   }
-  DiffPolicyOptions diff_policy_options(
-      consider_opaque_types_different);
+
+  DiffPolicyOptions diff_policy_options(consider_opaque_types_different);
+
   HeaderAbiDiff judge(lib_name, arch, old_dump, new_dump, compatibility_report,
-                      ignored_symbols, diff_policy_options, check_all_apis,
-                      text_format_old, text_format_new, text_format_diff);
+                      ignored_symbols, allow_adding_removing_weak_symbols,
+                      diff_policy_options, check_all_apis, text_format_old,
+                      text_format_new, text_format_diff);
 
   CompatibilityStatusIR status = judge.GenerateCompatibilityReport();
 

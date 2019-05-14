@@ -165,6 +165,7 @@ cc_library_host_static {
         "src/repr/symbol/so_file_parser.cpp",
         "src/repr/symbol/version_script_parser.cpp",
         "src/utils/api_level.cpp",
+        "src/utils/config_file.cpp",
         "src/utils/collect_exported_headers.cpp",
         "src/utils/string_utils.cpp",
     ],
@@ -198,6 +199,7 @@ cc_test_host {
         "src/repr/symbol/exported_symbol_set_test.cpp",
         "src/repr/symbol/version_script_parser_test.cpp",
         "src/utils/api_level_test.cpp",
+        "src/utils/config_file_test.cpp",
         "src/utils/string_utils_test.cpp",
     ],
 
