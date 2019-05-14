@@ -555,6 +555,37 @@ TEST_MODULES = [
             '--exclude-symbol-tag', 'mytag',
         ]
     ),
+
+    # Test data for test_allow_adding_removing_weak_symbols
+    LsdumpModule(
+        name='libweak_symbols_old',
+        arch='arm64',
+        srcs=[
+            'integration/weak_symbols/example.c',
+        ],
+        version_script='integration/weak_symbols/libexample_old.map.txt',
+        export_include_dirs=[],
+        dumper_flags=['-output-format', 'Json'],
+        linker_flags=[
+            '-input-format', 'Json',
+            '-output-format', 'Json',
+        ]
+    ),
+    LsdumpModule(
+        name='libweak_symbols_new',
+        arch='arm64',
+        srcs=[
+            'integration/weak_symbols/example.c',
+        ],
+        version_script='integration/weak_symbols/libexample_new.map.txt',
+        export_include_dirs=[],
+        dumper_flags=['-output-format', 'Json'],
+        linker_flags=[
+            '-input-format', 'Json',
+            '-output-format', 'Json',
+        ],
+        cflags=['-DNEW=1']
+    ),
 ]
 
 TEST_MODULES = {m.name: m for m in TEST_MODULES}
