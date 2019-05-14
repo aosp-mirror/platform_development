@@ -36,6 +36,7 @@ class HeaderAbiDiff {
                 const std::string &old_dump, const std::string &new_dump,
                 const std::string &compatibility_report,
                 const std::set<std::string> &ignored_symbols,
+                bool allow_adding_removing_weak_symbols,
                 const DiffPolicyOptions &diff_policy_options,
                 bool check_all_apis, repr::TextFormatIR text_format_old,
                 repr::TextFormatIR text_format_new,
@@ -44,6 +45,7 @@ class HeaderAbiDiff {
         new_dump_(new_dump), cr_(compatibility_report),
         ignored_symbols_(ignored_symbols),
         diff_policy_options_(diff_policy_options),
+        allow_adding_removing_weak_symbols_(allow_adding_removing_weak_symbols),
         check_all_apis_(check_all_apis),
         text_format_old_(text_format_old), text_format_new_(text_format_new),
         text_format_diff_(text_format_diff) {}
@@ -90,7 +92,8 @@ class HeaderAbiDiff {
   bool PopulateRemovedElements(
       const AbiElementMap<const T *> &old_elements_map,
       const AbiElementMap<const T *> &new_elements_map,
-      const AbiElementMap<const repr::ElfSymbolIR *> *elf_map,
+      const AbiElementMap<const repr::ElfSymbolIR *> *old_elf_map,
+      const AbiElementMap<const repr::ElfSymbolIR *> *new_elf_map,
       repr::IRDiffDumper *ir_diff_dumper,
       repr::IRDiffDumper::DiffKind diff_kind,
       const AbiElementMap<const repr::TypeIR *> &types_map);
@@ -115,7 +118,8 @@ class HeaderAbiDiff {
   template <typename T>
   bool DumpLoneElements(
       std::vector<const T *> &elements,
-      const AbiElementMap<const repr::ElfSymbolIR *> *elf_map,
+      const AbiElementMap<const repr::ElfSymbolIR *> *old_elf_map,
+      const AbiElementMap<const repr::ElfSymbolIR *> *new_elf_map,
       repr::IRDiffDumper *ir_diff_dumper,
       repr::IRDiffDumper::DiffKind diff_kind,
       const AbiElementMap<const repr::TypeIR *> &old_types_map);
@@ -147,6 +151,7 @@ class HeaderAbiDiff {
   const std::string &cr_;
   const std::set<std::string> &ignored_symbols_;
   const DiffPolicyOptions &diff_policy_options_;
+  bool allow_adding_removing_weak_symbols_;
   bool check_all_apis_;
   std::set<std::string> type_cache_;
   repr::TextFormatIR text_format_old_;
