@@ -61,7 +61,7 @@ repr::CompatibilityStatusIR HeaderAbiDiff::CompareTUs(
   const AbiElementMap<const repr::TypeIR *> new_types =
       new_tu.GetTypeGraph();
 
-  // Collect fills in added, removed ,unsafe and safe function diffs.
+  // CollectDynsymExportables() fills in added, removed, unsafe, and safe function diffs.
   if (!CollectDynsymExportables(old_tu.GetFunctions(), new_tu.GetFunctions(),
                                 old_tu.GetElfFunctions(),
                                 new_tu.GetElfFunctions(),
@@ -225,11 +225,11 @@ bool HeaderAbiDiff::Collect(
     const AbiElementMap<const repr::TypeIR *> &old_types_map,
     const AbiElementMap<const repr::TypeIR *> &new_types_map) {
   if (!PopulateRemovedElements(
-          old_elements_map, new_elements_map, new_elf_map, ir_diff_dumper,
-          repr::DiffMessageIR::Removed, old_types_map) ||
+          old_elements_map, new_elements_map, old_elf_map, new_elf_map,
+          ir_diff_dumper, repr::DiffMessageIR::Removed, old_types_map) ||
       !PopulateRemovedElements(
-          new_elements_map, old_elements_map, old_elf_map, ir_diff_dumper,
-          repr::IRDiffDumper::DiffKind::Added, new_types_map)) {
+          new_elements_map, old_elements_map, new_elf_map, old_elf_map,
+          ir_diff_dumper, repr::DiffMessageIR::Added, new_types_map)) {
     llvm::errs() << "Populating functions in report failed\n";
     return false;
   }
@@ -257,6 +257,10 @@ bool HeaderAbiDiff::PopulateElfElements(
     repr::IRDiffDumper *ir_diff_dumper,
     repr::IRDiffDumper::DiffKind diff_kind) {
   for (auto &&elf_element : elf_elements) {
+    if (allow_adding_removing_weak_symbols_ &&
+        elf_element->GetBinding() == repr::ElfSymbolIR::Weak) {
+      continue;
+    }
     if (!ir_diff_dumper->AddElfSymbolMessageIR(elf_element, diff_kind)) {
       return false;
     }
@@ -268,15 +272,16 @@ template <typename T>
 bool HeaderAbiDiff::PopulateRemovedElements(
     const AbiElementMap<const T*> &old_elements_map,
     const AbiElementMap<const T*> &new_elements_map,
-    const AbiElementMap<const repr::ElfSymbolIR *> *elf_map,
+    const AbiElementMap<const repr::ElfSymbolIR *> *old_elf_map,
+    const AbiElementMap<const repr::ElfSymbolIR *> *new_elf_map,
     repr::IRDiffDumper *ir_diff_dumper,
     repr::IRDiffDumper::DiffKind diff_kind,
     const AbiElementMap<const repr::TypeIR *> &removed_types_map) {
   std::vector<const T *> removed_elements =
       utils::FindRemovedElements(old_elements_map, new_elements_map);
-  if (!DumpLoneElements(removed_elements, elf_map, ir_diff_dumper, diff_kind,
-                        removed_types_map)) {
-    llvm::errs() << "Dumping added / removed element to report failed\n";
+  if (!DumpLoneElements(removed_elements, old_elf_map, new_elf_map,
+                        ir_diff_dumper, diff_kind, removed_types_map)) {
+    llvm::errs() << "Dumping added or removed element to report failed\n";
     return false;
   }
   return true;
@@ -306,33 +311,52 @@ bool HeaderAbiDiff::PopulateCommonElements(
 template <typename T>
 bool HeaderAbiDiff::DumpLoneElements(
     std::vector<const T *> &elements,
-    const AbiElementMap<const repr::ElfSymbolIR *> *elf_map,
+    const AbiElementMap<const repr::ElfSymbolIR *> *old_elf_map,
+    const AbiElementMap<const repr::ElfSymbolIR *> *new_elf_map,
     repr::IRDiffDumper *ir_diff_dumper,
     repr::IRDiffDumper::DiffKind diff_kind,
     const AbiElementMap<const repr::TypeIR *> &types_map) {
-  // If the record / enum has source file information, skip it.
   std::smatch source_file_match;
   std::regex source_file_regex(" at ");
+
   for (auto &&element : elements) {
     if (IgnoreSymbol<T>(element, ignored_symbols_,
                         [](const T *e) {return e->GetLinkerSetKey();})) {
       continue;
     }
-    // The element does exist in the .dynsym table, we do not have meta-data
-    // surrounding the element.
+
+    // If an element (FunctionIR or GlobalVarIR) is missing from the new ABI
+    // dump but a corresponding ELF symbol (ElfFunctionIR or ElfObjectIR) can
+    // be found in the new ABI dump file, don't emit error on this element.
+    // This may happen when the standard reference target implements the
+    // function (or the global variable) in C/C++ and the target-under-test
+    // implements the function (or the global variable) in assembly.
     const std::string &element_linker_set_key = element->GetLinkerSetKey();
-    if ((elf_map != nullptr) &&
-        (elf_map->find(element_linker_set_key) != elf_map->end())) {
+    if (new_elf_map &&
+        new_elf_map->find(element_linker_set_key) != new_elf_map->end()) {
       continue;
     }
+
+    // If the `-ignore-weak-symbols` option is enabled, ignore the element if
+    // it was a weak symbol.
+    if (allow_adding_removing_weak_symbols_ && old_elf_map) {
+      auto elem_it = old_elf_map->find(element_linker_set_key);
+      if (elem_it != old_elf_map->end() &&
+          elem_it->second->GetBinding() == repr::ElfSymbolIR::Weak) {
+        continue;
+      }
+    }
+
+    // If the record / enum has source file information, skip it.
     if (std::regex_search(element_linker_set_key, source_file_match,
                           source_file_regex)) {
       continue;
     }
+
     auto element_copy = *element;
     ReplaceTypeIdsWithTypeNames(types_map, &element_copy);
     if (!ir_diff_dumper->AddLinkableMessageIR(&element_copy, diff_kind)) {
-      llvm::errs() << "Couldn't dump added /removed element\n";
+      llvm::errs() << "Couldn't dump added or removed element\n";
       return false;
     }
   }
