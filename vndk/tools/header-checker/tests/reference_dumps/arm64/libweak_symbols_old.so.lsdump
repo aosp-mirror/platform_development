@@ -1,0 +1,37 @@
+{
+ "array_types" : [],
+ "builtin_types" :
+ [
+  {
+   "linker_set_key" : "void",
+   "name" : "void",
+   "referenced_type" : "type-1",
+   "self_type" : "type-1"
+  }
+ ],
+ "elf_functions" :
+ [
+  {
+   "binding" : "weak",
+   "name" : "example"
+  }
+ ],
+ "elf_objects" : [],
+ "enum_types" : [],
+ "function_types" : [],
+ "functions" :
+ [
+  {
+   "function_name" : "example",
+   "linker_set_key" : "example",
+   "return_type" : "type-1",
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/weak_symbols/example.c"
+  }
+ ],
+ "global_vars" : [],
+ "lvalue_reference_types" : [],
+ "pointer_types" : [],
+ "qualified_types" : [],
+ "record_types" : [],
+ "rvalue_reference_types" : []
+}
