@@ -94,6 +94,20 @@ TEST(StringUtilsTest, ParseInt) {
 }
 
 
+TEST(StringUtilsTest, ParseBool) {
+  EXPECT_FALSE(ParseBool(""));
+  EXPECT_FALSE(ParseBool("false"));
+  EXPECT_FALSE(ParseBool("off"));
+  EXPECT_FALSE(ParseBool("0"));
+
+  EXPECT_TRUE(ParseBool("TRUE"));
+  EXPECT_TRUE(ParseBool("True"));
+  EXPECT_TRUE(ParseBool("true"));
+  EXPECT_TRUE(ParseBool("ON"));
+  EXPECT_TRUE(ParseBool("1"));
+}
+
+
 TEST(StringUtilsTest, IsGlobPattern) {
   EXPECT_TRUE(IsGlobPattern("*.so"));
   EXPECT_TRUE(IsGlobPattern("[ab].txt"));
