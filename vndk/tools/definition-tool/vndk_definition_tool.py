@@ -2917,7 +2917,7 @@ class ELFLinker(object):
 
 
     @staticmethod
-    def _create_internal(scan_elf_files, system_dirs, system_dirs_as_vendor,
+    def _create_internal(system_dirs, system_dirs_as_vendor,
                          system_dirs_ignored, vendor_dirs,
                          vendor_dirs_as_system, vendor_dirs_ignored,
                          extra_deps, generic_refs, tagged_paths,
@@ -2933,14 +2933,14 @@ class ELFLinker(object):
                 graph.add_executables_in_dir(
                     'system', PT_SYSTEM, path, PT_VENDOR,
                     system_dirs_as_vendor, system_dirs_ignored,
-                    scan_elf_files, unzip_files)
+                    unzip_files)
 
         if vendor_dirs:
             for path in vendor_dirs:
                 graph.add_executables_in_dir(
                     'vendor', PT_VENDOR, path, PT_SYSTEM,
                     vendor_dirs_as_system, vendor_dirs_ignored,
-                    scan_elf_files, unzip_files)
+                    unzip_files)
 
         if extra_deps:
             for path in extra_deps:
@@ -2959,7 +2959,7 @@ class ELFLinker(object):
                extra_deps=None, generic_refs=None, tagged_paths=None,
                vndk_lib_dirs=None, unzip_files=True):
         return ELFLinker._create_internal(
-            scan_elf_files, system_dirs, system_dirs_as_vendor,
+            system_dirs, system_dirs_as_vendor,
             system_dirs_ignored, vendor_dirs, vendor_dirs_as_system,
             vendor_dirs_ignored, extra_deps, generic_refs, tagged_paths,
             vndk_lib_dirs, unzip_files)
