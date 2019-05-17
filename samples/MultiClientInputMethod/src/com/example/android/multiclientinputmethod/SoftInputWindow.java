@@ -40,6 +40,7 @@ final class SoftInputWindow extends Dialog {
 
     private final Keyboard mQwertygKeyboard;
     private final Keyboard mSymbolKeyboard;
+    private final Keyboard mSymbolShiftKeyboard;
 
     private int mClientId = MultiClientInputMethodServiceDelegate.INVALID_CLIENT_ID;
     private int mTargetWindowHandle = MultiClientInputMethodServiceDelegate.INVALID_WINDOW_HANDLE;
@@ -74,6 +75,7 @@ final class SoftInputWindow extends Dialog {
         mKeyboardView = (KeyboardView) getLayoutInflater().inflate(R.layout.input, null);
         mQwertygKeyboard = new Keyboard(context, R.xml.qwerty);
         mSymbolKeyboard = new Keyboard(context, R.xml.symbols);
+        mSymbolShiftKeyboard = new Keyboard(context, R.xml.symbols_shift);
         mKeyboardView.setKeyboard(mQwertygKeyboard);
         mKeyboardView.setOnKeyboardActionListener(sNoopListener);
         layout.addView(mKeyboardView);
@@ -93,8 +95,13 @@ final class SoftInputWindow extends Dialog {
         return mTargetWindowHandle;
     }
 
-    boolean isQwerty() {
+    boolean isQwertyKeyboard() {
         return mKeyboardView.getKeyboard() == mQwertygKeyboard;
+    }
+
+    boolean isSymbolKeyboard() {
+        Keyboard keyboard = mKeyboardView.getKeyboard();
+        return keyboard == mSymbolKeyboard || keyboard == mSymbolShiftKeyboard;
     }
 
     void onFinishClient() {
@@ -127,6 +134,8 @@ final class SoftInputWindow extends Dialog {
                     Log.v(TAG, "onKey clientId=" + clientId + " primaryCode=" + primaryCode
                             + " keyCodes=" + Arrays.toString(keyCodes));
                 }
+                boolean isShifted = isShifted();  // Store the current state before resetting it.
+                resetShift();
                 switch (primaryCode) {
                     case Keyboard.KEYCODE_CANCEL:
                         hide();
@@ -140,8 +149,11 @@ final class SoftInputWindow extends Dialog {
                     case Keyboard.KEYCODE_MODE_CHANGE:
                         handleSwitchKeyboard();
                         break;
+                    case Keyboard.KEYCODE_SHIFT:
+                        handleShift(isShifted);
+                        break;
                     default:
-                        inputConnection.commitText(String.valueOf((char) primaryCode), 1);
+                        handleCharacter(inputConnection, primaryCode, isShifted);
                         break;
                 }
             }
@@ -160,11 +172,36 @@ final class SoftInputWindow extends Dialog {
     }
 
     void handleSwitchKeyboard() {
-        if (isQwerty()) {
+        if (isQwertyKeyboard()) {
             mKeyboardView.setKeyboard(mSymbolKeyboard);
         } else {
             mKeyboardView.setKeyboard(mQwertygKeyboard);
         }
 
+    }
+
+    boolean isShifted() {
+        return mKeyboardView.isShifted();
+    }
+
+    void resetShift() {
+        if (isSymbolKeyboard() && isShifted()) {
+            mKeyboardView.setKeyboard(mSymbolKeyboard);
+        }
+        mKeyboardView.setShifted(false);
+    }
+
+    void handleShift(boolean isShifted) {
+        if (isSymbolKeyboard()) {
+            mKeyboardView.setKeyboard(isShifted ? mSymbolKeyboard : mSymbolShiftKeyboard);
+        }
+        mKeyboardView.setShifted(!isShifted);
+    }
+
+    void handleCharacter(InputConnection inputConnection, int primaryCode, boolean isShifted) {
+        if (isQwertyKeyboard() && isShifted) {
+            primaryCode = Character.toUpperCase(primaryCode);
+        }
+        inputConnection.commitText(String.valueOf((char) primaryCode), 1);
     }
 }
