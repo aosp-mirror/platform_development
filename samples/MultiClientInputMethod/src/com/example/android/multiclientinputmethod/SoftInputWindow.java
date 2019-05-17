@@ -36,7 +36,10 @@ final class SoftInputWindow extends Dialog {
     private static final String TAG = "SoftInputWindow";
     private static final boolean DEBUG = false;
 
-    private final KeyboardView mQwerty;
+    private final KeyboardView mKeyboardView;
+
+    private final Keyboard mQwertygKeyboard;
+    private final Keyboard mSymbolKeyboard;
 
     private int mClientId = MultiClientInputMethodServiceDelegate.INVALID_CLIENT_ID;
     private int mTargetWindowHandle = MultiClientInputMethodServiceDelegate.INVALID_WINDOW_HANDLE;
@@ -68,10 +71,12 @@ final class SoftInputWindow extends Dialog {
         final LinearLayout layout = new LinearLayout(context);
         layout.setOrientation(LinearLayout.VERTICAL);
 
-        mQwerty = (KeyboardView) getLayoutInflater().inflate(R.layout.input, null);
-        mQwerty.setKeyboard(new Keyboard(context, R.xml.qwerty));
-        mQwerty.setOnKeyboardActionListener(sNoopListener);
-        layout.addView(mQwerty);
+        mKeyboardView = (KeyboardView) getLayoutInflater().inflate(R.layout.input, null);
+        mQwertygKeyboard = new Keyboard(context, R.xml.qwerty);
+        mSymbolKeyboard = new Keyboard(context, R.xml.symbols);
+        mKeyboardView.setKeyboard(mQwertygKeyboard);
+        mKeyboardView.setOnKeyboardActionListener(sNoopListener);
+        layout.addView(mKeyboardView);
 
         setContentView(layout, new ViewGroup.LayoutParams(
                 LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
@@ -88,8 +93,12 @@ final class SoftInputWindow extends Dialog {
         return mTargetWindowHandle;
     }
 
+    boolean isQwerty() {
+        return mKeyboardView.getKeyboard() == mQwertygKeyboard;
+    }
+
     void onFinishClient() {
-        mQwerty.setOnKeyboardActionListener(sNoopListener);
+        mKeyboardView.setOnKeyboardActionListener(sNoopListener);
         mClientId = MultiClientInputMethodServiceDelegate.INVALID_CLIENT_ID;
         mTargetWindowHandle = MultiClientInputMethodServiceDelegate.INVALID_WINDOW_HANDLE;
     }
@@ -99,7 +108,7 @@ final class SoftInputWindow extends Dialog {
             Log.v(TAG, "onDummyStartInput clientId=" + clientId
                     + " targetWindowHandle=" + targetWindowHandle);
         }
-        mQwerty.setOnKeyboardActionListener(sNoopListener);
+        mKeyboardView.setOnKeyboardActionListener(sNoopListener);
         mClientId = clientId;
         mTargetWindowHandle = targetWindowHandle;
     }
@@ -111,7 +120,7 @@ final class SoftInputWindow extends Dialog {
         }
         mClientId = clientId;
         mTargetWindowHandle = targetWindowHandle;
-        mQwerty.setOnKeyboardActionListener(new NoopKeyboardActionListener() {
+        mKeyboardView.setOnKeyboardActionListener(new NoopKeyboardActionListener() {
             @Override
             public void onKey(int primaryCode, int[] keyCodes) {
                 if (DEBUG) {
@@ -128,10 +137,11 @@ final class SoftInputWindow extends Dialog {
                         inputConnection.sendKeyEvent(
                                 new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DEL));
                         break;
+                    case Keyboard.KEYCODE_MODE_CHANGE:
+                        handleSwitchKeyboard();
+                        break;
                     default:
-                        if (Character.isLetter(primaryCode)) {
-                            inputConnection.commitText(String.valueOf((char) primaryCode), 1);
-                        }
+                        inputConnection.commitText(String.valueOf((char) primaryCode), 1);
                         break;
                 }
             }
@@ -147,5 +157,14 @@ final class SoftInputWindow extends Dialog {
                 inputConnection.commitText(text, 0);
             }
         });
+    }
+
+    void handleSwitchKeyboard() {
+        if (isQwerty()) {
+            mKeyboardView.setKeyboard(mSymbolKeyboard);
+        } else {
+            mKeyboardView.setKeyboard(mQwertygKeyboard);
+        }
+
     }
 }
