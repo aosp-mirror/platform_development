@@ -18,7 +18,7 @@ usage () {
     echo "    required host binaries to modify system image. Optional."
     echo "override_vbmeta_image_path is the path to a vbmeta.img to use"
     echo "    to override the existing vbmeta.img of device. Optional."
-    echo "override_boot_image_path is the path to a boot imgage to use to
+    echo "override_boot_image_path is the path to a boot imgage to use to"
     echo "    override the existing boot.img of device. Optional."
     echo "-s is used to fetch and flash both product.img and system.img from"
     echo "    the system_build_dir for devices with a product partition."
