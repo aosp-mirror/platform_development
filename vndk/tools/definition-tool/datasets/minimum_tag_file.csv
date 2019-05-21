@@ -1,4 +1,7 @@
 Path,Tag,Comments
+/apex/com.android.runtime/${LIB}/bionic/libc.so,LL-NDK,
+/apex/com.android.runtime/${LIB}/bionic/libdl.so,LL-NDK,
+/apex/com.android.runtime/${LIB}/bionic/libm.so,LL-NDK,
 /system/${LIB}/libEGL.so,LL-NDK,
 /system/${LIB}/libGLESv1_CM.so,LL-NDK,
 /system/${LIB}/libGLESv2.so,LL-NDK,

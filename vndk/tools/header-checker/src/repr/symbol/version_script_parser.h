@@ -44,6 +44,7 @@ class VersionScriptParser {
     unsigned has_excluded_tags_ : 1;
     unsigned has_future_tag_ : 1;
     unsigned has_var_tag_ : 1;
+    unsigned has_weak_tag_ : 1;
     utils::ApiLevel introduced_;
 
 

@@ -1087,6 +1087,19 @@ class DexFileReader(object):
     ))
 
 
+    # VdexHeader 21
+    VdexHeader21 = create_struct('VdexHeader21', (
+        ('magic', '4s'),
+        ('vdex_version', '4s'),
+        ('dex_section_version', '4s'),
+        ('number_of_dex_files', 'I'),
+        ('verifier_deps_size', 'I'),
+        ('bootclasspath_checksums_size', 'I'),
+        ('class_loader_context_size', 'I'),
+        # checksums
+    ))
+
+
     DexSectionHeader = create_struct('DexSectionHeader', (
         ('dex_size', 'I'),
         ('dex_shared_data_size', 'I'),
@@ -1111,8 +1124,10 @@ class DexFileReader(object):
             VdexHeader = cls.VdexHeader1
         elif b'016\x00' <= version < b'019\x00':
             VdexHeader = cls.VdexHeader16
-        elif version == b'019\x00':
+        elif b'019\x00' <= version < b'021\x00':
             VdexHeader = cls.VdexHeader19
+        elif version == b'021\x00':
+            VdexHeader = cls.VdexHeader21
         else:
             raise ValueError('unknown vdex version ' + repr(version))
 
@@ -2200,6 +2215,7 @@ class ELFLinker(object):
     def _rename_lib(self, lib, new_path):
         self._remove_lib_from_lookup_dict(lib)
         lib.path = new_path
+        lib._tag_bit = self.tagged_paths.get_path_tag_bit(new_path)
         self._add_lib_to_lookup_dict(lib)
 
 
