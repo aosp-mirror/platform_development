@@ -16,55 +16,37 @@
 
 """stack symbolizes native crash dumps."""
 
-import getopt
+import argparse
 import sys
 
 import stack_core
 import symbol
 
-
-def PrintUsage():
-  """Print usage and exit with error."""
-  # pylint: disable-msg=C6310
-  print
-  print "  usage: " + sys.argv[0] + " [options] [FILE]"
-  print
-  print "  --arch=arm|arm64|mips|mips64|x86|x86_64"
-  print "       the target architecture"
-  print
-  print "  FILE should contain a stack trace in it somewhere"
-  print "       the tool will find that and re-print it with"
-  print "       source files and line numbers.  If you don't"
-  print "       pass FILE, or if file is -, it reads from"
-  print "       stdin."
-  print
-  # pylint: enable-msg=C6310
-  sys.exit(1)
-
-
 def main():
-  try:
-    options, arguments = getopt.getopt(sys.argv[1:], "",
-                                       ["arch=",
-                                        "help"])
-  except getopt.GetoptError, unused_error:
-    PrintUsage()
+  parser = argparse.ArgumentParser(description='Parse and symbolize crashes')
+  parser.add_argument('--arch', help='the target architecture')
+  parser.add_argument('--syms', '--symdir', help='the symbols directory')
+  parser.add_argument('file',
+                      metavar='FILE',
+                      default='-',
+                      nargs='?',  # Required for default.
+                      help='should contain a stack trace in it somewhere the '
+                           'tool will find that and re-print it with source '
+                           'files and line numbers. If you don\'t pass FILE, '
+                           'or if file is -, it reads from stdin.')
 
-  for option, value in options:
-    if option == "--help":
-      PrintUsage()
-    elif option == "--arch":
-      symbol.ARCH = value
+  args = parser.parse_args()
 
-  if len(arguments) > 1:
-    PrintUsage()
-
-  if not arguments or arguments[0] == "-":
+  if args.arch:
+    symbol.ARCH = args.arch
+  if args.syms:
+    symbol.SYMBOLS_DIR = args.syms
+  if args.file == '-':
     print "Reading native crash info from stdin"
     f = sys.stdin
   else:
-    print "Searching for native crashes in %s" % arguments[0]
-    f = open(arguments[0], "r")
+    print "Searching for native crashes in %s" % args.file
+    f = open(args.file, "r")
 
   lines = f.readlines()
   f.close()

@@ -8,16 +8,6 @@ LLNDK: libclang_rt.asan-mips-android.so
 LLNDK: libclang_rt.asan-mips64-android.so
 LLNDK: libclang_rt.asan-x86_64-android.so
 
-VNDK-core: libclang_rt.scudo-aarch64-android.so
-VNDK-core: libclang_rt.scudo-arm-android.so
-VNDK-core: libclang_rt.scudo-i686-android.so
-VNDK-core: libclang_rt.scudo-x86_64-android.so
-
-VNDK-core: libclang_rt.scudo_minimal-aarch64-android.so
-VNDK-core: libclang_rt.scudo_minimal-arm-android.so
-VNDK-core: libclang_rt.scudo_minimal-i686-android.so
-VNDK-core: libclang_rt.scudo_minimal-x86_64-android.so
-
 VNDK-core: libclang_rt.ubsan_standalone-aarch64-android.so
 VNDK-core: libclang_rt.ubsan_standalone-arm-android.so
 VNDK-core: libclang_rt.ubsan_standalone-i686-android.so
@@ -27,7 +17,6 @@ VNDK-core: libclang_rt.ubsan_standalone-x86_64-android.so
 
 LLNDK-private: ld-android.so
 LLNDK-private: libc_malloc_debug.so
-LLNDK-private: libdl_android.so
 LLNDK-private: libnetd_client.so
 LLNDK-private: libtextclassifier_hash.so
 
@@ -43,3 +32,8 @@ SP-HAL: [regex]^/vendor/.*/libGLESv3_.*\.so$
 SP-HAL: [regex]^/vendor/.*/libPVRRS\.so$
 SP-HAL: [regex]^/vendor/.*/libRSDriver.*\.so$
 SP-HAL: [regex]^/vendor/.*/vulkan.*\.so$
+
+# Workaround for degenerated VDNK
+VNDK-SP-private: libartbase.so
+VNDK-SP-private: libdexfile.so
+VNDK-SP-private: libziparchive.so
