@@ -14,6 +14,8 @@
 
 #include "utils/string_utils.h"
 
+#include <algorithm>
+#include <cctype>
 #include <cstdlib>
 #include <string>
 #include <utility>
@@ -83,6 +85,13 @@ std::optional<int> ParseInt(const std::string &s) {
   }
 
   return static_cast<int>(res);
+}
+
+
+bool ParseBool(const std::string &s) {
+  std::string value(s);
+  std::transform(value.begin(), value.end(), value.begin(), std::tolower);
+  return (value == "true" || value == "on" || value == "1");
 }
 
 

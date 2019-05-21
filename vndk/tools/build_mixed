@@ -4,9 +4,10 @@ usage () {
     echo
     echo "Usage: $0 [-v <vendor_version>] [-m <modify_system_image_path>]"
     echo "    [-t <prebuilt_otatools_path>] [-p <override_vbmeta_image_path>]"
+    echo "    [-b <override_boot_image_path>]"
     echo "    [-s] system_build_dir device_build_dir out_dir [check_tool]"
     echo
-    echo "Options -v, -m, -t, -p, -s must precede positional arguments."
+    echo "Options -v, -m, -t, -p, -b, -s must precede positional arguments."
     echo
     echo "vendor_version is the version of the vendor image when Keymaster v3"
     echo "    related modifications to the system image is necessary. Optional."
@@ -17,6 +18,8 @@ usage () {
     echo "    required host binaries to modify system image. Optional."
     echo "override_vbmeta_image_path is the path to a vbmeta.img to use"
     echo "    to override the existing vbmeta.img of device. Optional."
+    echo "override_boot_image_path is the path to a boot imgage to use to"
+    echo "    override the existing boot.img of device. Optional."
     echo "-s is used to fetch and flash both product.img and system.img from"
     echo "    the system_build_dir for devices with a product partition."
     echo "    product.img will be removed if system_build_dir does not have"
@@ -50,7 +53,7 @@ cleanup_and_exit () {
 
 trap cleanup_and_exit EXIT
 
-while getopts :v:m:p:t:s opt; do
+while getopts :v:m:p:b:t:s opt; do
     case "$opt" in
         v)
             readonly VENDOR_VERSION="$OPTARG"
@@ -60,6 +63,9 @@ while getopts :v:m:p:t:s opt; do
             ;;
         p)
             readonly OVERRIDE_VBMETA_IMAGE_PATH="$OPTARG"
+            ;;
+        b)
+            readonly OVERRIDE_BOOT_IMAGE_PATH="$OPTARG"
             ;;
         t)
             readonly OTATOOLS_ZIP="$OPTARG"
@@ -113,6 +119,10 @@ fi
 
 if [[ ! -z "${OVERRIDE_VBMETA_IMAGE_PATH+x}" && ! -f "$OVERRIDE_VBMETA_IMAGE_PATH" ]]; then
     exit_badparam "Specified vbmeta.img not found: "$OVERRIDE_VBMETA_IMAGE_PATH""
+fi
+
+if [[ ! -z "${OVERRIDE_BOOT_IMAGE_PATH+x}" && ! -f "$OVERRIDE_BOOT_IMAGE_PATH" ]]; then
+    exit_badparam "Specified boot image not found: "$OVERRIDE_BOOT_IMAGE_PATH""
 fi
 
 readonly DEVICE_ARTIFACTS_DIR="$TEMP_DIR"/device_archive_artifacts
@@ -217,6 +227,12 @@ fi
 if [[ -f "$DEVICE_IMAGES_DIR"/vbmeta.img ]]; then
     readonly VBMETA_IMAGE_PATH="${OVERRIDE_VBMETA_IMAGE_PATH:-"$SYSTEM_IMAGES_DIR"/vbmeta.img}"
     cp "$VBMETA_IMAGE_PATH" "$DEVICE_IMAGES_DIR"/
+fi
+
+# Override boot.img with the provided boot image file since fastboot update cmd
+# will try to flash boot.img in the archive.
+if [[ ! -z "${OVERRIDE_BOOT_IMAGE_PATH+x}" && -f "$DEVICE_IMAGES_DIR"/boot.img ]]; then
+    cp "$OVERRIDE_BOOT_IMAGE_PATH" "$DEVICE_IMAGES_DIR"/boot.img
 fi
 
 ###
