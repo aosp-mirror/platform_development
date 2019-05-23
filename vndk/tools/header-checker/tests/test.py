@@ -309,6 +309,25 @@ class HeaderCheckerTest(unittest.TestCase):
             ["-input-format-old", "Json", "-input-format-new", "Json",
              "-consider-opaque-types-different"])
 
+    def test_allow_adding_removing_weak_symbols(self):
+        module_old = Module.get_test_modules_by_name("libweak_symbols_old")[0]
+        module_new = Module.get_test_modules_by_name("libweak_symbols_new")[0]
+        lsdump_old = self.get_or_create_ref_dump(module_old, False)
+        lsdump_new = self.get_or_create_ref_dump(module_new, False)
+
+        options = ["-input-format-old", "Json", "-input-format-new", "Json"]
+
+        # If `-allow-adding-removing-weak-symbols` is not specified, removing a
+        # weak symbol must be treated as an incompatible change.
+        self.run_and_compare_abi_diff(
+            lsdump_old, lsdump_new, "libweak_symbols", "arm64", 8, options)
+
+        # If `-allow-adding-removing-weak-symbols` is specified, removing a
+        # weak symbol must be fine and mustn't be a fatal error.
+        self.run_and_compare_abi_diff(
+            lsdump_old, lsdump_new, "libweak_symbols", "arm64", 0,
+            options + ["-allow-adding-removing-weak-symbols"])
+
     def test_linker_shared_object_file_and_version_script(self):
         base_dir = os.path.join(
             SCRIPT_DIR, 'integration', 'version_script_example')

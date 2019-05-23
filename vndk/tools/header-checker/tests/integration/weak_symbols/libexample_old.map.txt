@@ -1,0 +1,4 @@
+LIBTEST_1.0 {
+  global:
+    example;  # weak
+};
