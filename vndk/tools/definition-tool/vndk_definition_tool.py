@@ -1191,6 +1191,16 @@ class DexFileReader(object):
 
 
 #------------------------------------------------------------------------------
+# Path Functions
+#------------------------------------------------------------------------------
+
+def _is_under_dir(dir_path, path):
+    dir_path = os.path.abspath(dir_path)
+    path = os.path.abspath(path)
+    return path == dir_path or path.startswith(dir_path + os.path.sep)
+
+
+#------------------------------------------------------------------------------
 # TaggedDict
 #------------------------------------------------------------------------------
 
@@ -1203,6 +1213,8 @@ class TaggedDict(object):
             'system_only', 'system_only_rs',
             'sp_hal', 'sp_hal_dep',
             'vendor_only',
+            'product_services_only',
+            'product_only',
             'remove',
         ]
         assert len(tag_list) < 32
@@ -1243,17 +1255,38 @@ class TaggedDict(object):
         return tag
 
 
-    _LL_NDK_VIS = {'ll_ndk', 'll_ndk_private'}
+    _LL_NDK_VIS = {
+        'll_ndk', 'll_ndk_private',
+    }
 
-    _VNDK_SP_VIS = {'ll_ndk', 'vndk_sp', 'vndk_sp_private', 'system_only_rs'}
+    _VNDK_SP_VIS = {
+        'll_ndk', 'vndk_sp', 'vndk_sp_private', 'system_only_rs',
+    }
 
-    _VNDK_VIS = {'ll_ndk', 'vndk_sp', 'vndk_sp_private', 'vndk', 'vndk_private'}
+    _VNDK_VIS = {
+        'll_ndk', 'vndk_sp', 'vndk_sp_private', 'vndk', 'vndk_private',
+    }
 
-    _SYSTEM_ONLY_VIS = {'ll_ndk', 'll_ndk_private',
-                        'vndk_sp', 'vndk_sp_private',
-                        'vndk', 'vndk_private',
-                        'system_only', 'system_only_rs',
-                        'sp_hal'}
+    _SYSTEM_ONLY_VIS = {
+        'll_ndk', 'll_ndk_private',
+        'vndk_sp', 'vndk_sp_private',
+        'vndk', 'vndk_private',
+        'system_only', 'system_only_rs',
+        'product_services_only',
+        'sp_hal',
+    }
+
+    _PRODUCT_ONLY_VIS = {
+        'll_ndk', 'vndk_sp', 'vndk', 'sp_hal',
+
+        # Remove the following after VNDK-ext can be checked separately.
+        'sp_hal_dep', 'vendor_only',
+    }
+
+    _VENDOR_ONLY_VIS = {
+        'll_ndk', 'vndk_sp', 'vndk', 'sp_hal', 'sp_hal_dep',
+        'vendor_only',
+    }
 
     _SP_HAL_VIS = {'ll_ndk', 'vndk_sp', 'sp_hal', 'sp_hal_dep'}
 
@@ -1269,17 +1302,19 @@ class TaggedDict(object):
 
         'system_only': _SYSTEM_ONLY_VIS,
         'system_only_rs': _SYSTEM_ONLY_VIS,
+        'product_services_only': _SYSTEM_ONLY_VIS,
 
         'sp_hal': _SP_HAL_VIS,
         'sp_hal_dep': _SP_HAL_VIS,
 
-        'vendor_only': {'ll_ndk', 'vndk_sp', 'vndk', 'sp_hal', 'sp_hal_dep',
-                        'vendor_only'},
+        'vendor_only': _VENDOR_ONLY_VIS,
+        'product_only': _PRODUCT_ONLY_VIS,
 
         'remove': set(),
     }
 
-    del _LL_NDK_VIS, _VNDK_SP_VIS, _VNDK_VIS, _SYSTEM_ONLY_VIS, _SP_HAL_VIS
+    del _LL_NDK_VIS, _VNDK_SP_VIS, _VNDK_VIS, _SYSTEM_ONLY_VIS, \
+        _PRODUCT_ONLY_VIS, _VENDOR_ONLY_VIS, _SP_HAL_VIS
 
 
     @classmethod
@@ -1426,8 +1461,12 @@ class TaggedPathDict(TaggedDict):
 
     @staticmethod
     def get_path_tag_default(path):
-        if path.startswith('/vendor/'):
+        if _is_under_dir('/vendor', path):
             return 'vendor_only'
+        if _is_under_dir('/product', path):
+            return 'product_only'
+        if _is_under_dir('/product_services', path):
+            return 'product_services_only'
         return 'system_only'
 
 
@@ -1459,6 +1498,13 @@ class TaggedLibDict(object):
                 d.add('sp_hal_dep', lib)
             else:
                 d.add('vendor_only', lib)
+
+        for lib in graph.lib_pt[PT_PRODUCT].values():
+            d.add('vendor_only', lib)
+
+        for lib in graph.lib_pt[PT_PRODUCT_SERVICES].values():
+            d.add('vendor_only', lib)
+
         return d
 
 
@@ -1679,7 +1725,9 @@ def scan_elf_files(root, mount_point=None, unzip_files=True):
 
 PT_SYSTEM = 0
 PT_VENDOR = 1
-NUM_PARTITIONS = 2
+PT_PRODUCT = 2
+PT_PRODUCT_SERVICES = 3
+NUM_PARTITIONS = 4
 
 
 SPLibResult = collections.namedtuple(
@@ -1771,7 +1819,7 @@ class VNDKLibDir(list):
 
 
     @classmethod
-    def create_vndk_search_paths(cls, lib_dir, version):
+    def get_vndk_lib_dirs(cls, lib_dir, version):
         """Create VNDK/VNDK-SP search paths from lib_dir and version."""
         vndk_sp_name = cls.create_vndk_sp_dir_name(version)
         vndk_name = cls.create_vndk_dir_name(version)
@@ -2407,35 +2455,88 @@ class ELFLinker(object):
             self._resolve_lib_deps(lib, resolver, generic_refs)
 
 
-    def _get_apex_bionic_search_paths(self, lib_dir):
+    def _get_apex_bionic_lib_dirs(self, lib_dir):
         return ['/apex/com.android.runtime/' + lib_dir + '/bionic']
 
 
-    def _get_apex_search_paths(self, lib_dir):
+    def _get_apex_lib_dirs(self, lib_dir):
         return ['/apex/' + name + '/' + lib_dir
                 for name in sorted(self.apex_module_names)]
 
 
-    def _get_system_search_paths(self, lib_dir):
-        apex_lib_dirs = (self._get_apex_search_paths(lib_dir) +
-                         self._get_apex_bionic_search_paths(lib_dir))
-        system_lib_dirs = ['/system/' + lib_dir, '/system/product/' + lib_dir]
-        vendor_lib_dirs = ['/vendor/' + lib_dir]
-        return apex_lib_dirs + system_lib_dirs + vendor_lib_dirs
+    def _get_system_lib_dirs(self, lib_dir):
+        return ['/system/' + lib_dir]
 
 
-    def _get_vendor_search_paths(self, lib_dir, vndk_sp_dirs, vndk_dirs):
-        vendor_lib_dirs = [
+    def _get_product_services_lib_dirs(self, lib_dir):
+        return [
+            '/product_services/' + lib_dir,
+            '/system/product_services/' + lib_dir,
+        ]
+
+
+    def _get_vendor_lib_dirs(self, lib_dir):
+        return [
             '/vendor/' + lib_dir + '/hw',
             '/vendor/' + lib_dir + '/egl',
             '/vendor/' + lib_dir,
         ]
-        # For degenerated VNDK libs.
-        apex_lib_dirs = (self._get_apex_search_paths(lib_dir) +
-                         self._get_apex_bionic_search_paths(lib_dir))
-        system_lib_dirs = ['/system/' + lib_dir]
-        return (vendor_lib_dirs + vndk_sp_dirs + vndk_dirs + apex_lib_dirs +
-                system_lib_dirs)
+
+
+    def _get_product_lib_dirs(self, lib_dir):
+        return [
+            '/product/' + lib_dir,
+            '/system/product/' + lib_dir,
+        ]
+
+
+    def _get_system_search_paths(self, lib_dir):
+        return (
+            self._get_apex_bionic_lib_dirs(lib_dir) +
+            self._get_apex_lib_dirs(lib_dir) +
+            self._get_product_services_lib_dirs(lib_dir) +
+            self._get_system_lib_dirs(lib_dir) +
+
+            # Search '/vendor/${LIB}' and '/product/${LIB}' to detect
+            # violations.
+            self._get_product_lib_dirs(lib_dir) +
+            self._get_vendor_lib_dirs(lib_dir)
+        )
+
+
+    def _get_vendor_search_paths(self, lib_dir, vndk_sp_dirs, vndk_dirs):
+        return (
+            self._get_vendor_lib_dirs(lib_dir) +
+            vndk_sp_dirs +
+            vndk_dirs +
+
+            # Search '/apex/*/${LIB}' and '/system/${LIB}' for degenerated VNDK
+            # and LL-NDK or to detect violations.
+            self._get_apex_bionic_lib_dirs(lib_dir) +
+            self._get_apex_lib_dirs(lib_dir) +
+            self._get_system_lib_dirs(lib_dir)
+        )
+
+
+    def _get_product_search_paths(self, lib_dir, vndk_sp_dirs, vndk_dirs):
+        return (
+            self._get_product_lib_dirs(lib_dir) +
+            vndk_sp_dirs +
+            vndk_dirs +
+
+            # Search '/vendor/${LIB}', '/system/${LIB}', and '/apex/*/${LIB}'
+            # for degenerated VNDK and LL-NDK or to detect violations.
+            self._get_vendor_lib_dirs(lib_dir) +
+            self._get_apex_bionic_lib_dirs(lib_dir) +
+            self._get_apex_lib_dirs(lib_dir) +
+            self._get_system_lib_dirs(lib_dir)
+        )
+
+
+    def _get_product_services_search_paths(self, lib_dir):
+        # Delegate to _get_system_search_paths() because there is no ABI
+        # boundary between system and product_services partition.
+        return self._get_system_search_paths(lib_dir)
 
 
     def _get_vndk_sp_search_paths(self, lib_dir, vndk_sp_dirs):
@@ -2444,16 +2545,21 @@ class ELFLinker(object):
             '/vendor/' + lib_dir,
             '/system/' + lib_dir,
         ]
-        fallback_lib_dirs += self._get_apex_search_paths(lib_dir)
-        fallback_lib_dirs += self._get_apex_bionic_search_paths(lib_dir)
+        fallback_lib_dirs += self._get_apex_bionic_lib_dirs(lib_dir)
+        fallback_lib_dirs += self._get_apex_lib_dirs(lib_dir)
+
         return vndk_sp_dirs + fallback_lib_dirs
 
 
     def _get_vndk_search_paths(self, lib_dir, vndk_sp_dirs, vndk_dirs):
         # To find missing dependencies or LL-NDK.
-        fallback_lib_dirs = ['/system/' + lib_dir]
-        fallback_lib_dirs += self._get_apex_search_paths(lib_dir)
-        fallback_lib_dirs += self._get_apex_bionic_search_paths(lib_dir)
+        fallback_lib_dirs = [
+            '/vendor/' + lib_dir,
+            '/system/' + lib_dir,
+        ]
+        fallback_lib_dirs += self._get_apex_bionic_lib_dirs(lib_dir)
+        fallback_lib_dirs += self._get_apex_lib_dirs(lib_dir)
+
         return vndk_sp_dirs + vndk_dirs + fallback_lib_dirs
 
 
@@ -2478,7 +2584,7 @@ class ELFLinker(object):
         # Resolve vndk-sp libs
         for version in vndk_lib_dirs:
             vndk_sp_dirs, vndk_dirs = \
-                vndk_lib_dirs.create_vndk_search_paths(lib_dir, version)
+                vndk_lib_dirs.get_vndk_lib_dirs(lib_dir, version)
             vndk_sp_libs = \
                 system_vndk_sp_libs[version] | vendor_vndk_sp_libs[version]
             search_paths = self._get_vndk_sp_search_paths(
@@ -2489,7 +2595,7 @@ class ELFLinker(object):
         # Resolve vndk libs
         for version in vndk_lib_dirs:
             vndk_sp_dirs, vndk_dirs = \
-                vndk_lib_dirs.create_vndk_search_paths(lib_dir, version)
+                vndk_lib_dirs.get_vndk_lib_dirs(lib_dir, version)
             vndk_libs = system_vndk_libs[version] | vendor_vndk_libs[version]
             search_paths = self._get_vndk_search_paths(
                 lib_dir, vndk_sp_dirs, vndk_dirs)
@@ -2497,12 +2603,29 @@ class ELFLinker(object):
             self._resolve_lib_set_deps(vndk_libs, resolver, generic_refs)
 
         # Resolve vendor libs.
-        vndk_sp_dirs, vndk_dirs = vndk_lib_dirs.create_vndk_search_paths(
+        vndk_sp_dirs, vndk_dirs = vndk_lib_dirs.get_vndk_lib_dirs(
             lib_dir, self.ro_vndk_version)
         search_paths = self._get_vendor_search_paths(
             lib_dir, vndk_sp_dirs, vndk_dirs)
         resolver = ELFResolver(lib_dict, search_paths)
         self._resolve_lib_set_deps(vendor_libs, resolver, generic_refs)
+
+        # Resolve product libs
+        product_lib_dict = self.lib_pt[PT_PRODUCT].get_lib_dict(elf_class)
+        product_libs = set(product_lib_dict.values())
+        search_paths = self._get_product_search_paths(
+            lib_dir, vndk_sp_dirs, vndk_dirs)
+        resolver = ELFResolver(lib_dict, search_paths)
+        self._resolve_lib_set_deps(product_libs, resolver, generic_refs)
+
+        # Resolve product_services libs
+        product_services_lib_dict = \
+            self.lib_pt[PT_PRODUCT_SERVICES].get_lib_dict(elf_class)
+        product_services_libs = set(product_services_lib_dict.values())
+        search_paths = self._get_product_services_search_paths(lib_dir)
+        resolver = ELFResolver(lib_dict, search_paths)
+        self._resolve_lib_set_deps(
+            product_services_libs, resolver, generic_refs)
 
 
     def resolve_deps(self, generic_refs=None):
@@ -2911,11 +3034,12 @@ class ELFLinker(object):
 
 
     @staticmethod
-    def _create_internal(system_dirs, system_dirs_as_vendor,
-                         system_dirs_ignored, vendor_dirs,
-                         vendor_dirs_as_system, vendor_dirs_ignored,
-                         extra_deps, generic_refs, tagged_paths,
-                         vndk_lib_dirs, unzip_files):
+    def create(system_dirs=None, system_dirs_as_vendor=None,
+               system_dirs_ignored=None, vendor_dirs=None,
+               vendor_dirs_as_system=None, vendor_dirs_ignored=None,
+               product_dirs=None, product_services_dirs=None,
+               extra_deps=None, generic_refs=None, tagged_paths=None,
+               vndk_lib_dirs=None, unzip_files=True):
         if vndk_lib_dirs is None:
             vndk_lib_dirs = VNDKLibDir.create_from_dirs(
                 system_dirs, vendor_dirs)
@@ -2936,6 +3060,18 @@ class ELFLinker(object):
                     vendor_dirs_as_system, vendor_dirs_ignored,
                     unzip_files)
 
+        if product_dirs:
+            for path in product_dirs:
+                graph.add_executables_in_dir(
+                    'product', PT_PRODUCT, path, None, None, None,
+                    unzip_files)
+
+        if product_services_dirs:
+            for path in product_services_dirs:
+                graph.add_executables_in_dir(
+                    'product_services', PT_PRODUCT_SERVICES, path, None,
+                    None, None, unzip_files)
+
         if extra_deps:
             for path in extra_deps:
                 graph.add_dlopen_deps(path)
@@ -2944,19 +3080,6 @@ class ELFLinker(object):
         graph.resolve_deps(generic_refs)
 
         return graph
-
-
-    @staticmethod
-    def create(system_dirs=None, system_dirs_as_vendor=None,
-               system_dirs_ignored=None, vendor_dirs=None,
-               vendor_dirs_as_system=None, vendor_dirs_ignored=None,
-               extra_deps=None, generic_refs=None, tagged_paths=None,
-               vndk_lib_dirs=None, unzip_files=True):
-        return ELFLinker._create_internal(
-            system_dirs, system_dirs_as_vendor,
-            system_dirs_ignored, vendor_dirs, vendor_dirs_as_system,
-            vendor_dirs_ignored, extra_deps, generic_refs, tagged_paths,
-            vndk_lib_dirs, unzip_files)
 
 
 #------------------------------------------------------------------------------
@@ -3074,16 +3197,24 @@ def _enumerate_partition_paths(partition, root):
             yield (android_path, path)
 
 
-def _enumerate_paths(system_dirs, vendor_dirs):
+def _enumerate_paths(system_dirs, vendor_dirs, product_dirs,
+                     product_services_dirs):
     for root in system_dirs:
         for ap, path in _enumerate_partition_paths('system', root):
             yield (ap, path)
     for root in vendor_dirs:
         for ap, path in _enumerate_partition_paths('vendor', root):
             yield (ap, path)
+    for root in product_dirs:
+        for ap, path in _enumerate_partition_paths('product', root):
+            yield (ap, path)
+    for root in product_services_dirs:
+        for ap, path in _enumerate_partition_paths('product_services', root):
+            yield (ap, path)
 
 
-def scan_apk_dep(graph, system_dirs, vendor_dirs):
+def scan_apk_dep(graph, system_dirs, vendor_dirs, product_dirs,
+                 product_services_dirs):
     libnames = _build_lib_names_dict(graph)
     results = []
 
@@ -3094,7 +3225,8 @@ def scan_apk_dep(graph, system_dirs, vendor_dirs):
         def decode(string):  # PY3
             return string.decode('mutf-8')
 
-    for ap, path in _enumerate_paths(system_dirs, vendor_dirs):
+    for ap, path in _enumerate_paths(system_dirs, vendor_dirs,
+                                     product_dirs, product_services_dirs):
         # Read the dex file from various file formats
         try:
             dex_string_iter = DexFileReader.enumerate_dex_strings(path)
@@ -3254,13 +3386,22 @@ class ELFGraphCommand(Command):
             help='load extra module dependencies')
 
         parser.add_argument(
-            '--system', action='append',
+            '--system', action='append', default=[],
             help='path to system partition contents')
 
         parser.add_argument(
-            '--vendor', action='append',
+            '--vendor', action='append', default=[],
             help='path to vendor partition contents')
 
+        parser.add_argument(
+            '--product', action='append', default=[],
+            help='path to product partition contents')
+
+        parser.add_argument(
+            '--product-services', action='append', default=[],
+            help='path to product_services partition contents')
+
+        # XXX: BEGIN: Remove these options
         parser.add_argument(
             '--system-dir-as-vendor', action='append',
             help='sub directory of system partition that has vendor files')
@@ -3276,6 +3417,7 @@ class ELFGraphCommand(Command):
         parser.add_argument(
             '--vendor-dir-ignored', action='append',
             help='sub directory of vendor partition that must be ignored')
+        # XXX: END: Remove these options
 
         parser.add_argument(
             '--load-generic-refs',
@@ -3322,6 +3464,8 @@ class ELFGraphCommand(Command):
     def check_dirs_from_args(self, args):
         self._check_arg_dir_exists('--system', args.system)
         self._check_arg_dir_exists('--vendor', args.vendor)
+        self._check_arg_dir_exists('--product', args.product)
+        self._check_arg_dir_exists('--product-services', args.product_services)
 
 
     def create_from_args(self, args):
@@ -3341,6 +3485,8 @@ class ELFGraphCommand(Command):
                                  args.system_dir_ignored,
                                  args.vendor, args.vendor_dir_as_system,
                                  args.vendor_dir_ignored,
+                                 args.product,
+                                 args.product_services,
                                  args.load_extra_deps,
                                  generic_refs=generic_refs,
                                  tagged_paths=tagged_paths,
@@ -3899,7 +4045,8 @@ class ApkDepsCommand(ELFGraphCommand):
     def main(self, args):
         _, graph, _, _ = self.create_from_args(args)
 
-        apk_deps = scan_apk_dep(graph, args.system, args.vendor)
+        apk_deps = scan_apk_dep(graph, args.system, args.vendor, args.product,
+                                args.product_services)
 
         for apk_path, dep_paths in apk_deps:
             print(apk_path)
@@ -3985,6 +4132,7 @@ class CheckDepCommand(CheckDepCommandBase):
         num_errors = 0
 
         vendor_libs = set(graph.lib_pt[PT_VENDOR].values())
+        vendor_libs.update(graph.lib_pt[PT_PRODUCT].values())
 
         eligible_libs = (tagged_libs.ll_ndk | tagged_libs.vndk_sp |
                          tagged_libs.vndk_sp_private | tagged_libs.vndk)
@@ -4064,7 +4212,8 @@ class CheckDepCommand(CheckDepCommandBase):
         return num_errors
 
 
-    def _check_apk_dep(self, graph, system_dirs, vendor_dirs, module_info):
+    def _check_apk_dep(self, graph, system_dirs, vendor_dirs, product_dirs,
+                       product_services_dirs, module_info):
         num_errors = 0
 
         def is_in_system_partition(path):
@@ -4072,7 +4221,8 @@ class CheckDepCommand(CheckDepCommandBase):
                    path.startswith('/product/') or \
                    path.startswith('/oem/')
 
-        apk_deps = scan_apk_dep(graph, system_dirs, vendor_dirs)
+        apk_deps = scan_apk_dep(graph, system_dirs, vendor_dirs, product_dirs,
+                                product_services_dirs)
 
         for apk_path, dep_paths in apk_deps:
             apk_in_system = is_in_system_partition(apk_path)
@@ -4113,8 +4263,9 @@ class CheckDepCommand(CheckDepCommandBase):
             num_errors += self._check_dt_needed_ordering(graph)
 
         if args.check_apk:
-            num_errors += self._check_apk_dep(graph, args.system, args.vendor,
-                                              module_info)
+            num_errors += self._check_apk_dep(
+                graph, args.system, args.vendor, args.product,
+                args.product_services, module_info)
 
         return 0 if num_errors == 0 else 1
 

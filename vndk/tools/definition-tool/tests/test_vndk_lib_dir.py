@@ -108,7 +108,7 @@ class VNDKLibDirTest(unittest.TestCase):
             VNDKLibDir.is_in_vndk_dir('/system/lib/vndk-sp-28/liba.so'))
 
 
-    def test_create_vndk_search_paths(self):
+    def test_get_vndk_lib_dirs(self):
         for version in ('current', '28'):
             for lib_dir in ('lib', 'lib64'):
                 vndk_sp_name = VNDKLibDir.create_vndk_sp_dir_name(version)
@@ -124,7 +124,7 @@ class VNDKLibDirTest(unittest.TestCase):
                 ]
 
                 vndk_sp_dirs, vndk_dirs = \
-                    VNDKLibDir.create_vndk_search_paths(lib_dir, version)
+                    VNDKLibDir.get_vndk_lib_dirs(lib_dir, version)
                 self.assertEqual(expected_vndk_sp, vndk_sp_dirs)
                 self.assertEqual(expected_vndk, vndk_dirs)
 
