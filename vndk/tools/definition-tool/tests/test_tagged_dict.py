@@ -17,11 +17,11 @@ _TEST_DATA = '''Path,Tag
 /system/lib/lib_vndk_sp.so,vndk-sp
 /system/lib/lib_vndk_sp_private.so,vndk-sp-private
 /system/lib/lib_vndk.so,vndk
-/system/lib/lib_fwk_only.so,fwk-only
-/system/lib/lib_fwk_only_rs.so,fwk-only-rs
+/system/lib/lib_system_only.so,system-only
+/system/lib/lib_system_only_rs.so,system-only-rs
 /vendor/lib/lib_sp_hal.so,sp-hal
 /vendor/lib/lib_sp_hal_dep.so,sp-hal-dep
-/vendor/lib/lib_vnd_only.so,vnd-only
+/vendor/lib/lib_vendor_only.so,vendor-only
 /system/lib/lib_remove.so,remove
 /system/lib/lib_hl_ndk.so,hl-ndk
 /system/lib/lib_vndk_private.so,vndk-private
@@ -30,6 +30,9 @@ _TEST_DATA = '''Path,Tag
 /system/lib/lib_vndk_indirect.so,vndk-private
 /system/lib/lib_vndk_sp_indirect.so,vndk-sp
 /system/lib/lib_vndk_sp_indirect_private.so,vndk-sp-private
+/system/lib/lib_fwk_only.so,system-only
+/system/lib/lib_fwk_only_rs.so,system-only-rs
+/vendor/lib/lib_vnd_only.so,vendor-only
 '''
 
 _TEST_DATA_ALIAS_PATHS = {
@@ -39,6 +42,9 @@ _TEST_DATA_ALIAS_PATHS = {
     '/system/lib/lib_vndk_sp_hal.so',
     '/system/lib/lib_vndk_sp_indirect.so',
     '/system/lib/lib_vndk_sp_indirect_private.so',
+    '/system/lib/lib_fwk_only.so',
+    '/system/lib/lib_fwk_only_rs.so',
+    '/vendor/lib/lib_vnd_only.so',
 }
 
 
@@ -66,7 +72,8 @@ class TaggedDictTest(unittest.TestCase):
         self._check_tag_visibility(d, 'll_ndk_private', visible_tags)
 
         # VNDK-SP
-        visible_tags = {'ll_ndk', 'vndk_sp', 'vndk_sp_private', 'fwk_only_rs'}
+        visible_tags = {'ll_ndk', 'vndk_sp', 'vndk_sp_private',
+                        'system_only_rs'}
         self._check_tag_visibility(d, 'vndk_sp', visible_tags)
         self._check_tag_visibility(d, 'vndk_sp_private', visible_tags)
 
@@ -75,24 +82,24 @@ class TaggedDictTest(unittest.TestCase):
                         'vndk', 'vndk_private'}
         self._check_tag_visibility(d, 'vndk', visible_tags)
 
-        # FWK-ONLY
+        # SYSTEM-ONLY
         visible_tags = {'ll_ndk', 'll_ndk_private',
                         'vndk_sp', 'vndk_sp_private',
                         'vndk', 'vndk_private',
-                        'fwk_only', 'fwk_only_rs',
+                        'system_only', 'system_only_rs',
                         'sp_hal'}
-        self._check_tag_visibility(d, 'fwk_only', visible_tags)
-        self._check_tag_visibility(d, 'fwk_only_rs', visible_tags)
+        self._check_tag_visibility(d, 'system_only', visible_tags)
+        self._check_tag_visibility(d, 'system_only_rs', visible_tags)
 
         # SP-HAL
         visible_tags = {'ll_ndk', 'vndk_sp', 'sp_hal', 'sp_hal_dep'}
         self._check_tag_visibility(d, 'sp_hal', visible_tags)
         self._check_tag_visibility(d, 'sp_hal_dep', visible_tags)
 
-        # VND-ONLY
+        # VENDOR-ONLY
         visible_tags = {'ll_ndk', 'vndk_sp', 'vndk', 'sp_hal', 'sp_hal_dep',
-                        'vnd_only'}
-        self._check_tag_visibility(d, 'vnd_only', visible_tags)
+                        'vendor_only'}
+        self._check_tag_visibility(d, 'vendor_only', visible_tags)
 
         # Remove
         self._check_tag_visibility(d, 'remove', set())
@@ -144,22 +151,22 @@ class TaggedPathDictTest(unittest.TestCase):
 
 
     def test_load_from_csv_with_header(self):
-        fp = StringIO('Path,Tag\nliba.so,fwk-only\n')
+        fp = StringIO('Path,Tag\nliba.so,system-only\n')
         d = TaggedPathDict()
         d.load_from_csv(fp)
-        self.assertIn('liba.so', d.fwk_only)
+        self.assertIn('liba.so', d.system_only)
 
-        fp = StringIO('Tag,Path\nfwk-only,liba.so\n')
+        fp = StringIO('Tag,Path\nsystem-only,liba.so\n')
         d = TaggedPathDict()
         d.load_from_csv(fp)
-        self.assertIn('liba.so', d.fwk_only)
+        self.assertIn('liba.so', d.system_only)
 
 
     def test_load_from_csv_without_header(self):
-        fp = StringIO('liba.so,fwk-only\n')
+        fp = StringIO('liba.so,system-only\n')
         d = TaggedPathDict()
         d.load_from_csv(fp)
-        self.assertIn('liba.so', d.fwk_only)
+        self.assertIn('liba.so', d.system_only)
 
 
     def _check_test_data_loaded(self, d):
@@ -170,15 +177,15 @@ class TaggedPathDictTest(unittest.TestCase):
         self.assertIn('/system/lib/lib_vndk_sp_private.so', d.vndk_sp_private)
         self.assertIn('/system/lib/lib_vndk.so', d.vndk)
         self.assertIn('/system/lib/lib_vndk_private.so', d.vndk_private)
-        self.assertIn('/system/lib/lib_fwk_only.so', d.fwk_only)
-        self.assertIn('/system/lib/lib_fwk_only_rs.so', d.fwk_only_rs)
+        self.assertIn('/system/lib/lib_system_only.so', d.system_only)
+        self.assertIn('/system/lib/lib_system_only_rs.so', d.system_only_rs)
         self.assertIn('/vendor/lib/lib_sp_hal.so', d.sp_hal)
         self.assertIn('/vendor/lib/lib_sp_hal_dep.so', d.sp_hal_dep)
-        self.assertIn('/vendor/lib/lib_vnd_only.so', d.vnd_only)
+        self.assertIn('/vendor/lib/lib_vendor_only.so', d.vendor_only)
         self.assertIn('/system/lib/lib_remove.so', d.remove)
 
         # Aliases
-        self.assertIn('/system/lib/lib_hl_ndk.so', d.fwk_only)
+        self.assertIn('/system/lib/lib_hl_ndk.so', d.system_only)
         self.assertIn('/system/lib/lib_vndk_sp_both.so', d.vndk_sp)
         self.assertIn('/system/lib/lib_vndk_sp_hal.so', d.vndk_sp)
 
@@ -219,21 +226,21 @@ class TaggedPathDictTest(unittest.TestCase):
         self.assertEqual('vndk', d.get_path_tag('/system/lib/lib_vndk.so'))
         self.assertEqual('vndk_private',
                          d.get_path_tag('/system/lib/lib_vndk_private.so'))
-        self.assertEqual('fwk_only',
-                         d.get_path_tag('/system/lib/lib_fwk_only.so'))
-        self.assertEqual('fwk_only_rs',
-                         d.get_path_tag('/system/lib/lib_fwk_only_rs.so'))
+        self.assertEqual('system_only',
+                         d.get_path_tag('/system/lib/lib_system_only.so'))
+        self.assertEqual('system_only_rs',
+                         d.get_path_tag('/system/lib/lib_system_only_rs.so'))
         self.assertEqual('sp_hal',
                          d.get_path_tag('/vendor/lib/lib_sp_hal.so'))
         self.assertEqual('sp_hal_dep',
                          d.get_path_tag('/vendor/lib/lib_sp_hal_dep.so'))
-        self.assertEqual('vnd_only',
-                         d.get_path_tag('/vendor/lib/lib_vnd_only.so'))
+        self.assertEqual('vendor_only',
+                         d.get_path_tag('/vendor/lib/lib_vendor_only.so'))
         self.assertEqual('remove',
                          d.get_path_tag('/system/lib/lib_remove.so'))
 
         # Aliases
-        self.assertEqual('fwk_only',
+        self.assertEqual('system_only',
                          d.get_path_tag('/system/lib/lib_hl_ndk.so'))
         self.assertEqual('vndk_sp',
                          d.get_path_tag('/system/lib/lib_vndk_sp_hal.so'))
@@ -246,11 +253,20 @@ class TaggedPathDictTest(unittest.TestCase):
         self.assertEqual('vndk_sp_private',
                          d.get_path_tag('/system/lib/' +
                                         'lib_vndk_sp_indirect_private.so'))
+        self.assertEqual('system_only',
+                         d.get_path_tag('/system/lib/lib_fwk_only.so'))
+        self.assertEqual('system_only_rs',
+                         d.get_path_tag('/system/lib/lib_fwk_only_rs.so'))
+        self.assertEqual('vendor_only',
+                         d.get_path_tag('/vendor/lib/lib_vendor_only.so'))
 
         # Unmatched paths
-        self.assertEqual('fwk_only', d.get_path_tag('/system/lib/unknown.so'))
-        self.assertEqual('fwk_only', d.get_path_tag('/data/lib/unknown.so'))
-        self.assertEqual('vnd_only', d.get_path_tag('/vendor/lib/unknown.so'))
+        self.assertEqual('system_only',
+                         d.get_path_tag('/system/lib/unknown.so'))
+        self.assertEqual('system_only',
+                         d.get_path_tag('/data/lib/unknown.so'))
+        self.assertEqual('vendor_only',
+                         d.get_path_tag('/vendor/lib/unknown.so'))
 
 
     def _check_path_visibility(self, d, all_paths, from_paths, visible_paths):
@@ -291,7 +307,7 @@ class TaggedPathDictTest(unittest.TestCase):
             '/system/lib/lib_ll_ndk.so',
             '/system/lib/lib_vndk_sp.so',
             '/system/lib/lib_vndk_sp_private.so',
-            '/system/lib/lib_fwk_only_rs.so',
+            '/system/lib/lib_system_only_rs.so',
         }
         self._check_path_visibility(d, all_paths, from_paths, visible_paths)
 
@@ -308,10 +324,10 @@ class TaggedPathDictTest(unittest.TestCase):
         }
         self._check_path_visibility(d, all_paths, from_paths, visible_paths)
 
-        # FWK-ONLY
+        # SYSTEM-ONLY
         from_paths = {
-            '/system/lib/lib_fwk_only.so',
-            '/system/lib/lib_fwk_only_rs.so',
+            '/system/lib/lib_system_only.so',
+            '/system/lib/lib_system_only_rs.so',
         }
         visible_paths = {
             '/system/lib/lib_ll_ndk.so',
@@ -320,8 +336,8 @@ class TaggedPathDictTest(unittest.TestCase):
             '/system/lib/lib_vndk_sp_private.so',
             '/system/lib/lib_vndk.so',
             '/system/lib/lib_vndk_private.so',
-            '/system/lib/lib_fwk_only.so',
-            '/system/lib/lib_fwk_only_rs.so',
+            '/system/lib/lib_system_only.so',
+            '/system/lib/lib_system_only_rs.so',
             '/vendor/lib/lib_sp_hal.so',
         }
         self._check_path_visibility(d, all_paths, from_paths, visible_paths)
@@ -339,9 +355,9 @@ class TaggedPathDictTest(unittest.TestCase):
         }
         self._check_path_visibility(d, all_paths, from_paths, visible_paths)
 
-        # VND-ONLY
+        # VENDOR-ONLY
         from_paths = {
-            '/vendor/lib/lib_vnd_only.so',
+            '/vendor/lib/lib_vendor_only.so',
         }
         visible_paths = {
             '/system/lib/lib_ll_ndk.so',
@@ -349,7 +365,7 @@ class TaggedPathDictTest(unittest.TestCase):
             '/system/lib/lib_vndk.so',
             '/vendor/lib/lib_sp_hal.so',
             '/vendor/lib/lib_sp_hal_dep.so',
-            '/vendor/lib/lib_vnd_only.so',
+            '/vendor/lib/lib_vendor_only.so',
         }
         self._check_path_visibility(d, all_paths, from_paths, visible_paths)
 
@@ -400,13 +416,15 @@ class TaggedLibDictTest(unittest.TestCase):
 
         self.lib_vndk = self.graph.add('/system/lib/lib_vndk.so')
 
-        self.lib_fwk_only = self.graph.add('/system/lib/lib_fwk_only.so')
-        self.lib_fwk_only_rs = self.graph.add('/system/lib/lib_fwk_only_rs.so')
+        self.lib_system_only = \
+            self.graph.add('/system/lib/lib_system_only.so')
+        self.lib_system_only_rs = \
+            self.graph.add('/system/lib/lib_system_only_rs.so')
 
         self.lib_sp_hal = self.graph.add('/vendor/lib/lib_sp_hal.so')
         self.lib_sp_hal_dep = self.graph.add('/vendor/lib/lib_sp_hal_dep.so')
 
-        self.lib_vnd_only = self.graph.add('/vendor/lib/lib_vnd_only.so')
+        self.lib_vendor_only = self.graph.add('/vendor/lib/lib_vendor_only.so')
 
         self.tagged_libs = TaggedLibDict.create_from_graph(
             self.graph, self.tagged_paths)
@@ -422,12 +440,12 @@ class TaggedLibDictTest(unittest.TestCase):
 
         self.assertIn(self.lib_vndk, self.tagged_libs.vndk)
 
-        self.assertIn(self.lib_fwk_only, self.tagged_libs.fwk_only)
-        self.assertIn(self.lib_fwk_only_rs, self.tagged_libs.fwk_only_rs)
+        self.assertIn(self.lib_system_only, self.tagged_libs.system_only)
+        self.assertIn(self.lib_system_only_rs, self.tagged_libs.system_only_rs)
 
         self.assertIn(self.lib_sp_hal, self.tagged_libs.sp_hal)
         self.assertIn(self.lib_sp_hal_dep, self.tagged_libs.sp_hal_dep)
-        self.assertIn(self.lib_vnd_only, self.tagged_libs.vnd_only)
+        self.assertIn(self.lib_vendor_only, self.tagged_libs.vendor_only)
 
 
     def test_get_path_tag(self):
@@ -440,16 +458,17 @@ class TaggedLibDictTest(unittest.TestCase):
         self.assertEqual('vndk_sp_private',
                          d.get_path_tag(self.lib_vndk_sp_private))
         self.assertEqual('vndk', d.get_path_tag(self.lib_vndk))
-        self.assertEqual('fwk_only', d.get_path_tag(self.lib_fwk_only))
-        self.assertEqual('fwk_only_rs', d.get_path_tag(self.lib_fwk_only_rs))
+        self.assertEqual('system_only', d.get_path_tag(self.lib_system_only))
+        self.assertEqual('system_only_rs',
+                         d.get_path_tag(self.lib_system_only_rs))
         self.assertEqual('sp_hal', d.get_path_tag(self.lib_sp_hal))
         self.assertEqual('sp_hal_dep', d.get_path_tag(self.lib_sp_hal_dep))
-        self.assertEqual('vnd_only', d.get_path_tag(self.lib_vnd_only))
+        self.assertEqual('vendor_only', d.get_path_tag(self.lib_vendor_only))
 
         # Unmatched paths
         tag = d.get_path_tag(MockELFLinkData('/system/lib/unknown.so'))
-        self.assertEqual('fwk_only', tag)
+        self.assertEqual('system_only', tag)
         tag = d.get_path_tag(MockELFLinkData('/data/lib/unknown.so'))
-        self.assertEqual('fwk_only', tag)
+        self.assertEqual('system_only', tag)
         tag = d.get_path_tag(MockELFLinkData('/vendor/lib/unknown.so'))
-        self.assertEqual('vnd_only', tag)
+        self.assertEqual('vendor_only', tag)

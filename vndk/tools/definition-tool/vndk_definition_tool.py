@@ -1200,9 +1200,9 @@ class TaggedDict(object):
             'll_ndk', 'll_ndk_private',
             'vndk_sp', 'vndk_sp_private',
             'vndk', 'vndk_private',
-            'fwk_only', 'fwk_only_rs',
+            'system_only', 'system_only_rs',
             'sp_hal', 'sp_hal_dep',
-            'vnd_only',
+            'vendor_only',
             'remove',
         ]
         assert len(tag_list) < 32
@@ -1219,7 +1219,10 @@ class TaggedDict(object):
 
 
     _TAG_ALIASES = {
-        'hl_ndk': 'fwk_only',  # Treat HL-NDK as FWK-ONLY.
+        'fwk_only': 'system_only',
+        'fwk_only_rs': 'system_only_rs',
+        'vnd_only': 'vendor_only',
+        'hl_ndk': 'system_only',  # Treat HL-NDK as SYSTEM-ONLY.
         'sp_ndk': 'll_ndk',
         'sp_ndk_indirect': 'll_ndk_private',
         'll_ndk_indirect': 'll_ndk_private',
@@ -1242,15 +1245,15 @@ class TaggedDict(object):
 
     _LL_NDK_VIS = {'ll_ndk', 'll_ndk_private'}
 
-    _VNDK_SP_VIS = {'ll_ndk', 'vndk_sp', 'vndk_sp_private', 'fwk_only_rs'}
+    _VNDK_SP_VIS = {'ll_ndk', 'vndk_sp', 'vndk_sp_private', 'system_only_rs'}
 
     _VNDK_VIS = {'ll_ndk', 'vndk_sp', 'vndk_sp_private', 'vndk', 'vndk_private'}
 
-    _FWK_ONLY_VIS = {'ll_ndk', 'll_ndk_private',
-                     'vndk_sp', 'vndk_sp_private',
-                     'vndk', 'vndk_private',
-                     'fwk_only', 'fwk_only_rs',
-                     'sp_hal'}
+    _SYSTEM_ONLY_VIS = {'ll_ndk', 'll_ndk_private',
+                        'vndk_sp', 'vndk_sp_private',
+                        'vndk', 'vndk_private',
+                        'system_only', 'system_only_rs',
+                        'sp_hal'}
 
     _SP_HAL_VIS = {'ll_ndk', 'vndk_sp', 'sp_hal', 'sp_hal_dep'}
 
@@ -1264,19 +1267,19 @@ class TaggedDict(object):
         'vndk': _VNDK_VIS,
         'vndk_private': _VNDK_VIS,
 
-        'fwk_only': _FWK_ONLY_VIS,
-        'fwk_only_rs': _FWK_ONLY_VIS,
+        'system_only': _SYSTEM_ONLY_VIS,
+        'system_only_rs': _SYSTEM_ONLY_VIS,
 
         'sp_hal': _SP_HAL_VIS,
         'sp_hal_dep': _SP_HAL_VIS,
 
-        'vnd_only': {'ll_ndk', 'vndk_sp', 'vndk', 'sp_hal', 'sp_hal_dep',
-                     'vnd_only'},
+        'vendor_only': {'ll_ndk', 'vndk_sp', 'vndk', 'sp_hal', 'sp_hal_dep',
+                        'vendor_only'},
 
         'remove': set(),
     }
 
-    del _LL_NDK_VIS, _VNDK_SP_VIS, _VNDK_VIS, _FWK_ONLY_VIS, _SP_HAL_VIS
+    del _LL_NDK_VIS, _VNDK_SP_VIS, _VNDK_VIS, _SYSTEM_ONLY_VIS, _SP_HAL_VIS
 
 
     @classmethod
@@ -1349,8 +1352,8 @@ class TaggedDict(object):
 
 
     @staticmethod
-    def is_fwk_only_rs(tag_bit):
-        return bool(tag_bit & TaggedDict.FWK_ONLY_RS)
+    def is_system_only_rs(tag_bit):
+        return bool(tag_bit & TaggedDict.SYSTEM_ONLY_RS)
 
 
     @staticmethod
@@ -1421,8 +1424,11 @@ class TaggedPathDict(TaggedDict):
             super(TaggedPathDict, self).add(tag, path)
 
 
-    def get_path_tag_default(self, path):
-        return 'vnd_only' if path.startswith('/vendor') else 'fwk_only'
+    @staticmethod
+    def get_path_tag_default(path):
+        if path.startswith('/vendor/'):
+            return 'vendor_only'
+        return 'system_only'
 
 
 class TaggedLibDict(object):
@@ -1452,7 +1458,7 @@ class TaggedLibDict(object):
             elif lib in sp_lib.sp_hal_dep:
                 d.add('sp_hal_dep', lib)
             else:
-                d.add('vnd_only', lib)
+                d.add('vendor_only', lib)
         return d
 
 
@@ -1463,8 +1469,9 @@ class TaggedLibDict(object):
             return self.get_path_tag_default(lib)
 
 
-    def get_path_tag_default(self, lib):
-        return 'vnd_only' if lib.path.startswith('/vendor') else 'fwk_only'
+    @staticmethod
+    def get_path_tag_default(lib):
+        return TaggedPathDict.get_path_tag_default(lib.path)
 
 
 class LibProperties(object):
@@ -1991,8 +1998,8 @@ class ELFLinkData(object):
 
 
     @property
-    def is_fwk_only_rs(self):
-        return TaggedDict.is_fwk_only_rs(self._tag_bit)
+    def is_system_only_rs(self):
+        return TaggedDict.is_system_only_rs(self._tag_bit)
 
 
     @property
@@ -2123,9 +2130,9 @@ _VNDK_RESULT_FIELD_NAMES = (
     'vndk_sp', 'vndk_sp_unused',
     'vndk_sp_private', 'vndk_sp_private_unused',
     'vndk', 'vndk_private',
-    'fwk_only', 'fwk_only_rs',
+    'system_only', 'system_only_rs',
     'sp_hal', 'sp_hal_dep',
-    'vnd_only',
+    'vendor_only',
     'vndk_ext',
     'vndk_sp_ext', 'vndk_sp_private_ext',
     'extra_vendor_libs')
@@ -2609,7 +2616,8 @@ class ELFLinker(object):
         ll_ndk = set(lib for lib in self.all_libs() if lib.is_ll_ndk)
 
         # Find pre-defined libs.
-        fwk_only_rs = set(lib for lib in self.all_libs() if lib.is_fwk_only_rs)
+        system_only_rs = set(
+            lib for lib in self.all_libs() if lib.is_system_only_rs)
         predefined_vndk_sp = set(
             lib for lib in self.all_libs() if lib.is_vndk_sp)
         predefined_vndk_sp_private = set(
@@ -2662,7 +2670,7 @@ class ELFLinker(object):
 
         # Find VNDK-SP-Indirect libs.
         def is_not_vndk_sp_private(lib):
-            return lib.is_ll_ndk or lib in vndk_sp or lib in fwk_only_rs
+            return lib.is_ll_ndk or lib in vndk_sp or lib in system_only_rs
 
         vndk_sp_private = self.compute_deps_closure(
             vndk_sp, is_not_vndk_sp_private, True)
@@ -2760,7 +2768,7 @@ class ELFLinker(object):
             return result
 
         def is_not_vndk_sp_private(lib):
-            return lib.is_ll_ndk or lib in vndk_sp or lib in fwk_only_rs
+            return lib.is_ll_ndk or lib in vndk_sp or lib in system_only_rs
 
         candidates = collect_vndk_sp_private_ext(vndk_sp_ext)
         while candidates:
@@ -2770,7 +2778,7 @@ class ELFLinker(object):
         # Find VNDK libs (a.k.a. system shared libs directly used by vendor
         # partition.)
         def is_not_vndk(lib):
-            if lib.is_ll_ndk or is_vndk_sp_public(lib) or lib in fwk_only_rs:
+            if lib.is_ll_ndk or is_vndk_sp_public(lib) or lib in system_only_rs:
                 return True
             return lib.partition != PT_SYSTEM
 
@@ -2860,11 +2868,11 @@ class ELFLinker(object):
             vndk_sp_private_unused=vndk_sp_private_unused,
             vndk=vndk,
             vndk_private=vndk_private,
-            # fwk_only=fwk_only,
-            fwk_only_rs=fwk_only_rs,
+            # system_only=system_only,
+            system_only_rs=system_only_rs,
             sp_hal=sp_hal,
             sp_hal_dep=sp_hal_dep,
-            # vnd_only=vnd_only,
+            # vendor_only=vendor_only,
             vndk_ext=vndk_ext,
             vndk_sp_ext=vndk_sp_ext,
             vndk_sp_private_ext=vndk_sp_private_ext,
@@ -4150,10 +4158,11 @@ class DepGraphCommand(ELFGraphCommand):
     def _create_tag_hierarchy():
         hierarchy = dict()
         for tag in TaggedPathDict.TAGS:
-            if tag in {'sp_hal', 'sp_hal_dep', 'vnd_only'}:
+            if tag in {'sp_hal', 'sp_hal_dep', 'vendor_only'}:
                 hierarchy[tag] = 'vendor.private.{}'.format(tag)
             else:
-                vendor_visible = TaggedPathDict.is_tag_visible('vnd_only', tag)
+                vendor_visible = TaggedPathDict.is_tag_visible(
+                    'vendor_only', tag)
                 pub = 'public' if vendor_visible else 'private'
                 hierarchy[tag] = 'system.{}.{}'.format(pub, tag)
         return hierarchy
