@@ -2305,7 +2305,7 @@ class ELFLinker(object):
 
     def add_executables_in_dir(self, partition_name, partition, root,
                                alter_partition, alter_subdirs, ignored_subdirs,
-                               scan_elf_files, unzip_files):
+                               unzip_files):
         root = os.path.abspath(root)
         prefix_len = len(root) + 1
 
