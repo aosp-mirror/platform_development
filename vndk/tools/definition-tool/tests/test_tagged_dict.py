@@ -22,6 +22,8 @@ _TEST_DATA = '''Path,Tag
 /vendor/lib/lib_sp_hal.so,sp-hal
 /vendor/lib/lib_sp_hal_dep.so,sp-hal-dep
 /vendor/lib/lib_vendor_only.so,vendor-only
+/product/lib/lib_product_only.so,product-only
+/product_services/lib/lib_product_services_only.so,product_services-only
 /system/lib/lib_remove.so,remove
 /system/lib/lib_hl_ndk.so,hl-ndk
 /system/lib/lib_vndk_private.so,vndk-private
@@ -58,6 +60,8 @@ class TaggedDictTest(unittest.TestCase):
 
 
     def _check_tag_visibility(self, d, from_tag, visible_tags):
+        for to_tag in visible_tags:
+            self.assertTrue(d.is_tag_visible(from_tag, to_tag))
         for to_tag in TaggedDict.TAGS:
             self.assertEqual(d.is_tag_visible(from_tag, to_tag),
                              to_tag in visible_tags)
@@ -72,24 +76,30 @@ class TaggedDictTest(unittest.TestCase):
         self._check_tag_visibility(d, 'll_ndk_private', visible_tags)
 
         # VNDK-SP
-        visible_tags = {'ll_ndk', 'vndk_sp', 'vndk_sp_private',
-                        'system_only_rs'}
+        visible_tags = {
+            'll_ndk', 'vndk_sp', 'vndk_sp_private', 'system_only_rs',
+        }
         self._check_tag_visibility(d, 'vndk_sp', visible_tags)
         self._check_tag_visibility(d, 'vndk_sp_private', visible_tags)
 
         # VNDK
-        visible_tags = {'ll_ndk', 'vndk_sp', 'vndk_sp_private',
-                        'vndk', 'vndk_private'}
+        visible_tags = {
+            'll_ndk', 'vndk_sp', 'vndk_sp_private', 'vndk', 'vndk_private',
+        }
         self._check_tag_visibility(d, 'vndk', visible_tags)
 
-        # SYSTEM-ONLY
-        visible_tags = {'ll_ndk', 'll_ndk_private',
-                        'vndk_sp', 'vndk_sp_private',
-                        'vndk', 'vndk_private',
-                        'system_only', 'system_only_rs',
-                        'sp_hal'}
+        # SYSTEM-ONLY and PRODUCT_SERVICES-ONLY
+        visible_tags = {
+            'll_ndk', 'll_ndk_private',
+            'vndk_sp', 'vndk_sp_private',
+            'vndk', 'vndk_private',
+            'system_only', 'system_only_rs',
+            'product_services_only',
+            'sp_hal'
+        }
         self._check_tag_visibility(d, 'system_only', visible_tags)
         self._check_tag_visibility(d, 'system_only_rs', visible_tags)
+        self._check_tag_visibility(d, 'product_services_only', visible_tags)
 
         # SP-HAL
         visible_tags = {'ll_ndk', 'vndk_sp', 'sp_hal', 'sp_hal_dep'}
@@ -97,8 +107,17 @@ class TaggedDictTest(unittest.TestCase):
         self._check_tag_visibility(d, 'sp_hal_dep', visible_tags)
 
         # VENDOR-ONLY
-        visible_tags = {'ll_ndk', 'vndk_sp', 'vndk', 'sp_hal', 'sp_hal_dep',
-                        'vendor_only'}
+        visible_tags = {
+            'll_ndk', 'vndk_sp', 'vndk', 'sp_hal', 'sp_hal_dep', 'vendor_only',
+        }
+        self._check_tag_visibility(d, 'vendor_only', visible_tags)
+
+        # PRODUCT-ONLY
+        visible_tags = {
+            'll_ndk', 'vndk_sp', 'vndk', 'sp_hal',
+            # Remove the following after VNDK-ext can be checked separately.
+            'sp_hal_dep', 'vendor_only',
+        }
         self._check_tag_visibility(d, 'vendor_only', visible_tags)
 
         # Remove
@@ -182,6 +201,9 @@ class TaggedPathDictTest(unittest.TestCase):
         self.assertIn('/vendor/lib/lib_sp_hal.so', d.sp_hal)
         self.assertIn('/vendor/lib/lib_sp_hal_dep.so', d.sp_hal_dep)
         self.assertIn('/vendor/lib/lib_vendor_only.so', d.vendor_only)
+        self.assertIn('/product_services/lib/lib_product_services_only.so',
+                      d.product_services_only)
+        self.assertIn('/product/lib/lib_product_only.so', d.product_only)
         self.assertIn('/system/lib/lib_remove.so', d.remove)
 
         # Aliases
@@ -339,6 +361,7 @@ class TaggedPathDictTest(unittest.TestCase):
             '/system/lib/lib_system_only.so',
             '/system/lib/lib_system_only_rs.so',
             '/vendor/lib/lib_sp_hal.so',
+            '/product_services/lib/lib_product_services_only.so',
         }
         self._check_path_visibility(d, all_paths, from_paths, visible_paths)
 
