@@ -14,8 +14,52 @@
  * limitations under the License.
  */
 
+
+import jsonProtoDefs from 'frameworks/base/core/proto/android/server/windowmanagertrace.proto'
+import jsonProtoDefsSF from 'frameworks/native/services/surfaceflinger/layerproto/layerstrace.proto'
+import protobuf from 'protobufjs'
+import {transform_layers, transform_layers_trace} from './transform_sf.js'
+import {transform_window_service, transform_window_trace} from './transform_wm.js'
+
+var protoDefs = protobuf.Root.fromJSON(jsonProtoDefs)
+    .addJSON(jsonProtoDefsSF.nested);
+
+var WindowTraceMessage = protoDefs.lookupType(
+  "com.android.server.wm.WindowManagerTraceFileProto");
+var WindowMessage = protoDefs.lookupType(
+  "com.android.server.wm.WindowManagerServiceDumpProto");
+var LayersMessage = protoDefs.lookupType("android.surfaceflinger.LayersProto");
+var LayersTraceMessage = protoDefs.lookupType("android.surfaceflinger.LayersTraceFileProto");
+
+
 const LAYER_TRACE_MAGIC_NUMBER = [0x09, 0x4c, 0x59, 0x52, 0x54, 0x52, 0x41, 0x43, 0x45] // .LYRTRACE
 const WINDOW_TRACE_MAGIC_NUMBER = [0x09, 0x57, 0x49, 0x4e, 0x54, 0x52, 0x41, 0x43, 0x45] // .WINTRACE
+const FILE_TYPES = {
+  'window_trace': {
+    protoType: WindowTraceMessage,
+    transform: transform_window_trace,
+    name: "WindowManager trace",
+    timeline: true,
+  },
+  'layers_trace': {
+    protoType: LayersTraceMessage,
+    transform: transform_layers_trace,
+    name: "SurfaceFlinger trace",
+    timeline: true,
+  },
+  'layers_dump': {
+    protoType: LayersMessage,
+    transform: transform_layers,
+    name: "SurfaceFlinger dump",
+    timeline: false,
+  },
+  'window_dump': {
+    protoType: WindowMessage,
+    transform: transform_window_service,
+    name: "WindowManager dump",
+    timeline: false,
+  },
+};
 
 function arrayEquals(a, b) {
   if (a.length !== b.length) {
@@ -33,23 +77,27 @@ function arrayStartsWith(array, prefix) {
   return arrayEquals(array.slice(0, prefix.length), prefix);
 }
 
-/** buffer: Uint8Array */
-function detect(buffer) {
-  if (arrayStartsWith(buffer, LAYER_TRACE_MAGIC_NUMBER)) {
-    return 'layers_trace'
-  }
-  if (arrayStartsWith(buffer, WINDOW_TRACE_MAGIC_NUMBER)) {
-    return 'window_trace'
-  }
-  if (arrayStartsWith(buffer, [0x12])) {
-     // Because policy is empty, the first field in the dump is 2 currently.
-     // This might change.
-    return 'window_dump';
-  }
-  if (arrayStartsWith(buffer, [0x0a])) {
-    // For now; window_dump might soon start with 0x0a too.
-    return 'layers_dump';
-  }
+function decodedFile(filename, buffer) {
+  var decoded = FILE_TYPES[filename].protoType.decode(buffer);
+  return [FILE_TYPES[filename], decoded];
 }
 
+function detect(buffer) {
+  if (arrayStartsWith(buffer, LAYER_TRACE_MAGIC_NUMBER)) {
+    return decodedFile('layers_trace', buffer);
+  }
+  if (arrayStartsWith(buffer, WINDOW_TRACE_MAGIC_NUMBER)) {
+    return decodedFile('window_trace', buffer);
+  }
+  for (var filename of ['layers_dump', 'window_dump']) {
+    try {
+      var [filetype,decoded] = decodedFile(filename, buffer);
+      var transformed = filetype.transform(decoded);
+      return [FILE_TYPES[filename], decoded];
+    } catch (ex) {
+      // ignore exception and try next filetype
+    }
+  }
+  throw new Error('Unable to detect file');
+}
 export default detect;

@@ -202,14 +202,23 @@ export default {
       var reader = new FileReader();
       reader.onload = (e) => {
         var buffer = new Uint8Array(e.target.result);
-        var filetype = FILE_TYPES[type] || FILE_TYPES[detectFile(buffer)];
-        if (!filetype) {
-          this.title = this.filename + ": Could not detect file type."
-          event.target.value = '';
-          return;
+        try { 
+          if (FILE_TYPES[type]) {
+            var filetype = FILE_TYPES[type];
+            var decoded = filetype.protoType.decode(buffer);
+            modifyProtoFields(decoded, this.store.displayDefaults);
+            var transformed = filetype.transform(decoded);
+          } else {
+            var [filetype, decoded] = detectFile(buffer);
+            modifyProtoFields(decoded, this.store.displayDefaults);
+            var transformed = filetype.transform(decoded);
+        }} catch (ex) {
+           this.title = this.filename + ': ' + ex;
+           return;
+        }  finally {
+           event.target.value =''
         }
         this.title = this.filename + " (loading " + filetype.name + ")";
-
         // Replace enum values with string representation and
         // add default values to the proto objects. This function also handles
         // a special case with TransformProtos where the matrix may be derived
@@ -242,22 +251,9 @@ export default {
               protoObj[fieldName] = fieldProperties.resolvedType.valuesById[protoObj[fieldProperties.name]];
               continue;
             }
-
             modifyProtoFields(protoObj[fieldName], displayDefaults);
           }
         }
-
-        try {
-          var decoded = filetype.protoType.decode(buffer);
-          modifyProtoFields(decoded, this.store.displayDefaults);
-          var transformed = filetype.transform(decoded);
-        } catch (ex) {
-          this.title = this.filename + " (loading " + filetype.name + "):" + ex;
-          return;
-        } finally {
-          event.target.value = '';
-        }
-
         if (filetype.timeline) {
           this.timeline = transformed.children;
         } else {
