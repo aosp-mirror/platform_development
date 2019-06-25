@@ -586,6 +586,16 @@ TEST_MODULES = [
         ],
         cflags=['-DNEW=1']
     ),
+    LsdumpModule(
+        name='libempty',
+        arch='arm64',
+        srcs=[],
+        version_script='integration/c_and_cpp/map.txt',
+        export_include_dirs=['integration/c_and_cpp/include'],
+        linker_flags=[
+            '-output-format', 'Json',
+        ],
+    ),
 ]
 
 TEST_MODULES = {m.name: m for m in TEST_MODULES}
