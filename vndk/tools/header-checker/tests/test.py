@@ -347,6 +347,11 @@ class HeaderCheckerTest(unittest.TestCase):
                 module_name, "arm64", 0,
                 ["-input-format-old", "Json", "-input-format-new", "Json"])
 
+    def test_no_source(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libempty", "libempty", 0,
+            ["-input-format-old", "Json", "-input-format-new", "Json"])
+
 
 if __name__ == '__main__':
     unittest.main()
