@@ -119,6 +119,17 @@ function transform_above(entry) {
   });
 }
 
+function transform_ime(entry) {
+  return transform({
+    obj: entry,
+    kind: 'imeWindow',
+    name: '',
+    children: [
+      [entry.windows, transform_window],
+    ],
+  });
+}
+
 function transform_display(entry) {
   var bounds = {
     width: entry.displayInfo.logicalWidth || 0,
@@ -131,6 +142,7 @@ function transform_display(entry) {
     name: entry.id || 0,
     children: [
       [entry.aboveAppWindows, transform_above],
+      [entry.imeWindows, transform_ime],
       [entry.stacks, transform_stack],
       [entry.belowAppWindows, transform_below],
     ],
