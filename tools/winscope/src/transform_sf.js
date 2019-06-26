@@ -38,6 +38,7 @@ function transform_layer(layer, {parentHidden}) {
         top: pos.y || 0,
         bottom: pos.y + size.h || 0,
         label: layer.name,
+        transform: layer.transform,
     }
   }
 
