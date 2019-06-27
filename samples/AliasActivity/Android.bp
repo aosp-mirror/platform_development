@@ -1,0 +1,9 @@
+android_app {
+    name: "AliasActivity",
+    installable: false,
+    srcs: ["**/*.java"],
+    sdk_version: "current",
+    dex_preopt: {
+        enabled: false,
+    },
+}
