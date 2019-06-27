@@ -1,0 +1,8 @@
+android_test {
+    name: "AppNavigation",
+    srcs: ["src/**/*.java"],
+    sdk_version: "current",
+    dex_preopt: {
+        enabled: false,
+    },
+}
