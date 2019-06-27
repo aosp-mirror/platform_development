@@ -1,0 +1,11 @@
+android_test {
+    name: "LunarLanderTests",
+    srcs: ["**/*.java"],
+    libs: [
+        "android.test.runner.stubs",
+        "android.test.base.stubs",
+    ],
+    static_libs: ["junit"],
+    instrumentation_for: "LunarLander",
+    sdk_version: "current",
+}

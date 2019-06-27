@@ -1,0 +1,5 @@
+android_app {
+    name: "MissileLauncher",
+    srcs: ["**/*.java"],
+    sdk_version: "current",
+}

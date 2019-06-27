@@ -1,0 +1,11 @@
+android_test {
+    name: "BrokenKeyDerivationTests",
+    srcs: ["**/*.java"],
+    libs: [
+        "android.test.runner.stubs",
+        "android.test.base.stubs",
+    ],
+    static_libs: ["junit"],
+    instrumentation_for: "BrokenKeyDerivation",
+    sdk_version: "current",
+}
