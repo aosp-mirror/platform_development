@@ -1,0 +1,10 @@
+android_app {
+    name: "SdkSetup",
+    privileged: true,
+    srcs: ["**/*.java"],
+    platform_apis: true,
+    certificate: "platform",
+    optimize: {
+        enabled: false,
+    },
+}
