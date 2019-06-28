@@ -1,0 +1,9 @@
+android_app {
+    name: "NsdChat",
+    // Only compile source java files in this apk.
+    srcs: ["src/**/*.java"],
+    sdk_version: "current",
+    optimize: {
+        proguard_flags_files: ["proguard.cfg"],
+    },
+}

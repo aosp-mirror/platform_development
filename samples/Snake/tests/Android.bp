@@ -1,0 +1,11 @@
+android_test {
+    name: "SnakeTests",
+    srcs: ["**/*.java"],
+    libs: [
+        "android.test.runner.stubs",
+        "android.test.base.stubs",
+    ],
+    static_libs: ["junit"],
+    instrumentation_for: "Snake",
+    sdk_version: "current",
+}

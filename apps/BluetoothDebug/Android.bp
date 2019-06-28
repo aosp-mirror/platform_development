@@ -1,0 +1,9 @@
+android_app {
+    name: "BluetoothDebug",
+    srcs: ["**/*.java"],
+    platform_apis: true,
+    certificate: "platform",
+    optimize: {
+        enabled: false,
+    },
+}

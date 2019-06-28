@@ -1,0 +1,6 @@
+android_test {
+    name: "launchperf",
+    srcs: ["**/*.java"],
+    libs: ["android.test.runner"],
+    platform_apis: true,
+}
