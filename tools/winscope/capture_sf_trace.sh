@@ -72,7 +72,7 @@ start_tracing
 read -p "Press ENTER to stop tracing" -s x
 echo
 stop_tracing
-adb exec-out su root cat /data/misc/trace/layerstrace.pb >"$outfile"
+adb exec-out su root cat /data/misc/wmtrace/layers_trace.pb >"$outfile"
 
 echo
 echo "To view the trace, go to $WINSCOPE_URL, click 'OPEN SF TRACE' and open"
