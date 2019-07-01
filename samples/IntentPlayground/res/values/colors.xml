@@ -17,6 +17,7 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="white">@android:color/white</color>
     <!-- Material design colours from
         https://material.io/guidelines/style/color.html#color-color-palette -->
     <color name="md_red_500">#F44336</color>
@@ -40,4 +41,10 @@
     <color name="md_blue_grey_500">#607D8B</color>
     <color name="defaultTint">@color/md_teal_500</color>
     <color name="labelText">@android:color/white</color>
+    <color name="md_grey_900">#FF212121</color>
+    <color name="transparent_grey">#80212121</color>
+    <color name="colorSuggestedCheckBox">@color/colorAccent</color>
+    <color name="background">#FAFAFA</color>
+    <color name="colorAccentTranslucent">#50FF4081</color>
+    <color name="shady_grey">#AA212121</color>
 </resources>

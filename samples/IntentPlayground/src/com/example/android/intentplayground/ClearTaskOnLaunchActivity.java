@@ -17,6 +17,6 @@
 package com.example.android.intentplayground;
 
 /**
- * An activity with clearTaskOnLaunch flag set in AndroidManifest.xml
+ * An activity with clearTaskOnLaunch flag set in AndroidManifest.xml.
  */
 public class ClearTaskOnLaunchActivity extends BaseActivity {}

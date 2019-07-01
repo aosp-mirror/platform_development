@@ -24,6 +24,7 @@ import android.accounts.AccountManagerFuture;
 import android.accounts.AuthenticatorDescription;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -44,10 +45,13 @@ import java.util.List;
 
 public class MainActivity extends Activity {
 
+    public static final String TYPE = "com.example.android.pushapiauthenticator";
+
     private static AccountManager am;
+    private ComponentName authenticatorComponent;
 
     public boolean isAccountAdded(Account a) {
-        Account[] accounts = am.getAccountsByType(getApplicationContext().getPackageName());
+        Account[] accounts = am.getAccountsByType(TYPE);
         for (Account account : accounts) {
             if (a.equals(account)) {
                 return true;
@@ -83,9 +87,14 @@ public class MainActivity extends Activity {
         final String ACCOUNT_PASSWORD = "some password";
         final Bundle ACCOUNT_BUNDLE = new Bundle();
 
-        Account terraAccount = new Account("TERRA", getPackageName());
-        Account aquaAccount = new Account("AQUA", getPackageName());
-        Account ventusAccount = new Account("VENTUS", getPackageName());
+        Account terraAccount = new Account("TERRA", TYPE);
+        Account aquaAccount = new Account("AQUA", TYPE);
+        Account ventusAccount = new Account("VENTUS", TYPE);
+        authenticatorComponent = new ComponentName(
+                getApplicationContext().getPackageName(),
+                getApplicationContext().getPackageName()
+                 + ".MyAccountauthenticatorComponent");
+
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage("Welcome to Auth App. \nPlease make sure you have: \n\n1. Test App 1\n"
@@ -216,6 +225,21 @@ public class MainActivity extends Activity {
                                         Toast.LENGTH_SHORT).show();
                             }
                             break;
+                        case R.id.enableComponent:
+                            Toast.makeText(getApplicationContext(),
+                                    "Enabling Component", Toast.LENGTH_SHORT).show();
+                            getPackageManager().setComponentEnabledSetting(authenticatorComponent,
+                                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                                    PackageManager.DONT_KILL_APP);
+                            break;
+                        case R.id.disableComponent:
+                            Toast.makeText(getApplicationContext(),
+                                    "Disabling Component", Toast.LENGTH_SHORT).show();
+                            getPackageManager().setComponentEnabledSetting(authenticatorComponent,
+                                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                                    PackageManager.DONT_KILL_APP);
+                            break;
+
                     }
                 }
             }

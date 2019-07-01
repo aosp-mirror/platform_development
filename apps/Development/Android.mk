@@ -11,5 +11,6 @@ LOCAL_SRC_FILES := $(call all-subdir-java-files) \
 LOCAL_PACKAGE_NAME := Development
 LOCAL_PRIVATE_PLATFORM_APIS := true
 LOCAL_CERTIFICATE := platform
+LOCAL_COMPATIBILITY_SUITE := device-tests
 
 include $(BUILD_PACKAGE)

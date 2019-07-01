@@ -23,7 +23,6 @@
     android:layout_marginRight="@dimen/smallMargin"
     android:layout_marginStart="@dimen/smallMargin"
     android:layout_marginTop="@dimen/smallMargin"
-    android:background="@drawable/card_background"
     android:elevation="@dimen/cardElevation"
     android:orientation="vertical"
     android:padding="@dimen/medMargin">

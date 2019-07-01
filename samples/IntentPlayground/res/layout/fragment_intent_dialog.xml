@@ -14,7 +14,6 @@
      limitations under the License.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical" android:layout_width="wrap_content"
     android:layout_height="match_parent"
     android:minWidth="@dimen/dialogWidth">
@@ -46,5 +45,33 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="@dimen/smallMargin"
             android:text="@android:string/cancel" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/move_task_to_front_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="4dp"
+        android:paddingStart="@dimen/smallMargin"
+        android:paddingEnd="@dimen/smallMargin"
+        android:gravity="end"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/kill_task_button"
+            style="@style/flatButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0"
+            android:text="@string/kill_task_button"/>
+
+        <Button
+            android:id="@+id/move_task_to_front_button"
+            style="@style/flatButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0"
+            android:text="@string/move_to_front"/>
+
     </LinearLayout>
 </LinearLayout>
