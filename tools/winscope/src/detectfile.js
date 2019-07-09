@@ -18,11 +18,11 @@
 import jsonProtoDefs from 'frameworks/base/core/proto/android/server/windowmanagertrace.proto'
 import jsonProtoDefsSF from 'frameworks/native/services/surfaceflinger/layerproto/layerstrace.proto'
 import protobuf from 'protobufjs'
-import {transform_layers, transform_layers_trace} from './transform_sf.js'
-import {transform_window_service, transform_window_trace} from './transform_wm.js'
+import { transform_layers, transform_layers_trace } from './transform_sf.js'
+import { transform_window_service, transform_window_trace } from './transform_wm.js'
 
 var protoDefs = protobuf.Root.fromJSON(jsonProtoDefs)
-    .addJSON(jsonProtoDefsSF.nested);
+  .addJSON(jsonProtoDefsSF.nested);
 
 var WindowTraceMessage = protoDefs.lookupType(
   "com.android.server.wm.WindowManagerTraceFileProto");
@@ -34,32 +34,57 @@ var LayersTraceMessage = protoDefs.lookupType("android.surfaceflinger.LayersTrac
 
 const LAYER_TRACE_MAGIC_NUMBER = [0x09, 0x4c, 0x59, 0x52, 0x54, 0x52, 0x41, 0x43, 0x45] // .LYRTRACE
 const WINDOW_TRACE_MAGIC_NUMBER = [0x09, 0x57, 0x49, 0x4e, 0x54, 0x52, 0x41, 0x43, 0x45] // .WINTRACE
+
+const DATA_TYPES = {
+  WINDOW_MANAGER: {
+    name: "WindowManager",
+    icon: "view_compact",
+  },
+  SURFACE_FLINGER: {
+    name: "SurfaceFlinger",
+    icon: "filter_none",
+  },
+}
+
 const FILE_TYPES = {
   'window_trace': {
     protoType: WindowTraceMessage,
     transform: transform_window_trace,
     name: "WindowManager trace",
     timeline: true,
+    dataType: DATA_TYPES.WINDOW_MANAGER,
   },
   'layers_trace': {
     protoType: LayersTraceMessage,
     transform: transform_layers_trace,
     name: "SurfaceFlinger trace",
     timeline: true,
+    dataType: DATA_TYPES.SURFACE_FLINGER,
   },
   'layers_dump': {
     protoType: LayersMessage,
     transform: transform_layers,
     name: "SurfaceFlinger dump",
     timeline: false,
+    dataType: DATA_TYPES.SURFACE_FLINGER,
   },
   'window_dump': {
     protoType: WindowMessage,
     transform: transform_window_service,
     name: "WindowManager dump",
     timeline: false,
+    dataType: DATA_TYPES.WINDOW_MANAGER,
   },
 };
+
+function dataFile(filename, timeline, type) {
+  return {
+    filename: filename,
+    timeline: timeline,
+    type: type,
+    selectedIndex: 0,
+  }
+}
 
 function arrayEquals(a, b) {
   if (a.length !== b.length) {
@@ -82,7 +107,7 @@ function decodedFile(filename, buffer) {
   return [FILE_TYPES[filename], decoded];
 }
 
-function detect(buffer) {
+function detectFile(buffer) {
   if (arrayStartsWith(buffer, LAYER_TRACE_MAGIC_NUMBER)) {
     return decodedFile('layers_trace', buffer);
   }
@@ -91,7 +116,7 @@ function detect(buffer) {
   }
   for (var filename of ['layers_dump', 'window_dump']) {
     try {
-      var [filetype,decoded] = decodedFile(filename, buffer);
+      var [filetype, decoded] = decodedFile(filename, buffer);
       var transformed = filetype.transform(decoded);
       return [FILE_TYPES[filename], decoded];
     } catch (ex) {
@@ -100,4 +125,5 @@ function detect(buffer) {
   }
   throw new Error('Unable to detect file');
 }
-export default detect;
+
+export { detectFile, dataFile, DATA_TYPES, FILE_TYPES };
