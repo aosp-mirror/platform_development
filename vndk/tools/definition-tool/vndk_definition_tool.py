@@ -1213,7 +1213,7 @@ class TaggedDict(object):
             'system_only', 'system_only_rs',
             'sp_hal', 'sp_hal_dep',
             'vendor_only',
-            'product_services_only',
+            'system_ext_only',
             'product_only',
             'remove',
         ]
@@ -1272,7 +1272,7 @@ class TaggedDict(object):
         'vndk_sp', 'vndk_sp_private',
         'vndk', 'vndk_private',
         'system_only', 'system_only_rs',
-        'product_services_only',
+        'system_ext_only',
         'sp_hal',
     }
 
@@ -1302,7 +1302,7 @@ class TaggedDict(object):
 
         'system_only': _SYSTEM_ONLY_VIS,
         'system_only_rs': _SYSTEM_ONLY_VIS,
-        'product_services_only': _SYSTEM_ONLY_VIS,
+        'system_ext_only': _SYSTEM_ONLY_VIS,
 
         'sp_hal': _SP_HAL_VIS,
         'sp_hal_dep': _SP_HAL_VIS,
@@ -1465,8 +1465,8 @@ class TaggedPathDict(TaggedDict):
             return 'vendor_only'
         if _is_under_dir('/product', path):
             return 'product_only'
-        if _is_under_dir('/product_services', path):
-            return 'product_services_only'
+        if _is_under_dir('/system_ext', path):
+            return 'system_ext_only'
         return 'system_only'
 
 
@@ -1502,7 +1502,7 @@ class TaggedLibDict(object):
         for lib in graph.lib_pt[PT_PRODUCT].values():
             d.add('vendor_only', lib)
 
-        for lib in graph.lib_pt[PT_PRODUCT_SERVICES].values():
+        for lib in graph.lib_pt[PT_SYSTEM_EXT].values():
             d.add('vendor_only', lib)
 
         return d
@@ -1748,7 +1748,7 @@ def scan_elf_files(root, mount_point=None, unzip_files=True):
 PT_SYSTEM = 0
 PT_VENDOR = 1
 PT_PRODUCT = 2
-PT_PRODUCT_SERVICES = 3
+PT_SYSTEM_EXT = 3
 NUM_PARTITIONS = 4
 
 
@@ -2490,10 +2490,10 @@ class ELFLinker(object):
         return ['/system/' + lib_dir]
 
 
-    def _get_product_services_lib_dirs(self, lib_dir):
+    def _get_system_ext_lib_dirs(self, lib_dir):
         return [
-            '/product_services/' + lib_dir,
-            '/system/product_services/' + lib_dir,
+            '/system_ext/' + lib_dir,
+            '/system/system_ext/' + lib_dir,
         ]
 
 
@@ -2516,7 +2516,7 @@ class ELFLinker(object):
         return (
             self._get_apex_bionic_lib_dirs(lib_dir) +
             self._get_apex_lib_dirs(lib_dir) +
-            self._get_product_services_lib_dirs(lib_dir) +
+            self._get_system_ext_lib_dirs(lib_dir) +
             self._get_system_lib_dirs(lib_dir) +
 
             # Search '/vendor/${LIB}' and '/product/${LIB}' to detect
@@ -2555,9 +2555,9 @@ class ELFLinker(object):
         )
 
 
-    def _get_product_services_search_paths(self, lib_dir):
+    def _get_system_ext_search_paths(self, lib_dir):
         # Delegate to _get_system_search_paths() because there is no ABI
-        # boundary between system and product_services partition.
+        # boundary between system and system_ext partition.
         return self._get_system_search_paths(lib_dir)
 
 
@@ -2640,14 +2640,13 @@ class ELFLinker(object):
         resolver = ELFResolver(lib_dict, search_paths)
         self._resolve_lib_set_deps(product_libs, resolver, generic_refs)
 
-        # Resolve product_services libs
-        product_services_lib_dict = \
-            self.lib_pt[PT_PRODUCT_SERVICES].get_lib_dict(elf_class)
-        product_services_libs = set(product_services_lib_dict.values())
-        search_paths = self._get_product_services_search_paths(lib_dir)
+        # Resolve system_ext libs
+        system_ext_lib_dict = \
+            self.lib_pt[PT_SYSTEM_EXT].get_lib_dict(elf_class)
+        system_ext_libs = set(system_ext_lib_dict.values())
+        search_paths = self._get_system_ext_search_paths(lib_dir)
         resolver = ELFResolver(lib_dict, search_paths)
-        self._resolve_lib_set_deps(
-            product_services_libs, resolver, generic_refs)
+        self._resolve_lib_set_deps(system_ext_libs, resolver, generic_refs)
 
 
     def resolve_deps(self, generic_refs=None):
@@ -3059,9 +3058,9 @@ class ELFLinker(object):
     def create(system_dirs=None, system_dirs_as_vendor=None,
                system_dirs_ignored=None, vendor_dirs=None,
                vendor_dirs_as_system=None, vendor_dirs_ignored=None,
-               product_dirs=None, product_services_dirs=None,
-               extra_deps=None, generic_refs=None, tagged_paths=None,
-               vndk_lib_dirs=None, unzip_files=True):
+               product_dirs=None, system_ext_dirs=None, extra_deps=None,
+               generic_refs=None, tagged_paths=None, vndk_lib_dirs=None,
+               unzip_files=True):
         if vndk_lib_dirs is None:
             vndk_lib_dirs = VNDKLibDir.create_from_dirs(
                 system_dirs, vendor_dirs)
@@ -3088,11 +3087,11 @@ class ELFLinker(object):
                     'product', PT_PRODUCT, path, None, None, None,
                     unzip_files)
 
-        if product_services_dirs:
-            for path in product_services_dirs:
+        if system_ext_dirs:
+            for path in system_ext_dirs:
                 graph.add_executables_in_dir(
-                    'product_services', PT_PRODUCT_SERVICES, path, None,
-                    None, None, unzip_files)
+                    'system_ext', PT_SYSTEM_EXT, path, None, None, None,
+                    unzip_files)
 
         if extra_deps:
             for path in extra_deps:
@@ -3219,8 +3218,7 @@ def _enumerate_partition_paths(partition, root):
             yield (android_path, path)
 
 
-def _enumerate_paths(system_dirs, vendor_dirs, product_dirs,
-                     product_services_dirs):
+def _enumerate_paths(system_dirs, vendor_dirs, product_dirs, system_ext_dirs):
     for root in system_dirs:
         for ap, path in _enumerate_partition_paths('system', root):
             yield (ap, path)
@@ -3230,13 +3228,13 @@ def _enumerate_paths(system_dirs, vendor_dirs, product_dirs,
     for root in product_dirs:
         for ap, path in _enumerate_partition_paths('product', root):
             yield (ap, path)
-    for root in product_services_dirs:
-        for ap, path in _enumerate_partition_paths('product_services', root):
+    for root in system_ext_dirs:
+        for ap, path in _enumerate_partition_paths('system_ext', root):
             yield (ap, path)
 
 
 def scan_apk_dep(graph, system_dirs, vendor_dirs, product_dirs,
-                 product_services_dirs):
+                 system_ext_dirs):
     libnames = _build_lib_names_dict(graph)
     results = []
 
@@ -3247,8 +3245,8 @@ def scan_apk_dep(graph, system_dirs, vendor_dirs, product_dirs,
         def decode(string):  # PY3
             return string.decode('mutf-8')
 
-    for ap, path in _enumerate_paths(system_dirs, vendor_dirs,
-                                     product_dirs, product_services_dirs):
+    for ap, path in _enumerate_paths(system_dirs, vendor_dirs, product_dirs,
+                                     system_ext_dirs):
         # Read the dex file from various file formats
         try:
             dex_string_iter = DexFileReader.enumerate_dex_strings(path)
@@ -3420,8 +3418,8 @@ class ELFGraphCommand(Command):
             help='path to product partition contents')
 
         parser.add_argument(
-            '--product-services', action='append', default=[],
-            help='path to product_services partition contents')
+            '--system_ext', action='append', default=[],
+            help='path to system_ext partition contents')
 
         # XXX: BEGIN: Remove these options
         parser.add_argument(
@@ -3487,7 +3485,7 @@ class ELFGraphCommand(Command):
         self._check_arg_dir_exists('--system', args.system)
         self._check_arg_dir_exists('--vendor', args.vendor)
         self._check_arg_dir_exists('--product', args.product)
-        self._check_arg_dir_exists('--product-services', args.product_services)
+        self._check_arg_dir_exists('--system_ext', args.system_ext)
 
 
     def create_from_args(self, args):
@@ -3508,7 +3506,7 @@ class ELFGraphCommand(Command):
                                  args.vendor, args.vendor_dir_as_system,
                                  args.vendor_dir_ignored,
                                  args.product,
-                                 args.product_services,
+                                 args.system_ext,
                                  args.load_extra_deps,
                                  generic_refs=generic_refs,
                                  tagged_paths=tagged_paths,
@@ -4068,7 +4066,7 @@ class ApkDepsCommand(ELFGraphCommand):
         _, graph, _, _ = self.create_from_args(args)
 
         apk_deps = scan_apk_dep(graph, args.system, args.vendor, args.product,
-                                args.product_services)
+                                args.system_ext)
 
         for apk_path, dep_paths in apk_deps:
             print(apk_path)
@@ -4174,8 +4172,8 @@ class CheckDepCommand(CheckDepCommandBase):
             app_dirs = [
                 '/product/app',
                 '/product/priv-app',
-                '/product_services/app',
-                '/product_services/priv-app',
+                '/system_ext/app',
+                '/system_ext/priv-app',
                 '/vendor/app',
                 '/vendor/priv-app',
             ]
@@ -4263,7 +4261,7 @@ class CheckDepCommand(CheckDepCommandBase):
 
 
     def _check_apk_dep(self, graph, system_dirs, vendor_dirs, product_dirs,
-                       product_services_dirs, module_info):
+                       system_ext_dirs, module_info):
         num_errors = 0
 
         def is_in_system_partition(path):
@@ -4272,7 +4270,7 @@ class CheckDepCommand(CheckDepCommandBase):
                    path.startswith('/oem/')
 
         apk_deps = scan_apk_dep(graph, system_dirs, vendor_dirs, product_dirs,
-                                product_services_dirs)
+                                system_ext_dirs)
 
         for apk_path, dep_paths in apk_deps:
             apk_in_system = is_in_system_partition(apk_path)
@@ -4316,8 +4314,8 @@ class CheckDepCommand(CheckDepCommandBase):
 
         if args.check_apk:
             num_errors += self._check_apk_dep(
-                graph, args.system, args.vendor, args.product,
-                args.product_services, module_info)
+                graph, args.system, args.vendor, args.product, args.system_ext,
+                module_info)
 
         return 0 if num_errors == 0 else 1
 
