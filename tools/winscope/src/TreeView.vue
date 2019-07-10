@@ -21,14 +21,11 @@
       </div>
     </div>
     <div class="children" v-if="children">
-      <tree-view v-for="(c,i) in children" :item="c" @item-selected="childItemSelected" :selected="selected" :v-key="i" :chip-class='chipClass' :filter="childFilter(c)" :flattened="flattened"
-          :force-flattened="applyingFlattened" v-show="filterMatches(c)" ref='children' />
+      <tree-view v-for="(c,i) in children" :item="c" @item-selected="childItemSelected" :selected="selected" :key="i" :chip-class='chipClass' :filter="childFilter(c)" :flattened="flattened" :force-flattened="applyingFlattened" v-show="filterMatches(c)" ref='children' />
     </div>
   </div>
 </template>
-
 <script>
-
 import jsonProtoDefs from 'frameworks/base/core/proto/android/server/windowmanagertrace.proto'
 import protobuf from 'protobufjs'
 
@@ -41,9 +38,8 @@ var ServiceMessage = protoDefs.lookupType(
 export default {
   name: 'tree-view',
   props: ['item', 'selected', 'chipClass', 'filter', 'flattened', 'force-flattened'],
-  data () {
-    return {
-    };
+  data() {
+    return {};
   },
   methods: {
     selectNext(found, parent) {
@@ -84,7 +80,8 @@ export default {
     },
     chipClassForChip(c) {
       return ['tree-view-internal-chip', this.chipClassOrDefault,
-          this.chipClassOrDefault + '-' + (c.class || 'default')];
+        this.chipClassOrDefault + '-' + (c.class || 'default')
+      ];
     },
     filterMatches(c) {
       if (this.filter) {
@@ -117,22 +114,26 @@ export default {
     },
   }
 }
-</script>
 
+</script>
 <style>
 .children {
   margin-left: 24px;
 }
+
 .kind {
   color: #333;
 }
+
 .selected {
   background-color: #3f51b5;
   color: white;
 }
-.selected .kind{
+
+.selected .kind {
   color: #ccc;
 }
+
 .tree-view-internal-chip {
   display: inline-block;
 }

@@ -2,7 +2,8 @@ android_app {
     name: "SoftKeyboard",
     srcs: ["**/*.java"],
     sdk_version: "current",
-    dex_preopt: {
-        enabled: false,
-    },
+    min_sdk_version: "19",
+    static_libs: [
+        "androidx.annotation_annotation",
+    ],
 }
