@@ -23,7 +23,7 @@ _TEST_DATA = '''Path,Tag
 /vendor/lib/lib_sp_hal_dep.so,sp-hal-dep
 /vendor/lib/lib_vendor_only.so,vendor-only
 /product/lib/lib_product_only.so,product-only
-/product_services/lib/lib_product_services_only.so,product_services-only
+/system_ext/lib/lib_system_ext_only.so,system_ext-only
 /system/lib/lib_remove.so,remove
 /system/lib/lib_hl_ndk.so,hl-ndk
 /system/lib/lib_vndk_private.so,vndk-private
@@ -88,18 +88,18 @@ class TaggedDictTest(unittest.TestCase):
         }
         self._check_tag_visibility(d, 'vndk', visible_tags)
 
-        # SYSTEM-ONLY and PRODUCT_SERVICES-ONLY
+        # SYSTEM-ONLY and SYSTEM_EXT-ONLY
         visible_tags = {
             'll_ndk', 'll_ndk_private',
             'vndk_sp', 'vndk_sp_private',
             'vndk', 'vndk_private',
             'system_only', 'system_only_rs',
-            'product_services_only',
+            'system_ext_only',
             'sp_hal'
         }
         self._check_tag_visibility(d, 'system_only', visible_tags)
         self._check_tag_visibility(d, 'system_only_rs', visible_tags)
-        self._check_tag_visibility(d, 'product_services_only', visible_tags)
+        self._check_tag_visibility(d, 'system_ext_only', visible_tags)
 
         # SP-HAL
         visible_tags = {'ll_ndk', 'vndk_sp', 'sp_hal', 'sp_hal_dep'}
@@ -201,8 +201,8 @@ class TaggedPathDictTest(unittest.TestCase):
         self.assertIn('/vendor/lib/lib_sp_hal.so', d.sp_hal)
         self.assertIn('/vendor/lib/lib_sp_hal_dep.so', d.sp_hal_dep)
         self.assertIn('/vendor/lib/lib_vendor_only.so', d.vendor_only)
-        self.assertIn('/product_services/lib/lib_product_services_only.so',
-                      d.product_services_only)
+        self.assertIn('/system_ext/lib/lib_system_ext_only.so',
+                      d.system_ext_only)
         self.assertIn('/product/lib/lib_product_only.so', d.product_only)
         self.assertIn('/system/lib/lib_remove.so', d.remove)
 
@@ -361,7 +361,7 @@ class TaggedPathDictTest(unittest.TestCase):
             '/system/lib/lib_system_only.so',
             '/system/lib/lib_system_only_rs.so',
             '/vendor/lib/lib_sp_hal.so',
-            '/product_services/lib/lib_product_services_only.so',
+            '/system_ext/lib/lib_system_ext_only.so',
         }
         self._check_path_visibility(d, all_paths, from_paths, visible_paths)
 
