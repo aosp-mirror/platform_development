@@ -122,6 +122,25 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
       (rect.left - rect.right === 0 || rect.top - rect.bottom === 0);
   }
 
+  function is_transform_invalid(transform) {
+    return !transform || (transform.dsdx * transform.dtdy ===
+        transform.dtdx * transform.dsdy); //determinant of transform
+        /**
+         * The transformation matrix is defined as the product of:
+         * | cos(a) -sin(a) |  \/  | X 0 | 
+         * | sin(a)  cos(a) |  /\  | 0 Y |
+         *
+         * where a is a rotation angle, and X and Y are scaling factors.
+         * A transformation matrix is invalid when either X or Y is zero,
+         * as a rotation matrix is valid for any angle. When either X or Y
+         * is 0, then the scaling matrix is not invertible, which makes the
+         * transformation matrix not invertible as well. A 2D matrix with
+         * components | A B | is uninvertible if and only if AD - BC = 0.
+         *            | C D | 
+         * This check is included above.
+         */
+  }
+
   /**
    * Checks if the layer is visible on screen according to its type,
    * active buffer content, alpha and visible regions.
@@ -187,8 +206,8 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
     if (is_rect_empty_and_valid(layer.crop)) {
       reasons.push('Crop is zero');
     }
-    if (!layer.transform || (layer.type === 'BufferLayer'
-        && !layer.bufferTransform)) {
+    if (is_transform_invalid(layer.transform) || (layer.type === 'BufferLayer'
+        && is_transform_invalid(layer.bufferTransform))) {
       reasons.push('Transform is invalid');
     }
     return reasons.join();
