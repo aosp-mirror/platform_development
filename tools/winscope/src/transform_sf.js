@@ -32,7 +32,6 @@ var MISSING_LAYER = {short: 'MissingLayer',
     class: 'error'};
 
 function transform_layer(layer, {parentBounds, parentHidden}) {
-
   function get_size(layer) {
     var size = layer.size || {w: 0, h: 0};
     return {
@@ -118,6 +117,30 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
         region.rect.every(function(r) { return is_empty_rect(r) } );
   }
 
+  function is_rect_empty_and_valid(rect) {
+    return rect &&
+      (rect.left - rect.right === 0 || rect.top - rect.bottom === 0);
+  }
+
+  function is_transform_invalid(transform) {
+    return !transform || (transform.dsdx * transform.dtdy ===
+        transform.dtdx * transform.dsdy); //determinant of transform
+        /**
+         * The transformation matrix is defined as the product of:
+         * | cos(a) -sin(a) |  \/  | X 0 | 
+         * | sin(a)  cos(a) |  /\  | 0 Y |
+         *
+         * where a is a rotation angle, and X and Y are scaling factors.
+         * A transformation matrix is invalid when either X or Y is zero,
+         * as a rotation matrix is valid for any angle. When either X or Y
+         * is 0, then the scaling matrix is not invertible, which makes the
+         * transformation matrix not invertible as well. A 2D matrix with
+         * components | A B | is uninvertible if and only if AD - BC = 0.
+         *            | C D | 
+         * This check is included above.
+         */
+  }
+
   /**
    * Checks if the layer is visible on screen according to its type,
    * active buffer content, alpha and visible regions.
@@ -172,12 +195,42 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
   if (layer.missing) {
     chips.push(MISSING_LAYER);
   }
-
+  function visibilityReason(layer) {
+    let reasons = [];
+    if (!layer.color || layer.color.a === 0) {
+      reasons.push('Alpha is 0');
+    }
+    if (layer.flags && (layer.flags & FLAG_HIDDEN != 0)) {
+      reasons.push('Flag is hidden');
+    }
+    if (is_rect_empty_and_valid(layer.crop)) {
+      reasons.push('Crop is zero');
+    }
+    if (is_transform_invalid(layer.transform) || (layer.type === 'BufferLayer'
+        && is_transform_invalid(layer.bufferTransform))) {
+      reasons.push('Transform is invalid');
+    }
+    return reasons.join();
+  }
+  if (parentHidden) {
+    layer.invisibleDueTo = 'Hidden by parent with ID: ' + parentHidden;
+  } else {
+    var reasons_hidden = visibilityReason(layer);
+    if (reasons_hidden) {
+      layer.invisibleDueTo = reasons_hidden;
+      parentHidden = layer.id
+    } else if (layer.type === 'ContainerLayer') {
+        layer.invisibleDueTo = 'This is a ContainerLayer.';
+    } else if (layer.type === 'BufferLayer' && (!layer.activeBuffer ||
+          layer.activeBuffer.height === 0 || layer.activeBuffer.width === 0)) {
+        reasons.push('The buffer is zero');
+    } else if (!visible) {
+        layer.invisibleDueTo = 'Occluded by another layer.';
+    }
+  }
   var transform_layer_with_parent_hidden =
-      (layer) => transform_layer(layer, {parentBounds: rect, parentHidden: hidden});
-
+      (layer) => transform_layer(layer, {parentBounds: rect, parentHidden: parentHidden});
   postprocess_flags(layer);
-
   return transform({
     obj: layer,
     kind: 'layer',
@@ -237,7 +290,7 @@ function transform_layers(layers) {
   var idToTransformed = {};
   var transformed_roots = roots.map((r) =>
     transform_layer(r, {parentBounds: {left: 0, right: 0, top: 0, bottom: 0},
-      parentHidden: false}));
+      parentHidden: null}));
 
   foreachTree(transformed_roots, (n) => {
     idToTransformed[n.obj.id] = n;
