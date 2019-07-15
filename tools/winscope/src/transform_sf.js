@@ -196,7 +196,7 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
     chips.push(MISSING_LAYER);
   }
   function visibilityReason(layer) {
-    let reasons = [];
+    var reasons = [];
     if (!layer.color || layer.color.a === 0) {
       reasons.push('Alpha is 0');
     }
@@ -206,16 +206,19 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
     if (is_rect_empty_and_valid(layer.crop)) {
       reasons.push('Crop is zero');
     }
-    if (is_transform_invalid(layer.transform) || (layer.type === 'BufferLayer'
-        && is_transform_invalid(layer.bufferTransform))) {
+    if (is_transform_invalid(layer.transform)) {
       reasons.push('Transform is invalid');
+    }
+    if (layer.type === 'BufferLayer' && is_transform_invalid(layer.bufferTransform)
+        && layer.activeBuffer) {
+      reasons.push('BufferTransform is invalid')
     }
     return reasons.join();
   }
   if (parentHidden) {
     layer.invisibleDueTo = 'Hidden by parent with ID: ' + parentHidden;
   } else {
-    var reasons_hidden = visibilityReason(layer);
+    let reasons_hidden = visibilityReason(layer);
     if (reasons_hidden) {
       layer.invisibleDueTo = reasons_hidden;
       parentHidden = layer.id
@@ -223,7 +226,7 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
         layer.invisibleDueTo = 'This is a ContainerLayer.';
     } else if (layer.type === 'BufferLayer' && (!layer.activeBuffer ||
           layer.activeBuffer.height === 0 || layer.activeBuffer.width === 0)) {
-        reasons.push('The buffer is zero');
+        layer.invisibleDueTo = 'The buffer is empty.';
     } else if (!visible) {
         layer.invisibleDueTo = 'Occluded by another layer.';
     }
