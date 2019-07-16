@@ -1,8 +1,9 @@
 android_app {
     name: "SoftKeyboard",
     srcs: ["**/*.java"],
-    sdk_version: "current",
     min_sdk_version: "19",
+    target_sdk_version: "29",
+    sdk_version: "current",
     static_libs: [
         "androidx.annotation_annotation",
     ],
