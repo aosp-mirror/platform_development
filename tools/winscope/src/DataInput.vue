@@ -55,23 +55,7 @@
   </md-layout>
 </template>
 <script>
-import jsonProtoDefs from 'frameworks/base/core/proto/android/server/windowmanagertrace.proto'
-import jsonProtoDefsSF from 'frameworks/native/services/surfaceflinger/layerproto/layerstrace.proto'
-import protobuf from 'protobufjs'
-
-import { detectFile, dataFile, FILE_TYPES, DATA_TYPES } from './detectfile.js'
-
-import { fill_transform_data } from './matrix_utils.js'
-
-var protoDefs = protobuf.Root.fromJSON(jsonProtoDefs)
-  .addJSON(jsonProtoDefsSF.nested);
-
-var TraceMessage = protoDefs.lookupType(
-  "com.android.server.wm.WindowManagerTraceFileProto");
-var ServiceMessage = protoDefs.lookupType(
-  "com.android.server.wm.WindowManagerServiceDumpProto");
-var LayersMessage = protoDefs.lookupType("android.surfaceflinger.LayersProto");
-var LayersTraceMessage = protoDefs.lookupType("android.surfaceflinger.LayersTraceFileProto");
+import { detectAndDecode, dataFile, FILE_TYPES, DATA_TYPES } from './decode.js'
 
 export default {
   name: 'datainput',
@@ -92,7 +76,7 @@ export default {
         // No file selected.
         return;
       }
-      this.$emit('statusChange', this.filename + " (loading)");
+      this.$emit('statusChange', file.name + " (loading)");
 
       var reader = new FileReader();
       reader.onload = (e) => {
@@ -100,13 +84,9 @@ export default {
         try {
           if (FILE_TYPES[type]) {
             var filetype = FILE_TYPES[type];
-            var decoded = filetype.protoType.decode(buffer);
-            modifyProtoFields(decoded, this.store.displayDefaults);
-            var transformed = filetype.transform(decoded);
+            var data = fileType.decoder(buffer, filetype, file.name, this.store);
           } else {
-            var [filetype, decoded] = detectFile(buffer);
-            modifyProtoFields(decoded, this.store.displayDefaults);
-            var transformed = filetype.transform(decoded);
+            var [filetype, data] = detectAndDecode(buffer, file.name, this.store);
           }
         } catch (ex) {
           this.$emit('statusChange', this.filename + ': ' + ex);
@@ -114,51 +94,8 @@ export default {
         } finally {
           event.target.value = ''
         }
-        this.$emit('statusChange', this.filename + " (loading " + filetype.name + ")");
 
-        // Replace enum values with string representation and
-        // add default values to the proto objects. This function also handles
-        // a special case with TransformProtos where the matrix may be derived
-        // from the transform type.
-        function modifyProtoFields(protoObj, displayDefaults) {
-          if (!protoObj || protoObj !== Object(protoObj) || !protoObj.$type) {
-            return;
-          }
-          for (var fieldName in protoObj.$type.fields) {
-            var fieldProperties = protoObj.$type.fields[fieldName];
-            var field = protoObj[fieldName];
-
-            if (Array.isArray(field)) {
-              field.forEach((item, _) => {
-                modifyProtoFields(item, displayDefaults);
-              })
-              continue;
-            }
-
-            if (displayDefaults && !(field)) {
-              protoObj[fieldName] = fieldProperties.defaultValue;
-            }
-
-            if (fieldProperties.type === 'TransformProto') {
-              fill_transform_data(protoObj[fieldName]);
-              continue;
-            }
-
-            if (fieldProperties.resolvedType && fieldProperties.resolvedType.valuesById) {
-              protoObj[fieldName] = fieldProperties.resolvedType.valuesById[protoObj[fieldProperties.name]];
-              continue;
-            }
-            modifyProtoFields(protoObj[fieldName], displayDefaults);
-          }
-        }
-        var timeline;
-        if (filetype.timeline) {
-          timeline = transformed.children;
-        } else {
-          timeline = [transformed];
-        }
-
-        this.$set(this.dataFiles, filetype.dataType.name, dataFile(file.name, timeline, filetype.dataType));
+        this.$set(this.dataFiles, filetype.dataType.name, data);
         this.$emit('statusChange', null);
       }
       reader.readAsArrayBuffer(files[0]);
