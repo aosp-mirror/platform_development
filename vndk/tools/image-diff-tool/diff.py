@@ -107,7 +107,7 @@ def main(targets, search_paths, ignore_signing_key=False):
 
 
 if __name__ == "__main__":
-  parser = argparse.ArgumentParser(prog="system_product_image_diff", usage="system_product_image_diff -t model1 model2 model3 -s system product [-i]")
+  parser = argparse.ArgumentParser(prog="compare_images", usage="compare_images -t model1 model2 [model...] -s dir1 [dir...] [-i]")
   parser.add_argument("-t", "--target", nargs='+', required=True)
   parser.add_argument("-s", "--search_path", nargs='+', required=True)
   parser.add_argument("-i", "--ignore_signing_key", action='store_true')
