@@ -15,7 +15,7 @@
 //
 
 python_binary_host {
-    name: "system_product_image_diff",
+    name: "compare_images",
     main: "diff.py",
     srcs: [
         "diff.py",
