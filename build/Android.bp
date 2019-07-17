@@ -22,7 +22,7 @@ java_defaults {
     java_resources: [
         ":notices-for-framework-stubs",
     ],
-    no_standard_libs: true,
+    sdk_version: "none",
     system_modules: "none",
     java_version: "1.8",
     compile_dex: true,
