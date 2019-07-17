@@ -1,0 +1,8 @@
+android_app {
+    name: "FixedGridLayout",
+    srcs: ["**/*.java"],
+    sdk_version: "current",
+    dex_preopt: {
+        enabled: false,
+    },
+}
