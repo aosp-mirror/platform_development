@@ -17,14 +17,17 @@
 
 import jsonProtoDefs from 'frameworks/base/core/proto/android/server/windowmanagertrace.proto'
 import jsonProtoDefsSF from 'frameworks/native/services/surfaceflinger/layerproto/layerstrace.proto'
+import jsonProtoDefsTrans from 'frameworks/native/cmds/surfacereplayer/proto/src/trace.proto'
 import protobuf from 'protobufjs'
 import { transform_layers, transform_layers_trace } from './transform_sf.js'
 import { transform_window_service, transform_window_trace } from './transform_wm.js'
+import { transform_transaction_trace } from './transform_transaction.js'
 import { fill_transform_data } from './matrix_utils.js'
 import { mp4Decoder } from './decodeVideo.js'
 
 var protoDefs = protobuf.Root.fromJSON(jsonProtoDefs)
-  .addJSON(jsonProtoDefsSF.nested);
+  .addJSON(jsonProtoDefsSF.nested)
+  .addJSON(jsonProtoDefsTrans.nested);
 
 var WindowTraceMessage = protoDefs.lookupType(
   "com.android.server.wm.WindowManagerTraceFileProto");
@@ -32,7 +35,7 @@ var WindowMessage = protoDefs.lookupType(
   "com.android.server.wm.WindowManagerServiceDumpProto");
 var LayersMessage = protoDefs.lookupType("android.surfaceflinger.LayersProto");
 var LayersTraceMessage = protoDefs.lookupType("android.surfaceflinger.LayersTraceFileProto");
-
+var TransactionMessage = protoDefs.lookupType("Trace");
 
 const LAYER_TRACE_MAGIC_NUMBER = [0x09, 0x4c, 0x59, 0x52, 0x54, 0x52, 0x41, 0x43, 0x45] // .LYRTRACE
 const WINDOW_TRACE_MAGIC_NUMBER = [0x09, 0x57, 0x49, 0x4e, 0x54, 0x52, 0x41, 0x43, 0x45] // .WINTRACE
@@ -50,7 +53,11 @@ const DATA_TYPES = {
   SCREEN_RECORDING: {
     name: "Screen recording",
     icon: "videocam",
-  }
+  },
+  TRANSACTION: {
+    name: "Transaction",
+    icon: "timeline",
+  },
 }
 
 const FILE_TYPES = {
@@ -101,6 +108,16 @@ const FILE_TYPES = {
     decoderParams: {
       videoDecoder: mp4Decoder,
     },
+  },
+  'transaction': {
+    name: "Transaction",
+    dataType: DATA_TYPES.TRANSACTION,
+    decoder: protoDecoder,
+    decoderParams: {
+      protoType: TransactionMessage,
+      transform: transform_transaction_trace,
+      timeline: true,
+    }
   }
 };
 
@@ -198,7 +215,7 @@ function detectAndDecode(buffer, fileName, store) {
   if (arrayStartsWith(buffer, MPEG4_MAGIC_NMBER)) {
     return decodedFile(FILE_TYPES['screen_recording'], buffer, fileName, store);
   }
-  for (var name of ['layers_dump', 'window_dump']) {
+  for (var name of ['transaction', 'layers_dump', 'window_dump']) {
     try {
       return decodedFile(FILE_TYPES[name], buffer, fileName, store);
     } catch (ex) {

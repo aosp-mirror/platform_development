@@ -44,7 +44,8 @@ export default {
   props: ['store', 'file'],
   computed: {
     isTrace() {
-      return this.file.type == DATA_TYPES.WINDOW_MANAGER || this.file.type == DATA_TYPES.SURFACE_FLINGER;
+      return this.file.type == DATA_TYPES.WINDOW_MANAGER ||
+          this.file.type == DATA_TYPES.SURFACE_FLINGER || this.file.type == DATA_TYPES.TRANSACTION;
     },
     isVideo() {
       return this.file.type == DATA_TYPES.SCREEN_RECORDING;
