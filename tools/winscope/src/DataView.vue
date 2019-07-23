@@ -13,203 +13,47 @@
      limitations under the License.
 -->
 <template>
-  <md-card v-if="tree">
+  <md-card v-if="file">
     <md-card-header>
       <div class="md-title">
         <md-icon>{{file.type.icon}}</md-icon> {{file.filename}}
       </div>
     </md-card-header>
-    <md-card-content class="container">
-      <md-card class="rects">
-        <md-whiteframe md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
-          <h2 class="md-title">Screen</h2>
-        </md-whiteframe>
-        <md-whiteframe md-elevation="8">
-          <rects :bounds="bounds" :rects="rects" :highlight="highlight" @rect-click="onRectClick" />
-        </md-whiteframe>
-      </md-card>
-      <md-card class="hierarchy">
-        <md-whiteframe md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
-          <h2 class="md-title" style="flex: 1;">Hierarchy</h2>
-          <md-checkbox v-model="store.onlyVisible">Only visible</md-checkbox>
-          <md-checkbox v-model="store.flattened">Flat</md-checkbox>
-        </md-whiteframe>
-        <tree-view :item="tree" @item-selected="itemSelected" :selected="hierarchySelected" :filter="hierarchyFilter" :flattened="store.flattened" ref="hierarchy" />
-      </md-card>
-      <md-card class="properties">
-        <md-whiteframe md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
-          <h2 class="md-title" style="flex: 1">Properties</h2>
-          <div class="filter">
-            <input id="filter" type="search" placeholder="Filter..." v-model="propertyFilterString" />
-          </div>
-        </md-whiteframe>
-        <tree-view :item="selectedTree" :filter="propertyFilter" />
-      </md-card>
-    </md-card-content>
+    <traceview v-if="isTrace" :store="store" :file="file" ref="view" />
+    <videoview v-if="isVideo" :file="file" ref="view" />
   </md-card>
 </template>
 <script>
-import TreeView from './TreeView.vue'
-import Timeline from './Timeline.vue'
-import Rects from './Rects.vue'
-
-import { transform_json } from './transform.js'
-import { format_transform_type, is_simple_transform } from './matrix_utils.js'
-
-function formatProto(obj) {
-  if (!obj || !obj.$type) {
-    return;
-  }
-  if (obj.$type.fullName === '.android.surfaceflinger.RectProto' ||
-    obj.$type.fullName === '.android.graphics.RectProto') {
-    return `(${obj.left}, ${obj.top})  -  (${obj.right}, ${obj.bottom})`;
-  } else if (obj.$type.fullName === '.android.surfaceflinger.FloatRectProto') {
-    return `(${obj.left.toFixed(3)}, ${obj.top.toFixed(3)})  -  (${obj.right.toFixed(3)}, ${obj.bottom.toFixed(3)})`;
-  } else if (obj.$type.fullName === '.android.surfaceflinger.PositionProto') {
-    return `(${obj.x.toFixed(3)}, ${obj.y.toFixed(3)})`;
-  } else if (obj.$type.fullName === '.android.surfaceflinger.SizeProto') {
-    return `${obj.w} x ${obj.h}`;
-  } else if (obj.$type.fullName === '.android.surfaceflinger.ColorProto') {
-    return `r:${obj.r} g:${obj.g} \n b:${obj.b} a:${obj.a}`;
-  } else if (obj.$type.fullName === '.android.surfaceflinger.TransformProto') {
-    var transform_type = format_transform_type(obj);
-    if (is_simple_transform(obj)) {
-      return `${transform_type}`;
-    }
-    return `${transform_type}  dsdx:${obj.dsdx.toFixed(3)}   dtdx:${obj.dtdx.toFixed(3)}   dsdy:${obj.dsdy.toFixed(3)}   dtdy:${obj.dtdy.toFixed(3)}`;
-  }
-}
+import TraceView from './TraceView.vue'
+import VideoView from './VideoView.vue'
+import { DATA_TYPES } from './decode.js'
 
 export default {
   name: 'dataview',
   data() {
-    return {
-      propertyFilterString: "",
-      selectedTree: {},
-      hierarchySelected: null,
-      lastSelectedStableId: null,
-      bounds: {},
-      rects: [],
-      tree: null,
-      highlight: null,
-    }
+    return {}
   },
   methods: {
-    itemSelected(item) {
-      this.hierarchySelected = item;
-      this.selectedTree = transform_json(item.obj, item.name, {
-        skip: item.skip,
-        formatter: formatProto
-      });
-      this.highlight = item.highlight;
-      this.lastSelectedStableId = item.stableId;
-      this.$emit('focus');
-    },
-    onRectClick(item) {
-      if (item) {
-        this.itemSelected(item);
-      }
-    },
-    setData(item) {
-      this.tree = item;
-      this.rects = [...item.rects].reverse();
-      this.bounds = item.bounds;
-
-      this.hierarchySelected = null;
-      this.selectedTree = {};
-      this.highlight = null;
-
-      function find_item(item, stableId) {
-        if (item.stableId === stableId) {
-          return item;
-        }
-        if (Array.isArray(item.children)) {
-          for (var child of item.children) {
-            var found = find_item(child, stableId);
-            if (found) {
-              return found;
-            }
-          }
-        }
-        return null;
-      }
-
-      if (this.lastSelectedStableId) {
-        var found = find_item(item, this.lastSelectedStableId);
-        if (found) {
-          this.itemSelected(found);
-        }
-      }
-    },
     arrowUp() {
-      return this.$refs.hierarchy.selectPrev();
+      return this.$refs.view.arrowUp();
     },
     arrowDown() {
-      return this.$refs.hierarchy.selectNext();
+      return this.$refs.view.arrowDown();
     },
-  },
-  created() {
-    this.setData(this.file.timeline[this.file.selectedIndex]);
-  },
-  watch: {
-    selectedIndex() {
-      this.setData(this.file.timeline[this.file.selectedIndex]);
-    }
   },
   props: ['store', 'file'],
   computed: {
-    selectedIndex() {
-      return this.file.selectedIndex;
+    isTrace() {
+      return this.file.type == DATA_TYPES.WINDOW_MANAGER || this.file.type == DATA_TYPES.SURFACE_FLINGER;
     },
-    hierarchyFilter() {
-      return this.store.onlyVisible ? (c, flattened) => {
-        return c.visible || c.childrenVisible && !flattened;
-      } : null;
-    },
-    propertyFilter() {
-      var filterStrings = this.propertyFilterString.split(",");
-      var positive = [];
-      var negative = [];
-      filterStrings.forEach((f) => {
-        if (f.startsWith("!")) {
-          var str = f.substring(1);
-          negative.push((s) => s.indexOf(str) === -1);
-        } else {
-          var str = f;
-          positive.push((s) => s.indexOf(str) !== -1);
-        }
-      });
-      var filter = (item) => {
-        var apply = (f) => f(item.name);
-        return (positive.length === 0 || positive.some(apply)) &&
-          (negative.length === 0 || negative.every(apply));
-      };
-      filter.includeChildren = true;
-      return filter;
+    isVideo() {
+      return this.file.type == DATA_TYPES.SCREEN_RECORDING;
     }
   },
   components: {
-    'tree-view': TreeView,
-    'rects': Rects,
+    'traceview': TraceView,
+    'videoview': VideoView,
   }
 }
 
 </script>
-<style>
-.rects {
-  flex: none;
-  margin: 8px;
-}
-
-.hierarchy,
-.properties {
-  flex: 1;
-  margin: 8px;
-  min-width: 400px;
-}
-
-.hierarchy>.tree-view,
-.properties>.tree-view {
-  margin: 16px;
-}
-</style>

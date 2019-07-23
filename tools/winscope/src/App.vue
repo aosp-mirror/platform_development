@@ -85,11 +85,11 @@ export default {
     },
     onTimelineItemSelected(index, timelineIndex) {
       this.files[timelineIndex].selectedIndex = index;
-      var t = parseInt(this.files[timelineIndex].timeline[index].timestamp);
+      var t = parseInt(this.files[timelineIndex].timeline[index]);
       for (var i = 0; i < this.files.length; i++) {
         if (i != timelineIndex) {
           this.files[i].selectedIndex = findLastMatchingSorted(this.files[i].timeline, function(array, idx) {
-            return parseInt(array[idx].timestamp) <= t;
+            return parseInt(array[idx]) <= t;
           });
         }
       }
@@ -104,7 +104,7 @@ export default {
         if (cur + direction < 0 || cur + direction >= this.files[idx].timeline.length) {
           continue;
         }
-        var d = Math.abs(parseInt(file.timeline[cur + direction].timestamp) - this.currentTimestamp);
+        var d = Math.abs(parseInt(file.timeline[cur + direction]) - this.currentTimestamp);
         if (timeDiff > d) {
           timeDiff = d;
           closestTimeline = idx;
@@ -112,7 +112,7 @@ export default {
       }
       if (closestTimeline >= 0) {
         this.files[closestTimeline].selectedIndex += direction;
-        this.currentTimestamp = parseInt(this.files[closestTimeline].timeline[this.files[closestTimeline].selectedIndex].timestamp);
+        this.currentTimestamp = parseInt(this.files[closestTimeline].timeline[this.files[closestTimeline].selectedIndex]);
       }
     },
     onDataViewFocus(view) {
@@ -149,8 +149,8 @@ export default {
     prettyDump: function() { return JSON.stringify(this.dump, null, 2); },
     dataLoaded: function() { return this.files.length > 0 },
     scale() {
-      var mx = Math.max(...(this.files.map(f => Math.max(...f.timeline.map(t => t.timestamp)))));
-      var mi = Math.min(...(this.files.map(f => Math.min(...f.timeline.map(t => t.timestamp)))));
+      var mx = Math.max(...(this.files.map(f => Math.max(...f.timeline))));
+      var mi = Math.min(...(this.files.map(f => Math.min(...f.timeline))));
       return [mi, mx];
     },
     activeView: function() {
