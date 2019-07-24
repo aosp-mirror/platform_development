@@ -27,7 +27,7 @@ export default {
   },
   methods: {
     position(item) {
-      return this.translate(item.timestamp);
+      return this.translate(item);
     },
     translate(cx) {
       var scale = [...this.scale];
@@ -45,7 +45,7 @@ export default {
       if (this.items.length == 1) {
         return [0];
       }
-      return this.items.map((e) => parseInt(e.timestamp));
+      return this.items;
     },
     selected() {
       return this.items[this.selectedIndex];
