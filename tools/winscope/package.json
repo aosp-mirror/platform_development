@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "vue": "^2.3.3",
-    "vue-material": "^0.7.5"
+    "vue-material": "0.8.1"
   },
   "devDependencies": {
     "babel-core": "^6.0.0",
