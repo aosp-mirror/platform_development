@@ -53,7 +53,7 @@ function parseUint64LE(buffer, position) {
 function mp4Decoder(buffer) {
   var dataStart = findFirstInArray(buffer, WINSCOPE_META_MAGIC_STRING);
   if (dataStart < 0) {
-    throw new Error('Unable to find sync metadata in the file');
+    throw new Error('Unable to find sync metadata in the file. Are you using the latest Android ScreenRecorder version?');
   }
   dataStart += WINSCOPE_META_MAGIC_STRING.length;
   var frameNum = parseUint32LE(buffer, dataStart);

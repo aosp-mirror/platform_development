@@ -19,7 +19,10 @@
       <a class="md-button md-accent md-raised md-theme-default" @click="clear()" v-if="dataLoaded">Clear</a>
     </md-whiteframe>
     <div class="main-content">
-      <datainput v-if="!dataLoaded" ref="input" :store="store" @dataReady="onDataReady" @statusChange="setStatus" />
+      <md-layout v-if="!dataLoaded" class="m-2">
+        <dataadb ref="adb" :store="store" @dataReady="onDataReady" @statusChange="setStatus" />
+        <datainput ref="input" :store="store" @dataReady="onDataReady" @statusChange="setStatus" />
+      </md-layout>
       <md-card v-if="dataLoaded">
         <md-whiteframe md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
           <h2 class="md-title">Timeline</h2>
@@ -42,6 +45,7 @@ import Rects from './Rects.vue'
 import DataView from './DataView.vue'
 import DataInput from './DataInput.vue'
 import LocalStore from './localstore.js'
+import DataAdb from './DataAdb.vue'
 
 const APP_NAME = "Winscope"
 
@@ -169,6 +173,7 @@ export default {
     'timeline': Timeline,
     'dataview': DataView,
     'datainput': DataInput,
+    'dataadb': DataAdb,
   },
 }
 
@@ -189,6 +194,14 @@ export default {
 .container {
   display: flex;
   flex-wrap: wrap;
+}
+
+.md-layout > .md-card {
+  margin: 0.5em;
+}
+
+.md-button {
+  margin-top: 1em
 }
 
 h1,

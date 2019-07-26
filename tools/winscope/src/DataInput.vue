@@ -13,9 +13,7 @@
      limitations under the License.
 -->
 <template>
-  <md-layout class="md-alignment-top-center">
     <md-card style="min-width: 50em">
-      <!-- v-if="!timeline.length" -->
       <md-card-header>
         <div class="md-title">Open files</div>
       </md-card-header>
@@ -52,7 +50,6 @@
         </div>
       </md-card-content>
     </md-card>
-  </md-layout>
 </template>
 <script>
 import { detectAndDecode, dataFile, FILE_TYPES, DATA_TYPES } from './decode.js'
@@ -84,7 +81,7 @@ export default {
         try {
           if (FILE_TYPES[type]) {
             var filetype = FILE_TYPES[type];
-            var data = fileType.decoder(buffer, filetype, file.name, this.store);
+            var data = filetype.decoder(buffer, filetype, file.name, this.store);
           } else {
             var [filetype, data] = detectAndDecode(buffer, file.name, this.store);
           }
