@@ -54,11 +54,6 @@ bin/dmtracedump                         strip platform-tools/dmtracedump
 bin/etc1tool                            strip platform-tools/etc1tool
 bin/hprof-conv                          strip platform-tools/hprof-conv
 
-# fastdeploy
-system/framework/deployagent.jar        platform-tools/deployagent.jar
-system/bin/deployagent                  platform-tools/deployagent
-framework/deploypatchgenerator.jar      platform-tools/deploypatchgenerator.jar
-
 # systrace
 external/chromium-trace/catapult/                                         platform-tools/systrace/catapult/
 external/chromium-trace/systrace.py                                       platform-tools/systrace/systrace.py
