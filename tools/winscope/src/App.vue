@@ -86,6 +86,7 @@ export default {
   methods: {
     clear() {
       this.files = [];
+      this.activeDataView = null;
     },
     onTimelineItemSelected(index, timelineIndex) {
       this.files[timelineIndex].selectedIndex = index;
