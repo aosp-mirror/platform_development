@@ -159,7 +159,7 @@ export default {
       return [mi, mx];
     },
     activeView: function() {
-      if (!this.activeDataView) {
+      if (!this.activeDataView && this.files.length > 0) {
         this.activeDataView = this.files[0].filename;
       }
       return this.activeDataView;

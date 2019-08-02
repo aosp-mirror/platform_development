@@ -127,7 +127,7 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
         transform.dtdx * transform.dsdy); //determinant of transform
         /**
          * The transformation matrix is defined as the product of:
-         * | cos(a) -sin(a) |  \/  | X 0 | 
+         * | cos(a) -sin(a) |  \/  | X 0 |
          * | sin(a)  cos(a) |  /\  | 0 Y |
          *
          * where a is a rotation angle, and X and Y are scaling factors.
@@ -136,7 +136,7 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
          * is 0, then the scaling matrix is not invertible, which makes the
          * transformation matrix not invertible as well. A 2D matrix with
          * components | A B | is uninvertible if and only if AD - BC = 0.
-         *            | C D | 
+         *            | C D |
          * This check is included above.
          */
   }
@@ -228,7 +228,7 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
           layer.activeBuffer.height === 0 || layer.activeBuffer.width === 0)) {
         layer.invisibleDueTo = 'The buffer is empty.';
     } else if (!visible) {
-        layer.invisibleDueTo = 'Occluded by another layer.';
+        layer.invisibleDueTo = 'Unknown. Occluded by another layer?';
     }
   }
   var transform_layer_with_parent_hidden =
@@ -236,8 +236,8 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
   postprocess_flags(layer);
   return transform({
     obj: layer,
-    kind: 'layer',
-    name: layer.name,
+    kind: '',
+    name: layer.id + ": " + layer.name,
     children: [
       [layer.resolvedChildren, transform_layer_with_parent_hidden],
     ],
