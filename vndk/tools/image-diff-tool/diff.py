@@ -17,7 +17,7 @@ import os
 import subprocess
 import sys
 from collections import defaultdict
-from glob import glob
+from pathlib import Path
 from operator import itemgetter
 import hashlib
 import argparse
@@ -69,8 +69,7 @@ def main(all_targets, search_paths, ignore_signing_key=False):
         if os.path.join(target, s).lower() + os.path.sep in p.lower():
           return True
       return False
-    paths = [path for path in glob(os.path.join(
-        target, "**", "*"), recursive=True) if valid_path(path)]
+    paths = [path for path in Path(target).glob('**/*') if valid_path(path)]
 
     def run(path):
       is_native_component = silent_call(["objdump", "-a", path])
