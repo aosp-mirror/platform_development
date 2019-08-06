@@ -69,7 +69,7 @@ def main(all_targets, search_paths, ignore_signing_key=False):
         if os.path.join(target, s).lower() + os.path.sep in p.lower():
           return True
       return False
-    paths = [path for path in Path(target).glob('**/*') if valid_path(path)]
+    paths = [str(path) for path in Path(target).glob('**/*') if valid_path(str(path))]
 
     def run(path):
       is_native_component = silent_call(["objdump", "-a", path])
