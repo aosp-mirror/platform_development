@@ -28,7 +28,7 @@
         <md-checkbox v-model="store.onlyVisible">Only visible</md-checkbox>
         <md-checkbox v-model="store.flattened">Flat</md-checkbox>
       </md-whiteframe>
-      <tree-view :item="tree" @item-selected="itemSelected" :selected="hierarchySelected" :filter="hierarchyFilter" :flattened="store.flattened" ref="hierarchy" />
+      <tree-view class="data-card" :item="tree" @item-selected="itemSelected" :selected="hierarchySelected" :filter="hierarchyFilter" :flattened="store.flattened" ref="hierarchy" />
     </md-card>
     <md-card class="properties">
       <md-whiteframe md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
@@ -37,7 +37,7 @@
           <input id="filter" type="search" placeholder="Filter..." v-model="propertyFilterString" />
         </div>
       </md-whiteframe>
-      <tree-view :item="selectedTree" :filter="propertyFilter" />
+      <tree-view class="data-card" :item="selectedTree" :filter="propertyFilter" />
     </md-card>
   </md-card-content>
 </template>
@@ -203,6 +203,11 @@ export default {
 .hierarchy>.tree-view,
 .properties>.tree-view {
   margin: 16px;
+}
+
+.data-card {
+  overflow: auto;
+  max-height: 48em;
 }
 
 </style>
