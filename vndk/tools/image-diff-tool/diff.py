@@ -106,11 +106,17 @@ def main(all_targets, search_paths, ignore_signing_key=False):
 
 
 if __name__ == "__main__":
-  parser = argparse.ArgumentParser(prog="compare_images", usage="compare_images -t model1 model2 [model...] -s dir1 [dir...] [-i]")
+  parser = argparse.ArgumentParser(prog="compare_images", usage="compare_images -t model1 model2 [model...] -s dir1 [dir...] [-i] [-u]")
   parser.add_argument("-t", "--target", nargs='+', required=True)
   parser.add_argument("-s", "--search_path", nargs='+', required=True)
   parser.add_argument("-i", "--ignore_signing_key", action='store_true')
+  parser.add_argument("-u", "--unzip", action='store_true')
   args = parser.parse_args()
   if len(args.target) < 2:
     parser.error("The number of targets has to be at least two.")
+  if args.unzip:
+    for t in args.target:
+      unzip_cmd = ["unzip", "-qd", t, os.path.join(t, "*.zip")]
+      unzip_cmd.extend([os.path.join(s, "*") for s in args.search_path])
+      subprocess.call(unzip_cmd)
   main(args.target, args.search_path, args.ignore_signing_key)
