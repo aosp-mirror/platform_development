@@ -8,3 +8,7 @@ cat common.csv
 echo
 echo " - Different parts"
 cat diff.csv
+
+if [ -v DIST_DIR ]; then
+  cp common.csv diff.csv $DIST_DIR
+fi
