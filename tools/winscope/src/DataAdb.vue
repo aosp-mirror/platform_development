@@ -228,7 +228,7 @@ export default {
             view.$emit('dataReady', view.dataFiles);
           }
         } catch (err) {
-          view.errorText = ex;
+          view.errorText = err;
           view.status = STATES.ERROR;
         }
       }, "arraybuffer")
