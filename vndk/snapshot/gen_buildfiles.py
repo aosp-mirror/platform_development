@@ -17,6 +17,7 @@
 
 import argparse
 import glob
+import json
 import logging
 import os
 import sys
@@ -61,9 +62,6 @@ class GenBuildFile(object):
     ETC_MODULES = [
         'ld.config.txt', 'llndk.libraries.txt', 'vndksp.libraries.txt'
     ]
-
-    # TODO(b/70312118): Parse from soong build system
-    RELATIVE_INSTALL_PATHS = {'android.hidl.memory@1.0-impl.so': 'hw'}
 
     def __init__(self, install_dir, vndk_version):
         """GenBuildFile constructor.
@@ -180,8 +178,8 @@ class GenBuildFile(object):
             # isolated in separate 'binder32' subdirectory.
             if is_binder32 and self._vndk_version >= 28:
                 variant_subpath = os.path.join(arch, utils.BINDER32)
-            bpfile_path = os.path.join(self._install_dir, variant_subpath,
-                                       'Android.bp')
+            variant_path = os.path.join(self._install_dir, variant_subpath)
+            bpfile_path = os.path.join(variant_path, 'Android.bp')
 
             vndk_core_buildrules = self._gen_vndk_shared_prebuilts(
                 self._vndk_core[arch], arch, is_binder32=is_binder32)
@@ -199,6 +197,12 @@ class GenBuildFile(object):
                 bpfile.write('\n'.join(vndk_core_buildrules))
                 bpfile.write('\n')
                 bpfile.write('\n'.join(vndk_sp_buildrules))
+
+            variant_include_path = os.path.join(variant_path, 'include')
+            include_path = os.path.join(self._install_dir, arch, 'include')
+            if os.path.isdir(include_path) and variant_include_path != include_path:
+                os.symlink(os.path.relpath(include_path, variant_path),
+                    variant_include_path)
 
             logging.info('Successfully generated {}'.format(bpfile_path))
 
@@ -393,28 +397,23 @@ class GenBuildFile(object):
                     notice_filegroup=self._get_notice_filegroup_name(prebuilt))
             return notice
 
-        def get_rel_install_path(prebuilt):
-            """Returns build rule for 'relative_install_path'.
-
-            Args:
-              prebuilt: string, name of prebuilt object
-            """
-            rel_install_path = ''
-            if prebuilt in self.RELATIVE_INSTALL_PATHS:
-                path = self.RELATIVE_INSTALL_PATHS[prebuilt]
-                rel_install_path += ('{ind}relative_install_path: "{path}",\n'
-                                     .format(ind=self.INDENT, path=path))
-            return rel_install_path
-
-        def get_arch_srcs(prebuilt, arch):
+        def get_arch_props(prebuilt, arch):
             """Returns build rule for arch specific srcs.
 
             e.g.,
                 arch: {
                     arm: {
+                        export_include_dirs: ["..."],
+                        export_system_include_dirs: ["..."],
+                        export_flags: ["..."],
+                        relative_install_path: "...",
                         srcs: ["..."]
                     },
                     arm64: {
+                        export_include_dirs: ["..."],
+                        export_system_include_dirs: ["..."],
+                        export_flags: ["..."],
+                        relative_install_path: "...",
                         srcs: ["..."]
                     },
                 }
@@ -423,22 +422,70 @@ class GenBuildFile(object):
               prebuilt: string, name of prebuilt object
               arch: string, VNDK snapshot arch (e.g. 'arm64')
             """
-            arch_srcs = '{ind}arch: {{\n'.format(ind=self.INDENT)
+            arch_props = '{ind}arch: {{\n'.format(ind=self.INDENT)
             src_paths = utils.find(src_root, [prebuilt])
             # filter out paths under 'binder32' subdirectory
             src_paths = filter(lambda src: not src.startswith(utils.BINDER32),
                                src_paths)
 
+            def list_to_prop_value(l, name):
+                if len(l) == 0:
+                    return ''
+                dirs=',\n{ind}{ind}{ind}{ind}'.format(
+                    ind=self.INDENT).join(['"%s"' % d for d in l])
+                return ('{ind}{ind}{ind}{name}: [\n'
+                        '{ind}{ind}{ind}{ind}{dirs},\n'
+                        '{ind}{ind}{ind}],\n'.format(
+                            ind=self.INDENT,
+                            dirs=dirs,
+                            name=name))
+
             for src in sorted(src_paths):
-                arch_srcs += ('{ind}{ind}{arch}: {{\n'
-                              '{ind}{ind}{ind}srcs: ["{src}"],\n'
-                              '{ind}{ind}}},\n'.format(
+                include_dirs = ''
+                system_include_dirs = ''
+                flags = ''
+                relative_install_path = ''
+                prop_path = os.path.join(src_root, src+'.json')
+                props = dict()
+                try:
+                    with open(prop_path, 'r') as f:
+                        props = json.loads(f.read())
+                    os.unlink(prop_path)
+                except:
+                    # TODO(b/70312118): Parse from soong build system
+                    if prebuilt == 'android.hidl.memory@1.0-impl.so':
+                        props['RelativeInstallPath'] = 'hw'
+                if 'ExportedDirs' in props:
+                    l = ['include/%s' % d for d in props['ExportedDirs']]
+                    include_dirs = list_to_prop_value(l, 'export_include_dirs')
+                if 'ExportedSystemDirs' in props:
+                    l = ['include/%s' % d for d in props['ExportedSystemDirs']]
+                    system_include_dirs = list_to_prop_value(l, 'export_system_include_dirs')
+                if 'ExportedFlags' in props:
+                    flags = list_to_prop_value(props['ExportedFlags'], 'export_flags')
+                if 'RelativeInstallPath' in props:
+                    relative_install_path = ('{ind}{ind}{ind}'
+                        'relative_install_path: "{path}",\n').format(
+                            ind=self.INDENT,
+                            path=props['RelativeInstallPath'])
+
+                arch_props += ('{ind}{ind}{arch}: {{\n'
+                               '{include_dirs}'
+                               '{system_include_dirs}'
+                               '{flags}'
+                               '{relative_install_path}'
+                               '{ind}{ind}{ind}srcs: ["{src}"],\n'
+                               '{ind}{ind}}},\n').format(
                                   ind=self.INDENT,
                                   arch=utils.prebuilt_arch_from_path(
                                       os.path.join(arch, src)),
-                                  src=src))
-            arch_srcs += '{ind}}},\n'.format(ind=self.INDENT)
-            return arch_srcs
+                                  include_dirs=include_dirs,
+                                  system_include_dirs=system_include_dirs,
+                                  flags=flags,
+                                  relative_install_path=relative_install_path,
+                                  src=src)
+            arch_props += '{ind}}},\n'.format(ind=self.INDENT)
+            return arch_props
 
         src_root = os.path.join(self._install_dir, arch)
         # For O-MR1 snapshot (v27), 32-bit binder prebuilts are not
@@ -456,8 +503,7 @@ class GenBuildFile(object):
                 ind=self.INDENT)
 
         notice = get_notice_file(prebuilt)
-        rel_install_path = get_rel_install_path(prebuilt)
-        arch_srcs = get_arch_srcs(prebuilt, arch)
+        arch_props = get_arch_props(prebuilt, arch)
 
         binder32bit = ''
         if is_binder32:
@@ -474,8 +520,7 @@ class GenBuildFile(object):
                 '{vndk_sp}'
                 '{ind}}},\n'
                 '{notice}'
-                '{rel_install_path}'
-                '{arch_srcs}'
+                '{arch_props}'
                 '}}\n'.format(
                     ind=self.INDENT,
                     name=name,
@@ -485,8 +530,7 @@ class GenBuildFile(object):
                     vendor_available=vendor_available,
                     vndk_sp=vndk_sp,
                     notice=notice,
-                    rel_install_path=rel_install_path,
-                    arch_srcs=arch_srcs))
+                    arch_props=arch_props))
 
 
 def get_args():
