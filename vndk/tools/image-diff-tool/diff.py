@@ -17,14 +17,12 @@ import os
 import subprocess
 import sys
 from collections import defaultdict
-from concurrent import futures
-from glob import glob
+from pathlib import Path
 from operator import itemgetter
 import hashlib
 import argparse
 import zipfile
 
-tpe = futures.ThreadPoolExecutor()
 def silent_call(cmd):
   return subprocess.call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0
 
@@ -32,7 +30,7 @@ def sha1sum(f):
   with open(f, 'rb') as fin:
     return hashlib.sha1(fin.read()).hexdigest()
 
-def unsigned_and_sha1sum(filepath):
+def sha1sum_without_signing_key(filepath):
   apk = zipfile.ZipFile(filepath)
   l = []
   for f in sorted(apk.namelist()):
@@ -59,11 +57,11 @@ def strip_and_sha1sum(filepath):
   return sha1sum(filepath)
 
 
-def main(targets, search_paths, ignore_signing_key=False):
+def main(all_targets, search_paths, ignore_signing_key=False):
   def get_target_name(path):
     return os.path.basename(os.path.normpath(path))
   artifact_target_map = defaultdict(list)
-  for target in targets:
+  for target in all_targets:
     def valid_path(p):
       if os.path.isdir(p) or not os.path.exists(p):
         return False
@@ -71,32 +69,33 @@ def main(targets, search_paths, ignore_signing_key=False):
         if os.path.join(target, s).lower() + os.path.sep in p.lower():
           return True
       return False
-    paths = [path for path in glob(os.path.join(
-        target, "**", "*"), recursive=True) if valid_path(path)]
+    paths = [str(path) for path in Path(target).glob('**/*') if valid_path(str(path))]
 
     def run(path):
-      objdump = silent_call(["objdump", "-a", path])
+      is_native_component = silent_call(["objdump", "-a", path])
       is_apk = path.endswith('.apk')
-      if objdump:
+      if is_native_component:
         return strip_and_sha1sum(path), path[len(target):]
       elif is_apk and ignore_signing_key:
-        return unsigned_and_sha1sum(path), path[len(target):]
+        return sha1sum_without_signing_key(path), path[len(target):]
       else:
         return sha1sum(path), path[len(target):]
-    results = list(map(futures.Future.result, [tpe.submit(run, p) for p in paths]))
+    results = [run(p) for p in paths]
 
-    for sha1, f in results:
-      basename = os.path.split(os.path.dirname(f))[1] + os.path.basename(f)
-      artifact_target_map[(sha1, basename)].append((get_target_name(target), f))
+    for sha1, filename in results:
+      artifact_target_map[(sha1, filename)].append(get_target_name(target))
 
-  def pretty_print(p, ts):
-    assert(len({t for t, _ in ts}) == len(ts))
-    return ";".join({f for _, f in ts}) + ", " + p[0][:10] + ", " + ";".join(map(itemgetter(0), ts)) + "\n"
+  def pretty_print(sha1, filename, targets):
+    return filename + ", " + sha1[:10] + ", " + ";".join(targets) + "\n"
+
   header = "filename, sha1sum, targets\n"
-  common = sorted([pretty_print(p, ts)
-                   for p, ts in artifact_target_map.items() if len(ts) == len(targets)])
-  diff = sorted([pretty_print(p, ts)
-                 for p, ts in artifact_target_map.items() if len(ts) < len(targets)])
+
+  def is_common(targets):
+    return len(targets) == len(all_targets)
+  common = sorted([pretty_print(sha1, filename, targets)
+                   for (sha1, filename), targets in artifact_target_map.items() if is_common(targets)])
+  diff = sorted([pretty_print(sha1, filename, targets)
+                 for (sha1, filename), targets in artifact_target_map.items() if not is_common(targets)])
 
   with open("common.csv", 'w') as fout:
     fout.write(header)
@@ -107,11 +106,17 @@ def main(targets, search_paths, ignore_signing_key=False):
 
 
 if __name__ == "__main__":
-  parser = argparse.ArgumentParser(prog="compare_images", usage="compare_images -t model1 model2 [model...] -s dir1 [dir...] [-i]")
+  parser = argparse.ArgumentParser(prog="compare_images", usage="compare_images -t model1 model2 [model...] -s dir1 [dir...] [-i] [-u]")
   parser.add_argument("-t", "--target", nargs='+', required=True)
   parser.add_argument("-s", "--search_path", nargs='+', required=True)
   parser.add_argument("-i", "--ignore_signing_key", action='store_true')
+  parser.add_argument("-u", "--unzip", action='store_true')
   args = parser.parse_args()
   if len(args.target) < 2:
     parser.error("The number of targets has to be at least two.")
+  if args.unzip:
+    for t in args.target:
+      unzip_cmd = ["unzip", "-qd", t, os.path.join(t, "*.zip")]
+      unzip_cmd.extend([os.path.join(s, "*") for s in args.search_path])
+      subprocess.call(unzip_cmd)
   main(args.target, args.search_path, args.ignore_signing_key)
