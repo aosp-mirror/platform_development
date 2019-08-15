@@ -1191,18 +1191,30 @@ class DexFileReader(object):
 
 
 #------------------------------------------------------------------------------
+# Path Functions
+#------------------------------------------------------------------------------
+
+def _is_under_dir(dir_path, path):
+    dir_path = os.path.abspath(dir_path)
+    path = os.path.abspath(path)
+    return path == dir_path or path.startswith(dir_path + os.path.sep)
+
+
+#------------------------------------------------------------------------------
 # TaggedDict
 #------------------------------------------------------------------------------
 
 class TaggedDict(object):
     def _define_tag_constants(local_ns):
         tag_list = [
-            'll_ndk', 'll_ndk_indirect',
-            'vndk_sp', 'vndk_sp_indirect', 'vndk_sp_indirect_private',
-            'vndk',
-            'fwk_only', 'fwk_only_rs',
+            'll_ndk', 'll_ndk_private',
+            'vndk_sp', 'vndk_sp_private',
+            'vndk', 'vndk_private',
+            'system_only', 'system_only_rs',
             'sp_hal', 'sp_hal_dep',
-            'vnd_only',
+            'vendor_only',
+            'system_ext_only',
+            'product_only',
             'remove',
         ]
         assert len(tag_list) < 32
@@ -1219,20 +1231,18 @@ class TaggedDict(object):
 
 
     _TAG_ALIASES = {
-        'hl_ndk': 'fwk_only',  # Treat HL-NDK as FWK-ONLY.
+        'fwk_only': 'system_only',
+        'fwk_only_rs': 'system_only_rs',
+        'vnd_only': 'vendor_only',
+        'hl_ndk': 'system_only',  # Treat HL-NDK as SYSTEM-ONLY.
         'sp_ndk': 'll_ndk',
-        'sp_ndk_indirect': 'll_ndk_indirect',
-        'vndk_indirect': 'vndk',  # Legacy
+        'sp_ndk_indirect': 'll_ndk_private',
+        'll_ndk_indirect': 'll_ndk_private',
+        'vndk_sp_indirect': 'vndk_sp',
+        'vndk_sp_indirect_private': 'vndk_sp_private',
+        'vndk_indirect': 'vndk_private',
         'vndk_sp_hal': 'vndk_sp',  # Legacy
         'vndk_sp_both': 'vndk_sp',  # Legacy
-
-        # FIXME: LL-NDK-Private, VNDK-Private and VNDK-SP-Private are new tags.
-        # They should not be treated as aliases.
-        # TODO: Refine the code that compute and verify VNDK sets and reverse
-        # the aliases.
-        'll_ndk_private': 'll_ndk_indirect',
-        'vndk_private': 'vndk',
-        'vndk_sp_private': 'vndk_sp_indirect_private',
     }
 
 
@@ -1245,37 +1255,66 @@ class TaggedDict(object):
         return tag
 
 
-    _LL_NDK_VIS = {'ll_ndk', 'll_ndk_indirect'}
-    _VNDK_SP_VIS = {'ll_ndk', 'vndk_sp', 'vndk_sp_indirect',
-                    'vndk_sp_indirect_private', 'fwk_only_rs'}
-    _FWK_ONLY_VIS = {'ll_ndk', 'll_ndk_indirect',
-                     'vndk_sp', 'vndk_sp_indirect', 'vndk_sp_indirect_private',
-                     'vndk', 'fwk_only', 'fwk_only_rs', 'sp_hal'}
+    _LL_NDK_VIS = {
+        'll_ndk', 'll_ndk_private',
+    }
+
+    _VNDK_SP_VIS = {
+        'll_ndk', 'vndk_sp', 'vndk_sp_private', 'system_only_rs',
+    }
+
+    _VNDK_VIS = {
+        'll_ndk', 'vndk_sp', 'vndk_sp_private', 'vndk', 'vndk_private',
+    }
+
+    _SYSTEM_ONLY_VIS = {
+        'll_ndk', 'll_ndk_private',
+        'vndk_sp', 'vndk_sp_private',
+        'vndk', 'vndk_private',
+        'system_only', 'system_only_rs',
+        'system_ext_only',
+        'sp_hal',
+    }
+
+    _PRODUCT_ONLY_VIS = {
+        'll_ndk', 'vndk_sp', 'vndk', 'sp_hal',
+
+        # Remove the following after VNDK-ext can be checked separately.
+        'sp_hal_dep', 'vendor_only',
+    }
+
+    _VENDOR_ONLY_VIS = {
+        'll_ndk', 'vndk_sp', 'vndk', 'sp_hal', 'sp_hal_dep',
+        'vendor_only',
+    }
+
     _SP_HAL_VIS = {'ll_ndk', 'vndk_sp', 'sp_hal', 'sp_hal_dep'}
 
     _TAG_VISIBILITY = {
         'll_ndk': _LL_NDK_VIS,
-        'll_ndk_indirect': _LL_NDK_VIS,
+        'll_ndk_private': _LL_NDK_VIS,
 
         'vndk_sp': _VNDK_SP_VIS,
-        'vndk_sp_indirect': _VNDK_SP_VIS,
-        'vndk_sp_indirect_private': _VNDK_SP_VIS,
+        'vndk_sp_private': _VNDK_SP_VIS,
 
-        'vndk': {'ll_ndk', 'vndk_sp', 'vndk_sp_indirect', 'vndk'},
+        'vndk': _VNDK_VIS,
+        'vndk_private': _VNDK_VIS,
 
-        'fwk_only': _FWK_ONLY_VIS,
-        'fwk_only_rs': _FWK_ONLY_VIS,
+        'system_only': _SYSTEM_ONLY_VIS,
+        'system_only_rs': _SYSTEM_ONLY_VIS,
+        'system_ext_only': _SYSTEM_ONLY_VIS,
 
         'sp_hal': _SP_HAL_VIS,
         'sp_hal_dep': _SP_HAL_VIS,
 
-        'vnd_only': {'ll_ndk', 'vndk_sp', 'vndk_sp_indirect',
-                     'vndk', 'sp_hal', 'sp_hal_dep', 'vnd_only'},
+        'vendor_only': _VENDOR_ONLY_VIS,
+        'product_only': _PRODUCT_ONLY_VIS,
 
         'remove': set(),
     }
 
-    del _LL_NDK_VIS, _VNDK_SP_VIS, _FWK_ONLY_VIS, _SP_HAL_VIS
+    del _LL_NDK_VIS, _VNDK_SP_VIS, _VNDK_VIS, _SYSTEM_ONLY_VIS, \
+        _PRODUCT_ONLY_VIS, _VENDOR_ONLY_VIS, _SP_HAL_VIS
 
 
     @classmethod
@@ -1343,18 +1382,13 @@ class TaggedDict(object):
 
 
     @staticmethod
-    def is_vndk_sp_indirect(tag_bit):
-        return bool(tag_bit & TaggedDict.VNDK_SP_INDIRECT)
+    def is_vndk_sp_private(tag_bit):
+        return bool(tag_bit & TaggedDict.VNDK_SP_PRIVATE)
 
 
     @staticmethod
-    def is_vndk_sp_indirect_private(tag_bit):
-        return bool(tag_bit & TaggedDict.VNDK_SP_INDIRECT_PRIVATE)
-
-
-    @staticmethod
-    def is_fwk_only_rs(tag_bit):
-        return bool(tag_bit & TaggedDict.FWK_ONLY_RS)
+    def is_system_only_rs(tag_bit):
+        return bool(tag_bit & TaggedDict.SYSTEM_ONLY_RS)
 
 
     @staticmethod
@@ -1425,8 +1459,15 @@ class TaggedPathDict(TaggedDict):
             super(TaggedPathDict, self).add(tag, path)
 
 
-    def get_path_tag_default(self, path):
-        return 'vnd_only' if path.startswith('/vendor') else 'fwk_only'
+    @staticmethod
+    def get_path_tag_default(path):
+        if _is_under_dir('/vendor', path):
+            return 'vendor_only'
+        if _is_under_dir('/product', path):
+            return 'product_only'
+        if _is_under_dir('/system_ext', path):
+            return 'system_ext_only'
+        return 'system_only'
 
 
 class TaggedLibDict(object):
@@ -1456,7 +1497,14 @@ class TaggedLibDict(object):
             elif lib in sp_lib.sp_hal_dep:
                 d.add('sp_hal_dep', lib)
             else:
-                d.add('vnd_only', lib)
+                d.add('vendor_only', lib)
+
+        for lib in graph.lib_pt[PT_PRODUCT].values():
+            d.add('vendor_only', lib)
+
+        for lib in graph.lib_pt[PT_SYSTEM_EXT].values():
+            d.add('vendor_only', lib)
+
         return d
 
 
@@ -1467,8 +1515,9 @@ class TaggedLibDict(object):
             return self.get_path_tag_default(lib)
 
 
-    def get_path_tag_default(self, lib):
-        return 'vnd_only' if lib.path.startswith('/vendor') else 'fwk_only'
+    @staticmethod
+    def get_path_tag_default(lib):
+        return TaggedPathDict.get_path_tag_default(lib.path)
 
 
 class LibProperties(object):
@@ -1515,6 +1564,28 @@ class LibProperties(object):
     def get_lib_properties_file_path(tag_file_path):
         root, ext = os.path.splitext(tag_file_path)
         return root + '-properties' + ext
+
+
+#------------------------------------------------------------------------------
+# Public Libraries
+#------------------------------------------------------------------------------
+
+class PublicLibSet(object):
+    def __init__(self):
+        self._lib_names = set()
+
+
+    def load_from_public_libraries_txt(self, config_path):
+        with open(config_path, 'r') as config_file:
+            for line in config_file:
+                line = line.strip()
+                if line and not line.startswith('#'):
+                    self._lib_names.add(line)
+
+
+    def is_public_lib(self, path):
+        lib_name = os.path.basename(path)
+        return lib_name in self._lib_names
 
 
 #------------------------------------------------------------------------------
@@ -1676,12 +1747,14 @@ def scan_elf_files(root, mount_point=None, unzip_files=True):
 
 PT_SYSTEM = 0
 PT_VENDOR = 1
-NUM_PARTITIONS = 2
+PT_PRODUCT = 2
+PT_SYSTEM_EXT = 3
+NUM_PARTITIONS = 4
 
 
 SPLibResult = collections.namedtuple(
     'SPLibResult',
-    'sp_hal sp_hal_dep vndk_sp_hal ll_ndk ll_ndk_indirect vndk_sp_both')
+    'sp_hal sp_hal_dep vndk_sp_hal ll_ndk ll_ndk_private vndk_sp_both')
 
 
 VNDKLibTuple = defaultnamedtuple('VNDKLibTuple', 'vndk_sp vndk', [])
@@ -1768,7 +1841,7 @@ class VNDKLibDir(list):
 
 
     @classmethod
-    def create_vndk_search_paths(cls, lib_dir, version):
+    def get_vndk_lib_dirs(cls, lib_dir, version):
         """Create VNDK/VNDK-SP search paths from lib_dir and version."""
         vndk_sp_name = cls.create_vndk_sp_dir_name(version)
         vndk_name = cls.create_vndk_dir_name(version)
@@ -1990,18 +2063,13 @@ class ELFLinkData(object):
 
 
     @property
-    def is_vndk_sp_indirect(self):
-        return TaggedDict.is_vndk_sp_indirect(self._tag_bit)
+    def is_vndk_sp_private(self):
+        return TaggedDict.is_vndk_sp_private(self._tag_bit)
 
 
     @property
-    def is_vndk_sp_indirect_private(self):
-        return TaggedDict.is_vndk_sp_indirect_private(self._tag_bit)
-
-
-    @property
-    def is_fwk_only_rs(self):
-        return TaggedDict.is_fwk_only_rs(self._tag_bit)
+    def is_system_only_rs(self):
+        return TaggedDict.is_system_only_rs(self._tag_bit)
 
 
     @property
@@ -2128,11 +2196,15 @@ def sorted_lib_path_list(libs):
 
 
 _VNDK_RESULT_FIELD_NAMES = (
-    'll_ndk', 'll_ndk_indirect',
-    'vndk_sp', 'vndk_sp_unused', 'vndk_sp_indirect',
-    'vndk_sp_indirect_unused', 'vndk_sp_indirect_private', 'vndk',
-    'vndk_indirect', 'fwk_only', 'fwk_only_rs', 'sp_hal', 'sp_hal_dep',
-    'vnd_only', 'vndk_ext', 'vndk_sp_ext', 'vndk_sp_indirect_ext',
+    'll_ndk', 'll_ndk_private',
+    'vndk_sp', 'vndk_sp_unused',
+    'vndk_sp_private', 'vndk_sp_private_unused',
+    'vndk', 'vndk_private',
+    'system_only', 'system_only_rs',
+    'sp_hal', 'sp_hal_dep',
+    'vendor_only',
+    'vndk_ext',
+    'vndk_sp_ext', 'vndk_sp_private_ext',
     'extra_vendor_libs')
 
 
@@ -2303,7 +2375,7 @@ class ELFLinker(object):
 
     def add_executables_in_dir(self, partition_name, partition, root,
                                alter_partition, alter_subdirs, ignored_subdirs,
-                               scan_elf_files, unzip_files):
+                               unzip_files):
         root = os.path.abspath(root)
         prefix_len = len(root) + 1
 
@@ -2405,35 +2477,88 @@ class ELFLinker(object):
             self._resolve_lib_deps(lib, resolver, generic_refs)
 
 
-    def _get_apex_bionic_search_paths(self, lib_dir):
+    def _get_apex_bionic_lib_dirs(self, lib_dir):
         return ['/apex/com.android.runtime/' + lib_dir + '/bionic']
 
 
-    def _get_apex_search_paths(self, lib_dir):
+    def _get_apex_lib_dirs(self, lib_dir):
         return ['/apex/' + name + '/' + lib_dir
                 for name in sorted(self.apex_module_names)]
 
 
-    def _get_system_search_paths(self, lib_dir):
-        apex_lib_dirs = (self._get_apex_search_paths(lib_dir) +
-                         self._get_apex_bionic_search_paths(lib_dir))
-        system_lib_dirs = ['/system/' + lib_dir, '/system/product/' + lib_dir]
-        vendor_lib_dirs = ['/vendor/' + lib_dir]
-        return apex_lib_dirs + system_lib_dirs + vendor_lib_dirs
+    def _get_system_lib_dirs(self, lib_dir):
+        return ['/system/' + lib_dir]
 
 
-    def _get_vendor_search_paths(self, lib_dir, vndk_sp_dirs, vndk_dirs):
-        vendor_lib_dirs = [
+    def _get_system_ext_lib_dirs(self, lib_dir):
+        return [
+            '/system_ext/' + lib_dir,
+            '/system/system_ext/' + lib_dir,
+        ]
+
+
+    def _get_vendor_lib_dirs(self, lib_dir):
+        return [
             '/vendor/' + lib_dir + '/hw',
             '/vendor/' + lib_dir + '/egl',
             '/vendor/' + lib_dir,
         ]
-        # For degenerated VNDK libs.
-        apex_lib_dirs = (self._get_apex_search_paths(lib_dir) +
-                         self._get_apex_bionic_search_paths(lib_dir))
-        system_lib_dirs = ['/system/' + lib_dir]
-        return (vendor_lib_dirs + vndk_sp_dirs + vndk_dirs + apex_lib_dirs +
-                system_lib_dirs)
+
+
+    def _get_product_lib_dirs(self, lib_dir):
+        return [
+            '/product/' + lib_dir,
+            '/system/product/' + lib_dir,
+        ]
+
+
+    def _get_system_search_paths(self, lib_dir):
+        return (
+            self._get_apex_bionic_lib_dirs(lib_dir) +
+            self._get_apex_lib_dirs(lib_dir) +
+            self._get_system_ext_lib_dirs(lib_dir) +
+            self._get_system_lib_dirs(lib_dir) +
+
+            # Search '/vendor/${LIB}' and '/product/${LIB}' to detect
+            # violations.
+            self._get_product_lib_dirs(lib_dir) +
+            self._get_vendor_lib_dirs(lib_dir)
+        )
+
+
+    def _get_vendor_search_paths(self, lib_dir, vndk_sp_dirs, vndk_dirs):
+        return (
+            self._get_vendor_lib_dirs(lib_dir) +
+            vndk_sp_dirs +
+            vndk_dirs +
+
+            # Search '/apex/*/${LIB}' and '/system/${LIB}' for degenerated VNDK
+            # and LL-NDK or to detect violations.
+            self._get_apex_bionic_lib_dirs(lib_dir) +
+            self._get_apex_lib_dirs(lib_dir) +
+            self._get_system_lib_dirs(lib_dir)
+        )
+
+
+    def _get_product_search_paths(self, lib_dir, vndk_sp_dirs, vndk_dirs):
+        return (
+            self._get_product_lib_dirs(lib_dir) +
+            vndk_sp_dirs +
+            vndk_dirs +
+
+            # Search '/vendor/${LIB}', '/system/${LIB}', and '/apex/*/${LIB}'
+            # for degenerated VNDK and LL-NDK or to detect violations.
+            self._get_vendor_lib_dirs(lib_dir) +
+            self._get_apex_bionic_lib_dirs(lib_dir) +
+            self._get_apex_lib_dirs(lib_dir) +
+            self._get_system_lib_dirs(lib_dir)
+        )
+
+
+    def _get_system_ext_search_paths(self, lib_dir):
+        # Delegate to _get_system_search_paths() because there is no ABI
+        # boundary between system and system_ext partition.
+        return self._get_system_search_paths(lib_dir)
 
 
     def _get_vndk_sp_search_paths(self, lib_dir, vndk_sp_dirs):
@@ -2442,16 +2567,21 @@ class ELFLinker(object):
             '/vendor/' + lib_dir,
             '/system/' + lib_dir,
         ]
-        fallback_lib_dirs += self._get_apex_search_paths(lib_dir)
-        fallback_lib_dirs += self._get_apex_bionic_search_paths(lib_dir)
+        fallback_lib_dirs += self._get_apex_bionic_lib_dirs(lib_dir)
+        fallback_lib_dirs += self._get_apex_lib_dirs(lib_dir)
+
         return vndk_sp_dirs + fallback_lib_dirs
 
 
     def _get_vndk_search_paths(self, lib_dir, vndk_sp_dirs, vndk_dirs):
         # To find missing dependencies or LL-NDK.
-        fallback_lib_dirs = ['/system/' + lib_dir]
-        fallback_lib_dirs += self._get_apex_search_paths(lib_dir)
-        fallback_lib_dirs += self._get_apex_bionic_search_paths(lib_dir)
+        fallback_lib_dirs = [
+            '/vendor/' + lib_dir,
+            '/system/' + lib_dir,
+        ]
+        fallback_lib_dirs += self._get_apex_bionic_lib_dirs(lib_dir)
+        fallback_lib_dirs += self._get_apex_lib_dirs(lib_dir)
+
         return vndk_sp_dirs + vndk_dirs + fallback_lib_dirs
 
 
@@ -2476,7 +2606,7 @@ class ELFLinker(object):
         # Resolve vndk-sp libs
         for version in vndk_lib_dirs:
             vndk_sp_dirs, vndk_dirs = \
-                vndk_lib_dirs.create_vndk_search_paths(lib_dir, version)
+                vndk_lib_dirs.get_vndk_lib_dirs(lib_dir, version)
             vndk_sp_libs = \
                 system_vndk_sp_libs[version] | vendor_vndk_sp_libs[version]
             search_paths = self._get_vndk_sp_search_paths(
@@ -2487,7 +2617,7 @@ class ELFLinker(object):
         # Resolve vndk libs
         for version in vndk_lib_dirs:
             vndk_sp_dirs, vndk_dirs = \
-                vndk_lib_dirs.create_vndk_search_paths(lib_dir, version)
+                vndk_lib_dirs.get_vndk_lib_dirs(lib_dir, version)
             vndk_libs = system_vndk_libs[version] | vendor_vndk_libs[version]
             search_paths = self._get_vndk_search_paths(
                 lib_dir, vndk_sp_dirs, vndk_dirs)
@@ -2495,12 +2625,28 @@ class ELFLinker(object):
             self._resolve_lib_set_deps(vndk_libs, resolver, generic_refs)
 
         # Resolve vendor libs.
-        vndk_sp_dirs, vndk_dirs = vndk_lib_dirs.create_vndk_search_paths(
+        vndk_sp_dirs, vndk_dirs = vndk_lib_dirs.get_vndk_lib_dirs(
             lib_dir, self.ro_vndk_version)
         search_paths = self._get_vendor_search_paths(
             lib_dir, vndk_sp_dirs, vndk_dirs)
         resolver = ELFResolver(lib_dict, search_paths)
         self._resolve_lib_set_deps(vendor_libs, resolver, generic_refs)
+
+        # Resolve product libs
+        product_lib_dict = self.lib_pt[PT_PRODUCT].get_lib_dict(elf_class)
+        product_libs = set(product_lib_dict.values())
+        search_paths = self._get_product_search_paths(
+            lib_dir, vndk_sp_dirs, vndk_dirs)
+        resolver = ELFResolver(lib_dict, search_paths)
+        self._resolve_lib_set_deps(product_libs, resolver, generic_refs)
+
+        # Resolve system_ext libs
+        system_ext_lib_dict = \
+            self.lib_pt[PT_SYSTEM_EXT].get_lib_dict(elf_class)
+        system_ext_libs = set(system_ext_lib_dict.values())
+        search_paths = self._get_system_ext_search_paths(lib_dir)
+        resolver = ELFResolver(lib_dict, search_paths)
+        self._resolve_lib_set_deps(system_ext_libs, resolver, generic_refs)
 
 
     def resolve_deps(self, generic_refs=None):
@@ -2520,7 +2666,7 @@ class ELFLinker(object):
         ll_ndk = set(lib for lib in self.all_libs() if lib.is_ll_ndk)
         ll_ndk_closure = self.compute_deps_closure(
             ll_ndk, is_ll_ndk_or_sp_hal, ignore_hidden_deps)
-        ll_ndk_indirect = ll_ndk_closure - ll_ndk
+        ll_ndk_private = ll_ndk_closure - ll_ndk
 
         def is_ll_ndk(lib):
             return lib.is_ll_ndk
@@ -2541,12 +2687,12 @@ class ELFLinker(object):
             else:
                 sp_hal_dep.add(lib)
 
-        vndk_sp_both = ll_ndk_indirect & vndk_sp_hal
-        ll_ndk_indirect -= vndk_sp_both
+        vndk_sp_both = ll_ndk_private & vndk_sp_hal
+        ll_ndk_private -= vndk_sp_both
         vndk_sp_hal -= vndk_sp_both
 
         return SPLibResult(sp_hal, sp_hal_dep, vndk_sp_hal, ll_ndk,
-                           ll_ndk_indirect, vndk_sp_both)
+                           ll_ndk_private, vndk_sp_both)
 
 
     def normalize_partition_tags(self, sp_hals, generic_refs):
@@ -2614,16 +2760,12 @@ class ELFLinker(object):
         ll_ndk = set(lib for lib in self.all_libs() if lib.is_ll_ndk)
 
         # Find pre-defined libs.
-        fwk_only_rs = set(lib for lib in self.all_libs() if lib.is_fwk_only_rs)
+        system_only_rs = set(
+            lib for lib in self.all_libs() if lib.is_system_only_rs)
         predefined_vndk_sp = set(
             lib for lib in self.all_libs() if lib.is_vndk_sp)
-        predefined_vndk_sp_indirect = set(
-            lib for lib in self.all_libs() if lib.is_vndk_sp_indirect)
-        predefined_vndk_sp_indirect_private = set(
-            lib for lib in self.all_libs() if lib.is_vndk_sp_indirect_private)
-
-        # FIXME: Don't squash VNDK-SP-Indirect-Private into VNDK-SP-Indirect.
-        predefined_vndk_sp_indirect |= predefined_vndk_sp_indirect_private
+        predefined_vndk_sp_private = set(
+            lib for lib in self.all_libs() if lib.is_vndk_sp_private)
 
         # Find SP-HAL libs.
         sp_hal = self.compute_predefined_sp_hal()
@@ -2671,50 +2813,47 @@ class ELFLinker(object):
                     vndk_sp.add(dep)
 
         # Find VNDK-SP-Indirect libs.
-        def is_not_vndk_sp_indirect(lib):
-            return lib.is_ll_ndk or lib in vndk_sp or lib in fwk_only_rs
+        def is_not_vndk_sp_private(lib):
+            return lib.is_ll_ndk or lib in vndk_sp or lib in system_only_rs
 
-        vndk_sp_indirect = self.compute_deps_closure(
-            vndk_sp, is_not_vndk_sp_indirect, True)
-        vndk_sp_indirect -= vndk_sp
+        vndk_sp_private = self.compute_deps_closure(
+            vndk_sp, is_not_vndk_sp_private, True)
+        vndk_sp_private -= vndk_sp
 
         # Find unused predefined VNDK-SP libs.
         vndk_sp_unused = set(lib for lib in predefined_vndk_sp
                              if VNDKLibDir.is_in_vndk_sp_dir(lib.path))
         vndk_sp_unused -= vndk_sp
-        vndk_sp_unused -= vndk_sp_indirect
+        vndk_sp_unused -= vndk_sp_private
 
         # Find dependencies of unused predefined VNDK-SP libs.
-        def is_not_vndk_sp_indirect_unused(lib):
-            return is_not_vndk_sp_indirect(lib) or lib in vndk_sp_indirect
+        def is_not_vndk_sp_private_unused(lib):
+            return is_not_vndk_sp_private(lib) or lib in vndk_sp_private
         vndk_sp_unused_deps = self.compute_deps_closure(
-            vndk_sp_unused, is_not_vndk_sp_indirect_unused, True)
+            vndk_sp_unused, is_not_vndk_sp_private_unused, True)
         vndk_sp_unused_deps -= vndk_sp_unused
 
-        vndk_sp_indirect_unused = set(
-            lib for lib in predefined_vndk_sp_indirect
+        vndk_sp_private_unused = set(
+            lib for lib in predefined_vndk_sp_private
             if VNDKLibDir.is_in_vndk_sp_dir(lib.path))
-        vndk_sp_indirect_unused -= vndk_sp_indirect
-        vndk_sp_indirect_unused -= vndk_sp_unused
-        vndk_sp_indirect_unused |= vndk_sp_unused_deps
+        vndk_sp_private_unused -= vndk_sp_private
+        vndk_sp_private_unused -= vndk_sp_unused
+        vndk_sp_private_unused |= vndk_sp_unused_deps
 
-        # TODO: Compute VNDK-SP-Indirect-Private.
-        vndk_sp_indirect_private = set()
-
-        assert not vndk_sp & vndk_sp_indirect
-        assert not vndk_sp_unused & vndk_sp_indirect_unused
+        assert not vndk_sp & vndk_sp_private
+        assert not vndk_sp_unused & vndk_sp_private_unused
 
         # Define helper functions for vndk_sp sets.
         def is_vndk_sp_public(lib):
             return lib in vndk_sp or lib in vndk_sp_unused or \
-                   lib in vndk_sp_indirect or \
-                   lib in vndk_sp_indirect_unused
+                   lib in vndk_sp_private or \
+                   lib in vndk_sp_private_unused
 
         def is_vndk_sp(lib):
-            return is_vndk_sp_public(lib) or lib in vndk_sp_indirect_private
+            return is_vndk_sp_public(lib) or lib in vndk_sp_private
 
         def is_vndk_sp_unused(lib):
-            return lib in vndk_sp_unused or lib in vndk_sp_indirect_unused
+            return lib in vndk_sp_unused or lib in vndk_sp_private_unused
 
         def relabel_vndk_sp_as_used(lib):
             assert is_vndk_sp_unused(lib)
@@ -2723,15 +2862,15 @@ class ELFLinker(object):
                 vndk_sp_unused.remove(lib)
                 vndk_sp.add(lib)
             else:
-                vndk_sp_indirect_unused.remove(lib)
-                vndk_sp_indirect.add(lib)
+                vndk_sp_private_unused.remove(lib)
+                vndk_sp_private.add(lib)
 
-            # Add the dependencies to vndk_sp_indirect if they are not vndk_sp.
+            # Add the dependencies to vndk_sp_private if they are not vndk_sp.
             closure = self.compute_deps_closure(
-                {lib}, lambda lib: lib not in vndk_sp_indirect_unused, True)
+                {lib}, lambda lib: lib not in vndk_sp_private_unused, True)
             closure.remove(lib)
-            vndk_sp_indirect_unused.difference_update(closure)
-            vndk_sp_indirect.update(closure)
+            vndk_sp_private_unused.difference_update(closure)
+            vndk_sp_private.update(closure)
 
         # Find VNDK-SP-Ext libs.
         vndk_sp_ext = set()
@@ -2749,15 +2888,15 @@ class ELFLinker(object):
             candidates = collect_vndk_ext(candidates)
 
         # Find VNDK-SP-Indirect-Ext libs.
-        vndk_sp_indirect_ext = set()
-        def collect_vndk_sp_indirect_ext(libs):
+        vndk_sp_private_ext = set()
+        def collect_vndk_sp_private_ext(libs):
             result = set()
             for lib in libs:
                 exts = set(lib.imported_ext_symbols.keys())
                 for dep in lib.deps_all:
                     if not is_vndk_sp_public(dep):
                         continue
-                    if dep in vndk_sp_ext or dep in vndk_sp_indirect_ext:
+                    if dep in vndk_sp_ext or dep in vndk_sp_private_ext:
                         continue
                     # If lib is using extended definition from deps, then we
                     # have to make a copy of dep.
@@ -2767,23 +2906,23 @@ class ELFLinker(object):
                     # If lib is using non-predefined VNDK-SP-Indirect, then we
                     # have to make a copy of dep.
                     if dep not in predefined_vndk_sp and \
-                            dep not in predefined_vndk_sp_indirect:
+                            dep not in predefined_vndk_sp_private:
                         result.add(dep)
                         continue
             return result
 
-        def is_not_vndk_sp_indirect(lib):
-            return lib.is_ll_ndk or lib in vndk_sp or lib in fwk_only_rs
+        def is_not_vndk_sp_private(lib):
+            return lib.is_ll_ndk or lib in vndk_sp or lib in system_only_rs
 
-        candidates = collect_vndk_sp_indirect_ext(vndk_sp_ext)
+        candidates = collect_vndk_sp_private_ext(vndk_sp_ext)
         while candidates:
-            vndk_sp_indirect_ext |= candidates
-            candidates = collect_vndk_sp_indirect_ext(candidates)
+            vndk_sp_private_ext |= candidates
+            candidates = collect_vndk_sp_private_ext(candidates)
 
         # Find VNDK libs (a.k.a. system shared libs directly used by vendor
         # partition.)
         def is_not_vndk(lib):
-            if lib.is_ll_ndk or is_vndk_sp_public(lib) or lib in fwk_only_rs:
+            if lib.is_ll_ndk or is_vndk_sp_public(lib) or lib in system_only_rs:
                 return True
             return lib.partition != PT_SYSTEM
 
@@ -2826,11 +2965,11 @@ class ELFLinker(object):
         while candidates:
             candidates = collect_vndk(candidates)
 
-        vndk_indirect = self.compute_deps_closure(vndk, is_not_vndk, True)
-        vndk_indirect -= vndk
+        vndk_private = self.compute_deps_closure(vndk, is_not_vndk, True)
+        vndk_private -= vndk
 
         def is_vndk(lib):
-            return lib in vndk or lib in vndk_indirect
+            return lib in vndk or lib in vndk_private
 
         # Find VNDK-EXT libs (VNDK libs with extended definitions and the
         # extended definitions are used by the vendor modules (including
@@ -2855,33 +2994,32 @@ class ELFLinker(object):
             candidates = collect_vndk_ext(candidates)
 
         # Compute LL-NDK-Indirect.
-        def is_not_ll_ndk_indirect(lib):
+        def is_not_ll_ndk_private(lib):
             return lib.is_ll_ndk or lib.is_sp_hal or is_vndk_sp(lib) or \
                    is_vndk_sp(lib) or is_vndk(lib)
 
-        ll_ndk_indirect = self.compute_deps_closure(
-            ll_ndk, is_not_ll_ndk_indirect, True)
-        ll_ndk_indirect -= ll_ndk
+        ll_ndk_private = self.compute_deps_closure(
+            ll_ndk, is_not_ll_ndk_private, True)
+        ll_ndk_private -= ll_ndk
 
         # Return the VNDK classifications.
         return VNDKResult(
             ll_ndk=ll_ndk,
-            ll_ndk_indirect=ll_ndk_indirect,
+            ll_ndk_private=ll_ndk_private,
             vndk_sp=vndk_sp,
-            vndk_sp_indirect=vndk_sp_indirect,
-            # vndk_sp_indirect_private=vndk_sp_indirect_private,
             vndk_sp_unused=vndk_sp_unused,
-            vndk_sp_indirect_unused=vndk_sp_indirect_unused,
+            vndk_sp_private=vndk_sp_private,
+            vndk_sp_private_unused=vndk_sp_private_unused,
             vndk=vndk,
-            vndk_indirect=vndk_indirect,
-            # fwk_only=fwk_only,
-            fwk_only_rs=fwk_only_rs,
+            vndk_private=vndk_private,
+            # system_only=system_only,
+            system_only_rs=system_only_rs,
             sp_hal=sp_hal,
             sp_hal_dep=sp_hal_dep,
-            # vnd_only=vnd_only,
+            # vendor_only=vendor_only,
             vndk_ext=vndk_ext,
             vndk_sp_ext=vndk_sp_ext,
-            vndk_sp_indirect_ext=vndk_sp_indirect_ext,
+            vndk_sp_private_ext=vndk_sp_private_ext,
             extra_vendor_libs=extra_vendor_libs)
 
 
@@ -2917,11 +3055,12 @@ class ELFLinker(object):
 
 
     @staticmethod
-    def _create_internal(scan_elf_files, system_dirs, system_dirs_as_vendor,
-                         system_dirs_ignored, vendor_dirs,
-                         vendor_dirs_as_system, vendor_dirs_ignored,
-                         extra_deps, generic_refs, tagged_paths,
-                         vndk_lib_dirs, unzip_files):
+    def create(system_dirs=None, system_dirs_as_vendor=None,
+               system_dirs_ignored=None, vendor_dirs=None,
+               vendor_dirs_as_system=None, vendor_dirs_ignored=None,
+               product_dirs=None, system_ext_dirs=None, extra_deps=None,
+               generic_refs=None, tagged_paths=None, vndk_lib_dirs=None,
+               unzip_files=True):
         if vndk_lib_dirs is None:
             vndk_lib_dirs = VNDKLibDir.create_from_dirs(
                 system_dirs, vendor_dirs)
@@ -2933,14 +3072,26 @@ class ELFLinker(object):
                 graph.add_executables_in_dir(
                     'system', PT_SYSTEM, path, PT_VENDOR,
                     system_dirs_as_vendor, system_dirs_ignored,
-                    scan_elf_files, unzip_files)
+                    unzip_files)
 
         if vendor_dirs:
             for path in vendor_dirs:
                 graph.add_executables_in_dir(
                     'vendor', PT_VENDOR, path, PT_SYSTEM,
                     vendor_dirs_as_system, vendor_dirs_ignored,
-                    scan_elf_files, unzip_files)
+                    unzip_files)
+
+        if product_dirs:
+            for path in product_dirs:
+                graph.add_executables_in_dir(
+                    'product', PT_PRODUCT, path, None, None, None,
+                    unzip_files)
+
+        if system_ext_dirs:
+            for path in system_ext_dirs:
+                graph.add_executables_in_dir(
+                    'system_ext', PT_SYSTEM_EXT, path, None, None, None,
+                    unzip_files)
 
         if extra_deps:
             for path in extra_deps:
@@ -2950,19 +3101,6 @@ class ELFLinker(object):
         graph.resolve_deps(generic_refs)
 
         return graph
-
-
-    @staticmethod
-    def create(system_dirs=None, system_dirs_as_vendor=None,
-               system_dirs_ignored=None, vendor_dirs=None,
-               vendor_dirs_as_system=None, vendor_dirs_ignored=None,
-               extra_deps=None, generic_refs=None, tagged_paths=None,
-               vndk_lib_dirs=None, unzip_files=True):
-        return ELFLinker._create_internal(
-            scan_elf_files, system_dirs, system_dirs_as_vendor,
-            system_dirs_ignored, vendor_dirs, vendor_dirs_as_system,
-            vendor_dirs_ignored, extra_deps, generic_refs, tagged_paths,
-            vndk_lib_dirs, unzip_files)
 
 
 #------------------------------------------------------------------------------
@@ -3080,16 +3218,23 @@ def _enumerate_partition_paths(partition, root):
             yield (android_path, path)
 
 
-def _enumerate_paths(system_dirs, vendor_dirs):
+def _enumerate_paths(system_dirs, vendor_dirs, product_dirs, system_ext_dirs):
     for root in system_dirs:
         for ap, path in _enumerate_partition_paths('system', root):
             yield (ap, path)
     for root in vendor_dirs:
         for ap, path in _enumerate_partition_paths('vendor', root):
             yield (ap, path)
+    for root in product_dirs:
+        for ap, path in _enumerate_partition_paths('product', root):
+            yield (ap, path)
+    for root in system_ext_dirs:
+        for ap, path in _enumerate_partition_paths('system_ext', root):
+            yield (ap, path)
 
 
-def scan_apk_dep(graph, system_dirs, vendor_dirs):
+def scan_apk_dep(graph, system_dirs, vendor_dirs, product_dirs,
+                 system_ext_dirs):
     libnames = _build_lib_names_dict(graph)
     results = []
 
@@ -3100,7 +3245,8 @@ def scan_apk_dep(graph, system_dirs, vendor_dirs):
         def decode(string):  # PY3
             return string.decode('mutf-8')
 
-    for ap, path in _enumerate_paths(system_dirs, vendor_dirs):
+    for ap, path in _enumerate_paths(system_dirs, vendor_dirs, product_dirs,
+                                     system_ext_dirs):
         # Read the dex file from various file formats
         try:
             dex_string_iter = DexFileReader.enumerate_dex_strings(path)
@@ -3260,13 +3406,22 @@ class ELFGraphCommand(Command):
             help='load extra module dependencies')
 
         parser.add_argument(
-            '--system', action='append',
+            '--system', action='append', default=[],
             help='path to system partition contents')
 
         parser.add_argument(
-            '--vendor', action='append',
+            '--vendor', action='append', default=[],
             help='path to vendor partition contents')
 
+        parser.add_argument(
+            '--product', action='append', default=[],
+            help='path to product partition contents')
+
+        parser.add_argument(
+            '--system_ext', action='append', default=[],
+            help='path to system_ext partition contents')
+
+        # XXX: BEGIN: Remove these options
         parser.add_argument(
             '--system-dir-as-vendor', action='append',
             help='sub directory of system partition that has vendor files')
@@ -3282,6 +3437,7 @@ class ELFGraphCommand(Command):
         parser.add_argument(
             '--vendor-dir-ignored', action='append',
             help='sub directory of vendor partition that must be ignored')
+        # XXX: END: Remove these options
 
         parser.add_argument(
             '--load-generic-refs',
@@ -3328,6 +3484,8 @@ class ELFGraphCommand(Command):
     def check_dirs_from_args(self, args):
         self._check_arg_dir_exists('--system', args.system)
         self._check_arg_dir_exists('--vendor', args.vendor)
+        self._check_arg_dir_exists('--product', args.product)
+        self._check_arg_dir_exists('--system_ext', args.system_ext)
 
 
     def create_from_args(self, args):
@@ -3347,6 +3505,8 @@ class ELFGraphCommand(Command):
                                  args.system_dir_ignored,
                                  args.vendor, args.vendor_dir_as_system,
                                  args.vendor_dir_ignored,
+                                 args.product,
+                                 args.system_ext,
                                  args.load_extra_deps,
                                  generic_refs=generic_refs,
                                  tagged_paths=tagged_paths,
@@ -3440,12 +3600,11 @@ class VNDKCommand(VNDKCommandBase):
         field_name_tags = [
             ('vndk_sp', 'vndk_sp'),
             ('vndk_sp_unused', 'vndk_sp'),
-            ('vndk_sp_indirect', 'vndk_sp'),
-            ('vndk_sp_indirect_unused', 'vndk_sp'),
-            ('vndk_sp_indirect_private', 'vndk_sp'),
+            ('vndk_sp_private', 'vndk_sp'),
+            ('vndk_sp_private_unused', 'vndk_sp'),
 
             ('vndk_sp_ext', 'vndk_sp_ext'),
-            ('vndk_sp_indirect_ext', 'vndk_sp_ext'),
+            ('vndk_sp_private_ext', 'vndk_sp_ext'),
 
             ('vndk_ext', 'extra_vendor_libs'),
             ('extra_vendor_libs', 'extra_vendor_libs'),
@@ -3906,7 +4065,8 @@ class ApkDepsCommand(ELFGraphCommand):
     def main(self, args):
         _, graph, _, _ = self.create_from_args(args)
 
-        apk_deps = scan_apk_dep(graph, args.system, args.vendor)
+        apk_deps = scan_apk_dep(graph, args.system, args.vendor, args.product,
+                                args.system_ext)
 
         for apk_path, dep_paths in apk_deps:
             print(apk_path)
@@ -3986,15 +4146,38 @@ class CheckDepCommand(CheckDepCommandBase):
                            help='Do not check ordering of DT_NEEDED entries')
 
 
+    def _load_public_lib_names(self, system_dirs, vendor_dirs):
+        names = PublicLibSet()
+        for base in itertools.chain(system_dirs, vendor_dirs):
+            config_path = os.path.join(base, 'etc', 'public.libraries.txt')
+            try:
+                names.load_from_public_libraries_txt(config_path)
+            except FileNotFoundError:
+                pass
+        return names
+
+
     def _check_vendor_dep(self, graph, tagged_libs, lib_properties,
-                          module_info):
+                          module_info, public_libs):
         """Check whether vendor libs are depending on non-eligible libs."""
         num_errors = 0
 
         vendor_libs = set(graph.lib_pt[PT_VENDOR].values())
+        vendor_libs.update(graph.lib_pt[PT_PRODUCT].values())
 
         eligible_libs = (tagged_libs.ll_ndk | tagged_libs.vndk_sp |
-                         tagged_libs.vndk_sp_indirect | tagged_libs.vndk)
+                         tagged_libs.vndk_sp_private | tagged_libs.vndk)
+
+        def _is_app_lib(lib):
+            app_dirs = [
+                '/product/app',
+                '/product/priv-app',
+                '/system_ext/app',
+                '/system_ext/priv-app',
+                '/vendor/app',
+                '/vendor/priv-app',
+            ]
+            return any(_is_under_dir(d, lib.path) for d in app_dirs)
 
         for lib in sorted(vendor_libs):
             bad_deps = set()
@@ -4013,6 +4196,12 @@ class CheckDepCommand(CheckDepCommandBase):
             # Check whether vendor modules depend on ineligible libs.
             for dep in lib.deps_all:
                 if dep not in vendor_libs and dep not in eligible_libs:
+                    if _is_app_lib(lib) and public_libs.is_public_lib(dep.path):
+                        # It is fine for APK files to depend on public
+                        # libraries (including NDK or other explicitly exposed
+                        # libs).
+                        continue
+
                     num_errors += 1
                     bad_deps.add(dep)
 
@@ -4071,7 +4260,8 @@ class CheckDepCommand(CheckDepCommandBase):
         return num_errors
 
 
-    def _check_apk_dep(self, graph, system_dirs, vendor_dirs, module_info):
+    def _check_apk_dep(self, graph, system_dirs, vendor_dirs, product_dirs,
+                       system_ext_dirs, module_info):
         num_errors = 0
 
         def is_in_system_partition(path):
@@ -4079,7 +4269,8 @@ class CheckDepCommand(CheckDepCommandBase):
                    path.startswith('/product/') or \
                    path.startswith('/oem/')
 
-        apk_deps = scan_apk_dep(graph, system_dirs, vendor_dirs)
+        apk_deps = scan_apk_dep(graph, system_dirs, vendor_dirs, product_dirs,
+                                system_ext_dirs)
 
         for apk_path, dep_paths in apk_deps:
             apk_in_system = is_in_system_partition(apk_path)
@@ -4113,15 +4304,18 @@ class CheckDepCommand(CheckDepCommandBase):
         lib_properties = \
             LibProperties.load_from_path_or_default(lib_properties_path)
 
+        public_libs = self._load_public_lib_names(args.system, args.vendor)
+
         num_errors = self._check_vendor_dep(graph, tagged_libs, lib_properties,
-                                            module_info)
+                                            module_info, public_libs)
 
         if args.check_dt_needed_ordering:
             num_errors += self._check_dt_needed_ordering(graph)
 
         if args.check_apk:
-            num_errors += self._check_apk_dep(graph, args.system, args.vendor,
-                                              module_info)
+            num_errors += self._check_apk_dep(
+                graph, args.system, args.vendor, args.product, args.system_ext,
+                module_info)
 
         return 0 if num_errors == 0 else 1
 
@@ -4165,10 +4359,11 @@ class DepGraphCommand(ELFGraphCommand):
     def _create_tag_hierarchy():
         hierarchy = dict()
         for tag in TaggedPathDict.TAGS:
-            if tag in {'sp_hal', 'sp_hal_dep', 'vnd_only'}:
+            if tag in {'sp_hal', 'sp_hal_dep', 'vendor_only'}:
                 hierarchy[tag] = 'vendor.private.{}'.format(tag)
             else:
-                vendor_visible = TaggedPathDict.is_tag_visible('vnd_only', tag)
+                vendor_visible = TaggedPathDict.is_tag_visible(
+                    'vendor_only', tag)
                 pub = 'public' if vendor_visible else 'private'
                 hierarchy[tag] = 'system.{}.{}'.format(pub, tag)
         return hierarchy

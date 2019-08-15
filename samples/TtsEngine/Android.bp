@@ -1,0 +1,8 @@
+android_app {
+    name: "TtsEngine",
+    srcs: ["src/**/*.java"],
+    sdk_version: "current",
+    dex_preopt: {
+        enabled: false,
+    },
+}
