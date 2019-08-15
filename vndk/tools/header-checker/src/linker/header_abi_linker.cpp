@@ -45,8 +45,8 @@ static llvm::cl::OptionCategory header_linker_category(
     "header-abi-linker options");
 
 static llvm::cl::list<std::string> dump_files(
-    llvm::cl::Positional, llvm::cl::desc("<dump-files>"), llvm::cl::Required,
-    llvm::cl::cat(header_linker_category), llvm::cl::OneOrMore);
+    llvm::cl::Positional, llvm::cl::desc("<dump-files>"), llvm::cl::ZeroOrMore,
+    llvm::cl::cat(header_linker_category));
 
 static llvm::cl::opt<std::string> linked_dump(
     "o", llvm::cl::desc("<linked dump>"), llvm::cl::Required,

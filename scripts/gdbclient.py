@@ -20,13 +20,18 @@ import argparse
 import json
 import logging
 import os
+import posixpath
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 import textwrap
 
 # Shared functions across gdbclient.py and ndk-gdb.py.
 import gdbrunner
+
+g_temp_dirs = []
 
 def get_gdbserver_path(root, arch):
     path = "{}/prebuilts/misc/gdbserver/android-{}/gdbserver{}"
@@ -101,14 +106,62 @@ def get_remote_pid(device, process_name):
     return pids[0]
 
 
-def ensure_linker(device, sysroot, is64bit):
-    local_path = os.path.join(sysroot, "system", "bin", "linker")
-    remote_path = "/system/bin/linker"
-    if is64bit:
-        local_path += "64"
-        remote_path += "64"
-    if not os.path.exists(local_path):
-        device.pull(remote_path, local_path)
+def make_temp_dir(prefix):
+    global g_temp_dirs
+    result = tempfile.mkdtemp(prefix='gdbclient-linker-')
+    g_temp_dirs.append(result)
+    return result
+
+
+def ensure_linker(device, sysroot, interp):
+    """Ensure that the device's linker exists on the host.
+
+    PT_INTERP is usually /system/bin/linker[64], but on the device, that file is
+    a symlink to /apex/com.android.runtime/bin/linker[64]. The symbolized linker
+    binary on the host is located in ${sysroot}/apex, not in ${sysroot}/system,
+    so add the ${sysroot}/apex path to the solib search path.
+
+    PT_INTERP will be /system/bin/bootstrap/linker[64] for executables using the
+    non-APEX/bootstrap linker. No search path modification is needed.
+
+    For a tapas build, only an unbundled app is built, and there is no linker in
+    ${sysroot} at all, so copy the linker from the device.
+
+    Returns:
+        A directory to add to the soinfo search path or None if no directory
+        needs to be added.
+    """
+
+    # Static executables have no interpreter.
+    if interp is None:
+        return None
+
+    # gdb will search for the linker using the PT_INTERP path. First try to find
+    # it in the sysroot.
+    local_path = os.path.join(sysroot, interp.lstrip("/"))
+    if os.path.exists(local_path):
+        return None
+
+    # If the linker on the device is a symlink, search for the symlink's target
+    # in the sysroot directory.
+    interp_real, _ = device.shell(["realpath", interp])
+    interp_real = interp_real.strip()
+    local_path = os.path.join(sysroot, interp_real.lstrip("/"))
+    if os.path.exists(local_path):
+        if posixpath.basename(interp) == posixpath.basename(interp_real):
+            # Add the interpreter's directory to the search path.
+            return os.path.dirname(local_path)
+        else:
+            # If PT_INTERP is linker_asan[64], but the sysroot file is
+            # linker[64], then copy the local file to the name gdb expects.
+            result = make_temp_dir('gdbclient-linker-')
+            shutil.copy(local_path, os.path.join(result, posixpath.basename(interp)))
+            return result
+
+    # Pull the system linker.
+    result = make_temp_dir('gdbclient-linker-')
+    device.pull(interp, os.path.join(result, posixpath.basename(interp)))
+    return result
 
 
 def handle_switches(args, sysroot):
@@ -247,7 +300,7 @@ end
 
     return gdb_commands
 
-def generate_setup_script(gdbpath, sysroot, binary_file, is64bit, port, debugger, connect_timeout=5):
+def generate_setup_script(gdbpath, sysroot, linker_search_dir, binary_file, is64bit, port, debugger, connect_timeout=5):
     # Generate a setup script.
     # TODO: Detect the zygote and run 'art-on' automatically.
     root = os.environ["ANDROID_BUILD_TOP"]
@@ -259,6 +312,8 @@ def generate_setup_script(gdbpath, sysroot, binary_file, is64bit, port, debugger
     vendor_paths = ["", "hw", "egl"]
     solib_search_path += [os.path.join(symbols_dir, x) for x in symbols_paths]
     solib_search_path += [os.path.join(vendor_dir, x) for x in vendor_paths]
+    if linker_search_dir is not None:
+        solib_search_path += [linker_search_dir]
 
     dalvik_gdb_script = os.path.join(root, "development", "scripts", "gdb", "dalvik.gdb")
     if not os.path.exists(dalvik_gdb_script):
@@ -275,7 +330,7 @@ def generate_setup_script(gdbpath, sysroot, binary_file, is64bit, port, debugger
         raise Exception("Unknown debugger type " + debugger)
 
 
-def main():
+def do_main():
     required_env = ["ANDROID_BUILD_TOP",
                     "ANDROID_PRODUCT_OUT", "TARGET_PRODUCT"]
     for env in required_env:
@@ -303,11 +358,21 @@ def main():
     binary_file, pid, run_cmd = handle_switches(args, sysroot)
 
     with binary_file:
+        if sys.platform.startswith("linux"):
+            platform_name = "linux-x86"
+        elif sys.platform.startswith("darwin"):
+            platform_name = "darwin-x86"
+        else:
+            sys.exit("Unknown platform: {}".format(sys.platform))
+
         arch = gdbrunner.get_binary_arch(binary_file)
         is64bit = arch.endswith("64")
 
         # Make sure we have the linker
-        ensure_linker(device, sysroot, is64bit)
+        llvm_readobj_path = os.path.join(root, "prebuilts", "clang", "host", platform_name,
+                                         "llvm-binutils-stable", "llvm-readobj")
+        interp = gdbrunner.get_binary_interp(binary_file.name, llvm_readobj_path)
+        linker_search_dir = ensure_linker(device, sysroot, interp)
 
         tracer_pid = get_tracer_pid(device, pid)
         if tracer_pid == 0:
@@ -327,19 +392,12 @@ def main():
             gdbrunner.forward_gdbserver_port(device, local=args.port,
                                              remote="tcp:{}".format(args.port))
 
-        # Find where gdb is
-        if sys.platform.startswith("linux"):
-            platform_name = "linux-x86"
-        elif sys.platform.startswith("darwin"):
-            platform_name = "darwin-x86"
-        else:
-            sys.exit("Unknown platform: {}".format(sys.platform))
-
         gdb_path = os.path.join(root, "prebuilts", "gdb", platform_name, "bin",
                                 "gdb")
         # Generate a gdb script.
         setup_commands = generate_setup_script(gdbpath=gdb_path,
                                                sysroot=sysroot,
+                                               linker_search_dir=linker_search_dir,
                                                binary_file=binary_file,
                                                is64bit=is64bit,
                                                port=args.port,
@@ -367,6 +425,16 @@ def main():
                         shutdown the gdbserver and close all the ports.""")
             print("")
             raw_input("Press enter to shutdown gdbserver")
+
+
+def main():
+    try:
+        do_main()
+    finally:
+        global g_temp_dirs
+        for temp_dir in g_temp_dirs:
+            shutil.rmtree(temp_dir)
+
 
 if __name__ == "__main__":
     main()

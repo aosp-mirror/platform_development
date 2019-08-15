@@ -17,6 +17,15 @@
     <md-whiteframe md-tag="md-toolbar">
       <h1 class="md-title" style="flex: 1">{{title}}</h1>
 
+      <div>
+          <md-checkbox v-model="store.displayDefaults">Show default properties
+            <md-tooltip md-direction="bottom">
+              If checked, shows the value of all properties.
+              Otherwise, hides all properties whose value is the default for its data type.
+            </md-tooltip>
+          </md-checkbox>
+      </div>
+
       <input type="file" @change="onLoadFile" id="upload-file" v-show="false"/>
       <label class="md-button md-accent md-raised md-theme-default" for="upload-file">Open File</label>
 
@@ -82,6 +91,7 @@ import LocalStore from './localstore.js'
 import {transform_json} from './transform.js'
 import {transform_layers, transform_layers_trace} from './transform_sf.js'
 import {transform_window_service, transform_window_trace} from './transform_wm.js'
+import {fill_transform_data, format_transform_type, is_simple_transform} from './matrix_utils.js'
 
 
 var protoDefs = protobuf.Root.fromJSON(jsonProtoDefs)
@@ -98,14 +108,24 @@ function formatProto(obj) {
   if (!obj || !obj.$type) {
     return;
   }
-  if (obj.$type.fullName === '.android.surfaceflinger.RectProto') {
-    return `(${obj.left},${obj.top})-(${obj.right},${obj.bottom})`;
-  } else if (obj.$type.fullName === '.android.surfaceflinger.PositionProto') {
-    return `(${obj.x},${obj.y})`;
+  if (obj.$type.fullName === '.android.surfaceflinger.RectProto' ||
+      obj.$type.fullName === '.android.graphics.RectProto') {
+    return `(${obj.left}, ${obj.top})  -  (${obj.right}, ${obj.bottom})`;
+  } else if (obj.$type.fullName === '.android.surfaceflinger.FloatRectProto') {
+    return `(${obj.left.toFixed(3)}, ${obj.top.toFixed(3)})  -  (${obj.right.toFixed(3)}, ${obj.bottom.toFixed(3)})`;
+  }
+  else if (obj.$type.fullName === '.android.surfaceflinger.PositionProto') {
+    return `(${obj.x.toFixed(3)}, ${obj.y.toFixed(3)})`;
   } else if (obj.$type.fullName === '.android.surfaceflinger.SizeProto') {
-    return `${obj.w}x${obj.h}`;
+    return `${obj.w} x ${obj.h}`;
   } else if (obj.$type.fullName === '.android.surfaceflinger.ColorProto') {
-    return `r:${obj.r} g:${obj.g} b:${obj.b} a:${obj.a}`;
+    return `r:${obj.r} g:${obj.g} \n b:${obj.b} a:${obj.a}`;
+  } else if (obj.$type.fullName === '.android.surfaceflinger.TransformProto') {
+    var transform_type = format_transform_type(obj);
+    if (is_simple_transform(obj)) {
+      return `${transform_type}`;
+    }
+    return `${transform_type}  dsdx:${obj.dsdx.toFixed(3)}   dtdx:${obj.dtdx.toFixed(3)}   dsdy:${obj.dsdy.toFixed(3)}   dtdy:${obj.dtdy.toFixed(3)}`;
   }
 }
 
@@ -155,6 +175,7 @@ export default {
       store: LocalStore('app', {
         flattened: false,
         onlyVisible: false,
+        displayDefaults: true
       }),
       FILE_TYPES,
       fileType: "auto",
@@ -189,9 +210,46 @@ export default {
         }
         this.title = this.filename + " (loading " + filetype.name + ")";
 
+        // Replace enum values with string representation and
+        // add default values to the proto objects. This function also handles
+        // a special case with TransformProtos where the matrix may be derived
+        // from the transform type.
+        function modifyProtoFields(protoObj, displayDefaults) {
+          if (!protoObj || protoObj !== Object(protoObj) || !protoObj.$type) {
+            return;
+          }
+          for (var fieldName in protoObj.$type.fields) {
+            var fieldProperties = protoObj.$type.fields[fieldName];
+            var field = protoObj[fieldName];
+
+            if (Array.isArray(field)) {
+              field.forEach((item, _) => {
+                modifyProtoFields(item, displayDefaults);
+              })
+              continue;
+            }
+
+            if (displayDefaults && !(field)) {
+              protoObj[fieldName] = fieldProperties.defaultValue;
+            }
+
+            if (fieldProperties.type === 'TransformProto'){
+              fill_transform_data(protoObj[fieldName]);
+              continue;
+            }
+
+            if (fieldProperties.resolvedType && fieldProperties.resolvedType.valuesById) {
+              protoObj[fieldName] = fieldProperties.resolvedType.valuesById[protoObj[fieldProperties.name]];
+              continue;
+            }
+
+            modifyProtoFields(protoObj[fieldName], displayDefaults);
+          }
+        }
+
         try {
           var decoded = filetype.protoType.decode(buffer);
-          decoded = filetype.protoType.toObject(decoded, {enums: String, defaults: true});
+          modifyProtoFields(decoded, this.store.displayDefaults);
           var transformed = filetype.transform(decoded);
         } catch (ex) {
           this.title = this.filename + " (loading " + filetype.name + "):" + ex;

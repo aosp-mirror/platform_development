@@ -1,0 +1,5 @@
+android_test {
+    name: "NinePatchLab",
+    srcs: ["**/*.java"],
+    sdk_version: "current",
+}

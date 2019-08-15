@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-function transform({obj, kind, name, children, timestamp, rect, bounds, highlight, rects_transform, chips, visible, flattened}) {
+function transform({obj, kind, name, children, timestamp, rect, bounds, highlight, rects_transform, chips, visible, flattened, stableId}) {
 	function call(fn, arg) {
 		return (typeof fn == 'function') ? fn(arg) : fn;
 	}
@@ -55,6 +55,9 @@ function transform({obj, kind, name, children, timestamp, rect, bounds, highligh
 	var kindResolved = call(kind, obj);
 	var nameResolved = call(name, obj);
 	var rectResolved = call(rect, obj);
+	var stableIdResolved = (stableId === undefined) ?
+			kindResolved + '|-|' + nameResolved :
+			call(stableId, obj);
 
 	var result = {
 		kind: kindResolved,
@@ -68,7 +71,7 @@ function transform({obj, kind, name, children, timestamp, rect, bounds, highligh
 		rects: rects_transform(concat(rectResolved, transformed_children, (e) => e.rects)),
 		highlight: call(highlight, obj),
 		chips: call(chips, obj),
-		stableId: kindResolved + "|-|" + nameResolved,
+		stableId: stableIdResolved,
 		visible: call(visible, obj),
 		childrenVisible: transformed_children.some((c) => {
 				return c.childrenVisible || c.visible

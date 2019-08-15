@@ -1,0 +1,15 @@
+android_app_certificate {
+    name: "development_apps_pushapitestappone_cert",
+    certificate: "cert",
+}
+
+android_test {
+    name: "PushApiTestAppOne",
+    // Only compile source java files in this apk.
+    srcs: ["src/**/*.java"],
+    sdk_version: "current",
+    dex_preopt: {
+        enabled: false,
+    },
+    certificate: ":development_apps_pushapitestappone_cert",
+}
