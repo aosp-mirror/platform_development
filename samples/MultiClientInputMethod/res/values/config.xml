@@ -21,15 +21,21 @@
   <!--
     The MultiClientInputMethod will use the same display for the IME window by default.
     But, if you want to use the separate display for the IME window, consider to define item of
-    'config_inputDisplayToImeDisplay'.  The each item is a comma-separated pair of the uniqueId of
-    the displays.  The first is the uniqueId of the display where the input happens and the second
+    'config_inputDisplayToImeDisplay'.  The each item is a slash-separated (/) pair of the display
+    the uniqueIds.  The first is the uniqueId of the display where the input happens and the second
     is the unqiueId of the display where the IME window will be shown.
     FYI, you can find the uniqueId of displays in "dumpsys display".
 
     E.g. If you have two displays 19261083906282752, local:19260422155234049 and you want to use
     local:19260422155234049 as the IME window for the input at the display local:19261083906282752,
     then the config item will be:
-      <item>local:19261083906282752,local:19260422155234049</item>
+      <item>local:19261083906282752/local:19260422155234049</item>
+
+    E.g. The display of ActivityView has the unique id of the form of
+        'virtual:' + package_name + ',' + ownerUid + ',' + 'ActivityViewVirtualDisplay@'
+           + hashCode + ',' + displayIndex.
+    We can use the following regular expression to match it:
+      <item>virtual:com.android.car.carlauncher,\\d+,ActivityViewVirtualDisplay@\\d+,\\d+/local:19260422155234049</item>
   -->
   </string-array>
 </resources>

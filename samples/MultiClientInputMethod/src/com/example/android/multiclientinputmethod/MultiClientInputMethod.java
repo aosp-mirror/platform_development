@@ -90,6 +90,7 @@ public final class MultiClientInputMethod extends Service implements DisplayList
 
     @Override
     public void onDisplayAdded(int displayId) {
+        mInputDisplayToImeDisplay = buildInputDisplayToImeDisplay();
     }
 
     @Override
@@ -132,7 +133,6 @@ public final class MultiClientInputMethod extends Service implements DisplayList
 
     @NonNull
     private SparseIntArray buildInputDisplayToImeDisplay() {
-        // TODO: Support the virtual display after b/137375833 is fixed.
         Context context = getApplicationContext();
         String config[] = context.getResources().getStringArray(
                 R.array.config_inputDisplayToImeDisplay);
@@ -140,7 +140,7 @@ public final class MultiClientInputMethod extends Service implements DisplayList
         SparseIntArray inputDisplayToImeDisplay = new SparseIntArray();
         Display[] displays = context.getSystemService(DisplayManager.class).getDisplays();
         for (String item: config) {
-            String[] pair = item.split(",");
+            String[] pair = item.split("/");
             if (pair.length != 2) {
                 Log.w(TAG, "Skip illegal config: " + item);
                 continue;
@@ -154,13 +154,17 @@ public final class MultiClientInputMethod extends Service implements DisplayList
         return inputDisplayToImeDisplay;
     }
 
-    private static int findDisplayId(Display displays[], String uniqueId) {
+    private static int findDisplayId(Display displays[], String regexp) {
         for (Display display: displays) {
-            if (uniqueId.equals(display.getUniqueId())) {
-                return display.getDisplayId();
+            if (display.getUniqueId().matches(regexp)) {
+                int displayId = display.getDisplayId();
+                if (DEBUG) {
+                    Log.v(TAG, regexp + " matches displayId=" + displayId);
+                }
+                return displayId;
             }
         }
-        Log.w(TAG, "Can't find the display of " + uniqueId);
+        Log.w(TAG, "Can't find the display of " + regexp);
         return Display.INVALID_DISPLAY;
     }
 }
