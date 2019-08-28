@@ -46,7 +46,7 @@ LOG_LEVEL = logging.WARNING
 PORT = 5544
 
 # Keep in sync with WINSCOPE_PROXY_VERSION in Winscope DataAdb.vue
-VERSION = '0.1'
+VERSION = '0.2'
 
 WINSCOPE_VERSION_HEADER = "Winscope-Proxy-Version"
 WINSCOPE_TOKEN_HEADER = "Winscope-Token"
@@ -92,6 +92,11 @@ TRACE_TARGETS = {
         "/data/local/tmp/screen.winscope.mp4",
         'screenrecord --bit-rate 8M /data/local/tmp/screen.winscope.mp4 >/dev/null 2>&1 &\necho "ScreenRecorder started."',
         'pkill -l SIGINT screenrecord >/dev/null 2>&1'
+    ),
+    "transaction": TraceTarget(
+        "/data/misc/wmtrace/transaction_trace.pb",
+        'su root service call SurfaceFlinger 1020 i32 1\necho "SF transactions recording started."',
+        'su root service call SurfaceFlinger 1020 i32 0 >/dev/null 2>&1'
     )
 }
 
@@ -230,14 +235,14 @@ def call_adb_outfile(params: str, outfile, device: str = None, stdin: bytes = No
 
 
 class ListDevicesEndpoint(RequestEndpoint):
-    ADB_INFO_RE = re.compile("^([A-Z0-9]+)\\s+(\\w+)(.*model:(\\w+))?")
+    ADB_INFO_RE = re.compile("^([A-Za-z0-9\\-]+)\\s+(\\w+)(.*model:(\\w+))?")
 
     def process(self, server, path):
         lines = list(filter(None, call_adb('devices -l').split('\n')))
         devices = {m.group(1): {
             'authorised': str(m.group(2)) != 'unauthorized',
             'model': m.group(4).replace('_', ' ') if m.group(4) else ''
-        } for m in [ListDevicesEndpoint.ADB_INFO_RE.match(d) for d in lines[1:]]}
+        } for m in [ListDevicesEndpoint.ADB_INFO_RE.match(d) for d in lines[1:]] if m}
         j = json.dumps(devices)
         log.debug("Detected devices: " + j)
         server.respond(HTTPStatus.OK, j.encode("utf-8"), "text/json")
@@ -245,7 +250,7 @@ class ListDevicesEndpoint(RequestEndpoint):
 
 class DeviceRequestEndpoint(RequestEndpoint):
     def process(self, server, path):
-        if len(path) > 0 and re.fullmatch("[A-Z0-9]+", path[0]):
+        if len(path) > 0 and re.fullmatch("[A-Za-z0-9\\-]+", path[0]):
             self.process_with_device(server, path[1:], path[0])
         else:
             raise BadRequest("Device id not specified")
@@ -423,8 +428,8 @@ class EndTrace(DeviceRequestEndpoint):
             server.respond(HTTPStatus.OK, out, "text/plain")
         else:
             raise AdbError(
-                "Error tracing the device\nOutput:\n" + out.decode(
-                    "utf-8") + "\nCommand: adb -s {} shell\nInput:\n".format(device_id) + command.decode("utf-8"))
+                "Error tracing the device\n### Output ###\n" + out.decode(
+                    "utf-8") + "\n### Command: adb -s {} shell ###\n### Input ###\n".format(device_id) + command.decode("utf-8"))
 
 
 class StatusEndpoint(DeviceRequestEndpoint):

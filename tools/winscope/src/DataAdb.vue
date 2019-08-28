@@ -119,7 +119,7 @@ const STATES = {
   LOAD_DATA: 8,
 }
 
-const WINSCOPE_PROXY_VERSION = "0.1"
+const WINSCOPE_PROXY_VERSION = "0.2"
 const WINSCOPE_PROXY_URL = "http://localhost:5544"
 const PROXY_ENDPOINTS = {
   DEVICES: "/devices/",
@@ -132,6 +132,7 @@ const CAPTURE_FILES = [
   "window_trace",
   "layers_trace",
   "screen_recording",
+  "transaction"
 ]
 
 export default {
