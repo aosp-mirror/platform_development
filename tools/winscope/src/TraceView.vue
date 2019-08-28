@@ -53,18 +53,17 @@ function formatProto(obj) {
   if (!obj || !obj.$type) {
     return;
   }
-  if (obj.$type.fullName === '.android.surfaceflinger.RectProto' ||
-    obj.$type.fullName === '.android.graphics.RectProto') {
+  if (obj.$type.name === 'RectProto') {
     return `(${obj.left}, ${obj.top})  -  (${obj.right}, ${obj.bottom})`;
-  } else if (obj.$type.fullName === '.android.surfaceflinger.FloatRectProto') {
+  } else if (obj.$type.name === 'FloatRectProto') {
     return `(${obj.left.toFixed(3)}, ${obj.top.toFixed(3)})  -  (${obj.right.toFixed(3)}, ${obj.bottom.toFixed(3)})`;
-  } else if (obj.$type.fullName === '.android.surfaceflinger.PositionProto') {
+  } else if (obj.$type.name === 'PositionProto') {
     return `(${obj.x.toFixed(3)}, ${obj.y.toFixed(3)})`;
-  } else if (obj.$type.fullName === '.android.surfaceflinger.SizeProto') {
+  } else if (obj.$type.name === 'SizeProto') {
     return `${obj.w} x ${obj.h}`;
-  } else if (obj.$type.fullName === '.android.surfaceflinger.ColorProto') {
+  } else if (obj.$type.name === 'ColorProto') {
     return `r:${obj.r} g:${obj.g} \n b:${obj.b} a:${obj.a}`;
-  } else if (obj.$type.fullName === '.android.surfaceflinger.TransformProto') {
+  } else if (obj.$type.name === 'TransformProto') {
     var transform_type = format_transform_type(obj);
     if (is_simple_transform(obj)) {
       return `${transform_type}`;
