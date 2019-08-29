@@ -10,3 +10,16 @@ android_app {
         enabled: false,
     },
 }
+
+android_app {
+    name: "BusinessCard_LowerApi",
+    // Only compile source java files in this apk.
+    srcs: ["src/**/*.java"],
+    sdk_version: "21",
+    dex_preopt: {
+        enabled: false,
+    },
+    optimize: {
+        enabled: false,
+    },
+}
