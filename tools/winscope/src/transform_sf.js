@@ -100,7 +100,7 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
     var ty = (layer.position) ? layer.position.y || 0 : 0;
     result = offset_to(result, 0, 0);
     result.label = layer.name;
-    result.transform = layer.transform;
+    result.transform = layer.transform || {dsdx:1, dtdx:0, dsdy:0, dtdy:1};
     result.transform.tx = tx;
     result.transform.ty = ty;
     return result;
