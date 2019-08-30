@@ -24,15 +24,6 @@
 
 <script>
 
-import jsonProtoDefs from 'frameworks/base/core/proto/android/server/windowmanagertrace.proto'
-import protobuf from 'protobufjs'
-
-var protoDefs = protobuf.Root.fromJSON(jsonProtoDefs);
-var TraceMessage = protoDefs.lookupType(
-  "com.android.server.wm.WindowManagerTraceFileProto");
-var ServiceMessage = protoDefs.lookupType(
-  "com.android.server.wm.WindowManagerServiceDumpProto");
-
 export default {
   name: 'rects',
   props: ['bounds', 'rects', 'highlight'],

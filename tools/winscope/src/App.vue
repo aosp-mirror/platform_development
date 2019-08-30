@@ -20,12 +20,13 @@
     </md-whiteframe>
     <div class="main-content">
       <md-layout v-if="!dataLoaded" class="m-2">
-        <dataadb ref="adb" :store="store" @dataReady="onDataReady" @statusChange="setStatus" />
-        <datainput ref="input" :store="store" @dataReady="onDataReady" @statusChange="setStatus" />
+        <dataadb ref="adb" :store="store" @dataReady="onDataReady" @statusChange="setStatus"/>
+        <datainput ref="input" :store="store" @dataReady="onDataReady" @statusChange="setStatus"/>
       </md-layout>
       <md-card v-if="dataLoaded">
         <md-whiteframe md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
           <h2 class="md-title">Timeline</h2>
+          <datafilter v-for="file in files" :key="file.filename" :ref="file.filename" :store="store" :file="file" />
         </md-whiteframe>
         <md-list>
           <md-list-item v-for="(file, idx) in files" :key="file.filename">
@@ -46,6 +47,7 @@ import DataView from './DataView.vue'
 import DataInput from './DataInput.vue'
 import LocalStore from './localstore.js'
 import DataAdb from './DataAdb.vue'
+import DataFilter from './DataFilter.vue'
 
 const APP_NAME = "Winscope"
 
@@ -175,6 +177,7 @@ export default {
     'dataview': DataView,
     'datainput': DataInput,
     'dataadb': DataAdb,
+    'datafilter': DataFilter,
   },
 }
 
