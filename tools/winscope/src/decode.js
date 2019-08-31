@@ -18,16 +18,19 @@
 import jsonProtoDefs from 'frameworks/base/core/proto/android/server/windowmanagertrace.proto'
 import jsonProtoDefsSF from 'frameworks/native/services/surfaceflinger/layerproto/layerstrace.proto'
 import jsonProtoDefsTrans from 'frameworks/native/cmds/surfacereplayer/proto/src/trace.proto'
+import jsonProtoDefsWL from 'vendor/google_arc/libs/wayland_service/waylandtrace.proto'
 import protobuf from 'protobufjs'
 import { transform_layers, transform_layers_trace } from './transform_sf.js'
 import { transform_window_service, transform_window_trace } from './transform_wm.js'
 import { transform_transaction_trace } from './transform_transaction.js'
+import { transform_wl_outputstate, transform_wayland_trace } from './transform_wl.js'
 import { fill_transform_data } from './matrix_utils.js'
 import { mp4Decoder } from './decodeVideo.js'
 
 var protoDefs = protobuf.Root.fromJSON(jsonProtoDefs)
   .addJSON(jsonProtoDefsSF.nested)
-  .addJSON(jsonProtoDefsTrans.nested);
+  .addJSON(jsonProtoDefsTrans.nested)
+  .addJSON(jsonProtoDefsWL.nested);
 
 var WindowTraceMessage = protoDefs.lookupType(
   "com.android.server.wm.WindowManagerTraceFileProto");
@@ -36,10 +39,13 @@ var WindowMessage = protoDefs.lookupType(
 var LayersMessage = protoDefs.lookupType("android.surfaceflinger.LayersProto");
 var LayersTraceMessage = protoDefs.lookupType("android.surfaceflinger.LayersTraceFileProto");
 var TransactionMessage = protoDefs.lookupType("Trace");
+var WaylandMessage = protoDefs.lookupType("org.chromium.arc.wayland_composer.OutputStateProto");
+var WaylandTraceMessage = protoDefs.lookupType("org.chromium.arc.wayland_composer.TraceFileProto");
 
 const LAYER_TRACE_MAGIC_NUMBER = [0x09, 0x4c, 0x59, 0x52, 0x54, 0x52, 0x41, 0x43, 0x45] // .LYRTRACE
 const WINDOW_TRACE_MAGIC_NUMBER = [0x09, 0x57, 0x49, 0x4e, 0x54, 0x52, 0x41, 0x43, 0x45] // .WINTRACE
 const MPEG4_MAGIC_NMBER = [0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x6d, 0x70, 0x34, 0x32] // ....ftypmp42
+const WAYLAND_TRACE_MAGIC_NUMBER = [0x09, 0x57, 0x59, 0x4c, 0x54, 0x52, 0x41, 0x43, 0x45] // .WYLTRACE
 
 const DATA_TYPES = {
   WINDOW_MANAGER: {
@@ -57,6 +63,10 @@ const DATA_TYPES = {
   TRANSACTION: {
     name: "Transaction",
     icon: "timeline",
+  },
+  WAYLAND: {
+    name: "Wayland",
+    icon: "filter_none",
   },
 }
 
@@ -81,6 +91,16 @@ const FILE_TYPES = {
       timeline: true,
     },
   },
+  'wl_trace': {
+    name: "Wayland trace",
+    dataType: DATA_TYPES.WAYLAND,
+    decoder: protoDecoder,
+    decoderParams: {
+      protoType: WaylandTraceMessage,
+      transform: transform_wayland_trace,
+      timeline: true,
+    },
+  },
   'layers_dump': {
     name: "SurfaceFlinger dump",
     dataType: DATA_TYPES.SURFACE_FLINGER,
@@ -98,6 +118,16 @@ const FILE_TYPES = {
     decoderParams: {
       protoType: WindowMessage,
       transform: transform_window_service,
+      timeline: false,
+    },
+  },
+  'wl_dump': {
+    name: "Wayland dump",
+    dataType: DATA_TYPES.WAYLAND,
+    decoder: protoDecoder,
+    decoderParams: {
+      protoType: WaylandMessage,
+      transform: transform_wl_outputstate,
       timeline: false,
     },
   },
@@ -215,7 +245,10 @@ function detectAndDecode(buffer, fileName, store) {
   if (arrayStartsWith(buffer, MPEG4_MAGIC_NMBER)) {
     return decodedFile(FILE_TYPES['screen_recording'], buffer, fileName, store);
   }
-  for (var name of ['transaction', 'layers_dump', 'window_dump']) {
+  if (arrayStartsWith(buffer, WAYLAND_TRACE_MAGIC_NUMBER)) {
+    return decodedFile(FILE_TYPES['wl_trace'], buffer, fileName, store);
+  }
+  for (var name of ['transaction', 'layers_dump', 'window_dump', 'wl_dump']) {
     try {
       return decodedFile(FILE_TYPES[name], buffer, fileName, store);
     } catch (ex) {

@@ -21,6 +21,9 @@
     </md-card-header>
     <traceview v-if="isTrace" :store="store" :file="file" ref="view" />
     <videoview v-if="isVideo" :file="file" ref="view" />
+    <div v-if="!(isTrace || isVideo)">
+      <h1 class="bad">Unrecognized DataType</h1>
+    </div>
   </md-card>
 </template>
 <script>
@@ -45,7 +48,8 @@ export default {
   computed: {
     isTrace() {
       return this.file.type == DATA_TYPES.WINDOW_MANAGER ||
-          this.file.type == DATA_TYPES.SURFACE_FLINGER || this.file.type == DATA_TYPES.TRANSACTION;
+          this.file.type == DATA_TYPES.SURFACE_FLINGER ||
+          this.file.type == DATA_TYPES.TRANSACTION || this.file.type == DATA_TYPES.WAYLAND
     },
     isVideo() {
       return this.file.type == DATA_TYPES.SCREEN_RECORDING;
@@ -58,3 +62,18 @@ export default {
 }
 
 </script>
+<style>
+.bad {
+  animation: warning 0.2s linear infinite;
+  margin: 1em 1em 1em 1em;
+  font-size: 4em;
+  color: red;
+}
+
+@keyframes warning {
+  20% { transform: translateX(-10px) translateY(-10px); }
+  40% { transform: translateX(10px) translateY(5px); }
+  60% { transform: translateX(-5px) translateY(0px); }
+  80% { transform: translateX(5px) translateY(-8px); }
+}
+</style>
