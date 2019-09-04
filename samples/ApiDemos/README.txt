@@ -7,7 +7,6 @@ that illustrate the use of various Android APIs. It includes samples of:
   - Menus
   - Search
   - Persistent application state
-  - Preferences
   - Background Services
   - App Widgets
   - Voice Recognition

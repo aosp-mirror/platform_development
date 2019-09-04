@@ -192,6 +192,16 @@ def main():
     for name in libs:
         update_tag('/system/${LIB}/' + name + '.so', 'FWK-ONLY-RS')
 
+    # Workaround for LL-NDK APEX bionic
+    libs = [
+        'libc',
+        'libdl',
+        'libm',
+    ]
+    for name in libs:
+        update_tag('/apex/com.android.runtime/${LIB}/bionic/' + name + '.so',
+                   'LL-NDK')
+
     # Workaround for LL-NDK-Private
     libs = [
         'ld-android',
