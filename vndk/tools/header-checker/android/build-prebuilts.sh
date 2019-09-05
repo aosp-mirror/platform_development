@@ -14,12 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-export LLVM_BUILD_HOST_TOOLS=true
-export LLVM_PREBUILTS_VERSION=clang-r365631
-export LLVM_RELEASE_VERSION=9.0.6
-
-# FIXME: Workaround to build bionic versioner in the aosp/clang-tools branch.
-export FORCE_BUILD_LLVM_COMPONENTS=true
+source "$(dirname "$0")/envsetup.sh"
 
 if [ -z "${OUT_DIR}" ]; then
     echo "error: Must set OUT_DIR"
