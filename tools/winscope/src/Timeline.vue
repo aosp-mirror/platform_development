@@ -15,7 +15,7 @@
 <template>
   <svg width="2000" height="20" viewBox="-5,0,2010,20">
     <circle :cx="position(item)" cy="10" r="5" v-for="(item, idx) in items" @click="onItemClick(idx)" />
-    <circle :cx="position(selected)" cy="10" r="5" class="selected" />
+    <circle v-if="items.length" :cx="position(selected)" cy="10" r="5" class="selected" />
   </svg>
 </template>
 <script>
