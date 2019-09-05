@@ -14,7 +14,14 @@
      limitations under the License.
 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="@android:color/background_light"/>
-    <corners android:radius="2dp"/>
-    <padding android:left="0dp" android:top="0dp" android:right="0dp" android:bottom="0dp" />
+
+    <solid android:color="@android:color/transparent"/>
+
+    <corners android:radius="@dimen/corner_radius"/>
+
+    <padding
+        android:left="@dimen/smallMargin"
+        android:top="@dimen/smallMargin"
+        android:right="@dimen/smallMargin"
+        android:bottom="@dimen/smallMargin" />
 </shape>

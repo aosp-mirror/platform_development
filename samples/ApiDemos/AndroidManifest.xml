@@ -1157,84 +1157,6 @@
         </receiver>
 
         <!-- ************************************* -->
-        <!--       PREFERENCE PACKAGE SAMPLES      -->
-        <!-- ************************************* -->
-
-        <activity android:name=".preference.FragmentPreferences"
-                android:label="@string/fragment_preferences"
-                android:enabled="@bool/atLeastHoneycomb">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".preference.PreferenceWithHeaders"
-                android:label="@string/preference_with_headers"
-                android:enabled="@bool/atLeastHoneycomb">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".preference.PreferencesFromXml"
-                android:label="@string/preferences_from_xml">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".preference.PreferencesFromCode"
-                android:label="@string/preferences_from_code">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".preference.AdvancedPreferences"
-                android:label="@string/advanced_preferences">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".preference.LaunchingPreferences"
-                android:label="@string/launching_preferences">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".preference.PreferenceDependencies"
-                android:label="@string/preference_dependencies">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".preference.DefaultValues" android:label="@string/default_values">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <activity android:name=".preference.SwitchPreference"
-                android:label="@string/switch_preference"
-                android:enabled="@bool/atLeastIceCreamSandwich">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.SAMPLE_CODE" />
-            </intent-filter>
-        </activity>
-
-        <!-- ************************************* -->
         <!--        CONTENT PACKAGE SAMPLES        -->
         <!-- ************************************* -->
 
@@ -1360,7 +1282,7 @@
 
         <!-- A FileProvider for passing the APK to be installed to the system. -->
         <provider
-            android:name="android.support.v4.content.FileProvider"
+            android:name="androidx.core.content.FileProvider"
             android:authorities="com.example.android.apis.installapkprovider"
             android:exported="false"
             android:grantUriPermissions="true">

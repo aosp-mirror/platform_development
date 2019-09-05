@@ -17,6 +17,6 @@
 package com.example.android.intentplayground;
 
 /**
- * An activity with taskAffinity=".t2" set in AndroidManifest.xml
+ * An activity with taskAffinity=".t2" set in AndroidManifest.xml.
  */
 public class TaskAffinity2Activity extends BaseActivity {}

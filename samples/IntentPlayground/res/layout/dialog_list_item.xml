@@ -22,6 +22,4 @@
     android:paddingRight="@dimen/fullMargin"
     android:text="@string/dialog_intent_flag_placeholder"
     android:textAppearance="@style/normal"
-    android:textSize="@dimen/regularText">
-
-</TextView>
+    android:textSize="@dimen/regularText" />

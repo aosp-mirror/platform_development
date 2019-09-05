@@ -13,10 +13,13 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="@dimen/smallMargin">
+    android:paddingTop="@dimen/denseSectionMargin"
+    android:paddingBottom="@dimen/smallMargin">
 
     <TextView
         android:id="@+id/header_title"

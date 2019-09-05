@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# Copyright (C) 2018 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+. "${0%/*}"/bash_util.bash
+
+function usage() {
+    cat 1>&2 <<"EOF"
+
+  $script_name: Get heapdump from a process and open in ahat.
+
+  Usage: $script_name PID_OR_PROCESS_NAME
+
+EOF
+    exit 1
+}
+
+pid="$(resolve_pid "$1" || usage)"
+
+dev_file=/data/local/tmp/heapdump.prof
+local_file="$(make_temp_file .prof)"
+
+
+info "Getting heap dump from $pid ..."
+do_adb shell am dumpheap -g "$pid" "$dev_file"
+
+
+info "Pulling the dump file to $local_file ..."
+do_adb pull "$dev_file" "$local_file"
+
+
+info "Looking for available port ..."
+port=$(find_open_port 11000)
+info "Using port $port"
+
+(
+    sleep 2
+    info "Starting the browser ..."
+    setsid "${AHAT_BROWSER:-google-chrome}" http://localhost:$port
+) &
+
+
+info "Opening $local_file with ahat ..."
+ahat -p $port "$local_file"

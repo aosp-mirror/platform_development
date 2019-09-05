@@ -15,10 +15,11 @@
 -->
 <resources>
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="@android:style/Theme.Material.Light">
+    <style name="AppTheme" parent="@style/Theme.AppCompat.Light.NoActionBar">
         <item name="android:colorPrimary">@color/colorPrimary</item>
         <item name="android:colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="android:colorAccent">@color/colorAccent</item>
+        <item name="android:navigationBarColor">@color/colorPrimaryDark</item>
     </style>
     <style name="flatButton" parent="@android:style/Widget.Material.Light.Button.Borderless.Colored" />
     <style name="title" parent="@android:style/TextAppearance.Material.Title" />
@@ -26,4 +27,12 @@
     <style name="medium" parent="@android:style/TextAppearance.Material.Body2" />
     <style name="caption" parent="@android:style/TextAppearance.Material.Caption" />
     <style name="subsection" parent="@android:style/TextAppearance.Material.Medium" />
+    <style name="toolbarTheme" parent="@android:style/ThemeOverlay.Material.Light" />
+
+    <style name="snackbarText" parent="@android:style/TextAppearance.Material.Body1">
+        <item name="android:textSize">@dimen/snackBarText</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <dimen name="snackBarText">14dp</dimen>
 </resources>

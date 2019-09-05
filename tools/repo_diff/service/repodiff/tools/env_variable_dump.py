@@ -1,0 +1,18 @@
+import json
+import os
+
+REQUIRED_VARIABLES = [
+  "GCP_DB_INSTANCE_CONNECTION_NAME_DEV",
+  "GCP_DB_USER_DEV",
+  "GCP_DB_PASSWORD_DEV",
+  "GCP_DB_NAME_DEV",
+  "GCP_DB_PROXY_PORT_DEV",
+  "GCP_DB_INSTANCE_CONNECTION_NAME_PROD",
+  "GCP_DB_USER_PROD",
+  "GCP_DB_PASSWORD_PROD",
+  "GCP_DB_NAME_PROD",
+  "GCP_DB_PROXY_PORT_PROD",
+]
+
+as_dict = {var: os.environ[var] for var in REQUIRED_VARIABLES}
+print "'%s'" % json.dumps(as_dict)
