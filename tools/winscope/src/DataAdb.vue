@@ -76,10 +76,18 @@
           <md-icon>smartphone</md-icon><span>{{ devices[selectedDevice].model }} ({{ selectedDevice }})</span>
         </md-list-item>
       </md-list>
-      <md-checkbox v-for="file in CAPTURE_FILES" :key="file" v-model="adbStore[file]">{{FILE_TYPES[file].name}}</md-checkbox>
+      <div>
+        <p>Trace targets:</p>
+        <md-checkbox v-for="file in TRACE_FILES" :key="file" v-model="adbStore[file]">{{FILE_TYPES[file].name}}</md-checkbox>
+      </div>
+      <div>
+        <p>Dump targets:</p>
+        <md-checkbox v-for="file in DUMP_FILES" :key="file" v-model="adbStore[file]">{{FILE_TYPES[file].name}}</md-checkbox>
+      </div>
       <div class="md-layout md-gutter">
         <md-button class="md-accent md-raised" @click="startTrace">Start trace</md-button>
-        <md-button class="md-raised md-accent" @click="resetLastDevice">Device list</md-button>
+        <md-button class="md-accent md-raised" @click="dumpState">Dump state</md-button>
+        <md-button class="md-raised" @click="resetLastDevice">Device list</md-button>
       </div>
     </md-card-content>
     <md-card-content v-if="status === STATES.ERROR">
@@ -119,27 +127,35 @@ const STATES = {
   LOAD_DATA: 8,
 }
 
-const WINSCOPE_PROXY_VERSION = "0.2"
+const WINSCOPE_PROXY_VERSION = "0.3"
 const WINSCOPE_PROXY_URL = "http://localhost:5544"
 const PROXY_ENDPOINTS = {
   DEVICES: "/devices/",
   START_TRACE: "/start/",
   END_TRACE: "/end/",
+  DUMP: "/dump/",
   FETCH: "/fetch/",
   STATUS: "/status/",
 }
-const CAPTURE_FILES = [
+const TRACE_FILES = [
   "window_trace",
   "layers_trace",
   "screen_recording",
   "transaction"
 ]
+const DUMP_FILES = [
+  "window_dump",
+  "layers_dump"
+]
+const CAPTURE_FILES = TRACE_FILES.concat(DUMP_FILES)
 
 export default {
   name: 'dataadb',
   data() {
     return {
       STATES,
+      TRACE_FILES,
+      DUMP_FILES,
       CAPTURE_FILES,
       FILE_TYPES,
       WINSCOPE_PROXY_VERSION,
@@ -198,21 +214,33 @@ export default {
       })
     },
     startTrace() {
-      const requested = this.toLoad()
+      const requested = this.toTrace()
       if (requested.length < 1) {
         this.errorText = "No targets selected";
         this.status = STATES.ERROR;
         return
       }
+      this.status = STATES.END_TRACE;
       this.callProxy("POST", PROXY_ENDPOINTS.START_TRACE + this.deviceId() + "/", this, function(request, view) {
-        view.status = STATES.END_TRACE;
         view.keepAliveTrace();
+      }, null, requested)
+    },
+    dumpState() {
+      const requested = this.toDump()
+      if (requested.length < 1) {
+        this.errorText = "No targets selected";
+        this.status = STATES.ERROR;
+        return
+      }
+      this.status = STATES.LOAD_DATA;
+      this.callProxy("POST", PROXY_ENDPOINTS.DUMP + this.deviceId() + "/", this, function(request, view) {
+        view.loadFile(requested, 0);
       }, null, requested)
     },
     endTrace() {
       this.status = STATES.LOAD_DATA;
       this.callProxy("POST", PROXY_ENDPOINTS.END_TRACE + this.deviceId() + "/", this, function(request, view) {
-        view.loadFile(view.toLoad(), 0);
+        view.loadFile(view.toTrace(), 0);
       })
     },
     loadFile(files, idx) {
@@ -234,8 +262,11 @@ export default {
         }
       }, "arraybuffer")
     },
-    toLoad() {
-      return CAPTURE_FILES.filter(file => this.adbStore[file]);
+    toTrace() {
+      return TRACE_FILES.filter(file => this.adbStore[file]);
+    },
+    toDump() {
+      return DUMP_FILES.filter(file => this.adbStore[file]);
     },
     selectDevice(device_id) {
       this.selectedDevice = device_id;
