@@ -13,16 +13,16 @@
      limitations under the License.
 -->
 <template>
- <div class="bounds" v-if="file && visibleTransactions">
- <md-select v-model="visibleTransactions" name="visibleTransactions" id="visibleTransactions"
-         placeholder="Everything Turned Off" md-dense multiple @input="updateFilter()" >
-     <md-option value="displayCreation, displayDeletion">Display</md-option>
-     <md-option value="powerModeUpdate">Power Mode</md-option>
-     <md-option value="surfaceCreation, surfaceDeletion">Surface</md-option>
-     <md-option value="transaction">Transaction</md-option>
-     <md-option value="vsyncEvent">vsync</md-option>
-     <md-option value="bufferUpdate">Buffer</md-option>
- </md-select>
+ <div class="bounds" v-if="visible">
+   <md-select v-model="visibleTransactions" name="visibleTransactions" id="visibleTransactions"
+           placeholder="Everything Turned Off" md-dense multiple @input="updateFilter()" >
+       <md-option value="displayCreation, displayDeletion">Display</md-option>
+       <md-option value="powerModeUpdate">Power Mode</md-option>
+       <md-option value="surfaceCreation, surfaceDeletion">Surface</md-option>
+       <md-option value="transaction">Transaction</md-option>
+       <md-option value="vsyncEvent">vsync</md-option>
+       <md-option value="bufferUpdate">Buffer</md-option>
+   </md-select>
  </div>
 </template>
 <script>
@@ -32,22 +32,26 @@ export default {
   name: 'datafilter',
   props: ['file'],
   data() {
-    return {};
+    return {
+      rawData: this.file.data,
+      rawTimeline: this.file.timeline,
+      visibleTransactions: ["powerModeUpdate", "surfaceCreation, surfaceDeletion",
+                    "displayCreation, displayDeletion", "transaction"]
+    };
   },
-  created() {
-      if (this.file.type == DATA_TYPES.TRANSACTION) {
-        this.visibleTransactions = ["powerModeUpdate", "surfaceCreation, surfaceDeletion",
-                    "displayCreation, displayDeletion", "transaction"],
-        this.rawData = this.file.data,
-        this.rawTimeline = this.file.timeline,
-        this.updateFilter = function() {
-            this.file.data =
-                    this.rawData.filter(x => this.visibleTransactions.includes(x.obj.increment));
-            this.file.timeline =
-                    this.rawTimeline.filter(x => this.file.data.map(y => y.timestamp).includes(x));
-        };
-      }
+  methods: {
+    updateFilter() {
+      this.file.data =
+              this.rawData.filter(x => this.visibleTransactions.includes(x.obj.increment));
+      this.file.timeline =
+              this.rawTimeline.filter(x => this.file.data.map(y => y.timestamp).includes(x));
+    },
   },
+  computed: {
+    visible() {
+      return this.file.type == DATA_TYPES.TRANSACTION
+    },
+  }
 }
 </script>
 
