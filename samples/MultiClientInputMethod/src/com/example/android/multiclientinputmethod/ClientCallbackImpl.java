@@ -58,7 +58,7 @@ final class ClientCallbackImpl implements MultiClientInputMethodServiceDelegate.
         // For simplicity, we use the main looper for this sample.
         // To use other looper thread, make sure that the IME Window also runs on the same looper
         // and introduce an appropriate synchronization mechanism instead of directly accessing
-        // MultiClientInputMethod#mLastClientId.
+        // MultiClientInputMethod#mDisplayToLastClientId.
         mLooper = Looper.getMainLooper();
     }
 
@@ -157,11 +157,13 @@ final class ClientCallbackImpl implements MultiClientInputMethodServiceDelegate.
             mDelegate.reportImeWindowTarget(
                     mClientId, targetWindowHandle, window.getWindow().getAttributes().token);
         }
+        final int lastClientId = mInputMethod.mDisplayToLastClientId.get(mSelfReportedDisplayId);
+        if (lastClientId != mClientId) {
+            // deactivate previous client and activate current.
+            mDelegate.setActive(lastClientId, false /* active */);
+            mDelegate.setActive(mClientId, true /* active */);
+        }
         if (inputConnection == null || editorInfo == null) {
-            // deactivate previous client.
-            if (mInputMethod.mLastClientId != mClientId) {
-                mDelegate.setActive(mInputMethod.mLastClientId, false /* active */);
-            }
             // Dummy InputConnection case.
             if (window.getClientId() == mClientId) {
                 // Special hack for temporary focus changes (e.g. notification shade).
@@ -171,9 +173,6 @@ final class ClientCallbackImpl implements MultiClientInputMethodServiceDelegate.
                 window.onDummyStartInput(mClientId, targetWindowHandle);
             }
         } else {
-            if (mInputMethod.mLastClientId != mClientId) {
-                mDelegate.setActive(mClientId, true /* active */);
-            }
             window.onStartInput(mClientId, targetWindowHandle, inputConnection);
         }
 
@@ -195,7 +194,7 @@ final class ClientCallbackImpl implements MultiClientInputMethodServiceDelegate.
                 window.hide();
                 break;
         }
-        mInputMethod.mLastClientId = mClientId;
+        mInputMethod.mDisplayToLastClientId.put(mSelfReportedDisplayId, mClientId);
     }
 
     @Override
