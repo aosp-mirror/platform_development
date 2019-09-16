@@ -112,7 +112,7 @@
   </md-card>
 </template>
 <script>
-import { dataFile, FILE_TYPES, DATA_TYPES } from './decode.js'
+import { FILE_TYPES, DATA_TYPES } from './decode.js'
 import LocalStore from './localstore.js'
 
 const STATES = {

@@ -19,7 +19,7 @@
         <h2 class="md-title">Screen</h2>
       </md-whiteframe>
       <md-whiteframe md-elevation="8">
-        <video :id="file.filename" class="screen" :src="videoUri" />
+        <video :id="file.filename" class="screen" :src="file.data" />
       </md-whiteframe>
     </md-card>
   </md-card-content>
@@ -63,9 +63,6 @@ export default {
     selectedIndex() {
       return this.file.selectedIndex;
     },
-    videoUri() {
-      return "data:video/mp4;base64," + btoa(uint8ToString(this.file.data));
-    }
   },
 }
 

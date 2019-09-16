@@ -59,26 +59,32 @@ const DATA_TYPES = {
   WINDOW_MANAGER: {
     name: "WindowManager",
     icon: "view_compact",
+    mime: "application/octet-stream",
   },
   SURFACE_FLINGER: {
     name: "SurfaceFlinger",
     icon: "filter_none",
+    mime: "application/octet-stream",
   },
   SCREEN_RECORDING: {
     name: "Screen recording",
     icon: "videocam",
+    mime: "video/mp4",
   },
   TRANSACTION: {
     name: "Transaction",
     icon: "timeline",
+    mime: "application/octet-stream",
   },
   WAYLAND: {
     name: "Wayland",
     icon: "filter_none",
+    mime: "application/octet-stream",
   },
   WINDOW_LOG: {
     name: "WindowManager log",
     icon: "notes",
+    mime: "application/octet-stream",
   }
 }
 
@@ -219,21 +225,27 @@ function protoDecoder(buffer, fileType, fileName, store) {
   } else {
     data = [transformed];
   }
-  return dataFile(fileName, data.map(x => x.timestamp), data, fileType.dataType);
+  let blobUrl = URL.createObjectURL(new Blob([buffer], { type: fileType.dataType.mime }));
+  return dataFile(fileName, data.map(x => x.timestamp), data, blobUrl, fileType.dataType);
 }
 
 function videoDecoder(buffer, fileType, fileName, store) {
-  var [data, timeline] = fileType.decoderParams.videoDecoder(buffer)
-  return dataFile(fileName, timeline, data, fileType.dataType);
+  let [data, timeline] = fileType.decoderParams.videoDecoder(buffer);
+  let blobUrl = URL.createObjectURL(new Blob([data], { type: fileType.dataType.mime }));
+  return dataFile(fileName, timeline, blobUrl, blobUrl, fileType.dataType);
 }
 
-function dataFile(filename, timeline, data, type) {
+function dataFile(filename, timeline, data, blobUrl, type) {
   return {
     filename: filename,
     timeline: timeline,
     data: data,
+    blobUrl: blobUrl,
     type: type,
     selectedIndex: 0,
+    destroy() {
+      URL.revokeObjectURL(this.blobUrl);
+    },
   }
 }
 
@@ -283,4 +295,4 @@ function detectAndDecode(buffer, fileName, store) {
   throw new Error('Unable to detect file');
 }
 
-export { detectAndDecode, dataFile, DATA_TYPES, FILE_TYPES };
+export { detectAndDecode, DATA_TYPES, FILE_TYPES };
