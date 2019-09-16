@@ -52,7 +52,7 @@
     </md-card>
 </template>
 <script>
-import { detectAndDecode, dataFile, FILE_TYPES, DATA_TYPES } from './decode.js'
+import { detectAndDecode, FILE_TYPES, DATA_TYPES } from './decode.js'
 
 export default {
   name: 'datainput',
