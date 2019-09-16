@@ -26,7 +26,7 @@
       <md-card v-if="dataLoaded">
         <md-whiteframe md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
           <h2 class="md-title">Timeline</h2>
-          <datafilter v-for="file in files" :key="file.filename" :ref="file.filename" :store="store" :file="file" />
+          <datafilter v-for="file in files" :key="file.filename" :store="store" :file="file" />
         </md-whiteframe>
         <md-list>
           <md-list-item v-for="(file, idx) in files" :key="file.filename">

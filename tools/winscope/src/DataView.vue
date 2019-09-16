@@ -21,7 +21,8 @@
     </md-card-header>
     <traceview v-if="isTrace" :store="store" :file="file" ref="view" />
     <videoview v-if="isVideo" :file="file" ref="view" />
-    <div v-if="!(isTrace || isVideo)">
+    <logview v-if="isLog" :file="file" ref="view" />
+    <div v-if="!(isTrace || isVideo || isLog)">
       <h1 class="bad">Unrecognized DataType</h1>
     </div>
   </md-card>
@@ -29,6 +30,7 @@
 <script>
 import TraceView from './TraceView.vue'
 import VideoView from './VideoView.vue'
+import LogView from './LogView.vue'
 import { DATA_TYPES } from './decode.js'
 
 export default {
@@ -53,27 +55,23 @@ export default {
     },
     isVideo() {
       return this.file.type == DATA_TYPES.SCREEN_RECORDING;
+    },
+    isLog() {
+      return this.file.type == DATA_TYPES.WINDOW_LOG
     }
   },
   components: {
     'traceview': TraceView,
     'videoview': VideoView,
+    'logview': LogView,
   }
 }
 
 </script>
 <style>
 .bad {
-  animation: warning 0.2s linear infinite;
   margin: 1em 1em 1em 1em;
   font-size: 4em;
   color: red;
-}
-
-@keyframes warning {
-  20% { transform: translateX(-10px) translateY(-10px); }
-  40% { transform: translateX(10px) translateY(5px); }
-  60% { transform: translateX(-5px) translateY(0px); }
-  80% { transform: translateX(5px) translateY(-8px); }
 }
 </style>

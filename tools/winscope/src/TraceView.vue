@@ -14,7 +14,7 @@
 -->
 <template>
   <md-card-content class="container">
-    <md-card class="rects">
+    <md-card class="rects" v-if="hasScreenView">
       <md-whiteframe md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
         <h2 class="md-title">Screen</h2>
       </md-whiteframe>
@@ -48,6 +48,7 @@ import Rects from './Rects.vue'
 
 import { transform_json } from './transform.js'
 import { format_transform_type, is_simple_transform } from './matrix_utils.js'
+import { DATA_TYPES } from './decode.js'
 
 function formatProto(obj) {
   if (!obj || !obj.$type) {
@@ -178,7 +179,10 @@ export default {
       };
       filter.includeChildren = true;
       return filter;
-    }
+    },
+    hasScreenView() {
+      return this.file.type !== DATA_TYPES.TRANSACTION;
+    },
   },
   components: {
     'tree-view': TreeView,
