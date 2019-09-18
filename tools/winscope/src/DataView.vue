@@ -15,9 +15,14 @@
 <template>
   <md-card v-if="file">
     <md-card-header>
-      <div class="md-title">
-        <md-icon>{{file.type.icon}}</md-icon> {{file.filename}}
-      </div>
+      <md-card-header-text>
+        <div class="md-title">
+          <md-icon>{{file.type.icon}}</md-icon> {{file.filename}}
+        </div>
+      </md-card-header-text>
+      <md-button :href="file.blobUrl" :download="file.filename" class="md-icon-button">
+        <md-icon>save_alt</md-icon>
+      </md-button>
     </md-card-header>
     <traceview v-if="isTrace" :store="store" :file="file" ref="view" />
     <videoview v-if="isVideo" :file="file" ref="view" />
@@ -50,15 +55,15 @@ export default {
   computed: {
     isTrace() {
       return this.file.type == DATA_TYPES.WINDOW_MANAGER ||
-          this.file.type == DATA_TYPES.SURFACE_FLINGER ||
-          this.file.type == DATA_TYPES.TRANSACTION || this.file.type == DATA_TYPES.WAYLAND
+        this.file.type == DATA_TYPES.SURFACE_FLINGER ||
+        this.file.type == DATA_TYPES.TRANSACTION || this.file.type == DATA_TYPES.WAYLAND
     },
     isVideo() {
       return this.file.type == DATA_TYPES.SCREEN_RECORDING;
     },
     isLog() {
       return this.file.type == DATA_TYPES.WINDOW_LOG
-    }
+    },
   },
   components: {
     'traceview': TraceView,
@@ -74,4 +79,5 @@ export default {
   font-size: 4em;
   color: red;
 }
+
 </style>
