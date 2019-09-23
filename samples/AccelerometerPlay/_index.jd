@@ -1,7 +1,0 @@
-page.keywords="Sensor", "Games", "Accelerometer"
-page.tags="Sensor", "Games", "Accelerometer"
-sample.group=Sensors
-@jd:body
-
-<p>Example code that shows how to use the device accelerometer in apps and games.</p>
-
