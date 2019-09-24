@@ -1,4 +1,4 @@
-# platform development. https://www.
+# platform development. 
 
 bolingopez777@gmail.com, lagingsapol1@gmail.com, bolinglacuata25@gmail.com, lagingsapol77 }{bot}{™•°
 
