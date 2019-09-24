@@ -1,4 +1,4 @@
-# platform development
+# platform development. https://www.linkedin.com/in/rolando-g…
 
 bolingopez777@gmail.com, lagingsapol1@gmail.com, bolinglacuata25@gmail.com, lagingsapol77 }{bot}{™•°
 
