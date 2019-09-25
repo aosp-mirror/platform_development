@@ -127,7 +127,7 @@ const STATES = {
   LOAD_DATA: 8,
 }
 
-const WINSCOPE_PROXY_VERSION = "0.4"
+const WINSCOPE_PROXY_VERSION = "0.5"
 const WINSCOPE_PROXY_URL = "http://localhost:5544"
 const PROXY_ENDPOINTS = {
   DEVICES: "/devices/",
@@ -142,7 +142,7 @@ const TRACE_FILES = [
   "layers_trace",
   "screen_recording",
   "transaction",
-  "window_log"
+  "proto_log"
 ]
 const DUMP_FILES = [
   "window_dump",

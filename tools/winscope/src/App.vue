@@ -20,8 +20,8 @@
     </md-whiteframe>
     <div class="main-content">
       <md-layout v-if="!dataLoaded" class="m-2">
-        <dataadb ref="adb" :store="store" @dataReady="onDataReady" @statusChange="setStatus" />
-        <datainput ref="input" :store="store" @dataReady="onDataReady" @statusChange="setStatus" />
+        <dataadb ref="adb" :store="store" @dataReady="onDataReady" @statusChange="setStatus"/>
+        <datainput ref="input" :store="store" @dataReady="onDataReady" @statusChange="setStatus"/>
       </md-layout>
       <md-card v-if="dataLoaded">
         <md-whiteframe md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
@@ -201,7 +201,7 @@ export default {
   flex-wrap: wrap;
 }
 
-.md-layout>.md-card {
+.md-layout > .md-card {
   margin: 0.5em;
 }
 

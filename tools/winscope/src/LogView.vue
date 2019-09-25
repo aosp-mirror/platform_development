@@ -16,14 +16,16 @@
   <md-card-content class="container">
     <md-table class="log-table">
       <md-table-header>
-        <md-table-head class="time-column">Time</md-table-head>
-        <md-table-head class="tag-column">Tag</md-table-head>
+        <md-table-head class="time-column-header">Time</md-table-head>
+        <md-table-head class="tag-column-header">Tag</md-table-head>
+        <md-table-head class="at-column-header">At</md-table-head>
         <md-table-head>Message</md-table-head>
       </md-table-header>
       <md-table-body>
         <md-table-row v-for="line in data" :key="line.timestamp">
           <md-table-cell class="time-column">{{line.time}}</md-table-cell>
           <md-table-cell class="tag-column">{{line.tag}}</md-table-cell>
+          <md-table-cell class="at-column">{{line.at}}</md-table-cell>
           <md-table-cell>{{line.text}}</md-table-cell>
         </md-table-row>
       </md-table-body>
@@ -90,8 +92,27 @@ export default {
   min-width: 15em;
 }
 
-.tag-column {
+.time-column-header {
   min-width: 15em;
+  padding-right: 9em !important;
+}
+
+.tag-column {
+  min-width: 10em;
+}
+
+.tag-column-header {
+  min-width: 10em;
+  padding-right: 7em !important;
+}
+
+.at-column {
+  min-width: 35em;
+}
+
+.at-column-header {
+  min-width: 35em;
+  padding-right: 32em !important;
 }
 
 .log-table table {
@@ -108,10 +129,6 @@ export default {
 .log-table tr {
   width: 100%;
   display: block;
-}
-
-.log-table th {
-  padding-right: 9.5em !important;
 }
 
 .log-table td:last-child {
