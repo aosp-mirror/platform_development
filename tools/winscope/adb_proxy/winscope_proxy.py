@@ -46,7 +46,7 @@ LOG_LEVEL = logging.WARNING
 PORT = 5544
 
 # Keep in sync with WINSCOPE_PROXY_VERSION in Winscope DataAdb.vue
-VERSION = '0.4'
+VERSION = '0.5'
 
 WINSCOPE_VERSION_HEADER = "Winscope-Proxy-Version"
 WINSCOPE_TOKEN_HEADER = "Winscope-Token"
@@ -98,7 +98,7 @@ TRACE_TARGETS = {
         'su root service call SurfaceFlinger 1020 i32 1\necho "SF transactions recording started."',
         'su root service call SurfaceFlinger 1020 i32 0 >/dev/null 2>&1'
     ),
-    "window_log": TraceTarget(
+    "proto_log": TraceTarget(
         "/data/misc/wmtrace/wm_log.pb",
         'su root cmd window logging start\necho "WM logging started."',
         'su root cmd window logging stop >/dev/null 2>&1'

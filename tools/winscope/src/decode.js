@@ -16,7 +16,7 @@
 
 
 import jsonProtoDefs from 'frameworks/base/core/proto/android/server/windowmanagertrace.proto'
-import jsonProtoLogDefs from 'frameworks/base/core/proto/android/server/windowmanagerlog.proto'
+import jsonProtoLogDefs from 'frameworks/base/core/proto/android/server/protolog.proto'
 import jsonProtoDefsSF from 'frameworks/native/services/surfaceflinger/layerproto/layerstrace.proto'
 import jsonProtoDefsTrans from 'frameworks/native/cmds/surfacereplayer/proto/src/trace.proto'
 import jsonProtoDefsWL from 'vendor/google_arc/libs/wayland_service/waylandtrace.proto'
@@ -45,15 +45,15 @@ var TransactionMessage = protoDefs.lookupType("Trace");
 var WaylandMessage = protoDefs.lookupType("org.chromium.arc.wayland_composer.OutputStateProto");
 var WaylandTraceMessage = protoDefs.lookupType("org.chromium.arc.wayland_composer.TraceFileProto");
 var WindowLogMessage = protoDefs.lookupType(
-  "com.android.server.wm.WindowManagerLogFileProto");
+  "com.android.server.protolog.ProtoLogFileProto");
 var LogMessage = protoDefs.lookupType(
-  "com.android.server.wm.ProtoLogMessage");
+  "com.android.server.protolog.ProtoLogMessage");
 
 const LAYER_TRACE_MAGIC_NUMBER = [0x09, 0x4c, 0x59, 0x52, 0x54, 0x52, 0x41, 0x43, 0x45] // .LYRTRACE
 const WINDOW_TRACE_MAGIC_NUMBER = [0x09, 0x57, 0x49, 0x4e, 0x54, 0x52, 0x41, 0x43, 0x45] // .WINTRACE
 const MPEG4_MAGIC_NMBER = [0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x6d, 0x70, 0x34, 0x32] // ....ftypmp42
 const WAYLAND_TRACE_MAGIC_NUMBER = [0x09, 0x57, 0x59, 0x4c, 0x54, 0x52, 0x41, 0x43, 0x45] // .WYLTRACE
-const WINDOW_LOG_MAGIC_NUMBER = [0x09, 0x57, 0x49, 0x4e, 0x44, 0x4f, 0x4c, 0x4f, 0x47] // .WINDOLOG
+const PROTO_LOG_MAGIC_NUMBER = [0x09, 0x50, 0x52, 0x4f, 0x54, 0x4f, 0x4c, 0x4f, 0x47] // .PROTOLOG
 
 const DATA_TYPES = {
   WINDOW_MANAGER: {
@@ -81,8 +81,8 @@ const DATA_TYPES = {
     icon: "filter_none",
     mime: "application/octet-stream",
   },
-  WINDOW_LOG: {
-    name: "WindowManager log",
+  PROTO_LOG: {
+    name: "ProtoLog",
     icon: "notes",
     mime: "application/octet-stream",
   }
@@ -167,9 +167,9 @@ const FILE_TYPES = {
       timeline: true,
     }
   },
-  'window_log': {
-    name: "WindowManager log",
-    dataType: DATA_TYPES.WINDOW_LOG,
+  'proto_log': {
+    name: "ProtoLog",
+    dataType: DATA_TYPES.PROTO_LOG,
     decoder: protoDecoder,
     decoderParams: {
       protoType: WindowLogMessage,
@@ -282,8 +282,8 @@ function detectAndDecode(buffer, fileName, store) {
   if (arrayStartsWith(buffer, WAYLAND_TRACE_MAGIC_NUMBER)) {
     return decodedFile(FILE_TYPES['wl_trace'], buffer, fileName, store);
   }
-  if (arrayStartsWith(buffer, WINDOW_LOG_MAGIC_NUMBER)) {
-    return decodedFile(FILE_TYPES['window_log'], buffer, fileName, store);
+  if (arrayStartsWith(buffer, PROTO_LOG_MAGIC_NUMBER)) {
+    return decodedFile(FILE_TYPES['proto_log'], buffer, fileName, store);
   }
   for (var name of ['transaction', 'layers_dump', 'window_dump', 'wl_dump']) {
     try {
