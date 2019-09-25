@@ -1,4 +1,4 @@
-import viewerConfig from "../../../../frameworks/base/data/etc/services.core.wm.protolog.json"
+import viewerConfig from "../../../../frameworks/base/data/etc/services.core.protolog.json"
 
 import { nanos_to_string } from './transform.js'
 
@@ -81,6 +81,7 @@ function transform_unformatted(entry) {
       '] [' + entry.booleanParams.toString() + ']'),
     time: nanos_to_string(entry.elapsedRealtimeNanos),
     tag: "INVALID",
+    at: "",
     timestamp: entry.elapsedRealtimeNanos,
   };
 }
@@ -90,6 +91,7 @@ function transform_formatted(entry, message) {
     text: format_text(message.message, entry),
     time: nanos_to_string(entry.elapsedRealtimeNanos),
     tag: viewerConfig.groups[message.group].tag,
+    at: message.at,
     timestamp: entry.elapsedRealtimeNanos,
   };
 }
