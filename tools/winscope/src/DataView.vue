@@ -55,15 +55,15 @@ export default {
   computed: {
     isTrace() {
       return this.file.type == DATA_TYPES.WINDOW_MANAGER ||
-        this.file.type == DATA_TYPES.SURFACE_FLINGER ||
-        this.file.type == DATA_TYPES.TRANSACTION || this.file.type == DATA_TYPES.WAYLAND
+          this.file.type == DATA_TYPES.SURFACE_FLINGER ||
+          this.file.type == DATA_TYPES.TRANSACTION || this.file.type == DATA_TYPES.WAYLAND
     },
     isVideo() {
       return this.file.type == DATA_TYPES.SCREEN_RECORDING;
     },
     isLog() {
-      return this.file.type == DATA_TYPES.WINDOW_LOG
-    },
+      return this.file.type == DATA_TYPES.PROTO_LOG
+    }
   },
   components: {
     'traceview': TraceView,
@@ -79,5 +79,4 @@ export default {
   font-size: 4em;
   color: red;
 }
-
 </style>
