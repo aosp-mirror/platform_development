@@ -212,7 +212,6 @@ prebuilts/sdk/sdk-annotations/annotations.zip platforms/${PLATFORM_NAME}/data/an
 ${OUT_DIR}/target/common/obj/PACKAGING/api-stubs-docs_annotations.zip platforms/${PLATFORM_NAME}/data/annotations.zip
 
 # Eclipse Editors support
-framework/layoutlib-legacy.jar            platforms/${PLATFORM_NAME}/data/layoutlib.jar
 frameworks/base/core/res/res              platforms/${PLATFORM_NAME}/data/res
 docs/offline-sdk/activity_actions.txt                 platforms/${PLATFORM_NAME}/data/activity_actions.txt
 docs/offline-sdk/broadcast_actions.txt                platforms/${PLATFORM_NAME}/data/broadcast_actions.txt
@@ -220,12 +219,6 @@ docs/offline-sdk/service_actions.txt                  platforms/${PLATFORM_NAME}
 docs/offline-sdk/categories.txt                       platforms/${PLATFORM_NAME}/data/categories.txt
 docs/offline-sdk/widgets.txt                          platforms/${PLATFORM_NAME}/data/widgets.txt
 docs/offline-sdk/features.txt                         platforms/${PLATFORM_NAME}/data/features.txt
-
-# fonts for layoutlib.
-${FONT_OUT}                       platforms/${PLATFORM_NAME}/data/fonts
-
-# timezone data for layoutlib
-system/timezone/output_data/iana/tzdata   platforms/${PLATFORM_NAME}/data/tzdata
 
 # NOTICE files are copied by build/core/Makefile from sdk.git
 development/sdk/sdk_files_NOTICE.txt      platforms/${PLATFORM_NAME}/templates/NOTICE.txt
