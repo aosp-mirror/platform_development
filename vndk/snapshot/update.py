@@ -151,6 +151,11 @@ def post_processe_files_if_needed(vndk_version):
         for file_to_rename in files_to_add_version_suffix:
             add_version_suffix(file_to_rename)
 
+    files_to_enforce_version_suffix = ('vndkcore.libraries.txt',
+                                       'vndkprivate.libraries.txt')
+    for file_to_rename in files_to_enforce_version_suffix:
+        add_version_suffix(file_to_rename)
+
 
 def update_buildfiles(buildfile_generator):
     logging.info('Generating root Android.bp file...')
