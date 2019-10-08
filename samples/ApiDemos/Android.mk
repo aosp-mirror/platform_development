@@ -11,7 +11,7 @@ LOCAL_SRC_FILES := \
     src/com/example/android/apis/app/ISecondary.aidl \
 
 LOCAL_STATIC_ANDROID_LIBRARIES += \
-    android-support-v4
+    androidx.legacy_legacy-support-v4
 
 LOCAL_USE_AAPT2 := true
 

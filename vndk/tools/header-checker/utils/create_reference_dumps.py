@@ -8,58 +8,16 @@ import time
 
 from utils import (
     AOSP_DIR, COMPRESSED_SOURCE_ABI_DUMP_EXT, SOURCE_ABI_DUMP_EXT,
-    SOURCE_ABI_DUMP_EXT_END, SO_EXT, copy_reference_dumps, find_lib_lsdumps,
-    get_build_vars_for_product, get_module_variant_dir_name, make_libraries,
-    make_tree, read_lsdump_paths)
+    SOURCE_ABI_DUMP_EXT_END, SO_EXT, Target, copy_reference_dump,
+    find_lib_lsdumps, get_build_vars_for_product, make_libraries, make_tree,
+    read_lsdump_paths)
 
 
-PRODUCTS_DEFAULT = ['aosp_arm_ab', 'aosp_arm', 'aosp_arm64', 'aosp_x86_ab',
-                    'aosp_x86', 'aosp_x86_64']
+PRODUCTS_DEFAULT = ['aosp_arm', 'aosp_arm64', 'aosp_x86', 'aosp_x86_64']
 
 PREBUILTS_ABI_DUMPS_DEFAULT = os.path.join(AOSP_DIR, 'prebuilts', 'abi-dumps')
 
 SOONG_DIR = os.path.join(AOSP_DIR, 'out', 'soong', '.intermediates')
-
-
-class Target(object):
-    def __init__(self, has_2nd, product):
-        extra = '_2ND' if has_2nd else ''
-        build_vars_to_fetch = ['TARGET_ARCH',
-                               'TARGET{}_ARCH'.format(extra),
-                               'TARGET{}_ARCH_VARIANT'.format(extra),
-                               'TARGET{}_CPU_VARIANT'.format(extra)]
-        build_vars = get_build_vars_for_product(build_vars_to_fetch, product)
-        self.primary_arch = build_vars[0]
-        self.arch = build_vars[1]
-        self.arch_variant = build_vars[2]
-        self.cpu_variant = build_vars[3]
-
-
-def get_lib_arch_str(target):
-    assert target.primary_arch != ''
-    target_arch_variant_str = ''
-    # If TARGET_ARCH == TARGET_ARCH_VARIANT, soong makes targetArchVariant
-    # empty. This is the case for aosp_x86_64 and aosp_x86_ab.
-    if target.arch_variant != target.arch:
-        target_arch_variant_str = '_' + target.arch_variant
-    return target.arch + target_arch_variant_str
-
-
-def find_and_copy_lib_lsdumps(target, ref_dump_dir_stem, ref_dump_dir_insertion,
-                              core_or_vendor_shared_str, libs, lsdump_paths,
-                              compress):
-    module_variant_dir_name = get_module_variant_dir_name(
-        target.arch, target.arch_variant, target.cpu_variant,
-        core_or_vendor_shared_str)
-
-    arch_lsdump_paths = find_lib_lsdumps(
-        module_variant_dir_name, lsdump_paths, libs)
-
-    # Copy the contents of the lsdump into their corresponding reference ABI
-    # dumps directories.
-    return copy_reference_dumps(arch_lsdump_paths, ref_dump_dir_stem,
-                                ref_dump_dir_insertion,
-                                get_lib_arch_str(target), compress)
 
 
 def choose_vndk_version(version, platform_vndk_version, board_vndk_version):
@@ -72,23 +30,18 @@ def choose_vndk_version(version, platform_vndk_version, board_vndk_version):
     return version
 
 
-def get_ref_dump_dir_stem(args, vndk_or_ndk, product, chosen_vndk_version):
-    binder_bitness = '64'
-    if get_build_vars_for_product(['BINDER32BIT'], product)[0] == 'true':
-        binder_bitness = '32'
-    ref_dump_dir_stem = os.path.join(args.ref_dump_dir, vndk_or_ndk)
-    ref_dump_dir_stem = os.path.join(ref_dump_dir_stem, chosen_vndk_version)
-    ref_dump_dir_stem = os.path.join(ref_dump_dir_stem, binder_bitness)
-
-    return ref_dump_dir_stem
-
-
-def make_libs_for_product(libs, llndk_mode, product, variant, targets):
+def make_libs_for_product(libs, product, variant, targets):
     print('making libs for', product + '-' + variant)
     if libs:
-        make_libraries(product, variant, targets, libs, llndk_mode)
+        make_libraries(product, variant, targets, libs)
     else:
         make_tree(product, variant)
+
+
+def get_ref_dump_dir_stem(ref_dump_dir, category, chosen_vndk_version,
+                          binder_bitness, arch_cpu):
+    return os.path.join(ref_dump_dir, category, chosen_vndk_version,
+                        binder_bitness, arch_cpu)
 
 
 def find_and_remove_path(root_path, file_name=None):
@@ -103,57 +56,56 @@ def find_and_remove_path(root_path, file_name=None):
             shutil.rmtree(root_path)
 
 
-def remove_references_for_all_arches_and_variants(args, product, targets,
-                                                  chosen_vndk_version):
-    libs = args.libs
+def remove_references_for_all_arches_and_variants(ref_dump_dir,
+                                                  chosen_vndk_version,
+                                                  binder_bitness, targets,
+                                                  libs):
     for target in targets:
         if target.arch == '' or target.arch_variant == '':
             continue
-
-        dir_to_remove_vndk = os.path.join(
-            get_ref_dump_dir_stem(args, 'vndk', product, chosen_vndk_version),
-            get_lib_arch_str(target))
-
-        dir_to_remove_ndk = os.path.join(
-            get_ref_dump_dir_stem(args, 'ndk', product, chosen_vndk_version),
-            get_lib_arch_str(target))
-
-        if libs:
-            for lib in libs:
-                find_and_remove_path(dir_to_remove_vndk,
-                                     lib + SOURCE_ABI_DUMP_EXT)
-                find_and_remove_path(dir_to_remove_vndk,
-                                     lib + COMPRESSED_SOURCE_ABI_DUMP_EXT)
-                find_and_remove_path(dir_to_remove_ndk,
-                                     lib + SOURCE_ABI_DUMP_EXT)
-                find_and_remove_path(dir_to_remove_ndk,
-                                     lib + COMPRESSED_SOURCE_ABI_DUMP_EXT)
-        else:
-            find_and_remove_path(dir_to_remove_vndk)
-            find_and_remove_path(dir_to_remove_ndk)
+        for category in ('ndk', 'platform', 'vndk'):
+            dir_to_remove = get_ref_dump_dir_stem(
+                ref_dump_dir, category, chosen_vndk_version, binder_bitness,
+                target.get_arch_cpu_str())
+            if libs:
+                for lib in libs:
+                    find_and_remove_path(dir_to_remove,
+                                         lib + SOURCE_ABI_DUMP_EXT)
+                    find_and_remove_path(dir_to_remove,
+                                         lib + COMPRESSED_SOURCE_ABI_DUMP_EXT)
+            else:
+                find_and_remove_path(dir_to_remove)
 
 
-def add_to_path_dict(path, dictionary, libs=tuple()):
-    name, lsdump_ext = os.path.splitext(path)
-    sofile, so_ext = os.path.splitext(name)
-    libname = os.path.basename(sofile)
-    if lsdump_ext == SOURCE_ABI_DUMP_EXT_END and so_ext == SO_EXT:
-        if libs and libname not in libs:
-            return
-        dictionary[libname].append(path)
+def tag_to_dir_name(tag):
+    if tag == 'NDK':
+        return 'ndk'
+    if tag == 'PLATFORM':
+        return 'platform'
+    if tag.startswith('VNDK') or tag == 'LLNDK':
+        return 'vndk'
+    raise ValueError(tag + 'is not a known tag.')
 
 
-def create_source_abi_reference_dumps(args, product,
-                                      chosen_vndk_version, lsdump_paths,
-                                      targets):
-    ref_dump_dir_stem_vndk = \
-        get_ref_dump_dir_stem(args, 'vndk', product, chosen_vndk_version)
-    ref_dump_dir_stem_ndk = \
-        get_ref_dump_dir_stem(args, 'ndk', product, chosen_vndk_version)
-    ref_dump_dir_insertion = 'source-based'
+def find_and_copy_lib_lsdumps(ref_dump_dir, chosen_vndk_version,
+                              binder_bitness, target, libs, lsdump_paths,
+                              compress):
+    arch_lsdump_paths = find_lib_lsdumps(lsdump_paths, libs, target)
 
+    num_created = 0
+    for tag, path in arch_lsdump_paths:
+        ref_dump_dir_stem = get_ref_dump_dir_stem(
+            ref_dump_dir, tag_to_dir_name(tag), chosen_vndk_version,
+            binder_bitness, target.get_arch_cpu_str())
+        copy_reference_dump(
+            path, os.path.join(ref_dump_dir_stem, 'source-based'), compress)
+        num_created += 1
+    return num_created
+
+
+def create_source_abi_reference_dumps(args, chosen_vndk_version,
+                                      binder_bitness, lsdump_paths, targets):
     num_libs_copied = 0
-
     for target in targets:
         if target.arch == '' or target.arch_variant == '':
             continue
@@ -163,13 +115,8 @@ def create_source_abi_reference_dumps(args, product,
         assert target.primary_arch != ''
 
         num_libs_copied += find_and_copy_lib_lsdumps(
-            target, ref_dump_dir_stem_vndk, ref_dump_dir_insertion,
-            '_vendor_shared', args.libs, lsdump_paths, args.compress)
-
-        num_libs_copied += find_and_copy_lib_lsdumps(
-            target, ref_dump_dir_stem_ndk, ref_dump_dir_insertion,
-            '_core_shared', args.libs, lsdump_paths, args.compress)
-
+            args.ref_dump_dir, chosen_vndk_version, binder_bitness, target,
+            args.libs, lsdump_paths, args.compress)
     return num_libs_copied
 
 
@@ -186,23 +133,29 @@ def create_source_abi_reference_dumps_for_all_products(args):
     for product in args.products:
         targets = [Target(True, product), Target(False, product)]
 
+        if get_build_vars_for_product(['BINDER32BIT'], product)[0] == 'true':
+            binder_bitness = '32'
+        else:
+            binder_bitness = '64'
+
         # Remove reference ABI dumps specified in `args.libs` (or remove all of
         # them if none of them are specified) so that we may build these
         # libraries successfully.
         remove_references_for_all_arches_and_variants(
-            args, product, targets, chosen_vndk_version)
+            args.ref_dump_dir, chosen_vndk_version, binder_bitness, targets,
+            args.libs)
 
         if not args.no_make_lib:
             # Build all the specified libs (or build the 'vndk' target if none
             # of them are specified.)
-            make_libs_for_product(args.libs, args.llndk, product,
+            make_libs_for_product(args.libs, product,
                                   args.build_variant, targets)
 
         lsdump_paths = read_lsdump_paths(product, args.build_variant, targets,
                                          build=False)
 
         num_processed += create_source_abi_reference_dumps(
-            args, product, chosen_vndk_version, lsdump_paths, targets)
+            args, chosen_vndk_version, binder_bitness, lsdump_paths, targets)
 
     return num_processed
 
@@ -215,7 +168,7 @@ def _parse_args():
     parser.add_argument('--no-make-lib', action='store_true',
                         help='no m -j lib.vendor while creating reference')
     parser.add_argument('--llndk', action='store_true',
-                        help='The libs specified by -l are llndk')
+                        help='the flag is deprecated and has no effect')
     parser.add_argument('-libs', action='append',
                         help='libs to create references for')
     parser.add_argument('-products', action='append',

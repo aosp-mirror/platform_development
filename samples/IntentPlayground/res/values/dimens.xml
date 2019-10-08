@@ -1,17 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2018 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
 <resources>
-    <dimen name="dialogWidth">@android:dimen/dialog_min_width_major</dimen>
+    <dimen name="dialogWidth">320dp</dimen>
     <dimen name="smallMargin">8dp</dimen>
     <dimen name="medMargin">16dp</dimen>
     <dimen name="fullMargin">24dp</dimen>
-    <dimen name="blockMargin">32dp</dimen>
-    <dimen name="cardElevation">2dp</dimen>
+    <dimen name="blockMargin">56dp</dimen>
+    <dimen name="cardElevation">0dp</dimen>
     <dimen name="titleText">20sp</dimen>
     <dimen name="regularText">16sp</dimen>
     <dimen name="smallText">12sp</dimen>
     <dimen name="listItem">48dp</dimen>
+    <dimen name="denseListItem">40dp</dimen>
     <dimen name="listIcon">48dp</dimen>
     <dimen name="listControl">24dp</dimen>
     <dimen name="listLabelTextBox">24dp</dimen>
     <dimen name="dividerHeight">1dp</dimen>
+    <dimen name="toolbarHeight">56dp</dimen>
+    <dimen name="snackbarHeight">48dp</dimen>
+    <dimen name="snackbarVerticalPadding">14dp</dimen>
+    <dimen name="bottom_nav_elevation">8dp</dimen>
+    <dimen name="checkbox_padding">24dp</dimen>
+    <dimen name="toolbar_elevation">4dp</dimen>
+    <dimen name="doubleListItem">60dp</dimen>
+    <dimen name="denseSectionMargin">12dp</dimen>
+    <dimen name="border_width">1dp</dimen>
+    <dimen name="tutorial_elevation">4dp</dimen>
+    <dimen name="corner_radius">2dp</dimen>
+    <dimen name="tutorial_bottom_margin">100dp</dimen>
 </resources>

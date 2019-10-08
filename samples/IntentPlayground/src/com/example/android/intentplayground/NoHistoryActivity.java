@@ -17,6 +17,6 @@
 package com.example.android.intentplayground;
 
 /**
- * An activity with noHistory="true" set in AndroidManifest.xml
+ * An activity with noHistory="true" set in AndroidManifest.xml.
  */
 public class NoHistoryActivity extends BaseActivity {}

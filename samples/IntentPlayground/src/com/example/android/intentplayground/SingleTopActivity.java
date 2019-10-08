@@ -17,6 +17,6 @@
 package com.example.android.intentplayground;
 
 /**
- * An activity with launchMode="singleTop" set in AndroidManifest.xml
+ * An activity with launchMode="singleTop" set in AndroidManifest.xml.
  */
 public class SingleTopActivity extends BaseActivity {}
