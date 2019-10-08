@@ -1,0 +1,1 @@
+ALTER TABLE denormalized_view_recent_commit DROP COLUMN first_seen_datastudio_datetime;

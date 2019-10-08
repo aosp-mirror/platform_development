@@ -16,6 +16,7 @@
 
 package com.android.commands.monkey;
 
+import android.app.ActivityManager;
 import android.app.IActivityManager;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -66,8 +67,8 @@ public class MonkeyActivityEvent extends MonkeyEvent {
         }
 
         try {
-            iam.startActivity(null, null, intent, null, null, null, 0,
-                    0, null, null);
+            iam.startActivityAsUser(null, null, intent, null, null, null, 0,
+                    0, null, null, ActivityManager.getCurrentUser());
         } catch (RemoteException e) {
             Logger.err.println("** Failed talking with activity manager!");
             return MonkeyEvent.INJECT_ERROR_REMOTE_EXCEPTION;
