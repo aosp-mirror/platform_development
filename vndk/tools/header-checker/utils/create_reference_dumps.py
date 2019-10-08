@@ -39,9 +39,9 @@ def make_libs_for_product(libs, product, variant, targets):
 
 
 def get_ref_dump_dir_stem(ref_dump_dir, category, chosen_vndk_version,
-                          binder_bitness, arch_cpu):
+                          binder_bitness, arch):
     return os.path.join(ref_dump_dir, category, chosen_vndk_version,
-                        binder_bitness, arch_cpu)
+                        binder_bitness, arch)
 
 
 def find_and_remove_path(root_path, file_name=None):
@@ -66,7 +66,7 @@ def remove_references_for_all_arches_and_variants(ref_dump_dir,
         for category in ('ndk', 'platform', 'vndk'):
             dir_to_remove = get_ref_dump_dir_stem(
                 ref_dump_dir, category, chosen_vndk_version, binder_bitness,
-                target.get_arch_cpu_str())
+                target.get_arch_str())
             if libs:
                 for lib in libs:
                     find_and_remove_path(dir_to_remove,
@@ -96,7 +96,7 @@ def find_and_copy_lib_lsdumps(ref_dump_dir, chosen_vndk_version,
     for tag, path in arch_lsdump_paths:
         ref_dump_dir_stem = get_ref_dump_dir_stem(
             ref_dump_dir, tag_to_dir_name(tag), chosen_vndk_version,
-            binder_bitness, target.get_arch_cpu_str())
+            binder_bitness, target.get_arch_str())
         copy_reference_dump(
             path, os.path.join(ref_dump_dir_stem, 'source-based'), compress)
         num_created += 1
