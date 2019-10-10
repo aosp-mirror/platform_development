@@ -13,21 +13,11 @@ DIR=$1
 # changed in the process, making it easier to match 3rd party complaints/questions
 # with the source tree.
 #
-# sed on Mac OS takes -i SUFFIX and sed on Linux takes -iSUFFIX
-#
-if [ $HOST_OS = darwin ] ; then
-find $DIR -name "*.java" -o -name "*.xml" | xargs -n 1 \
-    sed \
-        -e "s/.*BEGIN_INCLUDE(.*//" \
-        -e "s/.*END_INCLUDE(.*//" \
-        -i ""
-else
 find $DIR -name "*.java" -o -name "*.xml" | xargs -n 1 \
     sed \
         -e "s/.*BEGIN_INCLUDE(.*//" \
         -e "s/.*END_INCLUDE(.*//" \
         -i
-fi
 
 #
 # Fix up the line endings of all text files. This also removes executable permissions.
