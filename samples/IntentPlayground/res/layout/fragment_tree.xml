@@ -28,15 +28,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/smallMargin"
-        android:layout_marginStart="@dimen/medMargin"
+        android:layout_marginStart="@dimen/smallMargin"
         android:layout_marginTop="@dimen/medMargin"
         android:text="@string/task_tree_title"
         android:textAppearance="@style/title" />
-    <LinearLayout
-        android:id="@+id/task_tree"
+
+
+    <androidx.recyclerview.widget.RecyclerView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:divider="@drawable/divider"
-        android:showDividers="middle"/>
+        android:id="@+id/tree_recycler">
+
+    </androidx.recyclerview.widget.RecyclerView>
 </LinearLayout>

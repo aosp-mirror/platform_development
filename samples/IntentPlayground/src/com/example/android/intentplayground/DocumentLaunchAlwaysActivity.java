@@ -17,6 +17,6 @@
 package com.example.android.intentplayground;
 
 /**
- * An activity with documentLaunch="always" set in AndroidManifest.xml
+ * An activity with documentLaunch="always" set in AndroidManifest.xml.
  */
 public class DocumentLaunchAlwaysActivity extends BaseActivity {}

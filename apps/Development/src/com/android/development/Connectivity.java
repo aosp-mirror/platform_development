@@ -700,7 +700,7 @@ public class Connectivity extends Activity {
         Log.e(TAG, "LINK STATS:  ");
         try {
             WifiActivityEnergyInfo info =
-                    mWm.getControllerActivityEnergyInfo(0);
+                    mWm.getControllerActivityEnergyInfo();
             if (info != null) {
                 mLinkStatsResults.setText(" power " + info.toString());
             } else {

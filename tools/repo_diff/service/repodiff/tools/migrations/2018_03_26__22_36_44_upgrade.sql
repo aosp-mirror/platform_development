@@ -1,0 +1,7 @@
+CREATE TABLE id_to_url_branch (
+  id SMALLINT NOT NULL AUTO_INCREMENT,
+  url VARCHAR(255) NOT NULL,
+  branch VARCHAR(255) NOT NULL,
+  PRIMARY KEY (id),
+  UNIQUE INDEX (url, branch)
+);

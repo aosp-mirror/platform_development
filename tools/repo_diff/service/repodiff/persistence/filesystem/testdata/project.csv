@@ -1,0 +1,671 @@
+Date,Downstream Project,Upstream Project,Diff Status,Files Changed,Line Insertions,Line Deletions,Line Changes,Commits Not Upstreamed
+2018/03/02,platform/frameworks/multidex,platform/frameworks/multidex,Modified Projects,34,707,540,1247,23
+2018/03/02,device/google/cuttlefish_common,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/safe-iop,platform/external/safe-iop,Modified Projects,2,8,1,9,1
+2018/03/02,platform/system/libfmq,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/mmc-utils,platform/external/mmc-utils,Modified Projects,2,22,21,43,1
+2018/03/02,platform/frameworks/compile/libbcc,platform/frameworks/compile/libbcc,Modified Projects,113,1611,2526,4137,48
+2018/03/02,platform/pdk,platform/pdk,Modified Projects,7,48,2,50,6
+2018/03/02,platform/system/keymaster,platform/system/keymaster,Modified Projects,82,1701,698,2399,59
+2018/03/02,platform/external/compiler-rt,platform/external/compiler-rt,Modified Projects,829,26574,5966,32540,29
+2018/03/02,platform/external/lzma,platform/external/lzma,Modified Projects,374,22457,14584,37041,10
+2018/03/02,platform/tools/external/gradle,platform/tools/external/gradle,Modified Projects,29,77,10,87,0
+2018/03/02,platform/packages/apps/StorageManager,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/squashfs-tools,platform/external/squashfs-tools,Modified Projects,7,347,62,409,180
+2018/03/02,platform/external/blktrace,platform/external/blktrace,Intact Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/Car/LatinIME,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/SpareParts,platform/packages/apps/SpareParts,Modified Projects,2,4,3,7,2
+2018/03/02,platform/external/webview_support_interfaces,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/hamcrest,platform/external/hamcrest,Modified Projects,193,11084,2287,13371,7
+2018/03/02,platform/system/iot/attestation,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/harfbuzz_ng,platform/external/harfbuzz_ng,Modified Projects,314,21669,10087,31756,620
+2018/03/02,platform/external/libogg,platform/external/libogg,Modified Projects,2,14,12,26,2
+2018/03/02,platform/system/core,platform/system/core,Modified Projects,1852,156609,92451,249060,2185
+2018/03/02,platform/packages/services/NetworkRecommendation,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/tools/test/connectivity,platform/tools/test/connectivity,Modified Projects,550,130094,13669,143763,1383
+2018/03/02,platform/external/speex,platform/external/speex,Modified Projects,3,58,133,191,7
+2018/03/02,platform/external/boringssl,platform/external/boringssl,Modified Projects,1359,868569,392501,1261070,77
+2018/03/02,platform/external/guava,platform/external/guava,Modified Projects,4,34,45,79,4
+2018/03/02,platform/frameworks/opt/calendar,platform/frameworks/opt/calendar,Modified Projects,4,161,50,211,2
+2018/03/02,platform/packages/apps/Gallery,platform/packages/apps/Gallery,Modified Projects,39,66,63,129,11
+2018/03/02,platform/external/lisa,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/mdnsresponder,platform/external/mdnsresponder,Modified Projects,181,40679,149,40828,12
+2018/03/02,platform/hardware/libhardware,platform/hardware/libhardware,Modified Projects,347,28190,10941,39131,265
+2018/03/02,platform/external/jline,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/system/chre,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/webrtc,platform/external/webrtc,Modified Projects,142,952,2526,3478,8
+2018/03/02,platform/external/cmockery,platform/external/cmockery,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/esd,platform/external/esd,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/libhevc,platform/external/libhevc,Modified Projects,41,2090,512,2602,49
+2018/03/02,platform/external/markdown,platform/external/markdown,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/xmlrpcpp,platform/external/xmlrpcpp,Modified Projects,3,3,3,6,2
+2018/03/02,platform/external/libunwind,platform/external/libunwind,Modified Projects,10,179,612,791,15
+2018/03/02,platform/external/kernel-headers,platform/external/kernel-headers,Modified Projects,947,28653,6585,35238,11
+2018/03/02,device/generic/mini-emulator-mips,device/generic/mini-emulator-mips,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/python/google-auth-httplib2,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/DocumentsUI,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/universal-tween-engine,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/mksh,platform/external/mksh,Modified Projects,36,9622,5459,15081,10
+2018/03/02,device/huawei/angler-kernel,device/huawei/angler-kernel,Modified Projects,1,0,0,0,0
+2018/03/02,platform/frameworks/compile/slang,platform/frameworks/compile/slang,Modified Projects,249,10339,1277,11616,62
+2018/03/02,platform/test/vti/fuzz_test_serving,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/tools/apksig,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/eyes-free,platform/external/eyes-free,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/giflib,platform/external/giflib,Modified Projects,8,135,58,193,4
+2018/03/02,platform/external/nist-pkits,platform/external/nist-pkits,Modified Projects,2,2,2,4,1
+2018/03/02,platform/external/gflags,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/libgsm,platform/external/libgsm,Modified Projects,44,5275,102,5377,4
+2018/03/02,platform/external/sl4a,platform/external/sl4a,Modified Projects,260,14610,5000,19610,212
+2018/03/02,platform/external/libdrm,platform/external/libdrm,Modified Projects,181,13624,3727,17351,199
+2018/03/02,platform/external/gptfdisk,platform/external/gptfdisk,Modified Projects,17,43,6,49,6
+2018/03/02,platform/external/xz-embedded,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/google-styleguide,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/emma,platform/external/emma,Modified Projects,1,5,1,6,2
+2018/03/02,platform/external/python/googleapis,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/vixl,platform/external/vixl,Modified Projects,4309,8527937,1870818,10398755,368
+2018/03/02,platform/packages/apps/Browser2,platform/packages/apps/Browser2,Modified Projects,2,7,1,8,3
+2018/03/02,platform/packages/apps/PackageInstaller,platform/packages/apps/PackageInstaller,Modified Projects,454,12879,6841,19720,169
+2018/03/02,platform/packages/apps/ExactCalculator,platform/packages/apps/ExactCalculator,Modified Projects,189,11457,3286,14743,154
+2018/03/02,device/google/marlin,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,device/generic/uml,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,device/generic/car,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/libvpx,platform/external/libvpx,Modified Projects,1069,190505,181038,371543,22
+2018/03/02,platform/build,platform/build,Modified Projects,1289,29097,103359,132456,1334
+2018/03/02,platform/external/lmfit,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/cblas,platform/external/cblas,Modified Projects,2,192,193,385,5
+2018/03/02,platform/external/mockftpserver,platform/external/mockftpserver,Modified Projects,1,37,0,37,3
+2018/03/02,platform/external/perfetto,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/freetype,platform/external/freetype,Modified Projects,727,207147,16123,223270,4491
+2018/03/02,platform/external/javaparser,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,device/google/cuttlefish_kernel,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/system/hwservicemanager,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/seccomp-tests,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/hardware/broadcom/wlan,platform/hardware/broadcom/wlan,Modified Projects,24,313,129,442,24
+2018/03/02,device/google/contexthub,device/google/contexthub,Modified Projects,509,91811,55404,147215,416
+2018/03/02,platform/hardware/qcom/display,platform/hardware/qcom/display,Modified Projects,717,121078,2678,123756,174
+2018/03/02,platform/frameworks/opt/bitmap,platform/frameworks/opt/bitmap,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/libpng,platform/external/libpng,Modified Projects,274,57096,2528,59624,9
+2018/03/02,platform/external/caliper,platform/external/caliper,Modified Projects,6,104,28,132,7
+2018/03/02,platform/hardware/intel/audio_media,platform/hardware/intel/audio_media,Modified Projects,1,1,1,2,1
+2018/03/02,platform/test/vti/alert,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/DevCamera,platform/packages/apps/DevCamera,Modified Projects,3,110,5,115,1
+2018/03/02,platform/external/python/pyparsing,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/iputils,platform/external/iputils,Modified Projects,2,12,0,12,4
+2018/03/02,platform/external/iw,platform/external/iw,Modified Projects,1,7,3,10,3
+2018/03/02,device/common,device/common,Modified Projects,3,52,14,66,10
+2018/03/02,platform/hardware/intel/common/omx-components,platform/hardware/intel/common/omx-components,Modified Projects,877,51,336747,336798,8
+2018/03/02,platform/packages/apps/Car/LocalMediaPlayer,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/python/google-gax,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/jsoncpp,platform/external/jsoncpp,Modified Projects,2,29,27,56,4
+2018/03/02,device/generic/common,device/generic/common,Modified Projects,1,73,0,73,5
+2018/03/02,platform/frameworks/opt/colorpicker,platform/frameworks/opt/colorpicker,Modified Projects,30,1,1,2,2
+2018/03/02,platform/external/drrickorang,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/protobuf,platform/external/protobuf,Modified Projects,1460,448521,84925,533446,32
+2018/03/02,platform/hardware/nxp/secure_element,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/jsmn,platform/external/jsmn,Modified Projects,2,23,24,47,2
+2018/03/02,device/google/dragon-kernel,device/google/dragon-kernel,Modified Projects,2,0,0,0,0
+2018/03/02,platform/external/fonttools,platform/external/fonttools,Modified Projects,1,39,0,39,1
+2018/03/02,platform/external/aac,platform/external/aac,Modified Projects,18,124,150,274,13
+2018/03/02,platform/external/guice,platform/external/guice,Modified Projects,3,107,174,281,3
+2018/03/02,platform/packages/apps/Car/LensPicker,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/frameworks/data-binding,platform/frameworks/data-binding,Modified Projects,186,9674,3276,12950,20
+2018/03/02,platform/external/libpcap,platform/external/libpcap,Modified Projects,236,30402,18083,48485,8
+2018/03/02,platform/external/llvm,platform/external/llvm,Modified Projects,9078,720363,264391,984754,44
+2018/03/02,platform/external/hyphenation-patterns,platform/external/hyphenation-patterns,Modified Projects,19,19282,502,19784,2
+2018/03/02,platform/packages/apps/BasicSmsReceiver,platform/packages/apps/BasicSmsReceiver,Modified Projects,32,5,4,9,3
+2018/03/02,platform/external/dlmalloc,platform/external/dlmalloc,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/mockito,platform/external/mockito,Modified Projects,1376,71433,61952,133385,14
+2018/03/02,platform/packages/apps/Test/connectivity,platform/packages/apps/Test/connectivity,Modified Projects,50,4443,508,4951,34
+2018/03/02,platform/hardware/intel/img/psb_video,platform/hardware/intel/img/psb_video,Modified Projects,24,403,245,648,9
+2018/03/02,platform/system/vold,platform/system/vold,Modified Projects,55,3686,2148,5834,97
+2018/03/02,platform/external/xmp_toolkit,platform/external/xmp_toolkit,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/iproute2,platform/external/iproute2,Modified Projects,466,42146,14669,56815,919
+2018/03/02,platform/external/tinyxml2,platform/external/tinyxml2,Modified Projects,31,14249,1555,15804,9
+2018/03/02,platform/external/python/oauth2client,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/hardware/qcom/camera,platform/hardware/qcom/camera,Modified Projects,189,45726,13356,59082,218
+2018/03/02,platform/packages/services/Telephony,platform/packages/services/Telephony,Modified Projects,665,32926,42731,75657,546
+2018/03/02,platform/external/glide,platform/external/glide,Modified Projects,5,98,4,102,2
+2018/03/02,platform/external/chromium-webview,platform/external/chromium-webview,Modified Projects,7,5,7,12,0
+2018/03/02,platform/external/golang-protobuf,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/frameworks/rs,platform/frameworks/rs,Modified Projects,2010,132703,52914,185617,388
+2018/03/02,platform/external/libavc,platform/external/libavc,Modified Projects,95,2939,1957,4896,94
+2018/03/02,platform/packages/providers/BlockedNumberProvider,platform/packages/providers/BlockedNumberProvider,Modified Projects,34,11,3,14,10
+2018/03/02,device/google/accessory/arduino,device/google/accessory/arduino,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/tpm2,platform/external/tpm2,Modified Projects,1025,792,170603,171395,40
+2018/03/02,device/google/vrservices,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/ant-glob,platform/external/ant-glob,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/easymock,platform/external/easymock,Modified Projects,2,3,3,6,2
+2018/03/02,platform/test/vts-testcase/nbu,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/libunwind_llvm,platform/external/libunwind_llvm,Modified Projects,48,3771,1132,4903,122
+2018/03/02,platform/packages/apps/TvSettings,platform/packages/apps/TvSettings,Modified Projects,437,11904,14501,26405,185
+2018/03/02,platform/hardware/intel/common/libwsbm,platform/hardware/intel/common/libwsbm,Modified Projects,3,13,5,18,2
+2018/03/02,device/generic/mini-emulator-arm64,device/generic/mini-emulator-arm64,Modified Projects,1,2,2,4,1
+2018/03/02,platform/external/google-fonts/carrois-gothic-sc,platform/external/google-fonts/carrois-gothic-sc,Intact Projects,0,0,0,0,0
+2018/03/02,platform/frameworks/wilhelm,platform/frameworks/wilhelm,Modified Projects,147,3462,2894,6356,34
+2018/03/02,platform/external/android-clat,platform/external/android-clat,Modified Projects,7,21,10,31,7
+2018/03/02,platform/developers/demos,platform/developers/demos,Modified Projects,1,2,2,4,1
+2018/03/02,platform/system/libvintf,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/python/appdirs,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/test/sts,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/frameworks/ml,platform/frameworks/ml,Modified Projects,797,67360,7293,74653,246
+2018/03/02,device/generic/goldfish,device/generic/goldfish,Modified Projects,241,10682,40783,51465,127
+2018/03/02,platform/packages/apps/UnifiedEmail,platform/packages/apps/UnifiedEmail,Modified Projects,73,223,130,353,8
+2018/03/02,platform/external/shaderc/spirv-headers,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/Car/Media,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/sonic,platform/external/sonic,Modified Projects,2,14,13,27,3
+2018/03/02,platform/hardware/qcom/power,platform/hardware/qcom/power,Modified Projects,1,1,0,1,1
+2018/03/02,platform/packages/providers/DownloadProvider,platform/packages/providers/DownloadProvider,Modified Projects,145,976,860,1836,67
+2018/03/02,platform/external/testng,platform/external/testng,Modified Projects,3,71,138,209,2
+2018/03/02,platform/external/python/enum34,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/hardware/akm,platform/hardware/akm,Modified Projects,9,23,14,37,5
+2018/03/02,platform/packages/apps/Provision,platform/packages/apps/Provision,Modified Projects,1,1,0,1,1
+2018/03/02,platform/packages/services/Mms,platform/packages/services/Mms,Modified Projects,7,65,11,76,8
+2018/03/02,platform/external/apache-harmony,platform/external/apache-harmony,Modified Projects,1030,5663,86607,92270,55
+2018/03/02,platform/external/scapy,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/libnativehelper,platform/libnativehelper,Modified Projects,39,3635,702,4337,27
+2018/03/02,platform/external/mp4parser,platform/external/mp4parser,Modified Projects,1,2,2,4,1
+2018/03/02,device/asus/fugu,device/asus/fugu,Modified Projects,66,1837,934,2771,79
+2018/03/02,platform/external/ksoap2,platform/external/ksoap2,Modified Projects,1,1,1,2,1
+2018/03/02,platform/external/zlib,platform/external/zlib,Modified Projects,80,2597,2373,4970,20
+2018/03/02,platform/external/dexmaker,platform/external/dexmaker,Modified Projects,384,6182,65919,72101,26
+2018/03/02,platform/external/libcxx,platform/external/libcxx,Modified Projects,4890,228917,85679,314596,1815
+2018/03/02,platform/external/owasp/sanitizer,platform/external/owasp/sanitizer,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/crcalc,platform/external/crcalc,Modified Projects,12,1014,27,1041,10
+2018/03/02,platform/external/sonivox,platform/external/sonivox,Modified Projects,18,167,124,291,8
+2018/03/02,platform/external/vboot_reference,platform/external/vboot_reference,Modified Projects,8,52,8,60,8
+2018/03/02,platform/external/libmtp,platform/external/libmtp,Modified Projects,627,272614,50310,322924,1766
+2018/03/02,platform/bootable/recovery,platform/bootable/recovery,Modified Projects,737,21578,19445,41023,405
+2018/03/02,platform/external/python/rsa,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/hardware/broadcom/libbt,platform/hardware/broadcom/libbt,Modified Projects,19,286,988,1274,20
+2018/03/02,platform/development,platform/development,Modified Projects,5747,214723,508526,723249,484
+2018/03/02,platform/platform_testing,platform/platform_testing,Modified Projects,407,21369,18496,39865,314
+2018/03/02,platform/external/antlr,platform/external/antlr,Modified Projects,3,21,35,56,2
+2018/03/02,toolchain/pgo-profiles,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/python/scipy,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/google-fonts/coming-soon,platform/external/google-fonts/coming-soon,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/wpa_supplicant_8,platform/external/wpa_supplicant_8,Modified Projects,437,67204,11716,78920,144
+2018/03/02,platform/system/bt,platform/system/bt,Modified Projects,1603,335629,313749,649378,1183
+2018/03/02,platform/packages/providers/UserDictionaryProvider,platform/packages/providers/UserDictionaryProvider,Modified Projects,34,8,3,11,5
+2018/03/02,platform/external/abi-compliance-checker,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/Car/SystemUpdater,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,device/google/muskie,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/fio,platform/external/fio,Modified Projects,248,27821,7867,35688,5
+2018/03/02,platform/external/devlib,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/dnsmasq,platform/external/dnsmasq,Modified Projects,76,194,25653,25847,11
+2018/03/02,platform/packages/apps/CarrierConfig,platform/packages/apps/CarrierConfig,Modified Projects,438,4922,1075,5997,95
+2018/03/02,platform/tools/apkzlib,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/python/cpython3,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/python/cpython2,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/libnfnetlink,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/hardware/qcom/bootctrl,platform/hardware/qcom/bootctrl,Modified Projects,2,230,169,399,10
+2018/03/02,platform/external/avb,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,kernel/configs,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/build/kati,platform/build/kati,Modified Projects,121,3669,1155,4824,98
+2018/03/02,platform/external/noto-fonts,platform/external/noto-fonts,Modified Projects,75,7466,328,7794,37
+2018/03/02,platform/external/ppp,platform/external/ppp,Modified Projects,1,0,3,3,0
+2018/03/02,platform/external/eigen,platform/external/eigen,Modified Projects,1091,136441,45090,181531,11
+2018/03/02,platform/build/soong,platform/build/soong,Modified Projects,305,55308,10839,66147,995
+2018/03/02,platform/external/python/olefile,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/frameworks/opt/timezonepicker,platform/frameworks/opt/timezonepicker,Modified Projects,61,3,3,6,3
+2018/03/02,platform/external/python/grpcio,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/elfutils,platform/external/elfutils,Modified Projects,9,187,805,992,3
+2018/03/02,platform/external/libcups,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/dng_sdk,platform/external/dng_sdk,Modified Projects,8,255,179,434,12
+2018/03/02,platform/external/libevent,platform/external/libevent,Modified Projects,200,66156,12334,78490,12
+2018/03/02,platform/external/libdaemon,platform/external/libdaemon,Modified Projects,1,2,0,2,1
+2018/03/02,platform/external/valgrind,platform/external/valgrind,Modified Projects,1511,2644006,403782,3047788,13
+2018/03/02,platform/external/libchrome,platform/external/libchrome,Modified Projects,981,64230,78050,142280,45
+2018/03/02,platform/external/rmi4utils,platform/external/rmi4utils,Modified Projects,8,215,6,221,3
+2018/03/02,platform/system/libhwbinder,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/hardware/qcom/wlan,platform/hardware/qcom/wlan,Modified Projects,47,7781,2103,9884,86
+2018/03/02,platform/packages/services/Telecomm,platform/packages/services/Telecomm,Modified Projects,325,25249,6424,31673,322
+2018/03/02,platform/system/connectivity/wifilogd,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/system/hardware/interfaces,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,device/google/atv,device/google/atv,Modified Projects,96,2109,16,2125,26
+2018/03/02,platform/test/vti/dashboard,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/wallpapers/LivePicker,platform/packages/wallpapers/LivePicker,Modified Projects,100,918,173,1091,36
+2018/03/02,platform/external/python/Pillow,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/python/grpc-google-iam-v1,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/subsampling-scale-image-view,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/libnetfilter_conntrack,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/hardware/google/apf,platform/hardware/google/apf,Modified Projects,4,91,2,93,3
+2018/03/02,platform/hardware/intel/common/utils,platform/hardware/intel/common/utils,Modified Projects,21,383,207,590,15
+2018/03/02,platform/system/media,platform/system/media,Modified Projects,124,8148,2935,11083,137
+2018/03/02,platform/tools/repohooks,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/Car/Stream,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/hardware/marvell/bt,platform/hardware/marvell/bt,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/libcap-ng,platform/external/libcap-ng,Modified Projects,2,16,27,43,1
+2018/03/02,platform/hardware/intel/img/hwcomposer,platform/hardware/intel/img/hwcomposer,Modified Projects,45,1722,366,2088,19
+2018/03/02,platform/external/jacoco,platform/external/jacoco,Modified Projects,756,16097,3025,19122,174
+2018/03/02,platform/external/opencv,platform/external/opencv,Modified Projects,6,52,11,63,6
+2018/03/02,platform/external/libcxxabi,platform/external/libcxxabi,Modified Projects,113,8725,5444,14169,197
+2018/03/02,platform/external/google-api-services-storage,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/nanohttpd,platform/external/nanohttpd,Intact Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/CertInstaller,platform/packages/apps/CertInstaller,Modified Projects,51,212,221,433,21
+2018/03/02,platform/external/tcpdump,platform/external/tcpdump,Modified Projects,745,367599,11762,379361,11
+2018/03/02,platform/external/puffin,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/frameworks/opt/net/voip,platform/frameworks/opt/net/voip,Modified Projects,7,103,103,206,4
+2018/03/02,platform/external/fec,platform/external/fec,Modified Projects,2,28,25,53,3
+2018/03/02,platform/external/unicode,platform/external/unicode,Modified Projects,22,4837,2824,7661,8
+2018/03/02,device/generic/x86_64,device/generic/x86_64,Modified Projects,1,3,4,7,2
+2018/03/02,platform/tools/metalava,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/piex,platform/external/piex,Modified Projects,6,108,62,170,12
+2018/03/02,platform/external/bsdiff,platform/external/bsdiff,Modified Projects,83,5189,680,5869,53
+2018/03/02,device/generic/mini-emulator-x86_64,device/generic/mini-emulator-x86_64,Modified Projects,1,1,9,10,1
+2018/03/02,platform/packages/providers/ApplicationsProvider,platform/packages/providers/ApplicationsProvider,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/python/parse,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/cn-cbor,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/inputmethods/OpenWnn,platform/packages/inputmethods/OpenWnn,Modified Projects,4,4,3,7,2
+2018/03/02,platform/external/apache-xml,platform/external/apache-xml,Modified Projects,1,2,0,2,1
+2018/03/02,platform/external/nist-sip,platform/external/nist-sip,Modified Projects,3,51,0,51,3
+2018/03/02,platform/external/python/setuptools,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/hardware/qcom/msm8x84,platform/hardware/qcom/msm8x84,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/oauth,platform/external/oauth,Intact Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/Dialer,platform/packages/apps/Dialer,Modified Projects,7114,363546,114872,478418,736
+2018/03/02,platform/external/neven,platform/external/neven,Modified Projects,4,155,121,276,4
+2018/03/02,platform/external/libmicrohttpd,platform/external/libmicrohttpd,Modified Projects,1,7,1,8,1
+2018/03/02,platform/external/libese,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/EmergencyInfo,platform/packages/apps/EmergencyInfo,Modified Projects,153,4574,2608,7182,70
+2018/03/02,platform/external/google-breakpad,platform/external/google-breakpad,Modified Projects,2,31,2,33,4
+2018/03/02,platform/external/jdiff,platform/external/jdiff,Modified Projects,21,781,737,1518,5
+2018/03/02,platform/hardware/qcom/msm8960,platform/hardware/qcom/msm8960,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/v4l2_codec2,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/sqlite,platform/external/sqlite,Modified Projects,20,117255,44754,162009,30
+2018/03/02,platform/packages/screensavers/PhotoTable,platform/packages/screensavers/PhotoTable,Modified Projects,33,25,22,47,5
+2018/03/02,platform/packages/apps/Car/Settings,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/services/BuiltInPrintService,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/jsr330,platform/external/jsr330,Modified Projects,2,39,50,89,2
+2018/03/02,platform/external/nanopb-c,platform/external/nanopb-c,Modified Projects,2,46,62,108,3
+2018/03/02,platform/cts,platform/cts,Modified Projects,7531,792553,144723,937276,4325
+2018/03/02,platform/external/proguard,platform/external/proguard,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/libxml2,platform/external/libxml2,Modified Projects,499,56435,6404,62839,239
+2018/03/02,platform/external/jcommander,platform/external/jcommander,Modified Projects,2,34,51,85,2
+2018/03/02,platform/packages/apps/Nfc,platform/packages/apps/Nfc,Modified Projects,301,24141,32900,57041,121
+2018/03/02,platform/test/vts-testcase/hal,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/hardware/intel/sensors,platform/hardware/intel/sensors,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/tremolo,platform/external/tremolo,Modified Projects,5,337,292,629,8
+2018/03/02,platform/external/pdfium,platform/external/pdfium,Modified Projects,2980,460282,512194,972476,10
+2018/03/02,device/linaro/bootloader/edk2,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/Settings,platform/packages/apps/Settings,Modified Projects,2811,374428,181665,556093,2477
+2018/03/02,platform/system/tools/aidl,platform/system/tools/aidl,Modified Projects,53,2265,788,3053,50
+2018/03/02,platform/external/timezonepicker-support,platform/external/timezonepicker-support,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/toybox,platform/external/toybox,Modified Projects,314,13263,7877,21140,533
+2018/03/02,platform/frameworks/base,platform/frameworks/base,Modified Projects,22628,1269993,2773648,4043641,12698
+2018/03/02,platform/packages/apps/Launcher3,platform/packages/apps/Launcher3,Modified Projects,1124,63660,52848,116508,1111
+2018/03/02,platform/packages/apps/Launcher2,platform/packages/apps/Launcher2,Modified Projects,32,23,15,38,17
+2018/03/02,platform/frameworks/ex,platform/frameworks/ex,Modified Projects,22,208,65,273,20
+2018/03/02,platform/frameworks/opt/net/ims,platform/frameworks/opt/net/ims,Modified Projects,25,3592,3455,7047,70
+2018/03/02,platform/packages/apps/Camera2,platform/packages/apps/Camera2,Modified Projects,91,239,2300,2539,34
+2018/03/02,platform/packages/apps/SecureElement,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/kmod,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/clang,platform/external/clang,Modified Projects,3325,313067,79490,392557,32
+2018/03/02,platform/external/python/futures,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/conscrypt,platform/external/conscrypt,Modified Projects,424,115326,27723,143049,425
+2018/03/02,platform/packages/apps/Car/Launcher,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/snakeyaml,platform/external/snakeyaml,Modified Projects,5,67,97,164,4
+2018/03/02,platform/external/libdivsufsort,platform/external/libdivsufsort,Modified Projects,2,54,55,109,1
+2018/03/02,platform/frameworks/opt/vcard,platform/frameworks/opt/vcard,Modified Projects,10,206,7,213,8
+2018/03/02,platform/developers/build,platform/developers/build,Modified Projects,2190,76848,18604,95452,26
+2018/03/02,platform/external/replicaisland,platform/external/replicaisland,Modified Projects,1,3,1,4,2
+2018/03/02,platform/external/libmojo,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/frameworks/opt/inputconnectioncommon,platform/frameworks/opt/inputconnectioncommon,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/androidplot,platform/external/androidplot,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/slf4j,platform/external/slf4j,Modified Projects,1,35,0,35,3
+2018/03/02,platform/hardware/interfaces,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,device/google/cuttlefish,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,device/google/accessory/demokit,device/google/accessory/demokit,Intact Projects,0,0,0,0,0
+2018/03/02,platform/hardware/qcom/gps,platform/hardware/qcom/gps,Modified Projects,363,56807,1145,57952,83
+2018/03/02,platform/system/libhidl,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/python/google-auth,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/Gallery2,platform/packages/apps/Gallery2,Modified Projects,90,159,137,296,26
+2018/03/02,platform/frameworks/opt/net/wifi,platform/frameworks/opt/net/wifi,Modified Projects,438,111327,46605,157932,1060
+2018/03/02,platform/external/brotli,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,device/google/wahoo-kernel,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/tools/tradefederation,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/libtextclassifier,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/hardware/intel/bootstub,platform/hardware/intel/bootstub,Modified Projects,1,1,0,1,1
+2018/03/02,platform/hardware/intel/common/libva,platform/hardware/intel/common/libva,Modified Projects,5,14,14,28,5
+2018/03/02,platform/external/libyuv,platform/external/libyuv,Modified Projects,187,69775,23056,92831,15
+2018/03/02,platform/external/libldac,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/libcore,platform/libcore,Modified Projects,3123,395148,211140,606288,1274
+2018/03/02,platform/hardware/qcom/keymaster,platform/hardware/qcom/keymaster,Modified Projects,2,14,10,24,4
+2018/03/02,platform/external/flatbuffers,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/system/connectivity/wificond,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/tools/external/fat32lib,platform/tools/external/fat32lib,Modified Projects,1,2,0,2,1
+2018/03/02,platform/external/zopfli,platform/external/zopfli,Modified Projects,2,31,24,55,2
+2018/03/02,platform/hardware/intel/common/libstagefrighthw,platform/hardware/intel/common/libstagefrighthw,Modified Projects,2,3,2,5,2
+2018/03/02,platform/hardware/qcom/media,platform/hardware/qcom/media,Modified Projects,303,162696,803,163499,86
+2018/03/02,platform/external/libjpeg-turbo,platform/external/libjpeg-turbo,Modified Projects,288,21945,7273,29218,12
+2018/03/02,platform/external/google-tv-pairing-protocol,platform/external/google-tv-pairing-protocol,Modified Projects,2,5,2,7,2
+2018/03/02,platform/external/libphonenumber,platform/external/libphonenumber,Modified Projects,905,3415,1602,5017,16
+2018/03/02,platform/tools/tradefederation/contrib,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/libbrillo,platform/external/libbrillo,Modified Projects,81,1964,945,2909,33
+2018/03/02,platform/external/libbackup,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/services/Car,platform/packages/services/Car,Modified Projects,1230,110722,142235,252957,527
+2018/03/02,platform/external/python/protobuf,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,device/generic/mini-emulator-x86,device/generic/mini-emulator-x86,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/junit-params,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/junit,platform/external/junit,Modified Projects,353,16973,12540,29513,14
+2018/03/02,platform/packages/apps/WallpaperPicker,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/Email,platform/packages/apps/Email,Modified Projects,30,16,8,24,4
+2018/03/02,platform/frameworks/opt/chips,platform/frameworks/opt/chips,Modified Projects,81,369,251,620,19
+2018/03/02,device/linaro/hikey,device/linaro/hikey,Modified Projects,195,13096,648,13744,198
+2018/03/02,platform/compatibility/cdd,platform/compatibility/cdd,Modified Projects,76,5884,3278,9162,145
+2018/03/02,platform/packages/apps/QuickSearchBox,platform/packages/apps/QuickSearchBox,Modified Projects,2,6,2,8,2
+2018/03/02,platform/external/apache-commons-math,platform/external/apache-commons-math,Modified Projects,2,2,0,2,1
+2018/03/02,platform/external/v8,platform/external/v8,Modified Projects,7127,616945,1368743,1985688,17
+2018/03/02,platform/packages/providers/PartnerBookmarksProvider,platform/packages/providers/PartnerBookmarksProvider,Modified Projects,2,4,1,5,2
+2018/03/02,platform/packages/apps/LegacyCamera,platform/packages/apps/LegacyCamera,Modified Projects,11,44,23,67,7
+2018/03/02,platform/packages/providers/CallLogProvider,platform/packages/providers/CallLogProvider,Modified Projects,6,11,11,22,6
+2018/03/02,platform/external/roboto-fonts,platform/external/roboto-fonts,Modified Projects,23,12,4,16,4
+2018/03/02,platform/external/google-benchmark,platform/external/google-benchmark,Modified Projects,96,9869,3407,13276,272
+2018/03/02,platform/external/libmpeg2,platform/external/libmpeg2,Modified Projects,32,901,420,1321,33
+2018/03/02,platform/external/mesa3d,platform/external/mesa3d,Modified Projects,6615,1414523,529807,1944330,26783
+2018/03/02,platform/external/javasqlite,platform/external/javasqlite,Modified Projects,2,15,26,41,3
+2018/03/02,platform/packages/apps/Tag,platform/packages/apps/Tag,Modified Projects,85,126,14,140,7
+2018/03/02,device/generic/mips64,device/generic/mips64,Modified Projects,1,1,1,2,1
+2018/03/02,platform/packages/providers/BookmarkProvider,platform/packages/providers/BookmarkProvider,Modified Projects,2,3,0,3,2
+2018/03/02,platform/external/jarjar,platform/external/jarjar,Modified Projects,3,45,50,95,3
+2018/03/02,platform/external/bouncycastle,platform/external/bouncycastle,Modified Projects,256,9882,17733,27615,26
+2018/03/02,device/linaro/bootloader/OpenPlatformPkg,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/frameworks/av,platform/frameworks/av,Modified Projects,2570,197938,253629,451567,1468
+2018/03/02,device/sample,device/sample,Modified Projects,6,742,301,1043,36
+2018/03/02,platform/frameworks/minikin,platform/frameworks/minikin,Modified Projects,127,8891,3175,12066,83
+2018/03/02,platform/external/gemmlowp,platform/external/gemmlowp,Modified Projects,122,75248,42203,117451,12
+2018/03/02,platform/external/python/enum,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/chromium-trace,platform/external/chromium-trace,Modified Projects,7044,32855,2459412,2492267,14
+2018/03/02,platform/external/jemalloc,platform/external/jemalloc,Modified Projects,138,11264,6103,17367,260
+2018/03/02,platform/external/x264,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/jsr305,platform/external/jsr305,Modified Projects,3,28,34,62,3
+2018/03/02,platform/packages/inputmethods/LatinIME,platform/packages/inputmethods/LatinIME,Modified Projects,320,1021,1277,2298,75
+2018/03/02,platform/external/smali,platform/external/smali,Modified Projects,255,21928,15611,37539,140
+2018/03/02,platform/frameworks/opt/telephony,platform/frameworks/opt/telephony,Modified Projects,386,75196,32196,107392,897
+2018/03/02,platform/external/python/pyasn1-modules,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,device/generic/qemu,device/generic/qemu,Modified Projects,11,167,34,201,1
+2018/03/02,platform/external/mtpd,platform/external/mtpd,Modified Projects,5,41,77,118,5
+2018/03/02,platform/external/tinycompress,platform/external/tinycompress,Modified Projects,3,92,21,113,3
+2018/03/02,platform/packages/apps/Car/Radio,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/rootdev,platform/external/rootdev,Modified Projects,1,8,8,16,3
+2018/03/02,platform/external/libxcam,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/bionic,platform/bionic,Modified Projects,3020,114830,84211,199041,1159
+2018/03/02,platform/system/tools/hidl,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/libusb,platform/external/libusb,Modified Projects,228,50055,44062,94117,924
+2018/03/02,platform/packages/apps/MusicFX,platform/packages/apps/MusicFX,Modified Projects,8,43,45,88,6
+2018/03/02,platform/external/jsilver,platform/external/jsilver,Modified Projects,2,20,27,47,1
+2018/03/02,platform/frameworks/opt/inputmethodcommon,platform/frameworks/opt/inputmethodcommon,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/python/httplib2,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/frameworks/compile/mclinker,platform/frameworks/compile/mclinker,Modified Projects,46,475,944,1419,6
+2018/03/02,platform/external/autotest,platform/external/autotest,Modified Projects,5537,242826,341215,584041,4445
+2018/03/02,platform/external/libvorbis,platform/external/libvorbis,Modified Projects,1,6,0,6,1
+2018/03/02,platform/system/timezone,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,device/generic/arm64,device/generic/arm64,Modified Projects,1,0,1,1,0
+2018/03/02,platform/external/ply,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/art,platform/art,Modified Projects,4705,519339,182140,701479,3725
+2018/03/02,platform/external/archive-patcher,platform/external/archive-patcher,Modified Projects,56,7080,0,7080,7
+2018/03/02,platform/external/error_prone,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/linux-kselftest,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/system/tpm,platform/system/tpm,Modified Projects,202,23645,29113,52758,20
+2018/03/02,platform/external/googletest,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/strace,platform/external/strace,Modified Projects,4749,365130,26927,392057,1004
+2018/03/02,platform/system/nvram,platform/system/nvram,Modified Projects,62,10043,0,10043,47
+2018/03/02,platform/external/python/google-cloud-pubsub,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,device/generic/x86,device/generic/x86,Modified Projects,1,1,1,2,1
+2018/03/02,platform/test/vts-testcase/kernel,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/frameworks/opt/car/services,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/e2fsprogs,platform/external/e2fsprogs,Modified Projects,1211,163584,38989,202573,1077
+2018/03/02,platform/packages/apps/Bluetooth,platform/packages/apps/Bluetooth,Modified Projects,853,70337,43031,113368,721
+2018/03/02,platform/external/wycheproof,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/Car/libs,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/python/numpy,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/spirv-llvm,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/hardware/intel/img/psb_headers,platform/hardware/intel/img/psb_headers,Modified Projects,3,100,9,109,1
+2018/03/02,platform/external/fsck_msdos,platform/external/fsck_msdos,Modified Projects,1,9,1,10,2
+2018/03/02,platform/hardware/intel/common/wrs_omxil_core,platform/hardware/intel/common/wrs_omxil_core,Modified Projects,3,17,1,18,3
+2018/03/02,platform/frameworks/layoutlib,platform/frameworks/base,Forked Projects,31710,38031,6263427,6301458,0
+2018/03/02,platform/test/vts-testcase/hal-trace,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/deqp,platform/external/deqp,Modified Projects,1218,1312995,1341221,2654216,831
+2018/03/02,platform/packages/apps/TimeZoneUpdater,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/chromium-libpac,platform/external/chromium-libpac,Modified Projects,2,2,1,3,1
+2018/03/02,platform/test/vts-testcase/fuzz,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/screensavers/WebView,platform/packages/screensavers/WebView,Modified Projects,1,1,0,1,1
+2018/03/02,device/google/marlin-kernel,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/Car/UserManagement,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/hardware/qcom/msm8x27,platform/hardware/qcom/msm8x27,Intact Projects,0,0,0,0,0
+2018/03/02,platform/hardware/qcom/msm8x26,platform/hardware/qcom/msm8x26,Modified Projects,4,60,33,93,1
+2018/03/02,platform/tools/acloud,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/python/uritemplates,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/hardware/qcom/bt,platform/hardware/qcom/bt,Modified Projects,58,14744,190,14934,41
+2018/03/02,platform/external/swiftshader,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/lz4,platform/external/lz4,Modified Projects,125,16252,6371,22623,667
+2018/03/02,platform/system/update_engine,platform/system/update_engine,Modified Projects,381,25622,14508,40130,382
+2018/03/02,platform/external/trappy,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,device/generic/armv7-a-neon,device/generic/armv7-a-neon,Modified Projects,2,2,2,4,3
+2018/03/02,platform/external/f2fs-tools,platform/external/f2fs-tools,Modified Projects,61,15792,1582,17374,304
+2018/03/02,platform/system/security,platform/system/security,Modified Projects,75,8144,4618,12762,65
+2018/03/02,platform/external/google-fonts/cutive-mono,platform/external/google-fonts/cutive-mono,Intact Projects,0,0,0,0,0
+2018/03/02,platform/system/netd,platform/system/netd,Modified Projects,207,22969,3705,26674,290
+2018/03/02,platform/external/libexif,platform/external/libexif,Modified Projects,4,89,73,162,4
+2018/03/02,platform/external/python/six,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/test/vts-testcase/performance,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/stressapptest,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/hardware/qcom/neuralnetworks/hvxservice,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/javassist,platform/external/javassist,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/libvncserver,platform/external/libvncserver,Modified Projects,3,349,2,351,3
+2018/03/02,platform/frameworks/opt/photoviewer,platform/frameworks/opt/photoviewer,Modified Projects,93,66,602,668,11
+2018/03/02,platform/external/shflags,platform/external/shflags,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/libedit,platform/external/libedit,Intact Projects,0,0,0,0,0
+2018/03/02,device/google/dragon,device/google/dragon,Modified Projects,186,2353,1118,3471,100
+2018/03/02,platform/external/cros/system_api,platform/external/cros/system_api,Modified Projects,38,2017,76,2093,165
+2018/03/02,platform/external/expat,platform/external/expat,Modified Projects,126,24867,2715,27582,8
+2018/03/02,platform/packages/apps/CellBroadcastReceiver,platform/packages/apps/CellBroadcastReceiver,Modified Projects,427,13811,8581,22392,149
+2018/03/02,platform/external/kotlinc,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/scrypt,platform/external/scrypt,Modified Projects,15,259,369,628,7
+2018/03/02,platform/external/skia,platform/external/skia,Modified Projects,4877,684377,338929,1023306,5518
+2018/03/02,platform/external/netcat,platform/external/netcat,Modified Projects,1,7,1,8,1
+2018/03/02,device/huawei/angler,device/huawei/angler,Modified Projects,329,4413,31195,35608,219
+2018/03/02,platform/external/dtc,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/abi-dumper,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/providers/ContactsProvider,platform/packages/providers/ContactsProvider,Modified Projects,134,5983,3343,9326,82
+2018/03/02,platform/external/mockwebserver,platform/external/mockwebserver,Modified Projects,2,11,3,14,2
+2018/03/02,platform/system/ca-certificates,platform/system/ca-certificates,Modified Projects,43,1410,2828,4238,3
+2018/03/02,platform/external/arm-neon-tests,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/Car/Dialer,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/dhcpcd-6.8.2,platform/external/dhcpcd-6.8.2,Modified Projects,1,5,1,6,3
+2018/03/02,platform/external/syslinux,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/ManagedProvisioning,platform/packages/apps/ManagedProvisioning,Modified Projects,365,36769,12483,49252,206
+2018/03/02,platform/external/python/cachetools,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,device/lge/bullhead,device/lge/bullhead,Modified Projects,251,3944,30471,34415,210
+2018/03/02,platform/external/ipsec-tools,platform/external/ipsec-tools,Modified Projects,7,99,44,143,10
+2018/03/02,platform/external/one-true-awk,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/hardware/ril,platform/hardware/ril,Modified Projects,28,13244,6523,19767,151
+2018/03/02,platform/hardware/qcom/msm8998,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/volley,platform/frameworks/volley,Forked Projects,71,3543,1093,4636,0
+2018/03/02,platform/external/python/matplotlib,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/screensavers/Basic,platform/packages/screensavers/Basic,Modified Projects,32,3,2,5,3
+2018/03/02,platform/packages/apps/Stk,platform/packages/apps/Stk,Modified Projects,103,1727,637,2364,70
+2018/03/02,platform/system/gatekeeper,platform/system/gatekeeper,Modified Projects,11,250,94,344,12
+2018/03/02,platform/external/iptables,platform/external/iptables,Modified Projects,319,23721,1942,25663,499
+2018/03/02,platform/external/modp_b64,platform/external/modp_b64,Modified Projects,3,35,34,69,4
+2018/03/02,platform/external/icu,platform/external/icu,Modified Projects,9746,1270605,935560,2206165,244
+2018/03/02,platform/packages/apps/Contacts,platform/packages/apps/Contacts,Modified Projects,1144,113651,41688,155339,1244
+2018/03/02,platform/frameworks/opt/setupwizard,platform/frameworks/opt/setupwizard,Modified Projects,348,13288,4781,18069,134
+2018/03/02,platform/external/pcre,platform/external/pcre,Modified Projects,618,130331,128724,259055,11
+2018/03/02,platform/frameworks/native,platform/frameworks/native,Modified Projects,1248,155499,26522,182021,1663
+2018/03/02,platform/packages/apps/Car/Hvac,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/hardware/qcom/msm8994,platform/hardware/qcom/msm8994,Modified Projects,3,315,1,316,1
+2018/03/02,platform/packages/apps/Car/Overview,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/bart,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/TV,platform/packages/apps/TV,Modified Projects,3822,106859,47692,154551,17
+2018/03/02,platform/external/vulkan-validation-layers,platform/external/vulkan-validation-layers,Modified Projects,375,190552,69198,259750,2468
+2018/03/02,platform/frameworks/webview,platform/frameworks/webview,Modified Projects,6,17,292,309,7
+2018/03/02,device/linaro/bootloader/arm-trusted-firmware,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/build/blueprint,platform/build/blueprint,Modified Projects,93,9884,4922,14806,138
+2018/03/02,platform/external/jmdns,platform/external/jmdns,Intact Projects,0,0,0,0,0
+2018/03/02,platform/hardware/google/easel,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/KeyChain,platform/packages/apps/KeyChain,Modified Projects,95,400,365,765,18
+2018/03/02,platform/external/objenesis,platform/external/objenesis,Modified Projects,116,5379,3609,8988,10
+2018/03/02,platform/external/okhttp,platform/external/okhttp,Modified Projects,147,8006,3564,11570,34
+2018/03/02,platform/dalvik,platform/dalvik,Modified Projects,915,232710,3203,235913,97
+2018/03/02,platform/frameworks/opt/net/lowpan,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/providers/TelephonyProvider,platform/packages/providers/TelephonyProvider,Modified Projects,93,13849,541,14390,76
+2018/03/02,platform/external/toolchain-utils,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/hardware/libhardware_legacy,platform/hardware/libhardware_legacy,Modified Projects,27,1259,7109,8368,42
+2018/03/02,platform/system/extras,platform/system/extras,Modified Projects,674,81018,15663,96681,598
+2018/03/02,platform/packages/apps/Music,platform/packages/apps/Music,Modified Projects,133,6442,12152,18594,13
+2018/03/02,platform/hardware/nxp/nfc,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,device/lge/bullhead-kernel,device/lge/bullhead-kernel,Modified Projects,1,0,0,0,0
+2018/03/02,platform/external/zxing,platform/external/zxing,Intact Projects,0,0,0,0,0
+2018/03/02,device/generic/goldfish-opengl,device/generic/goldfish,Forked Projects,254,38715,36453,75168,0
+2018/03/02,platform/system/libufdt,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/SoundRecorder,platform/packages/apps/SoundRecorder,Modified Projects,31,1,0,1,3
+2018/03/02,platform/packages/apps/Messaging,platform/packages/apps/Messaging,Modified Projects,83,258,78,336,24
+2018/03/02,platform/external/apache-http,platform/external/apache-http,Modified Projects,6,4338,11,4349,6
+2018/03/02,platform/external/turbine,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/tinyxml,platform/external/tinyxml,Modified Projects,1,10,31,41,3
+2018/03/02,platform/external/oj-libjdwp,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/HTMLViewer,platform/packages/apps/HTMLViewer,Modified Projects,6,6,0,6,3
+2018/03/02,platform/external/desugar,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/python/pyasn1,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/fdlibm,platform/external/fdlibm,Modified Projects,2,131,82,213,2
+2018/03/02,platform/frameworks/opt/net/ethernet,platform/frameworks/opt/net/ethernet,Modified Projects,4,801,491,1292,5
+2018/03/02,platform/packages/apps/Protips,platform/packages/apps/Protips,Modified Projects,8,0,0,0,1
+2018/03/02,platform/hardware/qcom/msm8x09,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/test/vts-testcase/vndk,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/libopus,platform/external/libopus,Modified Projects,328,38764,54840,93604,10
+2018/03/02,platform/test/vts-testcase/security,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/tagsoup,platform/external/tagsoup,Modified Projects,2,20,21,41,2
+2018/03/02,device/generic/mini-emulator-armv7-a-neon,device/generic/mini-emulator-armv7-a-neon,Intact Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/OneTimeInitializer,platform/packages/apps/OneTimeInitializer,Modified Projects,4,21,29,50,2
+2018/03/02,platform/packages/apps/Terminal,platform/packages/apps/Terminal,Modified Projects,5,31,36,67,4
+2018/03/02,platform/external/annotation-tools,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/frameworks/opt/datetimepicker,platform/frameworks/opt/datetimepicker,Modified Projects,32,14,14,28,4
+2018/03/02,platform/hardware/qcom/data/ipacfg-mgr,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,device/google/taimen,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/libcap,platform/external/libcap,Modified Projects,18,236,84,320,67
+2018/03/02,platform/frameworks/support,platform/frameworks/support,Modified Projects,6892,864840,329617,1194457,2744
+2018/03/02,platform/packages/apps/Car/Messenger,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/sfntly,platform/external/sfntly,Modified Projects,28,524,390,914,65
+2018/03/02,platform/external/minijail,platform/external/minijail,Modified Projects,61,10144,2875,13019,158
+2018/03/02,platform/frameworks/hardware/interfaces,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/providers/CalendarProvider,platform/packages/providers/CalendarProvider,Modified Projects,37,199,249,448,13
+2018/03/02,platform/external/drm_hwcomposer,platform/external/drm_hwcomposer,Modified Projects,30,1072,723,1795,42
+2018/03/02,platform/test/vti/test_serving,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/doclava,platform/external/doclava,Modified Projects,270,31238,1362,32600,89
+2018/03/02,platform/external/ImageMagick,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/Traceur,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/python/ply,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/webp,platform/external/webp,Modified Projects,179,23977,9027,33004,7
+2018/03/02,platform/packages/apps/PhoneCommon,platform/packages/apps/PhoneCommon,Modified Projects,89,496,44,540,43
+2018/03/02,platform/external/nfacct,platform/external/nfacct,Modified Projects,2,11,1,12,2
+2018/03/02,toolchain/binutils,toolchain/binutils,Modified Projects,22231,3235922,2881117,6117039,64
+2018/03/02,device/generic/mips,device/generic/mips,Modified Projects,1,1,1,2,1
+2018/03/02,platform/external/python/proto-google-cloud-pubsub-v1,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/hardware/qcom/msm8996,platform/hardware/qcom/msm8996,Modified Projects,46,2360,1282,3642,13
+2018/03/02,platform/external/google-fonts/dancing-script,platform/external/google-fonts/dancing-script,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/naver-fonts,platform/external/naver-fonts,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/parameter-framework,platform/external/parameter-framework,Modified Projects,8,65,36,101,3
+2018/03/02,toolchain/benchmark,toolchain/binutils,Forked Projects,15841,84838,4978555,5063393,0
+2018/03/02,platform/packages/providers/MediaProvider,platform/packages/providers/MediaProvider,Modified Projects,101,3081,1980,5061,65
+2018/03/02,platform/external/Microsoft-GSL,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,device/linaro/hikey-kernel,device/linaro/hikey-kernel,Modified Projects,14,0,0,0,0
+2018/03/02,platform/external/bzip2,platform/external/bzip2,Modified Projects,2,58,49,107,4
+2018/03/02,device/generic/mini-emulator-mips64,device/generic/mini-emulator-mips64,Intact Projects,0,0,0,0,0
+2018/03/02,platform/test/framework,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/vogar,platform/external/vogar,Modified Projects,143,5897,2997,8894,57
+2018/03/02,platform/test/vts,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/DeskClock,platform/packages/apps/DeskClock,Modified Projects,993,62957,49053,112010,386
+2018/03/02,platform/external/robolectric,platform/external/robolectric,Modified Projects,2,57,1,58,5
+2018/03/02,platform/hardware/intel/common/bd_prov,platform/hardware/intel/common/bd_prov,Intact Projects,0,0,0,0,0
+2018/03/02,platform/external/python/gapic-google-cloud-pubsub-v1,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/python/future,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/python/packaging,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/hardware/intel/common/libmix,platform/hardware/intel/common/libmix,Modified Projects,10,117,60,177,6
+2018/03/02,platform/external/python/dill,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/ltp,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/python/google-cloud-core,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/SafetyRegulatoryInfo,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/selinux,platform/external/selinux,Modified Projects,796,38382,97329,135711,655
+2018/03/02,platform/packages/providers/TvProvider,platform/packages/providers/TvProvider,Modified Projects,66,2330,84,2414,51
+2018/03/02,platform/external/curl,platform/external/curl,Modified Projects,2009,265595,93492,359087,21
+2018/03/02,platform/external/libvterm,platform/external/libvterm,Modified Projects,2,26,29,55,2
+2018/03/02,platform/external/walt,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/libusb-compat,platform/external/libusb-compat,Intact Projects,0,0,0,0,0
+2018/03/02,platform/packages/apps/Calendar,platform/packages/apps/Calendar,Modified Projects,46,0,461,461,0
+2018/03/02,platform/external/tinyalsa,platform/external/tinyalsa,Modified Projects,10,734,170,904,21
+2018/03/02,platform/system/sepolicy,platform/system/sepolicy,Modified Projects,1037,64188,3378,67566,962
+2018/03/02,platform/packages/experimental,platform/packages/experimental,Modified Projects,60,1216,1278,2494,6
+2018/03/02,platform/hardware/qcom/audio,platform/hardware/qcom/audio,Modified Projects,149,10923,61661,72584,151
+2018/03/02,platform/external/python/google-api-python-client,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,device/asus/fugu-kernel,device/asus/fugu-kernel,Modified Projects,1,0,0,0,0
+2018/03/02,kernel/tests,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/tools/loganalysis,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,device/google/wahoo,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/droiddriver,platform/external/droiddriver,Modified Projects,44,1042,1049,2091,13
+2018/03/02,platform/external/libconstrainedcrypto,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/ims,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/tools/dexter,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/tensorflow,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/sdk,platform/sdk,Modified Projects,10,69,334,403,5
+2018/03/02,platform/hardware/invensense,platform/hardware/invensense,Modified Projects,4,4,4,8,1
+2018/03/02,platform/external/flac,platform/external/flac,Modified Projects,87,13545,956,14501,3
+2018/03/02,platform/system/nfc,platform/external/libnfc-nci,Forked Projects,332,76179,135238,211417,0
+2018/03/02,platform/packages/apps/TimeZoneData,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,platform/external/libnl,platform/external/libnl,Modified Projects,477,59046,11841,70887,13
+2018/03/02,platform/external/dagger2,platform/external/dagger2,Modified Projects,16,1268,1120,2388,8
+2018/03/02,platform/developers/samples/android,platform/developers/samples/android,Modified Projects,2143,78137,15601,93738,256
+2018/03/02,platform/external/python/requests,,Downstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/eclipse-basebuilder,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/eclipse-windowbuilder,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/svox,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/gmock,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/hardware/ti/omap3,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/packages/apps/Phone,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/libutf,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/dbus,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/packages/apps/SpeechRecorder,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/bison,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/hardware/bsp/intel,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,device/intel/edison,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,device/htc/flounder,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/packages/apps/Calculator,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/frameworks/opt/emoji,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/ceres-solver,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/hardware/ti/omap4xxx,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/xmlwriter,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/netperf,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/avahi,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/jetty,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/libselinux,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/system/firewalld,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/system/webservd,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/system/nativepower,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/drm_gralloc,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/libnfc-nxp,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/srtp,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,device/htc/flounder-kernel,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/littlemock,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/messageformat,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/regex-re2,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/hardware/ti/omap4-aah,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/abi/cpp,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/tlsdate,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,device/moto/shamu,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/system/connectivity/dhcp_client,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/lld,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/packages/apps/ContactsCommon,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/gtest,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/system/weaved,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/system/connectivity/apmanager,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/opencv3,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/donuts,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/libweave,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/frameworks/opt/bluetooth,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/system/connectivity/shill,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/ndk,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/docs/source.android.com,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/liblzf,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,device/moto/shamu-kernel,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/ltrace,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/c-ares,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/dbus-binding-generator,Upstream Only Projects,0,0,0,0,0
+2018/03/02,,platform/external/jhead,Upstream Only Projects,0,0,0,0,0

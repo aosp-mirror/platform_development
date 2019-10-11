@@ -35,8 +35,8 @@ LOCAL_RESOURCE_DIR += $(LOCAL_PATH)/../common/res
 LOCAL_RESOURCE_DIR += $(LOCAL_PATH)/res1
 
 LOCAL_STATIC_ANDROID_LIBRARIES := \
-    android-support-v4 \
-    android-support-v13
+    androidx.legacy_legacy-support-v4 \
+    androidx.legacy_legacy-support-v13
 
 LOCAL_USE_AAPT2 := true
 
@@ -51,6 +51,7 @@ LOCAL_PACKAGE_NAME := ShortcutLauncherDemo2
 
 LOCAL_MODULE_TAGS := samples tests
 
+
 LOCAL_AAPT_FLAGS += --rename-manifest-package com.example.android.pm.shortcutlauncherdemo2
 
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
@@ -61,8 +62,8 @@ LOCAL_RESOURCE_DIR += $(LOCAL_PATH)/../common/res
 LOCAL_RESOURCE_DIR += $(LOCAL_PATH)/res2
 
 LOCAL_STATIC_ANDROID_LIBRARIES := \
-    android-support-v4 \
-    android-support-v13
+    androidx.legacy_legacy-support-v4 \
+    androidx.legacy_legacy-support-v13
 
 LOCAL_USE_AAPT2 := true
 

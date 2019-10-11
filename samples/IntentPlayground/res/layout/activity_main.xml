@@ -13,19 +13,48 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<ScrollView
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root_container"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:id="@+id/scroll_container"
-    tools:context="com.example.android.intentplayground.BaseActivity">
+    android:layout_height="match_parent">
 
     <LinearLayout
-        android:id="@+id/fragment_container"
         android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/app_bar"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/toolbarHeight"
+            android:background="@color/colorPrimary"
+            android:elevation="@dimen/toolbar_elevation"
+            app:titleTextColor="@color/white"/>
+        <ScrollView
+            xmlns:tools="http://schemas.android.com/tools"
+            android:id="@+id/scroll_container"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            tools:context="com.example.android.intentplayground.BaseActivity">
+            <LinearLayout
+                android:id="@+id/fragment_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:showDividers="middle"
+                android:divider="@drawable/divider"
+                android:visibility="visible">
+            </LinearLayout>
+          </ScrollView>
+        </LinearLayout>
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/launch_fab"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:visibility="visible">
-    </LinearLayout>
-</ScrollView>
+        android:layout_gravity="end|bottom"
+        android:layout_marginEnd="@dimen/smallMargin"
+        android:layout_marginBottom="@dimen/smallMargin"
+        android:src="@drawable/icon_launch" />
+</FrameLayout>
