@@ -60,7 +60,11 @@ class GenBuildFile(object):
     """
     INDENT = '    '
     ETC_MODULES = [
-        'ld.config.txt', 'llndk.libraries.txt', 'vndksp.libraries.txt'
+        'ld.config.txt',
+        'llndk.libraries.txt',
+        'vndksp.libraries.txt',
+        'vndkcore.libraries.txt',
+        'vndkprivate.libraries.txt'
     ]
 
     def __init__(self, install_dir, vndk_version):
@@ -77,10 +81,12 @@ class GenBuildFile(object):
         self._snapshot_archs = utils.get_snapshot_archs(install_dir)
         self._root_bpfile = os.path.join(install_dir, utils.ROOT_BP_PATH)
         self._common_bpfile = os.path.join(install_dir, utils.COMMON_BP_PATH)
-        self._vndk_core = self._parse_lib_list('vndkcore.libraries.txt')
+        self._vndk_core = self._parse_lib_list(
+            os.path.basename(self._etc_paths['vndkcore.libraries.txt']))
         self._vndk_sp = self._parse_lib_list(
             os.path.basename(self._etc_paths['vndksp.libraries.txt']))
-        self._vndk_private = self._parse_lib_list('vndkprivate.libraries.txt')
+        self._vndk_private = self._parse_lib_list(
+            os.path.basename(self._etc_paths['vndkprivate.libraries.txt']))
         self._modules_with_notice = self._get_modules_with_notice()
 
     def _get_etc_paths(self):
