@@ -1,38 +1,38 @@
 #!/bin/bash -ex
 usage () {
-    echo "Create a Mixed Build archive with the given system and device archives."
-    echo
-    echo "Usage: $0 [-v <vendor_version>] [-m <modify_system_image_path>]"
-    echo "    [-t <prebuilt_otatools_path>] [-p <override_vbmeta_image_path>]"
-    echo "    [-b <override_boot_image_path>]"
-    echo "    [-s] system_build_dir device_build_dir out_dir [check_tool]"
-    echo
-    echo "Options -v, -m, -t, -p, -b, -s must precede positional arguments."
-    echo
-    echo "vendor_version is the version of the vendor image when Keymaster v3"
-    echo "    related modifications to the system image is necessary. Optional."
-    echo "    eg. 8.1.0 for a mixed build of GSI and O-MR1 vendor image."
-    echo "modify_system_image_path is the path to the script that modifies the"
-    echo "    system image, needed for Keymaster v3. Optional."
-    echo "prebuilt_otatools_path is the path to otatools.zip file that has all"
-    echo "    required host binaries to modify system image. Optional."
-    echo "override_vbmeta_image_path is the path to a vbmeta.img to use"
-    echo "    to override the existing vbmeta.img of device. Optional."
-    echo "override_boot_image_path is the path to a boot imgage to use to"
-    echo "    override the existing boot.img of device. Optional."
-    echo "-s is used to fetch and flash both product.img and system.img from"
-    echo "    the system_build_dir for devices with a product partition."
-    echo "    product.img will be removed if system_build_dir does not have"
-    echo "    product.img when -s option is declared."
-    echo "    By default, only system.img is flashed to the target device for"
-    echo "    independent system update. No parameter required. Optional"
-    echo "system_build_dir is the path to the system build"
-    echo "    eg. aosp_arm64_ab-userdebug."
-    echo "device_build_dir is the path to the device build"
-    echo "    eg. sailfish-user."
-    echo "out_dir is the path to where the new build will be placed."
-    echo "check_tool is the path to the checkvintf executable that will be"
-    echo "    used to verify the compatibility of the given images. Optional."
+  echo "Create a Mixed Build archive with the given system and device archives."
+  echo
+  echo "Usage: $0 [-v <vendor_version>] [-m <modify_system_image_path>]"
+  echo "    [-t <prebuilt_otatools_path>] [-p <override_vbmeta_image_path>]"
+  echo "    [-b <override_boot_image_path>]"
+  echo "    [-s] system_build_dir device_build_dir out_dir [check_tool]"
+  echo
+  echo "Options -v, -m, -t, -p, -b, -s must precede positional arguments."
+  echo
+  echo "vendor_version is the version of the vendor image when Keymaster v3"
+  echo "    related modifications to the system image is necessary. Optional."
+  echo "    eg. 8.1.0 for a mixed build of GSI and O-MR1 vendor image."
+  echo "modify_system_image_path is the path to the script that modifies the"
+  echo "    system image, needed for Keymaster v3. Optional."
+  echo "prebuilt_otatools_path is the path to otatools.zip file that has all"
+  echo "    required host binaries to modify system image. Optional."
+  echo "override_vbmeta_image_path is the path to a vbmeta.img to use"
+  echo "    to override the existing vbmeta.img of device. Optional."
+  echo "override_boot_image_path is the path to a boot imgage to use to"
+  echo "    override the existing boot.img of device. Optional."
+  echo "-s is used to fetch and flash both product.img and system.img from"
+  echo "    the system_build_dir for devices with a product partition."
+  echo "    product.img will be removed if system_build_dir does not have"
+  echo "    product.img when -s option is declared."
+  echo "    By default, only system.img is flashed to the target device for"
+  echo "    independent system update. No parameter required. Optional"
+  echo "system_build_dir is the path to the system build"
+  echo "    eg. aosp_arm64_ab-userdebug."
+  echo "device_build_dir is the path to the device build"
+  echo "    eg. sailfish-user."
+  echo "out_dir is the path to where the new build will be placed."
+  echo "check_tool is the path to the checkvintf executable that will be"
+  echo "    used to verify the compatibility of the given images. Optional."
 }
 
 # Print error message and exit.
@@ -40,56 +40,57 @@ usage () {
 #
 # message is a string to be displayed before exit.
 exit_badparam () {
-    echo "ERROR: $1" >&2
-    usage
-    exit 1
+  echo "ERROR: $1" >&2
+  usage
+  exit 1
 }
 
 cleanup_and_exit () {
-    readonly result="$?"
-    rm -rf "$TEMP_DIR"
-    exit "$result"
+  readonly result="$?"
+  rm -rf "$TEMP_DIR"
+  exit "$result"
 }
 
 trap cleanup_and_exit EXIT
 
 while getopts :v:m:p:b:t:s opt; do
-    case "$opt" in
-        v)
-            readonly VENDOR_VERSION="$OPTARG"
-            ;;
-        m)
-            readonly MODIFY_SYSTEM_SCRIPT="$OPTARG"
-            ;;
-        p)
-            readonly OVERRIDE_VBMETA_IMAGE_PATH="$OPTARG"
-            ;;
-        b)
-            readonly OVERRIDE_BOOT_IMAGE_PATH="$OPTARG"
-            ;;
-        t)
-            readonly OTATOOLS_ZIP="$OPTARG"
-            ;;
-        s)
-            readonly INCLUDE_PRODUCT=true
-            ;;
-        \?)
-            exit_badparam "Invalid options: -"$OPTARG""
-            ;;
-        :)
-            exit_badparam "Option -"$OPTARG" requires an argument."
-            ;;
-    esac
+  case "$opt" in
+    v)
+      readonly VENDOR_VERSION="$OPTARG"
+      ;;
+    m)
+      readonly MODIFY_SYSTEM_SCRIPT="$OPTARG"
+      ;;
+    p)
+      readonly OVERRIDE_VBMETA_IMAGE_PATH="$OPTARG"
+      ;;
+    b)
+      readonly OVERRIDE_BOOT_IMAGE_PATH="$OPTARG"
+      ;;
+    t)
+      readonly OTATOOLS_ZIP="$OPTARG"
+      ;;
+    s)
+      readonly INCLUDE_PRODUCT=true
+      ;;
+    \?)
+      exit_badparam "Invalid options: -"$OPTARG""
+      ;;
+    :)
+      exit_badparam "Option -"$OPTARG" requires an argument."
+      ;;
+  esac
 done
 
-if [[ -z "${VENDOR_VERSION+x}" && ! -z "${MODIFY_SYSTEM_SCRIPT+x}" ]] || [[ ! -z "${VENDOR_VERSION+x}" && -z "${MODIFY_SYSTEM_SCRIPT+x}" ]]; then
-    exit_badparam "Options -v and -m must be set together."
+if [[ -z "${VENDOR_VERSION+x}" && ! -z "${MODIFY_SYSTEM_SCRIPT+x}" ]] || \
+  [[ ! -z "${VENDOR_VERSION+x}" && -z "${MODIFY_SYSTEM_SCRIPT+x}" ]]; then
+  exit_badparam "Options -v and -m must be set together."
 fi
 
 shift "$((OPTIND-1))"
 
 if [[ $# -lt 3 ]]; then
-    exit_badparam "Unexpected number of arguments"
+  exit_badparam "Unexpected number of arguments"
 fi
 
 readonly SYSTEM_DIR="$1"
@@ -100,29 +101,29 @@ readonly TEMP_DIR="$(mktemp -d /tmp/"$(basename $0)"_XXXXXXXX)"
 
 readonly SYSTEM_TARGET_FILES_ARCHIVE="$(find "$SYSTEM_DIR" -name "*-target_files-*.zip" -print)"
 if [[ ! -f "$SYSTEM_TARGET_FILES_ARCHIVE" ]]; then
-    exit_badparam "Could not find system target files archive in $SYSTEM_DIR."
+  exit_badparam "Could not find system target files archive in $SYSTEM_DIR."
 fi
 
 readonly DEVICE_ARCHIVE="$(find "$DEVICE_DIR" -name "*-img-*.zip" -print)"
 if [[ ! -f "$DEVICE_ARCHIVE" ]]; then
-    exit_badparam "Could not find device img archive in $DEVICE_DIR."
+  exit_badparam "Could not find device img archive in $DEVICE_DIR."
 fi
 
 readonly DEVICE_TARGET_FILES_ARCHIVE="$(find "$DEVICE_DIR" -name "*-target_files-*.zip" -print)"
 if [[ ! -f "$DEVICE_TARGET_FILES_ARCHIVE" ]]; then
-    exit_badparam "Could not find device target_files archive in $DEVICE_DIR."
+  exit_badparam "Could not find device target_files archive in $DEVICE_DIR."
 fi
 
 if [[ ! -z "${MODIFY_SYSTEM_SCRIPT+x}" && ! -f "$MODIFY_SYSTEM_SCRIPT" ]]; then
-    exit_badparam "Script not found: "$MODIFY_SYSTEM_SCRIPT""
+  exit_badparam "Script not found: "$MODIFY_SYSTEM_SCRIPT""
 fi
 
 if [[ ! -z "${OVERRIDE_VBMETA_IMAGE_PATH+x}" && ! -f "$OVERRIDE_VBMETA_IMAGE_PATH" ]]; then
-    exit_badparam "Specified vbmeta.img not found: "$OVERRIDE_VBMETA_IMAGE_PATH""
+  exit_badparam "Specified vbmeta.img not found: "$OVERRIDE_VBMETA_IMAGE_PATH""
 fi
 
 if [[ ! -z "${OVERRIDE_BOOT_IMAGE_PATH+x}" && ! -f "$OVERRIDE_BOOT_IMAGE_PATH" ]]; then
-    exit_badparam "Specified boot image not found: "$OVERRIDE_BOOT_IMAGE_PATH""
+  exit_badparam "Specified boot image not found: "$OVERRIDE_BOOT_IMAGE_PATH""
 fi
 
 readonly DEVICE_ARTIFACTS_DIR="$TEMP_DIR"/device_archive_artifacts
@@ -138,11 +139,11 @@ readonly SYSTEM_BUILD_PROP="SYSTEM/build.prop"
 # Uncompress the archives.
 declare -a EXTRACT_FILE_LIST
 EXTRACT_FILE_LIST=(
-    IMAGES/system.img \
-    IMAGES/vbmeta.img \
-    META/system_matrix.xml \
-    META/system_manifest.xml \
-    "$SYSTEM_BUILD_PROP" \
+  IMAGES/system.img \
+  IMAGES/vbmeta.img \
+  META/system_matrix.xml \
+  META/system_manifest.xml \
+  "$SYSTEM_BUILD_PROP" \
 )
 
 if [[ "$INCLUDE_PRODUCT" == true ]]; then
@@ -164,49 +165,49 @@ unzip "$DEVICE_TARGET_FILES_ARCHIVE" \
   -d "$DEVICE_ARTIFACTS_DIR"
 
 if [[ -f "$OTATOOLS_ZIP" ]]; then
-    # Uncompress otatools
-    mkdir -p "$OTATOOLS_DIR"
-    unzip "$OTATOOLS_ZIP" bin/* lib64/* -d "$OTATOOLS_DIR"
-    # Set paths for using prebuilt host binaries.
-    export PATH="$OTATOOLS_DIR"/bin:"$PATH"
-    export LD_LIBRARY_PATH="$OTATOOLS_DIR"/lib64:"$LD_LIBRARY_PATH"
+  # Uncompress otatools
+  mkdir -p "$OTATOOLS_DIR"
+  unzip "$OTATOOLS_ZIP" bin/* lib64/* -d "$OTATOOLS_DIR"
+  # Set paths for using prebuilt host binaries.
+  export PATH="$OTATOOLS_DIR"/bin:"$PATH"
+  export LD_LIBRARY_PATH="$OTATOOLS_DIR"/lib64:"$LD_LIBRARY_PATH"
 fi
 
 ###
 # Check compatibility between the system and device.
 if [[ -f "$CHECK_TOOL" ]]; then
-    chmod 755 "$CHECK_TOOL"
-    "$CHECK_TOOL" \
-        "$DEVICE_ARTIFACTS_DIR"/META/vendor_manifest.xml \
-        "$SYSTEM_ARTIFACTS_DIR"/META/system_matrix.xml
-    "$CHECK_TOOL" \
-        "$SYSTEM_ARTIFACTS_DIR"/META/system_manifest.xml \
-        "$DEVICE_ARTIFACTS_DIR"/META/vendor_matrix.xml
+  chmod 755 "$CHECK_TOOL"
+  "$CHECK_TOOL" \
+    "$DEVICE_ARTIFACTS_DIR"/META/vendor_manifest.xml \
+    "$SYSTEM_ARTIFACTS_DIR"/META/system_matrix.xml
+  "$CHECK_TOOL" \
+    "$SYSTEM_ARTIFACTS_DIR"/META/system_manifest.xml \
+    "$DEVICE_ARTIFACTS_DIR"/META/vendor_matrix.xml
 fi
 
 ###
 # Modify system.img if vendor version is provided.
 if [[ ! -z "${VENDOR_VERSION+x}" ]]; then
-    # Create copy of system target files package that can be modified
-    # since the original $SYSTEM_TARGET_FILES_ARCHIVE is a symlink to
-    # prebuilt files in cache
-    cp "$SYSTEM_TARGET_FILES_ARCHIVE" "$TEMP_DIR"
-    readonly COPY_SYSTEM_TARGET_FILES_ARCHIVE="$TEMP_DIR"/"$(basename "$SYSTEM_TARGET_FILES_ARCHIVE")"
+  # Create copy of system target files package that can be modified
+  # since the original $SYSTEM_TARGET_FILES_ARCHIVE is a symlink to
+  # prebuilt files in cache
+  cp "$SYSTEM_TARGET_FILES_ARCHIVE" "$TEMP_DIR"
+  readonly COPY_SYSTEM_TARGET_FILES_ARCHIVE="$TEMP_DIR"/"$(basename "$SYSTEM_TARGET_FILES_ARCHIVE")"
 
-    # Check compatibility of security patch level
-    readonly SYSTEM_SPL=$(sed -n -r "s/^"$SPL_PROPERTY_NAME"=(.*)$/\1/p" "$SYSTEM_ARTIFACTS_DIR"/"$SYSTEM_BUILD_PROP")
-    readonly VENDOR_SPL=$(sed -n -r "s/^"$SPL_PROPERTY_NAME"=(.*)$/\1/p" "$DEVICE_ARTIFACTS_DIR"/"$SYSTEM_BUILD_PROP")
-    declare -a args
-    args=(-v "$VENDOR_VERSION" "$COPY_SYSTEM_TARGET_FILES_ARCHIVE")
-    if [[ "$SYSTEM_SPL" != "$VENDOR_SPL" ]]; then
-        echo "Security patch level mismatch detected..."
-        echo "  SPL of system: "$SYSTEM_SPL""
-        echo "  SPL of vendor: "$VENDOR_SPL""
-        args+=("$VENDOR_SPL")
-    fi
-    "$MODIFY_SYSTEM_SCRIPT" "${args[@]}"
-    # Replace system.img with newly modified system.img
-    unzip -o "$COPY_SYSTEM_TARGET_FILES_ARCHIVE" IMAGES/system.img -d "$SYSTEM_ARTIFACTS_DIR"
+  # Check compatibility of security patch level
+  readonly SYSTEM_SPL=$(sed -n -r "s/^"$SPL_PROPERTY_NAME"=(.*)$/\1/p" "$SYSTEM_ARTIFACTS_DIR"/"$SYSTEM_BUILD_PROP")
+  readonly VENDOR_SPL=$(sed -n -r "s/^"$SPL_PROPERTY_NAME"=(.*)$/\1/p" "$DEVICE_ARTIFACTS_DIR"/"$SYSTEM_BUILD_PROP")
+  declare -a args
+  args=(-v "$VENDOR_VERSION" "$COPY_SYSTEM_TARGET_FILES_ARCHIVE")
+  if [[ "$SYSTEM_SPL" != "$VENDOR_SPL" ]]; then
+    echo "Security patch level mismatch detected..."
+    echo "  SPL of system: "$SYSTEM_SPL""
+    echo "  SPL of vendor: "$VENDOR_SPL""
+    args+=("$VENDOR_SPL")
+  fi
+  "$MODIFY_SYSTEM_SCRIPT" "${args[@]}"
+  # Replace system.img with newly modified system.img
+  unzip -o "$COPY_SYSTEM_TARGET_FILES_ARCHIVE" IMAGES/system.img -d "$SYSTEM_ARTIFACTS_DIR"
 fi
 
 ###
@@ -225,27 +226,27 @@ fi
 # Only override vbmeta if it is already present since fastboot update will try
 # to flash whatever is in the archive.
 if [[ -f "$DEVICE_IMAGES_DIR"/vbmeta.img ]]; then
-    readonly VBMETA_IMAGE_PATH="${OVERRIDE_VBMETA_IMAGE_PATH:-"$SYSTEM_IMAGES_DIR"/vbmeta.img}"
-    cp "$VBMETA_IMAGE_PATH" "$DEVICE_IMAGES_DIR"/
+  readonly VBMETA_IMAGE_PATH="${OVERRIDE_VBMETA_IMAGE_PATH:-"$SYSTEM_IMAGES_DIR"/vbmeta.img}"
+  cp "$VBMETA_IMAGE_PATH" "$DEVICE_IMAGES_DIR"/
 fi
 
 # Override boot.img with the provided boot image file since fastboot update cmd
 # will try to flash boot.img in the archive.
 if [[ ! -z "${OVERRIDE_BOOT_IMAGE_PATH+x}" && -f "$DEVICE_IMAGES_DIR"/boot.img ]]; then
-    cp "$OVERRIDE_BOOT_IMAGE_PATH" "$DEVICE_IMAGES_DIR"/boot.img
+  cp "$OVERRIDE_BOOT_IMAGE_PATH" "$DEVICE_IMAGES_DIR"/boot.img
 fi
 
 ###
 # Create the Mixed Build archive.
 (
-    cd "$DEVICE_IMAGES_DIR"
-    zip -r mixed.zip ./*
+  cd "$DEVICE_IMAGES_DIR"
+  zip -r mixed.zip ./*
 )
 
 ###
 # Archive the artifacts.
 if [ -n "$DIST_DIR" ]; then
-    mkdir -p "$DIST_DIR" || true
+  mkdir -p "$DIST_DIR" || true
 fi
 # Archive all the device artifacts.
 rsync --archive --verbose --copy-links --exclude='logs' \
