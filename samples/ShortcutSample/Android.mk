@@ -24,6 +24,8 @@ LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
 
+LOCAL_USE_AAPT2 := true
+
 LOCAL_PACKAGE_NAME := ShortcutSample
 
 LOCAL_AAPT_FLAGS += --version-code 10
@@ -34,7 +36,7 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 LOCAL_RESOURCE_DIR := $(LOCAL_PATH)/res
 
-LOCAL_STATIC_JAVA_LIBRARIES = android-support-v4
+LOCAL_STATIC_ANDROID_LIBRARIES = androidx.legacy_legacy-support-v4
 
 LOCAL_SDK_VERSION := current
 
@@ -46,6 +48,8 @@ include $(BUILD_PACKAGE)
 
 include $(CLEAR_VARS)
 
+LOCAL_USE_AAPT2 := true
+
 LOCAL_PACKAGE_NAME := ShortcutSample11
 
 LOCAL_AAPT_FLAGS += --version-code 11
@@ -56,7 +60,7 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 LOCAL_RESOURCE_DIR := $(LOCAL_PATH)/res
 
-LOCAL_STATIC_JAVA_LIBRARIES = android-support-v4
+LOCAL_STATIC_ANDROID_LIBRARIES = androidx.legacy_legacy-support-v4
 
 LOCAL_SDK_VERSION := current
 
@@ -68,6 +72,8 @@ include $(BUILD_PACKAGE)
 
 include $(CLEAR_VARS)
 
+LOCAL_USE_AAPT2 := true
+
 LOCAL_PACKAGE_NAME := ShortcutSample12
 
 LOCAL_AAPT_FLAGS += --version-code 12
@@ -78,7 +84,7 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 LOCAL_RESOURCE_DIR := $(LOCAL_PATH)/res
 
-LOCAL_STATIC_JAVA_LIBRARIES = android-support-v4
+LOCAL_STATIC_ANDROID_LIBRARIES = androidx.legacy_legacy-support-v4
 
 LOCAL_SDK_VERSION := current
 
@@ -89,6 +95,8 @@ include $(BUILD_PACKAGE)
 #============================================================================
 
 include $(CLEAR_VARS)
+
+LOCAL_USE_AAPT2 := true
 
 LOCAL_PACKAGE_NAME := ShortcutSample11nb
 
@@ -101,7 +109,7 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 LOCAL_RESOURCE_DIR := $(LOCAL_PATH)/res
 
-LOCAL_STATIC_JAVA_LIBRARIES = android-support-v4
+LOCAL_STATIC_ANDROID_LIBRARIES = androidx.legacy_legacy-support-v4
 
 LOCAL_SDK_VERSION := current
 
@@ -112,6 +120,8 @@ include $(BUILD_PACKAGE)
 #============================================================================
 
 include $(CLEAR_VARS)
+
+LOCAL_USE_AAPT2 := true
 
 LOCAL_PACKAGE_NAME := ShortcutSample12nb
 
@@ -124,7 +134,7 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 LOCAL_RESOURCE_DIR := $(LOCAL_PATH)/res
 
-LOCAL_STATIC_JAVA_LIBRARIES = android-support-v4
+LOCAL_STATIC_ANDROID_LIBRARIES = androidx.legacy_legacy-support-v4
 
 LOCAL_SDK_VERSION := current
 

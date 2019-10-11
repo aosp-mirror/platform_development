@@ -18,6 +18,7 @@ package com.android.commands.monkey;
 
 import static com.android.commands.monkey.MonkeySourceNetwork.EARG;
 
+import android.app.ActivityManager;
 import android.app.UiAutomation;
 import android.app.UiAutomationConnection;
 import android.content.pm.ApplicationInfo;
@@ -26,7 +27,6 @@ import android.graphics.Rect;
 import android.os.HandlerThread;
 import android.os.RemoteException;
 import android.os.ServiceManager;
-import android.os.UserHandle;
 import android.view.accessibility.AccessibilityInteractionClient;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.accessibility.AccessibilityWindowInfo;
@@ -171,7 +171,7 @@ public class MonkeySourceNetworkViews {
             try{
                 Class<?> klass;
                 ApplicationInfo appInfo = sPm.getApplicationInfo(packageName, 0,
-                        UserHandle.myUserId());
+                        ActivityManager.getCurrentUser());
                 klass = getIdClass(packageName, appInfo.sourceDir);
                 StringBuilder fieldBuilder = new StringBuilder();
                 Field[] fields = klass.getFields();

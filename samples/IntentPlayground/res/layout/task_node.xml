@@ -14,19 +14,17 @@
      limitations under the License.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:gravity="center_vertical|left"
-    android:layout_height="@dimen/listItem" >
+    android:layout_height="wrap_content" >
 
     <TextView
         android:id="@+id/task_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/fullMargin"
+        android:layout_marginStart="@dimen/smallMargin"
         android:layout_weight="0"
-        android:text="@string/placeholder"
+        android:text="@string/task_num"
         android:textAppearance="@style/medium"
         android:textSize="@dimen/regularText" />
 
@@ -48,11 +46,4 @@
         android:layout_weight="1"
         android:text="@string/placeholder"
         android:textSize="@dimen/smallText" />
-
-    <ImageView
-        android:id="@+id/group_indicator"
-        android:layout_width="@dimen/listControl"
-        android:layout_height="@dimen/listControl"
-        android:layout_marginEnd="@dimen/fullMargin"
-        android:src="@drawable/expand_more_mtrl" />
 </LinearLayout>

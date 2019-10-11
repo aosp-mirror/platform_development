@@ -69,12 +69,6 @@ public class Pictures extends GraphicsActivity {
 
             mDrawable.setBounds(0, 200, getWidth(), 300);
             mDrawable.draw(canvas);
-
-            ByteArrayOutputStream os = new ByteArrayOutputStream();
-            mPicture.writeToStream(os);
-            InputStream is = new ByteArrayInputStream(os.toByteArray());
-            canvas.translate(0, 300);
-            canvas.drawPicture(Picture.createFromStream(is));
         }
     }
 }

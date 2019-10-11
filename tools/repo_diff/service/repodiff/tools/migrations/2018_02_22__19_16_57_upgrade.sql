@@ -1,0 +1,20 @@
+CREATE TABLE denormalized_view_recent_project (
+  upstream_target_id SMALLINT NOT NULL,
+  downstream_target_id SMALLINT NOT NULL,
+  row_index INT NOT NULL,
+  date DATE NOT NULL,
+  downstream_project VARCHAR(255) NOT NULL,
+  upstream_project VARCHAR(255) NOT NULL,
+  status VARCHAR(255) NOT NULL,
+  files_changed INT NOT NULL,
+  line_insertions INT NOT NULL,
+  line_deletions INT NOT NULL,
+  line_changes INT NOT NULL,
+  commits_not_upstreamed INT NOT NULL,
+  upstream_url VARCHAR(255) NOT NULL,
+  upstream_branch VARCHAR(255) NOT NULL,
+  downstream_url VARCHAR(255) NOT NULL,
+  downstream_branch VARCHAR(255) NOT NULL,
+  PRIMARY KEY (upstream_target_id, downstream_target_id, row_index),
+  INDEX idx_url_branch (upstream_url, upstream_branch, downstream_url, downstream_branch)
+);
