@@ -16,7 +16,7 @@
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="appTitle" msgid="161410001913116606">"ഫാൾബാക്ക്"</string>
-    <string name="title" msgid="8156274565006125136">"പിന്തുണയ്‌ക്കാത്ത പ്രവർത്തനം"</string>
-    <string name="error" msgid="6539615832923362301">"ആ പ്രവർത്തനം നിലവിൽ പിന്തുണയ്‌ക്കുന്നില്ല."</string>
+    <string name="appTitle" msgid="2602861335056897297">"ഫാൾബാക്ക്"</string>
+    <string name="title" msgid="4690900077948963868">"പിന്തുണയ്‌ക്കാത്ത പ്രവർത്തനം"</string>
+    <string name="error" msgid="5607912284955296701">"ആ പ്രവർത്തനം നിലവിൽ പിന്തുണയ്‌ക്കുന്നില്ല."</string>
 </resources>
