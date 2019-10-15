@@ -16,7 +16,7 @@
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="appTitle" msgid="161410001913116606">"폴백"</string>
-    <string name="title" msgid="8156274565006125136">"지원되지 않는 작업"</string>
-    <string name="error" msgid="6539615832923362301">"이 작업은 현재 지원되지 않습니다."</string>
+    <string name="appTitle" msgid="2602861335056897297">"폴백"</string>
+    <string name="title" msgid="4690900077948963868">"지원되지 않는 작업"</string>
+    <string name="error" msgid="5607912284955296701">"이 작업은 현재 지원되지 않습니다."</string>
 </resources>
