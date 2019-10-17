@@ -16,7 +16,7 @@
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="appTitle" msgid="161410001913116606">"Fallback"</string>
-    <string name="title" msgid="8156274565006125136">"Acción no admitida"</string>
-    <string name="error" msgid="6539615832923362301">"Esa acción no se admite actualmente."</string>
+    <string name="appTitle" msgid="2602861335056897297">"Fallback"</string>
+    <string name="title" msgid="4690900077948963868">"Acción no admitida"</string>
+    <string name="error" msgid="5607912284955296701">"Esa acción no se admite actualmente."</string>
 </resources>
