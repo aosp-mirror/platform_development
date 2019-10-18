@@ -5,7 +5,7 @@ usage () {
   echo "Usage: $0 [-v <vendor_version>] [-m <modify_system_image_path>]"
   echo "    [-t <prebuilt_otatools_path>] [-p <override_vbmeta_image_path>]"
   echo "    [-b <override_boot_image_path>]"
-  echo "    [-s] system_build_dir device_build_dir out_dir [check_tool]"
+  echo "    [-s] system_build_dir device_build_dir out_dir"
   echo
   echo "Options -v, -m, -t, -p, -b, -s must precede positional arguments."
   echo
@@ -15,7 +15,9 @@ usage () {
   echo "modify_system_image_path is the path to the script that modifies the"
   echo "    system image, needed for Keymaster v3. Optional."
   echo "prebuilt_otatools_path is the path to otatools.zip file that has all"
-  echo "    required host binaries to modify system image. Optional."
+  echo "    required host binaries to modify system image. It also must include"
+  echo "    VINTF check tool to verify the compatibility of the given images."
+  echo "    Optional."
   echo "override_vbmeta_image_path is the path to a vbmeta.img to use"
   echo "    to override the existing vbmeta.img of device. Optional."
   echo "override_boot_image_path is the path to a boot imgage to use to"
@@ -31,8 +33,6 @@ usage () {
   echo "device_build_dir is the path to the device build"
   echo "    eg. sailfish-user."
   echo "out_dir is the path to where the new build will be placed."
-  echo "check_tool is the path to the checkvintf executable that will be"
-  echo "    used to verify the compatibility of the given images. Optional."
 }
 
 # Print error message and exit.
@@ -96,7 +96,6 @@ fi
 readonly SYSTEM_DIR="$1"
 readonly DEVICE_DIR="$2"
 readonly DIST_DIR="$3"
-readonly CHECK_TOOL="$4"
 readonly TEMP_DIR="$(mktemp -d /tmp/"$(basename $0)"_XXXXXXXX)"
 
 readonly SYSTEM_TARGET_FILES_ARCHIVE="$(find "$SYSTEM_DIR" -name "*-target_files-*.zip" -print)"
@@ -135,55 +134,104 @@ readonly OTATOOLS_DIR="$TEMP_DIR"/otatools
 readonly SPL_PROPERTY_NAME="ro.build.version.security_patch"
 readonly SYSTEM_BUILD_PROP="SYSTEM/build.prop"
 
-###
-# Uncompress the archives.
-declare -a EXTRACT_FILE_LIST
-EXTRACT_FILE_LIST=(
+declare -a EXTRACT_SYSTEM_FILE_LIST
+EXTRACT_SYSTEM_FILE_LIST=(
   IMAGES/system.img \
   IMAGES/vbmeta.img \
-  META/system_matrix.xml \
-  META/system_manifest.xml \
   "$SYSTEM_BUILD_PROP" \
 )
 
-if [[ "$INCLUDE_PRODUCT" == true ]]; then
-  unzip -l "$SYSTEM_TARGET_FILES_ARCHIVE" | grep -q IMAGES/product.img &&
-  EXTRACT_FILE_LIST+=(IMAGES/product.img)
-fi
+declare -a EXTRACT_VINTF_SYSTEM_FILE_LIST
+EXTRACT_VINTF_SYSTEM_FILE_LIST=(
+  "$SYSTEM_BUILD_PROP" \
+)
 
-mkdir -p "$SYSTEM_ARTIFACTS_DIR"
-# Get the system images and meta data.
-# ${EXTRACT_FILE_LIST[*]} cannot be quoted to list each file for unzipping
-unzip "$SYSTEM_TARGET_FILES_ARCHIVE" ${EXTRACT_FILE_LIST[*]} -d "$SYSTEM_ARTIFACTS_DIR"
+declare -a EXTRACT_DEVICE_FILE_LIST
+EXTRACT_DEVICE_FILE_LIST=(
+  */build.prop \
+  META/* \
+)
 
-mkdir -p "$DEVICE_IMAGES_DIR"
-# Get the device images.
-unzip "$DEVICE_ARCHIVE" -d "$DEVICE_IMAGES_DIR"
-# Get the device meta data.
-unzip "$DEVICE_TARGET_FILES_ARCHIVE" \
-  META/vendor_matrix.xml META/vendor_manifest.xml "$SYSTEM_BUILD_PROP" \
-  -d "$DEVICE_ARTIFACTS_DIR"
+declare -A SYSTEM_SEARCH_PATH
+SYSTEM_SEARCH_PATH=( \
+  [/system]="SYSTEM" \
+  [/product]="PRODUCT SYSTEM/product" \
+  [/system_ext]="SYSTEM_EXT SYSTEM/system_ext" \
+)
 
-if [[ -f "$OTATOOLS_ZIP" ]]; then
+declare -A DEVICE_SEARCH_PATH
+# Mixed build will not have /vendor to SYSTEM/vendor case
+DEVICE_SEARCH_PATH=( \
+  [/vendor]="VENDOR" \
+  [/odm]="ODM VENDOR/odm" \
+)
+
+###
+# Uncompress otatools.zip and get vintf file list.
+if [[ ! -f "$OTATOOLS_ZIP" ]]; then
+  echo "WARNING: otatools.zip is missing. Add \"-t otatools.zip\" to enable checkvintf"
+else
+  readonly OTATOOLS_AVAILABLE=true
   # Uncompress otatools
   mkdir -p "$OTATOOLS_DIR"
   unzip "$OTATOOLS_ZIP" bin/* lib64/* -d "$OTATOOLS_DIR"
   # Set paths for using prebuilt host binaries.
   export PATH="$OTATOOLS_DIR"/bin:"$PATH"
   export LD_LIBRARY_PATH="$OTATOOLS_DIR"/lib64:"$LD_LIBRARY_PATH"
+
+  # Add vintf file to extract file list
+  declare -a VINTF_DUMP_FILE_LIST
+  VINTF_DUMP_FILE_LIST=( "$(checkvintf --dump-file-list)" )
+
+  for vintf_file_list in ${VINTF_DUMP_FILE_LIST[*]}; do
+    if [[ "$vintf_file_list" == */ ]]; then
+      vintf_file_list="$vintf_file_list"\*
+      # Create system vintf file list for system target files archive
+      for system_dir in "${!SYSTEM_SEARCH_PATH[@]}"; do
+        if [[ "$vintf_file_list" == "$system_dir"/* ]]; then
+          for search_dir in ${SYSTEM_SEARCH_PATH["$system_dir"]}; do
+            search_file=${vintf_file_list/$system_dir/$search_dir}
+            unzip -l "$SYSTEM_TARGET_FILES_ARCHIVE" "$search_file" > /dev/null && \
+              EXTRACT_VINTF_SYSTEM_FILE_LIST+=( "$search_file" )
+          done
+          break
+        fi
+      done
+      # Create device vintf file list for device target files archive
+      for device_dir in "${!DEVICE_SEARCH_PATH[@]}"; do
+        if [[ "$vintf_file_list" == "$device_dir"/* ]]; then
+          for search_dir in ${DEVICE_SEARCH_PATH["$device_dir"]}; do
+            search_file=${vintf_file_list/$device_dir/$search_dir}
+            unzip -l "$DEVICE_TARGET_FILES_ARCHIVE" "$search_file" > /dev/null && \
+              EXTRACT_DEVICE_FILE_LIST+=( "$search_file" )
+          done
+          break
+        fi
+      done
+     fi
+  done
 fi
 
 ###
-# Check compatibility between the system and device.
-if [[ -f "$CHECK_TOOL" ]]; then
-  chmod 755 "$CHECK_TOOL"
-  "$CHECK_TOOL" \
-    "$DEVICE_ARTIFACTS_DIR"/META/vendor_manifest.xml \
-    "$SYSTEM_ARTIFACTS_DIR"/META/system_matrix.xml
-  "$CHECK_TOOL" \
-    "$SYSTEM_ARTIFACTS_DIR"/META/system_manifest.xml \
-    "$DEVICE_ARTIFACTS_DIR"/META/vendor_matrix.xml
+# Uncompress the system archives.
+if [[ "$INCLUDE_PRODUCT" == true ]]; then
+  unzip -l "$SYSTEM_TARGET_FILES_ARCHIVE" | grep -q IMAGES/product.img &&
+  EXTRACT_SYSTEM_FILE_LIST+=(IMAGES/product.img)
 fi
+
+mkdir -p "$SYSTEM_ARTIFACTS_DIR"
+# Get system images.
+unzip "$SYSTEM_TARGET_FILES_ARCHIVE" "${EXTRACT_SYSTEM_FILE_LIST[@]}" \
+  -d "$SYSTEM_ARTIFACTS_DIR"
+
+###
+# Uncompress the device archives.
+mkdir -p "$DEVICE_IMAGES_DIR"
+# Get device images.
+unzip "$DEVICE_ARCHIVE" -d "$DEVICE_IMAGES_DIR"
+# Get the device meta data.
+unzip "$DEVICE_TARGET_FILES_ARCHIVE" "${EXTRACT_DEVICE_FILE_LIST[@]}" \
+  -d "$DEVICE_ARTIFACTS_DIR"
 
 ###
 # Modify system.img if vendor version is provided.
@@ -208,6 +256,14 @@ if [[ ! -z "${VENDOR_VERSION+x}" ]]; then
   "$MODIFY_SYSTEM_SCRIPT" "${args[@]}"
   # Replace system.img with newly modified system.img
   unzip -o "$COPY_SYSTEM_TARGET_FILES_ARCHIVE" IMAGES/system.img -d "$SYSTEM_ARTIFACTS_DIR"
+fi
+
+# Check vintf
+if [[ "$OTATOOLS_AVAILABLE" == true ]]; then
+  # Overwrite VINTF system matrix to device artifacts dir
+  unzip -o "$SYSTEM_TARGET_FILES_ARCHIVE" "${EXTRACT_VINTF_SYSTEM_FILE_LIST[@]}" \
+    -d "$DEVICE_ARTIFACTS_DIR"
+  check_target_files_vintf "$DEVICE_ARTIFACTS_DIR"
 fi
 
 ###
