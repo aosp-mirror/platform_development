@@ -172,7 +172,6 @@ RecordTypeIR ProtobufIRReader::RecordTypeProtobufToIR(
   record_type_ir.SetRecordKind(
       RecordKindProtobufToIR(record_type_protobuf.record_kind()));
   record_type_ir.SetAnonymity(record_type_protobuf.is_anonymous());
-  record_type_ir.SetUniqueId(record_type_protobuf.tag_info().unique_id());
   return record_type_ir;
 }
 
@@ -194,7 +193,6 @@ EnumTypeIR ProtobufIRReader::EnumTypeProtobufToIR(
   enum_type_ir.SetAccess(AccessProtobufToIR(enum_type_protobuf.access()));
   enum_type_ir.SetFields(
       EnumFieldsProtobufToIR(enum_type_protobuf.enum_fields()));
-  enum_type_ir.SetUniqueId(enum_type_protobuf.tag_info().unique_id());
   return enum_type_ir;
 }
 

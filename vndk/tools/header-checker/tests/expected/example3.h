@@ -5,7 +5,7 @@ record_types {
     alignment: 4
     referenced_type: "type-1"
     source_file: "/development/vndk/tools/header-checker/tests/input/example3.h"
-    linker_set_key: "HiddenBase"
+    linker_set_key: "_ZTI10HiddenBase"
     self_type: "type-1"
   }
   fields {
@@ -22,9 +22,6 @@ record_types {
   }
   access: public_access
   record_kind: class_kind
-  tag_info {
-    unique_id: "_ZTS10HiddenBase"
-  }
 }
 builtin_types {
   type_info {
@@ -33,7 +30,7 @@ builtin_types {
     alignment: 4
     referenced_type: "type-3"
     source_file: ""
-    linker_set_key: "float"
+    linker_set_key: "_ZTIf"
     self_type: "type-3"
   }
   is_unsigned: false
@@ -46,7 +43,7 @@ builtin_types {
     alignment: 4
     referenced_type: "type-2"
     source_file: ""
-    linker_set_key: "int"
+    linker_set_key: "_ZTIi"
     self_type: "type-2"
   }
   is_unsigned: false

@@ -139,13 +139,6 @@ bool ABIWrapper::SetupFunctionParameter(
   return true;
 }
 
-static const clang::TagDecl *GetTagDecl(clang::QualType qual_type) {
-  const clang::Type *type_ptr = qual_type.getCanonicalType().getTypePtr();
-  assert(type_ptr != nullptr);
-  const clang::TagDecl *tag_decl = type_ptr->getAsTagDecl();
-  return tag_decl;
-}
-
 static const clang::RecordDecl *GetAnonymousRecord(clang::QualType type) {
   const clang::Type *type_ptr = type.getTypePtr();
   assert(type_ptr != nullptr);
@@ -218,22 +211,6 @@ static clang::QualType GetFinalReferencedType(clang::QualType qual_type) {
   return qual_type;
 }
 
-std::string ABIWrapper::TypeNameWithFinalDestination(
-    clang::QualType qual_type) {
-  clang::QualType canonical_qual_type = qual_type.getCanonicalType();
-  const std::string qual_type_name = QualTypeToString(canonical_qual_type);
-  clang::QualType final_destination_type =
-      GetFinalReferencedType(canonical_qual_type);
-  const clang::RecordDecl *anon_record =
-      GetAnonymousRecord(final_destination_type);
-  if (anon_record) {
-    clang::SourceManager &sm = cip_->getSourceManager();
-    clang::SourceLocation location = anon_record->getLocation();
-    return qual_type_name + " at " + location.printToString(sm);
-  }
-  return qual_type_name;
-}
-
 std::string ABIWrapper::GetTypeId(clang::QualType qual_type) {
   return ast_caches_->GetTypeId(GetKeyForTypeId(qual_type));
 }
@@ -246,8 +223,7 @@ std::string ABIWrapper::GetKeyForTypeId(clang::QualType qual_type) {
   // final destination. This helps in avoiding aliasing of types when fully
   // qualified type-name doesn't expand all template parameters with their
   // namespaces.
-  return TypeNameWithFinalDestination(qual_type) +
-      GetTypeUniqueId(GetTagDecl(final_destination_type));
+  return QualTypeToString(qual_type) + GetTypeUniqueId(final_destination_type);
 }
 
 bool ABIWrapper::CreateAnonymousRecord(const clang::RecordDecl *record_decl) {
@@ -263,19 +239,14 @@ bool ABIWrapper::CreateExtendedType(clang::QualType qual_type,
   return CreateBasicNamedAndTypedDecl(canonical_type, typep, "");
 }
 
-std::string ABIWrapper::GetTypeUniqueId(const clang::TagDecl *tag_decl) {
-  if (!tag_decl) {
-    return "";
-  }
-  clang::QualType qual_type =
-      tag_decl->getTypeForDecl()->getCanonicalTypeInternal();
-  if (!tag_decl->isExternCContext() && ast_contextp_->getLangOpts().CPlusPlus) {
-    llvm::SmallString<256> uid;
-    llvm::raw_svector_ostream out(uid);
-    mangle_contextp_->mangleCXXRTTIName(qual_type, out);
-    return uid.str();
-  }
-  return QualTypeToString(qual_type);
+std::string ABIWrapper::GetTypeUniqueId(clang::QualType qual_type) {
+  const clang::Type *canonical_type = qual_type.getCanonicalType().getTypePtr();
+  assert(canonical_type != nullptr);
+
+  llvm::SmallString<256> uid;
+  llvm::raw_svector_ostream out(uid);
+  mangle_contextp_->mangleCXXRTTI(qual_type, out);
+  return uid.str();
 }
 
 // CreateBasicNamedAndTypedDecl creates a BasicNamedAndTypedDecl which will
@@ -300,10 +271,10 @@ bool ABIWrapper::CreateBasicNamedAndTypedDecl(
     typep->SetAlignment(size_and_alignment.second.getQuantity());
   }
 
-  std::string type_name_with_destination =
-      TypeNameWithFinalDestination(canonical_type);
-  typep->SetName(type_name_with_destination);
-  typep->SetLinkerSetKey(type_name_with_destination);
+  std::string human_name = QualTypeToString(canonical_type);
+  std::string mangled_name = GetTypeUniqueId(canonical_type);
+  typep->SetName(human_name);
+  typep->SetLinkerSetKey(mangled_name);
 
   // This type has a reference type if its a pointer / reference OR it has CVR
   // qualifiers.
@@ -819,7 +790,6 @@ bool RecordDeclWrapper::SetupRecordInfo(repr::RecordTypeIR *record_declp,
       record_decl_->isAnonymousStructOrUnion()) {
     record_declp->SetAnonymity(true);
   }
-  record_declp->SetUniqueId(GetTypeUniqueId(record_decl_));
   record_declp->SetAccess(AccessClangToIR(record_decl_->getAccess()));
   return SetupRecordFields(record_declp, source_file) &&
       SetupCXXRecordInfo(record_declp, source_file);
@@ -903,7 +873,6 @@ bool EnumDeclWrapper::SetupEnum(repr::EnumTypeIR *enum_type,
   enum_type->SetSourceFile(source_file);
   enum_type->SetUnderlyingType(GetTypeId(enum_decl_->getIntegerType()));
   enum_type->SetAccess(AccessClangToIR(enum_decl_->getAccess()));
-  enum_type->SetUniqueId(GetTypeUniqueId(enum_decl_));
   return SetupEnumFields(enum_type) &&
       CreateBasicNamedAndTypedDecl(enum_decl_->getIntegerType(), "");
 }
