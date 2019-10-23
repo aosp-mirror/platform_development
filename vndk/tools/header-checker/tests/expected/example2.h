@@ -5,7 +5,7 @@ record_types {
     alignment: 4
     referenced_type: "type-1"
     source_file: "/development/vndk/tools/header-checker/tests/input/example3.h"
-    linker_set_key: "HiddenBase"
+    linker_set_key: "_ZTI10HiddenBase"
     self_type: "type-1"
   }
   fields {
@@ -22,9 +22,6 @@ record_types {
   }
   access: public_access
   record_kind: class_kind
-  tag_info {
-    unique_id: "_ZTS10HiddenBase"
-  }
 }
 record_types {
   type_info {
@@ -33,7 +30,7 @@ record_types {
     alignment: 8
     referenced_type: "type-4"
     source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-    linker_set_key: "test2::HelloAgain"
+    linker_set_key: "_ZTIN5test210HelloAgainE"
     self_type: "type-4"
   }
   fields {
@@ -82,9 +79,44 @@ record_types {
   }
   access: public_access
   record_kind: struct_kind
-  tag_info {
-    unique_id: "_ZTSN5test210HelloAgainE"
+}
+record_types {
+  type_info {
+    name: "test3::Outer::Inner"
+    size: 4
+    alignment: 4
+    referenced_type: "type-20"
+    source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+    linker_set_key: "_ZTIN5test35Outer5InnerE"
+    self_type: "type-20"
   }
+  fields {
+    referenced_type: "type-2"
+    field_offset: 0
+    field_name: "b"
+    access: private_access
+  }
+  access: private_access
+  record_kind: class_kind
+}
+record_types {
+  type_info {
+    name: "test3::Outer"
+    size: 4
+    alignment: 4
+    referenced_type: "type-19"
+    source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+    linker_set_key: "_ZTIN5test35OuterE"
+    self_type: "type-19"
+  }
+  fields {
+    referenced_type: "type-2"
+    field_offset: 0
+    field_name: "a"
+    access: public_access
+  }
+  access: public_access
+  record_kind: class_kind
 }
 record_types {
   type_info {
@@ -93,7 +125,7 @@ record_types {
     alignment: 8
     referenced_type: "type-13"
     source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-    linker_set_key: "test3::ByeAgain<double>"
+    linker_set_key: "_ZTIN5test38ByeAgainIdEE"
     self_type: "type-13"
   }
   fields {
@@ -115,9 +147,6 @@ record_types {
   }
   access: public_access
   record_kind: struct_kind
-  tag_info {
-    unique_id: "_ZTSN5test38ByeAgainIdEE"
-  }
 }
 record_types {
   type_info {
@@ -126,7 +155,7 @@ record_types {
     alignment: 4
     referenced_type: "type-16"
     source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-    linker_set_key: "test3::ByeAgain<float>"
+    linker_set_key: "_ZTIN5test38ByeAgainIfEE"
     self_type: "type-16"
   }
   fields {
@@ -148,53 +177,6 @@ record_types {
   }
   access: public_access
   record_kind: struct_kind
-  tag_info {
-    unique_id: "_ZTSN5test38ByeAgainIfEE"
-  }
-}
-record_types {
-  type_info {
-    name: "test3::Outer"
-    size: 4
-    alignment: 4
-    referenced_type: "type-19"
-    source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-    linker_set_key: "test3::Outer"
-    self_type: "type-19"
-  }
-  fields {
-    referenced_type: "type-2"
-    field_offset: 0
-    field_name: "a"
-    access: public_access
-  }
-  access: public_access
-  record_kind: class_kind
-  tag_info {
-    unique_id: "_ZTSN5test35OuterE"
-  }
-}
-record_types {
-  type_info {
-    name: "test3::Outer::Inner"
-    size: 4
-    alignment: 4
-    referenced_type: "type-20"
-    source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-    linker_set_key: "test3::Outer::Inner"
-    self_type: "type-20"
-  }
-  fields {
-    referenced_type: "type-2"
-    field_offset: 0
-    field_name: "b"
-    access: private_access
-  }
-  access: private_access
-  record_kind: class_kind
-  tag_info {
-    unique_id: "_ZTSN5test35Outer5InnerE"
-  }
 }
 enum_types {
   type_info {
@@ -203,7 +185,7 @@ enum_types {
     alignment: 4
     referenced_type: "type-8"
     source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-    linker_set_key: "Foo_s"
+    linker_set_key: "_ZTI5Foo_s"
     self_type: "type-8"
   }
   underlying_type: "type-9"
@@ -216,9 +198,6 @@ enum_types {
     name: "foosbat"
   }
   access: public_access
-  tag_info {
-    unique_id: "_ZTS5Foo_s"
-  }
 }
 enum_types {
   type_info {
@@ -227,7 +206,7 @@ enum_types {
     alignment: 4
     referenced_type: "type-18"
     source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-    linker_set_key: "test3::Kind"
+    linker_set_key: "_ZTIN5test34KindE"
     self_type: "type-18"
   }
   underlying_type: "type-9"
@@ -240,9 +219,6 @@ enum_types {
     name: "test3::kind2"
   }
   access: public_access
-  tag_info {
-    unique_id: "_ZTSN5test34KindE"
-  }
 }
 pointer_types {
   type_info {
@@ -251,7 +227,7 @@ pointer_types {
     alignment: 8
     referenced_type: "type-4"
     source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-    linker_set_key: "test2::HelloAgain *"
+    linker_set_key: "_ZTIPN5test210HelloAgainE"
     self_type: "type-6"
   }
 }
@@ -262,7 +238,7 @@ pointer_types {
     alignment: 8
     referenced_type: "type-13"
     source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-    linker_set_key: "test3::ByeAgain<double> *"
+    linker_set_key: "_ZTIPN5test38ByeAgainIdEE"
     self_type: "type-15"
   }
 }
@@ -273,7 +249,7 @@ pointer_types {
     alignment: 8
     referenced_type: "type-16"
     source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-    linker_set_key: "test3::ByeAgain<float> *"
+    linker_set_key: "_ZTIPN5test38ByeAgainIfEE"
     self_type: "type-17"
   }
 }
@@ -284,7 +260,7 @@ builtin_types {
     alignment: 1
     referenced_type: "type-12"
     source_file: ""
-    linker_set_key: "bool"
+    linker_set_key: "_ZTIb"
     self_type: "type-12"
   }
   is_unsigned: true
@@ -297,7 +273,7 @@ builtin_types {
     alignment: 8
     referenced_type: "type-14"
     source_file: ""
-    linker_set_key: "double"
+    linker_set_key: "_ZTId"
     self_type: "type-14"
   }
   is_unsigned: false
@@ -310,7 +286,7 @@ builtin_types {
     alignment: 4
     referenced_type: "type-3"
     source_file: ""
-    linker_set_key: "float"
+    linker_set_key: "_ZTIf"
     self_type: "type-3"
   }
   is_unsigned: false
@@ -323,7 +299,7 @@ builtin_types {
     alignment: 4
     referenced_type: "type-2"
     source_file: ""
-    linker_set_key: "int"
+    linker_set_key: "_ZTIi"
     self_type: "type-2"
   }
   is_unsigned: false
@@ -336,7 +312,7 @@ builtin_types {
     alignment: 4
     referenced_type: "type-9"
     source_file: ""
-    linker_set_key: "unsigned int"
+    linker_set_key: "_ZTIj"
     self_type: "type-9"
   }
   is_unsigned: true
@@ -349,7 +325,7 @@ builtin_types {
     alignment: 0
     referenced_type: "type-7"
     source_file: ""
-    linker_set_key: "void"
+    linker_set_key: "_ZTIv"
     self_type: "type-7"
   }
   is_unsigned: false
@@ -362,7 +338,7 @@ qualified_types {
     alignment: 1
     referenced_type: "type-10"
     source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-    linker_set_key: "bool const[2]"
+    linker_set_key: "_ZTIA2_Kb"
     self_type: "type-11"
   }
   is_const: true
@@ -376,7 +352,7 @@ array_types {
     alignment: 1
     referenced_type: "type-12"
     source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-    linker_set_key: "bool [2]"
+    linker_set_key: "_ZTIA2_b"
     self_type: "type-10"
   }
 }

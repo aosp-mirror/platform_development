@@ -86,14 +86,12 @@ class ABIWrapper {
   bool CreateExtendedType(clang::QualType canonical_type,
                           repr::TypeIR *typep);
 
-  std::string GetTypeUniqueId(const clang::TagDecl *tag_decl);
-
  private:
+  std::string GetTypeUniqueId(clang::QualType qual_type);
+
   std::string QualTypeToString(const clang::QualType &sweet_qt);
 
   std::string GetKeyForTypeId(clang::QualType qual_type);
-
-  std::string TypeNameWithFinalDestination(clang::QualType qual_type);
 
   TypeAndCreationStatus SetTypeKind(const clang::QualType qtype,
                                     const std::string &source_file);
