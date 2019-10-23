@@ -5,7 +5,7 @@ record_types {
     alignment: 8
     referenced_type: "type-1"
     source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
-    linker_set_key: "SuperSpeaker"
+    linker_set_key: "_ZTI12SuperSpeaker"
     self_type: "type-1"
   }
   fields {
@@ -54,68 +54,6 @@ record_types {
   }
   access: public_access
   record_kind: class_kind
-  tag_info {
-    unique_id: "_ZTS12SuperSpeaker"
-  }
-}
-record_types {
-  type_info {
-    name: "HighVolumeSpeaker"
-    size: 16
-    alignment: 8
-    referenced_type: "type-11"
-    source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h"
-    linker_set_key: "HighVolumeSpeaker"
-    self_type: "type-11"
-  }
-  base_specifiers {
-    referenced_type: "type-1"
-    is_virtual: false
-    access: public_access
-  }
-  vtable_layout {
-    vtable_components {
-      kind: OffsetToTop
-      mangled_component_name: ""
-      component_value: 0
-      is_pure: false
-    }
-    vtable_components {
-      kind: RTTI
-      mangled_component_name: "_ZTI17HighVolumeSpeaker"
-      component_value: 0
-      is_pure: false
-    }
-    vtable_components {
-      kind: FunctionPointer
-      mangled_component_name: "_ZN17HighVolumeSpeaker5SpeakEv"
-      component_value: 0
-      is_pure: false
-    }
-    vtable_components {
-      kind: FunctionPointer
-      mangled_component_name: "_ZN17HighVolumeSpeaker6ListenEv"
-      component_value: 0
-      is_pure: false
-    }
-    vtable_components {
-      kind: CompleteDtorPointer
-      mangled_component_name: "_ZN17HighVolumeSpeakerD1Ev"
-      component_value: 0
-      is_pure: false
-    }
-    vtable_components {
-      kind: DeletingDtorPointer
-      mangled_component_name: "_ZN17HighVolumeSpeakerD0Ev"
-      component_value: 0
-      is_pure: false
-    }
-  }
-  access: public_access
-  record_kind: class_kind
-  tag_info {
-    unique_id: "_ZTS17HighVolumeSpeaker"
-  }
 }
 record_types {
   type_info {
@@ -124,7 +62,7 @@ record_types {
     alignment: 8
     referenced_type: "type-4"
     source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
-    linker_set_key: "LowVolumeSpeaker"
+    linker_set_key: "_ZTI16LowVolumeSpeaker"
     self_type: "type-4"
   }
   fields {
@@ -184,9 +122,62 @@ record_types {
   }
   access: public_access
   record_kind: class_kind
-  tag_info {
-    unique_id: "_ZTS16LowVolumeSpeaker"
+}
+record_types {
+  type_info {
+    name: "HighVolumeSpeaker"
+    size: 16
+    alignment: 8
+    referenced_type: "type-11"
+    source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h"
+    linker_set_key: "_ZTI17HighVolumeSpeaker"
+    self_type: "type-11"
   }
+  base_specifiers {
+    referenced_type: "type-1"
+    is_virtual: false
+    access: public_access
+  }
+  vtable_layout {
+    vtable_components {
+      kind: OffsetToTop
+      mangled_component_name: ""
+      component_value: 0
+      is_pure: false
+    }
+    vtable_components {
+      kind: RTTI
+      mangled_component_name: "_ZTI17HighVolumeSpeaker"
+      component_value: 0
+      is_pure: false
+    }
+    vtable_components {
+      kind: FunctionPointer
+      mangled_component_name: "_ZN17HighVolumeSpeaker5SpeakEv"
+      component_value: 0
+      is_pure: false
+    }
+    vtable_components {
+      kind: FunctionPointer
+      mangled_component_name: "_ZN17HighVolumeSpeaker6ListenEv"
+      component_value: 0
+      is_pure: false
+    }
+    vtable_components {
+      kind: CompleteDtorPointer
+      mangled_component_name: "_ZN17HighVolumeSpeakerD1Ev"
+      component_value: 0
+      is_pure: false
+    }
+    vtable_components {
+      kind: DeletingDtorPointer
+      mangled_component_name: "_ZN17HighVolumeSpeakerD0Ev"
+      component_value: 0
+      is_pure: false
+    }
+  }
+  access: public_access
+  record_kind: class_kind
 }
 enum_types {
   type_info {
@@ -195,7 +186,7 @@ enum_types {
     alignment: 4
     referenced_type: "type-8"
     source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
-    linker_set_key: "SuperSpeaker::Volume"
+    linker_set_key: "_ZTIN12SuperSpeaker6VolumeE"
     self_type: "type-8"
   }
   underlying_type: "type-2"
@@ -212,9 +203,6 @@ enum_types {
     name: "SuperSpeaker::Loudest"
   }
   access: private_access
-  tag_info {
-    unique_id: "_ZTSN12SuperSpeaker6VolumeE"
-  }
 }
 pointer_types {
   type_info {
@@ -223,19 +211,8 @@ pointer_types {
     alignment: 8
     referenced_type: "type-1"
     source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
-    linker_set_key: "SuperSpeaker *"
+    linker_set_key: "_ZTIP12SuperSpeaker"
     self_type: "type-9"
-  }
-}
-pointer_types {
-  type_info {
-    name: "HighVolumeSpeaker *"
-    size: 8
-    alignment: 8
-    referenced_type: "type-11"
-    source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h"
-    linker_set_key: "HighVolumeSpeaker *"
-    self_type: "type-12"
   }
 }
 pointer_types {
@@ -245,8 +222,19 @@ pointer_types {
     alignment: 8
     referenced_type: "type-4"
     source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
-    linker_set_key: "LowVolumeSpeaker *"
+    linker_set_key: "_ZTIP16LowVolumeSpeaker"
     self_type: "type-3"
+  }
+}
+pointer_types {
+  type_info {
+    name: "HighVolumeSpeaker *"
+    size: 8
+    alignment: 8
+    referenced_type: "type-11"
+    source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h"
+    linker_set_key: "_ZTIP17HighVolumeSpeaker"
+    self_type: "type-12"
   }
 }
 pointer_types {
@@ -256,7 +244,7 @@ pointer_types {
     alignment: 8
     referenced_type: "type-7"
     source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
-    linker_set_key: "float *"
+    linker_set_key: "_ZTIPf"
     self_type: "type-6"
   }
 }
@@ -267,7 +255,7 @@ builtin_types {
     alignment: 4
     referenced_type: "type-7"
     source_file: ""
-    linker_set_key: "float"
+    linker_set_key: "_ZTIf"
     self_type: "type-7"
   }
   is_unsigned: false
@@ -280,7 +268,7 @@ builtin_types {
     alignment: 4
     referenced_type: "type-2"
     source_file: ""
-    linker_set_key: "int"
+    linker_set_key: "_ZTIi"
     self_type: "type-2"
   }
   is_unsigned: false
@@ -293,7 +281,7 @@ builtin_types {
     alignment: 4
     referenced_type: "type-5"
     source_file: ""
-    linker_set_key: "unsigned int"
+    linker_set_key: "_ZTIj"
     self_type: "type-5"
   }
   is_unsigned: true
@@ -306,7 +294,7 @@ builtin_types {
     alignment: 0
     referenced_type: "type-10"
     source_file: ""
-    linker_set_key: "void"
+    linker_set_key: "_ZTIv"
     self_type: "type-10"
   }
   is_unsigned: false

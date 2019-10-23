@@ -199,7 +199,7 @@ DiffStatus AbiDiffHelper::CompareEnumTypes(
     const EnumTypeIR *old_type, const EnumTypeIR *new_type,
     std::deque<std::string> *type_queue,
     DiffMessageIR::DiffKind diff_kind) {
-  if (old_type->GetUniqueId() != new_type->GetUniqueId()) {
+  if (old_type->GetLinkerSetKey() != new_type->GetLinkerSetKey()) {
     return DiffStatus::direct_diff;
   }
   auto enum_type_diff_ir = std::make_unique<EnumTypeDiffIR>();
@@ -548,7 +548,7 @@ DiffStatus AbiDiffHelper::CompareRecordTypes(
   auto record_type_diff_ir = std::make_unique<RecordTypeDiffIR>();
   // Compare names.
   if (!old_type->IsAnonymous() && !new_type->IsAnonymous() &&
-      old_type->GetUniqueId() != new_type->GetUniqueId()) {
+      old_type->GetLinkerSetKey() != new_type->GetLinkerSetKey()) {
     // Do not dump anything since the record types themselves are fundamentally
     // different.
     return DiffStatus::direct_diff;
