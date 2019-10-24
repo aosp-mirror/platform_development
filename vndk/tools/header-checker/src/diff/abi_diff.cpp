@@ -121,11 +121,11 @@ HeaderAbiDiff::ExtractUserDefinedTypes(const repr::ModuleIR &tu) {
           continue;
         }
         record_types.emplace(
-            record_type->GetUniqueId(), record_type);
+            record_type->GetLinkerSetKey(), record_type);
         break;
       case repr::EnumTypeKind:
         enum_types.emplace(
-            static_cast<const repr::EnumTypeIR *>(type)->GetUniqueId(),
+            static_cast<const repr::EnumTypeIR *>(type)->GetLinkerSetKey(),
             static_cast<const repr::EnumTypeIR *>(type));
         break;
       case repr::FunctionTypeKind:
