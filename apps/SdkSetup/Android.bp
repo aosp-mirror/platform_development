@@ -7,4 +7,5 @@ android_app {
     optimize: {
         enabled: false,
     },
+    product_specific: true,
 }
