@@ -46,8 +46,4 @@ PRODUCT_HOST_PACKAGES += \
 	split-select \
 	zipalign
 
-PRODUCT_ARTIFACT_PATH_REQUIREMENT_WHITELIST += \
-system/bin/deployagent \
-system/framework/deployagent.jar
-
 #end
