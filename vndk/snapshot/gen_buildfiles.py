@@ -95,11 +95,12 @@ class GenBuildFile(object):
         etc_paths = dict()
         for etc_module in self.ETC_MODULES:
             etc_pattern = '{}*'.format(os.path.splitext(etc_module)[0])
-            etc_path = glob.glob(
+            globbed = glob.glob(
                 os.path.join(self._install_dir, utils.CONFIG_DIR_PATH_PATTERN,
-                             etc_pattern))[0]
-            rel_etc_path = etc_path.replace(self._install_dir, '')[1:]
-            etc_paths[etc_module] = rel_etc_path
+                             etc_pattern))
+            if len(globbed) > 0:
+                rel_etc_path = globbed[0].replace(self._install_dir, '')[1:]
+                etc_paths[etc_module] = rel_etc_path
         return etc_paths
 
     def _parse_lib_list(self, txt_filename):
@@ -179,6 +180,22 @@ class GenBuildFile(object):
             logging.info('Generating Android.bp for vndk_v{}_{}{}'.format(
                 self._vndk_version, arch, binder32_suffix))
 
+            src_root = os.path.join(self._install_dir, arch)
+            module_names_txt = os.path.join(
+                src_root, "configs", "module_names.txt")
+            module_names = dict()
+            try:
+                with open(module_names_txt, 'r') as f:
+                    # Remove empty lines from module_names_txt
+                    module_list = filter(None, f.read().split('\n'))
+                for module in module_list:
+                    lib, name = module.split(' ')
+                    module_names[lib] = name
+            except IOError:
+                # If module_names.txt doesn't exist, ignore it and parse
+                # module names out from .so filenames. (old snapshot)
+                pass
+
             variant_subpath = arch
             # For O-MR1 snapshot (v27), 32-bit binder prebuilts are not
             # isolated in separate 'binder32' subdirectory.
@@ -188,17 +205,22 @@ class GenBuildFile(object):
             bpfile_path = os.path.join(variant_path, 'Android.bp')
 
             vndk_core_buildrules = self._gen_vndk_shared_prebuilts(
-                self._vndk_core[arch], arch, is_binder32=is_binder32)
+                self._vndk_core[arch],
+                arch,
+                is_vndk_sp=False,
+                is_binder32=is_binder32,
+                module_names=module_names)
             vndk_sp_buildrules = self._gen_vndk_shared_prebuilts(
                 self._vndk_sp[arch],
                 arch,
                 is_vndk_sp=True,
-                is_binder32=is_binder32)
+                is_binder32=is_binder32,
+                module_names=module_names)
 
             with open(bpfile_path, 'w') as bpfile:
                 bpfile.write(self._gen_autogen_msg('/'))
                 bpfile.write('\n')
-                bpfile.write(self._gen_bp_phony(arch, is_binder32))
+                bpfile.write(self._gen_bp_phony(arch, is_binder32, module_names))
                 bpfile.write('\n')
                 bpfile.write('\n'.join(vndk_core_buildrules))
                 bpfile.write('\n')
@@ -237,7 +259,8 @@ class GenBuildFile(object):
                             prebuilt,
                             arch,
                             is_etc=False,
-                            is_binder32=False):
+                            is_binder32=False,
+                            module_names=None):
         """Returns the VNDK version-specific module name for a given prebuilt.
 
         The VNDK version-specific module name is defined as follows:
@@ -253,11 +276,17 @@ class GenBuildFile(object):
           arch: string, VNDK snapshot arch (e.g. 'arm64')
           is_etc: bool, True if the LOCAL_MODULE_CLASS of prebuilt is 'ETC'
           is_binder32: bool, True if binder interface is 32-bit
+          module_names: dict, module names for given prebuilts
         """
-        name, ext = os.path.splitext(prebuilt)
         if is_etc:
+            name, ext = os.path.splitext(prebuilt)
             versioned_name = '{}.{}{}'.format(name, self._vndk_version, ext)
         else:
+            module_names = module_names or dict()
+            if prebuilt in module_names:
+                name = module_names[prebuilt]
+            else:
+                name = os.path.splitext(prebuilt)[0]
             binder_suffix = '.{}'.format(utils.BINDER32) if is_binder32 else ''
             versioned_name = '{}.vndk.{}.{}{}.vendor'.format(
                 name, self._vndk_version, arch, binder_suffix)
@@ -314,24 +343,33 @@ class GenBuildFile(object):
         return 'vndk-v{ver}-{module}-notice'.format(
             ver=self._vndk_version, module=module)
 
-    def _gen_bp_phony(self, arch, is_binder32=False):
+    def _gen_bp_phony(self, arch, is_binder32, module_names):
         """Generates build rule for phony package 'vndk_v{ver}_{arch}'.
 
         Args:
           arch: string, VNDK snapshot arch (e.g. 'arm64')
           is_binder32: bool, True if binder interface is 32-bit
+          module_names: dict, module names for given prebuilts
         """
+
         required = []
         for prebuilts in (self._vndk_core[arch], self._vndk_sp[arch]):
             for prebuilt in prebuilts:
                 required.append(
                     self._get_versioned_name(
-                        prebuilt, arch, is_binder32=is_binder32))
+                        prebuilt,
+                        arch,
+                        is_binder32=is_binder32,
+                        module_names=module_names))
 
         for prebuilt in self.ETC_MODULES:
             required.append(
                 self._get_versioned_name(
-                    prebuilt, None, is_etc=True, is_binder32=is_binder32))
+                    prebuilt,
+                    None,
+                    is_etc=True,
+                    is_binder32=is_binder32,
+                    module_names=module_names))
 
         required_str = ['"{}",'.format(prebuilt) for prebuilt in required]
         required_formatted = '\n{ind}{ind}'.format(
@@ -356,8 +394,9 @@ class GenBuildFile(object):
     def _gen_vndk_shared_prebuilts(self,
                                    prebuilts,
                                    arch,
-                                   is_vndk_sp=False,
-                                   is_binder32=False):
+                                   is_vndk_sp,
+                                   is_binder32,
+                                   module_names):
         """Returns list of build rules for given prebuilts.
 
         Args:
@@ -365,7 +404,9 @@ class GenBuildFile(object):
           arch: string, VNDK snapshot arch (e.g. 'arm64')
           is_vndk_sp: bool, True if prebuilts are VNDK_SP libs
           is_binder32: bool, True if binder interface is 32-bit
+          module_names: dict, module names for given prebuilts
         """
+
         build_rules = []
         for prebuilt in prebuilts:
             build_rules.append(
@@ -373,14 +414,16 @@ class GenBuildFile(object):
                     prebuilt,
                     arch,
                     is_vndk_sp=is_vndk_sp,
-                    is_binder32=is_binder32))
+                    is_binder32=is_binder32,
+                    module_names=module_names))
         return build_rules
 
     def _gen_vndk_shared_prebuilt(self,
                                   prebuilt,
                                   arch,
-                                  is_vndk_sp=False,
-                                  is_binder32=False):
+                                  is_vndk_sp,
+                                  is_binder32,
+                                  module_names):
         """Returns build rule for given prebuilt.
 
         Args:
@@ -388,6 +431,7 @@ class GenBuildFile(object):
           arch: string, VNDK snapshot arch (e.g. 'arm64')
           is_vndk_sp: bool, True if prebuilt is a VNDK_SP lib
           is_binder32: bool, True if binder interface is 32-bit
+          module_names: dict, module names for given prebuilts
         """
 
         def get_notice_file(prebuilt):
@@ -499,7 +543,10 @@ class GenBuildFile(object):
         if is_binder32 and self._vndk_version >= 28:
             src_root = os.path.join(src_root, utils.BINDER32)
 
-        name = os.path.splitext(prebuilt)[0]
+        if prebuilt in module_names:
+            name = module_names[prebuilt]
+        else:
+            name = os.path.splitext(prebuilt)[0]
         vendor_available = str(
             prebuilt not in self._vndk_private[arch]).lower()
 
