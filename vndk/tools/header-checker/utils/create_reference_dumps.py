@@ -30,10 +30,10 @@ def choose_vndk_version(version, platform_vndk_version, board_vndk_version):
     return version
 
 
-def make_libs_for_product(libs, product, variant, targets):
+def make_libs_for_product(libs, product, variant, vndk_version, targets):
     print('making libs for', product + '-' + variant)
     if libs:
-        make_libraries(product, variant, targets, libs)
+        make_libraries(product, variant, vndk_version, targets, libs)
     else:
         make_tree(product, variant)
 
@@ -123,21 +123,24 @@ def create_source_abi_reference_dumps(args, chosen_vndk_version,
 def create_source_abi_reference_dumps_for_all_products(args):
     """Create reference ABI dumps for all specified products."""
 
-    platform_vndk_version, board_vndk_version = get_build_vars_for_product(
-        ['PLATFORM_VNDK_VERSION', 'BOARD_VNDK_VERSION'])
-    chosen_vndk_version = choose_vndk_version(
-        args.version, platform_vndk_version, board_vndk_version)
-
     num_processed = 0
 
     for product in args.products:
-        targets = [Target(True, product), Target(False, product)]
+        build_vars = get_build_vars_for_product(
+            ['PLATFORM_VNDK_VERSION', 'BOARD_VNDK_VERSION', 'BINDER32BIT'],
+            product, args.build_variant)
 
-        if get_build_vars_for_product(['BINDER32BIT'], product)[0] == 'true':
+        platform_vndk_version = build_vars[0]
+        board_vndk_version = build_vars[1]
+        if build_vars[2] == 'true':
             binder_bitness = '32'
         else:
             binder_bitness = '64'
 
+        chosen_vndk_version = choose_vndk_version(
+            args.version, platform_vndk_version, board_vndk_version)
+
+        targets = [Target(True, product), Target(False, product)]
         # Remove reference ABI dumps specified in `args.libs` (or remove all of
         # them if none of them are specified) so that we may build these
         # libraries successfully.
@@ -146,12 +149,13 @@ def create_source_abi_reference_dumps_for_all_products(args):
             args.libs)
 
         if not args.no_make_lib:
-            # Build all the specified libs (or build the 'vndk' target if none
-            # of them are specified.)
-            make_libs_for_product(args.libs, product,
-                                  args.build_variant, targets)
+            # Build all the specified libs, or build `findlsdumps` if no libs
+            # are specified.
+            make_libs_for_product(args.libs, product, args.build_variant,
+                                  platform_vndk_version, targets)
 
-        lsdump_paths = read_lsdump_paths(product, args.build_variant, targets,
+        lsdump_paths = read_lsdump_paths(product, args.build_variant,
+                                         platform_vndk_version, targets,
                                          build=False)
 
         num_processed += create_source_abi_reference_dumps(

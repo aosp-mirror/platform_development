@@ -191,20 +191,6 @@ class TypeIR : public LinkableMessageIR, public ReferencesOtherType {
   uint32_t alignment_ = 0;
 };
 
-class TagTypeIR {
- public:
-  const std::string &GetUniqueId() const {
-    return unique_id_;
-  }
-
-  void SetUniqueId(const std::string &unique_id) {
-    unique_id_ = unique_id;
-  }
-
- protected:
-  std::string unique_id_;
-};
-
 class VTableComponentIR {
  public:
   enum Kind {
@@ -360,8 +346,7 @@ class RecordFieldIR : public ReferencesOtherType {
   AccessSpecifierIR access_ = AccessSpecifierIR::PublicAccess;
 };
 
-class RecordTypeIR : public TypeIR, public TemplatedArtifactIR,
-                     public TagTypeIR {
+class RecordTypeIR : public TypeIR, public TemplatedArtifactIR {
  public:
   enum RecordKind {
     struct_kind,
@@ -466,7 +451,7 @@ class EnumFieldIR {
   int value_ = 0;
 };
 
-class EnumTypeIR : public TypeIR, public TagTypeIR {
+class EnumTypeIR : public TypeIR {
  public:
   // Add Methods to get information from the IR.
   void AddEnumField(EnumFieldIR &&field) {
