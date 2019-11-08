@@ -41,18 +41,16 @@ def sha1sum_without_signing_key(filepath):
   return hashlib.sha1(",".join(l).encode()).hexdigest()
 
 def strip_and_sha1sum(filepath):
-  strip_all = lambda: silent_call(["llvm-strip", "--strip-all", "-keep-section=.ARM.attributes", filepath, "-o", filepath + ".tmp"])
-  remove_build_id = lambda: silent_call(["llvm-strip", "-remove-section=.note.gnu.build-id", filepath + ".tmp", "-o", filepath + ".tmp.no-build-id"])
+  tmp_filepath = filepath + '.tmp.no-build-id'
+  strip_all_and_remove_build_id = lambda: silent_call(["llvm-strip", "--strip-all", "--keep-section=.ARM.attributes", "--remove-section=.note.gnu.build-id", filepath, "-o", tmp_filepath])
   try:
-    if strip_all() and remove_build_id():
-      return sha1sum(filepath + ".tmp.no-build-id")
+    if strip_all_and_remove_build_id():
+      return sha1sum(tmp_filepath)
     else:
       return sha1sum(filepath)
   finally:
-    if os.path.exists(filepath + ".tmp"):
-      os.remove(filepath + ".tmp")
-    if os.path.exists(filepath + ".tmp.no-build-id"):
-      os.remove(filepath + ".tmp.no-build-id")
+    if os.path.exists(tmp_filepath):
+      os.remove(tmp_filepath)
 
   return sha1sum(filepath)
 
@@ -72,7 +70,7 @@ def main(all_targets, search_paths, ignore_signing_key=False):
     paths = [str(path) for path in Path(target).glob('**/*') if valid_path(str(path))]
 
     def run(path):
-      is_native_component = silent_call(["objdump", "-a", path])
+      is_native_component = silent_call(["llvm-objdump", "-a", path])
       is_apk = path.endswith('.apk')
       if is_native_component:
         return strip_and_sha1sum(path), path[len(target):]
