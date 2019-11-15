@@ -20,12 +20,16 @@ import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.hardware.input.InputManager;
+import android.hardware.input.KeyboardLayout;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.os.ServiceManager;
+import android.os.SystemProperties;
 import android.os.Build;
 import android.provider.Settings;
+import android.view.InputDevice;
 
 /**
  * Entry point for SDK SetupWizard.
@@ -39,6 +43,13 @@ public class DefaultActivity extends Activity {
 
         // Edit Settings only for Emulator
         if (Build.IS_EMULATOR) {
+            // Set physical keyboard layout based on the system property set by emulator host.
+            String layoutName = SystemProperties.get("qemu.keyboard_layout");
+            String deviceName = "qwerty2";
+            InputDevice device = getKeyboardDevice(deviceName);
+            if (device != null && !layoutName.isEmpty()) {
+                setKeyboardLayout(device, layoutName);
+            }
             // Add a persistent setting to allow other apps to know the device has been provisioned.
             Settings.Global.putInt(getContentResolver(), Settings.Global.DEVICE_PROVISIONED, 1);
 
@@ -53,9 +64,9 @@ public class DefaultActivity extends Activity {
                     LocationManager.GPS_PROVIDER);
 
             // enable install from non market
-            Settings.Global.putInt(getContentResolver(), Settings.Global.INSTALL_NON_MARKET_APPS, 1);
+            Settings.Secure.putInt(getContentResolver(), Settings.Secure.INSTALL_NON_MARKET_APPS, 1);
 
-            Settings.Secure.putInt(getContentResolver(),Settings.Secure.ADB_ENABLED, 1);
+            Settings.Global.putInt(getContentResolver(), Settings.Global.ADB_ENABLED, 1);
         }
 
         // remove this activity from the package manager.
@@ -65,6 +76,35 @@ public class DefaultActivity extends Activity {
 
         // terminate the activity.
         finish();
+    }
+
+    private InputDevice getKeyboardDevice(String keyboardDeviceName) {
+        int[] deviceIds = InputDevice.getDeviceIds();
+
+        for (int deviceId : deviceIds) {
+            InputDevice inputDevice = InputDevice.getDevice(deviceId);
+            if (inputDevice != null
+                    && inputDevice.supportsSource(InputDevice.SOURCE_KEYBOARD)
+                    && inputDevice.getName().equals(keyboardDeviceName)) {
+                return inputDevice;
+            }
+        }
+        return null;
+    }
+
+    private void setKeyboardLayout(InputDevice keyboardDevice, String layoutName) {
+        InputManager im = InputManager.getInstance();
+
+        KeyboardLayout[] keyboardLayouts =
+                im.getKeyboardLayoutsForInputDevice(keyboardDevice.getIdentifier());
+
+        for (KeyboardLayout keyboardLayout : keyboardLayouts) {
+            if (keyboardLayout.getDescriptor().endsWith(layoutName)) {
+                im.setCurrentKeyboardLayoutForInputDevice(
+                        keyboardDevice.getIdentifier(), keyboardLayout.getDescriptor());
+                return;
+            }
+        }
     }
 }
 
