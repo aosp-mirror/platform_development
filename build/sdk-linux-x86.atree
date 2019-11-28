@@ -41,4 +41,6 @@ prebuilts/sdk/tools/linux/bin/i686-linux-android-ld      strip build-tools/${PLA
 prebuilts/sdk/tools/linux/bin/x86_64-linux-android-ld    strip build-tools/${PLATFORM_NAME}/x86_64-linux-android-ld
 prebuilts/sdk/tools/linux/bin/mipsel-linux-android-ld    strip build-tools/${PLATFORM_NAME}/mipsel-linux-android-ld
 
+prebuilts/sdk/tools/linux/bin/lld   strip build-tools/${PLATFORM_NAME}/lld
+
 dalvik/dx/etc/mainDexClasses                               build-tools/${PLATFORM_NAME}/mainDexClasses
