@@ -35,7 +35,7 @@ class HeaderCheckerFrontendActionFactory
  public:
   HeaderCheckerFrontendActionFactory(HeaderCheckerOptions &options);
 
-  clang::FrontendAction *create() override;
+  std::unique_ptr<clang::FrontendAction> create() override;
 };
 
 

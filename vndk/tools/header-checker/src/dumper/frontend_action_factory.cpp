@@ -18,6 +18,8 @@
 
 #include <clang/Frontend/FrontendActions.h>
 
+#include <utility>
+
 
 namespace header_checker {
 namespace dumper {
@@ -27,8 +29,9 @@ HeaderCheckerFrontendActionFactory::HeaderCheckerFrontendActionFactory(
     HeaderCheckerOptions &options)
     : options_(options) {}
 
-clang::FrontendAction *HeaderCheckerFrontendActionFactory::create() {
-  return new HeaderCheckerFrontendAction(options_);
+std::unique_ptr<clang::FrontendAction>
+HeaderCheckerFrontendActionFactory::create() {
+  return std::make_unique<HeaderCheckerFrontendAction>(options_);
 }
 
 
