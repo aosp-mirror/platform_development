@@ -32,7 +32,7 @@ cc_defaults {
     cppflags: [
         "-fno-exceptions",
         "-fno-rtti",
-        "-std=c++17",
+        "-std=c++14",
     ],
 
     target: {
@@ -211,6 +211,7 @@ cc_test_host {
     ],
 
     shared_libs: [
+        "libLLVM_host",
         "libc++_host",
     ],
 

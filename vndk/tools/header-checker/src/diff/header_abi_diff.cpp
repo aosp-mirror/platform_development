@@ -156,8 +156,9 @@ static std::string GetConfigFilePath(const std::string &dump_file_path) {
 static void ReadConfigFile(const std::string &config_file_path) {
   ConfigFile cfg = ConfigParser::ParseFile(config_file_path);
   if (cfg.HasSection("global")) {
-    for (auto &&[key, value] : cfg.GetSection("global")) {
-      bool value_bool = ParseBool(value);
+    for (auto &&p : cfg.GetSection("global")) {
+      auto &&key = p.first;
+      bool value_bool = ParseBool(p.second);
       if (key == "allow_adding_removing_weak_symbols") {
         allow_adding_removing_weak_symbols = value_bool;
       } else if (key == "advice_only") {
