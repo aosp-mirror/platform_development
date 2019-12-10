@@ -20,6 +20,7 @@
 #include "utils/command_line_utils.h"
 #include "utils/header_abi_util.h"
 
+#include <llvm/ADT/Optional.h>
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/raw_ostream.h>
 
@@ -401,7 +402,7 @@ bool HeaderAbiLinker::ReadExportedSymbols() {
 }
 
 bool HeaderAbiLinker::ReadExportedSymbolsFromVersionScript() {
-  std::optional<utils::ApiLevel> api_level = utils::ParseApiLevel(api_);
+  llvm::Optional<utils::ApiLevel> api_level = utils::ParseApiLevel(api_);
   if (!api_level) {
     llvm::errs() << "-api must be either \"current\" or an integer (e.g. 21)\n";
     return false;
@@ -415,7 +416,7 @@ bool HeaderAbiLinker::ReadExportedSymbolsFromVersionScript() {
 
   repr::VersionScriptParser parser;
   parser.SetArch(arch_);
-  parser.SetApiLevel(api_level.value());
+  parser.SetApiLevel(api_level.getValue());
   for (auto &&version : excluded_symbol_versions_) {
     parser.AddExcludedSymbolVersion(version);
   }
