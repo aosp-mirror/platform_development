@@ -699,13 +699,13 @@ public class Connectivity extends Activity {
     private void onLinkStats() {
         Log.e(TAG, "LINK STATS:  ");
         try {
-            WifiActivityEnergyInfo info =
-                    mWm.getControllerActivityEnergyInfo();
-            if (info != null) {
-                mLinkStatsResults.setText(" power " + info.toString());
-            } else {
-                mLinkStatsResults.setText(" null! ");
-            }
+            mWm.getWifiActivityEnergyInfoAsync(getMainExecutor(), info -> {
+                if (info != null) {
+                    mLinkStatsResults.setText(" power " + info.toString());
+                } else {
+                    mLinkStatsResults.setText(" null! ");
+                }
+            });
         } catch (Exception e) {
             mLinkStatsResults.setText(" failed! " + e.toString());
         }
