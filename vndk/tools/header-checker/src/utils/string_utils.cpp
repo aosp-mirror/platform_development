@@ -14,6 +14,8 @@
 
 #include "utils/string_utils.h"
 
+#include <llvm/ADT/Optional.h>
+
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
@@ -72,7 +74,7 @@ std::vector<std::string_view> Split(std::string_view s,
 }
 
 
-std::optional<int> ParseInt(const std::string &s) {
+llvm::Optional<int> ParseInt(const std::string &s) {
   const char *start = s.c_str();
   if (*start == '\0') {
     return {};
