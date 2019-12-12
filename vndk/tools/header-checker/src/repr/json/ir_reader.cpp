@@ -152,7 +152,7 @@ GetElfSymbolBinding(const JsonObjectRef &elf_symbol) {
                    "Failed to convert JSON to ElfSymbolBinding");
 }
 
-bool JsonIRReader::ReadDump(const std::string &dump_file) {
+bool JsonIRReader::ReadDumpImpl(const std::string &dump_file) {
   Json::Value tu_json;
   Json::Reader reader;
   std::ifstream input(dump_file);
