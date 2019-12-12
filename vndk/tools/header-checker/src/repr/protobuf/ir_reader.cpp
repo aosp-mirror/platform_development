@@ -39,7 +39,7 @@ void ProtobufIRReader::ReadTypeInfo(
   typep->SetAlignment(type_info.alignment());
 }
 
-bool ProtobufIRReader::ReadDump(const std::string &dump_file) {
+bool ProtobufIRReader::ReadDumpImpl(const std::string &dump_file) {
   abi_dump::TranslationUnit tu;
   std::ifstream input(dump_file);
   google::protobuf::io::IstreamInputStream text_is(&input);
