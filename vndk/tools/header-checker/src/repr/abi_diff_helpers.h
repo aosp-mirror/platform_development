@@ -107,6 +107,30 @@ class AbiDiffHelper {
                                 std::deque<std::string> *type_queue,
                                 IRDiffDumper::DiffKind diff_kind);
 
+  DiffStatus CompareEnumTypes(const EnumTypeIR *old_type,
+                              const EnumTypeIR *new_type,
+                              std::deque<std::string> *type_queue,
+                              IRDiffDumper::DiffKind diff_kind);
+
+  DiffStatus CompareFunctionTypes(const FunctionTypeIR *old_type,
+                                  const FunctionTypeIR *new_type,
+                                  std::deque<std::string> *type_queue,
+                                  DiffMessageIR::DiffKind diff_kind);
+
+  DiffStatus CompareFunctionParameters(
+      const std::vector<ParamIR> &old_parameters,
+      const std::vector<ParamIR> &new_parameters,
+      std::deque<std::string> *type_queue,
+      IRDiffDumper::DiffKind diff_kind);
+
+  DiffStatus CompareTemplateInfo(
+      const std::vector<TemplateElementIR> &old_template_elements,
+      const std::vector<TemplateElementIR> &new_template_elements,
+      std::deque<std::string> *type_queue,
+      IRDiffDumper::DiffKind diff_kind);
+
+
+ private:
   DiffStatus CompareQualifiedTypes(const QualifiedTypeIR *old_type,
                                    const QualifiedTypeIR *new_type,
                                    std::deque<std::string> *type_queue,
@@ -138,15 +162,6 @@ class AbiDiffHelper {
       const std::vector<EnumFieldIR> &new_fields,
       EnumTypeDiffIR *enum_type_diff_ir);
 
-  DiffStatus CompareEnumTypes(const EnumTypeIR *old_type,
-                              const EnumTypeIR *new_type,
-                              std::deque<std::string> *type_queue,
-                              IRDiffDumper::DiffKind diff_kind);
-
-  DiffStatus CompareFunctionTypes(const FunctionTypeIR *old_type,
-                                  const FunctionTypeIR *new_type,
-                                  std::deque<std::string> *type_queue,
-                                  DiffMessageIR::DiffKind diff_kind);
 
   void ReplaceRemovedFieldTypeIdsWithTypeNames(
       std::vector<RecordFieldIR *> *removed_fields);
@@ -172,12 +187,6 @@ class AbiDiffHelper {
       std::deque<std::string> *type_queue,
       IRDiffDumper::DiffKind diff_kind);
 
-  DiffStatus CompareFunctionParameters(
-      const std::vector<ParamIR> &old_parameters,
-      const std::vector<ParamIR> &new_parameters,
-      std::deque<std::string> *type_queue,
-      IRDiffDumper::DiffKind diff_kind);
-
   bool CompareBaseSpecifiers(
       const std::vector<CXXBaseSpecifierIR> &old_base_specifiers,
       const std::vector<CXXBaseSpecifierIR> &new_base_specifiers,
@@ -190,13 +199,6 @@ class AbiDiffHelper {
   bool CompareVTableComponents(
       const VTableComponentIR &old_component,
       const VTableComponentIR &new_component);
-
-  DiffStatus CompareTemplateInfo(
-      const std::vector<TemplateElementIR> &old_template_elements,
-      const std::vector<TemplateElementIR> &new_template_elements,
-      std::deque<std::string> *type_queue,
-      IRDiffDumper::DiffKind diff_kind);
-
 
   bool CompareSizeAndAlignment(const TypeIR *old_ti,
                                const TypeIR *new_ti);
