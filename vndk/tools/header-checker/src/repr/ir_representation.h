@@ -764,6 +764,14 @@ class ModuleIR {
   ModuleIR(const std::set<std::string> *exported_headers)
       : exported_headers_(exported_headers) {}
 
+  const std::string &GetCompilationUnitPath() const {
+    return compilation_unit_path_;
+  }
+
+  void SetCompilationUnitPath(const std::string &compilation_unit_path) {
+    compilation_unit_path_ = compilation_unit_path;
+  }
+
   const AbiElementMap<FunctionIR> &GetFunctions() const {
     return functions_;
   }
@@ -872,6 +880,9 @@ class ModuleIR {
 
 
  public:
+  // File path to the compilation unit (*.sdump)
+  std::string compilation_unit_path_;
+
   AbiElementList<RecordTypeIR> record_types_list_;
   AbiElementMap<FunctionIR> functions_;
   AbiElementMap<GlobalVarIR> global_variables_;
