@@ -5,8 +5,8 @@
   {
    "linker_set_key" : "_ZTIv",
    "name" : "void",
-   "referenced_type" : "type-1",
-   "self_type" : "type-1"
+   "referenced_type" : "_ZTIv",
+   "self_type" : "_ZTIv"
   }
  ],
  "elf_functions" :
@@ -36,10 +36,10 @@
    [
     {
      "is_this_ptr" : true,
-     "referenced_type" : "type-3"
+     "referenced_type" : "_ZTIP5Test3"
     }
    ],
-   "return_type" : "type-1",
+   "return_type" : "_ZTIv",
    "source_file" : "/development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
   },
   {
@@ -49,22 +49,22 @@
    [
     {
      "is_this_ptr" : true,
-     "referenced_type" : "type-5"
+     "referenced_type" : "_ZTIP5Test4"
     }
    ],
-   "return_type" : "type-1",
+   "return_type" : "_ZTIv",
    "source_file" : "/development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
   },
   {
    "function_name" : "test1",
    "linker_set_key" : "test1",
-   "return_type" : "type-1",
+   "return_type" : "_ZTIv",
    "source_file" : "/development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
   },
   {
    "function_name" : "test2",
    "linker_set_key" : "test2",
-   "return_type" : "type-1",
+   "return_type" : "_ZTIv",
    "source_file" : "/development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
   }
  ],
@@ -76,8 +76,8 @@
    "alignment" : 8,
    "linker_set_key" : "_ZTIP5Test3",
    "name" : "Test3 *",
-   "referenced_type" : "type-2",
-   "self_type" : "type-3",
+   "referenced_type" : "_ZTI5Test3",
+   "self_type" : "_ZTIP5Test3",
    "size" : 8,
    "source_file" : "/development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
   },
@@ -85,8 +85,8 @@
    "alignment" : 8,
    "linker_set_key" : "_ZTIP5Test4",
    "name" : "Test4 *",
-   "referenced_type" : "type-4",
-   "self_type" : "type-5",
+   "referenced_type" : "_ZTI5Test4",
+   "self_type" : "_ZTIP5Test4",
    "size" : 8,
    "source_file" : "/development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
   }
@@ -99,8 +99,8 @@
    "linker_set_key" : "_ZTI5Test3",
    "name" : "Test3",
    "record_kind" : "class",
-   "referenced_type" : "type-2",
-   "self_type" : "type-2",
+   "referenced_type" : "_ZTI5Test3",
+   "self_type" : "_ZTI5Test3",
    "size" : 1,
    "source_file" : "/development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
   },
@@ -109,8 +109,8 @@
    "linker_set_key" : "_ZTI5Test4",
    "name" : "Test4",
    "record_kind" : "class",
-   "referenced_type" : "type-4",
-   "self_type" : "type-4",
+   "referenced_type" : "_ZTI5Test4",
+   "self_type" : "_ZTI5Test4",
    "size" : 1,
    "source_file" : "/development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
   }

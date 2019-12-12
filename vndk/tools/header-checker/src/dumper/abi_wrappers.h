@@ -74,7 +74,7 @@ class ABIWrapper {
 
  protected:
   // Type-related functions
-  std::string GetTypeId(clang::QualType qual_type);
+  std::string GetTypeUniqueId(clang::QualType qual_type);
 
   bool CreateBasicNamedAndTypedDecl(clang::QualType,
                                     const std::string &source_file);
@@ -87,11 +87,7 @@ class ABIWrapper {
                           repr::TypeIR *typep);
 
  private:
-  std::string GetTypeUniqueId(clang::QualType qual_type);
-
   std::string QualTypeToString(const clang::QualType &sweet_qt);
-
-  std::string GetKeyForTypeId(clang::QualType qual_type);
 
   TypeAndCreationStatus SetTypeKind(const clang::QualType qtype,
                                     const std::string &source_file);
