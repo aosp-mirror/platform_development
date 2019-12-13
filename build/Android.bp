@@ -59,6 +59,7 @@ java_library_static {
         "private-stub-annotations-jar",
     ],
     defaults: ["framework-stubs-default"],
+    sdk_version: "core_current",
 }
 
 java_system_modules {
