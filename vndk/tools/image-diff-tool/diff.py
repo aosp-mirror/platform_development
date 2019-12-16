@@ -22,6 +22,7 @@ import hashlib
 import argparse
 import zipfile
 import fnmatch
+import tempfile
 
 def silent_call(cmd):
   return subprocess.call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0
@@ -41,6 +42,7 @@ def sha1sum_without_signing_key(filepath):
   return hashlib.sha1(",".join(l).encode()).hexdigest()
 
 def strip_and_sha1sum(filepath):
+  # TODO: save striped file in tmp directory to support readonly directory.
   tmp_filepath = filepath + '.tmp.no-build-id'
   strip_all_and_remove_build_id = lambda: silent_call(
       ["llvm-strip", "--strip-all", "--keep-section=.ARM.attributes",
@@ -217,8 +219,14 @@ if __name__ == "__main__":
   if len(args.target) < 2:
     parser.error("The number of targets has to be at least two.")
   if args.unzip:
-    for t in args.target:
-      unzip_cmd = ["unzip", "-qd", t, os.path.join(t, "*.zip")]
-      unzip_cmd.extend([os.path.join(s, "*") for s in args.search_path])
-      subprocess.call(unzip_cmd)
-  main(args.target, args.search_path, args.whitelist, args.ignore_signing_key)
+    with tempfile.TemporaryDirectory() as tmpdir:
+      target_in_tmp = [os.path.join(tmpdir, t) for t in args.target]
+      for p in target_in_tmp:
+        os.makedirs(p)
+      for origin_path, tmp_path in zip(args.target, target_in_tmp):
+        unzip_cmd = ["unzip", "-qd", tmp_path, os.path.join(origin_path, "*.zip")]
+        unzip_cmd.extend([os.path.join(s, "*") for s in args.search_path])
+        subprocess.call(unzip_cmd)
+      main(target_in_tmp, args.search_path, args.whitelist, args.ignore_signing_key)
+  else:
+    main(args.target, args.search_path, args.whitelist, args.ignore_signing_key)
