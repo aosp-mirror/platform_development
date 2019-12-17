@@ -207,26 +207,32 @@ def main(all_targets, search_paths, whitelists, ignore_signing_key=False):
     fout.write(header)
     fout.writelines(whitelisted_diff)
 
+def main_with_zip(extracted_paths, args):
+  for origin_path, tmp_path in zip(args.target, extracted_paths):
+    unzip_cmd = ["unzip", "-qd", tmp_path, os.path.join(origin_path, "*.zip")]
+    unzip_cmd.extend([os.path.join(s, "*") for s in args.search_path])
+    subprocess.call(unzip_cmd)
+  main(extracted_paths, args.search_path, args.whitelist, args.ignore_signing_key)
 
 if __name__ == "__main__":
-  parser = argparse.ArgumentParser(prog="compare_images", usage="compare_images -t model1 model2 [model...] -s dir1 [dir...] [-i] [-u] [-w whitelist1] [-w whitelist2]")
+  parser = argparse.ArgumentParser(prog="compare_images", usage="compare_images -t model1 model2 [model...] -s dir1 [dir...] [-i] [-u] [-p] [-w whitelist1] [-w whitelist2]")
   parser.add_argument("-t", "--target", nargs='+', required=True)
   parser.add_argument("-s", "--search_path", nargs='+', required=True)
   parser.add_argument("-i", "--ignore_signing_key", action='store_true')
   parser.add_argument("-u", "--unzip", action='store_true')
+  parser.add_argument("-p", "--preserve_extracted_files", action='store_true')
   parser.add_argument("-w", "--whitelist", action="append", default=[])
   args = parser.parse_args()
   if len(args.target) < 2:
     parser.error("The number of targets has to be at least two.")
   if args.unzip:
-    with tempfile.TemporaryDirectory() as tmpdir:
-      target_in_tmp = [os.path.join(tmpdir, t) for t in args.target]
-      for p in target_in_tmp:
-        os.makedirs(p)
-      for origin_path, tmp_path in zip(args.target, target_in_tmp):
-        unzip_cmd = ["unzip", "-qd", tmp_path, os.path.join(origin_path, "*.zip")]
-        unzip_cmd.extend([os.path.join(s, "*") for s in args.search_path])
-        subprocess.call(unzip_cmd)
-      main(target_in_tmp, args.search_path, args.whitelist, args.ignore_signing_key)
+    if args.preserve_extracted_files:
+      main_with_zip(args.target, args)
+    else:
+      with tempfile.TemporaryDirectory() as tmpdir:
+        target_in_tmp = [os.path.join(tmpdir, t) for t in args.target]
+        for p in target_in_tmp:
+          os.makedirs(p)
+        main_with_zip(target_in_tmp, args)
   else:
     main(args.target, args.search_path, args.whitelist, args.ignore_signing_key)
