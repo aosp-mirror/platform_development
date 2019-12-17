@@ -17,6 +17,8 @@
 #include "repr/symbol/exported_symbol_set.h"
 #include "utils/string_utils.h"
 
+#include <llvm/ADT/Optional.h>
+
 #include <iostream>
 #include <memory>
 #include <regex>
@@ -94,28 +96,28 @@ VersionScriptParser::ParsedTags VersionScriptParser::ParseSymbolTags(
 
     // Check introduced tags.
     if (utils::StartsWith(tag, "introduced=")) {
-      std::optional<utils::ApiLevel> intro = utils::ParseApiLevel(
+      llvm::Optional<utils::ApiLevel> intro = utils::ParseApiLevel(
           std::string(tag.substr(sizeof("introduced=") - 1)));
       if (!intro) {
         ReportError("Bad introduced tag: " + std::string(tag));
       } else {
         if (!has_introduced_arch_tags) {
           result.has_introduced_tags_ = true;
-          result.introduced_ = intro.value();
+          result.introduced_ = intro.getValue();
         }
       }
       continue;
     }
 
     if (utils::StartsWith(tag, introduced_arch_tag_)) {
-      std::optional<utils::ApiLevel> intro = utils::ParseApiLevel(
+      llvm::Optional<utils::ApiLevel> intro = utils::ParseApiLevel(
           std::string(tag.substr(introduced_arch_tag_.size())));
       if (!intro) {
         ReportError("Bad introduced tag " + std::string(tag));
       } else {
         has_introduced_arch_tags = true;
         result.has_introduced_tags_ = true;
-        result.introduced_ = intro.value();
+        result.introduced_ = intro.getValue();
       }
       continue;
     }

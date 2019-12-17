@@ -3,13 +3,13 @@ record_types {
     name: "DerivedBar"
     size: 4
     alignment: 4
-    referenced_type: "type-4"
+    referenced_type: "_ZTI10DerivedBar"
     source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/pure_virtual/include/header1.h"
     linker_set_key: "_ZTI10DerivedBar"
-    self_type: "type-4"
+    self_type: "_ZTI10DerivedBar"
   }
   base_specifiers {
-    referenced_type: "type-1"
+    referenced_type: "_ZTI15PureVirtualBase"
     is_virtual: false
     access: public_access
   }
@@ -59,10 +59,10 @@ record_types {
     name: "PureVirtualBase"
     size: 4
     alignment: 4
-    referenced_type: "type-1"
+    referenced_type: "_ZTI15PureVirtualBase"
     source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/pure_virtual/include/header1.h"
     linker_set_key: "_ZTI15PureVirtualBase"
-    self_type: "type-1"
+    self_type: "_ZTI15PureVirtualBase"
   }
   vtable_layout {
     vtable_components {
@@ -110,10 +110,10 @@ pointer_types {
     name: "DerivedBar *"
     size: 4
     alignment: 4
-    referenced_type: "type-4"
+    referenced_type: "_ZTI10DerivedBar"
     source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/pure_virtual/include/header1.h"
     linker_set_key: "_ZTIP10DerivedBar"
-    self_type: "type-5"
+    self_type: "_ZTIP10DerivedBar"
   }
 }
 pointer_types {
@@ -121,10 +121,10 @@ pointer_types {
     name: "PureVirtualBase *"
     size: 4
     alignment: 4
-    referenced_type: "type-1"
+    referenced_type: "_ZTI15PureVirtualBase"
     source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/pure_virtual/include/header1.h"
     linker_set_key: "_ZTIP15PureVirtualBase"
-    self_type: "type-3"
+    self_type: "_ZTIP15PureVirtualBase"
   }
 }
 builtin_types {
@@ -132,10 +132,10 @@ builtin_types {
     name: "void"
     size: 0
     alignment: 0
-    referenced_type: "type-2"
+    referenced_type: "_ZTIv"
     source_file: ""
     linker_set_key: "_ZTIv"
-    self_type: "type-2"
+    self_type: "_ZTIv"
   }
   is_unsigned: false
   is_integral: false

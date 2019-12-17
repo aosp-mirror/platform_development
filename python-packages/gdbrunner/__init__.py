@@ -115,6 +115,7 @@ def get_processes(device):
     output, _ = device.shell([ps_script])
     return parse_ps_output(output)
 
+
 def parse_ps_output(output):
     processes = dict()
     output = adb.split_lines(output.replace("\r", ""))
@@ -141,7 +142,8 @@ def get_pids(device, process_name):
 
 
 def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
-                    target_pid, run_cmd, debug_socket, port, run_as_cmd=None):
+                    target_pid, run_cmd, debug_socket, port, run_as_cmd=None,
+                    lldb=False):
     """Start gdbserver in the background and forward necessary ports.
 
     Args:
@@ -160,13 +162,22 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
 
     assert target_pid is None or run_cmd is None
 
+    # Remove the old socket file.
+    rm_cmd = ["rm", debug_socket]
+    if run_as_cmd:
+        rm_cmd = run_as_cmd + rm_cmd
+    device.shell_nocheck(rm_cmd)
+
     # Push gdbserver to the target.
     if gdbserver_local_path is not None:
         device.push(gdbserver_local_path, gdbserver_remote_path)
 
     # Run gdbserver.
-    gdbserver_cmd = [gdbserver_remote_path, "--once",
-                     "+{}".format(debug_socket)]
+    gdbserver_cmd = [gdbserver_remote_path]
+    if lldb:
+        gdbserver_cmd.extend(["gdbserver", "unix://" + debug_socket])
+    else:
+        gdbserver_cmd.extend(["--once", "+{}".format(debug_socket)])
 
     if target_pid is not None:
         gdbserver_cmd += ["--attach", str(target_pid)]
@@ -329,7 +340,7 @@ def get_binary_interp(binary_path, llvm_readobj_path):
         return m.group(1)
 
 
-def start_gdb(gdb_path, gdb_commands, gdb_flags=None):
+def start_gdb(gdb_path, gdb_commands, gdb_flags=None, lldb=False):
     """Start gdb in the background and block until it finishes.
 
     Args:
@@ -339,20 +350,32 @@ def start_gdb(gdb_path, gdb_commands, gdb_flags=None):
     """
 
     # Windows disallows opening the file while it's open for writing.
-    gdb_script_fd, gdb_script_path = tempfile.mkstemp()
-    os.write(gdb_script_fd, gdb_commands)
-    os.close(gdb_script_fd)
-    gdb_args = [gdb_path, "-x", gdb_script_path] + (gdb_flags or [])
+    script_fd, script_path = tempfile.mkstemp()
+    os.write(script_fd, gdb_commands)
+    os.close(script_fd)
+    if lldb:
+        script_parameter = "--source"
+    else:
+        script_parameter = "-x"
+    gdb_args = [gdb_path, script_parameter, script_path] + (gdb_flags or [])
 
-    kwargs = {}
+    creationflags = 0
     if sys.platform.startswith("win"):
-        kwargs["creationflags"] = subprocess.CREATE_NEW_CONSOLE
+        creationflags = subprocess.CREATE_NEW_CONSOLE
+    env = dict(os.environ)
+    if lldb:
+        bin_dir = os.path.dirname(gdb_path)
+        if sys.platform.startswith("win"):
+            python_path = os.path.join(bin_dir, "../lib/site-packages")
+        else:
+            python_path = os.path.join(bin_dir, "../lib/python2.7/site-packages")
+        env['PYTHONPATH'] = os.path.normpath(python_path)
 
-    gdb_process = subprocess.Popen(gdb_args, **kwargs)
+    gdb_process = subprocess.Popen(gdb_args, creationflags=creationflags, env=env)
     while gdb_process.returncode is None:
         try:
             gdb_process.communicate()
         except KeyboardInterrupt:
             pass
 
-    os.unlink(gdb_script_path)
+    os.unlink(script_path)
