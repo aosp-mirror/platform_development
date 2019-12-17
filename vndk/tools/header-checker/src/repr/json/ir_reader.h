@@ -116,9 +116,9 @@ class JsonIRReader : public IRReader {
   JsonIRReader(const std::set<std::string> *exported_headers)
       : IRReader(exported_headers) {}
 
-  bool ReadDump(const std::string &dump_file) override;
-
  private:
+  bool ReadDumpImpl(const std::string &dump_file) override;
+
   void ReadFunctions(const JsonObjectRef &tu);
 
   void ReadGlobalVariables(const JsonObjectRef &tu);

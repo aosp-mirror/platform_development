@@ -21,6 +21,8 @@
 #include <llvm/Object/ELFTypes.h>
 #include <llvm/Object/SymbolSize.h>
 
+#include <utility>
+
 
 namespace header_checker {
 namespace repr {
@@ -112,7 +114,7 @@ ELFSoFileParser<T>::ELFSoFileParser(const llvm::object::ELFObjectFile<T> *obj) {
 template <typename T>
 static std::unique_ptr<SoFileParser> CreateELFSoFileParser(
     const llvm::object::ELFObjectFile<T> *elfo) {
-  return llvm::make_unique<ELFSoFileParser<T>>(elfo);
+  return std::make_unique<ELFSoFileParser<T>>(elfo);
 }
 
 
