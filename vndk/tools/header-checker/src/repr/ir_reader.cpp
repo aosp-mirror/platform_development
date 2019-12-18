@@ -67,9 +67,8 @@ MergeStatus IRReader::MergeBuiltinType(
 
   // Add this builtin type to the parent graph's builtin_types_ map.
   const std::string &type_id = builtin_type->GetSelfType();
-  auto [it, inserted] = module_->builtin_types_.emplace(
-      linker_set_key, *builtin_type);
-  module_->type_graph_.emplace(type_id, &it->second);
+  auto p = module_->builtin_types_.emplace(linker_set_key, *builtin_type);
+  module_->type_graph_.emplace(type_id, &p.first->second);
 
   MergeStatus merge_status(true, type_id);
   local_to_global_type_id_map->emplace(type_id, merge_status);
@@ -262,11 +261,12 @@ IRReader::UpdateUDTypeAccounting(
 MergeStatus IRReader::MergeRecordAndDependencies(
     const RecordTypeIR *addend_node, const IRReader &addend,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
-  auto [merge_status, it] = UpdateUDTypeAccounting(
+  auto p = UpdateUDTypeAccounting(
       addend_node, addend, local_to_global_type_id_map,
       &module_->record_types_);
-  MergeRecordDependencies(addend, &it->second, local_to_global_type_id_map);
-  return merge_status;
+  MergeRecordDependencies(addend, &p.second->second,
+                          local_to_global_type_id_map);
+  return p.first;
 }
 
 
@@ -293,21 +293,22 @@ void IRReader::MergeEnumDependencies(
 MergeStatus IRReader::MergeEnumType(
     const EnumTypeIR *addend_node, const IRReader &addend,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
-  auto [merge_status, it] = UpdateUDTypeAccounting(
+  auto p = UpdateUDTypeAccounting(
       addend_node, addend, local_to_global_type_id_map, &module_->enum_types_);
-  MergeEnumDependencies(addend, &it->second, local_to_global_type_id_map);
-  return merge_status;
+  MergeEnumDependencies(addend, &p.second->second, local_to_global_type_id_map);
+  return p.first;
 }
 
 
 MergeStatus IRReader::MergeFunctionType(
     const FunctionTypeIR *addend_node, const IRReader &addend,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map) {
-  auto [merge_status, it] = UpdateUDTypeAccounting(
+  auto p = UpdateUDTypeAccounting(
       addend_node, addend, local_to_global_type_id_map,
       &module_->function_types_);
-  MergeCFunctionLikeDeps(addend, &it->second, local_to_global_type_id_map);
-  return merge_status;
+  MergeCFunctionLikeDeps(addend, &p.second->second,
+                         local_to_global_type_id_map);
+  return p.first;
 }
 
 
