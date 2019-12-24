@@ -22,7 +22,10 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     style="@style/KeyboardArea">
 
-  <View style="@style/KeyboardRow.Header"/>
+  <LinearLayout
+      android:id="@+id/suggestion_view"
+      style="@style/KeyboardRow.Header">
+  </LinearLayout>
 
   <LinearLayout style="@style/KeyboardRow">
     <TextView

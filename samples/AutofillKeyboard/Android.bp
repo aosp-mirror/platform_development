@@ -6,5 +6,6 @@ android_app {
     sdk_version: "current",
     static_libs: [
         "androidx.annotation_annotation",
+        "android-support-annotations",
     ],
 }
