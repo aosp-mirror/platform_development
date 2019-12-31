@@ -7,5 +7,14 @@ android_app {
     optimize: {
         enabled: false,
     },
-    product_specific: true,
+    system_ext_specific: true,
+    required: ["privapp_whitelist_com.android.sdksetup"],
+}
+
+prebuilt_etc {
+    name: "privapp_whitelist_com.android.sdksetup",
+    system_ext_specific: true,
+    sub_dir: "permissions",
+    src: "com.android.sdksetup.xml",
+    filename_from_src: true,
 }
