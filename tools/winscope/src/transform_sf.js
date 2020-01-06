@@ -209,7 +209,8 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
     if (is_transform_invalid(layer.transform)) {
       reasons.push('Transform is invalid');
     }
-    if (layer.type === 'BufferLayer' && is_transform_invalid(layer.bufferTransform)
+    var isBufferLayer = (layer.type === 'BufferStateLayer' || layer.type === 'BufferQueueLayer');
+    if (isBufferLayer && is_transform_invalid(layer.bufferTransform)
         && layer.activeBuffer) {
       reasons.push('BufferTransform is invalid')
     }
