@@ -133,7 +133,6 @@ public class InlineFillService extends AutofillService {
             final RemoteViews presentation = newDatasetPresentation(packageName, displayValue);
 
             // Add Inline Suggestion required info.
-            InlinePresentation inlinePresentation = null;
             if (inlineRequest != null) {
                 Log.d(TAG, "Found InlineSuggestionsRequest in FillRequest: " + inlineRequest);
 
@@ -147,13 +146,15 @@ public class InlineFillService extends AutofillService {
 
                 final List<InlinePresentationSpec> specs = inlineRequest.getPresentationSpecs();
                 final int specsSize = specs.size();
-                final InlinePresentationSpec currentSpec = i < specsSize
-                        ? specs.get(i)
+                final InlinePresentationSpec currentSpec = i - 1 < specsSize
+                        ? specs.get(i - 1)
                         : specs.get(specsSize - 1);
-                inlinePresentation = new InlinePresentation(suggestionSlice, currentSpec);
+                final InlinePresentation inlinePresentation =
+                        new InlinePresentation(suggestionSlice, currentSpec);
+                dataset.setValue(id, AutofillValue.forText(value), presentation, inlinePresentation);
+            } else {
+                dataset.setValue(id, AutofillValue.forText(value), presentation);
             }
-
-            dataset.setValue(id, AutofillValue.forText(value), presentation, inlinePresentation);
         }
 
         return dataset.build();
