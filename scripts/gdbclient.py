@@ -33,12 +33,44 @@ import gdbrunner
 
 g_temp_dirs = []
 
+
+def read_toolchain_config(root):
+    """Finds out current toolchain path and version."""
+    def get_value(str):
+        return str[str.index('"') + 1:str.rindex('"')]
+
+    config_path = os.path.join(root, 'build', 'soong', 'cc', 'config',
+                               'global.go')
+    with open(config_path) as f:
+        contents = f.readlines()
+    clang_base = ""
+    clang_version = ""
+    for line in contents:
+        line = line.strip()
+        if line.startswith('ClangDefaultBase'):
+            clang_base = get_value(line)
+        elif line.startswith('ClangDefaultVersion'):
+            clang_version = get_value(line)
+    return (clang_base, clang_version)
+
+
 def get_gdbserver_path(root, arch):
     path = "{}/prebuilts/misc/gdbserver/android-{}/gdbserver{}"
     if arch.endswith("64"):
         return path.format(root, arch, "64")
     else:
         return path.format(root, arch, "")
+
+
+def get_lldb_server_path(root, clang_base, clang_version, arch):
+    arch = {
+        'arm': 'arm',
+        'arm64': 'aarch64',
+        'x86': 'i386',
+        'x86_64': 'x86_64',
+    }[arch]
+    return os.path.join(root, clang_base, "linux-x86",
+                        clang_version, "runtimes_ndk_cxx", arch, "lldb-server")
 
 
 def get_tracer_pid(device, pid):
@@ -76,6 +108,10 @@ def parse_args():
         help=("Setup the gdbserver and port forwarding. Prints commands or " +
               ".vscode/launch.json configuration needed to connect the debugging " +
               "client to the server."))
+
+    lldb_group = parser.add_mutually_exclusive_group()
+    lldb_group.add_argument("--lldb", action="store_true", help="Use lldb.")
+    lldb_group.add_argument("--no-lldb", action="store_true", help="Do not use lldb.")
 
     parser.add_argument(
         "--env", nargs=1, action="append", metavar="VAR=VALUE",
@@ -300,7 +336,19 @@ end
 
     return gdb_commands
 
-def generate_setup_script(gdbpath, sysroot, linker_search_dir, binary_file, is64bit, port, debugger, connect_timeout=5):
+
+def generate_lldb_script(sysroot, binary_name, port, solib_search_path):
+    commands = []
+    commands.append(
+        'settings append target.exec-search-paths {}'.format(' '.join(solib_search_path)))
+
+    commands.append('target create {}'.format(binary_name))
+    commands.append('target modules search-paths add / {}/'.format(sysroot))
+    commands.append('gdb-remote {}'.format(port))
+    return '\n'.join(commands)
+
+
+def generate_setup_script(debugger_path, sysroot, linker_search_dir, binary_file, is64bit, port, debugger, connect_timeout=5):
     # Generate a setup script.
     # TODO: Detect the zygote and run 'art-on' automatically.
     root = os.environ["ANDROID_BUILD_TOP"]
@@ -323,9 +371,12 @@ def generate_setup_script(gdbpath, sysroot, linker_search_dir, binary_file, is64
 
     if debugger == "vscode":
         return generate_vscode_script(
-            gdbpath, root, sysroot, binary_file.name, port, dalvik_gdb_script, solib_search_path)
+            debugger_path, root, sysroot, binary_file.name, port, dalvik_gdb_script, solib_search_path)
     elif debugger == "gdb":
         return generate_gdb_script(root, sysroot, binary_file.name, port, dalvik_gdb_script, solib_search_path, connect_timeout)
+    elif debugger == 'lldb':
+        return generate_lldb_script(
+            sysroot, binary_file.name, port, solib_search_path)
     else:
         raise Exception("Unknown debugger type " + debugger)
 
@@ -369,60 +420,78 @@ def do_main():
         is64bit = arch.endswith("64")
 
         # Make sure we have the linker
-        llvm_readobj_path = os.path.join(root, "prebuilts", "clang", "host", platform_name,
-                                         "llvm-binutils-stable", "llvm-readobj")
+        clang_base, clang_version = read_toolchain_config(root)
+        toolchain_path = os.path.join(root, clang_base, platform_name,
+                                      clang_version)
+        llvm_readobj_path = os.path.join(toolchain_path, "bin", "llvm-readobj")
         interp = gdbrunner.get_binary_interp(binary_file.name, llvm_readobj_path)
         linker_search_dir = ensure_linker(device, sysroot, interp)
 
         tracer_pid = get_tracer_pid(device, pid)
+        use_lldb = args.lldb
         if tracer_pid == 0:
             cmd_prefix = args.su_cmd
             if args.env:
                 cmd_prefix += ['env'] + [v[0] for v in args.env]
 
             # Start gdbserver.
-            gdbserver_local_path = get_gdbserver_path(root, arch)
-            gdbserver_remote_path = "/data/local/tmp/{}-gdbserver".format(arch)
+            if use_lldb:
+                server_local_path = get_lldb_server_path(
+                    root, clang_base, clang_version, arch)
+                server_remote_path = "/data/local/tmp/{}-lldb-server".format(
+                    arch)
+            else:
+                server_local_path = get_gdbserver_path(root, arch)
+                server_remote_path = "/data/local/tmp/{}-gdbserver".format(
+                    arch)
             gdbrunner.start_gdbserver(
-                device, gdbserver_local_path, gdbserver_remote_path,
+                device, server_local_path, server_remote_path,
                 target_pid=pid, run_cmd=run_cmd, debug_socket=debug_socket,
-                port=args.port, run_as_cmd=cmd_prefix)
+                port=args.port, run_as_cmd=cmd_prefix, lldb=use_lldb)
         else:
-            print "Connecting to tracing pid {} using local port {}".format(tracer_pid, args.port)
+            print(
+                "Connecting to tracing pid {} using local port {}".format(
+                    tracer_pid, args.port))
             gdbrunner.forward_gdbserver_port(device, local=args.port,
                                              remote="tcp:{}".format(args.port))
 
-        gdb_path = os.path.join(root, "prebuilts", "gdb", platform_name, "bin",
-                                "gdb")
+        if use_lldb:
+            debugger_path = os.path.join(toolchain_path, "bin", "lldb")
+            debugger = 'lldb'
+        else:
+            debugger_path = os.path.join(
+                root, "prebuilts", "gdb", platform_name, "bin", "gdb")
+            debugger = args.setup_forwarding or "gdb"
+
         # Generate a gdb script.
-        setup_commands = generate_setup_script(gdbpath=gdb_path,
+        setup_commands = generate_setup_script(debugger_path=debugger_path,
                                                sysroot=sysroot,
                                                linker_search_dir=linker_search_dir,
                                                binary_file=binary_file,
                                                is64bit=is64bit,
                                                port=args.port,
-                                               debugger=args.setup_forwarding or "gdb")
+                                               debugger=debugger)
 
-        if not args.setup_forwarding:
+        if use_lldb or not args.setup_forwarding:
             # Print a newline to separate our messages from the GDB session.
             print("")
 
             # Start gdb.
-            gdbrunner.start_gdb(gdb_path, setup_commands)
+            gdbrunner.start_gdb(debugger_path, setup_commands, lldb=use_lldb)
         else:
             print("")
-            print setup_commands
+            print(setup_commands)
             print("")
             if args.setup_forwarding == "vscode":
-                print textwrap.dedent("""
+                print(textwrap.dedent("""
                         Paste the above json into .vscode/launch.json and start the debugger as
                         normal. Press enter in this terminal once debugging is finished to shutdown
-                        the gdbserver and close all the ports.""")
+                        the gdbserver and close all the ports."""))
             else:
-                print textwrap.dedent("""
+                print(textwrap.dedent("""
                         Paste the above gdb commands into the gdb frontend to setup the gdbserver
                         connection. Press enter in this terminal once debugging is finished to
-                        shutdown the gdbserver and close all the ports.""")
+                        shutdown the gdbserver and close all the ports."""))
             print("")
             raw_input("Press enter to shutdown gdbserver")
 
