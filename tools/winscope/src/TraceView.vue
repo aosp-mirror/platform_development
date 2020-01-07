@@ -50,6 +50,18 @@ import { transform_json } from './transform.js'
 import { format_transform_type, is_simple_transform } from './matrix_utils.js'
 import { DATA_TYPES } from './decode.js'
 
+function formatColorTransform(vals) {
+    const fixedVals = vals.map(v => v.toFixed(1));
+    var formatted = ``;
+    for (var i = 0; i < fixedVals.length; i += 4) {
+      formatted += `[`;
+      formatted += fixedVals.slice(i, i + 4).join(", ");
+      formatted += `] `;
+    }
+    return formatted;
+}
+
+
 function formatProto(obj) {
   if (!obj || !obj.$type) {
     return;
@@ -70,6 +82,9 @@ function formatProto(obj) {
       return `${transform_type}`;
     }
     return `${transform_type}  dsdx:${obj.dsdx.toFixed(3)}   dtdx:${obj.dtdx.toFixed(3)}   dsdy:${obj.dsdy.toFixed(3)}   dtdy:${obj.dtdy.toFixed(3)}`;
+  } else if (obj.$type.name === 'ColorTransformProto') {
+    var formated = formatColorTransform(obj.val);
+    return `${formated}`;
   }
 }
 
