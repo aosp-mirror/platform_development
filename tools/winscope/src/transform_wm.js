@@ -53,10 +53,10 @@ function transform_window(entry) {
   });
 }
 
-function transform_app_window_token(entry) {
+function transform_activity_record(entry) {
   return transform({
     obj: entry,
-    kind: 'appWinToken',
+    kind: 'activityRecord',
     name: entry.name,
     children: [
       [entry.windowToken.windows, transform_window],
@@ -70,7 +70,7 @@ function transform_task(entry) {
     kind: 'task',
     name: entry.id || 0,
     children: [
-      [entry.appWindowTokens, transform_app_window_token],
+      [entry.activity, transform_activity_record],
     ],
   });
 }
