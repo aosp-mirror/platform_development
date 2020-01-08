@@ -79,12 +79,6 @@ class Target(object):
 
         return self.get_arch_str() + cpu_variant
 
-    def get_module_variant_dir_name(self, variant_suffix):
-        """Create module variant directory name from the architecture, the
-        architecture variant, the CPU variant, and a variant suffix
-        (e.g. `_core_shared`, `_vendor_shared`, etc)."""
-        return 'android_' + self.get_arch_cpu_str() + variant_suffix
-
 
 def copy_reference_dump(lib_path, reference_dump_dir, compress):
     reference_dump_path = os.path.join(
@@ -199,12 +193,15 @@ def _is_sanitizer_variation(variation):
     return variation in {'asan', 'hwasan', 'tsan', 'intOverflow', 'cfi', 'scs'}
 
 
-def _tag_to_variant_suffix(tag, vndk_version):
-    """Map a tag to a variant suffix."""
+def _get_module_variant_dir_name(tag, vndk_version, arch_cpu_str):
+    """Return the module variant directory name.
+
+    For example, android_x86_shared, android_vendor.R_arm_armv7-a-neon_shared.
+    """
     if tag in ('LLNDK', 'NDK', 'PLATFORM'):
-        return '_core_shared'
+        return 'android_%s_shared' % arch_cpu_str
     if tag.startswith('VNDK'):
-        return '_vendor.' + vndk_version + '_shared'
+        return 'android_vendor.%s_%s_shared' % (vndk_version, arch_cpu_str)
     raise ValueError(tag + ' is not a known tag.')
 
 
@@ -228,7 +225,6 @@ def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, targets):
     with open(lsdump_paths_file_path, 'r') as lsdump_paths_file:
         for line in lsdump_paths_file:
             tag, path = (x.strip() for x in line.split(':', 1))
-            variant_suffix = _tag_to_variant_suffix(tag, vndk_version)
             if not path:
                 continue
             dirname, filename = os.path.split(path)
@@ -241,7 +237,9 @@ def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, targets):
             if not variant:
                 continue
             for target in targets:
-                prefix = target.get_module_variant_dir_name(variant_suffix)
+                arch_cpu = target.get_arch_cpu_str()
+                prefix = _get_module_variant_dir_name(tag, vndk_version,
+                                                      arch_cpu)
                 if not variant.startswith(prefix):
                     continue
                 new_suffix = variant[len(prefix):]
@@ -250,7 +248,6 @@ def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, targets):
                 if new_variations and not all(_is_sanitizer_variation(x)
                                               for x in new_variations):
                     continue
-                arch_cpu = target.get_arch_cpu_str()
                 old_suffix = suffixes[libname].get(arch_cpu)
                 if not old_suffix or new_suffix > old_suffix:
                     lsdump_paths[libname][arch_cpu] = (tag, path)
