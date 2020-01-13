@@ -209,10 +209,8 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
     if (is_transform_invalid(layer.transform)) {
       reasons.push('Transform is invalid');
     }
-    var isBufferLayer = (layer.type === 'BufferStateLayer' || layer.type === 'BufferQueueLayer');
-    if (isBufferLayer && is_transform_invalid(layer.bufferTransform)
-        && layer.activeBuffer) {
-      reasons.push('BufferTransform is invalid')
+    if (layer.isRelativeOf && layer.zOrderRelativeOf == -1) {
+      reasons.push('RelativeOf layer has been removed');
     }
     return reasons.join();
   }
@@ -220,12 +218,13 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
     layer.invisibleDueTo = 'Hidden by parent with ID: ' + parentHidden;
   } else {
     let reasons_hidden = visibilityReason(layer);
+    let isBufferLayer = (layer.type === 'BufferStateLayer' || layer.type === 'BufferQueueLayer');
     if (reasons_hidden) {
       layer.invisibleDueTo = reasons_hidden;
       parentHidden = layer.id
     } else if (layer.type === 'ContainerLayer') {
         layer.invisibleDueTo = 'This is a ContainerLayer.';
-    } else if (layer.type === 'BufferLayer' && (!layer.activeBuffer ||
+    } else if (isBufferLayer && (!layer.activeBuffer ||
           layer.activeBuffer.height === 0 || layer.activeBuffer.width === 0)) {
         layer.invisibleDueTo = 'The buffer is empty.';
     } else if (!visible) {
