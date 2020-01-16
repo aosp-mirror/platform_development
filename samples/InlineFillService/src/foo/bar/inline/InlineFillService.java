@@ -20,6 +20,7 @@ import android.app.assist.AssistStructure.ViewNode;
 import android.app.slice.Slice;
 import android.app.slice.SliceSpec;
 import android.content.Context;
+import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.CancellationSignal;
 import android.service.autofill.AutofillService;
@@ -44,14 +45,11 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import foo.bar.inline.R;
 
 /**
  * A basic {@link AutofillService} implementation that only shows dynamic-generated datasets
@@ -101,7 +99,8 @@ public class InlineFillService extends AutofillService {
         FillResponse.Builder response = new FillResponse.Builder();
         // 1.Add the dynamic datasets
         for (int i = 1; i <= numDatasets; i++) {
-            Dataset unlockedDataset = newUnlockedDataset(fields, packageName, i, inlineRequest);
+            Dataset unlockedDataset = newUnlockedDataset(context, fields, packageName, i,
+                    inlineRequest);
             response.addDataset(unlockedDataset);
         }
 
@@ -117,8 +116,9 @@ public class InlineFillService extends AutofillService {
         return response.build();
     }
 
-    static Dataset newUnlockedDataset(@NonNull Map<String, AutofillId> fields,
-            @NonNull String packageName, int i, @Nullable InlineSuggestionsRequest inlineRequest) {
+    static Dataset newUnlockedDataset(@NonNull Context context,
+            @NonNull Map<String, AutofillId> fields, @NonNull String packageName, int i,
+            @Nullable InlineSuggestionsRequest inlineRequest) {
 
         Dataset.Builder dataset = new Dataset.Builder();
         for (Entry<String, AutofillId> field : fields.entrySet()) {
@@ -136,12 +136,9 @@ public class InlineFillService extends AutofillService {
             if (inlineRequest != null) {
                 Log.d(TAG, "Found InlineSuggestionsRequest in FillRequest: " + inlineRequest);
 
-                final Uri uri = new Uri.Builder().appendPath("BasicService-" + i).build();
-                final ArrayList<String> autofillHints = new ArrayList<>();
-                autofillHints.add(hint);
-                final Slice suggestionSlice = new Slice.Builder(uri,
-                        new SliceSpec("InlineSuggestion", 1))
-                        .addHints(autofillHints)
+                final Slice suggestionSlice = new Slice.Builder(Uri.parse("inline.slice"),
+                        new SliceSpec("InlinePresentation", 1))
+                        .addText(value, null, Collections.singletonList("inline_title"))
                         .build();
 
                 final List<InlinePresentationSpec> specs = inlineRequest.getPresentationSpecs();
