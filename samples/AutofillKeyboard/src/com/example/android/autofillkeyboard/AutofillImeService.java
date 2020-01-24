@@ -16,6 +16,7 @@
 
 package com.example.android.autofillkeyboard;
 
+import android.content.res.Resources;
 import android.inputmethodservice.InputMethodService;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -93,9 +94,11 @@ public class AutofillImeService extends InputMethodService {
         Log.d(TAG, "onCreateInlineSuggestionsRequest() called");
         final ArrayList<InlinePresentationSpec> presentationSpecs = new ArrayList<>();
         presentationSpecs.add(new InlinePresentationSpec.Builder(new Size(100, 100),
-                new Size(400, 100)).build());
+                new Size(400, 100)).setStyle(
+                getResources().getResourceName(R.style.YellowTheme)).build());
         presentationSpecs.add(new InlinePresentationSpec.Builder(new Size(100, 100),
-                new Size(400, 100)).build());
+                new Size(400, 100)).setStyle(
+                getResources().getResourceName(R.style.GreenTheme)).build());
 
         return new InlineSuggestionsRequest.Builder(presentationSpecs)
                 .setMaxSuggestionCount(2)
@@ -122,6 +125,9 @@ public class AutofillImeService extends InputMethodService {
                 mSuggestionStrip.removeAllViews();
                 final int size = mSuggestionViews.size();
                 for (int i = 0; i < size; i++) {
+                    if(mSuggestionViews.get(i) == null) {
+                        continue;
+                    }
                     ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
                             mSuggestionViewSizes.get(i).getWidth(),
                             mSuggestionViewSizes.get(i).getHeight());
@@ -160,13 +166,15 @@ public class AutofillImeService extends InputMethodService {
                     AsyncTask.THREAD_POOL_EXECUTOR,
                     suggestionView -> {
                         Log.d(TAG, "new inline suggestion view ready");
-                        suggestionViews[index] = suggestionView;
-                        sizes[index] = size;
-                        suggestionView.setOnTouchListener((v, event) -> {
-                            Toast.makeText(AutofillImeService.this, "hello",
-                                    Toast.LENGTH_LONG).show();
-                            return false;
-                        });
+                        if(suggestionView != null) {
+                            suggestionViews[index] = suggestionView;
+                            sizes[index] = size;
+                            suggestionView.setOnTouchListener((v, event) -> {
+                                Toast.makeText(AutofillImeService.this, "hello",
+                                        Toast.LENGTH_LONG).show();
+                                return false;
+                            });
+                        }
                         if (suggestionsCount.decrementAndGet() == 0) {
                             updateSuggestionViews(suggestionViews, sizes);
                         }

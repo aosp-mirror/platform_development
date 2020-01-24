@@ -61,4 +61,27 @@
     <item name="android:layout_weight">5</item>
     <item name="android:textColor">#FF333333</item>
   </style>
+
+  <style name="YellowText" parent="@android:style/TextAppearance">
+    <item name="android:textColor">#FFFF00</item>
+    <item name="android:background">#88FF00FF</item>
+    <!-- This theme will be invalid -->
+    <item name="android:fontFamily">@font/just_another_hand</item>
+  </style>
+  <style name="GreenText" parent="@android:style/TextAppearance">
+    <item name="android:textColor">#00FF00</item>
+    <item name="android:fontFamily">monospace</item>
+  </style>
+  <style name="PinkBackground">
+    <item name="android:background">#33FF00FF</item>
+  </style>
+  <style name="YellowTheme" parent="@android:style/Theme.AutofillInlineSuggestion">
+    <item name="android:autofillInlineSuggestionTitle">@style/YellowText</item>
+    <item name="android:autofillInlineSuggestionSubtitle">@style/YellowText</item>
+  </style>
+  <style name="GreenTheme" parent="@android:style/Theme.AutofillInlineSuggestion">
+    <item name="android:autofillInlineSuggestionChip">@style/PinkBackground</item>
+    <item name="android:autofillInlineSuggestionTitle">@style/GreenText</item>
+    <item name="android:autofillInlineSuggestionSubtitle">@style/GreenText</item>
+  </style>
 </resources>
