@@ -147,7 +147,7 @@ public class InlineFillService extends AutofillService {
                         ? specs.get(i - 1)
                         : specs.get(specsSize - 1);
                 final InlinePresentation inlinePresentation =
-                        new InlinePresentation(suggestionSlice, currentSpec);
+                        new InlinePresentation(suggestionSlice, currentSpec, /** pined= */ false);
                 dataset.setValue(id, AutofillValue.forText(value), presentation, inlinePresentation);
             } else {
                 dataset.setValue(id, AutofillValue.forText(value), presentation);
