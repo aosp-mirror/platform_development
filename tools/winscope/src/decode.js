@@ -16,10 +16,10 @@
 
 
 import jsonProtoDefs from 'frameworks/base/core/proto/android/server/windowmanagertrace.proto'
-import jsonProtoLogDefs from 'frameworks/base/core/proto/android/server/protolog.proto'
+import jsonProtoLogDefs from 'ProtoLogSafePath/protolog.proto'
 import jsonProtoDefsSF from 'frameworks/native/services/surfaceflinger/layerproto/layerstrace.proto'
 import jsonProtoDefsTrans from 'frameworks/native/cmds/surfacereplayer/proto/src/trace.proto'
-import jsonProtoDefsWL from 'vendor/google_arc/libs/wayland_service/waylandtrace.proto'
+import jsonProtoDefsWL from 'WaylandSafePath/waylandtrace.proto'
 import protobuf from 'protobufjs'
 import { transform_layers, transform_layers_trace } from './transform_sf.js'
 import { transform_window_service, transform_window_trace } from './transform_wm.js'
