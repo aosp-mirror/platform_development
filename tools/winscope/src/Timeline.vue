@@ -14,7 +14,8 @@
 -->
 <template>
   <svg width="2000" height="20" viewBox="-5,0,2010,20">
-    <circle :cx="translate(c.timestamp)" cy="10" r="5" v-for="(c,i) in items" @click="onItemClick(c, i)" :class="itemClass(i)" />
+    <circle :cx="position(item)" cy="10" r="5" v-for="(item, idx) in items" @click="onItemClick(idx)" />
+    <circle v-if="items.length" :cx="position(selected)" cy="10" r="5" class="selected" />
   </svg>
 </template>
 <script>
@@ -25,6 +26,9 @@ export default {
     return {};
   },
   methods: {
+    position(item) {
+      return this.translate(item);
+    },
     translate(cx) {
       var scale = [...this.scale];
       if (scale[0] >= scale[1]) {
@@ -32,11 +36,8 @@ export default {
       }
       return (cx - scale[0]) / (scale[1] - scale[0]) * 2000;
     },
-    onItemClick(item, index) {
+    onItemClick(index) {
       this.$emit('item-selected', index);
-    },
-    itemClass(index) {
-      return (this.selectedIndex == index) ? 'selected' : 'not-selected'
     },
   },
   computed: {
@@ -44,7 +45,10 @@ export default {
       if (this.items.length == 1) {
         return [0];
       }
-      return this.items.map((e) => parseInt(e.timestamp));
+      return this.items;
+    },
+    selected() {
+      return this.items[this.selectedIndex];
     }
   },
 }
