@@ -19,10 +19,14 @@
       <a class="md-button md-accent md-raised md-theme-default" @click="clear()" v-if="dataLoaded">Clear</a>
     </md-whiteframe>
     <div class="main-content">
-      <datainput v-if="!dataLoaded" ref="input" :store="store" @dataReady="onDataReady" @statusChange="setStatus" />
+      <md-layout v-if="!dataLoaded" class="m-2">
+        <dataadb ref="adb" :store="store" @dataReady="onDataReady" @statusChange="setStatus"/>
+        <datainput ref="input" :store="store" @dataReady="onDataReady" @statusChange="setStatus"/>
+      </md-layout>
       <md-card v-if="dataLoaded">
         <md-whiteframe md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
           <h2 class="md-title">Timeline</h2>
+          <datafilter v-for="file in files" :key="file.filename" :store="store" :file="file" />
         </md-whiteframe>
         <md-list>
           <md-list-item v-for="(file, idx) in files" :key="file.filename">
@@ -42,6 +46,8 @@ import Rects from './Rects.vue'
 import DataView from './DataView.vue'
 import DataInput from './DataInput.vue'
 import LocalStore from './localstore.js'
+import DataAdb from './DataAdb.vue'
+import DataFilter from './DataFilter.vue'
 
 const APP_NAME = "Winscope"
 
@@ -81,15 +87,17 @@ export default {
   },
   methods: {
     clear() {
+      this.files.forEach(function(item) { item.destroy(); })
       this.files = [];
+      this.activeDataView = null;
     },
     onTimelineItemSelected(index, timelineIndex) {
       this.files[timelineIndex].selectedIndex = index;
-      var t = parseInt(this.files[timelineIndex].timeline[index].timestamp);
+      var t = parseInt(this.files[timelineIndex].timeline[index]);
       for (var i = 0; i < this.files.length; i++) {
         if (i != timelineIndex) {
           this.files[i].selectedIndex = findLastMatchingSorted(this.files[i].timeline, function(array, idx) {
-            return parseInt(array[idx].timestamp) <= t;
+            return parseInt(array[idx]) <= t;
           });
         }
       }
@@ -104,7 +112,7 @@ export default {
         if (cur + direction < 0 || cur + direction >= this.files[idx].timeline.length) {
           continue;
         }
-        var d = Math.abs(parseInt(file.timeline[cur + direction].timestamp) - this.currentTimestamp);
+        var d = Math.abs(parseInt(file.timeline[cur + direction]) - this.currentTimestamp);
         if (timeDiff > d) {
           timeDiff = d;
           closestTimeline = idx;
@@ -112,7 +120,7 @@ export default {
       }
       if (closestTimeline >= 0) {
         this.files[closestTimeline].selectedIndex += direction;
-        this.currentTimestamp = parseInt(this.files[closestTimeline].timeline[this.files[closestTimeline].selectedIndex].timestamp);
+        this.currentTimestamp = parseInt(this.files[closestTimeline].timeline[this.files[closestTimeline].selectedIndex]);
       }
     },
     onDataViewFocus(view) {
@@ -149,12 +157,12 @@ export default {
     prettyDump: function() { return JSON.stringify(this.dump, null, 2); },
     dataLoaded: function() { return this.files.length > 0 },
     scale() {
-      var mx = Math.max(...(this.files.map(f => Math.max(...f.timeline.map(t => t.timestamp)))));
-      var mi = Math.min(...(this.files.map(f => Math.min(...f.timeline.map(t => t.timestamp)))));
+      var mx = Math.max(...(this.files.map(f => Math.max(...f.timeline))));
+      var mi = Math.min(...(this.files.map(f => Math.min(...f.timeline))));
       return [mi, mx];
     },
     activeView: function() {
-      if (!this.activeDataView) {
+      if (!this.activeDataView && this.files.length > 0) {
         this.activeDataView = this.files[0].filename;
       }
       return this.activeDataView;
@@ -169,6 +177,8 @@ export default {
     'timeline': Timeline,
     'dataview': DataView,
     'datainput': DataInput,
+    'dataadb': DataAdb,
+    'datafilter': DataFilter,
   },
 }
 
@@ -189,6 +199,14 @@ export default {
 .container {
   display: flex;
   flex-wrap: wrap;
+}
+
+.md-layout > .md-card {
+  margin: 0.5em;
+}
+
+.md-button {
+  margin-top: 1em
 }
 
 h1,
