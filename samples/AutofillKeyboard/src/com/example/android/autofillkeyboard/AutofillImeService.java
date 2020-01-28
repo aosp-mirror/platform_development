@@ -16,7 +16,6 @@
 
 package com.example.android.autofillkeyboard;
 
-import android.content.res.Resources;
 import android.inputmethodservice.InputMethodService;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -101,7 +100,7 @@ public class AutofillImeService extends InputMethodService {
                 getResources().getResourceName(R.style.GreenTheme)).build());
 
         return new InlineSuggestionsRequest.Builder(presentationSpecs)
-                .setMaxSuggestionCount(2)
+                .setMaxSuggestionCount(6)
                 .build();
     }
 

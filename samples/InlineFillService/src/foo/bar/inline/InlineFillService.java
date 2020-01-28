@@ -62,7 +62,7 @@ public class InlineFillService extends AutofillService {
     /**
      * Number of datasets sent on each request - we're simple, that value is hardcoded in our DNA!
      */
-    static final int NUMBER_DATASETS = 4;
+    static final int NUMBER_DATASETS = 6;
 
     @Override
     public void onFillRequest(FillRequest request, CancellationSignal cancellationSignal,
