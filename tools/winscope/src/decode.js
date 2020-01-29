@@ -20,12 +20,16 @@ import jsonProtoLogDefs from 'ProtoLogSafePath/protolog.proto'
 import jsonProtoDefsSF from 'frameworks/native/services/surfaceflinger/layerproto/layerstrace.proto'
 import jsonProtoDefsTrans from 'frameworks/native/cmds/surfacereplayer/proto/src/trace.proto'
 import jsonProtoDefsWL from 'WaylandSafePath/waylandtrace.proto'
+import jsonProtoDefsSysUi from 'frameworks/base/packages/SystemUI/src/com/android/systemui/tracing/sysui_trace_file.proto'
+import jsonProtoDefsLauncher from 'packages/apps/Launcher3/protos/launcher_trace_file.proto'
 import protobuf from 'protobufjs'
 import { transform_layers, transform_layers_trace } from './transform_sf.js'
 import { transform_window_service, transform_window_trace } from './transform_wm.js'
 import { transform_transaction_trace } from './transform_transaction.js'
 import { transform_wl_outputstate, transform_wayland_trace } from './transform_wl.js'
 import { transform_protolog } from './transform_protolog.js'
+import { transform_sysui_trace } from './transform_sys_ui.js'
+import { transform_launcher_trace } from './transform_launcher.js'
 import { fill_transform_data } from './matrix_utils.js'
 import { mp4Decoder } from './decodeVideo.js'
 
@@ -33,7 +37,9 @@ var protoDefs = protobuf.Root.fromJSON(jsonProtoDefs)
   .addJSON(jsonProtoLogDefs.nested)
   .addJSON(jsonProtoDefsSF.nested)
   .addJSON(jsonProtoDefsTrans.nested)
-  .addJSON(jsonProtoDefsWL.nested);
+  .addJSON(jsonProtoDefsWL.nested)
+  .addJSON(jsonProtoDefsSysUi.nested)
+  .addJSON(jsonProtoDefsLauncher.nested);
 
 var WindowTraceMessage = protoDefs.lookupType(
   "com.android.server.wm.WindowManagerTraceFileProto");
@@ -48,12 +54,18 @@ var WindowLogMessage = protoDefs.lookupType(
   "com.android.server.protolog.ProtoLogFileProto");
 var LogMessage = protoDefs.lookupType(
   "com.android.server.protolog.ProtoLogMessage");
+var SystemUiTraceMessage = protoDefs.lookupType(
+  "com.android.systemui.tracing.SystemUiTraceFileProto");
+var LauncherTraceMessage = protoDefs.lookupType(
+  "com.android.launcher3.tracing.LauncherTraceFileProto");
 
 const LAYER_TRACE_MAGIC_NUMBER = [0x09, 0x4c, 0x59, 0x52, 0x54, 0x52, 0x41, 0x43, 0x45] // .LYRTRACE
 const WINDOW_TRACE_MAGIC_NUMBER = [0x09, 0x57, 0x49, 0x4e, 0x54, 0x52, 0x41, 0x43, 0x45] // .WINTRACE
 const MPEG4_MAGIC_NMBER = [0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x6d, 0x70, 0x34, 0x32] // ....ftypmp42
 const WAYLAND_TRACE_MAGIC_NUMBER = [0x09, 0x57, 0x59, 0x4c, 0x54, 0x52, 0x41, 0x43, 0x45] // .WYLTRACE
 const PROTO_LOG_MAGIC_NUMBER = [0x09, 0x50, 0x52, 0x4f, 0x54, 0x4f, 0x4c, 0x4f, 0x47] // .PROTOLOG
+const SYSTEM_UI_MAGIC_NUMBER = [0x09, 0x53, 0x59, 0x53, 0x55, 0x49, 0x54, 0x52, 0x43] // .SYSUITRC
+const LAUNCHER_MAGIC_NUMBER = [0x09, 0x4C, 0x4E, 0x43, 0x48, 0x52, 0x54, 0x52, 0x43] // .LNCHRTRC
 
 const DATA_TYPES = {
   WINDOW_MANAGER: {
@@ -85,7 +97,17 @@ const DATA_TYPES = {
     name: "ProtoLog",
     icon: "notes",
     mime: "application/octet-stream",
-  }
+  },
+  SYSTEM_UI: {
+    name: "SystemUI",
+    icon: "filter_none",
+    mime: "application/octet-stream",
+  },
+  LAUNCHER: {
+    name: "Launcher",
+    icon: "filter_none",
+    mime: "application/octet-stream",
+  },
 }
 
 const FILE_TYPES = {
@@ -176,7 +198,27 @@ const FILE_TYPES = {
       transform: transform_protolog,
       timeline: true,
     }
-  }
+  },
+  'system_ui_trace': {
+    name: "SystemUI trace",
+    dataType: DATA_TYPES.SYSTEM_UI,
+    decoder: protoDecoder,
+    decoderParams: {
+      protoType: SystemUiTraceMessage,
+      transform: transform_sysui_trace,
+      timeline: true,
+    }
+  },
+  'launcher_trace': {
+    name: "Launcher trace",
+    dataType: DATA_TYPES.LAUNCHER,
+    decoder: protoDecoder,
+    decoderParams: {
+      protoType: LauncherTraceMessage,
+      transform: transform_launcher_trace,
+      timeline: true,
+    }
+  },
 };
 
 // Replace enum values with string representation and
@@ -284,6 +326,12 @@ function detectAndDecode(buffer, fileName, store) {
   }
   if (arrayStartsWith(buffer, PROTO_LOG_MAGIC_NUMBER)) {
     return decodedFile(FILE_TYPES['proto_log'], buffer, fileName, store);
+  }
+  if (arrayStartsWith(buffer, SYSTEM_UI_MAGIC_NUMBER)) {
+    return decodedFile(FILE_TYPES['system_ui_trace'], buffer, fileName, store);
+  }
+  if (arrayStartsWith(buffer, LAUNCHER_MAGIC_NUMBER)) {
+    return decodedFile(FILE_TYPES['launcher_trace'], buffer, fileName, store);
   }
   for (var name of ['transaction', 'layers_dump', 'window_dump', 'wl_dump']) {
     try {
