@@ -1,0 +1,113 @@
+{
+ "array_types" : [],
+ "builtin_types" :
+ [
+  {
+   "alignment" : 1,
+   "is_integral" : true,
+   "is_unsigned" : true,
+   "linker_set_key" : "_ZTIc",
+   "name" : "char",
+   "referenced_type" : "_ZTIc",
+   "self_type" : "_ZTIc",
+   "size" : 1
+  },
+  {
+   "alignment" : 4,
+   "is_integral" : true,
+   "is_unsigned" : true,
+   "linker_set_key" : "_ZTIj",
+   "name" : "unsigned int",
+   "referenced_type" : "_ZTIj",
+   "self_type" : "_ZTIj",
+   "size" : 4
+  }
+ ],
+ "elf_functions" : [],
+ "elf_objects" : [],
+ "enum_types" :
+ [
+  {
+   "alignment" : 1,
+   "enum_fields" :
+   [
+    {
+     "enum_field_value" : 1,
+     "name" : "A"
+    }
+   ],
+   "linker_set_key" : "_ZTI2$A",
+   "name" : "(anonymous enum at /development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h:1:1)",
+   "referenced_type" : "_ZTI2$A",
+   "self_type" : "_ZTI2$A",
+   "size" : 1,
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h",
+   "underlying_type" : "_ZTIc"
+  },
+  {
+   "alignment" : 1,
+   "enum_fields" :
+   [
+    {
+     "enum_field_value" : 1,
+     "name" : "B"
+    }
+   ],
+   "linker_set_key" : "_ZTI2$B",
+   "name" : "(anonymous enum at /development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h:5:1)",
+   "referenced_type" : "_ZTI2$B",
+   "self_type" : "_ZTI2$B",
+   "size" : 1,
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h",
+   "underlying_type" : "_ZTIc"
+  },
+  {
+   "alignment" : 4,
+   "enum_fields" :
+   [
+    {
+     "enum_field_value" : 0,
+     "name" : "(anonymous struct)::B"
+    },
+    {
+     "enum_field_value" : 1,
+     "name" : "(anonymous struct)::C"
+    }
+   ],
+   "linker_set_key" : "_ZTIN3$_22$BE",
+   "name" : "(anonymous struct at /development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h:9:1)::(anonymous enum at /development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h:10:3)",
+   "referenced_type" : "_ZTIN3$_22$BE",
+   "self_type" : "_ZTIN3$_22$BE",
+   "size" : 4,
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h",
+   "underlying_type" : "_ZTIj"
+  }
+ ],
+ "function_types" : [],
+ "functions" : [],
+ "global_vars" : [],
+ "lvalue_reference_types" : [],
+ "pointer_types" : [],
+ "qualified_types" : [],
+ "record_types" :
+ [
+  {
+   "alignment" : 4,
+   "fields" :
+   [
+    {
+     "field_name" : "member",
+     "referenced_type" : "_ZTIN3$_22$BE"
+    }
+   ],
+   "is_anonymous" : true,
+   "linker_set_key" : "_ZTI3$_2",
+   "name" : "(anonymous struct at /development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h:9:1)",
+   "referenced_type" : "_ZTI3$_2",
+   "self_type" : "_ZTI3$_2",
+   "size" : 4,
+   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h"
+  }
+ ],
+ "rvalue_reference_types" : []
+}
