@@ -20,6 +20,7 @@
 #include <clang/AST/QualTypeNames.h>
 #include <clang/Index/CodegenNameGenerator.h>
 
+#include <regex>
 #include <string>
 
 #include <assert.h>
@@ -217,6 +218,51 @@ bool ABIWrapper::CreateExtendedType(clang::QualType qual_type,
   return CreateBasicNamedAndTypedDecl(canonical_type, typep, "");
 }
 
+// A mangled anonymous enum name ends with $_<number> or Ut<number>_ where the
+// number may be inconsistent between translation units. This function replaces
+// the name with $ followed by the lexicographically smallest field name.
+static std::string GetAnonymousEnumUniqueId(llvm::StringRef mangled_name,
+                                            const clang::EnumDecl *enum_decl) {
+  // Get the type name from the mangled name.
+  const std::string mangled_name_str = mangled_name;
+  std::smatch match_result;
+  std::string old_suffix;
+  std::string nested_name_suffix;
+  if (std::regex_search(mangled_name_str, match_result,
+                        std::regex(R"((\$_\d+)(E?)$)"))) {
+    const std::ssub_match &old_name = match_result[1];
+    old_suffix = std::to_string(old_name.length()) + match_result[0].str();
+    nested_name_suffix = match_result[2].str();
+    if (!mangled_name.endswith(old_suffix)) {
+      llvm::errs() << "Unexpected length of anonymous enum type name: "
+                   << mangled_name << "\n";
+      ::exit(1);
+    }
+  } else if (std::regex_search(mangled_name_str, match_result,
+                               std::regex(R"(Ut\d*_(E?)$)"))) {
+    old_suffix = match_result[0].str();
+    nested_name_suffix = match_result[1].str();
+  } else {
+    llvm::errs() << "Cannot parse anonymous enum name: " << mangled_name
+                 << "\n";
+    ::exit(1);
+  }
+
+  // Find the smallest enumerator name.
+  std::string smallest_enum_name;
+  for (auto enum_it : enum_decl->enumerators()) {
+    std::string enum_name = enum_it->getNameAsString();
+    if (smallest_enum_name.empty() || smallest_enum_name > enum_name) {
+      smallest_enum_name = enum_name;
+    }
+  }
+  smallest_enum_name = "$" + smallest_enum_name;
+  std::string new_suffix = std::to_string(smallest_enum_name.length()) +
+                           smallest_enum_name + nested_name_suffix;
+
+  return mangled_name.drop_back(old_suffix.length()).str() + new_suffix;
+}
+
 std::string ABIWrapper::GetTypeUniqueId(clang::QualType qual_type) {
   const clang::Type *canonical_type = qual_type.getCanonicalType().getTypePtr();
   assert(canonical_type != nullptr);
@@ -224,6 +270,11 @@ std::string ABIWrapper::GetTypeUniqueId(clang::QualType qual_type) {
   llvm::SmallString<256> uid;
   llvm::raw_svector_ostream out(uid);
   mangle_contextp_->mangleCXXRTTI(qual_type, out);
+
+  if (const clang::EnumDecl *enum_decl = GetAnonymousEnum(qual_type)) {
+    return GetAnonymousEnumUniqueId(uid.str(), enum_decl);
+  }
+
   return uid.str();
 }
 
@@ -548,10 +599,6 @@ bool RecordDeclWrapper::SetupRecordFields(repr::RecordTypeIR *recordp,
       ast_contextp_->getASTRecordLayout(record_decl_);
   while (field != record_decl_->field_end()) {
     clang::QualType field_type = field->getType();
-    if (const clang::EnumDecl *enum_decl = GetAnonymousEnum(field_type)) {
-      // Handle anonymous enums.
-      field_type = enum_decl->getIntegerType();
-    }
     if (!CreateBasicNamedAndTypedDecl(field_type, source_file)) {
       llvm::errs() << "Creation of Type failed\n";
       return false;

@@ -3,10 +3,10 @@
  "builtin_types" :
  [
   {
-   "linker_set_key" : "void",
+   "linker_set_key" : "_ZTIv",
    "name" : "void",
-   "referenced_type" : "type-1",
-   "self_type" : "type-1"
+   "referenced_type" : "_ZTIv",
+   "self_type" : "_ZTIv"
   }
  ],
  "elf_functions" :
@@ -24,7 +24,7 @@
   {
    "function_name" : "example",
    "linker_set_key" : "example",
-   "return_type" : "type-1",
+   "return_type" : "_ZTIv",
    "source_file" : "/development/vndk/tools/header-checker/tests/integration/weak_symbols/example.c"
   }
  ],
