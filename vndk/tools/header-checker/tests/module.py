@@ -596,6 +596,41 @@ TEST_MODULES = [
             '-output-format', 'Json',
         ],
     ),
+    LsdumpModule(
+        name='libgolden_anonymous_enum',
+        arch='arm64',
+        srcs=['integration/cpp/anonymous_enum/include/golden.h'],
+        version_script='',
+        export_include_dirs=['integration/cpp/anonymous_enum/include'],
+        linker_flags=['-output-format', 'Json',],
+    ),
+    LsdumpModule(
+        name='libswap_anonymous_enum',
+        arch='arm64',
+        srcs=['integration/cpp/anonymous_enum/include/swap_enum.h'],
+        version_script='',
+        export_include_dirs=['integration/cpp/anonymous_enum/include'],
+        linker_flags=['-output-format', 'Json'],
+    ),
+    LsdumpModule(
+        name='libswap_anonymous_enum_field',
+        arch='arm64',
+        srcs=['integration/cpp/anonymous_enum/include/swap_enum_field.h'],
+        version_script='',
+        export_include_dirs=['integration/cpp/anonymous_enum/include'],
+        linker_flags=['-output-format', 'Json'],
+    ),
+    LsdumpModule(
+        name='libanonymous_enum_odr',
+        arch='arm64',
+        srcs=[
+            'integration/cpp/anonymous_enum/include/golden.h',
+            'integration/cpp/anonymous_enum/include/include_golden.h',
+        ],
+        version_script='',
+        export_include_dirs=['integration/cpp/anonymous_enum/include'],
+        linker_flags=['-output-format', 'Json'],
+    ),
 ]
 
 TEST_MODULES = {m.name: m for m in TEST_MODULES}

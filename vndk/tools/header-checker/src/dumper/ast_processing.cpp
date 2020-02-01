@@ -61,8 +61,7 @@ bool HeaderASTVisitor::VisitRecordDecl(const clang::RecordDecl *decl) {
 
 bool HeaderASTVisitor::VisitEnumDecl(const clang::EnumDecl *decl) {
   if (!decl->isThisDeclarationADefinition() ||
-      decl->getTypeForDecl()->isDependentType() ||
-      !decl->hasNameForLinkage()) {
+      decl->getTypeForDecl()->isDependentType()) {
     return true;
   }
   EnumDeclWrapper enum_decl_wrapper(
