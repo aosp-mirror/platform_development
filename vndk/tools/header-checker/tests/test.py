@@ -352,6 +352,26 @@ class HeaderCheckerTest(unittest.TestCase):
             "libempty", "libempty", 0,
             ["-input-format-old", "Json", "-input-format-new", "Json"])
 
+    def test_golden_anonymous_enum(self):
+        self.prepare_and_absolute_diff_all_archs(
+            "libgolden_anonymous_enum", "libgolden_anonymous_enum")
+
+    def test_swap_anonymous_enum(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_anonymous_enum", "libswap_anonymous_enum", 0,
+            ["-input-format-old", "Json", "-input-format-new", "Json",
+             "-check-all-apis"])
+
+    def test_swap_anonymous_enum_field(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_anonymous_enum", "libswap_anonymous_enum_field", 0,
+            ["-input-format-old", "Json", "-input-format-new", "Json",
+             "-check-all-apis"])
+
+    def test_anonymous_enum_odr(self):
+        self.prepare_and_absolute_diff_all_archs(
+            "libanonymous_enum_odr", "libanonymous_enum_odr")
+
 
 if __name__ == '__main__':
     unittest.main()
