@@ -22,10 +22,14 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     style="@style/KeyboardArea">
 
-  <LinearLayout
-      android:id="@+id/suggestion_view"
-      style="@style/KeyboardRow.Header">
-  </LinearLayout>
+  <HorizontalScrollView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content">
+    <LinearLayout
+        android:id="@+id/suggestion_view"
+        style="@style/KeyboardRow.Header">
+    </LinearLayout>
+  </HorizontalScrollView>
 
   <LinearLayout style="@style/KeyboardRow">
     <TextView
