@@ -187,6 +187,12 @@ def _parse_args():
 
     args = parser.parse_args()
 
+    if args.libs:
+        if any(lib_name.endswith(SOURCE_ABI_DUMP_EXT_END) or
+               lib_name.endswith(SO_EXT) for lib_name in args.libs):
+            parser.error('-libs should be followed by a base name without '
+                         'file extension.')
+
     if args.products is None:
         # If `args.products` is unspecified, generate reference ABI dumps for
         # all products.
