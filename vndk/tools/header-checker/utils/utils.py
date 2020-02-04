@@ -176,6 +176,8 @@ def make_libraries(product, variant, vndk_version, targets, libs):
                                      build=True)
     make_target_paths = []
     for name in libs:
+        if not (name in lsdump_paths and lsdump_paths[name]):
+            raise KeyError('Cannot find lsdump for %s.' % name)
         make_target_paths.extend(path for tag, path in
                                  lsdump_paths[name].values())
     make_targets(product, variant, make_target_paths)
@@ -281,6 +283,10 @@ def find_lib_lsdumps(lsdump_paths, libs, target):
     result = []
     if libs:
         for lib_name in libs:
+            if not (lib_name in lsdump_paths and
+                    arch_cpu in lsdump_paths[lib_name]):
+                raise KeyError('Cannot find lsdump for %s, %s.' %
+                               (lib_name, arch_cpu))
             result.append(lsdump_paths[lib_name][arch_cpu])
     else:
         result.extend(paths[arch_cpu] for paths in lsdump_paths.values())
