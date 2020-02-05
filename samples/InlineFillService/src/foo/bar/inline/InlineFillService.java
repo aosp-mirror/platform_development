@@ -35,6 +35,7 @@ import android.service.autofill.SaveInfo;
 import android.service.autofill.SaveRequest;
 import android.util.ArrayMap;
 import android.util.Log;
+import android.util.Size;
 import android.view.autofill.AutofillId;
 import android.view.autofill.AutofillValue;
 import android.view.inline.InlinePresentationSpec;
@@ -62,7 +63,7 @@ public class InlineFillService extends AutofillService {
     /**
      * Number of datasets sent on each request - we're simple, that value is hardcoded in our DNA!
      */
-    static final int NUMBER_DATASETS = 4;
+    static final int NUMBER_DATASETS = 6;
 
     @Override
     public void onFillRequest(FillRequest request, CancellationSignal cancellationSignal,
@@ -104,6 +105,15 @@ public class InlineFillService extends AutofillService {
             response.addDataset(unlockedDataset);
         }
 
+        if(inlineRequest != null) {
+            // Reuse the first spec's height for the inline action size, as there isn't dedicated
+            // value from the request for this.
+            final int height = inlineRequest.getPresentationSpecs().get(0).getMinSize().getHeight();
+            final Size actionIconSize = new Size(height, height);
+            response.addInlineAction(
+                    newInlineAction(context, actionIconSize, R.drawable.ic_settings));
+        }
+
         // 2.Add save info
         Collection<AutofillId> ids = fields.values();
         AutofillId[] requiredIds = new AutofillId[ids.size()];
@@ -114,6 +124,18 @@ public class InlineFillService extends AutofillService {
 
         // 3.Profit!
         return response.build();
+    }
+
+    static InlinePresentation newInlineAction(@NonNull Context context,
+            @NonNull Size size, int drawable) {
+        final Slice suggestionSlice = new Slice.Builder(Uri.parse("inline.slice"),
+                new SliceSpec("InlinePresentation", 1))
+                .addIcon(Icon.createWithResource(context, drawable), null,
+                        Collections.singletonList(""))
+                .build();
+        final InlinePresentationSpec currentSpec = new InlinePresentationSpec.Builder(size,
+                size).build();
+        return new InlinePresentation(suggestionSlice, currentSpec, /** pined= */ true);
     }
 
     static Dataset newUnlockedDataset(@NonNull Context context,
