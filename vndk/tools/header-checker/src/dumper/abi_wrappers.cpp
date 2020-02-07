@@ -18,7 +18,6 @@
 #include "utils/header_abi_util.h"
 
 #include <clang/AST/QualTypeNames.h>
-#include <clang/Index/CodegenNameGenerator.h>
 
 #include <regex>
 #include <string>
