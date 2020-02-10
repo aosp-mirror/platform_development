@@ -144,7 +144,8 @@ public class AutofillImeService extends InputMethodService {
         Log.d(TAG, "updateSuggestionViews() called");
         mSuggestionViews = Arrays.asList(suggestionViews);
         mSuggestionViewSizes = Arrays.asList(sizes);
-        updateInlineSuggestionVisibility(true, true);
+        final boolean visible = !mSuggestionViews.isEmpty();
+        updateInlineSuggestionVisibility(visible, true);
     }
 
     private void onInlineSuggestionsResponseInternal(InlineSuggestionsResponse response) {
@@ -157,6 +158,10 @@ public class AutofillImeService extends InputMethodService {
         final View[] suggestionViews = new View[totalSuggestionsCount];
         final Size[] sizes = new Size[totalSuggestionsCount];
 
+        if (totalSuggestionsCount == 0) {
+            updateSuggestionViews(suggestionViews, sizes);
+            return;
+        }
         for (int i=0; i<totalSuggestionsCount; i++) {
             final int index = i;
             InlineSuggestion inlineSuggestion = inlineSuggestions.get(index);
@@ -183,7 +188,6 @@ public class AutofillImeService extends InputMethodService {
 
     void handle(String data) {
         Log.d(TAG, "handle() called: [" + data + "]");
-        mDecoder.decode(data);
-        updateInlineSuggestionVisibility(mDecoder.isEmpty(), false);
+        mDecoder.decodeAndApply(data);
     }
 }

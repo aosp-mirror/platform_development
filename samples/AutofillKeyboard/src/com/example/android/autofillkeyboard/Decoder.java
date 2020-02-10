@@ -28,7 +28,7 @@ final class Decoder {
         this.mInputConnection = inputConnection;
     }
 
-    void decode(String data) {
+    void decodeAndApply(String data) {
         if ("DEL".equals(data)) {
             mInputConnection.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL));
         } else if ("ENT".equals(data)) {
