@@ -3,47 +3,44 @@ record_types {
     name: "HiddenBase"
     size: 8
     alignment: 4
-    referenced_type: "type-1"
+    referenced_type: "_ZTI10HiddenBase"
     source_file: "/development/vndk/tools/header-checker/tests/input/example3.h"
-    linker_set_key: "HiddenBase"
-    self_type: "type-1"
+    linker_set_key: "_ZTI10HiddenBase"
+    self_type: "_ZTI10HiddenBase"
   }
   fields {
-    referenced_type: "type-2"
+    referenced_type: "_ZTIi"
     field_offset: 0
     field_name: "hide"
     access: private_access
   }
   fields {
-    referenced_type: "type-3"
+    referenced_type: "_ZTIf"
     field_offset: 32
     field_name: "seek"
     access: private_access
   }
   access: public_access
   record_kind: class_kind
-  tag_info {
-    unique_id: "_ZTS10HiddenBase"
-  }
 }
 record_types {
   type_info {
     name: "test2::HelloAgain"
     size: 40
     alignment: 8
-    referenced_type: "type-4"
+    referenced_type: "_ZTIN5test210HelloAgainE"
     source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-    linker_set_key: "test2::HelloAgain"
-    self_type: "type-4"
+    linker_set_key: "_ZTIN5test210HelloAgainE"
+    self_type: "_ZTIN5test210HelloAgainE"
   }
   fields {
-    referenced_type: "type-5"
+    referenced_type: "_ZTINSt3__16vectorIPN5test210HelloAgainENS_9allocatorIS3_EEEE"
     field_offset: 64
     field_name: "foo_again"
     access: public_access
   }
   fields {
-    referenced_type: "type-2"
+    referenced_type: "_ZTIi"
     field_offset: 256
     field_name: "bar_again"
     access: public_access
@@ -82,131 +79,116 @@ record_types {
   }
   access: public_access
   record_kind: struct_kind
-  tag_info {
-    unique_id: "_ZTSN5test210HelloAgainE"
-  }
-}
-record_types {
-  type_info {
-    name: "test3::ByeAgain<double>"
-    size: 16
-    alignment: 8
-    referenced_type: "type-13"
-    source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-    linker_set_key: "test3::ByeAgain<double>"
-    self_type: "type-13"
-  }
-  fields {
-    referenced_type: "type-14"
-    field_offset: 0
-    field_name: "foo_again"
-    access: public_access
-  }
-  fields {
-    referenced_type: "type-2"
-    field_offset: 64
-    field_name: "bar_again"
-    access: public_access
-  }
-  template_info {
-    elements {
-      referenced_type: "type-14"
-    }
-  }
-  access: public_access
-  record_kind: struct_kind
-  tag_info {
-    unique_id: "_ZTSN5test38ByeAgainIdEE"
-  }
-}
-record_types {
-  type_info {
-    name: "test3::ByeAgain<float>"
-    size: 8
-    alignment: 4
-    referenced_type: "type-16"
-    source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-    linker_set_key: "test3::ByeAgain<float>"
-    self_type: "type-16"
-  }
-  fields {
-    referenced_type: "type-3"
-    field_offset: 0
-    field_name: "foo_again"
-    access: public_access
-  }
-  fields {
-    referenced_type: "type-3"
-    field_offset: 32
-    field_name: "bar_Again"
-    access: public_access
-  }
-  template_info {
-    elements {
-      referenced_type: "type-3"
-    }
-  }
-  access: public_access
-  record_kind: struct_kind
-  tag_info {
-    unique_id: "_ZTSN5test38ByeAgainIfEE"
-  }
-}
-record_types {
-  type_info {
-    name: "test3::Outer"
-    size: 4
-    alignment: 4
-    referenced_type: "type-19"
-    source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-    linker_set_key: "test3::Outer"
-    self_type: "type-19"
-  }
-  fields {
-    referenced_type: "type-2"
-    field_offset: 0
-    field_name: "a"
-    access: public_access
-  }
-  access: public_access
-  record_kind: class_kind
-  tag_info {
-    unique_id: "_ZTSN5test35OuterE"
-  }
 }
 record_types {
   type_info {
     name: "test3::Outer::Inner"
     size: 4
     alignment: 4
-    referenced_type: "type-20"
+    referenced_type: "_ZTIN5test35Outer5InnerE"
     source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-    linker_set_key: "test3::Outer::Inner"
-    self_type: "type-20"
+    linker_set_key: "_ZTIN5test35Outer5InnerE"
+    self_type: "_ZTIN5test35Outer5InnerE"
   }
   fields {
-    referenced_type: "type-2"
+    referenced_type: "_ZTIi"
     field_offset: 0
     field_name: "b"
     access: private_access
   }
   access: private_access
   record_kind: class_kind
-  tag_info {
-    unique_id: "_ZTSN5test35Outer5InnerE"
+}
+record_types {
+  type_info {
+    name: "test3::Outer"
+    size: 4
+    alignment: 4
+    referenced_type: "_ZTIN5test35OuterE"
+    source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+    linker_set_key: "_ZTIN5test35OuterE"
+    self_type: "_ZTIN5test35OuterE"
   }
+  fields {
+    referenced_type: "_ZTIi"
+    field_offset: 0
+    field_name: "a"
+    access: public_access
+  }
+  access: public_access
+  record_kind: class_kind
+}
+record_types {
+  type_info {
+    name: "test3::ByeAgain<double>"
+    size: 16
+    alignment: 8
+    referenced_type: "_ZTIN5test38ByeAgainIdEE"
+    source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+    linker_set_key: "_ZTIN5test38ByeAgainIdEE"
+    self_type: "_ZTIN5test38ByeAgainIdEE"
+  }
+  fields {
+    referenced_type: "_ZTId"
+    field_offset: 0
+    field_name: "foo_again"
+    access: public_access
+  }
+  fields {
+    referenced_type: "_ZTIi"
+    field_offset: 64
+    field_name: "bar_again"
+    access: public_access
+  }
+  template_info {
+    elements {
+      referenced_type: "_ZTId"
+    }
+  }
+  access: public_access
+  record_kind: struct_kind
+}
+record_types {
+  type_info {
+    name: "test3::ByeAgain<float>"
+    size: 8
+    alignment: 4
+    referenced_type: "_ZTIN5test38ByeAgainIfEE"
+    source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+    linker_set_key: "_ZTIN5test38ByeAgainIfEE"
+    self_type: "_ZTIN5test38ByeAgainIfEE"
+  }
+  fields {
+    referenced_type: "_ZTIf"
+    field_offset: 0
+    field_name: "foo_again"
+    access: public_access
+  }
+  fields {
+    referenced_type: "_ZTIf"
+    field_offset: 32
+    field_name: "bar_Again"
+    access: public_access
+  }
+  template_info {
+    elements {
+      referenced_type: "_ZTIf"
+    }
+  }
+  access: public_access
+  record_kind: struct_kind
 }
 enum_types {
   type_info {
     name: "Foo_s"
     size: 4
     alignment: 4
-    referenced_type: "type-8"
+    referenced_type: "_ZTI5Foo_s"
     source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-    linker_set_key: "Foo_s"
-    self_type: "type-8"
+    linker_set_key: "_ZTI5Foo_s"
+    self_type: "_ZTI5Foo_s"
   }
-  underlying_type: "type-9"
+  underlying_type: "_ZTIj"
   enum_fields {
     enum_field_value: 10
     name: "foosball"
@@ -216,21 +198,18 @@ enum_types {
     name: "foosbat"
   }
   access: public_access
-  tag_info {
-    unique_id: "_ZTS5Foo_s"
-  }
 }
 enum_types {
   type_info {
     name: "test3::Kind"
     size: 4
     alignment: 4
-    referenced_type: "type-18"
+    referenced_type: "_ZTIN5test34KindE"
     source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-    linker_set_key: "test3::Kind"
-    self_type: "type-18"
+    linker_set_key: "_ZTIN5test34KindE"
+    self_type: "_ZTIN5test34KindE"
   }
-  underlying_type: "type-9"
+  underlying_type: "_ZTIj"
   enum_fields {
     enum_field_value: 24
     name: "test3::kind1"
@@ -240,19 +219,16 @@ enum_types {
     name: "test3::kind2"
   }
   access: public_access
-  tag_info {
-    unique_id: "_ZTSN5test34KindE"
-  }
 }
 pointer_types {
   type_info {
     name: "test2::HelloAgain *"
     size: 8
     alignment: 8
-    referenced_type: "type-4"
+    referenced_type: "_ZTIN5test210HelloAgainE"
     source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-    linker_set_key: "test2::HelloAgain *"
-    self_type: "type-6"
+    linker_set_key: "_ZTIPN5test210HelloAgainE"
+    self_type: "_ZTIPN5test210HelloAgainE"
   }
 }
 pointer_types {
@@ -260,10 +236,10 @@ pointer_types {
     name: "test3::ByeAgain<double> *"
     size: 8
     alignment: 8
-    referenced_type: "type-13"
+    referenced_type: "_ZTIN5test38ByeAgainIdEE"
     source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-    linker_set_key: "test3::ByeAgain<double> *"
-    self_type: "type-15"
+    linker_set_key: "_ZTIPN5test38ByeAgainIdEE"
+    self_type: "_ZTIPN5test38ByeAgainIdEE"
   }
 }
 pointer_types {
@@ -271,10 +247,10 @@ pointer_types {
     name: "test3::ByeAgain<float> *"
     size: 8
     alignment: 8
-    referenced_type: "type-16"
+    referenced_type: "_ZTIN5test38ByeAgainIfEE"
     source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-    linker_set_key: "test3::ByeAgain<float> *"
-    self_type: "type-17"
+    linker_set_key: "_ZTIPN5test38ByeAgainIfEE"
+    self_type: "_ZTIPN5test38ByeAgainIfEE"
   }
 }
 builtin_types {
@@ -282,10 +258,10 @@ builtin_types {
     name: "bool"
     size: 1
     alignment: 1
-    referenced_type: "type-12"
+    referenced_type: "_ZTIb"
     source_file: ""
-    linker_set_key: "bool"
-    self_type: "type-12"
+    linker_set_key: "_ZTIb"
+    self_type: "_ZTIb"
   }
   is_unsigned: true
   is_integral: true
@@ -295,10 +271,10 @@ builtin_types {
     name: "double"
     size: 8
     alignment: 8
-    referenced_type: "type-14"
+    referenced_type: "_ZTId"
     source_file: ""
-    linker_set_key: "double"
-    self_type: "type-14"
+    linker_set_key: "_ZTId"
+    self_type: "_ZTId"
   }
   is_unsigned: false
   is_integral: false
@@ -308,10 +284,10 @@ builtin_types {
     name: "float"
     size: 4
     alignment: 4
-    referenced_type: "type-3"
+    referenced_type: "_ZTIf"
     source_file: ""
-    linker_set_key: "float"
-    self_type: "type-3"
+    linker_set_key: "_ZTIf"
+    self_type: "_ZTIf"
   }
   is_unsigned: false
   is_integral: false
@@ -321,10 +297,10 @@ builtin_types {
     name: "int"
     size: 4
     alignment: 4
-    referenced_type: "type-2"
+    referenced_type: "_ZTIi"
     source_file: ""
-    linker_set_key: "int"
-    self_type: "type-2"
+    linker_set_key: "_ZTIi"
+    self_type: "_ZTIi"
   }
   is_unsigned: false
   is_integral: true
@@ -334,10 +310,10 @@ builtin_types {
     name: "unsigned int"
     size: 4
     alignment: 4
-    referenced_type: "type-9"
+    referenced_type: "_ZTIj"
     source_file: ""
-    linker_set_key: "unsigned int"
-    self_type: "type-9"
+    linker_set_key: "_ZTIj"
+    self_type: "_ZTIj"
   }
   is_unsigned: true
   is_integral: true
@@ -347,10 +323,10 @@ builtin_types {
     name: "void"
     size: 0
     alignment: 0
-    referenced_type: "type-7"
+    referenced_type: "_ZTIv"
     source_file: ""
-    linker_set_key: "void"
-    self_type: "type-7"
+    linker_set_key: "_ZTIv"
+    self_type: "_ZTIv"
   }
   is_unsigned: false
   is_integral: false
@@ -360,10 +336,10 @@ qualified_types {
     name: "bool const[2]"
     size: 2
     alignment: 1
-    referenced_type: "type-10"
+    referenced_type: "_ZTIA2_b"
     source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-    linker_set_key: "bool const[2]"
-    self_type: "type-11"
+    linker_set_key: "_ZTIA2_Kb"
+    self_type: "_ZTIA2_Kb"
   }
   is_const: true
   is_volatile: false
@@ -374,18 +350,18 @@ array_types {
     name: "bool [2]"
     size: 2
     alignment: 1
-    referenced_type: "type-12"
+    referenced_type: "_ZTIb"
     source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
-    linker_set_key: "bool [2]"
-    self_type: "type-10"
+    linker_set_key: "_ZTIA2_b"
+    self_type: "_ZTIA2_b"
   }
 }
 functions {
-  return_type: "type-2"
+  return_type: "_ZTIi"
   function_name: "test2::HelloAgain::again"
   source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
   parameters {
-    referenced_type: "type-6"
+    referenced_type: "_ZTIPN5test210HelloAgainE"
     default_arg: false
     is_this_ptr: true
   }
@@ -393,11 +369,11 @@ functions {
   access: public_access
 }
 functions {
-  return_type: "type-7"
+  return_type: "_ZTIv"
   function_name: "test2::HelloAgain::~HelloAgain"
   source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
   parameters {
-    referenced_type: "type-6"
+    referenced_type: "_ZTIPN5test210HelloAgainE"
     default_arg: false
     is_this_ptr: true
   }
@@ -405,11 +381,11 @@ functions {
   access: public_access
 }
 functions {
-  return_type: "type-7"
+  return_type: "_ZTIv"
   function_name: "test2::HelloAgain::~HelloAgain"
   source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
   parameters {
-    referenced_type: "type-6"
+    referenced_type: "_ZTIPN5test210HelloAgainE"
     default_arg: false
     is_this_ptr: true
   }
@@ -417,11 +393,11 @@ functions {
   access: public_access
 }
 functions {
-  return_type: "type-7"
+  return_type: "_ZTIv"
   function_name: "test2::HelloAgain::~HelloAgain"
   source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
   parameters {
-    referenced_type: "type-6"
+    referenced_type: "_ZTIPN5test210HelloAgainE"
     default_arg: false
     is_this_ptr: true
   }
@@ -429,11 +405,11 @@ functions {
   access: public_access
 }
 functions {
-  return_type: "type-12"
+  return_type: "_ZTIb"
   function_name: "test3::End"
   source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
   parameters {
-    referenced_type: "type-3"
+    referenced_type: "_ZTIf"
     default_arg: true
     is_this_ptr: false
   }
@@ -441,41 +417,41 @@ functions {
   access: public_access
 }
 functions {
-  return_type: "type-12"
+  return_type: "_ZTIb"
   function_name: "test3::Begin"
   source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
   parameters {
-    referenced_type: "type-3"
+    referenced_type: "_ZTIf"
     default_arg: false
     is_this_ptr: false
   }
   parameters {
-    referenced_type: "type-2"
+    referenced_type: "_ZTIi"
     default_arg: false
     is_this_ptr: false
   }
   parameters {
-    referenced_type: "type-2"
+    referenced_type: "_ZTIi"
     default_arg: false
     is_this_ptr: false
   }
   template_info {
     elements {
-      referenced_type: "type-3"
+      referenced_type: "_ZTIf"
     }
     elements {
-      referenced_type: "type-2"
+      referenced_type: "_ZTIi"
     }
   }
   linker_set_key: "_ZN5test35BeginIfiEEbT_T0_i"
   access: public_access
 }
 functions {
-  return_type: "type-21"
+  return_type: "_ZTINSt3__16vectorIPiNS_9allocatorIS1_EEEE"
   function_name: "test3::Dummy"
   source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
   parameters {
-    referenced_type: "type-2"
+    referenced_type: "_ZTIi"
     default_arg: false
     is_this_ptr: false
   }
@@ -483,16 +459,16 @@ functions {
   access: public_access
 }
 functions {
-  return_type: "type-14"
+  return_type: "_ZTId"
   function_name: "test3::ByeAgain<double>::method_foo"
   source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
   parameters {
-    referenced_type: "type-15"
+    referenced_type: "_ZTIPN5test38ByeAgainIdEE"
     default_arg: false
     is_this_ptr: true
   }
   parameters {
-    referenced_type: "type-14"
+    referenced_type: "_ZTId"
     default_arg: false
     is_this_ptr: false
   }
@@ -500,16 +476,16 @@ functions {
   access: public_access
 }
 functions {
-  return_type: "type-3"
+  return_type: "_ZTIf"
   function_name: "test3::ByeAgain<float>::method_foo"
   source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
   parameters {
-    referenced_type: "type-17"
+    referenced_type: "_ZTIPN5test38ByeAgainIfEE"
     default_arg: false
     is_this_ptr: true
   }
   parameters {
-    referenced_type: "type-2"
+    referenced_type: "_ZTIi"
     default_arg: false
     is_this_ptr: false
   }
@@ -520,27 +496,27 @@ global_vars {
   name: "__test_var"
   source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
   linker_set_key: "_ZL10__test_var"
-  referenced_type: "type-11"
+  referenced_type: "_ZTIA2_Kb"
   access: public_access
 }
 global_vars {
   name: "test2::HelloAgain::hello_forever"
   source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
   linker_set_key: "_ZN5test210HelloAgain13hello_foreverE"
-  referenced_type: "type-2"
+  referenced_type: "_ZTIi"
   access: public_access
 }
 global_vars {
   name: "test3::double_bye"
   source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
   linker_set_key: "_ZN5test310double_byeE"
-  referenced_type: "type-13"
+  referenced_type: "_ZTIN5test38ByeAgainIdEE"
   access: public_access
 }
 global_vars {
   name: "test3::ByeAgain<float>::foo_forever"
   source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
   linker_set_key: "_ZN5test38ByeAgainIfE11foo_foreverE"
-  referenced_type: "type-2"
+  referenced_type: "_ZTIi"
   access: public_access
 }

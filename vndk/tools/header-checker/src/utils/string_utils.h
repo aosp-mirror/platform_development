@@ -15,7 +15,8 @@
 #ifndef STRING_UTILS_H_
 #define STRING_UTILS_H_
 
-#include <optional>
+#include <llvm/ADT/Optional.h>
+
 #include <string>
 #include <vector>
 
@@ -33,7 +34,7 @@ bool EndsWith(std::string_view s, std::string_view suffix);
 std::vector<std::string_view> Split(std::string_view s,
                                     std::string_view delim_chars);
 
-std::optional<int> ParseInt(const std::string &s);
+llvm::Optional<int> ParseInt(const std::string &s);
 
 bool ParseBool(const std::string &s);
 

@@ -152,7 +152,7 @@ GetElfSymbolBinding(const JsonObjectRef &elf_symbol) {
                    "Failed to convert JSON to ElfSymbolBinding");
 }
 
-bool JsonIRReader::ReadDump(const std::string &dump_file) {
+bool JsonIRReader::ReadDumpImpl(const std::string &dump_file) {
   Json::Value tu_json;
   Json::Reader reader;
   std::ifstream input(dump_file);
@@ -187,11 +187,6 @@ bool JsonIRReader::ReadDump(const std::string &dump_file) {
     return false;
   }
   return true;
-}
-
-void JsonIRReader::ReadTagTypeInfo(const JsonObjectRef &type_decl,
-                                   TagTypeIR *tag_type_ir) {
-  tag_type_ir->SetUniqueId(type_decl.GetString("unique_id"));
 }
 
 void JsonIRReader::ReadTemplateInfo(const JsonObjectRef &type_decl,
@@ -299,7 +294,6 @@ JsonIRReader::RecordTypeJsonToIR(const JsonObjectRef &record_type) {
   ReadBaseSpecifiers(record_type, &record_type_ir);
   record_type_ir.SetRecordKind(GetRecordKind(record_type));
   record_type_ir.SetAnonymity(record_type.GetBool("is_anonymous"));
-  ReadTagTypeInfo(record_type, &record_type_ir);
   return record_type_ir;
 }
 
@@ -309,7 +303,6 @@ EnumTypeIR JsonIRReader::EnumTypeJsonToIR(const JsonObjectRef &enum_type) {
   enum_type_ir.SetUnderlyingType(enum_type.GetString("underlying_type"));
   enum_type_ir.SetAccess(GetAccess(enum_type));
   ReadEnumFields(enum_type, &enum_type_ir);
-  ReadTagTypeInfo(enum_type, &enum_type_ir);
   return enum_type_ir;
 }
 

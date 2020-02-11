@@ -16,6 +16,8 @@
 
 #include "utils/string_utils.h"
 
+#include <llvm/ADT/Optional.h>
+
 #include <cassert>
 #include <string>
 
@@ -24,7 +26,7 @@ namespace header_checker {
 namespace utils {
 
 
-std::optional<ApiLevel> ParseApiLevel(const std::string &api_level_str) {
+llvm::Optional<ApiLevel> ParseApiLevel(const std::string &api_level_str) {
   if (api_level_str == "current") {
     return FUTURE_API_LEVEL;
   }

@@ -3,132 +3,98 @@ record_types {
     name: "UnusedStruct"
     size: 4
     alignment: 4
-    referenced_type: "type-1"
+    referenced_type: "_ZTI12UnusedStruct"
     source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_and_cpp.h"
-    linker_set_key: "UnusedStruct"
-    self_type: "type-1"
+    linker_set_key: "_ZTI12UnusedStruct"
+    self_type: "_ZTI12UnusedStruct"
   }
   fields {
-    referenced_type: "type-2"
+    referenced_type: "_ZTIi"
     field_offset: 0
     field_name: "mUnusedMember"
     access: public_access
   }
   access: public_access
   record_kind: struct_kind
-  tag_info {
-    unique_id: "_ZTS12UnusedStruct"
-  }
-}
-record_types {
-  type_info {
-    name: "Cstruct"
-    size: 16
-    alignment: 8
-    referenced_type: "type-4"
-    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
-    linker_set_key: "Cstruct"
-    self_type: "type-4"
-  }
-  fields {
-    referenced_type: "type-2"
-    field_offset: 0
-    field_name: "a"
-    access: public_access
-  }
-  fields {
-    referenced_type: "type-5"
-    field_offset: 64
-    field_name: "b"
-    access: public_access
-  }
-  access: public_access
-  record_kind: struct_kind
-  tag_info {
-    unique_id: "Cstruct"
-  }
-}
-record_types {
-  type_info {
-    name: "Cinner"
-    size: 4
-    alignment: 4
-    referenced_type: "type-6"
-    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
-    linker_set_key: "Cinner"
-    self_type: "type-6"
-  }
-  fields {
-    referenced_type: "type-2"
-    field_offset: 0
-    field_name: "c"
-    access: public_access
-  }
-  access: public_access
-  record_kind: struct_kind
-  tag_info {
-    unique_id: "Cinner"
-  }
 }
 record_types {
   type_info {
     name: "Foo"
     size: 16
     alignment: 8
-    referenced_type: "type-8"
+    referenced_type: "_ZTI3Foo"
     source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_and_cpp.h"
-    linker_set_key: "Foo"
-    self_type: "type-8"
+    linker_set_key: "_ZTI3Foo"
+    self_type: "_ZTI3Foo"
   }
   fields {
-    referenced_type: "type-9"
+    referenced_type: "_ZTIPi"
     field_offset: 0
     field_name: "a_"
     access: private_access
   }
   fields {
-    referenced_type: "type-9"
+    referenced_type: "_ZTIPi"
     field_offset: 64
     field_name: "b_"
     access: private_access
   }
   access: public_access
   record_kind: class_kind
-  tag_info {
-    unique_id: "_ZTS3Foo"
+}
+record_types {
+  type_info {
+    name: "Cinner"
+    size: 4
+    alignment: 4
+    referenced_type: "_ZTI6Cinner"
+    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
+    linker_set_key: "_ZTI6Cinner"
+    self_type: "_ZTI6Cinner"
   }
+  fields {
+    referenced_type: "_ZTIi"
+    field_offset: 0
+    field_name: "c"
+    access: public_access
+  }
+  access: public_access
+  record_kind: struct_kind
+}
+record_types {
+  type_info {
+    name: "Cstruct"
+    size: 16
+    alignment: 8
+    referenced_type: "_ZTI7Cstruct"
+    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
+    linker_set_key: "_ZTI7Cstruct"
+    self_type: "_ZTI7Cstruct"
+  }
+  fields {
+    referenced_type: "_ZTIi"
+    field_offset: 0
+    field_name: "a"
+    access: public_access
+  }
+  fields {
+    referenced_type: "_ZTIP6Cinner"
+    field_offset: 64
+    field_name: "b"
+    access: public_access
+  }
+  access: public_access
+  record_kind: struct_kind
 }
 pointer_types {
   type_info {
-    name: "int *"
+    name: "Foo *"
     size: 8
     alignment: 8
-    referenced_type: "type-2"
+    referenced_type: "_ZTI3Foo"
     source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_and_cpp.h"
-    linker_set_key: "int *"
-    self_type: "type-9"
-  }
-}
-pointer_types {
-  type_info {
-    name: "Cstruct **"
-    size: 8
-    alignment: 8
-    referenced_type: "type-3"
-    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
-    linker_set_key: "Cstruct **"
-    self_type: "type-7"
-  }
-}
-pointer_types {
-  type_info {
-    name: "Cstruct *"
-    size: 8
-    alignment: 8
-    referenced_type: "type-4"
-    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
-    linker_set_key: "Cstruct *"
-    self_type: "type-3"
+    linker_set_key: "_ZTIP3Foo"
+    self_type: "_ZTIP3Foo"
   }
 }
 pointer_types {
@@ -136,21 +102,43 @@ pointer_types {
     name: "Cinner *"
     size: 8
     alignment: 8
-    referenced_type: "type-6"
+    referenced_type: "_ZTI6Cinner"
     source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
-    linker_set_key: "Cinner *"
-    self_type: "type-5"
+    linker_set_key: "_ZTIP6Cinner"
+    self_type: "_ZTIP6Cinner"
   }
 }
 pointer_types {
   type_info {
-    name: "Foo *"
+    name: "Cstruct *"
     size: 8
     alignment: 8
-    referenced_type: "type-8"
+    referenced_type: "_ZTI7Cstruct"
+    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
+    linker_set_key: "_ZTIP7Cstruct"
+    self_type: "_ZTIP7Cstruct"
+  }
+}
+pointer_types {
+  type_info {
+    name: "Cstruct **"
+    size: 8
+    alignment: 8
+    referenced_type: "_ZTIP7Cstruct"
+    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
+    linker_set_key: "_ZTIPP7Cstruct"
+    self_type: "_ZTIPP7Cstruct"
+  }
+}
+pointer_types {
+  type_info {
+    name: "int *"
+    size: 8
+    alignment: 8
+    referenced_type: "_ZTIi"
     source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_and_cpp.h"
-    linker_set_key: "Foo *"
-    self_type: "type-11"
+    linker_set_key: "_ZTIPi"
+    self_type: "_ZTIPi"
   }
 }
 builtin_types {
@@ -158,10 +146,10 @@ builtin_types {
     name: "int"
     size: 4
     alignment: 4
-    referenced_type: "type-2"
+    referenced_type: "_ZTIi"
     source_file: ""
-    linker_set_key: "int"
-    self_type: "type-2"
+    linker_set_key: "_ZTIi"
+    self_type: "_ZTIi"
   }
   is_unsigned: false
   is_integral: true
@@ -171,20 +159,20 @@ builtin_types {
     name: "void"
     size: 0
     alignment: 0
-    referenced_type: "type-10"
+    referenced_type: "_ZTIv"
     source_file: ""
-    linker_set_key: "void"
-    self_type: "type-10"
+    linker_set_key: "_ZTIv"
+    self_type: "_ZTIv"
   }
   is_unsigned: false
   is_integral: false
 }
 functions {
-  return_type: "type-10"
+  return_type: "_ZTIv"
   function_name: "CFunction"
   source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
   parameters {
-    referenced_type: "type-7"
+    referenced_type: "_ZTIPP7Cstruct"
     default_arg: false
     is_this_ptr: false
   }
@@ -192,16 +180,16 @@ functions {
   access: public_access
 }
 functions {
-  return_type: "type-8"
+  return_type: "_ZTI3Foo"
   function_name: "foo"
   source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_and_cpp.h"
   parameters {
-    referenced_type: "type-9"
+    referenced_type: "_ZTIPi"
     default_arg: false
     is_this_ptr: false
   }
   parameters {
-    referenced_type: "type-9"
+    referenced_type: "_ZTIPi"
     default_arg: false
     is_this_ptr: false
   }
