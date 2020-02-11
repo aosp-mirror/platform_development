@@ -24,7 +24,7 @@
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Lex/Preprocessor.h>
 
-#include <llvm/ADT/STLExtras.h>
+#include <utility>
 
 
 namespace header_checker {
@@ -39,7 +39,7 @@ std::unique_ptr<clang::ASTConsumer>
 HeaderCheckerFrontendAction::CreateASTConsumer(clang::CompilerInstance &ci,
                                                llvm::StringRef header_file) {
   // Create AST consumers.
-  return llvm::make_unique<HeaderASTConsumer>(&ci, options_);
+  return std::make_unique<HeaderASTConsumer>(&ci, options_);
 }
 
 bool HeaderCheckerFrontendAction::BeginInvocation(clang::CompilerInstance &ci) {

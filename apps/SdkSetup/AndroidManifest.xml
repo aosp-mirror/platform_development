@@ -18,10 +18,12 @@
         package="com.android.sdksetup">
 
     <!-- For miscellaneous settings -->
+    <uses-permission android:name="android.permission.INTERACT_ACROSS_USERS" />
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
     <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
     <uses-permission android:name="android.permission.MANAGE_USERS" />
-
+    <uses-permission android:name="android.permission.WRITE_SYSTEM_SETTINGS" />
+    <uses-permission android:name="android.permission.SET_KEYBOARD_LAYOUT" />
     <application>
         <activity android:name="DefaultActivity"
                 android:excludeFromRecents="true">

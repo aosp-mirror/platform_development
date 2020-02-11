@@ -102,16 +102,6 @@ bool IRToProtobufConverter::AddVTableLayout(
   return true;
 }
 
-bool IRToProtobufConverter::AddTagTypeInfo(
-    abi_dump::TagType *tag_type_protobuf,
-    const TagTypeIR *tag_type_ir) {
-  if (!tag_type_protobuf || !tag_type_ir) {
-    return false;
-  }
-  tag_type_protobuf->set_unique_id(tag_type_ir->GetUniqueId());
-  return true;
-}
-
 abi_dump::RecordType IRToProtobufConverter::ConvertRecordTypeIR(
     const RecordTypeIR *recordp) {
   abi_dump::RecordType added_record_type;
@@ -125,7 +115,6 @@ abi_dump::RecordType IRToProtobufConverter::ConvertRecordTypeIR(
       !AddRecordFields(&added_record_type, recordp) ||
       !AddBaseSpecifiers(&added_record_type, recordp) ||
       !AddVTableLayout(&added_record_type, recordp) ||
-      !AddTagTypeInfo(added_record_type.mutable_tag_info(), recordp) ||
       !(recordp->GetTemplateElements().size() ?
         AddTemplateInformation(added_record_type.mutable_template_info(),
                                recordp) : true)) {
@@ -223,8 +212,7 @@ abi_dump::EnumType IRToProtobufConverter::ConvertEnumTypeIR(
   added_enum_type.set_access(AccessIRToProtobuf(enump->GetAccess()));
   added_enum_type.set_underlying_type(enump->GetUnderlyingType());
   if (!AddTypeInfo(added_enum_type.mutable_type_info(), enump) ||
-      !AddEnumFields(&added_enum_type, enump) ||
-      !AddTagTypeInfo(added_enum_type.mutable_tag_info(), enump)) {
+      !AddEnumFields(&added_enum_type, enump)) {
     llvm::errs() << "EnumTypeIR could not be converted\n";
     ::exit(1);
   }

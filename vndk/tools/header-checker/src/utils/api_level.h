@@ -15,7 +15,8 @@
 #ifndef API_LEVEL_H_
 #define API_LEVEL_H_
 
-#include <optional>
+#include <llvm/ADT/Optional.h>
+
 #include <string>
 
 
@@ -29,7 +30,7 @@ using ApiLevel = int;
 constexpr ApiLevel FUTURE_API_LEVEL = 10000;
 
 
-std::optional<ApiLevel> ParseApiLevel(const std::string &api);
+llvm::Optional<ApiLevel> ParseApiLevel(const std::string &api);
 
 
 }  // namespace utils

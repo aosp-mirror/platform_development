@@ -16,6 +16,9 @@
 #define AST_UTIL_H_
 
 #include <clang/AST/AST.h>
+#include <clang/AST/Type.h>
+
+#include <llvm/ADT/DenseSet.h>
 
 #include <map>
 #include <string>
@@ -25,27 +28,14 @@ namespace header_checker {
 namespace dumper {
 
 
-constexpr static char type_id_prefix[] = "type-";
-
 struct ASTCaches {
   ASTCaches(const std::string &translation_unit_source)
       : translation_unit_source_(translation_unit_source) {}
 
-  std::string GetTypeId(const std::string &qual_type) {
-    auto type_id_it = qual_type_to_type_id_cache_.find(qual_type);
-    if (type_id_it == qual_type_to_type_id_cache_.end()) {
-      qual_type_to_type_id_cache_.insert(
-          std::make_pair(qual_type, ++max_type_id_));
-          return type_id_prefix + std::to_string(max_type_id_);
-    }
-    return type_id_prefix + std::to_string(type_id_it->second);
-  }
-
   std::string translation_unit_source_;
-  std::set<std::string> type_cache_;
   std::map<const clang::Decl *, std::string> decl_to_source_file_cache_;
-  std::map<std::string, uint64_t> qual_type_to_type_id_cache_;
-  uint64_t max_type_id_ = 0;
+
+  llvm::DenseSet<clang::QualType> converted_qual_types_;
 };
 
 
