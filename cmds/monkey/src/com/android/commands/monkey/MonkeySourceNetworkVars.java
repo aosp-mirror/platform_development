@@ -77,7 +77,7 @@ public class MonkeySourceNetworkVars {
         VAR_MAP.put("build.cpu_abi", new StaticVarGetter(Build.CPU_ABI));
         VAR_MAP.put("build.manufacturer", new StaticVarGetter(Build.MANUFACTURER));
         VAR_MAP.put("build.version.incremental", new StaticVarGetter(Build.VERSION.INCREMENTAL));
-        VAR_MAP.put("build.version.release", new StaticVarGetter(Build.VERSION.RELEASE));
+        VAR_MAP.put("build.version.release", new StaticVarGetter(Build.VERSION.RELEASE_OR_CODENAME));
         VAR_MAP.put("build.version.sdk", new StaticVarGetter(Integer.toString(Build.VERSION.SDK_INT)));
         VAR_MAP.put("build.version.codename", new StaticVarGetter(Build.VERSION.CODENAME));
 

@@ -57,8 +57,7 @@ FakeDeclSource::CreateClassTemplateDecl(clang::CXXRecordDecl *cxx_record_decl,
   clang::ClassTemplateDecl *class_template_decl =
       clang::ClassTemplateDecl::Create(
           ast, decl_context, clang::SourceLocation(),
-          cxx_record_decl->getDeclName(), parm_list, cxx_record_decl,
-          /* AssociatedConstraints */ nullptr);
+          cxx_record_decl->getDeclName(), parm_list, cxx_record_decl);
 
   cxx_record_decl->setDescribedClassTemplate(class_template_decl);
   class_template_decl->setInvalidDecl(true);
