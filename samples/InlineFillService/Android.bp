@@ -21,5 +21,6 @@ android_app {
     sdk_version: "system_current",
     static_libs: [
         "androidx.annotation_annotation",
+        "androidx.autofill_autofill"
     ],
 }
