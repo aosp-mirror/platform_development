@@ -75,13 +75,13 @@
   <style name="PinkBackground">
     <item name="android:background">#33FF00FF</item>
   </style>
-  <style name="YellowTheme" parent="@android:style/Theme.AutofillInlineSuggestion">
-    <item name="android:autofillInlineSuggestionTitle">@style/YellowText</item>
-    <item name="android:autofillInlineSuggestionSubtitle">@style/YellowText</item>
+  <style name="YellowTheme" parent="@style/Theme.AutofillInlineSuggestion">
+    <item name="autofillInlineSuggestionTitle">@style/YellowText</item>
+    <item name="autofillInlineSuggestionSubtitle">@style/YellowText</item>
   </style>
-  <style name="GreenTheme" parent="@android:style/Theme.AutofillInlineSuggestion">
-    <item name="android:autofillInlineSuggestionChip">@style/PinkBackground</item>
-    <item name="android:autofillInlineSuggestionTitle">@style/GreenText</item>
-    <item name="android:autofillInlineSuggestionSubtitle">@style/GreenText</item>
+  <style name="GreenTheme" parent="@style/Theme.AutofillInlineSuggestion">
+    <item name="autofillInlineSuggestionChip">@style/PinkBackground</item>
+    <item name="autofillInlineSuggestionTitle">@style/GreenText</item>
+    <item name="autofillInlineSuggestionSubtitle">@style/GreenText</item>
   </style>
 </resources>
