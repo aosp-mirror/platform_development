@@ -13,6 +13,11 @@
                 android:resource="@xml/autofill_service_config">
             </meta-data>
         </service>
+
+        <activity
+            android:name=".AuthActivity"
+            android:taskAffinity=".AuthActivity"
+            android:label="Autofill Authentication" />
     </application>
 </manifest>
 
