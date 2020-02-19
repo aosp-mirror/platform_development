@@ -18,6 +18,7 @@ package com.example.android.autofillkeyboard;
 
 import android.inputmethodservice.InputMethodService;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.GuardedBy;
 import android.util.Log;
@@ -89,15 +90,13 @@ public class AutofillImeService extends InputMethodService {
     private boolean mSuggestionViewVisible = false;
 
     @Override
-    public InlineSuggestionsRequest onCreateInlineSuggestionsRequest() {
+    public InlineSuggestionsRequest onCreateInlineSuggestionsRequest(Bundle uiExtras) {
         Log.d(TAG, "onCreateInlineSuggestionsRequest() called");
         final ArrayList<InlinePresentationSpec> presentationSpecs = new ArrayList<>();
         presentationSpecs.add(new InlinePresentationSpec.Builder(new Size(100, 100),
-                new Size(400, 100)).setStyle(
-                getResources().getResourceName(R.style.YellowTheme)).build());
+                new Size(400, 100)).build());
         presentationSpecs.add(new InlinePresentationSpec.Builder(new Size(100, 100),
-                new Size(400, 100)).setStyle(
-                getResources().getResourceName(R.style.GreenTheme)).build());
+                new Size(400, 100)).build());
 
         return new InlineSuggestionsRequest.Builder(presentationSpecs)
                 .setMaxSuggestionCount(6)
