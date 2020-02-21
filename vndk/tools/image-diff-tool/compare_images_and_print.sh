@@ -38,9 +38,9 @@ fi
 
 readonly CHECK_DIFF_RESULT
 
-build/soong/soong_ui.bash --make-mode compare_images
 . build/envsetup.sh
 lunch aosp_arm64
+build/soong/soong_ui.bash --make-mode compare_images
 COMMON_WHITELIST=development/vndk/tools/image-diff-tool/whitelist.txt
 out/host/linux-x86/bin/compare_images $1 -u -w "${COMMON_WHITELIST}"
 
