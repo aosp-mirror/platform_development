@@ -414,6 +414,17 @@ TEST_MODULES = [
         export_include_dirs=['integration/c_and_cpp/include'],
     ),
     LsdumpModule(
+        name='libifunc',
+        srcs=['integration/ifunc/ifunc.c'],
+        version_script='integration/ifunc/map.txt',
+        export_include_dirs=[],
+        linker_flags=[
+            '-so', relative_to_abs_path(
+                'integration/ifunc/prebuilts/libifunc.so'
+            ),
+        ]
+    ),
+    LsdumpModule(
         name='libgolden_cpp_member_name_changed',
         srcs=[
             'integration/cpp/gold/golden_1.cpp',
