@@ -20,6 +20,7 @@ import android.app.assist.AssistStructure.ViewNode;
 import android.app.slice.Slice;
 import android.app.slice.SliceSpec;
 import android.content.Context;
+import android.content.IntentSender;
 import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.CancellationSignal;
@@ -45,6 +46,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.autofill.InlinePresentationBuilder;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -64,6 +66,9 @@ public class InlineFillService extends AutofillService {
      * Number of datasets sent on each request - we're simple, that value is hardcoded in our DNA!
      */
     static final int NUMBER_DATASETS = 6;
+
+    private final boolean mAuthenticateResponses = false;
+    private final boolean mAuthenticateDatasets = false;
 
     @Override
     public void onFillRequest(FillRequest request, CancellationSignal cancellationSignal,
@@ -88,21 +93,86 @@ public class InlineFillService extends AutofillService {
                 : Math.min(inlineRequest.getMaxSuggestionCount(), NUMBER_DATASETS);
 
         // Create the base response
-        FillResponse response = createResponse(this, fields, maxSuggestionsCount,
-                request.getInlineSuggestionsRequest());
+        final FillResponse response;
+        if (mAuthenticateResponses) {
+            int size = fields.size();
+            String[] hints = new String[size];
+            AutofillId[] ids = new AutofillId[size];
+            for (int i = 0; i < size; i++) {
+                hints[i] = fields.keyAt(i);
+                ids[i] = fields.valueAt(i);
+            }
+
+            IntentSender authentication = AuthActivity.newIntentSenderForResponse(this, hints,
+                    ids, mAuthenticateDatasets, inlineRequest);
+            RemoteViews presentation = newDatasetPresentation(getPackageName(),
+                    "Tap to auth response");
+
+            final InlinePresentation inlinePresentation;
+            if (inlineRequest != null) {
+                final Slice authSlice = new InlinePresentationBuilder("Tap to auth respones")
+                        .build();
+                final List<InlinePresentationSpec> specs = inlineRequest.getPresentationSpecs();
+                final int specsSize = specs.size();
+                final InlinePresentationSpec currentSpec = specsSize > 0 ? specs.get(0) : null;
+                inlinePresentation = new InlinePresentation(authSlice, currentSpec,
+                        /* pined= */ false);
+            } else {
+                inlinePresentation = null;
+            }
+
+            response = new FillResponse.Builder()
+                    .setAuthentication(ids, authentication, presentation, inlinePresentation)
+                    .build();
+        } else {
+            response =  createResponse(this, fields, maxSuggestionsCount, mAuthenticateDatasets,
+                    request.getInlineSuggestionsRequest());
+        }
+
         callback.onSuccess(response);
     }
 
     static FillResponse createResponse(@NonNull Context context,
             @NonNull ArrayMap<String, AutofillId> fields, int numDatasets,
-            @Nullable InlineSuggestionsRequest inlineRequest) {
+            boolean authenticateDatasets, @Nullable InlineSuggestionsRequest inlineRequest) {
         String packageName = context.getPackageName();
         FillResponse.Builder response = new FillResponse.Builder();
         // 1.Add the dynamic datasets
         for (int i = 1; i <= numDatasets; i++) {
             Dataset unlockedDataset = newUnlockedDataset(context, fields, packageName, i,
                     inlineRequest);
-            response.addDataset(unlockedDataset);
+            if (authenticateDatasets) {
+                Dataset.Builder lockedDataset = new Dataset.Builder();
+                for (Entry<String, AutofillId> field : fields.entrySet()) {
+                    String hint = field.getKey();
+                    AutofillId id = field.getValue();
+                    String value = i + "-" + hint;
+                    IntentSender authentication =
+                            AuthActivity.newIntentSenderForDataset(context, unlockedDataset);
+                    RemoteViews presentation = newDatasetPresentation(packageName,
+                            "Tap to auth " + value);
+
+                    final InlinePresentation inlinePresentation;
+                    if (inlineRequest != null) {
+                        final Slice authSlice = new InlinePresentationBuilder("Tap to auth " + value).build();
+                        final List<InlinePresentationSpec> specs
+                                = inlineRequest.getPresentationSpecs();
+                        final int specsSize = specs.size();
+                        final InlinePresentationSpec currentSpec =
+                                specsSize > 0 ? specs.get(0) : null;
+                        inlinePresentation = new InlinePresentation(authSlice, currentSpec,
+                                /* pined= */ false);
+                        lockedDataset.setValue(id, null, presentation, inlinePresentation)
+                                .setAuthentication(authentication);
+                    } else {
+                        lockedDataset.setValue(id, null, presentation)
+                                .setAuthentication(authentication);
+                    }
+                }
+                response.addDataset(lockedDataset.build());
+            } else {
+                response.addDataset(unlockedDataset);
+            }
         }
 
         if(inlineRequest != null) {
@@ -128,10 +198,8 @@ public class InlineFillService extends AutofillService {
 
     static InlinePresentation newInlineAction(@NonNull Context context,
             @NonNull Size size, int drawable) {
-        final Slice suggestionSlice = new Slice.Builder(Uri.parse("inline.slice"),
-                new SliceSpec("InlinePresentation", 1))
-                .addIcon(Icon.createWithResource(context, drawable), null,
-                        Collections.singletonList(""))
+        final Slice suggestionSlice = new InlinePresentationBuilder()
+                .setStartIcon(Icon.createWithResource(context, drawable))
                 .build();
         final InlinePresentationSpec currentSpec = new InlinePresentationSpec.Builder(size,
                 size).build();
@@ -158,10 +226,7 @@ public class InlineFillService extends AutofillService {
             if (inlineRequest != null) {
                 Log.d(TAG, "Found InlineSuggestionsRequest in FillRequest: " + inlineRequest);
 
-                final Slice suggestionSlice = new Slice.Builder(Uri.parse("inline.slice"),
-                        new SliceSpec("InlinePresentation", 1))
-                        .addText(value, null, Collections.singletonList("inline_title"))
-                        .build();
+                final Slice suggestionSlice = new InlinePresentationBuilder(value).build();
 
                 final List<InlinePresentationSpec> specs = inlineRequest.getPresentationSpecs();
                 final int specsSize = specs.size();

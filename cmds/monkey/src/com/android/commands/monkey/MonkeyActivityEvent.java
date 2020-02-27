@@ -20,8 +20,11 @@ import android.app.ActivityManager;
 import android.app.IActivityManager;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.pm.IPackageManager;
+import android.os.Binder;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.os.ServiceManager;
 import android.view.IWindowManager;
 
 /**
@@ -67,8 +70,8 @@ public class MonkeyActivityEvent extends MonkeyEvent {
         }
 
         try {
-            iam.startActivityAsUser(null, null, intent, null, null, null, 0,
-                    0, null, null, ActivityManager.getCurrentUser());
+            iam.startActivityAsUserWithFeature(null, getPackageName(), null, intent, null, null,
+                    null, 0, 0, null, null, ActivityManager.getCurrentUser());
         } catch (RemoteException e) {
             Logger.err.println("** Failed talking with activity manager!");
             return MonkeyEvent.INJECT_ERROR_REMOTE_EXCEPTION;
@@ -80,5 +83,25 @@ public class MonkeyActivityEvent extends MonkeyEvent {
             return MonkeyEvent.INJECT_ERROR_SECURITY_EXCEPTION;
         }
         return MonkeyEvent.INJECT_SUCCESS;
+    }
+
+    /**
+     * Obtain the package name of the current process using the current UID. The package name has to
+     * match the current UID in IActivityManager#startActivityAsUser to be allowed to start an
+     * activity.
+     */
+    private static String getPackageName() {
+        try {
+            IPackageManager pm = IPackageManager.Stub.asInterface(
+                    ServiceManager.getService("package"));
+            if (pm == null) {
+                return null;
+            }
+            String[] packages = pm.getPackagesForUid(Binder.getCallingUid());
+            return packages != null ? packages[0] : null;
+        } catch (RemoteException e) {
+            Logger.err.println("** Failed talking with package manager!");
+            return null;
+        }
     }
 }

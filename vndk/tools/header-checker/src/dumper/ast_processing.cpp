@@ -19,7 +19,6 @@
 
 #include <clang/Lex/Token.h>
 #include <clang/AST/QualTypeNames.h>
-#include <clang/Index/CodegenNameGenerator.h>
 
 #include <fstream>
 #include <iostream>
@@ -135,7 +134,7 @@ bool HeaderASTVisitor::VisitFunctionDecl(const clang::FunctionDecl *decl) {
   auto function_wrapper = function_decl_wrapper.GetFunctionDecl();
   // Destructors and Constructors can have more than 1 symbol generated from the
   // same Decl.
-  clang::index::CodegenNameGenerator cg(*ast_contextp_);
+  clang::ASTNameGenerator cg(*ast_contextp_);
   std::vector<std::string> manglings = cg.getAllManglings(decl);
   if (!manglings.empty()) {
     return AddMangledFunctions(function_wrapper.get(), module_, manglings);

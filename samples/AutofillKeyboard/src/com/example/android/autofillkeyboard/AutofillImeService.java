@@ -18,6 +18,7 @@ package com.example.android.autofillkeyboard;
 
 import android.inputmethodservice.InputMethodService;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.GuardedBy;
 import android.util.Log;
@@ -89,15 +90,13 @@ public class AutofillImeService extends InputMethodService {
     private boolean mSuggestionViewVisible = false;
 
     @Override
-    public InlineSuggestionsRequest onCreateInlineSuggestionsRequest() {
+    public InlineSuggestionsRequest onCreateInlineSuggestionsRequest(Bundle uiExtras) {
         Log.d(TAG, "onCreateInlineSuggestionsRequest() called");
         final ArrayList<InlinePresentationSpec> presentationSpecs = new ArrayList<>();
         presentationSpecs.add(new InlinePresentationSpec.Builder(new Size(100, 100),
-                new Size(400, 100)).setStyle(
-                getResources().getResourceName(R.style.YellowTheme)).build());
+                new Size(400, 100)).build());
         presentationSpecs.add(new InlinePresentationSpec.Builder(new Size(100, 100),
-                new Size(400, 100)).setStyle(
-                getResources().getResourceName(R.style.GreenTheme)).build());
+                new Size(400, 100)).build());
 
         return new InlineSuggestionsRequest.Builder(presentationSpecs)
                 .setMaxSuggestionCount(6)
@@ -144,7 +143,8 @@ public class AutofillImeService extends InputMethodService {
         Log.d(TAG, "updateSuggestionViews() called");
         mSuggestionViews = Arrays.asList(suggestionViews);
         mSuggestionViewSizes = Arrays.asList(sizes);
-        updateInlineSuggestionVisibility(true, true);
+        final boolean visible = !mSuggestionViews.isEmpty();
+        updateInlineSuggestionVisibility(visible, true);
     }
 
     private void onInlineSuggestionsResponseInternal(InlineSuggestionsResponse response) {
@@ -157,6 +157,10 @@ public class AutofillImeService extends InputMethodService {
         final View[] suggestionViews = new View[totalSuggestionsCount];
         final Size[] sizes = new Size[totalSuggestionsCount];
 
+        if (totalSuggestionsCount == 0) {
+            updateSuggestionViews(suggestionViews, sizes);
+            return;
+        }
         for (int i=0; i<totalSuggestionsCount; i++) {
             final int index = i;
             InlineSuggestion inlineSuggestion = inlineSuggestions.get(index);
@@ -183,7 +187,6 @@ public class AutofillImeService extends InputMethodService {
 
     void handle(String data) {
         Log.d(TAG, "handle() called: [" + data + "]");
-        mDecoder.decode(data);
-        updateInlineSuggestionVisibility(mDecoder.isEmpty(), false);
+        mDecoder.decodeAndApply(data);
     }
 }
