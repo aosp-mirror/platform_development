@@ -372,6 +372,10 @@ class HeaderCheckerTest(unittest.TestCase):
         self.prepare_and_absolute_diff_all_archs(
             "libanonymous_enum_odr", "libanonymous_enum_odr")
 
+    def test_libifunc(self):
+        self.prepare_and_absolute_diff_all_archs(
+            "libifunc", "libifunc")
+
 
 if __name__ == '__main__':
     unittest.main()
