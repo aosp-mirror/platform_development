@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 function usage {
   cat <<EOF
@@ -47,17 +47,31 @@ if [[ -z "${DIST_DIR}" ]]; then
 fi
 
 # Create output directory if not already present
+mkdir -p "${DIST_DIR}" || true
+
 if [[ ! -d "${DIST_DIR}" ]]; then
-  mkdir -p "${DIST_DIR}"
+  echo >&2 'Cannot create $DIST_DIR or $DIST_DIR is non-existence'
+  exit 1
 fi
+
+# Show the artifacts to be copied in the log
+echo "Artifacts to copy:"
+find "${SRC_DIR}" || true
+echo
 
 # Don't copy logs/ and files whose name starts with $SRC_PRODUCT
 rsync --verbose --archive --copy-links --exclude='logs' \
-  --exclude="${SRC_PRODUCT}-*" "${SRC_DIR}/" "${DIST_DIR}"
+  --exclude='*.zip' "${SRC_DIR}/" "${DIST_DIR}"
 
-# Rename ${SRC_PRODUCT}-xxx.yyy to ${TARGET_PRODUCT}-xxx.yyy
-for src_path in $(find "${SRC_DIR}" -type f -name "${SRC_PRODUCT}-*") ; do
-  src_file="$(basename ${src_path})"
-  target_file="${src_file/${SRC_PRODUCT}/${TARGET_PRODUCT}}"
-  cp -v "${src_path}" "${DIST_DIR}/${target_file}"
+# Rename ${SRC_PRODUCT}-xxx.zip to ${TARGET_PRODUCT}-xxx.zip
+ZIP_PATHNAMES="$(find "${SRC_DIR}" -type f -name '*.zip')"
+
+echo "ZIP files to be copied and renamed:"
+echo "${ZIP_PATHNAMES}"
+echo
+
+for SRC_PATHNAME in ${ZIP_PATHNAMES} ; do
+  SRC_FILENAME="$(basename ${SRC_PATHNAME})"
+  TARGET_FILENAME="${SRC_FILENAME/${SRC_PRODUCT}/${TARGET_PRODUCT}}"
+  cp -v "${SRC_PATHNAME}" "${DIST_DIR}/${TARGET_FILENAME}"
 done
