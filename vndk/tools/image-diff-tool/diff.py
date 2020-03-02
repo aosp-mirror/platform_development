@@ -65,6 +65,8 @@ def make_filter_from_whitelists(whitelists, all_targets):
   Whitelist can contain pathname patterns or ignored lines. Pathnames are case
   insensitive.
 
+  Whitelist can contain single-line comments. Comment lines begin with #
+
   For example, this ignores the file "system/build.prop":
     SYSTEM/build.prop
 
@@ -93,6 +95,8 @@ def make_filter_from_whitelists(whitelists, all_targets):
     with open(whitelist, 'rb') as f:
       for line in f:
         pat = line.strip().decode()
+        if pat.startswith('#'):
+          continue
         if pat and pat[-1] == '\\':
           pat = pat.rstrip('\\')
         if '=' in pat:
