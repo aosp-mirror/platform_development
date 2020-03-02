@@ -64,7 +64,7 @@ rsync --verbose --archive --copy-links --exclude='logs' \
   --exclude='*.zip' "${SRC_DIR}/" "${DIST_DIR}"
 
 # Rename ${SRC_PRODUCT}-xxx.zip to ${TARGET_PRODUCT}-xxx.zip
-ZIP_PATHNAMES="$(find "${SRC_DIR}" -type f -name '*.zip')"
+ZIP_PATHNAMES="$(find -L "${SRC_DIR}" -type f -name '*.zip')"
 
 echo "ZIP files to be copied and renamed:"
 echo "${ZIP_PATHNAMES}"
@@ -73,5 +73,5 @@ echo
 for SRC_PATHNAME in ${ZIP_PATHNAMES} ; do
   SRC_FILENAME="$(basename ${SRC_PATHNAME})"
   TARGET_FILENAME="${SRC_FILENAME/${SRC_PRODUCT}/${TARGET_PRODUCT}}"
-  cp -v "${SRC_PATHNAME}" "${DIST_DIR}/${TARGET_FILENAME}"
+  cp --verbose --archive --dereference "${SRC_PATHNAME}" "${DIST_DIR}/${TARGET_FILENAME}"
 done
