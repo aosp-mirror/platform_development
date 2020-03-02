@@ -53,7 +53,7 @@ fi
 
 # Don't copy logs/ and files whose name starts with $SRC_PRODUCT
 rsync --verbose --archive --copy-links --exclude='logs' \
-  --exclude="${SRC_PRODUCT}-*" "${SRC_DIR}" "${DIST_DIR}"
+  --exclude="${SRC_PRODUCT}-*" "${SRC_DIR}/" "${DIST_DIR}"
 
 # Rename ${SRC_PRODUCT}-xxx.yyy to ${TARGET_PRODUCT}-xxx.yyy
 for src_path in $(find "${SRC_DIR}" -type f -name "${SRC_PRODUCT}-*") ; do
