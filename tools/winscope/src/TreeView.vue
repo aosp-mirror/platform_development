@@ -155,4 +155,14 @@ export default {
   color: black;
 }
 
+.tree-view-chip.tree-view-chip-gpu {
+  background-color: #00c853;
+  color: black;
+}
+
+.tree-view-chip.tree-view-chip-hwc {
+  background-color: #448aff;
+  color: black;
+}
+
 </style>
