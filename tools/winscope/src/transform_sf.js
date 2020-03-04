@@ -30,6 +30,12 @@ var RELATIVE_Z_PARENT_CHIP = {short: 'RelZParent',
 var MISSING_LAYER = {short: 'MissingLayer',
     long: "This layer was referenced from the parent, but not present in the trace",
     class: 'error'};
+var GPU_CHIP = {short: 'GPU',
+    long: "This layer was composed on the GPU",
+    class: 'gpu'};
+var HWC_CHIP = {short: 'HWC',
+    long: "This layer was composed by Hardware Composer",
+    class: 'hwc'};
 
 function transform_layer(layer, {parentBounds, parentHidden}) {
   function get_size(layer) {
@@ -155,6 +161,14 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
     return visible;
   }
 
+  function add_hwc_composition_type_chip(layer) {
+      if (layer.hwcCompositionType === "CLIENT") {
+          chips.push(GPU_CHIP);
+      } else if (layer.hwcCompositionType === "DEVICE") {
+          chips.push(HWC_CHIP);
+      }
+  }
+
   function postprocess_flags(layer) {
     if (!layer.flags) return;
     var verboseFlags = [];
@@ -234,6 +248,7 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
   var transform_layer_with_parent_hidden =
       (layer) => transform_layer(layer, {parentBounds: rect, parentHidden: parentHidden});
   postprocess_flags(layer);
+  add_hwc_composition_type_chip(layer);
   return transform({
     obj: layer,
     kind: '',
