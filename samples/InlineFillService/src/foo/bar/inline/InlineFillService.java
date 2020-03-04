@@ -15,14 +15,15 @@
  */
 package foo.bar.inline;
 
+import android.app.PendingIntent;
 import android.app.assist.AssistStructure;
 import android.app.assist.AssistStructure.ViewNode;
 import android.app.slice.Slice;
-import android.app.slice.SliceSpec;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentSender;
 import android.graphics.drawable.Icon;
-import android.net.Uri;
 import android.os.CancellationSignal;
 import android.service.autofill.AutofillService;
 import android.service.autofill.Dataset;
@@ -30,6 +31,7 @@ import android.service.autofill.FillCallback;
 import android.service.autofill.FillContext;
 import android.service.autofill.FillRequest;
 import android.service.autofill.FillResponse;
+import android.service.autofill.InlineAction;
 import android.service.autofill.InlinePresentation;
 import android.service.autofill.SaveCallback;
 import android.service.autofill.SaveInfo;
@@ -49,7 +51,6 @@ import androidx.annotation.Nullable;
 import androidx.autofill.InlinePresentationBuilder;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -125,7 +126,7 @@ public class InlineFillService extends AutofillService {
                     .setAuthentication(ids, authentication, presentation, inlinePresentation)
                     .build();
         } else {
-            response =  createResponse(this, fields, maxSuggestionsCount, mAuthenticateDatasets,
+            response = createResponse(this, fields, maxSuggestionsCount, mAuthenticateDatasets,
                     request.getInlineSuggestionsRequest());
         }
 
@@ -154,7 +155,8 @@ public class InlineFillService extends AutofillService {
 
                     final InlinePresentation inlinePresentation;
                     if (inlineRequest != null) {
-                        final Slice authSlice = new InlinePresentationBuilder("Tap to auth " + value).build();
+                        final Slice authSlice = new InlinePresentationBuilder(
+                                "Tap to auth " + value).build();
                         final List<InlinePresentationSpec> specs
                                 = inlineRequest.getPresentationSpecs();
                         final int specsSize = specs.size();
@@ -175,7 +177,7 @@ public class InlineFillService extends AutofillService {
             }
         }
 
-        if(inlineRequest != null) {
+        if (inlineRequest != null) {
             // Reuse the first spec's height for the inline action size, as there isn't dedicated
             // value from the request for this.
             final int height = inlineRequest.getPresentationSpecs().get(0).getMinSize().getHeight();
@@ -196,14 +198,20 @@ public class InlineFillService extends AutofillService {
         return response.build();
     }
 
-    static InlinePresentation newInlineAction(@NonNull Context context,
+    static InlineAction newInlineAction(@NonNull Context context,
             @NonNull Size size, int drawable) {
+        Intent intent = new Intent().setComponent(
+                new ComponentName(context.getPackageName(), SettingsActivity.class.getName()));
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
         final Slice suggestionSlice = new InlinePresentationBuilder()
                 .setStartIcon(Icon.createWithResource(context, drawable))
                 .build();
         final InlinePresentationSpec currentSpec = new InlinePresentationSpec.Builder(size,
                 size).build();
-        return new InlinePresentation(suggestionSlice, currentSpec, /** pined= */ true);
+        return new InlineAction(
+                new InlinePresentation(suggestionSlice, currentSpec, /** pined= */true),
+                pendingIntent.getIntentSender());
     }
 
     static Dataset newUnlockedDataset(@NonNull Context context,
@@ -234,8 +242,9 @@ public class InlineFillService extends AutofillService {
                         ? specs.get(i - 1)
                         : specs.get(specsSize - 1);
                 final InlinePresentation inlinePresentation =
-                        new InlinePresentation(suggestionSlice, currentSpec, /** pined= */ false);
-                dataset.setValue(id, AutofillValue.forText(value), presentation, inlinePresentation);
+                        new InlinePresentation(suggestionSlice, currentSpec, /** pined= */false);
+                dataset.setValue(id, AutofillValue.forText(value), presentation,
+                        inlinePresentation);
             } else {
                 dataset.setValue(id, AutofillValue.forText(value), presentation);
             }
@@ -299,7 +308,6 @@ public class InlineFillService extends AutofillService {
      * <p>By default it just return the first entry on the node's
      * {@link ViewNode#getAutofillHints() autofillHints} (when available), but subclasses could
      * extend it to use heuristics when the app developer didn't explicitly provide these hints.
-     *
      */
     @Nullable
     protected String getHint(@NonNull ViewNode node, int flags) {
