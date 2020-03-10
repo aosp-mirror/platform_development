@@ -70,7 +70,8 @@ function transform_task(entry) {
     kind: 'task',
     name: entry.id || 0,
     children: [
-      [entry.activity, transform_activity_record],
+      [entry.tasks, transform_task],
+      [entry.activities, transform_activity_record],
     ],
   });
 }
@@ -144,6 +145,7 @@ function transform_display(entry) {
       [entry.aboveAppWindows, transform_above],
       [entry.imeWindows, transform_ime],
       [entry.stacks, transform_stack],
+      [entry.tasks, transform_task],
       [entry.belowAppWindows, transform_below],
     ],
     bounds,
