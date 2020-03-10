@@ -147,6 +147,25 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
          */
   }
 
+  function fills_color(layer) {
+    return layer.color && layer.color.a > 0 &&
+        layer.color.r >= 0 && layer.color.g >= 0 &&
+        layer.color.b >= 0;
+  }
+
+  function draws_shadows(layer) {
+    return layer.shadowRadius && layer.shadowRadius > 0;
+  }
+
+  function has_effects(layer) {
+    // Support previous color layer
+    if (layer.type === 'ColorLayer') return true;
+
+    // Support newer effect layer
+    return layer.type === 'EffectLayer' &&
+        (fills_color(layer) || draws_shadows(layer))
+  }
+
   /**
    * Checks if the layer is visible on screen according to its type,
    * active buffer content, alpha and visible regions.
@@ -155,7 +174,7 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
    * @returns if the layer is visible on screen or not
    */
   function is_visible(layer) {
-    var visible = (layer.activeBuffer || layer.type === 'ColorLayer')
+    var visible = (layer.activeBuffer || has_effects(layer))
                   && !hidden && is_opaque(layer);
     visible &= !is_empty(layer.visibleRegion);
     return visible;
