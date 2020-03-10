@@ -1,5 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="foo.bar.inline" >
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <application>
         <service
             android:name=".InlineFillService"
@@ -17,7 +18,12 @@
         <activity
             android:name=".AuthActivity"
             android:taskAffinity=".AuthActivity"
-            android:label="Autofill Authentication" />
+            android:label="Autofill Authentication"/>
+
+        <activity
+            android:name=".SettingsActivity"
+            android:label="Autofill Settings"
+            android:exported="true"/>
     </application>
 </manifest>
 
