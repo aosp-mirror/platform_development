@@ -44,7 +44,8 @@ function transform_window(entry) {
     kind: 'window',
     name,
     children: [
-      [entry.childWindows, transform_window]
+      [entry.childWindows, transform_window],
+      [entry.windowContainer.children.reverse(), transform_window_container_child],
     ],
     rect,
     highlight: rect,
@@ -60,6 +61,7 @@ function transform_activity_record(entry) {
     name: entry.name,
     children: [
       [entry.windowToken.windows, transform_window],
+      [entry.windowToken.windowContainer.children.reverse(), transform_window_container_child],
     ],
   });
 }
@@ -72,6 +74,7 @@ function transform_task(entry) {
     children: [
       [entry.tasks, transform_task],
       [entry.activities, transform_activity_record],
+      [entry.windowContainer.children.reverse(), transform_window_container_child],
     ],
   });
 }
@@ -94,6 +97,7 @@ function transform_window_token(entry) {
     name: '',
     children: [
       [entry.windows, transform_window],
+      [entry.windowContainer.children.reverse(), transform_window_container_child],
     ],
   });
 }
@@ -131,14 +135,45 @@ function transform_ime(entry) {
   });
 }
 
-function transform_display(entry) {
+function transform_window_container_child(entry) {
+  if (entry.displayArea != null) {return transform_display_area(entry.displayArea)}
+  if (entry.displayContent != null) {return transform_display_content(entry.displayContent)}
+  if (entry.task != null) {return transform_task(entry.task)}
+  if (entry.activity != null) {return transform_activity_record(entry.activity)}
+  if (entry.windowToken != null) {return transform_window_token(entry.windowToken)}
+  if (entry.window != null) {return transform_window(entry.window)}
+
+  // The WindowContainerChild may be unknown
+  return transform({
+      obj: {},
+      kind: 'WindowContainerChild',
+      name: '',
+      children: [[entry.windowContainer.children.reverse(), transform_window_container_child],]
+  });
+}
+
+
+function transform_display_area(entry) {
+  return transform({
+    obj: {},
+    kind: 'DisplayArea',
+    name: entry.name,
+    children: [
+      [entry.windowContainer.children.reverse(), transform_window_container_child],
+    ],
+  });
+}
+
+function transform_display_content(entry) {
   var bounds = {
     width: entry.displayInfo.logicalWidth || 0,
     height: entry.displayInfo.logicalHeight || 0,
   };
 
+  // If trace supports display areas
+  var obj = (entry.rootDisplayArea != null) ? {} : entry;
   return transform({
-    obj: entry,
+    obj: obj,
     kind: 'display',
     name: entry.id || 0,
     children: [
@@ -147,6 +182,7 @@ function transform_display(entry) {
       [entry.stacks, transform_stack],
       [entry.tasks, transform_task],
       [entry.belowAppWindows, transform_below],
+      [entry.windowContainer.children.reverse(), transform_window_container_child],
     ],
     bounds,
   });
@@ -167,7 +203,7 @@ function transform_window_service(entry) {
     kind: 'service',
     name: '',
     children: [
-      [entry.rootWindowContainer.displays, transform_display],
+      [entry.rootWindowContainer.displays, transform_display_content],
       [[entry.policy], transform_policy],
     ],
     timestamp: entry.elapsedRealtimeNanos,
@@ -180,7 +216,9 @@ function transform_entry(entry) {
     kind: 'entry',
     name: nanos_to_string(entry.elapsedRealtimeNanos),
     children: [
-      [entry.windowManagerService.rootWindowContainer.displays, transform_display],
+      [entry.windowManagerService.rootWindowContainer.displays, transform_display_content],
+      [entry.windowManagerService.rootWindowContainer.windowContainer.children.reverse(),
+          transform_window_container_child],
       [[entry.windowManagerService.policy], transform_policy],
     ],
     timestamp: entry.elapsedRealtimeNanos,
