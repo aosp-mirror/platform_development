@@ -35,6 +35,7 @@ WIN_TARGETS := \
 	fastboot \
 	hprof-conv \
 	libaapt2_jni \
+	lld \
 	llvm-rs-cc \
 	sqlite3 \
 	zipalign \
