@@ -19,10 +19,13 @@
 #
 # 1. sudo apt-get install lcov
 # 2. Build application/library with coverage information.
-# 3. Push the new binaries to the device.
-# 4. Run tests with the additional environment variables:
-#     * GCOV_PREFIX=/data/local/tmp/gcov
-#     * GCOV_PREFIX_STRIP=`echo $(ANDROID_BUILD_TOP) | grep -o / | wc -l`
+#     * make NATIVE_COVERAGE=true COVERAGE_PATHS='*'
+# 3. Push the new binaries to the device with adb sync.
+# (Optional): Run `acov --clean-device`. This will reset coverage for everything
+#      on the device.
+# 4. Run tests.
+# (Optional): Run `acov --flush`. This will dump coverage from all processes
+#      running on the device.
 # 5. Run `acov`.
 #
 # acov will pull all coverage information from the device, push it to the right
@@ -30,21 +33,56 @@
 # it in your browser).
 #
 
+ANDROID_OUT=${OUT_DIR:-out}
+FLUSH_SLEEP=${FLUSH_SLEEP:-60}
+
+function clearGcdaFiles() {
+  if [ -d "$ANDROID_OUT" ]; then
+    find $ANDROID_OUT -name '*.gcda' -delete
+  fi
+}
+
+function clearGcnoFiles() {
+  if [ -d "$ANDROID_OUT" ]; then
+    find $ANDROID_OUT -name '*.gcno' -delete
+  fi
+}
+
 if [ "$1" = "--clean" ]; then
-  find $ANDROID_HOST_OUT \( -name '*.gcda' -o -name '*.gcno' \) -delete
-  find $ANDROID_PRODUCT_OUT \( -name '*.gcda' -o -name '*.gcno' \) -delete
+  echo "Clearing gcda and gcno files from the local build."
+  clearGcdaFiles
+  clearGcnoFiles
   exit 0
 fi
 
 if [ "$1" = "--prep" ]; then
-  if [ -d "$ANDROID_HOST_OUT" ]; then
-    find $ANDROID_HOST_OUT -name '*.gcda' -delete
-  fi
+  echo "Clearing gcda files from the local build."
+  clearGcdaFiles
+  exit 0
+fi
 
-  if [ -d "$ANDROID_PRODUCT_OUT" ]; then
-    find $ANDROID_PRODUCT_OUT -name '*.gcda' -delete
-  fi
+adb root
 
+if [ "$1" = "--clean-device" ]; then
+  echo "Resetting coverage on the device..."
+  adb shell kill -37 -1
+  echo "Waiting $FLUSH_SLEEP seconds for coverage to be written..."
+  sleep $FLUSH_SLEEP
+  adb shell rm -rf /data/misc/trace/*
+  exit 0
+fi
+
+if [ "$1" = "--flush" ]; then
+  shift
+  if [ -z $@ ]; then
+    echo "Flushing coverage for all processes on the device..."
+    adb shell kill -37 -1
+  else
+    echo "Flushing coverage for [$@] on the device..."
+    adb shell kill -37 $(adb shell pidof $@)
+  fi
+  echo "Waiting $FLUSH_SLEEP seconds for coverage to be written..."
+  sleep $FLUSH_SLEEP
   exit 0
 fi
 
@@ -54,24 +92,24 @@ if [ $? -ne 0 ]; then
   sudo apt-get install lcov
 fi
 
-HOST=false
-ANDROID_OUT=$ANDROID_PRODUCT_OUT
-EXTRA_ARGS="$@"
-if [ "$1" = "--host" ]; then
-  HOST=true
-  ANDROID_OUT=$ANDROID_HOST_OUT
-  EXTRA_ARGS="--gcov-tool=/usr/bin/gcov-4.6 ${@:2}"
-fi
-
 cd $ANDROID_BUILD_TOP
-FILE=cov.info
 DIR=$(mktemp -d covreport-XXXXXX)
 
-if [ "$HOST" = "false" ]; then
-  adb pull /data/local/tmp/gcov
-fi
+# Build a coverage report for each euid that has reported coverage.
+COVERAGE_REPORTS=
+for USER_ID in $(adb shell ls /data/misc/trace)
+do
+  FILE=cov-$USER_ID.info
+  adb shell tar -czf - -C /data/misc/trace/$USER_ID/proc/self/cwd $ANDROID_OUT | tar zxvf -
 
-lcov -c -d $ANDROID_OUT -o $DIR/$FILE $EXTRA_ARGS
+  lcov -c -d $ANDROID_OUT -o $DIR/$FILE --gcov-tool=llvm-gcov $@
+  COVERAGE_REPORTS="-a $DIR/$FILE $COVERAGE_REPORTS"
+
+  clearGcdaFiles
+done
+
+FILE=merged.info
+lcov $COVERAGE_REPORTS -o $DIR/$FILE
 echo "Generating coverage report at $DIR"
 genhtml -q -o $DIR $DIR/$FILE
 xdg-open $DIR/index.html >/dev/null
