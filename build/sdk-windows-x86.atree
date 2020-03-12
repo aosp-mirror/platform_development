@@ -142,7 +142,13 @@ rm build-tools/${PLATFORM_NAME}/lib64/libc++.so.1
 
 rm build-tools/${PLATFORM_NAME}/lld
 rm build-tools/${PLATFORM_NAME}/lld-bin/lld
-prebuilts/sdk/tools/windows/bin/lld.exe   strip build-tools/${PLATFORM_NAME}/lld.exe
+
+# lld linker trampoline (invokes actual lld linker at lld-bin/lld.exe)
+bin/lld.exe                                                 strip build-tools/${PLATFORM_NAME}/lld.exe
+
+# actual lld linker, and dependent library
+prebuilts/sdk/tools/windows/bin/lld.exe                     strip build-tools/${PLATFORM_NAME}/lld-bin/lld.exe
+prebuilts/sdk/tools/windows/bin/lib64/libwinpthread-1.dll   strip build-tools/${PLATFORM_NAME}/lld-bin/libwinpthread-1.dll
 
 dalvik/dx/etc/mainDexClasses.bat             build-tools/${PLATFORM_NAME}/mainDexClasses.bat
 
