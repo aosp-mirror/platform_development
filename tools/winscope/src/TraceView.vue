@@ -37,7 +37,7 @@
           <input id="filter" type="search" placeholder="Filter..." v-model="propertyFilterString" />
         </div>
       </md-whiteframe>
-      <tree-view class="data-card" :item="selectedTree" :filter="propertyFilter" />
+      <tree-view class="pre-line-data-card" :item="selectedTree" :filter="propertyFilter" />
     </md-card>
   </md-card-content>
 </template>
@@ -227,6 +227,12 @@ export default {
 .data-card {
   overflow: auto;
   max-height: 48em;
+}
+
+.pre-line-data-card {
+  overflow: auto;
+  max-height: 48em;
+  white-space: pre-line;
 }
 
 </style>
