@@ -172,10 +172,12 @@ public class AutofillImeService extends InputMethodService {
                         if(suggestionView != null) {
                             suggestionViews[index] = suggestionView;
                             sizes[index] = size;
-                            suggestionView.setOnTouchListener((v, event) -> {
-                                Toast.makeText(AutofillImeService.this, "hello",
-                                        Toast.LENGTH_LONG).show();
-                                return false;
+                            suggestionView.setOnClickListener((v) -> {
+                                Log.d(TAG, "Received click on the suggestion");
+                            });
+                            suggestionView.setOnLongClickListener((v) -> {
+                                Log.d(TAG, "Received long click on the suggestion");
+                                return true;
                             });
                         }
                         if (suggestionsCount.decrementAndGet() == 0) {
