@@ -145,7 +145,7 @@ function transform_window_container_child(entry) {
 
   // The WindowContainerChild may be unknown
   return transform({
-      obj: {},
+      obj: entry,
       kind: 'WindowContainerChild',
       name: '',
       children: [[entry.windowContainer.children.reverse(), transform_window_container_child],]
@@ -155,7 +155,7 @@ function transform_window_container_child(entry) {
 
 function transform_display_area(entry) {
   return transform({
-    obj: {},
+    obj: entry,
     kind: 'DisplayArea',
     name: entry.name,
     children: [
@@ -170,10 +170,8 @@ function transform_display_content(entry) {
     height: entry.displayInfo.logicalHeight || 0,
   };
 
-  // If trace supports display areas
-  var obj = (entry.rootDisplayArea != null) ? {} : entry;
   return transform({
-    obj: obj,
+    obj: entry,
     kind: 'display',
     name: entry.id || 0,
     children: [
