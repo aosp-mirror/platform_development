@@ -1,6 +1,6 @@
 Pkg.Desc=Android SDK System Image
 Pkg.UserSrc=false
-Pkg.Revision=2
+Pkg.Revision=3
 Pkg.Dependencies=emulator#29.1.11
 AndroidVersion.ApiLevel=${PLATFORM_SDK_VERSION}
 AndroidVersion.CodeName=${PLATFORM_VERSION_CODENAME}
