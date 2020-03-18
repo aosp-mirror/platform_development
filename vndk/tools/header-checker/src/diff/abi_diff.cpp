@@ -14,6 +14,7 @@
 
 #include "diff/abi_diff.h"
 
+#include "repr/ir_reader.h"
 #include "utils/header_abi_util.h"
 
 #include <llvm/Support/raw_ostream.h>

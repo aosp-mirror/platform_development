@@ -110,6 +110,7 @@ cc_binary_host {
 
     srcs: [
         "src/linker/header_abi_linker.cpp",
+        "src/linker/module_merger.cpp",
     ],
 }
 
