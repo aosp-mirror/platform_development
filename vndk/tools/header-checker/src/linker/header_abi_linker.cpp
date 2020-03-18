@@ -42,8 +42,6 @@ using header_checker::utils::CollectAllExportedHeaders;
 using header_checker::utils::HideIrrelevantCommandLineOptions;
 
 
-static constexpr std::size_t kSourcesPerBatchThread = 7;
-
 static llvm::cl::OptionCategory header_linker_category(
     "header-abi-linker options");
 
@@ -103,6 +101,12 @@ static llvm::cl::opt<TextFormatIR> output_format(
                      clEnumValN(TextFormatIR::Json, "Json", "JSON")),
     llvm::cl::init(TextFormatIR::Json),
     llvm::cl::cat(header_linker_category));
+
+static llvm::cl::opt<std::size_t> sources_per_thread(
+    "sources-per-thread",
+    llvm::cl::desc("Specify number of input dump files each thread parses, for "
+                   "debugging merging types"),
+    llvm::cl::init(7), llvm::cl::Hidden);
 
 class HeaderAbiLinker {
  public:
@@ -188,11 +192,11 @@ static void DeDuplicateAbiElementsThread(
   auto begin_it = dump_files.begin();
   std::size_t num_sources = dump_files.size();
   while (1) {
-    std::size_t i = cnt->fetch_add(kSourcesPerBatchThread);
+    std::size_t i = cnt->fetch_add(sources_per_thread);
     if (i >= num_sources) {
       break;
     }
-    std::size_t end = std::min(i + kSourcesPerBatchThread, num_sources);
+    std::size_t end = std::min(i + sources_per_thread, num_sources);
     for (auto it = begin_it + i; it != begin_it + end; it++) {
       std::unique_ptr<repr::IRReader> reader =
           repr::IRReader::CreateIRReader(input_format, exported_headers);
@@ -215,8 +219,10 @@ HeaderAbiLinker::ReadInputDumpFiles() {
       repr::IRReader::CreateIRReader(input_format, &exported_headers_);
 
   std::size_t max_threads = std::thread::hardware_concurrency();
-  std::size_t num_threads = kSourcesPerBatchThread < dump_files_.size() ?
-      std::min(dump_files_.size() / kSourcesPerBatchThread, max_threads) : 0;
+  std::size_t num_threads =
+      sources_per_thread < dump_files_.size()
+          ? std::min(dump_files_.size() / sources_per_thread, max_threads)
+          : 1;
   std::vector<std::thread> threads;
   std::atomic<std::size_t> cnt(0);
   std::mutex greader_lock;
