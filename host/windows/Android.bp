@@ -18,6 +18,7 @@ cc_prebuilt_library_shared {
 
     export_include_dirs: ["usb/api"],
     srcs: ["prebuilt/usb/AdbWinApi.dll"],
+    windows_import_lib: "prebuilt/usb/AdbWinApi.lib",
 }
 
 cc_prebuilt_library_shared {
