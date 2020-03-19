@@ -31,7 +31,6 @@ import android.service.autofill.FillCallback;
 import android.service.autofill.FillContext;
 import android.service.autofill.FillRequest;
 import android.service.autofill.FillResponse;
-import android.service.autofill.InlineAction;
 import android.service.autofill.InlinePresentation;
 import android.service.autofill.SaveCallback;
 import android.service.autofill.SaveInfo;
@@ -182,8 +181,9 @@ public class InlineFillService extends AutofillService {
             // value from the request for this.
             final int height = inlineRequest.getPresentationSpecs().get(0).getMinSize().getHeight();
             final Size actionIconSize = new Size(height, height);
-            response.addInlineAction(
-                    newInlineAction(context, actionIconSize, R.drawable.ic_settings));
+            response.addDataset(
+                    newInlineActionDataset(context, actionIconSize, R.drawable.ic_settings,
+                            fields));
         }
 
         // 2.Add save info
@@ -198,8 +198,8 @@ public class InlineFillService extends AutofillService {
         return response.build();
     }
 
-    static InlineAction newInlineAction(@NonNull Context context,
-            @NonNull Size size, int drawable) {
+    static Dataset newInlineActionDataset(@NonNull Context context,
+            @NonNull Size size, int drawable, ArrayMap<String, AutofillId> fields) {
         Intent intent = new Intent().setComponent(
                 new ComponentName(context.getPackageName(), SettingsActivity.class.getName()));
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent,
@@ -209,9 +209,14 @@ public class InlineFillService extends AutofillService {
                 .build();
         final InlinePresentationSpec currentSpec = new InlinePresentationSpec.Builder(size,
                 size).build();
-        return new InlineAction(
-                new InlinePresentation(suggestionSlice, currentSpec, /** pined= */true),
-                pendingIntent.getIntentSender());
+        Dataset.Builder builder = new Dataset.Builder()
+                .setInlinePresentation(
+                        new InlinePresentation(suggestionSlice, currentSpec, /** pined= */true))
+                .setAuthentication(pendingIntent.getIntentSender());
+        for (AutofillId fieldId : fields.values()) {
+            builder.setValue(fieldId, null);
+        }
+        return builder.build();
     }
 
     static Dataset newUnlockedDataset(@NonNull Context context,
