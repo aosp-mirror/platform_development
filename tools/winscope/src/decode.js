@@ -16,7 +16,7 @@
 
 
 import jsonProtoDefs from 'frameworks/base/core/proto/android/server/windowmanagertrace.proto'
-import jsonProtoLogDefs from 'ProtoLogSafePath/protolog.proto'
+import jsonProtoLogDefs from 'frameworks/base/core/proto/android/server/protolog.proto'
 import jsonProtoDefsSF from 'frameworks/native/services/surfaceflinger/layerproto/layerstrace.proto'
 import jsonProtoDefsTrans from 'frameworks/native/cmds/surfacereplayer/proto/src/trace.proto'
 import jsonProtoDefsWL from 'WaylandSafePath/waylandtrace.proto'
