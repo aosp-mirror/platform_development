@@ -100,13 +100,13 @@ record_types {
     access: public_access
   }
   fields {
-    referenced_type: "_ZTIj"
+    referenced_type: "_ZTIN5Hello2$AE"
     field_offset: 96
     field_name: "enum_field"
     access: public_access
   }
   fields {
-    referenced_type: "_ZTIj"
+    referenced_type: "_ZTIN5Hello2$CE"
     field_offset: 128
     field_name: "enum_field2"
     access: public_access
@@ -443,6 +443,48 @@ enum_types {
   enum_fields {
     enum_field_value: 11
     name: "foosbat"
+  }
+  access: public_access
+}
+enum_types {
+  type_info {
+    name: "Hello::(anonymous enum at /development/vndk/tools/header-checker/tests/input/example1.h:17:3)"
+    size: 4
+    alignment: 4
+    referenced_type: "_ZTIN5Hello2$AE"
+    source_file: "/development/vndk/tools/header-checker/tests/input/example1.h"
+    linker_set_key: "_ZTIN5Hello2$AE"
+    self_type: "_ZTIN5Hello2$AE"
+  }
+  underlying_type: "_ZTIj"
+  enum_fields {
+    enum_field_value: 0
+    name: "Hello::A"
+  }
+  enum_fields {
+    enum_field_value: 1
+    name: "Hello::B"
+  }
+  access: public_access
+}
+enum_types {
+  type_info {
+    name: "Hello::(anonymous enum at /development/vndk/tools/header-checker/tests/input/example1.h:18:3)"
+    size: 4
+    alignment: 4
+    referenced_type: "_ZTIN5Hello2$CE"
+    source_file: "/development/vndk/tools/header-checker/tests/input/example1.h"
+    linker_set_key: "_ZTIN5Hello2$CE"
+    self_type: "_ZTIN5Hello2$CE"
+  }
+  underlying_type: "_ZTIj"
+  enum_fields {
+    enum_field_value: 0
+    name: "Hello::C"
+  }
+  enum_fields {
+    enum_field_value: 1
+    name: "Hello::D"
   }
   access: public_access
 }
