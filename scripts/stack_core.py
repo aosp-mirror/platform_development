@@ -374,9 +374,17 @@ class TraceConverter:
           if area.endswith(".apk"):
             apk = area
           else:
-            index = area.rfind(".apk!")
+            index = area.rfind(".so!")
             if index != -1:
-              apk = area[0:index + 4]
+              # Sometimes we'll see something like:
+              #   #01 pc abcd  libart.so!libart.so (offset 0x134000)
+              # Remove everything after the ! and zero the offset value.
+              area = area[0:index + 3]
+              so_offset = 0
+            else:
+              index = area.rfind(".apk!")
+              if index != -1:
+                apk = area[0:index + 4]
           if apk:
             lib_name, lib = self.GetLibFromApk(apk, so_offset)
         if not lib:

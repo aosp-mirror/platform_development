@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+// kind - a type used for categorization of different levels
+// name - name of the node
+// children - list of child entries. Each child entry is pair list [raw object, nested transform function].
+// bounds - used to calculate the full bounds of parents
+// stableId - unique id for an entry. Used to maintain selection across frames.
 function transform({obj, kind, name, children, timestamp, rect, bounds, highlight, rects_transform, chips, visible, flattened, stableId}) {
 	function call(fn, arg) {
 		return (typeof fn == 'function') ? fn(arg) : fn;

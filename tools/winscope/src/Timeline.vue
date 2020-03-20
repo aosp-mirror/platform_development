@@ -14,21 +14,21 @@
 -->
 <template>
   <svg width="2000" height="20" viewBox="-5,0,2010,20">
-    <circle :cx="translate(c.timestamp)" cy="10" r="5" v-for="(c,i) in items"
-      @click="onItemClick(c, i)" :class="itemClass(c)" />
+    <circle :cx="position(item)" cy="10" r="5" v-for="(item, idx) in items" @click="onItemClick(idx)" />
+    <circle v-if="items.length" :cx="position(selected)" cy="10" r="5" class="selected" />
   </svg>
 </template>
-
 <script>
-
 export default {
   name: 'timeline',
-  props: ['items', 'selected'],
-  data () {
-    return {
-    };
+  props: ['items', 'selectedIndex', 'scale'],
+  data() {
+    return {};
   },
   methods: {
+    position(item) {
+      return this.translate(item);
+    },
     translate(cx) {
       var scale = [...this.scale];
       if (scale[0] >= scale[1]) {
@@ -36,29 +36,27 @@ export default {
       }
       return (cx - scale[0]) / (scale[1] - scale[0]) * 2000;
     },
-    onItemClick(item, index) {
-      this.$emit('item-selected', item, index);
+    onItemClick(index) {
+      this.$emit('item-selected', index);
     },
-    itemClass(item) {
-      return (this.selected == item) ? 'selected' : 'not-selected'
-    }
   },
   computed: {
-    scale() {
-      return [Math.min(...this.timestamps), Math.max(...this.timestamps)];
-    },
     timestamps() {
       if (this.items.length == 1) {
         return [0];
       }
-      return this.items.map((e) => parseInt(e.timestamp));
+      return this.items;
+    },
+    selected() {
+      return this.items[this.selectedIndex];
     }
   },
 }
-</script>
 
+</script>
 <style scoped>
 .selected {
   fill: red;
 }
+
 </style>

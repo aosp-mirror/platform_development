@@ -414,6 +414,17 @@ TEST_MODULES = [
         export_include_dirs=['integration/c_and_cpp/include'],
     ),
     LsdumpModule(
+        name='libifunc',
+        srcs=['integration/ifunc/ifunc.c'],
+        version_script='integration/ifunc/map.txt',
+        export_include_dirs=[],
+        linker_flags=[
+            '-so', relative_to_abs_path(
+                'integration/ifunc/prebuilts/libifunc.so'
+            ),
+        ]
+    ),
+    LsdumpModule(
         name='libgolden_cpp_member_name_changed',
         srcs=[
             'integration/cpp/gold/golden_1.cpp',
@@ -595,6 +606,41 @@ TEST_MODULES = [
         linker_flags=[
             '-output-format', 'Json',
         ],
+    ),
+    LsdumpModule(
+        name='libgolden_anonymous_enum',
+        arch='arm64',
+        srcs=['integration/cpp/anonymous_enum/include/golden.h'],
+        version_script='',
+        export_include_dirs=['integration/cpp/anonymous_enum/include'],
+        linker_flags=['-output-format', 'Json',],
+    ),
+    LsdumpModule(
+        name='libswap_anonymous_enum',
+        arch='arm64',
+        srcs=['integration/cpp/anonymous_enum/include/swap_enum.h'],
+        version_script='',
+        export_include_dirs=['integration/cpp/anonymous_enum/include'],
+        linker_flags=['-output-format', 'Json'],
+    ),
+    LsdumpModule(
+        name='libswap_anonymous_enum_field',
+        arch='arm64',
+        srcs=['integration/cpp/anonymous_enum/include/swap_enum_field.h'],
+        version_script='',
+        export_include_dirs=['integration/cpp/anonymous_enum/include'],
+        linker_flags=['-output-format', 'Json'],
+    ),
+    LsdumpModule(
+        name='libanonymous_enum_odr',
+        arch='arm64',
+        srcs=[
+            'integration/cpp/anonymous_enum/include/golden.h',
+            'integration/cpp/anonymous_enum/include/include_golden.h',
+        ],
+        version_script='',
+        export_include_dirs=['integration/cpp/anonymous_enum/include'],
+        linker_flags=['-output-format', 'Json'],
     ),
 ]
 

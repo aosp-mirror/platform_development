@@ -26,6 +26,7 @@ VNDK-core: libclang_rt.ubsan_standalone-mips64-android.so
 VNDK-core: libclang_rt.ubsan_standalone-x86_64-android.so
 
 LLNDK-private: ld-android.so
+LLNDK-private: libandroid_runtime_lazy.so
 LLNDK-private: libc_malloc_debug.so
 LLNDK-private: libdl_android.so
 LLNDK-private: libnetd_client.so

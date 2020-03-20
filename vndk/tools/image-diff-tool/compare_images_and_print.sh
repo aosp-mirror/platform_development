@@ -38,25 +38,22 @@ fi
 
 readonly CHECK_DIFF_RESULT
 
-build/soong/soong_ui.bash --make-mode compare_images
 . build/envsetup.sh
 lunch aosp_arm64
+build/soong/soong_ui.bash --make-mode compare_images
 COMMON_WHITELIST=development/vndk/tools/image-diff-tool/whitelist.txt
 out/host/linux-x86/bin/compare_images $1 -u -w "${COMMON_WHITELIST}"
-
-echo
-echo " - Common parts"
-cat common.csv
-echo
-echo " - Different parts (that are whitelisted)"
-cat whitelisted_diff.csv
-echo
-echo " - Different parts (that are not whitelisted)"
-cat diff.csv
 
 if [ -v DIST_DIR ]; then
   cp common.csv diff.csv whitelisted_diff.csv "${DIST_DIR}"
 fi
+
+echo >&2
+echo >&2 " - Different parts (that are whitelisted)"
+cat >&2 whitelisted_diff.csv
+echo >&2
+echo >&2 " - Different parts (that are not whitelisted)"
+cat >&2 diff.csv
 
 if [ "$(wc -l diff.csv | cut -d' ' -f1)" -gt "1" ]; then
   cat >&2 <<EOF

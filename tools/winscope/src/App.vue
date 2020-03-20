@@ -16,169 +16,69 @@
   <div id="app">
     <md-whiteframe md-tag="md-toolbar">
       <h1 class="md-title" style="flex: 1">{{title}}</h1>
-
-      <div>
-          <md-checkbox v-model="store.displayDefaults">Show default properties
-            <md-tooltip md-direction="bottom">
-              If checked, shows the value of all properties.
-              Otherwise, hides all properties whose value is the default for its data type.
-            </md-tooltip>
-          </md-checkbox>
-      </div>
-
-      <input type="file" @change="onLoadFile" id="upload-file" v-show="false"/>
-      <label class="md-button md-accent md-raised md-theme-default" for="upload-file">Open File</label>
-
-      <div>
-        <md-select v-model="fileType" id="file-type" placeholder="File type">
-          <md-option value="auto">Detect type</md-option>
-          <md-option :value="k" v-for="(v,k) in FILE_TYPES">{{v.name}}</md-option>
-        </md-select>
-      </div>
-
+      <a class="md-button md-accent md-raised md-theme-default" @click="clear()" v-if="dataLoaded">Clear</a>
     </md-whiteframe>
-
-    <div class="main-content" v-if="timeline.length">
-      <md-card class="timeline-card">
-        <md-whiteframe md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense"><h2 class="md-title">Timeline</h2></md-whiteframe>
-        <timeline :items="timeline" :selected="tree" @item-selected="onTimelineItemSelected" class="timeline" />
+    <div class="main-content">
+      <md-layout v-if="!dataLoaded" class="m-2">
+        <dataadb ref="adb" :store="store" @dataReady="onDataReady" @statusChange="setStatus"/>
+        <datainput ref="input" :store="store" @dataReady="onDataReady" @statusChange="setStatus"/>
+      </md-layout>
+      <md-card v-if="dataLoaded">
+        <md-whiteframe md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
+          <h2 class="md-title">Timeline</h2>
+          <datafilter v-for="file in files" :key="file.filename" :store="store" :file="file" />
+        </md-whiteframe>
+        <md-list>
+          <md-list-item v-for="(file, idx) in files" :key="file.filename">
+            <md-icon>{{file.type.icon}}</md-icon>
+            <timeline :items="file.timeline" :selected-index="file.selectedIndex" :scale="scale" @item-selected="onTimelineItemSelected($event, idx)" class="timeline" />
+          </md-list-item>
+        </md-list>
       </md-card>
-
-      <div class="container">
-        <md-card class="rects">
-          <md-whiteframe md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense"><h2 class="md-title">Screen</h2></md-whiteframe>
-          <md-whiteframe md-elevation="8">
-            <rects :bounds="bounds" :rects="rects" :highlight="highlight" @rect-click="onRectClick" />
-          </md-whiteframe>
-        </md-card>
-
-        <md-card class="hierarchy">
-          <md-whiteframe md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
-            <h2 class="md-title" style="flex: 1;">Hierarchy</h2>
-            <md-checkbox v-model="store.onlyVisible">Only visible</md-checkbox>
-            <md-checkbox v-model="store.flattened">Flat</md-checkbox>
-          </md-whiteframe>
-          <tree-view :item="tree" @item-selected="itemSelected" :selected="hierarchySelected" :filter="hierarchyFilter" :flattened="store.flattened" ref="hierarchy" />
-        </md-card>
-
-        <md-card class="properties">
-          <md-whiteframe md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
-            <h2 class="md-title" style="flex: 1">Properties</h2>
-            <div class="filter">
-              <input id="filter" type="search" placeholder="Filter..." v-model="propertyFilterString" />
-            </div>
-          </md-whiteframe>
-          <tree-view :item="selectedTree" :filter="propertyFilter" />
-        </md-card>
-      </div>
+      <dataview v-for="file in files" :key="file.filename" :ref="file.filename" :store="store" :file="file" @focus="onDataViewFocus(file.filename)" />
     </div>
   </div>
 </template>
-
 <script>
-
-import jsonProtoDefs from 'frameworks/base/core/proto/android/server/windowmanagertrace.proto'
-import jsonProtoDefsSF from 'frameworks/native/services/surfaceflinger/layerproto/layerstrace.proto'
-import protobuf from 'protobufjs'
-
 import TreeView from './TreeView.vue'
 import Timeline from './Timeline.vue'
 import Rects from './Rects.vue'
-
-import detectFile from './detectfile.js'
+import DataView from './DataView.vue'
+import DataInput from './DataInput.vue'
 import LocalStore from './localstore.js'
+import DataAdb from './DataAdb.vue'
+import DataFilter from './DataFilter.vue'
 
-import {transform_json} from './transform.js'
-import {transform_layers, transform_layers_trace} from './transform_sf.js'
-import {transform_window_service, transform_window_trace} from './transform_wm.js'
-import {fill_transform_data, format_transform_type, is_simple_transform} from './matrix_utils.js'
+const APP_NAME = "Winscope"
 
-
-var protoDefs = protobuf.Root.fromJSON(jsonProtoDefs)
-    .addJSON(jsonProtoDefsSF.nested);
-
-var TraceMessage = protoDefs.lookupType(
-  "com.android.server.wm.WindowManagerTraceFileProto");
-var ServiceMessage = protoDefs.lookupType(
-  "com.android.server.wm.WindowManagerServiceDumpProto");
-var LayersMessage = protoDefs.lookupType("android.surfaceflinger.LayersProto");
-var LayersTraceMessage = protoDefs.lookupType("android.surfaceflinger.LayersTraceFileProto");
-
-function formatProto(obj) {
-  if (!obj || !obj.$type) {
-    return;
-  }
-  if (obj.$type.fullName === '.android.surfaceflinger.RectProto' ||
-      obj.$type.fullName === '.android.graphics.RectProto') {
-    return `(${obj.left}, ${obj.top})  -  (${obj.right}, ${obj.bottom})`;
-  } else if (obj.$type.fullName === '.android.surfaceflinger.FloatRectProto') {
-    return `(${obj.left.toFixed(3)}, ${obj.top.toFixed(3)})  -  (${obj.right.toFixed(3)}, ${obj.bottom.toFixed(3)})`;
-  }
-  else if (obj.$type.fullName === '.android.surfaceflinger.PositionProto') {
-    return `(${obj.x.toFixed(3)}, ${obj.y.toFixed(3)})`;
-  } else if (obj.$type.fullName === '.android.surfaceflinger.SizeProto') {
-    return `${obj.w} x ${obj.h}`;
-  } else if (obj.$type.fullName === '.android.surfaceflinger.ColorProto') {
-    return `r:${obj.r} g:${obj.g} \n b:${obj.b} a:${obj.a}`;
-  } else if (obj.$type.fullName === '.android.surfaceflinger.TransformProto') {
-    var transform_type = format_transform_type(obj);
-    if (is_simple_transform(obj)) {
-      return `${transform_type}`;
+// Find the index of the last element matching the predicate in a sorted array
+function findLastMatchingSorted(array, predicate) {
+  var a = 0;
+  var b = array.length - 1;
+  while (b - a > 1) {
+    var m = Math.floor((a + b) / 2);
+    if (predicate(array, m)) {
+      a = m;
+    } else {
+      b = m - 1;
     }
-    return `${transform_type}  dsdx:${obj.dsdx.toFixed(3)}   dtdx:${obj.dtdx.toFixed(3)}   dsdy:${obj.dsdy.toFixed(3)}   dtdy:${obj.dtdy.toFixed(3)}`;
   }
+  return predicate(array, b) ? b : a;
 }
-
-const FILE_TYPES = {
-  'window_dump': {
-    protoType: ServiceMessage,
-    transform: transform_window_service,
-    name: "WindowManager dump",
-    timeline: false,
-  },
-  'window_trace': {
-    protoType: TraceMessage,
-    transform: transform_window_trace,
-    name: "WindowManager trace",
-    timeline: true,
-  },
-  'layers_dump': {
-    protoType: LayersMessage,
-    transform: transform_layers,
-    name: "SurfaceFlinger dump",
-    timeline: false,
-  },
-  'layers_trace': {
-    protoType: LayersTraceMessage,
-    transform: transform_layers_trace,
-    name: "SurfaceFlinger trace",
-    timeline: true,
-  },
-};
 
 export default {
   name: 'app',
   data() {
     return {
-      selectedTree: {},
-      hierarchySelected: null,
-      tree: {},
-      timeline: [],
-      bounds: {},
-      rects: [],
-      highlight: null,
-      timelineIndex: 0,
-      title: "The Tool",
-      filename: "",
-      lastSelectedStableId: null,
-      propertyFilterString: "",
+      files: [],
+      title: APP_NAME,
+      currentTimestamp: 0,
+      activeDataView: null,
       store: LocalStore('app', {
         flattened: false,
         onlyVisible: false,
-        displayDefaults: true
+        displayDefaults: true,
       }),
-      FILE_TYPES,
-      fileType: "auto",
     }
   },
   created() {
@@ -186,195 +86,87 @@ export default {
     document.title = this.title;
   },
   methods: {
-    onLoadFile(e) {
-      return this.onLoadProtoFile(e, this.fileType);
+    clear() {
+      this.files.forEach(function(item) { item.destroy(); })
+      this.files = [];
+      this.activeDataView = null;
     },
-    onLoadProtoFile(event, type) {
-      var files = event.target.files || event.dataTransfer.files;
-      var file = files[0];
-      if (!file) {
-        // No file selected.
-        return;
+    onTimelineItemSelected(index, timelineIndex) {
+      this.files[timelineIndex].selectedIndex = index;
+      var t = parseInt(this.files[timelineIndex].timeline[index]);
+      for (var i = 0; i < this.files.length; i++) {
+        if (i != timelineIndex) {
+          this.files[i].selectedIndex = findLastMatchingSorted(this.files[i].timeline, function(array, idx) {
+            return parseInt(array[idx]) <= t;
+          });
+        }
       }
-      this.filename = file.name;
-      this.title = this.filename + " (loading)";
-
-      var reader = new FileReader();
-      reader.onload = (e) => {
-        var buffer = new Uint8Array(e.target.result);
-        var filetype = FILE_TYPES[type] || FILE_TYPES[detectFile(buffer)];
-        if (!filetype) {
-          this.title = this.filename + ": Could not detect file type."
-          event.target.value = '';
-          return;
+      this.currentTimestamp = t;
+    },
+    advanceTimeline(direction) {
+      var closestTimeline = -1;
+      var timeDiff = Infinity;
+      for (var idx = 0; idx < this.files.length; idx++) {
+        var file = this.files[idx];
+        var cur = file.selectedIndex;
+        if (cur + direction < 0 || cur + direction >= this.files[idx].timeline.length) {
+          continue;
         }
-        this.title = this.filename + " (loading " + filetype.name + ")";
-
-        // Replace enum values with string representation and
-        // add default values to the proto objects. This function also handles
-        // a special case with TransformProtos where the matrix may be derived
-        // from the transform type.
-        function modifyProtoFields(protoObj, displayDefaults) {
-          if (!protoObj || protoObj !== Object(protoObj) || !protoObj.$type) {
-            return;
-          }
-          for (var fieldName in protoObj.$type.fields) {
-            var fieldProperties = protoObj.$type.fields[fieldName];
-            var field = protoObj[fieldName];
-
-            if (Array.isArray(field)) {
-              field.forEach((item, _) => {
-                modifyProtoFields(item, displayDefaults);
-              })
-              continue;
-            }
-
-            if (displayDefaults && !(field)) {
-              protoObj[fieldName] = fieldProperties.defaultValue;
-            }
-
-            if (fieldProperties.type === 'TransformProto'){
-              fill_transform_data(protoObj[fieldName]);
-              continue;
-            }
-
-            if (fieldProperties.resolvedType && fieldProperties.resolvedType.valuesById) {
-              protoObj[fieldName] = fieldProperties.resolvedType.valuesById[protoObj[fieldProperties.name]];
-              continue;
-            }
-
-            modifyProtoFields(protoObj[fieldName], displayDefaults);
-          }
+        var d = Math.abs(parseInt(file.timeline[cur + direction]) - this.currentTimestamp);
+        if (timeDiff > d) {
+          timeDiff = d;
+          closestTimeline = idx;
         }
-
-        try {
-          var decoded = filetype.protoType.decode(buffer);
-          modifyProtoFields(decoded, this.store.displayDefaults);
-          var transformed = filetype.transform(decoded);
-        } catch (ex) {
-          this.title = this.filename + " (loading " + filetype.name + "):" + ex;
-          return;
-        } finally {
-          event.target.value = '';
-        }
-
-        if (filetype.timeline) {
-          this.timeline = transformed.children;
-        } else {
-          this.timeline = [transformed];
-        }
-
-        this.title = this.filename + " (" + filetype.name + ")";
-
-        this.lastSelectedStableId = null;
-        this.onTimelineItemSelected(this.timeline[0], 0);
       }
-      reader.readAsArrayBuffer(files[0]);
-    },
-    itemSelected(item) {
-      this.hierarchySelected = item;
-      this.selectedTree = transform_json(item.obj, item.name, {
-          skip: item.skip,
-          formatter: formatProto});
-      this.highlight = item.highlight;
-      this.lastSelectedStableId = item.stableId;
-    },
-    onRectClick(item) {
-      if (item) {
-        this.itemSelected(item);
+      if (closestTimeline >= 0) {
+        this.files[closestTimeline].selectedIndex += direction;
+        this.currentTimestamp = parseInt(this.files[closestTimeline].timeline[this.files[closestTimeline].selectedIndex]);
       }
     },
-    onTimelineItemSelected(item, index) {
-      this.timelineIndex = index;
-      this.tree = item;
-      this.rects = [...item.rects].reverse();
-      this.bounds = item.bounds;
-
-      this.hierarchySelected = null;
-      this.selectedTree = {};
-      this.highlight = null;
-
-      function find_item(item, stableId) {
-        if (item.stableId === stableId) {
-          return item;
-        }
-        if (Array.isArray(item.children)) {
-          for (var child of item.children) {
-            var found = find_item(child, stableId);
-            if (found) {
-              return found;
-            }
-          }
-        }
-        return null;
-      }
-
-      if (this.lastSelectedStableId) {
-        var found = find_item(item, this.lastSelectedStableId);
-        if (found) {
-          this.itemSelected(found);
-        }
-      }
+    onDataViewFocus(view) {
+      this.activeDataView = view;
     },
     onKeyDown(event) {
       event = event || window.event;
-      if (event.keyCode == 37 /* left */) {
+      if (event.keyCode == 37 /* left */ ) {
         this.advanceTimeline(-1);
-      } else if (event.keyCode == 39 /* right */) {
+      } else if (event.keyCode == 39 /* right */ ) {
         this.advanceTimeline(1);
-      } else if (event.keyCode == 38 /* up */) {
-        this.$refs.hierarchy.selectPrev();
-      } else if (event.keyCode == 40 /* down */) {
-        this.$refs.hierarchy.selectNext();
+      } else if (event.keyCode == 38 /* up */ ) {
+        this.$refs[this.activeView][0].arrowUp();
+      } else if (event.keyCode == 40 /* down */ ) {
+        this.$refs[this.activeView][0].arrowDown();
       } else {
         return false;
       }
       event.preventDefault();
       return true;
     },
-    advanceTimeline(frames) {
-      if (!Array.isArray(this.timeline) || this.timeline.length == 0) {
-        return false;
-      }
-      var nextIndex = this.timelineIndex + frames;
-      if (nextIndex < 0) {
-        nextIndex = 0;
-      }
-      if (nextIndex >= this.timeline.length) {
-        nextIndex = this.timeline.length - 1;
-      }
-      this.onTimelineItemSelected(this.timeline[nextIndex], nextIndex);
-      return true;
+    onDataReady(files) {
+      this.files = files;
     },
+    setStatus(status) {
+      if (status) {
+        this.title = status;
+      } else {
+        this.title = APP_NAME;
+      }
+    }
   },
   computed: {
     prettyDump: function() { return JSON.stringify(this.dump, null, 2); },
-    hierarchyFilter() {
-      return this.store.onlyVisible ? (c, flattened) => {
-        return c.visible || c.childrenVisible && !flattened;
-      } : null;
+    dataLoaded: function() { return this.files.length > 0 },
+    scale() {
+      var mx = Math.max(...(this.files.map(f => Math.max(...f.timeline))));
+      var mi = Math.min(...(this.files.map(f => Math.min(...f.timeline))));
+      return [mi, mx];
     },
-    propertyFilter() {
-      var filterStrings = this.propertyFilterString.split(",");
-      var positive = [];
-      var negative = [];
-      filterStrings.forEach((f) => {
-        if (f.startsWith("!")) {
-          var str = f.substring(1);
-          negative.push((s) => s.indexOf(str) === -1);
-        } else {
-          var str = f;
-          positive.push((s) => s.indexOf(str) !== -1);
-        }
-      });
-      var filter = (item) => {
-        var apply = (f) => f(item.name);
-        return (positive.length === 0 || positive.some(apply))
-            && (negative.length === 0 || negative.every(apply));
-      };
-      filter.includeChildren = true;
-      return filter;
-    },
+    activeView: function() {
+      if (!this.activeDataView && this.files.length > 0) {
+        this.activeDataView = this.files[0].filename;
+      }
+      return this.activeDataView;
+    }
   },
   watch: {
     title() {
@@ -382,35 +174,26 @@ export default {
     }
   },
   components: {
-    'tree-view': TreeView,
     'timeline': Timeline,
-    'rects': Rects,
-  }
+    'dataview': DataView,
+    'datainput': DataInput,
+    'dataadb': DataAdb,
+    'datafilter': DataFilter,
+  },
 }
+
 </script>
-
 <style>
-#app {
-}
-
-.main-content {
-  padding: 8px;
+.main-content>* {
+  margin: 1em;
 }
 
 .card-toolbar {
   border-bottom: 1px solid rgba(0, 0, 0, .12);
 }
 
-.timeline-card {
-  margin: 8px;
-}
-
 .timeline {
   margin: 16px;
-}
-
-.screen {
-  border: 1px solid black;
 }
 
 .container {
@@ -418,22 +201,16 @@ export default {
   flex-wrap: wrap;
 }
 
-.rects {
-  flex: none;
-  margin: 8px;
+.md-layout > .md-card {
+  margin: 0.5em;
 }
 
-.hierarchy, .properties {
-  flex: 1;
-  margin: 8px;
-  min-width: 400px;
+.md-button {
+  margin-top: 1em
 }
 
-.hierarchy > .tree-view, .properties > .tree-view {
-  margin: 16px;
-}
-
-h1, h2 {
+h1,
+h2 {
   font-weight: normal;
 }
 
@@ -450,4 +227,5 @@ li {
 a {
   color: #42b983;
 }
+
 </style>

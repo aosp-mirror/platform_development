@@ -15,11 +15,10 @@
 # limitations under the License.
 #
 
-WINSCOPE_URL='http://go/winscope/#sftrace'
+WINSCOPE_URL='http://go/winscope/'
 
 set -e
 
-outfile=layerstrace.pb
 help=
 
 for arg in "$@"; do
@@ -31,13 +30,18 @@ for arg in "$@"; do
   esac
 done
 
+outfileTrans=${outfile}_transactiontrace.pb
+outfileSurf=${outfile}_layerstrace.pb
+
+outfileTrans_abs="$(cd "$(dirname "$outfileTrans")"; pwd)/$(basename "$outfileTrans")"
+outfileSurf_abs="$(cd "$(dirname "$outfileSurf")"; pwd)/$(basename "$outfileSurf")"
+
 if [ "$help" != "" ]; then
   echo "usage: $0 [-h | --help] [OUTFILE]"
   echo
-  echo "Traces SurfaceFlinger and writes the output to OUTFILE (default ./layerstrace.pb)."
+  echo "Records Transaction traces (default transactiontrace.pb)."
+  echo "Records Surface traces (default layerstrace.pb)."
   echo "To view the traces, use $WINSCOPE_URL."
-  echo
-  echo "WARNING: This calls adb root and deactivates SELinux."
   exit 1
 fi
 
@@ -46,16 +50,19 @@ function log_error() {
 }
 trap log_error ERR
 
-outfile_abs="$(cd "$(dirname "$outfile")"; pwd)/$(basename "$outfile")"
-
 function start_tracing() {
-  echo -n "Starting SurfaceFlinger trace..."
+  echo -n "Starting transaction and surface recording..."
+  echo
+  adb shell su root service call SurfaceFlinger 1020 i32 1 >/dev/null
   adb shell su root service call SurfaceFlinger 1025 i32 1 >/dev/null
   echo "DONE"
   trap stop_tracing EXIT
 }
+
 function stop_tracing() {
-  echo -n "Stopping SurfaceFlinger trace..."
+  echo -n "Stopping transaction and surface recording..."
+  echo
+  adb shell su root service call SurfaceFlinger 1020 i32 0 >/dev/null
   adb shell su root service call SurfaceFlinger 1025 i32 0 >/dev/null
   echo "DONE"
   trap - EXIT
@@ -64,16 +71,14 @@ function stop_tracing() {
 which adb >/dev/null 2>/dev/null || { echo "ERROR: ADB not found."; exit 1; }
 adb get-state 2>/dev/null | grep -q device || { echo "ERROR: No device connected or device is unauthorized."; exit 1; }
 
-echo -n "Deactivating SELinux..."
-adb shell su root setenforce 0 2>/dev/null >/dev/null
-echo "DONE"
-
 start_tracing
-read -p "Press ENTER to stop tracing" -s x
+read -p "Press ENTER to stop recording" -s x
 echo
 stop_tracing
-adb exec-out su root cat /data/misc/wmtrace/layers_trace.pb >"$outfile"
+adb exec-out su root cat /data/misc/wmtrace/transaction_trace.pb >"$outfileTrans"
+adb exec-out su root cat /data/misc/wmtrace/layers_trace.pb >"$outfileSurf"
 
 echo
-echo "To view the trace, go to $WINSCOPE_URL, click 'OPEN SF TRACE' and open"
-echo "${outfile_abs}"
+echo "To view the trace, go to $WINSCOPE_URL, and open"
+echo "${outfileTrans_abs}"
+echo "${outfileSurf_abs}"
