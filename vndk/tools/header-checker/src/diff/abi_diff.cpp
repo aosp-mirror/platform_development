@@ -113,7 +113,7 @@ HeaderAbiDiff::ExtractUserDefinedTypes(const repr::ModuleIR &tu) {
     if (odr_list.size() != 1) {
       continue;
     }
-    const repr::TypeIR *type = *(odr_list.begin());
+    const repr::TypeIR *type = odr_list.begin()->type_ir_;
     const repr::RecordTypeIR *record_type = nullptr;
     switch (type->GetKind()) {
       case repr::RecordTypeKind:

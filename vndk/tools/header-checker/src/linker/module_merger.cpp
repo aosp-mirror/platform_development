@@ -67,7 +67,8 @@ MergeStatus ModuleMerger::LookupUserDefinedType(
 
   // Compare each user-defined type with the latest input user-defined type.
   // If there is a match, re-use the existing user-defined type.
-  for (auto &contender_ud : it->second) {
+  for (auto &definition : it->second) {
+    const TypeIR *contender_ud = definition.type_ir_;
     DiffStatus result = diff_helper.CompareAndDumpTypeDiff(
         contender_ud->GetSelfType(), ud_type->GetSelfType());
     if (result == DiffStatus::no_diff) {
@@ -81,7 +82,7 @@ MergeStatus ModuleMerger::LookupUserDefinedType(
 #ifdef DEBUG
   llvm::errs() << "ODR violation detected for: " << ud_type->GetName() << "\n";
 #endif
-  return MergeStatus(true, (*(it->second.begin()))->GetSelfType());
+  return MergeStatus(true, it->second.begin()->type_ir_->GetSelfType());
 }
 
 
@@ -199,10 +200,13 @@ ModuleMerger::UpdateUDTypeAccounting(
     const T *addend_node, const ModuleIR &addend,
     AbiElementMap<MergeStatus> *local_to_global_type_id_map,
     AbiElementMap<T> *specific_type_map) {
+  const std::string addend_compilation_unit_path =
+      addend.GetCompilationUnitPath(addend_node);
+  assert(addend_compilation_unit_path != "");
   std::string added_type_id = addend_node->GetSelfType();
   auto type_id_it = module_->type_graph_.find(added_type_id);
   if (type_id_it != module_->type_graph_.end()) {
-    added_type_id = AllocateNewTypeId(added_type_id, addend);
+    added_type_id = added_type_id + "#ODR:" + addend_compilation_unit_path;
   }
 
   // Add the ud-type with type-id to the type_graph_, since if there are generic
@@ -217,7 +221,7 @@ ModuleMerger::UpdateUDTypeAccounting(
   // Add to facilitate ODR checking.
   const std::string &key = GetODRListMapKey(&(it->second));
   MergeStatus type_merge_status = MergeStatus(true, added_type_id);
-  module_->AddToODRListMap(key, &(it->second));
+  module_->AddToODRListMap(key, &(it->second), addend_compilation_unit_path);
   local_to_global_type_id_map->emplace(addend_node->GetSelfType(),
                                        type_merge_status);
   return {type_merge_status, it};
