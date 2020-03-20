@@ -14,28 +14,61 @@
 -->
 <template>
   <div class="tree-view">
-    <div @click="clicked" :class="computedClass">
-      <span class="kind">{{item.kind}}</span><span v-if="item.kind && item.name"> - </span><span>{{item.name}}</span>
-      <div v-for="c in item.chips" :title="c.long" :class="chipClassForChip(c)">
-        {{c.short}}
-      </div>
+    <div @click="clicked" :class="computedClass" class="node">
+      <span class="kind">{{item.kind}}</span>
+      <span v-if="item.kind && item.name">-</span>
+      <span>{{item.name}}</span>
+      <div
+        v-for="c in item.chips"
+        v-bind:key="c.long"
+        :title="c.long"
+        :class="chipClassForChip(c)"
+      >{{c.short}}</div>
     </div>
     <div class="children" v-if="children">
-      <tree-view v-for="(c,i) in children" :item="c" @item-selected="childItemSelected" :selected="selected" :key="i" :chip-class='chipClass' :filter="childFilter(c)" :flattened="flattened" :force-flattened="applyingFlattened" v-show="filterMatches(c)" ref='children' />
+      <tree-view
+        v-for="(c,i) in children"
+        :item="c"
+        @item-selected="childItemSelected"
+        :selected="selected"
+        :key="i"
+        :chip-class="chipClass"
+        :filter="childFilter(c)"
+        :flattened="flattened"
+        :force-flattened="applyingFlattened"
+        v-show="filterMatches(c)"
+        ref="children"
+      />
     </div>
   </div>
 </template>
+
 <script>
-import jsonProtoDefs from 'frameworks/base/core/proto/android/server/windowmanagertrace.proto'
-import protobuf from 'protobufjs'
+import jsonProtoDefs from "frameworks/base/core/proto/android/server/windowmanagertrace.proto";
+import protobuf from "protobufjs";
 
 var protoDefs = protobuf.Root.fromJSON(jsonProtoDefs);
+var TraceMessage = protoDefs.lookupType(
+  "com.android.server.wm.WindowManagerTraceFileProto"
+);
+var ServiceMessage = protoDefs.lookupType(
+  "com.android.server.wm.WindowManagerServiceDumpProto"
+);
 
 export default {
-  name: 'tree-view',
-  props: ['item', 'selected', 'chipClass', 'filter', 'flattened', 'force-flattened'],
-  data() {
-    return {};
+  name: "tree-view",
+  props: [
+    "item",
+    "selected",
+    "chipClass",
+    "filter",
+    "flattened",
+    "force-flattened"
+  ],
+  data: function() {
+    return {
+      isChildSelected: false
+    };
   },
   methods: {
     selectNext(found, parent) {
@@ -43,7 +76,7 @@ export default {
         this.clicked();
         return false;
       }
-      if (this.selected === this.item) {
+      if (this.isCurrentSelected()) {
         found = true;
       }
       if (this.$refs.children) {
@@ -63,20 +96,23 @@ export default {
         this.clicked();
         return false;
       }
-      if (this.selected === this.item) {
+      if (this.isCurrentSelected()) {
         found = true;
       }
       return found;
     },
     childItemSelected(item) {
-      this.$emit('item-selected', item);
+      this.isChildSelected = true;
+      this.$emit("item-selected", item);
     },
     clicked() {
-      this.$emit('item-selected', this.item);
+      this.$emit("item-selected", this.item);
     },
     chipClassForChip(c) {
-      return ['tree-view-internal-chip', this.chipClassOrDefault,
-        this.chipClassOrDefault + '-' + (c.class || 'default')
+      return [
+        "tree-view-internal-chip",
+        this.chipClassOrDefault,
+        this.chipClassOrDefault + "-" + (c.class || "default")
       ];
     },
     filterMatches(c) {
@@ -99,40 +135,72 @@ export default {
       }
       return this.filter;
     },
+    isCurrentSelected() {
+      return this.selected === this.item;
+    },
   },
   computed: {
     computedClass() {
       return (this.item == this.selected) ? 'selected' : ''
     },
     chipClassOrDefault() {
-      return this.chipClass || 'tree-view-chip';
+      return this.chipClass || "tree-view-chip";
     },
     applyingFlattened() {
-      return this.flattened && this.item.flattened || this.forceFlattened;
+      return (this.flattened && this.item.flattened) || this.forceFlattened;
     },
     children() {
       return this.applyingFlattened ? this.item.flattened : this.item.children;
     },
   }
-}
-
+};
 </script>
 <style>
+.data-card > .tree-view {
+  border: none;
+}
+
+.tree-view {
+  display: block;
+  border-left: 1px solid rgb(238, 238, 238);
+}
+
+.tree-view.tree-view {
+  margin: 0;
+  padding: 1px 8px;
+}
+
+.tree-view .node {
+  display: inline-block;
+  padding: 2px;
+  cursor: pointer;
+}
+
+.tree-view .node:hover:not(.selected) {
+  background: #f1f1f1;
+}
+
 .children {
-  margin-left: 24px;
+  margin-left: 8px;
+  margin-top: 0px;
 }
 
 .kind {
   color: #333;
+  font-weight: bold;
 }
 
 .selected {
-  background-color: #3f51b5;
+  background-color: #365179;
   color: white;
 }
 
+.childSelected {
+  border-left: 1px solid rgb(233, 22, 22)
+}
+
 .selected .kind {
-  color: #ccc;
+  color: #e9e9e9;
 }
 
 .tree-view-internal-chip {

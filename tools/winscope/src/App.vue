@@ -42,7 +42,10 @@
             </md-toolbar>
             <md-list>
               <md-list-item v-for="(file, idx) in files" :key="file.filename">
-                <md-icon>{{file.type.icon}}</md-icon>
+                <md-icon>
+                  {{file.type.icon}}
+                  <md-tooltip md-direction="right">{{file.type.name}}</md-tooltip>
+                </md-icon>
                 <timeline
                   :items="file.timeline"
                   :selected-index="file.selectedIndex"
