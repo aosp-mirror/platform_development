@@ -67,7 +67,7 @@
    "linker_set_key" : "_ZTIP6Struct",
    "name" : "Struct *",
    "referenced_type" : "_ZTI6Struct#ODR:/def2.h.sdump",
-   "self_type" : "_ZTIP6Struct#ODR:",
+   "self_type" : "_ZTIP6Struct#ODR:/def2.h.sdump",
    "size" : 8,
    "source_file" : "/development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def2.h"
   },
@@ -82,15 +82,6 @@
   },
   {
    "alignment" : 8,
-   "linker_set_key" : "_ZTIPK6Opaque",
-   "name" : "const Opaque *",
-   "referenced_type" : "_ZTIK6Opaque#ODR:",
-   "self_type" : "_ZTIPK6Opaque#ODR:",
-   "size" : 8,
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def2.h"
-  },
-  {
-   "alignment" : 8,
    "linker_set_key" : "_ZTIPK6Struct",
    "name" : "const Struct *",
    "referenced_type" : "_ZTIK6Struct",
@@ -102,8 +93,8 @@
    "alignment" : 8,
    "linker_set_key" : "_ZTIPK6Struct",
    "name" : "const Struct *",
-   "referenced_type" : "_ZTIK6Struct#ODR:",
-   "self_type" : "_ZTIPK6Struct#ODR:",
+   "referenced_type" : "_ZTIK6Struct#ODR:/def2.h.sdump",
+   "self_type" : "_ZTIPK6Struct#ODR:/def2.h.sdump",
    "size" : 8,
    "source_file" : "/development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def2.h"
   }
@@ -124,7 +115,7 @@
    "linker_set_key" : "_ZTIK6Struct",
    "name" : "const Struct",
    "referenced_type" : "_ZTI6Struct#ODR:/def2.h.sdump",
-   "self_type" : "_ZTIK6Struct#ODR:",
+   "self_type" : "_ZTIK6Struct#ODR:/def2.h.sdump",
    "size" : 8,
    "source_file" : "/development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def2.h"
   },
@@ -163,7 +154,7 @@
    [
     {
      "field_name" : "member2",
-     "referenced_type" : "_ZTIP6Struct#ODR:"
+     "referenced_type" : "_ZTIP6Struct#ODR:/def2.h.sdump"
     }
    ],
    "linker_set_key" : "_ZTI6Struct",

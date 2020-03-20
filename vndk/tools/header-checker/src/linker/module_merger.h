@@ -144,9 +144,6 @@ private:
       const TypeIR *addend_type, const ModuleIR &addend,
       AbiElementMap<MergeStatus> *merged_types_cache);
 
-  std::string AllocateNewTypeId(const std::string &addend_type_id,
-                                const ModuleIR &addend_module);
-
 private:
   std::unique_ptr<ModuleIR> module_;
 

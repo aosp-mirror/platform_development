@@ -349,6 +349,43 @@ MergeStatus ModuleMerger::MergeReferencingTypeInternalAndUpdateParent(
 }
 
 
+static bool IsReferencingType(LinkableMessageKind kind) {
+  switch (kind) {
+    case PointerTypeKind:
+    case QualifiedTypeKind:
+    case ArrayTypeKind:
+    case LvalueReferenceTypeKind:
+    case RvalueReferenceTypeKind:
+      return true;
+    case RecordTypeKind:
+    case EnumTypeKind:
+    case BuiltinTypeKind:
+    case FunctionTypeKind:
+    case FunctionKind:
+    case GlobalVarKind:
+      return false;
+  }
+}
+
+
+// Trace the referenced type until reaching a RecordTypeIR, EnumTypeIR,
+// FunctionTypeIR, or BuiltinTypeIR. Return nullptr if the referenced type is
+// undefined or built-in.
+static const TypeIR *DereferenceType(const ModuleIR &module,
+                                     const TypeIR *type_ir) {
+  auto &type_graph = module.GetTypeGraph();
+  while (IsReferencingType(type_ir->GetKind())) {
+    auto it = type_graph.find(type_ir->GetReferencedType());
+    // The referenced type is undefined in the module.
+    if (it == type_graph.end()) {
+      return nullptr;
+    }
+    type_ir = it->second;
+  }
+  return type_ir;
+}
+
+
 // This method creates a new node for the addend node in the graph if MergeType
 // on the reference returned a MergeStatus with was_newly_added_ = true.
 MergeStatus ModuleMerger::MergeReferencingType(
@@ -360,7 +397,15 @@ MergeStatus ModuleMerger::MergeReferencingType(
   std::string added_type_id = addend_node->GetSelfType();
   auto type_id_it = module_->type_graph_.find(added_type_id);
   if (type_id_it != module_->type_graph_.end()) {
-    added_type_id = AllocateNewTypeId(added_type_id, addend);
+    const TypeIR *final_referenced_type = DereferenceType(addend, addend_node);
+    if (final_referenced_type != nullptr) {
+      std::string compilation_unit_path =
+          addend.GetCompilationUnitPath(final_referenced_type);
+      // The path is empty for built-in types.
+      if (compilation_unit_path != "") {
+        added_type_id = added_type_id + "#ODR:" + compilation_unit_path;
+      }
+    }
   }
 
   // Add the added record type to the local_to_global_type_id_map.
@@ -504,12 +549,6 @@ void ModuleMerger::MergeFunction(
   MergeFunctionDeps(&function_ir, addend, local_to_global_type_id_map);
   // Add it to the parent's function map.
   module_->functions_.emplace(function_linkage_name, std::move(function_ir));
-}
-
-
-std::string ModuleMerger::AllocateNewTypeId(const std::string &addend_type_id,
-                                              const ModuleIR &addend_module) {
-  return addend_type_id + "#ODR:" + addend_module.GetCompilationUnitPath();
 }
 
 
