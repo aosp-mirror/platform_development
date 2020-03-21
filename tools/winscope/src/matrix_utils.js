@@ -172,4 +172,32 @@ function is_type_flag_clear(transform, bits) {
   return (type & bits) === 0;
 }
 
-export {format_transform_type, fill_transform_data, is_simple_transform};
+function multiply_vec2(matrix, x, y) {
+  // |dsdx dsdy  tx|     | x |
+  // |dtdx dtdy  ty|  x  | y |
+  // |0    0     1 |     | 1 |
+  return { 
+    x: matrix.dsdx * x + matrix.dsdy * y + matrix.tx,  
+    y: matrix.dtdx * x + matrix.dtdy * y + matrix.ty
+  };
+}
+
+function multiply_rect(matrix, rect) {
+  //          |dsdx dsdy  tx|         | left, top         |
+  // matrix = |dtdx dtdy  ty|  rect = |                   |
+  //          |0    0     1 |         |     right, bottom |
+
+  var left_top = multiply_vec2(matrix, rect.left, rect.top);
+  var right_top = multiply_vec2(matrix, rect.right, rect.top);
+  var left_bottom = multiply_vec2(matrix, rect.left, rect.bottom);
+  var right_bottom = multiply_vec2(matrix, rect.right, rect.bottom);
+
+  var outrect = {};
+  outrect.left   = Math.min(left_top.x, right_top.x, left_bottom.x, right_bottom.x);
+  outrect.top    = Math.min(left_top.y, right_top.y, left_bottom.y, right_bottom.y);
+  outrect.right  = Math.max(left_top.x, right_top.x, left_bottom.x, right_bottom.x);
+  outrect.bottom = Math.max(left_top.y, right_top.y, left_bottom.y, right_bottom.y);
+  return outrect;
+}
+
+export {format_transform_type, fill_transform_data, is_simple_transform, multiply_rect};
