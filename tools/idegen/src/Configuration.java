@@ -48,6 +48,9 @@ public class Configuration {
     /** File name used for excluded path files. */
     private static final String EXCLUDED_PATHS = "excluded-paths";
 
+    /** The vendor directory. */
+    private static final String VENDOR_PATH = "./vendor/";
+
     /**
      * Constructs a Configuration by traversing the directory tree, looking
      * for .java and .jar files and identifying source roots.
@@ -91,12 +94,8 @@ public class Configuration {
         File globalExcludes = new File(toolDirectory, EXCLUDED_PATHS);
         parseFile(globalExcludes, patterns);
 
-        // Look for Google-specific excludes.
-        // TODO: Traverse all vendor-specific directories.
-        File googleExcludes = new File("./vendor/google/" + EXCLUDED_PATHS);
-        if (googleExcludes.exists()) {
-            parseFile(googleExcludes, patterns);
-        }
+        // Traverse all vendor-specific directories
+        readVendorExcludes(patterns);
 
         // Look for user-specific excluded-paths file in current directory.
         File localExcludes = new File(EXCLUDED_PATHS);
@@ -105,6 +104,23 @@ public class Configuration {
         }
 
         return new Excludes(patterns);
+    }
+
+    /**
+     * Reads vendor excluded path files.
+     * @see #readExcludes()
+     */
+    private static void readVendorExcludes(List<Pattern> out) throws IOException {
+        File vendorDir = new File(VENDOR_PATH);
+        File[] vendorList;
+        if (!vendorDir.exists() || (vendorList = vendorDir.listFiles()) == null) return;
+        for (File vendor : vendorList) {
+            File vendorExcludes = new File(vendor, EXCLUDED_PATHS);
+            if (vendorExcludes.exists()) {
+                Log.info("Read vendor excludes: " + vendorExcludes.getPath());
+                parseFile(vendorExcludes, out);
+            }
+        }
     }
 
     /**
