@@ -193,7 +193,7 @@ static void DeDuplicateAbiElementsThread(
       break;
     }
     std::size_t end = std::min(i + kSourcesPerBatchThread, num_sources);
-    for (auto it = begin_it; it != begin_it + end; it++) {
+    for (auto it = begin_it + i; it != begin_it + end; it++) {
       std::unique_ptr<repr::IRReader> reader =
           repr::IRReader::CreateIRReader(input_format, exported_headers);
       assert(reader != nullptr);
@@ -201,7 +201,6 @@ static void DeDuplicateAbiElementsThread(
         llvm::errs() << "ReadDump failed\n";
         ::exit(1);
       }
-      // This merge is needed since the iterators might not be contigous.
       local_reader->MergeGraphs(*reader);
     }
   }
