@@ -128,19 +128,6 @@ cc_binary_host {
     ],
 }
 
-cc_binary_host {
-    name: "merge-abi-diff",
-
-    defaults: [
-        "header-checker-defaults",
-        "header-abi-linker-defaults",
-    ],
-
-    srcs: [
-        "src/diff_merge/merge_abi_diff.cpp",
-    ],
-}
-
 cc_library_host_static {
     name: "libheader-checker",
 
