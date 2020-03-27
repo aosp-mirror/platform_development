@@ -178,8 +178,8 @@ def make_libraries(product, variant, vndk_version, targets, libs):
     for name in libs:
         if not (name in lsdump_paths and lsdump_paths[name]):
             raise KeyError('Cannot find lsdump for %s.' % name)
-        make_target_paths.extend(path for tag, path in
-                                 lsdump_paths[name].values())
+        for tag_path_dict in lsdump_paths[name].values():
+            make_target_paths.extend(tag_path_dict.values())
     make_targets(product, variant, make_target_paths)
 
 
@@ -210,18 +210,18 @@ def _get_module_variant_dir_name(tag, vndk_version, arch_cpu_str):
 def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, targets):
     """Read lsdump paths from lsdump_paths.txt for each libname and variant.
 
-    This function returns a dictionary, {lib_name: {arch_cpu: (tag, path)}}.
+    This function returns a dictionary, {lib_name: {arch_cpu: {tag: path}}}.
     For example,
     {
       "libc": {
-        "x86_x86_64": (
-          "NDK",
-          "path/to/libc.so.lsdump"
-        )
+        "x86_x86_64": {
+          "NDK": "path/to/libc.so.lsdump"
+        }
       }
     }
     """
-    lsdump_paths = collections.defaultdict(dict)
+    lsdump_paths = collections.defaultdict(
+        lambda: collections.defaultdict(dict))
     suffixes = collections.defaultdict(dict)
 
     with open(lsdump_paths_file_path, 'r') as lsdump_paths_file:
@@ -252,7 +252,7 @@ def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, targets):
                     continue
                 old_suffix = suffixes[libname].get(arch_cpu)
                 if not old_suffix or new_suffix > old_suffix:
-                    lsdump_paths[libname][arch_cpu] = (tag, path)
+                    lsdump_paths[libname][arch_cpu][tag] = path
                     suffixes[libname][arch_cpu] = new_suffix
     return lsdump_paths
 
@@ -287,9 +287,10 @@ def find_lib_lsdumps(lsdump_paths, libs, target):
                     arch_cpu in lsdump_paths[lib_name]):
                 raise KeyError('Cannot find lsdump for %s, %s.' %
                                (lib_name, arch_cpu))
-            result.append(lsdump_paths[lib_name][arch_cpu])
+            result.extend(lsdump_paths[lib_name][arch_cpu].items())
     else:
-        result.extend(paths[arch_cpu] for paths in lsdump_paths.values())
+        for arch_tag_path_dict in lsdump_paths.values():
+            result.extend(arch_tag_path_dict[arch_cpu].items())
     return [(tag, os.path.join(AOSP_DIR, path)) for tag, path in result]
 
 
