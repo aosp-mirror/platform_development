@@ -40,7 +40,7 @@ import android.util.Log;
 import android.util.Size;
 import android.view.autofill.AutofillId;
 import android.view.autofill.AutofillValue;
-import android.view.inline.InlinePresentationSpec;
+import android.widget.inline.InlinePresentationSpec;
 import android.view.inputmethod.InlineSuggestionsRequest;
 import android.widget.RemoteViews;
 import android.widget.Toast;
@@ -112,7 +112,7 @@ public class InlineFillService extends AutofillService {
             if (inlineRequest != null) {
                 final Slice authSlice = new InlinePresentationBuilder("Tap to auth respones")
                         .build();
-                final List<InlinePresentationSpec> specs = inlineRequest.getPresentationSpecs();
+                final List<InlinePresentationSpec> specs = inlineRequest.getInlinePresentationSpecs();
                 final int specsSize = specs.size();
                 final InlinePresentationSpec currentSpec = specsSize > 0 ? specs.get(0) : null;
                 inlinePresentation = new InlinePresentation(authSlice, currentSpec,
@@ -157,7 +157,7 @@ public class InlineFillService extends AutofillService {
                         final Slice authSlice = new InlinePresentationBuilder(
                                 "Tap to auth " + value).build();
                         final List<InlinePresentationSpec> specs
-                                = inlineRequest.getPresentationSpecs();
+                                = inlineRequest.getInlinePresentationSpecs();
                         final int specsSize = specs.size();
                         final InlinePresentationSpec currentSpec =
                                 specsSize > 0 ? specs.get(0) : null;
@@ -176,15 +176,15 @@ public class InlineFillService extends AutofillService {
             }
         }
 
-        if (inlineRequest != null) {
-            // Reuse the first spec's height for the inline action size, as there isn't dedicated
-            // value from the request for this.
-            final int height = inlineRequest.getPresentationSpecs().get(0).getMinSize().getHeight();
-            final Size actionIconSize = new Size(height, height);
-            response.addDataset(
-                    newInlineActionDataset(context, actionIconSize, R.drawable.ic_settings,
-                            fields));
-        }
+//        if (inlineRequest != null) {
+//            // Reuse the first spec's height for the inline action size, as there isn't dedicated
+//            // value from the request for this.
+//            final int height = inlineRequest.getPresentationSpecs().get(0).getMinSize().getHeight();
+//            final Size actionIconSize = new Size(height, height);
+//            response.addDataset(
+//                    newInlineActionDataset(context, actionIconSize, R.drawable.ic_settings,
+//                            fields));
+//        }
 
         // 2.Add save info
         Collection<AutofillId> ids = fields.values();
@@ -206,6 +206,7 @@ public class InlineFillService extends AutofillService {
                 PendingIntent.FLAG_UPDATE_CURRENT);
         final Slice suggestionSlice = new InlinePresentationBuilder()
                 .setStartIcon(Icon.createWithResource(context, drawable))
+                .setAttribution(pendingIntent)
                 .build();
         final InlinePresentationSpec currentSpec = new InlinePresentationSpec.Builder(size,
                 size).build();
@@ -239,9 +240,14 @@ public class InlineFillService extends AutofillService {
             if (inlineRequest != null) {
                 Log.d(TAG, "Found InlineSuggestionsRequest in FillRequest: " + inlineRequest);
 
-                final Slice suggestionSlice = new InlinePresentationBuilder(value).build();
+                Intent intent = new Intent().setComponent(
+                        new ComponentName(context.getPackageName(), SettingsActivity.class.getName()));
+                PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT);
+                final Slice suggestionSlice = new InlinePresentationBuilder(value)
+                        .setAttribution(pendingIntent).build();
 
-                final List<InlinePresentationSpec> specs = inlineRequest.getPresentationSpecs();
+                final List<InlinePresentationSpec> specs = inlineRequest.getInlinePresentationSpecs();
                 final int specsSize = specs.size();
                 final InlinePresentationSpec currentSpec = i - 1 < specsSize
                         ? specs.get(i - 1)
