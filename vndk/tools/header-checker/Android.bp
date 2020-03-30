@@ -110,6 +110,7 @@ cc_binary_host {
 
     srcs: [
         "src/linker/header_abi_linker.cpp",
+        "src/linker/module_merger.cpp",
     ],
 }
 
@@ -125,19 +126,6 @@ cc_binary_host {
         "src/diff/abi_diff.cpp",
         "src/diff/abi_diff_wrappers.cpp",
         "src/diff/header_abi_diff.cpp",
-    ],
-}
-
-cc_binary_host {
-    name: "merge-abi-diff",
-
-    defaults: [
-        "header-checker-defaults",
-        "header-abi-linker-defaults",
-    ],
-
-    srcs: [
-        "src/diff_merge/merge_abi_diff.cpp",
     ],
 }
 

@@ -9,7 +9,6 @@ import_path = os.path.abspath(os.path.join(import_path, 'utils'))
 sys.path.insert(1, import_path)
 
 from utils import run_header_abi_dumper
-from utils import run_header_abi_dumper_on_file
 from utils import run_header_abi_linker
 from utils import SOURCE_ABI_DUMP_EXT
 
@@ -125,13 +124,15 @@ class LsdumpModule(Module):
                 output_path = os.path.join(tmp,
                                            os.path.basename(src) + '.sdump')
                 dumps_to_link.append(output_path)
-                run_header_abi_dumper_on_file(
-                    src, output_path, self.export_include_dirs,
-                    self.cflags + self.arch_cflags,
-                    self.dumper_flags)
+                content = run_header_abi_dumper(
+                    src, self.cflags + self.arch_cflags,
+                    self.export_include_dirs, self.dumper_flags)
+                with open(output_path, 'w') as dump_file:
+                    dump_file.write(content)
             return run_header_abi_linker(output_lsdump, dumps_to_link,
                                          self.version_script, self.api,
-                                         self.arch, self.linker_flags)
+                                         self.arch, self.linker_flags,
+                                         input_dir=tmp)
 
     def mutate_for_arch(self, target_arch):
         return LsdumpModule(self.name, self.srcs, self.version_script,
@@ -641,6 +642,17 @@ TEST_MODULES = [
         version_script='',
         export_include_dirs=['integration/cpp/anonymous_enum/include'],
         linker_flags=['-output-format', 'Json'],
+    ),
+    LsdumpModule(
+        name='libmerge_multi_definitions',
+        arch='arm64',
+        srcs=[
+            'integration/merge_multi_definitions/include/def1.h',
+            'integration/merge_multi_definitions/include/def2.h',
+        ],
+        version_script='integration/merge_multi_definitions/map.txt',
+        export_include_dirs=['integration/merge_multi_definitions/include'],
+        linker_flags=['-output-format', 'Json', '-sources-per-thread', '1'],
     ),
 ]
 
