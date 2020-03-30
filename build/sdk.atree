@@ -62,8 +62,8 @@ external/chromium-trace/UPSTREAM_REVISION                                 platfo
 
 # Compatibility: moved to platform but also leave them in platform-tools for a little
 # longer until all active Gradle plugins have support for looking in both places
-${OUT_DIR}/target/common/obj/PACKAGING/api-stubs-docs_generated-api-versions.xml    platform-tools/api/api-versions.xml
-${OUT_DIR}/target/common/obj/PACKAGING/api-stubs-docs_annotations.zip   platform-tools/api/annotations.zip
+${OUT_DIR}/target/common/obj/PACKAGING/framework-doc-stubs_generated-api-versions.xml    platform-tools/api/api-versions.xml
+${OUT_DIR}/target/common/obj/PACKAGING/framework-doc-stubs_annotations.zip   platform-tools/api/annotations.zip
 
 ##############################################################################
 # Build Tools Component
@@ -205,11 +205,11 @@ development/tools/templates/ic_launcher_hdpi.png            platforms/${PLATFORM
 development/tools/templates/ic_launcher_xhdpi.png           platforms/${PLATFORM_NAME}/templates/ic_launcher_xhdpi.png
 
 # API database for tools such as lint
-${OUT_DIR}/target/common/obj/PACKAGING/api-stubs-docs_generated-api-versions.xml  platforms/${PLATFORM_NAME}/data/api-versions.xml
+${OUT_DIR}/target/common/obj/PACKAGING/framework-doc-stubs_generated-api-versions.xml  platforms/${PLATFORM_NAME}/data/api-versions.xml
 
 # API annotations database for lint
 prebuilts/sdk/sdk-annotations/annotations.zip platforms/${PLATFORM_NAME}/data/annotations.zip
-${OUT_DIR}/target/common/obj/PACKAGING/api-stubs-docs_annotations.zip platforms/${PLATFORM_NAME}/data/annotations.zip
+${OUT_DIR}/target/common/obj/PACKAGING/framework-doc-stubs_annotations.zip platforms/${PLATFORM_NAME}/data/annotations.zip
 
 # Eclipse Editors support
 framework/layoutlib-legacy.jar            platforms/${PLATFORM_NAME}/data/layoutlib.jar
