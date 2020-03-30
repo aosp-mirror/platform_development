@@ -109,14 +109,14 @@ def run_header_abi_dumper(input_path, cflags=tuple(),
     output."""
     with tempfile.TemporaryDirectory() as tmp:
         output_path = os.path.join(tmp, os.path.basename(input_path)) + '.dump'
-        run_header_abi_dumper_on_file(input_path, output_path,
-                                      export_include_dirs, cflags, flags)
+        _run_header_abi_dumper_on_file(input_path, output_path,
+                                       export_include_dirs, cflags, flags)
         return read_output_content(output_path, AOSP_DIR)
 
 
-def run_header_abi_dumper_on_file(input_path, output_path,
-                                  export_include_dirs=tuple(), cflags=tuple(),
-                                  flags=tuple()):
+def _run_header_abi_dumper_on_file(input_path, output_path,
+                                   export_include_dirs=tuple(), cflags=tuple(),
+                                   flags=tuple()):
     """Run header-abi-dumper to dump ABI from `input_path` and the output is
     written to `output_path`."""
     input_ext = os.path.splitext(input_path)[1]
@@ -144,7 +144,7 @@ def run_header_abi_dumper_on_file(input_path, output_path,
 
 
 def run_header_abi_linker(output_path, inputs, version_script, api, arch,
-                          flags=tuple()):
+                          flags=tuple(), input_dir=AOSP_DIR):
     """Link inputs, taking version_script into account"""
     cmd = ['header-abi-linker', '-o', output_path, '-v', version_script,
            '-api', api, '-arch', arch]
@@ -155,7 +155,7 @@ def run_header_abi_linker(output_path, inputs, version_script, api, arch,
         cmd += ['-output-format', DEFAULT_FORMAT]
     cmd += inputs
     subprocess.check_call(cmd)
-    return read_output_content(output_path, AOSP_DIR)
+    return read_output_content(output_path, input_dir)
 
 
 def make_targets(product, variant, targets):

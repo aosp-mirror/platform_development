@@ -109,7 +109,10 @@ ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/core-lambda-s
 ALL_SDK_FILES += $(HOST_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/shrinkedAndroid_intermediates/shrinkedAndroid.jar
 
 # ======= Lint API XML ===========
-ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/api-stubs-docs_generated-api-versions.xml
+ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework-doc-stubs_generated-api-versions.xml
+
+# ======= Lint Annotations zip ===========
+ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework-doc-stubs_annotations.zip
 
 # ============ SDK AIDL ============
 $(eval $(call copy-one-file,$(FRAMEWORK_AIDL),$(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework.aidl))
@@ -134,3 +137,19 @@ android_test_stubs: $(full_target)
 # Build and store the android_test.jar.
 $(call dist-for-goals,sdk win_sdk,$(full_target):android_test.jar)
 $(call dist-for-goals,sdk win_sdk,$(full_target):apistubs/android/test/android.jar)
+
+# ============ Module Lib SDK ============
+full_target := $(call intermediates-dir-for,JAVA_LIBRARIES,android_module_lib_stubs_current,,COMMON)/classes.jar
+
+.PHONY: android_module_lib_stubs
+android_module_lib_stubs: $(full_target)
+
+$(call dist-for-goals,sdk win_sdk,$(full_target):apistubs/android/module-lib/android.jar)
+
+# ============ System server SDK ============
+full_target := $(call intermediates-dir-for,JAVA_LIBRARIES,android_system_server_stubs_current,,COMMON)/classes.jar
+
+.PHONY: android_system_server_stubs
+android_system_server_stubs: $(full_target)
+
+$(call dist-for-goals,sdk win_sdk,$(full_target):apistubs/android/system-server/android.jar)
