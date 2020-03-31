@@ -26,7 +26,7 @@ import android.util.Size;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inline.InlinePresentationSpec;
+import android.widget.inline.InlinePresentationSpec;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InlineSuggestion;
 import android.view.inputmethod.InlineSuggestionsRequest;
@@ -164,7 +164,7 @@ public class AutofillImeService extends InputMethodService {
         for (int i=0; i<totalSuggestionsCount; i++) {
             final int index = i;
             InlineSuggestion inlineSuggestion = inlineSuggestions.get(index);
-            Size size = inlineSuggestion.getInfo().getPresentationSpec().getMaxSize();
+            Size size = inlineSuggestion.getInfo().getInlinePresentationSpec().getMaxSize();
             inlineSuggestion.inflate(this, size,
                     AsyncTask.THREAD_POOL_EXECUTOR,
                     suggestionView -> {
