@@ -30,10 +30,6 @@ import jsonProtoDefs from 'frameworks/base/core/proto/android/server/windowmanag
 import protobuf from 'protobufjs'
 
 var protoDefs = protobuf.Root.fromJSON(jsonProtoDefs);
-var TraceMessage = protoDefs.lookupType(
-  "com.android.server.wm.WindowManagerTraceFileProto");
-var ServiceMessage = protoDefs.lookupType(
-  "com.android.server.wm.WindowManagerServiceDumpProto");
 
 export default {
   name: 'tree-view',
@@ -84,14 +80,19 @@ export default {
       ];
     },
     filterMatches(c) {
+      // If a filter is set, consider the item matches if the current item or any of its
+      // children matches.
       if (this.filter) {
-        return this.filter(c, this.applyingFlattened);
+        var thisMatches = this.filter(c);
+        const childMatches = (child) => this.filterMatches(child);
+        return thisMatches || (!this.applyingFlattened && 
+            c.children && c.children.some(childMatches));
       }
       return true;
     },
     childFilter(c) {
-      if (this.filter && this.filter.includeChildren) {
-        if (this.filterMatches(c)) {
+      if (this.filter) {
+        if (this.filter(c)) {
           // Filter matched c, don't apply further filtering on c's children.
           return undefined;
         }
