@@ -138,6 +138,9 @@ prebuilts/sdk/tools/windows/bin/x86_64-linux-android-ld.exe      strip build-too
 rm build-tools/${PLATFORM_NAME}/mipsel-linux-android-ld
 prebuilts/sdk/tools/windows/bin/mipsel-linux-android-ld.exe    strip build-tools/${PLATFORM_NAME}/mipsel-linux-android-ld.exe
 
+rm build-tools/${PLATFORM_NAME}/lld
+prebuilts/sdk/tools/windows/bin/lld.exe   strip build-tools/${PLATFORM_NAME}/lld.exe
+
 dalvik/dx/etc/mainDexClasses.bat             build-tools/${PLATFORM_NAME}/mainDexClasses.bat
 
 
