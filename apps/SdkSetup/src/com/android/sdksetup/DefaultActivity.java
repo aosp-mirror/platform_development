@@ -67,6 +67,10 @@ public class DefaultActivity extends Activity {
             Settings.Secure.putInt(getContentResolver(), Settings.Secure.INSTALL_NON_MARKET_APPS, 1);
 
             Settings.Global.putInt(getContentResolver(), Settings.Global.ADB_ENABLED, 1);
+
+            // Disable offload wifi tethering
+            Settings.Global.putInt(getContentResolver(), Settings.Global.TETHER_OFFLOAD_DISABLED, 1);
+
         }
 
         // remove this activity from the package manager.
