@@ -233,7 +233,7 @@ development/sdk/sdk_files_NOTICE.txt      platforms/${PLATFORM_NAME}/skins/NOTIC
 # System images + Kernel
 system-qemu.img                                 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/system.img
 vendor-qemu.img                                 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/vendor.img
-ramdisk.img                                system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/ramdisk.img
+ramdisk-qemu.img                                system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/ramdisk.img
 device/generic/goldfish/data/etc/userdata.img    system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/userdata.img
 data/misc                                        system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/data/misc
 system/build.prop                          system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/build.prop
