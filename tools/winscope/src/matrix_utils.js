@@ -200,4 +200,11 @@ function multiply_rect(matrix, rect) {
   return outrect;
 }
 
-export {format_transform_type, fill_transform_data, is_simple_transform, multiply_rect};
+// Returns true if the applying the transform on an an axis aligned rectangle 
+// results in another axis aligned rectangle.
+function is_simple_rotation(transform) {
+  return !is_type_flag_set(transform, ROT_INVALID_VAL);
+}
+
+export {format_transform_type, fill_transform_data, is_simple_transform,
+        multiply_rect, is_simple_rotation};
