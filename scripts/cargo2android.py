@@ -182,7 +182,7 @@ class Crate(object):
     # Parameters collected from rustc command line.
     self.crate_name = ''  # follows --crate-name
     self.main_src = ''  # follows crate_name parameter, shortened
-    self.crate_type = ''  # bin|lib|test (see --test flag)
+    self.crate_types = list()  # follows --crate-type
     self.cfgs = list()  # follows --cfg, without feature= prefix
     self.features = list()  # follows --cfg, name in 'feature="..."'
     self.codegens = list()  # follows -C, some ignored
@@ -216,8 +216,10 @@ class Crate(object):
   def merge_host_device(self, other):
     """Returns true if attributes are the same except host/device support."""
     return (self.crate_name == other.crate_name and
-            self.crate_type == other.crate_type and
-            self.main_src == other.main_src and self.stem == other.stem and
+            self.crate_types == other.crate_types and
+            self.main_src == other.main_src and
+            # before merge, each test module has an unique module name and stem
+            (self.stem == other.stem or self.crate_types == ['test']) and
             self.root_pkg == other.root_pkg and not self.skip_crate() and
             self.same_flags(other))
 
@@ -226,8 +228,9 @@ class Crate(object):
     # Before merger, each test has its own crate_name.
     # A merged test uses its source file base name as output file name,
     # so a test is mergeable only if its base name equals to its crate name.
-    return (self.crate_type == other.crate_type and
-            self.crate_type == 'test' and self.root_pkg == other.root_pkg and
+    return (self.crate_types == other.crate_types and
+            self.crate_types == ['test'] and
+            self.root_pkg == other.root_pkg and
             not self.skip_crate() and
             other.crate_name == test_base_name(other.main_src) and
             (len(self.srcs) > 1 or
@@ -308,37 +311,16 @@ class Crate(object):
     while i < len(args):
       arg = args[i]
       if arg == '--crate-name':
-        self.crate_name = args[i + 1]
-        i += 2
-        # shorten imported crate main source path
-        self.main_src = re.sub('^/[^ ]*/registry/src/', '.../', args[i])
-        self.main_src = re.sub('^.../github.com-[0-9a-f]*/', '.../',
-                               self.main_src)
-        self.find_cargo_dir()
-        if self.cargo_dir and not self.runner.args.onefile:
-          # Write to Android.bp in the subdirectory with Cargo.toml.
-          self.outf_name = self.cargo_dir + '/Android.bp'
-          self.main_src = self.main_src[len(self.cargo_dir) + 1:]
+        i += 1
+        self.crate_name = args[i]
       elif arg == '--crate-type':
         i += 1
-        if self.crate_type:
-          self.errors += '  ERROR: multiple --crate-type '
-          self.errors += self.crate_type + ' ' + args[i] + '\n'
-          # TODO(chh): handle multiple types, e.g. lexical-core-0.4.6 has
-          #   crate-type = ["lib", "staticlib", "cdylib"]
-          # output: debug/liblexical_core.{a,so,rlib}
-          # cargo calls rustc with multiple --crate-type flags.
-          # rustc can accept:
-          #   --crate-type [bin|lib|rlib|dylib|cdylib|staticlib|proc-macro]
-          #   Comma separated list of types of crates for the compiler to emit
-        self.crate_type = args[i]
+        # cargo calls rustc with multiple --crate-type flags.
+        # rustc can accept:
+        #   --crate-type [bin|lib|rlib|dylib|cdylib|staticlib|proc-macro]
+        self.crate_types.append(args[i])
       elif arg == '--test':
-        # only --test or --crate-type should appear once
-        if self.crate_type:
-          self.errors += ('  ERROR: found both --test and --crate-type ' +
-                          self.crate_type + '\n')
-        else:
-          self.crate_type = 'test'
+        self.crate_types.append('test')
       elif arg == '--target':
         i += 1
         self.target = args[i]
@@ -390,6 +372,17 @@ class Crate(object):
         self.emit_list = arg.replace('--emit=', '')
       elif arg.startswith('--edition='):
         self.edition = arg.replace('--edition=', '')
+      elif not arg.startswith('-'):
+        # shorten imported crate main source paths like $HOME/.cargo/
+        # registry/src/github.com-1ecc6299db9ec823/memchr-2.3.3/src/lib.rs
+        self.main_src = re.sub(r'^/[^ ]*/registry/src/', '.../', args[i])
+        self.main_src = re.sub(r'^\.\.\./github.com-[0-9a-f]*/', '.../',
+                               self.main_src)
+        self.find_cargo_dir()
+        if self.cargo_dir and not self.runner.args.onefile:
+          # Write to Android.bp in the subdirectory with Cargo.toml.
+          self.outf_name = self.cargo_dir + '/Android.bp'
+          self.main_src = self.main_src[len(self.cargo_dir) + 1:]
       else:
         self.errors += 'ERROR: unknown ' + arg + '\n'
       i += 1
@@ -399,12 +392,17 @@ class Crate(object):
       self.errors += 'ERROR: missing main source file\n'
     else:
       self.srcs.append(self.main_src)
-    if not self.crate_type:
+    if not self.crate_types:
       # Treat "--cfg test" as "--test"
       if 'test' in self.cfgs:
-        self.crate_type = 'test'
+        self.crate_types.append('test')
       else:
-        self.errors += 'ERROR: missing --crate-type\n'
+        self.errors += 'ERROR: missing --crate-type or --test\n'
+    elif len(self.crate_types) > 1:
+      if 'test' in self.crate_types:
+        self.errors += 'ERROR: cannot handle both --crate-type and --test\n'
+      if 'lib' in self.crate_types and 'rlib' in self.crate_types:
+        self.errors += 'ERROR: cannot generate both lib and rlib crate types\n'
     if not self.root_pkg:
       self.root_pkg = self.crate_name
     if self.target:
@@ -417,6 +415,7 @@ class Crate(object):
     self.core_externs = sorted(set(self.core_externs))
     self.static_libs = sorted(set(self.static_libs))
     self.shared_libs = sorted(set(self.shared_libs))
+    self.crate_types = sorted(set(self.crate_types))
     self.decide_module_type()
     self.module_name = altered_name(self.stem)
     return self
@@ -478,7 +477,7 @@ class Crate(object):
     self.dump_line()
     dump('module_name', self.module_name)
     dump('crate_name', self.crate_name)
-    dump('crate_type', self.crate_type)
+    dump('crate_types', self.crate_types)
     dump('main_src', self.main_src)
     dump('has_warning', self.has_warning)
     dump('for_host', self.host_supported)
@@ -497,9 +496,19 @@ class Crate(object):
     dump_list('//  -l (dylib) = %s', self.shared_libs)
 
   def dump_android_module(self):
+    # Dump one Android module per crate_type.
+    if len(self.crate_types) == 1:
+      # do not change self.stem or self.module_name
+      self.dump_one_android_module(self.crate_types[0])
+      return
+    for crate_type in self.crate_types:
+      self.decide_one_module_type(crate_type)
+      self.dump_one_android_module(crate_type)
+
+  def dump_one_android_module(self, crate_type):
     """Dump one Android module definition."""
     if not self.module_type:
-      self.write('\nERROR: unknown crate_type ' + self.crate_type)
+      self.write('\nERROR: unknown crate_type ' + crate_type)
       return
     self.write('\n' + self.module_type + ' {')
     self.dump_android_core_properties()
@@ -532,28 +541,64 @@ class Crate(object):
     return self.root_pkg + '_tests_' + suffix
 
   def decide_module_type(self):
+    # Use the first crate type for the default/first module.
+    crate_type = self.crate_types[0] if self.crate_types else ''
+    self.decide_one_module_type(crate_type)
+
+  def decide_one_module_type(self, crate_type):
     """Decide which Android module type to use."""
     host = '' if self.device_supported else '_host'
-    if self.crate_type == 'bin':  # rust_binary[_host]
+    if crate_type == 'bin':  # rust_binary[_host]
       self.module_type = 'rust_binary' + host
       self.stem = self.crate_name
-    elif self.crate_type == 'lib':  # rust_library[_host]_rlib
+      self.module_name = altered_name(self.stem)
+    elif crate_type == 'lib':  # rust_library[_host]_rlib
+      # TODO(chh): should this be rust_library[_host]?
+      # Assuming that Cargo.toml do not use both 'lib' and 'rlib',
+      # because we map them both to rlib.
       self.module_type = 'rust_library' + host + '_rlib'
       self.stem = 'lib' + self.crate_name
-    elif self.crate_type == 'cdylib':  # rust_library[_host]_dylib
-      # TODO(chh): complete and test cdylib module type
+      self.module_name = altered_name(self.stem)
+    elif crate_type == 'rlib':  # rust_library[_host]_rlib
+      self.module_type = 'rust_library' + host + '_rlib'
+      self.stem = 'lib' + self.crate_name
+      self.module_name = altered_name(self.stem)
+    elif crate_type == 'dylib':  # rust_library[_host]_dylib
       self.module_type = 'rust_library' + host + '_dylib'
-      self.stem = 'lib' + self.crate_name + '.so'
-    elif self.crate_type == 'test':  # rust_test[_host]
+      self.stem = 'lib' + self.crate_name
+      self.module_name = altered_name(self.stem) + '_dylib'
+    elif crate_type == 'cdylib':  # rust_library[_host]_shared
+      self.module_type = 'rust_library' + host + '_shared'
+      self.stem = 'lib' + self.crate_name
+      self.module_name = altered_name(self.stem) + '_shared'
+    elif crate_type == 'staticlib':  # rust_library[_host]_static
+      self.module_type = 'rust_library' + host + '_static'
+      self.stem = 'lib' + self.crate_name
+      self.module_name = altered_name(self.stem) + '_static'
+    elif crate_type == 'test':  # rust_test[_host]
       self.module_type = 'rust_test' + host
+      # Before do_merge, stem name is based on the --crate-name parameter.
+      # and test module name is based on stem.
       self.stem = self.test_module_name()
       # self.stem will be changed after merging with other tests.
       # self.stem is NOT used for final test binary name.
       # rust_test uses each source file base name as its output file name,
       # unless crate_name is specified by user in Cargo.toml.
-    elif self.crate_type == 'proc-macro':  # rust_proc_macro
+      # In do_merge, this function is called again, with a module_name.
+      # We make sure that the module name is unique in each package.
+      if self.module_name:
+        # Cargo uses "-C extra-filename=..." and "-C metadata=..." to add
+        # different suffixes and distinguish multiple tests of the same
+        # crate name. We ignore -C and use claim_module_name to get
+        # unique sequential suffix.
+        self.module_name = self.runner.claim_module_name(
+            self.module_name, self, 0)
+        # Now the module name is unique, stem should also match and unique.
+        self.stem = self.module_name
+    elif crate_type == 'proc-macro':  # rust_proc_macro
       self.module_type = 'rust_proc_macro'
       self.stem = 'lib' + self.crate_name
+      self.module_name = altered_name(self.stem)
     else:  # unknown module type, rust_prebuilt_dylib? rust_library[_host]?
       self.module_type = ''
       self.stem = ''
@@ -584,7 +629,7 @@ class Crate(object):
       self.dump_android_property_list('srcs', '"%s"', self.srcs)
     else:
       self.write('    srcs: ["' + self.main_src + '"],')
-    if self.crate_type == 'test':
+    if 'test' in self.crate_types:
       # self.root_pkg can have multiple test modules, with different *_tests[n]
       # names, but their executables can all be installed under the same _tests
       # directory. When built from Cargo.toml, all tests should have different
