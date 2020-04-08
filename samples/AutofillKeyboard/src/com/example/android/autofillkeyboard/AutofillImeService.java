@@ -17,34 +17,73 @@
 package com.example.android.autofillkeyboard;
 
 import android.inputmethodservice.InputMethodService;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.GuardedBy;
 import android.util.Log;
 import android.util.Size;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.inline.InlinePresentationSpec;
 import android.view.inputmethod.EditorInfo;
+import android.widget.inline.InlineContentView;
+import android.widget.inline.InlinePresentationSpec;
 import android.view.inputmethod.InlineSuggestion;
 import android.view.inputmethod.InlineSuggestionsRequest;
 import android.view.inputmethod.InlineSuggestionsResponse;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /** The {@link InputMethodService} implementation for Autofill keyboard. */
 public class AutofillImeService extends InputMethodService {
+    private static final boolean SHOWCASE_BG_FG_TRANSITION = false;
+    // To test this you need to change KeyboardArea style layout_height to 400dp
+    private static final boolean SHOWCASE_UP_DOWN_TRANSITION = false;
+
+    private static final long MOVE_SUGGESTIONS_TO_BG_TIMEOUT = 5000;
+    private static final long MOVE_SUGGESTIONS_TO_FG_TIMEOUT = 15000;
+
+    private static final long MOVE_SUGGESTIONS_UP_TIMEOUT = 5000;
+    private static final long MOVE_SUGGESTIONS_DOWN_TIMEOUT = 10000;
 
     private InputView mInputView;
     private Decoder mDecoder;
-    private LinearLayout mSuggestionStrip;
+
+    private ViewGroup mSuggestionStrip;
+    private ViewGroup mPinnedSuggestionsStart;
+    private ViewGroup mPinnedSuggestionsEnd;
+    private InlineContentClipView mScrollableSuggestionsClip;
+    private ViewGroup mScrollableSuggestions;
+
+    private final Runnable mMoveScrollableSuggestionsToBg = () -> {
+        mScrollableSuggestionsClip.setZOrderedOnTop(false);
+        Toast.makeText(AutofillImeService.this, "Chips moved to bg - not clickable",
+                Toast.LENGTH_SHORT).show();
+    };
+
+    private final Runnable mMoveScrollableSuggestionsToFg = () -> {
+        mScrollableSuggestionsClip.setZOrderedOnTop(true);
+        Toast.makeText(AutofillImeService.this, "Chips moved to fg - clickable",
+                Toast.LENGTH_SHORT).show();
+    };
+
+    private final Runnable mMoveScrollableSuggestionsUp = () -> {
+        mSuggestionStrip.animate().translationY(-50).setDuration(500).start();
+        Toast.makeText(AutofillImeService.this, "Animating up",
+                Toast.LENGTH_SHORT).show();
+    };
+
+    private final Runnable mMoveScrollableSuggestionsDown = () -> {
+        mSuggestionStrip.animate().translationY(0).setDuration(500).start();
+        Toast.makeText(AutofillImeService.this, "Animating down",
+                Toast.LENGTH_SHORT).show();
+    };
 
     @Override
     public View onCreateInputView() {
@@ -61,10 +100,18 @@ public class AutofillImeService extends InputMethodService {
     @Override
     public void onStartInputView(EditorInfo info, boolean restarting) {
         super.onStartInputView(info, restarting);
+
         mInputView.removeAllViews();
         Keyboard keyboard = Keyboard.qwerty(this);
         mInputView.addView(keyboard.inflateKeyboardView(LayoutInflater.from(this), mInputView));
-        mSuggestionStrip = mInputView.findViewById(R.id.suggestion_view);
+
+        mSuggestionStrip = mInputView.findViewById(R.id.suggestion_strip);
+        mPinnedSuggestionsStart = mInputView.findViewById(R.id.pinned_suggestions_start);
+        mPinnedSuggestionsEnd = mInputView.findViewById(R.id.pinned_suggestions_end);
+        mScrollableSuggestionsClip = mInputView.findViewById(R.id.scrollable_suggestions_clip);
+        mScrollableSuggestions = mInputView.findViewById(R.id.scrollable_suggestions);
+
+        updateInlineSuggestionStrip(Collections.emptyList());
     }
 
     @Override
@@ -79,15 +126,6 @@ public class AutofillImeService extends InputMethodService {
     /*****************    Inline Suggestions Demo Code   *****************/
 
     private static final String TAG = "AutofillImeService";
-
-    private Handler mMainHandler = new Handler();
-
-    @GuardedBy("this")
-    private List<View> mSuggestionViews = new ArrayList<>();
-    @GuardedBy("this")
-    private List<Size> mSuggestionViewSizes = new ArrayList<>();
-    @GuardedBy("this")
-    private boolean mSuggestionViewVisible = false;
 
     @Override
     public InlineSuggestionsRequest onCreateInlineSuggestionsRequest(Bundle uiExtras) {
@@ -106,45 +144,65 @@ public class AutofillImeService extends InputMethodService {
     @Override
     public boolean onInlineSuggestionsResponse(InlineSuggestionsResponse response) {
         Log.d(TAG, "onInlineSuggestionsResponse() called");
-        AsyncTask.THREAD_POOL_EXECUTOR.execute(() -> {
-            onInlineSuggestionsResponseInternal(response);
-        });
+        onInlineSuggestionsResponseInternal(response);
         return true;
     }
 
-    private synchronized void updateInlineSuggestionVisibility(boolean visible, boolean force) {
-        Log.d(TAG, "updateInlineSuggestionVisibility() called, visible=" + visible + ", force="
-                + force);
-        mMainHandler.post(() -> {
-            Log.d(TAG, "updateInlineSuggestionVisibility() running");
-            if (visible == mSuggestionViewVisible && !force) {
-                return;
-            } else if (visible) {
-                mSuggestionStrip.removeAllViews();
-                final int size = mSuggestionViews.size();
-                for (int i = 0; i < size; i++) {
-                    if(mSuggestionViews.get(i) == null) {
-                        continue;
-                    }
-                    ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
-                            mSuggestionViewSizes.get(i).getWidth(),
-                            mSuggestionViewSizes.get(i).getHeight());
-                    mSuggestionStrip.addView(mSuggestionViews.get(i), layoutParams);
-                }
-                mSuggestionViewVisible = true;
-            } else {
-                mSuggestionStrip.removeAllViews();
-                mSuggestionViewVisible = false;
+    private void updateInlineSuggestionStrip(List<SuggestionItem> suggestionItems) {
+        mPinnedSuggestionsStart.removeAllViews();
+        mScrollableSuggestions.removeAllViews();
+        mPinnedSuggestionsEnd.removeAllViews();
+
+        final int size = suggestionItems.size();
+        if (size <= 0) {
+            mSuggestionStrip.setVisibility(View.GONE);
+            return;
+        }
+
+        // TODO: refactor me
+        mScrollableSuggestionsClip.setBackgroundColor(
+                getColor(R.color.suggestion_strip_background));
+        mSuggestionStrip.setVisibility(View.VISIBLE);
+
+        for (int i = 0; i < size; i++) {
+            final SuggestionItem suggestionItem = suggestionItems.get(i);
+            if (suggestionItem == null) {
+                continue;
             }
-        });
+            final InlineContentView suggestionView = suggestionItem.mView;
+            if (suggestionItem.mIsPinned) {
+                if (mPinnedSuggestionsStart.getChildCount() <= 0) {
+                    mPinnedSuggestionsStart.addView(suggestionView);
+                } else   {
+                    mPinnedSuggestionsEnd.addView(suggestionView);
+                }
+            } else {
+                mScrollableSuggestions.addView(suggestionView);
+            }
+        }
+
+        if (SHOWCASE_BG_FG_TRANSITION) {
+            rescheduleShowcaseBgFgTransitions();
+        }
+        if (SHOWCASE_UP_DOWN_TRANSITION) {
+            rescheduleShowcaseUpDownTransitions();
+        }
     }
 
-    private synchronized void updateSuggestionViews(View[] suggestionViews, Size[] sizes) {
-        Log.d(TAG, "updateSuggestionViews() called");
-        mSuggestionViews = Arrays.asList(suggestionViews);
-        mSuggestionViewSizes = Arrays.asList(sizes);
-        final boolean visible = !mSuggestionViews.isEmpty();
-        updateInlineSuggestionVisibility(visible, true);
+    private void rescheduleShowcaseBgFgTransitions() {
+        final Handler handler = mInputView.getHandler();
+        handler.removeCallbacks(mMoveScrollableSuggestionsToBg);
+        handler.postDelayed(mMoveScrollableSuggestionsToBg, MOVE_SUGGESTIONS_TO_BG_TIMEOUT);
+        handler.removeCallbacks(mMoveScrollableSuggestionsToFg);
+        handler.postDelayed(mMoveScrollableSuggestionsToFg, MOVE_SUGGESTIONS_TO_FG_TIMEOUT);
+    }
+
+    private void rescheduleShowcaseUpDownTransitions() {
+        final Handler handler = mInputView.getHandler();
+        handler.removeCallbacks(mMoveScrollableSuggestionsUp);
+        handler.postDelayed(mMoveScrollableSuggestionsUp, MOVE_SUGGESTIONS_UP_TIMEOUT);
+        handler.removeCallbacks(mMoveScrollableSuggestionsDown);
+        handler.postDelayed(mMoveScrollableSuggestionsDown, MOVE_SUGGESTIONS_DOWN_TIMEOUT);
     }
 
     private void onInlineSuggestionsResponseInternal(InlineSuggestionsResponse response) {
@@ -152,43 +210,63 @@ public class AutofillImeService extends InputMethodService {
                 + response.getInlineSuggestions().size());
 
         final List<InlineSuggestion> inlineSuggestions = response.getInlineSuggestions();
-        final int totalSuggestionsCount = inlineSuggestions.size();
-        final AtomicInteger suggestionsCount = new AtomicInteger(totalSuggestionsCount);
-        final View[] suggestionViews = new View[totalSuggestionsCount];
-        final Size[] sizes = new Size[totalSuggestionsCount];
 
-        if (totalSuggestionsCount == 0) {
-            updateSuggestionViews(suggestionViews, sizes);
+        final int totalSuggestionsCount = inlineSuggestions.size();
+        if (totalSuggestionsCount <= 0) {
+            updateInlineSuggestionStrip(Collections.emptyList());
             return;
         }
-        for (int i=0; i<totalSuggestionsCount; i++) {
+
+        final Map<Integer, SuggestionItem> suggestionMap = Collections.synchronizedMap((
+                new TreeMap<>()));
+        final ExecutorService executor = Executors.newSingleThreadExecutor();
+
+        for (int i = 0; i < totalSuggestionsCount; i++) {
             final int index = i;
-            InlineSuggestion inlineSuggestion = inlineSuggestions.get(index);
-            Size size = inlineSuggestion.getInfo().getInlinePresentationSpec().getMaxSize();
-            inlineSuggestion.inflate(this, size,
-                    AsyncTask.THREAD_POOL_EXECUTOR,
-                    suggestionView -> {
-                        Log.d(TAG, "new inline suggestion view ready");
-                        if(suggestionView != null) {
-                            suggestionViews[index] = suggestionView;
-                            sizes[index] = size;
-                            suggestionView.setOnClickListener((v) -> {
-                                Log.d(TAG, "Received click on the suggestion");
-                            });
-                            suggestionView.setOnLongClickListener((v) -> {
-                                Log.d(TAG, "Received long click on the suggestion");
-                                return true;
-                            });
-                        }
-                        if (suggestionsCount.decrementAndGet() == 0) {
-                            updateSuggestionViews(suggestionViews, sizes);
-                        }
+            final InlineSuggestion inlineSuggestion = inlineSuggestions.get(i);
+            final Size size = inlineSuggestion.getInfo().getInlinePresentationSpec().getMaxSize();
+
+            inlineSuggestion.inflate(this, size, executor, suggestionView -> {
+                Log.d(TAG, "new inline suggestion view ready");
+                if(suggestionView != null) {
+                    suggestionView.setLayoutParams(new ViewGroup.LayoutParams(
+                            size.getWidth(), size.getHeight()));
+                    suggestionView.setOnClickListener((v) -> {
+                        Log.d(TAG, "Received click on the suggestion");
                     });
+                    suggestionView.setOnLongClickListener((v) -> {
+                        Log.d(TAG, "Received long click on the suggestion");
+                        return true;
+                    });
+                    final SuggestionItem suggestionItem = new SuggestionItem(
+                            suggestionView, /*isAction*/ inlineSuggestion.getInfo().isPinned());
+                    suggestionMap.put(index, suggestionItem);
+                } else {
+                    suggestionMap.put(index, null);
+                }
+
+                // Update the UI once the last inflation completed
+                if (suggestionMap.size() >= totalSuggestionsCount) {
+                    final ArrayList<SuggestionItem> suggestionItems = new ArrayList<>(
+                            suggestionMap.values());
+                    getMainExecutor().execute(() -> updateInlineSuggestionStrip(suggestionItems));
+                }
+            });
         }
     }
 
     void handle(String data) {
         Log.d(TAG, "handle() called: [" + data + "]");
         mDecoder.decodeAndApply(data);
+    }
+
+    static class SuggestionItem {
+        final InlineContentView mView;
+        final boolean mIsPinned;
+
+        SuggestionItem(InlineContentView view, boolean isPinned) {
+            mView = view;
+            mIsPinned = isPinned;
+        }
     }
 }

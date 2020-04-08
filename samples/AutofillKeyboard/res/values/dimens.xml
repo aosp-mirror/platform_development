@@ -22,6 +22,6 @@
   <dimen name="text_size_normal">24dp</dimen>
   <dimen name="text_size_symbol">14dp</dimen>
 
-  <dimen name="keyboard_header_height">41dp</dimen>
+  <dimen name="keyboard_header_height">48dp</dimen>
   <dimen name="keyboard_row_height">48dp</dimen>
 </resources>
