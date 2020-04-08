@@ -25,18 +25,26 @@
     <item name="android:layout_height">wrap_content</item>
     <item name="android:layout_gravity">bottom</item>
     <item name="android:orientation">vertical</item>
-    <item name="android:background">#FFFFFFFF</item>
+    <item name="android:gravity">bottom</item>
   </style>
 
   <style name="KeyboardRow">
     <item name="android:layout_width">match_parent</item>
     <item name="android:layout_height">@dimen/keyboard_row_height</item>
     <item name="android:orientation">horizontal</item>
+    <item name="android:background">#FFFFFFFF</item>
+  </style>
+
+  <style name="PinnedSuggestionArea">
+    <item name="android:layout_width">wrap_content</item>
+    <item name="android:layout_height">@dimen/keyboard_header_height</item>
+    <item name="android:layout_weight">0</item>
+    <item name="android:background">@color/suggestion_strip_background</item>
   </style>
 
   <style name="KeyboardRow.Header">
     <item name="android:layout_height">@dimen/keyboard_header_height</item>
-    <item name="android:background">#FFEEEEEE</item>
+    <item name="android:background">@android:color/transparent</item>
   </style>
 
   <style name="SoftKey">
