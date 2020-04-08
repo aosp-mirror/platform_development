@@ -22,14 +22,43 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     style="@style/KeyboardArea">
 
-  <HorizontalScrollView
-      android:layout_width="match_parent"
+  <LinearLayout
+      android:id="@+id/suggestion_strip"
+      android:layout_width="fill_parent"
       android:layout_height="wrap_content">
+
     <LinearLayout
-        android:id="@+id/suggestion_view"
-        style="@style/KeyboardRow.Header">
+        android:id="@+id/pinned_suggestions_start"
+        style="@style/PinnedSuggestionArea">
     </LinearLayout>
-  </HorizontalScrollView>
+
+    <com.example.android.autofillkeyboard.InlineContentClipView
+        android:id="@+id/scrollable_suggestions_clip"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_weight="1">
+
+      <HorizontalScrollView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:id="@+id/scrollable_suggestions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/KeyboardRow.Header">
+        </LinearLayout>
+
+      </HorizontalScrollView>
+
+    </com.example.android.autofillkeyboard.InlineContentClipView>
+
+    <LinearLayout
+        android:id="@+id/pinned_suggestions_end"
+        style="@style/PinnedSuggestionArea">
+    </LinearLayout>
+
+  </LinearLayout>
 
   <LinearLayout style="@style/KeyboardRow">
     <TextView
@@ -141,4 +170,5 @@
         android:id="@+id/key_pos_enter"
         style="@style/SoftKey.Function"/>
   </LinearLayout>
+
 </LinearLayout>
