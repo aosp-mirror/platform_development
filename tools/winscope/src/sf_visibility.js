@@ -77,7 +77,8 @@ function is_transform_invalid(transform) {
 }
 
 function is_opaque(layer) {
-  return layer.color == undefined || (layer.color.a || 0) < 1 || layer.isOpaque;
+  if (layer.color == undefined || layer.color.a == undefined || layer.color.a != 1) return false;
+  return layer.isOpaque;
 }
 
 function fills_color(layer) {
