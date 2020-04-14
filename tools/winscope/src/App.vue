@@ -14,29 +14,56 @@
 -->
 <template>
   <div id="app">
-    <md-whiteframe md-tag="md-toolbar">
-      <h1 class="md-title" style="flex: 1">{{title}}</h1>
-      <a class="md-button md-accent md-raised md-theme-default" @click="clear()" v-if="dataLoaded">Clear</a>
-    </md-whiteframe>
-    <div class="main-content">
-      <md-layout v-if="!dataLoaded" class="m-2">
-        <dataadb ref="adb" :store="store" @dataReady="onDataReady" @statusChange="setStatus"/>
-        <datainput ref="input" :store="store" @dataReady="onDataReady" @statusChange="setStatus"/>
-      </md-layout>
-      <md-card v-if="dataLoaded">
-        <md-whiteframe md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
-          <h2 class="md-title">Timeline</h2>
-          <datafilter v-for="file in files" :key="file.filename" :store="store" :file="file" />
-        </md-whiteframe>
-        <md-list>
-          <md-list-item v-for="(file, idx) in files" :key="file.filename">
-            <md-icon>{{file.type.icon}}</md-icon>
-            <timeline :items="file.timeline" :selected-index="file.selectedIndex" :scale="scale" @item-selected="onTimelineItemSelected($event, idx)" class="timeline" />
-          </md-list-item>
-        </md-list>
-      </md-card>
-      <dataview v-for="file in files" :key="file.filename" :ref="file.filename" :store="store" :file="file" @focus="onDataViewFocus(file.filename)" />
-    </div>
+    <md-app>
+      <md-app-toolbar md-tag="md-toolbar">
+        <h1 class="md-title" style="flex: 1">{{title}}</h1>
+        <md-button
+          class="md-accent md-raised md-theme-default"
+          @click="clear()"
+          v-if="dataLoaded"
+        >Clear</md-button>
+      </md-app-toolbar>
+      <md-app-content class="main-content">
+        <div class="md-layout m-2" v-if="!dataLoaded">
+          <dataadb ref="adb" :store="store" @dataReady="onDataReady" @statusChange="setStatus" />
+          <datainput ref="input" :store="store" @dataReady="onDataReady" @statusChange="setStatus" />
+        </div>
+        <div class="md-layout md-alignment-left-center " v-if="dataLoaded">
+          <div class="md-layout-item video" v-if="video">
+            <videoview :file="video" :ref="video.filename" />
+          </div>
+          <div class="md-layout-item">
+            <md-toolbar
+              md-elevation="0"
+              class="md-transparent">
+              <h2 class="md-title">Timeline </h2>
+              <span> {{seekTime}} </span>
+              <datafilter v-for="file in files" :key="file.filename" :store="store" :file="file" />
+            </md-toolbar>
+            <md-list>
+              <md-list-item v-for="(file, idx) in files" :key="file.filename">
+                <md-icon>{{file.type.icon}}</md-icon>
+                <timeline
+                  :items="file.timeline"
+                  :selected-index="file.selectedIndex"
+                  :scale="scale"
+                  @item-selected="onTimelineItemSelected($event, idx)"
+                  class="timeline"
+                />
+              </md-list-item>
+            </md-list>
+          </div>
+        </div>
+        <dataview
+          v-for="file in files"
+          :key="file.filename"
+          :ref="file.filename"
+          :store="store"
+          :file="file"
+          @focus="onDataViewFocus(file.filename)"
+        />
+      </md-app-content>
+    </md-app>
   </div>
 </template>
 <script>
@@ -44,10 +71,13 @@ import TreeView from './TreeView.vue'
 import Timeline from './Timeline.vue'
 import Rects from './Rects.vue'
 import DataView from './DataView.vue'
+import VideoView from './VideoView.vue'
 import DataInput from './DataInput.vue'
 import LocalStore from './localstore.js'
 import DataAdb from './DataAdb.vue'
 import DataFilter from './DataFilter.vue'
+import FileType from './FileType.js'
+import { nanos_to_string } from './transform.js'
 
 const APP_NAME = "Winscope"
 
@@ -68,9 +98,11 @@ function findLastMatchingSorted(array, predicate) {
 
 export default {
   name: 'app',
+  mixins: [FileType],
   data() {
     return {
       files: [],
+      video: null,
       title: APP_NAME,
       currentTimestamp: 0,
       activeDataView: null,
@@ -143,7 +175,13 @@ export default {
       return true;
     },
     onDataReady(files) {
-      this.files = files;
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (this.isVideo(file)) {
+          this.video = file;
+        }
+        this.files.push(file);
+      }
     },
     setStatus(status) {
       if (status) {
@@ -151,7 +189,7 @@ export default {
       } else {
         this.title = APP_NAME;
       }
-    }
+    },
   },
   computed: {
     prettyDump: function() { return JSON.stringify(this.dump, null, 2); },
@@ -166,6 +204,9 @@ export default {
         this.activeDataView = this.files[0].filename;
       }
       return this.activeDataView;
+    },
+    seekTime: function() {
+      return nanos_to_string(this.currentTimestamp);
     }
   },
   watch: {
@@ -174,14 +215,14 @@ export default {
     }
   },
   components: {
-    'timeline': Timeline,
-    'dataview': DataView,
-    'datainput': DataInput,
-    'dataadb': DataAdb,
-    'datafilter': DataFilter,
-  },
-}
-
+    timeline: Timeline,
+    dataview: DataView,
+    videoview: VideoView,
+    datainput: DataInput,
+    dataadb: DataAdb,
+    datafilter: DataFilter
+  }
+};
 </script>
 <style>
 .main-content>* {
@@ -205,6 +246,10 @@ export default {
   margin-top: 1em
 }
 
+.video {
+  flex-grow: 0;
+}
+
 h1,
 h2 {
   font-weight: normal;
@@ -223,5 +268,4 @@ li {
 a {
   color: #42b983;
 }
-
 </style>
