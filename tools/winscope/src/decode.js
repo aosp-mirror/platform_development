@@ -147,7 +147,7 @@ const FILE_TYPES = {
     decoder: protoDecoder,
     decoderParams: {
       protoType: LayersMessage,
-      transform: transform_layers,
+      transform: (decoded) => transform_layers(true /*includesCompositionState*/, decoded),
       timeline: false,
     },
   },
