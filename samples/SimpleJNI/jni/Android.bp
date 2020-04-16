@@ -29,6 +29,7 @@ cc_library_shared {
         "-Wall",
         "-Werror",
     ],
+    header_libs: ["jni_headers"],
     stl: "none",
     sdk_version: "current",
 }
