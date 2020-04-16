@@ -156,10 +156,6 @@ bool HeaderASTVisitor::VisitVarDecl(const clang::VarDecl *decl) {
   return global_var_decl_wrapper.GetGlobalVarDecl();
 }
 
-static bool AreHeadersExported(const std::set<std::string> &exported_headers) {
-  return !exported_headers.empty();
-}
-
 // We don't need to recurse into Declarations which are not exported.
 bool HeaderASTVisitor::TraverseDecl(clang::Decl *decl) {
   if (!decl) {
@@ -170,7 +166,8 @@ bool HeaderASTVisitor::TraverseDecl(clang::Decl *decl) {
       std::make_pair(decl, source_file));
   // If no exported headers are specified we assume the whole AST is exported.
   const auto &exported_headers = options_.exported_headers_;
-  if ((decl != tu_decl_) && AreHeadersExported(exported_headers) &&
+  if ((decl != tu_decl_) && options_.dump_exported_only_ &&
+      source_file != ast_caches_->translation_unit_source_ &&
       (exported_headers.find(source_file) == exported_headers.end())) {
     return true;
   }
@@ -198,12 +195,7 @@ void HeaderASTConsumer::HandleTranslationUnit(clang::ASTContext &ctx) {
   clang::TranslationUnitDecl *translation_unit = ctx.getTranslationUnitDecl();
   std::unique_ptr<clang::MangleContext> mangle_contextp(
       ctx.createMangleContext());
-  const std::string &translation_unit_source =
-      ABIWrapper::GetDeclSourceFile(translation_unit, cip_);
-  ASTCaches ast_caches(translation_unit_source);
-  if (!options_.exported_headers_.empty()) {
-    options_.exported_headers_.insert(translation_unit_source);
-  }
+  ASTCaches ast_caches(ABIWrapper::GetDeclSourceFile(translation_unit, cip_));
 
   std::unique_ptr<repr::ModuleIR> module(
       new repr::ModuleIR(nullptr /*FIXME*/));
