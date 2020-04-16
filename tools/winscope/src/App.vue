@@ -201,10 +201,6 @@ export default {
   flex-wrap: wrap;
 }
 
-.md-layout > .md-card {
-  margin: 0.5em;
-}
-
 .md-button {
   margin-top: 1em
 }
