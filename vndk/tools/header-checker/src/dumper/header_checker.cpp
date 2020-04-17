@@ -128,16 +128,16 @@ int main(int argc, const char **argv) {
     ::exit(1);
   }
 
-  std::set<std::string> exported_headers;
-  if (!no_filter) {
-    exported_headers = CollectAllExportedHeaders(exported_header_dirs);
-  }
+  bool dump_exported_only = (!no_filter && !exported_header_dirs.empty());
+  std::set<std::string> exported_headers =
+      CollectAllExportedHeaders(exported_header_dirs);
 
   // Initialize clang tools and run front-end action.
   std::vector<std::string> header_files{ header_file };
   HeaderCheckerOptions options(RealPath(header_file), out_dump,
                                std::move(exported_headers), output_format,
-                               dump_function_declarations, suppress_errors);
+                               dump_exported_only, dump_function_declarations,
+                               suppress_errors);
 
   clang::tooling::ClangTool tool(*compilations, header_files);
   std::unique_ptr<clang::tooling::FrontendActionFactory> factory(
