@@ -149,6 +149,9 @@ def _make_json_post_request(url_opener, url, data, method='POST'):
     response_file = url_opener.open(request)
     try:
         res_code = response_file.getcode()
+        # Nothing to parse if response is '204 No Content'
+        if res_code == 204:
+            return (res_code, None)
         res_json = _decode_xssi_json(response_file.read())
         return (res_code, res_json)
     finally:
@@ -229,6 +232,28 @@ def get_patch(url_opener, gerrit_url, change_id, revision_id='current'):
         return base64.b64decode(response_file.read())
     finally:
         response_file.close()
+
+
+def add_reviewers(url_opener, gerrit_url, change_id, reviewers):
+    """Add reviewers."""
+
+    url = '{}/a/changes/{}/revisions/current/review'.format(
+        gerrit_url, change_id)
+
+    data = {}
+    if reviewers:
+        data['reviewers'] = reviewers
+
+    return _make_json_post_request(url_opener, url, data)
+
+
+def delete_reviewer(url_opener, gerrit_url, change_id, name):
+    """Delete reviewer."""
+
+    url = '{}/a/changes/{}/reviewers/{}/delete'.format(
+        gerrit_url, change_id, name)
+
+    return _make_json_post_request(url_opener, url, {})
 
 
 def _parse_args():
