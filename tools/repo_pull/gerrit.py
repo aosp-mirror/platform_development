@@ -27,6 +27,11 @@ import os
 import sys
 
 try:
+    from urllib.error import HTTPError  # PY3
+except ImportError:
+    from urllib2 import HTTPError  # PY2
+
+try:
     from urllib.request import (
         HTTPBasicAuthHandler, Request, build_opener)  # PY3
 except ImportError:
@@ -146,13 +151,19 @@ def _make_json_post_request(url_opener, url, data, method='POST'):
 
     request = Request(url, data, headers)
     request.get_method = lambda: method
-    response_file = url_opener.open(request)
+
     try:
+        response_file = url_opener.open(request)
+    except HTTPError as error:
+        response_file = error
+
+    with response_file:
         res_code = response_file.getcode()
+        # Nothing to parse if response is '204 No Content'
+        if res_code == 204:
+            return (res_code, None)
         res_json = _decode_xssi_json(response_file.read())
         return (res_code, res_json)
-    finally:
-        response_file.close()
 
 
 def set_review(url_opener, gerrit_url, change_id, labels, message):
@@ -229,6 +240,28 @@ def get_patch(url_opener, gerrit_url, change_id, revision_id='current'):
         return base64.b64decode(response_file.read())
     finally:
         response_file.close()
+
+
+def add_reviewers(url_opener, gerrit_url, change_id, reviewers):
+    """Add reviewers."""
+
+    url = '{}/a/changes/{}/revisions/current/review'.format(
+        gerrit_url, change_id)
+
+    data = {}
+    if reviewers:
+        data['reviewers'] = reviewers
+
+    return _make_json_post_request(url_opener, url, data)
+
+
+def delete_reviewer(url_opener, gerrit_url, change_id, name):
+    """Delete reviewer."""
+
+    url = '{}/a/changes/{}/reviewers/{}/delete'.format(
+        gerrit_url, change_id, name)
+
+    return _make_json_post_request(url_opener, url, {})
 
 
 def _parse_args():
