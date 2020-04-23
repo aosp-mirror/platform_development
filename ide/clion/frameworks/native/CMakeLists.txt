@@ -13,7 +13,6 @@ add_subdirectory(services/surfaceflinger/layerproto/liblayers_proto-arm64-androi
 add_subdirectory(services/surfaceflinger/tests/IPC_test-arm64-android)
 add_subdirectory(services/surfaceflinger/tests/fakehwc/sffakehwc_test-arm64-android)
 add_subdirectory(services/surfaceflinger/tests/SurfaceFlinger_test-arm64-android)
-add_subdirectory(services/surfaceflinger/tests/hwc2/test-hwc2-arm64-android)
 add_subdirectory(services/surfaceflinger/tests/vsync/test-vsync-events-arm64-android)
 add_subdirectory(services/surfaceflinger/tests/waitforvsync/test-waitforvsync-arm64-android)
 add_subdirectory(services/surfaceflinger/tests/unittests/libsurfaceflinger_unittest-arm64-android)
