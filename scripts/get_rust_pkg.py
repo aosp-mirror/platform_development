@@ -54,7 +54,7 @@ def parse_args():
       "-o", metavar="out_dir", default=".",
       help="output directory")
   parser.add_argument(
-      dest="pkg", metavar="pkg_name",
+      dest="pkgs", metavar="pkg_name", nargs="+",
       help="name of Rust package to be fetched from crates.io")
   return parser.parse_args()
 
@@ -72,7 +72,10 @@ def pkg_base_name(args, name):
   if match is not None:
     base = match.group(1)
     version = match.group(2)
-  echo(args, "package base name: {}  version: {}".format(base, version))
+  if version:
+    echo(args, "package base name: {}  version: {}".format(base, version))
+  else:
+    echo(args, "package base name: {}".format(base))
   return base, version
 
 
@@ -121,13 +124,15 @@ def find_dl_path(args, name):
     if not dl_path:
       print("ERROR: cannot find version {} of package {}"
             .format(version, base_name))
-      sys.exit(1)
+      return None
     echo(args, "found download path for version {}".format(found_version))
     return dl_path
 
 
 def fetch_pkg(args, dl_path):
   """Fetch package from crates.io and untar it into a subdirectory."""
+  if not dl_path:
+    return False
   url = "https://crates.io" + dl_path
   tmp_dir = tempfile.mkdtemp()
   echo(args, "fetch tar file from {}".format(url))
@@ -143,7 +148,7 @@ def fetch_pkg(args, dl_path):
     dest_dir = os.path.join(args.o, files[0])
     if os.path.exists(dest_dir):
       print("ERROR: do not overwrite existing {}".format(dest_dir))
-      sys.exit(1)  # leave tar_file and tmp_dir
+      return False  # leave tar_file and tmp_dir
     else:
       echo(args, "move {} to {}".format(pkg_tmp_dir, dest_dir))
       shutil.move(pkg_tmp_dir, dest_dir)
@@ -152,11 +157,22 @@ def fetch_pkg(args, dl_path):
   echo(args, "delete temp directory {}".format(tmp_dir))
   shutil.rmtree(tmp_dir)
   print("SUCCESS: downloaded package in {}".format(dest_dir))
+  return True
 
 
 def main():
   args = parse_args()
-  fetch_pkg(args, find_dl_path(args, args.pkg))
+  packages = list(dict.fromkeys(args.pkgs))
+  echo(args, "to fetch packags = {}".format(packages))
+  errors = []
+  for pkg in packages:
+    echo(args, "trying to fetch package {}".format(pkg))
+    if not fetch_pkg(args, find_dl_path(args, pkg)):
+      errors.append(pkg)
+  if errors:
+    for pkg in errors:
+      print("ERROR: failed to fetch {}".format(pkg))
+    sys.exit(1)
 
 
 if __name__ == "__main__":
