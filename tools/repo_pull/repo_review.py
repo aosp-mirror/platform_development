@@ -31,8 +31,8 @@ except ImportError:
     from urllib2 import HTTPError  # PY2
 
 from gerrit import (
-    abandon, create_url_opener_from_args, delete_topic, query_change_lists,
-    set_hashtags, set_review, set_topic)
+    add_reviewers, delete_reviewer, abandon, create_url_opener_from_args,
+    delete_topic, query_change_lists, set_hashtags, set_review, set_topic)
 
 
 def _get_labels_from_args(args):
@@ -112,6 +112,10 @@ def _parse_args():
                         help='Delete topic name')
     parser.add_argument('--remove-topic', action='store_true',
                         help='Delete topic name', dest='delete_topic')
+    parser.add_argument('--add-reviewer', action='append', default=[],
+                        help='Add reviewer')
+    parser.add_argument('--delete-reviewer', action='append', default=[],
+                        help='Delete reviewer')
 
     return parser.parse_args()
 
@@ -125,6 +129,8 @@ def _has_task(args):
     if args.add_hashtag or args.remove_hashtag:
         return True
     if args.set_topic or args.delete_topic:
+        return True
+    if args.add_reviewer or args.delete_reviewer:
         return True
     return False
 
@@ -178,12 +184,15 @@ def main():
     args = _parse_args()
     if not _has_task(args):
         print('error: Either --label, --message, --abandon, --add-hashtag, '
-              '--remove-hashtag, --set-topic, or --delete-topic must be ',
-              'specified', file=sys.stderr)
+              '--remove-hashtag, --set-topic, --delete-topic, --add-reviewer '
+              'or --delete-reviewer must be specified', file=sys.stderr)
         sys.exit(1)
 
     # Convert label arguments
     labels = _get_labels_from_args(args)
+
+    # Convert reviewer arguments
+    new_reviewers = [{'reviewer': name} for name in args.add_reviewer]
 
     # Load authentication credentials
     url_opener = create_url_opener_from_args(args)
@@ -220,6 +229,13 @@ def main():
         if args.abandon:
             _do_task(change, abandon, url_opener, args.gerrit, change['id'],
                      args.abandon, errors=errors)
+        if args.add_reviewer:
+            _do_task(change, add_reviewers, url_opener, args.gerrit,
+                     change['id'], new_reviewers, errors=errors)
+        for name in args.delete_reviewer:
+            _do_task(change, delete_reviewer, url_opener, args.gerrit,
+                     change['id'], name, expected_http_code=204, errors=errors)
+
 
     if errors['num_errors']:
         sys.exit(1)
