@@ -52,7 +52,7 @@ public class WiFiDirectActivity extends Activity implements ChannelListener, Dev
 
     public static final String TAG = "wifidirectdemo";
 
-    private static final int PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION = 1001;
+    private static final int PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION = 1001;
 
     private WifiP2pManager manager;
     private boolean isWifiP2pEnabled = false;
@@ -73,9 +73,9 @@ public class WiFiDirectActivity extends Activity implements ChannelListener, Dev
     public void onRequestPermissionsResult(int requestCode, String[] permissions,
             int[] grantResults) {
         switch (requestCode) {
-        case PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION:
+        case PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION:
             if  (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                Log.e(TAG, "Fine location permission is not granted!");
+                Log.e(TAG, "Coarse location permission is not granted!");
                 finish();
             }
             break;
@@ -98,10 +98,10 @@ public class WiFiDirectActivity extends Activity implements ChannelListener, Dev
         channel = manager.initialize(this, getMainLooper(), null);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-                    && checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                    && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
                     != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    WiFiDirectActivity.PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION);
+            requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                    WiFiDirectActivity.PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION);
             // After this point you wait for callback in
             // onRequestPermissionsResult(int, String[], int[]) overridden method
         }

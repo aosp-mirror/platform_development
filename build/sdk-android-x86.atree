@@ -21,4 +21,4 @@ device/generic/goldfish/data/etc/encryptionkey.img system-images/${PLATFORM_NAME
 ${HOST_OUT}/development/sys-img-${TARGET_CPU_ABI}/images_${TARGET_ARCH}_source.properties system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/source.properties
 
 # feature control config file
-device/generic/goldfish/data/etc/advancedFeatures.ini system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/advancedFeatures.ini
+development/sys-img/advancedFeatures.ini system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/advancedFeatures.ini

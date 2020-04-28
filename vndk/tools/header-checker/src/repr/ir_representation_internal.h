@@ -53,13 +53,13 @@ inline std::string GetReferencedTypeMapKey<QualifiedTypeIR>(
 
 inline std::string GetODRListMapKey(const RecordTypeIR *record_type_ir) {
   if (record_type_ir->IsAnonymous()) {
-    return record_type_ir->GetLinkerSetKey();
+    return record_type_ir->GetLinkerSetKey() + record_type_ir->GetUniqueId();
   }
-  return record_type_ir->GetLinkerSetKey() + record_type_ir->GetSourceFile();
+  return record_type_ir->GetUniqueId() + record_type_ir->GetSourceFile();
 }
 
 inline std::string GetODRListMapKey(const EnumTypeIR *enum_type_ir) {
-  return enum_type_ir->GetLinkerSetKey() + enum_type_ir->GetSourceFile();
+  return enum_type_ir->GetUniqueId() + enum_type_ir->GetSourceFile();
 }
 
 inline std::string GetODRListMapKey(const FunctionTypeIR *function_type_ir) {

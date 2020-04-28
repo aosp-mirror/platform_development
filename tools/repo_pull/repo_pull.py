@@ -26,7 +26,6 @@ import itertools
 import json
 import multiprocessing
 import os
-import os.path
 import re
 import sys
 import xml.dom.minidom
@@ -171,15 +170,6 @@ def build_project_name_dir_dict(manifest_path):
     directory path."""
     project_dirs = {}
     parsed_xml = xml.dom.minidom.parse(manifest_path)
-
-    includes = parsed_xml.getElementsByTagName('include')
-    for include in includes:
-        include_path = include.getAttribute('name')
-        if not os.path.isabs(include_path):
-            manifest_dir = os.path.dirname(os.path.realpath(manifest_path))
-            include_path = os.path.join(manifest_dir, include_path)
-        project_dirs.update(build_project_name_dir_dict(include_path))
-
     projects = parsed_xml.getElementsByTagName('project')
     for project in projects:
         name = project.getAttribute('name')
@@ -188,7 +178,6 @@ def build_project_name_dir_dict(manifest_path):
             project_dirs[name] = path
         else:
             project_dirs[name] = name
-
     return project_dirs
 
 

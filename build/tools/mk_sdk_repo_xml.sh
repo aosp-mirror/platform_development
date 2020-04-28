@@ -420,7 +420,11 @@ while [[ -n "$1" ]]; do
 
     # Generate archive info
     #echo "## Add $TYPE/$OS archive $SRC"
-    SIZE=$( stat -c %s "$SRC" )
+    if [[ $( uname ) == "Darwin" ]]; then
+      SIZE=$( stat -f %z "$SRC" )
+    else
+      SIZE=$( stat -c %s "$SRC" )
+    fi
     SHA1=$( sha1sum "$SRC" | cut -d " "  -f 1 )
 
     if uses_new_host_os ; then

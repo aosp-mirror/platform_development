@@ -130,8 +130,8 @@ void ModuleIR::AddEnumType(EnumTypeIR &&enum_type) {
   }
   auto it = AddToMapAndTypeGraph(
       std::move(enum_type), &enum_types_, &type_graph_);
-  const std::string &key = GetODRListMapKey(&(it->second));
-  AddToODRListMap(key, (&it->second));
+  AddToODRListMap(it->second.GetUniqueId() + it->second.GetSourceFile(),
+                  (&it->second));
 }
 
 

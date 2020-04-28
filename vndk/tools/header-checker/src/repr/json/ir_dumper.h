@@ -42,6 +42,9 @@ class IRToJsonConverter {
   static void AddVTableLayout(JsonObject &record_type,
                               const RecordTypeIR *record_ir);
 
+  static void AddTagTypeInfo(JsonObject &type_decl,
+                             const TagTypeIR *tag_type_ir);
+
   static void AddEnumFields(JsonObject &enum_type, const EnumTypeIR *enum_ir);
 
  public:

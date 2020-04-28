@@ -18,26 +18,21 @@ package com.example.android.multiclientinputmethod;
 
 import android.app.Service;
 import android.content.Intent;
-import android.hardware.display.DisplayManager;
-import android.hardware.display.DisplayManager.DisplayListener;
 import android.inputmethodservice.MultiClientInputMethodServiceDelegate;
 import android.os.IBinder;
 import android.util.Log;
-import android.util.SparseIntArray;
 
 /**
  * A {@link Service} that implements multi-client IME protocol.
  */
-public final class MultiClientInputMethod extends Service implements DisplayListener {
+public final class MultiClientInputMethod extends Service {
     private static final String TAG = "MultiClientInputMethod";
     private static final boolean DEBUG = false;
 
-    // last client that had active InputConnection for a given displayId.
-    final SparseIntArray mDisplayToLastClientId = new SparseIntArray();
+    // last client that had active InputConnection.
+    int mLastClientId = MultiClientInputMethodServiceDelegate.INVALID_CLIENT_ID;
     SoftInputWindowManager mSoftInputWindowManager;
     MultiClientInputMethodServiceDelegate mDelegate;
-
-    private DisplayManager mDisplayManager;
 
     @Override
     public void onCreate() {
@@ -78,25 +73,10 @@ public final class MultiClientInputMethod extends Service implements DisplayList
     }
 
     @Override
-    public void onDisplayAdded(int displayId) {
-    }
-
-    @Override
-    public void onDisplayRemoved(int displayId) {
-        mDisplayToLastClientId.delete(displayId);
-    }
-
-    @Override
-    public void onDisplayChanged(int displayId) {
-    }
-
-    @Override
     public IBinder onBind(Intent intent) {
         if (DEBUG) {
             Log.v(TAG, "onBind intent=" + intent);
         }
-        mDisplayManager = getApplicationContext().getSystemService(DisplayManager.class);
-        mDisplayManager.registerDisplayListener(this, getMainThreadHandler());
         return mDelegate.onBind(intent);
     }
 
@@ -104,9 +84,6 @@ public final class MultiClientInputMethod extends Service implements DisplayList
     public boolean onUnbind(Intent intent) {
         if (DEBUG) {
             Log.v(TAG, "onUnbind intent=" + intent);
-        }
-        if (mDisplayManager != null) {
-            mDisplayManager.unregisterDisplayListener(this);
         }
         return mDelegate.onUnbind(intent);
     }

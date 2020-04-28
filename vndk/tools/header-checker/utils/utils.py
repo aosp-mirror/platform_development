@@ -41,49 +41,24 @@ DEFAULT_HEADER_FLAGS = ["-dump-function-declarations"]
 DEFAULT_FORMAT = 'ProtobufTextFormat'
 
 
-class Target(object):
-    def __init__(self, is_2nd, product):
-        extra = '_2ND' if is_2nd else ''
-        build_vars_to_fetch = ['TARGET_ARCH',
-                               'TARGET{}_ARCH'.format(extra),
-                               'TARGET{}_ARCH_VARIANT'.format(extra),
-                               'TARGET{}_CPU_VARIANT'.format(extra)]
-        build_vars = get_build_vars_for_product(build_vars_to_fetch, product)
-        self.primary_arch = build_vars[0]
-        assert self.primary_arch != ''
-        self.arch = build_vars[1]
-        self.arch_variant = build_vars[2]
-        self.cpu_variant = build_vars[3]
+def get_reference_dump_dir(reference_dump_dir_stem,
+                           reference_dump_dir_insertion, lib_arch):
+    reference_dump_dir = os.path.join(reference_dump_dir_stem, lib_arch)
+    reference_dump_dir = os.path.join(reference_dump_dir,
+                                      reference_dump_dir_insertion)
+    return reference_dump_dir
 
-    def get_arch_str(self):
-        """Return a string that represents the architecture and the
-        architecture variant.
 
-        If TARGET_ARCH == TARGET_ARCH_VARIANT, soong makes targetArchVariant
-        empty. This is the case for aosp_x86_64.
-        """
-        if not self.arch_variant or self.arch_variant == self.arch:
-            arch_variant = ''
-        else:
-            arch_variant = '_' + self.arch_variant
-
-        return self.arch + arch_variant
-
-    def get_arch_cpu_str(self):
-        """Return a string that represents the architecture, the architecture
-        variant, and the CPU variant."""
-        if not self.cpu_variant or self.cpu_variant == 'generic':
-            cpu_variant = ''
-        else:
-            cpu_variant = '_' + self.cpu_variant
-
-        return self.get_arch_str() + cpu_variant
-
-    def get_module_variant_dir_name(self, variant_suffix):
-        """Create module variant directory name from the architecture, the
-        architecture variant, the CPU variant, and a variant suffix
-        (e.g. `_core_shared`, `_vendor_shared`, etc)."""
-        return 'android_' + self.get_arch_cpu_str() + variant_suffix
+def copy_reference_dumps(lib_paths, reference_dir_stem,
+                         reference_dump_dir_insertion, lib_arch, compress):
+    reference_dump_dir = get_reference_dump_dir(reference_dir_stem,
+                                                reference_dump_dir_insertion,
+                                                lib_arch)
+    num_created = 0
+    for lib_path in lib_paths:
+        copy_reference_dump(lib_path, reference_dump_dir, compress)
+        num_created += 1
+    return num_created
 
 
 def copy_reference_dump(lib_path, reference_dump_dir, compress):
@@ -176,15 +151,13 @@ def make_tree(product, variant):
     return make_targets(product, variant, ['findlsdumps'])
 
 
-def make_libraries(product, variant, vndk_version, targets, libs):
+def make_libraries(product, variant, targets, libs, llndk_mode):
     """Build lsdump files for specific libs."""
-    lsdump_paths = read_lsdump_paths(product, variant, vndk_version, targets,
-                                     build=True)
-    make_target_paths = []
+    lsdump_paths = read_lsdump_paths(product, variant, targets, build=True)
+    targets = []
     for name in libs:
-        make_target_paths.extend(path for tag, path in
-                                 lsdump_paths[name].values())
-    make_targets(product, variant, make_target_paths)
+        targets.extend(lsdump_paths[name].values())
+    make_targets(product, variant, targets)
 
 
 def get_lsdump_paths_file_path(product, variant):
@@ -199,36 +172,29 @@ def _is_sanitizer_variation(variation):
     return variation in {'asan', 'hwasan', 'tsan', 'intOverflow', 'cfi', 'scs'}
 
 
-def _tag_to_variant_suffix(tag, vndk_version):
-    """Map a tag to a variant suffix."""
-    if tag in ('LLNDK', 'NDK', 'PLATFORM'):
-        return '_core_shared'
-    if tag.startswith('VNDK'):
-        return '_vendor.' + vndk_version + '_shared'
-    raise ValueError(tag + ' is not a known tag.')
+def _are_sanitizer_variations(variations):
+    """Check whether these variations are introduced by sanitizers."""
+    if isinstance(variations, str):
+        variations = [v for v in variations.split('_') if v]
+    return all(_is_sanitizer_variation(v) for v in variations)
 
 
-def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, targets):
-    """Read lsdump paths from lsdump_paths.txt for each libname and variant.
-
-    This function returns a dictionary, {lib_name: {arch_cpu: (tag, path)}}.
-    For example,
-    {
-      "libc": {
-        "x86_x86_64": (
-          "NDK",
-          "path/to/libc.so.lsdump"
-        )
-      }
-    }
-    """
+def _read_lsdump_paths(lsdump_paths_file_path, targets):
+    """Read lsdump path from lsdump_paths.txt for each libname and variant."""
     lsdump_paths = collections.defaultdict(dict)
     suffixes = collections.defaultdict(dict)
 
+    prefixes = []
+    prefixes.extend(get_module_variant_dir_name(
+        target.arch, target.arch_variant, target.cpu_variant, '_core_shared')
+        for target in targets)
+    prefixes.extend(get_module_variant_dir_name(
+        target.arch, target.arch_variant, target.cpu_variant, '_vendor_shared')
+        for target in targets)
+
     with open(lsdump_paths_file_path, 'r') as lsdump_paths_file:
         for line in lsdump_paths_file:
-            tag, path = (x.strip() for x in line.split(':', 1))
-            variant_suffix = _tag_to_variant_suffix(tag, vndk_version)
+            path = line.strip()
             if not path:
                 continue
             dirname, filename = os.path.split(path)
@@ -240,54 +206,58 @@ def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, targets):
             variant = os.path.basename(dirname)
             if not variant:
                 continue
-            for target in targets:
-                prefix = target.get_module_variant_dir_name(variant_suffix)
+            for prefix in prefixes:
                 if not variant.startswith(prefix):
                     continue
                 new_suffix = variant[len(prefix):]
-                # Skip if the suffix contains APEX variations.
-                new_variations = [x for x in new_suffix.split('_') if x]
-                if new_variations and not all(_is_sanitizer_variation(x)
-                                              for x in new_variations):
+                if not _are_sanitizer_variations(new_suffix):
                     continue
-                arch_cpu = target.get_arch_cpu_str()
-                old_suffix = suffixes[libname].get(arch_cpu)
+                old_suffix = suffixes[libname].get(prefix)
                 if not old_suffix or new_suffix > old_suffix:
-                    lsdump_paths[libname][arch_cpu] = (tag, path)
-                    suffixes[libname][arch_cpu] = new_suffix
+                    lsdump_paths[libname][prefix] = path
+                    suffixes[libname][prefix] = new_suffix
     return lsdump_paths
 
 
-def read_lsdump_paths(product, variant, vndk_version, targets, build=True):
+def read_lsdump_paths(product, variant, targets, build=True):
     """Build lsdump_paths.txt and read the paths."""
     lsdump_paths_file_path = get_lsdump_paths_file_path(product, variant)
     if build:
         make_targets(product, variant, [lsdump_paths_file_path])
     lsdump_paths_file_abspath = os.path.join(AOSP_DIR, lsdump_paths_file_path)
-    return _read_lsdump_paths(lsdump_paths_file_abspath, vndk_version,
-                              targets)
+    return _read_lsdump_paths(lsdump_paths_file_abspath, targets)
 
 
-def find_lib_lsdumps(lsdump_paths, libs, target):
-    """Find the lsdump corresponding to libs for the given target.
+def get_module_variant_dir_name(arch, arch_variant, cpu_variant,
+                                variant_suffix):
+    """Create module variant directory name from the target architecture, the
+    target architecture variant, the target CPU variant, and a variant suffix
+    (e.g. `_core_shared`, `_vendor_shared`, etc)."""
 
-    This function returns a list of (tag, absolute_path).
-    For example,
-    [
-      (
-        "NDK",
-        "/path/to/libc.so.lsdump"
-      )
-    ]
-    """
-    arch_cpu = target.get_arch_cpu_str()
-    result = []
-    if libs:
-        for lib_name in libs:
-            result.append(lsdump_paths[lib_name][arch_cpu])
+    if not arch_variant or arch_variant == arch:
+        arch_variant = ''
     else:
-        result.extend(paths[arch_cpu] for paths in lsdump_paths.values())
-    return [(tag, os.path.join(AOSP_DIR, path)) for tag, path in result]
+        arch_variant = '_' + arch_variant
+
+    if not cpu_variant or cpu_variant == 'generic':
+        cpu_variant = ''
+    else:
+        cpu_variant = '_' + cpu_variant
+
+    return 'android_' + arch + arch_variant + cpu_variant + variant_suffix
+
+
+def find_lib_lsdumps(module_variant_dir_name, lsdump_paths, libs):
+    """Find the lsdump corresponding to lib_name for the given module variant
+    if it exists."""
+    result = []
+    for lib_name, variations in lsdump_paths.items():
+        if libs and lib_name not in libs:
+            continue
+        for variation, path in variations.items():
+            if variation.startswith(module_variant_dir_name):
+                result.append(os.path.join(AOSP_DIR, path.strip()))
+    return result
 
 
 def run_abi_diff(old_test_dump_path, new_test_dump_path, arch, lib_name,

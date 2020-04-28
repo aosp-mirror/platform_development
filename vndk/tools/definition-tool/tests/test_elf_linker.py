@@ -327,7 +327,7 @@ class ELFLinkerTest(TestCase):
         self.assertEqual(2 * 2, len(sp_lib.sp_hal_dep))
         self.assertEqual(2 * 2, len(sp_lib.vndk_sp_hal))
         self.assertEqual(2 * 2, len(sp_lib.ll_ndk))
-        self.assertEqual(2 * 3, len(sp_lib.ll_ndk_private))
+        self.assertEqual(2 * 3, len(sp_lib.ll_ndk_indirect))
         self.assertEqual(2 * 1, len(sp_lib.vndk_sp_both))
 
         sp_hal = self._get_paths_from_nodes(sp_lib.sp_hal)
@@ -335,7 +335,7 @@ class ELFLinkerTest(TestCase):
         vndk_sp_hal = self._get_paths_from_nodes(sp_lib.vndk_sp_hal)
 
         ll_ndk = self._get_paths_from_nodes(sp_lib.ll_ndk)
-        ll_ndk_private = self._get_paths_from_nodes(sp_lib.ll_ndk_private)
+        ll_ndk_indirect = self._get_paths_from_nodes(sp_lib.ll_ndk_indirect)
 
         vndk_sp_both = self._get_paths_from_nodes(sp_lib.vndk_sp_both)
 
@@ -346,11 +346,11 @@ class ELFLinkerTest(TestCase):
 
             # VNDK-SP used by LL-NDK
             self.assertIn('/system/{}/libcutils.so'.format(lib_dir),
-                          ll_ndk_private)
+                          ll_ndk_indirect)
             self.assertIn('/system/{}/libcutils_dep.so'.format(lib_dir),
-                          ll_ndk_private)
+                          ll_ndk_indirect)
             self.assertIn('/system/{}/libutils.so'.format(lib_dir),
-                          ll_ndk_private)
+                          ll_ndk_indirect)
 
             # VNDK-SP used by SP-HAL
             self.assertIn('/system/{}/libhidlbase.so'.format(lib_dir),
@@ -377,7 +377,7 @@ class ELFLinkerTest(TestCase):
             self.assertNotIn(libc_path, sp_hal)
             self.assertNotIn(libc_path, sp_hal_dep)
             self.assertNotIn(libc_path, vndk_sp_hal)
-            self.assertNotIn(libc_path, ll_ndk_private)
+            self.assertNotIn(libc_path, ll_ndk_indirect)
 
 
     def test_link_vndk_ver_dirs(self):

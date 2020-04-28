@@ -32,7 +32,7 @@ template <>
 bool DiffWrapper<repr::RecordTypeIR>::DumpDiff(
     repr::DiffMessageIR::DiffKind diff_kind) {
   std::deque<std::string> type_queue;
-  if (oldp_->GetLinkerSetKey() != newp_->GetLinkerSetKey()) {
+  if (oldp_->GetUniqueId() != newp_->GetUniqueId()) {
     llvm::errs() << "Comparing two different unreferenced records\n";
     return false;
   }
@@ -48,7 +48,7 @@ template <>
 bool DiffWrapper<repr::EnumTypeIR>::DumpDiff(
     repr::DiffMessageIR::DiffKind diff_kind) {
   std::deque<std::string> type_queue;
-  if (oldp_->GetLinkerSetKey() != newp_->GetLinkerSetKey()) {
+  if (oldp_->GetUniqueId() != newp_->GetUniqueId()) {
     llvm::errs() << "Comparing two different unreferenced enums\n";
     return false;
   }

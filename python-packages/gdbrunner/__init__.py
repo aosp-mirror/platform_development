@@ -20,7 +20,6 @@ import adb
 import argparse
 import atexit
 import os
-import re
 import subprocess
 import sys
 import tempfile
@@ -317,16 +316,6 @@ def get_binary_arch(binary_file):
             return "mips64"
     else:
         raise RuntimeError("unknown architecture: 0x{:x}".format(e_machine))
-
-
-def get_binary_interp(binary_path, llvm_readobj_path):
-    args = [llvm_readobj_path, "--elf-output-style=GNU", "-l", binary_path]
-    output = subprocess.check_output(args, universal_newlines=True)
-    m = re.search(r"\[Requesting program interpreter: (.*?)\]\n", output)
-    if m is None:
-        return None
-    else:
-        return m.group(1)
 
 
 def start_gdb(gdb_path, gdb_commands, gdb_flags=None):

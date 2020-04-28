@@ -24,4 +24,4 @@ ${HOST_OUT}/development/sys-img-${TARGET_CPU_ABI}/images_armeabi-v7a_source.prop
 development/sys-img/images_armeabi-v7a_hardware.ini    system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/hardware.ini
 
 # feature control config file
-device/generic/goldfish/data/etc/advancedFeatures.ini.arm system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/advancedFeatures.ini
+development/sys-img/advancedFeatures.ini.arm system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/advancedFeatures.ini

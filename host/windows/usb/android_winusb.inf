@@ -51,7 +51,6 @@ HKR,,Icon,,-1
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4EE4&MI_02
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4EE6&MI_01
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4EE7
-%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_D001
 
 ;Google Glass
 %SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_9001
@@ -94,7 +93,6 @@ HKR,,Icon,,-1
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4EE4&MI_02
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4EE6&MI_01
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4EE7
-%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_D001
 
 ;Google Glass
 %SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_9001

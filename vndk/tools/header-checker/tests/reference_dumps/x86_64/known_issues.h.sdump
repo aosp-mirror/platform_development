@@ -5,7 +5,7 @@
   {
    "alignment" : 4,
    "is_integral" : true,
-   "linker_set_key" : "_ZTIi",
+   "linker_set_key" : "int",
    "name" : "int",
    "referenced_type" : "type-1",
    "self_type" : "type-1",

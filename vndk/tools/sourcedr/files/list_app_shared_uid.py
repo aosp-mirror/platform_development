@@ -58,8 +58,8 @@ def find_file(product_out, app_name):
     product_out = os.path.abspath(product_out)
     prefix_len = len(product_out) + 1
     partitions = (
-        'data', 'odm', 'oem', 'product', 'system', 'system_ext', 'system_other',
-        'vendor',)
+        'data', 'odm', 'oem', 'product', 'product_services', 'system',
+        'system_other', 'vendor',)
     for partition in partitions:
         partition_dir = os.path.join(product_out, partition)
         for base, _, filenames in os.walk(partition_dir):

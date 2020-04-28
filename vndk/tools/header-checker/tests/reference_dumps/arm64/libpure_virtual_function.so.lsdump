@@ -5,7 +5,7 @@ record_types {
     alignment: 8
     referenced_type: "type-4"
     source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/pure_virtual/include/header1.h"
-    linker_set_key: "_ZTI10DerivedBar"
+    linker_set_key: "DerivedBar"
     self_type: "type-4"
   }
   base_specifiers {
@@ -53,6 +53,9 @@ record_types {
   }
   access: public_access
   record_kind: class_kind
+  tag_info {
+    unique_id: "_ZTS10DerivedBar"
+  }
 }
 record_types {
   type_info {
@@ -61,7 +64,7 @@ record_types {
     alignment: 8
     referenced_type: "type-1"
     source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/pure_virtual/include/header1.h"
-    linker_set_key: "_ZTI15PureVirtualBase"
+    linker_set_key: "PureVirtualBase"
     self_type: "type-1"
   }
   vtable_layout {
@@ -104,6 +107,9 @@ record_types {
   }
   access: public_access
   record_kind: class_kind
+  tag_info {
+    unique_id: "_ZTS15PureVirtualBase"
+  }
 }
 pointer_types {
   type_info {
@@ -112,7 +118,7 @@ pointer_types {
     alignment: 8
     referenced_type: "type-4"
     source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/pure_virtual/include/header1.h"
-    linker_set_key: "_ZTIP10DerivedBar"
+    linker_set_key: "DerivedBar *"
     self_type: "type-5"
   }
 }
@@ -123,7 +129,7 @@ pointer_types {
     alignment: 8
     referenced_type: "type-1"
     source_file: "/development/vndk/tools/header-checker/tests/integration/cpp/pure_virtual/include/header1.h"
-    linker_set_key: "_ZTIP15PureVirtualBase"
+    linker_set_key: "PureVirtualBase *"
     self_type: "type-3"
   }
 }
@@ -134,7 +140,7 @@ builtin_types {
     alignment: 0
     referenced_type: "type-2"
     source_file: ""
-    linker_set_key: "_ZTIv"
+    linker_set_key: "void"
     self_type: "type-2"
   }
   is_unsigned: false

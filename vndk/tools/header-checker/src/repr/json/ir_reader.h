@@ -159,6 +159,9 @@ class JsonIRReader : public IRReader {
   static void ReadVTableLayout(const JsonObjectRef &record_type,
                                RecordTypeIR *record_ir);
 
+  static void ReadTagTypeInfo(const JsonObjectRef &type_decl,
+                              TagTypeIR *tag_type_ir);
+
   static void ReadEnumFields(const JsonObjectRef &enum_type,
                              EnumTypeIR *enum_ir);
 

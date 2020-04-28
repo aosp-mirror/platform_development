@@ -17,7 +17,6 @@
 #include "repr/ir_reader.h"
 #include "repr/symbol/so_file_parser.h"
 #include "repr/symbol/version_script_parser.h"
-#include "utils/command_line_utils.h"
 #include "utils/header_abi_util.h"
 
 #include <llvm/Support/CommandLine.h>
@@ -38,7 +37,6 @@
 using namespace header_checker;
 using header_checker::repr::TextFormatIR;
 using header_checker::utils::CollectAllExportedHeaders;
-using header_checker::utils::HideIrrelevantCommandLineOptions;
 
 
 static constexpr std::size_t kSourcesPerBatchThread = 7;
@@ -47,8 +45,8 @@ static llvm::cl::OptionCategory header_linker_category(
     "header-abi-linker options");
 
 static llvm::cl::list<std::string> dump_files(
-    llvm::cl::Positional, llvm::cl::desc("<dump-files>"), llvm::cl::ZeroOrMore,
-    llvm::cl::cat(header_linker_category));
+    llvm::cl::Positional, llvm::cl::desc("<dump-files>"), llvm::cl::Required,
+    llvm::cl::cat(header_linker_category), llvm::cl::OneOrMore);
 
 static llvm::cl::opt<std::string> linked_dump(
     "o", llvm::cl::desc("<linked dump>"), llvm::cl::Required,
@@ -448,8 +446,22 @@ bool HeaderAbiLinker::ReadExportedSymbolsFromSharedObjectFile() {
   return true;
 }
 
+// Hide irrelevant command line options defined in LLVM libraries.
+static void HideIrrelevantCommandLineOptions() {
+  llvm::StringMap<llvm::cl::Option *> &map = llvm::cl::getRegisteredOptions();
+  for (llvm::StringMapEntry<llvm::cl::Option *> &p : map) {
+    if (p.second->Category == &header_linker_category) {
+      continue;
+    }
+    if (p.first().startswith("help")) {
+      continue;
+    }
+    p.second->setHiddenFlag(llvm::cl::Hidden);
+  }
+}
+
 int main(int argc, const char **argv) {
-  HideIrrelevantCommandLineOptions(header_linker_category);
+  HideIrrelevantCommandLineOptions();
   llvm::cl::ParseCommandLineOptions(argc, argv, "header-linker");
 
   if (so_file.empty() && version_script.empty()) {

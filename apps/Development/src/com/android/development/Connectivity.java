@@ -47,6 +47,7 @@ import android.os.Parcel;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.os.ServiceManager;
+import android.os.ServiceManagerNative;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.os.Bundle;

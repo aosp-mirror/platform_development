@@ -46,35 +46,33 @@ class ABIWrapper {
              repr::ModuleIR *module,
              ASTCaches *ast_caches);
 
- public:
   static std::string GetDeclSourceFile(const clang::Decl *decl,
                                        const clang::CompilerInstance *cip);
+
+  static std::string GetMangledNameDecl(const clang::NamedDecl *decl,
+                                        clang::MangleContext *mangle_context);
 
  protected:
   std::string GetCachedDeclSourceFile(const clang::Decl *decl,
                                       const clang::CompilerInstance *cip);
 
- public:
-  static std::string GetMangledNameDecl(const clang::NamedDecl *decl,
-                                        clang::MangleContext *mangle_context);
+  std::string GetKeyForTypeId(clang::QualType qual_type);
 
- protected:
-  // Shared between FunctionDeclWrapper and RecordDeclWrapper.
+  std::string TypeNameWithFinalDestination(clang::QualType qual_type);
+
   bool SetupTemplateArguments(const clang::TemplateArgumentList *tl,
                               repr::TemplatedArtifactIR *ta,
                               const std::string &source_file);
 
- protected:
-  // Shared between FunctionTypeWrapper and FunctionDeclWrapper.
   bool SetupFunctionParameter(repr::CFunctionLikeIR *functionp,
                               const clang::QualType qual_type,
                               bool has_default_arg,
                               const std::string &source_file,
                               bool is_this_parameter = false);
 
- protected:
-  // Type-related functions
-  std::string GetTypeId(clang::QualType qual_type);
+  std::string QualTypeToString(const clang::QualType &sweet_qt);
+
+  std::string GetTagDeclQualifiedName(const clang::TagDecl *decl);
 
   bool CreateBasicNamedAndTypedDecl(clang::QualType,
                                     const std::string &source_file);
@@ -86,17 +84,14 @@ class ABIWrapper {
   bool CreateExtendedType(clang::QualType canonical_type,
                           repr::TypeIR *typep);
 
- private:
-  std::string GetTypeUniqueId(clang::QualType qual_type);
+  bool CreateAnonymousRecord(const clang::RecordDecl *decl);
 
-  std::string QualTypeToString(const clang::QualType &sweet_qt);
-
-  std::string GetKeyForTypeId(clang::QualType qual_type);
+  std::string GetTypeLinkageName(const clang::Type *typep);
 
   TypeAndCreationStatus SetTypeKind(const clang::QualType qtype,
                                     const std::string &source_file);
 
-  bool CreateAnonymousRecord(const clang::RecordDecl *decl);
+  std::string GetTypeUniqueId(const clang::TagDecl *tag_decl);
 
  protected:
   const clang::CompilerInstance *cip_;

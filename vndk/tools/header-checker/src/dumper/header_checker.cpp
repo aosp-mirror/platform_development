@@ -16,7 +16,6 @@
 
 #include "dumper/fixed_argv.h"
 #include "dumper/frontend_action_factory.h"
-#include "utils/command_line_utils.h"
 #include "utils/header_abi_util.h"
 
 #include <clang/Frontend/FrontendActions.h>
@@ -41,7 +40,6 @@ using header_checker::dumper::HeaderCheckerFrontendActionFactory;
 using header_checker::dumper::HeaderCheckerOptions;
 using header_checker::repr::TextFormatIR;
 using header_checker::utils::CollectAllExportedHeaders;
-using header_checker::utils::HideIrrelevantCommandLineOptions;
 using header_checker::utils::RealPath;
 
 
@@ -85,8 +83,22 @@ static llvm::cl::opt<TextFormatIR> output_format(
     llvm::cl::init(TextFormatIR::Json),
     llvm::cl::cat(header_checker_category));
 
+// Hide irrelevant command line options defined in LLVM libraries.
+static void HideIrrelevantCommandLineOptions() {
+  llvm::StringMap<llvm::cl::Option *> &map = llvm::cl::getRegisteredOptions();
+  for (llvm::StringMapEntry<llvm::cl::Option *> &p : map) {
+    if (p.second->Category == &header_checker_category) {
+      continue;
+    }
+    if (p.first().startswith("help")) {
+      continue;
+    }
+    p.second->setHiddenFlag(llvm::cl::Hidden);
+  }
+}
+
 int main(int argc, const char **argv) {
-  HideIrrelevantCommandLineOptions(header_checker_category);
+  HideIrrelevantCommandLineOptions();
 
   // Tweak argc and argv to workaround clang version mismatches.
   FixedArgv fixed_argv(argc, argv);

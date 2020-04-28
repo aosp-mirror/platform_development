@@ -147,6 +147,11 @@ void IRToJsonConverter::AddVTableLayout(JsonObject &record_type,
   record_type.Set("vtable_components", vtable_components);
 }
 
+void IRToJsonConverter::AddTagTypeInfo(JsonObject &type_decl,
+                                       const TagTypeIR *tag_type_ir) {
+  type_decl.Set("unique_id", tag_type_ir->GetUniqueId());
+}
+
 JsonObject IRToJsonConverter::ConvertRecordTypeIR(const RecordTypeIR *recordp) {
   JsonObject record_type;
 
@@ -157,6 +162,7 @@ JsonObject IRToJsonConverter::ConvertRecordTypeIR(const RecordTypeIR *recordp) {
   AddRecordFields(record_type, recordp);
   AddBaseSpecifiers(record_type, recordp);
   AddVTableLayout(record_type, recordp);
+  AddTagTypeInfo(record_type, recordp);
   AddTemplateInfo(record_type, recordp);
   return record_type;
 }
@@ -222,6 +228,7 @@ JsonObject IRToJsonConverter::ConvertEnumTypeIR(const EnumTypeIR *enump) {
   enum_type.Set("underlying_type", enump->GetUnderlyingType());
   AddTypeInfo(enum_type, enump);
   AddEnumFields(enum_type, enump);
+  AddTagTypeInfo(enum_type, enump);
   return enum_type;
 }
 

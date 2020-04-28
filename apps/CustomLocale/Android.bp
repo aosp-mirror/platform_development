@@ -1,6 +1,0 @@
-android_app {
-    name: "CustomLocale",
-    srcs: ["**/*.java"],
-    platform_apis: true,
-    certificate: "platform",
-}

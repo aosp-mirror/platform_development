@@ -128,6 +128,10 @@ message VTableLayout {
   repeated VTableComponent vtable_components = 1;
 }
 
+message TagType {
+  optional string unique_id = 1 [default = ""];
+}
+
 message RecordType {
   optional BasicNamedAndTypedDecl type_info = 1;
   repeated RecordFieldDecl fields = 2;
@@ -137,6 +141,7 @@ message RecordType {
   optional AccessSpecifier access = 8 [default = public_access];
   optional bool is_anonymous = 9;
   optional RecordKind record_kind = 10 [default = struct_kind];
+  optional TagType tag_info = 11;
 }
 
 message EnumType {
@@ -144,6 +149,7 @@ message EnumType {
   optional string underlying_type = 2;
   repeated EnumFieldDecl enum_fields = 3;
   optional AccessSpecifier access = 4 [default = public_access];
+  optional TagType tag_info = 5;
 }
 
 message GlobalVarDecl {

@@ -206,12 +206,31 @@ def main():
     libs = [
         'ld-android',
         'libc_malloc_debug',
-        'libdl_android',
         'libnetd_client',
         'libtextclassifier_hash',
     ]
     for name in libs:
         update_tag('/system/${LIB}/' + name + '.so', 'LL-NDK-Private')
+
+    # Workaround for extra VNDK-SP-Private.  The extra VNDK-SP-Private shared
+    # libraries are VNDK-SP-Private when BOARD_VNDK_VERSION is set but are not
+    # VNDK-SP-Private when BOARD_VNDK_VERSION is set.
+    libs = [
+        'libdexfile',
+    ]
+
+    prefix_core = '/system/${LIB}/'
+    prefix_vendor = '/system/${LIB}/vndk-sp${VNDK_VER}/'
+
+    for name in libs:
+        assert name not in vndk_sp
+        assert name not in vndk_private
+        name = get_subdir_and_name(name, name_path_dict, prefix_core,
+                                   prefix_vendor)
+        update_tag(prefix_core + name, 'VNDK-SP-Private',
+                   'Workaround for degenerated VDNK')
+        update_tag(prefix_vendor + name, 'VNDK-SP-Private',
+                   'Workaround for degenerated VDNK')
 
     # Workaround for libclang_rt.*.so
     lib_sets = {

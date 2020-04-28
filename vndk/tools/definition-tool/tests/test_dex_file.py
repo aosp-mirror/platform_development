@@ -68,7 +68,7 @@ class DexFileTest(unittest.TestCase):
         unavailable."""
         try:
             subprocess.check_call(['smali', 'a', source, '-o', dest])
-        except EnvironmentError:
+        except IOError:
             self.skipTest('smali not available')
 
 

@@ -32,18 +32,13 @@ namespace diff {
 repr::CompatibilityStatusIR HeaderAbiDiff::GenerateCompatibilityReport() {
   std::unique_ptr<repr::IRReader> old_reader =
       repr::IRReader::CreateIRReader(text_format_old_);
-  if (!old_reader || !old_reader->ReadDump(old_dump_)) {
-    llvm::errs() << "Failed to read old ABI dump: " << old_dump_ << "\n";
-    ::exit(1);
-  }
-
   std::unique_ptr<repr::IRReader> new_reader =
       repr::IRReader::CreateIRReader(text_format_new_);
-  if (!new_reader || !new_reader->ReadDump(new_dump_)) {
-    llvm::errs() << "Failed to read new ABI dump: " << new_dump_ << "\n";
+  if (!old_reader || !new_reader || !old_reader->ReadDump(old_dump_) ||
+      !new_reader->ReadDump(new_dump_)) {
+    llvm::errs() << "Could not create Text Format readers\n";
     ::exit(1);
   }
-
   std::unique_ptr<repr::IRDiffDumper> ir_diff_dumper =
       repr::IRDiffDumper::CreateIRDiffDumper(text_format_diff_, cr_);
   repr::CompatibilityStatusIR status =
@@ -121,11 +116,11 @@ HeaderAbiDiff::ExtractUserDefinedTypes(const repr::ModuleIR &tu) {
           continue;
         }
         record_types.emplace(
-            record_type->GetLinkerSetKey(), record_type);
+            record_type->GetUniqueId(), record_type);
         break;
       case repr::EnumTypeKind:
         enum_types.emplace(
-            static_cast<const repr::EnumTypeIR *>(type)->GetLinkerSetKey(),
+            static_cast<const repr::EnumTypeIR *>(type)->GetUniqueId(),
             static_cast<const repr::EnumTypeIR *>(type));
         break;
       case repr::FunctionTypeKind:
