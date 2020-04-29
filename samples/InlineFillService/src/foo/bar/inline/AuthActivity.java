@@ -34,6 +34,8 @@ import android.view.inputmethod.InlineSuggestionsRequest;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.Optional;
+
 /**
  * Activity used for autofill authentication, it simply sets the dataste upon tapping OK.
  */
@@ -75,7 +77,7 @@ public class AuthActivity extends Activity {
             }
             FillResponse response =
                     InlineFillService.createResponse(this, fields, 1, authenticateDatasets,
-                            inlineRequest);
+                            Optional.ofNullable(inlineRequest));
             replyIntent.putExtra(EXTRA_AUTHENTICATION_RESULT, response);
         }
         setResult(RESULT_OK, replyIntent);
@@ -94,7 +96,7 @@ public class AuthActivity extends Activity {
 
     public static IntentSender newIntentSenderForResponse(@NonNull Context context,
             @NonNull String[] hints, @NonNull AutofillId[] ids, boolean authenticateDatasets,
-            @NonNull InlineSuggestionsRequest inlineRequest) {
+            @Nullable InlineSuggestionsRequest inlineRequest) {
         return newIntentSender(context, null, hints, ids, authenticateDatasets, inlineRequest);
     }
 

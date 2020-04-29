@@ -16,11 +16,16 @@
 
 package com.example.android.autofillkeyboard;
 
+import static android.util.TypedValue.COMPLEX_UNIT_DIP;
+
+import android.graphics.Color;
+import android.graphics.drawable.Icon;
 import android.inputmethodservice.InputMethodService;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.util.Size;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,6 +36,14 @@ import android.view.inputmethod.InlineSuggestion;
 import android.view.inputmethod.InlineSuggestionsRequest;
 import android.view.inputmethod.InlineSuggestionsResponse;
 import android.widget.Toast;
+
+import androidx.autofill.inline.UiVersions;
+import androidx.autofill.inline.UiVersions.StylesBuilder;
+import androidx.autofill.inline.common.ImageViewStyle;
+import androidx.autofill.inline.common.TextViewStyle;
+import androidx.autofill.inline.common.ViewStyle;
+import androidx.autofill.inline.v1.InlineSuggestionUi;
+import androidx.autofill.inline.v1.InlineSuggestionUi.Style;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -130,15 +143,56 @@ public class AutofillImeService extends InputMethodService {
     @Override
     public InlineSuggestionsRequest onCreateInlineSuggestionsRequest(Bundle uiExtras) {
         Log.d(TAG, "onCreateInlineSuggestionsRequest() called");
+        StylesBuilder stylesBuilder = UiVersions.newStylesBuilder();
+        Style style = InlineSuggestionUi.newStyleBuilder()
+                .setSingleIconChipStyle(
+                        new ViewStyle.Builder()
+                                .setBackground(
+                                        Icon.createWithResource(this, R.drawable.chip_background))
+                                .setPadding(0, 0, 0, 0)
+                                .build())
+                .setChipStyle(
+                        new ViewStyle.Builder()
+                                .setBackground(
+                                        Icon.createWithResource(this, R.drawable.chip_background))
+                                .setPadding(toPixel(5 + 8), 0, toPixel(5 + 8), 0)
+                                .build())
+                .setStartIconStyle(new ImageViewStyle.Builder().setLayoutMargin(0, 0, 0, 0).build())
+                .setTitleStyle(
+                        new TextViewStyle.Builder()
+                                .setLayoutMargin(toPixel(4), 0, toPixel(4), 0)
+                                .setTextColor(Color.parseColor("#FF202124"))
+                                .setTextSize(16)
+                                .build())
+                .setSubtitleStyle(
+                        new TextViewStyle.Builder()
+                                .setLayoutMargin(0, 0, toPixel(4), 0)
+                                .setTextColor(Color.parseColor("#99202124")) // 60% opacity
+                                .setTextSize(14)
+                                .build())
+                .setEndIconStyle(new ImageViewStyle.Builder().setLayoutMargin(0, 0, 0, 0).build())
+                .build();
+        stylesBuilder.addStyle(style);
+        Bundle stylesBundle = stylesBuilder.build();
+
         final ArrayList<InlinePresentationSpec> presentationSpecs = new ArrayList<>();
-        presentationSpecs.add(new InlinePresentationSpec.Builder(new Size(100, 100),
-                new Size(400, 100)).build());
-        presentationSpecs.add(new InlinePresentationSpec.Builder(new Size(100, 100),
-                new Size(400, 100)).build());
+        presentationSpecs.add(new InlinePresentationSpec.Builder(new Size(100, getHeight()),
+                new Size(740, getHeight())).setStyle(stylesBundle).build());
+        presentationSpecs.add(new InlinePresentationSpec.Builder(new Size(100, getHeight()),
+                new Size(740, getHeight())).setStyle(stylesBundle).build());
 
         return new InlineSuggestionsRequest.Builder(presentationSpecs)
                 .setMaxSuggestionCount(6)
                 .build();
+    }
+
+    private int toPixel(int dp) {
+        return (int) TypedValue.applyDimension(COMPLEX_UNIT_DIP, dp,
+                getResources().getDisplayMetrics());
+    }
+
+    private int getHeight() {
+        return getResources().getDimensionPixelSize(R.dimen.keyboard_header_height);
     }
 
     @Override
@@ -224,13 +278,12 @@ public class AutofillImeService extends InputMethodService {
         for (int i = 0; i < totalSuggestionsCount; i++) {
             final int index = i;
             final InlineSuggestion inlineSuggestion = inlineSuggestions.get(i);
-            final Size size = inlineSuggestion.getInfo().getInlinePresentationSpec().getMaxSize();
+            final Size size = new Size(ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
 
             inlineSuggestion.inflate(this, size, executor, suggestionView -> {
                 Log.d(TAG, "new inline suggestion view ready");
                 if(suggestionView != null) {
-                    suggestionView.setLayoutParams(new ViewGroup.LayoutParams(
-                            size.getWidth(), size.getHeight()));
                     suggestionView.setOnClickListener((v) -> {
                         Log.d(TAG, "Received click on the suggestion");
                     });
