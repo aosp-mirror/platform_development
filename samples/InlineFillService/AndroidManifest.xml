@@ -23,5 +23,9 @@
             android:name=".SettingsActivity"
             android:label="Autofill Settings"
             android:exported="true"/>
+
+        <activity android:name=".AttributionDialogActivity"
+                  android:label="Autofill Attribution"
+                  android:theme="@android:style/Theme.Material.Light.Dialog.NoActionBar"/>
     </application>
 </manifest>
