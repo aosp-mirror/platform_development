@@ -35,6 +35,12 @@ lib64/libclang_android.so                              strip build-tools/${PLATF
 lib64/libc++.so                                        strip build-tools/${PLATFORM_NAME}/lib64/libc++.so
 lib64/libaapt2_jni.so                                  strip build-tools/${PLATFORM_NAME}/lib64/libaapt2_jni.so
 
+prebuilts/sdk/tools/lld-dummy  build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld
+prebuilts/sdk/tools/lld-dummy  build-tools/${PLATFORM_NAME}/aarch64-linux-android-ld
+prebuilts/sdk/tools/lld-dummy  build-tools/${PLATFORM_NAME}/i686-linux-android-ld
+prebuilts/sdk/tools/lld-dummy  build-tools/${PLATFORM_NAME}/x86_64-linux-android-ld
+prebuilts/sdk/tools/lld-dummy  build-tools/${PLATFORM_NAME}/mipsel-linux-android-ld
+
 prebuilts/sdk/tools/lld                              build-tools/${PLATFORM_NAME}/lld
 prebuilts/sdk/tools/linux/lld-bin/lld          strip build-tools/${PLATFORM_NAME}/lld-bin/lld
 prebuilts/sdk/tools/linux/lib64/libc++.so.1    strip build-tools/${PLATFORM_NAME}/lib64/libc++.so.1
