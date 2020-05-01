@@ -99,7 +99,7 @@ ELFSoFileParser<T>::ELFSoFileParser(const llvm::object::ELFObjectFile<T> *obj) {
 
     ElfSymbolIR::ElfSymbolBinding symbol_binding =
         LLVMToIRSymbolBinding(elf_sym->getBinding());
-    std::string symbol_name = UnWrap(symbol_it.getName());
+    std::string symbol_name(UnWrap(symbol_it.getName()));
 
     switch (symbol_it.getELFType()) {
       case llvm::ELF::STT_OBJECT:
