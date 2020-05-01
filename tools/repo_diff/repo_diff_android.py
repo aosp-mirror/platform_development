@@ -68,6 +68,15 @@ def repo_init(url, rev, workspace):
     workspace: the folder to init and sync code
   """
 
+  try:
+    subprocess.check_output("repo", stderr=subprocess.PIPE,
+                            cwd=os.path.dirname(workspace), shell=True)
+  except subprocess.CalledProcessError:
+    pass
+  else:
+    raise ValueError("cannot repo-init workspace (%s), workspace is within an "
+                     "existing tree" % workspace)
+
   print("repo init:\n  url: %s\n  rev: %s\n  workspace: %s" %
         (url, rev, workspace))
 
