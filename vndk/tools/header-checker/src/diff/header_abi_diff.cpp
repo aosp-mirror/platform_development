@@ -150,7 +150,7 @@ static std::string GetConfigFilePath(const std::string &dump_file_path) {
   llvm::SmallString<128> config_file_path(dump_file_path);
   llvm::sys::path::remove_filename(config_file_path);
   llvm::sys::path::append(config_file_path, "config.ini");
-  return config_file_path.str();
+  return std::string(config_file_path);
 }
 
 static void ReadConfigFile(const std::string &config_file_path) {
