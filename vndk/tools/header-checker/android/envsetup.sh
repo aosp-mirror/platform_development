@@ -15,5 +15,5 @@
 # limitations under the License.
 
 export LLVM_BUILD_HOST_TOOLS=true
-export LLVM_PREBUILTS_VERSION=clang-r377782d
-export LLVM_RELEASE_VERSION=10.0.6
+export LLVM_PREBUILTS_VERSION=clang-r383902
+export LLVM_RELEASE_VERSION=11.0.1
