@@ -139,7 +139,7 @@ _SEP_SPLIT = '=' * 79
 _SEP = '-' * 79
 
 
-def _print_error(change, res_code, res_json):
+def _print_error(change, res_code, res_body, res_json):
     """Print the error message"""
 
     change_id = change['change_id']
@@ -158,19 +158,19 @@ def _print_error(change, res_code, res_json):
         json.dump(res_json, sys.stderr, indent=4,
                   separators=(', ', ': '))
         print(file=sys.stderr)
+    elif res_body:
+        print(_SEP, file=sys.stderr)
+        print(res_body.decode('utf-8'), file=sys.stderr)
     print(_SEP_SPLIT, file=sys.stderr)
 
 
 def _do_task(change, func, *args, **kwargs):
     """Process a task and report errors when necessary."""
-    try:
-        res_code, res_json = func(*args)
-    except HTTPError as error:
-        res_code = error.code
-        res_json = None
+
+    res_code, res_body, res_json = func(*args)
 
     if res_code != kwargs.get('expected_http_code', 200):
-        _print_error(change, res_code, res_json)
+        _print_error(change, res_code, res_body, res_json)
 
         errors = kwargs.get('errors')
         if errors is not None:
