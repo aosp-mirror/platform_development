@@ -112,7 +112,15 @@ def create_url_opener_from_args(args):
 
 
 def _decode_xssi_json(data):
-    """Trim XSSI protector and decode JSON objects."""
+    """Trim XSSI protector and decode JSON objects.
+
+    Returns:
+        An object returned by json.loads().
+
+    Raises:
+        ValueError: If data doesn't start with a XSSI token.
+        json.JSONDecodeError: If data failed to decode.
+    """
 
     # Decode UTF-8
     data = data.decode('utf-8')
@@ -144,6 +152,14 @@ def query_change_lists(url_opener, gerrit, query_string, limits):
 
 
 def _make_json_post_request(url_opener, url, data, method='POST'):
+    """Open an URL request and decode its response.
+
+    Returns a 3-tuple of (code, body, json).
+        code: A numerical value, the HTTP status code of the response.
+        body: A bytes, the response body.
+        json: An object, the parsed JSON response.
+    """
+
     data = json.dumps(data).encode('utf-8')
     headers = {
         'Content-Type': 'application/json; charset=UTF-8',
@@ -159,11 +175,14 @@ def _make_json_post_request(url_opener, url, data, method='POST'):
 
     with response_file:
         res_code = response_file.getcode()
-        # Nothing to parse if response is '204 No Content'
-        if res_code == 204:
-            return (res_code, None)
-        res_json = _decode_xssi_json(response_file.read())
-        return (res_code, res_json)
+        res_body = response_file.read()
+        try:
+            res_json = _decode_xssi_json(res_body)
+        except ValueError:
+            # The response isn't JSON if it doesn't start with a XSSI token.
+            # Possibly a plain text error message or empty body.
+            res_json = None
+        return (res_code, res_body, res_json)
 
 
 def set_review(url_opener, gerrit_url, change_id, labels, message):
@@ -205,13 +224,8 @@ def delete_topic(url_opener, gerrit_url, change_id):
     """Delete the topic name."""
 
     url = '{}/a/changes/{}/topic'.format(gerrit_url, change_id)
-    request = Request(url)
-    request.get_method = lambda: 'DELETE'
-    response_file = url_opener.open(request)
-    try:
-        return (response_file.getcode(), response_file.read())
-    finally:
-        response_file.close()
+
+    return _make_json_post_request(url_opener, url, {}, method='DELETE')
 
 
 def set_hashtags(url_opener, gerrit_url, change_id, add_tags=None,
@@ -227,19 +241,6 @@ def set_hashtags(url_opener, gerrit_url, change_id, add_tags=None,
         data['remove'] = remove_tags
 
     return _make_json_post_request(url_opener, url, data)
-
-
-def get_patch(url_opener, gerrit_url, change_id, revision_id='current'):
-    """Download the patch file."""
-
-    url = '{}/a/changes/{}/revisions/{}/patch'.format(
-        gerrit_url, change_id, revision_id)
-
-    response_file = url_opener.open(url)
-    try:
-        return base64.b64decode(response_file.read())
-    finally:
-        response_file.close()
 
 
 def add_reviewers(url_opener, gerrit_url, change_id, reviewers):
@@ -262,6 +263,19 @@ def delete_reviewer(url_opener, gerrit_url, change_id, name):
         gerrit_url, change_id, name)
 
     return _make_json_post_request(url_opener, url, {})
+
+
+def get_patch(url_opener, gerrit_url, change_id, revision_id='current'):
+    """Download the patch file."""
+
+    url = '{}/a/changes/{}/revisions/{}/patch'.format(
+        gerrit_url, change_id, revision_id)
+
+    response_file = url_opener.open(url)
+    try:
+        return base64.b64decode(response_file.read())
+    finally:
+        response_file.close()
 
 
 def _parse_args():
