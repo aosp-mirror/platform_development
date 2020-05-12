@@ -75,7 +75,7 @@ def set2list(a_set):
 
 def echo(args, msg):
   if args.v:
-    print("INFO: {}".format(msg))
+    print("INFO: {}".format(msg), flush=True)
 
 
 def echo_all_deps(args, kind, deps):
@@ -130,9 +130,10 @@ def find_dl_path(args, name):
     return data["version"]["dl_path"]
 
 
-def fetch_pkg(args, dl_path):
+def fetch_pkg(args, pkg, dl_path):
   """Fetch package from crates.io and untar it into a subdirectory."""
   if not dl_path:
+    print("ERROR: cannot find download path for '{}'".format(pkg))
     return False
   url = "https://crates.io" + dl_path
   tmp_dir = tempfile.mkdtemp()
@@ -157,7 +158,7 @@ def fetch_pkg(args, dl_path):
   os.remove(tar_file)
   echo(args, "delete temp directory {}".format(tmp_dir))
   shutil.rmtree(tmp_dir)
-  print("SUCCESS: downloaded package in {}".format(dest_dir))
+  print("SUCCESS: downloaded package to '{}'".format(dest_dir))
   return True
 
 
@@ -263,22 +264,21 @@ def sort_found_pkgs(tuples):
 def show_all_dependencies(args, found_pkgs):
   """Topological sort found_pkgs and report number of dependent packages."""
   found_pkgs = sort_found_pkgs(found_pkgs)
-  max_pkg_length = 1
-  for (pkg, _, _) in found_pkgs:
-    max_pkg_length = max(max_pkg_length, len(pkg))
-  name_format = "{:" + str(max_pkg_length) + "s}"
+  max_length = functools.reduce(lambda a, t: max(a, len(t[0])), found_pkgs, 1)
+  name_format = "{:" + str(max_length) + "s}"
   print("\n##### Summary of all dependent package counts #####")
-  print("build_deps[k] = # of non-dev-dependent packages of pkg[k]")
-  print("dev_deps[k] = # of all dependent packages of pkg[k]")
-  print(
-      "all_build_deps[k] = # of non-dev-dependent packages of pkg[1] to pkg[k]")
-  print("all_dev_deps[k] = # of all dependent packages of pkg[1] to pkg[k]")
+  pattern = "{:>9s}_deps[k] = # of {}dependent packages of {}"
+  for (prefix, suffix) in [("    ", "pkg[k]"), ("all_", "pkg[1] to pkg[k]")]:
+    for (name, kind) in [("build", "non-dev-"), ("dev", "all ")]:
+      print(pattern.format(prefix + name, kind, suffix))
   print(("{:>4s} " + name_format + " {:>10s} {:>10s} {:>14s} {:>14s}").format(
       "k", "pkg", "build_deps", "dev_deps", "all_build_deps", "all_dev_deps"))
   all_pkgs = set()
   all_build_deps = set()
   all_dev_deps = set()
   k = 0
+  prev_all_build_deps = set()
+  prev_all_dev_deps = set()
   for (pkg, build_deps, dev_deps) in found_pkgs:
     all_pkgs.add(pkg)
     all_build_deps = all_build_deps.union(build_deps).difference(all_pkgs)
@@ -287,14 +287,18 @@ def show_all_dependencies(args, found_pkgs):
     print(("{:4d} " + name_format + " {:10d} {:10d} {:14d} {:14d}").format(
         k, pkg, len(build_deps), len(dev_deps), len(all_build_deps),
         len(all_dev_deps)))
-    echo_all_deps(args, "all_build_deps", all_build_deps)
-    echo_all_deps(args, "all_dev_deps", all_dev_deps)
+    if prev_all_build_deps != all_build_deps:
+      echo_all_deps(args, "all_build_deps", all_build_deps)
+      prev_all_build_deps = all_build_deps
+    if prev_all_dev_deps != all_dev_deps:
+      echo_all_deps(args, "all_dev_deps", all_dev_deps)
+      prev_all_dev_deps = all_dev_deps
   print("\nNOTE: from all {} package(s):{}".format(
       len(all_pkgs), set2list(all_pkgs)))
-  print("NOTE: found {:3d} other non-dev-dependent package(s):{}".format(
-      len(all_build_deps), set2list(all_build_deps)))
-  print("NOTE: found {:3d} other dependent package(s):{}".format(
-      len(all_dev_deps), set2list(all_dev_deps)))
+  for (kind, deps) in [("non-dev-", all_build_deps), ("", all_dev_deps)]:
+    if deps:
+      print("NOTE: found {:3d} other {}dependent package(s):{}".format(
+          len(deps), kind, set2list(deps)))
 
 
 def crates_io_find_pkgs(args, pkgs, found_pkgs):
@@ -323,20 +327,10 @@ def add_non_dev_dependencies(args, all_deps, core_pkgs, visited, pkg):
   visited.add(pkg)
 
   for p in sorted(build_deps):
-    # If p was visited before as a non-core package and now added
-    # into core_pkgs, its dev_deps should be revisited .
-    revisit_dev_deps = False
-    if pkg in core_pkgs and p not in core_pkgs:
+    if p not in core_pkgs and pkg in core_pkgs:
       core_pkgs.add(p)
-      revisit_dev_deps = True
     deps = add_non_dev_dependencies(args, all_deps, core_pkgs, visited, p)
     build_deps = build_deps.union(deps)
-    if revisit_dev_deps:
-      (_, p_build_deps, p_dev_deps) = all_deps[p]
-      for q in sorted(p_dev_deps):
-        deps = add_non_dev_dependencies(args, all_deps, core_pkgs, visited, q)
-        p_dev_deps = p_dev_deps.union(deps)
-      all_deps[p] = (p, p_build_deps, p_dev_deps)
   if pkg in core_pkgs:
     for p in sorted(dev_deps):
       deps = add_non_dev_dependencies(args, all_deps, core_pkgs, visited, p)
@@ -354,6 +348,24 @@ def add_indirect_build_deps(args, found_pkgs):
   visited = set()
   for pkg in sorted(core_pkgs):
     add_non_dev_dependencies(args, all_deps, core_pkgs, visited, pkg)
+  # Revisit core packages to add build_deps into core_pkgs and other deps.
+  check_again = True
+  while check_again:
+    pattern = "Revisiting {} core packages:{}"
+    echo(args, pattern.format(len(core_pkgs), set2list(core_pkgs)))
+    check_again = False
+    visited = set()
+    num_core_pkgs = len(core_pkgs)
+    for pkg in sorted(core_pkgs):
+      (_, build_deps, dev_deps) = all_deps[pkg]
+      (num_build_deps, num_dev_deps) = (len(build_deps), len(dev_deps))
+      add_non_dev_dependencies(args, all_deps, core_pkgs, visited, pkg)
+      (_, build_deps, dev_deps) = all_deps[pkg]
+      (new_num_build_deps, new_num_dev_deps) = (len(build_deps), len(dev_deps))
+      # If build_deps, dev_deps, or core_pkgs was changed, check again.
+      if (num_build_deps != new_num_build_deps or
+          num_dev_deps != new_num_dev_deps or num_core_pkgs != len(core_pkgs)):
+        check_again = True
   dev_pkgs = visited.difference(core_pkgs)
   dump_pkgs(args, "AFTER", all_deps, core_pkgs, dev_pkgs)
   found_pkgs = list(map(lambda p: all_deps[p], core_pkgs))
@@ -406,17 +418,16 @@ def main():
       sys.exit(2)
     return
   echo(args, "to fetch packages = {}".format(args.pkgs))
-  errors = []
+  success = True
   for pkg in args.pkgs:
-    echo(args, "trying to fetch package {}".format(pkg))
+    echo(args, "trying to fetch package '{}'".format(pkg))
     try:
-      if not fetch_pkg(args, find_dl_path(args, pkg)):
-        errors.append(pkg)
+      if not fetch_pkg(args, pkg, find_dl_path(args, pkg)):
+        success = False
     except urllib.error.HTTPError:
-      errors.append(pkg)
-  if errors:
-    for pkg in errors:
-      print("ERROR: failed to fetch {}".format(pkg))
+      print("ERROR: unknown package '{}'".format(pkg))
+      success = False
+  if not success:
     sys.exit(1)
 
 
