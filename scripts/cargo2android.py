@@ -229,8 +229,7 @@ class Crate(object):
     # A merged test uses its source file base name as output file name,
     # so a test is mergeable only if its base name equals to its crate name.
     return (self.crate_types == other.crate_types and
-            self.crate_types == ['test'] and
-            self.root_pkg == other.root_pkg and
+            self.crate_types == ['test'] and self.root_pkg == other.root_pkg and
             not self.skip_crate() and
             other.crate_name == test_base_name(other.main_src) and
             (len(self.srcs) > 1 or
@@ -633,8 +632,12 @@ class Crate(object):
       # self.root_pkg can have multiple test modules, with different *_tests[n]
       # names, but their executables can all be installed under the same _tests
       # directory. When built from Cargo.toml, all tests should have different
-      # file or crate names.
-      self.write('    relative_install_path: "' + self.root_pkg + '_tests",')
+      # file or crate names. So we used (root_pkg + '_tests') name as the
+      # relative_install_path.
+      # However, some package like 'slab' can have non-mergeable tests that
+      # must be separated by different module names. So, here we no longer
+      # emit relative_install_path.
+      # self.write('    relative_install_path: "' + self.root_pkg + '_tests",')
       self.write('    test_suites: ["general-tests"],')
       self.write('    auto_gen_config: true,')
 
@@ -859,6 +862,8 @@ class Runner(object):
     self.warning_files = set()
     # Keep a unique mapping from (module name) to crate
     self.name_owners = {}
+    # Save and dump all errors from cargo to Android.bp.
+    self.errors = ''
     # Default action is cargo clean, followed by build or user given actions.
     if args.cargo:
       self.cargo = ['clean'] + args.cargo
@@ -993,6 +998,8 @@ class Runner(object):
               lib.dump()
         if self.args.dependencies and self.dependencies:
           self.dump_dependencies()
+        if self.errors:
+          self.append_to_bp('\nErrors in ' + CARGO_OUT + ':\n' + self.errors)
     return self
 
   def add_ar_object(self, obj):
@@ -1014,6 +1021,8 @@ class Runner(object):
       for c in self.crates:
         if c.merge(crate, 'Android.bp'):
           return
+      # If not merged, decide module type and name now.
+      crate.decide_module_type()
       self.crates.append(crate)
 
   def find_warning_owners(self):
@@ -1062,11 +1071,14 @@ class Runner(object):
     else:
       self.add_ar_object(ARObject(self, outf_name).parse(pkg, n, line))
 
+  def append_to_bp(self, line):
+    self.init_bp_file('Android.bp')
+    with open('Android.bp', 'a') as outf:
+      outf.write(line)
+
   def assert_empty_vv_line(self, line):
     if line:  # report error if line is not empty
-      self.init_bp_file('Android.bp')
-      with open('Android.bp', 'a') as outf:
-        outf.write('ERROR -vv line: ', line)
+      self.append_to_bp('ERROR -vv line: ' + line)
     return ''
 
   def parse(self, inf, outf_name):
@@ -1094,6 +1106,8 @@ class Runner(object):
         fpath = WARNING_FILE_PAT.match(line).group(1)
         if fpath[0] != '/':  # ignore absolute path
           self.warning_files.add(fpath)
+      elif line.startswith('error: ') or line.startswith('error[E'):
+        self.errors += line
       prev_warning = False
       rustc_line = new_rustc
     self.find_warning_owners()
@@ -1124,7 +1138,8 @@ def parse_args():
       default=False,
       help='run cargo also for a default device target')
   parser.add_argument(
-      '--features', type=str,
+      '--features',
+      type=str,
       help=('pass features to cargo build, ' +
             'empty string means no default features'))
   parser.add_argument(
