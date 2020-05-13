@@ -284,6 +284,16 @@ function fill_inherited_state(layerMap, rootLayers) {
     const parentHidden = parent && parent.hidden;
     layer.hidden = is_hidden_by_policy(layer) || parentHidden;
     layer.verboseFlags = flags_to_string(layer.flags);
+
+    if (!layer.bounds) {
+      if (!layer.sourceBounds) {
+        layer.bounds = layer.sourceBounds;
+      } else if (parent) {
+        layer.bounds = parent.bounds;
+      } else {
+        layer.bounds = {left:0, top:0, right:0, bottom:0};
+      }
+    }
   });
 } 
 
