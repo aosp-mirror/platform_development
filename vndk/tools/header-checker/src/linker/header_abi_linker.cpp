@@ -135,7 +135,7 @@ class HeaderAbiLinker {
                 const repr::AbiElementMap<T> &src,
                 const std::function<bool(const std::string &)> &symbol_filter);
 
-  std::unique_ptr<repr::ModuleMerger> ReadInputDumpFiles();
+  std::unique_ptr<linker::ModuleMerger> ReadInputDumpFiles();
 
   bool ReadExportedSymbols();
 
@@ -187,10 +187,10 @@ class HeaderAbiLinker {
 static void
 DeDuplicateAbiElementsThread(const std::vector<std::string> &dump_files,
                              const std::set<std::string> *exported_headers,
-                             repr::ModuleMerger *global_merger,
+                             linker::ModuleMerger *global_merger,
                              std::mutex *global_merger_lock,
                              std::atomic<std::size_t> *cnt) {
-  repr::ModuleMerger local_merger(exported_headers);
+  linker::ModuleMerger local_merger(exported_headers);
 
   auto begin_it = dump_files.begin();
   std::size_t num_sources = dump_files.size();
@@ -216,9 +216,9 @@ DeDuplicateAbiElementsThread(const std::vector<std::string> &dump_files,
   global_merger->MergeGraphs(local_merger.GetModule());
 }
 
-std::unique_ptr<repr::ModuleMerger> HeaderAbiLinker::ReadInputDumpFiles() {
-  std::unique_ptr<repr::ModuleMerger> merger(
-      new repr::ModuleMerger(&exported_headers_));
+std::unique_ptr<linker::ModuleMerger> HeaderAbiLinker::ReadInputDumpFiles() {
+  std::unique_ptr<linker::ModuleMerger> merger(
+      new linker::ModuleMerger(&exported_headers_));
 
   std::size_t max_threads = std::thread::hardware_concurrency();
   std::size_t num_threads =
