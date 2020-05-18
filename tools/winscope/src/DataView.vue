@@ -13,24 +13,26 @@
      limitations under the License.
 -->
 <template>
-  <md-card v-if="(isLog(file) || isTrace(file))">
-    <md-card-header>
-      <md-card-header-text>
-        <div class="md-title">
-          <md-icon>{{file.type.icon}}</md-icon>
-          {{file.filename}}
-        </div>
-      </md-card-header-text>
-      <md-button :href="file.blobUrl" :download="file.filename" class="md-icon-button">
-        <md-icon>save_alt</md-icon>
-      </md-button>
-    </md-card-header>
-    <traceview v-if="isTrace(file)" :store="store" :file="file" ref="view" />
-    <logview v-if="isLog(file)" :file="file" ref="view" />
-    <div v-if="!(isTrace(file) || isVideo(file) || isLog(file))">
-      <h1 class="bad">Unrecognized DataType</h1>
-    </div>
-  </md-card>
+  <div @click="onClick($event)">
+    <md-card v-if="(isLog(file) || isTrace(file))">
+      <md-card-header>
+        <md-card-header-text>
+          <div class="md-title">
+            <md-icon>{{file.type.icon}}</md-icon>
+            {{file.filename}}
+          </div>
+        </md-card-header-text>
+        <md-button :href="file.blobUrl" :download="file.filename" class="md-icon-button">
+          <md-icon>save_alt</md-icon>
+        </md-button>
+      </md-card-header>
+      <traceview v-if="isTrace(file)" :store="store" :file="file" ref="view" />
+      <logview v-if="isLog(file)" :file="file" ref="view" />
+      <div v-if="!(isTrace(file) || isVideo(file) || isLog(file))">
+        <h1 class="bad">Unrecognized DataType</h1>
+      </div>
+    </md-card>
+  </div>
 </template>
 <script>
 import TraceView from "./TraceView.vue";
@@ -48,6 +50,10 @@ export default {
     },
     arrowDown() {
       return this.$refs.view.arrowDown();
+    },
+    onClick(e) {
+      // Pass click event to parent, so that click event handler can be attached to component.
+      this.$emit('click', e);
     }
   },
   props: ["store", "file"],
