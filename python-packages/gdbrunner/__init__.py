@@ -362,16 +362,8 @@ def start_gdb(gdb_path, gdb_commands, gdb_flags=None, lldb=False):
     creationflags = 0
     if sys.platform.startswith("win"):
         creationflags = subprocess.CREATE_NEW_CONSOLE
-    env = dict(os.environ)
-    if lldb:
-        bin_dir = os.path.dirname(gdb_path)
-        if sys.platform.startswith("win"):
-            python_path = os.path.join(bin_dir, "../lib/site-packages")
-        else:
-            python_path = os.path.join(bin_dir, "../lib/python2.7/site-packages")
-        env['PYTHONPATH'] = os.path.normpath(python_path)
 
-    gdb_process = subprocess.Popen(gdb_args, creationflags=creationflags, env=env)
+    gdb_process = subprocess.Popen(gdb_args, creationflags=creationflags)
     while gdb_process.returncode is None:
         try:
             gdb_process.communicate()
