@@ -202,7 +202,9 @@ function transform_window_service(entry) {
     name: '',
     children: [
       [entry.rootWindowContainer.displays, transform_display_content],
-      [[entry.policy], transform_policy],
+      [entry.rootWindowContainer.windowContainer.children.reverse(),
+        transform_window_container_child],
+    [[entry.policy], transform_policy],
     ],
     timestamp: entry.elapsedRealtimeNanos,
   });
