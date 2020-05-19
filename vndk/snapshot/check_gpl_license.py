@@ -136,33 +136,58 @@ class GPLChecker(object):
                             rev=revision, proj=git_project_path))
             return True
 
-        if not _check_rev_list(revision):
-            # VNDK snapshots built from a *-release branch will have merge
-            # CLs in the manifest because the *-dev branch is merged to the
-            # *-release branch periodically. In order to extract the
-            # revision relevant to the source of the git_project_path,
-            # we fetch the *-release branch and get the revision of the
-            # parent commit with FETCH_HEAD^2.
+        def _get_2nd_parent_if_merge_commit(revision):
+            """Checks if the commit is merge commit.
+
+            Returns:
+              revision: string, the 2nd parent which is the merged commit.
+              If the commit is not a merge commit, returns None.
+            """
             logging.info(
                 'Checking if the parent of revision {rev} exists in {proj}'.
                 format(rev=revision, proj=git_project_path))
             try:
-                cmd = ['git', '-C', path, 'fetch', self._remote_git, revision]
-                utils.check_call(cmd)
-                cmd = ['git', '-C', path, 'rev-parse', 'FETCH_HEAD^2']
+                cmd = [
+                    'git', '-C', path, 'rev-parse', '--verify',
+                    '{}^2'.format(revision)]
                 parent_revision = utils.check_output(cmd).strip()
             except subprocess.CalledProcessError as error:
                 logging.error(
                     'Failed to get parent of revision {rev} from "{remote}": '
                     '{err}'.format(
                         rev=revision, remote=self._remote_git, err=error))
-                logging.error('Try --remote to manually set remote name')
-                raise
+                logging.error('{} is not a merge commit and must be included '
+                    'in the current branch'.format(revision))
+                return None
             else:
-                if not _check_rev_list(parent_revision):
-                    return False
+                return parent_revision
 
-        return True
+        if _check_rev_list(revision):
+            return True
+
+        # VNDK snapshots built from a *-release branch will have merge
+        # CLs in the manifest because the *-dev branch is merged to the
+        # *-release branch periodically. In order to extract the
+        # revision relevant to the source of the git_project_path,
+        # we find the parent of the merge commit.
+        try:
+            cmd = ['git', '-C', path, 'fetch', self._remote_git, revision]
+            utils.check_call(cmd)
+        except subprocess.CalledProcessError as error:
+            logging.error(
+                'Failed to fetch revision {rev} from "{remote}": '
+                '{err}'.format(
+                    rev=revision, remote=self._remote_git, err=error))
+            logging.error('Try --remote to manually set remote name')
+            raise
+
+        parent_revision = _get_2nd_parent_if_merge_commit(revision)
+        while True:
+            if not parent_revision:
+                return False
+            if _check_rev_list(parent_revision):
+                return True
+            parent_revision = _get_2nd_parent_if_merge_commit(parent_revision)
 
     def check_gpl_projects(self):
         """Checks that all GPL projects have released sources.
