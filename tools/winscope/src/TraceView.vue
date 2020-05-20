@@ -45,6 +45,7 @@
       <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
         <h2 class="md-title" style="flex: 1">Properties</h2>
         <div class="filter">
+          <md-checkbox v-model="showPropertiesDiff">Show Diff</md-checkbox>
           <input id="filter" type="search" placeholder="Filter..." v-model="propertyFilterString" />
         </div>
       </md-content>
@@ -63,7 +64,7 @@ import TreeView from './TreeView.vue'
 import Timeline from './Timeline.vue'
 import Rects from './Rects.vue'
 
-import { transform_json } from './transform.js'
+import { ObjectTransformer } from './transform.js'
 import { format_transform_type, is_simple_transform } from './matrix_utils.js'
 import { DATA_TYPES } from './decode.js'
 import { stableIdCompatibilityFixup } from './utils/utils.js'
@@ -105,6 +106,25 @@ function formatProto(obj) {
   }
 }
 
+function findEntryInTree(tree, id) {
+  if (tree.stableId === id) {
+    return tree;
+  }
+
+  if (!tree.children) {
+    return null;
+  }
+
+  for (const child of tree.children) {
+    const foundEntry = findEntryInTree(child, id);
+    if (foundEntry) {
+      return foundEntry;
+    }
+  }
+
+  return null;
+}
+
 export default {
   name: 'traceview',
   data() {
@@ -118,23 +138,33 @@ export default {
       rects: [],
       tree: null,
       highlight: null,
+      showPropertiesDiff: false,
     }
   },
   methods: {
     itemSelected(item) {
       this.hierarchySelected = item;
-      this.selectedTree = transform_json(
-        item.obj,
-        item.name,
-        stableIdCompatibilityFixup(item),
-        {
-          skip: item.skip,
-          formatter: formatProto
-        },
-      );
+      this.selectedTree = this.getTransformedProperties(item);
       this.highlight = item.highlight;
       this.lastSelectedStableId = item.stableId;
       this.$emit('focus');
+    },
+    getTransformedProperties(item) {
+      const transformer = new ObjectTransformer(
+        item.obj,
+        item.name,
+        stableIdCompatibilityFixup(item)
+      ).setOptions({
+          skip: item.skip,
+          formatter: formatProto,
+        });
+
+      if (this.showPropertiesDiff) {
+        const prevItem = this.getItemFromPrevTree(item);
+        transformer.withDiff(prevItem?.obj);
+      }
+
+      return transformer.transform();
     },
     onRectClick(item) {
       if (item) {
@@ -178,6 +208,39 @@ export default {
     arrowDown() {
       return this.$refs.hierarchy.selectNext();
     },
+    getDataWithOffset(offset) {
+      const index = this.file.selectedIndex + offset;
+
+      if (index < 0 || index >= this.file.data.length) {
+        return null;
+      }
+
+      return this.file.data[index];
+    },
+    getItemFromPrevTree(entry) {
+      if (!this.showPropertiesDiff || !this.hierarchySelected) {
+        return null;
+      }
+
+      const id = entry.stableId;
+      if (!id) {
+        throw new Error("Entry has no stableId...");
+      }
+
+      const prevTree = this.getDataWithOffset(-1);
+      if (!prevTree) {
+        console.warn("No previous entry");
+        return null;
+      }
+
+      const prevEntry = findEntryInTree(prevTree, id);
+      if (!prevEntry) {
+        console.warn("Didn't exist in last entry");
+        // TODO: Maybe handle this in some way.
+      }
+
+      return prevEntry;
+    }
   },
   created() {
     this.setData(this.file.data[this.file.selectedIndex]);
@@ -185,6 +248,11 @@ export default {
   watch: {
     selectedIndex() {
       this.setData(this.file.data[this.file.selectedIndex]);
+    },
+    showPropertiesDiff() {
+      if (this.hierarchySelected) {
+        this.selectedTree = this.getTransformedProperties(this.hierarchySelected);
+      }
     }
   },
   props: ['store', 'file'],
