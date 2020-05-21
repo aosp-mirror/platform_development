@@ -19,5 +19,4 @@ contain the proto definitions for their internal states.
 
 ### Building with internal extensions
 Internal paths in vendor/ which are not available in AOSP must be replaced by
-stub files. Actual path can be optionally picked up using env args. For
-example, to pick up Wayland support, run `WAYLAND=yes yarn run dev`
+stub files. See getWaylandSafePath for an example
