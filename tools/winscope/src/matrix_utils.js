@@ -173,6 +173,7 @@ function is_type_flag_clear(transform, bits) {
 }
 
 function multiply_vec2(matrix, x, y) {
+  if (!matrix) return {x, y};
   // |dsdx dsdy  tx|     | x |
   // |dtdx dtdy  ty|  x  | y |
   // |0    0     1 |     | 1 |
