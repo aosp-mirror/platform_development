@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
+const fs = require('fs');
 var path = require('path')
 var webpack = require('webpack')
 var HtmlWebpackPlugin = require('html-webpack-plugin')
 var HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin')
 
 function getWaylandSafePath() {
-  if (process.env.WAYLAND) {
-    return path.resolve(__dirname, '../../../vendor/google_arc/libs/wayland_service');
+  waylandPath = path.resolve(__dirname, '../../../vendor/google_arc/libs/wayland_service');
+  if (fs.existsSync(waylandPath)) {
+    return waylandPath;
   }
   return path.resolve(__dirname, 'src/stubs');
 }
