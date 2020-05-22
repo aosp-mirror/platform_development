@@ -32,7 +32,8 @@ except ImportError:
 
 from gerrit import (
     add_reviewers, delete_reviewer, abandon, create_url_opener_from_args,
-    delete_topic, query_change_lists, set_hashtags, set_review, set_topic)
+    delete_topic, query_change_lists, set_hashtags, set_review, set_topic,
+    submit)
 
 
 def _get_labels_from_args(args):
@@ -99,6 +100,8 @@ def _parse_args():
                         help='Labels to be added')
     parser.add_argument('-m', '--message', help='Review message')
 
+    parser.add_argument('--submit', action='store_true', help='Submit a CL')
+
     parser.add_argument('--abandon', help='Abandon a CL with a message')
 
     parser.add_argument('--add-hashtag', action='append', help='Add hashtag')
@@ -123,6 +126,8 @@ def _parse_args():
 def _has_task(args):
     """Determine whether a task has been specified in the arguments."""
     if args.label is not None or args.message is not None:
+        return True
+    if args.submit:
         return True
     if args.abandon is not None:
         return True
@@ -183,9 +188,10 @@ def main():
     # Parse and check the command line options
     args = _parse_args()
     if not _has_task(args):
-        print('error: Either --label, --message, --abandon, --add-hashtag, '
-              '--remove-hashtag, --set-topic, --delete-topic, --add-reviewer '
-              'or --delete-reviewer must be specified', file=sys.stderr)
+        print('error: Either --label, --message, --submit, --abandon, '
+              '--add-hashtag, --remove-hashtag, --set-topic, --delete-topic, '
+              '--add-reviewer or --delete-reviewer must be specified',
+              file=sys.stderr)
         sys.exit(1)
 
     # Convert label arguments
@@ -226,6 +232,9 @@ def main():
         if args.delete_topic:
             _do_task(change, delete_topic, url_opener, args.gerrit,
                      change['id'], expected_http_code=204, errors=errors)
+        if args.submit:
+            _do_task(change, submit, url_opener, args.gerrit, change['id'],
+                     errors=errors)
         if args.abandon:
             _do_task(change, abandon, url_opener, args.gerrit, change['id'],
                      args.abandon, errors=errors)
