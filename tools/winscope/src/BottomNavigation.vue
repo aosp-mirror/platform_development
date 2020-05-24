@@ -44,25 +44,30 @@
         </md-toolbar>
 
         <div class="expanded-content" v-show="expanded">
-          <md-list>
-            <md-list-item v-for="(file, idx) in files" :key="file.filename">
-              <md-icon>
-                {{file.type.icon}}
-                <md-tooltip md-direction="right">{{file.type.name}}</md-tooltip>
-              </md-icon>
-              <timeline
-                :items="file.timeline"
-                :selected-index="file.selectedIndex"
-                :scale="scale"
-                @item-selected="onTimelineItemSelected($event, idx)"
-                class="timeline"
-              />
-            </md-list-item>
-          </md-list>
-          <div class="options">
-            <div class="datafilter">
-              <label>Datafilter</label>
-              <datafilter v-for="file in files" :key="file.filename" :store="store" :file="file" />
+          <div class="md-layout-item video" :v-if="video">
+            <videoview :file="video" :ref="video.filename" />
+          </div>
+          <div class="flex-fill">
+            <md-list>
+              <md-list-item v-for="(file, idx) in files" :key="file.filename">
+                <md-icon>
+                  {{file.type.icon}}
+                  <md-tooltip md-direction="right">{{file.type.name}}</md-tooltip>
+                </md-icon>
+                <timeline
+                  :items="file.timeline"
+                  :selected-index="file.selectedIndex"
+                  :scale="scale"
+                  @item-selected="onTimelineItemSelected($event, idx)"
+                  class="timeline"
+                />
+              </md-list-item>
+            </md-list>
+            <div class="options">
+              <div class="datafilter">
+                <label>Datafilter</label>
+                <datafilter v-for="file in files" :key="file.filename" :store="store" :file="file" />
+              </div>
             </div>
           </div>
         </div>
@@ -73,6 +78,7 @@
 <script>
 import Timeline from './Timeline.vue'
 import DataFilter from './DataFilter.vue'
+import VideoView from './VideoView.vue'
 import { nanos_to_string } from './transform.js'
 
 // Find the index of the last element matching the predicate in a sorted array
@@ -92,7 +98,7 @@ function findLastMatchingSorted(array, predicate) {
 
 export default {
   name: 'bottom-navigation',
-  props: [ 'files', 'store', 'dataViewPositions', 'activeFile' ],
+  props: [ 'files', 'video', 'store', 'dataViewPositions', 'activeFile' ],
   data() {
     return {
       minimized: true,
@@ -220,6 +226,7 @@ export default {
   components: {
     timeline: Timeline,
     datafilter: DataFilter,
+    videoview: VideoView,
   }
 }
 </script>
@@ -269,6 +276,18 @@ export default {
   height: 50px;
   display: flex;
   align-items: center;
+}
+
+.expanded-content {
+  display: flex;
+}
+
+.flex-fill {
+  flex-grow: 1;
+}
+
+.video {
+  flex-grow: 0;
 }
 
 </style>

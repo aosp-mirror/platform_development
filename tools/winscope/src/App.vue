@@ -42,6 +42,7 @@
         <bottom-navigation
           :files="files"
           :activeFile="activeFile"
+          :video="video"
           :store="store"
           :dataViewPositions="dataViewPositions"
           :ref="bottomNavRef"
@@ -56,7 +57,6 @@ import TreeView from './TreeView.vue'
 import BottomNavigation from './BottomNavigation.vue'
 import Rects from './Rects.vue'
 import DataView from './DataView.vue'
-import VideoView from './VideoView.vue'
 import DataInput from './DataInput.vue'
 import LocalStore from './localstore.js'
 import DataAdb from './DataAdb.vue'
@@ -134,6 +134,10 @@ export default {
       const positions = {}
 
       for (const file of this.files) {
+        if (this.isVideo(file)) {
+          continue;
+        }
+
         const dataViewEl = this.$refs[file.filename][0].$el;
         positions[file.filename] = dataViewEl.getBoundingClientRect();
       }
@@ -166,7 +170,6 @@ export default {
   components: {
     'bottom-navigation': BottomNavigation,
     'dataview': DataView,
-    'videoview': VideoView,
     'datainput': DataInput,
     'dataadb': DataAdb,
   }
@@ -200,10 +203,6 @@ export default {
 
 .md-button {
   margin-top: 1em
-}
-
-.video {
-  flex-grow: 0;
 }
 
 h1,
