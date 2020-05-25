@@ -43,7 +43,11 @@ export default {
       return this.file.selectedIndex;
     },
     style() {
-      return `height: ${this.height}px`;
+      if (typeof this.height == 'number') {
+        return `height: ${this.height}px`;
+      } else {
+        return `height: ${this.height}`;
+      }
     }
   },
   methods: {

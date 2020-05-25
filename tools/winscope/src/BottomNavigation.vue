@@ -13,86 +13,111 @@
      limitations under the License.
 -->
 <template>
-  <md-bottom-bar class="bottom-nav" ref="bottomNav">
-    <div class="md-layout md-alignment-left-center nav-content">
-      <div class="md-layout-item">
-        <md-toolbar
-          md-elevation="0"
-          class="md-transparent">
-
-          <div class="toolbar">
-            <div class="resize-bar" v-show="expanded">
-              <div @mousedown="onMouseDown">
-                <md-icon class="drag-handle">
-                  drag_handle
-                  <md-tooltip md-direction="bottom">resize</md-tooltip>
-                </md-icon>
-              </div>
-            </div>
-
-            <div class="toolbar-content" v-show="minimized">
-              <div class="seek-time" v-if="seekTime">
-                <b>Seek time</b>: {{ seekTime }}
-              </div>
-              <div class="active-timeline">
-                <timeline
-                  :items="mergedTimeline.timeline"
-                  :selected-index="mergedTimeline.selectedIndex"
-                  :scale="scale"
-                  @item-selected="onMergedTimelineItemSelected($event)"
-                  class="timeline"
-                />
-              </div>
-            </div>
-
-            <md-button class="md-icon-button toggle-btn" @click="toggle">
-              <md-icon v-if="minimized">expand_less</md-icon>
-              <md-icon v-else>expand_more</md-icon>
-            </md-button>
+  <div class="overlay">
+    <div class="overlay-content" ref="overlayContent">
+      <draggable-div
+        ref="videoOverlay"
+        class="video-overlay"
+        v-show="minimized && showVideoOverlay"
+        position="bottomLeft"
+      >
+        <template slot="header">
+          <div class="close-video-overlay" @click="closeVideoOverlay">
+            <md-icon>
+              close
+              <md-tooltip md-direction="right">Close video overlay</md-tooltip>
+            </md-icon>
           </div>
-        </md-toolbar>
-
-        <div class="expanded-content" v-show="expanded">
-          <div class="video" :v-if="video">
-            <!-- videoHeight is calculated to match expandedTimeline height -->
-            <videoview :file="video" :ref="video.filename" :height="videoHeight" />
+        </template>
+        <template slot="main">
+          <div ref="overlayVideoContainer">
+            <videoview :file="video" ref="video" :height="videoHeight" />
           </div>
-          <div class="flex-fill">
-            <div ref="expandedTimeline" :style="`padding-top: ${resizeOffset}px;`">
-              <div class="seek-time" v-if="seekTime">
-                <b>Seek time</b>: {{ seekTime }}
-              </div>
-              <md-list>
-                <md-list-item v-for="(file, idx) in files" :key="file.filename">
-                  <md-icon>
-                    {{file.type.icon}}
-                    <md-tooltip md-direction="right">{{file.type.name}}</md-tooltip>
+        </template>
+      </draggable-div>
+    </div>
+    <md-bottom-bar class="bottom-nav" ref="bottomNav">
+      <div class="nav-content">
+        <div class="">
+          <md-toolbar
+            md-elevation="0"
+            class="md-transparent">
+
+            <div class="toolbar">
+              <div class="resize-bar" v-show="expanded">
+                <div @mousedown="onMouseDown">
+                  <md-icon class="drag-handle">
+                    drag_handle
+                    <md-tooltip md-direction="bottom">resize</md-tooltip>
                   </md-icon>
+                </div>
+              </div>
+
+              <div class="toolbar-content" v-show="minimized">
+                <div class="seek-time" v-if="seekTime">
+                  <b>Seek time</b>: {{ seekTime }}
+                </div>
+                <div class="active-timeline">
                   <timeline
-                    :items="file.timeline"
-                    :selected-index="file.selectedIndex"
+                    :items="mergedTimeline.timeline"
+                    :selected-index="mergedTimeline.selectedIndex"
                     :scale="scale"
-                    @item-selected="onTimelineItemSelected($event, idx)"
+                    @item-selected="onMergedTimelineItemSelected($event)"
                     class="timeline"
                   />
-                </md-list-item>
-              </md-list>
-              <div class="options">
-                <div class="datafilter">
-                  <label>Datafilter</label>
-                  <datafilter v-for="file in files" :key="file.filename" :store="store" :file="file" />
+                </div>
+              </div>
+
+              <md-button class="md-icon-button toggle-btn" @click="toggle">
+                <md-icon v-if="minimized">expand_less</md-icon>
+                <md-icon v-else>expand_more</md-icon>
+              </md-button>
+            </div>
+          </md-toolbar>
+
+          <div class="expanded-content" v-show="expanded">
+            <div class="expanded-content-video" :v-if="video" ref="expandedContentVideoContainer">
+              <!-- Video moved here on expansion -->
+            </div>
+            <div class="flex-fill">
+              <div ref="expandedTimeline" :style="`padding-top: ${resizeOffset}px;`">
+                <div class="seek-time" v-if="seekTime">
+                  <b>Seek time</b>: {{ seekTime }}
+                </div>
+
+                <md-list>
+                  <md-list-item v-for="(file, idx) in files" :key="file.filename">
+                    <md-icon>
+                      {{file.type.icon}}
+                      <md-tooltip md-direction="right">{{file.type.name}}</md-tooltip>
+                    </md-icon>
+                    <timeline
+                      :items="file.timeline"
+                      :selected-index="file.selectedIndex"
+                      :scale="scale"
+                      @item-selected="onTimelineItemSelected($event, idx)"
+                      class="timeline"
+                    />
+                  </md-list-item>
+                </md-list>
+                <div class="options">
+                  <div class="datafilter">
+                    <label>Datafilter</label>
+                    <datafilter v-for="file in files" :key="file.filename" :store="store" :file="file" />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </md-bottom-bar>
+    </md-bottom-bar>
+  </div>
 </template>
 <script>
 import Timeline from './Timeline.vue'
 import DataFilter from './DataFilter.vue'
+import DraggableDiv from './DraggableDiv.vue'
 import VideoView from './VideoView.vue'
 import { nanos_to_string } from './transform.js'
 
@@ -118,12 +143,16 @@ export default {
     return {
       minimized: true,
       currentTimestamp: 0,
-      videoHeight: 0,
+      // height of video in expanded timeline,
+      // made to match expandedTimeline dynamically
+      videoHeight: 'auto',
       dragState: {
         clientY: null,
         lastDragEndPosition: null,
       },
       resizeOffset: 0,
+      showVideoOverlay: true,
+      videoOverlayTop: 0,
     }
   },
   computed: {
@@ -185,14 +214,25 @@ export default {
   },
   updated () {
     this.$nextTick(function () {
-      if (this.$refs.expandedTimeline) {
+      if (this.$refs.expandedTimeline && this.expanded) {
         this.videoHeight = this.$refs.expandedTimeline.clientHeight;
+      } else {
+        this.videoHeight = 'auto';
       }
     })
   },
   methods: {
     toggle() {
+      this.minimized ? this.expand() : this.minimize();
+
       this.minimized = !this.minimized;
+    },
+    expand() {
+      console.log(this.$refs.video);
+      this.$refs.expandedContentVideoContainer.appendChild(this.$refs.video.$el);
+    },
+    minimize() {
+      this.$refs.overlayVideoContainer.appendChild(this.$refs.video.$el);
     },
     fileIsVisible(f) {
       return this.visibleDataViews.includes(f.filename);
@@ -284,25 +324,50 @@ export default {
     },
     getBottomNavDistanceToTop() {
       return this.$refs.bottomNav.$el.getBoundingClientRect().top;
-    }
+    },
+    closeVideoOverlay(e) {
+      this.showVideoOverlay = false;
+    },
   },
   components: {
-    timeline: Timeline,
-    datafilter: DataFilter,
-    videoview: VideoView,
+    'timeline': Timeline,
+    'datafilter': DataFilter,
+    'videoview': VideoView,
+    'draggable-div': DraggableDiv,
+  },
+  mounted() {
+    this.videoOverlayTop = this.$refs.overlayContent.clientHeight - 150 - 15 + "px";
+    console.log('TOP', this.videoOverlayTop);
   }
 }
 </script>
 <style scoped>
-.bottom-nav {
+.overlay {
   position: fixed;
-  bottom: 0;
+  top: 0;
   left: 0;
+  bottom: 0;
   right: 0;
-  z-index: 1;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+}
+
+.overlay-content {
+  flex-grow: 1;
+}
+
+.bottom-nav {
   background: white;
   margin: 0;
   max-height: 100vh;
+  bottom: 0;
+  left: 0;
+  pointer-events: all;
 }
 
 .nav-content {
@@ -360,6 +425,22 @@ export default {
 
 .drag-handle {
   cursor: grab;
+}
+
+.video-overlay {
+  display: inline-block;
+  margin-bottom: 15px;
+  width: 150px;
+  min-width: 50px;
+  max-width: 50vw;
+  height: auto;
+  resize: horizontal;
+  pointer-events: all;
+}
+
+.close-video-overlay {
+  float: right;
+  cursor: pointer;
 }
 
 </style>
