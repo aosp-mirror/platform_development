@@ -123,6 +123,7 @@ export default {
         [DiffType.ADDED]: "+",
         [DiffType.DELETED]: "-",
         [DiffType.MODIFIED]: ".",
+        [DiffType.MOVED]: ".",
       },
     };
   },
@@ -350,12 +351,17 @@ export default {
   background: chartreuse;
 }
 
-.tree-view .node:not(.selected).removed {
+.tree-view .node:not(.selected).deleted {
   background: coral;
 }
 
 .tree-view .node:not(.selected).modified {
   background: cyan;
+}
+
+.tree-view .node:not(.selected).addedMove, 
+.tree-view .node:not(.selected).deletedMove {
+  background: slateblue;
 }
 
 .children {

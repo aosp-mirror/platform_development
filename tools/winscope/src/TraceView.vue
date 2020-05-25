@@ -65,6 +65,7 @@ import Timeline from './Timeline.vue'
 import Rects from './Rects.vue'
 
 import { ObjectTransformer } from './transform.js'
+import { DiffGenerator, defaultModifiedCheck } from './utils/diff.js'
 import { format_transform_type, is_simple_transform } from './matrix_utils.js'
 import { DATA_TYPES } from './decode.js'
 import { stableIdCompatibilityFixup } from './utils/utils.js'
@@ -173,6 +174,28 @@ export default {
     },
     setData(item) {
       this.tree = item;
+
+      // TODO: Add flag to toggle diffs or not
+      // TODO: Disable if proto are not the latest
+      if (true) {
+        // Required pre-processing to match algo
+        // TODO: Clean this up somehow
+        if (this.file.type == DATA_TYPES.SURFACE_FLINGER) {
+          item.obj.id = -1; // TODO: Make sure this ID can never be used by other objects
+          item.children[0].obj.id = 0;
+        }
+
+        this.tree = new DiffGenerator(item)
+          .compareWith(this.getDataWithOffset(-1))
+          .withUniqueNodeId(node => {
+            return node.stableId;
+          })
+          .withModifiedCheck(defaultModifiedCheck)
+          .generateDiffTree();
+      } else {
+        this.tree = item;
+      }
+
       this.rects = [...item.rects].reverse();
       this.bounds = item.bounds;
 
