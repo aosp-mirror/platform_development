@@ -43,41 +43,56 @@
             md-elevation="0"
             class="md-transparent">
 
-            <div class="toolbar">
-              <div class="resize-bar" v-show="expanded">
-                <div @mousedown="onMouseDown">
-                  <md-icon class="drag-handle">
-                    drag_handle
-                    <md-tooltip md-direction="bottom">resize</md-tooltip>
-                  </md-icon>
-                </div>
+            <div class="toolbar" :class="{ expanded: expanded }">
+              <div class="resize-bar" v-show="expanded" @mousedown="onMouseDown">
+                <md-icon class="drag-handle">
+                  drag_handle
+                  <md-tooltip md-direction="bottom">resize</md-tooltip>
+                </md-icon>
               </div>
 
-              <div class="toolbar-content" v-show="minimized">
+              <md-button
+                class="md-icon-button show-video-overlay-btn"
+                @click="openVideoOverlay"
+                v-show="minimized && !showVideoOverlay"
+              >
+                <md-icon>
+                  featured_video
+                  <md-tooltip md-direction="right">Show video overlay</md-tooltip>
+                </md-icon>
+              </md-button>
+
+              <div class="minimized-timeline-content" v-show="minimized">
                 <div class="seek-time" v-if="seekTime">
                   <b>Seek time</b>: {{ seekTime }}
                 </div>
-                <div class="active-timeline">
-                  <timeline
-                    :items="mergedTimeline.timeline"
-                    :selected-index="mergedTimeline.selectedIndex"
-                    :scale="scale"
-                    @item-selected="onMergedTimelineItemSelected($event)"
-                    class="timeline"
-                  />
-                </div>
+                <timeline
+                  :items="mergedTimeline.timeline"
+                  :selected-index="mergedTimeline.selectedIndex"
+                  :scale="scale"
+                  @item-selected="onMergedTimelineItemSelected($event)"
+                  class="minimized-timeline"
+                />
               </div>
 
               <md-button class="md-icon-button toggle-btn" @click="toggle">
-                <md-icon v-if="minimized">expand_less</md-icon>
-                <md-icon v-else>expand_more</md-icon>
+                <md-icon v-if="minimized">
+                  expand_less
+                  <md-tooltip md-direction="right">Expand timeline</md-tooltip>
+                </md-icon>
+                <md-icon v-else>
+                  expand_more
+                  <md-tooltip md-direction="right">Collapse timeline</md-tooltip>
+                </md-icon>
               </md-button>
             </div>
           </md-toolbar>
 
           <div class="expanded-content" v-show="expanded">
-            <div class="expanded-content-video" :v-if="video" ref="expandedContentVideoContainer">
-              <!-- Video moved here on expansion -->
+            <div :v-if="video">
+              <div class="expanded-content-video" ref="expandedContentVideoContainer">
+                <!-- Video moved here on expansion -->
+              </div>
             </div>
             <div class="flex-fill">
               <div ref="expandedTimeline" :style="`padding-top: ${resizeOffset}px;`">
@@ -228,11 +243,14 @@ export default {
       this.minimized = !this.minimized;
     },
     expand() {
-      console.log(this.$refs.video);
-      this.$refs.expandedContentVideoContainer.appendChild(this.$refs.video.$el);
+      if (this.video) {
+        this.$refs.expandedContentVideoContainer.appendChild(this.$refs.video.$el);
+      }
     },
     minimize() {
-      this.$refs.overlayVideoContainer.appendChild(this.$refs.video.$el);
+      if (this.video) {
+        this.$refs.overlayVideoContainer.appendChild(this.$refs.video.$el);
+      }
     },
     fileIsVisible(f) {
       return this.visibleDataViews.includes(f.filename);
@@ -325,9 +343,12 @@ export default {
     getBottomNavDistanceToTop() {
       return this.$refs.bottomNav.$el.getBoundingClientRect().top;
     },
-    closeVideoOverlay(e) {
+    closeVideoOverlay() {
       this.showVideoOverlay = false;
     },
+    openVideoOverlay() {
+      this.showVideoOverlay = true;
+    }
   },
   components: {
     'timeline': Timeline,
@@ -374,27 +395,27 @@ export default {
   width: 100%;
 }
 
-.toggle-btn {
-  margin: 0;
-}
-
 .toolbar, .active-timeline, .options {
   display: flex;
   flex-direction: row;
   flex: 1;
-  align-items: center;
+  align-items: flex-end;
 }
 
-.toolbar-content {
+.toolbar.expanded {
+  align-items: baseline;
+}
+
+.minimized-timeline-content {
  flex-grow: 1;
 }
 
-.toolbar-content .seek-time {
-  margin: 8px 0 -8px 0;
+.minimized-timeline-content .seek-time {
+  padding: 3px 0;
 }
 
 .options, .expanded-content .seek-time {
-  padding: 0 20px 15px 20px
+  padding: 0 20px 15px 20px;
 }
 
 .options label {
@@ -427,6 +448,14 @@ export default {
   cursor: grab;
 }
 
+.md-icon-button {
+  margin: 0;
+}
+
+.toggle-btn {
+  margin-left: 8px;
+}
+
 .video-overlay {
   display: inline-block;
   margin-bottom: 15px;
@@ -441,6 +470,11 @@ export default {
 .close-video-overlay {
   float: right;
   cursor: pointer;
+}
+
+.show-video-overlay-btn {
+  align-self: flex-end;
+  margin-right: 12px;
 }
 
 </style>
