@@ -26,12 +26,18 @@
     "@jetbrains/kotlin-webpack-plugin": "^3.0.2",
     "babel-loader": "^8.1.0",
     "compression-webpack-plugin": "^4.0.0",
+    "cross-env": "^7.0.2",
     "css-loader": "^3.6.0",
+    "eslint": "^7.1.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-vue": "^6.2.2",
     "file-loader": "^6.0.0",
     "friendly-errors-webpack-plugin": "^1.7.0",
     "html-webpack-inline-source-plugin": "^0.0.10",
     "html-webpack-plugin": "^4.3.0",
     "jasmine": "^3.5.0",
+    "husky": "^4.2.5",
+    "lint-staged": ">=10",
     "loader-utils": "^2.0.0",
     "mini-css-extract-plugin": "^0.9.0",
     "optimize-css-assets-webpack-plugin": "^5.0.3",
@@ -46,5 +52,13 @@
     "webpack-cli": "^3.3.12",
     "webpack-dev-server": "^3.11.0",
     "webpack-merge": "^5.0.9"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,vue}": "eslint --cache --fix"
   }
 }
