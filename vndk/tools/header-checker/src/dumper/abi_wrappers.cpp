@@ -96,7 +96,7 @@ std::string ABIWrapper::GetMangledNameDecl(
     const clang::NamedDecl *decl, clang::MangleContext *mangle_contextp) {
   if (!mangle_contextp->shouldMangleDeclName(decl)) {
     clang::IdentifierInfo *identifier = decl->getIdentifier();
-    return identifier ? identifier->getName() : "";
+    return identifier ? identifier->getName().str() : "";
   }
   std::string mangled_name;
   llvm::raw_string_ostream ostream(mangled_name);
@@ -223,7 +223,7 @@ bool ABIWrapper::CreateExtendedType(clang::QualType qual_type,
 static std::string GetAnonymousEnumUniqueId(llvm::StringRef mangled_name,
                                             const clang::EnumDecl *enum_decl) {
   // Get the type name from the mangled name.
-  const std::string mangled_name_str = mangled_name;
+  const std::string mangled_name_str(mangled_name);
   std::smatch match_result;
   std::string old_suffix;
   std::string nested_name_suffix;
@@ -274,7 +274,7 @@ std::string ABIWrapper::GetTypeUniqueId(clang::QualType qual_type) {
     return GetAnonymousEnumUniqueId(uid.str(), enum_decl);
   }
 
-  return uid.str();
+  return std::string(uid);
 }
 
 // CreateBasicNamedAndTypedDecl creates a BasicNamedAndTypedDecl which will
@@ -602,7 +602,7 @@ bool RecordDeclWrapper::SetupRecordFields(repr::RecordTypeIR *recordp,
       llvm::errs() << "Creation of Type failed\n";
       return false;
     }
-    std::string field_name = field->getName();
+    std::string field_name(field->getName());
     uint64_t field_offset = record_layout.getFieldOffset(field_index);
     recordp->AddRecordField(repr::RecordFieldIR(
         field_name, GetTypeUniqueId(field_type), field_offset,
@@ -855,7 +855,7 @@ std::string RecordDeclWrapper::GetMangledRTTI(
   llvm::SmallString<256> uid;
   llvm::raw_svector_ostream out(uid);
   mangle_contextp_->mangleCXXRTTI(qual_type, out);
-  return uid.str();
+  return std::string(uid);
 }
 
 
