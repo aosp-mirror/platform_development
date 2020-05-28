@@ -1,22 +1,5 @@
 import { DiffGenerator, DiffType } from "../src/utils/diff.js";
-
-class Node {
-    constructor(nodeDef, children) {
-        this.children = children;
-        const { id, data } = nodeDef;
-        this.id = id;
-        if (data) {
-            this.data = data;
-        }
-    }
-}
-
-class DiffNode extends Node {
-    constructor(nodeDef, diffType, children) {
-        super(nodeDef, children);
-        this.diff = { type: diffType };
-    }
-}
+import { Node, DiffNode, toPlainObject } from "./utils/tree.js";
 
 function checkDiffTreeWithNoModifiedCheck(oldTree, newTree, expectedDiffTree) {
     const diffTree = new DiffGenerator(newTree)
@@ -25,24 +8,6 @@ function checkDiffTreeWithNoModifiedCheck(oldTree, newTree, expectedDiffTree) {
         .generateDiffTree();
 
     expect(diffTree).toEqual(expectedDiffTree);
-}
-
-function isPrimitive(test) {
-    return test !== Object(test);
-};
-
-function toPlainObject(theClass) {
-    if (isPrimitive(theClass)) {
-        return theClass;
-    } else if (Array.isArray(theClass)) {
-        return theClass.map(item => toPlainObject(item));
-    } else {
-        const keys = Object.getOwnPropertyNames(Object.assign({}, theClass));
-        return keys.reduce((classAsObj, key) => {
-            classAsObj[key] = toPlainObject(theClass[key]);
-            return classAsObj;
-        }, {});
-    }
 }
 
 describe("DiffGenerator", () => {
