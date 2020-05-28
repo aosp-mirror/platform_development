@@ -106,10 +106,7 @@ public class InlineRequestHelper {
     private static Slice createSlice(
             String title, String subtitle, Icon startIcon, Icon endIcon,
             PendingIntent attribution) {
-        Content.Builder builder = InlineSuggestionUi.newContentBuilder();
-        if (attribution != null) {
-            builder.setAttribution(attribution);
-        }
+        Content.Builder builder = InlineSuggestionUi.newContentBuilder(attribution);
         if (!TextUtils.isEmpty(title)) {
             builder.setTitle(title);
         }
