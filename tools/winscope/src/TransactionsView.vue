@@ -31,7 +31,11 @@
       </md-table-toolbar>
 
       <div class="scrollBody" ref="tableBody">
-        <md-table-row v-for="transaction in filteredData" :key="transaction.timestamp">
+        <md-table-row
+          v-for="transaction in filteredData"
+          :key="transaction.timestamp"
+          @click="transactionSelected(transaction)"
+        >
           <md-table-cell>{{transaction.time}}</md-table-cell>
 
           <div v-if="transaction.type == 'transaction'">
@@ -49,9 +53,24 @@
       </div>
 
     </md-table>
+
+    <md-card class="changes">
+      <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
+        <h2 class="md-title" style="flex: 1">Changes</h2>
+      </md-content>
+      <div class="changes-content">
+        <tree-view :item="selectedTree" :useGlobalCollapsedState="true" />
+      </div>
+    </md-card>
+
   </md-card-content>
 </template>
 <script>
+import TreeView from './TreeView.vue';
+
+import { transform_json } from './transform.js';
+import { stableIdCompatibilityFixup } from './utils/utils.js'
+
 export default {
   name: 'transactionsview',
   props: ['data'],
@@ -71,6 +90,7 @@ export default {
       transactionTypes: Array.from(transactionTypes),
       selectedTransactionTypes: [],
       searchInput: "",
+      selectedTree: null,
     };
   },
   computed: {
@@ -95,6 +115,47 @@ export default {
 
   },
   methods: {
+    removeNullFields(changeObject) {
+      for (const key in changeObject) {
+        if (changeObject[key] === null) {
+          delete changeObject[key];
+        }
+      }
+
+      return changeObject;
+    },
+    transactionSelected(transaction) {
+      let obj = this.removeNullFields(transaction.obj);
+      let name = transaction.type;
+
+      if (transaction.type == "transaction") {
+        name = "changes";
+        obj = {};
+
+        const [surfaceChanges, displayChanges] =
+          this.aggregateTransactions(transaction.transactions);
+
+        for (const changeId in surfaceChanges) {
+          this.removeNullFields(surfaceChanges[changeId]);
+        }
+        for (const changeId in displayChanges) {
+          this.removeNullFields(displayChanges[changeId]);
+        }
+
+        if (Object.keys(surfaceChanges).length > 0) {
+          obj.surfaceChanges = surfaceChanges;
+        }
+
+        if (Object.keys(displayChanges).length > 0) {
+          obj.displayChanges = displayChanges;
+        }
+      }
+
+      const transactionUnique = transaction.timestamp;
+      this.selectedTree = transform_json(obj, name, transactionUnique, {
+        formatter: () => {}
+      });
+    },
     filterTransactions(condition) {
       return (entry) => {
         if (entry.type == "transaction") {
@@ -110,7 +171,27 @@ export default {
           }
       };
     },
-    summarizeTranscations(transactions) {
+    mergeChanges(a, b) {
+      const res = {};
+
+      for (const key in a) {
+        if (a[key] !== null && a.hasOwnProperty(key)) {
+          res[key] = a[key];
+        }
+      }
+
+      for (const key in b) {
+        if (b[key] !== null && key !== 'id' && b.hasOwnProperty(key)) {
+          if (res.hasOwnProperty(key)) {
+            throw new Error(`Merge failed – key '${key}' already present`);
+          }
+          res[key] = b[key];
+        }
+      }
+
+      return res;
+    },
+    aggregateTransactions(transactions) {
       const surfaceChanges = {};
       const displayChanges = {};
 
@@ -120,12 +201,12 @@ export default {
         switch (transaction.type) {
           case "surfaceChange":
             surfaceChanges[obj.id] =
-              Object.assign(surfaceChanges[obj.id] ?? {}, obj);
+              this.mergeChanges(surfaceChanges[obj.id] ?? {}, obj);
             break;
 
           case "displayChange":
             displayChanges[obj.id] =
-              Object.assign(displayChanges[obj.id] ?? {}, obj);
+              this.mergeChanges(displayChanges[obj.id] ?? {}, obj);
             break;
 
           default:
@@ -133,31 +214,50 @@ export default {
         }
       }
 
-      const summary = [];
+      return [surfaceChanges, displayChanges];
+    },
+    summarizeTranscations(transactions) {
+      const ids = {
+        "surfaceChange": new Set(),
+        "displayChange": new Set(),
+      };
 
-      const surfaceChangesId = Object.keys(surfaceChanges);
-      if (surfaceChangesId.length > 0) {
-        summary.push(`surfaceChanges: ${surfaceChangesId.join(', ')}`);
+      for (const transaction of transactions) {
+        ids[transaction.type].add(transaction.obj.id);
       }
 
-      const displayChangesIds = Object.keys(displayChanges);
-      if (displayChangesIds.length > 0) {
-        summary.push(`displayChanges: ${displayChangesIds.join(', ')}`);
+      const summary = [];
+
+      if (ids.surfaceChange.size > 0) {
+        summary.push(`surfaceChanges: ${[...ids.surfaceChange].join(', ')}`);
+      }
+
+      if (ids.displayChange.size > 0) {
+        summary.push(`displayChanges: ${[...ids.displayChange].join(', ')}`);
       }
 
       return summary.join(" | ");
-    }
+    },
+  },
+  components: {
+    'tree-view': TreeView,
   }
 }
 
 </script>
 <style scoped>
-/* .transaction-table {
-  width: 100%;
-} */
+.container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.transaction-table,
+.changes {
+  flex: 1;
+  margin: 8px;
+}
 
 .scrollBody {
-  /* width: 100%; */
   max-height: 75vh;
   overflow: scroll;
 }
