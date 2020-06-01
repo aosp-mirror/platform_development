@@ -169,6 +169,9 @@ function transform_display_content(entry) {
     width: entry.displayInfo.logicalWidth || 0,
     height: entry.displayInfo.logicalHeight || 0,
   };
+  var children = entry.windowContainer == null
+    ? entry.rootDisplayArea.windowContainer.children.reverse()
+    : entry.windowContainer.children.reverse();
 
   return transform({
     obj: entry,
@@ -180,7 +183,7 @@ function transform_display_content(entry) {
       [entry.stacks, transform_stack],
       [entry.tasks, transform_task],
       [entry.belowAppWindows, transform_below],
-      [entry.windowContainer.children.reverse(), transform_window_container_child],
+      [children, transform_window_container_child],
     ],
     bounds,
   });
