@@ -197,6 +197,7 @@ export default {
             view.status = STATES.DEVICES;
           }
         } catch (err) {
+          console.error(err);
           view.errorText = request.responseText;
           view.status = STATES.ERROR;
         }
@@ -260,6 +261,7 @@ export default {
             view.$emit('dataReady', view.dataFiles);
           }
         } catch (err) {
+          console.error(err);
           view.errorText = err;
           view.status = STATES.ERROR;
         }

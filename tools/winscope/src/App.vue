@@ -57,7 +57,7 @@ import LocalStore from './localstore.js'
 import DataAdb from './DataAdb.vue'
 import FileType from './mixins/FileType.js'
 
-const APP_NAME = "Winscope";
+const APP_NAME = "Winscope"
 
 export default {
   name: 'app',
