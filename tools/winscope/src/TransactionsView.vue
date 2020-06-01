@@ -14,9 +14,24 @@
 -->
 <template>
   <md-card-content class="container">
-    <md-table class="transaction-table">
+    <md-table class="transaction-table" md-card>
+      <md-table-toolbar>
+        <md-field>
+          <label>Transaction Type</label>
+          <md-select v-model="selectedTransactionTypes" multiple>
+            <md-option v-for="type in transactionTypes" :value="type">{{ type }}</md-option>
+          </md-select>
+        </md-field>
+
+        <md-field md-clearable>
+          <md-input v-model="searchInput" placeholder="Search by id or name..." />
+          <span class="md-helper-text">Comma seperated</span>
+        </md-field>
+
+      </md-table-toolbar>
+
       <div class="scrollBody" ref="tableBody">
-        <md-table-row v-for="transaction in data" :key="transaction.timestamp">
+        <md-table-row v-for="transaction in filteredData" :key="transaction.timestamp">
           <md-table-cell>{{transaction.time}}</md-table-cell>
 
           <div v-if="transaction.type == 'transaction'">
@@ -25,7 +40,10 @@
             </md-table-cell>
           </div>
           <div v-else>
-            <md-table-cell>{{transaction.type}}</md-table-cell>
+            <md-table-cell>
+              {{transaction.type}}
+              <span v-if="transaction.obj.id !== undefined">: {{transaction.obj.id}}</span>
+            </md-table-cell>
           </div>
         </md-table-row>
       </div>
@@ -38,12 +56,60 @@ export default {
   name: 'transactionsview',
   props: ['data'],
   data() {
-    return {};
+    const transactionTypes = new Set();
+    for (const entry of this.data) {
+      if (entry.type == "transaction") {
+        for (const transaction of entry.transactions) {
+          transactionTypes.add(transaction.type);
+        }
+      } else {
+        transactionTypes.add(entry.type);
+      }
+    }
+
+    return {
+      transactionTypes: Array.from(transactionTypes),
+      selectedTransactionTypes: [],
+      searchInput: "",
+    };
   },
   computed: {
-    
+    filteredData() {
+      let filteredData = this.data;
+
+      if (this.selectedTransactionTypes.length > 0) {
+        filteredData = filteredData.filter(
+          this.filterTransactions(transaction =>
+            this.selectedTransactionTypes.includes(transaction.type)));
+      }
+
+      if (this.searchInput) {
+        const terms = this.searchInput.split(/,\s*/);
+        filteredData = filteredData.filter(
+          this.filterTransactions(transaction =>
+            terms.includes("" + transaction.obj.id)));
+      }
+
+      return filteredData;
+    },
+
   },
   methods: {
+    filterTransactions(condition) {
+      return (entry) => {
+        if (entry.type == "transaction") {
+            for (const transaction of entry.transactions) {
+              if (condition(transaction)) {
+                return true;
+              }
+            }
+
+            return false;
+          } else {
+            return condition(entry);
+          }
+      };
+    },
     summarizeTranscations(transactions) {
       const surfaceChanges = {};
       const displayChanges = {};
@@ -53,12 +119,12 @@ export default {
 
         switch (transaction.type) {
           case "surfaceChange":
-            surfaceChanges[obj.id] = 
+            surfaceChanges[obj.id] =
               Object.assign(surfaceChanges[obj.id] ?? {}, obj);
             break;
 
           case "displayChange":
-            displayChanges[obj.id] = 
+            displayChanges[obj.id] =
               Object.assign(displayChanges[obj.id] ?? {}, obj);
             break;
 
