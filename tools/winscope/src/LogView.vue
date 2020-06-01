@@ -27,7 +27,9 @@
       <div class="scrollBody" ref="tableBody">
         <md-table-row v-for="(line, i) in data" :key="line.timestamp">
           <div :class="{inactive: i > idx}">
-            <md-table-cell class="time-column">{{line.time}}</md-table-cell>
+            <md-table-cell class="time-column">
+              <a v-on:click="setTimelineTime(line.timestamp)">{{line.time}}</a>
+            </md-table-cell>
             <md-table-cell class="tag-column">{{line.tag}}</md-table-cell>
             <md-table-cell class="at-column">{{line.at}}</md-table-cell>
             <md-table-cell>{{line.text}}</md-table-cell>
@@ -69,12 +71,15 @@ export default {
 
       // Is the row viewable?
       const isViewable = (rowRect.top >= bodyRect.top) &&
-        (rowRect.top <= bodyRect.top + bodyRect.clientHeight);
+        (rowRect.top <= bodyRect.top + body.clientHeight);
 
       if (!isViewable) {
         body.scrollTop = (rowRect.top + body.scrollTop + rowRect.height) -
           (body.clientHeight + bodyRect.top);
       }
+    },
+    setTimelineTime(timestamp) {
+      this.$store.dispatch('updateTimelineTime', timestamp);
     }
   },
   updated() {
@@ -160,7 +165,15 @@ export default {
   overflow: auto;
 }
 
+.scrollBody a {
+  cursor: pointer;
+}
+
 .scrollBody .inactive {
+  color: gray;
+}
+
+.scrollBody .inactive a {
   color: gray;
 }
 
