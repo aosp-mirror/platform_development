@@ -26,15 +26,11 @@
                 <b>Seek time</b>: {{ seekTime }}
               </div>
               <div class="active-timeline" v-show="minimized">
-                <md-icon>
-                  {{timelineActiveFile.type.icon}}
-                  <md-tooltip md-direction="right">{{timelineActiveFile.type.name}}</md-tooltip>
-                </md-icon>
                 <timeline
-                  :items="timelineActiveFile.timeline"
-                  :selected-index="timelineActiveFile.selectedIndex"
+                  :items="mergedTimeline.timeline"
+                  :selected-index="mergedTimeline.selectedIndex"
                   :scale="scale"
-                  @item-selected="onTimelineItemSelected($event, timelineActiveFileIndex)"
+                  @item-selected="onMergedTimelineItemSelected($event)"
                   class="timeline"
                 />
               </div>
@@ -107,49 +103,6 @@ export default {
     expanded() {
       return !this.minimized;
     },
-    timelineActiveFile() {
-      if (this.activeFile) {
-        return this.activeFile;
-      }
-
-      if (!this.dataViewPositions) {
-        return this.files[0];
-      }
-
-      // If not active file is selected figure out which one takes up the most
-      // of the screen and mark that one as the active file
-      const visibleHeight =
-        Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
-      let maxScreenSpace = 0;
-      let selectedFile = this.files[0];
-      for (const file of this.files) {
-        const pos = this.dataViewPositions[file.filename];
-
-        let screenSpace = 0;
-        if (0 <= pos.top && pos.top <= visibleHeight) {
-          screenSpace = Math.min(visibleHeight, pos.bottom) - pos.top;
-        } else if (0 <= pos.bottom && pos.bottom <= visibleHeight) {
-          screenSpace = pos.bottom - Math.max(0, pos.top);
-        } else if (pos.top <=0 && pos.bottom >= visibleHeight) {
-          screenSpace = visibleHeight;
-        }
-
-        if (screenSpace >= maxScreenSpace) {
-          maxScreenSpace = screenSpace;
-          selectedFile = file;
-        }
-      }
-
-      return selectedFile;
-    },
-    timelineActiveFileIndex() {
-      for (let i = 0; i < this.files.length; i++) {
-        if (this.files[i].filename == this.timelineActiveFile.filename) {
-          return i;
-        }
-      }
-      throw "Active file index not found";
-    },
     seekTime() {
       return nanos_to_string(this.currentTimestamp);
     },
@@ -158,6 +111,50 @@ export default {
       var mi = Math.min(...(this.files.map(f => Math.min(...f.timeline))));
       return [mi, mx];
     },
+    mergedTimeline() {
+      const mergedTimeline = {
+        timeline: [], // Array of integers timestamps
+        selectedIndex: 0,
+      };
+
+      const timelineIndexes = [];
+      const timelines = [];
+      for (const file of this.files) {
+        timelineIndexes.push(0);
+        timelines.push(file.timeline);
+      }
+
+      while(true) {
+        let minTime = Infinity;
+        let timelineToAdvance;
+
+        for (let i = 0; i < timelines.length; i++) {
+          const timeline = timelines[i];
+          const index = timelineIndexes[i];
+
+          if (index >= timeline.length) {
+            continue;
+          }
+
+          const time = timeline[index];
+
+          if (time < minTime) {
+            minTime = time;
+            timelineToAdvance = i;
+          }
+        }
+
+        if (timelineToAdvance === undefined) {
+          // No more elements left
+          break;
+        }
+
+        timelineIndexes[timelineToAdvance]++;
+        mergedTimeline.timeline.push(minTime);
+      }
+
+      return mergedTimeline;
+    }
   },
   methods: {
     toggle() {
@@ -166,19 +163,40 @@ export default {
     fileIsVisible(f) {
       return this.visibleDataViews.includes(f.filename);
     },
+    updateSelectedIndex(file, timestamp) {
+      file.selectedIndex = findLastMatchingSorted(
+        file.timeline,
+        function(array, idx) {
+          return parseInt(array[idx]) <= timestamp;
+        }
+      );
+    },
+    onMergedTimelineItemSelected(index) {
+      this.mergedTimeline.selectedIndex = index;
+      const timestamp = this.mergedTimeline.timeline[index];
+      this.files.forEach(file => this.updateSelectedIndex(file, timestamp));
+      this.currentTimestamp = timestamp;
+    },
     onTimelineItemSelected(index, timelineIndex) {
       this.files[timelineIndex].selectedIndex = index;
-      var t = parseInt(this.files[timelineIndex].timeline[index]);
-      for (var i = 0; i < this.files.length; i++) {
+      const timestamp = parseInt(this.files[timelineIndex].timeline[index]);
+      for (let i = 0; i < this.files.length; i++) {
         if (i != timelineIndex) {
-          this.files[i].selectedIndex = findLastMatchingSorted(this.files[i].timeline, function(array, idx) {
-            return parseInt(array[idx]) <= t;
-          });
+          this.updateSelectedIndex(this.files[i], timestamp);
         }
       }
-      this.currentTimestamp = t;
+
+      this.updateSelectedIndex(this.mergedTimeline, timestamp);
+
+      this.currentTimestamp = timestamp;
     },
     advanceTimeline(direction) {
+      if (0 < this.mergedTimeline.selectedIndex + direction &&
+            this.mergedTimeline.selectedIndex + direction <
+              this.mergedTimeline.timeline.length) {
+        this.mergedTimeline.selectedIndex += direction;
+      }
+
       var closestTimeline = -1;
       var timeDiff = Infinity;
       for (var idx = 0; idx < this.files.length; idx++) {
