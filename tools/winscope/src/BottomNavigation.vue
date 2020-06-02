@@ -13,7 +13,7 @@
      limitations under the License.
 -->
 <template>
-  <md-bottom-bar class="bottom-nav">
+  <md-bottom-bar class="bottom-nav" ref="bottomNav">
     <div class="md-layout md-alignment-left-center nav-content">
       <div class="md-layout-item">
         <md-toolbar
@@ -21,11 +21,20 @@
           class="md-transparent">
 
           <div class="toolbar">
-            <div class="toolbar-content">
+            <div class="resize-bar" v-show="expanded">
+              <div @mousedown="onMouseDown">
+                <md-icon class="drag-handle">
+                  drag_handle
+                  <md-tooltip md-direction="bottom">resize</md-tooltip>
+                </md-icon>
+              </div>
+            </div>
+
+            <div class="toolbar-content" v-show="minimized">
               <div class="seek-time" v-if="seekTime">
                 <b>Seek time</b>: {{ seekTime }}
               </div>
-              <div class="active-timeline" v-show="minimized">
+              <div class="active-timeline">
                 <timeline
                   :items="mergedTimeline.timeline"
                   :selected-index="mergedTimeline.selectedIndex"
@@ -45,10 +54,14 @@
 
         <div class="expanded-content" v-show="expanded">
           <div class="video" :v-if="video">
+            <!-- videoHeight is calculated to match expandedTimeline height -->
             <videoview :file="video" :ref="video.filename" :height="videoHeight" />
           </div>
           <div class="flex-fill">
-            <div ref="expandedTimeline">
+            <div ref="expandedTimeline" :style="`padding-top: ${resizeOffset}px;`">
+              <div class="seek-time" v-if="seekTime">
+                <b>Seek time</b>: {{ seekTime }}
+              </div>
               <md-list>
                 <md-list-item v-for="(file, idx) in files" :key="file.filename">
                   <md-icon>
@@ -106,6 +119,11 @@ export default {
       minimized: true,
       currentTimestamp: 0,
       videoHeight: 0,
+      dragState: {
+        clientY: null,
+        lastDragEndPosition: null,
+      },
+      resizeOffset: 0,
     }
   },
   computed: {
@@ -232,6 +250,41 @@ export default {
         this.currentTimestamp = parseInt(this.files[closestTimeline].timeline[this.files[closestTimeline].selectedIndex]);
       }
     },
+    onMouseDown(e) {
+      this.initResizeAction(e);
+    },
+    initResizeAction(e) {
+      document.onmousemove = this.startResize;
+      document.onmouseup = this.endResize;
+    },
+    startResize(e) {
+      if (this.dragState.clientY === null) {
+        this.dragState.clientY = e.clientY;
+      }
+
+      const movement = this.dragState.clientY - e.clientY;
+
+      const resizeOffset = this.resizeOffset + movement;
+      if (resizeOffset < 0) {
+        this.resizeOffset = 0;
+        this.dragState.clientY = null;
+      } else if (movement > this.getBottomNavDistanceToTop()) {
+        this.dragState.clientY += this.getBottomNavDistanceToTop();
+        this.resizeOffset += this.getBottomNavDistanceToTop();
+      } else {
+        this.resizeOffset = resizeOffset;
+        this.dragState.clientY = e.clientY;
+      }
+    },
+    endResize() {
+      this.dragState.lastDragEndPosition = this.dragState.clientY;
+      this.dragState.clientY = null;
+      document.onmouseup = null;
+      document.onmousemove = null;
+    },
+    getBottomNavDistanceToTop() {
+      return this.$refs.bottomNav.$el.getBoundingClientRect().top;
+    }
   },
   components: {
     timeline: Timeline,
@@ -249,6 +302,7 @@ export default {
   z-index: 1;
   background: white;
   margin: 0;
+  max-height: 100vh;
 }
 
 .nav-content {
@@ -256,7 +310,7 @@ export default {
 }
 
 .toggle-btn {
-  margin-left: auto;
+  margin: 0;
 }
 
 .toolbar, .active-timeline, .options {
@@ -274,7 +328,7 @@ export default {
   margin: 8px 0 -8px 0;
 }
 
-.options {
+.options, .expanded-content .seek-time {
   padding: 0 20px 15px 20px
 }
 
@@ -298,6 +352,14 @@ export default {
 
 .video {
   flex-grow: 0;
+}
+
+.resize-bar {
+  flex-grow: 1;
+}
+
+.drag-handle {
+  cursor: grab;
 }
 
 </style>
