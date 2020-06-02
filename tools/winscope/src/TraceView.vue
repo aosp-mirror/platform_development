@@ -25,6 +25,12 @@
     <md-card class="hierarchy">
       <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
         <h2 class="md-title" style="flex: 1;">Hierarchy</h2>
+        <md-checkbox
+          v-model="showHierachyDiff"
+          v-if="diffVisualizationAvailable"
+        >
+          Show Diff
+        </md-checkbox>
         <md-checkbox v-model="store.onlyVisible">Only visible</md-checkbox>
         <md-checkbox v-model="store.flattened">Flat</md-checkbox>
         <input id="filter" type="search" placeholder="Filter..." v-model="hierarchyPropertyFilterString" />
@@ -45,7 +51,12 @@
       <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
         <h2 class="md-title" style="flex: 1">Properties</h2>
         <div class="filter">
-          <md-checkbox v-model="showPropertiesDiff">Show Diff</md-checkbox>
+          <md-checkbox
+            v-model="showPropertiesDiff"
+            v-if="diffVisualizationAvailable"
+          >
+            Show Diff
+          </md-checkbox>
           <input id="filter" type="search" placeholder="Filter..." v-model="propertyFilterString" />
         </div>
       </md-content>
@@ -69,6 +80,7 @@ import { DiffGenerator, defaultModifiedCheck } from './utils/diff.js'
 import { format_transform_type, is_simple_transform } from './matrix_utils.js'
 import { DATA_TYPES } from './decode.js'
 import { stableIdCompatibilityFixup } from './utils/utils.js'
+import { CompatibleFeatures } from './utils/compatibility.js'
 
 function formatColorTransform(vals) {
     const fixedVals = vals.map(v => v.toFixed(1));
@@ -175,9 +187,7 @@ export default {
     setData(item) {
       this.tree = item;
 
-      // TODO: Add flag to toggle diffs or not
-      // TODO: Disable if proto are not the latest
-      if (true) {
+      if (this.showHierachyDiff && this.diffVisualizationAvailable) {
         // Required pre-processing to match algo
         // TODO: Clean this up somehow
         if (this.file.type == DATA_TYPES.SURFACE_FLINGER) {
@@ -280,6 +290,12 @@ export default {
   },
   props: ['store', 'file'],
   computed: {
+    diffVisualizationAvailable() {
+      return CompatibleFeatures.DiffVisualization && (
+          this.file.type == DATA_TYPES.WINDOW_MANAGER ||
+          this.file.type == DATA_TYPES.SURFACE_FLINGER
+        );
+    },
     selectedIndex() {
       return this.file.selectedIndex;
     },
