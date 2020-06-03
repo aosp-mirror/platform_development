@@ -102,6 +102,11 @@ final class Keyboard {
         return mKeyboardView;
     }
 
+    void reset() {
+        mState = 0;
+        mapKeys();
+    }
+
     private void mapKeys() {
         for (int i = 0; i < mKeyMapping.size(); i++) {
             TextView softkey = mKeyboardView.findViewById(mKeyMapping.keyAt(i));
