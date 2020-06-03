@@ -14,47 +14,32 @@
 -->
 <template>
   <md-card-content class="container">
-    <md-table class="transaction-table" md-card>
+    <md-table v-model="filteredData" class="transaction-table card" md-card md-fixed-header>
       <md-table-toolbar>
-        <md-field>
-          <label>Transaction Type</label>
-          <md-select v-model="selectedTransactionTypes" multiple>
-            <md-option v-for="type in transactionTypes" :value="type">{{ type }}</md-option>
-          </md-select>
-        </md-field>
+        <div class="filters">
+          <md-field>
+            <label>Transaction Type</label>
+            <md-select v-model="selectedTransactionTypes" multiple>
+              <md-option v-for="type in transactionTypes" :value="type">{{ type }}</md-option>
+            </md-select>
+          </md-field>
 
-        <md-field md-clearable>
-          <md-input v-model="searchInput" placeholder="Search by id or name..." />
-          <span class="md-helper-text">Comma seperated</span>
-        </md-field>
-
+          <md-chips v-model="filters" md-placeholder="Add id or name...">
+            <div class="md-helper-text">Press enter to add</div>
+          </md-chips>
+        </div>
       </md-table-toolbar>
 
-      <div class="scrollBody" ref="tableBody">
-        <md-table-row
-          v-for="transaction in filteredData"
-          :key="transaction.timestamp"
-          @click="transactionSelected(transaction)"
-        >
-          <md-table-cell>{{transaction.time}}</md-table-cell>
-
-          <div v-if="transaction.type == 'transaction'">
-            <md-table-cell>
-              {{summarizeTranscations(transaction.transactions)}}
-            </md-table-cell>
-          </div>
-          <div v-else>
-            <md-table-cell>
-              {{transaction.type}}
-              <span v-if="transaction.obj.id !== undefined">: {{transaction.obj.id}}</span>
-            </md-table-cell>
-          </div>
-        </md-table-row>
-      </div>
+      <md-table-row class="test" slot="md-table-row" slot-scope="{ item }" @click="transactionSelected(item)">
+        <md-table-cell md-label="Time">{{ item.time }}</md-table-cell>
+        <md-table-cell md-label="Transaction">
+          {{summarizeTranscation(item)}}
+        </md-table-cell>
+      </md-table-row>
 
     </md-table>
 
-    <md-card class="changes">
+    <md-card class="changes card">
       <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
         <h2 class="md-title" style="flex: 1">Changes</h2>
       </md-content>
@@ -91,6 +76,7 @@ export default {
       selectedTransactionTypes: [],
       searchInput: "",
       selectedTree: null,
+      filters: [],
     };
   },
   computed: {
@@ -103,11 +89,10 @@ export default {
             this.selectedTransactionTypes.includes(transaction.type)));
       }
 
-      if (this.searchInput) {
-        const terms = this.searchInput.split(/,\s*/);
+      if (this.filters.length > 0) {
         filteredData = filteredData.filter(
           this.filterTransactions(transaction =>
-            terms.includes("" + transaction.obj.id)));
+            this.filters.includes("" + transaction.obj.id)));
       }
 
       return filteredData;
@@ -216,7 +201,17 @@ export default {
 
       return [surfaceChanges, displayChanges];
     },
-    summarizeTranscations(transactions) {
+    summarizeTranscation(transaction) {
+      if (transaction.type !== 'transaction') {
+        if (transaction.obj.id !== undefined) {
+          return `${transaction.type}: ${transaction.obj.id}`;
+        } else {
+          return transaction.type;
+        }
+      }
+
+      const transactions = transaction.transactions;
+
       const ids = {
         "surfaceChange": new Set(),
         "displayChange": new Set(),
@@ -258,8 +253,20 @@ export default {
 }
 
 .scrollBody {
-  max-height: 75vh;
+  width: 100%;
+  height: 100%;
   overflow: scroll;
+}
+
+.filters {
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.changes-content {
+  padding: 18px;
+  height: 550px;
+  overflow: auto;
 }
 
 </style>
