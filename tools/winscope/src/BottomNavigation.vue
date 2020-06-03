@@ -153,7 +153,7 @@ function findLastMatchingSorted(array, predicate) {
 
 export default {
   name: 'bottom-navigation',
-  props: [ 'files', 'video', 'store', 'dataViewPositions', 'activeFile' ],
+  props: [ 'files', 'video', 'store', 'activeFile' ],
   data() {
     return {
       minimized: true,
@@ -358,7 +358,6 @@ export default {
   },
   mounted() {
     this.videoOverlayTop = this.$refs.overlayContent.clientHeight - 150 - 15 + "px";
-    console.log('TOP', this.videoOverlayTop);
   }
 }
 </script>

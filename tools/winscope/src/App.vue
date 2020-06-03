@@ -44,7 +44,6 @@
           :activeFile="activeFile"
           :video="video"
           :store="store"
-          :dataViewPositions="dataViewPositions"
           :ref="bottomNavRef"
           v-if="dataLoaded"
         />
@@ -74,7 +73,6 @@ export default {
       title: APP_NAME,
       activeFile: null,
       activeDataView: null,
-      dataViewPositions: null,
       store: LocalStore('app', {
         flattened: false,
         onlyVisible: false,
@@ -118,9 +116,6 @@ export default {
       event.preventDefault();
       return true;
     },
-    onScroll() {
-      this.setDataViewPositions();
-    },
     onDataReady(files) {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -129,20 +124,6 @@ export default {
         }
         this.files.push(file);
       }
-    },
-    setDataViewPositions() {
-      const positions = {}
-
-      for (const file of this.files) {
-        if (this.isVideo(file)) {
-          continue;
-        }
-
-        const dataViewEl = this.$refs[file.filename][0].$el;
-        positions[file.filename] = dataViewEl.getBoundingClientRect();
-      }
-
-      this.dataViewPositions = positions;
     },
     setStatus(status) {
       if (status) {
