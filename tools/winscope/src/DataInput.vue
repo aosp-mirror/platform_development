@@ -37,15 +37,17 @@
         </div>
         <div class="md-layout">
           <div class="md-layout-item md-small-size-100">
+            <md-field>
             <md-select v-model="fileType" id="file-type" placeholder="File type">
               <md-option value="auto">Detect type</md-option>
               <md-option :value="k" v-for="(v,k) in FILE_TYPES" v-bind:key="v.name">{{v.name}}</md-option>
             </md-select>
+            </md-field>
           </div>
         </div>
-        <div class="md-layout md-gutter">
-          <input type="file" @change="onLoadFile" id="upload-file" v-show="false" />
-          <label class="md-button md-accent md-raised md-theme-default" for="upload-file">Add File</label>
+        <div class="md-layout">
+          <input type="file" @change="onLoadFile" ref="fileUpload" v-show="false" />
+          <md-button class="md-accent md-raised md-theme-default" @click="$refs.fileUpload.click()">Add File</md-button>
           <md-button v-if="dataReady" @click="onSubmit" class="md-button md-primary md-raised md-theme-default">Submit</md-button>
         </div>
       </md-card-content>

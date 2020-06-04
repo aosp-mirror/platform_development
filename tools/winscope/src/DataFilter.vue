@@ -14,15 +14,17 @@
 -->
 <template>
  <div class="bounds" v-if="visible">
-   <md-select v-model="visibleTransactions" name="visibleTransactions" id="visibleTransactions"
-           placeholder="Everything Turned Off" md-dense multiple @input="updateFilter()" >
-       <md-option value="displayCreation, displayDeletion">Display</md-option>
-       <md-option value="powerModeUpdate">Power Mode</md-option>
-       <md-option value="surfaceCreation, surfaceDeletion">Surface</md-option>
-       <md-option value="transaction">Transaction</md-option>
-       <md-option value="vsyncEvent">vsync</md-option>
-       <md-option value="bufferUpdate">Buffer</md-option>
-   </md-select>
+   <md-field>
+    <md-select v-model="visibleTransactions" name="visibleTransactions" id="visibleTransactions"
+            placeholder="Everything Turned Off" md-dense multiple @input="updateFilter()" >
+        <md-option value="displayCreation, displayDeletion">Display</md-option>
+        <md-option value="powerModeUpdate">Power Mode</md-option>
+        <md-option value="surfaceCreation, surfaceDeletion">Surface</md-option>
+        <md-option value="transaction">Transaction</md-option>
+        <md-option value="vsyncEvent">vsync</md-option>
+        <md-option value="bufferUpdate">Buffer</md-option>
+    </md-select>
+   </md-field>
  </div>
 </template>
 <script>
