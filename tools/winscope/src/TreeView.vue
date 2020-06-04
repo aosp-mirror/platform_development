@@ -347,21 +347,28 @@ export default {
   background: #f1f1f1;
 }
 
-.tree-view .node:not(.selected).added {
-  background: chartreuse;
+.tree-view .node:not(.selected).added,
+.tree-view .node:not(.selected).addedMove {
+  background: #03ff35;
 }
 
-.tree-view .node:not(.selected).deleted {
-  background: coral;
+.tree-view .node:not(.selected).deleted,
+.tree-view .node:not(.selected).deletedMove {
+  background: #ff6b6b;
 }
 
 .tree-view .node:not(.selected).modified {
   background: cyan;
 }
 
-.tree-view .node:not(.selected).addedMove, 
-.tree-view .node:not(.selected).deletedMove {
-  background: slateblue;
+.tree-view .node.addedMove:after,
+.tree-view .node.deletedMove:after {
+  content: 'moved';
+  margin: 0 5px;
+  background: #448aff;
+  border-radius: 5px;
+  padding: 3px;
+  color: white;
 }
 
 .children {

@@ -39,6 +39,7 @@ class DiffGenerator {
         this.getNodeId = node => {
             const id = getNodeId(node);
             if (id === null || id === undefined) {
+                console.error("Null node ID for node", node);
                 throw new Error("Node ID can't be null or undefined");
             }
             return id;
