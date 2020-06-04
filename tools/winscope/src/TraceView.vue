@@ -151,7 +151,8 @@ export default {
       rects: [],
       tree: null,
       highlight: null,
-      showPropertiesDiff: false,
+      showHierachyDiff: true,
+      showPropertiesDiff: true,
     }
   },
   methods: {
