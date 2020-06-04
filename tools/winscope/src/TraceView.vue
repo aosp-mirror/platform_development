@@ -15,29 +15,29 @@
 <template>
   <md-card-content class="container">
     <md-card class="rects" v-if="hasScreenView">
-      <md-whiteframe md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
+      <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
         <h2 class="md-title">Screen</h2>
-      </md-whiteframe>
-      <md-whiteframe md-elevation="8">
+      </md-content>
+      <md-content class="md-elevation-8">
         <rects :bounds="bounds" :rects="rects" :highlight="highlight" @rect-click="onRectClick" />
-      </md-whiteframe>
+      </md-content>
     </md-card>
     <md-card class="hierarchy">
-      <md-whiteframe md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
+      <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
         <h2 class="md-title" style="flex: 1;">Hierarchy</h2>
         <md-checkbox v-model="store.onlyVisible">Only visible</md-checkbox>
         <md-checkbox v-model="store.flattened">Flat</md-checkbox>
         <input id="filter" type="search" placeholder="Filter..." v-model="hierarchyPropertyFilterString" />
-      </md-whiteframe>
+      </md-content>
       <tree-view class="data-card" :item="tree" @item-selected="itemSelected" :selected="hierarchySelected" :filter="hierarchyFilter" :flattened="store.flattened" ref="hierarchy" />
     </md-card>
     <md-card class="properties">
-      <md-whiteframe md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
+      <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
         <h2 class="md-title" style="flex: 1">Properties</h2>
         <div class="filter">
           <input id="filter" type="search" placeholder="Filter..." v-model="propertyFilterString" />
         </div>
-      </md-whiteframe>
+      </md-content>
       <tree-view class="pre-line-data-card" :item="selectedTree" :filter="propertyFilter" />
     </md-card>
   </md-card-content>

@@ -31,6 +31,7 @@ export default {
   props: ['bounds', 'rects', 'highlight'],
   data () {
     return {
+      desiredHeight: 800,
       desiredWidth: 400,
     };
   },
@@ -50,7 +51,13 @@ export default {
   },
   methods: {
     s(sourceCoordinate) {  // translate source into target coordinates
-      return sourceCoordinate / this.boundsC.width * this.desiredWidth;
+    var scale; 
+    if(this.boundsC.width < this.boundsC.height) {
+      scale =  this.desiredHeight / this.boundsC.height;
+    } else {
+      scale = this.desiredWidth / this.boundsC.width;
+    }
+      return sourceCoordinate * scale;
     },
     rectToStyle(r) {
       var x = this.s(r.left);
@@ -82,10 +89,10 @@ export default {
 }
 .rect {
   border: 1px solid black;
-  background-color: rgba(100, 100, 100, 0.8);
+  background-color: rgba(110, 114, 116, 0.8);
 }
 .highlight {
-  border: 2px solid red;
+  border: 2px solid rgb(235, 52, 52);
   pointer-events: none;
 }
 .label {

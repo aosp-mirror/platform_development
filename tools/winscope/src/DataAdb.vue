@@ -18,7 +18,7 @@
       <div class="md-title">ADB Connect</div>
     </md-card-header>
     <md-card-content v-if="status === STATES.CONNECTING">
-      <md-spinner md-indeterminate></md-spinner>
+      <md-progress-spinner md-indeterminate></md-progress-spinner>
     </md-card-content>
     <md-card-content v-if="status === STATES.NO_PROXY">
       <md-icon class="md-accent">error</md-icon>
@@ -52,10 +52,10 @@
     <md-card-content v-if="status === STATES.UNAUTH">
       <md-icon class="md-accent">lock</md-icon>
       <span class="md-subheading">Proxy authorisation required</span>
-      <md-input-container>
+      <md-field>
         <label>Enter Winscope proxy token</label>
         <md-input v-model="adbStore.proxyKey"></md-input>
-      </md-input-container>
+      </md-field>
       <div class="md-body-2">The proxy token is printed to console on proxy launch, copy and paste it above.</div>
       <div class="md-layout md-gutter">
         <md-button class="md-accent md-raised" @click="restart">Connect</md-button>
@@ -65,15 +65,17 @@
       <div class="md-subheading">{{ Object.keys(devices).length > 0 ? "Connected devices:" : "No devices detected" }}</div>
       <md-list>
         <md-list-item v-for="(device, id) in devices" :key="id" @click="selectDevice(id)" :disabled="!device.authorised">
-          <md-icon>{{ device.authorised ? "smartphone" : "screen_lock_portrait" }}</md-icon><span>{{ device.authorised ? device.model : "unauthorised" }} ({{ id }})</span>
+          <md-icon>{{ device.authorised ? "smartphone" : "screen_lock_portrait" }}</md-icon>
+          <span class="md-list-item-text">{{ device.authorised ? device.model : "unauthorised" }} ({{ id }})</span>
         </md-list-item>
       </md-list>
-      <md-spinner :md-size="30" md-indeterminate></md-spinner>
+      <md-progress-spinner :md-size="30" md-indeterminate></md-progress-spinner>
     </md-card-content>
     <md-card-content v-if="status === STATES.START_TRACE">
       <md-list>
         <md-list-item>
-          <md-icon>smartphone</md-icon><span>{{ devices[selectedDevice].model }} ({{ selectedDevice }})</span>
+          <md-icon>smartphone</md-icon>
+          <span class="md-list-item-text">{{ devices[selectedDevice].model }} ({{ selectedDevice }})</span>
         </md-list-item>
       </md-list>
       <div>
@@ -84,7 +86,7 @@
         <p>Dump targets:</p>
         <md-checkbox v-for="file in DUMP_FILES" :key="file" v-model="adbStore[file]">{{FILE_TYPES[file].name}}</md-checkbox>
       </div>
-      <div class="md-layout md-gutter">
+      <div class="md-layout">
         <md-button class="md-accent md-raised" @click="startTrace">Start trace</md-button>
         <md-button class="md-accent md-raised" @click="dumpState">Dump state</md-button>
         <md-button class="md-raised" @click="resetLastDevice">Device list</md-button>
@@ -100,14 +102,14 @@
     </md-card-content>
     <md-card-content v-if="status === STATES.END_TRACE">
       <span class="md-subheading">Tracing...</span>
-      <md-progress md-indeterminate></md-progress>
-      <div class="md-layout md-gutter">
+      <md-progress-bar md-mode="indeterminate"></md-progress-bar>
+      <div class="md-layout">
         <md-button class="md-accent md-raised" @click="endTrace">End trace</md-button>
       </div>
     </md-card-content>
     <md-card-content v-if="status === STATES.LOAD_DATA">
       <span class="md-subheading">Loading data...</span>
-      <md-progress :md-progress="loadProgress"></md-progress>
+      <md-progress-bar md-mode="determinate" :md-value="loadProgress"></md-progress-bar>
     </md-card-content>
   </md-card>
 </template>
