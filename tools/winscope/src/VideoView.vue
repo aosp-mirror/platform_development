@@ -13,16 +13,7 @@
      limitations under the License.
 -->
 <template>
-  <md-card-content class="container">
-    <md-card class="rects">
-      <md-whiteframe md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
-        <h2 class="md-title">Screen</h2>
-      </md-whiteframe>
-      <md-whiteframe md-elevation="8">
-        <video :id="file.filename" class="screen" :src="file.data" />
-      </md-whiteframe>
-    </md-card>
-  </md-card-content>
+      <video class="md-elevation-2 screen" :id="file.filename" :src="file.data" />
 </template>
 <script>
 const EPSILON = 0.00001
@@ -70,6 +61,6 @@ export default {
 <style>
 .screen {
   max-height: 50em;
+  max-width: 50em;
 }
-
 </style>
