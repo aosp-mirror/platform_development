@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package foo.bar.inline;
+package com.example.android.inlinefillservice;
 
 import android.app.Activity;
 import android.app.AlertDialog;
