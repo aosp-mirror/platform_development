@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package foo.bar.inline;
+package com.example.android.inlinefillservice;
 
-import static foo.bar.inline.InlineFillService.TAG;
+import static com.example.android.inlinefillservice.InlineFillService.TAG;
 
 import android.app.assist.AssistStructure;
 import android.content.Context;
