@@ -57,7 +57,7 @@ def parse_args():
   parser.add_argument(
       "-o", metavar="out_dir", default=".", help="output directory")
   parser.add_argument(
-      "-show",
+      "-show", "--show",
       action="store_true",
       default=False,
       help="show all default dependent packages, using crates.io api")
