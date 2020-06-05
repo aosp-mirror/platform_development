@@ -29,7 +29,6 @@
           <dataadb ref="adb" :store="store" @dataReady="onDataReady" @statusChange="setStatus" />
           <datainput ref="input" :store="store" @dataReady="onDataReady" @statusChange="setStatus" />
         </div>
-
         <dataview
           v-for="file in files"
           :key="file.filename"

@@ -29,7 +29,16 @@
         <md-checkbox v-model="store.flattened">Flat</md-checkbox>
         <input id="filter" type="search" placeholder="Filter..." v-model="hierarchyPropertyFilterString" />
       </md-content>
-      <tree-view class="data-card" :item="tree" @item-selected="itemSelected" :selected="hierarchySelected" :filter="hierarchyFilter" :flattened="store.flattened" ref="hierarchy" />
+      <tree-view
+        class="data-card"
+        :item="tree"
+        @item-selected="itemSelected"
+        :selected="hierarchySelected"
+        :filter="hierarchyFilter"
+        :flattened="store.flattened"
+        :items-clickable="true"
+        ref="hierarchy"
+      />
     </md-card>
     <md-card class="properties">
       <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
