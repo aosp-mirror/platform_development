@@ -14,18 +14,35 @@
 -->
 <template>
   <div class="tree-view">
-    <div @click="clicked" :class="computedClass" class="node">
-      <span class="kind">{{item.kind}}</span>
-      <span v-if="item.kind && item.name">-</span>
-      <span>{{item.name}}</span>
-      <div
-        v-for="c in item.chips"
-        v-bind:key="c.long"
-        :title="c.long"
-        :class="chipClassForChip(c)"
-      >{{c.short}}</div>
+    <div class="node"
+      :class="{ leaf: isLeaf, selected: isSelected, clickable: isClickable }"
+      :style="nodeOffsetStyle" @click="clicked"
+    >
+      <button class="toggle-tree-btn" @click="toggleTree" v-if="!isLeaf" v-on:click.stop>
+        <i aria-hidden="true" class="md-icon md-theme-default material-icons">
+          {{isCollapsed ? "chevron_right" : "expand_more"}}
+        </i>
+      </button>
+      <div class="description">
+        <span class="kind">{{item.kind}}</span>
+        <span v-if="item.kind && item.name">-</span>
+        <span>{{item.name}}</span>
+        <div
+          v-for="c in item.chips"
+          v-bind:key="c.long"
+          :title="c.long"
+          :class="chipClassForChip(c)"
+        >
+          {{c.short}}
+        </div>
+      </div>
+      <div v-show="isCollapsed">
+        <button class="expand-tree-btn"  :class="{ 'child-selected': isCollapsed && childIsSelected }" v-if="children" @click="expandTree" v-on:click.stop>
+          <i aria-hidden="true" class="md-icon md-theme-default material-icons">more_horiz</i>
+        </button>
+      </div>
     </div>
-    <div class="children" v-if="children">
+    <div class="children" v-if="children" v-show="!isCollapsed">
       <tree-view
         v-for="(c,i) in children"
         :item="c"
@@ -37,6 +54,8 @@
         :flattened="flattened"
         :force-flattened="applyingFlattened"
         v-show="filterMatches(c)"
+        :items-clickable="itemsClickable"
+        :initial-depth="depth + 1"
         ref="children"
       />
     </div>
@@ -55,6 +74,8 @@ var ServiceMessage = protoDefs.lookupType(
   "com.android.server.wm.WindowManagerServiceDumpProto"
 );
 
+const levelOffset = 24; /* in px, must be kept in sync with css, maybe find a better solution... */
+
 export default {
   name: "tree-view",
   props: [
@@ -63,50 +84,108 @@ export default {
     "chipClass",
     "filter",
     "flattened",
-    "force-flattened"
+    "force-flattened",
+    "items-clickable",
+    "initial-depth"
   ],
   data: function() {
     return {
-      isChildSelected: false
+      isChildSelected: false,
+      isCollapsed: false,
+      clickTimeout: null,
     };
   },
   methods: {
-    selectNext(found, parent) {
-      if (found && this.filterMatches(this.item)) {
-        this.clicked();
+    toggleTree() {
+      this.isCollapsed = !this.isCollapsed;
+    },
+    expandTree() {
+      this.isCollapsed = false;
+    },
+    selectNext(found, inCollapsedTree) {
+      // Check if this is the next visible item
+      if (found && this.filterMatches(this.item) && !inCollapsedTree) {
+        this.select();
         return false;
       }
-      if (this.isCurrentSelected()) {
+
+      // Set traversal state variables
+      if (this.isSelected) {
         found = true;
       }
+      if (this.isCollapsed) {
+        inCollapsedTree = true;
+      }
+
+      // Travers children trees recursively in reverse to find currently
+      // selected item and select the next visible one
       if (this.$refs.children) {
         for (var c of this.$refs.children) {
-          found = c.selectNext(found);
+          found = c.selectNext(found, inCollapsedTree);
         }
       }
+
       return found;
     },
-    selectPrev(found) {
+    selectPrev(found, inCollapsedTree) {
+      // Set inCollapseTree flag to make sure elements in collapsed trees are not selected.
+      const isRootCollapse = !inCollapsedTree && this.isCollapsed;
+      if (isRootCollapse) {
+        inCollapsedTree = true;
+      }
+
+      // Travers children trees recursively in reverse to find currently
+      // selected item and select the previous visible one
       if (this.$refs.children) {
         for (var c of [...this.$refs.children].reverse()) {
-          found = c.selectPrev(found);
+          found = c.selectPrev(found, inCollapsedTree);
         }
       }
-      if (found && this.filterMatches(this.item)) {
-        this.clicked();
+
+      // Unset inCollapseTree flag as we are no longer in a collapsed tree.
+      if (isRootCollapse) {
+        inCollapsedTree = false;
+      }
+
+      // Check if this is the previous visible item
+      if (found && this.filterMatches(this.item) && !inCollapsedTree) {
+        this.select();
         return false;
       }
-      if (this.isCurrentSelected()) {
+
+      // Set found flag so that the next visited visible item can be selected.
+      if (this.isSelected) {
         found = true;
       }
+
       return found;
     },
     childItemSelected(item) {
       this.isChildSelected = true;
       this.$emit("item-selected", item);
     },
+    select() {
+      this.$emit('item-selected', this.item);
+    },
     clicked() {
-      this.$emit("item-selected", this.item);
+      if (!this.clickTimeout) {
+        this.clickTimeout = setTimeout(() => {
+          // Single click
+          this.clickTimeout = null;
+
+          if (this.itemsClickable) {
+            this.select();
+          }
+        }, 200);
+      } else {
+        // Double click
+        clearTimeout(this.clickTimeout);
+        this.clickTimeout = null;
+
+        if (!this.isLeaf) {
+          this.toggleTree();
+        }
+      }
     },
     chipClassForChip(c) {
       return [
@@ -121,7 +200,7 @@ export default {
       if (this.filter) {
         var thisMatches = this.filter(c);
         const childMatches = (child) => this.filterMatches(child);
-        return thisMatches || (!this.applyingFlattened && 
+        return thisMatches || (!this.applyingFlattened &&
             c.children && c.children.some(childMatches));
       }
       return true;
@@ -140,8 +219,19 @@ export default {
     },
   },
   computed: {
-    computedClass() {
-      return (this.item == this.selected) ? 'selected' : ''
+    isSelected() {
+      return this.selected === this.item;
+    },
+    childIsSelected() {
+      if (this.$refs.children) {
+        for (var c of this.$refs.children) {
+          if (c.isSelected || c.childIsSelected) {
+            return true;
+          }
+        }
+      }
+
+      return false;
     },
     chipClassOrDefault() {
       return this.chipClass || "tree-view-chip";
@@ -152,6 +242,23 @@ export default {
     children() {
       return this.applyingFlattened ? this.item.flattened : this.item.children;
     },
+    isLeaf() {
+      return !this.children || this.children.length == 0;
+    },
+    isClickable() {
+      return !this.isLeaf || this.itemsClickable;
+    },
+    depth() {
+      return this.initialDepth || 0;
+    },
+    nodeOffsetStyle() {
+      const offest = levelOffset * (this.depth + this.isLeaf) + 'px';
+
+      return {
+        marginLeft: '-' + offest,
+        paddingLeft: offest,
+      }
+    }
   }
 };
 </script>
@@ -162,18 +269,17 @@ export default {
 
 .tree-view {
   display: block;
-  border-left: 1px solid rgb(238, 238, 238);
-}
-
-.tree-view.tree-view {
-  margin: 0;
-  padding: 1px 8px;
 }
 
 .tree-view .node {
-  display: inline-block;
+  display: flex;
   padding: 2px;
+  align-items: flex-start;
+}
+
+.tree-view .node.clickable {
   cursor: pointer;
+  user-select: none;
 }
 
 .tree-view .node:hover:not(.selected) {
@@ -181,8 +287,15 @@ export default {
 }
 
 .children {
-  margin-left: 8px;
+  /* Aligns border with collapse arrows */
+  margin-left: 12px;
+  padding-left: 12px;
+  border-left: 1px solid rgb(238, 238, 238);
   margin-top: 0px;
+}
+
+.tree-view .node:hover + .children {
+  border-left: 1px solid rgb(200, 200, 200);
 }
 
 .kind {
@@ -232,6 +345,24 @@ export default {
 .tree-view-chip.tree-view-chip-hwc {
   background-color: #448aff;
   color: black;
+}
+
+.toggle-tree-btn, .expand-tree-btn {
+  background: none;
+  color: inherit;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
+}
+
+.expand-tree-btn {
+  margin-left: 5px;
+}
+
+.expand-tree-btn.child-selected {
+  color: #3f51b5;
 }
 
 </style>
