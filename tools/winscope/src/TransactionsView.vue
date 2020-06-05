@@ -44,8 +44,9 @@
           {{ transactionTypeOf(item) }}
         </md-table-cell>
         <md-table-cell md-label="Affected Surfaces">
-          <span v-for="surface in sufacesAffectedBy(item)">
-            {{ surface }}&nbsp;
+          <span v-for="(surface, index) in sufacesAffectedBy(item)">
+            {{surface.id}}<span v-if="surface.name"> ({{ surface.name }})</span>
+            <span v-if="index + 1 < sufacesAffectedBy(item).length">,&nbsp;</span>
           </span>
         </md-table-cell>
       </md-table-row>
@@ -254,13 +255,20 @@ export default {
     },
     sufacesAffectedBy(transaction) {
       if (transaction.type !== 'transaction') {
-        return [transaction.obj.id] ?? [];
+        return [{name: transaction.layerName, id: transaction.obj.id}];
       }
 
-      const affectedSurfaces = new Set();
-      transaction.transactions.forEach(t => affectedSurfaces.add(t.obj.id));
+      const surfaceIds = new Set();
+      const affectedSurfaces = [];
+      for (const transaction of transaction.transactions) {
+        const id = transaction.obj.id;
+        if (!surfaceIds.has(id)) {
+          surfaceIds.add(id);
+          affectedSurfaces.push({name: transaction.layerName, id});
+        }
+      }
 
-      return Array.from(affectedSurfaces);
+      return affectedSurfaces
     },
   },
   components: {

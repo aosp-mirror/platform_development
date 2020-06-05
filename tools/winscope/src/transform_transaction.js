@@ -14,28 +14,30 @@
  * limitations under the License.
  */
 
-import { transform, nanos_to_string } from './transform.js'
+import { nanos_to_string } from './transform.js'
 
-function transform_transaction(transaction) {
+function transform_transaction(transaction, layerIdToName) {
   const transactions = [];
 
   for (const surfaceChange of transaction.surfaceChange) {
     transactions.push(Object.freeze({
       type: 'surfaceChange',
       obj: surfaceChange,
+      layerName: layerIdToName[surfaceChange.id],
     }));
   }
   for (const displayChange of transaction.displayChange) {
     transactions.push(Object.freeze({
       type: 'displayChange',
       obj: displayChange,
+      layerName: layerIdToName[displayChange.id],
     }));
   }
 
   return transactions;
 }
 
-function transform_entry(entry) {
+function transform_entry(entry, layerIdToName) {
   const type = entry.increment;
   const timestamp = entry.timeStamp;
   const time = nanos_to_string(timestamp);
@@ -44,15 +46,20 @@ function transform_entry(entry) {
     case "transaction":
       return Object.freeze({
         type,
-        transactions: transform_transaction(entry.transaction),
+        transactions: transform_transaction(entry.transaction, layerIdToName),
         time,
         timestamp,
       });
+
+    case "surfaceCreation":
+      // NOTE: There is no break on purpose — we want to fall through to default
+      layerIdToName[entry[type].id] = entry[type].name;
 
     default:
       return Object.freeze({
         type,
         obj: entry[type],
+        layerName: entry[type].name ?? layerIdToName[entry[type].id],
         time,
         timestamp,
       })
@@ -60,7 +67,8 @@ function transform_entry(entry) {
 }
 
 function transform_transaction_trace(entries) {
-  const data = entries.increment.map(transform_entry);
+  const layerIdToName = {};
+  const data = entries.increment.map(entry => transform_entry(entry, layerIdToName));
 
   return { children: data };
 }
