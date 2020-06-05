@@ -13,17 +13,38 @@
      limitations under the License.
 -->
 <template>
-  <svg width="2000" height="20" viewBox="-5,0,2010,20">
-    <circle :cx="position(item)" cy="10" r="5" v-for="(item, idx) in items" @click="onItemClick(idx)" />
-    <circle v-if="items.length" :cx="position(selected)" cy="10" r="5" class="selected" />
+  <svg width="100%" height="20">
+    <rect
+      :x="position(item)"
+      y="0"
+      :width="pointWidth"
+      :height="pointHeight"
+      :rx="corner"
+      v-for="(item, idx) in items"
+      :key="item"
+      @click="onItemClick(idx)"
+    />
+    <rect
+      v-if="items.length"
+      :x="position(selected)"
+      y="0"
+      :width="pointWidth"
+      :height="pointHeight"
+      :rx="corner"
+      class="selected"
+    />
   </svg>
 </template>
 <script>
 export default {
-  name: 'timeline',
-  props: ['items', 'selectedIndex', 'scale'],
+  name: "timeline",
+  props: ["items", "selectedIndex", "scale"],
   data() {
-    return {};
+    return {
+      pointWidth: "1%",
+      pointHeight: 15,
+      corner: 2
+    };
   },
   methods: {
     position(item) {
@@ -34,11 +55,11 @@ export default {
       if (scale[0] >= scale[1]) {
         return cx;
       }
-      return (cx - scale[0]) / (scale[1] - scale[0]) * 2000;
+      return (((cx - scale[0]) / (scale[1] - scale[0])) * 100)  + "%";
     },
     onItemClick(index) {
-      this.$emit('item-selected', index);
-    },
+      this.$emit("item-selected", index);
+    }
   },
   computed: {
     timestamps() {
@@ -50,13 +71,11 @@ export default {
     selected() {
       return this.items[this.selectedIndex];
     }
-  },
-}
-
+  }
+};
 </script>
 <style scoped>
 .selected {
-  fill: red;
+  fill: rgb(240, 59, 59);
 }
-
 </style>

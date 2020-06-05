@@ -18,6 +18,8 @@ import Vue from 'vue'
 import App from './App.vue'
 
 import 'style-loader!css-loader!vue-material/dist/vue-material.css'
+import 'style-loader!css-loader!vue-material/dist/theme/default.css'
+
 import VueMaterial from 'vue-material'
 Vue.use(VueMaterial);
 

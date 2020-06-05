@@ -15,20 +15,20 @@
 <template>
   <md-card-content class="container">
     <md-table class="log-table">
-      <md-table-header>
+      <md-table-row>
         <md-table-head class="time-column-header">Time</md-table-head>
         <md-table-head class="tag-column-header">Tag</md-table-head>
         <md-table-head class="at-column-header">At</md-table-head>
         <md-table-head>Message</md-table-head>
-      </md-table-header>
-      <md-table-body>
+      </md-table-row>
+
         <md-table-row v-for="line in data" :key="line.timestamp">
           <md-table-cell class="time-column">{{line.time}}</md-table-cell>
           <md-table-cell class="tag-column">{{line.tag}}</md-table-cell>
           <md-table-cell class="at-column">{{line.at}}</md-table-cell>
           <md-table-cell>{{line.text}}</md-table-cell>
         </md-table-row>
-      </md-table-body>
+
     </md-table>
   </md-card-content>
 </template>
