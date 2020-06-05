@@ -145,7 +145,7 @@ def make_filter_from_whitelists(whitelists, all_targets):
   return whitelist_filter
 
 
-def main(all_targets, search_paths, whitelists, ignore_signing_key=False):
+def main(all_targets, search_paths, whitelists, ignore_signing_key=False, list_only=False):
   def run(path):
     is_native_component = silent_call(["llvm-objdump", "-a", path])
     is_apk = path.endswith('.apk')
@@ -167,10 +167,15 @@ def main(all_targets, search_paths, whitelists, ignore_signing_key=False):
 
     target_basename = os.path.basename(os.path.normpath(target))
     for path, filename in paths:
-      sha1 = run(path)
+      sha1 = 0
+      if not list_only:
+        sha1 = run(path)
       artifact_sha1_target_map[filename][sha1].append(target_basename)
 
-  def pretty_print(sha1, filename, targets):
+  def pretty_print(sha1, filename, targets, exclude_sha1):
+    if exclude_sha1:
+      return '{}, {}\n'.format(filename, ';'.join(targets))
+
     return '{}, {}, {}\n'.format(filename, sha1[:10], ';'.join(targets))
 
   def is_common(sha1_target_map):
@@ -186,20 +191,22 @@ def main(all_targets, search_paths, whitelists, ignore_signing_key=False):
   for filename, sha1_target_map in artifact_sha1_target_map.items():
     if is_common(sha1_target_map):
       for sha1, targets in sha1_target_map.items():
-        common.append(pretty_print(sha1, filename, targets))
+        common.append(pretty_print(sha1, filename, targets, list_only))
     else:
       if whitelist_filter(filename):
         for sha1, targets in sha1_target_map.items():
-          whitelisted_diff.append(pretty_print(sha1, filename, targets))
+          whitelisted_diff.append(pretty_print(sha1, filename, targets, list_only))
       else:
         for sha1, targets in sha1_target_map.items():
-          diff.append(pretty_print(sha1, filename, targets))
+          diff.append(pretty_print(sha1, filename, targets, list_only))
 
   common = sorted(common)
   diff = sorted(diff)
   whitelisted_diff = sorted(whitelisted_diff)
 
   header = "filename, sha1sum, targets\n"
+  if list_only:
+    header = "filename, targets\n"
 
   with open("common.csv", 'w') as fout:
     fout.write(header)
@@ -216,13 +223,14 @@ def main_with_zip(extracted_paths, args):
     unzip_cmd = ["unzip", "-qd", tmp_path, os.path.join(origin_path, "*.zip")]
     unzip_cmd.extend([os.path.join(s, "*") for s in args.search_path])
     subprocess.call(unzip_cmd)
-  main(extracted_paths, args.search_path, args.whitelist, args.ignore_signing_key)
+  main(extracted_paths, args.search_path, args.whitelist, args.ignore_signing_key, list_only=args.list_only)
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(prog="compare_images", usage="compare_images -t model1 model2 [model...] -s dir1 [dir...] [-i] [-u] [-p] [-w whitelist1] [-w whitelist2]")
   parser.add_argument("-t", "--target", nargs='+', required=True)
   parser.add_argument("-s", "--search_path", nargs='+', required=True)
   parser.add_argument("-i", "--ignore_signing_key", action='store_true')
+  parser.add_argument("-l", "--list_only", action='store_true', help='Compare file list only and ignore SHA-1 diff')
   parser.add_argument("-u", "--unzip", action='store_true')
   parser.add_argument("-p", "--preserve_extracted_files", action='store_true')
   parser.add_argument("-w", "--whitelist", action="append", default=[])
@@ -239,4 +247,4 @@ if __name__ == "__main__":
           os.makedirs(p)
         main_with_zip(target_in_tmp, args)
   else:
-    main(args.target, args.search_path, args.whitelist, args.ignore_signing_key)
+    main(args.target, args.search_path, args.whitelist, args.ignore_signing_key, list_only=args.list_only)
