@@ -24,7 +24,15 @@
             </md-select>
           </md-field>
 
-          <md-chips v-model="filters" md-placeholder="Add id or name...">
+          <div>
+            <md-autocomplete v-model="selectedProperty" :md-options="properties">
+              <label>Changed property</label>
+            </md-autocomplete>
+            <!-- TODO(b/159582192): Add way to select value a property has changed to,
+                 figure out how to handle properties that are objects... -->
+          </div>
+
+          <md-chips v-model="filters" md-placeholder="Add surface id or name...">
             <div class="md-helper-text">Press enter to add</div>
           </md-chips>
         </div>
@@ -66,22 +74,27 @@ export default {
   props: ['data'],
   data() {
     const transactionTypes = new Set();
+    const properties = new Set();
     for (const entry of this.data) {
       if (entry.type == "transaction") {
         for (const transaction of entry.transactions) {
           transactionTypes.add(transaction.type);
+          Object.keys(transaction.obj).forEach(item => properties.add(item));
         }
       } else {
         transactionTypes.add(entry.type);
+        Object.keys(entry.obj).forEach(item => properties.add(item));
       }
     }
 
     return {
       transactionTypes: Array.from(transactionTypes),
+      properties: Array.from(properties),
       selectedTransactionTypes: [],
       searchInput: "",
       selectedTree: null,
       filters: [],
+      selectedProperty: null,
     };
   },
   computed: {
@@ -98,6 +111,21 @@ export default {
         filteredData = filteredData.filter(
           this.filterTransactions(transaction =>
             this.filters.includes("" + transaction.obj.id)));
+      }
+
+      if (this.selectedProperty) {
+        filteredData = filteredData.filter(
+          this.filterTransactions(transaction => {
+            for (const key in transaction.obj) {
+              if (this.isMeaningfulChange(transaction.obj, key)
+                    && key === this.selectedProperty) {
+                return true;
+              }
+            }
+
+            return false;
+          })
+        );
       }
 
       return filteredData;
@@ -149,30 +177,34 @@ export default {
     filterTransactions(condition) {
       return (entry) => {
         if (entry.type == "transaction") {
-            for (const transaction of entry.transactions) {
-              if (condition(transaction)) {
-                return true;
-              }
+          for (const transaction of entry.transactions) {
+            if (condition(transaction)) {
+              return true;
             }
-
-            return false;
-          } else {
-            return condition(entry);
           }
+
+          return false;
+        } else {
+          return condition(entry);
+        }
       };
+    },
+    isMeaningfulChange(object, key) {
+      // TODO: Handle cases of non null objects but meaningless change
+      return object[key] !== null && object.hasOwnProperty(key)
     },
     mergeChanges(a, b) {
       const res = {};
 
       for (const key in a) {
-        if (a[key] !== null && a.hasOwnProperty(key)) {
+        if (this.isMeaningfulChange(a, key)) {
           res[key] = a[key];
         }
       }
 
       for (const key in b) {
-        if (b[key] !== null && key !== 'id' && b.hasOwnProperty(key)) {
-          if (res.hasOwnProperty(key)) {
+        if (this.isMeaningfulChange(b, key)) {
+          if (res.hasOwnProperty(key) && key != "id") {
             throw new Error(`Merge failed – key '${key}' already present`);
           }
           res[key] = b[key];
