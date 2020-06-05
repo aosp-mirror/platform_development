@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package foo.bar.inline;
+package com.example.android.inlinefillservice;
 
 import static android.view.autofill.AutofillManager.EXTRA_AUTHENTICATION_RESULT;
 
