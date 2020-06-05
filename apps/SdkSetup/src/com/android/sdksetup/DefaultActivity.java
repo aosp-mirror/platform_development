@@ -23,12 +23,13 @@ import android.content.pm.PackageManager;
 import android.hardware.input.InputManager;
 import android.hardware.input.KeyboardLayout;
 import android.location.LocationManager;
+import android.provider.Settings;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.SystemProperties;
 import android.os.Build;
-import android.provider.Settings;
+import android.telephony.TelephonyManager;
 import android.view.InputDevice;
 
 /**
@@ -67,6 +68,9 @@ public class DefaultActivity extends Activity {
             Settings.Secure.putInt(getContentResolver(), Settings.Secure.INSTALL_NON_MARKET_APPS, 1);
 
             Settings.Global.putInt(getContentResolver(), Settings.Global.ADB_ENABLED, 1);
+
+            TelephonyManager mTelephony = getApplicationContext().getSystemService(TelephonyManager.class);
+            mTelephony.setPreferredNetworkTypeBitmask(TelephonyManager.NETWORK_TYPE_BITMASK_NR);
         }
 
         // remove this activity from the package manager.
