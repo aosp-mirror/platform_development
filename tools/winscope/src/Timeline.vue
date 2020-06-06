@@ -23,6 +23,7 @@
       v-for="(item, idx) in items"
       :key="item"
       @click="onItemClick(idx)"
+      class="point"
     />
     <rect
       v-if="items.length"
@@ -31,7 +32,7 @@
       :width="pointWidth"
       :height="pointHeight"
       :rx="corner"
-      class="selected"
+      class="point selected"
     />
   </svg>
 </template>
@@ -77,5 +78,8 @@ export default {
 <style scoped>
 .selected {
   fill: rgb(240, 59, 59);
+}
+.point {
+  cursor: pointer;
 }
 </style>
