@@ -13,7 +13,12 @@
      limitations under the License.
 -->
 <template>
-      <video class="md-elevation-2 screen" :id="file.filename" :src="file.data" />
+  <video
+    class="md-elevation-2 screen"
+    :id="file.filename"
+    :src="file.data"
+    :style="style"
+  />
 </template>
 <script>
 const EPSILON = 0.00001
@@ -29,8 +34,21 @@ function uint8ToString(array) {
 
 export default {
   name: 'videoview',
+  props: ['file', 'height'],
   data() {
-    return {}
+    return {};
+  },
+  computed: {
+    selectedIndex() {
+      return this.file.selectedIndex;
+    },
+    style() {
+      if (typeof this.height == 'number') {
+        return `height: ${this.height}px`;
+      } else {
+        return `height: ${this.height}`;
+      }
+    }
   },
   methods: {
     arrowUp() {
@@ -49,18 +67,8 @@ export default {
       this.selectFrame(this.file.selectedIndex);
     }
   },
-  props: ['file'],
-  computed: {
-    selectedIndex() {
-      return this.file.selectedIndex;
-    },
-  },
 }
 
 </script>
 <style>
-.screen {
-  max-height: 50em;
-  max-width: 50em;
-}
 </style>
