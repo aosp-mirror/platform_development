@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.10.1",
+    "@babel/polyfill": "^7.10.1",
     "@babel/preset-env": "^7.10.1",
     "@babel/register": "^7.10.1",
     "babel-loader": "^8.1.0",
