@@ -102,16 +102,19 @@
                 </div>
 
                 <md-list>
-                  <md-list-item v-for="(file, idx) in files" :key="file.filename">
+                  <md-list-item
+                    v-for="indexedFile in indexedTimelineFiles"
+                    :key="indexedFile.file.filename"
+                  >
                     <md-icon>
-                      {{file.type.icon}}
-                      <md-tooltip md-direction="right">{{file.type.name}}</md-tooltip>
+                      {{indexedFile.file.type.icon}}
+                      <md-tooltip md-direction="right">{{indexedFile.file.type.name}}</md-tooltip>
                     </md-icon>
                     <timeline
-                      :items="file.timeline"
-                      :selected-index="file.selectedIndex"
+                      :items="indexedFile.file.timeline"
+                      :selected-index="indexedFile.file.selectedIndex"
                       :scale="scale"
-                      @item-selected="onTimelineItemSelected($event, idx)"
+                      @item-selected="onTimelineItemSelected($event, indexedFile.index)"
                       class="timeline"
                     />
                   </md-list-item>
@@ -135,7 +138,9 @@ import Timeline from './Timeline.vue'
 import DataFilter from './DataFilter.vue'
 import DraggableDiv from './DraggableDiv.vue'
 import VideoView from './VideoView.vue'
+
 import { nanos_to_string } from './transform.js'
+import { DATA_TYPES } from './decode.js'
 
 // Find the index of the last element matching the predicate in a sorted array
 function findLastMatchingSorted(array, predicate) {
@@ -156,6 +161,24 @@ export default {
   name: 'bottom-navigation',
   props: [ 'files', 'video', 'store', 'activeFile' ],
   data() {
+    // Files that should be excluded from being shown in timeline
+    const timelineFileFilter = new Set([DATA_TYPES.PROTO_LOG]);
+
+    const timelineFiles = this.files
+      .filter(file => !timelineFileFilter.has(file.type));
+
+    const indexedTimelineFiles = [];
+    for (let i = 0; i < this.files.length; i++) {
+      const file = this.files[i];
+
+      if (!timelineFileFilter.has(file.type)) {
+        indexedTimelineFiles.push({
+          index: i,
+          file: file,
+        })
+      }
+    }
+
     return {
       minimized: true,
       currentTimestamp: 0,
@@ -169,6 +192,8 @@ export default {
       resizeOffset: 0,
       showVideoOverlay: true,
       videoOverlayTop: 0,
+      timelineFiles,
+      indexedTimelineFiles,
     }
   },
   computed: {
