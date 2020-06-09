@@ -94,6 +94,8 @@ export default {
       this.files.forEach(function(item) { item.destroy(); })
       this.files = [];
       this.activeDataView = null;
+      this.activeFile = null;
+      this.video = null;
     },
     onDataViewFocus(file) {
       this.activeFile = file;
