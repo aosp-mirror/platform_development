@@ -63,10 +63,11 @@
       </md-table-header>
 
       <div class="scrollBody" ref="tableBody">
-        <md-table-row v-for="line in processedData" :key="line.timestamp">
+        <md-table-row v-for="(line, i) in processedData" :key="line.timestamp">
           <div :class="{inactive: !line.occured}">
             <md-table-cell class="time-column">
               <a v-on:click="setTimelineTime(line.timestamp)">{{line.time}}</a>
+              <div class="new-badge" v-show="prevLastOccuredIndex < i && i <= lastOccuredIndex">New</div>
             </md-table-cell>
             <md-table-cell class="tag-column">{{line.tag}}</md-table-cell>
             <md-table-cell class="at-column">{{line.at}}</md-table-cell>
@@ -158,6 +159,7 @@ export default {
     currentTimestamp: {
       immediate: true,
       handler(ts) {
+        this.prevLastOccuredIndex = this.lastOccuredIndex;
         this.lastOccuredIndex = findLastMatchingSorted(this.processedData,
           (array, idx) => array[idx].timestamp <= ts);
 
@@ -294,4 +296,14 @@ export default {
   color: gray;
 }
 
+.new-badge {
+  display: inline-block;
+  background: rgb(84, 139, 247);
+  border-radius: 3px;
+  color: white;
+  padding: 0 5px;
+  position: absolute;
+  margin-left: 5px;
+  font-size: 10px;
+}
 </style>
