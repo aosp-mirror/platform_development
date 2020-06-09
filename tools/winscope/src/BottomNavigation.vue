@@ -68,10 +68,9 @@
                   <b>Seek time</b>: {{ seekTime }}
                 </div>
                 <timeline
-                  :items="mergedTimeline.timeline"
+                  :timeline="mergedTimeline.timeline"
                   :selected-index="mergedTimeline.selectedIndex"
                   :scale="scale"
-                  @item-selected="onMergedTimelineItemSelected($event)"
                   class="minimized-timeline"
                 />
               </div>
@@ -103,18 +102,17 @@
 
                 <md-list>
                   <md-list-item
-                    v-for="indexedFile in indexedTimelineFiles"
-                    :key="indexedFile.file.filename"
+                    v-for="file in files"
+                    :key="file.filename"
                   >
                     <md-icon>
-                      {{indexedFile.file.type.icon}}
-                      <md-tooltip md-direction="right">{{indexedFile.file.type.name}}</md-tooltip>
+                      {{file.type.icon}}
+                      <md-tooltip md-direction="right">{{file.type.name}}</md-tooltip>
                     </md-icon>
                     <timeline
-                      :items="indexedFile.file.timeline"
-                      :selected-index="indexedFile.file.selectedIndex"
+                      :timeline="file.timeline"
+                      :selected-index="file.selectedIndex"
                       :scale="scale"
-                      @item-selected="onTimelineItemSelected($event, indexedFile.index)"
                       class="timeline"
                     />
                   </md-list-item>
@@ -140,48 +138,13 @@ import DraggableDiv from './DraggableDiv.vue'
 import VideoView from './VideoView.vue'
 
 import { nanos_to_string } from './transform.js'
-import { DATA_TYPES } from './decode.js'
-
-// Find the index of the last element matching the predicate in a sorted array
-function findLastMatchingSorted(array, predicate) {
-  var a = 0;
-  var b = array.length - 1;
-  while (b - a > 1) {
-    var m = Math.floor((a + b) / 2);
-    if (predicate(array, m)) {
-      a = m;
-    } else {
-      b = m - 1;
-    }
-  }
-  return predicate(array, b) ? b : a;
-}
 
 export default {
   name: 'bottom-navigation',
-  props: [ 'files', 'video', 'store', 'activeFile' ],
+  props: [ 'store' ],
   data() {
-    // Files that should be excluded from being shown in timeline
-    const timelineFileFilter = new Set([DATA_TYPES.PROTO_LOG]);
-
-    const timelineFiles = this.files
-      .filter(file => !timelineFileFilter.has(file.type));
-
-    const indexedTimelineFiles = [];
-    for (let i = 0; i < this.files.length; i++) {
-      const file = this.files[i];
-
-      if (!timelineFileFilter.has(file.type)) {
-        indexedTimelineFiles.push({
-          index: i,
-          file: file,
-        })
-      }
-    }
-
     return {
       minimized: true,
-      currentTimestamp: 0,
       // height of video in expanded timeline,
       // made to match expandedTimeline dynamically
       videoHeight: 'auto',
@@ -192,11 +155,24 @@ export default {
       resizeOffset: 0,
       showVideoOverlay: true,
       videoOverlayTop: 0,
-      timelineFiles,
-      indexedTimelineFiles,
+      mergedTimeline: null,
     }
   },
+  created() {
+    this.mergedTimeline = this.computeMergedTimeline();
+    this.$store.commit('addTimeline', this.mergedTimeline);
+  },
+  destroyed() {
+    this.$store.commit('removeTimeline', this.mergedTimeline);
+  },
   computed: {
+    video() {
+      return this.$store.state.video;
+    },
+    files() {
+      return this.$store.state.files
+        .filter(file => !this.$store.state.excludeFromTimeline.includes(file.type));
+    },
     expanded() {
       return !this.minimized;
     },
@@ -208,7 +184,21 @@ export default {
       var mi = Math.min(...(this.files.map(f => Math.min(...f.timeline))));
       return [mi, mx];
     },
-    mergedTimeline() {
+    currentTimestamp() {
+      return this.$store.state.currentTimestamp;
+    },
+  },
+  updated () {
+    this.$nextTick(function () {
+      if (this.$refs.expandedTimeline && this.expanded) {
+        this.videoHeight = this.$refs.expandedTimeline.clientHeight;
+      } else {
+        this.videoHeight = 'auto';
+      }
+    })
+  },
+  methods: {
+    computeMergedTimeline() {
       const mergedTimeline = {
         timeline: [], // Array of integers timestamps
         selectedIndex: 0,
@@ -251,18 +241,7 @@ export default {
       }
 
       return mergedTimeline;
-    }
-  },
-  updated () {
-    this.$nextTick(function () {
-      if (this.$refs.expandedTimeline && this.expanded) {
-        this.videoHeight = this.$refs.expandedTimeline.clientHeight;
-      } else {
-        this.videoHeight = 'auto';
-      }
-    })
-  },
-  methods: {
+    },
     toggle() {
       this.minimized ? this.expand() : this.minimize();
 
@@ -280,59 +259,6 @@ export default {
     },
     fileIsVisible(f) {
       return this.visibleDataViews.includes(f.filename);
-    },
-    updateSelectedIndex(file, timestamp) {
-      file.selectedIndex = findLastMatchingSorted(
-        file.timeline,
-        function(array, idx) {
-          return parseInt(array[idx]) <= timestamp;
-        }
-      );
-    },
-    onMergedTimelineItemSelected(index) {
-      this.mergedTimeline.selectedIndex = index;
-      const timestamp = this.mergedTimeline.timeline[index];
-      this.files.forEach(file => this.updateSelectedIndex(file, timestamp));
-      this.currentTimestamp = timestamp;
-    },
-    onTimelineItemSelected(index, timelineIndex) {
-      this.files[timelineIndex].selectedIndex = index;
-      const timestamp = parseInt(this.files[timelineIndex].timeline[index]);
-      for (let i = 0; i < this.files.length; i++) {
-        if (i != timelineIndex) {
-          this.updateSelectedIndex(this.files[i], timestamp);
-        }
-      }
-
-      this.updateSelectedIndex(this.mergedTimeline, timestamp);
-
-      this.currentTimestamp = timestamp;
-    },
-    advanceTimeline(direction) {
-      if (0 < this.mergedTimeline.selectedIndex + direction &&
-            this.mergedTimeline.selectedIndex + direction <
-              this.mergedTimeline.timeline.length) {
-        this.mergedTimeline.selectedIndex += direction;
-      }
-
-      var closestTimeline = -1;
-      var timeDiff = Infinity;
-      for (var idx = 0; idx < this.files.length; idx++) {
-        var file = this.files[idx];
-        var cur = file.selectedIndex;
-        if (cur + direction < 0 || cur + direction >= this.files[idx].timeline.length) {
-          continue;
-        }
-        var d = Math.abs(parseInt(file.timeline[cur + direction]) - this.currentTimestamp);
-        if (timeDiff > d) {
-          timeDiff = d;
-          closestTimeline = idx;
-        }
-      }
-      if (closestTimeline >= 0) {
-        this.files[closestTimeline].selectedIndex += direction;
-        this.currentTimestamp = parseInt(this.files[closestTimeline].timeline[this.files[closestTimeline].selectedIndex]);
-      }
     },
     onMouseDown(e) {
       this.initResizeAction(e);
