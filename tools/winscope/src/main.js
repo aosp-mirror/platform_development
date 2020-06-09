@@ -20,30 +20,14 @@ import VueMaterial from 'vue-material'
 
 import App from './App.vue'
 import { DATA_TYPES } from './decode.js'
-import { mixin as FileType } from './mixins/FileType';
+import { mixin as FileType } from './mixins/FileType.js'
+import { findLastMatchingSorted } from './utils/utils.js'
 
 import 'style-loader!css-loader!vue-material/dist/vue-material.css'
 import 'style-loader!css-loader!vue-material/dist/theme/default.css'
 
 Vue.use(Vuex)
 Vue.use(VueMaterial)
-
-// TODO: Move to utils file
-// Find the index of the last element matching the predicate in a sorted array
-function findLastMatchingSorted(array, predicate) {
-  let a = 0;
-  let b = array.length - 1;
-  while (b - a > 1) {
-    const m = Math.floor((a + b) / 2);
-    if (predicate(array, m)) {
-      a = m;
-    } else {
-      b = m - 1;
-    }
-  }
-
-  return predicate(array, b) ? b : a;
-}
 
 const store = new Vuex.Store({
   state: {
@@ -65,8 +49,11 @@ const store = new Vuex.Store({
       state.files[fileIndex].selectedIndex = entryIndex;
     },
     addFiles(state, files) {
-      const startIndex = state.files.length;
+      if (!state.activeFile && files.length > 0) {
+        state.activeFile = files[0];
+      }
 
+      const startIndex = state.files.length;
       for (const [i, file] of files.entries()) {
         file.index = startIndex + i;
 
@@ -83,6 +70,8 @@ const store = new Vuex.Store({
       }
 
       state.files = [];
+      state.activeFile = null;
+      state.video = null;
     },
     setActiveFile(state, file) {
       state.activeFile = file;

@@ -14,6 +14,31 @@
 -->
 <template>
   <md-card-content class="container">
+    <div class="filters">
+      <md-field>
+        <label>Tags</label>
+        <md-select v-model="selectedTags" multiple>
+          <md-option v-for="tag in tags" :value="tag">{{ tag }}</md-option>
+        </md-select>
+      </md-field>
+
+      <md-autocomplete v-model="selectedSourceFile" :md-options="sourceFiles">
+        <label>Source file</label>
+
+        <template slot="md-autocomplete-item" slot-scope="{ item, term }">
+          <md-highlight-text :md-term="term">{{ item }}</md-highlight-text>
+        </template>
+
+        <template slot="md-autocomplete-empty" slot-scope="{ term }">
+          No source file matching "{{ term }}" was found.
+        </template>
+      </md-autocomplete>
+
+      <md-field class="search-message-field" md-clearable>
+        <md-input placeholder="Search messages..." v-model="searchInput"></md-input>
+      </md-field>
+    </div>
+
     <md-table class="log-table">
       <md-table-header>
         <md-table-row>
@@ -25,8 +50,8 @@
       </md-table-header>
 
       <div class="scrollBody" ref="tableBody">
-        <md-table-row v-for="(line, i) in data" :key="line.timestamp">
-          <div :class="{inactive: i > idx}">
+        <md-table-row v-for="line in processedData" :key="line.timestamp">
+          <div :class="{inactive: !line.occured}">
             <md-table-cell class="time-column">
               <a v-on:click="setTimelineTime(line.timestamp)">{{line.time}}</a>
             </md-table-cell>
@@ -41,13 +66,30 @@
   </md-card-content>
 </template>
 <script>
+import { findLastMatchingSorted } from './utils/utils.js'
+
 export default {
   name: 'logview',
   data() {
+    const data = this.file.data;
+
+    const tags = new Set();
+    const sourceFiles = new Set();
+    for (const line of data) {
+      tags.add(line.tag);
+      sourceFiles.add(line.at);
+    }
+
     return {
-      data: this.file.data,
+      data,
       isSelected: false,
-      idx: 0,
+      prevLastOccuredIndex: 0,
+      lastOccuredIndex: 0,
+      selectedTags: Array.from(tags),
+      selectedSourceFile: null,
+      searchInput: null,
+      sourceFiles: Array.from(sourceFiles),
+      tags: Array.from(tags),
     }
   },
   methods: {
@@ -87,24 +129,64 @@ export default {
     scrolltable.scrollTop = scrolltable.scrollHeight - 100;
   },
   watch: {
-    selectedIndex: {
+    currentTimestamp: {
       immediate: true,
-      handler(idx) {
-        this.idx = idx;
-        this.scrollToRow(idx);
+      handler(ts) {
+        if (!this.$refs.tableBody) {
+          return;
+        }
+
+        this.lastOccuredIndex = findLastMatchingSorted(this.processedData,
+          (array, idx) => array[idx].timestamp <= ts);
+        this.scrollToRow(this.lastOccuredIndex);
       },
     }
   },
   props: ['file'],
   computed: {
-    selectedIndex() {
-      return this.file.selectedIndex;
+    currentTimestamp() {
+      return this.$store.state.currentTimestamp;
     },
+    processedData() {
+      const filteredData = this.data.filter(line => {
+        if (this.sourceFiles.includes(this.selectedSourceFile)) {
+          // Only filter once source file is fully inputed
+          if (line.at != this.selectedSourceFile) {
+            return false;
+          }
+        }
+
+        if (!this.selectedTags.includes(line.tag)) {
+          return false;
+        }
+
+        if (this.searchInput && !line.text.includes(this.searchInput)) {
+          return false;
+        }
+
+        return true;
+      });
+
+      for (const line of filteredData) {
+        line.occured = line.timestamp <= this.$store.state.currentTimestamp;
+      }
+
+      return filteredData;
+    }
   },
 }
 
 </script>
 <style>
+.filters {
+  width: 100%;
+  display: flex;
+}
+
+.filters > div {
+  margin: 10px;
+}
+
 .log-table .md-table-cell {
   height: auto;
 }
