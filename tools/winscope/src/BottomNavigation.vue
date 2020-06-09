@@ -20,6 +20,7 @@
         class="video-overlay"
         v-show="minimized && showVideoOverlay"
         position="bottomLeft"
+        v-if="video"
       >
         <template slot="header">
           <div class="close-video-overlay" @click="closeVideoOverlay">
