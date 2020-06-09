@@ -14,6 +14,19 @@
 -->
 <template>
   <md-card-content class="container">
+    <div class="navigation">
+      <md-button class="md-dense md-primary" @click.native="scrollToRow(lastOccuredIndex)">
+        Jump to latest entry
+      </md-button>
+      <md-button
+        class="md-icon-button" :class="{'md-primary': pinnedToLatest}"
+        @click.native="togglePin"
+      >
+        <md-icon>push_pin</md-icon>
+      </md-button>
+      <!-- <md-checkbox v-model="pinnedToTimeline" class="md-primary">Pin to timeline</md-checkbox> -->
+    </div>
+
     <div class="filters">
       <md-field>
         <label>Tags</label>
@@ -90,6 +103,7 @@ export default {
       searchInput: null,
       sourceFiles: Array.from(sourceFiles),
       tags: Array.from(tags),
+      pinnedToLatest: true,
     }
   },
   methods: {
@@ -104,7 +118,14 @@ export default {
     getRowEl(idx) {
       return this.$refs.tableBody.querySelectorAll('tr')[idx];
     },
+    togglePin() {
+      this.pinnedToLatest = !this.pinnedToLatest;
+    },
     scrollToRow(idx) {
+      if (!this.$refs.tableBody) {
+        return;
+      }
+
       const body = this.$refs.tableBody;
       const row = this.getRowEl(idx);
 
@@ -129,16 +150,20 @@ export default {
     scrolltable.scrollTop = scrolltable.scrollHeight - 100;
   },
   watch: {
+    pinnedToLatest(isPinned) {
+      if (isPinned) {
+        this.scrollToRow(this.lastOccuredIndex);
+      }
+    },
     currentTimestamp: {
       immediate: true,
       handler(ts) {
-        if (!this.$refs.tableBody) {
-          return;
-        }
-
         this.lastOccuredIndex = findLastMatchingSorted(this.processedData,
           (array, idx) => array[idx].timestamp <= ts);
-        this.scrollToRow(this.lastOccuredIndex);
+
+        if (this.pinnedToLatest) {
+          this.scrollToRow(this.lastOccuredIndex);
+        }
       },
     }
   },
@@ -178,9 +203,19 @@ export default {
 
 </script>
 <style>
-.filters {
+.filters, .navigation {
   width: 100%;
   display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.navigation {
+  justify-content: flex-end;
+}
+
+.navigation > button {
+  margin: 0;
 }
 
 .filters > div {
