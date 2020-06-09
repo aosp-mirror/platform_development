@@ -15,19 +15,25 @@
 <template>
   <md-card-content class="container">
     <md-table class="log-table">
-      <md-table-row>
-        <md-table-head class="time-column-header">Time</md-table-head>
-        <md-table-head class="tag-column-header">Tag</md-table-head>
-        <md-table-head class="at-column-header">At</md-table-head>
-        <md-table-head>Message</md-table-head>
-      </md-table-row>
-
-        <md-table-row v-for="line in data" :key="line.timestamp">
-          <md-table-cell class="time-column">{{line.time}}</md-table-cell>
-          <md-table-cell class="tag-column">{{line.tag}}</md-table-cell>
-          <md-table-cell class="at-column">{{line.at}}</md-table-cell>
-          <md-table-cell>{{line.text}}</md-table-cell>
+      <md-table-header>
+        <md-table-row>
+          <md-table-head class="time-column-header">Time</md-table-head>
+          <md-table-head class="tag-column-header">Tag</md-table-head>
+          <md-table-head class="at-column-header">At</md-table-head>
+          <md-table-head>Message</md-table-head>
         </md-table-row>
+      </md-table-header>
+
+      <div class="scrollBody" ref="tableBody">
+        <md-table-row v-for="(line, i) in data" :key="line.timestamp">
+          <div :class="{inactive: i > idx}">
+            <md-table-cell class="time-column">{{line.time}}</md-table-cell>
+            <md-table-cell class="tag-column">{{line.tag}}</md-table-cell>
+            <md-table-cell class="at-column">{{line.at}}</md-table-cell>
+            <md-table-cell>{{line.text}}</md-table-cell>
+          </div>
+        </md-table-row>
+      </div>
 
     </md-table>
   </md-card-content>
@@ -37,8 +43,9 @@ export default {
   name: 'logview',
   data() {
     return {
-      data: [],
+      data: this.file.data,
       isSelected: false,
+      idx: 0,
     }
   },
   methods: {
@@ -49,6 +56,25 @@ export default {
     arrowDown() {
       this.isSelected = !this.isSelected;
       return !this.isSelected;
+    },
+    getRowEl(idx) {
+      return this.$refs.tableBody.querySelectorAll('tr')[idx];
+    },
+    scrollToRow(idx) {
+      const body = this.$refs.tableBody;
+      const row = this.getRowEl(idx);
+
+      const bodyRect = body.getBoundingClientRect();
+      const rowRect = row.getBoundingClientRect();
+
+      // Is the row viewable?
+      const isViewable = (rowRect.top >= bodyRect.top) &&
+        (rowRect.top <= bodyRect.top + bodyRect.clientHeight);
+
+      if (!isViewable) {
+        body.scrollTop = (rowRect.top + body.scrollTop + rowRect.height) -
+          (body.clientHeight + bodyRect.top);
+      }
     }
   },
   updated() {
@@ -59,14 +85,8 @@ export default {
     selectedIndex: {
       immediate: true,
       handler(idx) {
-        if (this.file.data.length > 0) {
-          while (this.data.length > idx + 1) {
-            this.data.pop();
-          }
-          while (this.data.length <= idx) {
-            this.data.push(this.file.data[this.data.length]);
-          }
-        }
+        this.idx = idx;
+        this.scrollToRow(idx);
       },
     }
   },
@@ -123,7 +143,6 @@ export default {
   display: block;
   overflow-y: scroll;
   width: 100%;
-  height: 20em;
 }
 
 .log-table tr {
@@ -133,6 +152,16 @@ export default {
 
 .log-table td:last-child {
   width: 100%;
+}
+
+.scrollBody {
+  height: 75vh;
+  width: 100%;
+  overflow: auto;
+}
+
+.scrollBody .inactive {
+  color: gray;
 }
 
 </style>
