@@ -20,13 +20,13 @@
       :width="pointWidth"
       :height="pointHeight"
       :rx="corner"
-      v-for="(item, idx) in items"
+      v-for="(item, idx) in timeline"
       :key="item"
       @click="onItemClick(idx)"
       class="point"
     />
     <rect
-      v-if="items.length"
+      v-if="timeline.length"
       :x="position(selected)"
       y="0"
       :width="pointWidth"
@@ -39,7 +39,7 @@
 <script>
 export default {
   name: "timeline",
-  props: ["items", "selectedIndex", "scale"],
+  props: ["timeline", "selectedIndex", "scale"],
   data() {
     return {
       pointWidth: "1%",
@@ -59,18 +59,19 @@ export default {
       return (((cx - scale[0]) / (scale[1] - scale[0])) * 100)  + "%";
     },
     onItemClick(index) {
-      this.$emit("item-selected", index);
+      const timestamp = parseInt(this.timeline[index]);
+      this.$store.dispatch('updateTimelineTime', timestamp);
     }
   },
   computed: {
     timestamps() {
-      if (this.items.length == 1) {
+      if (this.timeline.length == 1) {
         return [0];
       }
-      return this.items;
+      return this.timeline;
     },
     selected() {
-      return this.items[this.selectedIndex];
+      return this.timeline[this.selectedIndex];
     }
   }
 };
