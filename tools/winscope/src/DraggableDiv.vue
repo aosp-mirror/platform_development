@@ -35,6 +35,7 @@ export default {
         clientY: undefined,
         movementX: 0,
         movementY: 0,
+        parentResizeObserver: null,
       }
     }
   },
@@ -87,7 +88,25 @@ export default {
     stopDrag() {
       document.onmouseup = null;
       document.onmousemove = null;
-    }
+    },
+    onParentResize() {
+      const parentHeight = this.$el.parentElement.clientHeight;
+      const parentWidth = this.$el.parentElement.clientWidth;
+
+      const elHeight = this.$el.clientHeight;
+      const elWidth = this.$el.clientWidth;
+      const rect = this.$el.getBoundingClientRect();
+
+      const offsetBottom = parentHeight - (rect.y + elHeight);
+      if (offsetBottom < 0) {
+        this.$el.style.top = parseInt(this.$el.style.top) + offsetBottom + 'px';
+      }
+
+      const offsetRight = parentWidth - (rect.x + elWidth);
+      if (offsetRight < 0) {
+        this.$el.style.left = parseInt(this.$el.style.left) + offsetRight + 'px';
+      }
+    },
   },
   mounted() {
     const margin = 15;
@@ -111,7 +130,15 @@ export default {
     // eg: if video needs to load it will change height at a later time than now
     resizeObserver.observe(this.$el);
     setTimeout(() => { resizeObserver.unobserve(this.$el); }, 500);
-  }
+
+    // Listen for changes in parent height to avoid element exiting visible view
+    this.parentResizeObserver = new ResizeObserver(this.onParentResize);
+
+    this.parentResizeObserver.observe(this.$el.parentElement);
+  },
+  destroyed() {
+    this.parentResizeObserver.unobserve(this.$el.parentElement);
+  },
 }
 </script>
 <style scoped>

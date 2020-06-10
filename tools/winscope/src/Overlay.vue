@@ -140,7 +140,7 @@ import VideoView from './VideoView.vue'
 import { nanos_to_string } from './transform.js'
 
 export default {
-  name: 'bottom-navigation',
+  name: 'overlay',
   props: [ 'store' ],
   data() {
     return {
@@ -154,7 +154,6 @@ export default {
       },
       resizeOffset: 0,
       showVideoOverlay: true,
-      videoOverlayTop: 0,
       mergedTimeline: null,
     }
   },
@@ -300,7 +299,7 @@ export default {
     },
     openVideoOverlay() {
       this.showVideoOverlay = true;
-    }
+    },
   },
   components: {
     'timeline': Timeline,
@@ -308,9 +307,6 @@ export default {
     'videoview': VideoView,
     'draggable-div': DraggableDiv,
   },
-  mounted() {
-    this.videoOverlayTop = this.$refs.overlayContent.clientHeight - 150 - 15 + "px";
-  }
 }
 </script>
 <style scoped>
