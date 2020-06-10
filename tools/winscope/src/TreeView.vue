@@ -13,7 +13,7 @@
      limitations under the License.
 -->
 <template>
-  <div class="tree-view">
+  <div class="tree-view" v-if="item">
     <div class="node"
       :class="{ leaf: isLeaf, selected: isSelected, clickable: isClickable }"
       :style="nodeOffsetStyle" @click="clicked"
@@ -88,7 +88,7 @@ export default {
     "items-clickable",
     "initial-depth"
   ],
-  data: function() {
+  data() {
     return {
       isChildSelected: false,
       isCollapsed: false,
