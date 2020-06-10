@@ -20,6 +20,7 @@
         class="video-overlay"
         v-show="minimized && showVideoOverlay"
         position="bottomLeft"
+        :asyncLoad="true"
         v-if="video"
       >
         <template slot="header">
@@ -32,7 +33,11 @@
         </template>
         <template slot="main">
           <div ref="overlayVideoContainer">
-            <videoview :file="video" ref="video" :height="videoHeight" />
+            <videoview
+              ref="video"
+              :file="video"
+              :height="videoHeight"
+              @loaded="videoLoaded" />
           </div>
         </template>
       </draggable-div>
@@ -299,6 +304,9 @@ export default {
     },
     openVideoOverlay() {
       this.showVideoOverlay = true;
+    },
+    videoLoaded() {
+      this.$refs.videoOverlay.contentLoaded();
     },
   },
   components: {

@@ -13,7 +13,10 @@
      limitations under the License.
 -->
 <template>
-  <div class="draggable-container">
+  <div
+    class="draggable-container"
+    :style="{visibility: contentIsLoaded ? 'visible' : 'hidden'}"
+  >
     <md-card class="draggable-card">
       <div class="header" @mousedown="onMouseDown">
         <md-icon class="drag-icon">
@@ -21,13 +24,15 @@
         </md-icon>
         <slot name="header" />
       </div>
-      <slot name="main" />
+      <slot name="main" ref="content"/>
     </md-card>
   </div>
 </template>
 <script>
 export default {
   name: "DraggableDiv",
+  // If asyncLoad is enabled must call contentLoaded when content is ready
+  props: ['position', 'asyncLoad'],
   data() {
     return {
       positions: {
@@ -35,11 +40,11 @@ export default {
         clientY: undefined,
         movementX: 0,
         movementY: 0,
-        parentResizeObserver: null,
-      }
+      },
+      parentResizeObserver: null,
+      contentIsLoaded: false,
     }
   },
-  props: ['position'],
   methods: {
     onMouseDown(e) {
       e.preventDefault();
@@ -107,29 +112,40 @@ export default {
         this.$el.style.left = parseInt(this.$el.style.left) + offsetRight + 'px';
       }
     },
-  },
-  mounted() {
-    const margin = 15;
-    const parentHeight = this.$el.parentElement.clientHeight;
+    contentLoaded() {
+      // To be called if content is loaded async (eg: video), so that div may
+      // position itself correctly.
 
-    const resizeObserver = new ResizeObserver(entries => {
-      const divHeight = this.$el.clientHeight;
+      if (this.contentIsLoaded) {
+        return;
+      }
+
+      this.contentIsLoaded = true;
+      const margin = 15;
 
       switch (this.position) {
         case 'bottomLeft':
-          this.$el.style.top = parentHeight - divHeight - margin + 'px';
-          this.$el.style.left = margin + 'px';
+          this.moveToBottomLeft(margin);
           break;
 
         default:
           throw new Error('Unsupported starting position for DraggableDiv');
       }
-    });
+    },
+    moveToBottomLeft(margin) {
+      margin = margin || 0;
 
-    // Listens of updates to size on container,
-    // eg: if video needs to load it will change height at a later time than now
-    resizeObserver.observe(this.$el);
-    setTimeout(() => { resizeObserver.unobserve(this.$el); }, 500);
+      const divHeight = this.$el.clientHeight;
+      const parentHeight = this.$el.parentElement.clientHeight;
+
+      this.$el.style.top = parentHeight - divHeight - margin + 'px';
+      this.$el.style.left = margin + 'px';
+    },
+  },
+  mounted() {
+    if (!this.asyncLoad) {
+      this.contentLoaded();
+    }
 
     // Listen for changes in parent height to avoid element exiting visible view
     this.parentResizeObserver = new ResizeObserver(this.onParentResize);
