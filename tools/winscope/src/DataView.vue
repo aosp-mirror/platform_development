@@ -37,7 +37,7 @@
 <script>
 import TraceView from "./TraceView.vue";
 import LogView from "./LogView.vue";
-import FileType from "./FileType.js";
+import FileType from "./mixins/FileType.js";
 
 export default {
   name: "dataview",

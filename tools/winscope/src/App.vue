@@ -39,9 +39,6 @@
         />
 
         <bottom-navigation
-          :files="files"
-          :activeFile="activeFile"
-          :video="video"
           :store="store"
           :ref="bottomNavRef"
           v-if="dataLoaded"
@@ -58,7 +55,7 @@ import DataView from './DataView.vue'
 import DataInput from './DataInput.vue'
 import LocalStore from './localstore.js'
 import DataAdb from './DataAdb.vue'
-import FileType from './FileType.js'
+import FileType from './mixins/FileType.js'
 
 const APP_NAME = "Winscope"
 
@@ -67,10 +64,7 @@ export default {
   mixins: [FileType],
   data() {
     return {
-      files: [],
-      video: null,
       title: APP_NAME,
-      activeFile: null,
       activeDataView: null,
       store: LocalStore('app', {
         flattened: false,
@@ -91,22 +85,21 @@ export default {
   },
   methods: {
     clear() {
-      this.files.forEach(function(item) { item.destroy(); })
-      this.files = [];
+      this.$store.commit('clearFiles');
       this.activeDataView = null;
       this.activeFile = null;
       this.video = null;
     },
     onDataViewFocus(file) {
-      this.activeFile = file;
+      this.$store.commit('setActiveFile', file);
       this.activeDataView = file.filename;
     },
     onKeyDown(event) {
       event = event || window.event;
       if (event.keyCode == 37 /* left */ ) {
-        this.$refs[this.bottomNavRef].advanceTimeline(-1);
+        this.$store.dispatch('advanceTimeline', -1, this.$store.state.excludeFromTimeline);
       } else if (event.keyCode == 39 /* right */ ) {
-        this.$refs[this.bottomNavRef].advanceTimeline(1);
+        this.$store.dispatch('advanceTimeline', 1, this.$store.state.excludeFromTimeline);
       } else if (event.keyCode == 38 /* up */ ) {
         this.$refs[this.activeView][0].arrowUp();
       } else if (event.keyCode == 40 /* down */ ) {
@@ -118,13 +111,7 @@ export default {
       return true;
     },
     onDataReady(files) {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        if (this.isVideo(file)) {
-          this.video = file;
-        }
-        this.files.push(file);
-      }
+      this.$store.dispatch('setFiles', files);
     },
     setStatus(status) {
       if (status) {
@@ -135,9 +122,16 @@ export default {
     },
   },
   computed: {
-    prettyDump: function() { return JSON.stringify(this.dump, null, 2); },
-    dataLoaded: function() { return this.files.length > 0 },
-    activeView: function() {
+    files() {
+      return this.$store.state.files;
+    },
+    prettyDump() {
+      return JSON.stringify(this.dump, null, 2);
+    },
+    dataLoaded() {
+      return this.files.length > 0;
+    },
+    activeView() {
       if (!this.activeDataView && this.files.length > 0) {
         this.activeDataView = this.files[0].filename;
       }
@@ -195,11 +189,6 @@ h2 {
 ul {
   list-style-type: none;
   padding: 0;
-}
-
-li {
-  display: inline-block;
-  margin: 0 10px;
 }
 
 a {
