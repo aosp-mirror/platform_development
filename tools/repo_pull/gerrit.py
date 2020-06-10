@@ -27,6 +27,11 @@ import os
 import sys
 
 try:
+    from urllib.error import HTTPError  # PY3
+except ImportError:
+    from urllib2 import HTTPError  # PY2
+
+try:
     from urllib.request import (
         HTTPBasicAuthHandler, Request, build_opener)  # PY3
 except ImportError:
@@ -107,7 +112,15 @@ def create_url_opener_from_args(args):
 
 
 def _decode_xssi_json(data):
-    """Trim XSSI protector and decode JSON objects."""
+    """Trim XSSI protector and decode JSON objects.
+
+    Returns:
+        An object returned by json.loads().
+
+    Raises:
+        ValueError: If data doesn't start with a XSSI token.
+        json.JSONDecodeError: If data failed to decode.
+    """
 
     # Decode UTF-8
     data = data.decode('utf-8')
@@ -139,6 +152,14 @@ def query_change_lists(url_opener, gerrit, query_string, limits):
 
 
 def _make_json_post_request(url_opener, url, data, method='POST'):
+    """Open an URL request and decode its response.
+
+    Returns a 3-tuple of (code, body, json).
+        code: A numerical value, the HTTP status code of the response.
+        body: A bytes, the response body.
+        json: An object, the parsed JSON response.
+    """
+
     data = json.dumps(data).encode('utf-8')
     headers = {
         'Content-Type': 'application/json; charset=UTF-8',
@@ -146,13 +167,22 @@ def _make_json_post_request(url_opener, url, data, method='POST'):
 
     request = Request(url, data, headers)
     request.get_method = lambda: method
-    response_file = url_opener.open(request)
+
     try:
+        response_file = url_opener.open(request)
+    except HTTPError as error:
+        response_file = error
+
+    with response_file:
         res_code = response_file.getcode()
-        res_json = _decode_xssi_json(response_file.read())
-        return (res_code, res_json)
-    finally:
-        response_file.close()
+        res_body = response_file.read()
+        try:
+            res_json = _decode_xssi_json(res_body)
+        except ValueError:
+            # The response isn't JSON if it doesn't start with a XSSI token.
+            # Possibly a plain text error message or empty body.
+            res_json = None
+        return (res_code, res_body, res_json)
 
 
 def set_review(url_opener, gerrit_url, change_id, labels, message):
@@ -168,6 +198,14 @@ def set_review(url_opener, gerrit_url, change_id, labels, message):
         data['message'] = message
 
     return _make_json_post_request(url_opener, url, data)
+
+
+def submit(url_opener, gerrit_url, change_id):
+    """Submit a change list."""
+
+    url = '{}/a/changes/{}/submit'.format(gerrit_url, change_id)
+
+    return _make_json_post_request(url_opener, url, {})
 
 
 def abandon(url_opener, gerrit_url, change_id, message):
@@ -194,13 +232,8 @@ def delete_topic(url_opener, gerrit_url, change_id):
     """Delete the topic name."""
 
     url = '{}/a/changes/{}/topic'.format(gerrit_url, change_id)
-    request = Request(url)
-    request.get_method = lambda: 'DELETE'
-    response_file = url_opener.open(request)
-    try:
-        return (response_file.getcode(), response_file.read())
-    finally:
-        response_file.close()
+
+    return _make_json_post_request(url_opener, url, {}, method='DELETE')
 
 
 def set_hashtags(url_opener, gerrit_url, change_id, add_tags=None,
@@ -216,6 +249,28 @@ def set_hashtags(url_opener, gerrit_url, change_id, add_tags=None,
         data['remove'] = remove_tags
 
     return _make_json_post_request(url_opener, url, data)
+
+
+def add_reviewers(url_opener, gerrit_url, change_id, reviewers):
+    """Add reviewers."""
+
+    url = '{}/a/changes/{}/revisions/current/review'.format(
+        gerrit_url, change_id)
+
+    data = {}
+    if reviewers:
+        data['reviewers'] = reviewers
+
+    return _make_json_post_request(url_opener, url, data)
+
+
+def delete_reviewer(url_opener, gerrit_url, change_id, name):
+    """Delete reviewer."""
+
+    url = '{}/a/changes/{}/reviewers/{}/delete'.format(
+        gerrit_url, change_id, name)
+
+    return _make_json_post_request(url_opener, url, {})
 
 
 def get_patch(url_opener, gerrit_url, change_id, revision_id='current'):

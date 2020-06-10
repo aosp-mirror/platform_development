@@ -139,7 +139,7 @@ framework/dx.jar                              build-tools/${PLATFORM_NAME}/lib/d
 bin/dexdump                                   build-tools/${PLATFORM_NAME}/dexdump
 
 # d8
-prebuilts/r8/buildtools/d8-master.jar         build-tools/${PLATFORM_NAME}/lib/d8.jar
+prebuilts/r8/r8.jar                           build-tools/${PLATFORM_NAME}/lib/d8.jar
 prebuilts/r8/d8                               build-tools/${PLATFORM_NAME}/d8
 
 # multi-dex
@@ -163,6 +163,9 @@ sdk/sdk-build.prop                                                              
 # Main Public API jar
 ${OUT_DIR}/target/common/obj/PACKAGING/android_jar_intermediates/android.jar            platforms/${PLATFORM_NAME}/android.jar
 ${OUT_DIR}/target/common/obj/PACKAGING/android_jar_intermediates/android-stubs-src.jar  platforms/${PLATFORM_NAME}/android-stubs-src.jar
+
+# core-for-system-modules.jar for building system modules
+${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/core-current-stubs-for-system-modules_intermediates/classes.jar    platforms/${PLATFORM_NAME}/core-for-system-modules.jar
 
 # optional API files.
 development/build/optional.json                                                               platforms/${PLATFORM_NAME}/optional/optional.json
