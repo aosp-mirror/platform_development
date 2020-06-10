@@ -68,8 +68,25 @@ def is_sparse_image(image_path):
     return image_file.read(4) == b"\x3a\xff\x26\xed"
 
 
-def rewrite_misc_info(part_img_dict, lpmake_path, input_file, output_file):
-  """Changes the lpmake path and image paths in a misc info file."""
+def rewrite_misc_info(args_part_imgs, unpacked_part_imgs, lpmake_path,
+                      input_file, output_file):
+  """Changes the lpmake path and image paths in a misc info file.
+
+  Args:
+    args_part_imgs: A dict of {partition_name: image_path} that the user
+                    intends to substitute. The partition_names must not have
+                    slot suffixes.
+    unpacked_part_imgs: A dict of {partition_name: image_path} unpacked from
+                        the input super image. The partition_names must have
+                        slot suffixes if the misc info enables virtual_ab.
+    lpmake_path: The path to the lpmake binary.
+    input_file: The input misc info file object.
+    output_file: The output misc info file object.
+
+  Returns:
+    The list of the partition names without slot suffixes.
+  """
+  virtual_ab = False
   partition_names = ()
   for line in input_file:
     split_line = line.strip().split("=", 1)
@@ -82,13 +99,19 @@ def rewrite_misc_info(part_img_dict, lpmake_path, input_file, output_file):
       continue
     elif split_line[0].endswith("_image"):
       continue
+    elif split_line[0] == "virtual_ab" and split_line[1] == "true":
+      virtual_ab = True
     output_file.write(line)
 
   for partition_name in partition_names:
-    if partition_name not in part_img_dict:
+    img_path = args_part_imgs.get(partition_name)
+    if img_path is None:
+      # _a is the active slot for the super images built from source.
+      img_path = unpacked_part_imgs.get(partition_name + "_a" if virtual_ab
+                                        else partition_name)
+    if img_path is None:
       raise KeyError("No image for " + partition_name + " partition.")
-    img_path = part_img_dict[partition_name]
-    if img_path:
+    if img_path != "":
       output_file.write("%s_image=%s\n" % (partition_name, img_path))
 
   return partition_names
@@ -123,16 +146,17 @@ def main():
                       type=partition_image,
                       help="The partition and the image that will be added "
                            "to the super image. The format is "
-                           "PARITITON_NAME=IMAGE_PATH. If IMAGE_PATH is "
-                           "empty, the partition will be resized to 0.")
+                           "PARITITON_NAME=IMAGE_PATH. PARTITION_NAME must "
+                           "not have slot suffix. If IMAGE_PATH is empty, the "
+                           "partition will be resized to 0.")
   args = parser.parse_args()
 
   # Convert the args.part_imgs to a dictionary.
-  part_img_dict = dict()
+  args_part_imgs = dict()
   for part, img in args.part_imgs:
-    if part in part_img_dict:
+    if part in args_part_imgs:
       raise ValueError(part + " partition is repeated.")
-    part_img_dict[part] = img
+    args_part_imgs[part] = img
 
   if args.temp_dir:
     tempfile.tempdir = args.temp_dir
@@ -163,6 +187,7 @@ def main():
         subprocess.check_call([simg2img_path, args.super_img, super_img_path])
 
     print("Unpack super image.")
+    unpacked_part_imgs = dict()
     lpunpack_path = os.path.join(ota_tools_dir, BIN_DIR_NAME, "lpunpack")
     unpack_dir = tempfile.mkdtemp(prefix="lpunpack")
     temp_dirs.append(unpack_dir)
@@ -170,8 +195,7 @@ def main():
     for file_name in os.listdir(unpack_dir):
       if file_name.endswith(IMG_FILE_EXT):
         part = file_name[:-len(IMG_FILE_EXT)]
-        if part not in part_img_dict:
-          part_img_dict[part] = os.path.join(unpack_dir, file_name)
+        unpacked_part_imgs[part] = os.path.join(unpack_dir, file_name)
 
     print("Create temporary misc info.")
     lpmake_path = os.path.join(ota_tools_dir, BIN_DIR_NAME, "lpmake")
@@ -181,11 +205,11 @@ def main():
       temp_files.append(misc_info_file.name)
       misc_info_file_path = misc_info_file.name
       with open(args.misc_info, "r") as misc_info:
-        part_list = rewrite_misc_info(part_img_dict, lpmake_path, misc_info,
-                                      misc_info_file)
+        part_list = rewrite_misc_info(args_part_imgs, unpacked_part_imgs,
+                                      lpmake_path, misc_info, misc_info_file)
 
     # Check that all input partitions are in the partition list.
-    parts_not_found = set(part for part, _ in args.part_imgs) - set(part_list)
+    parts_not_found = args_part_imgs.keys() - set(part_list)
     if parts_not_found:
       raise ValueError("Cannot find partitions in misc info: " +
                        " ".join(parts_not_found))
