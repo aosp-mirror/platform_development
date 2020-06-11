@@ -23,6 +23,11 @@
           {{isCollapsed ? "chevron_right" : "expand_more"}}
         </i>
       </button>
+      <div class="padding" v-else>
+        <i aria-hidden="true" class="md-icon md-theme-default material-icons">
+          arrow_right
+        </i>
+      </div>
       <div class="description">
         <span class="kind">{{item.kind}}</span>
         <span v-if="item.kind && item.name">-</span>
