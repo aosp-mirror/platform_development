@@ -60,7 +60,6 @@ class GenBuildFile(object):
     """
     INDENT = '    '
     ETC_MODULES = [
-        'ld.config.txt',
         'llndk.libraries.txt',
         'vndksp.libraries.txt',
         'vndkcore.libraries.txt',
@@ -125,7 +124,7 @@ class GenBuildFile(object):
         notice_paths = glob.glob(
             os.path.join(self._install_dir, utils.NOTICE_FILES_DIR_PATH,
                          '*.txt'))
-        return [os.path.splitext(os.path.basename(p))[0] for p in notice_paths]
+        return sorted(os.path.splitext(os.path.basename(p))[0] for p in notice_paths)
 
     def generate_root_android_bp(self):
         """Autogenerates Android.bp."""
@@ -134,11 +133,6 @@ class GenBuildFile(object):
             self._vndk_version))
         etc_buildrules = []
         for prebuilt in self.ETC_MODULES:
-            # ld.config.VER.txt is not installed as a prebuilt but is built and
-            # installed from thesource tree at the time the VNDK snapshot is
-            # installed to the system.img.
-            if prebuilt == 'ld.config.txt':
-                continue
             etc_buildrules.append(self._gen_etc_prebuilt(prebuilt))
 
         with open(self._root_bpfile, 'w') as bpfile:
@@ -219,8 +213,6 @@ class GenBuildFile(object):
 
             with open(bpfile_path, 'w') as bpfile:
                 bpfile.write(self._gen_autogen_msg('/'))
-                bpfile.write('\n')
-                bpfile.write(self._gen_bp_phony(arch, is_binder32, module_names))
                 bpfile.write('\n')
                 bpfile.write('\n'.join(vndk_core_buildrules))
                 bpfile.write('\n')
@@ -342,54 +334,6 @@ class GenBuildFile(object):
         """
         return 'vndk-v{ver}-{module}-notice'.format(
             ver=self._vndk_version, module=module)
-
-    def _gen_bp_phony(self, arch, is_binder32, module_names):
-        """Generates build rule for phony package 'vndk_v{ver}_{arch}'.
-
-        Args:
-          arch: string, VNDK snapshot arch (e.g. 'arm64')
-          is_binder32: bool, True if binder interface is 32-bit
-          module_names: dict, module names for given prebuilts
-        """
-
-        required = []
-        for prebuilts in (self._vndk_core[arch], self._vndk_sp[arch]):
-            for prebuilt in prebuilts:
-                required.append(
-                    self._get_versioned_name(
-                        prebuilt,
-                        arch,
-                        is_binder32=is_binder32,
-                        module_names=module_names))
-
-        for prebuilt in self.ETC_MODULES:
-            required.append(
-                self._get_versioned_name(
-                    prebuilt,
-                    None,
-                    is_etc=True,
-                    is_binder32=is_binder32,
-                    module_names=module_names))
-
-        required_str = ['"{}",'.format(prebuilt) for prebuilt in required]
-        required_formatted = '\n{ind}{ind}'.format(
-            ind=self.INDENT).join(required_str)
-        required_buildrule = ('{ind}required: [\n'
-                              '{ind}{ind}{required_formatted}\n'
-                              '{ind}],\n'.format(
-                                  ind=self.INDENT,
-                                  required_formatted=required_formatted))
-        binder_suffix = '_{}'.format(utils.BINDER32) if is_binder32 else ''
-
-        return ('phony {{\n'
-                '{ind}name: "vndk_v{ver}_{arch}{binder_suffix}",\n'
-                '{required_buildrule}'
-                '}}\n'.format(
-                    ind=self.INDENT,
-                    ver=self._vndk_version,
-                    arch=arch,
-                    binder_suffix=binder_suffix,
-                    required_buildrule=required_buildrule))
 
     def _gen_vndk_shared_prebuilts(self,
                                    prebuilts,
