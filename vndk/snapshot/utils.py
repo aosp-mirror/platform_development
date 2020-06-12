@@ -94,7 +94,7 @@ def get_snapshot_archs(install_dir):
         basename = os.path.basename(file)
         if os.path.isdir(file) and basename != COMMON_DIR_NAME:
             archs.append(basename)
-    return archs
+    return sorted(archs)
 
 
 def prebuilt_arch_from_path(path):
