@@ -160,10 +160,10 @@ export default {
   },
   created() {
     this.mergedTimeline = this.computeMergedTimeline();
-    this.$store.commit('addTimeline', this.mergedTimeline);
+    this.$store.commit('setMergedTimeline', this.mergedTimeline);
   },
   destroyed() {
-    this.$store.commit('removeTimeline', this.mergedTimeline);
+    this.$store.commit('removeMergedTimeline', this.mergedTimeline);
   },
   computed: {
     video() {
