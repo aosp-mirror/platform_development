@@ -23,6 +23,11 @@
           {{isCollapsed ? "chevron_right" : "expand_more"}}
         </i>
       </button>
+      <div class="padding" v-else>
+        <i aria-hidden="true" class="md-icon md-theme-default material-icons">
+          arrow_right
+        </i>
+      </div>
       <div class="description">
         <span class="kind">{{item.kind}}</span>
         <span v-if="item.kind && item.name">-</span>
@@ -167,22 +172,23 @@ export default {
     select() {
       this.$emit('item-selected', this.item);
     },
-    clicked() {
-      if (!this.clickTimeout) {
-        this.clickTimeout = setTimeout(() => {
-          // Single click
+    clicked(e) {
+      if (this.itemsClickable) {
+        this.select();
+      }
+
+      // Collapse on double click if leaf node
+      if (!this.isLeaf) {
+        if (!this.clickTimeout) {
+          this.clickTimeout = setTimeout(() => {
+            // Single click (double click hasn't occured before timeout end)
+            this.clickTimeout = null;
+          }, 500);
+        } else {
+          // Double click
+          clearTimeout(this.clickTimeout);
           this.clickTimeout = null;
 
-          if (this.itemsClickable) {
-            this.select();
-          }
-        }, 200);
-      } else {
-        // Double click
-        clearTimeout(this.clickTimeout);
-        this.clickTimeout = null;
-
-        if (!this.isLeaf) {
           this.toggleTree();
         }
       }
