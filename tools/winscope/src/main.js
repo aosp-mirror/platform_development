@@ -38,8 +38,7 @@ const store = new Vuex.Store({
     excludeFromTimeline: [
       DATA_TYPES.PROTO_LOG
     ],
-    // Timeline that are not part of any file but should be updated on time change
-    additionalTimelines: new Set(),
+    mergedTimeline: null,
   },
   mutations: {
     setCurrentTimestamp(state, { timestamp }) {
@@ -76,12 +75,15 @@ const store = new Vuex.Store({
     setActiveFile(state, file) {
       state.activeFile = file;
     },
-    removeTimeline(state, timeline) {
-      state.additionalTimelines.delete(timeline);
+    setMergedTimeline(state, timeline) {
+      state.mergedTimeline = timeline;
     },
-    addTimeline(state, timeline) {
-      state.additionalTimelines.add(timeline);
-    }
+    removeMergedTimeline(state, timeline) {
+      state.mergedTimeline = null;
+    },
+    setMergedTimelineIndex(state, newIndex) {
+      state.mergedTimeline.selectedIndex = newIndex;
+    },
   },
   actions: {
     setFiles(context, files) {
@@ -99,20 +101,22 @@ const store = new Vuex.Store({
         context.commit('setFileEntryIndex', { fileIndex, entryIndex });
       }
 
-      for (const timeline of context.state.additionalTimelines) {
+      if (context.state.mergedTimeline) {
         const newIndex = findLastMatchingSorted(
-          timeline.timeline,
+          context.state.mergedTimeline.timeline,
           (array, idx) => parseInt(array[idx]) <= timestamp,
         );
 
-        // TODO: Might want to change this to a commit so we can track the
-        // origin of the change
-        timeline.selectedIndex = newIndex;
+        context.commit('setMergedTimelineIndex', newIndex);
       }
 
       context.commit('setCurrentTimestamp', { timestamp });
     },
     advanceTimeline(context, direction, excludedFileTypes) {
+      // NOTE: MergedTimeline is never considered to find the next closest index
+      // MergedTimeline only represented the timelines overlapped together and
+      // isn't considered an actual timeline.
+
       excludedFileTypes = new Set(excludedFileTypes);
       let closestTimeline = -1;
       let timeDiff = Infinity;
@@ -136,7 +140,7 @@ const store = new Vuex.Store({
         const timestamp = parseInt(
           consideredFiles[closestTimeline]
             .timeline[consideredFiles[closestTimeline].selectedIndex]);
-        context.commit('setCurrentTimestamp', { timestamp });
+        context.dispatch('updateTimelineTime', timestamp);
       }
     }
   }
