@@ -104,7 +104,7 @@ export default {
     return {
       propertyFilterString: "",
       hierarchyPropertyFilterString:"",
-      selectedTree: {},
+      selectedTree: null,
       hierarchySelected: null,
       lastSelectedStableId: null,
       bounds: {},
@@ -135,7 +135,7 @@ export default {
       this.bounds = item.bounds;
 
       this.hierarchySelected = null;
-      this.selectedTree = {};
+      this.selectedTree = null;
       this.highlight = null;
 
       function find_item(item, stableId) {
