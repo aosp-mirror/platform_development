@@ -19,7 +19,7 @@
 #
 # 1. sudo apt-get install lcov
 # 2. Build application/library with coverage information.
-#     * make NATIVE_COVERAGE=true COVERAGE_PATHS='*'
+#     * make NATIVE_COVERAGE=true NATIVE_COVERAGE_PATHS='*'
 # 3. Push the new binaries to the device with adb sync.
 # (Optional): Run `acov --clean-device`. This will reset coverage for everything
 #      on the device.
