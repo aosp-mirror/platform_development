@@ -38,9 +38,9 @@
           @click="onDataViewFocus(file)"
         />
 
-        <bottom-navigation
+        <overlay
           :store="store"
-          :ref="bottomNavRef"
+          :ref="overlayRef"
           v-if="dataLoaded"
         />
       </md-app-content>
@@ -49,7 +49,7 @@
 </template>
 <script>
 import TreeView from './TreeView.vue'
-import BottomNavigation from './BottomNavigation.vue'
+import Overlay from './Overlay.vue'
 import Rects from './Rects.vue'
 import DataView from './DataView.vue'
 import DataInput from './DataInput.vue'
@@ -71,7 +71,7 @@ export default {
         onlyVisible: false,
         displayDefaults: true,
       }),
-      bottomNavRef: "bottomNav",
+      overlayRef: "overlay",
     }
   },
   created() {
@@ -144,10 +144,10 @@ export default {
     }
   },
   components: {
-    'bottom-navigation': BottomNavigation,
-    'dataview': DataView,
-    'datainput': DataInput,
-    'dataadb': DataAdb,
+    overlay: Overlay,
+    dataview: DataView,
+    datainput: DataInput,
+    dataadb: DataAdb,
   }
 };
 </script>
