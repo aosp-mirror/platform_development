@@ -14,4 +14,15 @@ function findLastMatchingSorted(array, predicate) {
     return predicate(array, b) ? b : a;
 }
 
-export { findLastMatchingSorted }
+// Make sure stableId is unique (makes old versions of proto compatible)
+function stableIdCompatibilityFixup(item) {
+    // For backwards compatibility
+    // (the only item that doesn't have a unique stable ID in the tree)
+    if (item.stableId === 'winToken|-|') {
+        return item.stableId + item.children[0].stableId;
+    }
+
+    return item.stableId;
+}
+
+export { findLastMatchingSorted, stableIdCompatibilityFixup }
