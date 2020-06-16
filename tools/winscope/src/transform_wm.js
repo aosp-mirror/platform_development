@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {transform, nanos_to_string, get_visible_chip} from './transform.js'
+import { transform, nanos_to_string, get_visible_chip } from './transform.js'
 
 function transform_window(entry) {
   var chips = [];
@@ -23,14 +23,18 @@ function transform_window(entry) {
   function transform_rect(rect, label) {
     var r = rect || {};
     return {
-        left: r.left || 0,
-        right: r.right || 0,
-        top: r.top || 0,
-        bottom: r.bottom || 0,
-        label,
+      left: r.left || 0,
+      right: r.right || 0,
+      top: r.top || 0,
+      bottom: r.bottom || 0,
+      label,
     }
   }
-  var name = renderIdentifier(entry.identifier)
+
+  // For backward compatibility
+  const identifier = entry.windowContainer?.identifier ?? entry.identifier;
+
+  var name = renderIdentifier(identifier);
   var rect = transform_rect((entry.windowFrames || entry).frame, name);
 
   if (visible) {
@@ -43,6 +47,7 @@ function transform_window(entry) {
     obj: entry,
     kind: 'window',
     name,
+    stableId: entry.windowContainer?.identifier?.hashCode,
     children: [
       [entry.childWindows, transform_window],
       [entry.windowContainer.children.reverse(), transform_window_container_child],
@@ -59,6 +64,7 @@ function transform_activity_record(entry) {
     obj: entry,
     kind: 'activityRecord',
     name: entry.name,
+    stableId: entry.windowToken.windowContainer?.identifier?.hashCode,
     children: [
       [entry.windowToken.windows, transform_window],
       [entry.windowToken.windowContainer.children.reverse(), transform_window_container_child],
@@ -71,6 +77,7 @@ function transform_task(entry) {
     obj: entry,
     kind: 'task',
     name: entry.id || 0,
+    stableId: entry.windowContainer?.identifier?.hashCode,
     children: [
       [entry.tasks, transform_task],
       [entry.activities, transform_activity_record],
@@ -95,6 +102,7 @@ function transform_window_token(entry) {
     obj: entry,
     kind: 'winToken',
     name: '',
+    stableId: entry.windowContainer?.identifier?.hashCode,
     children: [
       [entry.windows, transform_window],
       [entry.windowContainer.children.reverse(), transform_window_container_child],
@@ -136,19 +144,20 @@ function transform_ime(entry) {
 }
 
 function transform_window_container_child(entry) {
-  if (entry.displayArea != null) {return transform_display_area(entry.displayArea)}
-  if (entry.displayContent != null) {return transform_display_content(entry.displayContent)}
-  if (entry.task != null) {return transform_task(entry.task)}
-  if (entry.activity != null) {return transform_activity_record(entry.activity)}
-  if (entry.windowToken != null) {return transform_window_token(entry.windowToken)}
-  if (entry.window != null) {return transform_window(entry.window)}
+  if (entry.displayArea != null) { return transform_display_area(entry.displayArea) }
+  if (entry.displayContent != null) { return transform_display_content(entry.displayContent) }
+  if (entry.task != null) { return transform_task(entry.task) }
+  if (entry.activity != null) { return transform_activity_record(entry.activity) }
+  if (entry.windowToken != null) { return transform_window_token(entry.windowToken) }
+  if (entry.window != null) { return transform_window(entry.window) }
 
   // The WindowContainerChild may be unknown
   return transform({
-      obj: entry,
-      kind: 'WindowContainerChild',
-      name: '',
-      children: [[entry.windowContainer.children.reverse(), transform_window_container_child],]
+    obj: entry,
+    kind: 'WindowContainerChild',
+    name: '',
+    stableId: entry.windowContainer?.identifier?.hashCode,
+    children: [[entry.windowContainer.children.reverse(), transform_window_container_child],]
   });
 }
 
@@ -158,6 +167,7 @@ function transform_display_area(entry) {
     obj: entry,
     kind: 'DisplayArea',
     name: entry.name,
+    stableId: entry.windowContainer?.identifier?.hashCode,
     children: [
       [entry.windowContainer.children.reverse(), transform_window_container_child],
     ],
@@ -177,6 +187,7 @@ function transform_display_content(entry) {
     obj: entry,
     kind: 'display',
     name: entry.id || 0,
+    stableId: entry.windowContainer?.identifier?.hashCode,
     children: [
       [entry.aboveAppWindows, transform_above],
       [entry.imeWindows, transform_ime],
@@ -194,6 +205,7 @@ function transform_policy(entry) {
     obj: entry,
     kind: 'policy',
     name: 'policy',
+    stableId: 'policy',
     children: [],
   });
 }
@@ -207,7 +219,7 @@ function transform_window_service(entry) {
       [entry.rootWindowContainer.displays, transform_display_content],
       [entry.rootWindowContainer.windowContainer.children.reverse(),
         transform_window_container_child],
-    [[entry.policy], transform_policy],
+      [[entry.policy], transform_policy],
     ],
     timestamp: entry.elapsedRealtimeNanos,
   });
@@ -221,7 +233,7 @@ function transform_entry(entry) {
     children: [
       [entry.windowManagerService.rootWindowContainer.displays, transform_display_content],
       [entry.windowManagerService.rootWindowContainer.windowContainer.children.reverse(),
-          transform_window_container_child],
+        transform_window_container_child],
       [[entry.windowManagerService.policy], transform_policy],
     ],
     timestamp: entry.elapsedRealtimeNanos,
@@ -254,4 +266,4 @@ function shortenComponentName(name) {
   return name;
 }
 
-export {transform_window_service, transform_window_trace};
+export { transform_window_service, transform_window_trace };
