@@ -182,13 +182,13 @@ export default {
       const transformer = new ObjectTransformer(
         item.obj,
         item.name,
-        stableIdCompatibilityFixup(item)
+        stableIdCompatibilityFixup(item),
       ).setOptions({
-          skip: item.skip,
-          formatter: formatProto,
-        });
+        skip: item.skip,
+        formatter: formatProto,
+      });
 
-      if (this.showPropertiesDiff) {
+      if (this.showPropertiesDiff && this.diffVisualizationAvailable) {
         const prevItem = this.getItemFromPrevTree(item);
         transformer.withDiff(prevItem?.obj);
       }
