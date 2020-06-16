@@ -67,6 +67,11 @@ export default {
       this.selectFrame(this.file.selectedIndex);
     }
   },
+  mounted() {
+    this.$el.addEventListener('canplay', (e) => {
+      this.$emit('loaded');
+    });
+  },
 }
 
 </script>
