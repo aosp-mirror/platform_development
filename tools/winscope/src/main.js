@@ -21,7 +21,7 @@ import VueMaterial from 'vue-material'
 import App from './App.vue'
 import { DATA_TYPES } from './decode.js'
 import { mixin as FileType } from './mixins/FileType.js'
-import { findLastMatchingSorted } from './utils/utils.js'
+import { findLastMatchingSorted, stableIdCompatibilityFixup } from './utils/utils.js'
 
 import 'style-loader!css-loader!vue-material/dist/vue-material.css'
 import 'style-loader!css-loader!vue-material/dist/theme/default.css'
@@ -39,6 +39,17 @@ const store = new Vuex.Store({
       DATA_TYPES.PROTO_LOG
     ],
     mergedTimeline: null,
+    // obj -> bool, identifies whether or not an item is collapsed in a treeView
+    collapsedStateStore: {},
+  },
+  getters: {
+    collapsedStateStoreFor: (state) => (item) => {
+      if (item.stableId === undefined || item.stableId === null) {
+        throw new Error("Failed to get collapse state of item — missing a stableId");
+      }
+
+      return state.collapsedStateStore[stableIdCompatibilityFixup(item)];
+    }
   },
   mutations: {
     setCurrentTimestamp(state, { timestamp }) {
@@ -84,6 +95,17 @@ const store = new Vuex.Store({
     setMergedTimelineIndex(state, newIndex) {
       state.mergedTimeline.selectedIndex = newIndex;
     },
+    setCollapsedState(state, { item, isCollapsed }) {
+      if (item.stableId === undefined || item.stableId === null) {
+        return;
+      }
+
+      Vue.set(
+        state.collapsedStateStore,
+        stableIdCompatibilityFixup(item),
+        isCollapsed
+      );
+    }
   },
   actions: {
     setFiles(context, files) {

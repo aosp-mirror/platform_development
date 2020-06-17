@@ -20,6 +20,7 @@
         class="video-overlay"
         v-show="minimized && showVideoOverlay"
         position="bottomLeft"
+        :asyncLoad="true"
         v-if="video"
       >
         <template slot="header">
@@ -32,7 +33,11 @@
         </template>
         <template slot="main">
           <div ref="overlayVideoContainer">
-            <videoview :file="video" ref="video" :height="videoHeight" />
+            <videoview
+              ref="video"
+              :file="video"
+              :height="videoHeight"
+              @loaded="videoLoaded" />
           </div>
         </template>
       </draggable-div>
@@ -140,7 +145,7 @@ import VideoView from './VideoView.vue'
 import { nanos_to_string } from './transform.js'
 
 export default {
-  name: 'bottom-navigation',
+  name: 'overlay',
   props: [ 'store' ],
   data() {
     return {
@@ -154,7 +159,6 @@ export default {
       },
       resizeOffset: 0,
       showVideoOverlay: true,
-      videoOverlayTop: 0,
       mergedTimeline: null,
     }
   },
@@ -300,7 +304,10 @@ export default {
     },
     openVideoOverlay() {
       this.showVideoOverlay = true;
-    }
+    },
+    videoLoaded() {
+      this.$refs.videoOverlay.contentLoaded();
+    },
   },
   components: {
     'timeline': Timeline,
@@ -308,9 +315,6 @@ export default {
     'videoview': VideoView,
     'draggable-div': DraggableDiv,
   },
-  mounted() {
-    this.videoOverlayTop = this.$refs.overlayContent.clientHeight - 150 - 15 + "px";
-  }
 }
 </script>
 <style scoped>

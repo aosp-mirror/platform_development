@@ -14,24 +14,34 @@
  * limitations under the License.
  */
 
-import {transform, nanos_to_string, get_visible_chip} from './transform.js'
+import { transform, nanos_to_string, get_visible_chip } from './transform.js'
 import { fill_occlusion_state, fill_inherited_state } from './sf_visibility.js';
 
-var RELATIVE_Z_CHIP = {short: 'RelZ',
-    long: "Is relative Z-ordered to another surface",
-    class: 'warn'};
-var RELATIVE_Z_PARENT_CHIP = {short: 'RelZParent',
-    long: "Something is relative Z-ordered to this surface",
-    class: 'warn'};
-var MISSING_LAYER = {short: 'MissingLayer',
-    long: "This layer was referenced from the parent, but not present in the trace",
-    class: 'error'};
-var GPU_CHIP = {short: 'GPU',
-    long: "This layer was composed on the GPU",
-    class: 'gpu'};
-var HWC_CHIP = {short: 'HWC',
-    long: "This layer was composed by Hardware Composer",
-    class: 'hwc'};
+var RELATIVE_Z_CHIP = {
+  short: 'RelZ',
+  long: "Is relative Z-ordered to another surface",
+  class: 'warn'
+};
+var RELATIVE_Z_PARENT_CHIP = {
+  short: 'RelZParent',
+  long: "Something is relative Z-ordered to this surface",
+  class: 'warn'
+};
+var MISSING_LAYER = {
+  short: 'MissingLayer',
+  long: "This layer was referenced from the parent, but not present in the trace",
+  class: 'error'
+};
+var GPU_CHIP = {
+  short: 'GPU',
+  long: "This layer was composed on the GPU",
+  class: 'gpu'
+};
+var HWC_CHIP = {
+  short: 'HWC',
+  long: "This layer was composed by Hardware Composer",
+  class: 'hwc'
+};
 
 function transform_layer(layer) {
   function offset_to(bounds, x, y) {
@@ -56,11 +66,11 @@ function transform_layer(layer) {
   }
 
   function add_hwc_composition_type_chip(layer) {
-      if (layer.hwcCompositionType === "CLIENT") {
-          chips.push(GPU_CHIP);
-      } else if (layer.hwcCompositionType === "DEVICE" || layer.hwcCompositionType === "SOLID_COLOR") {
-          chips.push(HWC_CHIP);
-      }
+    if (layer.hwcCompositionType === "CLIENT") {
+      chips.push(GPU_CHIP);
+    } else if (layer.hwcCompositionType === "DEVICE" || layer.hwcCompositionType === "SOLID_COLOR") {
+      chips.push(HWC_CHIP);
+    }
   }
 
   var chips = [];
@@ -91,13 +101,13 @@ function transform_layer(layer) {
     visible: layer.visible,
   });
 }
- 
+
 function missingLayer(childId) {
   return {
     name: "layer #" + childId,
     missing: true,
     zOrderRelativeOf: -1,
-    transform: {dsdx:1, dtdx:0, dsdy:0, dtdy:1},
+    transform: { dsdx: 1, dtdx: 0, dsdy: 0, dtdy: 1 },
   }
 }
 
@@ -114,7 +124,7 @@ function transform_layers(includesCompositionState, layers) {
     e.resolvedChildren = [];
     if (Array.isArray(e.children)) {
       e.resolvedChildren = e.children.map(
-          (childId) => idToItem[childId] || missingLayer(childId));
+        (childId) => idToItem[childId] || missingLayer(childId));
       e.children.forEach((childId) => {
         isChild[childId] = true;
       });
@@ -136,8 +146,10 @@ function transform_layers(includesCompositionState, layers) {
 
   var idToTransformed = {};
   var transformed_roots = roots.map((r) =>
-    transform_layer(r, {parentBounds: {left: 0, right: 0, top: 0, bottom: 0},
-      parentHidden: null}));
+    transform_layer(r, {
+      parentBounds: { left: 0, right: 0, top: 0, bottom: 0 },
+      parentHidden: null
+    }));
 
   foreachTree(transformed_roots, (n) => {
     idToTransformed[n.obj.id] = n;
@@ -154,7 +166,7 @@ function transform_layers(includesCompositionState, layers) {
     children: [
       [transformed_roots, (c) => c],
     ],
-    rects_transform (r) {
+    rects_transform(r) {
       var res = [];
       flattened.forEach((l) => {
         if (l.rect) {
@@ -194,4 +206,4 @@ function transform_layers_trace(entries) {
   return r;
 }
 
-export {transform_layers, transform_layers_trace};
+export { transform_layers, transform_layers_trace };

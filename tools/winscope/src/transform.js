@@ -19,7 +19,7 @@
 // children - list of child entries. Each child entry is pair list [raw object, nested transform function].
 // bounds - used to calculate the full bounds of parents
 // stableId - unique id for an entry. Used to maintain selection across frames.
-function transform({obj, kind, name, children, timestamp, rect, bounds, highlight, rects_transform, chips, visible, flattened, stableId}) {
+function transform({ obj, kind, name, children, timestamp, rect, bounds, highlight, rects_transform, chips, visible, flattened, stableId }) {
 	function call(fn, arg) {
 		return (typeof fn == 'function') ? fn(arg) : fn;
 	}
@@ -29,7 +29,7 @@ function transform({obj, kind, name, children, timestamp, rect, bounds, highligh
 			var transformFunc = item[1];
 			var childs = call(childrenFunc, obj);
 			if (childs) {
-				if (typeof childs.map != 'function'){
+				if (typeof childs.map != 'function') {
 					throw 'Childs should be an array, but is: ' + (typeof childs) + '.'
 				}
 				return transform ? childs.map(transformFunc) : childs;
@@ -61,12 +61,13 @@ function transform({obj, kind, name, children, timestamp, rect, bounds, highligh
 	var nameResolved = call(name, obj);
 	var rectResolved = call(rect, obj);
 	var stableIdResolved = (stableId === undefined) ?
-			kindResolved + '|-|' + nameResolved :
-			call(stableId, obj);
+		kindResolved + '|-|' + nameResolved :
+		call(stableId, obj);
 
 	var result = {
 		kind: kindResolved,
 		name: nameResolved,
+		collapsed: false,
 		children: transformed_children,
 		obj: obj,
 		timestamp: call(timestamp, obj),
@@ -79,8 +80,8 @@ function transform({obj, kind, name, children, timestamp, rect, bounds, highligh
 		stableId: stableIdResolved,
 		visible: call(visible, obj),
 		childrenVisible: transformed_children.some((c) => {
-				return c.childrenVisible || c.visible
-			}),
+			return c.childrenVisible || c.visible
+		}),
 		flattened: call(flattened, obj),
 	};
 
@@ -92,8 +93,8 @@ function transform({obj, kind, name, children, timestamp, rect, bounds, highligh
 }
 
 
-function transform_json(obj, name, options) {
-	let {skip, formatter} = options;
+function transform_json(obj, name, stableId, options) {
+	let { skip, formatter } = options;
 
 	var children = [];
 	var formatted = undefined;
@@ -101,18 +102,18 @@ function transform_json(obj, name, options) {
 	if (skip && skip.includes(obj)) {
 		// skip
 	} else if ((formatted = formatter(obj))) {
-		children.push(transform_json(null, formatted, options));
+		children.push(transform_json(null, formatted, `${stableId}.${formatted}`, options));
 	} else if (Array.isArray(obj)) {
 		obj.forEach((e, i) => {
-			children.push(transform_json(e, ""+i, options));
+			children.push(transform_json(e, "" + i, `${stableId}[${i}]`, options));
 		})
 	} else if (typeof obj == 'string') {
-		children.push(transform_json(null, obj, options));
+		children.push(transform_json(null, obj, `${stableId}.${obj}`, options));
 	} else if (typeof obj == 'number' || typeof obj == 'boolean') {
-		children.push(transform_json(null, ""+obj, options));
+		children.push(transform_json(null, "" + obj, `${stableId}.${obj}`, options));
 	} else if (obj && typeof obj == 'object') {
 		Object.keys(obj).forEach((key) => {
-			children.push(transform_json(obj[key], key, options));
+			children.push(transform_json(obj[key], key, `${stableId}.${key}`, options));
 		});
 	}
 
@@ -120,6 +121,7 @@ function transform_json(obj, name, options) {
 		return Object.freeze({
 			kind: "",
 			name: name + ": " + children[0].name,
+			stableId: stableId,
 			children: children[0].children,
 			combined: true
 		});
@@ -128,6 +130,7 @@ function transform_json(obj, name, options) {
 	return Object.freeze({
 		kind: "",
 		name: name,
+		stableId: stableId,
 		children: children,
 	});
 }
@@ -155,9 +158,9 @@ function nanos_to_string(elapsedRealtimeNanos) {
 	return parts.reverse().join('');
 }
 
- // Returns a UI element used highlight a visible entry.
- function get_visible_chip() {
-	return {short: 'V', long: "visible", class: 'default'};
- }
+// Returns a UI element used highlight a visible entry.
+function get_visible_chip() {
+	return { short: 'V', long: "visible", class: 'default' };
+}
 
-export {transform, transform_json, nanos_to_string, get_visible_chip};
+export { transform, transform_json, nanos_to_string, get_visible_chip };
