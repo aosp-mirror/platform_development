@@ -23,8 +23,13 @@
         @click.native="togglePin"
       >
         <md-icon>push_pin</md-icon>
+        <md-tooltip md-direction="top" v-if="pinnedToLatest">
+          Unpin to latest message
+        </md-tooltip>
+        <md-tooltip md-direction="top" v-else>
+          Pin to latest message
+        </md-tooltip>
       </md-button>
-      <!-- <md-checkbox v-model="pinnedToTimeline" class="md-primary">Pin to timeline</md-checkbox> -->
     </div>
 
     <div class="filters">
