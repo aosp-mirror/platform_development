@@ -13,7 +13,7 @@
      limitations under the License.
 -->
 <template>
-  <div class="overlay">
+  <div class="overlay" v-if="hasTimeline || video">
     <div class="overlay-content" ref="overlayContent">
       <draggable-div
         ref="videoOverlay"
@@ -42,7 +42,11 @@
         </template>
       </draggable-div>
     </div>
-    <md-bottom-bar class="bottom-nav" ref="bottomNav">
+    <md-bottom-bar
+      class="bottom-nav"
+      v-if="hasTimeline || (video && !showVideoOverlay)"
+      ref="bottomNav"
+    >
       <div class="nav-content">
         <div class="">
           <md-toolbar
@@ -68,7 +72,7 @@
                 </md-icon>
               </md-button>
 
-              <div class="minimized-timeline-content" v-show="minimized">
+              <div class="minimized-timeline-content" v-show="minimized" v-if="hasTimeline">
                 <div class="seek-time" v-if="seekTime">
                   <b>Seek time</b>: {{ seekTime }}
                 </div>
@@ -107,7 +111,7 @@
 
                 <md-list>
                   <md-list-item
-                    v-for="file in files"
+                    v-for="file in timelineFiles"
                     :key="file.filename"
                   >
                     <md-icon>
@@ -125,7 +129,7 @@
                 <div class="options">
                   <div class="datafilter">
                     <label>Datafilter</label>
-                    <datafilter v-for="file in files" :key="file.filename" :store="store" :file="file" />
+                    <datafilter v-for="file in timelineFiles" :key="file.filename" :store="store" :file="file" />
                   </div>
                 </div>
               </div>
@@ -173,7 +177,7 @@ export default {
     video() {
       return this.$store.state.video;
     },
-    files() {
+    timelineFiles() {
       return this.$store.state.files
         .filter(file => !this.$store.state.excludeFromTimeline.includes(file.type));
     },
@@ -184,12 +188,24 @@ export default {
       return nanos_to_string(this.currentTimestamp);
     },
     scale() {
-      var mx = Math.max(...(this.files.map(f => Math.max(...f.timeline))));
-      var mi = Math.min(...(this.files.map(f => Math.min(...f.timeline))));
+      var mx = Math.max(...(this.timelineFiles.map(f => Math.max(...f.timeline))));
+      var mi = Math.min(...(this.timelineFiles.map(f => Math.min(...f.timeline))));
       return [mi, mx];
     },
     currentTimestamp() {
       return this.$store.state.currentTimestamp;
+    },
+    hasTimeline() {
+      // Returns true if a meaningful timeline exists (i.e. not only dumps)
+      for (const file of this.timelineFiles) {
+        const timeline = file.timeline;
+        if (file.timeline.length > 0 &&
+            (file.timeline[0] !== undefined || file.timeline.length > 1)) {
+          return true;
+        }
+      }
+
+      return false;
     },
   },
   updated () {
@@ -210,7 +226,7 @@ export default {
 
       const timelineIndexes = [];
       const timelines = [];
-      for (const file of this.files) {
+      for (const file of this.timelineFiles) {
         timelineIndexes.push(0);
         timelines.push(file.timeline);
       }
