@@ -15,7 +15,10 @@
 <template>
   <md-card-content class="container">
     <div class="navigation">
-      <md-button class="md-dense md-primary" @click.native="scrollToRow(lastOccuredIndex)">
+      <md-button
+        class="md-dense md-primary"
+        @click.native="scrollToRow(lastOccuredVisibleIndex)"
+      >
         Jump to latest entry
       </md-button>
       <md-button
@@ -57,33 +60,18 @@
       </md-field>
     </div>
 
-    <md-table class="log-table">
-      <md-table-row>
-        <md-table-head class="time-column-header">Time</md-table-head>
-        <md-table-head class="tag-column-header">Tag</md-table-head>
-        <md-table-head class="at-column-header">At</md-table-head>
-        <md-table-head>Message</md-table-head>
-      </md-table-row>
-
-      <div class="scrollBody" ref="tableBody">
-        <md-table-row v-for="(line, i) in processedData" :key="line.timestamp">
-          <div :class="{inactive: !line.occured}">
-            <md-table-cell class="time-column">
-              <a v-on:click="setTimelineTime(line.timestamp)">{{line.time}}</a>
-              <div class="new-badge" v-show="prevLastOccuredIndex < i && i <= lastOccuredIndex">New</div>
-            </md-table-cell>
-            <md-table-cell class="tag-column">{{line.tag}}</md-table-cell>
-            <md-table-cell class="at-column">{{line.at}}</md-table-cell>
-            <md-table-cell>{{line.text}}</md-table-cell>
-          </div>
-        </md-table-row>
-      </div>
-
-    </md-table>
+    <virtual-list style="height: 360px; overflow-y: auto;"
+      :data-key="'uid'"
+      :data-sources="processedData"
+      :data-component="logEntryComponent"
+      ref="loglist"
+    />
   </md-card-content>
 </template>
 <script>
-import { findLastMatchingSorted } from './utils/utils.js'
+import { findLastMatchingSorted } from './utils/utils.js';
+import LogEntryComponent from './LogEntry.vue';
+import VirtualList from '../libs/virtualList/VirtualList';
 
 export default {
   name: 'logview',
@@ -97,17 +85,20 @@ export default {
       sourceFiles.add(line.at);
     }
 
+    data.forEach((entry, index) => entry.index = index);
+
     return {
       data,
       isSelected: false,
-      prevLastOccuredIndex: 0,
+      prevLastOccuredIndex: -1,
       lastOccuredIndex: 0,
       selectedTags: Array.from(tags),
       selectedSourceFile: null,
       searchInput: null,
-      sourceFiles: Array.from(sourceFiles),
-      tags: Array.from(tags),
+      sourceFiles: Object.freeze(Array.from(sourceFiles)),
+      tags: Object.freeze(Array.from(tags)),
       pinnedToLatest: true,
+      logEntryComponent: LogEntryComponent,
     }
   },
   methods: {
@@ -125,55 +116,43 @@ export default {
     togglePin() {
       this.pinnedToLatest = !this.pinnedToLatest;
     },
-    scrollToRow(idx) {
-      if (!this.$refs.tableBody) {
+    scrollToRow(index) {
+      if (!this.$refs.loglist) {
         return;
       }
 
-      const body = this.$refs.tableBody;
-      const row = this.getRowEl(idx);
+      const itemOffset = this.$refs.loglist.virtual.getOffset(index);
+      const itemSize = 35;
+      const loglistSize = this.$refs.loglist.getClientSize();
 
-      const bodyRect = body.getBoundingClientRect();
-      const rowRect = row.getBoundingClientRect();
-
-      // Is the row viewable?
-      const isViewable = (rowRect.top >= bodyRect.top) &&
-        (rowRect.top <= bodyRect.top + body.clientHeight);
-
-      if (!isViewable) {
-        body.scrollTop = (rowRect.top + body.scrollTop + rowRect.height) -
-          (body.clientHeight + bodyRect.top);
-      }
+      this.$refs.loglist.scrollToOffset(itemOffset - loglistSize + itemSize);
     },
-    setTimelineTime(timestamp) {
-      this.$store.dispatch('updateTimelineTime', timestamp);
-    }
-  },
-  updated() {
-    let scrolltable = this.$el.getElementsByTagName("tbody")[0]
-    scrolltable.scrollTop = scrolltable.scrollHeight - 100;
   },
   watch: {
     pinnedToLatest(isPinned) {
       if (isPinned) {
-        this.scrollToRow(this.lastOccuredIndex);
+        this.scrollToRow(this.lastOccuredVisibleIndex);
       }
     },
     currentTimestamp: {
       immediate: true,
-      handler(ts) {
+      handler(newTimestamp) {
         this.prevLastOccuredIndex = this.lastOccuredIndex;
-        this.lastOccuredIndex = findLastMatchingSorted(this.processedData,
-          (array, idx) => array[idx].timestamp <= ts);
+        this.lastOccuredIndex = findLastMatchingSorted(this.data,
+          (array, idx) => array[idx].timestamp <= newTimestamp);
 
         if (this.pinnedToLatest) {
-          this.scrollToRow(this.lastOccuredIndex);
+          this.scrollToRow(this.lastOccuredVisibleIndex);
         }
       },
     }
   },
   props: ['file'],
   computed: {
+    lastOccuredVisibleIndex() {
+      return findLastMatchingSorted(this.processedData,
+          (array, idx) => array[idx].timestamp <= this.currentTimestamp);
+    },
     currentTimestamp() {
       return this.$store.state.currentTimestamp;
     },
@@ -197,13 +176,22 @@ export default {
         return true;
       });
 
-      for (const line of filteredData) {
-        line.occured = line.timestamp <= this.$store.state.currentTimestamp;
+      for (const entry of filteredData) {
+        entry.new = this.prevLastOccuredIndex < entry.index &&
+          entry.index <= this.lastOccuredIndex;
+        entry.occured = entry.index <= this.lastOccuredIndex;
+
+        // Force refresh if any of these changes
+        entry.uid = `${entry.index}${entry.new ? '-new' : ''}${entry.occured ? '-occured' : ''}`
       }
 
       return filteredData;
     }
   },
+  components: {
+    'virtual-list': VirtualList,
+    'logentry': LogEntryComponent,
+  }
 }
 
 </script>
@@ -227,86 +215,30 @@ export default {
   margin: 10px;
 }
 
-.log-table .md-table-cell {
-  height: auto;
+.log-header {
+  display: inline-flex;
+  color: var(--md-theme-default-text-accent-on-background, rgba(0,0,0,0.54));
+  font-weight: bold;
 }
 
-.log-table {
-  width: 100%;
+.log-header > div {
+  padding: 6px 10px;
+  border-bottom: 1px solid #f1f1f1;
 }
 
-.time-column {
-  min-width: 15em;
+.log-header .time-column {
+  width: 13em;
 }
 
-.time-column-header {
-  min-width: 15em;
-  padding-right: 9em !important;
+.log-header .tag-column {
+  width: 10em;
 }
 
-.tag-column {
-  min-width: 10em;
+.log-header .at-column {
+  width: 30em;
 }
 
-.tag-column-header {
-  min-width: 10em;
-  padding-right: 7em !important;
-}
-
-.at-column {
-  min-width: 35em;
-}
-
-.at-column-header {
-  min-width: 35em;
-  padding-right: 32em !important;
-}
-
-.log-table table {
-  display: block;
-}
-
-.log-table tbody {
-  display: block;
-  overflow-y: scroll;
-  width: 100%;
-}
-
-.log-table tr {
-  width: 100%;
-  display: block;
-}
-
-.log-table td:last-child {
-  width: 100%;
-}
-
-.scrollBody {
-  height: 75vh;
-  width: 100%;
-  overflow: auto;
-}
-
-.scrollBody a {
-  cursor: pointer;
-}
-
-.scrollBody .inactive {
-  color: gray;
-}
-
-.scrollBody .inactive a {
-  color: gray;
-}
-
-.new-badge {
-  display: inline-block;
-  background: rgb(84, 139, 247);
-  border-radius: 3px;
-  color: white;
-  padding: 0 5px;
-  position: absolute;
-  margin-left: 5px;
-  font-size: 10px;
+.column-title {
+  font-size: 12px;
 }
 </style>
