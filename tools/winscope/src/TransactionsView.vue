@@ -58,7 +58,11 @@
         <h2 class="md-title" style="flex: 1">Changes</h2>
       </md-content>
       <div class="changes-content">
-        <tree-view :item="selectedTree" :useGlobalCollapsedState="true" />
+        <tree-view
+          :item="selectedTree"
+          :collapseChildren="true"
+          :useGlobalCollapsedState="true"
+        />
       </div>
     </md-card>
 
@@ -187,9 +191,15 @@ export default {
       }
 
       const transactionUnique = transaction.timestamp;
-      this.selectedTree = transform_json(obj, name, transactionUnique, {
+      let tree = transform_json(obj, name, transactionUnique, {
         formatter: () => {}
       });
+
+      if (tree.name == "changes" && tree.children.length === 1) {
+        tree = tree.children[0];
+      }
+
+      this.selectedTree = tree;
     },
     filterTransactions(condition) {
       return (entry) => {
