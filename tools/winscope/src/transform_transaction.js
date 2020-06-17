@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import {transform, nanos_to_string} from './transform.js'
+import { transform, nanos_to_string } from './transform.js'
 
 function transform_transaction(transaction) {
   return transform({
     obj: transaction,
     kind: 'transaction',
-    children:[[transaction.surfaceChange, transform_entry_type('surfaceChange')],
-        [transaction.displayChange, transform_entry_type('displayChange')]],
+    children: [[transaction.surfaceChange, transform_entry_type('surfaceChange')],
+    [transaction.displayChange, transform_entry_type('displayChange')]],
     rects: [],
     visible: false,
   })
@@ -32,6 +32,7 @@ function transform_entry_type(transactionType) {
     return Object.freeze({
       obj: item,
       kind: transactionType,
+      collapsed: false,
       rects: [],
       visible: false,
       name: item.name || item.id || nanos_to_string(item.when),
@@ -63,4 +64,4 @@ function transform_transaction_trace(entries) {
   return r;
 }
 
-export {transform_transaction_trace};
+export { transform_transaction_trace };

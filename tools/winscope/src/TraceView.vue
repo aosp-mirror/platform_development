@@ -47,7 +47,12 @@
           <input id="filter" type="search" placeholder="Filter..." v-model="propertyFilterString" />
         </div>
       </md-content>
-      <tree-view class="pre-line-data-card" :item="selectedTree" :filter="propertyFilter" />
+      <tree-view
+        class="pre-line-data-card"
+        :item="selectedTree"
+        :filter="propertyFilter"
+        :collapseChildren="true"
+      />
     </md-card>
   </md-card-content>
 </template>
@@ -59,6 +64,7 @@ import Rects from './Rects.vue'
 import { transform_json } from './transform.js'
 import { format_transform_type, is_simple_transform } from './matrix_utils.js'
 import { DATA_TYPES } from './decode.js'
+import { stableIdCompatibilityFixup } from './utils/utils.js'
 
 function formatColorTransform(vals) {
     const fixedVals = vals.map(v => v.toFixed(1));
@@ -70,7 +76,6 @@ function formatColorTransform(vals) {
     }
     return formatted;
 }
-
 
 function formatProto(obj) {
   if (!obj || !obj.$type) {
@@ -116,10 +121,15 @@ export default {
   methods: {
     itemSelected(item) {
       this.hierarchySelected = item;
-      this.selectedTree = transform_json(item.obj, item.name, {
-        skip: item.skip,
-        formatter: formatProto
-      });
+      this.selectedTree = transform_json(
+        item.obj,
+        item.name,
+        stableIdCompatibilityFixup(item),
+        {
+          skip: item.skip,
+          formatter: formatProto
+        },
+      );
       this.highlight = item.highlight;
       this.lastSelectedStableId = item.stableId;
       this.$emit('focus');

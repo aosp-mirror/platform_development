@@ -53,14 +53,12 @@
     </div>
 
     <md-table class="log-table">
-      <md-table-header>
-        <md-table-row>
-          <md-table-head class="time-column-header">Time</md-table-head>
-          <md-table-head class="tag-column-header">Tag</md-table-head>
-          <md-table-head class="at-column-header">At</md-table-head>
-          <md-table-head>Message</md-table-head>
-        </md-table-row>
-      </md-table-header>
+      <md-table-row>
+        <md-table-head class="time-column-header">Time</md-table-head>
+        <md-table-head class="tag-column-header">Tag</md-table-head>
+        <md-table-head class="at-column-header">At</md-table-head>
+        <md-table-head>Message</md-table-head>
+      </md-table-row>
 
       <div class="scrollBody" ref="tableBody">
         <md-table-row v-for="(line, i) in processedData" :key="line.timestamp">

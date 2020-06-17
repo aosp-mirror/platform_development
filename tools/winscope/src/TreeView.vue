@@ -61,6 +61,8 @@
         v-show="filterMatches(c)"
         :items-clickable="itemsClickable"
         :initial-depth="depth + 1"
+        :collapse="collapseChildren"
+        :collapseChildren="collapseChildren"
         ref="children"
       />
     </div>
@@ -91,21 +93,31 @@ export default {
     "flattened",
     "force-flattened",
     "items-clickable",
-    "initial-depth"
+    "initial-depth",
+    "collapse",
+    "collapseChildren",
   ],
   data() {
+    const isCollapsedByDefault = this.collapse ?? false;
+
     return {
       isChildSelected: false,
-      isCollapsed: false,
       clickTimeout: null,
+      isCollapsedByDefault,
     };
   },
   methods: {
+    setCollapseValue(isCollapsed) {
+      this.$store.commit('setCollapsedState', {
+        item: this.item,
+        isCollapsed,
+      });
+    },
     toggleTree() {
-      this.isCollapsed = !this.isCollapsed;
+      this.setCollapseValue(!this.isCollapsed);
     },
     expandTree() {
-      this.isCollapsed = false;
+      this.setCollapseValue(false);
     },
     selectNext(found, inCollapsedTree) {
       // Check if this is the next visible item
@@ -225,6 +237,14 @@ export default {
     },
   },
   computed: {
+    isCollapsed() {
+      if (this.item.children.length === 0) {
+        return false;
+      }
+
+      return this.$store.getters.collapsedStateStoreFor(this.item) ??
+        this.isCollapsedByDefault;
+    },
     isSelected() {
       return this.selected === this.item;
     },
