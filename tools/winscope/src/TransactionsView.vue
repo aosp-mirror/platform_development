@@ -30,10 +30,15 @@
         </div>
       </md-table-toolbar>
 
-      <md-table-row class="test" slot="md-table-row" slot-scope="{ item }" @click="transactionSelected(item)">
+      <md-table-row class="row" slot="md-table-row" slot-scope="{ item }" @click="transactionSelected(item)">
         <md-table-cell md-label="Time">{{ item.time }}</md-table-cell>
-        <md-table-cell md-label="Transaction">
-          {{summarizeTranscation(item)}}
+        <md-table-cell md-label="Type(s)">
+          {{ transactionTypeOf(item) }}
+        </md-table-cell>
+        <md-table-cell md-label="Affected Surfaces">
+          <span v-for="surface in sufacesAffectedBy(item)">
+            {{ surface }}&nbsp;
+          </span>
         </md-table-cell>
       </md-table-row>
 
@@ -201,37 +206,29 @@ export default {
 
       return [surfaceChanges, displayChanges];
     },
-    summarizeTranscation(transaction) {
+    transactionTypeOf(transaction) {
       if (transaction.type !== 'transaction') {
-        if (transaction.obj.id !== undefined) {
-          return `${transaction.type}: ${transaction.obj.id}`;
-        } else {
-          return transaction.type;
-        }
+        return transaction.type;
       }
 
-      const transactions = transaction.transactions;
-
-      const ids = {
-        "surfaceChange": new Set(),
-        "displayChange": new Set(),
-      };
-
-      for (const transaction of transactions) {
-        ids[transaction.type].add(transaction.obj.id);
+      if (transaction.transactions.length === 0) {
+        return "Empty Transaction";
       }
 
-      const summary = [];
+      const types = new Set();
+      transaction.transactions.forEach(t => types.add(t.type));
 
-      if (ids.surfaceChange.size > 0) {
-        summary.push(`surfaceChanges: ${[...ids.surfaceChange].join(', ')}`);
+      return Array.from(types).join(", ");
+    },
+    sufacesAffectedBy(transaction) {
+      if (transaction.type !== 'transaction') {
+        return [transaction.obj.id] ?? [];
       }
 
-      if (ids.displayChange.size > 0) {
-        summary.push(`displayChanges: ${[...ids.displayChange].join(', ')}`);
-      }
+      const affectedSurfaces = new Set();
+      transaction.transactions.forEach(t => affectedSurfaces.add(t.obj.id));
 
-      return summary.join(" | ");
+      return Array.from(affectedSurfaces);
     },
   },
   components: {
