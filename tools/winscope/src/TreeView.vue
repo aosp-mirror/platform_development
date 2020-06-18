@@ -16,7 +16,9 @@
   <div class="tree-view" v-if="item">
     <div class="node"
       :class="{ leaf: isLeaf, selected: isSelected, clickable: isClickable }"
-      :style="nodeOffsetStyle" @click="clicked"
+      :style="nodeOffsetStyle"
+      @click="clicked"
+      ref="node"
     >
       <button class="toggle-tree-btn" @click="toggleTree" v-if="!isLeaf" v-on:click.stop>
         <i aria-hidden="true" class="md-icon md-theme-default material-icons">
@@ -185,24 +187,16 @@ export default {
       this.$emit('item-selected', this.item);
     },
     clicked(e) {
-      if (this.itemsClickable) {
-        this.select();
+      if (window.getSelection().type === "range") {
+        // Ignore click if is selection
+        return;
       }
 
-      // Collapse on double click if leaf node
-      if (!this.isLeaf) {
-        if (!this.clickTimeout) {
-          this.clickTimeout = setTimeout(() => {
-            // Single click (double click hasn't occured before timeout end)
-            this.clickTimeout = null;
-          }, 500);
-        } else {
-          // Double click
-          clearTimeout(this.clickTimeout);
-          this.clickTimeout = null;
-
-          this.toggleTree();
-        }
+      if (!this.isLeaf && e.detail % 2 === 0) {
+        // Double click collaspable node
+        this.toggleTree();
+      } else {
+        this.select();
       }
     },
     chipClassForChip(c) {
@@ -285,7 +279,19 @@ export default {
         paddingLeft: offest,
       }
     }
-  }
+  },
+  mounted() {
+    // Prevent highlighting on multiclick of node element
+    this.$refs.node?.addEventListener('mousedown', (e) => {
+      if (e.detail > 1) {
+        e.preventDefault();
+        return false;
+      }
+
+      return true;
+    });
+  },
+
 };
 </script>
 <style>
@@ -305,7 +311,6 @@ export default {
 
 .tree-view .node.clickable {
   cursor: pointer;
-  user-select: none;
 }
 
 .tree-view .node:hover:not(.selected) {
