@@ -58,6 +58,7 @@
 <script>
 import JSZip from 'jszip';
 import { detectAndDecode, FILE_TYPES, DATA_TYPES } from './decode.js';
+import { WebContentScriptMessageType } from './utils/consts';
 
 // Add any file that should be considered when extracting a bug report here
 // NOTE: If two files have the same type, the last one will be selected
@@ -80,13 +81,91 @@ export default {
     }
   },
   props: ['store'],
+  created() {
+    // Attempt to load files from extension if present
+    this.loadFilesFromExtension();
+  },
   methods: {
-    async onLoadFile(e) {
+    getLoadingStatusAnimation(message) {
+      let frame = 0;
+      const fetchingStatusAnimation = () => {
+        frame++;
+        this.$emit('statusChange', `${message}${'.'.repeat(frame % 4)}`);
+      };
+      let interval = undefined;
+
+      return Object.freeze({
+        start: () => {
+          interval = setInterval(fetchingStatusAnimation, 500);
+        },
+        stop: () => {
+          clearInterval(interval);
+        },
+      });
+    },
+    /**
+     * Attempt to load files from the extension if present.
+     *
+     * If the source URL parameter is set to the extension it make a request
+     * to the extension to fetch the files from the extension.
+     */
+    loadFilesFromExtension() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('source') === 'openFromExtension' && chrome) {
+        // Fetch files from extension
+        const androidBugToolExtensionId = "mbbaofdfoekifkfpgehgffcpagbbjkmj";
+
+        const loading = this.getLoadingStatusAnimation('Fetching files');
+        loading.start();
+
+        // Request to convert the blob object url "blob:chrome-extension://xxx"
+        // the chrome extension has to a web downloadable url "blob:http://xxx".
+        chrome.runtime.sendMessage(androidBugToolExtensionId, {
+          action: WebContentScriptMessageType.CONVERT_OBJECT_URL
+        }, async (response) => {
+          switch (response.action) {
+            case WebContentScriptMessageType.CONVERT_OBJECT_URL_RESPONSE:
+              if (response.attachments?.length > 0) {
+                const filesBlobPromises = response.attachments.map(async attachment => {
+                  const fileQueryResponse = await fetch(attachment.objectUrl);
+                  const blob = await fileQueryResponse.blob();
+
+                  /**
+                   * Note: The blob's media type is not correct. It is always set to "image/png".
+                   * Context: http://google3/javascript/closure/html/safeurl.js?g=0&l=256&rcl=273756987
+                   */
+
+                  // Clone blob to clear media type.
+                  const file = new Blob([blob]);
+                  file.name = attachment.name;
+
+                  return file;
+                });
+
+                const files = await Promise.all(filesBlobPromises);
+
+                loading.stop();
+                this.processFiles(files);
+              } else {
+                console.warn("Got no attachements from extension...");
+              }
+              break;
+
+            default:
+              loading.stop();
+              console.warn("Received unhandled response code from extension.");
+          }
+        });
+      }
+    },
+    onLoadFile(e) {
       // Clear status to avoid keeping status of previous failed uploads
       this.$emit('statusChange', null);
 
       const files = event.target.files || event.dataTransfer.files;
-
+      this.processFiles(files);
+    },
+    async processFiles(files) {
       let error;
       const decodedFiles = [];
       for (const file of files) {
@@ -117,12 +196,25 @@ export default {
           decodedFile.filetype.dataType.name, decodedFile.data);
       }
     },
+    getFileExtensions(file) {
+      const split = file.name.split('.');
+      if (split.length > 1) {
+        return split.pop();
+      }
+
+      return undefined;
+    },
     async addFile(file) {
       const decodedFiles = [];
       const type = this.fileType;
 
+      const extension = this.getFileExtensions(file);
+
+      // extension === 'zip' is required on top of file.type === 'application/zip' because when
+      // loaded from the extension the type is incorrect. See comment in loadFilesFromExtension()
+      // for more information.
       if (type === 'bugreport' ||
-          (type === 'auto' && file.type === 'application/zip')) {
+          (type === 'auto' && (extension === 'zip' || file.type === 'application/zip'))) {
         const results = await this.decodeCompressedBugReport(file);
         decodedFiles.push(...results);
       } else {
@@ -161,6 +253,8 @@ export default {
 
       const zip = new JSZip();
       const content = await zip.loadAsync(buffer);
+
+      console.log("ZIP CONTENT", content);
 
       const decodedFiles = [];
       for (const filename of BUG_REPORT_FILES) {
