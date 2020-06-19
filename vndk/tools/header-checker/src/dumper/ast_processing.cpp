@@ -91,7 +91,8 @@ static bool AddMangledFunctions(const repr::FunctionIR *function,
 bool HeaderASTVisitor::ShouldSkipFunctionDecl(const clang::FunctionDecl *decl) {
   if (!decl->getDefinition()) {
     if (!options_.dump_function_declarations_ ||
-        options_.source_file_ != ABIWrapper::GetDeclSourceFile(decl, cip_)) {
+        options_.source_file_ !=
+            ABIWrapper::GetDeclSourceFile(decl, cip_, options_.root_dir_)) {
       return true;
     }
   }
@@ -161,7 +162,8 @@ bool HeaderASTVisitor::TraverseDecl(clang::Decl *decl) {
   if (!decl) {
     return true;
   }
-  std::string source_file = ABIWrapper::GetDeclSourceFile(decl, cip_);
+  std::string source_file =
+      ABIWrapper::GetDeclSourceFile(decl, cip_, options_.root_dir_);
   ast_caches_->decl_to_source_file_cache_.insert(
       std::make_pair(decl, source_file));
   // If no exported headers are specified we assume the whole AST is exported.
@@ -195,7 +197,9 @@ void HeaderASTConsumer::HandleTranslationUnit(clang::ASTContext &ctx) {
   clang::TranslationUnitDecl *translation_unit = ctx.getTranslationUnitDecl();
   std::unique_ptr<clang::MangleContext> mangle_contextp(
       ctx.createMangleContext());
-  ASTCaches ast_caches(ABIWrapper::GetDeclSourceFile(translation_unit, cip_));
+  ASTCaches ast_caches(
+      ABIWrapper::GetDeclSourceFile(translation_unit, cip_, options_.root_dir_),
+      options_.root_dir_);
 
   std::unique_ptr<repr::ModuleIR> module(
       new repr::ModuleIR(nullptr /*FIXME*/));
