@@ -19,6 +19,11 @@
         <h1 class="md-title" style="flex: 1">{{title}}</h1>
         <md-button
           class="md-accent md-raised md-theme-default"
+          @click="downloadAsZip(files)"
+          v-if="dataLoaded"
+        >Download All</md-button>
+        <md-button
+          class="md-accent md-raised md-theme-default"
           @click="clear()"
           v-if="dataLoaded"
         >Clear</md-button>
@@ -56,12 +61,13 @@ import DataInput from './DataInput.vue'
 import LocalStore from './localstore.js'
 import DataAdb from './DataAdb.vue'
 import FileType from './mixins/FileType.js'
+import SaveAsZip from './mixins/SaveAsZip'
 
 const APP_NAME = "Winscope";
 
 export default {
   name: 'app',
-  mixins: [FileType],
+  mixins: [FileType, SaveAsZip],
   data() {
     return {
       title: APP_NAME,
