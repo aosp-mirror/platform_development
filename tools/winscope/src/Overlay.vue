@@ -50,11 +50,13 @@
             class="md-transparent">
 
             <div class="toolbar" :class="{ expanded: expanded }">
-              <div class="resize-bar" v-show="expanded" @mousedown="onMouseDown">
-                <md-icon class="drag-handle">
-                  drag_handle
-                  <md-tooltip md-direction="bottom">resize</md-tooltip>
-                </md-icon>
+              <div class="resize-bar" v-show="expanded">
+                <div v-if="video" @mousedown="resizeBottomNav">
+                  <md-icon class="drag-handle">
+                    drag_handle
+                    <md-tooltip md-direction="bottom">resize</md-tooltip>
+                  </md-icon>
+                </div>
               </div>
 
               <md-button
@@ -264,7 +266,7 @@ export default {
     fileIsVisible(f) {
       return this.visibleDataViews.includes(f.filename);
     },
-    onMouseDown(e) {
+    resizeBottomNav(e) {
       this.initResizeAction(e);
     },
     initResizeAction(e) {
