@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development webpack-dev-server --open --hot",
     "build": "cross-env NODE_ENV=production webpack --progress --hide-modules",
-    "test": "jasmine"
+    "test": "webpack --config webpack.spec.config.js && jasmine dist/bundleSpec.js"
   },
   "dependencies": {
     "vue": "^2.3.3",
