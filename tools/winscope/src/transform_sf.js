@@ -87,7 +87,8 @@ function transform_layer(layer) {
     chips.push(MISSING_LAYER);
   }
   add_hwc_composition_type_chip(layer);
-  const rect = layer.visible ? get_rect(layer) : undefined;
+
+  const rect = layer.visible && layer.bounds !== null ? get_rect(layer) : undefined;
 
   return transform({
     obj: layer,
@@ -136,7 +137,12 @@ function transform_layers(includesCompositionState, layers) {
 
   var roots = layersList.filter((e) => !isChild[e.id]);
   fill_inherited_state(idToItem, roots);
-  fill_occlusion_state(idToItem, roots, includesCompositionState);
+
+  // Backwards compatibility check
+  const occlusionDetectionCompatible = roots[0].bounds !== null;
+  if (occlusionDetectionCompatible) {
+    fill_occlusion_state(idToItem, roots, includesCompositionState);
+  }
   function foreachTree(nodes, fun) {
     nodes.forEach((n) => {
       fun(n);
