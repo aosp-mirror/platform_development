@@ -216,7 +216,7 @@ class ObjectTransformer {
 			transformedObj = {
 				kind: "",
 				name: name + ": " + child.name,
-				stableId: stableId,
+				stableId,
 				children: child.children,
 				combined: true,
 			}
@@ -228,7 +228,7 @@ class ObjectTransformer {
 			transformedObj = {
 				kind: "",
 				name,
-				stableId: stableId,
+				stableId,
 				children,
 			};
 

@@ -45,6 +45,7 @@ const store = new Vuex.Store({
   getters: {
     collapsedStateStoreFor: (state) => (item) => {
       if (item.stableId === undefined || item.stableId === null) {
+        console.error("Missing stable ID for item", item);
         throw new Error("Failed to get collapse state of item — missing a stableId");
       }
 
