@@ -29,7 +29,7 @@ function getWaylandSafePath() {
 }
 
 module.exports = {
-  entry: './src/main.js',
+  entry: ["@babel/polyfill", './src/main.js'],
   output: {
     path: path.resolve(__dirname, './dist'),
     filename: 'build.js'
@@ -71,7 +71,7 @@ module.exports = {
   },
   resolve: {
     alias: {
-        WaylandSafePath: getWaylandSafePath(),
+      WaylandSafePath: getWaylandSafePath(),
     },
     modules: [
       'node_modules',
