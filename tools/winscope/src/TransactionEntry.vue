@@ -12,6 +12,9 @@
       </div>
     </div>
     <div class="type-column">{{transactionTypeOf(source)}}</div>
+    <div class="origin-column">
+      <span style="white-space: pre;">{{formatOrigin(source)}}</span>
+    </div>
     <div class="affected-surfaces-column">
       <span v-for="(surface, index) in sufacesAffectedBy(source)">
         {{surface.id}}<span v-if="surface.name"> ({{ surface.name }})</span>
@@ -63,7 +66,7 @@ export default {
     },
     sufacesAffectedBy(transaction) {
       if (transaction.type !== 'transaction') {
-        return [{name: transaction.obj?.name, id: transaction.obj.id}];
+        return [{name: transaction.layerName, id: transaction.obj.id}];
       }
 
       const surfaceIds = new Set();
@@ -72,11 +75,18 @@ export default {
         const id = transaction.obj.id;
         if (!surfaceIds.has(id)) {
           surfaceIds.add(id);
-          affectedSurfaces.push({name: transaction.obj?.name, id});
+          affectedSurfaces.push({name: transaction.layerName, id});
         }
       }
 
       return affectedSurfaces
+    },
+    formatOrigin(transaction) {
+      if (!transaction.origin) {
+        return "unavailable";
+      }
+
+      return `PID: ${transaction.origin.pid},\nUID: ${transaction.origin.uid}`;
     },
   },
 }
@@ -93,6 +103,10 @@ export default {
 
 .type-column {
   width: 12em;
+}
+
+.origin-column {
+  width: 9em;
 }
 
 .affected-surfaces-column {
