@@ -46,7 +46,7 @@
           </div>
         </div>
         <div class="md-layout">
-          <input type="file" @change="onLoadFile" ref="fileUpload" v-show="false" />
+          <input type="file" @change="onLoadFile" ref="fileUpload" v-show="false" :multiple="fileType == 'auto'" />
           <md-button class="md-accent md-raised md-theme-default" @click="$refs.fileUpload.click()">Add File</md-button>
           <md-button v-if="dataReady" @click="onSubmit" class="md-button md-primary md-raised md-theme-default">Submit</md-button>
         </div>
@@ -67,37 +67,56 @@ export default {
   },
   props: ['store'],
   methods: {
-    onLoadFile(e) {
-      var type = this.fileType;
-      var files = event.target.files || event.dataTransfer.files;
-      var file = files[0];
-      if (!file) {
-        // No file selected.
-        return;
-      }
-      this.$emit('statusChange', file.name + " (loading)");
+    async onLoadFile(e) {
+      // Clear status to avoid keeping status of previous failed uploads
+      this.$emit('statusChange', null);
 
-      var reader = new FileReader();
-      reader.onload = (e) => {
-        var buffer = new Uint8Array(e.target.result);
+      const files = event.target.files || event.dataTransfer.files;
+
+      const fileData = [];
+      for (const file of files) {
         try {
-          if (FILE_TYPES[type]) {
-            var filetype = FILE_TYPES[type];
-            var data = filetype.decoder(buffer, filetype, file.name, this.store);
-          } else {
-            var [filetype, data] = detectAndDecode(buffer, file.name, this.store);
-          }
-        } catch (ex) {
-          this.$emit('statusChange', this.filename + ': ' + ex);
-          return;
-        } finally {
-          event.target.value = ''
+          const result = await this.addFile(file);
+          fileData.push(result);
+        } catch(e) {
+          this.$emit('statusChange', `${e.filename}: ${e.exepection}`);
+          break;
         }
-
-        this.$set(this.dataFiles, filetype.dataType.name, data);
-        this.$emit('statusChange', null);
       }
-      reader.readAsArrayBuffer(files[0]);
+
+      for (const data of fileData) {
+        this.$set(this.dataFiles, data.filetype.dataType.name, data.data);
+      }
+
+      event.target.value = '';
+    },
+    addFile(file) {
+      return new Promise((resolve, reject) => {
+        const type = this.fileType;
+
+        this.$emit('statusChange', file.name + " (loading)");
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const buffer = new Uint8Array(e.target.result);
+          let filetype, data;
+          try {
+            if (FILE_TYPES[type]) {
+              filetype = FILE_TYPES[type];
+              data = filetype.decoder(buffer, filetype, file.name, this.store);
+            } else {
+              [filetype, data] = detectAndDecode(buffer, file.name, this.store);
+            }
+
+            this.$emit('statusChange', null);
+            resolve({filetype, data});
+          } catch (ex) {
+            reject({filename: file.name, exepection: ex});
+            return;
+          }
+        }
+        reader.readAsArrayBuffer(file);
+      });
     },
     onRemoveFile(typeName) {
       this.$delete(this.dataFiles, typeName);
