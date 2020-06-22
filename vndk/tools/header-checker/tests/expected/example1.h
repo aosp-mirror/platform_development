@@ -220,7 +220,7 @@ record_types {
 }
 record_types {
   type_info {
-    name: "Hello::(anonymous struct at /development/vndk/tools/header-checker/tests/input/example1.h:19:3)"
+    name: "Hello::(anonymous struct at development/vndk/tools/header-checker/tests/input/example1.h:19:3)"
     size: 12
     alignment: 4
     referenced_type: "_ZTIN5HelloUt1_E"
@@ -252,7 +252,7 @@ record_types {
 }
 record_types {
   type_info {
-    name: "Hello::(anonymous struct at /development/vndk/tools/header-checker/tests/input/example1.h:19:3)::(anonymous struct at /development/vndk/tools/header-checker/tests/input/example1.h:22:5)"
+    name: "Hello::(anonymous struct at development/vndk/tools/header-checker/tests/input/example1.h:19:3)::(anonymous struct at development/vndk/tools/header-checker/tests/input/example1.h:22:5)"
     size: 4
     alignment: 4
     referenced_type: "_ZTIN5HelloUt1_Ut_E"
@@ -448,7 +448,7 @@ enum_types {
 }
 enum_types {
   type_info {
-    name: "Hello::(anonymous enum at /development/vndk/tools/header-checker/tests/input/example1.h:17:3)"
+    name: "Hello::(anonymous enum at development/vndk/tools/header-checker/tests/input/example1.h:17:3)"
     size: 4
     alignment: 4
     referenced_type: "_ZTIN5Hello2$AE"
@@ -469,7 +469,7 @@ enum_types {
 }
 enum_types {
   type_info {
-    name: "Hello::(anonymous enum at /development/vndk/tools/header-checker/tests/input/example1.h:18:3)"
+    name: "Hello::(anonymous enum at development/vndk/tools/header-checker/tests/input/example1.h:18:3)"
     size: 4
     alignment: 4
     referenced_type: "_ZTIN5Hello2$CE"

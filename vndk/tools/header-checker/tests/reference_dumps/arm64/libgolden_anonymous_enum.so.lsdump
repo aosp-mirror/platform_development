@@ -37,7 +37,7 @@
     }
    ],
    "linker_set_key" : "_ZTI2$A",
-   "name" : "(anonymous enum at /development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h:1:1)",
+   "name" : "(anonymous enum at development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h:1:1)",
    "referenced_type" : "_ZTI2$A",
    "self_type" : "_ZTI2$A",
    "size" : 1,
@@ -54,7 +54,7 @@
     }
    ],
    "linker_set_key" : "_ZTI2$B",
-   "name" : "(anonymous enum at /development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h:5:1)",
+   "name" : "(anonymous enum at development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h:5:1)",
    "referenced_type" : "_ZTI2$B",
    "self_type" : "_ZTI2$B",
    "size" : 1,
@@ -75,7 +75,7 @@
     }
    ],
    "linker_set_key" : "_ZTIN3$_22$BE",
-   "name" : "(anonymous struct at /development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h:9:1)::(anonymous enum at /development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h:10:3)",
+   "name" : "(anonymous struct at development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h:9:1)::(anonymous enum at development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h:10:3)",
    "referenced_type" : "_ZTIN3$_22$BE",
    "self_type" : "_ZTIN3$_22$BE",
    "size" : 4,
@@ -102,7 +102,7 @@
    ],
    "is_anonymous" : true,
    "linker_set_key" : "_ZTI3$_2",
-   "name" : "(anonymous struct at /development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h:9:1)",
+   "name" : "(anonymous struct at development/vndk/tools/header-checker/tests/integration/cpp/anonymous_enum/include/golden.h:9:1)",
    "referenced_type" : "_ZTI3$_2",
    "self_type" : "_ZTI3$_2",
    "size" : 4,
