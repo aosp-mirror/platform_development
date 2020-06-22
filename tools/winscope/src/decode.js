@@ -246,11 +246,17 @@ function modifyProtoFields(protoObj, displayDefaults) {
   }
 }
 
+function decodeAndTransformProto(buffer, fileType, displayDefaults) {
+  const decoded = fileType.decoderParams.protoType.decode(buffer);
+  modifyProtoFields(decoded, displayDefaults);
+  const transformed = fileType.decoderParams.transform(decoded);
+
+  return transformed;
+}
+
 function protoDecoder(buffer, fileType, fileName, store) {
-  var decoded = fileType.decoderParams.protoType.decode(buffer);
-  modifyProtoFields(decoded, store.displayDefaults);
-  var transformed = fileType.decoderParams.transform(decoded);
-  var data
+  const transformed = decodeAndTransformProto(buffer, fileType, store.displayDefaults);
+  let data;
   if (fileType.decoderParams.timeline) {
     data = transformed.children;
   } else {
@@ -332,4 +338,4 @@ function detectAndDecode(buffer, fileName, store) {
   throw new Error('Unable to detect file');
 }
 
-export { detectAndDecode, DATA_TYPES, FILE_TYPES };
+export { detectAndDecode, decodeAndTransformProto, DATA_TYPES, FILE_TYPES };
