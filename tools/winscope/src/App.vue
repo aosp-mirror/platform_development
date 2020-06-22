@@ -160,7 +160,7 @@ export default {
   padding-bottom: 75px;
 }
 
-.main-content>* {
+.main-content .md-layout>* {
   margin: 1em;
 }
 

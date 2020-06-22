@@ -10,6 +10,7 @@
     "test": "webpack --config webpack.spec.config.js && jasmine dist/bundleSpec.js"
   },
   "dependencies": {
+    "jszip": "^3.5.0",
     "vue": "^2.3.3",
     "vue-material": "^1.0.0-beta-11",
     "vuex": "^3.4.0"
