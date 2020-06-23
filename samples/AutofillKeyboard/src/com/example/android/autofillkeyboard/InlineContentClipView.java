@@ -19,15 +19,16 @@ package com.example.android.autofillkeyboard;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.PixelFormat;
+import android.graphics.Rect;
 import android.os.Build;
 import android.util.AttributeSet;
 import android.view.Choreographer;
 import android.view.Surface;
-import android.view.SurfaceControl;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.inline.InlineContentView;
 import android.widget.FrameLayout;
 
@@ -46,21 +47,21 @@ import androidx.collection.ArraySet;
  */
 @RequiresApi(api = Build.VERSION_CODES.R)
 public class InlineContentClipView extends FrameLayout {
-    // The trick that we use here is to have a hidden SurfaceView to whose
-    // surface we reparent the surfaces of remote content views which are
-    // InlineContentViews. Since surface locations are based off the window
-    // top-left making, making one surface parent of another compounds the
-    // offset from the child's point of view. To compensate for that we
-    // apply transformation to the InlineContentViews.
+    @NonNull
+    private final ArraySet<InlineContentView> mClippedDescendants = new ArraySet<>();
 
     @NonNull
-    private final ArraySet<InlineContentView> mReparentedDescendants = new ArraySet<>();
+    private final ViewTreeObserver.OnDrawListener mOnDrawListener =
+            this::clipDescendantInlineContentViews;
 
     @NonNull
-    private final int[] mTempLocation = new int[2];
+    private final Rect mParentBounds = new Rect();
 
     @NonNull
-    SurfaceView mSurfaceClipView;
+    private final Rect mContentBounds = new Rect();
+
+    @NonNull
+    private SurfaceView mBackgroundView;
 
     private int mBackgroundColor;
 
@@ -76,13 +77,13 @@ public class InlineContentClipView extends FrameLayout {
             @AttrRes int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
-        mSurfaceClipView = new SurfaceView(context);
-        mSurfaceClipView.setZOrderOnTop(true);
-        mSurfaceClipView.getHolder().setFormat(PixelFormat.TRANSPARENT);
-        mSurfaceClipView.setLayoutParams(new ViewGroup.LayoutParams(
+        mBackgroundView = new SurfaceView(context);
+        mBackgroundView.setZOrderOnTop(true);
+        mBackgroundView.getHolder().setFormat(PixelFormat.TRANSPARENT);
+        mBackgroundView.setLayoutParams(new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT));
-        mSurfaceClipView.getHolder().addCallback(new SurfaceHolder.Callback() {
+        mBackgroundView.getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(@NonNull SurfaceHolder holder) {
                 drawBackgroundColorIfReady();
@@ -94,18 +95,23 @@ public class InlineContentClipView extends FrameLayout {
 
             @Override
             public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
-                updateState(InlineContentClipView.this, /*parentSurfaceProvider*/ null);
+                /*do nothing*/
             }
         });
 
-        addView(mSurfaceClipView);
+        addView(mBackgroundView);
+    }
 
-        setWillNotDraw(false);
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        getViewTreeObserver().addOnDrawListener(mOnDrawListener);
+    }
 
-        getViewTreeObserver().addOnPreDrawListener(() -> {
-            updateState(InlineContentClipView.this, mSurfaceClipView);
-            return true;
-        });
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        getViewTreeObserver().removeOnDrawListener(mOnDrawListener);
     }
 
     @Override
@@ -116,7 +122,7 @@ public class InlineContentClipView extends FrameLayout {
     }
 
     private void drawBackgroundColorIfReady() {
-        final Surface surface = mSurfaceClipView.getHolder().getSurface();
+        final Surface surface = mBackgroundView.getHolder().getSurface();
         if (surface.isValid()) {
             final Canvas canvas = surface.lockCanvas(null);
             try {
@@ -140,79 +146,30 @@ public class InlineContentClipView extends FrameLayout {
      * @see InlineContentView#setZOrderedOnTop(boolean)
      */
     public void setZOrderedOnTop(boolean onTop) {
-        mSurfaceClipView.setZOrderOnTop(onTop);
-        for (InlineContentView inlineContentView : mReparentedDescendants) {
+        mBackgroundView.setZOrderOnTop(onTop);
+        for (InlineContentView inlineContentView : mClippedDescendants) {
             inlineContentView.setZOrderedOnTop(onTop);
         }
     }
 
-    void updateState(@NonNull View root,
-            @Nullable SurfaceView parentSurfaceProvider) {
-        if (parentSurfaceProvider != null) {
-            mSurfaceClipView.getLocationInWindow(mTempLocation);
-        } else {
-            mTempLocation[0] = 0;
-            mTempLocation[1] = 0;
-        }
-        reparentChildSurfaceViewSurfacesRecursive(root, parentSurfaceProvider,
-                /*parentSurfaceLeft*/ mTempLocation[0], /*parentSurfaceTop*/ mTempLocation[1]);
+    private void clipDescendantInlineContentViews() {
+        mParentBounds.right = getWidth();
+        mParentBounds.bottom = getHeight();
+        mClippedDescendants.clear();
+        clipDescendantInlineContentViews(this);
     }
 
-    private void reparentChildSurfaceViewSurfacesRecursive(@Nullable View root,
-            @Nullable SurfaceView parentSurfaceProvider, int parentSurfaceLeft,
-            int parentSurfaceTop) {
-        if (root == null || root == mSurfaceClipView) {
+    private void clipDescendantInlineContentViews(@Nullable View root) {
+        if (root == null) {
             return;
         }
 
-
         if (root instanceof InlineContentView) {
-            // Surfaces of a surface view have a transformation matrix relative
-            // to the top-left of the window and when one is reparented to the
-            // other the transformation adds up and we need to compensate.
-            root.setTranslationX(-parentSurfaceLeft);
-            root.setTranslationY(-parentSurfaceTop);
-
             final InlineContentView inlineContentView = (InlineContentView) root;
-            if (parentSurfaceProvider != null) {
-                if (mReparentedDescendants.contains(inlineContentView)) {
-                    return;
-                }
-
-                inlineContentView.setSurfaceControlCallback(
-                        new InlineContentView.SurfaceControlCallback() {
-                    @Override
-                    public void onCreated(SurfaceControl surfaceControl) {
-                        // Our surface and its descendants are initially hidden until
-                        // the descendants are reparented and their containers scrolled.
-                        new SurfaceControl.Transaction()
-                                .reparent(surfaceControl, parentSurfaceProvider.getSurfaceControl())
-                                .apply();
-                    }
-
-                    @Override
-                    public void onDestroyed(SurfaceControl surfaceControl) {
-                        /* do nothing */
-                    }
-                });
-
-                mReparentedDescendants.add(inlineContentView);
-            } else {
-                if (!mReparentedDescendants.contains(inlineContentView)) {
-                    return;
-                }
-
-                // Unparent the surface control of the removed surface view.
-                final SurfaceControl surfaceControl = inlineContentView.getSurfaceControl();
-                if (surfaceControl != null && surfaceControl.isValid()) {
-                    new SurfaceControl.Transaction()
-                            .reparent(surfaceControl, /*newParent*/ null)
-                            .apply();
-                }
-
-                mReparentedDescendants.remove(inlineContentView);
-            }
-
+            mContentBounds.set(mParentBounds);
+            offsetRectIntoDescendantCoords(inlineContentView, mContentBounds);
+            inlineContentView.setClipBounds(mContentBounds);
+            mClippedDescendants.add(inlineContentView);
             return;
         }
 
@@ -221,8 +178,7 @@ public class InlineContentClipView extends FrameLayout {
             final int childCount = rootGroup.getChildCount();
             for (int i = 0; i < childCount; i++) {
                 final View child = rootGroup.getChildAt(i);
-                reparentChildSurfaceViewSurfacesRecursive(child, parentSurfaceProvider,
-                        parentSurfaceLeft, parentSurfaceTop);
+                clipDescendantInlineContentViews(child);
             }
         }
     }
