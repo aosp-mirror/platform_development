@@ -33,7 +33,21 @@
       <div class="description">
         <span class="kind">{{item.kind}}</span>
         <span v-if="item.kind && item.name">-</span>
-        <span>{{item.name}}</span>
+        <span>
+          <span v-if="simplifyNames && item.shortName && item.shortName !== item.name">
+            {{ item.shortName }}
+            <md-tooltip
+              md-delay="300"
+              md-direction="top"
+              style="margin-bottom: -10px"
+            >
+              {{item.name}}
+            </md-tooltip>
+          </span>
+          <span v-else>
+            {{ item.name }}
+          </span>
+        </span>
         <div
           v-for="c in item.chips"
           v-bind:key="c.long"
@@ -65,6 +79,7 @@
         :chip-class="chipClass"
         :filter="childFilter(c)"
         :flattened="flattened"
+        :simplify-names="simplifyNames"
         :force-flattened="applyingFlattened"
         v-show="filterMatches(c)"
         :items-clickable="itemsClickable"
@@ -101,6 +116,7 @@ export default {
     "selected",
     "chipClass",
     "filter",
+    "simplify-names",
     "flattened",
     "force-flattened",
     "items-clickable",
@@ -523,6 +539,10 @@ export default {
 
 .expand-tree-btn.child-selected {
   color: #3f51b5;
+}
+
+.description span {
+  white-space: normal;
 }
 
 </style>
