@@ -102,6 +102,9 @@ public class AutofillImeService extends InputMethodService {
                 Toast.LENGTH_SHORT).show();
     };
 
+    private ResponseState mResponseState = ResponseState.RESET;
+    private Runnable mDelayedDeletion;
+
     @Override
     public View onCreateInputView() {
         mInputView = (InputView) LayoutInflater.from(this).inflate(R.layout.input_view, null);
@@ -122,21 +125,51 @@ public class AutofillImeService extends InputMethodService {
         if(mKeyboard != null) {
             mKeyboard.reset();
         }
-        if (mInputView != null) {
+        if (mResponseState == ResponseState.FINISH_INPUT) {
+            mResponseState = ResponseState.START_INPUT;
+        } else {
+            mResponseState = ResponseState.RESET;
+        }
+    }
+
+    @Override
+    public void onFinishInput() {
+        super.onFinishInput();
+        if (mResponseState == ResponseState.RECEIVE_RESPONSE) {
+            mResponseState = ResponseState.FINISH_INPUT;
+        } else {
+            mResponseState = ResponseState.RESET;
+        }
+    }
+
+    private void cancelDelayedDeletion(String msg) {
+        if(mDelayedDeletion != null) {
+            Log.d(TAG, msg + " canceling delayed deletion");
+            mHandler.removeCallbacks(mDelayedDeletion);
+            mDelayedDeletion = null;
+        }
+    }
+
+    private void scheduleDelayedDeletion() {
+        if (mInputView != null && mDelayedDeletion == null) {
             // We delay the deletion of the suggestions from previous input connection, to avoid
             // the flicker caused by deleting them and immediately showing new suggestions for
             // the current input connection.
-            Log.d(TAG, "onStartInput scheduling a delayed deletion of inline suggestions");
+            Log.d(TAG, "Scheduling a delayed deletion of inline suggestions");
             mDelayedDeletion = () -> {
-                Log.d(TAG, "onStartInput deleting inline suggestions");
+                Log.d(TAG, "Executing scheduled deleting inline suggestions");
                 mDelayedDeletion = null;
-                updateInlineSuggestionStrip(Collections.emptyList());
+                clearInlineSuggestionStrip();
             };
             mHandler.postDelayed(mDelayedDeletion, 200);
         }
     }
 
-    private Runnable mDelayedDeletion;
+    private void clearInlineSuggestionStrip() {
+        if (mInputView != null) {
+            updateInlineSuggestionStrip(Collections.emptyList());
+        }
+    }
 
     @Override
     public void onStartInputView(EditorInfo info, boolean restarting) {
@@ -153,7 +186,7 @@ public class AutofillImeService extends InputMethodService {
             // called. If the framework is changed to not resend, then we need to cache the
             // inline suggestion views locally and re-attach them when the IME is shown again by
             // onStartInputView.
-            updateInlineSuggestionStrip(Collections.emptyList());
+            clearInlineSuggestionStrip();
         }
     }
 
@@ -227,22 +260,29 @@ public class AutofillImeService extends InputMethodService {
 
     @Override
     public boolean onInlineSuggestionsResponse(InlineSuggestionsResponse response) {
-        Log.d(TAG, "onInlineSuggestionsResponse() called");
-        if(mDelayedDeletion != null) {
-            Log.d(TAG, "onInlineSuggestionsResponse unscheduling delayed deletion");
-            mHandler.removeCallbacks(mDelayedDeletion);
-        }
-        onInlineSuggestionsResponseInternal(response);
+        Log.d(TAG,
+                "onInlineSuggestionsResponse() called: " + response.getInlineSuggestions().size());
+        cancelDelayedDeletion("onInlineSuggestionsResponse");
+        final List<InlineSuggestion> inlineSuggestions = response.getInlineSuggestions();
+        mResponseState = ResponseState.RECEIVE_RESPONSE;
+        mHandler.post(() -> {
+            if (mResponseState == ResponseState.START_INPUT && inlineSuggestions.isEmpty()) {
+                scheduleDelayedDeletion();
+            } else {
+                inflateThenShowSuggestions(inlineSuggestions);
+            }
+            mResponseState = ResponseState.RESET;
+        });
         return true;
     }
 
     private void updateInlineSuggestionStrip(List<SuggestionItem> suggestionItems) {
+        Log.d(TAG, "Actually updating the suggestion strip: " + suggestionItems.size());
         mPinnedSuggestionsStart.removeAllViews();
         mScrollableSuggestions.removeAllViews();
         mPinnedSuggestionsEnd.removeAllViews();
 
-        final int size = suggestionItems.size();
-        if (size <= 0) {
+        if (suggestionItems.isEmpty()) {
             return;
         }
 
@@ -251,8 +291,7 @@ public class AutofillImeService extends InputMethodService {
                 getColor(R.color.suggestion_strip_background));
         mSuggestionStrip.setVisibility(View.VISIBLE);
 
-        for (int i = 0; i < size; i++) {
-            final SuggestionItem suggestionItem = suggestionItems.get(i);
+        for (SuggestionItem suggestionItem : suggestionItems) {
             if (suggestionItem == null) {
                 continue;
             }
@@ -292,18 +331,8 @@ public class AutofillImeService extends InputMethodService {
         handler.postDelayed(mMoveScrollableSuggestionsDown, MOVE_SUGGESTIONS_DOWN_TIMEOUT);
     }
 
-    private void onInlineSuggestionsResponseInternal(InlineSuggestionsResponse response) {
-        Log.d(TAG, "onInlineSuggestionsResponseInternal() called. Suggestion="
-                + response.getInlineSuggestions().size());
-
-        final List<InlineSuggestion> inlineSuggestions = response.getInlineSuggestions();
-
+    private void inflateThenShowSuggestions( List<InlineSuggestion> inlineSuggestions) {
         final int totalSuggestionsCount = inlineSuggestions.size();
-        if (totalSuggestionsCount <= 0) {
-            updateInlineSuggestionStrip(Collections.emptyList());
-            return;
-        }
-
         final Map<Integer, SuggestionItem> suggestionMap = Collections.synchronizedMap((
                 new TreeMap<>()));
         final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -354,5 +383,12 @@ public class AutofillImeService extends InputMethodService {
             mView = view;
             mIsPinned = isPinned;
         }
+    }
+
+    enum ResponseState {
+        RESET,
+        RECEIVE_RESPONSE,
+        FINISH_INPUT,
+        START_INPUT,
     }
 }
