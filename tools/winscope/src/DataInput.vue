@@ -27,6 +27,7 @@
             </md-button>
           </md-list-item>
         </md-list>
+        <md-progress-spinner :md-diameter="30" :md-stroke="3" md-mode="indeterminate" v-show="loadingFiles"/>
         <div>
           <md-checkbox v-model="store.displayDefaults">Show default properties
             <md-tooltip md-direction="bottom">
@@ -40,13 +41,14 @@
             <md-field>
             <md-select v-model="fileType" id="file-type" placeholder="File type">
               <md-option value="auto">Detect type</md-option>
+              <md-option value="bugreport">Bug Report (.zip)</md-option>
               <md-option :value="k" v-for="(v,k) in FILE_TYPES" v-bind:key="v.name">{{v.name}}</md-option>
             </md-select>
             </md-field>
           </div>
         </div>
         <div class="md-layout">
-          <input type="file" @change="onLoadFile" ref="fileUpload" v-show="false" />
+          <input type="file" @change="onLoadFile" ref="fileUpload" v-show="false" :multiple="fileType === 'auto'" />
           <md-button class="md-accent md-raised md-theme-default" @click="$refs.fileUpload.click()">Add File</md-button>
           <md-button v-if="dataReady" @click="onSubmit" class="md-button md-primary md-raised md-theme-default">Submit</md-button>
         </div>
@@ -54,7 +56,18 @@
     </md-card>
 </template>
 <script>
-import { detectAndDecode, FILE_TYPES, DATA_TYPES } from './decode.js'
+import JSZip from 'jszip';
+import { detectAndDecode, FILE_TYPES, DATA_TYPES } from './decode.js';
+
+// Add any file that should be considered when extracting a bug report here
+// NOTE: If two files have the same type, the last one will be selected
+const BUG_REPORT_FILES = [
+  "proto/SurfaceFlinger_CRITICAL.proto",
+  "proto/window_CRITICAL.proto",
+  "FS/data/misc/wmtrace/layers_trace.pb",
+  "FS/data/misc/wmtrace/wm_log.pb",
+  "FS/data/misc/wmtrace/wm_trace.pb",
+];
 
 export default {
   name: 'datainput',
@@ -63,41 +76,105 @@ export default {
       FILE_TYPES,
       fileType: "auto",
       dataFiles: {},
+      loadingFiles: false,
     }
   },
   props: ['store'],
   methods: {
-    onLoadFile(e) {
-      var type = this.fileType;
-      var files = event.target.files || event.dataTransfer.files;
-      var file = files[0];
-      if (!file) {
-        // No file selected.
+    async onLoadFile(e) {
+      // Clear status to avoid keeping status of previous failed uploads
+      this.$emit('statusChange', null);
+
+      const files = event.target.files || event.dataTransfer.files;
+
+      let error;
+      const decodedFiles = [];
+      for (const file of files) {
+        try {
+          this.loadingFiles = true;
+          this.$emit('statusChange', file.name + " (loading)");
+          const result = await this.addFile(file);
+          decodedFiles.push(...result);
+          this.$emit('statusChange', null);
+        } catch(e) {
+          this.$emit('statusChange', `${file.name}: ${e}`);
+          console.error(e);
+          error = e;
+          break;
+        } finally {
+          this.loadingFiles = false;
+        }
+      }
+
+      event.target.value = '';
+
+      if (error) {
         return;
       }
-      this.$emit('statusChange', file.name + " (loading)");
 
-      var reader = new FileReader();
-      reader.onload = (e) => {
-        var buffer = new Uint8Array(e.target.result);
-        try {
-          if (FILE_TYPES[type]) {
-            var filetype = FILE_TYPES[type];
-            var data = filetype.decoder(buffer, filetype, file.name, this.store);
-          } else {
-            var [filetype, data] = detectAndDecode(buffer, file.name, this.store);
-          }
-        } catch (ex) {
-          this.$emit('statusChange', this.filename + ': ' + ex);
-          return;
-        } finally {
-          event.target.value = ''
-        }
-
-        this.$set(this.dataFiles, filetype.dataType.name, data);
-        this.$emit('statusChange', null);
+      for (const decodedFile of decodedFiles) {
+        this.$set(this.dataFiles,
+          decodedFile.filetype.dataType.name, decodedFile.data);
       }
-      reader.readAsArrayBuffer(files[0]);
+    },
+    async addFile(file) {
+      const decodedFiles = [];
+      const type = this.fileType;
+
+      if (type === 'bugreport' ||
+          (type === 'auto' && file.type === 'application/zip')) {
+        const results = await this.decodeCompressedBugReport(file);
+        decodedFiles.push(...results);
+      } else {
+        const decodedFile = await this.decodeFile(file);
+        decodedFiles.push(decodedFile);
+      }
+
+      return decodedFiles;
+    },
+    readFile(file) {
+      return new Promise((resolve, _) => {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const buffer = new Uint8Array(e.target.result);
+          resolve(buffer);
+        };
+        reader.readAsArrayBuffer(file);
+      });
+    },
+    async decodeFile(file) {
+      const type = this.fileType;
+      const buffer = await this.readFile(file);
+
+      let filetype, data;
+      if (FILE_TYPES[type]) {
+        filetype = FILE_TYPES[type];
+        data = filetype.decoder(buffer, filetype, file.name, this.store);
+      } else {
+        [filetype, data] = detectAndDecode(buffer, file.name, this.store);
+      }
+
+      return {filetype, data};
+    },
+    async decodeCompressedBugReport(file) {
+      const buffer = await this.readFile(file);
+
+      const zip = new JSZip();
+      const content = await zip.loadAsync(buffer);
+
+      const decodedFiles = [];
+      for (const filename of BUG_REPORT_FILES) {
+        const file = content.files[filename];
+        if (file) {
+          const fileBlob = await file.async("blob");
+          fileBlob.name = filename;
+
+          const decodedFile = await this.decodeFile(fileBlob);
+          decodedFiles.push(decodedFile);
+        }
+      }
+
+      return decodedFiles;
     },
     onRemoveFile(typeName) {
       this.$delete(this.dataFiles, typeName);
