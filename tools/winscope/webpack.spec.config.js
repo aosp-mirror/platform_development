@@ -16,9 +16,7 @@
 
 const fs = require('fs');
 var path = require('path')
-var webpack = require('webpack')
-var HtmlWebpackPlugin = require('html-webpack-plugin')
-var HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin')
+var glob = require("glob");
 
 function getWaylandSafePath() {
   waylandPath = path.resolve(__dirname, '../../../vendor/google_arc/libs/wayland_service');
@@ -29,22 +27,19 @@ function getWaylandSafePath() {
 }
 
 module.exports = {
-  entry: ["@babel/polyfill", './src/main.js'],
+  entry: {
+    js: glob.sync("./spec/**/*Spec.js"),
+  },
   output: {
     path: path.resolve(__dirname, './dist'),
-    filename: 'build.js'
+    filename: 'bundleSpec.js'
+  },
+  target: 'node',
+  node: {
+    __dirname: false,
   },
   module: {
     rules: [
-      {
-        test: /\.vue$/,
-        loader: 'vue-loader',
-        options: {
-          loaders: {
-          }
-          // other vue-loader options go here
-        }
-      },
       {
         test: /\.js$/,
         loader: 'babel-loader',
@@ -61,12 +56,14 @@ module.exports = {
         }
       },
       {
-        test: /\.(png|jpg|gif|svg)$/,
+        test: /\.pb/,
         loader: 'file-loader',
         options: {
-          name: '[name].[ext]?[hash]'
+          paths: [
+            path.resolve(__dirname, './spec')
+          ]
         }
-      }
+      },
     ]
   },
   resolve: {
@@ -90,37 +87,5 @@ module.exports = {
   },
   performance: {
     hints: false
-  },
-  devtool: '#eval-source-map'
+  }
 }
-
-var prod = (process.env.NODE_ENV === 'production');
-
-if (prod) {
-  module.exports.devtool = '#source-map'
-  // http://vue-loader.vuejs.org/en/workflow/production.html
-  module.exports.plugins = (module.exports.plugins || []).concat([
-    new webpack.DefinePlugin({
-      'process.env': {
-        NODE_ENV: '"production"'
-      }
-    }),
-    new webpack.optimize.UglifyJsPlugin({
-      sourceMap: true,
-      compress: {
-        warnings: false
-      }
-    }),
-    new webpack.LoaderOptionsPlugin({
-      minimize: true
-    })
-  ])
-}
-
-module.exports.plugins = (module.exports.plugins || []).concat([
-  new HtmlWebpackPlugin({
-    inlineSource: prod ? '.(js|css)' : false,
-    template: 'src/index_template.html'
-  }),
-  new HtmlWebpackInlineSourcePlugin(),
-]);
