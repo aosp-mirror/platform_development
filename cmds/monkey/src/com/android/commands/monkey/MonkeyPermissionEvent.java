@@ -50,7 +50,8 @@ public class MonkeyPermissionEvent extends MonkeyEvent {
             if (grant) {
                 permissionManager.grantRuntimePermission(mPkg, mPermissionInfo.name, currentUser);
             } else {
-                permissionManager.revokeRuntimePermission(mPkg, mPermissionInfo.name, currentUser);
+                permissionManager.revokeRuntimePermission(mPkg, mPermissionInfo.name, currentUser,
+                        null);
             }
             return MonkeyEvent.INJECT_SUCCESS;
         } catch (RemoteException re) {
