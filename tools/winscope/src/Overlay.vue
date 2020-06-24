@@ -63,17 +63,6 @@
                 </div>
               </div>
 
-              <md-button
-                class="md-icon-button show-video-overlay-btn"
-                @click="openVideoOverlay"
-                v-show="minimized && !showVideoOverlay"
-              >
-                <md-icon>
-                  featured_video
-                  <md-tooltip md-direction="right">Show video overlay</md-tooltip>
-                </md-icon>
-              </md-button>
-
               <div class="minimized-timeline-content" v-show="minimized" v-if="hasTimeline">
                 <div class="seek-time" v-if="seekTime">
                   <b>Seek time</b>: {{ seekTime }}
@@ -86,14 +75,29 @@
                 />
               </div>
 
+              <md-button
+                class="md-icon-button show-video-overlay-btn"
+                :class="{active: minimized && showVideoOverlay}"
+                @click="toggleVideoOverlay"
+                v-show="minimized"
+              >
+                <i class="md-icon md-icon-font">
+                  featured_video
+                </i>
+                <md-tooltip md-direction="top">
+                  <span v-if="showVideoOverlay">Hide video overlay</span>
+                  <span v-else>Show video overlay</span>
+                </md-tooltip>
+              </md-button>
+
               <md-button class="md-icon-button toggle-btn" @click="toggle">
                 <md-icon v-if="minimized">
                   expand_less
-                  <md-tooltip md-direction="right">Expand timeline</md-tooltip>
+                  <md-tooltip md-direction="top">Expand timeline</md-tooltip>
                 </md-icon>
                 <md-icon v-else>
                   expand_more
-                  <md-tooltip md-direction="right">Collapse timeline</md-tooltip>
+                  <md-tooltip md-direction="top">Collapse timeline</md-tooltip>
                 </md-icon>
               </md-button>
             </div>
@@ -323,6 +327,9 @@ export default {
     openVideoOverlay() {
       this.showVideoOverlay = true;
     },
+    toggleVideoOverlay() {
+      this.showVideoOverlay = !this.showVideoOverlay;
+    },
     videoLoaded() {
       this.$refs.videoOverlay.contentLoaded();
     },
@@ -447,7 +454,15 @@ export default {
 
 .show-video-overlay-btn {
   align-self: flex-end;
-  margin-right: 12px;
+  margin-left: 12px;
+  margin-right: -8px;
 }
 
+.show-video-overlay-btn .md-icon {
+  color: #9E9E9E!important;
+}
+
+.show-video-overlay-btn.active .md-icon {
+  color: #212121!important;
+}
 </style>
