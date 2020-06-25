@@ -75,6 +75,7 @@ import DataAdb from './DataAdb.vue'
 import FileType from './mixins/FileType.js'
 import SaveAsZip from './mixins/SaveAsZip'
 import FocusedDataViewFinder from './mixins/FocusedDataViewFinder'
+import {DIRECTION} from './utils/utils'
 
 const APP_NAME = "Winscope";
 
@@ -113,9 +114,9 @@ export default {
     onKeyDown(event) {
       event = event || window.event;
       if (event.keyCode == 37 /* left */ ) {
-        this.$store.dispatch('advanceTimeline', -1);
+        this.$store.dispatch('advanceTimeline', DIRECTION.BACKWARD);
       } else if (event.keyCode == 39 /* right */ ) {
-        this.$store.dispatch('advanceTimeline', 1);
+        this.$store.dispatch('advanceTimeline', DIRECTION.FORWARD);
       } else if (event.keyCode == 38 /* up */ ) {
         this.$refs[this.activeView][0].arrowUp();
       } else if (event.keyCode == 40 /* down */ ) {

@@ -20,7 +20,7 @@ import VueMaterial from 'vue-material'
 
 import App from './App.vue'
 import { DATA_TYPES } from './decode.js'
-import { findLastMatchingSorted, stableIdCompatibilityFixup } from './utils/utils.js'
+import { DIRECTION, findLastMatchingSorted, stableIdCompatibilityFixup } from './utils/utils.js'
 
 import 'style-loader!css-loader!vue-material/dist/vue-material.css'
 import 'style-loader!css-loader!vue-material/dist/theme/default.css'
@@ -34,6 +34,11 @@ const fileOrder = {
   [DATA_TYPES.SURFACE_FLINGER.name]: 2,
   [DATA_TYPES.TRANSACTION.name]: 3,
   [DATA_TYPES.PROTO_LOG.name]: 4,
+};
+
+function sortFiles(files) {
+  return files.sort(
+    (a, b) => (fileOrder[a.type.name] ?? Infinity) - (fileOrder[b.type.name] ?? Infinity));
 };
 
 const store = new Vuex.Store({
@@ -61,14 +66,15 @@ const store = new Vuex.Store({
     files(state) {
       return Object.values(state.filesByType);
     },
-    sortedFiles(state) {
-      return Object.values(state.filesByType).sort((a, b) => {
-        return (fileOrder[a.type.name] ?? Infinity) - (fileOrder[b.type.name] ?? Infinity);
-      });
+    sortedFiles(state, getters) {
+      return sortFiles(getters.files);
     },
-    timelineFiles(state) {
-      return Object.values(state.filesByType)
+    timelineFiles(state, getters) {
+      return getters.files
         .filter(file => !state.excludeFromTimeline.includes(file.type));
+    },
+    sortedTimelineFiles(state, getters) {
+      return sortFiles(getters.timelineFiles);
     },
     video(state) {
       return state.filesByType[DATA_TYPES.SCREEN_RECORDING.name];
@@ -91,9 +97,9 @@ const store = new Vuex.Store({
       }
     },
     clearFiles(state) {
-      for (const filename in state.filesByType) {
-        if (state.filesByType.hasOwnProperty(filename)) {
-          delete state.filesByType[filename];
+      for (const fileType in state.filesByType) {
+        if (state.filesByType.hasOwnProperty(fileType)) {
+          Vue.delete(state.filesByType, fileType);
         }
       }
 
@@ -159,28 +165,62 @@ const store = new Vuex.Store({
       // MergedTimeline only represented the timelines overlapped together and
       // isn't considered an actual timeline.
 
-      let closestTimeline = -1;
-      let timeDiff = Infinity;
+      if (direction !== DIRECTION.FORWARD && direction !== DIRECTION.BACKWARD) {
+        throw new Error("Unsupported direction provided.");
+      }
+
       const consideredFiles = context.getters.timelineFiles;
+
+      let fileIndex = -1;
+      let timelineIndex;
+      let minTimeDiff = Infinity;
 
       for (let idx = 0; idx < consideredFiles.length; idx++) {
         const file = consideredFiles[idx];
         const cur = file.selectedIndex;
-        if (cur + direction < 0 || cur + direction >= consideredFiles[idx].timeline.length) {
-          continue;
+
+        let candidateTimestampIndex = cur;
+        let candidateTimestamp = file.timeline[candidateTimestampIndex];
+
+        let candidateCondition;
+        switch (direction) {
+          case DIRECTION.BACKWARD:
+            candidateCondition = () => candidateTimestamp < context.state.currentTimestamp;
+            break;
+          case DIRECTION.FORWARD:
+            candidateCondition = () => candidateTimestamp > context.state.currentTimestamp;
+            break;
         }
-        var d = Math.abs(parseInt(file.timeline[cur + direction]) - context.state.currentTimestamp);
-        if (timeDiff > d) {
-          timeDiff = d;
-          closestTimeline = idx;
+
+        if (!candidateCondition()) {
+          // Not a candidate — find a valid candidate
+          let noCandidate = false;
+          while (!candidateCondition()) {
+            candidateTimestampIndex += direction;
+            if (candidateTimestampIndex < 0 || candidateTimestampIndex >= file.timeline.length) {
+              noCandidate = true;
+              break;
+            }
+            candidateTimestamp = file.timeline[candidateTimestampIndex];
+          }
+
+          if (noCandidate) {
+            continue;
+          }
+        }
+
+        const timeDiff = Math.abs(candidateTimestamp - context.state.currentTimestamp);
+        if (minTimeDiff > timeDiff) {
+          minTimeDiff = timeDiff;
+          fileIndex = idx;
+          timelineIndex = candidateTimestampIndex;
         }
       }
 
-      if (closestTimeline >= 0) {
-        consideredFiles[closestTimeline].selectedIndex += direction;
-        const timestamp = parseInt(
-          consideredFiles[closestTimeline]
-            .timeline[consideredFiles[closestTimeline].selectedIndex]);
+      if (fileIndex >= 0) {
+        const closestFile = consideredFiles[fileIndex];
+        const timestamp = parseInt(closestFile.timeline[timelineIndex]);
+
         context.dispatch('updateTimelineTime', timestamp);
       }
     }
