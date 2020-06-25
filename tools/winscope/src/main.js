@@ -177,9 +177,12 @@ const store = new Vuex.Store({
 
       for (let idx = 0; idx < consideredFiles.length; idx++) {
         const file = consideredFiles[idx];
-        const cur = file.selectedIndex;
 
-        let candidateTimestampIndex = cur;
+        if (file.timelineDisabled) {
+          continue;
+        }
+
+        let candidateTimestampIndex = file.selectedIndex;
         let candidateTimestamp = file.timeline[candidateTimestampIndex];
 
         let candidateCondition;

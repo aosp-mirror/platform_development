@@ -58,7 +58,7 @@
                 <div v-if="video" @mousedown="resizeBottomNav">
                   <md-icon class="drag-handle">
                     drag_handle
-                    <md-tooltip md-direction="bottom">resize</md-tooltip>
+                    <md-tooltip md-direction="top">resize</md-tooltip>
                   </md-icon>
                 </div>
               </div>
@@ -120,14 +120,21 @@
                     v-for="file in timelineFiles"
                     :key="file.filename"
                   >
-                    <md-icon>
-                      {{file.type.icon}}
-                      <md-tooltip md-direction="right">{{file.type.name}}</md-tooltip>
-                    </md-icon>
+                    <div
+                      class="trace-icon"
+                      :class="{disabled: file.timelineDisabled}"
+                      @click="toggleTimeline(file)"
+                    >
+                      <i class="material-icons">
+                        {{file.type.icon}}
+                        <md-tooltip md-direction="bottom">{{file.type.name}}</md-tooltip>
+                      </i>
+                    </div>
                     <timeline
                       :timeline="file.timeline"
                       :selected-index="file.selectedIndex"
                       :scale="scale"
+                      :disabled="file.timelineDisabled"
                       class="timeline"
                     />
                   </md-list-item>
@@ -136,6 +143,15 @@
                   <div class="datafilter">
                     <label>Datafilter</label>
                     <datafilter v-for="file in timelineFiles" :key="file.filename" :store="store" :file="file" />
+                  </div>
+                </div>
+
+                <div class="help" v-if="!minimized">
+                  <div class="help-icon-wrapper">
+                    <span class="material-icons help-icon">
+                      help_outline
+                      <md-tooltip md-direction="left">Click on icons to disable timelines</md-tooltip>
+                    </span>
                   </div>
                 </div>
               </div>
@@ -332,6 +348,10 @@ export default {
     videoLoaded() {
       this.$refs.videoOverlay.contentLoaded();
     },
+    toggleTimeline(file) {
+      // file.timelineDisabled = !(file.timelineDisabled ?? false);
+      this.$set(file, "timelineDisabled", !file.timelineDisabled);
+    },
   },
   components: {
     'timeline': Timeline,
@@ -463,5 +483,30 @@ export default {
 
 .show-video-overlay-btn.active .md-icon {
   color: #212121!important;
+}
+
+.help {
+  display: flex;
+  align-content: flex-end;
+  align-items: flex-end;
+  flex-direction: column;
+}
+
+.help-icon-wrapper {
+  margin-right: 20px;
+  margin-bottom: 10px;
+}
+
+.help-icon-wrapper .help-icon {
+  cursor: help;
+}
+
+.trace-icon {
+  cursor: pointer;
+  user-select: none;
+}
+
+.trace-icon.disabled {
+  color: gray;
 }
 </style>

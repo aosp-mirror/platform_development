@@ -13,7 +13,7 @@
      limitations under the License.
 -->
 <template>
-  <svg width="100%" height="20">
+  <svg width="100%" height="20" class="timeline-svg" :class="{disabled: disabled}">
     <rect
       :x="position(item)"
       y="0"
@@ -39,7 +39,7 @@
 <script>
 export default {
   name: "timeline",
-  props: ["timeline", "selectedIndex", "scale"],
+  props: ["timeline", "selectedIndex", "scale", "disabled"],
   data() {
     return {
       pointWidth: "1%",
@@ -59,6 +59,9 @@ export default {
       return (((cx - scale[0]) / (scale[1] - scale[0])) * 100)  + "%";
     },
     onItemClick(index) {
+      if (this.disabled) {
+        return;
+      }
       const timestamp = parseInt(this.timeline[index]);
       this.$store.dispatch('updateTimelineTime', timestamp);
     }
@@ -77,10 +80,17 @@ export default {
 };
 </script>
 <style scoped>
-.selected {
+.timeline-svg .point {
+  cursor: pointer;
+}
+.timeline-svg.disabled .point {
+  fill: #BDBDBD;
+  cursor: not-allowed;
+}
+.timeline-svg:not(.disabled) .point.selected {
   fill: rgb(240, 59, 59);
 }
-.point {
-  cursor: pointer;
+.timeline-svg.disabled .point.selected {
+  fill: rgba(240, 59, 59, 0.596);
 }
 </style>
