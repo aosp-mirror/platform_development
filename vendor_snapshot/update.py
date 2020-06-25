@@ -153,11 +153,34 @@ def gen_bp_module(variation, name, version, target_arch, arch_props, bp_dir):
         del common_prop['src']
     prop.update(common_prop)
 
+    stem32 = stem64 = ''
+
     for arch in arch_props:
         for k in common_prop:
             if k in arch_props[arch]:
                 del arch_props[arch][k]
         prop['arch'][arch] = arch_props[arch]
+        # Record stem for executable binary snapshots.
+        # We don't check existence of 'src'; src must exist for executables
+        if variation == 'binary':
+            if '64' in arch: # arm64, x86_64
+                stem64 = os.path.basename(arch_props[arch]['src'])
+            else:
+                stem32 = os.path.basename(arch_props[arch]['src'])
+
+    # For binary snapshots, compile_multilib must be assigned to 'both'
+    # in order to install both. Prefer 64bit if their stem collide and
+    # installing both is impossible
+    if variation == 'binary':
+        if stem32 and stem64:
+            if stem32 == stem64:
+                prop['compile_multilib'] = 'first'
+            else:
+                prop['compile_multilib'] = 'both'
+        elif stem32:
+            prop['compile_multilib'] = '32'
+        elif stem64:
+            prop['compile_multilib'] = '64'
 
     bp = 'vendor_snapshot_%s {\n' % variation
     bp += gen_bp_prop(prop, INDENT)
