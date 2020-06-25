@@ -14,7 +14,7 @@
 -->
 <template>
   <div @click="onClick($event)">
-    <md-card v-if="(isLog(file) || isTrace(file))">
+    <md-card v-if="(isLog(file) || isTrace(file) || isTransactions(file))">
       <md-card-header>
         <md-card-header-text>
           <div class="md-title">
@@ -27,8 +27,9 @@
         </md-button>
       </md-card-header>
       <traceview v-if="isTrace(file)" :store="store" :file="file" ref="view" />
+      <transactionsview v-if="isTransactions(file)" :data="file.data" ref="view" />
       <logview v-if="isLog(file)" :file="file" ref="view" />
-      <div v-if="!(isTrace(file) || isVideo(file) || isLog(file))">
+      <div v-if="!(isTrace(file) || isVideo(file) || isLog(file) || isTransactions(file))">
         <h1 class="bad">Unrecognized DataType</h1>
       </div>
     </md-card>
@@ -36,6 +37,7 @@
 </template>
 <script>
 import TraceView from "./TraceView.vue";
+import TransactionsView from "./TransactionsView.vue";
 import LogView from "./LogView.vue";
 import FileType from "./mixins/FileType.js";
 
@@ -60,6 +62,7 @@ export default {
   mixins: [FileType],
   components: {
     traceview: TraceView,
+    transactionsview: TransactionsView,
     logview: LogView
   }
 };
