@@ -44,6 +44,7 @@ const store = new Vuex.Store({
       DATA_TYPES.PROTO_LOG,
     ],
     activeFile: null,
+    focusedFile: null,
     mergedTimeline: null,
     // obj -> bool, identifies whether or not an item is collapsed in a treeView
     collapsedStateStore: {},
@@ -121,6 +122,9 @@ const store = new Vuex.Store({
         stableIdCompatibilityFixup(item),
         isCollapsed
       );
+    },
+    setFocusedFile(state, file) {
+      state.focusedFile = file;
     }
   },
   actions: {

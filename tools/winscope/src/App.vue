@@ -74,12 +74,13 @@ import LocalStore from './localstore.js'
 import DataAdb from './DataAdb.vue'
 import FileType from './mixins/FileType.js'
 import SaveAsZip from './mixins/SaveAsZip'
+import FocusedDataViewFinder from './mixins/FocusedDataViewFinder'
 
 const APP_NAME = "Winscope";
 
 export default {
   name: 'app',
-  mixins: [FileType, SaveAsZip],
+  mixins: [FileType, SaveAsZip, FocusedDataViewFinder],
   data() {
     return {
       title: APP_NAME,
@@ -127,6 +128,7 @@ export default {
     },
     onDataReady(files) {
       this.$store.dispatch('setFiles', files);
+      this.updateFocusedView();
     },
     setStatus(status) {
       if (status) {
