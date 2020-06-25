@@ -383,13 +383,13 @@ while [[ -n "$1" ]]; do
     if [[ $FIRST ]]; then
       FIRST=""
 
-      if unzip -t "$SRC" | grep -qs "source.properties" ; then
+      if unzip -l "$SRC" | grep -qs "source.properties" ; then
         # Extract Source Properties
         # unzip: -j=flat (no dirs), -q=quiet, -o=overwrite, -d=dest dir
         unzip -j -q -o -d "$TMP_DIR" "$SRC" "*/source.properties"
         PROPS="$TMP_DIR/source.properties"
 
-      elif unzip -t "$SRC" | grep -qs "manifest.ini" ; then
+      elif unzip -l "$SRC" | grep -qs "manifest.ini" ; then
         unzip -j -q -o -d "$TMP_DIR" "$SRC" "*/manifest.ini"
         PROPS="$TMP_DIR/manifest.ini"
 
