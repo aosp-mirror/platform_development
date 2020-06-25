@@ -104,9 +104,6 @@ export default {
   methods: {
     clear() {
       this.$store.commit('clearFiles');
-      this.activeDataView = null;
-      this.activeFile = null;
-      this.video = null;
     },
     onDataViewFocus(file) {
       this.$store.commit('setActiveFile', file);
@@ -115,9 +112,9 @@ export default {
     onKeyDown(event) {
       event = event || window.event;
       if (event.keyCode == 37 /* left */ ) {
-        this.$store.dispatch('advanceTimeline', -1, this.$store.state.excludeFromTimeline);
+        this.$store.dispatch('advanceTimeline', -1);
       } else if (event.keyCode == 39 /* right */ ) {
-        this.$store.dispatch('advanceTimeline', 1, this.$store.state.excludeFromTimeline);
+        this.$store.dispatch('advanceTimeline', 1);
       } else if (event.keyCode == 38 /* up */ ) {
         this.$refs[this.activeView][0].arrowUp();
       } else if (event.keyCode == 40 /* down */ ) {
@@ -141,7 +138,7 @@ export default {
   },
   computed: {
     files() {
-      return this.$store.state.files;
+      return this.$store.getters.sortedFiles;
     },
     prettyDump() {
       return JSON.stringify(this.dump, null, 2);

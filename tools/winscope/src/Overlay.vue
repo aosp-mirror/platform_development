@@ -181,11 +181,10 @@ export default {
   },
   computed: {
     video() {
-      return this.$store.state.video;
+      return this.$store.getters.video;
     },
     timelineFiles() {
-      return this.$store.state.files
-        .filter(file => !this.$store.state.excludeFromTimeline.includes(file.type));
+      return this.$store.getters.timelineFiles;
     },
     expanded() {
       return !this.minimized;

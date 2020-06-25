@@ -20,7 +20,6 @@ import VueMaterial from 'vue-material'
 
 import App from './App.vue'
 import { DATA_TYPES } from './decode.js'
-import { mixin as FileType } from './mixins/FileType.js'
 import { findLastMatchingSorted, stableIdCompatibilityFixup } from './utils/utils.js'
 
 import 'style-loader!css-loader!vue-material/dist/vue-material.css'
@@ -29,15 +28,22 @@ import 'style-loader!css-loader!vue-material/dist/theme/default.css'
 Vue.use(Vuex)
 Vue.use(VueMaterial)
 
+// Used to determine the order in which files or displayed
+const fileOrder = {
+  [DATA_TYPES.WINDOW_MANAGER.name]: 1,
+  [DATA_TYPES.SURFACE_FLINGER.name]: 2,
+  [DATA_TYPES.TRANSACTION.name]: 3,
+  [DATA_TYPES.PROTO_LOG.name]: 4,
+};
+
 const store = new Vuex.Store({
   state: {
     currentTimestamp: 0,
-    files: [],
-    activeFile: null,
-    video: null,
+    filesByType: {},
     excludeFromTimeline: [
-      DATA_TYPES.PROTO_LOG
+      DATA_TYPES.PROTO_LOG,
     ],
+    activeFile: null,
     mergedTimeline: null,
     // obj -> bool, identifies whether or not an item is collapsed in a treeView
     collapsedStateStore: {},
@@ -50,39 +56,48 @@ const store = new Vuex.Store({
       }
 
       return state.collapsedStateStore[stableIdCompatibilityFixup(item)];
-    }
+    },
+    files(state) {
+      return Object.values(state.filesByType);
+    },
+    sortedFiles(state) {
+      return Object.values(state.filesByType).sort((a, b) => {
+        return (fileOrder[a.type.name] ?? Infinity) - (fileOrder[b.type.name] ?? Infinity);
+      });
+    },
+    timelineFiles(state) {
+      return Object.values(state.filesByType)
+        .filter(file => !state.excludeFromTimeline.includes(file.type));
+    },
+    video(state) {
+      return state.filesByType[DATA_TYPES.SCREEN_RECORDING.name];
+    },
   },
   mutations: {
     setCurrentTimestamp(state, { timestamp }) {
       state.currentTimestamp = timestamp;
     },
-    setFileEntryIndex(state, { fileIndex, entryIndex }) {
-      state.files[fileIndex].selectedIndex = entryIndex;
+    setFileEntryIndex(state, { fileTypeName, entryIndex }) {
+      state.filesByType[fileTypeName].selectedIndex = entryIndex;
     },
     addFiles(state, files) {
       if (!state.activeFile && files.length > 0) {
         state.activeFile = files[0];
       }
 
-      const startIndex = state.files.length;
-      for (const [i, file] of files.entries()) {
-        file.index = startIndex + i;
-
-        if (FileType.isVideo(file)) {
-          state.video = file;
-        }
-
-        state.files.push(file);
+      for (const file of files) {
+        Vue.set(state.filesByType, file.type.name, file);
       }
     },
     clearFiles(state) {
-      for (const file of state.files) {
-        file.destroy();
+      for (const filename in state.filesByType) {
+        if (state.filesByType.hasOwnProperty(filename)) {
+          delete state.filesByType[filename];
+        }
       }
 
-      state.files = [];
       state.activeFile = null;
-      state.video = null;
+      state.mergedTimeline = null;
     },
     setActiveFile(state, file) {
       state.activeFile = file;
@@ -114,14 +129,14 @@ const store = new Vuex.Store({
       context.commit('addFiles', files);
     },
     updateTimelineTime(context, timestamp) {
-      for (const file of context.state.files) {
-        const fileIndex = file.index;
+      for (const file of context.getters.files) {
+        const fileTypeName = file.type.name;
         const entryIndex = findLastMatchingSorted(
           file.timeline,
           (array, idx) => parseInt(array[idx]) <= timestamp,
         );
 
-        context.commit('setFileEntryIndex', { fileIndex, entryIndex });
+        context.commit('setFileEntryIndex', { fileTypeName, entryIndex });
       }
 
       if (context.state.mergedTimeline) {
@@ -135,16 +150,14 @@ const store = new Vuex.Store({
 
       context.commit('setCurrentTimestamp', { timestamp });
     },
-    advanceTimeline(context, direction, excludedFileTypes) {
+    advanceTimeline(context, direction) {
       // NOTE: MergedTimeline is never considered to find the next closest index
       // MergedTimeline only represented the timelines overlapped together and
       // isn't considered an actual timeline.
 
-      excludedFileTypes = new Set(excludedFileTypes);
       let closestTimeline = -1;
       let timeDiff = Infinity;
-      const consideredFiles = context.state.files
-        .filter(file => !excludedFileTypes.has(file.type));
+      const consideredFiles = context.getters.timelineFiles;
 
       for (let idx = 0; idx < consideredFiles.length; idx++) {
         const file = consideredFiles[idx];
@@ -158,6 +171,7 @@ const store = new Vuex.Store({
           closestTimeline = idx;
         }
       }
+
       if (closestTimeline >= 0) {
         consideredFiles[closestTimeline].selectedIndex += direction;
         const timestamp = parseInt(
