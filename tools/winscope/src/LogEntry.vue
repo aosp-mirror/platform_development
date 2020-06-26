@@ -31,6 +31,8 @@
 </template>
 
 <script>
+import { logLevel } from './utils/consts';
+
 export default {
   name: 'logentry',
   props: {
@@ -47,12 +49,12 @@ export default {
   data() {
     return {
       levelIcons: {
-        'info': 'info_outline',
-        'debug': 'help_outline',
-        'verbose': 'assignment',
-        'warn': 'warning',
-        'error': 'error',
-        'wtf': 'bolt',
+        [logLevel.INFO]: 'info_outline',
+        [logLevel.DEBUG]: 'help_outline',
+        [logLevel.VERBOSE]: 'assignment',
+        [logLevel.WARN]: 'warning',
+        [logLevel.ERROR]: 'error',
+        [logLevel.WTF]: 'bolt',
       }
     };
   },

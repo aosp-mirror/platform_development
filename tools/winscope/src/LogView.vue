@@ -37,6 +37,13 @@
 
     <div class="filters">
       <md-field>
+        <label>Log Levels</label>
+        <md-select v-model="selectedLogLevels" multiple>
+          <md-option v-for="level in logLevels" :value="level">{{ level }}</md-option>
+        </md-select>
+      </md-field>
+
+      <md-field>
         <label>Tags</label>
         <md-select v-model="selectedTags" multiple>
           <md-option v-for="tag in tags" :value="tag">{{ tag }}</md-option>
@@ -76,6 +83,7 @@
 </template>
 <script>
 import { findLastMatchingSorted } from './utils/utils.js';
+import { logLevel } from './utils/consts';
 import LogEntryComponent from './LogEntry.vue';
 import VirtualList from '../libs/virtualList/VirtualList';
 
@@ -93,18 +101,22 @@ export default {
 
     data.forEach((entry, index) => entry.index = index);
 
+    const logLevels = Object.values(logLevel);
+
     return {
       data,
       isSelected: false,
       prevLastOccuredIndex: -1,
       lastOccuredIndex: 0,
-      selectedTags: Array.from(tags),
+      selectedTags: [],
       selectedSourceFile: null,
       searchInput: null,
       sourceFiles: Object.freeze(Array.from(sourceFiles)),
       tags: Object.freeze(Array.from(tags)),
       pinnedToLatest: true,
       logEntryComponent: LogEntryComponent,
+      logLevels,
+      selectedLogLevels: [],
     }
   },
   methods: {
@@ -169,6 +181,11 @@ export default {
     },
     processedData() {
       const filteredData = this.data.filter(line => {
+        if (this.selectedLogLevels.length > 0 &&
+            !this.selectedLogLevels.includes(line.level.toLowerCase())) {
+          return false;
+        }
+
         if (this.sourceFiles.includes(this.selectedSourceFile)) {
           // Only filter once source file is fully inputed
           if (line.at != this.selectedSourceFile) {
@@ -176,7 +193,7 @@ export default {
           }
         }
 
-        if (!this.selectedTags.includes(line.tag)) {
+        if (this.selectedTags.length > 0 && !this.selectedTags.includes(line.tag)) {
           return false;
         }
 

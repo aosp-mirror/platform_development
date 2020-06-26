@@ -15,4 +15,13 @@ const NAVIGATION_STYLE = {
   TARGETED: 'Targeted',
 };
 
-export { WebContentScriptMessageType, NAVIGATION_STYLE };
+const logLevel = {
+  INFO: 'info',
+  DEBUG: 'debug',
+  VERBOSE: 'verbose',
+  WARN: 'warn',
+  ERROR: 'error',
+  WTF: 'wtf',
+}
+
+export { WebContentScriptMessageType, NAVIGATION_STYLE, logLevel };
