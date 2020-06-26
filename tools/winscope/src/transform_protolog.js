@@ -107,6 +107,7 @@ function transform_formatted(entry, message) {
     text: format_text(message.message, entry),
     time: nanos_to_string(entry.elapsedRealtimeNanos),
     tag: viewerConfig.groups[message.group].tag,
+    level: message.level,
     at: message.at,
     timestamp: entry.elapsedRealtimeNanos,
   };
@@ -137,7 +138,7 @@ function transform_protolog(log) {
   }
 
   let data = log.log.map(entry => (transform_message(entry)))
-  data.sort(function(a, b) { return a.timestamp - b.timestamp })
+  data.sort(function (a, b) { return a.timestamp - b.timestamp })
   let transformed = {
     children: data
   }
