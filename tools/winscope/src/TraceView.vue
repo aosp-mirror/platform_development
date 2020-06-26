@@ -37,6 +37,7 @@
         :filter="hierarchyFilter"
         :flattened="store.flattened"
         :items-clickable="true"
+        :useGlobalCollapsedState="true"
         ref="hierarchy"
       />
     </md-card>
@@ -52,6 +53,7 @@
         :item="selectedTree"
         :filter="propertyFilter"
         :collapseChildren="true"
+        :useGlobalCollapsedState="true"
       />
     </md-card>
   </md-card-content>

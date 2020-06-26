@@ -65,6 +65,7 @@
         :initial-depth="depth + 1"
         :collapse="collapseChildren"
         :collapseChildren="collapseChildren"
+        :useGlobalCollapsedState="useGlobalCollapsedState"
         ref="children"
       />
     </div>
@@ -98,6 +99,14 @@ export default {
     "initial-depth",
     "collapse",
     "collapseChildren",
+    // Allows collapse state to be tracked by Vuex so that collapse state of
+    // items with same stableId can remain consisten accross time and easily
+    // toggled from anywhere in the app.
+    // Should be true if you are using the same TreeView to display multiple
+    // trees throughout the component's lifetime to make sure same nodes are
+    // toggled when switching back and forth between trees.
+    // If true, requires all nodes in tree to have a stableId.
+    "useGlobalCollapsedState",
   ],
   data() {
     const isCollapsedByDefault = this.collapse ?? false;
@@ -106,14 +115,19 @@ export default {
       isChildSelected: false,
       clickTimeout: null,
       isCollapsedByDefault,
+      localCollapsedState: isCollapsedByDefault,
     };
   },
   methods: {
     setCollapseValue(isCollapsed) {
-      this.$store.commit('setCollapsedState', {
-        item: this.item,
-        isCollapsed,
-      });
+      if (this.useGlobalCollapsedState) {
+        this.$store.commit('setCollapsedState', {
+          item: this.item,
+          isCollapsed,
+        });
+      } else {
+        this.localCollapsedState = isCollapsed;
+      }
     },
     toggleTree() {
       this.setCollapseValue(!this.isCollapsed);
@@ -236,8 +250,12 @@ export default {
         return false;
       }
 
-      return this.$store.getters.collapsedStateStoreFor(this.item) ??
+      if (this.useGlobalCollapsedState) {
+        return this.$store.getters.collapsedStateStoreFor(this.item) ??
         this.isCollapsedByDefault;
+      }
+
+      return this.localCollapsedState;
     },
     isSelected() {
       return this.selected === this.item;

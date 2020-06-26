@@ -14,54 +14,63 @@
  * limitations under the License.
  */
 
-import { transform, nanos_to_string } from './transform.js'
+import { nanos_to_string } from './transform.js'
 
-function transform_transaction(transaction) {
-  return transform({
-    obj: transaction,
-    kind: 'transaction',
-    children: [[transaction.surfaceChange, transform_entry_type('surfaceChange')],
-    [transaction.displayChange, transform_entry_type('displayChange')]],
-    rects: [],
-    visible: false,
-  })
-}
+function transform_transaction(transaction, layerIdToName) {
+  const transactions = [];
 
-function transform_entry_type(transactionType) {
-  function return_transform(item) {
-    return Object.freeze({
-      obj: item,
-      kind: transactionType,
-      collapsed: false,
-      rects: [],
-      visible: false,
-      name: item.name || item.id || nanos_to_string(item.when),
-    });
+  for (const surfaceChange of transaction.surfaceChange) {
+    transactions.push(Object.freeze({
+      type: 'surfaceChange',
+      obj: surfaceChange,
+      layerName: layerIdToName[surfaceChange.id],
+    }));
   }
-  return transactionType === 'transaction' ? transform_transaction : return_transform;
+  for (const displayChange of transaction.displayChange) {
+    transactions.push(Object.freeze({
+      type: 'displayChange',
+      obj: displayChange,
+      layerName: layerIdToName[displayChange.id],
+    }));
+  }
+
+  return transactions;
 }
 
-function transform_entry(entry) {
-  var transactionType = entry.increment;
-  return transform({
-    obj: entry,
-    kind: 'entry',
-    name: nanos_to_string(entry.timeStamp),
-    children: [[[entry[transactionType]], transform_entry_type(transactionType)]],
-    timestamp: entry.timeStamp,
-  });
+function transform_entry(entry, layerIdToName) {
+  const type = entry.increment;
+  const timestamp = entry.timeStamp;
+  const time = nanos_to_string(timestamp);
+
+  switch (type) {
+    case "transaction":
+      return Object.freeze({
+        type,
+        transactions: transform_transaction(entry.transaction, layerIdToName),
+        time,
+        timestamp,
+      });
+
+    case "surfaceCreation":
+      // NOTE: There is no break on purpose — we want to fall through to default
+      layerIdToName[entry[type].id] = entry[type].name;
+
+    default:
+      return Object.freeze({
+        type,
+        obj: entry[type],
+        layerName: entry[type].name ?? layerIdToName[entry[type].id],
+        time,
+        timestamp,
+      })
+  }
 }
 
 function transform_transaction_trace(entries) {
-  var r = transform({
-    obj: entries,
-    kind: 'entries',
-    name: 'transactionstrace',
-    children: [
-      [entries.increment, transform_entry],
-    ],
-  })
-  return r;
+  const layerIdToName = {};
+  const data = entries.increment.map(entry => transform_entry(entry, layerIdToName));
+
+  return { children: data };
 }
 
 export { transform_transaction_trace };
