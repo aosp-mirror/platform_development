@@ -104,6 +104,7 @@ public class AutofillImeService extends InputMethodService {
 
     private ResponseState mResponseState = ResponseState.RESET;
     private Runnable mDelayedDeletion;
+    private Runnable mPendingResponse;
 
     @Override
     public View onCreateInputView() {
@@ -125,7 +126,7 @@ public class AutofillImeService extends InputMethodService {
         if(mKeyboard != null) {
             mKeyboard.reset();
         }
-        if (mResponseState == ResponseState.FINISH_INPUT) {
+        if (mResponseState == ResponseState.RECEIVE_RESPONSE) {
             mResponseState = ResponseState.START_INPUT;
         } else {
             mResponseState = ResponseState.RESET;
@@ -135,11 +136,30 @@ public class AutofillImeService extends InputMethodService {
     @Override
     public void onFinishInput() {
         super.onFinishInput();
-        if (mResponseState == ResponseState.RECEIVE_RESPONSE) {
-            mResponseState = ResponseState.FINISH_INPUT;
-        } else {
-            mResponseState = ResponseState.RESET;
+    }
+
+    private void cancelPendingResponse() {
+        if (mPendingResponse != null) {
+            Log.d(TAG, "Canceling pending response");
+            mHandler.removeCallbacks(mPendingResponse);
+            mPendingResponse = null;
         }
+    }
+
+    private void postPendingResponse(InlineSuggestionsResponse response) {
+        cancelPendingResponse();
+        final List<InlineSuggestion> inlineSuggestions = response.getInlineSuggestions();
+        mResponseState = ResponseState.RECEIVE_RESPONSE;
+        mPendingResponse = () -> {
+            mPendingResponse = null;
+            if (mResponseState == ResponseState.START_INPUT && inlineSuggestions.isEmpty()) {
+                scheduleDelayedDeletion();
+            } else {
+                inflateThenShowSuggestions(inlineSuggestions);
+            }
+            mResponseState = ResponseState.RESET;
+        };
+        mHandler.post(mPendingResponse);
     }
 
     private void cancelDelayedDeletion(String msg) {
@@ -263,16 +283,7 @@ public class AutofillImeService extends InputMethodService {
         Log.d(TAG,
                 "onInlineSuggestionsResponse() called: " + response.getInlineSuggestions().size());
         cancelDelayedDeletion("onInlineSuggestionsResponse");
-        final List<InlineSuggestion> inlineSuggestions = response.getInlineSuggestions();
-        mResponseState = ResponseState.RECEIVE_RESPONSE;
-        mHandler.post(() -> {
-            if (mResponseState == ResponseState.START_INPUT && inlineSuggestions.isEmpty()) {
-                scheduleDelayedDeletion();
-            } else {
-                inflateThenShowSuggestions(inlineSuggestions);
-            }
-            mResponseState = ResponseState.RESET;
-        });
+        postPendingResponse(response);
         return true;
     }
 
@@ -333,6 +344,12 @@ public class AutofillImeService extends InputMethodService {
 
     private void inflateThenShowSuggestions( List<InlineSuggestion> inlineSuggestions) {
         final int totalSuggestionsCount = inlineSuggestions.size();
+        if (inlineSuggestions.isEmpty()) {
+            // clear the suggestions and then return
+            getMainExecutor().execute(() -> updateInlineSuggestionStrip(Collections.EMPTY_LIST));
+            return;
+        }
+
         final Map<Integer, SuggestionItem> suggestionMap = Collections.synchronizedMap((
                 new TreeMap<>()));
         final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -388,7 +405,6 @@ public class AutofillImeService extends InputMethodService {
     enum ResponseState {
         RESET,
         RECEIVE_RESPONSE,
-        FINISH_INPUT,
         START_INPUT,
     }
 }
