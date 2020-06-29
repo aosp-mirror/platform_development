@@ -8,4 +8,11 @@ const WebContentScriptMessageType = {
   CONVERT_OBJECT_URL_RESPONSE: 2,
 };
 
-export { WebContentScriptMessageType };
+const NAVIGATION_STYLE = {
+  GLOBAL: 'Global',
+  FOCUSED: 'Focused',
+  CUSTOM: 'Custom',
+  TARGETED: 'Targeted',
+};
+
+export { WebContentScriptMessageType, NAVIGATION_STYLE };

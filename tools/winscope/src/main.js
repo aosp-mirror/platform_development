@@ -66,6 +66,7 @@ const store = new Vuex.Store({
     activeFile: null,
     focusedFile: null,
     mergedTimeline: null,
+    navigationFilesFilter: f => true,
     // obj -> bool, identifies whether or not an item is collapsed in a treeView
     collapsedStateStore: {},
   },
@@ -146,7 +147,10 @@ const store = new Vuex.Store({
     },
     setFocusedFile(state, file) {
       state.focusedFile = file;
-    }
+    },
+    setNavigationFilesFilter(state, filter) {
+      state.navigationFilesFilter = filter;
+    },
   },
   actions: {
     setFiles(context, files) {
@@ -189,7 +193,8 @@ const store = new Vuex.Store({
         throw new Error("Unsupported direction provided.");
       }
 
-      const consideredFiles = context.getters.timelineFiles;
+      const consideredFiles = context.getters.timelineFiles
+        .filter(context.state.navigationFilesFilter);
 
       let fileIndex = -1;
       let timelineIndex;
@@ -197,10 +202,6 @@ const store = new Vuex.Store({
 
       for (let idx = 0; idx < consideredFiles.length; idx++) {
         const file = consideredFiles[idx];
-
-        if (file.timelineDisabled) {
-          continue;
-        }
 
         let candidateTimestampIndex = file.selectedIndex;
         let candidateTimestamp = file.timeline[candidateTimestampIndex];

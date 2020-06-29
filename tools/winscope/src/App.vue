@@ -76,6 +76,7 @@ import FileType from './mixins/FileType.js'
 import SaveAsZip from './mixins/SaveAsZip'
 import FocusedDataViewFinder from './mixins/FocusedDataViewFinder'
 import {DIRECTION} from './utils/utils'
+import {NAVIGATION_STYLE} from './utils/consts';
 
 const APP_NAME = "Winscope";
 
@@ -90,6 +91,7 @@ export default {
         flattened: false,
         onlyVisible: false,
         displayDefaults: true,
+        navigationStyle: NAVIGATION_STYLE.GLOBAL,
       }),
       overlayRef: "overlay",
     }
