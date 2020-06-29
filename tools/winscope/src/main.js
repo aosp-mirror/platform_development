@@ -41,6 +41,21 @@ function sortFiles(files) {
     (a, b) => (fileOrder[a.type.name] ?? Infinity) - (fileOrder[b.type.name] ?? Infinity));
 };
 
+/**
+ * Find the smallest timeline timestamp in a list of files
+ * @return undefined if not timestamp exists in the timelines of the files
+ */
+function findSmallestTimestamp(files) {
+  let timestamp = Infinity;
+  for (const file of files) {
+    if (file.timeline[0] && file.timeline[0] < timestamp) {
+      timestamp = file.timeline[0];
+    }
+  }
+
+  return timestamp === Infinity ? undefined : timestamp;
+}
+
 const store = new Vuex.Store({
   state: {
     currentTimestamp: 0,
@@ -81,7 +96,7 @@ const store = new Vuex.Store({
     },
   },
   mutations: {
-    setCurrentTimestamp(state, { timestamp }) {
+    setCurrentTimestamp(state, timestamp) {
       state.currentTimestamp = timestamp;
     },
     setFileEntryIndex(state, { fileTypeName, entryIndex }) {
@@ -137,6 +152,11 @@ const store = new Vuex.Store({
     setFiles(context, files) {
       context.commit('clearFiles');
       context.commit('addFiles', files);
+
+      const timestamp = findSmallestTimestamp(files);
+      if (timestamp !== undefined) {
+        context.commit('setCurrentTimestamp', timestamp);
+      }
     },
     updateTimelineTime(context, timestamp) {
       for (const file of context.getters.files) {
@@ -158,7 +178,7 @@ const store = new Vuex.Store({
         context.commit('setMergedTimelineIndex', newIndex);
       }
 
-      context.commit('setCurrentTimestamp', { timestamp });
+      context.commit('setCurrentTimestamp', timestamp);
     },
     advanceTimeline(context, direction) {
       // NOTE: MergedTimeline is never considered to find the next closest index
