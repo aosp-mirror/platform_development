@@ -23,19 +23,19 @@
    "linker_set_key" : "non_type_template",
    "name" : "non_type_template",
    "referenced_type" : "_ZTIi",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/header/known_issues.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/header/known_issues.h"
   },
   {
    "linker_set_key" : "return_type",
    "name" : "return_type",
    "referenced_type" : "_ZTI7STDCALL",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/header/known_issues.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/header/known_issues.h"
   },
   {
    "linker_set_key" : "template_arg_in_namespace",
    "name" : "template_arg_in_namespace",
    "referenced_type" : "_ZTIi",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/header/known_issues.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/header/known_issues.h"
   }
  ],
  "lvalue_reference_types" : [],

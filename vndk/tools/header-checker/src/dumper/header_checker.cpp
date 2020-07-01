@@ -41,9 +41,9 @@ using header_checker::dumper::HeaderCheckerFrontendActionFactory;
 using header_checker::dumper::HeaderCheckerOptions;
 using header_checker::repr::TextFormatIR;
 using header_checker::utils::CollectAllExportedHeaders;
+using header_checker::utils::GetCwd;
 using header_checker::utils::HideIrrelevantCommandLineOptions;
-using header_checker::utils::RealPath;
-
+using header_checker::utils::NormalizePath;
 
 
 static llvm::cl::OptionCategory header_checker_category(
@@ -61,6 +61,12 @@ static llvm::cl::opt<std::string> out_dump(
 static llvm::cl::list<std::string> exported_header_dirs(
     "I", llvm::cl::desc("<export_include_dirs>"), llvm::cl::Prefix,
     llvm::cl::ZeroOrMore, llvm::cl::cat(header_checker_category));
+
+static llvm::cl::opt<std::string> root_dir(
+    "root-dir",
+    llvm::cl::desc("Specify the directory that the paths in the dump file are "
+                   "relative to. Default to current working directory"),
+    llvm::cl::Optional, llvm::cl::cat(header_checker_category));
 
 static llvm::cl::opt<bool> no_filter(
     "no-filter", llvm::cl::desc("Do not filter any abi"), llvm::cl::Optional,
@@ -128,16 +134,18 @@ int main(int argc, const char **argv) {
     ::exit(1);
   }
 
+  const std::string root_dir_or_cwd = (root_dir.empty() ? GetCwd() : root_dir);
+
   bool dump_exported_only = (!no_filter && !exported_header_dirs.empty());
   std::set<std::string> exported_headers =
-      CollectAllExportedHeaders(exported_header_dirs);
+      CollectAllExportedHeaders(exported_header_dirs, root_dir_or_cwd);
 
   // Initialize clang tools and run front-end action.
   std::vector<std::string> header_files{ header_file };
-  HeaderCheckerOptions options(RealPath(header_file), out_dump,
-                               std::move(exported_headers), output_format,
-                               dump_exported_only, dump_function_declarations,
-                               suppress_errors);
+  HeaderCheckerOptions options(
+      NormalizePath(header_file, root_dir_or_cwd), out_dump,
+      std::move(exported_headers), root_dir_or_cwd, output_format,
+      dump_exported_only, dump_function_declarations, suppress_errors);
 
   clang::tooling::ClangTool tool(*compilations, header_files);
   std::unique_ptr<clang::tooling::FrontendActionFactory> factory(
