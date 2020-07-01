@@ -47,7 +47,7 @@
    "linker_set_key" : "var",
    "name" : "var",
    "referenced_type" : "_ZTIc",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
   }
  ],
  "lvalue_reference_types" : [],
@@ -60,7 +60,7 @@
    "referenced_type" : "_ZTI6Struct",
    "self_type" : "_ZTIP6Struct",
    "size" : 8,
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
   },
   {
    "alignment" : 8,
@@ -69,7 +69,7 @@
    "referenced_type" : "_ZTI6Struct#ODR:/def2.h.sdump",
    "self_type" : "_ZTIP6Struct#ODR:/def2.h.sdump",
    "size" : 8,
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def2.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def2.h"
   },
   {
    "alignment" : 8,
@@ -78,7 +78,7 @@
    "referenced_type" : "_ZTIK6Opaque",
    "self_type" : "_ZTIPK6Opaque",
    "size" : 8,
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
   },
   {
    "alignment" : 8,
@@ -87,7 +87,7 @@
    "referenced_type" : "_ZTIK6Struct",
    "self_type" : "_ZTIPK6Struct",
    "size" : 8,
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
   },
   {
    "alignment" : 8,
@@ -96,7 +96,7 @@
    "referenced_type" : "_ZTIK6Struct#ODR:/def2.h.sdump",
    "self_type" : "_ZTIPK6Struct#ODR:/def2.h.sdump",
    "size" : 8,
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def2.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def2.h"
   }
  ],
  "qualified_types" :
@@ -107,7 +107,7 @@
    "name" : "const Opaque",
    "referenced_type" : "_ZTI6Opaque",
    "self_type" : "_ZTIK6Opaque",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
   },
   {
    "alignment" : 8,
@@ -117,7 +117,7 @@
    "referenced_type" : "_ZTI6Struct#ODR:/def2.h.sdump",
    "self_type" : "_ZTIK6Struct#ODR:/def2.h.sdump",
    "size" : 8,
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def2.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def2.h"
   },
   {
    "alignment" : 8,
@@ -127,7 +127,7 @@
    "referenced_type" : "_ZTI6Struct",
    "self_type" : "_ZTIK6Struct",
    "size" : 8,
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
   }
  ],
  "record_types" :
@@ -146,7 +146,7 @@
    "referenced_type" : "_ZTI6Struct",
    "self_type" : "_ZTI6Struct",
    "size" : 8,
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def1.h"
   },
   {
    "alignment" : 8,
@@ -162,7 +162,7 @@
    "referenced_type" : "_ZTI6Struct#ODR:/def2.h.sdump",
    "self_type" : "_ZTI6Struct#ODR:/def2.h.sdump",
    "size" : 8,
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def2.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def2.h"
   }
  ],
  "rvalue_reference_types" : []

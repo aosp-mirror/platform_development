@@ -4,7 +4,7 @@ record_types {
     size: 8
     alignment: 4
     referenced_type: "_ZTI10HiddenBase"
-    source_file: "/development/vndk/tools/header-checker/tests/input/example3.h"
+    source_file: "development/vndk/tools/header-checker/tests/input/example3.h"
     linker_set_key: "_ZTI10HiddenBase"
     self_type: "_ZTI10HiddenBase"
   }
@@ -29,7 +29,7 @@ record_types {
     size: 40
     alignment: 8
     referenced_type: "_ZTIN5test210HelloAgainE"
-    source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+    source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
     linker_set_key: "_ZTIN5test210HelloAgainE"
     self_type: "_ZTIN5test210HelloAgainE"
   }
@@ -86,7 +86,7 @@ record_types {
     size: 4
     alignment: 4
     referenced_type: "_ZTIN5test35Outer5InnerE"
-    source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+    source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
     linker_set_key: "_ZTIN5test35Outer5InnerE"
     self_type: "_ZTIN5test35Outer5InnerE"
   }
@@ -105,7 +105,7 @@ record_types {
     size: 4
     alignment: 4
     referenced_type: "_ZTIN5test35OuterE"
-    source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+    source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
     linker_set_key: "_ZTIN5test35OuterE"
     self_type: "_ZTIN5test35OuterE"
   }
@@ -124,7 +124,7 @@ record_types {
     size: 16
     alignment: 8
     referenced_type: "_ZTIN5test38ByeAgainIdEE"
-    source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+    source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
     linker_set_key: "_ZTIN5test38ByeAgainIdEE"
     self_type: "_ZTIN5test38ByeAgainIdEE"
   }
@@ -154,7 +154,7 @@ record_types {
     size: 8
     alignment: 4
     referenced_type: "_ZTIN5test38ByeAgainIfEE"
-    source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+    source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
     linker_set_key: "_ZTIN5test38ByeAgainIfEE"
     self_type: "_ZTIN5test38ByeAgainIfEE"
   }
@@ -184,7 +184,7 @@ enum_types {
     size: 4
     alignment: 4
     referenced_type: "_ZTI5Foo_s"
-    source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+    source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
     linker_set_key: "_ZTI5Foo_s"
     self_type: "_ZTI5Foo_s"
   }
@@ -205,7 +205,7 @@ enum_types {
     size: 4
     alignment: 4
     referenced_type: "_ZTIN5test34KindE"
-    source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+    source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
     linker_set_key: "_ZTIN5test34KindE"
     self_type: "_ZTIN5test34KindE"
   }
@@ -226,7 +226,7 @@ pointer_types {
     size: 8
     alignment: 8
     referenced_type: "_ZTIN5test210HelloAgainE"
-    source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+    source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
     linker_set_key: "_ZTIPN5test210HelloAgainE"
     self_type: "_ZTIPN5test210HelloAgainE"
   }
@@ -237,7 +237,7 @@ pointer_types {
     size: 8
     alignment: 8
     referenced_type: "_ZTIN5test38ByeAgainIdEE"
-    source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+    source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
     linker_set_key: "_ZTIPN5test38ByeAgainIdEE"
     self_type: "_ZTIPN5test38ByeAgainIdEE"
   }
@@ -248,7 +248,7 @@ pointer_types {
     size: 8
     alignment: 8
     referenced_type: "_ZTIN5test38ByeAgainIfEE"
-    source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+    source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
     linker_set_key: "_ZTIPN5test38ByeAgainIfEE"
     self_type: "_ZTIPN5test38ByeAgainIfEE"
   }
@@ -337,7 +337,7 @@ qualified_types {
     size: 2
     alignment: 1
     referenced_type: "_ZTIA2_b"
-    source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+    source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
     linker_set_key: "_ZTIA2_Kb"
     self_type: "_ZTIA2_Kb"
   }
@@ -351,7 +351,7 @@ array_types {
     size: 2
     alignment: 1
     referenced_type: "_ZTIb"
-    source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+    source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
     linker_set_key: "_ZTIA2_b"
     self_type: "_ZTIA2_b"
   }
@@ -359,7 +359,7 @@ array_types {
 functions {
   return_type: "_ZTIi"
   function_name: "test2::HelloAgain::again"
-  source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+  source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
   parameters {
     referenced_type: "_ZTIPN5test210HelloAgainE"
     default_arg: false
@@ -371,7 +371,7 @@ functions {
 functions {
   return_type: "_ZTIv"
   function_name: "test2::HelloAgain::~HelloAgain"
-  source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+  source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
   parameters {
     referenced_type: "_ZTIPN5test210HelloAgainE"
     default_arg: false
@@ -383,7 +383,7 @@ functions {
 functions {
   return_type: "_ZTIv"
   function_name: "test2::HelloAgain::~HelloAgain"
-  source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+  source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
   parameters {
     referenced_type: "_ZTIPN5test210HelloAgainE"
     default_arg: false
@@ -395,7 +395,7 @@ functions {
 functions {
   return_type: "_ZTIv"
   function_name: "test2::HelloAgain::~HelloAgain"
-  source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+  source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
   parameters {
     referenced_type: "_ZTIPN5test210HelloAgainE"
     default_arg: false
@@ -407,7 +407,7 @@ functions {
 functions {
   return_type: "_ZTIb"
   function_name: "test3::End"
-  source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+  source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
   parameters {
     referenced_type: "_ZTIf"
     default_arg: true
@@ -419,7 +419,7 @@ functions {
 functions {
   return_type: "_ZTIb"
   function_name: "test3::Begin"
-  source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+  source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
   parameters {
     referenced_type: "_ZTIf"
     default_arg: false
@@ -449,7 +449,7 @@ functions {
 functions {
   return_type: "_ZTINSt3__16vectorIPiNS_9allocatorIS1_EEEE"
   function_name: "test3::Dummy"
-  source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+  source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
   parameters {
     referenced_type: "_ZTIi"
     default_arg: false
@@ -461,7 +461,7 @@ functions {
 functions {
   return_type: "_ZTId"
   function_name: "test3::ByeAgain<double>::method_foo"
-  source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+  source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
   parameters {
     referenced_type: "_ZTIPN5test38ByeAgainIdEE"
     default_arg: false
@@ -478,7 +478,7 @@ functions {
 functions {
   return_type: "_ZTIf"
   function_name: "test3::ByeAgain<float>::method_foo"
-  source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+  source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
   parameters {
     referenced_type: "_ZTIPN5test38ByeAgainIfEE"
     default_arg: false
@@ -494,28 +494,28 @@ functions {
 }
 global_vars {
   name: "__test_var"
-  source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+  source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
   linker_set_key: "_ZL10__test_var"
   referenced_type: "_ZTIA2_Kb"
   access: public_access
 }
 global_vars {
   name: "test2::HelloAgain::hello_forever"
-  source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+  source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
   linker_set_key: "_ZN5test210HelloAgain13hello_foreverE"
   referenced_type: "_ZTIi"
   access: public_access
 }
 global_vars {
   name: "test3::double_bye"
-  source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+  source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
   linker_set_key: "_ZN5test310double_byeE"
   referenced_type: "_ZTIN5test38ByeAgainIdEE"
   access: public_access
 }
 global_vars {
   name: "test3::ByeAgain<float>::foo_forever"
-  source_file: "/development/vndk/tools/header-checker/tests/input/example2.h"
+  source_file: "development/vndk/tools/header-checker/tests/input/example2.h"
   linker_set_key: "_ZN5test38ByeAgainIfE11foo_foreverE"
   referenced_type: "_ZTIi"
   access: public_access
