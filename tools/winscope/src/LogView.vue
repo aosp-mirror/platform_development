@@ -60,7 +60,7 @@
       </md-field>
     </div>
 
-    <virtual-list style="height: 360px; overflow-y: auto;"
+    <virtual-list style="height: 600px; overflow-y: auto;"
       :data-key="'uid'"
       :data-sources="processedData"
       :data-component="logEntryComponent"
@@ -196,6 +196,11 @@ export default {
 
 </script>
 <style>
+.container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
 .filters, .navigation {
   width: 100%;
   display: flex;
