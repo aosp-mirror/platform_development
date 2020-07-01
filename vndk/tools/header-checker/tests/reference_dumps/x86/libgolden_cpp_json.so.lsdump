@@ -107,7 +107,7 @@
    "referenced_type" : "_ZTIN12SuperSpeaker6VolumeE",
    "self_type" : "_ZTIN12SuperSpeaker6VolumeE",
    "size" : 4,
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h",
    "underlying_type" : "_ZTIj"
   }
  ],
@@ -125,7 +125,7 @@
     }
    ],
    "return_type" : "_ZTIv",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
   },
   {
    "function_name" : "SuperSpeaker::CreateSuperSpeaker",
@@ -137,7 +137,7 @@
     }
    ],
    "return_type" : "_ZTIP12SuperSpeaker",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
   },
   {
    "function_name" : "SuperSpeaker::SpeakLoud",
@@ -150,7 +150,7 @@
     }
    ],
    "return_type" : "_ZTIN12SuperSpeaker6VolumeE",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
   },
   {
    "function_name" : "LowVolumeSpeaker::Speak",
@@ -163,7 +163,7 @@
     }
    ],
    "return_type" : "_ZTIv",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
   },
   {
    "function_name" : "LowVolumeSpeaker::Listen",
@@ -176,7 +176,7 @@
     }
    ],
    "return_type" : "_ZTIv",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
   },
   {
    "function_name" : "HighVolumeSpeaker::BadPractice",
@@ -192,7 +192,7 @@
     }
    ],
    "return_type" : "_ZTIP17HighVolumeSpeaker",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h"
   },
   {
    "function_name" : "HighVolumeSpeaker::Speak",
@@ -205,7 +205,7 @@
     }
    ],
    "return_type" : "_ZTIv",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h"
   },
   {
    "function_name" : "HighVolumeSpeaker::Listen",
@@ -218,7 +218,7 @@
     }
    ],
    "return_type" : "_ZTIv",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h"
   }
  ],
  "global_vars" : [],
@@ -232,7 +232,7 @@
    "referenced_type" : "_ZTI12SuperSpeaker",
    "self_type" : "_ZTIP12SuperSpeaker",
    "size" : 4,
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h"
   },
   {
    "alignment" : 4,
@@ -241,7 +241,7 @@
    "referenced_type" : "_ZTI16LowVolumeSpeaker",
    "self_type" : "_ZTIP16LowVolumeSpeaker",
    "size" : 4,
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
   },
   {
    "alignment" : 4,
@@ -250,7 +250,7 @@
    "referenced_type" : "_ZTI17HighVolumeSpeaker",
    "self_type" : "_ZTIP17HighVolumeSpeaker",
    "size" : 4,
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h"
   },
   {
    "alignment" : 4,
@@ -259,7 +259,7 @@
    "referenced_type" : "_ZTIf",
    "self_type" : "_ZTIPf",
    "size" : 4,
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h"
   }
  ],
  "qualified_types" : [],
@@ -282,7 +282,7 @@
    "referenced_type" : "_ZTI12SuperSpeaker",
    "self_type" : "_ZTI12SuperSpeaker",
    "size" : 8,
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/gold/include/abstract_class.h",
    "vtable_components" :
    [
     {
@@ -337,7 +337,7 @@
    "referenced_type" : "_ZTI16LowVolumeSpeaker",
    "self_type" : "_ZTI16LowVolumeSpeaker",
    "size" : 16,
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/gold/include/low_volume_speaker.h",
    "vtable_components" :
    [
     {
@@ -377,7 +377,7 @@
    "referenced_type" : "_ZTI17HighVolumeSpeaker",
    "self_type" : "_ZTI17HighVolumeSpeaker",
    "size" : 8,
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/cpp/gold/include/high_volume_speaker.h",
    "vtable_components" :
    [
     {
