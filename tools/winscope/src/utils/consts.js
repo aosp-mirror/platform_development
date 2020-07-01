@@ -3,9 +3,9 @@
  * google3/wireless/android/tools/android_bug_tool/extension/common/actions
  */
 const WebContentScriptMessageType = {
-  UNKNOWN = 0,
-  CONVERT_OBJECT_URL = 1,
-  CONVERT_OBJECT_URL_RESPONSE = 2,
+  UNKNOWN: 0,
+  CONVERT_OBJECT_URL: 1,
+  CONVERT_OBJECT_URL_RESPONSE: 2,
 };
 
 export { WebContentScriptMessageType };
