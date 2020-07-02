@@ -14,44 +14,40 @@
 -->
 <template>
   <md-card-content class="container">
-    <md-table v-model="filteredData" class="transaction-table card" md-card md-fixed-header>
-      <md-table-toolbar>
-        <div class="filters">
-          <md-field>
-            <label>Transaction Type</label>
-            <md-select v-model="selectedTransactionTypes" multiple>
-              <md-option v-for="type in transactionTypes" :value="type">{{ type }}</md-option>
-            </md-select>
-          </md-field>
 
-          <div>
-            <md-autocomplete v-model="selectedProperty" :md-options="properties">
-              <label>Changed property</label>
-            </md-autocomplete>
-            <!-- TODO(b/159582192): Add way to select value a property has changed to,
-                 figure out how to handle properties that are objects... -->
-          </div>
+    <md-card class="changes card">
+      <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
+        <h2 class="md-title" style="flex: 1">Log</h2>
+      </md-content>
+      <div class="filters">
+        <md-field>
+          <label>Transaction Type</label>
+          <md-select v-model="selectedTransactionTypes" multiple>
+            <md-option v-for="type in transactionTypes" :value="type">{{ type }}</md-option>
+          </md-select>
+        </md-field>
 
-          <md-chips v-model="filters" md-placeholder="Add surface id or name...">
-            <div class="md-helper-text">Press enter to add</div>
-          </md-chips>
+        <div>
+          <md-autocomplete v-model="selectedProperty" :md-options="properties">
+            <label>Changed property</label>
+          </md-autocomplete>
+          <!-- TODO(b/159582192): Add way to select value a property has changed to,
+                figure out how to handle properties that are objects... -->
         </div>
-      </md-table-toolbar>
 
-      <md-table-row class="row" slot="md-table-row" slot-scope="{ item }" @click="transactionSelected(item)">
-        <md-table-cell md-label="Time">{{ item.time }}</md-table-cell>
-        <md-table-cell md-label="Type(s)">
-          {{ transactionTypeOf(item) }}
-        </md-table-cell>
-        <md-table-cell md-label="Affected Surfaces">
-          <span v-for="(surface, index) in sufacesAffectedBy(item)">
-            {{surface.id}}<span v-if="surface.name"> ({{ surface.name }})</span>
-            <span v-if="index + 1 < sufacesAffectedBy(item).length">,&nbsp;</span>
-          </span>
-        </md-table-cell>
-      </md-table-row>
+        <md-chips v-model="filters" md-placeholder="Add surface id or name...">
+          <div class="md-helper-text">Press enter to add</div>
+        </md-chips>
+      </div>
 
-    </md-table>
+      <virtual-list style="height: 360px; overflow-y: auto;"
+        :data-key="'timestamp'"
+        :data-sources="filteredData"
+        :data-component="transactionEntryComponent"
+        :extra-props="{'onClick': transactionSelected}"
+        ref="loglist"
+      />
+    </md-card>
 
     <md-card class="changes card">
       <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
@@ -70,6 +66,8 @@
 </template>
 <script>
 import TreeView from './TreeView.vue';
+import VirtualList from '../libs/virtualList/VirtualList';
+import TransactionEntry from './TransactionEntry.vue';
 
 import { transform_json } from './transform.js';
 import { stableIdCompatibilityFixup } from './utils/utils.js'
@@ -100,6 +98,7 @@ export default {
       selectedTree: null,
       filters: [],
       selectedProperty: null,
+      transactionEntryComponent: TransactionEntry,
     };
   },
   computed: {
@@ -265,39 +264,9 @@ export default {
 
       return [surfaceChanges, displayChanges];
     },
-    transactionTypeOf(transaction) {
-      if (transaction.type !== 'transaction') {
-        return transaction.type;
-      }
-
-      if (transaction.transactions.length === 0) {
-        return "Empty Transaction";
-      }
-
-      const types = new Set();
-      transaction.transactions.forEach(t => types.add(t.type));
-
-      return Array.from(types).join(", ");
-    },
-    sufacesAffectedBy(transaction) {
-      if (transaction.type !== 'transaction') {
-        return [{name: transaction.layerName, id: transaction.obj.id}];
-      }
-
-      const surfaceIds = new Set();
-      const affectedSurfaces = [];
-      for (const transaction of transaction.transactions) {
-        const id = transaction.obj.id;
-        if (!surfaceIds.has(id)) {
-          surfaceIds.add(id);
-          affectedSurfaces.push({name: transaction.layerName, id});
-        }
-      }
-
-      return affectedSurfaces
-    },
   },
   components: {
+    'virtual-list': VirtualList,
     'tree-view': TreeView,
   }
 }

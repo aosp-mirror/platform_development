@@ -26,6 +26,7 @@ function transform_transaction(transaction, layerIdToName) {
       layerName: layerIdToName[surfaceChange.id],
     }));
   }
+
   for (const displayChange of transaction.displayChange) {
     transactions.push(Object.freeze({
       type: 'displayChange',
@@ -44,10 +45,13 @@ function transform_entry(entry, layerIdToName) {
 
   switch (type) {
     case "transaction":
+      const origin = entry.transaction.origin;
+
       return Object.freeze({
         type,
         transactions: transform_transaction(entry.transaction, layerIdToName),
         time,
+        origin,
         timestamp,
       });
 
@@ -62,7 +66,7 @@ function transform_entry(entry, layerIdToName) {
         layerName: entry[type].name ?? layerIdToName[entry[type].id],
         time,
         timestamp,
-      })
+      });
   }
 }
 
