@@ -15,7 +15,7 @@
 <template>
   <div class="tree-view" v-if="item">
     <div class="node"
-      :class="{ leaf: isLeaf, selected: isSelected, clickable: isClickable, diffClass }"
+      :class="[{ leaf: isLeaf, selected: isSelected, clickable: isClickable }, diffClass]"
       :style="nodeOffsetStyle"
       @click="clicked"
       ref="node"
@@ -44,7 +44,13 @@
         </div>
       </div>
       <div v-show="isCollapsed">
-        <button class="expand-tree-btn"  :class="{ 'child-selected': isCollapsed && childIsSelected }" v-if="children" @click="expandTree" v-on:click.stop>
+        <button
+          class="expand-tree-btn"
+          :class="[{ 'child-selected': isCollapsed && childIsSelected }, collapseDiffClass]"
+          v-if="children"
+          @click="expandTree"
+          v-on:click.stop
+        >
           <i aria-hidden="true" class="md-icon md-theme-default material-icons">more_horiz</i>
         </button>
       </div>
@@ -118,6 +124,7 @@ export default {
       clickTimeout: null,
       isCollapsedByDefault,
       localCollapsedState: isCollapsedByDefault,
+      collapseDiffClass: null,
       diffSymbol: {
         [DiffType.NONE]: "",
         [DiffType.ADDED]: "+",
@@ -126,6 +133,19 @@ export default {
         [DiffType.MOVED]: ".",
       },
     };
+  },
+  created() {
+    this.updateCollapsedDiffClass();
+  },
+  watch: {
+    stableId() {
+      // Update anything that is required to change when item changes.
+      this.updateCollapsedDiffClass();
+    },
+    currentTimestamp() {
+      // Update anything that is required to change when time changes.
+      this.updateCollapsedDiffClass();
+    }
   },
   methods: {
     setCollapseValue(isCollapsed) {
@@ -252,10 +272,60 @@ export default {
     isCurrentSelected() {
       return this.selected === this.item;
     },
+    updateCollapsedDiffClass() {
+        // NOTE: Could be memoized in $store map like collapsed state if
+        // performance ever becomes a problem.
+        if (this.item) {
+          this.collapseDiffClass = this.computeCollapseDiffClass();
+        }
+    },
+    getAllDiffTypesOfChildren(item) {
+      if (!item.children) {
+        return new Set();
+      }
+
+      const classes = new Set();
+      for (const child of item.children) {
+        if (child.diff) {
+          classes.add(child.diff.type);
+        }
+        for (const diffClass of this.getAllDiffTypesOfChildren(child)) {
+          classes.add(diffClass);
+        }
+      }
+
+      return classes;
+    },
+    computeCollapseDiffClass() {
+      if (!this.isCollapsed) {
+        return "";
+      }
+
+      const childrenDiffClasses = this.getAllDiffTypesOfChildren(this.item);
+
+      childrenDiffClasses.delete(DiffType.NONE);
+      childrenDiffClasses.delete(undefined);
+
+      if (childrenDiffClasses.size === 0) {
+        return "";
+      }
+      if (childrenDiffClasses.size === 1) {
+        const diff = childrenDiffClasses.values().next().value;
+        return diff;
+      }
+
+      return DiffType.MODIFIED;
+    },
   },
   computed: {
+    stableId() {
+      return this.item?.stableId;
+    },
+    currentTimestamp() {
+      return this.$store.state.currentTimestamp;
+    },
     isCollapsed() {
-      if (this.item.children.length === 0) {
+      if (this.item.children?.length === 0) {
         return false;
       }
 
@@ -271,7 +341,7 @@ export default {
     },
     childIsSelected() {
       if (this.$refs.children) {
-        for (var c of this.$refs.children) {
+        for (const c of this.$refs.children) {
           if (c.isSelected || c.childIsSelected) {
             return true;
           }
@@ -293,7 +363,7 @@ export default {
       return this.applyingFlattened ? this.item.flattened : this.item.children;
     },
     isLeaf() {
-      return !this.children || this.children.length == 0;
+      return !this.children || this.children?.length == 0;
     },
     isClickable() {
       return !this.isLeaf || this.itemsClickable;
@@ -348,16 +418,21 @@ export default {
 }
 
 .tree-view .node:not(.selected).added,
-.tree-view .node:not(.selected).addedMove {
+.tree-view .node:not(.selected).addedMove,
+.tree-view .expand-tree-btn.added,
+.tree-view .expand-tree-btn.addedMove {
   background: #03ff35;
 }
 
 .tree-view .node:not(.selected).deleted,
-.tree-view .node:not(.selected).deletedMove {
+.tree-view .node:not(.selected).deletedMove,
+.tree-view .expand-tree-btn.deleted,
+.tree-view .expand-tree-btn.deletedMove {
   background: #ff6b6b;
 }
 
-.tree-view .node:not(.selected).modified {
+.tree-view .node:not(.selected).modified,
+.tree-view .expand-tree-btn.modified {
   background: cyan;
 }
 
