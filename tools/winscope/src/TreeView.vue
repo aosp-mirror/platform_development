@@ -15,7 +15,7 @@
 <template>
   <div class="tree-view" v-if="item">
     <div class="node"
-      :class="{ leaf: isLeaf, selected: isSelected, clickable: isClickable }"
+      :class="{ leaf: isLeaf, selected: isSelected, clickable: isClickable, diffClass }"
       :style="nodeOffsetStyle"
       @click="clicked"
       ref="node"
@@ -76,6 +76,8 @@
 import jsonProtoDefs from "frameworks/base/core/proto/android/server/windowmanagertrace.proto";
 import protobuf from "protobufjs";
 
+import { DiffType } from "./utils/diff.js";
+
 var protoDefs = protobuf.Root.fromJSON(jsonProtoDefs);
 var TraceMessage = protoDefs.lookupType(
   "com.android.server.wm.WindowManagerTraceFileProto"
@@ -116,6 +118,13 @@ export default {
       clickTimeout: null,
       isCollapsedByDefault,
       localCollapsedState: isCollapsedByDefault,
+      diffSymbol: {
+        [DiffType.NONE]: "",
+        [DiffType.ADDED]: "+",
+        [DiffType.DELETED]: "-",
+        [DiffType.MODIFIED]: ".",
+        [DiffType.MOVED]: ".",
+      },
     };
   },
   methods: {
@@ -271,6 +280,9 @@ export default {
 
       return false;
     },
+    diffClass() {
+      return this.item.diff ? this.item.diff.type : ''
+    },
     chipClassOrDefault() {
       return this.chipClass || "tree-view-chip";
     },
@@ -333,6 +345,30 @@ export default {
 
 .tree-view .node:hover:not(.selected) {
   background: #f1f1f1;
+}
+
+.tree-view .node:not(.selected).added,
+.tree-view .node:not(.selected).addedMove {
+  background: #03ff35;
+}
+
+.tree-view .node:not(.selected).deleted,
+.tree-view .node:not(.selected).deletedMove {
+  background: #ff6b6b;
+}
+
+.tree-view .node:not(.selected).modified {
+  background: cyan;
+}
+
+.tree-view .node.addedMove:after,
+.tree-view .node.deletedMove:after {
+  content: 'moved';
+  margin: 0 5px;
+  background: #448aff;
+  border-radius: 5px;
+  padding: 3px;
+  color: white;
 }
 
 .children {

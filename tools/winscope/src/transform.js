@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { DiffType } from './utils/diff.js';
+
 // kind - a type used for categorization of different levels
 // name - name of the node
 // children - list of child entries. Each child entry is pair list [raw object, nested transform function].
@@ -92,47 +94,156 @@ function transform({ obj, kind, name, children, timestamp, rect, bounds, highlig
 	return Object.freeze(result);
 }
 
+function getDiff(val, compareVal) {
+	if (val && isTerminal(compareVal)) {
+		return { type: DiffType.ADDED };
+	} else if (isTerminal(val) && compareVal) {
+		return { type: DiffType.DELETED };
+	} else if (compareVal != val) {
+		return { type: DiffType.MODIFIED };
+	} else {
+		return { type: DiffType.NONE };
+	}
+}
 
-function transform_json(obj, name, stableId, options) {
-	let { skip, formatter } = options;
+// Represents termination of the object traversal,
+// differentiated with a null value in the object.
+class Terminal { }
 
-	var children = [];
-	var formatted = undefined;
+function isTerminal(obj) {
+	return obj instanceof Terminal;
+}
 
-	if (skip && skip.includes(obj)) {
-		// skip
-	} else if ((formatted = formatter(obj))) {
-		children.push(transform_json(null, formatted, `${stableId}.${formatted}`, options));
-	} else if (Array.isArray(obj)) {
-		obj.forEach((e, i) => {
-			children.push(transform_json(e, "" + i, `${stableId}[${i}]`, options));
-		})
-	} else if (typeof obj == 'string') {
-		children.push(transform_json(null, obj, `${stableId}.${obj}`, options));
-	} else if (typeof obj == 'number' || typeof obj == 'boolean') {
-		children.push(transform_json(null, "" + obj, `${stableId}.${obj}`, options));
-	} else if (obj && typeof obj == 'object') {
-		Object.keys(obj).forEach((key) => {
-			children.push(transform_json(obj[key], key, `${stableId}.${key}`, options));
-		});
+class ObjectTransformer {
+	constructor(obj, rootName, stableId) {
+		this.obj = obj;
+		this.rootName = rootName;
+		this.stableId = stableId;
+		this.diff = false;
 	}
 
-	if (children.length == 1 && !children[0].combined) {
-		return Object.freeze({
-			kind: "",
-			name: name + ": " + children[0].name,
-			stableId: stableId,
-			children: children[0].children,
-			combined: true
-		});
+	setOptions(options) {
+		this.options = options;
+		return this;
 	}
 
-	return Object.freeze({
-		kind: "",
-		name: name,
-		stableId: stableId,
-		children: children,
-	});
+	withDiff(obj) {
+		this.diff = true;
+		this.compareWithObj = obj ?? new Terminal();
+		return this;
+	}
+
+	transform() {
+		const { formatter } = this.options;
+		if (!formatter) {
+			throw new Error("Missing formatter, please set with setOptions()");
+		}
+
+		return this._transform(this.obj, this.rootName, this.compareWithObj, this.rootName, this.stableId);
+	}
+
+	_transformKeys(obj) {
+		const { skip, formatter } = this.options;
+		const transformedObj = {};
+		let formatted = undefined;
+
+		if (skip && skip.includes(obj)) {
+			// skip
+		} else if ((formatted = formatter(obj))) {
+			// Obj has been formatted into a terminal node — has no children.
+			transformedObj[formatted] = new Terminal();
+		} else if (Array.isArray(obj)) {
+			obj.forEach((e, i) => {
+				transformedObj["" + i] = e;
+			});
+		} else if (typeof obj == 'string') {
+			// Object is a primitive type — has no children. Set to terminal
+			// to differentiate between null object and Terminal element.
+			transformedObj[obj] = new Terminal();
+		} else if (typeof obj == 'number' || typeof obj == 'boolean') {
+			// Similar to above — primitive type node has no children.
+			transformedObj["" + obj] = new Terminal();
+		} else if (obj && typeof obj == 'object') {
+			Object.keys(obj).forEach((key) => {
+				transformedObj[key] = obj[key];
+			});
+		} else if (obj === null) {
+			// Null object is a has no children — set to be terminal node.
+			transformedObj.null = new Terminal();
+		}
+
+		return transformedObj;
+	}
+
+	_transform(obj, name, compareWithObj, compareWithName, stableId) {
+		const children = [];
+
+		if (!isTerminal(obj)) {
+			obj = this._transformKeys(obj);
+		}
+		if (!isTerminal(compareWithObj)) {
+			compareWithObj = this._transformKeys(compareWithObj);
+		}
+
+		for (const key in obj) {
+			if (obj.hasOwnProperty(key)) {
+				let compareWithChild = new Terminal();
+				let compareWithName = new Terminal();
+				if (compareWithObj.hasOwnProperty(key)) {
+					compareWithChild = compareWithObj[key];
+					compareWithName = key;
+				}
+				children.push(this._transform(obj[key], key, compareWithChild, compareWithName, `${stableId}.${key}`));
+			}
+		}
+
+		// Takes care of adding deleted items to final tree
+		for (const key in compareWithObj) {
+			if (!obj.hasOwnProperty(key) && compareWithObj.hasOwnProperty(key)) {
+				children.push(this._transform(new Terminal(), new Terminal(), compareWithObj[key], key));
+			}
+		}
+
+		let transformedObj;
+		if (
+			children.length == 1 &&
+			children[0].children.length == 0 &&
+			!children[0].combined
+		) {
+			// Merge leaf key value pairs.
+			const child = children[0];
+
+			transformedObj = {
+				kind: "",
+				name: name + ": " + child.name,
+				stableId: stableId,
+				children: child.children,
+				combined: true,
+			}
+
+			if (this.diff) {
+				transformedObj.diff = child.diff;
+			}
+		} else {
+			transformedObj = {
+				kind: "",
+				name,
+				stableId: stableId,
+				children,
+			};
+
+			if (this.diff) {
+				const diff = getDiff(name, compareWithName);
+				transformedObj.diff = diff;
+
+				if (diff.type == DiffType.DELETED) {
+					transformedObj.name = compareWithName;
+				}
+			}
+		}
+
+		return Object.freeze(transformedObj);
+	}
 }
 
 function nanos_to_string(elapsedRealtimeNanos) {
@@ -163,4 +274,4 @@ function get_visible_chip() {
 	return { short: 'V', long: "visible", class: 'default' };
 }
 
-export { transform, transform_json, nanos_to_string, get_visible_chip };
+export { transform, ObjectTransformer, nanos_to_string, get_visible_chip };
