@@ -15,10 +15,7 @@
 <template>
   <md-card-content class="container">
 
-    <md-card class="changes card">
-      <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
-        <h2 class="md-title" style="flex: 1">Log</h2>
-      </md-content>
+    <flat-card class="changes card">
       <div class="filters">
         <md-field>
           <label>Transaction Type</label>
@@ -40,27 +37,33 @@
         </md-chips>
       </div>
 
-      <virtual-list style="height: 360px; overflow-y: auto;"
+      <virtual-list style="height: 600px; overflow-y: auto;"
         :data-key="'timestamp'"
         :data-sources="filteredData"
         :data-component="transactionEntryComponent"
         :extra-props="{'onClick': transactionSelected}"
         ref="loglist"
       />
-    </md-card>
+    </flat-card>
 
-    <md-card class="changes card">
+    <flat-card class="changes card">
       <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
         <h2 class="md-title" style="flex: 1">Changes</h2>
       </md-content>
-      <div class="changes-content">
+      <div class="changes-content" v-if="selectedTree">
         <tree-view
           :item="selectedTree"
           :collapseChildren="true"
           :useGlobalCollapsedState="true"
         />
       </div>
-    </md-card>
+      <div class="no-properties" v-else>
+        <i class="material-icons none-icon">
+          filter_none
+        </i>
+        <span>No transaction selected.</span>
+      </div>
+    </flat-card>
 
   </md-card-content>
 </template>
@@ -68,9 +71,10 @@
 import TreeView from './TreeView.vue';
 import VirtualList from '../libs/virtualList/VirtualList';
 import TransactionEntry from './TransactionEntry.vue';
+import FlatCard from './components/FlatCard.vue';
 
 import { transform_json } from './transform.js';
-import { stableIdCompatibilityFixup } from './utils/utils.js'
+import { stableIdCompatibilityFixup } from './utils/utils.js';
 
 export default {
   name: 'transactionsview',
@@ -268,6 +272,7 @@ export default {
   components: {
     'virtual-list': VirtualList,
     'tree-view': TreeView,
+    'flat-card': FlatCard,
   }
 }
 
@@ -280,7 +285,8 @@ export default {
 
 .transaction-table,
 .changes {
-  flex: 1;
+  flex: 1 1 0;
+  width: 0;
   margin: 8px;
 }
 
@@ -301,4 +307,22 @@ export default {
   overflow: auto;
 }
 
+.no-properties {
+  display: flex;
+  flex-direction: column;
+  align-self: center;
+  align-items: center;
+  justify-content: center;
+  height: calc(100% - 50px);
+  padding: 50px 25px;
+}
+
+.no-properties .none-icon {
+  font-size: 35px;
+  margin-bottom: 10px;
+}
+
+.no-properties span {
+  font-weight: 100;
+}
 </style>

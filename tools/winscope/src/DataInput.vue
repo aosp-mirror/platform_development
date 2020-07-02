@@ -13,49 +13,51 @@
      limitations under the License.
 -->
 <template>
-    <md-card style="min-width: 50em">
-      <md-card-header>
-        <div class="md-title">Open files</div>
-      </md-card-header>
-      <md-card-content>
-        <md-list>
-          <md-list-item v-for="file in dataFiles" v-bind:key="file.filename">
-            <md-icon>{{file.type.icon}}</md-icon>
-            <span class="md-list-item-text">{{file.filename}} ({{file.type.name}})</span>
-            <md-button class="md-icon-button md-accent" @click="onRemoveFile(file.type.name)">
-              <md-icon>close</md-icon>
-            </md-button>
-          </md-list-item>
-        </md-list>
-        <md-progress-spinner :md-diameter="30" :md-stroke="3" md-mode="indeterminate" v-show="loadingFiles"/>
-        <div>
-          <md-checkbox v-model="store.displayDefaults">Show default properties
-            <md-tooltip md-direction="bottom">
-              If checked, shows the value of all properties.
-              Otherwise, hides all properties whose value is the default for its data type.
-            </md-tooltip>
-          </md-checkbox>
+  <flat-card style="min-width: 50em">
+    <md-card-header>
+      <div class="md-title">Open files</div>
+    </md-card-header>
+    <md-card-content>
+      <md-list>
+        <md-list-item v-for="file in dataFiles" v-bind:key="file.filename">
+          <md-icon>{{file.type.icon}}</md-icon>
+          <span class="md-list-item-text">{{file.filename}} ({{file.type.name}})</span>
+          <md-button class="md-icon-button md-accent" @click="onRemoveFile(file.type.name)">
+            <md-icon>close</md-icon>
+          </md-button>
+        </md-list-item>
+      </md-list>
+      <md-progress-spinner :md-diameter="30" :md-stroke="3" md-mode="indeterminate" v-show="loadingFiles"/>
+      <div>
+        <md-checkbox v-model="store.displayDefaults" class="md-primary">
+          Show default properties
+          <md-tooltip md-direction="bottom">
+            If checked, shows the value of all properties.
+            Otherwise, hides all properties whose value is the default for its data type.
+          </md-tooltip>
+        </md-checkbox>
+      </div>
+      <div class="md-layout">
+        <div class="md-layout-item md-small-size-100">
+          <md-field>
+          <md-select v-model="fileType" id="file-type" placeholder="File type">
+            <md-option value="auto">Detect type</md-option>
+            <md-option value="bugreport">Bug Report (.zip)</md-option>
+            <md-option :value="k" v-for="(v,k) in FILE_TYPES" v-bind:key="v.name">{{v.name}}</md-option>
+          </md-select>
+          </md-field>
         </div>
-        <div class="md-layout">
-          <div class="md-layout-item md-small-size-100">
-            <md-field>
-            <md-select v-model="fileType" id="file-type" placeholder="File type">
-              <md-option value="auto">Detect type</md-option>
-              <md-option value="bugreport">Bug Report (.zip)</md-option>
-              <md-option :value="k" v-for="(v,k) in FILE_TYPES" v-bind:key="v.name">{{v.name}}</md-option>
-            </md-select>
-            </md-field>
-          </div>
-        </div>
-        <div class="md-layout">
-          <input type="file" @change="onLoadFile" ref="fileUpload" v-show="false" :multiple="fileType === 'auto'" />
-          <md-button class="md-accent md-raised md-theme-default" @click="$refs.fileUpload.click()">Add File</md-button>
-          <md-button v-if="dataReady" @click="onSubmit" class="md-button md-primary md-raised md-theme-default">Submit</md-button>
-        </div>
-      </md-card-content>
-    </md-card>
+      </div>
+      <div class="md-layout">
+        <input type="file" @change="onLoadFile" ref="fileUpload" v-show="false" :multiple="fileType === 'auto'" />
+        <md-button class="md-primary md-theme-default" @click="$refs.fileUpload.click()">Add File</md-button>
+        <md-button v-if="dataReady" @click="onSubmit" class="md-button md-primary md-raised md-theme-default">Submit</md-button>
+      </div>
+    </md-card-content>
+  </flat-card>
 </template>
 <script>
+import FlatCard from './components/FlatCard.vue';
 import JSZip from 'jszip';
 import { detectAndDecode, FILE_TYPES, DATA_TYPES } from './decode.js';
 import { WebContentScriptMessageType } from './utils/consts';
@@ -279,7 +281,10 @@ export default {
   },
   computed: {
     dataReady: function() { return Object.keys(this.dataFiles).length > 0 }
-  }
+  },
+  components: {
+    'flat-card': FlatCard,
+  },
 }
 
 </script>

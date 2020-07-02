@@ -14,7 +14,7 @@
 -->
 <template>
   <div @click="onClick($event)">
-    <md-card v-if="(isLog(file) || isTrace(file) || isTransactions(file))">
+    <flat-card v-if="hasDataView(file)">
       <md-card-header>
         <md-card-header-text>
           <div class="md-title">
@@ -32,7 +32,7 @@
       <div v-if="!(isTrace(file) || isVideo(file) || isLog(file) || isTransactions(file))">
         <h1 class="bad">Unrecognized DataType</h1>
       </div>
-    </md-card>
+    </flat-card>
   </div>
 </template>
 <script>
@@ -40,6 +40,7 @@ import TraceView from "./TraceView.vue";
 import TransactionsView from "./TransactionsView.vue";
 import LogView from "./LogView.vue";
 import FileType from "./mixins/FileType.js";
+import FlatCard from "./components/FlatCard.vue";
 
 export default {
   name: "dataview",
@@ -61,9 +62,10 @@ export default {
   props: ["store", "file"],
   mixins: [FileType],
   components: {
-    traceview: TraceView,
-    transactionsview: TransactionsView,
-    logview: LogView
+    'traceview': TraceView,
+    'transactionsview': TransactionsView,
+    'logview': LogView,
+    'flat-card': FlatCard,
   }
 };
 </script>
