@@ -14,66 +14,81 @@
 -->
 <template>
   <md-card-content class="container">
-    <md-card class="rects" v-if="hasScreenView">
-      <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
-        <h2 class="md-title">Screen</h2>
-      </md-content>
-      <md-content class="md-elevation-8">
-        <rects :bounds="bounds" :rects="rects" :highlight="highlight" @rect-click="onRectClick" />
-      </md-content>
-    </md-card>
-    <md-card class="hierarchy">
-      <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
-        <h2 class="md-title" style="flex: 1;">Hierarchy</h2>
-        <md-checkbox
-          v-model="showHierachyDiff"
-          v-if="diffVisualizationAvailable"
-        >
-          Show Diff
-        </md-checkbox>
-        <md-checkbox v-model="store.onlyVisible">Only visible</md-checkbox>
-        <md-checkbox v-model="store.flattened">Flat</md-checkbox>
-        <input id="filter" type="search" placeholder="Filter..." v-model="hierarchyPropertyFilterString" />
-      </md-content>
-      <tree-view
-        class="data-card"
-        :item="tree"
-        @item-selected="itemSelected"
-        :selected="hierarchySelected"
-        :filter="hierarchyFilter"
-        :flattened="store.flattened"
-        :items-clickable="true"
-        :useGlobalCollapsedState="true"
-        ref="hierarchy"
-      />
-    </md-card>
-    <md-card class="properties">
-      <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
-        <h2 class="md-title" style="flex: 1">Properties</h2>
-        <div class="filter">
+    <div class="rects" v-if="hasScreenView">
+      <rects :bounds="bounds" :rects="rects" :highlight="highlight" @rect-click="onRectClick" />
+    </div>
+
+    <div class="hierarchy">
+      <flat-card>
+        <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
+          <h2 class="md-title" style="flex: 1;">Hierarchy</h2>
+          <md-checkbox
+            v-model="showHierachyDiff"
+            v-if="diffVisualizationAvailable"
+          >
+            Show Diff
+          </md-checkbox>
+          <md-checkbox v-model="store.onlyVisible">Only visible</md-checkbox>
+          <md-checkbox v-model="store.flattened">Flat</md-checkbox>
+          <md-field md-inline class="filter">
+            <label>Filter...</label>
+            <md-input v-model="hierarchyPropertyFilterString"></md-input>
+          </md-field>
+        </md-content>
+        <tree-view
+          class="data-card"
+          :item="tree"
+          @item-selected="itemSelected"
+          :selected="hierarchySelected"
+          :filter="hierarchyFilter"
+          :flattened="store.flattened"
+          :items-clickable="true"
+          :useGlobalCollapsedState="true"
+          ref="hierarchy"
+        />
+      </flat-card>
+    </div>
+
+    <div class="properties">
+      <flat-card>
+        <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
+          <h2 class="md-title" style="flex: 1">Properties</h2>
           <md-checkbox
             v-model="showPropertiesDiff"
             v-if="diffVisualizationAvailable"
           >
             Show Diff
           </md-checkbox>
-          <input id="filter" type="search" placeholder="Filter..." v-model="propertyFilterString" />
+          <md-field md-inline class="filter">
+            <label>Filter...</label>
+            <md-input v-model="propertyFilterString"></md-input>
+          </md-field>
+        </md-content>
+        <div v-if="selectedTree">
+          <tree-view
+            class="pre-line-data-card"
+            :item="selectedTree"
+            :filter="propertyFilter"
+            :collapseChildren="true"
+            :useGlobalCollapsedState="true"
+          />
         </div>
-      </md-content>
-      <tree-view
-        class="pre-line-data-card"
-        :item="selectedTree"
-        :filter="propertyFilter"
-        :collapseChildren="true"
-        :useGlobalCollapsedState="true"
-      />
-    </md-card>
+        <div class="no-properties" v-else>
+          <i class="material-icons none-icon">
+            filter_none
+          </i>
+          <span>No element selected in the hierachy.</span>
+        </div>
+      </flat-card>
+    </div>
+
   </md-card-content>
 </template>
 <script>
 import TreeView from './TreeView.vue'
 import Timeline from './Timeline.vue'
 import Rects from './Rects.vue'
+import FlatCard from './components/FlatCard.vue'
 
 import { ObjectTransformer } from './transform.js'
 import { DiffGenerator, defaultModifiedCheck } from './utils/diff.js'
@@ -315,6 +330,7 @@ export default {
   components: {
     'tree-view': TreeView,
     'rects': Rects,
+    'flat-card': FlatCard,
   }
 }
 
@@ -340,7 +356,12 @@ function getFilter(filterString) {
 }
 
 </script>
-<style>
+<style scoped>
+.container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
 .rects {
   flex: none;
   margin: 8px;
@@ -353,6 +374,16 @@ function getFilter(filterString) {
   min-width: 400px;
 }
 
+.rects,
+.hierarchy,
+.properties {
+  padding: 5px;
+}
+
+.flat-card {
+  height: 100%;
+}
+
 .hierarchy>.tree-view,
 .properties>.tree-view {
   margin: 16px;
@@ -360,13 +391,36 @@ function getFilter(filterString) {
 
 .data-card {
   overflow: auto;
-  max-height: 48em;
+  max-height: 730px;
 }
 
 .pre-line-data-card {
   overflow: auto;
   max-height: 48em;
   white-space: pre-line;
+}
+
+.no-properties {
+  display: flex;
+  flex-direction: column;
+  align-self: center;
+  align-items: center;
+  justify-content: center;
+  height: calc(100% - 50px);
+  padding: 50px 25px;
+}
+
+.no-properties .none-icon {
+  font-size: 35px;
+  margin-bottom: 10px;
+}
+
+.no-properties span {
+  font-weight: 100;
+}
+
+.filter {
+  width: auto;
 }
 
 </style>

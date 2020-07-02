@@ -45,7 +45,7 @@ export default {
 }
 
 .time-column .time-link {
-  width: 8.5em;
+  width: 9em;
 }
 
 .tag-column {
