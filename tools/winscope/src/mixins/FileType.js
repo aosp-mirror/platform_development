@@ -16,6 +16,9 @@ const mixin = {
     },
     isLog(file) {
         return file.type == DATA_TYPES.PROTO_LOG
+    },
+    hasDataView(file) {
+        return this.isLog(file) || this.isTrace(file) || this.isTransactions(file);
     }
 }
 

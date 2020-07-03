@@ -14,59 +14,88 @@
 -->
 <template>
   <md-card-content class="container">
-    <md-card class="rects" v-if="hasScreenView">
-      <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
-        <h2 class="md-title">Screen</h2>
-      </md-content>
-      <md-content class="md-elevation-8">
-        <rects :bounds="bounds" :rects="rects" :highlight="highlight" @rect-click="onRectClick" />
-      </md-content>
-    </md-card>
-    <md-card class="hierarchy">
-      <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
-        <h2 class="md-title" style="flex: 1;">Hierarchy</h2>
-        <md-checkbox v-model="store.onlyVisible">Only visible</md-checkbox>
-        <md-checkbox v-model="store.flattened">Flat</md-checkbox>
-        <input id="filter" type="search" placeholder="Filter..." v-model="hierarchyPropertyFilterString" />
-      </md-content>
-      <tree-view
-        class="data-card"
-        :item="tree"
-        @item-selected="itemSelected"
-        :selected="hierarchySelected"
-        :filter="hierarchyFilter"
-        :flattened="store.flattened"
-        :items-clickable="true"
-        :useGlobalCollapsedState="true"
-        ref="hierarchy"
-      />
-    </md-card>
-    <md-card class="properties">
-      <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
-        <h2 class="md-title" style="flex: 1">Properties</h2>
-        <div class="filter">
-          <input id="filter" type="search" placeholder="Filter..." v-model="propertyFilterString" />
+    <div class="rects" v-if="hasScreenView">
+      <rects :bounds="bounds" :rects="rects" :highlight="highlight" @rect-click="onRectClick" />
+    </div>
+
+    <div class="hierarchy">
+      <flat-card>
+        <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
+          <h2 class="md-title" style="flex: 1;">Hierarchy</h2>
+          <md-checkbox
+            v-model="showHierachyDiff"
+            v-if="diffVisualizationAvailable"
+          >
+            Show Diff
+          </md-checkbox>
+          <md-checkbox v-model="store.onlyVisible">Only visible</md-checkbox>
+          <md-checkbox v-model="store.flattened">Flat</md-checkbox>
+          <md-field md-inline class="filter">
+            <label>Filter...</label>
+            <md-input v-model="hierarchyPropertyFilterString"></md-input>
+          </md-field>
+        </md-content>
+        <tree-view
+          class="data-card"
+          :item="tree"
+          @item-selected="itemSelected"
+          :selected="hierarchySelected"
+          :filter="hierarchyFilter"
+          :flattened="store.flattened"
+          :items-clickable="true"
+          :useGlobalCollapsedState="true"
+          ref="hierarchy"
+        />
+      </flat-card>
+    </div>
+
+    <div class="properties">
+      <flat-card>
+        <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
+          <h2 class="md-title" style="flex: 1">Properties</h2>
+          <md-checkbox
+            v-model="showPropertiesDiff"
+            v-if="diffVisualizationAvailable"
+          >
+            Show Diff
+          </md-checkbox>
+          <md-field md-inline class="filter">
+            <label>Filter...</label>
+            <md-input v-model="propertyFilterString"></md-input>
+          </md-field>
+        </md-content>
+        <div v-if="selectedTree">
+          <tree-view
+            class="pre-line-data-card"
+            :item="selectedTree"
+            :filter="propertyFilter"
+            :collapseChildren="true"
+            :useGlobalCollapsedState="true"
+          />
         </div>
-      </md-content>
-      <tree-view
-        class="pre-line-data-card"
-        :item="selectedTree"
-        :filter="propertyFilter"
-        :collapseChildren="true"
-        :useGlobalCollapsedState="true"
-      />
-    </md-card>
+        <div class="no-properties" v-else>
+          <i class="material-icons none-icon">
+            filter_none
+          </i>
+          <span>No element selected in the hierachy.</span>
+        </div>
+      </flat-card>
+    </div>
+
   </md-card-content>
 </template>
 <script>
 import TreeView from './TreeView.vue'
 import Timeline from './Timeline.vue'
 import Rects from './Rects.vue'
+import FlatCard from './components/FlatCard.vue'
 
-import { transform_json } from './transform.js'
+import { ObjectTransformer } from './transform.js'
+import { DiffGenerator, defaultModifiedCheck } from './utils/diff.js'
 import { format_transform_type, is_simple_transform } from './matrix_utils.js'
 import { DATA_TYPES } from './decode.js'
 import { stableIdCompatibilityFixup } from './utils/utils.js'
+import { CompatibleFeatures } from './utils/compatibility.js'
 
 function formatColorTransform(vals) {
     const fixedVals = vals.map(v => v.toFixed(1));
@@ -105,6 +134,25 @@ function formatProto(obj) {
   }
 }
 
+function findEntryInTree(tree, id) {
+  if (tree.stableId === id) {
+    return tree;
+  }
+
+  if (!tree.children) {
+    return null;
+  }
+
+  for (const child of tree.children) {
+    const foundEntry = findEntryInTree(child, id);
+    if (foundEntry) {
+      return foundEntry;
+    }
+  }
+
+  return null;
+}
+
 export default {
   name: 'traceview',
   data() {
@@ -118,23 +166,34 @@ export default {
       rects: [],
       tree: null,
       highlight: null,
+      showHierachyDiff: true,
+      showPropertiesDiff: true,
     }
   },
   methods: {
     itemSelected(item) {
       this.hierarchySelected = item;
-      this.selectedTree = transform_json(
-        item.obj,
-        item.name,
-        stableIdCompatibilityFixup(item),
-        {
-          skip: item.skip,
-          formatter: formatProto
-        },
-      );
+      this.selectedTree = this.getTransformedProperties(item);
       this.highlight = item.highlight;
       this.lastSelectedStableId = item.stableId;
       this.$emit('focus');
+    },
+    getTransformedProperties(item) {
+      const transformer = new ObjectTransformer(
+        item.obj,
+        item.name,
+        stableIdCompatibilityFixup(item)
+      ).setOptions({
+          skip: item.skip,
+          formatter: formatProto,
+        });
+
+      if (this.showPropertiesDiff) {
+        const prevItem = this.getItemFromPrevTree(item);
+        transformer.withDiff(prevItem?.obj);
+      }
+
+      return transformer.transform();
     },
     onRectClick(item) {
       if (item) {
@@ -143,6 +202,26 @@ export default {
     },
     setData(item) {
       this.tree = item;
+
+      if (this.showHierachyDiff && this.diffVisualizationAvailable) {
+        // Required pre-processing to match algo
+        // TODO: Clean this up somehow
+        if (this.file.type == DATA_TYPES.SURFACE_FLINGER) {
+          item.obj.id = -1; // TODO: Make sure this ID can never be used by other objects
+          item.children[0].obj.id = 0;
+        }
+
+        this.tree = new DiffGenerator(item)
+          .compareWith(this.getDataWithOffset(-1))
+          .withUniqueNodeId(node => {
+            return node.stableId;
+          })
+          .withModifiedCheck(defaultModifiedCheck)
+          .generateDiffTree();
+      } else {
+        this.tree = item;
+      }
+
       this.rects = [...item.rects].reverse();
       this.bounds = item.bounds;
 
@@ -178,6 +257,39 @@ export default {
     arrowDown() {
       return this.$refs.hierarchy.selectNext();
     },
+    getDataWithOffset(offset) {
+      const index = this.file.selectedIndex + offset;
+
+      if (index < 0 || index >= this.file.data.length) {
+        return null;
+      }
+
+      return this.file.data[index];
+    },
+    getItemFromPrevTree(entry) {
+      if (!this.showPropertiesDiff || !this.hierarchySelected) {
+        return null;
+      }
+
+      const id = entry.stableId;
+      if (!id) {
+        throw new Error("Entry has no stableId...");
+      }
+
+      const prevTree = this.getDataWithOffset(-1);
+      if (!prevTree) {
+        console.warn("No previous entry");
+        return null;
+      }
+
+      const prevEntry = findEntryInTree(prevTree, id);
+      if (!prevEntry) {
+        console.warn("Didn't exist in last entry");
+        // TODO: Maybe handle this in some way.
+      }
+
+      return prevEntry;
+    }
   },
   created() {
     this.setData(this.file.data[this.file.selectedIndex]);
@@ -185,10 +297,21 @@ export default {
   watch: {
     selectedIndex() {
       this.setData(this.file.data[this.file.selectedIndex]);
+    },
+    showPropertiesDiff() {
+      if (this.hierarchySelected) {
+        this.selectedTree = this.getTransformedProperties(this.hierarchySelected);
+      }
     }
   },
   props: ['store', 'file'],
   computed: {
+    diffVisualizationAvailable() {
+      return CompatibleFeatures.DiffVisualization && (
+          this.file.type == DATA_TYPES.WINDOW_MANAGER ||
+          this.file.type == DATA_TYPES.SURFACE_FLINGER
+        );
+    },
     selectedIndex() {
       return this.file.selectedIndex;
     },
@@ -207,6 +330,7 @@ export default {
   components: {
     'tree-view': TreeView,
     'rects': Rects,
+    'flat-card': FlatCard,
   }
 }
 
@@ -232,7 +356,12 @@ function getFilter(filterString) {
 }
 
 </script>
-<style>
+<style scoped>
+.container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
 .rects {
   flex: none;
   margin: 8px;
@@ -245,6 +374,16 @@ function getFilter(filterString) {
   min-width: 400px;
 }
 
+.rects,
+.hierarchy,
+.properties {
+  padding: 5px;
+}
+
+.flat-card {
+  height: 100%;
+}
+
 .hierarchy>.tree-view,
 .properties>.tree-view {
   margin: 16px;
@@ -252,13 +391,36 @@ function getFilter(filterString) {
 
 .data-card {
   overflow: auto;
-  max-height: 48em;
+  max-height: 730px;
 }
 
 .pre-line-data-card {
   overflow: auto;
   max-height: 48em;
   white-space: pre-line;
+}
+
+.no-properties {
+  display: flex;
+  flex-direction: column;
+  align-self: center;
+  align-items: center;
+  justify-content: center;
+  height: calc(100% - 50px);
+  padding: 50px 25px;
+}
+
+.no-properties .none-icon {
+  font-size: 35px;
+  margin-bottom: 10px;
+}
+
+.no-properties span {
+  font-weight: 100;
+}
+
+.filter {
+  width: auto;
 }
 
 </style>

@@ -15,6 +15,7 @@
  */
 
 import { transform, nanos_to_string, get_visible_chip } from './transform.js'
+import { CompatibleFeatures } from './utils/compatibility.js'
 
 function transform_window(entry) {
   var chips = [];
@@ -32,6 +33,9 @@ function transform_window(entry) {
   }
 
   // For backward compatibility
+  if (!entry.windowContainer?.identifier) {
+    CompatibleFeatures.DiffVisualization = false;
+  }
   const identifier = entry.windowContainer?.identifier ?? entry.identifier;
 
   var name = renderIdentifier(identifier);
