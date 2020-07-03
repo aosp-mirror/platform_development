@@ -73,7 +73,7 @@ import VirtualList from '../libs/virtualList/VirtualList';
 import TransactionEntry from './TransactionEntry.vue';
 import FlatCard from './components/FlatCard.vue';
 
-import { transform_json } from './transform.js';
+import { ObjectTransformer } from './transform.js';
 import { stableIdCompatibilityFixup } from './utils/utils.js';
 
 export default {
@@ -193,10 +193,14 @@ export default {
         }
       }
 
-      const transactionUnique = transaction.timestamp;
-      let tree = transform_json(obj, name, transactionUnique, {
-        formatter: () => {}
-      });
+      const transactionUniqueId = transaction.timestamp;
+      let tree = new ObjectTransformer(
+        obj,
+        name,
+        transactionUniqueId
+      ).setOptions({
+        formatter: () => {},
+      }).transform();
 
       if (tree.name == "changes" && tree.children.length === 1) {
         tree = tree.children[0];
