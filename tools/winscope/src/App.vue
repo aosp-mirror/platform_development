@@ -15,39 +15,51 @@
 <template>
   <div id="app">
     <md-app>
-      <md-app-toolbar md-tag="md-toolbar">
+      <md-app-toolbar md-tag="md-toolbar" class="top-toolbar">
         <h1 class="md-title" style="flex: 1">{{title}}</h1>
         <md-button
-          class="md-accent md-raised md-theme-default"
+          class="md-primary md-theme-default download-all-btn"
           @click="downloadAsZip(files)"
           v-if="dataLoaded"
         >Download All</md-button>
         <md-button
-          class="md-accent md-raised md-theme-default"
+          class="md-accent md-raised md-theme-default clear-btn"
+          style="box-shadow: none;"
           @click="clear()"
           v-if="dataLoaded"
         >Clear</md-button>
       </md-app-toolbar>
 
       <md-app-content class="main-content">
-        <div class="md-layout m-2" v-if="!dataLoaded">
-          <dataadb ref="adb" :store="store" @dataReady="onDataReady" @statusChange="setStatus" />
-          <datainput ref="input" :store="store" @dataReady="onDataReady" @statusChange="setStatus" />
-        </div>
-        <dataview
-          v-for="file in files"
-          :key="file.filename"
-          :ref="file.filename"
-          :store="store"
-          :file="file"
-          @click="onDataViewFocus(file)"
-        />
+        <section class="data-inputs" v-if="!dataLoaded">
+          <div class="input">
+            <dataadb class="adbinput" ref="adb" :store="store" @dataReady="onDataReady" @statusChange="setStatus" />
+          </div>
+          <div class="input">
+            <datainput class="fileinput" ref="input" :store="store" @dataReady="onDataReady" @statusChange="setStatus" />
+          </div>
+        </section>
 
-        <overlay
-          :store="store"
-          :ref="overlayRef"
-          v-if="dataLoaded"
-        />
+        <section class="data-view">
+          <div
+            class="data-view-container"
+            v-for="file in dataViewFiles"
+            :key="file.filename"
+          >
+            <dataview
+              :ref="file.filename"
+              :store="store"
+              :file="file"
+              @click="onDataViewFocus(file)"
+            />
+          </div>
+
+          <overlay
+            :store="store"
+            :ref="overlayRef"
+            v-if="dataLoaded"
+          />
+        </section>
       </md-app-content>
     </md-app>
   </div>
@@ -143,6 +155,9 @@ export default {
       }
       return this.activeDataView;
     },
+    dataViewFiles() {
+      return this.files.filter(f => this.hasDataView(f));
+    }
   },
   watch: {
     title() {
@@ -158,16 +173,36 @@ export default {
 };
 </script>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@600&display=swap');
+
 #app .md-app-container {
   transform: none!important; /* Get rid of tranforms which prevent fixed position from being used */
+  min-height: 100vh;
 }
 
-.main-content {
-  padding-bottom: 75px;
+#app .top-toolbar {
+  box-shadow: none;
+  background-color: #fff;
+  background-color: var(--md-theme-default-background, #fff);
+  border-bottom: thin solid rgba(0,0,0,.12);
+  padding:  0 40px;
 }
 
-.main-content .md-layout>* {
-  margin: 1em;
+#app .top-toolbar .md-title {
+  font-family: 'Open Sans', sans-serif;
+  white-space: nowrap;
+  color: #5f6368;
+  margin: 0;
+  padding: 0;
+  font-size: 22px;
+  letter-spacing: 0;
+  font-weight: 600;
+}
+
+.data-view {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 75px; /* TODO: Disable if no bottom bar */
 }
 
 .card-toolbar {
@@ -199,5 +234,31 @@ ul {
 
 a {
   color: #42b983;
+}
+
+.data-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  height: 100%;
+  width: 100%;
+  align-self: center;
+  /* align-items: center; */
+  align-content: center;
+  justify-content: center;
+}
+
+.data-inputs .input {
+  padding: 15px;
+  flex: 1 1 0;
+  max-width: 840px;
+  /* align-self: center; */
+}
+
+.data-inputs .input > div {
+  height: 100%;
+}
+
+.data-view-container {
+  padding: 25px 20px 0 20px;
 }
 </style>

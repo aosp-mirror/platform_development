@@ -13,7 +13,7 @@
      limitations under the License.
 -->
 <template>
-  <md-card style="min-width: 50em">
+  <flat-card style="min-width: 50em">
     <md-card-header>
       <div class="md-title">ADB Connect</div>
     </md-card-header>
@@ -72,24 +72,30 @@
       <md-progress-spinner :md-size="30" md-indeterminate></md-progress-spinner>
     </md-card-content>
     <md-card-content v-if="status === STATES.START_TRACE">
-      <md-list>
-        <md-list-item>
-          <md-icon>smartphone</md-icon>
-          <span class="md-list-item-text">{{ devices[selectedDevice].model }} ({{ selectedDevice }})</span>
-        </md-list-item>
-      </md-list>
-      <div>
-        <p>Trace targets:</p>
-        <md-checkbox v-for="file in TRACE_FILES" :key="file" v-model="adbStore[file]">{{FILE_TYPES[file].name}}</md-checkbox>
+      <div class="device-choice">
+        <md-list>
+          <md-list-item>
+            <md-icon>smartphone</md-icon>
+            <span class="md-list-item-text">{{ devices[selectedDevice].model }} ({{ selectedDevice }})</span>
+          </md-list-item>
+        </md-list>
+        <md-button class="md-primary" @click="resetLastDevice">Change device</md-button>
       </div>
-      <div>
-        <p>Dump targets:</p>
-        <md-checkbox v-for="file in DUMP_FILES" :key="file" v-model="adbStore[file]">{{FILE_TYPES[file].name}}</md-checkbox>
+      <div class="trace-section">
+        <h3>Trace targets:</h3>
+        <div class="selection">
+          <md-checkbox class="md-primary" v-for="file in TRACE_FILES" :key="file" v-model="adbStore[file]">{{FILE_TYPES[file].name}}</md-checkbox>
+        </div>
+        <md-button class="md-primary trace-btn" @click="startTrace">Start trace</md-button>
       </div>
-      <div class="md-layout">
-        <md-button class="md-accent md-raised" @click="startTrace">Start trace</md-button>
-        <md-button class="md-accent md-raised" @click="dumpState">Dump state</md-button>
-        <md-button class="md-raised" @click="resetLastDevice">Device list</md-button>
+      <div class="dump-section">
+        <h3>Dump targets:</h3>
+        <div class="selection">
+          <md-checkbox class="md-primary" v-for="file in DUMP_FILES" :key="file" v-model="adbStore[file]">{{FILE_TYPES[file].name}}</md-checkbox>
+        </div>
+        <div class="md-layout">
+          <md-button class="md-primary dump-btn" @click="dumpState">Dump state</md-button>
+        </div>
       </div>
     </md-card-content>
     <md-card-content v-if="status === STATES.ERROR">
@@ -98,24 +104,25 @@
       <pre>
         {{ errorText }}
       </pre>
-      <md-button class="md-raised md-accent" @click="restart">Retry</md-button>
+      <md-button class="md-primary" @click="restart">Retry</md-button>
     </md-card-content>
     <md-card-content v-if="status === STATES.END_TRACE">
       <span class="md-subheading">Tracing...</span>
       <md-progress-bar md-mode="indeterminate"></md-progress-bar>
       <div class="md-layout">
-        <md-button class="md-accent md-raised" @click="endTrace">End trace</md-button>
+        <md-button class="md-primary" @click="endTrace">End trace</md-button>
       </div>
     </md-card-content>
     <md-card-content v-if="status === STATES.LOAD_DATA">
       <span class="md-subheading">Loading data...</span>
       <md-progress-bar md-mode="determinate" :md-value="loadProgress"></md-progress-bar>
     </md-card-content>
-  </md-card>
+  </flat-card>
 </template>
 <script>
 import { FILE_TYPES, DATA_TYPES } from './decode.js'
 import LocalStore from './localstore.js'
+import FlatCard from './components/FlatCard.vue';
 
 const STATES = {
   ERROR: 0,
@@ -178,6 +185,9 @@ export default {
     }
   },
   props: ["store"],
+  components: {
+    'flat-card': FlatCard,
+  },
   methods: {
     getDevices() {
       if (this.status !== STATES.DEVICES && this.status !== STATES.CONNECTING) {
@@ -345,3 +355,17 @@ export default {
 }
 
 </script>
+<style scoped>
+.device-choice {
+  display: inline-flex;
+}
+h3 {
+  margin-bottom: 0;
+}
+.trace-btn, .dump-btn {
+  margin-top: 0;
+}
+pre {
+  white-space: pre-wrap;
+}
+</style>
