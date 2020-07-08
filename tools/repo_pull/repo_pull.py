@@ -154,34 +154,28 @@ class ChangeList(object):
         return len(self.parents) > 1
 
 
-def find_manifest_xml(dir_path):
-    """Find the path to manifest.xml for this Android source tree."""
-    dir_path_prev = None
-    while dir_path != dir_path_prev:
-        path = os.path.join(dir_path, '.repo', 'manifest.xml')
-        if os.path.exists(path):
-            return path
-        dir_path_prev = dir_path
-        dir_path = os.path.dirname(dir_path)
+def find_repo_top(curdir):
+    """Find the top directory for this git-repo source tree."""
+    olddir = None
+    while curdir != olddir:
+        if os.path.exists(os.path.join(curdir, '.repo')):
+            return curdir
+        olddir = curdir
+        curdir = os.path.dirname(curdir)
     raise ValueError('.repo dir not found')
 
 
-def build_project_name_dir_dict(manifest_path):
+def build_project_name_dir_dict(manifest_name):
     """Build the mapping from Gerrit project name to source tree project
     directory path."""
+    manifest_cmd = ['repo', 'manifest']
+    if manifest_name:
+        manifest_cmd.extend(['-m', manifest_name])
+    raw_manifest_xml = run(manifest_cmd, stdout=PIPE, check=True).stdout
+
+    manifest_xml = xml.dom.minidom.parseString(raw_manifest_xml)
     project_dirs = {}
-    parsed_xml = xml.dom.minidom.parse(manifest_path)
-
-    includes = parsed_xml.getElementsByTagName('include')
-    for include in includes:
-        include_path = include.getAttribute('name')
-        if not os.path.isabs(include_path):
-            manifest_dir = os.path.dirname(os.path.realpath(manifest_path))
-            include_path = os.path.join(manifest_dir, include_path)
-        project_dirs.update(build_project_name_dir_dict(include_path))
-
-    projects = parsed_xml.getElementsByTagName('project')
-    for project in projects:
+    for project in manifest_xml.getElementsByTagName('project'):
         name = project.getAttribute('name')
         path = project.getAttribute('path')
         if path:
@@ -301,15 +295,14 @@ def _sh_quote_commands(cmds):
 
 def _main_bash(args):
     """Print the bash command to pull the change lists."""
-
+    repo_top = find_repo_top(os.getcwd())
+    project_dirs = build_project_name_dir_dict(args.manifest)
     branch_name = _get_local_branch_name_from_args(args)
-
-    manifest_path = _get_manifest_xml_from_args(args)
-    project_dirs = build_project_name_dir_dict(manifest_path)
 
     change_lists = _get_change_lists_from_args(args)
     change_list_groups = group_and_sort_change_lists(change_lists)
 
+    print(_sh_quote_command(['pushd', repo_top]))
     for changes in change_list_groups:
         for change in changes:
             project_dir = project_dirs.get(change.project, change.project)
@@ -319,6 +312,7 @@ def _main_bash(args):
                 change, branch_name, args.merge, args.pick))
             cmds.append(['popd'])
             print(_sh_quote_commands(cmds))
+    print(_sh_quote_command(['popd']))
 
 
 def _do_pull_change_lists_for_project(task):
@@ -329,6 +323,7 @@ def _do_pull_change_lists_for_project(task):
     merge_opt = task_opts['merge_opt']
     pick_opt = task_opts['pick_opt']
     project_dirs = task_opts['project_dirs']
+    repo_top = task_opts['repo_top']
 
     for i, change in enumerate(changes):
         try:
@@ -341,7 +336,7 @@ def _do_pull_change_lists_for_project(task):
         print(change.commit_sha1[0:10], i + 1, cwd)
         cmds = build_pull_commands(change, branch_name, merge_opt, pick_opt)
         for cmd in cmds:
-            proc = run(cmd, cwd=cwd, stderr=PIPE)
+            proc = run(cmd, cwd=os.path.join(repo_top, cwd), stderr=PIPE)
             if proc.returncode != 0:
                 return (change, changes[i + 1:], cmd, proc.stderr)
     return None
@@ -368,11 +363,9 @@ def _print_pull_failures(failures, file=sys.stderr):
 
 def _main_pull(args):
     """Pull the change lists."""
-
+    repo_top = find_repo_top(os.getcwd())
+    project_dirs = build_project_name_dir_dict(args.manifest)
     branch_name = _get_local_branch_name_from_args(args)
-
-    manifest_path = _get_manifest_xml_from_args(args)
-    project_dirs = build_project_name_dir_dict(manifest_path)
 
     # Collect change lists
     change_lists = _get_change_lists_from_args(args)
@@ -384,6 +377,7 @@ def _main_pull(args):
         'merge_opt': args.merge,
         'pick_opt': args.pick,
         'project_dirs': project_dirs,
+        'repo_top': repo_top,
     }
 
     # Run the commands to pull the change lists
@@ -437,14 +431,6 @@ def _parse_args():
                         help='Number of parallel running commands')
 
     return parser.parse_args()
-
-
-def _get_manifest_xml_from_args(args):
-    """Get the path to manifest.xml from args."""
-    manifest_path = args.manifest
-    if not args.manifest:
-        manifest_path = find_manifest_xml(os.getcwd())
-    return manifest_path
 
 
 def _get_change_lists_from_args(args):
