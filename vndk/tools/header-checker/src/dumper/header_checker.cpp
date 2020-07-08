@@ -19,6 +19,7 @@
 #include "utils/command_line_utils.h"
 #include "utils/header_abi_util.h"
 
+#include <clang/Driver/Driver.h>
 #include <clang/Frontend/FrontendActions.h>
 #include <clang/Tooling/CommonOptionsParser.h>
 #include <clang/Tooling/CompilationDatabase.h>
@@ -50,11 +51,11 @@ static llvm::cl::OptionCategory header_checker_category(
     "header-checker options");
 
 static llvm::cl::opt<std::string> header_file(
-    llvm::cl::Positional, llvm::cl::desc("<source.cpp>"), llvm::cl::Required,
+    llvm::cl::Positional, llvm::cl::desc("<source.cpp>"), llvm::cl::Optional,
     llvm::cl::cat(header_checker_category));
 
 static llvm::cl::opt<std::string> out_dump(
-    "o", llvm::cl::value_desc("out_dump"), llvm::cl::Required,
+    "o", llvm::cl::value_desc("out_dump"), llvm::cl::Optional,
     llvm::cl::desc("Specify the reference dump file name"),
     llvm::cl::cat(header_checker_category));
 
@@ -91,6 +92,24 @@ static llvm::cl::opt<TextFormatIR> output_format(
     llvm::cl::init(TextFormatIR::Json),
     llvm::cl::cat(header_checker_category));
 
+static llvm::cl::opt<bool> print_resource_dir(
+    "print-resource-dir",
+    llvm::cl::desc("Print real path to default resource directory"),
+    llvm::cl::Optional, llvm::cl::cat(header_checker_category));
+
+int main(int argc, const char **argv);
+
+static bool PrintResourceDir(const char *argv_0) {
+  std::string program_path =
+      llvm::sys::fs::getMainExecutable(argv_0, (void *)main);
+  if (program_path.empty()) {
+    llvm::errs() << "Failed to get program path\n";
+    return false;
+  }
+  llvm::outs() << clang::driver::Driver::GetResourcesPath(program_path) << "\n";
+  return true;
+}
+
 int main(int argc, const char **argv) {
   HideIrrelevantCommandLineOptions(header_checker_category);
 
@@ -112,8 +131,29 @@ int main(int argc, const char **argv) {
   }
 
   // Parse the command line options
-  llvm::cl::ParseCommandLineOptions(
-      fixed_argv.GetArgc(), fixed_argv.GetArgv(), "header-checker");
+  bool is_command_valid = llvm::cl::ParseCommandLineOptions(
+      fixed_argv.GetArgc(), fixed_argv.GetArgv(), "header-checker",
+      &llvm::errs());
+
+  if (print_resource_dir) {
+    bool ok = PrintResourceDir(fixed_argv.GetArgv()[0]);
+    ::exit(ok ? 0 : 1);
+  }
+
+  // Check required arguments after handling -print-resource-dir.
+  if (header_file.empty()) {
+    llvm::errs() << "ERROR: Expect exactly one positional argument\n";
+    is_command_valid = false;
+  } else if (!llvm::sys::fs::exists(header_file)) {
+    llvm::errs() << "ERROR: Source file \"" << header_file
+                 << "\" is not found\n";
+    is_command_valid = false;
+  }
+
+  if (out_dump.empty()) {
+    llvm::errs() << "ERROR: Expect exactly one -o=<out_dump>\n";
+    is_command_valid = false;
+  }
 
   // Print an error message if we failed to create the compilation database
   // from the command line arguments. This check is intentionally performed
@@ -125,12 +165,10 @@ int main(int argc, const char **argv) {
     } else {
       llvm::errs() << "ERROR: " << cmdline_error_msg << "\n";
     }
-    ::exit(1);
+    is_command_valid = false;
   }
 
-  // Input header file existential check.
-  if (!llvm::sys::fs::exists(header_file)) {
-    llvm::errs() << "ERROR: Header file \"" << header_file << "\" not found\n";
+  if (!is_command_valid) {
     ::exit(1);
   }
 
