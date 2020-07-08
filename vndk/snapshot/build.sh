@@ -15,17 +15,40 @@
 # limitations under the License.
 #
 
+function die {
+  echo "$0: $*"
+  exit 1
+}
+
+function usage {
+  cat <<EOF
+Usage: $0 [OPTION]
+Build VNDK snapshots for all arches (arm64, arm, x86_64, x86).
+
+  -a, --build-artifacts   include exported header files and flags
+  -h, --help              display this help and exit
+
+EOF
+  exit
+}
+
+additional_option=
+arches="arm64 arm x86_64 x86"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    (-a|--build-artifacts) additional_option="VNDK_SNAPSHOT_BUILD_ARTIFACTS=true";;
+    (-h|--help) usage;;
+    (*) die "Unknown option: '$1'
+Try '$0 --help' for more information.";;
+  esac
+  shift
+done
+
 export TARGET_BUILD_VARIANT=user
 export BOARD_VNDK_VERSION=current
 
-echo "-----Generating VNDK snapshot for arm64"
-build/soong/soong_ui.bash --make-mode vndk dist TARGET_PRODUCT=aosp_arm64
-
-echo "-----Generating VNDK snapshot for arm"
-build/soong/soong_ui.bash --make-mode vndk dist TARGET_PRODUCT=aosp_arm
-
-echo "-----Generating VNDK snapshot for x86_64"
-build/soong/soong_ui.bash --make-mode vndk dist TARGET_PRODUCT=aosp_x86_64
-
-echo "-----Generating VNDK snapshot for x86"
-build/soong/soong_ui.bash --make-mode vndk dist TARGET_PRODUCT=aosp_x86
+for arch in $arches; do
+  echo "-----Generating VNDK snapshot for $arch"
+  build/soong/soong_ui.bash --make-mode vndk dist TARGET_PRODUCT=aosp_$arch $additional_option
+done
