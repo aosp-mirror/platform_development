@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
 import os
-import unittest
+import shutil
+import subprocess
 import sys
 import tempfile
+import unittest
 
 import_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 import_path = os.path.abspath(os.path.join(import_path, 'utils'))
@@ -379,6 +381,18 @@ class HeaderCheckerTest(unittest.TestCase):
     def test_merge_multi_definitions(self):
         self.prepare_and_absolute_diff_all_archs(
             "libmerge_multi_definitions", "libmerge_multi_definitions")
+
+    def test_print_resource_dir(self):
+        dumper_path = shutil.which("header-abi-dumper")
+        self.assertIsNotNone(dumper_path)
+        dumper_path = os.path.realpath(dumper_path)
+        common_dir = os.path.dirname(os.path.dirname(dumper_path))
+        resource_dir = subprocess.check_output(
+            ["header-abi-dumper", "-print-resource-dir"], text=True,
+            stderr=subprocess.DEVNULL).strip()
+        self.assertEqual(os.path.dirname(resource_dir),
+                         os.path.join(common_dir, "lib64", "clang"))
+        self.assertRegex(os.path.basename(resource_dir), r"^[\d.]+$")
 
 
 if __name__ == '__main__':
