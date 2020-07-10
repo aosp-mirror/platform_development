@@ -48,9 +48,8 @@ The Cargo.toml file should work at least for the host platform.
       --cargo "build --target x86_64-unknown-linux-gnu"
       --cargo "build --tests --target x86_64-unknown-linux-gnu"
 
-Since Android rust builds by default treat all warnings as errors,
-if there are rustc warning messages, this script will add
-deny_warnings:false to the owner crate module in Android.bp.
+If there are rustc warning messages, this script will add
+a warning comment to the owner crate module in Android.bp.
 """
 
 from __future__ import print_function
@@ -552,15 +551,15 @@ class Crate(object):
       self.module_type = 'rust_binary' + host
       self.stem = self.crate_name
       self.module_name = altered_name(self.stem)
-    elif crate_type == 'lib':  # rust_library[_host]_rlib
+    elif crate_type == 'lib':  # rust_library[_host]
       # TODO(chh): should this be rust_library[_host]?
       # Assuming that Cargo.toml do not use both 'lib' and 'rlib',
       # because we map them both to rlib.
-      self.module_type = 'rust_library' + host + '_rlib'
+      self.module_type = 'rust_library' + host
       self.stem = 'lib' + self.crate_name
       self.module_name = altered_name(self.stem)
-    elif crate_type == 'rlib':  # rust_library[_host]_rlib
-      self.module_type = 'rust_library' + host + '_rlib'
+    elif crate_type == 'rlib':  # rust_library[_host]
+      self.module_type = 'rust_library' + host
       self.stem = 'lib' + self.crate_name
       self.module_name = altered_name(self.stem)
     elif crate_type == 'dylib':  # rust_library[_host]_dylib
@@ -620,7 +619,7 @@ class Crate(object):
     if self.stem != self.module_name:
       self.write('    stem: "' + self.stem + '",')
     if self.has_warning and not self.cap_lints:
-      self.write('    deny_warnings: false,')
+      self.write('    // has rustc warnings')
     if self.host_supported and self.device_supported:
       self.write('    host_supported: true,')
     self.write('    crate_name: "' + self.crate_name + '",')
@@ -664,7 +663,7 @@ class Crate(object):
       else:
         rust_libs += '        // ERROR: unknown type of lib ' + lib_name + '\n'
     if rust_libs:
-      self.write('    rlibs: [\n' + rust_libs + '    ],')
+      self.write('    rustlibs: [\n' + rust_libs + '    ],')
     # Are all dependent .so files proc_macros?
     # TODO(chh): Separate proc_macros and dylib.
     self.dump_android_property_list('proc_macros', '"lib%s"', so_libs)
