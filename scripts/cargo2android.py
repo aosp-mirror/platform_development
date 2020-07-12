@@ -61,13 +61,26 @@ import re
 import sys
 
 RENAME_MAP = {
-    # This map includes all changes to the default rust library module
-    # names to resolve name conflicts or avoid confusion.
+    # This map includes all changes to the default rust module names
+    # to resolve name conflicts, avoid confusion, or work as plugin.
     'libbacktrace': 'libbacktrace_rust',
     'libgcc': 'libgcc_rust',
     'liblog': 'liblog_rust',
     'libsync': 'libsync_rust',
     'libx86_64': 'libx86_64_rust',
+    'protoc_gen_rust': 'protoc-gen-rust',
+}
+
+RENAME_STEM_MAP = {
+    # This map includes all changes to the default rust module stem names,
+    # which is used for output files when different from the module name.
+    'protoc_gen_rust': 'protoc-gen-rust',
+}
+
+RENAME_DEFAULTS_MAP = {
+    # This map includes all changes to the default prefix of rust_default
+    # module names, to avoid conflict with existing Android modules.
+    'libc': 'rust_libc',
 }
 
 # Header added to all generated Android.bp files.
@@ -107,6 +120,14 @@ VERSION_SUFFIX_PAT = re.compile(r'^(.*)-[0-9]+\.[0-9]+\.[0-9]+$')
 
 def altered_name(name):
   return RENAME_MAP[name] if (name in RENAME_MAP) else name
+
+
+def altered_stem(name):
+  return RENAME_STEM_MAP[name] if (name in RENAME_STEM_MAP) else name
+
+
+def altered_defaults(name):
+  return RENAME_DEFAULTS_MAP[name] if (name in RENAME_DEFAULTS_MAP) else name
 
 
 def is_build_crate_name(name):
@@ -172,6 +193,7 @@ class Crate(object):
     # Android module properties derived from rustc parameters.
     self.module_name = ''  # unique in Android build system
     self.module_type = ''  # rust_{binary,library,test}[_host] etc.
+    self.defaults = ''  # rust_defaults used by rust_test* modules
     self.root_pkg = ''  # parent package name of a sub/test packge, from -L
     self.srcs = list()  # main_src or merged multiple source files
     self.stem = ''  # real base name of output file
@@ -407,6 +429,8 @@ class Crate(object):
     if self.target:
       self.device_supported = True
     self.host_supported = True  # assume host supported for all builds
+    if self.runner.args.no_host:  # unless --no-host was specified
+      self.host_supported = False
     self.cfgs = sorted(set(self.cfgs))
     self.features = sorted(set(self.features))
     self.codegens = sorted(set(self.codegens))
@@ -495,14 +519,67 @@ class Crate(object):
     dump_list('//  -l (dylib) = %s', self.shared_libs)
 
   def dump_android_module(self):
-    # Dump one Android module per crate_type.
+    """Dump one or more Android module definition, depending on crate_types."""
     if len(self.crate_types) == 1:
-      # do not change self.stem or self.module_name
-      self.dump_one_android_module(self.crate_types[0])
+      self.dump_single_type_android_module()
       return
+    if 'test' in self.crate_types:
+      self.write('\nERROR: multiple crate types cannot include test type')
+      return
+    # Dump one Android module per crate_type.
     for crate_type in self.crate_types:
       self.decide_one_module_type(crate_type)
       self.dump_one_android_module(crate_type)
+
+  def dump_defaults_module(self):
+    """Dump a rust_defaults module to be shared by other modules."""
+    name = altered_defaults(self.root_pkg) + '_defaults'
+    name = self.runner.claim_module_name(name, self, 0)
+    self.defaults = name
+    self.write('\nrust_defaults {')
+    self.write('    name: "' + name + '",')
+    self.write('    crate_name: "' + self.crate_name + '",')
+    if 'test' in self.crate_types:
+      self.write('    test_suites: ["general-tests"],')
+      self.write('    auto_gen_config: true,')
+    self.dump_edition_flags_libs()
+    self.write('}')
+
+  def dump_single_type_android_module(self):
+    """Dump one simple Android module, which has only one crate_type."""
+    crate_type = self.crate_types[0]
+    if crate_type != 'test':
+      # do not change self.stem or self.module_name
+      self.dump_one_android_module(crate_type)
+      return
+    # Dump one test module per source file, and separate host and device tests.
+    # crate_type == 'test'
+    if (self.host_supported and self.device_supported) or len(self.srcs) > 1:
+      self.srcs = sorted(set(self.srcs))
+      self.dump_defaults_module()
+    saved_srcs = self.srcs
+    for src in saved_srcs:
+      self.srcs = [src]
+      saved_device_supported = self.device_supported
+      saved_host_supported = self.host_supported
+      saved_main_src = self.main_src
+      self.main_src = src
+      if saved_host_supported:
+        self.device_supported = False
+        self.host_supported = True
+        self.module_name = self.test_module_name()
+        self.decide_one_module_type(crate_type)
+        self.dump_one_android_module(crate_type)
+      if saved_device_supported:
+        self.device_supported = True
+        self.host_supported = False
+        self.module_name = self.test_module_name()
+        self.decide_one_module_type(crate_type)
+        self.dump_one_android_module(crate_type)
+      self.host_supported = saved_host_supported
+      self.device_supported = saved_device_supported
+      self.main_src = saved_main_src
+    self.srcs = saved_srcs
 
   def dump_one_android_module(self, crate_type):
     """Dump one Android module definition."""
@@ -511,9 +588,14 @@ class Crate(object):
       return
     self.write('\n' + self.module_type + ' {')
     self.dump_android_core_properties()
-    if self.edition:
-      self.write('    edition: "' + self.edition + '",')
-    self.dump_android_property_list('features', '"%s"', self.features)
+    if not self.defaults:
+      self.dump_edition_flags_libs()
+    if self.runner.args.host_first_multilib and self.host_supported and crate_type != 'test':
+      self.write('    compile_multilib: "first",')
+    self.write('}')
+
+  def dump_android_flags(self):
+    """Dump Android module flags property."""
     cfg_fmt = '"--cfg %s"'
     if self.cap_lints:
       allowed = '"--cap-lints ' + self.cap_lints + '"'
@@ -525,19 +607,25 @@ class Crate(object):
         self.write('    ],')
     else:
       self.dump_android_property_list('flags', cfg_fmt, self.cfgs)
+
+  def dump_edition_flags_libs(self):
+    if self.edition:
+      self.write('    edition: "' + self.edition + '",')
+    self.dump_android_property_list('features', '"%s"', self.features)
+    self.dump_android_flags()
     if self.externs:
       self.dump_android_externs()
     self.dump_android_property_list('static_libs', '"lib%s"', self.static_libs)
     self.dump_android_property_list('shared_libs', '"lib%s"', self.shared_libs)
-    self.write('}')
 
   def test_module_name(self):
     """Return a unique name for a test module."""
-    # root_pkg+'_tests_'+(crate_name|source_file_path)
-    suffix = self.crate_name
-    if not suffix:
-      suffix = re.sub('/', '_', re.sub('.rs$', '', self.main_src))
-    return self.root_pkg + '_tests_' + suffix
+    # root_pkg+(_host|_device) + '_test_'+source_file_name
+    suffix = re.sub('/', '_', re.sub('.rs$', '', self.main_src))
+    host_device = '_host'
+    if self.device_supported:
+      host_device = '_device'
+    return self.root_pkg + host_device + '_test_' + suffix
 
   def decide_module_type(self):
     # Use the first crate type for the default/first module.
@@ -549,8 +637,10 @@ class Crate(object):
     host = '' if self.device_supported else '_host'
     if crate_type == 'bin':  # rust_binary[_host]
       self.module_type = 'rust_binary' + host
-      self.stem = self.crate_name
-      self.module_name = altered_name(self.stem)
+      # In rare cases like protobuf-codegen, the output binary name must
+      # be renamed to use as a plugin for protoc.
+      self.stem = altered_stem(self.crate_name)
+      self.module_name = altered_name(self.crate_name)
     elif crate_type == 'lib':  # rust_library[_host]
       # TODO(chh): should this be rust_library[_host]?
       # Assuming that Cargo.toml do not use both 'lib' and 'rlib',
@@ -581,8 +671,7 @@ class Crate(object):
       self.stem = self.test_module_name()
       # self.stem will be changed after merging with other tests.
       # self.stem is NOT used for final test binary name.
-      # rust_test uses each source file base name as its output file name,
-      # unless crate_name is specified by user in Cargo.toml.
+      # rust_test uses each source file base name as part of output file name.
       # In do_merge, this function is called again, with a module_name.
       # We make sure that the module name is unique in each package.
       if self.module_name:
@@ -616,19 +705,23 @@ class Crate(object):
   def dump_android_core_properties(self):
     """Dump the module header, name, stem, etc."""
     self.write('    name: "' + self.module_name + '",')
+    # see properties shared by dump_defaults_module
+    if self.defaults:
+      self.write('    defaults: ["' + self.defaults + '"],')
     if self.stem != self.module_name:
       self.write('    stem: "' + self.stem + '",')
     if self.has_warning and not self.cap_lints:
       self.write('    // has rustc warnings')
     if self.host_supported and self.device_supported:
       self.write('    host_supported: true,')
-    self.write('    crate_name: "' + self.crate_name + '",')
+    if not self.defaults:
+      self.write('    crate_name: "' + self.crate_name + '",')
     if len(self.srcs) > 1:
       self.srcs = sorted(set(self.srcs))
       self.dump_android_property_list('srcs', '"%s"', self.srcs)
     else:
       self.write('    srcs: ["' + self.main_src + '"],')
-    if 'test' in self.crate_types:
+    if 'test' in self.crate_types and not self.defaults:
       # self.root_pkg can have multiple test modules, with different *_tests[n]
       # names, but their executables can all be installed under the same _tests
       # directory. When built from Cargo.toml, all tests should have different
@@ -660,8 +753,8 @@ class Crate(object):
         rust_libs += '        "' + altered_name('lib' + lib_name) + '",\n'
       elif lib.endswith('.so'):
         so_libs.append(lib_name)
-      else:
-        rust_libs += '        // ERROR: unknown type of lib ' + lib_name + '\n'
+      elif lib != 'proc_macro':  # --extern proc_macro is special and ignored
+        rust_libs += '        // ERROR: unknown type of lib ' + lib + '\n'
     if rust_libs:
       self.write('    rustlibs: [\n' + rust_libs + '    ],')
     # Are all dependent .so files proc_macros?
@@ -869,13 +962,16 @@ class Runner(object):
       self.cargo = ['clean'] + args.cargo
     else:
       self.cargo = ['clean', 'build']
+      if args.no_host:  # do not run "cargo build" for host
+        self.cargo = ['clean']
       default_target = '--target x86_64-unknown-linux-gnu'
       if args.device:
         self.cargo.append('build ' + default_target)
         if args.tests:
-          self.cargo.append('build --tests')
+          if not args.no_host:
+            self.cargo.append('build --tests')
           self.cargo.append('build --tests ' + default_target)
-      elif args.tests:
+      elif args.tests and not args.no_host:
         self.cargo.append('build --tests')
 
   def init_bp_file(self, name):
@@ -1137,6 +1233,17 @@ def parse_args():
       action='store_true',
       default=False,
       help='run cargo also for a default device target')
+  parser.add_argument(
+      '--no-host',
+      action='store_true',
+      default=False,
+      help='do not run cargo for the host; only for the device target')
+  parser.add_argument(
+      '--host-first-multilib',
+      action='store_true',
+      default=False,
+      help=('add a compile_multilib:"first" property ' +
+            'to Android.bp host modules.'))
   parser.add_argument(
       '--features',
       type=str,
