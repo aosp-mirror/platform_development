@@ -142,6 +142,13 @@ export default {
       // Update anything that is required to change when item changes.
       this.updateCollapsedDiffClass();
     },
+    hasDiff(hasDiff) {
+      if (!hasDiff) {
+        this.collapseDiffClass = null;
+      } else {
+        this.updateCollapsedDiffClass();
+      }
+    },
     currentTimestamp() {
       // Update anything that is required to change when time changes.
       this.updateCollapsedDiffClass();
@@ -318,6 +325,9 @@ export default {
     },
   },
   computed: {
+    hasDiff() {
+      return this.item?.diff !== undefined;
+    },
     stableId() {
       return this.item?.stableId;
     },
