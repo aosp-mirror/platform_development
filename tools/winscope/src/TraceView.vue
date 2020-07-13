@@ -28,6 +28,7 @@
           >
             Show Diff
           </md-checkbox>
+          <md-checkbox v-model="store.simplifyNames">Simplify names</md-checkbox>
           <md-checkbox v-model="store.onlyVisible">Only visible</md-checkbox>
           <md-checkbox v-model="store.flattened">Flat</md-checkbox>
           <md-field md-inline class="filter">
@@ -44,6 +45,7 @@
           :flattened="store.flattened"
           :items-clickable="true"
           :useGlobalCollapsedState="true"
+          :simplify-names="store.simplifyNames"
           ref="hierarchy"
         />
       </flat-card>

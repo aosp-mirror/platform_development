@@ -90,6 +90,7 @@ export default {
       store: LocalStore('app', {
         flattened: false,
         onlyVisible: false,
+        simplifyNames: true,
         displayDefaults: true,
         navigationStyle: NAVIGATION_STYLE.GLOBAL,
       }),
