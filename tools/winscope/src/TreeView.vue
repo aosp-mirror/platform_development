@@ -325,7 +325,7 @@ export default {
       return this.$store.state.currentTimestamp;
     },
     isCollapsed() {
-      if (this.item.children?.length === 0) {
+      if (!this.item.children || this.item.children?.length === 0) {
         return false;
       }
 
@@ -363,7 +363,7 @@ export default {
       return this.applyingFlattened ? this.item.flattened : this.item.children;
     },
     isLeaf() {
-      return !this.children || this.children?.length == 0;
+      return !this.children || this.children.length === 0;
     },
     isClickable() {
       return !this.isLeaf || this.itemsClickable;
