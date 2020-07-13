@@ -1,5 +1,18 @@
 <template>
-  <div class="entry" :class="{inactive: !source.occured}">
+  <div class="entry" :class="[{inactive: !source.occured}, source.level.toLowerCase()]">
+    <div class="level-column">
+      <div>
+        <div class="icon" v-if="source.level.toLowerCase() === 'verbose'">
+          v
+        </div>
+        <i class="material-icons icon" v-else>
+          {{ levelIcons[source.level.toLowerCase()] }}
+        </i>
+        <md-tooltip md-direction="right" style="margin-left: -15px">
+          {{ source.level.toLowerCase() }}
+        </md-tooltip>
+      </div>
+    </div>
     <div class="time-column">
       <a @click="setTimelineTime(source.timestamp)" class="time-link">
         {{source.time}}
@@ -13,7 +26,7 @@
     </div>
     <div class="tag-column">{{source.tag}}</div>
     <div class="at-column">{{source.at}}</div>
-    <div class="text-column">{{source.text}}</div>
+    <div class="message-column">{{source.text}}</div>
   </div>
 </template>
 
@@ -31,6 +44,18 @@ export default {
       }
     }
   },
+  data() {
+    return {
+      levelIcons: {
+        'info': 'info_outline',
+        'debug': 'help_outline',
+        'verbose': 'assignment',
+        'warn': 'warning',
+        'error': 'error',
+        'wtf': 'bolt',
+      }
+    };
+  },
   methods: {
     setTimelineTime(timestamp) {
       this.$store.dispatch('updateTimelineTime', timestamp);
@@ -39,6 +64,15 @@ export default {
 }
 </script>
 <style scoped>
+.level-column {
+  width: 2em;
+  display: inline-flex;
+}
+
+.level-column > div {
+  align-self: start;
+}
+
 .time-column {
   display: inline-flex;
   width: 13em;
@@ -49,8 +83,8 @@ export default {
 }
 
 .tag-column {
-  width: 12em;
-  min-width: 12em;
+  width: 11em;
+  min-width: 11em;
 }
 
 .at-column {
@@ -58,7 +92,7 @@ export default {
   min-width: 30em;
 }
 
-.text-column {
+.message-column {
   min-width: 50em;
   flex-grow: 1;
   word-wrap: break-word;
@@ -99,5 +133,41 @@ a {
   margin-left: 5px;
   font-size: 10px;
   align-self: flex-start;
+}
+
+.entry.warn, .entry.warn > div {
+  background: #FFE0B2;
+}
+
+.entry.warn.inactive, .entry.warn.inactive > div {
+  background: #FFF3E0;
+}
+
+.entry.error, .entry.error > div,
+.entry.wtf, .entry.wtf > div {
+  background: #FFCCBC;
+}
+
+.entry.error.inactive, .entry.error.inactive > div,
+.entry.wtf.inactive, .entry.wtf.inactive > div {
+  background: #FBE9E7;
+}
+
+.level-column .icon {
+  font-size: 15px;
+  color: gray;
+  width: 15px;
+  height: 15px;
+  text-align: center;
+}
+
+.entry.warn .level-column .icon {
+  color: #FBC02D;
+  font-size: 20px;
+}
+
+.entry.error .level-column .icon, .entry.wtf .level-column .icon  {
+  color: #FF6E40;
+  font-size: 20px;
 }
 </style>
