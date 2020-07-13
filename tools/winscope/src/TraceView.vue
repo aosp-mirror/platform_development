@@ -184,9 +184,9 @@ export default {
         item.name,
         stableIdCompatibilityFixup(item)
       ).setOptions({
-          skip: item.skip,
-          formatter: formatProto,
-        });
+        skip: item.skip,
+        formatter: formatProto,
+      });
 
       if (this.showPropertiesDiff) {
         const prevItem = this.getItemFromPrevTree(item);
