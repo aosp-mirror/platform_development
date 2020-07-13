@@ -164,6 +164,7 @@ export default {
       lastSelectedStableId: null,
       bounds: {},
       rects: [],
+      item: null,
       tree: null,
       highlight: null,
       showHierachyDiff: true,
@@ -200,27 +201,22 @@ export default {
         this.itemSelected(item);
       }
     },
-    setData(item) {
-      this.tree = item;
-
-      if (this.showHierachyDiff && this.diffVisualizationAvailable) {
-        // Required pre-processing to match algo
-        // TODO: Clean this up somehow
-        if (this.file.type == DATA_TYPES.SURFACE_FLINGER) {
-          item.obj.id = -1; // TODO: Make sure this ID can never be used by other objects
-          item.children[0].obj.id = 0;
-        }
-
-        this.tree = new DiffGenerator(item)
-          .compareWith(this.getDataWithOffset(-1))
-          .withUniqueNodeId(node => {
-            return node.stableId;
-          })
-          .withModifiedCheck(defaultModifiedCheck)
-          .generateDiffTree();
-      } else {
-        this.tree = item;
+    generateTreeFromItem(item) {
+      if (!this.showHierachyDiff || !this.diffVisualizationAvailable) {
+        return item;
       }
+
+      return new DiffGenerator(this.item)
+        .compareWith(this.getDataWithOffset(-1))
+        .withUniqueNodeId(node => {
+          return node.stableId;
+        })
+        .withModifiedCheck(defaultModifiedCheck)
+        .generateDiffTree();
+    },
+    setData(item) {
+      this.item = item;
+      this.tree = this.generateTreeFromItem(item);
 
       this.rects = [...item.rects].reverse();
       this.bounds = item.bounds;
@@ -298,11 +294,14 @@ export default {
     selectedIndex() {
       this.setData(this.file.data[this.file.selectedIndex]);
     },
+    showHierachyDiff() {
+      this.tree = this.generateTreeFromItem(this.item);
+    },
     showPropertiesDiff() {
       if (this.hierarchySelected) {
         this.selectedTree = this.getTransformedProperties(this.hierarchySelected);
       }
-    }
+    },
   },
   props: ['store', 'file'],
   computed: {
