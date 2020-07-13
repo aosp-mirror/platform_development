@@ -459,7 +459,7 @@ export default {
 .children {
   /* Aligns border with collapse arrows */
   margin-left: 12px;
-  padding-left: 12px;
+  padding-left: 11px;
   border-left: 1px solid rgb(238, 238, 238);
   margin-top: 0px;
 }
