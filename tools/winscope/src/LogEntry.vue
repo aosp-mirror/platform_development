@@ -49,18 +49,23 @@ export default {
 }
 
 .tag-column {
-  width: 10em;
+  width: 12em;
+  min-width: 12em;
 }
 
 .at-column {
   width: 30em;
+  min-width: 30em;
 }
 
 .text-column {
-  white-space: nowrap;
+  min-width: 50em;
+  flex-grow: 1;
+  word-wrap: break-word;
 }
 
 .entry {
+  width: 100%;
   display: inline-flex;
 }
 
@@ -93,5 +98,6 @@ a {
   padding: 0 5px;
   margin-left: 5px;
   font-size: 10px;
+  align-self: flex-start;
 }
 </style>
