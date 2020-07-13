@@ -74,12 +74,15 @@ import LocalStore from './localstore.js'
 import DataAdb from './DataAdb.vue'
 import FileType from './mixins/FileType.js'
 import SaveAsZip from './mixins/SaveAsZip'
+import FocusedDataViewFinder from './mixins/FocusedDataViewFinder'
+import {DIRECTION} from './utils/utils'
+import {NAVIGATION_STYLE} from './utils/consts';
 
 const APP_NAME = "Winscope";
 
 export default {
   name: 'app',
-  mixins: [FileType, SaveAsZip],
+  mixins: [FileType, SaveAsZip, FocusedDataViewFinder],
   data() {
     return {
       title: APP_NAME,
@@ -88,6 +91,7 @@ export default {
         flattened: false,
         onlyVisible: false,
         displayDefaults: true,
+        navigationStyle: NAVIGATION_STYLE.GLOBAL,
       }),
       overlayRef: "overlay",
     }
@@ -104,9 +108,6 @@ export default {
   methods: {
     clear() {
       this.$store.commit('clearFiles');
-      this.activeDataView = null;
-      this.activeFile = null;
-      this.video = null;
     },
     onDataViewFocus(file) {
       this.$store.commit('setActiveFile', file);
@@ -115,9 +116,9 @@ export default {
     onKeyDown(event) {
       event = event || window.event;
       if (event.keyCode == 37 /* left */ ) {
-        this.$store.dispatch('advanceTimeline', -1, this.$store.state.excludeFromTimeline);
+        this.$store.dispatch('advanceTimeline', DIRECTION.BACKWARD);
       } else if (event.keyCode == 39 /* right */ ) {
-        this.$store.dispatch('advanceTimeline', 1, this.$store.state.excludeFromTimeline);
+        this.$store.dispatch('advanceTimeline', DIRECTION.FORWARD);
       } else if (event.keyCode == 38 /* up */ ) {
         this.$refs[this.activeView][0].arrowUp();
       } else if (event.keyCode == 40 /* down */ ) {
@@ -130,6 +131,7 @@ export default {
     },
     onDataReady(files) {
       this.$store.dispatch('setFiles', files);
+      this.updateFocusedView();
     },
     setStatus(status) {
       if (status) {
@@ -141,7 +143,7 @@ export default {
   },
   computed: {
     files() {
-      return this.$store.state.files;
+      return this.$store.getters.sortedFiles;
     },
     prettyDump() {
       return JSON.stringify(this.dump, null, 2);

@@ -25,4 +25,9 @@ function stableIdCompatibilityFixup(item) {
     return item.stableId;
 }
 
-export { findLastMatchingSorted, stableIdCompatibilityFixup }
+const DIRECTION = Object.freeze({
+    BACKWARD: -1,
+    FORWARD: 1,
+});
+
+export { DIRECTION, findLastMatchingSorted, stableIdCompatibilityFixup }
