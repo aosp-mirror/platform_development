@@ -16,6 +16,7 @@
 
 import { transform, nanos_to_string, get_visible_chip } from './transform.js'
 import { fill_occlusion_state, fill_inherited_state } from './sf_visibility.js';
+import { getSimplifiedLayerName } from './utils/names';
 
 var RELATIVE_Z_CHIP = {
   short: 'RelZ',
@@ -90,10 +91,14 @@ function transform_layer(layer) {
 
   const rect = layer.visible && layer.bounds !== null ? get_rect(layer) : undefined;
 
+  const simplifiedLayerName = getSimplifiedLayerName(layer.name);
+  const shortName = simplifiedLayerName ? layer.id + ": " + simplifiedLayerName : undefined;
+
   return transform({
     obj: layer,
     kind: '',
     name: layer.id + ": " + layer.name,
+    shortName,
     children: [[layer.resolvedChildren, transform_layer]],
     rect,
     undefined /* bounds */,
