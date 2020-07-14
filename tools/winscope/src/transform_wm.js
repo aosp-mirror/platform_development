@@ -16,13 +16,14 @@
 
 import { transform, nanos_to_string, get_visible_chip } from './transform.js'
 import { CompatibleFeatures } from './utils/compatibility.js'
+import { getComponentClassName } from './utils/names';
 
 function transform_window(entry) {
-  var chips = [];
-  var renderIdentifier = (id) => shortenComponentName(id.title) + "@" + id.hashCode;
-  var visible = entry.windowContainer.visible;
+  const chips = [];
+  const renderIdentifier = (id) => shortenComponentName(id.title) + "@" + id.hashCode;
+  const visible = entry.windowContainer.visible;
   function transform_rect(rect, label) {
-    var r = rect || {};
+    const r = rect || {};
     return {
       left: r.left || 0,
       right: r.right || 0,
@@ -37,9 +38,9 @@ function transform_window(entry) {
     CompatibleFeatures.DiffVisualization = false;
   }
   const identifier = entry.windowContainer?.identifier ?? entry.identifier;
-
-  var name = renderIdentifier(identifier);
-  var rect = transform_rect((entry.windowFrames || entry).frame, name);
+  const name = renderIdentifier(identifier);
+  const shortName = getComponentClassName(identifier.title);
+  let rect = transform_rect((entry.windowFrames || entry).frame, name);
 
   if (visible) {
     chips.push(get_visible_chip());
@@ -51,6 +52,7 @@ function transform_window(entry) {
     obj: entry,
     kind: 'window',
     name,
+    shortName,
     stableId: entry.windowContainer?.identifier?.hashCode,
     children: [
       [entry.childWindows, transform_window],
@@ -68,6 +70,7 @@ function transform_activity_record(entry) {
     obj: entry,
     kind: 'activityRecord',
     name: entry.name,
+    shortName: getComponentClassName(entry.name),
     stableId: entry.windowToken.windowContainer?.identifier?.hashCode,
     children: [
       [entry.windowToken.windows, transform_window],

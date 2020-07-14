@@ -37,6 +37,13 @@
 
     <div class="filters">
       <md-field>
+        <label>Log Levels</label>
+        <md-select v-model="selectedLogLevels" multiple>
+          <md-option v-for="level in logLevels" :value="level">{{ level }}</md-option>
+        </md-select>
+      </md-field>
+
+      <md-field>
         <label>Tags</label>
         <md-select v-model="selectedTags" multiple>
           <md-option v-for="tag in tags" :value="tag">{{ tag }}</md-option>
@@ -60,16 +67,23 @@
       </md-field>
     </div>
 
-    <virtual-list style="height: 600px; overflow-y: auto;"
-      :data-key="'uid'"
-      :data-sources="processedData"
-      :data-component="logEntryComponent"
-      ref="loglist"
-    />
+    <div v-if="processedData.length > 0" style="overflow-y: auto;">
+      <virtual-list style="height: 600px; overflow-y: auto;"
+        :data-key="'uid'"
+        :data-sources="processedData"
+        :data-component="logEntryComponent"
+        ref="loglist"
+      />
+    </div>
+    <div class="no-logs-message" v-else>
+      <md-icon>error_outline</md-icon>
+      <span class="message">No logs founds...</span>
+    </div>
   </md-card-content>
 </template>
 <script>
 import { findLastMatchingSorted } from './utils/utils.js';
+import { logLevel } from './utils/consts';
 import LogEntryComponent from './LogEntry.vue';
 import VirtualList from '../libs/virtualList/VirtualList';
 
@@ -87,18 +101,22 @@ export default {
 
     data.forEach((entry, index) => entry.index = index);
 
+    const logLevels = Object.values(logLevel);
+
     return {
       data,
       isSelected: false,
       prevLastOccuredIndex: -1,
       lastOccuredIndex: 0,
-      selectedTags: Array.from(tags),
+      selectedTags: [],
       selectedSourceFile: null,
       searchInput: null,
       sourceFiles: Object.freeze(Array.from(sourceFiles)),
       tags: Object.freeze(Array.from(tags)),
       pinnedToLatest: true,
       logEntryComponent: LogEntryComponent,
+      logLevels,
+      selectedLogLevels: [],
     }
   },
   methods: {
@@ -127,6 +145,13 @@ export default {
 
       this.$refs.loglist.scrollToOffset(itemOffset - loglistSize + itemSize);
     },
+    getLastOccuredIndex(data, timestamp) {
+      if (this.data.length === 0) {
+          return 0;
+      }
+      return findLastMatchingSorted(data,
+        (array, idx) => array[idx].timestamp <= timestamp);
+    },
   },
   watch: {
     pinnedToLatest(isPinned) {
@@ -138,8 +163,7 @@ export default {
       immediate: true,
       handler(newTimestamp) {
         this.prevLastOccuredIndex = this.lastOccuredIndex;
-        this.lastOccuredIndex = findLastMatchingSorted(this.data,
-          (array, idx) => array[idx].timestamp <= newTimestamp);
+        this.lastOccuredIndex = this.getLastOccuredIndex(this.data, newTimestamp);
 
         if (this.pinnedToLatest) {
           this.scrollToRow(this.lastOccuredVisibleIndex);
@@ -150,14 +174,18 @@ export default {
   props: ['file'],
   computed: {
     lastOccuredVisibleIndex() {
-      return findLastMatchingSorted(this.processedData,
-          (array, idx) => array[idx].timestamp <= this.currentTimestamp);
+      return this.getLastOccuredIndex(this.processedData, this.currentTimestamp);
     },
     currentTimestamp() {
       return this.$store.state.currentTimestamp;
     },
     processedData() {
       const filteredData = this.data.filter(line => {
+        if (this.selectedLogLevels.length > 0 &&
+            !this.selectedLogLevels.includes(line.level.toLowerCase())) {
+          return false;
+        }
+
         if (this.sourceFiles.includes(this.selectedSourceFile)) {
           // Only filter once source file is fully inputed
           if (line.at != this.selectedSourceFile) {
@@ -165,7 +193,7 @@ export default {
           }
         }
 
-        if (!this.selectedTags.includes(line.tag)) {
+        if (this.selectedTags.length > 0 && !this.selectedTags.includes(line.tag)) {
           return false;
         }
 
@@ -245,5 +273,17 @@ export default {
 
 .column-title {
   font-size: 12px;
+}
+
+.no-logs-message {
+  margin: 15px;
+  display: flex;
+  align-content: center;
+  align-items: center;
+}
+
+.no-logs-message .message {
+  margin-left: 10px;
+  font-size: 15px;
 }
 </style>
