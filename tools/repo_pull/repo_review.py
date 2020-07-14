@@ -187,6 +187,14 @@ def main():
 
     # Parse and check the command line options
     args = _parse_args()
+
+    if not args.gerrit:
+        try:
+            args.gerrit = find_gerrit_name()
+        except:
+            print('gerrit instance not found, use [-g GERRIT]')
+            sys.exit(1)
+
     if not _has_task(args):
         print('error: Either --label, --message, --submit, --abandon, '
               '--add-hashtag, --remove-hashtag, --set-topic, --delete-topic, '
