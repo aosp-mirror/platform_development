@@ -37,12 +37,19 @@ Generates privapp-permissions.xml file for priv-apps.
 
 Usage:
     Specify which apk to generate priv-app permissions for. If no apk is \
-specified, this will default to all APKs under "<ANDROID_PRODUCT_OUT>/ \
-system/priv-app and (system/)product/priv-app".
+specified, this will default to all APKs under "<ANDROID_PRODUCT_OUT>/\
+<all the partitions>/priv-app/".
+
+    To specify a target partition(s), use "-p <PARTITION>," where <PARTITION> \
+can be "system", "product", "system/product", "system_ext", \
+"system/system_ext", "system,system/product,vendor,system_ext", etc.
+
+    When using adb, adb pull can take a long time. To see the adb pull \
+progress, use "-v"
 
 Examples:
 
-    For all APKs under $ANDROID_PRODUCT_OUT:
+    For all APKs under $ANDROID_PRODUCT_OUT/<all partitions>/priv-app/:
         # If the build environment has not been set up, do so:
         . build/envsetup.sh
         lunch product_name
@@ -50,17 +57,27 @@ Examples:
         # then use:
         cd development/tools/privapp_permissions/
         ./privapp_permissions.py
+        # or to search for apks in "product" partition
+        ./privapp_permissions.py -p product
+        # or to search for apks in system, product, and vendor partitions
+        ./privapp_permissions.py -p system,product,vendor
 
-    For a given apk:
+    For an APK against $ANDROID_PRODUCT_OUT/<all partitions>/etc/permissions/:
         ./privapp_permissions.py path/to/the.apk
+        # or against /product/etc/permissions/
+        ./privapp_permissions.py path/to/the.apk -p product
 
-    For an APK already on the device:
+    For an APK already on the device against /<all partitions>/etc/permissions/:
         ./privapp_permissions.py device:/device/path/to/the.apk
+        # or against /product/etc/permissions/
+        ./privapp_permissions.py path/to/the.apk -p product
 
-    For all APKs on a device:
+    For all APKs on a device under /<all partitions>/priv-app/:
         ./privapp_permissions.py -d
         # or if more than one device is attached
-        ./privapp_permissions.py -s <ANDROID_SERIAL>\
+        ./privapp_permissions.py -s <ANDROID_SERIAL>
+        # or for all APKs on the "system" partitions
+        ./privapp_permissions.py -d -p system
 """
 
 # An array of all generated temp directories.
@@ -68,6 +85,10 @@ temp_dirs = []
 # An array of all generated temp files.
 temp_files = []
 
+def vprint(enable, message, *args):
+    if enable:
+        # Use stderr to avoid poluting print_xml result
+        sys.stderr.write(message % args + '\n')
 
 class MissingResourceError(Exception):
     """Raised when a dependency cannot be located."""
@@ -76,9 +97,10 @@ class MissingResourceError(Exception):
 class Adb(object):
     """A small wrapper around ADB calls."""
 
-    def __init__(self, path, serial=None):
+    def __init__(self, path, serial=None, verbose=False):
         self.path = path
         self.serial = serial
+        self.verbose = verbose
 
     def pull(self, src, dst=None):
         """A wrapper for `adb -s <SERIAL> pull <src> <dst>`.
@@ -96,18 +118,26 @@ class Adb(object):
             else:
                 _, dst = tempfile.mkstemp()
                 temp_files.append(dst)
-        self.call('pull %s %s' % (src, dst))
+        self.call('pull %s %s' % (src, dst), False, self.verbose)
         return dst
 
-    def call(self, cmdline):
+    def call(self, cmdline, getoutput=True, verbose=False):
         """Calls an adb command.
 
         Throws:
             subprocess.CalledProcessError upon command failure.
         """
         command = '%s -s %s %s' % (self.path, self.serial, cmdline)
-        return get_output(command)
-
+        if getoutput:
+            return get_output(command)
+        else:
+            # Handle verbose mode only when the output is not needed
+            # This is mainly for adb pull, which can take a long time
+            extracmd = ' > /dev/null 2>&1'
+            if verbose:
+                # Use stderr to avoid poluting print_xml result
+                extracmd = ' 1>&2'
+            os.system(command + extracmd)
 
 class Aapt(object):
     def __init__(self, path):
@@ -136,9 +166,16 @@ class Resources(object):
     """
 
     def __init__(self, adb_path=None, aapt_path=None, use_device=None,
-                 serial=None, apks=None):
+                 serial=None, partitions=None, verbose=False,
+                 writetodisk=None, systemfile=None, productfile=None,
+                 apks=None):
         self.adb = Resources._resolve_adb(adb_path)
         self.aapt = Resources._resolve_aapt(aapt_path)
+
+        self.verbose = self.adb.verbose = verbose
+        self.writetodisk = writetodisk
+        self.systemfile = systemfile;
+        self.productfile = productfile;
 
         self._is_android_env = 'ANDROID_PRODUCT_OUT' in os.environ and \
                                'ANDROID_HOST_OUT' in os.environ
@@ -156,21 +193,42 @@ class Resources(object):
                 'You must either set up your build environment, or specify a '
                 'device to run against. See --help for more info.')
 
-        self.system_privapp_apks, self.product_privapp_apks =(
-                self._resolve_apks(apks))
-        self.system_permissions_dir = (
-                self._resolve_sys_path('system/etc/permissions'))
-        self.system_sysconfig_dir = (
-                self._resolve_sys_path('system/etc/sysconfig'))
-        self.product_permissions_dir = (
-                self._resolve_sys_path('product/etc/permissions',
-                                       'system/product/etc/permissions'))
-        self.product_sysconfig_dir = (
-                self._resolve_sys_path('product/etc/sysconfig',
-                                       'system/product/etc/sysconfig'))
+        if apks and (partitions == "all" or partitions.find(',') != -1):
+            # override the partition to "system
+            print('\n# Defaulting the target partition to "system". '
+                  'Use -p option to specify the target partition '
+                  '(must provide one target instead of a list).\n',
+                  file=sys.stderr)
+            partitions = "system"
+
+        if partitions == "all":
+            # This is the default scenario
+            # Find all the partitions where priv-app exists
+            self.partitions = self._get_partitions()
+        else:
+            # Initialize self.partitions with the specified partitions
+            self.partitions = []
+            for p in partitions.split(','):
+                if p.endswith('/'):
+                    p = p[:-1]
+                self.partitions.append(p)
+                # Check if the directory exists
+                self._check_dir(p + '/priv-app')
+
+        vprint(self.verbose,
+                '# Examining the partitions: ' + str(self.partitions))
+
+        # Create dictionary of array (partition as the key)
+        self.privapp_apks = self._resolve_apks(apks, self.partitions)
+        self.permissions_dirs = self._resolve_sys_paths('etc/permissions',
+                                                       self.partitions)
+        self.sysconfig_dirs = self._resolve_sys_paths('etc/sysconfig',
+                                                     self.partitions)
+
+        # Always use the one in /system partition,
+        # as that is the only place we will find framework-res.apk
         self.framework_res_apk = self._resolve_sys_path('system/framework/'
                                                         'framework-res.apk')
-
     @staticmethod
     def _resolve_adb(adb_path):
         """Resolves ADB from either the cmdline argument or the os environment.
@@ -287,21 +345,75 @@ class Resources(object):
                       'devices.', file=sys.stderr)
                 raise
 
-    def _resolve_apks(self, apks):
+    def _get_partitions(self):
+        """Find all the partitions to examine
+
+        Returns:
+            The array of partitions where priv-app exists
+        Raises:
+            MissingResourceError find command over adb shell fails.
+        """
+        if not self.adb.serial:
+            privapp_dirs = get_output('cd  %s; find * -name "priv-app"'
+                                      % os.environ['ANDROID_PRODUCT_OUT']
+                                      + ' -type d | grep -v obj').split()
+        else:
+            try:
+                privapp_dirs = self.adb.call('shell find \'/!(proc)\' \
+                                           -name "priv-app" -type d').split()
+            except subprocess.CalledProcessError:
+                raise MissingResourceError(
+                    '"adb shell find / -name priv-app -type d" did not succeed'
+                    ' on device "%s".' % self.adb.serial)
+
+        # Remove 'priv-app' from the privapp_dirs
+        partitions = []
+        for i in range(len(privapp_dirs)):
+            partitions.append('/'.join(privapp_dirs[i].split('/')[:-1]))
+
+        return partitions
+
+    def _check_dir(self, directory):
+        """Check if a given directory is valid
+
+        Raises:
+            MissingResourceError if a given directory does not exist.
+        """
+        if not self.adb.serial:
+            if not os.path.isdir(os.environ['ANDROID_PRODUCT_OUT']
+                                 + '/' + directory):
+                raise MissingResourceError(
+                    '%s does not exist' % directory)
+        else:
+            try:
+                self.adb.call('shell ls %s' % directory)
+            except subprocess.CalledProcessError:
+                raise MissingResourceError(
+                    '"adb shell ls %s" did not succeed on '
+                    'device "%s".' % (directory, self.adb.serial))
+
+
+    def _resolve_apks(self, apks, partitions):
         """Resolves all APKs to run against.
 
         Returns:
             If no apk is specified in the arguments, return all apks in
-            system/priv-app. Otherwise, returns a list with the specified apk.
+            priv-app in all the partitions.
+            Otherwise, returns a list with the specified apk.
         Throws:
-            MissingResourceError if the specified apk or system/priv-app cannot
-            be found.
+            MissingResourceError if the specified apk or
+            <partition>/priv-app cannot be found.
         """
+        results = {}
         if not apks:
-            return (self._resolve_all_system_privapps(),
-                   self._resolve_all_product_privapps())
+            for p in partitions:
+                results[p] = self._resolve_all_privapps(p)
+            return results
 
-        ret_apks = []
+        # The first element is what is passed via '-p' option
+        # (default is overwritten to 'system' when apk is specified)
+        p = partitions[0]
+        results[p] = []
         for apk in apks:
             if apk.startswith(DEVICE_PREFIX):
                 device_apk = apk[len(DEVICE_PREFIX):]
@@ -311,82 +423,47 @@ class Resources(object):
                     raise MissingResourceError(
                         'File "%s" could not be located on device "%s".' %
                         (device_apk, self.adb.serial))
-                ret_apks.append(apk)
+                results[p].append(apk)
             elif not os.path.isfile(apk):
                 raise MissingResourceError('File "%s" does not exist.' % apk)
             else:
-                ret_apks.append(apk)
-        return ret_apks, None
+               results[p].append(apk)
+        return results
 
-    def _resolve_all_system_privapps(self):
-        """Extract package name and requested permissions."""
-        if self._is_android_env:
-            system_priv_app_dir = (
-                    os.path.join(os.environ['ANDROID_PRODUCT_OUT'],
-                                            'system/priv-app'))
+    def _resolve_all_privapps(self, partition):
+        """Resolves all APKs in <partition>/priv-app
+
+        Returns:
+            Return all apks in <partition>/priv-app
+        Throws:
+            MissingResourceError <partition>/priv-app cannot be found.
+        """
+        if not self.adb.serial:
+            priv_app_dir = os.path.join(os.environ['ANDROID_PRODUCT_OUT'],
+                                        partition + '/priv-app')
         else:
             try:
-                system_priv_app_dir = self.adb.pull('/system/priv-app/')
+                priv_app_dir = self.adb.pull(partition + '/priv-app/')
             except subprocess.CalledProcessError:
                 raise MissingResourceError(
-                    'Directory "/system/priv-app" could not be pulled from on '
-                    'device "%s".' % self.adb.serial)
+                    'Directory "%s/priv-app" could not be pulled from on '
+                    'device "%s".' % (partition, self.adb.serial))
+        return get_output('find %s -name "*.apk"' % priv_app_dir).split()
 
-        return get_output('find %s -name "*.apk"' % system_priv_app_dir).split()
-
-    def _resolve_all_product_privapps(self):
-        """Extract package name and requested permissions."""
-        if self._is_android_env:
-            product_priv_app_dir = (
-                    os.path.join(os.environ['ANDROID_PRODUCT_OUT'],
-                                            'product/priv-app'))
-            if not os.path.exists(product_priv_app_dir):
-                product_priv_app_dir  = (
-                        os.path.join(os.environ['ANDROID_PRODUCT_OUT'],
-                                                'system/product/priv-app'))
-        else:
-            try:
-                product_priv_app_dir = self.adb.pull('/product/priv-app/')
-            except subprocess.CalledProcessError:
-                print('Warning: Directory "/product/priv-app" could not be '
-                        'pulled from on device "%s". Trying '
-                        '"/system/product/priv-app"' % self.adb.serial,
-                        file=sys.stderr)
-                try:
-                    product_priv_app_dir = (
-                            self.adb.pull('/system/product/priv-app/'))
-                except subprocess.CalledProcessError:
-                    raise MissingResourceError(
-                        'Directory "/system/product/priv-app" could not be '
-                        'pulled from on device "%s".' % self.adb.serial)
-
-        return get_output(
-                'find %s -name "*.apk"' % product_priv_app_dir).split()
-
-    def _resolve_sys_path(self, file_path, fallback_file_path=None):
+    def _resolve_sys_path(self, file_path):
         """Resolves a path that is a part of an Android System Image."""
-        if self._is_android_env:
-            sys_path = (
-                    os.path.join(os.environ['ANDROID_PRODUCT_OUT'], file_path))
-            if not os.path.exists(sys_path):
-                sys_path = (
-                        os.path.join(os.environ['ANDROID_PRODUCT_OUT'],
-                        fallback_file_path))
+        if not self.adb.serial:
+            return os.path.join(os.environ['ANDROID_PRODUCT_OUT'], file_path)
         else:
-            try:
-                sys_path = self.adb.pull(file_path)
-            except subprocess.CalledProcessError:
-                print('Warning: Directory %s could not be pulled from on device'
-                        '"%s". Trying "/system/product/priv-app"'
-                        % (file_path, self.adb.serial), file=sys.stderr)
-                try:
-                    sys_path = self.adb.pull(fallback_file_path)
-                except subprocess.CalledProcessError:
-                    raise MissingResourceError(
-                        'Directory %s could not be pulled from on '
-                        'device "%s".' % (fallback_file_path, self.adb.serial))
+            return self.adb.pull(file_path)
 
-        return sys_path
+    def _resolve_sys_paths(self, file_path, partitions):
+        """Resolves a path that is a part of an Android System Image, for the
+        specified partitions."""
+        results = {}
+        for p in partitions:
+            results[p] = self._resolve_sys_path(p + '/' + file_path)
+        return results
 
 
 def get_output(command):
@@ -416,10 +493,19 @@ def parse_args():
              'details.'
     )
     parser.add_argument(
+        '-v',
+        '--verbose',
+        action='store_true',
+        default=False,
+        required=False,
+        help='Whether or not to enable more verbose logs such as '
+             'adb pull progress to be shown'
+    )
+    parser.add_argument(
         '--adb',
         type=str,
         required=False,
-        metavar='<ADB_PATH',
+        metavar='<ADB_PATH>',
         help='Path to adb. If none specified, uses the environment\'s adb.'
     )
     parser.add_argument(
@@ -440,6 +526,19 @@ def parse_args():
              'adb. If multiple devices are found, it will default to '
              '$ANDROID_SERIAL. Otherwise, the program will exit with error '
              'code 1. If -s is given, -d is not needed.'
+    )
+    parser.add_argument(
+        '-p',
+        '--partitions',
+        type=str,
+        required=False,
+        default='all',
+        metavar='<PARTITION>',
+        help='The target partition(s) to examine permissions for. '
+             'It is set to "all" by default, which means all the partitions '
+             'where priv-app diectory exists will be examined'
+             'Use "," as a delimiter when specifying multiple partitions. '
+             'E.g. "system,product"'
     )
     parser.add_argument(
         'apks',
@@ -473,25 +572,65 @@ def parse_args():
 
     return cmd_args
 
-def create_permission_file(resources, privapp_apks, permissions_dir,
-            sysconfig_dir, file=None):
-    # Parse base XML files in /etc dir, permissions listed there don't have
-    # to be re-added
-    base_permissions = {}
-    base_xml_files = itertools.chain(list_xml_files(permissions_dir),
-                                     list_xml_files(sysconfig_dir))
-    for xml_file in base_xml_files:
-        parse_config_xml(xml_file, base_permissions)
 
+def create_permission_file(resources):
+    """Prints out/creates permission file with missing permissions."""
+    # First extract privileged permissions from framework-res.apk
     priv_permissions = extract_priv_permissions(resources.aapt,
                                                 resources.framework_res_apk)
 
+    results = {}
+    for p in resources.partitions:
+        results[p], apps_redefine_base = \
+            generate_missing_permissions(resources, priv_permissions, p)
+        enable_print = True
+        vprint(enable_print, '#' * 80)
+        vprint(enable_print, '#')
+        if resources.writetodisk:
+            # Check if it is likely a product partition
+            if p.endswith('product'):
+                out_file_name = resources.productfile;
+            # Check if it is a system partition
+            elif p.endswith('system'):
+                out_file_name = resources.systemfile
+            # Fallback to the partition name itself
+            else:
+                out_file_name = str(p).replace('/', '_') + '.xml'
+
+            out_file = open(out_file_name, 'w')
+            vprint(enable_print, '# %s XML written to %s:', p, out_file_name)
+            vprint(enable_print, '#')
+            vprint(enable_print, '#' * 80)
+            print_xml(results[p], apps_redefine_base, p, out_file)
+            out_file.close()
+        else:
+            vprint(enable_print, '# %s XML:', p)
+            vprint(enable_print, '#')
+            vprint(enable_print, '#' * 80)
+
+        # Print it to stdout regardless of whether writing to a file or not
+        print_xml(results[p], apps_redefine_base, p)
+
+
+def generate_missing_permissions(resources, priv_permissions, partition):
+    """Generates the missing permissions for the specified partition."""
+    # Parse base XML files in /etc dir, permissions listed there don't have
+    # to be re-added
+    base_permissions = {}
+    base_xml_files = itertools.chain(
+        list_xml_files(resources.permissions_dirs[partition]),
+        list_xml_files(resources.sysconfig_dirs[partition]))
+
+    for xml_file in base_xml_files:
+        parse_config_xml(xml_file, base_permissions)
+
     apps_redefine_base = []
     results = {}
-    for priv_app in privapp_apks:
+    for priv_app in resources.privapp_apks[partition]:
         pkg_info = extract_pkg_and_requested_permissions(resources.aapt,
                                                          priv_app)
         pkg_name = pkg_info['package_name']
+        # get intersection of what's requested by app and by framework
         priv_perms = get_priv_permissions(pkg_info['permissions'],
                                           priv_permissions)
         # Compute diff against permissions defined in base file
@@ -504,13 +643,14 @@ def create_permission_file(resources, privapp_apks, permissions_dir,
         if priv_perms:
             results[pkg_name] = sorted(priv_perms)
 
-    print_xml(results, apps_redefine_base)
-    if file is not None:
-        print_xml(results, apps_redefine_base, file)
+    return results, apps_redefine_base
 
-def print_xml(results, apps_redefine_base, fd=sys.stdout):
+
+def print_xml(results, apps_redefine_base, partition, fd=sys.stdout):
     """Print results to the given file."""
-    fd.write('<?xml version="1.0" encoding="utf-8"?>\n<permissions>\n')
+    fd.write('<?xml version="1.0" encoding="utf-8"?>\n')
+    fd.write('<!-- for the partition: /%s -->\n' % partition)
+    fd.write('<permissions>\n')
     for package_name in sorted(results):
         if package_name in apps_redefine_base:
             fd.write('    <!-- Additional permissions on top of %s -->\n' %
@@ -641,7 +781,6 @@ def cleanup():
     del temp_dirs[:]
     del temp_files[:]
 
-
 if __name__ == '__main__':
     args = parse_args()
     try:
@@ -650,45 +789,14 @@ if __name__ == '__main__':
             adb_path=args.adb,
             use_device=args.device,
             serial=args.serial,
+            partitions=args.partitions,
+            verbose=args.verbose,
+            writetodisk=args.writetodisk,
+            systemfile=args.systemfile,
+            productfile=args.productfile,
             apks=args.apks
         )
-        system_permission_file=None
-        product_permission_file=None
-        print('#' * 80)
-        print('#')
-        if args.writetodisk:
-            print('#System XML written to %s:' % args.systemfile)
-            system_permission_file = open(args.systemfile, 'w')
-        else:
-            print('#System XML:')
-        print('#')
-        print('#' * 80)
-        create_permission_file(
-            tool_resources,
-            tool_resources.system_privapp_apks,
-            tool_resources.system_permissions_dir,
-            tool_resources.system_sysconfig_dir,
-            system_permission_file)
-        if args.writetodisk:
-            system_permission_file.close()
-        if tool_resources.product_privapp_apks:
-            print('#' * 80)
-            print('#')
-            if args.writetodisk:
-                print('#Product XML written to %s:' % args.productfile)
-                product_permission_file = open(args.productfile, 'w')
-            else:
-                print('#Product XML:')
-            print('#')
-            print('#' * 80)
-            create_permission_file(
-                tool_resources,
-                tool_resources.product_privapp_apks,
-                tool_resources.product_permissions_dir,
-                tool_resources.product_sysconfig_dir,
-                product_permission_file)
-            if args.writetodisk:
-                product_permission_file.close()
+        create_permission_file(tool_resources)
     except MissingResourceError as e:
         print(str(e), file=sys.stderr)
         exit(1)
