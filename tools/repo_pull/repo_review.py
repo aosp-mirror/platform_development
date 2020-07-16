@@ -31,9 +31,10 @@ except ImportError:
     from urllib2 import HTTPError  # PY2
 
 from gerrit import (
-    add_reviewers, delete_reviewer, abandon, create_url_opener_from_args,
-    delete_topic, query_change_lists, set_hashtags, set_review, set_topic,
-    submit)
+    abandon, add_reviewers, create_url_opener_from_args, delete_reviewer,
+    delete_topic, find_gerrit_name, query_change_lists, set_hashtags,
+    set_review, set_topic, submit
+)
 
 
 def _get_labels_from_args(args):
@@ -87,8 +88,7 @@ def _parse_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('query', help='Change list query string')
-    parser.add_argument('-g', '--gerrit', required=True,
-                        help='Gerrit review URL')
+    parser.add_argument('-g', '--gerrit', help='Gerrit review URL')
 
     parser.add_argument('--gitcookies',
                         default=os.path.expanduser('~/.gitcookies'),
@@ -187,6 +187,14 @@ def main():
 
     # Parse and check the command line options
     args = _parse_args()
+
+    if not args.gerrit:
+        try:
+            args.gerrit = find_gerrit_name()
+        except:
+            print('gerrit instance not found, use [-g GERRIT]')
+            sys.exit(1)
+
     if not _has_task(args):
         print('error: Either --label, --message, --submit, --abandon, '
               '--add-hashtag, --remove-hashtag, --set-topic, --delete-topic, '

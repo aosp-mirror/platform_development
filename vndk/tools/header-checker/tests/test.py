@@ -1,36 +1,38 @@
 #!/usr/bin/env python3
 
 import os
-import unittest
+import shutil
+import subprocess
 import sys
 import tempfile
+import unittest
 
 import_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 import_path = os.path.abspath(os.path.join(import_path, 'utils'))
 sys.path.insert(1, import_path)
 
-from utils import (AOSP_DIR, read_output_content, run_abi_diff,
-                   run_header_abi_dumper)
+from utils import run_abi_diff, run_header_abi_dumper
 from module import Module
 
 
 SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 INPUT_DIR = os.path.join(SCRIPT_DIR, 'input')
 EXPECTED_DIR = os.path.join(SCRIPT_DIR, 'expected')
+EXPORTED_HEADER_DIRS = (INPUT_DIR,)
 REF_DUMP_DIR = os.path.join(SCRIPT_DIR, 'reference_dumps')
 
 
 def make_and_copy_reference_dumps(module, reference_dump_dir=REF_DUMP_DIR):
-    output_content = module.make_dump()
-
     dump_dir = os.path.join(reference_dump_dir, module.arch)
     os.makedirs(dump_dir, exist_ok=True)
-
     dump_path = os.path.join(dump_dir, module.get_dump_name())
-    with open(dump_path, 'w') as f:
-        f.write(output_content)
-
+    module.make_dump(dump_path)
     return dump_path
+
+
+def _read_output_content(dump_path):
+    with open(dump_path, 'r') as f:
+        return f.read()
 
 
 class HeaderCheckerTest(unittest.TestCase):
@@ -54,7 +56,12 @@ class HeaderCheckerTest(unittest.TestCase):
     def run_and_compare(self, input_path, expected_path, cflags=[]):
         with open(expected_path, 'r') as f:
             expected_output = f.read()
-        actual_output = run_header_abi_dumper(input_path, cflags)
+        with tempfile.NamedTemporaryFile(dir=self.get_tmp_dir(),
+                                         delete=False) as f:
+            output_path = f.name
+        run_header_abi_dumper(input_path, output_path, cflags,
+                              EXPORTED_HEADER_DIRS)
+        actual_output = _read_output_content(output_path)
         self.assertEqual(actual_output, expected_output)
 
     def run_and_compare_name(self, name, cflags=[]):
@@ -111,9 +118,8 @@ class HeaderCheckerTest(unittest.TestCase):
             self.assertEqual(old_module.arch, new_module.arch)
             old_ref_dump_path = self.get_or_create_ref_dump(old_module, False)
             new_ref_dump_path = self.get_or_create_ref_dump(new_module, True)
-            self.assertEqual(
-                read_output_content(old_ref_dump_path, AOSP_DIR),
-                read_output_content(new_ref_dump_path, AOSP_DIR))
+            self.assertEqual(_read_output_content(old_ref_dump_path),
+                             _read_output_content(new_ref_dump_path))
 
     def test_example1_cpp(self):
         self.run_and_compare_name_cpp('example1.cpp')
@@ -379,6 +385,18 @@ class HeaderCheckerTest(unittest.TestCase):
     def test_merge_multi_definitions(self):
         self.prepare_and_absolute_diff_all_archs(
             "libmerge_multi_definitions", "libmerge_multi_definitions")
+
+    def test_print_resource_dir(self):
+        dumper_path = shutil.which("header-abi-dumper")
+        self.assertIsNotNone(dumper_path)
+        dumper_path = os.path.realpath(dumper_path)
+        common_dir = os.path.dirname(os.path.dirname(dumper_path))
+        resource_dir = subprocess.check_output(
+            ["header-abi-dumper", "-print-resource-dir"], text=True,
+            stderr=subprocess.DEVNULL).strip()
+        self.assertEqual(os.path.dirname(resource_dir),
+                         os.path.join(common_dir, "lib64", "clang"))
+        self.assertRegex(os.path.basename(resource_dir), r"^[\d.]+$")
 
 
 if __name__ == '__main__':
