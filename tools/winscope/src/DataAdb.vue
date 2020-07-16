@@ -30,9 +30,9 @@
         <pre>python3 $ANDROID_BUILD_TOP/development/tools/winscope/adb_proxy/winscope_proxy.py</pre>
         <p>Or get it from the AOSP repository.</p>
       </div>
-      <div class="md-layout md-gutter">
-        <md-button class="md-accent md-raised" :href="downloadProxyUrl">Download from AOSP</md-button>
-        <md-button class="md-raised md-accent" @click="restart">Retry</md-button>
+      <div class="md-layout">
+        <md-button class="md-accent" :href="downloadProxyUrl">Download from AOSP</md-button>
+        <md-button class="md-accent" @click="restart">Retry</md-button>
       </div>
     </md-card-content>
     <md-card-content v-if="status === STATES.INVALID_VERSION">
@@ -44,9 +44,9 @@
         <pre>python3 $ANDROID_BUILD_TOP/development/tools/winscope/adb_proxy/winscope_proxy.py</pre>
         <p>Or get it from the AOSP repository.</p>
       </div>
-      <div class="md-layout md-gutter">
-        <md-button class="md-accent md-raised" :href="downloadProxyUrl">Download from AOSP</md-button>
-        <md-button class="md-raised md-accent" @click="restart">Retry</md-button>
+      <div class="md-layout">
+        <md-button class="md-accent" :href="downloadProxyUrl">Download from AOSP</md-button>
+        <md-button class="md-accent" @click="restart">Retry</md-button>
       </div>
     </md-card-content>
     <md-card-content v-if="status === STATES.UNAUTH">
@@ -57,8 +57,8 @@
         <md-input v-model="adbStore.proxyKey"></md-input>
       </md-field>
       <div class="md-body-2">The proxy token is printed to console on proxy launch, copy and paste it above.</div>
-      <div class="md-layout md-gutter">
-        <md-button class="md-accent md-raised" @click="restart">Connect</md-button>
+      <div class="md-layout">
+        <md-button class="md-primary" @click="restart">Connect</md-button>
       </div>
     </md-card-content>
     <md-card-content v-if="status === STATES.DEVICES">
