@@ -2,6 +2,7 @@
 
 import gzip
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -22,11 +23,6 @@ BUILTIN_HEADERS_DIR = (
     os.path.join(AOSP_DIR, 'external', 'libcxx', 'include'),
     os.path.join(AOSP_DIR, 'prebuilts', 'clang-tools', 'linux-x86',
                  'clang-headers'),
-)
-
-EXPORTED_HEADERS_DIR = (
-    os.path.join(AOSP_DIR, 'development', 'vndk', 'tools', 'header-checker',
-                 'tests'),
 )
 
 SO_EXT = '.so'
@@ -80,43 +76,33 @@ class Target(object):
         return self.get_arch_str() + cpu_variant
 
 
+def _validate_dump_content(dump_path):
+    """Make sure that the dump contains relative source paths."""
+    with open(dump_path, 'r') as f:
+        if AOSP_DIR in f.read():
+            raise ValueError(
+                dump_path + ' contains absolute path to $ANDROID_BUILD_TOP.')
+
+
 def copy_reference_dump(lib_path, reference_dump_dir, compress):
     reference_dump_path = os.path.join(
         reference_dump_dir, os.path.basename(lib_path))
     if compress:
         reference_dump_path += '.gz'
     os.makedirs(os.path.dirname(reference_dump_path), exist_ok=True)
-    output_content = read_output_content(lib_path, AOSP_DIR)
+    _validate_dump_content(lib_path)
     if compress:
-        with gzip.open(reference_dump_path, 'wb') as f:
-            f.write(bytes(output_content, 'utf-8'))
+        with open(lib_path, 'rb') as src_file:
+            with gzip.open(reference_dump_path, 'wb') as dst_file:
+                shutil.copyfileobj(src_file, dst_file)
     else:
-        with open(reference_dump_path, 'wb') as f:
-            f.write(bytes(output_content, 'utf-8'))
+        shutil.copyfile(lib_path, reference_dump_path)
     print('Created abi dump at', reference_dump_path)
     return reference_dump_path
 
 
-def read_output_content(output_path, replace_str):
-    with open(output_path, 'r') as f:
-        return f.read().replace(replace_str, '')
-
-
-def run_header_abi_dumper(input_path, cflags=tuple(),
-                          export_include_dirs=EXPORTED_HEADERS_DIR,
-                          flags=tuple()):
-    """Run header-abi-dumper to dump ABI from `input_path` and return the
-    output."""
-    with tempfile.TemporaryDirectory() as tmp:
-        output_path = os.path.join(tmp, os.path.basename(input_path)) + '.dump'
-        _run_header_abi_dumper_on_file(input_path, output_path,
-                                       export_include_dirs, cflags, flags)
-        return read_output_content(output_path, AOSP_DIR)
-
-
-def _run_header_abi_dumper_on_file(input_path, output_path,
-                                   export_include_dirs=tuple(), cflags=tuple(),
-                                   flags=tuple()):
+def run_header_abi_dumper(input_path, output_path, cflags=tuple(),
+                          export_include_dirs=tuple(), flags=tuple()):
     """Run header-abi-dumper to dump ABI from `input_path` and the output is
     written to `output_path`."""
     input_ext = os.path.splitext(input_path)[1]
@@ -141,10 +127,11 @@ def _run_header_abi_dumper_on_file(input_path, output_path,
     for dir in export_include_dirs:
         cmd += ['-I', dir]
     subprocess.check_call(cmd, cwd=AOSP_DIR)
+    _validate_dump_content(output_path)
 
 
-def run_header_abi_linker(output_path, inputs, version_script, api, arch,
-                          flags=tuple(), input_dir=AOSP_DIR):
+def run_header_abi_linker(inputs, output_path, version_script, api, arch,
+                          flags=tuple()):
     """Link inputs, taking version_script into account"""
     cmd = ['header-abi-linker', '-o', output_path, '-v', version_script,
            '-api', api, '-arch', arch]
@@ -155,7 +142,7 @@ def run_header_abi_linker(output_path, inputs, version_script, api, arch,
         cmd += ['-output-format', DEFAULT_FORMAT]
     cmd += inputs
     subprocess.check_call(cmd, cwd=AOSP_DIR)
-    return read_output_content(output_path, input_dir)
+    _validate_dump_content(output_path)
 
 
 def make_targets(product, variant, targets):
