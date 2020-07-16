@@ -60,6 +60,10 @@ import os.path
 import re
 import sys
 
+# Some Rust packages include extra unwanted crates.
+# This set contains all such excluded crate names.
+EXCLUDED_CRATES = set(['protobuf_bin_gen_rust_do_not_use'])
+
 RENAME_MAP = {
     # This map includes all changes to the default rust module names
     # to resolve name conflicts, avoid confusion, or work as plugin.
@@ -462,7 +466,8 @@ class Crate(object):
 
   def skip_crate(self):
     """Return crate_name or a message if this crate should be skipped."""
-    if is_build_crate_name(self.crate_name):
+    if (is_build_crate_name(self.crate_name) or
+        self.crate_name in EXCLUDED_CRATES):
       return self.crate_name
     if is_dependent_file_path(self.main_src):
       return 'dependent crate'
@@ -531,10 +536,26 @@ class Crate(object):
       self.decide_one_module_type(crate_type)
       self.dump_one_android_module(crate_type)
 
+  def build_default_name(self):
+    """Return a short and readable name for the rust_defaults module."""
+    # Choices: (1) root_pkg + '_defaults',
+    # (2) root_pkg + '_defaults_' + crate_name
+    # (3) root_pkg + '_defaults_' + main_src_basename_path
+    # (4) root_pkg + '_defaults_' + a_positive_sequence_number
+    name1 = altered_defaults(self.root_pkg) + '_defaults'
+    if self.runner.try_claim_module_name(name1, self):
+      return name1
+    name2 = name1 + '_' + self.crate_name
+    if self.runner.try_claim_module_name(name2, self):
+      return name2
+    name3 = name1 + '_' + self.main_src_basename_path()
+    if self.runner.try_claim_module_name(name3, self):
+      return name3
+    return self.runner.claim_module_name(name1, self, 0)
+
   def dump_defaults_module(self):
     """Dump a rust_defaults module to be shared by other modules."""
-    name = altered_defaults(self.root_pkg) + '_defaults'
-    name = self.runner.claim_module_name(name, self, 0)
+    name = self.build_default_name()
     self.defaults = name
     self.write('\nrust_defaults {')
     self.write('    name: "' + name + '",')
@@ -618,10 +639,13 @@ class Crate(object):
     self.dump_android_property_list('static_libs', '"lib%s"', self.static_libs)
     self.dump_android_property_list('shared_libs', '"lib%s"', self.shared_libs)
 
+  def main_src_basename_path(self):
+    return re.sub('/', '_', re.sub('.rs$', '', self.main_src))
+
   def test_module_name(self):
     """Return a unique name for a test module."""
     # root_pkg+(_host|_device) + '_test_'+source_file_name
-    suffix = re.sub('/', '_', re.sub('.rs$', '', self.main_src))
+    suffix = self.main_src_basename_path()
     host_device = '_host'
     if self.device_supported:
       host_device = '_device'
@@ -980,16 +1004,20 @@ class Runner(object):
       with open(name, 'w') as outf:
         outf.write(ANDROID_BP_HEADER.format(args=' '.join(sys.argv[1:])))
 
+  def try_claim_module_name(self, name, owner):
+    """Reserve and return True if it has not been reserved yet."""
+    if name not in self.name_owners or owner == self.name_owners[name]:
+      self.name_owners[name] = owner
+      return True
+    return False
+
   def claim_module_name(self, prefix, owner, counter):
     """Return prefix if not owned yet, otherwise, prefix+str(counter)."""
     while True:
       name = prefix
       if counter > 0:
-        name += str(counter)
-      if name not in self.name_owners:
-        self.name_owners[name] = owner
-        return name
-      if owner == self.name_owners[name]:
+        name += '_' + str(counter)
+      if self.try_claim_module_name(name, owner):
         return name
       counter += 1
 
