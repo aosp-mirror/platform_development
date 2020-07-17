@@ -54,6 +54,23 @@
         <md-button v-if="dataReady" @click="onSubmit" class="md-button md-primary md-raised md-theme-default">Submit</md-button>
       </div>
     </md-card-content>
+
+    <md-snackbar
+      md-position="center"
+      :md-duration="Infinity"
+      :md-active.sync="showFetchingSnackbar"
+      md-persistent
+    >
+      <span>{{ fetchingSnackbarText }}</span>
+    </md-snackbar>
+
+    <md-snackbar
+      md-position="center"
+      :md-active.sync="showSnackbar"
+      md-persistent
+    >
+      <span style="white-space: pre-line;">{{ snackbarText }}</span>
+    </md-snackbar>
   </flat-card>
 </template>
 <script>
@@ -80,6 +97,10 @@ export default {
       fileType: "auto",
       dataFiles: {},
       loadingFiles: false,
+      showFetchingSnackbar: false,
+      showSnackbar: false,
+      snackbarText: '',
+      fetchingSnackbarText: "Fetching files...",
     }
   },
   props: ['store'],
@@ -88,19 +109,38 @@ export default {
     this.loadFilesFromExtension();
   },
   methods: {
-    getLoadingStatusAnimation(message) {
+    showSnackbarMessage(message, duration) {
+      clearTimeout(this.showSnackbarTimeout);
+
+      // Toogle boolean first to make ref available
+      this.showSnackbar = true;
+      this.snackbarText = message;
+
+      if (duration !== Infinity) {
+        this.showSnackbarTimeout = setTimeout(() => {
+          this.showSnackbar = false;
+        }, duration);
+      }
+    },
+    hideSnackbarMessage() {
+      clearTimeout(this.showSnackbarTimeout);
+      this.showSnackbar = false;
+    },
+    getFetchFilesLoadingAnimation() {
       let frame = 0;
       const fetchingStatusAnimation = () => {
         frame++;
-        this.$emit('statusChange', `${message}${'.'.repeat(frame % 4)}`);
+        this.fetchingSnackbarText = `Fetching files${'.'.repeat(frame % 4)}`;
       };
       let interval = undefined;
 
       return Object.freeze({
         start: () => {
+          this.showFetchingSnackbar = true;
           interval = setInterval(fetchingStatusAnimation, 500);
         },
         stop: () => {
+          this.showFetchingSnackbar = false;
           clearInterval(interval);
         },
       });
@@ -117,7 +157,7 @@ export default {
         // Fetch files from extension
         const androidBugToolExtensionId = "mbbaofdfoekifkfpgehgffcpagbbjkmj";
 
-        const loading = this.getLoadingStatusAnimation('Fetching files');
+        const loading = this.getFetchFilesLoadingAnimation();
         loading.start();
 
         // Request to convert the blob object url "blob:chrome-extension://xxx"
@@ -149,21 +189,22 @@ export default {
                 loading.stop();
                 this.processFiles(files);
               } else {
-                console.warn("Got no attachements from extension...");
+                const failureMessages = "Got no attachements from extension...";
+                console.warn(failureMessages);
+                this.showSnackbarMessage(failureMessages, 3500);
               }
               break;
 
             default:
               loading.stop();
-              console.warn("Received unhandled response code from extension.");
+              const failureMessages = "Received unhandled response code from extension.";
+              console.warn(failureMessages);
+              this.showSnackbarMessage(failureMessages, 3500);
           }
         });
       }
     },
     onLoadFile(e) {
-      // Clear status to avoid keeping status of previous failed uploads
-      this.$emit('statusChange', null);
-
       const files = event.target.files || event.dataTransfer.files;
       this.processFiles(files);
     },
@@ -173,12 +214,12 @@ export default {
       for (const file of files) {
         try {
           this.loadingFiles = true;
-          this.$emit('statusChange', file.name + " (loading)");
+          this.showSnackbarMessage(`Loading ${file.name}`, Infinity);
           const result = await this.addFile(file);
           decodedFiles.push(...result);
-          this.$emit('statusChange', null);
+          this.hideSnackbarMessage();
         } catch(e) {
-          this.$emit('statusChange', `${file.name}: ${e}`);
+          this.showSnackbarMessage(`Failed to load '${file.name}'...\n${e}`, 5000);
           console.error(e);
           error = e;
           break;
@@ -256,8 +297,6 @@ export default {
       const zip = new JSZip();
       const content = await zip.loadAsync(buffer);
 
-      console.log("ZIP CONTENT", content);
-
       const decodedFiles = [];
       for (const filename of BUG_REPORT_FILES) {
         const file = content.files[filename];
@@ -268,6 +307,10 @@ export default {
           const decodedFile = await this.decodeFile(fileBlob);
           decodedFiles.push(decodedFile);
         }
+      }
+
+      if (decodedFiles.length == 0) {
+        throw new Error("No matching files found in archive", file);
       }
 
       return decodedFiles;
