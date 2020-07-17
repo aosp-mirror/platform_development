@@ -14,25 +14,33 @@
  * limitations under the License.
  */
 
-import { FILE_TYPES, DUMP_TYPES } from "@/decode.js";
-import DumpBase from "./DumpBase";
+import {
+  ActivityRecord,
+} from "../common"
 
-import { WindowManagerTraceEntry } from '@/flickerlib';
+import { applyMixins } from '../mixin'
 
-export default class WindowManager extends DumpBase {
-  wmDumpFile: any;
+import WindowToken from "./WindowToken"
 
-  constructor(files) {
-    const wmDumpFile = files[FILE_TYPES.WINDOW_MANAGER_DUMP];
-    super(wmDumpFile.data, files);
-    this.wmDumpFile = wmDumpFile
+export class ActivityRecordMixin {
+  get kind() {
+    return "DisplayArea"
   }
 
-  get type() {
-    return DUMP_TYPES.WINDOW_MANAGER;
-  }
+  static fromProto(proto) {
+    const windowToken = WindowToken.fromProto(proto.windowToken)
 
-  static fromProto(proto): WindowManagerTraceEntry {
-    return WindowManagerTraceEntry.fromProto(proto);
+    const activityRecord = new ActivityRecord(windowToken)
+
+    const obj = Object.assign({}, proto)
+    delete proto.windowToken
+    Object.assign(obj, windowToken.obj)
+    activityRecord.attachObject(obj)
+
+    return activityRecord
   }
 }
+
+applyMixins(ActivityRecord, [ActivityRecordMixin])
+
+export default ActivityRecord

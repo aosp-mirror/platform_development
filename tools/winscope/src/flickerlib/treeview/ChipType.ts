@@ -14,25 +14,8 @@
  * limitations under the License.
  */
 
-import { FILE_TYPES, DUMP_TYPES } from "@/decode.js";
-import DumpBase from "./DumpBase";
-
-import { WindowManagerTraceEntry } from '@/flickerlib';
-
-export default class WindowManager extends DumpBase {
-  wmDumpFile: any;
-
-  constructor(files) {
-    const wmDumpFile = files[FILE_TYPES.WINDOW_MANAGER_DUMP];
-    super(wmDumpFile.data, files);
-    this.wmDumpFile = wmDumpFile
-  }
-
-  get type() {
-    return DUMP_TYPES.WINDOW_MANAGER;
-  }
-
-  static fromProto(proto): WindowManagerTraceEntry {
-    return WindowManagerTraceEntry.fromProto(proto);
-  }
+enum ChipType {
+  DEFAULT = 'default'
 }
+
+export default ChipType

@@ -14,25 +14,33 @@
  * limitations under the License.
  */
 
-import { FILE_TYPES, DUMP_TYPES } from "@/decode.js";
-import DumpBase from "./DumpBase";
+import {
+  DisplayArea,
+} from "../common"
 
-import { WindowManagerTraceEntry } from '@/flickerlib';
+import { applyMixins } from '../mixin'
 
-export default class WindowManager extends DumpBase {
-  wmDumpFile: any;
+import WindowContainer from "./WindowContainer"
 
-  constructor(files) {
-    const wmDumpFile = files[FILE_TYPES.WINDOW_MANAGER_DUMP];
-    super(wmDumpFile.data, files);
-    this.wmDumpFile = wmDumpFile
+export class DisplayAreaMixin {
+  get kind() {
+    return "DisplayArea"
   }
 
-  get type() {
-    return DUMP_TYPES.WINDOW_MANAGER;
-  }
+  static fromProto(proto) {
+    const windowContainer = WindowContainer.fromProto(proto.windowContainer)
 
-  static fromProto(proto): WindowManagerTraceEntry {
-    return WindowManagerTraceEntry.fromProto(proto);
+    const displayArea = new DisplayArea(windowContainer)
+
+    const obj = Object.assign({}, proto)
+    delete obj.windowContainer
+    Object.assign(obj, windowContainer.obj)
+    displayArea.attachObject(obj)
+
+    return displayArea
   }
 }
+
+applyMixins(DisplayArea, [DisplayAreaMixin])
+
+export default DisplayArea
