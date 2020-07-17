@@ -76,18 +76,8 @@
 <script>
 import FlatCard from './components/FlatCard.vue';
 import JSZip from 'jszip';
-import { detectAndDecode, FILE_TYPES, DATA_TYPES } from './decode.js';
+import { detectAndDecode, FILE_TYPES, DATA_TYPES, UndetectableFileType } from './decode.js';
 import { WebContentScriptMessageType } from './utils/consts';
-
-// Add any file that should be considered when extracting a bug report here
-// NOTE: If two files have the same type, the last one will be selected
-const BUG_REPORT_FILES = [
-  "proto/SurfaceFlinger_CRITICAL.proto",
-  "proto/window_CRITICAL.proto",
-  "FS/data/misc/wmtrace/layers_trace.pb",
-  "FS/data/misc/wmtrace/wm_log.pb",
-  "FS/data/misc/wmtrace/wm_trace.pb",
-];
 
 export default {
   name: 'datainput',
@@ -298,14 +288,20 @@ export default {
       const content = await zip.loadAsync(buffer);
 
       const decodedFiles = [];
-      for (const filename of BUG_REPORT_FILES) {
-        const file = content.files[filename];
-        if (file) {
-          const fileBlob = await file.async("blob");
-          fileBlob.name = filename;
 
+      for (const filename in content.files) {
+        const file = content.files[filename];
+
+        const fileBlob = await file.async("blob");
+        fileBlob.name = filename;
+
+        try {
           const decodedFile = await this.decodeFile(fileBlob);
           decodedFiles.push(decodedFile);
+        } catch(e) {
+          if (!(e instanceof UndetectableFileType)) {
+            throw e;
+          }
         }
       }
 

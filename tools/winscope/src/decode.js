@@ -335,7 +335,13 @@ function detectAndDecode(buffer, fileName, store) {
       // ignore exception and try next filetype
     }
   }
-  throw new Error('Unable to detect file');
+  throw new UndetectableFileType('Unable to detect file');
 }
 
-export { detectAndDecode, decodeAndTransformProto, DATA_TYPES, FILE_TYPES };
+/**
+ * Error is raised when detectAndDecode is called but the file can't be
+ * automatically detected as being of a compatible file type.
+ */
+class UndetectableFileType extends Error { }
+
+export { detectAndDecode, decodeAndTransformProto, DATA_TYPES, FILE_TYPES, UndetectableFileType };
