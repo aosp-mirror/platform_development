@@ -86,7 +86,15 @@ export default {
         return "unavailable";
       }
 
-      return `PID: ${transaction.origin.pid},\nUID: ${transaction.origin.uid}`;
+      const originString = [];
+      originString.push(`PID: ${transaction.origin.pid}`);
+      originString.push(`UID: ${transaction.origin.uid}`);
+
+      if (transaction.origin.appliedByMainThread) {
+        originString.push("Applied by main thread");
+      }
+
+      return originString.join("\n");
     },
   },
 }
