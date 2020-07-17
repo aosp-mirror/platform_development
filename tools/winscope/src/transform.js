@@ -15,6 +15,7 @@
  */
 
 import { DiffType } from './utils/diff.js';
+import intDefMapping from '../../../../prebuilts/misc/common/winscope/intDefMapping.json';
 
 // kind - a type used for categorization of different levels
 // name - name of the node
@@ -129,9 +130,10 @@ class ObjectTransformer {
 		return this;
 	}
 
-	withDiff(obj) {
+	withDiff(obj, fieldOptions) {
 		this.diff = true;
 		this.compareWithObj = obj ?? new Terminal();
+		this.compareWithFieldOptions = fieldOptions;
 		return this;
 	}
 
@@ -141,68 +143,90 @@ class ObjectTransformer {
 			throw new Error("Missing formatter, please set with setOptions()");
 		}
 
-		return this._transform(this.obj, this.rootName, this.compareWithObj, this.rootName, this.stableId);
+		return this._transform(this.obj, this.rootName, null,
+			this.compareWithObj, this.rootName, null,
+			this.stableId);
 	}
 
-	_transformKeys(obj) {
+	_transformObject(obj, fieldOptions) {
 		const { skip, formatter } = this.options;
-		const transformedObj = {};
+		const transformedObj = {
+			obj: {},
+			fieldOptions: {},
+		};
 		let formatted = undefined;
 
 		if (skip && skip.includes(obj)) {
 			// skip
 		} else if ((formatted = formatter(obj))) {
 			// Obj has been formatted into a terminal node — has no children.
-			transformedObj[formatted] = new Terminal();
+			transformedObj.obj[formatted] = new Terminal();
+			transformedObj.fieldOptions[formatted] = fieldOptions;
 		} else if (Array.isArray(obj)) {
 			obj.forEach((e, i) => {
-				transformedObj["" + i] = e;
+				transformedObj.obj["" + i] = e;
+				transformedObj.fieldOptions["" + i] = fieldOptions;
 			});
 		} else if (typeof obj == 'string') {
 			// Object is a primitive type — has no children. Set to terminal
 			// to differentiate between null object and Terminal element.
-			transformedObj[obj] = new Terminal();
+			transformedObj.obj[obj] = new Terminal();
+			transformedObj.fieldOptions[obj] = fieldOptions;
 		} else if (typeof obj == 'number' || typeof obj == 'boolean') {
 			// Similar to above — primitive type node has no children.
-			transformedObj["" + obj] = new Terminal();
+			transformedObj.obj["" + obj] = new Terminal();
+			transformedObj.fieldOptions["" + obj] = fieldOptions;
 		} else if (obj && typeof obj == 'object') {
 			Object.keys(obj).forEach((key) => {
-				transformedObj[key] = obj[key];
+				transformedObj.obj[key] = obj[key];
+				transformedObj.fieldOptions[key] = obj.$type?.fields[key]?.options;
 			});
 		} else if (obj === null) {
 			// Null object is a has no children — set to be terminal node.
-			transformedObj.null = new Terminal();
+			transformedObj.obj.null = new Terminal();
+			transformedObj.fieldOptions.null = undefined;
 		}
 
 		return transformedObj;
 	}
 
-	_transform(obj, name, compareWithObj, compareWithName, stableId) {
+	_transform(obj, name, fieldOptions,
+		compareWithObj, compareWithName, compareWithFieldOptions,
+		stableId) {
 		const children = [];
 
 		if (!isTerminal(obj)) {
-			obj = this._transformKeys(obj);
+			const transformedObj = this._transformObject(obj, fieldOptions);
+			obj = transformedObj.obj;
+			fieldOptions = transformedObj.fieldOptions;
 		}
 		if (!isTerminal(compareWithObj)) {
-			compareWithObj = this._transformKeys(compareWithObj);
+			const transformedObj = this._transformObject(compareWithObj, compareWithFieldOptions);
+			compareWithObj = transformedObj.obj;
+			compareWithFieldOptions = transformedObj.fieldOptions;
 		}
 
 		for (const key in obj) {
 			if (obj.hasOwnProperty(key)) {
 				let compareWithChild = new Terminal();
-				let compareWithName = new Terminal();
+				let compareWithChildName = new Terminal();
+				let compareWithChildFieldOptions = undefined;
 				if (compareWithObj.hasOwnProperty(key)) {
 					compareWithChild = compareWithObj[key];
-					compareWithName = key;
+					compareWithChildName = key;
+					compareWithChildFieldOptions = compareWithFieldOptions[key];
 				}
-				children.push(this._transform(obj[key], key, compareWithChild, compareWithName, `${stableId}.${key}`));
+				children.push(this._transform(obj[key], key, fieldOptions[key],
+					compareWithChild, compareWithChildName, compareWithChildFieldOptions,
+					`${stableId}.${key}`));
 			}
 		}
 
 		// Takes care of adding deleted items to final tree
 		for (const key in compareWithObj) {
 			if (!obj.hasOwnProperty(key) && compareWithObj.hasOwnProperty(key)) {
-				children.push(this._transform(new Terminal(), new Terminal(), compareWithObj[key], key));
+				children.push(this._transform(new Terminal(), new Terminal(), undefined,
+					compareWithObj[key], key, compareWithFieldOptions[key], `${stableId}.${key}`));
 			}
 		}
 
@@ -234,18 +258,61 @@ class ObjectTransformer {
 				children,
 			};
 
+			let fieldOptionsToUse = fieldOptions;
+
 			if (this.diff) {
 				const diff = getDiff(name, compareWithName);
 				transformedObj.diff = diff;
 
 				if (diff.type == DiffType.DELETED) {
 					transformedObj.name = compareWithName;
+					fieldOptionsToUse = compareWithFieldOptions;
+				}
+			}
+
+			const annotationType = fieldOptionsToUse?.["(.android.typedef)"];
+			if (annotationType) {
+				if (intDefMapping[annotationType] === undefined) {
+					console.error(`Missing intDef mapping for translation for ${annotationType}`);
+				} else if (intDefMapping[annotationType].flag) {
+					transformedObj.name = `${getIntFlagsAsStrings(transformedObj.name, annotationType)} (${transformedObj.name})`;
+				} else {
+					transformedObj.name = `${intDefMapping[annotationType].values[transformedObj.name]} (${transformedObj.name})`;
 				}
 			}
 		}
 
 		return Object.freeze(transformedObj);
 	}
+}
+
+function getIntFlagsAsStrings(intFlags, annotationType) {
+	const flags = [];
+
+	const mapping = intDefMapping[annotationType].values;
+
+	// Will only contain bits that have not been associated with a flag.
+	let leftOver = intFlags;
+
+	for (const intValue in mapping) {
+		if ((intFlags & parseInt(intValue)) === parseInt(intValue)) {
+			flags.push(mapping[intValue]);
+
+			leftOver = leftOver & ~intValue;
+		}
+	}
+
+	if (flags.length === 0) {
+		console.error("No valid flag mappings found for ", intFlags, "of type", annotationType);
+	}
+
+	if (leftOver) {
+		// If 0 is a valid flag value that isn't in the intDefMapping
+		// it will be ignored
+		flags.push(leftOver);
+	}
+
+	return flags.join(' | ');
 }
 
 function nanos_to_string(elapsedRealtimeNanos) {

@@ -17,6 +17,29 @@ contain the proto definitions for their internal states.
 * Navigate to `development/tools/winscope`
 * Run `yarn run dev`
 
+### Update IntDefMapping
+* Build `framework-all` module and a preprocessor will generate the latest
+IntDefMapping. From the `ANDROID_ROOT` run:
+```
+. build/envsetup.sh
+m framework-all
+```
+
+* Copy the generated `intDefMapping.json` file to the `prebuilts` repo.
+```
+cp
+./out/soong/.intermediates/frameworks/base/framework-all/android_common/javac/classes/com/android/winscope/intDefMapping.json
+./prebuilts/misc/common/winscope/intDefMapping.json
+```
+
+* Upload the changes.
+```
+cd ./prebuilts/misc/common/winscope
+repo start intdef-update
+git commit -am "Update intdef mapping" "Test: N/A"
+repo upload --cbr .
+```
+
 ### Building with internal extensions
 Internal paths in vendor/ which are not available in AOSP must be replaced by
 stub files. See getWaylandSafePath for an example
