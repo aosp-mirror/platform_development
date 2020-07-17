@@ -224,9 +224,67 @@ export default {
         return;
       }
 
+      const decodedFileTypes = new Set(Object.keys(this.dataFiles));
+      // A file is overridden if a file of the same type is upload twice, as
+      // Winscope currently only support at most one file to each type
+      const overriddenDataTypes = new Set();
+      const overriddenFiles = {}; // filetype => array of file names
+      let overriddenCount = 0;
       for (const decodedFile of decodedFiles) {
+        const dataType = decodedFile.filetype.dataType.name;
+
+        if (decodedFileTypes.has(dataType)) {
+          overriddenDataTypes.add(dataType);
+          (overriddenFiles[dataType] = overriddenFiles[dataType] || [])
+            .push(this.dataFiles[dataType].filename);
+          overriddenCount++;
+        }
+        decodedFileTypes.add(dataType);
+
         this.$set(this.dataFiles,
-          decodedFile.filetype.dataType.name, decodedFile.data);
+          dataType, decodedFile.data);
+      }
+
+      if (overriddenDataTypes.size > 0) {
+        if (overriddenDataTypes.size === 1 && overriddenCount === 1) {
+          const type = overriddenDataTypes.values().next().value;
+          const overriddenFile = overriddenFiles[type][0];
+          const keptFile = this.dataFiles[type].filename;
+          const message = `'${overriddenFile}' is conflicting with '${keptFile}'. Only '${keptFile}' will be kept. If you wish to display '${overriddenFile}', please upload it again with no other file of the same type.`;
+
+          this.showSnackbarMessage(`WARNING: ${message}`, Infinity);
+          console.warn(message);
+        } else {
+          const message = `Mutiple conflicting files have been uploaded. ${overriddenCount} files have been discarded. Please check the developer console for more information.`;
+          this.showSnackbarMessage(`WARNING: ${message}`, Infinity);
+
+          const messageBuilder = [];
+          for (const type of overriddenDataTypes.values()) {
+            const keptFile = this.dataFiles[type].filename;
+            const overriddenFilesCount = overriddenFiles[type].length;
+
+            messageBuilder.push(`${overriddenFilesCount} file${overriddenFilesCount > 1 ? 's' : ''} of type ${type} ${overriddenFilesCount > 1 ? 'have' : 'has'} been overridden. Only '${keptFile}' has been kept.`);
+          }
+
+          messageBuilder.push("");
+          messageBuilder.push("Please reupload the specific files you want to read (one of each type).");
+          messageBuilder.push("");
+
+          messageBuilder.push("================DISCARDED FILES================");
+
+          for (const type of overriddenDataTypes.values()) {
+            const discardedFiles = overriddenFiles[type];
+            const keptFile = this.dataFiles[type].filename;
+
+            messageBuilder.push(`The following files of type ${type} have been discarded:`);
+            for (const discardedFile of discardedFiles) {
+              messageBuilder.push(`  - ${discardedFile}`);
+            }
+            messageBuilder.push("");
+          }
+
+          console.warn(messageBuilder.join("\n"));
+        }
       }
     },
     getFileExtensions(file) {
