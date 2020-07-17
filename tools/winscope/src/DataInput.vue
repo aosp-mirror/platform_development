@@ -66,10 +66,16 @@
 
     <md-snackbar
       md-position="center"
+      :md-duration="snackbarDuration"
       :md-active.sync="showSnackbar"
       md-persistent
     >
       <span style="white-space: pre-line;">{{ snackbarText }}</span>
+      <div @click="hideSnackbarMessage()">
+        <md-button class="md-icon-button">
+          <md-icon style="color: white">close</md-icon>
+        </md-button>
+      </div>
     </md-snackbar>
   </flat-card>
 </template>
@@ -89,6 +95,7 @@ export default {
       loadingFiles: false,
       showFetchingSnackbar: false,
       showSnackbar: false,
+      snackbarDuration: 3500,
       snackbarText: '',
       fetchingSnackbarText: "Fetching files...",
     }
@@ -100,20 +107,11 @@ export default {
   },
   methods: {
     showSnackbarMessage(message, duration) {
-      clearTimeout(this.showSnackbarTimeout);
-
-      // Toogle boolean first to make ref available
-      this.showSnackbar = true;
       this.snackbarText = message;
-
-      if (duration !== Infinity) {
-        this.showSnackbarTimeout = setTimeout(() => {
-          this.showSnackbar = false;
-        }, duration);
-      }
+      this.snackbarDuration = duration;
+      this.showSnackbar = true;
     },
     hideSnackbarMessage() {
-      clearTimeout(this.showSnackbarTimeout);
       this.showSnackbar = false;
     },
     getFetchFilesLoadingAnimation() {
