@@ -169,8 +169,8 @@ export default {
       item: null,
       tree: null,
       highlight: null,
-      showHierachyDiff: true,
-      showPropertiesDiff: true,
+      showHierachyDiff: false,
+      showPropertiesDiff: false,
     }
   },
   methods: {
