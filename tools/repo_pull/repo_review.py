@@ -191,6 +191,7 @@ def main():
     if not args.gerrit:
         try:
             args.gerrit = find_gerrit_name()
+        # pylint: disable=bare-except
         except:
             print('gerrit instance not found, use [-g GERRIT]')
             sys.exit(1)
