@@ -304,7 +304,7 @@ export default {
       // for more information.
       if (type === 'bugreport' ||
           (type === 'auto' && (extension === 'zip' || file.type === 'application/zip'))) {
-        const results = await this.decodeCompressedBugReport(file);
+        const results = await this.decodeArchive(file);
         decodedFiles.push(...results);
       } else {
         const decodedFile = await this.decodeFile(file);
@@ -337,8 +337,8 @@ export default {
 
       return {filetype, data};
     },
-    async decodeCompressedBugReport(file) {
-      const buffer = await this.readFile(file);
+    async decodeArchive(archive) {
+      const buffer = await this.readFile(archive);
 
       const zip = new JSZip();
       const content = await zip.loadAsync(buffer);
@@ -353,6 +353,7 @@ export default {
 
         try {
           const decodedFile = await this.decodeFile(fileBlob);
+
           decodedFiles.push(decodedFile);
         } catch(e) {
           if (!(e instanceof UndetectableFileType)) {
@@ -362,7 +363,7 @@ export default {
       }
 
       if (decodedFiles.length == 0) {
-        throw new Error("No matching files found in archive", file);
+        throw new Error("No matching files found in archive", archive);
       }
 
       return decodedFiles;
