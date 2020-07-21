@@ -23,6 +23,7 @@ from __future__ import print_function
 
 import argparse
 import os
+import sys
 
 from gerrit import (
     create_url_opener_from_args, find_gerrit_name, query_change_lists, get_patch
@@ -51,6 +52,7 @@ def main():
     if not args.gerrit:
         try:
             args.gerrit = find_gerrit_name()
+        # pylint: disable=bare-except
         except:
             print('gerrit instance not found, use [-g GERRIT]')
             sys.exit(1)
