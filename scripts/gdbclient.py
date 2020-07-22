@@ -62,6 +62,14 @@ def get_gdbserver_path(root, arch):
         return path.format(root, arch, "")
 
 
+def get_lldb_path(toolchain_path):
+    for lldb_name in ['lldb.sh', 'lldb.cmd', 'lldb', 'lldb.exe']:
+        debugger_path = os.path.join(toolchain_path, "bin", lldb_name)
+        if os.path.isfile(debugger_path):
+            return debugger_path
+    return None
+
+
 def get_lldb_server_path(root, clang_base, clang_version, arch):
     arch = {
         'arm': 'arm',
@@ -457,7 +465,7 @@ def do_main():
                                              remote="tcp:{}".format(args.port))
 
         if use_lldb:
-            debugger_path = os.path.join(toolchain_path, "bin", "lldb")
+            debugger_path = get_lldb_path(toolchain_path)
             debugger = 'lldb'
         else:
             debugger_path = os.path.join(
