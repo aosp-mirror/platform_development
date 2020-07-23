@@ -73,6 +73,7 @@
             :filter="propertyFilter"
             :collapseChildren="true"
             :useGlobalCollapsedState="true"
+            :elementView="PropertiesTreeElement"
           />
         </div>
         <div class="no-properties" v-else>
@@ -91,6 +92,7 @@ import TreeView from './TreeView.vue'
 import Timeline from './Timeline.vue'
 import Rects from './Rects.vue'
 import FlatCard from './components/FlatCard.vue'
+import PropertiesTreeElement from './PropertiesTreeElement.vue'
 
 import { ObjectTransformer } from './transform.js'
 import { DiffGenerator, defaultModifiedCheck } from './utils/diff.js'
@@ -171,6 +173,7 @@ export default {
       highlight: null,
       showHierachyDiff: false,
       showPropertiesDiff: false,
+      PropertiesTreeElement,
     }
   },
   methods: {
