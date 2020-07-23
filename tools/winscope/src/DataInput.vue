@@ -54,23 +54,36 @@
         <md-button v-if="dataReady" @click="onSubmit" class="md-button md-primary md-raised md-theme-default">Submit</md-button>
       </div>
     </md-card-content>
+
+    <md-snackbar
+      md-position="center"
+      :md-duration="Infinity"
+      :md-active.sync="showFetchingSnackbar"
+      md-persistent
+    >
+      <span>{{ fetchingSnackbarText }}</span>
+    </md-snackbar>
+
+    <md-snackbar
+      md-position="center"
+      :md-duration="snackbarDuration"
+      :md-active.sync="showSnackbar"
+      md-persistent
+    >
+      <span style="white-space: pre-line;">{{ snackbarText }}</span>
+      <div @click="hideSnackbarMessage()">
+        <md-button class="md-icon-button">
+          <md-icon style="color: white">close</md-icon>
+        </md-button>
+      </div>
+    </md-snackbar>
   </flat-card>
 </template>
 <script>
 import FlatCard from './components/FlatCard.vue';
 import JSZip from 'jszip';
-import { detectAndDecode, FILE_TYPES, DATA_TYPES } from './decode.js';
+import { detectAndDecode, FILE_TYPES, DATA_TYPES, UndetectableFileType } from './decode.js';
 import { WebContentScriptMessageType } from './utils/consts';
-
-// Add any file that should be considered when extracting a bug report here
-// NOTE: If two files have the same type, the last one will be selected
-const BUG_REPORT_FILES = [
-  "proto/SurfaceFlinger_CRITICAL.proto",
-  "proto/window_CRITICAL.proto",
-  "FS/data/misc/wmtrace/layers_trace.pb",
-  "FS/data/misc/wmtrace/wm_log.pb",
-  "FS/data/misc/wmtrace/wm_trace.pb",
-];
 
 export default {
   name: 'datainput',
@@ -80,6 +93,11 @@ export default {
       fileType: "auto",
       dataFiles: {},
       loadingFiles: false,
+      showFetchingSnackbar: false,
+      showSnackbar: false,
+      snackbarDuration: 3500,
+      snackbarText: '',
+      fetchingSnackbarText: "Fetching files...",
     }
   },
   props: ['store'],
@@ -88,19 +106,29 @@ export default {
     this.loadFilesFromExtension();
   },
   methods: {
-    getLoadingStatusAnimation(message) {
+    showSnackbarMessage(message, duration) {
+      this.snackbarText = message;
+      this.snackbarDuration = duration;
+      this.showSnackbar = true;
+    },
+    hideSnackbarMessage() {
+      this.showSnackbar = false;
+    },
+    getFetchFilesLoadingAnimation() {
       let frame = 0;
       const fetchingStatusAnimation = () => {
         frame++;
-        this.$emit('statusChange', `${message}${'.'.repeat(frame % 4)}`);
+        this.fetchingSnackbarText = `Fetching files${'.'.repeat(frame % 4)}`;
       };
       let interval = undefined;
 
       return Object.freeze({
         start: () => {
+          this.showFetchingSnackbar = true;
           interval = setInterval(fetchingStatusAnimation, 500);
         },
         stop: () => {
+          this.showFetchingSnackbar = false;
           clearInterval(interval);
         },
       });
@@ -117,7 +145,7 @@ export default {
         // Fetch files from extension
         const androidBugToolExtensionId = "mbbaofdfoekifkfpgehgffcpagbbjkmj";
 
-        const loading = this.getLoadingStatusAnimation('Fetching files');
+        const loading = this.getFetchFilesLoadingAnimation();
         loading.start();
 
         // Request to convert the blob object url "blob:chrome-extension://xxx"
@@ -149,21 +177,22 @@ export default {
                 loading.stop();
                 this.processFiles(files);
               } else {
-                console.warn("Got no attachements from extension...");
+                const failureMessages = "Got no attachements from extension...";
+                console.warn(failureMessages);
+                this.showSnackbarMessage(failureMessages, 3500);
               }
               break;
 
             default:
               loading.stop();
-              console.warn("Received unhandled response code from extension.");
+              const failureMessages = "Received unhandled response code from extension.";
+              console.warn(failureMessages);
+              this.showSnackbarMessage(failureMessages, 3500);
           }
         });
       }
     },
     onLoadFile(e) {
-      // Clear status to avoid keeping status of previous failed uploads
-      this.$emit('statusChange', null);
-
       const files = event.target.files || event.dataTransfer.files;
       this.processFiles(files);
     },
@@ -173,12 +202,12 @@ export default {
       for (const file of files) {
         try {
           this.loadingFiles = true;
-          this.$emit('statusChange', file.name + " (loading)");
+          this.showSnackbarMessage(`Loading ${file.name}`, Infinity);
           const result = await this.addFile(file);
           decodedFiles.push(...result);
-          this.$emit('statusChange', null);
+          this.hideSnackbarMessage();
         } catch(e) {
-          this.$emit('statusChange', `${file.name}: ${e}`);
+          this.showSnackbarMessage(`Failed to load '${file.name}'...\n${e}`, 5000);
           console.error(e);
           error = e;
           break;
@@ -193,9 +222,67 @@ export default {
         return;
       }
 
+      const decodedFileTypes = new Set(Object.keys(this.dataFiles));
+      // A file is overridden if a file of the same type is upload twice, as
+      // Winscope currently only support at most one file to each type
+      const overriddenDataTypes = new Set();
+      const overriddenFiles = {}; // filetype => array of file names
+      let overriddenCount = 0;
       for (const decodedFile of decodedFiles) {
+        const dataType = decodedFile.filetype.dataType.name;
+
+        if (decodedFileTypes.has(dataType)) {
+          overriddenDataTypes.add(dataType);
+          (overriddenFiles[dataType] = overriddenFiles[dataType] || [])
+            .push(this.dataFiles[dataType].filename);
+          overriddenCount++;
+        }
+        decodedFileTypes.add(dataType);
+
         this.$set(this.dataFiles,
-          decodedFile.filetype.dataType.name, decodedFile.data);
+          dataType, decodedFile.data);
+      }
+
+      if (overriddenDataTypes.size > 0) {
+        if (overriddenDataTypes.size === 1 && overriddenCount === 1) {
+          const type = overriddenDataTypes.values().next().value;
+          const overriddenFile = overriddenFiles[type][0];
+          const keptFile = this.dataFiles[type].filename;
+          const message = `'${overriddenFile}' is conflicting with '${keptFile}'. Only '${keptFile}' will be kept. If you wish to display '${overriddenFile}', please upload it again with no other file of the same type.`;
+
+          this.showSnackbarMessage(`WARNING: ${message}`, Infinity);
+          console.warn(message);
+        } else {
+          const message = `Mutiple conflicting files have been uploaded. ${overriddenCount} files have been discarded. Please check the developer console for more information.`;
+          this.showSnackbarMessage(`WARNING: ${message}`, Infinity);
+
+          const messageBuilder = [];
+          for (const type of overriddenDataTypes.values()) {
+            const keptFile = this.dataFiles[type].filename;
+            const overriddenFilesCount = overriddenFiles[type].length;
+
+            messageBuilder.push(`${overriddenFilesCount} file${overriddenFilesCount > 1 ? 's' : ''} of type ${type} ${overriddenFilesCount > 1 ? 'have' : 'has'} been overridden. Only '${keptFile}' has been kept.`);
+          }
+
+          messageBuilder.push("");
+          messageBuilder.push("Please reupload the specific files you want to read (one of each type).");
+          messageBuilder.push("");
+
+          messageBuilder.push("================DISCARDED FILES================");
+
+          for (const type of overriddenDataTypes.values()) {
+            const discardedFiles = overriddenFiles[type];
+            const keptFile = this.dataFiles[type].filename;
+
+            messageBuilder.push(`The following files of type ${type} have been discarded:`);
+            for (const discardedFile of discardedFiles) {
+              messageBuilder.push(`  - ${discardedFile}`);
+            }
+            messageBuilder.push("");
+          }
+
+          console.warn(messageBuilder.join("\n"));
+        }
       }
     },
     getFileExtensions(file) {
@@ -217,7 +304,7 @@ export default {
       // for more information.
       if (type === 'bugreport' ||
           (type === 'auto' && (extension === 'zip' || file.type === 'application/zip'))) {
-        const results = await this.decodeCompressedBugReport(file);
+        const results = await this.decodeArchive(file);
         decodedFiles.push(...results);
       } else {
         const decodedFile = await this.decodeFile(file);
@@ -250,24 +337,33 @@ export default {
 
       return {filetype, data};
     },
-    async decodeCompressedBugReport(file) {
-      const buffer = await this.readFile(file);
+    async decodeArchive(archive) {
+      const buffer = await this.readFile(archive);
 
       const zip = new JSZip();
       const content = await zip.loadAsync(buffer);
 
-      console.log("ZIP CONTENT", content);
-
       const decodedFiles = [];
-      for (const filename of BUG_REPORT_FILES) {
-        const file = content.files[filename];
-        if (file) {
-          const fileBlob = await file.async("blob");
-          fileBlob.name = filename;
 
+      for (const filename in content.files) {
+        const file = content.files[filename];
+
+        const fileBlob = await file.async("blob");
+        fileBlob.name = filename;
+
+        try {
           const decodedFile = await this.decodeFile(fileBlob);
+
           decodedFiles.push(decodedFile);
+        } catch(e) {
+          if (!(e instanceof UndetectableFileType)) {
+            throw e;
+          }
         }
+      }
+
+      if (decodedFiles.length == 0) {
+        throw new Error("No matching files found in archive", archive);
       }
 
       return decodedFiles;
