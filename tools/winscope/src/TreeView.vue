@@ -15,7 +15,13 @@
 <template>
   <div class="tree-view" v-if="item">
     <div class="node"
-      :class="[{ leaf: isLeaf, selected: isSelected, clickable: isClickable }, diffClass]"
+      :class="[{
+        leaf: isLeaf,
+        selected: isSelected,
+        clickable: isClickable,
+        hover: nodeHover,
+        'child-hover': childHover,
+      }, diffClass]"
       :style="nodeOffsetStyle"
       @click="clicked"
       ref="node"
@@ -87,6 +93,8 @@
         :collapse="collapseChildren"
         :collapseChildren="collapseChildren"
         :useGlobalCollapsedState="useGlobalCollapsedState"
+        v-on:hoverStart="childHover = true"
+        v-on:hoverEnd="childHover = false"
         ref="children"
       />
     </div>
@@ -141,6 +149,8 @@ export default {
       isCollapsedByDefault,
       localCollapsedState: isCollapsedByDefault,
       collapseDiffClass: null,
+      nodeHover: false,
+      childHover: false,
       diffSymbol: {
         [DiffType.NONE]: "",
         [DiffType.ADDED]: "+",
@@ -149,9 +159,6 @@ export default {
         [DiffType.MOVED]: ".",
       },
     };
-  },
-  created() {
-    this.updateCollapsedDiffClass();
   },
   watch: {
     stableId() {
@@ -404,20 +411,39 @@ export default {
         marginLeft: '-' + offest,
         paddingLeft: offest,
       }
-    }
+    },
   },
   mounted() {
     // Prevent highlighting on multiclick of node element
-    this.$refs.node?.addEventListener('mousedown', (e) => {
+    this.nodeMouseDownEventListner = (e) => {
       if (e.detail > 1) {
         e.preventDefault();
         return false;
       }
 
       return true;
-    });
-  },
+    };
+    this.$refs.node?.addEventListener('mousedown', this.nodeMouseDownEventListner);
 
+    this.updateCollapsedDiffClass();
+
+    this.nodeMouseEnterEventListener = e => {
+      this.nodeHover = true;
+      this.$emit('hoverStart');
+    };
+    this.$refs.node?.addEventListener('mouseenter', this.nodeMouseEnterEventListener);
+
+    this.nodeMouseLeaveEventListener = e => {
+      this.nodeHover = false;
+      this.$emit('hoverEnd');
+    };
+    this.$refs.node?.addEventListener('mouseleave', this.nodeMouseLeaveEventListener);
+  },
+  beforeDestroy() {
+    this.$refs.node?.removeEventListener('mousedown', this.nodeMouseDownEventListner);
+    this.$refs.node?.removeEventListener('mouseenter', this.nodeMouseEnterEventListener);
+    this.$refs.node?.removeEventListener('mouseleave', this.nodeMouseLeaveEventListener);
+  },
 };
 </script>
 <style>
@@ -480,7 +506,11 @@ export default {
   margin-top: 0px;
 }
 
-.tree-view .node:hover + .children {
+.tree-view .node.child-hover + .children {
+  border-left: 1px solid #b4b4b4;
+}
+
+.tree-view .node.hover + .children {
   border-left: 1px solid rgb(200, 200, 200);
 }
 
