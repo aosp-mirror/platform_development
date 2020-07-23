@@ -31,7 +31,10 @@ import re
 import sys
 import xml.dom.minidom
 
-from gerrit import create_url_opener_from_args, query_change_lists
+from gerrit import (
+    create_url_opener_from_args, find_gerrit_name, query_change_lists, run
+)
+from subprocess import PIPE
 
 try:
     # pylint: disable=redefined-builtin
@@ -49,46 +52,6 @@ except ImportError:
     def _sh_quote(txt):
         """Quote a string if it contains special characters."""
         return txt if _SHELL_SIMPLE_PATTERN.match(txt) else json.dumps(txt)
-
-try:
-    from subprocess import PIPE, run  # PY3.5
-except ImportError:
-    from subprocess import CalledProcessError, PIPE, Popen
-
-    class CompletedProcess(object):
-        """Process execution result returned by subprocess.run()."""
-        # pylint: disable=too-few-public-methods
-
-        def __init__(self, args, returncode, stdout, stderr):
-            self.args = args
-            self.returncode = returncode
-            self.stdout = stdout
-            self.stderr = stderr
-
-    def run(*args, **kwargs):
-        """Run a command with subprocess.Popen() and redirect input/output."""
-
-        check = kwargs.pop('check', False)
-
-        try:
-            stdin = kwargs.pop('input')
-            assert 'stdin' not in kwargs
-            kwargs['stdin'] = PIPE
-        except KeyError:
-            stdin = None
-
-        proc = Popen(*args, **kwargs)
-        try:
-            stdout, stderr = proc.communicate(stdin)
-        except:
-            proc.kill()
-            proc.wait()
-            raise
-        returncode = proc.wait()
-
-        if check and returncode:
-            raise CalledProcessError(returncode, args, stdout)
-        return CompletedProcess(args, returncode, stdout, stderr)
 
 
 if bytes is str:
@@ -404,8 +367,7 @@ def _parse_args():
                         help='Commands')
 
     parser.add_argument('query', help='Change list query string')
-    parser.add_argument('-g', '--gerrit', required=True,
-                        help='Gerrit review URL')
+    parser.add_argument('-g', '--gerrit', help='Gerrit review URL')
 
     parser.add_argument('--gitcookies',
                         default=os.path.expanduser('~/.gitcookies'),
@@ -451,6 +413,15 @@ def _get_local_branch_name_from_args(args):
 def main():
     """Main function"""
     args = _parse_args()
+
+    if not args.gerrit:
+        try:
+            args.gerrit = find_gerrit_name()
+        # pylint: disable=bare-except
+        except:
+            print('gerrit instance not found, use [-g GERRIT]')
+            sys.exit(1)
+
     if args.command == 'json':
         _main_json(args)
     elif args.command == 'bash':
