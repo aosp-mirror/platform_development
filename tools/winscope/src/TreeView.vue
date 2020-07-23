@@ -18,6 +18,7 @@
       :class="[{
         leaf: isLeaf,
         selected: isSelected,
+        'child-selected': immediateChildSelected,
         clickable: isClickable,
         hover: nodeHover,
         'child-hover': childHover,
@@ -95,6 +96,8 @@
         :useGlobalCollapsedState="useGlobalCollapsedState"
         v-on:hoverStart="childHover = true"
         v-on:hoverEnd="childHover = false"
+        v-on:selected="immediateChildSelected = true"
+        v-on:unselected="immediateChildSelected = false"
         ref="children"
       />
     </div>
@@ -145,6 +148,7 @@ export default {
 
     return {
       isChildSelected: false,
+      immediateChildSelected: false,
       clickTimeout: null,
       isCollapsedByDefault,
       localCollapsedState: isCollapsedByDefault,
@@ -175,6 +179,13 @@ export default {
     currentTimestamp() {
       // Update anything that is required to change when time changes.
       this.updateCollapsedDiffClass();
+    },
+    isSelected(isSelected) {
+      if (isSelected) {
+        this.$emit('selected');
+      } else {
+        this.$emit('unselected');
+      }
     }
   },
   methods: {
@@ -504,6 +515,14 @@ export default {
   padding-left: 11px;
   border-left: 1px solid rgb(238, 238, 238);
   margin-top: 0px;
+}
+
+.tree-view .node.child-selected + .children {
+  border-left: 1px solid #b4b4b4;
+}
+
+.tree-view .node.selected + .children {
+  border-left: 1px solid rgb(200, 200, 200);
 }
 
 .tree-view .node.child-hover + .children {
