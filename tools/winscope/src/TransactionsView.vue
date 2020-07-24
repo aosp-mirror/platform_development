@@ -41,7 +41,7 @@
         :data-key="'timestamp'"
         :data-sources="filteredData"
         :data-component="transactionEntryComponent"
-        :extra-props="{'onClick': transactionSelected}"
+        :extra-props="{onClick: transactionSelected, selectedTransaction }"
         ref="loglist"
       />
     </flat-card>
@@ -102,6 +102,7 @@ export default {
       selectedTree: null,
       filters: [],
       selectedProperty: null,
+      selectedTransaction: null,
       transactionEntryComponent: TransactionEntry,
     };
   },
@@ -167,6 +168,8 @@ export default {
       return changeObject;
     },
     transactionSelected(transaction) {
+      this.selectedTransaction = transaction;
+
       let obj = this.removeNullFields(transaction.obj);
       let name = transaction.type;
 
