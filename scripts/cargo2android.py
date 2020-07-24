@@ -60,6 +60,7 @@ from __future__ import print_function
 import argparse
 import os
 import os.path
+import platform
 import re
 import sys
 
@@ -363,6 +364,16 @@ class Crate(object):
           return
         dir_name = os.path.dirname(dir_name)
 
+  def add_codegens_flag(self, flag):
+    # ignore options not used in Android
+    # 'prefer-dynamic' does not work with common flag -C lto
+    if not (flag.startswith('debuginfo=') or
+            flag.startswith('extra-filename=') or
+            flag.startswith('incremental=') or
+            flag.startswith('metadata=') or
+            flag == 'prefer-dynamic'):
+      self.codegens.append(flag)
+
   def parse(self, line_num, line):
     """Find important rustc arguments to convert to Android.bp properties."""
     self.line_num = line_num
@@ -398,12 +409,11 @@ class Crate(object):
         self.core_externs.append(re.sub(' = .*', '', extern_names))
       elif arg == '-C':  # codegen options
         i += 1
-        # ignore options not used in Android
-        if not (args[i].startswith('debuginfo=') or
-                args[i].startswith('extra-filename=') or
-                args[i].startswith('incremental=') or
-                args[i].startswith('metadata=')):
-          self.codegens.append(args[i])
+        self.add_codegens_flag(args[i])
+      elif arg.startswith('-C'):
+        # cargo has been passing "-C <xyz>" flag to rustc,
+        # but newer cargo could pass '-Cembed-bitcode=no' to rustc.
+        self.add_codegens_flag(arg[2:])
       elif arg == '--cap-lints':
         i += 1
         self.cap_lints = args[i]
@@ -660,17 +670,16 @@ class Crate(object):
 
   def dump_android_flags(self):
     """Dump Android module flags property."""
-    cfg_fmt = '"--cfg %s"'
+    if not self.cfgs and not self.codegens and not self.cap_lints:
+      return
+    self.write('    flags: [')
     if self.cap_lints:
-      allowed = '"--cap-lints ' + self.cap_lints + '"'
-      if not self.cfgs:
-        self.write('    flags: [' + allowed + '],')
-      else:
-        self.write('    flags: [\n       ' + allowed + ',')
-        self.dump_android_property_list_items(cfg_fmt, self.cfgs)
-        self.write('    ],')
-    else:
-      self.dump_android_property_list('flags', cfg_fmt, self.cfgs)
+      self.write('        "--cap-lints ' + self.cap_lints + '",')
+    cfg_fmt = '"--cfg %s"'
+    codegens_fmt = '"-C %s"'
+    self.dump_android_property_list_items(cfg_fmt, self.cfgs)
+    self.dump_android_property_list_items(codegens_fmt, self.codegens)
+    self.write('    ],')
 
   def dump_edition_flags_libs(self):
     if self.edition:
@@ -1013,6 +1022,7 @@ class Runner(object):
     self.args = args
     self.dry_run = not args.run
     self.skip_cargo = args.skipcargo
+    self.cargo_path = './cargo'  # path to cargo, will be set later
     # All cc/ar objects, crates, dependencies, and warning files
     self.cc_objects = list()
     self.pkg_obj2cc = {}
@@ -1025,6 +1035,7 @@ class Runner(object):
     self.name_owners = {}
     # Save and dump all errors from cargo to Android.bp.
     self.errors = ''
+    self.setup_cargo_path()
     # Default action is cargo clean, followed by build or user given actions.
     if args.cargo:
       self.cargo = ['clean'] + args.cargo
@@ -1041,6 +1052,58 @@ class Runner(object):
           self.cargo.append('build --tests ' + default_target)
       elif args.tests and not args.no_host:
         self.cargo.append('build --tests')
+
+  def setup_cargo_path(self):
+    """Find cargo in the --cargo_bin or prebuilt rust bin directory."""
+    if self.args.cargo_bin:
+      self.cargo_path = os.path.join(self.args.cargo_bin, 'cargo')
+      if not os.path.isfile(self.cargo_path):
+        sys.exit('ERROR: cannot find cargo in ' + self.args.cargo_bin)
+      print('WARNING: using cargo in ' + self.args.cargo_bin)
+      return
+    # We have only tested this on Linux.
+    if platform.system() != 'Linux':
+      sys.exit('ERROR: this script has only been tested on Linux with cargo.')
+    # Assuming that this script is in development/scripts.
+    my_dir = os.path.dirname(os.path.abspath(__file__))
+    linux_dir = os.path.join(my_dir, '..', '..',
+                             'prebuilts', 'rust', 'linux-x86')
+    if not os.path.isdir(linux_dir):
+      sys.exit('ERROR: cannot find directory ' + linux_dir)
+    rust_version = self.find_rust_version(my_dir, linux_dir)
+    cargo_bin = os.path.join(linux_dir, rust_version, 'bin')
+    self.cargo_path = os.path.join(cargo_bin, 'cargo')
+    if not os.path.isfile(self.cargo_path):
+      sys.exit('ERROR: cannot find cargo in ' + cargo_bin
+               + '; please try --cargo_bin= flag.')
+    return
+
+  def find_rust_version(self, my_dir, linux_dir):
+    """Use my script directory, find prebuilt rust version."""
+    # First look up build/soong/rust/config/global.go.
+    path2global = os.path.join(my_dir, '..', '..',
+                               'build', 'soong', 'rust', 'config', 'global.go')
+    if os.path.isfile(path2global):
+      # try to find: RustDefaultVersion = "1.44.0"
+      version_pat = re.compile(
+          r'\s*RustDefaultVersion\s*=\s*"([0-9]+\.[0-9]+\.[0-9]+)".*$')
+      with open(path2global, 'r') as inf:
+        for line in inf:
+          result = version_pat.match(line)
+          if result:
+            return result.group(1)
+    print('WARNING: cannot find RustDefaultVersion in ' + path2global)
+    # Otherwise, find the newest (largest) version number in linux_dir.
+    rust_version = (0, 0, 0)  # the prebuilt version to use
+    version_pat = re.compile(r'([0-9]+)\.([0-9]+)\.([0-9]+)$')
+    for dir_name in os.listdir(linux_dir):
+      result = version_pat.match(dir_name)
+      if not result:
+        continue
+      version = (result.group(1), result.group(2), result.group(3))
+      if version > rust_version:
+        rust_version = version
+    return '.'.join(rust_version)
 
   def init_bp_file(self, name):
     if name not in self.bp_files:
@@ -1107,6 +1170,9 @@ class Runner(object):
     if not self.dry_run and os.path.exists('cargo.out'):
       os.remove('cargo.out')
     cmd_tail = ' --target-dir ' + TARGET_TMP + ' >> cargo.out 2>&1'
+    # set up search PATH for cargo to find the correct rustc
+    saved_path = os.environ['PATH']
+    os.environ['PATH'] = os.path.dirname(self.cargo_path) + ':' + saved_path
     for c in self.cargo:
       features = ''
       if c != 'clean':
@@ -1114,7 +1180,8 @@ class Runner(object):
           features = ' --no-default-features'
         if self.args.features:
           features += ' --features ' + self.args.features
-      cmd = 'cargo -vv ' if self.args.vv else 'cargo -v '
+      cmd_v_flag = ' -vv ' if self.args.vv else ' -v '
+      cmd = self.cargo_path + cmd_v_flag
       cmd += c + features + cmd_tail
       if self.args.rustflags and c != 'clean':
         cmd = 'RUSTFLAGS="' + self.args.rustflags + '" ' + cmd
@@ -1126,6 +1193,7 @@ class Runner(object):
         with open('cargo.out', 'a') as cargo_out:
           cargo_out.write('### Running: ' + cmd + '\n')
         os.system(cmd)
+    os.environ['PATH'] = saved_path
     return self
 
   def dump_dependencies(self):
@@ -1305,6 +1373,10 @@ def parse_args():
       metavar='args_string',
       help=('extra cargo build -v args in a string, ' +
             'each --cargo flag calls cargo build -v once'))
+  parser.add_argument(
+      '--cargo_bin',
+      type=str,
+      help='use cargo in the cargo_bin directory instead of the prebuilt one')
   parser.add_argument(
       '--debug',
       action='store_true',
