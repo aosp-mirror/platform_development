@@ -170,6 +170,8 @@ ${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/core-current-stubs-for-system-module
 # optional API files.
 development/build/optional.json                                                               platforms/${PLATFORM_NAME}/optional/optional.json
 ${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/org.apache.http.legacy.stubs_intermediates/classes.jar  platforms/${PLATFORM_NAME}/optional/org.apache.http.legacy.jar
+# Android Automotive OS stubs.
+prebuilts/sdk/29/public/android.car.jar                                                       platforms/${PLATFORM_NAME}/optional/android.car.jar
 # deprecated APIs
 ${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android_uiautomator_intermediates/classes.jar     platforms/${PLATFORM_NAME}/uiautomator.jar
 # Test APIs
