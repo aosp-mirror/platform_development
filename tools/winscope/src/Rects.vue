@@ -51,7 +51,7 @@ export default {
   },
   methods: {
     s(sourceCoordinate) {  // translate source into target coordinates
-    var scale; 
+    var scale;
     if(this.boundsC.width < this.boundsC.height) {
       scale =  this.desiredHeight / this.boundsC.height;
     } else {

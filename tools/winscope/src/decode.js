@@ -328,14 +328,34 @@ function detectAndDecode(buffer, fileName, store) {
   if (arrayStartsWith(buffer, LAUNCHER_MAGIC_NUMBER)) {
     return decodedFile(FILE_TYPES['launcher_trace'], buffer, fileName, store);
   }
-  for (var name of ['transaction', 'layers_dump', 'window_dump', 'wl_dump']) {
+
+  for (const [name, condition] of [
+    ['transaction', (file) => file.data.length > 0],
+    ['wl_dump', (file) => (file.data.length > 0 && file.data.children[0] > 0) || file.data.length > 1],
+    ['layers_dump'],
+    ['window_dump']
+  ]) {
     try {
-      return decodedFile(FILE_TYPES[name], buffer, fileName, store);
+      const [filetype, fileData] = decodedFile(FILE_TYPES[name], buffer, fileName, store);
+
+      // A generic file will often wrongly be decoded as an empty wayland dump file
+      if (condition && !condition(fileData)) {
+        // Fall through to next filetype
+        continue;
+      }
+
+      return [filetype, fileData];
     } catch (ex) {
-      // ignore exception and try next filetype
+      // ignore exception and fall through to next filetype
     }
   }
-  throw new Error('Unable to detect file');
+  throw new UndetectableFileType('Unable to detect file');
 }
 
-export { detectAndDecode, decodeAndTransformProto, DATA_TYPES, FILE_TYPES };
+/**
+ * Error is raised when detectAndDecode is called but the file can't be
+ * automatically detected as being of a compatible file type.
+ */
+class UndetectableFileType extends Error { }
+
+export { detectAndDecode, decodeAndTransformProto, DATA_TYPES, FILE_TYPES, UndetectableFileType };
