@@ -1,5 +1,11 @@
 <template>
-  <div class="entry" :class="{inactive: source.timestamp > currentTimestamp}" @click="onClick(source)">
+  <div class="entry"
+    :class="{
+      inactive: source.timestamp > currentTimestamp,
+      selected: isSelected
+    }"
+    @click="onClick(source)"
+  >
     <div class="time-column">
       <a @click="setTimelineTime(source.timestamp)" class="time-link">
         {{source.time}}
@@ -29,7 +35,7 @@ export default {
   name: 'transaction-entry',
   props: {
     index: {
-      type: Number
+      type: Number,
     },
     source: {
       type: Object,
@@ -40,11 +46,17 @@ export default {
     onClick: {
       type: Function,
     },
+    selectedTransaction: {
+      type: Object,
+    }
   },
   computed: {
     currentTimestamp() {
       return this.$store.state.currentTimestamp;
-    }
+    },
+    isSelected() {
+      return this.source === this.selectedTransaction;
+    },
   },
   methods: {
     setTimelineTime(timestamp) {
@@ -119,7 +131,16 @@ export default {
   cursor: pointer;
 }
 
-.entry:hover {
+.entry.selected {
+  background-color: #365179;
+  color: white;
+}
+
+.entry.selected a {
+  color: white;
+}
+
+.entry:not(.selected):hover {
   background: #f1f1f1;
 }
 
