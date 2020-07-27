@@ -106,6 +106,28 @@ TRACE_TARGETS = {
 }
 
 
+class SurfaceFlingerTraceConfig:
+    """Handles optional configuration for surfaceflinger traces.
+    """
+    def __init__(self) -> None:
+        # default config flags
+        self.flags =  1 << 0 |  1 << 1
+
+    def add(self, config: str) -> None:
+        self.flags |= CONFIG_FLAG[config]
+
+    def is_valid(self, config: str) -> bool:
+        return config in CONFIG_FLAG
+
+    def command(self) -> str:
+        return f'su root service call SurfaceFlinger 1033 i32 {self.flags}'
+
+CONFIG_FLAG = {
+    "composition": 1 << 2,
+    "metadata": 1 << 3,
+    "hwc": 1 << 4
+}
+
 class DumpTarget:
     """Defines a single parameter to trace.
 
@@ -192,7 +214,7 @@ class BadRequest(Exception):
 
 
 class RequestRouter:
-    """Handles HTTP request authenticationn and routing"""
+    """Handles HTTP request authentication and routing"""
 
     def __init__(self, handler):
         self.request = handler
@@ -288,6 +310,15 @@ class DeviceRequestEndpoint(RequestEndpoint):
     @abstractmethod
     def process_with_device(self, server, path, device_id):
         pass
+
+    def get_request(self, server) -> str:
+        try:
+            length = int(server.headers["Content-Length"])
+        except KeyError as err:
+            raise BadRequest("Missing Content-Length header\n" + str(err))
+        except ValueError as err:
+            raise BadRequest("Content length unreadable\n" + str(err))
+        return json.loads(server.rfile.read(length).decode("utf-8"))
 
 
 class FetchFileEndpoint(DeviceRequestEndpoint):
@@ -419,13 +450,7 @@ while true; do sleep 0.1; done
 
     def process_with_device(self, server, path, device_id):
         try:
-            length = int(server.headers["Content-Length"])
-        except KeyError as err:
-            raise BadRequest("Missing Content-Length header\n" + str(err))
-        except ValueError as err:
-            raise BadRequest("Content length unreadable\n" + str(err))
-        try:
-            requested_types = json.loads(server.rfile.read(length).decode("utf-8"))
+            requested_types = self.get_request(server)
             requested_traces = [TRACE_TARGETS[t] for t in requested_types]
         except KeyError as err:
             raise BadRequest("Unsupported trace target\n" + str(err))
@@ -464,6 +489,33 @@ class EndTrace(DeviceRequestEndpoint):
                     "utf-8") + "\n### Command: adb -s {} shell ###\n### Input ###\n".format(device_id) + command.decode(
                     "utf-8"))
 
+class ConfigTrace(DeviceRequestEndpoint):
+    def process_with_device(self, server, path, device_id):
+        try:
+            requested_configs = self.get_request(server)
+            config = SurfaceFlingerTraceConfig()
+            for requested_config in requested_configs:
+                if not config.is_valid(requested_config): raise BadRequest(f"Unsupported config {requested_config}\n")
+                config.add(requested_config)
+        except KeyError as err:
+            raise BadRequest("Unsupported trace target\n" + str(err))
+        if device_id in TRACE_THREADS:
+            BadRequest(f"Trace in progress for {device_id}")
+        if not check_root(device_id):
+            raise AdbError(
+                f"Unable to acquire root privileges on the device - check the output of 'adb -s {device_id} shell su root id'")
+        command = config.command()
+        shell = ['adb', '-s', device_id, 'shell']
+        log.debug(f"Starting shell {' '.join(shell)}")
+        process = subprocess.Popen(shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                   stdin=subprocess.PIPE, start_new_session=True)
+        log.debug(f"Changing trace config on device {device_id}")
+        out, err = process.communicate(command.encode('utf-8'))
+        if process.returncode != 0:
+            raise AdbError(f"Error executing command:\n {command}\n\n### OUTPUT ###{out.decode('utf-8')}\n{err.decode('utf-8')}")
+        log.debug(f"Changing trace config finished on device {device_id}")
+        server.respond(HTTPStatus.OK, b'', "text/plain")
+
 
 class StatusEndpoint(DeviceRequestEndpoint):
     def process_with_device(self, server, path, device_id):
@@ -476,13 +528,7 @@ class StatusEndpoint(DeviceRequestEndpoint):
 class DumpEndpoint(DeviceRequestEndpoint):
     def process_with_device(self, server, path, device_id):
         try:
-            length = int(server.headers["Content-Length"])
-        except KeyError as err:
-            raise BadRequest("Missing Content-Length header\n" + str(err))
-        except ValueError as err:
-            raise BadRequest("Content length unreadable\n" + str(err))
-        try:
-            requested_types = json.loads(server.rfile.read(length).decode("utf-8"))
+            requested_types = self.get_request(server)
             requested_traces = [DUMP_TARGETS[t] for t in requested_types]
         except KeyError as err:
             raise BadRequest("Unsupported trace target\n" + str(err))
@@ -515,6 +561,7 @@ class ADBWinscopeProxy(BaseHTTPRequestHandler):
         self.router.register_endpoint(RequestType.POST, "start", StartTrace())
         self.router.register_endpoint(RequestType.POST, "end", EndTrace())
         self.router.register_endpoint(RequestType.POST, "dump", DumpEndpoint())
+        self.router.register_endpoint(RequestType.POST, "configtrace", ConfigTrace())
         super().__init__(request, client_address, server)
 
     def respond(self, code: int, data: bytes, mime: str) -> None:

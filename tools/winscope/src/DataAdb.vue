@@ -86,6 +86,12 @@
         <div class="selection">
           <md-checkbox class="md-primary" v-for="file in TRACE_FILES" :key="file" v-model="adbStore[file]">{{FILE_TYPES[file].name}}</md-checkbox>
         </div>
+        <div class="trace-config" v-for="file in Object.keys(TRACE_CONFIG)" :key="file">
+            <h4>{{FILE_TYPES[file].name}} config</h4>
+            <div class="selection">
+              <md-checkbox class="md-primary" v-for="config in TRACE_CONFIG[file]" :key="config" v-model="adbStore[config]">{{config}}</md-checkbox>
+            </div>
+        </div>
         <md-button class="md-primary trace-btn" @click="startTrace">Start trace</md-button>
       </div>
       <div class="dump-section">
@@ -142,6 +148,7 @@ const PROXY_ENDPOINTS = {
   DEVICES: "/devices/",
   START_TRACE: "/start/",
   END_TRACE: "/end/",
+  CONFIG_TRACE: "/configtrace/",
   DUMP: "/dump/",
   FETCH: "/fetch/",
   STATUS: "/status/",
@@ -153,11 +160,18 @@ const TRACE_FILES = [
   "transaction",
   "proto_log"
 ]
+const TRACE_CONFIG = {"layers_trace":[
+  "composition",
+  "metadata",
+  "hwc",
+]}
 const DUMP_FILES = [
   "window_dump",
   "layers_dump"
 ]
-const CAPTURE_FILES = TRACE_FILES.concat(DUMP_FILES)
+
+const CONFIGS = Object.keys(TRACE_CONFIG).flatMap(file => TRACE_CONFIG[file])
+const CAPTURE_FILES = TRACE_FILES.concat(DUMP_FILES).concat(CONFIGS)
 
 export default {
   name: 'dataadb',
@@ -165,6 +179,7 @@ export default {
     return {
       STATES,
       TRACE_FILES,
+      TRACE_CONFIG,
       DUMP_FILES,
       CAPTURE_FILES,
       FILE_TYPES,
@@ -229,11 +244,16 @@ export default {
     },
     startTrace() {
       const requested = this.toTrace()
+      const requestedConfig = this.toTraceConfig()
       if (requested.length < 1) {
         this.errorText = "No targets selected";
         this.status = STATES.ERROR;
         return
       }
+      if (requestedConfig.length > 0) {
+        this.callProxy("POST", PROXY_ENDPOINTS.CONFIG_TRACE + this.deviceId() + "/", this, null, null, requestedConfig)
+      }
+
       this.status = STATES.END_TRACE;
       this.callProxy("POST", PROXY_ENDPOINTS.START_TRACE + this.deviceId() + "/", this, function(request, view) {
         view.keepAliveTrace();
@@ -280,6 +300,12 @@ export default {
     toTrace() {
       return TRACE_FILES.filter(file => this.adbStore[file]);
     },
+    toTraceConfig() {
+      return Object.keys(TRACE_CONFIG)
+              .filter(file => this.adbStore[file])
+              .flatMap(file => TRACE_CONFIG[file])
+              .filter(config => this.adbStore[config]);
+    },
     toDump() {
       return DUMP_FILES.filter(file => this.adbStore[file]);
     },
@@ -310,7 +336,7 @@ export default {
         } else if (this.status === 200) {
           if (this.getResponseHeader("Winscope-Proxy-Version") !== WINSCOPE_PROXY_VERSION) {
             view.status = STATES.INVALID_VERSION;
-          } else {
+          } else if (onSuccess) {
             onSuccess(this, view)
           }
         } else if (this.status === 403) {
