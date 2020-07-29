@@ -137,7 +137,16 @@ class ObjectTransformer {
 		return this;
 	}
 
-	transform() {
+	/**
+	 * Transform the raw JS Object into a TreeView compatible object
+	 * @param {bool} keepOriginal whether or not to store the original object in
+	 *                            the obj property of a tree node for future reference
+	 * @param {bool} freeze whether or not the returned objected should be frozen
+	 *                      to prevent changing any of its properties
+	 * @param {string} metadataKey the key that contains a node's metadata to be
+	 *                             accessible after the transformation
+	 */
+	transform(transformOptions = { keepOriginal: false, freeze: true, metadataKey: null }) {
 		const { formatter } = this.options;
 		if (!formatter) {
 			throw new Error("Missing formatter, please set with setOptions()");
@@ -145,10 +154,13 @@ class ObjectTransformer {
 
 		return this._transform(this.obj, this.rootName, null,
 			this.compareWithObj, this.rootName, null,
-			this.stableId);
+			this.stableId, transformOptions);
 	}
 
-	_transformObject(obj, fieldOptions) {
+	/**
+	 * @param {*} metadataKey if 'obj' contains this key, it is excluded from the transformation
+	 */
+	_transformObject(obj, fieldOptions, metadataKey) {
 		const { skip, formatter } = this.options;
 		const transformedObj = {
 			obj: {},
@@ -178,6 +190,9 @@ class ObjectTransformer {
 			transformedObj.fieldOptions["" + obj] = fieldOptions;
 		} else if (obj && typeof obj == 'object') {
 			Object.keys(obj).forEach((key) => {
+				if (key === metadataKey) {
+					return;
+				}
 				transformedObj.obj[key] = obj[key];
 				transformedObj.fieldOptions[key] = obj.$type?.fields[key]?.options;
 			});
@@ -190,18 +205,38 @@ class ObjectTransformer {
 		return transformedObj;
 	}
 
+	/**
+	 * Extract the value of obj's property with key 'metadataKey'
+	 * @param {Object} obj the obj we want to extract the metadata from
+	 * @param {string} metadataKey the key that stores the metadata in the object
+	 * @return the metadata value or null in no metadata is present
+	 */
+	_getMetadata(obj, metadataKey) {
+		if (metadataKey && obj[metadataKey]) {
+			const metadata = obj[metadataKey];
+			obj[metadataKey] = undefined;
+			return metadata;
+		} else {
+			return null;
+		}
+	}
+
 	_transform(obj, name, fieldOptions,
 		compareWithObj, compareWithName, compareWithFieldOptions,
-		stableId) {
+		stableId, transformOptions) {
+
+		const originalObj = obj;
+		const metadata = this._getMetadata(obj, transformOptions.metadataKey);
+
 		const children = [];
 
 		if (!isTerminal(obj)) {
-			const transformedObj = this._transformObject(obj, fieldOptions);
+			const transformedObj = this._transformObject(obj, fieldOptions, transformOptions.metadataKey);
 			obj = transformedObj.obj;
 			fieldOptions = transformedObj.fieldOptions;
 		}
 		if (!isTerminal(compareWithObj)) {
-			const transformedObj = this._transformObject(compareWithObj, compareWithFieldOptions);
+			const transformedObj = this._transformObject(compareWithObj, compareWithFieldOptions, transformOptions.metadataKey);
 			compareWithObj = transformedObj.obj;
 			compareWithFieldOptions = transformedObj.fieldOptions;
 		}
@@ -218,7 +253,7 @@ class ObjectTransformer {
 				}
 				children.push(this._transform(obj[key], key, fieldOptions[key],
 					compareWithChild, compareWithChildName, compareWithChildFieldOptions,
-					`${stableId}.${key}`));
+					`${stableId}.${key}`, transformOptions));
 			}
 		}
 
@@ -226,7 +261,7 @@ class ObjectTransformer {
 		for (const key in compareWithObj) {
 			if (!obj.hasOwnProperty(key) && compareWithObj.hasOwnProperty(key)) {
 				children.push(this._transform(new Terminal(), new Terminal(), undefined,
-					compareWithObj[key], key, compareWithFieldOptions[key], `${stableId}.${key}`));
+					compareWithObj[key], key, compareWithFieldOptions[key], `${stableId}.${key}`, transformOptions));
 			}
 		}
 
@@ -282,7 +317,15 @@ class ObjectTransformer {
 			}
 		}
 
-		return Object.freeze(transformedObj);
+		if (transformOptions.keepOriginal) {
+			transformedObj.obj = originalObj;
+		}
+
+		if (metadata) {
+			transformedObj[transformOptions.metadataKey] = metadata;
+		}
+
+		return transformOptions.freeze ? Object.freeze(transformedObj) : transformedObj;
 	}
 }
 

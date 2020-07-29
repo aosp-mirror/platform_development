@@ -215,9 +215,10 @@ export default {
     transactionSelected(transaction) {
       this.selectedTransaction = transaction;
 
-      let obj = this.removeNullFields(transaction.obj);
-      let name = transaction.type;
+      const META_DATA_KEY = "metadata"
 
+      let obj;
+      let name;
       if (transaction.type == "transaction") {
         name = "changes";
         obj = {};
@@ -225,11 +226,27 @@ export default {
         const [surfaceChanges, displayChanges] =
           this.aggregateTransactions(transaction.transactions);
 
+        // Prepare the surface and display changes to be passed through
+        // the ObjectTransformer — in particular, remove redundant properties
+        // and add metadata that can be accessed post transformation
+        const perpareForTreeViewTransform = (change) => {
+          this.removeNullFields(change);
+          change[META_DATA_KEY] = {
+            // TODO (b/162402459): Shorten layer name
+            layerName: change.layerName,
+          }
+          // remove redundant properties
+          delete change.layerName;
+          delete change.id;
+
+          console.log(change)
+        };
+
         for (const changeId in surfaceChanges) {
-          this.removeNullFields(surfaceChanges[changeId]);
+          perpareForTreeViewTransform(surfaceChanges[changeId])
         }
         for (const changeId in displayChanges) {
-          this.removeNullFields(displayChanges[changeId]);
+          perpareForTreeViewTransform(displayChanges[changeId])
         }
 
         if (Object.keys(surfaceChanges).length > 0) {
@@ -239,8 +256,12 @@ export default {
         if (Object.keys(displayChanges).length > 0) {
           obj.displayChanges = displayChanges;
         }
+      } else {
+        obj = this.removeNullFields(transaction.obj);
+        name = transaction.type;
       }
 
+      // Transform the raw JS object to be TreeView compatible
       const transactionUniqueId = transaction.timestamp;
       let tree = new ObjectTransformer(
         obj,
@@ -248,8 +269,29 @@ export default {
         transactionUniqueId
       ).setOptions({
         formatter: () => {},
-      }).transform();
+      }).transform({
+        keepOriginal: true,
+        metadataKey: META_DATA_KEY,
+        freeze: false
+      });
 
+      // Add the layer name as the kind of the object to be shown in the TreeView
+      const addLayerNameAsKind = (tree) => {
+        for (const layerChanges of tree.children) {
+          layerChanges.kind = layerChanges.metadata.layerName;
+        }
+      }
+
+      if (transaction.type == "transaction") {
+        for (const child of tree.children) {
+          // child = surfaceChanges or displayChanges tree node
+          addLayerNameAsKind(child)
+        }
+      }
+
+      // If there are only surfaceChanges or only displayChanges and not both
+      // remove the extra top layer node which is meant to hold both types of
+      // changes when both are present
       if (tree.name == "changes" && tree.children.length === 1) {
         tree = tree.children[0];
       }
@@ -272,7 +314,7 @@ export default {
       };
     },
     isMeaningfulChange(object, key) {
-      // TODO: Handle cases of non null objects but meaningless change
+      // TODO (b/159799733): Handle cases of non null objects but meaningless change
       return object[key] !== null && object.hasOwnProperty(key)
     },
     mergeChanges(a, b) {
@@ -302,15 +344,22 @@ export default {
       for (const transaction of transactions) {
         const obj = transaction.obj;
 
+        // Create a new base object to merge all changes into
+        const newBaseObj = () => {
+          return {
+            layerName: transaction.layerName,
+          }
+        }
+
         switch (transaction.type) {
           case "surfaceChange":
             surfaceChanges[obj.id] =
-              this.mergeChanges(surfaceChanges[obj.id] ?? {}, obj);
+              this.mergeChanges(surfaceChanges[obj.id] ?? newBaseObj(), obj);
             break;
 
           case "displayChange":
             displayChanges[obj.id] =
-              this.mergeChanges(displayChanges[obj.id] ?? {}, obj);
+              this.mergeChanges(displayChanges[obj.id] ?? newBaseObj(), obj);
             break;
 
           default:
