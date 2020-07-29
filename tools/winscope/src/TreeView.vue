@@ -32,10 +32,8 @@
           {{isCollapsed ? "chevron_right" : "expand_more"}}
         </i>
       </button>
-      <div class="padding" v-else>
-        <i aria-hidden="true" class="md-icon md-theme-default material-icons">
-          arrow_right
-        </i>
+      <div class="leaf-node-icon-wrapper" v-else>
+        <i class="leaf-node-icon"/>
       </div>
       <div class="description">
         <span class="kind">{{item.kind}}</span>
@@ -602,6 +600,25 @@ export default {
 
 .description span {
   white-space: normal;
+}
+
+.leaf-node-icon-wrapper {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-content: center;
+  align-items: center;
+  justify-content: center;
+}
+
+.leaf-node-icon {
+  content: "";
+  display: inline-block;
+  height: 5px;
+  width: 5px;
+  margin-top: -2px;
+  border-radius: 50%;
+  background-color: #9b9b9b;
 }
 
 </style>
