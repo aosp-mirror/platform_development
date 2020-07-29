@@ -78,6 +78,7 @@ export default {
     },
     sufacesAffectedBy(transaction) {
       if (transaction.type !== 'transaction') {
+        // TODO (b/162402459): Shorten layer name
         return [{name: transaction.layerName, id: transaction.obj.id}];
       }
 
