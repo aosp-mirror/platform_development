@@ -246,6 +246,9 @@ export default {
     this.$store.commit('setMergedTimeline', this.mergedTimeline);
     this.updateNavigationFileFilter();
   },
+  mounted() {
+    this.emitBottomHeightUpdate();
+  },
   destroyed() {
     this.$store.commit('removeMergedTimeline', this.mergedTimeline);
   },
@@ -261,6 +264,8 @@ export default {
     minimized() {
       // Minimized toggled
       this.updateNavigationFileFilter();
+
+      this.$nextTick(this.emitBottomHeightUpdate);
     }
   },
   computed: {
@@ -373,6 +378,10 @@ export default {
     })
   },
   methods: {
+    emitBottomHeightUpdate() {
+      const newHeight = this.$refs.bottomNav.$el.clientHeight;
+      this.$emit('bottom-nav-height-change', newHeight);
+    },
     computeMergedTimeline() {
       const mergedTimeline = {
         timeline: [], // Array of integers timestamps
