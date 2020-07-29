@@ -1,5 +1,14 @@
 <template>
-  <div class="entry" :class="[{inactive: !source.occured}, source.level.toLowerCase()]">
+  <div
+    class="entry"
+    :class="[
+      {
+        'inactive': !source.occured,
+        'just-inactivated': source.justInactivated,
+      },
+      source.level.toLowerCase()
+    ]"
+  >
     <div class="level-column">
       <div>
         <div class="icon" v-if="source.level.toLowerCase() === 'verbose'">
@@ -124,6 +133,10 @@ a {
 
 .inactive a {
   color: gray;
+}
+
+.just-inactivated {
+  background: #dee2e3;
 }
 
 .new-badge {
