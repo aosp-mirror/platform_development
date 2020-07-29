@@ -17,24 +17,48 @@
 
     <flat-card class="changes card">
       <div class="filters">
-        <md-field>
-          <label>Transaction Type</label>
-          <md-select v-model="selectedTransactionTypes" multiple>
-            <md-option v-for="type in transactionTypes" :value="type">{{ type }}</md-option>
-          </md-select>
-        </md-field>
-
-        <div>
-          <md-autocomplete v-model="selectedProperty" :md-options="properties">
-            <label>Changed property</label>
-          </md-autocomplete>
-          <!-- TODO(b/159582192): Add way to select value a property has changed to,
-                figure out how to handle properties that are objects... -->
+        <div class="input">
+          <md-field>
+            <label>Transaction Type</label>
+            <md-select v-model="selectedTransactionTypes" multiple>
+              <md-option v-for="type in transactionTypes" :value="type">{{ type }}</md-option>
+            </md-select>
+          </md-field>
         </div>
 
-        <md-chips v-model="filters" md-placeholder="Add surface id or name...">
-          <div class="md-helper-text">Press enter to add</div>
-        </md-chips>
+        <div class="input">
+          <div>
+            <md-autocomplete v-model="selectedProperty" :md-options="properties">
+              <label>Changed property</label>
+            </md-autocomplete>
+            <!-- TODO(b/159582192): Add way to select value a property has changed to,
+                  figure out how to handle properties that are objects... -->
+          </div>
+        </div>
+
+        <div class="input">
+          <md-field>
+            <label>Origin PID</label>
+            <md-select v-model="selectedPids" multiple>
+              <md-option v-for="pid in pids" :value="pid">{{ pid }}</md-option>
+            </md-select>
+          </md-field>
+        </div>
+
+        <div class="input">
+          <md-field>
+            <label>Origin UID</label>
+            <md-select v-model="selectedUids" multiple>
+              <md-option v-for="uid in uids" :value="uid">{{ uid }}</md-option>
+            </md-select>
+          </md-field>
+        </div>
+
+        <div class="input">
+          <md-chips v-model="filters" md-placeholder="Add surface id or name...">
+            <div class="md-helper-text">Press enter to add</div>
+          </md-chips>
+        </div>
       </div>
 
       <virtual-list style="height: 600px; overflow-y: auto;"
@@ -82,6 +106,8 @@ export default {
   data() {
     const transactionTypes = new Set();
     const properties = new Set();
+    const pids = new Set();
+    const uids = new Set();
     for (const entry of this.data) {
       if (entry.type == "transaction") {
         for (const transaction of entry.transactions) {
@@ -92,12 +118,21 @@ export default {
         transactionTypes.add(entry.type);
         Object.keys(entry.obj).forEach(item => properties.add(item));
       }
+
+      if (entry.origin) {
+        pids.add(entry.origin.pid);
+        uids.add(entry.origin.uid);
+      }
     }
 
     return {
       transactionTypes: Array.from(transactionTypes),
       properties: Array.from(properties),
+      pids:  Array.from(pids),
+      uids:  Array.from(uids),
       selectedTransactionTypes: [],
+      selectedPids: [],
+      selectedUids: [],
       searchInput: "",
       selectedTree: null,
       filters: [],
@@ -116,11 +151,21 @@ export default {
             this.selectedTransactionTypes.includes(transaction.type)));
       }
 
+      if (this.selectedPids.length > 0) {
+        filteredData = filteredData.filter(entry =>
+            this.selectedPids.includes(entry.origin?.pid));
+      }
+
+      if (this.selectedUids.length > 0) {
+        filteredData = filteredData.filter(entry =>
+            this.selectedUids.includes(entry.origin?.uid));
+      }
+
       if (this.filters.length > 0) {
         filteredData = filteredData.filter(
           this.filterTransactions(transaction => {
             for (const filter of this.filters) {
-              if (isNaN(filter) && transaction.obj?.name?.includes(filter)) {
+              if (isNaN(filter) && transaction.layerName?.includes(filter)) {
                 // If filter isn't a number then check if the transaction's
                 // target surface's name matches the filter — if so keep it.
                 return true;
@@ -306,6 +351,15 @@ export default {
 .filters {
   margin-bottom: 15px;
   width: 100%;
+  padding: 15px 5px;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.filters .input {
+  max-width: 300px;
+  margin: 0 10px;
+  flex-grow: 1;
 }
 
 .changes-content {
