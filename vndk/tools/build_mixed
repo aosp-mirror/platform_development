@@ -285,13 +285,14 @@ if [[ "$INCLUDE_PRODUCT" == true ]]; then
 fi
 
 if [[ "$SKIP_VBMETA_REPLACE" == true ]]; then
-    # Totally skip the vbmeta.img replacement 
+    # Totally skip the vbmeta.img replacement
+    echo "Skip vbmeta.img replacement."
 else
     # Only override vbmeta if it is already present since fastboot update will try
     # to flash whatever is in the archive.
     if [[ -f "$DEVICE_IMAGES_DIR"/vbmeta.img ]]; then
-    readonly VBMETA_IMAGE_PATH="${OVERRIDE_VBMETA_IMAGE_PATH:-"$SYSTEM_IMAGES_DIR"/vbmeta.img}"
-    cp "$VBMETA_IMAGE_PATH" "$DEVICE_IMAGES_DIR"/
+      readonly VBMETA_IMAGE_PATH="${OVERRIDE_VBMETA_IMAGE_PATH:-"$SYSTEM_IMAGES_DIR"/vbmeta.img}"
+      cp "$VBMETA_IMAGE_PATH" "$DEVICE_IMAGES_DIR"/
     fi
 fi
 
