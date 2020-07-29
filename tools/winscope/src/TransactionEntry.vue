@@ -22,8 +22,11 @@
       <span style="white-space: pre;">{{formatOrigin(source)}}</span>
     </div>
     <div class="affected-surfaces-column">
-      <span v-for="(surface, index) in sufacesAffectedBy(source)">
-        {{surface.id}}<span v-if="surface.name"> ({{ surface.name }})</span>
+      <span v-for="(surface, index) in sufacesAffectedBy(source)" v-bind:key="surface.id">
+        <span v-if="surface.name" class="surface-name"> {{ surface.name }}</span>
+        <span class="surface-id">
+          <span v-if="surface.name">(</span>{{surface.id}}<span v-if="surface.name">)</span>
+        </span>
         <span v-if="index + 1 < sufacesAffectedBy(source).length">,&nbsp;</span>
       </span>
     </div>
@@ -178,5 +181,13 @@ a {
   padding: 0 5px;
   margin-left: 5px;
   font-size: 10px;
+}
+
+.affected-surfaces-column .surface-id {
+  color: #999999
+}
+
+.inactive .affected-surfaces-column .surface-id {
+  color: #b4b4b4
 }
 </style>
