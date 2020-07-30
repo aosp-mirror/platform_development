@@ -38,30 +38,15 @@
         </i>
       </div>
       <div class="description">
-        <span class="kind">{{item.kind}}</span>
-        <span v-if="item.kind && item.name">-</span>
-        <span>
-          <span v-if="simplifyNames && item.shortName && item.shortName !== item.name">
-            {{ item.shortName }}
-            <md-tooltip
-              md-delay="300"
-              md-direction="top"
-              style="margin-bottom: -10px"
-            >
-              {{item.name}}
-            </md-tooltip>
-          </span>
-          <span v-else>
-            {{ item.name }}
-          </span>
-        </span>
-        <div
-          v-for="c in item.chips"
-          v-bind:key="c.long"
-          :title="c.long"
-          :class="chipClassForChip(c)"
-        >
-          {{c.short}}
+        <div v-if="elementView">
+          <component
+            :is="elementView"
+            :item="item"
+            :simplify-names="simplifyNames"
+          />
+        </div>
+        <div v-else>
+          <DefaultTreeElement :item="item" :simplify-names="simplifyNames"/>
         </div>
       </div>
       <div v-show="isCollapsed">
@@ -98,6 +83,7 @@
         v-on:hoverEnd="childHover = false"
         v-on:selected="immediateChildSelected = true"
         v-on:unselected="immediateChildSelected = false"
+        :elementView="elementView"
         ref="children"
       />
     </div>
@@ -105,6 +91,8 @@
 </template>
 
 <script>
+import DefaultTreeElement from "./DefaultTreeElement.vue";
+
 import jsonProtoDefs from "frameworks/base/core/proto/android/server/windowmanagertrace.proto";
 import protobuf from "protobufjs";
 
@@ -142,6 +130,8 @@ export default {
     // toggled when switching back and forth between trees.
     // If true, requires all nodes in tree to have a stableId.
     "useGlobalCollapsedState",
+    // Custom view to use to render the elements in the tree view
+    "elementView",
   ],
   data() {
     const isCollapsedByDefault = this.collapse ?? false;
@@ -282,13 +272,6 @@ export default {
       } else {
         this.select();
       }
-    },
-    chipClassForChip(c) {
-      return [
-        "tree-view-internal-chip",
-        this.chipClassOrDefault,
-        this.chipClassOrDefault + "-" + (c.class || "default")
-      ];
     },
     filterMatches(c) {
       // If a filter is set, consider the item matches if the current item or any of its
@@ -454,6 +437,9 @@ export default {
     this.$refs.node?.removeEventListener('mousedown', this.nodeMouseDownEventListner);
     this.$refs.node?.removeEventListener('mouseenter', this.nodeMouseEnterEventListener);
     this.$refs.node?.removeEventListener('mouseleave', this.nodeMouseLeaveEventListener);
+  },
+  components: {
+    DefaultTreeElement
   },
 };
 </script>

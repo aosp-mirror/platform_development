@@ -5,9 +5,9 @@ usage () {
   echo "Usage: $0 [-v <vendor_version>] [-m <modify_system_image_path>]"
   echo "    [-t <prebuilt_otatools_path>] [-p <override_vbmeta_image_path>]"
   echo "    [-b <override_boot_image_path>]"
-  echo "    [-s] system_build_dir device_build_dir out_dir"
+  echo "    [-s] [-d] system_build_dir device_build_dir out_dir"
   echo
-  echo "Options -v, -m, -t, -p, -b, -s must precede positional arguments."
+  echo "Options -v, -m, -t, -p, -b, -s, -d must precede positional arguments."
   echo
   echo "vendor_version is the version of the vendor image when Keymaster v3"
   echo "    related modifications to the system image is necessary. Optional."
@@ -28,6 +28,8 @@ usage () {
   echo "    product.img when -s option is declared."
   echo "    By default, only system.img is flashed to the target device for"
   echo "    independent system update. No parameter required. Optional"
+  echo "-d is used to skip vbmeta.img replacement in its entirety and the"
+  echo "    one from the device build (if exists) is left untouched"
   echo "system_build_dir is the path to the system build"
   echo "    eg. aosp_arm64_ab-userdebug."
   echo "device_build_dir is the path to the device build"
@@ -53,7 +55,7 @@ cleanup_and_exit () {
 
 trap cleanup_and_exit EXIT
 
-while getopts :v:m:p:b:t:s opt; do
+while getopts :v:m:p:b:t:sd opt; do
   case "$opt" in
     v)
       readonly VENDOR_VERSION="$OPTARG"
@@ -72,6 +74,9 @@ while getopts :v:m:p:b:t:s opt; do
       ;;
     s)
       readonly INCLUDE_PRODUCT=true
+      ;;
+    d)
+      readonly SKIP_VBMETA_REPLACE=true
       ;;
     \?)
       exit_badparam "Invalid options: -"$OPTARG""
@@ -279,11 +284,16 @@ if [[ "$INCLUDE_PRODUCT" == true ]]; then
   fi
 fi
 
-# Only override vbmeta if it is already present since fastboot update will try
-# to flash whatever is in the archive.
-if [[ -f "$DEVICE_IMAGES_DIR"/vbmeta.img ]]; then
-  readonly VBMETA_IMAGE_PATH="${OVERRIDE_VBMETA_IMAGE_PATH:-"$SYSTEM_IMAGES_DIR"/vbmeta.img}"
-  cp "$VBMETA_IMAGE_PATH" "$DEVICE_IMAGES_DIR"/
+if [[ "$SKIP_VBMETA_REPLACE" == true ]]; then
+    # Totally skip the vbmeta.img replacement
+    echo "Skip vbmeta.img replacement."
+else
+    # Only override vbmeta if it is already present since fastboot update will try
+    # to flash whatever is in the archive.
+    if [[ -f "$DEVICE_IMAGES_DIR"/vbmeta.img ]]; then
+      readonly VBMETA_IMAGE_PATH="${OVERRIDE_VBMETA_IMAGE_PATH:-"$SYSTEM_IMAGES_DIR"/vbmeta.img}"
+      cp "$VBMETA_IMAGE_PATH" "$DEVICE_IMAGES_DIR"/
+    fi
 fi
 
 # Override boot.img with the provided boot image file since fastboot update cmd

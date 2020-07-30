@@ -30,7 +30,7 @@
         >Clear</md-button>
       </md-app-toolbar>
 
-      <md-app-content class="main-content">
+      <md-app-content class="main-content" :style="mainContentStyle">
         <section class="data-inputs" v-if="!dataLoaded">
           <div class="input">
             <dataadb class="adbinput" ref="adb" :store="store" @dataReady="onDataReady" @statusChange="setStatus" />
@@ -58,6 +58,7 @@
             :store="store"
             :ref="overlayRef"
             v-if="dataLoaded"
+            v-on:bottom-nav-height-change="handleBottomNavHeightChange"
           />
         </section>
       </md-app-content>
@@ -80,6 +81,8 @@ import {NAVIGATION_STYLE} from './utils/consts';
 
 const APP_NAME = "Winscope";
 
+const CONTENT_BOTTOM_PADDING = 25;
+
 export default {
   name: 'app',
   mixins: [FileType, SaveAsZip, FocusedDataViewFinder],
@@ -95,6 +98,9 @@ export default {
         navigationStyle: NAVIGATION_STYLE.GLOBAL,
       }),
       overlayRef: "overlay",
+      mainContentStyle: {
+        'padding-bottom': `${CONTENT_BOTTOM_PADDING}px`,
+      },
     }
   },
   created() {
@@ -140,6 +146,13 @@ export default {
       } else {
         this.title = APP_NAME;
       }
+    },
+    handleBottomNavHeightChange(newHeight) {
+      this.$set(
+        this.mainContentStyle,
+        'padding-bottom',
+        `${ CONTENT_BOTTOM_PADDING + newHeight }px`
+      );
     },
   },
   computed: {
@@ -205,7 +218,6 @@ export default {
 .data-view {
   display: flex;
   flex-direction: column;
-  padding-bottom: 75px; /* TODO: Disable if no bottom bar */
 }
 
 .card-toolbar {
