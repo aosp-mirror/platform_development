@@ -17,24 +17,48 @@
 
     <flat-card class="changes card">
       <div class="filters">
-        <md-field>
-          <label>Transaction Type</label>
-          <md-select v-model="selectedTransactionTypes" multiple>
-            <md-option v-for="type in transactionTypes" :value="type">{{ type }}</md-option>
-          </md-select>
-        </md-field>
-
-        <div>
-          <md-autocomplete v-model="selectedProperty" :md-options="properties">
-            <label>Changed property</label>
-          </md-autocomplete>
-          <!-- TODO(b/159582192): Add way to select value a property has changed to,
-                figure out how to handle properties that are objects... -->
+        <div class="input">
+          <md-field>
+            <label>Transaction Type</label>
+            <md-select v-model="selectedTransactionTypes" multiple>
+              <md-option v-for="type in transactionTypes" :value="type">{{ type }}</md-option>
+            </md-select>
+          </md-field>
         </div>
 
-        <md-chips v-model="filters" md-placeholder="Add surface id or name...">
-          <div class="md-helper-text">Press enter to add</div>
-        </md-chips>
+        <div class="input">
+          <div>
+            <md-autocomplete v-model="selectedProperty" :md-options="properties">
+              <label>Changed property</label>
+            </md-autocomplete>
+            <!-- TODO(b/159582192): Add way to select value a property has changed to,
+                  figure out how to handle properties that are objects... -->
+          </div>
+        </div>
+
+        <div class="input">
+          <md-field>
+            <label>Origin PID</label>
+            <md-select v-model="selectedPids" multiple>
+              <md-option v-for="pid in pids" :value="pid">{{ pid }}</md-option>
+            </md-select>
+          </md-field>
+        </div>
+
+        <div class="input">
+          <md-field>
+            <label>Origin UID</label>
+            <md-select v-model="selectedUids" multiple>
+              <md-option v-for="uid in uids" :value="uid">{{ uid }}</md-option>
+            </md-select>
+          </md-field>
+        </div>
+
+        <div class="input">
+          <md-chips v-model="filters" md-placeholder="Add surface id or name...">
+            <div class="md-helper-text">Press enter to add</div>
+          </md-chips>
+        </div>
       </div>
 
       <virtual-list style="height: 600px; overflow-y: auto;"
@@ -82,6 +106,8 @@ export default {
   data() {
     const transactionTypes = new Set();
     const properties = new Set();
+    const pids = new Set();
+    const uids = new Set();
     for (const entry of this.data) {
       if (entry.type == "transaction") {
         for (const transaction of entry.transactions) {
@@ -92,12 +118,21 @@ export default {
         transactionTypes.add(entry.type);
         Object.keys(entry.obj).forEach(item => properties.add(item));
       }
+
+      if (entry.origin) {
+        pids.add(entry.origin.pid);
+        uids.add(entry.origin.uid);
+      }
     }
 
     return {
       transactionTypes: Array.from(transactionTypes),
       properties: Array.from(properties),
+      pids:  Array.from(pids),
+      uids:  Array.from(uids),
       selectedTransactionTypes: [],
+      selectedPids: [],
+      selectedUids: [],
       searchInput: "",
       selectedTree: null,
       filters: [],
@@ -116,11 +151,21 @@ export default {
             this.selectedTransactionTypes.includes(transaction.type)));
       }
 
+      if (this.selectedPids.length > 0) {
+        filteredData = filteredData.filter(entry =>
+            this.selectedPids.includes(entry.origin?.pid));
+      }
+
+      if (this.selectedUids.length > 0) {
+        filteredData = filteredData.filter(entry =>
+            this.selectedUids.includes(entry.origin?.uid));
+      }
+
       if (this.filters.length > 0) {
         filteredData = filteredData.filter(
           this.filterTransactions(transaction => {
             for (const filter of this.filters) {
-              if (isNaN(filter) && transaction.obj?.name?.includes(filter)) {
+              if (isNaN(filter) && transaction.layerName?.includes(filter)) {
                 // If filter isn't a number then check if the transaction's
                 // target surface's name matches the filter — if so keep it.
                 return true;
@@ -170,9 +215,10 @@ export default {
     transactionSelected(transaction) {
       this.selectedTransaction = transaction;
 
-      let obj = this.removeNullFields(transaction.obj);
-      let name = transaction.type;
+      const META_DATA_KEY = "metadata"
 
+      let obj;
+      let name;
       if (transaction.type == "transaction") {
         name = "changes";
         obj = {};
@@ -180,11 +226,27 @@ export default {
         const [surfaceChanges, displayChanges] =
           this.aggregateTransactions(transaction.transactions);
 
+        // Prepare the surface and display changes to be passed through
+        // the ObjectTransformer — in particular, remove redundant properties
+        // and add metadata that can be accessed post transformation
+        const perpareForTreeViewTransform = (change) => {
+          this.removeNullFields(change);
+          change[META_DATA_KEY] = {
+            // TODO (b/162402459): Shorten layer name
+            layerName: change.layerName,
+          }
+          // remove redundant properties
+          delete change.layerName;
+          delete change.id;
+
+          console.log(change)
+        };
+
         for (const changeId in surfaceChanges) {
-          this.removeNullFields(surfaceChanges[changeId]);
+          perpareForTreeViewTransform(surfaceChanges[changeId])
         }
         for (const changeId in displayChanges) {
-          this.removeNullFields(displayChanges[changeId]);
+          perpareForTreeViewTransform(displayChanges[changeId])
         }
 
         if (Object.keys(surfaceChanges).length > 0) {
@@ -194,8 +256,12 @@ export default {
         if (Object.keys(displayChanges).length > 0) {
           obj.displayChanges = displayChanges;
         }
+      } else {
+        obj = this.removeNullFields(transaction.obj);
+        name = transaction.type;
       }
 
+      // Transform the raw JS object to be TreeView compatible
       const transactionUniqueId = transaction.timestamp;
       let tree = new ObjectTransformer(
         obj,
@@ -203,8 +269,29 @@ export default {
         transactionUniqueId
       ).setOptions({
         formatter: () => {},
-      }).transform();
+      }).transform({
+        keepOriginal: true,
+        metadataKey: META_DATA_KEY,
+        freeze: false
+      });
 
+      // Add the layer name as the kind of the object to be shown in the TreeView
+      const addLayerNameAsKind = (tree) => {
+        for (const layerChanges of tree.children) {
+          layerChanges.kind = layerChanges.metadata.layerName;
+        }
+      }
+
+      if (transaction.type == "transaction") {
+        for (const child of tree.children) {
+          // child = surfaceChanges or displayChanges tree node
+          addLayerNameAsKind(child)
+        }
+      }
+
+      // If there are only surfaceChanges or only displayChanges and not both
+      // remove the extra top layer node which is meant to hold both types of
+      // changes when both are present
       if (tree.name == "changes" && tree.children.length === 1) {
         tree = tree.children[0];
       }
@@ -227,7 +314,7 @@ export default {
       };
     },
     isMeaningfulChange(object, key) {
-      // TODO: Handle cases of non null objects but meaningless change
+      // TODO (b/159799733): Handle cases of non null objects but meaningless change
       return object[key] !== null && object.hasOwnProperty(key)
     },
     mergeChanges(a, b) {
@@ -257,15 +344,22 @@ export default {
       for (const transaction of transactions) {
         const obj = transaction.obj;
 
+        // Create a new base object to merge all changes into
+        const newBaseObj = () => {
+          return {
+            layerName: transaction.layerName,
+          }
+        }
+
         switch (transaction.type) {
           case "surfaceChange":
             surfaceChanges[obj.id] =
-              this.mergeChanges(surfaceChanges[obj.id] ?? {}, obj);
+              this.mergeChanges(surfaceChanges[obj.id] ?? newBaseObj(), obj);
             break;
 
           case "displayChange":
             displayChanges[obj.id] =
-              this.mergeChanges(displayChanges[obj.id] ?? {}, obj);
+              this.mergeChanges(displayChanges[obj.id] ?? newBaseObj(), obj);
             break;
 
           default:
@@ -306,6 +400,15 @@ export default {
 .filters {
   margin-bottom: 15px;
   width: 100%;
+  padding: 15px 5px;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.filters .input {
+  max-width: 300px;
+  margin: 0 10px;
+  flex-grow: 1;
 }
 
 .changes-content {
