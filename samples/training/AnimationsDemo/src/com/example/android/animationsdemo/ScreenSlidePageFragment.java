@@ -24,8 +24,8 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 /**
- * A fragment representing a single step in a wizard. The fragment shows a dummy title indicating
- * the page number, along with some dummy text.
+ * A fragment representing a single step in a wizard. The fragment shows a placeholder title indicating
+ * the page number, along with some placeholder text.
  *
  * <p>This class is used by the {@link CardFlipActivity} and {@link
  * ScreenSlideActivity} samples.</p>

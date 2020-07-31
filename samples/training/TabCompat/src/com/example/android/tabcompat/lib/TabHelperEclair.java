@@ -35,7 +35,7 @@ import java.util.HashMap;
  * It implements a generic mechanism for associating fragments with the tabs in a tab host.  It
  * relies on a trick:  Normally a tab host has a simple API for supplying a View or Intent that each
  * tab will show.  This is not sufficient for switching between fragments.  So instead we make the
- * content part of the tab host 0dp high (it is not shown) and this supplies its own dummy view to
+ * content part of the tab host 0dp high (it is not shown) and this supplies its own placeholder view to
  * show as the tab content.  It listens to changes in tabs, then passes the event back to the tab's
  * callback interface so the activity can take care of switching to the correct fragment.
  */
