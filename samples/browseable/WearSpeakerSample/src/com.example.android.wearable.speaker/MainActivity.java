@@ -202,7 +202,7 @@ public class MainActivity extends WearableActivity implements UIAnimation.UIStat
                 start();
             } else {
                 // Permission has been denied before. At this point we should show a dialog to
-                // user and explain why this permission is needed and direct him to go to the
+                // user and explain why this permission is needed and direct them to go to the
                 // Permissions settings for the app in the System settings. For this sample, we
                 // simply exit to get to the important part.
                 Toast.makeText(this, R.string.exiting_for_permissions, Toast.LENGTH_LONG).show();
