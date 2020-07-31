@@ -103,7 +103,7 @@ import java.util.regex.Pattern;
  * <pre class="prettyprint">
  * &lt;library&gt;
  *   &lt;book id="EH94"&gt;
- *     &lt;title&gt;The Old Man and the Sea&lt;/title&gt;
+ *     &lt;title&gt;The Old Person and the Sea&lt;/title&gt;
  *     &lt;author&gt;Ernest Hemingway&lt;/author&gt;
  *   &lt;/book&gt;
  *   &lt;book id="XX10"&gt;
