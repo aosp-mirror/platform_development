@@ -26,7 +26,6 @@
       class="point"
     />
     <rect
-      v-if="timeline.length"
       :x="position(selected)"
       y="0"
       :width="pointWidth"
@@ -39,7 +38,8 @@
 <script>
 export default {
   name: "timeline",
-  props: ["timeline", "selectedIndex", "scale", "disabled"],
+  // TODO: Add indication of trim, at least for collasped timeline
+  props: ["timeline", "selectedIndex", "scale", "crop", "disabled"],
   data() {
     return {
       pointWidth: "1%",
@@ -49,14 +49,21 @@ export default {
   },
   methods: {
     position(item) {
-      return this.translate(item);
+      let pos = this.translate(item);
+
+      if (this.crop) {
+        pos = (pos - this.crop.left) / (this.crop.right - this.crop.left);
+      }
+
+      return pos * 100 - (1 /*pointWidth*/) + "%";
     },
     translate(cx) {
-      var scale = [...this.scale];
+      const scale = [...this.scale];
       if (scale[0] >= scale[1]) {
         return cx;
       }
-      return (((cx - scale[0]) / (scale[1] - scale[0])) * 100)  + "%";
+
+      return (cx - scale[0]) / (scale[1] - scale[0]);
     },
     onItemClick(index) {
       if (this.disabled) {
