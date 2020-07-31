@@ -65,7 +65,7 @@ public class CardService extends HostApduService {
      * This method will be called when a command APDU has been received from a remote device. A
      * response APDU can be provided directly by returning a byte-array in this method. In general
      * response APDUs must be sent as quickly as possible, given the fact that the user is likely
-     * holding his device over an NFC reader when this method is called.
+     * holding their device over an NFC reader when this method is called.
      *
      * <p class="note">If there are multiple services that have registered for the same AIDs in
      * their meta-data entry, you will only get called if the user has explicitly selected your
