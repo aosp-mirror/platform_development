@@ -25,6 +25,7 @@
       }, diffClass]"
       :style="nodeOffsetStyle"
       @click="clicked"
+      @contextmenu.prevent="openContextMenu"
       ref="node"
     >
       <button class="toggle-tree-btn" @click="toggleTree" v-if="!isLeaf" v-on:click.stop>
@@ -59,6 +60,12 @@
         </button>
       </div>
     </div>
+
+    <node-context-menu
+      ref="nodeContextMenu"
+      v-on:collapseAllOtherNodes="collapseAllOtherNodes"
+    />
+
     <div class="children" v-if="children" v-show="!isCollapsed">
       <tree-view
         v-for="(c,i) in children"
@@ -81,6 +88,9 @@
         v-on:selected="immediateChildSelected = true"
         v-on:unselected="immediateChildSelected = false"
         :elementView="elementView"
+        v-on:collapseSibbling="collapseSibbling"
+        v-on:collapseAllOtherNodes="collapseAllOtherNodes"
+        v-on:closeAllContextMenus="closeAllContextMenus"
         ref="children"
       />
     </div>
@@ -89,6 +99,7 @@
 
 <script>
 import DefaultTreeElement from "./DefaultTreeElement.vue";
+import NodeContextMenu from "./NodeContextMenu.vue";
 
 import jsonProtoDefs from "frameworks/base/core/proto/android/server/windowmanagertrace.proto";
 import protobuf from "protobufjs";
@@ -336,6 +347,57 @@ export default {
 
       return DiffType.MODIFIED;
     },
+    collapseAllOtherNodes() {
+      this.$emit('collapseAllOtherNodes');
+      this.$emit('collapseSibbling', this.item);
+    },
+    collapseSibbling(item) {
+      if (!this.$refs.children) {
+        return;
+      }
+
+      for (const child of this.$refs.children) {
+        if (child.item === item) {
+          continue;
+        }
+
+        child.collapseAll();
+      }
+    },
+    collapseAll() {
+      this.setCollapseValue(true);
+
+      if (!this.$refs.children) {
+        return;
+      }
+
+      for (const child of this.$refs.children) {
+        child.collapseAll();
+      }
+    },
+    openContextMenu() {
+      this.closeAllContextMenus();
+      this.$refs.nodeContextMenu.open();
+    },
+    closeAllContextMenus(requestOrigin) {
+      this.$refs.nodeContextMenu.close();
+      this.$emit('closeAllContextMenus', this.item);
+      this.closeAllChildrenContextMenus(requestOrigin);
+    },
+    closeAllChildrenContextMenus(requestOrigin) {
+      if (!this.$refs.children) {
+        return;
+      }
+
+      for (const child of this.$refs.children) {
+        if (child.item ===  requestOrigin) {
+          continue;
+        }
+
+        child.$refs.nodeContextMenu.close();
+        child.closeAllChildrenContextMenus();
+      }
+    },
   },
   computed: {
     hasDiff() {
@@ -432,7 +494,8 @@ export default {
     this.$refs.node?.removeEventListener('mouseleave', this.nodeMouseLeaveEventListener);
   },
   components: {
-    DefaultTreeElement
+    DefaultTreeElement,
+    NodeContextMenu,
   },
 };
 </script>
