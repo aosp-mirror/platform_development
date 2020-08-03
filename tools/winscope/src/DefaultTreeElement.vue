@@ -41,6 +41,7 @@
     </div>
   </span>
 </template>
+
 <script>
 export default {
   name: 'DefaultTreeElement',
@@ -49,10 +50,43 @@ export default {
     chipClassForChip(c) {
       return [
         "tree-view-internal-chip",
-        this.chipClassOrDefault,
-        this.chipClassOrDefault + "-" + (c.class || "default")
+        "tree-view-chip",
+        "tree-view-chip" + "-" + (c.type?.toString() || c.class?.toString() || "default")
       ];
     },
   }
 }
 </script>
+
+<style scoped>
+.tree-view-internal-chip {
+  display: inline-block;
+}
+
+.tree-view-chip {
+  padding: 0 10px;
+  border-radius: 10px;
+  background-color: #aaa;
+  color: black;
+}
+
+.tree-view-chip.tree-view-chip-warn {
+  background-color: #ffaa6b;
+  color: black;
+}
+
+.tree-view-chip.tree-view-chip-error {
+  background-color: #ff6b6b;
+  color: black;
+}
+
+.tree-view-chip.tree-view-chip-gpu {
+  background-color: #00c853;
+  color: black;
+}
+
+.tree-view-chip.tree-view-chip-hwc {
+  background-color: #448aff;
+  color: black;
+}
+</style>
