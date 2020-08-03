@@ -545,7 +545,7 @@ public class MyCloudProvider extends DocumentsProvider {
 
     /**
      * Preload sample files packaged in the apk into the internal storage directory.  This is a
-     * dummy function specific to this demo.  The MyCloud mock cloud service doesn't actually
+     * placeholder function specific to this demo.  The MyCloud mock cloud service doesn't actually
      * have a backend, so it simulates by reading content from the device's internal storage.
      */
     private void writeDummyFilesToStorage() {
@@ -570,7 +570,7 @@ public class MyCloudProvider extends DocumentsProvider {
     }
 
     /**
-     * Write a file to internal storage.  Used to set up our dummy "cloud server".
+     * Write a file to internal storage.  Used to set up our placeholder "cloud server".
      *
      * @param resId     the resource ID of the file to write to internal storage
      * @param extension the file extension (ex. .png, .mp3)
@@ -608,7 +608,7 @@ public class MyCloudProvider extends DocumentsProvider {
     }
 
     /**
-     * Dummy function to determine whether the user is logged in.
+     * Placeholder function to determine whether the user is logged in.
      */
     private boolean isUserLoggedIn() {
         final SharedPreferences sharedPreferences =
