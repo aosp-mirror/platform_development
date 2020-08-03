@@ -100,12 +100,25 @@ export default {
       return this.translate(item);
     },
     translate(cx) {
-      var scale = [...this.scale];
+      const scale = [...this.scale];
       if (scale[0] >= scale[1]) {
         return cx;
       }
 
-      return (((cx - scale[0]) / (scale[1] - scale[0])) * 100 - (1 /*pointWidth*/)) + "%";
+      return (((cx - scale[0]) / (scale[1] - scale[0])) * (100 - (1 /*pointWidth*/))) + "%";
+    },
+    getPositionAsTimestamp(position) {
+      const scale = [...this.scale];
+      if (scale[0] >= scale[1]) {
+        return position;
+      }
+
+      const width = this.$refs.timelineSvg.clientWidth;
+      const pointWidth = 1/100 * width;
+      const positionAsPercent = position / (width - pointWidth);
+
+      return scale[0] +
+        positionAsPercent * (scale[1] - scale[0]);
     },
     emitCropDetails() {
       const width = this.$refs.timelineSvg.clientWidth;
@@ -144,6 +157,8 @@ export default {
             } else {
               this.selectionEndPosition = this.$refs.timelineSvg.clientWidth;
             }
+
+            this.$emit('showVideoAt', this.getPositionAsTimestamp(this.selectionEndPosition));
           } else {
             this.selectionEndPosition = this.selectionStartX;
 
@@ -153,6 +168,8 @@ export default {
             } else {
               this.selectionStartPosition = 0;
             }
+
+            this.$emit('showVideoAt', this.getPositionAsTimestamp(this.selectionStartPosition));
           }
         }
       }
@@ -160,6 +177,7 @@ export default {
       this.createSelectionMouseUpEventListener = e => {
         this.selecting = false;
         document.body.style.cursor = null;
+        this.$emit('resetVideoTimestamp');
       };
 
       this.$refs.timelineSvg
@@ -242,6 +260,7 @@ export default {
         this.resizeStartPos = this.selectionStartPosition;
 
         document.body.style.cursor = "ew-resize";
+        this.$emit('showVideoAt', this.getPositionAsTimestamp(this.selectionStartPosition));
       };
 
       this.rightResizeDraggerMouseDownEventListener = e => {
@@ -251,6 +270,7 @@ export default {
         this.resizeEndPos = this.selectionEndPosition;
 
         document.body.style.cursor = "ew-resize";
+        this.$emit('showVideoAt', this.getPositionAsTimestamp(this.selectionEndPosition));
       };
 
       this.resizeMouseMoveEventListener = e => {
@@ -265,6 +285,8 @@ export default {
           }
 
           this.selectionStartPosition = newStartPos;
+
+          this.$emit('showVideoAt', this.getPositionAsTimestamp(this.selectionStartPosition));
         }
 
         if (this.resizeingRight) {
@@ -278,6 +300,7 @@ export default {
           }
 
           this.selectionEndPosition = newEndPos;
+          this.$emit('showVideoAt', this.getPositionAsTimestamp(this.selectionEndPosition));
         }
       };
 
@@ -285,6 +308,7 @@ export default {
         this.resizeingLeft = false;
         this.resizeingRight = false;
         document.body.style.cursor = null;
+        this.$emit('resetVideoTimestamp');
       }
 
       document.body.style.cursor = null;

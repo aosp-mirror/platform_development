@@ -21,15 +21,15 @@
   />
 </template>
 <script>
-const EPSILON = 0.00001
+const EPSILON = 0.00001;
 
 function uint8ToString(array) {
-  var chunk = 0x8000;
-  var out = [];
-  for (var i = 0; i < array.length; i += chunk) {
+  const chunk = 0x8000;
+  const out = [];
+  for (let i = 0; i < array.length; i += chunk) {
     out.push(String.fromCharCode.apply(null, array.subarray(i, i + chunk)));
   }
-  return out.join("");
+  return out.join('');
 }
 
 export default {
@@ -48,31 +48,37 @@ export default {
       } else {
         return `height: ${this.height}`;
       }
-    }
+    },
   },
   methods: {
     arrowUp() {
-      return true
+      return true;
     },
     arrowDown() {
       return true;
     },
-    selectFrame(idx) {
-      var time = (this.file.timeline[idx] - this.file.timeline[0]) / 1000000000 + EPSILON;
+    selectFrameAtTime(timestamp) {
+      const time = (timestamp - this.file.timeline[0]) / 1000000000 + EPSILON;
       this.$refs.video.currentTime = time;
+    },
+    selectFrame(idx) {
+      this.selectFrameAtTime(this.file.timeline[idx]);
+    },
+    jumpToSelectedIndex() {
+      this.selectFrame(this.file.selectedIndex);
     },
   },
   watch: {
     selectedIndex() {
       this.selectFrame(this.file.selectedIndex);
-    }
+    },
   },
   mounted() {
     this.$el.addEventListener('canplay', (e) => {
       this.$emit('loaded');
     });
   },
-}
+};
 
 </script>
 <style>

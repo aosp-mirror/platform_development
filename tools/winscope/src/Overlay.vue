@@ -204,6 +204,8 @@
                     :end-timestamp="0"
                     :scale="scale"
                     v-on:crop="onTimelineCrop"
+                    v-on:showVideoAt="changeVideoTimestamp"
+                    v-on:resetVideoTimestamp="resetVideoTimestamp"
                   />
                 </div>
 
@@ -556,6 +558,12 @@ export default {
     onTimelineCrop(cropDetails) {
       this.crop = cropDetails;
     },
+    changeVideoTimestamp(ts) {
+      this.$refs.video.selectFrameAtTime(ts);
+    },
+    resetVideoTimestamp() {
+      this.$refs.video.jumpToSelectedIndex();
+    }
   },
   components: {
     'timeline': Timeline,
