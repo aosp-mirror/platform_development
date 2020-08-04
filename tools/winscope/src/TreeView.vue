@@ -550,8 +550,20 @@ export default {
   color: #3f51b5;
 }
 
+.description {
+  display: flex;
+  flex: 1 0 0;
+}
+
+.description > div {
+  display: flex;
+  flex: 1 0 0;
+}
+
 .description span {
-  white-space: normal;
+  overflow-wrap: break-word;
+  flex: 1 0 0;
+  width: 0;
 }
 
 </style>
