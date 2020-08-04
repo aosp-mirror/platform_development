@@ -68,7 +68,6 @@
         @item-selected="childItemSelected"
         :selected="selected"
         :key="i"
-        :chip-class="chipClass"
         :filter="childFilter(c)"
         :flattened="flattened"
         :simplify-names="simplifyNames"
@@ -113,7 +112,6 @@ export default {
   props: [
     "item",
     "selected",
-    "chipClass",
     "filter",
     "simplify-names",
     "flattened",
@@ -380,9 +378,6 @@ export default {
     diffClass() {
       return this.item.diff ? this.item.diff.type : ''
     },
-    chipClassOrDefault() {
-      return this.chipClass || "tree-view-chip";
-    },
     applyingFlattened() {
       return (this.flattened && this.item.flattened) || this.forceFlattened;
     },
@@ -535,37 +530,6 @@ export default {
 
 .selected .kind {
   color: #e9e9e9;
-}
-
-.tree-view-internal-chip {
-  display: inline-block;
-}
-
-.tree-view-chip {
-  padding: 0 10px;
-  border-radius: 10px;
-  background-color: #aaa;
-  color: black;
-}
-
-.tree-view-chip.tree-view-chip-warn {
-  background-color: #ffaa6b;
-  color: black;
-}
-
-.tree-view-chip.tree-view-chip-error {
-  background-color: #ff6b6b;
-  color: black;
-}
-
-.tree-view-chip.tree-view-chip-gpu {
-  background-color: #00c853;
-  color: black;
-}
-
-.tree-view-chip.tree-view-chip-hwc {
-  background-color: #448aff;
-  color: black;
 }
 
 .toggle-tree-btn, .expand-tree-btn {
