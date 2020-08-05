@@ -41,7 +41,9 @@ bin/mke2fs.exe                          strip platform-tools/mke2fs.exe
 
 rm platform-tools/sload_f2fs
 rm platform-tools/make_f2fs
+rm platform-tools/make_f2fs_casefold
 bin/make_f2fs.exe                       strip platform-tools/make_f2fs.exe
+bin/make_f2fs_casefold.exe              strip platform-tools/make_f2fs_casefold.exe
 
 lib/AdbWinUsbApi.dll                          platform-tools/AdbWinUsbApi.dll
 lib/AdbWinApi.dll                             platform-tools/AdbWinApi.dll
