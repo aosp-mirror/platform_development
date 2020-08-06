@@ -14,12 +14,18 @@
  * limitations under the License.
  */
 
-'use strict';
+import { FILE_TYPES, TRACE_TYPES } from "@/decode.js";
+import TraceBase from './TraceBase.js';
 
-const environment = (process.env.NODE_ENV || 'development').trim();
+export default class WindowManager extends TraceBase {
+  constructor(files) {
+    const wmTraceFile = files[FILE_TYPES.WINDOW_MANAGER_TRACE];
+    super(wmTraceFile.data, wmTraceFile.timeline);
 
-if (environment === 'development') {
-  module.exports = require('./webpack.config.dev');
-} else {
-  module.exports = require('./webpack.config.prod');
+    this.wmTraceFile = wmTraceFile;
+  }
+
+  get type() {
+    return TRACE_TYPES.WINDOW_MANAGER;
+  }
 }

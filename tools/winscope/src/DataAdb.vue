@@ -84,12 +84,12 @@
       <div class="trace-section">
         <h3>Trace targets:</h3>
         <div class="selection">
-          <md-checkbox class="md-primary" v-for="file in TRACE_FILES" :key="file" v-model="adbStore[file]">{{FILE_TYPES[file].name}}</md-checkbox>
+          <md-checkbox class="md-primary" v-for="traceKey in Object.keys(TRACES)" :key="traceKey" v-model="adbStore[traceKey]">{{TRACES[traceKey].name}}</md-checkbox>
         </div>
-        <div class="trace-config" v-for="file in Object.keys(TRACE_CONFIG)" :key="file">
-            <h4>{{FILE_TYPES[file].name}} config</h4>
+        <div class="trace-config" v-for="traceKey in Object.keys(TRACE_CONFIG)" :key="traceKey">
+            <h4>{{TRACES[traceKey].name}} config</h4>
             <div class="selection">
-              <md-checkbox class="md-primary" v-for="config in TRACE_CONFIG[file]" :key="config" v-model="adbStore[config]">{{config}}</md-checkbox>
+              <md-checkbox class="md-primary" v-for="config in TRACE_CONFIG[traceKey]" :key="config" v-model="adbStore[config]">{{config}}</md-checkbox>
             </div>
         </div>
         <md-button class="md-primary trace-btn" @click="startTrace">Start trace</md-button>
@@ -97,7 +97,7 @@
       <div class="dump-section">
         <h3>Dump targets:</h3>
         <div class="selection">
-          <md-checkbox class="md-primary" v-for="file in DUMP_FILES" :key="file" v-model="adbStore[file]">{{FILE_TYPES[file].name}}</md-checkbox>
+          <md-checkbox class="md-primary" v-for="dumpKey in Object.keys(DUMPS)" :key="dumpKey" v-model="adbStore[dumpKey]">{{DUMPS[dumpKey].name}}</md-checkbox>
         </div>
         <div class="md-layout">
           <md-button class="md-primary dump-btn" @click="dumpState">Dump state</md-button>
@@ -126,7 +126,7 @@
   </flat-card>
 </template>
 <script>
-import { FILE_TYPES, DATA_TYPES } from './decode.js'
+import { FILE_DECODERS, FILE_TYPES } from './decode.js'
 import LocalStore from './localstore.js'
 import FlatCard from './components/FlatCard.vue';
 
@@ -142,7 +142,7 @@ const STATES = {
   LOAD_DATA: 8,
 }
 
-const WINSCOPE_PROXY_VERSION = "0.5"
+const WINSCOPE_PROXY_VERSION = "0.6"
 const WINSCOPE_PROXY_URL = "http://localhost:5544"
 const PROXY_ENDPOINTS = {
   DEVICES: "/devices/",
@@ -153,36 +153,68 @@ const PROXY_ENDPOINTS = {
   FETCH: "/fetch/",
   STATUS: "/status/",
 }
-const TRACE_FILES = [
-  "window_trace",
-  "layers_trace",
-  "screen_recording",
-  "transaction",
-  "proto_log"
-]
-const TRACE_CONFIG = {"layers_trace":[
-  "composition",
-  "metadata",
-  "hwc",
-]}
-const DUMP_FILES = [
-  "window_dump",
-  "layers_dump"
-]
+
+const TRACES = {
+  "window_trace": {
+    name: "Window Manager"
+  },
+  "layers_trace": {
+    name: "Surface Flinger"
+  },
+  "transaction": {
+    name: "Transactions"
+  },
+  "proto_log": {
+    name: "ProtoLog"
+  },
+  "screen_recording": {
+    name: "Screen Recording"
+  },
+}
+
+const TRACE_CONFIG = {
+  "layers_trace": [
+    "composition",
+    "metadata",
+    "hwc",
+  ]
+}
+
+const DUMPS = {
+  "window_dump": {
+    name: "Window Manager"
+  },
+  "layers_dump": {
+    name: "Surface Flinger"
+  }
+}
+
+const proxyFileTypeAdapter = {
+  'window_trace': FILE_TYPES.WINDOW_MANAGER_TRACE,
+  'layers_trace': FILE_TYPES.SURFACE_FLINGER_TRACE,
+  'wl_trace': FILE_TYPES.WAYLAND_TRACE,
+  'layers_dump': FILE_TYPES.SURFACE_FLINGER_DUMP,
+  'window_dump': FILE_TYPES.WINDOW_MANAGER_DUMP,
+  'wl_dump': FILE_TYPES.WAYLAND_DUMP,
+  'screen_recording': FILE_TYPES.SCREEN_RECORDING,
+  'transactions': FILE_TYPES.TRANSACTIONS_TRACE,
+  'transaction_merges': FILE_TYPES.TRANSACTION_EVENTS_TRACE,
+  'proto_log': FILE_TYPES.PROTO_LOG,
+  'system_ui_trace': FILE_TYPES.SYSTEM_UI,
+  'launcher_trace': FILE_TYPES.LAUNCHER,
+};
 
 const CONFIGS = Object.keys(TRACE_CONFIG).flatMap(file => TRACE_CONFIG[file])
-const CAPTURE_FILES = TRACE_FILES.concat(DUMP_FILES).concat(CONFIGS)
 
 export default {
   name: 'dataadb',
   data() {
     return {
       STATES,
-      TRACE_FILES,
+      TRACES,
       TRACE_CONFIG,
-      DUMP_FILES,
-      CAPTURE_FILES,
-      FILE_TYPES,
+      DUMPS,
+      FILE_DECODERS,
       WINSCOPE_PROXY_VERSION,
       status: STATES.CONNECTING,
       dataFiles: [],
@@ -192,10 +224,19 @@ export default {
       keep_alive_worker: null,
       errorText: '',
       loadProgress: 0,
-      adbStore: LocalStore('adb', Object.assign({
-        proxyKey: '',
-        lastDevice: '',
-      }, CAPTURE_FILES.reduce(function(obj, key) { obj[key] = true; return obj }, {}))),
+      adbStore: LocalStore(
+        'adb',
+        Object.assign(
+          {
+            proxyKey: '',
+            lastDevice: '',
+          },
+          Object.keys(TRACES)
+            .concat(Object.keys(DUMPS))
+            .concat(CONFIGS)
+            .reduce(function(obj, key) { obj[key] = true; return obj }, {})
+        )
+      ),
       downloadProxyUrl: 'https://android.googlesource.com/platform/development/+/master/tools/winscope/adb_proxy/winscope_proxy.py',
     }
   },
@@ -280,11 +321,24 @@ export default {
     loadFile(files, idx) {
       this.callProxy("GET", PROXY_ENDPOINTS.FETCH + this.deviceId() + "/" + files[idx] + "/", this, function(request, view) {
         try {
-          var buffer = new Uint8Array(request.response);
-          var filetype = FILE_TYPES[files[idx]];
-          var data = filetype.decoder(buffer, filetype, filetype.name, view.store);
-          view.dataFiles.push(data)
-          view.loadProgress = 100 * (idx + 1) / files.length;
+          const enc = new TextDecoder("utf-8");
+          const resp = enc.decode(request.response);
+          const filesByType = JSON.parse(resp);
+
+          for (const filetype in filesByType) {
+            if (filesByType.hasOwnProperty(filetype)) {
+              const files = filesByType[filetype];
+              const fileDecoder = FILE_DECODERS[proxyFileTypeAdapter[filetype]];
+
+              for (const encodedFileBuffer of files) {
+                const buffer = Uint8Array.from(atob(encodedFileBuffer), c => c.charCodeAt(0));
+                const data = fileDecoder.decoder(buffer, fileDecoder.decoderParams, fileDecoder.name, view.store);
+                view.dataFiles.push(data);
+                view.loadProgress = 100 * (idx + 1) / files.length; // TODO: Update this
+              }
+            }
+          }
+
           if (idx < files.length - 1) {
             view.loadFile(files, idx + 1)
           } else {
@@ -298,7 +352,8 @@ export default {
       }, "arraybuffer")
     },
     toTrace() {
-      return TRACE_FILES.filter(file => this.adbStore[file]);
+      return Object.keys(TRACES)
+        .filter(traceKey => this.adbStore[traceKey]);
     },
     toTraceConfig() {
       return Object.keys(TRACE_CONFIG)
@@ -307,7 +362,8 @@ export default {
               .filter(config => this.adbStore[config]);
     },
     toDump() {
-      return DUMP_FILES.filter(file => this.adbStore[file]);
+      return Object.keys(DUMPS)
+        .filter(dumpKey => this.adbStore[dumpKey]);
     },
     selectDevice(device_id) {
       this.selectedDevice = device_id;

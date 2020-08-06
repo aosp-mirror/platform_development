@@ -75,6 +75,11 @@
         <h2 class="md-title" style="flex: 1">Changes</h2>
       </md-content>
       <div class="changes-content" v-if="selectedTree">
+        <div v-if="selectedTransaction.type === 'transaction'">
+          <div v-for="history in transactionHistory(selectedTransaction)" v-bind:key="history.id">
+            {{ history.type }}
+          </div>
+        </div>
         <tree-view
           :item="selectedTree"
           :collapseChildren="true"
@@ -102,13 +107,13 @@ import { stableIdCompatibilityFixup } from './utils/utils.js';
 
 export default {
   name: 'transactionsview',
-  props: ['data'],
+  props: ['transactionsTrace'],
   data() {
     const transactionTypes = new Set();
     const properties = new Set();
     const pids = new Set();
     const uids = new Set();
-    for (const entry of this.data) {
+    for (const entry of this.transactionsTrace.data) {
       if (entry.type == "transaction") {
         for (const transaction of entry.transactions) {
           transactionTypes.add(transaction.type);
@@ -142,6 +147,9 @@ export default {
     };
   },
   computed: {
+    data() {
+      return this.transactionsTrace.data;
+    },
     filteredData() {
       let filteredData = this.data;
 
@@ -367,6 +375,33 @@ export default {
 
       return [surfaceChanges, displayChanges];
     },
+
+    transactionHistory(selectedTransaction) {
+      const transactionId = selectedTransaction.identifier;
+      const history = this.transactionsTrace.transactionHistory.generateHistoryTreesOf(transactionId);
+
+      const historyElements = [];
+      for (const [i, event] of history.entries()) {
+        const elementId = transactionId + "." + i;
+
+        switch (event.type) {
+          case "apply":
+            break;
+          case "merge":
+            break;
+          default:
+            throw new Error("Unhandled event type");
+        }
+
+        const element = {
+          id: elementId,
+          type: event.type,
+        };
+        historyElements.push(element);
+      }
+
+      return historyElements;
+    }
   },
   components: {
     'virtual-list': VirtualList,

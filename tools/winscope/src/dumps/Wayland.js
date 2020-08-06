@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-'use strict';
+import { FILE_TYPES, DUMP_TYPES } from "@/decode.js";
 
-const environment = (process.env.NODE_ENV || 'development').trim();
+export default class WayLand {
+  constructor(files) {
+    this.waylandFile = files[FILE_TYPES.WAYLAND_DUMP];
+    this.data = this.waylandFile.data;
+    this.selectedIndex = 0;
+  }
 
-if (environment === 'development') {
-  module.exports = require('./webpack.config.dev');
-} else {
-  module.exports = require('./webpack.config.prod');
+  get type() {
+    return DUMP_TYPES.WAYLAND;
+  }
 }

@@ -26,10 +26,10 @@
           <md-icon>save_alt</md-icon>
         </md-button>
       </md-card-header>
-      <traceview v-if="isTrace(file)" :store="store" :file="file" ref="view" />
-      <transactionsview v-if="isTransactions(file)" :data="file.data" ref="view" />
+      <traceview v-if="showInTraceView(file)" :store="store" :file="file" ref="view" />
+      <transactionsview v-if="isTransactions(file)" :transactionsTrace="file" ref="view" />
       <logview v-if="isLog(file)" :file="file" ref="view" />
-      <div v-if="!(isTrace(file) || isVideo(file) || isLog(file) || isTransactions(file))">
+      <div v-if="!(showInTraceView(file) || isVideo(file) || isLog(file) || isTransactions(file))">
         <h1 class="bad">Unrecognized DataType</h1>
       </div>
     </flat-card>
