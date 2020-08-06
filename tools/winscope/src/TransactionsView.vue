@@ -238,8 +238,6 @@ export default {
           // remove redundant properties
           delete change.layerName;
           delete change.id;
-
-          console.log(change)
         };
 
         for (const changeId in surfaceChanges) {
