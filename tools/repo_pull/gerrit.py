@@ -334,7 +334,7 @@ def find_gerrit_name():
         name = remote.getAttribute('name')
         review = remote.getAttribute('review')
         if review and name == default_remote_name:
-            return review
+            return review.rstrip('/')
 
     raise ValueError('cannot find gerrit URL from manifest')
 
