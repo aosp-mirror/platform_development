@@ -89,6 +89,7 @@ JSON_TO_BP = {
     'ExportedDirs':        'export_include_dirs',
     'ExportedSystemDirs':  'export_system_include_dirs',
     'ExportedFlags':       'export_flags',
+    'Sanitize':            'sanitize',
     'SanitizeMinimalDep':  'sanitize_minimal_dep',
     'SanitizeUbsanDep':    'sanitize_ubsan_dep',
     'Symlinks':            'symlinks',
@@ -97,6 +98,15 @@ JSON_TO_BP = {
     'SharedLibs':          'shared_libs',
     'RuntimeLibs':         'runtime_libs',
     'Required':            'required',
+}
+
+SANITIZER_VARIANT_PROPS = {
+    'export_include_dirs',
+    'export_system_include_dirs',
+    'export_flags',
+    'sanitize_minimal_dep',
+    'sanitize_ubsan_dep',
+    'src',
 }
 
 # Converts parsed json dictionary (which is intermediate) to Android.bp prop
@@ -147,10 +157,11 @@ def gen_bp_module(variation, name, version, target_arch, arch_props, bp_dir):
             if not k in arch_props[arch] or common_prop[k] != arch_props[arch][k]:
                 del common_prop[k]
 
-    # Forcing src to be arch_props prevents 32-bit only modules to be used as
-    # 64-bit modules, and vice versa.
-    if 'src' in common_prop:
-        del common_prop['src']
+    # Some keys has to be arch_props to prevent 32-bit only modules from being
+    # used as 64-bit modules, and vice versa.
+    for arch_prop_key in ['src', 'cfi']:
+        if arch_prop_key in common_prop:
+            del common_prop[arch_prop_key]
     prop.update(common_prop)
 
     stem32 = stem64 = ''
@@ -247,10 +258,24 @@ def main():
             if os.path.exists(os.path.join(bp_dir, notice_path)):
                 prop['notice'] = notice_path
 
+            # Is this sanitized variant?
+            if 'sanitize' in prop:
+                sanitizer_type = prop['sanitize']
+                # module_name is {name}.{sanitizer_type}; trim sanitizer_type
+                module_name = module_name[:-len(sanitizer_type)-1]
+                # Only leave props for the sanitize variant
+                for k in list(prop.keys()):
+                    if not k in SANITIZER_VARIANT_PROPS:
+                        del prop[k]
+                prop = {sanitizer_type: prop}
+
             variation_dict = props[target_arch][variation]
             if not module_name in variation_dict:
                 variation_dict[module_name] = dict()
-            variation_dict[module_name][arch] = prop
+            if not arch in variation_dict[module_name]:
+                variation_dict[module_name][arch] = prop
+            else:
+                variation_dict[module_name][arch].update(prop)
 
     for target_arch in props:
         androidbp = ''
