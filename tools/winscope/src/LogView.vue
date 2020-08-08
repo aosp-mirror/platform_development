@@ -210,7 +210,6 @@ export default {
         entry.occured = entry.index <= this.lastOccuredIndex;
         entry.justInactivated = this.lastOccuredIndex < entry.index &&
           entry.index <= this.prevLastOccuredIndex;
-        console.log(entry.justInactivated);
 
         // Force refresh if any of these changes
         entry.uid = `${entry.index}${entry.new ? '-new' : ''}${entry.index}${entry.justInactivated ? '-just-inactivated' : ''}${entry.occured ? '-occured' : ''}`

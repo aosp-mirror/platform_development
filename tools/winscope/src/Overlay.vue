@@ -379,8 +379,10 @@ export default {
   },
   methods: {
     emitBottomHeightUpdate() {
-      const newHeight = this.$refs.bottomNav.$el.clientHeight;
-      this.$emit('bottom-nav-height-change', newHeight);
+      if (this.$refs.bottomNav) {
+        const newHeight = this.$refs.bottomNav.$el.clientHeight;
+        this.$emit('bottom-nav-height-change', newHeight);
+      }
     },
     computeMergedTimeline() {
       const mergedTimeline = {
