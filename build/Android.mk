@@ -60,6 +60,9 @@ $(sample_props) : $(HOST_OUT)/development/samples/%_source.properties : $(TOPDIR
 full_target := $(call intermediates-dir-for,JAVA_LIBRARIES,android_stubs_current,,COMMON)/classes.jar
 full_src_target := $(OUT_DOCS)/api-stubs-docs-stubs.srcjar
 
+.PHONY: android_stubs
+android_stubs: $(full_target) $(full_src_target)
+
 # android.jar is what we put in the SDK package.
 android_jar_intermediates := $(call intermediates-dir-for,PACKAGING,android_jar,,COMMON)
 android_jar_full_target := $(android_jar_intermediates)/android.jar
@@ -125,3 +128,15 @@ $(call dist-for-goals,sdk win_sdk,$(full_target):data/annotations.zip)
 # ============ SDK AIDL ============
 $(eval $(call copy-one-file,$(FRAMEWORK_AIDL),$(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework.aidl))
 ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework.aidl
+
+# ============ System SDK ============
+full_target := $(call intermediates-dir-for,JAVA_LIBRARIES,android_system_stubs_current,,COMMON)/classes.jar
+
+.PHONY: android_system_stubs
+android_system_stubs: $(full_target)
+
+# ============ Test SDK ============
+full_target := $(call intermediates-dir-for,JAVA_LIBRARIES,android_test_stubs_current,,COMMON)/classes.jar
+
+.PHONY: android_test_stubs
+android_test_stubs: $(full_target)
