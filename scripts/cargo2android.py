@@ -72,6 +72,7 @@ RENAME_MAP = {
     # This map includes all changes to the default rust module names
     # to resolve name conflicts, avoid confusion, or work as plugin.
     'libbacktrace': 'libbacktrace_rust',
+    'libbase': 'libbase_rust',
     'libgcc': 'libgcc_rust',
     'liblog': 'liblog_rust',
     'libminijail': 'libminijail_rust',
