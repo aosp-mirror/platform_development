@@ -118,7 +118,7 @@
                   {{ seekTime }}
                 </label>
                 <timeline
-                  :timeline="minimizedTimeline.timeline"
+                  :timeline="Object.freeze(minimizedTimeline.timeline)"
                   :selected-index="minimizedTimeline.selectedIndex"
                   :scale="scale"
                   :crop="crop"
@@ -182,7 +182,7 @@
                       </i>
                     </div>
                     <timeline
-                      :timeline="file.timeline"
+                      :timeline="Object.freeze(file.timeline)"
                       :selected-index="file.selectedIndex"
                       :scale="scale"
                       :crop="crop"
@@ -448,6 +448,10 @@ export default {
         timelineIndexes[timelineToAdvance]++;
         mergedTimeline.timeline.push(minTime);
       }
+
+      // Object is frozen for performance reasons
+      // It will prevent Vue from making it a reactive object which will be very slow as the timeline gets larger.
+      Object.freeze(mergedTimeline.timeline);
 
       return mergedTimeline;
     },

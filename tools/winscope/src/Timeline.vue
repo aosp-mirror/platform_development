@@ -13,22 +13,28 @@
      limitations under the License.
 -->
 <template>
-  <svg width="100%" height="20" class="timeline-svg" :class="{disabled: disabled}">
+  <svg
+    width="100%"
+    height="20"
+    class="timeline-svg"
+    :class="{disabled: disabled}"
+    ref="timeline"
+  >
     <rect
-      :x="position(item)"
+      :x="`${block.startPos}%`"
       y="0"
-      :width="pointWidth"
+      :width="`${block.width}%`"
       :height="pointHeight"
       :rx="corner"
-      v-for="(item, idx) in timeline"
-      :key="item"
-      @click="onItemClick(idx)"
+      v-for="(block, idx) in timelineBlocks"
+      :key="idx"
+      @click="onBlockClick"
       class="point"
     />
     <rect
-      :x="position(selected)"
+      :x="`${position(selected)}%`"
       y="0"
-      :width="pointWidth"
+      :width="`${pointWidth}%`"
       :height="pointHeight"
       :rx="corner"
       class="point selected"
@@ -36,43 +42,20 @@
   </svg>
 </template>
 <script>
+import TimelineMixin from "./mixins/Timeline.js";
+
 export default {
   name: "timeline",
   // TODO: Add indication of trim, at least for collasped timeline
-  props: ["timeline", "selectedIndex", "scale", "crop", "disabled"],
+  props: ["selectedIndex", "crop", "disabled"],
   data() {
     return {
-      pointWidth: "1%",
       pointHeight: 15,
       corner: 2
     };
   },
-  methods: {
-    position(item) {
-      let pos = this.translate(item);
-
-      if (this.crop) {
-        pos = (pos - this.crop.left) / (this.crop.right - this.crop.left);
-      }
-
-      return pos * 100 - (1 /*pointWidth*/) + "%";
-    },
-    translate(cx) {
-      const scale = [...this.scale];
-      if (scale[0] >= scale[1]) {
-        return cx;
-      }
-
-      return (cx - scale[0]) / (scale[1] - scale[0]);
-    },
-    onItemClick(index) {
-      if (this.disabled) {
-        return;
-      }
-      const timestamp = parseInt(this.timeline[index]);
-      this.$store.dispatch('updateTimelineTime', timestamp);
-    }
-  },
+  mixins: [TimelineMixin],
+  methods: {},
   computed: {
     timestamps() {
       if (this.timeline.length == 1) {
@@ -82,7 +65,7 @@ export default {
     },
     selected() {
       return this.timeline[this.selectedIndex];
-    }
+    },
   }
 };
 </script>

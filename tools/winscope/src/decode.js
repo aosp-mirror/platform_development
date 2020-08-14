@@ -408,7 +408,9 @@ function videoDecoder(buffer, params, fileName, store) {
 function dataFile(filename, timeline, data, blobUrl, type) {
   return {
     filename: filename,
-    timeline: timeline,
+    // Object is frozen for performance reasons
+    // It will prevent Vue from making it a reactive object which will be very slow as the timeline gets larger.
+    timeline: Object.freeze(timeline),
     data: data,
     blobUrl: blobUrl,
     type: type,
