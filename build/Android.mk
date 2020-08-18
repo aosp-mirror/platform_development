@@ -135,32 +135,8 @@ full_target := $(call intermediates-dir-for,JAVA_LIBRARIES,android_system_stubs_
 .PHONY: android_system_stubs
 android_system_stubs: $(full_target)
 
-# Build and store the android_system.jar.
-$(call dist-for-goals,sdk win_sdk,$(full_target):android_system.jar)
-$(call dist-for-goals,sdk win_sdk,$(full_target):apistubs/android/system/android.jar)
-
 # ============ Test SDK ============
 full_target := $(call intermediates-dir-for,JAVA_LIBRARIES,android_test_stubs_current,,COMMON)/classes.jar
 
 .PHONY: android_test_stubs
 android_test_stubs: $(full_target)
-
-# Build and store the android_test.jar.
-$(call dist-for-goals,sdk win_sdk,$(full_target):android_test.jar)
-$(call dist-for-goals,sdk win_sdk,$(full_target):apistubs/android/test/android.jar)
-
-# ============ Module Lib SDK ============
-full_target := $(call intermediates-dir-for,JAVA_LIBRARIES,android_module_lib_stubs_current,,COMMON)/classes.jar
-
-.PHONY: android_module_lib_stubs
-android_module_lib_stubs: $(full_target)
-
-$(call dist-for-goals,sdk win_sdk,$(full_target):apistubs/android/module-lib/android.jar)
-
-# ============ System server SDK ============
-full_target := $(call intermediates-dir-for,JAVA_LIBRARIES,android_system_server_stubs_current,,COMMON)/classes.jar
-
-.PHONY: android_system_server_stubs
-android_system_server_stubs: $(full_target)
-
-$(call dist-for-goals,sdk win_sdk,$(full_target):apistubs/android/system-server/android.jar)
