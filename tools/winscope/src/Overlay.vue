@@ -21,6 +21,9 @@
         v-show="minimized && showVideoOverlay"
         position="bottomLeft"
         :asyncLoad="true"
+        :resizeable="true"
+        v-on:requestExtraWidth="updateVideoOverlayWidth"
+        :style="videoOverlayStyle"
         v-if="video"
       >
         <template slot="header">
@@ -239,6 +242,7 @@ export default {
       mergedTimeline: null,
       NAVIGATION_STYLE,
       navigationStyle: this.store.navigationStyle,
+      videoOverlayExtraWidth: 0,
     }
   },
   created() {
@@ -271,6 +275,11 @@ export default {
   computed: {
     video() {
       return this.$store.getters.video;
+    },
+    videoOverlayStyle() {
+      return {
+        width: 150 + this.videoOverlayExtraWidth + 'px',
+      }
     },
     timelineFiles() {
       return this.$store.getters.timelineFiles;
@@ -529,6 +538,9 @@ export default {
 
       this.$store.commit('setNavigationFilesFilter', navigationStyleFilter);
     },
+    updateVideoOverlayWidth(width) {
+      this.videoOverlayExtraWidth = width;
+    },
   },
   components: {
     'timeline': Timeline,
@@ -637,7 +649,6 @@ export default {
 .video-overlay {
   display: inline-block;
   margin-bottom: 15px;
-  width: 150px;
   min-width: 50px;
   max-width: 50vw;
   height: auto;
