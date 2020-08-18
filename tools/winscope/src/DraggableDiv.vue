@@ -18,13 +18,16 @@
     :style="{visibility: contentIsLoaded ? 'visible' : 'hidden'}"
   >
     <md-card class="draggable-card">
-      <div class="header" @mousedown="onMouseDown">
+      <div class="header" @mousedown="onHeaderMouseDown">
         <md-icon class="drag-icon">
           drag_indicator
         </md-icon>
         <slot name="header" />
       </div>
-      <slot name="main" ref="content"/>
+      <div class="content">
+        <slot name="main" ref="content"/>
+        <div class="resizer" v-show="resizeable" @mousedown="onResizerMouseDown"/>
+      </div>
     </md-card>
   </div>
 </template>
@@ -32,7 +35,7 @@
 export default {
   name: "DraggableDiv",
   // If asyncLoad is enabled must call contentLoaded when content is ready
-  props: ['position', 'asyncLoad'],
+  props: ['position', 'asyncLoad', 'resizeable'],
   data() {
     return {
       positions: {
@@ -43,13 +46,20 @@ export default {
       },
       parentResizeObserver: null,
       contentIsLoaded: false,
+      extraWidth: 0,
+      extraHeight: 0,
     }
   },
   methods: {
-    onMouseDown(e) {
+    onHeaderMouseDown(e) {
       e.preventDefault();
 
       this.initDragAction(e);
+    },
+    onResizerMouseDown(e) {
+      e.preventDefault();
+
+      this.startResize(e);
     },
     initDragAction(e) {
       this.positions.clientX = e.clientX;
@@ -93,6 +103,40 @@ export default {
     stopDrag() {
       document.onmouseup = null;
       document.onmousemove = null;
+    },
+    startResize(e) {
+      e.preventDefault();
+      this.startResizeX = e.clientX;
+      this.startResizeY = e.clientY;
+      document.onmousemove = this.resizing;
+      document.onmouseup = this.stopResize;
+      document.body.style.cursor = "nwse-resize";
+    },
+    resizing(e) {
+      let extraWidth = this.extraWidth + (e.clientX - this.startResizeX);
+      if (extraWidth < 0) {
+        extraWidth = 0;
+      }
+      this.$emit('requestExtraWidth', extraWidth);
+
+      let extraHeight = this.extraHeight + (e.clientY - this.startResizeY);
+      if (extraHeight < 0) {
+        extraHeight = 0;
+      }
+      this.$emit('requestExtraHeight', extraHeight);
+    },
+    stopResize(e) {
+      this.extraWidth += e.clientX - this.startResizeX;
+      if (this.extraWidth < 0) {
+        this.extraWidth = 0;
+      }
+      this.extraHeight +=  e.clientY - this.startResizeY;
+      if (this.extraHeight < 0) {
+        this.extraHeight = 0;
+      }
+      document.onmousemove = null;
+      document.onmouseup = null;
+      document.body.style.cursor = null;
     },
     onParentResize() {
       const parentHeight = this.$el.parentElement.clientHeight;
@@ -169,5 +213,17 @@ export default {
 .header {
   cursor: grab;
   padding: 3px;
+}
+
+.resizer {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 0 15px 15px;
+  border-color: transparent transparent #ffffff transparent;
+  cursor: nwse-resize;
 }
 </style>
