@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-"""Installs vendor snapshot under prebuilts/vendor/v{version}."""
+"""Unzips and installs the vendor snapshot."""
 
 import argparse
 import glob
@@ -359,6 +359,11 @@ def get_args():
         help=(
             'Base directory to which vendor snapshot artifacts are installed. '
             'Example: --install-dir vendor/<company name>/vendor_snapshot/v30'))
+    parser.add_argument(
+        '--overwrite',
+        action='store_true',
+        help=(
+            'If provided, does not ask before overwriting the install-dir.'))
 
     parser.add_argument(
         '-v',
@@ -405,16 +410,21 @@ def main():
 
     install_dir = os.path.expanduser(args.install_dir)
     if os.path.exists(install_dir):
-        resp = input('Directory {} already exists. IT WILL BE REMOVED.\n'
-                     'Are you sure? (yes/no): '.format(install_dir))
-        if resp == 'yes':
+        def remove_dir():
             logging.info('Removing {}'.format(install_dir))
             check_call(['rm', '-rf', install_dir])
-        elif resp == 'no':
-            logging.info('Cancelled snapshot install.')
-            return
+        if args.overwrite:
+            remove_dir()
         else:
-            raise ValueError('Did not understand: ' + resp)
+            resp = input('Directory {} already exists. IT WILL BE REMOVED.\n'
+                         'Are you sure? (yes/no): '.format(install_dir))
+            if resp == 'yes':
+                remove_dir()
+            elif resp == 'no':
+                logging.info('Cancelled snapshot install.')
+                return
+            else:
+                raise ValueError('Did not understand: ' + resp)
     check_call(['mkdir', '-p', install_dir])
 
     install_artifacts(
