@@ -135,7 +135,8 @@ function transform_layers(includesCompositionState, layers) {
         isChild[childId] = true;
       });
     }
-    if ((e.zOrderRelativeOf || -1) !== -1) {
+    // We don't clean up relatives when the relative parent is removed, so it may be inconsistent
+    if ((e.zOrderRelativeOf || -1) !== -1 && (idToItem[e.zOrderRelativeOf])) {
       idToItem[e.zOrderRelativeOf].zOrderRelativeParentOf = e.id;
     }
   });
