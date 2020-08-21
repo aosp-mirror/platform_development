@@ -287,7 +287,7 @@ def call_adb_outfile(params: str, outfile, device: str = None, stdin: bytes = No
 
 
 class ListDevicesEndpoint(RequestEndpoint):
-    ADB_INFO_RE = re.compile("^([A-Za-z0-9\\-]+)\\s+(\\w+)(.*model:(\\w+))?")
+    ADB_INFO_RE = re.compile("^([A-Za-z0-9.:\\-]+)\\s+(\\w+)(.*model:(\\w+))?")
 
     def process(self, server, path):
         lines = list(filter(None, call_adb('devices -l').split('\n')))
@@ -302,7 +302,7 @@ class ListDevicesEndpoint(RequestEndpoint):
 
 class DeviceRequestEndpoint(RequestEndpoint):
     def process(self, server, path):
-        if len(path) > 0 and re.fullmatch("[A-Za-z0-9\\-]+", path[0]):
+        if len(path) > 0 and re.fullmatch("[A-Za-z0-9.:\\-]+", path[0]):
             self.process_with_device(server, path[1:], path[0])
         else:
             raise BadRequest("Device id not specified")
