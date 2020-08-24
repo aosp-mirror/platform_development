@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright (C) 2017 The Android Open Source Project
 #
@@ -52,7 +52,7 @@ def check_call(cmd):
 
 def check_output(cmd):
     logging.debug('Running `{}`'.format(' '.join(cmd)))
-    output = subprocess.check_output(cmd)
+    output = subprocess.check_output(cmd, encoding='utf-8')
     logging.debug('Output: `{}`'.format(output))
     return output
 
