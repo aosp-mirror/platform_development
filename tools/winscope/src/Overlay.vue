@@ -180,6 +180,7 @@
                     :start-timestamp="0"
                     :end-timestamp="0"
                     :scale="scale"
+                    :cropArea="crop"
                     v-on:crop="onTimelineCrop"
                     v-on:showVideoAt="changeVideoTimestamp"
                     v-on:resetVideoTimestamp="resetVideoTimestamp"
