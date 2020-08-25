@@ -16,7 +16,7 @@
 
 
 import jsonProtoDefsWm from 'frameworks/base/core/proto/android/server/windowmanagertrace.proto'
-import jsonProtoDefsProtoLog from 'frameworks/base/core/proto/android/server/protolog.proto'
+import jsonProtoDefsProtoLog from 'frameworks/base/core/proto/android/internal/protolog.proto'
 import jsonProtoDefsSf from 'frameworks/native/services/surfaceflinger/layerproto/layerstrace.proto'
 import jsonProtoDefsTransaction from 'frameworks/native/cmds/surfacereplayer/proto/src/trace.proto'
 import jsonProtoDefsWl from 'WaylandSafePath/waylandtrace.proto'
@@ -40,7 +40,7 @@ var SfDumpMessage = lookup_type(jsonProtoDefsSf, "android.surfaceflinger.LayersP
 var SfTransactionTraceMessage = lookup_type(jsonProtoDefsTransaction, "Trace");
 var WaylandTraceMessage = lookup_type(jsonProtoDefsWl, "org.chromium.arc.wayland_composer.TraceFileProto");
 var WaylandDumpMessage = lookup_type(jsonProtoDefsWl, "org.chromium.arc.wayland_composer.OutputStateProto");
-var ProtoLogMessage = lookup_type(jsonProtoDefsProtoLog, "com.android.server.protolog.ProtoLogFileProto");
+var ProtoLogMessage = lookup_type(jsonProtoDefsProtoLog, "com.android.internal.protolog.ProtoLogFileProto");
 var SystemUiTraceMessage = lookup_type(jsonProtoDefsSysUi, "com.android.systemui.tracing.SystemUiTraceFileProto");
 var LauncherTraceMessage = lookup_type(jsonProtoDefsLauncher, "com.android.launcher3.tracing.LauncherTraceFileProto");
 
