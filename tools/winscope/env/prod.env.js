@@ -14,12 +14,6 @@
  * limitations under the License.
  */
 
-'use strict';
-
-const environment = (process.env.NODE_ENV || 'development').trim();
-
-if (environment === 'development') {
-  module.exports = require('./webpack.config.dev');
-} else {
-  module.exports = require('./webpack.config.prod');
-}
+module.exports = {
+  NODE_ENV: 'production'
+};
