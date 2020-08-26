@@ -166,7 +166,13 @@
                   <b>Seek time</b>: {{ seekTime }}
                 </div>
 
-                <timelines :timelineFiles="timelineFiles" :scale="scale" :crop="crop" v-on:crop="onTimelineCrop" />
+                <timelines
+                  :timelineFiles="timelineFiles"
+                  :scale="scale"
+                  :crop="crop"
+                  :cropIntent="cropIntent"
+                  v-on:crop="onTimelineCrop"
+                />
 
                 <div class="timeline-selection">
                   <label>Timeline Area Selection</label>
@@ -182,6 +188,7 @@
                     :scale="scale"
                     :cropArea="crop"
                     v-on:crop="onTimelineCrop"
+                    v-on:cropIntent="onTimelineCropIntent"
                     v-on:showVideoAt="changeVideoTimestamp"
                     v-on:resetVideoTimestamp="resetVideoTimestamp"
                   />
@@ -236,6 +243,7 @@ export default {
       navigationStyle: this.store.navigationStyle,
       videoOverlayExtraWidth: 0,
       crop: null,
+      cropIntent: null,
     };
   },
   created() {
@@ -540,6 +548,9 @@ export default {
     },
     onTimelineCrop(cropDetails) {
       this.crop = cropDetails;
+    },
+    onTimelineCropIntent(cropIntent) {
+      this.cropIntent = cropIntent;
     },
     changeVideoTimestamp(ts) {
       this.$refs.video.selectFrameAtTime(ts);
