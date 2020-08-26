@@ -25,26 +25,63 @@ import base64
 import json
 import os
 import sys
+import xml.dom.minidom
 
 try:
-    from urllib.error import HTTPError  # PY3
-except ImportError:
-    from urllib2 import HTTPError  # PY2
-
-try:
+    # PY3
+    from urllib.error import HTTPError
+    from urllib.parse import urlencode, urlparse
     from urllib.request import (
-        HTTPBasicAuthHandler, Request, build_opener)  # PY3
+        HTTPBasicAuthHandler, Request, build_opener
+    )
 except ImportError:
+    # PY2
+    from urllib import urlencode
     from urllib2 import (
-        HTTPBasicAuthHandler, Request, build_opener)  # PY2
+        HTTPBasicAuthHandler, HTTPError, Request, build_opener
+    )
+    from urlparse import urlparse
 
 try:
-    # pylint: disable=ungrouped-imports
-    from urllib.parse import urlencode, urlparse  # PY3
+    # PY3.5
+    from subprocess import PIPE, run
 except ImportError:
-    # pylint: disable=ungrouped-imports
-    from urllib import urlencode  # PY2
-    from urlparse import urlparse  # PY2
+    from subprocess import CalledProcessError, PIPE, Popen
+
+    class CompletedProcess(object):
+        """Process execution result returned by subprocess.run()."""
+        # pylint: disable=too-few-public-methods
+
+        def __init__(self, args, returncode, stdout, stderr):
+            self.args = args
+            self.returncode = returncode
+            self.stdout = stdout
+            self.stderr = stderr
+
+    def run(*args, **kwargs):
+        """Run a command with subprocess.Popen() and redirect input/output."""
+
+        check = kwargs.pop('check', False)
+
+        try:
+            stdin = kwargs.pop('input')
+            assert 'stdin' not in kwargs
+            kwargs['stdin'] = PIPE
+        except KeyError:
+            stdin = None
+
+        proc = Popen(*args, **kwargs)
+        try:
+            stdout, stderr = proc.communicate(stdin)
+        except:
+            proc.kill()
+            proc.wait()
+            raise
+        returncode = proc.wait()
+
+        if check and returncode:
+            raise CalledProcessError(returncode, args, stdout)
+        return CompletedProcess(args, returncode, stdout, stderr)
 
 
 def load_auth_credentials_from_file(cookie_file):
@@ -285,14 +322,28 @@ def get_patch(url_opener, gerrit_url, change_id, revision_id='current'):
     finally:
         response_file.close()
 
+def find_gerrit_name():
+    """Find the gerrit instance specified in the default remote."""
+    manifest_cmd = ['repo', 'manifest']
+    raw_manifest_xml = run(manifest_cmd, stdout=PIPE, check=True).stdout
+
+    manifest_xml = xml.dom.minidom.parseString(raw_manifest_xml)
+    default_remote = manifest_xml.getElementsByTagName('default')[0]
+    default_remote_name = default_remote.getAttribute('remote')
+    for remote in manifest_xml.getElementsByTagName('remote'):
+        name = remote.getAttribute('name')
+        review = remote.getAttribute('review')
+        if review and name == default_remote_name:
+            return review.rstrip('/')
+
+    raise ValueError('cannot find gerrit URL from manifest')
 
 def _parse_args():
     """Parse command line options."""
     parser = argparse.ArgumentParser()
 
     parser.add_argument('query', help='Change list query string')
-    parser.add_argument('-g', '--gerrit', required=True,
-                        help='Gerrit review URL')
+    parser.add_argument('-g', '--gerrit', help='Gerrit review URL')
 
     parser.add_argument('--gitcookies',
                         default=os.path.expanduser('~/.gitcookies'),
@@ -306,6 +357,14 @@ def _parse_args():
 def main():
     """Main function"""
     args = _parse_args()
+
+    if not args.gerrit:
+        try:
+            args.gerrit = find_gerrit_name()
+        # pylint: disable=bare-except
+        except:
+            print('gerrit instance not found, use [-g GERRIT]')
+            sys.exit(1)
 
     # Query change lists
     url_opener = create_url_opener_from_args(args)

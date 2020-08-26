@@ -40,6 +40,7 @@
 using namespace header_checker;
 using header_checker::repr::TextFormatIR;
 using header_checker::utils::CollectAllExportedHeaders;
+using header_checker::utils::GetCwd;
 using header_checker::utils::HideIrrelevantCommandLineOptions;
 
 
@@ -57,6 +58,12 @@ static llvm::cl::opt<std::string> linked_dump(
 static llvm::cl::list<std::string> exported_header_dirs(
     "I", llvm::cl::desc("<export_include_dirs>"), llvm::cl::Prefix,
     llvm::cl::ZeroOrMore, llvm::cl::cat(header_linker_category));
+
+static llvm::cl::opt<std::string> root_dir(
+    "root-dir",
+    llvm::cl::desc("Specify the directory that the paths in the dump files are "
+                   "relative to. Default to current working directory"),
+    llvm::cl::Optional, llvm::cl::cat(header_linker_category));
 
 static llvm::cl::opt<std::string> version_script(
     "v", llvm::cl::desc("<version_script>"), llvm::cl::Optional,
@@ -249,7 +256,8 @@ bool HeaderAbiLinker::LinkAndDump() {
   }
 
   // Construct the list of exported headers for source location filtering.
-  exported_headers_ = CollectAllExportedHeaders(exported_header_dirs_);
+  exported_headers_ = CollectAllExportedHeaders(
+      exported_header_dirs_, root_dir.empty() ? GetCwd() : root_dir);
 
   // Read all input ABI dumps.
   auto merger = ReadInputDumpFiles();

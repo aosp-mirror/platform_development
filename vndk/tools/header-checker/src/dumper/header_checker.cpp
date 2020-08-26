@@ -19,6 +19,7 @@
 #include "utils/command_line_utils.h"
 #include "utils/header_abi_util.h"
 
+#include <clang/Driver/Driver.h>
 #include <clang/Frontend/FrontendActions.h>
 #include <clang/Tooling/CommonOptionsParser.h>
 #include <clang/Tooling/CompilationDatabase.h>
@@ -41,26 +42,32 @@ using header_checker::dumper::HeaderCheckerFrontendActionFactory;
 using header_checker::dumper::HeaderCheckerOptions;
 using header_checker::repr::TextFormatIR;
 using header_checker::utils::CollectAllExportedHeaders;
+using header_checker::utils::GetCwd;
 using header_checker::utils::HideIrrelevantCommandLineOptions;
-using header_checker::utils::RealPath;
-
+using header_checker::utils::NormalizePath;
 
 
 static llvm::cl::OptionCategory header_checker_category(
     "header-checker options");
 
 static llvm::cl::opt<std::string> header_file(
-    llvm::cl::Positional, llvm::cl::desc("<source.cpp>"), llvm::cl::Required,
+    llvm::cl::Positional, llvm::cl::desc("<source.cpp>"), llvm::cl::Optional,
     llvm::cl::cat(header_checker_category));
 
 static llvm::cl::opt<std::string> out_dump(
-    "o", llvm::cl::value_desc("out_dump"), llvm::cl::Required,
+    "o", llvm::cl::value_desc("out_dump"), llvm::cl::Optional,
     llvm::cl::desc("Specify the reference dump file name"),
     llvm::cl::cat(header_checker_category));
 
 static llvm::cl::list<std::string> exported_header_dirs(
     "I", llvm::cl::desc("<export_include_dirs>"), llvm::cl::Prefix,
     llvm::cl::ZeroOrMore, llvm::cl::cat(header_checker_category));
+
+static llvm::cl::opt<std::string> root_dir(
+    "root-dir",
+    llvm::cl::desc("Specify the directory that the paths in the dump file are "
+                   "relative to. Default to current working directory"),
+    llvm::cl::Optional, llvm::cl::cat(header_checker_category));
 
 static llvm::cl::opt<bool> no_filter(
     "no-filter", llvm::cl::desc("Do not filter any abi"), llvm::cl::Optional,
@@ -85,6 +92,24 @@ static llvm::cl::opt<TextFormatIR> output_format(
     llvm::cl::init(TextFormatIR::Json),
     llvm::cl::cat(header_checker_category));
 
+static llvm::cl::opt<bool> print_resource_dir(
+    "print-resource-dir",
+    llvm::cl::desc("Print real path to default resource directory"),
+    llvm::cl::Optional, llvm::cl::cat(header_checker_category));
+
+int main(int argc, const char **argv);
+
+static bool PrintResourceDir(const char *argv_0) {
+  std::string program_path =
+      llvm::sys::fs::getMainExecutable(argv_0, (void *)main);
+  if (program_path.empty()) {
+    llvm::errs() << "Failed to get program path\n";
+    return false;
+  }
+  llvm::outs() << clang::driver::Driver::GetResourcesPath(program_path) << "\n";
+  return true;
+}
+
 int main(int argc, const char **argv) {
   HideIrrelevantCommandLineOptions(header_checker_category);
 
@@ -106,8 +131,29 @@ int main(int argc, const char **argv) {
   }
 
   // Parse the command line options
-  llvm::cl::ParseCommandLineOptions(
-      fixed_argv.GetArgc(), fixed_argv.GetArgv(), "header-checker");
+  bool is_command_valid = llvm::cl::ParseCommandLineOptions(
+      fixed_argv.GetArgc(), fixed_argv.GetArgv(), "header-checker",
+      &llvm::errs());
+
+  if (print_resource_dir) {
+    bool ok = PrintResourceDir(fixed_argv.GetArgv()[0]);
+    ::exit(ok ? 0 : 1);
+  }
+
+  // Check required arguments after handling -print-resource-dir.
+  if (header_file.empty()) {
+    llvm::errs() << "ERROR: Expect exactly one positional argument\n";
+    is_command_valid = false;
+  } else if (!llvm::sys::fs::exists(header_file)) {
+    llvm::errs() << "ERROR: Source file \"" << header_file
+                 << "\" is not found\n";
+    is_command_valid = false;
+  }
+
+  if (out_dump.empty()) {
+    llvm::errs() << "ERROR: Expect exactly one -o=<out_dump>\n";
+    is_command_valid = false;
+  }
 
   // Print an error message if we failed to create the compilation database
   // from the command line arguments. This check is intentionally performed
@@ -119,25 +165,25 @@ int main(int argc, const char **argv) {
     } else {
       llvm::errs() << "ERROR: " << cmdline_error_msg << "\n";
     }
+    is_command_valid = false;
+  }
+
+  if (!is_command_valid) {
     ::exit(1);
   }
 
-  // Input header file existential check.
-  if (!llvm::sys::fs::exists(header_file)) {
-    llvm::errs() << "ERROR: Header file \"" << header_file << "\" not found\n";
-    ::exit(1);
-  }
+  const std::string root_dir_or_cwd = (root_dir.empty() ? GetCwd() : root_dir);
 
   bool dump_exported_only = (!no_filter && !exported_header_dirs.empty());
   std::set<std::string> exported_headers =
-      CollectAllExportedHeaders(exported_header_dirs);
+      CollectAllExportedHeaders(exported_header_dirs, root_dir_or_cwd);
 
   // Initialize clang tools and run front-end action.
   std::vector<std::string> header_files{ header_file };
-  HeaderCheckerOptions options(RealPath(header_file), out_dump,
-                               std::move(exported_headers), output_format,
-                               dump_exported_only, dump_function_declarations,
-                               suppress_errors);
+  HeaderCheckerOptions options(
+      NormalizePath(header_file, root_dir_or_cwd), out_dump,
+      std::move(exported_headers), root_dir_or_cwd, output_format,
+      dump_exported_only, dump_function_declarations, suppress_errors);
 
   clang::tooling::ClangTool tool(*compilations, header_files);
   std::unique_ptr<clang::tooling::FrontendActionFactory> factory(

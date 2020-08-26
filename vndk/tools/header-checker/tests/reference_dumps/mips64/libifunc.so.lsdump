@@ -14,7 +14,7 @@ builtin_types {
 functions {
   return_type: "_ZTIv"
   function_name: "ifunc"
-  source_file: "/development/vndk/tools/header-checker/tests/integration/ifunc/ifunc.c"
+  source_file: "development/vndk/tools/header-checker/tests/integration/ifunc/ifunc.c"
   linker_set_key: "ifunc"
   access: public_access
 }
