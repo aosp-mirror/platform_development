@@ -38,7 +38,7 @@ public class PopupListFragment extends ListFragment implements View.OnClickListe
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        // We want to allow modifications to the list so copy the dummy data array into an ArrayList
+        // We want to allow modifications to the list so copy the placeholder data array into an ArrayList
         ArrayList<String> items = new ArrayList<String>();
         for (int i = 0, z = Cheeses.CHEESES.length ; i < z ; i++) {
             items.add(Cheeses.CHEESES[i]);

@@ -131,7 +131,7 @@ public class ImageDownloader {
      * Kept private at the moment as its interest is not clear.
      */
     private void forceDownload(String url, ImageView imageView, String cookie) {
-        // State sanity: url is guaranteed to never be null in DownloadedDrawable and cache keys.
+        // State validity: url is guaranteed to never be null in DownloadedDrawable and cache keys.
         if (url == null) {
             imageView.setImageDrawable(null);
             return;
