@@ -27,6 +27,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import android.widget.Toast;
+
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -238,8 +240,14 @@ public abstract class BaseActivity extends AppCompatActivity implements
     }
 
     protected void runIntentTests() {
-        startActivity(getPackageManager()
-                .getLaunchIntentForPackage("com.example.android.intentplayground.test"));
+        final Intent intent = getPackageManager()
+            .getLaunchIntentForPackage("com.example.android.intentplayground.test");
+        if (intent != null) {
+            startActivity(intent);
+        } else {
+            Toast.makeText(this,
+                R.string.launch_testing_activities_failed, Toast.LENGTH_LONG).show();
+        }
     }
 
     protected Intent prepareLaunchForward() {

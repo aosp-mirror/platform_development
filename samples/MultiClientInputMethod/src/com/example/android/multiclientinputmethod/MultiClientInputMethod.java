@@ -16,7 +16,9 @@
 
 package com.example.android.multiclientinputmethod;
 
+import android.annotation.NonNull;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.DisplayManager.DisplayListener;
@@ -24,6 +26,7 @@ import android.inputmethodservice.MultiClientInputMethodServiceDelegate;
 import android.os.IBinder;
 import android.util.Log;
 import android.util.SparseIntArray;
+import android.view.Display;
 
 /**
  * A {@link Service} that implements multi-client IME protocol.
@@ -34,6 +37,9 @@ public final class MultiClientInputMethod extends Service implements DisplayList
 
     // last client that had active InputConnection for a given displayId.
     final SparseIntArray mDisplayToLastClientId = new SparseIntArray();
+    // Mapping table from the display where IME is attached to the display where IME window will be
+    // shown.  Assumes that missing display will use the same display for the IME window.
+    SparseIntArray mInputDisplayToImeDisplay;
     SoftInputWindowManager mSoftInputWindowManager;
     MultiClientInputMethodServiceDelegate mDelegate;
 
@@ -44,6 +50,7 @@ public final class MultiClientInputMethod extends Service implements DisplayList
         if (DEBUG) {
             Log.v(TAG, "onCreate");
         }
+        mInputDisplayToImeDisplay = buildInputDisplayToImeDisplay();
         mDelegate = MultiClientInputMethodServiceDelegate.create(this,
                 new MultiClientInputMethodServiceDelegate.ServiceCallback() {
                     @Override
@@ -56,13 +63,17 @@ public final class MultiClientInputMethod extends Service implements DisplayList
                     @Override
                     public void addClient(int clientId, int uid, int pid,
                             int selfReportedDisplayId) {
+                        int imeDisplayId = mInputDisplayToImeDisplay.get(selfReportedDisplayId,
+                                selfReportedDisplayId);
                         final ClientCallbackImpl callback = new ClientCallbackImpl(
                                 MultiClientInputMethod.this, mDelegate,
-                                mSoftInputWindowManager, clientId, uid, pid, selfReportedDisplayId);
+                                mSoftInputWindowManager, clientId, uid, pid, imeDisplayId);
                         if (DEBUG) {
                             Log.v(TAG, "addClient clientId=" + clientId + " uid=" + uid
-                                    + " pid=" + pid + " displayId=" + selfReportedDisplayId);
+                                    + " pid=" + pid + " displayId=" + selfReportedDisplayId
+                                    + " imeDisplayId=" + imeDisplayId);
                         }
+
                         mDelegate.acceptClient(clientId, callback, callback.getDispatcherState(),
                                 callback.getLooper());
                     }
@@ -79,6 +90,7 @@ public final class MultiClientInputMethod extends Service implements DisplayList
 
     @Override
     public void onDisplayAdded(int displayId) {
+        mInputDisplayToImeDisplay = buildInputDisplayToImeDisplay();
     }
 
     @Override
@@ -117,5 +129,42 @@ public final class MultiClientInputMethod extends Service implements DisplayList
             Log.v(TAG, "onDestroy");
         }
         mDelegate.onDestroy();
+    }
+
+    @NonNull
+    private SparseIntArray buildInputDisplayToImeDisplay() {
+        Context context = getApplicationContext();
+        String config[] = context.getResources().getStringArray(
+                R.array.config_inputDisplayToImeDisplay);
+
+        SparseIntArray inputDisplayToImeDisplay = new SparseIntArray();
+        Display[] displays = context.getSystemService(DisplayManager.class).getDisplays();
+        for (String item: config) {
+            String[] pair = item.split("/");
+            if (pair.length != 2) {
+                Log.w(TAG, "Skip illegal config: " + item);
+                continue;
+            }
+            int inputDisplay = findDisplayId(displays, pair[0]);
+            int imeDisplay = findDisplayId(displays, pair[1]);
+            if (inputDisplay != Display.INVALID_DISPLAY && imeDisplay != Display.INVALID_DISPLAY) {
+                inputDisplayToImeDisplay.put(inputDisplay, imeDisplay);
+            }
+        }
+        return inputDisplayToImeDisplay;
+    }
+
+    private static int findDisplayId(Display displays[], String regexp) {
+        for (Display display: displays) {
+            if (display.getUniqueId().matches(regexp)) {
+                int displayId = display.getDisplayId();
+                if (DEBUG) {
+                    Log.v(TAG, regexp + " matches displayId=" + displayId);
+                }
+                return displayId;
+            }
+        }
+        Log.w(TAG, "Can't find the display of " + regexp);
+        return Display.INVALID_DISPLAY;
     }
 }

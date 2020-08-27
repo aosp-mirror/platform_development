@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+top="$(dirname $0)/../.."
+
+function buildCodegen() {
+	$top/build/soong/soong_ui.bash --build-mode --all-modules --dir="$PWD" -j codegen_cli 1>&2
+}
+
+if ! command -v codegen_cli 2>&1 >/dev/null; then
+	# First time running codegen
+	buildCodegen
+else
+	latestVersion=$(cat $top/frameworks/base/tools/codegen/src/com/android/codegen/SharedConstants.kt | grep 'CODEGEN_VERSION =' | awk '{ print $5 }' | tr -d '"')
+	if [[ $(codegen_cli --version) != $latestVersion ]]; then
+		# Update codegen
+		buildCodegen
+	fi
+fi
+
+exec codegen_cli "$@"
