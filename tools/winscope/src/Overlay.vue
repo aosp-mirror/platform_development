@@ -189,12 +189,6 @@
                     />
                   </md-list-item>
                 </md-list>
-                <div class="options">
-                  <div class="datafilter">
-                    <label>Datafilter</label>
-                    <datafilter v-for="file in timelineFiles" :key="file.filename" :store="store" :file="file" />
-                  </div>
-                </div>
 
                 <div class="help" v-if="!minimized">
                   <div class="help-icon-wrapper">
@@ -214,7 +208,6 @@
 </template>
 <script>
 import Timeline from './Timeline.vue'
-import DataFilter from './DataFilter.vue'
 import DraggableDiv from './DraggableDiv.vue'
 import VideoView from './VideoView.vue'
 import MdIconOption from './components/IconSelection/IconSelectOption.vue'
@@ -544,7 +537,6 @@ export default {
   },
   components: {
     'timeline': Timeline,
-    'datafilter': DataFilter,
     'videoview': VideoView,
     'draggable-div': DraggableDiv,
     'md-icon-option': MdIconOption,

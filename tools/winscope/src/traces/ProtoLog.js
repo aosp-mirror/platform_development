@@ -14,12 +14,18 @@
  * limitations under the License.
  */
 
-'use strict';
+import { FILE_TYPES, TRACE_TYPES } from "@/decode.js";
+import TraceBase from './TraceBase.js';
 
-const environment = (process.env.NODE_ENV || 'development').trim();
+export default class ProtoLog extends TraceBase {
+  constructor(files) {
+    const protoLogFile = files[FILE_TYPES.PROTO_LOG];
+    super(protoLogFile.data, protoLogFile.timeline);
 
-if (environment === 'development') {
-  module.exports = require('./webpack.config.dev');
-} else {
-  module.exports = require('./webpack.config.prod');
+    this.protoLogFile = protoLogFile;
+  }
+
+  get type() {
+    return TRACE_TYPES.PROTO_LOG;
+  }
 }

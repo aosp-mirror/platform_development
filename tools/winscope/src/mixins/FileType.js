@@ -1,34 +1,27 @@
-import { DATA_TYPES } from '../decode.js'
+import { TRACE_TYPES, DUMP_TYPES } from '@/decode.js'
 
 const mixin = {
-  isTrace: function (file) {
-    return file.type == DATA_TYPES.WINDOW_MANAGER ||
-      file.type == DATA_TYPES.SURFACE_FLINGER ||
-      file.type == DATA_TYPES.WAYLAND ||
-      file.type == DATA_TYPES.SYSTEM_UI ||
-      file.type == DATA_TYPES.LAUNCHER
+  showInTraceView(file) {
+    return file.type == TRACE_TYPES.WINDOW_MANAGER ||
+      file.type == TRACE_TYPES.SURFACE_FLINGER ||
+      file.type == TRACE_TYPES.WAYLAND ||
+      file.type == TRACE_TYPES.SYSTEM_UI ||
+      file.type == TRACE_TYPES.LAUNCHER ||
+      file.type == DUMP_TYPES.WINDOW_MANAGER ||
+      file.type == DUMP_TYPES.SURFACE_FLINGER ||
+      file.type == DUMP_TYPES.WAYLAND
   },
   isVideo(file) {
-    return file.type == DATA_TYPES.SCREEN_RECORDING;
+    return file.type == TRACE_TYPES.SCREEN_RECORDING;
   },
   isTransactions(file) {
-    return file.type == DATA_TYPES.TRANSACTION;
+    return file.type == TRACE_TYPES.TRANSACTION;
   },
   isLog(file) {
-    return file.type == DATA_TYPES.PROTO_LOG
+    return file.type == TRACE_TYPES.PROTO_LOG;
   },
   hasDataView(file) {
-    return this.isLog(file) || this.isTrace(file) || this.isTransactions(file);
-  },
-  getDataTypeByName(name) {
-    for (const dataType in DATA_TYPES) {
-      if (DATA_TYPES.hasOwnProperty(dataType)
-        && DATA_TYPES[dataType].name === name) {
-        return DATA_TYPES[dataType];
-      }
-    }
-
-    throw new Error(`No data type with name ${name} found`);
+    return this.isLog(file) || this.showInTraceView(file) || this.isTransactions(file);
   },
 }
 

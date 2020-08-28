@@ -14,12 +14,18 @@
  * limitations under the License.
  */
 
-'use strict';
+import { FILE_TYPES, TRACE_TYPES } from "@/decode.js";
+import TraceBase from './TraceBase.js';
 
-const environment = (process.env.NODE_ENV || 'development').trim();
+export default class SurfaceFlinger extends TraceBase {
+  constructor(files) {
+    const sfTraceFile = files[FILE_TYPES.SURFACE_FLINGER_TRACE];
+    super(sfTraceFile.data, sfTraceFile.timeline);
 
-if (environment === 'development') {
-  module.exports = require('./webpack.config.dev');
-} else {
-  module.exports = require('./webpack.config.prod');
+    this.sfTraceFile = sfTraceFile;
+  }
+
+  get type() {
+    return TRACE_TYPES.SURFACE_FLINGER;
+  }
 }

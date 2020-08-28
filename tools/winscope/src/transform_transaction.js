@@ -45,13 +45,16 @@ function transform_entry(entry, layerIdToName) {
 
   switch (type) {
     case "transaction":
-      const origin = entry.transaction.origin;
 
       return Object.freeze({
         type,
+        // TODO: Rename to changes
         transactions: transform_transaction(entry.transaction, layerIdToName),
+        synchronous: entry.transaction.synchronous,
+        animation: entry.transaction.animation,
+        identifier: entry.transaction.id,
         time,
-        origin,
+        origin: entry.transaction.origin,
         timestamp,
       });
 
@@ -77,4 +80,10 @@ function transform_transaction_trace(entries) {
   return { children: data };
 }
 
-export { transform_transaction_trace };
+function transform_TRANSACTION_EVENTS_TRACE(proto) {
+  const events = proto.events;
+
+  return { children: events };
+}
+
+export { transform_transaction_trace, transform_TRANSACTION_EVENTS_TRACE };
