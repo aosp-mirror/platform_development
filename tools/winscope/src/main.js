@@ -19,7 +19,7 @@ import Vuex from 'vuex'
 import VueMaterial from 'vue-material'
 
 import App from './App.vue'
-import { DATA_TYPES } from './decode.js'
+import { TRACE_TYPES, DUMP_TYPES, TRACE_INFO, DUMP_INFO } from './decode.js'
 import { DIRECTION, findLastMatchingSorted, stableIdCompatibilityFixup } from './utils/utils.js'
 
 import 'style-loader!css-loader!vue-material/dist/vue-material.css'
@@ -30,15 +30,15 @@ Vue.use(VueMaterial)
 
 // Used to determine the order in which files or displayed
 const fileOrder = {
-  [DATA_TYPES.WINDOW_MANAGER.name]: 1,
-  [DATA_TYPES.SURFACE_FLINGER.name]: 2,
-  [DATA_TYPES.TRANSACTION.name]: 3,
-  [DATA_TYPES.PROTO_LOG.name]: 4,
+  [TRACE_TYPES.WINDOW_MANAGER]: 1,
+  [TRACE_TYPES.SURFACE_FLINGER]: 2,
+  [TRACE_TYPES.TRANSACTION]: 3,
+  [TRACE_TYPES.PROTO_LOG]: 4,
 };
 
 function sortFiles(files) {
   return files.sort(
-    (a, b) => (fileOrder[a.type.name] ?? Infinity) - (fileOrder[b.type.name] ?? Infinity));
+    (a, b) => (fileOrder[a.type] ?? Infinity) - (fileOrder[b.type] ?? Infinity));
 };
 
 /**
@@ -59,9 +59,10 @@ function findSmallestTimestamp(files) {
 const store = new Vuex.Store({
   state: {
     currentTimestamp: 0,
-    filesByType: {},
+    traces: {},
+    dumps: {},
     excludeFromTimeline: [
-      DATA_TYPES.PROTO_LOG,
+      TRACE_TYPES.PROTO_LOG,
     ],
     activeFile: null,
     focusedFile: null,
@@ -80,42 +81,126 @@ const store = new Vuex.Store({
       return state.collapsedStateStore[stableIdCompatibilityFixup(item)];
     },
     files(state) {
-      return Object.values(state.filesByType);
+      return Object.values(state.traces).concat(Object.values(state.dumps));
     },
     sortedFiles(state, getters) {
       return sortFiles(getters.files);
     },
     timelineFiles(state, getters) {
-      return getters.files
+      return Object.values(state.traces)
         .filter(file => !state.excludeFromTimeline.includes(file.type));
     },
     sortedTimelineFiles(state, getters) {
       return sortFiles(getters.timelineFiles);
     },
     video(state) {
-      return state.filesByType[DATA_TYPES.SCREEN_RECORDING.name];
+      return state.traces[TRACE_TYPES.SCREEN_RECORDING];
     },
   },
   mutations: {
     setCurrentTimestamp(state, timestamp) {
       state.currentTimestamp = timestamp;
     },
-    setFileEntryIndex(state, { fileTypeName, entryIndex }) {
-      state.filesByType[fileTypeName].selectedIndex = entryIndex;
+    setFileEntryIndex(state, { type, entryIndex }) {
+      if (state.traces[type]) {
+        state.traces[type].selectedIndex = entryIndex;
+      } else {
+        throw new Error("Unexpected type — not a trace...");
+      }
     },
-    addFiles(state, files) {
-      if (!state.activeFile && files.length > 0) {
-        state.activeFile = files[0];
+    setFiles(state, files) {
+      const filesByType = {};
+      for (const file of files) {
+        if (!filesByType[file.type]) {
+          filesByType[file.type] = [];
+        }
+        filesByType[file.type].push(file);
       }
 
-      for (const file of files) {
-        Vue.set(state.filesByType, file.type.name, file);
+      // TODO: Extract into smaller functions
+      const traces = {};
+      for (const traceType of Object.values(TRACE_TYPES)) {
+        const traceFiles = {};
+        const typeInfo = TRACE_INFO[traceType];
+
+        for (const traceDataFile of typeInfo.files) {
+
+          const files = filesByType[traceDataFile.type];
+
+          if (!files) {
+            continue;
+          }
+
+          if (traceDataFile.oneOf) {
+            if (files.length > 1) {
+              throw new Error(`More than one file of type ${traceDataFile.type} has been provided`);
+            }
+
+            traceFiles[traceDataFile.type] = files[0];
+          } else if (traceDataFile.manyOf) {
+            traceFiles[traceDataFile.type] = files;
+          } else {
+            throw new Error("Missing oneOf or manyOf property...");
+          }
+        }
+
+        if (Object.keys(traceFiles).length > 0 && typeInfo.constructor) {
+          traces[traceType] = new typeInfo.constructor(traceFiles);
+        }
       }
+
+      state.traces = traces;
+
+      // TODO: Refactor common code out
+      const dumps = {};
+      for (const dumpType of Object.values(DUMP_TYPES)) {
+        const dumpFiles = {};
+        const typeInfo = DUMP_INFO[dumpType];
+
+        for (const dumpDataFile of typeInfo.files) {
+          const files = filesByType[dumpDataFile.type];
+
+          if (!files) {
+            continue;
+          }
+
+          if (dumpDataFile.oneOf) {
+            if (files.length > 1) {
+              throw new Error(`More than one file of type ${dumpDataFile.type} has been provided`);
+            }
+
+            dumpFiles[dumpDataFile.type] = files[0];
+          } else if (dumpDataFile.manyOf) {
+
+          } else {
+            throw new Error("Missing oneOf or manyOf property...");
+          }
+        }
+
+        if (Object.keys(dumpFiles).length > 0 && typeInfo.constructor) {
+          dumps[dumpType] = new typeInfo.constructor(dumpFiles);
+        }
+
+      }
+
+      state.dumps = dumps;
+
+      if (!state.activeFile && Object.keys(traces).length > 0) {
+        state.activeFile = sortFiles(Object.values(traces))[0];
+      }
+
+      // TODO: Add same for dumps
     },
     clearFiles(state) {
-      for (const fileType in state.filesByType) {
-        if (state.filesByType.hasOwnProperty(fileType)) {
-          Vue.delete(state.filesByType, fileType);
+      for (const traceType in state.traces) {
+        if (state.traces.hasOwnProperty(traceType)) {
+          Vue.delete(state.traces, traceType);
+        }
+      }
+
+      for (const dumpType in state.dumps) {
+        if (state.dumps.hasOwnProperty(dumpType)) {
+          Vue.delete(state.dumps, dumpType);
         }
       }
 
@@ -155,7 +240,7 @@ const store = new Vuex.Store({
   actions: {
     setFiles(context, files) {
       context.commit('clearFiles');
-      context.commit('addFiles', files);
+      context.commit('setFiles', files);
 
       const timestamp = findSmallestTimestamp(files);
       if (timestamp !== undefined) {
@@ -164,13 +249,13 @@ const store = new Vuex.Store({
     },
     updateTimelineTime(context, timestamp) {
       for (const file of context.getters.files) {
-        const fileTypeName = file.type.name;
+        const type = file.type;
         const entryIndex = findLastMatchingSorted(
           file.timeline,
           (array, idx) => parseInt(array[idx]) <= timestamp,
         );
 
-        context.commit('setFileEntryIndex', { fileTypeName, entryIndex });
+        context.commit('setFileEntryIndex', { type, entryIndex });
       }
 
       if (context.state.mergedTimeline) {

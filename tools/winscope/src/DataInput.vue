@@ -20,8 +20,8 @@
     <md-card-content>
       <md-list>
         <md-list-item v-for="file in dataFiles" v-bind:key="file.filename">
-          <md-icon>{{file.type.icon}}</md-icon>
-          <span class="md-list-item-text">{{file.filename}} ({{file.type.name}})</span>
+          <md-icon>{{FILE_ICONS[file.type]}}</md-icon>
+          <span class="md-list-item-text">{{file.filename}} ({{file.type}})</span>
           <md-button class="md-icon-button md-accent" @click="onRemoveFile(file.type.name)">
             <md-icon>close</md-icon>
           </md-button>
@@ -43,7 +43,7 @@
           <md-select v-model="fileType" id="file-type" placeholder="File type">
             <md-option value="auto">Detect type</md-option>
             <md-option value="bugreport">Bug Report (.zip)</md-option>
-            <md-option :value="k" v-for="(v,k) in FILE_TYPES" v-bind:key="v.name">{{v.name}}</md-option>
+            <md-option :value="k" v-for="(v,k) in FILE_DECODERS" v-bind:key="v.name">{{v.name}}</md-option>
           </md-select>
           </md-field>
         </div>
@@ -82,7 +82,7 @@
 <script>
 import FlatCard from './components/FlatCard.vue';
 import JSZip from 'jszip';
-import { detectAndDecode, FILE_TYPES, DATA_TYPES, UndetectableFileType } from './decode.js';
+import { detectAndDecode, FILE_TYPES, FILE_DECODERS, FILE_ICONS, UndetectableFileType } from './decode.js';
 import { WebContentScriptMessageType } from './utils/consts';
 
 export default {
@@ -90,6 +90,8 @@ export default {
   data() {
     return {
       FILE_TYPES,
+      FILE_DECODERS,
+      FILE_ICONS,
       fileType: "auto",
       dataFiles: {},
       loadingFiles: false,
@@ -222,17 +224,19 @@ export default {
         return;
       }
 
+      // TODO: Handle the fact that we can now have multiple files of type FILE_TYPES.TRANSACTION_EVENTS_TRACE
+
       const decodedFileTypes = new Set(Object.keys(this.dataFiles));
       // A file is overridden if a file of the same type is upload twice, as
       // Winscope currently only support at most one file to each type
-      const overriddenDataTypes = new Set();
+      const overriddenFileTypes = new Set();
       const overriddenFiles = {}; // filetype => array of file names
       let overriddenCount = 0;
       for (const decodedFile of decodedFiles) {
-        const dataType = decodedFile.filetype.dataType.name;
+        const dataType = decodedFile.filetype;
 
         if (decodedFileTypes.has(dataType)) {
-          overriddenDataTypes.add(dataType);
+          overriddenFileTypes.add(dataType);
           (overriddenFiles[dataType] = overriddenFiles[dataType] || [])
             .push(this.dataFiles[dataType].filename);
           overriddenCount++;
@@ -243,9 +247,9 @@ export default {
           dataType, decodedFile.data);
       }
 
-      if (overriddenDataTypes.size > 0) {
-        if (overriddenDataTypes.size === 1 && overriddenCount === 1) {
-          const type = overriddenDataTypes.values().next().value;
+      if (overriddenFileTypes.size > 0) {
+        if (overriddenFileTypes.size === 1 && overriddenCount === 1) {
+          const type = overriddenFileTypes.values().next().value;
           const overriddenFile = overriddenFiles[type][0];
           const keptFile = this.dataFiles[type].filename;
           const message = `'${overriddenFile}' is conflicting with '${keptFile}'. Only '${keptFile}' will be kept. If you wish to display '${overriddenFile}', please upload it again with no other file of the same type.`;
@@ -257,7 +261,7 @@ export default {
           this.showSnackbarMessage(`WARNING: ${message}`, Infinity);
 
           const messageBuilder = [];
-          for (const type of overriddenDataTypes.values()) {
+          for (const type of overriddenFileTypes.values()) {
             const keptFile = this.dataFiles[type].filename;
             const overriddenFilesCount = overriddenFiles[type].length;
 
@@ -270,7 +274,7 @@ export default {
 
           messageBuilder.push("================DISCARDED FILES================");
 
-          for (const type of overriddenDataTypes.values()) {
+          for (const type of overriddenFileTypes.values()) {
             const discardedFiles = overriddenFiles[type];
             const keptFile = this.dataFiles[type].filename;
 
@@ -324,14 +328,15 @@ export default {
       });
     },
     async decodeFile(file) {
-      const type = this.fileType;
       const buffer = await this.readFile(file);
 
-      let filetype, data;
-      if (FILE_TYPES[type]) {
-        filetype = FILE_TYPES[type];
-        data = filetype.decoder(buffer, filetype, file.name, this.store);
+      let filetype = this.filetype;
+      let data;
+      if (filetype) {
+        const fileDecoder = FILE_DECODERS[filetype];
+        data = fileDecoder.decoder(buffer, fileDecoder.decoderParams, file.name, this.store);
       } else {
+        // Defaulting to auto — will attempt to detect file type
         [filetype, data] = detectAndDecode(buffer, file.name, this.store);
       }
 

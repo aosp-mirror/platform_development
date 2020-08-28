@@ -44,10 +44,10 @@
           <div
             class="data-view-container"
             v-for="file in dataViewFiles"
-            :key="file.filename"
+            :key="file.type.name"
           >
             <dataview
-              :ref="file.filename"
+              :ref="file.type.name"
               :store="store"
               :file="file"
               @click="onDataViewFocus(file)"
@@ -118,7 +118,7 @@ export default {
     },
     onDataViewFocus(file) {
       this.$store.commit('setActiveFile', file);
-      this.activeDataView = file.filename;
+      this.activeDataView = file.type.name;
     },
     onKeyDown(event) {
       event = event || window.event;
@@ -167,7 +167,7 @@ export default {
     },
     activeView() {
       if (!this.activeDataView && this.files.length > 0) {
-        this.activeDataView = this.files[0].filename;
+        this.activeDataView = this.files[0].type.name;
       }
       return this.activeDataView;
     },

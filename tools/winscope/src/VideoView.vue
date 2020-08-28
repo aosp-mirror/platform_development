@@ -15,9 +15,9 @@
 <template>
   <video
     class="md-elevation-2 screen"
-    :id="file.filename"
     :src="file.data"
     :style="style"
+    ref="video"
   />
 </template>
 <script>
@@ -59,7 +59,7 @@ export default {
     },
     selectFrame(idx) {
       var time = (this.file.timeline[idx] - this.file.timeline[0]) / 1000000000 + EPSILON;
-      document.getElementById(this.file.filename).currentTime = time;
+      this.$refs.video.currentTime = time;
     },
   },
   watch: {
