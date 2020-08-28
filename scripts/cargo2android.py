@@ -369,7 +369,9 @@ class Crate(object):
   def add_codegens_flag(self, flag):
     # ignore options not used in Android
     # 'prefer-dynamic' does not work with common flag -C lto
+    # 'embed-bitcode' is ignored; we might control LTO with other .bp flag
     if not (flag.startswith('debuginfo=') or
+            flag.startswith('embed-bitcode=') or
             flag.startswith('extra-filename=') or
             flag.startswith('incremental=') or
             flag.startswith('metadata=') or
