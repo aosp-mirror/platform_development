@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-'use strict';
-
-const environment = (process.env.NODE_ENV || 'development').trim();
-
-if (environment === 'development') {
-  module.exports = require('./webpack.config.dev');
-} else {
-  module.exports = require('./webpack.config.prod');
+export default class Trace {
+  constructor(data, timeline) {
+    this.selectedIndex = 0;
+    this.data = data;
+    this.timeline = timeline;
+  }
 }

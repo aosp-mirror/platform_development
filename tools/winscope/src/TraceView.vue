@@ -97,7 +97,7 @@ import PropertiesTreeElement from './PropertiesTreeElement.vue'
 import { ObjectTransformer } from './transform.js'
 import { DiffGenerator, defaultModifiedCheck } from './utils/diff.js'
 import { format_transform_type, is_simple_transform } from './matrix_utils.js'
-import { DATA_TYPES } from './decode.js'
+import { TRACE_TYPES, DUMP_TYPES } from './decode.js'
 import { stableIdCompatibilityFixup } from './utils/utils.js'
 import { CompatibleFeatures } from './utils/compatibility.js'
 
@@ -293,11 +293,11 @@ export default {
     }
   },
   created() {
-    this.setData(this.file.data[this.file.selectedIndex]);
+    this.setData(this.file.data[this.file.selectedIndex ?? 0]);
   },
   watch: {
     selectedIndex() {
-      this.setData(this.file.data[this.file.selectedIndex]);
+      this.setData(this.file.data[this.file.selectedIndex ?? 0]);
     },
     showHierachyDiff() {
       this.tree = this.generateTreeFromItem(this.item);
@@ -312,8 +312,8 @@ export default {
   computed: {
     diffVisualizationAvailable() {
       return CompatibleFeatures.DiffVisualization && (
-          this.file.type == DATA_TYPES.WINDOW_MANAGER ||
-          this.file.type == DATA_TYPES.SURFACE_FLINGER
+          this.file.type == TRACE_TYPES.WINDOW_MANAGER ||
+          this.file.type == TRACE_TYPES.SURFACE_FLINGER
         );
     },
     selectedIndex() {
@@ -328,7 +328,10 @@ export default {
       return getFilter(this.propertyFilterString);
     },
     hasScreenView() {
-      return this.file.type !== DATA_TYPES.TRANSACTION;
+      return this.file.type == TRACE_TYPES.WINDOW_MANAGER ||
+          this.file.type == TRACE_TYPES.SURFACE_FLINGER ||
+          this.file.type == DUMP_TYPES.WINDOW_MANAGER ||
+          this.file.type == DUMP_TYPES.SURFACE_FLINGER;
     },
   },
   components: {

@@ -14,12 +14,18 @@
  * limitations under the License.
  */
 
-'use strict';
+import { FILE_TYPES, TRACE_TYPES } from "@/decode.js";
+import TraceBase from './TraceBase.js';
 
-const environment = (process.env.NODE_ENV || 'development').trim();
+export default class ScreenRecording extends TraceBase {
+  constructor(files) {
+    const screenRecordingFile = files[FILE_TYPES.SCREEN_RECORDING];
+    super(screenRecordingFile.data, screenRecordingFile.timeline);
 
-if (environment === 'development') {
-  module.exports = require('./webpack.config.dev');
-} else {
-  module.exports = require('./webpack.config.prod');
+    this.screenRecordingFile = screenRecordingFile;
+  }
+
+  get type() {
+    return TRACE_TYPES.SCREEN_RECORDING;
+  }
 }
