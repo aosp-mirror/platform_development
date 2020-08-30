@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-'use strict';
+import { FILE_TYPES, DUMP_TYPES } from "@/decode.js";
 
-const environment = (process.env.NODE_ENV || 'development').trim();
+export default class WindowManager {
+  constructor(files) {
+    this.wmDumpFile = files[FILE_TYPES.WINDOW_MANAGER_DUMP];
+    this.data = this.wmDumpFile.data;
+  }
 
-if (environment === 'development') {
-  module.exports = require('./webpack.config.dev');
-} else {
-  module.exports = require('./webpack.config.prod');
+  get type() {
+    return DUMP_TYPES.WINDOW_MANAGER;
+  }
 }

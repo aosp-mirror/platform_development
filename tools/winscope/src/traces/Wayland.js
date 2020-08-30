@@ -14,12 +14,18 @@
  * limitations under the License.
  */
 
-'use strict';
+import { FILE_TYPES, TRACE_TYPES } from "@/decode.js";
+import TraceBase from './TraceBase.js';
 
-const environment = (process.env.NODE_ENV || 'development').trim();
+export default class WayLand extends TraceBase {
+  constructor(files) {
+    const waylandFile = files[FILE_TYPES.WAYLAND_TRACE];
+    super(waylandFile.data, waylandFile.timeline);
 
-if (environment === 'development') {
-  module.exports = require('./webpack.config.dev');
-} else {
-  module.exports = require('./webpack.config.prod');
+    this.waylandFile = waylandFile;
+  }
+
+  get type() {
+    return TRACE_TYPES.WAYLAND;
+  }
 }

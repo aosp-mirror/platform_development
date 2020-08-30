@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-'use strict';
+import { FILE_TYPES, DUMP_TYPES } from "@/decode.js";
 
-const environment = (process.env.NODE_ENV || 'development').trim();
+export default class SurfaceFlinger {
+  constructor(files) {
+    this.sfDumpFile = files[FILE_TYPES.SURFACE_FLINGER_DUMP];
+    this.data = this.sfDumpFile.data;
+  }
 
-if (environment === 'development') {
-  module.exports = require('./webpack.config.dev');
-} else {
-  module.exports = require('./webpack.config.prod');
+  get type() {
+    return DUMP_TYPES.SURFACE_FLINGER;
+  }
 }
