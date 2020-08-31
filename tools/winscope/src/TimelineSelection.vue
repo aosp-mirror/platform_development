@@ -128,7 +128,20 @@ export default {
       });
     },
 
+    createCursorStyle(cursor) {
+      const cursorStyle = document.createElement('style');
+      cursorStyle.type = 'text/css';
+      cursorStyle.appendChild(document.createTextNode(`* {cursor: ${cursor}!important}`));
+
+      return {
+        inject: () => { document.body.appendChild(cursorStyle) },
+        remove: () => { try { document.body.removeChild(cursorStyle) } catch (e) {} }
+      };
+    },
+
     setupCreateSelectionListeners() {
+      const cursorStyle = this.createCursorStyle("crosshair");
+
       this.timelineSvgMouseDownEventListener = e => {
         e.stopPropagation();
         this.selecting = true;
@@ -136,7 +149,7 @@ export default {
         this.mouseDownX = e.offsetX;
         this.mouseDownClientX = e.clientX;
 
-        document.body.style.cursor = "crosshair";
+        cursorStyle.inject();
       };
 
       this.createSelectionMouseMoveEventListener = e => {
@@ -176,7 +189,7 @@ export default {
 
       this.createSelectionMouseUpEventListener = e => {
         this.selecting = false;
-        document.body.style.cursor = null;
+        cursorStyle.remove();
         this.$emit('resetVideoTimestamp');
       };
 
@@ -198,6 +211,8 @@ export default {
     },
 
     setupDragSelectionListeners() {
+      const cursorStyle = this.createCursorStyle("move");
+
       this.selectedSectionMouseDownListener = e => {
         e.stopPropagation();
         this.draggingSelection = true;
@@ -205,7 +220,7 @@ export default {
         this.draggingSelectionStartPos = this.selectionStartPosition;
         this.draggingSelectionEndPos = this.selectionEndPosition;
 
-        document.body.style.cursor = "move";
+        cursorStyle.inject();
       };
 
       this.dragSelectionMouseMoveEventListener = e => {
@@ -232,7 +247,7 @@ export default {
 
       this.dragSelectionMouseUpEventListener = e => {
         this.draggingSelection = false;
-        document.body.style.cursor = null;
+        cursorStyle.remove();
       };
 
       this.$refs.selectedSection
@@ -253,13 +268,15 @@ export default {
     },
 
     setupResizeSelectionListeners() {
-       this.leftResizeDraggerMouseDownEventListener = e => {
+      const cursorStyle = this.createCursorStyle("ew-resize");
+
+      this.leftResizeDraggerMouseDownEventListener = e => {
         e.stopPropagation();
         this.resizeingLeft = true;
         this.resizeStartX = e.clientX;
         this.resizeStartPos = this.selectionStartPosition;
 
-        document.body.style.cursor = "ew-resize";
+        cursorStyle.inject();
         this.$emit('showVideoAt', this.getPositionAsTimestamp(this.selectionStartPosition));
       };
 
@@ -269,7 +286,7 @@ export default {
         this.resizeStartX = e.clientX;
         this.resizeEndPos = this.selectionEndPosition;
 
-        document.body.style.cursor = "ew-resize";
+        cursorStyle.inject();
         this.$emit('showVideoAt', this.getPositionAsTimestamp(this.selectionEndPosition));
       };
 
@@ -307,11 +324,9 @@ export default {
       this.resizeSelectionMouseUpEventListener = e => {
         this.resizeingLeft = false;
         this.resizeingRight = false;
-        document.body.style.cursor = null;
+        cursorStyle.remove();
         this.$emit('resetVideoTimestamp');
       }
-
-      document.body.style.cursor = null;
 
       this.$refs.leftResizeDragger
         .addEventListener('mousedown', this.leftResizeDraggerMouseDownEventListener);
