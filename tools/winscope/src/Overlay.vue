@@ -166,31 +166,8 @@
                   <b>Seek time</b>: {{ seekTime }}
                 </div>
 
-                <md-list>
-                  <md-list-item
-                    v-for="file in timelineFiles"
-                    :key="file.filename"
-                  >
-                    <div
-                      class="trace-icon"
-                      :class="{disabled: file.timelineDisabled}"
-                      @click="toggleTimeline(file)"
-                    >
-                      <i class="material-icons">
-                        {{file.type.icon}}
-                        <md-tooltip md-direction="bottom">{{file.type.name}}</md-tooltip>
-                      </i>
-                    </div>
-                    <timeline
-                      :timeline="Object.freeze(file.timeline)"
-                      :selected-index="file.selectedIndex"
-                      :scale="scale"
-                      :crop="crop"
-                      :disabled="file.timelineDisabled"
-                      class="timeline"
-                    />
-                  </md-list-item>
-                </md-list>
+                <timelines :timelineFiles="timelineFiles" :scale="scale" :crop="crop" v-on:crop="onTimelineCrop" />
+
                 <div class="timeline-selection">
                   <label>Timeline Area Selection</label>
                   <span class="material-icons help-icon">
@@ -227,6 +204,7 @@
 </template>
 <script>
 import Timeline from './Timeline.vue';
+import Timelines from './Timelines.vue';
 import TimelineSelection from './TimelineSelection.vue';
 import DraggableDiv from './DraggableDiv.vue';
 import VideoView from './VideoView.vue';
@@ -567,10 +545,11 @@ export default {
     },
     resetVideoTimestamp() {
       this.$refs.video.jumpToSelectedIndex();
-    }
+    },
   },
   components: {
     'timeline': Timeline,
+    'timelines': Timelines,
     'timeline-selection': TimelineSelection,
     'videoview': VideoView,
     'draggable-div': DraggableDiv,
