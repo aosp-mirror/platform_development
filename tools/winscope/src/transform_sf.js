@@ -94,7 +94,7 @@ function transform_layer(layer) {
   const simplifiedLayerName = getSimplifiedLayerName(layer.name);
   const shortName = simplifiedLayerName ? layer.id + ": " + simplifiedLayerName : undefined;
 
-  return transform({
+  const transformedLayer = transform({
     obj: layer,
     kind: '',
     name: layer.id + ": " + layer.name,
@@ -106,6 +106,16 @@ function transform_layer(layer) {
     chips,
     visible: layer.visible,
   });
+
+  // NOTE: Temporary until refactored to use flickerlib
+  return {
+    ...transformedLayer, ...{
+      invisibleDueTo: layer.invisibleDueTo,
+      occludedBy: layer.occludedBy,
+      partiallyOccludedBy: layer.partiallyOccludedBy,
+      coveredBy: layer.coveredBy
+    }
+  };
 }
 
 function missingLayer(childId) {
