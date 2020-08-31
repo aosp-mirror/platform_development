@@ -211,14 +211,6 @@ export default {
       return this.timeline[this.positionToTsIndex(position)];
     },
 
-    emitCropDetails() {
-      const width = this.$refs.timeline.clientWidth;
-      this.$emit('crop', {
-        left: this.selectionStartPosition / width,
-        right: this.selectionEndPosition / width
-      });
-    },
-
     /**
      * Handles the block click event.
      * When a block in the timeline is clicked this function will determine

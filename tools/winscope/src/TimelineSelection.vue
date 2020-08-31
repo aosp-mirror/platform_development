@@ -33,7 +33,8 @@
       />
       <rect
         v-if="selectedWidth >= 0"
-        :x="selectionStartPosition"
+        v-show="showSelection"
+        :x="selectionAreaStart"
         y="0"
         :width="selectedWidth"
         :height="pointHeight"
@@ -43,7 +44,8 @@
       />
       <rect
         v-else
-        :x="selectionStartPosition + selectedWidth"
+        v-show="showSelection"
+        :x="selectionAreaEnd"
         y="0"
         :width="-selectedWidth"
         :height="pointHeight"
@@ -53,7 +55,8 @@
       />
 
       <rect
-        :x="selectionStartPosition - 2"
+        v-show="showSelection"
+        :x="selectionAreaStart - 2"
         y="0"
         :width="4"
         :height="pointHeight"
@@ -63,7 +66,8 @@
       />
 
       <rect
-        :x="selectionStartPosition + selectedWidth - 2"
+        v-show="showSelection"
+        :x="selectionAreaEnd - 2"
         y="0"
         :width="4"
         :height="pointHeight"
@@ -78,14 +82,17 @@
 import TimelineMixin from './mixins/Timeline';
 
 export default {
-  name: "timelineSelection",
-  props: ["startTimestamp",  "endTimestamp", "disabled"],
+  name: 'timelineSelection',
+  props: ['startTimestamp', 'endTimestamp', 'cropArea', 'disabled'],
   data() {
     return {
       pointHeight: 15,
       corner: 2,
       selectionStartPosition: 0,
       selectionEndPosition: 0,
+      selecting: false,
+      dragged: false,
+      draggingSelection: false,
     };
   },
   mixins: [TimelineMixin],
@@ -95,7 +102,7 @@ export default {
     },
     selectionEndPosition() {
       this.emitCropDetails();
-    }
+    },
   },
   methods: {
     /**
@@ -112,23 +119,29 @@ export default {
     createCursorStyle(cursor) {
       const cursorMask = document.createElement('div');
       cursorMask.style.cursor = cursor;
-      cursorMask.style.height = "100vh";
-      cursorMask.style.width = "100vw";
-      cursorMask.style.position = "fixed";
-      cursorMask.style.top = "0";
-      cursorMask.style.left = "0";
-      cursorMask.style["z-index"] = "1000";
+      cursorMask.style.height = '100vh';
+      cursorMask.style.width = '100vw';
+      cursorMask.style.position = 'fixed';
+      cursorMask.style.top = '0';
+      cursorMask.style.left = '0';
+      cursorMask.style['z-index'] = '1000';
 
       return {
-        inject: () => { document.body.appendChild(cursorMask) },
-        remove: () => { try { document.body.removeChild(cursorMask) } catch (e) {} }
+        inject: () => {
+          document.body.appendChild(cursorMask);
+        },
+        remove: () => {
+          try {
+            document.body.removeChild(cursorMask);
+          } catch (e) {}
+        },
       };
     },
 
     setupCreateSelectionListeners() {
-      const cursorStyle = this.createCursorStyle("crosshair");
+      const cursorStyle = this.createCursorStyle('crosshair');
 
-      this.timelineSvgMouseDownEventListener = e => {
+      this.timelineSvgMouseDownEventListener = (e) => {
         e.stopPropagation();
         this.selecting = true;
         this.dragged = false;
@@ -138,14 +151,14 @@ export default {
         cursorStyle.inject();
       };
 
-      this.createSelectionMouseMoveEventListener = e => {
+      this.createSelectionMouseMoveEventListener = (e) => {
         if (this.selecting) {
           if (!this.dragged) {
             this.selectionStartX = this.mouseDownX;
           }
 
           this.dragged = true;
-          const draggedAmount =  e.clientX - this.mouseDownClientX;
+          const draggedAmount = e.clientX - this.mouseDownClientX;
 
           if (draggedAmount >= 0) {
             this.selectionStartPosition = this.selectionStartX;
@@ -171,45 +184,49 @@ export default {
             this.$emit('showVideoAt', this.absolutePositionAsTimestamp(this.selectionStartPosition));
           }
         }
-      }
+      };
 
-      this.createSelectionMouseUpEventListener = e => {
+      this.createSelectionMouseUpEventListener = (e) => {
         this.selecting = false;
         cursorStyle.remove();
         this.$emit('resetVideoTimestamp');
       };
 
       this.$refs.timeline
-        .addEventListener('mousedown', this.timelineSvgMouseDownEventListener);
+          .addEventListener('mousedown', this.timelineSvgMouseDownEventListener);
       document
-        .addEventListener('mousemove', this.createSelectionMouseMoveEventListener);
+          .addEventListener('mousemove', this.createSelectionMouseMoveEventListener);
       document
-        .addEventListener('mouseup', this.createSelectionMouseUpEventListener);
+          .addEventListener('mouseup', this.createSelectionMouseUpEventListener);
     },
 
     teardownCreateSelectionListeners() {
       this.$refs.timeline
-        .removeEventListener('mousedown', this.timelineSvgMouseDownEventListener);
+          .removeEventListener('mousedown', this.timelineSvgMouseDownEventListener);
       document
-        .removeEventListener('mousemove', this.createSelectionMouseMoveEventListener);
+          .removeEventListener('mousemove', this.createSelectionMouseMoveEventListener);
       document
-        .removeEventListener('mouseup', this.createSelectionMouseUpEventListener);
+          .removeEventListener('mouseup', this.createSelectionMouseUpEventListener);
     },
 
     setupDragSelectionListeners() {
-      const cursorStyle = this.createCursorStyle("move");
+      const cursorStyle = this.createCursorStyle('move');
 
-      this.selectedSectionMouseDownListener = e => {
+      this.selectedSectionMouseDownListener = (e) => {
         e.stopPropagation();
-        this.draggingSelection = true;
         this.draggingSelectionStartX = e.clientX;
-        this.draggingSelectionStartPos = this.selectionStartPosition;
-        this.draggingSelectionEndPos = this.selectionEndPosition;
+        this.selectionStartPosition = this.selectionAreaStart;
+        this.selectionEndPosition = this.selectionAreaEnd;
+        this.draggingSelectionStartPos = this.selectionAreaStart;
+        this.draggingSelectionEndPos = this.selectionAreaEnd;
+
+        // Keep this after fetching selectionAreaStart and selectionAreaEnd.
+        this.draggingSelection = true;
 
         cursorStyle.inject();
       };
 
-      this.dragSelectionMouseMoveEventListener = e => {
+      this.dragSelectionMouseMoveEventListener = (e) => {
         if (this.draggingSelection) {
           const dragAmount = e.clientX - this.draggingSelectionStartX;
 
@@ -221,7 +238,7 @@ export default {
           } else {
             if (newStartPos < 0) {
               this.selectionStartPosition = 0;
-              this.selectionEndPosition = newEndPos - (newStartPos /*negative overflown amount*/);
+              this.selectionEndPosition = newEndPos - (newStartPos /* negative overflown amount*/);
             } else {
               const overflownAmount = newEndPos - this.$refs.timeline.clientWidth;
               this.selectionEndPosition = this.$refs.timeline.clientWidth;
@@ -229,54 +246,58 @@ export default {
             }
           }
         }
-      }
+      };
 
-      this.dragSelectionMouseUpEventListener = e => {
+      this.dragSelectionMouseUpEventListener = (e) => {
         this.draggingSelection = false;
         cursorStyle.remove();
       };
 
       this.$refs.selectedSection
-        .addEventListener('mousedown', this.selectedSectionMouseDownListener);
+          .addEventListener('mousedown', this.selectedSectionMouseDownListener);
       document
-        .addEventListener('mousemove', this.dragSelectionMouseMoveEventListener);
+          .addEventListener('mousemove', this.dragSelectionMouseMoveEventListener);
       document
-        .addEventListener('mouseup', this.dragSelectionMouseUpEventListener);
+          .addEventListener('mouseup', this.dragSelectionMouseUpEventListener);
     },
 
     teardownDragSelectionListeners() {
       this.$refs.selectedSection
-        .removeEventListener('mousedown', this.selectedSectionMouseDownListener);
-       document
-        .removeEventListener('mousemove', this.dragSelectionMouseMoveEventListener);
+          .removeEventListener('mousedown', this.selectedSectionMouseDownListener);
       document
-        .removeEventListener('mouseup', this.dragSelectionMouseUpEventListener);
+          .removeEventListener('mousemove', this.dragSelectionMouseMoveEventListener);
+      document
+          .removeEventListener('mouseup', this.dragSelectionMouseUpEventListener);
     },
 
     setupResizeSelectionListeners() {
-      const cursorStyle = this.createCursorStyle("ew-resize");
+      const cursorStyle = this.createCursorStyle('ew-resize');
 
-      this.leftResizeDraggerMouseDownEventListener = e => {
+      this.leftResizeDraggerMouseDownEventListener = (e) => {
         e.stopPropagation();
+        this.resizeStartX = e.clientX;
+        this.selectionStartPosition = this.selectionAreaStart;
+        this.selectionEndPosition = this.selectionAreaEnd;
+        this.resizeStartPos = this.selectionAreaStart;
         this.resizeingLeft = true;
-        this.resizeStartX = e.clientX;
-        this.resizeStartPos = this.selectionStartPosition;
 
         cursorStyle.inject();
-        this.$emit('showVideoAt', this.absolutePositionAsTimestamp(this.selectionStartPosition));
+        this.$emit('showVideoAt', this.absolutePositionAsTimestamp(this.selectionAreaStart));
       };
 
-      this.rightResizeDraggerMouseDownEventListener = e => {
+      this.rightResizeDraggerMouseDownEventListener = (e) => {
         e.stopPropagation();
-        this.resizeingRight = true;
         this.resizeStartX = e.clientX;
-        this.resizeEndPos = this.selectionEndPosition;
+        this.selectionStartPosition = this.selectionAreaStart;
+        this.selectionEndPosition = this.selectionAreaEnd;
+        this.resizeEndPos = this.selectionAreaEnd;
+        this.resizeingRight = true;
 
         cursorStyle.inject();
-        this.$emit('showVideoAt', this.absolutePositionAsTimestamp(this.selectionEndPosition));
+        this.$emit('showVideoAt', this.absolutePositionAsTimestamp(this.selectionAreaEnd));
       };
 
-      this.resizeMouseMoveEventListener = e => {
+      this.resizeMouseMoveEventListener = (e) => {
         if (this.resizeingLeft) {
           const moveAmount = e.clientX - this.resizeStartX;
           let newStartPos = this.resizeStartPos + moveAmount;
@@ -307,32 +328,40 @@ export default {
         }
       };
 
-      this.resizeSelectionMouseUpEventListener = e => {
+      this.resizeSelectionMouseUpEventListener = (e) => {
         this.resizeingLeft = false;
         this.resizeingRight = false;
         cursorStyle.remove();
         this.$emit('resetVideoTimestamp');
-      }
+      };
 
       this.$refs.leftResizeDragger
-        .addEventListener('mousedown', this.leftResizeDraggerMouseDownEventListener);
+          .addEventListener('mousedown', this.leftResizeDraggerMouseDownEventListener);
       this.$refs.rightResizeDragger
-        .addEventListener('mousedown', this.rightResizeDraggerMouseDownEventListener);
+          .addEventListener('mousedown', this.rightResizeDraggerMouseDownEventListener);
       document
-        .addEventListener('mousemove', this.resizeMouseMoveEventListener);
+          .addEventListener('mousemove', this.resizeMouseMoveEventListener);
       document
-        .addEventListener('mouseup', this.resizeSelectionMouseUpEventListener);
+          .addEventListener('mouseup', this.resizeSelectionMouseUpEventListener);
     },
 
     teardownResizeSelectionListeners() {
       this.$refs.leftResizeDragger
-        .removeEventListener('mousedown', this.leftResizeDraggerMouseDownEventListener);
+          .removeEventListener('mousedown', this.leftResizeDraggerMouseDownEventListener);
       this.$refs.rightResizeDragger
-        .removeEventListener('mousedown', this.rightResizeDraggerMouseDownEventListener);
+          .removeEventListener('mousedown', this.rightResizeDraggerMouseDownEventListener);
       document
-        .removeEventListener('mousemove', this.resizeMouseMoveEventListener);
+          .removeEventListener('mousemove', this.resizeMouseMoveEventListener);
       document
-        .removeEventListener('mouseup', this.resizeSelectionMouseUpEventListener);
+          .removeEventListener('mouseup', this.resizeSelectionMouseUpEventListener);
+    },
+
+    emitCropDetails() {
+      const width = this.$refs.timeline.clientWidth;
+      this.$emit('crop', {
+        left: this.selectionStartPosition / width,
+        right: this.selectionEndPosition / width,
+      });
     },
   },
   computed: {
@@ -340,8 +369,33 @@ export default {
       return this.timeline[this.selectedIndex];
     },
     selectedWidth() {
-      return this.selectionEndPosition - this.selectionStartPosition;
-    }
+      return this.selectionAreaEnd - this.selectionAreaStart;
+    },
+    showSelection() {
+      return this.selectionAreaStart || this.selectionAreaEnd;
+    },
+    selectionAreaStart() {
+      if ((this.selecting && this.dragged) || this.draggingSelection) {
+        return this.selectionStartPosition;
+      }
+
+      if (this.cropArea && this.$refs.timeline) {
+        return this.cropArea.left * this.$refs.timeline.clientWidth;
+      }
+
+      return 0;
+    },
+    selectionAreaEnd() {
+      if ((this.selecting && this.dragged) || this.draggingSelection) {
+        return this.selectionEndPosition;
+      }
+
+      if (this.cropArea && this.$refs.timeline) {
+        return this.cropArea.right * this.$refs.timeline.clientWidth;
+      }
+
+      return 0;
+    },
   },
   mounted() {
     this.setupCreateSelectionListeners();
