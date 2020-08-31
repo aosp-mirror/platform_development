@@ -19,16 +19,16 @@
       height="20"
       class="timeline-svg"
       :class="{disabled: disabled}"
-      ref="timelineSvg"
+      ref="timeline"
     >
       <rect
-        :x="position(item)"
+        :x="`${block.startPos}%`"
         y="0"
-        :width="pointWidth"
+        :width="`${block.width}%`"
         :height="pointHeight"
         :rx="corner"
-        v-for="item in timeline"
-        :key="item"
+        v-for="(block, idx) in timelineBlocks"
+        :key="idx"
         class="point"
       />
       <rect
@@ -75,18 +75,20 @@
   </div>
 </template>
 <script>
+import TimelineMixin from './mixins/Timeline';
+
 export default {
   name: "timelineSelection",
-  props: ["timeline", "startTimestamp",  "endTimestamp", "scale", "disabled"],
+  props: ["startTimestamp",  "endTimestamp", "disabled"],
   data() {
     return {
-      pointWidth: "1%",
       pointHeight: 15,
       corner: 2,
       selectionStartPosition: 0,
       selectionEndPosition: 0,
     };
   },
+  mixins: [TimelineMixin],
   watch: {
     selectionStartPosition() {
       this.emitCropDetails();
@@ -96,46 +98,30 @@ export default {
     }
   },
   methods: {
-    position(item) {
-      return this.translate(item);
-    },
-    translate(cx) {
-      const scale = [...this.scale];
-      if (scale[0] >= scale[1]) {
-        return cx;
-      }
-
-      return (((cx - scale[0]) / (scale[1] - scale[0])) * (100 - (1 /*pointWidth*/))) + "%";
-    },
-    getPositionAsTimestamp(position) {
-      const scale = [...this.scale];
-      if (scale[0] >= scale[1]) {
-        return position;
-      }
-
-      const width = this.$refs.timelineSvg.clientWidth;
-      const pointWidth = 1/100 * width;
-      const positionAsPercent = position / (width - pointWidth);
-
-      return scale[0] +
-        positionAsPercent * (scale[1] - scale[0]);
-    },
-    emitCropDetails() {
-      const width = this.$refs.timelineSvg.clientWidth;
-      this.$emit('crop', {
-        left: this.selectionStartPosition / width,
-        right: this.selectionEndPosition / width
-      });
-    },
-
+    /**
+     * Create an object that can be injected and removed from the DOM to change
+     * the cursor style. The object is a mask over the entire screen. It is
+     * done this way as opposed to injecting a style targeting all elements for
+     * performance reasons, otherwise recalculate style would be very slow.
+     * This makes sure that regardless of the cursor style of other elements,
+     * the cursor style will be set to what we want over the entire screen.
+     * @param {string} cursor - The cursor type to apply to the entire page.
+     * @return An object that can be injected and removed from the DOM which
+     *         changes the cursor style for the entire page.
+     */
     createCursorStyle(cursor) {
-      const cursorStyle = document.createElement('style');
-      cursorStyle.type = 'text/css';
-      cursorStyle.appendChild(document.createTextNode(`* {cursor: ${cursor}!important}`));
+      const cursorMask = document.createElement('div');
+      cursorMask.style.cursor = cursor;
+      cursorMask.style.height = "100vh";
+      cursorMask.style.width = "100vw";
+      cursorMask.style.position = "fixed";
+      cursorMask.style.top = "0";
+      cursorMask.style.left = "0";
+      cursorMask.style["z-index"] = "1000";
 
       return {
-        inject: () => { document.body.appendChild(cursorStyle) },
-        remove: () => { try { document.body.removeChild(cursorStyle) } catch (e) {} }
+        inject: () => { document.body.appendChild(cursorMask) },
+        remove: () => { try { document.body.removeChild(cursorMask) } catch (e) {} }
       };
     },
 
@@ -165,13 +151,13 @@ export default {
             this.selectionStartPosition = this.selectionStartX;
 
             const endX = this.selectionStartX + draggedAmount;
-            if (endX <= this.$refs.timelineSvg.clientWidth) {
+            if (endX <= this.$refs.timeline.clientWidth) {
               this.selectionEndPosition = endX;
             } else {
-              this.selectionEndPosition = this.$refs.timelineSvg.clientWidth;
+              this.selectionEndPosition = this.$refs.timeline.clientWidth;
             }
 
-            this.$emit('showVideoAt', this.getPositionAsTimestamp(this.selectionEndPosition));
+            this.$emit('showVideoAt', this.absolutePositionAsTimestamp(this.selectionEndPosition));
           } else {
             this.selectionEndPosition = this.selectionStartX;
 
@@ -182,7 +168,7 @@ export default {
               this.selectionStartPosition = 0;
             }
 
-            this.$emit('showVideoAt', this.getPositionAsTimestamp(this.selectionStartPosition));
+            this.$emit('showVideoAt', this.absolutePositionAsTimestamp(this.selectionStartPosition));
           }
         }
       }
@@ -193,7 +179,7 @@ export default {
         this.$emit('resetVideoTimestamp');
       };
 
-      this.$refs.timelineSvg
+      this.$refs.timeline
         .addEventListener('mousedown', this.timelineSvgMouseDownEventListener);
       document
         .addEventListener('mousemove', this.createSelectionMouseMoveEventListener);
@@ -202,7 +188,7 @@ export default {
     },
 
     teardownCreateSelectionListeners() {
-      this.$refs.timelineSvg
+      this.$refs.timeline
         .removeEventListener('mousedown', this.timelineSvgMouseDownEventListener);
       document
         .removeEventListener('mousemove', this.createSelectionMouseMoveEventListener);
@@ -229,7 +215,7 @@ export default {
 
           const newStartPos = this.draggingSelectionStartPos + dragAmount;
           const newEndPos = this.draggingSelectionEndPos + dragAmount;
-          if (newStartPos >= 0 && newEndPos <= this.$refs.timelineSvg.clientWidth) {
+          if (newStartPos >= 0 && newEndPos <= this.$refs.timeline.clientWidth) {
             this.selectionStartPosition = newStartPos;
             this.selectionEndPosition = newEndPos;
           } else {
@@ -237,8 +223,8 @@ export default {
               this.selectionStartPosition = 0;
               this.selectionEndPosition = newEndPos - (newStartPos /*negative overflown amount*/);
             } else {
-              const overflownAmount = newEndPos - this.$refs.timelineSvg.clientWidth;
-              this.selectionEndPosition = this.$refs.timelineSvg.clientWidth;
+              const overflownAmount = newEndPos - this.$refs.timeline.clientWidth;
+              this.selectionEndPosition = this.$refs.timeline.clientWidth;
               this.selectionStartPosition = newStartPos - overflownAmount;
             }
           }
@@ -277,7 +263,7 @@ export default {
         this.resizeStartPos = this.selectionStartPosition;
 
         cursorStyle.inject();
-        this.$emit('showVideoAt', this.getPositionAsTimestamp(this.selectionStartPosition));
+        this.$emit('showVideoAt', this.absolutePositionAsTimestamp(this.selectionStartPosition));
       };
 
       this.rightResizeDraggerMouseDownEventListener = e => {
@@ -287,7 +273,7 @@ export default {
         this.resizeEndPos = this.selectionEndPosition;
 
         cursorStyle.inject();
-        this.$emit('showVideoAt', this.getPositionAsTimestamp(this.selectionEndPosition));
+        this.$emit('showVideoAt', this.absolutePositionAsTimestamp(this.selectionEndPosition));
       };
 
       this.resizeMouseMoveEventListener = e => {
@@ -303,7 +289,7 @@ export default {
 
           this.selectionStartPosition = newStartPos;
 
-          this.$emit('showVideoAt', this.getPositionAsTimestamp(this.selectionStartPosition));
+          this.$emit('showVideoAt', this.absolutePositionAsTimestamp(this.selectionStartPosition));
         }
 
         if (this.resizeingRight) {
@@ -312,12 +298,12 @@ export default {
           if (newEndPos <= this.selectionStartPosition) {
             newEndPos = this.selectionStartPosition;
           }
-          if (newEndPos > this.$refs.timelineSvg.clientWidth) {
-            newEndPos = this.$refs.timelineSvg.clientWidth;
+          if (newEndPos > this.$refs.timeline.clientWidth) {
+            newEndPos = this.$refs.timeline.clientWidth;
           }
 
           this.selectionEndPosition = newEndPos;
-          this.$emit('showVideoAt', this.getPositionAsTimestamp(this.selectionEndPosition));
+          this.$emit('showVideoAt', this.absolutePositionAsTimestamp(this.selectionEndPosition));
         }
       };
 
@@ -350,12 +336,6 @@ export default {
     },
   },
   computed: {
-    timestamps() {
-      if (this.timeline.length == 1) {
-        return [0];
-      }
-      return this.timeline;
-    },
     selected() {
       return this.timeline[this.selectedIndex];
     },
