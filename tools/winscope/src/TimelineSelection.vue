@@ -98,9 +98,21 @@ export default {
   mixins: [TimelineMixin],
   watch: {
     selectionStartPosition() {
+      // Send crop intent rather than final crop value while we are selecting
+      if ((this.selecting && this.dragged)) {
+        this.emitCropIntent();
+        return;
+      }
+
       this.emitCropDetails();
     },
     selectionEndPosition() {
+      // Send crop intent rather than final crop value while we are selecting
+      if ((this.selecting && this.dragged)) {
+        this.emitCropIntent();
+        return;
+      }
+
       this.emitCropDetails();
     },
   },
@@ -190,6 +202,13 @@ export default {
         this.selecting = false;
         cursorStyle.remove();
         this.$emit('resetVideoTimestamp');
+        if (this.dragged) {
+          // Clear crop intent, we now have a set crop value
+          this.clearCropIntent();
+          // Notify of final crop value
+          this.emitCropDetails();
+        }
+        this.dragged = false;
       };
 
       this.$refs.timeline
@@ -363,6 +382,18 @@ export default {
         right: this.selectionEndPosition / width,
       });
     },
+
+    emitCropIntent() {
+      const width = this.$refs.timeline.clientWidth;
+      this.$emit('cropIntent', {
+        left: this.selectionStartPosition / width,
+        right: this.selectionEndPosition / width
+      });
+    },
+
+    clearCropIntent() {
+      this.$emit('cropIntent', null);
+    }
   },
   computed: {
     selected() {

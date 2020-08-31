@@ -34,7 +34,7 @@
       </md-list-item>
     </md-list>
 
-    <div class="timelines-wrapper">
+    <div class="timelines-wrapper" ref="timelinesWrapper">
       <md-list class="timelines" @mousedown="mousedownHandler" ref="timelines">
         <md-list-item
         v-for="file in timelineFiles"
@@ -55,6 +55,12 @@
         class="selection"
         :style="selectionStyle"
       />
+
+      <div
+        v-show="this.cropIntent"
+        class="selection-intent"
+        :style="selectionIntentStyle"
+      />
     </div>
   </div>
 </template>
@@ -63,7 +69,7 @@ import Timeline from "./Timeline.vue";
 
 export default {
   name: "Timelines",
-  props: ["timelineFiles", "scale", "crop"],
+  props: ["timelineFiles", "scale", "crop", "cropIntent"],
   data() {
     return {
       // Distances of sides from top left corner of wrapping div in pixels
@@ -97,6 +103,45 @@ export default {
         height: `${this.selectionPosition.bottom - this.selectionPosition.top}px`,
         width: `${this.selectionPosition.right - this.selectionPosition.left}px`,
       };
+    },
+    /**
+     * Generates the dynamic style of the selection intent box.
+     * @return {object} an object containing the style of the selection intent box.
+     */
+    selectionIntentStyle() {
+      if (!(this.cropIntent && this.$refs.timelinesWrapper)) {
+        return {
+          left: 0,
+          width: 0,
+        };
+      }
+
+      const activeCropLeft = this.crop?.left ?? 0;
+      const activeCropRight = this.crop?.right ?? 1;
+      const timelineWidth = this.$refs.timelinesWrapper.getBoundingClientRect().width;
+
+      const r = timelineWidth / (activeCropRight - activeCropLeft);
+
+      let left = 0;
+      let boderLeft = "none";
+      if (this.cropIntent.left > activeCropLeft) {
+        left = (this.cropIntent.left - activeCropLeft) * r;
+        boderLeft = null;
+      }
+
+      let right = timelineWidth;
+      let borderRight = "none";
+      if (this.cropIntent.right < activeCropRight) {
+        right = timelineWidth - (activeCropRight - this.cropIntent.right) * r;
+        borderRight = null;
+      }
+
+      return {
+        left: `${left}px`,
+        width: `${right - left}px`,
+        'border-left': boderLeft,
+        'border-right': borderRight,
+      }
     },
   },
   methods: {
@@ -285,10 +330,22 @@ export default {
   position: relative;
 }
 
-.selection {
+.timelines-wrapper {
+  overflow: hidden;
+}
+
+.selection, .selection-intent {
   position: absolute;
   z-index: 100;
   background: rgba(255, 36, 36, 0.5);
   pointer-events: none;
+}
+
+.selection-intent {
+  top: 0;
+  height: 100%;
+  margin-left: -3px;
+  border-left: 3px #1261A0 solid;
+  border-right: 3px #1261A0 solid;
 }
 </style>
