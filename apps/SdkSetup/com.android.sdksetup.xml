@@ -25,6 +25,7 @@ It allows additional grants on top of privapp-permissions-platform.xml
     <privapp-permissions package="com.android.sdksetup">
         <permission name="android.permission.BACKUP"/>
         <permission name="android.permission.MANAGE_USERS"/>
+        <permission name="android.permission.MODIFY_PHONE_STATE"/>
         <permission name="android.permission.WRITE_SECURE_SETTINGS"/>
         <permission name="android.permission.INTERACT_ACROSS_USERS"/>
     </privapp-permissions>
