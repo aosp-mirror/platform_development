@@ -1,4 +1,4 @@
-import { TRACE_TYPES, DUMP_TYPES } from '@/decode.js'
+import {TRACE_TYPES, DUMP_TYPES} from '@/decode.js';
 
 const mixin = {
   showInTraceView(file) {
@@ -9,7 +9,15 @@ const mixin = {
       file.type == TRACE_TYPES.LAUNCHER ||
       file.type == DUMP_TYPES.WINDOW_MANAGER ||
       file.type == DUMP_TYPES.SURFACE_FLINGER ||
-      file.type == DUMP_TYPES.WAYLAND
+      file.type == DUMP_TYPES.WAYLAND;
+  },
+  showInWindowManagerTraceView(file) {
+    return file.type == TRACE_TYPES.WINDOW_MANAGER ||
+        file.type == DUMP_TYPES.WINDOW_MANAGER;
+  },
+  showInSurfaceFlingerTraceView(file) {
+    return file.type == TRACE_TYPES.SURFACE_FLINGER ||
+        file.type == DUMP_TYPES.SURFACE_FLINGER;
   },
   isVideo(file) {
     return file.type == TRACE_TYPES.SCREEN_RECORDING;
@@ -23,11 +31,11 @@ const mixin = {
   hasDataView(file) {
     return this.isLog(file) || this.showInTraceView(file) || this.isTransactions(file);
   },
-}
+};
 
-export { mixin }
+export {mixin};
 
 export default {
   name: 'FileType',
-  methods: mixin
-}
+  methods: mixin,
+};

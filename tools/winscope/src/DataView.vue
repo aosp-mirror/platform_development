@@ -26,26 +26,55 @@
           <md-icon>save_alt</md-icon>
         </md-button>
       </md-card-header>
-      <traceview v-if="showInTraceView(file)" :store="store" :file="file" ref="view" />
-      <transactionsview v-if="isTransactions(file)" :transactionsTrace="file" ref="view" />
-      <logview v-if="isLog(file)" :file="file" ref="view" />
-      <div v-if="!(showInTraceView(file) || isVideo(file) || isLog(file) || isTransactions(file))">
+
+      <WindowManagerTraceView
+        v-if="showInWindowManagerTraceView(file)"
+        :store="store"
+        :file="file"
+        ref="view"
+      />
+      <SurfaceFlingerTraceView
+        v-else-if="showInSurfaceFlingerTraceView(file)"
+        :store="store"
+        :file="file"
+        ref="view"
+      />
+      <transactionsview
+        v-else-if="isTransactions(file)"
+        :data="file.data"
+        ref="view"
+      />
+      <logview
+        v-else-if="isLog(file)"
+        :file="file"
+        ref="view"
+      />
+      <traceview
+        v-else-if="showInTraceView(file)"
+        :store="store"
+        :file="file"
+        ref="view"
+      />
+      <div v-else>
         <h1 class="bad">Unrecognized DataType</h1>
       </div>
+
     </flat-card>
   </div>
 </template>
 <script>
-import TraceView from "./TraceView.vue";
-import TransactionsView from "./TransactionsView.vue";
-import LogView from "./LogView.vue";
-import FileType from "./mixins/FileType.js";
-import FlatCard from "./components/FlatCard.vue";
+import TraceView from '@/TraceView.vue';
+import WindowManagerTraceView from '@/WindowManagerTraceView.vue';
+import SurfaceFlingerTraceView from '@/SurfaceFlingerTraceView.vue';
+import TransactionsView from '@/TransactionsView.vue';
+import LogView from '@/LogView.vue';
+import FileType from '@/mixins/FileType.js';
+import FlatCard from '@/components/FlatCard.vue';
 
 export default {
-  name: "dataview",
+  name: 'dataview',
   data() {
-    return {}
+    return {};
   },
   methods: {
     arrowUp() {
@@ -57,16 +86,18 @@ export default {
     onClick(e) {
       // Pass click event to parent, so that click event handler can be attached to component.
       this.$emit('click', e);
-    }
+    },
   },
-  props: ["store", "file"],
+  props: ['store', 'file'],
   mixins: [FileType],
   components: {
     'traceview': TraceView,
     'transactionsview': TransactionsView,
     'logview': LogView,
     'flat-card': FlatCard,
-  }
+    WindowManagerTraceView,
+    SurfaceFlingerTraceView,
+  },
 };
 </script>
 <style>

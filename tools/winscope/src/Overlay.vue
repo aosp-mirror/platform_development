@@ -118,9 +118,10 @@
                   {{ seekTime }}
                 </label>
                 <timeline
-                  :timeline="minimizedTimeline.timeline"
+                  :timeline="Object.freeze(minimizedTimeline.timeline)"
                   :selected-index="minimizedTimeline.selectedIndex"
                   :scale="scale"
+                  :crop="crop"
                   class="minimized-timeline"
                 />
               </div>
@@ -165,30 +166,33 @@
                   <b>Seek time</b>: {{ seekTime }}
                 </div>
 
-                <md-list>
-                  <md-list-item
-                    v-for="file in timelineFiles"
-                    :key="file.filename"
-                  >
-                    <div
-                      class="trace-icon"
-                      :class="{disabled: file.timelineDisabled}"
-                      @click="toggleTimeline(file)"
-                    >
-                      <i class="material-icons">
-                        {{file.type.icon}}
-                        <md-tooltip md-direction="bottom">{{file.type.name}}</md-tooltip>
-                      </i>
-                    </div>
-                    <timeline
-                      :timeline="file.timeline"
-                      :selected-index="file.selectedIndex"
-                      :scale="scale"
-                      :disabled="file.timelineDisabled"
-                      class="timeline"
-                    />
-                  </md-list-item>
-                </md-list>
+                <timelines
+                  :timelineFiles="timelineFiles"
+                  :scale="scale"
+                  :crop="crop"
+                  :cropIntent="cropIntent"
+                  v-on:crop="onTimelineCrop"
+                />
+
+                <div class="timeline-selection">
+                  <label>Timeline Area Selection</label>
+                  <span class="material-icons help-icon">
+                    help_outline
+                    <md-tooltip md-direction="right">Select the area of the timeline to focus on. Click and drag to select.</md-tooltip>
+                  </span>
+                  <br />
+                  <timeline-selection
+                    :timeline="mergedTimeline.timeline"
+                    :start-timestamp="0"
+                    :end-timestamp="0"
+                    :scale="scale"
+                    :cropArea="crop"
+                    v-on:crop="onTimelineCrop"
+                    v-on:cropIntent="onTimelineCropIntent"
+                    v-on:showVideoAt="changeVideoTimestamp"
+                    v-on:resetVideoTimestamp="resetVideoTimestamp"
+                  />
+                </div>
 
                 <div class="help" v-if="!minimized">
                   <div class="help-icon-wrapper">
@@ -207,18 +211,20 @@
   </div>
 </template>
 <script>
-import Timeline from './Timeline.vue'
-import DraggableDiv from './DraggableDiv.vue'
-import VideoView from './VideoView.vue'
-import MdIconOption from './components/IconSelection/IconSelectOption.vue'
-import FileType from './mixins/FileType.js'
-import {NAVIGATION_STYLE} from './utils/consts'
+import Timeline from './Timeline.vue';
+import Timelines from './Timelines.vue';
+import TimelineSelection from './TimelineSelection.vue';
+import DraggableDiv from './DraggableDiv.vue';
+import VideoView from './VideoView.vue';
+import MdIconOption from './components/IconSelection/IconSelectOption.vue';
+import FileType from './mixins/FileType.js';
+import {NAVIGATION_STYLE} from './utils/consts';
 
-import { nanos_to_string } from './transform.js'
+import {nanos_to_string} from './transform.js';
 
 export default {
   name: 'overlay',
-  props: [ 'store' ],
+  props: ['store'],
   mixins: [FileType],
   data() {
     return {
@@ -236,7 +242,9 @@ export default {
       NAVIGATION_STYLE,
       navigationStyle: this.store.navigationStyle,
       videoOverlayExtraWidth: 0,
-    }
+      crop: null,
+      cropIntent: null,
+    };
   },
   created() {
     this.mergedTimeline = this.computeMergedTimeline();
@@ -263,7 +271,7 @@ export default {
       this.updateNavigationFileFilter();
 
       this.$nextTick(this.emitBottomHeightUpdate);
-    }
+    },
   },
   computed: {
     video() {
@@ -272,7 +280,7 @@ export default {
     videoOverlayStyle() {
       return {
         width: 150 + this.videoOverlayExtraWidth + 'px',
-      }
+      };
     },
     timelineFiles() {
       return this.$store.getters.timelineFiles;
@@ -287,8 +295,8 @@ export default {
       return nanos_to_string(this.currentTimestamp);
     },
     scale() {
-      var mx = Math.max(...(this.timelineFiles.map(f => Math.max(...f.timeline))));
-      var mi = Math.min(...(this.timelineFiles.map(f => Math.min(...f.timeline))));
+      const mx = Math.max(...(this.timelineFiles.map((f) => Math.max(...f.timeline))));
+      const mi = Math.min(...(this.timelineFiles.map((f) => Math.min(...f.timeline))));
       return [mi, mx];
     },
     currentTimestamp() {
@@ -309,18 +317,18 @@ export default {
     collapsedTimelineIconTooltip() {
       switch (this.navigationStyle) {
         case NAVIGATION_STYLE.GLOBAL:
-          return "All timelines";
+          return 'All timelines';
 
         case NAVIGATION_STYLE.FOCUSED:
           return `Focused: ${this.focusedFile.type.name}`;
 
         case NAVIGATION_STYLE.CUSTOM:
-          return "Enabled timelines";
+          return 'Enabled timelines';
 
         default:
           const split = this.navigationStyle.split('-');
           if (split[0] !== NAVIGATION_STYLE.TARGETED) {
-            throw new Error("Unexpected nagivation type");
+            throw new Error('Unexpected nagivation type');
           }
 
           const fileType = split[1];
@@ -330,18 +338,18 @@ export default {
     collapsedTimelineIcon() {
       switch (this.navigationStyle) {
         case NAVIGATION_STYLE.GLOBAL:
-          return "public";
+          return 'public';
 
         case NAVIGATION_STYLE.FOCUSED:
           return this.focusedFile.type.icon;
 
         case NAVIGATION_STYLE.CUSTOM:
-          return "dashboard_customize";
+          return 'dashboard_customize';
 
         default:
           const split = this.navigationStyle.split('-');
           if (split[0] !== NAVIGATION_STYLE.TARGETED) {
-            throw new Error("Unexpected nagivation type");
+            throw new Error('Unexpected nagivation type');
           }
 
           const fileType = split[1];
@@ -362,22 +370,22 @@ export default {
         return this.mergedTimeline;
       }
 
-      if (this.navigationStyle.split("-")[0] === NAVIGATION_STYLE.TARGETED) {
+      if (this.navigationStyle.split('-')[0] === NAVIGATION_STYLE.TARGETED) {
         return this.$store.state
-          .filesByType[this.navigationStyle.split("-")[1]];
+            .filesByType[this.navigationStyle.split('-')[1]];
       }
 
-      throw new Error("Unexpected Nagivation Style");
+      throw new Error('Unexpected Nagivation Style');
     },
   },
-  updated () {
-    this.$nextTick(function () {
+  updated() {
+    this.$nextTick(function() {
       if (this.$refs.expandedTimeline && this.expanded) {
         this.videoHeight = this.$refs.expandedTimeline.clientHeight;
       } else {
         this.videoHeight = 'auto';
       }
-    })
+    });
   },
   methods: {
     emitBottomHeightUpdate() {
@@ -399,7 +407,7 @@ export default {
         timelines.push(file.timeline);
       }
 
-      while(true) {
+      while (true) {
         let minTime = Infinity;
         let timelineToAdvance;
 
@@ -427,6 +435,10 @@ export default {
         timelineIndexes[timelineToAdvance]++;
         mergedTimeline.timeline.push(minTime);
       }
+
+      // Object is frozen for performance reasons
+      // It will prevent Vue from making it a reactive object which will be very slow as the timeline gets larger.
+      Object.freeze(mergedTimeline.timeline);
 
       return mergedTimeline;
     },
@@ -496,37 +508,37 @@ export default {
       this.$refs.videoOverlay.contentLoaded();
     },
     toggleTimeline(file) {
-      this.$set(file, "timelineDisabled", !file.timelineDisabled);
+      this.$set(file, 'timelineDisabled', !file.timelineDisabled);
     },
     updateNavigationFileFilter() {
       if (!this.minimized) {
         // Always use custom mode navigation when timeline is expanded
-        this.$store.commit('setNavigationFilesFilter', f => !f.timelineDisabled);
+        this.$store.commit('setNavigationFilesFilter', (f) => !f.timelineDisabled);
         return;
       }
 
       let navigationStyleFilter;
       switch (this.navigationStyle) {
         case NAVIGATION_STYLE.GLOBAL:
-          navigationStyleFilter = f => true;
+          navigationStyleFilter = (f) => true;
           break;
 
         case NAVIGATION_STYLE.FOCUSED:
-          navigationStyleFilter = f => f.type.name === this.focusedFile.type.name;
+          navigationStyleFilter = (f) => f.type.name === this.focusedFile.type.name;
           break;
 
         case NAVIGATION_STYLE.CUSTOM:
-          navigationStyleFilter = f => !f.timelineDisabled;
+          navigationStyleFilter = (f) => !f.timelineDisabled;
           break;
 
         default:
           const split = this.navigationStyle.split('-');
           if (split[0] !== NAVIGATION_STYLE.TARGETED) {
-            throw new Error("Unexpected nagivation type");
+            throw new Error('Unexpected nagivation type');
           }
 
           const fileType = split[1];
-          navigationStyleFilter = f => f.type.name === this.getDataTypeByName(fileType).name;
+          navigationStyleFilter = (f) => f.type.name === this.getDataTypeByName(fileType).name;
       }
 
       this.$store.commit('setNavigationFilesFilter', navigationStyleFilter);
@@ -534,14 +546,28 @@ export default {
     updateVideoOverlayWidth(width) {
       this.videoOverlayExtraWidth = width;
     },
+    onTimelineCrop(cropDetails) {
+      this.crop = cropDetails;
+    },
+    onTimelineCropIntent(cropIntent) {
+      this.cropIntent = cropIntent;
+    },
+    changeVideoTimestamp(ts) {
+      this.$refs.video.selectFrameAtTime(ts);
+    },
+    resetVideoTimestamp() {
+      this.$refs.video.jumpToSelectedIndex();
+    },
   },
   components: {
     'timeline': Timeline,
+    'timelines': Timelines,
+    'timeline-selection': TimelineSelection,
     'videoview': VideoView,
     'draggable-div': DraggableDiv,
     'md-icon-option': MdIconOption,
   },
-}
+};
 </script>
 <style scoped>
 .overlay {
