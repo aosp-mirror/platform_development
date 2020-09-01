@@ -14,9 +14,10 @@
     "jszip": "^3.5.0",
     "kotlin": "^1.3.72",
     "lodash.clonedeep": "^4.5.0",
-    "vue": "^2.6.11",
-    "vue-material": "^1.0.0-beta-14",
-    "vuex": "^3.5.1"
+    "vue": "^2.3.3",
+    "vue-context": "^5.2.0",
+    "vue-material": "^1.0.0-beta-11",
+    "vuex": "^3.4.0"
   },
   "devDependencies": {
     "@babel/core": "^7.10.5",

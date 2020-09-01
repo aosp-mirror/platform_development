@@ -36,18 +36,20 @@
             <md-input v-model="hierarchyPropertyFilterString"></md-input>
           </md-field>
         </md-content>
-        <tree-view
-          class="data-card"
-          :item="tree"
-          @item-selected="itemSelected"
-          :selected="hierarchySelected"
-          :filter="hierarchyFilter"
-          :flattened="store.flattened"
-          :items-clickable="true"
-          :useGlobalCollapsedState="true"
-          :simplify-names="store.simplifyNames"
-          ref="hierarchy"
-        />
+        <div class="tree-view-wrapper">
+          <tree-view
+            class="treeview"
+            :item="tree"
+            @item-selected="itemSelected"
+            :selected="hierarchySelected"
+            :filter="hierarchyFilter"
+            :flattened="store.flattened"
+            :items-clickable="true"
+            :useGlobalCollapsedState="true"
+            :simplify-names="store.simplifyNames"
+            ref="hierarchy"
+          />
+        </div>
       </flat-card>
     </div>
 
@@ -66,21 +68,28 @@
             <md-input v-model="propertyFilterString"></md-input>
           </md-field>
         </md-content>
-        <div v-if="selectedTree">
-          <tree-view
-            class="pre-line-data-card"
-            :item="selectedTree"
-            :filter="propertyFilter"
-            :collapseChildren="true"
-            :useGlobalCollapsedState="true"
-            :elementView="PropertiesTreeElement"
-          />
-        </div>
-        <div class="no-properties" v-else>
-          <i class="material-icons none-icon">
-            filter_none
-          </i>
-          <span>No element selected in the hierachy.</span>
+        <div class="properties-content">
+          <div v-if="elementSummary" class="element-summary">
+            <div v-for="elem in elementSummary" v-bind:key="elem.key">
+              <span class="key">{{ elem.key }}:</span> <span class="value">{{ elem.value }}</span>
+            </div>
+          </div>
+          <div v-if="selectedTree" class="tree-view-wrapper">
+            <tree-view
+              class="treeview"
+              :item="selectedTree"
+              :filter="propertyFilter"
+              :collapseChildren="true"
+              :useGlobalCollapsedState="true"
+              :elementView="PropertiesTreeElement"
+            />
+          </div>
+          <div class="no-properties" v-else>
+            <i class="material-icons none-icon">
+              filter_none
+            </i>
+            <span>No element selected in the hierachy.</span>
+          </div>
         </div>
       </flat-card>
     </div>
@@ -159,6 +168,7 @@ function findEntryInTree(tree, id) {
 
 export default {
   name: 'traceview',
+  props: ['store', 'file', 'summarizer'],
   data() {
     return {
       propertyFilterString: "",
@@ -308,7 +318,6 @@ export default {
       }
     },
   },
-  props: ['store', 'file'],
   computed: {
     diffVisualizationAvailable() {
       return CompatibleFeatures.DiffVisualization && (
@@ -333,6 +342,13 @@ export default {
           this.file.type == DUMP_TYPES.WINDOW_MANAGER ||
           this.file.type == DUMP_TYPES.SURFACE_FLINGER;
     },
+    elementSummary() {
+      if (!this.hierarchySelected || !this.summarizer) {
+        return null;
+      }
+
+      return this.summarizer(this.hierarchySelected);
+    }
   },
   components: {
     'tree-view': TreeView,
@@ -379,6 +395,7 @@ function getFilter(filterString) {
   flex: 1;
   margin: 8px;
   min-width: 400px;
+  min-height: 50rem;
 }
 
 .rects,
@@ -388,6 +405,8 @@ function getFilter(filterString) {
 }
 
 .flat-card {
+  display: flex;
+  flex-direction: column;
   height: 100%;
 }
 
@@ -396,24 +415,18 @@ function getFilter(filterString) {
   margin: 16px;
 }
 
-.data-card {
+.treeview {
   overflow: auto;
-  max-height: 730px;
-}
-
-.pre-line-data-card {
-  overflow: auto;
-  max-height: 48em;
   white-space: pre-line;
 }
 
 .no-properties {
   display: flex;
+  flex: 1;
   flex-direction: column;
   align-self: center;
   align-items: center;
   justify-content: center;
-  height: calc(100% - 50px);
   padding: 50px 25px;
 }
 
@@ -430,4 +443,32 @@ function getFilter(filterString) {
   width: auto;
 }
 
+.element-summary {
+  padding: 1rem;
+  border-bottom: thin solid rgba(0,0,0,.12);
+}
+
+.element-summary .key {
+  font-weight: 500;
+}
+
+.element-summary .value {
+  color: rgba(0, 0, 0, 0.75);
+}
+
+.properties-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.tree-view-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.treeview {
+  flex: 1 0 0;
+}
 </style>
