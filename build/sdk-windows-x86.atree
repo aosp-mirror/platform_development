@@ -138,8 +138,17 @@ prebuilts/sdk/tools/windows/bin/x86_64-linux-android-ld.exe      strip build-too
 rm build-tools/${PLATFORM_NAME}/mipsel-linux-android-ld
 prebuilts/sdk/tools/windows/bin/mipsel-linux-android-ld.exe    strip build-tools/${PLATFORM_NAME}/mipsel-linux-android-ld.exe
 
+rm build-tools/${PLATFORM_NAME}/lib64/libc++.so.1
+
 rm build-tools/${PLATFORM_NAME}/lld
-prebuilts/sdk/tools/windows/bin/lld.exe   strip build-tools/${PLATFORM_NAME}/lld.exe
+rm build-tools/${PLATFORM_NAME}/lld-bin/lld
+
+# lld linker trampoline (invokes actual lld linker at lld-bin/lld.exe)
+bin/lld.exe                                                 strip build-tools/${PLATFORM_NAME}/lld.exe
+
+# actual lld linker, and dependent library
+prebuilts/sdk/tools/windows/bin/lld.exe                     strip build-tools/${PLATFORM_NAME}/lld-bin/lld.exe
+prebuilts/sdk/tools/windows/bin/lib64/libwinpthread-1.dll   strip build-tools/${PLATFORM_NAME}/lld-bin/libwinpthread-1.dll
 
 dalvik/dx/etc/mainDexClasses.bat             build-tools/${PLATFORM_NAME}/mainDexClasses.bat
 
