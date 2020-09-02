@@ -96,10 +96,10 @@
                     />
                     <md-icon-option
                       :value="NAVIGATION_STYLE.FOCUSED"
-                      :icon="focusedFile.type.icon"
+                      :icon="FILE_ICONS[focusedFile.type]"
                       :desc="`Automatically switch what timeline is considered
                         for navigation based on what is visible on screen.
-                        Currently ${focusedFile.type.name}.`"
+                        Currently ${focusedFile.type}.`"
                     />
                     <!-- TODO: Add edit button for custom settings that opens
                                popup dialog menu -->
@@ -113,13 +113,13 @@
                     <md-optgroup label="Targeted">
                       <md-icon-option
                         v-for="file in timelineFiles"
-                        v-bind:key="file.type.name"
+                        v-bind:key="file.type"
                         :value="`${NAVIGATION_STYLE.TARGETED}-` +
-                                `${file.type.name}`"
-                        :displayValue="file.type.name"
+                                `${file.type}`"
+                        :displayValue="file.type"
                         :shortValue="NAVIGATION_STYLE.TARGETED"
-                        :icon="file.type.icon"
-                        :desc="`Only consider ${file.type.name} ` +
+                        :icon="FILE_ICONS[file.type]"
+                        :desc="`Only consider ${file.type} ` +
                                'for timeline navigation.'"
                       />
                     </md-optgroup>
@@ -256,6 +256,7 @@ import VideoView from './VideoView.vue';
 import MdIconOption from './components/IconSelection/IconSelectOption.vue';
 import FileType from './mixins/FileType.js';
 import {NAVIGATION_STYLE} from './utils/consts';
+import {FILE_ICONS} from '@/decode.js';
 
 // eslint-disable-next-line camelcase
 import {nanos_to_string} from './transform.js';
@@ -282,6 +283,7 @@ export default {
       videoOverlayExtraWidth: 0,
       crop: null,
       cropIntent: null,
+      FILE_ICONS,
     };
   },
   created() {
@@ -360,7 +362,7 @@ export default {
           return 'All timelines';
 
         case NAVIGATION_STYLE.FOCUSED:
-          return `Focused: ${this.focusedFile.type.name}`;
+          return `Focused: ${this.focusedFile.type}`;
 
         case NAVIGATION_STYLE.CUSTOM:
           return 'Enabled timelines';
@@ -372,7 +374,7 @@ export default {
           }
 
           const fileType = split[1];
-          return this.getDataTypeByName(fileType).name;
+          return this.getDataTypeByName(fileType);
       }
     },
     collapsedTimelineIcon() {
@@ -381,7 +383,7 @@ export default {
           return 'public';
 
         case NAVIGATION_STYLE.FOCUSED:
-          return this.focusedFile.type.icon;
+          return FILE_ICONS[this.focusedFile.type];
 
         case NAVIGATION_STYLE.CUSTOM:
           return 'dashboard_customize';
@@ -572,7 +574,7 @@ export default {
 
         case NAVIGATION_STYLE.FOCUSED:
           navigationStyleFilter =
-            (f) => f.type.name === this.focusedFile.type.name;
+            (f) => f.type === this.focusedFile.type;
           break;
 
         case NAVIGATION_STYLE.CUSTOM:
@@ -587,7 +589,7 @@ export default {
 
           const fileType = split[1];
           navigationStyleFilter =
-            (f) => f.type.name === this.getDataTypeByName(fileType).name;
+            (f) => f.type === this.getDataTypeByName(fileType);
       }
 
       this.$store.commit('setNavigationFilesFilter', navigationStyleFilter);
@@ -825,5 +827,6 @@ export default {
 .help-icon {
   font-size: 15px;
   margin-bottom: 15px;
+  cursor: help;
 }
 </style>
