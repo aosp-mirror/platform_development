@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-import { FILE_TYPES, TRACE_TYPES } from "@/decode.js";
-import TraceBase from './TraceBase.js';
+import { FILE_TYPES, TRACE_TYPES } from '@/decode.js';
+import TraceBase from './TraceBase';
 
-export default class SystemUI extends TraceBase {
+export default class SurfaceFlinger extends TraceBase {
+  sfTraceFile: any;
+
   constructor(files) {
-    const systemUIFile = files[FILE_TYPES.SYSTEM_UI];
-    super(systemUIFile.data, systemUIFile.timeline);
+    const sfTraceFile = files[FILE_TYPES.SURFACE_FLINGER_TRACE];
+    super(sfTraceFile.data, sfTraceFile.timeline, files);
 
-    this.systemUIFile = systemUIFile;
+    this.sfTraceFile = sfTraceFile;
   }
 
   get type() {
-    return TRACE_TYPES.SYSTEM_UI;
+    return TRACE_TYPES.SURFACE_FLINGER;
   }
 }

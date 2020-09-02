@@ -14,18 +14,22 @@
  * limitations under the License.
  */
 
-import {FILE_TYPES, TRACE_TYPES} from '@/decode.js';
-import TraceBase from './TraceBase.js';
+import { FILE_TYPES, TRACE_TYPES } from '@/decode.js';
+import TraceBase from './TraceBase';
 
 export default class Transactions extends TraceBase {
-  constructor(files) {
+  transactionsFile: Object;
+  transactionsEventsFiles: Object[];
+  transactionHistory: TransactionHistory;
+
+  constructor(files: any[]) {
     const transactionsFile = files[FILE_TYPES.TRANSACTIONS_TRACE];
 
     // There should be one file for each process which recorded transaction
     // events
     const transactionsEventsFiles = files[FILE_TYPES.TRANSACTION_EVENTS_TRACE];
 
-    super(transactionsFile.data, transactionsFile.timeline);
+    super(transactionsFile.data, transactionsFile.timeline, files);
 
     this.transactionsFile = transactionsFile;
     this.transactionsEventsFiles = transactionsEventsFiles;
@@ -39,6 +43,10 @@ export default class Transactions extends TraceBase {
 }
 
 class TransactionHistory {
+  history: Object;
+  applied: Object;
+  mergeTrees: any;
+
   constructor(transactionsEventsFiles) {
     this.history = {};
     this.applied = {};
@@ -84,7 +92,7 @@ class TransactionHistory {
     return this._generateHistoryTree(transactionId);
   }
 
-  _generateHistoryTree(transactionId, upTo) {
+  _generateHistoryTree(transactionId, upTo = null) {
     if (!this.history[transactionId]) {
       return [];
     }
@@ -96,7 +104,7 @@ class TransactionHistory {
 
       if (event instanceof Merge) {
         const historyTree = this.
-            _generateHistoryTree(event.mergedId, event.mergedAt);
+          _generateHistoryTree(event.mergedId, event.mergedAt);
         const mergeTreeNode = new MergeTreeNode(event.mergedId, historyTree);
         children.push(mergeTreeNode);
       } else if (event instanceof Apply) {
@@ -147,12 +155,16 @@ class TransactionHistory {
    */
   allDirectMergesInto(transactionId) {
     return (this.history[transactionId] ?? [])
-        .filter((event) => event instanceof Merge)
-        .map((merge) => merge.mergedId);
+      .filter((event) => event instanceof Merge)
+      .map((merge) => merge.mergedId);
   }
 }
 
 class MergeTreeNode {
+  mergedId: Number;
+  mergedTransactionHistory: TransactionHistory;
+  children: TransactionHistory[];
+
   constructor(mergedId, mergedTransactionHistory) {
     this.mergedId = mergedId;
     this.mergedTransactionHistory = mergedTransactionHistory;
@@ -165,6 +177,8 @@ class MergeTreeNode {
 }
 
 class ApplyTreeNode {
+  children: any[];
+
   constructor() {
     this.children = [];
   }
@@ -175,6 +189,10 @@ class ApplyTreeNode {
 }
 
 class Merge {
+  originalId: Number;
+  mergedId: Number;
+  mergedAt: Number;
+
   constructor(originalId, mergedId, history) {
     this.originalId = originalId;
     this.mergedId = mergedId;
@@ -185,6 +203,8 @@ class Merge {
 }
 
 class Apply {
+  transactionId: Number;
+
   constructor(transactionId) {
     this.transactionId = transactionId;
   }

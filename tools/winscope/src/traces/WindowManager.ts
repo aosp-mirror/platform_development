@@ -14,15 +14,20 @@
  * limitations under the License.
  */
 
-import { FILE_TYPES, DUMP_TYPES } from "@/decode.js";
+import { FILE_TYPES, TRACE_TYPES } from '@/decode.js';
+import TraceBase from './TraceBase';
 
-export default class WindowManager {
+export default class WindowManager extends TraceBase {
+  wmTraceFile: Object;
+
   constructor(files) {
-    this.wmDumpFile = files[FILE_TYPES.WINDOW_MANAGER_DUMP];
-    this.data = this.wmDumpFile.data;
+    const wmTraceFile = files[FILE_TYPES.WINDOW_MANAGER_TRACE];
+    super(wmTraceFile.data, wmTraceFile.timeline, files);
+
+    this.wmTraceFile = wmTraceFile;
   }
 
   get type() {
-    return DUMP_TYPES.WINDOW_MANAGER;
+    return TRACE_TYPES.WINDOW_MANAGER;
   }
 }
