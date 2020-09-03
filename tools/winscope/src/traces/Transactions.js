@@ -14,22 +14,18 @@
  * limitations under the License.
  */
 
-import { FILE_TYPES, TRACE_TYPES } from "@/decode.js";
+import {FILE_TYPES, TRACE_TYPES} from '@/decode.js';
 import TraceBase from './TraceBase.js';
 
 export default class Transactions extends TraceBase {
   constructor(files) {
     const transactionsFile = files[FILE_TYPES.TRANSACTIONS_TRACE];
 
-    // There should be one file for each process which recorded transaction events
+    // There should be one file for each process which recorded transaction
+    // events
     const transactionsEventsFiles = files[FILE_TYPES.TRANSACTION_EVENTS_TRACE];
 
     super(transactionsFile.data, transactionsFile.timeline);
-
-    const transactions = transactionsFile.data
-      .filter(e => e.type === "transaction")
-      .map(e => e.transactions)
-      .flat();
 
     this.transactionsFile = transactionsFile;
     this.transactionsEventsFiles = transactionsEventsFiles;
@@ -55,12 +51,13 @@ class TransactionHistory {
       for (const event of eventsFile.data) {
         if (event.merge) {
           const merge = event.merge;
-          const originalId = merge.originalTransaction.identifier.id;
-          const mergedId = merge.mergedTransaction.identifier.id;
+          const originalId = merge.originalTransaction.id;
+          const mergedId = merge.mergedTransaction.id;
 
           this.addMerge(originalId, mergedId);
         } else if (event.apply) {
-          this.addApply(event.apply.identifier.id);
+          console.log(event);
+          this.addApply(event.apply.tx_id);
         }
       }
     }
@@ -98,21 +95,60 @@ class TransactionHistory {
       const event = events[i];
 
       if (event instanceof Merge) {
-        const historyTree = this._generateHistoryTree(event.mergedId, event.mergedAt);
+        const historyTree = this.
+            _generateHistoryTree(event.mergedId, event.mergedAt);
         const mergeTreeNode = new MergeTreeNode(event.mergedId, historyTree);
         children.push(mergeTreeNode);
       } else if (event instanceof Apply) {
         children.push(new ApplyTreeNode());
       } else {
-        throw new Error("Unhandled event type");
+        throw new Error('Unhandled event type');
       }
     }
 
     return children;
   }
 
-  getMergeTreeOf(transactionId) {
-    return this.mergeTrees[transactionId];
+  /**
+   * Generates the list of all the transactions that have ever been merged into
+   * the target transaction directly or indirectly through the merges of
+   * transactions that ended up being merged into the transaction.
+   * This includes both merges that occur before and after the transaction is
+   * applied.
+   * @param {Number} transactionId - The id of the transaction we want the list
+   *                                 of transactions merged in for
+   * @return {Set<Number>} a set of all the transaction ids that are in the
+   *                       history of merges of the transaction
+   */
+  allTransactionsMergedInto(transactionId) {
+    const allTransactionsMergedIn = new Set();
+
+    let event;
+    const toVisit = this.generateHistoryTreesOf(transactionId);
+    while (event = toVisit.pop()) {
+      if (event instanceof MergeTreeNode) {
+        allTransactionsMergedIn.add(event.mergedId);
+        for (const child of event.children) {
+          toVisit.push(child);
+        }
+      }
+    }
+
+    return allTransactionsMergedIn;
+  }
+
+  /**
+   * Generated the list of transactions that have been directly merged into the
+   * target transaction those are transactions that have explicitly been merged
+   * in the code with a call to merge.
+   * @param {Number} transactionId - The id of the target transaction.
+   * @return {Array<Number>} an array of the transaction ids of the transactions
+   *                        directly merged into the target transaction
+   */
+  allDirectMergesInto(transactionId) {
+    return (this.history[transactionId] ?? [])
+        .filter((event) => event instanceof Merge)
+        .map((merge) => merge.mergedId);
   }
 }
 
@@ -124,7 +160,7 @@ class MergeTreeNode {
   }
 
   get type() {
-    return "merge";
+    return 'merge';
   }
 }
 
@@ -134,7 +170,7 @@ class ApplyTreeNode {
   }
 
   get type() {
-    return "apply";
+    return 'apply';
   }
 }
 
@@ -142,7 +178,8 @@ class Merge {
   constructor(originalId, mergedId, history) {
     this.originalId = originalId;
     this.mergedId = mergedId;
-    // Specifies how long the merge chain of the merged transaction was at the time is was merged.
+    // Specifies how long the merge chain of the merged transaction was at the
+    // time is was merged.
     this.mergedAt = history[mergedId]?.length ?? 0;
   }
 }
@@ -151,4 +188,23 @@ class Apply {
   constructor(transactionId) {
     this.transactionId = transactionId;
   }
+}
+
+/**
+ * Converts the transactionId to the values that compose the identifier.
+ * The top 32 bits is the PID of the process that created the transaction
+ * and the bottom 32 bits is the ID of the transaction unique within that
+ * process.
+ * @param {Number} transactionId
+ * @return {Object} An object containing the id and pid of the transaction.
+ */
+export function expandTransactionId(transactionId) {
+  console.log('Expanding', transactionId);
+  // Can't use bit shift operation because it isn't a 32 bit integer...
+  // Because js uses floating point numbers for everything, maths isn't 100%
+  // accurate so we need to round...
+  return Object.freeze({
+    id: Math.round(transactionId % Math.pow(2, 32)),
+    pid: Math.round(transactionId / Math.pow(2, 32)),
+  });
 }
