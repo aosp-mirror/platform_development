@@ -20,17 +20,17 @@ const path = require('path');
 const fs = require('fs');
 
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
-const HtmlPlugin = require('html-webpack-plugin');
-const MiniCSSExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const KotlinWebpackPlugin = require('@jetbrains/kotlin-webpack-plugin');
-// const HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin');
+const HtmlWebpackInlineSourcePlugin =
+  require('html-webpack-inline-source-plugin');
 
 const isDev = process.env.NODE_ENV === 'development';
 
 
 function getWaylandSafePath() {
-  const waylandPath = path.resolve(__dirname, '../../../vendor/google_arc/libs/wayland_service');
+  const waylandPath =
+    path.resolve(__dirname, '../../../vendor/google_arc/libs/wayland_service');
   if (fs.existsSync(waylandPath)) {
     return waylandPath;
   }
@@ -52,14 +52,14 @@ const webpackConfig = {
     modules: [
       'node_modules',
       'kotlin_build',
-      path.resolve(__dirname, '../../..')
+      path.resolve(__dirname, '../../..'),
     ],
   },
   resolveLoader: {
     modules: [
       'node_modules',
-      path.resolve(__dirname, 'loaders')
-    ]
+      path.resolve(__dirname, 'loaders'),
+    ],
   },
   module: {
     rules: [
@@ -79,7 +79,7 @@ const webpackConfig = {
         test: /\.css$/,
         use: [
           'vue-style-loader',
-          { loader: 'css-loader', options: { sourceMap: isDev } },
+          {loader: 'css-loader', options: {sourceMap: isDev}},
         ],
         include: path.resolve(__dirname, './src'),
         exclude: /node_modules/,
@@ -90,37 +90,39 @@ const webpackConfig = {
         options: {
           paths: [
             path.resolve(__dirname, '../../..'),
-            path.resolve(__dirname, '../../../external/protobuf/src')
-          ]
-        }
+            path.resolve(__dirname, '../../../external/protobuf/src'),
+          ],
+        },
       },
       {
         test: /\.(png|jpg|gif|svg)$/,
         loader: 'file-loader',
         options: {
-          name: '[name].[ext]?[hash]'
-        }
+          name: '[name].[ext]?[hash]',
+        },
       },
       {
         test: /\.(ttf|otf|eot|woff|woff2)$/,
         use: {
-          loader: "file-loader",
+          loader: 'file-loader',
           options: {
-            name: "fonts/[name].[ext]",
+            name: 'fonts/[name].[ext]',
           },
         },
       },
-    ]
+    ],
   },
   plugins: [
     new VueLoaderPlugin(),
     new HtmlWebpackPlugin({
       inlineSource: isDev ? false : '.(js|css)',
-      template: 'src/index_template.html'
+      template: 'src/index_template.html',
     }),
+    new HtmlWebpackInlineSourcePlugin(),
     new KotlinWebpackPlugin({
       src: [
-        path.join(__dirname, '../../../platform_testing/libraries/flicker/src/com/android/server/wm/flicker/common/'),
+        path.join(__dirname, '../../../platform_testing/libraries/flicker/' +
+          'src/com/android/server/wm/flicker/common/'),
       ],
       output: 'kotlin_build',
       moduleName: 'flicker',
@@ -130,9 +132,7 @@ const webpackConfig = {
       verbose: true,
       optimize: true,
     }),
-    // new HtmlWebpackInlineSourcePlugin(),
-    // new HtmlPlugin({ template: 'index.html', chunksSortMode: 'dependency' })
-  ]
+  ],
 };
 
 module.exports = webpackConfig;
