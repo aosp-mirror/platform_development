@@ -169,6 +169,10 @@ export default {
       }
     }
 
+    // Remove vsync from being transaction types that can be filtered
+    // We want to always show vsyncs
+    transactionTypes.delete('vsyncEvent');
+
     return {
       transactionTypes: Array.from(transactionTypes),
       properties: Array.from(properties),
@@ -197,6 +201,7 @@ export default {
       if (this.selectedTransactionTypes.length > 0) {
         filteredData = filteredData.filter(
             this.filterTransactions((transaction) =>
+              transaction.type === 'vsyncEvent' ||
               this.selectedTransactionTypes.includes(transaction.type)));
       }
 
@@ -247,7 +252,10 @@ export default {
         );
       }
 
-      return filteredData;
+      // We quish vsyncs because otherwise the lazy list will not load enough
+      // elements if there are many vsyncs in a row since vsyncs take up no
+      // space.
+      return this.squishVSyncs(filteredData);
     },
 
   },
@@ -435,6 +443,14 @@ export default {
       const expandedId = expandTransactionId(transactionId);
       return `${expandedId.pid}.${expandedId.id}`;
     },
+
+    squishVSyncs(data) {
+      return data.filter((event, i) => {
+        console.log(event.type, data[i + 1]?.type);
+        return !(event.type === 'vsyncEvent' &&
+          data[i + 1]?.type === 'vsyncEvent');
+      });
+    },
   },
   components: {
     'virtual-list': VirtualList,
@@ -500,5 +516,9 @@ export default {
 
 .no-properties span {
   font-weight: 100;
+}
+
+.transaction-event {
+  display: inline-flex;
 }
 </style>
