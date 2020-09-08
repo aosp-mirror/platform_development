@@ -24,6 +24,8 @@
 
 <script>
 
+import { multiply_rect } from './matrix_utils.js'
+
 export default {
   name: 'rects',
   props: ['bounds', 'rects', 'highlight'],
@@ -37,8 +39,8 @@ export default {
       if (this.bounds) {
         return this.bounds;
       }
-      var width = Math.max(...this.rects.map((r) => r.right));
-      var height = Math.max(...this.rects.map((r) => r.bottom));
+      var width = Math.max(...this.rects.map((r) => multiply_rect(r.transform, r).right));
+      var height = Math.max(...this.rects.map((r) => multiply_rect(r.transform, r).bottom));
       return {width, height};
     },
     boundsStyle() {

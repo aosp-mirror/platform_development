@@ -69,7 +69,8 @@ public class SampleSpellCheckerService extends SpellCheckerService {
             final int flags = length <= 3 ? SuggestionsInfo.RESULT_ATTR_IN_THE_DICTIONARY
                     : length <= 20 ? SuggestionsInfo.RESULT_ATTR_LOOKS_LIKE_TYPO : 0;
             return new SuggestionsInfo(flags,
-                    new String[] {"aaa", "bbb", "Candidate for " + input, mLocale});
+                    new String[] {"aaa", "bbb", "Candidate for " + input, mLocale},
+                    textInfo.getCookie(), textInfo.getSequence());
         }
 
         /**
@@ -109,11 +110,11 @@ public class SampleSpellCheckerService extends SpellCheckerService {
                             | SuggestionsInfo.RESULT_ATTR_LOOKS_LIKE_TYPO;
                     final int flags2 = flags1;
                     final SuggestionsInfo si0 = new SuggestionsInfo(
-                            flags0, new String[] { "would" });
+                            flags0, new String[] { "would" }, ti.getCookie(), ti.getSequence());
                     final SuggestionsInfo si1 = new SuggestionsInfo(
-                            flags1, new String[] { "hear" });
+                            flags1, new String[] { "hear" }, ti.getCookie(), ti.getSequence());
                     final SuggestionsInfo si2 = new SuggestionsInfo(
-                            flags2, new String[] { "from" });
+                            flags2, new String[] { "from" }, ti.getCookie(), ti.getSequence());
                     sis = new SuggestionsInfo[] {si0, si1, si2};
                     offsets = new int[] { 2, 15, 20 };
                     lengths = new int[] { 4, 4, 4 };
@@ -125,13 +126,14 @@ public class SampleSpellCheckerService extends SpellCheckerService {
                     final int flags = length <= 3 ? SuggestionsInfo.RESULT_ATTR_IN_THE_DICTIONARY
                             : length <= 20 ? SuggestionsInfo.RESULT_ATTR_LOOKS_LIKE_TYPO : 0;
                     final SuggestionsInfo si = new SuggestionsInfo(flags,
-                            new String[] {"aaa", "bbb", "Candidate for " + input, mLocale});
+                            new String[] {"aaa", "bbb", "Candidate for " + input, mLocale},
+                            ti.getCookie(), ti.getSequence());
                     sis = new SuggestionsInfo[] { si };
                     offsets = new int[] { 0 };
                     lengths = new int[] { ti.getText().length() };
                 }
                 final SentenceSuggestionsInfo ssi =
-                        new SentenceSuggestionsInfo(sis, lengths, offsets);
+                        new SentenceSuggestionsInfo(sis, offsets, lengths);
                 retval.add(ssi);
             }
             return retval.toArray(new SentenceSuggestionsInfo[0]);

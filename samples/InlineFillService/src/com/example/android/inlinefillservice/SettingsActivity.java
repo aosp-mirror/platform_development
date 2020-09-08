@@ -13,9 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-syntax = "proto2";
 
-package com.android.server.protolog;
+package com.example.android.inlinefillservice;
 
-message ProtoLogMessage {}
-message ProtoLogFileProto {}
+import android.app.Activity;
+import android.os.Bundle;
+
+public class SettingsActivity extends Activity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.auth_activity);
+    }
+}

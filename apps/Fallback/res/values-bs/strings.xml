@@ -16,7 +16,7 @@
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="appTitle" msgid="161410001913116606">"Rezerva"</string>
-    <string name="title" msgid="8156274565006125136">"Nepodržana akcija"</string>
-    <string name="error" msgid="6539615832923362301">"Ta akcija trenutno nije podržana."</string>
+    <string name="appTitle" msgid="2602861335056897297">"Rezerva"</string>
+    <string name="title" msgid="4690900077948963868">"Nepodržana akcija"</string>
+    <string name="error" msgid="5607912284955296701">"Ta akcija trenutno nije podržana."</string>
 </resources>

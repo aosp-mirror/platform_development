@@ -216,7 +216,6 @@ prebuilts/sdk/sdk-annotations/annotations.zip platforms/${PLATFORM_NAME}/data/an
 ${OUT_DIR}/target/common/obj/PACKAGING/framework-doc-stubs_annotations.zip platforms/${PLATFORM_NAME}/data/annotations.zip
 
 # Eclipse Editors support
-framework/layoutlib-legacy.jar            platforms/${PLATFORM_NAME}/data/layoutlib.jar
 frameworks/base/core/res/res              platforms/${PLATFORM_NAME}/data/res
 ${OUT_DIR}/target/common/obj/PACKAGING/framework-doc-stubs-metadata_intermediates/activity_actions.txt   platforms/${PLATFORM_NAME}/data/activity_actions.txt
 ${OUT_DIR}/target/common/obj/PACKAGING/framework-doc-stubs-metadata_intermediates/broadcast_actions.txt  platforms/${PLATFORM_NAME}/data/broadcast_actions.txt
@@ -224,12 +223,6 @@ ${OUT_DIR}/target/common/obj/PACKAGING/framework-doc-stubs-metadata_intermediate
 ${OUT_DIR}/target/common/obj/PACKAGING/framework-doc-stubs-metadata_intermediates/categories.txt         platforms/${PLATFORM_NAME}/data/categories.txt
 ${OUT_DIR}/target/common/obj/PACKAGING/framework-doc-stubs-metadata_intermediates/widgets.txt            platforms/${PLATFORM_NAME}/data/widgets.txt
 ${OUT_DIR}/target/common/obj/PACKAGING/framework-doc-stubs-metadata_intermediates/features.txt           platforms/${PLATFORM_NAME}/data/features.txt
-
-# fonts for layoutlib.
-${FONT_OUT}                       platforms/${PLATFORM_NAME}/data/fonts
-
-# timezone data for layoutlib
-system/timezone/output_data/iana/tzdata   platforms/${PLATFORM_NAME}/data/tzdata
 
 # NOTICE files are copied by build/core/Makefile from sdk.git
 development/sdk/sdk_files_NOTICE.txt      platforms/${PLATFORM_NAME}/templates/NOTICE.txt

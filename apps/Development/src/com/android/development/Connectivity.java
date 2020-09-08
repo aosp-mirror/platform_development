@@ -36,7 +36,6 @@ import android.net.NetworkRequest;
 import android.net.NetworkUtils;
 import android.net.RouteInfo;
 import android.net.wifi.ScanResult;
-import android.net.wifi.WifiActivityEnergyInfo;
 import android.net.wifi.WifiManager;
 import android.os.RemoteException;
 import android.os.Handler;
@@ -50,6 +49,7 @@ import android.os.ServiceManager;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.os.Bundle;
+import android.os.connectivity.WifiActivityEnergyInfo;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.IWindowManager;
@@ -699,13 +699,13 @@ public class Connectivity extends Activity {
     private void onLinkStats() {
         Log.e(TAG, "LINK STATS:  ");
         try {
-            WifiActivityEnergyInfo info =
-                    mWm.getControllerActivityEnergyInfo();
-            if (info != null) {
-                mLinkStatsResults.setText(" power " + info.toString());
-            } else {
-                mLinkStatsResults.setText(" null! ");
-            }
+            mWm.getWifiActivityEnergyInfoAsync(getMainExecutor(), info -> {
+                if (info != null) {
+                    mLinkStatsResults.setText(" power " + info.toString());
+                } else {
+                    mLinkStatsResults.setText(" null! ");
+                }
+            });
         } catch (Exception e) {
             mLinkStatsResults.setText(" failed! " + e.toString());
         }
