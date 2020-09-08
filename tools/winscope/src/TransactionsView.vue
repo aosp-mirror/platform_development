@@ -81,7 +81,12 @@
         :data-key="'timestamp'"
         :data-sources="filteredData"
         :data-component="transactionEntryComponent"
-        :extra-props="{onClick: transactionSelected, selectedTransaction }"
+        :extra-props="{
+          onClick: transactionSelected,
+          selectedTransaction,
+          transactionsTrace,
+          prettifyTransactionId,
+        }"
         ref="loglist"
       />
     </flat-card>
@@ -95,12 +100,22 @@
         <h2 class="md-title" style="flex: 1">Changes</h2>
       </md-content>
       <div class="changes-content" v-if="selectedTree">
-        <div v-if="selectedTransaction.type === 'transaction'">
+        <div
+          v-if="selectedTransaction.type === 'transaction'"
+          class="transaction-events"
+        >
           <div
-            v-for="history in transactionHistory(selectedTransaction)"
-            v-bind:key="history.id"
+            v-for="(event, i) in transactionHistory(selectedTransaction)"
+            v-bind:key="`${selectedTransaction.identifier}-${i}`"
+            class="transaction-event"
           >
-            {{ history.type }}
+            <div v-if="event.type === 'apply'" class="applied-event">
+              applied
+            </div>
+            <div v-if="event.type === 'merge'" class="merged-event">
+              <!-- eslint-disable-next-line max-len -->
+              {{ prettifyTransactionId(event.mergedId) }}
+            </div>
           </div>
         </div>
         <tree-view
@@ -126,6 +141,7 @@ import TransactionEntry from './TransactionEntry.vue';
 import FlatCard from './components/FlatCard.vue';
 
 import {ObjectTransformer} from './transform.js';
+import {expandTransactionId} from '@/traces/Transactions.js';
 
 export default {
   name: 'transactionsview',
@@ -168,6 +184,7 @@ export default {
       selectedTransaction: null,
       transactionEntryComponent: TransactionEntry,
       transactionsTrace,
+      expandTransactionId,
     };
   },
   computed: {
@@ -411,27 +428,12 @@ export default {
       const history = this.transactionsTrace.transactionHistory
           .generateHistoryTreesOf(transactionId);
 
-      const historyElements = [];
-      for (const [i, event] of history.entries()) {
-        const elementId = transactionId + '.' + i;
+      return history;
+    },
 
-        switch (event.type) {
-          case 'apply':
-            break;
-          case 'merge':
-            break;
-          default:
-            throw new Error('Unhandled event type');
-        }
-
-        const element = {
-          id: elementId,
-          type: event.type,
-        };
-        historyElements.push(element);
-      }
-
-      return historyElements;
+    prettifyTransactionId(transactionId) {
+      const expandedId = expandTransactionId(transactionId);
+      return `${expandedId.pid}.${expandedId.id}`;
     },
   },
   components: {
