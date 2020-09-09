@@ -14,16 +14,20 @@
  * limitations under the License.
  */
 
-import { FILE_TYPES, DUMP_TYPES } from "@/decode.js";
+import { FILE_TYPES, TRACE_TYPES } from '@/decode.js';
+import TraceBase from './TraceBase';
 
-export default class WayLand {
+export default class SystemUI extends TraceBase {
+  systemUIFile: any;
+
   constructor(files) {
-    this.waylandFile = files[FILE_TYPES.WAYLAND_DUMP];
-    this.data = this.waylandFile.data;
-    this.selectedIndex = 0;
+    const systemUIFile = files[FILE_TYPES.SYSTEM_UI];
+    super(systemUIFile.data, systemUIFile.timeline, files);
+
+    this.systemUIFile = systemUIFile;
   }
 
   get type() {
-    return DUMP_TYPES.WAYLAND;
+    return TRACE_TYPES.SYSTEM_UI;
   }
 }

@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "outDir": "./dist/",
+    "noImplicitAny": false,
+    "module": "es6",
+    "target": "es5",
+    "allowJs": false,
+    "lib": [
+      "es2019"
+    ],
+    "paths": {
+      "@/*": [
+        "*"
+      ],
+    }
+  }
+}

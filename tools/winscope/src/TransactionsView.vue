@@ -141,7 +141,7 @@ import TransactionEntry from './TransactionEntry.vue';
 import FlatCard from './components/FlatCard.vue';
 
 import {ObjectTransformer} from './transform.js';
-import {expandTransactionId} from '@/traces/Transactions.js';
+import {expandTransactionId} from '@/traces/Transactions.ts';
 
 export default {
   name: 'transactionsview',

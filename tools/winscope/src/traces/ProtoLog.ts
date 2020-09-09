@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-import { FILE_TYPES, TRACE_TYPES } from "@/decode.js";
-import TraceBase from './TraceBase.js';
+import { FILE_TYPES, TRACE_TYPES } from '@/decode.js';
+import TraceBase from './TraceBase';
 
-export default class WayLand extends TraceBase {
+export default class ProtoLog extends TraceBase {
+  protoLogFile: any;
+
   constructor(files) {
-    const waylandFile = files[FILE_TYPES.WAYLAND_TRACE];
-    super(waylandFile.data, waylandFile.timeline);
+    const protoLogFile = files[FILE_TYPES.PROTO_LOG];
+    super(protoLogFile.data, protoLogFile.timeline, files);
 
-    this.waylandFile = waylandFile;
+    this.protoLogFile = protoLogFile;
   }
 
   get type() {
-    return TRACE_TYPES.WAYLAND;
+    return TRACE_TYPES.PROTO_LOG;
   }
 }

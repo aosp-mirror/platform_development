@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-/* eslint-disable max-len */
 /* eslint-disable camelcase */
+/* eslint-disable max-len */
 
 import jsonProtoDefsWm from 'frameworks/base/core/proto/android/server/windowmanagertrace.proto';
 import jsonProtoDefsProtoLog from 'frameworks/base/core/proto/android/internal/protolog.proto';
@@ -36,18 +36,18 @@ import {transform_launcher_trace} from './transform_launcher.js';
 import {fill_transform_data} from './matrix_utils.js';
 import {mp4Decoder} from './decodeVideo.js';
 
-import SurfaceFlingerTrace from '@/traces/SurfaceFlinger.js';
-import WindowManagerTrace from '@/traces/WindowManager.js';
-import TransactionsTrace from '@/traces/Transactions.js';
-import ScreenRecordingTrace from '@/traces/ScreenRecording.js';
-import WaylandTrace from '@/traces/Wayland.js';
-import ProtoLogTrace from '@/traces/ProtoLog.js';
-import SystemUITrace from '@/traces/SystemUI.js';
-import LauncherTrace from '@/traces/Launcher.js';
+import SurfaceFlingerTrace from '@/traces/SurfaceFlinger.ts';
+import WindowManagerTrace from '@/traces/WindowManager.ts';
+import TransactionsTrace from '@/traces/Transactions.ts';
+import ScreenRecordingTrace from '@/traces/ScreenRecording.ts';
+import WaylandTrace from '@/traces/Wayland.ts';
+import ProtoLogTrace from '@/traces/ProtoLog.ts';
+import SystemUITrace from '@/traces/SystemUI.ts';
+import LauncherTrace from '@/traces/Launcher.ts';
 
-import SurfaceFlingerDump from '@/dumps/SurfaceFlinger.js';
-import WindowManagerDump from '@/dumps/WindowManager.js';
-import WaylandDump from '@/dumps/Wayland.js';
+import SurfaceFlingerDump from '@/dumps/SurfaceFlinger.ts';
+import WindowManagerDump from '@/dumps/WindowManager.ts';
+import WaylandDump from '@/dumps/Wayland.ts';
 
 const WmTraceMessage = lookup_type(jsonProtoDefsWm, 'com.android.server.wm.WindowManagerTraceFileProto');
 const WmDumpMessage = lookup_type(jsonProtoDefsWm, 'com.android.server.wm.WindowManagerServiceDumpProto');
@@ -353,6 +353,7 @@ function modifyProtoFields(protoObj, displayDefaults) {
   if (!protoObj || protoObj !== Object(protoObj) || !protoObj.$type) {
     return;
   }
+
   for (const fieldName in protoObj.$type.fields) {
     if (protoObj.$type.fields.hasOwnProperty(fieldName)) {
       const fieldProperties = protoObj.$type.fields[fieldName];

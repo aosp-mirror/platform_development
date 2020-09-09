@@ -402,15 +402,21 @@ export default {
 
       const zip = new JSZip();
       const content = await zip.loadAsync(buffer);
+      console.log('ZIP CONTENT', content);
 
       const decodedFiles = [];
 
       for (const filename in content.files) {
         if (content.files.hasOwnProperty(filename)) {
           const file = content.files[filename];
+          if (file.dir) {
+            // Ignore directories
+            continue;
+          }
 
           const fileBlob = await file.async('blob');
-          fileBlob.name = filename;
+          // Get only filename and remove rest of path
+          fileBlob.name = filename.split('/').slice(-1).pop();
 
           try {
             const decodedFile = await this.decodeFile(fileBlob);

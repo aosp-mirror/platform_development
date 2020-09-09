@@ -14,18 +14,27 @@
  * limitations under the License.
  */
 
-import { FILE_TYPES, TRACE_TYPES } from "@/decode.js";
-import TraceBase from './TraceBase.js';
+export default abstract class Trace implements ITrace {
+  selectedIndex: Number;
+  data: Object;
+  timeline: Array<Number>;
+  _files: any[];
 
-export default class ProtoLog extends TraceBase {
-  constructor(files) {
-    const protoLogFile = files[FILE_TYPES.PROTO_LOG];
-    super(protoLogFile.data, protoLogFile.timeline);
-
-    this.protoLogFile = protoLogFile;
+  constructor(data: any, timeline: Number[], files: any[]) {
+    this.selectedIndex = 0;
+    this.data = data;
+    this.timeline = timeline;
+    this._files = files;
   }
 
-  get type() {
-    return TRACE_TYPES.PROTO_LOG;
+  get files(): any[] {
+    return Object.values(this._files).flat();
   }
+
+  abstract get type(): String;
+}
+
+interface ITrace {
+  files: Array<Object>;
+  type: String,
 }

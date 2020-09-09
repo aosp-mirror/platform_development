@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-import { FILE_TYPES, TRACE_TYPES } from "@/decode.js";
-import TraceBase from './TraceBase.js';
+import { FILE_TYPES, TRACE_TYPES } from '@/decode.js';
+import TraceBase from './TraceBase';
 
 export default class ScreenRecording extends TraceBase {
+  screenRecordingFile: any;
+
   constructor(files) {
     const screenRecordingFile = files[FILE_TYPES.SCREEN_RECORDING];
-    super(screenRecordingFile.data, screenRecordingFile.timeline);
+    super(screenRecordingFile.data, screenRecordingFile.timeline, files);
 
     this.screenRecordingFile = screenRecordingFile;
   }

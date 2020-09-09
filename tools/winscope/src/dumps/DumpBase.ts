@@ -14,18 +14,23 @@
  * limitations under the License.
  */
 
-import { FILE_TYPES, TRACE_TYPES } from "@/decode.js";
-import TraceBase from './TraceBase.js';
+export default abstract class DumpBase implements IDump {
+  data: any;
+  _files: any[];
 
-export default class Launcher extends TraceBase {
-  constructor(files) {
-    const launcherFile = files[FILE_TYPES.LAUNCHER];
-    super(launcherFile.data, launcherFile.timeline);
-
-    this.launcherFile = launcherFile;
+  constructor(data, files) {
+    this.data = data;
+    this._files = files;
   }
 
-  get type() {
-    return TRACE_TYPES.LAUNCHER;
+  get files(): any[] {
+    return Object.values(this._files).flat();
   }
+
+  abstract get type(): String;
+}
+
+interface IDump {
+  files: Array<Object>;
+  type: String,
 }
