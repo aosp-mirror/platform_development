@@ -553,9 +553,15 @@ export default {
       this.cropIntent = cropIntent;
     },
     changeVideoTimestamp(ts) {
+      if (!this.$refs.video) {
+        return;
+      }
       this.$refs.video.selectFrameAtTime(ts);
     },
     resetVideoTimestamp() {
+      if (!this.$refs.video) {
+        return;
+      }
       this.$refs.video.jumpToSelectedIndex();
     },
   },

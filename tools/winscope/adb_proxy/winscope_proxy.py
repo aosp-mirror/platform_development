@@ -402,7 +402,7 @@ class FetchFilesEndpoint(DeviceRequestEndpoint):
                     log.debug(f"Uploading file {tmp.name}")
                     if file_type not in file_buffers:
                         file_buffers[file_type] = []
-                    buf = base64.encodestring(tmp.read()).decode("utf-8")
+                    buf = base64.encodebytes(tmp.read()).decode("utf-8")
                     file_buffers[file_type].append(buf)
 
         # server.send_header('X-Content-Type-Options', 'nosniff')

@@ -21,18 +21,27 @@
           <md-field>
             <label>Transaction Type</label>
             <md-select v-model="selectedTransactionTypes" multiple>
-              <md-option v-for="type in transactionTypes" :value="type">{{ type }}</md-option>
+              <md-option
+                v-for="type in transactionTypes"
+                :value="type"
+                v-bind:key="type">
+                {{ type }}
+              </md-option>
             </md-select>
           </md-field>
         </div>
 
         <div class="input">
           <div>
-            <md-autocomplete v-model="selectedProperty" :md-options="properties">
+            <md-autocomplete
+              v-model="selectedProperty"
+              :md-options="properties"
+            >
               <label>Changed property</label>
             </md-autocomplete>
-            <!-- TODO(b/159582192): Add way to select value a property has changed to,
-                  figure out how to handle properties that are objects... -->
+            <!-- TODO(b/159582192): Add way to select value a property has
+              changed to, figure out how to handle properties that are
+              objects... -->
           </div>
         </div>
 
@@ -40,7 +49,9 @@
           <md-field>
             <label>Origin PID</label>
             <md-select v-model="selectedPids" multiple>
-              <md-option v-for="pid in pids" :value="pid">{{ pid }}</md-option>
+              <md-option v-for="pid in pids" :value="pid" v-bind:key="pid">
+                {{ pid }}
+              </md-option>
             </md-select>
           </md-field>
         </div>
@@ -49,13 +60,18 @@
           <md-field>
             <label>Origin UID</label>
             <md-select v-model="selectedUids" multiple>
-              <md-option v-for="uid in uids" :value="uid">{{ uid }}</md-option>
+              <md-option v-for="uid in uids" :value="uid" v-bind:key="uid">
+                {{ uid }}
+              </md-option>
             </md-select>
           </md-field>
         </div>
 
         <div class="input">
-          <md-chips v-model="filters" md-placeholder="Add surface id or name...">
+          <md-chips
+            v-model="filters"
+            md-placeholder="Add surface id or name..."
+          >
             <div class="md-helper-text">Press enter to add</div>
           </md-chips>
         </div>
@@ -65,19 +81,41 @@
         :data-key="'timestamp'"
         :data-sources="filteredData"
         :data-component="transactionEntryComponent"
-        :extra-props="{onClick: transactionSelected, selectedTransaction }"
+        :extra-props="{
+          onClick: transactionSelected,
+          selectedTransaction,
+          transactionsTrace,
+          prettifyTransactionId,
+        }"
         ref="loglist"
       />
     </flat-card>
 
     <flat-card class="changes card">
-      <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
+      <md-content
+        md-tag="md-toolbar"
+        md-elevation="0"
+        class="card-toolbar md-transparent md-dense"
+      >
         <h2 class="md-title" style="flex: 1">Changes</h2>
       </md-content>
       <div class="changes-content" v-if="selectedTree">
-        <div v-if="selectedTransaction.type === 'transaction'">
-          <div v-for="history in transactionHistory(selectedTransaction)" v-bind:key="history.id">
-            {{ history.type }}
+        <div
+          v-if="selectedTransaction.type === 'transaction'"
+          class="transaction-events"
+        >
+          <div
+            v-for="(event, i) in transactionHistory(selectedTransaction)"
+            v-bind:key="`${selectedTransaction.identifier}-${i}`"
+            class="transaction-event"
+          >
+            <div v-if="event.type === 'apply'" class="applied-event">
+              applied
+            </div>
+            <div v-if="event.type === 'merge'" class="merged-event">
+              <!-- eslint-disable-next-line max-len -->
+              {{ prettifyTransactionId(event.mergedId) }}
+            </div>
           </div>
         </div>
         <tree-view
@@ -102,26 +140,27 @@ import VirtualList from '../libs/virtualList/VirtualList';
 import TransactionEntry from './TransactionEntry.vue';
 import FlatCard from './components/FlatCard.vue';
 
-import { ObjectTransformer } from './transform.js';
-import { stableIdCompatibilityFixup } from './utils/utils.js';
+import {ObjectTransformer} from './transform.js';
+import {expandTransactionId} from '@/traces/Transactions.js';
 
 export default {
   name: 'transactionsview',
-  props: ['transactionsTrace'],
+  props: ['trace'],
   data() {
     const transactionTypes = new Set();
     const properties = new Set();
     const pids = new Set();
     const uids = new Set();
-    for (const entry of this.transactionsTrace.data) {
-      if (entry.type == "transaction") {
+    const transactionsTrace = this.trace;
+    for (const entry of transactionsTrace.data) {
+      if (entry.type == 'transaction') {
         for (const transaction of entry.transactions) {
           transactionTypes.add(transaction.type);
-          Object.keys(transaction.obj).forEach(item => properties.add(item));
+          Object.keys(transaction.obj).forEach((item) => properties.add(item));
         }
       } else {
         transactionTypes.add(entry.type);
-        Object.keys(entry.obj).forEach(item => properties.add(item));
+        Object.keys(entry.obj).forEach((item) => properties.add(item));
       }
 
       if (entry.origin) {
@@ -130,20 +169,26 @@ export default {
       }
     }
 
+    // Remove vsync from being transaction types that can be filtered
+    // We want to always show vsyncs
+    transactionTypes.delete('vsyncEvent');
+
     return {
       transactionTypes: Array.from(transactionTypes),
       properties: Array.from(properties),
-      pids:  Array.from(pids),
-      uids:  Array.from(uids),
+      pids: Array.from(pids),
+      uids: Array.from(uids),
       selectedTransactionTypes: [],
       selectedPids: [],
       selectedUids: [],
-      searchInput: "",
+      searchInput: '',
       selectedTree: null,
       filters: [],
       selectedProperty: null,
       selectedTransaction: null,
       transactionEntryComponent: TransactionEntry,
+      transactionsTrace,
+      expandTransactionId,
     };
   },
   computed: {
@@ -155,58 +200,62 @@ export default {
 
       if (this.selectedTransactionTypes.length > 0) {
         filteredData = filteredData.filter(
-          this.filterTransactions(transaction =>
-            this.selectedTransactionTypes.includes(transaction.type)));
+            this.filterTransactions((transaction) =>
+              transaction.type === 'vsyncEvent' ||
+              this.selectedTransactionTypes.includes(transaction.type)));
       }
 
       if (this.selectedPids.length > 0) {
-        filteredData = filteredData.filter(entry =>
-            this.selectedPids.includes(entry.origin?.pid));
+        filteredData = filteredData.filter((entry) =>
+          this.selectedPids.includes(entry.origin?.pid));
       }
 
       if (this.selectedUids.length > 0) {
-        filteredData = filteredData.filter(entry =>
-            this.selectedUids.includes(entry.origin?.uid));
+        filteredData = filteredData.filter((entry) =>
+          this.selectedUids.includes(entry.origin?.uid));
       }
 
       if (this.filters.length > 0) {
         filteredData = filteredData.filter(
-          this.filterTransactions(transaction => {
-            for (const filter of this.filters) {
-              if (isNaN(filter) && transaction.layerName?.includes(filter)) {
+            this.filterTransactions((transaction) => {
+              for (const filter of this.filters) {
+                if (isNaN(filter) && transaction.layerName?.includes(filter)) {
                 // If filter isn't a number then check if the transaction's
                 // target surface's name matches the filter — if so keep it.
-                return true;
-              }
-              if (filter == transaction.obj.id) {
+                  return true;
+                }
+                if (filter == transaction.obj.id) {
                 // If filteter is a number then check if the filter matches
                 // the transaction's target surface id — if so keep it.
-                return true;
+                  return true;
+                }
               }
-            }
 
-            // Exclude transaction if it fails to match filter.
-            return false;
-          })
+              // Exclude transaction if it fails to match filter.
+              return false;
+            }),
         );
       }
 
       if (this.selectedProperty) {
         filteredData = filteredData.filter(
-          this.filterTransactions(transaction => {
-            for (const key in transaction.obj) {
-              if (this.isMeaningfulChange(transaction.obj, key)
-                    && key === this.selectedProperty) {
-                return true;
+            this.filterTransactions((transaction) => {
+              for (const key in transaction.obj) {
+                if (this.isMeaningfulChange(transaction.obj, key) &&
+                    key === this.selectedProperty) {
+                  return true;
+                }
               }
-            }
 
-            return false;
-          })
+              return false;
+            }),
         );
       }
 
-      return filteredData;
+      // We quish vsyncs because otherwise the lazy list will not load enough
+      // elements if there are many vsyncs in a row since vsyncs take up no
+      // space.
+      return this.squishVSyncs(filteredData);
     },
 
   },
@@ -223,12 +272,12 @@ export default {
     transactionSelected(transaction) {
       this.selectedTransaction = transaction;
 
-      const META_DATA_KEY = "metadata"
+      const META_DATA_KEY = 'metadata';
 
       let obj;
       let name;
-      if (transaction.type == "transaction") {
-        name = "changes";
+      if (transaction.type == 'transaction') {
+        name = 'changes';
         obj = {};
 
         const [surfaceChanges, displayChanges] =
@@ -242,17 +291,21 @@ export default {
           change[META_DATA_KEY] = {
             // TODO (b/162402459): Shorten layer name
             layerName: change.layerName,
-          }
+          };
           // remove redundant properties
           delete change.layerName;
           delete change.id;
         };
 
         for (const changeId in surfaceChanges) {
-          perpareForTreeViewTransform(surfaceChanges[changeId])
+          if (surfaceChanges.hasOwnProperty(changeId)) {
+            perpareForTreeViewTransform(surfaceChanges[changeId]);
+          }
         }
         for (const changeId in displayChanges) {
-          perpareForTreeViewTransform(displayChanges[changeId])
+          if (displayChanges.hasOwnProperty(changeId)) {
+            perpareForTreeViewTransform(displayChanges[changeId]);
+          }
         }
 
         if (Object.keys(surfaceChanges).length > 0) {
@@ -270,35 +323,36 @@ export default {
       // Transform the raw JS object to be TreeView compatible
       const transactionUniqueId = transaction.timestamp;
       let tree = new ObjectTransformer(
-        obj,
-        name,
-        transactionUniqueId
+          obj,
+          name,
+          transactionUniqueId,
       ).setOptions({
         formatter: () => {},
       }).transform({
         keepOriginal: true,
         metadataKey: META_DATA_KEY,
-        freeze: false
+        freeze: false,
       });
 
-      // Add the layer name as the kind of the object to be shown in the TreeView
+      // Add the layer name as the kind of the object to be shown in the
+      // TreeView
       const addLayerNameAsKind = (tree) => {
         for (const layerChanges of tree.children) {
           layerChanges.kind = layerChanges.metadata.layerName;
         }
-      }
+      };
 
-      if (transaction.type == "transaction") {
+      if (transaction.type == 'transaction') {
         for (const child of tree.children) {
           // child = surfaceChanges or displayChanges tree node
-          addLayerNameAsKind(child)
+          addLayerNameAsKind(child);
         }
       }
 
       // If there are only surfaceChanges or only displayChanges and not both
       // remove the extra top layer node which is meant to hold both types of
       // changes when both are present
-      if (tree.name == "changes" && tree.children.length === 1) {
+      if (tree.name == 'changes' && tree.children.length === 1) {
         tree = tree.children[0];
       }
 
@@ -306,7 +360,7 @@ export default {
     },
     filterTransactions(condition) {
       return (entry) => {
-        if (entry.type == "transaction") {
+        if (entry.type == 'transaction') {
           for (const transaction of entry.transactions) {
             if (condition(transaction)) {
               return true;
@@ -320,8 +374,9 @@ export default {
       };
     },
     isMeaningfulChange(object, key) {
-      // TODO (b/159799733): Handle cases of non null objects but meaningless change
-      return object[key] !== null && object.hasOwnProperty(key)
+      // TODO (b/159799733): Handle cases of non null objects but meaningless
+      // change
+      return object[key] !== null && object.hasOwnProperty(key);
     },
     mergeChanges(a, b) {
       const res = {};
@@ -334,7 +389,7 @@ export default {
 
       for (const key in b) {
         if (this.isMeaningfulChange(b, key)) {
-          if (res.hasOwnProperty(key) && key != "id") {
+          if (res.hasOwnProperty(key) && key != 'id') {
             throw new Error(`Merge failed – key '${key}' already present`);
           }
           res[key] = b[key];
@@ -354,16 +409,16 @@ export default {
         const newBaseObj = () => {
           return {
             layerName: transaction.layerName,
-          }
-        }
+          };
+        };
 
         switch (transaction.type) {
-          case "surfaceChange":
+          case 'surfaceChange':
             surfaceChanges[obj.id] =
               this.mergeChanges(surfaceChanges[obj.id] ?? newBaseObj(), obj);
             break;
 
-          case "displayChange":
+          case 'displayChange':
             displayChanges[obj.id] =
               this.mergeChanges(displayChanges[obj.id] ?? newBaseObj(), obj);
             break;
@@ -378,37 +433,31 @@ export default {
 
     transactionHistory(selectedTransaction) {
       const transactionId = selectedTransaction.identifier;
-      const history = this.transactionsTrace.transactionHistory.generateHistoryTreesOf(transactionId);
+      const history = this.transactionsTrace.transactionHistory
+          .generateHistoryTreesOf(transactionId);
 
-      const historyElements = [];
-      for (const [i, event] of history.entries()) {
-        const elementId = transactionId + "." + i;
+      return history;
+    },
 
-        switch (event.type) {
-          case "apply":
-            break;
-          case "merge":
-            break;
-          default:
-            throw new Error("Unhandled event type");
-        }
+    prettifyTransactionId(transactionId) {
+      const expandedId = expandTransactionId(transactionId);
+      return `${expandedId.pid}.${expandedId.id}`;
+    },
 
-        const element = {
-          id: elementId,
-          type: event.type,
-        };
-        historyElements.push(element);
-      }
-
-      return historyElements;
-    }
+    squishVSyncs(data) {
+      return data.filter((event, i) => {
+        console.log(event.type, data[i + 1]?.type);
+        return !(event.type === 'vsyncEvent' &&
+          data[i + 1]?.type === 'vsyncEvent');
+      });
+    },
   },
   components: {
     'virtual-list': VirtualList,
     'tree-view': TreeView,
     'flat-card': FlatCard,
-  }
-}
+  },
+};
 
 </script>
 <style scoped>
@@ -467,5 +516,9 @@ export default {
 
 .no-properties span {
   font-weight: 100;
+}
+
+.transaction-event {
+  display: inline-flex;
 }
 </style>

@@ -22,7 +22,11 @@
             {{file.filename}}
           </div>
         </md-card-header-text>
-        <md-button :href="file.blobUrl" :download="file.filename" class="md-icon-button">
+        <md-button
+          :href="file.blobUrl"
+          :download="file.filename"
+          class="md-icon-button"
+        >
           <md-icon>save_alt</md-icon>
         </md-button>
       </md-card-header>
@@ -41,7 +45,7 @@
       />
       <transactionsview
         v-else-if="isTransactions(file)"
-        :data="file.data"
+        :trace="file"
         ref="view"
       />
       <logview
@@ -84,7 +88,8 @@ export default {
       return this.$refs.view.arrowDown();
     },
     onClick(e) {
-      // Pass click event to parent, so that click event handler can be attached to component.
+      // Pass click event to parent, so that click event handler can be attached
+      // to component.
       this.$emit('click', e);
     },
   },

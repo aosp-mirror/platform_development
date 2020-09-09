@@ -1,35 +1,60 @@
 <template>
-  <div class="entry"
-    :class="{
-      inactive: source.timestamp > currentTimestamp,
-      selected: isSelected
-    }"
-    @click="onClick(source)"
-  >
-    <div class="time-column">
-      <a @click="setTimelineTime(source.timestamp)" class="time-link">
-        {{source.time}}
-      </a>
-      <div
-        class="new-badge"
-        :style="{visibility: source.new ? 'visible' : 'hidden'} "
-      >
-        New
+  <div>
+
+    <div v-if="source.type === 'vsyncEvent'" class="vsync">
+      <div class="vsync-dot" />
+      <md-tooltip md-direction="left">
+        VSync
+      </md-tooltip>
+    </div>
+
+    <div v-else
+      class="entry"
+      :class="{
+        inactive: source.timestamp > currentTimestamp,
+        selected: isSelected
+      }"
+      @click="onClick(source)"
+    >
+      <div class="time-column">
+        <a @click="setTimelineTime(source.timestamp)" class="time-link">
+          {{source.time}}
+        </a>
+        <div
+          class="new-badge"
+          :style="{visibility: source.new ? 'visible' : 'hidden'} "
+        >
+          New
+        </div>
+      </div>
+      <div class="type-column">{{transactionTypeOf(source)}}</div>
+      <div class="affected-surfaces-column">
+        <span
+          v-for="(surface, index) in sufacesAffectedBy(source)"
+          v-bind:key="surface.id"
+        >
+          <!-- eslint-disable-next-line max-len -->
+          <span v-if="surface.name" class="surface-name">{{ surface.name }}</span>
+          <span class="surface-id">
+            <!-- eslint-disable-next-line max-len -->
+            <span v-if="surface.name">(</span>{{surface.id}}<span v-if="surface.name">)</span>
+          </span>
+          <!-- eslint-disable-next-line max-len -->
+          <span v-if="index + 1 < sufacesAffectedBy(source).length">,&nbsp;</span>
+        </span>
+      </div>
+      <div class="extra-info-column">
+        <span v-if="source.identifier">
+          <!-- eslint-disable-next-line max-len -->
+          Tx Id: <span class="light">{{ prettifyTransactionId(source.identifier) }}</span><br/>
+        </span>
+        <span v-if="source.origin">
+          PID: <span class="light">{{ source.origin.pid }}</span><br/>
+          TID: <span class="light">{{ source.origin.uid }}</span><br/>
+        </span>
       </div>
     </div>
-    <div class="type-column">{{transactionTypeOf(source)}}</div>
-    <div class="origin-column">
-      <span style="white-space: pre;">{{formatOrigin(source)}}</span>
-    </div>
-    <div class="affected-surfaces-column">
-      <span v-for="(surface, index) in sufacesAffectedBy(source)" v-bind:key="surface.id">
-        <span v-if="surface.name" class="surface-name"> {{ surface.name }}</span>
-        <span class="surface-id">
-          <span v-if="surface.name">(</span>{{surface.id}}<span v-if="surface.name">)</span>
-        </span>
-        <span v-if="index + 1 < sufacesAffectedBy(source).length">,&nbsp;</span>
-      </span>
-    </div>
+
   </div>
 </template>
 
@@ -42,16 +67,22 @@ export default {
     },
     source: {
       type: Object,
-      default () {
-        return {}
-      }
+      default() {
+        return {};
+      },
     },
     onClick: {
       type: Function,
     },
     selectedTransaction: {
       type: Object,
-    }
+    },
+    transactionsTrace: {
+      type: Object,
+    },
+    prettifyTransactionId: {
+      type: Function,
+    },
   },
   computed: {
     currentTimestamp() {
@@ -59,6 +90,27 @@ export default {
     },
     isSelected() {
       return this.source === this.selectedTransaction;
+    },
+    hasOverrideChangeDueToMerge() {
+      const transaction = this.source;
+
+      if (!transaction.identifier) {
+        return;
+      }
+
+      // console.log('transaction', transaction.identifier);
+
+      // const history = this.transactionsTrace.transactionHistory;
+
+      // const allTransactionsMergedInto = history
+      //     .allTransactionsMergedInto(transaction.identifier);
+      // console.log('All merges', allTransactionsMergedInto);
+
+      // console.log('Direct merges',
+      //     history.allDirectMergesInto(transaction.identifier));
+
+
+      return true;
     },
   },
   methods: {
@@ -71,13 +123,13 @@ export default {
       }
 
       if (transaction.transactions.length === 0) {
-        return "Empty Transaction";
+        return 'Empty Transaction';
       }
 
       const types = new Set();
-      transaction.transactions.forEach(t => types.add(t.type));
+      transaction.transactions.forEach((t) => types.add(t.type));
 
-      return Array.from(types).join(", ");
+      return Array.from(types).join(', ');
     },
     sufacesAffectedBy(transaction) {
       if (transaction.type !== 'transaction') {
@@ -95,25 +147,10 @@ export default {
         }
       }
 
-      return affectedSurfaces
-    },
-    formatOrigin(transaction) {
-      if (!transaction.origin) {
-        return "unavailable";
-      }
-
-      const originString = [];
-      originString.push(`PID: ${transaction.origin.pid}`);
-      originString.push(`UID: ${transaction.origin.uid}`);
-
-      if (transaction.origin.appliedByMainThread) {
-        originString.push("Applied by main thread");
-      }
-
-      return originString.join("\n");
+      return affectedSurfaces;
     },
   },
-}
+};
 </script>
 <style scoped>
 .time-column {
@@ -138,9 +175,18 @@ export default {
   width: 30em;
 }
 
+.extra-info-column {
+  width: 20em;
+}
+
 .entry {
   display: inline-flex;
   cursor: pointer;
+}
+
+.entry > div {
+  padding: 6px 10px;
+  border-bottom: 1px solid #f1f1f1;
 }
 
 .entry.selected {
@@ -154,11 +200,6 @@ export default {
 
 .entry:not(.selected):hover {
   background: #f1f1f1;
-}
-
-.entry > div {
-  padding: 6px 10px;
-  border-bottom: 1px solid #f1f1f1;
 }
 
 a {
@@ -189,5 +230,40 @@ a {
 
 .inactive .affected-surfaces-column .surface-id {
   color: #b4b4b4
+}
+
+.light {
+  color: #999999
+}
+
+.inactive .light {
+  color: #b4b4b4
+}
+
+.vsync {
+  position: relative;
+}
+
+.vsync-dot:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: -5px;
+  height: 10px;
+  width: 10px;
+  background-color: rgb(170, 65, 255);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.vsync-dot:after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 1px;
+  width: 100%;
+  background-color: rgb(170, 65, 255);
+  display: inline-block;
 }
 </style>
