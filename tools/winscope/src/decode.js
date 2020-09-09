@@ -14,82 +14,84 @@
  * limitations under the License.
  */
 
+/* eslint-disable max-len */
+/* eslint-disable camelcase */
 
-import jsonProtoDefsWm from 'frameworks/base/core/proto/android/server/windowmanagertrace.proto'
-import jsonProtoDefsProtoLog from 'frameworks/base/core/proto/android/internal/protolog.proto'
-import jsonProtoDefsSf from 'frameworks/native/services/surfaceflinger/layerproto/layerstrace.proto'
-import jsonProtoDefsTransaction from 'frameworks/native/cmds/surfacereplayer/proto/src/trace.proto'
-import jsonProtoDefsTransactionEvents from 'frameworks/native/libs/gui/proto/src/transactions.proto'
-import jsonProtoDefsWl from 'WaylandSafePath/waylandtrace.proto'
-import jsonProtoDefsSysUi from 'frameworks/base/packages/SystemUI/src/com/android/systemui/tracing/sysui_trace.proto'
-import jsonProtoDefsLauncher from 'packages/apps/Launcher3/protos/launcher_trace_file.proto'
-import protobuf from 'protobufjs'
-import { transform_layers, transform_layers_trace } from './transform_sf.js'
-import { transform_window_service, transform_window_trace } from './transform_wm.js'
-import { transform_transaction_trace, transform_TRANSACTION_EVENTS_TRACE } from './transform_transaction.js'
-import { transform_wl_outputstate, transform_wayland_trace } from './transform_wl.js'
-import { transform_protolog } from './transform_protolog.js'
-import { transform_sysui_trace } from './transform_sys_ui.js'
-import { transform_launcher_trace } from './transform_launcher.js'
-import { fill_transform_data } from './matrix_utils.js'
-import { mp4Decoder } from './decodeVideo.js'
+import jsonProtoDefsWm from 'frameworks/base/core/proto/android/server/windowmanagertrace.proto';
+import jsonProtoDefsProtoLog from 'frameworks/base/core/proto/android/internal/protolog.proto';
+import jsonProtoDefsSf from 'frameworks/native/services/surfaceflinger/layerproto/layerstrace.proto';
+import jsonProtoDefsTransaction from 'frameworks/native/cmds/surfacereplayer/proto/src/trace.proto';
+import jsonProtoDefsTransactionEvents from 'frameworks/native/libs/gui/proto/transactions.proto';
+import jsonProtoDefsWl from 'WaylandSafePath/waylandtrace.proto';
+import jsonProtoDefsSysUi from 'frameworks/base/packages/SystemUI/src/com/android/systemui/tracing/sysui_trace.proto';
+import jsonProtoDefsLauncher from 'packages/apps/Launcher3/protos/launcher_trace_file.proto';
+import protobuf from 'protobufjs';
+import {transform_layers, transform_layers_trace} from './transform_sf.js';
+import {transform_window_service, transform_window_trace} from './transform_wm.js';
+import {transform_transaction_trace, transform_TRANSACTION_EVENTS_TRACE} from './transform_transaction.js';
+import {transform_wl_outputstate, transform_wayland_trace} from './transform_wl.js';
+import {transform_protolog} from './transform_protolog.js';
+import {transform_sysui_trace} from './transform_sys_ui.js';
+import {transform_launcher_trace} from './transform_launcher.js';
+import {fill_transform_data} from './matrix_utils.js';
+import {mp4Decoder} from './decodeVideo.js';
 
-import SurfaceFlingerTrace from '@/traces/SurfaceFlinger.js'
-import WindowManagerTrace from '@/traces/WindowManager.js'
-import TransactionsTrace from '@/traces/Transactions.js'
-import ScreenRecordingTrace from '@/traces/ScreenRecording.js'
-import WaylandTrace from '@/traces/Wayland.js'
-import ProtoLogTrace from '@/traces/ProtoLog.js'
-import SystemUITrace from '@/traces/SystemUI.js'
-import LauncherTrace from '@/traces/Launcher.js'
+import SurfaceFlingerTrace from '@/traces/SurfaceFlinger.js';
+import WindowManagerTrace from '@/traces/WindowManager.js';
+import TransactionsTrace from '@/traces/Transactions.js';
+import ScreenRecordingTrace from '@/traces/ScreenRecording.js';
+import WaylandTrace from '@/traces/Wayland.js';
+import ProtoLogTrace from '@/traces/ProtoLog.js';
+import SystemUITrace from '@/traces/SystemUI.js';
+import LauncherTrace from '@/traces/Launcher.js';
 
-import SurfaceFlingerDump from '@/dumps/SurfaceFlinger.js'
-import WindowManagerDump from '@/dumps/WindowManager.js'
-import WaylandDump from '@/dumps/Wayland.js'
+import SurfaceFlingerDump from '@/dumps/SurfaceFlinger.js';
+import WindowManagerDump from '@/dumps/WindowManager.js';
+import WaylandDump from '@/dumps/Wayland.js';
 
-const WmTraceMessage = lookup_type(jsonProtoDefsWm, "com.android.server.wm.WindowManagerTraceFileProto");
-const WmDumpMessage = lookup_type(jsonProtoDefsWm, "com.android.server.wm.WindowManagerServiceDumpProto");
-const SfTraceMessage = lookup_type(jsonProtoDefsSf, "android.surfaceflinger.LayersTraceFileProto");
-const SfDumpMessage = lookup_type(jsonProtoDefsSf, "android.surfaceflinger.LayersProto");
-const SfTransactionTraceMessage = lookup_type(jsonProtoDefsTransaction, "Trace");
-const SfTransactionEventsTraceMessage = lookup_type(jsonProtoDefsTransactionEvents, "android.TransactionEventsProto");
-const WaylandTraceMessage = lookup_type(jsonProtoDefsWl, "org.chromium.arc.wayland_composer.TraceFileProto");
-const WaylandDumpMessage = lookup_type(jsonProtoDefsWl, "org.chromium.arc.wayland_composer.OutputStateProto");
-const ProtoLogMessage = lookup_type(jsonProtoDefsProtoLog, "com.android.internal.protolog.ProtoLogFileProto");
-const SystemUiTraceMessage = lookup_type(jsonProtoDefsSysUi, "com.android.systemui.tracing.SystemUiTraceFileProto");
-const LauncherTraceMessage = lookup_type(jsonProtoDefsLauncher, "com.android.launcher3.tracing.LauncherTraceFileProto");
+const WmTraceMessage = lookup_type(jsonProtoDefsWm, 'com.android.server.wm.WindowManagerTraceFileProto');
+const WmDumpMessage = lookup_type(jsonProtoDefsWm, 'com.android.server.wm.WindowManagerServiceDumpProto');
+const SfTraceMessage = lookup_type(jsonProtoDefsSf, 'android.surfaceflinger.LayersTraceFileProto');
+const SfDumpMessage = lookup_type(jsonProtoDefsSf, 'android.surfaceflinger.LayersProto');
+const SfTransactionTraceMessage = lookup_type(jsonProtoDefsTransaction, 'Trace');
+const SfTransactionEventsTraceMessage = lookup_type(jsonProtoDefsTransactionEvents, 'android.TransactionEventsProto');
+const WaylandTraceMessage = lookup_type(jsonProtoDefsWl, 'org.chromium.arc.wayland_composer.TraceFileProto');
+const WaylandDumpMessage = lookup_type(jsonProtoDefsWl, 'org.chromium.arc.wayland_composer.OutputStateProto');
+const ProtoLogMessage = lookup_type(jsonProtoDefsProtoLog, 'com.android.internal.protolog.ProtoLogFileProto');
+const SystemUiTraceMessage = lookup_type(jsonProtoDefsSysUi, 'com.android.systemui.tracing.SystemUiTraceFileProto');
+const LauncherTraceMessage = lookup_type(jsonProtoDefsLauncher, 'com.android.launcher3.tracing.LauncherTraceFileProto');
 
-const LAYER_TRACE_MAGIC_NUMBER = [0x09, 0x4c, 0x59, 0x52, 0x54, 0x52, 0x41, 0x43, 0x45] // .LYRTRACE
-const WINDOW_TRACE_MAGIC_NUMBER = [0x09, 0x57, 0x49, 0x4e, 0x54, 0x52, 0x41, 0x43, 0x45] // .WINTRACE
-const MPEG4_MAGIC_NMBER = [0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x6d, 0x70, 0x34, 0x32] // ....ftypmp42
-const WAYLAND_TRACE_MAGIC_NUMBER = [0x09, 0x57, 0x59, 0x4c, 0x54, 0x52, 0x41, 0x43, 0x45] // .WYLTRACE
-const PROTO_LOG_MAGIC_NUMBER = [0x09, 0x50, 0x52, 0x4f, 0x54, 0x4f, 0x4c, 0x4f, 0x47] // .PROTOLOG
-const SYSTEM_UI_MAGIC_NUMBER = [0x09, 0x53, 0x59, 0x53, 0x55, 0x49, 0x54, 0x52, 0x43] // .SYSUITRC
-const LAUNCHER_MAGIC_NUMBER = [0x09, 0x4C, 0x4E, 0x43, 0x48, 0x52, 0x54, 0x52, 0x43] // .LNCHRTRC
+const LAYER_TRACE_MAGIC_NUMBER = [0x09, 0x4c, 0x59, 0x52, 0x54, 0x52, 0x41, 0x43, 0x45]; // .LYRTRACE
+const WINDOW_TRACE_MAGIC_NUMBER = [0x09, 0x57, 0x49, 0x4e, 0x54, 0x52, 0x41, 0x43, 0x45]; // .WINTRACE
+const MPEG4_MAGIC_NMBER = [0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x6d, 0x70, 0x34, 0x32]; // ....ftypmp42
+const WAYLAND_TRACE_MAGIC_NUMBER = [0x09, 0x57, 0x59, 0x4c, 0x54, 0x52, 0x41, 0x43, 0x45]; // .WYLTRACE
+const PROTO_LOG_MAGIC_NUMBER = [0x09, 0x50, 0x52, 0x4f, 0x54, 0x4f, 0x4c, 0x4f, 0x47]; // .PROTOLOG
+const SYSTEM_UI_MAGIC_NUMBER = [0x09, 0x53, 0x59, 0x53, 0x55, 0x49, 0x54, 0x52, 0x43]; // .SYSUITRC
+const LAUNCHER_MAGIC_NUMBER = [0x09, 0x4C, 0x4E, 0x43, 0x48, 0x52, 0x54, 0x52, 0x43]; // .LNCHRTRC
 
 const FILE_TYPES = Object.freeze({
-  WINDOW_MANAGER_TRACE: "WindowManagerTrace",
-  SURFACE_FLINGER_TRACE: "SurfaceFlingerTrace",
-  WINDOW_MANAGER_DUMP: "WindowManagerDump",
-  SURFACE_FLINGER_DUMP: "SurfaceFlingerDump",
-  SCREEN_RECORDING: "ScreenRecording",
-  TRANSACTIONS_TRACE: "TransactionsTrace",
-  TRANSACTION_EVENTS_TRACE: "TransactionMergesTrace",
-  WAYLAND_TRACE: "WaylandTrace",
-  WAYLAND_DUMP: "WaylandDump",
-  PROTO_LOG: "ProtoLog",
-  SYSTEM_UI: "SystemUI",
-  LAUNCHER: "Launcher",
+  WINDOW_MANAGER_TRACE: 'WindowManagerTrace',
+  SURFACE_FLINGER_TRACE: 'SurfaceFlingerTrace',
+  WINDOW_MANAGER_DUMP: 'WindowManagerDump',
+  SURFACE_FLINGER_DUMP: 'SurfaceFlingerDump',
+  SCREEN_RECORDING: 'ScreenRecording',
+  TRANSACTIONS_TRACE: 'TransactionsTrace',
+  TRANSACTION_EVENTS_TRACE: 'TransactionMergesTrace',
+  WAYLAND_TRACE: 'WaylandTrace',
+  WAYLAND_DUMP: 'WaylandDump',
+  PROTO_LOG: 'ProtoLog',
+  SYSTEM_UI: 'SystemUI',
+  LAUNCHER: 'Launcher',
 });
 
-const WINDOW_MANAGER_ICON = "view_compact"
-const SURFACE_FLINGER_ICON = "filter_none"
-const SCREEN_RECORDING_ICON = "videocam"
-const TRANSACTION_ICON = "timeline"
-const WAYLAND_ICON = "filter_none"
-const PROTO_LOG_ICON = "notes"
-const SYSTEM_UI_ICON = "filter_none"
-const LAUNCHER_ICON = "filter_none"
+const WINDOW_MANAGER_ICON = 'view_compact';
+const SURFACE_FLINGER_ICON = 'filter_none';
+const SCREEN_RECORDING_ICON = 'videocam';
+const TRANSACTION_ICON = 'timeline';
+const WAYLAND_ICON = 'filter_none';
+const PROTO_LOG_ICON = 'notes';
+const SYSTEM_UI_ICON = 'filter_none';
+const LAUNCHER_ICON = 'filter_none';
 
 const FILE_ICONS = {
   [FILE_TYPES.WINDOW_MANAGER_TRACE]: WINDOW_MANAGER_ICON,
@@ -104,48 +106,48 @@ const FILE_ICONS = {
   [FILE_TYPES.PROTO_LOG]: PROTO_LOG_ICON,
   [FILE_TYPES.SYSTEM_UI]: SYSTEM_UI_ICON,
   [FILE_TYPES.LAUNCHER]: LAUNCHER_ICON,
-}
+};
 
 function oneOf(dataType) {
-  return { oneOf: true, type: dataType };
+  return {oneOf: true, type: dataType};
 }
 
 function manyOf(dataType, fold = null) {
-  return { manyOf: true, type: dataType, fold };
+  return {manyOf: true, type: dataType, fold};
 }
 
 const TRACE_TYPES = Object.freeze({
-  WINDOW_MANAGER: "WindowManagerTrace",
-  SURFACE_FLINGER: "SurfaceFlingerTrace",
-  SCREEN_RECORDING: "ScreenRecording",
-  TRANSACTION: "Transaction",
-  WAYLAND: "Wayland",
-  PROTO_LOG: "ProtoLog",
-  SYSTEM_UI: "SystemUI",
-  LAUNCHER: "Launcher"
+  WINDOW_MANAGER: 'WindowManagerTrace',
+  SURFACE_FLINGER: 'SurfaceFlingerTrace',
+  SCREEN_RECORDING: 'ScreenRecording',
+  TRANSACTION: 'Transaction',
+  WAYLAND: 'Wayland',
+  PROTO_LOG: 'ProtoLog',
+  SYSTEM_UI: 'SystemUI',
+  LAUNCHER: 'Launcher',
 });
 
 const TRACE_INFO = {
   [TRACE_TYPES.WINDOW_MANAGER]: {
-    name: "WindowManager",
+    name: 'WindowManager',
     icon: WINDOW_MANAGER_ICON,
     files: [oneOf(FILE_TYPES.WINDOW_MANAGER_TRACE)],
     constructor: WindowManagerTrace,
   },
   [TRACE_TYPES.SURFACE_FLINGER]: {
-    name: "SurfaceFlinger",
+    name: 'SurfaceFlinger',
     icon: SURFACE_FLINGER_ICON,
     files: [oneOf(FILE_TYPES.SURFACE_FLINGER_TRACE)],
     constructor: SurfaceFlingerTrace,
   },
   [TRACE_TYPES.SCREEN_RECORDING]: {
-    name: "Screen recording",
+    name: 'Screen recording',
     icon: SCREEN_RECORDING_ICON,
     files: [oneOf(FILE_TYPES.SCREEN_RECORDING)],
     constructor: ScreenRecordingTrace,
   },
   [TRACE_TYPES.TRANSACTION]: {
-    name: "Transaction",
+    name: 'Transaction',
     icon: TRANSACTION_ICON,
     files: [
       oneOf(FILE_TYPES.TRANSACTIONS_TRACE),
@@ -154,62 +156,62 @@ const TRACE_INFO = {
     constructor: TransactionsTrace,
   },
   [TRACE_TYPES.WAYLAND]: {
-    name: "Wayland",
+    name: 'Wayland',
     icon: WAYLAND_ICON,
     files: [oneOf(FILE_TYPES.WAYLAND_TRACE)],
     constructor: WaylandTrace,
   },
   [TRACE_TYPES.PROTO_LOG]: {
-    name: "ProtoLog",
+    name: 'ProtoLog',
     icon: PROTO_LOG_ICON,
     files: [oneOf(FILE_TYPES.PROTO_LOG)],
     constructor: ProtoLogTrace,
   },
   [TRACE_TYPES.SYSTEM_UI]: {
-    name: "SystemUI",
+    name: 'SystemUI',
     icon: SYSTEM_UI_ICON,
     files: [oneOf(FILE_TYPES.SYSTEM_UI)],
     constructor: SystemUITrace,
   },
   [TRACE_TYPES.LAUNCHER]: {
-    name: "Launcher",
+    name: 'Launcher',
     icon: LAUNCHER_ICON,
     files: [oneOf(FILE_TYPES.LAUNCHER)],
     constructor: LauncherTrace,
   },
-}
+};
 
 const DUMP_TYPES = Object.freeze({
-  WINDOW_MANAGER: "WindowManagerDump",
-  SURFACE_FLINGER: "SurfaceFlingerDump",
-  WAYLAND: "WaylandDump",
+  WINDOW_MANAGER: 'WindowManagerDump',
+  SURFACE_FLINGER: 'SurfaceFlingerDump',
+  WAYLAND: 'WaylandDump',
 });
 
 const DUMP_INFO = {
   [DUMP_TYPES.WINDOW_MANAGER]: {
-    name: "WindowManager",
+    name: 'WindowManager',
     icon: WINDOW_MANAGER_ICON,
     files: [oneOf(FILE_TYPES.WINDOW_MANAGER_DUMP)],
     constructor: WindowManagerDump,
   },
   [DUMP_TYPES.SURFACE_FLINGER]: {
-    name: "SurfaceFlinger",
+    name: 'SurfaceFlinger',
     icon: SURFACE_FLINGER_ICON,
     files: [oneOf(FILE_TYPES.SURFACE_FLINGER_DUMP)],
     constructor: SurfaceFlingerDump,
   },
   [DUMP_TYPES.WAYLAND]: {
-    name: "Wayland",
+    name: 'Wayland',
     icon: WAYLAND_ICON,
     files: [oneOf(FILE_TYPES.WAYLAND_DUMP)],
     constructor: WaylandDump,
   },
-}
+};
 
 // TODO: Rename name to defaultName
 const FILE_DECODERS = {
   [FILE_TYPES.WINDOW_MANAGER_TRACE]: {
-    name: "WindowManager trace",
+    name: 'WindowManager trace',
     decoder: protoDecoder,
     decoderParams: {
       type: FILE_TYPES.WINDOW_MANAGER_TRACE,
@@ -219,123 +221,123 @@ const FILE_DECODERS = {
     },
   },
   [FILE_TYPES.SURFACE_FLINGER_TRACE]: {
-    name: "SurfaceFlinger trace",
+    name: 'SurfaceFlinger trace',
     decoder: protoDecoder,
     decoderParams: {
       type: FILE_TYPES.SURFACE_FLINGER_TRACE,
-      mime: "application/octet-stream",
+      mime: 'application/octet-stream',
       protoType: SfTraceMessage,
       transform: transform_layers_trace,
       timeline: true,
     },
   },
   [FILE_TYPES.WAYLAND_TRACE]: {
-    name: "Wayland trace",
+    name: 'Wayland trace',
     decoder: protoDecoder,
     decoderParams: {
       type: FILE_TYPES.WAYLAND_TRACE,
-      mime: "application/octet-stream",
+      mime: 'application/octet-stream',
       protoType: WaylandTraceMessage,
       transform: transform_wayland_trace,
       timeline: true,
     },
   },
   [FILE_TYPES.SURFACE_FLINGER_DUMP]: {
-    name: "SurfaceFlinger dump",
+    name: 'SurfaceFlinger dump',
     decoder: protoDecoder,
     decoderParams: {
       type: FILE_TYPES.SURFACE_FLINGER_DUMP,
-      mime: "application/octet-stream",
+      mime: 'application/octet-stream',
       protoType: SfDumpMessage,
-      transform: (decoded) => transform_layers(true /*includesCompositionState*/, decoded),
+      transform: (decoded) => transform_layers(true /* includesCompositionState*/, decoded),
       timeline: false,
     },
   },
   [FILE_TYPES.WINDOW_MANAGER_DUMP]: {
-    name: "WindowManager dump",
+    name: 'WindowManager dump',
     decoder: protoDecoder,
     decoderParams: {
       type: FILE_TYPES.WINDOW_MANAGER_DUMP,
-      mime: "application/octet-stream",
+      mime: 'application/octet-stream',
       protoType: WmDumpMessage,
       transform: transform_window_service,
       timeline: false,
     },
   },
   [FILE_TYPES.WAYLAND_DUMP]: {
-    name: "Wayland dump",
+    name: 'Wayland dump',
     decoder: protoDecoder,
     decoderParams: {
       type: FILE_TYPES.WAYLAND_DUMP,
-      mime: "application/octet-stream",
+      mime: 'application/octet-stream',
       protoType: WaylandDumpMessage,
       transform: transform_wl_outputstate,
       timeline: false,
     },
   },
   [FILE_TYPES.SCREEN_RECORDING]: {
-    name: "Screen recording",
+    name: 'Screen recording',
     decoder: videoDecoder,
     decoderParams: {
       type: FILE_TYPES.SCREEN_RECORDING,
-      mime: "video/mp4",
+      mime: 'video/mp4',
       videoDecoder: mp4Decoder,
     },
   },
   [FILE_TYPES.TRANSACTIONS_TRACE]: {
-    name: "Transaction",
+    name: 'Transaction',
     decoder: protoDecoder,
     decoderParams: {
       type: FILE_TYPES.TRANSACTIONS_TRACE,
-      mime: "application/octet-stream",
+      mime: 'application/octet-stream',
       protoType: SfTransactionTraceMessage,
       transform: transform_transaction_trace,
       timeline: true,
-    }
+    },
   },
   [FILE_TYPES.TRANSACTION_EVENTS_TRACE]: {
-    name: "Transaction merges",
+    name: 'Transaction merges',
     decoder: protoDecoder,
     decoderParams: {
       type: FILE_TYPES.TRANSACTION_EVENTS_TRACE,
-      mime: "application/octet-stream",
+      mime: 'application/octet-stream',
       protoType: SfTransactionEventsTraceMessage,
       transform: transform_TRANSACTION_EVENTS_TRACE,
       timeline: true,
-    }
+    },
   },
   [FILE_TYPES.PROTO_LOG]: {
-    name: "ProtoLog",
+    name: 'ProtoLog',
     decoder: protoDecoder,
     decoderParams: {
       type: FILE_TYPES.PROTO_LOG,
-      mime: "application/octet-stream",
+      mime: 'application/octet-stream',
       protoType: ProtoLogMessage,
       transform: transform_protolog,
       timeline: true,
-    }
+    },
   },
   [FILE_TYPES.SYSTEM_UI]: {
-    name: "SystemUI trace",
+    name: 'SystemUI trace',
     decoder: protoDecoder,
     decoderParams: {
       type: FILE_TYPES.SYSTEM_UI,
-      mime: "application/octet-stream",
+      mime: 'application/octet-stream',
       protoType: SystemUiTraceMessage,
       transform: transform_sysui_trace,
       timeline: true,
-    }
+    },
   },
   [FILE_TYPES.LAUNCHER]: {
-    name: "Launcher trace",
+    name: 'Launcher trace',
     decoder: protoDecoder,
     decoderParams: {
       type: FILE_TYPES.LAUNCHER,
-      mime: "application/octet-stream",
+      mime: 'application/octet-stream',
       protoType: LauncherTraceMessage,
       transform: transform_launcher_trace,
       timeline: true,
-    }
+    },
   },
 };
 
@@ -351,31 +353,33 @@ function modifyProtoFields(protoObj, displayDefaults) {
   if (!protoObj || protoObj !== Object(protoObj) || !protoObj.$type) {
     return;
   }
-  for (var fieldName in protoObj.$type.fields) {
-    var fieldProperties = protoObj.$type.fields[fieldName];
-    var field = protoObj[fieldName];
+  for (const fieldName in protoObj.$type.fields) {
+    if (protoObj.$type.fields.hasOwnProperty(fieldName)) {
+      const fieldProperties = protoObj.$type.fields[fieldName];
+      const field = protoObj[fieldName];
 
-    if (Array.isArray(field)) {
-      field.forEach((item, _) => {
-        modifyProtoFields(item, displayDefaults);
-      })
-      continue;
-    }
+      if (Array.isArray(field)) {
+        field.forEach((item, _) => {
+          modifyProtoFields(item, displayDefaults);
+        });
+        continue;
+      }
 
-    if (displayDefaults && !(field)) {
-      protoObj[fieldName] = fieldProperties.defaultValue;
-    }
+      if (displayDefaults && !(field)) {
+        protoObj[fieldName] = fieldProperties.defaultValue;
+      }
 
-    if (fieldProperties.type === 'TransformProto') {
-      fill_transform_data(protoObj[fieldName]);
-      continue;
-    }
+      if (fieldProperties.type === 'TransformProto') {
+        fill_transform_data(protoObj[fieldName]);
+        continue;
+      }
 
-    if (fieldProperties.resolvedType && fieldProperties.resolvedType.valuesById) {
-      protoObj[fieldName] = fieldProperties.resolvedType.valuesById[protoObj[fieldProperties.name]];
-      continue;
+      if (fieldProperties.resolvedType && fieldProperties.resolvedType.valuesById) {
+        protoObj[fieldName] = fieldProperties.resolvedType.valuesById[protoObj[fieldProperties.name]];
+        continue;
+      }
+      modifyProtoFields(protoObj[fieldName], displayDefaults);
     }
-    modifyProtoFields(protoObj[fieldName], displayDefaults);
   }
 }
 
@@ -395,13 +399,13 @@ function protoDecoder(buffer, params, fileName, store) {
   } else {
     data = [transformed];
   }
-  let blobUrl = URL.createObjectURL(new Blob([buffer], { type: params.mime }));
-  return dataFile(fileName, data.map(x => x.timestamp), data, blobUrl, params.type);
+  const blobUrl = URL.createObjectURL(new Blob([buffer], {type: params.mime}));
+  return dataFile(fileName, data.map((x) => x.timestamp), data, blobUrl, params.type);
 }
 
 function videoDecoder(buffer, params, fileName, store) {
-  let [data, timeline] = params.videoDecoder(buffer);
-  let blobUrl = URL.createObjectURL(new Blob([data], { type: params.mime }));
+  const [data, timeline] = params.videoDecoder(buffer);
+  const blobUrl = URL.createObjectURL(new Blob([data], {type: params.mime}));
   return dataFile(fileName, timeline, blobUrl, blobUrl, params.type);
 }
 
@@ -418,14 +422,14 @@ function dataFile(filename, timeline, data, blobUrl, type) {
     destroy() {
       URL.revokeObjectURL(this.blobUrl);
     },
-  }
+  };
 }
 
 function arrayEquals(a, b) {
   if (a.length !== b.length) {
     return false;
   }
-  for (var i = 0; i < a.length; i++) {
+  for (let i = 0; i < a.length; i++) {
     if (a[i] != b[i]) {
       return false;
     }
@@ -473,7 +477,7 @@ function detectAndDecode(buffer, fileName, store) {
     [FILE_TYPES.TRANSACTION_EVENTS_TRACE], // TODO: Add magic number at begging of file for better auto detection
   ]) {
     try {
-      const [_, fileData] = decodedFile(filetype, buffer, fileName, store);
+      const [, fileData] = decodedFile(filetype, buffer, fileName, store);
 
       // A generic file will often wrongly be decoded as an empty wayland dump file
       if (condition && !condition(fileData)) {
@@ -495,4 +499,4 @@ function detectAndDecode(buffer, fileName, store) {
  */
 class UndetectableFileType extends Error { }
 
-export { detectAndDecode, decodeAndTransformProto, FILE_TYPES, TRACE_INFO, TRACE_TYPES, DUMP_TYPES, DUMP_INFO, FILE_DECODERS, FILE_ICONS, UndetectableFileType };
+export {detectAndDecode, decodeAndTransformProto, FILE_TYPES, TRACE_INFO, TRACE_TYPES, DUMP_TYPES, DUMP_INFO, FILE_DECODERS, FILE_ICONS, UndetectableFileType};
