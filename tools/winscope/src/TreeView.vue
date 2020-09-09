@@ -25,10 +25,14 @@
       }, diffClass]"
       :style="nodeOffsetStyle"
       @click="clicked"
-      @contextmenu.prevent="openContextMenu"
       ref="node"
     >
-      <button class="toggle-tree-btn" @click="toggleTree" v-if="!isLeaf" v-on:click.stop>
+      <button
+        class="toggle-tree-btn"
+        @click="toggleTree"
+        v-if="!isLeaf"
+        v-on:click.stop
+      >
         <i aria-hidden="true" class="md-icon md-theme-default material-icons">
           {{isCollapsed ? "chevron_right" : "expand_more"}}
         </i>
@@ -51,12 +55,19 @@
       <div v-show="isCollapsed">
         <button
           class="expand-tree-btn"
-          :class="[{ 'child-selected': isCollapsed && childIsSelected }, collapseDiffClass]"
+          :class="[{
+            'child-selected': isCollapsed && childIsSelected
+            }, collapseDiffClass]"
           v-if="children"
           @click="expandTree"
           v-on:click.stop
         >
-          <i aria-hidden="true" class="md-icon md-theme-default material-icons">more_horiz</i>
+          <i
+            aria-hidden="true"
+            class="md-icon md-theme-default material-icons"
+          >
+            more_horiz
+          </i>
         </button>
       </div>
     </div>
@@ -98,37 +109,27 @@
 </template>
 
 <script>
-import DefaultTreeElement from "./DefaultTreeElement.vue";
-import NodeContextMenu from "./NodeContextMenu.vue";
+import DefaultTreeElement from './DefaultTreeElement.vue';
+import NodeContextMenu from './NodeContextMenu.vue';
 
-import jsonProtoDefs from "frameworks/base/core/proto/android/server/windowmanagertrace.proto";
-import protobuf from "protobufjs";
+import {DiffType} from './utils/diff.js';
 
-import { DiffType } from "./utils/diff.js";
-
-var protoDefs = protobuf.Root.fromJSON(jsonProtoDefs);
-var TraceMessage = protoDefs.lookupType(
-  "com.android.server.wm.WindowManagerTraceFileProto"
-);
-var ServiceMessage = protoDefs.lookupType(
-  "com.android.server.wm.WindowManagerServiceDumpProto"
-);
-
-const levelOffset = 24; /* in px, must be kept in sync with css, maybe find a better solution... */
+/* in px, must be kept in sync with css, maybe find a better solution... */
+const levelOffset = 24;
 
 export default {
-  name: "tree-view",
+  name: 'tree-view',
   props: [
-    "item",
-    "selected",
-    "filter",
-    "simplify-names",
-    "flattened",
-    "force-flattened",
-    "items-clickable",
-    "initial-depth",
-    "collapse",
-    "collapseChildren",
+    'item',
+    'selected',
+    'filter',
+    'simplify-names',
+    'flattened',
+    'force-flattened',
+    'items-clickable',
+    'initial-depth',
+    'collapse',
+    'collapseChildren',
     // Allows collapse state to be tracked by Vuex so that collapse state of
     // items with same stableId can remain consisten accross time and easily
     // toggled from anywhere in the app.
@@ -136,9 +137,9 @@ export default {
     // trees throughout the component's lifetime to make sure same nodes are
     // toggled when switching back and forth between trees.
     // If true, requires all nodes in tree to have a stableId.
-    "useGlobalCollapsedState",
+    'useGlobalCollapsedState',
     // Custom view to use to render the elements in the tree view
-    "elementView",
+    'elementView',
   ],
   data() {
     const isCollapsedByDefault = this.collapse ?? false;
@@ -153,11 +154,11 @@ export default {
       nodeHover: false,
       childHover: false,
       diffSymbol: {
-        [DiffType.NONE]: "",
-        [DiffType.ADDED]: "+",
-        [DiffType.DELETED]: "-",
-        [DiffType.MODIFIED]: ".",
-        [DiffType.MOVED]: ".",
+        [DiffType.NONE]: '',
+        [DiffType.ADDED]: '+',
+        [DiffType.DELETED]: '-',
+        [DiffType.MODIFIED]: '.',
+        [DiffType.MOVED]: '.',
       },
     };
   },
@@ -183,7 +184,7 @@ export default {
       } else {
         this.$emit('unselected');
       }
-    }
+    },
   },
   methods: {
     setCollapseValue(isCollapsed) {
@@ -220,7 +221,7 @@ export default {
       // Travers children trees recursively in reverse to find currently
       // selected item and select the next visible one
       if (this.$refs.children) {
-        for (var c of this.$refs.children) {
+        for (const c of this.$refs.children) {
           found = c.selectNext(found, inCollapsedTree);
         }
       }
@@ -228,7 +229,8 @@ export default {
       return found;
     },
     selectPrev(found, inCollapsedTree) {
-      // Set inCollapseTree flag to make sure elements in collapsed trees are not selected.
+      // Set inCollapseTree flag to make sure elements in collapsed trees are
+      // not selected.
       const isRootCollapse = !inCollapsedTree && this.isCollapsed;
       if (isRootCollapse) {
         inCollapsedTree = true;
@@ -237,7 +239,7 @@ export default {
       // Travers children trees recursively in reverse to find currently
       // selected item and select the previous visible one
       if (this.$refs.children) {
-        for (var c of [...this.$refs.children].reverse()) {
+        for (const c of [...this.$refs.children].reverse()) {
           found = c.selectPrev(found, inCollapsedTree);
         }
       }
@@ -262,13 +264,13 @@ export default {
     },
     childItemSelected(item) {
       this.isChildSelected = true;
-      this.$emit("item-selected", item);
+      this.$emit('item-selected', item);
     },
     select() {
       this.$emit('item-selected', this.item);
     },
     clicked(e) {
-      if (window.getSelection().type === "range") {
+      if (window.getSelection().type === 'range') {
         // Ignore click if is selection
         return;
       }
@@ -281,10 +283,10 @@ export default {
       }
     },
     filterMatches(c) {
-      // If a filter is set, consider the item matches if the current item or any of its
-      // children matches.
+      // If a filter is set, consider the item matches if the current item or
+      // any of its children matches.
       if (this.filter) {
-        var thisMatches = this.filter(c);
+        const thisMatches = this.filter(c);
         const childMatches = (child) => this.filterMatches(child);
         return thisMatches || (!this.applyingFlattened &&
             c.children && c.children.some(childMatches));
@@ -304,11 +306,11 @@ export default {
       return this.selected === this.item;
     },
     updateCollapsedDiffClass() {
-        // NOTE: Could be memoized in $store map like collapsed state if
-        // performance ever becomes a problem.
-        if (this.item) {
-          this.collapseDiffClass = this.computeCollapseDiffClass();
-        }
+      // NOTE: Could be memoized in $store map like collapsed state if
+      // performance ever becomes a problem.
+      if (this.item) {
+        this.collapseDiffClass = this.computeCollapseDiffClass();
+      }
     },
     getAllDiffTypesOfChildren(item) {
       if (!item.children) {
@@ -329,7 +331,7 @@ export default {
     },
     computeCollapseDiffClass() {
       if (!this.isCollapsed) {
-        return "";
+        return '';
       }
 
       const childrenDiffClasses = this.getAllDiffTypesOfChildren(this.item);
@@ -338,7 +340,7 @@ export default {
       childrenDiffClasses.delete(undefined);
 
       if (childrenDiffClasses.size === 0) {
-        return "";
+        return '';
       }
       if (childrenDiffClasses.size === 1) {
         const diff = childrenDiffClasses.values().next().value;
@@ -390,7 +392,7 @@ export default {
       }
 
       for (const child of this.$refs.children) {
-        if (child.item ===  requestOrigin) {
+        if (child.item === requestOrigin) {
           continue;
         }
 
@@ -436,7 +438,7 @@ export default {
       return false;
     },
     diffClass() {
-      return this.item.diff ? this.item.diff.type : ''
+      return this.item.diff ? this.item.diff.type : '';
     },
     applyingFlattened() {
       return (this.flattened && this.item.flattened) || this.forceFlattened;
@@ -459,7 +461,7 @@ export default {
       return {
         marginLeft: '-' + offest,
         paddingLeft: offest,
-      }
+      };
     },
   },
   mounted() {
@@ -472,26 +474,32 @@ export default {
 
       return true;
     };
-    this.$refs.node?.addEventListener('mousedown', this.nodeMouseDownEventListner);
+    this.$refs.node?.addEventListener('mousedown',
+        this.nodeMouseDownEventListner);
 
     this.updateCollapsedDiffClass();
 
-    this.nodeMouseEnterEventListener = e => {
+    this.nodeMouseEnterEventListener = (e) => {
       this.nodeHover = true;
       this.$emit('hoverStart');
     };
-    this.$refs.node?.addEventListener('mouseenter', this.nodeMouseEnterEventListener);
+    this.$refs.node?.addEventListener('mouseenter',
+        this.nodeMouseEnterEventListener);
 
-    this.nodeMouseLeaveEventListener = e => {
+    this.nodeMouseLeaveEventListener = (e) => {
       this.nodeHover = false;
       this.$emit('hoverEnd');
     };
-    this.$refs.node?.addEventListener('mouseleave', this.nodeMouseLeaveEventListener);
+    this.$refs.node?.addEventListener('mouseleave',
+        this.nodeMouseLeaveEventListener);
   },
   beforeDestroy() {
-    this.$refs.node?.removeEventListener('mousedown', this.nodeMouseDownEventListner);
-    this.$refs.node?.removeEventListener('mouseenter', this.nodeMouseEnterEventListener);
-    this.$refs.node?.removeEventListener('mouseleave', this.nodeMouseLeaveEventListener);
+    this.$refs.node?.removeEventListener('mousedown',
+        this.nodeMouseDownEventListner);
+    this.$refs.node?.removeEventListener('mouseenter',
+        this.nodeMouseEnterEventListener);
+    this.$refs.node?.removeEventListener('mouseleave',
+        this.nodeMouseLeaveEventListener);
   },
   components: {
     DefaultTreeElement,
@@ -613,18 +621,12 @@ export default {
 
 .description {
   display: flex;
-  flex: 1 0 0;
+  flex: 1 1 auto;
 }
 
 .description > div {
   display: flex;
-  flex: 1 0 0;
-}
-
-.description span {
-  overflow-wrap: break-word;
-  flex: 1 0 0;
-  width: 0;
+  flex: 1 1 auto;
 }
 
 .leaf-node-icon-wrapper {
