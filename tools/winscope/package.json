@@ -14,6 +14,8 @@
     "jszip": "^3.5.0",
     "kotlin": "^1.3.72",
     "lodash.clonedeep": "^4.5.0",
+    "ts-loader": "^8.0.3",
+    "typescript": "^4.0.2",
     "vue": "^2.3.3",
     "vue-context": "^5.2.0",
     "vue-material": "^1.0.0-beta-11",

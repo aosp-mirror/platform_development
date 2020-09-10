@@ -15,14 +15,18 @@
  */
 
 import { FILE_TYPES, DUMP_TYPES } from "@/decode.js";
+import DumpBase from "./DumpBase";
 
-export default class SurfaceFlinger {
+export default class WindowManager extends DumpBase {
+  wmDumpFile: any;
+
   constructor(files) {
-    this.sfDumpFile = files[FILE_TYPES.SURFACE_FLINGER_DUMP];
-    this.data = this.sfDumpFile.data;
+    const wmDumpFile = files[FILE_TYPES.WINDOW_MANAGER_DUMP];
+    super(wmDumpFile.data, files);
+    this.wmDumpFile = wmDumpFile
   }
 
   get type() {
-    return DUMP_TYPES.SURFACE_FLINGER;
+    return DUMP_TYPES.WINDOW_MANAGER;
   }
 }

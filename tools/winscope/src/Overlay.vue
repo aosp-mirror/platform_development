@@ -69,7 +69,8 @@
               <div class="active-timeline" v-show="minimized">
                 <div
                   class="active-timeline-icon"
-                  @click="$refs.navigationTypeSelection.$el.querySelector('input').click()"
+                  @click="$refs.navigationTypeSelection.$el
+                          .querySelector('input').click()"
                 >
                   <md-icon class="collapsed-timeline-icon">
                     {{ collapsedTimelineIcon }}
@@ -79,41 +80,58 @@
                   </md-icon>
                 </div>
 
-                <md-field ref="navigationTypeSelection" class="nagivation-style-selection-field">
+                <md-field
+                  ref="navigationTypeSelection"
+                  class="nagivation-style-selection-field"
+                >
                   <label>Navigation</label>
-                  <md-select v-model="navigationStyle" name="navigationStyle" md-dense>
+                  <md-select
+                    v-model="navigationStyle"
+                    name="navigationStyle"
+                    md-dense
+                  >
                     <md-icon-option :value="NAVIGATION_STYLE.GLOBAL"
                       icon="public"
                       desc="Consider all timelines for navigation"
                     />
                     <md-icon-option
                       :value="NAVIGATION_STYLE.FOCUSED"
-                      :icon="focusedFile.type.icon"
-                      :desc="`Automatically switch what timeline is considered for navigation based
-                        on what is visible on screen. Currently ${focusedFile.type.name}.`"
+                      :icon="FILE_ICONS[focusedFile.type]"
+                      :desc="`Automatically switch what timeline is considered
+                        for navigation based on what is visible on screen.
+                        Currently ${focusedFile.type}.`"
                     />
-                    <!-- TODO: Add edit button for custom settings that opens popup dialog menu -->
+                    <!-- TODO: Add edit button for custom settings that opens
+                               popup dialog menu -->
                     <md-icon-option
                       :value="NAVIGATION_STYLE.CUSTOM"
                       icon="dashboard_customize"
-                      desc="Considers only the enabled timelines for navigation. Expand the bottom bar to toggle timelines."
+                      desc="Considers only the enabled timelines for
+                            navigation. Expand the bottom bar to toggle
+                            timelines."
                     />
                     <md-optgroup label="Targeted">
                       <md-icon-option
                         v-for="file in timelineFiles"
-                        v-bind:key="file.type.name"
-                        :value="`${NAVIGATION_STYLE.TARGETED}-${file.type.name}`"
-                        :displayValue="file.type.name"
+                        v-bind:key="file.type"
+                        :value="`${NAVIGATION_STYLE.TARGETED}-` +
+                                `${file.type}`"
+                        :displayValue="file.type"
                         :shortValue="NAVIGATION_STYLE.TARGETED"
-                        :icon="file.type.icon"
-                        :desc="`Only consider ${file.type.name} for timeline navigation.`"
+                        :icon="FILE_ICONS[file.type]"
+                        :desc="`Only consider ${file.type} ` +
+                               'for timeline navigation.'"
                       />
                     </md-optgroup>
                   </md-select>
                 </md-field>
               </div>
 
-              <div class="minimized-timeline-content" v-show="minimized" v-if="hasTimeline">
+              <div
+                class="minimized-timeline-content"
+                v-show="minimized"
+                v-if="hasTimeline"
+              >
                 <label>
                   {{ seekTime }}
                 </label>
@@ -156,12 +174,18 @@
 
           <div class="expanded-content" v-show="expanded">
             <div :v-if="video">
-              <div class="expanded-content-video" ref="expandedContentVideoContainer">
+              <div
+                class="expanded-content-video"
+                ref="expandedContentVideoContainer"
+              >
                 <!-- Video moved here on expansion -->
               </div>
             </div>
             <div class="flex-fill">
-              <div ref="expandedTimeline" :style="`padding-top: ${resizeOffset}px;`">
+              <div
+                ref="expandedTimeline"
+                :style="`padding-top: ${resizeOffset}px;`"
+              >
                 <div class="seek-time" v-if="seekTime">
                   <b>Seek time</b>: {{ seekTime }}
                 </div>
@@ -175,12 +199,23 @@
                 />
 
                 <div class="timeline-selection">
-                  <label>Timeline Area Selection</label>
-                  <span class="material-icons help-icon">
-                    help_outline
-                    <md-tooltip md-direction="right">Select the area of the timeline to focus on. Click and drag to select.</md-tooltip>
-                  </span>
-                  <br />
+                  <div class="timeline-selection-header">
+                    <label>Timeline Area Selection</label>
+                    <span class="material-icons help-icon">
+                      help_outline
+                      <md-tooltip md-direction="right">
+                        Select the area of the timeline to focus on.
+                        Click and drag to select.
+                      </md-tooltip>
+                    </span>
+                    <md-button
+                      class="md-primary"
+                      v-if="isCropped"
+                      @click.native="clearSelection"
+                    >
+                      Clear selection
+                    </md-button>
+                  </div>
                   <timeline-selection
                     :timeline="mergedTimeline.timeline"
                     :start-timestamp="0"
@@ -198,7 +233,9 @@
                   <div class="help-icon-wrapper">
                     <span class="material-icons help-icon">
                       help_outline
-                      <md-tooltip md-direction="left">Click on icons to disable timelines</md-tooltip>
+                      <md-tooltip md-direction="left">
+                        Click on icons to disable timelines
+                      </md-tooltip>
                     </span>
                   </div>
                 </div>
@@ -219,7 +256,9 @@ import VideoView from './VideoView.vue';
 import MdIconOption from './components/IconSelection/IconSelectOption.vue';
 import FileType from './mixins/FileType.js';
 import {NAVIGATION_STYLE} from './utils/consts';
+import {FILE_ICONS} from '@/decode.js';
 
+// eslint-disable-next-line camelcase
 import {nanos_to_string} from './transform.js';
 
 export default {
@@ -244,6 +283,7 @@ export default {
       videoOverlayExtraWidth: 0,
       crop: null,
       cropIntent: null,
+      FILE_ICONS,
     };
   },
   created() {
@@ -261,7 +301,8 @@ export default {
     navigationStyle(style) {
       // Only store navigation type in local store if it's a type that will
       // work regardless of what data is loaded.
-      if (style === NAVIGATION_STYLE.GLOBAL || style === NAVIGATION_STYLE.FOCUSED) {
+      if (style === NAVIGATION_STYLE.GLOBAL ||
+        style === NAVIGATION_STYLE.FOCUSED) {
         this.store.navigationStyle = style;
       }
       this.updateNavigationFileFilter();
@@ -295,8 +336,10 @@ export default {
       return nanos_to_string(this.currentTimestamp);
     },
     scale() {
-      const mx = Math.max(...(this.timelineFiles.map((f) => Math.max(...f.timeline))));
-      const mi = Math.min(...(this.timelineFiles.map((f) => Math.min(...f.timeline))));
+      const mx = Math.max(...(this.timelineFiles.map((f) =>
+        Math.max(...f.timeline))));
+      const mi = Math.min(...(this.timelineFiles.map((f) =>
+        Math.min(...f.timeline))));
       return [mi, mx];
     },
     currentTimestamp() {
@@ -305,7 +348,6 @@ export default {
     hasTimeline() {
       // Returns true if a meaningful timeline exists (i.e. not only dumps)
       for (const file of this.timelineFiles) {
-        const timeline = file.timeline;
         if (file.timeline.length > 0 &&
             (file.timeline[0] !== undefined || file.timeline.length > 1)) {
           return true;
@@ -320,7 +362,7 @@ export default {
           return 'All timelines';
 
         case NAVIGATION_STYLE.FOCUSED:
-          return `Focused: ${this.focusedFile.type.name}`;
+          return `Focused: ${this.focusedFile.type}`;
 
         case NAVIGATION_STYLE.CUSTOM:
           return 'Enabled timelines';
@@ -332,7 +374,7 @@ export default {
           }
 
           const fileType = split[1];
-          return this.getDataTypeByName(fileType).name;
+          return this.getDataTypeByName(fileType);
       }
     },
     collapsedTimelineIcon() {
@@ -341,7 +383,7 @@ export default {
           return 'public';
 
         case NAVIGATION_STYLE.FOCUSED:
-          return this.focusedFile.type.icon;
+          return FILE_ICONS[this.focusedFile.type];
 
         case NAVIGATION_STYLE.CUSTOM:
           return 'dashboard_customize';
@@ -377,9 +419,13 @@ export default {
 
       throw new Error('Unexpected Nagivation Style');
     },
+    isCropped() {
+      return this.crop != null &&
+        (this.crop.left !== 0 || this.crop.right !== 1);
+    },
   },
   updated() {
-    this.$nextTick(function() {
+    this.$nextTick(() => {
       if (this.$refs.expandedTimeline && this.expanded) {
         this.videoHeight = this.$refs.expandedTimeline.clientHeight;
       } else {
@@ -437,7 +483,8 @@ export default {
       }
 
       // Object is frozen for performance reasons
-      // It will prevent Vue from making it a reactive object which will be very slow as the timeline gets larger.
+      // It will prevent Vue from making it a reactive object which will be very
+      // slow as the timeline gets larger.
       Object.freeze(mergedTimeline.timeline);
 
       return mergedTimeline;
@@ -449,7 +496,8 @@ export default {
     },
     expand() {
       if (this.video) {
-        this.$refs.expandedContentVideoContainer.appendChild(this.$refs.video.$el);
+        this.$refs.expandedContentVideoContainer
+            .appendChild(this.$refs.video.$el);
       }
     },
     minimize() {
@@ -513,7 +561,8 @@ export default {
     updateNavigationFileFilter() {
       if (!this.minimized) {
         // Always use custom mode navigation when timeline is expanded
-        this.$store.commit('setNavigationFilesFilter', (f) => !f.timelineDisabled);
+        this.$store.commit('setNavigationFilesFilter',
+            (f) => !f.timelineDisabled);
         return;
       }
 
@@ -524,7 +573,8 @@ export default {
           break;
 
         case NAVIGATION_STYLE.FOCUSED:
-          navigationStyleFilter = (f) => f.type.name === this.focusedFile.type.name;
+          navigationStyleFilter =
+            (f) => f.type === this.focusedFile.type;
           break;
 
         case NAVIGATION_STYLE.CUSTOM:
@@ -538,7 +588,8 @@ export default {
           }
 
           const fileType = split[1];
-          navigationStyleFilter = (f) => f.type.name === this.getDataTypeByName(fileType).name;
+          navigationStyleFilter =
+            (f) => f.type === this.getDataTypeByName(fileType);
       }
 
       this.$store.commit('setNavigationFilesFilter', navigationStyleFilter);
@@ -563,6 +614,9 @@ export default {
         return;
       }
       this.$refs.video.jumpToSelectedIndex();
+    },
+    clearSelection() {
+      this.crop = null;
     },
   },
   components: {
@@ -763,4 +817,16 @@ export default {
   margin-bottom: 0;
 }
 
+.timeline-selection-header {
+  display: flex;
+  align-items: center;
+  padding-left: 15px;
+  height: 48px;
+}
+
+.help-icon {
+  font-size: 15px;
+  margin-bottom: 15px;
+  cursor: help;
+}
 </style>

@@ -21,19 +21,29 @@
       <md-list>
         <md-list-item v-for="file in dataFiles" v-bind:key="file.filename">
           <md-icon>{{FILE_ICONS[file.type]}}</md-icon>
-          <span class="md-list-item-text">{{file.filename}} ({{file.type}})</span>
-          <md-button class="md-icon-button md-accent" @click="onRemoveFile(file.type.name)">
+          <span class="md-list-item-text">{{file.filename}} ({{file.type}})
+          </span>
+          <md-button
+            class="md-icon-button md-accent"
+            @click="onRemoveFile(file.type)"
+          >
             <md-icon>close</md-icon>
           </md-button>
         </md-list-item>
       </md-list>
-      <md-progress-spinner :md-diameter="30" :md-stroke="3" md-mode="indeterminate" v-show="loadingFiles"/>
+      <md-progress-spinner
+        :md-diameter="30"
+        :md-stroke="3"
+        md-mode="indeterminate"
+        v-show="loadingFiles"
+      />
       <div>
         <md-checkbox v-model="store.displayDefaults" class="md-primary">
           Show default properties
           <md-tooltip md-direction="bottom">
             If checked, shows the value of all properties.
-            Otherwise, hides all properties whose value is the default for its data type.
+            Otherwise, hides all properties whose value is the default for its
+            data type.
           </md-tooltip>
         </md-checkbox>
       </div>
@@ -43,15 +53,35 @@
           <md-select v-model="fileType" id="file-type" placeholder="File type">
             <md-option value="auto">Detect type</md-option>
             <md-option value="bugreport">Bug Report (.zip)</md-option>
-            <md-option :value="k" v-for="(v,k) in FILE_DECODERS" v-bind:key="v.name">{{v.name}}</md-option>
+            <md-option
+              :value="k" v-for="(v,k) in FILE_DECODERS"
+              v-bind:key="v.name">{{v.name}}
+            ></md-option>
           </md-select>
           </md-field>
         </div>
       </div>
       <div class="md-layout">
-        <input type="file" @change="onLoadFile" ref="fileUpload" v-show="false" :multiple="fileType === 'auto'" />
-        <md-button class="md-primary md-theme-default" @click="$refs.fileUpload.click()">Add File</md-button>
-        <md-button v-if="dataReady" @click="onSubmit" class="md-button md-primary md-raised md-theme-default">Submit</md-button>
+        <input
+          type="file"
+          @change="onLoadFile"
+          ref="fileUpload"
+          v-show="false"
+          :multiple="fileType === 'auto'"
+        />
+        <md-button
+          class="md-primary md-theme-default"
+          @click="$refs.fileUpload.click()"
+        >
+          Add File
+        </md-button>
+        <md-button
+          v-if="dataReady"
+          @click="onSubmit"
+          class="md-button md-primary md-raised md-theme-default"
+        >
+          Submit
+        </md-button>
       </div>
     </md-card-content>
 
@@ -82,8 +112,14 @@
 <script>
 import FlatCard from './components/FlatCard.vue';
 import JSZip from 'jszip';
-import { detectAndDecode, FILE_TYPES, FILE_DECODERS, FILE_ICONS, UndetectableFileType } from './decode.js';
-import { WebContentScriptMessageType } from './utils/consts';
+import {
+  detectAndDecode,
+  FILE_TYPES,
+  FILE_DECODERS,
+  FILE_ICONS,
+  UndetectableFileType,
+} from './decode.js';
+import {WebContentScriptMessageType} from './utils/consts';
 
 export default {
   name: 'datainput',
@@ -92,15 +128,15 @@ export default {
       FILE_TYPES,
       FILE_DECODERS,
       FILE_ICONS,
-      fileType: "auto",
+      fileType: 'auto',
       dataFiles: {},
       loadingFiles: false,
       showFetchingSnackbar: false,
       showSnackbar: false,
       snackbarDuration: 3500,
       snackbarText: '',
-      fetchingSnackbarText: "Fetching files...",
-    }
+      fetchingSnackbarText: 'Fetching files...',
+    };
   },
   props: ['store'],
   created() {
@@ -145,7 +181,7 @@ export default {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('source') === 'openFromExtension' && chrome) {
         // Fetch files from extension
-        const androidBugToolExtensionId = "mbbaofdfoekifkfpgehgffcpagbbjkmj";
+        const androidBugToolExtensionId = 'mbbaofdfoekifkfpgehgffcpagbbjkmj';
 
         const loading = this.getFetchFilesLoadingAnimation();
         loading.start();
@@ -153,33 +189,36 @@ export default {
         // Request to convert the blob object url "blob:chrome-extension://xxx"
         // the chrome extension has to a web downloadable url "blob:http://xxx".
         chrome.runtime.sendMessage(androidBugToolExtensionId, {
-          action: WebContentScriptMessageType.CONVERT_OBJECT_URL
+          action: WebContentScriptMessageType.CONVERT_OBJECT_URL,
         }, async (response) => {
           switch (response.action) {
             case WebContentScriptMessageType.CONVERT_OBJECT_URL_RESPONSE:
               if (response.attachments?.length > 0) {
-                const filesBlobPromises = response.attachments.map(async attachment => {
-                  const fileQueryResponse = await fetch(attachment.objectUrl);
-                  const blob = await fileQueryResponse.blob();
+                const filesBlobPromises = response.attachments
+                    .map(async (attachment) => {
+                      const fileQueryResponse =
+                        await fetch(attachment.objectUrl);
+                      const blob = await fileQueryResponse.blob();
 
-                  /**
-                   * Note: The blob's media type is not correct. It is always set to "image/png".
-                   * Context: http://google3/javascript/closure/html/safeurl.js?g=0&l=256&rcl=273756987
-                   */
+                      /**
+                       * Note: The blob's media type is not correct.
+                       * It is always set to "image/png".
+                       * Context: http://google3/javascript/closure/html/safeurl.js?g=0&l=256&rcl=273756987
+                       */
 
-                  // Clone blob to clear media type.
-                  const file = new Blob([blob]);
-                  file.name = attachment.name;
+                      // Clone blob to clear media type.
+                      const file = new Blob([blob]);
+                      file.name = attachment.name;
 
-                  return file;
-                });
+                      return file;
+                    });
 
                 const files = await Promise.all(filesBlobPromises);
 
                 loading.stop();
                 this.processFiles(files);
               } else {
-                const failureMessages = "Got no attachements from extension...";
+                const failureMessages = 'Got no attachements from extension...';
                 console.warn(failureMessages);
                 this.showSnackbarMessage(failureMessages, 3500);
               }
@@ -187,7 +226,8 @@ export default {
 
             default:
               loading.stop();
-              const failureMessages = "Received unhandled response code from extension.";
+              const failureMessages =
+                'Received unhandled response code from extension.';
               console.warn(failureMessages);
               this.showSnackbarMessage(failureMessages, 3500);
           }
@@ -208,8 +248,9 @@ export default {
           const result = await this.addFile(file);
           decodedFiles.push(...result);
           this.hideSnackbarMessage();
-        } catch(e) {
-          this.showSnackbarMessage(`Failed to load '${file.name}'...\n${e}`, 5000);
+        } catch (e) {
+          this.showSnackbarMessage(
+              `Failed to load '${file.name}'...\n${e}`, 5000);
           console.error(e);
           error = e;
           break;
@@ -224,7 +265,8 @@ export default {
         return;
       }
 
-      // TODO: Handle the fact that we can now have multiple files of type FILE_TYPES.TRANSACTION_EVENTS_TRACE
+      // TODO: Handle the fact that we can now have multiple files of type
+      // FILE_TYPES.TRANSACTION_EVENTS_TRACE
 
       const decodedFileTypes = new Set(Object.keys(this.dataFiles));
       // A file is overridden if a file of the same type is upload twice, as
@@ -238,13 +280,13 @@ export default {
         if (decodedFileTypes.has(dataType)) {
           overriddenFileTypes.add(dataType);
           (overriddenFiles[dataType] = overriddenFiles[dataType] || [])
-            .push(this.dataFiles[dataType].filename);
+              .push(this.dataFiles[dataType].filename);
           overriddenCount++;
         }
         decodedFileTypes.add(dataType);
 
         this.$set(this.dataFiles,
-          dataType, decodedFile.data);
+            dataType, decodedFile.data);
       }
 
       if (overriddenFileTypes.size > 0) {
@@ -252,12 +294,18 @@ export default {
           const type = overriddenFileTypes.values().next().value;
           const overriddenFile = overriddenFiles[type][0];
           const keptFile = this.dataFiles[type].filename;
-          const message = `'${overriddenFile}' is conflicting with '${keptFile}'. Only '${keptFile}' will be kept. If you wish to display '${overriddenFile}', please upload it again with no other file of the same type.`;
+          const message =
+            `'${overriddenFile}' is conflicting with '${keptFile}'. ` +
+            `Only '${keptFile}' will be kept. If you wish to display ` +
+            `'${overriddenFile}', please upload it again with no other file ` +
+            `of the same type.`;
 
           this.showSnackbarMessage(`WARNING: ${message}`, Infinity);
           console.warn(message);
         } else {
-          const message = `Mutiple conflicting files have been uploaded. ${overriddenCount} files have been discarded. Please check the developer console for more information.`;
+          const message = `Mutiple conflicting files have been uploaded. ` +
+            `${overriddenCount} files have been discarded. Please check the ` +
+            `developer console for more information.`;
           this.showSnackbarMessage(`WARNING: ${message}`, Infinity);
 
           const messageBuilder = [];
@@ -265,27 +313,31 @@ export default {
             const keptFile = this.dataFiles[type].filename;
             const overriddenFilesCount = overriddenFiles[type].length;
 
-            messageBuilder.push(`${overriddenFilesCount} file${overriddenFilesCount > 1 ? 's' : ''} of type ${type} ${overriddenFilesCount > 1 ? 'have' : 'has'} been overridden. Only '${keptFile}' has been kept.`);
+            messageBuilder.push(`${overriddenFilesCount} file` +
+                `${overriddenFilesCount > 1 ? 's' : ''} of type ${type} ` +
+                `${overriddenFilesCount > 1 ? 'have' : 'has'} been ` +
+                `overridden. Only '${keptFile}' has been kept.`);
           }
 
-          messageBuilder.push("");
-          messageBuilder.push("Please reupload the specific files you want to read (one of each type).");
-          messageBuilder.push("");
+          messageBuilder.push('');
+          messageBuilder.push('Please reupload the specific files you want ' +
+            'to read (one of each type).');
+          messageBuilder.push('');
 
-          messageBuilder.push("================DISCARDED FILES================");
+          messageBuilder.push('===============DISCARDED FILES===============');
 
           for (const type of overriddenFileTypes.values()) {
             const discardedFiles = overriddenFiles[type];
-            const keptFile = this.dataFiles[type].filename;
 
-            messageBuilder.push(`The following files of type ${type} have been discarded:`);
+            messageBuilder.push(`The following files of type ${type} ` +
+              `have been discarded:`);
             for (const discardedFile of discardedFiles) {
               messageBuilder.push(`  - ${discardedFile}`);
             }
-            messageBuilder.push("");
+            messageBuilder.push('');
           }
 
-          console.warn(messageBuilder.join("\n"));
+          console.warn(messageBuilder.join('\n'));
         }
       }
     },
@@ -303,11 +355,13 @@ export default {
 
       const extension = this.getFileExtensions(file);
 
-      // extension === 'zip' is required on top of file.type === 'application/zip' because when
-      // loaded from the extension the type is incorrect. See comment in loadFilesFromExtension()
-      // for more information.
+      // extension === 'zip' is required on top of file.type ===
+      // 'application/zip' because when loaded from the extension the type is
+      // incorrect. See comment in loadFilesFromExtension() for more
+      // information.
       if (type === 'bugreport' ||
-          (type === 'auto' && (extension === 'zip' || file.type === 'application/zip'))) {
+          (type === 'auto' && (extension === 'zip' ||
+            file.type === 'application/zip'))) {
         const results = await this.decodeArchive(file);
         decodedFiles.push(...results);
       } else {
@@ -334,7 +388,8 @@ export default {
       let data;
       if (filetype) {
         const fileDecoder = FILE_DECODERS[filetype];
-        data = fileDecoder.decoder(buffer, fileDecoder.decoderParams, file.name, this.store);
+        data = fileDecoder.decoder(
+            buffer, fileDecoder.decoderParams, file.name, this.store);
       } else {
         // Defaulting to auto — will attempt to detect file type
         [filetype, data] = detectAndDecode(buffer, file.name, this.store);
@@ -347,28 +402,36 @@ export default {
 
       const zip = new JSZip();
       const content = await zip.loadAsync(buffer);
+      console.log('ZIP CONTENT', content);
 
       const decodedFiles = [];
 
       for (const filename in content.files) {
-        const file = content.files[filename];
+        if (content.files.hasOwnProperty(filename)) {
+          const file = content.files[filename];
+          if (file.dir) {
+            // Ignore directories
+            continue;
+          }
 
-        const fileBlob = await file.async("blob");
-        fileBlob.name = filename;
+          const fileBlob = await file.async('blob');
+          // Get only filename and remove rest of path
+          fileBlob.name = filename.split('/').slice(-1).pop();
 
-        try {
-          const decodedFile = await this.decodeFile(fileBlob);
+          try {
+            const decodedFile = await this.decodeFile(fileBlob);
 
-          decodedFiles.push(decodedFile);
-        } catch(e) {
-          if (!(e instanceof UndetectableFileType)) {
-            throw e;
+            decodedFiles.push(decodedFile);
+          } catch (e) {
+            if (!(e instanceof UndetectableFileType)) {
+              throw e;
+            }
           }
         }
       }
 
       if (decodedFiles.length == 0) {
-        throw new Error("No matching files found in archive", archive);
+        throw new Error('No matching files found in archive', archive);
       }
 
       return decodedFiles;
@@ -377,15 +440,18 @@ export default {
       this.$delete(this.dataFiles, typeName);
     },
     onSubmit() {
-      this.$emit('dataReady', Object.keys(this.dataFiles).map(key => this.dataFiles[key]));
-    }
+      this.$emit('dataReady',
+          Object.keys(this.dataFiles).map((key) => this.dataFiles[key]));
+    },
   },
   computed: {
-    dataReady: function() { return Object.keys(this.dataFiles).length > 0 }
+    dataReady: function() {
+      return Object.keys(this.dataFiles).length > 0;
+    },
   },
   components: {
     'flat-card': FlatCard,
   },
-}
+};
 
 </script>
