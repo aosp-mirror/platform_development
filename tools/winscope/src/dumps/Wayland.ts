@@ -14,10 +14,19 @@
  * limitations under the License.
  */
 
-export default class Trace {
-  constructor(data, timeline) {
-    this.selectedIndex = 0;
-    this.data = data;
-    this.timeline = timeline;
+import { FILE_TYPES, DUMP_TYPES } from "@/decode.js";
+import DumpBase from "./DumpBase";
+
+export default class WayLand extends DumpBase {
+  waylandFile: any;
+
+  constructor(files) {
+    const waylandFile = files[FILE_TYPES.WAYLAND_DUMP];
+    super(waylandFile.data, files);
+    this.waylandFile = waylandFile;
+  }
+
+  get type() {
+    return DUMP_TYPES.WAYLAND;
   }
 }

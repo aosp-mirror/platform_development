@@ -31,9 +31,11 @@ const isDev = process.env.NODE_ENV === 'development';
 function getWaylandSafePath() {
   const waylandPath =
     path.resolve(__dirname, '../../../vendor/google_arc/libs/wayland_service');
+
   if (fs.existsSync(waylandPath)) {
     return waylandPath;
   }
+
   return path.resolve(__dirname, 'src/stubs');
 }
 
@@ -43,7 +45,7 @@ const webpackConfig = {
     main: './src/main.js',
   },
   resolve: {
-    extensions: ['.js', '.vue'],
+    extensions: ['.tsx', '.ts', '.js', '.vue'],
     alias: {
       'vue$': isDev ? 'vue/dist/vue.runtime.js' : 'vue/dist/vue.runtime.min.js',
       '@': path.resolve(__dirname, 'src'),
@@ -66,6 +68,12 @@ const webpackConfig = {
       {
         test: /\.vue$/,
         loader: 'vue-loader',
+        include: path.resolve(__dirname, './src'),
+        exclude: /node_modules/,
+      },
+      {
+        test: /\.tsx?$/,
+        use: 'ts-loader',
         include: path.resolve(__dirname, './src'),
         exclude: /node_modules/,
       },

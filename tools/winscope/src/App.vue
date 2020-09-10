@@ -33,10 +33,12 @@
       <md-app-content class="main-content" :style="mainContentStyle">
         <section class="data-inputs" v-if="!dataLoaded">
           <div class="input">
-            <dataadb class="adbinput" ref="adb" :store="store" @dataReady="onDataReady" @statusChange="setStatus" />
+            <dataadb class="adbinput" ref="adb" :store="store"
+              @dataReady="onDataReady" @statusChange="setStatus" />
           </div>
           <div class="input">
-            <datainput class="fileinput" ref="input" :store="store" @dataReady="onDataReady" @statusChange="setStatus" />
+            <datainput class="fileinput" ref="input" :store="store"
+              @dataReady="onDataReady" @statusChange="setStatus" />
           </div>
         </section>
 
@@ -44,10 +46,10 @@
           <div
             class="data-view-container"
             v-for="file in dataViewFiles"
-            :key="file.type.name"
+            :key="file.type"
           >
             <dataview
-              :ref="file.type.name"
+              :ref="file.type"
               :store="store"
               :file="file"
               @click="onDataViewFocus(file)"
@@ -66,20 +68,18 @@
   </div>
 </template>
 <script>
-import TreeView from './TreeView.vue'
-import Overlay from './Overlay.vue'
-import Rects from './Rects.vue'
-import DataView from './DataView.vue'
-import DataInput from './DataInput.vue'
-import LocalStore from './localstore.js'
-import DataAdb from './DataAdb.vue'
-import FileType from './mixins/FileType.js'
-import SaveAsZip from './mixins/SaveAsZip'
-import FocusedDataViewFinder from './mixins/FocusedDataViewFinder'
-import {DIRECTION} from './utils/utils'
+import Overlay from './Overlay.vue';
+import DataView from './DataView.vue';
+import DataInput from './DataInput.vue';
+import LocalStore from './localstore.js';
+import DataAdb from './DataAdb.vue';
+import FileType from './mixins/FileType.js';
+import SaveAsZip from './mixins/SaveAsZip';
+import FocusedDataViewFinder from './mixins/FocusedDataViewFinder';
+import {DIRECTION} from './utils/utils';
 import {NAVIGATION_STYLE} from './utils/consts';
 
-const APP_NAME = "Winscope";
+const APP_NAME = 'Winscope';
 
 const CONTENT_BOTTOM_PADDING = 25;
 
@@ -90,6 +90,7 @@ export default {
     return {
       title: APP_NAME,
       activeDataView: null,
+      // eslint-disable-next-line new-cap
       store: LocalStore('app', {
         flattened: false,
         onlyVisible: false,
@@ -97,11 +98,11 @@ export default {
         displayDefaults: true,
         navigationStyle: NAVIGATION_STYLE.GLOBAL,
       }),
-      overlayRef: "overlay",
+      overlayRef: 'overlay',
       mainContentStyle: {
         'padding-bottom': `${CONTENT_BOTTOM_PADDING}px`,
       },
-    }
+    };
   },
   created() {
     window.addEventListener('keydown', this.onKeyDown);
@@ -118,7 +119,7 @@ export default {
     },
     onDataViewFocus(file) {
       this.$store.commit('setActiveFile', file);
-      this.activeDataView = file.type.name;
+      this.activeDataView = file.type;
     },
     onKeyDown(event) {
       event = event || window.event;
@@ -149,9 +150,9 @@ export default {
     },
     handleBottomNavHeightChange(newHeight) {
       this.$set(
-        this.mainContentStyle,
-        'padding-bottom',
-        `${ CONTENT_BOTTOM_PADDING + newHeight }px`
+          this.mainContentStyle,
+          'padding-bottom',
+          `${ CONTENT_BOTTOM_PADDING + newHeight }px`,
       );
     },
   },
@@ -167,32 +168,34 @@ export default {
     },
     activeView() {
       if (!this.activeDataView && this.files.length > 0) {
-        this.activeDataView = this.files[0].type.name;
+        // eslint-disable-next-line vue/no-side-effects-in-computed-properties
+        this.activeDataView = this.files[0].type;
       }
       return this.activeDataView;
     },
     dataViewFiles() {
-      return this.files.filter(f => this.hasDataView(f));
-    }
+      return this.files.filter((f) => this.hasDataView(f));
+    },
   },
   watch: {
     title() {
       document.title = this.title;
-    }
+    },
   },
   components: {
     overlay: Overlay,
     dataview: DataView,
     datainput: DataInput,
     dataadb: DataAdb,
-  }
+  },
 };
 </script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@600&display=swap');
 
 #app .md-app-container {
-  transform: none!important; /* Get rid of tranforms which prevent fixed position from being used */
+  /* Get rid of tranforms which prevent fixed position from being used */
+  transform: none!important;
   min-height: 100vh;
 }
 

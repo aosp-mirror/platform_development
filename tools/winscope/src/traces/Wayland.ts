@@ -15,17 +15,19 @@
  */
 
 import { FILE_TYPES, TRACE_TYPES } from "@/decode.js";
-import TraceBase from './TraceBase.js';
+import TraceBase from './TraceBase';
 
-export default class WindowManager extends TraceBase {
+export default class WayLand extends TraceBase {
+  waylandFile: Object;
+
   constructor(files) {
-    const wmTraceFile = files[FILE_TYPES.WINDOW_MANAGER_TRACE];
-    super(wmTraceFile.data, wmTraceFile.timeline);
+    const waylandFile = files[FILE_TYPES.WAYLAND_TRACE];
+    super(waylandFile.data, waylandFile.timeline, files);
 
-    this.wmTraceFile = wmTraceFile;
+    this.waylandFile = waylandFile;
   }
 
   get type() {
-    return TRACE_TYPES.WINDOW_MANAGER;
+    return TRACE_TYPES.WAYLAND;
   }
 }

@@ -16,23 +16,20 @@
 <template>
   <div class="timelines-container">
 
-    <md-list class="timeline-icons" @mousedown="mousedownHandler">
-      <md-list-item
-      v-for="file in timelineFiles"
-      :key="file.filename"
+    <div class="timeline-icons" @mousedown="mousedownHandler">
+      <div
+        v-for="file in timelineFiles"
+        :key="file.filename"
+        class="trace-icon"
+        :class="{disabled: file.timelineDisabled}"
+        @click="toggleTimeline(file)"
       >
-        <div
-          class="trace-icon"
-          :class="{disabled: file.timelineDisabled}"
-          @click="toggleTimeline(file)"
-        >
-          <i class="material-icons">
-          {{ file.type.icon }}
-          <md-tooltip md-direction="bottom">{{ file.type.name }}</md-tooltip>
-          </i>
-        </div>
-      </md-list-item>
-    </md-list>
+        <i class="material-icons">
+          {{ FILE_ICONS[file.type] }}
+          <md-tooltip md-direction="bottom">{{ file.type }}</md-tooltip>
+        </i>
+      </div>
+    </div>
 
     <div class="timelines-wrapper" ref="timelinesWrapper">
       <md-list class="timelines" @mousedown="mousedownHandler" ref="timelines">
@@ -65,11 +62,12 @@
   </div>
 </template>
 <script>
-import Timeline from "./Timeline.vue";
+import Timeline from './Timeline.vue';
+import {FILE_ICONS} from '@/decode.js';
 
 export default {
-  name: "Timelines",
-  props: ["timelineFiles", "scale", "crop", "cropIntent"],
+  name: 'Timelines',
+  props: ['timelineFiles', 'scale', 'crop', 'cropIntent'],
   data() {
     return {
       // Distances of sides from top left corner of wrapping div in pixels
@@ -78,8 +76,9 @@ export default {
         left: 0,
         bottom: 0,
         right: 0,
-      }
-    }
+      },
+      FILE_ICONS,
+    };
   },
   computed: {
     /**
@@ -100,13 +99,16 @@ export default {
       return {
         top: `${this.selectionPosition.top}px`,
         left: `${this.selectionPosition.left}px`,
-        height: `${this.selectionPosition.bottom - this.selectionPosition.top}px`,
-        width: `${this.selectionPosition.right - this.selectionPosition.left}px`,
+        height:
+          `${this.selectionPosition.bottom - this.selectionPosition.top}px`,
+        width:
+          `${this.selectionPosition.right - this.selectionPosition.left}px`,
       };
     },
     /**
      * Generates the dynamic style of the selection intent box.
-     * @return {object} an object containing the style of the selection intent box.
+     * @return {object} an object containing the style of the selection intent
+     *                  box.
      */
     selectionIntentStyle() {
       if (!(this.cropIntent && this.$refs.timelinesWrapper)) {
@@ -118,30 +120,31 @@ export default {
 
       const activeCropLeft = this.crop?.left ?? 0;
       const activeCropRight = this.crop?.right ?? 1;
-      const timelineWidth = this.$refs.timelinesWrapper.getBoundingClientRect().width;
+      const timelineWidth =
+        this.$refs.timelinesWrapper.getBoundingClientRect().width;
 
       const r = timelineWidth / (activeCropRight - activeCropLeft);
 
       let left = 0;
-      let boderLeft = "none";
+      let boderLeft = 'none';
       if (this.cropIntent.left > activeCropLeft) {
         left = (this.cropIntent.left - activeCropLeft) * r;
         boderLeft = null;
       }
 
       let right = timelineWidth;
-      let borderRight = "none";
+      let borderRight = 'none';
       if (this.cropIntent.right < activeCropRight) {
         right = timelineWidth - (activeCropRight - this.cropIntent.right) * r;
         borderRight = null;
       }
 
       return {
-        left: `${left}px`,
-        width: `${right - left}px`,
+        'left': `${left}px`,
+        'width': `${right - left}px`,
         'border-left': boderLeft,
         'border-right': borderRight,
-      }
+      };
     },
   },
   methods: {
@@ -157,13 +160,13 @@ export default {
 
       this.overlay = document.createElement('div');
       Object.assign(this.overlay.style, {
-        position: "fixed",
-        top: 0,
-        left: 0,
-        height: "100vh",
-        width: "100vw",
-        "z-index": 100,
-        cursor: "crosshair",
+        'position': 'fixed',
+        'top': 0,
+        'left': 0,
+        'height': '100vh',
+        'width': '100vw',
+        'z-index': 100,
+        'cursor': 'crosshair',
       });
 
       document.body.appendChild(this.overlay);
@@ -192,19 +195,22 @@ export default {
      *           event
      * - reset: clears the selection box, shold be called when the mouseup event
      *          occurs or when we want to no longer display the selection box.
+     * @return {null}
      */
     selectionPositionsUpdater() {
-      let startClientX, startClientY, x, y;
+      let startClientX; let startClientY; let x; let y;
 
       return {
-        init: e => {
+        init: (e) => {
           startClientX = e.clientX;
           startClientY = e.clientY;
-          x = startClientX - this.$refs.timelines.$el.getBoundingClientRect().left;
-          y = startClientY - this.$refs.timelines.$el.getBoundingClientRect().top;
+          x = startClientX -
+            this.$refs.timelines.$el.getBoundingClientRect().left;
+          y = startClientY -
+            this.$refs.timelines.$el.getBoundingClientRect().top;
         },
-        update: e => {
-          let left, right, top, bottom;
+        update: (e) => {
+          let left; let right; let top; let bottom;
 
           const xDiff = e.clientX - startClientX;
           if (xDiff > 0) {
@@ -234,28 +240,30 @@ export default {
             right = this.$refs.timelines.$el.getBoundingClientRect().width;
           }
 
-          if (bottom > this.$refs.timelines.$el.getBoundingClientRect().height) {
+          if (bottom >
+            this.$refs.timelines.$el.getBoundingClientRect().height) {
             bottom = this.$refs.timelines.$el.getBoundingClientRect().height;
           }
 
-          this.$set(this.selectionPosition, "left", left);
-          this.$set(this.selectionPosition, "right", right);
-          this.$set(this.selectionPosition, "top", top);
-          this.$set(this.selectionPosition, "bottom", bottom);
+          this.$set(this.selectionPosition, 'left', left);
+          this.$set(this.selectionPosition, 'right', right);
+          this.$set(this.selectionPosition, 'top', top);
+          this.$set(this.selectionPosition, 'bottom', bottom);
         },
-        reset: e => {
-          this.$set(this.selectionPosition, "left", 0);
-          this.$set(this.selectionPosition, "right", 0);
-          this.$set(this.selectionPosition, "top", 0);
-          this.$set(this.selectionPosition, "bottom", 0);
+        reset: (e) => {
+          this.$set(this.selectionPosition, 'left', 0);
+          this.$set(this.selectionPosition, 'right', 0);
+          this.$set(this.selectionPosition, 'top', 0);
+          this.$set(this.selectionPosition, 'bottom', 0);
         },
-      }
+      };
     },
 
     /**
      * Handles the mousedown event indicating the start of a selection.
      * Adds listeners to handles mousemove and mouseup event to detect the
      * selection and update the selection box's coordinates.
+     * @param {event} e
      */
     mousedownHandler(e) {
       const selectionPositionsUpdater = this.selectionPositionsUpdater();
@@ -263,7 +271,7 @@ export default {
 
       let dragged = false;
 
-      const mousemoveHandler = e => {
+      const mousemoveHandler = (e) => {
         if (!dragged) {
           dragged = true;
           this.addOverlay();
@@ -273,7 +281,7 @@ export default {
       };
       document.addEventListener('mousemove', mousemoveHandler);
 
-      const mouseupHandler = e => {
+      const mouseupHandler = (e) => {
         document.removeEventListener('mousemove', mousemoveHandler);
         document.removeEventListener('mouseup', mouseupHandler);
 
@@ -301,16 +309,17 @@ export default {
 
       const newCropWidth = ratio * (right - left);
       const newLeft = left + (this.selectionPosition.left /
-        this.$refs.timelines.$el.getBoundingClientRect().width) * (right - left);
+        this.$refs.timelines.$el.getBoundingClientRect().width) *
+          (right - left);
 
       if (this.crop) {
-        this.$set(this.crop, "left", newLeft);
-        this.$set(this.crop, "right", newLeft + newCropWidth);
+        this.$set(this.crop, 'left', newLeft);
+        this.$set(this.crop, 'right', newLeft + newCropWidth);
       } else {
         this.$emit('crop', {
           left: newLeft,
           right: newLeft + newCropWidth,
-        })
+        });
       }
     },
   },
@@ -347,5 +356,12 @@ export default {
   margin-left: -3px;
   border-left: 3px #1261A0 solid;
   border-right: 3px #1261A0 solid;
+}
+
+.timeline-icons {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  margin-left: 15px;
 }
 </style>

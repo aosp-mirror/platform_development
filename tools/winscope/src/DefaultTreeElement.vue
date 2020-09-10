@@ -16,28 +16,25 @@
   <span>
     <span class="kind">{{item.kind}}</span>
     <span v-if="item.kind && item.name">-</span>
-    <span>
-    <span v-if="simplifyNames && item.shortName && item.shortName !== item.name">
-        {{ item.shortName }}
-        <md-tooltip
+    <span
+      v-if="simplifyNames && item.shortName &&
+            item.shortName !== item.name"
+    >{{ item.shortName }} <!-- No line break on purpose -->
+      <md-tooltip
         md-delay="300"
         md-direction="top"
         style="margin-bottom: -10px"
-        >
+      >
         {{item.name}}
-        </md-tooltip>
+      </md-tooltip>
     </span>
-    <span v-else>
-        {{ item.name }}
-    </span>
-    </span>
+    <span v-else>{{ item.name }}</span>
     <div
-    v-for="c in item.chips"
-    v-bind:key="c.long"
-    :title="c.long"
-    :class="chipClassForChip(c)"
-    >
-    {{c.short}}
+      v-for="c in item.chips"
+      v-bind:key="c.long"
+      :title="c.long"
+      :class="chipClassForChip(c)"
+    >{{c.short}} <!-- No line break on purpose -->
     </div>
   </span>
 </template>
@@ -45,17 +42,18 @@
 <script>
 export default {
   name: 'DefaultTreeElement',
-  props: ["item", "simplify-names"],
+  props: ['item', 'simplify-names'],
   methods: {
     chipClassForChip(c) {
       return [
-        "tree-view-internal-chip",
-        "tree-view-chip",
-        "tree-view-chip" + "-" + (c.type?.toString() || c.class?.toString() || "default")
+        'tree-view-internal-chip',
+        'tree-view-chip',
+        'tree-view-chip' + '-' +
+          (c.type?.toString() || c.class?.toString() || 'default'),
       ];
     },
-  }
-}
+  },
+};
 </script>
 
 <style scoped>
@@ -88,5 +86,11 @@ export default {
 .tree-view-chip.tree-view-chip-hwc {
   background-color: #448aff;
   color: black;
+}
+
+span {
+  overflow-wrap: break-word;
+  flex: 1 1 auto;
+  width: 0;
 }
 </style>

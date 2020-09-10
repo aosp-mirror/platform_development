@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-import { FILE_TYPES, TRACE_TYPES } from "@/decode.js";
-import TraceBase from './TraceBase.js';
+import { FILE_TYPES, TRACE_TYPES } from '@/decode.js';
+import TraceBase from './TraceBase';
 
-export default class SurfaceFlinger extends TraceBase {
+export default class Launcher extends TraceBase {
+  launcherFile: any;
+
   constructor(files) {
-    const sfTraceFile = files[FILE_TYPES.SURFACE_FLINGER_TRACE];
-    super(sfTraceFile.data, sfTraceFile.timeline);
+    const launcherFile = files[FILE_TYPES.LAUNCHER];
+    super(launcherFile.data, launcherFile.timeline, files);
 
-    this.sfTraceFile = sfTraceFile;
+    this.launcherFile = launcherFile;
   }
 
   get type() {
-    return TRACE_TYPES.SURFACE_FLINGER;
+    return TRACE_TYPES.LAUNCHER;
   }
 }

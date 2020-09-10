@@ -18,7 +18,7 @@
       <md-card-header>
         <md-card-header-text>
           <div class="md-title">
-            <md-icon>{{file.type.icon}}</md-icon>
+            <md-icon>{{ FILE_ICONS[file.type] }}</md-icon>
             {{file.filename}}
           </div>
         </md-card-header-text>
@@ -75,10 +75,14 @@ import LogView from '@/LogView.vue';
 import FileType from '@/mixins/FileType.js';
 import FlatCard from '@/components/FlatCard.vue';
 
+import {FILE_ICONS} from '@/decode.js';
+
 export default {
   name: 'dataview',
   data() {
-    return {};
+    return {
+      FILE_ICONS,
+    };
   },
   methods: {
     arrowUp() {
