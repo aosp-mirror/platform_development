@@ -129,11 +129,11 @@ def parse_args():
 
 
 def verify_device(root, device):
-    name = device.get_prop("ro.product.name")
+    names = set([device.get_prop("ro.build.product"), device.get_prop("ro.product.name")])
     target_device = os.environ["TARGET_PRODUCT"]
-    if target_device != name:
+    if target_device not in names:
         msg = "TARGET_PRODUCT ({}) does not match attached device ({})"
-        sys.exit(msg.format(target_device, name))
+        sys.exit(msg.format(target_device, ", ".join(names)))
 
 
 def get_remote_pid(device, process_name):
