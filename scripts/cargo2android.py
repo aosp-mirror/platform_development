@@ -370,7 +370,9 @@ class Crate(object):
     # ignore options not used in Android
     # 'prefer-dynamic' does not work with common flag -C lto
     # 'embed-bitcode' is ignored; we might control LTO with other .bp flag
-    if not (flag.startswith('debuginfo=') or
+    # 'codegen-units' is set in Android global config or by default
+    if not (flag.startswith('codegen-units=') or
+            flag.startswith('debuginfo=') or
             flag.startswith('embed-bitcode=') or
             flag.startswith('extra-filename=') or
             flag.startswith('incremental=') or
