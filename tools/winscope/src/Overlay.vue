@@ -84,6 +84,7 @@
                   ref="navigationTypeSelection"
                   class="nagivation-style-selection-field"
                 >
+
                   <label>Navigation</label>
                   <md-select
                     v-model="navigationStyle"
@@ -374,7 +375,8 @@ export default {
           }
 
           const fileType = split[1];
-          return this.getDataTypeByName(fileType);
+
+          return fileType;
       }
     },
     collapsedTimelineIcon() {
@@ -395,7 +397,8 @@ export default {
           }
 
           const fileType = split[1];
-          return this.getDataTypeByName(fileType).icon;
+
+          return FILE_ICONS[fileType];
       }
     },
     minimizedTimeline() {
@@ -414,7 +417,7 @@ export default {
 
       if (this.navigationStyle.split('-')[0] === NAVIGATION_STYLE.TARGETED) {
         return this.$store.state
-            .filesByType[this.navigationStyle.split('-')[1]];
+            .traces[this.navigationStyle.split('-')[1]];
       }
 
       throw new Error('Unexpected Nagivation Style');
@@ -589,7 +592,7 @@ export default {
 
           const fileType = split[1];
           navigationStyleFilter =
-            (f) => f.type === this.getDataTypeByName(fileType);
+            (f) => f.type === fileType;
       }
 
       this.$store.commit('setNavigationFilesFilter', navigationStyleFilter);
