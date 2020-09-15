@@ -437,7 +437,10 @@ def do_main():
         linker_search_dir = ensure_linker(device, sysroot, interp)
 
         tracer_pid = get_tracer_pid(device, pid)
-        use_lldb = args.lldb
+        if os.path.basename(__file__) == 'gdbclient.py' and not args.lldb:
+            print("gdb is deprecated in favor of lldb. "
+                  "If you can't use lldb, please set --no-lldb and file a bug asap.")
+        use_lldb = not args.no_lldb
         if tracer_pid == 0:
             cmd_prefix = args.su_cmd
             if args.env:
