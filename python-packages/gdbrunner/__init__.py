@@ -197,8 +197,20 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
                               stderr=gdbserver_output)
 
 
+def get_uid(device):
+    """Gets the uid adbd runs as."""
+    line, _ = device.shell(["id", "-u"])
+    return int(line.strip())
+
+
 def forward_gdbserver_port(device, local, remote):
     """Forwards local TCP port `port` to `remote` via `adb forward`."""
+    if get_uid(device) != 0:
+        WARNING = '\033[93m'
+        ENDC = '\033[0m'
+        print(WARNING +
+              "Port forwarding may not work because adbd is not running as root. " +
+              " Run `adb root` to fix." + ENDC)
     device.forward("tcp:{}".format(local), remote)
     atexit.register(lambda: device.forward_remove("tcp:{}".format(local)))
 
