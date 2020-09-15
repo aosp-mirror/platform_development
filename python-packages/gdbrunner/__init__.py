@@ -189,9 +189,14 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
     if run_as_cmd:
         gdbserver_cmd = run_as_cmd + gdbserver_cmd
 
-    gdbserver_output_path = os.path.join(tempfile.gettempdir(),
-                                         "gdbclient.log")
-    print("Redirecting gdbserver output to {}".format(gdbserver_output_path))
+    if lldb:
+        gdbserver_output_path = os.path.join(tempfile.gettempdir(),
+                                             "lldb-client.log")
+        print("Redirecting lldb-server output to {}".format(gdbserver_output_path))
+    else:
+        gdbserver_output_path = os.path.join(tempfile.gettempdir(),
+                                             "gdbclient.log")
+        print("Redirecting gdbserver output to {}".format(gdbserver_output_path))
     gdbserver_output = file(gdbserver_output_path, 'w')
     return device.shell_popen(gdbserver_cmd, stdout=gdbserver_output,
                               stderr=gdbserver_output)
