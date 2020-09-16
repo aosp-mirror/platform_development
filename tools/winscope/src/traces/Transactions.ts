@@ -64,7 +64,6 @@ class TransactionHistory {
 
           this.addMerge(originalId, mergedId);
         } else if (event.apply) {
-          console.log(event);
           this.addApply(event.apply.tx_id);
         }
       }
@@ -219,7 +218,6 @@ class Apply {
  * @return {Object} An object containing the id and pid of the transaction.
  */
 export function expandTransactionId(transactionId) {
-  console.log('Expanding', transactionId);
   // Can't use bit shift operation because it isn't a 32 bit integer...
   // Because js uses floating point numbers for everything, maths isn't 100%
   // accurate so we need to round...

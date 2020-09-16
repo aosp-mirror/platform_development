@@ -446,7 +446,6 @@ export default {
 
     squishVSyncs(data) {
       return data.filter((event, i) => {
-        console.log(event.type, data[i + 1]?.type);
         return !(event.type === 'vsyncEvent' &&
           data[i + 1]?.type === 'vsyncEvent');
       });
