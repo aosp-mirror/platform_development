@@ -30,7 +30,7 @@ import {transform_layers, transform_layers_trace} from './transform_sf.js';
 import {transform_window_service, transform_window_trace} from './transform_wm.js';
 import {transform_transaction_trace, transform_TRANSACTION_EVENTS_TRACE} from './transform_transaction.js';
 import {transform_wl_outputstate, transform_wayland_trace} from './transform_wl.js';
-import {transform_protolog} from './transform_protolog.js';
+import {transformProtolog} from './transform_protolog.js';
 import {transform_sysui_trace} from './transform_sys_ui.js';
 import {transform_launcher_trace} from './transform_launcher.js';
 import {fill_transform_data} from './matrix_utils.js';
@@ -313,7 +313,7 @@ const FILE_DECODERS = {
       type: FILE_TYPES.PROTO_LOG,
       mime: 'application/octet-stream',
       protoType: ProtoLogMessage,
-      transform: transform_protolog,
+      transform: transformProtolog,
       timeline: true,
     },
   },

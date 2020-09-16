@@ -402,7 +402,6 @@ export default {
 
       const zip = new JSZip();
       const content = await zip.loadAsync(buffer);
-      console.log('ZIP CONTENT', content);
 
       const decodedFiles = [];
 

@@ -40,22 +40,26 @@
 </template>
 
 <script>
-import { logLevel } from './utils/consts';
+import {logLevel} from './utils/consts';
 
 export default {
   name: 'logentry',
   props: {
     index: {
-      type: Number
+      type: Number,
     },
     source: {
       type: Object,
-      default () {
-        return {}
-      }
-    }
+      default() {
+        return {};
+      },
+    },
   },
   data() {
+    if (!this.source?.level) {
+      console.log(this.source);
+    }
+
     return {
       levelIcons: {
         [logLevel.INFO]: 'info_outline',
@@ -64,15 +68,15 @@ export default {
         [logLevel.WARN]: 'warning',
         [logLevel.ERROR]: 'error',
         [logLevel.WTF]: 'bolt',
-      }
+      },
     };
   },
   methods: {
     setTimelineTime(timestamp) {
       this.$store.dispatch('updateTimelineTime', timestamp);
-    }
+    },
   },
-}
+};
 </script>
 <style scoped>
 .level-column {
