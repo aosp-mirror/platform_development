@@ -17,12 +17,13 @@
 package com.android.commands.monkey;
 
 import android.app.ActivityManager;
+import android.app.AppGlobals;
 import android.app.IActivityManager;
-import android.content.pm.IPackageManager;
 import android.content.pm.PackageManager;
 import android.content.pm.PermissionInfo;
 import android.os.RemoteException;
 import android.os.ServiceManager;
+import android.permission.IPermissionManager;
 import android.view.IWindowManager;
 
 public class MonkeyPermissionEvent extends MonkeyEvent {
@@ -37,19 +38,20 @@ public class MonkeyPermissionEvent extends MonkeyEvent {
 
     @Override
     public int injectEvent(IWindowManager iwm, IActivityManager iam, int verbose) {
-        IPackageManager pm = IPackageManager.Stub.asInterface(ServiceManager.getService("package"));
-        int currentUser = ActivityManager.getCurrentUser();
+        final IPermissionManager permissionManager = AppGlobals.getPermissionManager();
+        final int currentUser = ActivityManager.getCurrentUser();
         try {
             // determine if we should grant or revoke permission
-            int perm = pm.checkPermission(mPermissionInfo.name, mPkg, currentUser);
+            int perm = permissionManager.checkPermission(mPermissionInfo.name, mPkg, currentUser);
             boolean grant = perm == PackageManager.PERMISSION_DENIED;
             // log before calling pm in case we hit an error
             Logger.out.println(String.format(":Permission %s %s to package %s",
                     grant ? "grant" : "revoke", mPermissionInfo.name, mPkg));
             if (grant) {
-                pm.grantRuntimePermission(mPkg, mPermissionInfo.name, currentUser);
+                permissionManager.grantRuntimePermission(mPkg, mPermissionInfo.name, currentUser);
             } else {
-                pm.revokeRuntimePermission(mPkg, mPermissionInfo.name, currentUser);
+                permissionManager.revokeRuntimePermission(mPkg, mPermissionInfo.name, currentUser,
+                        null);
             }
             return MonkeyEvent.INJECT_SUCCESS;
         } catch (RemoteException re) {

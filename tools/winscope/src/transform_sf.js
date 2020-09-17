@@ -15,11 +15,7 @@
  */
 
 import {transform, nanos_to_string, get_visible_chip} from './transform.js'
-
-// Layer flags
-const FLAG_HIDDEN = 0x01;
-const FLAG_OPAQUE = 0x02;
-const FLAG_SECURE = 0x80;
+import { fill_occlusion_state, fill_inherited_state } from './sf_visibility.js';
 
 var RELATIVE_Z_CHIP = {short: 'RelZ',
     long: "Is relative Z-ordered to another surface",
@@ -30,61 +26,14 @@ var RELATIVE_Z_PARENT_CHIP = {short: 'RelZParent',
 var MISSING_LAYER = {short: 'MissingLayer',
     long: "This layer was referenced from the parent, but not present in the trace",
     class: 'error'};
+var GPU_CHIP = {short: 'GPU',
+    long: "This layer was composed on the GPU",
+    class: 'gpu'};
+var HWC_CHIP = {short: 'HWC',
+    long: "This layer was composed by Hardware Composer",
+    class: 'hwc'};
 
-function transform_layer(layer, {parentBounds, parentHidden}) {
-  function get_size(layer) {
-    var size = layer.size || {w: 0, h: 0};
-    return {
-      left: 0,
-      right: size.w,
-      top: 0,
-      bottom: size.h
-    };
-  }
-
-  function get_crop(layer) {
-    var crop = layer.crop || {left: 0, top: 0, right: 0 , bottom:0};
-    return {
-      left: crop.left || 0,
-      right: crop.right  || 0,
-      top: crop.top || 0,
-      bottom: crop.bottom || 0
-    };
-  }
-
-  function intersect(bounds, crop) {
-    return {
-      left: Math.max(crop.left, bounds.left),
-      right: Math.min(crop.right, bounds.right),
-      top: Math.max(crop.top, bounds.top),
-      bottom: Math.min(crop.bottom, bounds.bottom),
-    };
-  }
-
-  function is_empty_rect(rect) {
-    var right = rect.right || 0;
-    var left = rect.left || 0;
-    var top = rect.top || 0;
-    var bottom = rect.bottom || 0;
-
-    return (right - left) <= 0 || (bottom - top) <= 0;
-  }
-
-  function get_cropped_bounds(layer, parentBounds) {
-    var size = get_size(layer);
-    var crop = get_crop(layer);
-    if (!is_empty_rect(size) && !is_empty_rect(crop)) {
-      return intersect(size, crop);
-    }
-    if (!is_empty_rect(size)) {
-      return size;
-    }
-    if (!is_empty_rect(crop)) {
-      return crop;
-    }
-    return parentBounds || { left: 0, right: 0, top: 0, bottom: 0 };
-  }
-
+function transform_layer(layer) {
   function offset_to(bounds, x, y) {
     return {
       right: bounds.right - (bounds.left - x),
@@ -94,98 +43,30 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
     };
   }
 
-  function transform_bounds(layer, parentBounds) {
-    var result = layer.bounds || get_cropped_bounds(layer, parentBounds);
-    var tx = (layer.position) ? layer.position.x || 0 : 0;
-    var ty = (layer.position) ? layer.position.y || 0 : 0;
+  function get_rect(layer) {
+    var result = layer.bounds;
+    var tx = layer.position ? layer.position.x || 0 : 0;
+    var ty = layer.position ? layer.position.y || 0 : 0;
     result = offset_to(result, 0, 0);
     result.label = layer.name;
-    result.transform = layer.transform || {dsdx:1, dtdx:0, dsdy:0, dtdy:1};
+    result.transform = layer.transform;
     result.transform.tx = tx;
     result.transform.ty = ty;
     return result;
   }
 
-  function is_opaque(layer) {
-    return layer.color == undefined || (layer.color.a || 0) > 0;
-  }
-
-  function is_empty(region) {
-    return region == undefined ||
-        region.rect == undefined ||
-        region.rect.length == 0 ||
-        region.rect.every(function(r) { return is_empty_rect(r) } );
-  }
-
-  function is_rect_empty_and_valid(rect) {
-    return rect &&
-      (rect.left - rect.right === 0 || rect.top - rect.bottom === 0);
-  }
-
-  function is_transform_invalid(transform) {
-    return !transform || (transform.dsdx * transform.dtdy ===
-        transform.dtdx * transform.dsdy); //determinant of transform
-        /**
-         * The transformation matrix is defined as the product of:
-         * | cos(a) -sin(a) |  \/  | X 0 |
-         * | sin(a)  cos(a) |  /\  | 0 Y |
-         *
-         * where a is a rotation angle, and X and Y are scaling factors.
-         * A transformation matrix is invalid when either X or Y is zero,
-         * as a rotation matrix is valid for any angle. When either X or Y
-         * is 0, then the scaling matrix is not invertible, which makes the
-         * transformation matrix not invertible as well. A 2D matrix with
-         * components | A B | is uninvertible if and only if AD - BC = 0.
-         *            | C D |
-         * This check is included above.
-         */
-  }
-
-  /**
-   * Checks if the layer is visible on screen according to its type,
-   * active buffer content, alpha and visible regions.
-   *
-   * @param {layer} layer
-   * @returns if the layer is visible on screen or not
-   */
-  function is_visible(layer) {
-    var visible = (layer.activeBuffer || layer.type === 'ColorLayer')
-                  && !hidden && is_opaque(layer);
-    visible &= !is_empty(layer.visibleRegion);
-    return visible;
-  }
-
-  function postprocess_flags(layer) {
-    if (!layer.flags) return;
-    var verboseFlags = [];
-    if (layer.flags & FLAG_HIDDEN) {
-      verboseFlags.push("HIDDEN");
-    }
-    if (layer.flags & FLAG_OPAQUE) {
-      verboseFlags.push("OPAQUE");
-    }
-    if (layer.flags & FLAG_SECURE) {
-      verboseFlags.push("SECURE");
-    }
-
-    layer.flags = verboseFlags.join('|') + " (" + layer.flags + ")";
+  function add_hwc_composition_type_chip(layer) {
+      if (layer.hwcCompositionType === "CLIENT") {
+          chips.push(GPU_CHIP);
+      } else if (layer.hwcCompositionType === "DEVICE" || layer.hwcCompositionType === "SOLID_COLOR") {
+          chips.push(HWC_CHIP);
+      }
   }
 
   var chips = [];
-  var rect = transform_bounds(layer, parentBounds);
-  var hidden = (layer.flags & FLAG_HIDDEN) != 0 || parentHidden;
-  var visible = is_visible(layer);
-  if (visible) {
+  if (layer.visible) {
     chips.push(get_visible_chip());
-  } else {
-    rect = undefined;
   }
-
-  var bounds = undefined;
-  if (layer.name.startsWith("Display Root#0") && layer.sourceBounds) {
-    bounds = {width: layer.sourceBounds.right, height: layer.sourceBounds.bottom};
-  }
-
   if ((layer.zOrderRelativeOf || -1) !== -1) {
     chips.push(RELATIVE_Z_CHIP);
   }
@@ -195,60 +76,22 @@ function transform_layer(layer, {parentBounds, parentHidden}) {
   if (layer.missing) {
     chips.push(MISSING_LAYER);
   }
-  function visibilityReason(layer) {
-    var reasons = [];
-    if (!layer.color || layer.color.a === 0) {
-      reasons.push('Alpha is 0');
-    }
-    if (layer.flags && (layer.flags & FLAG_HIDDEN != 0)) {
-      reasons.push('Flag is hidden');
-    }
-    if (is_rect_empty_and_valid(layer.crop)) {
-      reasons.push('Crop is zero');
-    }
-    if (is_transform_invalid(layer.transform)) {
-      reasons.push('Transform is invalid');
-    }
-    if (layer.isRelativeOf && layer.zOrderRelativeOf == -1) {
-      reasons.push('RelativeOf layer has been removed');
-    }
-    return reasons.join();
-  }
-  if (parentHidden) {
-    layer.invisibleDueTo = 'Hidden by parent with ID: ' + parentHidden;
-  } else {
-    let reasons_hidden = visibilityReason(layer);
-    let isBufferLayer = (layer.type === 'BufferStateLayer' || layer.type === 'BufferQueueLayer');
-    if (reasons_hidden) {
-      layer.invisibleDueTo = reasons_hidden;
-      parentHidden = layer.id
-    } else if (layer.type === 'ContainerLayer') {
-        layer.invisibleDueTo = 'This is a ContainerLayer.';
-    } else if (isBufferLayer && (!layer.activeBuffer ||
-          layer.activeBuffer.height === 0 || layer.activeBuffer.width === 0)) {
-        layer.invisibleDueTo = 'The buffer is empty.';
-    } else if (!visible) {
-        layer.invisibleDueTo = 'Unknown. Occluded by another layer?';
-    }
-  }
-  var transform_layer_with_parent_hidden =
-      (layer) => transform_layer(layer, {parentBounds: rect, parentHidden: parentHidden});
-  postprocess_flags(layer);
+  add_hwc_composition_type_chip(layer);
+  const rect = layer.visible ? get_rect(layer) : undefined;
+
   return transform({
     obj: layer,
     kind: '',
     name: layer.id + ": " + layer.name,
-    children: [
-      [layer.resolvedChildren, transform_layer_with_parent_hidden],
-    ],
+    children: [[layer.resolvedChildren, transform_layer]],
     rect,
-    bounds,
+    undefined /* bounds */,
     highlight: rect,
     chips,
-    visible,
+    visible: layer.visible,
   });
 }
-
+ 
 function missingLayer(childId) {
   return {
     name: "layer #" + childId,
@@ -258,7 +101,7 @@ function missingLayer(childId) {
   }
 }
 
-function transform_layers(layers) {
+function transform_layers(includesCompositionState, layers) {
   var idToItem = {};
   var isChild = {}
 
@@ -282,7 +125,8 @@ function transform_layers(layers) {
   });
 
   var roots = layersList.filter((e) => !isChild[e.id]);
-
+  fill_inherited_state(idToItem, roots);
+  fill_occlusion_state(idToItem, roots, includesCompositionState);
   function foreachTree(nodes, fun) {
     nodes.forEach((n) => {
       fun(n);
@@ -324,12 +168,13 @@ function transform_layers(layers) {
 }
 
 function transform_layers_entry(entry) {
+  const includesCompositionState = !entry.excludesCompositionState;
   return transform({
     obj: entry,
     kind: 'entry',
     name: nanos_to_string(entry.elapsedRealtimeNanos) + " - " + entry.where,
     children: [
-      [[entry.layers], transform_layers],
+      [[entry.layers], (layer) => transform_layers(includesCompositionState, layer)],
     ],
     timestamp: entry.elapsedRealtimeNanos,
     stableId: 'entry',
