@@ -16,7 +16,7 @@
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="appTitle" msgid="161410001913116606">"ଫଲବ୍ୟାକ୍‌"</string>
-    <string name="title" msgid="8156274565006125136">"ସପୋର୍ଟ ହେଉ ନଥିବା କାର୍ଯ୍ୟ"</string>
-    <string name="error" msgid="6539615832923362301">"ବର୍ତ୍ତମାନରେ ଏହି କାର୍ଯ୍ୟଟି କରିହେବ ନାହିଁ।"</string>
+    <string name="appTitle" msgid="2602861335056897297">"ଫଲବ୍ୟାକ୍‌"</string>
+    <string name="title" msgid="4690900077948963868">"ସପୋର୍ଟ ହେଉ ନଥିବା କାର୍ଯ୍ୟ"</string>
+    <string name="error" msgid="5607912284955296701">"ବର୍ତ୍ତମାନରେ ଏହି କାର୍ଯ୍ୟଟି କରିହେବ ନାହିଁ।"</string>
 </resources>
