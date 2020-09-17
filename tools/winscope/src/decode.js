@@ -26,7 +26,7 @@ import jsonProtoDefsWl from 'WaylandSafePath/waylandtrace.proto';
 import jsonProtoDefsSysUi from 'frameworks/base/packages/SystemUI/src/com/android/systemui/tracing/sysui_trace.proto';
 import jsonProtoDefsLauncher from 'packages/apps/Launcher3/protos/launcher_trace_file.proto';
 import protobuf from 'protobufjs';
-import {transform_layers, transform_layers_trace} from './transform_sf.js';
+import {transformLayers, transformLayersTrace} from './transform_sf.js';
 import {transform_window_service, transform_window_trace} from './transform_wm.js';
 import {transform_transaction_trace, transform_TRANSACTION_EVENTS_TRACE} from './transform_transaction.js';
 import {transform_wl_outputstate, transform_wayland_trace} from './transform_wl.js';
@@ -227,7 +227,7 @@ const FILE_DECODERS = {
       type: FILE_TYPES.SURFACE_FLINGER_TRACE,
       mime: 'application/octet-stream',
       protoType: SfTraceMessage,
-      transform: transform_layers_trace,
+      transform: transformLayersTrace,
       timeline: true,
     },
   },
@@ -249,7 +249,7 @@ const FILE_DECODERS = {
       type: FILE_TYPES.SURFACE_FLINGER_DUMP,
       mime: 'application/octet-stream',
       protoType: SfDumpMessage,
-      transform: (decoded) => transform_layers(true /* includesCompositionState*/, decoded),
+      transform: (decoded) => transformLayers(true /* includesCompositionState*/, decoded),
       timeline: false,
     },
   },
