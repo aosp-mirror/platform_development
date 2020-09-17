@@ -115,14 +115,12 @@ function transformLayer(layer) {
   });
 
   // NOTE: Temporary until refactored to use flickerlib
-  return {
-    ...transformedLayer, ...{
-      invisibleDueTo: layer.invisibleDueTo,
-      occludedBy: layer.occludedBy,
-      partiallyOccludedBy: layer.partiallyOccludedBy,
-      coveredBy: layer.coveredBy,
-    },
-  };
+  transformedLayer.invisibleDueTo = layer.invisibleDueTo;
+  transformedLayer.occludedBy = layer.occludedBy;
+  transformedLayer.partiallyOccludedBy = layer.partiallyOccludedBy;
+  transformedLayer.coveredBy = layer.coveredBy;
+
+  return Object.freeze(transformedLayer);
 }
 
 function missingLayer(childId) {

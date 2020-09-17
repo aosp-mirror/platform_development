@@ -39,6 +39,7 @@ function transform({
   visible,
   flattened,
   stableId,
+  freeze = true,
 }) {
   function call(fn, arg) {
     return (typeof fn == 'function') ? fn(arg) : fn;
@@ -113,7 +114,7 @@ function transform({
     rectResolved.ref = result;
   }
 
-  return Object.freeze(result);
+  return freeze ? Object.freeze(result) : result;
 }
 
 function getDiff(val, compareVal) {

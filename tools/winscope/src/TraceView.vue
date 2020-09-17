@@ -369,7 +369,13 @@ export default {
         return null;
       }
 
-      return this.summarizer(this.hierarchySelected);
+      const summary = this.summarizer(this.hierarchySelected);
+
+      if (summary?.length === 0) {
+        return null;
+      }
+
+      return summary;
     },
   },
   components: {
