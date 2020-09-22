@@ -21,14 +21,13 @@ import jsonProtoDefsWm from 'frameworks/base/core/proto/android/server/windowman
 import jsonProtoDefsProtoLog from 'frameworks/base/core/proto/android/internal/protolog.proto';
 import jsonProtoDefsSf from 'frameworks/native/services/surfaceflinger/layerproto/layerstrace.proto';
 import jsonProtoDefsTransaction from 'frameworks/native/cmds/surfacereplayer/proto/src/trace.proto';
-import jsonProtoDefsTransactionEvents from 'frameworks/native/libs/gui/proto/transactions.proto';
 import jsonProtoDefsWl from 'WaylandSafePath/waylandtrace.proto';
 import jsonProtoDefsSysUi from 'frameworks/base/packages/SystemUI/src/com/android/systemui/tracing/sysui_trace.proto';
 import jsonProtoDefsLauncher from 'packages/apps/Launcher3/protos/launcher_trace_file.proto';
 import protobuf from 'protobufjs';
 import {transform_layers, transform_layers_trace} from './transform_sf.js';
 import {transform_window_service, transform_window_trace} from './transform_wm.js';
-import {transform_transaction_trace, transform_TRANSACTION_EVENTS_TRACE} from './transform_transaction.js';
+import {transform_transaction_trace} from './transform_transaction.js';
 import {transform_wl_outputstate, transform_wayland_trace} from './transform_wl.js';
 import {transformProtolog} from './transform_protolog.js';
 import {transform_sysui_trace} from './transform_sys_ui.js';
@@ -54,7 +53,6 @@ const WmDumpMessage = lookup_type(jsonProtoDefsWm, 'com.android.server.wm.Window
 const SfTraceMessage = lookup_type(jsonProtoDefsSf, 'android.surfaceflinger.LayersTraceFileProto');
 const SfDumpMessage = lookup_type(jsonProtoDefsSf, 'android.surfaceflinger.LayersProto');
 const SfTransactionTraceMessage = lookup_type(jsonProtoDefsTransaction, 'Trace');
-const SfTransactionEventsTraceMessage = lookup_type(jsonProtoDefsTransactionEvents, 'android.TransactionEventsProto');
 const WaylandTraceMessage = lookup_type(jsonProtoDefsWl, 'org.chromium.arc.wayland_composer.TraceFileProto');
 const WaylandDumpMessage = lookup_type(jsonProtoDefsWl, 'org.chromium.arc.wayland_composer.OutputStateProto');
 const ProtoLogMessage = lookup_type(jsonProtoDefsProtoLog, 'com.android.internal.protolog.ProtoLogFileProto');
@@ -76,7 +74,6 @@ const FILE_TYPES = Object.freeze({
   SURFACE_FLINGER_DUMP: 'SurfaceFlingerDump',
   SCREEN_RECORDING: 'ScreenRecording',
   TRANSACTIONS_TRACE: 'TransactionsTrace',
-  TRANSACTION_EVENTS_TRACE: 'TransactionMergesTrace',
   WAYLAND_TRACE: 'WaylandTrace',
   WAYLAND_DUMP: 'WaylandDump',
   PROTO_LOG: 'ProtoLog',
@@ -100,7 +97,6 @@ const FILE_ICONS = {
   [FILE_TYPES.SURFACE_FLINGER_DUMP]: SURFACE_FLINGER_ICON,
   [FILE_TYPES.SCREEN_RECORDING]: SCREEN_RECORDING_ICON,
   [FILE_TYPES.TRANSACTIONS_TRACE]: TRANSACTION_ICON,
-  [FILE_TYPES.TRANSACTION_EVENTS_TRACE]: TRANSACTION_ICON,
   [FILE_TYPES.WAYLAND_TRACE]: WAYLAND_ICON,
   [FILE_TYPES.WAYLAND_DUMP]: WAYLAND_ICON,
   [FILE_TYPES.PROTO_LOG]: PROTO_LOG_ICON,
@@ -151,7 +147,6 @@ const TRACE_INFO = {
     icon: TRANSACTION_ICON,
     files: [
       oneOf(FILE_TYPES.TRANSACTIONS_TRACE),
-      manyOf(FILE_TYPES.TRANSACTION_EVENTS_TRACE),
     ],
     constructor: TransactionsTrace,
   },
@@ -292,17 +287,6 @@ const FILE_DECODERS = {
       mime: 'application/octet-stream',
       protoType: SfTransactionTraceMessage,
       transform: transform_transaction_trace,
-      timeline: true,
-    },
-  },
-  [FILE_TYPES.TRANSACTION_EVENTS_TRACE]: {
-    name: 'Transaction merges',
-    decoder: protoDecoder,
-    decoderParams: {
-      type: FILE_TYPES.TRANSACTION_EVENTS_TRACE,
-      mime: 'application/octet-stream',
-      protoType: SfTransactionEventsTraceMessage,
-      transform: transform_TRANSACTION_EVENTS_TRACE,
       timeline: true,
     },
   },
@@ -475,7 +459,6 @@ function detectAndDecode(buffer, fileName, store) {
     [FILE_TYPES.WAYLAND_DUMP, (file) => (file.data.length > 0 && file.data.children[0] > 0) || file.data.length > 1],
     [FILE_TYPES.WINDOW_MANAGER_DUMP],
     [FILE_TYPES.SURFACE_FLINGER_DUMP],
-    [FILE_TYPES.TRANSACTION_EVENTS_TRACE], // TODO: Add magic number at begging of file for better auto detection
   ]) {
     try {
       const [, fileData] = decodedFile(filetype, buffer, fileName, store);
