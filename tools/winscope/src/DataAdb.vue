@@ -126,8 +126,8 @@
   </flat-card>
 </template>
 <script>
-import { FILE_DECODERS, FILE_TYPES } from './decode.js'
-import LocalStore from './localstore.js'
+import {FILE_DECODERS, FILE_TYPES} from './decode.js';
+import LocalStore from './localstore.js';
 import FlatCard from './components/FlatCard.vue';
 
 const STATES = {
@@ -140,54 +140,54 @@ const STATES = {
   START_TRACE: 6,
   END_TRACE: 7,
   LOAD_DATA: 8,
-}
+};
 
-const WINSCOPE_PROXY_VERSION = "0.6"
-const WINSCOPE_PROXY_URL = "http://localhost:5544"
+const WINSCOPE_PROXY_VERSION = '0.6';
+const WINSCOPE_PROXY_URL = 'http://localhost:5544';
 const PROXY_ENDPOINTS = {
-  DEVICES: "/devices/",
-  START_TRACE: "/start/",
-  END_TRACE: "/end/",
-  CONFIG_TRACE: "/configtrace/",
-  DUMP: "/dump/",
-  FETCH: "/fetch/",
-  STATUS: "/status/",
-}
+  DEVICES: '/devices/',
+  START_TRACE: '/start/',
+  END_TRACE: '/end/',
+  CONFIG_TRACE: '/configtrace/',
+  DUMP: '/dump/',
+  FETCH: '/fetch/',
+  STATUS: '/status/',
+};
 
 const TRACES = {
-  "window_trace": {
-    name: "Window Manager"
+  'window_trace': {
+    name: 'Window Manager',
   },
-  "layers_trace": {
-    name: "Surface Flinger"
+  'layers_trace': {
+    name: 'Surface Flinger',
   },
-  "transaction": {
-    name: "Transactions"
+  'transaction': {
+    name: 'Transactions',
   },
-  "proto_log": {
-    name: "ProtoLog"
+  'proto_log': {
+    name: 'ProtoLog',
   },
-  "screen_recording": {
-    name: "Screen Recording"
+  'screen_recording': {
+    name: 'Screen Recording',
   },
-}
+};
 
 const TRACE_CONFIG = {
-  "layers_trace": [
-    "composition",
-    "metadata",
-    "hwc",
-  ]
-}
+  'layers_trace': [
+    'composition',
+    'metadata',
+    'hwc',
+  ],
+};
 
 const DUMPS = {
-  "window_dump": {
-    name: "Window Manager"
+  'window_dump': {
+    name: 'Window Manager',
   },
-  "layers_dump": {
-    name: "Surface Flinger"
-  }
-}
+  'layers_dump': {
+    name: 'Surface Flinger',
+  },
+};
 
 const proxyFileTypeAdapter = {
   'window_trace': FILE_TYPES.WINDOW_MANAGER_TRACE,
@@ -198,13 +198,12 @@ const proxyFileTypeAdapter = {
   'wl_dump': FILE_TYPES.WAYLAND_DUMP,
   'screen_recording': FILE_TYPES.SCREEN_RECORDING,
   'transactions': FILE_TYPES.TRANSACTIONS_TRACE,
-  'transaction_merges': FILE_TYPES.TRANSACTION_EVENTS_TRACE,
   'proto_log': FILE_TYPES.PROTO_LOG,
   'system_ui_trace': FILE_TYPES.SYSTEM_UI,
   'launcher_trace': FILE_TYPES.LAUNCHER,
 };
 
-const CONFIGS = Object.keys(TRACE_CONFIG).flatMap(file => TRACE_CONFIG[file])
+const CONFIGS = Object.keys(TRACE_CONFIG).flatMap((file) => TRACE_CONFIG[file]);
 
 export default {
   name: 'dataadb',
@@ -225,22 +224,24 @@ export default {
       errorText: '',
       loadProgress: 0,
       adbStore: LocalStore(
-        'adb',
-        Object.assign(
-          {
-            proxyKey: '',
-            lastDevice: '',
-          },
-          Object.keys(TRACES)
-            .concat(Object.keys(DUMPS))
-            .concat(CONFIGS)
-            .reduce(function(obj, key) { obj[key] = true; return obj }, {})
-        )
+          'adb',
+          Object.assign(
+              {
+                proxyKey: '',
+                lastDevice: '',
+              },
+              Object.keys(TRACES)
+                  .concat(Object.keys(DUMPS))
+                  .concat(CONFIGS)
+                  .reduce(function(obj, key) {
+                    obj[key] = true; return obj;
+                  }, {}),
+          ),
       ),
       downloadProxyUrl: 'https://android.googlesource.com/platform/development/+/master/tools/winscope/adb_proxy/winscope_proxy.py',
-    }
+    };
   },
-  props: ["store"],
+  props: ['store'],
   components: {
     'flat-card': FlatCard,
   },
@@ -251,14 +252,14 @@ export default {
         this.refresh_worker = null;
         return;
       }
-      this.callProxy("GET", PROXY_ENDPOINTS.DEVICES, this, function(request, view) {
+      this.callProxy('GET', PROXY_ENDPOINTS.DEVICES, this, function(request, view) {
         try {
           view.devices = JSON.parse(request.responseText);
           if (view.adbStore.lastDevice && view.devices[view.adbStore.lastDevice] && view.devices[view.adbStore.lastDevice].authorised) {
-            view.selectDevice(view.adbStore.lastDevice)
+            view.selectDevice(view.adbStore.lastDevice);
           } else {
             if (view.refresh_worker === null) {
-              view.refresh_worker = setInterval(view.getDevices, 1000)
+              view.refresh_worker = setInterval(view.getDevices, 1000);
             }
             view.status = STATES.DEVICES;
           }
@@ -267,7 +268,7 @@ export default {
           view.errorText = request.responseText;
           view.status = STATES.ERROR;
         }
-      })
+      });
     },
     keepAliveTrace() {
       if (this.status !== STATES.END_TRACE) {
@@ -275,53 +276,53 @@ export default {
         this.keep_alive_worker = null;
         return;
       }
-      this.callProxy("GET", PROXY_ENDPOINTS.STATUS + this.deviceId() + "/", this, function(request, view) {
-        if (request.responseText !== "True") {
+      this.callProxy('GET', PROXY_ENDPOINTS.STATUS + this.deviceId() + '/', this, function(request, view) {
+        if (request.responseText !== 'True') {
           view.endTrace();
         } else if (view.keep_alive_worker === null) {
-          view.keep_alive_worker = setInterval(view.keepAliveTrace, 1000)
+          view.keep_alive_worker = setInterval(view.keepAliveTrace, 1000);
         }
-      })
+      });
     },
     startTrace() {
-      const requested = this.toTrace()
-      const requestedConfig = this.toTraceConfig()
+      const requested = this.toTrace();
+      const requestedConfig = this.toTraceConfig();
       if (requested.length < 1) {
-        this.errorText = "No targets selected";
+        this.errorText = 'No targets selected';
         this.status = STATES.ERROR;
-        return
+        return;
       }
       if (requestedConfig.length > 0) {
-        this.callProxy("POST", PROXY_ENDPOINTS.CONFIG_TRACE + this.deviceId() + "/", this, null, null, requestedConfig)
+        this.callProxy('POST', PROXY_ENDPOINTS.CONFIG_TRACE + this.deviceId() + '/', this, null, null, requestedConfig);
       }
 
       this.status = STATES.END_TRACE;
-      this.callProxy("POST", PROXY_ENDPOINTS.START_TRACE + this.deviceId() + "/", this, function(request, view) {
+      this.callProxy('POST', PROXY_ENDPOINTS.START_TRACE + this.deviceId() + '/', this, function(request, view) {
         view.keepAliveTrace();
-      }, null, requested)
+      }, null, requested);
     },
     dumpState() {
-      const requested = this.toDump()
+      const requested = this.toDump();
       if (requested.length < 1) {
-        this.errorText = "No targets selected";
+        this.errorText = 'No targets selected';
         this.status = STATES.ERROR;
-        return
+        return;
       }
       this.status = STATES.LOAD_DATA;
-      this.callProxy("POST", PROXY_ENDPOINTS.DUMP + this.deviceId() + "/", this, function(request, view) {
+      this.callProxy('POST', PROXY_ENDPOINTS.DUMP + this.deviceId() + '/', this, function(request, view) {
         view.loadFile(requested, 0);
-      }, null, requested)
+      }, null, requested);
     },
     endTrace() {
       this.status = STATES.LOAD_DATA;
-      this.callProxy("POST", PROXY_ENDPOINTS.END_TRACE + this.deviceId() + "/", this, function(request, view) {
+      this.callProxy('POST', PROXY_ENDPOINTS.END_TRACE + this.deviceId() + '/', this, function(request, view) {
         view.loadFile(view.toTrace(), 0);
-      })
+      });
     },
     loadFile(files, idx) {
-      this.callProxy("GET", PROXY_ENDPOINTS.FETCH + this.deviceId() + "/" + files[idx] + "/", this, function(request, view) {
+      this.callProxy('GET', PROXY_ENDPOINTS.FETCH + this.deviceId() + '/' + files[idx] + '/', this, function(request, view) {
         try {
-          const enc = new TextDecoder("utf-8");
+          const enc = new TextDecoder('utf-8');
           const resp = enc.decode(request.response);
           const filesByType = JSON.parse(resp);
 
@@ -331,7 +332,7 @@ export default {
               const fileDecoder = FILE_DECODERS[proxyFileTypeAdapter[filetype]];
 
               for (const encodedFileBuffer of files) {
-                const buffer = Uint8Array.from(atob(encodedFileBuffer), c => c.charCodeAt(0));
+                const buffer = Uint8Array.from(atob(encodedFileBuffer), (c) => c.charCodeAt(0));
                 const data = fileDecoder.decoder(buffer, fileDecoder.decoderParams, fileDecoder.name, view.store);
                 view.dataFiles.push(data);
                 view.loadProgress = 100 * (idx + 1) / files.length; // TODO: Update this
@@ -340,7 +341,7 @@ export default {
           }
 
           if (idx < files.length - 1) {
-            view.loadFile(files, idx + 1)
+            view.loadFile(files, idx + 1);
           } else {
             view.$emit('dataReady', view.dataFiles);
           }
@@ -349,21 +350,21 @@ export default {
           view.errorText = err;
           view.status = STATES.ERROR;
         }
-      }, "arraybuffer")
+      }, 'arraybuffer');
     },
     toTrace() {
       return Object.keys(TRACES)
-        .filter(traceKey => this.adbStore[traceKey]);
+          .filter((traceKey) => this.adbStore[traceKey]);
     },
     toTraceConfig() {
       return Object.keys(TRACE_CONFIG)
-              .filter(file => this.adbStore[file])
-              .flatMap(file => TRACE_CONFIG[file])
-              .filter(config => this.adbStore[config]);
+          .filter((file) => this.adbStore[file])
+          .flatMap((file) => TRACE_CONFIG[file])
+          .filter((config) => this.adbStore[config]);
     },
     toDump() {
       return Object.keys(DUMPS)
-        .filter(dumpKey => this.adbStore[dumpKey]);
+          .filter((dumpKey) => this.adbStore[dumpKey]);
     },
     selectDevice(device_id) {
       this.selectedDevice = device_id;
@@ -378,10 +379,10 @@ export default {
     },
     resetLastDevice() {
       this.adbStore.lastDevice = '';
-      this.restart()
+      this.restart();
     },
     callProxy(method, path, view, onSuccess, type, jsonRequest) {
-      var request = new XMLHttpRequest();
+      const request = new XMLHttpRequest();
       var view = this;
       request.onreadystatechange = function() {
         if (this.readyState !== 4) {
@@ -390,38 +391,38 @@ export default {
         if (this.status === 0) {
           view.status = STATES.NO_PROXY;
         } else if (this.status === 200) {
-          if (this.getResponseHeader("Winscope-Proxy-Version") !== WINSCOPE_PROXY_VERSION) {
+          if (this.getResponseHeader('Winscope-Proxy-Version') !== WINSCOPE_PROXY_VERSION) {
             view.status = STATES.INVALID_VERSION;
           } else if (onSuccess) {
-            onSuccess(this, view)
+            onSuccess(this, view);
           }
         } else if (this.status === 403) {
           view.status = STATES.UNAUTH;
         } else {
-          if (this.responseType === "text" || !this.responseType) {
+          if (this.responseType === 'text' || !this.responseType) {
             view.errorText = this.responseText;
-          } else if (this.responseType === "arraybuffer") {
+          } else if (this.responseType === 'arraybuffer') {
             view.errorText = String.fromCharCode.apply(null, new Uint8Array(this.response));
           }
           view.status = STATES.ERROR;
         }
-      }
-      request.responseType = type || "";
+      };
+      request.responseType = type || '';
       request.open(method, WINSCOPE_PROXY_URL + path);
-      request.setRequestHeader("Winscope-Token", this.adbStore.proxyKey);
+      request.setRequestHeader('Winscope-Token', this.adbStore.proxyKey);
       if (jsonRequest) {
-        const json = JSON.stringify(jsonRequest)
-        request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-        request.send(json)
+        const json = JSON.stringify(jsonRequest);
+        request.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+        request.send(json);
       } else {
         request.send();
       }
-    }
+    },
   },
   created() {
-    var urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has("token")) {
-      this.adbStore.proxyKey = urlParams.get("token")
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('token')) {
+      this.adbStore.proxyKey = urlParams.get('token');
     }
     this.getDevices();
   },
@@ -431,10 +432,10 @@ export default {
         if (st == STATES.CONNECTING) {
           this.getDevices();
         }
-      }
-    }
+      },
+    },
   },
-}
+};
 
 </script>
 <style scoped>
