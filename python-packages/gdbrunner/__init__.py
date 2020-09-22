@@ -182,7 +182,7 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
     if target_pid is not None:
         gdbserver_cmd += ["--attach", str(target_pid)]
     else:
-        gdbserver_cmd += run_cmd
+        gdbserver_cmd += ["--"] + run_cmd
 
     forward_gdbserver_port(device, local=port, remote="localfilesystem:{}".format(debug_socket))
 
