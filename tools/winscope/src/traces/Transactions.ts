@@ -19,22 +19,14 @@ import TraceBase from './TraceBase';
 
 export default class Transactions extends TraceBase {
   transactionsFile: Object;
-  transactionsEventsFiles: Object[];
   transactionHistory: TransactionHistory;
 
   constructor(files: any[]) {
     const transactionsFile = files[FILE_TYPES.TRANSACTIONS_TRACE];
 
-    // There should be one file for each process which recorded transaction
-    // events
-    const transactionsEventsFiles = files[FILE_TYPES.TRANSACTION_EVENTS_TRACE];
-
     super(transactionsFile.data, transactionsFile.timeline, files);
 
     this.transactionsFile = transactionsFile;
-    this.transactionsEventsFiles = transactionsEventsFiles;
-
-    this.transactionHistory = new TransactionHistory(transactionsEventsFiles);
   }
 
   get type() {
