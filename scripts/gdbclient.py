@@ -351,7 +351,9 @@ def generate_lldb_script(root, sysroot, binary_name, port, solib_search_path):
         'settings append target.exec-search-paths {}'.format(' '.join(solib_search_path)))
 
     commands.append('target create {}'.format(binary_name))
-    commands.append("settings set target.source-map '' '{}'".format(root))
+    # For RBE support.
+    commands.append("settings append target.source-map '/b/f/w' '{}'".format(root))
+    commands.append("settings append target.source-map '' '{}'".format(root))
     commands.append('target modules search-paths add / {}/'.format(sysroot))
     commands.append('gdb-remote {}'.format(port))
     return '\n'.join(commands)
