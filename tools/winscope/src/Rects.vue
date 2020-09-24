@@ -14,8 +14,12 @@
 -->
 <template>
   <div class="bounds" :style="boundsStyle">
-    <div class="rect" v-for="r in rects" :style="rectToStyle(r)"
-        @click="onClick(r)">
+    <div
+      class="rect" v-for="r in rects"
+      :style="rectToStyle(r)"
+      @click="onClick(r)"
+      v-bind:key="`${r.left}-${r.right}-${r.top}-${r.bottom}-${r.ref.name}`"
+    >
       <span class="label">{{r.label}}</span>
     </div>
     <div class="highlight" v-if="highlight" :style="rectToStyle(highlight)" />
@@ -24,12 +28,13 @@
 
 <script>
 
-import { multiply_rect } from './matrix_utils.js'
+// eslint-disable-next-line camelcase
+import {multiply_rect} from './matrix_utils.js';
 
 export default {
   name: 'rects',
   props: ['bounds', 'rects', 'highlight'],
-  data () {
+  data() {
     return {
       desiredHeight: 800,
       desiredWidth: 400,
@@ -40,40 +45,43 @@ export default {
       if (this.bounds) {
         return this.bounds;
       }
-      var width = Math.max(...this.rects.map((r) => multiply_rect(r.transform, r).right));
-      var height = Math.max(...this.rects.map((r) => multiply_rect(r.transform, r).bottom));
+      const width = Math.max(
+          ...this.rects.map((r) => multiply_rect(r.transform, r).right));
+      const height = Math.max(
+          ...this.rects.map((r) => multiply_rect(r.transform, r).bottom));
       return {width, height};
     },
     boundsStyle() {
       return this.rectToStyle({top: 0, left: 0, right: this.boundsC.width,
-          bottom: this.boundsC.height});
+        bottom: this.boundsC.height});
     },
   },
   methods: {
-    s(sourceCoordinate) {  // translate source into target coordinates
-    var scale;
-    if(this.boundsC.width < this.boundsC.height) {
-      scale =  this.desiredHeight / this.boundsC.height;
-    } else {
-      scale = this.desiredWidth / this.boundsC.width;
-    }
+    s(sourceCoordinate) { // translate source into target coordinates
+      let scale;
+      if (this.boundsC.width < this.boundsC.height) {
+        scale = this.desiredHeight / this.boundsC.height;
+      } else {
+        scale = this.desiredWidth / this.boundsC.width;
+      }
       return sourceCoordinate * scale;
     },
     rectToStyle(r) {
-      var x = this.s(r.left);
-      var y = this.s(r.top);
-      var w = this.s(r.right) - this.s(r.left);
-      var h = this.s(r.bottom) - this.s(r.top);
-      var t = r.transform;
-      var tr = t ? `matrix(${t.dsdx}, ${t.dtdx}, ${t.dsdy}, ${t.dtdy}, ${this.s(t.tx)}, ${this.s(t.ty)})` : '';
+      const x = this.s(r.left);
+      const y = this.s(r.top);
+      const w = this.s(r.right) - this.s(r.left);
+      const h = this.s(r.bottom) - this.s(r.top);
+      const t = r.transform;
+      const tr = t ? `matrix(${t.dsdx}, ${t.dtdx}, ${t.dsdy}, ${t.dtdy}, ` +
+          `${this.s(t.tx)}, ${this.s(t.ty)})` : '';
       return `top: ${y}px; left: ${x}px; height: ${h}px; width: ${w}px;` +
-             `transform: ${tr}; transform-origin: 0 0;`
+             `transform: ${tr}; transform-origin: 0 0;`;
     },
     onClick(r) {
       this.$emit('rect-click', r.ref);
     },
-  }
-}
+  },
+};
 </script>
 
 <style scoped>
