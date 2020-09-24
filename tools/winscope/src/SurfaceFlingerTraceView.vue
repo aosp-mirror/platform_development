@@ -18,36 +18,39 @@
 </template>
 
 <script>
-import TraceView from "@/TraceView.vue"
+import TraceView from '@/TraceView.vue';
 
 export default {
-  name: "WindowManagerTraceView",
-  props: ["store", "file"],
+  name: 'WindowManagerTraceView',
+  props: ['store', 'file'],
   components: {
-    TraceView
+    TraceView,
   },
   methods: {
     summarizer(layer) {
       const summary = [];
 
       if (layer.invisibleDueTo) {
-        summary.push({key: "Invisible due to", value: layer.invisibleDueTo});
+        summary.push({key: 'Invisible due to', value: layer.invisibleDueTo});
       }
 
       if (layer.occludedBy?.length > 0) {
-        summary.push({key: "Occluded by", value: layer.occludedBy.join(", ")});
+        summary.push({key: 'Occluded by', value: layer.occludedBy.join(', ')});
       }
 
       if (layer.partiallyOccludedBy?.length > 0) {
-        summary.push({key: "Partially occluded by", value: layer.partiallyOccludedBy.join(", ")});
+        summary.push({
+          key: 'Partially occluded by',
+          value: layer.partiallyOccludedBy.join(', '),
+        });
       }
 
       if (layer.coveredBy?.length > 0) {
-        summary.push({key: "Covered by", value: layer.coveredBy.join(", ")});
+        summary.push({key: 'Covered by', value: layer.coveredBy.join(', ')});
       }
 
       return summary;
     },
-  }
-}
+  },
+};
 </script>

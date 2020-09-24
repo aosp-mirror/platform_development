@@ -56,10 +56,6 @@ export default {
     },
   },
   data() {
-    if (!this.source?.level) {
-      console.log(this.source);
-    }
-
     return {
       levelIcons: {
         [logLevel.INFO]: 'info_outline',
