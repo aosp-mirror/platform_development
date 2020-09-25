@@ -272,16 +272,14 @@ export default {
       // A file is overridden if a file of the same type is upload twice, as
       // Winscope currently only support at most one file to each type
       const overriddenFileTypes = new Set();
-      const overriddenFiles = {}; // filetype => array of file names
-      let overriddenCount = 0;
+      const overriddenFiles = {}; // filetype => array of files
       for (const decodedFile of decodedFiles) {
         const dataType = decodedFile.filetype;
 
         if (decodedFileTypes.has(dataType)) {
           overriddenFileTypes.add(dataType);
           (overriddenFiles[dataType] = overriddenFiles[dataType] || [])
-              .push(this.dataFiles[dataType].filename);
-          overriddenCount++;
+              .push(this.dataFiles[dataType]);
         }
         decodedFileTypes.add(dataType);
 
@@ -289,58 +287,137 @@ export default {
             dataType, decodedFile.data);
       }
 
-      if (overriddenFileTypes.size > 0) {
-        if (overriddenFileTypes.size === 1 && overriddenCount === 1) {
-          const type = overriddenFileTypes.values().next().value;
-          const overriddenFile = overriddenFiles[type][0];
-          const keptFile = this.dataFiles[type].filename;
-          const message =
-            `'${overriddenFile}' is conflicting with '${keptFile}'. ` +
-            `Only '${keptFile}' will be kept. If you wish to display ` +
-            `'${overriddenFile}', please upload it again with no other file ` +
-            `of the same type.`;
+      // TODO(b/169305853): Remove this once we have magic numbers or another
+      // way to detect the file type more reliably.
+      for (const dataType in overriddenFiles) {
+        if (overriddenFiles.hasOwnProperty(dataType)) {
+          const files = overriddenFiles[dataType];
+          files.push(this.dataFiles[dataType]);
 
-          this.showSnackbarMessage(`WARNING: ${message}`, Infinity);
-          console.warn(message);
-        } else {
-          const message = `Mutiple conflicting files have been uploaded. ` +
-            `${overriddenCount} files have been discarded. Please check the ` +
-            `developer console for more information.`;
-          this.showSnackbarMessage(`WARNING: ${message}`, Infinity);
+          const selectedFile =
+              this.getMostLikelyCandidateFile(dataType, files);
+          this.$set(this.dataFiles, dataType, selectedFile);
 
-          const messageBuilder = [];
-          for (const type of overriddenFileTypes.values()) {
-            const keptFile = this.dataFiles[type].filename;
-            const overriddenFilesCount = overriddenFiles[type].length;
-
-            messageBuilder.push(`${overriddenFilesCount} file` +
-                `${overriddenFilesCount > 1 ? 's' : ''} of type ${type} ` +
-                `${overriddenFilesCount > 1 ? 'have' : 'has'} been ` +
-                `overridden. Only '${keptFile}' has been kept.`);
-          }
-
-          messageBuilder.push('');
-          messageBuilder.push('Please reupload the specific files you want ' +
-            'to read (one of each type).');
-          messageBuilder.push('');
-
-          messageBuilder.push('===============DISCARDED FILES===============');
-
-          for (const type of overriddenFileTypes.values()) {
-            const discardedFiles = overriddenFiles[type];
-
-            messageBuilder.push(`The following files of type ${type} ` +
-              `have been discarded:`);
-            for (const discardedFile of discardedFiles) {
-              messageBuilder.push(`  - ${discardedFile}`);
-            }
-            messageBuilder.push('');
-          }
-
-          console.warn(messageBuilder.join('\n'));
+          // Remove selected file from overriden list
+          const index = files.indexOf(selectedFile);
+          files.splice(index, 1);
         }
       }
+
+      if (overriddenFileTypes.size > 0) {
+        this.displayFilesOverridenWarning(overriddenFiles);
+      }
     },
+
+    /**
+     * Gets the file that is most likely to be the actual file of that type out
+     * of all the candidateFiles. This is required because there are some file
+     * types that have no magic number and may lead to false positives when
+     * decoding in decode.js. (b/169305853)
+     * @param {string} dataType - The type of the candidate files.
+     * @param {files[]} candidateFiles - The list all the files detected to be
+     *                                   of type dataType, passed in the order
+     *                                   they are detected/uploaded in.
+     * @return {file} - the most likely candidate.
+     */
+    getMostLikelyCandidateFile(dataType, candidateFiles) {
+      const keyWordsByDataType = {
+        [FILE_TYPES.WINDOW_MANAGER_DUMP]: 'window',
+        [FILE_TYPES.SURFACE_FLINGER_DUMP]: 'surface',
+      };
+
+      if (
+        !candidateFiles ||
+        !candidateFiles.length ||
+        candidateFiles.length == 0
+      ) {
+        throw new Error('No candidate files provided');
+      }
+
+      if (!keyWordsByDataType.hasOwnProperty(dataType)) {
+        console.warn(`setMostLikelyCandidateFile doesn't know how to handle ` +
+            `candidates of dataType ${dataType} – setting last candidate as ` +
+            `target file.`);
+
+        // We want to return the last candidate file so that, we always override
+        // old uploaded files with once of the latest uploaded files.
+        return candidateFiles.slice(-1)[0];
+      }
+
+      for (const file of candidateFiles) {
+        if (file.filename
+            .toLowerCase().includes(keyWordsByDataType[dataType])) {
+          return file;
+        }
+      }
+
+      // We want to return the last candidate file so that, we always override
+      // old uploaded files with once of the latest uploaded files.
+      return candidateFiles.slice(-1)[0];
+    },
+
+    /**
+     * Display a snackbar warning that files have been overriden and any
+     * relavant additional information in the logs.
+     * @param {{string: file[]}} overriddenFiles - a mapping from data types to
+     * the files of the of that datatype tha have been overriden.
+     */
+    displayFilesOverridenWarning(overriddenFiles) {
+      const overriddenFileTypes = Object.keys(overriddenFiles);
+      const overriddenCount = Object.values(overriddenFiles)
+          .map((files) => files.length).reduce((length, next) => length + next);
+
+      if (overriddenFileTypes.length === 1 && overriddenCount === 1) {
+        const type = overriddenFileTypes.values().next().value;
+        const overriddenFile = overriddenFiles[type][0].filename;
+        const keptFile = this.dataFiles[type].filename;
+        const message =
+          `'${overriddenFile}' is conflicting with '${keptFile}'. ` +
+          `Only '${keptFile}' will be kept. If you wish to display ` +
+          `'${overriddenFile}', please upload it again with no other file ` +
+          `of the same type.`;
+
+        this.showSnackbarMessage(`WARNING: ${message}`, Infinity);
+        console.warn(message);
+      } else {
+        const message = `Mutiple conflicting files have been uploaded. ` +
+          `${overriddenCount} files have been discarded. Please check the ` +
+          `developer console for more information.`;
+        this.showSnackbarMessage(`WARNING: ${message}`, Infinity);
+
+        const messageBuilder = [];
+        for (const type of overriddenFileTypes.values()) {
+          const keptFile = this.dataFiles[type].filename;
+          const overriddenFilesCount = overriddenFiles[type].length;
+
+          messageBuilder.push(`${overriddenFilesCount} file` +
+              `${overriddenFilesCount > 1 ? 's' : ''} of type ${type} ` +
+              `${overriddenFilesCount > 1 ? 'have' : 'has'} been ` +
+              `overridden. Only '${keptFile}' has been kept.`);
+        }
+
+        messageBuilder.push('');
+        messageBuilder.push('Please reupload the specific files you want ' +
+          'to read (one of each type).');
+        messageBuilder.push('');
+
+        messageBuilder.push('===============DISCARDED FILES===============');
+
+        for (const type of overriddenFileTypes.values()) {
+          const discardedFiles = overriddenFiles[type];
+
+          messageBuilder.push(`The following files of type ${type} ` +
+            `have been discarded:`);
+          for (const discardedFile of discardedFiles) {
+            messageBuilder.push(`  - ${discardedFile.filename}`);
+          }
+          messageBuilder.push('');
+        }
+
+        console.warn(messageBuilder.join('\n'));
+      }
+    },
+
     getFileExtensions(file) {
       const split = file.name.split('.');
       if (split.length > 1) {
