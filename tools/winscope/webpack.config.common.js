@@ -44,6 +44,9 @@ const webpackConfig = {
     polyfill: '@babel/polyfill',
     main: './src/main.js',
   },
+  externals: {
+    _: 'lodash',
+  },
   resolve: {
     extensions: ['.tsx', '.ts', '.js', '.vue'],
     alias: {

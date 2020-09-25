@@ -35,6 +35,13 @@
       :title="c.long"
       :class="chipClassForChip(c)"
     >{{c.short}} <!-- No line break on purpose -->
+      <md-tooltip
+        md-delay="300"
+        md-direction="top"
+        style="margin-bottom: -10px"
+      >
+        {{c.long}}
+      </md-tooltip>
     </div>
   </span>
 </template>

@@ -15,7 +15,7 @@
 <template>
   <div class="bounds" :style="boundsStyle">
     <div
-      class="rect" v-for="r in rects"
+      class="rect" v-for="r in filteredRects"
       :style="rectToStyle(r)"
       @click="onClick(r)"
       v-bind:key="`${r.left}-${r.right}-${r.top}-${r.bottom}-${r.ref.name}`"
@@ -54,6 +54,9 @@ export default {
     boundsStyle() {
       return this.rectToStyle({top: 0, left: 0, right: this.boundsC.width,
         bottom: this.boundsC.height});
+    },
+    filteredRects() {
+      return this.rects.filter((rect) => rect.ref.visible);
     },
   },
   methods: {
