@@ -454,6 +454,7 @@ function detectAndDecode(buffer, fileName, store) {
     return decodedFile(FILE_TYPES.LAUNCHER, buffer, fileName, store);
   }
 
+  // TODO(b/169305853): Add magic number at beginning of file for better auto detection
   for (const [filetype, condition] of [
     [FILE_TYPES.TRANSACTIONS_TRACE, (file) => file.data.length > 0],
     [FILE_TYPES.WAYLAND_DUMP, (file) => (file.data.length > 0 && file.data.children[0] > 0) || file.data.length > 1],
