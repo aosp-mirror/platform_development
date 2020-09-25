@@ -19,12 +19,12 @@
         <md-card-header-text>
           <div class="md-title">
             <md-icon>{{ FILE_ICONS[file.type] }}</md-icon>
-            {{file.filename}}
+            {{file.type}}
           </div>
         </md-card-header-text>
         <md-button
           :href="file.blobUrl"
-          :download="file.filename"
+          :download="file.type"
           class="md-icon-button"
         >
           <md-icon>save_alt</md-icon>
