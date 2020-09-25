@@ -14,11 +14,18 @@
  * limitations under the License.
  */
 
+type File = {
+  blobUrl: string,
+  filename: string,
+}
+
+import JSZip from 'jszip';
+
 export default abstract class Trace implements ITrace {
   selectedIndex: Number;
   data: Object;
   timeline: Array<Number>;
-  _files: any[];
+  _files: File[];
 
   constructor(data: any, timeline: Number[], files: any[]) {
     this.selectedIndex = 0;
@@ -27,11 +34,33 @@ export default abstract class Trace implements ITrace {
     this._files = files;
   }
 
-  get files(): any[] {
+  get files(): File[] {
     return Object.values(this._files).flat();
   }
 
   abstract get type(): String;
+
+  get blobUrl() {
+    if (this.files.length == 0) {
+      return null;
+    }
+
+    if (this.files.length == 1) {
+      return this.files[0].blobUrl;
+    }
+
+    const zip = new JSZip();
+
+    return (async () => {
+      for (const file of this.files) {
+        const blob = await fetch(file.blobUrl).then((r) => r.blob());
+        zip.file(file.filename, blob);
+      }
+
+      return await zip.generateAsync({ type: 'blob' });
+    })();
+
+  }
 }
 
 interface ITrace {
