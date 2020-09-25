@@ -15,12 +15,21 @@
 <template>
   <md-card-content class="container">
     <div class="rects" v-if="hasScreenView">
-      <rects :bounds="bounds" :rects="rects" :highlight="highlight" @rect-click="onRectClick" />
+      <rects
+        :bounds="bounds"
+        :rects="rects"
+        :highlight="highlight"
+        @rect-click="onRectClick"
+      />
     </div>
 
     <div class="hierarchy">
       <flat-card>
-        <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
+        <md-content
+          md-tag="md-toolbar"
+          md-elevation="0"
+          class="card-toolbar md-transparent md-dense"
+        >
           <h2 class="md-title" style="flex: 1;">Hierarchy</h2>
           <md-checkbox
             v-model="showHierachyDiff"
@@ -28,7 +37,9 @@
           >
             Show Diff
           </md-checkbox>
-          <md-checkbox v-model="store.simplifyNames">Simplify names</md-checkbox>
+          <md-checkbox v-model="store.simplifyNames">
+            Simplify names
+          </md-checkbox>
           <md-checkbox v-model="store.onlyVisible">Only visible</md-checkbox>
           <md-checkbox v-model="store.flattened">Flat</md-checkbox>
           <md-field md-inline class="filter">
@@ -55,7 +66,11 @@
 
     <div class="properties">
       <flat-card>
-        <md-content md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
+        <md-content
+          md-tag="md-toolbar"
+          md-elevation="0"
+          class="card-toolbar md-transparent md-dense"
+        >
           <h2 class="md-title" style="flex: 1">Properties</h2>
           <md-checkbox
             v-model="showPropertiesDiff"
@@ -71,6 +86,7 @@
         <div class="properties-content">
           <div v-if="elementSummary" class="element-summary">
             <div v-for="elem in elementSummary" v-bind:key="elem.key">
+              <!-- eslint-disable-next-line max-len -->
               <span class="key">{{ elem.key }}:</span> <span class="value">{{ elem.value }}</span>
             </div>
           </div>
@@ -97,28 +113,28 @@
   </md-card-content>
 </template>
 <script>
-import TreeView from './TreeView.vue'
-import Timeline from './Timeline.vue'
-import Rects from './Rects.vue'
-import FlatCard from './components/FlatCard.vue'
-import PropertiesTreeElement from './PropertiesTreeElement.vue'
+import TreeView from './TreeView.vue';
+import Rects from './Rects.vue';
+import FlatCard from './components/FlatCard.vue';
+import PropertiesTreeElement from './PropertiesTreeElement.vue';
 
-import { ObjectTransformer } from './transform.js'
-import { DiffGenerator, defaultModifiedCheck } from './utils/diff.js'
-import { format_transform_type, is_simple_transform } from './matrix_utils.js'
-import { TRACE_TYPES, DUMP_TYPES } from './decode.js'
-import { stableIdCompatibilityFixup } from './utils/utils.js'
-import { CompatibleFeatures } from './utils/compatibility.js'
+import {ObjectTransformer} from './transform.js';
+import {DiffGenerator, defaultModifiedCheck} from './utils/diff.js';
+// eslint-disable-next-line camelcase
+import {format_transform_type, is_simple_transform} from './matrix_utils.js';
+import {TRACE_TYPES, DUMP_TYPES} from './decode.js';
+import {stableIdCompatibilityFixup} from './utils/utils.js';
+import {CompatibleFeatures} from './utils/compatibility.js';
 
 function formatColorTransform(vals) {
-    const fixedVals = vals.map(v => v.toFixed(1));
-    var formatted = ``;
-    for (var i = 0; i < fixedVals.length; i += 4) {
-      formatted += `[`;
-      formatted += fixedVals.slice(i, i + 4).join(", ");
-      formatted += `] `;
-    }
-    return formatted;
+  const fixedVals = vals.map((v) => v.toFixed(1));
+  let formatted = ``;
+  for (let i = 0; i < fixedVals.length; i += 4) {
+    formatted += `[`;
+    formatted += fixedVals.slice(i, i + 4).join(', ');
+    formatted += `] `;
+  }
+  return formatted;
 }
 
 function formatProto(obj) {
@@ -128,7 +144,8 @@ function formatProto(obj) {
   if (obj.$type.name === 'RectProto') {
     return `(${obj.left}, ${obj.top})  -  (${obj.right}, ${obj.bottom})`;
   } else if (obj.$type.name === 'FloatRectProto') {
-    return `(${obj.left.toFixed(3)}, ${obj.top.toFixed(3)})  -  (${obj.right.toFixed(3)}, ${obj.bottom.toFixed(3)})`;
+    return `(${obj.left.toFixed(3)}, ${obj.top.toFixed(3)})  -  ` +
+        `(${obj.right.toFixed(3)}, ${obj.bottom.toFixed(3)})`;
   } else if (obj.$type.name === 'PositionProto') {
     return `(${obj.x.toFixed(3)}, ${obj.y.toFixed(3)})`;
   } else if (obj.$type.name === 'SizeProto') {
@@ -136,13 +153,15 @@ function formatProto(obj) {
   } else if (obj.$type.name === 'ColorProto') {
     return `r:${obj.r} g:${obj.g} \n b:${obj.b} a:${obj.a}`;
   } else if (obj.$type.name === 'TransformProto') {
-    var transform_type = format_transform_type(obj);
+    const transformType = format_transform_type(obj);
     if (is_simple_transform(obj)) {
-      return `${transform_type}`;
+      return `${transformType}`;
     }
-    return `${transform_type}  dsdx:${obj.dsdx.toFixed(3)}   dtdx:${obj.dtdx.toFixed(3)}   dsdy:${obj.dsdy.toFixed(3)}   dtdy:${obj.dtdy.toFixed(3)}`;
+    return `${transformType}  dsdx:${obj.dsdx.toFixed(3)}   ` +
+        `dtdx:${obj.dtdx.toFixed(3)}   dsdy:${obj.dsdy.toFixed(3)}   ` +
+        `dtdy:${obj.dtdy.toFixed(3)}`;
   } else if (obj.$type.name === 'ColorTransformProto') {
-    var formated = formatColorTransform(obj.val);
+    const formated = formatColorTransform(obj.val);
     return `${formated}`;
   }
 }
@@ -171,8 +190,8 @@ export default {
   props: ['store', 'file', 'summarizer'],
   data() {
     return {
-      propertyFilterString: "",
-      hierarchyPropertyFilterString:"",
+      propertyFilterString: '',
+      hierarchyPropertyFilterString: '',
       selectedTree: null,
       hierarchySelected: null,
       lastSelectedStableId: null,
@@ -184,7 +203,7 @@ export default {
       showHierachyDiff: false,
       showPropertiesDiff: false,
       PropertiesTreeElement,
-    }
+    };
   },
   methods: {
     itemSelected(item) {
@@ -196,9 +215,9 @@ export default {
     },
     getTransformedProperties(item) {
       const transformer = new ObjectTransformer(
-        item.obj,
-        item.name,
-        stableIdCompatibilityFixup(item),
+          item.obj,
+          item.name,
+          stableIdCompatibilityFixup(item),
       ).setOptions({
         skip: item.skip,
         formatter: formatProto,
@@ -222,12 +241,12 @@ export default {
       }
 
       return new DiffGenerator(this.item)
-        .compareWith(this.getDataWithOffset(-1))
-        .withUniqueNodeId(node => {
-          return node.stableId;
-        })
-        .withModifiedCheck(defaultModifiedCheck)
-        .generateDiffTree();
+          .compareWith(this.getDataWithOffset(-1))
+          .withUniqueNodeId((node) => {
+            return node.stableId;
+          })
+          .withModifiedCheck(defaultModifiedCheck)
+          .generateDiffTree();
     },
     setData(item) {
       this.item = item;
@@ -240,13 +259,13 @@ export default {
       this.selectedTree = null;
       this.highlight = null;
 
-      function find_item(item, stableId) {
+      function findItem(item, stableId) {
         if (item.stableId === stableId) {
           return item;
         }
         if (Array.isArray(item.children)) {
-          for (var child of item.children) {
-            var found = find_item(child, stableId);
+          for (const child of item.children) {
+            const found = findItem(child, stableId);
             if (found) {
               return found;
             }
@@ -256,7 +275,7 @@ export default {
       }
 
       if (this.lastSelectedStableId) {
-        var found = find_item(item, this.lastSelectedStableId);
+        const found = findItem(item, this.lastSelectedStableId);
         if (found) {
           this.itemSelected(found);
         }
@@ -284,23 +303,23 @@ export default {
 
       const id = entry.stableId;
       if (!id) {
-        throw new Error("Entry has no stableId...");
+        throw new Error('Entry has no stableId...');
       }
 
       const prevTree = this.getDataWithOffset(-1);
       if (!prevTree) {
-        console.warn("No previous entry");
+        console.warn('No previous entry');
         return null;
       }
 
       const prevEntry = findEntryInTree(prevTree, id);
       if (!prevEntry) {
-        console.warn("Didn't exist in last entry");
+        console.warn('Didn\'t exist in last entry');
         // TODO: Maybe handle this in some way.
       }
 
       return prevEntry;
-    }
+    },
   },
   created() {
     this.setData(this.file.data[this.file.selectedIndex ?? 0]);
@@ -314,24 +333,27 @@ export default {
     },
     showPropertiesDiff() {
       if (this.hierarchySelected) {
-        this.selectedTree = this.getTransformedProperties(this.hierarchySelected);
+        this.selectedTree =
+            this.getTransformedProperties(this.hierarchySelected);
       }
     },
   },
   computed: {
     diffVisualizationAvailable() {
       return CompatibleFeatures.DiffVisualization && (
-          this.file.type == TRACE_TYPES.WINDOW_MANAGER ||
+        this.file.type == TRACE_TYPES.WINDOW_MANAGER ||
           this.file.type == TRACE_TYPES.SURFACE_FLINGER
-        );
+      );
     },
     selectedIndex() {
       return this.file.selectedIndex;
     },
     hierarchyFilter() {
-      var hierarchyPropertyFilter = getFilter(this.hierarchyPropertyFilterString);
+      const hierarchyPropertyFilter =
+          getFilter(this.hierarchyPropertyFilterString);
       return this.store.onlyVisible ? (c) => {
-        return c.visible && hierarchyPropertyFilter(c);} : hierarchyPropertyFilter;
+        return c.visible && hierarchyPropertyFilter(c);
+      } : hierarchyPropertyFilter;
     },
     propertyFilter() {
       return getFilter(this.propertyFilterString);
@@ -347,31 +369,37 @@ export default {
         return null;
       }
 
-      return this.summarizer(this.hierarchySelected);
-    }
+      const summary = this.summarizer(this.hierarchySelected);
+
+      if (summary?.length === 0) {
+        return null;
+      }
+
+      return summary;
+    },
   },
   components: {
     'tree-view': TreeView,
     'rects': Rects,
     'flat-card': FlatCard,
-  }
-}
+  },
+};
 
 function getFilter(filterString) {
-  var filterStrings = filterString.split(",");
-  var positive = [];
-  var negative = [];
+  const filterStrings = filterString.split(',');
+  const positive = [];
+  const negative = [];
   filterStrings.forEach((f) => {
-    if (f.startsWith("!")) {
-      var str = f.substring(1);
+    if (f.startsWith('!')) {
+      const str = f.substring(1);
       negative.push((s) => s.indexOf(str) === -1);
     } else {
-      var str = f;
+      const str = f;
       positive.push((s) => s.indexOf(str) !== -1);
     }
   });
-  var filter = (item) => {
-    var apply = (f) => f(String(item.name));
+  const filter = (item) => {
+    const apply = (f) => f(String(item.name));
     return (positive.length === 0 || positive.some(apply)) &&
           (negative.length === 0 || negative.every(apply));
   };
