@@ -14,25 +14,12 @@
  * limitations under the License.
  */
 
-import { FILE_TYPES, DUMP_TYPES } from "@/decode.js";
-import DumpBase from "./DumpBase";
+import WindowManagerTraceEntry from './WindowManagerTraceEntry';
+import WindowManagerTrace from './WindowManagerTrace';
 
-import { WindowManagerTraceEntry } from '@/flickerlib';
+/**
+ * Entry point into the flickerlib for Winscope.
+ * Expose everything we want Winscope to have access to here.
+ */
+export {WindowManagerTraceEntry, WindowManagerTrace};
 
-export default class WindowManager extends DumpBase {
-  wmDumpFile: any;
-
-  constructor(files) {
-    const wmDumpFile = files[FILE_TYPES.WINDOW_MANAGER_DUMP];
-    super(wmDumpFile.data, files);
-    this.wmDumpFile = wmDumpFile
-  }
-
-  get type() {
-    return DUMP_TYPES.WINDOW_MANAGER;
-  }
-
-  static fromProto(proto): WindowManagerTraceEntry {
-    return WindowManagerTraceEntry.fromProto(proto);
-  }
-}

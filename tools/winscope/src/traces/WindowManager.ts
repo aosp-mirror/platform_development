@@ -17,6 +17,8 @@
 import { FILE_TYPES, TRACE_TYPES } from '@/decode.js';
 import TraceBase from './TraceBase';
 
+import { WindowManagerTrace } from '@/flickerlib';
+
 export default class WindowManager extends TraceBase {
   wmTraceFile: Object;
 
@@ -29,5 +31,9 @@ export default class WindowManager extends TraceBase {
 
   get type() {
     return TRACE_TYPES.WINDOW_MANAGER;
+  }
+
+  static fromProto(proto): WindowManagerTrace {
+    return WindowManagerTrace.fromProto(proto);
   }
 }

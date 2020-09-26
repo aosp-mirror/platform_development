@@ -209,7 +209,7 @@ export default {
     itemSelected(item) {
       this.hierarchySelected = item;
       this.selectedTree = this.getTransformedProperties(item);
-      this.highlight = item.highlight;
+      this.highlight = item.rect;
       this.lastSelectedStableId = item.stableId;
       this.$emit('focus');
     },

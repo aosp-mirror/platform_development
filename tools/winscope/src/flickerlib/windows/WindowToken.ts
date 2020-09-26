@@ -14,25 +14,31 @@
  * limitations under the License.
  */
 
-import { FILE_TYPES, DUMP_TYPES } from "@/decode.js";
-import DumpBase from "./DumpBase";
+import { WindowToken } from "../common"
 
-import { WindowManagerTraceEntry } from '@/flickerlib';
+import { applyMixins } from '../mixin'
 
-export default class WindowManager extends DumpBase {
-  wmDumpFile: any;
+import WindowContainer from "./WindowContainer"
 
-  constructor(files) {
-    const wmDumpFile = files[FILE_TYPES.WINDOW_MANAGER_DUMP];
-    super(wmDumpFile.data, files);
-    this.wmDumpFile = wmDumpFile
+export class WindowContainerMixin {
+  get kind() {
+    return "WindowToken"
   }
 
-  get type() {
-    return DUMP_TYPES.WINDOW_MANAGER;
-  }
+  static fromProto(proto) {
+    const windowContainer = WindowContainer.fromProto(proto.windowContainer)
 
-  static fromProto(proto): WindowManagerTraceEntry {
-    return WindowManagerTraceEntry.fromProto(proto);
+    const windowToken = new WindowToken(windowContainer)
+
+    const obj = Object.assign({}, proto)
+    Object.assign(obj, windowContainer.obj)
+    delete obj.windowContainer
+    windowToken.attachObject(obj)
+
+    return windowToken
   }
 }
+
+applyMixins(WindowToken, [WindowContainerMixin])
+
+export default WindowToken
