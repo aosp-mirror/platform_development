@@ -14,25 +14,31 @@
  * limitations under the License.
  */
 
-import { FILE_TYPES, DUMP_TYPES } from "@/decode.js";
-import DumpBase from "./DumpBase";
+import { Task } from "../common"
 
-import { WindowManagerTraceEntry } from '@/flickerlib';
+import { applyMixins } from '../mixin'
 
-export default class WindowManager extends DumpBase {
-  wmDumpFile: any;
+import WindowContainer from "./WindowContainer"
 
-  constructor(files) {
-    const wmDumpFile = files[FILE_TYPES.WINDOW_MANAGER_DUMP];
-    super(wmDumpFile.data, files);
-    this.wmDumpFile = wmDumpFile
+export class TaskMixin {
+  get kind() {
+    return "Task"
   }
 
-  get type() {
-    return DUMP_TYPES.WINDOW_MANAGER;
-  }
+  static fromProto(proto) {
+    const windowContainer = WindowContainer.fromProto(proto.windowContainer)
 
-  static fromProto(proto): WindowManagerTraceEntry {
-    return WindowManagerTraceEntry.fromProto(proto);
+    const task = new Task(windowContainer)
+
+    const obj = Object.assign({}, proto)
+    delete obj.windowContainer
+    Object.assign(obj, windowContainer.obj)
+    task.attachObject(obj)
+
+    return task
   }
 }
+
+applyMixins(Task, [TaskMixin])
+
+export default Task

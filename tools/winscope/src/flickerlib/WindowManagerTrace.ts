@@ -14,25 +14,23 @@
  * limitations under the License.
  */
 
-import { FILE_TYPES, DUMP_TYPES } from "@/decode.js";
-import DumpBase from "./DumpBase";
+import {
+  WindowManagerTrace,
+} from "./common"
 
-import { WindowManagerTraceEntry } from '@/flickerlib';
+import WindowManagerTraceEntry from "./WindowManagerTraceEntry"
 
-export default class WindowManager extends DumpBase {
-  wmDumpFile: any;
-
-  constructor(files) {
-    const wmDumpFile = files[FILE_TYPES.WINDOW_MANAGER_DUMP];
-    super(wmDumpFile.data, files);
-    this.wmDumpFile = wmDumpFile
+WindowManagerTrace.fromProto = function (proto) {
+  const entries = []
+  for (const entryProto of proto.entry) {
+    const transformedEntry = WindowManagerTraceEntry.fromProto(
+      entryProto.windowManagerService, entryProto.elapsedRealtimeNanos)
+    entries.push(transformedEntry)
   }
 
-  get type() {
-    return DUMP_TYPES.WINDOW_MANAGER;
-  }
-
-  static fromProto(proto): WindowManagerTraceEntry {
-    return WindowManagerTraceEntry.fromProto(proto);
-  }
+  const source = null;
+  const sourceChecksum = null;
+  return new WindowManagerTrace(entries, source, sourceChecksum)
 }
+
+export default WindowManagerTrace;

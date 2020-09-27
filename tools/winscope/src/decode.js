@@ -26,7 +26,6 @@ import jsonProtoDefsSysUi from 'frameworks/base/packages/SystemUI/src/com/androi
 import jsonProtoDefsLauncher from 'packages/apps/Launcher3/protos/launcher_trace_file.proto';
 import protobuf from 'protobufjs';
 import {transformLayers, transformLayersTrace} from './transform_sf.js';
-import {transform_window_service, transform_window_trace} from './transform_wm.js';
 import {transform_transaction_trace} from './transform_transaction.js';
 import {transform_wl_outputstate, transform_wayland_trace} from './transform_wl.js';
 import {transformProtolog} from './transform_protolog.js';
@@ -211,7 +210,7 @@ const FILE_DECODERS = {
     decoderParams: {
       type: FILE_TYPES.WINDOW_MANAGER_TRACE,
       protoType: WmTraceMessage,
-      transform: transform_window_trace,
+      transform: WindowManagerTrace.fromProto,
       timeline: true,
     },
   },
@@ -255,7 +254,7 @@ const FILE_DECODERS = {
       type: FILE_TYPES.WINDOW_MANAGER_DUMP,
       mime: 'application/octet-stream',
       protoType: WmDumpMessage,
-      transform: transform_window_service,
+      transform: WindowManagerDump.fromProto,
       timeline: false,
     },
   },
@@ -380,7 +379,7 @@ function protoDecoder(buffer, params, fileName, store) {
   const transformed = decodeAndTransformProto(buffer, params, store.displayDefaults);
   let data;
   if (params.timeline) {
-    data = transformed.children;
+    data = transformed.entries ?? transformed.children;
   } else {
     data = [transformed];
   }
@@ -454,6 +453,7 @@ function detectAndDecode(buffer, fileName, store) {
     return decodedFile(FILE_TYPES.LAUNCHER, buffer, fileName, store);
   }
 
+  // TODO(b/169305853): Add magic number at beginning of file for better auto detection
   for (const [filetype, condition] of [
     [FILE_TYPES.TRANSACTIONS_TRACE, (file) => file.data.length > 0],
     [FILE_TYPES.WAYLAND_DUMP, (file) => (file.data.length > 0 && file.data.children[0] > 0) || file.data.length > 1],
