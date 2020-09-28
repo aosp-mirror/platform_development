@@ -129,11 +129,11 @@ def parse_args():
 
 
 def verify_device(root, device):
-    name = device.get_prop("ro.product.name")
+    names = set([device.get_prop("ro.build.product"), device.get_prop("ro.product.name")])
     target_device = os.environ["TARGET_PRODUCT"]
-    if target_device != name:
+    if target_device not in names:
         msg = "TARGET_PRODUCT ({}) does not match attached device ({})"
-        sys.exit(msg.format(target_device, name))
+        sys.exit(msg.format(target_device, ", ".join(names)))
 
 
 def get_remote_pid(device, process_name):
@@ -351,7 +351,9 @@ def generate_lldb_script(root, sysroot, binary_name, port, solib_search_path):
         'settings append target.exec-search-paths {}'.format(' '.join(solib_search_path)))
 
     commands.append('target create {}'.format(binary_name))
-    commands.append("settings set target.source-map '' '{}'".format(root))
+    # For RBE support.
+    commands.append("settings append target.source-map '/b/f/w' '{}'".format(root))
+    commands.append("settings append target.source-map '' '{}'".format(root))
     commands.append('target modules search-paths add / {}/'.format(sysroot))
     commands.append('gdb-remote {}'.format(port))
     return '\n'.join(commands)
@@ -437,7 +439,10 @@ def do_main():
         linker_search_dir = ensure_linker(device, sysroot, interp)
 
         tracer_pid = get_tracer_pid(device, pid)
-        use_lldb = args.lldb
+        if os.path.basename(__file__) == 'gdbclient.py' and not args.lldb:
+            print("gdb is deprecated in favor of lldb. "
+                  "If you can't use lldb, please set --no-lldb and file a bug asap.")
+        use_lldb = not args.no_lldb
         if tracer_pid == 0:
             cmd_prefix = args.su_cmd
             if args.env:

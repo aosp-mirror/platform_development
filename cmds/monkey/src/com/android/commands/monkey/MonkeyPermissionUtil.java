@@ -26,6 +26,7 @@ import android.os.Build;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.UserHandle;
+import android.permission.IPermissionManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -69,12 +70,15 @@ public class MonkeyPermissionUtil {
     /** if we should target system packages regardless if they are listed */
     private boolean mTargetSystemPackages;
     private IPackageManager mPm;
+    private final IPermissionManager mPermManager;
 
     /** keep track of runtime permissions requested for each package targeted */
     private Map<String, List<PermissionInfo>> mPermissionMap;
 
     public MonkeyPermissionUtil() {
         mPm = IPackageManager.Stub.asInterface(ServiceManager.getService("package"));
+        mPermManager =
+                IPermissionManager.Stub.asInterface(ServiceManager.getService("permissionmgr"));
     }
 
     public void setTargetSystemPackages(boolean targetSystemPackages) {
@@ -102,7 +106,7 @@ public class MonkeyPermissionUtil {
     }
 
     private boolean shouldTargetPermission(String pkg, PermissionInfo pi) throws RemoteException {
-        int flags = mPm.getPermissionFlags(pi.name, pkg, UserHandle.myUserId());
+        int flags = mPermManager.getPermissionFlags(pi.name, pkg, UserHandle.myUserId());
         int fixedPermFlags = PackageManager.FLAG_PERMISSION_SYSTEM_FIXED
                 | PackageManager.FLAG_PERMISSION_POLICY_FIXED;
         return pi.group != null && pi.protectionLevel == PermissionInfo.PROTECTION_DANGEROUS
@@ -129,7 +133,7 @@ public class MonkeyPermissionUtil {
                     continue;
                 }
                 for (String perm : info.requestedPermissions) {
-                    PermissionInfo pi = mPm.getPermissionInfo(perm, "shell", 0);
+                    PermissionInfo pi = mPermManager.getPermissionInfo(perm, "shell", 0);
                     if (pi != null && shouldTargetPermission(info.packageName, pi)) {
                         permissions.add(pi);
                     }

@@ -1,0 +1,32 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.android.inlinefillservice" >
+    <application
+        android:label="@string/app_name">
+        <service
+            android:name=".InlineFillService"
+            android:label="Inline Fill Service"
+            android:permission="android.permission.BIND_AUTOFILL_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.autofill.AutofillService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.autofill"
+                android:resource="@xml/autofill_service_config">
+            </meta-data>
+        </service>
+
+        <activity
+            android:name=".AuthActivity"
+            android:taskAffinity=".AuthActivity"
+            android:label="Autofill Authentication"/>
+
+        <activity
+            android:name=".SettingsActivity"
+            android:label="Autofill Settings"
+            android:exported="true"/>
+
+        <activity android:name=".AttributionDialogActivity"
+                  android:label="Autofill Attribution"
+                  android:theme="@android:style/Theme.Material.Light.Dialog.NoActionBar"/>
+    </application>
+</manifest>

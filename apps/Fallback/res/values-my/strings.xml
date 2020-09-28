@@ -16,7 +16,7 @@
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="appTitle" msgid="161410001913116606">"နောက်ပြန်ဆုတ်"</string>
-    <string name="title" msgid="8156274565006125136">"ပံ့ပိုးမထားသော လုပ်ဆောင်ချက်"</string>
-    <string name="error" msgid="6539615832923362301">"ထို လုပ်ဆောင်ချက်ကို ပံ့ပိုးမထား"</string>
+    <string name="appTitle" msgid="2602861335056897297">"နောက်ပြန်ဆုတ်"</string>
+    <string name="title" msgid="4690900077948963868">"ပံ့ပိုးမထားသော လုပ်ဆောင်ချက်"</string>
+    <string name="error" msgid="5607912284955296701">"ထို လုပ်ဆောင်ချက်ကို ပံ့ပိုးမထား"</string>
 </resources>

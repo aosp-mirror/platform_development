@@ -17,3 +17,6 @@ contain the proto definitions for their internal states.
 * Navigate to `development/tools/winscope`
 * Run `yarn run dev`
 
+### Building with internal extensions
+Internal paths in vendor/ which are not available in AOSP must be replaced by
+stub files. See getWaylandSafePath for an example
