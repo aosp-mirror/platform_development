@@ -27,6 +27,7 @@
         <h2 class="md-title" style="flex: 1;">Hierarchy</h2>
         <md-checkbox v-model="store.onlyVisible">Only visible</md-checkbox>
         <md-checkbox v-model="store.flattened">Flat</md-checkbox>
+        <input id="filter" type="search" placeholder="Filter..." v-model="hierarchyPropertyFilterString" />
       </md-whiteframe>
       <tree-view class="data-card" :item="tree" @item-selected="itemSelected" :selected="hierarchySelected" :filter="hierarchyFilter" :flattened="store.flattened" ref="hierarchy" />
     </md-card>
@@ -37,7 +38,7 @@
           <input id="filter" type="search" placeholder="Filter..." v-model="propertyFilterString" />
         </div>
       </md-whiteframe>
-      <tree-view class="data-card" :item="selectedTree" :filter="propertyFilter" />
+      <tree-view class="pre-line-data-card" :item="selectedTree" :filter="propertyFilter" />
     </md-card>
   </md-card-content>
 </template>
@@ -93,6 +94,7 @@ export default {
   data() {
     return {
       propertyFilterString: "",
+      hierarchyPropertyFilterString:"",
       selectedTree: {},
       hierarchySelected: null,
       lastSelectedStableId: null,
@@ -170,30 +172,12 @@ export default {
       return this.file.selectedIndex;
     },
     hierarchyFilter() {
-      return this.store.onlyVisible ? (c, flattened) => {
-        return c.visible || c.childrenVisible && !flattened;
-      } : null;
+      var hierarchyPropertyFilter = getFilter(this.hierarchyPropertyFilterString);
+      return this.store.onlyVisible ? (c) => {
+        return c.visible && hierarchyPropertyFilter(c);} : hierarchyPropertyFilter;
     },
     propertyFilter() {
-      var filterStrings = this.propertyFilterString.split(",");
-      var positive = [];
-      var negative = [];
-      filterStrings.forEach((f) => {
-        if (f.startsWith("!")) {
-          var str = f.substring(1);
-          negative.push((s) => s.indexOf(str) === -1);
-        } else {
-          var str = f;
-          positive.push((s) => s.indexOf(str) !== -1);
-        }
-      });
-      var filter = (item) => {
-        var apply = (f) => f(item.name);
-        return (positive.length === 0 || positive.some(apply)) &&
-          (negative.length === 0 || negative.every(apply));
-      };
-      filter.includeChildren = true;
-      return filter;
+      return getFilter(this.propertyFilterString);
     },
     hasScreenView() {
       return this.file.type !== DATA_TYPES.TRANSACTION;
@@ -203,6 +187,27 @@ export default {
     'tree-view': TreeView,
     'rects': Rects,
   }
+}
+
+function getFilter(filterString) {
+  var filterStrings = filterString.split(",");
+  var positive = [];
+  var negative = [];
+  filterStrings.forEach((f) => {
+    if (f.startsWith("!")) {
+      var str = f.substring(1);
+      negative.push((s) => s.indexOf(str) === -1);
+    } else {
+      var str = f;
+      positive.push((s) => s.indexOf(str) !== -1);
+    }
+  });
+  var filter = (item) => {
+    var apply = (f) => f(String(item.name));
+    return (positive.length === 0 || positive.some(apply)) &&
+          (negative.length === 0 || negative.every(apply));
+  };
+  return filter;
 }
 
 </script>
@@ -227,6 +232,12 @@ export default {
 .data-card {
   overflow: auto;
   max-height: 48em;
+}
+
+.pre-line-data-card {
+  overflow: auto;
+  max-height: 48em;
+  white-space: pre-line;
 }
 
 </style>

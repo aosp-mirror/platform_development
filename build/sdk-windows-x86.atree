@@ -125,6 +125,21 @@ lib/libbcinfo.dll                       strip build-tools/${PLATFORM_NAME}/libbc
 rm build-tools/${PLATFORM_NAME}/bcc_compat
 bin/bcc_compat.exe                      strip build-tools/${PLATFORM_NAME}/bcc_compat.exe
 
+rm build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld
+prebuilts/sdk/tools/lld-dummy   build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld.exe
+
+rm build-tools/${PLATFORM_NAME}/aarch64-linux-android-ld
+prebuilts/sdk/tools/lld-dummy   build-tools/${PLATFORM_NAME}/aarch64-linux-android-ld.exe
+
+rm build-tools/${PLATFORM_NAME}/i686-linux-android-ld
+prebuilts/sdk/tools/lld-dummy   build-tools/${PLATFORM_NAME}/i686-linux-android-ld.exe
+
+rm build-tools/${PLATFORM_NAME}/x86_64-linux-android-ld
+prebuilts/sdk/tools/lld-dummy   build-tools/${PLATFORM_NAME}/x86_64-linux-android-ld.exe
+
+rm build-tools/${PLATFORM_NAME}/mipsel-linux-android-ld
+prebuilts/sdk/tools/lld-dummy   build-tools/${PLATFORM_NAME}/mipsel-linux-android-ld.exe
+
 rm build-tools/${PLATFORM_NAME}/lib64/libc++.so.1
 
 rm build-tools/${PLATFORM_NAME}/lld
@@ -134,8 +149,8 @@ rm build-tools/${PLATFORM_NAME}/lld-bin/lld
 bin/lld.exe                                                 strip build-tools/${PLATFORM_NAME}/lld.exe
 
 # actual lld linker, and dependent library
-prebuilts/sdk/tools/windows/bin/lld.exe                     strip build-tools/${PLATFORM_NAME}/lld-bin/lld.exe
-prebuilts/sdk/tools/windows/bin/lib64/libwinpthread-1.dll   strip build-tools/${PLATFORM_NAME}/lld-bin/libwinpthread-1.dll
+prebuilts/sdk/tools/windows/lld-bin/lld.exe                 strip build-tools/${PLATFORM_NAME}/lld-bin/lld.exe
+prebuilts/sdk/tools/windows/lld-bin/libwinpthread-1.dll     strip build-tools/${PLATFORM_NAME}/lld-bin/libwinpthread-1.dll
 
 dalvik/dx/etc/mainDexClasses.bat             build-tools/${PLATFORM_NAME}/mainDexClasses.bat
 

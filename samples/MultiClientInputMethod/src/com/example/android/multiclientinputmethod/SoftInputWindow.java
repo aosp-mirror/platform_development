@@ -78,6 +78,10 @@ final class SoftInputWindow extends Dialog {
         mSymbolShiftKeyboard = new Keyboard(context, R.xml.symbols_shift);
         mKeyboardView.setKeyboard(mQwertygKeyboard);
         mKeyboardView.setOnKeyboardActionListener(sNoopListener);
+
+        // TODO(b/158663354): Disabling keyboard popped preview key since it is currently broken.
+        mKeyboardView.setPreviewEnabled(false);
+
         layout.addView(mKeyboardView);
 
         setContentView(layout, new ViewGroup.LayoutParams(

@@ -743,8 +743,9 @@ repr::VTableComponentIR RecordDeclWrapper::SetupRecordVTableComponent(
               }
 
               if (thunk_info.isEmpty()) {
-                mangle_contextp_->mangleCXXDtor(
-                    vtable_component.getDestructorDecl(), dtor_type, ostream);
+                auto GD = clang::GlobalDecl(
+                    vtable_component.getDestructorDecl(), dtor_type);
+                mangle_contextp_->mangleName(GD, ostream);
               } else {
                 mangle_contextp_->mangleCXXDtorThunk(
                     vtable_component.getDestructorDecl(), dtor_type,

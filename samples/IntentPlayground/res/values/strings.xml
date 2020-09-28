@@ -92,4 +92,5 @@
     <string name="start_mode">Select start mode</string>
     <string name="start_normal">Start activity</string>
     <string name="start_for_result">Start activity for result</string>
+    <string name="launch_testing_activities_failed">Start Intent testing failed</string>
 </resources>

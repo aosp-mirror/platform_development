@@ -16,7 +16,7 @@
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="appTitle" msgid="161410001913116606">"ਪਿੱਛੇ ਜਾਓ"</string>
-    <string name="title" msgid="8156274565006125136">"ਅਸਮਰਥਿਤ ਕਾਰਵਾਈ"</string>
-    <string name="error" msgid="6539615832923362301">"ਉਹ ਕਾਰਵਾਈ ਇਸ ਵੇਲੇ ਸਮਰਥਿਤ ਨਹੀਂ ਹੈ।"</string>
+    <string name="appTitle" msgid="2602861335056897297">"ਪਿੱਛੇ ਜਾਓ"</string>
+    <string name="title" msgid="4690900077948963868">"ਅਸਮਰਥਿਤ ਕਾਰਵਾਈ"</string>
+    <string name="error" msgid="5607912284955296701">"ਉਹ ਕਾਰਵਾਈ ਇਸ ਵੇਲੇ ਸਮਰਥਿਤ ਨਹੀਂ ਹੈ।"</string>
 </resources>
