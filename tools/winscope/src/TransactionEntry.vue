@@ -17,7 +17,7 @@
       @click="onClick(source)"
     >
       <div class="time-column">
-        <a @click="setTimelineTime(source.timestamp)" class="time-link">
+        <a @click="e => setTimelineTime(e, source.timestamp)" class="time-link">
           {{source.time}}
         </a>
         <div
@@ -50,7 +50,7 @@
         </span>
         <span v-if="source.origin">
           PID: <span class="light">{{ source.origin.pid }}</span><br/>
-          TID: <span class="light">{{ source.origin.uid }}</span><br/>
+          UID: <span class="light">{{ source.origin.uid }}</span><br/>
         </span>
       </div>
     </div>
@@ -114,7 +114,9 @@ export default {
     },
   },
   methods: {
-    setTimelineTime(timestamp) {
+    setTimelineTime(e, timestamp) {
+      e.preventDefault();
+      e.stopPropagation();
       this.$store.dispatch('updateTimelineTime', timestamp);
     },
     transactionTypeOf(transaction) {
