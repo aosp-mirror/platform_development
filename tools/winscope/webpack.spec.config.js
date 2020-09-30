@@ -15,11 +15,13 @@
  */
 
 const fs = require('fs');
-var path = require('path')
-var glob = require("glob");
+const path = require('path');
+const glob = require('glob');
+const KotlinWebpackPlugin = require('@jetbrains/kotlin-webpack-plugin');
 
 function getWaylandSafePath() {
-  waylandPath = path.resolve(__dirname, '../../../vendor/google_arc/libs/wayland_service');
+  waylandPath = path.resolve(
+      __dirname, '../../../vendor/google_arc/libs/wayland_service');
   if (fs.existsSync(waylandPath)) {
     return waylandPath;
   }
@@ -28,11 +30,11 @@ function getWaylandSafePath() {
 
 module.exports = {
   entry: {
-    js: glob.sync("./spec/**/*Spec.js"),
+    js: glob.sync('./spec/**/*Spec.js'),
   },
   output: {
     path: path.resolve(__dirname, './dist'),
-    filename: 'bundleSpec.js'
+    filename: 'bundleSpec.js',
   },
   target: 'node',
   node: {
@@ -43,7 +45,13 @@ module.exports = {
       {
         test: /\.js$/,
         loader: 'babel-loader',
-        exclude: /node_modules/
+        exclude: /node_modules/,
+      },
+      {
+        test: /\.tsx?$/,
+        use: 'ts-loader',
+        include: path.resolve(__dirname, './src'),
+        exclude: /node_modules/,
       },
       {
         test: /\.proto$/,
@@ -51,41 +59,59 @@ module.exports = {
         options: {
           paths: [
             path.resolve(__dirname, '../../..'),
-            path.resolve(__dirname, '../../../external/protobuf/src')
-          ]
-        }
+            path.resolve(__dirname, '../../../external/protobuf/src'),
+          ],
+        },
       },
       {
         test: /\.pb/,
         loader: 'file-loader',
         options: {
           paths: [
-            path.resolve(__dirname, './spec')
-          ]
-        }
+            path.resolve(__dirname, './spec'),
+          ],
+        },
       },
-    ]
+    ],
   },
   resolve: {
+    extensions: ['.tsx', '.ts', '.js', '.vue'],
     alias: {
-      WaylandSafePath: getWaylandSafePath(),
+      '@': path.resolve(__dirname, 'src'),
+      'WaylandSafePath': getWaylandSafePath(),
     },
     modules: [
       'node_modules',
-      path.resolve(__dirname, '../../..')
+      'kotlin_build',
+      path.resolve(__dirname, '../../..'),
     ],
   },
   resolveLoader: {
     modules: [
       'node_modules',
-      path.resolve(__dirname, 'loaders')
-    ]
+      path.resolve(__dirname, 'loaders'),
+    ],
   },
+  plugins: [
+    new KotlinWebpackPlugin({
+      src: [
+        path.join(__dirname, '../../../platform_testing/libraries/flicker/' +
+          'src/com/android/server/wm/flicker/common/'),
+      ],
+      output: 'kotlin_build',
+      moduleName: 'flicker',
+      librariesAutoLookup: true,
+      sourceMaps: true,
+      sourceMapEmbedSources: 'always',
+      verbose: true,
+      optimize: true,
+    }),
+  ],
   devServer: {
     historyApiFallback: true,
-    noInfo: true
+    noInfo: true,
   },
   performance: {
-    hints: false
-  }
-}
+    hints: false,
+  },
+};
