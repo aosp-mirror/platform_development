@@ -9,7 +9,6 @@ add_subdirectory(services/surfaceflinger/CompositionEngine/libcompositionengine_
 add_subdirectory(services/surfaceflinger/CompositionEngine/libcompositionengine-arm64-android)
 add_subdirectory(services/surfaceflinger/TimeStats/timestatsproto/libtimestats_proto-arm64-android)
 add_subdirectory(services/surfaceflinger/TimeStats/libtimestats-arm64-android)
-add_subdirectory(services/surfaceflinger/libsurfaceflinger-arm64-android)
 add_subdirectory(services/surfaceflinger/layerproto/liblayers_proto-arm64-android)
 add_subdirectory(services/surfaceflinger/tests/IPC_test-arm64-android)
 add_subdirectory(services/surfaceflinger/tests/fakehwc/sffakehwc_test-arm64-android)
