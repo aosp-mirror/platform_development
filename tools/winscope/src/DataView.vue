@@ -56,7 +56,10 @@ export default {
     isTrace() {
       return this.file.type == DATA_TYPES.WINDOW_MANAGER ||
           this.file.type == DATA_TYPES.SURFACE_FLINGER ||
-          this.file.type == DATA_TYPES.TRANSACTION || this.file.type == DATA_TYPES.WAYLAND
+          this.file.type == DATA_TYPES.TRANSACTION ||
+          this.file.type == DATA_TYPES.WAYLAND ||
+          this.file.type == DATA_TYPES.SYSTEM_UI ||
+          this.file.type == DATA_TYPES.LAUNCHER
     },
     isVideo() {
       return this.file.type == DATA_TYPES.SCREEN_RECORDING;

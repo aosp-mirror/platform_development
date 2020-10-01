@@ -28,28 +28,23 @@ import sys
 import xml.dom.minidom
 
 try:
-    from urllib.error import HTTPError  # PY3
-except ImportError:
-    from urllib2 import HTTPError  # PY2
-
-try:
+    # PY3
+    from urllib.error import HTTPError
+    from urllib.parse import urlencode, urlparse
     from urllib.request import (
-        HTTPBasicAuthHandler, Request, build_opener)  # PY3
+        HTTPBasicAuthHandler, Request, build_opener
+    )
 except ImportError:
+    # PY2
+    from urllib import urlencode
     from urllib2 import (
-        HTTPBasicAuthHandler, Request, build_opener)  # PY2
+        HTTPBasicAuthHandler, HTTPError, Request, build_opener
+    )
+    from urlparse import urlparse
 
 try:
-    # pylint: disable=ungrouped-imports
-    from urllib.parse import urlencode, urlparse  # PY3
-except ImportError:
-    # pylint: disable=ungrouped-imports
-    from urllib import urlencode  # PY2
-    from urlparse import urlparse  # PY2
-
-
-try:
-    from subprocess import PIPE, run  # PY3.5
+    # PY3.5
+    from subprocess import PIPE, run
 except ImportError:
     from subprocess import CalledProcessError, PIPE, Popen
 
@@ -339,7 +334,7 @@ def find_gerrit_name():
         name = remote.getAttribute('name')
         review = remote.getAttribute('review')
         if review and name == default_remote_name:
-            return review
+            return review.rstrip('/')
 
     raise ValueError('cannot find gerrit URL from manifest')
 
@@ -366,6 +361,7 @@ def main():
     if not args.gerrit:
         try:
             args.gerrit = find_gerrit_name()
+        # pylint: disable=bare-except
         except:
             print('gerrit instance not found, use [-g GERRIT]')
             sys.exit(1)

@@ -42,7 +42,7 @@ import android.widget.Button;
  * interactive, fun, and engaging experience.
  *
  * This main activity launches a sub-activity when the Play button is clicked. The
- * main action in this master activity is bouncing the Play button in, randomly
+ * main action in this manager activity is bouncing the Play button in, randomly
  * bouncing it while waiting for input, and animating its press and click behaviors
  * when the user interacts with it. 
  *

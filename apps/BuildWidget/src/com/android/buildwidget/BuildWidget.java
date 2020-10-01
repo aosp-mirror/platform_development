@@ -27,7 +27,6 @@ import android.content.res.Resources;
 import android.net.Uri;
 import android.os.IBinder;
 import android.text.format.DateUtils;
-import android.text.format.Time;
 import android.util.Log;
 import android.widget.RemoteViews;
 

@@ -29,7 +29,6 @@
 #include <functional>
 #include <iostream>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
@@ -191,58 +190,58 @@ class HeaderAbiLinker {
   std::unique_ptr<repr::ExportedSymbolSet> version_script_symbols_;
 };
 
-static void
-DeDuplicateAbiElementsThread(const std::vector<std::string> &dump_files,
-                             const std::set<std::string> *exported_headers,
-                             linker::ModuleMerger *global_merger,
-                             std::mutex *global_merger_lock,
-                             std::atomic<std::size_t> *cnt) {
-  linker::ModuleMerger local_merger(exported_headers);
-
-  auto begin_it = dump_files.begin();
-  std::size_t num_sources = dump_files.size();
-  while (1) {
-    std::size_t i = cnt->fetch_add(sources_per_thread);
-    if (i >= num_sources) {
-      break;
+static void DeDuplicateAbiElementsThread(
+    std::vector<std::string>::const_iterator dump_files_begin,
+    std::vector<std::string>::const_iterator dump_files_end,
+    const std::set<std::string> *exported_headers,
+    linker::ModuleMerger *merger) {
+  for (auto it = dump_files_begin; it != dump_files_end; it++) {
+    std::unique_ptr<repr::IRReader> reader =
+        repr::IRReader::CreateIRReader(input_format, exported_headers);
+    assert(reader != nullptr);
+    if (!reader->ReadDump(*it)) {
+      llvm::errs() << "ReadDump failed\n";
+      ::exit(1);
     }
-    std::size_t end = std::min(i + sources_per_thread, num_sources);
-    for (auto it = begin_it + i; it != begin_it + end; it++) {
-      std::unique_ptr<repr::IRReader> reader =
-          repr::IRReader::CreateIRReader(input_format, exported_headers);
-      assert(reader != nullptr);
-      if (!reader->ReadDump(*it)) {
-        llvm::errs() << "ReadDump failed\n";
-        ::exit(1);
-      }
-      local_merger.MergeGraphs(reader->GetModule());
-    }
+    merger->MergeGraphs(reader->GetModule());
   }
-
-  std::lock_guard<std::mutex> lock(*global_merger_lock);
-  global_merger->MergeGraphs(local_merger.GetModule());
 }
 
 std::unique_ptr<linker::ModuleMerger> HeaderAbiLinker::ReadInputDumpFiles() {
   std::unique_ptr<linker::ModuleMerger> merger(
       new linker::ModuleMerger(&exported_headers_));
-
   std::size_t max_threads = std::thread::hardware_concurrency();
-  std::size_t num_threads =
-      sources_per_thread < dump_files_.size()
-          ? std::min(dump_files_.size() / sources_per_thread, max_threads)
-          : 1;
+  std::size_t num_threads = std::max<std::size_t>(
+      std::min(dump_files_.size() / sources_per_thread, max_threads), 1);
   std::vector<std::thread> threads;
-  std::atomic<std::size_t> cnt(0);
-  std::mutex merger_lock;
-  for (std::size_t i = 1; i < num_threads; i++) {
-    threads.emplace_back(DeDuplicateAbiElementsThread, dump_files_,
-                         &exported_headers_, merger.get(), &merger_lock, &cnt);
+  std::vector<linker::ModuleMerger> thread_mergers;
+  thread_mergers.reserve(num_threads - 1);
+
+  std::size_t dump_files_index = 0;
+  std::size_t first_end_index = 0;
+  for (std::size_t i = 0; i < num_threads; i++) {
+    std::size_t cnt = dump_files_.size() / num_threads +
+                      (i < dump_files_.size() % num_threads ? 1 : 0);
+    if (i == 0) {
+      first_end_index = cnt;
+    } else {
+      thread_mergers.emplace_back(&exported_headers_);
+      threads.emplace_back(DeDuplicateAbiElementsThread,
+                           dump_files_.begin() + dump_files_index,
+                           dump_files_.begin() + dump_files_index + cnt,
+                           &exported_headers_, &thread_mergers.back());
+    }
+    dump_files_index += cnt;
   }
-  DeDuplicateAbiElementsThread(dump_files_, &exported_headers_, merger.get(),
-                               &merger_lock, &cnt);
-  for (auto &thread : threads) {
-    thread.join();
+  assert(dump_files_index == dump_files_.size());
+
+  DeDuplicateAbiElementsThread(dump_files_.begin(),
+                               dump_files_.begin() + first_end_index,
+                               &exported_headers_, merger.get());
+
+  for (std::size_t i = 0; i < threads.size(); i++) {
+    threads[i].join();
+    merger->MergeGraphs(thread_mergers[i].GetModule());
   }
 
   return merger;
