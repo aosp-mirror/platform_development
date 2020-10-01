@@ -25,7 +25,7 @@
         @click="toggleTimeline(file)"
       >
         <i class="material-icons">
-          {{ FILE_ICONS[file.type] }}
+          {{ TRACE_ICONS[file.type] }}
           <md-tooltip md-direction="bottom">{{ file.type }}</md-tooltip>
         </i>
       </div>
@@ -63,7 +63,7 @@
 </template>
 <script>
 import Timeline from './Timeline.vue';
-import {FILE_ICONS} from '@/decode.js';
+import {TRACE_ICONS} from '@/decode.js';
 
 export default {
   name: 'Timelines',
@@ -77,7 +77,7 @@ export default {
         bottom: 0,
         right: 0,
       },
-      FILE_ICONS,
+      TRACE_ICONS,
     };
   },
   computed: {

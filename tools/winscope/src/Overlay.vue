@@ -97,7 +97,7 @@
                     />
                     <md-icon-option
                       :value="NAVIGATION_STYLE.FOCUSED"
-                      :icon="FILE_ICONS[focusedFile.type]"
+                      :icon="TRACE_ICONS[focusedFile.type]"
                       :desc="`Automatically switch what timeline is considered
                         for navigation based on what is visible on screen.
                         Currently ${focusedFile.type}.`"
@@ -119,7 +119,7 @@
                                 `${file.type}`"
                         :displayValue="file.type"
                         :shortValue="NAVIGATION_STYLE.TARGETED"
-                        :icon="FILE_ICONS[file.type]"
+                        :icon="TRACE_ICONS[file.type]"
                         :desc="`Only consider ${file.type} ` +
                                'for timeline navigation.'"
                       />
@@ -150,6 +150,7 @@
                 :class="{active: minimized && showVideoOverlay}"
                 @click="toggleVideoOverlay"
                 v-show="minimized"
+                style="margin-bottom: 10px;"
               >
                 <i class="md-icon md-icon-font">
                   featured_video
@@ -160,7 +161,11 @@
                 </md-tooltip>
               </md-button>
 
-              <md-button class="md-icon-button toggle-btn" @click="toggle">
+              <md-button
+                class="md-icon-button toggle-btn"
+                @click="toggle"
+                style="margin-bottom: 10px;"
+              >
                 <md-icon v-if="minimized">
                   expand_less
                   <md-tooltip md-direction="top">Expand timeline</md-tooltip>
@@ -257,7 +262,7 @@ import VideoView from './VideoView.vue';
 import MdIconOption from './components/IconSelection/IconSelectOption.vue';
 import FileType from './mixins/FileType.js';
 import {NAVIGATION_STYLE} from './utils/consts';
-import {FILE_ICONS} from '@/decode.js';
+import {TRACE_ICONS} from '@/decode.js';
 
 // eslint-disable-next-line camelcase
 import {nanos_to_string} from './transform.js';
@@ -284,7 +289,7 @@ export default {
       videoOverlayExtraWidth: 0,
       crop: null,
       cropIntent: null,
-      FILE_ICONS,
+      TRACE_ICONS,
     };
   },
   created() {
@@ -385,7 +390,7 @@ export default {
           return 'public';
 
         case NAVIGATION_STYLE.FOCUSED:
-          return FILE_ICONS[this.focusedFile.type];
+          return TRACE_ICONS[this.focusedFile.type];
 
         case NAVIGATION_STYLE.CUSTOM:
           return 'dashboard_customize';
@@ -398,7 +403,7 @@ export default {
 
           const fileType = split[1];
 
-          return FILE_ICONS[fileType];
+          return TRACE_ICONS[fileType];
       }
     },
     minimizedTimeline() {
@@ -557,9 +562,6 @@ export default {
     },
     videoLoaded() {
       this.$refs.videoOverlay.contentLoaded();
-    },
-    toggleTimeline(file) {
-      this.$set(file, 'timelineDisabled', !file.timelineDisabled);
     },
     updateNavigationFileFilter() {
       if (!this.minimized) {
@@ -796,7 +798,7 @@ export default {
 .active-timeline .active-timeline-icon {
   margin-right: 10px;
   align-self: flex-end;
-  margin-bottom: 3px;
+  margin-bottom: 18px;
 }
 
 .minimized-timeline-content {
