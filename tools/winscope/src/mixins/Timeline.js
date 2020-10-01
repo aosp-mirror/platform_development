@@ -52,7 +52,7 @@ export default {
      */
     'scale': {
       type: Array,
-    }
+    },
   },
   data() {
     return {
@@ -62,7 +62,7 @@ export default {
        * up when rendered.
        */
       pointWidth: 1,
-    }
+    };
   },
   computed: {
     /**
@@ -79,6 +79,7 @@ export default {
       // The difference in time between two timestamps after which they are no
       // longer rendered as a continuous segment/block.
       const overlapDistanceInTs = (this.scale[1] - this.scale[0]) *
+        ((this.crop?.right ?? 1) - (this.crop?.left ?? 0)) *
         1 / (100 - this.pointWidth);
 
       let blockStartTs = this.timeline[0];
@@ -241,9 +242,9 @@ export default {
      *                 scale parameter.
      */
     generateTimelineBlock(startTs, endTs) {
-      const blockWidth = this.position(endTs) - this.position(startTs)
-        + this.pointWidth;
+      const blockWidth = this.position(endTs) - this.position(startTs) +
+        this.pointWidth;
       return Object.freeze(new Block(this.position(startTs), blockWidth));
     },
   },
-}
+};

@@ -23,6 +23,7 @@
         class="trace-icon"
         :class="{disabled: file.timelineDisabled}"
         @click="toggleTimeline(file)"
+        style="cursor: pointer;"
       >
         <i class="material-icons">
           {{ TRACE_ICONS[file.type] }}
@@ -322,6 +323,10 @@ export default {
         });
       }
     },
+
+    toggleTimeline(file) {
+      this.$set(file, 'timelineDisabled', !file.timelineDisabled);
+    },
   },
   components: {
     Timeline,
@@ -363,5 +368,9 @@ export default {
   flex-direction: column;
   justify-content: space-evenly;
   margin-left: 15px;
+}
+
+.trace-icon.disabled {
+  color: gray;
 }
 </style>
