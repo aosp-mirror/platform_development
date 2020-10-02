@@ -25,6 +25,7 @@
       }, diffClass]"
       :style="nodeOffsetStyle"
       @click="clicked"
+      @contextmenu.prevent="openContextMenu"
       ref="node"
     >
       <button
@@ -377,9 +378,16 @@ export default {
         child.collapseAll();
       }
     },
-    openContextMenu() {
+    openContextMenu(e) {
       this.closeAllContextMenus();
-      this.$refs.nodeContextMenu.open();
+      // vue-context takes in the event and uses clientX and clientY to
+      // determine the position of the context meny.
+      // This doesn't satisfy our use case so we specify our own positions for
+      // this.
+      this.$refs.nodeContextMenu.open({
+        clientX: e.x,
+        clientY: e.y,
+      });
     },
     closeAllContextMenus(requestOrigin) {
       this.$refs.nodeContextMenu.close();
