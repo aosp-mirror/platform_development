@@ -23,9 +23,10 @@
         class="trace-icon"
         :class="{disabled: file.timelineDisabled}"
         @click="toggleTimeline(file)"
+        style="cursor: pointer;"
       >
         <i class="material-icons">
-          {{ FILE_ICONS[file.type] }}
+          {{ TRACE_ICONS[file.type] }}
           <md-tooltip md-direction="bottom">{{ file.type }}</md-tooltip>
         </i>
       </div>
@@ -63,7 +64,7 @@
 </template>
 <script>
 import Timeline from './Timeline.vue';
-import {FILE_ICONS} from '@/decode.js';
+import {TRACE_ICONS} from '@/decode.js';
 
 export default {
   name: 'Timelines',
@@ -77,7 +78,7 @@ export default {
         bottom: 0,
         right: 0,
       },
-      FILE_ICONS,
+      TRACE_ICONS,
     };
   },
   computed: {
@@ -322,6 +323,10 @@ export default {
         });
       }
     },
+
+    toggleTimeline(file) {
+      this.$set(file, 'timelineDisabled', !file.timelineDisabled);
+    },
   },
   components: {
     Timeline,
@@ -363,5 +368,9 @@ export default {
   flex-direction: column;
   justify-content: space-evenly;
   margin-left: 15px;
+}
+
+.trace-icon.disabled {
+  color: gray;
 }
 </style>

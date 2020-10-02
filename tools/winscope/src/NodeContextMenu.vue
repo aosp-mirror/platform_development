@@ -9,22 +9,22 @@
 </template>
 
 <script>
-import { VueContext } from 'vue-context';
+import {VueContext} from 'vue-context';
 
 export default {
-  name: "NodeContextMenu",
+  name: 'NodeContextMenu',
   components: {
-    VueContext
+    VueContext,
   },
   methods: {
-    open() {
-      this.$refs.menu.open();
+    open(e) {
+      this.$refs.menu.open(e);
     },
     close() {
       this.$refs.menu.close();
-    }
-  }
-}
+    },
+  },
+};
 </script>
 <style scoped>
 .v-context,
@@ -33,7 +33,10 @@ export default {
   background-clip: padding-box;
   border-radius: .25rem;
   border: 1px solid rgba(0, 0, 0, .15);
-  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14), 0 3px 1px -2px rgba(0, 0, 0, .2), 0 1px 5px 0 rgba(0, 0, 0, .12);
+  box-shadow:
+    0 2px 2px 0 rgba(0, 0, 0, .14),
+    0 3px 1px -2px rgba(0, 0, 0, .2),
+    0 1px 5px 0 rgba(0, 0, 0, .12);
   display: block;
   margin: 0;
   padding: 10px 0;

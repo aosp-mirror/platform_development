@@ -14,7 +14,7 @@
 -->
 <template>
   <span>
-    <span class="key">{{ key }}: </span>
+    <span class="key">{{ key }} </span>
     <span v-if="value">: </span>
     <span class="value" v-if="value" :class="[valueClass]">{{ value }}</span>
   </span>
@@ -22,18 +22,18 @@
 <script>
 export default {
   name: 'PropertiesTreeElement',
-  props: ["item", "simplify-names"],
+  props: ['item', 'simplify-names'],
   computed: {
     key() {
       if (!this.item.children || this.item.children.length === 0) {
-        return this.item.name.split(": ")[0];
+        return this.item.name.split(': ')[0];
       }
 
       return this.item.name;
     },
     value() {
       if (!this.item.children || this.item.children.length === 0) {
-        return this.item.name.split(": ").slice(1).join(': ');
+        return this.item.name.split(': ').slice(1).join(': ');
       }
 
       return null;
@@ -43,24 +43,24 @@ export default {
         return null;
       }
 
-      if (this.value == "null") {
-        return "null";
+      if (this.value == 'null') {
+        return 'null';
       }
 
-      if (this.value == "true") {
-        return "true";
+      if (this.value == 'true') {
+        return 'true';
       }
 
-      if (this.value == "false") {
-        return "false";
+      if (this.value == 'false') {
+        return 'false';
       }
 
       if (!isNaN(this.value)) {
-        return "number";
+        return 'number';
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 <style scoped>
 .key {
