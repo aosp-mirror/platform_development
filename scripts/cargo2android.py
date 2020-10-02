@@ -27,15 +27,8 @@ The Cargo.toml file should work at least for the host platform.
     --device flag, for example:
     cargo2android.py --run --device
 
-    This is equivalent to using the --cargo flag to add extra builds:
-    cargo2android.py --run
-      --cargo "build"
-      --cargo "build --target x86_64-unknown-linux-gnu"
-
-    On MacOS, use x86_64-apple-darwin as target triple.
-    Here the host target triple is used as a fake cross compilation target.
-    If the crate's Cargo.toml and environment configuration works for an
-    Android target, use that target triple as the cargo build flag.
+    Note that cargo build is only called once with the default target
+    x86_64-unknown-linux-gnu.
 
 (3) To build default and test crates, for host and device, use both
     --device and --tests flags:
@@ -43,8 +36,6 @@ The Cargo.toml file should work at least for the host platform.
 
     This is equivalent to using the --cargo flag to add extra builds:
     cargo2android.py --run
-      --cargo "build"
-      --cargo "build --tests"
       --cargo "build --target x86_64-unknown-linux-gnu"
       --cargo "build --tests --target x86_64-unknown-linux-gnu"
 
@@ -305,16 +296,13 @@ class Crate(object):
 
   def merge(self, other, outf_name):
     """Try to merge crate into self."""
+    # Cargo build --tests could recompile a library for tests.
+    # We need to merge such duplicated calls to rustc, with
+    # the algorithm in merge_host_device.
     should_merge_host_device = self.merge_host_device(other)
     should_merge_test = False
     if not should_merge_host_device:
       should_merge_test = self.merge_test(other)
-    # A for-device test crate can be merged with its for-host version,
-    # or merged with a different test for the same host or device.
-    # Since we run cargo once for each device or host, test crates for the
-    # first device or host will be merged first. Then test crates for a
-    # different device or host should be allowed to be merged into a
-    # previously merged one, maybe for a different device or host.
     if should_merge_host_device or should_merge_test:
       self.runner.init_bp_file(outf_name)
       with open(outf_name, 'a') as outf:  # to write debug info
@@ -332,8 +320,6 @@ class Crate(object):
       self.write('\n// Before merge definition (2):')
       other.dump_debug_info()
     # Merge properties of other to self.
-    self.host_supported = self.host_supported or other.host_supported
-    self.device_supported = self.device_supported or other.device_supported
     self.has_warning = self.has_warning or other.has_warning
     if not self.target:  # okay to keep only the first target triple
       self.target = other.target
@@ -367,7 +353,7 @@ class Crate(object):
         dir_name = os.path.dirname(dir_name)
 
   def add_codegens_flag(self, flag):
-    # ignore options not used in Android
+    """Ignore options not used in Android."""
     # 'prefer-dynamic' does not work with common flag -C lto
     # 'embed-bitcode' is ignored; we might control LTO with other .bp flag
     # 'codegen-units' is set in Android global config or by default
@@ -485,11 +471,8 @@ class Crate(object):
         self.errors += 'ERROR: cannot generate both lib and rlib crate types\n'
     if not self.root_pkg:
       self.root_pkg = self.crate_name
-    if self.target:
-      self.device_supported = True
-    self.host_supported = True  # assume host supported for all builds
-    if self.runner.args.no_host:  # unless --no-host was specified
-      self.host_supported = False
+    self.device_supported = self.runner.args.device
+    self.host_supported = not self.runner.args.no_host
     self.cfgs = sorted(set(self.cfgs))
     self.features = sorted(set(self.features))
     self.codegens = sorted(set(self.codegens))
@@ -803,7 +786,7 @@ class Crate(object):
       self.write('    stem: "' + self.stem + '",')
     if self.has_warning and not self.cap_lints and not self.default_srcs:
       self.write('    // has rustc warnings')
-    if self.host_supported and self.device_supported:
+    if self.host_supported and self.device_supported and self.module_type != 'rust_proc_macro':
       self.write('    host_supported: true,')
     if not self.defaults:
       self.write('    crate_name: "' + self.crate_name + '",')
@@ -1055,18 +1038,14 @@ class Runner(object):
     if args.cargo:
       self.cargo = ['clean'] + args.cargo
     else:
-      self.cargo = ['clean', 'build']
-      if args.no_host:  # do not run "cargo build" for host
-        self.cargo = ['clean']
       default_target = '--target x86_64-unknown-linux-gnu'
-      if args.device:
-        self.cargo.append('build ' + default_target)
-        if args.tests:
-          if not args.no_host:
-            self.cargo.append('build --tests')
-          self.cargo.append('build --tests ' + default_target)
-      elif args.tests and not args.no_host:
-        self.cargo.append('build --tests')
+      # Use the same target for both host and default device builds.
+      # Same target is used as default in host x86_64 Android compilation.
+      # Note: b/169872957, prebuilt cargo failed to build vsock
+      # on x86_64-unknown-linux-musl systems.
+      self.cargo = ['clean', 'build ' + default_target]
+      if args.tests:
+        self.cargo.append('build --tests ' + default_target)
 
   def setup_cargo_path(self):
     """Find cargo in the --cargo_bin or prebuilt rust bin directory."""
