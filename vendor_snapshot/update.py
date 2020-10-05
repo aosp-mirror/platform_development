@@ -208,7 +208,7 @@ def gen_bp_module(variation, name, version, target_arch, arch_props, bp_dir):
     return bp
 
 
-def gen_bp_files(install_dir, snapshot_version):
+def build_props(install_dir):
     # props[target_arch]["static"|"shared"|"binary"|"header"][name][arch] : json
     props = dict()
 
@@ -264,11 +264,17 @@ def gen_bp_files(install_dir, snapshot_version):
             else:
                 variation_dict[module_name][arch].update(prop)
 
-    for target_arch in props:
+    return props
+
+
+def gen_bp_files(install_dir, snapshot_version):
+    props = build_props(install_dir)
+
+    for target_arch in sorted(props):
         androidbp = ''
         bp_dir = os.path.join(install_dir, target_arch)
-        for variation in props[target_arch]:
-            for name in props[target_arch][variation]:
+        for variation in sorted(props[target_arch]):
+            for name in sorted(props[target_arch][variation]):
                 androidbp += gen_bp_module(variation, name, snapshot_version,
                                            target_arch,
                                            props[target_arch][variation][name],
