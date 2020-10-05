@@ -24,6 +24,7 @@ import jsonProtoDefsTransaction from 'frameworks/native/cmds/surfacereplayer/pro
 import jsonProtoDefsWl from 'WaylandSafePath/waylandtrace.proto';
 import jsonProtoDefsSysUi from 'frameworks/base/packages/SystemUI/src/com/android/systemui/tracing/sysui_trace.proto';
 import jsonProtoDefsLauncher from 'packages/apps/Launcher3/protos/launcher_trace_file.proto';
+import jsonProtoDefsIme from 'frameworks/base/core/proto/android/view/inputmethod/inputmethodeditortrace.proto';
 import protobuf from 'protobufjs';
 import {transformLayers, transformLayersTrace} from './transform_sf.js';
 import {transform_transaction_trace} from './transform_transaction.js';
@@ -31,6 +32,7 @@ import {transform_wl_outputstate, transform_wayland_trace} from './transform_wl.
 import {transformProtolog} from './transform_protolog.js';
 import {transform_sysui_trace} from './transform_sys_ui.js';
 import {transform_launcher_trace} from './transform_launcher.js';
+import {transform_ime_trace} from './transform_ime.js';
 import {fill_transform_data} from './matrix_utils.js';
 import {mp4Decoder} from './decodeVideo.js';
 
@@ -42,6 +44,7 @@ import WaylandTrace from '@/traces/Wayland.ts';
 import ProtoLogTrace from '@/traces/ProtoLog.ts';
 import SystemUITrace from '@/traces/SystemUI.ts';
 import LauncherTrace from '@/traces/Launcher.ts';
+import ImeTrace from '@/traces/InputMethodEditor.ts';
 
 import SurfaceFlingerDump from '@/dumps/SurfaceFlinger.ts';
 import WindowManagerDump from '@/dumps/WindowManager.ts';
@@ -57,6 +60,7 @@ const WaylandDumpMessage = lookup_type(jsonProtoDefsWl, 'org.chromium.arc.waylan
 const ProtoLogMessage = lookup_type(jsonProtoDefsProtoLog, 'com.android.internal.protolog.ProtoLogFileProto');
 const SystemUiTraceMessage = lookup_type(jsonProtoDefsSysUi, 'com.android.systemui.tracing.SystemUiTraceFileProto');
 const LauncherTraceMessage = lookup_type(jsonProtoDefsLauncher, 'com.android.launcher3.tracing.LauncherTraceFileProto');
+const InputMethodEditorTraceMessage = lookup_type(jsonProtoDefsIme, "android.view.inputmethod.InputMethodEditorTraceFileProto");
 
 const LAYER_TRACE_MAGIC_NUMBER = [0x09, 0x4c, 0x59, 0x52, 0x54, 0x52, 0x41, 0x43, 0x45]; // .LYRTRACE
 const WINDOW_TRACE_MAGIC_NUMBER = [0x09, 0x57, 0x49, 0x4e, 0x54, 0x52, 0x41, 0x43, 0x45]; // .WINTRACE
@@ -65,6 +69,7 @@ const WAYLAND_TRACE_MAGIC_NUMBER = [0x09, 0x57, 0x59, 0x4c, 0x54, 0x52, 0x41, 0x
 const PROTO_LOG_MAGIC_NUMBER = [0x09, 0x50, 0x52, 0x4f, 0x54, 0x4f, 0x4c, 0x4f, 0x47]; // .PROTOLOG
 const SYSTEM_UI_MAGIC_NUMBER = [0x09, 0x53, 0x59, 0x53, 0x55, 0x49, 0x54, 0x52, 0x43]; // .SYSUITRC
 const LAUNCHER_MAGIC_NUMBER = [0x09, 0x4C, 0x4E, 0x43, 0x48, 0x52, 0x54, 0x52, 0x43]; // .LNCHRTRC
+const IME_TRACE_MAGIC_NUMBER = [0x09, 0x49, 0x4d, 0x45, 0x54, 0x52, 0x41, 0x43, 0x45] //.IMETRACE
 
 const FILE_TYPES = Object.freeze({
   WINDOW_MANAGER_TRACE: 'WindowManagerTrace',
@@ -78,6 +83,7 @@ const FILE_TYPES = Object.freeze({
   PROTO_LOG: 'ProtoLog',
   SYSTEM_UI: 'SystemUI',
   LAUNCHER: 'Launcher',
+  IME_TRACE: 'ImeTrace',
 });
 
 const WINDOW_MANAGER_ICON = 'view_compact';
@@ -88,6 +94,7 @@ const WAYLAND_ICON = 'filter_none';
 const PROTO_LOG_ICON = 'notes';
 const SYSTEM_UI_ICON = 'filter_none';
 const LAUNCHER_ICON = 'filter_none';
+const IME_ICON = 'keyboard';
 
 const FILE_ICONS = {
   [FILE_TYPES.WINDOW_MANAGER_TRACE]: WINDOW_MANAGER_ICON,
@@ -101,6 +108,7 @@ const FILE_ICONS = {
   [FILE_TYPES.PROTO_LOG]: PROTO_LOG_ICON,
   [FILE_TYPES.SYSTEM_UI]: SYSTEM_UI_ICON,
   [FILE_TYPES.LAUNCHER]: LAUNCHER_ICON,
+  [FILE_TYPES.IME_TRACE]: IME_ICON,
 };
 
 function oneOf(dataType) {
@@ -120,6 +128,7 @@ const TRACE_TYPES = Object.freeze({
   PROTO_LOG: 'ProtoLog',
   SYSTEM_UI: 'SystemUI',
   LAUNCHER: 'Launcher',
+  IME: 'ImeTrace',
 });
 
 const TRACE_INFO = {
@@ -172,6 +181,12 @@ const TRACE_INFO = {
     icon: LAUNCHER_ICON,
     files: [oneOf(FILE_TYPES.LAUNCHER)],
     constructor: LauncherTrace,
+  },
+  [TRACE_TYPES.IME]: {
+    name: 'InputMethodEditor',
+    icon: IME_ICON,
+    files: [oneOf(FILE_TYPES.IME_TRACE)],
+    constructor: ImeTrace,
   },
 };
 
@@ -337,6 +352,17 @@ const FILE_DECODERS = {
       timeline: true,
     },
   },
+  [FILE_TYPES.IME_TRACE]: {
+    name: 'InputMethodEditor trace',
+    decoder: protoDecoder,
+    decoderParams: {
+      type: FILE_TYPES.IME_TRACE,
+      mime: 'application/octet-stream',
+      protoType: InputMethodEditorTraceMessage,
+      transform: transform_ime_trace,
+      timeline: true,
+    },
+  },
 };
 
 function lookup_type(protoPath, type) {
@@ -466,6 +492,9 @@ function detectAndDecode(buffer, fileName, store) {
   }
   if (arrayStartsWith(buffer, LAUNCHER_MAGIC_NUMBER)) {
     return decodedFile(FILE_TYPES.LAUNCHER, buffer, fileName, store);
+  }
+  if (arrayStartsWith(buffer, IME_TRACE_MAGIC_NUMBER)) {
+    return decodedFile(FILE_TYPES.IME_TRACE, buffer, fileName, store);
   }
 
   // TODO(b/169305853): Add magic number at beginning of file for better auto detection
