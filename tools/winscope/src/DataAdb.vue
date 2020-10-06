@@ -142,7 +142,7 @@ const STATES = {
   LOAD_DATA: 8,
 };
 
-const WINSCOPE_PROXY_VERSION = '0.6';
+const WINSCOPE_PROXY_VERSION = '0.7';
 const WINSCOPE_PROXY_URL = 'http://localhost:5544';
 const PROXY_ENDPOINTS = {
   DEVICES: '/devices/',
@@ -169,6 +169,9 @@ const TRACES = {
   },
   'screen_recording': {
     name: 'Screen Recording',
+  },
+  'ime_trace': {
+    name: 'Input Method',
   },
 };
 
@@ -201,6 +204,7 @@ const proxyFileTypeAdapter = {
   'proto_log': FILE_TYPES.PROTO_LOG,
   'system_ui_trace': FILE_TYPES.SYSTEM_UI,
   'launcher_trace': FILE_TYPES.LAUNCHER,
+  'ime_trace': FILE_TYPES.IME_TRACE,
 };
 
 const CONFIGS = Object.keys(TRACE_CONFIG).flatMap((file) => TRACE_CONFIG[file]);
