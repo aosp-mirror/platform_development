@@ -47,7 +47,7 @@ LOG_LEVEL = logging.WARNING
 PORT = 5544
 
 # Keep in sync with WINSCOPE_PROXY_VERSION in Winscope DataAdb.vue
-VERSION = '0.6'
+VERSION = '0.7'
 
 WINSCOPE_VERSION_HEADER = "Winscope-Proxy-Version"
 WINSCOPE_TOKEN_HEADER = "Winscope-Token"
@@ -138,6 +138,11 @@ TRACE_TARGETS = {
         File("/data/misc/wmtrace/wm_log.pb", "proto_log"),
         'su root cmd window logging start\necho "WM logging started."',
         'su root cmd window logging stop >/dev/null 2>&1'
+    ),
+    "ime_trace": TraceTarget(
+        File("/data/misc/wmtrace/ime_trace.pb", "ime_trace"),
+        'su root ime tracing start\necho "IME trace started."',
+        'su root ime tracing stop >/dev/null 2>&1'
     ),
 }
 
