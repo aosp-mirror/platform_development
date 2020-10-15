@@ -15,10 +15,8 @@ function transform_entry(entry) {
   return transform({
     obj: entry,
     kind: 'entry',
-    name: nanos_to_string(entry.elapsedRealtimeNanos),
+    name: nanos_to_string(entry.elapsedRealtimeNanos) + " - " + entry.where,
     children: [
-      [[entry.inputMethodManagerService], transform_imms_dump],
-      [[entry.inputMethodService], transform_ims_dump],
       [[entry.clients], transform_client_dump]
     ],
     timestamp: entry.elapsedRealtimeNanos,
@@ -26,28 +24,10 @@ function transform_entry(entry) {
   });
 }
 
-function transform_imms_dump(entry) {
-  return transform({
-    obj: entry,
-    kind: 'InputMethodManagerService',
-    name: '',
-    children: []
-  });
-}
-
 function transform_client_dump(entry) {
   return transform({
     obj: entry,
     kind: 'Clients',
-    name: '',
-    children: []
-  });
-}
-
-function transform_ims_dump(entry) {
-  return transform({
-    obj: entry,
-    kind: 'InputMethodService',
     name: '',
     children: []
   });

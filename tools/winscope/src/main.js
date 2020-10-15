@@ -34,7 +34,7 @@ const fileOrder = {
   [TRACE_TYPES.SURFACE_FLINGER]: 2,
   [TRACE_TYPES.TRANSACTION]: 3,
   [TRACE_TYPES.PROTO_LOG]: 4,
-  [TRACE_TYPES.IME]: 5,
+  [TRACE_TYPES.IME_CLIENTS]: 5,
 };
 
 function sortFiles(files) {
