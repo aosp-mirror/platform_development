@@ -14,23 +14,26 @@
  * limitations under the License.
  */
 
-import {
-  WindowManagerTrace,
-} from "./common"
-
-import WindowManagerTraceEntry from "./WindowManagerTraceEntry"
+import { WindowManagerTrace } from "./common"
+import WindowManagerState from "./WindowManagerState"
 
 WindowManagerTrace.fromProto = function (proto) {
-  const entries = []
-  for (const entryProto of proto.entry) {
-    const transformedEntry = WindowManagerTraceEntry.fromProto(
-      entryProto.windowManagerService, entryProto.elapsedRealtimeNanos)
-    entries.push(transformedEntry)
-  }
+    const entries = []
+    for (const entryProto of proto.entry) {
+        const transformedEntry = WindowManagerState.fromProto({
+            proto: entryProto.windowManagerService,
+            timestamp: entryProto.elapsedRealtimeNanos,
+            where: entryProto.where})
+        entries.push(transformedEntry)
 
-  const source = null;
-  const sourceChecksum = null;
-  return new WindowManagerTrace(entries, source, sourceChecksum)
+    }
+    const source = null
+    const sourceChecksum = null
+    return new WindowManagerTrace(entries, source, sourceChecksum)
+}
+
+WindowManagerTrace.fromDump = function(proto): WindowManagerTrace {
+    return WindowManagerState.fromProto({proto: proto})
 }
 
 export default WindowManagerTrace;

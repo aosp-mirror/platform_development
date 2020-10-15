@@ -17,7 +17,7 @@
 import { FILE_TYPES, DUMP_TYPES } from "@/decode.js";
 import DumpBase from "./DumpBase";
 
-import { WindowManagerTraceEntry } from '@/flickerlib';
+import { WindowManagerTrace } from '@/flickerlib';
 
 export default class WindowManager extends DumpBase {
   wmDumpFile: any;
@@ -32,7 +32,7 @@ export default class WindowManager extends DumpBase {
     return DUMP_TYPES.WINDOW_MANAGER;
   }
 
-  static fromProto(proto): WindowManagerTraceEntry {
-    return WindowManagerTraceEntry.fromProto(proto);
+  static fromProto(proto): WindowManagerTrace {
+    return WindowManagerTrace.fromDump(proto);
   }
 }

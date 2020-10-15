@@ -14,32 +14,30 @@
  * limitations under the License.
  */
 
+import { getWMPropertiesForDisplay,  shortenName } from '../mixin'
 import { WindowToken } from "../common"
-
-import { applyMixins } from '../mixin'
-
 import WindowContainer from "./WindowContainer"
 
-export class WindowContainerMixin {
-  get kind() {
-    return "WindowToken"
-  }
+WindowToken.fromProto = function (proto, isActivityInTree: Boolean): WindowToken {
+    if (proto == null) {
+        return null
+    } else {
+        const windowContainer = WindowContainer.fromProto({proto: proto.windowContainer, tokenOverride: proto.hashCode})
+        if (windowContainer == null) {
+            throw "Window container should not be null: " + JSON.stringify(proto)
+        }
+        const entry = new WindowToken(windowContainer)
 
-  static fromProto(proto) {
-    const windowContainer = WindowContainer.fromProto(proto.windowContainer,
-                                                      null)
+        proto.windowContainer.children.reverse()
+            .map(it => WindowContainer.childrenFromProto(entry, it, isActivityInTree))
+            .filter(it => it != null)
+            .forEach(it => windowContainer.childContainers.push(it))
 
-    const windowToken = new WindowToken(windowContainer)
-
-    const obj = Object.assign({}, proto)
-    Object.assign(obj, windowContainer.obj)
-    delete obj.windowContainer
-    windowToken.attachObject(obj)
-
-    return windowToken
-  }
+        entry.obj = getWMPropertiesForDisplay(proto)
+        entry.shortName = shortenName(entry.name)
+        entry.children = entry.childrenWindows
+        return entry
+    }
 }
-
-applyMixins(WindowToken, [WindowContainerMixin])
 
 export default WindowToken
