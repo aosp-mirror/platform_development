@@ -1,0 +1,12 @@
+android_app {
+    name: "ReceiveContentDemo",
+    srcs: ["src/**/*.java"],
+    static_libs: [
+        "guava",
+        "jsr305",
+    ],
+    sdk_version: "current",
+    dex_preopt: {
+        enabled: false,
+    },
+}
