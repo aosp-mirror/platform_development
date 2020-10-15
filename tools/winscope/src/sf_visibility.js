@@ -281,7 +281,7 @@ function traverse_top_to_bottom(layerMap, rootLayers, globalState, fn) {
             `Children layer with id ${id} not found in dumped layers... ` +
             `Skipping layer in traversal...`);
       } else {
-        relatives.push(layerMap[id]);
+        children.push(layerMap[id]);
       }
     }
 
