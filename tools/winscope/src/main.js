@@ -35,6 +35,7 @@ const fileOrder = {
   [TRACE_TYPES.TRANSACTION]: 3,
   [TRACE_TYPES.PROTO_LOG]: 4,
   [TRACE_TYPES.IME_CLIENTS]: 5,
+  [TRACE_TYPES.IME_SERVICE]: 6,
 };
 
 function sortFiles(files) {
