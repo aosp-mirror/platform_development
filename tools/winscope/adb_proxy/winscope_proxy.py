@@ -149,6 +149,11 @@ TRACE_TARGETS = {
         'su root ime tracing start\necho "Service IME trace started."',
         'su root ime tracing stop >/dev/null 2>&1'
     ),
+    "ime_trace_managerservice": TraceTarget(
+        File("/data/misc/wmtrace/ime_trace_managerservice.pb", "ime_trace_managerservice"),
+        'su root ime tracing start\necho "ManagerService IME trace started."',
+        'su root ime tracing stop >/dev/null 2>&1'
+    ),
 }
 
 

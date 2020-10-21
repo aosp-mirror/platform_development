@@ -176,6 +176,9 @@ const TRACES = {
   'ime_trace_service': {
     name: 'Input Method Service',
   },
+  'ime_trace_managerservice': {
+    name: 'Input Method Manager Service',
+  },
 };
 
 const TRACE_CONFIG = {
@@ -208,7 +211,8 @@ const proxyFileTypeAdapter = {
   'system_ui_trace': FILE_TYPES.SYSTEM_UI,
   'launcher_trace': FILE_TYPES.LAUNCHER,
   'ime_trace_clients': FILE_TYPES.IME_TRACE_CLIENTS,
-  'ime_trace_ims': FILE_TYPES.IME_TRACE_SERVICE,
+  'ime_trace_service': FILE_TYPES.IME_TRACE_SERVICE,
+  'ime_trace_imms': FILE_TYPES.IME_TRACE_MANAGERSERVICE,
 };
 
 const CONFIGS = Object.keys(TRACE_CONFIG).flatMap((file) => TRACE_CONFIG[file]);

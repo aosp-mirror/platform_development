@@ -25,6 +25,7 @@ const mixin = {
       file.type == TRACE_TYPES.LAUNCHER ||
       file.type == TRACE_TYPES.IME_CLIENTS ||
       file.type == TRACE_TYPES.IME_SERVICE ||
+      file.type == TRACE_TYPES.IME_MANAGERSERVICE ||
       file.type == DUMP_TYPES.WINDOW_MANAGER ||
       file.type == DUMP_TYPES.SURFACE_FLINGER ||
       file.type == DUMP_TYPES.WAYLAND;

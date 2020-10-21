@@ -66,4 +66,37 @@ function transform_service_dump(entry) {
   });
 }
 
-export {transform_ime_trace_clients, transform_ime_trace_service};
+function transform_ime_trace_managerservice(entries) {
+  return transform({
+    obj: entries,
+    kind: 'entries',
+    name: 'entries',
+    children: [
+      [entries.entry, transform_entry_managerservice]
+    ]
+  });
+}
+
+function transform_entry_managerservice(entry) {
+  return transform({
+    obj: entry,
+    kind: 'entry',
+    name: nanos_to_string(entry.elapsedRealtimeNanos) + " - " + entry.where,
+    children: [
+      [[entry.inputMethodManagerService], transform_managerservice_dump]
+    ],
+    timestamp: entry.elapsedRealtimeNanos,
+    stableId: 'entry'
+  });
+}
+
+function transform_managerservice_dump(entry) {
+  return transform({
+    obj: entry,
+    kind: 'InputMethodManagerService',
+    name: '',
+    children: []
+  });
+}
+
+export {transform_ime_trace_clients, transform_ime_trace_service, transform_ime_trace_managerservice};
