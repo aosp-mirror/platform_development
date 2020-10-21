@@ -16,6 +16,7 @@
 """Add files to a Rust package for third party review."""
 
 import datetime
+import glob
 import json
 import os
 import pathlib
@@ -30,6 +31,8 @@ DESCRIPTION_PATTERN = r"^description *= *(\".+\")"
 DESCRIPTION_MATCHER = re.compile(DESCRIPTION_PATTERN)
 # NOTE: This description one-liner pattern fails to match
 # multi-line descriptions in some Rust crates, e.g. shlex.
+LICENSE_PATTERN = r"^license *= *\"(.+)\""
+LICENSE_MATCHER = re.compile(LICENSE_PATTERN)
 
 # patterns to match year/month/day in METADATA
 YMD_PATTERN = r"^ +(year|month|day): (.+)$"
@@ -119,28 +122,48 @@ def grep_license_keyword(license_file):
   with open(license_file, "r") as input_file:
     for line in input_file:
       if APACHE_MATCHER.match(line):
-        return "APACHE2"
+        return "APACHE2", license_file
       if MIT_MATCHER.match(line):
-        return "MIT"
+        return "MIT", license_file
       if BSD_MATCHER.match(line):
-        return "BSD_LIKE"
+        return "BSD_LIKE", license_file
   print("ERROR: cannot decide license type in", license_file,
         " assume BSD_LIKE")
-  return "BSD_LIKE"
+  return "BSD_LIKE", license_file
 
 
-def decide_license_type():
+def decide_license_type(cargo_license):
   """Check LICENSE* files to determine the license type."""
   # Most crates.io packages have both APACHE and MIT.
-  if os.path.exists("LICENSE-APACHE"):
-    return "APACHE2"
-  if os.path.exists("LICENSE-MIT"):
-    return "MIT"
+  # Some crate like time-macros-impl uses lower case names like LICENSE-Apache.
+  targets = {}
+  license_file = "unknown-file"
+  for license_file in glob.glob("./LICENSE*"):
+    license_file = license_file[2:]
+    lowered_name = license_file.lower()
+    if lowered_name == "license-apache":
+      targets["APACHE2"] = license_file
+    elif lowered_name == "license-mit":
+      targets["MIT"] = license_file
+  # Prefer APACHE2 over MIT license type.
+  for license_type in ["APACHE2", "MIT"]:
+    if license_type in targets:
+      return license_type, targets[license_type]
+  # Use cargo_license found in Cargo.toml.
+  if "Apache" in cargo_license:
+    return "APACHE2", license_file
+  if "MIT" in cargo_license:
+    return "MIT", license_file
+  if "BSD" in cargo_license:
+    return "BSD_LIKE", license_file
+  if "ISC" in cargo_license:
+    return "ISC", license_file
+  # Try to find key words in LICENSE* files.
   for license_file in ["LICENSE", "LICENSE.txt"]:
     if os.path.exists(license_file):
       return grep_license_keyword(license_file)
   print("ERROR: missing LICENSE-{APACHE,MIT}; assume BSD_LIKE")
-  return "BSD_LIKE"
+  return "BSD_LIKE", "unknown-file"
 
 
 def add_notice():
@@ -152,48 +175,27 @@ def add_notice():
       print("ERROR: missing NOTICE and LICENSE")
 
 
-def license_link_target(license_type):
-  """Return the LICENSE-* target file for LICENSE link."""
-  if license_type == "APACHE2":
-    return "LICENSE-APACHE"
-  elif license_type == "MIT":
-    return "LICENSE-MIT"
-  elif license_type == "BSD_LIKE":
-    for name in ["LICENSE.txt"]:
-      if os.path.exists(name):
-        return name
-    print("### ERROR: cannot find LICENSE target")
-    return ""
-  else:
-    print("### ERROR; unknown license type:", license_type)
-    return ""
-
-
-def check_license_link(license_type):
-  """Check the LICENSE link, must match given type."""
+def check_license_link(target):
+  """Check the LICENSE link, must bet the given target."""
   if not os.path.islink("LICENSE"):
     print("ERROR: LICENSE file is not a link")
     return
-  target = os.readlink("LICENSE")
-  expected = license_link_target(license_type)
-  if target != expected:
-    print("ERROR: found LICENSE link to", target,
-          "but expected", expected)
+  found_target = os.readlink("LICENSE")
+  if target != found_target and found_target != "LICENSE.txt":
+    print("ERROR: found LICENSE link to", found_target,
+          "but expected", target)
 
 
-def add_license(license_type):
-  """Add LICENSE related file."""
+def add_license(target):
+  """Add LICENSE link to give target."""
   if os.path.exists("LICENSE"):
     if os.path.islink("LICENSE"):
-      check_license_link(license_type)
+      check_license_link(target)
     else:
       print("NOTE: found LICENSE and it is not a link!")
     return
-  target = license_link_target(license_type)
   print("### Creating LICENSE link to", target)
-  if target:
-    os.symlink(target, "LICENSE")
-  # error reported in license_link_target
+  os.symlink(target, "LICENSE")
 
 
 def add_module_license(license_type):
@@ -203,7 +205,7 @@ def add_module_license(license_type):
     module_file = "MODULE_LICENSE_" + suffix
     if os.path.exists(module_file):
       if license_type != suffix:
-        print("### ERROR: found unexpected", module_file)
+        print("ERROR: found unexpected", module_file)
       return
   module_file = "MODULE_LICENSE_" + license_type
   pathlib.Path(module_file).touch()
@@ -249,27 +251,24 @@ def toml2json(line):
 
 
 def parse_cargo_toml(cargo):
-  """get description string from Cargo.toml."""
+  """get name, version, description, license string from Cargo.toml."""
   name = ""
   version = ""
   description = ""
+  cargo_license = ""
   with open(cargo, "r") as toml:
     for line in toml:
-      if not name:
-        match = NAME_MATCHER.match(line)
-        if match:
-          name = match.group(1)
-      if not version:
-        match = VERSION_MATCHER.match(line)
-        if match:
-          version = match.group(1)
-      if not description:
-        match = DESCRIPTION_MATCHER.match(line)
-        if match:
-          description = toml2json(match.group(1))
-      if name and version and description:
+      if not name and NAME_MATCHER.match(line):
+        name = NAME_MATCHER.match(line).group(1)
+      elif not version and VERSION_MATCHER.match(line):
+        version = VERSION_MATCHER.match(line).group(1)
+      elif not description and DESCRIPTION_MATCHER.match(line):
+        description = toml2json(DESCRIPTION_MATCHER.match(line).group(1))
+      elif not cargo_license and LICENSE_MATCHER.match(line):
+        cargo_license = LICENSE_MATCHER.match(line).group(1)
+      if name and version and description and cargo_license:
         break
-  return name, version, description
+  return name, version, description, cargo_license
 
 
 def main():
@@ -281,14 +280,15 @@ def main():
   if not os.access(cargo, os.R_OK):
     print("ERROR: ", cargo, "is not readable")
     return
-  name, version, description = parse_cargo_toml(cargo)
+  name, version, description, cargo_license = parse_cargo_toml(cargo)
   if not name or not version or not description:
     print("ERROR: Cannot find name, version, or description in", cargo)
     return
+  print("### Cargo.toml license:", cargo_license)
   add_metadata(name, version, description)
   add_owners()
-  license_type = decide_license_type()
-  add_license(license_type)
+  license_type, file_name = decide_license_type(cargo_license)
+  add_license(file_name)
   add_module_license(license_type)
   # It is unclear yet if a NOTICE file is required.
   # add_notice()
