@@ -33,7 +33,6 @@ import android.widget.TextViewOnReceiveContentCallback;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -42,14 +41,10 @@ import java.util.Set;
  * to the platform.
  */
 public class OnReceiveContentCallbackAllTypes extends TextViewOnReceiveContentCallback {
-    private static final Set<String> ALL_MIME_TYPES = Collections.singleton("*/*");
+    static final String[] SUPPORTED_MIME_TYPES = new String[] {"*/*"};
+
     private static final Set<String> SUPPORTED_CONTENT_URI_MIME_TYPES =
             new ArraySet<>(new String[] {"image/*", "video/mp4"});
-
-    @Override
-    public Set<String> getSupportedMimeTypes(TextView view) {
-        return ALL_MIME_TYPES;
-    }
 
     @Override
     public boolean onReceiveContent(TextView view, Payload payload) {
