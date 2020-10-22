@@ -194,7 +194,7 @@ function transformLayers(includesCompositionState, layers) {
     children: [
       [transformedRoots, (c) => c],
     ],
-    rects_transform(r) {
+    rectsTransform(r) {
       const res = [];
       flattened.forEach((l) => {
         if (l.rect) {
