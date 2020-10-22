@@ -241,9 +241,6 @@ def build_props(install_dir):
                     target_arch)
 
             module_name = prop['name']
-            notice_path = 'NOTICE_FILES/' + module_name + '.txt'
-            if os.path.exists(os.path.join(bp_dir, notice_path)):
-                prop['notice'] = notice_path
 
             # Is this sanitized variant?
             if 'sanitize' in prop:
@@ -254,7 +251,11 @@ def build_props(install_dir):
                 for k in list(prop.keys()):
                     if not k in SANITIZER_VARIANT_PROPS:
                         del prop[k]
-                prop = {sanitizer_type: prop}
+                prop = {'name': module_name, sanitizer_type: prop}
+
+            notice_path = 'NOTICE_FILES/' + module_name + '.txt'
+            if os.path.exists(os.path.join(bp_dir, notice_path)):
+                prop['notice'] = notice_path
 
             variation_dict = props[target_arch][variation]
             if not module_name in variation_dict:
