@@ -15,6 +15,7 @@
  */
 
 import { getWMPropertiesForDisplay,  shortenName } from '../mixin'
+import { asRawTreeViewObject } from '../../utils/diff.js'
 import { DisplayArea } from "../common"
 import WindowContainer from "./WindowContainer"
 
@@ -36,6 +37,7 @@ DisplayArea.fromProto = function (proto, isActivityInTree: Boolean): DisplayArea
         entry.obj = getWMPropertiesForDisplay(proto)
         entry.shortName = shortenName(entry.name)
         entry.children = entry.childrenWindows
+        entry.rawTreeViewObject = asRawTreeViewObject(entry)
         return entry
     }
 }

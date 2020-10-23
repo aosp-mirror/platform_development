@@ -15,6 +15,7 @@
  */
 
 import { getWMPropertiesForDisplay, shortenName } from '../mixin'
+import { asRawTreeViewObject } from '../../utils/diff.js'
 import { Activity } from "../common"
 import WindowContainer from "./WindowContainer"
 
@@ -46,6 +47,7 @@ Activity.fromProto = function (proto, parent: WindowContainer): Activity {
         entry.obj = getWMPropertiesForDisplay(proto)
         entry.shortName = shortenName(entry.name)
         entry.children = entry.childrenWindows
+        entry.rawTreeViewObject = asRawTreeViewObject(entry)
         return entry
     }
 }

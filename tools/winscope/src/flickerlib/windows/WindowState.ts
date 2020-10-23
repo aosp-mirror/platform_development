@@ -15,6 +15,7 @@
  */
 
 import { getWMPropertiesForDisplay, shortenName } from '../mixin'
+import { asRawTreeViewObject } from '../../utils/diff.js'
 import { toRect, WindowState } from "../common"
 import { VISIBLE_CHIP } from '../treeview/Chips'
 import WindowContainer from "./WindowContainer"
@@ -75,12 +76,13 @@ import WindowContainer from "./WindowContainer"
 
         entry.obj = getWMPropertiesForDisplay(proto)
         entry.shortName = shortenName(entry.name)
-        entry.visible = entry.isVisible ?? false
-        entry.chips = entry.isVisible ? [VISIBLE_CHIP] : []
+        entry.visible = entry.isSurfaceShown ?? false
+        entry.chips = entry.isSurfaceShown ? [VISIBLE_CHIP] : []
         entry.children = entry.childrenWindows
-        if (entry.isVisible) {
+        if (entry.isSurfaceShown) {
             entry.rect = entry.rects[0]
         }
+        entry.rawTreeViewObject = asRawTreeViewObject(entry)
         return entry
     }
 }

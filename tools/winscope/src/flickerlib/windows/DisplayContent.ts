@@ -15,6 +15,7 @@
  */
 
 import { getWMPropertiesForDisplay,  shortenName } from '../mixin'
+import { asRawTreeViewObject } from '../../utils/diff.js'
 import { toRect, DisplayContent, Rect } from "../common"
 import WindowContainer from "./WindowContainer"
 
@@ -52,6 +53,8 @@ DisplayContent.fromProto = function (proto, isActivityInTree: Boolean): DisplayC
             proto.focusedApp,
             proto.appTransition?.lastUsedAppTransition ?? "",
             proto.appTransition?.appTransitionState ?? "",
+            proto.displayRotation?.rotation ?? 0,
+            proto.displayRotation?.lastOrientation ?? 0,
             windowContainer
         )
 
@@ -63,6 +66,7 @@ DisplayContent.fromProto = function (proto, isActivityInTree: Boolean): DisplayC
         entry.obj = getWMPropertiesForDisplay(proto)
         entry.shortName = shortenName(entry.name)
         entry.children = entry.childrenWindows
+        entry.rawTreeViewObject = asRawTreeViewObject(entry)
         return entry
     }
 }

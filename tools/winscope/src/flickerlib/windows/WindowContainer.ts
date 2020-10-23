@@ -15,6 +15,7 @@
  */
 
 import { getWMPropertiesForDisplay, shortenName } from '../mixin'
+import { asRawTreeViewObject } from '../../utils/diff.js'
 
 import {
     Configuration,
@@ -58,6 +59,7 @@ WindowContainer.fromProto = function ({
         // properties by changing the target element in the hierarchy tree view.
         entry.obj = getWMPropertiesForDisplay(proto)
         entry.shortName = shortenName(entry.name)
+        entry.rawTreeViewObject = asRawTreeViewObject(entry)
         return entry
     }
 }

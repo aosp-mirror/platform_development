@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { asRawTreeViewObject } from '../utils/diff.js'
 import { nanosToString, TimeUnits } from "../utils/utils.js"
 import { getWMPropertiesForDisplay } from './mixin'
 
@@ -25,7 +26,6 @@ import {
 } from "./common"
 
 import WindowContainer from "./windows/WindowContainer"
-
 
 WindowManagerState.fromProto = function ({proto, timestamp = 0, where = ""}): WindowManagerState {
     var inputMethodWIndowAppToken = ""
@@ -44,8 +44,6 @@ WindowManagerState.fromProto = function ({proto, timestamp = 0, where = ""}): Wi
         inputMethodWIndowAppToken,
         proto.rootWindowContainer.isHomeRecentsComponent,
         proto.displayFrozen,
-        proto.rotation,
-        proto.lastOrientation,
         proto.rootWindowContainer.pendingActivities.map(it => it.title),
         rootWindowContainer,
         keyguardControllerState,
@@ -53,11 +51,16 @@ WindowManagerState.fromProto = function ({proto, timestamp = 0, where = ""}): Wi
     )
 
     entry.obj = getWMPropertiesForDisplay(proto)
+    entry.obj["isComplete"] = entry.isComplete()
+    if (!entry.obj.isComplete) {
+        entry.obj["isIncompleteReason"] = entry.getIsIncompleteReason()
+    }
     entry.name = nanosToString(entry.timestamp, TimeUnits.MILLI_SECONDS)
     entry.shortName = entry.name
     entry.children = entry.root.childrenWindows.reverse()
     entry.chips = []
     entry.visible = true
+    entry.rawTreeViewObject = asRawTreeViewObject(entry)
     return entry
 }
 
@@ -101,8 +104,8 @@ function newKeyguardControllerState(proto): KeyguardControllerState {
     }
 
     return new KeyguardControllerState(
-        proto?.aodShowing ?? false,
-        proto?.keyguardShowing ?? false,
+        proto?.isAodShowing ?? false,
+        proto?.isKeyguardShowing ?? false,
         keyguardOccludedStates
     )
 }
