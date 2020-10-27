@@ -26,20 +26,12 @@ import android.view.OnReceiveContentCallback;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.Collections;
-import java.util.Set;
-
 /**
  * Sample implementation that accepts only images. All other content is deferred to default platform
  * behavior.
  */
 public class OnReceiveContentCallbackImages implements OnReceiveContentCallback<TextView> {
-    private static final Set<String> SUPPORTED_MIME_TYPES = Collections.singleton("image/*");
-
-    @Override
-    public Set<String> getSupportedMimeTypes(TextView view) {
-        return SUPPORTED_MIME_TYPES;
-    }
+    static final String[] SUPPORTED_MIME_TYPES = new String[] {"image/*"};
 
     @Override
     public boolean onReceiveContent(TextView view, Payload payload) {
