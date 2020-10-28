@@ -29,13 +29,13 @@ public class ReceiveContentDemoActivity extends Activity {
         setContentView(R.layout.demo);
 
         EditText editTextImagesOnly = findViewById(R.id.edittext_images);
-        editTextImagesOnly.setOnReceiveContentCallback(
-                OnReceiveContentCallbackImages.SUPPORTED_MIME_TYPES,
-                new OnReceiveContentCallbackImages());
+        editTextImagesOnly.setOnReceiveContentListener(
+                MyListenerImages.SUPPORTED_MIME_TYPES,
+                new MyListenerImages());
 
         EditText editTextAllTypes = findViewById(R.id.edittext_all_types);
-        editTextAllTypes.setOnReceiveContentCallback(
-                OnReceiveContentCallbackAllTypes.SUPPORTED_MIME_TYPES,
-                new OnReceiveContentCallbackAllTypes());
+        editTextAllTypes.setOnReceiveContentListener(
+                MyListenerAllContent.SUPPORTED_MIME_TYPES,
+                new MyListenerAllContent());
     }
 }
