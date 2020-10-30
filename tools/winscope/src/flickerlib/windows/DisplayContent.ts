@@ -33,7 +33,8 @@ export class DisplayContentMixin {
     let rootDisplayArea;
     if (proto.rootDisplayArea.windowContainer == null) {
       // For backward compatibility
-      const windowContainer = WindowContainer.fromProto(proto.windowContainer)
+      const windowContainer = WindowContainer.fromProto(proto.windowContainer,
+                                                        null)
       rootDisplayArea = new DisplayArea(windowContainer)
     } else {
       // New protos should always be using this

@@ -52,7 +52,7 @@ class WindowManagerTraceEntryMixin implements IClickableTreeViewElement {
 
   static fromProto(proto, timestamp) {
     const rootWindow =
-      WindowContainer.fromProto(proto.rootWindowContainer.windowContainer)
+      WindowContainer.fromProto(proto.rootWindowContainer.windowContainer, null)
     const windowManagerTraceEntry =
       new WindowManagerTraceEntry(rootWindow, timestamp)
 
