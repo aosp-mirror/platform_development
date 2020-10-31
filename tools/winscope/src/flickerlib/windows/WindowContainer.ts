@@ -84,7 +84,7 @@ export class WindowContainerMixin implements IClickableTreeViewElement {
     return this._obj
   }
 
-  static fromProto(proto) {
+  static fromProto(proto, parent_identifier) {
     const children = proto.children.map(
       child => transformWindowContainerChildProto(child))
 
@@ -98,9 +98,10 @@ export class WindowContainerMixin implements IClickableTreeViewElement {
       CompatibleFeatures.DiffVisualization = false;
     }
 
-
-    const title = proto.identifier.title
-    const hashCode = proto.identifier.hashCode
+    const fallback_title = parent_identifier?.title ?? ""
+    const fallback_hashCode = parent_identifier?.hashCode ?? ""
+    const title = proto.identifier?.title ?? fallback_title
+    const hashCode = proto.identifier?.hashCode ?? fallback_hashCode
     const visible = proto.visible
     const windowContainer =
       new WindowContainer(children, title, hashCode, visible)

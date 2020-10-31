@@ -26,7 +26,8 @@ export class WindowContainerMixin {
   }
 
   static fromProto(proto) {
-    const windowContainer = WindowContainer.fromProto(proto.windowContainer)
+    const windowContainer = WindowContainer.fromProto(proto.windowContainer,
+                                                      null)
 
     const windowToken = new WindowToken(windowContainer)
 

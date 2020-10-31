@@ -28,7 +28,8 @@ export class DisplayAreaMixin {
   }
 
   static fromProto(proto) {
-    const windowContainer = WindowContainer.fromProto(proto.windowContainer)
+    const windowContainer = WindowContainer.fromProto(proto.windowContainer,
+                                                      null)
 
     const displayArea = new DisplayArea(windowContainer)
 
