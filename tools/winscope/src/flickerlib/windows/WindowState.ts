@@ -29,7 +29,8 @@ export class WindowStateMixin {
   }
 
   static fromProto(proto) {
-    const windowContainer = WindowContainer.fromProto(proto.windowContainer)
+    const windowContainer = WindowContainer.fromProto(proto.windowContainer,
+                                                      proto.identifier)
 
     const frame = (proto.windowFrames ?? proto).frame ?? {}
     const rect = new Rect(frame.left ?? 0, frame.top ?? 0, frame.right ?? 0, frame.bottom ?? 0)

@@ -26,7 +26,8 @@ export class TaskMixin {
   }
 
   static fromProto(proto) {
-    const windowContainer = WindowContainer.fromProto(proto.windowContainer)
+    const windowContainer = WindowContainer.fromProto(proto.windowContainer,
+                                                      null)
 
     const task = new Task(windowContainer)
 
