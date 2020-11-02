@@ -1128,7 +1128,7 @@ class Runner(object):
     out_files = set()
     if list1 or list2:
       os.makedirs('out', exist_ok=True)
-    for path in (list1 + list2):
+    for path in list1 + list2:
       file_name = path.split('/')[-1]
       out_files.add(file_name)
       shutil.copy(path, 'out/' + file_name)
@@ -1223,11 +1223,19 @@ class Runner(object):
       return self
     cargo_toml = './Cargo.toml'
     cargo_out = './cargo.out'
+    # Do not use Cargo.lock, because .bp rules are designed to
+    # run with "latest" crates avaialable on Android.
+    cargo_lock = './Cargo.lock'
+    cargo_lock_saved = './cargo.lock.saved'
+    had_cargo_lock = os.path.exists(cargo_lock)
     if not os.access(cargo_toml, os.R_OK):
       print('ERROR: Cannot find or read', cargo_toml)
       return self
-    if not self.dry_run and os.path.exists(cargo_out):
-      os.remove(cargo_out)
+    if not self.dry_run:
+      if os.path.exists(cargo_out):
+        os.remove(cargo_out)
+      if not self.args.use_cargo_lock and had_cargo_lock:  # save it
+        os.rename(cargo_lock, cargo_lock_saved)
     cmd_tail = ' --target-dir ' + TARGET_TMP + ' >> ' + cargo_out + ' 2>&1'
     # set up search PATH for cargo to find the correct rustc
     saved_path = os.environ['PATH']
@@ -1272,6 +1280,11 @@ class Runner(object):
       if self.args.verbose:
         print('### INFO: restored original Cargo.toml')
     os.environ['PATH'] = saved_path
+    if not self.dry_run:
+      if not had_cargo_lock:  # restore to no Cargo.lock state
+        os.remove(cargo_lock)
+      elif not self.args.use_cargo_lock:  # restore saved Cargo.lock
+        os.rename(cargo_lock_saved, cargo_lock)
     return self
 
   def dump_dependencies(self):
@@ -1534,6 +1547,12 @@ def parse_args():
       action='store_true',
       default=False,
       help='run cargo build --tests after normal build')
+  parser.add_argument(
+      '--use-cargo-lock',
+      action='store_true',
+      default=False,
+      help=('run cargo build with existing Cargo.lock ' +
+            '(used when some latest dependent crates failed)'))
   parser.add_argument(
       '--verbose',
       action='store_true',
