@@ -1317,6 +1317,20 @@ class Runner(object):
           outf.write('//  ' + short_out_name(pkg, obj) + ' => ' +
                      short_out_name(pkg, obj2cc[obj].src) + '\n')
 
+  def apply_patch(self):
+    """Apply local patch file if it is given."""
+    if self.args.patch:
+      if self.dry_run:
+        print('Dry-run skip patch file:', self.args.patch)
+      else:
+        if not os.path.exists(self.args.patch):
+          self.append_to_bp('ERROR cannot find patch file: ' + self.args.patch)
+          return self
+        if self.args.verbose:
+          print('### INFO: applying local patch file:', self.args.patch)
+        os.system('patch -s --no-backup-if-mismatch ./Android.bp ' + self.args.patch)
+    return self
+
   def gen_bp(self):
     """Parse cargo.out and generate Android.bp files."""
     if self.dry_run:
@@ -1450,7 +1464,8 @@ class Runner(object):
         if fpath[0] != '/':  # ignore absolute path
           self.warning_files.add(fpath)
       elif line.startswith('error: ') or line.startswith('error[E'):
-        self.errors += line
+        if not self.args.ignore_cargo_errors:
+          self.errors += line
       prev_warning = False
       rustc_line = new_rustc
     self.find_warning_owners()
@@ -1516,6 +1531,11 @@ def parse_args():
       help=('add a compile_multilib:"first" property ' +
             'to Android.bp host modules.'))
   parser.add_argument(
+      '--ignore-cargo-errors',
+      action='store_true',
+      default=False,
+      help='do not append cargo/rustc error messages to Android.bp')
+  parser.add_argument(
       '--no-host',
       action='store_true',
       default=False,
@@ -1531,6 +1551,10 @@ def parse_args():
       default=False,
       help=('output all into one ./Android.bp, default will generate ' +
             'one Android.bp per Cargo.toml in subdirectories'))
+  parser.add_argument(
+      '--patch',
+      type=str,
+      help='apply the given patch file to generated ./Android.bp')
   parser.add_argument(
       '--run',
       action='store_true',
@@ -1570,7 +1594,7 @@ def main():
   args = parse_args()
   if not args.run:  # default is dry-run
     print(DRY_RUN_NOTE)
-  Runner(args).run_cargo().gen_bp().dump_test_mapping_files()
+  Runner(args).run_cargo().gen_bp().apply_patch().dump_test_mapping_files()
 
 
 if __name__ == '__main__':
