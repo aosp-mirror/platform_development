@@ -1116,23 +1116,32 @@ class Runner(object):
         rust_version = version
     return '.'.join(rust_version)
 
-  def copy_out_files(self):
-    """Copy build.rs output files to ./out and set up build_out_files."""
-    if not self.args.copy_out or self.checked_out_files:
-      return
-    self.checked_out_files = True
+  def find_out_files(self):
     # list1 has build.rs output for normal crates
     list1 = glob.glob(TARGET_TMP + '/*/*/build/' + self.root_pkg + '-*/out/*')
     # list2 has build.rs output for proc-macro crates
     list2 = glob.glob(TARGET_TMP + '/*/build/' + self.root_pkg + '-*/out/*')
+    return list1 + list2
+
+  def copy_out_files(self):
+    """Copy build.rs output files to ./out and set up build_out_files."""
+    if self.checked_out_files:
+      return
+    self.checked_out_files = True
+    cargo_out_files = self.find_out_files()
     out_files = set()
-    if list1 or list2:
+    if cargo_out_files:
       os.makedirs('out', exist_ok=True)
-    for path in list1 + list2:
+    for path in cargo_out_files:
       file_name = path.split('/')[-1]
       out_files.add(file_name)
       shutil.copy(path, 'out/' + file_name)
     self.build_out_files = sorted(out_files)
+
+  def has_used_out_dir(self):
+    """Returns true if env!("OUT_DIR") is found."""
+    return 0 == os.system('grep -rl --exclude build.rs --include \\*.rs' +
+                          ' \'env!("OUT_DIR")\' * > /dev/null')
 
   def copy_out_module_name(self):
     if self.args.copy_out and self.build_out_files:
@@ -1328,7 +1337,8 @@ class Runner(object):
           return self
         if self.args.verbose:
           print('### INFO: applying local patch file:', self.args.patch)
-        os.system('patch -s --no-backup-if-mismatch ./Android.bp ' + self.args.patch)
+        os.system('patch -s --no-backup-if-mismatch ./Android.bp ' +
+                  self.args.patch)
     return self
 
   def gen_bp(self):
@@ -1337,7 +1347,11 @@ class Runner(object):
       print('Dry-run skip: read', CARGO_OUT, 'write Android.bp')
     elif os.path.exists(CARGO_OUT):
       self.find_root_pkg()
-      self.copy_out_files()
+      if self.args.copy_out:
+        self.copy_out_files()
+      elif self.find_out_files() and self.has_used_out_dir():
+        print('WARNING: ' + self.root_pkg + ' has cargo output files; ' +
+              'please rerun with the --copy-out flag.')
       with open(CARGO_OUT, 'r') as cargo_out:
         self.parse(cargo_out, 'Android.bp')
         self.crates.sort(key=get_module_name)
