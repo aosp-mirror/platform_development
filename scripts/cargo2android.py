@@ -203,11 +203,10 @@ class TestMapping(object):
         if not is_first:  # add comma and '\n' after the previous entry
           outf.write(',\n')
         is_first = False
-        outf.write('    {\n      "name": "' + name + '"')
+        outf.write('    {\n')
         if host:
-          outf.write(',\n      "host": true\n    }')
-        else:
-          outf.write('\n    }')
+          outf.write('      "host": true,\n')
+        outf.write('      "name": "' + name + '"' + '\n    }')
       outf.write('\n  ]\n}\n')
 
 
