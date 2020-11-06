@@ -31,7 +31,7 @@ usage () {
   echo "-d is used to skip vbmeta.img replacement in its entirety and the"
   echo "    one from the device build (if exists) is left untouched"
   echo "system_build_dir is the path to the system build"
-  echo "    eg. aosp_arm64_ab-userdebug."
+  echo "    eg. aosp_arm64-userdebug."
   echo "device_build_dir is the path to the device build"
   echo "    eg. sailfish-user."
   echo "out_dir is the path to where the new build will be placed."
