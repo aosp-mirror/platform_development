@@ -17,7 +17,7 @@ function transform_entry_clients(entry) {
     kind: 'entry',
     name: nanos_to_string(entry.elapsedRealtimeNanos) + " - " + entry.where,
     children: [
-      [[entry.clients], transform_client_dump]
+      [[entry.client], transform_client_dump]
     ],
     timestamp: entry.elapsedRealtimeNanos,
     stableId: 'entry'
@@ -27,7 +27,7 @@ function transform_entry_clients(entry) {
 function transform_client_dump(entry) {
   return transform({
     obj: entry,
-    kind: 'Clients',
+    kind: 'Client',
     name: '',
     children: []
   });
