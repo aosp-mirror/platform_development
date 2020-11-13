@@ -18,6 +18,10 @@
 <resources>
     <string name="app_name">Receive Content Demo</string>
     <string name="hint_edittext_no_callback">Default EditText</string>
-    <string name="hint_edittext_images">EditText with a callback that handles "image/*"</string>
-    <string name="hint_edittext_all_types">EditText with a callback that handles "*/*"</string>
+    <string name="hint_edittext_images">
+        EditText with a listener that handles images
+    </string>
+    <string name="hint_edittext_all_types">
+        EditText with a listener that handles all content
+    </string>
 </resources>
