@@ -32,7 +32,7 @@ import {transform_wl_outputstate, transform_wayland_trace} from './transform_wl.
 import {transformProtolog} from './transform_protolog.js';
 import {transform_sysui_trace} from './transform_sys_ui.js';
 import {transform_launcher_trace} from './transform_launcher.js';
-import {transform_ime_trace} from './transform_ime.js';
+import {transform_ime_trace_clients, transform_ime_trace_service, transform_ime_trace_managerservice} from './transform_ime.js';
 import {fill_transform_data} from './matrix_utils.js';
 import {mp4Decoder} from './decodeVideo.js';
 
@@ -44,7 +44,9 @@ import WaylandTrace from '@/traces/Wayland.ts';
 import ProtoLogTrace from '@/traces/ProtoLog.ts';
 import SystemUITrace from '@/traces/SystemUI.ts';
 import LauncherTrace from '@/traces/Launcher.ts';
-import ImeTrace from '@/traces/InputMethodEditor.ts';
+import ImeTraceClients from '@/traces/InputMethodClients.ts';
+import ImeTraceService from '@/traces/InputMethodService.ts';
+import ImeTraceManagerService from '@/traces/InputMethodManagerService.ts';
 
 import SurfaceFlingerDump from '@/dumps/SurfaceFlinger.ts';
 import WindowManagerDump from '@/dumps/WindowManager.ts';
@@ -60,7 +62,9 @@ const WaylandDumpMessage = lookup_type(jsonProtoDefsWl, 'org.chromium.arc.waylan
 const ProtoLogMessage = lookup_type(jsonProtoDefsProtoLog, 'com.android.internal.protolog.ProtoLogFileProto');
 const SystemUiTraceMessage = lookup_type(jsonProtoDefsSysUi, 'com.android.systemui.tracing.SystemUiTraceFileProto');
 const LauncherTraceMessage = lookup_type(jsonProtoDefsLauncher, 'com.android.launcher3.tracing.LauncherTraceFileProto');
-const InputMethodEditorTraceMessage = lookup_type(jsonProtoDefsIme, "android.view.inputmethod.InputMethodEditorTraceFileProto");
+const InputMethodClientsTraceMessage = lookup_type(jsonProtoDefsIme, "android.view.inputmethod.InputMethodClientsTraceFileProto");
+const InputMethodServiceTraceMessage = lookup_type(jsonProtoDefsIme, "android.view.inputmethod.InputMethodServiceTraceFileProto");
+const InputMethodManagerServiceTraceMessage = lookup_type(jsonProtoDefsIme, "android.view.inputmethod.InputMethodManagerServiceTraceFileProto");
 
 const LAYER_TRACE_MAGIC_NUMBER = [0x09, 0x4c, 0x59, 0x52, 0x54, 0x52, 0x41, 0x43, 0x45]; // .LYRTRACE
 const WINDOW_TRACE_MAGIC_NUMBER = [0x09, 0x57, 0x49, 0x4e, 0x54, 0x52, 0x41, 0x43, 0x45]; // .WINTRACE
@@ -69,7 +73,9 @@ const WAYLAND_TRACE_MAGIC_NUMBER = [0x09, 0x57, 0x59, 0x4c, 0x54, 0x52, 0x41, 0x
 const PROTO_LOG_MAGIC_NUMBER = [0x09, 0x50, 0x52, 0x4f, 0x54, 0x4f, 0x4c, 0x4f, 0x47]; // .PROTOLOG
 const SYSTEM_UI_MAGIC_NUMBER = [0x09, 0x53, 0x59, 0x53, 0x55, 0x49, 0x54, 0x52, 0x43]; // .SYSUITRC
 const LAUNCHER_MAGIC_NUMBER = [0x09, 0x4C, 0x4E, 0x43, 0x48, 0x52, 0x54, 0x52, 0x43]; // .LNCHRTRC
-const IME_TRACE_MAGIC_NUMBER = [0x09, 0x49, 0x4d, 0x45, 0x54, 0x52, 0x41, 0x43, 0x45] //.IMETRACE
+const IMC_TRACE_MAGIC_NUMBER = [0x09, 0x49, 0x4d, 0x43, 0x54, 0x52, 0x41, 0x43, 0x45] //.IMCTRACE
+const IMS_TRACE_MAGIC_NUMBER = [0x09, 0x49, 0x4d, 0x53, 0x54, 0x52, 0x41, 0x43, 0x45] //.IMSTRACE
+const IMM_TRACE_MAGIC_NUMBER = [0x09, 0x49, 0x4d, 0x4d, 0x54, 0x52, 0x41, 0x43, 0x45] //.IMMTRACE
 
 const FILE_TYPES = Object.freeze({
   WINDOW_MANAGER_TRACE: 'WindowManagerTrace',
@@ -83,7 +89,9 @@ const FILE_TYPES = Object.freeze({
   PROTO_LOG: 'ProtoLog',
   SYSTEM_UI: 'SystemUI',
   LAUNCHER: 'Launcher',
-  IME_TRACE: 'ImeTrace',
+  IME_TRACE_CLIENTS: 'ImeTraceClients',
+  IME_TRACE_SERVICE: 'ImeTrace InputMethodService',
+  IME_TRACE_MANAGERSERVICE: 'ImeTrace InputMethodManagerService',
 });
 
 const WINDOW_MANAGER_ICON = 'view_compact';
@@ -108,7 +116,9 @@ const FILE_ICONS = {
   [FILE_TYPES.PROTO_LOG]: PROTO_LOG_ICON,
   [FILE_TYPES.SYSTEM_UI]: SYSTEM_UI_ICON,
   [FILE_TYPES.LAUNCHER]: LAUNCHER_ICON,
-  [FILE_TYPES.IME_TRACE]: IME_ICON,
+  [FILE_TYPES.IME_TRACE_CLIENTS]: IME_ICON,
+  [FILE_TYPES.IME_TRACE_SERVICE]: IME_ICON,
+  [FILE_TYPES.IME_TRACE_MANAGERSERVICE]: IME_ICON,
 };
 
 function oneOf(dataType) {
@@ -128,7 +138,9 @@ const TRACE_TYPES = Object.freeze({
   PROTO_LOG: 'ProtoLog',
   SYSTEM_UI: 'SystemUI',
   LAUNCHER: 'Launcher',
-  IME: 'ImeTrace',
+  IME_CLIENTS: 'ImeTrace Clients',
+  IME_SERVICE: 'ImeTrace InputMethodService',
+  IME_MANAGERSERVICE: 'ImeTrace InputMethodManagerService',
 });
 
 const TRACE_INFO = {
@@ -182,11 +194,23 @@ const TRACE_INFO = {
     files: [oneOf(FILE_TYPES.LAUNCHER)],
     constructor: LauncherTrace,
   },
-  [TRACE_TYPES.IME]: {
-    name: 'InputMethodEditor',
+  [TRACE_TYPES.IME_CLIENTS]: {
+    name: 'InputMethodClients',
     icon: IME_ICON,
-    files: [oneOf(FILE_TYPES.IME_TRACE)],
-    constructor: ImeTrace,
+    files: [oneOf(FILE_TYPES.IME_TRACE_CLIENTS)],
+    constructor: ImeTraceClients,
+  },
+  [TRACE_TYPES.IME_SERVICE]: {
+    name: 'InputMethodService',
+    icon: IME_ICON,
+    files: [oneOf(FILE_TYPES.IME_TRACE_SERVICE)],
+    constructor: ImeTraceService,
+  },
+  [TRACE_TYPES.IME_MANAGERSERVICE]: {
+    name: 'InputMethodManagerService',
+    icon: IME_ICON,
+    files: [oneOf(FILE_TYPES.IME_TRACE_MANAGERSERVICE)],
+    constructor: ImeTraceManagerService,
   },
 };
 
@@ -226,6 +250,9 @@ export const TRACE_ICONS = {
   [TRACE_TYPES.PROTO_LOG]: PROTO_LOG_ICON,
   [TRACE_TYPES.SYSTEM_UI]: SYSTEM_UI_ICON,
   [TRACE_TYPES.LAUNCHER]: LAUNCHER_ICON,
+  [TRACE_TYPES.IME_CLIENTS]: IME_ICON,
+  [TRACE_TYPES.IME_SERVICE]: IME_ICON,
+  [TRACE_TYPES.IME_MANAGERSERVICE]: IME_ICON,
 
   [DUMP_TYPES.WINDOW_MANAGER]: WINDOW_MANAGER_ICON,
   [DUMP_TYPES.SURFACE_FLINGER]: SURFACE_FLINGER_ICON,
@@ -352,14 +379,36 @@ const FILE_DECODERS = {
       timeline: true,
     },
   },
-  [FILE_TYPES.IME_TRACE]: {
-    name: 'InputMethodEditor trace',
+  [FILE_TYPES.IME_TRACE_CLIENTS]: {
+    name: 'InputMethodClients trace',
     decoder: protoDecoder,
     decoderParams: {
-      type: FILE_TYPES.IME_TRACE,
+      type: FILE_TYPES.IME_TRACE_CLIENTS,
       mime: 'application/octet-stream',
-      protoType: InputMethodEditorTraceMessage,
-      transform: transform_ime_trace,
+      protoType: InputMethodClientsTraceMessage,
+      transform: transform_ime_trace_clients,
+      timeline: true,
+    },
+  },
+  [FILE_TYPES.IME_TRACE_SERVICE]: {
+    name: 'InputMethodService trace',
+    decoder: protoDecoder,
+    decoderParams: {
+      type: FILE_TYPES.IME_TRACE_SERVICE,
+      mime: 'application/octet-stream',
+      protoType: InputMethodServiceTraceMessage,
+      transform: transform_ime_trace_service,
+      timeline: true,
+    },
+  },
+  [FILE_TYPES.IME_TRACE_MANAGERSERVICE]: {
+    name: 'InputMethodManagerService trace',
+    decoder: protoDecoder,
+    decoderParams: {
+      type: FILE_TYPES.IME_TRACE_MANAGERSERVICE,
+      mime: 'application/octet-stream',
+      protoType: InputMethodManagerServiceTraceMessage,
+      transform: transform_ime_trace_managerservice,
       timeline: true,
     },
   },
@@ -493,8 +542,14 @@ function detectAndDecode(buffer, fileName, store) {
   if (arrayStartsWith(buffer, LAUNCHER_MAGIC_NUMBER)) {
     return decodedFile(FILE_TYPES.LAUNCHER, buffer, fileName, store);
   }
-  if (arrayStartsWith(buffer, IME_TRACE_MAGIC_NUMBER)) {
-    return decodedFile(FILE_TYPES.IME_TRACE, buffer, fileName, store);
+  if (arrayStartsWith(buffer, IMC_TRACE_MAGIC_NUMBER)) {
+    return decodedFile(FILE_TYPES.IME_TRACE_CLIENTS, buffer, fileName, store);
+  }
+  if (arrayStartsWith(buffer, IMS_TRACE_MAGIC_NUMBER)) {
+    return decodedFile(FILE_TYPES.IME_TRACE_SERVICE, buffer, fileName, store);
+  }
+  if (arrayStartsWith(buffer, IMM_TRACE_MAGIC_NUMBER)) {
+    return decodedFile(FILE_TYPES.IME_TRACE_MANAGERSERVICE, buffer, fileName, store);
   }
 
   // TODO(b/169305853): Add magic number at beginning of file for better auto detection
