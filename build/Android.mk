@@ -58,7 +58,7 @@ $(sample_props) : $(HOST_OUT)/development/samples/%_source.properties : $(TOPDIR
 # ===== SDK jar file of stubs =====
 # A.k.a the "current" version of the public SDK (android.jar inside the SDK package).
 full_target := $(call intermediates-dir-for,JAVA_LIBRARIES,android_stubs_current,,COMMON)/classes.jar
-full_src_target := $(OUT_DOCS)/api-stubs-docs-stubs.srcjar
+full_src_target := $(call intermediates-dir-for,ETC,frameworks-base-api-current.srcjar)/frameworks-base-api-current.srcjar
 
 # android.jar is what we put in the SDK package.
 android_jar_intermediates := $(call intermediates-dir-for,PACKAGING,android_jar,,COMMON)
