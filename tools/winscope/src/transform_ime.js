@@ -1,50 +1,63 @@
 import {nanos_to_string, transform} from './transform.js'
 
-function transform_ime_trace(entries) {
+function transform_ime_trace_clients(entries) {
   return transform({
     obj: entries,
     kind: 'entries',
     name: 'entries',
     children: [
-      [entries.entry, transform_entry]
+      [entries.entry, transform_entry_clients]
     ]
   });
 }
 
-function transform_entry(entry) {
+function transform_entry_clients(entry) {
   return transform({
     obj: entry,
     kind: 'entry',
-    name: nanos_to_string(entry.elapsedRealtimeNanos),
+    name: nanos_to_string(entry.elapsedRealtimeNanos) + " - " + entry.where,
     children: [
-      [[entry.inputMethodManagerService], transform_imms_dump],
-      [[entry.inputMethodService], transform_ims_dump],
-      [[entry.clients], transform_client_dump]
+      [[entry.client], transform_client_dump]
     ],
     timestamp: entry.elapsedRealtimeNanos,
     stableId: 'entry'
   });
 }
 
-function transform_imms_dump(entry) {
-  return transform({
-    obj: entry,
-    kind: 'InputMethodManagerService',
-    name: '',
-    children: []
-  });
-}
-
 function transform_client_dump(entry) {
   return transform({
     obj: entry,
-    kind: 'Clients',
+    kind: 'Client',
     name: '',
     children: []
   });
 }
 
-function transform_ims_dump(entry) {
+function transform_ime_trace_service(entries) {
+  return transform({
+    obj: entries,
+    kind: 'entries',
+    name: 'entries',
+    children: [
+      [entries.entry, transform_entry_service]
+    ]
+  });
+}
+
+function transform_entry_service(entry) {
+  return transform({
+    obj: entry,
+    kind: 'entry',
+    name: nanos_to_string(entry.elapsedRealtimeNanos) + " - " + entry.where,
+    children: [
+      [[entry.inputMethodService], transform_service_dump]
+    ],
+    timestamp: entry.elapsedRealtimeNanos,
+    stableId: 'entry'
+  });
+}
+
+function transform_service_dump(entry) {
   return transform({
     obj: entry,
     kind: 'InputMethodService',
@@ -53,4 +66,37 @@ function transform_ims_dump(entry) {
   });
 }
 
-export {transform_ime_trace};
+function transform_ime_trace_managerservice(entries) {
+  return transform({
+    obj: entries,
+    kind: 'entries',
+    name: 'entries',
+    children: [
+      [entries.entry, transform_entry_managerservice]
+    ]
+  });
+}
+
+function transform_entry_managerservice(entry) {
+  return transform({
+    obj: entry,
+    kind: 'entry',
+    name: nanos_to_string(entry.elapsedRealtimeNanos) + " - " + entry.where,
+    children: [
+      [[entry.inputMethodManagerService], transform_managerservice_dump]
+    ],
+    timestamp: entry.elapsedRealtimeNanos,
+    stableId: 'entry'
+  });
+}
+
+function transform_managerservice_dump(entry) {
+  return transform({
+    obj: entry,
+    kind: 'InputMethodManagerService',
+    name: '',
+    children: []
+  });
+}
+
+export {transform_ime_trace_clients, transform_ime_trace_service, transform_ime_trace_managerservice};
