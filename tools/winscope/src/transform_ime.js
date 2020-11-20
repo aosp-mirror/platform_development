@@ -28,8 +28,11 @@ function transform_client_dump(entry) {
   return transform({
     obj: entry,
     kind: 'Client',
-    name: '',
-    children: []
+    name: '\n- methodId ' + entry?.inputMethodManager?.curId
+        + '\n- view ' + entry?.viewRootImpl?.view
+        + '\n- packageName ' + entry?.editorInfo?.packageName,
+    children: [],
+    stableId: 'client'
   });
 }
 
@@ -61,8 +64,11 @@ function transform_service_dump(entry) {
   return transform({
     obj: entry,
     kind: 'InputMethodService',
-    name: '',
-    children: []
+    name: '\n- windowVisible ' + entry?.windowVisible
+        + '\n- decorViewVisible ' + entry?.decorViewVisible
+        + '\n- packageName ' + entry?.inputEditorInfo?.packageName,
+    children: [],
+    stableId: 'service'
   });
 }
 
@@ -94,8 +100,12 @@ function transform_managerservice_dump(entry) {
   return transform({
     obj: entry,
     kind: 'InputMethodManagerService',
-    name: '',
-    children: []
+    name: '\n- methodId ' + entry?.curMethodId
+        + '\n- curFocusedWindow ' + entry?.curFocusedWindowName
+        + '\n- lastImeTargetWindow ' + entry?.lastImeTargetWindowName
+        + '\n- inputShown ' + entry?.inputShown,
+    children: [],
+    stableId: 'managerservice'
   });
 }
 
