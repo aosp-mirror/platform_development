@@ -61,7 +61,6 @@ function transformLayer(layer) {
     let result = layer.bounds;
     const tx = layer.position ? layer.position.x || 0 : 0;
     const ty = layer.position ? layer.position.y || 0 : 0;
-    result = offsetTo(result, 0, 0);
     result.label = layer.name;
     result.transform = layer.transform;
     result.transform.tx = tx;
