@@ -278,7 +278,7 @@ function traverse_top_to_bottom(layerMap, rootLayers, globalState, fn) {
       if (!layerMap.hasOwnProperty(id)) {
         // TODO (b/162500053): so that this doesn't need to be checked here
         console.warn(
-            `Children layer with id ${id} not found in dumped layers... ` +
+            `Child layer with id ${id} not found in dumped layers... ` +
             `Skipping layer in traversal...`);
       } else {
         children.push(layerMap[id]);
@@ -327,7 +327,16 @@ function traverse(layerMap, rootLayers, fn) {
     const parentId = rootLayers[i].parent;
     const parent = parentId == -1 ? null : layerMap[parentId];
     fn(rootLayers[i], parent);
-    const children = rootLayers[i].children.map((id) => layerMap[id]);
+    const children = rootLayers[i].children.map(
+      (id) => {
+        const child = layerMap[id];
+        if (child == null) {
+          console.warn(
+            `Child layer with id ${id} in parent layer id ${rootLayers[i].id} not found... ` +
+            `Skipping layer in traversal...`);
+        }
+        return child;
+      }).filter(item => item !== undefined);
     traverse(layerMap, children, fn);
   }
 }
