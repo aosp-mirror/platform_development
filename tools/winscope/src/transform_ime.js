@@ -26,10 +26,13 @@ function transform_entry_clients(entry) {
 
 function transform_client_dump(entry) {
   return transform({
-    obj: entry,
+    obj: transform_input_connection_call(entry),
     kind: 'Client',
-    name: '',
-    children: []
+    name: '\n- methodId ' + entry?.inputMethodManager?.curId
+        + '\n- view ' + entry?.viewRootImpl?.view
+        + '\n- packageName ' + entry?.editorInfo?.packageName,
+    children: [],
+    stableId: 'client'
   });
 }
 
@@ -59,10 +62,13 @@ function transform_entry_service(entry) {
 
 function transform_service_dump(entry) {
   return transform({
-    obj: entry,
+    obj: transform_input_connection_call(entry),
     kind: 'InputMethodService',
-    name: '',
-    children: []
+    name: '\n- windowVisible ' + entry?.windowVisible
+        + '\n- decorViewVisible ' + entry?.decorViewVisible
+        + '\n- packageName ' + entry?.inputEditorInfo?.packageName,
+    children: [],
+    stableId: 'service'
   });
 }
 
@@ -94,9 +100,24 @@ function transform_managerservice_dump(entry) {
   return transform({
     obj: entry,
     kind: 'InputMethodManagerService',
-    name: '',
-    children: []
+    name: '\n- methodId ' + entry?.curMethodId
+        + '\n- curFocusedWindow ' + entry?.curFocusedWindowName
+        + '\n- lastImeTargetWindow ' + entry?.lastImeTargetWindowName
+        + '\n- inputShown ' + entry?.inputShown,
+    children: [],
+    stableId: 'managerservice'
   });
+}
+
+function transform_input_connection_call(entry) {
+  const obj = Object.assign({}, entry)
+  if (obj.inputConnectionCall) {
+    Object.getOwnPropertyNames(obj.inputConnectionCall).forEach(name => {
+        const value = Object.getOwnPropertyDescriptor(obj.inputConnectionCall, name)
+        if (!value.value) delete obj.inputConnectionCall[name]
+    })
+  }
+  return obj
 }
 
 export {transform_ime_trace_clients, transform_ime_trace_service, transform_ime_trace_managerservice};
