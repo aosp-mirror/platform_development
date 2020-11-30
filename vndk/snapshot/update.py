@@ -116,40 +116,19 @@ def gather_notice_files(install_dir):
 
 
 def post_processe_files_if_needed(vndk_version):
-    """For O-MR1, replaces unversioned VNDK directories with versioned ones.
-    Also, renames ld.config.txt, llndk.libraries.txt and vndksp.libraries.txt
+    """Renames vndkcore.libraries.txt and vndksp.libraries.txt
     files to have version suffix.
-
-    Unversioned VNDK directories: /system/${LIB}/vndk[-sp]
-    Versioned VNDK directories: /system/${LIB}/vndk[-sp]-27
 
     Args:
       vndk_version: int, version of VNDK snapshot
     """
     def add_version_suffix(file_name):
-        logging.info('Rename {} to have version suffix'.format(vndk_version))
+        logging.info('Rename {} to have version suffix'.format(file_name))
         target_files = glob.glob(
             os.path.join(utils.CONFIG_DIR_PATH_PATTERN, file_name))
         for target_file in target_files:
             name, ext = os.path.splitext(target_file)
             os.rename(target_file, name + '.' + str(vndk_version) + ext)
-    if vndk_version == 27:
-        logging.info('Revising ld.config.txt for O-MR1...')
-        re_pattern = '(system\/\${LIB}\/vndk(?:-sp)?)([:/]|$)'
-        VNDK_INSTALL_DIR_RE = re.compile(re_pattern, flags=re.MULTILINE)
-        ld_config_txt_paths = glob.glob(
-            os.path.join(utils.CONFIG_DIR_PATH_PATTERN, 'ld.config*'))
-        for ld_config_file in ld_config_txt_paths:
-            with open(ld_config_file, 'r') as file:
-                revised = VNDK_INSTALL_DIR_RE.sub(r'\1-27\2', file.read())
-            with open(ld_config_file, 'w') as file:
-                file.write(revised)
-
-        files_to_add_version_suffix = ('ld.config.txt',
-                                       'llndk.libraries.txt',
-                                       'vndksp.libraries.txt')
-        for file_to_rename in files_to_add_version_suffix:
-            add_version_suffix(file_to_rename)
 
     files_to_enforce_version_suffix = ('vndkcore.libraries.txt',
                                        'vndkprivate.libraries.txt')
@@ -191,8 +170,9 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         'vndk_version',
-        type=int,
-        help='VNDK snapshot version to install, e.g. "27".')
+        type=utils.vndk_version_int,
+        help='VNDK snapshot version to install, e.g. "{}".'.format(
+            utils.MINIMUM_VNDK_VERSION))
     parser.add_argument('-b', '--branch', help='Branch to pull build from.')
     parser.add_argument('--build', help='Build number to pull.')
     parser.add_argument(
