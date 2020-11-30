@@ -118,6 +118,7 @@ def gather_notice_files(install_dir):
 def post_processe_files_if_needed(vndk_version):
     """Renames vndkcore.libraries.txt and vndksp.libraries.txt
     files to have version suffix.
+    Create empty vndkproduct.libraries.txt file if not exist.
 
     Args:
       vndk_version: int, version of VNDK snapshot
@@ -129,11 +130,22 @@ def post_processe_files_if_needed(vndk_version):
         for target_file in target_files:
             name, ext = os.path.splitext(target_file)
             os.rename(target_file, name + '.' + str(vndk_version) + ext)
+    def create_empty_file_if_not_exist(file_name):
+        target_dirs = glob.glob(utils.CONFIG_DIR_PATH_PATTERN)
+        for dir in target_dirs:
+            path = os.path.join(dir, file_name)
+            if os.path.isfile(path):
+                continue
+            logging.info('Creating empty file: {}'.format(path))
+            open(path, 'a').close()
 
-    files_to_enforce_version_suffix = ('vndkcore.libraries.txt',
-                                       'vndkprivate.libraries.txt')
-    for file_to_rename in files_to_enforce_version_suffix:
+    files_to_add_version_suffix = ('vndkcore.libraries.txt',
+                                   'vndkprivate.libraries.txt')
+    files_to_create_if_not_exist = ('vndkproduct.libraries.txt',)
+    for file_to_rename in files_to_add_version_suffix:
         add_version_suffix(file_to_rename)
+    for file_to_create in files_to_create_if_not_exist:
+        create_empty_file_if_not_exist(file_to_create)
 
 
 def update_buildfiles(buildfile_generator):
