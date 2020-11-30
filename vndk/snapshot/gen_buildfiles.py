@@ -63,7 +63,8 @@ class GenBuildFile(object):
         'llndk.libraries.txt',
         'vndksp.libraries.txt',
         'vndkcore.libraries.txt',
-        'vndkprivate.libraries.txt'
+        'vndkprivate.libraries.txt',
+        'vndkproduct.libraries.txt',
     ]
 
     def __init__(self, install_dir, vndk_version):
@@ -86,6 +87,8 @@ class GenBuildFile(object):
             os.path.basename(self._etc_paths['vndksp.libraries.txt']))
         self._vndk_private = self._parse_lib_list(
             os.path.basename(self._etc_paths['vndkprivate.libraries.txt']))
+        self._vndk_product = self._parse_lib_list(
+            os.path.basename(self._etc_paths['vndkproduct.libraries.txt']))
         self._modules_with_notice = self._get_modules_with_notice()
 
     def _get_etc_paths(self):
@@ -117,6 +120,8 @@ class GenBuildFile(object):
             abs_path_of_txt = os.path.join(self._install_dir, txt_path)
             with open(abs_path_of_txt, 'r') as f:
                 lib_map[arch] = f.read().strip().split('\n')
+            if lib_map[arch] == ['']:
+                lib_map[arch].clear()
         return lib_map
 
     def _get_modules_with_notice(self):
@@ -487,6 +492,11 @@ class GenBuildFile(object):
             name = os.path.splitext(prebuilt)[0]
         vendor_available = str(
             prebuilt not in self._vndk_private[arch]).lower()
+        product_available = ''
+        # if vndkproduct.libraries.txt is empty, make the VNDKs available to product by default.
+        if not self._vndk_product[arch] or prebuilt in self._vndk_product[arch]:
+            product_available = '{ind}product_available: {available},\n'.format(
+                ind=self.INDENT, available=vendor_available)
 
         vndk_sp = ''
         if is_vndk_sp:
@@ -506,6 +516,7 @@ class GenBuildFile(object):
                 '{ind}target_arch: "{target_arch}",\n'
                 '{binder32bit}'
                 '{ind}vendor_available: {vendor_available},\n'
+                '{product_available}'
                 '{ind}vndk: {{\n'
                 '{ind}{ind}enabled: true,\n'
                 '{vndk_sp}'
@@ -519,6 +530,7 @@ class GenBuildFile(object):
                     target_arch=arch,
                     binder32bit=binder32bit,
                     vendor_available=vendor_available,
+                    product_available=product_available,
                     vndk_sp=vndk_sp,
                     notice=notice,
                     arch_props=arch_props))
