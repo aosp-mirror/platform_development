@@ -1,4 +1,4 @@
-// Copyright (C) 2009 The Android Open Source Project
+// Copyright (C) 2020 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,14 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-java_library_host {
-    name: "hosttestlib",
-
-    // Only compile source java files in this lib.
-    srcs: ["src/**/*.java"],
-
-    libs: [
-        "ddmlib-prebuilt",
-        "junit",
+blueprint_go_binary {
+    name: "bpflatten",
+    srcs: [
+        "bpflatten/main.go",
     ],
+    deps: [
+        "blueprint-parser",
+    ],
+}
+
+sh_binary_host {
+    name: "fix_android_bp_prebuilt",
+    src: "fix_android_bp_prebuilt.sh",
 }
