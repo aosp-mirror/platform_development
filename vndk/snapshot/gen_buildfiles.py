@@ -67,6 +67,27 @@ class GenBuildFile(object):
         'vndkproduct.libraries.txt',
     ]
 
+    """Some vendor prebuilts reference libprotobuf-cpp-lite.so and
+    libprotobuf-cpp-full.so and expect the 3.0.0-beta3 version.
+    The new version of protobuf will be installed as
+    /vendor/lib64/libprotobuf-cpp-lite-3.9.1.so.  The VNDK doesn't
+    help here because we compile old devices against the current
+    branch and not an old VNDK snapshot.  We need to continue to
+    provide a vendor libprotobuf-cpp-lite.so until all products in
+    the current branch get updated prebuilts or are obsoleted.
+
+    VENDOR_COMPAT is a dictionary that has VNDK versions as keys and
+    the list of (library name string, shared libs list) as values.
+    """
+    VENDOR_COMPAT = {
+        28: [
+            ('libprotobuf-cpp-lite',
+                ['libc++', 'libc', 'libdl', 'liblog', 'libm', 'libz']),
+            ('libprotobuf-cpp-full',
+                ['libc++', 'libc', 'libdl', 'liblog', 'libm', 'libz']),
+        ]
+    }
+
     def __init__(self, install_dir, vndk_version):
         """GenBuildFile constructor.
 
@@ -136,14 +157,21 @@ class GenBuildFile(object):
 
         logging.info('Generating Android.bp for snapshot v{}'.format(
             self._vndk_version))
-        etc_buildrules = []
+        prebuilt_buildrules = []
         for prebuilt in self.ETC_MODULES:
-            etc_buildrules.append(self._gen_etc_prebuilt(prebuilt))
+            prebuilt_buildrules.append(self._gen_etc_prebuilt(prebuilt))
+
+        if self._vndk_version in self.VENDOR_COMPAT:
+            prebuilt_buildrules.append('// Defining prebuilt libraries '
+                        'for the compatibility of old vendor modules')
+            for vendor_compat_lib_info in self.VENDOR_COMPAT[self._vndk_version]:
+                prebuilt_buildrules.append(
+                    self._gen_prebuilt_library_shared(vendor_compat_lib_info))
 
         with open(self._root_bpfile, 'w') as bpfile:
             bpfile.write(self._gen_autogen_msg('/'))
             bpfile.write('\n')
-            bpfile.write('\n'.join(etc_buildrules))
+            bpfile.write('\n'.join(prebuilt_buildrules))
             bpfile.write('\n')
 
         logging.info('Successfully generated {}'.format(self._root_bpfile))
@@ -303,6 +331,56 @@ class GenBuildFile(object):
         prebuilt_etc += ('{ind}}},\n'
                          '}}\n'.format(ind=self.INDENT))
         return prebuilt_etc
+
+    def _gen_prebuilt_library_shared(self, prebuilt_lib_info):
+        """Generates cc_prebuilt_library_shared modules for the old vendor
+        compatibility.
+
+        Some vendor modules still require old version of libraries that is not
+        available from the current source tree. To provide the old copy of the
+        libraries, use the vndk snapshot.
+
+        Args:
+            prebuilt_lib_info: pair of (string, list of strings), name of the
+                        prebuilt library and the list of shared libs for it.
+        """
+        lib_name = prebuilt_lib_info[0]
+        shared_libs = prebuilt_lib_info[1]
+
+        shared_libs_prop = ''
+        if shared_libs:
+            shared_libs_prop = ('{ind}shared_libs: [\n'.format(ind=self.INDENT))
+            for lib in shared_libs:
+                shared_libs_prop += ('{ind}{ind}"{lib}",\n'.format(
+                                        ind=self.INDENT, lib=lib))
+            shared_libs_prop += ('{ind}],\n'.format(ind=self.INDENT))
+
+        cc_prebuilt_libraries = ('cc_prebuilt_library_shared {{\n'
+                                 '{ind}name: "{name}-vendorcompat",\n'
+                                 '{ind}stem: "{name}",\n'
+                                 '{ind}vendor: true,\n'
+                                 '{ind}// These are already stripped, and '
+                                 'restripping them just issues diagnostics.\n'
+                                 '{ind}strip: {{\n'
+                                 '{ind}{ind}none: true,\n'
+                                 '{ind}}},\n'
+                                 '{shared_libs}'
+                                 '{ind}target: {{\n'.format(
+                                    ind=self.INDENT,
+                                    name=lib_name,
+                                    shared_libs=shared_libs_prop))
+        src_paths = utils.find(self._install_dir, [lib_name+'.so'])
+        for src in src_paths:
+            dirs = src.split(os.path.sep)
+            if len(dirs) < 3 or not dirs[1].startswith('arch-{}-'.format(dirs[0])):
+                continue
+            cc_prebuilt_libraries += ('{ind}{ind}android_{arch}: {{\n'
+                                      '{ind}{ind}{ind}srcs: ["{src}"],\n'
+                                      '{ind}{ind}}},\n'.format(
+                                        ind=self.INDENT, arch=dirs[0], src=src))
+        cc_prebuilt_libraries += ('{ind}}},\n'
+                                  '}}\n'.format(ind=self.INDENT))
+        return cc_prebuilt_libraries
 
     def _gen_notice_filegroup(self, module):
         """Generates a notice filegroup build rule for a given module.
