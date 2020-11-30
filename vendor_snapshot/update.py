@@ -208,12 +208,12 @@ def gen_bp_module(variation, name, version, target_arch, arch_props, bp_dir):
     return bp
 
 
-def gen_bp_files(install_dir, snapshot_version):
+def build_props(install_dir):
     # props[target_arch]["static"|"shared"|"binary"|"header"][name][arch] : json
     props = dict()
 
     # {target_arch}/{arch}/{variation}/{module}.json
-    for root, _, files in os.walk(install_dir):
+    for root, _, files in os.walk(install_dir, followlinks = True):
         for file_name in sorted(files):
             if not file_name.endswith('.json'):
                 continue
@@ -241,9 +241,6 @@ def gen_bp_files(install_dir, snapshot_version):
                     target_arch)
 
             module_name = prop['name']
-            notice_path = 'NOTICE_FILES/' + module_name + '.txt'
-            if os.path.exists(os.path.join(bp_dir, notice_path)):
-                prop['notice'] = notice_path
 
             # Is this sanitized variant?
             if 'sanitize' in prop:
@@ -254,7 +251,11 @@ def gen_bp_files(install_dir, snapshot_version):
                 for k in list(prop.keys()):
                     if not k in SANITIZER_VARIANT_PROPS:
                         del prop[k]
-                prop = {sanitizer_type: prop}
+                prop = {'name': module_name, sanitizer_type: prop}
+
+            notice_path = 'NOTICE_FILES/' + module_name + '.txt'
+            if os.path.exists(os.path.join(bp_dir, notice_path)):
+                prop['notice'] = notice_path
 
             variation_dict = props[target_arch][variation]
             if not module_name in variation_dict:
@@ -264,11 +265,17 @@ def gen_bp_files(install_dir, snapshot_version):
             else:
                 variation_dict[module_name][arch].update(prop)
 
-    for target_arch in props:
+    return props
+
+
+def gen_bp_files(install_dir, snapshot_version):
+    props = build_props(install_dir)
+
+    for target_arch in sorted(props):
         androidbp = ''
         bp_dir = os.path.join(install_dir, target_arch)
-        for variation in props[target_arch]:
-            for name in props[target_arch][variation]:
+        for variation in sorted(props[target_arch]):
+            for name in sorted(props[target_arch][variation]):
                 androidbp += gen_bp_module(variation, name, snapshot_version,
                                            target_arch,
                                            props[target_arch][variation][name],
@@ -300,17 +307,19 @@ def fetch_artifact(branch, build, target, pattern, destination):
     ]
     check_call(cmd)
 
-def install_artifacts(branch, build, target, local_dir, install_dir):
+def install_artifacts(branch, build, target, local_dir, symlink, install_dir):
     """Installs vendor snapshot build artifacts to {install_dir}/v{version}.
 
     1) Fetch build artifacts from Android Build server or from local_dir
-    2) Unzip build artifacts
+    2) Unzip or create symlinks to build artifacts
 
     Args:
       branch: string or None, branch name of build artifacts
       build: string or None, build number of build artifacts
       target: string or None, target name of build artifacts
       local_dir: string or None, local dir to pull artifacts from
+      symlink: boolean, whether to use symlinks instead of unzipping the
+        vendor snapshot zip
       install_dir: string, directory to install vendor snapshot
       temp_artifact_dir: string, temp directory to hold build artifacts fetched
         from Android Build server. For 'local' option, is set to None.
@@ -335,8 +344,27 @@ def install_artifacts(branch, build, target, local_dir, install_dir):
             fetch_artifact(branch, build, target, artifact_pattern, tmpdir)
             unzip_artifacts(tmpdir)
     elif local_dir:
-        logging.info('Fetching local VNDK snapshot from {}'.format(local_dir))
-        unzip_artifacts(local_dir)
+        if symlink:
+            # This assumes local_dir is the location of vendor-snapshot in the
+            # build (e.g., out/soong/vendor-snapshot).
+            #
+            # Create the first level as proper directories and the next level
+            # as symlinks.
+            for item1 in os.listdir(local_dir):
+                dest_dir = os.path.join(install_dir, item1)
+                src_dir = os.path.join(local_dir, item1)
+                if os.path.isdir(src_dir):
+                    check_call(['mkdir', '-p', dest_dir])
+                    # Create symlinks.
+                    for item2 in os.listdir(src_dir):
+                        src_item = os.path.join(src_dir, item2)
+                        logging.info('Creating symlink from {} in {}'.format(
+                            src_item, dest_dir))
+                        os.symlink(src_item, os.path.join(dest_dir, item2))
+        else:
+            logging.info('Fetching local VNDK snapshot from {}'.format(
+                local_dir))
+            unzip_artifacts(local_dir)
     else:
         raise RuntimeError('Neither local nor remote fetch information given.')
 
@@ -354,6 +382,10 @@ def get_args():
         help=('Fetch local vendor snapshot artifacts from specified local '
               'directory instead of Android Build server. '
               'Example: --local /path/to/local/dir'))
+    parser.add_argument(
+        '--symlink',
+        action='store_true',
+        help='Use symlinks instead of unzipping vendor snapshot zip')
     parser.add_argument(
         '--install-dir',
         help=(
@@ -432,6 +464,7 @@ def main():
         build=args.build,
         target=args.target,
         local_dir=local,
+        symlink=args.symlink,
         install_dir=install_dir)
     gen_bp_files(install_dir, snapshot_version)
 

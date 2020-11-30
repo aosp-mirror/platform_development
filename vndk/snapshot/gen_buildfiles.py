@@ -63,7 +63,8 @@ class GenBuildFile(object):
         'llndk.libraries.txt',
         'vndksp.libraries.txt',
         'vndkcore.libraries.txt',
-        'vndkprivate.libraries.txt'
+        'vndkprivate.libraries.txt',
+        'vndkproduct.libraries.txt',
     ]
 
     def __init__(self, install_dir, vndk_version):
@@ -72,7 +73,7 @@ class GenBuildFile(object):
         Args:
           install_dir: string, absolute path to the prebuilts/vndk/v{version}
             directory where the build files will be generated.
-          vndk_version: int, VNDK snapshot version (e.g., 27, 28)
+          vndk_version: int, VNDK snapshot version (e.g. 30)
         """
         self._install_dir = install_dir
         self._vndk_version = vndk_version
@@ -86,6 +87,8 @@ class GenBuildFile(object):
             os.path.basename(self._etc_paths['vndksp.libraries.txt']))
         self._vndk_private = self._parse_lib_list(
             os.path.basename(self._etc_paths['vndkprivate.libraries.txt']))
+        self._vndk_product = self._parse_lib_list(
+            os.path.basename(self._etc_paths['vndkproduct.libraries.txt']))
         self._modules_with_notice = self._get_modules_with_notice()
 
     def _get_etc_paths(self):
@@ -117,6 +120,8 @@ class GenBuildFile(object):
             abs_path_of_txt = os.path.join(self._install_dir, txt_path)
             with open(abs_path_of_txt, 'r') as f:
                 lib_map[arch] = f.read().strip().split('\n')
+            if lib_map[arch] == ['']:
+                lib_map[arch].clear()
         return lib_map
 
     def _get_modules_with_notice(self):
@@ -191,9 +196,7 @@ class GenBuildFile(object):
                 pass
 
             variant_subpath = arch
-            # For O-MR1 snapshot (v27), 32-bit binder prebuilts are not
-            # isolated in separate 'binder32' subdirectory.
-            if is_binder32 and self._vndk_version >= 28:
+            if is_binder32:
                 variant_subpath = os.path.join(arch, utils.BINDER32)
             variant_path = os.path.join(self._install_dir, variant_subpath)
             bpfile_path = os.path.join(variant_path, 'Android.bp')
@@ -225,16 +228,6 @@ class GenBuildFile(object):
                     variant_include_path)
 
             logging.info('Successfully generated {}'.format(bpfile_path))
-
-        if self._vndk_version == 27:
-            # For O-MR1 snapshot (v27), 32-bit binder prebuilts are not
-            # isolated in separate 'binder32' subdirectory.
-            for arch in self._snapshot_archs:
-                if arch in ('arm', 'x86'):
-                    gen_for_variant(arch, is_binder32=True)
-                else:
-                    gen_for_variant(arch)
-            return
 
         for arch in self._snapshot_archs:
             if os.path.isdir(
@@ -481,9 +474,7 @@ class GenBuildFile(object):
             return arch_props
 
         src_root = os.path.join(self._install_dir, arch)
-        # For O-MR1 snapshot (v27), 32-bit binder prebuilts are not
-        # isolated in separate 'binder32' subdirectory.
-        if is_binder32 and self._vndk_version >= 28:
+        if is_binder32:
             src_root = os.path.join(src_root, utils.BINDER32)
 
         src_paths = utils.find(src_root, [prebuilt])
@@ -501,6 +492,11 @@ class GenBuildFile(object):
             name = os.path.splitext(prebuilt)[0]
         vendor_available = str(
             prebuilt not in self._vndk_private[arch]).lower()
+        product_available = ''
+        # if vndkproduct.libraries.txt is empty, make the VNDKs available to product by default.
+        if not self._vndk_product[arch] or prebuilt in self._vndk_product[arch]:
+            product_available = '{ind}product_available: {available},\n'.format(
+                ind=self.INDENT, available=vendor_available)
 
         vndk_sp = ''
         if is_vndk_sp:
@@ -520,6 +516,7 @@ class GenBuildFile(object):
                 '{ind}target_arch: "{target_arch}",\n'
                 '{binder32bit}'
                 '{ind}vendor_available: {vendor_available},\n'
+                '{product_available}'
                 '{ind}vndk: {{\n'
                 '{ind}{ind}enabled: true,\n'
                 '{vndk_sp}'
@@ -533,6 +530,7 @@ class GenBuildFile(object):
                     target_arch=arch,
                     binder32bit=binder32bit,
                     vendor_available=vendor_available,
+                    product_available=product_available,
                     vndk_sp=vndk_sp,
                     notice=notice,
                     arch_props=arch_props))
@@ -542,8 +540,9 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         'vndk_version',
-        type=int,
-        help='VNDK snapshot version to install, e.g. "27".')
+        type=utils.vndk_version_int,
+        help='VNDK snapshot version to install, e.g. "{}".'.format(
+            utils.MINIMUM_VNDK_VERSION))
     parser.add_argument(
         '-v',
         '--verbose',
