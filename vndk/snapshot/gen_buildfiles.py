@@ -72,7 +72,7 @@ class GenBuildFile(object):
         Args:
           install_dir: string, absolute path to the prebuilts/vndk/v{version}
             directory where the build files will be generated.
-          vndk_version: int, VNDK snapshot version (e.g., 27, 28)
+          vndk_version: int, VNDK snapshot version (e.g. 30)
         """
         self._install_dir = install_dir
         self._vndk_version = vndk_version
@@ -191,9 +191,7 @@ class GenBuildFile(object):
                 pass
 
             variant_subpath = arch
-            # For O-MR1 snapshot (v27), 32-bit binder prebuilts are not
-            # isolated in separate 'binder32' subdirectory.
-            if is_binder32 and self._vndk_version >= 28:
+            if is_binder32:
                 variant_subpath = os.path.join(arch, utils.BINDER32)
             variant_path = os.path.join(self._install_dir, variant_subpath)
             bpfile_path = os.path.join(variant_path, 'Android.bp')
@@ -225,16 +223,6 @@ class GenBuildFile(object):
                     variant_include_path)
 
             logging.info('Successfully generated {}'.format(bpfile_path))
-
-        if self._vndk_version == 27:
-            # For O-MR1 snapshot (v27), 32-bit binder prebuilts are not
-            # isolated in separate 'binder32' subdirectory.
-            for arch in self._snapshot_archs:
-                if arch in ('arm', 'x86'):
-                    gen_for_variant(arch, is_binder32=True)
-                else:
-                    gen_for_variant(arch)
-            return
 
         for arch in self._snapshot_archs:
             if os.path.isdir(
@@ -481,9 +469,7 @@ class GenBuildFile(object):
             return arch_props
 
         src_root = os.path.join(self._install_dir, arch)
-        # For O-MR1 snapshot (v27), 32-bit binder prebuilts are not
-        # isolated in separate 'binder32' subdirectory.
-        if is_binder32 and self._vndk_version >= 28:
+        if is_binder32:
             src_root = os.path.join(src_root, utils.BINDER32)
 
         src_paths = utils.find(src_root, [prebuilt])
@@ -542,8 +528,9 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         'vndk_version',
-        type=int,
-        help='VNDK snapshot version to install, e.g. "27".')
+        type=utils.vndk_version_int,
+        help='VNDK snapshot version to install, e.g. "{}".'.format(
+            utils.MINIMUM_VNDK_VERSION))
     parser.add_argument(
         '-v',
         '--verbose',
