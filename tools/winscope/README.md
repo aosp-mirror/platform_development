@@ -18,18 +18,16 @@ contain the proto definitions for their internal states.
 * Run `yarn run dev`
 
 ### Update IntDefMapping
-* Build `framework-all` module and a preprocessor will generate the latest
-IntDefMapping. From the `ANDROID_ROOT` run:
+* Build `framework-minus-apex-intdefs` module and a preprocessor will
+generate the latest IntDefMapping. From the `ANDROID_ROOT` run:
 ```
 . build/envsetup.sh
-m framework-all
+m framework-minus-apex-intdefs
 ```
 
-* Copy the generated `intDefMapping.json` file to the `prebuilts` repo.
+* Copy the generated `intDefMapping.json` files to the `prebuilts` repo.
 ```
-cp
-./out/soong/.intermediates/frameworks/base/framework-all/android_common/javac/classes/com/android/winscope/intDefMapping.json
-./prebuilts/misc/common/winscope/intDefMapping.json
+python3 -c 'import sys,json,collections; print(json.dumps(collections.OrderedDict(sorted(collections.ChainMap(*map(lambda x:json.load(open(x)), sys.argv[1:])).items())), indent=2))' $(find out/soong/.intermediates/frameworks/base -iname intDefMapping.json) > ./prebuilts/misc/common/winscope/intDefMapping.json
 ```
 
 * Upload the changes.
