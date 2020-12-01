@@ -22,6 +22,7 @@ import static com.example.android.receivecontent.Utils.showMessage;
 import android.content.ClipData;
 import android.content.ContentResolver;
 import android.net.Uri;
+import android.view.ContentInfo;
 import android.view.OnReceiveContentListener;
 import android.view.View;
 
@@ -35,8 +36,8 @@ public class MyListenerImages implements OnReceiveContentListener {
     static final String[] SUPPORTED_MIME_TYPES = new String[]{"image/*"};
 
     @Override
-    public Payload onReceiveContent(View view, Payload payload) {
-        Map<Boolean, Payload> split = payload.partition(item -> item.getUri() != null);
+    public ContentInfo onReceiveContent(View view, ContentInfo payload) {
+        Map<Boolean, ContentInfo> split = payload.partition(item -> item.getUri() != null);
         if (split.get(true) != null) {
             ClipData clip = payload.getClip();
             for (int i = 0; i < clip.getItemCount(); i++) {
