@@ -25,6 +25,7 @@ import android.content.ClipDescription;
 import android.content.ContentResolver;
 import android.net.Uri;
 import android.util.Log;
+import android.view.ContentInfo;
 import android.view.OnReceiveContentListener;
 import android.view.View;
 
@@ -43,7 +44,7 @@ public class MyListenerAllContent implements OnReceiveContentListener {
     static final String[] SUPPORTED_MIME_TYPES = new String[]{"image/*", "video/mp4"};
 
     @Override
-    public Payload onReceiveContent(View view, Payload payload) {
+    public ContentInfo onReceiveContent(View view, ContentInfo payload) {
         ClipData clip = payload.getClip();
         ClipDescription description = clip.getDescription();
         ArrayList<ClipData.Item> remainingItems = new ArrayList<>();
@@ -66,7 +67,7 @@ public class MyListenerAllContent implements OnReceiveContentListener {
             for (int i = 1; i < remainingItems.size(); i++) {
                 newClip.addItem(remainingItems.get(i));
             }
-            return new Payload.Builder(payload).setClip(newClip).build();
+            return new ContentInfo.Builder(payload).setClip(newClip).build();
         }
 
         return null;
