@@ -48,7 +48,7 @@ DisplayContent.fromProto = function (proto, isActivityInTree: Boolean): DisplayC
             new Rect(0, 0, appRectWidth, appRectHeight),
             proto.dpi,
             proto.displayInfo?.flags ?? 0,
-            toRect(proto.displayFrames.stableBounds),
+            toRect(proto.displayFrames?.stableBounds),
             proto.surfaceSize,
             proto.focusedApp,
             proto.appTransition?.lastUsedAppTransition ?? "",
