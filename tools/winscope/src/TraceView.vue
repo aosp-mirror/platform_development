@@ -252,7 +252,8 @@ export default {
       this.item = item;
       this.tree = this.generateTreeFromItem(item);
 
-      this.rects = [...item.rects].reverse();
+      const rects = item.rects //.toArray()
+      this.rects = [...rects].reverse();
       this.bounds = item.bounds;
 
       this.hierarchySelected = null;
