@@ -96,7 +96,7 @@ module.exports = {
     new KotlinWebpackPlugin({
       src: [
         path.join(__dirname, '../../../platform_testing/libraries/flicker/' +
-          'src/com/android/server/wm/flicker/common/'),
+          'src/com/android/server/wm/traces/common/'),
       ],
       output: 'kotlin_build',
       moduleName: 'flicker',

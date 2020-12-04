@@ -17,42 +17,69 @@
 // Imports all the compiled common Flicker library classes and exports them
 // as clean es6 modules rather than having them be commonjs modules
 
-const WindowManagerTrace = require('flicker').com.android.server.wm.flicker
-    .common.traces.windowmanager.WindowManagerTrace;
-const WindowManagerTraceEntry = require('flicker').com.android.server.wm.
-    flicker.common.traces.windowmanager.WindowManagerTraceEntry;
+const WindowManagerTrace = require('flicker').com.android.server.wm.traces.common.
+    windowmanager.WindowManagerTrace;
+const WindowManagerState = require('flicker').com.android.server.wm.traces.common.
+    windowmanager.WindowManagerState;
 
-const WindowContainer = require('flicker').com.android.server.wm.flicker.common.
-    traces.windowmanager.windows.WindowContainer;
-const WindowState = require('flicker').com.android.server.wm.flicker.common.
-    traces.windowmanager.windows.WindowState;
-const DisplayContent = require('flicker').com.android.server.wm.flicker.common.
-    traces.windowmanager.windows.DisplayContent;
-const ActivityRecord = require('flicker').com.android.server.wm.flicker.common.
-    traces.windowmanager.windows.ActivityRecord;
-const WindowToken = require('flicker').com.android.server.wm.flicker.common.
-    traces.windowmanager.windows.WindowToken;
-const DisplayArea = require('flicker').com.android.server.wm.flicker.common.
-    traces.windowmanager.windows.DisplayArea;
-const RootDisplayArea = require('flicker').com.android.server.wm.flicker.common.
-    traces.windowmanager.windows.RootDisplayArea;
-const Task = require('flicker').com.android.server.wm.flicker.common.traces.
-    windowmanager.windows.Task;
+const Activity = require('flicker').com.android.server.wm.traces.common.
+    windowmanager.windows.Activity;
+const ActivityTask = require('flicker').com.android.server.wm.traces.common.
+    windowmanager.windows.ActivityTask;
+const Configuration = require('flicker').com.android.server.wm.traces.common.
+    windowmanager.windows.Configuration;
+const ConfigurationContainer = require('flicker').com.android.server.wm.traces.common.
+    windowmanager.windows.ConfigurationContainer;
+const DisplayArea = require('flicker').com.android.server.wm.traces.common.
+    windowmanager.windows.DisplayArea;
+const DisplayContent = require('flicker').com.android.server.wm.traces.common.
+    windowmanager.windows.DisplayContent;
+const KeyguardControllerState = require('flicker').com.android.server.wm.traces.common.
+    windowmanager.windows.KeyguardControllerState;
+const RootWindowContainer = require('flicker').com.android.server.wm.traces.common.
+    windowmanager.windows.RootWindowContainer;
+const WindowConfiguration = require('flicker').com.android.server.wm.traces.common.
+    windowmanager.windows.WindowConfiguration;
+const WindowContainer = require('flicker').com.android.server.wm.traces.common.
+    windowmanager.windows.WindowContainer;
+const WindowContainerChild = require('flicker').com.android.server.wm.traces.common.
+    windowmanager.windows.WindowContainerChild;
+const WindowManagerPolicy = require('flicker').com.android.server.wm.traces.common.
+    windowmanager.windows.WindowManagerPolicy;
+const WindowState = require('flicker').com.android.server.wm.traces.common.
+    windowmanager.windows.WindowState;
+const WindowToken = require('flicker').com.android.server.wm.traces.common.
+    windowmanager.windows.WindowToken;
 
-const Rect = require('flicker').com.android.server.wm.flicker.common.Rect;
-const Bounds = require('flicker').com.android.server.wm.flicker.common.Bounds;
+const Rect = require('flicker').com.android.server.wm.traces.common.Rect;
+const Bounds = require('flicker').com.android.server.wm.traces.common.Bounds;
+
+function toRect(proto) {
+    if (proto == null) {
+        return new Rect(0, 0, 0, 0)
+    } else {
+        return new Rect(proto.left, proto.top, proto.right, proto.bottom)
+    }
+}
 
 export {
-  WindowManagerTrace,
-  WindowManagerTraceEntry,
-  WindowContainer,
-  WindowState,
-  DisplayContent,
-  ActivityRecord,
-  WindowToken,
-  DisplayArea,
-  RootDisplayArea,
-  Task,
-  Rect,
-  Bounds,
+    Activity,
+    ActivityTask,
+    Configuration,
+    ConfigurationContainer,
+    DisplayArea,
+    DisplayContent,
+    KeyguardControllerState,
+    RootWindowContainer,
+    WindowConfiguration,
+    WindowContainer,
+    WindowContainerChild,
+    WindowState,
+    WindowToken,
+    WindowManagerPolicy,
+    WindowManagerTrace,
+    WindowManagerState,
+    Rect,
+    Bounds,
+    toRect
 };

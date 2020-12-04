@@ -14,43 +14,77 @@
  * limitations under the License.
  */
 
-import { WindowState, Rect } from "../common"
+import { getWMPropertiesForDisplay, shortenName } from '../mixin'
+import { asRawTreeViewObject } from '../../utils/diff.js'
+import { toRect, WindowState } from "../common"
 import { VISIBLE_CHIP } from '../treeview/Chips'
-
-import { applyMixins } from '../mixin'
-
 import WindowContainer from "./WindowContainer"
 
-export class WindowStateMixin {
-  visible: boolean
+ WindowState.fromProto = function (proto, isActivityInTree: Boolean): WindowState {
+    if (proto == null) {
+        return null
+    } else {
+        const identifierName = proto.windowContainer.identifier?.title ?? proto.identifier?.title ?? ""
+        var windowType = 0
+        if (identifierName.startsWith(WindowState.STARTING_WINDOW_PREFIX)) {
+            windowType = WindowState.WINDOW_TYPE_STARTING
+        } else if (proto.animatingExit) {
+            windowType = WindowState.WINDOW_TYPE_EXITING
+        } else if (identifierName.startsWith(WindowState.DEBUGGER_WINDOW_PREFIX)) {
+            windowType = WindowState.WINDOW_TYPE_STARTING
+        }
 
-  get kind() {
-    return "WindowState"
-  }
+        var nameOverride = identifierName
 
-  static fromProto(proto) {
-    const windowContainer = WindowContainer.fromProto(proto.windowContainer,
-                                                      proto.identifier)
+        if (identifierName.startsWith(WindowState.STARTING_WINDOW_PREFIX)) {
+            nameOverride = identifierName.substring(WindowState.STARTING_WINDOW_PREFIX.length)
+        } else if (identifierName.startsWith(WindowState.DEBUGGER_WINDOW_PREFIX)) {
+            nameOverride = identifierName.substring(WindowState.DEBUGGER_WINDOW_PREFIX.length)
+        }
 
-    const frame = (proto.windowFrames ?? proto).frame ?? {}
-    const rect = new Rect(frame.left ?? 0, frame.top ?? 0, frame.right ?? 0, frame.bottom ?? 0)
+        const windowContainer = WindowContainer.fromProto({
+            proto: proto.windowContainer,
+            nameOverride: nameOverride,
+            identifierOverride: proto.identifier})
+        if (windowContainer == null) {
+            throw "Window container should not be null: " + JSON.stringify(proto)
+        }
 
-    const windowState =
-      new WindowState(windowContainer, /* childWindows */[], rect)
+        proto.windowContainer.children.reverse()
+            .map(it => WindowContainer.childrenFromProto(entry, it, isActivityInTree))
+            .filter(it => it != null)
+            .forEach(it => windowContainer.childContainers.push(it))
 
-    const obj = Object.assign({}, proto)
-    Object.assign(obj, windowContainer.obj)
-    delete obj.windowContainer
-    windowState.attachObject(obj)
+        const entry = new WindowState(
+            proto.attributes?.type ?? 0,
+            proto.displayId,
+            proto.stackId,
+            proto.animator?.surface?.layer ?? 0,
+            proto.animator?.surface?.shown ?? false,
+            windowType,
+            toRect(proto.windowFrames?.frame ?? null),
+            toRect(proto.windowFrames?.containingFrame ?? null),
+            toRect(proto.windowFrames?.parentFrame ?? null),
+            toRect(proto.windowFrames?.contentFrame ?? null),
+            toRect(proto.windowFrames?.contentInsets ?? null),
+            toRect(proto.surfaceInsets),
+            toRect(proto.givenContentInsets),
+            toRect(proto.animator?.lastClipRect ?? null),
+            windowContainer,
+            /* isAppWindow */ isActivityInTree
+        )
 
-    return windowState
-  }
-
-  get chips() {
-    return this.visible ? [VISIBLE_CHIP] : []
-  }
+        entry.obj = getWMPropertiesForDisplay(proto)
+        entry.shortName = shortenName(entry.name)
+        entry.visible = entry.isSurfaceShown ?? false
+        entry.chips = entry.isSurfaceShown ? [VISIBLE_CHIP] : []
+        entry.children = entry.childrenWindows
+        if (entry.isSurfaceShown) {
+            entry.rect = entry.rects[0]
+        }
+        entry.rawTreeViewObject = asRawTreeViewObject(entry)
+        return entry
+    }
 }
-
-applyMixins(WindowState, [WindowStateMixin])
 
 export default WindowState

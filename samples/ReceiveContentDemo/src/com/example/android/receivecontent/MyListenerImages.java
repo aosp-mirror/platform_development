@@ -22,11 +22,10 @@ import static com.example.android.receivecontent.Utils.showMessage;
 import android.content.ClipData;
 import android.content.ContentResolver;
 import android.net.Uri;
+import android.util.Pair;
 import android.view.ContentInfo;
 import android.view.OnReceiveContentListener;
 import android.view.View;
-
-import java.util.Map;
 
 /**
  * Sample implementation that accepts images, rejects other URIs, and delegates handling for all
@@ -37,14 +36,17 @@ public class MyListenerImages implements OnReceiveContentListener {
 
     @Override
     public ContentInfo onReceiveContent(View view, ContentInfo payload) {
-        Map<Boolean, ContentInfo> split = payload.partition(item -> item.getUri() != null);
-        if (split.get(true) != null) {
-            ClipData clip = payload.getClip();
+        Pair<ContentInfo, ContentInfo> split = payload.partition(
+                item -> item.getUri() != null);
+        ContentInfo uriContent = split.first;
+        ContentInfo remaining = split.second;
+        if (uriContent != null) {
+            ClipData clip = uriContent.getClip();
             for (int i = 0; i < clip.getItemCount(); i++) {
                 receive(view, clip.getItemAt(i).getUri());
             }
         }
-        return split.get(false);
+        return remaining;
     }
 
     private static void receive(View view, Uri contentUri) {

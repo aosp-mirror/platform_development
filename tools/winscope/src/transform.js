@@ -374,6 +374,11 @@ function getIntFlagsAsStrings(intFlags, annotationType) {
   const mapping = intDefMapping[annotationType].values;
   const knownFlagValues = Object.keys(mapping).reverse().map(x => parseInt(x));
 
+  if (mapping.length == 0) {
+    console.warn("No mapping for type", annotationType)
+    return intFlags + ""
+  }
+
   // Will only contain bits that have not been associated with a flag.
   const parsedIntFlags = parseInt(intFlags);
   let leftOver = parsedIntFlags;

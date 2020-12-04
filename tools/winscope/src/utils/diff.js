@@ -26,6 +26,21 @@ export const DiffType = Object.freeze({
   MODIFIED: 'modified',
 });
 
+export function asRawTreeViewObject(obj) {
+  const children = obj.children?.map(child => child.rawTreeViewObject) ?? []
+
+  return {
+    kind: obj.kind,
+    name: obj.name,
+    shortName: obj.shortName,
+    stableId: obj.stableId,
+    chips: obj.chips,
+    obj: obj.obj,
+    children,
+    ref: obj,
+  };
+}
+
 export function defaultModifiedCheck(newNode, oldNode) {
   if (!newNode && !oldNode) {
     return false;
@@ -44,16 +59,16 @@ function isPrimitive(test) {
 
 export class DiffGenerator {
   constructor(tree) {
-    if (tree.asRawTreeViewObject) {
-      this.tree = tree.asRawTreeViewObject();
+    if (tree.rawTreeViewObject) {
+      this.tree = tree.rawTreeViewObject;
     } else {
       this.tree = tree;
     }
   }
 
   compareWith(tree) {
-    if (tree?.asRawTreeViewObject) {
-      this.diffWithTree = tree.asRawTreeViewObject();
+    if (tree?.rawTreeViewObject) {
+      this.diffWithTree = tree.rawTreeViewObject;
     } else {
       this.diffWithTree = tree;
     }
