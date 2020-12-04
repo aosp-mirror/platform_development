@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import WindowManagerTraceEntry from './WindowManagerTraceEntry';
+import WindowManagerState from './WindowManagerState';
 import WindowManagerTrace from './WindowManagerTrace';
 
 /**
  * Entry point into the flickerlib for Winscope.
  * Expose everything we want Winscope to have access to here.
  */
-export {WindowManagerTraceEntry, WindowManagerTrace};
+export {WindowManagerState, WindowManagerTrace};
 

@@ -14,23 +14,33 @@
  * limitations under the License.
  */
 
-import { getWMPropertiesForDisplay,  shortenName } from '../mixin'
+import { getWMPropertiesForDisplay, shortenName } from '../mixin'
 import { asRawTreeViewObject } from '../../utils/diff.js'
-import { DisplayArea } from "../common"
+import { Activity } from "../common"
 import WindowContainer from "./WindowContainer"
 
-DisplayArea.fromProto = function (proto, isActivityInTree: Boolean): DisplayArea {
+Activity.fromProto = function (proto, parent: WindowContainer): Activity {
     if (proto == null) {
         return null
     } else {
-        const windowContainer = WindowContainer.fromProto({proto: proto.windowContainer, nameOverride: proto.name})
+        const windowContainer = WindowContainer.fromProto({proto: proto.windowToken.windowContainer,
+            identifierOverride: proto.identifier})
         if (windowContainer == null) {
             throw "Window container should not be null: " + JSON.stringify(proto)
         }
-        const entry = new DisplayArea(proto.isTaskDisplayArea, windowContainer)
+        const entry = new Activity(
+            proto.name,
+            proto.state,
+            proto.visible,
+            proto.frontOfTask,
+            proto.procId,
+            proto.translucent,
+            parent,
+            windowContainer
+        )
 
-        proto.windowContainer.children.reverse()
-            .map(it => WindowContainer.childrenFromProto(entry, it, isActivityInTree))
+        proto.windowToken.windowContainer.children.reverse()
+            .map(it => WindowContainer.childrenFromProto(entry, it, /* isActivityInTree */ true))
             .filter(it => it != null)
             .forEach(it => windowContainer.childContainers.push(it))
 
@@ -42,4 +52,4 @@ DisplayArea.fromProto = function (proto, isActivityInTree: Boolean): DisplayArea
     }
 }
 
-export default DisplayArea
+export default Activity

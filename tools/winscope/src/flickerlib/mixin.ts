@@ -1,23 +1,44 @@
-/**
- * Injects all the properties (getters, setters, functions...) of a list of
- * classes (baseCtors) into a class (derivedCtor).
- * @param derivedCtor The constructor of the class we want to inject the
- *                    properties into.
- * @param baseCtors A list of consturctor of the classes we want to mixin the
- *                  properties of into the derivedCtor.
+/*
+ * Copyright 2020, The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-export function applyMixins(derivedCtor: any, baseCtors: any[]) {
-  baseCtors.forEach(baseCtor => {
-    Object.getOwnPropertyNames(baseCtor).forEach(name => {
-      if (['length', 'name', 'prototype'].includes(name)) {
-        return;
-      }
 
-      Object.defineProperty(derivedCtor, name, Object.getOwnPropertyDescriptor(baseCtor, name))
-    })
+/**
+ * Get the properties of a WM object for display.
+ *
+ * @param entry WM hierarchy element
+ * @param proto Associated proto object
+ */
+export function getWMPropertiesForDisplay(proto: any): any {
+    const obj = Object.assign({}, proto)
+    if (obj.children) delete obj.children
+    if (obj.childWindows) delete obj.childWindows
+    if (obj.childrenWindows) delete obj.childrenWindows
+    if (obj.childContainers) delete obj.childContainers
+    if (obj.identifier) delete obj.identifier
+    if (obj.windowToken) delete obj.windowToken
+    if (obj.rootDisplayArea) delete obj.rootDisplayArea
+    if (obj.rootWindowContainer) delete obj.rootWindowContainer
+    if (obj.windowContainer) delete obj.windowContainer
+    return obj
+}
 
-    Object.getOwnPropertyNames(baseCtor.prototype).forEach(name => {
-      Object.defineProperty(derivedCtor.prototype, name, Object.getOwnPropertyDescriptor(baseCtor.prototype, name))
-    })
-  });
+export function shortenName(name: any): string {
+    const classParts = (name + "").split(".")
+    if (classParts.length <= 3) {
+        return name
+    }
+    const className = classParts.slice(-1)[0] // last element
+    return `${classParts[0]}.${classParts[1]}.(...).${className}`
 }

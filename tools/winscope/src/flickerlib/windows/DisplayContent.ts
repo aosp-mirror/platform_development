@@ -14,50 +14,61 @@
  * limitations under the License.
  */
 
-import {
-  DisplayContent,
-  Bounds
-} from "../common"
-
-import { applyMixins } from '../mixin'
-
+import { getWMPropertiesForDisplay,  shortenName } from '../mixin'
+import { asRawTreeViewObject } from '../../utils/diff.js'
+import { toRect, DisplayContent, Rect } from "../common"
 import WindowContainer from "./WindowContainer"
-import DisplayArea from "./DisplayArea"
 
-export class DisplayContentMixin {
-  get kind() {
-    return "DisplayContent"
-  }
-
-  static fromProto(proto) {
-    let rootDisplayArea;
-    if (proto.rootDisplayArea.windowContainer == null) {
-      // For backward compatibility
-      const windowContainer = WindowContainer.fromProto(proto.windowContainer,
-                                                        null)
-      rootDisplayArea = new DisplayArea(windowContainer)
+DisplayContent.fromProto = function (proto, isActivityInTree: Boolean): DisplayContent {
+    if (proto == null) {
+        return null
     } else {
-      // New protos should always be using this
-      rootDisplayArea = DisplayArea.fromProto(proto.rootDisplayArea)
+        const windowContainer = WindowContainer.fromProto({proto: proto.rootDisplayArea.windowContainer,
+            nameOverride: proto.displayInfo?.name ?? null})
+        if (windowContainer == null) {
+            throw "Window container should not be null: " + JSON.stringify(proto)
+        }
+
+        const displayRectWidth = proto.displayInfo?.logicalWidth ?? 0
+        const displayRectHeight = proto.displayInfo?.logicalHeight ?? 0
+        const appRectWidth = proto.displayInfo?.appWidth ?? 0
+        const appRectHeight = proto.displayInfo?.appHeight ?? 0
+
+        const defaultBounds = proto.pinnedStackController?.defaultBounds ?? null
+        const movementBounds = proto.pinnedStackController?.movementBounds ?? null
+
+        const entry = new DisplayContent(
+            proto.id,
+            proto.focusedRootTaskId,
+            proto.resumedActivity?.title ?? "",
+            proto.singleTaskInstance,
+            toRect(defaultBounds),
+            toRect(movementBounds),
+            new Rect(0, 0, displayRectWidth, displayRectHeight),
+            new Rect(0, 0, appRectWidth, appRectHeight),
+            proto.dpi,
+            proto.displayInfo?.flags ?? 0,
+            toRect(proto.displayFrames?.stableBounds),
+            proto.surfaceSize,
+            proto.focusedApp,
+            proto.appTransition?.lastUsedAppTransition ?? "",
+            proto.appTransition?.appTransitionState ?? "",
+            proto.displayRotation?.rotation ?? 0,
+            proto.displayRotation?.lastOrientation ?? 0,
+            windowContainer
+        )
+
+        proto.rootDisplayArea.windowContainer.children.reverse()
+            .map(it => WindowContainer.childrenFromProto(entry, it, isActivityInTree))
+            .filter(it => it != null)
+            .forEach(it => windowContainer.childContainers.push(it))
+
+        entry.obj = getWMPropertiesForDisplay(proto)
+        entry.shortName = shortenName(entry.name)
+        entry.children = entry.childrenWindows
+        entry.rawTreeViewObject = asRawTreeViewObject(entry)
+        return entry
     }
-
-    const bounds = new Bounds(
-      proto.displayInfo.logicalWidth || 0,
-      proto.displayInfo.logicalHeight || 0,
-    )
-
-    const displayContent = new DisplayContent(rootDisplayArea, bounds)
-
-    const obj = Object.assign({}, proto)
-    delete obj.windowContainer
-    delete obj.rootDisplayArea
-    Object.assign(obj, rootDisplayArea.obj)
-    displayContent.attachObject(obj)
-
-    return displayContent
-  }
 }
-
-applyMixins(DisplayContent, [DisplayContentMixin])
 
 export default DisplayContent
