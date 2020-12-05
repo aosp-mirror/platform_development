@@ -46,6 +46,8 @@ function is_empty(region) {
 }
 
 function is_empty_rect(rect) {
+  if (rect == undefined) return true;
+
   const right = rect.right || 0;
   const left = rect.left || 0;
   const top = rect.top || 0;
@@ -141,6 +143,10 @@ function is_visible(layer, hiddenByPolicy, includesCompositionState) {
     return false;
   }
 
+  if (layer.cornerRadius > 0 && is_empty_rect(layer.cornerRadiusCrop)) {
+    return false;
+  }
+
   return true;
 }
 
@@ -191,6 +197,10 @@ function get_visibility_reason(layer) {
 
   if (layer.occludedBy && layer.occludedBy.length > 0) {
     return 'Layer is occluded by:' + layer.occludedBy.join();
+  }
+
+  if (layer.cornerRadius > 0 && is_empty_rect(layer.cornerRadiusCrop)) {
+    return 'Layer has a corner radius set without a valid cornerRadiusCrop';
   }
 
   if (layer.visible) {
@@ -278,7 +288,7 @@ function traverse_top_to_bottom(layerMap, rootLayers, globalState, fn) {
       if (!layerMap.hasOwnProperty(id)) {
         // TODO (b/162500053): so that this doesn't need to be checked here
         console.warn(
-            `Children layer with id ${id} not found in dumped layers... ` +
+            `Child layer with id ${id} not found in dumped layers... ` +
             `Skipping layer in traversal...`);
       } else {
         children.push(layerMap[id]);
@@ -327,7 +337,16 @@ function traverse(layerMap, rootLayers, fn) {
     const parentId = rootLayers[i].parent;
     const parent = parentId == -1 ? null : layerMap[parentId];
     fn(rootLayers[i], parent);
-    const children = rootLayers[i].children.map((id) => layerMap[id]);
+    const children = rootLayers[i].children.map(
+      (id) => {
+        const child = layerMap[id];
+        if (child == null) {
+          console.warn(
+            `Child layer with id ${id} in parent layer id ${rootLayers[i].id} not found... ` +
+            `Skipping layer in traversal...`);
+        }
+        return child;
+      }).filter(item => item !== undefined);
     traverse(layerMap, children, fn);
   }
 }
