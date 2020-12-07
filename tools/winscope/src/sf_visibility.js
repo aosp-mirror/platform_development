@@ -46,8 +46,6 @@ function is_empty(region) {
 }
 
 function is_empty_rect(rect) {
-  if (rect == undefined) return true;
-
   const right = rect.right || 0;
   const left = rect.left || 0;
   const top = rect.top || 0;
@@ -143,10 +141,6 @@ function is_visible(layer, hiddenByPolicy, includesCompositionState) {
     return false;
   }
 
-  if (layer.cornerRadius > 0 && is_empty_rect(layer.cornerRadiusCrop)) {
-    return false;
-  }
-
   return true;
 }
 
@@ -197,10 +191,6 @@ function get_visibility_reason(layer) {
 
   if (layer.occludedBy && layer.occludedBy.length > 0) {
     return 'Layer is occluded by:' + layer.occludedBy.join();
-  }
-
-  if (layer.cornerRadius > 0 && is_empty_rect(layer.cornerRadiusCrop)) {
-    return 'Layer has a corner radius set without a valid cornerRadiusCrop';
   }
 
   if (layer.visible) {
