@@ -17,11 +17,6 @@
 #
 # These are the files that comprise that SDK.
 #
-# The files that will go in the tools folder are setup through
-#    sdk/build/tools.atree
-# This is to help when the sdk.git project is branched differently from
-# the other projects.
-#
 
 ##############################################################################
 # SDK Root folder
@@ -172,6 +167,8 @@ development/build/optional.json                                                 
 ${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/org.apache.http.legacy.stubs_intermediates/classes.jar  platforms/${PLATFORM_NAME}/optional/org.apache.http.legacy.jar
 # deprecated APIs
 ${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android_uiautomator_intermediates/classes.jar     platforms/${PLATFORM_NAME}/uiautomator.jar
+# Android Automotive OS stubs.
+${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android.car-stubs_intermediates/classes.jar         platforms/${PLATFORM_NAME}/optional/android.car.jar
 # Test APIs
 ${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android.test.mock.stubs_intermediates/classes.jar   platforms/${PLATFORM_NAME}/optional/android.test.mock.jar
 ${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android.test.base.stubs_intermediates/classes.jar   platforms/${PLATFORM_NAME}/optional/android.test.base.jar
