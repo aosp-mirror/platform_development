@@ -66,6 +66,7 @@ RENAME_MAP = {
     # to resolve name conflicts, avoid confusion, or work as plugin.
     'libbacktrace': 'libbacktrace_rust',
     'libbase': 'libbase_rust',
+    'libfuse': 'libfuse_rust',
     'libgcc': 'libgcc_rust',
     'liblog': 'liblog_rust',
     'libminijail': 'libminijail_rust',
