@@ -36,7 +36,7 @@ public class MyListenerImages implements OnReceiveContentListener {
 
     @Override
     public ContentInfo onReceiveContent(View view, ContentInfo payload) {
-        Pair<ContentInfo, ContentInfo> split = payload.partition(
+        Pair<ContentInfo, ContentInfo> split = Utils.partition(payload,
                 item -> item.getUri() != null);
         ContentInfo uriContent = split.first;
         ContentInfo remaining = split.second;
