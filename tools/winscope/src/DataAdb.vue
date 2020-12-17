@@ -304,10 +304,7 @@ export default {
         this.status = STATES.ERROR;
         return;
       }
-      if (requestedConfig.length > 0) {
-        this.callProxy('POST', PROXY_ENDPOINTS.CONFIG_TRACE + this.deviceId() + '/', this, null, null, requestedConfig);
-      }
-
+      this.callProxy('POST', PROXY_ENDPOINTS.CONFIG_TRACE + this.deviceId() + '/', this, null, null, requestedConfig);
       this.status = STATES.END_TRACE;
       this.callProxy('POST', PROXY_ENDPOINTS.START_TRACE + this.deviceId() + '/', this, function(request, view) {
         view.keepAliveTrace();
