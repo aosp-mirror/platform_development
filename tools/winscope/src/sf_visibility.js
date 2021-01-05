@@ -237,12 +237,14 @@ function fill_occlusion_state(layerMap, rootLayers, includesCompositionState) {
 
     const visible = is_visible(layer, layer.hidden, includesCompositionState);
     if (visible) {
-      const fullyOccludes = (testLayer) => contains(testLayer, layer);
+      const fullyOccludes = (testLayer) => contains(testLayer, layer) && !layer.cornerRadius;
       const partiallyOccludes = (testLayer) => overlaps(screen_bounds(testLayer), screen_bounds(layer));
       const covers = (testLayer) => overlaps(screen_bounds(testLayer), screen_bounds(layer));
 
       layer.occludedBy = globalState.opaqueRects.filter(fullyOccludes).map((layer) => layer.id);
-      layer.partiallyOccludedBy = globalState.opaqueRects.filter(partiallyOccludes).map((layer) => layer.id);
+      layer.partiallyOccludedBy = globalState.opaqueRects.filter(partiallyOccludes)
+        .filter((p) => layer.occludedBy.indexOf(p.id) == -1)
+        .map((layer) => layer.id);
       layer.coveredBy = globalState.transparentRects.filter(covers).map((layer) => layer.id);
 
       if (is_opaque(layer)) {
