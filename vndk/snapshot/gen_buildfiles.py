@@ -568,17 +568,21 @@ class GenBuildFile(object):
             name = module_names[prebuilt]
         else:
             name = os.path.splitext(prebuilt)[0]
-        vendor_available = str(
-            prebuilt not in self._vndk_private[arch]).lower()
+
         product_available = ''
         # if vndkproduct.libraries.txt is empty, make the VNDKs available to product by default.
         if not self._vndk_product[arch] or prebuilt in self._vndk_product[arch]:
-            product_available = '{ind}product_available: {available},\n'.format(
-                ind=self.INDENT, available=vendor_available)
+            product_available = '{ind}product_available: true,\n'.format(
+                ind=self.INDENT)
 
         vndk_sp = ''
         if is_vndk_sp:
             vndk_sp = '{ind}{ind}support_system_process: true,\n'.format(
+                ind=self.INDENT)
+
+        vndk_private = ''
+        if prebuilt in self._vndk_private[arch]:
+            vndk_private = '{ind}{ind}private: true,\n'.format(
                 ind=self.INDENT)
 
         notice = get_notice_file(prebuilt)
@@ -593,11 +597,12 @@ class GenBuildFile(object):
                 '{ind}version: "{ver}",\n'
                 '{ind}target_arch: "{target_arch}",\n'
                 '{binder32bit}'
-                '{ind}vendor_available: {vendor_available},\n'
+                '{ind}vendor_available: true,\n'
                 '{product_available}'
                 '{ind}vndk: {{\n'
                 '{ind}{ind}enabled: true,\n'
                 '{vndk_sp}'
+                '{vndk_private}'
                 '{ind}}},\n'
                 '{notice}'
                 '{arch_props}'
@@ -607,9 +612,9 @@ class GenBuildFile(object):
                     ver=self._vndk_version,
                     target_arch=arch,
                     binder32bit=binder32bit,
-                    vendor_available=vendor_available,
                     product_available=product_available,
                     vndk_sp=vndk_sp,
+                    vndk_private=vndk_private,
                     notice=notice,
                     arch_props=arch_props))
 
