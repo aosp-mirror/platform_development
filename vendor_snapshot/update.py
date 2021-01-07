@@ -145,12 +145,12 @@ def convert_json_to_bp_prop(json_path, bp_dir):
     return ret
 
 
-def gen_bp_module(variation, name, version, target_arch, arch_props, bp_dir):
+def gen_bp_module(image, variation, name, version, target_arch, arch_props, bp_dir):
     prop = {
         # These three are common for all snapshot modules.
         'version': str(version),
         'target_arch': target_arch,
-        'vendor': True,
+        image: True,
         'arch': {},
     }
 
@@ -202,7 +202,7 @@ def gen_bp_module(variation, name, version, target_arch, arch_props, bp_dir):
         elif stem64:
             prop['compile_multilib'] = '64'
 
-    bp = 'vendor_snapshot_%s {\n' % variation
+    bp = '%s_snapshot_%s {\n' % (image, variation)
     bp += gen_bp_prop(prop, INDENT)
     bp += '}\n\n'
     return bp
@@ -268,7 +268,7 @@ def build_props(install_dir):
     return props
 
 
-def gen_bp_files(install_dir, snapshot_version):
+def gen_bp_files(image, install_dir, snapshot_version):
     props = build_props(install_dir)
 
     for target_arch in sorted(props):
@@ -276,8 +276,8 @@ def gen_bp_files(install_dir, snapshot_version):
         bp_dir = os.path.join(install_dir, target_arch)
         for variation in sorted(props[target_arch]):
             for name in sorted(props[target_arch][variation]):
-                androidbp += gen_bp_module(variation, name, snapshot_version,
-                                           target_arch,
+                androidbp += gen_bp_module(image, variation, name,
+                                           snapshot_version, target_arch,
                                            props[target_arch][variation][name],
                                            bp_dir)
         with open(os.path.join(bp_dir, 'Android.bp'), 'w') as f:
@@ -307,13 +307,16 @@ def fetch_artifact(branch, build, target, pattern, destination):
     ]
     check_call(cmd)
 
-def install_artifacts(branch, build, target, local_dir, symlink, install_dir):
+def install_artifacts(image, branch, build, target, local_dir, symlink,
+                      install_dir):
     """Installs vendor snapshot build artifacts to {install_dir}/v{version}.
 
     1) Fetch build artifacts from Android Build server or from local_dir
     2) Unzip or create symlinks to build artifacts
 
     Args:
+      image: string, img file for which the snapshot was created (vendor,
+             recovery, etc.)
       branch: string or None, branch name of build artifacts
       build: string or None, build number of build artifacts
       target: string or None, target name of build artifacts
@@ -324,7 +327,7 @@ def install_artifacts(branch, build, target, local_dir, symlink, install_dir):
       temp_artifact_dir: string, temp directory to hold build artifacts fetched
         from Android Build server. For 'local' option, is set to None.
     """
-    artifact_pattern = 'vendor-*.zip'
+    artifact_pattern = image + '-*.zip'
 
     def unzip_artifacts(artifact_dir):
         artifacts = glob.glob(os.path.join(artifact_dir, artifact_pattern))
@@ -374,6 +377,11 @@ def get_args():
         'snapshot_version',
         type=int,
         help='Vendor snapshot version to install, e.g. "30".')
+    parser.add_argument(
+        '--image',
+        help=('Image whose snapshot is being updated (e.g., vendor, '
+              'recovery , ramdisk, etc.)'),
+        default='vendor')
     parser.add_argument('--branch', help='Branch to pull build from.')
     parser.add_argument('--build', help='Build number to pull.')
     parser.add_argument('--target', help='Target to pull.')
@@ -460,13 +468,14 @@ def main():
     check_call(['mkdir', '-p', install_dir])
 
     install_artifacts(
+        image=args.image,
         branch=args.branch,
         build=args.build,
         target=args.target,
         local_dir=local,
         symlink=args.symlink,
         install_dir=install_dir)
-    gen_bp_files(install_dir, snapshot_version)
+    gen_bp_files(args.image, install_dir, snapshot_version)
 
 if __name__ == '__main__':
     main()
