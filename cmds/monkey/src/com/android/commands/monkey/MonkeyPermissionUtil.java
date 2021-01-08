@@ -17,16 +17,18 @@
 package com.android.commands.monkey;
 
 import android.Manifest;
+import android.app.ActivityThread;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.IPackageManager;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PermissionInfo;
 import android.os.Build;
+import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.UserHandle;
-import android.permission.IPermissionManager;
+import android.permission.PermissionManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -70,15 +72,15 @@ public class MonkeyPermissionUtil {
     /** if we should target system packages regardless if they are listed */
     private boolean mTargetSystemPackages;
     private IPackageManager mPm;
-    private final IPermissionManager mPermManager;
+    private final PermissionManager mPermManager;
 
     /** keep track of runtime permissions requested for each package targeted */
     private Map<String, List<PermissionInfo>> mPermissionMap;
 
     public MonkeyPermissionUtil() {
         mPm = IPackageManager.Stub.asInterface(ServiceManager.getService("package"));
-        mPermManager =
-                IPermissionManager.Stub.asInterface(ServiceManager.getService("permissionmgr"));
+        mPermManager = ActivityThread.currentApplication().getSystemService(
+                PermissionManager.class);
     }
 
     public void setTargetSystemPackages(boolean targetSystemPackages) {
@@ -105,8 +107,8 @@ public class MonkeyPermissionUtil {
         return false;
     }
 
-    private boolean shouldTargetPermission(String pkg, PermissionInfo pi) throws RemoteException {
-        int flags = mPermManager.getPermissionFlags(pi.name, pkg, UserHandle.myUserId());
+    private boolean shouldTargetPermission(String pkg, PermissionInfo pi) {
+        int flags = mPermManager.getPermissionFlags(pkg, pi.name, Process.myUserHandle());
         int fixedPermFlags = PackageManager.FLAG_PERMISSION_SYSTEM_FIXED
                 | PackageManager.FLAG_PERMISSION_POLICY_FIXED;
         return pi.group != null && pi.protectionLevel == PermissionInfo.PROTECTION_DANGEROUS
@@ -133,7 +135,7 @@ public class MonkeyPermissionUtil {
                     continue;
                 }
                 for (String perm : info.requestedPermissions) {
-                    PermissionInfo pi = mPermManager.getPermissionInfo(perm, "shell", 0);
+                    PermissionInfo pi = mPermManager.getPermissionInfo(perm, 0);
                     if (pi != null && shouldTargetPermission(info.packageName, pi)) {
                         permissions.add(pi);
                     }
