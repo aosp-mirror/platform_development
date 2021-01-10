@@ -742,11 +742,11 @@ class Crate(object):
       self.stem = 'lib' + self.crate_name
       self.module_name = altered_name(self.stem) + '_dylib'
     elif crate_type == 'cdylib':  # rust_library[_host]_shared
-      self.module_type = 'rust_library' + host + '_shared'
+      self.module_type = 'rust_ffi' + host + '_shared'
       self.stem = 'lib' + self.crate_name
       self.module_name = altered_name(self.stem) + '_shared'
     elif crate_type == 'staticlib':  # rust_library[_host]_static
-      self.module_type = 'rust_library' + host + '_static'
+      self.module_type = 'rust_ffi' + host + '_static'
       self.stem = 'lib' + self.crate_name
       self.module_name = altered_name(self.stem) + '_static'
     elif crate_type == 'test':  # rust_test[_host]
