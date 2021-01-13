@@ -651,7 +651,8 @@ class Crate(object):
         self.module_name = self.test_module_name()
         self.decide_one_module_type(crate_type)
         self.dump_one_android_module(crate_type)
-        self.runner.add_test(self.outf_name, self.module_name, True)
+        # We do not add host tests, as these are handled in the Android.bp file.
+        # self.runner.add_test(self.outf_name, self.module_name, True)
       if saved_device_supported:
         self.device_supported = True
         self.host_supported = False
@@ -822,6 +823,10 @@ class Crate(object):
       # self.write('    relative_install_path: "' + self.root_pkg + '_tests",')
       self.write('    test_suites: ["general-tests"],')
       self.write('    auto_gen_config: true,')
+    if 'test' in self.crate_types and self.host_supported:
+      self.write('    test_options: {')
+      self.write('        unit_test: true,')
+      self.write('    },')
 
   def dump_android_externs(self):
     """Dump the dependent rlibs and dylibs property."""
