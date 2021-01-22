@@ -11,6 +11,7 @@ LOCAL_SRC_FILES := \
     src/com/example/android/apis/app/ISecondary.aidl \
 
 LOCAL_STATIC_ANDROID_LIBRARIES += \
+	androidx-constraintlayout_constraintlayout \
     androidx.legacy_legacy-support-v4
 
 LOCAL_USE_AAPT2 := true
