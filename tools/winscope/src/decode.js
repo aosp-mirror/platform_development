@@ -17,6 +17,7 @@
 /* eslint-disable camelcase */
 /* eslint-disable max-len */
 
+import jsonProtoDefsAccessibility from 'frameworks/base/core/proto/android/server/accessibilitytrace.proto';
 import jsonProtoDefsWm from 'frameworks/base/core/proto/android/server/windowmanagertrace.proto';
 import jsonProtoDefsProtoLog from 'frameworks/base/core/proto/android/internal/protolog.proto';
 import jsonProtoDefsSf from 'frameworks/native/services/surfaceflinger/layerproto/layerstrace.proto';
@@ -27,6 +28,7 @@ import jsonProtoDefsLauncher from 'packages/apps/Launcher3/protos/launcher_trace
 import jsonProtoDefsIme from 'frameworks/base/core/proto/android/view/inputmethod/inputmethodeditortrace.proto';
 import protobuf from 'protobufjs';
 import {transformLayers, transformLayersTrace} from './transform_sf.js';
+import {transform_accessibility, transform_accessibility_trace} from './transform_accessibility.js';
 import {transform_transaction_trace} from './transform_transaction.js';
 import {transform_wl_outputstate, transform_wayland_trace} from './transform_wl.js';
 import {transformProtolog} from './transform_protolog.js';
@@ -36,6 +38,7 @@ import {transform_ime_trace_clients, transform_ime_trace_service, transform_ime_
 import {fill_transform_data} from './matrix_utils.js';
 import {mp4Decoder} from './decodeVideo.js';
 
+import AccessibilityTrace from '@/traces/Accessibility.ts';
 import SurfaceFlingerTrace from '@/traces/SurfaceFlinger.ts';
 import WindowManagerTrace from '@/traces/WindowManager.ts';
 import TransactionsTrace from '@/traces/Transactions.ts';
@@ -52,6 +55,7 @@ import SurfaceFlingerDump from '@/dumps/SurfaceFlinger.ts';
 import WindowManagerDump from '@/dumps/WindowManager.ts';
 import WaylandDump from '@/dumps/Wayland.ts';
 
+const AccessibilityTraceMessage = lookup_type(jsonProtoDefsAccessibility, 'com.android.server.accessibility.AccessibilityTraceFileProto');
 const WmTraceMessage = lookup_type(jsonProtoDefsWm, 'com.android.server.wm.WindowManagerTraceFileProto');
 const WmDumpMessage = lookup_type(jsonProtoDefsWm, 'com.android.server.wm.WindowManagerServiceDumpProto');
 const SfTraceMessage = lookup_type(jsonProtoDefsSf, 'android.surfaceflinger.LayersTraceFileProto');
@@ -66,6 +70,7 @@ const InputMethodClientsTraceMessage = lookup_type(jsonProtoDefsIme, "android.vi
 const InputMethodServiceTraceMessage = lookup_type(jsonProtoDefsIme, "android.view.inputmethod.InputMethodServiceTraceFileProto");
 const InputMethodManagerServiceTraceMessage = lookup_type(jsonProtoDefsIme, "android.view.inputmethod.InputMethodManagerServiceTraceFileProto");
 
+const ACCESSIBILITY_MAGIC_NUMBER = [0x09, 0x41, 0x31, 0x31, 0x59, 0x54, 0x52, 0x41, 0x43]; // .A11YTRAC
 const LAYER_TRACE_MAGIC_NUMBER = [0x09, 0x4c, 0x59, 0x52, 0x54, 0x52, 0x41, 0x43, 0x45]; // .LYRTRACE
 const WINDOW_TRACE_MAGIC_NUMBER = [0x09, 0x57, 0x49, 0x4e, 0x54, 0x52, 0x41, 0x43, 0x45]; // .WINTRACE
 const MPEG4_MAGIC_NMBER = [0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x6d, 0x70, 0x34, 0x32]; // ....ftypmp42
@@ -78,6 +83,7 @@ const IMS_TRACE_MAGIC_NUMBER = [0x09, 0x49, 0x4d, 0x53, 0x54, 0x52, 0x41, 0x43, 
 const IMM_TRACE_MAGIC_NUMBER = [0x09, 0x49, 0x4d, 0x4d, 0x54, 0x52, 0x41, 0x43, 0x45] //.IMMTRACE
 
 const FILE_TYPES = Object.freeze({
+  ACCESSIBILITY_TRACE: 'AccessibilityTrace',
   WINDOW_MANAGER_TRACE: 'WindowManagerTrace',
   SURFACE_FLINGER_TRACE: 'SurfaceFlingerTrace',
   WINDOW_MANAGER_DUMP: 'WindowManagerDump',
@@ -103,8 +109,10 @@ const PROTO_LOG_ICON = 'notes';
 const SYSTEM_UI_ICON = 'filter_none';
 const LAUNCHER_ICON = 'filter_none';
 const IME_ICON = 'keyboard';
+const ACCESSIBILITY_ICON = 'filter_none';
 
 const FILE_ICONS = {
+  [FILE_TYPES.ACCESSIBILITY_TRACE]: ACCESSIBILITY_ICON,
   [FILE_TYPES.WINDOW_MANAGER_TRACE]: WINDOW_MANAGER_ICON,
   [FILE_TYPES.SURFACE_FLINGER_TRACE]: SURFACE_FLINGER_ICON,
   [FILE_TYPES.WINDOW_MANAGER_DUMP]: WINDOW_MANAGER_ICON,
@@ -130,6 +138,7 @@ function manyOf(dataType, fold = null) {
 }
 
 const TRACE_TYPES = Object.freeze({
+  ACCESSIBILITY: 'AccessibilityTrace',
   WINDOW_MANAGER: 'WindowManagerTrace',
   SURFACE_FLINGER: 'SurfaceFlingerTrace',
   SCREEN_RECORDING: 'ScreenRecording',
@@ -144,6 +153,12 @@ const TRACE_TYPES = Object.freeze({
 });
 
 const TRACE_INFO = {
+  [TRACE_TYPES.ACCESSIBILITY]: {
+    name: 'Accessibility',
+    icon: ACCESSIBILITY_ICON,
+    files: [oneOf(FILE_TYPES.ACCESSIBILITY_TRACE)],
+    constructor: AccessibilityTrace,
+  },
   [TRACE_TYPES.WINDOW_MANAGER]: {
     name: 'WindowManager',
     icon: WINDOW_MANAGER_ICON,
@@ -261,6 +276,16 @@ export const TRACE_ICONS = {
 
 // TODO: Rename name to defaultName
 const FILE_DECODERS = {
+  [FILE_TYPES.ACCESSIBILITY_TRACE]: {
+    name: 'Accessibility trace',
+    decoder: protoDecoder,
+    decoderParams: {
+      type: FILE_TYPES.ACCESSIBILITY_TRACE,
+      protoType: AccessibilityTraceMessage,
+      transform: transform_accessibility_trace,
+      timeline: true,
+    },
+  },
   [FILE_TYPES.WINDOW_MANAGER_TRACE]: {
     name: 'WindowManager trace',
     decoder: protoDecoder,
@@ -523,6 +548,9 @@ function decodedFile(fileType, buffer, fileName, store) {
 function detectAndDecode(buffer, fileName, store) {
   if (arrayStartsWith(buffer, LAYER_TRACE_MAGIC_NUMBER)) {
     return decodedFile(FILE_TYPES.SURFACE_FLINGER_TRACE, buffer, fileName, store);
+  }
+  if (arrayStartsWith(buffer, ACCESSIBILITY_MAGIC_NUMBER)) {
+    return decodedFile(FILE_TYPES.ACCESSIBILITY_TRACE, buffer, fileName, store);
   }
   if (arrayStartsWith(buffer, WINDOW_TRACE_MAGIC_NUMBER)) {
     return decodedFile(FILE_TYPES.WINDOW_MANAGER_TRACE, buffer, fileName, store);
