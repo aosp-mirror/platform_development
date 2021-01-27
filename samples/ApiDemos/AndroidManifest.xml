@@ -301,6 +301,18 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.PictureInPictureSeamlessResize"
+                  android:label="@string/activity_picture_in_picture_seamless_resize"
+                  android:resizeableActivity="true"
+                  android:supportsPictureInPicture="true"
+                  android:configChanges=
+                      "screenSize|smallestScreenSize|screenLayout|orientation">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".app.MaxAspectRatio$Square"
                   android:label="@string/activity_max_aspect_ratio_square"
                   android:resizeableActivity="false"
