@@ -105,6 +105,7 @@ JSON_TO_BP = {
     'SharedLibs': 'shared_libs',
     'RuntimeLibs': 'runtime_libs',
     'Required': 'required',
+    'AndroidMkSuffix': 'androidmk_suffix',
 }
 
 SANITIZER_VARIANT_PROPS = {
