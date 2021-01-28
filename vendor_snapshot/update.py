@@ -207,6 +207,75 @@ def gen_bp_module(image, variation, name, version, target_arch, arch_props, bp_d
     bp += '}\n\n'
     return bp
 
+def get_vndk_list(vndk_dir, target_arch):
+    """Generates vndk_libs list, e.g. ['libbase', 'libc++', ...]
+    This list is retrieved from vndk_dir/target_arch/configs/module_names.txt.
+    If it doesn't exist, print an error message and return an empty list.
+    """
+
+    module_names_path = os.path.join(vndk_dir, target_arch, 'configs/module_names.txt')
+
+    try:
+        with open(module_names_path, 'r') as f:
+            """The format of module_names.txt is a list of "{so_name} {module_name}", e.g.
+
+                lib1.so lib1
+                lib2.so lib2
+                ...
+
+            We extract the module name part.
+            """
+            return [l.split()[1] for l in f.read().strip('\n').split('\n')]
+    except IOError as e:
+        logging.error('Failed to read %s: %s' % (module_names_path, e.strerror))
+    except IndexError as e:
+        logging.error('Failed to parse %s: invalid format' % module_names_path)
+
+    return []
+
+def gen_bp_list_module(image, snapshot_version, vndk_dir, target_arch, arch_props):
+    """Generates a {image}_snapshot module which contains lists of snapshots.
+    For vendor snapshot, vndk list is also included, extracted from vndk_dir.
+    """
+
+    bp = '%s_snapshot {\n' % image
+
+    bp_props = dict()
+    bp_props['name'] = '%s_snapshot' % image
+    bp_props['version'] = str(snapshot_version)
+    if image == 'vendor':
+        bp_props['vndk_libs'] = get_vndk_list(vndk_dir, target_arch)
+
+    variant_to_property = {
+        'shared': 'shared_libs',
+        'static': 'static_libs',
+        'header': 'header_libs',
+        'binary': 'binaries',
+        'object': 'objects',
+    }
+
+    # arch_bp_prop[arch][variant_prop] = list
+    # e.g. arch_bp_prop['x86']['shared_libs'] == ['libfoo', 'libbar', ...]
+    arch_bp_prop = dict()
+
+    # Gather module lists per arch.
+    # arch_props structure: arch_props[variant][module_name][arch]
+    # e.g. arch_props['shared']['libc++']['x86']
+    for variant in arch_props:
+        variant_name = variant_to_property[variant]
+        for name in arch_props[variant]:
+            for arch in arch_props[variant][name]:
+                if arch not in arch_bp_prop:
+                    arch_bp_prop[arch] = dict()
+                if variant_name not in arch_bp_prop[arch]:
+                    arch_bp_prop[arch][variant_name] = []
+                arch_bp_prop[arch][variant_name].append(name)
+
+    bp_props['arch'] = arch_bp_prop
+    bp += gen_bp_prop(bp_props, INDENT)
+
+    bp += '}\n\n'
+    return bp
 
 def build_props(install_dir):
     # props[target_arch]["static"|"shared"|"binary"|"header"][name][arch] : json
@@ -268,18 +337,35 @@ def build_props(install_dir):
     return props
 
 
-def gen_bp_files(image, install_dir, snapshot_version):
+def gen_bp_files(image, vndk_dir, install_dir, snapshot_version):
+    """Generates Android.bp for each archtecture.
+    Android.bp will contain a {image}_snapshot module having lists of VNDK and
+    vendor snapshot libraries, and {image}_snapshot_{variant} modules which are
+    prebuilt libraries of the snapshot.
+
+    Args:
+      image: string, name of partition (e.g. 'vendor', 'recovery')
+      vndk_dir: string, directory to which vndk snapshot is installed
+      install_dir: string, directory to which the snapshot will be installed
+      snapshot_version: int, version of the snapshot
+    """
     props = build_props(install_dir)
 
     for target_arch in sorted(props):
         androidbp = ''
         bp_dir = os.path.join(install_dir, target_arch)
+
+        # Generate snapshot modules.
         for variation in sorted(props[target_arch]):
             for name in sorted(props[target_arch][variation]):
                 androidbp += gen_bp_module(image, variation, name,
                                            snapshot_version, target_arch,
                                            props[target_arch][variation][name],
                                            bp_dir)
+
+        # Generate {image}_snapshot module which contains the list of modules.
+        androidbp += gen_bp_list_module(image, snapshot_version, vndk_dir,
+                                        target_arch, props[target_arch])
         with open(os.path.join(bp_dir, 'Android.bp'), 'w') as f:
             logging.info('Generating Android.bp to: {}'.format(f.name))
             f.write(androidbp)
@@ -611,6 +697,10 @@ def get_args():
     parser.add_argument(
         '--check-module-usage-output',
         help='File to which to write the check-module-usage results.')
+    parser.add_argument(
+        '--vndk-dir',
+        help='Path to installed vndk snapshot directory. Needed to retrieve '
+             'the list of VNDK. prebuilts/vndk/v{ver} will be used by default.')
 
     parser.add_argument(
         '-v',
@@ -692,6 +782,12 @@ def main():
                 raise ValueError('Did not understand: ' + resp)
     check_call(['mkdir', '-p', install_dir])
 
+    if args.vndk_dir:
+        vndk_dir = os.path.expanduser(args.vndk_dir)
+    else:
+        vndk_dir = 'prebuilts/vndk/v%d' % snapshot_version
+        logging.debug('Using %s for vndk directory' % vndk_dir)
+
     install_artifacts(
         image=args.image,
         branch=args.branch,
@@ -700,7 +796,7 @@ def main():
         local_dir=local,
         symlink=args.symlink,
         install_dir=install_dir)
-    gen_bp_files(args.image, install_dir, snapshot_version)
+    gen_bp_files(args.image, vndk_dir, install_dir, snapshot_version)
 
 if __name__ == '__main__':
     main()
