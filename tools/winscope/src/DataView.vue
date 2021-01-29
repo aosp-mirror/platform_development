@@ -30,7 +30,12 @@
           <md-icon>save_alt</md-icon>
         </md-button>
       </md-card-header>
-
+      <AccessibilityTraceView
+        v-if="showInAccessibilityTraceView(file)"
+        :store="store"
+        :file="file"
+        ref="view"
+      />
       <WindowManagerTraceView
         v-if="showInWindowManagerTraceView(file)"
         :store="store"
@@ -68,6 +73,7 @@
 </template>
 <script>
 import TraceView from '@/TraceView.vue';
+import AccessibilityTraceView from '@/AccessibilityTraceView.vue';
 import WindowManagerTraceView from '@/WindowManagerTraceView.vue';
 import SurfaceFlingerTraceView from '@/SurfaceFlingerTraceView.vue';
 import TransactionsView from '@/TransactionsView.vue';
@@ -104,6 +110,7 @@ export default {
     'transactionsview': TransactionsView,
     'logview': LogView,
     'flat-card': FlatCard,
+    AccessibilityTraceView,
     WindowManagerTraceView,
     SurfaceFlingerTraceView,
   },
