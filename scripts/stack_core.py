@@ -263,7 +263,7 @@ class TraceConverter:
     else:
       apk_full_path = os.path.join(out_dir, apk)
     if not os.path.exists(apk_full_path):
-      print "Cannot find apk " + apk;
+      print "Cannot find apk " + apk
       return None, None
 
     cmd = subprocess.Popen(["zipinfo", "-v", apk_full_path], stdout=subprocess.PIPE)
