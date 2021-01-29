@@ -1,3 +1,5 @@
 third_party {
-  license_type: NOTICE
+  # would be NOTICE save for the CC-BY-SA in
+  # samples/browseable/XYZTouristAttractions/Application/src/com.example.android.xyztouristattractions/provider/TouristAttractions.java
+  license_type: RESTRICTED
 }

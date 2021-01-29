@@ -57,6 +57,11 @@ def parse_args():
   parser.add_argument(
       "-o", metavar="out_dir", default=".", help="output directory")
   parser.add_argument(
+      "-add3prf", "--add3prf",
+      action="store_true",
+      default=False,
+      help="call add3prf.py to add third party review files")
+  parser.add_argument(
       "-show", "--show",
       action="store_true",
       default=False,
@@ -159,6 +164,12 @@ def fetch_pkg(args, pkg, dl_path):
   echo(args, "delete temp directory {}".format(tmp_dir))
   shutil.rmtree(tmp_dir)
   print("SUCCESS: downloaded package to '{}'".format(dest_dir))
+  if args.add3prf:
+    echo(args, "Calling add3prf.py in {}".format(dest_dir))
+    cwd = os.getcwd()
+    os.chdir(dest_dir)
+    os.system("add3prf.py")
+    os.chdir(cwd)
   return True
 
 
