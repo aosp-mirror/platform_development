@@ -35,45 +35,45 @@ import WindowToken from "./WindowToken"
 
 WindowContainer.fromProto = function ({
     proto,
+    children,
     nameOverride = null,
     identifierOverride = null,
     tokenOverride = null
 }): WindowContainer {
     if (proto == null) {
         return null
-    } else {
-        const identifier = identifierOverride ?? proto.identifier
-        var name = nameOverride ?? identifier?.title ?? ""
-        var token = tokenOverride?.toString(16) ?? identifier?.hashCode?.toString(16) ?? ""
-
-        const entry = new WindowContainer(
-            name,
-            token,
-            proto.orientation,
-            proto.visible,
-            newConfigurationContainer(proto.configurationContainer)
-        )
-
-        // we remove the children property from the object to avoid it showing the
-        // the properties view of the element as we can always see those elements'
-        // properties by changing the target element in the hierarchy tree view.
-        entry.obj = getWMPropertiesForDisplay(proto)
-        entry.shortName = shortenName(entry.name)
-        entry.rawTreeViewObject = asRawTreeViewObject(entry)
-        return entry
     }
+    const identifier = identifierOverride ?? proto.identifier
+    var name = nameOverride ?? identifier?.title ?? ""
+    var token = tokenOverride?.toString(16) ?? identifier?.hashCode?.toString(16) ?? ""
+
+    const config = newConfigurationContainer(proto.configurationContainer)
+    const entry = new WindowContainer(
+        name,
+        token,
+        proto.orientation,
+        proto.visible,
+        config,
+        children
+    )
+
+    // we remove the children property from the object to avoid it showing the
+    // the properties view of the element as we can always see those elements'
+    // properties by changing the target element in the hierarchy tree view.
+    entry.obj = getWMPropertiesForDisplay(proto)
+    entry.shortName = shortenName(entry.name)
+    entry.rawTreeViewObject = asRawTreeViewObject(entry)
+    return entry
 }
 
-WindowContainer.childrenFromProto = function(parent: WindowContainer, proto, isActivityInTree: Boolean): WindowContainerChild {
-    return new WindowContainerChild(
-        DisplayContent.fromProto(proto.displayContent, isActivityInTree),
-        DisplayArea.fromProto(proto.displayArea, isActivityInTree),
-        ActivityTask.fromProto(proto.task, isActivityInTree),
-        Activity.fromProto(proto.activity, parent),
-        WindowToken.fromProto(proto.windowToken, isActivityInTree),
-        WindowState.fromProto(proto.window, isActivityInTree),
+WindowContainer.childrenFromProto = function(proto, isActivityInTree: Boolean): WindowContainerChild {
+    return DisplayContent.fromProto(proto.displayContent, isActivityInTree) ??
+        DisplayArea.fromProto(proto.displayArea, isActivityInTree) ??
+        ActivityTask.fromProto(proto.task, isActivityInTree) ??
+        Activity.fromProto(proto.activity) ??
+        WindowToken.fromProto(proto.windowToken, isActivityInTree) ??
+        WindowState.fromProto(proto.window, isActivityInTree) ??
         WindowContainer.fromProto({proto: proto.windowContainer})
-    )
 }
 
 function newConfigurationContainer(proto): ConfigurationContainer {
@@ -89,6 +89,9 @@ function newConfigurationContainer(proto): ConfigurationContainer {
 }
 
 function newConfiguration(proto): Configuration {
+    if (proto == null) {
+        return null
+    }
     var windowConfiguration = null
 
     if (proto != null && proto.windowConfiguration != null) {

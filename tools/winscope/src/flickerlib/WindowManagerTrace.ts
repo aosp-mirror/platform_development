@@ -24,8 +24,8 @@ WindowManagerTrace.fromProto = function (proto) {
             proto: entryProto.windowManagerService,
             timestamp: entryProto.elapsedRealtimeNanos,
             where: entryProto.where})
-        entries.push(transformedEntry)
 
+        entries.push(transformedEntry)
     }
     const source = null
     const sourceChecksum = null
