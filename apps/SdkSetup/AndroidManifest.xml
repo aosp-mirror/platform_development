@@ -28,6 +28,7 @@
     <application>
         <activity android:name="DefaultActivity"
                 android:excludeFromRecents="true">
+                android:exported="true">
             <intent-filter android:priority="3">
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.HOME" />
