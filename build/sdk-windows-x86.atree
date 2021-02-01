@@ -86,6 +86,12 @@ bin/aapt2.exe                           strip build-tools/${PLATFORM_NAME}/aapt2
 rm build-tools/${PLATFORM_NAME}/lib64/libaapt2_jni.so
 lib/libaapt2_jni.dll                    strip build-tools/${PLATFORM_NAME}/libaapt2_jni.dll
 
+# Also include a 64-bit version of libaapt2_jni.dll for use by 64-bit JVMs.
+lib64/libaapt2_jni.dll                  strip build-tools/${PLATFORM_NAME}/lib64/libaapt2_jni.dll
+
+# Also include the 64-bit libwinpthread-1.dll needed by libaapt2_jni.dll.
+prebuilts/gcc/linux-x86/host/x86_64-w64-mingw32-4.8/x86_64-w64-mingw32/bin/libwinpthread-1.dll strip build-tools/${PLATFORM_NAME}/lib64/libwinpthread-1.dll
+
 rm build-tools/${PLATFORM_NAME}/split-select
 bin/split-select.exe                    strip build-tools/${PLATFORM_NAME}/split-select.exe
 

@@ -145,12 +145,12 @@ def convert_json_to_bp_prop(json_path, bp_dir):
     return ret
 
 
-def gen_bp_module(variation, name, version, target_arch, arch_props, bp_dir):
+def gen_bp_module(image, variation, name, version, target_arch, arch_props, bp_dir):
     prop = {
         # These three are common for all snapshot modules.
         'version': str(version),
         'target_arch': target_arch,
-        'vendor': True,
+        image: True,
         'arch': {},
     }
 
@@ -202,7 +202,7 @@ def gen_bp_module(variation, name, version, target_arch, arch_props, bp_dir):
         elif stem64:
             prop['compile_multilib'] = '64'
 
-    bp = 'vendor_snapshot_%s {\n' % variation
+    bp = '%s_snapshot_%s {\n' % (image, variation)
     bp += gen_bp_prop(prop, INDENT)
     bp += '}\n\n'
     return bp
@@ -268,7 +268,7 @@ def build_props(install_dir):
     return props
 
 
-def gen_bp_files(install_dir, snapshot_version):
+def gen_bp_files(image, install_dir, snapshot_version):
     props = build_props(install_dir)
 
     for target_arch in sorted(props):
@@ -276,14 +276,206 @@ def gen_bp_files(install_dir, snapshot_version):
         bp_dir = os.path.join(install_dir, target_arch)
         for variation in sorted(props[target_arch]):
             for name in sorted(props[target_arch][variation]):
-                androidbp += gen_bp_module(variation, name, snapshot_version,
-                                           target_arch,
+                androidbp += gen_bp_module(image, variation, name,
+                                           snapshot_version, target_arch,
                                            props[target_arch][variation][name],
                                            bp_dir)
         with open(os.path.join(bp_dir, 'Android.bp'), 'w') as f:
             logging.info('Generating Android.bp to: {}'.format(f.name))
             f.write(androidbp)
 
+
+def find_all_installed_files(install_dir):
+    installed_files = dict()
+    for root, _, files in os.walk(install_dir, followlinks = True):
+        for file_name in sorted(files):
+            if file_name.endswith('.json'):
+                continue
+            if file_name.endswith('Android.bp'):
+                continue
+            full_path = os.path.join(root, file_name)
+            size = os.stat(full_path).st_size
+            installed_files[full_path] = size
+
+    logging.debug('')
+    for f in sorted(installed_files.keys()):
+        logging.debug(f)
+    logging.debug('')
+    logging.debug('found {} installed files'.format(len(installed_files)))
+    logging.debug('')
+    return installed_files
+
+
+def find_files_in_props(target_arch, arch_install_dir, variation, name, props, file_to_info):
+    logging.debug('{} {} {} {} {}'.format(
+        target_arch, arch_install_dir, variation, name, props))
+
+    def add_info(file, name, variation, arch, is_cfi, is_header):
+        info = (name, variation, arch, is_cfi, is_header)
+        info_list = file_to_info.get(file)
+        if not info_list:
+            info_list = []
+            file_to_info[file] = info_list
+        info_list.append(info)
+
+    def find_file_in_list(dict, key, is_cfi):
+        list = dict.get(key)
+        logging.debug('    {} {}'.format(key, list))
+        if list:
+            for item in list:
+                item_path = os.path.join(arch_install_dir, item)
+                add_info(item_path, name, variation, arch, is_cfi, False)
+
+    def find_file_in_dirs(dict, key, is_cfi, is_header):
+        dirs = dict.get(key)
+        logging.debug('    {} {}'.format(key, dirs))
+        if dirs:
+            for dir in dirs:
+                dir_path = os.path.join(arch_install_dir, dir)
+                logging.debug('        scanning {}'.format(dir_path))
+                for root, _, files in os.walk(dir_path, followlinks = True):
+                    for file_name in sorted(files):
+                        item_path = os.path.join(root, file_name)
+                        add_info(item_path, name, variation, arch, is_cfi, is_header)
+
+    def find_file_in_dict(dict, is_cfi):
+        logging.debug('    arch {}'.format(arch))
+        logging.debug('    name {}'.format( name))
+        logging.debug('    is_cfi {}'.format(is_cfi))
+
+        src = dict.get('src')
+        logging.debug('    src {}'.format(src))
+        if src:
+            src_path = os.path.join(arch_install_dir, src)
+            add_info(src_path, name, variation, arch, is_cfi, False)
+
+        notice = dict.get('notice')
+        logging.debug('    notice {}'.format(notice))
+        if notice:
+            notice_path = os.path.join(arch_install_dir, notice)
+            add_info(notice_path, name, variation, arch, is_cfi, False)
+
+        find_file_in_list(dict, 'init_rc', is_cfi)
+        find_file_in_list(dict, 'vintf_fragments', is_cfi)
+
+        find_file_in_dirs(dict, 'export_include_dirs', is_cfi, True)
+        find_file_in_dirs(dict, 'export_system_include_dirs', is_cfi, True)
+
+    for arch in sorted(props):
+        name = props[arch]['name']
+        find_file_in_dict(props[arch], False)
+        cfi = props[arch].get('cfi')
+        if cfi:
+            find_file_in_dict(cfi, True)
+
+
+def find_all_props_files(install_dir):
+
+    # This function builds a database of filename to module. This means that we
+    # need to dive into the json to find the files that the vendor snapshot
+    # provides, and link these back to modules that provide them.
+
+    file_to_info = dict()
+
+    props = build_props(install_dir)
+    for target_arch in sorted(props):
+        arch_install_dir = os.path.join(install_dir, target_arch)
+        for variation in sorted(props[target_arch]):
+            for name in sorted(props[target_arch][variation]):
+                find_files_in_props(
+                    target_arch,
+                    arch_install_dir,
+                    variation,
+                    name,
+                    props[target_arch][variation][name],
+                    file_to_info)
+
+    logging.debug('')
+    for f in sorted(file_to_info.keys()):
+        logging.debug(f)
+    logging.debug('')
+    logging.debug('found {} props files'.format(len(file_to_info)))
+    logging.debug('')
+    return file_to_info
+
+
+def get_ninja_inputs(ninja_binary, ninja_build_file, modules):
+    """Returns the set of input file path strings for the given modules.
+
+    Uses the `ninja -t inputs` tool.
+
+    Args:
+        ninja_binary: The path to a ninja binary.
+        ninja_build_file: The path to a .ninja file from a build.
+        modules: The list of modules to scan for inputs.
+    """
+    inputs = set()
+    cmd = [
+        ninja_binary,
+        "-f",
+        ninja_build_file,
+        "-t",
+        "inputs",
+        "-d",
+    ] + list(modules)
+    logging.debug('invoke ninja {}'.format(cmd))
+    inputs = inputs.union(set(
+        subprocess.check_output(cmd).decode().strip("\n").split("\n")))
+
+    return inputs
+
+
+def check_module_usage(install_dir, ninja_binary, ninja_file, goals, output):
+    all_installed_files = find_all_installed_files(install_dir)
+    all_props_files = find_all_props_files(install_dir)
+
+    ninja_inputs = get_ninja_inputs(ninja_binary, ninja_file, goals)
+    logging.debug('')
+    logging.debug('ninja inputs')
+    for ni in ninja_inputs:
+        logging.debug(ni)
+
+    logging.debug('found {} ninja_inputs for goals {}'.format(
+        len(ninja_inputs), goals))
+
+    # Intersect the file_to_info dict with the ninja_inputs to determine
+    # which items from the vendor snapshot are actually used by the goals.
+
+    total_size = 0
+    used_size = 0
+    used_file_to_info = dict()
+
+    for file, size in all_installed_files.items():
+        total_size += size
+        if file in ninja_inputs:
+            logging.debug('used: {}'.format(file))
+            used_size += size
+            info = all_props_files.get(file)
+
+            if info:
+                used_file_to_info[file] = info
+            else:
+                logging.warning('No info for file {}'.format(file))
+                used_file_to_info[file] = 'no info'
+
+    logging.debug('Total size {}'.format(total_size))
+    logging.debug('Used size {}'.format(used_size))
+    logging.debug('')
+    logging.debug('used items')
+
+    used_modules = set()
+
+    for f, i in sorted(used_file_to_info.items()):
+        logging.debug('{} {}'.format(f, i))
+        for m in i:
+            key = 'n=%s,v=%s,a=%s,c=%s,h=%s' % m
+            (name, variation, arch, is_cfi, is_header) = m
+            if not is_header:
+                used_modules.add(key)
+
+    with open(output, 'w') as f:
+        for m in sorted(used_modules):
+            f.write('%s\n' % m)
 
 def check_call(cmd):
     logging.debug('Running `{}`'.format(' '.join(cmd)))
@@ -307,13 +499,16 @@ def fetch_artifact(branch, build, target, pattern, destination):
     ]
     check_call(cmd)
 
-def install_artifacts(branch, build, target, local_dir, symlink, install_dir):
+def install_artifacts(image, branch, build, target, local_dir, symlink,
+                      install_dir):
     """Installs vendor snapshot build artifacts to {install_dir}/v{version}.
 
     1) Fetch build artifacts from Android Build server or from local_dir
     2) Unzip or create symlinks to build artifacts
 
     Args:
+      image: string, img file for which the snapshot was created (vendor,
+             recovery, etc.)
       branch: string or None, branch name of build artifacts
       build: string or None, build number of build artifacts
       target: string or None, target name of build artifacts
@@ -324,7 +519,7 @@ def install_artifacts(branch, build, target, local_dir, symlink, install_dir):
       temp_artifact_dir: string, temp directory to hold build artifacts fetched
         from Android Build server. For 'local' option, is set to None.
     """
-    artifact_pattern = 'vendor-*.zip'
+    artifact_pattern = image + '-*.zip'
 
     def unzip_artifacts(artifact_dir):
         artifacts = glob.glob(os.path.join(artifact_dir, artifact_pattern))
@@ -374,6 +569,11 @@ def get_args():
         'snapshot_version',
         type=int,
         help='Vendor snapshot version to install, e.g. "30".')
+    parser.add_argument(
+        '--image',
+        help=('Image whose snapshot is being updated (e.g., vendor, '
+              'recovery , ramdisk, etc.)'),
+        default='vendor')
     parser.add_argument('--branch', help='Branch to pull build from.')
     parser.add_argument('--build', help='Build number to pull.')
     parser.add_argument('--target', help='Target to pull.')
@@ -388,6 +588,7 @@ def get_args():
         help='Use symlinks instead of unzipping vendor snapshot zip')
     parser.add_argument(
         '--install-dir',
+        required=True,
         help=(
             'Base directory to which vendor snapshot artifacts are installed. '
             'Example: --install-dir vendor/<company name>/vendor_snapshot/v30'))
@@ -396,6 +597,20 @@ def get_args():
         action='store_true',
         help=(
             'If provided, does not ask before overwriting the install-dir.'))
+    parser.add_argument(
+        '--check-module-usage',
+        action='store_true',
+        help='Check which modules are used.')
+    parser.add_argument(
+        '--check-module-usage-goal',
+        action='append',
+        help='Goal(s) for which --check-module-usage is calculated.')
+    parser.add_argument(
+        '--check-module-usage-ninja-file',
+        help='Ninja file for which --check-module-usage is calculated.')
+    parser.add_argument(
+        '--check-module-usage-output',
+        help='File to which to write the check-module-usage results.')
 
     parser.add_argument(
         '-v',
@@ -409,6 +624,34 @@ def get_args():
 def main():
     """Program entry point."""
     args = get_args()
+
+    verbose_map = (logging.WARNING, logging.INFO, logging.DEBUG)
+    verbosity = min(args.verbose, 2)
+    logging.basicConfig(
+        format='%(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
+        level=verbose_map[verbosity])
+
+    if not args.install_dir:
+        raise ValueError('Please provide --install-dir option.')
+    install_dir = os.path.expanduser(args.install_dir)
+
+    if args.check_module_usage:
+        ninja_binary = './prebuilts/build-tools/linux-x86/bin/ninja'
+
+        if not args.check_module_usage_goal:
+            raise ValueError('Please provide --check-module-usage-goal option.')
+        if not args.check_module_usage_ninja_file:
+            raise ValueError(
+                'Please provide --check-module-usage-ninja-file option.')
+        if not args.check_module_usage_output:
+            raise ValueError(
+                'Please provide --check-module-usage-output option.')
+
+        check_module_usage(install_dir, ninja_binary,
+                           args.check_module_usage_ninja_file,
+                           args.check_module_usage_goal,
+                           args.check_module_usage_output)
+        return
 
     local = None
     if args.local:
@@ -429,18 +672,8 @@ def main():
                 'Please provide --branch, --build and --target. Or set --local '
                 'option.')
 
-    if not args.install_dir:
-        raise ValueError('Please provide --install-dir option.')
-
     snapshot_version = args.snapshot_version
 
-    verbose_map = (logging.WARNING, logging.INFO, logging.DEBUG)
-    verbosity = min(args.verbose, 2)
-    logging.basicConfig(
-        format='%(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
-        level=verbose_map[verbosity])
-
-    install_dir = os.path.expanduser(args.install_dir)
     if os.path.exists(install_dir):
         def remove_dir():
             logging.info('Removing {}'.format(install_dir))
@@ -460,13 +693,14 @@ def main():
     check_call(['mkdir', '-p', install_dir])
 
     install_artifacts(
+        image=args.image,
         branch=args.branch,
         build=args.build,
         target=args.target,
         local_dir=local,
         symlink=args.symlink,
         install_dir=install_dir)
-    gen_bp_files(install_dir, snapshot_version)
+    gen_bp_files(args.image, install_dir, snapshot_version)
 
 if __name__ == '__main__':
     main()
