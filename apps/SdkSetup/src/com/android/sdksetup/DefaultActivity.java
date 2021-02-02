@@ -45,7 +45,7 @@ public class DefaultActivity extends Activity {
         // Edit Settings only for Emulator
         if (Build.IS_EMULATOR) {
             // Set physical keyboard layout based on the system property set by emulator host.
-            String layoutName = SystemProperties.get("qemu.keyboard_layout");
+            String layoutName = SystemProperties.get("vendor.qemu.keyboard_layout");
             String deviceName = "qwerty2";
             InputDevice device = getKeyboardDevice(deviceName);
             if (device != null && !layoutName.isEmpty()) {
