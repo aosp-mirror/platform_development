@@ -43,6 +43,10 @@ public class NotificationDisplay extends Activity implements View.OnClickListene
         // Be sure to call the super class.
         super.onCreate(icicle);
 
+        // Have the system blur any windows behind this one.
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND,
+                WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+        
         RelativeLayout container = new RelativeLayout(this);
         
         ImageButton button = new ImageButton(this);
