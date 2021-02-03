@@ -142,6 +142,15 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.TranslucentBlurActivity"
+                android:label="@string/activity_translucent_blur"
+                android:theme="@style/Theme.Transparent">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".app.Animation" android:label="@string/activity_animation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -303,6 +312,18 @@
 
         <activity android:name=".app.PictureInPictureSeamlessResize"
                   android:label="@string/activity_picture_in_picture_seamless_resize"
+                  android:resizeableActivity="true"
+                  android:supportsPictureInPicture="true"
+                  android:configChanges=
+                      "screenSize|smallestScreenSize|screenLayout|orientation">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.PictureInPictureSourceRectHint"
+                  android:label="@string/activity_picture_in_picture_source_rect_hint"
                   android:resizeableActivity="true"
                   android:supportsPictureInPicture="true"
                   android:configChanges=
