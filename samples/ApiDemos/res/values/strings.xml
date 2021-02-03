@@ -65,6 +65,9 @@
     <string name="activity_picture_in_picture">App/Activity/Picture in Picture</string>
     <string name="activity_picture_in_picture_auto_enter">App/Activity/Picture in Picture Auto Enter</string>
     <string name="activity_picture_in_picture_seamless_resize">App/Activity/Picture in Picture Seamless Resize</string>
+    <string name="activity_picture_in_picture_source_rect_hint">App/Activity/Picture in Picture Source Rect Hint</string>
+    <string name="activity_picture_in_picture_source_rect_hint_current_position">Current position: %1$s</string>
+    <string name="activity_picture_in_picture_source_rect_hint_position_on_exit">Position on exit: %1$s</string>
     <string name="activity_picture_in_picture_change_orientation">Change orientation</string>
     <string name="activity_picture_in_picture_seamless_resize_switch">Enable Seamless Resize</string>
     <string name="activity_picture_in_picture_seamless_resize_demo_text">Fixed-size Text</string>
