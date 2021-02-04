@@ -1152,7 +1152,7 @@ class Runner(object):
     if self.dry_run:
       print('Dry-run skip dump of TEST_MAPPING')
     else:
-      test_mapping = TestMapping()
+      test_mapping = TestMapping(None)
       for bp_file_name in self.bp_files:
         test_mapping.create_test_mapping(os.path.dirname(bp_file_name))
     return self
