@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-prebuilts/qemu-kernel/x86_64/5.10/kernel-qemu2 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/kernel-ranchu-64
+kernel/prebuilts/5.10/x86_64/kernel-5.10 system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/kernel-ranchu-64
 device/generic/goldfish/data/etc/encryptionkey.img system-images/${PLATFORM_NAME}/${TARGET_CPU_ABI}/encryptionkey.img
 
 # version files for the SDK updater, from development.git
