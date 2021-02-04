@@ -44,8 +44,10 @@ class Env(object):
             self.cwd = path
         try:
             self.cwd_relative = self.cwd.split(self.ANDROID_BUILD_TOP)[1]
+            self.setup = True
         except:
-            sys.exit("Exit if we're not being run from a Rust dir.")
+            # Mark setup as failed if a path to a rust crate is not provided.
+            self.setup = False
 
 class Bazel(object):
     # set up the Bazel queryview
@@ -55,9 +57,12 @@ class Bazel(object):
         cmd = "./build/soong/soong_ui.bash --build-mode --all-modules --dir=. queryview"
         try:
             out = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+            self.setup = True
         except subprocess.CalledProcessError as e:
             print("Error: Unable to update TEST_MAPPING due to the following build error:")
-            sys.exit(e.output)
+            print(e.output)
+            # Mark setup as failed if the Bazel queryview fails to build.
+            self.setup = False
         os.chdir(env.cwd)
 
     def path(self):
@@ -123,6 +128,8 @@ class TestMapping(object):
         self.bazel = Bazel(self.env)
 
     def create_test_mapping(self, path):
+        if self.env.setup == False or self.bazel.setup == False:
+            return
         tests = self.get_tests(path)
         if not bool(tests):
             return
