@@ -23,21 +23,21 @@ DisplayArea.fromProto = function (proto, isActivityInTree: Boolean): DisplayArea
     if (proto == null) {
         return null
     } else {
-        const windowContainer = WindowContainer.fromProto({proto: proto.windowContainer, nameOverride: proto.name})
+        const children = proto.windowContainer.children.reverse()
+            .mapNotNull(it => WindowContainer.childrenFromProto(it, isActivityInTree))
+        const windowContainer = WindowContainer.fromProto({proto: proto.windowContainer,
+            children: children, nameOverride: proto.name})
         if (windowContainer == null) {
             throw "Window container should not be null: " + JSON.stringify(proto)
         }
         const entry = new DisplayArea(proto.isTaskDisplayArea, windowContainer)
 
-        proto.windowContainer.children.reverse()
-            .map(it => WindowContainer.childrenFromProto(entry, it, isActivityInTree))
-            .filter(it => it != null)
-            .forEach(it => windowContainer.childContainers.push(it))
-
         entry.obj = getWMPropertiesForDisplay(proto)
         entry.shortName = shortenName(entry.name)
         entry.children = entry.childrenWindows
         entry.rawTreeViewObject = asRawTreeViewObject(entry)
+
+        console.warn("Created ", entry.kind, " stableId=", entry.stableId)
         return entry
     }
 }
