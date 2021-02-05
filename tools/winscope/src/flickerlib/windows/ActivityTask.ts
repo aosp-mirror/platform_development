@@ -23,7 +23,10 @@ ActivityTask.fromProto = function (proto, isActivityInTree: Boolean): ActivityTa
     if (proto == null) {
         return null
     } else {
-        const windowContainer = WindowContainer.fromProto({proto: proto.windowContainer})
+        const children = proto.windowContainer.children.reverse()
+            .mapNotNull(it => WindowContainer.childrenFromProto(it, isActivityInTree))
+        const windowContainer = WindowContainer.fromProto({proto: proto.windowContainer,
+            children: children})
         if (windowContainer == null) {
             throw "Window container should not be null: " + JSON.stringify(proto)
         }
@@ -48,15 +51,12 @@ ActivityTask.fromProto = function (proto, isActivityInTree: Boolean): ActivityTa
             windowContainer
         )
 
-        proto.windowContainer.children.reverse()
-            .map(it => WindowContainer.childrenFromProto(entry, it, isActivityInTree))
-            .filter(it => it != null)
-            .forEach(it => windowContainer.childContainers.push(it))
-
         entry.obj = getWMPropertiesForDisplay(proto)
         entry.shortName = shortenName(entry.name)
         entry.children = entry.childrenWindows
         entry.rawTreeViewObject = asRawTreeViewObject(entry)
+
+        console.warn("Created ", entry.kind, " stableId=", entry.stableId)
         return entry
     }
 }

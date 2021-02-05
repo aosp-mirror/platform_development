@@ -56,7 +56,11 @@ export default {
         bottom: this.boundsC.height});
     },
     filteredRects() {
-      return this.rects.filter((rect) => rect.ref.visible);
+      return this.rects.filter((rect) => {
+        const isVisible = rect.ref.visible ?? rect.ref.isVisible;
+        console.warn(`Name: ${rect.ref.name} Kind: ${rect.ref.kind} isVisible=${isVisible}`);
+        return isVisible;
+      });
     },
   },
   methods: {
