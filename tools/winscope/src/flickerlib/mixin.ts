@@ -29,6 +29,7 @@ export function getWMPropertiesForDisplay(proto: any): any {
     if (obj.windowToken) delete obj.windowToken
     if (obj.rootDisplayArea) delete obj.rootDisplayArea
     if (obj.rootWindowContainer) delete obj.rootWindowContainer
+    if (obj.windowContainer?.children) delete obj.windowContainer.children
     return obj
 }
 

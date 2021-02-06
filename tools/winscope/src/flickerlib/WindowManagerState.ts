@@ -61,6 +61,8 @@ WindowManagerState.fromProto = function ({proto, timestamp = 0, where = ""}): Wi
     entry.chips = []
     entry.visible = true
     entry.rawTreeViewObject = asRawTreeViewObject(entry)
+
+    console.warn("Created ", entry.kind, " stableId=", entry.stableId)
     return entry
 }
 
@@ -83,15 +85,15 @@ function newWindowManagerPolicy(proto): WindowManagerPolicy {
 }
 
 function newRootWindowContainer(proto): RootWindowContainer {
-    const windowContainer = WindowContainer.fromProto({proto: proto.windowContainer})
+    const children = proto.windowContainer.children.reverse()
+        .mapNotNull(it => WindowContainer.childrenFromProto(it, /* isActivityInTree */ false))
+    const windowContainer = WindowContainer.fromProto(
+        {proto: proto.windowContainer, children: children})
     if (windowContainer == null) {
         throw "Window container should not be null: " + JSON.stringify(proto)
     }
     const entry = new RootWindowContainer(windowContainer)
-    proto.windowContainer.children.reverse()
-        .map(it => WindowContainer.childrenFromProto(entry, it, /* isActivityInTree */ false))
-        .filter(it => it != null)
-        .forEach(it => windowContainer.childContainers.push(it))
+
     return entry
 }
 

@@ -22,24 +22,23 @@ import WindowContainer from "./WindowContainer"
 WindowToken.fromProto = function (proto, isActivityInTree: Boolean): WindowToken {
     if (proto == null) {
         return null
-    } else {
-        const windowContainer = WindowContainer.fromProto({proto: proto.windowContainer, tokenOverride: proto.hashCode})
-        if (windowContainer == null) {
-            throw "Window container should not be null: " + JSON.stringify(proto)
-        }
-        const entry = new WindowToken(windowContainer)
-
-        proto.windowContainer.children.reverse()
-            .map(it => WindowContainer.childrenFromProto(entry, it, isActivityInTree))
-            .filter(it => it != null)
-            .forEach(it => windowContainer.childContainers.push(it))
-
-        entry.obj = getWMPropertiesForDisplay(proto)
-        entry.shortName = shortenName(entry.name)
-        entry.children = entry.childrenWindows
-        entry.rawTreeViewObject = asRawTreeViewObject(entry)
-        return entry
     }
+
+    const children = proto.windowContainer.children.reverse()
+        .mapNotNull(it => WindowContainer.childrenFromProto(it, isActivityInTree))
+    const windowContainer = WindowContainer.fromProto({proto: proto.windowContainer,
+        children: children, tokenOverride: proto.hashCode})
+    if (windowContainer == null) {
+        throw "Window container should not be null: " + JSON.stringify(proto)
+    }
+    const entry = new WindowToken(windowContainer)
+    entry.obj = getWMPropertiesForDisplay(proto)
+    entry.shortName = shortenName(entry.name)
+    entry.children = entry.childrenWindows
+    entry.rawTreeViewObject = asRawTreeViewObject(entry)
+
+    console.warn("Created ", entry.kind, " stableId=", entry.stableId)
+    return entry
 }
 
 export default WindowToken

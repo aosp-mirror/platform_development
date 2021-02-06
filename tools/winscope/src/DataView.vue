@@ -85,11 +85,59 @@ export default {
     };
   },
   methods: {
+    // Recursively search for an arrowUp method in the children
+    // This is necessary because the VueComponent hierarchy has
+    // different depths depending on the source
+    depthFirstSearchArrowUp(component) {
+      if (component.arrowUp) {
+        component.arrowUp();
+        return true;
+      } else {
+        for (let i = 0; i < component.$children.length; i++) {
+          var child = component.$children[i];
+          if (this.depthFirstSearchArrowUp(child)) {
+            return true;
+          }
+        }
+        return false;
+      }
+    },
+    // Recursively search for an arrowUp method in the children
+    // This is necessary because the VueComponent hierarchy has
+    // different depths depending on the source
+    depthFirstSearchArrowDown(component) {
+      if (component.arrowDown) {
+        component.arrowDown();
+        return true
+      } else {
+        for (let i = 0; i < component.$children.length; i++) {
+          var child = component.$children[i];
+          if (this.depthFirstSearchArrowDown(child)) {
+            return true;
+          }
+        }
+        return false;
+      }
+    },
     arrowUp() {
-      return this.$refs.view.arrowUp();
+      for (let i = 0; i < this.$children.length; i++) {
+        var child = this.$children[i];
+        let done = this.depthFirstSearchArrowUp(child);
+        if (done) {
+          return true;
+        }
+      }
+      return false;
     },
     arrowDown() {
-      return this.$refs.view.arrowDown();
+      for (let i = 0; i < this.$children.length; i++) {
+        var child = this.$children[i];
+        let done = this.depthFirstSearchArrowDown(child);
+        if (done) {
+          return true;
+        }
+      }
+      return false;
     },
     onClick(e) {
       // Pass click event to parent, so that click event handler can be attached

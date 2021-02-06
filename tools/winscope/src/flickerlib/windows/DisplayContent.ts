@@ -23,8 +23,10 @@ DisplayContent.fromProto = function (proto, isActivityInTree: Boolean): DisplayC
     if (proto == null) {
         return null
     } else {
+        const children = proto.rootDisplayArea.windowContainer.children.reverse()
+            .mapNotNull(it => WindowContainer.childrenFromProto(it, isActivityInTree))
         const windowContainer = WindowContainer.fromProto({proto: proto.rootDisplayArea.windowContainer,
-            nameOverride: proto.displayInfo?.name ?? null})
+            children: children, nameOverride: proto.displayInfo?.name ?? null})
         if (windowContainer == null) {
             throw "Window container should not be null: " + JSON.stringify(proto)
         }
@@ -58,15 +60,12 @@ DisplayContent.fromProto = function (proto, isActivityInTree: Boolean): DisplayC
             windowContainer
         )
 
-        proto.rootDisplayArea.windowContainer.children.reverse()
-            .map(it => WindowContainer.childrenFromProto(entry, it, isActivityInTree))
-            .filter(it => it != null)
-            .forEach(it => windowContainer.childContainers.push(it))
-
         entry.obj = getWMPropertiesForDisplay(proto)
         entry.shortName = shortenName(entry.name)
         entry.children = entry.childrenWindows
         entry.rawTreeViewObject = asRawTreeViewObject(entry)
+
+        console.warn("Created ", entry.kind, " stableId=", entry.stableId)
         return entry
     }
 }
