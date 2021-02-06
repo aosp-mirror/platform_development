@@ -42,8 +42,6 @@ const WindowConfiguration = require('flicker').com.android.server.wm.traces.comm
     windowmanager.windows.WindowConfiguration;
 const WindowContainer = require('flicker').com.android.server.wm.traces.common.
     windowmanager.windows.WindowContainer;
-const WindowContainerChild = require('flicker').com.android.server.wm.traces.common.
-    windowmanager.windows.WindowContainerChild;
 const WindowManagerPolicy = require('flicker').com.android.server.wm.traces.common.
     windowmanager.windows.WindowManagerPolicy;
 const WindowState = require('flicker').com.android.server.wm.traces.common.
@@ -56,10 +54,9 @@ const Bounds = require('flicker').com.android.server.wm.traces.common.Bounds;
 
 function toRect(proto) {
     if (proto == null) {
-        return new Rect(0, 0, 0, 0)
-    } else {
-        return new Rect(proto.left, proto.top, proto.right, proto.bottom)
+        return null
     }
+    return new Rect(proto.left, proto.top, proto.right, proto.bottom)
 }
 
 export {
@@ -73,7 +70,6 @@ export {
     RootWindowContainer,
     WindowConfiguration,
     WindowContainer,
-    WindowContainerChild,
     WindowState,
     WindowToken,
     WindowManagerPolicy,

@@ -42,18 +42,17 @@ import WindowContainer from "./WindowContainer"
             nameOverride = identifierName.substring(WindowState.DEBUGGER_WINDOW_PREFIX.length)
         }
 
+        const children = proto.windowContainer.children.reverse()
+            .mapNotNull(it => WindowContainer.childrenFromProto(it, isActivityInTree))
+
         const windowContainer = WindowContainer.fromProto({
             proto: proto.windowContainer,
+            children: children,
             nameOverride: nameOverride,
             identifierOverride: proto.identifier})
         if (windowContainer == null) {
             throw "Window container should not be null: " + JSON.stringify(proto)
         }
-
-        proto.windowContainer.children.reverse()
-            .map(it => WindowContainer.childrenFromProto(entry, it, isActivityInTree))
-            .filter(it => it != null)
-            .forEach(it => windowContainer.childContainers.push(it))
 
         const entry = new WindowState(
             proto.attributes?.type ?? 0,
@@ -74,6 +73,7 @@ import WindowContainer from "./WindowContainer"
             /* isAppWindow */ isActivityInTree
         )
 
+        entry.rects.map((rect) => rect.ref = entry)
         entry.obj = getWMPropertiesForDisplay(proto)
         entry.shortName = shortenName(entry.name)
         entry.visible = entry.isSurfaceShown ?? false

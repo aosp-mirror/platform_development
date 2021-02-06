@@ -19,12 +19,14 @@ import { asRawTreeViewObject } from '../../utils/diff.js'
 import { Activity } from "../common"
 import WindowContainer from "./WindowContainer"
 
-Activity.fromProto = function (proto, parent: WindowContainer): Activity {
+Activity.fromProto = function (proto): Activity {
     if (proto == null) {
         return null
     } else {
+        const children = proto.windowToken.windowContainer.children.reverse()
+            .mapNotNull(it => WindowContainer.childrenFromProto(it, /* isActivityInTree */ true))            
         const windowContainer = WindowContainer.fromProto({proto: proto.windowToken.windowContainer,
-            identifierOverride: proto.identifier})
+            children: children, identifierOverride: proto.identifier})
         if (windowContainer == null) {
             throw "Window container should not be null: " + JSON.stringify(proto)
         }
@@ -35,19 +37,15 @@ Activity.fromProto = function (proto, parent: WindowContainer): Activity {
             proto.frontOfTask,
             proto.procId,
             proto.translucent,
-            parent,
             windowContainer
         )
-
-        proto.windowToken.windowContainer.children.reverse()
-            .map(it => WindowContainer.childrenFromProto(entry, it, /* isActivityInTree */ true))
-            .filter(it => it != null)
-            .forEach(it => windowContainer.childContainers.push(it))
 
         entry.obj = getWMPropertiesForDisplay(proto)
         entry.shortName = shortenName(entry.name)
         entry.children = entry.childrenWindows
         entry.rawTreeViewObject = asRawTreeViewObject(entry)
+
+        console.warn("Created ", entry.kind, " stableId=", entry.stableId)
         return entry
     }
 }
