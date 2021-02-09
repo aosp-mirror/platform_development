@@ -115,6 +115,11 @@ TRACE_TARGETS = {
         'su root cmd window tracing start\necho "WM trace started."',
         'su root cmd window tracing stop >/dev/null 2>&1'
     ),
+    "accessibility_trace": TraceTarget(
+        File("/data/misc/a11ytrace/a11y_trace.pb", "accessibility_trace"),
+        'su root cmd accessibility start-trace\necho "Accessibility trace started."',
+        'su root cmd accessibility stop-trace >/dev/null 2>&1'
+    ),
     "layers_trace": TraceTarget(
         File("/data/misc/wmtrace/layers_trace.pb", "layers_trace"),
         'su root service call SurfaceFlinger 1025 i32 1\necho "SF trace started."',
