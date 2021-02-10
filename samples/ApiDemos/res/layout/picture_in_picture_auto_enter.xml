@@ -30,6 +30,15 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintDimensionRatio="H,16:9" />
 
+    <Switch android:id="@+id/source_rect_hint_toggle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:padding="8dp"
+        android:text="@string/activity_picture_in_picture_source_rect_hint_toggle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/change_orientation" />
+
     <Button android:id="@+id/change_orientation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
