@@ -24,17 +24,24 @@ import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.Rational;
 import android.view.View;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 
 import com.example.android.apis.R;
 
 public class PictureInPictureAutoEnter extends Activity {
 
-    private View mImageView;
-    private View mButtonView;
     private final View.OnLayoutChangeListener mOnLayoutChangeListener =
             (v, oldLeft, oldTop, oldRight, oldBottom, newLeft, newTop, newRight, newBottom) -> {
-        updatePictureInPictureParams();
-    };
+                updatePictureInPictureParams();
+            };
+
+    private final CompoundButton.OnCheckedChangeListener mOnCheckedChangeListener =
+            (v, isChecked) -> updatePictureInPictureParams();
+
+    private View mImageView;
+    private View mButtonView;
+    private Switch mSwitchView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +50,7 @@ public class PictureInPictureAutoEnter extends Activity {
         setContentView(R.layout.picture_in_picture_auto_enter);
 
         mImageView = findViewById(R.id.image);
+        mImageView.addOnLayoutChangeListener(mOnLayoutChangeListener);
         mButtonView = findViewById(R.id.change_orientation);
         mButtonView.setOnClickListener((v) -> {
             final int orientation = getResources().getConfiguration().orientation;
@@ -51,22 +59,30 @@ public class PictureInPictureAutoEnter extends Activity {
             } else {
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
             }
-            mImageView.addOnLayoutChangeListener(mOnLayoutChangeListener);
         });
+        mSwitchView = findViewById(R.id.source_rect_hint_toggle);
+        mSwitchView.setOnCheckedChangeListener(mOnCheckedChangeListener);
 
-        mImageView.addOnLayoutChangeListener(mOnLayoutChangeListener);
+        // there is a bug that setSourceRectHint(null) does not clear the source rect hint
+        // once there is a non-null source rect hint ever been set. set this to false by default
+        // therefore this demo activity can be used for testing autoEnterPip behavior without
+        // source rect hint when launched for the first time.
+        mSwitchView.setChecked(false);
     }
 
     @Override
     public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode,
             Configuration newConfig) {
         mButtonView.setVisibility(isInPictureInPictureMode ? View.GONE : View.VISIBLE);
+        mSwitchView.setVisibility(isInPictureInPictureMode ? View.GONE: View.VISIBLE);
     }
 
     private void updatePictureInPictureParams() {
-        mImageView.removeOnLayoutChangeListener(mOnLayoutChangeListener);
-        final Rect sourceRectHint = new Rect();
-        mImageView.getGlobalVisibleRect(sourceRectHint);
+        final Rect imageViewRect = new Rect();
+        mImageView.getGlobalVisibleRect(imageViewRect);
+        // bail early if mImageView has not been measured yet
+        if (imageViewRect.isEmpty()) return;
+        final Rect sourceRectHint = mSwitchView.isChecked() ? new Rect(imageViewRect) : null;
         final Rational aspectRatio = new Rational(mImageView.getWidth(), mImageView.getHeight());
         final PictureInPictureParams.Builder builder = new PictureInPictureParams.Builder()
                 .setAutoEnterEnabled(true)
