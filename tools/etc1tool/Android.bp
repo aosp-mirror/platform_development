@@ -3,6 +3,10 @@
 // Android.mk for etc1tool
 //
 
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
 cc_binary_host {
     name: "etc1tool",
 
