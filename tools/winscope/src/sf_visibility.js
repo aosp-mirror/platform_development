@@ -144,7 +144,7 @@ function is_visible(layer, hiddenByPolicy, includesCompositionState) {
   return true;
 }
 
-function get_visibility_reason(layer) {
+function get_visibility_reason(layer, includesCompositionState) {
   if (layer.type === 'ContainerLayer') {
     return 'ContainerLayer';
   }
@@ -191,6 +191,10 @@ function get_visibility_reason(layer) {
 
   if (layer.occludedBy && layer.occludedBy.length > 0) {
     return 'Layer is occluded by:' + layer.occludedBy.join();
+  }
+
+  if (includesCompositionState && is_empty(layer.visibleRegion)) {
+    return 'Visible region calculated by Composition Engine is empty';
   }
 
   if (layer.visible) {
@@ -256,7 +260,7 @@ function fill_occlusion_state(layerMap, rootLayers, includesCompositionState) {
 
     layer.visible = is_visible(layer, layer.hidden, includesCompositionState);
     if (!layer.visible) {
-      layer.invisibleDueTo = get_visibility_reason(layer);
+      layer.invisibleDueTo = get_visibility_reason(layer, includesCompositionState);
     }
   });
 }
