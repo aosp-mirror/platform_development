@@ -51,3 +51,14 @@ python_test_host {
     test_config: "symbol-tests.xml",
     test_suites: ["general-tests"],
 }
+
+python_test_host {
+    name: "add3prf_test",
+    srcs: [
+        "add3prf.py",
+        "add3prf_test.py",
+    ],
+    libs: [
+        "pyfakefs",
+    ]
+}
