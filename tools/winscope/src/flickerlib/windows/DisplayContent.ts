@@ -24,7 +24,8 @@ DisplayContent.fromProto = function (proto, isActivityInTree: Boolean): DisplayC
         return null
     } else {
         const children = proto.rootDisplayArea.windowContainer.children.reverse()
-            .mapNotNull(it => WindowContainer.childrenFromProto(it, isActivityInTree))
+            .filter(it => it != null)
+            .map(it => WindowContainer.childrenFromProto(it, isActivityInTree))
         const windowContainer = WindowContainer.fromProto({proto: proto.rootDisplayArea.windowContainer,
             children: children, nameOverride: proto.displayInfo?.name ?? null})
         if (windowContainer == null) {
