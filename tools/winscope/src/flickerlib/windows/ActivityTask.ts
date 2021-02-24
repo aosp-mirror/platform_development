@@ -24,7 +24,8 @@ ActivityTask.fromProto = function (proto, isActivityInTree: Boolean): ActivityTa
         return null
     } else {
         const children = proto.windowContainer.children.reverse()
-            .mapNotNull(it => WindowContainer.childrenFromProto(it, isActivityInTree))
+            .filter(it => it != null)
+            .map(it => WindowContainer.childrenFromProto(it, isActivityInTree))
         const windowContainer = WindowContainer.fromProto({proto: proto.windowContainer,
             children: children})
         if (windowContainer == null) {
