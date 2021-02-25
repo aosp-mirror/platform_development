@@ -86,7 +86,8 @@ function newWindowManagerPolicy(proto): WindowManagerPolicy {
 
 function newRootWindowContainer(proto): RootWindowContainer {
     const children = proto.windowContainer.children.reverse()
-        .mapNotNull(it => WindowContainer.childrenFromProto(it, /* isActivityInTree */ false))
+        .filter(it => it != null)
+        .map(it => WindowContainer.childrenFromProto(it, /* isActivityInTree */ false))
     const windowContainer = WindowContainer.fromProto(
         {proto: proto.windowContainer, children: children})
     if (windowContainer == null) {
