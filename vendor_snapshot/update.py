@@ -50,7 +50,7 @@ def get_variation(json_rel_path):
 # convert .bp prop dictionary to .bp prop string
 def gen_bp_prop(prop, ind):
     bp = ''
-    for key in prop:
+    for key in sorted(prop):
         val = prop[key]
 
         # Skip empty list or dict, rather than printing empty prop like
