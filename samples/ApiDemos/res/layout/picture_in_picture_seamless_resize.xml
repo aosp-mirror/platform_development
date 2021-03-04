@@ -20,19 +20,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <VideoView
-        android:id="@+id/surface_view"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"/>
-
     <TextView
         android:id="@+id/text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:padding="8dp"
         android:text="@string/activity_picture_in_picture_seamless_resize_demo_text"
         android:textSize="18sp"
         app:layout_constraintTop_toTopOf="parent"
@@ -45,7 +37,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/activity_picture_in_picture_seamless_resize_switch"
-        android:checked="true"
+        android:checked="false"
         android:background="@android:color/white"
         android:padding="8dp"
         app:layout_constraintStart_toStartOf="parent"
