@@ -19,21 +19,15 @@ package com.example.android.apis.app;
 import android.app.Activity;
 import android.app.PictureInPictureParams;
 import android.content.res.Configuration;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.MediaController;
 import android.widget.Switch;
-import android.widget.TextView;
-import android.widget.VideoView;
 
 import com.example.android.apis.R;
 
 public class PictureInPictureSeamlessResize extends Activity {
 
     private Switch mSwitchView;
-    private VideoView mVideoView;
-    private TextView mTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,8 +35,6 @@ public class PictureInPictureSeamlessResize extends Activity {
         getActionBar().hide();
         setContentView(R.layout.picture_in_picture_seamless_resize);
 
-        mVideoView = findViewById(R.id.surface_view);
-        mTextView = findViewById(R.id.text_view);
         mSwitchView = findViewById(R.id.seamless_resize_switch);
         mSwitchView.setOnCheckedChangeListener((v, isChecked) -> {
             onSeamlessResizeCheckedChanged(isChecked);
@@ -66,23 +58,5 @@ public class PictureInPictureSeamlessResize extends Activity {
         final PictureInPictureParams.Builder builder = new PictureInPictureParams.Builder()
                 .setSeamlessResizeEnabled(checked);
         setPictureInPictureParams(builder.build());
-
-        mVideoView.setVisibility(checked ? View.VISIBLE : View.GONE);
-        mTextView.setVisibility(checked ? View.GONE : View.VISIBLE);
-        if (checked) {
-            initPlayer(Uri.parse("android.resource://" + getPackageName() +
-                    "/" + R.raw.videoviewdemo));
-        } else {
-            mVideoView.stopPlayback();
-        }
-    }
-
-    private void initPlayer(Uri uri) {
-        mVideoView.setVideoURI(uri);
-        mVideoView.requestFocus();
-        mVideoView.setOnPreparedListener(mp -> {
-            mp.setLooping(true);
-            mVideoView.start();
-        });
     }
 }
