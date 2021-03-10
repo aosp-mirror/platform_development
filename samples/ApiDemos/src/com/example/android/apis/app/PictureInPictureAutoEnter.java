@@ -30,6 +30,11 @@ import android.widget.Switch;
 import com.example.android.apis.R;
 
 public class PictureInPictureAutoEnter extends Activity {
+    // Fixed the aspect ratio value as it's been specified in the layout file.
+    // Defined the value here to avoid unnecessary onTaskInfoChanged callbacks to SysUI
+    // due to 1px difference when measuring aspect ratio from width and height in
+    // layout change listener.
+    private final Rational mAspectRatio = new Rational(16, 9);
 
     private final View.OnLayoutChangeListener mOnLayoutChangeListener =
             (v, oldLeft, oldTop, oldRight, oldBottom, newLeft, newTop, newRight, newBottom) -> {
@@ -83,10 +88,9 @@ public class PictureInPictureAutoEnter extends Activity {
         // bail early if mImageView has not been measured yet
         if (imageViewRect.isEmpty()) return;
         final Rect sourceRectHint = mSwitchView.isChecked() ? new Rect(imageViewRect) : null;
-        final Rational aspectRatio = new Rational(mImageView.getWidth(), mImageView.getHeight());
         final PictureInPictureParams.Builder builder = new PictureInPictureParams.Builder()
                 .setAutoEnterEnabled(true)
-                .setAspectRatio(aspectRatio)
+                .setAspectRatio(mAspectRatio)
                 .setSourceRectHint(sourceRectHint);
         setPictureInPictureParams(builder.build());
     }
