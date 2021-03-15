@@ -17,7 +17,6 @@
 package com.example.android.voiceinteractor;
 
 import android.media.AudioAttributes;
-import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Handler;
@@ -35,13 +34,40 @@ import androidx.annotation.Nullable;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.time.Duration;
 import java.util.function.IntConsumer;
 
 public class SampleHotwordDetectionService extends HotwordDetectionService {
     static final String TAG = "SHotwordDetectionSrvc";
 
-    // Number of bytes per sample of audio (which is a short).
-    private static final int BYTES_PER_SAMPLE = 2;
+    // AudioRecord config
+    private static final Duration AUDIO_RECORD_BUFFER_DURATION = Duration.ofSeconds(1);
+    private static final Duration DSP_AUDIO_READ_DURATION = Duration.ofSeconds(5);
+    private static final Duration AUDIO_RECORD_RELEASE_TIMEOUT = Duration.ofSeconds(10);
+
+    private static AudioRecord createAudioRecord(AlwaysOnHotwordDetector.EventPayload eventPayload,
+            int bytesPerSecond,
+            int sessionId) {
+        int audioRecordBufferSize = getBufferSizeInBytes(bytesPerSecond,
+                AUDIO_RECORD_BUFFER_DURATION.getSeconds());
+        Log.d(TAG, "creating AudioRecord: bytes=" + audioRecordBufferSize
+                + ", lengthSeconds=" + (audioRecordBufferSize / bytesPerSecond));
+        return new AudioRecord.Builder()
+                .setAudioAttributes(
+                        new AudioAttributes.Builder()
+                                .setInternalCapturePreset(MediaRecorder.AudioSource.HOTWORD)
+                                // TODO see what happens if this is too small
+                                .build())
+                .setAudioFormat(eventPayload.getCaptureAudioFormat())
+                .setBufferSizeInBytes(audioRecordBufferSize)
+                .setSessionId(sessionId)
+                .setMaxSharedAudioHistoryMillis(AudioRecord.getMaxSharedAudioHistoryMillis())
+                .build();
+    }
+
+    private static int getBufferSizeInBytes(int bytesPerSecond, float bufferLengthSeconds) {
+        return (int) (bytesPerSecond * bufferLengthSeconds);
+    }
 
     @Override
     public void onUpdateState(@Nullable PersistableBundle options,
@@ -58,10 +84,11 @@ public class SampleHotwordDetectionService extends HotwordDetectionService {
             @NonNull AlwaysOnHotwordDetector.EventPayload eventPayload,
             long timeoutMillis,
             @NonNull Callback callback) {
-        Log.d(TAG, "onDetect (Hardware trigger)");
+        Log.d(TAG, "onDetect (Hardware trigger): " + eventPayload);
 
         int sampleRate = eventPayload.getCaptureAudioFormat().getSampleRate();
-        int bytesPerSecond = BYTES_PER_SAMPLE * sampleRate;
+        int bytesPerSecond =
+                eventPayload.getCaptureAudioFormat().getFrameSizeInBytes() * sampleRate;
 
         Integer captureSession = 0;
         try {
@@ -81,9 +108,11 @@ public class SampleHotwordDetectionService extends HotwordDetectionService {
             return;
         }
 
-        byte[] buffer = new byte[bytesPerSecond * 10];
+        byte[] buffer = new byte[bytesPerSecond * (int) DSP_AUDIO_READ_DURATION.getSeconds()];
+        Log.d(TAG, "starting read: bytesPerSecond=" + bytesPerSecond
+                + ", totalBufferSize=" + buffer.length);
         record.startRecording();
-        AudioUtils.read(record, bytesPerSecond, .75f, buffer);
+        AudioUtils.read(record, bytesPerSecond, DSP_AUDIO_READ_DURATION.getSeconds(), buffer);
 
         callback.onDetected(
                 new HotwordDetectedResult.Builder()
@@ -95,7 +124,7 @@ public class SampleHotwordDetectionService extends HotwordDetectionService {
             Log.i(TAG, "Releasing audio record");
             record.stop();
             record.release();
-        }, 5000);
+        }, AUDIO_RECORD_RELEASE_TIMEOUT.toMillis());
     }
 
     private int getKeyphraseId(AlwaysOnHotwordDetector.EventPayload payload) {
@@ -108,48 +137,7 @@ public class SampleHotwordDetectionService extends HotwordDetectionService {
 
     @Override
     public void onDetect(@NonNull Callback callback) {
-        int sampleRate = 16000;
-        int bytesPerSecond = BYTES_PER_SAMPLE * sampleRate;
-        AudioRecord record = new AudioRecord.Builder()
-                .setAudioAttributes(new AudioAttributes.Builder()
-                        .setInternalCapturePreset(MediaRecorder.AudioSource.HOTWORD).build())
-                .setAudioFormat(
-                        new AudioFormat.Builder()
-                                .setChannelMask(AudioFormat.CHANNEL_IN_MONO)
-                        .setEncoding(AudioFormat.ENCODING_DEFAULT)
-                        .setSampleRate(sampleRate)
-                        .build())
-                .setBufferSizeInBytes(getBufferSizeInBytes(bytesPerSecond, 15))
-                .setMaxSharedAudioHistoryMillis(AudioRecord.getMaxSharedAudioHistoryMillis())
-                .build();
-
-        if (record.getState() != AudioRecord.STATE_INITIALIZED) {
-            Log.w(TAG, "Failed to initialize AudioRecord");
-            record.release();
-        }
-        record.startRecording();
-        byte[] buffer = new byte[bytesPerSecond * 10];
-        int numBytes = AudioUtils.read(record, bytesPerSecond, .75f, buffer);
-    }
-
-    private static AudioRecord createAudioRecord(AlwaysOnHotwordDetector.EventPayload eventPayload,
-            int bytesPerSecond,
-            int sessionId) {
-        return new AudioRecord.Builder()
-                .setAudioAttributes(
-                new AudioAttributes.Builder()
-                        .setInternalCapturePreset(MediaRecorder.AudioSource.HOTWORD)
-                // TODO see what happens if this is too small
-                        .build())
-                .setAudioFormat(eventPayload.getCaptureAudioFormat())
-                .setBufferSizeInBytes(getBufferSizeInBytes(bytesPerSecond, 1))
-                .setSessionId(sessionId)
-                .setMaxSharedAudioHistoryMillis(AudioRecord.getMaxSharedAudioHistoryMillis())
-                .build();
-    }
-
-    private static int getBufferSizeInBytes(int bytesPerSecond, float bufferLengthSeconds) {
-        return (int) (bytesPerSecond * bufferLengthSeconds);
+        Log.w(TAG, "onDetect called for microphone trigger");
     }
 
 }

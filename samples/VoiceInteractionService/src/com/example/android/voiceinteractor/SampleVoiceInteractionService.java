@@ -24,41 +24,62 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
-import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Trace;
 import android.service.voice.AlwaysOnHotwordDetector;
 import android.service.voice.AlwaysOnHotwordDetector.EventPayload;
 import android.service.voice.HotwordDetector;
+import android.service.voice.HotwordDetector.IllegalDetectorStateException;
 import android.service.voice.HotwordRejectedResult;
 import android.service.voice.VoiceInteractionService;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.Arrays;
+import java.time.Duration;
 import java.util.Locale;
 
 public class SampleVoiceInteractionService extends VoiceInteractionService {
+    public static final String DSP_MODEL_KEYPHRASE = "Test Keyphrase";
     private static final String TAG = "VIS";
 
-    // Number of bytes per sample of audio (which is a short).
-    private static final int BYTES_PER_SAMPLE = 2;
-    public static final String KEYPHRASE = "X Android";
+    // AudioRecord config
+    private static final Duration AUDIO_RECORD_BUFFER_DURATION = Duration.ofSeconds(5);
+    private static final Duration AUDIO_READ_DURATION = Duration.ofSeconds(5);
+
+    // DSP model config
+    private static final Locale DSP_MODEL_LOCALE = Locale.US;
 
     private final IBinder binder = new LocalBinder();
 
-    public class LocalBinder extends Binder {
-        SampleVoiceInteractionService getService() {
-            // Return this instance of LocalService so clients can call public methods
-            return SampleVoiceInteractionService.this;
-        }
+    HotwordDetector mDetector;
+    Callback mCallback;
+    Bundle mData = new Bundle();
+    AudioFormat mAudioFormat;
+    EventPayload mLastPayload;
+
+    private static AudioRecord createAudioRecord(EventPayload eventPayload, int bytesPerSecond) {
+        int audioRecordBufferSize = getBufferSizeInBytes(bytesPerSecond,
+                AUDIO_RECORD_BUFFER_DURATION.getSeconds());
+        Log.d(TAG, "creating AudioRecord: bytes=" + audioRecordBufferSize
+                + ", lengthSeconds=" + (audioRecordBufferSize / bytesPerSecond));
+        return new AudioRecord.Builder()
+                .setAudioAttributes(
+                        new AudioAttributes.Builder()
+                                .setInternalCapturePreset(MediaRecorder.AudioSource.HOTWORD)
+                                .build())
+                .setAudioFormat(eventPayload.getCaptureAudioFormat())
+                .setBufferSizeInBytes(audioRecordBufferSize)
+                .setSharedAudioEvent(eventPayload.getHotwordDetectedResult().getMediaSyncEvent())
+                .build();
+    }
+
+    private static int getBufferSizeInBytes(int bytesPerSecond, float bufferLengthSeconds) {
+        return (int) (bytesPerSecond * bufferLengthSeconds);
     }
 
     @Override
@@ -69,25 +90,26 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
         return super.onBind(intent);
     }
 
-    HotwordDetector mDetector;
-    Callback mCallback;
-
-    Bundle mData = new Bundle();
-    AudioFormat mAudioFormat;
-    EventPayload mLastPayload;
-
     @Override
     public void onReady() {
         super.onReady();
         Log.i(TAG, "onReady");
         mCallback = new Callback();
-        mDetector = createAlwaysOnHotwordDetector(KEYPHRASE, Locale.US, null, null, mCallback);
+        mDetector = createAlwaysOnHotwordDetector(DSP_MODEL_KEYPHRASE, DSP_MODEL_LOCALE, null, null,
+                mCallback);
     }
 
     @Override
     public void onShutdown() {
         super.onShutdown();
         Log.i(TAG, "onShutdown");
+    }
+
+    public class LocalBinder extends Binder {
+        SampleVoiceInteractionService getService() {
+            // Return this instance of LocalService so clients can call public methods
+            return SampleVoiceInteractionService.this;
+        }
     }
 
     class Callback extends AlwaysOnHotwordDetector.Callback {
@@ -110,7 +132,7 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
                 Intent enrollIntent = null;
                 try {
                     enrollIntent = ((AlwaysOnHotwordDetector) mDetector).createEnrollIntent();
-                } catch (HotwordDetector.IllegalDetectorStateException e) {
+                } catch (IllegalDetectorStateException e) {
                     e.printStackTrace();
                 }
                 if (enrollIntent == null) {
@@ -131,14 +153,16 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
         public void onRejected(@NonNull HotwordRejectedResult result) {
             try {
                 mDetector.startRecognition();
-            } catch (HotwordDetector.IllegalDetectorStateException e) {
+            } catch (IllegalDetectorStateException e) {
                 e.printStackTrace();
             }
         }
 
         @Override
         public void onDetected(@NonNull EventPayload eventPayload) {
+            Trace.beginAsyncSection("SampleVoiceInteractionService.onDetected", 0);
             onDetected(eventPayload, false);
+            Trace.endAsyncSection("SampleVoiceInteractionService.onDetected", 0);
         }
 
         public void onDetected(@NonNull EventPayload eventPayload, boolean generateSessionId) {
@@ -150,7 +174,10 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
                     eventPayload.getCaptureAudioFormat().getEncoding()));
 
             int sampleRate = eventPayload.getCaptureAudioFormat().getSampleRate();
-            int bytesPerSecond = BYTES_PER_SAMPLE * sampleRate;
+            int bytesPerSecond =
+                    eventPayload.getCaptureAudioFormat().getFrameSizeInBytes() * sampleRate;
+
+            Trace.beginAsyncSection("SampleVoiceInteractionService.createAudioRecord", 1);
 
             // For Non-trusted:
 //            Integer captureSession = 0;
@@ -163,20 +190,25 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
 //            int sessionId = generateSessionId ?
 //                    AudioManager.AUDIO_SESSION_ID_GENERATE : captureSession;
 //            AudioRecord record = createAudioRecord(eventPayload, bytesPerSecond, sessionId);
+
             AudioRecord record = createAudioRecord(eventPayload, bytesPerSecond);
             if (record.getState() != AudioRecord.STATE_INITIALIZED) {
+                Trace.endAsyncSection("SampleVoiceInteractionService.createAudioRecord", 1);
+                Trace.setCounter("SampleVoiceInteractionService AudioRecord.STATE_INITIALIZED",
+                        record.getState());
                 Log.e(TAG, "Failed to init first AudioRecord.");
                 try {
                     mDetector.startRecognition();
-                } catch (HotwordDetector.IllegalDetectorStateException e) {
+                } catch (IllegalDetectorStateException e) {
                     e.printStackTrace();
                 }
                 return;
             }
 
-            byte[] buffer = new byte[bytesPerSecond * 6];
+            byte[] buffer = new byte[bytesPerSecond * (int) AUDIO_READ_DURATION.getSeconds()];
             record.startRecording();
-            int numBytes = AudioUtils.read(record, bytesPerSecond, 5, buffer);
+            int numBytes = AudioUtils.read(record, bytesPerSecond, AUDIO_READ_DURATION.getSeconds(),
+                    buffer);
 
 //            try {
 //                Thread.sleep(2000);
@@ -185,6 +217,9 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
 //                throw new RuntimeException(e);
 //            }
 
+
+            Trace.endAsyncSection("SampleVoiceInteractionService.createAudioRecord", 1);
+            Trace.setCounter("SampleVoiceInteractionService Read Complete", numBytes);
             record.stop();
             record.release();
 
@@ -195,7 +230,7 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
 
             try {
                 mDetector.startRecognition();
-            } catch (HotwordDetector.IllegalDetectorStateException e) {
+            } catch (IllegalDetectorStateException e) {
                 e.printStackTrace();
             }
         }
@@ -205,7 +240,7 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
             Log.i(TAG, "onError");
             try {
                 mDetector.startRecognition();
-            } catch (HotwordDetector.IllegalDetectorStateException e) {
+            } catch (IllegalDetectorStateException e) {
                 e.printStackTrace();
             }
         }
@@ -227,37 +262,10 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
             if (mAvailable) {
                 try {
                     mDetector.startRecognition();
-                } catch (HotwordDetector.IllegalDetectorStateException e) {
+                } catch (IllegalDetectorStateException e) {
                     e.printStackTrace();
                 }
             }
         }
-    }
-
-    private static AudioRecord createAudioRecord(EventPayload eventPayload, int bytesPerSecond) {
-        return new AudioRecord.Builder()
-                .setAudioAttributes(
-                new AudioAttributes.Builder()
-                        .setInternalCapturePreset(MediaRecorder.AudioSource.HOTWORD)
-                        .build())
-                .setAudioFormat(eventPayload.getCaptureAudioFormat())
-                .setBufferSizeInBytes(getBufferSizeInBytes(bytesPerSecond, 2))
-                .setSharedAudioEvent(eventPayload.getHotwordDetectedResult().getMediaSyncEvent())
-                .build();
-    }
-
-    private static AudioRecord createAudioRecord(EventPayload eventPayload, int bytesPerSecond,
-            int sessionId) {
-        return new AudioRecord(
-                new AudioAttributes.Builder()
-                        .setInternalCapturePreset(MediaRecorder.AudioSource.HOTWORD)
-                        .build(),
-                eventPayload.getCaptureAudioFormat(),
-                getBufferSizeInBytes(bytesPerSecond, 2),
-                sessionId);
-    }
-
-    private static int getBufferSizeInBytes(int bytesPerSecond, float bufferLengthSeconds) {
-        return (int) (bytesPerSecond * bufferLengthSeconds);
     }
 }
