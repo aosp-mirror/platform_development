@@ -302,6 +302,7 @@
                   android:label="@string/activity_picture_in_picture_auto_enter"
                   android:resizeableActivity="true"
                   android:supportsPictureInPicture="true"
+                  android:theme="@style/Theme.NoActionBar"
                   android:configChanges=
                       "screenSize|smallestScreenSize|screenLayout|orientation">
             <intent-filter>
