@@ -294,10 +294,9 @@ bool ABIWrapper::CreateBasicNamedAndTypedDecl(
   // Temporary hack: Skip the auto types, incomplete types and dependent types.
   if (type_class != clang::Type::Auto && !base_type->isIncompleteType() &&
       !base_type->isDependentType()) {
-    std::pair<clang::CharUnits, clang::CharUnits> size_and_alignment =
-        ast_contextp_->getTypeInfoInChars(canonical_type);
-    typep->SetSize(size_and_alignment.first.getQuantity());
-    typep->SetAlignment(size_and_alignment.second.getQuantity());
+    auto type_info_chars = ast_contextp_->getTypeInfoInChars(canonical_type);
+    typep->SetSize(type_info_chars.Width.getQuantity());
+    typep->SetAlignment(type_info_chars.Align.getQuantity());
   }
 
   std::string human_name = QualTypeToString(canonical_type);
