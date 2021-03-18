@@ -19,6 +19,9 @@ if [ -z ${ANDROID_BUILD_TOP} ]; then
 else
     WD=$ANDROID_BUILD_TOP
 fi
+if [ -z ${OUT_DIR} ]; then
+    OUT_DIR=${WD}/out
+fi
 echo "use build top: $WD"
 
 function linkto()
@@ -56,6 +59,7 @@ function bld_mainline()
     pushd $WD/kernel
     HERMETIC_TOOLCHAIN=0 BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh ${make_opt}
     popd
+    repack out/android-mainline/dist/Image ${OUT_DIR}/target/kernel/mainline/arm64 mainline
 }
 
 function bld_k54()
@@ -64,6 +68,7 @@ function bld_k54()
     pushd $WD/kernel
     HERMETIC_TOOLCHAIN=0 BUILD_CONFIG=common-5.4/build.config.gki.aarch64 build/build.sh ${make_opt}
     popd
+    repack out/android12-5.4/dist/Image    ${OUT_DIR}/target/kernel/5.4/arm64 5.4
 }
 
 function bld_k510()
@@ -72,4 +77,20 @@ function bld_k510()
     pushd $WD/kernel
     HERMETIC_TOOLCHAIN=0 BUILD_CONFIG=common-5.10/build.config.gki.aarch64 build/build.sh ${make_opt}
     popd
+    repack out/android12-5.10/dist/Image   ${OUT_DIR}/target/kernel/5.10/arm64 5.10
+}
+
+function repack()
+{
+    local src_img=$1
+    local dst_dir=$2
+    local version=$3
+    local dir_name=$(dirname ${src_img})
+    mkdir -p ${dst_dir}
+    cp \
+        ${src_img} ${dst_dir}/kernel-$version
+    gzip -nc \
+        ${src_img}>${dst_dir}/kernel-$version-gz
+    lz4 -f -l -12 --favor-decSpeed \
+        ${src_img} ${dst_dir}/kernel-$version-lz4
 }
