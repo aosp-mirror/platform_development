@@ -74,6 +74,7 @@ public class MyListenerAllContent implements OnReceiveContentListener {
     }
 
     private static void receive(View view, Uri contentUri) {
+        final String viewClassName = view.getClass().getSimpleName();
         MyExecutors.getBg().submit(() -> {
             ContentResolver contentResolver = view.getContext().getContentResolver();
             String mimeType = contentResolver.getType(contentUri);
@@ -81,7 +82,7 @@ public class MyListenerAllContent implements OnReceiveContentListener {
                 showMessage(view, "Content of type " + mimeType + "  is not supported");
                 return;
             }
-            showMessage(view, "Received " + mimeType + ": " + contentUri);
+            showMessage(view, viewClassName + ": Received " + mimeType + ": " + contentUri);
         });
     }
 }
