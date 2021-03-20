@@ -18,6 +18,7 @@ package com.example.android.receivecontent;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.EditText;
 
 public class ReceiveContentDemoActivity extends Activity {
@@ -35,6 +36,11 @@ public class ReceiveContentDemoActivity extends Activity {
 
         EditText editTextAllTypes = findViewById(R.id.edittext_all_types);
         editTextAllTypes.setOnReceiveContentListener(
+                MyListenerAllContent.SUPPORTED_MIME_TYPES,
+                new MyListenerAllContent());
+
+        View container = findViewById(R.id.container);
+        container.setOnReceiveContentListener(
                 MyListenerAllContent.SUPPORTED_MIME_TYPES,
                 new MyListenerAllContent());
     }
