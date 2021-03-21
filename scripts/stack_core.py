@@ -391,6 +391,17 @@ class TraceConverter:
           lib = area
           lib_name = None
 
+        # When using atest, test paths are different between the out/ directory
+        # and device. Apply fixups.
+        if lib.startswith("/data/local/tests/") or lib.startswith("/data/local/tmp/"):
+          test_name = lib.rsplit("/", 1)[-1]
+          prefix = "/data/nativetest"
+          if symbol.ARCH.endswith("64"):
+            prefix += "64"
+          if lib.startswith("/data/local/tests/vendor/"):
+            prefix += "/vendor"
+          lib = prefix + "/" + test_name + "/" + test_name
+
         # If a calls b which further calls c and c is inlined to b, we want to
         # display "a -> b -> c" in the stack trace instead of just "a -> c"
         info = symbol.SymbolInformation(lib, code_addr)
