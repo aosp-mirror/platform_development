@@ -1122,6 +1122,21 @@ class Runner(object):
     else:
       return ''
 
+  def read_license(self, name):
+    if not os.path.isfile(name):
+      return ''
+    license = ''
+    with open(name, 'r') as intf:
+      line = intf.readline()
+      # Firstly skip ANDROID_BP_HEADER
+      while line.startswith('//'):
+        line = intf.readline()
+      # Read all lines until we see a rust_* rule.
+      while line != '' and not line.startswith('rust_'):
+        license += line
+        line = intf.readline()
+    return license.strip()
+
   def dump_copy_out_module(self, outf):
     """Output the genrule module to copy out/* to $(genDir)."""
     copy_out = self.copy_out_module_name()
@@ -1144,8 +1159,12 @@ class Runner(object):
     # name could be Android.bp or sub_dir_path/Android.bp
     if name not in self.bp_files:
       self.bp_files.add(name)
+      license_section = self.read_license(name)
       with open(name, 'w') as outf:
         outf.write(ANDROID_BP_HEADER.format(args=' '.join(sys.argv[1:])))
+        outf.write('\n')
+        outf.write(license_section)
+        outf.write('\n')
         # at most one copy_out module per .bp file
         self.dump_copy_out_module(outf)
 
