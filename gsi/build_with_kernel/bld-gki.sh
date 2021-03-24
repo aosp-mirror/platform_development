@@ -58,7 +58,7 @@ function bld_mainline()
 {
     local make_opt=("$@")
     pushd "${WD}/kernel"
-    HERMETIC_TOOLCHAIN=0 BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh "${make_opt[@]}"
+    DIST_DIR="${OUT_DIR}/android-mainline/dist" HERMETIC_TOOLCHAIN=0 BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh "${make_opt[@]}"
     popd
     repack "${OUT_DIR}/android-mainline/dist/Image" "${OUT_DIR}/target/kernel/mainline/arm64" mainline
 }
@@ -67,7 +67,7 @@ function bld_k54()
 {
     local make_opt=("$@")
     pushd "${WD}/kernel"
-    HERMETIC_TOOLCHAIN=0 BUILD_CONFIG=common-5.4/build.config.gki.aarch64 build/build.sh "${make_opt[@]}"
+    DIST_DIR="${OUT_DIR}/android12-5.4/dist" HERMETIC_TOOLCHAIN=0 BUILD_CONFIG=common-5.4/build.config.gki.aarch64 build/build.sh "${make_opt[@]}"
     popd
     repack "${OUT_DIR}/android12-5.4/dist/Image" "${OUT_DIR}/target/kernel/5.4/arm64" 5.4
 }
@@ -76,7 +76,7 @@ function bld_k510()
 {
     local make_opt=("$@")
     pushd "${WD}/kernel"
-    HERMETIC_TOOLCHAIN=0 BUILD_CONFIG=common-5.10/build.config.gki.aarch64 build/build.sh "${make_opt[@]}"
+    DIST_DIR="${OUT_DIR}/android12-5.10/dist" HERMETIC_TOOLCHAIN=0 BUILD_CONFIG=common-5.10/build.config.gki.aarch64 build/build.sh "${make_opt[@]}"
     popd
     repack "${OUT_DIR}/android12-5.10/dist/Image" "${OUT_DIR}/target/kernel/5.10/arm64" 5.10
 }
