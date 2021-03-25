@@ -24,6 +24,10 @@ fi
 if [ -z "${OUT_DIR}" ]; then
     OUT_DIR="${WD}/out"
 fi
+
+GZIP="gzip"
+LZ4="${WD}/kernel/prebuilts/kernel-build-tools/linux-x86/bin/lz4"
+
 echo "WD=${WD}"
 echo "OUT_DIR=${OUT_DIR}"
 
@@ -89,8 +93,8 @@ function repack()
 
     mkdir -p "${dst_dir}"
     cp "${src_img}" "${dst_dir}/kernel-${version}"
-    gzip -nc \
+    "${GZIP}" -nc \
        "${src_img}">"${dst_dir}/kernel-${version}-gz"
-    lz4 -f -l -12 --favor-decSpeed \
+    "${LZ4}" -f -l -12 --favor-decSpeed \
        "${src_img}" "${dst_dir}/kernel-${version}-lz4"
 }
