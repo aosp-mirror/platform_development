@@ -33,6 +33,11 @@
 # it in your browser).
 #
 
+if [ "$CLANG_COVERAGE" == "true" ]; then
+  echo "CLANG_COVERAGE is set.  Use development/scripts/acov-llvm.py instead."
+  exit 0
+fi
+
 ANDROID_OUT=${OUT_DIR:-out}
 FLUSH_SLEEP=${FLUSH_SLEEP:-60}
 
