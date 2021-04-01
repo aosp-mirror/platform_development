@@ -21,6 +21,7 @@ adding LOCAL_MULTILIB, or adding LOCAL_CHECK_ELF_FILES.
 """
 
 import argparse
+import io
 
 from elfcheck.rewriter import Rewriter
 
@@ -28,6 +29,8 @@ from elfcheck.rewriter import Rewriter
 def _parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('android_mk', help='path to Android.mk')
+    parser.add_argument('--in-place', action='store_true',
+                        help='update the input file in place')
     parser.add_argument('--var', action='append', default=[],
                         metavar='KEY=VALUE', help='extra makefile variables')
     return parser.parse_args()
@@ -48,7 +51,13 @@ def main():
     """Main function"""
     args = _parse_args()
     rewriter = Rewriter(args.android_mk, _parse_arg_var(args.var))
-    rewriter.rewrite()
+    if args.in_place:
+        output_buffer = io.StringIO()
+        rewriter.rewrite(output_buffer)
+        with open(args.android_mk, 'w') as output_file:
+            output_file.write(output_buffer.getvalue())
+    else:
+        rewriter.rewrite()
 
 
 if __name__ == '__main__':
