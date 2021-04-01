@@ -30,3 +30,20 @@ sh_binary_host {
     name: "fix_android_bp_prebuilt",
     src: "fix_android_bp_prebuilt.sh",
 }
+
+python_binary_host {
+    name: "fix_android_mk_prebuilt",
+    srcs: [
+        "elfcheck/*.py",
+        "fix_android_mk_prebuilt.py",
+    ],
+    version: {
+        py2: {
+            enabled: false,
+        },
+        py3: {
+            enabled: true,
+            embedded_launcher: true,
+        },
+    },
+}
