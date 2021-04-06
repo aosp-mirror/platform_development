@@ -152,6 +152,7 @@ class TestMapping(object):
                 test_mapping["presubmit"].append({"name": test, "options": test_options[test]})
             else:
                 test_mapping["presubmit"].append({"name": test})
+        test_mapping["presubmit"] = sorted(test_mapping["presubmit"], key=lambda t: t["name"])
         return test_mapping
 
     def write_test_mapping(self, test_mapping):
