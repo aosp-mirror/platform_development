@@ -154,6 +154,11 @@ public class InlineFillService extends AutofillService {
     public void onSavedDatasetsInfoRequest(@NonNull SavedDatasetsInfoCallback callback) {
         callback.onSuccess(
                 Collections.singleton(
-                        new SavedDatasetsInfo(SavedDatasetsInfo.TYPE_PASSWORDS, NUMBER_DATASETS)));
+                        new SavedDatasetsInfo(
+                                SavedDatasetsInfo.TYPE_PASSWORDS, sNumSavedDatasets)));
+        sNumSavedDatasets++;
+        sNumSavedDatasets %= 3;
     }
+
+    private static int sNumSavedDatasets = 0;
 }
