@@ -95,6 +95,9 @@ ANDROID_BP_HEADER = (
 
 CARGO_OUT = 'cargo.out'  # Name of file to keep cargo build -v output.
 
+# This should be kept in sync with tools/external_updater/crates_updater.py.
+ERRORS_LINE = 'Errors in ' + CARGO_OUT + ':'
+
 TARGET_TMP = 'target.tmp'  # Name of temporary output directory.
 
 # Message to be displayed when this script is called without the --run flag.
@@ -1355,7 +1358,7 @@ class Runner(object):
         if self.args.dependencies and self.dependencies:
           self.dump_dependencies()
         if self.errors:
-          self.append_to_bp('\nErrors in ' + CARGO_OUT + ':\n' + self.errors)
+          self.append_to_bp('\n' + ERRORS_LINE + '\n' + self.errors)
     return self
 
   def add_ar_object(self, obj):
