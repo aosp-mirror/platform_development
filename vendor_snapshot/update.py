@@ -145,6 +145,8 @@ def convert_json_to_bp_prop(json_path, bp_dir):
 
     return ret
 
+def is_64bit_arch(arch):
+    return '64' in arch # arm64, x86_64
 
 def gen_bp_module(image, variation, name, version, target_arch, arch_props, bp_dir):
     prop = {
@@ -174,6 +176,7 @@ def gen_bp_module(image, variation, name, version, target_arch, arch_props, bp_d
             del common_prop[arch_prop_key]
     prop.update(common_prop)
 
+    has32 = has64 = False
     stem32 = stem64 = ''
 
     for arch in arch_props:
@@ -181,27 +184,34 @@ def gen_bp_module(image, variation, name, version, target_arch, arch_props, bp_d
             if k in arch_props[arch]:
                 del arch_props[arch][k]
         prop['arch'][arch] = arch_props[arch]
-        # Record stem for executable binary snapshots.
+
+        has64 |= is_64bit_arch(arch)
+        has32 |= not is_64bit_arch(arch)
+
+        # Record stem for snapshots.
         # We don't check existence of 'src'; src must exist for executables
         if variation == 'binary':
-            if '64' in arch:  # arm64, x86_64
+            if is_64bit_arch(arch):
                 stem64 = os.path.basename(arch_props[arch]['src'])
             else:
                 stem32 = os.path.basename(arch_props[arch]['src'])
 
-    # For binary snapshots, compile_multilib must be assigned to 'both'
-    # in order to install both. Prefer 64bit if their stem collide and
-    # installing both is impossible
-    if variation == 'binary':
-        if stem32 and stem64:
-            if stem32 == stem64:
-                prop['compile_multilib'] = 'first'
-            else:
-                prop['compile_multilib'] = 'both'
-        elif stem32:
+    # header snapshots doesn't need compile_multilib. The other snapshots,
+    # shared/static/object/binary snapshots, do need them
+    if variation != 'header':
+        if has32 and has64:
+            prop['compile_multilib'] = 'both'
+        elif has32:
             prop['compile_multilib'] = '32'
-        elif stem64:
+        elif has64:
             prop['compile_multilib'] = '64'
+        else:
+            raise RuntimeError("Module %s doesn't have prebuilts." % name)
+
+    # For binary snapshots, prefer 64bit if their stem collide and installing
+    # both is impossible
+    if variation == 'binary' and stem32 == stem64:
+        prop['compile_multilib'] = 'first'
 
     bp = '%s_snapshot_%s {\n' % (image, variation)
     bp += gen_bp_prop(prop, INDENT)
