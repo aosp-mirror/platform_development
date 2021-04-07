@@ -20,7 +20,10 @@ import platform
 import subprocess
 import sys
 
-test_options = {"ring_device_test_tests_digest_tests": [{"test-timeout": "600000"}]}
+test_options = {
+    "ring_device_test_tests_digest_tests": [{"test-timeout": "600000"}],
+    "ring_device_test_src_lib": [{"test-timeout": "100000"}],
+}
 test_exclude = [
         "aidl_test_rust_client",
         "aidl_test_rust_service"
@@ -152,6 +155,7 @@ class TestMapping(object):
                 test_mapping["presubmit"].append({"name": test, "options": test_options[test]})
             else:
                 test_mapping["presubmit"].append({"name": test})
+        test_mapping["presubmit"] = sorted(test_mapping["presubmit"], key=lambda t: t["name"])
         return test_mapping
 
     def write_test_mapping(self, test_mapping):
