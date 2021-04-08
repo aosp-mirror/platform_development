@@ -1131,8 +1131,8 @@ class Runner(object):
       # Firstly skip ANDROID_BP_HEADER
       while line.startswith('//'):
         line = intf.readline()
-      # Read all lines until we see a rust_* rule.
-      while line != '' and not line.startswith('rust_'):
+      # Read all lines until we see a rust_* or genrule rule.
+      while line != '' and not (line.startswith('rust_') or line.startswith('genrule {')):
         license += line
         line = intf.readline()
     return license.strip()
