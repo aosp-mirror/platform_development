@@ -1172,6 +1172,8 @@ class Runner(object):
     """Dump all TEST_MAPPING files."""
     if self.dry_run:
       print('Dry-run skip dump of TEST_MAPPING')
+    elif self.args.no_test_mapping:
+      print('Skipping generation of TEST_MAPPING')
     else:
       test_mapping = TestMapping(None)
       for bp_file_name in self.bp_files:
@@ -1576,6 +1578,11 @@ def parse_args():
       default=False,
       help=('run cargo build with existing Cargo.lock ' +
             '(used when some latest dependent crates failed)'))
+  parser.add_argument(
+      '--no-test-mapping',
+      action='store_true',
+      default=False,
+      help='Do not generate a TEST_MAPPING file.  Use only to speed up debugging.')
   parser.add_argument(
       '--verbose',
       action='store_true',
