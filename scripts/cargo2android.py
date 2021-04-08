@@ -652,14 +652,12 @@ class Crate(object):
 
   def dump_android_flags(self):
     """Dump Android module flags property."""
-    if not self.cfgs and not self.codegens and not self.cap_lints:
+    if not self.codegens and not self.cap_lints:
       return
     self.write('    flags: [')
     if self.cap_lints:
       self.write('        "--cap-lints ' + self.cap_lints + '",')
-    cfg_fmt = '"--cfg %s"'
     codegens_fmt = '"-C %s"'
-    self.dump_android_property_list_items(cfg_fmt, self.cfgs)
     self.dump_android_property_list_items(codegens_fmt, self.codegens)
     self.write('    ],')
 
@@ -667,6 +665,7 @@ class Crate(object):
     if self.edition:
       self.write('    edition: "' + self.edition + '",')
     self.dump_android_property_list('features', '"%s"', self.features)
+    self.dump_android_property_list('cfgs', '"%s"', self.cfgs)
     self.dump_android_flags()
     if self.externs:
       self.dump_android_externs()
