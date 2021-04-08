@@ -20,7 +20,10 @@ import platform
 import subprocess
 import sys
 
-test_options = {"ring_device_test_tests_digest_tests": [{"test-timeout": "600000"}]}
+test_options = {
+    "ring_device_test_tests_digest_tests": [{"test-timeout": "600000"}],
+    "ring_device_test_src_lib": [{"test-timeout": "100000"}],
+}
 test_exclude = [
         "aidl_test_rust_client",
         "aidl_test_rust_service"
