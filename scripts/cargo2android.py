@@ -95,6 +95,9 @@ ANDROID_BP_HEADER = (
 
 CARGO_OUT = 'cargo.out'  # Name of file to keep cargo build -v output.
 
+# This should be kept in sync with tools/external_updater/crates_updater.py.
+ERRORS_LINE = 'Errors in ' + CARGO_OUT + ':'
+
 TARGET_TMP = 'target.tmp'  # Name of temporary output directory.
 
 # Message to be displayed when this script is called without the --run flag.
@@ -649,14 +652,12 @@ class Crate(object):
 
   def dump_android_flags(self):
     """Dump Android module flags property."""
-    if not self.cfgs and not self.codegens and not self.cap_lints:
+    if not self.codegens and not self.cap_lints:
       return
     self.write('    flags: [')
     if self.cap_lints:
       self.write('        "--cap-lints ' + self.cap_lints + '",')
-    cfg_fmt = '"--cfg %s"'
     codegens_fmt = '"-C %s"'
-    self.dump_android_property_list_items(cfg_fmt, self.cfgs)
     self.dump_android_property_list_items(codegens_fmt, self.codegens)
     self.write('    ],')
 
@@ -664,6 +665,7 @@ class Crate(object):
     if self.edition:
       self.write('    edition: "' + self.edition + '",')
     self.dump_android_property_list('features', '"%s"', self.features)
+    self.dump_android_property_list('cfgs', '"%s"', self.cfgs)
     self.dump_android_flags()
     if self.externs:
       self.dump_android_externs()
@@ -1131,8 +1133,8 @@ class Runner(object):
       # Firstly skip ANDROID_BP_HEADER
       while line.startswith('//'):
         line = intf.readline()
-      # Read all lines until we see a rust_* rule.
-      while line != '' and not line.startswith('rust_'):
+      # Read all lines until we see a rust_* or genrule rule.
+      while line != '' and not (line.startswith('rust_') or line.startswith('genrule {')):
         license += line
         line = intf.readline()
     return license.strip()
@@ -1172,6 +1174,8 @@ class Runner(object):
     """Dump all TEST_MAPPING files."""
     if self.dry_run:
       print('Dry-run skip dump of TEST_MAPPING')
+    elif self.args.no_test_mapping:
+      print('Skipping generation of TEST_MAPPING')
     else:
       test_mapping = TestMapping(None)
       for bp_file_name in self.bp_files:
@@ -1355,7 +1359,7 @@ class Runner(object):
         if self.args.dependencies and self.dependencies:
           self.dump_dependencies()
         if self.errors:
-          self.append_to_bp('\nErrors in ' + CARGO_OUT + ':\n' + self.errors)
+          self.append_to_bp('\n' + ERRORS_LINE + '\n' + self.errors)
     return self
 
   def add_ar_object(self, obj):
@@ -1576,6 +1580,11 @@ def parse_args():
       default=False,
       help=('run cargo build with existing Cargo.lock ' +
             '(used when some latest dependent crates failed)'))
+  parser.add_argument(
+      '--no-test-mapping',
+      action='store_true',
+      default=False,
+      help='Do not generate a TEST_MAPPING file.  Use only to speed up debugging.')
   parser.add_argument(
       '--verbose',
       action='store_true',
