@@ -46,7 +46,6 @@ def get_arch(json_rel_path):
 def get_variation(json_rel_path):
     return json_rel_path.split('/')[2]
 
-
 # convert .bp prop dictionary to .bp prop string
 def gen_bp_prop(prop, ind):
     bp = ''
@@ -55,9 +54,10 @@ def gen_bp_prop(prop, ind):
 
         # Skip empty list or dict, rather than printing empty prop like
         # "key: []," or "key: {},"
-        if type(val) == list or type(val) == dict:
-            if len(val) == 0:
-                continue
+        if type(val) == list and len(val) == 0:
+            continue
+        if type(val) == dict and gen_bp_prop(val, '') == '':
+            continue
 
         bp += ind + key + ': '
         if type(val) == bool:
@@ -105,7 +105,6 @@ JSON_TO_BP = {
     'SharedLibs': 'shared_libs',
     'RuntimeLibs': 'runtime_libs',
     'Required': 'required',
-    'AndroidMkSuffix': 'androidmk_suffix',
 }
 
 SANITIZER_VARIANT_PROPS = {
@@ -115,6 +114,12 @@ SANITIZER_VARIANT_PROPS = {
     'sanitize_minimal_dep',
     'sanitize_ubsan_dep',
     'src',
+}
+
+EXPORTED_FLAGS_PROPS = {
+    'export_include_dirs',
+    'export_system_include_dirs',
+    'export_flags',
 }
 
 
@@ -145,8 +150,27 @@ def convert_json_to_bp_prop(json_path, bp_dir):
 
     return ret
 
+def is_64bit_arch(arch):
+    return '64' in arch # arm64, x86_64
 
-def gen_bp_module(image, variation, name, version, target_arch, arch_props, bp_dir):
+def remove_keys_from_dict(keys, d):
+    # May contain subdictionaries (e.g. cfi), so recursively erase
+    for k in list(d.keys()):
+        if k in keys:
+            del d[k]
+        elif type(d[k]) == dict:
+            remove_keys_from_dict(keys, d[k])
+
+def reexport_vndk_header(name, arch_props):
+    remove_keys_from_dict(EXPORTED_FLAGS_PROPS, arch_props)
+    for arch in arch_props:
+        arch_props[arch]['shared_libs'] = [name]
+        arch_props[arch]['export_shared_lib_headers'] = [name]
+
+def gen_bp_module(image, variation, name, version, target_arch, vndk_list, arch_props, bp_dir):
+    # Generate Android.bp module for given snapshot.
+    # If a vndk library with the same name exists, reuses exported flags of the vndk library,
+    # instead of the snapshot's own flags.
     prop = {
         # These three are common for all snapshot modules.
         'version': str(version),
@@ -154,6 +178,15 @@ def gen_bp_module(image, variation, name, version, target_arch, arch_props, bp_d
         image: True,
         'arch': {},
     }
+
+    reexport_vndk_name = name
+    if reexport_vndk_name == "libc++_static":
+        reexport_vndk_name = "libc++"
+
+    if reexport_vndk_name in vndk_list:
+        if variation == 'shared':
+            logging.error("Module %s is both vendor snapshot shared and vndk" % name)
+        reexport_vndk_header(reexport_vndk_name, arch_props)
 
     # Factor out common prop among architectures to minimize Android.bp.
     common_prop = None
@@ -174,6 +207,7 @@ def gen_bp_module(image, variation, name, version, target_arch, arch_props, bp_d
             del common_prop[arch_prop_key]
     prop.update(common_prop)
 
+    has32 = has64 = False
     stem32 = stem64 = ''
 
     for arch in arch_props:
@@ -181,27 +215,34 @@ def gen_bp_module(image, variation, name, version, target_arch, arch_props, bp_d
             if k in arch_props[arch]:
                 del arch_props[arch][k]
         prop['arch'][arch] = arch_props[arch]
-        # Record stem for executable binary snapshots.
+
+        has64 |= is_64bit_arch(arch)
+        has32 |= not is_64bit_arch(arch)
+
+        # Record stem for snapshots.
         # We don't check existence of 'src'; src must exist for executables
         if variation == 'binary':
-            if '64' in arch:  # arm64, x86_64
+            if is_64bit_arch(arch):
                 stem64 = os.path.basename(arch_props[arch]['src'])
             else:
                 stem32 = os.path.basename(arch_props[arch]['src'])
 
-    # For binary snapshots, compile_multilib must be assigned to 'both'
-    # in order to install both. Prefer 64bit if their stem collide and
-    # installing both is impossible
-    if variation == 'binary':
-        if stem32 and stem64:
-            if stem32 == stem64:
-                prop['compile_multilib'] = 'first'
-            else:
-                prop['compile_multilib'] = 'both'
-        elif stem32:
+    # header snapshots doesn't need compile_multilib. The other snapshots,
+    # shared/static/object/binary snapshots, do need them
+    if variation != 'header':
+        if has32 and has64:
+            prop['compile_multilib'] = 'both'
+        elif has32:
             prop['compile_multilib'] = '32'
-        elif stem64:
+        elif has64:
             prop['compile_multilib'] = '64'
+        else:
+            raise RuntimeError("Module %s doesn't have prebuilts." % name)
+
+    # For binary snapshots, prefer 64bit if their stem collide and installing
+    # both is impossible
+    if variation == 'binary' and stem32 == stem64:
+        prop['compile_multilib'] = 'first'
 
     bp = '%s_snapshot_%s {\n' % (image, variation)
     bp += gen_bp_prop(prop, INDENT)
@@ -234,7 +275,7 @@ def get_vndk_list(vndk_dir, target_arch):
 
     return []
 
-def gen_bp_list_module(image, snapshot_version, vndk_dir, target_arch, arch_props):
+def gen_bp_list_module(image, snapshot_version, vndk_list, target_arch, arch_props):
     """Generates a {image}_snapshot module which contains lists of snapshots.
     For vendor snapshot, vndk list is also included, extracted from vndk_dir.
     """
@@ -245,7 +286,7 @@ def gen_bp_list_module(image, snapshot_version, vndk_dir, target_arch, arch_prop
     bp_props['name'] = '%s_snapshot' % image
     bp_props['version'] = str(snapshot_version)
     if image == 'vendor':
-        bp_props['vndk_libs'] = get_vndk_list(vndk_dir, target_arch)
+        bp_props['vndk_libs'] = vndk_list
 
     variant_to_property = {
         'shared': 'shared_libs',
@@ -355,17 +396,21 @@ def gen_bp_files(image, vndk_dir, install_dir, snapshot_version):
     for target_arch in sorted(props):
         androidbp = ''
         bp_dir = os.path.join(install_dir, target_arch)
+        vndk_list = []
+        if image == 'vendor':
+            vndk_list = get_vndk_list(vndk_dir, target_arch)
 
         # Generate snapshot modules.
         for variation in sorted(props[target_arch]):
             for name in sorted(props[target_arch][variation]):
                 androidbp += gen_bp_module(image, variation, name,
                                            snapshot_version, target_arch,
+                                           vndk_list,
                                            props[target_arch][variation][name],
                                            bp_dir)
 
         # Generate {image}_snapshot module which contains the list of modules.
-        androidbp += gen_bp_list_module(image, snapshot_version, vndk_dir,
+        androidbp += gen_bp_list_module(image, snapshot_version, vndk_list,
                                         target_arch, props[target_arch])
         with open(os.path.join(bp_dir, 'Android.bp'), 'w') as f:
             logging.info('Generating Android.bp to: {}'.format(f.name))

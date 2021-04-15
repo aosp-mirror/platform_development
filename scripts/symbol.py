@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 # Copyright (C) 2013 The Android Open Source Project
 #
@@ -28,12 +28,7 @@ import signal
 import subprocess
 import unittest
 
-try:
-  ANDROID_BUILD_TOP = str(os.environ["ANDROID_BUILD_TOP"])
-  if not ANDROID_BUILD_TOP:
-    ANDROID_BUILD_TOP = "."
-except:
-  ANDROID_BUILD_TOP = "."
+ANDROID_BUILD_TOP = os.environ.get("ANDROID_BUILD_TOP", ".")
 
 def FindSymbolsDir():
   saveddir = os.getcwd()
@@ -41,8 +36,8 @@ def FindSymbolsDir():
   stream = None
   try:
     cmd = "build/soong/soong_ui.bash --dumpvar-mode --abs TARGET_OUT_UNSTRIPPED"
-    stream = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True).stdout
-    return os.path.join(ANDROID_BUILD_TOP, str(stream.read().strip()))
+    stream = subprocess.Popen(cmd, stdout=subprocess.PIPE, encoding='utf8', shell=True).stdout
+    return str(stream.read().strip())
   finally:
     if stream is not None:
         stream.close()
@@ -96,7 +91,7 @@ class ProcessCache:
     return pipe
 
   def SpawnProcess(self, cmd):
-     return subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+     return subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, encoding='utf8')
 
   def TerminateProcess(self, pipe):
     pipe.stdin.close()
@@ -156,7 +151,7 @@ def FindToolchain():
 
   _CACHED_TOOLCHAIN = llvm_binutils_dir
   _CACHED_TOOLCHAIN_ARCH = ARCH
-  print("Using %s toolchain from: %s" % (_CACHED_TOOLCHAIN_ARCH, _CACHED_TOOLCHAIN))
+  print("Using", _CACHED_TOOLCHAIN_ARCH, "toolchain from:", _CACHED_TOOLCHAIN)
   return _CACHED_TOOLCHAIN
 
 
@@ -303,6 +298,7 @@ def CallLlvmSymbolizerForSet(lib, unique_addrs):
           # reading inlines from the output.
           # The blank line will cause llvm-symbolizer to emit a blank line.
           child.stdin.write("\n")
+          child.stdin.flush()
           first = False
     except IOError as e:
       # Remove the / in front of the library name to match other output.
@@ -394,7 +390,7 @@ def CallObjdumpForSet(lib, unique_addrs):
   current_symbol_addr = 0  # The address of the current function.
   addr_index = 0  # The address that we are currently looking for.
 
-  stream = subprocess.Popen(cmd, stdout=subprocess.PIPE).stdout
+  stream = subprocess.Popen(cmd, stdout=subprocess.PIPE, encoding='utf8').stdout
   for line in stream:
     # Is it a function line like:
     #   000177b0 <android::IBinder::~IBinder()>:
