@@ -42,6 +42,8 @@ const WindowConfiguration = require('flicker').com.android.server.wm.traces.comm
     windowmanager.windows.WindowConfiguration;
 const WindowContainer = require('flicker').com.android.server.wm.traces.common.
     windowmanager.windows.WindowContainer;
+const WindowLayoutParams= require('flicker').com.android.server.wm.traces.common.
+    windowmanager.windows.WindowLayoutParams;
 const WindowManagerPolicy = require('flicker').com.android.server.wm.traces.common.
     windowmanager.windows.WindowManagerPolicy;
 const WindowState = require('flicker').com.android.server.wm.traces.common.
@@ -72,6 +74,7 @@ export {
     WindowContainer,
     WindowState,
     WindowToken,
+    WindowLayoutParams,
     WindowManagerPolicy,
     WindowManagerTrace,
     WindowManagerState,
