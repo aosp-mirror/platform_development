@@ -16,7 +16,7 @@
 
 import { getWMPropertiesForDisplay, shortenName } from '../mixin'
 import { asRawTreeViewObject } from '../../utils/diff.js'
-import { toRect, WindowState } from "../common"
+import { toRect, WindowState, WindowLayoutParams } from "../common"
 import { VISIBLE_CHIP } from '../treeview/Chips'
 import WindowContainer from "./WindowContainer"
 
@@ -56,7 +56,7 @@ import WindowContainer from "./WindowContainer"
         }
 
         const entry = new WindowState(
-            proto.attributes?.type ?? 0,
+            newWindowLayoutParams(proto.attributes),
             proto.displayId,
             proto.stackId,
             proto.animator?.surface?.layer ?? 0,
@@ -77,15 +77,50 @@ import WindowContainer from "./WindowContainer"
         entry.rects.map((rect) => rect.ref = entry)
         entry.obj = getWMPropertiesForDisplay(proto)
         entry.shortName = shortenName(entry.name)
-        entry.visible = entry.isSurfaceShown ?? false
-        entry.chips = entry.isSurfaceShown ? [VISIBLE_CHIP] : []
+        entry.visible = entry.isVisible ?? false
+        entry.chips = entry.isVisible ? [VISIBLE_CHIP] : []
         entry.children = entry.childrenWindows
-        if (entry.isSurfaceShown) {
+        if (entry.visible) {
             entry.rect = entry.rects[0]
         }
         entry.rawTreeViewObject = asRawTreeViewObject(entry)
         return entry
     }
+}
+
+function newWindowLayoutParams(proto): WindowLayoutParams {
+    return new WindowLayoutParams(
+        /* type */ proto?.type ?? 0,
+        /* x */ proto?.x ?? 0,
+        /* y */ proto?.y ?? 0,
+        /* width */ proto?.width ?? 0,
+        /* height */ proto?.height ?? 0,
+        /* horizontalMargin */ proto?.horizontalMargin ?? 0,
+        /* verticalMargin */ proto?.verticalMargin ?? 0,
+        /* gravity */ proto?.gravity ?? 0,
+        /* softInputMode */ proto?.softInputMode ?? 0,
+        /* format */ proto?.format ?? 0,
+        /* windowAnimations */ proto?.windowAnimations ?? 0,
+        /* alpha */ proto?.alpha ?? 0,
+        /* screenBrightness */ proto?.screenBrightness ?? 0,
+        /* buttonBrightness */ proto?.buttonBrightness ?? 0,
+        /* rotationAnimation */ proto?.rotationAnimation ?? 0,
+        /* preferredRefreshRate */ proto?.preferredRefreshRate ?? 0,
+        /* preferredDisplayModeId */ proto?.preferredDisplayModeId ?? 0,
+        /* hasSystemUiListeners */ proto?.hasSystemUiListeners ?? false,
+        /* inputFeatureFlags */ proto?.inputFeatureFlags ?? 0,
+        /* userActivityTimeout */ proto?.userActivityTimeout ?? 0,
+        /* colorMode */ proto?.colorMode ?? 0,
+        /* flags */ proto?.flags ?? 0,
+        /* privateFlags */ proto?.privateFlags ?? 0,
+        /* systemUiVisibilityFlags */ proto?.systemUiVisibilityFlags ?? 0,
+        /* subtreeSystemUiVisibilityFlags */ proto?.subtreeSystemUiVisibilityFlags ?? 0,
+        /* appearance */ proto?.appearance ?? 0,
+        /* behavior */ proto?.behavior ?? 0,
+        /* fitInsetsTypes */ proto?.fitInsetsTypes ?? 0,
+        /* fitInsetsSides */ proto?.fitInsetsSides ?? 0,
+        /* fitIgnoreVisibility */ proto?.fitIgnoreVisibility ?? false
+    )
 }
 
 export default WindowState
