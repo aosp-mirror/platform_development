@@ -9738,6 +9738,7 @@ Notices for file(s):
 /bin/aapt
 /bin/aidl
 /bin/dexdump
+/bin/dx
 /bin/jasmin
 /bin/split-select
 /framework/android-mock-generatorlib.jar
