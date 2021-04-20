@@ -55,6 +55,7 @@ def generate_docs() -> None:
     html_dir = out_dir / 'html'
     input_dir = product_out.parents[2] / 'soong/ndk/sysroot/usr/include'
     doxyfile_template = ANDROID_TOP / 'frameworks/native/docs/Doxyfile'
+    out_dir.mkdir(parents=True, exist_ok=True)
     doxyfile = out_dir / 'Doxyfile'
 
     doxyfile_contents = doxyfile_template.read_text()
