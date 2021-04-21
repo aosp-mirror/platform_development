@@ -18,6 +18,8 @@ LOCAL_STATIC_ANDROID_LIBRARIES := \
 LOCAL_USE_AAPT2 := true
 
 LOCAL_PACKAGE_NAME := IntentPlayground
+LOCAL_LICENSE_KINDS := SPDX-license-identifier-Apache-2.0
+LOCAL_LICENSE_CONDITIONS := notice
 
 LOCAL_SDK_VERSION := current
 
