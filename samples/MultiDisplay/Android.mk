@@ -28,6 +28,8 @@ LOCAL_STATIC_ANDROID_LIBRARIES += \
     androidx.lifecycle_lifecycle-viewmodel
 
 LOCAL_PACKAGE_NAME := MultiDisplay
+LOCAL_LICENSE_KINDS := SPDX-license-identifier-Apache-2.0
+LOCAL_LICENSE_CONDITIONS := notice
 
 LOCAL_SDK_VERSION := current
 

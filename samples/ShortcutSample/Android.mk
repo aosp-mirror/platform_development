@@ -27,6 +27,8 @@ include $(CLEAR_VARS)
 LOCAL_USE_AAPT2 := true
 
 LOCAL_PACKAGE_NAME := ShortcutSample
+LOCAL_LICENSE_KINDS := SPDX-license-identifier-Apache-2.0
+LOCAL_LICENSE_CONDITIONS := notice
 
 LOCAL_AAPT_FLAGS += --version-code 10
 
@@ -51,6 +53,8 @@ include $(CLEAR_VARS)
 LOCAL_USE_AAPT2 := true
 
 LOCAL_PACKAGE_NAME := ShortcutSample11
+LOCAL_LICENSE_KINDS := SPDX-license-identifier-Apache-2.0
+LOCAL_LICENSE_CONDITIONS := notice
 
 LOCAL_AAPT_FLAGS += --version-code 11
 
@@ -75,6 +79,8 @@ include $(CLEAR_VARS)
 LOCAL_USE_AAPT2 := true
 
 LOCAL_PACKAGE_NAME := ShortcutSample12
+LOCAL_LICENSE_KINDS := SPDX-license-identifier-Apache-2.0
+LOCAL_LICENSE_CONDITIONS := notice
 
 LOCAL_AAPT_FLAGS += --version-code 12
 
@@ -99,6 +105,8 @@ include $(CLEAR_VARS)
 LOCAL_USE_AAPT2 := true
 
 LOCAL_PACKAGE_NAME := ShortcutSample11nb
+LOCAL_LICENSE_KINDS := SPDX-license-identifier-Apache-2.0
+LOCAL_LICENSE_CONDITIONS := notice
 
 LOCAL_AAPT_FLAGS += --version-code 11
 LOCAL_MANIFEST_FILE := noback/AndroidManifest.xml
@@ -124,6 +132,8 @@ include $(CLEAR_VARS)
 LOCAL_USE_AAPT2 := true
 
 LOCAL_PACKAGE_NAME := ShortcutSample12nb
+LOCAL_LICENSE_KINDS := SPDX-license-identifier-Apache-2.0
+LOCAL_LICENSE_CONDITIONS := notice
 
 LOCAL_AAPT_FLAGS += --version-code 12
 LOCAL_MANIFEST_FILE := noback/AndroidManifest.xml
@@ -139,4 +149,3 @@ LOCAL_STATIC_ANDROID_LIBRARIES = androidx.legacy_legacy-support-v4
 LOCAL_SDK_VERSION := current
 
 include $(BUILD_PACKAGE)
-
