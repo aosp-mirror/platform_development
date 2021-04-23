@@ -103,7 +103,7 @@ function transform({
     stableId: stableIdResolved,
     visible: call(visible, obj),
     childrenVisible: transformedChildren.some((c) => {
-      return c.childrenVisible || c.visible;
+      return c.childrenVisible || c.isVisible;
     }),
     flattened: call(flattened, obj),
   };

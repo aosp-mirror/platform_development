@@ -27,8 +27,7 @@ import jsonProtoDefsSysUi from 'frameworks/base/packages/SystemUI/src/com/androi
 import jsonProtoDefsLauncher from 'packages/apps/Launcher3/protos/launcher_trace_file.proto';
 import jsonProtoDefsIme from 'frameworks/base/core/proto/android/view/inputmethod/inputmethodeditortrace.proto';
 import protobuf from 'protobufjs';
-import {transformLayers, transformLayersTrace} from './transform_sf.js';
-import {transform_accessibility, transform_accessibility_trace} from './transform_accessibility.js';
+import {transform_accessibility_trace} from './transform_accessibility.js';
 import {transform_transaction_trace} from './transform_transaction.js';
 import {transform_wl_outputstate, transform_wayland_trace} from './transform_wl.js';
 import {transformProtolog} from './transform_protolog.js';
@@ -50,6 +49,7 @@ import LauncherTrace from '@/traces/Launcher.ts';
 import ImeTraceClients from '@/traces/InputMethodClients.ts';
 import ImeTraceService from '@/traces/InputMethodService.ts';
 import ImeTraceManagerService from '@/traces/InputMethodManagerService.ts';
+import { ObjectFormatter } from '@/flickerlib'
 
 import SurfaceFlingerDump from '@/dumps/SurfaceFlinger.ts';
 import WindowManagerDump from '@/dumps/WindowManager.ts';
@@ -303,7 +303,7 @@ const FILE_DECODERS = {
       type: FILE_TYPES.SURFACE_FLINGER_TRACE,
       mime: 'application/octet-stream',
       protoType: SfTraceMessage,
-      transform: transformLayersTrace,
+      transform: SurfaceFlingerTrace.fromProto,
       timeline: true,
     },
   },
@@ -325,7 +325,7 @@ const FILE_DECODERS = {
       type: FILE_TYPES.SURFACE_FLINGER_DUMP,
       mime: 'application/octet-stream',
       protoType: SfDumpMessage,
-      transform: (decoded) => transformLayers(true /* includesCompositionState*/, decoded),
+      transform: SurfaceFlingerDump.fromProto,
       timeline: false,
     },
   },
@@ -484,6 +484,7 @@ function modifyProtoFields(protoObj, displayDefaults) {
 
 function decodeAndTransformProto(buffer, params, displayDefaults) {
   const decoded = params.protoType.decode(buffer);
+  ObjectFormatter.displayDefaults = displayDefaults
   modifyProtoFields(decoded, displayDefaults);
   const transformed = params.transform(decoded);
 

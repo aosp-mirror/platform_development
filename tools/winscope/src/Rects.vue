@@ -57,7 +57,7 @@ export default {
     },
     filteredRects() {
       return this.rects.filter((rect) => {
-        const isVisible = rect.ref.visible ?? rect.ref.isVisible;
+        const isVisible = rect.ref.isVisible;
         console.warn(`Name: ${rect.ref.name} Kind: ${rect.ref.kind} isVisible=${isVisible}`);
         return isVisible;
       });
@@ -78,11 +78,22 @@ export default {
       const y = this.s(r.top);
       const w = this.s(r.right) - this.s(r.left);
       const h = this.s(r.bottom) - this.s(r.top);
-      const t = r.transform;
+
+      let t
+      if (r.transform && r.transform.matrix) {
+        t = r.transform.matrix;
+      } else {
+        t = r.transform;
+      }
+
       const tr = t ? `matrix(${t.dsdx}, ${t.dtdx}, ${t.dsdy}, ${t.dtdy}, ` +
           `${this.s(t.tx)}, ${this.s(t.ty)})` : '';
-      return `top: ${y}px; left: ${x}px; height: ${h}px; width: ${w}px;` +
+      const rectStyle = `top: ${y}px; left: ${x}px; height: ${h}px; width: ${w}px;` +
              `transform: ${tr}; transform-origin: 0 0;`;
+      if (r && r.ref) {
+        console.log(`${r.ref.name} - ${rectStyle}`)
+      }
+      return rectStyle;
     },
     onClick(r) {
       this.$emit('rect-click', r.ref);

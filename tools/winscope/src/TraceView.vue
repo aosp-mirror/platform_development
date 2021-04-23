@@ -317,7 +317,7 @@ export default {
       const hierarchyPropertyFilter =
           getFilter(this.hierarchyPropertyFilterString);
       return this.store.onlyVisible ? (c) => {
-        return c.visible && hierarchyPropertyFilter(c);
+        return c.isVisible && hierarchyPropertyFilter(c);
       } : hierarchyPropertyFilter;
     },
     propertyFilter() {

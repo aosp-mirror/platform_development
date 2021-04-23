@@ -82,7 +82,6 @@ import WindowContainer from "./WindowContainer"
         entry.rect.label = entry.name
         entry.obj = getPropertiesForDisplay(proto, entry)
         entry.shortName = shortenName(entry.name)
-        entry.visible = entry.isVisible ?? false
         entry.chips = entry.isVisible ? [VISIBLE_CHIP] : []
         entry.rawTreeViewObject = asRawTreeViewObject(entry)
         return entry

@@ -20,8 +20,10 @@ import intDefMapping from
     '../../../../../prebuilts/misc/common/winscope/intDefMapping.json';
 
 export default class ObjectFormatter {
+    static displayDefaults: boolean = false
     private static INVALID_ELEMENT_PROPERTIES = ['length', 'name', 'prototype', 'children',
-    'childrenWindows', 'ref', 'root', 'layers', 'resolvedChildren']
+        'childrenWindows', 'ref', 'root', 'layers', 'resolvedChildren', 'flattenedLayers',
+        'rects', 'zOrderRelativeOf', 'rawTreeViewObject', 'chips', 'stableId']
 
     private static FLICKER_INTDEF_MAP = new Map([
         [`WindowLayoutParams.type`, `android.view.WindowManager.LayoutParams.WindowType`],
@@ -44,6 +46,7 @@ export default class ObjectFormatter {
     static format(obj: any): {} {
         const entries = Object.entries(obj)
             .filter(it => !it[0].includes(`$`))
+            .filter(it => !it[0].startsWith(`_`))
             .filter(it => !this.INVALID_ELEMENT_PROPERTIES.includes(it[0]))
         const sortedEntries = entries.sort()
 
@@ -52,7 +55,7 @@ export default class ObjectFormatter {
             const key = entry[0]
             const value: any = entry[1]
 
-            if (value) {
+            if (value || (this.displayDefaults && value !== undefined && value !== null)) {
                 // flicker obj
                 if (value.prettyPrint) {
                     result[key] = value.prettyPrint()
@@ -63,7 +66,10 @@ export default class ObjectFormatter {
                         result[key] = translatedObject.prettyPrint()
                     // objects - recursive call
                     } else if (value && typeof(value) == `object`) {
-                        result[key] = this.format(value)
+                        const childObj = this.format(value)
+                        if (Object.entries(childObj).length > 0) {
+                            result[key] = childObj
+                        }
                     } else {
                     // values
                         result[key] = this.translateIntDef(obj, key, value)

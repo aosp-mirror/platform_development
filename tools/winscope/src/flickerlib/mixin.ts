@@ -25,7 +25,6 @@ import ObjectFormatter from "./ObjectFormatter"
 export function getPropertiesForDisplay(proto: any, entry: any): any {
     let obj = Object.assign({}, entry)
     if (obj.children) delete obj.children
-    // obj = ObjectFormatter.format(obj)
 
     obj.proto = Object.assign({}, proto)
     if (obj.proto.children) delete obj.proto.children
