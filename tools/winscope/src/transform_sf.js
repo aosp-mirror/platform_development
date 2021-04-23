@@ -19,6 +19,7 @@ import {transform, nanos_to_string, get_visible_chip} from './transform.js';
 // eslint-disable-next-line camelcase
 import {fill_occlusion_state, fill_inherited_state} from './sf_visibility.js';
 import {getSimplifiedLayerName} from './utils/names';
+import ObjectFormatter from './flickerlib/ObjectFormatter'
 
 const RELATIVE_Z_CHIP = {
   short: 'RelZ',
@@ -100,7 +101,7 @@ function transformLayer(layer) {
       layer.id + ': ' + simplifiedLayerName : undefined;
 
   const transformedLayer = transform({
-    obj: layer,
+    obj: ObjectFormatter.format(layer),
     kind: '',
     name: layer.id + ': ' + layer.name,
     shortName,
