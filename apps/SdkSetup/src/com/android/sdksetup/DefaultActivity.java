@@ -23,6 +23,8 @@ import android.content.pm.PackageManager;
 import android.hardware.input.InputManager;
 import android.hardware.input.KeyboardLayout;
 import android.location.LocationManager;
+import android.net.wifi.WifiManager;
+import android.net.wifi.WifiConfiguration;
 import android.provider.Settings;
 import android.os.Bundle;
 import android.os.RemoteException;
@@ -30,6 +32,7 @@ import android.os.ServiceManager;
 import android.os.SystemProperties;
 import android.os.Build;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 import android.view.InputDevice;
 
 /**
@@ -37,7 +40,8 @@ import android.view.InputDevice;
  *
  */
 public class DefaultActivity extends Activity {
-
+    private static final String TAG = "SdkSetup";
+    private static final int ADD_NETWORK_FAIL = -1;
     @Override
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -46,6 +50,7 @@ public class DefaultActivity extends Activity {
         if (Build.IS_EMULATOR) {
             // Set physical keyboard layout based on the system property set by emulator host.
             String layoutName = SystemProperties.get("vendor.qemu.keyboard_layout");
+            String displaySettingsName = SystemProperties.get("ro.boot.qemu.display.settings.xml");
             String deviceName = "qwerty2";
             InputDevice device = getKeyboardDevice(deviceName);
             if (device != null && !layoutName.isEmpty()) {
@@ -74,8 +79,23 @@ public class DefaultActivity extends Activity {
 
             TelephonyManager mTelephony = getApplicationContext().getSystemService(TelephonyManager.class);
             mTelephony.setPreferredNetworkTypeBitmask(TelephonyManager.NETWORK_TYPE_BITMASK_NR);
+            if ("freeform".equals(displaySettingsName)) {
+                Settings.Global.putInt(getContentResolver(), "sf", 1);
+                Settings.Global.putString(getContentResolver(), Settings.Global.DEVELOPMENT_ENABLE_FREEFORM_WINDOWS_SUPPORT, "1");
+                Settings.Global.putString(getContentResolver(), Settings.Global.DEVELOPMENT_FORCE_RESIZABLE_ACTIVITIES, "1");
+                Settings.Global.putString(getContentResolver(), Settings.Global.DEVELOPMENT_WM_DISPLAY_SETTINGS_PATH, "vendor/etc/display_settings_freeform.xml");
+            }
         }
 
+        // Add network with SSID "AndroidWifi"
+        WifiConfiguration config = new WifiConfiguration();
+        config.SSID = "\"AndroidWifi\"";
+        config.setSecurityParams(WifiConfiguration.SECURITY_TYPE_OPEN);
+        WifiManager mWifiManager = getApplicationContext().getSystemService(WifiManager.class);
+        int netId = mWifiManager.addNetwork(config);
+        if (netId == ADD_NETWORK_FAIL || mWifiManager.enableNetwork(netId, true)) {
+            Log.e(TAG, "Unable to add Wi-Fi network AndroidWifi.");
+        }
         // remove this activity from the package manager.
         PackageManager pm = getPackageManager();
         ComponentName name = new ComponentName(this, DefaultActivity.class);
