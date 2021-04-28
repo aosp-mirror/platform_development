@@ -49,7 +49,6 @@ import LauncherTrace from '@/traces/Launcher.ts';
 import ImeTraceClients from '@/traces/InputMethodClients.ts';
 import ImeTraceService from '@/traces/InputMethodService.ts';
 import ImeTraceManagerService from '@/traces/InputMethodManagerService.ts';
-import { ObjectFormatter } from '@/flickerlib'
 
 import SurfaceFlingerDump from '@/dumps/SurfaceFlinger.ts';
 import WindowManagerDump from '@/dumps/WindowManager.ts';
@@ -484,7 +483,6 @@ function modifyProtoFields(protoObj, displayDefaults) {
 
 function decodeAndTransformProto(buffer, params, displayDefaults) {
   const decoded = params.protoType.decode(buffer);
-  ObjectFormatter.displayDefaults = displayDefaults
   modifyProtoFields(decoded, displayDefaults);
   const transformed = params.transform(decoded);
 

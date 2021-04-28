@@ -22,11 +22,16 @@ import ObjectFormatter from "./ObjectFormatter"
  * @param entry WM hierarchy element
  * @param proto Associated proto object
  */
-export function getPropertiesForDisplay(proto: any, entry: any): any {
+export function getPropertiesForDisplay(entry: any): any {
+    if (!entry) {
+        return
+    }
+
     let obj = Object.assign({}, entry)
     if (obj.children) delete obj.children
+    if (obj.proto) delete obj.proto
 
-    obj.proto = Object.assign({}, proto)
+    obj.proto = Object.assign({}, entry.proto)
     if (obj.proto.children) delete obj.proto.children
     if (obj.proto.childWindows) delete obj.proto.childWindows
     if (obj.proto.childrenWindows) delete obj.proto.childrenWindows

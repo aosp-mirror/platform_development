@@ -15,7 +15,6 @@
  */
 
 import { asRawTreeViewObject } from '../../utils/diff.js'
-import { getPropertiesForDisplay } from '../mixin'
 import { LayerTraceEntry, LayerTraceEntryBuilder } from "../common"
 import Layer from './Layer'
 import { VISIBLE_CHIP, RELATIVE_Z_PARENT_CHIP, MISSING_LAYER  } from '../treeview/Chips'
@@ -26,6 +25,7 @@ LayerTraceEntry.fromProto = function ({protos, timestamp = 0, hwcBlob = "", wher
     const entry = builder.build()
 
     entry.flattenedLayers.forEach(it => {
+        it.rawTreeViewObject = asRawTreeViewObject(it)
         updateChips(it)
     })
     entry.kind = "entry"
@@ -42,7 +42,7 @@ LayerTraceEntry.fromProto = function ({protos, timestamp = 0, hwcBlob = "", wher
     protos.forEach(it => {
         entryIds[it.id] = `\nparent=${it.parent}\ntype=${it.type}\nname=${it.name}`
     })
-    entry.obj = getPropertiesForDisplay(entryIds, entry)
+    entry.proto = entryIds
     entry.shortName = entry.name
     entry.chips = []
     entry.isVisible = true

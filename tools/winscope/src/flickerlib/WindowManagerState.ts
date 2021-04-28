@@ -15,7 +15,6 @@
  */
 
 import { asRawTreeViewObject } from '../utils/diff.js'
-import { getPropertiesForDisplay } from './mixin'
 
 import {
     KeyguardControllerState,
@@ -56,7 +55,7 @@ WindowManagerState.fromProto = function ({proto, timestamp = 0, where = ""}): Wi
     if (!entry.isComplete()) {
         entry.isIncompleteReason = entry.getIsIncompleteReason()
     }
-    entry.obj = getPropertiesForDisplay(proto, entry)
+    entry.proto = proto
     entry.shortName = entry.name
     entry.chips = []
     entry.isVisible = true

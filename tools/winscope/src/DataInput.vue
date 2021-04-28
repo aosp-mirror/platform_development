@@ -37,16 +37,6 @@
         md-mode="indeterminate"
         v-show="loadingFiles"
       />
-      <div>
-        <md-checkbox v-model="store.displayDefaults" class="md-primary">
-          Show default properties
-          <md-tooltip md-direction="bottom">
-            If checked, shows the value of all properties.
-            Otherwise, hides all properties whose value is the default for its
-            data type.
-          </md-tooltip>
-        </md-checkbox>
-      </div>
       <div class="md-layout">
         <div class="md-layout-item md-small-size-100">
           <md-field>

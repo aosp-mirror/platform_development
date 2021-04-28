@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getPropertiesForDisplay, shortenName } from '../mixin'
+import { shortenName } from '../mixin'
 import { asRawTreeViewObject } from '../../utils/diff.js'
 import { toRect, Size, WindowState, WindowLayoutParams } from "../common"
 import { VISIBLE_CHIP } from '../treeview/Chips'
@@ -80,7 +80,7 @@ import WindowContainer from "./WindowContainer"
         entry.rect = entry.frame
         entry.rect.ref = entry
         entry.rect.label = entry.name
-        entry.obj = getPropertiesForDisplay(proto, entry)
+        entry.proto = proto
         entry.shortName = shortenName(entry.name)
         entry.chips = entry.isVisible ? [VISIBLE_CHIP] : []
         entry.rawTreeViewObject = asRawTreeViewObject(entry)

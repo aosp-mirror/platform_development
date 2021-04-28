@@ -58,7 +58,9 @@ export default class ObjectFormatter {
             if (value || (this.displayDefaults && value !== undefined && value !== null)) {
                 // flicker obj
                 if (value.prettyPrint) {
-                    result[key] = value.prettyPrint()
+                    if (value.isNotEmpty || this.displayDefaults) {
+                        result[key] = value.prettyPrint()
+                    }
                 } else {
                     // converted proto to flicker
                     const translatedObject = this.translateObject(value)
@@ -66,8 +68,9 @@ export default class ObjectFormatter {
                         result[key] = translatedObject.prettyPrint()
                     // objects - recursive call
                     } else if (value && typeof(value) == `object`) {
-                        const childObj = this.format(value)
-                        if (Object.entries(childObj).length > 0) {
+                        const childObj = this.format(value) as any
+                        const isEmpty = Object.entries(childObj).length == 0 || childObj.isEmpty
+                        if (!isEmpty || this.displayDefaults) {
                             result[key] = childObj
                         }
                     } else {

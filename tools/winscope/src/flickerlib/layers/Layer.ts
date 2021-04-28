@@ -15,7 +15,6 @@
  */
 
 
-import { asRawTreeViewObject } from '../../utils/diff.js'
 import { Layer, Rect, toBuffer, toColor, toRect, toRectF, toRegion } from "../common"
 import { shortenName } from '../mixin'
 import { RELATIVE_Z_CHIP, GPU_CHIP, HWC_CHIP } from '../treeview/Chips'
@@ -75,7 +74,6 @@ Layer.fromProto = function (proto): Layer {
     entry.rect.label = entry.name
     entry.chips = []
     updateChips(entry)
-    entry.rawTreeViewObject = asRawTreeViewObject(entry)
     return entry
 }
 

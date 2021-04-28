@@ -72,6 +72,19 @@
           class="card-toolbar md-transparent md-dense"
         >
           <h2 class="md-title" style="flex: 1">Properties</h2>
+          <div>
+            <md-checkbox
+              v-model="displayDefaults"
+              @change="checkboxChange"
+            >
+              Show Defaults
+            </md-checkbox>
+            <md-tooltip md-direction="bottom">
+                If checked, shows the value of all properties.
+                Otherwise, hides all properties whose value is the default for its
+                data type.
+            </md-tooltip>
+          </div>
           <md-checkbox
             v-model="showPropertiesDiff"
             v-if="diffVisualizationAvailable"
@@ -123,6 +136,8 @@ import {DiffGenerator, defaultModifiedCheck} from './utils/diff.js';
 import {TRACE_TYPES, DUMP_TYPES} from './decode.js';
 import {stableIdCompatibilityFixup} from './utils/utils.js';
 import {CompatibleFeatures} from './utils/compatibility.js';
+import {getPropertiesForDisplay} from './flickerlib/mixin';
+import ObjectFormatter from './flickerlib/ObjectFormatter';
 
 function formatProto(obj) {
   if (obj?.prettyPrint) {
@@ -165,11 +180,15 @@ export default {
       tree: null,
       highlight: null,
       showHierachyDiff: false,
+      displayDefaults: false,
       showPropertiesDiff: false,
       PropertiesTreeElement,
     };
   },
   methods: {
+    checkboxChange(checked) {
+      this.itemSelected(this.item)
+    },
     itemSelected(item) {
       this.hierarchySelected = item;
       this.selectedTree = this.getTransformedProperties(item);
@@ -178,8 +197,9 @@ export default {
       this.$emit('focus');
     },
     getTransformedProperties(item) {
+      ObjectFormatter.displayDefaults = this.displayDefaults
       const transformer = new ObjectTransformer(
-          item.obj,
+          getPropertiesForDisplay(item),
           item.name,
           stableIdCompatibilityFixup(item),
       ).setOptions({
@@ -189,7 +209,7 @@ export default {
 
       if (this.showPropertiesDiff && this.diffVisualizationAvailable) {
         const prevItem = this.getItemFromPrevTree(item);
-        transformer.withDiff(prevItem?.obj);
+        transformer.withDiff(getPropertiesForDisplay(prevItem));
       }
 
       return transformer.transform();
