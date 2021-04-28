@@ -51,6 +51,7 @@ from update_crate_tests import TestMapping
 
 import argparse
 import glob
+import json
 import os
 import os.path
 import platform
@@ -1474,7 +1475,7 @@ class Runner(object):
     self.find_warning_owners()
 
 
-def parse_args():
+def get_parser():
   """Parse main arguments."""
   parser = argparse.ArgumentParser('cargo2android')
   parser.add_argument(
@@ -1595,14 +1596,54 @@ def parse_args():
       action='store_true',
       default=False,
       help='run cargo with -vv instead of default -v')
-  return parser.parse_args()
+  parser.add_argument(
+      '--dump-config-and-exit',
+      type=str,
+      help=('Dump command-line arguments (minus this flag) to a config file and exit. ' +
+            'This is intended to help migrate from command line options to config files.'))
+  parser.add_argument(
+      '--config',
+      type=str,
+      help=('Load command-line options from the given config file. ' +
+            'Options in this file will override those passed on the command line.'))
+  return parser
+
+
+def parse_args(parser):
+  """Parses command-line options."""
+  args = parser.parse_args()
+  # Use the values specified in a config file if one was found.
+  if args.config:
+    with open(args.config, 'r') as f:
+      config = json.load(f)
+      args_dict = vars(args)
+      for arg in config:
+        args_dict[arg.replace('-', '_')] = config[arg]
+  return args
+
+
+def dump_config(parser, args):
+  """Writes the non-default command-line options to the specified file."""
+  args_dict = vars(args)
+  # Filter out the arguments that have their default value.
+  non_default_args = {}
+  for arg in args_dict:
+    if args_dict[arg] != parser.get_default(arg) and arg != 'dump_config_and_exit':
+      non_default_args[arg.replace('_', '-')] = args_dict[arg]
+  # Write to the specified file.
+  with open(args.dump_config_and_exit, 'w') as f:
+    json.dump(non_default_args, f, indent=2, sort_keys=True)
 
 
 def main():
-  args = parse_args()
+  parser = get_parser()
+  args = parse_args(parser)
   if not args.run:  # default is dry-run
     print(DRY_RUN_NOTE)
-  Runner(args).run_cargo().gen_bp().apply_patch().dump_test_mapping_files()
+  if args.dump_config_and_exit:
+    dump_config(parser, args)
+  else:
+    Runner(args).run_cargo().gen_bp().apply_patch().dump_test_mapping_files()
 
 
 if __name__ == '__main__':
