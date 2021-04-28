@@ -649,6 +649,13 @@ class Crate(object):
       self.dump_edition_flags_libs()
     if self.runner.args.host_first_multilib and self.host_supported and crate_type != 'test':
       self.write('    compile_multilib: "first",')
+    if self.runner.args.apex_available and crate_type == 'lib':
+      self.write('    apex_available: [')
+      for apex in self.runner.args.apex_available:
+        self.write('        "%s",' % apex)
+      self.write('    ],')
+    if self.runner.args.min_sdk_version and crate_type == 'lib':
+      self.write('    min_sdk_version: "%s",' % self.runner.args.min_sdk_version)
     self.write('}')
 
   def dump_android_flags(self):
@@ -1581,6 +1588,14 @@ def get_parser():
       default=False,
       help=('run cargo build with existing Cargo.lock ' +
             '(used when some latest dependent crates failed)'))
+  parser.add_argument(
+      '--min-sdk-version',
+      type=str,
+      help='Minimum SDK version')
+  parser.add_argument(
+      '--apex-available',
+      nargs='*',
+      help='Mark the main library as apex_available with the given apexes.')
   parser.add_argument(
       '--no-test-mapping',
       action='store_true',
