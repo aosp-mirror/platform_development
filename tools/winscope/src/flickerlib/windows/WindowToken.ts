@@ -33,9 +33,9 @@ WindowToken.fromProto = function (proto, isActivityInTree: Boolean): WindowToken
         throw "Window container should not be null: " + JSON.stringify(proto)
     }
     const entry = new WindowToken(windowContainer)
+    entry.kind = entry.constructor.name
     entry.obj = getWMPropertiesForDisplay(proto)
     entry.shortName = shortenName(entry.name)
-    entry.children = entry.childrenWindows
     entry.rawTreeViewObject = asRawTreeViewObject(entry)
 
     console.warn("Created ", entry.kind, " stableId=", entry.stableId)

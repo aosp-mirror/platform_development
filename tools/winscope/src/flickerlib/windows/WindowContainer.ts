@@ -61,6 +61,7 @@ WindowContainer.fromProto = function ({
     // the properties view of the element as we can always see those elements'
     // properties by changing the target element in the hierarchy tree view.
     entry.obj = getWMPropertiesForDisplay(proto)
+    entry.kind = entry.constructor.name
     entry.shortName = shortenName(entry.name)
     entry.rawTreeViewObject = asRawTreeViewObject(entry)
     return entry
@@ -83,7 +84,6 @@ function newConfigurationContainer(proto): ConfigurationContainer {
         newConfiguration(proto?.mergedOverrideConfiguration ?? null)
     )
 
-    entry.kind = "ConfigurationContainer"
     entry.obj = entry
     return entry
 }
