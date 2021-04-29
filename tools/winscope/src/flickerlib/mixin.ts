@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import ObjectFormatter from "./ObjectFormatter"
+
 /**
  * Get the properties of a WM object for display.
  *
@@ -30,7 +32,8 @@ export function getWMPropertiesForDisplay(proto: any): any {
     if (obj.rootDisplayArea) delete obj.rootDisplayArea
     if (obj.rootWindowContainer) delete obj.rootWindowContainer
     if (obj.windowContainer?.children) delete obj.windowContainer.children
-    return obj
+
+    return ObjectFormatter.format(obj)
 }
 
 export function shortenName(name: any): string {
