@@ -34,8 +34,8 @@ DisplayArea.fromProto = function (proto, isActivityInTree: Boolean): DisplayArea
         const entry = new DisplayArea(proto.isTaskDisplayArea, windowContainer)
 
         entry.obj = getWMPropertiesForDisplay(proto)
+        entry.kind = entry.constructor.name
         entry.shortName = shortenName(entry.name)
-        entry.children = entry.childrenWindows
         entry.rawTreeViewObject = asRawTreeViewObject(entry)
 
         console.warn("Created ", entry.kind, " stableId=", entry.stableId)
