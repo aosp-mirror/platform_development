@@ -1,0 +1,32 @@
+// Copyright 2008 The Android Open Source Project
+//
+
+package {
+    default_applicable_licenses: ["development_cmds_monkey_license"],
+}
+
+// See: http://go/android-license-faq
+license {
+    name: "development_cmds_monkey_license",
+    visibility: [":__subpackages__"],
+    license_kinds: [
+        "SPDX-license-identifier-Apache-2.0",
+    ],
+    license_text: [
+        "NOTICE",
+    ],
+}
+
+java_library {
+    name: "monkeylib",
+    installable: true,
+    srcs: ["**/*.java"],
+    stem: "monkey",
+}
+
+//###############################################################
+cc_prebuilt_binary {
+    name: "monkey",
+    srcs: ["monkey"],
+    required: ["monkeylib"],
+}
