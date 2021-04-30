@@ -74,15 +74,14 @@ import WindowContainer from "./WindowContainer"
             /* isAppWindow */ isActivityInTree
         )
 
-        entry.rects.map((rect) => rect.ref = entry)
+        entry.kind = entry.constructor.name
         entry.obj = getWMPropertiesForDisplay(proto)
+        entry.rect = entry.frame
+        entry.rect.ref = entry
+        entry.rect.label = entry.name
         entry.shortName = shortenName(entry.name)
         entry.visible = entry.isVisible ?? false
         entry.chips = entry.isVisible ? [VISIBLE_CHIP] : []
-        entry.children = entry.childrenWindows
-        if (entry.visible) {
-            entry.rect = entry.rects[0]
-        }
         entry.rawTreeViewObject = asRawTreeViewObject(entry)
         return entry
     }
