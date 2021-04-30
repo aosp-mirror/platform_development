@@ -1171,7 +1171,8 @@ class Runner(object):
       self.bp_files.add(name)
       license_section = self.read_license(name)
       with open(name, 'w') as outf:
-        outf.write(ANDROID_BP_HEADER.format(args=' '.join(sys.argv[1:])))
+        print_args = filter(lambda x: x != "--no-test-mapping", sys.argv[1:])
+        outf.write(ANDROID_BP_HEADER.format(args=' '.join(print_args)))
         outf.write('\n')
         outf.write(license_section)
         outf.write('\n')
@@ -1641,9 +1642,11 @@ def dump_config(parser, args):
   """Writes the non-default command-line options to the specified file."""
   args_dict = vars(args)
   # Filter out the arguments that have their default value.
+  # Also filter certain "temporary" arguments.
   non_default_args = {}
   for arg in args_dict:
-    if args_dict[arg] != parser.get_default(arg) and arg != 'dump_config_and_exit':
+    if args_dict[arg] != parser.get_default(
+        arg) and arg != 'dump_config_and_exit' and arg != 'no_test_mapping':
       non_default_args[arg.replace('_', '-')] = args_dict[arg]
   # Write to the specified file.
   with open(args.dump_config_and_exit, 'w') as f:
