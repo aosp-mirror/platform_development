@@ -50,14 +50,14 @@ WindowManagerState.fromProto = function ({proto, timestamp = 0, where = ""}): Wi
         timestamp = timestamp
     )
 
+    entry.kind = entry.constructor.name
+    entry.rects = entry.windowStates.reverse().map(it => it.rect)
     entry.obj = getWMPropertiesForDisplay(proto)
     entry.obj["isComplete"] = entry.isComplete()
     if (!entry.obj.isComplete) {
         entry.obj["isIncompleteReason"] = entry.getIsIncompleteReason()
     }
-    entry.name = nanosToString(entry.timestamp, TimeUnits.MILLI_SECONDS)
     entry.shortName = entry.name
-    entry.children = entry.root.childrenWindows.reverse()
     entry.chips = []
     entry.visible = true
     entry.rawTreeViewObject = asRawTreeViewObject(entry)
