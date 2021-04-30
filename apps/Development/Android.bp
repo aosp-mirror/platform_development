@@ -1,0 +1,30 @@
+package {
+    default_applicable_licenses: ["development_apps_Development_license"],
+}
+
+// See: http://go/android-license-faq
+license {
+    name: "development_apps_Development_license",
+    visibility: [":__subpackages__"],
+    license_kinds: [
+        "SPDX-license-identifier-Apache-2.0",
+    ],
+    license_text: [
+        "NOTICE",
+    ],
+}
+
+android_app {
+    name: "Development",
+    libs: [
+        "android.test.runner.stubs",
+        "telephony-common",
+        "org.apache.http.legacy",
+    ],
+    srcs: [
+        "**/*.java",
+        "src/com/android/development/IRemoteService.aidl",
+    ],
+    platform_apis: true,
+    certificate: "platform",
+}
