@@ -28,7 +28,13 @@ export default {
   },
   methods: {
     summarizer(item) {
-      return null;
+      const summary = [];
+
+      if (item.obj.isIncompleteReason) {
+        summary.push({key: 'Incomplete state reason', value: item.obj.isIncompleteReason});
+      }
+
+      return summary;
     },
   }
 }
