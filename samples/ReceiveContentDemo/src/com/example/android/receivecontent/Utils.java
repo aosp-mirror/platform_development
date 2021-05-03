@@ -16,15 +16,10 @@
 
 package com.example.android.receivecontent;
 
-import static com.example.android.receivecontent.ReceiveContentDemoActivity.LOG_TAG;
-
 import android.content.ClipData;
 import android.content.ClipDescription;
-import android.util.Log;
 import android.util.Pair;
 import android.view.ContentInfo;
-import android.view.View;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,24 +28,8 @@ import java.util.function.Predicate;
 final class Utils {
     private Utils() {}
 
-    public static boolean matchesAny(String mimeType, String[] targetMimeTypes) {
-        for (String targetMimeType : targetMimeTypes) {
-            if (ClipDescription.compareMimeTypes(mimeType, targetMimeType)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static void showMessage(View view, String msg) {
-        Log.i(LOG_TAG, msg);
-        view.getHandler().post(() ->
-                Toast.makeText(view.getContext(), msg, Toast.LENGTH_LONG).show()
-        );
-    }
-
     /**
-     * If you use the support library, use {@code androidx.core.view.ContentInfoCompat.partition()}.
+     * If you use Jetpack, use {@code androidx.core.view.ContentInfoCompat.partition()}.
      */
     public static Pair<ContentInfo, ContentInfo> partition(ContentInfo payload,
             Predicate<ClipData.Item> itemPredicate) {
