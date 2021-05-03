@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,39 @@
 
 package com.example.android.receivecontent;
 
-import java.util.concurrent.ExecutorService;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+
+import com.google.common.util.concurrent.ListeningScheduledExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-public class MyExecutors {
-    private static final ExecutorService mBg = Executors.newSingleThreadExecutor();
+final class MyExecutors {
+    private MyExecutors() {}
 
-    public static ExecutorService getBg() {
-        return mBg;
+    private static final ListeningScheduledExecutorService BG =
+            MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor());
+
+    private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
+    private static final Executor MAIN_EXECUTOR =
+            runnable -> {
+                if (!MAIN_HANDLER.post(runnable)) {
+                    Log.e(Logcat.TAG, "Failed to post runnable on main thread");
+                }
+            };
+
+    @NonNull
+    public static ListeningScheduledExecutorService bg() {
+        return BG;
+    }
+
+    @NonNull
+    public static Executor main() {
+        return MAIN_EXECUTOR;
     }
 }

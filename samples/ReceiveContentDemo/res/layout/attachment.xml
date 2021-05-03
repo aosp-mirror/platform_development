@@ -15,9 +15,12 @@
   ~ limitations under the License.
   -->
 
-<resources>
-    <string name="app_name">Android: Receive Content Demo</string>
-    <string name="app_menu_item_clear_attachments">Clear attachments</string>
-    <string name="text_input_default_text">Try inserting text, images and other content
-        using copy/paste or drag-and-drop</string>
-</resources>
+<ImageView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/attachment_thumbnail"
+    android:layout_width="72dp"
+    android:layout_height="72dp"
+    android:layout_marginHorizontal="8dp"
+    android:layout_marginVertical="16dp"
+    android:scaleType="centerCrop"
+    android:background="@drawable/thumbnail_background"/>
