@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e
-
 if [ -z "${ANDROID_BUILD_TOP}" ]; then
     WD="$(pwd)"
 else
@@ -30,7 +28,6 @@ LZ4="${WD}/kernel/prebuilts/kernel-build-tools/linux-x86/bin/lz4"
 
 echo "WD=${WD}"
 echo "OUT_DIR=${OUT_DIR}"
-
 
 function linkto()
 {
@@ -83,6 +80,37 @@ function bld_k510()
     DIST_DIR="${OUT_DIR}/android12-5.10/dist" HERMETIC_TOOLCHAIN=0 BUILD_CONFIG=common-5.10/build.config.gki.aarch64 build/build.sh "${make_opt[@]}"
     popd
     repack "${OUT_DIR}/android12-5.10/dist/Image" "${OUT_DIR}/target/kernel/5.10/arm64" 5.10
+}
+
+function bld_k510_ko()
+{
+    local make_opt=("$@")
+    local COMMON_PLATFORM_CONFIG="common-modules/virtual-device/build.config.virtual_device.aarch64"
+    pushd "${WD}/kernel"
+    BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh "${make_opt[@]}"
+    BUILD_CONFIG=${COMMON_PLATFORM_CONFIG} build/build.sh "${make_opt[@]}"
+    popd
+}
+
+function chk_k510_ko()
+{
+    local make_opt=("$@")
+    local COMMON_PLATFORM_CONFIG="common-modules/virtual-device/build.config.virtual_device.aarch64"
+    local COMMON_PLATFORM_SL="common/android/abi_gki_aarch64_virtual_device"
+    local ABI_XML="common/android/abi_gki_aarch64.xml"
+    pushd "${WD}/kernel"
+    if [ -f "${COMMON_PLATFORM_SL}.ori" ]; then
+        mv "${COMMON_PLATFORM_SL}.ori" ${COMMON_PLATFORM_SL}
+    fi
+    cp ${COMMON_PLATFORM_SL} "${COMMON_PLATFORM_SL}.ori"
+    BUILD_CONFIG=${COMMON_PLATFORM_CONFIG} build/build_abi.sh --update-symbol-list "${make_opt[@]}"
+    if ! diff ${COMMON_PLATFORM_SL} "${COMMON_PLATFORM_SL}.ori"; then
+        echo "${COMMON_PLATFORM_SL} is out-of-sync"
+        return 1
+    else
+        echo "${COMMON_PLATFORM_SL} is up-to-date"
+    fi
+    popd
 }
 
 function repack()
