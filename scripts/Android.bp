@@ -21,14 +21,6 @@ python_library_host {
     srcs: [
         "symbol.py",
     ],
-    version: {
-        py2: {
-            enabled: true,
-        },
-        py3: {
-            enabled: true,
-        },
-    },
 }
 
 python_test_host {
@@ -49,6 +41,17 @@ python_test_host {
     // this doesn't work.
     srcs: ["symbol.py"],
     test_config: "symbol-tests.xml",
+    test_suites: ["general-tests"],
+}
+
+python_test_host {
+    name: "python-stack_core_test",
+    main: "stack_core.py",
+    srcs: [
+        "example_crashes.py",
+        "stack_core.py",
+    ],
+    libs: ["python-symbol"],
     test_suites: ["general-tests"],
 }
 
