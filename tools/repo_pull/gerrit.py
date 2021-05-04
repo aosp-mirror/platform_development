@@ -257,6 +257,14 @@ def abandon(url_opener, gerrit_url, change_id, message):
     return _make_json_post_request(url_opener, url, data)
 
 
+def restore(url_opener, gerrit_url, change_id):
+    """Restore a change list."""
+
+    url = '{}/a/changes/{}/restore'.format(gerrit_url, change_id)
+
+    return _make_json_post_request(url_opener, url, {})
+
+
 def set_topic(url_opener, gerrit_url, change_id, name):
     """Set the topic name."""
 
