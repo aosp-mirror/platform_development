@@ -51,6 +51,7 @@ from update_crate_tests import TestMapping
 
 import argparse
 import glob
+import json
 import os
 import os.path
 import platform
@@ -94,6 +95,9 @@ ANDROID_BP_HEADER = (
     '// Do not modify this file as changes will be overridden on upgrade.\n')
 
 CARGO_OUT = 'cargo.out'  # Name of file to keep cargo build -v output.
+
+# This should be kept in sync with tools/external_updater/crates_updater.py.
+ERRORS_LINE = 'Errors in ' + CARGO_OUT + ':'
 
 TARGET_TMP = 'target.tmp'  # Name of temporary output directory.
 
@@ -645,18 +649,23 @@ class Crate(object):
       self.dump_edition_flags_libs()
     if self.runner.args.host_first_multilib and self.host_supported and crate_type != 'test':
       self.write('    compile_multilib: "first",')
+    if self.runner.args.apex_available and crate_type == 'lib':
+      self.write('    apex_available: [')
+      for apex in self.runner.args.apex_available:
+        self.write('        "%s",' % apex)
+      self.write('    ],')
+    if self.runner.args.min_sdk_version and crate_type == 'lib':
+      self.write('    min_sdk_version: "%s",' % self.runner.args.min_sdk_version)
     self.write('}')
 
   def dump_android_flags(self):
     """Dump Android module flags property."""
-    if not self.cfgs and not self.codegens and not self.cap_lints:
+    if not self.codegens and not self.cap_lints:
       return
     self.write('    flags: [')
     if self.cap_lints:
       self.write('        "--cap-lints ' + self.cap_lints + '",')
-    cfg_fmt = '"--cfg %s"'
     codegens_fmt = '"-C %s"'
-    self.dump_android_property_list_items(cfg_fmt, self.cfgs)
     self.dump_android_property_list_items(codegens_fmt, self.codegens)
     self.write('    ],')
 
@@ -664,6 +673,7 @@ class Crate(object):
     if self.edition:
       self.write('    edition: "' + self.edition + '",')
     self.dump_android_property_list('features', '"%s"', self.features)
+    self.dump_android_property_list('cfgs', '"%s"', self.cfgs)
     self.dump_android_flags()
     if self.externs:
       self.dump_android_externs()
@@ -1131,8 +1141,8 @@ class Runner(object):
       # Firstly skip ANDROID_BP_HEADER
       while line.startswith('//'):
         line = intf.readline()
-      # Read all lines until we see a rust_* rule.
-      while line != '' and not line.startswith('rust_'):
+      # Read all lines until we see a rust_* or genrule rule.
+      while line != '' and not (line.startswith('rust_') or line.startswith('genrule {')):
         license += line
         line = intf.readline()
     return license.strip()
@@ -1161,7 +1171,8 @@ class Runner(object):
       self.bp_files.add(name)
       license_section = self.read_license(name)
       with open(name, 'w') as outf:
-        outf.write(ANDROID_BP_HEADER.format(args=' '.join(sys.argv[1:])))
+        print_args = filter(lambda x: x != "--no-test-mapping", sys.argv[1:])
+        outf.write(ANDROID_BP_HEADER.format(args=' '.join(print_args)))
         outf.write('\n')
         outf.write(license_section)
         outf.write('\n')
@@ -1172,6 +1183,8 @@ class Runner(object):
     """Dump all TEST_MAPPING files."""
     if self.dry_run:
       print('Dry-run skip dump of TEST_MAPPING')
+    elif self.args.no_test_mapping:
+      print('Skipping generation of TEST_MAPPING')
     else:
       test_mapping = TestMapping(None)
       for bp_file_name in self.bp_files:
@@ -1355,7 +1368,7 @@ class Runner(object):
         if self.args.dependencies and self.dependencies:
           self.dump_dependencies()
         if self.errors:
-          self.append_to_bp('\nErrors in ' + CARGO_OUT + ':\n' + self.errors)
+          self.append_to_bp('\n' + ERRORS_LINE + '\n' + self.errors)
     return self
 
   def add_ar_object(self, obj):
@@ -1470,7 +1483,7 @@ class Runner(object):
     self.find_warning_owners()
 
 
-def parse_args():
+def get_parser():
   """Parse main arguments."""
   parser = argparse.ArgumentParser('cargo2android')
   parser.add_argument(
@@ -1577,6 +1590,19 @@ def parse_args():
       help=('run cargo build with existing Cargo.lock ' +
             '(used when some latest dependent crates failed)'))
   parser.add_argument(
+      '--min-sdk-version',
+      type=str,
+      help='Minimum SDK version')
+  parser.add_argument(
+      '--apex-available',
+      nargs='*',
+      help='Mark the main library as apex_available with the given apexes.')
+  parser.add_argument(
+      '--no-test-mapping',
+      action='store_true',
+      default=False,
+      help='Do not generate a TEST_MAPPING file.  Use only to speed up debugging.')
+  parser.add_argument(
       '--verbose',
       action='store_true',
       default=False,
@@ -1586,14 +1612,56 @@ def parse_args():
       action='store_true',
       default=False,
       help='run cargo with -vv instead of default -v')
-  return parser.parse_args()
+  parser.add_argument(
+      '--dump-config-and-exit',
+      type=str,
+      help=('Dump command-line arguments (minus this flag) to a config file and exit. ' +
+            'This is intended to help migrate from command line options to config files.'))
+  parser.add_argument(
+      '--config',
+      type=str,
+      help=('Load command-line options from the given config file. ' +
+            'Options in this file will override those passed on the command line.'))
+  return parser
+
+
+def parse_args(parser):
+  """Parses command-line options."""
+  args = parser.parse_args()
+  # Use the values specified in a config file if one was found.
+  if args.config:
+    with open(args.config, 'r') as f:
+      config = json.load(f)
+      args_dict = vars(args)
+      for arg in config:
+        args_dict[arg.replace('-', '_')] = config[arg]
+  return args
+
+
+def dump_config(parser, args):
+  """Writes the non-default command-line options to the specified file."""
+  args_dict = vars(args)
+  # Filter out the arguments that have their default value.
+  # Also filter certain "temporary" arguments.
+  non_default_args = {}
+  for arg in args_dict:
+    if args_dict[arg] != parser.get_default(
+        arg) and arg != 'dump_config_and_exit' and arg != 'no_test_mapping':
+      non_default_args[arg.replace('_', '-')] = args_dict[arg]
+  # Write to the specified file.
+  with open(args.dump_config_and_exit, 'w') as f:
+    json.dump(non_default_args, f, indent=2, sort_keys=True)
 
 
 def main():
-  args = parse_args()
+  parser = get_parser()
+  args = parse_args(parser)
   if not args.run:  # default is dry-run
     print(DRY_RUN_NOTE)
-  Runner(args).run_cargo().gen_bp().apply_patch().dump_test_mapping_files()
+  if args.dump_config_and_exit:
+    dump_config(parser, args)
+  else:
+    Runner(args).run_cargo().gen_bp().apply_patch().dump_test_mapping_files()
 
 
 if __name__ == '__main__':
