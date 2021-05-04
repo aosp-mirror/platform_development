@@ -31,6 +31,10 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".SingleInstancePerTaskActivity"
+            android:launchMode="singleInstancePerTask"
+        />
+        <activity
             android:name=".SingleTopActivity"
             android:launchMode="singleTop" />
         <activity
