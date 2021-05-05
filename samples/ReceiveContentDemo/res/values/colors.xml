@@ -16,8 +16,6 @@
   -->
 
 <resources>
-    <string name="app_name">Android: Receive Content Demo</string>
-    <string name="app_menu_item_clear_attachments">Clear attachments</string>
-    <string name="text_input_default_text">Try inserting text, images and other content
-        using copy/paste or drag-and-drop</string>
+    <color name="gray">#5f6368</color>
+    <color name="white">#ffffff</color>
 </resources>
