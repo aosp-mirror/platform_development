@@ -120,49 +120,13 @@ import PropertiesTreeElement from './PropertiesTreeElement.vue';
 
 import {ObjectTransformer} from './transform.js';
 import {DiffGenerator, defaultModifiedCheck} from './utils/diff.js';
-// eslint-disable-next-line camelcase
-import {format_transform_type, is_simple_transform} from './matrix_utils.js';
 import {TRACE_TYPES, DUMP_TYPES} from './decode.js';
 import {stableIdCompatibilityFixup} from './utils/utils.js';
 import {CompatibleFeatures} from './utils/compatibility.js';
 
-function formatColorTransform(vals) {
-  const fixedVals = vals.map((v) => v.toFixed(1));
-  let formatted = ``;
-  for (let i = 0; i < fixedVals.length; i += 4) {
-    formatted += `[`;
-    formatted += fixedVals.slice(i, i + 4).join(', ');
-    formatted += `] `;
-  }
-  return formatted;
-}
-
 function formatProto(obj) {
-  if (!obj || !obj.$type) {
-    return;
-  }
-  if (obj.$type.name === 'RectProto') {
-    return `(${obj.left}, ${obj.top})  -  (${obj.right}, ${obj.bottom})`;
-  } else if (obj.$type.name === 'FloatRectProto') {
-    return `(${obj.left.toFixed(3)}, ${obj.top.toFixed(3)})  -  ` +
-        `(${obj.right.toFixed(3)}, ${obj.bottom.toFixed(3)})`;
-  } else if (obj.$type.name === 'PositionProto') {
-    return `(${obj.x.toFixed(3)}, ${obj.y.toFixed(3)})`;
-  } else if (obj.$type.name === 'SizeProto') {
-    return `${obj.w} x ${obj.h}`;
-  } else if (obj.$type.name === 'ColorProto') {
-    return `r:${obj.r} g:${obj.g} \n b:${obj.b} a:${obj.a}`;
-  } else if (obj.$type.name === 'TransformProto') {
-    const transformType = format_transform_type(obj);
-    if (is_simple_transform(obj)) {
-      return `${transformType}`;
-    }
-    return `${transformType}  dsdx:${obj.dsdx.toFixed(3)}   ` +
-        `dtdx:${obj.dtdx.toFixed(3)}   dsdy:${obj.dsdy.toFixed(3)}   ` +
-        `dtdy:${obj.dtdy.toFixed(3)}`;
-  } else if (obj.$type.name === 'ColorTransformProto') {
-    const formated = formatColorTransform(obj.val);
-    return `${formated}`;
+  if (obj?.prettyPrint) {
+    return obj.prettyPrint();
   }
 }
 
