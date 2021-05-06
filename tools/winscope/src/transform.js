@@ -15,8 +15,6 @@
  */
 
 import {DiffType} from './utils/diff.js';
-import intDefMapping from
-  '../../../../prebuilts/misc/common/winscope/intDefMapping.json';
 
 // kind - a type used for categorization of different levels
 // name - name of the node
@@ -339,20 +337,6 @@ class ObjectTransformer {
           fieldOptionsToUse = compareWithFieldOptions;
         }
       }
-
-      const annotationType = fieldOptionsToUse?.['(.android.typedef)'];
-      if (annotationType) {
-        if (intDefMapping[annotationType] === undefined) {
-          console.error(
-              `Missing intDef mapping for translation for ${annotationType}`);
-        } else if (intDefMapping[annotationType].flag) {
-          transformedObj.name = `${getIntFlagsAsStrings(
-              transformedObj.name, annotationType)} (${transformedObj.name})`;
-        } else {
-          transformedObj.name = `${intDefMapping[annotationType]
-              .values[transformedObj.name]} (${transformedObj.name})`;
-        }
-      }
     }
 
     if (transformOptions.keepOriginal) {
@@ -366,44 +350,6 @@ class ObjectTransformer {
     return transformOptions.freeze ?
       Object.freeze(transformedObj) : transformedObj;
   }
-}
-
-function getIntFlagsAsStrings(intFlags, annotationType) {
-  const flags = [];
-
-  const mapping = intDefMapping[annotationType].values;
-  const knownFlagValues = Object.keys(mapping).reverse().map(x => parseInt(x));
-
-  if (mapping.length == 0) {
-    console.warn("No mapping for type", annotationType)
-    return intFlags + ""
-  }
-
-  // Will only contain bits that have not been associated with a flag.
-  const parsedIntFlags = parseInt(intFlags);
-  let leftOver = parsedIntFlags;
-
-  for (const flagValue of knownFlagValues) {
-    if (((leftOver & flagValue) && ((intFlags & flagValue) === flagValue))
-          || (parsedIntFlags === 0 && flagValue === 0)) {
-      flags.push(mapping[flagValue]);
-
-      leftOver = leftOver & ~flagValue;
-    }
-  }
-
-  if (flags.length === 0) {
-    console.error('No valid flag mappings found for ',
-        intFlags, 'of type', annotationType);
-  }
-
-  if (leftOver) {
-    // If 0 is a valid flag value that isn't in the intDefMapping
-    // it will be ignored
-    flags.push(leftOver);
-  }
-
-  return flags.join(' | ');
 }
 
 // eslint-disable-next-line camelcase
