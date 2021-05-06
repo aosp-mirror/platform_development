@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getWMPropertiesForDisplay,  shortenName } from '../mixin'
+import { getPropertiesForDisplay,  shortenName } from '../mixin'
 import { asRawTreeViewObject } from '../../utils/diff.js'
 import { toRect, DisplayContent, Rect } from "../common"
 import WindowContainer from "./WindowContainer"
@@ -61,7 +61,7 @@ DisplayContent.fromProto = function (proto, isActivityInTree: Boolean): DisplayC
             windowContainer
         )
 
-        entry.obj = getWMPropertiesForDisplay(proto)
+        entry.obj = getPropertiesForDisplay(proto, entry)
         entry.kind = entry.constructor.name
         entry.shortName = shortenName(entry.name)
         entry.rawTreeViewObject = asRawTreeViewObject(entry)

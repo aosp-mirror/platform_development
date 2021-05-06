@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import { getWMPropertiesForDisplay, shortenName } from '../mixin'
+import { getPropertiesForDisplay, shortenName } from '../mixin'
 import { asRawTreeViewObject } from '../../utils/diff.js'
-import { toRect, WindowState, WindowLayoutParams } from "../common"
+import { toRect, Bounds, WindowState, WindowLayoutParams } from "../common"
 import { VISIBLE_CHIP } from '../treeview/Chips'
 import WindowContainer from "./WindowContainer"
 
@@ -62,6 +62,8 @@ import WindowContainer from "./WindowContainer"
             proto.animator?.surface?.layer ?? 0,
             proto.animator?.surface?.shown ?? false,
             windowType,
+            new Bounds(proto.requestedWidth, proto.requestedHeight),
+            toRect(proto.surfacePosition),
             toRect(proto.windowFrames?.frame ?? null),
             toRect(proto.windowFrames?.containingFrame ?? null),
             toRect(proto.windowFrames?.parentFrame ?? null),
@@ -75,10 +77,10 @@ import WindowContainer from "./WindowContainer"
         )
 
         entry.kind = entry.constructor.name
-        entry.obj = getWMPropertiesForDisplay(proto)
         entry.rect = entry.frame
         entry.rect.ref = entry
         entry.rect.label = entry.name
+        entry.obj = getPropertiesForDisplay(proto, entry)
         entry.shortName = shortenName(entry.name)
         entry.visible = entry.isVisible ?? false
         entry.chips = entry.isVisible ? [VISIBLE_CHIP] : []
