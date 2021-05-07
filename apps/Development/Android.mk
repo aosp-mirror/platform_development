@@ -5,6 +5,9 @@ LOCAL_MODULE_TAGS := optional
 
 LOCAL_JAVA_LIBRARIES := android.test.runner.stubs telephony-common org.apache.http.legacy
 
+LOCAL_USES_LIBRARIES := android.test.runner
+LOCAL_OPTIONAL_USES_LIBRARIES := org.apache.http.legacy android.test.base android.test.mock
+
 LOCAL_SRC_FILES := $(call all-subdir-java-files) \
                 src/com/android/development/IRemoteService.aidl \
 
