@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getWMPropertiesForDisplay,  shortenName } from '../mixin'
+import { getPropertiesForDisplay,  shortenName } from '../mixin'
 import { asRawTreeViewObject } from '../../utils/diff.js'
 import { DisplayArea } from "../common"
 import WindowContainer from "./WindowContainer"
@@ -33,9 +33,9 @@ DisplayArea.fromProto = function (proto, isActivityInTree: Boolean): DisplayArea
         }
         const entry = new DisplayArea(proto.isTaskDisplayArea, windowContainer)
 
-        entry.obj = getWMPropertiesForDisplay(proto)
+        entry.obj = getPropertiesForDisplay(proto, entry)
+        entry.kind = entry.constructor.name
         entry.shortName = shortenName(entry.name)
-        entry.children = entry.childrenWindows
         entry.rawTreeViewObject = asRawTreeViewObject(entry)
 
         console.warn("Created ", entry.kind, " stableId=", entry.stableId)

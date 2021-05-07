@@ -15,8 +15,7 @@
  */
 
 import { asRawTreeViewObject } from '../utils/diff.js'
-import { nanosToString, TimeUnits } from "../utils/utils.js"
-import { getWMPropertiesForDisplay } from './mixin'
+import { getPropertiesForDisplay } from './mixin'
 
 import {
     KeyguardControllerState,
@@ -50,14 +49,13 @@ WindowManagerState.fromProto = function ({proto, timestamp = 0, where = ""}): Wi
         timestamp = timestamp
     )
 
-    entry.obj = getWMPropertiesForDisplay(proto)
-    entry.obj["isComplete"] = entry.isComplete()
-    if (!entry.obj.isComplete) {
-        entry.obj["isIncompleteReason"] = entry.getIsIncompleteReason()
+    entry.kind = entry.constructor.name
+    entry.rects = entry.windowStates.reverse().map(it => it.rect)
+    if (!entry.isComplete()) {
+        entry.isIncompleteReason = entry.getIsIncompleteReason()
     }
-    entry.name = nanosToString(entry.timestamp, TimeUnits.MILLI_SECONDS)
+    entry.obj = getPropertiesForDisplay(proto, entry)
     entry.shortName = entry.name
-    entry.children = entry.root.childrenWindows.reverse()
     entry.chips = []
     entry.visible = true
     entry.rawTreeViewObject = asRawTreeViewObject(entry)

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getWMPropertiesForDisplay,  shortenName } from '../mixin'
+import { getPropertiesForDisplay,  shortenName } from '../mixin'
 import { asRawTreeViewObject } from '../../utils/diff.js'
 import { WindowToken } from "../common"
 import WindowContainer from "./WindowContainer"
@@ -33,9 +33,9 @@ WindowToken.fromProto = function (proto, isActivityInTree: Boolean): WindowToken
         throw "Window container should not be null: " + JSON.stringify(proto)
     }
     const entry = new WindowToken(windowContainer)
-    entry.obj = getWMPropertiesForDisplay(proto)
+    entry.kind = entry.constructor.name
+    entry.obj = getPropertiesForDisplay(proto, entry)
     entry.shortName = shortenName(entry.name)
-    entry.children = entry.childrenWindows
     entry.rawTreeViewObject = asRawTreeViewObject(entry)
 
     console.warn("Created ", entry.kind, " stableId=", entry.stableId)

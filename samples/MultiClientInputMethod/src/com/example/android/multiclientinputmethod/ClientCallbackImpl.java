@@ -198,13 +198,6 @@ final class ClientCallbackImpl implements MultiClientInputMethodServiceDelegate.
     }
 
     @Override
-    public void onToggleSoftInput(int showFlags, int hideFlags) {
-        // TODO: Implement
-        Log.w(TAG, "onToggleSoftInput is not yet implemented. clientId=" + mClientId
-                + " showFlags=" + showFlags + " hideFlags=" + hideFlags);
-    }
-
-    @Override
     public void onUpdateCursorAnchorInfo(CursorAnchorInfo info) {
     }
 

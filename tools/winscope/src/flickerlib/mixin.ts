@@ -14,22 +14,30 @@
  * limitations under the License.
  */
 
+import ObjectFormatter from "./ObjectFormatter"
+
 /**
  * Get the properties of a WM object for display.
  *
  * @param entry WM hierarchy element
  * @param proto Associated proto object
  */
-export function getWMPropertiesForDisplay(proto: any): any {
-    const obj = Object.assign({}, proto)
+export function getPropertiesForDisplay(proto: any, entry: any): any {
+    let obj = Object.assign({}, entry)
     if (obj.children) delete obj.children
-    if (obj.childWindows) delete obj.childWindows
-    if (obj.childrenWindows) delete obj.childrenWindows
-    if (obj.childContainers) delete obj.childContainers
-    if (obj.windowToken) delete obj.windowToken
-    if (obj.rootDisplayArea) delete obj.rootDisplayArea
-    if (obj.rootWindowContainer) delete obj.rootWindowContainer
-    if (obj.windowContainer?.children) delete obj.windowContainer.children
+    // obj = ObjectFormatter.format(obj)
+
+    obj.proto = Object.assign({}, proto)
+    if (obj.proto.children) delete obj.proto.children
+    if (obj.proto.childWindows) delete obj.proto.childWindows
+    if (obj.proto.childrenWindows) delete obj.proto.childrenWindows
+    if (obj.proto.childContainers) delete obj.proto.childContainers
+    if (obj.proto.windowToken) delete obj.proto.windowToken
+    if (obj.proto.rootDisplayArea) delete obj.proto.rootDisplayArea
+    if (obj.proto.rootWindowContainer) delete obj.proto.rootWindowContainer
+    if (obj.proto.windowContainer?.children) delete obj.proto.windowContainer.children
+    obj = ObjectFormatter.format(obj)
+
     return obj
 }
 
