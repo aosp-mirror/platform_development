@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright (C) 2013 The Android Open Source Project
 #
@@ -27,15 +27,15 @@ import example_crashes
 
 def ConvertTrace(lines):
   tracer = TraceConverter()
-  print "Reading symbols from", symbol.SYMBOLS_DIR
+  print("Reading symbols from", symbol.SYMBOLS_DIR)
   tracer.ConvertTrace(lines)
 
 class TraceConverter:
-  process_info_line = re.compile("(pid: [0-9]+, tid: [0-9]+.*)")
-  revision_line = re.compile("(Revision: \'(.*)\')")
-  signal_line = re.compile("(signal [0-9]+ \(.*\).*)")
-  abort_message_line = re.compile("(Abort message: '.*')")
-  thread_line = re.compile("(.*)(\-\-\- ){15}\-\-\-")
+  process_info_line = re.compile(r"(pid: [0-9]+, tid: [0-9]+.*)")
+  revision_line = re.compile(r"(Revision: '(.*)')")
+  signal_line = re.compile(r"(signal [0-9]+ \(.*\).*)")
+  abort_message_line = re.compile(r"(Abort message: '.*')")
+  thread_line = re.compile(r"(.*)(--- ){15}---")
   dalvik_jni_thread_line = re.compile("(\".*\" prio=[0-9]+ tid=[0-9]+ NATIVE.*)")
   dalvik_native_thread_line = re.compile("(\".*\" sysTid=[0-9]+ nice=[0-9]+.*)")
   register_line = re.compile("$a")
@@ -43,14 +43,14 @@ class TraceConverter:
   sanitizer_trace_line = re.compile("$a")
   value_line = re.compile("$a")
   code_line = re.compile("$a")
-  zipinfo_central_directory_line = re.compile("Central\s+directory\s+entry")
+  zipinfo_central_directory_line = re.compile(r"Central\s+directory\s+entry")
   zipinfo_central_info_match = re.compile(
-      "^\s*(\S+)$\s*offset of local header from start of archive:\s*(\d+)"
-      ".*^\s*compressed size:\s+(\d+)", re.M | re.S)
-  unreachable_line = re.compile("((\d+ bytes in \d+ unreachable allocations)|"+\
-                                "(\d+ bytes unreachable at [0-9a-f]+)|"+\
-                                "(referencing \d+ unreachable bytes in \d+ allocation(s)?)|"+\
-                                "(and \d+ similar unreachable bytes in \d+ allocation(s)?))")
+      r"^\s*(\S+)$\s*offset of local header from start of archive:\s*(\d+)"
+      r".*^\s*compressed size:\s+(\d+)", re.M | re.S)
+  unreachable_line = re.compile(r"((\d+ bytes in \d+ unreachable allocations)|"
+                                r"(\d+ bytes unreachable at [0-9a-f]+)|"
+                                r"(referencing \d+ unreachable bytes in \d+ allocation(s)?)|"
+                                r"(and \d+ similar unreachable bytes in \d+ allocation(s)?))")
   trace_lines = []
   value_lines = []
   last_frame = -1
@@ -89,35 +89,35 @@ class TraceConverter:
     #   03-25 00:51:05.520 I/DEBUG ( 65): #00 pc 001cf42e /data/data/com.my.project/lib/libmyproject.so
     # Please note the spacing differences.
     self.trace_line = re.compile(
-        ".*"                                                 # Random start stuff.
-        "\#(?P<frame>[0-9]+)"                                # Frame number.
-        "[ \t]+..[ \t]+"                                     # (space)pc(space).
-        "(?P<offset>[0-9a-f]" + self.width + ")[ \t]+"       # Offset (hex number given without
-                                                             #         0x prefix).
-        "(?P<dso>\[[^\]]+\]|[^\r\n \t]*)"                    # Library name.
-        "( \(offset (?P<so_offset>0x[0-9a-fA-F]+)\))?"       # Offset into the file to find the start of the shared so.
-        "(?P<symbolpresent> \((?P<symbol>.*)\))?")           # Is the symbol there?
-                                                             # pylint: disable-msg=C6310
+        r".*"                                                 # Random start stuff.
+        r"\#(?P<frame>[0-9]+)"                                # Frame number.
+        r"[ \t]+..[ \t]+"                                     # (space)pc(space).
+        r"(?P<offset>[0-9a-f]" + self.width + ")[ \t]+"       # Offset (hex number given without
+                                                              #         0x prefix).
+        r"(?P<dso>\[[^\]]+\]|[^\r\n \t]*)"                    # Library name.
+        r"( \(offset (?P<so_offset>0x[0-9a-fA-F]+)\))?"       # Offset into the file to find the start of the shared so.
+        r"(?P<symbolpresent> \((?P<symbol>.*)\))?")           # Is the symbol there?
+                                                              # pylint: disable-msg=C6310
     # Sanitizer output. This is different from debuggerd output, and it is easier to handle this as
     # its own regex. Example:
     # 08-19 05:29:26.283   397   403 I         :     #0 0xb6a15237  (/system/lib/libclang_rt.asan-arm-android.so+0x4f237)
     self.sanitizer_trace_line = re.compile(
-        ".*"                                                 # Random start stuff.
-        "\#(?P<frame>[0-9]+)"                                # Frame number.
-        "[ \t]+0x[0-9a-f]+[ \t]+"                            # PC, not interesting to us.
-        "\("                                                 # Opening paren.
-        "(?P<dso>[^+]+)"                                     # Library name.
-        "\+"                                                 # '+'
-        "0x(?P<offset>[0-9a-f]+)"                            # Offset (hex number given with
-                                                             #         0x prefix).
-        "\)")                                                # Closin paren.
-                                                             # pylint: disable-msg=C6310
+        r".*"                                                 # Random start stuff.
+        r"\#(?P<frame>[0-9]+)"                                # Frame number.
+        r"[ \t]+0x[0-9a-f]+[ \t]+"                            # PC, not interesting to us.
+        r"\("                                                 # Opening paren.
+        r"(?P<dso>[^+]+)"                                     # Library name.
+        r"\+"                                                 # '+'
+        r"0x(?P<offset>[0-9a-f]+)"                            # Offset (hex number given with
+                                                              #         0x prefix).
+        r"\)")                                                # Closing paren.
+                                                              # pylint: disable-msg=C6310
     # Examples of matched value lines include:
     #   bea4170c  8018e4e9  /data/data/com.my.project/lib/libmyproject.so
     #   bea4170c  8018e4e9  /data/data/com.my.project/lib/libmyproject.so (symbol)
     #   03-25 00:51:05.530 I/DEBUG ( 65): bea4170c 8018e4e9 /data/data/com.my.project/lib/libmyproject.so
     # Again, note the spacing differences.
-    self.value_line = re.compile("(.*)([0-9a-f]" + self.width + ")[ \t]+([0-9a-f]" + self.width + ")[ \t]+([^\r\n \t]*)( \((.*)\))?")
+    self.value_line = re.compile(r"(.*)([0-9a-f]" + self.width + r")[ \t]+([0-9a-f]" + self.width + r")[ \t]+([^\r\n \t]*)( \((.*)\))?")
     # Lines from 'code around' sections of the output will be matched before
     # value lines because otheriwse the 'code around' sections will be confused as
     # value lines.
@@ -125,39 +125,35 @@ class TraceConverter:
     # Examples include:
     #   801cf40c ffffc4cc 00b2f2c5 00b2f1c7 00c1e1a8
     #   03-25 00:51:05.530 I/DEBUG ( 65): 801cf40c ffffc4cc 00b2f2c5 00b2f1c7 00c1e1a8
-    self.code_line = re.compile("(.*)[ \t]*[a-f0-9]" + self.width +
-                                "[ \t]*[a-f0-9]" + self.width +
-                                "[ \t]*[a-f0-9]" + self.width +
-                                "[ \t]*[a-f0-9]" + self.width +
-                                "[ \t]*[a-f0-9]" + self.width +
-                                "[ \t]*[ \r\n]")  # pylint: disable-msg=C6310
+    self.code_line = re.compile(r"(.*)[ \t]*[a-f0-9]" + self.width +
+                                r"[ \t]*[a-f0-9]" + self.width +
+                                r"[ \t]*[a-f0-9]" + self.width +
+                                r"[ \t]*[a-f0-9]" + self.width +
+                                r"[ \t]*[a-f0-9]" + self.width +
+                                r"[ \t]*[ \r\n]")  # pylint: disable-msg=C6310
 
   def CleanLine(self, ln):
     # AndroidFeedback adds zero width spaces into its crash reports. These
     # should be removed or the regular expresssions will fail to match.
-    return unicode(ln, errors='ignore')
+    return ln.encode().decode(encoding='utf8', errors='ignore')
 
   def PrintTraceLines(self, trace_lines):
     """Print back trace."""
-    maxlen = max(map(lambda tl: len(tl[1]), trace_lines))
-    print
-    print "Stack Trace:"
-    print "  RELADDR   " + self.spacing + "FUNCTION".ljust(maxlen) + "  FILE:LINE"
+    maxlen = max(len(tl[1]) for tl in trace_lines)
+    print("\nStack Trace:")
+    print("  RELADDR   " + self.spacing + "FUNCTION".ljust(maxlen) + "  FILE:LINE")
     for tl in self.trace_lines:
       (addr, symbol_with_offset, location) = tl
-      print "  %8s  %s  %s" % (addr, symbol_with_offset.ljust(maxlen), location)
-    return
+      print("  %8s  %s  %s" % (addr, symbol_with_offset.ljust(maxlen), location))
 
   def PrintValueLines(self, value_lines):
     """Print stack data values."""
-    maxlen = max(map(lambda tl: len(tl[2]), self.value_lines))
-    print
-    print "Stack Data:"
-    print "  ADDR      " + self.spacing + "VALUE     " + "FUNCTION".ljust(maxlen) + "  FILE:LINE"
+    maxlen = max(len(tl[2]) for tl in self.value_lines)
+    print("\nStack Data:")
+    print("  ADDR      " + self.spacing + "VALUE     " + "FUNCTION".ljust(maxlen) + "  FILE:LINE")
     for vl in self.value_lines:
       (addr, value, symbol_with_offset, location) = vl
-      print "  %8s  %8s  %s  %s" % (addr, value, symbol_with_offset.ljust(maxlen), location)
-    return
+      print("  %8s  %8s  %s  %s" % (addr, value, symbol_with_offset.ljust(maxlen), location))
 
   def PrintOutput(self, trace_lines, value_lines):
     if self.trace_lines:
@@ -166,8 +162,7 @@ class TraceConverter:
       self.PrintValueLines(self.value_lines)
 
   def PrintDivider(self):
-    print
-    print "-----------------------------------------------------\n"
+    print("\n-----------------------------------------------------\n")
 
   def DeleteApkTmpFiles(self):
     for _, _, tmp_files in self.apk_info.values():
@@ -175,7 +170,7 @@ class TraceConverter:
         os.unlink(tmp_file)
 
   def ConvertTrace(self, lines):
-    lines = map(self.CleanLine, lines)
+    lines = [self.CleanLine(line) for line in lines]
     try:
       if not symbol.ARCH:
         symbol.SetAbi(lines)
@@ -252,18 +247,18 @@ class TraceConverter:
       return None, None
 
     if not "ANDROID_PRODUCT_OUT" in os.environ:
-      print "ANDROID_PRODUCT_OUT environment variable not set."
+      print("ANDROID_PRODUCT_OUT environment variable not set.")
       return None, None
     out_dir = os.environ["ANDROID_PRODUCT_OUT"]
     if not os.path.exists(out_dir):
-      print "ANDROID_PRODUCT_OUT " + out_dir + " does not exist."
+      print("ANDROID_PRODUCT_OUT", out_dir, "does not exist.")
       return None, None
     if apk.startswith("/"):
       apk_full_path = out_dir + apk
     else:
       apk_full_path = os.path.join(out_dir, apk)
     if not os.path.exists(apk_full_path):
-      print "Cannot find apk " + apk
+      print("Cannot find apk", apk)
       return None, None
 
     cmd = subprocess.Popen(["zipinfo", "-v", apk_full_path], stdout=subprocess.PIPE)
@@ -322,23 +317,23 @@ class TraceConverter:
         self.value_lines = []
         self.last_frame = -1
       if process_header:
-        print process_header.group(1)
+        print(process_header.group(1))
       if signal_header:
-        print signal_header.group(1)
+        print(signal_header.group(1))
       if abort_message_header:
-        print abort_message_header.group(1)
+        print(abort_message_header.group(1))
       if register_header:
-        print register_header.group(1)
+        print(register_header.group(1))
       if thread_header:
-        print thread_header.group(1)
+        print(thread_header.group(1))
       if dalvik_jni_thread_header:
-        print dalvik_jni_thread_header.group(1)
+        print(dalvik_jni_thread_header.group(1))
       if dalvik_native_thread_header:
-        print dalvik_native_thread_header.group(1)
+        print(dalvik_native_thread_header.group(1))
       if revision_header:
-        print revision_header.group(1)
+        print(revision_header.group(1))
       if unreachable_header:
-        print unreachable_header.group(1)
+        print(unreachable_header.group(1))
       return True
     trace_line_dict = self.MatchTraceLine(line)
     if trace_line_dict is not None:
@@ -470,7 +465,7 @@ class RegisterPatternTests(unittest.TestCase):
       tc.ProcessLine(line)
       is_register = (re.search(stupid_pattern, line) is not None)
       matched = (tc.register_line.search(line) is not None)
-      self.assertEquals(matched, is_register, line)
+      self.assertEqual(matched, is_register, line)
     tc.PrintOutput(tc.trace_lines, tc.value_lines)
 
   def test_arm_registers(self):
@@ -497,7 +492,7 @@ class LibmemunreachablePatternTests(unittest.TestCase):
     lines = example_crashes.libmemunreachable.split('\n')
 
     symbol.SetAbi(lines)
-    self.assertEquals(symbol.ARCH, "arm")
+    self.assertEqual(symbol.ARCH, "arm")
 
     tc.UpdateAbiRegexes()
     header_lines = 0
@@ -508,8 +503,8 @@ class LibmemunreachablePatternTests(unittest.TestCase):
         header_lines += 1
       if tc.MatchTraceLine(line) is not None:
         trace_lines += 1
-    self.assertEquals(header_lines, 3)
-    self.assertEquals(trace_lines, 2)
+    self.assertEqual(header_lines, 3)
+    self.assertEqual(trace_lines, 2)
     tc.PrintOutput(tc.trace_lines, tc.value_lines)
 
 class LongASANStackTests(unittest.TestCase):
@@ -542,4 +537,4 @@ class ValueLinesTest(unittest.TestCase):
     self.assertEqual([], tc.value_lines)
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(verbosity=2)
