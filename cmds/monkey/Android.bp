@@ -17,16 +17,9 @@ license {
     ],
 }
 
-java_library {
-    name: "monkeylib",
-    installable: true,
-    srcs: ["**/*.java"],
-    stem: "monkey",
-}
-
 //###############################################################
-cc_prebuilt_binary {
+java_binary {
     name: "monkey",
-    srcs: ["monkey"],
-    required: ["monkeylib"],
+    srcs: ["**/*.java"],
+    wrapper: "monkey",
 }
