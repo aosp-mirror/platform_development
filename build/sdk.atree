@@ -129,9 +129,7 @@ prebuilts/sdk/renderscript/lib/x86_64/librsrt_x86_64.bc     build-tools/${PLATFO
 bin/apksigner                                 build-tools/${PLATFORM_NAME}/apksigner
 framework/apksigner.jar                       build-tools/${PLATFORM_NAME}/lib/apksigner.jar
 
-# dx
-bin/dx                                        build-tools/${PLATFORM_NAME}/dx
-framework/dx.jar                              build-tools/${PLATFORM_NAME}/lib/dx.jar
+# dexdump
 bin/dexdump                                   build-tools/${PLATFORM_NAME}/dexdump
 
 # d8

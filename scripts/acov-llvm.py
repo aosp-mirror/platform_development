@@ -60,7 +60,7 @@ def android_build_top():
 
 
 def _get_clang_revision():
-    regex = r'ClangDefaultVersion\s+= "(?P<rev>clang-r\d+)"'
+    regex = r'ClangDefaultVersion\s+= "(?P<rev>clang-r\d+[a-z]?)"'
     global_go = android_build_top() / 'build/soong/cc/config/global.go'
     with open(global_go) as infile:
         match = re.search(regex, infile.read())
@@ -86,12 +86,47 @@ def check_output(cmd, *args, **kwargs):
 
 def adb_shell(cmd, *args, **kwargs):
     """call 'adb shell <cmd>' with logging."""
-    return check_output(['adb', 'shell'] + cmd)
+    return check_output(['adb', 'shell'] + cmd, *args, **kwargs)
+
+
+def send_flush_signal(pids=None):
+
+    def _has_handler_sig37(pid):
+        try:
+            status = adb_shell(['cat', f'/proc/{pid}/status'],
+                               text=True,
+                               stderr=subprocess.DEVNULL)
+        except subprocess.CalledProcessError:
+            logging.warning(f'Process {pid} is no longer active')
+            return False
+
+        status = status.split('\n')
+        sigcgt = [
+            line.split(':\t')[1] for line in status if line.startswith('SigCgt')
+        ]
+        if not sigcgt:
+            logging.warning(f'Cannot find \'SigCgt:\' in /proc/{pid}/status')
+            return False
+        return int(sigcgt[0], base=16) & (1 << 36)
+
+    if not pids:
+        output = adb_shell(['ps', '-eo', 'pid'], text=True)
+        pids = [pid.strip() for pid in output.split()]
+        pids = pids[1:]  # ignore the column header
+    pids = [pid for pid in pids if _has_handler_sig37(pid)]
+
+    if not pids:
+        logging.warning(
+            f'couldn\'t find any process with handler for signal 37')
+
+    adb_shell(['kill', '-37'] + pids)
 
 
 def do_clean_device(args):
+    adb_shell(['root'])
+
     logging.info('resetting coverage on device')
-    adb_shell(['kill', '-37', '-1'])
+    send_flush_signal()
 
     logging.info(
         f'sleeping for {FLUSH_SLEEP} seconds for coverage to be written')
@@ -102,16 +137,16 @@ def do_clean_device(args):
 
 
 def do_flush(args):
+    adb_shell(['root'])
+
     if args.procnames:
         pids = adb_shell(['pidof'] + args.procnames, text=True).split()
         logging.info(f'flushing coverage for pids: {pids}')
     else:
-        pids = ['-1']
+        pids = None
         logging.info('flushing coverage for all processes on device')
 
-    # TODO(pirama) Send signal 37 to only those processes that have a
-    # handler installed for it.  See b/149047976
-    adb_shell(['kill', '-37'] + pids)
+    send_flush_signal(pids)
 
     logging.info(
         f'sleeping for {FLUSH_SLEEP} seconds for coverage to be written')
@@ -119,6 +154,8 @@ def do_flush(args):
 
 
 def do_report(args):
+    adb_shell(['root'])
+
     temp_dir = tempfile.mkdtemp(
         prefix='covreport-', dir=os.environ.get('ANDROID_BUILD_TOP', None))
     logging.info(f'generating coverage report in {temp_dir}')
