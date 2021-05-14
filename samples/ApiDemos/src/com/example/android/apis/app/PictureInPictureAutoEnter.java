@@ -24,18 +24,14 @@ import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.Rational;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.CompoundButton;
+import android.widget.LinearLayout;
 import android.widget.Switch;
 
 import com.example.android.apis.R;
 
 public class PictureInPictureAutoEnter extends Activity {
-    // Fixed the aspect ratio value as it's been specified in the layout file.
-    // Defined the value here to avoid unnecessary onTaskInfoChanged callbacks to SysUI
-    // due to 1px difference when measuring aspect ratio from width and height in
-    // layout change listener.
-    private final Rational mAspectRatio = new Rational(16, 9);
-
     private final View.OnLayoutChangeListener mOnLayoutChangeListener =
             (v, oldLeft, oldTop, oldRight, oldBottom, newLeft, newTop, newRight, newBottom) -> {
                 updatePictureInPictureParams();
@@ -47,11 +43,11 @@ public class PictureInPictureAutoEnter extends Activity {
     private View mImageView;
     private View mButtonView;
     private Switch mSwitchView;
+    private int mLastOrientation = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getActionBar().hide();
         setContentView(R.layout.picture_in_picture_auto_enter);
 
         mImageView = findViewById(R.id.image);
@@ -73,16 +69,52 @@ public class PictureInPictureAutoEnter extends Activity {
         // therefore this demo activity can be used for testing autoEnterPip behavior without
         // source rect hint when launched for the first time.
         mSwitchView.setChecked(false);
+
+        updateLayout(getResources().getConfiguration());
     }
 
     @Override
-    public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode,
-            Configuration newConfig) {
-        mButtonView.setVisibility(isInPictureInPictureMode ? View.GONE : View.VISIBLE);
-        mSwitchView.setVisibility(isInPictureInPictureMode ? View.GONE: View.VISIBLE);
+    public void onConfigurationChanged(Configuration newConfiguration) {
+        super.onConfigurationChanged(newConfiguration);
+        if (!isInPictureInPictureMode()) {
+            updateLayout(newConfiguration);
+        }
+    }
+
+    private void updateLayout(Configuration configuration) {
+        if (configuration.orientation == mLastOrientation) return;
+        mLastOrientation = configuration.orientation;
+        final boolean isLandscape = (mLastOrientation == Configuration.ORIENTATION_LANDSCAPE);
+        mButtonView.setVisibility(isLandscape ? View.GONE : View.VISIBLE);
+        mSwitchView.setVisibility(isLandscape ? View.GONE: View.VISIBLE);
+        final LinearLayout.LayoutParams layoutParams;
+        // Toggle the fullscreen mode as well.
+        // TODO(b/188001699) switch to use insets controller once the bug is fixed.
+        final View decorView = getWindow().getDecorView();
+        final int systemUiNavigationBarFlags = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
+        if (isLandscape) {
+            layoutParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT);
+            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                    WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            decorView.setSystemUiVisibility(decorView.getSystemUiVisibility()
+                    | systemUiNavigationBarFlags);
+        } else {
+            layoutParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            decorView.setSystemUiVisibility(decorView.getSystemUiVisibility()
+                    & ~systemUiNavigationBarFlags);
+        }
+        mImageView.setLayoutParams(layoutParams);
     }
 
     private void updatePictureInPictureParams() {
+        // do not bother PictureInPictureParams update when it's already in pip mode.
+        if (isInPictureInPictureMode()) return;
         final Rect imageViewRect = new Rect();
         mImageView.getGlobalVisibleRect(imageViewRect);
         // bail early if mImageView has not been measured yet
@@ -90,7 +122,7 @@ public class PictureInPictureAutoEnter extends Activity {
         final Rect sourceRectHint = mSwitchView.isChecked() ? new Rect(imageViewRect) : null;
         final PictureInPictureParams.Builder builder = new PictureInPictureParams.Builder()
                 .setAutoEnterEnabled(true)
-                .setAspectRatio(mAspectRatio)
+                .setAspectRatio(new Rational(imageViewRect.width(), imageViewRect.height()))
                 .setSourceRectHint(sourceRectHint);
         setPictureInPictureParams(builder.build());
     }
