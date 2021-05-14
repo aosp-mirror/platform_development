@@ -15,37 +15,31 @@
 -->
 
 <!-- Demonstrates Picture-In-Picture with auto enter enabled. -->
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
+    <!-- layout params would be changed programmatically -->
     <ImageView android:id="@+id/image"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:scaleType="fitXY"
-        android:src="@drawable/sample_1"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintDimensionRatio="H,16:9" />
+        android:src="@drawable/sample_1" />
 
     <Switch android:id="@+id/source_rect_hint_toggle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
         android:padding="8dp"
-        android:text="@string/activity_picture_in_picture_source_rect_hint_toggle"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/change_orientation" />
+        android:text="@string/activity_picture_in_picture_source_rect_hint_toggle" />
 
     <Button android:id="@+id/change_orientation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
         android:padding="8dp"
-        android:text="@string/activity_picture_in_picture_change_orientation"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        android:text="@string/activity_picture_in_picture_change_orientation" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>
