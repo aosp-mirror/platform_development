@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (C) 202121 The Android Open Source Project
+# Copyright (C) 2021 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,11 +32,11 @@
 # or from all processes on the device:
 #   $ acov-llvm.py flush
 #
-# 4. pull coverage from device and generate coverage report
+# 4. Pull coverage from device and generate coverage report
 #   $ acov-llvm.py report -s <one-or-more-source-paths-in-$ANDROID_BUILD_TOP \
 #                         -b <one-or-more-binaries-in-$OUT> \
 # E.g.:
-# development/scripts/acov-llvm.py report \
+# acov-llvm.py report \
 #         -s bionic \
 #         -b \
 #         $OUT/symbols/apex/com.android.runtime/lib/bionic/libc.so \
@@ -84,9 +84,19 @@ def check_output(cmd, *args, **kwargs):
         cmd, *args, **kwargs, check=True, stdout=subprocess.PIPE).stdout
 
 
+def adb(cmd, *args, **kwargs):
+    """call 'adb <cmd>' with logging."""
+    return check_output(['adb'] + cmd, *args, **kwargs)
+
+
+def adb_root(*args, **kwargs):
+    """call 'adb root' with logging."""
+    return adb(['root'], *args, **kwargs)
+
+
 def adb_shell(cmd, *args, **kwargs):
     """call 'adb shell <cmd>' with logging."""
-    return check_output(['adb', 'shell'] + cmd, *args, **kwargs)
+    return adb(['shell'] + cmd, *args, **kwargs)
 
 
 def send_flush_signal(pids=None):
@@ -123,7 +133,7 @@ def send_flush_signal(pids=None):
 
 
 def do_clean_device(args):
-    adb_shell(['root'])
+    adb_root()
 
     logging.info('resetting coverage on device')
     send_flush_signal()
@@ -137,7 +147,7 @@ def do_clean_device(args):
 
 
 def do_flush(args):
-    adb_shell(['root'])
+    adb_root()
 
     if args.procnames:
         pids = adb_shell(['pidof'] + args.procnames, text=True).split()
@@ -154,7 +164,7 @@ def do_flush(args):
 
 
 def do_report(args):
-    adb_shell(['root'])
+    adb_root()
 
     temp_dir = tempfile.mkdtemp(
         prefix='covreport-', dir=os.environ.get('ANDROID_BUILD_TOP', None))
