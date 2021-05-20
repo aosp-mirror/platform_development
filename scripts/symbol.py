@@ -36,7 +36,7 @@ def FindSymbolsDir():
   stream = None
   try:
     cmd = "build/soong/soong_ui.bash --dumpvar-mode --abs TARGET_OUT_UNSTRIPPED"
-    stream = subprocess.Popen(cmd, stdout=subprocess.PIPE, encoding='utf8', shell=True).stdout
+    stream = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True, shell=True).stdout
     return str(stream.read().strip())
   finally:
     if stream is not None:
@@ -91,7 +91,7 @@ class ProcessCache:
     return pipe
 
   def SpawnProcess(self, cmd):
-     return subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, encoding='utf8')
+     return subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
 
   def TerminateProcess(self, pipe):
     pipe.stdin.close()
@@ -390,7 +390,7 @@ def CallObjdumpForSet(lib, unique_addrs):
   current_symbol_addr = 0  # The address of the current function.
   addr_index = 0  # The address that we are currently looking for.
 
-  stream = subprocess.Popen(cmd, stdout=subprocess.PIPE, encoding='utf8').stdout
+  stream = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True).stdout
   for line in stream:
     # Is it a function line like:
     #   000177b0 <android::IBinder::~IBinder()>:

@@ -56,8 +56,6 @@ template <typename T>
 class ELFSoFileParser : public SoFileParser {
  private:
   LLVM_ELF_IMPORT_TYPES_ELFT(T)
-  typedef llvm::object::ELFFile<T> ELFO;
-  typedef typename ELFO::Elf_Sym Elf_Sym;
 
  public:
   ELFSoFileParser(const llvm::object::ELFObjectFile<T> *obj);
@@ -91,8 +89,9 @@ ELFSoFileParser<T>::ELFSoFileParser(const llvm::object::ELFObjectFile<T> *obj) {
   exported_symbols_.reset(new ExportedSymbolSet());
 
   for (auto symbol_it : obj->getDynamicSymbolIterators()) {
-    const Elf_Sym *elf_sym = obj->getSymbol(symbol_it.getRawDataRefImpl());
-    assert (elf_sym != nullptr);
+    auto elf_sym_or_error = obj->getSymbol(symbol_it.getRawDataRefImpl());
+    assert (elf_sym_or_error);
+    const Elf_Sym *elf_sym = elf_sym_or_error.get();
     if (!IsSymbolExported(elf_sym) || elf_sym->isUndefined()) {
       continue;
     }
