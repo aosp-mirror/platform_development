@@ -24,6 +24,7 @@ import glob
 import os
 import platform
 import re
+import shutil
 import signal
 import subprocess
 import unittest
@@ -132,7 +133,9 @@ for sig in (signal.SIGABRT, signal.SIGINT, signal.SIGTERM):
 
 
 def ToolPath(tool, toolchain=None):
-  """Return a fully-qualified path to the specified tool"""
+  """Return a fully-qualified path to the specified tool, or just the tool if it's on PATH """
+  if shutil.which(tool) is not None:
+      return tool
   if not toolchain:
     toolchain = FindToolchain()
   return os.path.join(toolchain, tool)
@@ -431,14 +434,14 @@ def CallCppFilt(mangled_symbol):
   if mangled_symbol in _SYMBOL_DEMANGLING_CACHE:
     return _SYMBOL_DEMANGLING_CACHE[mangled_symbol]
 
-  # TODO: Replace with llvm-cxxfilt when available.
   global _CACHED_CXX_FILT
   if not _CACHED_CXX_FILT:
-    os_name = platform.system().lower()
-    toolchains = glob.glob("%s/prebuilts/gcc/%s-*/host/*-linux-*/bin/*c++filt" %
-                           (ANDROID_BUILD_TOP, os_name))
+    toolchains = None
+    # TODO(b/187231324) do not hard-code prebuilt version number below
+    if os.path.exists('./clang-r416183b/bin/llvm-cxxfilt'):
+      toolchains = ["./clang-r416183b/bin/llvm-cxxfilt"]
     if not toolchains:
-      raise Exception("Could not find gcc c++filt tool")
+      raise Exception("Could not find llvm-cxxfilt tool")
     _CACHED_CXX_FILT = sorted(toolchains)[-1]
 
   cmd = [_CACHED_CXX_FILT]

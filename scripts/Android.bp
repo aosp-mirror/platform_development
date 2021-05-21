@@ -51,8 +51,23 @@ python_test_host {
         "example_crashes.py",
         "stack_core.py",
     ],
+    data: [
+        ":llvm-tools",
+    ],
     libs: ["python-symbol"],
-    test_suites: ["general-tests"],
+    version: {
+        py2: {
+            enabled: false,
+            embedded_launcher: false,
+        },
+        py3: {
+            enabled: true,
+            embedded_launcher: false,
+        },
+    },
+    test_options: {
+        unit_test: true,
+    },
 }
 
 python_test_host {
