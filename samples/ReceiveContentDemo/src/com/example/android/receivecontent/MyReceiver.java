@@ -16,7 +16,6 @@
 
 package com.example.android.receivecontent;
 
-import android.content.ClipData;
 import android.content.ClipDescription;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -37,6 +36,8 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Sample {@link OnReceiveContentListener} implementation that accepts all URIs, and delegates
@@ -65,13 +66,7 @@ final class MyReceiver implements OnReceiveContentListener {
         ContentInfo uriContent = split.first;
         ContentInfo remaining = split.second;
         if (uriContent != null) {
-            ContentResolver contentResolver = view.getContext().getContentResolver();
-            ClipData clip = uriContent.getClip();
-            for (int i = 0; i < clip.getItemCount(); i++) {
-                Uri uri = clip.getItemAt(i).getUri();
-                String mimeType = contentResolver.getType(uri);
-                receive(view, uri, mimeType);
-            }
+            receive(view.getContext(), uriContent);
         }
         // Return anything that we didn't handle ourselves. This preserves the default platform
         // behavior for text and anything else for which we are not implementing custom handling.
@@ -82,34 +77,43 @@ final class MyReceiver implements OnReceiveContentListener {
      * Handles incoming content URIs. If the content is an image, stores it as an attachment in the
      * app's private storage. If the content is any other type, simply shows a toast with the type
      * of the content and its size in bytes.
+     *
+     * <p><strong>Important:</strong> It is significant that we pass along the {@code payload}
+     * object to the worker thread that will process the content, because URI permissions are tied
+     * to the payload object's lifecycle. If that object is not passed along, it could be garbage
+     * collected and permissions would be revoked prematurely (before we have a chance to process
+     * the content).
      */
-    private void receive(@NonNull View view, @NonNull Uri uri, @NonNull String mimeType) {
-        Log.i(Logcat.TAG, "Receiving " + mimeType + ": " + uri);
-        if (ClipDescription.compareMimeTypes(mimeType, "image/*")) {
-            createAttachment(uri, mimeType);
-        } else {
-            showMessage(view, uri, mimeType);
-        }
-    }
-
-    /**
-     * Reads the image at the given URI and writes it to private storage. Then shows the image in
-     * the UI by passing the URI pointing to the locally stored copy to the recycler view adapter.
-     */
-    private void createAttachment(@NonNull Uri uri, @NonNull String mimeType) {
-        ListenableFuture<Uri> addAttachmentFuture = MyExecutors.bg().submit(() ->
-                mAttachmentsRepo.write(uri)
-        );
-        Futures.addCallback(addAttachmentFuture, new FutureCallback<Uri>() {
+    private void receive(@NonNull Context context, @NonNull ContentInfo payload) {
+        Context applicationContext = context.getApplicationContext();
+        ContentResolver contentResolver = applicationContext.getContentResolver();
+        ListenableFuture<List<Uri>> addAttachmentsFuture = MyExecutors.bg().submit(() -> {
+            List<Uri> uris = Utils.collectUris(payload.getClip());
+            List<Uri> localUris = new ArrayList<>(uris.size());
+            for (Uri uri : uris) {
+                String mimeType = contentResolver.getType(uri);
+                Log.i(Logcat.TAG, "Processing " + mimeType + ": " + uri);
+                if (ClipDescription.compareMimeTypes(mimeType, "image/*")) {
+                    // Read the image at the given URI and write it to private storage.
+                    localUris.add(mAttachmentsRepo.write(uri));
+                } else {
+                    showMessage(applicationContext, uri, mimeType);
+                }
+            }
+            return localUris;
+        });
+        Futures.addCallback(addAttachmentsFuture, new FutureCallback<List<Uri>>() {
             @Override
-            public void onSuccess(Uri result) {
-                mAttachmentsRecyclerViewAdapter.addAttachment(result);
+            public void onSuccess(List<Uri> localUris) {
+                // Show the image in the UI by passing the URI pointing to the locally stored copy
+                // to the recycler view adapter.
+                mAttachmentsRecyclerViewAdapter.addAttachments(localUris);
                 mAttachmentsRecyclerViewAdapter.notifyDataSetChanged();
+                Log.i(Logcat.TAG, "Processed content: " + payload);
             }
             @Override
             public void onFailure(@NonNull Throwable t) {
-                Log.e(Logcat.TAG,
-                        "Error receiving content: uri=" + uri + ", mimeType" + mimeType, t);
+                Log.e(Logcat.TAG,"Error processing content: " + payload, t);
             }
         }, MyExecutors.main());
     }
@@ -118,8 +122,8 @@ final class MyReceiver implements OnReceiveContentListener {
      * Reads the size of the given content URI and shows a toast with the type of the content and
      * its size in bytes.
      */
-    private void showMessage(@NonNull View view, @NonNull Uri uri, @NonNull String mimeType) {
-        Context applicationContext = view.getContext().getApplicationContext();
+    private void showMessage(@NonNull Context applicationContext,
+            @NonNull Uri uri, @NonNull String mimeType) {
         MyExecutors.bg().execute(() -> {
             ContentResolver contentResolver = applicationContext.getContentResolver();
             long lengthBytes;
