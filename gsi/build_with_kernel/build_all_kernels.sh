@@ -22,8 +22,6 @@ MAKE_OPT=("$@")
 
 setup_dir
 
-#bld_mainline "${MAKE_OPT[@]}"
 bld_k510 "${MAKE_OPT[@]}"
-#bld_k54 "${MAKE_OPT[@]}"
 bld_k510_ko "${MAKE_OPT[@]}"
-chk_k510_ko "${MAKE_OPT[@]}"
+#chk_k510_ko "${MAKE_OPT[@]}"

@@ -55,24 +55,6 @@ function setup_dir()
     # touch "${WD}/kernel/Android.mk"
 }
 
-function bld_mainline()
-{
-    local make_opt=("$@")
-    pushd "${WD}/kernel"
-    DIST_DIR="${OUT_DIR}/android-mainline/dist" HERMETIC_TOOLCHAIN=0 BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh "${make_opt[@]}"
-    popd
-    repack "${OUT_DIR}/android-mainline/dist/Image" "${OUT_DIR}/target/kernel/mainline/arm64" mainline
-}
-
-function bld_k54()
-{
-    local make_opt=("$@")
-    pushd "${WD}/kernel"
-    DIST_DIR="${OUT_DIR}/android12-5.4/dist" HERMETIC_TOOLCHAIN=0 BUILD_CONFIG=common-5.4/build.config.gki.aarch64 build/build.sh "${make_opt[@]}"
-    popd
-    repack "${OUT_DIR}/android12-5.4/dist/Image" "${OUT_DIR}/target/kernel/5.4/arm64" 5.4
-}
-
 function bld_k510()
 {
     local make_opt=("$@")
@@ -103,6 +85,8 @@ function chk_k510_ko()
         mv "${COMMON_PLATFORM_SL}.ori" ${COMMON_PLATFORM_SL}
     fi
     cp ${COMMON_PLATFORM_SL} "${COMMON_PLATFORM_SL}.ori"
+    BUILD_CONFIG=common/build.config.gki.aarch64 build/build_abi.sh "${make_opt[@]}"
+    BUILD_CONFIG=${COMMON_PLATFORM_CONFIG} build/build_abi.sh "${make_opt[@]}"
     BUILD_CONFIG=${COMMON_PLATFORM_CONFIG} build/build_abi.sh --update-symbol-list "${make_opt[@]}"
     if ! diff ${COMMON_PLATFORM_SL} "${COMMON_PLATFORM_SL}.ori"; then
         echo "${COMMON_PLATFORM_SL} is out-of-sync"
