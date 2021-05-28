@@ -132,7 +132,7 @@ function bld_arm64()
     bld_k510 "${MAKE_OPT[@]}"
     repack "${OUT_DIR}/android12-5.10/dist/Image" "${OUT_DIR}/target/kernel/5.10/arm64" 5.10
     bld_k510_ko "${MAKE_OPT[@]}"
-    #chk_k510_ko "${MAKE_OPT[@]}"
+    chk_k510_ko "${MAKE_OPT[@]}"
 }
 
 function bld_x86_64()
