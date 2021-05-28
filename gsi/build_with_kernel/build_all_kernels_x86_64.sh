@@ -20,4 +20,4 @@ set -e
 
 MAKE_OPT=("$@")
 
-bld_arm64
+bld_x86_64
