@@ -183,11 +183,15 @@ def do_report(args):
     object_flags = [args.binary[0]] + ['--object=' + b for b in args.binary[1:]]
     source_dirs = ['/proc/self/cwd/' + s for s in args.source_dir]
 
+    output_dir = f'{temp_dir}/html'
+
     check_output([
         str(LLVM_COV_PATH), 'show', f'--instr-profile={profdata}',
-        '--format=html', f'--output-dir={temp_dir}/html',
+        '--format=html', f'--output-dir={output_dir}',
         '--show-region-summary=false'
     ] + object_flags + source_dirs)
+
+    print(f'Coverage report data written in {output_dir}')
 
 
 def parse_args():
