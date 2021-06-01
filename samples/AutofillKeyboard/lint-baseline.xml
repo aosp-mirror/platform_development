@@ -36,6 +36,28 @@
 
     <issue
         id="NewApi"
+        message="Call requires API level R (current min is 29): `newStylesBuilder`"
+        errorLine1="        StylesBuilder stylesBuilder = UiVersions.newStylesBuilder();"
+        errorLine2="                                                 ~~~~~~~~~~~~~~~~">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="229"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level R (current min is 29): `newStyleBuilder`"
+        errorLine1="        Style style = InlineSuggestionUi.newStyleBuilder()"
+        errorLine2="                                         ~~~~~~~~~~~~~~~">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="230"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="NewApi"
         message="Call requires API level R (current min is 29): `new android.widget.inline.InlinePresentationSpec.Builder`"
         errorLine1="        presentationSpecs.add(new InlinePresentationSpec.Builder(new Size(100, getHeight()),"
         errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
