@@ -57,6 +57,7 @@ import os.path
 import platform
 import re
 import shutil
+import subprocess
 import sys
 
 # Some Rust packages include extra unwanted crates.
@@ -1338,8 +1339,8 @@ class Runner(object):
           return self
         if self.args.verbose:
           print('### INFO: applying local patch file:', self.args.patch)
-        os.system('patch -s --no-backup-if-mismatch ./Android.bp ' +
-                  self.args.patch)
+        subprocess.run(['patch', '-s', '--no-backup-if-mismatch', './Android.bp',
+                        self.args.patch], check=True)
     return self
 
   def gen_bp(self):
