@@ -1280,7 +1280,10 @@ class Runner(object):
           print('Running:', cmd)
         with open(cargo_out, 'a') as out_file:
           out_file.write('### Running: ' + cmd + '\n')
-        os.system(cmd)
+        ret = os.system(cmd)
+        if ret != 0:
+          print('*** There was an error while running cargo.  ' +
+                'See the cargo.out file for details.')
     if added_workspace:  # restore original Cargo.toml
       with open(cargo_toml, 'w') as out_file:
         out_file.writelines(cargo_toml_lines)
