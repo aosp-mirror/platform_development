@@ -612,7 +612,9 @@ class Crate(object):
       return
     # Dump one test module per source file, and separate host and device tests.
     # crate_type == 'test'
-    if (self.host_supported and self.device_supported) or len(self.srcs) > 1:
+    self.srcs = [src for src in self.srcs if not src in self.runner.args.test_blocklist]
+    if ((self.host_supported and self.device_supported and len(self.srcs) > 0) or
+        len(self.srcs) > 1):
       self.srcs = sorted(set(self.srcs))
       self.dump_defaults_module()
     saved_srcs = self.srcs
@@ -1608,6 +1610,12 @@ def get_parser():
       nargs='*',
       default=[],
       help='Do not emit the given dependencies.')
+  parser.add_argument(
+      '--test-blocklist',
+      nargs='*',
+      default=[],
+      help=('Do not emit the given tests. ' +
+            'Pass the path to the test file to exclude.'))
   parser.add_argument(
       '--no-test-mapping',
       action='store_true',
