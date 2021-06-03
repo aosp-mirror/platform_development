@@ -822,6 +822,8 @@ class Crate(object):
         lib_name = groups.group(1)
       else:
         lib_name = re.sub(' .*$', '', lib)
+      if lib_name in self.runner.args.dependency_blocklist:
+        continue
       if lib.endswith('.rlib') or lib.endswith('.rmeta'):
         # On MacOS .rmeta is used when Linux uses .rlib or .rmeta.
         rust_libs += '        "' + altered_name('lib' + lib_name) + '",\n'
@@ -1601,6 +1603,11 @@ def get_parser():
       '--apex-available',
       nargs='*',
       help='Mark the main library as apex_available with the given apexes.')
+  parser.add_argument(
+      '--dependency-blocklist',
+      nargs='*',
+      default=[],
+      help='Do not emit the given dependencies.')
   parser.add_argument(
       '--no-test-mapping',
       action='store_true',
