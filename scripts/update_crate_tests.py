@@ -130,8 +130,11 @@ class TestMapping(object):
         self.env = Env(path)
         self.bazel = Bazel(self.env)
 
+    def is_setup(self):
+        return self.env.setup and self.bazel.setup
+
     def create_test_mapping(self, path):
-        if self.env.setup == False or self.bazel.setup == False:
+        if not self.is_setup():
             return
         tests = self.get_tests(path)
         if not bool(tests):
@@ -170,7 +173,10 @@ def main():
         path = sys.argv[1]
     else:
         path = None
-    TestMapping(path).create_test_mapping(None)
+    test_mapping = TestMapping(path)
+    test_mapping.create_test_mapping(None)
+    if not test_mapping.is_setup():
+        raise ValueError('Error getting crate tests.')
 
 if __name__ == '__main__':
   main()
