@@ -34,7 +34,7 @@ update_manifest () {
   "${FETCH_ARTIFACT}" --bid "${BUILD_ID}" --target "linux" \
     "manifest_${BUILD_ID}.xml"
   mv "manifest_${BUILD_ID}.xml" "manifest.xml"
-  rm .fetch*
+  rm .fetch* || true
 }
 
 
@@ -56,7 +56,8 @@ update_prebuilts () {
   "${FETCH_ARTIFACT}" --bid "${BUILD_ID}" --target "${target}" \
     "build-prebuilts.zip"
   unzip -o "build-prebuilts.zip"
-  rm "build-prebuilts.zip" .fetch*
+  rm "build-prebuilts.zip"
+  rm .fetch* || true
 
   find . | xargs touch
 }
