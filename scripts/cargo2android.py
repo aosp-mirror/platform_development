@@ -612,7 +612,9 @@ class Crate(object):
       return
     # Dump one test module per source file, and separate host and device tests.
     # crate_type == 'test'
-    if (self.host_supported and self.device_supported) or len(self.srcs) > 1:
+    self.srcs = [src for src in self.srcs if not src in self.runner.args.test_blocklist]
+    if ((self.host_supported and self.device_supported and len(self.srcs) > 0) or
+        len(self.srcs) > 1):
       self.srcs = sorted(set(self.srcs))
       self.dump_defaults_module()
     saved_srcs = self.srcs
@@ -822,6 +824,8 @@ class Crate(object):
         lib_name = groups.group(1)
       else:
         lib_name = re.sub(' .*$', '', lib)
+      if lib_name in self.runner.args.dependency_blocklist:
+        continue
       if lib.endswith('.rlib') or lib.endswith('.rmeta'):
         # On MacOS .rmeta is used when Linux uses .rlib or .rmeta.
         rust_libs += '        "' + altered_name('lib' + lib_name) + '",\n'
@@ -1601,6 +1605,17 @@ def get_parser():
       '--apex-available',
       nargs='*',
       help='Mark the main library as apex_available with the given apexes.')
+  parser.add_argument(
+      '--dependency-blocklist',
+      nargs='*',
+      default=[],
+      help='Do not emit the given dependencies.')
+  parser.add_argument(
+      '--test-blocklist',
+      nargs='*',
+      default=[],
+      help=('Do not emit the given tests. ' +
+            'Pass the path to the test file to exclude.'))
   parser.add_argument(
       '--no-test-mapping',
       action='store_true',
