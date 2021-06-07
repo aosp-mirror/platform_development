@@ -77,15 +77,14 @@ function bld_k510_ko()
     local common_platform_config=${COMMON_PLATFORM_CONFIG:="common-modules/virtual-device/build.config.virtual_device.aarch64"}
 
     pushd "${WD}/kernel"
-    BUILD_CONFIG=${build_config} build/build.sh "${make_opt[@]}"
-    BUILD_CONFIG=${common_platform_config} build/build.sh "${make_opt[@]}"
+    DIST_DIR="${OUT_DIR}/android12-5.10/dist" BUILD_CONFIG=${common_platform_config} build/build.sh "${make_opt[@]}"
     popd
 }
 
 function bld_k510_ko_x86_64()
 {
     BUILD_CONFIG=common/build.config.gki.x86_64 \
-    COMMON_PLATFORM_CONFIG=common-modules/virtual-device/build.config.cuttlefish.x86_64 \
+    COMMON_PLATFORM_CONFIG=common-modules/virtual-device/build.config.virtual_device.x86_64 \
         bld_k510_ko $@
 }
 
@@ -132,6 +131,7 @@ function bld_arm64()
     bld_k510 "${MAKE_OPT[@]}"
     repack "${OUT_DIR}/android12-5.10/dist/Image" "${OUT_DIR}/target/kernel/5.10/arm64" 5.10
     bld_k510_ko "${MAKE_OPT[@]}"
+    cp ${OUT_DIR}/android12-5.10/dist/*.ko ${OUT_DIR}/target/kernel/5.10/arm64/
     chk_k510_ko "${MAKE_OPT[@]}"
 }
 
@@ -139,6 +139,8 @@ function bld_x86_64()
 {
     setup_dir
     bld_k510_x86_64 "${MAKE_OPT[@]}"
-    cp "${OUT_DIR}/android12-5.10/dist/bzImage" "${OUT_DIR}/target/kernel/5.10/x86_64/"
+    mkdir -p "${OUT_DIR}/target/kernel/5.10/x86_64/"
+    cp "${OUT_DIR}/android12-5.10/dist/bzImage" "${OUT_DIR}/target/kernel/5.10/x86_64/kernel-5.10"
     bld_k510_ko_x86_64 "${MAKE_OPT[@]}"
+    cp ${OUT_DIR}/android12-5.10/dist/*.ko ${OUT_DIR}/target/kernel/5.10/x86_64/
 }
