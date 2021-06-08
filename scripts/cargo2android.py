@@ -676,7 +676,8 @@ class Crate(object):
     if self.edition:
       self.write('    edition: "' + self.edition + '",')
     self.dump_android_property_list('features', '"%s"', self.features)
-    self.dump_android_property_list('cfgs', '"%s"', self.cfgs)
+    cfgs = [cfg for cfg in self.cfgs if not cfg in self.runner.args.cfg_blocklist]
+    self.dump_android_property_list('cfgs', '"%s"', cfgs)
     self.dump_android_flags()
     if self.externs:
       self.dump_android_externs()
@@ -1616,6 +1617,11 @@ def get_parser():
       default=[],
       help=('Do not emit the given tests. ' +
             'Pass the path to the test file to exclude.'))
+  parser.add_argument(
+      '--cfg-blocklist',
+      nargs='*',
+      default=[],
+      help='Do not emit the given cfg.')
   parser.add_argument(
       '--no-test-mapping',
       action='store_true',
