@@ -1,8 +1,12 @@
 <template>
-  <div class="job-display">
-    <span>Status of Job.{{ job.id }}</span>
-    <h4>{{ job.status }}</h4>
-  </div>
+  <router-link
+    :to="{ name: 'JobDetails', params: {id: job.id} }"
+  >
+    <div class="job-display">
+      <span>Status of Job.{{ job.id }}</span>
+      <h4>{{ job.status }}</h4>
+    </div>
+  </router-link>
 </template>
 
 <script>
