@@ -1,7 +1,7 @@
 <template>
   <label class="file-select">
     <div class="select-button">
-      <span v-if="value">Selected File: {{ value.name }}</span>
+      <span v-if="label">{{ label }}</span>
       <span v-else>Select File</span>
     </div>
     <input
@@ -14,12 +14,14 @@
 <script>
 export default {
   props: {
-    value: File
+    label: {
+      type: String,
+      default: ''
+    }
   },
-
   methods: {
     handleFileChange(e) {
-      this.$emit('input', e.target.files[0])
+      this.$emit('file-select', e.target.files)
     }
   }
 }

@@ -1,23 +1,23 @@
 <template>
   <div v-if="job">
-    <h3> Job. {{ job.id }} {{ job.status }}</h3>
+    <h3>Job. {{ job.id }} {{ job.status }}</h3>
     <div>
-      <h4> STDERR </h4>
+      <h4>STDERR</h4>
       <div class="stderr">
         {{ job.stderr }}
+        <p ref="stderr_bottom" />
       </div>
-      <h4> STDOUT </h4>
+      <h4>STDOUT</h4>
       <div class="stdout">
         {{ job.stdout }}
+        <p ref="stdout_bottom" />
       </div>
     </div>
     <br>
     <a
-      v-if="job.status=='Finished'"
+      v-if="job.status == 'Finished'"
       :href="download"
-    >
-      Download
-    </a>
+    > Download </a>
   </div>
 </template>
 
@@ -32,33 +32,35 @@ export default {
   },
   computed: {
     download() {
-      return "http://localhost:8000/download/" + this.job.path
-    }
+      return 'http://localhost:8000/download/' + this.job.path
+    },
   },
   created() {
     this.updateStatus()
   },
   methods: {
     async updateStatus() {
-    // fetch job (by id) and set local job data
+      // fetch job (by id) and set local job data
       try {
         let response = await ApiService.getJobById(this.id)
         this.job = response.data
+        await this.$refs.stdout_bottom.scrollIntoView({ behavior: 'smooth' })
+        await this.$refs.stderr_bottom.scrollIntoView({ behavior: 'smooth' })
+      } catch (err) {
+        console.log(err)
       }
-      catch (err) {
-        console.log(error)
-      }
-      if (this.job.status=='Running') {
+      if (this.job.status == 'Running') {
         setTimeout(this.updateStatus, 1000)
       }
-    }
-  }
+    },
+  },
 }
 </script>
 
 <style scoped>
-.stderr, .stdout {
-  overflow: scroll;
-  height: 200px;
+.stderr,
+.stdout {
+	overflow: scroll;
+	height: 200px;
 }
 </style>
