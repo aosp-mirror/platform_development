@@ -1,20 +1,27 @@
 """
-A simple local HTTP server for Android OTA package generation.
-Based on OTA_from_target_files.
+A local HTTP server for Android OTA package generation.
+Based on OTA_from_target_files.py
 
 Usage::
   python ./web_server.py [<port>]
+
 API::
   GET /check : check the status of all jobs
-  [TODO] GET /check/id : check the status of the job with <id>
-  POST /run/id : submit a job with <id>,
+  GET /check/<id> : check the status of the job with <id>
+  GET /file : fetch the target file list
+  GET /download/<id> : download the ota package with <id>
+  POST /run/<id> : submit a job with <id>,
                  arguments set in a json uploaded together
-  [TODO] POST /cancel/id : cancel a job with <id>
+  POST /file/<filename> : upload a target file
+  [TODO] POST /cancel/<id> : cancel a job with <id>
+
+Other GET request will be redirected to the static request under 'dist' directory
 """
 
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, SimpleHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
 from threading import Lock
+from ota_interface import ProcessesManagement
 import logging
 import json
 import pipes
@@ -25,123 +32,114 @@ import os
 LOCAL_ADDRESS = '0.0.0.0'
 
 
-class ThreadSafeContainer:
-    def __init__(self):
-        self.__container = {}
-        self.__lock = Lock()
-
-    def set(self, name, value):
-        with self.__lock:
-            self.__container[name] = value
-
-    def get(self, name):
-        with self.__lock:
-            return self.__container[name]
-
-    def get_keys(self):
-        with self.__lock:
-            return self.__container.keys()
-
-
-class RequestHandler(BaseHTTPRequestHandler):
-    def get_status(self):
-        statusList = []
-        for id in PROCESSES.get_keys():
-            status = {}
-            status['id'] = id
-            if PROCESSES.get(id).poll() == None:
-                status['status'] = 'Running'
-            elif PROCESSES.get(id).poll() == 0:
-                status['status'] = 'Finished'
-            else:
-                status['status'] = 'Error'
-            statusList.append(json.dumps(status))
-        return '['+','.join(statusList)+']'
-
-    def ota_generate(self, args, id=0):
-        command = ['ota_from_target_files']
-        # Check essential configuration is properly set
-        if not os.path.isfile(args['target']):
-            raise FileNotFoundError
-        if not args['output']:
-            raise SyntaxError
-        if args['verbose']:
-            command.append('-v')
-        command.append('-k')
-        command.append(
-            '../../../build/make/target/product/security/testkey')
-        if args['incremental']:
-            command.append('-i')
-            command.append(args['incremental'])
-        command.append(args['target'])
-        command.append(args['output'])
-        stderr_pipes = pipes.Template()
-        stdout_pipes = pipes.Template()
-        ferr = stderr_pipes.open('stderr', 'w')
-        fout = stdout_pipes.open('stdout', 'w')
-        PROCESSES.set(id, subprocess.Popen(
-            command, stderr=ferr, stdout=fout))
-        logging.info(
-            'Starting generating OTA package with id {}: \n {}'
-            .format(id, command))
-
-    def _set_response(self, type='text/html'):
-        self.send_response(200)
-        self.send_header('Content-type', type)
+class CORSSimpleHTTPHandler(SimpleHTTPRequestHandler):
+    def end_headers(self):
         try:
             origin_address, _ = cgi.parse_header(self.headers['Origin'])
             self.send_header('Access-Control-Allow-Credentials', 'true')
             self.send_header('Access-Control-Allow-Origin', origin_address)
         except TypeError:
             pass
+        super().end_headers()
+
+
+class RequestHandler(CORSSimpleHTTPHandler):
+    def _set_response(self, code=200, type='text/html'):
+        self.send_response(code)
+        self.send_header('Content-type', type)
         self.end_headers()
 
     def do_OPTIONS(self):
         self.send_response(200)
-        self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
         self.send_header("Access-Control-Allow-Headers", "X-Requested-With")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
 
     def do_GET(self):
-        if str(self.path) == '/check':
-            status = self.get_status()
-            self._set_response('application/json')
-            self.wfile.write(
-                status.encode()
+        if self.path.startswith('/check'):
+            if self.path == '/check' or self.path == '/check/':
+                status = jobs.get_status()
+                self._set_response(type='application/json')
+                self.wfile.write(
+                    json.dumps(status).encode()
+                )
+            else:
+                id = self.path[7:]
+                status = jobs.get_status_by_ID(id=id, details=True)
+                self._set_response(type='application/json')
+                self.wfile.write(
+                    json.dumps(status).encode()
+                )
+            logging.info(
+                "GET request:\nPath:%s\nHeaders:\n%s\nBody:\n%s\n",
+                str(self.path), str(self.headers), status
             )
-        else:
-            self.send_error(404)
             return
-        logging.info(
-            "GET request:\nPath:%s\nHeaders:\n%s\nBody:\n%s\n",
-            str(self.path), str(self.headers), status
-        )
+        elif self.path.startswith('/file'):
+            file_list = jobs.get_list(self.path[6:])
+            self._set_response(type='application/json')
+            self.wfile.write(
+                json.dumps(file_list).encode()
+            )
+            logging.info(
+                "GET request:\nPath:%s\nHeaders:\n%s\nBody:\n%s\n",
+                str(self.path), str(self.headers), file_list
+            )
+            return
+        elif self.path.startswith('/download'):
+            self.path = self.path[10:]
+            return CORSSimpleHTTPHandler.do_GET(self)
+        else:
+            self.path = '/dist' + self.path
+            return CORSSimpleHTTPHandler.do_GET(self)
 
     def do_POST(self):
-        content_type, _ = cgi.parse_header(self.headers['content-type'])
-        if content_type != 'application/json':
-            self.send_response(400)
-            self.end_headers()
-            return
-        content_length = int(self.headers['Content-Length'])
-        post_data = json.loads(self.rfile.read(content_length))
-        if str(self.path)[:4] == '/run':
+        if self.path.startswith('/run'):
+            content_type, _ = cgi.parse_header(self.headers['content-type'])
+            if content_type != 'application/json':
+                self.send_response(400)
+                self.end_headers()
+                return
+            content_length = int(self.headers['Content-Length'])
+            post_data = json.loads(self.rfile.read(content_length))
             try:
-                self.ota_generate(post_data, id=str(self.path[5:]))
-                self._set_response()
+                jobs.ota_generate(post_data, id=str(self.path[5:]))
+                self._set_response(code=201)
                 self.wfile.write(
                     "ota generator start running".encode('utf-8'))
             except SyntaxError:
                 self.send_error(400)
+            logging.info(
+                "POST request:\nPath:%s\nHeaders:\n%s\nBody:\n%s\n",
+                str(self.path), str(self.headers),
+                json.dumps(post_data)
+            )
+        elif self.path.startswith('/file'):
+            file_name = os.path.join('target', self.path[6:])
+            file_length = int(self.headers['Content-Length'])
+            with open(file_name, 'wb') as output_file:
+                # Unwrap the uploaded file first (due to the usage of FormData)
+                # The wrapper has a boundary line at the top and bottom
+                # and some file information in the beginning
+                # There are a file content line, a file name line, and an empty line
+                # The boundary line in the bottom is 4 bytes longer than the top one
+                # Please refer to the following links for more details:
+                # https://stackoverflow.com/questions/8659808/how-does-http-file-upload-work
+                # https://datatracker.ietf.org/doc/html/rfc1867
+                upper_boundary = self.rfile.readline()
+                file_length -= len(upper_boundary) * 2 + 4
+                file_length -= len(self.rfile.readline())
+                file_length -= len(self.rfile.readline())
+                file_length -= len(self.rfile.readline())
+                output_file.write(self.rfile.read(file_length))
+            self._set_response(code=201)
+            self.wfile.write(
+                "File received, saved into {}".format(
+                    file_name).encode('utf-8')
+            )
         else:
             self.send_error(400)
-        logging.info(
-            "POST request:\nPath:%s\nHeaders:\n%s\nBody:\n%s\n",
-            str(self.path), str(self.headers),
-            json.dumps(post_data)
-        )
 
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
@@ -166,7 +164,7 @@ def run_server(SeverClass=ThreadedHTTPServer, HandlerClass=RequestHandler, port=
 if __name__ == '__main__':
     from sys import argv
     print(argv)
-    PROCESSES = ThreadSafeContainer()
+    jobs = ProcessesManagement()
     if len(argv) == 2:
         run_server(port=int(argv[1]))
     else:
