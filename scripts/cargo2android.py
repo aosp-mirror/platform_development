@@ -681,8 +681,10 @@ class Crate(object):
     self.dump_android_flags()
     if self.externs:
       self.dump_android_externs()
-    self.dump_android_property_list('static_libs', '"lib%s"', self.static_libs)
-    self.dump_android_property_list('shared_libs', '"lib%s"', self.shared_libs)
+    static_libs = [lib for lib in self.static_libs if not lib in self.runner.args.lib_blocklist]
+    self.dump_android_property_list('static_libs', '"lib%s"', static_libs)
+    shared_libs = [lib for lib in self.shared_libs if not lib in self.runner.args.lib_blocklist]
+    self.dump_android_property_list('shared_libs', '"lib%s"', shared_libs)
 
   def main_src_basename_path(self):
     return re.sub('/', '_', re.sub('.rs$', '', self.main_src))
@@ -704,6 +706,7 @@ class Crate(object):
   def decide_one_module_type(self, crate_type):
     """Decide which Android module type to use."""
     host = '' if self.device_supported else '_host'
+    rlib = '_rlib' if self.runner.args.force_rlib else ''
     if crate_type == 'bin':  # rust_binary[_host]
       self.module_type = 'rust_binary' + host
       # In rare cases like protobuf-codegen, the output binary name must
@@ -714,11 +717,11 @@ class Crate(object):
       # TODO(chh): should this be rust_library[_host]?
       # Assuming that Cargo.toml do not use both 'lib' and 'rlib',
       # because we map them both to rlib.
-      self.module_type = 'rust_library' + host
+      self.module_type = 'rust_library' + rlib + host
       self.stem = 'lib' + self.crate_name
       self.module_name = altered_name(self.stem)
     elif crate_type == 'rlib':  # rust_library[_host]
-      self.module_type = 'rust_library' + host
+      self.module_type = 'rust_library' + rlib + host
       self.stem = 'lib' + self.crate_name
       self.module_name = altered_name(self.stem)
     elif crate_type == 'dylib':  # rust_library[_host]_dylib
@@ -1607,10 +1610,20 @@ def get_parser():
       nargs='*',
       help='Mark the main library as apex_available with the given apexes.')
   parser.add_argument(
+      '--force-rlib',
+      action='store_true',
+      default=False,
+      help='Make the main library an rlib.')
+  parser.add_argument(
       '--dependency-blocklist',
       nargs='*',
       default=[],
       help='Do not emit the given dependencies.')
+  parser.add_argument(
+      '--lib-blocklist',
+      nargs='*',
+      default=[],
+      help='Do not emit the given C libraries as dependencies.')
   parser.add_argument(
       '--test-blocklist',
       nargs='*',
