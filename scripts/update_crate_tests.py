@@ -35,40 +35,45 @@ exclude_paths = [
         "//external/vm_tools"
     ]
 
+
+class UpdaterException(Exception):
+    pass
+
+
 class Env(object):
     def __init__(self, path):
         try:
             self.ANDROID_BUILD_TOP = os.environ['ANDROID_BUILD_TOP']
-        except:
-            sys.exit('ERROR: this script must be run from an Android tree.')
+        except KeyError:
+            raise UpdaterException('$ANDROID_BUILD_TOP is not defined; you '
+                                   'must first source build/envsetup.sh and '
+                                   'select a target.')
         if path == None:
             self.cwd = os.getcwd()
         else:
             self.cwd = path
         try:
             self.cwd_relative = self.cwd.split(self.ANDROID_BUILD_TOP)[1]
-            self.setup = True
-        except:
-            # Mark setup as failed if a path to a rust crate is not provided.
-            self.setup = False
+        except IndexError:
+            raise UpdaterException('The path ' + self.cwd + ' is not under ' +
+                            self.ANDROID_BUILD_TOP + '; You must be in the '
+                            'directory of a crate or pass its absolute path '
+                            'as first argument.')
+
 
 class Bazel(object):
     # set up the Bazel queryview
     def __init__(self, env):
         if platform.system() != 'Linux':
-            sys.exit('ERROR: this script has only been tested on Linux.')
+            raise UpdaterException('This script has only been tested on Linux.')
         self.path = os.path.join(env.ANDROID_BUILD_TOP, "tools", "bazel")
         os.chdir(env.ANDROID_BUILD_TOP)
         print("Building Bazel Queryview. This can take a couple of minutes...")
         cmd = "./build/soong/soong_ui.bash --build-mode --all-modules --dir=. queryview"
         try:
-            out = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
-            self.setup = True
+            subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
-            print("Error: Unable to update TEST_MAPPING due to the following build error:")
-            print(e.output)
-            # Mark setup as failed if the Bazel queryview fails to build.
-            self.setup = False
+            raise UpdaterException('Unable to update TEST_MAPPING: ' + e.output)
         os.chdir(env.cwd)
 
     # Return all modules for a given path.
@@ -125,12 +130,7 @@ class TestMapping(object):
         self.env = Env(path)
         self.bazel = Bazel(self.env)
 
-    def is_setup(self):
-        return self.env.setup and self.bazel.setup
-
     def create_test_mapping(self, path):
-        if not self.is_setup():
-            return
         tests = self.get_tests(path)
         if not bool(tests):
             return
@@ -168,10 +168,11 @@ def main():
         path = sys.argv[1]
     else:
         path = None
-    test_mapping = TestMapping(path)
+    try:
+        test_mapping = TestMapping(path)
+    except UpdaterException as err:
+        sys.exit("Error: " + str(err))
     test_mapping.create_test_mapping(None)
-    if not test_mapping.is_setup():
-        raise ValueError('Error getting crate tests.')
 
 if __name__ == '__main__':
   main()
