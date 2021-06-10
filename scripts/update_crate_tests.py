@@ -55,6 +55,9 @@ class Env(object):
 class Bazel(object):
     # set up the Bazel queryview
     def __init__(self, env):
+        if platform.system() != 'Linux':
+            sys.exit('ERROR: this script has only been tested on Linux.')
+        self.path = os.path.join(env.ANDROID_BUILD_TOP, "tools", "bazel")
         os.chdir(env.ANDROID_BUILD_TOP)
         print("Building Bazel Queryview. This can take a couple of minutes...")
         cmd = "./build/soong/soong_ui.bash --build-mode --all-modules --dir=. queryview"
@@ -68,15 +71,9 @@ class Bazel(object):
             self.setup = False
         os.chdir(env.cwd)
 
-    def path(self):
-        # Only tested on Linux.
-        if platform.system() != 'Linux':
-            sys.exit('ERROR: this script has only been tested on Linux.')
-        return "/usr/bin/bazel"
-
     # Return all modules for a given path.
     def query_modules(self, path):
-        cmd = self.path() + " query --config=queryview /" + path + ":all"
+        cmd = self.path + " query --config=queryview /" + path + ":all"
         out = subprocess.check_output(cmd, shell=True, stderr=subprocess.DEVNULL, text=True).strip().split("\n")
         modules = set()
         for line in out:
@@ -88,7 +85,7 @@ class Bazel(object):
 
     # Return all reverse dependencies for a single module.
     def query_rdeps(self, module):
-        cmd = (self.path() + " query --config=queryview \'rdeps(//..., " +
+        cmd = (self.path + " query --config=queryview \'rdeps(//..., " +
                 module + ")\' --output=label_kind")
         out = (subprocess.check_output(cmd, shell=True, stderr=subprocess.DEVNULL, text=True)
                 .strip().split("\n"))
