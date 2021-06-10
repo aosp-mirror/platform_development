@@ -41,24 +41,13 @@ class UpdaterException(Exception):
 
 
 class Env(object):
-    def __init__(self, path):
+    def __init__(self):
         try:
             self.ANDROID_BUILD_TOP = os.environ['ANDROID_BUILD_TOP']
         except KeyError:
             raise UpdaterException('$ANDROID_BUILD_TOP is not defined; you '
                                    'must first source build/envsetup.sh and '
                                    'select a target.')
-        if path == None:
-            self.cwd = os.getcwd()
-        else:
-            self.cwd = path
-        try:
-            self.cwd_relative = self.cwd.split(self.ANDROID_BUILD_TOP)[1]
-        except IndexError:
-            raise UpdaterException('The path ' + self.cwd + ' is not under ' +
-                            self.ANDROID_BUILD_TOP + '; You must be in the '
-                            'directory of a crate or pass its absolute path '
-                            'as first argument.')
 
 
 class Bazel(object):
@@ -68,6 +57,8 @@ class Bazel(object):
             raise UpdaterException('This script has only been tested on Linux.')
         self.path = os.path.join(env.ANDROID_BUILD_TOP, "tools", "bazel")
         soong_ui = os.path.join(env.ANDROID_BUILD_TOP, "build", "soong", "soong_ui.bash")
+
+        # soong_ui requires to be at the root of the repository.
         os.chdir(env.ANDROID_BUILD_TOP)
         print("Generating Bazel files...")
         cmd = [soong_ui, "--make-mode", "GENERATE_BAZEL_FILES=1", "nothing"]
@@ -82,7 +73,6 @@ class Bazel(object):
             subprocess.check_output(cmd, stderr=subprocess.STDOUT, text=True)
         except subprocess.CalledProcessError as e:
             raise UpdaterException('Unable to update TEST_MAPPING: ' + e.output)
-        os.chdir(env.cwd)
 
     # Return all modules for a given path.
     def query_modules(self, path):
@@ -125,8 +115,22 @@ class Bazel(object):
 
 
 class Package(object):
-    def __init__(self, path, bazel):
-        modules = bazel.query_modules(path)
+    def __init__(self, path, env, bazel):
+        if path == None:
+            self.dir = os.getcwd()
+        else:
+            self.dir = path
+        try:
+            self.dir_rel = self.dir.split(env.ANDROID_BUILD_TOP)[1]
+        except IndexError:
+            raise UpdaterException('The path ' + self.dir + ' is not under ' +
+                            env.ANDROID_BUILD_TOP + '; You must be in the '
+                            'directory of a crate or pass its absolute path '
+                            'as first argument.')
+
+        # Move to the package_directory.
+        os.chdir(self.dir)
+        modules = bazel.query_modules(self.dir_rel)
         self.rdep_tests = bazel.query_rdep_tests(modules)
 
     def get_rdep_tests(self):
@@ -135,11 +139,12 @@ class Package(object):
 
 class TestMapping(object):
     def __init__(self, path):
-        self.env = Env(path)
-        self.bazel = Bazel(self.env)
+        env = Env()
+        bazel = Bazel(env)
+        self.package = Package(path, env, bazel)
 
     def create(self):
-        tests = Package(self.env.cwd_relative, self.bazel).get_rdep_tests()
+        tests = self.package.get_rdep_tests()
         if not bool(tests):
             return
         test_mapping = self.tests_to_mapping(tests)
@@ -163,6 +168,7 @@ class TestMapping(object):
             json.dump(test_mapping, json_file, indent=2, separators=(',', ': '), sort_keys=True)
             json_file.write("\n")
         print("TEST_MAPPING successfully updated!")
+
 
 def main():
     if len(sys.argv) == 2:
