@@ -76,27 +76,25 @@ class Bazel(object):
 
     # Return all modules for a given path.
     def query_modules(self, path):
-        with open(os.devnull, 'wb') as DEVNULL:
-            cmd = self.path() + " query --config=queryview /" + path + ":all"
-            out = subprocess.check_output(cmd, shell=True, stderr=DEVNULL, text=True).strip().split("\n")
-            modules = set()
-            for line in out:
-                # speed up by excluding unused modules.
-                if "windows_x86" in line:
-                    continue
-                modules.add(line)
-            return modules
+        cmd = self.path() + " query --config=queryview /" + path + ":all"
+        out = subprocess.check_output(cmd, shell=True, stderr=subprocess.DEVNULL, text=True).strip().split("\n")
+        modules = set()
+        for line in out:
+            # speed up by excluding unused modules.
+            if "windows_x86" in line:
+                continue
+            modules.add(line)
+        return modules
 
     # Return all reverse dependencies for a single module.
     def query_rdeps(self, module):
-        with open(os.devnull, 'wb') as DEVNULL:
-            cmd = (self.path() + " query --config=queryview \'rdeps(//..., " +
-                    module + ")\' --output=label_kind")
-            out = (subprocess.check_output(cmd, shell=True, stderr=DEVNULL, text=True)
-                    .strip().split("\n"))
-            if '' in out:
-                out.remove('')
-            return out
+        cmd = (self.path() + " query --config=queryview \'rdeps(//..., " +
+                module + ")\' --output=label_kind")
+        out = (subprocess.check_output(cmd, shell=True, stderr=subprocess.DEVNULL, text=True)
+                .strip().split("\n"))
+        if '' in out:
+            out.remove('')
+        return out
 
     def exclude_module(self, module):
         for path in exclude_paths:
