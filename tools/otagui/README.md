@@ -15,6 +15,13 @@ In this case we use `lunch 17` as an example (aosp-x86_64-cf), you can choose wh
 
 Then, in this directory, please use `npm build` to install the dependencies.
 
+Create a `target` directory to store the target files and a `output` directory
+to store the output files:
+```
+mkdir target
+mkdir output
+```
+
 Finally, run the python http-server and vue.js server:
 ```
 python3 web_server.py &

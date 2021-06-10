@@ -12,6 +12,7 @@
     "eslint-config-airbnb-base": "^14.2.1",
     "vue": "^3.0.0-0",
     "vue-router": "^4.0.0-0",
+    "vue-uuid": "^2.0.2",
     "vuex": "^4.0.0-0"
   },
   "devDependencies": {
