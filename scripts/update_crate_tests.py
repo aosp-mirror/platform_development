@@ -117,17 +117,17 @@ class Bazel(object):
         rdep_tests = set()
         for module in modules:
             for rdep in self.query_rdeps(module):
-                rule_type, tmp, mod = rdep.split(" ")
+                rule_type, _, mod = rdep.split(" ")
                 if rule_type == "rust_test_" or rule_type == "rust_test":
                     if self.exclude_module(mod) == False:
                         rdep_tests.add(mod.split(":")[1].split("--")[0])
         return rdep_tests
 
 
-class Crate(object):
+class Package(object):
     def __init__(self, path, bazel):
-        self.modules = bazel.query_modules(path)
-        self.rdep_tests = bazel.query_rdep_tests(self.modules)
+        modules = bazel.query_modules(path)
+        self.rdep_tests = bazel.query_rdep_tests(modules)
 
     def get_rdep_tests(self):
         return self.rdep_tests
@@ -138,19 +138,12 @@ class TestMapping(object):
         self.env = Env(path)
         self.bazel = Bazel(self.env)
 
-    def create_test_mapping(self, path):
-        tests = self.get_tests(path)
+    def create(self):
+        tests = Package(self.env.cwd_relative, self.bazel).get_rdep_tests()
         if not bool(tests):
             return
         test_mapping = self.tests_to_mapping(tests)
         self.write_test_mapping(test_mapping)
-
-    def get_tests(self, path):
-        # for each path collect local Rust modules.
-        if path is not None and path != "":
-            return Crate(self.env.cwd_relative + "/" + path, self.bazel).get_rdep_tests()
-        else:
-            return Crate(self.env.cwd_relative, self.bazel).get_rdep_tests()
 
     def tests_to_mapping(self, tests):
         test_mapping = {"presubmit": []}
@@ -180,7 +173,7 @@ def main():
         test_mapping = TestMapping(path)
     except UpdaterException as err:
         sys.exit("Error: " + str(err))
-    test_mapping.create_test_mapping(None)
+    test_mapping.create()
 
 if __name__ == '__main__':
   main()
