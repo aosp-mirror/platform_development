@@ -67,11 +67,19 @@ class Bazel(object):
         if platform.system() != 'Linux':
             raise UpdaterException('This script has only been tested on Linux.')
         self.path = os.path.join(env.ANDROID_BUILD_TOP, "tools", "bazel")
+        soong_ui = os.path.join(env.ANDROID_BUILD_TOP, "build", "soong", "soong_ui.bash")
         os.chdir(env.ANDROID_BUILD_TOP)
-        print("Building Bazel Queryview. This can take a couple of minutes...")
-        cmd = "./build/soong/soong_ui.bash --build-mode --all-modules --dir=. queryview"
+        print("Generating Bazel files...")
+        cmd = [soong_ui, "--make-mode", "GENERATE_BAZEL_FILES=1", "nothing"]
         try:
-            subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+            subprocess.check_output(cmd, stderr=subprocess.STDOUT, text=True)
+        except subprocess.CalledProcessError as e:
+            raise UpdaterException('Unable to generate bazel workspace: ' + e.output)
+
+        print("Building Bazel Queryview. This can take a couple of minutes...")
+        cmd = [soong_ui, "--build-mode", "--all-modules", "--dir=.", "queryview"]
+        try:
+            subprocess.check_output(cmd, stderr=subprocess.STDOUT, text=True)
         except subprocess.CalledProcessError as e:
             raise UpdaterException('Unable to update TEST_MAPPING: ' + e.output)
         os.chdir(env.cwd)
