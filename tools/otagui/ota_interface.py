@@ -49,14 +49,10 @@ class ProcessesManagement:
     def get_status(self):
         return [self.get_status_by_ID(id=id) for id in self.get_keys()]
 
-    def get_list(self, dir):
-        files = os.listdir(dir)
-        return files
-
     def ota_generate(self, args, id=0):
         command = ['ota_from_target_files']
         # Check essential configuration is properly set
-        if not os.path.isfile('target/' + args['target']):
+        if not os.path.isfile(args['target']):
             raise FileNotFoundError
         if not args['output']:
             raise SyntaxError
@@ -65,14 +61,17 @@ class ProcessesManagement:
         command.append('-k')
         command.append(
             '../../../build/make/target/product/security/testkey')
-        if args['incremental']:
-            if not os.path.isfile('target/' + args['incremental']):
+        if args['isIncremental']:
+            if not os.path.isfile(args['incremental']):
                 raise FileNotFoundError
             command.append('-i')
-            command.append('target/' + args['incremental'])
-        command.append('target/' + args['target'])
+            command.append(args['incremental'])
+        if args['isPartial']:
+            command.append('--partial')
+            command.append(args['partial'])
+        command.append(args['target'])
         command.append(args['output'])
-
+        # Start a subprocess and collect the output
         stderr_pipes = pipes.Template()
         stdout_pipes = pipes.Template()
         ferr = stderr_pipes.open(os.path.join(
