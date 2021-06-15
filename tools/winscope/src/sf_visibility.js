@@ -202,10 +202,13 @@ function get_visibility_reason(layer, includesCompositionState) {
   };
 }
 
-// Returns true if rectA overlaps rectB
-function overlaps(rectA, rectB) {
-  return rectA.left < rectB.right && rectA.right > rectB.left &&
-      rectA.top < rectB.bottom && rectA.bottom > rectA.top;
+// Returns true if outer rect overlaps inner rect
+function overlaps(outerLayer, innerLayer) {
+  const outer = screen_bounds(outerLayer);
+  const inner = screen_bounds(innerLayer);
+
+  return outer.left < inner.right && outer.right > inner.left &&
+      outer.top < inner.bottom && outer.bottom > inner.top;
 }
 
 // Returns true if outer rect contains inner rect
