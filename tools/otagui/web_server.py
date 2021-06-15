@@ -9,11 +9,16 @@ API::
   GET /check : check the status of all jobs
   GET /check/<id> : check the status of the job with <id>
   GET /file : fetch the target file list
+  GET /file/<path> : Add build file(s) in <path>, and return the target file list
   GET /download/<id> : download the ota package with <id>
   POST /run/<id> : submit a job with <id>,
                  arguments set in a json uploaded together
   POST /file/<filename> : upload a target file
   [TODO] POST /cancel/<id> : cancel a job with <id>
+
+TODO:
+  - Avoid unintentionally path leakage
+  - Avoid overwriting build when uploading build with same file name
 
 Other GET request will be redirected to the static request under 'dist' directory
 """
@@ -22,12 +27,14 @@ from http.server import BaseHTTPRequestHandler, SimpleHTTPRequestHandler, HTTPSe
 from socketserver import ThreadingMixIn
 from threading import Lock
 from ota_interface import ProcessesManagement
+from target_lib import TargetLib
 import logging
 import json
 import pipes
 import cgi
 import subprocess
 import os
+import sys
 
 LOCAL_ADDRESS = '0.0.0.0'
 
@@ -77,10 +84,14 @@ class RequestHandler(CORSSimpleHTTPHandler):
             )
             return
         elif self.path.startswith('/file'):
-            file_list = jobs.get_list(self.path[6:])
+            if self.path == '/file' or self.path == '/file/':
+                file_list = target_lib.get_builds()
+            else:
+                file_list = target_lib.new_build_from_dir(self.path[6:])
+            builds_info = [build.to_dict() for build in file_list]
             self._set_response(type='application/json')
             self.wfile.write(
-                json.dumps(file_list).encode()
+                json.dumps(builds_info).encode()
             )
             logging.info(
                 "GET request:\nPath:%s\nHeaders:\n%s\nBody:\n%s\n",
@@ -133,6 +144,7 @@ class RequestHandler(CORSSimpleHTTPHandler):
                 file_length -= len(self.rfile.readline())
                 file_length -= len(self.rfile.readline())
                 output_file.write(self.rfile.read(file_length))
+                target_lib.new_build(self.path[6:], file_name)
             self._set_response(code=201)
             self.wfile.write(
                 "File received, saved into {}".format(
@@ -164,8 +176,16 @@ def run_server(SeverClass=ThreadedHTTPServer, HandlerClass=RequestHandler, port=
 if __name__ == '__main__':
     from sys import argv
     print(argv)
+    if not os.path.isdir('target'):
+        os.mkdir('target', 755)
+    if not os.path.isdir('output'):
+        os.mkdir('output', 755)
+    target_lib = TargetLib()
     jobs = ProcessesManagement()
-    if len(argv) == 2:
-        run_server(port=int(argv[1]))
-    else:
-        run_server()
+    try:
+        if len(argv) == 2:
+            run_server(port=int(argv[1]))
+        else:
+            run_server()
+    except KeyboardInterrupt:
+        sys.exit(0)
