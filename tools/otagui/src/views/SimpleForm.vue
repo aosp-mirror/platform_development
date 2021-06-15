@@ -170,6 +170,7 @@ export default {
         this.response_message = response.data
         alert(this.response_message)
       } catch (err) {
+        alert('Job cannot be started properly, please check.')
         console.log(err)
       }
       this.resetInput()
