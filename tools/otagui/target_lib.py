@@ -68,6 +68,9 @@ class BuildInfo:
 
 
 class TargetLib:
+    """
+    A class that manages the builds in database.
+    """
     def __init__(self, path='ota_database.db'):
         """
         Create a build table if not existing
@@ -142,7 +145,7 @@ class TargetLib:
             FROM Builds""")
             return list(map(self.sql_to_buildinfo, cursor.fetchall()))
 
-    def get_builds_by_path(self, path):
+    def get_build_by_path(self, path):
         """
         Get a build in the database by its path
         Return:
@@ -153,6 +156,6 @@ class TargetLib:
             cursor = connect.cursor()
             cursor.execute("""
             SELECT FileName, Path, UploadTime, BuildID, BuildVersion, BuildFlavor, Partitions
-            WHERE Path==(?)
+            FROM Builds WHERE Path==(?)
             """, (path, ))
         return self.sql_to_buildinfo(cursor.fetchone())
