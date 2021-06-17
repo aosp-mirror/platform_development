@@ -298,6 +298,43 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.PictureInPictureAutoEnter"
+                  android:label="@string/activity_picture_in_picture_auto_enter"
+                  android:resizeableActivity="true"
+                  android:supportsPictureInPicture="true"
+                  android:theme="@style/Theme.NoActionBar"
+                  android:configChanges=
+                      "screenSize|smallestScreenSize|screenLayout|orientation">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.PictureInPictureSeamlessResize"
+                  android:label="@string/activity_picture_in_picture_seamless_resize"
+                  android:resizeableActivity="true"
+                  android:supportsPictureInPicture="true"
+                  android:configChanges=
+                      "screenSize|smallestScreenSize|screenLayout|orientation">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".app.PictureInPictureSourceRectHint"
+                  android:label="@string/activity_picture_in_picture_source_rect_hint"
+                  android:resizeableActivity="true"
+                  android:supportsPictureInPicture="true"
+                  android:configChanges=
+                      "screenSize|smallestScreenSize|screenLayout|orientation">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".app.MaxAspectRatio$Square"
                   android:label="@string/activity_max_aspect_ratio_square"
                   android:resizeableActivity="false"

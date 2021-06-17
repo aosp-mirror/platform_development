@@ -447,9 +447,9 @@ public class SnakeView extends TileView {
     }
 
     /**
-     * Figure out which way the snake is going, see if he's run into anything (the walls, himself,
-     * or an apple). If he's not going to die, we then add to the front and subtract from the rear
-     * in order to simulate motion. If we want to grow him, we don't subtract from the rear.
+     * Figure out which way the snake is going, see if they've run into anything (the walls, themself,
+     * or an apple). If they're not going to die, we then add to the front and subtract from the rear
+     * in order to simulate motion. If we want to grow them, we don't subtract from the rear.
      */
     private void updateSnake() {
         boolean growSnake = false;
