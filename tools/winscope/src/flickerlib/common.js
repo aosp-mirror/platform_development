@@ -24,8 +24,6 @@ const WindowManagerState = require('flicker').com.android.server.wm.traces.commo
 
 const Activity = require('flicker').com.android.server.wm.traces.common.
     windowmanager.windows.Activity;
-const ActivityTask = require('flicker').com.android.server.wm.traces.common.
-    windowmanager.windows.ActivityTask;
 const Configuration = require('flicker').com.android.server.wm.traces.common.
     windowmanager.windows.Configuration;
 const ConfigurationContainer = require('flicker').com.android.server.wm.traces.common.
@@ -38,6 +36,10 @@ const KeyguardControllerState = require('flicker').com.android.server.wm.traces.
     windowmanager.windows.KeyguardControllerState;
 const RootWindowContainer = require('flicker').com.android.server.wm.traces.common.
     windowmanager.windows.RootWindowContainer;
+const Task = require('flicker').com.android.server.wm.traces.common.
+    windowmanager.windows.Task;
+const TaskFragment = require('flicker').com.android.server.wm.traces.common.
+    windowmanager.windows.TaskFragment;
 const WindowConfiguration = require('flicker').com.android.server.wm.traces.common.
     windowmanager.windows.WindowConfiguration;
 const WindowContainer = require('flicker').com.android.server.wm.traces.common.
@@ -130,13 +132,14 @@ function toTransform(proto) {
 
 export {
     Activity,
-    ActivityTask,
     Configuration,
     ConfigurationContainer,
     DisplayArea,
     DisplayContent,
     KeyguardControllerState,
     RootWindowContainer,
+    Task,
+    TaskFragment,
     WindowConfiguration,
     WindowContainer,
     WindowState,

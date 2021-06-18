@@ -29,7 +29,8 @@ import {
 import Activity from "./Activity"
 import DisplayArea from "./DisplayArea"
 import DisplayContent from "./DisplayContent"
-import ActivityTask from "./ActivityTask"
+import Task from "./Task"
+import TaskFragment from "./TaskFragment"
 import WindowState from "./WindowState"
 import WindowToken from "./WindowToken"
 
@@ -70,7 +71,8 @@ WindowContainer.fromProto = function ({
 WindowContainer.childrenFromProto = function(proto, isActivityInTree: Boolean): WindowContainerChild {
     return DisplayContent.fromProto(proto.displayContent, isActivityInTree) ??
         DisplayArea.fromProto(proto.displayArea, isActivityInTree) ??
-        ActivityTask.fromProto(proto.task, isActivityInTree) ??
+        Task.fromProto(proto.task, isActivityInTree) ??
+        TaskFragment.fromProto(proto.taskFragment, isActivityInTree) ??
         Activity.fromProto(proto.activity) ??
         WindowToken.fromProto(proto.windowToken, isActivityInTree) ??
         WindowState.fromProto(proto.window, isActivityInTree) ??
