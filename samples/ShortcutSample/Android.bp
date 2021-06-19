@@ -1,0 +1,104 @@
+//
+// Copyright (C) 2016 The Android Open Source Project
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+package {
+    // See: http://go/android-license-faq
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+// For testing, we build multiple apk files with different versions.
+
+//============================================================================
+// Base version (10)
+//============================================================================
+
+android_test {
+    name: "ShortcutSample",
+    aaptflags: [
+        "--version-code",
+        "10",
+    ],
+    srcs: ["src/**/*.java"],
+    resource_dirs: ["res"],
+    static_libs: ["androidx.legacy_legacy-support-v4"],
+    sdk_version: "current",
+}
+
+//============================================================================
+// Version 11.
+//============================================================================
+
+android_test {
+    name: "ShortcutSample11",
+    aaptflags: [
+        "--version-code",
+        "11",
+    ],
+    srcs: ["src/**/*.java"],
+    resource_dirs: ["res"],
+    static_libs: ["androidx.legacy_legacy-support-v4"],
+    sdk_version: "current",
+}
+
+//============================================================================
+// Version 12.
+//============================================================================
+
+android_test {
+    name: "ShortcutSample12",
+    aaptflags: [
+        "--version-code",
+        "12",
+    ],
+    srcs: ["src/**/*.java"],
+    resource_dirs: ["res"],
+    static_libs: ["androidx.legacy_legacy-support-v4"],
+    sdk_version: "current",
+}
+
+//============================================================================
+// Version 11, backup disabled.
+//============================================================================
+
+android_test {
+    name: "ShortcutSample11nb",
+    aaptflags: [
+        "--version-code",
+        "11",
+    ],
+    manifest: "noback/AndroidManifest.xml",
+    srcs: ["src/**/*.java"],
+    resource_dirs: ["res"],
+    static_libs: ["androidx.legacy_legacy-support-v4"],
+    sdk_version: "current",
+}
+
+//============================================================================
+// Version 12, backup disabled.
+//============================================================================
+
+android_test {
+    name: "ShortcutSample12nb",
+    aaptflags: [
+        "--version-code",
+        "12",
+    ],
+    manifest: "noback/AndroidManifest.xml",
+    srcs: ["src/**/*.java"],
+    resource_dirs: ["res"],
+    static_libs: ["androidx.legacy_legacy-support-v4"],
+    sdk_version: "current",
+}

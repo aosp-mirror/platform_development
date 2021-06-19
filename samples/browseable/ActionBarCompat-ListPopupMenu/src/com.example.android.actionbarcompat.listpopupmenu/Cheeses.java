@@ -17,7 +17,7 @@
 package com.example.android.actionbarcompat.listpopupmenu;
 
 /**
- * Dummy data.
+ * Placeholder data.
  */
 public class Cheeses {
     public static final String[] CHEESES = {
