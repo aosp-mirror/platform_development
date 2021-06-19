@@ -362,10 +362,9 @@ bool JsonIRDumper::AddElfSymbolMessageIR(const ElfSymbolIR *elf_symbol_ir) {
 }
 
 static std::string DumpJson(const JsonObject &obj) {
-  std::ostringstream output_stream;
-  Json::StyledStreamWriter writer(/* indentation */ " ");
-  writer.write(output_stream, obj);
-  return output_stream.str();
+  Json::StreamWriterBuilder factory;
+  factory["indentation"] = " ";
+  return Json::writeString(factory, obj);
 }
 
 static void WriteTailTrimmedLinesToFile(const std::string &path,
