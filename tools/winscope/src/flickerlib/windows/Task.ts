@@ -16,28 +16,29 @@
 
 import { getPropertiesForDisplay, shortenName } from '../mixin'
 import { asRawTreeViewObject } from '../../utils/diff.js'
-import { ActivityTask, toRect } from "../common"
+import { Task, toRect } from "../common"
 import WindowContainer from "./WindowContainer"
 
-ActivityTask.fromProto = function (proto, isActivityInTree: Boolean): ActivityTask {
+Task.fromProto = function (proto, isActivityInTree: Boolean): Task {
     if (proto == null) {
         return null
     } else {
-        const children = proto.windowContainer.children.reverse()
+        const windowContainerProto = proto?.taskFragment.windowContainer ?? proto.windowContainer
+        const children = windowContainerProto.children.reverse()
             .filter(it => it != null)
             .map(it => WindowContainer.childrenFromProto(it, isActivityInTree))
-        const windowContainer = WindowContainer.fromProto({proto: proto.windowContainer,
+        const windowContainer = WindowContainer.fromProto({proto: windowContainerProto,
             children: children})
         if (windowContainer == null) {
             throw "Window container should not be null: " + JSON.stringify(proto)
         }
-        const entry = new ActivityTask(
-            proto.activityType,
+        const entry = new Task(
+            proto?.taskFragment.activityType ?? proto.activityType,
             proto.fillsParent,
             toRect(proto.bounds),
             proto.id,
             proto.rootTaskId,
-            proto.displayId,
+            proto.taskFragment.displayId,
             toRect(proto.lastNonFullscreenBounds),
             proto.realActivity,
             proto.origActivity,
@@ -47,8 +48,8 @@ ActivityTask.fromProto = function (proto, isActivityInTree: Boolean): ActivityTa
             proto.surfaceWidth,
             proto.surfaceHeight,
             proto.createdByOrganizer,
-            proto.minWidth,
-            proto.minHeight,
+            proto?.taskFragment.minWidth ?? proto.minWidth,
+            proto?.taskFragment.minHeight ?? proto.minHeight,
             windowContainer
         )
 
@@ -62,4 +63,4 @@ ActivityTask.fromProto = function (proto, isActivityInTree: Boolean): ActivityTa
     }
 }
 
-export default ActivityTask
+export default Task
