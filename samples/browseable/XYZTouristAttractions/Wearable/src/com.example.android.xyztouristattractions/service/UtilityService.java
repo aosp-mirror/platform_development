@@ -67,7 +67,7 @@ public class UtilityService extends IntentService {
     }
 
     /**
-     * Trigger a message that asks the master device to start an activity.
+     * Trigger a message that asks the manager device to start an activity.
      *
      * @param context the context
      * @param path the path that will be sent via the wearable message API

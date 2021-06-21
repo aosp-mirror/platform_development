@@ -25,21 +25,63 @@ import base64
 import json
 import os
 import sys
+import xml.dom.minidom
 
 try:
+    # PY3
+    from urllib.error import HTTPError
+    from urllib.parse import urlencode, urlparse
     from urllib.request import (
-        HTTPBasicAuthHandler, Request, build_opener)  # PY3
+        HTTPBasicAuthHandler, Request, build_opener
+    )
 except ImportError:
+    # PY2
+    from urllib import urlencode
     from urllib2 import (
-        HTTPBasicAuthHandler, Request, build_opener)  # PY2
+        HTTPBasicAuthHandler, HTTPError, Request, build_opener
+    )
+    from urlparse import urlparse
 
 try:
-    # pylint: disable=ungrouped-imports
-    from urllib.parse import urlencode, urlparse  # PY3
+    # PY3.5
+    from subprocess import PIPE, run
 except ImportError:
-    # pylint: disable=ungrouped-imports
-    from urllib import urlencode  # PY2
-    from urlparse import urlparse  # PY2
+    from subprocess import CalledProcessError, PIPE, Popen
+
+    class CompletedProcess(object):
+        """Process execution result returned by subprocess.run()."""
+        # pylint: disable=too-few-public-methods
+
+        def __init__(self, args, returncode, stdout, stderr):
+            self.args = args
+            self.returncode = returncode
+            self.stdout = stdout
+            self.stderr = stderr
+
+    def run(*args, **kwargs):
+        """Run a command with subprocess.Popen() and redirect input/output."""
+
+        check = kwargs.pop('check', False)
+
+        try:
+            stdin = kwargs.pop('input')
+            assert 'stdin' not in kwargs
+            kwargs['stdin'] = PIPE
+        except KeyError:
+            stdin = None
+
+        proc = Popen(*args, **kwargs)
+        try:
+            stdout, stderr = proc.communicate(stdin)
+        except:
+            proc.kill()
+            proc.wait()
+            raise
+        returncode = proc.wait()
+
+        if check and returncode:
+            raise CalledProcessError(returncode, args, stdout)
+        return CompletedProcess(args, returncode, stdout, stderr)
 
 
 def load_auth_credentials_from_file(cookie_file):
@@ -107,7 +149,15 @@ def create_url_opener_from_args(args):
 
 
 def _decode_xssi_json(data):
-    """Trim XSSI protector and decode JSON objects."""
+    """Trim XSSI protector and decode JSON objects.
+
+    Returns:
+        An object returned by json.loads().
+
+    Raises:
+        ValueError: If data doesn't start with a XSSI token.
+        json.JSONDecodeError: If data failed to decode.
+    """
 
     # Decode UTF-8
     data = data.decode('utf-8')
@@ -139,6 +189,14 @@ def query_change_lists(url_opener, gerrit, query_string, limits):
 
 
 def _make_json_post_request(url_opener, url, data, method='POST'):
+    """Open an URL request and decode its response.
+
+    Returns a 3-tuple of (code, body, json).
+        code: A numerical value, the HTTP status code of the response.
+        body: A bytes, the response body.
+        json: An object, the parsed JSON response.
+    """
+
     data = json.dumps(data).encode('utf-8')
     headers = {
         'Content-Type': 'application/json; charset=UTF-8',
@@ -146,13 +204,22 @@ def _make_json_post_request(url_opener, url, data, method='POST'):
 
     request = Request(url, data, headers)
     request.get_method = lambda: method
-    response_file = url_opener.open(request)
+
     try:
+        response_file = url_opener.open(request)
+    except HTTPError as error:
+        response_file = error
+
+    with response_file:
         res_code = response_file.getcode()
-        res_json = _decode_xssi_json(response_file.read())
-        return (res_code, res_json)
-    finally:
-        response_file.close()
+        res_body = response_file.read()
+        try:
+            res_json = _decode_xssi_json(res_body)
+        except ValueError:
+            # The response isn't JSON if it doesn't start with a XSSI token.
+            # Possibly a plain text error message or empty body.
+            res_json = None
+        return (res_code, res_body, res_json)
 
 
 def set_review(url_opener, gerrit_url, change_id, labels, message):
@@ -170,6 +237,14 @@ def set_review(url_opener, gerrit_url, change_id, labels, message):
     return _make_json_post_request(url_opener, url, data)
 
 
+def submit(url_opener, gerrit_url, change_id):
+    """Submit a change list."""
+
+    url = '{}/a/changes/{}/submit'.format(gerrit_url, change_id)
+
+    return _make_json_post_request(url_opener, url, {})
+
+
 def abandon(url_opener, gerrit_url, change_id, message):
     """Abandon a change list."""
 
@@ -180,6 +255,14 @@ def abandon(url_opener, gerrit_url, change_id, message):
         data['message'] = message
 
     return _make_json_post_request(url_opener, url, data)
+
+
+def restore(url_opener, gerrit_url, change_id):
+    """Restore a change list."""
+
+    url = '{}/a/changes/{}/restore'.format(gerrit_url, change_id)
+
+    return _make_json_post_request(url_opener, url, {})
 
 
 def set_topic(url_opener, gerrit_url, change_id, name):
@@ -194,13 +277,8 @@ def delete_topic(url_opener, gerrit_url, change_id):
     """Delete the topic name."""
 
     url = '{}/a/changes/{}/topic'.format(gerrit_url, change_id)
-    request = Request(url)
-    request.get_method = lambda: 'DELETE'
-    response_file = url_opener.open(request)
-    try:
-        return (response_file.getcode(), response_file.read())
-    finally:
-        response_file.close()
+
+    return _make_json_post_request(url_opener, url, {}, method='DELETE')
 
 
 def set_hashtags(url_opener, gerrit_url, change_id, add_tags=None,
@@ -218,6 +296,28 @@ def set_hashtags(url_opener, gerrit_url, change_id, add_tags=None,
     return _make_json_post_request(url_opener, url, data)
 
 
+def add_reviewers(url_opener, gerrit_url, change_id, reviewers):
+    """Add reviewers."""
+
+    url = '{}/a/changes/{}/revisions/current/review'.format(
+        gerrit_url, change_id)
+
+    data = {}
+    if reviewers:
+        data['reviewers'] = reviewers
+
+    return _make_json_post_request(url_opener, url, data)
+
+
+def delete_reviewer(url_opener, gerrit_url, change_id, name):
+    """Delete reviewer."""
+
+    url = '{}/a/changes/{}/reviewers/{}/delete'.format(
+        gerrit_url, change_id, name)
+
+    return _make_json_post_request(url_opener, url, {})
+
+
 def get_patch(url_opener, gerrit_url, change_id, revision_id='current'):
     """Download the patch file."""
 
@@ -230,14 +330,28 @@ def get_patch(url_opener, gerrit_url, change_id, revision_id='current'):
     finally:
         response_file.close()
 
+def find_gerrit_name():
+    """Find the gerrit instance specified in the default remote."""
+    manifest_cmd = ['repo', 'manifest']
+    raw_manifest_xml = run(manifest_cmd, stdout=PIPE, check=True).stdout
+
+    manifest_xml = xml.dom.minidom.parseString(raw_manifest_xml)
+    default_remote = manifest_xml.getElementsByTagName('default')[0]
+    default_remote_name = default_remote.getAttribute('remote')
+    for remote in manifest_xml.getElementsByTagName('remote'):
+        name = remote.getAttribute('name')
+        review = remote.getAttribute('review')
+        if review and name == default_remote_name:
+            return review.rstrip('/')
+
+    raise ValueError('cannot find gerrit URL from manifest')
 
 def _parse_args():
     """Parse command line options."""
     parser = argparse.ArgumentParser()
 
     parser.add_argument('query', help='Change list query string')
-    parser.add_argument('-g', '--gerrit', required=True,
-                        help='Gerrit review URL')
+    parser.add_argument('-g', '--gerrit', help='Gerrit review URL')
 
     parser.add_argument('--gitcookies',
                         default=os.path.expanduser('~/.gitcookies'),
@@ -251,6 +365,14 @@ def _parse_args():
 def main():
     """Main function"""
     args = _parse_args()
+
+    if not args.gerrit:
+        try:
+            args.gerrit = find_gerrit_name()
+        # pylint: disable=bare-except
+        except:
+            print('gerrit instance not found, use [-g GERRIT]')
+            sys.exit(1)
 
     # Query change lists
     url_opener = create_url_opener_from_args(args)

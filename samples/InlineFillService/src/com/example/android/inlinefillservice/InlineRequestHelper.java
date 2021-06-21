@@ -79,7 +79,7 @@ public class InlineRequestHelper {
             InlineSuggestionsRequest inlineRequest, int drawable) {
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(context, 0, new Intent(context, SettingsActivity.class),
-                        PendingIntent.FLAG_UPDATE_CURRENT);
+                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE);
 
         Dataset.Builder builder =
                 new Dataset.Builder()
@@ -126,9 +126,8 @@ public class InlineRequestHelper {
         Intent intent = new Intent(context, AttributionDialogActivity.class);
         intent.putExtra(AttributionDialogActivity.KEY_MSG, msg);
         // Should use different request code to avoid the new intent overriding the old one.
-        PendingIntent pendingIntent =
-                PendingIntent.getActivity(
-                        context, msg.hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, msg.hashCode(), intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE);
         return pendingIntent;
     }
 
