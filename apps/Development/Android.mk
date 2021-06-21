@@ -5,10 +5,16 @@ LOCAL_MODULE_TAGS := optional
 
 LOCAL_JAVA_LIBRARIES := android.test.runner.stubs telephony-common org.apache.http.legacy
 
+LOCAL_USES_LIBRARIES := android.test.runner
+LOCAL_OPTIONAL_USES_LIBRARIES := org.apache.http.legacy android.test.base android.test.mock
+
 LOCAL_SRC_FILES := $(call all-subdir-java-files) \
                 src/com/android/development/IRemoteService.aidl \
 
 LOCAL_PACKAGE_NAME := Development
+LOCAL_LICENSE_KINDS := SPDX-license-identifier-Apache-2.0
+LOCAL_LICENSE_CONDITIONS := notice
+LOCAL_NOTICE_FILE  := $(LOCAL_PATH)/NOTICE
 LOCAL_PRIVATE_PLATFORM_APIS := true
 LOCAL_CERTIFICATE := platform
 

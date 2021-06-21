@@ -43,6 +43,7 @@ bin/mke2fs                              strip platform-tools/mke2fs
 bin/mke2fs.conf                         platform-tools/mke2fs.conf
 bin/e2fsdroid                           strip platform-tools/e2fsdroid
 bin/make_f2fs                           strip platform-tools/make_f2fs
+bin/make_f2fs_casefold                  strip platform-tools/make_f2fs_casefold
 bin/sload_f2fs                          strip platform-tools/sload_f2fs
 bin/sqlite3                             strip platform-tools/sqlite3
 bin/dmtracedump                         strip platform-tools/dmtracedump
@@ -128,13 +129,11 @@ prebuilts/sdk/renderscript/lib/x86_64/librsrt_x86_64.bc     build-tools/${PLATFO
 bin/apksigner                                 build-tools/${PLATFORM_NAME}/apksigner
 framework/apksigner.jar                       build-tools/${PLATFORM_NAME}/lib/apksigner.jar
 
-# dx
-bin/dx                                        build-tools/${PLATFORM_NAME}/dx
-framework/dx.jar                              build-tools/${PLATFORM_NAME}/lib/dx.jar
+# dexdump
 bin/dexdump                                   build-tools/${PLATFORM_NAME}/dexdump
 
 # d8
-prebuilts/r8/buildtools/d8-master.jar         build-tools/${PLATFORM_NAME}/lib/d8.jar
+prebuilts/r8/r8.jar                           build-tools/${PLATFORM_NAME}/lib/d8.jar
 prebuilts/r8/d8                               build-tools/${PLATFORM_NAME}/d8
 
 # multi-dex
@@ -176,6 +175,8 @@ ${OUT_DIR}/target/common/obj/JAVA_LIBRARIES/android.test.runner.stubs_intermedia
 
 # the aidl precompiled include
 ${OUT_DIR}/target/common/obj/PACKAGING/framework.aidl                                        platforms/${PLATFORM_NAME}/framework.aidl
+# the libbinder_ndk C++ library files associated with the AIDL compiler
+frameworks/native/libs/binder/ndk/include_cpp/                                               platforms/${PLATFORM_NAME}/optional/libbinder_ndk_cpp/
 
 # emulator skins from sdk.git
 development/tools/emulator/skins/QVGA          platforms/${PLATFORM_NAME}/skins/QVGA
