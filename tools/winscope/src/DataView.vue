@@ -13,68 +13,149 @@
      limitations under the License.
 -->
 <template>
-  <md-card v-if="file">
-    <md-card-header>
-      <md-card-header-text>
-        <div class="md-title">
-          <md-icon>{{file.type.icon}}</md-icon> {{file.filename}}
-        </div>
-      </md-card-header-text>
-      <md-button :href="file.blobUrl" :download="file.filename" class="md-icon-button">
-        <md-icon>save_alt</md-icon>
-      </md-button>
-    </md-card-header>
-    <traceview v-if="isTrace" :store="store" :file="file" ref="view" />
-    <videoview v-if="isVideo" :file="file" ref="view" />
-    <logview v-if="isLog" :file="file" ref="view" />
-    <div v-if="!(isTrace || isVideo || isLog)">
-      <h1 class="bad">Unrecognized DataType</h1>
-    </div>
-  </md-card>
+  <div @click="onClick($event)">
+    <flat-card v-if="hasDataView(file)">
+      <md-card-header>
+        <md-card-header-text>
+          <div class="md-title">
+            <md-icon>{{ TRACE_ICONS[file.type] }}</md-icon>
+            {{file.type}}
+          </div>
+        </md-card-header-text>
+        <md-button
+          :href="file.blobUrl"
+          :download="file.type"
+          class="md-icon-button"
+        >
+          <md-icon>save_alt</md-icon>
+        </md-button>
+      </md-card-header>
+
+      <WindowManagerTraceView
+        v-if="showInWindowManagerTraceView(file)"
+        :store="store"
+        :file="file"
+        ref="view"
+      />
+      <SurfaceFlingerTraceView
+        v-else-if="showInSurfaceFlingerTraceView(file)"
+        :store="store"
+        :file="file"
+        ref="view"
+      />
+      <transactionsview
+        v-else-if="isTransactions(file)"
+        :trace="file"
+        ref="view"
+      />
+      <logview
+        v-else-if="isLog(file)"
+        :file="file"
+        ref="view"
+      />
+      <traceview
+        v-else-if="showInTraceView(file)"
+        :store="store"
+        :file="file"
+        ref="view"
+      />
+      <div v-else>
+        <h1 class="bad">Unrecognized DataType</h1>
+      </div>
+
+    </flat-card>
+  </div>
 </template>
 <script>
-import TraceView from './TraceView.vue'
-import VideoView from './VideoView.vue'
-import LogView from './LogView.vue'
-import { DATA_TYPES } from './decode.js'
+import TraceView from '@/TraceView.vue';
+import WindowManagerTraceView from '@/WindowManagerTraceView.vue';
+import SurfaceFlingerTraceView from '@/SurfaceFlingerTraceView.vue';
+import TransactionsView from '@/TransactionsView.vue';
+import LogView from '@/LogView.vue';
+import FileType from '@/mixins/FileType.js';
+import FlatCard from '@/components/FlatCard.vue';
+
+import {TRACE_ICONS} from '@/decode.js';
 
 export default {
   name: 'dataview',
   data() {
-    return {}
+    return {
+      TRACE_ICONS,
+    };
   },
   methods: {
+    // Recursively search for an arrowUp method in the children
+    // This is necessary because the VueComponent hierarchy has
+    // different depths depending on the source
+    depthFirstSearchArrowUp(component) {
+      if (component.arrowUp) {
+        component.arrowUp();
+        return true;
+      } else {
+        for (let i = 0; i < component.$children.length; i++) {
+          var child = component.$children[i];
+          if (this.depthFirstSearchArrowUp(child)) {
+            return true;
+          }
+        }
+        return false;
+      }
+    },
+    // Recursively search for an arrowUp method in the children
+    // This is necessary because the VueComponent hierarchy has
+    // different depths depending on the source
+    depthFirstSearchArrowDown(component) {
+      if (component.arrowDown) {
+        component.arrowDown();
+        return true
+      } else {
+        for (let i = 0; i < component.$children.length; i++) {
+          var child = component.$children[i];
+          if (this.depthFirstSearchArrowDown(child)) {
+            return true;
+          }
+        }
+        return false;
+      }
+    },
     arrowUp() {
-      return this.$refs.view.arrowUp();
+      for (let i = 0; i < this.$children.length; i++) {
+        var child = this.$children[i];
+        let done = this.depthFirstSearchArrowUp(child);
+        if (done) {
+          return true;
+        }
+      }
+      return false;
     },
     arrowDown() {
-      return this.$refs.view.arrowDown();
+      for (let i = 0; i < this.$children.length; i++) {
+        var child = this.$children[i];
+        let done = this.depthFirstSearchArrowDown(child);
+        if (done) {
+          return true;
+        }
+      }
+      return false;
+    },
+    onClick(e) {
+      // Pass click event to parent, so that click event handler can be attached
+      // to component.
+      this.$emit('click', e);
     },
   },
   props: ['store', 'file'],
-  computed: {
-    isTrace() {
-      return this.file.type == DATA_TYPES.WINDOW_MANAGER ||
-          this.file.type == DATA_TYPES.SURFACE_FLINGER ||
-          this.file.type == DATA_TYPES.TRANSACTION ||
-          this.file.type == DATA_TYPES.WAYLAND ||
-          this.file.type == DATA_TYPES.SYSTEM_UI ||
-          this.file.type == DATA_TYPES.LAUNCHER
-    },
-    isVideo() {
-      return this.file.type == DATA_TYPES.SCREEN_RECORDING;
-    },
-    isLog() {
-      return this.file.type == DATA_TYPES.PROTO_LOG
-    }
-  },
+  mixins: [FileType],
   components: {
     'traceview': TraceView,
-    'videoview': VideoView,
+    'transactionsview': TransactionsView,
     'logview': LogView,
-  }
-}
-
+    'flat-card': FlatCard,
+    WindowManagerTraceView,
+    SurfaceFlingerTraceView,
+  },
+};
 </script>
 <style>
 .bad {
