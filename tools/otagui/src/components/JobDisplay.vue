@@ -1,26 +1,39 @@
 <template>
-  <router-link
-    :to="{ name: 'JobDetails', params: {id: job.id} }"
-  >
+  <router-link :to="{ name: 'JobDetails', params: { id: job.id } }">
     <div class="job-display">
       <span>Status of Job.{{ job.id }}</span>
       <h4>{{ job.status }}</h4>
+      <div v-show="active">
+        <JobConfiguration
+          :job="job"
+          :build-detail="false"
+        />
+      </div>
     </div>
   </router-link>
 </template>
 
 <script>
+import JobConfiguration from '../components/JobConfiguration.vue'
+
 export default {
+  components: {
+    JobConfiguration
+  },
   props: {
     job: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
+    active: {
+      type: Boolean,
+      default: false,
+    },
   }
 }
 </script>
 
-<style scoped>
+<style>
 .job-display {
   padding: 20px;
   width: 250px;

@@ -66,22 +66,19 @@ class RequestHandler(CORSSimpleHTTPHandler):
     def do_GET(self):
         if self.path.startswith('/check'):
             if self.path == '/check' or self.path == '/check/':
-                status = jobs.get_status()
+                statuses = jobs.get_status()
                 self._set_response(type='application/json')
                 self.wfile.write(
-                    json.dumps(status).encode()
+                    json.dumps([status.to_dict_basic()
+                               for status in statuses]).encode()
                 )
             else:
                 id = self.path[7:]
-                status = jobs.get_status_by_ID(id=id, details=True)
+                status = jobs.get_status_by_ID(id=id)
                 self._set_response(type='application/json')
                 self.wfile.write(
-                    json.dumps(status).encode()
+                    json.dumps(status.to_dict_detail(target_lib)).encode()
                 )
-            logging.info(
-                "GET request:\nPath:%s\nHeaders:\n%s\nBody:\n%s\n",
-                str(self.path), str(self.headers), status
-            )
             return
         elif self.path.startswith('/file'):
             if self.path == '/file' or self.path == '/file/':
