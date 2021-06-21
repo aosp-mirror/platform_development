@@ -15,7 +15,9 @@
 -->
 
 <autofill-service xmlns:android="http://schemas.android.com/apk/res/android"
-                  android:supportsInlineSuggestions="true">
+        android:supportsInlineSuggestions="true"
+        android:settingsActivity="com.example.android.inlinefillservice.SettingsActivity"
+        android:passwordsActivity="com.example.android.inlinefillservice.PasswordsActivity">
     <compatibility-package android:name="com.android.chrome" android:maxLongVersionCode="1000000000" />
     <compatibility-package android:name="com.chrome.beta" android:maxLongVersionCode="1000000000" />
 </autofill-service>

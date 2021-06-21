@@ -22,7 +22,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.android.helloactivity">
     <application android:label="Hello, Activity!">
-        <activity android:name="HelloActivity">
+        <activity android:name="HelloActivity"
+                android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

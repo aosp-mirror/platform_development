@@ -22,6 +22,8 @@ LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_PACKAGE_NAME := ShortcutLauncherDemo
+LOCAL_LICENSE_KINDS := SPDX-license-identifier-Apache-2.0
+LOCAL_LICENSE_CONDITIONS := notice
 
 LOCAL_MODULE_TAGS := samples tests
 
@@ -48,6 +50,8 @@ include $(BUILD_PACKAGE)
 include $(CLEAR_VARS)
 
 LOCAL_PACKAGE_NAME := ShortcutLauncherDemo2
+LOCAL_LICENSE_KINDS := SPDX-license-identifier-Apache-2.0
+LOCAL_LICENSE_CONDITIONS := notice
 
 LOCAL_MODULE_TAGS := samples tests
 

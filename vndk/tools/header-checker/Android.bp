@@ -14,6 +14,10 @@
 // limitations under the License.
 //
 
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
 cc_defaults {
     name: "header-checker-defaults",
 
@@ -110,6 +114,7 @@ cc_binary_host {
 
     srcs: [
         "src/linker/header_abi_linker.cpp",
+        "src/linker/module_merger.cpp",
     ],
 }
 
@@ -125,19 +130,6 @@ cc_binary_host {
         "src/diff/abi_diff.cpp",
         "src/diff/abi_diff_wrappers.cpp",
         "src/diff/header_abi_diff.cpp",
-    ],
-}
-
-cc_binary_host {
-    name: "merge-abi-diff",
-
-    defaults: [
-        "header-checker-defaults",
-        "header-abi-linker-defaults",
-    ],
-
-    srcs: [
-        "src/diff_merge/merge_abi_diff.cpp",
     ],
 }
 
@@ -200,6 +192,7 @@ cc_test_host {
         "src/repr/symbol/exported_symbol_set_test.cpp",
         "src/repr/symbol/version_script_parser_test.cpp",
         "src/utils/api_level_test.cpp",
+        "src/utils/collect_exported_headers_test.cpp",
         "src/utils/config_file_test.cpp",
         "src/utils/string_utils_test.cpp",
     ],
