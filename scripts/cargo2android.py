@@ -659,6 +659,9 @@ class Crate(object):
       self.write('    ],')
     if self.runner.args.min_sdk_version and crate_type == 'lib':
       self.write('    min_sdk_version: "%s",' % self.runner.args.min_sdk_version)
+    if self.runner.args.add_module_block:
+      with open(self.runner.args.add_module_block, 'r') as f:
+        self.write('    %s,' % f.read().replace('\n', '\n    '))
     self.write('}')
 
   def dump_android_flags(self):
@@ -1377,6 +1380,9 @@ class Runner(object):
             if lib_name not in dumped_libs:
               dumped_libs.add(lib_name)
               lib.dump()
+        if self.args.add_toplevel_block:
+          with open(self.args.add_toplevel_block, 'r') as f:
+            self.append_to_bp('\n' + f.read() + '\n')
         if self.args.dependencies and self.dependencies:
           self.dump_dependencies()
         if self.errors:
@@ -1635,6 +1641,14 @@ def get_parser():
       nargs='*',
       default=[],
       help='Do not emit the given cfg.')
+  parser.add_argument(
+      '--add-toplevel-block',
+      type=str,
+      help='Add the contents of the given file to the top level of the Android.bp.')
+  parser.add_argument(
+      '--add-module-block',
+      type=str,
+      help='Add the contents of the given file to the main module.')
   parser.add_argument(
       '--no-test-mapping',
       action='store_true',
