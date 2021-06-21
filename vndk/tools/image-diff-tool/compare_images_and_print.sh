@@ -41,26 +41,26 @@ readonly CHECK_DIFF_RESULT
 . build/envsetup.sh
 lunch aosp_arm64
 build/soong/soong_ui.bash --make-mode compare_images
-COMMON_WHITELIST=development/vndk/tools/image-diff-tool/whitelist.txt
-out/host/linux-x86/bin/compare_images $1 -u -w "${COMMON_WHITELIST}"
+COMMON_ALLOWLIST=development/vndk/tools/image-diff-tool/allowlist.txt
+out/host/linux-x86/bin/compare_images $1 -u -w "${COMMON_ALLOWLIST}"
 
 if [ -v DIST_DIR ]; then
-  cp common.csv diff.csv whitelisted_diff.csv "${DIST_DIR}"
+  cp common.csv diff.csv allowlisted_diff.csv "${DIST_DIR}"
 fi
 
 echo >&2
-echo >&2 " - Different parts (that are whitelisted)"
-cat >&2 whitelisted_diff.csv
+echo >&2 " - Different parts (that are allowlisted)"
+cat >&2 allowlisted_diff.csv
 echo >&2
-echo >&2 " - Different parts (that are not whitelisted)"
+echo >&2 " - Different parts (that are not allowlisted)"
 cat >&2 diff.csv
 
 if [ "$(wc -l diff.csv | cut -d' ' -f1)" -gt "1" ]; then
   cat >&2 <<EOF
 
 [ERROR] Unexpected diffing files.
-There are diffing files that are not ignored by whitelist.
-The whitelist may need to be updated.
+There are diffing files that are not ignored by allowlist.
+The allowlist may need to be updated.
 EOF
   if [ -n "${CHECK_DIFF_RESULT}" ]; then
     exit 1

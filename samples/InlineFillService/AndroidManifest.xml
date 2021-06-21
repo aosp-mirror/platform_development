@@ -5,6 +5,7 @@
         <service
             android:name=".InlineFillService"
             android:label="Inline Fill Service"
+            android:exported="true"
             android:permission="android.permission.BIND_AUTOFILL_SERVICE">
             <intent-filter>
                 <action android:name="android.service.autofill.AutofillService" />
@@ -23,6 +24,11 @@
         <activity
             android:name=".SettingsActivity"
             android:label="Autofill Settings"
+            android:exported="true"/>
+
+        <activity
+            android:name=".PasswordsActivity"
+            android:label="Saved Passwords"
             android:exported="true"/>
 
         <activity android:name=".AttributionDialogActivity"

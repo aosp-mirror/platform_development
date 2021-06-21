@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
@@ -82,6 +83,40 @@ public class WiFiDirectActivity extends Activity implements ChannelListener, Dev
         }
     }
 
+    private boolean initP2p() {
+        // Device capability definition check
+        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_WIFI_DIRECT)) {
+            Log.e(TAG, "Wi-Fi Direct is not supported by this device.");
+            return false;
+        }
+
+        // Hardware capability check
+        WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        if (wifiManager == null) {
+            Log.e(TAG, "Cannot get Wi-Fi system service.");
+            return false;
+        }
+
+        if (!wifiManager.isP2pSupported()) {
+            Log.e(TAG, "Wi-Fi Direct is not supported by the hardware or Wi-Fi is off.");
+            return false;
+        }
+
+        manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
+        if (manager == null) {
+            Log.e(TAG, "Cannot get Wi-Fi Direct system service.");
+            return false;
+        }
+
+        channel = manager.initialize(this, getMainLooper(), null);
+        if (channel == null) {
+            Log.e(TAG, "Cannot initialize Wi-Fi Direct.");
+            return false;
+        }
+
+        return true;
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -94,8 +129,9 @@ public class WiFiDirectActivity extends Activity implements ChannelListener, Dev
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
-        manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
-        channel = manager.initialize(this, getMainLooper(), null);
+        if (!initP2p()) {
+            finish();
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
                     && checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
