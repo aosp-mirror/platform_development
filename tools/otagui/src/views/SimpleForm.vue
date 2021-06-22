@@ -102,6 +102,7 @@ import FileSelect from '@/components/FileSelect.vue'
 import ApiService from '../services/ApiService.js'
 import UploadFile from '@/components/UploadFile.vue'
 import PartialCheckbox from '@/components/PartialCheckbox.vue'
+import FormDate from '../services/FormDate.js'
 import { uuid } from 'vue-uuid'
 
 export default {
@@ -111,6 +112,7 @@ export default {
     UploadFile,
     FileSelect,
     PartialCheckbox,
+    FormDate,
   },
   data() {
     return {
@@ -162,7 +164,8 @@ export default {
         partial: '',
         isPartial: false,
         extra: '',
-      }
+      },
+      this.partitionInclude = new Map()
     },
     async sendForm(e) {
       try {
@@ -189,20 +192,7 @@ export default {
       this.input.output += String(this.id) + '.zip'
     },
     formDate(unixTime) {
-      let formTime = new Date(unixTime * 1000)
-      let date =
-        formTime.getFullYear() +
-        '-' +
-        (formTime.getMonth() + 1) +
-        '-' +
-        formTime.getDate()
-      let time =
-        formTime.getHours() +
-        ':' +
-        formTime.getMinutes() +
-        ':' +
-        formTime.getSeconds()
-      return date + ' ' + time
+      return FormDate.formDate(unixTime)
     },
     selectTarget(path) {
       this.input.target = path
