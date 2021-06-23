@@ -12,6 +12,7 @@ from utils import run_header_abi_dumper
 from module import Module
 from test import INPUT_DIR
 from test import EXPECTED_DIR
+from test import EXPORTED_HEADER_DIRS
 from test import make_and_copy_reference_dumps
 
 FILE_EXTENSIONS = ['h', 'hpp', 'hxx', 'cpp', 'cc', 'c']
@@ -34,11 +35,10 @@ def main():
             output_path = os.path.join(EXPECTED_DIR, input_rel_path)
 
             print('generating', output_path, '...')
-            output_content = run_header_abi_dumper(input_path)
-
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            with open(output_path, 'w') as f:
-                f.write(output_content)
+            run_header_abi_dumper(input_path, output_path,
+                                  export_include_dirs=EXPORTED_HEADER_DIRS)
+
     modules = Module.get_test_modules()
     for module in modules:
         print('Created abi dump at', make_and_copy_reference_dumps(module))

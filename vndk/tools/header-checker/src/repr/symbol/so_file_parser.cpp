@@ -56,8 +56,6 @@ template <typename T>
 class ELFSoFileParser : public SoFileParser {
  private:
   LLVM_ELF_IMPORT_TYPES_ELFT(T)
-  typedef llvm::object::ELFFile<T> ELFO;
-  typedef typename ELFO::Elf_Sym Elf_Sym;
 
  public:
   ELFSoFileParser(const llvm::object::ELFObjectFile<T> *obj);
@@ -91,21 +89,29 @@ ELFSoFileParser<T>::ELFSoFileParser(const llvm::object::ELFObjectFile<T> *obj) {
   exported_symbols_.reset(new ExportedSymbolSet());
 
   for (auto symbol_it : obj->getDynamicSymbolIterators()) {
-    const Elf_Sym *elf_sym = obj->getSymbol(symbol_it.getRawDataRefImpl());
-    assert (elf_sym != nullptr);
+    auto elf_sym_or_error = obj->getSymbol(symbol_it.getRawDataRefImpl());
+    assert (elf_sym_or_error);
+    const Elf_Sym *elf_sym = elf_sym_or_error.get();
     if (!IsSymbolExported(elf_sym) || elf_sym->isUndefined()) {
       continue;
     }
 
     ElfSymbolIR::ElfSymbolBinding symbol_binding =
         LLVMToIRSymbolBinding(elf_sym->getBinding());
-    std::string symbol_name = UnWrap(symbol_it.getName());
+    std::string symbol_name(UnWrap(symbol_it.getName()));
 
-    llvm::object::SymbolRef::Type type = UnWrap(symbol_it.getType());
-    if (type == llvm::object::SymbolRef::Type::ST_Function) {
-      exported_symbols_->AddFunction(symbol_name, symbol_binding);
-    } else if (type == llvm::object::SymbolRef::Type::ST_Data) {
-      exported_symbols_->AddVar(symbol_name, symbol_binding);
+    switch (symbol_it.getELFType()) {
+      case llvm::ELF::STT_OBJECT:
+      case llvm::ELF::STT_COMMON:
+      case llvm::ELF::STT_TLS:
+        exported_symbols_->AddVar(symbol_name, symbol_binding);
+        break;
+      case llvm::ELF::STT_FUNC:
+      case llvm::ELF::STT_GNU_IFUNC:
+        exported_symbols_->AddFunction(symbol_name, symbol_binding);
+        break;
+      default:
+        break;
     }
   }
 }

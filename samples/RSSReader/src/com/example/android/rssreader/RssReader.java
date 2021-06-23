@@ -284,7 +284,7 @@ public class RssReader extends ListActivity {
             mAdapter.add(mItem);
         }
 
-        // NOTE: Performance idea -- would be more efficient to have he option
+        // NOTE: Performance idea -- would be more efficient to have the option
         // to add multiple items at once, so you get less "update storm" in the UI
         // compared to adding things one at a time.
     }

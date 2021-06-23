@@ -4,7 +4,7 @@ record_types {
     size: 8
     alignment: 4
     referenced_type: "_ZTI10HiddenBase"
-    source_file: "/development/vndk/tools/header-checker/tests/input/example3.h"
+    source_file: "development/vndk/tools/header-checker/tests/input/example3.h"
     linker_set_key: "_ZTI10HiddenBase"
     self_type: "_ZTI10HiddenBase"
   }

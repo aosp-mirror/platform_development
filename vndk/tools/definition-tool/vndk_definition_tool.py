@@ -1893,7 +1893,7 @@ class VNDKLibDir(list):
         if vendor_dirs:
             versions.update(collect_versions(vendor_dirs))
 
-        # Sanity check: Versions must not be 'sp' or start with 'sp-'.
+        # Validate: Versions must not be 'sp' or start with 'sp-'.
         bad_versions = [version for version in versions
                         if version == 'sp' or version.startswith('sp-')]
         if bad_versions:

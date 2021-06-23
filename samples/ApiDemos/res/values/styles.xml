@@ -129,4 +129,10 @@
 	<item name="android:windowAllowEnterTransitionOverlap">false</item>
     </style>
 
+    <!-- A theme without action bar -->
+    <style name="Theme.NoActionBar" parent="android:Theme.Material.Light">
+        <item name="windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
 </resources>

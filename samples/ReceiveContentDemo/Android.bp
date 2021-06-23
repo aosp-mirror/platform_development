@@ -1,0 +1,19 @@
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_app {
+    name: "ReceiveContentDemo",
+    srcs: ["src/**/*.java"],
+    static_libs: [
+        "guava",
+        "jsr305",
+        "androidx.appcompat_appcompat",
+        "androidx.recyclerview_recyclerview",
+        "com.google.android.material_material",
+    ],
+    sdk_version: "current",
+    dex_preopt: {
+        enabled: false,
+    },
+}

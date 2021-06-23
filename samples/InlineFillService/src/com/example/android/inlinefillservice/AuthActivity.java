@@ -114,6 +114,6 @@ public class AuthActivity extends Activity {
         }
 
         return PendingIntent.getActivity(context, ++sPendingIntentId, intent,
-                PendingIntent.FLAG_CANCEL_CURRENT).getIntentSender();
+                PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_MUTABLE).getIntentSender();
     }
 }
