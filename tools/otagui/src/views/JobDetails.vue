@@ -1,16 +1,26 @@
 <template>
   <div v-if="job">
     <h3>Job. {{ job.id }} {{ job.status }}</h3>
+    <JobConfiguration
+      :job="job"
+      :build-detail="true"
+    />
     <div>
       <h4>STDERR</h4>
-      <div class="stderr">
+      <div
+        ref="stderr"
+        class="stderr"
+      >
         {{ job.stderr }}
-        <p ref="stderr_bottom" />
+        <p ref="stderrBottom" />
       </div>
       <h4>STDOUT</h4>
-      <div class="stdout">
+      <div
+        ref="stdout"
+        class="stdout"
+      >
         {{ job.stdout }}
-        <p ref="stdout_bottom" />
+        <p ref="stdoutBottom" />
       </div>
     </div>
     <br>
@@ -22,9 +32,23 @@
 </template>
 
 <script>
+import { ref } from 'vue'
 import ApiService from '../services/ApiService.js'
+import JobConfiguration from '../components/JobConfiguration.vue'
+
 export default {
+  components: {
+    ApiService,
+    JobConfiguration,
+  },
   props: ['id'],
+  setup() {
+    const stderr = ref()
+    const stdout = ref()
+    const stderrBottom = ref()
+    const stdoutBottom = ref()
+    return { stderr, stdout, stderrBottom, stdoutBottom }
+  },
   data() {
     return {
       job: null,
@@ -32,7 +56,7 @@ export default {
   },
   computed: {
     download() {
-      return 'http://localhost:8000/download/' + this.job.path
+      return 'http://localhost:8000/download/' + this.job.output
     },
   },
   created() {
@@ -44,15 +68,27 @@ export default {
       try {
         let response = await ApiService.getJobById(this.id)
         this.job = response.data
-        await this.$refs.stdout_bottom.scrollIntoView({ behavior: 'smooth' })
-        await this.$refs.stderr_bottom.scrollIntoView({ behavior: 'smooth' })
+      } catch (err) {
+        console.log(err)
+      }
+      try {
+        await this.$nextTick(() => {
+          this.stderr.scrollTo({
+            top: this.stderrBottom.offsetTop,
+            behavior: 'smooth',
+          })
+          this.stdout.scrollTo({
+            top: this.stdoutBottom.offsetTop,
+            behavior: 'smooth',
+          })
+        })
       } catch (err) {
         console.log(err)
       }
       if (this.job.status == 'Running') {
         setTimeout(this.updateStatus, 1000)
       }
-    },
+    }
   },
 }
 </script>
@@ -60,7 +96,7 @@ export default {
 <style scoped>
 .stderr,
 .stdout {
-	overflow: scroll;
-	height: 200px;
+  overflow: scroll;
+  height: 200px;
 }
 </style>

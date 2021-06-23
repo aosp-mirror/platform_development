@@ -4,6 +4,9 @@
       v-for="job in jobs"
       :key="job.id"
       :job="job"
+      :active="overStatus.get(job.id)"
+      @mouseover="mouseOver(job.id, true)"
+      @mouseout="mouseOver(job.id, false)"
     />
     <button @click="updateStatus">
       Update
@@ -23,6 +26,7 @@ export default {
   data() {
     return {
       jobs: null,
+      overStatus: new Map()
     }
   },
   created (){
@@ -36,6 +40,9 @@ export default {
       } catch (err) {
         console.log(err);
       }
+    },
+    mouseOver(id, status) {
+      this.overStatus.set(id, status)
     }
   }
 }
