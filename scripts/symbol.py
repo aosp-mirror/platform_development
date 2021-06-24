@@ -438,8 +438,8 @@ def CallCppFilt(mangled_symbol):
   if not _CACHED_CXX_FILT:
     toolchains = None
     # TODO(b/187231324) do not hard-code prebuilt version number below
-    if os.path.exists('./clang-r416183b/bin/llvm-cxxfilt'):
-      toolchains = ["./clang-r416183b/bin/llvm-cxxfilt"]
+    if os.path.exists('./clang-r416183b1/bin/llvm-cxxfilt'):
+      toolchains = ["./clang-r416183b1/bin/llvm-cxxfilt"]
     if not toolchains:
       raise Exception("Could not find llvm-cxxfilt tool")
     _CACHED_CXX_FILT = sorted(toolchains)[-1]
