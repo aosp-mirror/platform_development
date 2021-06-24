@@ -51,11 +51,13 @@ from update_crate_tests import TestMapping
 
 import argparse
 import glob
+import json
 import os
 import os.path
 import platform
 import re
 import shutil
+import subprocess
 import sys
 
 # Some Rust packages include extra unwanted crates.
@@ -94,6 +96,9 @@ ANDROID_BP_HEADER = (
     '// Do not modify this file as changes will be overridden on upgrade.\n')
 
 CARGO_OUT = 'cargo.out'  # Name of file to keep cargo build -v output.
+
+# This should be kept in sync with tools/external_updater/crates_updater.py.
+ERRORS_LINE = 'Errors in ' + CARGO_OUT + ':'
 
 TARGET_TMP = 'target.tmp'  # Name of temporary output directory.
 
@@ -607,7 +612,9 @@ class Crate(object):
       return
     # Dump one test module per source file, and separate host and device tests.
     # crate_type == 'test'
-    if (self.host_supported and self.device_supported) or len(self.srcs) > 1:
+    self.srcs = [src for src in self.srcs if not src in self.runner.args.test_blocklist]
+    if ((self.host_supported and self.device_supported and len(self.srcs) > 0) or
+        len(self.srcs) > 1):
       self.srcs = sorted(set(self.srcs))
       self.dump_defaults_module()
     saved_srcs = self.srcs
@@ -645,18 +652,26 @@ class Crate(object):
       self.dump_edition_flags_libs()
     if self.runner.args.host_first_multilib and self.host_supported and crate_type != 'test':
       self.write('    compile_multilib: "first",')
+    if self.runner.args.apex_available and crate_type == 'lib':
+      self.write('    apex_available: [')
+      for apex in self.runner.args.apex_available:
+        self.write('        "%s",' % apex)
+      self.write('    ],')
+    if self.runner.args.min_sdk_version and crate_type == 'lib':
+      self.write('    min_sdk_version: "%s",' % self.runner.args.min_sdk_version)
+    if self.runner.args.add_module_block:
+      with open(self.runner.args.add_module_block, 'r') as f:
+        self.write('    %s,' % f.read().replace('\n', '\n    '))
     self.write('}')
 
   def dump_android_flags(self):
     """Dump Android module flags property."""
-    if not self.cfgs and not self.codegens and not self.cap_lints:
+    if not self.codegens and not self.cap_lints:
       return
     self.write('    flags: [')
     if self.cap_lints:
       self.write('        "--cap-lints ' + self.cap_lints + '",')
-    cfg_fmt = '"--cfg %s"'
     codegens_fmt = '"-C %s"'
-    self.dump_android_property_list_items(cfg_fmt, self.cfgs)
     self.dump_android_property_list_items(codegens_fmt, self.codegens)
     self.write('    ],')
 
@@ -664,11 +679,15 @@ class Crate(object):
     if self.edition:
       self.write('    edition: "' + self.edition + '",')
     self.dump_android_property_list('features', '"%s"', self.features)
+    cfgs = [cfg for cfg in self.cfgs if not cfg in self.runner.args.cfg_blocklist]
+    self.dump_android_property_list('cfgs', '"%s"', cfgs)
     self.dump_android_flags()
     if self.externs:
       self.dump_android_externs()
-    self.dump_android_property_list('static_libs', '"lib%s"', self.static_libs)
-    self.dump_android_property_list('shared_libs', '"lib%s"', self.shared_libs)
+    static_libs = [lib for lib in self.static_libs if not lib in self.runner.args.lib_blocklist]
+    self.dump_android_property_list('static_libs', '"lib%s"', static_libs)
+    shared_libs = [lib for lib in self.shared_libs if not lib in self.runner.args.lib_blocklist]
+    self.dump_android_property_list('shared_libs', '"lib%s"', shared_libs)
 
   def main_src_basename_path(self):
     return re.sub('/', '_', re.sub('.rs$', '', self.main_src))
@@ -690,6 +709,7 @@ class Crate(object):
   def decide_one_module_type(self, crate_type):
     """Decide which Android module type to use."""
     host = '' if self.device_supported else '_host'
+    rlib = '_rlib' if self.runner.args.force_rlib else ''
     if crate_type == 'bin':  # rust_binary[_host]
       self.module_type = 'rust_binary' + host
       # In rare cases like protobuf-codegen, the output binary name must
@@ -700,11 +720,11 @@ class Crate(object):
       # TODO(chh): should this be rust_library[_host]?
       # Assuming that Cargo.toml do not use both 'lib' and 'rlib',
       # because we map them both to rlib.
-      self.module_type = 'rust_library' + host
+      self.module_type = 'rust_library' + rlib + host
       self.stem = 'lib' + self.crate_name
       self.module_name = altered_name(self.stem)
     elif crate_type == 'rlib':  # rust_library[_host]
-      self.module_type = 'rust_library' + host
+      self.module_type = 'rust_library' + rlib + host
       self.stem = 'lib' + self.crate_name
       self.module_name = altered_name(self.stem)
     elif crate_type == 'dylib':  # rust_library[_host]_dylib
@@ -811,6 +831,8 @@ class Crate(object):
         lib_name = groups.group(1)
       else:
         lib_name = re.sub(' .*$', '', lib)
+      if lib_name in self.runner.args.dependency_blocklist:
+        continue
       if lib.endswith('.rlib') or lib.endswith('.rmeta'):
         # On MacOS .rmeta is used when Linux uses .rlib or .rmeta.
         rust_libs += '        "' + altered_name('lib' + lib_name) + '",\n'
@@ -1131,8 +1153,8 @@ class Runner(object):
       # Firstly skip ANDROID_BP_HEADER
       while line.startswith('//'):
         line = intf.readline()
-      # Read all lines until we see a rust_* rule.
-      while line != '' and not line.startswith('rust_'):
+      # Read all lines until we see a rust_* or genrule rule.
+      while line != '' and not (line.startswith('rust_') or line.startswith('genrule {')):
         license += line
         line = intf.readline()
     return license.strip()
@@ -1161,7 +1183,8 @@ class Runner(object):
       self.bp_files.add(name)
       license_section = self.read_license(name)
       with open(name, 'w') as outf:
-        outf.write(ANDROID_BP_HEADER.format(args=' '.join(sys.argv[1:])))
+        print_args = filter(lambda x: x != "--no-test-mapping", sys.argv[1:])
+        outf.write(ANDROID_BP_HEADER.format(args=' '.join(print_args)))
         outf.write('\n')
         outf.write(license_section)
         outf.write('\n')
@@ -1172,6 +1195,8 @@ class Runner(object):
     """Dump all TEST_MAPPING files."""
     if self.dry_run:
       print('Dry-run skip dump of TEST_MAPPING')
+    elif self.args.no_test_mapping:
+      print('Skipping generation of TEST_MAPPING')
     else:
       test_mapping = TestMapping(None)
       for bp_file_name in self.bp_files:
@@ -1267,7 +1292,10 @@ class Runner(object):
           print('Running:', cmd)
         with open(cargo_out, 'a') as out_file:
           out_file.write('### Running: ' + cmd + '\n')
-        os.system(cmd)
+        ret = os.system(cmd)
+        if ret != 0:
+          print('*** There was an error while running cargo.  ' +
+                'See the cargo.out file for details.')
     if added_workspace:  # restore original Cargo.toml
       with open(cargo_toml, 'w') as out_file:
         out_file.writelines(cargo_toml_lines)
@@ -1322,8 +1350,8 @@ class Runner(object):
           return self
         if self.args.verbose:
           print('### INFO: applying local patch file:', self.args.patch)
-        os.system('patch -s --no-backup-if-mismatch ./Android.bp ' +
-                  self.args.patch)
+        subprocess.run(['patch', '-s', '--no-backup-if-mismatch', './Android.bp',
+                        self.args.patch], check=True)
     return self
 
   def gen_bp(self):
@@ -1352,10 +1380,13 @@ class Runner(object):
             if lib_name not in dumped_libs:
               dumped_libs.add(lib_name)
               lib.dump()
+        if self.args.add_toplevel_block:
+          with open(self.args.add_toplevel_block, 'r') as f:
+            self.append_to_bp('\n' + f.read() + '\n')
         if self.args.dependencies and self.dependencies:
           self.dump_dependencies()
         if self.errors:
-          self.append_to_bp('\nErrors in ' + CARGO_OUT + ':\n' + self.errors)
+          self.append_to_bp('\n' + ERRORS_LINE + '\n' + self.errors)
     return self
 
   def add_ar_object(self, obj):
@@ -1470,7 +1501,7 @@ class Runner(object):
     self.find_warning_owners()
 
 
-def parse_args():
+def get_parser():
   """Parse main arguments."""
   parser = argparse.ArgumentParser('cargo2android')
   parser.add_argument(
@@ -1577,6 +1608,53 @@ def parse_args():
       help=('run cargo build with existing Cargo.lock ' +
             '(used when some latest dependent crates failed)'))
   parser.add_argument(
+      '--min-sdk-version',
+      type=str,
+      help='Minimum SDK version')
+  parser.add_argument(
+      '--apex-available',
+      nargs='*',
+      help='Mark the main library as apex_available with the given apexes.')
+  parser.add_argument(
+      '--force-rlib',
+      action='store_true',
+      default=False,
+      help='Make the main library an rlib.')
+  parser.add_argument(
+      '--dependency-blocklist',
+      nargs='*',
+      default=[],
+      help='Do not emit the given dependencies.')
+  parser.add_argument(
+      '--lib-blocklist',
+      nargs='*',
+      default=[],
+      help='Do not emit the given C libraries as dependencies.')
+  parser.add_argument(
+      '--test-blocklist',
+      nargs='*',
+      default=[],
+      help=('Do not emit the given tests. ' +
+            'Pass the path to the test file to exclude.'))
+  parser.add_argument(
+      '--cfg-blocklist',
+      nargs='*',
+      default=[],
+      help='Do not emit the given cfg.')
+  parser.add_argument(
+      '--add-toplevel-block',
+      type=str,
+      help='Add the contents of the given file to the top level of the Android.bp.')
+  parser.add_argument(
+      '--add-module-block',
+      type=str,
+      help='Add the contents of the given file to the main module.')
+  parser.add_argument(
+      '--no-test-mapping',
+      action='store_true',
+      default=False,
+      help='Do not generate a TEST_MAPPING file.  Use only to speed up debugging.')
+  parser.add_argument(
       '--verbose',
       action='store_true',
       default=False,
@@ -1586,14 +1664,56 @@ def parse_args():
       action='store_true',
       default=False,
       help='run cargo with -vv instead of default -v')
-  return parser.parse_args()
+  parser.add_argument(
+      '--dump-config-and-exit',
+      type=str,
+      help=('Dump command-line arguments (minus this flag) to a config file and exit. ' +
+            'This is intended to help migrate from command line options to config files.'))
+  parser.add_argument(
+      '--config',
+      type=str,
+      help=('Load command-line options from the given config file. ' +
+            'Options in this file will override those passed on the command line.'))
+  return parser
+
+
+def parse_args(parser):
+  """Parses command-line options."""
+  args = parser.parse_args()
+  # Use the values specified in a config file if one was found.
+  if args.config:
+    with open(args.config, 'r') as f:
+      config = json.load(f)
+      args_dict = vars(args)
+      for arg in config:
+        args_dict[arg.replace('-', '_')] = config[arg]
+  return args
+
+
+def dump_config(parser, args):
+  """Writes the non-default command-line options to the specified file."""
+  args_dict = vars(args)
+  # Filter out the arguments that have their default value.
+  # Also filter certain "temporary" arguments.
+  non_default_args = {}
+  for arg in args_dict:
+    if args_dict[arg] != parser.get_default(
+        arg) and arg != 'dump_config_and_exit' and arg != 'no_test_mapping':
+      non_default_args[arg.replace('_', '-')] = args_dict[arg]
+  # Write to the specified file.
+  with open(args.dump_config_and_exit, 'w') as f:
+    json.dump(non_default_args, f, indent=2, sort_keys=True)
 
 
 def main():
-  args = parse_args()
+  parser = get_parser()
+  args = parse_args(parser)
   if not args.run:  # default is dry-run
     print(DRY_RUN_NOTE)
-  Runner(args).run_cargo().gen_bp().apply_patch().dump_test_mapping_files()
+  if args.dump_config_and_exit:
+    dump_config(parser, args)
+  else:
+    Runner(args).run_cargo().gen_bp().apply_patch().dump_test_mapping_files()
 
 
 if __name__ == '__main__':
