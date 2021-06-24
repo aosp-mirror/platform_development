@@ -104,8 +104,6 @@ tools/apksig/etc/apksigner.bat                build-tools/${PLATFORM_NAME}/apksi
 rm build-tools/${PLATFORM_NAME}/zipalign
 bin/zipalign.exe                        strip build-tools/${PLATFORM_NAME}/zipalign.exe
 
-rm build-tools/${PLATFORM_NAME}/dx
-dalvik/dx/etc/dx.bat                          build-tools/${PLATFORM_NAME}/dx.bat
 rm build-tools/${PLATFORM_NAME}/dexdump
 bin/dexdump.exe                         strip build-tools/${PLATFORM_NAME}/dexdump.exe
 

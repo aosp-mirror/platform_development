@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 # Copyright (C) 2013 The Android Open Source Project
 #
@@ -24,16 +24,12 @@ import glob
 import os
 import platform
 import re
+import shutil
 import signal
 import subprocess
 import unittest
 
-try:
-  ANDROID_BUILD_TOP = str(os.environ["ANDROID_BUILD_TOP"])
-  if not ANDROID_BUILD_TOP:
-    ANDROID_BUILD_TOP = "."
-except:
-  ANDROID_BUILD_TOP = "."
+ANDROID_BUILD_TOP = os.environ.get("ANDROID_BUILD_TOP", ".")
 
 def FindSymbolsDir():
   saveddir = os.getcwd()
@@ -41,8 +37,8 @@ def FindSymbolsDir():
   stream = None
   try:
     cmd = "build/soong/soong_ui.bash --dumpvar-mode --abs TARGET_OUT_UNSTRIPPED"
-    stream = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True).stdout
-    return os.path.join(ANDROID_BUILD_TOP, str(stream.read().strip()))
+    stream = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True, shell=True).stdout
+    return str(stream.read().strip())
   finally:
     if stream is not None:
         stream.close()
@@ -96,7 +92,7 @@ class ProcessCache:
     return pipe
 
   def SpawnProcess(self, cmd):
-     return subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+     return subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
 
   def TerminateProcess(self, pipe):
     pipe.stdin.close()
@@ -137,7 +133,9 @@ for sig in (signal.SIGABRT, signal.SIGINT, signal.SIGTERM):
 
 
 def ToolPath(tool, toolchain=None):
-  """Return a fully-qualified path to the specified tool"""
+  """Return a fully-qualified path to the specified tool, or just the tool if it's on PATH """
+  if shutil.which(tool) is not None:
+      return tool
   if not toolchain:
     toolchain = FindToolchain()
   return os.path.join(toolchain, tool)
@@ -156,7 +154,7 @@ def FindToolchain():
 
   _CACHED_TOOLCHAIN = llvm_binutils_dir
   _CACHED_TOOLCHAIN_ARCH = ARCH
-  print("Using %s toolchain from: %s" % (_CACHED_TOOLCHAIN_ARCH, _CACHED_TOOLCHAIN))
+  print("Using", _CACHED_TOOLCHAIN_ARCH, "toolchain from:", _CACHED_TOOLCHAIN)
   return _CACHED_TOOLCHAIN
 
 
@@ -303,6 +301,7 @@ def CallLlvmSymbolizerForSet(lib, unique_addrs):
           # reading inlines from the output.
           # The blank line will cause llvm-symbolizer to emit a blank line.
           child.stdin.write("\n")
+          child.stdin.flush()
           first = False
     except IOError as e:
       # Remove the / in front of the library name to match other output.
@@ -394,7 +393,7 @@ def CallObjdumpForSet(lib, unique_addrs):
   current_symbol_addr = 0  # The address of the current function.
   addr_index = 0  # The address that we are currently looking for.
 
-  stream = subprocess.Popen(cmd, stdout=subprocess.PIPE).stdout
+  stream = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True).stdout
   for line in stream:
     # Is it a function line like:
     #   000177b0 <android::IBinder::~IBinder()>:
@@ -435,14 +434,14 @@ def CallCppFilt(mangled_symbol):
   if mangled_symbol in _SYMBOL_DEMANGLING_CACHE:
     return _SYMBOL_DEMANGLING_CACHE[mangled_symbol]
 
-  # TODO: Replace with llvm-cxxfilt when available.
   global _CACHED_CXX_FILT
   if not _CACHED_CXX_FILT:
-    os_name = platform.system().lower()
-    toolchains = glob.glob("%s/prebuilts/gcc/%s-*/host/*-linux-*/bin/*c++filt" %
-                           (ANDROID_BUILD_TOP, os_name))
+    toolchains = None
+    # TODO(b/187231324) do not hard-code prebuilt version number below
+    if os.path.exists('./clang-r416183b/bin/llvm-cxxfilt'):
+      toolchains = ["./clang-r416183b/bin/llvm-cxxfilt"]
     if not toolchains:
-      raise Exception("Could not find gcc c++filt tool")
+      raise Exception("Could not find llvm-cxxfilt tool")
     _CACHED_CXX_FILT = sorted(toolchains)[-1]
 
   cmd = [_CACHED_CXX_FILT]
