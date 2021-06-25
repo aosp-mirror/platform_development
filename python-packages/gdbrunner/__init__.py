@@ -197,7 +197,7 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
         gdbserver_output_path = os.path.join(tempfile.gettempdir(),
                                              "gdbclient.log")
         print("Redirecting gdbserver output to {}".format(gdbserver_output_path))
-    gdbserver_output = file(gdbserver_output_path, 'w')
+    gdbserver_output = open(gdbserver_output_path, 'w')
     return device.shell_popen(gdbserver_cmd, stdout=gdbserver_output,
                               stderr=gdbserver_output)
 
@@ -275,7 +275,7 @@ def find_file(device, executable_path, sysroot, run_as_cmd=None):
 
     for path, found_locally in generate_files():
         if os.path.isfile(path):
-            return (open(path, "r"), found_locally)
+            return (open(path, "rb"), found_locally)
     raise RuntimeError('Could not find executable {}'.format(executable_path))
 
 def find_executable_path(device, executable_name, run_as_cmd=None):
@@ -318,14 +318,14 @@ def get_binary_arch(binary_file):
         binary = binary_file.read(0x14)
     except IOError:
         raise RuntimeError("failed to read binary file")
-    ei_class = ord(binary[0x4]) # 1 = 32-bit, 2 = 64-bit
-    ei_data = ord(binary[0x5]) # Endianness
+    ei_class = binary[0x4] # 1 = 32-bit, 2 = 64-bit
+    ei_data = binary[0x5] # Endianness
 
     assert ei_class == 1 or ei_class == 2
     if ei_data != 1:
         raise RuntimeError("binary isn't little-endian?")
 
-    e_machine = ord(binary[0x13]) << 8 | ord(binary[0x12])
+    e_machine = binary[0x13] << 8 | binary[0x12]
     if e_machine == 0x28:
         assert ei_class == 1
         return "arm"
@@ -338,11 +338,6 @@ def get_binary_arch(binary_file):
     elif e_machine == 0x3E:
         assert ei_class == 2
         return "x86_64"
-    elif e_machine == 0x08:
-        if ei_class == 1:
-            return "mips"
-        else:
-            return "mips64"
     else:
         raise RuntimeError("unknown architecture: 0x{:x}".format(e_machine))
 
@@ -368,7 +363,7 @@ def start_gdb(gdb_path, gdb_commands, gdb_flags=None, lldb=False):
 
     # Windows disallows opening the file while it's open for writing.
     script_fd, script_path = tempfile.mkstemp()
-    os.write(script_fd, gdb_commands)
+    os.write(script_fd, gdb_commands.encode())
     os.close(script_fd)
     if lldb:
         script_parameter = "--source"
