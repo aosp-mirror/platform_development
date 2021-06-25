@@ -24,17 +24,6 @@ python_library_host {
 }
 
 python_test_host {
-    name: "python-native_heapdump_viewer_test",
-    main: "native_heapdump_viewer_tests.py",
-    srcs: [
-        "native_heapdump_viewer.py",
-        "native_heapdump_viewer_tests.py",
-    ],
-    test_config: "native_heapdump_viewer-tests.xml",
-    test_suites: ["general-tests"],
-}
-
-python_test_host {
     name: "python-symbol_test",
     main: "symbol.py",
     // Would be nice to use the library above, but as it's single-source
