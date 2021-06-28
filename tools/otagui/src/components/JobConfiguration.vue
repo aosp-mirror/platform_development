@@ -24,9 +24,6 @@
 import FormDate from '../services/FormDate.js'
 
 export default {
-  components: {
-    FormDate,
-  },
   props: {
     job: {
       type: Object,
