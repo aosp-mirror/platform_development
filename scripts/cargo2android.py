@@ -57,6 +57,7 @@ import os.path
 import platform
 import re
 import shutil
+import subprocess
 import sys
 
 # Some Rust packages include extra unwanted crates.
@@ -611,7 +612,9 @@ class Crate(object):
       return
     # Dump one test module per source file, and separate host and device tests.
     # crate_type == 'test'
-    if (self.host_supported and self.device_supported) or len(self.srcs) > 1:
+    self.srcs = [src for src in self.srcs if not src in self.runner.args.test_blocklist]
+    if ((self.host_supported and self.device_supported and len(self.srcs) > 0) or
+        len(self.srcs) > 1):
       self.srcs = sorted(set(self.srcs))
       self.dump_defaults_module()
     saved_srcs = self.srcs
@@ -656,6 +659,9 @@ class Crate(object):
       self.write('    ],')
     if self.runner.args.min_sdk_version and crate_type == 'lib':
       self.write('    min_sdk_version: "%s",' % self.runner.args.min_sdk_version)
+    if self.runner.args.add_module_block:
+      with open(self.runner.args.add_module_block, 'r') as f:
+        self.write('    %s,' % f.read().replace('\n', '\n    '))
     self.write('}')
 
   def dump_android_flags(self):
@@ -673,12 +679,15 @@ class Crate(object):
     if self.edition:
       self.write('    edition: "' + self.edition + '",')
     self.dump_android_property_list('features', '"%s"', self.features)
-    self.dump_android_property_list('cfgs', '"%s"', self.cfgs)
+    cfgs = [cfg for cfg in self.cfgs if not cfg in self.runner.args.cfg_blocklist]
+    self.dump_android_property_list('cfgs', '"%s"', cfgs)
     self.dump_android_flags()
     if self.externs:
       self.dump_android_externs()
-    self.dump_android_property_list('static_libs', '"lib%s"', self.static_libs)
-    self.dump_android_property_list('shared_libs', '"lib%s"', self.shared_libs)
+    static_libs = [lib for lib in self.static_libs if not lib in self.runner.args.lib_blocklist]
+    self.dump_android_property_list('static_libs', '"lib%s"', static_libs)
+    shared_libs = [lib for lib in self.shared_libs if not lib in self.runner.args.lib_blocklist]
+    self.dump_android_property_list('shared_libs', '"lib%s"', shared_libs)
 
   def main_src_basename_path(self):
     return re.sub('/', '_', re.sub('.rs$', '', self.main_src))
@@ -700,6 +709,7 @@ class Crate(object):
   def decide_one_module_type(self, crate_type):
     """Decide which Android module type to use."""
     host = '' if self.device_supported else '_host'
+    rlib = '_rlib' if self.runner.args.force_rlib else ''
     if crate_type == 'bin':  # rust_binary[_host]
       self.module_type = 'rust_binary' + host
       # In rare cases like protobuf-codegen, the output binary name must
@@ -710,11 +720,11 @@ class Crate(object):
       # TODO(chh): should this be rust_library[_host]?
       # Assuming that Cargo.toml do not use both 'lib' and 'rlib',
       # because we map them both to rlib.
-      self.module_type = 'rust_library' + host
+      self.module_type = 'rust_library' + rlib + host
       self.stem = 'lib' + self.crate_name
       self.module_name = altered_name(self.stem)
     elif crate_type == 'rlib':  # rust_library[_host]
-      self.module_type = 'rust_library' + host
+      self.module_type = 'rust_library' + rlib + host
       self.stem = 'lib' + self.crate_name
       self.module_name = altered_name(self.stem)
     elif crate_type == 'dylib':  # rust_library[_host]_dylib
@@ -821,6 +831,8 @@ class Crate(object):
         lib_name = groups.group(1)
       else:
         lib_name = re.sub(' .*$', '', lib)
+      if lib_name in self.runner.args.dependency_blocklist:
+        continue
       if lib.endswith('.rlib') or lib.endswith('.rmeta'):
         # On MacOS .rmeta is used when Linux uses .rlib or .rmeta.
         rust_libs += '        "' + altered_name('lib' + lib_name) + '",\n'
@@ -1338,8 +1350,8 @@ class Runner(object):
           return self
         if self.args.verbose:
           print('### INFO: applying local patch file:', self.args.patch)
-        os.system('patch -s --no-backup-if-mismatch ./Android.bp ' +
-                  self.args.patch)
+        subprocess.run(['patch', '-s', '--no-backup-if-mismatch', './Android.bp',
+                        self.args.patch], check=True)
     return self
 
   def gen_bp(self):
@@ -1368,6 +1380,9 @@ class Runner(object):
             if lib_name not in dumped_libs:
               dumped_libs.add(lib_name)
               lib.dump()
+        if self.args.add_toplevel_block:
+          with open(self.args.add_toplevel_block, 'r') as f:
+            self.append_to_bp('\n' + f.read() + '\n')
         if self.args.dependencies and self.dependencies:
           self.dump_dependencies()
         if self.errors:
@@ -1600,6 +1615,40 @@ def get_parser():
       '--apex-available',
       nargs='*',
       help='Mark the main library as apex_available with the given apexes.')
+  parser.add_argument(
+      '--force-rlib',
+      action='store_true',
+      default=False,
+      help='Make the main library an rlib.')
+  parser.add_argument(
+      '--dependency-blocklist',
+      nargs='*',
+      default=[],
+      help='Do not emit the given dependencies.')
+  parser.add_argument(
+      '--lib-blocklist',
+      nargs='*',
+      default=[],
+      help='Do not emit the given C libraries as dependencies.')
+  parser.add_argument(
+      '--test-blocklist',
+      nargs='*',
+      default=[],
+      help=('Do not emit the given tests. ' +
+            'Pass the path to the test file to exclude.'))
+  parser.add_argument(
+      '--cfg-blocklist',
+      nargs='*',
+      default=[],
+      help='Do not emit the given cfg.')
+  parser.add_argument(
+      '--add-toplevel-block',
+      type=str,
+      help='Add the contents of the given file to the top level of the Android.bp.')
+  parser.add_argument(
+      '--add-module-block',
+      type=str,
+      help='Add the contents of the given file to the main module.')
   parser.add_argument(
       '--no-test-mapping',
       action='store_true',

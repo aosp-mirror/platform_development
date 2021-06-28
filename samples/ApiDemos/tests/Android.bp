@@ -1,0 +1,21 @@
+package {
+    // See: http://go/android-license-faq
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_test {
+    name: "ApiDemosTests",
+    // We only want this apk build for tests.
+    libs: [
+        "android.test.runner.stubs",
+        "android.test.base.stubs",
+    ],
+    static_libs: ["junit"],
+    // Include all test java files.
+    srcs: ["src/**/*.java"],
+    // Notice that we don't have to include the src files of ApiDemos because, by
+    // running the tests using an instrumentation targeting ApiDemos, we
+    // automatically get all of its classes loaded into our environment.
+    instrumentation_for: "ApiDemos",
+    sdk_version: "current",
+}
