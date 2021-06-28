@@ -112,7 +112,6 @@ export default {
     UploadFile,
     FileSelect,
     PartialCheckbox,
-    FormDate,
   },
   data() {
     return {
