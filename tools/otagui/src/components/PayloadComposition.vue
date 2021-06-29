@@ -3,28 +3,31 @@
     v-model="partitionInclude"
     :labels="updatePartitions"
   />
-  <button @click="updateChart">
-    Update the chart
+  <button @click="updateChart('blocks')">
+    Analyse Installed Blocks (in target build)
   </button>
-  <div
-    v-if="listData"
-    class="list-data"
-  >
-    <pre>
-      {{ listData }}
-    </pre>
+  <button @click="updateChart('payload')">
+    Analyse Payload Composition
+  </button>
+  <div v-if="echartsData">
+    <PieChart :echartsData="echartsData" />
   </div>
 </template>
 
 <script>
 import PartialCheckbox from '@/components/PartialCheckbox.vue'
-import { operatedBlockStatistics } from '../services/payload_composition.js'
+import PieChart from '@/components/PieChart.vue'
+import {
+  operatedBlockStatistics,
+  operatedPayloadStatistics,
+} from '../services/payload_composition.js'
 import { EchartsData } from '../services/echarts_data.js'
 import { chromeos_update_engine as update_metadata_pb } from '../services/update_metadata_pb.js'
 
 export default {
   components: {
     PartialCheckbox,
+    PieChart,
   },
   props: {
     manifest: {
@@ -52,12 +55,27 @@ export default {
     })
   },
   methods: {
-    updateChart() {
+    updateChart(metrics) {
       let partitionSelected = this.manifest.partitions.filter((partition) =>
         this.partitionInclude.get(partition.partitionName)
       )
-      let statisticsData = operatedBlockStatistics(partitionSelected)
-      this.echartsData = new EchartsData(statisticsData)
+      let statisticsData
+      switch (metrics) {
+      case 'blocks':
+        statisticsData = operatedBlockStatistics(partitionSelected)
+        this.echartsData = new EchartsData(
+          statisticsData,
+          'Operated blocks in target build'
+        )
+        break
+      case 'payload':
+        statisticsData = operatedPayloadStatistics(partitionSelected)
+        this.echartsData = new EchartsData(
+          statisticsData,
+          'Payload disk usage'
+        )
+        break
+      }
       this.listData = this.echartsData.listData()
     },
   },
