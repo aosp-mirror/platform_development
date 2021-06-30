@@ -60,14 +60,10 @@ def android_build_top():
 
 
 def _get_clang_revision():
-    regex = r'ClangDefaultVersion\s+= "(?P<rev>clang-r\d+[a-z]?)"'
-    global_go = android_build_top() / 'build/soong/cc/config/global.go'
-    with open(global_go) as infile:
-        match = re.search(regex, infile.read())
-
-    if match is None:
-        raise RuntimeError(f'Parsing clang info from {global_go} failed')
-    return match.group('rev')
+    version_output = subprocess.check_output(
+        android_build_top() / 'build/soong/scripts/get_clang_version.py',
+        text=True)
+    return version_output.strip()
 
 
 CLANG_TOP = android_build_top() / 'prebuilts/clang/host/linux-x86/' \

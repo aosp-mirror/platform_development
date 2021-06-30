@@ -35,23 +35,11 @@ g_temp_dirs = []
 
 
 def read_toolchain_config(root):
-    """Finds out current toolchain path and version."""
-    def get_value(str):
-        return str[str.index('"') + 1:str.rindex('"')]
-
-    config_path = os.path.join(root, 'build', 'soong', 'cc', 'config',
-                               'global.go')
-    with open(config_path) as f:
-        contents = f.readlines()
-    clang_base = ""
-    clang_version = ""
-    for line in contents:
-        line = line.strip()
-        if line.startswith('ClangDefaultBase'):
-            clang_base = get_value(line)
-        elif line.startswith('ClangDefaultVersion'):
-            clang_version = get_value(line)
-    return (clang_base, clang_version)
+    """Finds out current toolchain version."""
+    version_output = subprocess.check_output(
+        f'{root}/build/soong/scripts/get_clang_version.py',
+        text=True)
+    return version_output.strip()
 
 
 def get_lldb_path(toolchain_path):
@@ -348,7 +336,8 @@ def do_main():
         is64bit = arch.endswith("64")
 
         # Make sure we have the linker
-        clang_base, clang_version = read_toolchain_config(root)
+        clang_base = 'prebuilts/clang/host'
+        clang_version = read_toolchain_config(root)
         toolchain_path = os.path.join(root, clang_base, platform_name,
                                       clang_version)
         llvm_readobj_path = os.path.join(toolchain_path, "bin", "llvm-readobj")
