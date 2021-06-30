@@ -8,6 +8,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@zip.js/zip.js": "^2.3.6",
     "core-js": "^3.6.5",
     "echarts": "^5.1.2",
     "eslint-config-airbnb-base": "^14.2.1",

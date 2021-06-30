@@ -38,10 +38,14 @@ import JobConfiguration from '../components/JobConfiguration.vue'
 
 export default {
   components: {
-    ApiService,
     JobConfiguration,
   },
-  props: ['id'],
+  props: {
+    id: {
+      type: String,
+      required: true
+    }
+  },
   setup() {
     const stderr = ref()
     const stdout = ref()
