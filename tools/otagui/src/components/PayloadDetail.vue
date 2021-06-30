@@ -8,6 +8,10 @@
     </ul>
   </div>
   <div v-if="payload">
+    <h3>Payload Compositin</h3>
+    <div v-if="payload.manifest">
+      <PayloadComposition :manifest="payload.manifest" />
+    </div>
     <h3>Partition List</h3>
     <ul v-if="payload.manifest">
       <li
@@ -38,11 +42,13 @@
 
 <script>
 import PartitionDetail from './PartitionDetail.vue'
+import PayloadComposition from './PayloadComposition.vue'
 import { Payload } from '@/services/payload.js'
 
 export default {
   components: {
     PartitionDetail,
+    PayloadComposition,
   },
   props: {
     zipFile: {
