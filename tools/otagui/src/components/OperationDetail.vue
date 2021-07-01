@@ -1,18 +1,18 @@
 <template>
   {{ mapType.get(operation.type) }}
-  <p v-if="operation.dataOffset !== null">
+  <p v-if="operation.hasOwnProperty('dataOffset')">
     Data offset: {{ operation.dataOffset }}
   </p>
-  <p v-if="operation.dataLength !== null">
+  <p v-if="operation.hasOwnProperty('dataLength')">
     Data length: {{ operation.dataLength }}
   </p>
-  <p v-if="operation.srcExtents !== null">
+  <p v-if="operation.hasOwnProperty('srcExtents')">
     Source: {{ operation.srcExtents.length }} extents ({{ srcTotalBlocks }}
     blocks)
     <br>
     {{ srcBlocks }}
   </p>
-  <p v-if="operation.dstExtents !== null">
+  <p v-if="operation.hasOwnProperty('dstExtents')">
     Destination: {{ operation.dstExtents.length }} extents ({{ dstTotalBlocks }}
     blocks)
     <br>
@@ -21,6 +21,8 @@
 </template>
 
 <script>
+import { numBlocks, displayBlocks } from '../services/payload_composition.js'
+
 export default {
   props: {
     operation: {
@@ -51,16 +53,4 @@ export default {
     }
   },
 }
-
-function numBlocks(exts) {
-  const accumulator = (total, ext) => total + ext.numBlocks
-  return exts.reduce(accumulator, 0)
-}
-
-function displayBlocks(exts) {
-  const accumulator = (total, ext) =>
-    total + '(' + ext.startBlock + ',' + ext.numBlocks + ')'
-  return exts.reduce(accumulator, '')
-}
-
 </script>

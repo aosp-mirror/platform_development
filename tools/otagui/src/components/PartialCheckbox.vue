@@ -35,3 +35,14 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+ul > li {
+  display: inline-block;
+  list-style-type: none;
+  margin-left: 5%;
+  margin-right: 5%;
+  top: 0px;
+  height: 50px;
+}
+</style>
