@@ -103,6 +103,7 @@ JSON_TO_BP = {
     'InitRc': 'init_rc',
     'VintfFragments': 'vintf_fragments',
     'SharedLibs': 'shared_libs',
+    'StaticLibs': 'static_libs',
     'RuntimeLibs': 'runtime_libs',
     'Required': 'required',
 }
