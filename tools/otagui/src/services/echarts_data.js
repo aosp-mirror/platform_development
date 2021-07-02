@@ -4,10 +4,12 @@ export class EchartsData {
    * usage in Vue-Echarts.
    * @param {Map} statisticData
    * @param {String} title
+   * @param {String} unit
    */
-  constructor(statisticData, title) {
+  constructor(statisticData, title, unit) {
     this.statisticData = statisticData
     this.title = title
+    this.unit = unit
   }
 
   /**
@@ -26,6 +28,7 @@ export class EchartsData {
    * Generate necessary parameters (option) for vue-echarts.
    * Format of the parameters can be found here:
    * https://echarts.apache.org/en/option.html
+   * @param {String} unit
    * @return {Object} an ECharts option object.
    */
   getEchartsOption() {
@@ -36,7 +39,7 @@ export class EchartsData {
     }
     option.tooltip = {
       trigger: "item",
-      formatter: "{a} <br/>{b} : {c} ({d}%)"
+      formatter: "{a} <br/>{b} : {c} " + this.unit + " ({d}%)"
     }
     option.legend = {
       orient: "horizontal",
