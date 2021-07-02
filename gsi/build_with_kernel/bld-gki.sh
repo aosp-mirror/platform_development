@@ -116,13 +116,14 @@ function repack()
     local src_img=$1
     local dst_dir=$2
     local version=$3
+    local postfix=$4
 
     mkdir -p "${dst_dir}"
-    cp "${src_img}" "${dst_dir}/kernel-${version}"
+    cp "${src_img}" "${dst_dir}/kernel-${version}${postfix}"
     "${GZIP}" -nc \
-       "${src_img}">"${dst_dir}/kernel-${version}-gz"
+       "${src_img}">"${dst_dir}/kernel-${version}-gz${postfix}"
     "${LZ4}" -f -l -12 --favor-decSpeed \
-       "${src_img}" "${dst_dir}/kernel-${version}-lz4"
+       "${src_img}" "${dst_dir}/kernel-${version}-lz4${postfix}"
 }
 
 function bld_arm64()
