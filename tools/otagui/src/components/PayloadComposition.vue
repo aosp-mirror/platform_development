@@ -9,6 +9,9 @@
   <button @click="updateChart('payload')">
     Analyse Payload Composition
   </button>
+  <button @click="updateChart('COWmerge')">
+    Analyse COW Merge Operations
+  </button>
   <div v-if="echartsData">
     <PieChart :echartsData="echartsData" />
   </div>
@@ -17,11 +20,7 @@
 <script>
 import PartialCheckbox from '@/components/PartialCheckbox.vue'
 import PieChart from '@/components/PieChart.vue'
-import {
-  operatedBlockStatistics,
-  operatedPayloadStatistics,
-} from '../services/payload_composition.js'
-import { EchartsData } from '../services/echarts_data.js'
+import { analysePartitions } from '../services/payload_composition.js'
 import { chromeos_update_engine as update_metadata_pb } from '../services/update_metadata_pb.js'
 
 export default {
@@ -54,24 +53,10 @@ export default {
       let partitionSelected = this.manifest.partitions.filter((partition) =>
         this.partitionInclude.get(partition.partitionName)
       )
-      let statisticsData
-      switch (metrics) {
-      case 'blocks':
-        statisticsData = operatedBlockStatistics(partitionSelected)
-        this.echartsData = new EchartsData(
-          statisticsData,
-          'Operated blocks in target build'
-        )
-        break
-      case 'payload':
-        statisticsData = operatedPayloadStatistics(partitionSelected)
-        this.echartsData = new EchartsData(
-          statisticsData,
-          'Payload disk usage'
-        )
-        break
-      }
-      this.listData = this.echartsData.listData()
+      this.echartsData = analysePartitions(
+        metrics,
+        partitionSelected,
+        this.manifest.blockSize)
     },
   },
 }

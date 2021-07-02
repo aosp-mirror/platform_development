@@ -1,5 +1,5 @@
 /**
- * @fileoverview Clss paypload is used to read in and
+ * @fileoverview Class paypload is used to read in and
  * parse the payload.bin file from a OTA.zip file.
  * Class OpType creates a Map that can resolve the
  * operation type.
@@ -123,6 +123,22 @@ export class OpType {
    */
   constructor() {
     let types = update_metadata_pb.InstallOperation.Type
+    this.mapType = new Map()
+    for (let key in types) {
+      this.mapType.set(types[key], key)
+    }
+  }
+}
+
+export class MergeOpType {
+  /**
+   * MergeOpType create a map that could resolve the COW merge operation
+   * types. This is very similar to OpType class except that one is for
+   * installation operations.
+   */
+  constructor() {
+    let /** Array<{String: Number}>*/ types =
+      update_metadata_pb.CowMergeOperation.Type
     this.mapType = new Map()
     for (let key in types) {
       this.mapType.set(types[key], key)
