@@ -17,7 +17,7 @@ export class EchartsData {
    * @return {String} A list of [key, value].
    */
   listData() {
-    let table = ''
+    let /** String */ table = ''
     for (let [key, value] of this.statisticData) {
       table += key + ' : ' + value.toString() + ' Blocks' + '\n'
     }
@@ -32,7 +32,7 @@ export class EchartsData {
    * @return {Object} an ECharts option object.
    */
   getEchartsOption() {
-    let option = new Object()
+    let /** Object */ option = new Object()
     option.title = {
       text: this.title,
       left: "center"
