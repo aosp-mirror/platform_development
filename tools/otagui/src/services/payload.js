@@ -1,5 +1,5 @@
 /**
- * @fileoverview Clss paypload is used to read in and
+ * @fileoverview Class paypload is used to read in and
  * parse the payload.bin file from a OTA.zip file.
  * Class OpType creates a Map that can resolve the
  * operation type.
@@ -10,11 +10,11 @@
 import * as zip from '@zip.js/zip.js/dist/zip-full.min.js'
 import { chromeos_update_engine as update_metadata_pb } from './update_metadata_pb.js'
 
-const _MAGIC = 'CrAU'
-const _VERSION_SIZE = 8
-const _MANIFEST_LEN_SIZE = 8
-const _METADATA_SIGNATURE_LEN_SIZE = 4
-const _BRILLO_MAJOR_PAYLOAD_VERSION = 2
+const /** Number */ _MAGIC = 'CrAU'
+const /** Number */ _VERSION_SIZE = 8
+const /** Number */ _MANIFEST_LEN_SIZE = 8
+const /** Number */ _METADATA_SIGNATURE_LEN_SIZE = 4
+const /** Number */ _BRILLO_MAJOR_PAYLOAD_VERSION = 2
 
 export class Payload {
   /**
@@ -27,7 +27,7 @@ export class Payload {
   }
 
   async unzipPayload() {
-    let entries = await this.packedFile.getEntries()
+    let /** Array<Entry> */ entries = await this.packedFile.getEntries()
     this.payload = null
     for (let entry of entries) {
       if (entry.filename == 'payload.bin') {
@@ -48,7 +48,7 @@ export class Payload {
    * @return {Int} an integer.
    */
   readInt(size) {
-    let view = new DataView(
+    let /** DataView */ view = new DataView(
       this.buffer.slice(this.cursor, this.cursor + size))
     this.cursor += size
     switch (size) {
@@ -64,7 +64,7 @@ export class Payload {
   }
 
   readHeader() {
-    let decoder = new TextDecoder()
+    let /** TextDecoder */ decoder = new TextDecoder()
     try {
       this.magic = decoder.decode(
         this.buffer.slice(this.cursor, _MAGIC.length))
@@ -89,7 +89,7 @@ export class Payload {
    * aosp/system/update_engine/update_metadata.proto
    */
   readManifest() {
-    let manifest_raw = new Uint8Array(this.buffer.slice(
+    let /** Array<Uint8> */ manifest_raw = new Uint8Array(this.buffer.slice(
       this.cursor, this.cursor + this.manifest_len
     ))
     this.cursor += this.manifest_len
@@ -98,7 +98,7 @@ export class Payload {
   }
 
   readSignature() {
-    let signature_raw = new Uint8Array(this.buffer.slice(
+    let /** Array<Uint8>*/ signature_raw = new Uint8Array(this.buffer.slice(
       this.cursor, this.cursor + this.metadata_signature_len
     ))
     this.cursor += this.metadata_signature_len
@@ -122,7 +122,23 @@ export class OpType {
    * update_metadata.proto and must be decoded before any usage.
    */
   constructor() {
-    let types = update_metadata_pb.InstallOperation.Type
+    let /** Array<{String: Number}>*/ types = update_metadata_pb.InstallOperation.Type
+    this.mapType = new Map()
+    for (let key in types) {
+      this.mapType.set(types[key], key)
+    }
+  }
+}
+
+export class MergeOpType {
+  /**
+   * MergeOpType create a map that could resolve the COW merge operation
+   * types. This is very similar to OpType class except that one is for
+   * installation operations.
+   */
+  constructor() {
+    let /** Array<{String: Number}>*/ types =
+      update_metadata_pb.CowMergeOperation.Type
     this.mapType = new Map()
     for (let key in types) {
       this.mapType.set(types[key], key)
