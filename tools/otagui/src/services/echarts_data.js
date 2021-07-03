@@ -4,10 +4,12 @@ export class EchartsData {
    * usage in Vue-Echarts.
    * @param {Map} statisticData
    * @param {String} title
+   * @param {String} unit
    */
-  constructor(statisticData, title) {
+  constructor(statisticData, title, unit) {
     this.statisticData = statisticData
     this.title = title
+    this.unit = unit
   }
 
   /**
@@ -15,7 +17,7 @@ export class EchartsData {
    * @return {String} A list of [key, value].
    */
   listData() {
-    let table = ''
+    let /** String */ table = ''
     for (let [key, value] of this.statisticData) {
       table += key + ' : ' + value.toString() + ' Blocks' + '\n'
     }
@@ -26,17 +28,18 @@ export class EchartsData {
    * Generate necessary parameters (option) for vue-echarts.
    * Format of the parameters can be found here:
    * https://echarts.apache.org/en/option.html
+   * @param {String} unit
    * @return {Object} an ECharts option object.
    */
   getEchartsOption() {
-    let option = new Object()
+    let /** Object */ option = new Object()
     option.title = {
       text: this.title,
       left: "center"
     }
     option.tooltip = {
       trigger: "item",
-      formatter: "{a} <br/>{b} : {c} ({d}%)"
+      formatter: "{a} <br/>{b} : {c} " + this.unit + " ({d}%)"
     }
     option.legend = {
       orient: "horizontal",

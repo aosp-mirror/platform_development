@@ -1,4 +1,25 @@
-import { OpType } from '@/services/payload.js'
+/**
+ * @fileoverview Offer functions that can be used to parse the partitionUpdate
+ * and then do statistics over it. One can use analysePartitions to specify the
+ * partitions been analysed and metrics.
+ */
+
+import { OpType, MergeOpType } from '@/services/payload.js'
+import { EchartsData } from '../services/echarts_data.js'
+
+/**
+ * Add a <value> to a element associated to <key>. If the element dose not
+ * exists than its value will be initialized to zero.
+ * @param {Map} map
+ * @param {String} key
+ * @param {Nynber} value
+ */
+function addNumberToMap(map, key, value) {
+  if (!map.get(key)) {
+    map.set(key, 0)
+  }
+  map.set(key, map.get(key) + value)
+}
 
 /**
  * Return a statistics over the numbers of blocks (in destination) that are
@@ -8,21 +29,40 @@ import { OpType } from '@/services/payload.js'
  * @return {Map}
  */
 export function operatedBlockStatistics(partitions) {
-  let operatedBlocks = new Map()
-  let opType = new OpType()
+  let /** Map */ operatedBlocks = new Map()
+  let /** OpType */ opType = new OpType()
   for (let partition of partitions) {
     for (let operation of partition.operations) {
       let operationType = opType.mapType.get(operation.type)
-      if (!operatedBlocks.get(operationType)) {
-        operatedBlocks.set(operationType, 0)
-      }
-      operatedBlocks.set(
+      addNumberToMap(
+        operatedBlocks,
         operationType,
-        operatedBlocks.get(operationType) + numBlocks(operation.dstExtents)
-      )
+        numBlocks(operation.dstExtents))
     }
   }
   return operatedBlocks
+}
+
+export function mergeOperationStatistics(partitions, blockSize) {
+  let /** Map */ mergeOperations = new Map()
+  let /** MergeOpType */ opType = new MergeOpType()
+  let /** Number */ totalBlocks = 0
+  for (let partition of partitions) {
+    for (let operation of partition.mergeOperations) {
+      let operationType = opType.mapType.get(operation.type)
+      addNumberToMap(
+        mergeOperations,
+        operationType,
+        operation.dstExtent.numBlocks)
+    }
+    totalBlocks += partition.newPartitionInfo.size / blockSize
+  }
+  // The COW merge operation is default to be COW_replace and not shown in
+  // the manifest info. We have to mannually add that part of operations,
+  // by subtracting the total blocks with other blocks.
+  mergeOperations.forEach((value, key)=> totalBlocks -= value )
+  mergeOperations.set('COW_REPLACE', totalBlocks)
+  return mergeOperations
 }
 
 /**
@@ -33,21 +73,55 @@ export function operatedBlockStatistics(partitions) {
  * @return {Map}
  */
 export function operatedPayloadStatistics(partitions) {
-  let operatedBlocks = new Map()
-  let opType = new OpType()
+  let /** Map */ operatedBlocks = new Map()
+  let /** OpType */ opType = new OpType()
   for (let partition of partitions) {
     for (let operation of partition.operations) {
       let operationType = opType.mapType.get(operation.type)
-      if (!operatedBlocks.get(operationType)) {
-        operatedBlocks.set(operationType, 0)
-      }
-      operatedBlocks.set(
+      addNumberToMap(
+        operatedBlocks,
         operationType,
-        operatedBlocks.get(operationType) + operation.dataLength
-      )
+        operation.dataLength)
     }
   }
   return operatedBlocks
+}
+
+/**
+ * Analyse the given partitions using the given metrics.
+ * @param {String} metrics
+ * @param {Array<PartitionUpdate>} partitions
+ * @return {EchartsData}
+ */
+export function analysePartitions(metrics, partitions, blockSize=4096) {
+  let /** Map */statisticsData
+  let /** Echartsdata */ echartsData
+  switch (metrics) {
+  case 'blocks':
+    statisticsData = operatedBlockStatistics(partitions)
+    echartsData = new EchartsData(
+      statisticsData,
+      'Operated blocks in target build',
+      'blocks'
+    )
+    break
+  case 'payload':
+    statisticsData = operatedPayloadStatistics(partitions)
+    echartsData = new EchartsData(
+      statisticsData,
+      'Payload disk usage',
+      'bytes'
+    )
+    break
+  case 'COWmerge':
+    statisticsData = mergeOperationStatistics(partitions, blockSize)
+    echartsData = new EchartsData(
+      statisticsData,
+      'COW merge operations',
+      'blocks'
+    )
+  }
+  return echartsData
 }
 
 /**
