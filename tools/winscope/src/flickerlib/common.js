@@ -17,46 +17,48 @@
 // Imports all the compiled common Flicker library classes and exports them
 // as clean es6 modules rather than having them be commonjs modules
 
-const WindowManagerTrace = require('flicker').com.android.server.wm.traces.common.
-    windowmanager.WindowManagerTrace;
-const WindowManagerState = require('flicker').com.android.server.wm.traces.common.
-    windowmanager.WindowManagerState;
+const WindowManagerTrace = require('flicker').com.android.server.wm.traces.
+    common.windowmanager.WindowManagerTrace;
+const WindowManagerState = require('flicker').com.android.server.wm.traces.
+    common.windowmanager.WindowManagerState;
 
 const Activity = require('flicker').com.android.server.wm.traces.common.
     windowmanager.windows.Activity;
 const Configuration = require('flicker').com.android.server.wm.traces.common.
     windowmanager.windows.Configuration;
-const ConfigurationContainer = require('flicker').com.android.server.wm.traces.common.
-    windowmanager.windows.ConfigurationContainer;
+const ConfigurationContainer = require('flicker').com.android.server.wm.traces.
+    common.windowmanager.windows.ConfigurationContainer;
 const DisplayArea = require('flicker').com.android.server.wm.traces.common.
     windowmanager.windows.DisplayArea;
 const DisplayContent = require('flicker').com.android.server.wm.traces.common.
     windowmanager.windows.DisplayContent;
-const KeyguardControllerState = require('flicker').com.android.server.wm.traces.common.
-    windowmanager.windows.KeyguardControllerState;
-const RootWindowContainer = require('flicker').com.android.server.wm.traces.common.
-    windowmanager.windows.RootWindowContainer;
+const KeyguardControllerState = require('flicker').com.android.server.wm.
+    traces.common.windowmanager.windows.KeyguardControllerState;
+const RootWindowContainer = require('flicker').com.android.server.wm.traces.
+    common.windowmanager.windows.RootWindowContainer;
 const Task = require('flicker').com.android.server.wm.traces.common.
     windowmanager.windows.Task;
 const TaskFragment = require('flicker').com.android.server.wm.traces.common.
     windowmanager.windows.TaskFragment;
-const WindowConfiguration = require('flicker').com.android.server.wm.traces.common.
-    windowmanager.windows.WindowConfiguration;
+const WindowConfiguration = require('flicker').com.android.server.wm.traces.
+    common.windowmanager.windows.WindowConfiguration;
 const WindowContainer = require('flicker').com.android.server.wm.traces.common.
     windowmanager.windows.WindowContainer;
-const WindowLayoutParams= require('flicker').com.android.server.wm.traces.common.
-    windowmanager.windows.WindowLayoutParams;
-const WindowManagerPolicy = require('flicker').com.android.server.wm.traces.common.
-    windowmanager.windows.WindowManagerPolicy;
+const WindowLayoutParams= require('flicker').com.android.server.wm.traces.
+    common.windowmanager.windows.WindowLayoutParams;
+const WindowManagerPolicy = require('flicker').com.android.server.wm.traces.
+    common.windowmanager.windows.WindowManagerPolicy;
 const WindowState = require('flicker').com.android.server.wm.traces.common.
     windowmanager.windows.WindowState;
 const WindowToken = require('flicker').com.android.server.wm.traces.common.
     windowmanager.windows.WindowToken;
 
-const Matrix = require('flicker').com.android.server.wm.traces.common.layers.Transform.Matrix;
-const Transform = require('flicker').com.android.server.wm.traces.common.layers.Transform;
+const Matrix = require('flicker').com.android.server.wm.traces.common.
+    layers.Transform.Matrix;
+const Transform = require('flicker').com.android.server.wm.traces.common.
+    layers.Transform;
 
-const Bounds = require('flicker').com.android.server.wm.traces.common.Bounds;
+const Size = require('flicker').com.android.server.wm.traces.common.Size;
 const Buffer = require('flicker').com.android.server.wm.traces.common.Buffer;
 const Color = require('flicker').com.android.server.wm.traces.common.Color;
 const Point = require('flicker').com.android.server.wm.traces.common.Point;
@@ -64,103 +66,106 @@ const Rect = require('flicker').com.android.server.wm.traces.common.Rect;
 const RectF = require('flicker').com.android.server.wm.traces.common.RectF;
 const Region = require('flicker').com.android.server.wm.traces.common.Region;
 
-function toBounds(proto) {
-    if (proto == null) {
-        return null
-    }
-    return new Bounds(proto.width ?? proto.w ?? 0, proto.height ?? proto.h ?? 0)
+function toSize(proto) {
+  if (proto == null) {
+    return null;
+  }
+  return new Size(proto.width ?? proto.w ?? 0, proto.height ?? proto.h ?? 0);
 }
 
 function toBuffer(proto) {
-    if (proto == null) {
-        return null
-    }
-    return new Buffer(proto.width ?? 0, proto.height ?? 0, proto.stride ?? 0, proto.format ?? 0)
+  if (proto == null) {
+    return null;
+  }
+  return new Buffer(proto.width ?? 0, proto.height ?? 0,
+      proto.stride ?? 0, proto.format ?? 0);
 }
 
 function toColor(proto) {
-    if (proto == null) {
-        return null
-    }
-    return new Color(proto.r ?? 0, proto.g ?? 0, proto.b ?? 0, proto.a ?? 0)
+  if (proto == null) {
+    return null;
+  }
+  return new Color(proto.r ?? 0, proto.g ?? 0, proto.b ?? 0, proto.a ?? 0);
 }
 
 function toPoint(proto) {
-    if (proto == null) {
-        return null
-    }
-    return new Point(proto.x ?? 0, proto.y ?? 0)
+  if (proto == null) {
+    return null;
+  }
+  return new Point(proto.x ?? 0, proto.y ?? 0);
 }
 
 function toRect(proto) {
-    if (proto == null) {
-        return null
-    }
-    return new Rect(proto.left ?? 0, proto.top ?? 0, proto.right ?? 0, proto.bottom ?? 0)
+  if (proto == null) {
+    return null;
+  }
+  return new Rect(proto.left ?? 0, proto.top ?? 0,
+      proto.right ?? 0, proto.bottom ?? 0);
 }
 
 function toRectF(proto) {
-    if (proto == null) {
-        return null
-    }
-    return new RectF(proto.left ?? 0, proto.top ?? 0, proto.right ?? 0, proto.bottom ?? 0)
+  if (proto == null) {
+    return null;
+  }
+  return new RectF(proto.left ?? 0, proto.top ?? 0,
+      proto.right ?? 0, proto.bottom ?? 0);
 }
 
 function toRegion(proto) {
-    if (proto == null) {
-        return null
-    }
+  if (proto == null) {
+    return null;
+  }
 
-    let rects = []
-    for (let rectNr in proto.rect) {
-        const rect = proto.rect[rectNr]
-        const parsedRect = toRect(rect)
-        rects.push(parsedRect)
-    }
+  const rects = [];
+  for (let x = 0; x < proto.rect.length; x++) {
+    const rect = proto.rect[x];
+    const parsedRect = toRect(rect);
+    rects.push(parsedRect);
+  }
 
-    return new Region(rects)
+  return new Region(rects);
 }
 
 function toTransform(proto) {
-    if (proto == null) {
-        return null
-    }
-    const matrix = new Matrix(proto.dsdx ?? 0, proto.dtdx ?? 0,
-        proto.tx ?? 0, proto.dsdy ?? 0, proto.dtdy ?? 0, proto.ty ?? 0)
-    return new Transform(proto.type ?? 0, matrix)
+  if (proto == null) {
+    return null;
+  }
+  const matrix = new Matrix(proto.dsdx ?? 0, proto.dtdx ?? 0,
+      proto.tx ?? 0, proto.dsdy ?? 0, proto.dtdy ?? 0, proto.ty ?? 0);
+  return new Transform(proto.type ?? 0, matrix);
 }
 
 export {
-    Activity,
-    Configuration,
-    ConfigurationContainer,
-    DisplayArea,
-    DisplayContent,
-    KeyguardControllerState,
-    RootWindowContainer,
-    Task,
-    TaskFragment,
-    WindowConfiguration,
-    WindowContainer,
-    WindowState,
-    WindowToken,
-    WindowLayoutParams,
-    WindowManagerPolicy,
-    WindowManagerTrace,
-    WindowManagerState,
-    Bounds,
-    Buffer,
-    Color,
-    Point,
-    Rect,
-    RectF,
-    Region,
-    toBounds,
-    toBuffer,
-    toColor,
-    toPoint,
-    toRect,
-    toRectF,
-    toRegion,
-    toTransform
+  Activity,
+  Configuration,
+  ConfigurationContainer,
+  DisplayArea,
+  DisplayContent,
+  KeyguardControllerState,
+  RootWindowContainer,
+  Task,
+  TaskFragment,
+  WindowConfiguration,
+  WindowContainer,
+  WindowState,
+  WindowToken,
+  WindowLayoutParams,
+  WindowManagerPolicy,
+  WindowManagerTrace,
+  WindowManagerState,
+  Size,
+  Buffer,
+  Color,
+  Point,
+  Rect,
+  RectF,
+  Region,
+  toSize,
+  toBuffer,
+  toColor,
+  toPoint,
+  toRect,
+  toRectF,
+  toRegion,
+  toTransform,
 };
