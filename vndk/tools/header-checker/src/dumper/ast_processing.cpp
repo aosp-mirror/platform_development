@@ -16,7 +16,6 @@
 
 #include "dumper/abi_wrappers.h"
 #include "repr/ir_dumper.h"
-#include "utils/header_abi_util.h"
 
 #include <clang/AST/PrettyPrinter.h>
 #include <clang/AST/QualTypeNames.h>
@@ -33,14 +32,15 @@ namespace dumper {
 
 class PrintNormalizedPath : public clang::PrintingCallbacks {
  public:
-  PrintNormalizedPath(const std::string root_dir) : root_dir_(root_dir) {}
+  PrintNormalizedPath(const utils::RootDirs &root_dirs)
+      : root_dirs_(root_dirs) {}
 
   std::string remapPath(llvm::StringRef path) const {
-    return utils::NormalizePath(path.str(), root_dir_);
+    return utils::NormalizePath(path.str(), root_dirs_);
   }
 
  private:
-  const std::string root_dir_;
+  const utils::RootDirs &root_dirs_;
 };
 
 HeaderASTVisitor::HeaderASTVisitor(
@@ -106,7 +106,7 @@ bool HeaderASTVisitor::ShouldSkipFunctionDecl(const clang::FunctionDecl *decl) {
   if (!decl->getDefinition()) {
     if (!options_.dump_function_declarations_ ||
         options_.source_file_ !=
-            ABIWrapper::GetDeclSourceFile(decl, cip_, options_.root_dir_)) {
+            ABIWrapper::GetDeclSourceFile(decl, cip_, options_.root_dirs_)) {
       return true;
     }
   }
@@ -177,7 +177,7 @@ bool HeaderASTVisitor::TraverseDecl(clang::Decl *decl) {
     return true;
   }
   std::string source_file =
-      ABIWrapper::GetDeclSourceFile(decl, cip_, options_.root_dir_);
+      ABIWrapper::GetDeclSourceFile(decl, cip_, options_.root_dirs_);
   ast_caches_->decl_to_source_file_cache_.insert(
       std::make_pair(decl, source_file));
   // If no exported headers are specified we assume the whole AST is exported.
@@ -208,15 +208,15 @@ void HeaderASTConsumer::HandleTranslationUnit(clang::ASTContext &ctx) {
   // names to avoid inconsistency between C and C++ (for C++ files, this is true
   // by default)
   policy.SuppressTagKeyword = true;
-  PrintNormalizedPath callbacks(options_.root_dir_);
+  PrintNormalizedPath callbacks(options_.root_dirs_);
   policy.Callbacks = &callbacks;
   ctx.setPrintingPolicy(policy);
   clang::TranslationUnitDecl *translation_unit = ctx.getTranslationUnitDecl();
   std::unique_ptr<clang::MangleContext> mangle_contextp(
       ctx.createMangleContext());
-  ASTCaches ast_caches(
-      ABIWrapper::GetDeclSourceFile(translation_unit, cip_, options_.root_dir_),
-      options_.root_dir_);
+  ASTCaches ast_caches(ABIWrapper::GetDeclSourceFile(translation_unit, cip_,
+                                                     options_.root_dirs_),
+                       options_.root_dirs_);
 
   std::unique_ptr<repr::ModuleIR> module(
       new repr::ModuleIR(nullptr /*FIXME*/));

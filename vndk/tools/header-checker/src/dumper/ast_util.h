@@ -15,6 +15,8 @@
 #ifndef AST_UTIL_H_
 #define AST_UTIL_H_
 
+#include "utils/source_path_utils.h"
+
 #include <clang/AST/AST.h>
 #include <clang/AST/Type.h>
 
@@ -30,12 +32,12 @@ namespace dumper {
 
 struct ASTCaches {
   ASTCaches(const std::string &translation_unit_source,
-            const std::string &root_dir)
-      : translation_unit_source_(translation_unit_source), root_dir_(root_dir) {
-  }
+            const utils::RootDirs &root_dirs)
+      : translation_unit_source_(translation_unit_source),
+        root_dirs_(root_dirs) {}
 
   std::string translation_unit_source_;
-  const std::string root_dir_;
+  const utils::RootDirs &root_dirs_;
   std::map<const clang::Decl *, std::string> decl_to_source_file_cache_;
 
   llvm::DenseSet<clang::QualType> converted_qual_types_;

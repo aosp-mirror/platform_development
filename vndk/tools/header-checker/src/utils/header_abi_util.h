@@ -26,16 +26,6 @@ namespace header_checker {
 namespace utils {
 
 
-std::string GetCwd();
-
-// Resolve '..' and '.'; if the path starts with root_dir, remove the prefix;
-// don't resolve symbolic links.
-std::string NormalizePath(const std::string &path, const std::string &root_dir);
-
-std::set<std::string>
-CollectAllExportedHeaders(const std::vector<std::string> &exported_header_dirs,
-                          const std::string &root_dir);
-
 inline std::string FindAndReplace(const std::string &candidate_str,
                                   const std::string &find_str,
                                   const std::string &replace_str) {

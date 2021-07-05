@@ -19,7 +19,7 @@
 #include "repr/symbol/so_file_parser.h"
 #include "repr/symbol/version_script_parser.h"
 #include "utils/command_line_utils.h"
-#include "utils/header_abi_util.h"
+#include "utils/source_path_utils.h"
 
 #include <llvm/ADT/Optional.h>
 #include <llvm/Support/CommandLine.h>
@@ -39,8 +39,9 @@
 using namespace header_checker;
 using header_checker::repr::TextFormatIR;
 using header_checker::utils::CollectAllExportedHeaders;
-using header_checker::utils::GetCwd;
 using header_checker::utils::HideIrrelevantCommandLineOptions;
+using header_checker::utils::ParseRootDirs;
+using header_checker::utils::RootDir;
 
 
 static llvm::cl::OptionCategory header_linker_category(
@@ -58,11 +59,13 @@ static llvm::cl::list<std::string> exported_header_dirs(
     "I", llvm::cl::desc("<export_include_dirs>"), llvm::cl::Prefix,
     llvm::cl::ZeroOrMore, llvm::cl::cat(header_linker_category));
 
-static llvm::cl::opt<std::string> root_dir(
+static llvm::cl::list<std::string> root_dirs(
     "root-dir",
-    llvm::cl::desc("Specify the directory that the paths in the dump files are "
-                   "relative to. Default to current working directory"),
-    llvm::cl::Optional, llvm::cl::cat(header_linker_category));
+    llvm::cl::desc("Specify the directory that the paths in the dump files "
+                   "are relative to. The format is <path>:<replacement> or "
+                   "<path>. If this option is not specified, it defaults to "
+                   "current working directory."),
+    llvm::cl::ZeroOrMore, llvm::cl::cat(header_linker_category));
 
 static llvm::cl::opt<std::string> version_script(
     "v", llvm::cl::desc("<version_script>"), llvm::cl::Optional,
@@ -255,8 +258,8 @@ bool HeaderAbiLinker::LinkAndDump() {
   }
 
   // Construct the list of exported headers for source location filtering.
-  exported_headers_ = CollectAllExportedHeaders(
-      exported_header_dirs_, root_dir.empty() ? GetCwd() : root_dir);
+  exported_headers_ = CollectAllExportedHeaders(exported_header_dirs_,
+                                                ParseRootDirs(root_dirs));
 
   // Read all input ABI dumps.
   auto merger = ReadInputDumpFiles();
