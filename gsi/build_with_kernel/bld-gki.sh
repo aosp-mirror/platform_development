@@ -23,11 +23,13 @@ if [ -z "${OUT_DIR}" ]; then
     OUT_DIR="${WD}/out"
 fi
 
+LTO=${LTO:-thin}
 GZIP="gzip"
 LZ4="${WD}/kernel/prebuilts/kernel-build-tools/linux-x86/bin/lz4"
 
 echo "WD=${WD}"
 echo "OUT_DIR=${OUT_DIR}"
+echo "LTO=${LTO}"
 
 function linkto()
 {
@@ -60,7 +62,7 @@ function bld_k510()
     local make_opt=("$@")
     local build_config=${BUILD_CONFIG:=common/build.config.gki.aarch64}
     pushd "${WD}/kernel"
-    DIST_DIR="${OUT_DIR}/android12-5.10/dist" BUILD_CONFIG=${build_config} build/build.sh "${make_opt[@]}"
+    DIST_DIR="${OUT_DIR}/android12-5.10/dist" BUILD_CONFIG=${build_config} LTO=${LTO} build/build.sh "${make_opt[@]}"
     popd
 }
 
@@ -77,7 +79,7 @@ function bld_k510_ko()
     local common_platform_config=${COMMON_PLATFORM_CONFIG:="common-modules/virtual-device/build.config.virtual_device.aarch64"}
 
     pushd "${WD}/kernel"
-    DIST_DIR="${OUT_DIR}/android12-5.10/dist" BUILD_CONFIG=${common_platform_config} build/build.sh "${make_opt[@]}"
+    DIST_DIR="${OUT_DIR}/android12-5.10/dist" BUILD_CONFIG=${common_platform_config} LTO=${LTO} build/build.sh "${make_opt[@]}"
     popd
 }
 
@@ -99,9 +101,8 @@ function chk_k510_ko()
         mv "${COMMON_PLATFORM_SL}.ori" ${COMMON_PLATFORM_SL}
     fi
     cp ${COMMON_PLATFORM_SL} "${COMMON_PLATFORM_SL}.ori"
-    BUILD_CONFIG=common/build.config.gki.aarch64 build/build_abi.sh "${make_opt[@]}"
-    BUILD_CONFIG=${COMMON_PLATFORM_CONFIG} build/build_abi.sh "${make_opt[@]}"
-    BUILD_CONFIG=${COMMON_PLATFORM_CONFIG} build/build_abi.sh --update-symbol-list "${make_opt[@]}"
+    BUILD_CONFIG=common/build.config.gki.aarch64 LTO=${LTO} build/build_abi.sh "${make_opt[@]}"
+    BUILD_CONFIG=${COMMON_PLATFORM_CONFIG} LTO=${LTO} build/build_abi.sh --update-symbol-list "${make_opt[@]}"
     if ! diff ${COMMON_PLATFORM_SL} "${COMMON_PLATFORM_SL}.ori"; then
         echo "${COMMON_PLATFORM_SL} is out-of-sync"
         return 1
