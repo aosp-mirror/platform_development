@@ -15,7 +15,7 @@
  */
 
 // TODO (b/162300507): Get rid of cloning
-import cloneDeep from 'lodash.clonedeep';
+import ObjectFormatter from '../flickerlib/ObjectFormatter';
 
 export const DiffType = Object.freeze({
   NONE: 'none',
@@ -25,23 +25,6 @@ export const DiffType = Object.freeze({
   DELETED_MOVE: 'deletedMove',
   MODIFIED: 'modified',
 });
-
-export function asRawTreeViewObject(obj) {
-  const children = obj.children;
-  const transformedChildren = children?.map((child) =>
-    child.rawTreeViewObject ?? asRawTreeViewObject(child)) ?? [];
-
-  return {
-    kind: obj.kind,
-    name: obj.name,
-    shortName: obj.shortName,
-    stableId: obj.stableId,
-    chips: obj.chips,
-    obj: obj.obj,
-    children: transformedChildren,
-    ref: obj,
-  };
-}
 
 export function defaultModifiedCheck(newNode, oldNode) {
   if (!newNode && !oldNode) {
@@ -55,26 +38,13 @@ export function defaultModifiedCheck(newNode, oldNode) {
   return JSON.stringify(newNode.obj) !== JSON.stringify(oldNode.obj);
 }
 
-function isPrimitive(test) {
-  return test !== Object(test);
-}
-
 export class DiffGenerator {
   constructor(tree) {
-    if (tree.rawTreeViewObject) {
-      this.tree = tree.rawTreeViewObject;
-    } else {
-      this.tree = tree;
-    }
+    this.tree = tree;
   }
 
   compareWith(tree) {
-    if (tree?.rawTreeViewObject) {
-      this.diffWithTree = tree.rawTreeViewObject;
-    } else {
-      this.diffWithTree = tree;
-    }
-
+    this.diffWithTree = tree;
     return this;
   }
 
@@ -142,16 +112,13 @@ export class DiffGenerator {
     return Object.keys(obj).length === 0 && obj.constructor === Object;
   }
 
-  _cloneNodeWithoutChildren(node) {
-    const clone = {};
-
-    for (const key in node) {
-      if (key !== 'children') {
-        const val = node[key];
-        clone[key] = isPrimitive(val) ? val : cloneDeep(val);
-      }
-    }
-
+  _cloneNode(node) {
+    const clone = ObjectFormatter.cloneObject(node);
+    clone.children = node.children;
+    clone.name = node.name;
+    clone.kind = node.kind;
+    clone.stableId = node.stableId;
+    clone.shortName = node.shortName;
     return clone;
   }
 
@@ -169,7 +136,7 @@ export class DiffGenerator {
       // Deep clone newTree omitting children field
       // Clone is required because trees are frozen objects — we can't
       // modify the original tree object. Also means there is no side effect.
-      const diffTree = this._cloneNodeWithoutChildren(newTree);
+      const diffTree = this._cloneNode(newTree);
 
       // Default to no changes
       diffTree.diff = {type: DiffType.NONE};
@@ -202,7 +169,7 @@ export class DiffGenerator {
 
         // Check if oldTree has been deleted of moved
         if (oldTree && !newTreeSiblingIds.includes(oldId)) {
-          const deletedTreeDiff = this._cloneNodeWithoutChildren(oldTree);
+          const deletedTreeDiff = this._cloneNode(oldTree);
 
           if (this.newMapping[oldId]) {
             deletedTreeDiff.diff = {type: DiffType.DELETED_MOVE};
@@ -235,7 +202,7 @@ export class DiffGenerator {
     } else if (oldTree) {
       if (!newTreeSiblingIds.includes(oldId)) {
         // Deep clone oldTree omitting children field
-        const diffTree = this._cloneNodeWithoutChildren(oldTree);
+        const diffTree = this._cloneNode(oldTree);
 
         // newTree doesn't exists, oldTree has either been moved or deleted.
         if (this.newMapping[oldId]) {
@@ -260,12 +227,12 @@ export class DiffGenerator {
 
     // TODO: Try replacing this with some sort of zipWith.
     const numOfChildren = Math.max(
-        newTree?.children.length ?? 0, oldTree?.children.length ?? 0);
+        newTree?.children?.length ?? 0, oldTree?.children?.length ?? 0);
     for (let i = 0; i < numOfChildren; i++) {
-      const newChild = i < newTree?.children.length ?
+      const newChild = i < newTree?.children?.length ?
         newTree.children[i] : null;
 
-      const oldChild = i < oldTree?.children.length ?
+      const oldChild = i < oldTree?.children?.length ?
         oldTree.children[i] : null;
 
       const childDiffTrees = this._generateDiffTree(

@@ -20,7 +20,7 @@ import { shortenName } from '../mixin'
 import { RELATIVE_Z_CHIP, GPU_CHIP, HWC_CHIP } from '../treeview/Chips'
 import Transform from './Transform'
 
-Layer.fromProto = function (proto): Layer {
+Layer.fromProto = function (proto: any): Layer {
     const visibleRegion = toRegion(proto.visibleRegion)
     const activeBuffer = toBuffer(proto.activeBuffer)
     const bounds = toRectF(proto.bounds)
@@ -34,7 +34,7 @@ Layer.fromProto = function (proto): Layer {
     let crop: Rect
     if (proto.crop) {
         crop = toRect(proto.crop)
-    }
+    };
 
     const entry = new Layer(
         proto.name ?? ``,
@@ -63,18 +63,22 @@ Layer.fromProto = function (proto): Layer {
         crop,
         proto.isRelativeOf,
         proto.zOrderRelativeOf
-    )
+    );
 
-    entry.kind = `${entry.id}`
-    entry.shortName = shortenName(entry.name)
-    entry.proto = proto
-    entry.rect = entry.bounds
-    entry.rect.transform = entry.transform
-    entry.rect.ref = entry
-    entry.rect.label = entry.name
-    entry.chips = []
-    updateChips(entry)
+    addAttributes(entry, proto);
     return entry
+}
+
+function addAttributes(entry: Layer, proto: any) {
+    entry.kind = `${entry.id}`;
+    entry.shortName = shortenName(entry.name);
+    entry.proto = proto;
+    entry.rect = entry.bounds;
+    entry.rect.transform = entry.transform;
+    entry.rect.ref = entry;
+    entry.rect.label = entry.name;
+    entry.chips = [];
+    updateChips(entry);
 }
 
 function updateChips(entry) {
@@ -88,5 +92,4 @@ function updateChips(entry) {
     }
 }
 
-
-export default Layer
+export default Layer;

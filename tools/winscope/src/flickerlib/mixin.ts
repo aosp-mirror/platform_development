@@ -27,7 +27,13 @@ export function getPropertiesForDisplay(entry: any): any {
         return
     }
 
-    let obj = Object.assign({}, entry)
+    let obj: any = {}
+    const properties = ObjectFormatter.getProperties(entry)
+    properties.forEach(prop => obj[prop] = entry[prop]);
+
+    // we remove the children property from the object to avoid it showing the
+    // the properties view of the element as we can always see those elements'
+    // properties by changing the target element in the hierarchy tree view.
     if (obj.children) delete obj.children
     if (obj.proto) delete obj.proto
 

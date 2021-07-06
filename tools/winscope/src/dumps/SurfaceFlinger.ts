@@ -32,7 +32,11 @@ export default class SurfaceFlinger extends DumpBase {
     return DUMP_TYPES.SURFACE_FLINGER;
   }
 
-  static fromProto(proto): LayersTraceEntry {
-    return LayersTraceEntry.fromProto({protos: proto.layers, timestamp: 0, where: ""});
+  static fromProto(proto: any): LayersTraceEntry {
+    return LayersTraceEntry.fromProto(
+        /*protos */ proto.layers,
+        /* timestamp */ 0,
+        /* hwcBlob */ ""
+      );
   }
 }

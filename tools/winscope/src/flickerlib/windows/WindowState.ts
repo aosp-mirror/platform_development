@@ -15,48 +15,28 @@
  */
 
 import { shortenName } from '../mixin'
-import { asRawTreeViewObject } from '../../utils/diff.js'
 import { toRect, Size, WindowState, WindowLayoutParams } from "../common"
 import { VISIBLE_CHIP } from '../treeview/Chips'
 import WindowContainer from "./WindowContainer"
 
- WindowState.fromProto = function (proto, isActivityInTree: Boolean): WindowState {
+ WindowState.fromProto = function (proto: any, isActivityInTree: Boolean): WindowState {
     if (proto == null) {
-        return null
+        return null;
     } else {
-        const identifierName = proto.windowContainer.identifier?.title ?? proto.identifier?.title ?? ""
-        var windowType = 0
-        if (identifierName.startsWith(WindowState.STARTING_WINDOW_PREFIX)) {
-            windowType = WindowState.WINDOW_TYPE_STARTING
-        } else if (proto.animatingExit) {
-            windowType = WindowState.WINDOW_TYPE_EXITING
-        } else if (identifierName.startsWith(WindowState.DEBUGGER_WINDOW_PREFIX)) {
-            windowType = WindowState.WINDOW_TYPE_STARTING
-        }
-
-        var nameOverride = identifierName
-
-        if (identifierName.startsWith(WindowState.STARTING_WINDOW_PREFIX)) {
-            nameOverride = identifierName.substring(WindowState.STARTING_WINDOW_PREFIX.length)
-        } else if (identifierName.startsWith(WindowState.DEBUGGER_WINDOW_PREFIX)) {
-            nameOverride = identifierName.substring(WindowState.DEBUGGER_WINDOW_PREFIX.length)
-        }
-
-        const children = proto.windowContainer.children.reverse()
-            .filter(it => it != null)
-            .map(it => WindowContainer.childrenFromProto(it, isActivityInTree))
-
-        const windowContainer = WindowContainer.fromProto({
-            proto: proto.windowContainer,
-            children: children,
-            nameOverride: nameOverride,
-            identifierOverride: proto.identifier})
-        if (windowContainer == null) {
-            throw "Window container should not be null: " + JSON.stringify(proto)
-        }
+        const windowParams = createWindowLayoutParams(proto.attributes);
+        const identifierName = getIdentifier(proto);
+        const windowType = getWindowType(proto, identifierName);
+        const name = getName(identifierName);
+        const windowContainer = WindowContainer.fromProto(
+            /* proto */ proto.windowContainer,
+            /* protoChildren */ proto.windowContainer.children.reverse(),
+            /* isActivityInTree */ isActivityInTree,
+            /* nameOverride */ name,
+            /* identifierOverride */ proto.identifier
+        );
 
         const entry = new WindowState(
-            newWindowLayoutParams(proto.attributes),
+            windowParams,
             proto.displayId,
             proto.stackId,
             proto.animator?.surface?.layer ?? 0,
@@ -74,21 +54,14 @@ import WindowContainer from "./WindowContainer"
             toRect(proto.animator?.lastClipRect ?? null),
             windowContainer,
             /* isAppWindow */ isActivityInTree
-        )
+        );
 
-        entry.kind = entry.constructor.name
-        entry.rect = entry.frame
-        entry.rect.ref = entry
-        entry.rect.label = entry.name
-        entry.proto = proto
-        entry.shortName = shortenName(entry.name)
-        entry.chips = entry.isVisible ? [VISIBLE_CHIP] : []
-        entry.rawTreeViewObject = asRawTreeViewObject(entry)
-        return entry
+        addAttributes(entry, proto);
+        return entry;
     }
 }
 
-function newWindowLayoutParams(proto): WindowLayoutParams {
+function createWindowLayoutParams(proto: any): WindowLayoutParams {
     return new WindowLayoutParams(
         /* type */ proto?.type ?? 0,
         /* x */ proto?.x ?? 0,
@@ -121,6 +94,44 @@ function newWindowLayoutParams(proto): WindowLayoutParams {
         /* fitInsetsSides */ proto?.fitInsetsSides ?? 0,
         /* fitIgnoreVisibility */ proto?.fitIgnoreVisibility ?? false
     )
+}
+
+function getWindowType(proto: any, identifierName: string): number {
+    if (identifierName.startsWith(WindowState.STARTING_WINDOW_PREFIX)) {
+        return WindowState.WINDOW_TYPE_STARTING;
+    } else if (proto.animatingExit) {
+        return WindowState.WINDOW_TYPE_EXITING;
+    } else if (identifierName.startsWith(WindowState.DEBUGGER_WINDOW_PREFIX)) {
+        return WindowState.WINDOW_TYPE_STARTING;
+    }
+
+    return 0;
+}
+
+function getName(identifierName: string): string {
+    var name = identifierName;
+
+    if (identifierName.startsWith(WindowState.STARTING_WINDOW_PREFIX)) {
+        name = identifierName.substring(WindowState.STARTING_WINDOW_PREFIX.length);
+    } else if (identifierName.startsWith(WindowState.DEBUGGER_WINDOW_PREFIX)) {
+        name = identifierName.substring(WindowState.DEBUGGER_WINDOW_PREFIX.length);
+    }
+
+    return name;
+}
+
+function getIdentifier(proto: any): string {
+    return proto.windowContainer.identifier?.title ?? proto.identifier?.title ?? "";
+}
+
+function addAttributes(entry: WindowState, proto: any) {
+    entry.kind = entry.constructor.name;
+    entry.rect = entry.frame;
+    entry.rect.ref = entry;
+    entry.rect.label = entry.name;
+    entry.proto = proto;
+    entry.shortName = shortenName(entry.name);
+    entry.chips = entry.isVisible ? [VISIBLE_CHIP] : [];
 }
 
 export default WindowState

@@ -34,7 +34,6 @@ import {transformProtolog} from './transform_protolog.js';
 import {transform_sysui_trace} from './transform_sys_ui.js';
 import {transform_launcher_trace} from './transform_launcher.js';
 import {transform_ime_trace_clients, transform_ime_trace_service, transform_ime_trace_managerservice} from './transform_ime.js';
-import {fill_transform_data} from './matrix_utils.js';
 import {mp4Decoder} from './decodeVideo.js';
 
 import AccessibilityTrace from '@/traces/Accessibility.ts';
@@ -65,9 +64,9 @@ const WaylandDumpMessage = lookup_type(jsonProtoDefsWl, 'org.chromium.arc.waylan
 const ProtoLogMessage = lookup_type(jsonProtoDefsProtoLog, 'com.android.internal.protolog.ProtoLogFileProto');
 const SystemUiTraceMessage = lookup_type(jsonProtoDefsSysUi, 'com.android.systemui.tracing.SystemUiTraceFileProto');
 const LauncherTraceMessage = lookup_type(jsonProtoDefsLauncher, 'com.android.launcher3.tracing.LauncherTraceFileProto');
-const InputMethodClientsTraceMessage = lookup_type(jsonProtoDefsIme, "android.view.inputmethod.InputMethodClientsTraceFileProto");
-const InputMethodServiceTraceMessage = lookup_type(jsonProtoDefsIme, "android.view.inputmethod.InputMethodServiceTraceFileProto");
-const InputMethodManagerServiceTraceMessage = lookup_type(jsonProtoDefsIme, "android.view.inputmethod.InputMethodManagerServiceTraceFileProto");
+const InputMethodClientsTraceMessage = lookup_type(jsonProtoDefsIme, 'android.view.inputmethod.InputMethodClientsTraceFileProto');
+const InputMethodServiceTraceMessage = lookup_type(jsonProtoDefsIme, 'android.view.inputmethod.InputMethodServiceTraceFileProto');
+const InputMethodManagerServiceTraceMessage = lookup_type(jsonProtoDefsIme, 'android.view.inputmethod.InputMethodManagerServiceTraceFileProto');
 
 const ACCESSIBILITY_MAGIC_NUMBER = [0x09, 0x41, 0x31, 0x31, 0x59, 0x54, 0x52, 0x41, 0x43]; // .A11YTRAC
 const LAYER_TRACE_MAGIC_NUMBER = [0x09, 0x4c, 0x59, 0x52, 0x54, 0x52, 0x41, 0x43, 0x45]; // .LYRTRACE
@@ -77,9 +76,9 @@ const WAYLAND_TRACE_MAGIC_NUMBER = [0x09, 0x57, 0x59, 0x4c, 0x54, 0x52, 0x41, 0x
 const PROTO_LOG_MAGIC_NUMBER = [0x09, 0x50, 0x52, 0x4f, 0x54, 0x4f, 0x4c, 0x4f, 0x47]; // .PROTOLOG
 const SYSTEM_UI_MAGIC_NUMBER = [0x09, 0x53, 0x59, 0x53, 0x55, 0x49, 0x54, 0x52, 0x43]; // .SYSUITRC
 const LAUNCHER_MAGIC_NUMBER = [0x09, 0x4C, 0x4E, 0x43, 0x48, 0x52, 0x54, 0x52, 0x43]; // .LNCHRTRC
-const IMC_TRACE_MAGIC_NUMBER = [0x09, 0x49, 0x4d, 0x43, 0x54, 0x52, 0x41, 0x43, 0x45] //.IMCTRACE
-const IMS_TRACE_MAGIC_NUMBER = [0x09, 0x49, 0x4d, 0x53, 0x54, 0x52, 0x41, 0x43, 0x45] //.IMSTRACE
-const IMM_TRACE_MAGIC_NUMBER = [0x09, 0x49, 0x4d, 0x4d, 0x54, 0x52, 0x41, 0x43, 0x45] //.IMMTRACE
+const IMC_TRACE_MAGIC_NUMBER = [0x09, 0x49, 0x4d, 0x43, 0x54, 0x52, 0x41, 0x43, 0x45]; // .IMCTRACE
+const IMS_TRACE_MAGIC_NUMBER = [0x09, 0x49, 0x4d, 0x53, 0x54, 0x52, 0x41, 0x43, 0x45]; // .IMSTRACE
+const IMM_TRACE_MAGIC_NUMBER = [0x09, 0x49, 0x4d, 0x4d, 0x54, 0x52, 0x41, 0x43, 0x45]; // .IMMTRACE
 
 const FILE_TYPES = Object.freeze({
   ACCESSIBILITY_TRACE: 'AccessibilityTrace',
@@ -130,10 +129,6 @@ const FILE_ICONS = {
 
 function oneOf(dataType) {
   return {oneOf: true, type: dataType};
-}
-
-function manyOf(dataType, fold = null) {
-  return {manyOf: true, type: dataType, fold};
 }
 
 const TRACE_TYPES = Object.freeze({
@@ -465,11 +460,6 @@ function modifyProtoFields(protoObj, displayDefaults) {
 
       if (displayDefaults && !(field)) {
         protoObj[fieldName] = fieldProperties.defaultValue;
-      }
-
-      if (fieldProperties.type === 'TransformProto') {
-        fill_transform_data(protoObj[fieldName]);
-        continue;
       }
 
       if (fieldProperties.resolvedType && fieldProperties.resolvedType.valuesById) {
