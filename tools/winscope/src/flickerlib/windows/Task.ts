@@ -23,7 +23,7 @@ Task.fromProto = function (proto, isActivityInTree: Boolean): Task {
     if (proto == null) {
         return null
     } else {
-        const windowContainerProto = proto?.taskFragment.windowContainer ?? proto.windowContainer
+        const windowContainerProto = proto.taskFragment?.windowContainer ?? proto.windowContainer
         const children = windowContainerProto.children.reverse()
             .filter(it => it != null)
             .map(it => WindowContainer.childrenFromProto(it, isActivityInTree))
@@ -33,12 +33,12 @@ Task.fromProto = function (proto, isActivityInTree: Boolean): Task {
             throw "Window container should not be null: " + JSON.stringify(proto)
         }
         const entry = new Task(
-            proto?.taskFragment.activityType ?? proto.activityType,
+            proto.taskFragment?.activityType ?? proto.activityType,
             proto.fillsParent,
             toRect(proto.bounds),
             proto.id,
             proto.rootTaskId,
-            proto.taskFragment.displayId,
+            proto.taskFragment?.displayId,
             toRect(proto.lastNonFullscreenBounds),
             proto.realActivity,
             proto.origActivity,
@@ -48,8 +48,8 @@ Task.fromProto = function (proto, isActivityInTree: Boolean): Task {
             proto.surfaceWidth,
             proto.surfaceHeight,
             proto.createdByOrganizer,
-            proto?.taskFragment.minWidth ?? proto.minWidth,
-            proto?.taskFragment.minHeight ?? proto.minHeight,
+            proto.taskFragment?.minWidth ?? proto.minWidth,
+            proto.taskFragment?.minHeight ?? proto.minHeight,
             windowContainer
         )
 
