@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {toBounds, toBuffer, toColor, toPoint, toRect,
+import {toSize, toBuffer, toColor, toPoint, toRect,
     toRectF, toRegion, toTransform} from './common';
 import intDefMapping from
     '../../../../../prebuilts/misc/common/winscope/intDefMapping.json';
@@ -86,7 +86,7 @@ export default class ObjectFormatter {
     private static translateObject(obj) {
         const type = obj?.$type?.name
         switch(type) {
-            case `SizeProto`: return toBounds(obj)
+            case `SizeProto`: return toSize(obj)
             case `ActiveBufferProto`: return toBuffer(obj)
             case `ColorProto`: return toColor(obj)
             case `PointProto`: return toPoint(obj)
