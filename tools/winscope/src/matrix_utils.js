@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/* transform type flags */
+ /* transform type flags */
 const TRANSLATE_VAL   = 0x0001;
 const ROTATE_VAL      = 0x0002;
 const SCALE_VAL       = 0x0004;
@@ -177,13 +177,17 @@ function multiply_vec2(matrix, x, y) {
   // |dsdx dsdy  tx|     | x |
   // |dtdx dtdy  ty|  x  | y |
   // |0    0     1 |     | 1 |
-  return { 
-    x: matrix.dsdx * x + matrix.dsdy * y + matrix.tx,  
+  return {
+    x: matrix.dsdx * x + matrix.dsdy * y + matrix.tx,
     y: matrix.dtdx * x + matrix.dtdy * y + matrix.ty
   };
 }
 
-function multiply_rect(matrix, rect) {
+function multiply_rect(transform, rect) {
+  let matrix = transform
+  if (transform && transform.matrix) {
+    matrix = transform.matrix
+  }
   //          |dsdx dsdy  tx|         | left, top         |
   // matrix = |dtdx dtdy  ty|  rect = |                   |
   //          |0    0     1 |         |     right, bottom |
@@ -201,7 +205,7 @@ function multiply_rect(matrix, rect) {
   return outrect;
 }
 
-// Returns true if the applying the transform on an an axis aligned rectangle 
+// Returns true if the applying the transform on an an axis aligned rectangle
 // results in another axis aligned rectangle.
 function is_simple_rotation(transform) {
   return !is_type_flag_set(transform, ROT_INVALID_VAL);

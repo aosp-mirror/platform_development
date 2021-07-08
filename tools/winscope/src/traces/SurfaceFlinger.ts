@@ -16,9 +16,10 @@
 
 import { FILE_TYPES, TRACE_TYPES } from '@/decode.js';
 import TraceBase from './TraceBase';
+import { LayersTrace } from '@/flickerlib';
 
 export default class SurfaceFlinger extends TraceBase {
-  sfTraceFile: any;
+  sfTraceFile: Object;
 
   constructor(files) {
     const sfTraceFile = files[FILE_TYPES.SURFACE_FLINGER_TRACE];
@@ -29,5 +30,9 @@ export default class SurfaceFlinger extends TraceBase {
 
   get type() {
     return TRACE_TYPES.SURFACE_FLINGER;
+  }
+
+  static fromProto(proto): LayersTrace {
+    return LayersTrace.fromProto(proto);
   }
 }

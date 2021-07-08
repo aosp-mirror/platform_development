@@ -27,7 +27,9 @@ export const DiffType = Object.freeze({
 });
 
 export function asRawTreeViewObject(obj) {
-  const children = obj.children?.map(child => child.rawTreeViewObject) ?? []
+  const children = obj.children;
+  const transformedChildren = children?.map((child) =>
+    child.rawTreeViewObject ?? asRawTreeViewObject(child)) ?? [];
 
   return {
     kind: obj.kind,
@@ -36,7 +38,7 @@ export function asRawTreeViewObject(obj) {
     stableId: obj.stableId,
     chips: obj.chips,
     obj: obj.obj,
-    children,
+    children: transformedChildren,
     ref: obj,
   };
 }

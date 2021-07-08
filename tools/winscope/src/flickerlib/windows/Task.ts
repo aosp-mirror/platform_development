@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getPropertiesForDisplay, shortenName } from '../mixin'
+import { shortenName } from '../mixin'
 import { asRawTreeViewObject } from '../../utils/diff.js'
 import { Task, toRect } from "../common"
 import WindowContainer from "./WindowContainer"
@@ -53,7 +53,7 @@ Task.fromProto = function (proto, isActivityInTree: Boolean): Task {
             windowContainer
         )
 
-        entry.obj = getPropertiesForDisplay(proto, entry)
+        entry.proto = proto
         entry.kind = entry.constructor.name
         entry.shortName = shortenName(entry.name)
         entry.rawTreeViewObject = asRawTreeViewObject(entry)
