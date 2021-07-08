@@ -100,9 +100,11 @@ JSON_TO_BP = {
     'SanitizeMinimalDep': 'sanitize_minimal_dep',
     'SanitizeUbsanDep': 'sanitize_ubsan_dep',
     'Symlinks': 'symlinks',
+    'StaticExecutable': 'static_executable',
     'InitRc': 'init_rc',
     'VintfFragments': 'vintf_fragments',
     'SharedLibs': 'shared_libs',
+    'StaticLibs': 'static_libs',
     'RuntimeLibs': 'runtime_libs',
     'Required': 'required',
 }
