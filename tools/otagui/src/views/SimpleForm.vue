@@ -112,7 +112,6 @@ export default {
     UploadFile,
     FileSelect,
     PartialCheckbox,
-    FormDate,
   },
   data() {
     return {
@@ -126,6 +125,7 @@ export default {
   },
   computed: {
     updatePartitions() {
+      if (!this.input.target) return []
       let target = this.targetDetails.filter(
         (d) => d.path === this.input.target
       )
@@ -146,7 +146,7 @@ export default {
       handler: function () {
         this.input.partial = this.partitionList
       },
-    },
+    }
   },
   created() {
     this.resetInput()

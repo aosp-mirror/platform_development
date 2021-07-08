@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright (C) 2015 The Android Open Source Project
 #
@@ -54,14 +54,6 @@ def read_toolchain_config(root):
     return (clang_base, clang_version)
 
 
-def get_gdbserver_path(root, arch):
-    path = "{}/prebuilts/misc/gdbserver/android-{}/gdbserver{}"
-    if arch.endswith("64"):
-        return path.format(root, arch, "64")
-    else:
-        return path.format(root, arch, "")
-
-
 def get_lldb_path(toolchain_path):
     for lldb_name in ['lldb.sh', 'lldb.cmd', 'lldb', 'lldb.exe']:
         debugger_path = os.path.join(toolchain_path, "bin", lldb_name)
@@ -113,17 +105,11 @@ def parse_args():
         help="user to run commands as on the device [default: root]")
     parser.add_argument(
         "--setup-forwarding", default=None,
-        choices=["gdb", "lldb", "vscode", "vscode-gdb", "vscode-lldb"],
-        help=("Setup the gdbserver/lldb-server and port forwarding. Prints commands or " +
+        choices=["lldb", "vscode-lldb"],
+        help=("Set up lldb-server and port forwarding. Prints commands or " +
               ".vscode/launch.json configuration needed to connect the debugging " +
-              "client to the server. If 'gdb' and 'vscode-gdb' are only valid if " +
-              "'--no-lldb' is passed. 'vscode' with llbd and 'vscode-lldb' both " +
-              "require the 'vadimcn.vscode-lldb' extension. 'vscode' with '--no-lldb' " +
-              "and 'vscode-gdb' require the 'ms-vscode.cpptools' extension."))
-
-    lldb_group = parser.add_mutually_exclusive_group()
-    lldb_group.add_argument("--lldb", action="store_true", help="Use lldb.")
-    lldb_group.add_argument("--no-lldb", action="store_true", help="Do not use lldb.")
+              "client to the server. 'vscode' with llbd and 'vscode-lldb' both " +
+              "require the 'vadimcn.vscode-lldb' extension."))
 
     parser.add_argument(
         "--env", nargs=1, action="append", metavar="VAR=VALUE",
@@ -156,7 +142,7 @@ def get_remote_pid(device, process_name):
 
 def make_temp_dir(prefix):
     global g_temp_dirs
-    result = tempfile.mkdtemp(prefix='gdbclient-linker-')
+    result = tempfile.mkdtemp(prefix='lldbclient-linker-')
     g_temp_dirs.append(result)
     return result
 
@@ -184,7 +170,7 @@ def ensure_linker(device, sysroot, interp):
     if interp is None:
         return None
 
-    # gdb will search for the linker using the PT_INTERP path. First try to find
+    # lldb will search for the linker using the PT_INTERP path. First try to find
     # it in the sysroot.
     local_path = os.path.join(sysroot, interp.lstrip("/"))
     if os.path.exists(local_path):
@@ -201,19 +187,19 @@ def ensure_linker(device, sysroot, interp):
             return os.path.dirname(local_path)
         else:
             # If PT_INTERP is linker_asan[64], but the sysroot file is
-            # linker[64], then copy the local file to the name gdb expects.
-            result = make_temp_dir('gdbclient-linker-')
+            # linker[64], then copy the local file to the name lldb expects.
+            result = make_temp_dir('lldbclient-linker-')
             shutil.copy(local_path, os.path.join(result, posixpath.basename(interp)))
             return result
 
     # Pull the system linker.
-    result = make_temp_dir('gdbclient-linker-')
+    result = make_temp_dir('lldbclient-linker-')
     device.pull(interp, os.path.join(result, posixpath.basename(interp)))
     return result
 
 
 def handle_switches(args, sysroot):
-    """Fetch the targeted binary and determine how to attach gdb.
+    """Fetch the targeted binary and determine how to attach lldb.
 
     Args:
         args: Parsed arguments.
@@ -267,7 +253,7 @@ def handle_switches(args, sysroot):
 
 def generate_vscode_lldb_script(root, sysroot, binary_name, port, solib_search_path):
     # TODO It would be nice if we didn't need to copy this or run the
-    #      gdbclient.py program manually. Doing this would probably require
+    #      lldbclient.py program manually. Doing this would probably require
     #      writing a vscode extension or modifying an existing one.
     # TODO: https://code.visualstudio.com/api/references/vscode-api#debug and
     #       https://code.visualstudio.com/api/extension-guides/debugger-extension and
@@ -285,90 +271,6 @@ def generate_vscode_lldb_script(root, sysroot, binary_name, port, solib_search_p
     }
     return json.dumps(res, indent=4)
 
-def generate_vscode_gdb_script(gdbpath, root, sysroot, binary_name, port, dalvik_gdb_script, solib_search_path):
-    # TODO It would be nice if we didn't need to copy this or run the
-    #      gdbclient.py program manually. Doing this would probably require
-    #      writing a vscode extension or modifying an existing one.
-    res = {
-        "name": "(gdbclient.py) Attach {} (port: {})".format(binary_name.split("/")[-1], port),
-        "type": "cppdbg",
-        "request": "launch",  # Needed for gdbserver.
-        "cwd": root,
-        "program": binary_name,
-        "MIMode": "gdb",
-        "miDebuggerServerAddress": "localhost:{}".format(port),
-        "miDebuggerPath": gdbpath,
-        "setupCommands": [
-            {
-                # Required for vscode.
-                "description": "Enable pretty-printing for gdb",
-                "text": "-enable-pretty-printing",
-                "ignoreFailures": True,
-            },
-            {
-                "description": "gdb command: dir",
-                "text": "-environment-directory {}".format(root),
-                "ignoreFailures": False
-            },
-            {
-                "description": "gdb command: set solib-search-path",
-                "text": "-gdb-set solib-search-path {}".format(":".join(solib_search_path)),
-                "ignoreFailures": False
-            },
-            {
-                "description": "gdb command: set solib-absolute-prefix",
-                "text": "-gdb-set solib-absolute-prefix {}".format(sysroot),
-                "ignoreFailures": False
-            },
-        ]
-    }
-    if dalvik_gdb_script:
-        res["setupCommands"].append({
-            "description": "gdb command: source art commands",
-            "text": "-interpreter-exec console \"source {}\"".format(dalvik_gdb_script),
-            "ignoreFailures": False,
-        })
-    return json.dumps(res, indent=4)
-
-def generate_gdb_script(root, sysroot, binary_name, port, dalvik_gdb_script, solib_search_path, connect_timeout):
-    solib_search_path = ":".join(solib_search_path)
-
-    gdb_commands = ""
-    gdb_commands += "file '{}'\n".format(binary_name)
-    gdb_commands += "directory '{}'\n".format(root)
-    gdb_commands += "set solib-absolute-prefix {}\n".format(sysroot)
-    gdb_commands += "set solib-search-path {}\n".format(solib_search_path)
-    if dalvik_gdb_script:
-        gdb_commands += "source {}\n".format(dalvik_gdb_script)
-
-    # Try to connect for a few seconds, sometimes the device gdbserver takes
-    # a little bit to come up, especially on emulators.
-    gdb_commands += """
-python
-
-def target_remote_with_retry(target, timeout_seconds):
-  import time
-  end_time = time.time() + timeout_seconds
-  while True:
-    try:
-      gdb.execute("target extended-remote " + target)
-      return True
-    except gdb.error as e:
-      time_left = end_time - time.time()
-      if time_left < 0 or time_left > timeout_seconds:
-        print("Error: unable to connect to device.")
-        print(e)
-        return False
-      time.sleep(min(0.25, time_left))
-
-target_remote_with_retry(':{}', {})
-
-end
-""".format(port, connect_timeout)
-
-    return gdb_commands
-
-
 def generate_lldb_script(root, sysroot, binary_name, port, solib_search_path):
     commands = []
     commands.append(
@@ -385,7 +287,6 @@ def generate_lldb_script(root, sysroot, binary_name, port, solib_search_path):
 
 def generate_setup_script(debugger_path, sysroot, linker_search_dir, binary_file, is64bit, port, debugger, connect_timeout=5):
     # Generate a setup script.
-    # TODO: Detect the zygote and run 'art-on' automatically.
     root = os.environ["ANDROID_BUILD_TOP"]
     symbols_dir = os.path.join(sysroot, "system", "lib64" if is64bit else "lib")
     vendor_dir = os.path.join(sysroot, "vendor", "lib64" if is64bit else "lib")
@@ -398,20 +299,9 @@ def generate_setup_script(debugger_path, sysroot, linker_search_dir, binary_file
     if linker_search_dir is not None:
         solib_search_path += [linker_search_dir]
 
-    dalvik_gdb_script = os.path.join(root, "development", "scripts", "gdb", "dalvik.gdb")
-    if not os.path.exists(dalvik_gdb_script):
-        logging.warning(("couldn't find {} - ART debugging options will not " +
-                         "be available").format(dalvik_gdb_script))
-        dalvik_gdb_script = None
-
-    if debugger == "vscode-gdb":
-        return generate_vscode_gdb_script(
-            debugger_path, root, sysroot, binary_file.name, port, dalvik_gdb_script, solib_search_path)
     if debugger == "vscode-lldb":
         return generate_vscode_lldb_script(
             root, sysroot, binary_file.name, port, solib_search_path)
-    elif debugger == "gdb":
-        return generate_gdb_script(root, sysroot, binary_file.name, port, dalvik_gdb_script, solib_search_path, connect_timeout)
     elif debugger == 'lldb':
         return generate_lldb_script(
             root, sysroot, binary_file.name, port, solib_search_path)
@@ -432,19 +322,6 @@ def do_main():
 
     if device is None:
         sys.exit("ERROR: Failed to find device.")
-
-    use_lldb = not args.no_lldb
-    # Error check forwarding.
-    if args.setup_forwarding:
-        if use_lldb and (args.setup_forwarding == "gdb" or args.setup_forwarding == "vscode-gdb"):
-            sys.exit("Error: --setup-forwarding={} requires '--no-lldb'.".format(
-                     args.setup_forwarding))
-        elif (not use_lldb) and (args.setup_forwarding == 'lldb' or args.setup_forwarding == 'vscode-lldb'):
-            sys.exit("Error: --setup-forwarding={} requires '--lldb'.".format(
-                     args.setup_forwarding))
-    # Pick what vscode-debugger type to use.
-    if args.setup_forwarding == 'vscode':
-        args.setup_forwarding = 'vscode-lldb' if use_lldb else 'vscode-gdb'
 
     root = os.environ["ANDROID_BUILD_TOP"]
     sysroot = os.path.join(os.environ["ANDROID_PRODUCT_OUT"], "symbols")
@@ -479,28 +356,18 @@ def do_main():
         linker_search_dir = ensure_linker(device, sysroot, interp)
 
         tracer_pid = get_tracer_pid(device, pid)
-        if os.path.basename(__file__) == 'gdbclient.py' and not args.lldb:
-            print("gdb is deprecated in favor of lldb. "
-                  "If you can't use lldb, please set --no-lldb and file a bug asap.")
         if tracer_pid == 0:
             cmd_prefix = args.su_cmd
             if args.env:
                 cmd_prefix += ['env'] + [v[0] for v in args.env]
 
-            # Start gdbserver.
-            if use_lldb:
-                server_local_path = get_lldb_server_path(
-                    root, clang_base, clang_version, arch)
-                server_remote_path = "/data/local/tmp/{}-lldb-server".format(
-                    arch)
-            else:
-                server_local_path = get_gdbserver_path(root, arch)
-                server_remote_path = "/data/local/tmp/{}-gdbserver".format(
-                    arch)
+            # Start lldb-server.
+            server_local_path = get_lldb_server_path(root, clang_base, clang_version, arch)
+            server_remote_path = "/data/local/tmp/{}-lldb-server".format(arch)
             gdbrunner.start_gdbserver(
                 device, server_local_path, server_remote_path,
                 target_pid=pid, run_cmd=run_cmd, debug_socket=debug_socket,
-                port=args.port, run_as_cmd=cmd_prefix, lldb=use_lldb)
+                port=args.port, run_as_cmd=cmd_prefix, lldb=True)
         else:
             print(
                 "Connecting to tracing pid {} using local port {}".format(
@@ -508,15 +375,10 @@ def do_main():
             gdbrunner.forward_gdbserver_port(device, local=args.port,
                                              remote="tcp:{}".format(args.port))
 
-        if use_lldb:
-            debugger_path = get_lldb_path(toolchain_path)
-            debugger = args.setup_forwarding or 'lldb'
-        else:
-            debugger_path = os.path.join(
-                root, "prebuilts", "gdb", platform_name, "bin", "gdb")
-            debugger = args.setup_forwarding or "gdb"
+        debugger_path = get_lldb_path(toolchain_path)
+        debugger = args.setup_forwarding or 'lldb'
 
-        # Generate a gdb/lldb script.
+        # Generate the lldb script.
         setup_commands = generate_setup_script(debugger_path=debugger_path,
                                                sysroot=sysroot,
                                                linker_search_dir=linker_search_dir,
@@ -529,25 +391,24 @@ def do_main():
             # Print a newline to separate our messages from the GDB session.
             print("")
 
-            # Start gdb.
-            gdbrunner.start_gdb(debugger_path, setup_commands, lldb=use_lldb)
+            # Start lldb.
+            gdbrunner.start_gdb(debugger_path, setup_commands, lldb=True)
         else:
-            debugger_name = "lldb" if use_lldb else "gdb"
             print("")
             print(setup_commands)
             print("")
-            if args.setup_forwarding == "vscode-{}".format(debugger_name):
+            if args.setup_forwarding == "vscode-lldb":
                 print(textwrap.dedent("""
                         Paste the above json into .vscode/launch.json and start the debugger as
-                        normal. Press enter in this terminal once debugging is finished to shutdown
-                        the gdbserver and close all the ports."""))
+                        normal. Press enter in this terminal once debugging is finished to shut
+                        lldb-server down and close all the ports."""))
             else:
                 print(textwrap.dedent("""
-                        Paste the above {name} commands into the {name} frontend to setup the
-                        gdbserver connection. Press enter in this terminal once debugging is
-                        finished to shutdown the gdbserver and close all the ports.""".format(name=debugger_name)))
+                        Paste the lldb commands above into the lldb frontend to set up the
+                        lldb-server connection. Press enter in this terminal once debugging is
+                        finished to shut lldb-server down and close all the ports."""))
             print("")
-            raw_input("Press enter to shutdown gdbserver")
+            raw_input("Press enter to shut down lldb-server")
 
 
 def main():
