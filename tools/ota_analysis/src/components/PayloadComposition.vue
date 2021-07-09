@@ -12,6 +12,16 @@
   <button @click="updateChart('COWmerge')">
     Analyse COW Merge Operations
   </button>
+  <BaseFile
+    label="Select The Target Android Build"
+    @file-select="selectBuild"
+  />
+  <button
+    :disabled="!targetFile"
+    @click="updateChart('extensions')"
+  >
+    Analyse File Extensions
+  </button>
   <div v-if="echartsData">
     <PieChart :echartsData="echartsData" />
   </div>
@@ -20,6 +30,7 @@
 <script>
 import PartialCheckbox from '@/components/PartialCheckbox.vue'
 import PieChart from '@/components/PieChart.vue'
+import BaseFile from '@/components/BaseFile.vue'
 import { analysePartitions } from '../services/payload_composition.js'
 import { chromeos_update_engine as update_metadata_pb } from '../services/update_metadata_pb.js'
 
@@ -27,6 +38,7 @@ export default {
   components: {
     PartialCheckbox,
     PieChart,
+    BaseFile
   },
   props: {
     manifest: {
@@ -39,6 +51,7 @@ export default {
       partitionInclude: new Map(),
       echartsData: null,
       listData: '',
+      targetFile: null
     }
   },
   computed: {
@@ -49,15 +62,24 @@ export default {
     },
   },
   methods: {
-    updateChart(metrics) {
+    async updateChart(metrics) {
       let partitionSelected = this.manifest.partitions.filter((partition) =>
         this.partitionInclude.get(partition.partitionName)
       )
-      this.echartsData = analysePartitions(
-        metrics,
-        partitionSelected,
-        this.manifest.blockSize)
+      try {
+        this.echartsData = await analysePartitions(
+          metrics,
+          partitionSelected,
+          this.manifest.blockSize,
+          this.targetFile) }
+      catch (err) {
+        alert('Cannot be processed for the following issue: ', err)
+      }
     },
+    selectBuild(files) {
+      //TODO(lishutong) check the version of target file is same to the OTA target
+      this.targetFile = files[0]
+    }
   },
 }
 </script>
