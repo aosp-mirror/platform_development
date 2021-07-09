@@ -14,10 +14,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source development/gsi/build_with_kernel/bld-gki.sh
+source development/gsi/build_with_kernel/repack_kernels_common.sh
 
 set -e
 
-repack \
-  "out/prebuilt_cached/artifacts/common-android12-5_10-kernel_x86_64/Image"  \
-  "${OUT_DIR}/target/kernel/5.10/x86_64" 5.10
+prepare_kernel_image \
+  "artifacts/common-android12-5_10-kernel_x86_64" \
+  "5.10" \
+  "x86_64"
+
+prepare_kernel_image \
+  "artifacts/common-android12-5_10-kernel_debug_x86_64" \
+  "5.10" \
+  "x86_64" \
+  "debug"
+
+prepare_kernel_modules \
+  "artifacts/common-android12-5_10-kernel_virt_x86_64" \
+  "5.10" \
+  "x86_64" \
