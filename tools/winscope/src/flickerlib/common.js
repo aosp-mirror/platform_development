@@ -58,12 +58,14 @@ const Layer = require('flicker').com.android.server.wm.traces.common.
     layers.Layer;
 const LayerTraceEntry = require('flicker').com.android.server.wm.traces.common.
     layers.LayerTraceEntry;
-const LayerTraceEntryBuilder = require('flicker').com.android.server.wm.traces.common.
-    layers.LayerTraceEntryBuilder;
+const LayerTraceEntryBuilder = require('flicker').com.android.server.wm.traces.
+    common.layers.LayerTraceEntryBuilder;
 const LayersTrace = require('flicker').com.android.server.wm.traces.common.
     layers.LayersTrace;
-const Matrix = require('flicker').com.android.server.wm.traces.common.layers.Transform.Matrix;
-const Transform = require('flicker').com.android.server.wm.traces.common.layers.Transform;
+const Matrix = require('flicker').com.android.server.wm.traces.common.layers.
+    Transform.Matrix;
+const Transform = require('flicker').com.android.server.wm.traces.common.
+    layers.Transform;
 
 // Common
 const Size = require('flicker').com.android.server.wm.traces.common.Size;
@@ -74,94 +76,92 @@ const Rect = require('flicker').com.android.server.wm.traces.common.Rect;
 const RectF = require('flicker').com.android.server.wm.traces.common.RectF;
 const Region = require('flicker').com.android.server.wm.traces.common.Region;
 
-const EMPTY_SIZE = new Size(0, 0)
-const EMPTY_BUFFER = new Buffer(0, 0, 0 ,0)
-const EMPTY_COLOR = new Color(-1, -1, -1, 0)
-const EMPTY_RECT = new Rect(0, 0, 0, 0)
-const EMPTY_RECTF = new RectF(0, 0, 0, 0)
-const EMPTY_REGION = new Region([])
-const EMPTY_POINT = new Point(0, 0)
-const EMPTY_MATRIX = new Matrix(0, 0, 0, 0, 0, 0)
-const EMPTY_TRANSFORM = new Transform(0, EMPTY_MATRIX)
+const EMPTY_BUFFER = new Buffer(0, 0, 0, 0);
+const EMPTY_COLOR = new Color(-1, -1, -1, 0);
+const EMPTY_RECT = new Rect(0, 0, 0, 0);
+const EMPTY_RECTF = new RectF(0, 0, 0, 0);
+const EMPTY_POINT = new Point(0, 0);
+const EMPTY_MATRIX = new Matrix(0, 0, 0, 0, 0, 0);
+const EMPTY_TRANSFORM = new Transform(0, EMPTY_MATRIX);
 
 function toSize(proto) {
-    if (proto == null) {
-        return EMPTY_BOUNDS
-    }
-    const width = proto.width ?? proto.w ?? 0
-    const height = proto.height ?? proto.h ?? 0
-    if (width || height) {
-        return new Size(width, height)
-    }
-    return EMPTY_BOUNDS
+  if (proto == null) {
+    return EMPTY_BOUNDS;
+  }
+  const width = proto.width ?? proto.w ?? 0;
+  const height = proto.height ?? proto.h ?? 0;
+  if (width || height) {
+    return new Size(width, height);
+  }
+  return EMPTY_BOUNDS;
 }
 
 function toBuffer(proto) {
-    const width = proto?.width ?? 0
-    const height = proto?.height ?? 0
-    const stride = proto?.stride ?? 0
-    const format = proto?.format ?? 0
+  const width = proto?.width ?? 0;
+  const height = proto?.height ?? 0;
+  const stride = proto?.stride ?? 0;
+  const format = proto?.format ?? 0;
 
-    if (width || height || stride || format) {
-        return new Buffer(width, height, stride, format)
-    }
-    return EMPTY_BUFFER
+  if (width || height || stride || format) {
+    return new Buffer(width, height, stride, format);
+  }
+  return EMPTY_BUFFER;
 }
 
 function toColor(proto) {
-    if (proto == null) {
-        return EMPTY_COLOR
-    }
-    const r = proto.r ?? 0
-    const g = proto.g ?? 0
-    const b = proto.b ?? 0
-    const a = proto.a ?? 0
-    if (r || g || b || a) {
-        return new Color(r, g, b, a)
-    }
-    return EMPTY_COLOR
+  if (proto == null) {
+    return EMPTY_COLOR;
+  }
+  const r = proto.r ?? 0;
+  const g = proto.g ?? 0;
+  const b = proto.b ?? 0;
+  const a = proto.a ?? 0;
+  if (r || g || b || a) {
+    return new Color(r, g, b, a);
+  }
+  return EMPTY_COLOR;
 }
 
 function toPoint(proto) {
-    if (proto == null) {
-        return null
-    }
-    const x = proto.x ?? 0
-    const y = proto.y ?? 0
-    if (x || y) {
-        return new Point(x, y)
-    }
-    return EMPTY_POINT
+  if (proto == null) {
+    return null;
+  }
+  const x = proto.x ?? 0;
+  const y = proto.y ?? 0;
+  if (x || y) {
+    return new Point(x, y);
+  }
+  return EMPTY_POINT;
 }
 
 function toRect(proto) {
-    if (proto == null) {
-        return EMPTY_RECT
-    }
+  if (proto == null) {
+    return EMPTY_RECT;
+  }
 
-    const left = proto?.left ?? 0
-    const top = proto?.top ?? 0
-    const right = proto?.right ?? 0
-    const bottom = proto?.bottom ?? 0
-    if (left || top || right || bottom) {
-        return new Rect(left, top, right, bottom)
-    }
-    return EMPTY_RECT
+  const left = proto?.left ?? 0;
+  const top = proto?.top ?? 0;
+  const right = proto?.right ?? 0;
+  const bottom = proto?.bottom ?? 0;
+  if (left || top || right || bottom) {
+    return new Rect(left, top, right, bottom);
+  }
+  return EMPTY_RECT;
 }
 
 function toRectF(proto) {
-    if (proto == null) {
-        return EMPTY_RECTF
-    }
+  if (proto == null) {
+    return EMPTY_RECTF;
+  }
 
-    const left = proto?.left ?? 0
-    const top = proto?.top ?? 0
-    const right = proto?.right ?? 0
-    const bottom = proto?.bottom ?? 0
-    if (left || top || right || bottom) {
-        return new RectF(left, top, right, bottom)
-    }
-    return EMPTY_RECTF
+  const left = proto?.left ?? 0;
+  const top = proto?.top ?? 0;
+  const right = proto?.right ?? 0;
+  const bottom = proto?.bottom ?? 0;
+  if (left || top || right || bottom) {
+    return new RectF(left, top, right, bottom);
+  }
+  return EMPTY_RECTF;
 }
 
 function toRegion(proto) {
@@ -180,66 +180,66 @@ function toRegion(proto) {
 }
 
 function toTransform(proto) {
-    if (proto == null) {
-        return EMPTY_TRANSFORM
-    }
-    const dsdx = proto.dsdx ?? 0
-    const dtdx = proto.dtdx ?? 0
-    const tx = proto.tx ?? 0
-    const dsdy = proto.dsdy ?? 0
-    const dtdy = proto.dtdy ?? 0
-    const ty = proto.ty ?? 0
+  if (proto == null) {
+    return EMPTY_TRANSFORM;
+  }
+  const dsdx = proto.dsdx ?? 0;
+  const dtdx = proto.dtdx ?? 0;
+  const tx = proto.tx ?? 0;
+  const dsdy = proto.dsdy ?? 0;
+  const dtdy = proto.dtdy ?? 0;
+  const ty = proto.ty ?? 0;
 
-    if (dsdx || dtdx || tx || dsdy || dtdy || ty) {
-        const matrix = new Matrix(dsdx, dtdx, tx, dsdy, dtdy, ty)
-        return new Transform(proto.type ?? 0, matrix)
-    }
+  if (dsdx || dtdx || tx || dsdy || dtdy || ty) {
+    const matrix = new Matrix(dsdx, dtdx, tx, dsdy, dtdy, ty);
+    return new Transform(proto.type ?? 0, matrix);
+  }
 
-    if (proto.type) {
-        return new Transform(proto.type ?? 0, EMPTY_MATRIX)
-    }
-    return EMPTY_TRANSFORM
+  if (proto.type) {
+    return new Transform(proto.type ?? 0, EMPTY_MATRIX);
+  }
+  return EMPTY_TRANSFORM;
 }
 
 export {
-    Activity,
-    Configuration,
-    ConfigurationContainer,
-    DisplayArea,
-    DisplayContent,
-    KeyguardControllerState,
-    RootWindowContainer,
-    Task,
-    TaskFragment,
-    WindowConfiguration,
-    WindowContainer,
-    WindowState,
-    WindowToken,
-    WindowLayoutParams,
-    WindowManagerPolicy,
-    WindowManagerTrace,
-    WindowManagerState,
-    // SF
-    Layer,
-    LayerTraceEntry,
-    LayerTraceEntryBuilder,
-    LayersTrace,
-    Transform,
-    Matrix,
-    // Common
-    Size,
-    Buffer,
-    Color,
-    Point,
-    Rect,
-    RectF,
-    Region,
-    toSize,
-    toBuffer,
-    toColor,
-    toPoint,
-    toRect,
-    toRectF,
-    toRegion,
-    toTransform
+  Activity,
+  Configuration,
+  ConfigurationContainer,
+  DisplayArea,
+  DisplayContent,
+  KeyguardControllerState,
+  RootWindowContainer,
+  Task,
+  TaskFragment,
+  WindowConfiguration,
+  WindowContainer,
+  WindowState,
+  WindowToken,
+  WindowLayoutParams,
+  WindowManagerPolicy,
+  WindowManagerTrace,
+  WindowManagerState,
+  // SF
+  Layer,
+  LayerTraceEntry,
+  LayerTraceEntryBuilder,
+  LayersTrace,
+  Transform,
+  Matrix,
+  // Common
+  Size,
+  Buffer,
+  Color,
+  Point,
+  Rect,
+  RectF,
+  Region,
+  toSize,
+  toBuffer,
+  toColor,
+  toPoint,
+  toRect,
+  toRectF,
+  toRegion,
+  toTransform,
 };

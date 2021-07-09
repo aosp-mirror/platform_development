@@ -32,7 +32,7 @@ export default class WindowManager extends DumpBase {
     return DUMP_TYPES.WINDOW_MANAGER;
   }
 
-  static fromProto(proto): WindowManagerTrace {
+  static fromProto(proto: any): WindowManagerTrace {
     return WindowManagerTrace.fromDump(proto);
   }
 }

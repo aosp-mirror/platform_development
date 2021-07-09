@@ -32,7 +32,7 @@ export default class SurfaceFlinger extends TraceBase {
     return TRACE_TYPES.SURFACE_FLINGER;
   }
 
-  static fromProto(proto): LayersTrace {
+  static fromProto(proto: any): LayersTrace {
     return LayersTrace.fromProto(proto);
   }
 }

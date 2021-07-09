@@ -15,31 +15,28 @@
  */
 
 import { shortenName } from '../mixin'
-import { asRawTreeViewObject } from '../../utils/diff.js'
 import { WindowToken } from "../common"
 import WindowContainer from "./WindowContainer"
 
-WindowToken.fromProto = function (proto, isActivityInTree: Boolean): WindowToken {
+WindowToken.fromProto = function (proto: any, isActivityInTree: Boolean): WindowToken {
     if (proto == null) {
-        return null
+        return null;
     }
 
-    const children = proto.windowContainer.children.reverse()
-        .filter(it => it != null)
-        .map(it => WindowContainer.childrenFromProto(it, isActivityInTree))
-    const windowContainer = WindowContainer.fromProto({proto: proto.windowContainer,
-        children: children, tokenOverride: proto.hashCode})
-    if (windowContainer == null) {
-        throw "Window container should not be null: " + JSON.stringify(proto)
-    }
-    const entry = new WindowToken(windowContainer)
-    entry.kind = entry.constructor.name
-    entry.proto = proto
-    entry.shortName = shortenName(entry.name)
-    entry.rawTreeViewObject = asRawTreeViewObject(entry)
-
-    console.warn("Created ", entry.kind, " stableId=", entry.stableId)
-    return entry
+    const windowContainer = WindowContainer.fromProto(
+        /* proto */ proto.windowContainer,
+        /* protoChildren */ proto.windowContainer.children.reverse(),
+        /* isActivityInTree */ isActivityInTree,
+        /* nameOverride */ null,
+        /* identifierOverride */ null,
+        /* tokenOverride */ proto.hashCode
+    );
+    const entry = new WindowToken(windowContainer);
+    entry.kind = entry.constructor.name;
+    entry.proto = proto;
+    entry.shortName = shortenName(entry.name);
+    console.warn("Created ", entry.kind, " stableId=", entry.stableId);
+    return entry;
 }
 
-export default WindowToken
+export default WindowToken;

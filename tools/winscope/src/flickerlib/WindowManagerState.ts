@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import { asRawTreeViewObject } from '../utils/diff.js'
-
 import {
     KeyguardControllerState,
     RootWindowContainer,
@@ -25,17 +23,20 @@ import {
 
 import WindowContainer from "./windows/WindowContainer"
 
-WindowManagerState.fromProto = function ({proto, timestamp = 0, where = ""}): WindowManagerState {
-    var inputMethodWIndowAppToken = ""
+WindowManagerState.fromProto = function (proto: any, timestamp: number = 0, where: string = ""): WindowManagerState {
+    var inputMethodWIndowAppToken = "";
     if (proto.inputMethodWindow != null) {
         proto.inputMethodWindow.hashCode.toString(16)
-    }
-    const rootWindowContainer = newRootWindowContainer(proto.rootWindowContainer)
-    const keyguardControllerState = newKeyguardControllerState(
-        proto.rootWindowContainer.keyguardController)
+    };
+
+    const rootWindowContainer = createRootWindowContainer(proto.rootWindowContainer);
+    const keyguardControllerState = createKeyguardControllerState(
+        proto.rootWindowContainer.keyguardController);
+    const policy = createWindowManagerPolicy(proto.policy);
+
     const entry = new WindowManagerState(
         where,
-        newWindowManagerPolicy(proto.policy),
+        policy,
         proto.focusedApp,
         proto.focusedDisplayId,
         proto.focusedWindow?.title ?? "",
@@ -46,28 +47,30 @@ WindowManagerState.fromProto = function ({proto, timestamp = 0, where = ""}): Wi
         rootWindowContainer,
         keyguardControllerState,
         timestamp = timestamp
-    )
+    );
 
-    entry.kind = entry.constructor.name
-    // There no JVM/JS translation for Longs yet
-    entry.timestampMs = entry.timestamp.toString()
-    entry.rects = entry.windowStates.reverse().map(it => it.rect)
-    if (!entry.isComplete()) {
-        entry.isIncompleteReason = entry.getIsIncompleteReason()
-    }
-    entry.proto = proto
-    entry.shortName = entry.name
-    entry.chips = []
-    entry.isVisible = true
-    entry.rawTreeViewObject = asRawTreeViewObject(entry)
-
+    addAttributes(entry, proto);
     console.warn("Created ", entry.kind, " stableId=", entry.stableId)
     return entry
 }
 
-function newWindowManagerPolicy(proto): WindowManagerPolicy {
+function addAttributes(entry: WindowManagerState, proto: any) {
+    entry.kind = entry.constructor.name;
+    // There no JVM/JS translation for Longs yet
+    entry.timestampMs = entry.timestamp.toString();
+    entry.rects = entry.windowStates.reverse().map(it => it.rect);
+    if (!entry.isComplete()) {
+        entry.isIncompleteReason = entry.getIsIncompleteReason();
+    }
+    entry.proto = proto;
+    entry.shortName = entry.name;
+    entry.chips = [];
+    entry.isVisible = true;
+}
+
+function createWindowManagerPolicy(proto: any): WindowManagerPolicy {
     return new WindowManagerPolicy(
-        proto.focusedAppToken || "",
+        proto.focusedAppToken ?? "",
         proto.forceStatusBar,
         proto.forceStatusBarFromKeyguard,
         proto.keyguardDrawComplete,
@@ -80,36 +83,35 @@ function newWindowManagerPolicy(proto): WindowManagerPolicy {
         proto.rotationMode,
         proto.screenOnFully,
         proto.windowManagerDrawComplete
-    )
+    );
 }
 
-function newRootWindowContainer(proto): RootWindowContainer {
-    const children = proto.windowContainer.children.reverse()
-        .filter(it => it != null)
-        .map(it => WindowContainer.childrenFromProto(it, /* isActivityInTree */ false))
+function createRootWindowContainer(proto: any): RootWindowContainer {
     const windowContainer = WindowContainer.fromProto(
-        {proto: proto.windowContainer, children: children})
-    if (windowContainer == null) {
-        throw "Window container should not be null: " + JSON.stringify(proto)
-    }
-    const entry = new RootWindowContainer(windowContainer)
+        /* proto */ proto.windowContainer,
+        /* childrenProto */ proto.windowContainer.children.reverse()
+    );
 
-    return entry
+    if (windowContainer == null) {
+        throw new Error(`Window container should not be null.\n${JSON.stringify(proto)}`);
+    }
+    const entry = new RootWindowContainer(windowContainer);
+    return entry;
 }
 
-function newKeyguardControllerState(proto): KeyguardControllerState {
-    const keyguardOccludedStates = {}
+function createKeyguardControllerState(proto: any): KeyguardControllerState {
+    const keyguardOccludedStates = {};
 
     if (proto) {
         proto.keyguardOccludedStates.forEach(it =>
-            keyguardOccludedStates[it.displayId] = it.keyguardOccluded)
+            keyguardOccludedStates[it.displayId] = it.keyguardOccluded);
     }
 
     return new KeyguardControllerState(
         proto?.isAodShowing ?? false,
         proto?.isKeyguardShowing ?? false,
         keyguardOccludedStates
-    )
+    );
 }
 
 export default WindowManagerState;
