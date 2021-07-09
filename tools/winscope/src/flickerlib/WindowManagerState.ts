@@ -15,7 +15,6 @@
  */
 
 import { asRawTreeViewObject } from '../utils/diff.js'
-import { getPropertiesForDisplay } from './mixin'
 
 import {
     KeyguardControllerState,
@@ -50,14 +49,16 @@ WindowManagerState.fromProto = function ({proto, timestamp = 0, where = ""}): Wi
     )
 
     entry.kind = entry.constructor.name
+    // There no JVM/JS translation for Longs yet
+    entry.timestampMs = entry.timestamp.toString()
     entry.rects = entry.windowStates.reverse().map(it => it.rect)
     if (!entry.isComplete()) {
         entry.isIncompleteReason = entry.getIsIncompleteReason()
     }
-    entry.obj = getPropertiesForDisplay(proto, entry)
+    entry.proto = proto
     entry.shortName = entry.name
     entry.chips = []
-    entry.visible = true
+    entry.isVisible = true
     entry.rawTreeViewObject = asRawTreeViewObject(entry)
 
     console.warn("Created ", entry.kind, " stableId=", entry.stableId)

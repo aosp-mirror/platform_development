@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-import {toBounds, toBuffer, toColor, toPoint, toRect,
+import {toSize, toBuffer, toColor, toPoint, toRect,
     toRectF, toRegion, toTransform} from './common';
 import intDefMapping from
     '../../../../../prebuilts/misc/common/winscope/intDefMapping.json';
 
 export default class ObjectFormatter {
+    static displayDefaults: boolean = false
     private static INVALID_ELEMENT_PROPERTIES = ['length', 'name', 'prototype', 'children',
-    'childrenWindows', 'ref', 'root', 'layers', 'resolvedChildren']
+        'childrenWindows', 'ref', 'root', 'layers', 'resolvedChildren', 'flattenedLayers',
+        'rects', 'zOrderRelativeOf', 'rawTreeViewObject', 'chips', 'stableId']
 
     private static FLICKER_INTDEF_MAP = new Map([
         [`WindowLayoutParams.type`, `android.view.WindowManager.LayoutParams.WindowType`],
@@ -44,6 +46,7 @@ export default class ObjectFormatter {
     static format(obj: any): {} {
         const entries = Object.entries(obj)
             .filter(it => !it[0].includes(`$`))
+            .filter(it => !it[0].startsWith(`_`))
             .filter(it => !this.INVALID_ELEMENT_PROPERTIES.includes(it[0]))
         const sortedEntries = entries.sort()
 
@@ -52,10 +55,12 @@ export default class ObjectFormatter {
             const key = entry[0]
             const value: any = entry[1]
 
-            if (value) {
+            if (value || (this.displayDefaults && value !== undefined && value !== null)) {
                 // flicker obj
                 if (value.prettyPrint) {
-                    result[key] = value.prettyPrint()
+                    if (value.isNotEmpty || this.displayDefaults) {
+                        result[key] = value.prettyPrint()
+                    }
                 } else {
                     // converted proto to flicker
                     const translatedObject = this.translateObject(value)
@@ -63,7 +68,11 @@ export default class ObjectFormatter {
                         result[key] = translatedObject.prettyPrint()
                     // objects - recursive call
                     } else if (value && typeof(value) == `object`) {
-                        result[key] = this.format(value)
+                        const childObj = this.format(value) as any
+                        const isEmpty = Object.entries(childObj).length == 0 || childObj.isEmpty
+                        if (!isEmpty || this.displayDefaults) {
+                            result[key] = childObj
+                        }
                     } else {
                     // values
                         result[key] = this.translateIntDef(obj, key, value)
@@ -86,7 +95,7 @@ export default class ObjectFormatter {
     private static translateObject(obj) {
         const type = obj?.$type?.name
         switch(type) {
-            case `SizeProto`: return toBounds(obj)
+            case `SizeProto`: return toSize(obj)
             case `ActiveBufferProto`: return toBuffer(obj)
             case `ColorProto`: return toColor(obj)
             case `PointProto`: return toPoint(obj)
