@@ -30,8 +30,8 @@ export default {
     summarizer(item) {
       const summary = [];
 
-      if (item.obj.isIncompleteReason) {
-        summary.push({key: 'Incomplete state reason', value: item.obj.isIncompleteReason});
+      if (item.isIncompleteReason) {
+        summary.push({key: 'Incomplete state reason', value: item.isIncompleteReason});
       }
 
       return summary;

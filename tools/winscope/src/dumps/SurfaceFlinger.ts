@@ -16,6 +16,7 @@
 
 import { FILE_TYPES, DUMP_TYPES } from "@/decode.js";
 import DumpBase from "./DumpBase";
+import LayersTraceEntry from '../flickerlib/layers/LayerTraceEntry'
 
 export default class SurfaceFlinger extends DumpBase {
   sfDumpFile: any;
@@ -29,5 +30,9 @@ export default class SurfaceFlinger extends DumpBase {
 
   get type() {
     return DUMP_TYPES.SURFACE_FLINGER;
+  }
+
+  static fromProto(proto): LayersTraceEntry {
+    return LayersTraceEntry.fromProto({protos: proto.layers, timestamp: 0, where: ""});
   }
 }

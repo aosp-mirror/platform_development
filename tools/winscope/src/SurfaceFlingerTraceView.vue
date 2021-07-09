@@ -30,23 +30,23 @@ export default {
     summarizer(layer) {
       const summary = [];
 
-      if (layer.invisibleDueTo) {
-        summary.push({key: 'Invisible due to', value: layer.invisibleDueTo});
+      if (layer?.visibilityReason) {
+        summary.push({key: 'Invisible due to', value: layer.visibilityReason});
       }
 
-      if (layer.occludedBy?.length > 0) {
-        summary.push({key: 'Occluded by', value: layer.occludedBy.join(', ')});
+      if (layer?.occludedBy?.length > 0) {
+        summary.push({key: 'Occluded by', value: layer.occludedBy.map(it => it.id).join(', ')});
       }
 
-      if (layer.partiallyOccludedBy?.length > 0) {
+      if (layer?.partiallyOccludedBy?.length > 0) {
         summary.push({
           key: 'Partially occluded by',
-          value: layer.partiallyOccludedBy.join(', '),
+          value: layer.partiallyOccludedBy.map(it => it.id).join(', '),
         });
       }
 
-      if (layer.coveredBy?.length > 0) {
-        summary.push({key: 'Covered by', value: layer.coveredBy.join(', ')});
+      if (layer?.coveredBy?.length > 0) {
+        summary.push({key: 'Covered by', value: layer.coveredBy.map(it => it.id).join(', ')});
       }
 
       return summary;
