@@ -15,38 +15,35 @@
  */
 
 import { shortenName } from '../mixin'
-import { asRawTreeViewObject } from '../../utils/diff.js'
 import { TaskFragment } from "../common"
 import WindowContainer from "./WindowContainer"
 
-TaskFragment.fromProto = function (proto, isActivityInTree: Boolean): TaskFragment {
+TaskFragment.fromProto = function (proto: any, isActivityInTree: Boolean): TaskFragment {
     if (proto == null) {
-        return null
+        return null;
     } else {
-        const children = proto.windowContainer.children.reverse()
-            .filter(it => it != null)
-            .map(it => WindowContainer.childrenFromProto(it, isActivityInTree))
-        const windowContainer = WindowContainer.fromProto({proto: proto.windowContainer,
-            children: children})
-        if (windowContainer == null) {
-            throw "Window container should not be null: " + JSON.stringify(proto)
-        }
+        const windowContainer = WindowContainer.fromProto(
+            /* proto */ proto.windowContainer,
+            /* protoChildren */ proto.windowContainer.children.reverse(),
+            /* isActivityInTree */ isActivityInTree);
         const entry = new TaskFragment(
             proto.activityType,
             proto.displayId,
             proto.minWidth,
             proto.minHeight,
             windowContainer
-        )
+        );
 
-        entry.proto = proto
-        entry.kind = entry.constructor.name
-        entry.shortName = shortenName(entry.name)
-        entry.rawTreeViewObject = asRawTreeViewObject(entry)
-
-        console.warn("Created ", entry.kind, " stableId=", entry.stableId)
-        return entry
+        addAttributes(entry, proto);
+        console.warn("Created ", entry.kind, " stableId=", entry.stableId);
+        return entry;
     }
 }
 
-export default TaskFragment
+function addAttributes(entry: TaskFragment, proto: any) {
+    entry.proto = proto;
+    entry.kind = entry.constructor.name;
+    entry.shortName = shortenName(entry.name);
+}
+
+export default TaskFragment;

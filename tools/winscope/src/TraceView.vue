@@ -81,8 +81,8 @@
             </md-checkbox>
             <md-tooltip md-direction="bottom">
                 If checked, shows the value of all properties.
-                Otherwise, hides all properties whose value is the default for its
-                data type.
+                Otherwise, hides all properties whose value is
+                the default for its data type.
             </md-tooltip>
           </div>
           <md-checkbox
@@ -187,7 +187,7 @@ export default {
   },
   methods: {
     checkboxChange(checked) {
-      this.itemSelected(this.item)
+      this.itemSelected(this.item);
     },
     itemSelected(item) {
       this.hierarchySelected = item;
@@ -197,7 +197,7 @@ export default {
       this.$emit('focus');
     },
     getTransformedProperties(item) {
-      ObjectFormatter.displayDefaults = this.displayDefaults
+      ObjectFormatter.displayDefaults = this.displayDefaults;
       const transformer = new ObjectTransformer(
           getPropertiesForDisplay(item),
           item.name,
@@ -224,8 +224,10 @@ export default {
         return item;
       }
 
-      return new DiffGenerator(this.item)
-          .compareWith(this.getDataWithOffset(-1))
+      const thisItem = this.item;
+      const prevItem = this.getDataWithOffset(-1);
+      return new DiffGenerator(thisItem)
+          .compareWith(prevItem)
           .withUniqueNodeId((node) => {
             return node.stableId;
           })
@@ -236,7 +238,7 @@ export default {
       this.item = item;
       this.tree = this.generateTreeFromItem(item);
 
-      const rects = item.rects //.toArray()
+      const rects = item.rects; // .toArray()
       this.rects = [...rects].reverse();
       this.bounds = item.bounds;
 

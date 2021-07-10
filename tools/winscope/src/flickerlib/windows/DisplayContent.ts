@@ -15,30 +15,25 @@
  */
 
 import { shortenName } from '../mixin'
-import { asRawTreeViewObject } from '../../utils/diff.js'
 import { toRect, DisplayContent, Rect } from "../common"
 import WindowContainer from "./WindowContainer"
 
-DisplayContent.fromProto = function (proto, isActivityInTree: Boolean): DisplayContent {
+DisplayContent.fromProto = function (proto: any, isActivityInTree: Boolean): DisplayContent {
     if (proto == null) {
-        return null
+        return null;
     } else {
-        const children = proto.rootDisplayArea.windowContainer.children.reverse()
-            .filter(it => it != null)
-            .map(it => WindowContainer.childrenFromProto(it, isActivityInTree))
-        const windowContainer = WindowContainer.fromProto({proto: proto.rootDisplayArea.windowContainer,
-            children: children, nameOverride: proto.displayInfo?.name ?? null})
-        if (windowContainer == null) {
-            throw "Window container should not be null: " + JSON.stringify(proto)
-        }
-
-        const displayRectWidth = proto.displayInfo?.logicalWidth ?? 0
-        const displayRectHeight = proto.displayInfo?.logicalHeight ?? 0
-        const appRectWidth = proto.displayInfo?.appWidth ?? 0
-        const appRectHeight = proto.displayInfo?.appHeight ?? 0
-
-        const defaultBounds = proto.pinnedStackController?.defaultBounds ?? null
-        const movementBounds = proto.pinnedStackController?.movementBounds ?? null
+        const windowContainer = WindowContainer.fromProto(
+            /* proto */ proto.rootDisplayArea.windowContainer,
+            /* protoChildren */ proto.rootDisplayArea.windowContainer.children.reverse(),
+            /* isActivityInTree */ isActivityInTree,
+            /* nameOverride */ proto.displayInfo?.name ?? null
+        );
+        const displayRectWidth = proto.displayInfo?.logicalWidth ?? 0;
+        const displayRectHeight = proto.displayInfo?.logicalHeight ?? 0;
+        const appRectWidth = proto.displayInfo?.appWidth ?? 0;
+        const appRectHeight = proto.displayInfo?.appHeight ?? 0;
+        const defaultBounds = proto.pinnedStackController?.defaultBounds ?? null;
+        const movementBounds = proto.pinnedStackController?.movementBounds ?? null;
 
         const entry = new DisplayContent(
             proto.id,
@@ -59,16 +54,18 @@ DisplayContent.fromProto = function (proto, isActivityInTree: Boolean): DisplayC
             proto.displayRotation?.rotation ?? 0,
             proto.displayRotation?.lastOrientation ?? 0,
             windowContainer
-        )
+        );
 
-        entry.proto = proto
-        entry.kind = entry.constructor.name
-        entry.shortName = shortenName(entry.name)
-        entry.rawTreeViewObject = asRawTreeViewObject(entry)
-
-        console.warn("Created ", entry.kind, " stableId=", entry.stableId)
-        return entry
+        addAttributes(entry, proto);
+        console.warn("Created ", entry.kind, " stableId=", entry.stableId);
+        return entry;
     }
 }
 
-export default DisplayContent
+function addAttributes(entry: DisplayContent, proto: any) {
+    entry.proto = proto;
+    entry.kind = entry.constructor.name;
+    entry.shortName = shortenName(entry.name);
+}
+
+export default DisplayContent;

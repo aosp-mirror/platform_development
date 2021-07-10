@@ -15,32 +15,32 @@
  */
 
 import { shortenName } from '../mixin'
-import { asRawTreeViewObject } from '../../utils/diff.js'
 import { DisplayArea } from "../common"
 import WindowContainer from "./WindowContainer"
 
-DisplayArea.fromProto = function (proto, isActivityInTree: Boolean): DisplayArea {
+DisplayArea.fromProto = function (proto: any, isActivityInTree: Boolean): DisplayArea {
     if (proto == null) {
-        return null
+        return null;
     } else {
-        const children = proto.windowContainer.children.reverse()
-            .filter(it => it != null)
-            .map(it => WindowContainer.childrenFromProto(it, isActivityInTree))
-        const windowContainer = WindowContainer.fromProto({proto: proto.windowContainer,
-            children: children, nameOverride: proto.name})
-        if (windowContainer == null) {
-            throw "Window container should not be null: " + JSON.stringify(proto)
-        }
-        const entry = new DisplayArea(proto.isTaskDisplayArea, windowContainer)
+        const windowContainer = WindowContainer.fromProto(
+            /* proto */ proto.windowContainer,
+            /* protoChildren */ proto.windowContainer.children.reverse(),
+            /* isActivityInTree */ isActivityInTree,
+            /* nameOverride */ proto.name
+        );
 
-        entry.proto = proto
-        entry.kind = entry.constructor.name
-        entry.shortName = shortenName(entry.name)
-        entry.rawTreeViewObject = asRawTreeViewObject(entry)
+        const entry = new DisplayArea(proto.isTaskDisplayArea, windowContainer);
 
-        console.warn("Created ", entry.kind, " stableId=", entry.stableId)
-        return entry
+        addAttributes(entry, proto);
+        console.warn("Created ", entry.kind, " stableId=", entry.stableId);
+        return entry;
     }
 }
 
-export default DisplayArea
+function addAttributes(entry: DisplayArea, proto: any) {
+    entry.proto = proto;
+    entry.kind = entry.constructor.name;
+    entry.shortName = shortenName(entry.name);
+}
+
+export default DisplayArea;

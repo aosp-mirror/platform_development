@@ -16,34 +16,20 @@
 
 import { LayersTrace } from "./common"
 import LayerTraceEntry from './layers/LayerTraceEntry'
-import { transformLayersTrace } from '../transform_sf'
 
-LayersTrace.fromProto = function (proto): LayersTrace {
+LayersTrace.fromProto = function (proto: any): LayersTrace {
     const entries = []
     for (const entryProto of proto.entry) {
-        const transformedEntry = LayerTraceEntry.fromProto({
-            protos: entryProto.layers.layers,
-            timestamp: entryProto.elapsedRealtimeNanos,
-            hwcBlob: entryProto.hwcBlob,
-            where: ``})
+        const transformedEntry = LayerTraceEntry.fromProto(
+            /* protos */ entryProto.layers.layers,
+            /* timestamp */ entryProto.elapsedRealtimeNanos,
+            /* hwcBlob */ entryProto.hwcBlob);
 
-        entries.push(transformedEntry)
+        entries.push(transformedEntry);
     }
-    const source = null
-    const sourceChecksum = null
-
-    const original = transformLayersTrace(proto)
-    const originalRects = original.children[3].rects
-    let a = `Original rects\n`
-    originalRects.forEach(it => a += `(${it.left}, ${it.top}) - (${it.right}, ${it.bottom}) - ${it.label}\n` )
-    console.log(a)
-
-    const trace = new LayersTrace(entries, source, sourceChecksum)
-    const newRects = trace.entries[3].rects
-    a = `New rects\n`
-    newRects.forEach(it => a += `(${it.left}, ${it.top}) - (${it.right}, ${it.bottom}) - ${it.label}\n` )
-    console.log(a)
-    return trace
+    const source = null;
+    const trace = new LayersTrace(entries, source);
+    return trace;
 }
 
-export default LayersTrace
+export default LayersTrace;

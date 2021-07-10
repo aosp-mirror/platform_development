@@ -15,23 +15,20 @@
  */
 
 import { shortenName } from '../mixin'
-import { asRawTreeViewObject } from '../../utils/diff.js'
 import { Task, toRect } from "../common"
 import WindowContainer from "./WindowContainer"
 
-Task.fromProto = function (proto, isActivityInTree: Boolean): Task {
+Task.fromProto = function (proto: any, isActivityInTree: Boolean): Task {
     if (proto == null) {
-        return null
+        return null;
     } else {
-        const windowContainerProto = proto.taskFragment?.windowContainer ?? proto.windowContainer
-        const children = windowContainerProto.children.reverse()
-            .filter(it => it != null)
-            .map(it => WindowContainer.childrenFromProto(it, isActivityInTree))
-        const windowContainer = WindowContainer.fromProto({proto: windowContainerProto,
-            children: children})
-        if (windowContainer == null) {
-            throw "Window container should not be null: " + JSON.stringify(proto)
-        }
+        const windowContainerProto = proto.taskFragment?.windowContainer ?? proto.windowContainer;
+        const windowContainer = WindowContainer.fromProto(
+            /* proto */ windowContainerProto,
+            /* protoChildren */ windowContainerProto.children.reverse(),
+            /* isActivityInTree */ isActivityInTree
+        );
+
         const entry = new Task(
             proto.taskFragment?.activityType ?? proto.activityType,
             proto.fillsParent,
@@ -51,16 +48,18 @@ Task.fromProto = function (proto, isActivityInTree: Boolean): Task {
             proto.taskFragment?.minWidth ?? proto.minWidth,
             proto.taskFragment?.minHeight ?? proto.minHeight,
             windowContainer
-        )
+        );
 
-        entry.proto = proto
-        entry.kind = entry.constructor.name
-        entry.shortName = shortenName(entry.name)
-        entry.rawTreeViewObject = asRawTreeViewObject(entry)
-
-        console.warn("Created ", entry.kind, " stableId=", entry.stableId)
-        return entry
+        addAttributes(entry, proto);
+        console.warn("Created ", entry.kind, " stableId=", entry.stableId);
+        return entry;
     }
 }
 
-export default Task
+function addAttributes(entry: Task, proto: any) {
+    entry.proto = proto;
+    entry.kind = entry.constructor.name;
+    entry.shortName = shortenName(entry.name);
+}
+
+export default Task;

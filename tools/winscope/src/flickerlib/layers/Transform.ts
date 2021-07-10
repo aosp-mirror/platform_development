@@ -78,7 +78,6 @@ export function isSimpleTransform(type): Boolean {
 }
 
 /* transform type flags */
-const TRANSLATE_VAL = 0x0001
 const ROTATE_VAL = 0x0002
 const SCALE_VAL = 0x0004
 

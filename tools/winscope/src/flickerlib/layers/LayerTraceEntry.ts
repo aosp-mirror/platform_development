@@ -14,52 +14,53 @@
  * limitations under the License.
  */
 
-import { asRawTreeViewObject } from '../../utils/diff.js'
 import { LayerTraceEntry, LayerTraceEntryBuilder } from "../common"
 import Layer from './Layer'
-import { VISIBLE_CHIP, RELATIVE_Z_PARENT_CHIP, MISSING_LAYER  } from '../treeview/Chips'
+import { VISIBLE_CHIP, RELATIVE_Z_PARENT_CHIP, MISSING_LAYER } from '../treeview/Chips'
 
-LayerTraceEntry.fromProto = function ({protos, timestamp = 0, hwcBlob = "", where = ""}): LayerTraceEntry {
-    const layers = protos.map(it => Layer.fromProto(it))
-    const builder = new LayerTraceEntryBuilder(timestamp, layers, hwcBlob, where)
-    const entry = builder.build()
+LayerTraceEntry.fromProto = function (protos: any[], timestamp: number, hwcBlob: string, where: string = ''): LayerTraceEntry {
+    const layers = protos.map(it => Layer.fromProto(it));
+    const builder = new LayerTraceEntryBuilder(timestamp, layers, hwcBlob, where);
+    const entry: LayerTraceEntry = builder.build();
 
-    entry.flattenedLayers.forEach(it => {
-        it.rawTreeViewObject = asRawTreeViewObject(it)
-        updateChips(it)
-    })
+    updateChildren(entry);
+    addAttributes(entry, protos);
+    return entry;
+}
+
+function addAttributes(entry: LayerTraceEntry, protos: any) {
     entry.kind = "entry"
     // There no JVM/JS translation for Longs yet
     entry.timestampMs = entry.timestamp.toString()
     entry.rects = entry.visibleLayers
         .sort((a, b) => (b.absoluteZ > a.absoluteZ) ? 1 : (a.absoluteZ == b.absoluteZ) ? 0 : -1)
-        .map(it => it.rect)
+        .map(it => it.rect);
 
     // Avoid parsing the entry root because it is an array of layers
     // containing all trace information, this slows down the property tree.
     // Instead parse only key properties for debugging
     const entryIds = {}
-    protos.forEach(it => {
+    protos.forEach(it =>
         entryIds[it.id] = `\nparent=${it.parent}\ntype=${it.type}\nname=${it.name}`
-    })
-    entry.proto = entryIds
-    entry.shortName = entry.name
-    entry.chips = []
-    entry.isVisible = true
-    entry.rawTreeViewObject = asRawTreeViewObject(entry)
-    return entry
+    );
+    entry.proto = entryIds;
+    entry.shortName = entry.name;
+    entry.chips = [];
+    entry.isVisible = true;
 }
 
-function updateChips(entry) {
-    if (entry.isVisible) {
-        entry.chips.push(VISIBLE_CHIP);
-    }
-    if (entry.zOrderRelativeOf) {
-        entry.chips.push(RELATIVE_Z_PARENT_CHIP);
-    }
-    if (entry.isMissing) {
-        entry.chips.push(MISSING_LAYER);
-    }
+function updateChildren(entry: LayerTraceEntry) {
+    entry.flattenedLayers.forEach(it => {
+        if (it.isVisible) {
+            it.chips.push(VISIBLE_CHIP);
+        }
+        if (it.zOrderRelativeOf) {
+            it.chips.push(RELATIVE_Z_PARENT_CHIP);
+        }
+        if (it.isMissing) {
+            it.chips.push(MISSING_LAYER);
+        }
+    });
 }
 
-export default LayerTraceEntry
+export default LayerTraceEntry;
