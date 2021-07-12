@@ -3,28 +3,56 @@
     v-model="partitionInclude"
     :labels="updatePartitions"
   />
-  <button @click="updateChart('blocks')">
-    Analyse Installed Blocks (in target build)
-  </button>
-  <button @click="updateChart('payload')">
-    Analyse Payload Composition
-  </button>
-  <button @click="updateChart('COWmerge')">
-    Analyse COW Merge Operations
-  </button>
-  <BaseFile
-    label="Select The Target Android Build"
-    @file-select="selectBuild"
-  />
-  <button
-    :disabled="!targetFile"
-    @click="updateChart('extensions')"
-  >
-    Analyse File Extensions
-  </button>
   <div v-if="echartsData">
     <PieChart :echartsData="echartsData" />
   </div>
+  <v-divider />
+  <v-row>
+    <v-col cols="6">
+      <v-btn
+        block
+        @click="updateChart('blocks')"
+      >
+        Analyse Installed Blocks (in target build)
+      </v-btn>
+    </v-col>
+    <v-col cols="6">
+      <v-btn
+        block
+        @click="updateChart('payload')"
+      >
+        Analyse Payload Composition
+      </v-btn>
+    </v-col>
+  </v-row>
+  <v-row>
+    <v-col cols="6">
+      <v-btn
+        block
+        @click="updateChart('COWmerge')"
+      >
+        Analyse COW Merge Operations
+      </v-btn>
+    </v-col>
+    <v-col cols="6">
+      <v-btn
+        block
+        :disabled="!targetFile"
+        @click="updateChart('extensions')"
+      >
+        Analyse File Extensions
+      </v-btn>
+    </v-col>
+  </v-row>
+  <v-row>
+    <v-col cols="6" />
+    <v-col cols="6">
+      <BaseFile
+        label="Drag and drop or Select The target Android build"
+        @file-select="selectBuild"
+      />
+    </v-col>
+  </v-row>
 </template>
 
 <script>
@@ -38,7 +66,7 @@ export default {
   components: {
     PartialCheckbox,
     PieChart,
-    BaseFile
+    BaseFile,
   },
   props: {
     manifest: {
@@ -51,7 +79,7 @@ export default {
       partitionInclude: new Map(),
       echartsData: null,
       listData: '',
-      targetFile: null
+      targetFile: null,
     }
   },
   computed: {
@@ -71,15 +99,16 @@ export default {
           metrics,
           partitionSelected,
           this.manifest.blockSize,
-          this.targetFile) }
-      catch (err) {
+          this.targetFile
+        )
+      } catch (err) {
         alert('Cannot be processed for the following issue: ', err)
       }
     },
     selectBuild(files) {
       //TODO(lishutong) check the version of target file is same to the OTA target
       this.targetFile = files[0]
-    }
+    },
   },
 }
 </script>

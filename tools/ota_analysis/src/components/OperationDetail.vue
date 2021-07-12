@@ -1,23 +1,26 @@
 <template>
-  {{ mapType.get(operation.type) }}
-  <p v-if="operation.hasOwnProperty('dataOffset')">
-    Data offset: {{ operation.dataOffset }}
-  </p>
-  <p v-if="operation.hasOwnProperty('dataLength')">
-    Data length: {{ operation.dataLength }}
-  </p>
-  <p v-if="operation.hasOwnProperty('srcExtents')">
-    Source: {{ operation.srcExtents.length }} extents ({{ srcTotalBlocks }}
-    blocks)
-    <br>
-    {{ srcBlocks }}
-  </p>
-  <p v-if="operation.hasOwnProperty('dstExtents')">
-    Destination: {{ operation.dstExtents.length }} extents ({{ dstTotalBlocks }}
-    blocks)
-    <br>
-    {{ dstBlocks }}
-  </p>
+  <ul>
+    <h5> {{ mapType.get(operation.type) }} </h5>
+    <li v-if="operation.hasOwnProperty('dataOffset')">
+      <strong> Data offset: </strong> {{ operation.dataOffset }}
+    </li>
+    <li v-if="operation.hasOwnProperty('dataLength')">
+      <strong> Data length: </strong> {{ operation.dataLength }}
+    </li>
+    <li v-if="operation.hasOwnProperty('srcExtents')">
+      <strong> Source: </strong> {{ operation.srcExtents.length }} extents ({{ srcTotalBlocks }}
+      blocks)
+      <br>
+      {{ srcBlocks }}
+    </li>
+    <li v-if="operation.hasOwnProperty('dstExtents')">
+      <strong> Destination: </strong> {{ operation.dstExtents.length }} extents ({{ dstTotalBlocks }}
+      blocks)
+      <br>
+      {{ dstBlocks }}
+    </li>
+  </ul>
+  <v-divider />
 </template>
 
 <script>
@@ -54,3 +57,15 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+ul {
+  padding: 5px;
+}
+
+li {
+  color: black;
+  list-style-type: none;
+}
+
+</style>
