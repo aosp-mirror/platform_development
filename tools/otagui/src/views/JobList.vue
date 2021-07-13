@@ -1,30 +1,42 @@
 <template>
-  <div class="jobs">
-    <JobDisplay
+  <OTAJobTable
+    v-if="jobs"
+    :jobs="jobs"
+  />
+  <v-row>
+    <v-cow
       v-for="job in jobs"
       :key="job.id"
-      :job="job"
-      :active="overStatus.get(job.id)"
-      @mouseover="mouseOver(job.id, true)"
-      @mouseout="mouseOver(job.id, false)"
-    />
-    <v-btn
-      block
-      @click="updateStatus"
+      cols="3"
+      sm="12"
+      class="ma-5"
     >
-      Update
-    </v-btn>
-  </div>
+      <JobDisplay
+        :job="job"
+        :active="overStatus.get(job.id)"
+        @mouseover="mouseOver(job.id, true)"
+        @mouseout="mouseOver(job.id, false)"
+      />
+    </v-cow>
+  </v-row>
+  <v-btn
+    block
+    @click="updateStatus"
+  >
+    Update
+  </v-btn>
 </template>
 
 <script>
 import JobDisplay from '@/components/JobDisplay.vue'
 import ApiService from '../services/ApiService.js'
+import OTAJobTable from '@/components/OTAJobTable.vue'
 
 export default {
   name: 'JobList',
   components: {
     JobDisplay,
+    OTAJobTable
   },
   data() {
     return {
@@ -51,12 +63,3 @@ export default {
 }
 
 </script>
-
-<style scoped>
-.jobs {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-</style>
