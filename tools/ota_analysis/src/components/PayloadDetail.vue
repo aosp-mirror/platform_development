@@ -1,5 +1,8 @@
 <template>
-  <div v-if="zipFile">
+  <div
+    v-if="zipFile"
+    class="mb-5"
+  >
     <h3>File infos</h3>
     <ul>
       <li>File name: {{ zipFile.name }}</li>
@@ -7,27 +10,36 @@
       <li>File last modified date: {{ zipFile.lastModifiedDate }}</li>
     </ul>
   </div>
+  <v-divider />
   <div v-if="payload">
-    <h3>Payload Compositin</h3>
-    <div v-if="payload.manifest">
-      <PayloadComposition :manifest="payload.manifest" />
-    </div>
     <h3>Partition List</h3>
-    <ul v-if="payload.manifest">
-      <li
+    <v-row
+      v-if="payload.manifest"
+      class="mb-5"
+    >
+      <v-col
         v-for="partition in payload.manifest.partitions"
         :key="partition.partitionName"
+        cols="4"
       >
-        <h4>{{ partition.partitionName }}</h4>
-        <p v-if="partition.estimateCowSize">
-          Estimate COW Size: {{ partition.estimateCowSize }} Bytes
-        </p>
-        <p v-else>
-          Estimate COW Size: 0 Bytes
-        </p>
-        <PartitionDetail :partition="partition" />
-      </li>
-    </ul>
+        <v-card
+          elevation="5"
+          hover
+          shaped
+          class="partial-info"
+        >
+          <h4> {{ partition.partitionName }} </h4>
+          <p v-if="partition.estimateCowSize">
+            <strong> Estimate COW Size: </strong> {{ partition.estimateCowSize }} Bytes
+          </p>
+          <p v-else>
+            <strong> Estimate COW Size: </strong> 0 Bytes
+          </p>
+          <PartitionDetail :partition="partition" />
+        </v-card>
+      </v-col>
+    </v-row>
+    <v-divider />
     <h3>Metadata Signature</h3>
     <div
       v-if="payload.metadata_signature"
@@ -42,13 +54,11 @@
 
 <script>
 import PartitionDetail from './PartitionDetail.vue'
-import PayloadComposition from './PayloadComposition.vue'
 import { Payload } from '@/services/payload.js'
 
 export default {
   components: {
     PartitionDetail,
-    PayloadComposition,
   },
   props: {
     zipFile: {
@@ -83,5 +93,9 @@ function octToHex(bufferArray) {
   height: 200px;
   width: 100%;
   word-break: break-all;
+}
+
+.partial-info {
+  padding: 5px;
 }
 </style>
