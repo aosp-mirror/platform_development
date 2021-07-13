@@ -554,11 +554,12 @@ class Crate(object):
 
   def build_default_name(self):
     """Return a short and readable name for the rust_defaults module."""
-    # Choices: (1) root_pkg + '_defaults',
-    # (2) root_pkg + '_defaults_' + crate_name
-    # (3) root_pkg + '_defaults_' + main_src_basename_path
-    # (4) root_pkg + '_defaults_' + a_positive_sequence_number
-    name1 = altered_defaults(self.root_pkg) + '_defaults'
+    # Choices: (1) root_pkg + '_test'? + '_defaults',
+    # (2) root_pkg + '_test'? + '_defaults_' + crate_name
+    # (3) root_pkg + '_test'? + '_defaults_' + main_src_basename_path
+    # (4) root_pkg + '_test'? + '_defaults_' + a_positive_sequence_number
+    test = "_test" if self.crate_types == ['test'] else ""
+    name1 = altered_defaults(self.root_pkg) + test + '_defaults'
     if self.runner.try_claim_module_name(name1, self):
       return name1
     name2 = name1 + '_' + self.crate_name
