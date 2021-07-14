@@ -4,7 +4,7 @@
       rounded
       color="primary"
     >
-      <v-app-bar-title> OTA Dashboard </v-app-bar-title>
+      <v-app-bar-title> OTA Analyzer </v-app-bar-title>
       <v-spacer />
       <v-btn
         v-for="link in links"
@@ -28,7 +28,7 @@
 export default {
   data() {
     return {
-      links: ['Create', 'JobList', 'About'],
+      links: ['Analysis', 'About'],
     }
   },
 }
