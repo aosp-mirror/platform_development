@@ -1,5 +1,5 @@
 <template>
-  <label> {{ label }} </label>
+  <h3> {{ label }} </h3>
   <br>
   <input
     v-bind="$attrs"
@@ -24,3 +24,10 @@ export default{
   }
 }
 </script>
+
+<style scoped>
+input {
+  width: 100%;
+  background: #f2f2f2;
+}
+</style>
