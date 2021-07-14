@@ -20,7 +20,6 @@
     "vue-echarts": "^6.0.0-rc.6",
     "vue-router": "^4.0.0-0",
     "vue-uuid": "^2.0.2",
-    "vue3-table-lite": "^1.0.5",
     "vuetify": "^3.0.0-alpha.0",
     "vuex": "^4.0.0-0"
   },
