@@ -1,14 +1,17 @@
 <template>
-  <ul v-bind="$attrs">
-    <button
-      type="button"
-      @click="revertAllSelection"
-      v-text="selectAllText[selectAll]"
-    />
-    <br>
-    <li
+  <v-btn
+    block
+    type="button"
+    class="my-5"
+    @click="revertAllSelection"
+  >
+    {{ selectAllText[selectAll] }}
+  </v-btn>
+  <v-row class="mb-5">
+    <v-col
       v-for="label in labels"
       :key="label"
+      cols="3"
     >
       <input
         type="checkbox"
@@ -17,8 +20,8 @@
         @change="updateSelected($event.target.value)"
       >
       <label v-if="label"> {{ label }} </label>
-    </li>
-  </ul>
+    </v-col>
+  </v-row>
 </template>
 
 <script>
