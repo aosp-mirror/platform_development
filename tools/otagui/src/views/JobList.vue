@@ -8,9 +8,12 @@
       @mouseover="mouseOver(job.id, true)"
       @mouseout="mouseOver(job.id, false)"
     />
-    <button @click="updateStatus">
+    <v-btn
+      block
+      @click="updateStatus"
+    >
       Update
-    </button>
+    </v-btn>
   </div>
 </template>
 
