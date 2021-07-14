@@ -26,6 +26,8 @@ import android.service.autofill.InlinePresentation;
 import android.service.autofill.SaveCallback;
 import android.service.autofill.SaveInfo;
 import android.service.autofill.SaveRequest;
+import android.service.autofill.SavedDatasetsInfo;
+import android.service.autofill.SavedDatasetsInfoCallback;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.view.autofill.AutofillId;
@@ -35,6 +37,7 @@ import android.widget.RemoteViews;
 import androidx.annotation.NonNull;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Optional;
 
 /**
@@ -146,4 +149,16 @@ public class InlineFillService extends AutofillService {
         Helper.showMessage(getApplicationContext(), "InlineFillService doesn't support Save");
         callback.onSuccess();
     }
+
+    @Override
+    public void onSavedDatasetsInfoRequest(@NonNull SavedDatasetsInfoCallback callback) {
+        callback.onSuccess(
+                Collections.singleton(
+                        new SavedDatasetsInfo(
+                                SavedDatasetsInfo.TYPE_PASSWORDS, sNumSavedDatasets)));
+        sNumSavedDatasets++;
+        sNumSavedDatasets %= 3;
+    }
+
+    private static int sNumSavedDatasets = 0;
 }

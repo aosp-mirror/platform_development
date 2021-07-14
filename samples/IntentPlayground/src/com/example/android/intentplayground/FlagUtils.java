@@ -288,6 +288,9 @@ class FlagUtils {
                 case ActivityInfo.LAUNCH_SINGLE_TOP:
                     lm += "singleTop";
                     break;
+                case ActivityInfo.LAUNCH_SINGLE_INSTANCE_PER_TASK:
+                    lm += "singleInstancePerTask";
+                    break;
                 case ActivityInfo.LAUNCH_MULTIPLE:
                 default:
                     lm += "standard";

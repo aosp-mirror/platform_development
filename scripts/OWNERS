@@ -3,5 +3,5 @@ danalbert@google.com
 enh@google.com
 jmgao@google.com
 rprichard@google.com
-per-file cargo2android.py = chh@google.com,srhines@google.com
+per-file add3prf.py,add3prf_test.py,cargo2android.py,get_rust_pkg.py,update_crate_tests.py = ivanlozano@google.com,jeffv@google.com,jgalenson@google.com,mmaurer@google.com,srhines@google.com,tweek@google.com
 per-file codegen = eugenesusla@google.com
