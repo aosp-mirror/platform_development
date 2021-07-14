@@ -1,98 +1,106 @@
 <template>
-  <div>
-    <form @submit.prevent="sendForm">
-      <UploadFile @file-uploaded="fetchTargetList" />
-      <br>
-      <FileSelect
-        v-if="input.isIncremental"
-        v-model="input.incremental"
-        label="Select the source file"
-        :options="targetDetails"
-      />
-      <FileSelect
-        v-model="input.target"
-        label="Select the target file"
-        :options="targetDetails"
-      />
-      <button
-        type="button"
-        @click="fetchTargetList"
-      >
-        Update File List
-      </button>
-      <div>
-        <BaseCheckbox
-          v-model="input.verbose"
-          :label="'Verbose'"
-        /> &emsp;
-        <BaseCheckbox
-          v-model="input.isIncremental"
-          :label="'Incremental'"
+  <v-row>
+    <v-col cols="6">
+      <form @submit.prevent="sendForm">
+        <FileSelect
+          v-if="input.isIncremental"
+          v-model="input.incremental"
+          label="Select the source file"
+          :options="targetDetails"
         />
-      </div>
-      <div>
-        <BaseCheckbox
-          v-model="input.isPartial"
-          :label="'Partial'"
+        <FileSelect
+          v-model="input.target"
+          label="Select a target file"
+          :options="targetDetails"
         />
-        <PartialCheckbox
-          v-if="input.isPartial"
-          v-model="partitionInclude"
-          :labels="updatePartitions"
-        />
-        <div v-if="input.isPartial">
-          Partial list: {{ partitionList }}
-        </div>
-      </div>
-      <br>
-      <BaseInput
-        v-model="input.extra"
-        :label="'Extra Configurations'"
-      />
-      <br>
-      <button type="submit">
-        Submit
-      </button>
-    </form>
-  </div>
-  <div>
-    <ul>
-      <h4>Build Library</h4>
-      <strong>
-        Careful: Use a same filename will overwrite the original build.
-      </strong>
-      <br>
-      <button @click="updateBuildLib">
-        Refresh the build Library (use with cautions)
-      </button>
-      <li
-        v-for="targetDetail in targetDetails"
-        :key="targetDetail.file_name"
-      >
-        <div>
-          <h5>Build File Name: {{ targetDetail.file_name }}</h5>
-          Uploaded time: {{ formDate(targetDetail.time) }}
-          <br>
-          Build ID: {{ targetDetail.build_id }}
-          <br>
-          Build Version: {{ targetDetail.build_version }}
-          <br>
-          Build Flavor: {{ targetDetail.build_flavor }}
-          <br>
-          <button
-            :disabled="!input.isIncremental"
-            @click="selectIncremental(targetDetail.path)"
+        <v-row>
+          <v-col
+            cols="4"
+            align="center"
           >
-            Select as Incremental File
-          </button>
-          &emsp;
-          <button @click="selectTarget(targetDetail.path)">
-            Select as Target File
-          </button>
+            <BaseCheckbox
+              v-model="input.verbose"
+              :label="'Verbose'"
+            />
+          </v-col>
+          <v-col
+            cols="4"
+            align="center"
+          >
+            <BaseCheckbox
+              v-model="input.isIncremental"
+              :label="'Incremental'"
+            />
+          </v-col>
+          <v-col
+            cols="4"
+            align="center"
+          >
+            <BaseCheckbox
+              v-model="input.isPartial"
+              :label="'Partial'"
+            />
+          </v-col>
+        </v-row>
+        <div>
+          <PartialCheckbox
+            v-if="input.isPartial"
+            v-model="partitionInclude"
+            :labels="updatePartitions"
+          />
         </div>
-      </li>
-    </ul>
-  </div>
+        <v-divider class="my-5" />
+        <BaseInput
+          v-model="input.extra"
+          :label="'Extra Configurations'"
+        />
+        <v-divider class="my-5" />
+        <v-btn
+          block
+          type="submit"
+        >
+          Submit
+        </v-btn>
+      </form>
+    </v-col>
+    <v-divider vertical />
+    <v-col cols="6">
+      <ul>
+        <h3>Build Library</h3>
+        <UploadFile @file-uploaded="fetchTargetList" />
+        <li
+          v-for="targetDetail in targetDetails"
+          :key="targetDetail.file_name"
+        >
+          <div>
+            <h3> Build File Name: {{ targetDetail.file_name }} </h3>
+            <strong> Uploaded time: </strong> {{ formDate(targetDetail.time) }}
+            <br>
+            <strong> Build ID: </strong> {{ targetDetail.build_id }}
+            <br>
+            <strong> Build Version: </strong> {{ targetDetail.build_version }}
+            <br>
+            <strong> Build Flavor: </strong> {{ targetDetail.build_flavor }}
+            <br>
+            <v-btn
+              :disabled="!input.isIncremental"
+              @click="selectIncremental(targetDetail.path)"
+            >
+              Select as Incremental File
+            </v-btn>
+            &emsp;
+            <v-btn @click="selectTarget(targetDetail.path)">
+              Select as Target File
+            </v-btn>
+          </div>
+          <v-divider class="my-5" />
+        </li>
+        <v-btn @click="updateBuildLib">
+          Refresh the build Library (use with cautions)
+        </v-btn>
+      </ul>
+    </v-col>
+  </v-row>
 </template>
 
 <script>
@@ -146,7 +154,7 @@ export default {
       handler: function () {
         this.input.partial = this.partitionList
       },
-    }
+    },
   },
   created() {
     this.resetInput()
@@ -213,4 +221,7 @@ export default {
 </script>
 
 <style scoped>
+ul > li {
+  list-style: none
+}
 </style>

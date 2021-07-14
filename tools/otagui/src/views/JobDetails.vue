@@ -5,8 +5,9 @@
       :job="job"
       :build-detail="true"
     />
+    <v-divider class="my-5" />
     <div>
-      <h4>STDERR</h4>
+      <h3>STDERR</h3>
       <div
         ref="stderr"
         class="stderr"
@@ -14,7 +15,7 @@
         {{ job.stderr }}
         <p ref="stderrBottom" />
       </div>
-      <h4>STDOUT</h4>
+      <h3>STDOUT</h3>
       <div
         ref="stdout"
         class="stdout"
@@ -23,11 +24,13 @@
         <p ref="stdoutBottom" />
       </div>
     </div>
-    <br>
-    <a
-      v-if="job.status == 'Finished'"
-      :href="download"
-    > Download </a>
+    <v-divider class="my-5" />
+    <div class="download">
+      <a
+        v-if="job.status == 'Finished'"
+        :href="download"
+      > Download </a>
+    </div>
   </div>
 </template>
 
@@ -101,6 +104,12 @@ export default {
 .stderr,
 .stdout {
   overflow: scroll;
-  height: 200px;
+  height: 160px;
+}
+
+.download {
+  margin: auto;
+  text-align: center;
+  font-size: 160%;
 }
 </style>
