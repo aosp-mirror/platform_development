@@ -1,21 +1,21 @@
 <template>
   <ul v-if="job">
-    <li>Start Time: {{ formDate(job.start_time) }}</li>
+    <li> <strong> Start Time: </strong> {{ formDate(job.start_time) }}</li>
     <li v-if="job.finish_time > 0">
-      Finish Time: {{ formDate(job.finish_time) }}
+      <strong> Finish Time: </strong> {{ formDate(job.finish_time) }}
     </li>
     <li v-if="job.isIncremental">
-      Incremental source: {{ job.incremental_name }}
+      <strong> Incremental source: </strong> {{ job.incremental_name }}
     </li>
     <li v-if="job.isIncremental && buildDetail">
-      Incremental source version: {{ job.incremental_build_version }}
+      <strong> Incremental source version: </strong> {{ job.incremental_build_version }}
     </li>
-    <li>Target source: {{ job.target_name }}</li>
+    <li> <strong> Target source: </strong> {{ job.target_name }}</li>
     <li v-if="buildDetail">
-      Target source version: {{ job.target_build_version }}
+      <strong> Target source version: </strong> {{ job.target_build_version }}
     </li>
     <li v-if="job.isPartial">
-      Partial: {{ job.partial }}
+      <strong> Partial: </strong> {{ job.partial }}
     </li>
   </ul>
 </template>
@@ -42,3 +42,10 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+ul > li {
+  list-style: none;
+  text-align: center;
+}
+</style>
