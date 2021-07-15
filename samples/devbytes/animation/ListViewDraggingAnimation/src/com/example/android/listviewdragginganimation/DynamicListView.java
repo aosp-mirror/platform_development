@@ -450,7 +450,7 @@ public class DynamicListView extends ListView {
 
     /**
      * This TypeEvaluator is used to animate the BitmapDrawable back to its
-     * final location when the user lifts his finger by modifying the
+     * final location when the user lifts their finger by modifying the
      * BitmapDrawable's bounds.
      */
     private final static TypeEvaluator<Rect> sBoundEvaluator = new TypeEvaluator<Rect>() {

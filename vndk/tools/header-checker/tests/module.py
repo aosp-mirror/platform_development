@@ -9,7 +9,6 @@ import_path = os.path.abspath(os.path.join(import_path, 'utils'))
 sys.path.insert(1, import_path)
 
 from utils import run_header_abi_dumper
-from utils import run_header_abi_dumper_on_file
 from utils import run_header_abi_linker
 from utils import SOURCE_ABI_DUMP_EXT
 
@@ -50,8 +49,8 @@ class Module(object):
         """Returns the module name followed by file extension."""
         raise NotImplementedError()
 
-    def make_dump(self):
-        """Returns the dump content as a string."""
+    def make_dump(self, output_path):
+        """Create a dump file."""
         raise NotImplementedError()
 
     def mutate_for_arch(self, target_arch):
@@ -89,9 +88,9 @@ class SdumpModule(Module):
     def get_dump_name(self):
         return self.name + '.sdump'
 
-    def make_dump(self):
+    def make_dump(self, output_path):
         return run_header_abi_dumper(
-            self.src, cflags=self.cflags,
+            self.src, output_path, cflags=self.cflags,
             export_include_dirs=self.export_include_dirs,
             flags=self.dumper_flags)
 
@@ -115,23 +114,29 @@ class LsdumpModule(Module):
     def get_dump_name(self):
         return self.name + SOURCE_ABI_DUMP_EXT
 
-    def make_dump(self):
+    def make_dump(self, output_path):
         """For each source file, produce a .sdump file, and link them to form
            an lsump file."""
         dumps_to_link = []
         with tempfile.TemporaryDirectory() as tmp:
-            output_lsdump = os.path.join(tmp, self.get_dump_name())
             for src in self.srcs:
-                output_path = os.path.join(tmp,
-                                           os.path.basename(src) + '.sdump')
-                dumps_to_link.append(output_path)
-                run_header_abi_dumper_on_file(
-                    src, output_path, self.export_include_dirs,
-                    self.cflags + self.arch_cflags,
-                    self.dumper_flags)
-            return run_header_abi_linker(output_lsdump, dumps_to_link,
-                                         self.version_script, self.api,
-                                         self.arch, self.linker_flags)
+                sdump_path = os.path.join(tmp,
+                                          os.path.basename(src) + '.sdump')
+                dumps_to_link.append(sdump_path)
+                run_header_abi_dumper(
+                    src, sdump_path, self.cflags + self.arch_cflags,
+                    self.export_include_dirs, self.dumper_flags)
+
+            lsdump_path = os.path.join(tmp, self.get_dump_name())
+            run_header_abi_linker(dumps_to_link, lsdump_path,
+                                  self.version_script, self.api, self.arch,
+                                  self.linker_flags)
+            # Replace the absolute tmp paths in the type ID.
+            with open(lsdump_path, 'r') as lsdump_file:
+                content = lsdump_file.read().replace(tmp, '')
+
+        with open(output_path, 'w') as output_file:
+            output_file.write(content)
 
     def mutate_for_arch(self, target_arch):
         return LsdumpModule(self.name, self.srcs, self.version_script,
@@ -414,6 +419,17 @@ TEST_MODULES = [
         export_include_dirs=['integration/c_and_cpp/include'],
     ),
     LsdumpModule(
+        name='libifunc',
+        srcs=['integration/ifunc/ifunc.c'],
+        version_script='integration/ifunc/map.txt',
+        export_include_dirs=[],
+        linker_flags=[
+            '-so', relative_to_abs_path(
+                'integration/ifunc/prebuilts/libifunc.so'
+            ),
+        ]
+    ),
+    LsdumpModule(
         name='libgolden_cpp_member_name_changed',
         srcs=[
             'integration/cpp/gold/golden_1.cpp',
@@ -630,6 +646,17 @@ TEST_MODULES = [
         version_script='',
         export_include_dirs=['integration/cpp/anonymous_enum/include'],
         linker_flags=['-output-format', 'Json'],
+    ),
+    LsdumpModule(
+        name='libmerge_multi_definitions',
+        arch='arm64',
+        srcs=[
+            'integration/merge_multi_definitions/include/def1.h',
+            'integration/merge_multi_definitions/include/def2.h',
+        ],
+        version_script='integration/merge_multi_definitions/map.txt',
+        export_include_dirs=['integration/merge_multi_definitions/include'],
+        linker_flags=['-output-format', 'Json', '-sources-per-thread', '1'],
     ),
 ]
 

@@ -13,63 +13,73 @@
      limitations under the License.
 -->
 <template>
-  <md-card-content class="container">
-    <md-card class="rects">
-      <md-whiteframe md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
-        <h2 class="md-title">Screen</h2>
-      </md-whiteframe>
-      <md-whiteframe md-elevation="8">
-        <video :id="file.filename" class="screen" :src="file.data" />
-      </md-whiteframe>
-    </md-card>
-  </md-card-content>
+  <video
+    class="md-elevation-2 screen"
+    :src="file.data"
+    :style="style"
+    ref="video"
+  />
 </template>
 <script>
-const EPSILON = 0.00001
+const EPSILON = 0.00001;
 
 function uint8ToString(array) {
-  var chunk = 0x8000;
-  var out = [];
-  for (var i = 0; i < array.length; i += chunk) {
+  const chunk = 0x8000;
+  const out = [];
+  for (let i = 0; i < array.length; i += chunk) {
     out.push(String.fromCharCode.apply(null, array.subarray(i, i + chunk)));
   }
-  return out.join("");
+  return out.join('');
 }
 
 export default {
   name: 'videoview',
+  props: ['file', 'height'],
   data() {
-    return {}
+    return {};
+  },
+  computed: {
+    selectedIndex() {
+      return this.file.selectedIndex;
+    },
+    style() {
+      if (typeof this.height == 'number') {
+        return `height: ${this.height}px`;
+      } else {
+        return `height: ${this.height}`;
+      }
+    },
   },
   methods: {
     arrowUp() {
-      return true
+      return true;
     },
     arrowDown() {
       return true;
     },
+    selectFrameAtTime(timestamp) {
+      const time = (timestamp - this.file.timeline[0]) / 1000000000 + EPSILON;
+      this.$refs.video.currentTime = time;
+    },
     selectFrame(idx) {
-      var time = (this.file.timeline[idx] - this.file.timeline[0]) / 1000000000 + EPSILON;
-      document.getElementById(this.file.filename).currentTime = time;
+      this.selectFrameAtTime(this.file.timeline[idx]);
+    },
+    jumpToSelectedIndex() {
+      this.selectFrame(this.file.selectedIndex);
     },
   },
   watch: {
     selectedIndex() {
       this.selectFrame(this.file.selectedIndex);
-    }
-  },
-  props: ['file'],
-  computed: {
-    selectedIndex() {
-      return this.file.selectedIndex;
     },
   },
-}
+  mounted() {
+    this.$el.addEventListener('canplay', (e) => {
+      this.$emit('loaded');
+    });
+  },
+};
 
 </script>
 <style>
-.screen {
-  max-height: 50em;
-}
-
 </style>

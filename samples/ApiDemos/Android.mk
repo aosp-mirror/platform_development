@@ -11,11 +11,14 @@ LOCAL_SRC_FILES := \
     src/com/example/android/apis/app/ISecondary.aidl \
 
 LOCAL_STATIC_ANDROID_LIBRARIES += \
+	androidx-constraintlayout_constraintlayout \
     androidx.legacy_legacy-support-v4
 
 LOCAL_USE_AAPT2 := true
 
 LOCAL_PACKAGE_NAME := ApiDemos
+LOCAL_LICENSE_KINDS := SPDX-license-identifier-Apache-2.0
+LOCAL_LICENSE_CONDITIONS := notice
 
 LOCAL_SDK_VERSION := current
 
