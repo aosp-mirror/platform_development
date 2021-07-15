@@ -229,7 +229,14 @@ export default {
       if (this.disabled) {
         return;
       }
-      const timestamp = parseInt(this.timeline[clickedOnTsIndex]);
+
+      var timestamp = parseInt(this.timeline[clickedOnTsIndex]);
+
+      //pointWidth is always 1
+      //if offset percentage < 1, clickedOnTsIndex becomes negative, leading to a negative index
+      if (clickedOnTsIndex < 0) {
+        timestamp = parseInt(this.timeline[0])
+      }
       this.$store.dispatch('updateTimelineTime', timestamp);
     },
 

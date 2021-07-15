@@ -1,24 +1,32 @@
 <template>
-  <ul v-bind="$attrs">
-    <button
-      type="button"
-      @click="revertAllSelection"
-      v-text="selectAllText[selectAll]"
-    />
-    <br>
-    <li
+  <v-btn
+    block
+    type="button"
+    class="my-5"
+    @click="revertAllSelection"
+  >
+    {{ selectAllText[selectAll] }}
+  </v-btn>
+  <v-row class="mb-5">
+    <v-col
       v-for="label in labels"
       :key="label"
+      cols="4"
     >
-      <input
-        type="checkbox"
-        :value="label"
-        :checked="modelValue.get(label)"
-        @change="updateSelected($event.target.value)"
+      <label
+        v-if="label"
+        class="checkbox"
       >
-      <label v-if="label"> {{ label }} </label>
-    </li>
-  </ul>
+        <input
+          type="checkbox"
+          :value="label"
+          :checked="modelValue.get(label)"
+          @change="updateSelected($event.target.value)"
+        >
+        {{ label }}
+      </label>
+    </v-col>
+  </v-row>
 </template>
 
 <script>
@@ -68,5 +76,18 @@ ul > li {
   margin-right: 5%;
   top: 0px;
   height: 50px;
+}
+
+.checkbox {
+  display: block;
+  position: relative;
+  padding-left: 35px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  transition: all 0.2s ease;
 }
 </style>
