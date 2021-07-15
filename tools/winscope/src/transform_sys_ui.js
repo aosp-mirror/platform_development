@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {transform, nanos_to_string, get_visible_chip} from './transform.js'
+import { transform, nanos_to_string, get_visible_chip } from './transform.js'
 
 function transform_edgeBack(edgeBack) {
   return transform({
@@ -31,7 +31,7 @@ function transform_systemUi(sysui) {
     kind: 'systemUi',
     name: 'systemUi',
     children: [
-        [[sysui.edgeBackGestureHandler], transform_edgeBack]
+      [[sysui.edgeBackGestureHandler], transform_edgeBack]
     ]
   });
 }
@@ -60,4 +60,4 @@ function transform_sysui_trace(entries) {
   });
 }
 
-export {transform_sysui_trace};
+export { transform_sysui_trace };

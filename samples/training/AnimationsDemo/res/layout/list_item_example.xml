@@ -23,7 +23,7 @@
     android:dividerPadding="8dp"
     android:gravity="center">
 
-    <!-- Dummy text view that will display the name of a random country. -->
+    <!-- Placeholder text view that will display the name of a random country. -->
     <TextView android:id="@android:id/text1"
         style="?android:textAppearanceMedium"
         android:layout_width="0dp"
