@@ -4,7 +4,7 @@ record_types {
     size: 4
     alignment: 4
     referenced_type: "_ZTI11ShouldRepro"
-    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/reproducability_c.h"
+    source_file: "development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/reproducability_c.h"
     linker_set_key: "_ZTI11ShouldRepro"
     self_type: "_ZTI11ShouldRepro"
   }

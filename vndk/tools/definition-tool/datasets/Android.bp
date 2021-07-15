@@ -14,6 +14,15 @@
 // limitations under the License.
 //
 
+package {
+    // See: http://go/android-license-faq
+    // A large-scale-change added 'default_applicable_licenses' to import
+    // all of the 'license_kinds' from "development_license"
+    // to get the below license kinds:
+    //   legacy_restricted
+    default_applicable_licenses: ["development_license"],
+}
+
 filegroup {
     name: "vndk_lib_extra_lists",
     srcs: [

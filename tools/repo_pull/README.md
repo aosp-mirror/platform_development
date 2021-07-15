@@ -70,7 +70,6 @@ These are common queries:
 ### Options
 
 * `-g` or `--gerrit` specifies the URL of the Gerrit Code Review website.
-  *(required)*
 
 * `-b` or `--branch` specifies the local branch name that will be passed to
   `repo start`.

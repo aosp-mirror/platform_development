@@ -1,0 +1,24 @@
+builtin_types {
+  type_info {
+    name: "void"
+    size: 0
+    alignment: 0
+    referenced_type: "_ZTIv"
+    source_file: ""
+    linker_set_key: "_ZTIv"
+    self_type: "_ZTIv"
+  }
+  is_unsigned: false
+  is_integral: false
+}
+functions {
+  return_type: "_ZTIv"
+  function_name: "ifunc"
+  source_file: "development/vndk/tools/header-checker/tests/integration/ifunc/ifunc.c"
+  linker_set_key: "ifunc"
+  access: public_access
+}
+elf_functions {
+  name: "ifunc"
+  binding: Global
+}

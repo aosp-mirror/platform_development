@@ -41,7 +41,14 @@ WIN_TARGETS := \
 	zipalign \
 	split-select
 
+# b/150355628 - we want the 64-bit libaapt2_jni for loading as JNI in 64-bit JVMs.
+WIN_TARGETS += \
+	libaapt2_jni_64
+
 WIN_TARGETS := $(foreach t,$(WIN_TARGETS),$(ALL_MODULES.host_cross_$(t).INSTALLED))
+
+WIN_TARGETS += prebuilts/gcc/linux-x86/host/x86_64-w64-mingw32-4.8/x86_64-w64-mingw32/bin/libwinpthread-1.dll
+WIN_TARGETS += prebuilts/gcc/linux-x86/host/x86_64-w64-mingw32-4.8/x86_64-w64-mingw32/lib32/libwinpthread-1.dll
 
 # MAIN_SDK_NAME/DIR is set in build/core/Makefile
 WIN_SDK_NAME := $(subst $(HOST_OS)-$(SDK_HOST_ARCH),windows,$(MAIN_SDK_NAME))

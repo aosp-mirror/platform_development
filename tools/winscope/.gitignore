@@ -1,2 +1,8 @@
 node_modules/
 adb_proxy/venv/
+.vscode/
+dist/
+kotlin_build/
+yarn-error.log
+kotlin_build/
+.eslintcache
