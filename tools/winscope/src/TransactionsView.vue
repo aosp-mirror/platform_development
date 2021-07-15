@@ -75,6 +75,11 @@
             <div class="md-helper-text">Press enter to add</div>
           </md-chips>
         </div>
+
+        <md-checkbox v-model="trace.simplifyNames">
+            Simplify names
+        </md-checkbox>
+
       </div>
 
       <virtual-list style="height: 600px; overflow-y: auto;"
@@ -86,6 +91,7 @@
           selectedTransaction,
           transactionsTrace,
           prettifyTransactionId,
+          simplifyNames: trace.simplifyNames,
         }"
         ref="loglist"
       />
@@ -289,7 +295,6 @@ export default {
         const perpareForTreeViewTransform = (change) => {
           this.removeNullFields(change);
           change[META_DATA_KEY] = {
-            // TODO (b/162402459): Shorten layer name
             layerName: change.layerName,
           };
           // remove redundant properties
