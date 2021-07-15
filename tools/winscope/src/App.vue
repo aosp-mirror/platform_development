@@ -36,7 +36,7 @@
             <dataadb class="adbinput" ref="adb" :store="store"
               @dataReady="onDataReady" @statusChange="setStatus" />
           </div>
-          <div class="input">
+          <div class="input" @dragover.prevent @drop.prevent>
             <datainput class="fileinput" ref="input" :store="store"
               @dataReady="onDataReady" @statusChange="setStatus" />
           </div>

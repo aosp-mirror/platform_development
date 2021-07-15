@@ -13,6 +13,7 @@
      limitations under the License.
 -->
 <template>
+<div @dragleave="fileDragOut" @dragover="fileDragIn" @drop="handleFileDrop">
   <flat-card style="min-width: 50em">
     <md-card-header>
       <div class="md-title">Open files</div>
@@ -98,6 +99,7 @@
       </div>
     </md-snackbar>
   </flat-card>
+</div>
 </template>
 <script>
 import FlatCard from './components/FlatCard.vue';
@@ -223,6 +225,18 @@ export default {
           }
         });
       }
+    },
+    fileDragIn(e){
+      e.preventDefault();
+    },
+    fileDragOut(e){
+      e.preventDefault();
+    },
+    handleFileDrop(e) {
+      e.preventDefault();
+      let droppedFiles = e.dataTransfer.files;
+      if(!droppedFiles) return;
+      this.processFiles(droppedFiles);
     },
     onLoadFile(e) {
       const files = event.target.files || event.dataTransfer.files;
