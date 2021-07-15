@@ -82,13 +82,13 @@ export default {
     }
   },
   created() {
-    this.rows = this.jobs
+    this.rows = this.sort(this.jobs, this.sortable.order, this.sortable.sort, 0, 10)
     this.total = this.jobs.length
   },
   methods: {
     sort(arr, key, sortOrder, offset, limit) {
       let orderNumber = 1
-      if (sortOrder==="asc") {
+      if (sortOrder==="desc") {
         orderNumber = -1
       }
       return arr.sort(function(a, b) {
@@ -97,17 +97,15 @@ export default {
         if (keyA < keyB) return -1*orderNumber;
         if (keyA > keyB) return 1*orderNumber;
         return 0;
-      }).slice(offset, limit);
+      }).slice(offset, offset + limit);
     },
     doSearch(offset, limit, order, sort) {
       this.isLoading = true
-      setTimeout(() => {
-        this.sortable.order = order
-        this.sortable.sort = sort
-        this.rows = this.sort(this.jobs, order, sort, offset, limit)
-        this.total = this.jobs.length
-      }, 600)
-      setTimeout(() => {this.isLoading=false}, 1000)
+      this.sortable.order = order
+      this.sortable.sort = sort
+      this.rows = this.sort(this.jobs, order, sort, offset, limit)
+      this.total = this.jobs.length
+      this.isLoading = false
     }
   }
 }
