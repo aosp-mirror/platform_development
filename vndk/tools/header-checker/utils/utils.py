@@ -2,6 +2,8 @@
 
 import gzip
 import os
+import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -22,11 +24,6 @@ BUILTIN_HEADERS_DIR = (
     os.path.join(AOSP_DIR, 'external', 'libcxx', 'include'),
     os.path.join(AOSP_DIR, 'prebuilts', 'clang-tools', 'linux-x86',
                  'clang-headers'),
-)
-
-EXPORTED_HEADERS_DIR = (
-    os.path.join(AOSP_DIR, 'development', 'vndk', 'tools', 'header-checker',
-                 'tests'),
 )
 
 SO_EXT = '.so'
@@ -80,43 +77,33 @@ class Target(object):
         return self.get_arch_str() + cpu_variant
 
 
+def _validate_dump_content(dump_path):
+    """Make sure that the dump contains relative source paths."""
+    with open(dump_path, 'r') as f:
+        if AOSP_DIR in f.read():
+            raise ValueError(
+                dump_path + ' contains absolute path to $ANDROID_BUILD_TOP.')
+
+
 def copy_reference_dump(lib_path, reference_dump_dir, compress):
     reference_dump_path = os.path.join(
         reference_dump_dir, os.path.basename(lib_path))
     if compress:
         reference_dump_path += '.gz'
     os.makedirs(os.path.dirname(reference_dump_path), exist_ok=True)
-    output_content = read_output_content(lib_path, AOSP_DIR)
+    _validate_dump_content(lib_path)
     if compress:
-        with gzip.open(reference_dump_path, 'wb') as f:
-            f.write(bytes(output_content, 'utf-8'))
+        with open(lib_path, 'rb') as src_file:
+            with gzip.open(reference_dump_path, 'wb') as dst_file:
+                shutil.copyfileobj(src_file, dst_file)
     else:
-        with open(reference_dump_path, 'wb') as f:
-            f.write(bytes(output_content, 'utf-8'))
+        shutil.copyfile(lib_path, reference_dump_path)
     print('Created abi dump at', reference_dump_path)
     return reference_dump_path
 
 
-def read_output_content(output_path, replace_str):
-    with open(output_path, 'r') as f:
-        return f.read().replace(replace_str, '')
-
-
-def run_header_abi_dumper(input_path, cflags=tuple(),
-                          export_include_dirs=EXPORTED_HEADERS_DIR,
-                          flags=tuple()):
-    """Run header-abi-dumper to dump ABI from `input_path` and return the
-    output."""
-    with tempfile.TemporaryDirectory() as tmp:
-        output_path = os.path.join(tmp, os.path.basename(input_path)) + '.dump'
-        run_header_abi_dumper_on_file(input_path, output_path,
-                                      export_include_dirs, cflags, flags)
-        return read_output_content(output_path, AOSP_DIR)
-
-
-def run_header_abi_dumper_on_file(input_path, output_path,
-                                  export_include_dirs=tuple(), cflags=tuple(),
-                                  flags=tuple()):
+def run_header_abi_dumper(input_path, output_path, cflags=tuple(),
+                          export_include_dirs=tuple(), flags=tuple()):
     """Run header-abi-dumper to dump ABI from `input_path` and the output is
     written to `output_path`."""
     input_ext = os.path.splitext(input_path)[1]
@@ -140,10 +127,11 @@ def run_header_abi_dumper_on_file(input_path, output_path,
     # The export include dirs imply local include dirs.
     for dir in export_include_dirs:
         cmd += ['-I', dir]
-    subprocess.check_call(cmd)
+    subprocess.check_call(cmd, cwd=AOSP_DIR)
+    _validate_dump_content(output_path)
 
 
-def run_header_abi_linker(output_path, inputs, version_script, api, arch,
+def run_header_abi_linker(inputs, output_path, version_script, api, arch,
                           flags=tuple()):
     """Link inputs, taking version_script into account"""
     cmd = ['header-abi-linker', '-o', output_path, '-v', version_script,
@@ -154,8 +142,8 @@ def run_header_abi_linker(output_path, inputs, version_script, api, arch,
     if '-output-format' not in flags:
         cmd += ['-output-format', DEFAULT_FORMAT]
     cmd += inputs
-    subprocess.check_call(cmd)
-    return read_output_content(output_path, AOSP_DIR)
+    subprocess.check_call(cmd, cwd=AOSP_DIR)
+    _validate_dump_content(output_path)
 
 
 def make_targets(product, variant, targets):
@@ -190,9 +178,12 @@ def get_lsdump_paths_file_path(product, variant):
     return os.path.join(product_out, 'lsdump_paths.txt')
 
 
-def _is_sanitizer_variation(variation):
-    """Check whether the variation is introduced by a sanitizer."""
-    return variation in {'asan', 'hwasan', 'tsan', 'intOverflow', 'cfi', 'scs'}
+def _get_module_variant_sort_key(suffix):
+    for variant in suffix.split('_'):
+        match = re.match(r'apex(\d+)$', variant)
+        if match:
+            return (int(match.group(1)), suffix)
+    return (-1, suffix)
 
 
 def _get_module_variant_dir_name(tag, vndk_version, arch_cpu_str):
@@ -245,13 +236,10 @@ def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, targets):
                 if not variant.startswith(prefix):
                     continue
                 new_suffix = variant[len(prefix):]
-                # Skip if the suffix contains APEX variations.
-                new_variations = [x for x in new_suffix.split('_') if x]
-                if new_variations and not all(_is_sanitizer_variation(x)
-                                              for x in new_variations):
-                    continue
                 old_suffix = suffixes[libname].get(arch_cpu)
-                if not old_suffix or new_suffix > old_suffix:
+                if (not old_suffix or
+                        _get_module_variant_sort_key(new_suffix) >
+                        _get_module_variant_sort_key(old_suffix)):
                     lsdump_paths[libname][arch_cpu][tag] = path
                     suffixes[libname][arch_cpu] = new_suffix
     return lsdump_paths

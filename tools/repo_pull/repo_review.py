@@ -31,8 +31,10 @@ except ImportError:
     from urllib2 import HTTPError  # PY2
 
 from gerrit import (
-    abandon, create_url_opener_from_args, delete_topic, query_change_lists,
-    set_hashtags, set_review, set_topic)
+    abandon, add_reviewers, create_url_opener_from_args, delete_reviewer,
+    delete_topic, find_gerrit_name, query_change_lists, restore, set_hashtags,
+    set_review, set_topic, submit
+)
 
 
 def _get_labels_from_args(args):
@@ -86,8 +88,7 @@ def _parse_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('query', help='Change list query string')
-    parser.add_argument('-g', '--gerrit', required=True,
-                        help='Gerrit review URL')
+    parser.add_argument('-g', '--gerrit', help='Gerrit review URL')
 
     parser.add_argument('--gitcookies',
                         default=os.path.expanduser('~/.gitcookies'),
@@ -99,7 +100,10 @@ def _parse_args():
                         help='Labels to be added')
     parser.add_argument('-m', '--message', help='Review message')
 
+    parser.add_argument('--submit', action='store_true', help='Submit a CL')
+
     parser.add_argument('--abandon', help='Abandon a CL with a message')
+    parser.add_argument('--restore', action='store_true', help='Restore a CL')
 
     parser.add_argument('--add-hashtag', action='append', help='Add hashtag')
     parser.add_argument('--remove-hashtag', action='append',
@@ -112,6 +116,10 @@ def _parse_args():
                         help='Delete topic name')
     parser.add_argument('--remove-topic', action='store_true',
                         help='Delete topic name', dest='delete_topic')
+    parser.add_argument('--add-reviewer', action='append', default=[],
+                        help='Add reviewer')
+    parser.add_argument('--delete-reviewer', action='append', default=[],
+                        help='Delete reviewer')
 
     return parser.parse_args()
 
@@ -120,11 +128,17 @@ def _has_task(args):
     """Determine whether a task has been specified in the arguments."""
     if args.label is not None or args.message is not None:
         return True
+    if args.submit:
+        return True
     if args.abandon is not None:
+        return True
+    if args.restore:
         return True
     if args.add_hashtag or args.remove_hashtag:
         return True
     if args.set_topic or args.delete_topic:
+        return True
+    if args.add_reviewer or args.delete_reviewer:
         return True
     return False
 
@@ -133,7 +147,7 @@ _SEP_SPLIT = '=' * 79
 _SEP = '-' * 79
 
 
-def _print_error(change, res_code, res_json):
+def _print_error(change, res_code, res_body, res_json):
     """Print the error message"""
 
     change_id = change['change_id']
@@ -152,19 +166,19 @@ def _print_error(change, res_code, res_json):
         json.dump(res_json, sys.stderr, indent=4,
                   separators=(', ', ': '))
         print(file=sys.stderr)
+    elif res_body:
+        print(_SEP, file=sys.stderr)
+        print(res_body.decode('utf-8'), file=sys.stderr)
     print(_SEP_SPLIT, file=sys.stderr)
 
 
 def _do_task(change, func, *args, **kwargs):
     """Process a task and report errors when necessary."""
-    try:
-        res_code, res_json = func(*args)
-    except HTTPError as error:
-        res_code = error.code
-        res_json = None
+
+    res_code, res_body, res_json = func(*args)
 
     if res_code != kwargs.get('expected_http_code', 200):
-        _print_error(change, res_code, res_json)
+        _print_error(change, res_code, res_body, res_json)
 
         errors = kwargs.get('errors')
         if errors is not None:
@@ -176,14 +190,27 @@ def main():
 
     # Parse and check the command line options
     args = _parse_args()
+
+    if not args.gerrit:
+        try:
+            args.gerrit = find_gerrit_name()
+        # pylint: disable=bare-except
+        except:
+            print('gerrit instance not found, use [-g GERRIT]')
+            sys.exit(1)
+
     if not _has_task(args):
-        print('error: Either --label, --message, --abandon, --add-hashtag, '
-              '--remove-hashtag, --set-topic, or --delete-topic must be ',
-              'specified', file=sys.stderr)
+        print('error: Either --label, --message, --submit, --abandon, --restore, '
+              '--add-hashtag, --remove-hashtag, --set-topic, --delete-topic, '
+              '--add-reviewer or --delete-reviewer must be specified',
+              file=sys.stderr)
         sys.exit(1)
 
     # Convert label arguments
     labels = _get_labels_from_args(args)
+
+    # Convert reviewer arguments
+    new_reviewers = [{'reviewer': name} for name in args.add_reviewer]
 
     # Load authentication credentials
     url_opener = create_url_opener_from_args(args)
@@ -217,9 +244,22 @@ def main():
         if args.delete_topic:
             _do_task(change, delete_topic, url_opener, args.gerrit,
                      change['id'], expected_http_code=204, errors=errors)
+        if args.submit:
+            _do_task(change, submit, url_opener, args.gerrit, change['id'],
+                     errors=errors)
         if args.abandon:
             _do_task(change, abandon, url_opener, args.gerrit, change['id'],
                      args.abandon, errors=errors)
+        if args.restore:
+            _do_task(change, restore, url_opener, args.gerrit, change['id'],
+                     errors=errors)
+        if args.add_reviewer:
+            _do_task(change, add_reviewers, url_opener, args.gerrit,
+                     change['id'], new_reviewers, errors=errors)
+        for name in args.delete_reviewer:
+            _do_task(change, delete_reviewer, url_opener, args.gerrit,
+                     change['id'], name, expected_http_code=204, errors=errors)
+
 
     if errors['num_errors']:
         sys.exit(1)

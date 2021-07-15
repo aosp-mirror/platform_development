@@ -17,6 +17,10 @@
 // This makefile shows how to build a shared library and an activity that
 // bundles the shared library and calls it using JNI.
 
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
 android_app {
     name: "SimpleJNI",
     srcs: ["**/*.java"],

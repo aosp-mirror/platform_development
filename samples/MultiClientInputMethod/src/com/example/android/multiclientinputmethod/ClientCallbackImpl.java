@@ -164,10 +164,10 @@ final class ClientCallbackImpl implements MultiClientInputMethodServiceDelegate.
             mDelegate.setActive(mClientId, true /* active */);
         }
         if (inputConnection == null || editorInfo == null) {
-            // Dummy InputConnection case.
+            // Placeholder InputConnection case.
             if (window.getClientId() == mClientId) {
                 // Special hack for temporary focus changes (e.g. notification shade).
-                // If we have already established a connection to this client, and if a dummy
+                // If we have already established a connection to this client, and if a placeholder
                 // InputConnection is notified, just ignore this event.
             } else {
                 window.onDummyStartInput(mClientId, targetWindowHandle);
@@ -195,13 +195,6 @@ final class ClientCallbackImpl implements MultiClientInputMethodServiceDelegate.
                 break;
         }
         mInputMethod.mDisplayToLastClientId.put(mSelfReportedDisplayId, mClientId);
-    }
-
-    @Override
-    public void onToggleSoftInput(int showFlags, int hideFlags) {
-        // TODO: Implement
-        Log.w(TAG, "onToggleSoftInput is not yet implemented. clientId=" + mClientId
-                + " showFlags=" + showFlags + " hideFlags=" + hideFlags);
     }
 
     @Override

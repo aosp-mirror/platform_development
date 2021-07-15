@@ -193,7 +193,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     }
 
     /**
-     * A dummy fragment representing a section of the app, but that simply displays dummy text.
+     * A placeholder fragment representing a section of the app, but that simply displays placeholder text.
      * This would be replaced with your application's content.
      */
     public static class DummySectionFragment extends Fragment {

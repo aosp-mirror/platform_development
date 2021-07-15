@@ -12,19 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
 python_library_host {
     name: "python-symbol",
     srcs: [
         "symbol.py",
     ],
-    version: {
-        py2: {
-            enabled: true,
-        },
-        py3: {
-            enabled: true,
-        },
-    },
 }
 
 python_test_host {
@@ -46,4 +42,26 @@ python_test_host {
     srcs: ["symbol.py"],
     test_config: "symbol-tests.xml",
     test_suites: ["general-tests"],
+}
+
+python_test_host {
+    name: "python-stack_core_test",
+    main: "stack_core.py",
+    srcs: [
+        "example_crashes.py",
+        "stack_core.py",
+    ],
+    libs: ["python-symbol"],
+    test_suites: ["general-tests"],
+}
+
+python_test_host {
+    name: "add3prf_test",
+    srcs: [
+        "add3prf.py",
+        "add3prf_test.py",
+    ],
+    libs: [
+        "pyfakefs",
+    ]
 }
