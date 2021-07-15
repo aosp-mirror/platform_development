@@ -59,7 +59,7 @@ public class MainActivity extends Activity
     private static final long TIME_THRESHOLD_NS = 2000000000; // in nanoseconds (= 2sec)
 
     /**
-     * Earth gravity is around 9.8 m/s^2 but user may not completely direct his/her hand vertical
+     * Earth gravity is around 9.8 m/s^2 but user may not completely direct their hand vertical
      * during the exercise so we leave some room. Basically if the x-component of gravity, as
      * measured by the Gravity sensor, changes with a variation (delta) > GRAVITY_THRESHOLD,
      * we consider that a successful count.

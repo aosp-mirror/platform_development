@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {transform, nanos_to_string, get_visible_chip} from './transform.js'
+import { transform, nanos_to_string, get_visible_chip } from './transform.js'
 
 function transform_launcher(launcher) {
   return transform({
@@ -49,4 +49,4 @@ function transform_launcher_trace(entries) {
   });
 }
 
-export {transform_launcher_trace};
+export { transform_launcher_trace };

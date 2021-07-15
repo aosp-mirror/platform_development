@@ -17,6 +17,10 @@
 // This makefile supplies the rules for building a library of JNI code for
 // use by our example of how to bundle a shared library with an APK.
 
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
 cc_library_shared {
     name: "libsimplejni",
     // All of the source files that we will compile.
@@ -29,6 +33,7 @@ cc_library_shared {
         "-Wall",
         "-Werror",
     ],
+    header_libs: ["jni_headers"],
     stl: "none",
     sdk_version: "current",
 }

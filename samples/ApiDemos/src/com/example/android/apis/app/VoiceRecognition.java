@@ -109,7 +109,7 @@ public class VoiceRecognition extends Activity implements OnClickListener {
         // Specify the calling package to identify your application
         intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getClass().getPackage().getName());
 
-        // Display an hint to the user about what he should say.
+        // Display an hint to the user about what they should say.
         intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Speech recognition demo");
 
         // Given an hint to the recognizer about what the user is going to say

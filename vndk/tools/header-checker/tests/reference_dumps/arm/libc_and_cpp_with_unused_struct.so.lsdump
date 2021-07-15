@@ -4,7 +4,7 @@ record_types {
     size: 4
     alignment: 4
     referenced_type: "_ZTI12UnusedStruct"
-    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_and_cpp.h"
+    source_file: "development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_and_cpp.h"
     linker_set_key: "_ZTI12UnusedStruct"
     self_type: "_ZTI12UnusedStruct"
   }
@@ -23,7 +23,7 @@ record_types {
     size: 8
     alignment: 4
     referenced_type: "_ZTI3Foo"
-    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_and_cpp.h"
+    source_file: "development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_and_cpp.h"
     linker_set_key: "_ZTI3Foo"
     self_type: "_ZTI3Foo"
   }
@@ -48,7 +48,7 @@ record_types {
     size: 4
     alignment: 4
     referenced_type: "_ZTI6Cinner"
-    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
+    source_file: "development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
     linker_set_key: "_ZTI6Cinner"
     self_type: "_ZTI6Cinner"
   }
@@ -67,7 +67,7 @@ record_types {
     size: 8
     alignment: 4
     referenced_type: "_ZTI7Cstruct"
-    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
+    source_file: "development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
     linker_set_key: "_ZTI7Cstruct"
     self_type: "_ZTI7Cstruct"
   }
@@ -92,7 +92,7 @@ pointer_types {
     size: 4
     alignment: 4
     referenced_type: "_ZTI3Foo"
-    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_and_cpp.h"
+    source_file: "development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_and_cpp.h"
     linker_set_key: "_ZTIP3Foo"
     self_type: "_ZTIP3Foo"
   }
@@ -103,7 +103,7 @@ pointer_types {
     size: 4
     alignment: 4
     referenced_type: "_ZTI6Cinner"
-    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
+    source_file: "development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
     linker_set_key: "_ZTIP6Cinner"
     self_type: "_ZTIP6Cinner"
   }
@@ -114,7 +114,7 @@ pointer_types {
     size: 4
     alignment: 4
     referenced_type: "_ZTI7Cstruct"
-    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
+    source_file: "development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
     linker_set_key: "_ZTIP7Cstruct"
     self_type: "_ZTIP7Cstruct"
   }
@@ -125,7 +125,7 @@ pointer_types {
     size: 4
     alignment: 4
     referenced_type: "_ZTIP7Cstruct"
-    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
+    source_file: "development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
     linker_set_key: "_ZTIPP7Cstruct"
     self_type: "_ZTIPP7Cstruct"
   }
@@ -136,7 +136,7 @@ pointer_types {
     size: 4
     alignment: 4
     referenced_type: "_ZTIi"
-    source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_and_cpp.h"
+    source_file: "development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_and_cpp.h"
     linker_set_key: "_ZTIPi"
     self_type: "_ZTIPi"
   }
@@ -170,7 +170,7 @@ builtin_types {
 functions {
   return_type: "_ZTIv"
   function_name: "CFunction"
-  source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
+  source_file: "development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_include.h"
   parameters {
     referenced_type: "_ZTIPP7Cstruct"
     default_arg: false
@@ -182,7 +182,7 @@ functions {
 functions {
   return_type: "_ZTI3Foo"
   function_name: "foo"
-  source_file: "/development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_and_cpp.h"
+  source_file: "development/vndk/tools/header-checker/tests/integration/c_and_cpp/include/c_and_cpp.h"
   parameters {
     referenced_type: "_ZTIPi"
     default_arg: false
