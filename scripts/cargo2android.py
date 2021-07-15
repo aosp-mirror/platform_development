@@ -72,6 +72,7 @@ RENAME_MAP = {
     'libminijail': 'libminijail_rust',
     'libsync': 'libsync_rust',
     'libx86_64': 'libx86_64_rust',
+    'libxml': 'libxml_rust',
     'protoc_gen_rust': 'protoc-gen-rust',
 }
 
