@@ -3,7 +3,6 @@ import JobList from '@/views/JobList.vue'
 import JobDetails from '@/views/JobDetails.vue'
 import About from '@/views/About.vue'
 import SimpleForm from '@/views/SimpleForm.vue'
-import PackageAnalysis from '@/views/PackageAnalysis.vue'
 
 const routes = [
   {
@@ -26,11 +25,6 @@ const routes = [
     path: '/create',
     name: 'Create',
     component: SimpleForm
-  },
-  {
-    path: '/analysis',
-    name: 'Analysis',
-    component: PackageAnalysis
   }
 ]
 

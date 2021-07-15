@@ -554,11 +554,12 @@ class Crate(object):
 
   def build_default_name(self):
     """Return a short and readable name for the rust_defaults module."""
-    # Choices: (1) root_pkg + '_defaults',
-    # (2) root_pkg + '_defaults_' + crate_name
-    # (3) root_pkg + '_defaults_' + main_src_basename_path
-    # (4) root_pkg + '_defaults_' + a_positive_sequence_number
-    name1 = altered_defaults(self.root_pkg) + '_defaults'
+    # Choices: (1) root_pkg + '_test'? + '_defaults',
+    # (2) root_pkg + '_test'? + '_defaults_' + crate_name
+    # (3) root_pkg + '_test'? + '_defaults_' + main_src_basename_path
+    # (4) root_pkg + '_test'? + '_defaults_' + a_positive_sequence_number
+    test = "_test" if self.crate_types == ['test'] else ""
+    name1 = altered_defaults(self.root_pkg) + test + '_defaults'
     if self.runner.try_claim_module_name(name1, self):
       return name1
     name2 = name1 + '_' + self.crate_name
@@ -681,8 +682,11 @@ class Crate(object):
     self.dump_android_flags()
     if self.externs:
       self.dump_android_externs()
-    static_libs = [lib for lib in self.static_libs if not lib in self.runner.args.lib_blocklist]
+    all_static_libs = [lib for lib in self.static_libs if not lib in self.runner.args.lib_blocklist]
+    static_libs = [lib for lib in all_static_libs if not lib in self.runner.args.whole_static_libs]
     self.dump_android_property_list('static_libs', '"lib%s"', static_libs)
+    whole_static_libs = [lib for lib in all_static_libs if lib in self.runner.args.whole_static_libs]
+    self.dump_android_property_list('whole_static_libs', '"lib%s"', whole_static_libs)
     shared_libs = [lib for lib in self.shared_libs if not lib in self.runner.args.lib_blocklist]
     self.dump_android_property_list('shared_libs', '"lib%s"', shared_libs)
 
@@ -1606,15 +1610,20 @@ def get_parser():
       default=False,
       help='Make the main library an rlib.')
   parser.add_argument(
+      '--whole-static-libs',
+      nargs='*',
+      default=[],
+      help='Make the given libraries (without lib prefixes) whole_static_libs.')
+  parser.add_argument(
       '--dependency-blocklist',
       nargs='*',
       default=[],
-      help='Do not emit the given dependencies.')
+      help='Do not emit the given dependencies (without lib prefixes).')
   parser.add_argument(
       '--lib-blocklist',
       nargs='*',
       default=[],
-      help='Do not emit the given C libraries as dependencies.')
+      help='Do not emit the given C libraries as dependencies (without lib prefixes).')
   parser.add_argument(
       '--test-blocklist',
       nargs='*',
