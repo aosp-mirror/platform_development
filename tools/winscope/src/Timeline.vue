@@ -13,50 +13,74 @@
      limitations under the License.
 -->
 <template>
-  <svg width="2000" height="20" viewBox="-5,0,2010,20">
-    <circle :cx="position(item)" cy="10" r="5" v-for="(item, idx) in items" @click="onItemClick(idx)" />
-    <circle v-if="items.length" :cx="position(selected)" cy="10" r="5" class="selected" />
+  <svg
+    width="100%"
+    height="20"
+    class="timeline-svg"
+    :class="{disabled: disabled}"
+    ref="timeline"
+  >
+    <rect
+      :x="`${block.startPos}%`"
+      y="0"
+      :width="`${block.width}%`"
+      :height="pointHeight"
+      :rx="corner"
+      v-for="(block, idx) in timelineBlocks"
+      :key="idx"
+      @click="onBlockClick"
+      class="point"
+    />
+    <rect
+      :x="`${position(selected)}%`"
+      y="0"
+      :width="`${pointWidth}%`"
+      :height="pointHeight"
+      :rx="corner"
+      class="point selected"
+    />
   </svg>
 </template>
 <script>
+import TimelineMixin from "./mixins/Timeline.js";
+
 export default {
-  name: 'timeline',
-  props: ['items', 'selectedIndex', 'scale'],
+  name: "timeline",
+  // TODO: Add indication of trim, at least for collasped timeline
+  props: ["selectedIndex", "crop", "disabled"],
   data() {
-    return {};
+    return {
+      pointHeight: 15,
+      corner: 2
+    };
   },
-  methods: {
-    position(item) {
-      return this.translate(item);
-    },
-    translate(cx) {
-      var scale = [...this.scale];
-      if (scale[0] >= scale[1]) {
-        return cx;
-      }
-      return (cx - scale[0]) / (scale[1] - scale[0]) * 2000;
-    },
-    onItemClick(index) {
-      this.$emit('item-selected', index);
-    },
-  },
+  mixins: [TimelineMixin],
+  methods: {},
   computed: {
     timestamps() {
-      if (this.items.length == 1) {
+      if (this.timeline.length == 1) {
         return [0];
       }
-      return this.items;
+      return this.timeline;
     },
     selected() {
-      return this.items[this.selectedIndex];
-    }
-  },
-}
-
+      return this.timeline[this.selectedIndex];
+    },
+  }
+};
 </script>
 <style scoped>
-.selected {
-  fill: red;
+.timeline-svg .point {
+  cursor: pointer;
 }
-
+.timeline-svg.disabled .point {
+  fill: #BDBDBD;
+  cursor: not-allowed;
+}
+.timeline-svg:not(.disabled) .point.selected {
+  fill: rgb(240, 59, 59);
+}
+.timeline-svg.disabled .point.selected {
+  fill: rgba(240, 59, 59, 0.596);
+}
 </style>

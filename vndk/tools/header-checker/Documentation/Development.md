@@ -25,8 +25,7 @@ To build `header-abi-dumper`, `header-abi-linker` and `header-abi-diff`:
 
 ## Alternative build instructions
 
-If you have a full AOSP master branch source tree, you may build the tools
-with:
+If you have a full source tree, you may build the tools with:
 
     $ source build/envsetup.sh
 

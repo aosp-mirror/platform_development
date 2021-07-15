@@ -49,7 +49,7 @@ import common.activities.SampleActivityBase;
  * Contacts permissions (({@link android.Manifest.permission#READ_CONTACTS} and ({@link
  * android.Manifest.permission#WRITE_CONTACTS})) are requested when the 'Show and Add Contacts'
  * button is
- * clicked to display the first contact in the contacts database and to add a dummy contact
+ * clicked to display the first contact in the contacts database and to add a placeholder contact
  * directly to it. Permissions are verified and requested through compat helpers in the support v4
  * library, in this Activity using {@link ActivityCompat}.
  * First, permissions are checked if they have already been granted through {@link

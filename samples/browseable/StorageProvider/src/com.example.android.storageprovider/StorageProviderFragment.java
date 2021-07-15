@@ -70,7 +70,7 @@ public class StorageProviderFragment extends Fragment {
     }
 
     /**
-     * Dummy function to change the user's authorization status.
+     * Placeholder function to change the user's authorization status.
      */
     private void toggleLogin() {
         // Replace this with your standard method of authentication to determine if your app
@@ -81,7 +81,7 @@ public class StorageProviderFragment extends Fragment {
     }
 
     /**
-     * Dummy function to save whether the user is logged in.
+     * Placeholder function to save whether the user is logged in.
      */
     private void writeLoginValue(boolean loggedIn) {
         final SharedPreferences sharedPreferences =
@@ -91,7 +91,7 @@ public class StorageProviderFragment extends Fragment {
     }
 
     /**
-     * Dummy function to determine whether the user is logged in.
+     * Placeholder function to determine whether the user is logged in.
      */
     private boolean readLoginValue() {
         final SharedPreferences sharedPreferences =

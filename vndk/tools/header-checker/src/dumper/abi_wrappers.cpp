@@ -68,7 +68,8 @@ ABIWrapper::ABIWrapper(
       ast_caches_(ast_caches) {}
 
 std::string ABIWrapper::GetDeclSourceFile(const clang::Decl *decl,
-                                          const clang::CompilerInstance *cip) {
+                                          const clang::CompilerInstance *cip,
+                                          const std::string &root_dir) {
   clang::SourceManager &sm = cip->getSourceManager();
   clang::SourceLocation location = decl->getLocation();
   // We need to use the expansion location to identify whether we should recurse
@@ -78,8 +79,8 @@ std::string ABIWrapper::GetDeclSourceFile(const clang::Decl *decl,
   // skipped. Its expansion location will still be the source-file / header
   // belonging to the library.
   clang::SourceLocation expansion_location = sm.getExpansionLoc(location);
-  llvm::StringRef file_name = sm.getFilename(expansion_location);
-  return utils::RealPath(file_name.str());
+  return utils::NormalizePath(sm.getFilename(expansion_location).str(),
+                              root_dir);
 }
 
 std::string ABIWrapper::GetCachedDeclSourceFile(
@@ -87,7 +88,7 @@ std::string ABIWrapper::GetCachedDeclSourceFile(
   assert(decl != nullptr);
   auto result = ast_caches_->decl_to_source_file_cache_.find(decl);
   if (result == ast_caches_->decl_to_source_file_cache_.end()) {
-    return GetDeclSourceFile(decl, cip);
+    return GetDeclSourceFile(decl, cip, ast_caches_->root_dir_);
   }
   return result->second;
 }
@@ -96,7 +97,7 @@ std::string ABIWrapper::GetMangledNameDecl(
     const clang::NamedDecl *decl, clang::MangleContext *mangle_contextp) {
   if (!mangle_contextp->shouldMangleDeclName(decl)) {
     clang::IdentifierInfo *identifier = decl->getIdentifier();
-    return identifier ? identifier->getName() : "";
+    return identifier ? identifier->getName().str() : "";
   }
   std::string mangled_name;
   llvm::raw_string_ostream ostream(mangled_name);
@@ -223,7 +224,7 @@ bool ABIWrapper::CreateExtendedType(clang::QualType qual_type,
 static std::string GetAnonymousEnumUniqueId(llvm::StringRef mangled_name,
                                             const clang::EnumDecl *enum_decl) {
   // Get the type name from the mangled name.
-  const std::string mangled_name_str = mangled_name;
+  const std::string mangled_name_str(mangled_name);
   std::smatch match_result;
   std::string old_suffix;
   std::string nested_name_suffix;
@@ -274,7 +275,7 @@ std::string ABIWrapper::GetTypeUniqueId(clang::QualType qual_type) {
     return GetAnonymousEnumUniqueId(uid.str(), enum_decl);
   }
 
-  return uid.str();
+  return std::string(uid);
 }
 
 // CreateBasicNamedAndTypedDecl creates a BasicNamedAndTypedDecl which will
@@ -293,10 +294,9 @@ bool ABIWrapper::CreateBasicNamedAndTypedDecl(
   // Temporary hack: Skip the auto types, incomplete types and dependent types.
   if (type_class != clang::Type::Auto && !base_type->isIncompleteType() &&
       !base_type->isDependentType()) {
-    std::pair<clang::CharUnits, clang::CharUnits> size_and_alignment =
-        ast_contextp_->getTypeInfoInChars(canonical_type);
-    typep->SetSize(size_and_alignment.first.getQuantity());
-    typep->SetAlignment(size_and_alignment.second.getQuantity());
+    auto type_info_chars = ast_contextp_->getTypeInfoInChars(canonical_type);
+    typep->SetSize(type_info_chars.Width.getQuantity());
+    typep->SetAlignment(type_info_chars.Align.getQuantity());
   }
 
   std::string human_name = QualTypeToString(canonical_type);
@@ -602,7 +602,7 @@ bool RecordDeclWrapper::SetupRecordFields(repr::RecordTypeIR *recordp,
       llvm::errs() << "Creation of Type failed\n";
       return false;
     }
-    std::string field_name = field->getName();
+    std::string field_name(field->getName());
     uint64_t field_offset = record_layout.getFieldOffset(field_index);
     recordp->AddRecordField(repr::RecordFieldIR(
         field_name, GetTypeUniqueId(field_type), field_offset,
@@ -742,8 +742,9 @@ repr::VTableComponentIR RecordDeclWrapper::SetupRecordVTableComponent(
               }
 
               if (thunk_info.isEmpty()) {
-                mangle_contextp_->mangleCXXDtor(
-                    vtable_component.getDestructorDecl(), dtor_type, ostream);
+                auto GD = clang::GlobalDecl(
+                    vtable_component.getDestructorDecl(), dtor_type);
+                mangle_contextp_->mangleName(GD, ostream);
               } else {
                 mangle_contextp_->mangleCXXDtorThunk(
                     vtable_component.getDestructorDecl(), dtor_type,
@@ -855,7 +856,7 @@ std::string RecordDeclWrapper::GetMangledRTTI(
   llvm::SmallString<256> uid;
   llvm::raw_svector_ostream out(uid);
   mangle_contextp_->mangleCXXRTTI(qual_type, out);
-  return uid.str();
+  return std::string(uid);
 }
 
 

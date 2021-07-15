@@ -37,9 +37,6 @@ using AbiElementMap = std::map<std::string, T>;
 template <typename T>
 using AbiElementUnorderedMap = std::unordered_map<std::string, T>;
 
-template <typename T>
-using AbiElementList = std::list<T>;
-
 enum TextFormatIR {
   ProtobufTextFormat = 0,
   Json = 1,
@@ -759,6 +756,16 @@ class ElfObjectIR : public ElfSymbolIR {
   }
 };
 
+class TypeDefinition {
+ public:
+  TypeDefinition(const TypeIR *type_ir,
+                 const std::string *compilation_unit_path)
+      : type_ir_(type_ir), compilation_unit_path_(*compilation_unit_path) {}
+
+  const TypeIR *type_ir_;
+  const std::string &compilation_unit_path_;
+};
+
 class ModuleIR {
  public:
   ModuleIR(const std::set<std::string> *exported_headers)
@@ -828,7 +835,7 @@ class ModuleIR {
     return type_graph_;
   }
 
-  const AbiElementUnorderedMap<std::list<const TypeIR *>> &
+  const AbiElementUnorderedMap<std::list<TypeDefinition>> &
   GetODRListMap() const {
     return odr_list_map_;
   }
@@ -864,10 +871,19 @@ class ModuleIR {
 
   void AddElfObject(ElfObjectIR &&elf_object);
 
-  void AddToODRListMap(const std::string &key, const TypeIR *value) {
+  // Find the compilation unit path of a RecordTypeIR, FunctionTypeIR, or
+  // EnumTypeIR in odr_list_map_. Return an empty string if the type is not in
+  // the map.
+  std::string GetCompilationUnitPath(const TypeIR *type_ir) const;
+
+  void AddToODRListMap(const std::string &key, const TypeIR *type_ir,
+                       const std::string &compilation_unit_path) {
+    auto compilation_unit_path_it =
+        compilation_unit_paths_.emplace(compilation_unit_path).first;
     auto map_it = odr_list_map_.find(key);
+    TypeDefinition value(type_ir, &*compilation_unit_path_it);
     if (map_it == odr_list_map_.end()) {
-      odr_list_map_.emplace(key, std::list<const TypeIR *>({value}));
+      odr_list_map_.emplace(key, std::list<TypeDefinition>({value}));
       return;
     }
     odr_list_map_[key].emplace_back(value);
@@ -883,7 +899,6 @@ class ModuleIR {
   // File path to the compilation unit (*.sdump)
   std::string compilation_unit_path_;
 
-  AbiElementList<RecordTypeIR> record_types_list_;
   AbiElementMap<FunctionIR> functions_;
   AbiElementMap<GlobalVarIR> global_variables_;
   AbiElementMap<RecordTypeIR> record_types_;
@@ -904,8 +919,13 @@ class ModuleIR {
   AbiElementMap<ElfObjectIR> elf_objects_;
   // type-id -> LinkableMessageIR * map
   AbiElementMap<const TypeIR *> type_graph_;
-  // maps unique_id + source_file -> const TypeIR *
-  AbiElementUnorderedMap<std::list<const TypeIR *>> odr_list_map_;
+  // maps unique_id + source_file -> TypeDefinition
+  AbiElementUnorderedMap<std::list<TypeDefinition>> odr_list_map_;
+
+
+ private:
+  // The compilation unit paths referenced by odr_list_map_;
+  std::set<std::string> compilation_unit_paths_;
   const std::set<std::string> *exported_headers_;
 };
 

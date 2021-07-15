@@ -15,6 +15,8 @@
 include $(CLEAR_VARS)
 test_module := foo
 LOCAL_MODULE := $(test_module)
+LOCAL_LICENSE_KINDS := SPDX-license-identifier-Apache-2.0
+LOCAL_LICENSE_CONDITIONS := notice
 recursive_var := $(recursive_var)
 LOCAL_MODULE_TAGS := tags
 LOCAL_SRC_FILES := src
