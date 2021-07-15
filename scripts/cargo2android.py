@@ -303,6 +303,9 @@ class Crate(object):
     # which can be changed if self is a merged test module.
     self.decide_module_type()
     if should_merge_test:
+      if (self.main_src in self.runner.args.test_blocklist and
+          not other.main_src in self.runner.args.test_blocklist):
+        self.main_src = other.main_src
       self.srcs.append(other.main_src)
       # use a short unique name as the merged module name.
       prefix = self.root_pkg + '_tests'
