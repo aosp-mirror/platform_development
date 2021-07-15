@@ -29,10 +29,13 @@ namespace dumper {
 
 
 struct ASTCaches {
-  ASTCaches(const std::string &translation_unit_source)
-      : translation_unit_source_(translation_unit_source) {}
+  ASTCaches(const std::string &translation_unit_source,
+            const std::string &root_dir)
+      : translation_unit_source_(translation_unit_source), root_dir_(root_dir) {
+  }
 
   std::string translation_unit_source_;
+  const std::string root_dir_;
   std::map<const clang::Decl *, std::string> decl_to_source_file_cache_;
 
   llvm::DenseSet<clang::QualType> converted_qual_types_;

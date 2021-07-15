@@ -25,7 +25,7 @@
    "function_name" : "example",
    "linker_set_key" : "example",
    "return_type" : "_ZTIv",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/weak_symbols/example.c"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/weak_symbols/example.c"
   }
  ],
  "global_vars" : [],

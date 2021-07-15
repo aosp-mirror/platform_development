@@ -141,7 +141,7 @@ public class SendMessageActivity extends Activity {
     };
 
     /**
-     * Pretends to send the text to the contact. This only shows a dummy message.
+     * Pretends to send the text to the contact. This only shows a placeholder message.
      */
     private void send() {
         Toast.makeText(this,

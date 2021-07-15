@@ -14,20 +14,6 @@
  * limitations under the License.
  */
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.SortedSet;
-import java.util.TreeSet;
-
 /**
  * Generates IntelliJ and Eclipse project configurations.
  */
