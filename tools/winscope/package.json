@@ -7,8 +7,7 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development webpack serve --open --hot",
     "build": "cross-env NODE_ENV=production webpack --progress",
-    "test": "webpack --config webpack.spec.config.js && jasmine dist/bundleSpec.js",
-    "prepare": "cd ../../ && husky install tools/winscope"
+    "test": "webpack --config webpack.spec.config.js && jasmine dist/bundleSpec.js"
   },
   "dependencies": {
     "cross-env": "^7.0.3",
