@@ -11,20 +11,15 @@
     <v-col
       v-for="label in labels"
       :key="label"
-      cols="4"
+      cols="3"
     >
-      <label
-        v-if="label"
-        class="checkbox"
+      <input
+        type="checkbox"
+        :value="label"
+        :checked="modelValue.get(label)"
+        @change="updateSelected($event.target.value)"
       >
-        <input
-          type="checkbox"
-          :value="label"
-          :checked="modelValue.get(label)"
-          @change="updateSelected($event.target.value)"
-        >
-        {{ label }}
-      </label>
+      <label v-if="label"> {{ label }} </label>
     </v-col>
   </v-row>
 </template>
@@ -76,18 +71,5 @@ ul > li {
   margin-right: 5%;
   top: 0px;
   height: 50px;
-}
-
-.checkbox {
-  display: block;
-  position: relative;
-  padding-left: 35px;
-  margin-bottom: 12px;
-  cursor: pointer;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  transition: all 0.2s ease;
 }
 </style>

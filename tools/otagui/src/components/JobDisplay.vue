@@ -4,6 +4,7 @@
       <span>Status of Job.{{ job.id }}</span>
       <h4>{{ job.status }}</h4>
       <div v-show="active">
+        <v-divider class="my-3" />
         <JobConfiguration
           :job="job"
           :build-detail="false"

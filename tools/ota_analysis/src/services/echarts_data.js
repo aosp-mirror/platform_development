@@ -5,11 +5,13 @@ export class EchartsData {
    * @param {Map} statisticData
    * @param {String} title
    * @param {String} unit
+   * @param {Number} maximumEntries
    */
-  constructor(statisticData, title, unit) {
+  constructor(statisticData, title, unit, maximumEntries = 15) {
     this.statisticData = statisticData
     this.title = title
     this.unit = unit
+    this.maximumEntries = maximumEntries
   }
 
   /**
@@ -32,6 +34,9 @@ export class EchartsData {
    * @return {Object} an ECharts option object.
    */
   getEchartsOption() {
+    if (this.statisticData.size > this.maximumEntries) {
+      this.statisticData = trimMap(this.statisticData, this.maximumEntries)
+    }
     let /** Object */ option = new Object()
     option.title = {
       text: this.title,
@@ -67,4 +72,39 @@ export class EchartsData {
     ]
     return option
   }
+}
+
+/**
+ * When there are too many entries in the map, the pie chart can be very
+ * crowded. This function will return the entries that have high values.
+ * Specifically, the top <maximumEntries> will be stored and the others
+ * will be added into an entry called 'other'.
+ * @param {Map} map
+ * @param {Number} maximumEntries
+ * @return {Map}
+ */
+function trimMap(map, maximumEntries) {
+  if (map.size <= maximumEntries) return map
+  let /** Map */ new_map = new Map()
+  for (let i=0; i<maximumEntries; i++) {
+    let /** Number */ curr = 0
+    let /** String */ currKey = ''
+    for (let [key, value] of map) {
+      if (!new_map.get(key)) {
+        if (value > curr) {
+          curr = value
+          currKey = key
+        }
+      }
+    }
+    new_map.set(currKey, curr)
+  }
+  let /** Number */ restTotal = 0
+  for (let [key, value] of map) {
+    if (!new_map.get(key)) {
+      restTotal += value
+    }
+  }
+  new_map.set('other', restTotal)
+  return new_map
 }

@@ -57,4 +57,8 @@ export default {
   cursor: pointer;
   color: #00c255;
 }
+
+li {
+  list-style-type: none;
+}
 </style>

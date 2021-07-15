@@ -1,26 +1,43 @@
 <template>
-  <div>
-    <BaseFile
-      label="Select an OTA package"
-      @file-select="unpackOTA"
+  <v-row>
+    <v-col
+      cols="6"
+    >
+      <BaseFile
+        label="Please drag and drop an OTA package or Select one"
+        @file-select="unpackOTA"
+      />
+      <PayloadDetail
+        v-if="zipFile && payload"
+        :zipFile="zipFile"
+        :payload="payload"
+      />
+    </v-col>
+    <v-divider
+      vertical
     />
-    <PayloadDetail
-      v-if="zipFile && payload"
-      :zipFile="zipFile"
-      :payload="payload"
-    />
-  </div>
+    <v-col
+      cols="6"
+    >
+      <PayloadComposition
+        v-if="zipFile && payload.manifest"
+        :manifest="payload.manifest"
+      />
+    </v-col>
+  </v-row>
 </template>
 
 <script>
 import BaseFile from '@/components/BaseFile.vue'
 import PayloadDetail from '@/components/PayloadDetail.vue'
+import PayloadComposition from '@/components/PayloadComposition.vue'
 import { Payload } from '@/services/payload.js'
 
 export default {
   components: {
     BaseFile,
     PayloadDetail,
+    PayloadComposition,
   },
   data() {
     return {
