@@ -68,6 +68,10 @@
       <ul>
         <h3>Build Library</h3>
         <UploadFile @file-uploaded="fetchTargetList" />
+        <BuildTable
+          v-if="targetDetails.length>0"
+          :builds="targetDetails"
+        />
         <li
           v-for="targetDetail in targetDetails"
           :key="targetDetail.file_name"
@@ -111,6 +115,7 @@ import ApiService from '../services/ApiService.js'
 import UploadFile from '@/components/UploadFile.vue'
 import PartialCheckbox from '@/components/PartialCheckbox.vue'
 import FormDate from '../services/FormDate.js'
+import BuildTable from '@/components/BuildTable.vue'
 import { uuid } from 'vue-uuid'
 
 export default {
@@ -120,6 +125,7 @@ export default {
     UploadFile,
     FileSelect,
     PartialCheckbox,
+    BuildTable
   },
   data() {
     return {
