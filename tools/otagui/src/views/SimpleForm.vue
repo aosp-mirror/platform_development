@@ -1,6 +1,9 @@
 <template>
   <v-row>
-    <v-col cols="6">
+    <v-col
+      cols="12"
+      md="6"
+    >
       <form @submit.prevent="sendForm">
         <FileSelect
           v-if="input.isIncremental"
@@ -15,7 +18,8 @@
         />
         <v-row>
           <v-col
-            cols="4"
+            cols="12"
+            md="4"
             align="center"
           >
             <BaseCheckbox
@@ -24,7 +28,8 @@
             />
           </v-col>
           <v-col
-            cols="4"
+            cols="12"
+            md="4"
             align="center"
           >
             <BaseCheckbox
@@ -33,7 +38,8 @@
             />
           </v-col>
           <v-col
-            cols="4"
+            cols="12"
+            md="4"
             align="center"
           >
             <BaseCheckbox
@@ -64,7 +70,10 @@
       </form>
     </v-col>
     <v-divider vertical />
-    <v-col cols="6">
+    <v-col
+      cols="12"
+      md="6"
+    >
       <ul>
         <h3>Build Library</h3>
         <UploadFile @file-uploaded="fetchTargetList" />
