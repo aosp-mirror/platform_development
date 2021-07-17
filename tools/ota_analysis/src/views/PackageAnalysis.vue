@@ -1,7 +1,8 @@
 <template>
   <v-row>
     <v-col
-      cols="6"
+      cols="12"
+      md="6"
     >
       <BaseFile
         label="Please drag and drop an OTA package or Select one"
@@ -17,7 +18,8 @@
       vertical
     />
     <v-col
-      cols="6"
+      cols="12"
+      md="6"
     >
       <PayloadComposition
         v-if="zipFile && payload.manifest"
