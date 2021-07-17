@@ -4,12 +4,11 @@
     :jobs="jobs"
   />
   <v-row>
-    <v-cow
+    <v-col
       v-for="job in jobs"
       :key="job.id"
-      cols="3"
-      sm="12"
-      class="ma-5"
+      cols="12"
+      sm="3"
     >
       <JobDisplay
         :job="job"
@@ -17,7 +16,7 @@
         @mouseover="mouseOver(job.id, true)"
         @mouseout="mouseOver(job.id, false)"
       />
-    </v-cow>
+    </v-col>
   </v-row>
   <v-btn
     block
