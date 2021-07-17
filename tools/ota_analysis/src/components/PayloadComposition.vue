@@ -8,7 +8,10 @@
   </div>
   <v-divider />
   <v-row>
-    <v-col cols="6">
+    <v-col
+      cols="12"
+      md="6"
+    >
       <v-btn
         block
         @click="updateChart('blocks')"
@@ -16,7 +19,10 @@
         Analyse Installed Blocks (in target build)
       </v-btn>
     </v-col>
-    <v-col cols="6">
+    <v-col
+      cols="12"
+      md="6"
+    >
       <v-btn
         block
         @click="updateChart('payload')"
@@ -26,7 +32,10 @@
     </v-col>
   </v-row>
   <v-row>
-    <v-col cols="6">
+    <v-col
+      cols="12"
+      md="6"
+    >
       <v-btn
         block
         @click="updateChart('COWmerge')"
@@ -34,7 +43,10 @@
         Analyse COW Merge Operations
       </v-btn>
     </v-col>
-    <v-col cols="6">
+    <v-col
+      cols="12"
+      md="6"
+    >
       <v-btn
         block
         :disabled="!targetFile"
@@ -45,8 +57,14 @@
     </v-col>
   </v-row>
   <v-row>
-    <v-col cols="6" />
-    <v-col cols="6">
+    <v-col
+      cols="12"
+      md="6"
+    />
+    <v-col
+      cols="12"
+      md="6"
+    >
       <BaseFile
         label="Drag and drop or Select The target Android build"
         @file-select="selectBuild"

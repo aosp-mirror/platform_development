@@ -11,7 +11,8 @@
     <v-col
       v-for="label in labels"
       :key="label"
-      cols="4"
+      cols="12"
+      md="4"
     >
       <label
         v-if="label"

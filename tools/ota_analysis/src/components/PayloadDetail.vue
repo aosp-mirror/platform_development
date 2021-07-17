@@ -20,7 +20,8 @@
       <v-col
         v-for="partition in payload.manifest.partitions"
         :key="partition.partitionName"
-        cols="4"
+        cols="12"
+        md="4"
       >
         <v-card
           elevation="5"
