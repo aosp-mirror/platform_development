@@ -49,7 +49,7 @@ class ABIWrapper {
  public:
   static std::string GetDeclSourceFile(const clang::Decl *decl,
                                        const clang::CompilerInstance *cip,
-                                       const std::string &root_dir);
+                                       const utils::RootDirs &root_dirs);
 
  protected:
   std::string GetCachedDeclSourceFile(const clang::Decl *decl,
