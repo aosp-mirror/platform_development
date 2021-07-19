@@ -52,10 +52,10 @@ export default {
   watch: {
     partitionSelected: {
       handler: function() {
-        let list = ''
+        let list = []
         for (let [key, value] of this.partitionSelected) {
           if (value) {
-            list += key + ' '
+            list.push(key)
           }
         }
         this.$emit('update:modelValue', list)
