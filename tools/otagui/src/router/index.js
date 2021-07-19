@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import JobList from '@/views/JobList.vue'
 import JobDetails from '@/views/JobDetails.vue'
 import About from '@/views/About.vue'
-import SimpleForm from '@/views/SimpleForm.vue'
+import JobConfigure from '@/views/JobConfigure.vue'
 
 const routes = [
   {
@@ -24,7 +24,7 @@ const routes = [
   {
     path: '/create',
     name: 'Create',
-    component: SimpleForm
+    component: JobConfigure
   }
 ]
 
