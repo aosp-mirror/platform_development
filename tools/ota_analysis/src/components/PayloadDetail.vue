@@ -1,15 +1,9 @@
 <template>
-  <div
-    v-if="zipFile"
+  <BasicInfo
+    :zipFile="zipFile"
+    :payload="payload"
     class="mb-5"
-  >
-    <h3>File infos</h3>
-    <ul>
-      <li>File name: {{ zipFile.name }}</li>
-      <li>File size: {{ zipFile.size }} Bytes</li>
-      <li>File last modified date: {{ zipFile.lastModifiedDate }}</li>
-    </ul>
-  </div>
+  />
   <v-divider />
   <div v-if="payload">
     <h3>Partition List</h3>
@@ -55,11 +49,13 @@
 
 <script>
 import PartitionDetail from './PartitionDetail.vue'
+import BasicInfo from '@/components/BasicInfo.vue'
 import { Payload } from '@/services/payload.js'
 
 export default {
   components: {
     PartitionDetail,
+    BasicInfo,
   },
   props: {
     zipFile: {
@@ -94,6 +90,7 @@ function octToHex(bufferArray) {
   height: 200px;
   width: 100%;
   word-break: break-all;
+  text-align: center;
 }
 
 .partial-info {
