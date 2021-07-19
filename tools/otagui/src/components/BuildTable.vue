@@ -20,7 +20,7 @@ export default {
     TableLite
   },
   props: {
-    jobs: {
+    builds: {
       type: Array,
       required: true
     }
@@ -30,51 +30,36 @@ export default {
       rows: null,
       columns: [
         {
-          label: "Source build",
-          field: "incremental_name",
+          label: "Build Name",
+          field: "file_name",
           sortable: true
         },
         {
-          label: "Target build",
-          field: "target_name",
+          label: "Upload Time",
+          field: "time",
+          sortable: true,
+          display: function (row) {
+            return FormDate.formDate(row.time)
+          }
+        },
+        {
+          label: "Build ID",
+          field: "build_id",
           sortable: true
         },
         {
-          label: "Status",
-          field: "status",
-          sortable: true,
-          display: function (row) {
-            return (
-              "<a href=/check/" + row.id + '>'
-              + row.status
-              + "</a>"
-            );
-          }
-        },
-        {
-          label: "Partial",
-          field: "isPartial",
+          label: "Build Version",
+          field: "build_version",
           sortable: true
         },
         {
-          label: "Start Time",
-          field: "start_time",
-          sortable: true,
-          display: function (row) {
-            return FormDate.formDate(row.start_time)
-          }
-        },
-        {
-          label: "Finish Time",
-          field: "finish_time",
-          sortable: true,
-          display: function (row) {
-            return FormDate.formDate(row.finish_time)
-          }
-        },
+          label: "Build Flavor",
+          field: "build_flavor",
+          sortable: true
+        }
       ],
       sortable: {
-        order: "start_time",
+        order: "time",
         sort: "desc",
       },
       isReSearch: false,
@@ -83,16 +68,16 @@ export default {
     }
   },
   created() {
-    this.rows = TableSort(this.jobs, this.sortable.order, this.sortable.sort, 0, 10)
-    this.total = this.jobs.length
+    this.rows = TableSort(this.builds, this.sortable.order, this.sortable.sort, 0, 10)
+    this.total = this.builds.length
   },
   methods: {
     doSearch(offset, limit, order, sort) {
       this.isLoading = true
       this.sortable.order = order
       this.sortable.sort = sort
-      this.rows = TableSort(this.jobs, order, sort, offset, limit)
-      this.total = this.jobs.length
+      this.rows = TableSort(this.builds, order, sort, offset, limit)
+      this.total = this.builds.length
       this.isLoading = false
     }
   }
