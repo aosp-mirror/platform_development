@@ -320,7 +320,7 @@ const FILE_DECODERS = {
       mime: 'application/octet-stream',
       protoType: SfDumpMessage,
       transform: SurfaceFlingerDump.fromProto,
-      timeline: false,
+      timeline: true,
     },
   },
   [FILE_TYPES.WINDOW_MANAGER_DUMP]: {
@@ -331,7 +331,7 @@ const FILE_DECODERS = {
       mime: 'application/octet-stream',
       protoType: WmDumpMessage,
       transform: WindowManagerDump.fromProto,
-      timeline: false,
+      timeline: true,
     },
   },
   [FILE_TYPES.WAYLAND_DUMP]: {
@@ -342,7 +342,7 @@ const FILE_DECODERS = {
       mime: 'application/octet-stream',
       protoType: WaylandDumpMessage,
       transform: transform_wl_outputstate,
-      timeline: false,
+      timeline: true,
     },
   },
   [FILE_TYPES.SCREEN_RECORDING]: {
