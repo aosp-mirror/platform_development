@@ -91,7 +91,7 @@
       :md-active.sync="showSnackbar"
       md-persistent
     >
-      <span style="white-space: pre-line;">{{ snackbarText }}</span>
+      <p class="snackbar-break-words">{{ snackbarText }}</p>
       <div @click="hideSnackbarMessage()">
         <md-button class="md-icon-button">
           <md-icon style="color: white">close</md-icon>
@@ -137,7 +137,7 @@ export default {
   },
   methods: {
     showSnackbarMessage(message, duration) {
-      this.snackbarText = message;
+      this.snackbarText = '\n' + message + '\n';
       this.snackbarDuration = duration;
       this.showSnackbar = true;
     },
