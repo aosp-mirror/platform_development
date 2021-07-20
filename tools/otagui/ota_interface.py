@@ -176,6 +176,10 @@ class ProcessesManagement:
             args['output'] = os.path.join('output', str(id) + '.zip')
         if args['verbose']:
             command.append('-v')
+        if args['extra_keys']:
+            args['extra'] += '--' + ' --'.join(args['extra_keys'])
+        if args['extra']:
+            command.append(args['extra'])
         command.append('-k')
         command.append(
             '../../../build/make/target/product/security/testkey')
