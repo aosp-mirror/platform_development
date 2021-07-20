@@ -1,6 +1,9 @@
 <template>
   <h3>Basic infos</h3>
-  <div v-if="zipFile">
+  <div
+    v-if="zipFile"
+    v-bind="$attrs"
+  >
     <ul class="align">
       <li><strong> File name </strong> {{ zipFile.name }}</li>
       <li><strong> File size </strong> {{ zipFile.size }} Bytes</li>
@@ -18,26 +21,26 @@
         <span v-if="payload.manifest.partitions[0].oldPartitionInfo">
           &#9989;
         </span>
-        <span v-else> &#10062; </span>
+        <span v-else> &#10060; </span>
       </li>
       <li>
         <strong> Partial </strong>
         <span v-if="payload.manifest.partialUpdate"> &#9989; </span>
-        <span v-else> &#10062; </span>
+        <span v-else> &#10060; </span>
       </li>
       <li>
         <strong> VAB </strong>
         <span v-if="payload.manifest.dynamicPartitionMetadata.snapshotEnabled">
           &#9989;
         </span>
-        <span v-else> &#10062; </span>
+        <span v-else> &#10060; </span>
       </li>
       <li>
         <strong> VABC </strong>
         <span v-if="payload.manifest.dynamicPartitionMetadata.vabcEnabled">
           &#9989;
         </span>
-        <span v-else> &#10062; </span>
+        <span v-else> &#10060; </span>
       </li>
     </ul>
   </div>
