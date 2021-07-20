@@ -18,26 +18,26 @@
         <span v-if="payload.manifest.partitions[0].oldPartitionInfo">
           &#9989;
         </span>
-        <span v-else> &#10062; </span>
+        <span v-else> &#10060; </span>
       </li>
       <li>
         <strong> Partial </strong>
         <span v-if="payload.manifest.partialUpdate"> &#9989; </span>
-        <span v-else> &#10062; </span>
+        <span v-else> &#10060; </span>
       </li>
       <li>
         <strong> VAB </strong>
         <span v-if="payload.manifest.dynamicPartitionMetadata.snapshotEnabled">
           &#9989;
         </span>
-        <span v-else> &#10062; </span>
+        <span v-else> &#10060; </span>
       </li>
       <li>
         <strong> VABC </strong>
         <span v-if="payload.manifest.dynamicPartitionMetadata.vabcEnabled">
           &#9989;
         </span>
-        <span v-else> &#10062; </span>
+        <span v-else> &#10060; </span>
       </li>
     </ul>
   </div>
