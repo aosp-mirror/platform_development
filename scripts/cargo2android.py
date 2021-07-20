@@ -659,6 +659,10 @@ class Crate(object):
       for apex in self.runner.args.apex_available:
         self.write('        "%s",' % apex)
       self.write('    ],')
+    if self.runner.args.vendor_available:
+      self.write('    vendor_available: true,')
+    if self.runner.args.vendor_ramdisk_available:
+      self.write('    vendor_ramdisk_available: true,')
     if self.runner.args.min_sdk_version and crate_type == 'lib':
       self.write('    min_sdk_version: "%s",' % self.runner.args.min_sdk_version)
     if self.runner.args.add_module_block:
@@ -1608,6 +1612,16 @@ def get_parser():
       '--apex-available',
       nargs='*',
       help='Mark the main library as apex_available with the given apexes.')
+  parser.add_argument(
+      '--vendor-available',
+      action='store_true',
+      default=False,
+      help='Mark the main library as vendor_available.')
+  parser.add_argument(
+      '--vendor-ramdisk-available',
+      action='store_true',
+      default=False,
+      help='Mark the main library as vendor_ramdisk_available.')
   parser.add_argument(
       '--force-rlib',
       action='store_true',
