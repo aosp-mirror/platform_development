@@ -35,7 +35,7 @@ export class OTAConfiguration {
    * Start the generation process, will throw an error if not succeed
    */
   async sendForm() {
-    for (let flag of OTAExtraFlags.slice(3, OTAflags.length)) {
+    for (let flag of OTAExtraFlags) {
       if (this[flag.key]) {
         this.extra_keys.push(flag.key)
       }
