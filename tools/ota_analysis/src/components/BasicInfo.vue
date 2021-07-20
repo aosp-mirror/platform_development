@@ -1,6 +1,9 @@
 <template>
   <h3>Basic infos</h3>
-  <div v-if="zipFile">
+  <div
+    v-if="zipFile"
+    v-bind="$attrs"
+  >
     <ul class="align">
       <li><strong> File name </strong> {{ zipFile.name }}</li>
       <li><strong> File size </strong> {{ zipFile.size }} Bytes</li>
