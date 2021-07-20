@@ -13,43 +13,45 @@
     />
     <v-row>
       <v-col
+        v-for="flag in basicFlags"
+        :key="flag.key"
         cols="12"
         md="4"
-        align="center"
       >
         <BaseCheckbox
-          v-model="input.verbose"
-          :label="'Verbose'"
-        />
-      </v-col>
-      <v-col
-        cols="12"
-        md="4"
-        align="center"
-      >
-        <BaseCheckbox
-          v-model="input.isIncremental"
-          :label="'Incremental'"
-        />
-      </v-col>
-      <v-col
-        cols="12"
-        md="4"
-        align="center"
-      >
-        <BaseCheckbox
-          v-model="input.isPartial"
-          :label="'Partial'"
+          v-model="input[flag.key]"
+          :label="flag.label"
         />
       </v-col>
     </v-row>
-    <div>
+    <div v-if="input.isPartial">
+      <v-divider />
+      <h3>Select Partitions</h3>
       <PartialCheckbox
-        v-if="input.isPartial"
         v-model="input.partial"
         :labels="updatablePartitions"
       />
+      <v-divider />
     </div>
+    <v-btn
+      block
+      @click="moreOptions = !moreOptions"
+    >
+      More Options
+    </v-btn>
+    <v-row v-if="moreOptions">
+      <v-col
+        v-for="flag in extraFlags"
+        :key="flag.key"
+        cols="12"
+        md="4"
+      >
+        <BaseCheckbox
+          v-model="input[flag.key]"
+          :label="flag.label"
+        />
+      </v-col>
+    </v-row>
     <v-divider class="my-5" />
     <BaseInput
       v-model="input.extra"
@@ -70,10 +72,10 @@ import BaseInput from '@/components/BaseInput.vue'
 import BaseCheckbox from '@/components/BaseCheckbox.vue'
 import FileSelect from '@/components/FileSelect.vue'
 import PartialCheckbox from '@/components/PartialCheckbox.vue'
-import { OTAConfiguration } from '@/services/JobSubmission.js'
+import { OTAConfiguration, OTABasicFlags, OTAExtraFlags } from '@/services/JobSubmission.js'
 
 export default {
-  components:{
+  components: {
     BaseInput,
     BaseCheckbox,
     FileSelect,
@@ -82,20 +84,23 @@ export default {
   props: {
     targetDetails: {
       type: Array,
-      default: () => []
+      default: () => [],
     },
     incrementalSource: {
       type: String,
-      default: ''
+      default: '',
     },
     targetBuild: {
       type: String,
-      default: ''
-    }
+      default: '',
+    },
   },
-  data () {
+  data() {
     return {
-      input: new OTAConfiguration()
+      input: new OTAConfiguration(),
+      moreOptions: false,
+      basicFlags: OTABasicFlags,
+      extraFlags: OTAExtraFlags
     }
   },
   computed: {
@@ -112,25 +117,25 @@ export default {
     },
     checkIncremental() {
       return this.input.isIncremental
-    }
+    },
   },
   watch: {
     incrementalSource: {
       handler: function () {
         this.input.isIncremental = true
         this.input.incremental = this.incrementalSource
-      }
+      },
     },
     targetBuild: {
       handler: function () {
         this.input.target = this.targetBuild
-      }
+      },
     },
     checkIncremental: {
       handler: function () {
         this.$emit('update:isIncremental', this.checkIncremental)
-      }
-    }
+      },
+    },
   },
   methods: {
     /**
@@ -141,10 +146,12 @@ export default {
         let response_message = await this.input.sendForm()
         alert(response_message)
       } catch (err) {
-        alert('Job cannot be started properly for the following reasons: ' + err)
+        alert(
+          'Job cannot be started properly for the following reasons: ' + err
+        )
       }
       this.input = new OTAInput()
-    }
-  }
+    },
+  },
 }
 </script>
