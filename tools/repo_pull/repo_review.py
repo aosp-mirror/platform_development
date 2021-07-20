@@ -32,8 +32,8 @@ except ImportError:
 
 from gerrit import (
     abandon, add_reviewers, create_url_opener_from_args, delete_reviewer,
-    delete_topic, find_gerrit_name, query_change_lists, restore, set_hashtags,
-    set_review, set_topic, submit
+    delete_topic, find_gerrit_name, normalize_gerrit_name, query_change_lists,
+    restore, set_hashtags, set_review, set_topic, submit
 )
 
 
@@ -191,7 +191,9 @@ def main():
     # Parse and check the command line options
     args = _parse_args()
 
-    if not args.gerrit:
+    if args.gerrit:
+        args.gerrit = normalize_gerrit_name(args.gerrit)
+    else:
         try:
             args.gerrit = find_gerrit_name()
         # pylint: disable=bare-except
