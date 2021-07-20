@@ -91,7 +91,8 @@
                     name="navigationStyle"
                     md-dense
                   >
-                    <md-icon-option :value="NAVIGATION_STYLE.GLOBAL"
+                    <md-icon-option
+                      :value="NAVIGATION_STYLE.GLOBAL"
                       icon="public"
                       desc="Consider all timelines for navigation"
                     />
@@ -412,7 +413,11 @@ export default {
       }
 
       if (this.navigationStyle === NAVIGATION_STYLE.FOCUSED) {
-        return this.focusedFile;
+        //dumps do not have a timeline, so if scrolling over a dump, show merged timeline
+        if (this.focusedFile.timeline) {
+          return this.focusedFile;
+        }
+        return this.mergedTimeline;
       }
 
       if (this.navigationStyle === NAVIGATION_STYLE.CUSTOM) {
