@@ -109,7 +109,7 @@ void ModuleIR::AddRecordType(RecordTypeIR &&record_type) {
   auto it = AddToMapAndTypeGraph(
       std::move(record_type), &record_types_, &type_graph_);
   const std::string &key = GetODRListMapKey(&(it->second));
-  AddToODRListMap(key, &(it->second));
+  AddToODRListMap(key, &(it->second), compilation_unit_path_);
 }
 
 
@@ -120,7 +120,7 @@ void ModuleIR::AddFunctionType(FunctionTypeIR &&function_type) {
   auto it = AddToMapAndTypeGraph(
       std::move(function_type), &function_types_, &type_graph_);
   const std::string &key = GetODRListMapKey(&(it->second));
-  AddToODRListMap(key, &(it->second));
+  AddToODRListMap(key, &(it->second), compilation_unit_path_);
 }
 
 
@@ -131,7 +131,7 @@ void ModuleIR::AddEnumType(EnumTypeIR &&enum_type) {
   auto it = AddToMapAndTypeGraph(
       std::move(enum_type), &enum_types_, &type_graph_);
   const std::string &key = GetODRListMapKey(&(it->second));
-  AddToODRListMap(key, (&it->second));
+  AddToODRListMap(key, (&it->second), compilation_unit_path_);
 }
 
 
@@ -194,6 +194,34 @@ void ModuleIR::AddElfFunction(ElfFunctionIR &&elf_function) {
 void ModuleIR::AddElfObject(ElfObjectIR &&elf_object) {
   elf_objects_.insert(
       {elf_object.GetName(), std::move(elf_object)});
+}
+
+
+std::string ModuleIR::GetCompilationUnitPath(const TypeIR *type_ir) const {
+  std::string key;
+  switch (type_ir->GetKind()) {
+    case RecordTypeKind:
+      key = GetODRListMapKey(static_cast<const RecordTypeIR *>(type_ir));
+      break;
+    case EnumTypeKind:
+      key = GetODRListMapKey(static_cast<const EnumTypeIR *>(type_ir));
+      break;
+    case FunctionTypeKind:
+      key = GetODRListMapKey(static_cast<const FunctionTypeIR *>(type_ir));
+      break;
+    default:
+      return "";
+  }
+  auto it = odr_list_map_.find(key);
+  if (it == odr_list_map_.end()) {
+    return "";
+  }
+  for (const auto &definition : it->second) {
+    if (definition.type_ir_ == type_ir) {
+      return definition.compilation_unit_path_;
+    }
+  }
+  return "";
 }
 
 

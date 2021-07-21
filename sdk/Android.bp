@@ -1,3 +1,16 @@
+package {
+    // See: http://go/android-license-faq
+    // A large-scale-change added 'default_applicable_licenses' to import
+    // all of the 'license_kinds' from "development_license"
+    // to get the below license kinds:
+    //   SPDX-license-identifier-BSD
+    //   SPDX-license-identifier-CPL-1.0
+    //   SPDX-license-identifier-MIT
+    //   SPDX-license-identifier-Unicode-DFS
+    //   SPDX-license-identifier-W3C
+    default_applicable_licenses: ["development_license"],
+}
+
 genrule {
     name: "platform_tools_version",
     cmd: "sed 's/$${PLATFORM_SDK_VERSION}/0/ ; s/^Pkg.Revision=\\(.*\\)/#define PLATFORM_TOOLS_VERSION \"\\1\"/p ; d' $(in) > $(out)",

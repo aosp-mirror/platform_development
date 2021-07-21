@@ -22,6 +22,8 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src)
 LOCAL_MODULE_TAGS := optional
 
 LOCAL_MODULE := uiautomator.samples
+LOCAL_LICENSE_KINDS := SPDX-license-identifier-Apache-2.0
+LOCAL_LICENSE_CONDITIONS := notice
 
 LOCAL_JAVA_LIBRARIES := uiautomator.core android.test.base.stubs
 LOCAL_STATIC_JAVA_LIBRARIES := junit
