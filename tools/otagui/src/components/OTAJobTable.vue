@@ -5,7 +5,7 @@
     :is-loading="isLoading"
     :rows="rows"
     :sortable="sortable"
-    :total="total"
+    :total="tableLength"
     @do-search="doSearch"
   />
 </template>
@@ -82,9 +82,21 @@ export default {
       total: 0
     }
   },
+  computed: {
+    tableLength() {
+      return this.jobs.length
+    },
+  },
+  watch: {
+    jobs: {
+      handler: function() {
+        this.rows = TableSort(this.jobs, this.sortable.order, this.sortable.sort, 0, 10)
+      },
+      deep: true
+    }
+  },
   created() {
     this.rows = TableSort(this.jobs, this.sortable.order, this.sortable.sort, 0, 10)
-    this.total = this.jobs.length
   },
   methods: {
     doSearch(offset, limit, order, sort) {
@@ -92,7 +104,6 @@ export default {
       this.sortable.order = order
       this.sortable.sort = sort
       this.rows = TableSort(this.jobs, order, sort, offset, limit)
-      this.total = this.jobs.length
       this.isLoading = false
     }
   }

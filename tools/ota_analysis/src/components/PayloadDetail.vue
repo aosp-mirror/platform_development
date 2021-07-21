@@ -23,13 +23,6 @@
           shaped
           class="partial-info"
         >
-          <h4> {{ partition.partitionName }} </h4>
-          <p v-if="partition.estimateCowSize">
-            <strong> Estimate COW Size: </strong> {{ partition.estimateCowSize }} Bytes
-          </p>
-          <p v-else>
-            <strong> Estimate COW Size: </strong> 0 Bytes
-          </p>
           <PartitionDetail :partition="partition" />
         </v-card>
       </v-col>
@@ -50,7 +43,7 @@
 <script>
 import PartitionDetail from './PartitionDetail.vue'
 import BasicInfo from '@/components/BasicInfo.vue'
-import { Payload } from '@/services/payload.js'
+import { Payload, octToHex } from '@/services/payload.js'
 
 export default {
   components: {
@@ -70,17 +63,6 @@ export default {
   methods: {
     octToHex: octToHex,
   },
-}
-
-function octToHex(bufferArray) {
-  let hex_table = ''
-  for (let i = 0; i < bufferArray.length; i++) {
-    hex_table += bufferArray[i].toString(16) + ' '
-    if ((i + 1) % 16 == 0) {
-      hex_table += '\n'
-    }
-  }
-  return hex_table
 }
 </script>
 

@@ -81,8 +81,9 @@
                 </div>
 
                 <md-field
+                  v-if="multipleTraces"
                   ref="navigationTypeSelection"
-                  class="nagivation-style-selection-field"
+                  class="navigation-style-selection-field"
                 >
 
                   <label>Navigation</label>
@@ -91,7 +92,8 @@
                     name="navigationStyle"
                     md-dense
                   >
-                    <md-icon-option :value="NAVIGATION_STYLE.GLOBAL"
+                    <md-icon-option
+                      :value="NAVIGATION_STYLE.GLOBAL"
                       icon="public"
                       desc="Consider all timelines for navigation"
                     />
@@ -376,7 +378,7 @@ export default {
         default:
           const split = this.navigationStyle.split('-');
           if (split[0] !== NAVIGATION_STYLE.TARGETED) {
-            throw new Error('Unexpected nagivation type');
+            throw new Error('Unexpected navigation type');
           }
 
           const fileType = split[1];
@@ -398,7 +400,7 @@ export default {
         default:
           const split = this.navigationStyle.split('-');
           if (split[0] !== NAVIGATION_STYLE.TARGETED) {
-            throw new Error('Unexpected nagivation type');
+            throw new Error('Unexpected navigation type');
           }
 
           const fileType = split[1];
@@ -412,7 +414,11 @@ export default {
       }
 
       if (this.navigationStyle === NAVIGATION_STYLE.FOCUSED) {
-        return this.focusedFile;
+        //dumps do not have a timeline, so if scrolling over a dump, show merged timeline
+        if (this.focusedFile.timeline) {
+          return this.focusedFile;
+        }
+        return this.mergedTimeline;
       }
 
       if (this.navigationStyle === NAVIGATION_STYLE.CUSTOM) {
@@ -425,11 +431,14 @@ export default {
             .traces[this.navigationStyle.split('-')[1]];
       }
 
-      throw new Error('Unexpected Nagivation Style');
+      throw new Error('Unexpected Navigation Style');
     },
     isCropped() {
       return this.crop != null &&
         (this.crop.left !== 0 || this.crop.right !== 1);
+    },
+    multipleTraces() {
+      return this.timelineFiles.length > 1;
     },
   },
   updated() {
@@ -589,7 +598,7 @@ export default {
         default:
           const split = this.navigationStyle.split('-');
           if (split[0] !== NAVIGATION_STYLE.TARGETED) {
-            throw new Error('Unexpected nagivation type');
+            throw new Error('Unexpected navigation type');
           }
 
           const fileType = split[1];
@@ -816,7 +825,7 @@ export default {
   margin-top: 4px;
 }
 
-.nagivation-style-selection-field {
+.navigation-style-selection-field {
   width: 90px;
   margin-right: 10px;
   margin-bottom: 0;
