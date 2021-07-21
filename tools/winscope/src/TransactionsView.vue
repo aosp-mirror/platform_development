@@ -16,6 +16,13 @@
   <md-card-content class="container">
 
     <flat-card class="changes card">
+      <md-content
+        md-tag="md-toolbar"
+        md-elevation="0"
+        class="card-toolbar md-transparent md-dense"
+      >
+        <h2 class="md-title" style="flex: 1">Transactions</h2>
+      </md-content>
       <div class="filters">
         <div class="input">
           <md-field>

@@ -1,15 +1,9 @@
 <template>
-  <div
-    v-if="zipFile"
+  <BasicInfo
+    :zipFile="zipFile"
+    :payload="payload"
     class="mb-5"
-  >
-    <h3>File infos</h3>
-    <ul>
-      <li>File name: {{ zipFile.name }}</li>
-      <li>File size: {{ zipFile.size }} Bytes</li>
-      <li>File last modified date: {{ zipFile.lastModifiedDate }}</li>
-    </ul>
-  </div>
+  />
   <v-divider />
   <div v-if="payload">
     <h3>Partition List</h3>
@@ -29,13 +23,6 @@
           shaped
           class="partial-info"
         >
-          <h4> {{ partition.partitionName }} </h4>
-          <p v-if="partition.estimateCowSize">
-            <strong> Estimate COW Size: </strong> {{ partition.estimateCowSize }} Bytes
-          </p>
-          <p v-else>
-            <strong> Estimate COW Size: </strong> 0 Bytes
-          </p>
           <PartitionDetail :partition="partition" />
         </v-card>
       </v-col>
@@ -55,11 +42,13 @@
 
 <script>
 import PartitionDetail from './PartitionDetail.vue'
-import { Payload } from '@/services/payload.js'
+import BasicInfo from '@/components/BasicInfo.vue'
+import { Payload, octToHex } from '@/services/payload.js'
 
 export default {
   components: {
     PartitionDetail,
+    BasicInfo,
   },
   props: {
     zipFile: {
@@ -75,17 +64,6 @@ export default {
     octToHex: octToHex,
   },
 }
-
-function octToHex(bufferArray) {
-  let hex_table = ''
-  for (let i = 0; i < bufferArray.length; i++) {
-    hex_table += bufferArray[i].toString(16) + ' '
-    if ((i + 1) % 16 == 0) {
-      hex_table += '\n'
-    }
-  }
-  return hex_table
-}
 </script>
 
 <style scoped>
@@ -94,6 +72,7 @@ function octToHex(bufferArray) {
   height: 200px;
   width: 100%;
   word-break: break-all;
+  text-align: center;
 }
 
 .partial-info {

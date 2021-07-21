@@ -172,10 +172,14 @@ class ProcessesManagement:
         # Check essential configuration is properly set
         if not os.path.isfile(args['target']):
             raise FileNotFoundError
-        if not args['output']:
-            raise SyntaxError
+        if not 'output' in args:
+            args['output'] = os.path.join('output', str(id) + '.zip')
         if args['verbose']:
             command.append('-v')
+        if args['extra_keys']:
+            args['extra'] += '--' + ' --'.join(args['extra_keys'])
+        if args['extra']:
+            command.append(args['extra'])
         command.append('-k')
         command.append(
             '../../../build/make/target/product/security/testkey')
@@ -186,15 +190,14 @@ class ProcessesManagement:
             command.append(args['incremental'])
         if args['isPartial']:
             command.append('--partial')
-            command.append(args['partial'])
+            command.append(' '.join(args['partial']))
         command.append(args['target'])
         command.append(args['output'])
         job_info = JobInfo(id,
                            target=args['target'],
                            incremental=args['incremental'] if args['isIncremental'] else '',
                            verbose=args['verbose'],
-                           partial=args['partial'].split(
-                               ' ') if args['isPartial'] else [],
+                           partial=args['partial'] if args['isPartial'] else [],
                            output=args['output'],
                            status='Running',
                            extra=args['extra'],

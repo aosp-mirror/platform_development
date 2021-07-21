@@ -603,6 +603,8 @@ class Crate(object):
       self.write('    test_suites: ["general-tests"],')
       self.write('    auto_gen_config: true,')
     self.dump_edition_flags_libs()
+    if 'test' in self.crate_types and len(self.srcs) == 1:
+      self.dump_test_data()
     self.write('}')
 
   def dump_single_type_android_module(self):
@@ -659,8 +661,14 @@ class Crate(object):
       for apex in self.runner.args.apex_available:
         self.write('        "%s",' % apex)
       self.write('    ],')
+    if self.runner.args.vendor_available:
+      self.write('    vendor_available: true,')
+    if self.runner.args.vendor_ramdisk_available:
+      self.write('    vendor_ramdisk_available: true,')
     if self.runner.args.min_sdk_version and crate_type == 'lib':
       self.write('    min_sdk_version: "%s",' % self.runner.args.min_sdk_version)
+    if crate_type == 'test' and not self.default_srcs:
+      self.dump_test_data()
     if self.runner.args.add_module_block:
       with open(self.runner.args.add_module_block, 'r') as f:
         self.write('    %s,' % f.read().replace('\n', '\n    '))
@@ -693,6 +701,12 @@ class Crate(object):
     self.dump_android_property_list('whole_static_libs', '"lib%s"', whole_static_libs)
     shared_libs = [lib for lib in self.shared_libs if not lib in self.runner.args.lib_blocklist]
     self.dump_android_property_list('shared_libs', '"lib%s"', shared_libs)
+
+  def dump_test_data(self):
+    data = [data for (name, data) in map(lambda kv: kv.split('=', 1), self.runner.args.test_data)
+            if self.srcs == [name]]
+    if data:
+      self.dump_android_property_list('data', '"%s"', data)
 
   def main_src_basename_path(self):
     return re.sub('/', '_', re.sub('.rs$', '', self.main_src))
@@ -1609,6 +1623,16 @@ def get_parser():
       nargs='*',
       help='Mark the main library as apex_available with the given apexes.')
   parser.add_argument(
+      '--vendor-available',
+      action='store_true',
+      default=False,
+      help='Mark the main library as vendor_available.')
+  parser.add_argument(
+      '--vendor-ramdisk-available',
+      action='store_true',
+      default=False,
+      help='Mark the main library as vendor_ramdisk_available.')
+  parser.add_argument(
       '--force-rlib',
       action='store_true',
       default=False,
@@ -1618,6 +1642,12 @@ def get_parser():
       nargs='*',
       default=[],
       help='Make the given libraries (without lib prefixes) whole_static_libs.')
+  parser.add_argument(
+      '--test-data',
+      nargs='*',
+      default=[],
+      help=('Add the given file to the given test\'s data property. ' +
+            'Usage: test-path=data-path'))
   parser.add_argument(
       '--dependency-blocklist',
       nargs='*',

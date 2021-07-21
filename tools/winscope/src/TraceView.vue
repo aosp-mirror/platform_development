@@ -109,7 +109,6 @@
               :item="selectedTree"
               :filter="propertyFilter"
               :collapseChildren="true"
-              :useGlobalCollapsedState="true"
               :elementView="PropertiesTreeElement"
             />
           </div>

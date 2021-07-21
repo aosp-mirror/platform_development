@@ -15,24 +15,31 @@
 <template>
   <md-card-content class="container">
     <div class="navigation">
-      <md-button
-        class="md-dense md-primary"
-        @click.native="scrollToRow(lastOccuredVisibleIndex)"
+      <md-content
+        md-tag="md-toolbar"
+        md-elevation="0"
+        class="card-toolbar md-transparent md-dense"
       >
-        Jump to latest entry
-      </md-button>
-      <md-button
-        class="md-icon-button" :class="{'md-primary': pinnedToLatest}"
-        @click.native="togglePin"
-      >
-        <md-icon>push_pin</md-icon>
-        <md-tooltip md-direction="top" v-if="pinnedToLatest">
-          Unpin to latest message
-        </md-tooltip>
-        <md-tooltip md-direction="top" v-else>
-          Pin to latest message
-        </md-tooltip>
-      </md-button>
+        <h2 class="md-title" style="flex: 1">Log View</h2>
+        <md-button
+          class="md-dense md-primary"
+          @click.native="scrollToRow(lastOccuredVisibleIndex)"
+        >
+          Jump to latest entry
+        </md-button>
+        <md-button
+          class="md-icon-button" :class="{'md-primary': pinnedToLatest}"
+          @click.native="togglePin"
+        >
+          <md-icon>push_pin</md-icon>
+          <md-tooltip md-direction="top" v-if="pinnedToLatest">
+            Unpin to latest message
+          </md-tooltip>
+          <md-tooltip md-direction="top" v-else>
+            Pin to latest message
+          </md-tooltip>
+        </md-button>
+      </md-content>
     </div>
 
     <div class="filters">
