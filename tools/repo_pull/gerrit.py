@@ -346,6 +346,11 @@ def find_gerrit_name():
 
     raise ValueError('cannot find gerrit URL from manifest')
 
+def normalize_gerrit_name(gerrit):
+    """Strip the trailing slashes because Gerrit will return 404 when there are
+    redundant trailing slashes."""
+    return gerrit.rstrip('/')
+
 def _parse_args():
     """Parse command line options."""
     parser = argparse.ArgumentParser()
@@ -361,12 +366,13 @@ def _parse_args():
 
     return parser.parse_args()
 
-
 def main():
     """Main function"""
     args = _parse_args()
 
-    if not args.gerrit:
+    if args.gerrit:
+        args.gerrit = normalize_gerrit_name(args.gerrit)
+    else:
         try:
             args.gerrit = find_gerrit_name()
         # pylint: disable=bare-except
