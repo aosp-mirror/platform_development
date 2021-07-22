@@ -29,6 +29,37 @@ export class OTAConfiguration {
   }
 
   /**
+   * Take in multiple paths of target and incremental builds and generate
+   * OTA packages between them. If there are n incremental sources and m target
+   * builds, there will be n x m OTA packages in total. If there is 0
+   * incremental package, full OTA will be generated.
+   * @param {Array<String>} targetBuilds
+   * @param {Array<String>} incrementalSources
+   * @return Array<String>
+   */
+  async sendForms(targetBuilds, incrementalSources = []) {
+    const responses = []
+    if (!this.isIncremental) {
+      responses.push(
+        ... await Promise.all(
+          targetBuilds.map(async (target) => await this.sendForm(target))
+        )
+      )
+    } else {
+      for (const incremental of incrementalSources) {
+        responses.push(
+          ... await Promise.all(
+            targetBuilds.map(
+              async (target) => await this.sendForm(target, incremental)
+            )
+          )
+        )
+      }
+    }
+    return responses
+  }
+
+  /**
    * Start an OTA package generation from target build to incremental source.
    * Throw an error if not succeed, otherwise will return the message from
    * the backend.
@@ -36,14 +67,16 @@ export class OTAConfiguration {
    * @param {String} incrementalSource
    * @return String
    */
-  async sendForm(targetBuild, incrementalSource='') {
+  async sendForm(targetBuild, incrementalSource = '') {
     let jsonOptions = Object.assign({}, this)
     jsonOptions.target = targetBuild
     jsonOptions.incremental = incrementalSource
     jsonOptions.id = uuid.v1()
     for (let flag of OTAExtraFlags) {
       if (jsonOptions[flag.key]) {
-        jsonOptions.extra_keys.push(flag.key)
+        if (jsonOptions.extra_keys.indexOf(flag.key) === -1) {
+          jsonOptions.extra_keys.push(flag.key)
+        }
       }
     }
     try {
