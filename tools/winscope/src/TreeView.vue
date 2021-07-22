@@ -100,7 +100,7 @@
         v-on:selected="immediateChildSelected = true"
         v-on:unselected="immediateChildSelected = false"
         :elementView="elementView"
-        v-on:collapseSibbling="collapseSibbling"
+        v-on:collapseSibling="collapseSibling"
         v-on:collapseAllOtherNodes="collapseAllOtherNodes"
         v-on:closeAllContextMenus="closeAllContextMenus"
         ref="children"
@@ -352,9 +352,9 @@ export default {
     },
     collapseAllOtherNodes() {
       this.$emit('collapseAllOtherNodes');
-      this.$emit('collapseSibbling', this.item);
+      this.$emit('collapseSibling', this.item);
     },
-    collapseSibbling(item) {
+    collapseSibling(item) {
       if (!this.$refs.children) {
         return;
       }
