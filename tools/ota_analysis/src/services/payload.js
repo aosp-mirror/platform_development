@@ -145,3 +145,18 @@ export class MergeOpType {
     }
   }
 }
+
+export function octToHex(bufferArray, space = true, maxLine = 16) {
+  let hex_table = ''
+  for (let i = 0; i < bufferArray.length; i++) {
+    if (bufferArray[i].toString(16).length===2) {
+      hex_table += bufferArray[i].toString(16) + (space ? ' ' : '')
+    } else {
+      hex_table += '0' + bufferArray[i].toString(16) + (space ? ' ' : '')
+    }
+    if ((i + 1) % maxLine == 0) {
+      hex_table += '\n'
+    }
+  }
+  return hex_table
+}
