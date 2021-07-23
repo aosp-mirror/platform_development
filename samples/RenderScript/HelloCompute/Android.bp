@@ -1,0 +1,65 @@
+//
+// Copyright (C) 2011 The Android Open Source Project
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+package {
+    // See: http://go/android-license-faq
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+// This variable is used to match the 'LOCAL_SDK_VERSION' field in the former Android.mk file.
+local_sdk_version = "14"
+// This variable is used to set the value of the '-target-api' option for the 'llvm-rs-cc' command.
+// Note: it may NOT always be the same as the 'local_sdk_version', due to the existing logic in the Make build system.
+// For the Android.mk to Android.bp conversion, it is recommend to run the build before and after
+// the conversion, to make sure the value of the '-target-api' option to be the same.
+target_api_level = local_sdk_version
+
+android_app {
+    name: "RsHelloCompute",
+    srcs: [
+        "src/**/*.java",
+        ":RsHelloCompute-rscript{RsHelloCompute.srcjar}",
+    ],
+    resource_zips: [
+        ":RsHelloCompute-rscript{RsHelloCompute.res.zip}",
+    ],
+    sdk_version: local_sdk_version,
+}
+
+genrule {
+    name: "RsHelloCompute-rscript",
+    srcs: [
+        "src/**/*.rscript",
+        ":rs_script_api",
+        ":rs_clang_headers",
+    ],
+    tools: [
+        "llvm-rs-cc",
+        "soong_zip",
+    ],
+    out: [
+        "RsHelloCompute.srcjar",
+        "RsHelloCompute.res.zip",
+    ],
+    cmd: "for f in $(locations src/**/*.rscript); do " +
+        "  $(location llvm-rs-cc) -target-api " + target_api_level +
+        " -o $(genDir)/res/raw -p $(genDir)/src " +
+        "  -I $$(dirname $$(echo $(locations :rs_script_api) | awk '{ print $$1 }')) " +
+        "  -I $$(dirname $$(echo $(locations :rs_clang_headers) | awk '{ print $$1 }')) $${f}; " +
+        "done && " +
+        "$(location soong_zip) -srcjar -o $(location RsHelloCompute.srcjar) -C $(genDir)/src -D $(genDir)/src &&" +
+        "$(location soong_zip) -o $(location RsHelloCompute.res.zip) -C $(genDir)/res -D $(genDir)/res",
+}
