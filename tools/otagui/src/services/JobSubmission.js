@@ -21,31 +21,49 @@ export class OTAConfiguration {
      * disable checkboxes of which dependencies are not fulfilled.
      */
     this.verbose = false,
-    this.target = '',
-    this.incremental = '',
     this.isIncremental = false,
     this.partial = [],
     this.isPartial = false,
     this.extra_keys = [],
-    this.extra = '',
-    this.id = uuid.v1()
+    this.extra = ''
   }
 
   /**
-   * Start the generation process, will throw an error if not succeed
+   * Start an OTA package generation from target build to incremental source.
+   * Throw an error if not succeed, otherwise will return the message from
+   * the backend.
+   * @param {String} targetBuild
+   * @param {String} incrementalSource
+   * @return String
    */
-  async sendForm() {
+  async sendForm(targetBuild, incrementalSource='') {
+    let jsonOptions = Object.assign({}, this)
+    jsonOptions.target = targetBuild
+    jsonOptions.incremental = incrementalSource
+    jsonOptions.id = uuid.v1()
     for (let flag of OTAExtraFlags) {
-      if (this[flag.key]) {
-        this.extra_keys.push(flag.key)
+      if (jsonOptions[flag.key]) {
+        jsonOptions.extra_keys.push(flag.key)
       }
     }
     try {
-      let response = await ApiServices.postInput(JSON.stringify(this), this.id)
+      let response = await ApiServices.postInput(JSON.stringify(jsonOptions), jsonOptions.id)
       return response.data
     } catch (err) {
       throw err
     }
+  }
+
+  /**
+   * Reset all the flags being set in this object.
+   */
+  reset() {
+    for (let flag of OTAExtraFlags) {
+      if (this[flag.key]) {
+        delete this[flag.key]
+      }
+    }
+    this.constructor()
   }
 }
 
