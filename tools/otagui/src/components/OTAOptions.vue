@@ -1,76 +1,55 @@
 <template>
-  <form @submit.prevent="sendForm">
-    <FileSelect
-      v-if="input.isIncremental"
-      v-model="input.incremental"
-      label="Select the source file"
-      :options="targetDetails"
-    />
-    <FileSelect
-      v-model="input.target"
-      label="Select a target file"
-      :options="targetDetails"
-    />
-    <v-row>
-      <v-col
-        v-for="flag in basicFlags"
-        :key="flag.key"
-        cols="12"
-        md="4"
-      >
-        <BaseCheckbox
-          v-model="input[flag.key]"
-          :label="flag.label"
-        />
-      </v-col>
-    </v-row>
-    <div v-if="input.isPartial">
-      <v-divider />
-      <h3>Select Partitions</h3>
-      <PartialCheckbox
-        v-model="input.partial"
-        :labels="updatablePartitions"
+  <v-row>
+    <v-col
+      v-for="flag in basicFlags"
+      :key="flag.key"
+      cols="12"
+      md="4"
+    >
+      <BaseCheckbox
+        v-model="otaConfig[flag.key]"
+        :label="flag.label"
       />
-      <v-divider />
-    </div>
-    <v-btn
-      block
-      @click="moreOptions = !moreOptions"
-    >
-      More Options
-    </v-btn>
-    <v-row v-if="moreOptions">
-      <v-col
-        v-for="flag in extraFlags"
-        :key="flag.key"
-        cols="12"
-        md="4"
-      >
-        <BaseCheckbox
-          v-model="input[flag.key]"
-          :label="flag.label"
-        />
-      </v-col>
-    </v-row>
-    <v-divider class="my-5" />
-    <BaseInput
-      v-model="input.extra"
-      :label="'Extra Configurations'"
+    </v-col>
+  </v-row>
+  <div v-if="otaConfig.isPartial">
+    <v-divider />
+    <h3>Select Partitions</h3>
+    <PartialCheckbox
+      v-model="otaConfig.partial"
+      :labels="updatablePartitions"
     />
-    <v-divider class="my-5" />
-    <v-btn
-      block
-      type="submit"
+    <v-divider />
+  </div>
+  <v-btn
+    block
+    @click="moreOptions = !moreOptions"
+  >
+    More Options
+  </v-btn>
+  <v-row v-if="moreOptions">
+    <v-col
+      v-for="flag in extraFlags"
+      :key="flag.key"
+      cols="12"
+      md="4"
     >
-      Submit
-    </v-btn>
-  </form>
+      <BaseCheckbox
+        v-model="otaConfig[flag.key]"
+        :label="flag.label"
+      />
+    </v-col>
+  </v-row>
+  <v-divider class="my-5" />
+  <BaseInput
+    v-model="otaConfig.extra"
+    :label="'Extra Configurations'"
+  />
 </template>
 
 <script>
 import BaseInput from '@/components/BaseInput.vue'
 import BaseCheckbox from '@/components/BaseCheckbox.vue'
-import FileSelect from '@/components/FileSelect.vue'
 import PartialCheckbox from '@/components/PartialCheckbox.vue'
 import { OTAConfiguration, OTABasicFlags, OTAExtraFlags } from '@/services/JobSubmission.js'
 
@@ -78,7 +57,6 @@ export default {
   components: {
     BaseInput,
     BaseCheckbox,
-    FileSelect,
     PartialCheckbox,
   },
   props: {
@@ -86,18 +64,14 @@ export default {
       type: Array,
       default: () => [],
     },
-    incrementalSource: {
-      type: String,
-      default: '',
-    },
-    targetBuild: {
-      type: String,
-      default: '',
-    },
+    targetBuilds: {
+      type: Array,
+      default: () => []
+    }
   },
-  data() {
+  data () {
     return {
-      input: new OTAConfiguration(),
+      otaConfig: new OTAConfiguration(),
       moreOptions: false,
       basicFlags: OTABasicFlags,
       extraFlags: OTAExtraFlags
@@ -109,49 +83,24 @@ export default {
      * @return Array<String>
      */
     updatablePartitions() {
-      if (!this.input.target) return []
+      // TODO(lishutong): currently only give the partition list of first
+      // build, should use the intersections of the partitions of
+      // all given builds.
+      if (!this.targetBuilds | this.targetBuilds.length===0) return []
+      if (this.targetBuilds[0] === '') return []
       let target = this.targetDetails.filter(
-        (d) => d.path === this.input.target
+        (d) => d.path === this.targetBuilds[0]
       )
       return target[0].partitions
     },
-    checkIncremental() {
-      return this.input.isIncremental
-    },
   },
   watch: {
-    incrementalSource: {
-      handler: function () {
-        this.input.isIncremental = true
-        this.input.incremental = this.incrementalSource
+    otaConfig: {
+      handler () {
+        this.$emit('update:otaConfig', this.otaConfig)
       },
-    },
-    targetBuild: {
-      handler: function () {
-        this.input.target = this.targetBuild
-      },
-    },
-    checkIncremental: {
-      handler: function () {
-        this.$emit('update:isIncremental', this.checkIncremental)
-      },
-    },
-  },
-  methods: {
-    /**
-     * Send the configuration to the backend.
-     */
-    async sendForm() {
-      try {
-        let response_message = await this.input.sendForm()
-        alert(response_message)
-      } catch (err) {
-        alert(
-          'Job cannot be started properly for the following reasons: ' + err
-        )
-      }
-      this.input = new OTAInput()
-    },
-  },
+      deep: true
+    }
+  }
 }
 </script>
