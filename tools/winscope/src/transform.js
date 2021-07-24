@@ -309,7 +309,7 @@ class ObjectTransformer {
 
       transformedObj = {
         kind: '',
-        name: name + ': ' + child.name,
+        name: (isTerminal(name) ? compareWithName : name) + ': ' + child.name,
         stableId,
         children: child.children,
         combined: true,
