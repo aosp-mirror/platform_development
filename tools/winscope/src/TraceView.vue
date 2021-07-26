@@ -32,7 +32,7 @@
         >
           <h2 class="md-title" style="flex: 1;">Hierarchy</h2>
           <md-checkbox
-            v-model="showHierachyDiff"
+            v-model="showHierarchyDiff"
             v-if="diffVisualizationAvailable"
           >
             Show Diff
@@ -116,7 +116,7 @@
             <i class="material-icons none-icon">
               filter_none
             </i>
-            <span>No element selected in the hierachy.</span>
+            <span>No element selected in the hierarchy.</span>
           </div>
         </div>
       </flat-card>
@@ -178,7 +178,7 @@ export default {
       item: null,
       tree: null,
       highlight: null,
-      showHierachyDiff: false,
+      showHierarchyDiff: false,
       displayDefaults: false,
       showPropertiesDiff: false,
       PropertiesTreeElement,
@@ -219,7 +219,7 @@ export default {
       }
     },
     generateTreeFromItem(item) {
-      if (!this.showHierachyDiff || !this.diffVisualizationAvailable) {
+      if (!this.showHierarchyDiff || !this.diffVisualizationAvailable) {
         return item;
       }
 
@@ -314,7 +314,7 @@ export default {
     selectedIndex() {
       this.setData(this.file.data[this.file.selectedIndex ?? 0]);
     },
-    showHierachyDiff() {
+    showHierarchyDiff() {
       this.tree = this.generateTreeFromItem(this.item);
     },
     showPropertiesDiff() {
