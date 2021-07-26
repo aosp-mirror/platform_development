@@ -60,6 +60,28 @@ export class OTAConfiguration {
   }
 
   /**
+   * Take in an ordered list of target builds and generate OTA packages between
+   * them in order. For example, if there are n target builds, there will be
+   * n-1 OTA packages.
+   * @param {Array<String>} targetBuilds
+   * @return Array<String>
+   */
+  async sendChainForms(targetBuilds) {
+    const responses = []
+    this.isIncremental = true
+    for (let i = 0; i < targetBuilds.length-1; i++) {
+      try {
+        let response =
+          await this.sendForm(targetBuilds[i+1], targetBuilds[i])
+        responses.push(response)
+      } catch (err) {
+        throw err
+      }
+    }
+    return responses
+  }
+
+  /**
    * Start an OTA package generation from target build to incremental source.
    * Throw an error if not succeed, otherwise will return the message from
    * the backend.
