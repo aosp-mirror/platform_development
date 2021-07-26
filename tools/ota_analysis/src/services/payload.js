@@ -14,6 +14,10 @@ const /** String */ _MAGIC = 'CrAU'
 const /** Number */ _VERSION_SIZE = 8
 const /** Number */ _MANIFEST_LEN_SIZE = 8
 const /** Number */ _METADATA_SIGNATURE_LEN_SIZE = 4
+
+const /** Number */ _PAYLOAD_HEADER_SIZE =
+  _MAGIC.length + _VERSION_SIZE + _MANIFEST_LEN_SIZE + _METADATA_SIGNATURE_LEN_SIZE
+
 const /** Number */ _BRILLO_MAJOR_PAYLOAD_VERSION = 2
 export const /** Array<Object> */ MetadataFormat = [
   {
@@ -38,6 +42,60 @@ export const /** Array<Object> */ MetadataFormat = [
   }
 ]
 
+class StopIteration extends Error {
+
+}
+
+class OTAPayloadBlobWriter extends zip.Writer {
+  /**
+   * A zip.Writer that is tailored for OTA payload.bin read-in.
+   * Instead of reading in all the contents in payload.bin, this writer will
+   * throw an 'StopIteration' error when the header is read in.
+   * The header will be stored into the <payload>.
+   * @param {Payload} payload
+   * @param {String} contentType
+   */
+  constructor(payload, contentType = "") {
+    super()
+    this.offset = 0
+    this.contentType = contentType
+    this.blob = new Blob([], { type: contentType })
+    this.prefixLength = 0
+    this.payload = payload
+  }
+
+  async writeUint8Array(/**  @type {Uint8Array} */ array) {
+    super.writeUint8Array(array)
+    this.blob = new Blob([this.blob, array.buffer], { type: this.contentType })
+    this.offset = this.blob.size
+    // Once the prefixLength is non-zero, the address of manifest and signature
+    // become known and can be read in. Otherwise the header needs to be read
+    // in first to determine the prefixLength.
+    if (this.prefixLength > 0) {
+      if (this.offset >= this.prefixLength) {
+        await this.payload.readManifest(this.blob)
+        await this.payload.readSignature(this.blob)
+      }
+    } else if (this.offset >= _PAYLOAD_HEADER_SIZE) {
+      await this.payload.readHeader(this.blob)
+      this.prefixLength =
+        _PAYLOAD_HEADER_SIZE
+        + this.payload.manifest_len
+        + this.payload.metadata_signature_len
+      return
+    }
+    // The prefix has everything we need (header, manifest, signature). Once
+    // the offset is beyond the prefix, no need to move on.
+    if (this.offset >= this.prefixLength) {
+      throw new StopIteration()
+    }
+  }
+
+  getData() {
+    return this.blob
+  }
+}
+
 export class Payload {
   /**
    * This class parses the metadata of a OTA package.
@@ -56,8 +114,20 @@ export class Payload {
     this.payload = null
     for (let entry of entries) {
       if (entry.filename == 'payload.bin') {
-        //TODO: only read in the manifest instead of the whole payload
-        this.payload = await entry.getData(new zip.BlobWriter())
+        let writer = new OTAPayloadBlobWriter(this, "")
+        try {
+          await entry.getData(writer)
+        } catch (e) {
+          if (e instanceof StopIteration) {
+            // Exception used as a hack to stop reading from zip. NO need to do anything
+            // Ideally zip.js would provide an API to partialll read a zip
+            // entry, but they don't. So this is what we get
+          } else {
+            throw e
+          }
+        }
+        this.payload = writer.getData()
+        break
       }
       if (entry.filename == 'META-INF/com/android/metadata') {
         this.metadata = await entry.getData(new zip.TextWriter())
@@ -67,7 +137,6 @@ export class Payload {
       alert('Please select a legit OTA package')
       return
     }
-    this.buffer = await this.payload.arrayBuffer()
   }
 
   /**
@@ -100,19 +169,27 @@ export class Payload {
     }
   }
 
-  readHeader() {
+  /**
+   * Read the header of payload.bin, including the magic, header_version,
+   * manifest_len, metadata_signature_len.
+   */
+  async readHeader(/** @type {Blob} */buffer) {
+    this.buffer = await buffer.slice(0, _PAYLOAD_HEADER_SIZE).arrayBuffer()
     let /** TextDecoder */ decoder = new TextDecoder()
     try {
       this.magic = decoder.decode(
         this.buffer.slice(this.cursor, _MAGIC.length))
-      this.cursor += _MAGIC.length
       if (this.magic != _MAGIC) {
-        alert('MAGIC is not correct, please double check.')
+        throw new Error('MAGIC is not correct, please double check.')
       }
+      this.cursor += _MAGIC.length
       this.header_version = this.readInt(_VERSION_SIZE)
       this.manifest_len = this.readInt(_MANIFEST_LEN_SIZE)
       if (this.header_version == _BRILLO_MAJOR_PAYLOAD_VERSION) {
         this.metadata_signature_len = this.readInt(_METADATA_SIGNATURE_LEN_SIZE)
+      }
+      else {
+        throw new Error(`Unexpected major version number: ${this.header_version}`)
       }
     } catch (err) {
       console.log(err)
@@ -125,22 +202,20 @@ export class Payload {
    * The structure of the manifest can be found in:
    * aosp/system/update_engine/update_metadata.proto
    */
-  readManifest() {
-    let /** Array<Uint8> */ manifest_raw = new Uint8Array(this.buffer.slice(
-      this.cursor, this.cursor + this.manifest_len
-    ))
+  async readManifest(/** @type {Blob} */buffer) {
+    buffer = await buffer.slice(
+      this.cursor, this.cursor + this.manifest_len).arrayBuffer()
     this.cursor += this.manifest_len
     this.manifest = update_metadata_pb.DeltaArchiveManifest
-      .decode(manifest_raw)
+      .decode(new Uint8Array(buffer))
   }
 
-  readSignature() {
-    let /** Array<Uint8>*/ signature_raw = new Uint8Array(this.buffer.slice(
-      this.cursor, this.cursor + this.metadata_signature_len
-    ))
+  async readSignature(/** @type {Blob} */buffer) {
+    buffer = await buffer.slice(
+      this.cursor, this.cursor + this.metadata_signature_len).arrayBuffer()
     this.cursor += this.metadata_signature_len
     this.metadata_signature = update_metadata_pb.Signatures
-      .decode(signature_raw)
+      .decode(new Uint8Array(buffer))
   }
 
   parseMetadata() {
@@ -155,9 +230,6 @@ export class Payload {
 
   async init() {
     await this.unzip()
-    this.readHeader()
-    this.readManifest()
-    this.readSignature()
     this.parseMetadata()
   }
 
