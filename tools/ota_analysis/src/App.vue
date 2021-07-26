@@ -28,7 +28,7 @@
 export default {
   data() {
     return {
-      links: ['Analysis', 'About'],
+      links: ['Analysis', 'Demo', 'About'],
     }
   },
 }

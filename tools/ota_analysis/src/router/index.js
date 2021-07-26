@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import PackageAnalysis from '@/views/PackageAnalysis.vue'
+import Demo from'@/views/Demo.vue'
 import About from '@/views/About.vue'
 
 const routes = [
@@ -10,6 +11,11 @@ const routes = [
     meta: {
       title: 'Analyse OTA package - from AOSP'
     }
+  },
+  {
+    path: '/Demo',
+    name: 'Demo',
+    component: Demo
   },
   {
     path: '/About',
