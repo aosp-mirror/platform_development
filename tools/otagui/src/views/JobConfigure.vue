@@ -42,12 +42,14 @@
 <script>
 import SingleOTAOptions from '@/components/SingleOTAOptions.vue'
 import BatchOTAOptions from '@/components/BatchOTAOptions.vue'
+import ChainOTAOptions from '@/components/ChainOTAOptions.vue'
 import BuildLibrary from '@/components/BuildLibrary.vue'
 
 export default {
   components: {
     SingleOTAOptions,
     BatchOTAOptions,
+    ChainOTAOptions,
     BuildLibrary,
   },
   data() {
@@ -58,7 +60,8 @@ export default {
       refresh: false,
       tabs: [
         {label: 'Single OTA', component: 'SingleOTAOptions'},
-        {label: 'Batch OTA', component: 'BatchOTAOptions'}
+        {label: 'Batch OTA', component: 'BatchOTAOptions'},
+        {label: 'Chain OTA', component: 'ChainOTAOptions'}
       ],
     }
   },

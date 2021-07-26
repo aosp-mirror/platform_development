@@ -14,13 +14,48 @@
       {{ build }}
     </option>
   </select>
-  <v-btn
+  <v-row
     class="my-2"
-    :disabled="!selected"
-    @click="deleteSelected"
   >
-    Remove selected item
-  </v-btn>
+    <v-col
+      cols="12"
+      md="4"
+    >
+      <v-btn
+        :disabled="!selected"
+        block
+        @click="deleteSelected"
+      >
+        Remove selected item
+      </v-btn>
+    </v-col>
+    <v-col
+      cols="12"
+      md="4"
+    >
+      <v-btn
+        v-if="movable"
+        :disabled="!selected"
+        block
+        @click="moveSelected(-1)"
+      >
+        &#128316;
+      </v-btn>
+    </v-col>
+    <v-col
+      cols="12"
+      md="4"
+    >
+      <v-btn
+        v-if="movable"
+        :disabled="!selected"
+        block
+        @click="moveSelected(1)"
+      >
+        &#128317;
+      </v-btn>
+    </v-col>
+  </v-row>
 </template>
 
 <script>
@@ -33,6 +68,10 @@ export default {
     modelValue: {
       type: Array,
       required: true
+    },
+    movable: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -61,6 +100,18 @@ export default {
         )
       }
       this.selected = null
+    },
+    moveSelected(direction) {
+      let selectedIndex = this.modelValue.indexOf(this.selected)
+      if (selectedIndex + direction > this.modelValue.length ||
+        selectedIndex + direction < 0) {
+        return
+      }
+      let tempArray = Array.from(this.modelValue)
+      let temp = this.modelValue[selectedIndex]
+      tempArray[selectedIndex] = tempArray[selectedIndex + direction]
+      tempArray[selectedIndex + direction] = temp
+      this.$emit("update:modelValue", tempArray)
     }
   }
 }
