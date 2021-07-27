@@ -35,7 +35,7 @@ export function defaultModifiedCheck(newNode, oldNode) {
     return true;
   }
 
-  return JSON.stringify(newNode.obj) !== JSON.stringify(oldNode.obj);
+  return !newNode.equals(oldNode);
 }
 
 export class DiffGenerator {
