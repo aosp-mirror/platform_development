@@ -26,6 +26,8 @@ import jsonProtoDefsWl from 'WaylandSafePath/waylandtrace.proto';
 import jsonProtoDefsSysUi from 'frameworks/base/packages/SystemUI/src/com/android/systemui/tracing/sysui_trace.proto';
 import jsonProtoDefsLauncher from 'packages/apps/Launcher3/protos/launcher_trace_file.proto';
 import jsonProtoDefsIme from 'frameworks/base/core/proto/android/view/inputmethod/inputmethodeditortrace.proto';
+import jsonProtoDefsTags from 'platform_testing/libraries/flicker/src/com/android/server/wm/proto/tags.proto';
+import jsonProtoDefsErrors from 'platform_testing/libraries/flicker/src/com/android/server/wm/proto/errors.proto';
 import protobuf from 'protobufjs';
 import {transform_accessibility_trace} from './transform_accessibility.js';
 import {transform_transaction_trace} from './transform_transaction.js';
@@ -53,6 +55,9 @@ import SurfaceFlingerDump from '@/dumps/SurfaceFlinger.ts';
 import WindowManagerDump from '@/dumps/WindowManager.ts';
 import WaylandDump from '@/dumps/Wayland.ts';
 
+import TagTrace from '@/traces/TraceTag.ts';
+import ErrorTrace from '@/traces/TraceError.ts';
+
 const AccessibilityTraceMessage = lookup_type(jsonProtoDefsAccessibility, 'com.android.server.accessibility.AccessibilityTraceFileProto');
 const WmTraceMessage = lookup_type(jsonProtoDefsWm, 'com.android.server.wm.WindowManagerTraceFileProto');
 const WmDumpMessage = lookup_type(jsonProtoDefsWm, 'com.android.server.wm.WindowManagerServiceDumpProto');
@@ -67,6 +72,8 @@ const LauncherTraceMessage = lookup_type(jsonProtoDefsLauncher, 'com.android.lau
 const InputMethodClientsTraceMessage = lookup_type(jsonProtoDefsIme, 'android.view.inputmethod.InputMethodClientsTraceFileProto');
 const InputMethodServiceTraceMessage = lookup_type(jsonProtoDefsIme, 'android.view.inputmethod.InputMethodServiceTraceFileProto');
 const InputMethodManagerServiceTraceMessage = lookup_type(jsonProtoDefsIme, 'android.view.inputmethod.InputMethodManagerServiceTraceFileProto');
+const TagTraceMessage = lookup_type(jsonProtoDefsTags, 'com.android.server.wm.flicker.FlickerTagTraceProto');
+const ErrorTraceMessage = lookup_type(jsonProtoDefsErrors, 'com.android.server.wm.flicker.FlickerErrorTraceProto');
 
 const ACCESSIBILITY_MAGIC_NUMBER = [0x09, 0x41, 0x31, 0x31, 0x59, 0x54, 0x52, 0x41, 0x43]; // .A11YTRAC
 const LAYER_TRACE_MAGIC_NUMBER = [0x09, 0x4c, 0x59, 0x52, 0x54, 0x52, 0x41, 0x43, 0x45]; // .LYRTRACE
@@ -79,6 +86,8 @@ const LAUNCHER_MAGIC_NUMBER = [0x09, 0x4C, 0x4E, 0x43, 0x48, 0x52, 0x54, 0x52, 0
 const IMC_TRACE_MAGIC_NUMBER = [0x09, 0x49, 0x4d, 0x43, 0x54, 0x52, 0x41, 0x43, 0x45]; // .IMCTRACE
 const IMS_TRACE_MAGIC_NUMBER = [0x09, 0x49, 0x4d, 0x53, 0x54, 0x52, 0x41, 0x43, 0x45]; // .IMSTRACE
 const IMM_TRACE_MAGIC_NUMBER = [0x09, 0x49, 0x4d, 0x4d, 0x54, 0x52, 0x41, 0x43, 0x45]; // .IMMTRACE
+const TAG_TRACE_MAGIC_NUMBER = [0x09, 0x54, 0x41, 0x47, 0x54, 0x52, 0x41, 0x43, 0x45]; //.TAGTRACE
+const ERROR_TRACE_MAGIC_NUMBER = [0x09, 0x45, 0x52, 0x52, 0x54, 0x52, 0x41, 0x43, 0x45]; //.ERRORTRACE
 
 const FILE_TYPES = Object.freeze({
   ACCESSIBILITY_TRACE: 'AccessibilityTrace',
@@ -96,6 +105,8 @@ const FILE_TYPES = Object.freeze({
   IME_TRACE_CLIENTS: 'ImeTraceClients',
   IME_TRACE_SERVICE: 'ImeTrace InputMethodService',
   IME_TRACE_MANAGERSERVICE: 'ImeTrace InputMethodManagerService',
+  TAG_TRACE: 'TagTrace',
+  ERROR_TRACE: 'ErrorTrace',
 });
 
 const WINDOW_MANAGER_ICON = 'view_compact';
@@ -108,6 +119,8 @@ const SYSTEM_UI_ICON = 'filter_none';
 const LAUNCHER_ICON = 'filter_none';
 const IME_ICON = 'keyboard';
 const ACCESSIBILITY_ICON = 'filter_none';
+const TAG_ICON = 'details';
+const TRACE_ERROR_ICON = 'warning';
 
 const FILE_ICONS = {
   [FILE_TYPES.ACCESSIBILITY_TRACE]: ACCESSIBILITY_ICON,
@@ -125,6 +138,8 @@ const FILE_ICONS = {
   [FILE_TYPES.IME_TRACE_CLIENTS]: IME_ICON,
   [FILE_TYPES.IME_TRACE_SERVICE]: IME_ICON,
   [FILE_TYPES.IME_TRACE_MANAGERSERVICE]: IME_ICON,
+  [FILE_TYPES.TAG_TRACE]: TAG_ICON,
+  [FILE_TYPES.ERROR_TRACE]: TRACE_ERROR_ICON,
 };
 
 function oneOf(dataType) {
@@ -144,6 +159,8 @@ const TRACE_TYPES = Object.freeze({
   IME_CLIENTS: 'ImeTrace Clients',
   IME_SERVICE: 'ImeTrace InputMethodService',
   IME_MANAGERSERVICE: 'ImeTrace InputMethodManagerService',
+  TAG: 'TagTrace',
+  ERROR: 'ErrorTrace',
 });
 
 const TRACE_INFO = {
@@ -221,6 +238,18 @@ const TRACE_INFO = {
     files: [oneOf(FILE_TYPES.IME_TRACE_MANAGERSERVICE)],
     constructor: ImeTraceManagerService,
   },
+  [TRACE_TYPES.TAG]: {
+    name: 'Tag',
+    icon: TAG_ICON,
+    files: [oneOf(FILE_TYPES.TAG_TRACE)],
+    constructor: TagTrace,
+  },
+  [TRACE_TYPES.ERROR]: {
+    name: 'Error',
+    icon: TRACE_ERROR_ICON,
+    files: [oneOf(FILE_TYPES.ERROR_TRACE)],
+    constructor: ErrorTrace,
+  },
 };
 
 const DUMP_TYPES = Object.freeze({
@@ -262,6 +291,8 @@ export const TRACE_ICONS = {
   [TRACE_TYPES.IME_CLIENTS]: IME_ICON,
   [TRACE_TYPES.IME_SERVICE]: IME_ICON,
   [TRACE_TYPES.IME_MANAGERSERVICE]: IME_ICON,
+  [TRACE_TYPES.TAG_TRACE]: TAG_ICON,
+  [TRACE_TYPES.ERROR_TRACE]: TRACE_ERROR_ICON,
 
   [DUMP_TYPES.WINDOW_MANAGER]: WINDOW_MANAGER_ICON,
   [DUMP_TYPES.SURFACE_FLINGER]: SURFACE_FLINGER_ICON,
@@ -431,6 +462,26 @@ const FILE_DECODERS = {
       timeline: true,
     },
   },
+  [FILE_TYPES.TAG_TRACE]: {
+    name: 'Tag trace',
+    decoder: protoDecoder,
+    decoderParams: {
+      type: FILE_TYPES.TAG_TRACE,
+      protoType: TagTraceMessage,
+      transform: TagTrace.fromProto,
+      timeline: true,
+    },
+  },
+  [FILE_TYPES.ERROR_TRACE]: {
+    name: 'Error trace',
+    decoder: protoDecoder,
+    decoderParams: {
+      type: FILE_TYPES.ERROR_TRACE,
+      protoType: ErrorTraceMessage,
+      transform: ErrorTrace.fromProto,
+      timeline: true,
+    },
+  },
 };
 
 function lookup_type(protoPath, type) {
@@ -567,6 +618,12 @@ function detectAndDecode(buffer, fileName, store) {
   }
   if (arrayStartsWith(buffer, IMM_TRACE_MAGIC_NUMBER)) {
     return decodedFile(FILE_TYPES.IME_TRACE_MANAGERSERVICE, buffer, fileName, store);
+  }
+  if (arrayStartsWith(buffer, TAG_TRACE_MAGIC_NUMBER)) {
+    return decodedFile(FILE_TYPES.TAG_TRACE, buffer, fileName, store);
+  }
+  if (arrayStartsWith(buffer, ERROR_TRACE_MAGIC_NUMBER)) {
+    return decodedFile(FILE_TYPES.ERROR_TRACE, buffer, fileName, store);
   }
 
   // TODO(b/169305853): Add magic number at beginning of file for better auto detection

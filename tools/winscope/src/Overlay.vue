@@ -344,6 +344,9 @@ export default {
     timelineFiles() {
       return this.$store.getters.timelineFiles;
     },
+    tagFiles() {
+      return this.$store.getters.tagFiles;
+    },
     focusedFile() {
       return this.$store.state.focusedFile;
     },
