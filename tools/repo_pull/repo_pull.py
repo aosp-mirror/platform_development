@@ -32,7 +32,8 @@ import sys
 import xml.dom.minidom
 
 from gerrit import (
-    create_url_opener_from_args, find_gerrit_name, query_change_lists, run
+    create_url_opener_from_args, find_gerrit_name, normalize_gerrit_name,
+    query_change_lists, run
 )
 from subprocess import PIPE
 
@@ -414,7 +415,9 @@ def main():
     """Main function"""
     args = _parse_args()
 
-    if not args.gerrit:
+    if args.gerrit:
+        args.gerrit = normalize_gerrit_name(args.gerrit)
+    else:
         try:
             args.gerrit = find_gerrit_name()
         # pylint: disable=bare-except
