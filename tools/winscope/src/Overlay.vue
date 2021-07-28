@@ -67,6 +67,15 @@
               </div>
 
               <div class="active-timeline" v-show="minimized">
+                <md-field class="seek-timestamp-field">
+                  <label>Search for timestamp</label>
+                  <md-input v-model="searchTimestamp"></md-input>
+                </md-field>
+
+                <md-button
+                  @click="updateSearchForTimestamp"
+                >Search</md-button>
+
                 <div
                   class="active-timeline-icon"
                   @click="$refs.navigationTypeSelection.$el
@@ -267,7 +276,7 @@ import {NAVIGATION_STYLE} from './utils/consts';
 import {TRACE_ICONS} from '@/decode.js';
 
 // eslint-disable-next-line camelcase
-import {nanos_to_string} from './transform.js';
+import {nanos_to_string, string_to_nanos} from './transform.js';
 
 export default {
   name: 'overlay',
@@ -292,6 +301,7 @@ export default {
       crop: null,
       cropIntent: null,
       TRACE_ICONS,
+      searchTimestamp: '',
     };
   },
   created() {
@@ -631,6 +641,17 @@ export default {
     },
     clearSelection() {
       this.crop = null;
+    },
+    updateSearchForTimestamp() {
+      if (/^\d+$/.test(this.searchTimestamp)) {
+        var roundedTimestamp = parseInt(this.searchTimestamp);
+      } else {
+        var roundedTimestamp = string_to_nanos(this.searchTimestamp);
+      }
+      var closestTimestamp = this.mergedTimeline.timeline.reduce(function(prev, curr) {
+        return (Math.abs(curr-roundedTimestamp) < Math.abs(prev-roundedTimestamp) ? curr : prev);
+      });
+      this.$store.dispatch('updateTimelineTime', parseInt(closestTimestamp));
     },
   },
   components: {
