@@ -24,11 +24,24 @@ import glob
 import os
 import platform
 import re
+import shutil
 import signal
 import subprocess
 import unittest
 
 ANDROID_BUILD_TOP = os.environ.get("ANDROID_BUILD_TOP", ".")
+
+
+def FindClangDir():
+  get_clang_version = ANDROID_BUILD_TOP + "/build/soong/scripts/get_clang_version.py"
+  if os.path.exists(get_clang_version):
+    # We want the script to fail if get_clang_version.py exists but is unable
+    # to find the clang version.
+    version_output = subprocess.check_output(get_clang_version, text=True)
+    return ANDROID_BUILD_TOP + "/prebuilts/clang/host/linux-x86/clang-" + version_output.strip()
+  else:
+    return None
+
 
 def FindSymbolsDir():
   saveddir = os.getcwd()
@@ -132,7 +145,9 @@ for sig in (signal.SIGABRT, signal.SIGINT, signal.SIGTERM):
 
 
 def ToolPath(tool, toolchain=None):
-  """Return a fully-qualified path to the specified tool"""
+  """Return a fully-qualified path to the specified tool, or just the tool if it's on PATH """
+  if shutil.which(tool) is not None:
+      return tool
   if not toolchain:
     toolchain = FindToolchain()
   return os.path.join(toolchain, tool)
@@ -431,14 +446,24 @@ def CallCppFilt(mangled_symbol):
   if mangled_symbol in _SYMBOL_DEMANGLING_CACHE:
     return _SYMBOL_DEMANGLING_CACHE[mangled_symbol]
 
-  # TODO: Replace with llvm-cxxfilt when available.
   global _CACHED_CXX_FILT
   if not _CACHED_CXX_FILT:
-    os_name = platform.system().lower()
-    toolchains = glob.glob("%s/prebuilts/gcc/%s-*/host/*-linux-*/bin/*c++filt" %
-                           (ANDROID_BUILD_TOP, os_name))
+    toolchains = None
+    clang_dir = FindClangDir()
+    if clang_dir:
+      if os.path.exists(clang_dir + "/bin/llvm-cxxfilt"):
+        toolchains = [clang_dir + "/bin/llvm-cxxfilt"]
+      else:
+        raise Exception("bin/llvm-cxxfilt missing from " + clang_dir)
+    else:
+      # When run in CI, we don't have a way to find the clang version.  But
+      # llvm-cxxfilt should be available in the following relative path.
+      toolchains = glob.glob("./clang-r*/bin/llvm-cxxfilt")
+      if toolchains and len(toolchains) != 1:
+        raise Exception("Expected one llvm-cxxfilt but found many: " + \
+                        ", ".join(toolchains))
     if not toolchains:
-      raise Exception("Could not find gcc c++filt tool")
+      raise Exception("Could not find llvm-cxxfilt tool")
     _CACHED_CXX_FILT = sorted(toolchains)[-1]
 
   cmd = [_CACHED_CXX_FILT]
@@ -546,6 +571,11 @@ class FindToolchainTests(unittest.TestCase):
     self.assert_toolchain_found("mips")
     self.assert_toolchain_found("x86")
     self.assert_toolchain_found("x86_64")
+
+class FindClangDirTests(unittest.TestCase):
+  @unittest.skipIf(ANDROID_BUILD_TOP == '.', 'Test only supported in an Android tree.')
+  def test_clang_dir_found(self):
+    self.assertIsNotNone(FindClangDir())
 
 class SetArchTests(unittest.TestCase):
   def test_abi_check(self):
