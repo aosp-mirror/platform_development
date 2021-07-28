@@ -45,7 +45,7 @@ export default {
           sortable: true,
           display: function (row) {
             return (
-              "<a href=/check/" + row.id + '>'
+              "<a href=/check-job/" + row.id + '>'
               + row.status
               + "</a>"
             );
