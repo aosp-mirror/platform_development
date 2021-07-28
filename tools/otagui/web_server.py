@@ -64,22 +64,20 @@ class RequestHandler(CORSSimpleHTTPHandler):
         self.end_headers()
 
     def do_GET(self):
-        if self.path.startswith('/check'):
-            if self.path == '/check' or self.path == '/check/':
-                statuses = jobs.get_status()
-                self._set_response(type='application/json')
-                self.wfile.write(
-                    json.dumps([status.to_dict_basic()
-                               for status in statuses]).encode()
-                )
-            else:
-                id = self.path[7:]
-                status = jobs.get_status_by_ID(id=id)
-                self._set_response(type='application/json')
-                self.wfile.write(
-                    json.dumps(status.to_dict_detail(target_lib)).encode()
-                )
-            return
+        if self.path == '/check' or self.path == '/check/':
+            statuses = jobs.get_status()
+            self._set_response(type='application/json')
+            self.wfile.write(
+                json.dumps([status.to_dict_basic()
+                            for status in statuses]).encode()
+            )
+        elif self.path.startswith('/check/'):
+            id = self.path[7:]
+            status = jobs.get_status_by_ID(id=id)
+            self._set_response(type='application/json')
+            self.wfile.write(
+                json.dumps(status.to_dict_detail(target_lib)).encode()
+            )
         elif self.path.startswith('/file'):
             if self.path == '/file' or self.path == '/file/':
                 file_list = target_lib.get_builds()
@@ -99,7 +97,11 @@ class RequestHandler(CORSSimpleHTTPHandler):
             self.path = self.path[10:]
             return CORSSimpleHTTPHandler.do_GET(self)
         else:
-            self.path = '/dist' + self.path
+            if not os.path.exists('dist' + self.path):
+                logging.info('redirect to dist')
+                self.path = '/dist/'
+            else:
+                self.path = '/dist' + self.path
             return CORSSimpleHTTPHandler.do_GET(self)
 
     def do_POST(self):
