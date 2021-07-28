@@ -179,7 +179,7 @@ class ProcessesManagement:
         if args['extra_keys']:
             args['extra'] += '--' + ' --'.join(args['extra_keys'])
         if args['extra']:
-            command.append(args['extra'])
+            command += args['extra'].split(' ')
         command.append('-k')
         command.append(
             '../../../build/make/target/product/security/testkey')
