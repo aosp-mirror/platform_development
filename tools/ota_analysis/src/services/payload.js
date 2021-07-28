@@ -78,6 +78,15 @@ export class Payload {
   readInt(size) {
     let /** DataView */ view = new DataView(
       this.buffer.slice(this.cursor, this.cursor + size))
+    if (typeof view.getBigUint64 !== "function") {
+      view.getBigUint64 =
+              function(offset) {
+                const a = BigInt(view.getUint32(offset))
+                const b = BigInt(view.getUint32(offset + 4))
+                const bigNumber = a * 4294967296n + b
+                return bigNumber
+              }
+    }
     this.cursor += size
     switch (size) {
     case 2:
