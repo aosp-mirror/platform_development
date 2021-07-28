@@ -21,20 +21,14 @@
 import TraceView from "@/TraceView.vue"
 
 export default {
-  name: "WindowManagerTraceView",
+  name: "AccessibilityTraceView",
   props: ["store", "file"],
   components: {
     TraceView
   },
   methods: {
     summarizer(item) {
-      const summary = [];
-
-      if (item.isIncompleteReason) {
-        summary.push({key: 'Incomplete state reason', value: item.isIncompleteReason});
-      }
-
-      return summary;
+      return null;
     },
   }
 }

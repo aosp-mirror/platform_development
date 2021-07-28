@@ -33,7 +33,7 @@ export default class WindowManager extends TraceBase {
     return TRACE_TYPES.WINDOW_MANAGER;
   }
 
-  static fromProto(proto): WindowManagerTrace {
+  static fromProto(proto: any): WindowManagerTrace {
     return WindowManagerTrace.fromProto(proto);
   }
 }

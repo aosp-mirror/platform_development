@@ -36,7 +36,7 @@
             <dataadb class="adbinput" ref="adb" :store="store"
               @dataReady="onDataReady" @statusChange="setStatus" />
           </div>
-          <div class="input">
+          <div class="input" @dragover.prevent @drop.prevent>
             <datainput class="fileinput" ref="input" :store="store"
               @dataReady="onDataReady" @statusChange="setStatus" />
           </div>
@@ -279,4 +279,18 @@ a {
 .data-view-container {
   padding: 25px 20px 0 20px;
 }
+
+.snackbar-break-words {
+    /* These are technically the same, but use both */
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    -ms-word-break: break-all;
+    word-break: break-word;
+    /* Adds a hyphen where the word breaks, if supported (No Blink) */
+    -ms-hyphens: auto;
+    -moz-hyphens: auto;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+    padding: 10px 10px 10px 10px;
+  }
 </style>

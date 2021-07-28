@@ -14,48 +14,84 @@
  * limitations under the License.
  */
 
-import {toBounds, toBuffer, toColor, toPoint, toRect,
+import {toSize, toBuffer, toColor, toPoint, toRect,
     toRectF, toRegion, toTransform} from './common';
 import intDefMapping from
     '../../../../../prebuilts/misc/common/winscope/intDefMapping.json';
+import config from '../config/Configuration.json'
 
+function readIntdefMap(): Map<string, string> {
+    const map = new Map<string, string>();
+    const keys = Object.keys(config.intDefColumn);
+
+    keys.forEach(key => {
+        const value = config.intDefColumn[key];
+        map.set(key, value);
+    });
+
+    return map;
+}
 export default class ObjectFormatter {
-    private static INVALID_ELEMENT_PROPERTIES = ['length', 'name', 'prototype', 'children',
-    'childrenWindows', 'ref', 'root', 'layers', 'resolvedChildren']
+    static displayDefaults: boolean = false
+    private static INVALID_ELEMENT_PROPERTIES = config.invalidProperties;
 
-    private static FLICKER_INTDEF_MAP = new Map([
-        [`WindowLayoutParams.type`, `android.view.WindowManager.LayoutParams.WindowType`],
-        [`WindowLayoutParams.flags`, `android.view.WindowManager.LayoutParams.Flags`],
-        [`WindowLayoutParams.privateFlags`, `android.view.WindowManager.LayoutParams.PrivateFlags`],
-        [`WindowLayoutParams.gravity`, `android.view.Gravity.GravityFlags`],
-        [`WindowLayoutParams.softInputMode`, `android.view.WindowManager.LayoutParams.WindowType`],
-        [`WindowLayoutParams.systemUiVisibilityFlags`, `android.view.WindowManager.LayoutParams.SystemUiVisibilityFlags`],
-        [`WindowLayoutParams.subtreeSystemUiVisibilityFlags`, `android.view.WindowManager.LayoutParams.SystemUiVisibilityFlags`],
-        [`WindowLayoutParams.behavior`, `android.view.WindowInsetsController.Behavior`],
-        [`WindowLayoutParams.fitInsetsSides`, `android.view.WindowInsets.Side.InsetsSide`],
+    private static FLICKER_INTDEF_MAP = readIntdefMap();
 
-        [`Configuration.windowingMode`, `android.app.WindowConfiguration.WindowingMode`],
-        [`WindowConfiguration.windowingMode`, `android.app.WindowConfiguration.WindowingMode`],
-        [`Configuration.orientation`, `android.content.pm.ActivityInfo.ScreenOrientation`],
-        [`WindowConfiguration.orientation`, `android.content.pm.ActivityInfo.ScreenOrientation`],
-        [`WindowState.orientation`, `android.content.pm.ActivityInfo.ScreenOrientation`],
-    ])
+    static cloneObject(entry: any): any {
+        let obj: any = {}
+        const properties = ObjectFormatter.getProperties(entry);
+        properties.forEach(prop => obj[prop] = entry[prop]);
+        return obj;
+    }
+
+    static getProperties(entry: any): string[] {
+        var props = [];
+        let obj = entry;
+
+        do {
+            const properties = Object.getOwnPropertyNames(obj).filter(it => {
+                // filter out functions
+                if (typeof(entry[it]) === 'function') return false;
+                // internal propertires from kotlinJs
+                if (it.includes(`$`)) return false;
+                // private kotlin variables from kotlin
+                if (it.startsWith(`_`)) return false;
+                // some predefined properties used only internally (e.g., children, ref, diff)
+                if (this.INVALID_ELEMENT_PROPERTIES.includes(it)) return false;
+                // Flicker object properties or arrays
+                if (!entry[it]) return false;
+                const value = entry[it]
+                // only non-empty arrays of non-flicker objects (otherwise they are in hierarchy)
+                if (Array.isArray(value) && value.length > 0) return !value[0].stableId
+                // non-flicker object
+                return !value.stableId;
+            });
+            properties.forEach(function (prop) {
+                if (typeof(entry[prop]) !== 'function' && props.indexOf(prop) === -1) {
+                    props.push(prop);
+                }
+            });
+        } while (obj = Object.getPrototypeOf(obj));
+
+        return props;
+    }
 
     static format(obj: any): {} {
-        const entries = Object.entries(obj)
-            .filter(it => !it[0].includes(`$`))
-            .filter(it => !this.INVALID_ELEMENT_PROPERTIES.includes(it[0]))
-        const sortedEntries = entries.sort()
+        const properties = this.getProperties(obj);
+        const sortedProperties = properties.sort()
 
         const result: any = {}
-        sortedEntries.forEach(entry => {
-            const key = entry[0]
-            const value: any = entry[1]
+        sortedProperties.forEach(entry => {
+            const key = entry;
+            const value: any = obj[key];
 
-            if (value) {
+            if (value || (this.displayDefaults && value !== undefined && value !== null)) {
                 // flicker obj
                 if (value.prettyPrint) {
-                    result[key] = value.prettyPrint()
+                    const isEmpty = value.isEmpty === true;
+                    if (!isEmpty || this.displayDefaults) {
+                        result[key] = value.prettyPrint()
+                    }
                 } else {
                     // converted proto to flicker
                     const translatedObject = this.translateObject(value)
@@ -63,7 +99,11 @@ export default class ObjectFormatter {
                         result[key] = translatedObject.prettyPrint()
                     // objects - recursive call
                     } else if (value && typeof(value) == `object`) {
-                        result[key] = this.format(value)
+                        const childObj = this.format(value) as any
+                        const isEmpty = Object.entries(childObj).length == 0 || childObj.isEmpty
+                        if (!isEmpty || this.displayDefaults) {
+                            result[key] = childObj
+                        }
                     } else {
                     // values
                         result[key] = this.translateIntDef(obj, key, value)
@@ -73,7 +113,8 @@ export default class ObjectFormatter {
             }
         })
 
-        return Object.freeze(result)
+        // return Object.freeze(result)
+        return result
     }
 
     /**
@@ -86,7 +127,7 @@ export default class ObjectFormatter {
     private static translateObject(obj) {
         const type = obj?.$type?.name
         switch(type) {
-            case `SizeProto`: return toBounds(obj)
+            case `SizeProto`: return toSize(obj)
             case `ActiveBufferProto`: return toBuffer(obj)
             case `ColorProto`: return toColor(obj)
             case `PointProto`: return toPoint(obj)

@@ -14,8 +14,22 @@
  * limitations under the License.
  */
 
-import ITreeViewElement from "./ITreeViewElement"
+import { LayersTrace } from "./common"
+import LayerTraceEntry from './layers/LayerTraceEntry'
 
-export default interface IClickableTreeViewElement extends ITreeViewElement {
-  obj: any
+LayersTrace.fromProto = function (proto: any): LayersTrace {
+    const entries = []
+    for (const entryProto of proto.entry) {
+        const transformedEntry = LayerTraceEntry.fromProto(
+            /* protos */ entryProto.layers.layers,
+            /* timestamp */ entryProto.elapsedRealtimeNanos,
+            /* hwcBlob */ entryProto.hwcBlob);
+
+        entries.push(transformedEntry);
+    }
+    const source = null;
+    const trace = new LayersTrace(entries, source);
+    return trace;
 }
+
+export default LayersTrace;
