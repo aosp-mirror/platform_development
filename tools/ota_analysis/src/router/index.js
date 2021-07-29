@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import PackageAnalysis from '@/views/PackageAnalysis.vue'
+import Demo from'@/views/Demo.vue'
 import About from '@/views/About.vue'
+import NotFound from '@/views/NotFound.vue'
 
 const routes = [
   {
@@ -12,9 +14,19 @@ const routes = [
     }
   },
   {
-    path: '/About',
+    path: '/demo',
+    name: 'Demo',
+    component: Demo
+  },
+  {
+    path: '/about',
     name: 'About',
     component: About
+  },
+  {
+    path: '/:catchAll(.*)',
+    name: 'Not Found',
+    component: NotFound
   }
 ]
 
