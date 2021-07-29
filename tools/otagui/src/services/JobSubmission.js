@@ -21,31 +21,104 @@ export class OTAConfiguration {
      * disable checkboxes of which dependencies are not fulfilled.
      */
     this.verbose = false,
-    this.target = '',
-    this.incremental = '',
     this.isIncremental = false,
     this.partial = [],
     this.isPartial = false,
     this.extra_keys = [],
-    this.extra = '',
-    this.id = uuid.v1()
+    this.extra = ''
   }
 
   /**
-   * Start the generation process, will throw an error if not succeed
+   * Take in multiple paths of target and incremental builds and generate
+   * OTA packages between them. If there are n incremental sources and m target
+   * builds, there will be n x m OTA packages in total. If there is 0
+   * incremental package, full OTA will be generated.
+   * @param {Array<String>} targetBuilds
+   * @param {Array<String>} incrementalSources
+   * @return Array<String>
    */
-  async sendForm() {
+  async sendForms(targetBuilds, incrementalSources = []) {
+    const responses = []
+    if (!this.isIncremental) {
+      responses.push(
+        ... await Promise.all(
+          targetBuilds.map(async (target) => await this.sendForm(target))
+        )
+      )
+    } else {
+      for (const incremental of incrementalSources) {
+        responses.push(
+          ... await Promise.all(
+            targetBuilds.map(
+              async (target) => await this.sendForm(target, incremental)
+            )
+          )
+        )
+      }
+    }
+    return responses
+  }
+
+  /**
+   * Take in an ordered list of target builds and generate OTA packages between
+   * them in order. For example, if there are n target builds, there will be
+   * n-1 OTA packages.
+   * @param {Array<String>} targetBuilds
+   * @return Array<String>
+   */
+  async sendChainForms(targetBuilds) {
+    const responses = []
+    this.isIncremental = true
+    for (let i = 0; i < targetBuilds.length-1; i++) {
+      try {
+        let response =
+          await this.sendForm(targetBuilds[i+1], targetBuilds[i])
+        responses.push(response)
+      } catch (err) {
+        throw err
+      }
+    }
+    return responses
+  }
+
+  /**
+   * Start an OTA package generation from target build to incremental source.
+   * Throw an error if not succeed, otherwise will return the message from
+   * the backend.
+   * @param {String} targetBuild
+   * @param {String} incrementalSource
+   * @return String
+   */
+  async sendForm(targetBuild, incrementalSource = '') {
+    let jsonOptions = Object.assign({}, this)
+    jsonOptions.target = targetBuild
+    jsonOptions.incremental = incrementalSource
+    jsonOptions.id = uuid.v1()
     for (let flag of OTAExtraFlags) {
-      if (this[flag.key]) {
-        this.extra_keys.push(flag.key)
+      if (jsonOptions[flag.key]) {
+        if (jsonOptions.extra_keys.indexOf(flag.key) === -1) {
+          jsonOptions.extra_keys.push(flag.key)
+        }
       }
     }
     try {
-      let response = await ApiServices.postInput(JSON.stringify(this), this.id)
+      let response = await ApiServices.postInput(JSON.stringify(jsonOptions), jsonOptions.id)
       return response.data
     } catch (err) {
       throw err
     }
+  }
+
+  /**
+   * Reset all the flags being set in this object.
+   */
+  reset() {
+    for (let flag of OTAExtraFlags) {
+      if (this[flag.key]) {
+        delete this[flag.key]
+      }
+    }
+    this.constructor()
   }
 }
 
