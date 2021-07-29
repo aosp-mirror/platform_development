@@ -10,11 +10,33 @@
 import * as zip from '@zip.js/zip.js/dist/zip-full.min.js'
 import { chromeos_update_engine as update_metadata_pb } from './update_metadata_pb.js'
 
-const /** Number */ _MAGIC = 'CrAU'
+const /** String */ _MAGIC = 'CrAU'
 const /** Number */ _VERSION_SIZE = 8
 const /** Number */ _MANIFEST_LEN_SIZE = 8
 const /** Number */ _METADATA_SIGNATURE_LEN_SIZE = 4
 const /** Number */ _BRILLO_MAJOR_PAYLOAD_VERSION = 2
+export const /** Array<Object> */ MetadataFormat = [
+  {
+    prefix: 'pre-build',
+    key: 'preBuild',
+    name: 'Pre-build'
+  },
+  {
+    prefix: 'pre-build-incremental',
+    key: 'preBuildVersion',
+    name: 'Pre-build version'
+  },
+  {
+    prefix: 'post-build',
+    key: 'postBuild',
+    name: 'Post-build'
+  },
+  {
+    prefix: 'post-build-incremental',
+    key: 'postBuildVersion',
+    name: 'Post-build version'
+  }
+]
 
 export class Payload {
   /**
@@ -26,13 +48,19 @@ export class Payload {
     this.cursor = 0
   }
 
-  async unzipPayload() {
+  /**
+   * Unzip the OTA package, get payload.bin and metadata
+   */
+  async unzip() {
     let /** Array<Entry> */ entries = await this.packedFile.getEntries()
     this.payload = null
     for (let entry of entries) {
       if (entry.filename == 'payload.bin') {
         //TODO: only read in the manifest instead of the whole payload
         this.payload = await entry.getData(new zip.BlobWriter())
+      }
+      if (entry.filename == 'META-INF/com/android/metadata') {
+        this.metadata = await entry.getData(new zip.TextWriter())
       }
     }
     if (!this.payload) {
@@ -50,6 +78,15 @@ export class Payload {
   readInt(size) {
     let /** DataView */ view = new DataView(
       this.buffer.slice(this.cursor, this.cursor + size))
+    if (typeof view.getBigUint64 !== "function") {
+      view.getBigUint64 =
+              function(offset) {
+                const a = BigInt(view.getUint32(offset))
+                const b = BigInt(view.getUint32(offset + 4))
+                const bigNumber = a * 4294967296n + b
+                return bigNumber
+              }
+    }
     this.cursor += size
     switch (size) {
     case 2:
@@ -106,11 +143,22 @@ export class Payload {
       .decode(signature_raw)
   }
 
+  parseMetadata() {
+    for (let formatter of MetadataFormat) {
+      let regex = new RegExp(formatter.prefix + '.+')
+      if (this.metadata.match(regex)) {
+        this[formatter.key] =
+          trimEntry(this.metadata.match(regex)[0], formatter.prefix)
+      } else this[formatter.key] = ''
+    }
+  }
+
   async init() {
-    await this.unzipPayload()
+    await this.unzip()
     this.readHeader()
     this.readManifest()
     this.readSignature()
+    this.parseMetadata()
   }
 
 }
@@ -149,7 +197,7 @@ export class MergeOpType {
 export function octToHex(bufferArray, space = true, maxLine = 16) {
   let hex_table = ''
   for (let i = 0; i < bufferArray.length; i++) {
-    if (bufferArray[i].toString(16).length===2) {
+    if (bufferArray[i].toString(16).length === 2) {
       hex_table += bufferArray[i].toString(16) + (space ? ' ' : '')
     } else {
       hex_table += '0' + bufferArray[i].toString(16) + (space ? ' ' : '')
@@ -159,4 +207,15 @@ export function octToHex(bufferArray, space = true, maxLine = 16) {
     }
   }
   return hex_table
+}
+
+/**
+ * Trim the prefix in an entry. This is required because the lookbehind
+ * regular expression is not supported in safari yet.
+ * @param {String} entry
+ * @param {String} prefix
+ * @return String
+ */
+function trimEntry(entry, prefix) {
+  return entry.slice(prefix.length + 1, entry.length)
 }
