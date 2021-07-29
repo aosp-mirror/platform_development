@@ -107,6 +107,8 @@ JSON_TO_BP = {
     'StaticLibs': 'static_libs',
     'RuntimeLibs': 'runtime_libs',
     'Required': 'required',
+    'Filename': 'filename',
+    'RelativeInstallPath': 'relative_install_path',
 }
 
 SANITIZER_VARIANT_PROPS = {
@@ -174,12 +176,16 @@ def gen_bp_module(image, variation, name, version, target_arch, vndk_list, arch_
     # If a vndk library with the same name exists, reuses exported flags of the vndk library,
     # instead of the snapshot's own flags.
     prop = {
-        # These three are common for all snapshot modules.
-        'version': str(version),
-        'target_arch': target_arch,
+        # These are common for all snapshot modules.
         image: True,
         'arch': {},
     }
+
+    if variation != 'etc':
+        prop['version'] = str(version)
+        prop['target_arch'] = target_arch
+    else:
+        prop['prefer'] = True
 
     reexport_vndk_name = name
     if reexport_vndk_name == "libc++_static":
@@ -231,7 +237,7 @@ def gen_bp_module(image, variation, name, version, target_arch, vndk_list, arch_
 
     # header snapshots doesn't need compile_multilib. The other snapshots,
     # shared/static/object/binary snapshots, do need them
-    if variation != 'header':
+    if variation != 'header' and variation != 'etc':
         if has32 and has64:
             prop['compile_multilib'] = 'both'
         elif has32:
@@ -246,7 +252,14 @@ def gen_bp_module(image, variation, name, version, target_arch, vndk_list, arch_
     if variation == 'binary' and stem32 == stem64:
         prop['compile_multilib'] = 'first'
 
-    bp = '%s_snapshot_%s {\n' % (image, variation)
+    module_type = ''
+
+    if variation == 'etc':
+        module_type = 'snapshot_etc'
+    else:
+        module_type = '%s_snapshot_%s' % (image, variation)
+
+    bp = module_type + ' {\n'
     bp += gen_bp_prop(prop, INDENT)
     bp += '}\n\n'
     return bp
@@ -307,14 +320,15 @@ def gen_bp_list_module(image, snapshot_version, vndk_list, target_arch, arch_pro
     # arch_props structure: arch_props[variant][module_name][arch]
     # e.g. arch_props['shared']['libc++']['x86']
     for variant in arch_props:
-        variant_name = variant_to_property[variant]
-        for name in arch_props[variant]:
-            for arch in arch_props[variant][name]:
-                if arch not in arch_bp_prop:
-                    arch_bp_prop[arch] = dict()
-                if variant_name not in arch_bp_prop[arch]:
-                    arch_bp_prop[arch][variant_name] = []
-                arch_bp_prop[arch][variant_name].append(name)
+        if variant in variant_to_property:
+            variant_name = variant_to_property[variant]
+            for name in arch_props[variant]:
+                for arch in arch_props[variant][name]:
+                    if arch not in arch_bp_prop:
+                        arch_bp_prop[arch] = dict()
+                    if variant_name not in arch_bp_prop[arch]:
+                        arch_bp_prop[arch][variant_name] = []
+                    arch_bp_prop[arch][variant_name].append(name)
 
     bp_props['arch'] = arch_bp_prop
     bp += gen_bp_prop(bp_props, INDENT)
