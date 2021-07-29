@@ -89,7 +89,7 @@ class ProcessesManagement:
     A class manage the ota generate process
     """
 
-    def __init__(self, path='ota_database.db'):
+    def __init__(self, path='output/ota_database.db'):
         """
         create a table if not exist
         """
@@ -156,9 +156,9 @@ class ProcessesManagement:
             'output', 'stdout.'+str(id)), 'w')
         try:
             proc = subprocess.Popen(
-                command, stderr=ferr, stdout=fout)
-        except FileNotFoundError:
-            logging.error('ota_from_target_files is not set properly')
+                command, stderr=ferr, stdout=fout, shell=False)
+        except FileNotFoundError as e:
+            logging.error('ota_from_target_files is not set properly %s', e)
             self.update_status(id, 'Error', int(time.time()))
             return
         exit_code = proc.wait()
@@ -182,7 +182,7 @@ class ProcessesManagement:
             command += args['extra'].split(' ')
         command.append('-k')
         command.append(
-            '../../../build/make/target/product/security/testkey')
+            'build/make/target/product/security/testkey')
         if args['isIncremental']:
             if not os.path.isfile(args['incremental']):
                 raise FileNotFoundError
