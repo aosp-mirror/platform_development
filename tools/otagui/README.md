@@ -27,3 +27,8 @@ Finally, run the python http-server and vue.js server:
 python3 web_server.py &
 npm run serve
 ```
+### Run with Docker
+
+1. Build the image `docker build -t zhangxp1998/test .`
+
+2. Run: `docker run -it -p 8000:8000 -v target:/app/target -v output:/app/output zhangxp1998/test:latest`

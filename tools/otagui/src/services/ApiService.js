@@ -1,15 +1,22 @@
 import axios from 'axios'
 
+const baseURL = process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8000';
+
+console.log(`Build mode: ${process.env.NODE_ENV}, API base url ${baseURL}`);
+
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL,
   withCredentials: false,
   headers: {
     Accept: 'application/json',
     'Content-Type': 'application/json'
   }
-})
+});
 
 export default {
+  getDownloadURLForJob(job) {
+    return `${baseURL}/download/${job.output}`;
+  },
   getJobs() {
     return apiClient.get("/check")
   },
