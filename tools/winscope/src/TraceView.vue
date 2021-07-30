@@ -32,7 +32,7 @@
         >
           <h2 class="md-title" style="flex: 1;">Hierarchy</h2>
           <md-checkbox
-            v-model="showHierachyDiff"
+            v-model="showHierarchyDiff"
             v-if="diffVisualizationAvailable"
           >
             Show Diff
@@ -72,6 +72,19 @@
           class="card-toolbar md-transparent md-dense"
         >
           <h2 class="md-title" style="flex: 1">Properties</h2>
+          <div>
+            <md-checkbox
+              v-model="displayDefaults"
+              @change="checkboxChange"
+            >
+              Show Defaults
+            </md-checkbox>
+            <md-tooltip md-direction="bottom">
+                If checked, shows the value of all properties.
+                Otherwise, hides all properties whose value is
+                the default for its data type.
+            </md-tooltip>
+          </div>
           <md-checkbox
             v-model="showPropertiesDiff"
             v-if="diffVisualizationAvailable"
@@ -96,7 +109,6 @@
               :item="selectedTree"
               :filter="propertyFilter"
               :collapseChildren="true"
-              :useGlobalCollapsedState="true"
               :elementView="PropertiesTreeElement"
             />
           </div>
@@ -104,7 +116,7 @@
             <i class="material-icons none-icon">
               filter_none
             </i>
-            <span>No element selected in the hierachy.</span>
+            <span>No element selected in the hierarchy.</span>
           </div>
         </div>
       </flat-card>
@@ -123,6 +135,8 @@ import {DiffGenerator, defaultModifiedCheck} from './utils/diff.js';
 import {TRACE_TYPES, DUMP_TYPES} from './decode.js';
 import {stableIdCompatibilityFixup} from './utils/utils.js';
 import {CompatibleFeatures} from './utils/compatibility.js';
+import {getPropertiesForDisplay} from './flickerlib/mixin';
+import ObjectFormatter from './flickerlib/ObjectFormatter';
 
 function formatProto(obj) {
   if (obj?.prettyPrint) {
@@ -164,12 +178,16 @@ export default {
       item: null,
       tree: null,
       highlight: null,
-      showHierachyDiff: false,
+      showHierarchyDiff: false,
+      displayDefaults: false,
       showPropertiesDiff: false,
       PropertiesTreeElement,
     };
   },
   methods: {
+    checkboxChange(checked) {
+      this.itemSelected(this.item);
+    },
     itemSelected(item) {
       this.hierarchySelected = item;
       this.selectedTree = this.getTransformedProperties(item);
@@ -178,8 +196,9 @@ export default {
       this.$emit('focus');
     },
     getTransformedProperties(item) {
+      ObjectFormatter.displayDefaults = this.displayDefaults;
       const transformer = new ObjectTransformer(
-          item.obj,
+          getPropertiesForDisplay(item),
           item.name,
           stableIdCompatibilityFixup(item),
       ).setOptions({
@@ -189,7 +208,7 @@ export default {
 
       if (this.showPropertiesDiff && this.diffVisualizationAvailable) {
         const prevItem = this.getItemFromPrevTree(item);
-        transformer.withDiff(prevItem?.obj);
+        transformer.withDiff(getPropertiesForDisplay(prevItem));
       }
 
       return transformer.transform();
@@ -200,12 +219,14 @@ export default {
       }
     },
     generateTreeFromItem(item) {
-      if (!this.showHierachyDiff || !this.diffVisualizationAvailable) {
+      if (!this.showHierarchyDiff || !this.diffVisualizationAvailable) {
         return item;
       }
 
-      return new DiffGenerator(this.item)
-          .compareWith(this.getDataWithOffset(-1))
+      const thisItem = this.item;
+      const prevItem = this.getDataWithOffset(-1);
+      return new DiffGenerator(thisItem)
+          .compareWith(prevItem)
           .withUniqueNodeId((node) => {
             return node.stableId;
           })
@@ -216,7 +237,7 @@ export default {
       this.item = item;
       this.tree = this.generateTreeFromItem(item);
 
-      const rects = item.rects //.toArray()
+      const rects = item.rects; // .toArray()
       this.rects = [...rects].reverse();
       this.bounds = item.bounds;
 
@@ -293,7 +314,7 @@ export default {
     selectedIndex() {
       this.setData(this.file.data[this.file.selectedIndex ?? 0]);
     },
-    showHierachyDiff() {
+    showHierarchyDiff() {
       this.tree = this.generateTreeFromItem(this.item);
     },
     showPropertiesDiff() {
@@ -317,7 +338,7 @@ export default {
       const hierarchyPropertyFilter =
           getFilter(this.hierarchyPropertyFilterString);
       return this.store.onlyVisible ? (c) => {
-        return c.visible && hierarchyPropertyFilter(c);
+        return c.isVisible && hierarchyPropertyFilter(c);
       } : hierarchyPropertyFilter;
     },
     propertyFilter() {

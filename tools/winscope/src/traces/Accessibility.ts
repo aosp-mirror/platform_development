@@ -14,25 +14,20 @@
  * limitations under the License.
  */
 
-import { FILE_TYPES, DUMP_TYPES } from "@/decode.js";
-import DumpBase from "./DumpBase";
+import { FILE_TYPES, TRACE_TYPES } from '@/decode.js';
+import TraceBase from './TraceBase';
 
-import { WindowManagerTrace } from '@/flickerlib';
-
-export default class WindowManager extends DumpBase {
-  wmDumpFile: any;
+export default class Accessibility extends TraceBase {
+  accessibilityTraceFile: Object;
 
   constructor(files) {
-    const wmDumpFile = files[FILE_TYPES.WINDOW_MANAGER_DUMP];
-    super(wmDumpFile.data, files);
-    this.wmDumpFile = wmDumpFile
+    const accessibilityTraceFile = files[FILE_TYPES.ACCESSIBILITY_TRACE];
+    super(accessibilityTraceFile.data, accessibilityTraceFile.timeline, files);
+
+    this.accessibilityTraceFile = accessibilityTraceFile;
   }
 
   get type() {
-    return DUMP_TYPES.WINDOW_MANAGER;
-  }
-
-  static fromProto(proto: any): WindowManagerTrace {
-    return WindowManagerTrace.fromDump(proto);
+    return TRACE_TYPES.ACCESSIBILITY;
   }
 }

@@ -252,6 +252,9 @@ const store = new Vuex.Store({
     },
     updateTimelineTime(context, timestamp) {
       for (const file of context.getters.files) {
+        //dumps do not have a timeline, so only look at files with timelines to update the timestamp
+        if (!file.timeline) continue;
+
         const type = file.type;
         const entryIndex = findLastMatchingSorted(
           file.timeline,

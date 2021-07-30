@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
+import LayersTrace from './LayersTrace';
 import WindowManagerState from './WindowManagerState';
 import WindowManagerTrace from './WindowManagerTrace';
-
+import ObjectFormatter from './ObjectFormatter';
 /**
  * Entry point into the flickerlib for Winscope.
  * Expose everything we want Winscope to have access to here.
  */
-export {WindowManagerState, WindowManagerTrace};
+export {ObjectFormatter, LayersTrace, WindowManagerState, WindowManagerTrace};
 
