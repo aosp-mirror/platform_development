@@ -464,11 +464,11 @@ export default {
       return this.initialDepth || 0;
     },
     nodeOffsetStyle() {
-      const offest = levelOffset * (this.depth + this.isLeaf) + 'px';
+      const offset = levelOffset * (this.depth + this.isLeaf) + 'px';
 
       return {
-        marginLeft: '-' + offest,
-        paddingLeft: offest,
+        marginLeft: '-' + offset,
+        paddingLeft: offset,
       };
     },
   },
