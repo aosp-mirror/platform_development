@@ -37,12 +37,18 @@ function prepare_kernel_image()
      postfix="-allsyms"
   fi
 
-  # Pack all compress format for kernel images
-  repack \
-    "${prebuilts_root}/Image" \
-    "${out_root}" \
-    "${kernel_version}" \
-    "${postfix}"
+  if [[ "$arch" == "x86_64" ]]; then
+    mkdir -p "${out_root}"
+    cp "${prebuilts_root}/bzImage" \
+      "${out_root}/kernel-${kernel_version}${postfix}"
+  else
+    # Pack all compress format for kernel images
+    repack \
+      "${prebuilts_root}/Image" \
+      "${out_root}" \
+      "${kernel_version}" \
+      "${postfix}"
+  fi
 
   # Prepare the dist folder
   mkdir -p "${dist_root}"
