@@ -14,64 +14,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source development/gsi/build_with_kernel/bld-gki.sh
+source development/gsi/build_with_kernel/repack_kernels_common.sh
 
 set -e
-
-if [[ -z "${DIST_DIR}" ]]; then
-  echo "DIST_DIR must be defined." 1>&2
-  exit 1
-fi
-
-function prepare_kernel_image()
-{
-  local prebuilt_path=$1
-  local kernel_version=$2
-  local arch=$3
-  local is_debug=$4
-
-  local prebuilts_root="out/prebuilt_cached/${prebuilt_path}"
-  local dist_root="${DIST_DIR}/kernel/${kernel_version}"
-  local postfix=""
-  if [[ "$is_debug" == true ]]; then
-     dist_root="${dist_root}-debug"
-     postfix="-allsyms"
-  fi
-
-  # Pack all compress format for kernel images
-  repack \
-    "${prebuilts_root}/Image" \
-    "${OUT_DIR}/target/kernel/${kernel_version}/${arch}" \
-    "${kernel_version}" \
-    "${postfix}"
-
-  # Prepare the dist folder
-  mkdir -p "${dist_root}"
-
-  # Prepare prebuilt-info.txt
-  BID=$(cat "${prebuilts_root}/BUILD_INFO" | sed -n 's/^.*"bid":\s*"\(.*\)".*$/\1/p')
-  cat > "${dist_root}/prebuilt-info.txt" <<EOF
-{
-    "kernel-build-id": ${BID}
-}
-EOF
-
-  # Copy all other helper files
-  cp "${prebuilts_root}/System.map" "${dist_root}"
-  cp "${prebuilts_root}/vmlinux" "${dist_root}"
-  cp "${prebuilts_root}/vmlinux.symvers" "${dist_root}"
-  cp "${prebuilts_root}/modules.builtin" "${dist_root}"
-  cp "${prebuilts_root}/modules.builtin.modinfo" "${dist_root}"
-}
 
 prepare_kernel_image \
   "artifacts/common-android12-5_10-kernel_aarch64" \
   "5.10" \
-  "arm64" \
-  false
+  "arm64"
 
 prepare_kernel_image \
   "artifacts/common-android12-5_10-kernel_debug_aarch64" \
   "5.10" \
   "arm64" \
-  true
+  "debug"
+
+prepare_kernel_modules \
+  "artifacts/common-android12-5_10-kernel_virt_aarch64" \
+  "5.10" \
+  "arm64" \
