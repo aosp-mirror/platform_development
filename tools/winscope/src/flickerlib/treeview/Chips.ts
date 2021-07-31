@@ -18,3 +18,33 @@ import Chip from "./Chip"
 import ChipType from "./ChipType"
 
 export const VISIBLE_CHIP = new Chip("V", "visible", ChipType.DEFAULT)
+
+export const RELATIVE_Z_CHIP = {
+    short: 'RelZ',
+    long: 'Is relative Z-ordered to another surface',
+    class: 'warn',
+};
+
+export const RELATIVE_Z_PARENT_CHIP = {
+    short: 'RelZParent',
+    long: 'Something is relative Z-ordered to this surface',
+    class: 'warn',
+};
+
+export const MISSING_LAYER = {
+    short: 'MissingLayer',
+    long: 'This layer was referenced from the parent, but not present in the trace',
+    class: 'error',
+};
+
+export const GPU_CHIP = {
+    short: 'GPU',
+    long: 'This layer was composed on the GPU',
+    class: 'gpu',
+};
+
+export const HWC_CHIP = {
+    short: 'HWC',
+    long: 'This layer was composed by Hardware Composer',
+    class: 'hwc',
+};

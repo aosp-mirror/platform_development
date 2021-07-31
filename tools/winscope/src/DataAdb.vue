@@ -200,6 +200,7 @@ const DUMPS = {
 
 const proxyFileTypeAdapter = {
   'window_trace': FILE_TYPES.WINDOW_MANAGER_TRACE,
+  'accessibility_trace': FILE_TYPES.ACCESSIBILITY_TRACE,
   'layers_trace': FILE_TYPES.SURFACE_FLINGER_TRACE,
   'wl_trace': FILE_TYPES.WAYLAND_TRACE,
   'layers_dump': FILE_TYPES.SURFACE_FLINGER_DUMP,
