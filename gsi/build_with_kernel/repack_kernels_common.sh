@@ -14,12 +14,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source development/gsi/build_with_kernel/bld-gki.sh
+if [ -z "${ANDROID_BUILD_TOP}" ]; then
+    WD="$(pwd)"
+else
+    WD="${ANDROID_BUILD_TOP}"
+fi
+if [ -z "${OUT_DIR}" ]; then
+    OUT_DIR="${WD}/out"
+fi
 
 if [[ -z "${DIST_DIR}" ]]; then
   echo "DIST_DIR must be defined." 1>&2
   exit 1
 fi
+
+GZIP="gzip"
+LZ4="${WD}/prebuilts/misc/linux-x86/lz4/lz4"
+
 
 function prepare_kernel_image()
 {
@@ -37,17 +48,15 @@ function prepare_kernel_image()
      postfix="-allsyms"
   fi
 
+  mkdir -p "${out_root}"
   if [[ "$arch" == "x86_64" ]]; then
-    mkdir -p "${out_root}"
-    cp "${prebuilts_root}/bzImage" \
-      "${out_root}/kernel-${kernel_version}${postfix}"
+    cp "${prebuilts_root}/bzImage" "${out_root}/kernel-${kernel_version}${postfix}"
   else
     # Pack all compress format for kernel images
-    repack \
-      "${prebuilts_root}/Image" \
-      "${out_root}" \
-      "${kernel_version}" \
-      "${postfix}"
+    cp "${prebuilts_root}/Image" "${out_root}/kernel-${kernel_version}${postfix}"
+    cp "${prebuilts_root}/Image.lz4" "${out_root}/kernel-${kernel_version}-lz4${postfix}"
+    "$GZIP" -nc \
+       "${prebuilts_root}/Image">"${out_root}/kernel-${kernel_version}-gz${postfix}"
   fi
 
   # Prepare the dist folder
