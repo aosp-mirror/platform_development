@@ -33,14 +33,37 @@ export default {
 
       document.body.removeChild(a);
     },
+    /**
+     * Returns the file name, if the file has an extension use its default,
+     * otherwise use ".mp4" for screen recording (name from proxy script) and
+     * ".winscope" for traces
+     * @param {*} fileName
+     */
+    getFileName(fileName) {
+      var re = /(?:\.([^.]+))?$/;
+      var extension = re.exec(fileName)[1];
+      if (!extension) {
+        extension = "";
+      }
+      switch (extension) {
+        case "": {
+          if (fileName == "Screen recording") {
+            return fileName + ".mp4"
+          }
+          return fileName + ".winscope"
+        }
+        default: return fileName
+      }
+    },
     async downloadAsZip(traces) {
       const zip = new JSZip();
 
       for (const trace of traces) {
         const traceFolder = zip.folder(trace.type);
         for (const file of trace.files) {
+          var fileName = this.getFileName(file.filename);
           const blob = await fetch(file.blobUrl).then((r) => r.blob());
-          traceFolder.file(file.filename, blob);
+          traceFolder.file(fileName, blob);
         }
       }
 
