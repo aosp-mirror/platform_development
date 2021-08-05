@@ -5,6 +5,8 @@ node_modules
 /output
 stderr*
 stdout*
+yarn.lock
+otatools.zip
 
 
 # local env files
