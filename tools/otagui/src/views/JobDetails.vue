@@ -63,7 +63,7 @@ export default {
   },
   computed: {
     download() {
-      return 'http://localhost:8000/download/' + this.job.output
+      return ApiService.getDownloadURLForJob(this.job);
     },
   },
   created() {
