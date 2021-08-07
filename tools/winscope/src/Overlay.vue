@@ -388,7 +388,8 @@ export default {
         default:
           const split = this.navigationStyle.split('-');
           if (split[0] !== NAVIGATION_STYLE.TARGETED) {
-            throw new Error('Unexpected navigation type');
+            console.warn('Unexpected navigation type; fallback to global');
+            return 'All timelines';
           }
 
           const fileType = split[1];
@@ -410,7 +411,8 @@ export default {
         default:
           const split = this.navigationStyle.split('-');
           if (split[0] !== NAVIGATION_STYLE.TARGETED) {
-            throw new Error('Unexpected navigation type');
+            console.warn('Unexpected navigation type; fallback to global');
+            return 'public';
           }
 
           const fileType = split[1];
@@ -441,7 +443,8 @@ export default {
             .traces[this.navigationStyle.split('-')[1]];
       }
 
-      throw new Error('Unexpected Navigation Style');
+      console.warn('Unexpected navigation type; fallback to global');
+      return this.mergedTimeline;
     },
     isCropped() {
       return this.crop != null &&
@@ -608,7 +611,9 @@ export default {
         default:
           const split = this.navigationStyle.split('-');
           if (split[0] !== NAVIGATION_STYLE.TARGETED) {
-            throw new Error('Unexpected navigation type');
+            console.warn('Unexpected navigation type; fallback to global');
+            navigationStyleFilter = (f) => true;
+            break;
           }
 
           const fileType = split[1];
