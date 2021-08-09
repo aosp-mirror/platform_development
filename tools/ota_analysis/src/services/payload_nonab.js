@@ -53,15 +53,20 @@ export class PayloadNonAB extends chromeos_update_engine.DeltaArchiveManifest{
     * zero [rangeset] : fill zeros
     * new [rangeset] : fill with new data from <partitionName.new.data>
     * erase [rangeset] : mark given blocks as empty
-    * move <...>
-    * bsdiff <patchstart> <patchlen> <...>
-    * imgdiff <patchstart> <patchlen> <...> :
+    * move <src_hash> <...>
+    * bsdiff <patchstart> <patchlen> <src_hash> <tgt_hash> <...>
+    * imgdiff <patchstart> <patchlen> <src_hash> <tgt_hash> <...> :
     * Read the source blocks and apply (not for move op) to the target blocks
     * stash <stash_id> <src_range> : load the given source range to memory
     * free <stash_id> : free the given <stash_id>
     * format:
     * [rangeset]: <# of pairs>, <pair A start>, <pair A end>, ...
     * <stash_id>: a hex number with length of 40
+    * <...>: We expect to parse the remainder of the parameter tokens as one of:
+    *   <tgt_range> <src_block_count> <src_range> (loads data from source image only)
+    *   <tgt_range> <src_block_count> - <[stash_id:stash_range] ...> (loads data from stashes only)
+    *   <tgt_range> <src_block_count> <src_range> <src_loc> <[stash_id:stash_range] ...>
+    *   (loads data from both source image and stashes)
     */
     partition.operations = new Array()
     let newDataSize = await this.sizeNewData(partition.partitionName)
@@ -87,14 +92,17 @@ export class PayloadNonAB extends chromeos_update_engine.DeltaArchiveManifest{
         op.dstExtents = elements.slice(1).reduce(parseRange, [])
         break
       case 'move':
+        op.dstExtents = parseRange([], elements[2])
         break
       case 'bsdiff':
         op.dataOffset = parseInt(elements[1])
         op.dataLength = parseInt(elements[2])
+        op.dstExtents = parseRange([], elements[5])
         break
       case 'imgdiff':
         op.dataOffset = parseInt(elements[1])
         op.dataLength = parseInt(elements[2])
+        op.dstExtents = parseRange([], elements[5])
         break
       case 'stash':
         break
