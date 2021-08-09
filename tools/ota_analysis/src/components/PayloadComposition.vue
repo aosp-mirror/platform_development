@@ -37,6 +37,7 @@
       md="6"
     >
       <v-btn
+        :disabled="manifest.nonAB"
         block
         @click="updateChart('COWmerge')"
       >
