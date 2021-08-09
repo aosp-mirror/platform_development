@@ -9,6 +9,7 @@
 
 import * as zip from '@zip.js/zip.js/dist/zip-full.min.js'
 import { chromeos_update_engine as update_metadata_pb } from './update_metadata_pb.js'
+import { PayloadNonAB } from './payload_nonab.js'
 
 const /** String */ _MAGIC = 'CrAU'
 const /** Number */ _VERSION_SIZE = 8
@@ -134,8 +135,17 @@ export class Payload {
       }
     }
     if (!this.payload) {
-      alert('Please select a legit OTA package')
-      return
+      try {
+        // The temporary variable manifest has to be used here, to prevent the html page
+        // being rendered before everything is read in properly
+        let manifest = new PayloadNonAB(this.packedFile)
+        await manifest.init()
+        manifest.nonAB = true
+        this.manifest = manifest
+      } catch (error) {
+        alert('Please select a legit OTA package')
+        return
+      }
     }
   }
 
@@ -208,6 +218,7 @@ export class Payload {
     this.cursor += this.manifest_len
     this.manifest = update_metadata_pb.DeltaArchiveManifest
       .decode(new Uint8Array(buffer))
+    this.manifest.nonAB = false
   }
 
   async readSignature(/** @type {Blob} */buffer) {
@@ -235,6 +246,17 @@ export class Payload {
 
 }
 
+export class DefaultMap extends Map {
+  /** Reload the original get method. Return the original key value if
+   * the key does not exist.
+   * @param {Any} key
+   */
+  getWithDefault(key) {
+    if (!this.has(key)) return key
+    return this.get(key)
+  }
+}
+
 export class OpType {
   /**
    * OpType.mapType create a map that could resolve the operation
@@ -243,8 +265,8 @@ export class OpType {
    */
   constructor() {
     let /** Array<{String: Number}>*/ types = update_metadata_pb.InstallOperation.Type
-    this.mapType = new Map()
-    for (let key in types) {
+    this.mapType = new DefaultMap()
+    for (let key of Object.keys(types)) {
       this.mapType.set(types[key], key)
     }
   }
@@ -259,8 +281,8 @@ export class MergeOpType {
   constructor() {
     let /** Array<{String: Number}>*/ types =
       update_metadata_pb.CowMergeOperation.Type
-    this.mapType = new Map()
-    for (let key in types) {
+    this.mapType = new DefaultMap()
+    for (let key of Object.keys(types)) {
       this.mapType.set(types[key], key)
     }
   }

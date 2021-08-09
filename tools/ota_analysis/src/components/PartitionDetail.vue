@@ -3,9 +3,6 @@
   <p v-if="partition.estimateCowSize">
     <strong> Estimate COW Size: </strong> {{ partition.estimateCowSize }} Bytes
   </p>
-  <p v-else>
-    <strong> Estimate COW Size: </strong> 0 Bytes
-  </p>
   <div
     class="toggle"
     @click="toggle('showInfo')"
@@ -30,7 +27,7 @@
         </strong>
         {{ partition.newPartitionInfo.size }} Bytes
       </li>
-      <li>
+      <li v-if="partition.newPartitionInfo.hash">
         <strong>
           New Partition Hash:
         </strong>
