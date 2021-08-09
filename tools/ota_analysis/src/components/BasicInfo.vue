@@ -34,7 +34,7 @@
       <li>
         <strong> Incremental </strong>
         <!-- Check if the first partition is incremental or not -->
-        <span v-if="payload.manifest.partitions[0].oldPartitionInfo">
+        <span v-if="payload.preBuild">
           &#9989;
         </span>
         <span v-else> &#10060; </span>
@@ -42,6 +42,13 @@
       <li>
         <strong> Partial </strong>
         <span v-if="payload.manifest.partialUpdate"> &#9989; </span>
+        <span v-else> &#10060; </span>
+      </li>
+      <li>
+        <strong> A/B update </strong>
+        <span v-if="!payload.manifest.nonAB">
+          &#9989;
+        </span>
         <span v-else> &#10060; </span>
       </li>
       <li>
