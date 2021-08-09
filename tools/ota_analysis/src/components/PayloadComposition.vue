@@ -35,6 +35,7 @@
     <v-col
       cols="12"
       md="6"
+      class="tooltip"
     >
       <v-btn
         :disabled="manifest.nonAB"
@@ -43,6 +44,12 @@
       >
         Analyse COW Merge Operations
       </v-btn>
+      <span
+        v-if="manifest.nonAB"
+        class="tooltiptext"
+      >
+        This function is only supported in A/B OTA
+      </span>
     </v-col>
     <v-col
       cols="12"
@@ -154,5 +161,25 @@ export default {
 <style scoped>
 .list-data {
   text-align: center;
+}
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 120px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  position: absolute;
+  z-index: 1;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
 }
 </style>

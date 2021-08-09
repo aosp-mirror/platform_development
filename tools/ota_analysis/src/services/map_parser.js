@@ -115,5 +115,8 @@ function InsertMap(map, name, left, right) {
 function queryMap(map, left, right) {
   // Assuming the consecutive blocks belong to the same file
   // Only the start block is queried here.
+  if (!map[left]) {
+    return 'unknown'
+  }
   return map[left]
 }
