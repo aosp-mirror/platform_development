@@ -76,6 +76,16 @@ const Rect = require('flicker').com.android.server.wm.traces.common.Rect;
 const RectF = require('flicker').com.android.server.wm.traces.common.RectF;
 const Region = require('flicker').com.android.server.wm.traces.common.Region;
 
+//Tags
+const Tag = require('flicker').com.android.server.wm.traces.common.tags.Tag;
+const TagState = require('flicker').com.android.server.wm.traces.common.tags.TagState;
+const TagTrace = require('flicker').com.android.server.wm.traces.common.tags.TagTrace;
+
+//Errors
+const Error = require('flicker').com.android.server.wm.traces.common.errors.Error;
+const ErrorState = require('flicker').com.android.server.wm.traces.common.errors.ErrorState;
+const ErrorTrace = require('flicker').com.android.server.wm.traces.common.errors.ErrorTrace;
+
 const EMPTY_BUFFER = new Buffer(0, 0, 0, 0);
 const EMPTY_COLOR = new Color(-1, -1, -1, 0);
 const EMPTY_RECT = new Rect(0, 0, 0, 0);
@@ -226,6 +236,14 @@ export {
   LayersTrace,
   Transform,
   Matrix,
+  // Tags
+  Tag,
+  TagState,
+  TagTrace,
+  // Errors
+  Error,
+  ErrorState,
+  ErrorTrace,
   // Common
   Size,
   Buffer,
