@@ -15,18 +15,21 @@
 -->
 
 <!-- Demonstrates Picture-In-Picture with auto enter enabled. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
     <!-- layout params would be changed programmatically -->
-    <ImageView android:id="@+id/image"
+    <com.example.android.apis.view.FixedAspectRatioImageView
+        android:id="@+id/image"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:scaleType="fitXY"
-        android:src="@drawable/sample_1" />
+        android:src="@drawable/sample_1"
+        app:aspectRatio="16/9" />
 
     <Switch android:id="@+id/source_rect_hint_toggle"
         android:layout_width="wrap_content"
