@@ -55,8 +55,10 @@ WINSCOPE_TOKEN_HEADER = "Winscope-Token"
 # Location to save the proxy security token
 WINSCOPE_TOKEN_LOCATION = os.path.expanduser('~/.config/winscope/.token')
 
-# Winscope traces extension
+# Winscope traces extensions
 WINSCOPE_EXT = ".winscope"
+WINSCOPE_EXT_LEGACY = ".pb"
+WINSCOPE_EXTS = [WINSCOPE_EXT, WINSCOPE_EXT_LEGACY]
 
 # Winscope traces directory
 WINSCOPE_DIR = "/data/misc/wmtrace/"
@@ -97,6 +99,21 @@ class FileMatcher:
         return self.type
 
 
+class WinscopeFileMatcher(FileMatcher):
+    def __init__(self, path, matcher, filetype) -> None:
+        self.path = path
+        self.internal_matchers = map(lambda ext: FileMatcher(path, f'{matcher}{ext}', filetype),
+            WINSCOPE_EXTS)
+        self.type = filetype
+
+    def get_filepaths(self, device_id):
+        for matcher in self.internal_matchers:
+            files = matcher.get_filepaths(device_id)
+            if len(files) > 0:
+                return files
+        return []
+
+
 class TraceTarget:
     """Defines a single parameter to trace.
 
@@ -117,51 +134,50 @@ class TraceTarget:
 # Order of files matters as they will be expected in that order and decoded in that order
 TRACE_TARGETS = {
     "window_trace": TraceTarget(
-        File(f'{WINSCOPE_DIR}wm_trace{WINSCOPE_EXT}', "window_trace"),
+        WinscopeFileMatcher(WINSCOPE_DIR, "wm_trace", "window_trace"),
         'su root cmd window tracing start\necho "WM trace started."',
         'su root cmd window tracing stop >/dev/null 2>&1'
     ),
     "accessibility_trace": TraceTarget(
-        File(f'/data/misc/a11ytrace/a11y_trace{WINSCOPE_EXT}', "accessibility_trace"),
+        WinscopeFileMatcher("/data/misc/a11ytrace", "a11y_trace", "accessibility_trace"),
         'su root cmd accessibility start-trace\necho "Accessibility trace started."',
         'su root cmd accessibility stop-trace >/dev/null 2>&1'
     ),
     "layers_trace": TraceTarget(
-        File(f'{WINSCOPE_DIR}layers_trace{WINSCOPE_EXT}', "layers_trace"),
+        WinscopeFileMatcher(WINSCOPE_DIR, "layers_trace", "layers_trace"),
         'su root service call SurfaceFlinger 1025 i32 1\necho "SF trace started."',
         'su root service call SurfaceFlinger 1025 i32 0 >/dev/null 2>&1'
     ),
     "screen_recording": TraceTarget(
-        File(f'/data/local/tmp/screen{WINSCOPE_EXT}.mp4', "screen_recording"),
-        f'screenrecord --bit-rate 8M /data/local/tmp/screen{WINSCOPE_EXT}.mp4 >/dev/null 2>&1 &\necho "ScreenRecorder started."',
+        File(f'/data/local/tmp/screen.mp4', "screen_recording"),
+        f'screenrecord --bit-rate 8M /data/local/tmp/screen.mp4 >/dev/null 2>&1 &\necho "ScreenRecorder started."',
         'pkill -l SIGINT screenrecord >/dev/null 2>&1'
     ),
     "transaction": TraceTarget(
         [
-            File(f'{WINSCOPE_DIR}transaction_trace{WINSCOPE_EXT}', "transactions"),
-            FileMatcher(WINSCOPE_DIR, f'transaction_merges_*{WINSCOPE_EXT}',
-                        "transaction_merges"),
+            WinscopeFileMatcher(WINSCOPE_DIR, "transaction_trace", "transactions"),
+            FileMatcher(WINSCOPE_DIR, f'transaction_merges_*', "transaction_merges"),
         ],
         'su root service call SurfaceFlinger 1020 i32 1\necho "SF transactions recording started."',
         'su root service call SurfaceFlinger 1020 i32 0 >/dev/null 2>&1'
     ),
     "proto_log": TraceTarget(
-        File(f'{WINSCOPE_DIR}wm_log{WINSCOPE_EXT}', "proto_log"),
+        WinscopeFileMatcher(WINSCOPE_DIR, "wm_log", "proto_log"),
         'su root cmd window logging start\necho "WM logging started."',
         'su root cmd window logging stop >/dev/null 2>&1'
     ),
     "ime_trace_clients": TraceTarget(
-        File(f'{WINSCOPE_DIR}ime_trace_clients{WINSCOPE_EXT}', "ime_trace_clients"),
+        WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_clients", "ime_trace_clients"),
         'su root ime tracing start\necho "Clients IME trace started."',
         'su root ime tracing stop >/dev/null 2>&1'
     ),
    "ime_trace_service": TraceTarget(
-        File(f'{WINSCOPE_DIR}ime_trace_service{WINSCOPE_EXT}', "ime_trace_service"),
+        WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_service", "ime_trace_service"),
         'su root ime tracing start\necho "Service IME trace started."',
         'su root ime tracing stop >/dev/null 2>&1'
     ),
     "ime_trace_managerservice": TraceTarget(
-        File(f'{WINSCOPE_DIR}ime_trace_managerservice{WINSCOPE_EXT}', "ime_trace_managerservice"),
+        WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_managerservice", "ime_trace_managerservice"),
         'su root ime tracing start\necho "ManagerService IME trace started."',
         'su root ime tracing stop >/dev/null 2>&1'
     ),
