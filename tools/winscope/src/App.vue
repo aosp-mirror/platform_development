@@ -57,8 +57,12 @@
           </div>
 
           <overlay
+            :presentTags="Object.freeze(presentTags)"
+            :presentErrors="Object.freeze(presentErrors)"
+            :tagAndErrorTraces="tagAndErrorTraces"
             :store="store"
             :ref="overlayRef"
+            :searchTypes="searchTypes"
             v-if="dataLoaded"
             v-on:bottom-nav-height-change="handleBottomNavHeightChange"
           />
@@ -77,7 +81,8 @@ import FileType from './mixins/FileType.js';
 import SaveAsZip from './mixins/SaveAsZip';
 import FocusedDataViewFinder from './mixins/FocusedDataViewFinder';
 import {DIRECTION} from './utils/utils';
-import {NAVIGATION_STYLE} from './utils/consts';
+import Searchbar from './Searchbar.vue';
+import {NAVIGATION_STYLE, SEARCH_TYPE} from './utils/consts';
 
 const APP_NAME = 'Winscope';
 
@@ -102,6 +107,10 @@ export default {
       mainContentStyle: {
         'padding-bottom': `${CONTENT_BOTTOM_PADDING}px`,
       },
+      presentTags: [],
+      presentErrors: [],
+      searchTypes: [SEARCH_TYPE.TIMESTAMP],
+      tagAndErrorTraces: false,
     };
   },
   created() {
@@ -113,7 +122,50 @@ export default {
     window.removeEventListener('keydown', this.onKeyDown);
     window.removeEventListener('scroll', this.onScroll);
   },
+
   methods: {
+    /** get states from either tag files or error files */
+    getUpdatedStates(files) {
+      var states = [];
+      for (const file of files) {
+        states.push(...file.data);
+      }
+      return states;
+    },
+    /** get tags from all uploaded tag files*/
+    getUpdatedTags() {
+      var tagStates = this.getUpdatedStates(this.tagFiles);
+      var tags = [];
+      tagStates.forEach(tagState => {
+        tagState.tags.forEach(tag => {
+          tag.timestamp = tagState.timestamp;
+          tags.push(tag);
+        });
+      });
+      return tags;
+    },
+    /** get tags from all uploaded error files*/
+    getUpdatedErrors() {
+      var errorStates = this.getUpdatedStates(this.errorFiles);
+      var errors = [];
+      //TODO (b/196201487) add check if errors empty
+      errorStates.forEach(errorState => {
+        errorState.errors.forEach(error => {
+          error.timestamp = errorState.timestamp;
+          errors.push(error);
+        });
+      });
+      return errors;
+    },
+    /** set flicker mode check for if there are tag/error traces uploaded*/
+    shouldUpdateTagAndErrorTraces() {
+      return this.tagFiles.length > 0 || this.errorFiles.length > 0;
+    },
+    /** activate flicker search tab if tags/errors uploaded*/
+    updateSearchTypes() {
+      this.searchTypes = [SEARCH_TYPE.TIMESTAMP];
+      if (this.tagAndErrorTraces) this.searchTypes.push(SEARCH_TYPE.TAG);
+    },
     clear() {
       this.$store.commit('clearFiles');
     },
@@ -139,6 +191,10 @@ export default {
     },
     onDataReady(files) {
       this.$store.dispatch('setFiles', files);
+      this.tagAndErrorTraces = this.shouldUpdateTagAndErrorTraces();
+      this.presentTags = this.getUpdatedTags();
+      this.presentErrors = this.getUpdatedErrors();
+      this.updateSearchTypes();
       this.updateFocusedView();
     },
     setStatus(status) {
@@ -176,6 +232,15 @@ export default {
     dataViewFiles() {
       return this.files.filter((f) => this.hasDataView(f));
     },
+    tagFiles() {
+      return this.$store.getters.tagFiles;
+    },
+    errorFiles() {
+      return this.$store.getters.errorFiles;
+    },
+    timelineFiles() {
+      return this.$store.getters.timelineFiles;
+    },
   },
   watch: {
     title() {
@@ -187,6 +252,7 @@ export default {
     dataview: DataView,
     datainput: DataInput,
     dataadb: DataAdb,
+    searchbar: Searchbar,
   },
 };
 </script>
@@ -194,7 +260,7 @@ export default {
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@600&display=swap');
 
 #app .md-app-container {
-  /* Get rid of tranforms which prevent fixed position from being used */
+  /* Get rid of transforms which prevent fixed position from being used */
   transform: none!important;
   min-height: 100vh;
 }
@@ -243,15 +309,6 @@ export default {
 h1,
 h2 {
   font-weight: normal;
-}
-
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-a {
-  color: #42b983;
 }
 
 .data-inputs {

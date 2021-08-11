@@ -20,10 +20,13 @@
         v-for="transition in timelineTransitions"
         :key="transition.type"
         :startPos="transition.startPos"
+        :startTime="transition.startTime"
+        :endTime="transition.endTime"
         :width="transition.width"
         :color="transition.color"
         :overlap="transition.overlap"
         :tooltip="transition.tooltip"
+        :store="store"
       />
     </div>
     <svg
@@ -74,7 +77,7 @@ export default {
   components: {
     'transition-container': TransitionContainer,
   },
-  props: ["selectedIndex", "crop", "disabled"],
+  props: ["selectedIndex", "crop", "disabled", "store"],
   data() {
     return {
       pointHeight: 15,
@@ -82,7 +85,6 @@ export default {
     };
   },
   mixins: [TimelineMixin],
-  methods: {},
   computed: {
     timestamps() {
       if (this.timeline.length == 1) {
@@ -113,6 +115,9 @@ export default {
 <style scoped>
 .timeline-container {
   width: 100%;
+}
+.container:hover {
+  cursor: pointer;
 }
 .tag-timeline {
   width: 100%;

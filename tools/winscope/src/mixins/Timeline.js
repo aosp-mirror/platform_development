@@ -16,7 +16,7 @@
 
 import _ from "lodash";
 import { nanos_to_string } from "../transform";
-import TransitionType from "../flickerlib/tags/TransitionType";
+import { transitionMap } from "../utils/consts";
 
 /**
  * Represents a continuous section of the timeline that is rendered into the
@@ -42,14 +42,18 @@ class Transition {
    * Create a transition.
    * @param {number} startPos - The position of the start tag as a percentage
    * of the timeline width.
+   * @param {number} startTime - The start timestamp in ms of the transition.
+   * @param {number} endTime - The end timestamp in ms of the transition.
    * @param {number} width - The width of the transition as a percentage of the
    * timeline width.
    * @param {string} color - the color of transition depending on type.
    * @param {number} overlap - number of transitions with which this transition overlaps.
    * @param {string} tooltip - The tooltip of the transition, minus the type of transition.
    */
-  constructor(startPos, width, color, overlap, tooltip) {
+  constructor(startPos, startTime, endTime, width, color, overlap, tooltip) {
     this.startPos = startPos;
+    this.startTime = startTime;
+    this.endTime = endTime;
     this.width = width;
     this.color = color;
     this.overlap = overlap;
@@ -61,16 +65,6 @@ class Transition {
  * This Mixin should only be injected into components which have the following:
  * - An element in the template referenced as 'timeline' (this.$refs.timeline).
  */
-const transitionMap = new Map([
-    [TransitionType.ROTATION, {desc: 'Rotation', color: '#9900ffff'}],
-    [TransitionType.PIP_ENTER, {desc: 'Entering PIP mode', color: '#4a86e8ff'}],
-    [TransitionType.PIP_RESIZE, {desc: 'Resizing PIP mode', color: '#2b9e94ff'}],
-    [TransitionType.PIP_EXIT, {desc: 'Exiting PIP mode', color: 'darkblue'}],
-    [TransitionType.APP_LAUNCH, {desc: 'Launching app', color: '#ef6befff'}],
-    [TransitionType.APP_CLOSE, {desc: 'Closing app', color: '#d10ddfff'}],
-    [TransitionType.IME_APPEAR, {desc: 'IME appearing', color: '#ff9900ff'}],
-    [TransitionType.IME_DISAPPEAR, {desc: 'IME disappearing', color: '#ad6800ff'}],
-]);
 
 export default {
   name: 'timeline',
@@ -91,7 +85,7 @@ export default {
     'tags': {
       type: Array,
     },
-    'errorTimestamps': {
+    'errors': {
       type: Array,
     },
     'flickerMode': {
@@ -195,7 +189,7 @@ export default {
     },
     errorPositions() {
       if (!this.flickerMode) return [];
-      const errorPositions = this.errorTimestamps.map(timestamp => this.position(timestamp));
+      const errorPositions = this.errors.map(error => this.position(error.timestamp));
       return Object.freeze(errorPositions);
     },
   },
@@ -358,7 +352,7 @@ export default {
     /**
      * Generate a transition object that can be used by the tag-timeline to render
      * a transformed transition that starts at `startTs` and ends at `endTs`.
-     * @param {number} startPos - The timestamp at which the transition starts.
+     * @param {number} startTs - The timestamp at which the transition starts.
      * @param {number} endTs - The timestamp at which the transition ends.
      * @param {string} transitionType - The type of transition.
      * @param {number} overlap - The degree to which the transition overlaps with others.
@@ -370,7 +364,7 @@ export default {
       const transitionDesc = transitionMap.get(transitionType).desc;
       const transitionColor = transitionMap.get(transitionType).color;
       const tooltip = `${transitionDesc}. Start: ${nanos_to_string(startTs)}. End: ${nanos_to_string(endTs)}.`;
-      return new Transition(this.position(startTs), transitionWidth, transitionColor, overlap, tooltip);
+      return new Transition(this.position(startTs), startTs, endTs, transitionWidth, transitionColor, overlap, tooltip);
     },
   },
 };

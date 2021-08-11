@@ -52,6 +52,15 @@
     >
       <div class="nav-content">
         <div class="">
+          <searchbar
+            class="search-bar"
+            v-if="search"
+            :searchTypes="searchTypes"
+            :store="store"
+            :presentTags="Object.freeze(presentTags)"
+            :presentErrors="Object.freeze(presentErrors)"
+            :timeline="mergedTimeline.timeline"
+          />
           <md-toolbar
             md-elevation="0"
             class="md-transparent">
@@ -66,16 +75,12 @@
                 </div>
               </div>
 
+              <md-button
+                @click="toggleSearch()"
+                class="drop-search"
+              >Show/hide search bar</md-button>
+
               <div class="active-timeline" v-show="minimized">
-                <md-field class="seek-timestamp-field">
-                  <label>Search for timestamp</label>
-                  <md-input v-model="searchTimestamp"></md-input>
-                </md-field>
-
-                <md-button
-                  @click="updateSearchForTimestamp"
-                >Search</md-button>
-
                 <div
                   class="active-timeline-icon"
                   @click="$refs.navigationTypeSelection.$el
@@ -154,9 +159,10 @@
                   {{ seekTime }}
                 </label>
                 <timeline
+                  :store="store"
                   :flickerMode="flickerMode"
-                  :tags="Object.freeze(tags)"
-                  :errorTimestamps="Object.freeze(errorTimestamps)"
+                  :tags="Object.freeze(presentTags)"
+                  :errors="Object.freeze(presentErrors)"
                   :timeline="Object.freeze(minimizedTimeline.timeline)"
                   :selected-index="minimizedTimeline.selectedIndex"
                   :scale="scale"
@@ -280,16 +286,17 @@ import TimelineSelection from './TimelineSelection.vue';
 import DraggableDiv from './DraggableDiv.vue';
 import VideoView from './VideoView.vue';
 import MdIconOption from './components/IconSelection/IconSelectOption.vue';
+import Searchbar from './Searchbar.vue';
 import FileType from './mixins/FileType.js';
 import {NAVIGATION_STYLE} from './utils/consts';
 import {TRACE_ICONS} from '@/decode.js';
 
 // eslint-disable-next-line camelcase
-import {nanos_to_string, string_to_nanos} from './transform.js';
+import {nanos_to_string} from './transform.js';
 
 export default {
   name: 'overlay',
-  props: ['store'],
+  props: ['store', 'presentTags', 'presentErrors', 'tagAndErrorTraces', 'searchTypes'],
   mixins: [FileType],
   data() {
     return {
@@ -310,15 +317,12 @@ export default {
       crop: null,
       cropIntent: null,
       TRACE_ICONS,
-      searchTimestamp: '',
-      tags: [],
-      errorTimestamps: [],
+      search: false,
     };
   },
   created() {
     this.mergedTimeline = this.computeMergedTimeline();
     this.$store.commit('setMergedTimeline', this.mergedTimeline);
-    this.updateTagsAndErrors();
     this.updateNavigationFileFilter();
   },
   mounted() {
@@ -356,12 +360,6 @@ export default {
     },
     timelineFiles() {
       return this.$store.getters.timelineFiles;
-    },
-    tagFiles() {
-      return this.$store.getters.tagFiles;
-    },
-    errorFiles() {
-      return this.$store.getters.errorFiles;
     },
     focusedFile() {
       return this.$store.state.focusedFile;
@@ -485,9 +483,6 @@ export default {
     flickerMode() {
       return this.navigationStyle === NAVIGATION_STYLE.FLICKER;
     },
-    tagAndErrorTraces() {
-      return this.tagFiles.length > 0 || this.errorFiles.length >0;
-    },
   },
   updated() {
     this.$nextTick(() => {
@@ -499,34 +494,8 @@ export default {
     });
   },
   methods: {
-    getStates(files) {
-      var states = [];
-      for (const file of files) {
-        states.push(...file.data);
-      }
-      return states;
-    },
-    updateTags() {
-      var tagStates = this.getStates(this.tagFiles);
-      var tags = [];
-      tagStates.forEach(tagState => {
-        const time = this.findClosestTimestamp(tagState.timestamp);
-        tagState.tags.forEach(tag => {
-          tag.timestamp = time;
-          tags.push(tag);
-        });
-      });;
-      return tags;
-    },
-    updateErrorTimestamps() {
-      var errorStates = this.getStates(this.errorFiles);
-      var errorTimestamps = [];
-      //TODO (b/196201487): update more than one error for each state, add check if errors empty
-      errorStates.forEach(errorState => {
-          errorTimestamps.push(errorState.timestamp);
-        }
-      );
-      return errorTimestamps;
+    toggleSearch() {
+      this.search = !(this.search);
     },
     emitBottomHeightUpdate() {
       if (this.$refs.bottomNav) {
@@ -547,9 +516,10 @@ export default {
         timelines.push(file.timeline);
       }
 
-      while (true) {
+      var timelineToAdvance = 0;
+      while (timelineToAdvance !== undefined) {
+        timelineToAdvance = undefined;
         let minTime = Infinity;
-        let timelineToAdvance;
 
         for (let i = 0; i < timelines.length; i++) {
           const timeline = timelines[i];
@@ -715,28 +685,6 @@ export default {
     clearSelection() {
       this.crop = null;
     },
-    updateSearchForTimestamp() {
-      if (/^\d+$/.test(this.searchTimestamp)) {
-        var roundedTimestamp = parseInt(this.searchTimestamp);
-      } else {
-        var roundedTimestamp = string_to_nanos(this.searchTimestamp);
-      }
-      var closestTimestamp = this.findClosestTimestamp(roundedTimestamp);
-      this.$store.dispatch('updateTimelineTime', parseInt(closestTimestamp));
-    },
-    findClosestTimestamp(roundedTimestamp) {
-      return this.mergedTimeline.timeline.reduce(function(prev, curr) {
-        return (Math.abs(curr-roundedTimestamp) < Math.abs(prev-roundedTimestamp) ? curr : prev);
-      });
-    },
-    updateTagsAndErrors() {
-      if (this.tagFiles) {
-        this.tags = this.updateTags();
-      }
-      if (this.errorFiles) {
-        this.errorTimestamps = this.updateErrorTimestamps();
-      }
-    },
   },
   components: {
     'timeline': Timeline,
@@ -745,6 +693,7 @@ export default {
     'videoview': VideoView,
     'draggable-div': DraggableDiv,
     'md-icon-option': MdIconOption,
+    'searchbar': Searchbar,
   },
 };
 </script>
@@ -947,5 +896,9 @@ export default {
   font-size: 15px;
   margin-bottom: 15px;
   cursor: help;
+}
+
+.drop-search:hover {
+  background-color: #9af39f;
 }
 </style>
