@@ -15,18 +15,30 @@
  */
 
 
-import { Tag } from "../common"
+import { Tag } from "../common";
+import TransitionType from "./TransitionType";
+
+const transitionTypeMap = new Map([
+  ['ROTATION', TransitionType.ROTATION],
+  ['PIP_ENTER', TransitionType.PIP_ENTER],
+  ['PIP_RESIZE', TransitionType.PIP_RESIZE],
+  ['PIP_EXIT', TransitionType.PIP_EXIT],
+  ['APP_LAUNCH', TransitionType.APP_LAUNCH],
+  ['APP_CLOSE', TransitionType.APP_CLOSE],
+  ['IME_APPEAR', TransitionType.IME_APPEAR],
+  ['IME_DISAPPEAR', TransitionType.IME_DISAPPEAR],
+]);
 
 Tag.fromProto = function (proto: any): Tag {
     const tag = new Tag(
         proto.id,
-        proto.transition,
+        transitionTypeMap.get(proto.transition),
         proto.isStartTag,
         proto.layerId,
         proto.windowToken,
         proto.taskId
     );
-    return tag
-}
+    return tag;
+};
 
 export default Tag;
