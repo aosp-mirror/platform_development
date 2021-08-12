@@ -28,11 +28,11 @@
       </v-col>
     </v-row>
     <v-divider />
-    <h3>Metadata Signature</h3>
     <div
-      v-if="payload.metadata_signature"
+      v-if="payload.metadata_signature && !payload.manifest.nonAB"
       class="signature"
     >
+      <h3>Metadata Signature</h3>
       <span style="white-space: pre-wrap">
         {{ octToHex(payload.metadata_signature.signatures[0].data) }}
       </span>

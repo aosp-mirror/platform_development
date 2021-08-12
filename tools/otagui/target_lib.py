@@ -71,7 +71,7 @@ class TargetLib:
     """
     A class that manages the builds in database.
     """
-    def __init__(self, path='ota_database.db'):
+    def __init__(self, path='target/ota_database.db'):
         """
         Create a build table if not existing
         """

@@ -30,11 +30,11 @@ from ota_interface import ProcessesManagement
 from target_lib import TargetLib
 import logging
 import json
-import pipes
 import cgi
-import subprocess
 import os
+import stat
 import sys
+import zipfile
 
 LOCAL_ADDRESS = '0.0.0.0'
 
@@ -64,22 +64,20 @@ class RequestHandler(CORSSimpleHTTPHandler):
         self.end_headers()
 
     def do_GET(self):
-        if self.path.startswith('/check'):
-            if self.path == '/check' or self.path == '/check/':
-                statuses = jobs.get_status()
-                self._set_response(type='application/json')
-                self.wfile.write(
-                    json.dumps([status.to_dict_basic()
-                               for status in statuses]).encode()
-                )
-            else:
-                id = self.path[7:]
-                status = jobs.get_status_by_ID(id=id)
-                self._set_response(type='application/json')
-                self.wfile.write(
-                    json.dumps(status.to_dict_detail(target_lib)).encode()
-                )
-            return
+        if self.path == '/check' or self.path == '/check/':
+            statuses = jobs.get_status()
+            self._set_response(type='application/json')
+            self.wfile.write(
+                json.dumps([status.to_dict_basic()
+                            for status in statuses]).encode()
+            )
+        elif self.path.startswith('/check/'):
+            id = self.path[7:]
+            status = jobs.get_status_by_ID(id=id)
+            self._set_response(type='application/json')
+            self.wfile.write(
+                json.dumps(status.to_dict_detail(target_lib)).encode()
+            )
         elif self.path.startswith('/file'):
             if self.path == '/file' or self.path == '/file/':
                 file_list = target_lib.get_builds()
@@ -99,7 +97,11 @@ class RequestHandler(CORSSimpleHTTPHandler):
             self.path = self.path[10:]
             return CORSSimpleHTTPHandler.do_GET(self)
         else:
-            self.path = '/dist' + self.path
+            if not os.path.exists('dist' + self.path):
+                logging.info('redirect to dist')
+                self.path = '/dist/'
+            else:
+                self.path = '/dist' + self.path
             return CORSSimpleHTTPHandler.do_GET(self)
 
     def do_POST(self):
@@ -140,7 +142,10 @@ class RequestHandler(CORSSimpleHTTPHandler):
                 file_length -= len(self.rfile.readline())
                 file_length -= len(self.rfile.readline())
                 file_length -= len(self.rfile.readline())
-                output_file.write(self.rfile.read(file_length))
+                BUFFER_SIZE = 1024*1024
+                for offset in range(0, file_length, BUFFER_SIZE):
+                    chunk = self.rfile.read(min(file_length-offset, BUFFER_SIZE))
+                    output_file.write(chunk)
                 target_lib.new_build(self.path[6:], file_name)
             self._set_response(code=201)
             self.wfile.write(
@@ -156,7 +161,6 @@ class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
 
 
 def run_server(SeverClass=ThreadedHTTPServer, HandlerClass=RequestHandler, port=8000):
-    logging.basicConfig(level=logging.DEBUG)
     server_address = (LOCAL_ADDRESS, port)
     server_instance = SeverClass(server_address, HandlerClass)
     try:
@@ -167,12 +171,27 @@ def run_server(SeverClass=ThreadedHTTPServer, HandlerClass=RequestHandler, port=
     except KeyboardInterrupt:
         pass
     server_instance.server_close()
+    logging.basicConfig(level=logging.DEBUG)
     logging.info('Server has been turned off.')
 
 
 if __name__ == '__main__':
     from sys import argv
+    logging.basicConfig(level=logging.DEBUG)
     print(argv)
+    if os.path.exists("otatools.zip"):
+        logging.info("Found otatools.zip, extracting...")
+        EXTRACT_DIR = "./"
+        os.makedirs(EXTRACT_DIR, exist_ok=True)
+        with zipfile.ZipFile("otatools.zip", "r") as zfp:
+            zfp.extractall(EXTRACT_DIR)
+        # mark all binaries executable by owner
+        bin_dir = os.path.join(EXTRACT_DIR, "bin")
+        for filename in os.listdir(bin_dir):
+            os.chmod(os.path.join(bin_dir, filename), stat.S_IRWXU)
+        os.environ["PATH"] = os.path.join(EXTRACT_DIR, "bin") + ":" + os.environ["PATH"]
+        logging.info("Extracted otatools to {}".format(EXTRACT_DIR))
+        logging.info("PATH: %s", os.environ["PATH"])
     if not os.path.isdir('target'):
         os.mkdir('target', 755)
     if not os.path.isdir('output'):
