@@ -32,7 +32,7 @@ class JobInfo:
 
     def __post_init__(self):
         if not self.output:
-            self.output = os.path.join('output', self.id, '.zip')
+            self.output = os.path.join('output', self.id + '.zip')
         if not self.stdout:
             self.stdout = os.path.join('output/stdout.'+self.id)
         if not self.stderr:
