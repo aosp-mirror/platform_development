@@ -72,18 +72,20 @@ class OTAPayloadBlobWriter extends zip.Writer {
     // Once the prefixLength is non-zero, the address of manifest and signature
     // become known and can be read in. Otherwise the header needs to be read
     // in first to determine the prefixLength.
-    if (this.prefixLength > 0) {
-      if (this.offset >= this.prefixLength) {
-        await this.payload.readManifest(this.blob)
-        await this.payload.readSignature(this.blob)
-      }
-    } else if (this.offset >= _PAYLOAD_HEADER_SIZE) {
+    if (this.offset >= _PAYLOAD_HEADER_SIZE) {
       await this.payload.readHeader(this.blob)
       this.prefixLength =
         _PAYLOAD_HEADER_SIZE
         + this.payload.manifest_len
         + this.payload.metadata_signature_len
-      return
+      console.log(`Computed metadata length: ${this.prefixLength}`);
+    }
+    if (this.prefixLength > 0) {
+      console.log(`${this.offset}/${this.prefixLength}`);
+      if (this.offset >= this.prefixLength) {
+        await this.payload.readManifest(this.blob)
+        await this.payload.readSignature(this.blob)
+      }
     }
     // The prefix has everything we need (header, manifest, signature). Once
     // the offset is beyond the prefix, no need to move on.
@@ -159,12 +161,12 @@ export class Payload {
       this.buffer.slice(this.cursor, this.cursor + size))
     if (typeof view.getBigUint64 !== "function") {
       view.getBigUint64 =
-              function(offset) {
-                const a = BigInt(view.getUint32(offset))
-                const b = BigInt(view.getUint32(offset + 4))
-                const bigNumber = a * 4294967296n + b
-                return bigNumber
-              }
+        function (offset) {
+          const a = BigInt(view.getUint32(offset))
+          const b = BigInt(view.getUint32(offset + 4))
+          const bigNumber = a * 4294967296n + b
+          return bigNumber
+        }
     }
     this.cursor += size
     switch (size) {
