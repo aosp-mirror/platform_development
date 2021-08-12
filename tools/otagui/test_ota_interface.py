@@ -1,6 +1,9 @@
 import unittest
 from ota_interface import JobInfo, ProcessesManagement
 from unittest.mock import patch, mock_open, Mock, MagicMock
+import os
+import sqlite3
+import copy
 
 class TestJobInfo(unittest.TestCase):
     def setUp(self):
@@ -176,7 +179,152 @@ class TestJobInfo(unittest.TestCase):
         )
 
 class TestProcessesManagement(unittest.TestCase):
-    pass
+    def setUp(self):
+        if os.path.isfile('test_process.db'):
+            self.tearDown()
+        self.processes = ProcessesManagement(path='test_process.db')
+        testcase_job_info = TestJobInfo()
+        testcase_job_info.setUp()
+        self.test_job_info = testcase_job_info.setup_job(incremental='target/source.zip')
+        self.processes.insert_database(self.test_job_info)
+
+    def tearDown(self):
+        os.remove('test_process.db')
+        try:
+            os.remove('output/stderr.'+self.test_job_info.id)
+            os.remove('output/stdout.'+self.test_job_info.id)
+        except FileNotFoundError:
+            pass
+
+    def test_init(self):
+        # Test the database is created successfully
+        self.assertTrue(os.path.isfile('test_process.db'))
+        test_columns = [
+            {'name': 'ID','type':'TEXT'},
+            {'name': 'TargetPath','type':'TEXT'},
+            {'name': 'IncrementalPath','type':'TEXT'},
+            {'name': 'Verbose','type':'INTEGER'},
+            {'name': 'Partial','type':'TEXT'},
+            {'name': 'OutputPath','type':'TEXT'},
+            {'name': 'Status','type':'TEXT'},
+            {'name': 'Downgrade','type':'INTEGER'},
+            {'name': 'OtherFlags','type':'TEXT'},
+            {'name': 'STDOUT','type':'TEXT'},
+            {'name': 'STDERR','type':'TEXT'},
+            {'name': 'StartTime','type':'INTEGER'},
+            {'name': 'FinishTime','type':'INTEGER'},
+        ]
+        connect = sqlite3.connect('test_process.db')
+        cursor = connect.cursor()
+        cursor.execute("PRAGMA table_info(jobs)")
+        columns = cursor.fetchall()
+        for column in test_columns:
+            column_found = list(filter(lambda x: x[1]==column['name'], columns))
+            self.assertEqual(len(column_found), 1,
+                'The column ' + column['name'] + ' is not found in database'
+            )
+            self.assertEqual(column_found[0][2], column['type'],
+                'The column' + column['name'] + ' has a wrong type'
+            )
+
+    def test_get_status_by_ID(self):
+        job_info = self.processes.get_status_by_ID(self.test_job_info.id)
+        self.assertEqual(job_info, self.test_job_info,
+            'The data read from database is not the same one as inserted'
+        )
+
+    def test_get_status(self):
+        # Insert the same info again, but change the last digit of id to 0
+        test_job_info2 = copy.copy(self.test_job_info)
+        test_job_info2.id = test_job_info2.id[:-1] + '0'
+        self.processes.insert_database(test_job_info2)
+        job_infos = self.processes.get_status()
+        self.assertEqual(len(job_infos), 2,
+            'The number of data entries is not the same as created'
+        )
+        self.assertEqual(job_infos[0], self.test_job_info,
+            'The data list read from database is not the same one as inserted'
+        )
+        self.assertEqual(job_infos[1], test_job_info2,
+            'The data list read from database is not the same one as inserted'
+        )
+
+    def test_ota_run(self):
+        # Test when the job exit normally
+        mock_proc = Mock()
+        mock_proc.wait = Mock(return_value=0)
+        mock_Popen = Mock(return_value=mock_proc)
+        test_command = [
+            "ota_from_target_files", "-v","build/target.zip", "output/ota.zip",
+            ]
+        mock_pipes_template = Mock()
+        mock_pipes_template.open = Mock()
+        mock_Template = Mock(return_value=mock_pipes_template)
+        # Mock the subprocess.Popen, subprocess.Popen().wait and pipes.Template
+        with patch("subprocess.Popen", mock_Popen), \
+            patch("pipes.Template", mock_Template):
+            self.processes.ota_run(test_command, self.test_job_info.id)
+        mock_Popen.assert_called_once()
+        mock_proc.wait.assert_called_once()
+        job_info = self.processes.get_status_by_ID(self.test_job_info.id)
+        self.assertEqual(job_info.status, 'Finished')
+        mock_Popen.reset_mock()
+        mock_proc.wait.reset_mock()
+        # Test when the job exit with prbolems
+        mock_proc.wait = Mock(return_value=1)
+        with patch("subprocess.Popen", mock_Popen), \
+            patch("pipes.Template", mock_Template):
+            self.processes.ota_run(test_command, self.test_job_info.id)
+        mock_Popen.assert_called_once()
+        mock_proc.wait.assert_called_once()
+        job_info = self.processes.get_status_by_ID(self.test_job_info.id)
+        self.assertEqual(job_info.status, 'Error')
+
+    def test_ota_generate(self):
+        test_args = dict({
+            'output': 'ota.zip',
+            'extra_keys': ['downgrade', 'wipe_user_data'],
+            'extra': '--disable_vabc',
+            'isIncremental': True,
+            'isPartial': True,
+            'partial': ['system', 'vendor'],
+            'incremental': 'target/source.zip',
+            'target': 'target/build.zip',
+            'verbose': True
+        })
+        # Usually the order of commands make no difference, but the following
+        # order has been validated, so it is best to follow this manner:
+        #   ota_from_target_files [flags like -v, --downgrade]
+        #   [-i incremental_source] [-p partial_list] target output
+        test_command = [
+            'ota_from_target_files', '-v', '--downgrade',
+            '--wipe_user_data', '--disable_vabc', '-k',
+            'build/make/target/product/security/testkey',
+            '-i', 'target/source.zip',
+            '--partial', 'system vendor', 'target/build.zip', 'ota.zip'
+        ]
+        mock_os_path_isfile = Mock(return_value=True)
+        mock_threading = Mock()
+        mock_thread = Mock(return_value=mock_threading)
+        with patch("os.path.isfile", mock_os_path_isfile), \
+            patch("threading.Thread", mock_thread):
+                self.processes.ota_generate(test_args, id='test')
+        job_info = self.processes.get_status_by_ID('test')
+        self.assertEqual(job_info.status, 'Running',
+            'The job cannot be stored into database properly'
+        )
+        # Test if the job stored into database properly
+        for key, value in test_args.items():
+            # extra_keys is merged to extra when stored into database
+            if key=='extra_keys':
+                continue
+            self.assertEqual(job_info.__dict__[key], value,
+                'The column ' + key + ' is not stored into database properly'
+            )
+        # Test if the command is in its order
+        self.assertEqual(mock_thread.call_args[1]['args'][0], test_command,
+            'The subprocess command is not in its good shape'
+        )
 
 if __name__ == '__main__':
     unittest.main()
