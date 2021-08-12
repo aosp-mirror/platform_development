@@ -13,12 +13,28 @@
       </li>
     </ul>
   </div>
+  <div
+    v-if="payload && payload.metadata"
+    v-bind="$attrs"
+  >
+    <ul class="align">
+      <li
+        v-for="formatter in MetadataFormat"
+        :key="formatter.name"
+      >
+        <strong> {{ formatter.name }} </strong>
+        <p class="wrap">
+          {{ String(payload[formatter.key]) }}
+        </p>
+      </li>
+    </ul>
+  </div>
   <div v-if="payload && payload.manifest">
     <ul class="align">
       <li>
         <strong> Incremental </strong>
         <!-- Check if the first partition is incremental or not -->
-        <span v-if="payload.manifest.partitions[0].oldPartitionInfo">
+        <span v-if="payload.preBuild">
           &#9989;
         </span>
         <span v-else> &#10060; </span>
@@ -26,6 +42,13 @@
       <li>
         <strong> Partial </strong>
         <span v-if="payload.manifest.partialUpdate"> &#9989; </span>
+        <span v-else> &#10060; </span>
+      </li>
+      <li>
+        <strong> A/B update </strong>
+        <span v-if="!payload.manifest.nonAB">
+          &#9989;
+        </span>
         <span v-else> &#10060; </span>
       </li>
       <li>
@@ -47,7 +70,7 @@
 </template>
 
 <script>
-import { Payload } from '@/services/payload.js'
+import { Payload, MetadataFormat } from '@/services/payload.js'
 
 export default {
   props: {
@@ -60,6 +83,11 @@ export default {
       required: true,
     },
   },
+  data() {
+    return {
+      MetadataFormat
+    }
+  }
 }
 </script>
 
@@ -74,5 +102,17 @@ export default {
 
 .align strong::after {
   content: ':';
+}
+
+li {
+  list-style-type: none;
+}
+
+.wrap {
+  width: 50%;
+  display: inline-block;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: inherit;
 }
 </style>

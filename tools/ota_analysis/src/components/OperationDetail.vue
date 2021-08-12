@@ -1,6 +1,6 @@
 <template>
   <ul>
-    <h5> {{ mapType.get(operation.type) }} </h5>
+    <h5> {{ mapType.getWithDefault(operation.type) }} </h5>
     <li v-if="operation.hasOwnProperty('dataOffset')">
       <strong> Data offset: </strong> {{ operation.dataOffset }}
     </li>
@@ -25,6 +25,7 @@
 
 <script>
 import { numBlocks, displayBlocks } from '../services/payload_composition.js'
+import { DefaultMap } from '../services/payload.js'
 
 export default {
   props: {
@@ -33,7 +34,7 @@ export default {
       required: true,
     },
     mapType: {
-      type: Map,
+      type: DefaultMap,
       required: true,
     },
   },
