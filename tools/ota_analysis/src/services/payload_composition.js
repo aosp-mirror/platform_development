@@ -34,7 +34,7 @@ export function operatedBlockStatistics(partitions) {
   let /** OpType */ opType = new OpType()
   for (let partition of partitions) {
     for (let operation of partition.operations) {
-      let operationType = opType.mapType.get(operation.type)
+      let operationType = opType.mapType.getWithDefault(operation.type)
       addNumberToMap(
         operatedBlocks,
         operationType,
@@ -50,7 +50,7 @@ export function mergeOperationStatistics(partitions, blockSize) {
   let /** Number */ totalBlocks = 0
   for (let partition of partitions) {
     for (let operation of partition.mergeOperations) {
-      let operationType = opType.mapType.get(operation.type)
+      let operationType = opType.mapType.getWithDefault(operation.type)
       addNumberToMap(
         mergeOperations,
         operationType,
@@ -79,7 +79,7 @@ export function operatedPayloadStatistics(partitions) {
   let /** OpType */ opType = new OpType()
   for (let partition of partitions) {
     for (let operation of partition.operations) {
-      let operationType = opType.mapType.get(operation.type)
+      let operationType = opType.mapType.getWithDefault(operation.type)
       addNumberToMap(
         operatedBlocks,
         operationType,
