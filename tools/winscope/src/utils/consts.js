@@ -29,6 +29,7 @@ const NAVIGATION_STYLE = {
   FOCUSED: 'Focused',
   CUSTOM: 'Custom',
   TARGETED: 'Targeted',
+  FLICKER: 'Flicker',
 };
 
 const logLevel = {

@@ -107,6 +107,12 @@
                       desc="Consider all timelines for navigation"
                     />
                     <md-icon-option
+                      v-if="tagAndErrorTraces"
+                      :value="NAVIGATION_STYLE.FLICKER"
+                      icon="details"
+                      desc="Display transition tags and flicker errors on global timeline"
+                    />
+                    <md-icon-option
                       :value="NAVIGATION_STYLE.FOCUSED"
                       :icon="TRACE_ICONS[focusedFile.type]"
                       :desc="`Automatically switch what timeline is considered
@@ -148,6 +154,9 @@
                   {{ seekTime }}
                 </label>
                 <timeline
+                  :flickerMode="flickerMode"
+                  :tags="Object.freeze(tags)"
+                  :errorTimestamps="Object.freeze(errorTimestamps)"
                   :timeline="Object.freeze(minimizedTimeline.timeline)"
                   :selected-index="minimizedTimeline.selectedIndex"
                   :scale="scale"
@@ -302,11 +311,14 @@ export default {
       cropIntent: null,
       TRACE_ICONS,
       searchTimestamp: '',
+      tags: [],
+      errorTimestamps: [],
     };
   },
   created() {
     this.mergedTimeline = this.computeMergedTimeline();
     this.$store.commit('setMergedTimeline', this.mergedTimeline);
+    this.updateTagsAndErrors();
     this.updateNavigationFileFilter();
   },
   mounted() {
@@ -320,7 +332,8 @@ export default {
       // Only store navigation type in local store if it's a type that will
       // work regardless of what data is loaded.
       if (style === NAVIGATION_STYLE.GLOBAL ||
-        style === NAVIGATION_STYLE.FOCUSED) {
+        style === NAVIGATION_STYLE.FOCUSED ||
+        style === NAVIGATION_STYLE.FLICKER) {
         this.store.navigationStyle = style;
       }
       this.updateNavigationFileFilter();
@@ -346,6 +359,9 @@ export default {
     },
     tagFiles() {
       return this.$store.getters.tagFiles;
+    },
+    errorFiles() {
+      return this.$store.getters.errorFiles;
     },
     focusedFile() {
       return this.$store.state.focusedFile;
@@ -382,6 +398,9 @@ export default {
         case NAVIGATION_STYLE.GLOBAL:
           return 'All timelines';
 
+        case NAVIGATION_STYLE.FLICKER:
+          return 'All timelines with tags and errors';
+
         case NAVIGATION_STYLE.FOCUSED:
           return `Focused: ${this.focusedFile.type}`;
 
@@ -405,6 +424,9 @@ export default {
         case NAVIGATION_STYLE.GLOBAL:
           return 'public';
 
+        case NAVIGATION_STYLE.FLICKER:
+          return 'details';
+
         case NAVIGATION_STYLE.FOCUSED:
           return TRACE_ICONS[this.focusedFile.type];
 
@@ -425,6 +447,10 @@ export default {
     },
     minimizedTimeline() {
       if (this.navigationStyle === NAVIGATION_STYLE.GLOBAL) {
+        return this.mergedTimeline;
+      }
+
+      if (this.navigationStyle === NAVIGATION_STYLE.FLICKER) {
         return this.mergedTimeline;
       }
 
@@ -456,6 +482,12 @@ export default {
     multipleTraces() {
       return this.timelineFiles.length > 1;
     },
+    flickerMode() {
+      return this.navigationStyle === NAVIGATION_STYLE.FLICKER;
+    },
+    tagAndErrorTraces() {
+      return this.tagFiles.length > 0 || this.errorFiles.length >0;
+    },
   },
   updated() {
     this.$nextTick(() => {
@@ -467,6 +499,35 @@ export default {
     });
   },
   methods: {
+    getStates(files) {
+      var states = [];
+      for (const file of files) {
+        states.push(...file.data);
+      }
+      return states;
+    },
+    updateTags() {
+      var tagStates = this.getStates(this.tagFiles);
+      var tags = [];
+      tagStates.forEach(tagState => {
+        const time = this.findClosestTimestamp(tagState.timestamp);
+        tagState.tags.forEach(tag => {
+          tag.timestamp = time;
+          tags.push(tag);
+        });
+      });;
+      return tags;
+    },
+    updateErrorTimestamps() {
+      var errorStates = this.getStates(this.errorFiles);
+      var errorTimestamps = [];
+      //TODO (b/196201487): update more than one error for each state, add check if errors empty
+      errorStates.forEach(errorState => {
+          errorTimestamps.push(errorState.timestamp);
+        }
+      );
+      return errorTimestamps;
+    },
     emitBottomHeightUpdate() {
       if (this.$refs.bottomNav) {
         const newHeight = this.$refs.bottomNav.$el.clientHeight;
@@ -602,6 +663,10 @@ export default {
           navigationStyleFilter = (f) => true;
           break;
 
+        case NAVIGATION_STYLE.FLICKER:
+          navigationStyleFilter = (f) => true;
+          break;
+
         case NAVIGATION_STYLE.FOCUSED:
           navigationStyleFilter =
             (f) => f.type === this.focusedFile.type;
@@ -656,10 +721,21 @@ export default {
       } else {
         var roundedTimestamp = string_to_nanos(this.searchTimestamp);
       }
-      var closestTimestamp = this.mergedTimeline.timeline.reduce(function(prev, curr) {
+      var closestTimestamp = this.findClosestTimestamp(roundedTimestamp);
+      this.$store.dispatch('updateTimelineTime', parseInt(closestTimestamp));
+    },
+    findClosestTimestamp(roundedTimestamp) {
+      return this.mergedTimeline.timeline.reduce(function(prev, curr) {
         return (Math.abs(curr-roundedTimestamp) < Math.abs(prev-roundedTimestamp) ? curr : prev);
       });
-      this.$store.dispatch('updateTimelineTime', parseInt(closestTimestamp));
+    },
+    updateTagsAndErrors() {
+      if (this.tagFiles) {
+        this.tags = this.updateTags();
+      }
+      if (this.errorFiles) {
+        this.errorTimestamps = this.updateErrorTimestamps();
+      }
     },
   },
   components: {

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import _ from "lodash";
+import { nanos_to_string } from "../transform";
 
 /**
  * Represents a continuous section of the timeline that is rendered into the
@@ -33,10 +35,42 @@ class Block {
   }
 }
 
+//Represents a continuous section of the tag display that relates to a specific transition
+class Transition {
+  /**
+   * Create a transition.
+   * @param {number} startPos - The position of the start tag as a percentage
+   * of the timeline width.
+   * @param {number} width - The width of the transition as a percentage of the
+   * timeline width.
+   * @param {string} color - the color of transition depending on type.
+   * @param {number} overlap - number of transitions with which this transition overlaps.
+   * @param {string} tooltip - The tooltip of the transition, minus the type of transition.
+   */
+  constructor(startPos, width, color, overlap, tooltip) {
+    this.startPos = startPos;
+    this.width = width;
+    this.color = color;
+    this.overlap = overlap;
+    this.tooltip = tooltip;
+  }
+}
+
 /**
  * This Mixin should only be injected into components which have the following:
  * - An element in the template referenced as 'timeline' (this.$refs.timeline).
  */
+const transitionMap = new Map([
+    ['ROTATION', {desc: 'Rotation', color: '#9900ffff'}],
+    ['PIP_ENTER', {desc: 'Entering PIP mode', color: '#4a86e8ff'}],
+    ['PIP_RESIZE', {desc: 'Resizing PIP mode', color: '#2b9e94ff'}],
+    ['PIP_EXIT', {desc: 'Exiting PIP mode', color: 'darkblue'}],
+    ['APP_LAUNCH', {desc: 'Launching app', color: '#ef6befff'}],
+    ['APP_CLOSE', {desc: 'Closing app', color: '#d10ddfff'}],
+    ['IME_APPEAR', {desc: 'IME appearing', color: '#ff9900ff'}],
+    ['IME_DISAPPEAR', {desc: 'IME disappearing', color: '#ad6800ff'}],
+]);
+
 export default {
   name: 'timeline',
   props: {
@@ -53,6 +87,15 @@ export default {
     'scale': {
       type: Array,
     },
+    'tags': {
+      type: Array,
+    },
+    'errorTimestamps': {
+      type: Array,
+    },
+    'flickerMode': {
+      type: Boolean,
+    }
   },
   data() {
     return {
@@ -99,6 +142,61 @@ export default {
 
       return Object.freeze(blocks);
     },
+
+    //Generates list of transitions to be displayed in flicker mode
+    timelineTransitions() {
+      const transitions = [];
+
+      //group tags by transition 'id' property
+      const groupedTags = _.mapValues(
+        _.groupBy(this.tags, 'id'), clist => clist.map(tag => _.omit(tag, 'id')))
+      ;
+
+      for (const transitionId in groupedTags) {
+        const id = groupedTags[transitionId];
+        //there are two tags per id; check which tag is the start, which is end
+        const transitionStartTime = (id[0].isStartTag) ? id[0].timestamp : id[1].timestamp;
+        const transitionEndTime = (!id[0].isStartTag) ? id[0].timestamp : id[1].timestamp;
+
+        //do not freeze new transition, as overlap still to be handled (defaulted to 0)
+        const transition = this.generateTransition(
+          transitionStartTime,
+          transitionEndTime,
+          id[0].transition,
+          0
+        );
+        transitions.push(transition);
+      }
+
+      //sort transitions in ascending start position in order to handle overlap
+      transitions.sort((a, b) => (a.startPos > b.startPos) ? 1: -1);
+
+      //compare each transition to the ones that came before
+      for (let curr=0; curr<transitions.length; curr++) {
+        let overlapStore = [];
+
+        for (let prev=0; prev<curr; prev++) {
+          overlapStore.push(transitions[prev].overlap);
+
+          if (transitions[prev].startPos <= transitions[curr].startPos
+            && transitions[curr].startPos <= transitions[prev].startPos+transitions[prev].width
+            && transitions[curr].overlap === transitions[prev].overlap) {
+            transitions[curr].overlap++;
+          }
+        }
+
+        if (overlapStore.length>0
+          && transitions[curr].overlap === Math.max(overlapStore)
+        ) transitions[curr].overlap++;
+      }
+
+      return Object.freeze(transitions);
+    },
+    errorPositions() {
+      if (!this.flickerMode) return [];
+      const errorPositions = this.errorTimestamps.map(timestamp => this.position(timestamp));
+      return Object.freeze(errorPositions);
+    },
   },
   methods: {
     position(item) {
@@ -141,6 +239,10 @@ export default {
       }
 
       return pos * (this.crop.right - this.crop.left) + this.crop.left;
+    },
+
+    objectWidth(startTs, endTs) {
+      return this.position(endTs) - this.position(startTs) + this.pointWidth;
     },
 
     /**
@@ -249,9 +351,25 @@ export default {
      *                 scale parameter.
      */
     generateTimelineBlock(startTs, endTs) {
-      const blockWidth = this.position(endTs) - this.position(startTs) +
-        this.pointWidth;
+      const blockWidth = this.objectWidth(startTs, endTs);
       return Object.freeze(new Block(this.position(startTs), blockWidth));
+    },
+    /**
+     * Generate a transition object that can be used by the tag-timeline to render
+     * a transformed transition that starts at `startTs` and ends at `endTs`.
+     * @param {number} startPos - The timestamp at which the transition starts.
+     * @param {number} endTs - The timestamp at which the transition ends.
+     * @param {string} transitionType - The type of transition.
+     * @param {number} overlap - The degree to which the transition overlaps with others.
+     * @return {Transition} A transition object transformed to the timeline's crop and
+     *                 scale parameter.
+     */
+    generateTransition(startTs, endTs, transitionType, overlap) {
+      const transitionWidth = this.objectWidth(startTs, endTs);
+      const transitionDesc = transitionMap.get(transitionType).desc;
+      const transitionColor = transitionMap.get(transitionType).color;
+      const tooltip = `${transitionDesc}. Start: ${nanos_to_string(startTs)}. End: ${nanos_to_string(endTs)}.`;
+      return new Transition(this.position(startTs), transitionWidth, transitionColor, overlap, tooltip);
     },
   },
 };
