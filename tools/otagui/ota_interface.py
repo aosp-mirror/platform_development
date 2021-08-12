@@ -31,6 +31,10 @@ class JobInfo:
     isIncremental: bool = False
 
     def __post_init__(self):
+        """
+        If the output, stdout, stderr paths are not set, automatically use
+        the job id as the file name.
+        """
         if not self.output:
             self.output = os.path.join('output', self.id + '.zip')
         if not self.stdout:
@@ -48,6 +52,15 @@ class JobInfo:
             self.isPartial = True
 
     def to_sql_form_dict(self):
+        """
+        Convert this instance to a dict, which can be later used to insert into
+        the SQL database.
+        Format:
+            id: string, target: string, incremental: string, verbose: int,
+            partial: string, output:string, status:string,
+            downgrade: bool, extra: string, stdout: string, stderr:string,
+            start_time:int, finish_time: int(not required)
+        """
         sql_form_dict = asdict(self)
         sql_form_dict['partial'] = ','.join(sql_form_dict['partial'])
         def bool_to_int(t): return 1 if t else 0
@@ -57,6 +70,9 @@ class JobInfo:
         return sql_form_dict
 
     def to_dict_basic(self):
+        """
+        Convert the instance to a dict, which includes the file name of target.
+        """
         basic_info = asdict(self)
         basic_info['target_name'] = self.target.split('/')[-1]
         if self.isIncremental:
@@ -64,6 +80,10 @@ class JobInfo:
         return basic_info
 
     def to_dict_detail(self, target_lib, offset=0):
+        """
+        Convert this instance into a dict, which includes some detailed information
+        of the target/source build, i.e. build version and file name.
+        """
         detail_info = asdict(self)
         try:
             with open(self.stdout, 'r') as fout:
