@@ -13,40 +13,67 @@
      limitations under the License.
 -->
 <template>
-  <svg
-    width="100%"
-    height="20"
-    class="timeline-svg"
-    :class="{disabled: disabled}"
-    ref="timeline"
-  >
-    <rect
-      :x="`${block.startPos}%`"
-      y="0"
-      :width="`${block.width}%`"
-      :height="pointHeight"
-      :rx="corner"
-      v-for="(block, idx) in timelineBlocks"
-      :key="idx"
-      @click="onBlockClick"
-      class="point"
-    />
-    <rect
-      :x="`${position(selected)}%`"
-      y="0"
-      :width="`${pointWidth}%`"
-      :height="pointHeight"
-      :rx="corner"
-      class="point selected"
-    />
-  </svg>
+  <div class="timeline-container">
+    <div class="tag-timeline" v-if="flickerMode" :style="maxOverlap">
+      <transition-container
+        class="container"
+        v-for="transition in timelineTransitions"
+        :key="transition.type"
+        :startPos="transition.startPos"
+        :width="transition.width"
+        :color="transition.color"
+        :overlap="transition.overlap"
+        :tooltip="transition.tooltip"
+      />
+    </div>
+    <svg
+      width="100%"
+      height="20"
+      class="timeline-svg"
+      :class="{disabled: disabled}"
+      ref="timeline"
+    >
+      <rect
+        :x="`${block.startPos}%`"
+        y="0"
+        :width="`${block.width}%`"
+        :height="pointHeight"
+        :rx="corner"
+        v-for="(block, idx) in timelineBlocks"
+        :key="idx"
+        @click="onBlockClick"
+        class="point"
+      />
+      <rect
+        :x="`${position(selected)}%`"
+        y="0"
+        :width="`${pointWidth}%`"
+        :height="pointHeight"
+        :rx="corner"
+        class="point selected"
+      />
+      <line
+        v-for="error in errorPositions"
+        :key="error"
+        :x1="`${error}%`"
+        :x2="`${error}%`"
+        y1="0"
+        y2="18px"
+        class="error"
+      />
+    </svg>
+  </div>
 </template>
 <script>
 import TimelineMixin from "./mixins/Timeline.js";
+import TransitionContainer from './components/TagDisplay/TransitionContainer.vue';
 
 export default {
   name: "timeline",
   // TODO: Add indication of trim, at least for collasped timeline
+  components: {
+    'transition-container': TransitionContainer,
+  },
   props: ["selectedIndex", "crop", "disabled"],
   data() {
     return {
@@ -66,10 +93,32 @@ export default {
     selected() {
       return this.timeline[this.selectedIndex];
     },
+    maxOverlap() {
+      if (!this.timelineTransitions) {
+        return {
+          marginTop: '0px',
+        }
+      }
+      var overlaps = [];
+      for (const transition in this.timelineTransitions) {
+        overlaps.push(this.timelineTransitions[transition].overlap);
+      }
+      return {
+        marginTop: (Math.max(...overlaps)+1)*10 + 'px',
+      }
+    },
   }
 };
 </script>
 <style scoped>
+.timeline-container {
+  width: 100%;
+}
+.tag-timeline {
+  width: 100%;
+  position: relative;
+  height: 10px;
+}
 .timeline-svg .point {
   cursor: pointer;
 }
@@ -78,9 +127,13 @@ export default {
   cursor: not-allowed;
 }
 .timeline-svg:not(.disabled) .point.selected {
-  fill: rgb(240, 59, 59);
+  fill: #b2f6faff;
 }
 .timeline-svg.disabled .point.selected {
   fill: rgba(240, 59, 59, 0.596);
+}
+.error {
+  stroke: rgb(255, 0, 0);
+  stroke-width: 2px;
 }
 </style>
