@@ -23,6 +23,7 @@ import android.content.res.Configuration;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.Rational;
+import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.CompoundButton;
@@ -43,7 +44,6 @@ public class PictureInPictureAutoEnter extends Activity {
     private View mImageView;
     private View mButtonView;
     private Switch mSwitchView;
-    private int mLastOrientation = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,43 +76,52 @@ public class PictureInPictureAutoEnter extends Activity {
     @Override
     public void onConfigurationChanged(Configuration newConfiguration) {
         super.onConfigurationChanged(newConfiguration);
-        if (!isInPictureInPictureMode()) {
-            updateLayout(newConfiguration);
-        }
+        updateLayout(newConfiguration);
     }
 
     private void updateLayout(Configuration configuration) {
-        if (configuration.orientation == mLastOrientation) return;
-        mLastOrientation = configuration.orientation;
-        final boolean isLandscape = (mLastOrientation == Configuration.ORIENTATION_LANDSCAPE);
-        mButtonView.setVisibility(isLandscape ? View.GONE : View.VISIBLE);
-        mSwitchView.setVisibility(isLandscape ? View.GONE: View.VISIBLE);
+        final boolean isLandscape =
+                (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE);
+        final boolean isPictureInPicture = isInPictureInPictureMode();
+        mButtonView.setVisibility((isPictureInPicture || isLandscape) ? View.GONE : View.VISIBLE);
+        mSwitchView.setVisibility((isPictureInPicture || isLandscape) ? View.GONE: View.VISIBLE);
         final LinearLayout.LayoutParams layoutParams;
-        // Toggle the fullscreen mode as well.
-        // TODO(b/188001699) switch to use insets controller once the bug is fixed.
-        final View decorView = getWindow().getDecorView();
-        final int systemUiNavigationBarFlags = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
-        if (isLandscape) {
+        if (isPictureInPicture) {
             layoutParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.MATCH_PARENT);
-            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                    WindowManager.LayoutParams.FLAG_FULLSCREEN);
-            decorView.setSystemUiVisibility(decorView.getSystemUiVisibility()
-                    | systemUiNavigationBarFlags);
+            layoutParams.gravity = Gravity.NO_GRAVITY;
         } else {
-            layoutParams = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
-            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-            decorView.setSystemUiVisibility(decorView.getSystemUiVisibility()
-                    & ~systemUiNavigationBarFlags);
+            // Toggle the fullscreen mode as well.
+            // TODO(b/188001699) switch to use insets controller once the bug is fixed.
+            final View decorView = getWindow().getDecorView();
+            final int systemUiNavigationBarFlags = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
+            if (isLandscape) {
+                layoutParams = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.MATCH_PARENT);
+                layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
+                getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                        WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                decorView.setSystemUiVisibility(decorView.getSystemUiVisibility()
+                        | systemUiNavigationBarFlags);
+            } else {
+                layoutParams = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                layoutParams.gravity = Gravity.NO_GRAVITY;
+                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                decorView.setSystemUiVisibility(decorView.getSystemUiVisibility()
+                        & ~systemUiNavigationBarFlags);
+            }
         }
+        mImageView.addOnLayoutChangeListener(mOnLayoutChangeListener);
         mImageView.setLayoutParams(layoutParams);
     }
 
     private void updatePictureInPictureParams() {
+        mImageView.removeOnLayoutChangeListener(mOnLayoutChangeListener);
         // do not bother PictureInPictureParams update when it's already in pip mode.
         if (isInPictureInPictureMode()) return;
         final Rect imageViewRect = new Rect();
