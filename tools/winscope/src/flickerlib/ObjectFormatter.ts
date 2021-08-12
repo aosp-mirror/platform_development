@@ -44,6 +44,13 @@ export default class ObjectFormatter {
         return obj;
     }
 
+    /**
+     * Get the true properties of an entry excluding functions, kotlin gernerated
+     * variables, explicitly excluded properties, and flicker objects already in
+     * the hierarchy that shouldn't be traversed when formatting the entry
+     * @param entry The entry for which we want to get the properties for
+     * @return The "true" properties of the entry as described above
+     */
     static getProperties(entry: any): string[] {
         var props = [];
         let obj = entry;
@@ -58,13 +65,12 @@ export default class ObjectFormatter {
                 if (it.startsWith(`_`)) return false;
                 // some predefined properties used only internally (e.g., children, ref, diff)
                 if (this.INVALID_ELEMENT_PROPERTIES.includes(it)) return false;
-                // Flicker object properties or arrays
-                if (!entry[it]) return false;
-                const value = entry[it]
+
+                const value = entry[it];
                 // only non-empty arrays of non-flicker objects (otherwise they are in hierarchy)
-                if (Array.isArray(value) && value.length > 0) return !value[0].stableId
+                if (Array.isArray(value) && value.length > 0) return !value[0].stableId;
                 // non-flicker object
-                return !value.stableId;
+                return !(value?.stableId);
             });
             properties.forEach(function (prop) {
                 if (typeof(entry[prop]) !== 'function' && props.indexOf(prop) === -1) {
@@ -76,6 +82,12 @@ export default class ObjectFormatter {
         return props;
     }
 
+    /**
+     * Format a Winscope entry to be displayed in the UI
+     * Accounts for different user display settings (e.g. hiding empty/default values)
+     * @param obj The raw object to format
+     * @return The formatted object
+     */
     static format(obj: any): {} {
         const properties = this.getProperties(obj);
         const sortedProperties = properties.sort()
@@ -85,7 +97,14 @@ export default class ObjectFormatter {
             const key = entry;
             const value: any = obj[key];
 
-            if (value || (this.displayDefaults && value !== undefined && value !== null)) {
+            if (value === null || value === undefined) {
+                if (this.displayDefaults) {
+                    result[key] = value
+                }
+                return
+            }
+
+            if (value || this.displayDefaults) {
                 // flicker obj
                 if (value.prettyPrint) {
                     const isEmpty = value.isEmpty === true;
