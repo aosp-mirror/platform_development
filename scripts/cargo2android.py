@@ -227,6 +227,8 @@ class Crate(object):
     self.emit_list = ''  # e.g., --emit=dep-info,metadata,link
     self.edition = '2015'  # rustc default, e.g., --edition=2018
     self.target = ''  # follows --target
+    self.cargo_env_compat = True
+    self.cargo_pkg_version = ''  # value extracted from Cargo.toml version field
 
   def write(self, s):
     # convenient way to output one line at a time with EOL.
@@ -429,6 +431,20 @@ class Crate(object):
             # Write to Android.bp in the subdirectory with Cargo.toml.
             self.outf_name = self.cargo_dir + '/Android.bp'
             self.main_src = self.main_src[len(self.cargo_dir) + 1:]
+
+        # get the package version from running cargo metadata
+        cargo_metadata = subprocess.run(["cargo", "metadata", "--no-deps"],
+                cwd=os.path.abspath(self.cargo_dir), capture_output=True)
+        if cargo_metadata.returncode:
+            self.errors += ("ERROR: unable to get cargo metadata for package version; return code " +
+                cargo_metadata.returncode + "\n")
+        else:
+            metadata_json = json.loads(cargo_metadata.stdout)
+            if len(metadata_json["packages"]) > 1:
+                self.errors += "ERROR: multiple packages defined, will not output package version"
+            else:
+                self.cargo_pkg_version = metadata_json["packages"][0]["version"]
+
       else:
         self.errors += 'ERROR: unknown ' + arg + '\n'
       i += 1
@@ -817,6 +833,9 @@ class Crate(object):
       self.write('    host_supported: true,')
     if not self.defaults:
       self.write('    crate_name: "' + self.crate_name + '",')
+    if not self.defaults and self.cargo_env_compat:
+      self.write('    cargo_env_compat: true,')
+      self.write('    cargo_pkg_version: "' + self.cargo_pkg_version + '",')
     if not self.default_srcs:
       self.dump_srcs_list()
     if 'test' in self.crate_types and not self.defaults:
