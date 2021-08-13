@@ -39,6 +39,6 @@ const logLevel = {
   WARN: 'warn',
   ERROR: 'error',
   WTF: 'wtf',
-}
+};
 
 export { WebContentScriptMessageType, NAVIGATION_STYLE, logLevel };
