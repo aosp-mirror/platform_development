@@ -701,10 +701,18 @@ class Crate(object):
       for apex in self.runner.args.apex_available:
         self.write('        "%s",' % apex)
       self.write('    ],')
+    if self.runner.args.native_bridge_supported:
+      self.write('    native_bridge_supported: true,')
+    if self.runner.args.product_available:
+      self.write('    product_available: true,')
+    if self.runner.args.recovery_available:
+      self.write('    recovery_available: true,')
     if self.runner.args.vendor_available:
       self.write('    vendor_available: true,')
     if self.runner.args.vendor_ramdisk_available:
       self.write('    vendor_ramdisk_available: true,')
+    if self.runner.args.ramdisk_available:
+      self.write('    ramdisk_available: true,')
     if self.runner.args.min_sdk_version and crate_type == 'lib':
       self.write('    min_sdk_version: "%s",' % self.runner.args.min_sdk_version)
     if crate_type == 'test' and not self.default_srcs:
@@ -1645,6 +1653,21 @@ def get_parser():
       nargs='*',
       help='Mark the main library as apex_available with the given apexes.')
   parser.add_argument(
+      '--native-bridge-supported',
+      action='store_true',
+      default=False,
+      help='Mark the main library as native_bridge_supported.')
+  parser.add_argument(
+      '--product-available',
+      action='store_true',
+      default=False,
+      help='Mark the main library as product_available.')
+  parser.add_argument(
+      '--recovery-available',
+      action='store_true',
+      default=False,
+      help='Mark the main library as recovery_available.')
+  parser.add_argument(
       '--vendor-available',
       action='store_true',
       default=False,
@@ -1654,6 +1677,11 @@ def get_parser():
       action='store_true',
       default=False,
       help='Mark the main library as vendor_ramdisk_available.')
+  parser.add_argument(
+      '--ramdisk-available',
+      action='store_true',
+      default=False,
+      help='Mark the main library as ramdisk_available.')
   parser.add_argument(
       '--force-rlib',
       action='store_true',
