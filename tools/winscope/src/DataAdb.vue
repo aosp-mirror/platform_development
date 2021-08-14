@@ -13,12 +13,12 @@
      limitations under the License.
 -->
 <template>
-  <md-card style="min-width: 50em">
+  <flat-card style="min-width: 50em">
     <md-card-header>
       <div class="md-title">ADB Connect</div>
     </md-card-header>
     <md-card-content v-if="status === STATES.CONNECTING">
-      <md-spinner md-indeterminate></md-spinner>
+      <md-progress-spinner md-indeterminate></md-progress-spinner>
     </md-card-content>
     <md-card-content v-if="status === STATES.NO_PROXY">
       <md-icon class="md-accent">error</md-icon>
@@ -30,9 +30,9 @@
         <pre>python3 $ANDROID_BUILD_TOP/development/tools/winscope/adb_proxy/winscope_proxy.py</pre>
         <p>Or get it from the AOSP repository.</p>
       </div>
-      <div class="md-layout md-gutter">
-        <md-button class="md-accent md-raised" :href="downloadProxyUrl">Download from AOSP</md-button>
-        <md-button class="md-raised md-accent" @click="restart">Retry</md-button>
+      <div class="md-layout">
+        <md-button class="md-accent" :href="downloadProxyUrl">Download from AOSP</md-button>
+        <md-button class="md-accent" @click="restart">Retry</md-button>
       </div>
     </md-card-content>
     <md-card-content v-if="status === STATES.INVALID_VERSION">
@@ -44,50 +44,64 @@
         <pre>python3 $ANDROID_BUILD_TOP/development/tools/winscope/adb_proxy/winscope_proxy.py</pre>
         <p>Or get it from the AOSP repository.</p>
       </div>
-      <div class="md-layout md-gutter">
-        <md-button class="md-accent md-raised" :href="downloadProxyUrl">Download from AOSP</md-button>
-        <md-button class="md-raised md-accent" @click="restart">Retry</md-button>
+      <div class="md-layout">
+        <md-button class="md-accent" :href="downloadProxyUrl">Download from AOSP</md-button>
+        <md-button class="md-accent" @click="restart">Retry</md-button>
       </div>
     </md-card-content>
     <md-card-content v-if="status === STATES.UNAUTH">
       <md-icon class="md-accent">lock</md-icon>
       <span class="md-subheading">Proxy authorisation required</span>
-      <md-input-container>
+      <md-field>
         <label>Enter Winscope proxy token</label>
         <md-input v-model="adbStore.proxyKey"></md-input>
-      </md-input-container>
+      </md-field>
       <div class="md-body-2">The proxy token is printed to console on proxy launch, copy and paste it above.</div>
-      <div class="md-layout md-gutter">
-        <md-button class="md-accent md-raised" @click="restart">Connect</md-button>
+      <div class="md-layout">
+        <md-button class="md-primary" @click="restart">Connect</md-button>
       </div>
     </md-card-content>
     <md-card-content v-if="status === STATES.DEVICES">
       <div class="md-subheading">{{ Object.keys(devices).length > 0 ? "Connected devices:" : "No devices detected" }}</div>
       <md-list>
         <md-list-item v-for="(device, id) in devices" :key="id" @click="selectDevice(id)" :disabled="!device.authorised">
-          <md-icon>{{ device.authorised ? "smartphone" : "screen_lock_portrait" }}</md-icon><span>{{ device.authorised ? device.model : "unauthorised" }} ({{ id }})</span>
+          <md-icon>{{ device.authorised ? "smartphone" : "screen_lock_portrait" }}</md-icon>
+          <span class="md-list-item-text">{{ device.authorised ? device.model : "unauthorised" }} ({{ id }})</span>
         </md-list-item>
       </md-list>
-      <md-spinner :md-size="30" md-indeterminate></md-spinner>
+      <md-progress-spinner :md-size="30" md-indeterminate></md-progress-spinner>
     </md-card-content>
     <md-card-content v-if="status === STATES.START_TRACE">
-      <md-list>
-        <md-list-item>
-          <md-icon>smartphone</md-icon><span>{{ devices[selectedDevice].model }} ({{ selectedDevice }})</span>
-        </md-list-item>
-      </md-list>
-      <div>
-        <p>Trace targets:</p>
-        <md-checkbox v-for="file in TRACE_FILES" :key="file" v-model="adbStore[file]">{{FILE_TYPES[file].name}}</md-checkbox>
+      <div class="device-choice">
+        <md-list>
+          <md-list-item>
+            <md-icon>smartphone</md-icon>
+            <span class="md-list-item-text">{{ devices[selectedDevice].model }} ({{ selectedDevice }})</span>
+          </md-list-item>
+        </md-list>
+        <md-button class="md-primary" @click="resetLastDevice">Change device</md-button>
       </div>
-      <div>
-        <p>Dump targets:</p>
-        <md-checkbox v-for="file in DUMP_FILES" :key="file" v-model="adbStore[file]">{{FILE_TYPES[file].name}}</md-checkbox>
+      <div class="trace-section">
+        <h3>Trace targets:</h3>
+        <div class="selection">
+          <md-checkbox class="md-primary" v-for="traceKey in Object.keys(TRACES)" :key="traceKey" v-model="adbStore[traceKey]">{{TRACES[traceKey].name}}</md-checkbox>
+        </div>
+        <div class="trace-config" v-for="traceKey in Object.keys(TRACE_CONFIG)" :key="traceKey">
+            <h4>{{TRACES[traceKey].name}} config</h4>
+            <div class="selection">
+              <md-checkbox class="md-primary" v-for="config in TRACE_CONFIG[traceKey]" :key="config" v-model="adbStore[config]">{{config}}</md-checkbox>
+            </div>
+        </div>
+        <md-button class="md-primary trace-btn" @click="startTrace">Start trace</md-button>
       </div>
-      <div class="md-layout md-gutter">
-        <md-button class="md-accent md-raised" @click="startTrace">Start trace</md-button>
-        <md-button class="md-accent md-raised" @click="dumpState">Dump state</md-button>
-        <md-button class="md-raised" @click="resetLastDevice">Device list</md-button>
+      <div class="dump-section">
+        <h3>Dump targets:</h3>
+        <div class="selection">
+          <md-checkbox class="md-primary" v-for="dumpKey in Object.keys(DUMPS)" :key="dumpKey" v-model="adbStore[dumpKey]">{{DUMPS[dumpKey].name}}</md-checkbox>
+        </div>
+        <div class="md-layout">
+          <md-button class="md-primary dump-btn" @click="dumpState">Dump state</md-button>
+        </div>
       </div>
     </md-card-content>
     <md-card-content v-if="status === STATES.ERROR">
@@ -96,24 +110,25 @@
       <pre>
         {{ errorText }}
       </pre>
-      <md-button class="md-raised md-accent" @click="restart">Retry</md-button>
+      <md-button class="md-primary" @click="restart">Retry</md-button>
     </md-card-content>
     <md-card-content v-if="status === STATES.END_TRACE">
       <span class="md-subheading">Tracing...</span>
-      <md-progress md-indeterminate></md-progress>
-      <div class="md-layout md-gutter">
-        <md-button class="md-accent md-raised" @click="endTrace">End trace</md-button>
+      <md-progress-bar md-mode="indeterminate"></md-progress-bar>
+      <div class="md-layout">
+        <md-button class="md-primary" @click="endTrace">End trace</md-button>
       </div>
     </md-card-content>
     <md-card-content v-if="status === STATES.LOAD_DATA">
       <span class="md-subheading">Loading data...</span>
-      <md-progress :md-progress="loadProgress"></md-progress>
+      <md-progress-bar md-mode="determinate" :md-value="loadProgress"></md-progress-bar>
     </md-card-content>
-  </md-card>
+  </flat-card>
 </template>
 <script>
-import { FILE_TYPES, DATA_TYPES } from './decode.js'
-import LocalStore from './localstore.js'
+import {FILE_DECODERS, FILE_TYPES} from './decode.js';
+import LocalStore from './localstore.js';
+import FlatCard from './components/FlatCard.vue';
 
 const STATES = {
   ERROR: 0,
@@ -125,40 +140,92 @@ const STATES = {
   START_TRACE: 6,
   END_TRACE: 7,
   LOAD_DATA: 8,
-}
+};
 
-const WINSCOPE_PROXY_VERSION = "0.5"
-const WINSCOPE_PROXY_URL = "http://localhost:5544"
+const WINSCOPE_PROXY_VERSION = '0.8';
+const WINSCOPE_PROXY_URL = 'http://localhost:5544';
 const PROXY_ENDPOINTS = {
-  DEVICES: "/devices/",
-  START_TRACE: "/start/",
-  END_TRACE: "/end/",
-  DUMP: "/dump/",
-  FETCH: "/fetch/",
-  STATUS: "/status/",
-}
-const TRACE_FILES = [
-  "window_trace",
-  "layers_trace",
-  "screen_recording",
-  "transaction",
-  "proto_log"
-]
-const DUMP_FILES = [
-  "window_dump",
-  "layers_dump"
-]
-const CAPTURE_FILES = TRACE_FILES.concat(DUMP_FILES)
+  DEVICES: '/devices/',
+  START_TRACE: '/start/',
+  END_TRACE: '/end/',
+  CONFIG_TRACE: '/configtrace/',
+  DUMP: '/dump/',
+  FETCH: '/fetch/',
+  STATUS: '/status/',
+};
+
+const TRACES = {
+  'window_trace': {
+    name: 'Window Manager',
+  },
+  'layers_trace': {
+    name: 'Surface Flinger',
+  },
+  'transaction': {
+    name: 'Transactions',
+  },
+  'proto_log': {
+    name: 'ProtoLog',
+  },
+  'screen_recording': {
+    name: 'Screen Recording',
+  },
+  'ime_trace_clients': {
+    name: 'Input Method Clients',
+  },
+  'ime_trace_service': {
+    name: 'Input Method Service',
+  },
+  'ime_trace_managerservice': {
+    name: 'Input Method Manager Service',
+  },
+};
+
+const TRACE_CONFIG = {
+  'layers_trace': [
+    'composition',
+    'metadata',
+    'hwc',
+  ],
+};
+
+const DUMPS = {
+  'window_dump': {
+    name: 'Window Manager',
+  },
+  'layers_dump': {
+    name: 'Surface Flinger',
+  },
+};
+
+const proxyFileTypeAdapter = {
+  'window_trace': FILE_TYPES.WINDOW_MANAGER_TRACE,
+  'layers_trace': FILE_TYPES.SURFACE_FLINGER_TRACE,
+  'wl_trace': FILE_TYPES.WAYLAND_TRACE,
+  'layers_dump': FILE_TYPES.SURFACE_FLINGER_DUMP,
+  'window_dump': FILE_TYPES.WINDOW_MANAGER_DUMP,
+  'wl_dump': FILE_TYPES.WAYLAND_DUMP,
+  'screen_recording': FILE_TYPES.SCREEN_RECORDING,
+  'transactions': FILE_TYPES.TRANSACTIONS_TRACE,
+  'proto_log': FILE_TYPES.PROTO_LOG,
+  'system_ui_trace': FILE_TYPES.SYSTEM_UI,
+  'launcher_trace': FILE_TYPES.LAUNCHER,
+  'ime_trace_clients': FILE_TYPES.IME_TRACE_CLIENTS,
+  'ime_trace_service': FILE_TYPES.IME_TRACE_SERVICE,
+  'ime_trace_managerservice': FILE_TYPES.IME_TRACE_MANAGERSERVICE,
+};
+
+const CONFIGS = Object.keys(TRACE_CONFIG).flatMap((file) => TRACE_CONFIG[file]);
 
 export default {
   name: 'dataadb',
   data() {
     return {
       STATES,
-      TRACE_FILES,
-      DUMP_FILES,
-      CAPTURE_FILES,
-      FILE_TYPES,
+      TRACES,
+      TRACE_CONFIG,
+      DUMPS,
+      FILE_DECODERS,
       WINSCOPE_PROXY_VERSION,
       status: STATES.CONNECTING,
       dataFiles: [],
@@ -168,14 +235,28 @@ export default {
       keep_alive_worker: null,
       errorText: '',
       loadProgress: 0,
-      adbStore: LocalStore('adb', Object.assign({
-        proxyKey: '',
-        lastDevice: '',
-      }, CAPTURE_FILES.reduce(function(obj, key) { obj[key] = true; return obj }, {}))),
+      adbStore: LocalStore(
+          'adb',
+          Object.assign(
+              {
+                proxyKey: '',
+                lastDevice: '',
+              },
+              Object.keys(TRACES)
+                  .concat(Object.keys(DUMPS))
+                  .concat(CONFIGS)
+                  .reduce(function(obj, key) {
+                    obj[key] = true; return obj;
+                  }, {}),
+          ),
+      ),
       downloadProxyUrl: 'https://android.googlesource.com/platform/development/+/master/tools/winscope/adb_proxy/winscope_proxy.py',
-    }
+    };
   },
-  props: ["store"],
+  props: ['store'],
+  components: {
+    'flat-card': FlatCard,
+  },
   methods: {
     getDevices() {
       if (this.status !== STATES.DEVICES && this.status !== STATES.CONNECTING) {
@@ -183,22 +264,23 @@ export default {
         this.refresh_worker = null;
         return;
       }
-      this.callProxy("GET", PROXY_ENDPOINTS.DEVICES, this, function(request, view) {
+      this.callProxy('GET', PROXY_ENDPOINTS.DEVICES, this, function(request, view) {
         try {
           view.devices = JSON.parse(request.responseText);
           if (view.adbStore.lastDevice && view.devices[view.adbStore.lastDevice] && view.devices[view.adbStore.lastDevice].authorised) {
-            view.selectDevice(view.adbStore.lastDevice)
+            view.selectDevice(view.adbStore.lastDevice);
           } else {
             if (view.refresh_worker === null) {
-              view.refresh_worker = setInterval(view.getDevices, 1000)
+              view.refresh_worker = setInterval(view.getDevices, 1000);
             }
             view.status = STATES.DEVICES;
           }
         } catch (err) {
+          console.error(err);
           view.errorText = request.responseText;
           view.status = STATES.ERROR;
         }
-      })
+      });
     },
     keepAliveTrace() {
       if (this.status !== STATES.END_TRACE) {
@@ -206,68 +288,92 @@ export default {
         this.keep_alive_worker = null;
         return;
       }
-      this.callProxy("GET", PROXY_ENDPOINTS.STATUS + this.deviceId() + "/", this, function(request, view) {
-        if (request.responseText !== "True") {
+      this.callProxy('GET', PROXY_ENDPOINTS.STATUS + this.deviceId() + '/', this, function(request, view) {
+        if (request.responseText !== 'True') {
           view.endTrace();
         } else if (view.keep_alive_worker === null) {
-          view.keep_alive_worker = setInterval(view.keepAliveTrace, 1000)
+          view.keep_alive_worker = setInterval(view.keepAliveTrace, 1000);
         }
-      })
+      });
     },
     startTrace() {
-      const requested = this.toTrace()
+      const requested = this.toTrace();
+      const requestedConfig = this.toTraceConfig();
       if (requested.length < 1) {
-        this.errorText = "No targets selected";
+        this.errorText = 'No targets selected';
         this.status = STATES.ERROR;
-        return
+        return;
       }
+      this.callProxy('POST', PROXY_ENDPOINTS.CONFIG_TRACE + this.deviceId() + '/', this, null, null, requestedConfig);
       this.status = STATES.END_TRACE;
-      this.callProxy("POST", PROXY_ENDPOINTS.START_TRACE + this.deviceId() + "/", this, function(request, view) {
+      this.callProxy('POST', PROXY_ENDPOINTS.START_TRACE + this.deviceId() + '/', this, function(request, view) {
         view.keepAliveTrace();
-      }, null, requested)
+      }, null, requested);
     },
     dumpState() {
-      const requested = this.toDump()
+      const requested = this.toDump();
       if (requested.length < 1) {
-        this.errorText = "No targets selected";
+        this.errorText = 'No targets selected';
         this.status = STATES.ERROR;
-        return
+        return;
       }
       this.status = STATES.LOAD_DATA;
-      this.callProxy("POST", PROXY_ENDPOINTS.DUMP + this.deviceId() + "/", this, function(request, view) {
+      this.callProxy('POST', PROXY_ENDPOINTS.DUMP + this.deviceId() + '/', this, function(request, view) {
         view.loadFile(requested, 0);
-      }, null, requested)
+      }, null, requested);
     },
     endTrace() {
       this.status = STATES.LOAD_DATA;
-      this.callProxy("POST", PROXY_ENDPOINTS.END_TRACE + this.deviceId() + "/", this, function(request, view) {
+      this.callProxy('POST', PROXY_ENDPOINTS.END_TRACE + this.deviceId() + '/', this, function(request, view) {
         view.loadFile(view.toTrace(), 0);
-      })
+      });
     },
     loadFile(files, idx) {
-      this.callProxy("GET", PROXY_ENDPOINTS.FETCH + this.deviceId() + "/" + files[idx] + "/", this, function(request, view) {
+      this.callProxy('GET', PROXY_ENDPOINTS.FETCH + this.deviceId() + '/' + files[idx] + '/', this, function(request, view) {
         try {
-          var buffer = new Uint8Array(request.response);
-          var filetype = FILE_TYPES[files[idx]];
-          var data = filetype.decoder(buffer, filetype, filetype.name, view.store);
-          view.dataFiles.push(data)
-          view.loadProgress = 100 * (idx + 1) / files.length;
+          const enc = new TextDecoder('utf-8');
+          const resp = enc.decode(request.response);
+          const filesByType = JSON.parse(resp);
+
+          for (const filetype in filesByType) {
+            if (filesByType.hasOwnProperty(filetype)) {
+              const files = filesByType[filetype];
+              const fileDecoder = FILE_DECODERS[proxyFileTypeAdapter[filetype]];
+
+              for (const encodedFileBuffer of files) {
+                const buffer = Uint8Array.from(atob(encodedFileBuffer), (c) => c.charCodeAt(0));
+                const data = fileDecoder.decoder(buffer, fileDecoder.decoderParams, fileDecoder.name, view.store);
+                view.dataFiles.push(data);
+                view.loadProgress = 100 * (idx + 1) / files.length; // TODO: Update this
+              }
+            }
+          }
+
           if (idx < files.length - 1) {
-            view.loadFile(files, idx + 1)
+            view.loadFile(files, idx + 1);
           } else {
             view.$emit('dataReady', view.dataFiles);
           }
         } catch (err) {
+          console.error(err);
           view.errorText = err;
           view.status = STATES.ERROR;
         }
-      }, "arraybuffer")
+      }, 'arraybuffer');
     },
     toTrace() {
-      return TRACE_FILES.filter(file => this.adbStore[file]);
+      return Object.keys(TRACES)
+          .filter((traceKey) => this.adbStore[traceKey]);
+    },
+    toTraceConfig() {
+      return Object.keys(TRACE_CONFIG)
+          .filter((file) => this.adbStore[file])
+          .flatMap((file) => TRACE_CONFIG[file])
+          .filter((config) => this.adbStore[config]);
     },
     toDump() {
-      return DUMP_FILES.filter(file => this.adbStore[file]);
+      return Object.keys(DUMPS)
+          .filter((dumpKey) => this.adbStore[dumpKey]);
     },
     selectDevice(device_id) {
       this.selectedDevice = device_id;
@@ -282,10 +388,10 @@ export default {
     },
     resetLastDevice() {
       this.adbStore.lastDevice = '';
-      this.restart()
+      this.restart();
     },
     callProxy(method, path, view, onSuccess, type, jsonRequest) {
-      var request = new XMLHttpRequest();
+      const request = new XMLHttpRequest();
       var view = this;
       request.onreadystatechange = function() {
         if (this.readyState !== 4) {
@@ -294,38 +400,38 @@ export default {
         if (this.status === 0) {
           view.status = STATES.NO_PROXY;
         } else if (this.status === 200) {
-          if (this.getResponseHeader("Winscope-Proxy-Version") !== WINSCOPE_PROXY_VERSION) {
+          if (this.getResponseHeader('Winscope-Proxy-Version') !== WINSCOPE_PROXY_VERSION) {
             view.status = STATES.INVALID_VERSION;
-          } else {
-            onSuccess(this, view)
+          } else if (onSuccess) {
+            onSuccess(this, view);
           }
         } else if (this.status === 403) {
           view.status = STATES.UNAUTH;
         } else {
-          if (this.responseType === "text" || !this.responseType) {
+          if (this.responseType === 'text' || !this.responseType) {
             view.errorText = this.responseText;
-          } else if (this.responseType === "arraybuffer") {
+          } else if (this.responseType === 'arraybuffer') {
             view.errorText = String.fromCharCode.apply(null, new Uint8Array(this.response));
           }
           view.status = STATES.ERROR;
         }
-      }
-      request.responseType = type || "";
+      };
+      request.responseType = type || '';
       request.open(method, WINSCOPE_PROXY_URL + path);
-      request.setRequestHeader("Winscope-Token", this.adbStore.proxyKey);
+      request.setRequestHeader('Winscope-Token', this.adbStore.proxyKey);
       if (jsonRequest) {
-        const json = JSON.stringify(jsonRequest)
-        request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-        request.send(json)
+        const json = JSON.stringify(jsonRequest);
+        request.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+        request.send(json);
       } else {
         request.send();
       }
-    }
+    },
   },
   created() {
-    var urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has("token")) {
-      this.adbStore.proxyKey = urlParams.get("token")
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('token')) {
+      this.adbStore.proxyKey = urlParams.get('token');
     }
     this.getDevices();
   },
@@ -335,9 +441,23 @@ export default {
         if (st == STATES.CONNECTING) {
           this.getDevices();
         }
-      }
-    }
+      },
+    },
   },
-}
+};
 
 </script>
+<style scoped>
+.device-choice {
+  display: inline-flex;
+}
+h3 {
+  margin-bottom: 0;
+}
+.trace-btn, .dump-btn {
+  margin-top: 0;
+}
+pre {
+  white-space: pre-wrap;
+}
+</style>

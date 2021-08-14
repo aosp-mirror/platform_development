@@ -63,6 +63,17 @@
     <string name="screen_orientation">Screen Orientation</string>
 
     <string name="activity_picture_in_picture">App/Activity/Picture in Picture</string>
+    <string name="activity_picture_in_picture_auto_enter">App/Activity/Picture in Picture Auto Enter</string>
+    <string name="activity_picture_in_picture_source_rect_hint_toggle">Toggle source rect hint</string>
+    <string name="activity_picture_in_picture_seamless_resize">App/Activity/Picture in Picture Seamless Resize</string>
+    <string name="activity_picture_in_picture_source_rect_hint">App/Activity/Picture in Picture Source Rect Hint</string>
+    <string name="activity_picture_in_picture_source_rect_hint_current_position">Current position: %1$s</string>
+    <string name="activity_picture_in_picture_source_rect_hint_position_on_exit">Position on exit: %1$s</string>
+    <string name="activity_picture_in_picture_change_orientation">Change orientation</string>
+    <string name="activity_picture_in_picture_seamless_resize_switch">Turn on Seamless Resize (recommend off)</string>
+    <string name="activity_picture_in_picture_seamless_resize_demo_text">
+        The quick brown fox jumps over the lazy dog.
+    </string>
     <string name="activity_max_aspect_ratio_square">App/Activity/Max Aspect Ratio/1:1</string>
     <string name="activity_max_aspect_ratio_16to9">App/Activity/Max Aspect Ratio/16:9</string>
     <string name="activity_max_aspect_ratio_any">App/Activity/Max Aspect Ratio/Any</string>
