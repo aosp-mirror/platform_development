@@ -16,6 +16,7 @@
 
 import _ from "lodash";
 import { nanos_to_string } from "../transform";
+import TransitionType from "../flickerlib/tags/TransitionType";
 
 /**
  * Represents a continuous section of the timeline that is rendered into the
@@ -61,14 +62,14 @@ class Transition {
  * - An element in the template referenced as 'timeline' (this.$refs.timeline).
  */
 const transitionMap = new Map([
-    ['ROTATION', {desc: 'Rotation', color: '#9900ffff'}],
-    ['PIP_ENTER', {desc: 'Entering PIP mode', color: '#4a86e8ff'}],
-    ['PIP_RESIZE', {desc: 'Resizing PIP mode', color: '#2b9e94ff'}],
-    ['PIP_EXIT', {desc: 'Exiting PIP mode', color: 'darkblue'}],
-    ['APP_LAUNCH', {desc: 'Launching app', color: '#ef6befff'}],
-    ['APP_CLOSE', {desc: 'Closing app', color: '#d10ddfff'}],
-    ['IME_APPEAR', {desc: 'IME appearing', color: '#ff9900ff'}],
-    ['IME_DISAPPEAR', {desc: 'IME disappearing', color: '#ad6800ff'}],
+    [TransitionType.ROTATION, {desc: 'Rotation', color: '#9900ffff'}],
+    [TransitionType.PIP_ENTER, {desc: 'Entering PIP mode', color: '#4a86e8ff'}],
+    [TransitionType.PIP_RESIZE, {desc: 'Resizing PIP mode', color: '#2b9e94ff'}],
+    [TransitionType.PIP_EXIT, {desc: 'Exiting PIP mode', color: 'darkblue'}],
+    [TransitionType.APP_LAUNCH, {desc: 'Launching app', color: '#ef6befff'}],
+    [TransitionType.APP_CLOSE, {desc: 'Closing app', color: '#d10ddfff'}],
+    [TransitionType.IME_APPEAR, {desc: 'IME appearing', color: '#ff9900ff'}],
+    [TransitionType.IME_DISAPPEAR, {desc: 'IME disappearing', color: '#ad6800ff'}],
 ]);
 
 export default {
