@@ -432,19 +432,6 @@ class Crate(object):
             self.outf_name = self.cargo_dir + '/Android.bp'
             self.main_src = self.main_src[len(self.cargo_dir) + 1:]
 
-        # get the package version from running cargo metadata
-        cargo_metadata = subprocess.run(["cargo", "metadata", "--no-deps"],
-                cwd=os.path.abspath(self.cargo_dir), capture_output=True)
-        if cargo_metadata.returncode:
-            self.errors += ("ERROR: unable to get cargo metadata for package version; return code " +
-                cargo_metadata.returncode + "\n")
-        else:
-            metadata_json = json.loads(cargo_metadata.stdout)
-            if len(metadata_json["packages"]) > 1:
-                self.errors += "ERROR: multiple packages defined, will not output package version"
-            else:
-                self.cargo_pkg_version = metadata_json["packages"][0]["version"]
-
       else:
         self.errors += 'ERROR: unknown ' + arg + '\n'
       i += 1
@@ -467,6 +454,11 @@ class Crate(object):
         self.errors += 'ERROR: cannot generate both lib and rlib crate types\n'
     if not self.root_pkg:
       self.root_pkg = self.crate_name
+
+    # get the package version from running cargo metadata
+    if not self.runner.args.no_pkg_vers:
+        self.get_pkg_version()
+
     self.device_supported = self.runner.args.device
     self.host_supported = not self.runner.args.no_host
     self.cfgs = sorted(set(self.cfgs))
@@ -480,6 +472,36 @@ class Crate(object):
     self.decide_module_type()
     self.module_name = altered_name(self.stem)
     return self
+
+  def get_pkg_version(self):
+    """Attempt to retrieve the package version from the Cargo.toml
+
+    If there is only one package, use its version. Otherwise, try to
+    match the emitted `--crate_name` arg against the package name.
+
+    This may fail in cases where multiple packages are defined (workspaces)
+    and where the package name does not match the emitted crate_name
+    (e.g. [lib.name] is set).
+    """
+    cargo_metadata = subprocess.run(['cargo', 'metadata', '--no-deps'],
+            cwd=os.path.abspath(self.cargo_dir), capture_output=True)
+    if cargo_metadata.returncode:
+        self.errors += ('ERROR: unable to get cargo metadata for package version; ' +
+                'return code ' + cargo_metadata.returncode + '\n')
+    else:
+        metadata_json = json.loads(cargo_metadata.stdout)
+        if len(metadata_json['packages']) > 1:
+            for package in metadata_json['packages']:
+                # package names may contain '-', but is changed to '_' in the crate_name
+                if package['name'].replace('-','_') == self.crate_name:
+                    self.cargo_pkg_version = package['version']
+                    break
+        else:
+            self.cargo_pkg_version = metadata_json['packages'][0]['version']
+
+        if not self.cargo_pkg_version:
+            self.errors += ('ERROR: Unable to retrieve package version; ' +
+                'to disable, run with arg "--no-pkg-vers"\n')
 
   def dump_line(self):
     self.write('\n// Line ' + str(self.line_num) + ' ' + self.line)
@@ -1661,6 +1683,11 @@ def get_parser():
       nargs='*',
       default=[],
       help='Make the given libraries (without lib prefixes) whole_static_libs.')
+  parser.add_argument(
+      '--no-pkg-vers',
+      action='store_true',
+      default=False,
+      help='Do not attempt to determine the package version automatically.')
   parser.add_argument(
       '--test-data',
       nargs='*',
