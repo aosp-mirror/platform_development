@@ -456,7 +456,7 @@ class Crate(object):
       self.root_pkg = self.crate_name
 
     # get the package version from running cargo metadata
-    if not self.runner.args.no_pkg_vers:
+    if not self.runner.args.no_pkg_vers and not self.skip_crate():
         self.get_pkg_version()
 
     self.device_supported = self.runner.args.device
@@ -483,7 +483,8 @@ class Crate(object):
     and where the package name does not match the emitted crate_name
     (e.g. [lib.name] is set).
     """
-    cargo_metadata = subprocess.run([self.runner.cargo_path, 'metadata', '--no-deps'],
+    cargo_metadata = subprocess.run([self.runner.cargo_path, 'metadata', '--no-deps',
+                                     '--format-version', '1'],
                                     cwd=os.path.abspath(self.cargo_dir),
                                     stdout=subprocess.PIPE)
     if cargo_metadata.returncode:
