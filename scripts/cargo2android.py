@@ -127,6 +127,8 @@ WARNING_FILE_PAT = re.compile('^ *--> ([^:]*):[0-9]+')
 # Rust package name with suffix -d1.d2.d3.
 VERSION_SUFFIX_PAT = re.compile(r'^(.*)-[0-9]+\.[0-9]+\.[0-9]+$')
 
+# Rust crate_type values that correspond to a library
+LIBRARY_CRATE_TYPES = ['lib', 'rlib', 'dylib', 'staticlib', 'cdylib']
 
 def altered_name(name):
   return RENAME_MAP[name] if (name in RENAME_MAP) else name
@@ -696,7 +698,7 @@ class Crate(object):
       self.dump_edition_flags_libs()
     if self.runner.args.host_first_multilib and self.host_supported and crate_type != 'test':
       self.write('    compile_multilib: "first",')
-    if self.runner.args.apex_available and crate_type == 'lib':
+    if self.runner.args.apex_available and crate_type in LIBRARY_CRATE_TYPES:
       self.write('    apex_available: [')
       for apex in self.runner.args.apex_available:
         self.write('        "%s",' % apex)
@@ -713,7 +715,7 @@ class Crate(object):
       self.write('    vendor_ramdisk_available: true,')
     if self.runner.args.ramdisk_available:
       self.write('    ramdisk_available: true,')
-    if self.runner.args.min_sdk_version and crate_type == 'lib':
+    if self.runner.args.min_sdk_version and crate_type in LIBRARY_CRATE_TYPES:
       self.write('    min_sdk_version: "%s",' % self.runner.args.min_sdk_version)
     if crate_type == 'test' and not self.default_srcs:
       self.dump_test_data()
