@@ -72,6 +72,7 @@ RENAME_MAP = {
     'libminijail': 'libminijail_rust',
     'libsync': 'libsync_rust',
     'libx86_64': 'libx86_64_rust',
+    'libxml': 'libxml_rust',
     'protoc_gen_rust': 'protoc-gen-rust',
 }
 
@@ -226,6 +227,8 @@ class Crate(object):
     self.emit_list = ''  # e.g., --emit=dep-info,metadata,link
     self.edition = '2015'  # rustc default, e.g., --edition=2018
     self.target = ''  # follows --target
+    self.cargo_env_compat = True
+    self.cargo_pkg_version = ''  # value extracted from Cargo.toml version field
 
   def write(self, s):
     # convenient way to output one line at a time with EOL.
@@ -303,6 +306,9 @@ class Crate(object):
     # which can be changed if self is a merged test module.
     self.decide_module_type()
     if should_merge_test:
+      if (self.main_src in self.runner.args.test_blocklist and
+          not other.main_src in self.runner.args.test_blocklist):
+        self.main_src = other.main_src
       self.srcs.append(other.main_src)
       # use a short unique name as the merged module name.
       prefix = self.root_pkg + '_tests'
@@ -425,6 +431,7 @@ class Crate(object):
             # Write to Android.bp in the subdirectory with Cargo.toml.
             self.outf_name = self.cargo_dir + '/Android.bp'
             self.main_src = self.main_src[len(self.cargo_dir) + 1:]
+
       else:
         self.errors += 'ERROR: unknown ' + arg + '\n'
       i += 1
@@ -447,6 +454,11 @@ class Crate(object):
         self.errors += 'ERROR: cannot generate both lib and rlib crate types\n'
     if not self.root_pkg:
       self.root_pkg = self.crate_name
+
+    # get the package version from running cargo metadata
+    if not self.runner.args.no_pkg_vers and not self.skip_crate():
+        self.get_pkg_version()
+
     self.device_supported = self.runner.args.device
     self.host_supported = not self.runner.args.no_host
     self.cfgs = sorted(set(self.cfgs))
@@ -460,6 +472,38 @@ class Crate(object):
     self.decide_module_type()
     self.module_name = altered_name(self.stem)
     return self
+
+  def get_pkg_version(self):
+    """Attempt to retrieve the package version from the Cargo.toml
+
+    If there is only one package, use its version. Otherwise, try to
+    match the emitted `--crate_name` arg against the package name.
+
+    This may fail in cases where multiple packages are defined (workspaces)
+    and where the package name does not match the emitted crate_name
+    (e.g. [lib.name] is set).
+    """
+    cargo_metadata = subprocess.run([self.runner.cargo_path, 'metadata', '--no-deps',
+                                     '--format-version', '1'],
+                                    cwd=os.path.abspath(self.cargo_dir),
+                                    stdout=subprocess.PIPE)
+    if cargo_metadata.returncode:
+        self.errors += ('ERROR: unable to get cargo metadata for package version; ' +
+                'return code ' + cargo_metadata.returncode + '\n')
+    else:
+        metadata_json = json.loads(cargo_metadata.stdout)
+        if len(metadata_json['packages']) > 1:
+            for package in metadata_json['packages']:
+                # package names may contain '-', but is changed to '_' in the crate_name
+                if package['name'].replace('-','_') == self.crate_name:
+                    self.cargo_pkg_version = package['version']
+                    break
+        else:
+            self.cargo_pkg_version = metadata_json['packages'][0]['version']
+
+        if not self.cargo_pkg_version:
+            self.errors += ('ERROR: Unable to retrieve package version; ' +
+                'to disable, run with arg "--no-pkg-vers"\n')
 
   def dump_line(self):
     self.write('\n// Line ' + str(self.line_num) + ' ' + self.line)
@@ -599,6 +643,8 @@ class Crate(object):
       self.write('    test_suites: ["general-tests"],')
       self.write('    auto_gen_config: true,')
     self.dump_edition_flags_libs()
+    if 'test' in self.crate_types and len(self.srcs) == 1:
+      self.dump_test_data()
     self.write('}')
 
   def dump_single_type_android_module(self):
@@ -655,8 +701,14 @@ class Crate(object):
       for apex in self.runner.args.apex_available:
         self.write('        "%s",' % apex)
       self.write('    ],')
+    if self.runner.args.vendor_available:
+      self.write('    vendor_available: true,')
+    if self.runner.args.vendor_ramdisk_available:
+      self.write('    vendor_ramdisk_available: true,')
     if self.runner.args.min_sdk_version and crate_type == 'lib':
       self.write('    min_sdk_version: "%s",' % self.runner.args.min_sdk_version)
+    if crate_type == 'test' and not self.default_srcs:
+      self.dump_test_data()
     if self.runner.args.add_module_block:
       with open(self.runner.args.add_module_block, 'r') as f:
         self.write('    %s,' % f.read().replace('\n', '\n    '))
@@ -689,6 +741,12 @@ class Crate(object):
     self.dump_android_property_list('whole_static_libs', '"lib%s"', whole_static_libs)
     shared_libs = [lib for lib in self.shared_libs if not lib in self.runner.args.lib_blocklist]
     self.dump_android_property_list('shared_libs', '"lib%s"', shared_libs)
+
+  def dump_test_data(self):
+    data = [data for (name, data) in map(lambda kv: kv.split('=', 1), self.runner.args.test_data)
+            if self.srcs == [name]]
+    if data:
+      self.dump_android_property_list('data', '"%s"', data)
 
   def main_src_basename_path(self):
     return re.sub('/', '_', re.sub('.rs$', '', self.main_src))
@@ -799,6 +857,9 @@ class Crate(object):
       self.write('    host_supported: true,')
     if not self.defaults:
       self.write('    crate_name: "' + self.crate_name + '",')
+    if not self.defaults and self.cargo_env_compat:
+      self.write('    cargo_env_compat: true,')
+      self.write('    cargo_pkg_version: "' + self.cargo_pkg_version + '",')
     if not self.default_srcs:
       self.dump_srcs_list()
     if 'test' in self.crate_types and not self.defaults:
@@ -1605,6 +1666,16 @@ def get_parser():
       nargs='*',
       help='Mark the main library as apex_available with the given apexes.')
   parser.add_argument(
+      '--vendor-available',
+      action='store_true',
+      default=False,
+      help='Mark the main library as vendor_available.')
+  parser.add_argument(
+      '--vendor-ramdisk-available',
+      action='store_true',
+      default=False,
+      help='Mark the main library as vendor_ramdisk_available.')
+  parser.add_argument(
       '--force-rlib',
       action='store_true',
       default=False,
@@ -1614,6 +1685,17 @@ def get_parser():
       nargs='*',
       default=[],
       help='Make the given libraries (without lib prefixes) whole_static_libs.')
+  parser.add_argument(
+      '--no-pkg-vers',
+      action='store_true',
+      default=False,
+      help='Do not attempt to determine the package version automatically.')
+  parser.add_argument(
+      '--test-data',
+      nargs='*',
+      default=[],
+      help=('Add the given file to the given test\'s data property. ' +
+            'Usage: test-path=data-path'))
   parser.add_argument(
       '--dependency-blocklist',
       nargs='*',

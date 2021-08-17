@@ -41,7 +41,7 @@ export class MapParser {
    */
   async add(partitionName, totalLength) {
     let /** Array<String> */ map = []
-    const /** RegExp */ regexNumber = /(?<![0-9\-])\d+(?![0-9\-])/g
+    const /** RegExp */ regexNumber = /\d+/g
     const /** Reg */ regexRange = /\d+\-\d+/g
     for (let i = 0; i < totalLength; i++) map[i] = 'unknown'
     if (this.mapFiles.get(partitionName)) {
@@ -115,5 +115,8 @@ function InsertMap(map, name, left, right) {
 function queryMap(map, left, right) {
   // Assuming the consecutive blocks belong to the same file
   // Only the start block is queried here.
+  if (!map[left]) {
+    return 'unknown'
+  }
   return map[left]
 }

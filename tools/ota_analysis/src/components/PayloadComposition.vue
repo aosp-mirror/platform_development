@@ -8,7 +8,10 @@
   </div>
   <v-divider />
   <v-row>
-    <v-col cols="6">
+    <v-col
+      cols="12"
+      md="6"
+    >
       <v-btn
         block
         @click="updateChart('blocks')"
@@ -16,7 +19,10 @@
         Analyse Installed Blocks (in target build)
       </v-btn>
     </v-col>
-    <v-col cols="6">
+    <v-col
+      cols="12"
+      md="6"
+    >
       <v-btn
         block
         @click="updateChart('payload')"
@@ -26,15 +32,29 @@
     </v-col>
   </v-row>
   <v-row>
-    <v-col cols="6">
+    <v-col
+      cols="12"
+      md="6"
+      class="tooltip"
+    >
       <v-btn
+        :disabled="manifest.nonAB"
         block
         @click="updateChart('COWmerge')"
       >
         Analyse COW Merge Operations
       </v-btn>
+      <span
+        v-if="manifest.nonAB"
+        class="tooltiptext"
+      >
+        This function is only supported in A/B OTA
+      </span>
     </v-col>
-    <v-col cols="6">
+    <v-col
+      cols="12"
+      md="6"
+    >
       <v-btn
         block
         :disabled="!targetFile"
@@ -45,9 +65,16 @@
     </v-col>
   </v-row>
   <v-row>
-    <v-col cols="6" />
-    <v-col cols="6">
+    <v-col
+      cols="12"
+      md="6"
+    />
+    <v-col
+      cols="12"
+      md="6"
+    >
       <BaseFile
+        v-if="!demo"
         label="Drag and drop or Select The target Android build"
         @file-select="selectBuild"
       />
@@ -56,6 +83,7 @@
 </template>
 
 <script>
+import axios from 'axios'
 import PartialCheckbox from '@/components/PartialCheckbox.vue'
 import PieChart from '@/components/PieChart.vue'
 import BaseFile from '@/components/BaseFile.vue'
@@ -73,6 +101,10 @@ export default {
       type: update_metadata_pb.DeltaArchiveManifest,
       default: () => [],
     },
+    demo: {
+      type: Boolean,
+      default: false
+    }
   },
   data() {
     return {
@@ -88,6 +120,19 @@ export default {
         return partition.partitionName
       })
     },
+  },
+  async mounted() {
+    if (this.demo) {
+      try {
+        const download = await axios.get(
+          './files/cf_x86_target_file_demo.zip',
+          {responseType: 'blob'}
+        )
+        this.targetFile = new File([download.data], 'target_demo.zip')
+      } catch (err) {
+        console.log('Please put a proper example target file in /public/files/')
+      }
+    }
   },
   methods: {
     async updateChart(metrics) {
@@ -116,5 +161,25 @@ export default {
 <style scoped>
 .list-data {
   text-align: center;
+}
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 120px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  position: absolute;
+  z-index: 1;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
 }
 </style>

@@ -38,7 +38,7 @@ def FindClangDir():
     # We want the script to fail if get_clang_version.py exists but is unable
     # to find the clang version.
     version_output = subprocess.check_output(get_clang_version, text=True)
-    return ANDROID_BUILD_TOP + "/prebuilts/clang/host/linux-x86/clang-" + version_output.strip()
+    return ANDROID_BUILD_TOP + "/prebuilts/clang/host/linux-x86/" + version_output.strip()
   else:
     return None
 
