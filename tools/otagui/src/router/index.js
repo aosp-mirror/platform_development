@@ -2,7 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import JobList from '@/views/JobList.vue'
 import JobDetails from '@/views/JobDetails.vue'
 import About from '@/views/About.vue'
-import SimpleForm from '@/views/SimpleForm.vue'
+import JobConfigure from '@/views/JobConfigure.vue'
+import NotFound from '@/views/NotFound.vue'
 
 const routes = [
   {
@@ -11,7 +12,7 @@ const routes = [
     component: JobList
   },
   {
-    path: '/check/:id',
+    path: '/check-job/:id',
     name: 'JobDetails',
     props: true,
     component: JobDetails
@@ -24,7 +25,12 @@ const routes = [
   {
     path: '/create',
     name: 'Create',
-    component: SimpleForm
+    component: JobConfigure
+  },
+  {
+    path: '/:catchAll(.*)',
+    name: 'Not Found',
+    component: NotFound
   }
 ]
 

@@ -11,7 +11,8 @@
     <v-col
       v-for="label in labels"
       :key="label"
-      cols="3"
+      cols="12"
+      md="4"
     >
       <input
         type="checkbox"

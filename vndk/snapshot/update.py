@@ -216,7 +216,7 @@ def main():
 
     local = None
     if args.local:
-        local = os.path.expanduser(args.local)
+        local = os.path.abspath(os.path.expanduser(args.local))
 
     if local:
         if args.build or args.branch:
