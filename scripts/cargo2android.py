@@ -712,18 +712,19 @@ class Crate(object):
       for apex in self.runner.args.apex_available:
         self.write('        "%s",' % apex)
       self.write('    ],')
-    if self.runner.args.native_bridge_supported:
-      self.write('    native_bridge_supported: true,')
-    if self.runner.args.product_available:
-      self.write('    product_available: true,')
-    if self.runner.args.recovery_available:
-      self.write('    recovery_available: true,')
-    if self.runner.args.vendor_available:
-      self.write('    vendor_available: true,')
-    if self.runner.args.vendor_ramdisk_available:
-      self.write('    vendor_ramdisk_available: true,')
-    if self.runner.args.ramdisk_available:
-      self.write('    ramdisk_available: true,')
+    if crate_type != 'test':
+      if self.runner.args.native_bridge_supported:
+        self.write('    native_bridge_supported: true,')
+      if self.runner.args.product_available:
+        self.write('    product_available: true,')
+      if self.runner.args.recovery_available:
+        self.write('    recovery_available: true,')
+      if self.runner.args.vendor_available:
+        self.write('    vendor_available: true,')
+      if self.runner.args.vendor_ramdisk_available:
+        self.write('    vendor_ramdisk_available: true,')
+      if self.runner.args.ramdisk_available:
+        self.write('    ramdisk_available: true,')
     if self.runner.args.min_sdk_version and crate_type in LIBRARY_CRATE_TYPES:
       self.write('    min_sdk_version: "%s",' % self.runner.args.min_sdk_version)
     if crate_type == 'test' and not self.default_srcs:
