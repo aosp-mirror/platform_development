@@ -127,8 +127,12 @@ WARNING_FILE_PAT = re.compile('^ *--> ([^:]*):[0-9]+')
 # Rust package name with suffix -d1.d2.d3.
 VERSION_SUFFIX_PAT = re.compile(r'^(.*)-[0-9]+\.[0-9]+\.[0-9]+$')
 
-# Rust crate_type values that correspond to a library
-LIBRARY_CRATE_TYPES = ['lib', 'rlib', 'dylib', 'staticlib', 'cdylib']
+# Crate types corresponding to a C ABI library
+C_LIBRARY_CRATE_TYPES = ['staticlib', 'cdylib']
+# Crate types corresponding to a Rust ABI library
+RUST_LIBRARY_CRATE_TYPES = ['lib', 'rlib', 'dylib']
+# Crate types corresponding to a library
+LIBRARY_CRATE_TYPES = C_LIBRARY_CRATE_TYPES + RUST_LIBRARY_CRATE_TYPES
 
 def altered_name(name):
   return RENAME_MAP[name] if (name in RENAME_MAP) else name
@@ -698,6 +702,11 @@ class Crate(object):
       self.dump_edition_flags_libs()
     if self.runner.args.host_first_multilib and self.host_supported and crate_type != 'test':
       self.write('    compile_multilib: "first",')
+    if self.runner.args.exported_c_header_dir and crate_type in C_LIBRARY_CRATE_TYPES:
+      self.write('    include_dirs: [')
+      for header_dir in self.runner.args.exported_c_header_dir:
+        self.write('        "%s",' % header_dir)
+      self.write('    ],')
     if self.runner.args.apex_available and crate_type in LIBRARY_CRATE_TYPES:
       self.write('    apex_available: [')
       for apex in self.runner.args.apex_available:
@@ -1646,6 +1655,11 @@ def get_parser():
       default=False,
       help=('run cargo build with existing Cargo.lock ' +
             '(used when some latest dependent crates failed)'))
+  parser.add_argument(
+      '--exported_c_header_dir',
+      nargs='*',
+      help='Directories with headers to export for C usage'
+  )
   parser.add_argument(
       '--min-sdk-version',
       type=str,
