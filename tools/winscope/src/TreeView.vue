@@ -31,7 +31,7 @@
       <button
         class="toggle-tree-btn"
         @click="toggleTree"
-        v-if="!isLeaf"
+        v-if="!isLeaf && !flattened"
         v-on:click.stop
       >
         <i aria-hidden="true" class="md-icon md-theme-default material-icons">
@@ -78,7 +78,7 @@
       v-on:collapseAllOtherNodes="collapseAllOtherNodes"
     />
 
-    <div class="children" v-if="children" v-show="!isCollapsed">
+    <div class="children" v-if="children" v-show="!isCollapsed" :style="childrenIndentation()">
       <tree-view
         v-for="(c,i) in children"
         :item="c"
@@ -87,6 +87,7 @@
         :key="i"
         :filter="childFilter(c)"
         :flattened="flattened"
+        :onlyVisible="onlyVisible"
         :simplify-names="simplifyNames"
         :force-flattened="applyingFlattened"
         v-show="filterMatches(c)"
@@ -141,6 +142,7 @@ export default {
     'useGlobalCollapsedState',
     // Custom view to use to render the elements in the tree view
     'elementView',
+    'onlyVisible',
   ],
   data() {
     const isCollapsedByDefault = this.collapse ?? false;
@@ -277,7 +279,7 @@ export default {
       }
 
       if (!this.isLeaf && e.detail % 2 === 0) {
-        // Double click collaspable node
+        // Double click collapsable node
         this.toggleTree();
       } else {
         this.select();
@@ -408,6 +410,23 @@ export default {
         child.closeAllChildrenContextMenus();
       }
     },
+    childrenIndentation() {
+      if (this.flattened || this.forceFlattened) {
+        return {
+          marginLeft: '0px',
+          paddingLeft: '0px',
+          marginTop: '0px',
+        }
+      } else {
+        //Aligns border with collapse arrows
+        return {
+          marginLeft: '12px',
+          paddingLeft: '11px',
+          borderLeft: '1px solid rgb(238, 238, 238)',
+          marginTop: '0px',
+        }
+      }
+    }
   },
   computed: {
     hasDiff() {
@@ -466,9 +485,13 @@ export default {
     nodeOffsetStyle() {
       const offset = levelOffset * (this.depth + this.isLeaf) + 'px';
 
+      var display = "";
+      if (this.onlyVisible && !this.item.isVisible) display = 'none';
+
       return {
         marginLeft: '-' + offset,
         paddingLeft: offset,
+        display: display,
       };
     },
   },
@@ -565,14 +588,6 @@ export default {
   border-radius: 5px;
   padding: 3px;
   color: white;
-}
-
-.children {
-  /* Aligns border with collapse arrows */
-  margin-left: 12px;
-  padding-left: 11px;
-  border-left: 1px solid rgb(238, 238, 238);
-  margin-top: 0px;
 }
 
 .tree-view .node.child-selected + .children {
