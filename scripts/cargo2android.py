@@ -1264,8 +1264,7 @@ class Runner(object):
       self.bp_files.add(name)
       license_section = self.read_license(name)
       with open(name, 'w') as outf:
-        print_args = filter(lambda x: x != "--no-test-mapping", sys.argv[1:])
-        outf.write(ANDROID_BP_HEADER.format(args=' '.join(print_args)))
+        outf.write(ANDROID_BP_HEADER.format(args=' '.join(sys.argv[1:])))
         outf.write('\n')
         outf.write(license_section)
         outf.write('\n')
@@ -1750,11 +1749,6 @@ def get_parser():
       type=str,
       help='Add the contents of the given file to the main module.')
   parser.add_argument(
-      '--no-test-mapping',
-      action='store_true',
-      default=False,
-      help='Deprecated. Has no effect.')
-  parser.add_argument(
       '--verbose',
       action='store_true',
       default=False,
@@ -1798,7 +1792,7 @@ def dump_config(parser, args):
   non_default_args = {}
   for arg in args_dict:
     if (args_dict[arg] != parser.get_default(arg) and arg != 'dump_config_and_exit'
-        and arg != 'no_test_mapping' and arg != 'config'):
+        and arg != 'config'):
       non_default_args[arg.replace('_', '-')] = args_dict[arg]
   # Write to the specified file.
   with open(args.dump_config_and_exit, 'w') as f:
