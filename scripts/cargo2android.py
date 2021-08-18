@@ -1101,7 +1101,6 @@ class Runner(object):
     # pkg_obj2cc[cc_object[i].pkg][cc_objects[i].obj] = cc_objects[i]
     self.ar_objects = list()
     self.crates = list()
-    self.dependencies = list()  # dependent and build script crates
     self.warning_files = set()
     # Keep a unique mapping from (module name) to crate
     self.name_owners = {}
@@ -1359,20 +1358,6 @@ class Runner(object):
         os.rename(cargo_lock_saved, cargo_lock)
     return self
 
-  def dump_dependencies(self):
-    """Append dependencies and their features to Android.bp."""
-    if not self.dependencies:
-      return
-    dependent_list = list()
-    for c in self.dependencies:
-      dependent_list.append(c.feature_list())
-    sorted_dependencies = sorted(set(dependent_list))
-    self.init_bp_file('Android.bp')
-    with open('Android.bp', 'a') as outf:
-      outf.write('\n// dependent_library ["feature_list"]\n')
-      for s in sorted_dependencies:
-        outf.write('//   ' + s + '\n')
-
   def dump_pkg_obj2cc(self):
     """Dump debug info of the pkg_obj2cc map."""
     if not self.args.debug:
@@ -1433,8 +1418,6 @@ class Runner(object):
         if self.args.add_toplevel_block:
           with open(self.args.add_toplevel_block, 'r') as f:
             self.append_to_bp('\n' + f.read() + '\n')
-        if self.args.dependencies and self.dependencies:
-          self.dump_dependencies()
         if self.errors:
           self.append_to_bp('\n' + ERRORS_LINE + '\n' + self.errors)
     return self
@@ -1450,10 +1433,6 @@ class Runner(object):
     if crate.skip_crate():
       if self.args.debug:  # include debug info of all crates
         self.crates.append(crate)
-      if self.args.dependencies:  # include only dependent crates
-        if (is_dependent_file_path(crate.main_src) and
-            not is_build_crate_name(crate.crate_name)):
-          self.dependencies.append(crate)
     else:
       for c in self.crates:
         if c.merge(crate, 'Android.bp'):
@@ -1589,7 +1568,7 @@ def get_parser():
       '--dependencies',
       action='store_true',
       default=False,
-      help='dump debug info of dependent crates')
+      help='Deprecated. Has no effect.')
   parser.add_argument(
       '--device',
       action='store_true',
