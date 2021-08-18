@@ -93,6 +93,7 @@ class FileMatcher:
         matchingFiles = call_adb(
             f"shell su root find {self.path} -name {self.matcher}", device_id)
 
+        log.debug("Found file %s", matchingFiles.split('\n')[:-1])
         return matchingFiles.split('\n')[:-1]
 
     def get_filetype(self):
@@ -102,8 +103,8 @@ class FileMatcher:
 class WinscopeFileMatcher(FileMatcher):
     def __init__(self, path, matcher, filetype) -> None:
         self.path = path
-        self.internal_matchers = map(lambda ext: FileMatcher(path, f'{matcher}{ext}', filetype),
-            WINSCOPE_EXTS)
+        self.internal_matchers = list(map(lambda ext: FileMatcher(path, f'{matcher}{ext}', filetype),
+            WINSCOPE_EXTS))
         self.type = filetype
 
     def get_filepaths(self, device_id):
@@ -111,6 +112,7 @@ class WinscopeFileMatcher(FileMatcher):
             files = matcher.get_filepaths(device_id)
             if len(files) > 0:
                 return files
+        log.debug("No files found")
         return []
 
 
@@ -446,6 +448,9 @@ class FetchFilesEndpoint(DeviceRequestEndpoint):
                         file_buffers[file_type] = []
                     buf = base64.encodebytes(tmp.read()).decode("utf-8")
                     file_buffers[file_type].append(buf)
+
+        if (len(file_buffers) == 0):
+            log.error("Proxy didn't find any file to fetch")
 
         # server.send_header('X-Content-Type-Options', 'nosniff')
         # add_standard_headers(server)
