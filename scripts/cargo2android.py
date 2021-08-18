@@ -1752,8 +1752,8 @@ def dump_config(parser, args):
   # Also filter certain "temporary" arguments.
   non_default_args = {}
   for arg in args_dict:
-    if args_dict[arg] != parser.get_default(
-        arg) and arg != 'dump_config_and_exit' and arg != 'no_test_mapping':
+    if (args_dict[arg] != parser.get_default(arg) and arg != 'dump_config_and_exit'
+        and arg != 'no_test_mapping' and arg != 'config'):
       non_default_args[arg.replace('_', '-')] = args_dict[arg]
   # Write to the specified file.
   with open(args.dump_config_and_exit, 'w') as f:
