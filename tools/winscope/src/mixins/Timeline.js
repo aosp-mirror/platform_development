@@ -149,9 +149,13 @@ export default {
 
       for (const transitionId in groupedTags) {
         const id = groupedTags[transitionId];
-        //there are two tags per id; check which tag is the start, which is end
-        const transitionStartTime = (id[0].isStartTag) ? id[0].timestamp : id[1].timestamp;
-        const transitionEndTime = (!id[0].isStartTag) ? id[0].timestamp : id[1].timestamp;
+        //there are at least two tags per id, maybe more if multiple traces
+        // determine which tag is the start (min of start times), which is end (max of end times)
+        const startTimes = id.filter(tag => tag.isStartTag).map(tag => tag.timestamp);
+        const endTimes = id.filter(tag => !tag.isStartTag).map(tag => tag.timestamp);
+
+        const transitionStartTime = Math.min(startTimes);
+        const transitionEndTime = Math.max(endTimes);
 
         //do not freeze new transition, as overlap still to be handled (defaulted to 0)
         const transition = this.generateTransition(

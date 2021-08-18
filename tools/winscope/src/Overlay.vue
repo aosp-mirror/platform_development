@@ -112,12 +112,6 @@
                       desc="Consider all timelines for navigation"
                     />
                     <md-icon-option
-                      v-if="tagAndErrorTraces"
-                      :value="NAVIGATION_STYLE.FLICKER"
-                      icon="details"
-                      desc="Display transition tags and flicker errors on global timeline"
-                    />
-                    <md-icon-option
                       :value="NAVIGATION_STYLE.FOCUSED"
                       :icon="TRACE_ICONS[focusedFile.type]"
                       :desc="`Automatically switch what timeline is considered
@@ -161,8 +155,8 @@
                 <timeline
                   :store="store"
                   :flickerMode="flickerMode"
-                  :tags="Object.freeze(presentTags)"
-                  :errors="Object.freeze(presentErrors)"
+                  :tags="Object.freeze(tags)"
+                  :errors="Object.freeze(errors)"
                   :timeline="Object.freeze(minimizedTimeline.timeline)"
                   :selected-index="minimizedTimeline.selectedIndex"
                   :scale="scale"
@@ -289,7 +283,7 @@ import MdIconOption from './components/IconSelection/IconSelectOption.vue';
 import Searchbar from './Searchbar.vue';
 import FileType from './mixins/FileType.js';
 import {NAVIGATION_STYLE} from './utils/consts';
-import {TRACE_ICONS} from '@/decode.js';
+import {TRACE_ICONS, FILE_TYPES} from '@/decode.js';
 
 // eslint-disable-next-line camelcase
 import {nanos_to_string} from './transform.js';
@@ -318,6 +312,8 @@ export default {
       cropIntent: null,
       TRACE_ICONS,
       search: false,
+      tags: [],
+      errors: [],
     };
   },
   created() {
@@ -336,8 +332,7 @@ export default {
       // Only store navigation type in local store if it's a type that will
       // work regardless of what data is loaded.
       if (style === NAVIGATION_STYLE.GLOBAL ||
-        style === NAVIGATION_STYLE.FOCUSED ||
-        style === NAVIGATION_STYLE.FLICKER) {
+        style === NAVIGATION_STYLE.FOCUSED) {
         this.store.navigationStyle = style;
       }
       this.updateNavigationFileFilter();
@@ -396,9 +391,6 @@ export default {
         case NAVIGATION_STYLE.GLOBAL:
           return 'All timelines';
 
-        case NAVIGATION_STYLE.FLICKER:
-          return 'All timelines with tags and errors';
-
         case NAVIGATION_STYLE.FOCUSED:
           return `Focused: ${this.focusedFile.type}`;
 
@@ -422,9 +414,6 @@ export default {
         case NAVIGATION_STYLE.GLOBAL:
           return 'public';
 
-        case NAVIGATION_STYLE.FLICKER:
-          return 'details';
-
         case NAVIGATION_STYLE.FOCUSED:
           return TRACE_ICONS[this.focusedFile.type];
 
@@ -444,11 +433,9 @@ export default {
       }
     },
     minimizedTimeline() {
-      if (this.navigationStyle === NAVIGATION_STYLE.GLOBAL) {
-        return this.mergedTimeline;
-      }
+      this.updateFlickerMode(this.navigationStyle);
 
-      if (this.navigationStyle === NAVIGATION_STYLE.FLICKER) {
+      if (this.navigationStyle === NAVIGATION_STYLE.GLOBAL) {
         return this.mergedTimeline;
       }
 
@@ -465,7 +452,10 @@ export default {
         return this.mergedTimeline;
       }
 
-      if (this.navigationStyle.split('-')[0] === NAVIGATION_STYLE.TARGETED) {
+      if (
+        this.navigationStyle.split('-').length >= 2
+        && this.navigationStyle.split('-')[0] === NAVIGATION_STYLE.TARGETED
+      ) {
         return this.$store.state
             .traces[this.navigationStyle.split('-')[1]];
       }
@@ -481,7 +471,7 @@ export default {
       return this.timelineFiles.length > 1;
     },
     flickerMode() {
-      return this.navigationStyle === NAVIGATION_STYLE.FLICKER;
+      return this.tags.length>0 || this.errors.length>0;
     },
   },
   updated() {
@@ -633,10 +623,6 @@ export default {
           navigationStyleFilter = (f) => true;
           break;
 
-        case NAVIGATION_STYLE.FLICKER:
-          navigationStyleFilter = (f) => true;
-          break;
-
         case NAVIGATION_STYLE.FOCUSED:
           navigationStyleFilter =
             (f) => f.type === this.focusedFile.type;
@@ -660,6 +646,43 @@ export default {
       }
 
       this.$store.commit('setNavigationFilesFilter', navigationStyleFilter);
+    },
+    updateFlickerMode(style) {
+      if (style === NAVIGATION_STYLE.GLOBAL ||
+        style === NAVIGATION_STYLE.CUSTOM) {
+        this.tags = this.presentTags;
+        this.errors = this.presentErrors;
+
+      } else if (style === NAVIGATION_STYLE.FOCUSED) {
+        if (this.focusedFile.timeline) {
+          this.tags = this.getTagTimelineComponents(this.presentTags, this.focusedFile);
+          this.errors = this.getTagTimelineComponents(this.presentErrors, this.focusedFile);
+        }
+      } else if (
+        style.split('-').length >= 2 &&
+        style.split('-')[0] === NAVIGATION_STYLE.TARGETED
+      ) {
+        const file = this.$store.state.traces[style.split('-')[1]];
+        if (file.timeline) {
+          this.tags = this.getTagTimelineComponents(this.presentTags, file);
+          this.errors = this.getTagTimelineComponents(this.presentErrors, file);
+        }
+      //Unexpected navigation type or no timeline present in file
+      } else {
+        console.warn('Unexpected timeline or navigation type; no flicker mode available');
+        this.tags = [];
+        this.errors = [];
+      }
+    },
+    getTagTimelineComponents(items, file) {
+      if (file.type===FILE_TYPES.SURFACE_FLINGER_TRACE) {
+        return items.filter(item => item.layerId !== -1);
+      }
+      if (file.type===FILE_TYPES.WINDOW_MANAGER_TRACE) {
+        return items.filter(item => item.taskId !== -1);
+      }
+      // if focused file is not one supported by tags/errors
+      return [];
     },
     updateVideoOverlayWidth(width) {
       this.videoOverlayExtraWidth = width;

@@ -30,8 +30,8 @@
     <div class="dropdown-content" v-if="isTagSearch()">
       <table>
         <tr class="header">
-          <th style="width: 10%">Start</th>
-          <th style="width: 10%">End</th>
+          <th style="width: 10%">Global Start</th>
+          <th style="width: 10%">Global End</th>
           <th style="width: 80%">Description</th>
         </tr>
 
