@@ -59,11 +59,19 @@ class BuildInfo:
             pass
 
     def to_sql_form_dict(self):
+        """
+        Because sqlite can only store text but self.partitions is a list
+        Turn the list into a string joined by ',', for example:
+        ['system', 'vendor'] => 'system,vendor'
+        """
         sql_form_dict = asdict(self)
         sql_form_dict['partitions'] = ','.join(sql_form_dict['partitions'])
         return sql_form_dict
 
     def to_dict(self):
+        """
+        Return as a normal dict.
+        """
         return asdict(self)
 
 
