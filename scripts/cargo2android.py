@@ -127,6 +127,12 @@ WARNING_FILE_PAT = re.compile('^ *--> ([^:]*):[0-9]+')
 # Rust package name with suffix -d1.d2.d3.
 VERSION_SUFFIX_PAT = re.compile(r'^(.*)-[0-9]+\.[0-9]+\.[0-9]+$')
 
+# Crate types corresponding to a C ABI library
+C_LIBRARY_CRATE_TYPES = ['staticlib', 'cdylib']
+# Crate types corresponding to a Rust ABI library
+RUST_LIBRARY_CRATE_TYPES = ['lib', 'rlib', 'dylib']
+# Crate types corresponding to a library
+LIBRARY_CRATE_TYPES = C_LIBRARY_CRATE_TYPES + RUST_LIBRARY_CRATE_TYPES
 
 def altered_name(name):
   return RENAME_MAP[name] if (name in RENAME_MAP) else name
@@ -696,16 +702,30 @@ class Crate(object):
       self.dump_edition_flags_libs()
     if self.runner.args.host_first_multilib and self.host_supported and crate_type != 'test':
       self.write('    compile_multilib: "first",')
-    if self.runner.args.apex_available and crate_type == 'lib':
+    if self.runner.args.exported_c_header_dir and crate_type in C_LIBRARY_CRATE_TYPES:
+      self.write('    include_dirs: [')
+      for header_dir in self.runner.args.exported_c_header_dir:
+        self.write('        "%s",' % header_dir)
+      self.write('    ],')
+    if self.runner.args.apex_available and crate_type in LIBRARY_CRATE_TYPES:
       self.write('    apex_available: [')
       for apex in self.runner.args.apex_available:
         self.write('        "%s",' % apex)
       self.write('    ],')
-    if self.runner.args.vendor_available:
-      self.write('    vendor_available: true,')
-    if self.runner.args.vendor_ramdisk_available:
-      self.write('    vendor_ramdisk_available: true,')
-    if self.runner.args.min_sdk_version and crate_type == 'lib':
+    if crate_type != 'test':
+      if self.runner.args.native_bridge_supported:
+        self.write('    native_bridge_supported: true,')
+      if self.runner.args.product_available:
+        self.write('    product_available: true,')
+      if self.runner.args.recovery_available:
+        self.write('    recovery_available: true,')
+      if self.runner.args.vendor_available:
+        self.write('    vendor_available: true,')
+      if self.runner.args.vendor_ramdisk_available:
+        self.write('    vendor_ramdisk_available: true,')
+      if self.runner.args.ramdisk_available:
+        self.write('    ramdisk_available: true,')
+    if self.runner.args.min_sdk_version and crate_type in LIBRARY_CRATE_TYPES:
       self.write('    min_sdk_version: "%s",' % self.runner.args.min_sdk_version)
     if crate_type == 'test' and not self.default_srcs:
       self.dump_test_data()
@@ -1637,6 +1657,11 @@ def get_parser():
       help=('run cargo build with existing Cargo.lock ' +
             '(used when some latest dependent crates failed)'))
   parser.add_argument(
+      '--exported_c_header_dir',
+      nargs='*',
+      help='Directories with headers to export for C usage'
+  )
+  parser.add_argument(
       '--min-sdk-version',
       type=str,
       help='Minimum SDK version')
@@ -1644,6 +1669,21 @@ def get_parser():
       '--apex-available',
       nargs='*',
       help='Mark the main library as apex_available with the given apexes.')
+  parser.add_argument(
+      '--native-bridge-supported',
+      action='store_true',
+      default=False,
+      help='Mark the main library as native_bridge_supported.')
+  parser.add_argument(
+      '--product-available',
+      action='store_true',
+      default=False,
+      help='Mark the main library as product_available.')
+  parser.add_argument(
+      '--recovery-available',
+      action='store_true',
+      default=False,
+      help='Mark the main library as recovery_available.')
   parser.add_argument(
       '--vendor-available',
       action='store_true',
@@ -1654,6 +1694,11 @@ def get_parser():
       action='store_true',
       default=False,
       help='Mark the main library as vendor_ramdisk_available.')
+  parser.add_argument(
+      '--ramdisk-available',
+      action='store_true',
+      default=False,
+      help='Mark the main library as ramdisk_available.')
   parser.add_argument(
       '--force-rlib',
       action='store_true',
@@ -1752,8 +1797,8 @@ def dump_config(parser, args):
   # Also filter certain "temporary" arguments.
   non_default_args = {}
   for arg in args_dict:
-    if args_dict[arg] != parser.get_default(
-        arg) and arg != 'dump_config_and_exit' and arg != 'no_test_mapping':
+    if (args_dict[arg] != parser.get_default(arg) and arg != 'dump_config_and_exit'
+        and arg != 'no_test_mapping' and arg != 'config'):
       non_default_args[arg.replace('_', '-')] = args_dict[arg]
   # Write to the specified file.
   with open(args.dump_config_and_exit, 'w') as f:
