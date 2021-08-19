@@ -76,7 +76,7 @@
             class="inline-error"
             @click="setCurrentTimestamp(item.timestamp)"
           >
-            Error
+            Error: {{item.message}}
           </td>
         </tr>
       </table>
@@ -117,17 +117,17 @@ export default {
     };
   },
   methods: {
-    /** set search type depending on tab selected */
+    /** Set search type depending on tab selected */
     setSearchType(searchType) {
       this.searchType = searchType;
     },
-    /** set tab class to determine color highlight for active tab */
+    /** Set tab class to determine color highlight for active tab */
     tabClass(searchType) {
       var isActive = (this.searchType === searchType) ? 'active' : 'inactive';
       return ['tab', isActive];
     },
 
-    /** filter all the tags present in the trace by the searchbar input */
+    /** Filter all the tags present in the trace by the searchbar input */
     filteredTags() {
       var tags = [];
       var filter = this.searchInput.toUpperCase();
@@ -136,7 +136,7 @@ export default {
       });
       return tags;
     },
-    /** add filtered errors to filtered tags to integrate both into table*/
+    /** Add filtered errors to filtered tags to integrate both into table*/
     filteredTagsAndErrors() {
       var tagsAndErrors = [...this.filteredTags()];
       var filter = this.searchInput.toUpperCase();
@@ -148,9 +148,9 @@ export default {
 
       return tagsAndErrors;
     },
-    /** each transition has two tags present
-     * isolate the tags for the desire transition
-     * add a desc to display the timestamps as strings
+    /** Each transition has two tags present
+     * Isolate the tags for the desire transition
+     * Add a desc to display the timestamps as strings
      */
     transitionTags(id) {
       var tags = this.filteredTags().filter((tag) => tag.id === id);
@@ -160,36 +160,36 @@ export default {
       return tags;
     },
 
-    /** find the start as minimum timestamp in transition tags */
+    /** Find the start as minimum timestamp in transition tags */
     transitionStart(tags) {
       var times = tags.map((tag) => tag.timestamp);
       return times[0];
     },
-    /** find the end as maximum timestamp in transition tags */
+    /** Find the end as maximum timestamp in transition tags */
     transitionEnd(tags) {
       var times = tags.map((tag) => tag.timestamp);
       return times[times.length - 1];
     },
-    /** upon selecting a start/end tag in the dropdown;
+    /** Upon selecting a start/end tag in the dropdown;
      * navigates to that timestamp in the timeline */
     setCurrentTimestamp(timestamp) {
       this.$store.dispatch("updateTimelineTime", timestamp);
     },
 
-    /** colour codes text of transition in dropdown */
+    /** Colour codes text of transition in dropdown */
     transitionTextColor(transition) {
       return transitionMap.get(transition).color;
     },
-    /** displays transition description rather than variable name */
+    /** Displays transition description rather than variable name */
     transitionDesc(transition) {
       return transitionMap.get(transition).desc;
     },
-    /** add a desc to display the error timestamps as strings */
+    /** Add a desc to display the error timestamps as strings */
     errorDesc(timestamp) {
       return nanos_to_string(timestamp);
     },
 
-    /** navigates to closest timestamp in timeline to search input*/
+    /** Navigates to closest timestamp in timeline to search input*/
     updateSearchForTimestamp() {
       if (regExpTimestampSearch.test(this.searchInput)) {
         var roundedTimestamp = parseInt(this.searchInput);

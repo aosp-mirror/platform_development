@@ -92,10 +92,12 @@ export default {
 }
 
 .arrow-start {
+  position: absolute;
   left: 0%;
 }
 
 .arrow-end {
+  position: absolute;
   right: 0%;
 }
 

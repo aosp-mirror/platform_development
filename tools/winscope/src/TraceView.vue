@@ -42,6 +42,7 @@
           </md-checkbox>
           <md-checkbox v-model="store.onlyVisible">Only visible</md-checkbox>
           <md-checkbox v-model="store.flattened">Flat</md-checkbox>
+          <md-checkbox v-if="hasTagsOrErrors" v-model="store.flickerTraceView">Flicker</md-checkbox>
           <md-field md-inline class="filter">
             <label>Filter...</label>
             <md-input v-model="hierarchyPropertyFilterString"></md-input>
@@ -56,6 +57,9 @@
             :filter="hierarchyFilter"
             :flattened="store.flattened"
             :onlyVisible="store.onlyVisible"
+            :flickerTraceView="store.flickerTraceView"
+            :presentTags="presentTags"
+            :presentErrors="presentErrors"
             :items-clickable="true"
             :useGlobalCollapsedState="true"
             :simplify-names="store.simplifyNames"
@@ -166,7 +170,7 @@ function findEntryInTree(tree, id) {
 
 export default {
   name: 'traceview',
-  props: ['store', 'file', 'summarizer'],
+  props: ['store', 'file', 'summarizer', 'presentTags', 'presentErrors'],
   data() {
     return {
       propertyFilterString: '',
@@ -307,9 +311,29 @@ export default {
 
       return prevEntry;
     },
+
+    /** Performs check for id match between entry and present tags/errors
+     * must be carried out for every present tag/error
+     */
+    matchItems(flickerItems, entryItem) {
+      var match = false;
+      flickerItems.forEach(flickerItem => {
+        if (flickerItem.taskId===entryItem.taskId || flickerItem.layerId===entryItem.id) {
+          match = true;
+        }
+      });
+      return match;
+    },
+    /** Returns check for id match between entry and present tags/errors */
+    isEntryTagMatch(entryItem) {
+      return this.matchItems(this.presentTags, entryItem) || this.matchItems(this.presentErrors, entryItem);
+    },
   },
   created() {
     this.setData(this.file.data[this.file.selectedIndex ?? 0]);
+  },
+  destroyed() {
+    this.store.flickerTraceView = false;
   },
   watch: {
     selectedIndex() {
@@ -338,9 +362,12 @@ export default {
     hierarchyFilter() {
       const hierarchyPropertyFilter =
           getFilter(this.hierarchyPropertyFilterString);
-      return this.store.onlyVisible ? (c) => {
+      var fil = this.store.onlyVisible ? (c) => {
         return c.isVisible && hierarchyPropertyFilter(c);
       } : hierarchyPropertyFilter;
+      return this.store.flickerTraceView ? (c) => {
+        return this.isEntryTagMatch(c);
+      } : fil;
     },
     propertyFilter() {
       return getFilter(this.propertyFilterString);
@@ -363,6 +390,9 @@ export default {
       }
 
       return summary;
+    },
+    hasTagsOrErrors() {
+      return this.presentTags.length > 0 || this.presentErrors.length > 0;
     },
   },
   components: {

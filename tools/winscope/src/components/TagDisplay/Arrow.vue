@@ -24,7 +24,6 @@ export default {
 <style scoped>
 .arrow {
   display: inline-block;
-  position: absolute;
   width: 0;
   height: 0;
   border-left: 6px solid transparent;

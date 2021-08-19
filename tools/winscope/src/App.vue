@@ -52,6 +52,8 @@
               :ref="file.type"
               :store="store"
               :file="file"
+              :presentTags="Object.freeze(presentTags)"
+              :presentErrors="Object.freeze(presentErrors)"
               @click="onDataViewFocus(file)"
             />
           </div>
@@ -102,6 +104,7 @@ export default {
         simplifyNames: true,
         displayDefaults: true,
         navigationStyle: NAVIGATION_STYLE.GLOBAL,
+        flickerTraceView: false,
       }),
       overlayRef: 'overlay',
       mainContentStyle: {
@@ -110,7 +113,6 @@ export default {
       presentTags: [],
       presentErrors: [],
       searchTypes: [SEARCH_TYPE.TIMESTAMP],
-      tagAndErrorTraces: false,
     };
   },
   created() {
@@ -124,7 +126,7 @@ export default {
   },
 
   methods: {
-    /** get states from either tag files or error files */
+    /** Get states from either tag files or error files */
     getUpdatedStates(files) {
       var states = [];
       for (const file of files) {
@@ -132,7 +134,7 @@ export default {
       }
       return states;
     },
-    /** get tags from all uploaded tag files*/
+    /** Get tags from all uploaded tag files*/
     getUpdatedTags() {
       var tagStates = this.getUpdatedStates(this.tagFiles);
       var tags = [];
@@ -144,7 +146,7 @@ export default {
       });
       return tags;
     },
-    /** get tags from all uploaded error files*/
+    /** Get tags from all uploaded error files*/
     getUpdatedErrors() {
       var errorStates = this.getUpdatedStates(this.errorFiles);
       var errors = [];
@@ -157,11 +159,11 @@ export default {
       });
       return errors;
     },
-    /** set flicker mode check for if there are tag/error traces uploaded*/
+    /** Set flicker mode check for if there are tag/error traces uploaded*/
     shouldUpdateTagAndErrorTraces() {
       return this.tagFiles.length > 0 || this.errorFiles.length > 0;
     },
-    /** activate flicker search tab if tags/errors uploaded*/
+    /** Activate flicker search tab if tags/errors uploaded*/
     updateSearchTypes() {
       this.searchTypes = [SEARCH_TYPE.TIMESTAMP];
       if (this.tagAndErrorTraces) this.searchTypes.push(SEARCH_TYPE.TAG);
