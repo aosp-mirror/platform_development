@@ -29,16 +29,31 @@ function download_kernel_info_files {
   local kernel_target=$2
   local output_folder=$3
 
-  cd "$output_folder"
+  local url_base="https://ci.android.com/builds/submitted/${bid}/${kernel_target}/latest"
+  local url_list="${url_base}/list.json"
+  local list_json="$(curl -sfL "$url_list")"
+  # do nothing and return if cannot get the file list
+  [[ -z "$list_json" ]] && return
 
+  # Pick manifest.xml if the file is not ready
+  local artifact_manifest="manifest_${bid}.xml"
+  local output_manifest="${output_folder}/manifest.xml"
+  if [[ ! -f "$output_manifest" ]]; then
+    echo "Pick ${artifact_manifest} to ${output_manifest}..."
+    curl -sfL "${url_base}/raw/${artifact_manifest}" -o "$output_manifest"
+  fi
+
+  # Pick kernel binaries
   for f in "${KERNEL_INFO_FILES[@]}"; do
-    /google/data/ro/projects/android/fetch_artifact \
-      --bid "$bid" \
-      --target "$kernel_target" \
-      "$f" || true
-  done
+    # The URL request always return 200 even the file does not exist,
+    # so we check it in the file list. Skip the file if it does not exist.
+    [[ "$list_json" =~ "\"name\":\"${f}\"" ]] || continue
 
-  cd -
+    local output="${output_folder}/$(basename "$f")"
+
+    echo "Pick ${output}..."
+    curl -sfL "${url_base}/raw/${f}" -o "$output"
+  done
 }
 
 function download_all_kernel_info_files {
