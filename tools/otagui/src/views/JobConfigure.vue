@@ -17,7 +17,6 @@
         :is="currentTab"
         class="tab-component"
         :targetDetails="targetDetails"
-        @update:isIncremental="isIncremental = $event"
         @update:handler="setHandler"
       />
     </v-col>
@@ -30,7 +29,7 @@
       <!-- the key-binding refresh has to be used to reload the methods-->
       <BuildLibrary
         :refresh="refresh"
-        :isIncremental="isIncremental"
+        :isIncremental="checkIncremental"
         @update:incrementalSource="addIncrementalSource"
         @update:targetBuild="addTargetBuild"
         @update:targetDetails="targetDetails = $event"
@@ -55,7 +54,6 @@ export default {
   data() {
     return {
       targetDetails: [],
-      isIncremental: false,
       currentTab: 'SingleOTAOptions',
       refresh: false,
       tabs: [
@@ -64,6 +62,11 @@ export default {
         {label: 'Chain OTA', component: 'ChainOTAOptions'}
       ],
     }
+  },
+  computed: {
+    checkIncremental() {
+      return this.$store.state.otaConfig.isIncremental
+    },
   },
   methods: {
     setHandler(addIncrementalSource, addTargetBuild) {

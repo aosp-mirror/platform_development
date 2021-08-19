@@ -15,10 +15,12 @@
   <div v-if="otaConfig.isPartial">
     <v-divider />
     <h3>Select Partitions</h3>
-    <PartialCheckbox
-      v-model="otaConfig.partial"
-      :labels="updatablePartitions"
-    />
+    <div v-if="targetDetails.length!==0">
+      <PartialCheckbox
+        v-model="otaConfig.partial"
+        :labels="updatablePartitions"
+      />
+    </div>
     <v-divider />
   </div>
   <v-btn
@@ -51,7 +53,7 @@
 import BaseInput from '@/components/BaseInput.vue'
 import BaseCheckbox from '@/components/BaseCheckbox.vue'
 import PartialCheckbox from '@/components/PartialCheckbox.vue'
-import { OTAConfiguration, OTABasicFlags, OTAExtraFlags } from '@/services/JobSubmission.js'
+import { OTABasicFlags, OTAExtraFlags } from '@/services/JobSubmission.js'
 
 export default {
   components: {
@@ -71,7 +73,7 @@ export default {
   },
   data () {
     return {
-      otaConfig: new OTAConfiguration(),
+      otaConfig: null,
       moreOptions: false,
       basicFlags: OTABasicFlags,
       extraFlags: OTAExtraFlags
@@ -93,14 +95,29 @@ export default {
       )
       return target[0].partitions
     },
+    checkIncremental() {
+      return this.$store.state.otaConfig.isIncremental
+    }
   },
   watch: {
     otaConfig: {
       handler () {
-        this.$emit('update:otaConfig', this.otaConfig)
+        this.$store.commit('SET_CONFIG', this.otaConfig)
       },
       deep: true
+    },
+    checkIncremental: {
+      handler () {
+        // In chain OTA, this option will be set outside this components
+        console.log('changed')
+        this.otaConfig.isIncremental = this.checkIncremental
+      }
     }
+  },
+  created() {
+    // This option only need to be synced once because this will not be
+    // modified outside this components
+    this.otaConfig = this.$store.state.otaConfig
   }
 }
 </script>
