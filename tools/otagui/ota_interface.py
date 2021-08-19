@@ -251,7 +251,7 @@ class ProcessesManagement:
             args['extra'] = \
                 '--' + ' --'.join(args['extra_keys']) + ' ' + args['extra']
         if args['extra']:
-            command += args['extra'].split(' ')
+            command += args['extra'].strip().split(' ')
         command.append('-k')
         command.append(
             'build/make/target/product/security/testkey')
