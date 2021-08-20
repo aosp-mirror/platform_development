@@ -55,6 +55,7 @@
             :selected="hierarchySelected"
             :filter="hierarchyFilter"
             :flattened="store.flattened"
+            :onlyVisible="store.onlyVisible"
             :items-clickable="true"
             :useGlobalCollapsedState="true"
             :simplify-names="store.simplifyNames"
