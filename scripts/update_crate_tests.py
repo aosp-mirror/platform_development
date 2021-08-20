@@ -27,11 +27,14 @@ argument is provided, it assumes the crate is the current directory.
 This script is automatically called by external_updater.
 """
 
+import argparse
+import glob
 import json
 import os
 import platform
 import subprocess
 import sys
+from pathlib import Path
 
 # Some tests requires specific options. Consider fixing the upstream crate
 # before updating this dictionary.
@@ -245,11 +248,23 @@ class TestMapping(object):
         print("TEST_MAPPING successfully updated for %s!" % self.package.dir_rel)
 
 
+def parse_args():
+    parser = argparse.ArgumentParser('update_crate_tests')
+    parser.add_argument(
+        'paths',
+        nargs='*',
+        help='Absolute or relative paths of the projects as globs.')
+    return parser.parse_args()
+
+
 def main():
-    if len(sys.argv) > 1:
-        paths = sys.argv[1:]
-    else:
-        paths = [os.getcwd()]
+    args = parse_args()
+    paths = args.paths if len(args.paths) > 0 else [os.getcwd()]
+    # We want to use glob to get all the paths, so we first convert to absolute.
+    paths = [Path(path).resolve() for path in paths]
+    paths = sorted([path for abs_path in paths
+                    for path in glob.glob(str(abs_path))])
+
     env = Env()
     bazel = Bazel(env)
     for path in paths:
