@@ -1,7 +1,7 @@
 <template>
   <form @submit.prevent="sendForm">
     <FileSelect
-      v-if="otaConfig.isIncremental"
+      v-if="checkIncremental"
       v-model="incrementalSource"
       label="Select the source file"
       :options="targetDetails"
@@ -14,7 +14,6 @@
     <OTAOptions
       :targetDetails="targetDetails"
       :targetBuilds="[targetBuild]"
-      @update:otaConfig="otaConfig=$event"
     />
     <v-divider class="my-5" />
     <v-btn
@@ -29,7 +28,6 @@
 <script>
 import OTAOptions from '@/components/OTAOptions.vue'
 import FileSelect from '@/components/FileSelect.vue'
-import { OTAConfiguration } from '@/services/JobSubmission.js'
 
 export default {
   components: {
@@ -44,25 +42,30 @@ export default {
   },
   data() {
     return {
-      incrementalSource: '',
-      targetBuild: '',
-      otaConfig: new OTAConfiguration(),
     }
   },
   computed: {
     checkIncremental() {
-      return this.otaConfig.isIncremental
+      return this.$store.state.otaConfig.isIncremental
     },
-  },
-  watch: {
-    checkIncremental: {
-      handler: function () {
-        this.$emit('update:isIncremental', this.checkIncremental)
+    incrementalSource: {
+      get() {
+        return this.$store.state.sourceBuilds[0]
       },
+      set(target) {
+        this.$store.commit('SET_SOURCE', target)
+      }
     },
+    targetBuild: {
+      get() {
+        return this.$store.state.targetBuilds[0]
+      },
+      set(target) {
+        this.$store.commit('SET_TARGET', target)
+      }
+    }
   },
   created() {
-    this.$emit('update:isIncremental', this.checkIncremental)
     this.$emit('update:handler', this.setIncrementalSource, this.setTargetBuild)
   },
   methods: {
@@ -71,10 +74,12 @@ export default {
      */
     async sendForm() {
       try {
-        let response_message = await this.otaConfig.sendForm(
+        let response_message = await this.$store.state.otaConfig.sendForm(
           this.targetBuild, this.incrementalSource)
         alert(response_message)
-        this.otaConfig.reset()
+        this.$store.state.otaConfig.reset()
+        this.$store.commit('SET_TARGETS', [])
+        this.$store.commit('SET_SOURCES', [])
       } catch (err) {
         alert(
           'Job cannot be started properly for the following reasons: ' + err
