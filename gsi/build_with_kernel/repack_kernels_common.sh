@@ -69,13 +69,6 @@ function prepare_kernel_image()
     "kernel-build-id": ${BID}
 }
 EOF
-
-  # Copy all other helper files
-  cp "${prebuilts_root}/System.map" "${dist_root}"
-  cp "${prebuilts_root}/vmlinux" "${dist_root}"
-  cp "${prebuilts_root}/vmlinux.symvers" "${dist_root}"
-  cp "${prebuilts_root}/modules.builtin" "${dist_root}"
-  cp "${prebuilts_root}/modules.builtin.modinfo" "${dist_root}"
 }
 
 function prepare_kernel_modules()
