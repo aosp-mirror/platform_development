@@ -34,6 +34,7 @@ import os
 import platform
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 
 # Some tests requires specific options. Consider fixing the upstream crate
@@ -250,10 +251,15 @@ class TestMapping(object):
 
 def parse_args():
     parser = argparse.ArgumentParser('update_crate_tests')
-    parser.add_argument(
-        'paths',
-        nargs='*',
-        help='Absolute or relative paths of the projects as globs.')
+    parser.add_argument('paths',
+                        nargs='*',
+                        help='Absolute or relative paths of the projects as globs.')
+    parser.add_argument('--branch_and_commit',
+                        action='store_true',
+                        help='Starts a new branch and commit changes.')
+    parser.add_argument('--push_change',
+                        action='store_true',
+                        help='Pushes change to Gerrit.')
     return parser.parse_args()
 
 
@@ -270,9 +276,20 @@ def main():
     for path in paths:
         try:
             test_mapping = TestMapping(env, bazel, path)
-        except UpdaterException as err:
+            test_mapping.create()
+            changed = (subprocess.call(['git', 'diff', '--quiet']) == 1)
+            if changed and args.branch_and_commit:
+                subprocess.check_output(['repo', 'start',
+                                         'tmp_auto_test_mapping', '.'])
+                subprocess.check_output(['git', 'add', 'TEST_MAPPING'])
+                subprocess.check_output(['git', 'commit', '-m',
+                                         'Update TEST_MAPPING\n\nTest: None'])
+            if changed and args.push_change:
+                date = datetime.today().strftime('%m-%d')
+                subprocess.check_output(['git', 'push', 'aosp', 'HEAD:refs/for/master',
+                                         '-o', 'topic=test-mapping-%s' % date])
+        except (UpdaterException, subprocess.CalledProcessError) as err:
             sys.exit("Error: " + str(err))
-        test_mapping.create()
 
 if __name__ == '__main__':
   main()
