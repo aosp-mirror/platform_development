@@ -21,7 +21,7 @@
 import TraceView from '@/TraceView.vue';
 
 export default {
-  name: 'WindowManagerTraceView',
+  name: 'SurfaceFlingerTraceView',
   props: ['store', 'file'],
   components: {
     TraceView,
