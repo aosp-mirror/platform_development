@@ -60,14 +60,10 @@ def android_build_top():
 
 
 def _get_clang_revision():
-    regex = r'ClangDefaultVersion\s+= "(?P<rev>clang-r\d+[a-z]?)"'
-    global_go = android_build_top() / 'build/soong/cc/config/global.go'
-    with open(global_go) as infile:
-        match = re.search(regex, infile.read())
-
-    if match is None:
-        raise RuntimeError(f'Parsing clang info from {global_go} failed')
-    return match.group('rev')
+    version_output = subprocess.check_output(
+        android_build_top() / 'build/soong/scripts/get_clang_version.py',
+        text=True)
+    return version_output.strip()
 
 
 CLANG_TOP = android_build_top() / 'prebuilts/clang/host/linux-x86/' \
@@ -183,11 +179,15 @@ def do_report(args):
     object_flags = [args.binary[0]] + ['--object=' + b for b in args.binary[1:]]
     source_dirs = ['/proc/self/cwd/' + s for s in args.source_dir]
 
+    output_dir = f'{temp_dir}/html'
+
     check_output([
         str(LLVM_COV_PATH), 'show', f'--instr-profile={profdata}',
-        '--format=html', f'--output-dir={temp_dir}/html',
+        '--format=html', f'--output-dir={output_dir}',
         '--show-region-summary=false'
     ] + object_flags + source_dirs)
+
+    print(f'Coverage report data written in {output_dir}')
 
 
 def parse_args():

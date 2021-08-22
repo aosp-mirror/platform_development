@@ -2,6 +2,7 @@
 
 import gzip
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -177,9 +178,12 @@ def get_lsdump_paths_file_path(product, variant):
     return os.path.join(product_out, 'lsdump_paths.txt')
 
 
-def _is_sanitizer_variation(variation):
-    """Check whether the variation is introduced by a sanitizer."""
-    return variation in {'asan', 'hwasan', 'tsan', 'intOverflow', 'cfi', 'scs'}
+def _get_module_variant_sort_key(suffix):
+    for variant in suffix.split('_'):
+        match = re.match(r'apex(\d+)$', variant)
+        if match:
+            return (int(match.group(1)), suffix)
+    return (-1, suffix)
 
 
 def _get_module_variant_dir_name(tag, vndk_version, arch_cpu_str):
@@ -232,13 +236,10 @@ def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, targets):
                 if not variant.startswith(prefix):
                     continue
                 new_suffix = variant[len(prefix):]
-                # Skip if the suffix contains APEX variations.
-                new_variations = [x for x in new_suffix.split('_') if x]
-                if new_variations and not all(_is_sanitizer_variation(x)
-                                              for x in new_variations):
-                    continue
                 old_suffix = suffixes[libname].get(arch_cpu)
-                if not old_suffix or new_suffix > old_suffix:
+                if (not old_suffix or
+                        _get_module_variant_sort_key(new_suffix) >
+                        _get_module_variant_sort_key(old_suffix)):
                     lsdump_paths[libname][arch_cpu][tag] = path
                     suffixes[libname][arch_cpu] = new_suffix
     return lsdump_paths
