@@ -127,6 +127,12 @@ WARNING_FILE_PAT = re.compile('^ *--> ([^:]*):[0-9]+')
 # Rust package name with suffix -d1.d2.d3.
 VERSION_SUFFIX_PAT = re.compile(r'^(.*)-[0-9]+\.[0-9]+\.[0-9]+$')
 
+# Crate types corresponding to a C ABI library
+C_LIBRARY_CRATE_TYPES = ['staticlib', 'cdylib']
+# Crate types corresponding to a Rust ABI library
+RUST_LIBRARY_CRATE_TYPES = ['lib', 'rlib', 'dylib']
+# Crate types corresponding to a library
+LIBRARY_CRATE_TYPES = C_LIBRARY_CRATE_TYPES + RUST_LIBRARY_CRATE_TYPES
 
 def altered_name(name):
   return RENAME_MAP[name] if (name in RENAME_MAP) else name
@@ -696,16 +702,30 @@ class Crate(object):
       self.dump_edition_flags_libs()
     if self.runner.args.host_first_multilib and self.host_supported and crate_type != 'test':
       self.write('    compile_multilib: "first",')
-    if self.runner.args.apex_available and crate_type == 'lib':
+    if self.runner.args.exported_c_header_dir and crate_type in C_LIBRARY_CRATE_TYPES:
+      self.write('    include_dirs: [')
+      for header_dir in self.runner.args.exported_c_header_dir:
+        self.write('        "%s",' % header_dir)
+      self.write('    ],')
+    if self.runner.args.apex_available and crate_type in LIBRARY_CRATE_TYPES:
       self.write('    apex_available: [')
       for apex in self.runner.args.apex_available:
         self.write('        "%s",' % apex)
       self.write('    ],')
-    if self.runner.args.vendor_available:
-      self.write('    vendor_available: true,')
-    if self.runner.args.vendor_ramdisk_available:
-      self.write('    vendor_ramdisk_available: true,')
-    if self.runner.args.min_sdk_version and crate_type == 'lib':
+    if crate_type != 'test':
+      if self.runner.args.native_bridge_supported:
+        self.write('    native_bridge_supported: true,')
+      if self.runner.args.product_available:
+        self.write('    product_available: true,')
+      if self.runner.args.recovery_available:
+        self.write('    recovery_available: true,')
+      if self.runner.args.vendor_available:
+        self.write('    vendor_available: true,')
+      if self.runner.args.vendor_ramdisk_available:
+        self.write('    vendor_ramdisk_available: true,')
+      if self.runner.args.ramdisk_available:
+        self.write('    ramdisk_available: true,')
+    if self.runner.args.min_sdk_version and crate_type in LIBRARY_CRATE_TYPES:
       self.write('    min_sdk_version: "%s",' % self.runner.args.min_sdk_version)
     if crate_type == 'test' and not self.default_srcs:
       self.dump_test_data()
@@ -1101,7 +1121,6 @@ class Runner(object):
     # pkg_obj2cc[cc_object[i].pkg][cc_objects[i].obj] = cc_objects[i]
     self.ar_objects = list()
     self.crates = list()
-    self.dependencies = list()  # dependent and build script crates
     self.warning_files = set()
     # Keep a unique mapping from (module name) to crate
     self.name_owners = {}
@@ -1245,8 +1264,7 @@ class Runner(object):
       self.bp_files.add(name)
       license_section = self.read_license(name)
       with open(name, 'w') as outf:
-        print_args = filter(lambda x: x != "--no-test-mapping", sys.argv[1:])
-        outf.write(ANDROID_BP_HEADER.format(args=' '.join(print_args)))
+        outf.write(ANDROID_BP_HEADER.format(args=' '.join(sys.argv[1:])))
         outf.write('\n')
         outf.write(license_section)
         outf.write('\n')
@@ -1359,20 +1377,6 @@ class Runner(object):
         os.rename(cargo_lock_saved, cargo_lock)
     return self
 
-  def dump_dependencies(self):
-    """Append dependencies and their features to Android.bp."""
-    if not self.dependencies:
-      return
-    dependent_list = list()
-    for c in self.dependencies:
-      dependent_list.append(c.feature_list())
-    sorted_dependencies = sorted(set(dependent_list))
-    self.init_bp_file('Android.bp')
-    with open('Android.bp', 'a') as outf:
-      outf.write('\n// dependent_library ["feature_list"]\n')
-      for s in sorted_dependencies:
-        outf.write('//   ' + s + '\n')
-
   def dump_pkg_obj2cc(self):
     """Dump debug info of the pkg_obj2cc map."""
     if not self.args.debug:
@@ -1433,8 +1437,6 @@ class Runner(object):
         if self.args.add_toplevel_block:
           with open(self.args.add_toplevel_block, 'r') as f:
             self.append_to_bp('\n' + f.read() + '\n')
-        if self.args.dependencies and self.dependencies:
-          self.dump_dependencies()
         if self.errors:
           self.append_to_bp('\n' + ERRORS_LINE + '\n' + self.errors)
     return self
@@ -1450,10 +1452,6 @@ class Runner(object):
     if crate.skip_crate():
       if self.args.debug:  # include debug info of all crates
         self.crates.append(crate)
-      if self.args.dependencies:  # include only dependent crates
-        if (is_dependent_file_path(crate.main_src) and
-            not is_build_crate_name(crate.crate_name)):
-          self.dependencies.append(crate)
     else:
       for c in self.crates:
         if c.merge(crate, 'Android.bp'):
@@ -1589,7 +1587,7 @@ def get_parser():
       '--dependencies',
       action='store_true',
       default=False,
-      help='dump debug info of dependent crates')
+      help='Deprecated. Has no effect.')
   parser.add_argument(
       '--device',
       action='store_true',
@@ -1658,6 +1656,11 @@ def get_parser():
       help=('run cargo build with existing Cargo.lock ' +
             '(used when some latest dependent crates failed)'))
   parser.add_argument(
+      '--exported_c_header_dir',
+      nargs='*',
+      help='Directories with headers to export for C usage'
+  )
+  parser.add_argument(
       '--min-sdk-version',
       type=str,
       help='Minimum SDK version')
@@ -1665,6 +1668,21 @@ def get_parser():
       '--apex-available',
       nargs='*',
       help='Mark the main library as apex_available with the given apexes.')
+  parser.add_argument(
+      '--native-bridge-supported',
+      action='store_true',
+      default=False,
+      help='Mark the main library as native_bridge_supported.')
+  parser.add_argument(
+      '--product-available',
+      action='store_true',
+      default=False,
+      help='Mark the main library as product_available.')
+  parser.add_argument(
+      '--recovery-available',
+      action='store_true',
+      default=False,
+      help='Mark the main library as recovery_available.')
   parser.add_argument(
       '--vendor-available',
       action='store_true',
@@ -1675,6 +1693,11 @@ def get_parser():
       action='store_true',
       default=False,
       help='Mark the main library as vendor_ramdisk_available.')
+  parser.add_argument(
+      '--ramdisk-available',
+      action='store_true',
+      default=False,
+      help='Mark the main library as ramdisk_available.')
   parser.add_argument(
       '--force-rlib',
       action='store_true',
@@ -1726,11 +1749,6 @@ def get_parser():
       type=str,
       help='Add the contents of the given file to the main module.')
   parser.add_argument(
-      '--no-test-mapping',
-      action='store_true',
-      default=False,
-      help='Deprecated. Has no effect.')
-  parser.add_argument(
       '--verbose',
       action='store_true',
       default=False,
@@ -1773,8 +1791,8 @@ def dump_config(parser, args):
   # Also filter certain "temporary" arguments.
   non_default_args = {}
   for arg in args_dict:
-    if args_dict[arg] != parser.get_default(
-        arg) and arg != 'dump_config_and_exit' and arg != 'no_test_mapping':
+    if (args_dict[arg] != parser.get_default(arg) and arg != 'dump_config_and_exit'
+        and arg != 'config'):
       non_default_args[arg.replace('_', '-')] = args_dict[arg]
   # Write to the specified file.
   with open(args.dump_config_and_exit, 'w') as f:
