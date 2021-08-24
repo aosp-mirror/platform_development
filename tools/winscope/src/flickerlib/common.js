@@ -66,6 +66,8 @@ const Matrix = require('flicker').com.android.server.wm.traces.common.layers.
     Transform.Matrix;
 const Transform = require('flicker').com.android.server.wm.traces.common.
     layers.Transform;
+const Display = require('flicker').com.android.server.wm.traces.common.
+    layers.Display;
 
 // Common
 const Size = require('flicker').com.android.server.wm.traces.common.Size;
@@ -236,6 +238,7 @@ export {
   LayersTrace,
   Transform,
   Matrix,
+  Display,
   // Tags
   Tag,
   TagState,
