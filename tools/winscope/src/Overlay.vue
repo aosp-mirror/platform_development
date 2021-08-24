@@ -78,7 +78,7 @@
               <md-button
                 @click="toggleSearch()"
                 class="drop-search"
-              >Show/hide search bar</md-button>
+              >Toggle search bar</md-button>
 
               <div class="active-timeline" v-show="minimized">
                 <div
