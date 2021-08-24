@@ -64,10 +64,20 @@ export default {
     }
   },
   mounted() {
-    // Set the default value to be true once mounted
-    for (let key of this.labels) {
-      this.partitionSelected.set(key, true)
+    // Set the default value to be true once mounted if nothing has been selected
+    if (this.modelValue.length === 0) {
+      for (let key of this.labels) {
+        this.partitionSelected.set(key, true)
+      }
+    } else {
+      for (let key of this.labels) {
+        this.partitionSelected.set(key, false)
+      }
+      for (let key of this.modelValue) {
+        this.partitionSelected.set(key, true)
+      }
     }
+    this.$emit('update:modelValue', this.modelValue)
   },
   methods: {
     updateSelected(newSelect) {
