@@ -40,12 +40,16 @@
         v-if="showInWindowManagerTraceView(file)"
         :store="store"
         :file="file"
+        :presentTags="presentTags"
+        :presentErrors="presentErrors"
         ref="view"
       />
       <SurfaceFlingerTraceView
         v-else-if="showInSurfaceFlingerTraceView(file)"
         :store="store"
         :file="file"
+        :presentTags="presentTags"
+        :presentErrors="presentErrors"
         ref="view"
       />
       <transactionsview
@@ -151,7 +155,7 @@ export default {
       this.$emit('click', e);
     },
   },
-  props: ['store', 'file'],
+  props: ['store', 'file', 'presentTags', 'presentErrors'],
   mixins: [FileType],
   components: {
     'traceview': TraceView,

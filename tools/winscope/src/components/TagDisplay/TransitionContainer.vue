@@ -13,7 +13,7 @@
      limitations under the License.
 -->
 <template>
-  <div class="transition-container" :style="transitionStyle">
+  <div class="transition-container" :style="transitionStyle" @click="handleTransitionClick()">
     <md-tooltip md-direction="left"> {{tooltip}} </md-tooltip>
     <arrow class="arrow-start" :style="transitionComponentColor"/>
     <div class="connector" :style="transitionComponentColor"/>
@@ -22,6 +22,10 @@
 </template>
 <script>
 import Arrow from './Arrow.vue';
+import {LocalStore} from '../../localstore.js';
+
+var transitionCount = false;
+
 export default {
   name: 'transition-container',
   components: {
@@ -34,6 +38,12 @@ export default {
     'startPos': {
       type: Number,
     },
+    'startTime': {
+      type: Number,
+    },
+    'endTime': {
+      type: Number,
+    },
     'color': {
       type: String,
     },
@@ -42,6 +52,20 @@ export default {
     },
     'tooltip': {
       type: String,
+    },
+    'store': {
+      type: LocalStore,
+    },
+  },
+  methods: {
+    handleTransitionClick() {
+      if (transitionCount) {
+        this.$store.dispatch('updateTimelineTime', this.startTime);
+        transitionCount = false;
+      } else {
+        this.$store.dispatch('updateTimelineTime', this.endTime);
+        transitionCount = true;
+      }
     },
   },
   computed: {
@@ -68,10 +92,12 @@ export default {
 }
 
 .arrow-start {
+  position: absolute;
   left: 0%;
 }
 
 .arrow-end {
+  position: absolute;
   right: 0%;
 }
 

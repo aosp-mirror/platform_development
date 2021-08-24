@@ -50,7 +50,12 @@
           />
         </div>
         <div v-else>
-          <DefaultTreeElement :item="item" :simplify-names="simplifyNames"/>
+          <DefaultTreeElement
+            :item="item"
+            :simplify-names="simplifyNames"
+            :errors="errors"
+            :transitions="transitions"
+          />
         </div>
       </div>
       <div v-show="isCollapsed">
@@ -89,6 +94,9 @@
         :flattened="flattened"
         :onlyVisible="onlyVisible"
         :simplify-names="simplifyNames"
+        :flickerTraceView="flickerTraceView"
+        :presentTags="currentTags"
+        :presentErrors="currentErrors"
         :force-flattened="applyingFlattened"
         v-show="filterMatches(c)"
         :items-clickable="itemsClickable"
@@ -113,7 +121,6 @@
 <script>
 import DefaultTreeElement from './DefaultTreeElement.vue';
 import NodeContextMenu from './NodeContextMenu.vue';
-
 import {DiffType} from './utils/diff.js';
 
 /* in px, must be kept in sync with css, maybe find a better solution... */
@@ -143,6 +150,9 @@ export default {
     // Custom view to use to render the elements in the tree view
     'elementView',
     'onlyVisible',
+    'flickerTraceView',
+    'presentTags',
+    'presentErrors',
   ],
   data() {
     const isCollapsedByDefault = this.collapse ?? false;
@@ -163,6 +173,10 @@ export default {
         [DiffType.MODIFIED]: '.',
         [DiffType.MOVED]: '.',
       },
+      currentTags: [],
+      currentErrors: [],
+      transitions: [],
+      errors: [],
     };
   },
   watch: {
@@ -179,6 +193,10 @@ export default {
     },
     currentTimestamp() {
       // Update anything that is required to change when time changes.
+      this.currentTags = this.getCurrentItems(this.presentTags);
+      this.currentErrors = this.getCurrentItems(this.presentErrors);
+      this.transitions = this.getCurrentTransitions();
+      this.errors = this.getCurrentErrorTags();
       this.updateCollapsedDiffClass();
     },
     isSelected(isSelected) {
@@ -426,7 +444,48 @@ export default {
           marginTop: '0px',
         }
       }
-    }
+    },
+
+    /** Check if tag/error id matches entry id */
+    isIdMatch(a, b) {
+      return a.taskId===b.taskId || a.layerId===b.id;
+    },
+    /** Performs check for id match between entry and present tags/errors
+     * exits once match has been found
+     */
+    matchItems(flickerItems) {
+      var match = false;
+      flickerItems.every(flickerItem => {
+        if (this.isIdMatch(flickerItem, this.item)) {
+          match = true;
+          return false;
+        }
+      });
+      return match;
+    },
+    /** Returns check for id match between entry and present tags/errors */
+    isEntryTagMatch() {
+      return this.matchItems(this.currentTags) || this.matchItems(this.currentErrors);
+    },
+
+    getCurrentItems(items) {
+      if (!items) return [];
+      else return items.filter(item => item.timestamp===this.currentTimestamp);
+    },
+    getCurrentTransitions() {
+      var transitions = [];
+      var ids = [];
+      this.currentTags.forEach(tag => {
+        if (!ids.includes(tag.id) && this.isIdMatch(tag, this.item)) {
+          transitions.push(tag.transition);
+          ids.push(tag.id);
+        }
+      });
+      return transitions;
+    },
+    getCurrentErrorTags() {
+      return this.currentErrors.filter(error => this.isIdMatch(error, this.item));
+    },
   },
   computed: {
     hasDiff() {
@@ -486,7 +545,12 @@ export default {
       const offset = levelOffset * (this.depth + this.isLeaf) + 'px';
 
       var display = "";
-      if (this.onlyVisible && !this.item.isVisible) display = 'none';
+      if (!this.item.timestamp
+        && this.flattened
+        && (this.onlyVisible && !this.item.isVisible ||
+            this.flickerTraceView && !this.isEntryTagMatch())) {
+        display = 'none';
+      }
 
       return {
         marginLeft: '-' + offset,
