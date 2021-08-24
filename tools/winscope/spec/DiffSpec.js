@@ -1,10 +1,24 @@
 import { DiffGenerator, DiffType } from "../src/utils/diff.js";
 import { Node, DiffNode, toPlainObject } from "./utils/tree.js";
 
+const treeOne = new Node({ id: 1 }, [
+    new Node({ id: 2 }, []),
+    new Node({ id: 3 }, []),
+    new Node({ id: 4 }, []),
+]);
+const treeTwo = new Node({ id: 1 }, [
+    new Node({ id: 2 }, []),
+    new Node({ id: 3 }, [
+        new Node({ id: 5 }, []),
+    ]),
+    new Node({ id: 4 }, []),
+]);
+
 function checkDiffTreeWithNoModifiedCheck(oldTree, newTree, expectedDiffTree) {
     const diffTree = new DiffGenerator(newTree)
         .compareWith(oldTree)
         .withUniqueNodeId(node => node.id)
+        .withModifiedCheck(() => false)
         .generateDiffTree();
 
     expect(diffTree).toEqual(expectedDiffTree);
@@ -12,25 +26,8 @@ function checkDiffTreeWithNoModifiedCheck(oldTree, newTree, expectedDiffTree) {
 
 describe("DiffGenerator", () => {
     it("can generate a simple add diff", () => {
-        const oldTree = new Node({ id: 1 }, [
-            new Node({ id: 2 }, []),
-            new Node({ id: 3 }, []),
-            new Node({ id: 4 }, []),
-        ]);
-
-        const newTree = new Node({ id: 1 }, [
-            new Node({ id: 2 }, []),
-            new Node({ id: 3 }, [
-                new Node({ id: 5 }, []),
-            ]),
-            new Node({ id: 4 }, []),
-        ]);
-
-        const diffTree = new DiffGenerator(newTree)
-            .compareWith(oldTree)
-            .withUniqueNodeId(node => node.id)
-            .withModifiedCheck(() => false)
-            .generateDiffTree();
+        const oldTree = treeOne;
+        const newTree = treeTwo;
 
         const expectedDiffTree = toPlainObject(
             new DiffNode({ id: 1 }, DiffType.NONE, [
@@ -46,19 +43,8 @@ describe("DiffGenerator", () => {
     });
 
     it("can generate a simple delete diff", () => {
-        const oldTree = new Node({ id: 1 }, [
-            new Node({ id: 2 }, []),
-            new Node({ id: 3 }, [
-                new Node({ id: 5 }, []),
-            ]),
-            new Node({ id: 4 }, []),
-        ]);
-
-        const newTree = new Node({ id: 1 }, [
-            new Node({ id: 2 }, []),
-            new Node({ id: 3 }, []),
-            new Node({ id: 4 }, []),
-        ]);
+        const oldTree = treeTwo;
+        const newTree = treeOne;
 
         const expectedDiffTree = toPlainObject(
             new DiffNode({ id: 1 }, DiffType.NONE, [
@@ -74,13 +60,7 @@ describe("DiffGenerator", () => {
     });
 
     it("can generate a simple move diff", () => {
-        const oldTree = new Node({ id: 1 }, [
-            new Node({ id: 2 }, []),
-            new Node({ id: 3 }, [
-                new Node({ id: 5 }, []),
-            ]),
-            new Node({ id: 4 }, []),
-        ]);
+        const oldTree = treeTwo;
 
         const newTree = new Node({ id: 1 }, [
             new Node({ id: 2 }, []),
