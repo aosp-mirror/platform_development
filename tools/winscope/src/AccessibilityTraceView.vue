@@ -14,7 +14,13 @@
 -->
 
 <template>
-  <TraceView :store="store" :file="file" :summarizer="summarizer" />
+  <TraceView
+    :store="store"
+    :file="file"
+    :summarizer="summarizer"
+    :presentTags="[]"
+    :presentErrors="[]"
+  />
 </template>
 
 <script>
