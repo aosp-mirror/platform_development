@@ -66,6 +66,8 @@
         v-else-if="showInTraceView(file)"
         :store="store"
         :file="file"
+        :presentTags="[]"
+        :presentErrors="[]"
         ref="view"
       />
       <div v-else>
