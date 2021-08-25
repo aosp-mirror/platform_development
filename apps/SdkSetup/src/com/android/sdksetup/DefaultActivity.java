@@ -91,8 +91,6 @@ public class DefaultActivity extends Activity {
             // the following blocks, TODO: find out why and fix it. disable this for now.
             // TelephonyManager mTelephony = getApplicationContext().getSystemService(TelephonyManager.class);
             // mTelephony.setPreferredNetworkTypeBitmask(TelephonyManager.NETWORK_TYPE_BITMASK_NR);
-            TelephonyManager mTelephony = getApplicationContext().getSystemService(TelephonyManager.class);
-            mTelephony.setPreferredNetworkTypeBitmask(TelephonyManager.NETWORK_TYPE_BITMASK_NR);
             if ("freeform".equals(displaySettingsName)) {
                 Settings.Global.putInt(getContentResolver(), "sf", 1);
                 Settings.Global.putString(getContentResolver(), Settings.Global.DEVELOPMENT_ENABLE_FREEFORM_WINDOWS_SUPPORT, "1");
