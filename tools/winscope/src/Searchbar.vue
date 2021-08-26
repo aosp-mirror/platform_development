@@ -23,7 +23,7 @@
       </md-button>
       <md-field class="search-input">
         <label>Enter timestamp</label>
-        <md-input v-model="searchInput"></md-input>
+        <md-input v-model="searchInput" @keyup.enter.native="updateSearchForTimestamp" />
       </md-field>
     </div>
 
