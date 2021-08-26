@@ -5,6 +5,14 @@
       :job="job"
       :build-detail="true"
     />
+    <router-link :to="{name: 'Create'}">
+      <v-btn
+        block
+        @click="updateConfig()"
+      >
+        Reuse this configuration.
+      </v-btn>
+    </router-link>
     <v-divider class="my-5" />
     <div>
       <h3>STDERR</h3>
@@ -95,6 +103,9 @@ export default {
       if (this.job.status == 'Running') {
         setTimeout(this.updateStatus, 1000)
       }
+    },
+    updateConfig() {
+      this.$store.commit("REUSE_CONFIG", this.job)
     }
   },
 }

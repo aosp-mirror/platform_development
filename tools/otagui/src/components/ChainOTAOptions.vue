@@ -9,7 +9,6 @@
     <OTAOptions
       :targetDetails="targetDetails"
       :targetBuilds="targetBuilds"
-      @update:otaConfig="otaConfig=$event"
     />
     <v-divider class="my-5" />
     <v-btn
@@ -24,7 +23,6 @@
 <script>
 import OTAOptions from '@/components/OTAOptions.vue'
 import FileList from '@/components/FileList.vue'
-import { OTAConfiguration } from '@/services/JobSubmission.js'
 
 export default {
   components: {
@@ -39,12 +37,33 @@ export default {
   },
   data() {
     return {
-      targetBuilds: [],
-      otaConfig: new OTAConfiguration(),
+    }
+  },
+  computed: {
+    checkIncremental() {
+      return this.$store.state.otaConfig.isIncremental
+    },
+    targetBuilds: {
+      get() {
+        return this.$store.state.targetBuilds
+      },
+      set(target) {
+        this.$store.commit('SET_TARGETS', target)
+      }
+    }
+  },
+  watch: {
+    checkIncremental: {
+      handler() {
+        // The isIncremental flag has to be set false all the time
+        this.$store.commit('SET_ISINCREMENTAL', false)
+        this.$store.commit('SET_SOURCES', [])
+      }
     }
   },
   created() {
-    this.$emit('update:isIncremental', false)
+    this.$store.commit('SET_ISINCREMENTAL', false)
+    this.$store.commit('SET_SOURCES', [])
     this.$emit('update:handler', this.addIncrementalSources, this.addTargetBuilds)
   },
   methods: {
@@ -59,10 +78,11 @@ export default {
         return
       }
       try {
-        let response_messages = await this.otaConfig
+        let response_messages = await this.$store.state.otaConfig
           .sendChainForms(this.targetBuilds)
         alert(response_messages.join('\n'))
-        this.otaConfig.reset()
+        this.$store.state.otaConfig.reset()
+        this.$store.commit('SET_TARGETS', [])
       } catch (err) {
         alert(
           'Job cannot be started properly for the following reasons: ' + err
