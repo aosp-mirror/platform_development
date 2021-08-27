@@ -22,6 +22,7 @@ LayersTrace.fromProto = function (proto: any): LayersTrace {
     for (const entryProto of proto.entry) {
         const transformedEntry = LayerTraceEntry.fromProto(
             /* protos */ entryProto.layers.layers,
+            /* displays */ entryProto.displays,
             /* timestamp */ entryProto.elapsedRealtimeNanos,
             /* hwcBlob */ entryProto.hwcBlob);
 

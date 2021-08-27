@@ -36,7 +36,8 @@ export default class SurfaceFlinger extends DumpBase {
   static fromProto(proto: any): LayersTrace {
     const source = null;
     const entry =  LayersTraceEntry.fromProto(
-      /*protos */ proto.layers,
+      /* protos */ proto.layers,
+      /* displays */ proto.displays,
       /* timestamp */ 0,
       /* hwcBlob */ ""
     );
