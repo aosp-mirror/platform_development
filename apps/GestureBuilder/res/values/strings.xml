@@ -40,7 +40,7 @@
     <skip />
     <!-- Label, prompt asking the user to enter the name of the gesture -->
     <string name="prompt_gesture_name">Name</string>
-    <!-- Error message, informs the user he needs to enter a name before saving a gesture -->
+    <!-- Error message, informs the user they need to enter a name before saving a gesture -->
     <string name="error_missing_name">You must enter a name</string>
     <!-- success message, tells the user where the gesture was saved -->
     <string name="save_success">Gesture saved in %s</string>

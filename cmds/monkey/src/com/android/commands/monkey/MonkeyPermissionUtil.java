@@ -106,7 +106,7 @@ public class MonkeyPermissionUtil {
     }
 
     private boolean shouldTargetPermission(String pkg, PermissionInfo pi) throws RemoteException {
-        int flags = mPermManager.getPermissionFlags(pi.name, pkg, UserHandle.myUserId());
+        int flags = mPermManager.getPermissionFlags(pkg, pi.name, UserHandle.myUserId());
         int fixedPermFlags = PackageManager.FLAG_PERMISSION_SYSTEM_FIXED
                 | PackageManager.FLAG_PERMISSION_POLICY_FIXED;
         return pi.group != null && pi.protectionLevel == PermissionInfo.PROTECTION_DANGEROUS

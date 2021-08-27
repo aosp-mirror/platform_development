@@ -16,10 +16,11 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src)
 # automatically get all of its classes loaded into our environment.
 
 LOCAL_PACKAGE_NAME := ApiDemosTests
+LOCAL_LICENSE_KINDS := SPDX-license-identifier-Apache-2.0
+LOCAL_LICENSE_CONDITIONS := notice
 
 LOCAL_INSTRUMENTATION_FOR := ApiDemos
 
 LOCAL_SDK_VERSION := current
 
 include $(BUILD_PACKAGE)
-
