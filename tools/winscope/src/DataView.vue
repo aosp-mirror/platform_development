@@ -16,10 +16,15 @@
   <div @click="onClick($event)">
     <flat-card v-if="hasDataView(file)">
       <md-card-header>
+        <button class="toggle-view-button" @click="toggleView">
+          <i aria-hidden="true" class="md-icon md-theme-default material-icons">
+            {{ isShowFileType(file.type) ? "expand_more" : "chevron_right" }}
+          </i>
+        </button>
         <md-card-header-text>
           <div class="md-title">
             <md-icon>{{ TRACE_ICONS[file.type] }}</md-icon>
-            {{file.type}}
+            {{ file.type }}
           </div>
         </md-card-header-text>
         <md-button
@@ -31,13 +36,13 @@
         </md-button>
       </md-card-header>
       <AccessibilityTraceView
-        v-if="showInAccessibilityTraceView(file)"
+        v-if="showInAccessibilityTraceView(file) && isShowFileType(file.type)"
         :store="store"
         :file="file"
         ref="view"
       />
       <WindowManagerTraceView
-        v-if="showInWindowManagerTraceView(file)"
+        v-if="showInWindowManagerTraceView(file) && isShowFileType(file.type)"
         :store="store"
         :file="file"
         :presentTags="presentTags"
@@ -45,7 +50,7 @@
         ref="view"
       />
       <SurfaceFlingerTraceView
-        v-else-if="showInSurfaceFlingerTraceView(file)"
+        v-else-if="showInSurfaceFlingerTraceView(file) && isShowFileType(file.type)"
         :store="store"
         :file="file"
         :presentTags="presentTags"
@@ -53,17 +58,17 @@
         ref="view"
       />
       <transactionsview
-        v-else-if="isTransactions(file)"
+        v-else-if="isTransactions(file) && isShowFileType(file.type)"
         :trace="file"
         ref="view"
       />
       <logview
-        v-else-if="isLog(file)"
+        v-else-if="isLog(file) && isShowFileType(file.type)"
         :file="file"
         ref="view"
       />
       <traceview
-        v-else-if="showInTraceView(file)"
+        v-else-if="showInTraceView(file) && isShowFileType(file.type)"
         :store="store"
         :file="file"
         :presentTags="[]"
@@ -71,7 +76,7 @@
         ref="view"
       />
       <div v-else>
-        <h1 class="bad">Unrecognized DataType</h1>
+        <h1 v-if="isShowFileType(file.type)" class="bad">Unrecognized DataType</h1>
       </div>
 
     </flat-card>
@@ -156,8 +161,23 @@ export default {
       // to component.
       this.$emit('click', e);
     },
+    /** Filter data view files by current show settings */
+    updateShowFileTypes() {
+      this.store.showFileTypes = this.dataViewFiles
+        .filter((file) => file.show)
+        .map(file => file.type);
+    },
+    /** Expand or collapse data view */
+    toggleView() {
+      this.file.show = !this.file.show;
+      this.updateShowFileTypes();
+    },
+    /** Check if data view file should be shown */
+    isShowFileType(type) {
+      return this.store.showFileTypes.find(fileType => fileType===type);
+    },
   },
-  props: ['store', 'file', 'presentTags', 'presentErrors'],
+  props: ['store', 'file', 'presentTags', 'presentErrors', 'dataViewFiles'],
   mixins: [FileType],
   components: {
     'traceview': TraceView,
@@ -175,5 +195,19 @@ export default {
   margin: 1em 1em 1em 1em;
   font-size: 4em;
   color: red;
+}
+
+.toggle-view-button {
+  background: none;
+  color: inherit;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  padding-right: 10px;
+  display: inline-block;
+}
+
+.md-title {
+  display: inline-block;
 }
 </style>

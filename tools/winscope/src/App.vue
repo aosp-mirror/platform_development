@@ -54,6 +54,7 @@
               :file="file"
               :presentTags="Object.freeze(presentTags)"
               :presentErrors="Object.freeze(presentErrors)"
+              :dataViewFiles="dataViewFiles"
               @click="onDataViewFocus(file)"
             />
           </div>
@@ -105,6 +106,7 @@ export default {
         displayDefaults: true,
         navigationStyle: NAVIGATION_STYLE.GLOBAL,
         flickerTraceView: false,
+        showFileTypes: [],
       }),
       overlayRef: 'overlay',
       mainContentStyle: {
@@ -113,6 +115,7 @@ export default {
       presentTags: [],
       presentErrors: [],
       searchTypes: [SEARCH_TYPE.TIMESTAMP],
+      tagAndErrorTraces: false,
     };
   },
   created() {
@@ -168,7 +171,14 @@ export default {
       this.searchTypes = [SEARCH_TYPE.TIMESTAMP];
       if (this.tagAndErrorTraces) this.searchTypes.push(SEARCH_TYPE.TAG);
     },
+    /** Filter data view files by current show settings*/
+    updateShowFileTypes() {
+      this.store.showFileTypes = this.dataViewFiles
+        .filter((file) => file.show)
+        .map(file => file.type);
+    },
     clear() {
+      this.store.showFileTypes = [];
       this.$store.commit('clearFiles');
     },
     onDataViewFocus(file) {
@@ -198,6 +208,7 @@ export default {
       this.presentErrors = this.getUpdatedErrors();
       this.updateSearchTypes();
       this.updateFocusedView();
+      this.updateShowFileTypes();
     },
     setStatus(status) {
       if (status) {
@@ -216,7 +227,10 @@ export default {
   },
   computed: {
     files() {
-      return this.$store.getters.sortedFiles;
+      return this.$store.getters.sortedFiles.map(file => {
+        if (this.hasDataView(file)) file.show = true;
+        return file;
+      });
     },
     prettyDump() {
       return JSON.stringify(this.dump, null, 2);
@@ -232,7 +246,7 @@ export default {
       return this.activeDataView;
     },
     dataViewFiles() {
-      return this.files.filter((f) => this.hasDataView(f));
+      return this.files.filter((file) => this.hasDataView(file));
     },
     tagFiles() {
       return this.$store.getters.tagFiles;
@@ -308,8 +322,7 @@ export default {
   margin-top: 1em
 }
 
-h1,
-h2 {
+h1 {
   font-weight: normal;
 }
 

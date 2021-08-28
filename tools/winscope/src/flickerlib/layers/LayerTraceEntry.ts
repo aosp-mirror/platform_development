@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-import { LayerTraceEntry, LayerTraceEntryBuilder } from "../common"
+import { Display, LayerTraceEntry, LayerTraceEntryBuilder, toRect, toSize, toTransform } from "../common"
 import Layer from './Layer'
 import { VISIBLE_CHIP, RELATIVE_Z_PARENT_CHIP, MISSING_LAYER } from '../treeview/Chips'
 
-LayerTraceEntry.fromProto = function (protos: any[], timestamp: number, hwcBlob: string, where: string = ''): LayerTraceEntry {
+LayerTraceEntry.fromProto = function (protos: any[], displayProtos: any[],
+        timestamp: number, hwcBlob: string, where: string = ''): LayerTraceEntry {
     const layers = protos.map(it => Layer.fromProto(it));
-    const builder = new LayerTraceEntryBuilder(timestamp, layers, hwcBlob, where);
+    const displays = (displayProtos || []).map(it => newDisplay(it));
+    const builder = new LayerTraceEntryBuilder(timestamp, layers, displays, hwcBlob, where);
     const entry: LayerTraceEntry = builder.build();
 
     updateChildren(entry);
@@ -61,6 +63,17 @@ function updateChildren(entry: LayerTraceEntry) {
             it.chips.push(MISSING_LAYER);
         }
     });
+}
+
+function newDisplay(proto: any): Display {
+    return new Display(
+        proto.id,
+        proto.name,
+        proto.layerStack,
+        toSize(proto.size),
+        toRect(proto.layerStackSpaceRect),
+        toTransform(proto.transform)
+    )
 }
 
 export default LayerTraceEntry;
