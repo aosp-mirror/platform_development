@@ -37,12 +37,11 @@ export default {
   },
   async postInput(input, id) {
     try {
-      const response = await apiClient.post(
-        '/run/' + id, input)
-      return response
-    } catch (err) {
-      console.log('err:', err)
-      return
+      return await apiClient.post(
+        '/run/' + id, JSON.stringify(input));
+    } catch (error) {
+      console.log(error);
+      throw new Error(error.response.data.explain);
     }
   }
 }
