@@ -252,9 +252,6 @@ class ProcessesManagement:
                 '--' + ' --'.join(args['extra_keys']) + ' ' + args['extra']
         if args['extra']:
             command += args['extra'].strip().split(' ')
-        command.append('-k')
-        command.append(
-            'build/make/target/product/security/testkey')
         if args['isIncremental']:
             if not os.path.isfile(args['incremental']):
                 raise FileNotFoundError
