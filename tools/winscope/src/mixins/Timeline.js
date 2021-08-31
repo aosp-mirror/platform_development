@@ -169,7 +169,7 @@ export default {
       }
 
       //sort transitions in ascending start position in order to handle overlap
-      transitions.sort((a, b) => (a.startPos > b.startPos) ? 1: -1);
+      transitions.sort((a, b) => (a.startPos > b.startPos) ? 1 : -1);
 
       //compare each transition to the ones that came before
       for (let curr=0; curr<transitions.length; curr++) {
@@ -194,7 +194,9 @@ export default {
     },
     errorPositions() {
       if (!this.flickerMode) return [];
-      const errorPositions = this.errors.map(error => this.position(error.timestamp));
+      const errorPositions = this.errors.map(
+        error => ({ pos: this.position(error.timestamp), ts: error.timestamp })
+      );
       return Object.freeze(errorPositions);
     },
   },
@@ -343,6 +345,16 @@ export default {
     },
 
     /**
+     * Handles the error click event.
+     * When an error in the timeline is clicked this function will update the timeline
+     * to match the error timestamp.
+     * @param {number} errorTimestamp
+     */
+    onErrorClick(errorTimestamp) {
+      this.$store.dispatch('updateTimelineTime', errorTimestamp);
+    },
+
+    /**
      * Generate a block object that can be used by the timeline SVG to render
      * a transformed block that starts at `startTs` and ends at `endTs`.
      * @param {number} startTs - The timestamp at which the block starts.
@@ -373,8 +385,11 @@ export default {
       const transitionColor = transitionMap.get(transitionType).color;
       var tooltip = `${transitionDesc}. Start: ${nanos_to_string(startTs)}. End: ${nanos_to_string(endTs)}.`;
 
-      if (layerId !== 0 && taskId === 0 && windowToken === "") tooltip += " SF only.";
-      else if ((taskId !== 0 || windowToken !== "") && layerId === 0) tooltip += " WM only.";
+      if (layerId !== 0 && taskId === 0 && windowToken === "") {
+        tooltip += " SF only.";
+      } else if ((taskId !== 0 || windowToken !== "") && layerId === 0) {
+        tooltip += " WM only.";
+      }
 
       return new Transition(this.position(startTs), startTs, endTs, transitionWidth, transitionColor, overlap, tooltip);
     },

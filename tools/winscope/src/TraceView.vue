@@ -45,7 +45,11 @@
           <md-checkbox v-if="hasTagsOrErrors" v-model="store.flickerTraceView">Flicker</md-checkbox>
           <md-field md-inline class="filter">
             <label>Filter...</label>
-            <md-input v-model="hierarchyPropertyFilterString"></md-input>
+            <md-input
+              v-model="hierarchyPropertyFilterString"
+              v-on:focus="updateInputMode(true)"
+              v-on:blur="updateInputMode(false)"
+            />
           </md-field>
         </md-content>
         <div class="tree-view-wrapper">
@@ -98,7 +102,11 @@
           </md-checkbox>
           <md-field md-inline class="filter">
             <label>Filter...</label>
-            <md-input v-model="propertyFilterString"></md-input>
+            <md-input
+              v-model="propertyFilterString"
+              v-on:focus="updateInputMode(true)"
+              v-on:blur="updateInputMode(false)"
+            />
           </md-field>
         </md-content>
         <div class="properties-content">
@@ -334,6 +342,11 @@ export default {
     /** Returns check for id match between entry and present tags/errors */
     isEntryTagMatch(entryItem) {
       return this.matchItems(this.presentTags, entryItem) || this.matchItems(this.presentErrors, entryItem);
+    },
+
+    /** determines whether left/right arrow keys should move cursor in input field */
+    updateInputMode(isInputMode) {
+      this.store.isInputMode = isInputMode;
     },
   },
   created() {

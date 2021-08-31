@@ -60,4 +60,7 @@ const transitionMap = new Map([
   [TransitionType.APP_PAIRS_EXIT, {desc: 'Exiting app pairs mode', color: 'rgb(45, 110, 32)'}],
 ])
 
-export { WebContentScriptMessageType, NAVIGATION_STYLE, SEARCH_TYPE, logLevel, transitionMap };
+//used to split timestamp search input by unit, to convert to nanoseconds
+const regExpTimestampSearch = new RegExp(/^\d+$/);
+
+export { WebContentScriptMessageType, NAVIGATION_STYLE, SEARCH_TYPE, logLevel, transitionMap, regExpTimestampSearch };

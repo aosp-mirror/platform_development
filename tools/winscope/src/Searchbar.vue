@@ -17,9 +17,14 @@
 
     <div class="tabs">
       <div class="search-timestamp" v-if="isTimestampSearch()">
-        <md-field class="search-input">
+        <md-field md-inline class="search-input">
           <label>Enter timestamp</label>
-          <md-input v-model="searchInput" @keyup.enter.native="updateSearchForTimestamp" />
+          <md-input
+            v-model="searchInput"
+            v-on:focus="updateInputMode(true)"
+            v-on:blur="updateInputMode(false)"
+            @keyup.enter.native="updateSearchForTimestamp"
+          />
         </md-field>
         <md-button
             class="md-dense md-primary search-timestamp-button"
@@ -37,7 +42,7 @@
             <th style="width: 80%">Description</th>
           </tr>
 
-          <tr v-for="item in filteredTransitionsAndErrors" :key="item">
+          <tr v-for="item in filteredTransitionsAndErrors" :key="item.id">
             <td
               v-if="isTransition(item)"
               class="inline-time"
@@ -58,9 +63,7 @@
               v-if="isTransition(item)"
               class="inline-transition"
               :style="{color: transitionTextColor(item.transition)}"
-              @click="
-                setCurrentTimestamp(transitionStart(transitionTags(item.id)))
-              "
+              @click="setCurrentTimestamp(transitionStart(transitionTags(item.id)))"
             >
               {{ transitionDesc(item.transition) }}
             </td>
@@ -82,12 +85,16 @@
             </td>
           </tr>
         </table>
-        <md-field class="search-input">
+        <md-field md-inline class="search-input">
           <label
             >Filter by transition or error message. Click to navigate to closest
             timestamp in active timeline.</label
           >
-          <md-input v-model="searchInput"></md-input>
+          <md-input
+            v-model="searchInput"
+            v-on:focus="updateInputMode(true)"
+            v-on:blur="updateInputMode(false)"
+          />
         </md-field>
       </div>
     </div>
@@ -107,9 +114,7 @@
 </template>
 <script>
 import { transitionMap, SEARCH_TYPE } from "./utils/consts";
-import { nanos_to_string, string_to_nanos } from "./transform";
-
-const regExpTimestampSearch = new RegExp(/^\d+$/);
+import { nanos_to_string, getClosestTimestamp } from "./transform";
 
 export default {
   name: "searchbar",
@@ -174,8 +179,10 @@ export default {
       var times = tags.map((tag) => tag.timestamp);
       return times[times.length - 1];
     },
-    /** Upon selecting a start/end tag in the dropdown;
-     * navigates to that timestamp in the timeline */
+    /**
+     * Upon selecting a start/end tag in the dropdown;
+     * navigates to that timestamp in the timeline
+     */
     setCurrentTimestamp(timestamp) {
       this.$store.dispatch("updateTimelineTime", timestamp);
     },
@@ -195,17 +202,7 @@ export default {
 
     /** Navigates to closest timestamp in timeline to search input*/
     updateSearchForTimestamp() {
-      if (regExpTimestampSearch.test(this.searchInput)) {
-        var roundedTimestamp = parseInt(this.searchInput);
-      } else {
-        var roundedTimestamp = string_to_nanos(this.searchInput);
-      }
-      var closestTimestamp = this.timeline.reduce(function (prev, curr) {
-        return Math.abs(curr - roundedTimestamp) <
-          Math.abs(prev - roundedTimestamp)
-          ? curr
-          : prev;
-      });
+      const closestTimestamp = getClosestTimestamp(this.searchInput, this.timeline);
       this.setCurrentTimestamp(closestTimestamp);
     },
 
@@ -217,6 +214,11 @@ export default {
     },
     isTransition(item) {
       return item.stacktrace === undefined;
+    },
+
+    /** determines whether left/right arrow keys should move cursor in input field */
+    updateInputMode(isInputMode) {
+      this.store.isInputMode = isInputMode;
     },
   },
   computed: {
@@ -230,6 +232,9 @@ export default {
         return !this.isTransition(item) || this.isTransition(item) && item.transitionStart;
       });
     },
+  },
+  destroyed() {
+    this.updateInputMode(false);
   },
 };
 </script>
