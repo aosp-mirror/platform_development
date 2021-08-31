@@ -31,7 +31,7 @@
       <button
         class="toggle-tree-btn"
         @click="toggleTree"
-        v-if="!isLeaf"
+        v-if="!isLeaf && !flattened"
         v-on:click.stop
       >
         <i aria-hidden="true" class="md-icon md-theme-default material-icons">
@@ -50,7 +50,12 @@
           />
         </div>
         <div v-else>
-          <DefaultTreeElement :item="item" :simplify-names="simplifyNames"/>
+          <DefaultTreeElement
+            :item="item"
+            :simplify-names="simplifyNames"
+            :errors="errors"
+            :transitions="transitions"
+          />
         </div>
       </div>
       <div v-show="isCollapsed">
@@ -78,7 +83,7 @@
       v-on:collapseAllOtherNodes="collapseAllOtherNodes"
     />
 
-    <div class="children" v-if="children" v-show="!isCollapsed">
+    <div class="children" v-if="children" v-show="!isCollapsed" :style="childrenIndentation()">
       <tree-view
         v-for="(c,i) in children"
         :item="c"
@@ -87,7 +92,11 @@
         :key="i"
         :filter="childFilter(c)"
         :flattened="flattened"
+        :onlyVisible="onlyVisible"
         :simplify-names="simplifyNames"
+        :flickerTraceView="flickerTraceView"
+        :presentTags="currentTags"
+        :presentErrors="currentErrors"
         :force-flattened="applyingFlattened"
         v-show="filterMatches(c)"
         :items-clickable="itemsClickable"
@@ -112,7 +121,6 @@
 <script>
 import DefaultTreeElement from './DefaultTreeElement.vue';
 import NodeContextMenu from './NodeContextMenu.vue';
-
 import {DiffType} from './utils/diff.js';
 
 /* in px, must be kept in sync with css, maybe find a better solution... */
@@ -141,6 +149,10 @@ export default {
     'useGlobalCollapsedState',
     // Custom view to use to render the elements in the tree view
     'elementView',
+    'onlyVisible',
+    'flickerTraceView',
+    'presentTags',
+    'presentErrors',
   ],
   data() {
     const isCollapsedByDefault = this.collapse ?? false;
@@ -161,6 +173,10 @@ export default {
         [DiffType.MODIFIED]: '.',
         [DiffType.MOVED]: '.',
       },
+      currentTags: [],
+      currentErrors: [],
+      transitions: [],
+      errors: [],
     };
   },
   watch: {
@@ -177,6 +193,10 @@ export default {
     },
     currentTimestamp() {
       // Update anything that is required to change when time changes.
+      this.currentTags = this.getCurrentItems(this.presentTags);
+      this.currentErrors = this.getCurrentItems(this.presentErrors);
+      this.transitions = this.getCurrentTransitions();
+      this.errors = this.getCurrentErrorTags();
       this.updateCollapsedDiffClass();
     },
     isSelected(isSelected) {
@@ -277,7 +297,7 @@ export default {
       }
 
       if (!this.isLeaf && e.detail % 2 === 0) {
-        // Double click collaspable node
+        // Double click collapsable node
         this.toggleTree();
       } else {
         this.select();
@@ -408,6 +428,64 @@ export default {
         child.closeAllChildrenContextMenus();
       }
     },
+    childrenIndentation() {
+      if (this.flattened || this.forceFlattened) {
+        return {
+          marginLeft: '0px',
+          paddingLeft: '0px',
+          marginTop: '0px',
+        }
+      } else {
+        //Aligns border with collapse arrows
+        return {
+          marginLeft: '12px',
+          paddingLeft: '11px',
+          borderLeft: '1px solid rgb(238, 238, 238)',
+          marginTop: '0px',
+        }
+      }
+    },
+
+    /** Check if tag/error id matches entry id */
+    isIdMatch(a, b) {
+      return a.taskId===b.taskId || a.layerId===b.id;
+    },
+    /** Performs check for id match between entry and present tags/errors
+     * exits once match has been found
+     */
+    matchItems(flickerItems) {
+      var match = false;
+      flickerItems.every(flickerItem => {
+        if (this.isIdMatch(flickerItem, this.item)) {
+          match = true;
+          return false;
+        }
+      });
+      return match;
+    },
+    /** Returns check for id match between entry and present tags/errors */
+    isEntryTagMatch() {
+      return this.matchItems(this.currentTags) || this.matchItems(this.currentErrors);
+    },
+
+    getCurrentItems(items) {
+      if (!items) return [];
+      else return items.filter(item => item.timestamp===this.currentTimestamp);
+    },
+    getCurrentTransitions() {
+      var transitions = [];
+      var ids = [];
+      this.currentTags.forEach(tag => {
+        if (!ids.includes(tag.id) && this.isIdMatch(tag, this.item)) {
+          transitions.push(tag.transition);
+          ids.push(tag.id);
+        }
+      });
+      return transitions;
+    },
+    getCurrentErrorTags() {
+      return this.currentErrors.filter(error => this.isIdMatch(error, this.item));
+    },
   },
   computed: {
     hasDiff() {
@@ -464,11 +542,20 @@ export default {
       return this.initialDepth || 0;
     },
     nodeOffsetStyle() {
-      const offest = levelOffset * (this.depth + this.isLeaf) + 'px';
+      const offset = levelOffset * (this.depth + this.isLeaf) + 'px';
+
+      var display = "";
+      if (!this.item.timestamp
+        && this.flattened
+        && (this.onlyVisible && !this.item.isVisible ||
+            this.flickerTraceView && !this.isEntryTagMatch())) {
+        display = 'none';
+      }
 
       return {
-        marginLeft: '-' + offest,
-        paddingLeft: offest,
+        marginLeft: '-' + offset,
+        paddingLeft: offset,
+        display: display,
       };
     },
   },
@@ -565,14 +652,6 @@ export default {
   border-radius: 5px;
   padding: 3px;
   color: white;
-}
-
-.children {
-  /* Aligns border with collapse arrows */
-  margin-left: 12px;
-  padding-left: 11px;
-  border-left: 1px solid rgb(238, 238, 238);
-  margin-top: 0px;
 }
 
 .tree-view .node.child-selected + .children {

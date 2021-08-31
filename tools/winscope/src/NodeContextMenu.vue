@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import {VueContext} from 'vue-context';
+import VueContext from 'vue-context';
 
 export default {
   name: 'NodeContextMenu',

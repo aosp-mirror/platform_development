@@ -14,28 +14,20 @@
 -->
 
 <template>
-  <TraceView
-    :store="store"
-    :file="file"
-    :summarizer="summarizer"
-    :presentTags="[]"
-    :presentErrors="[]"
-  />
+  <div class="arrow"/>
 </template>
-
 <script>
-import TraceView from "@/TraceView.vue"
-
 export default {
-  name: "AccessibilityTraceView",
-  props: ["store", "file"],
-  components: {
-    TraceView
-  },
-  methods: {
-    summarizer(item) {
-      return null;
-    },
-  }
-}
+  name: 'arrow',
+};
 </script>
+<style scoped>
+.arrow {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 10px solid;
+}
+</style>

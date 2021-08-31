@@ -1,5 +1,5 @@
 /*
- * Copyright 2020, The Android Open Source Project
+ * Copyright 2021, The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import LayersTrace from './LayersTrace';
-import WindowManagerState from './WindowManagerState';
-import WindowManagerTrace from './WindowManagerTrace';
-import ObjectFormatter from './ObjectFormatter';
-import TagTrace from './TagTrace';
-import ErrorTrace from './ErrorTrace';
-/**
- * Entry point into the flickerlib for Winscope.
- * Expose everything we want Winscope to have access to here.
- */
-export {ObjectFormatter, LayersTrace, WindowManagerState, WindowManagerTrace, TagTrace, ErrorTrace};
+enum TransitionType {
+  ROTATION = 'ROTATION',
+  PIP_ENTER = 'PIP_ENTER',
+  PIP_RESIZE ='PIP_RESIZE',
+  PIP_EXIT = 'PIP_EXIT',
+  APP_LAUNCH = 'APP_LAUNCH',
+  APP_CLOSE = 'APP_CLOSE',
+  IME_APPEAR = 'IME_APPEAR',
+  IME_DISAPPEAR = 'IME_DISAPPEAR',
+};
 
+export default TransitionType;
