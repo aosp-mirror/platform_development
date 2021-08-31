@@ -79,12 +79,13 @@ class TargetLib:
     """
     A class that manages the builds in database.
     """
+
     def __init__(self, path='target/ota_database.db'):
         """
         Create a build table if not existing
         """
-        self.path = path
-        with sqlite3.connect(self.path) as connect:
+        self.db_path = path
+        with sqlite3.connect(self.db_path) as connect:
             cursor = connect.cursor()
             cursor.execute("""
                 CREATE TABLE if not exists Builds (
@@ -107,7 +108,7 @@ class TargetLib:
         """
         build_info = BuildInfo(filename, path, int(time.time()))
         build_info.analyse_buildprop()
-        with sqlite3.connect(self.path) as connect:
+        with sqlite3.connect(self.db_path) as connect:
             cursor = connect.cursor()
             cursor.execute("""
             SELECT * FROM Builds WHERE FileName=:file_name and Path=:path
@@ -147,7 +148,7 @@ class TargetLib:
             A list of build_info, each of which is an object:
             (FileName, UploadTime, Path, Build ID, Build Version, Build Flavor, Partitions)
         """
-        with sqlite3.connect(self.path) as connect:
+        with sqlite3.connect(self.db_path) as connect:
             cursor = connect.cursor()
             cursor.execute("""
             SELECT FileName, Path, UploadTime, BuildID, BuildVersion, BuildFlavor, Partitions
@@ -161,7 +162,7 @@ class TargetLib:
             A build_info, which is an object:
             (FileName, UploadTime, Path, Build ID, Build Version, Build Flavor, Partitions)
         """
-        with sqlite3.connect(self.path) as connect:
+        with sqlite3.connect(self.db_path) as connect:
             cursor = connect.cursor()
             cursor.execute("""
             SELECT FileName, Path, UploadTime, BuildID, BuildVersion, BuildFlavor, Partitions
