@@ -16,21 +16,21 @@
     <v-divider class="my-5" />
     <div>
       <h3>STDERR</h3>
-      <div
+      <pre
         ref="stderr"
         class="stderr"
       >
         {{ job.stderr }}
         <p ref="stderrBottom" />
-      </div>
+      </pre>
       <h3>STDOUT</h3>
-      <div
+      <pre
         ref="stdout"
         class="stdout"
       >
         {{ job.stdout }}
         <p ref="stdoutBottom" />
-      </div>
+      </pre>
     </div>
     <v-divider class="my-5" />
     <div class="download">

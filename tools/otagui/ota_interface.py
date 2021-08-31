@@ -97,23 +97,43 @@ class JobInfo:
         return detail_info
 
 
+class DependencyError(Exception):
+    pass
+
+
 class ProcessesManagement:
     """
     A class manage the ota generate process
     """
 
-    def __init__(self, *, working_dir='output', path=None, otatools_dir=None):
+    @staticmethod
+    def check_external_dependencies():
+        try:
+            java_version = subprocess.check_output(["java", "--version"])
+            print("Java version:", java_version.decode())
+        except Exception as e:
+            raise DependencyError(
+                "java not found in PATH. Attempt to generate OTA might fail. " + str(e))
+        try:
+            zip_version = subprocess.check_output(["zip", "-v"])
+            print("Zip version:", zip_version.decode())
+        except Exception as e:
+            raise DependencyError(
+                "zip command not found in PATH. Attempt to generate OTA might fail. " + str(e))
+
+    def __init__(self, *, working_dir='output', db_path=None, otatools_dir=None):
         """
         create a table if not exist
         """
+        ProcessesManagement.check_external_dependencies()
         self.working_dir = working_dir
         self.logs_dir = os.path.join(working_dir, 'logs')
         self.otatools_dir = otatools_dir
         os.makedirs(self.working_dir, exist_ok=True)
         os.makedirs(self.logs_dir, exist_ok=True)
-        if not path:
-            path = os.path.join(self.working_dir, "ota_database.db")
-        self.path = path
+        if not db_path:
+            db_path = os.path.join(self.working_dir, "ota_database.db")
+        self.path = db_path
         with sqlite3.connect(self.path) as connect:
             cursor = connect.cursor()
             cursor.execute("""
@@ -214,7 +234,7 @@ class ProcessesManagement:
         # TODO(lishutong): Enable user to use self-defined stderr/stdout path
         try:
             proc = subprocess.Popen(
-                command, stderr=ferr, stdout=fout, shell=False, env=env)
+                command, stderr=ferr, stdout=fout, shell=False, env=env, cwd=self.otatools_dir)
         except FileNotFoundError as e:
             logging.error('ota_from_target_files is not set properly %s', e)
             self.update_status(id, 'Error', int(time.time()))
@@ -249,7 +269,7 @@ class ProcessesManagement:
         if not os.path.isfile(args['target']):
             raise FileNotFoundError
         if not 'output' in args:
-            args['output'] = os.path.join('output', str(id) + '.zip')
+            args['output'] = os.path.join(self.working_dir, str(id) + '.zip')
         if args['verbose']:
             command.append('-v')
         if args['extra_keys']:
@@ -261,19 +281,20 @@ class ProcessesManagement:
             if not os.path.isfile(args['incremental']):
                 raise FileNotFoundError
             command.append('-i')
-            command.append(args['incremental'])
+            command.append(os.path.realpath(args['incremental']))
         if args['isPartial']:
             command.append('--partial')
             command.append(' '.join(args['partial']))
-        command.append(args['target'])
-        command.append(args['output'])
+        command.append(os.path.realpath(args['target']))
+        command.append(os.path.realpath(args['output']))
         stdout = os.path.join(self.logs_dir, 'stdout.' + str(id))
         stderr = os.path.join(self.logs_dir, 'stderr.' + str(id))
         job_info = JobInfo(id,
                            target=args['target'],
                            incremental=args['incremental'] if args['isIncremental'] else '',
                            verbose=args['verbose'],
-                           partial=args['partial'] if args['isPartial'] else [],
+                           partial=args['partial'] if args['isPartial'] else [
+                           ],
                            output=args['output'],
                            status='Running',
                            extra=args['extra'],

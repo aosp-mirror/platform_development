@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const baseURL = process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8000';
+const baseURL = process.env.NODE_ENV === 'production' ? '' : 'http://localhost:5000';
 
 console.log(`Build mode: ${process.env.NODE_ENV}, API base url ${baseURL}`);
 
@@ -23,8 +23,13 @@ export default {
   getJobById(id) {
     return apiClient.get("/check/" + id)
   },
-  getFileList(path) {
-    return apiClient.get("/file" + path)
+  async getBuildList() {
+    let resp = await apiClient.get("/file");
+    return resp.data || [];
+  },
+  async reconstructBuildList() {
+    let resp = await apiClient.get("/reconstruct_build_list");
+    return resp.data;
   },
   uploadTarget(file, onUploadProgress) {
     let formData = new FormData()
@@ -37,11 +42,15 @@ export default {
   },
   async postInput(input, id) {
     try {
-      return await apiClient.post(
+      let resp = await apiClient.post(
         '/run/' + id, JSON.stringify(input));
+      return resp.data;
     } catch (error) {
-      console.log(error);
-      throw new Error(error.response.data.explain);
+      if (error.response.data) {
+        return error.response.data;
+      } else {
+        throw error;
+      }
     }
   }
 }
