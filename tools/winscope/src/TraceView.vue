@@ -18,6 +18,7 @@
       <rects
         :bounds="bounds"
         :rects="rects"
+        :displays="displays"
         :highlight="highlight"
         @rect-click="onRectClick"
       />
@@ -188,6 +189,7 @@ export default {
       lastSelectedStableId: null,
       bounds: {},
       rects: [],
+      displays: [],
       item: null,
       tree: null,
       highlight: null,
@@ -253,6 +255,13 @@ export default {
       const rects = item.rects; // .toArray()
       this.rects = [...rects].reverse();
       this.bounds = item.bounds;
+
+      //only update displays if item is SF trace and displays present
+      if (item.stableId==="LayerTraceEntry") {
+        this.displays = item.displays;
+      } else {
+        this.displays = [];
+      }
 
       this.hierarchySelected = null;
       this.selectedTree = null;
