@@ -162,7 +162,9 @@ export default {
           transitionStartTime,
           transitionEndTime,
           id[0].transition,
-          0
+          0,
+          id[0].layerId,
+          id[0].taskId
         );
         transitions.push(transition);
       }
@@ -360,14 +362,20 @@ export default {
      * @param {number} endTs - The timestamp at which the transition ends.
      * @param {string} transitionType - The type of transition.
      * @param {number} overlap - The degree to which the transition overlaps with others.
+     * @param {number} layerId - Determines if transition is associated with SF trace.
+     * @param {number} taskId - Determines if transition is associated with WM trace.
      * @return {Transition} A transition object transformed to the timeline's crop and
      *                 scale parameter.
      */
-    generateTransition(startTs, endTs, transitionType, overlap) {
+    generateTransition(startTs, endTs, transitionType, overlap, layerId, taskId) {
       const transitionWidth = this.objectWidth(startTs, endTs);
       const transitionDesc = transitionMap.get(transitionType).desc;
       const transitionColor = transitionMap.get(transitionType).color;
-      const tooltip = `${transitionDesc}. Start: ${nanos_to_string(startTs)}. End: ${nanos_to_string(endTs)}.`;
+      var tooltip = `${transitionDesc}. Start: ${nanos_to_string(startTs)}. End: ${nanos_to_string(endTs)}.`;
+
+      if (layerId!==-1 && taskId===-1) tooltip += " SF only.";
+      else if (taskId!==-1 && layerId===-1) tooltip += " WM only.";
+
       return new Transition(this.position(startTs), startTs, endTs, transitionWidth, transitionColor, overlap, tooltip);
     },
   },

@@ -155,8 +155,8 @@
                 <timeline
                   :store="store"
                   :flickerMode="flickerMode"
-                  :tags="Object.freeze(tags)"
-                  :errors="Object.freeze(errors)"
+                  :tags="Object.freeze(presentTags)"
+                  :errors="Object.freeze(presentErrors)"
                   :timeline="Object.freeze(minimizedTimeline.timeline)"
                   :selected-index="minimizedTimeline.selectedIndex"
                   :scale="scale"
@@ -312,8 +312,6 @@ export default {
       cropIntent: null,
       TRACE_ICONS,
       search: false,
-      tags: [],
-      errors: [],
     };
   },
   created() {
@@ -433,8 +431,6 @@ export default {
       }
     },
     minimizedTimeline() {
-      this.updateFlickerMode(this.navigationStyle);
-
       if (this.navigationStyle === NAVIGATION_STYLE.GLOBAL) {
         return this.mergedTimeline;
       }
@@ -471,7 +467,7 @@ export default {
       return this.timelineFiles.length > 1;
     },
     flickerMode() {
-      return this.tags.length>0 || this.errors.length>0;
+      return this.presentTags.length>0 || this.presentErrors.length>0;
     },
   },
   updated() {
@@ -646,43 +642,6 @@ export default {
       }
 
       this.$store.commit('setNavigationFilesFilter', navigationStyleFilter);
-    },
-    updateFlickerMode(style) {
-      if (style === NAVIGATION_STYLE.GLOBAL ||
-        style === NAVIGATION_STYLE.CUSTOM) {
-        this.tags = this.presentTags;
-        this.errors = this.presentErrors;
-
-      } else if (style === NAVIGATION_STYLE.FOCUSED) {
-        if (this.focusedFile.timeline) {
-          this.tags = this.getTagTimelineComponents(this.presentTags, this.focusedFile);
-          this.errors = this.getTagTimelineComponents(this.presentErrors, this.focusedFile);
-        }
-      } else if (
-        style.split('-').length >= 2 &&
-        style.split('-')[0] === NAVIGATION_STYLE.TARGETED
-      ) {
-        const file = this.$store.state.traces[style.split('-')[1]];
-        if (file.timeline) {
-          this.tags = this.getTagTimelineComponents(this.presentTags, file);
-          this.errors = this.getTagTimelineComponents(this.presentErrors, file);
-        }
-      //Unexpected navigation type or no timeline present in file
-      } else {
-        console.warn('Unexpected timeline or navigation type; no flicker mode available');
-        this.tags = [];
-        this.errors = [];
-      }
-    },
-    getTagTimelineComponents(items, file) {
-      if (file.type===FILE_TYPES.SURFACE_FLINGER_TRACE) {
-        return items.filter(item => item.layerId !== -1);
-      }
-      if (file.type===FILE_TYPES.WINDOW_MANAGER_TRACE) {
-        return items.filter(item => item.taskId !== -1);
-      }
-      // if focused file is not one supported by tags/errors
-      return [];
     },
     updateVideoOverlayWidth(width) {
       this.videoOverlayExtraWidth = width;
