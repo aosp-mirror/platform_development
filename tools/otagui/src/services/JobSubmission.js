@@ -89,6 +89,7 @@ export class OTAConfiguration {
     let jsonOptions = Object.assign({}, this)
     jsonOptions.target = targetBuild
     jsonOptions.incremental = incrementalSource
+    jsonOptions.isIncremental = !!incrementalSource;
     jsonOptions.id = uuid.v1()
     for (let flag of OTAExtraFlags) {
       if (jsonOptions[flag.key]) {
@@ -97,8 +98,8 @@ export class OTAConfiguration {
         }
       }
     }
-    let response = await ApiServices.postInput(jsonOptions, jsonOptions.id)
-    return response.data
+    let data = await ApiServices.postInput(jsonOptions, jsonOptions.id)
+    return data;
   }
 
   /**
