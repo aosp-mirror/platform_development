@@ -74,12 +74,13 @@ export default {
       if (this.targetBuilds.length<2) {
         alert(
           'At least two OTA packeges has to be given!'
-        )
+        );
         return
       }
       try {
-        let response_messages = await this.$store.state.otaConfig
+        let response_data = await this.$store.state.otaConfig
           .sendChainForms(this.targetBuilds)
+        let response_messages = response_data.map(d => d.msg);
         alert(response_messages.join('\n'))
         this.$store.state.otaConfig.reset()
         this.$store.commit('SET_TARGETS', [])
