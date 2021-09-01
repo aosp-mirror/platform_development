@@ -69,14 +69,10 @@ export class OTAConfiguration {
   async sendChainForms(targetBuilds) {
     const responses = []
     this.isIncremental = true
-    for (let i = 0; i < targetBuilds.length-1; i++) {
-      try {
-        let response =
-          await this.sendForm(targetBuilds[i+1], targetBuilds[i])
-        responses.push(response)
-      } catch (err) {
-        throw err
-      }
+    for (let i = 0; i < targetBuilds.length - 1; i++) {
+      let response =
+        await this.sendForm(targetBuilds[i + 1], targetBuilds[i])
+      responses.push(response)
     }
     return responses
   }
@@ -101,12 +97,8 @@ export class OTAConfiguration {
         }
       }
     }
-    try {
-      let response = await ApiServices.postInput(JSON.stringify(jsonOptions), jsonOptions.id)
-      return response.data
-    } catch (err) {
-      throw err
-    }
+    let response = await ApiServices.postInput(jsonOptions, jsonOptions.id)
+    return response.data
   }
 
   /**
