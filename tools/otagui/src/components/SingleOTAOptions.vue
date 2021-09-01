@@ -74,9 +74,9 @@ export default {
      */
     async sendForm() {
       try {
-        let response_message = await this.$store.state.otaConfig.sendForm(
+        let data = await this.$store.state.otaConfig.sendForm(
           this.targetBuild, this.incrementalSource)
-        alert(response_message)
+        alert(data.msg);
         this.$store.state.otaConfig.reset()
         this.$store.commit('SET_TARGETS', [])
         this.$store.commit('SET_SOURCES', [])
