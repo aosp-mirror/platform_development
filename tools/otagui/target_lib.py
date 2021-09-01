@@ -130,8 +130,9 @@ class TargetLib:
         if os.path.isdir(path):
             builds_name = os.listdir(path)
             for build_name in builds_name:
-                self.new_build(build_name, os.path.join(path, build_name))
-        elif os.path.isfile(path):
+                if build_name.endswith(".zip"):
+                    self.new_build(build_name, os.path.join(path, build_name))
+        elif os.path.isfile(path) and path.endswith(".zip"):
             self.new_build(os.path.split(path)[-1], path)
         return self.get_builds()
 
