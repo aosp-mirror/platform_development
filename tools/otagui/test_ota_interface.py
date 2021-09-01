@@ -182,7 +182,7 @@ class TestProcessesManagement(unittest.TestCase):
     def setUp(self):
         if os.path.isfile('test_process.db'):
             self.tearDown()
-        self.processes = ProcessesManagement(path='test_process.db')
+        self.processes = ProcessesManagement(db_path='test_process.db')
         testcase_job_info = TestJobInfo()
         testcase_job_info.setUp()
         self.test_job_info = testcase_job_info.setup_job(incremental='target/source.zip')

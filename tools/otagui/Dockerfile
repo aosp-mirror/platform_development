@@ -3,7 +3,12 @@ FROM node:lts-alpine as build-stage
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
-COPY . .
+COPY src ./src
+COPY public ./public
+COPY *.js .
+COPY .env* .
+COPY .eslint* .
+
 RUN npm run build
 
 # production stage
@@ -14,7 +19,7 @@ WORKDIR /app
 VOLUME [ "/app/target", "/app/output"]
 COPY otatools.zip .
 COPY --from=build-stage /app/dist ./dist
-COPY --from=build-stage /app/*.py .
+COPY *.py .
 
 EXPOSE 8000
 CMD ["python3.9", "web_server.py"]
