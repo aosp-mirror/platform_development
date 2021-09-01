@@ -3,7 +3,7 @@
     <h3>Build Library</h3>
     <UploadFile @file-uploaded="fetchTargetList" />
     <BuildTable
-      v-if="targetDetails.length>0"
+      v-if="targetDetails && targetDetails.length>0"
       :builds="targetDetails"
     />
     <li
@@ -42,7 +42,7 @@
 <script>
 import UploadFile from '@/components/UploadFile.vue'
 import BuildTable from '@/components/BuildTable.vue'
-import ApiService from '@/services/ApiService.js'
+import ApiService from '../services/ApiService.js'
 import FormDate from '@/services/FormDate.js'
 
 export default {
@@ -72,9 +72,8 @@ export default {
      */
     async fetchTargetList() {
       try {
-        let response = await ApiService.getFileList('')
-        this.targetDetails = response.data
-        this.$emit('update:targetDetails', response.data)
+        this.targetDetails = await ApiService.getBuildList()
+        this.$emit('update:targetDetails', this.targetDetails)
       } catch (err) {
         alert(
           "Cannot fetch Android Builds list from the backend, for the following reasons:"
@@ -88,9 +87,8 @@ export default {
      */
     async updateBuildLib() {
       try {
-        let response = await ApiService.getFileList('/target')
-        this.targetDetails = response.data
-        this.$emit('update:targetDetails', response.data)
+        this.targetDetails = await ApiService.reconstructBuildList();
+        this.$emit('update:targetDetails', this.targetDetails);
       } catch (err) {
         alert(
           "Cannot fetch Android Builds list from the backend, for the following reasons: "
