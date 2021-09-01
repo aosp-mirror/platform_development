@@ -8,6 +8,10 @@ import re
 import json
 
 
+class BuildFileInvalidError(Exception):
+    pass
+
+
 @dataclass
 class BuildInfo:
     """
@@ -34,29 +38,26 @@ class BuildInfo:
             else:
                 return ''
 
-        build = zipfile.ZipFile(self.path)
-        try:
-            with build.open('SYSTEM/build.prop', 'r') as build_prop:
-                raw_info = build_prop.readlines()
-                pattern_id = re.compile(b'(?<=ro\.build\.id\=).+')
-                pattern_version = re.compile(
-                    b'(?<=ro\.build\.version\.incremental\=).+')
-                pattern_flavor = re.compile(b'(?<=ro\.build\.flavor\=).+')
-                self.build_id = extract_info(
-                    pattern_id, raw_info).decode('utf-8')
-                self.build_version = extract_info(
-                    pattern_version, raw_info).decode('utf-8')
-                self.build_flavor = extract_info(
-                    pattern_flavor, raw_info).decode('utf-8')
-        except KeyError:
-            pass
-        try:
-            with build.open('META/ab_partitions.txt', 'r') as partition_info:
-                raw_info = partition_info.readlines()
-                for line in raw_info:
-                    self.partitions.append(line.decode('utf-8').rstrip())
-        except KeyError:
-            pass
+        with zipfile.ZipFile(self.path) as build:
+            try:
+                with build.open('SYSTEM/build.prop', 'r') as build_prop:
+                    raw_info = build_prop.readlines()
+                    pattern_id = re.compile(b'(?<=ro\.build\.id\=).+')
+                    pattern_version = re.compile(
+                        b'(?<=ro\.build\.version\.incremental\=).+')
+                    pattern_flavor = re.compile(b'(?<=ro\.build\.flavor\=).+')
+                    self.build_id = extract_info(
+                        pattern_id, raw_info).decode('utf-8')
+                    self.build_version = extract_info(
+                        pattern_version, raw_info).decode('utf-8')
+                    self.build_flavor = extract_info(
+                        pattern_flavor, raw_info).decode('utf-8')
+                with build.open('META/ab_partitions.txt', 'r') as partition_info:
+                    raw_info = partition_info.readlines()
+                    for line in raw_info:
+                        self.partitions.append(line.decode('utf-8').rstrip())
+            except KeyError as e:
+                raise BuildFileInvalidError("Invalid build due to " + str(e))
 
     def to_sql_form_dict(self):
         """
@@ -79,12 +80,16 @@ class TargetLib:
     """
     A class that manages the builds in database.
     """
-    def __init__(self, path='target/ota_database.db'):
+
+    def __init__(self, working_dir="target", db_path=None):
         """
         Create a build table if not existing
         """
-        self.path = path
-        with sqlite3.connect(self.path) as connect:
+        self.working_dir = working_dir
+        if db_path is None:
+            db_path = os.path.join(working_dir, "ota_database.db")
+        self.db_path = db_path
+        with sqlite3.connect(self.db_path) as connect:
             cursor = connect.cursor()
             cursor.execute("""
                 CREATE TABLE if not exists Builds (
@@ -107,7 +112,12 @@ class TargetLib:
         """
         build_info = BuildInfo(filename, path, int(time.time()))
         build_info.analyse_buildprop()
-        with sqlite3.connect(self.path) as connect:
+        # Ignore name specified by user, instead use a standard format
+        build_info.path = os.path.join(self.working_dir, "{}-{}-{}.zip".format(
+            build_info.build_flavor, build_info.build_id, build_info.build_version))
+        if path != build_info.path:
+            os.rename(path, build_info.path)
+        with sqlite3.connect(self.db_path) as connect:
             cursor = connect.cursor()
             cursor.execute("""
             SELECT * FROM Builds WHERE FileName=:file_name and Path=:path
@@ -121,19 +131,21 @@ class TargetLib:
             VALUES (:file_name, :time, :path, :build_id, :build_version, :build_flavor, :partitions)
             """, build_info.to_sql_form_dict())
 
-    def new_build_from_dir(self, path):
+    def new_build_from_dir(self):
         """
         Update the database using files under a directory
         Args:
             path: a directory
         """
-        if os.path.isdir(path):
-            builds_name = os.listdir(path)
+        build_dir = self.working_dir
+        if os.path.isdir(build_dir):
+            builds_name = os.listdir(build_dir)
             for build_name in builds_name:
-                if build_name.endswith(".zip"):
-                    self.new_build(build_name, os.path.join(path, build_name))
-        elif os.path.isfile(path) and path.endswith(".zip"):
-            self.new_build(os.path.split(path)[-1], path)
+                path = os.path.join(build_dir, build_name)
+                if build_name.endswith(".zip") and zipfile.is_zipfile(path):
+                    self.new_build(build_name, path)
+        elif os.path.isfile(build_dir) and build_dir.endswith(".zip"):
+            self.new_build(os.path.split(build_dir)[-1], build_dir)
         return self.get_builds()
 
     def sql_to_buildinfo(self, row):
@@ -147,7 +159,7 @@ class TargetLib:
             A list of build_info, each of which is an object:
             (FileName, UploadTime, Path, Build ID, Build Version, Build Flavor, Partitions)
         """
-        with sqlite3.connect(self.path) as connect:
+        with sqlite3.connect(self.db_path) as connect:
             cursor = connect.cursor()
             cursor.execute("""
             SELECT FileName, Path, UploadTime, BuildID, BuildVersion, BuildFlavor, Partitions
@@ -161,7 +173,7 @@ class TargetLib:
             A build_info, which is an object:
             (FileName, UploadTime, Path, Build ID, Build Version, Build Flavor, Partitions)
         """
-        with sqlite3.connect(self.path) as connect:
+        with sqlite3.connect(self.db_path) as connect:
             cursor = connect.cursor()
             cursor.execute("""
             SELECT FileName, Path, UploadTime, BuildID, BuildVersion, BuildFlavor, Partitions
