@@ -14,82 +14,86 @@
 -->
 <template>
   <md-content class="searchbar">
-    <div class="search-timestamp" v-if="isTimestampSearch()">
-      <md-button
-        class="search-timestamp-button"
-        @click="updateSearchForTimestamp"
-      >
-        Navigate to timestamp
-      </md-button>
-      <md-field class="search-input">
-        <label>Enter timestamp</label>
-        <md-input v-model="searchInput" @keyup.enter.native="updateSearchForTimestamp" />
-      </md-field>
+
+    <div class="tabs">
+      <div class="search-timestamp" v-if="isTimestampSearch()">
+        <md-field class="search-input">
+          <label>Enter timestamp</label>
+          <md-input v-model="searchInput" @keyup.enter.native="updateSearchForTimestamp" />
+        </md-field>
+        <md-button
+            class="md-dense md-primary search-timestamp-button"
+            @click="updateSearchForTimestamp"
+          >
+            Go to timestamp
+          </md-button>
+      </div>
+
+      <div class="dropdown-content" v-if="isTagSearch()">
+        <table>
+          <tr class="header">
+            <th style="width: 10%">Global Start</th>
+            <th style="width: 10%">Global End</th>
+            <th style="width: 80%">Description</th>
+          </tr>
+
+          <tr v-for="item in filteredTransitionsAndErrors" :key="item">
+            <td
+              v-if="isTransition(item)"
+              class="inline-time"
+              @click="
+                setCurrentTimestamp(transitionStart(transitionTags(item.id)))
+              "
+            >
+              <span>{{ transitionTags(item.id)[0].desc }}</span>
+            </td>
+            <td
+              v-if="isTransition(item)"
+              class="inline-time"
+              @click="setCurrentTimestamp(transitionEnd(transitionTags(item.id)))"
+            >
+              <span>{{ transitionTags(item.id)[1].desc }}</span>
+            </td>
+            <td
+              v-if="isTransition(item)"
+              class="inline-transition"
+              :style="{color: transitionTextColor(item.transition)}"
+              @click="
+                setCurrentTimestamp(transitionStart(transitionTags(item.id)))
+              "
+            >
+              {{ transitionDesc(item.transition) }}
+            </td>
+
+            <td
+              v-if="!isTransition(item)"
+              class="inline-time"
+              @click="setCurrentTimestamp(item.timestamp)"
+            >
+              {{ errorDesc(item.timestamp) }}
+            </td>
+            <td v-if="!isTransition(item)">-</td>
+            <td
+              v-if="!isTransition(item)"
+              class="inline-error"
+              @click="setCurrentTimestamp(item.timestamp)"
+            >
+              Error: {{item.message}}
+            </td>
+          </tr>
+        </table>
+        <md-field class="search-input">
+          <label
+            >Filter by transition or error message. Click to navigate to closest
+            timestamp in active timeline.</label
+          >
+          <md-input v-model="searchInput"></md-input>
+        </md-field>
+      </div>
     </div>
 
-    <div class="dropdown-content" v-if="isTagSearch()">
-      <table>
-        <tr class="header">
-          <th style="width: 10%">Global Start</th>
-          <th style="width: 10%">Global End</th>
-          <th style="width: 80%">Description</th>
-        </tr>
-
-        <tr v-for="item in filteredTransitionsAndErrors" :key="item">
-          <td
-            v-if="isTransition(item)"
-            class="inline-time"
-            @click="
-              setCurrentTimestamp(transitionStart(transitionTags(item.id)))
-            "
-          >
-            <span>{{ transitionTags(item.id)[0].desc }}</span>
-          </td>
-          <td
-            v-if="isTransition(item)"
-            class="inline-time"
-            @click="setCurrentTimestamp(transitionEnd(transitionTags(item.id)))"
-          >
-            <span>{{ transitionTags(item.id)[1].desc }}</span>
-          </td>
-          <td
-            v-if="isTransition(item)"
-            class="inline-transition"
-            :style="{color: transitionTextColor(item.transition)}"
-            @click="
-              setCurrentTimestamp(transitionStart(transitionTags(item.id)))
-            "
-          >
-            {{ transitionDesc(item.transition) }}
-          </td>
-
-          <td
-            v-if="!isTransition(item)"
-            class="inline-time"
-            @click="setCurrentTimestamp(item.timestamp)"
-          >
-            {{ errorDesc(item.timestamp) }}
-          </td>
-          <td v-if="!isTransition(item)">-</td>
-          <td
-            v-if="!isTransition(item)"
-            class="inline-error"
-            @click="setCurrentTimestamp(item.timestamp)"
-          >
-            Error: {{item.message}}
-          </td>
-        </tr>
-      </table>
-      <md-field class="search-input">
-        <label
-          >Filter by transition or error message. Click to navigate to closest
-          timestamp in active timeline.</label
-        >
-        <md-input v-model="searchInput"></md-input>
-      </md-field>
-    </div>
-
-    <div class="tab-container">
+    <div class="tab-container" v-if="searchTypes.length > 0">
+      Search mode:
       <md-button
         v-for="searchType in searchTypes"
         :key="searchType"
@@ -229,7 +233,7 @@ export default {
   },
 };
 </script>
-<style>
+<style scoped>
 .searchbar {
   background-color: rgb(250, 243, 233) !important;
   top: 0;
@@ -241,8 +245,14 @@ export default {
   bottom: 1px;
 }
 
+.tabs {
+  padding-top: 1rem;
+}
+
 .tab-container {
-  padding: 0px 20px 0px 20px;
+  padding-left: 20px;
+  display: flex;
+  align-items: center;
 }
 
 .tab.active {
@@ -255,11 +265,18 @@ export default {
 
 .search-timestamp {
   padding: 5px 20px 0px 20px;
-  display: block;
+  display: inline-flex;
+  width: 100%;
+}
+
+.search-timestamp > .search-input {
+  margin-top: -5px;
+  max-width: 200px;
 }
 
 .search-timestamp-button {
   left: 0;
+  padding: 0 15px;
 }
 
 .dropdown-content {
@@ -269,7 +286,7 @@ export default {
 
 .dropdown-content table {
   overflow-y: scroll;
-  height: 150px;
+  max-height: 150px;
   display: block;
 }
 
