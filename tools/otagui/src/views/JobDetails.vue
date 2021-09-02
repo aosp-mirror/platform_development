@@ -16,21 +16,21 @@
     <v-divider class="my-5" />
     <div>
       <h3>STDERR</h3>
-      <div
+      <pre
         ref="stderr"
         class="stderr"
       >
         {{ job.stderr }}
         <p ref="stderrBottom" />
-      </div>
+      </pre>
       <h3>STDOUT</h3>
-      <div
+      <pre
         ref="stdout"
         class="stdout"
       >
         {{ job.stdout }}
         <p ref="stdoutBottom" />
-      </div>
+      </pre>
     </div>
     <v-divider class="my-5" />
     <div class="download">
@@ -67,6 +67,7 @@ export default {
   data() {
     return {
       job: null,
+      pending_task: null,
     }
   },
   computed: {
@@ -76,6 +77,12 @@ export default {
   },
   created() {
     this.updateStatus()
+  },
+  unmounted() {
+    if (this.pending_task) {
+      clearTimeout(this.pending_task);
+      this.pending_task = null;
+    }
   },
   methods: {
     async updateStatus() {
@@ -101,7 +108,7 @@ export default {
         console.log(err)
       }
       if (this.job.status == 'Running') {
-        setTimeout(this.updateStatus, 1000)
+        this.pending_task = setTimeout(this.updateStatus, 1000)
       }
     },
     updateConfig() {
