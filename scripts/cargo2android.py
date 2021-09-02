@@ -645,6 +645,9 @@ class Crate(object):
       if self.has_warning and not self.cap_lints:
         self.write('    // has rustc warnings')
       self.dump_srcs_list()
+    if self.cargo_env_compat:
+      self.write('    cargo_env_compat: true,')
+      self.write('    cargo_pkg_version: "' + self.cargo_pkg_version + '",')
     if 'test' in self.crate_types:
       self.write('    test_suites: ["general-tests"],')
       self.write('    auto_gen_config: true,')
