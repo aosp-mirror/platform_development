@@ -308,7 +308,7 @@ import {nanos_to_string, getClosestTimestamp} from './transform.js';
 
 export default {
   name: 'overlay',
-  props: ['store', 'presentTags', 'presentErrors', 'tagAndErrorTraces', 'searchTypes'],
+  props: ['store', 'presentTags', 'presentErrors', 'searchTypes'],
   mixins: [FileType],
   data() {
     return {

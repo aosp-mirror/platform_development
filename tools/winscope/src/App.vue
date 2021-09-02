@@ -19,6 +19,11 @@
         <h1 class="md-title" style="flex: 1">{{title}}</h1>
         <md-button
           class="md-primary md-theme-default download-all-btn"
+          @click="generateTags()"
+          v-if="dataLoaded && canGenerateTags"
+        >Generate Tags</md-button>
+        <md-button
+          class="md-primary md-theme-default"
           @click="downloadAsZip(files)"
           v-if="dataLoaded"
         >Download All</md-button>
@@ -62,7 +67,6 @@
           <overlay
             :presentTags="Object.freeze(presentTags)"
             :presentErrors="Object.freeze(presentErrors)"
-            :tagAndErrorTraces="tagAndErrorTraces"
             :store="store"
             :ref="overlayRef"
             :searchTypes="searchTypes"
@@ -86,6 +90,8 @@ import FocusedDataViewFinder from './mixins/FocusedDataViewFinder';
 import {DIRECTION} from './utils/utils';
 import Searchbar from './Searchbar.vue';
 import {NAVIGATION_STYLE, SEARCH_TYPE} from './utils/consts';
+import {TRACE_TYPES, FILE_TYPES, dataFile} from './decode.js';
+import { TaggingEngine } from './flickerlib/common';
 
 const APP_NAME = 'Winscope';
 
@@ -113,10 +119,11 @@ export default {
       mainContentStyle: {
         'padding-bottom': `${CONTENT_BOTTOM_PADDING}px`,
       },
+      tagFile: null,
       presentTags: [],
       presentErrors: [],
       searchTypes: [SEARCH_TYPE.TIMESTAMP],
-      tagAndErrorTraces: false,
+      hasTagOrErrorTraces: false,
     };
   },
   created() {
@@ -140,11 +147,14 @@ export default {
     },
     /** Get tags from all uploaded tag files*/
     getUpdatedTags() {
-      var tagStates = this.getUpdatedStates(this.tagFiles);
+      if (this.tagFile === null) return [];
+      const tagStates = this.getUpdatedStates([this.tagFile]);
       var tags = [];
       tagStates.forEach(tagState => {
         tagState.tags.forEach(tag => {
-          tag.timestamp = tagState.timestamp;
+          tag.timestamp = Number(tagState.timestamp);
+          // tags generated on frontend have transition.name due to kotlin enum
+          tag.transition = tag.transition.name ?? tag.transition;
           tags.push(tag);
         });
       });
@@ -157,18 +167,18 @@ export default {
       //TODO (b/196201487) add check if errors empty
       errorStates.forEach(errorState => {
         errorState.errors.forEach(error => {
-          error.timestamp = errorState.timestamp;
+          error.timestamp = Number(errorState.timestamp);
           errors.push(error);
         });
       });
       return errors;
     },
     /** Set flicker mode check for if there are tag/error traces uploaded*/
-    shouldUpdateTagAndErrorTraces() {
+    updateHasTagOrErrorTraces() {
       return this.hasTagTrace() || this.hasErrorTrace();
     },
     hasTagTrace() {
-      return this.tagFiles.length > 0;
+      return this.tagFile !== null;
     },
     hasErrorTrace() {
       return this.errorFiles.length > 0;
@@ -191,6 +201,7 @@ export default {
     },
     clear() {
       this.store.showFileTypes = [];
+      this.tagFile = null;
       this.$store.commit('clearFiles');
     },
     onDataViewFocus(file) {
@@ -216,7 +227,9 @@ export default {
     },
     onDataReady(files) {
       this.$store.dispatch('setFiles', files);
-      this.tagAndErrorTraces = this.shouldUpdateTagAndErrorTraces();
+
+      this.tagFile = this.tagFiles[0] ?? null;
+      this.hasTagOrErrorTraces = this.updateHasTagOrErrorTraces();
       this.presentTags = this.getUpdatedTags();
       this.presentErrors = this.getUpdatedErrors();
       this.updateSearchTypes();
@@ -237,11 +250,42 @@ export default {
           `${ CONTENT_BOTTOM_PADDING + newHeight }px`,
       );
     },
+    generateTags() {
+      // generate tag file
+      const engine = new TaggingEngine(
+        this.$store.getters.tagGenerationWmTrace,
+        this.$store.getters.tagGenerationSfTrace,
+        (text) => { console.log(text) }
+      );
+      const tagTrace = engine.run();
+      const tagFile = this.generateTagFile(tagTrace);
+
+      // update tag trace in set files, update flicker mode
+      this.tagFile = tagFile;
+      this.hasTagOrErrorTraces = this.updateHasTagOrErrorTraces();
+      this.presentTags = this.getUpdatedTags();
+      this.presentErrors = this.getUpdatedErrors();
+      this.updateSearchTypes();
+    },
+
+    generateTagFile(tagTrace) {
+      const data = tagTrace.entries;
+      const blobUrl = URL.createObjectURL(new Blob([], {type: undefined}));
+      return dataFile(
+        "GeneratedTagTrace.winscope",
+        data.map((x) => x.timestamp),
+        data,
+        blobUrl,
+        FILE_TYPES.TAG_TRACE
+      );
+    },
   },
   computed: {
     files() {
       return this.$store.getters.sortedFiles.map(file => {
-        if (this.hasDataView(file)) file.show = true;
+        if (this.hasDataView(file)) {
+          file.show = true;
+        }
         return file;
       });
     },
@@ -269,6 +313,11 @@ export default {
     },
     timelineFiles() {
       return this.$store.getters.timelineFiles;
+    },
+    canGenerateTags() {
+      const fileTypes = this.dataViewFiles.map((file) => file.type);
+      return fileTypes.includes(TRACE_TYPES.WINDOW_MANAGER)
+        && fileTypes.includes(TRACE_TYPES.SURFACE_FLINGER);
     },
   },
   watch: {

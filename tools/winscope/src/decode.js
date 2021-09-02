@@ -554,6 +554,14 @@ function decodeAndTransformProto(buffer, params, displayDefaults) {
 
 function protoDecoder(buffer, params, fileName, store) {
   const transformed = decodeAndTransformProto(buffer, params, store.displayDefaults);
+
+  // add tagGenerationTrace to dataFile for WM/SF traces so tags can be generated
+  var tagGenerationTrace = null;
+  if (params.type === FILE_TYPES.WINDOW_MANAGER_TRACE ||
+    params.type === FILE_TYPES.SURFACE_FLINGER_TRACE) {
+    tagGenerationTrace = transformed;
+  }
+
   let data;
   if (params.timeline) {
     data = transformed.entries ?? transformed.children;
@@ -561,7 +569,15 @@ function protoDecoder(buffer, params, fileName, store) {
     data = [transformed];
   }
   const blobUrl = URL.createObjectURL(new Blob([buffer], {type: params.mime}));
-  return dataFile(fileName, data.map((x) => x.timestamp), data, blobUrl, params.type);
+
+  return dataFile(
+    fileName,
+    data.map((x) => x.timestamp),
+    data,
+    blobUrl,
+    params.type,
+    tagGenerationTrace
+  );
 }
 
 function videoDecoder(buffer, params, fileName, store) {
@@ -570,7 +586,7 @@ function videoDecoder(buffer, params, fileName, store) {
   return dataFile(fileName, timeline, blobUrl, blobUrl, params.type);
 }
 
-function dataFile(filename, timeline, data, blobUrl, type) {
+function dataFile(filename, timeline, data, blobUrl, type, tagGenerationTrace = null) {
   return {
     filename: filename,
     // Object is frozen for performance reasons
@@ -578,6 +594,7 @@ function dataFile(filename, timeline, data, blobUrl, type) {
     timeline: Object.freeze(timeline),
     data: data,
     blobUrl: blobUrl,
+    tagGenerationTrace: tagGenerationTrace,
     type: type,
     selectedIndex: 0,
     destroy() {
@@ -678,4 +695,17 @@ function detectAndDecode(buffer, fileName, store) {
  */
 class UndetectableFileType extends Error { }
 
-export {detectAndDecode, decodeAndTransformProto, FILE_TYPES, TRACE_INFO, TRACE_TYPES, DUMP_TYPES, DUMP_INFO, FILE_DECODERS, FILE_ICONS, UndetectableFileType};
+export {
+  dataFile,
+  detectAndDecode,
+  decodeAndTransformProto,
+  TagTraceMessage,
+  FILE_TYPES,
+  TRACE_INFO,
+  TRACE_TYPES,
+  DUMP_TYPES,
+  DUMP_INFO,
+  FILE_DECODERS,
+  FILE_ICONS,
+  UndetectableFileType
+};
