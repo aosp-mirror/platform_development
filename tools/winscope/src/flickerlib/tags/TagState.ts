@@ -19,7 +19,7 @@ import Tag from './Tag';
 
 TagState.fromProto = function (timestamp: number, protos: any[]): TagState {
     const tags = protos.map(it => Tag.fromProto(it));
-    const state = new TagState(timestamp, tags);
+    const state = new TagState(`${timestamp}`, tags);
     return state;
 }
 
