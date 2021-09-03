@@ -373,8 +373,8 @@ export default {
       const transitionColor = transitionMap.get(transitionType).color;
       var tooltip = `${transitionDesc}. Start: ${nanos_to_string(startTs)}. End: ${nanos_to_string(endTs)}.`;
 
-      if (layerId!==-1 && taskId===-1) tooltip += " SF only.";
-      else if (taskId!==-1 && layerId===-1) tooltip += " WM only.";
+      if (layerId!==0 && taskId===0) tooltip += " SF only.";
+      else if (taskId!==0 && layerId===0) tooltip += " WM only.";
 
       return new Transition(this.position(startTs), startTs, endTs, transitionWidth, transitionColor, overlap, tooltip);
     },
