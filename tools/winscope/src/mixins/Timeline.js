@@ -154,8 +154,8 @@ export default {
         const startTimes = id.filter(tag => tag.isStartTag).map(tag => tag.timestamp);
         const endTimes = id.filter(tag => !tag.isStartTag).map(tag => tag.timestamp);
 
-        const transitionStartTime = Math.min(startTimes);
-        const transitionEndTime = Math.max(endTimes);
+        const transitionStartTime = Math.min(...startTimes);
+        const transitionEndTime = Math.max(...endTimes);
 
         //do not freeze new transition, as overlap still to be handled (defaulted to 0)
         const transition = this.generateTransition(
