@@ -142,10 +142,8 @@ export default {
     timelineTransitions() {
       const transitions = [];
 
-      //group tags by transition 'id' property
-      const groupedTags = _.mapValues(
-        _.groupBy(this.tags, 'id'), clist => clist.map(tag => _.omit(tag, 'id')))
-      ;
+      //group tags by transition and 'id' property
+      const groupedTags = _.groupBy(this.tags, tag => `"${tag.transition} ${tag.id}"`);
 
       for (const transitionId in groupedTags) {
         const id = groupedTags[transitionId];
