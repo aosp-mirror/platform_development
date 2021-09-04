@@ -63,6 +63,7 @@ EXCLUDED_CRATES = set(['protobuf_bin_gen_rust_do_not_use'])
 RENAME_MAP = {
     # This map includes all changes to the default rust module names
     # to resolve name conflicts, avoid confusion, or work as plugin.
+    'libash': 'libash_rust',
     'libbacktrace': 'libbacktrace_rust',
     'libbase': 'libbase_rust',
     'libbase64': 'libbase64_rust',
