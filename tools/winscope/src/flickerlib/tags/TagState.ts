@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-import LayersTrace from './LayersTrace';
-import WindowManagerState from './WindowManagerState';
-import WindowManagerTrace from './WindowManagerTrace';
-import ObjectFormatter from './ObjectFormatter';
-import TagTrace from './TagTrace';
-import ErrorTrace from './ErrorTrace';
-/**
- * Entry point into the flickerlib for Winscope.
- * Expose everything we want Winscope to have access to here.
- */
-export {ObjectFormatter, LayersTrace, WindowManagerState, WindowManagerTrace, TagTrace, ErrorTrace};
+import { TagState } from "../common";
+import Tag from './Tag';
 
+TagState.fromProto = function (timestamp: number, protos: any[]): TagState {
+    const tags = protos.map(it => Tag.fromProto(it));
+    const state = new TagState(timestamp, tags);
+    return state;
+}
+
+export default TagState;

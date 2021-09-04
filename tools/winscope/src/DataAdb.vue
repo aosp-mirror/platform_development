@@ -158,6 +158,9 @@ const TRACES = {
   'window_trace': {
     name: 'Window Manager',
   },
+  'accessibility_trace': {
+    name: 'Accessibility',
+  },
   'layers_trace': {
     name: 'Surface Flinger',
   },

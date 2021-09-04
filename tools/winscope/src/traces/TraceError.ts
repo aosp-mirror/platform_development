@@ -14,15 +14,24 @@
  * limitations under the License.
  */
 
-import LayersTrace from './LayersTrace';
-import WindowManagerState from './WindowManagerState';
-import WindowManagerTrace from './WindowManagerTrace';
-import ObjectFormatter from './ObjectFormatter';
-import TagTrace from './TagTrace';
-import ErrorTrace from './ErrorTrace';
-/**
- * Entry point into the flickerlib for Winscope.
- * Expose everything we want Winscope to have access to here.
- */
-export {ObjectFormatter, LayersTrace, WindowManagerState, WindowManagerTrace, TagTrace, ErrorTrace};
+import { FILE_TYPES, TRACE_TYPES } from '@/decode.js';
+import TraceBase from './TraceBase';
+import { ErrorTrace } from '@/flickerlib';
 
+export default class TraceError extends TraceBase {
+  errorTraceFile: Object;
+
+  constructor(files) {
+    const errorTraceFile = files[FILE_TYPES.ERROR_TRACE];
+    super(errorTraceFile.data, errorTraceFile.timeline, files);
+    this.errorTraceFile = errorTraceFile;
+  }
+
+  get type() {
+    return TRACE_TYPES.ERROR;
+  }
+
+  static fromProto(proto: any): ErrorTrace {
+    return ErrorTrace.fromProto(proto);
+  }
+}
