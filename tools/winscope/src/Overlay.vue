@@ -52,6 +52,15 @@
     >
       <div class="nav-content">
         <div class="">
+          <searchbar
+            class="search-bar"
+            v-if="search"
+            :searchTypes="searchTypes"
+            :store="store"
+            :presentTags="Object.freeze(presentTags)"
+            :presentErrors="Object.freeze(presentErrors)"
+            :timeline="mergedTimeline.timeline"
+          />
           <md-toolbar
             md-elevation="0"
             class="md-transparent">
@@ -66,16 +75,12 @@
                 </div>
               </div>
 
+              <md-button
+                @click="toggleSearch()"
+                class="drop-search"
+              >Show/hide search bar</md-button>
+
               <div class="active-timeline" v-show="minimized">
-                <md-field class="seek-timestamp-field">
-                  <label>Search for timestamp</label>
-                  <md-input v-model="searchTimestamp"></md-input>
-                </md-field>
-
-                <md-button
-                  @click="updateSearchForTimestamp"
-                >Search</md-button>
-
                 <div
                   class="active-timeline-icon"
                   @click="$refs.navigationTypeSelection.$el
@@ -148,6 +153,10 @@
                   {{ seekTime }}
                 </label>
                 <timeline
+                  :store="store"
+                  :flickerMode="flickerMode"
+                  :tags="Object.freeze(tags)"
+                  :errors="Object.freeze(errors)"
                   :timeline="Object.freeze(minimizedTimeline.timeline)"
                   :selected-index="minimizedTimeline.selectedIndex"
                   :scale="scale"
@@ -271,16 +280,17 @@ import TimelineSelection from './TimelineSelection.vue';
 import DraggableDiv from './DraggableDiv.vue';
 import VideoView from './VideoView.vue';
 import MdIconOption from './components/IconSelection/IconSelectOption.vue';
+import Searchbar from './Searchbar.vue';
 import FileType from './mixins/FileType.js';
 import {NAVIGATION_STYLE} from './utils/consts';
-import {TRACE_ICONS} from '@/decode.js';
+import {TRACE_ICONS, FILE_TYPES} from '@/decode.js';
 
 // eslint-disable-next-line camelcase
-import {nanos_to_string, string_to_nanos} from './transform.js';
+import {nanos_to_string} from './transform.js';
 
 export default {
   name: 'overlay',
-  props: ['store'],
+  props: ['store', 'presentTags', 'presentErrors', 'tagAndErrorTraces', 'searchTypes'],
   mixins: [FileType],
   data() {
     return {
@@ -301,7 +311,9 @@ export default {
       crop: null,
       cropIntent: null,
       TRACE_ICONS,
-      searchTimestamp: '',
+      search: false,
+      tags: [],
+      errors: [],
     };
   },
   created() {
@@ -388,7 +400,8 @@ export default {
         default:
           const split = this.navigationStyle.split('-');
           if (split[0] !== NAVIGATION_STYLE.TARGETED) {
-            throw new Error('Unexpected navigation type');
+            console.warn('Unexpected navigation type; fallback to global');
+            return 'All timelines';
           }
 
           const fileType = split[1];
@@ -410,7 +423,8 @@ export default {
         default:
           const split = this.navigationStyle.split('-');
           if (split[0] !== NAVIGATION_STYLE.TARGETED) {
-            throw new Error('Unexpected navigation type');
+            console.warn('Unexpected navigation type; fallback to global');
+            return 'public';
           }
 
           const fileType = split[1];
@@ -419,6 +433,8 @@ export default {
       }
     },
     minimizedTimeline() {
+      this.updateFlickerMode(this.navigationStyle);
+
       if (this.navigationStyle === NAVIGATION_STYLE.GLOBAL) {
         return this.mergedTimeline;
       }
@@ -436,12 +452,16 @@ export default {
         return this.mergedTimeline;
       }
 
-      if (this.navigationStyle.split('-')[0] === NAVIGATION_STYLE.TARGETED) {
+      if (
+        this.navigationStyle.split('-').length >= 2
+        && this.navigationStyle.split('-')[0] === NAVIGATION_STYLE.TARGETED
+      ) {
         return this.$store.state
             .traces[this.navigationStyle.split('-')[1]];
       }
 
-      throw new Error('Unexpected Navigation Style');
+      console.warn('Unexpected navigation type; fallback to global');
+      return this.mergedTimeline;
     },
     isCropped() {
       return this.crop != null &&
@@ -449,6 +469,9 @@ export default {
     },
     multipleTraces() {
       return this.timelineFiles.length > 1;
+    },
+    flickerMode() {
+      return this.tags.length>0 || this.errors.length>0;
     },
   },
   updated() {
@@ -461,6 +484,9 @@ export default {
     });
   },
   methods: {
+    toggleSearch() {
+      this.search = !(this.search);
+    },
     emitBottomHeightUpdate() {
       if (this.$refs.bottomNav) {
         const newHeight = this.$refs.bottomNav.$el.clientHeight;
@@ -480,9 +506,10 @@ export default {
         timelines.push(file.timeline);
       }
 
-      while (true) {
+      var timelineToAdvance = 0;
+      while (timelineToAdvance !== undefined) {
+        timelineToAdvance = undefined;
         let minTime = Infinity;
-        let timelineToAdvance;
 
         for (let i = 0; i < timelines.length; i++) {
           const timeline = timelines[i];
@@ -608,7 +635,9 @@ export default {
         default:
           const split = this.navigationStyle.split('-');
           if (split[0] !== NAVIGATION_STYLE.TARGETED) {
-            throw new Error('Unexpected navigation type');
+            console.warn('Unexpected navigation type; fallback to global');
+            navigationStyleFilter = (f) => true;
+            break;
           }
 
           const fileType = split[1];
@@ -617,6 +646,43 @@ export default {
       }
 
       this.$store.commit('setNavigationFilesFilter', navigationStyleFilter);
+    },
+    updateFlickerMode(style) {
+      if (style === NAVIGATION_STYLE.GLOBAL ||
+        style === NAVIGATION_STYLE.CUSTOM) {
+        this.tags = this.presentTags;
+        this.errors = this.presentErrors;
+
+      } else if (style === NAVIGATION_STYLE.FOCUSED) {
+        if (this.focusedFile.timeline) {
+          this.tags = this.getTagTimelineComponents(this.presentTags, this.focusedFile);
+          this.errors = this.getTagTimelineComponents(this.presentErrors, this.focusedFile);
+        }
+      } else if (
+        style.split('-').length >= 2 &&
+        style.split('-')[0] === NAVIGATION_STYLE.TARGETED
+      ) {
+        const file = this.$store.state.traces[style.split('-')[1]];
+        if (file.timeline) {
+          this.tags = this.getTagTimelineComponents(this.presentTags, file);
+          this.errors = this.getTagTimelineComponents(this.presentErrors, file);
+        }
+      //Unexpected navigation type or no timeline present in file
+      } else {
+        console.warn('Unexpected timeline or navigation type; no flicker mode available');
+        this.tags = [];
+        this.errors = [];
+      }
+    },
+    getTagTimelineComponents(items, file) {
+      if (file.type===FILE_TYPES.SURFACE_FLINGER_TRACE) {
+        return items.filter(item => item.layerId !== -1);
+      }
+      if (file.type===FILE_TYPES.WINDOW_MANAGER_TRACE) {
+        return items.filter(item => item.taskId !== -1);
+      }
+      // if focused file is not one supported by tags/errors
+      return [];
     },
     updateVideoOverlayWidth(width) {
       this.videoOverlayExtraWidth = width;
@@ -642,17 +708,6 @@ export default {
     clearSelection() {
       this.crop = null;
     },
-    updateSearchForTimestamp() {
-      if (/^\d+$/.test(this.searchTimestamp)) {
-        var roundedTimestamp = parseInt(this.searchTimestamp);
-      } else {
-        var roundedTimestamp = string_to_nanos(this.searchTimestamp);
-      }
-      var closestTimestamp = this.mergedTimeline.timeline.reduce(function(prev, curr) {
-        return (Math.abs(curr-roundedTimestamp) < Math.abs(prev-roundedTimestamp) ? curr : prev);
-      });
-      this.$store.dispatch('updateTimelineTime', parseInt(closestTimestamp));
-    },
   },
   components: {
     'timeline': Timeline,
@@ -661,6 +716,7 @@ export default {
     'videoview': VideoView,
     'draggable-div': DraggableDiv,
     'md-icon-option': MdIconOption,
+    'searchbar': Searchbar,
   },
 };
 </script>
@@ -863,5 +919,9 @@ export default {
   font-size: 15px;
   margin-bottom: 15px;
   cursor: help;
+}
+
+.drop-search:hover {
+  background-color: #9af39f;
 }
 </style>

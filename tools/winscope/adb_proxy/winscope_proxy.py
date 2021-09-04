@@ -55,6 +55,14 @@ WINSCOPE_TOKEN_HEADER = "Winscope-Token"
 # Location to save the proxy security token
 WINSCOPE_TOKEN_LOCATION = os.path.expanduser('~/.config/winscope/.token')
 
+# Winscope traces extensions
+WINSCOPE_EXT = ".winscope"
+WINSCOPE_EXT_LEGACY = ".pb"
+WINSCOPE_EXTS = [WINSCOPE_EXT, WINSCOPE_EXT_LEGACY]
+
+# Winscope traces directory
+WINSCOPE_DIR = "/data/misc/wmtrace/"
+
 # Max interval between the client keep-alive requests in seconds
 KEEP_ALIVE_INTERVAL_S = 5
 
@@ -85,10 +93,27 @@ class FileMatcher:
         matchingFiles = call_adb(
             f"shell su root find {self.path} -name {self.matcher}", device_id)
 
+        log.debug("Found file %s", matchingFiles.split('\n')[:-1])
         return matchingFiles.split('\n')[:-1]
 
     def get_filetype(self):
         return self.type
+
+
+class WinscopeFileMatcher(FileMatcher):
+    def __init__(self, path, matcher, filetype) -> None:
+        self.path = path
+        self.internal_matchers = list(map(lambda ext: FileMatcher(path, f'{matcher}{ext}', filetype),
+            WINSCOPE_EXTS))
+        self.type = filetype
+
+    def get_filepaths(self, device_id):
+        for matcher in self.internal_matchers:
+            files = matcher.get_filepaths(device_id)
+            if len(files) > 0:
+                return files
+        log.debug("No files found")
+        return []
 
 
 class TraceTarget:
@@ -111,51 +136,50 @@ class TraceTarget:
 # Order of files matters as they will be expected in that order and decoded in that order
 TRACE_TARGETS = {
     "window_trace": TraceTarget(
-        File("/data/misc/wmtrace/wm_trace.pb", "window_trace"),
+        WinscopeFileMatcher(WINSCOPE_DIR, "wm_trace", "window_trace"),
         'su root cmd window tracing start\necho "WM trace started."',
         'su root cmd window tracing stop >/dev/null 2>&1'
     ),
     "accessibility_trace": TraceTarget(
-        File("/data/misc/a11ytrace/a11y_trace.pb", "accessibility_trace"),
+        WinscopeFileMatcher("/data/misc/a11ytrace", "a11y_trace", "accessibility_trace"),
         'su root cmd accessibility start-trace\necho "Accessibility trace started."',
         'su root cmd accessibility stop-trace >/dev/null 2>&1'
     ),
     "layers_trace": TraceTarget(
-        File("/data/misc/wmtrace/layers_trace.pb", "layers_trace"),
+        WinscopeFileMatcher(WINSCOPE_DIR, "layers_trace", "layers_trace"),
         'su root service call SurfaceFlinger 1025 i32 1\necho "SF trace started."',
         'su root service call SurfaceFlinger 1025 i32 0 >/dev/null 2>&1'
     ),
     "screen_recording": TraceTarget(
-        File("/data/local/tmp/screen.winscope.mp4", "screen_recording"),
-        'screenrecord --bit-rate 8M /data/local/tmp/screen.winscope.mp4 >/dev/null 2>&1 &\necho "ScreenRecorder started."',
+        File(f'/data/local/tmp/screen.mp4', "screen_recording"),
+        f'screenrecord --bit-rate 8M /data/local/tmp/screen.mp4 >/dev/null 2>&1 &\necho "ScreenRecorder started."',
         'pkill -l SIGINT screenrecord >/dev/null 2>&1'
     ),
     "transaction": TraceTarget(
         [
-            File("/data/misc/wmtrace/transaction_trace.pb", "transactions"),
-            FileMatcher("/data/misc/wmtrace/", "transaction_merges_*.pb",
-                        "transaction_merges"),
+            WinscopeFileMatcher(WINSCOPE_DIR, "transaction_trace", "transactions"),
+            FileMatcher(WINSCOPE_DIR, f'transaction_merges_*', "transaction_merges"),
         ],
         'su root service call SurfaceFlinger 1020 i32 1\necho "SF transactions recording started."',
         'su root service call SurfaceFlinger 1020 i32 0 >/dev/null 2>&1'
     ),
     "proto_log": TraceTarget(
-        File("/data/misc/wmtrace/wm_log.pb", "proto_log"),
+        WinscopeFileMatcher(WINSCOPE_DIR, "wm_log", "proto_log"),
         'su root cmd window logging start\necho "WM logging started."',
         'su root cmd window logging stop >/dev/null 2>&1'
     ),
     "ime_trace_clients": TraceTarget(
-        File("/data/misc/wmtrace/ime_trace_clients.pb", "ime_trace_clients"),
+        WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_clients", "ime_trace_clients"),
         'su root ime tracing start\necho "Clients IME trace started."',
         'su root ime tracing stop >/dev/null 2>&1'
     ),
    "ime_trace_service": TraceTarget(
-        File("/data/misc/wmtrace/ime_trace_service.pb", "ime_trace_service"),
+        WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_service", "ime_trace_service"),
         'su root ime tracing start\necho "Service IME trace started."',
         'su root ime tracing stop >/dev/null 2>&1'
     ),
     "ime_trace_managerservice": TraceTarget(
-        File("/data/misc/wmtrace/ime_trace_managerservice.pb", "ime_trace_managerservice"),
+        WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_managerservice", "ime_trace_managerservice"),
         'su root ime tracing start\necho "ManagerService IME trace started."',
         'su root ime tracing stop >/dev/null 2>&1'
     ),
@@ -204,12 +228,12 @@ class DumpTarget:
 
 DUMP_TARGETS = {
     "window_dump": DumpTarget(
-        File("/data/local/tmp/wm_dump.pb", "window_dump"),
-        'su root dumpsys window --proto > /data/local/tmp/wm_dump.pb'
+        File(f'/data/local/tmp/wm_dump{WINSCOPE_EXT}', "window_dump"),
+        f'su root dumpsys window --proto > /data/local/tmp/wm_dump{WINSCOPE_EXT}'
     ),
     "layers_dump": DumpTarget(
-        File("/data/local/tmp/sf_dump.pb", "layers_dump"),
-        'su root dumpsys SurfaceFlinger --proto > /data/local/tmp/sf_dump.pb'
+        File(f'/data/local/tmp/sf_dump{WINSCOPE_EXT}', "layers_dump"),
+        f'su root dumpsys SurfaceFlinger --proto > /data/local/tmp/sf_dump{WINSCOPE_EXT}'
     )
 }
 
@@ -424,6 +448,9 @@ class FetchFilesEndpoint(DeviceRequestEndpoint):
                         file_buffers[file_type] = []
                     buf = base64.encodebytes(tmp.read()).decode("utf-8")
                     file_buffers[file_type].append(buf)
+
+        if (len(file_buffers) == 0):
+            log.error("Proxy didn't find any file to fetch")
 
         # server.send_header('X-Content-Type-Options', 'nosniff')
         # add_standard_headers(server)
