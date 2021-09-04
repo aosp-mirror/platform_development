@@ -14,15 +14,21 @@
 -->
 
 <template>
-  <TraceView :store="store" :file="file" :summarizer="summarizer" />
+  <TraceView
+    :store="store"
+    :file="file"
+    :summarizer="summarizer"
+    :presentTags="presentTags"
+    :presentErrors="presentErrors"
+  />
 </template>
 
 <script>
 import TraceView from '@/TraceView.vue';
 
 export default {
-  name: 'WindowManagerTraceView',
-  props: ['store', 'file'],
+  name: 'SurfaceFlingerTraceView',
+  props: ['store', 'file', 'presentTags', 'presentErrors'],
   components: {
     TraceView,
   },
