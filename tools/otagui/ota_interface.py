@@ -1,6 +1,5 @@
 import subprocess
 import os
-import json
 import pipes
 import threading
 from dataclasses import dataclass, asdict, field
@@ -31,16 +30,6 @@ class JobInfo:
     isIncremental: bool = False
 
     def __post_init__(self):
-        """
-        If the output, stdout, stderr paths are not set, automatically use
-        the job id as the file name.
-        """
-        if not self.output:
-            self.output = os.path.join('output', self.id + '.zip')
-        if not self.stdout:
-            self.stdout = os.path.join('output/stdout.'+self.id)
-        if not self.stderr:
-            self.stderr = os.path.join('output/stderr.'+self.id)
 
         def enforce_bool(t): return t if isinstance(t, bool) else bool(t)
         self.verbose, self.downgrade = map(
@@ -108,16 +97,43 @@ class JobInfo:
         return detail_info
 
 
+class DependencyError(Exception):
+    pass
+
+
 class ProcessesManagement:
     """
     A class manage the ota generate process
     """
 
-    def __init__(self, path='output/ota_database.db'):
+    @staticmethod
+    def check_external_dependencies():
+        try:
+            java_version = subprocess.check_output(["java", "--version"])
+            print("Java version:", java_version.decode())
+        except Exception as e:
+            raise DependencyError(
+                "java not found in PATH. Attempt to generate OTA might fail. " + str(e))
+        try:
+            zip_version = subprocess.check_output(["zip", "-v"])
+            print("Zip version:", zip_version.decode())
+        except Exception as e:
+            raise DependencyError(
+                "zip command not found in PATH. Attempt to generate OTA might fail. " + str(e))
+
+    def __init__(self, *, working_dir='output', db_path=None, otatools_dir=None):
         """
         create a table if not exist
         """
-        self.path = path
+        ProcessesManagement.check_external_dependencies()
+        self.working_dir = working_dir
+        self.logs_dir = os.path.join(working_dir, 'logs')
+        self.otatools_dir = otatools_dir
+        os.makedirs(self.working_dir, exist_ok=True)
+        os.makedirs(self.logs_dir, exist_ok=True)
+        if not db_path:
+            db_path = os.path.join(self.working_dir, "ota_database.db")
+        self.path = db_path
         with sqlite3.connect(self.path) as connect:
             cursor = connect.cursor()
             cursor.execute("""
@@ -145,8 +161,8 @@ class ProcessesManagement:
             job_info: JobInfo
         """
         with sqlite3.connect(self.path) as connect:
-                cursor = connect.cursor()
-                cursor.execute("""
+            cursor = connect.cursor()
+            cursor.execute("""
                     INSERT INTO Jobs (ID, TargetPath, IncrementalPath, Verbose, Partial, OutputPath, Status, Downgrade, OtherFlags, STDOUT, STDERR, StartTime, Finishtime)
                     VALUES (:id, :target, :incremental, :verbose, :partial, :output, :status, :downgrade, :extra, :stdout, :stderr, :start_time, :finish_time)
                 """, job_info.to_sql_form_dict())
@@ -165,7 +181,7 @@ class ProcessesManagement:
             cursor.execute("""
             SELECT ID, TargetPath, IncrementalPath, Verbose, Partial, OutputPath, Status, Downgrade, OtherFlags, STDOUT, STDERR, StartTime, FinishTime
             FROM Jobs WHERE ID=(?)
-            """, (id,))
+            """, (str(id),))
             row = cursor.fetchone()
         status = JobInfo(*row)
         return status
@@ -202,32 +218,41 @@ class ProcessesManagement:
                 """,
                            (status, finish_time, id))
 
-    def ota_run(self, command, id):
+    def ota_run(self, command, id, stdout_path, stderr_path):
         """
         Initiate a subprocess to run the ota generation. Wait until it finished and update
         the record in the database.
         """
         stderr_pipes = pipes.Template()
         stdout_pipes = pipes.Template()
+        ferr = stderr_pipes.open(stdout_path, 'w')
+        fout = stdout_pipes.open(stderr_path, 'w')
+        env = {}
+        if self.otatools_dir:
+            env['PATH'] = os.path.join(
+                self.otatools_dir, "bin") + ":" + os.environ["PATH"]
         # TODO(lishutong): Enable user to use self-defined stderr/stdout path
-        ferr = stderr_pipes.open(os.path.join(
-            'output', 'stderr.'+str(id)), 'w')
-        fout = stdout_pipes.open(os.path.join(
-            'output', 'stdout.'+str(id)), 'w')
         try:
             proc = subprocess.Popen(
-                command, stderr=ferr, stdout=fout, shell=False)
+                command, stderr=ferr, stdout=fout, shell=False, env=env, cwd=self.otatools_dir)
         except FileNotFoundError as e:
             logging.error('ota_from_target_files is not set properly %s', e)
             self.update_status(id, 'Error', int(time.time()))
-            return
-        exit_code = proc.wait()
-        if exit_code == 0:
-            self.update_status(id, 'Finished', int(time.time()))
-        else:
+            raise
+        except Exception as e:
+            logging.error('Failed to execute ota_from_target_files %s', e)
             self.update_status(id, 'Error', int(time.time()))
+            raise
 
-    def ota_generate(self, args, id=0):
+        def wait_result():
+            exit_code = proc.wait()
+            if exit_code == 0:
+                self.update_status(id, 'Finished', int(time.time()))
+            else:
+                self.update_status(id, 'Error', int(time.time()))
+        threading.Thread(target=wait_result).start()
+
+    def ota_generate(self, args, id):
         """
         Read in the arguments from the frontend and start running the OTA
         generation process, then update the records in database.
@@ -244,43 +269,41 @@ class ProcessesManagement:
         if not os.path.isfile(args['target']):
             raise FileNotFoundError
         if not 'output' in args:
-            args['output'] = os.path.join('output', str(id) + '.zip')
+            args['output'] = os.path.join(self.working_dir, str(id) + '.zip')
         if args['verbose']:
             command.append('-v')
         if args['extra_keys']:
-            args['extra'] = \
-                '--' + ' --'.join(args['extra_keys']) + ' ' + args['extra']
+            args['extra'] = '--' + \
+                ' --'.join(args['extra_keys']) + ' ' + args['extra']
         if args['extra']:
             command += args['extra'].strip().split(' ')
-        command.append('-k')
-        command.append(
-            'build/make/target/product/security/testkey')
         if args['isIncremental']:
             if not os.path.isfile(args['incremental']):
                 raise FileNotFoundError
             command.append('-i')
-            command.append(args['incremental'])
+            command.append(os.path.realpath(args['incremental']))
         if args['isPartial']:
             command.append('--partial')
             command.append(' '.join(args['partial']))
-        command.append(args['target'])
-        command.append(args['output'])
+        command.append(os.path.realpath(args['target']))
+        command.append(os.path.realpath(args['output']))
+        stdout = os.path.join(self.logs_dir, 'stdout.' + str(id))
+        stderr = os.path.join(self.logs_dir, 'stderr.' + str(id))
         job_info = JobInfo(id,
                            target=args['target'],
                            incremental=args['incremental'] if args['isIncremental'] else '',
                            verbose=args['verbose'],
-                           partial=args['partial'] if args['isPartial'] else [],
+                           partial=args['partial'] if args['isPartial'] else [
+                           ],
                            output=args['output'],
                            status='Running',
                            extra=args['extra'],
-                           start_time=int(time.time())
+                           start_time=int(time.time()),
+                           stdout=stdout,
+                           stderr=stderr
                            )
-        try:
-            thread = threading.Thread(target=self.ota_run, args=(command, id))
-            self.insert_database(job_info)
-            thread.start()
-        except AssertionError:
-            raise SyntaxError
+        self.ota_run(command, id, job_info.stdout, job_info.stderr)
+        self.insert_database(job_info)
         logging.info(
             'Starting generating OTA package with id {}: \n {}'
             .format(id, command))
