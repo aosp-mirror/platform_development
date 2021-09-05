@@ -33,7 +33,6 @@ import json
 import cgi
 import os
 import stat
-import sys
 import zipfile
 
 LOCAL_ADDRESS = '0.0.0.0'
@@ -78,17 +77,17 @@ class RequestHandler(CORSSimpleHTTPHandler):
             self.wfile.write(
                 json.dumps(status.to_dict_detail(target_lib)).encode()
             )
-        elif self.path.startswith('/file'):
+        elif self.path.startswith('/file') or self.path.startswith("/reconstruct_build_list"):
             if self.path == '/file' or self.path == '/file/':
                 file_list = target_lib.get_builds()
             else:
-                file_list = target_lib.new_build_from_dir(self.path[6:])
+                file_list = target_lib.new_build_from_dir()
             builds_info = [build.to_dict() for build in file_list]
             self._set_response(type='application/json')
             self.wfile.write(
                 json.dumps(builds_info).encode()
             )
-            logging.info(
+            logging.debug(
                 "GET request:\nPath:%s\nHeaders:\n%s\nBody:\n%s\n",
                 str(self.path), str(self.headers), file_list
             )
@@ -115,12 +114,16 @@ class RequestHandler(CORSSimpleHTTPHandler):
             post_data = json.loads(self.rfile.read(content_length))
             try:
                 jobs.ota_generate(post_data, id=str(self.path[5:]))
-                self._set_response(code=201)
-                self.wfile.write(
-                    "ota generator start running".encode('utf-8'))
-            except SyntaxError:
-                self.send_error(400)
-            logging.info(
+                self._set_response(code=200)
+                self.send_header("Content-Type", 'application/json')
+                self.wfile.write(json.dumps(
+                    {"success": True, "msg": "OTA Generator started running"}).encode())
+            except Exception as e:
+                logging.warning(
+                    "Failed to run ota_from_target_files %s", e.__traceback__)
+                self.send_error(
+                    400, "Failed to run ota_from_target_files", str(e))
+            logging.debug(
                 "POST request:\nPath:%s\nHeaders:\n%s\nBody:\n%s\n",
                 str(self.path), str(self.headers),
                 json.dumps(post_data)
@@ -144,7 +147,8 @@ class RequestHandler(CORSSimpleHTTPHandler):
                 file_length -= len(self.rfile.readline())
                 BUFFER_SIZE = 1024*1024
                 for offset in range(0, file_length, BUFFER_SIZE):
-                    chunk = self.rfile.read(min(file_length-offset, BUFFER_SIZE))
+                    chunk = self.rfile.read(
+                        min(file_length-offset, BUFFER_SIZE))
                     output_file.write(chunk)
                 target_lib.new_build(self.path[6:], file_name)
             self._set_response(code=201)
@@ -171,17 +175,17 @@ def run_server(SeverClass=ThreadedHTTPServer, HandlerClass=RequestHandler, port=
     except KeyboardInterrupt:
         pass
     server_instance.server_close()
-    logging.basicConfig(level=logging.DEBUG)
     logging.info('Server has been turned off.')
 
 
 if __name__ == '__main__':
     from sys import argv
-    logging.basicConfig(level=logging.DEBUG)
     print(argv)
+    logging.basicConfig(level=logging.INFO)
+    EXTRACT_DIR = None
     if os.path.exists("otatools.zip"):
         logging.info("Found otatools.zip, extracting...")
-        EXTRACT_DIR = "./"
+        EXTRACT_DIR = "/tmp/otatools-" + str(os.getpid())
         os.makedirs(EXTRACT_DIR, exist_ok=True)
         with zipfile.ZipFile("otatools.zip", "r") as zfp:
             zfp.extractall(EXTRACT_DIR)
@@ -189,19 +193,14 @@ if __name__ == '__main__':
         bin_dir = os.path.join(EXTRACT_DIR, "bin")
         for filename in os.listdir(bin_dir):
             os.chmod(os.path.join(bin_dir, filename), stat.S_IRWXU)
-        os.environ["PATH"] = os.path.join(EXTRACT_DIR, "bin") + ":" + os.environ["PATH"]
         logging.info("Extracted otatools to {}".format(EXTRACT_DIR))
-        logging.info("PATH: %s", os.environ["PATH"])
     if not os.path.isdir('target'):
         os.mkdir('target', 755)
     if not os.path.isdir('output'):
         os.mkdir('output', 755)
     target_lib = TargetLib()
-    jobs = ProcessesManagement()
-    try:
-        if len(argv) == 2:
-            run_server(port=int(argv[1]))
-        else:
-            run_server()
-    except KeyboardInterrupt:
-        sys.exit(0)
+    jobs = ProcessesManagement(otatools_dir=EXTRACT_DIR)
+    if len(argv) == 2:
+        run_server(port=int(argv[1]))
+    else:
+        run_server()
