@@ -56,6 +56,8 @@ const transitionMap = new Map([
   [TransitionType.APP_CLOSE, {desc: 'Closing app', color: '#d10ddfff'}],
   [TransitionType.IME_APPEAR, {desc: 'IME appearing', color: '#ff9900ff'}],
   [TransitionType.IME_DISAPPEAR, {desc: 'IME disappearing', color: '#ad6800ff'}],
+  [TransitionType.APP_PAIRS_ENTER, {desc: 'Entering app pairs mode', color: 'rgb(58, 151, 39)'}],
+  [TransitionType.APP_PAIRS_EXIT, {desc: 'Exiting app pairs mode', color: 'rgb(45, 110, 32)'}],
 ])
 
 export { WebContentScriptMessageType, NAVIGATION_STYLE, SEARCH_TYPE, logLevel, transitionMap };
