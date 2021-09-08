@@ -109,7 +109,7 @@ class Bazel(object):
         # soong_ui requires to be at the root of the repository.
         os.chdir(env.ANDROID_BUILD_TOP)
         print("Generating Bazel files...")
-        cmd = [soong_ui, "--make-mode", "GENERATE_BAZEL_FILES=1", "nothing"]
+        cmd = [soong_ui, "--make-mode", "bp2build"]
         try:
             subprocess.check_output(cmd, stderr=subprocess.STDOUT, text=True)
         except subprocess.CalledProcessError as e:
