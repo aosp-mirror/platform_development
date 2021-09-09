@@ -162,7 +162,8 @@ export default {
           id[0].transition,
           0,
           id[0].layerId,
-          id[0].taskId
+          id[0].taskId,
+          id[0].windowToken
         );
         transitions.push(transition);
       }
@@ -360,19 +361,20 @@ export default {
      * @param {number} endTs - The timestamp at which the transition ends.
      * @param {string} transitionType - The type of transition.
      * @param {number} overlap - The degree to which the transition overlaps with others.
-     * @param {number} layerId - Determines if transition is associated with SF trace.
-     * @param {number} taskId - Determines if transition is associated with WM trace.
+     * @param {number} layerId - Helps determine if transition is associated with SF trace.
+     * @param {number} taskId - Helps determine if transition is associated with WM trace.
+     * @param {number} windowToken - Helps determine if transition is associated with WM trace.
      * @return {Transition} A transition object transformed to the timeline's crop and
      *                 scale parameter.
      */
-    generateTransition(startTs, endTs, transitionType, overlap, layerId, taskId) {
+    generateTransition(startTs, endTs, transitionType, overlap, layerId, taskId, windowToken) {
       const transitionWidth = this.objectWidth(startTs, endTs);
       const transitionDesc = transitionMap.get(transitionType).desc;
       const transitionColor = transitionMap.get(transitionType).color;
       var tooltip = `${transitionDesc}. Start: ${nanos_to_string(startTs)}. End: ${nanos_to_string(endTs)}.`;
 
-      if (layerId!==0 && taskId===0) tooltip += " SF only.";
-      else if (taskId!==0 && layerId===0) tooltip += " WM only.";
+      if (layerId !== 0 && taskId === 0 && windowToken === "") tooltip += " SF only.";
+      else if ((taskId !== 0 || windowToken !== "") && layerId === 0) tooltip += " WM only.";
 
       return new Transition(this.position(startTs), startTs, endTs, transitionWidth, transitionColor, overlap, tooltip);
     },
