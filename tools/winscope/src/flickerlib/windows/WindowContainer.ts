@@ -58,6 +58,7 @@ WindowContainer.fromProto = function (
         name,
         token,
         proto.orientation,
+        proto.surfaceControl?.layerId ?? 0,
         proto.visible,
         config,
         children
