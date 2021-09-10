@@ -27,6 +27,8 @@ const transitionTypeMap = new Map([
   ['APP_CLOSE', TransitionType.APP_CLOSE],
   ['IME_APPEAR', TransitionType.IME_APPEAR],
   ['IME_DISAPPEAR', TransitionType.IME_DISAPPEAR],
+  ['APP_PAIRS_ENTER', TransitionType.APP_PAIRS_ENTER],
+  ['APP_PAIRS_EXIT', TransitionType.APP_PAIRS_EXIT],
 ]);
 
 Tag.fromProto = function (proto: any): Tag {

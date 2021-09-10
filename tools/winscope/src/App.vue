@@ -107,6 +107,7 @@ export default {
         navigationStyle: NAVIGATION_STYLE.GLOBAL,
         flickerTraceView: false,
         showFileTypes: [],
+        isInputMode: false,
       }),
       overlayRef: 'overlay',
       mainContentStyle: {
@@ -187,6 +188,7 @@ export default {
     },
     onKeyDown(event) {
       event = event || window.event;
+      if (this.store.isInputMode) return false;
       if (event.keyCode == 37 /* left */ ) {
         this.$store.dispatch('advanceTimeline', DIRECTION.BACKWARD);
       } else if (event.keyCode == 39 /* right */ ) {

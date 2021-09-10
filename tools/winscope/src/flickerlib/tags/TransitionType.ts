@@ -23,6 +23,8 @@ enum TransitionType {
   APP_CLOSE = 'APP_CLOSE',
   IME_APPEAR = 'IME_APPEAR',
   IME_DISAPPEAR = 'IME_DISAPPEAR',
+  APP_PAIRS_ENTER = 'APP_PAIRS_ENTER',
+  APP_PAIRS_EXIT = 'APP_PAIRS_EXIT',
 };
 
 export default TransitionType;

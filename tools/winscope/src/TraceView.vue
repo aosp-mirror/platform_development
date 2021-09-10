@@ -45,7 +45,11 @@
           <md-checkbox v-if="hasTagsOrErrors" v-model="store.flickerTraceView">Flicker</md-checkbox>
           <md-field md-inline class="filter">
             <label>Filter...</label>
-            <md-input v-model="hierarchyPropertyFilterString"></md-input>
+            <md-input
+              v-model="hierarchyPropertyFilterString"
+              v-on:focus="updateInputMode(true)"
+              v-on:blur="updateInputMode(false)"
+            />
           </md-field>
         </md-content>
         <div class="tree-view-wrapper">
@@ -98,7 +102,11 @@
           </md-checkbox>
           <md-field md-inline class="filter">
             <label>Filter...</label>
-            <md-input v-model="propertyFilterString"></md-input>
+            <md-input
+              v-model="propertyFilterString"
+              v-on:focus="updateInputMode(true)"
+              v-on:blur="updateInputMode(false)"
+            />
           </md-field>
         </md-content>
         <div class="properties-content">
@@ -312,21 +320,33 @@ export default {
       return prevEntry;
     },
 
+    /** Checks for match in window manager properties taskId, layerId, or windowToken,
+     * or surface flinger property id
+     */
+    isPropertyMatch(flickerItem, entryItem) {
+      return flickerItem.taskId === entryItem.taskId ||
+        flickerItem.windowToken === entryItem.windowToken ||
+        flickerItem.layerId === entryItem.layerId ||
+        flickerItem.layerId === entryItem.id;
+    },
     /** Performs check for id match between entry and present tags/errors
      * must be carried out for every present tag/error
      */
     matchItems(flickerItems, entryItem) {
       var match = false;
       flickerItems.forEach(flickerItem => {
-        if (flickerItem.taskId===entryItem.taskId || flickerItem.layerId===entryItem.id) {
-          match = true;
-        }
+        if (this.isPropertyMatch(flickerItem, entryItem)) match = true;
       });
       return match;
     },
     /** Returns check for id match between entry and present tags/errors */
     isEntryTagMatch(entryItem) {
       return this.matchItems(this.presentTags, entryItem) || this.matchItems(this.presentErrors, entryItem);
+    },
+
+    /** determines whether left/right arrow keys should move cursor in input field */
+    updateInputMode(isInputMode) {
+      this.store.isInputMode = isInputMode;
     },
   },
   created() {
