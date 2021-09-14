@@ -165,12 +165,23 @@ export default {
     },
     /** Set flicker mode check for if there are tag/error traces uploaded*/
     shouldUpdateTagAndErrorTraces() {
-      return this.tagFiles.length > 0 || this.errorFiles.length > 0;
+      return this.hasTagTrace() || this.hasErrorTrace();
+    },
+    hasTagTrace() {
+      return this.tagFiles.length > 0;
+    },
+    hasErrorTrace() {
+      return this.errorFiles.length > 0;
     },
     /** Activate flicker search tab if tags/errors uploaded*/
     updateSearchTypes() {
       this.searchTypes = [SEARCH_TYPE.TIMESTAMP];
-      if (this.tagAndErrorTraces) this.searchTypes.push(SEARCH_TYPE.TAG);
+      if (this.hasTagTrace()) {
+        this.searchTypes.push(SEARCH_TYPE.TRANSITIONS);
+      }
+      if (this.hasErrorTrace()) {
+        this.searchTypes.push(SEARCH_TYPE.ERRORS);
+      }
     },
     /** Filter data view files by current show settings*/
     updateShowFileTypes() {
