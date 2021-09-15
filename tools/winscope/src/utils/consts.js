@@ -34,7 +34,8 @@ const NAVIGATION_STYLE = {
 };
 
 const SEARCH_TYPE = {
-  TAG: 'Transitions and Errors',
+  TRANSITIONS: 'Transitions',
+  ERRORS: 'Errors',
   TIMESTAMP: 'Timestamp',
 };
 
