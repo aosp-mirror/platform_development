@@ -47,8 +47,6 @@
           ref="fileUpload"
           id="dropzone"
           v-show="false"
-          webkitdirectory
-          directory
           multiple
         />
           <p v-if="!dataReady">
