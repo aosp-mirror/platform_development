@@ -88,6 +88,10 @@ const Error = require('flicker').com.android.server.wm.traces.common.errors.Erro
 const ErrorState = require('flicker').com.android.server.wm.traces.common.errors.ErrorState;
 const ErrorTrace = require('flicker').com.android.server.wm.traces.common.errors.ErrorTrace;
 
+// Service
+const TaggingEngine = require('flicker').com.android.server.wm.traces.common.service.TaggingEngine;
+
+
 const EMPTY_BUFFER = new Buffer(0, 0, 0, 0);
 const EMPTY_COLOR = new Color(-1, -1, -1, 0);
 const EMPTY_RECT = new Rect(0, 0, 0, 0);
@@ -255,6 +259,8 @@ export {
   Rect,
   RectF,
   Region,
+  // Service
+  TaggingEngine,
   toSize,
   toBuffer,
   toColor,
