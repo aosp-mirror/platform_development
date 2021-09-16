@@ -22,6 +22,7 @@ const transitionTypeMap = new Map([
   ['ROTATION', TransitionType.ROTATION],
   ['PIP_ENTER', TransitionType.PIP_ENTER],
   ['PIP_RESIZE', TransitionType.PIP_RESIZE],
+  ['PIP_CLOSE', TransitionType.PIP_CLOSE],
   ['PIP_EXIT', TransitionType.PIP_EXIT],
   ['APP_LAUNCH', TransitionType.APP_LAUNCH],
   ['APP_CLOSE', TransitionType.APP_CLOSE],
