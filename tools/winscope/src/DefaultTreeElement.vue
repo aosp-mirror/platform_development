@@ -52,7 +52,7 @@
     </div>
     <div class="flicker-tags" v-for="error in errors" :key="error.message">
       <Arrow class="error-arrow"/>
-      <md-tooltip md-direction="right"> Error: {{error.message}} </md-tooltip>
+      <md-tooltip md-direction="right"> {{errorTooltip(error.message)}} </md-tooltip>
     </div>
   </span>
 </template>
@@ -79,6 +79,12 @@ export default {
     },
     transitionTooltip(transition) {
       return transitionMap.get(transition).desc;
+    },
+    errorTooltip(errorMessage) {
+      if (errorMessage.length>100) {
+        return `Error: ${errorMessage.substring(0,100)}...`;
+      }
+      return `Error: ${errorMessage}`;
     },
   },
   components: {

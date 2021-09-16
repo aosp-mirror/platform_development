@@ -91,7 +91,6 @@ const ErrorTrace = require('flicker').com.android.server.wm.traces.common.errors
 // Service
 const TaggingEngine = require('flicker').com.android.server.wm.traces.common.service.TaggingEngine;
 
-
 const EMPTY_BUFFER = new Buffer(0, 0, 0, 0);
 const EMPTY_COLOR = new Color(-1, -1, -1, 0);
 const EMPTY_RECT = new Rect(0, 0, 0, 0);

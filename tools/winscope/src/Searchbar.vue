@@ -27,19 +27,19 @@
           />
         </md-field>
         <md-button
-            class="md-dense md-primary search-timestamp-button"
-            @click="updateSearchForTimestamp"
-          >
-            Go to timestamp
-          </md-button>
+          class="md-dense md-primary search-timestamp-button"
+          @click="updateSearchForTimestamp"
+        >
+          Go to timestamp
+        </md-button>
       </div>
 
-      <div class="dropdown-content" v-if="isTagSearch()">
+      <div class="dropdown-content" v-if="isTransitionSearch()">
         <table>
           <tr class="header">
             <th style="width: 10%">Global Start</th>
             <th style="width: 10%">Global End</th>
-            <th style="width: 80%">Description</th>
+            <th style="width: 80%">Transition</th>
           </tr>
 
           <tr v-for="item in filteredTransitionsAndErrors" :key="item.id">
@@ -67,7 +67,29 @@
             >
               {{ transitionDesc(item.transition) }}
             </td>
+          </tr>
+        </table>
+        <md-field md-inline class="search-input">
+          <label>
+            Filter by transition name. Click to navigate to closest
+            timestamp in active timeline.
+          </label>
+          <md-input
+            v-model="searchInput"
+            v-on:focus="updateInputMode(true)"
+            v-on:blur="updateInputMode(false)"
+          />
+        </md-field>
+      </div>
 
+      <div class="dropdown-content" v-if="isErrorSearch()">
+        <table>
+          <tr class="header">
+            <th style="width: 10%">Timestamp</th>
+            <th style="width: 90%">Error Message</th>
+          </tr>
+
+          <tr v-for="item in filteredTransitionsAndErrors" :key="item.id">
             <td
               v-if="!isTransition(item)"
               class="inline-time"
@@ -75,21 +97,20 @@
             >
               {{ errorDesc(item.timestamp) }}
             </td>
-            <td v-if="!isTransition(item)">-</td>
             <td
               v-if="!isTransition(item)"
               class="inline-error"
               @click="setCurrentTimestamp(item.timestamp)"
             >
-              Error: {{item.message}}
+              {{item.message}}
             </td>
           </tr>
         </table>
         <md-field md-inline class="search-input">
-          <label
-            >Filter by transition or error message. Click to navigate to closest
-            timestamp in active timeline.</label
-          >
+          <label>
+            Filter by error message. Click to navigate to closest
+            timestamp in active timeline.
+          </label>
           <md-input
             v-model="searchInput"
             v-on:focus="updateInputMode(true)"
@@ -141,7 +162,8 @@ export default {
       var tags = [];
       var filter = this.searchInput.toUpperCase();
       this.presentTags.forEach((tag) => {
-        if (tag.transition.includes(filter)) tags.push(tag);
+        const tagTransition = tag.transition.toUpperCase();
+        if (tagTransition.includes(filter)) tags.push(tag);
       });
       return tags;
     },
@@ -150,7 +172,8 @@ export default {
       var tagsAndErrors = [...this.filteredTags()];
       var filter = this.searchInput.toUpperCase();
       this.presentErrors.forEach((error) => {
-        if (error.message.includes(filter)) tagsAndErrors.push(error);
+        const errorMessage = error.message.toUpperCase();
+        if (errorMessage.includes(filter)) tagsAndErrors.push(error);
       });
       // sort into chronological order
       tagsAndErrors.sort((a, b) => (a.timestamp > b.timestamp ? 1 : -1));
@@ -206,8 +229,11 @@ export default {
       this.setCurrentTimestamp(closestTimestamp);
     },
 
-    isTagSearch() {
-      return this.searchType === SEARCH_TYPE.TAG;
+    isTransitionSearch() {
+      return this.searchType === SEARCH_TYPE.TRANSITIONS;
+    },
+    isErrorSearch() {
+      return this.searchType === SEARCH_TYPE.ERRORS;
     },
     isTimestampSearch() {
       return this.searchType === SEARCH_TYPE.TIMESTAMP;
