@@ -331,7 +331,7 @@ export default {
 }
 
 .inline-time:hover {
-  background: #9af39f;
+  background: rgb(216, 250, 218);
   cursor: pointer;
 }
 
@@ -340,7 +340,7 @@ export default {
 }
 
 .inline-transition:hover {
-  background: #9af39f;
+  background: rgb(216, 250, 218);
   cursor: pointer;
 }
 
@@ -350,7 +350,7 @@ export default {
 }
 
 .inline-error:hover {
-  background: #9af39f;
+  background: rgb(216, 250, 218);
   cursor: pointer;
 }
 </style>
