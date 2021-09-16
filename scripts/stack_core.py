@@ -295,6 +295,58 @@ class TraceConverter:
       return file_name, tmp_shared_lib
     return None, None
 
+  def GetLibPath(self, lib):
+    symbol_dir = symbol.SYMBOLS_DIR
+    if os.path.isfile(symbol_dir + lib):
+      return lib
+
+    # When using atest, test paths are different between the out/ directory
+    # and device. Apply fixups.
+    if not lib.startswith("/data/local/tests/") and not lib.startswith("/data/local/tmp/"):
+      print("WARNING: Cannot find %s in symbol directory" % lib)
+      return lib
+
+    test_name = lib.rsplit("/", 1)[-1]
+    test_dir = "/data/nativetest"
+    test_dir_bitness = ""
+    if symbol.ARCH.endswith("64"):
+      bitness = "64"
+      test_dir_bitness = "64"
+    else:
+      bitness = "32"
+
+    # Unfortunately, the location of the real symbol file is not
+    # standardized, so we need to go hunting for it.
+
+    # This is in vendor, look for the value in:
+    #   /data/nativetest{64}/vendor/test_name/test_name
+    if lib.startswith("/data/local/tests/vendor/"):
+       lib_path = os.path.join(test_dir + test_dir_bitness, "vendor", test_name, test_name)
+       if os.path.isfile(symbol_dir + lib_path):
+         return lib_path
+
+    # Look for the path in:
+    #   /data/nativetest{64}/test_name/test_name
+    lib_path = os.path.join(test_dir + test_dir_bitness, test_name, test_name)
+    if os.path.isfile(symbol_dir + lib_path):
+      return lib_path
+
+    # CtsXXX tests are in really non-standard locations try:
+    #  /data/nativetest/{test_name}
+    lib_path = os.path.join(test_dir, test_name)
+    if os.path.isfile(symbol_dir + lib_path):
+      return lib_path
+    # Try:
+    #   /data/nativetest/{test_name}{32|64}
+    lib_path += bitness
+    if os.path.isfile(symbol_dir + lib_path):
+      return lib_path
+
+    # Cannot find location, give up and return the original path
+    print("WARNING: Cannot find %s in symbol directory" % lib)
+    return lib
+
+
   def ProcessLine(self, line):
     ret = False
     process_header = self.process_info_line.search(line)
@@ -388,14 +440,7 @@ class TraceConverter:
 
         # When using atest, test paths are different between the out/ directory
         # and device. Apply fixups.
-        if lib.startswith("/data/local/tests/") or lib.startswith("/data/local/tmp/"):
-          test_name = lib.rsplit("/", 1)[-1]
-          prefix = "/data/nativetest"
-          if symbol.ARCH.endswith("64"):
-            prefix += "64"
-          if lib.startswith("/data/local/tests/vendor/"):
-            prefix += "/vendor"
-          lib = prefix + "/" + test_name + "/" + test_name
+        lib = self.GetLibPath(lib)
 
         # If a calls b which further calls c and c is inlined to b, we want to
         # display "a -> b -> c" in the stack trace instead of just "a -> c"
