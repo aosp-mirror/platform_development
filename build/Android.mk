@@ -104,9 +104,6 @@ ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android.test.
 # core-lambda-stubs
 ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/core-lambda-stubs_intermediates/classes.jar
 
-# shrinkedAndroid.jar for multidex support
-ALL_SDK_FILES += $(HOST_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/shrinkedAndroid_intermediates/shrinkedAndroid.jar
-
 # ======= Lint API XML ===========
 full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework-doc-stubs_generated-api-versions.xml
 ALL_SDK_FILES += $(full_target)
