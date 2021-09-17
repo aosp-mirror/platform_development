@@ -146,7 +146,7 @@ import PropertiesTreeElement from './PropertiesTreeElement.vue';
 import {ObjectTransformer} from './transform.js';
 import {DiffGenerator, defaultModifiedCheck} from './utils/diff.js';
 import {TRACE_TYPES, DUMP_TYPES} from './decode.js';
-import {stableIdCompatibilityFixup} from './utils/utils.js';
+import {isPropertyMatch, stableIdCompatibilityFixup} from './utils/utils.js';
 import {CompatibleFeatures} from './utils/compatibility.js';
 import {getPropertiesForDisplay} from './flickerlib/mixin';
 import ObjectFormatter from './flickerlib/ObjectFormatter';
@@ -320,22 +320,13 @@ export default {
       return prevEntry;
     },
 
-    /** Checks for match in window manager properties taskId, layerId, or windowToken,
-     * or surface flinger property id
-     */
-    isPropertyMatch(flickerItem, entryItem) {
-      return flickerItem.taskId === entryItem.taskId ||
-        flickerItem.windowToken === entryItem.windowToken ||
-        flickerItem.layerId === entryItem.layerId ||
-        flickerItem.layerId === entryItem.id;
-    },
     /** Performs check for id match between entry and present tags/errors
      * must be carried out for every present tag/error
      */
     matchItems(flickerItems, entryItem) {
       var match = false;
       flickerItems.forEach(flickerItem => {
-        if (this.isPropertyMatch(flickerItem, entryItem)) match = true;
+        if (isPropertyMatch(flickerItem, entryItem)) match = true;
       });
       return match;
     },

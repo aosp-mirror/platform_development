@@ -109,6 +109,12 @@ const store = new Vuex.Store({
     video(state) {
       return state.traces[TRACE_TYPES.SCREEN_RECORDING];
     },
+    tagGenerationWmTrace(state, getters) {
+      return state.traces[TRACE_TYPES.WINDOW_MANAGER].tagGenerationTrace;
+    },
+    tagGenerationSfTrace(state, getters) {
+      return state.traces[TRACE_TYPES.SURFACE_FLINGER].tagGenerationTrace;
+    }
   },
   mutations: {
     setCurrentTimestamp(state, timestamp) {

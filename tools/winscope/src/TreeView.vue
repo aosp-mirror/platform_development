@@ -122,6 +122,7 @@
 import DefaultTreeElement from './DefaultTreeElement.vue';
 import NodeContextMenu from './NodeContextMenu.vue';
 import {DiffType} from './utils/diff.js';
+import {isPropertyMatch} from './utils/utils.js';
 
 /* in px, must be kept in sync with css, maybe find a better solution... */
 const levelOffset = 24;
@@ -446,22 +447,13 @@ export default {
       }
     },
 
-    /** Checks for match in window manager properties taskId, layerId, or windowToken,
-     * or surface flinger property id
-     */
-    isPropertyMatch(flickerItem, entryItem) {
-      return flickerItem.taskId === entryItem.taskId ||
-        flickerItem.windowToken === entryItem.windowToken ||
-        flickerItem.layerId === entryItem.layerId ||
-        flickerItem.layerId === entryItem.id;
-    },
     /** Performs check for id match between entry and present tags/errors
      * exits once match has been found
      */
     matchItems(flickerItems) {
       var match = false;
       flickerItems.every(flickerItem => {
-        if (this.isPropertyMatch(flickerItem, this.item)) {
+        if (isPropertyMatch(flickerItem, this.item)) {
           match = true;
           return false;
         }
@@ -481,7 +473,7 @@ export default {
       var transitions = [];
       var ids = [];
       this.currentTags.forEach(tag => {
-        if (!ids.includes(tag.id) && this.isPropertyMatch(tag, this.item)) {
+        if (!ids.includes(tag.id) && isPropertyMatch(tag, this.item)) {
           transitions.push(tag.transition);
           ids.push(tag.id);
         }
@@ -489,7 +481,7 @@ export default {
       return transitions;
     },
     getCurrentErrorTags() {
-      return this.currentErrors.filter(error => this.isPropertyMatch(error, this.item));
+      return this.currentErrors.filter(error => isPropertyMatch(error, this.item));
     },
   },
   computed: {

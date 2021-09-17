@@ -34,7 +34,8 @@ const NAVIGATION_STYLE = {
 };
 
 const SEARCH_TYPE = {
-  TAG: 'Transitions and Errors',
+  TRANSITIONS: 'Transitions',
+  ERRORS: 'Errors',
   TIMESTAMP: 'Timestamp',
 };
 
@@ -51,6 +52,7 @@ const transitionMap = new Map([
   [TransitionType.ROTATION, {desc: 'Rotation', color: '#9900ffff'}],
   [TransitionType.PIP_ENTER, {desc: 'Entering PIP mode', color: '#4a86e8ff'}],
   [TransitionType.PIP_RESIZE, {desc: 'Resizing PIP mode', color: '#2b9e94ff'}],
+  [TransitionType.PIP_CLOSE, {desc: 'Closing PIP mode', color: 'rgb(57, 57, 182)'}],
   [TransitionType.PIP_EXIT, {desc: 'Exiting PIP mode', color: 'darkblue'}],
   [TransitionType.APP_LAUNCH, {desc: 'Launching app', color: '#ef6befff'}],
   [TransitionType.APP_CLOSE, {desc: 'Closing app', color: '#d10ddfff'}],
