@@ -46,8 +46,6 @@ prebuilts/sdk/tools/darwin/lld-bin/lld               strip build-tools/${PLATFOR
 prebuilts/sdk/tools/darwin/lib64/libc++.1.dylib      strip build-tools/${PLATFORM_NAME}/lib64/libc++.1.dylib
 prebuilts/sdk/tools/darwin/lib64/libc++abi.1.dylib   strip build-tools/${PLATFORM_NAME}/lib64/libc++abi.1.dylib
 
-dalvik/dx/etc/mainDexClasses                                build-tools/${PLATFORM_NAME}/mainDexClasses
-
 ##############################################################################
 # Docs Component
 ##############################################################################
