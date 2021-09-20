@@ -152,6 +152,7 @@ export default {
     },
     hideSnackbarMessage() {
       this.showSnackbar = false;
+      this.buttonClicked("Hide Snackbar Message")
     },
     getFetchFilesLoadingAnimation() {
       let frame = 0;
@@ -245,10 +246,14 @@ export default {
       e.preventDefault();
       let droppedFiles = e.dataTransfer.files;
       if(!droppedFiles) return;
+      // Record analytics event
+      this.draggedAndDropped(droppedFiles);
+
       this.processFiles(droppedFiles);
     },
     onLoadFile(e) {
       const files = event.target.files || event.dataTransfer.files;
+      this.uploadedFileThroughFilesystem(files);
       this.processFiles(files);
     },
     async processFiles(files) {
