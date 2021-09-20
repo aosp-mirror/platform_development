@@ -203,6 +203,52 @@ class SurfaceFlingerTraceConfig:
     def command(self) -> str:
         return f'su root service call SurfaceFlinger 1033 i32 {self.flags}'
 
+class SurfaceFlingerTraceSelectedConfig:
+    """Handles optional selected configuration for surfaceflinger traces.
+    """
+
+    def __init__(self) -> None:
+        # defaults set for all configs
+        self.selectedConfigs = {
+            "sfbuffersize": "16000"
+        }
+
+    def add(self, configType, configValue) -> None:
+        self.selectedConfigs[configType] = configValue
+
+    def is_valid(self, configType) -> bool:
+        return configType in CONFIG_SF_SELECTION
+
+    def setBufferSize(self) -> str:
+        return f'su root service call SurfaceFlinger 1029 i32 {self.selectedConfigs["sfbuffersize"]}'
+
+class WindowManagerTraceSelectedConfig:
+    """Handles optional selected configuration for windowmanager traces.
+    """
+
+    def __init__(self) -> None:
+        # defaults set for all configs
+        self.selectedConfigs = {
+            "wmbuffersize": "16000",
+            "tracinglevel": "all",
+            "tracingtype": "frame",
+        }
+
+    def add(self, configType, configValue) -> None:
+        self.selectedConfigs[configType] = configValue
+
+    def is_valid(self, configType) -> bool:
+        return configType in CONFIG_WM_SELECTION
+
+    def setBufferSize(self) -> str:
+        return f'su root cmd window tracing size {self.selectedConfigs["wmbuffersize"]}'
+
+    def setTracingLevel(self) -> str:
+        return f'su root cmd window tracing level {self.selectedConfigs["tracinglevel"]}'
+
+    def setTracingType(self) -> str:
+        return f'su root cmd window tracing {self.selectedConfigs["tracingtype"]}'
+
 
 CONFIG_FLAG = {
     "composition": 1 << 2,
@@ -210,6 +256,17 @@ CONFIG_FLAG = {
     "hwc": 1 << 4
 }
 
+#Keep up to date with options in DataAdb.vue
+CONFIG_SF_SELECTION = [
+    "sfbuffersize",
+]
+
+#Keep up to date with options in DataAdb.vue
+CONFIG_WM_SELECTION = [
+    "wmbuffersize",
+    "tracingtype",
+    "tracinglevel",
+]
 
 class DumpTarget:
     """Defines a single parameter to trace.
@@ -610,6 +667,18 @@ class EndTrace(DeviceRequestEndpoint):
                     "utf-8"))
 
 
+def execute_command(server, device_id, shell, configType, configValue):
+    process = subprocess.Popen(shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                   stdin=subprocess.PIPE, start_new_session=True)
+    log.debug(f"Changing trace config on device {device_id} {configType}:{configValue}")
+    out, err = process.communicate(configValue.encode('utf-8'))
+    if process.returncode != 0:
+        raise AdbError(
+            f"Error executing command:\n {configValue}\n\n### OUTPUT ###{out.decode('utf-8')}\n{err.decode('utf-8')}")
+    log.debug(f"Changing trace config finished on device {device_id}")
+    server.respond(HTTPStatus.OK, b'', "text/plain")
+
+
 class ConfigTrace(DeviceRequestEndpoint):
     def process_with_device(self, server, path, device_id):
         try:
@@ -630,15 +699,50 @@ class ConfigTrace(DeviceRequestEndpoint):
         command = config.command()
         shell = ['adb', '-s', device_id, 'shell']
         log.debug(f"Starting shell {' '.join(shell)}")
-        process = subprocess.Popen(shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                   stdin=subprocess.PIPE, start_new_session=True)
-        log.debug(f"Changing trace config on device {device_id} cmd:{command}")
-        out, err = process.communicate(command.encode('utf-8'))
-        if process.returncode != 0:
-            raise AdbError(
-                f"Error executing command:\n {command}\n\n### OUTPUT ###{out.decode('utf-8')}\n{err.decode('utf-8')}")
-        log.debug(f"Changing trace config finished on device {device_id}")
-        server.respond(HTTPStatus.OK, b'', "text/plain")
+        execute_command(server, device_id, shell, "sf buffer size", command)
+
+
+def add_selected_request_to_config(self, server, device_id, config):
+    try:
+        requested_configs = self.get_request(server)
+        for requested_config in requested_configs:
+            if config.is_valid(requested_config):
+                config.add(requested_config, requested_configs[requested_config])
+            else:
+                raise BadRequest(
+                        f"Unsupported config {requested_config}\n")
+    except KeyError as err:
+        raise BadRequest("Unsupported trace target\n" + str(err))
+    if device_id in TRACE_THREADS:
+        BadRequest(f"Trace in progress for {device_id}")
+    if not check_root(device_id):
+        raise AdbError(
+            f"Unable to acquire root privileges on the device - check the output of 'adb -s {device_id} shell su root id'")
+    return config
+
+
+class SurfaceFlingerSelectedConfigTrace(DeviceRequestEndpoint):
+    def process_with_device(self, server, path, device_id):
+        config = SurfaceFlingerTraceSelectedConfig()
+        config = add_selected_request_to_config(self, server, device_id, config)
+        setBufferSize = config.setBufferSize()
+        shell = ['adb', '-s', device_id, 'shell']
+        log.debug(f"Starting shell {' '.join(shell)}")
+        execute_command(server, device_id, shell, "sf buffer size", setBufferSize)
+
+
+class WindowManagerSelectedConfigTrace(DeviceRequestEndpoint):
+    def process_with_device(self, server, path, device_id):
+        config = WindowManagerTraceSelectedConfig()
+        config = add_selected_request_to_config(self, server, device_id, config)
+        setBufferSize = config.setBufferSize()
+        setTracingType = config.setTracingType()
+        setTracingLevel = config.setTracingLevel()
+        shell = ['adb', '-s', device_id, 'shell']
+        log.debug(f"Starting shell {' '.join(shell)}")
+        execute_command(server, device_id, shell, "wm buffer size", setBufferSize)
+        execute_command(server, device_id, shell, "tracing type", setTracingType)
+        execute_command(server, device_id, shell, "tracing level", setTracingLevel)
 
 
 class StatusEndpoint(DeviceRequestEndpoint):
@@ -691,6 +795,10 @@ class ADBWinscopeProxy(BaseHTTPRequestHandler):
         self.router.register_endpoint(RequestType.POST, "dump", DumpEndpoint())
         self.router.register_endpoint(
             RequestType.POST, "configtrace", ConfigTrace())
+        self.router.register_endpoint(
+            RequestType.POST, "selectedsfconfigtrace", SurfaceFlingerSelectedConfigTrace())
+        self.router.register_endpoint(
+            RequestType.POST, "selectedwmconfigtrace", WindowManagerSelectedConfigTrace())
         super().__init__(request, client_address, server)
 
     def respond(self, code: int, data: bytes, mime: str) -> None:
