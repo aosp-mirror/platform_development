@@ -173,21 +173,26 @@ export default {
 
       //compare each transition to the ones that came before
       for (let curr=0; curr<transitions.length; curr++) {
-        let overlapStore = [];
+        let processedTransitions = [];
 
         for (let prev=0; prev<curr; prev++) {
-          overlapStore.push(transitions[prev].overlap);
+          processedTransitions.push(transitions[prev]);
 
-          if (transitions[prev].startPos <= transitions[curr].startPos
-            && transitions[curr].startPos <= transitions[prev].startPos+transitions[prev].width
-            && transitions[curr].overlap === transitions[prev].overlap) {
+          if (this.isSimultaneousTransition(transitions[curr], transitions[prev])) {
             transitions[curr].overlap++;
           }
         }
 
-        if (overlapStore.length>0
-          && transitions[curr].overlap === Math.max(overlapStore)
-        ) transitions[curr].overlap++;
+        let overlapStore = processedTransitions.map(transition => transition.overlap);
+
+        if (transitions[curr].overlap === Math.max(...overlapStore)) {
+          let previousTransition = processedTransitions.find(transition => {
+            return transition.overlap===transitions[curr].overlap;
+          });
+          if (this.isSimultaneousTransition(transitions[curr], previousTransition)) {
+            transitions[curr].overlap++;
+          }
+        }
       }
 
       return Object.freeze(transitions);
@@ -245,6 +250,12 @@ export default {
 
     objectWidth(startTs, endTs) {
       return this.position(endTs) - this.position(startTs) + this.pointWidth;
+    },
+
+    isSimultaneousTransition(currTransition, prevTransition) {
+      return prevTransition.startPos <= currTransition.startPos
+        && currTransition.startPos <= prevTransition.startPos+prevTransition.width
+        && currTransition.overlap === prevTransition.overlap;
     },
 
     /**
