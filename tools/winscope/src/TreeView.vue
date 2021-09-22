@@ -221,6 +221,9 @@ export default {
     },
     toggleTree() {
       this.setCollapseValue(!this.isCollapsed);
+      if (!this.isCollapsed) {
+        this.openedToSeeAttributeField(this.item.name)
+      }
     },
     expandTree() {
       this.setCollapseValue(false);
