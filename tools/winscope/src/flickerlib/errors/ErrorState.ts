@@ -19,7 +19,7 @@ import Error from './Error';
 
 ErrorState.fromProto = function (protos: any[], timestamp: number): ErrorState {
     const errors = protos.map(it => Error.fromProto(it));
-    const state = new ErrorState(errors, timestamp);
+    const state = new ErrorState(errors, `${timestamp}`);
     return state;
 }
 

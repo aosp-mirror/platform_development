@@ -15,6 +15,7 @@
  */
 
 import {DiffType} from './utils/diff.js';
+import {regExpTimestampSearch} from './utils/consts';
 
 // kind - a type used for categorization of different levels
 // name - name of the node
@@ -400,5 +401,18 @@ function get_visible_chip() {
   return {short: 'V', long: 'visible', class: 'default'};
 }
 
+// Returns closest timestamp in timeline based on search input*/
+function getClosestTimestamp(searchInput, timeline) {
+  if (regExpTimestampSearch.test(searchInput)) {
+    var roundedTimestamp = parseInt(searchInput);
+  } else {
+    var roundedTimestamp = string_to_nanos(searchInput);
+  }
+  const closestTimestamp = timeline.reduce((prev, curr) => {
+    return Math.abs(curr-roundedTimestamp) < Math.abs(prev-roundedTimestamp) ? curr : prev;
+  });
+  return closestTimestamp;
+}
+
 // eslint-disable-next-line camelcase
-export {transform, ObjectTransformer, nanos_to_string, string_to_nanos, get_visible_chip};
+export {transform, ObjectTransformer, nanos_to_string, string_to_nanos, get_visible_chip, getClosestTimestamp};

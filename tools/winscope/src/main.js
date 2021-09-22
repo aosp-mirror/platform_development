@@ -17,6 +17,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import VueMaterial from 'vue-material'
+import VueGtag from "vue-gtag";
 
 import App from './App.vue'
 import { TRACE_TYPES, DUMP_TYPES, TRACE_INFO, DUMP_INFO } from './decode.js'
@@ -109,6 +110,12 @@ const store = new Vuex.Store({
     video(state) {
       return state.traces[TRACE_TYPES.SCREEN_RECORDING];
     },
+    tagGenerationWmTrace(state, getters) {
+      return state.traces[TRACE_TYPES.WINDOW_MANAGER].tagGenerationTrace;
+    },
+    tagGenerationSfTrace(state, getters) {
+      return state.traces[TRACE_TYPES.SURFACE_FLINGER].tagGenerationTrace;
+    }
   },
   mutations: {
     setCurrentTimestamp(state, timestamp) {
@@ -351,6 +358,61 @@ const store = new Vuex.Store({
     }
   }
 })
+
+/**
+ * Make Google analytics functionalities available for recording events.
+ */
+Vue.use(VueGtag, {
+  config: { id: 'G-RRV0M08Y76'}
+})
+
+Vue.mixin({
+  methods: {
+    buttonClicked(button) {
+      const string = "Clicked " + button + " Button";
+      this.$gtag.event(string, {
+        'event_category': 'Button Clicked',
+        'event_label': "Winscope Interactions",
+        'value': button,
+      });
+    },
+    draggedAndDropped(val) {
+      this.$gtag.event("Dragged And DroppedFile", {
+        'event_category': 'Uploaded file',
+        'event_label': "Winscope Interactions",
+        'value': val,
+      });
+    },
+    uploadedFileThroughFilesystem(val) {
+      this.$gtag.event("Uploaded File From Filesystem", {
+        'event_category': 'Uploaded file',
+        'event_label': "Winscope Interactions",
+        'value': val,
+      });
+    },
+    newEventOccurred(event) {
+      this.$gtag.event(event, {
+        'event_category': event,
+        'event_label': "Winscope Interactions",
+        'value': 1,
+      });
+    },
+    seeingNewScreen(screenname) {
+      this.$gtag.screenview({
+        app_name: "Winscope",
+        screen_name: screenname,
+      })
+    },
+    openedToSeeAttributeField(field) {
+      const string = "Opened field " + field;
+      this.$gtag.event(string, {
+        'event_category': "Opened attribute field",
+        'event_label': "Winscope Interactions",
+        'value': field,
+      });
+    },
+  }
+});
 
 new Vue({
   el: '#app',

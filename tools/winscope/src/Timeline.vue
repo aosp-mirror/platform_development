@@ -57,12 +57,13 @@
       />
       <line
         v-for="error in errorPositions"
-        :key="error"
-        :x1="`${error}%`"
-        :x2="`${error}%`"
+        :key="error.pos"
+        :x1="`${error.pos}%`"
+        :x2="`${error.pos}%`"
         y1="0"
         y2="18px"
         class="error"
+        @click="onErrorClick(error.ts)"
       />
     </svg>
   </div>
@@ -139,6 +140,7 @@ export default {
 }
 .error {
   stroke: rgb(255, 0, 0);
-  stroke-width: 2px;
+  stroke-width: 8px;
+  cursor: pointer;
 }
 </style>
