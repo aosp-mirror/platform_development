@@ -411,6 +411,13 @@ Vue.mixin({
         'value': field,
       });
     },
+    changedNavigationStyle(field) {
+      this.$gtag.event("Timeline navigation changed", {
+        'event_category': "Timeline Navigation",
+        'event_label': "Winscope Interactions",
+        'value': field,
+      });
+    },
   }
 });
 

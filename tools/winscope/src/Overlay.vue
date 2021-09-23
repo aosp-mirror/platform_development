@@ -686,7 +686,7 @@ export default {
           navigationStyleFilter =
             (f) => f.type === fileType;
       }
-
+      this.changedNavigationStyle(this.navigationStyle);
       this.$store.commit('setNavigationFilesFilter', navigationStyleFilter);
     },
     updateVideoOverlayWidth(width) {
