@@ -374,8 +374,10 @@ def _parse_args():
                         default=os.path.expanduser('~/.gitcookies'),
                         help='Gerrit cookie file')
     parser.add_argument('--manifest', help='Manifest')
-    parser.add_argument('--limits', default=1000,
+    parser.add_argument('--limits', default=1000, type=int,
                         help='Max number of change lists')
+    parser.add_argument('--start', default=0, type=int,
+                        help='Skip first N changes in query')
 
     parser.add_argument('-m', '--merge',
                         choices=sorted(_MERGE_COMMANDS.keys()),
@@ -399,7 +401,8 @@ def _parse_args():
 def _get_change_lists_from_args(args):
     """Query the change lists by args."""
     url_opener = create_url_opener_from_args(args)
-    return query_change_lists(url_opener, args.gerrit, args.query, args.limits)
+    return query_change_lists(url_opener, args.gerrit, args.query, args.start,
+                              args.limits)
 
 
 def _get_local_branch_name_from_args(args):
