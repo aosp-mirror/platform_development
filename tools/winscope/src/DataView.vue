@@ -160,7 +160,6 @@ export default {
       // Pass click event to parent, so that click event handler can be attached
       // to component.
       this.$emit('click', e);
-      this.newEventOccurred(e.toString());
     },
     /** Filter data view files by current show settings */
     updateShowFileTypes() {
