@@ -92,6 +92,7 @@ def remove_invalid_dirs(paths, bp_dir, module_name):
 
 JSON_TO_BP = {
     'ModuleName': 'name',
+    'ModuleStemName': 'stem',
     'RelativeInstallPath': 'relative_install_path',
     'ExportedDirs': 'export_include_dirs',
     'ExportedSystemDirs': 'export_system_include_dirs',
@@ -108,7 +109,6 @@ JSON_TO_BP = {
     'RuntimeLibs': 'runtime_libs',
     'Required': 'required',
     'Filename': 'filename',
-    'RelativeInstallPath': 'relative_install_path',
 }
 
 SANITIZER_VARIANT_PROPS = {
@@ -126,12 +126,15 @@ EXPORTED_FLAGS_PROPS = {
     'export_flags',
 }
 
+# Convert json file to Android.bp prop dictionary
+def convert_json_to_bp_prop(json_path, bp_dir):
+    prop = json.load(json_path)
+    return convert_json_data_to_bp_prop(prop, bp_dir)
 
 # Converts parsed json dictionary (which is intermediate) to Android.bp prop
 # dictionary. This validates paths such as include directories and init_rc
 # files while converting.
-def convert_json_to_bp_prop(json_path, bp_dir):
-    prop = json.load(json_path)
+def convert_json_data_to_bp_prop(prop, bp_dir):
     ret = {}
 
     module_name = prop['ModuleName']
@@ -395,6 +398,49 @@ def build_props(install_dir):
 
     return props
 
+def convert_json_host_data_to_bp(mod, install_dir):
+    """Create blueprint definition for a given host module.
+
+    All host modules are created as a cc_prebuilt_binary
+    blueprint module with the prefer attribute set to true.
+
+    Args:
+      mod: JSON definition of the module
+      install_dir: installation directory of the host snapshot
+    """
+    prop = convert_json_data_to_bp_prop(mod, install_dir)
+    prop['host_supported'] = True
+    prop['device_supported'] = False
+    prop['prefer'] = True
+    prop['stl'] = 'none'
+    ## Move install file to host source file
+    prop['target'] = dict()
+    prop['target']['host'] = dict()
+    prop['target']['host']['srcs'] = [prop['filename']]
+    del prop['filename']
+
+    bp = 'cc_prebuilt_binary {\n' + gen_bp_prop(prop, INDENT) + '}\n\n'
+    return bp
+
+def gen_host_bp_file(install_dir):
+    """Generate Android.bp for a host snapshot.
+
+    This routine will find the JSON description file from a host
+    snapshot and create a blueprint definition for each module
+    and add to the created Android.bp file.
+
+    Args:
+      install_dir: directory where the host snapshot can be found
+    """
+    bpfilename = 'Android.bp'
+    with open(os.path.join(install_dir, bpfilename), 'w') as wfp:
+        for file in os.listdir(install_dir):
+            if file.endswith('.json'):
+                with open(os.path.join(install_dir, file), 'r') as rfp:
+                    props = json.load(rfp)
+                    for mod in props:
+                        prop = convert_json_host_data_to_bp(mod, install_dir)
+                        wfp.write(prop)
 
 def gen_bp_files(image, vndk_dir, install_dir, snapshot_version):
     """Generates Android.bp for each archtecture.
@@ -573,6 +619,37 @@ def get_ninja_inputs(ninja_binary, ninja_build_file, modules):
 
     return inputs
 
+def check_host_usage(install_dir, ninja_binary, ninja_file, goals, output):
+    """Find the host modules that are in the ninja build dependency for a given goal.
+
+    To use this routine the user has installed a fake host snapshot with all
+    possible host tools into the install directory.  Check the ninja build
+    graph for any mapping to the modules in this installation directory.
+
+    This routine will print out a vsdk_host_tools = [] statement with the
+    dependent tools.  The user can then use the vsdk_host_tools as the
+    deps of their host_snapshot module.
+    """
+    file_to_info = dict()
+    for file in os.listdir(install_dir):
+        if file.endswith('.json'):
+            with open(os.path.join(install_dir,file),'r') as rfp:
+                props = json.load(rfp)
+                for mod in props:
+                    file_to_info[os.path.join(install_dir,mod['Filename'])] = mod['ModuleName']
+
+    used_modules = set()
+    ninja_inputs = get_ninja_inputs(ninja_binary, ninja_file, goals)
+    ## Check for host file in ninja inputs
+    for file in file_to_info:
+        if file in ninja_inputs:
+            used_modules.add(file_to_info[file])
+
+    with open(output, 'w') as f:
+        f.write('vsdk_host_tools = [ \n')
+        for m in sorted(used_modules):
+            f.write('  "%s", \n' % m)
+        f.write('] \n')
 
 def check_module_usage(install_dir, ninja_binary, image, ninja_file, goals,
                        output):
@@ -722,7 +799,7 @@ def get_args():
     parser.add_argument(
         '--image',
         help=('Image whose snapshot is being updated (e.g., vendor, '
-              'recovery , ramdisk, etc.)'),
+              'recovery , ramdisk, host, etc.)'),
         default='vendor')
     parser.add_argument('--branch', help='Branch to pull build from.')
     parser.add_argument('--build', help='Build number to pull.')
@@ -779,6 +856,7 @@ def main():
     """Program entry point."""
     args = get_args()
 
+    host_image = args.image == 'host'
     verbose_map = (logging.WARNING, logging.INFO, logging.DEBUG)
     verbosity = min(args.verbose, 2)
     logging.basicConfig(
@@ -801,10 +879,16 @@ def main():
             raise ValueError(
                 'Please provide --check-module-usage-output option.')
 
-        check_module_usage(install_dir, ninja_binary, args.image,
-                           args.check_module_usage_ninja_file,
-                           args.check_module_usage_goal,
-                           args.check_module_usage_output)
+        if host_image:
+            check_host_usage(install_dir, ninja_binary,
+                             args.check_module_usage_ninja_file,
+                             args.check_module_usage_goal,
+                             args.check_module_usage_output)
+        else:
+            check_module_usage(install_dir, ninja_binary, args.image,
+                               args.check_module_usage_ninja_file,
+                               args.check_module_usage_goal,
+                               args.check_module_usage_output)
         return
 
     local = None
@@ -860,7 +944,12 @@ def main():
         local_dir=local,
         symlink=args.symlink,
         install_dir=install_dir)
-    gen_bp_files(args.image, vndk_dir, install_dir, snapshot_version)
+
+    if host_image:
+        gen_host_bp_file(install_dir)
+
+    else:
+        gen_bp_files(args.image, vndk_dir, install_dir, snapshot_version)
 
 if __name__ == '__main__':
     main()

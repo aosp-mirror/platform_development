@@ -63,6 +63,7 @@ EXCLUDED_CRATES = set(['protobuf_bin_gen_rust_do_not_use'])
 RENAME_MAP = {
     # This map includes all changes to the default rust module names
     # to resolve name conflicts, avoid confusion, or work as plugin.
+    'libash': 'libash_rust',
     'libbacktrace': 'libbacktrace_rust',
     'libbase': 'libbase_rust',
     'libbase64': 'libbase64_rust',
@@ -645,6 +646,9 @@ class Crate(object):
       if self.has_warning and not self.cap_lints:
         self.write('    // has rustc warnings')
       self.dump_srcs_list()
+    if self.cargo_env_compat:
+      self.write('    cargo_env_compat: true,')
+      self.write('    cargo_pkg_version: "' + self.cargo_pkg_version + '",')
     if 'test' in self.crate_types:
       self.write('    test_suites: ["general-tests"],')
       self.write('    auto_gen_config: true,')
