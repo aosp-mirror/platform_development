@@ -55,8 +55,6 @@ WIN_SDK_NAME := $(subst $(HOST_OS)-$(SDK_HOST_ARCH),windows,$(MAIN_SDK_NAME))
 WIN_SDK_DIR  := $(subst $(HOST_OS)-$(SDK_HOST_ARCH),windows,$(MAIN_SDK_DIR))
 WIN_SDK_ZIP  := $(WIN_SDK_DIR)/$(WIN_SDK_NAME).zip
 
-$(call dist-for-goals, win_sdk, $(WIN_SDK_ZIP))
-
 # b/36697262 - we want the 64-bit libaapt2_jni and its dependencies
 ifdef HOST_CROSS_2ND_ARCH
 $(call dist-for-goals,win_sdk,$(ALL_MODULES.host_cross_libaapt2_jni$(HOST_CROSS_2ND_ARCH_MODULE_SUFFIX).BUILT):lib64/libaapt2_jni.dll)

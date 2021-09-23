@@ -109,7 +109,7 @@ class Bazel(object):
         # soong_ui requires to be at the root of the repository.
         os.chdir(env.ANDROID_BUILD_TOP)
         print("Generating Bazel files...")
-        cmd = [soong_ui, "--make-mode", "GENERATE_BAZEL_FILES=1", "nothing"]
+        cmd = [soong_ui, "--make-mode", "bp2build"]
         try:
             subprocess.check_output(cmd, stderr=subprocess.STDOUT, text=True)
         except subprocess.CalledProcessError as e:
@@ -278,13 +278,17 @@ def main():
             test_mapping = TestMapping(env, bazel, path)
             test_mapping.create()
             changed = (subprocess.call(['git', 'diff', '--quiet']) == 1)
-            if changed and args.branch_and_commit:
+            untracked = (os.path.isfile('TEST_MAPPING') and
+                         (subprocess.run(['git', 'ls-files', '--error-unmatch', 'TEST_MAPPING'],
+                                         stderr=subprocess.DEVNULL,
+                                         stdout=subprocess.DEVNULL).returncode == 1))
+            if args.branch_and_commit and (changed or untracked):
                 subprocess.check_output(['repo', 'start',
                                          'tmp_auto_test_mapping', '.'])
                 subprocess.check_output(['git', 'add', 'TEST_MAPPING'])
                 subprocess.check_output(['git', 'commit', '-m',
                                          'Update TEST_MAPPING\n\nTest: None'])
-            if changed and args.push_change:
+            if args.push_change and (changed or untracked):
                 date = datetime.today().strftime('%m-%d')
                 subprocess.check_output(['git', 'push', 'aosp', 'HEAD:refs/for/master',
                                          '-o', 'topic=test-mapping-%s' % date])

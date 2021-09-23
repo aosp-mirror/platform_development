@@ -74,8 +74,9 @@ export default {
      */
     async sendForm() {
       try {
-        let response_messages = await this.$store.state.otaConfig.sendForms(
-          this.targetBuilds, this.incrementalSources)
+        let response_data = await this.$store.state.otaConfig.sendForms(
+          this.targetBuilds, this.incrementalSources);
+        let response_messages = response_data.map(d => d.msg);
         alert(response_messages.join('\n'))
         this.$store.state.otaConfig.reset()
         this.$store.commit('SET_TARGETS', [])
