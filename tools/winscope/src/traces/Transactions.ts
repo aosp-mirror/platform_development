@@ -27,6 +27,9 @@ export default class Transactions extends TraceBase {
     super(transactionsFile.data, transactionsFile.timeline, files);
 
     this.transactionsFile = transactionsFile;
+
+    // Create new transaction history
+    this.transactionHistory = new TransactionHistory(transactionsFile);
   }
 
   get type() {
