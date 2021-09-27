@@ -22,7 +22,7 @@
 </template>
 <script>
 import Arrow from './Arrow.vue';
-import {LocalStore} from '../../localstore.js';
+import LocalStore from '../../localstore.js';
 
 var transitionCount = false;
 
