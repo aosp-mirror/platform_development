@@ -525,6 +525,10 @@ class GenBuildFile(object):
                             dirs=dirs,
                             name=name))
 
+            def rename_generated_dirs(dirs):
+                # Reame out/soong/.intermedaites to generated-headers for better readability.
+                return [d.replace(utils.SOONG_INTERMEDIATES_DIR, utils.GENERATED_HEADERS_DIR, 1) for d in dirs]
+
             for src in sorted(src_paths):
                 include_dirs = ''
                 system_include_dirs = ''
@@ -541,10 +545,12 @@ class GenBuildFile(object):
                     if prebuilt == 'android.hidl.memory@1.0-impl.so':
                         props['RelativeInstallPath'] = 'hw'
                 if 'ExportedDirs' in props:
-                    l = ['include/%s' % d for d in props['ExportedDirs']]
+                    dirs = rename_generated_dirs(props['ExportedDirs'])
+                    l = ['include/%s' % d for d in dirs]
                     include_dirs = list_to_prop_value(l, 'export_include_dirs')
                 if 'ExportedSystemDirs' in props:
-                    l = ['include/%s' % d for d in props['ExportedSystemDirs']]
+                    dirs = rename_generated_dirs(props['ExportedSystemDirs'])
+                    l = ['include/%s' % d for d in dirs]
                     system_include_dirs = list_to_prop_value(l, 'export_system_include_dirs')
                 if 'ExportedFlags' in props:
                     flags = list_to_prop_value(props['ExportedFlags'], 'export_flags')
