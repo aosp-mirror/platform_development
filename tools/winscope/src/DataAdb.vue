@@ -234,8 +234,8 @@ const WM_SELECTED_CONFIG = {
     'transaction',
   ],
   'tracinglevel': [
-    'all',
-    'trim',
+    'verbose',
+    'debug',
     'critical',
   ],
 };

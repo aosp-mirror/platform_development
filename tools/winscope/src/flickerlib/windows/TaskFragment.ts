@@ -24,7 +24,7 @@ TaskFragment.fromProto = function (proto: any, isActivityInTree: Boolean): TaskF
     } else {
         const windowContainer = WindowContainer.fromProto(
             /* proto */ proto.windowContainer,
-            /* protoChildren */ proto.windowContainer.children.reverse(),
+            /* protoChildren */ proto.windowContainer?.children?.reverse() ?? [],
             /* isActivityInTree */ isActivityInTree);
         const entry = new TaskFragment(
             proto.activityType,

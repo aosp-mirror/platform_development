@@ -230,7 +230,7 @@ class WindowManagerTraceSelectedConfig:
         # defaults set for all configs
         self.selectedConfigs = {
             "wmbuffersize": "16000",
-            "tracinglevel": "all",
+            "tracinglevel": "debug",
             "tracingtype": "frame",
         }
 
