@@ -46,14 +46,14 @@
       <md-field>
         <label>Log Levels</label>
         <md-select v-model="selectedLogLevels" multiple>
-          <md-option v-for="level in logLevels" :value="level">{{ level }}</md-option>
+          <md-option v-for="level in logLevels" :value="level" v-bind:key="level">{{ level }}</md-option>
         </md-select>
       </md-field>
 
       <md-field>
         <label>Tags</label>
         <md-select v-model="selectedTags" multiple>
-          <md-option v-for="tag in tags" :value="tag">{{ tag }}</md-option>
+          <md-option v-for="tag in tags" :value="tag" v-bind:key="tag">{{ tag }}</md-option>
         </md-select>
       </md-field>
 
