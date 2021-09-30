@@ -40,8 +40,10 @@ def _parse_args():
     parser.add_argument('--gitcookies',
                         default=os.path.expanduser('~/.gitcookies'),
                         help='Gerrit cookie file')
-    parser.add_argument('--limits', default=1000,
+    parser.add_argument('--limits', default=1000, type=int,
                         help='Max number of change lists')
+    parser.add_argument('--start', default=0, type=int,
+                        help='Skip first N changes in query')
 
     return parser.parse_args()
 
@@ -63,7 +65,7 @@ def main():
     # Query change lists
     url_opener = create_url_opener_from_args(args)
     change_lists = query_change_lists(
-        url_opener, args.gerrit, args.query, args.limits)
+        url_opener, args.gerrit, args.query, args.start, args.limits)
 
     # Download patch files
     num_changes = len(change_lists)
