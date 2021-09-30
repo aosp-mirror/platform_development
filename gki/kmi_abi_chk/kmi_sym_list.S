@@ -23,7 +23,10 @@
 
 kmi_sym_arr:
 
-#include "kmi_sym_list.inc"
+#define XSTR(x) #x
+#define STR(x) XSTR(x)
+
+#include STR(kmi_sym_list-GKI_BID.inc)
 
 	.xword	0
 	.size	kmi_sym_arr, . - kmi_sym_arr
