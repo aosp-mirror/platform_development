@@ -47,7 +47,12 @@ TEST_OPTIONS = {
 # Excluded tests. These tests will be ignored by this script.
 TEST_EXCLUDE = [
         "aidl_test_rust_client",
-        "aidl_test_rust_service"
+        "aidl_test_rust_service",
+        "ash_device_test_src_lib",
+        "ash_device_test_tests_constant_size_arrays",
+        "ash_device_test_tests_display",
+        "shared_library_device_test_src_lib",
+        "vulkano_device_test_src_lib"
 ]
 
 # Excluded modules.
