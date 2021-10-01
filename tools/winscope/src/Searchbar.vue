@@ -102,7 +102,7 @@
               class="inline-error"
               @click="setCurrentTimestamp(item.timestamp)"
             >
-              {{item.message}}
+              {{ `${item.assertionName} ${item.message}` }}
             </td>
           </tr>
         </table>
