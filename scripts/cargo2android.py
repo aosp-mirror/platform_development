@@ -125,8 +125,8 @@ CC_AR_VV_PAT = re.compile(r'^\[([^ ]*)[^\]]*\] running:? "(cc|ar)" (.*)$')
 # Rustc output of file location path pattern for a warning message.
 WARNING_FILE_PAT = re.compile('^ *--> ([^:]*):[0-9]+')
 
-# Rust package name with suffix -d1.d2.d3.
-VERSION_SUFFIX_PAT = re.compile(r'^(.*)-[0-9]+\.[0-9]+\.[0-9]+$')
+# Rust package name with suffix -d1.d2.d3(+.*)?.
+VERSION_SUFFIX_PAT = re.compile(r'^(.*)-[0-9]+\.[0-9]+\.[0-9]+(?:\+.*)?$')
 
 # Crate types corresponding to a C ABI library
 C_LIBRARY_CRATE_TYPES = ['staticlib', 'cdylib']
