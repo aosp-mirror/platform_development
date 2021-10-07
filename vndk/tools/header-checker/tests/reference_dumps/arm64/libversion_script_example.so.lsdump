@@ -40,7 +40,7 @@
     }
    ],
    "return_type" : "_ZTIv",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
   },
   {
    "function_name" : "Test4::test",
@@ -53,19 +53,19 @@
     }
    ],
    "return_type" : "_ZTIv",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
   },
   {
    "function_name" : "test1",
    "linker_set_key" : "test1",
    "return_type" : "_ZTIv",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
   },
   {
    "function_name" : "test2",
    "linker_set_key" : "test2",
    "return_type" : "_ZTIv",
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
   }
  ],
  "global_vars" : [],
@@ -79,7 +79,7 @@
    "referenced_type" : "_ZTI5Test3",
    "self_type" : "_ZTIP5Test3",
    "size" : 8,
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
   },
   {
    "alignment" : 8,
@@ -88,7 +88,7 @@
    "referenced_type" : "_ZTI5Test4",
    "self_type" : "_ZTIP5Test4",
    "size" : 8,
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
   }
  ],
  "qualified_types" : [],
@@ -102,7 +102,7 @@
    "referenced_type" : "_ZTI5Test3",
    "self_type" : "_ZTI5Test3",
    "size" : 1,
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
   },
   {
    "alignment" : 1,
@@ -112,7 +112,7 @@
    "referenced_type" : "_ZTI5Test4",
    "self_type" : "_ZTI5Test4",
    "size" : 1,
-   "source_file" : "/development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/version_script_example/example.h"
   }
  ],
  "rvalue_reference_types" : []

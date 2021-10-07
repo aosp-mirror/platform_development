@@ -861,6 +861,10 @@ class RecursiveParser(object):
                 envs.pop()
 
             # Filter sub directories
+            if '.out-dir' in filenames:
+                # Stop at OUT_DIR
+                dirnames[:] = []
+                continue
             new_dirnames = []
             for name in dirnames:
                 if name in {'.git', '.repo'}:

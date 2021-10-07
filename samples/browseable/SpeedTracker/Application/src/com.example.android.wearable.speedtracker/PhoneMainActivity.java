@@ -42,7 +42,7 @@ import java.util.List;
 
 /**
  * The main activity for the handset application. When a watch device reconnects to the handset
- * app, the collected GPS data on the watch, if any, is synced up and user can see his/her track on
+ * app, the collected GPS data on the watch, if any, is synced up and user can see their track on
  * a map. This data is then saved into an internal database and the corresponding data items are
  * deleted.
  */

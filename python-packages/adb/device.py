@@ -435,7 +435,13 @@ class AndroidDevice(object):
         cmd = ['push']
         if sync:
             cmd.append('--sync')
-        cmd.extend([local, remote])
+
+        if isinstance(local, str):
+            cmd.extend([local, remote])
+        else:
+            cmd.extend(local)
+            cmd.append(remote)
+
         return self._simple_call(cmd)
 
     def pull(self, remote, local):

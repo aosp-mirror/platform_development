@@ -57,6 +57,18 @@ HKR,,Icon,,-1
 %SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_9001
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_9001&MI_01
 
+;Google Glass EE1
+
+%SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_9003
+%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_9003&MI_01
+%SingleBootLoaderInterface% = USB_Install, USB\VID_18D1&PID_9004
+
+;Google Glass EE2
+
+%SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_9005
+%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_9005&MI_00
+%SingleBootLoaderInterface% = USB_Install, USB\VID_18D1&PID_9006
+
 ;Project Tango (generic)
 %SingleBootLoaderInterface% = USB_Install, USB\VID_18D1&PID_4D00
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_4D02&MI_01
@@ -99,6 +111,18 @@ HKR,,Icon,,-1
 ;Google Glass
 %SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_9001
 %CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_9001&MI_01
+
+;Google Glass EE1
+
+%SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_9003
+%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_9003&MI_01
+%SingleBootLoaderInterface% = USB_Install, USB\VID_18D1&PID_9004
+
+;Google Glass EE2
+
+%SingleAdbInterface%        = USB_Install, USB\VID_18D1&PID_9005
+%CompositeAdbInterface%     = USB_Install, USB\VID_18D1&PID_9005&MI_00
+%SingleBootLoaderInterface% = USB_Install, USB\VID_18D1&PID_9006
 
 ;Project Tango (generic)
 %SingleBootLoaderInterface% = USB_Install, USB\VID_18D1&PID_4D00
