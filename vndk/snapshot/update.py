@@ -95,6 +95,13 @@ def install_snapshot(branch, build, local_dir, install_dir, temp_artifact_dir):
         logging.info('Unzipping VNDK snapshot: {}'.format(artifact))
         utils.check_call(['unzip', '-qn', artifact, '-d', install_dir])
 
+        # rename {install_dir}/{arch}/include/out/soong/.intermediates
+        for soong_intermediates_dir in glob.glob(install_dir + '/*/include/' + utils.SOONG_INTERMEDIATES_DIR):
+            generated_headers_dir = soong_intermediates_dir.replace(
+                utils.SOONG_INTERMEDIATES_DIR,
+                utils.GENERATED_HEADERS_DIR
+            )
+            os.rename(soong_intermediates_dir, generated_headers_dir)
 
 def gather_notice_files(install_dir):
     """Gathers all NOTICE files to a common NOTICE_FILES directory."""
