@@ -45,7 +45,11 @@
           <md-checkbox v-if="hasTagsOrErrors" v-model="store.flickerTraceView">Flicker</md-checkbox>
           <md-field md-inline class="filter">
             <label>Filter...</label>
-            <md-input v-model="hierarchyPropertyFilterString"></md-input>
+            <md-input
+              v-model="hierarchyPropertyFilterString"
+              v-on:focus="updateInputMode(true)"
+              v-on:blur="updateInputMode(false)"
+            />
           </md-field>
         </md-content>
         <div class="tree-view-wrapper">
@@ -98,7 +102,11 @@
           </md-checkbox>
           <md-field md-inline class="filter">
             <label>Filter...</label>
-            <md-input v-model="propertyFilterString"></md-input>
+            <md-input
+              v-model="propertyFilterString"
+              v-on:focus="updateInputMode(true)"
+              v-on:blur="updateInputMode(false)"
+            />
           </md-field>
         </md-content>
         <div class="properties-content">
@@ -138,7 +146,7 @@ import PropertiesTreeElement from './PropertiesTreeElement.vue';
 import {ObjectTransformer} from './transform.js';
 import {DiffGenerator, defaultModifiedCheck} from './utils/diff.js';
 import {TRACE_TYPES, DUMP_TYPES} from './decode.js';
-import {stableIdCompatibilityFixup} from './utils/utils.js';
+import {isPropertyMatch, stableIdCompatibilityFixup} from './utils/utils.js';
 import {CompatibleFeatures} from './utils/compatibility.js';
 import {getPropertiesForDisplay} from './flickerlib/mixin';
 import ObjectFormatter from './flickerlib/ObjectFormatter';
@@ -318,15 +326,18 @@ export default {
     matchItems(flickerItems, entryItem) {
       var match = false;
       flickerItems.forEach(flickerItem => {
-        if (flickerItem.taskId===entryItem.taskId || flickerItem.layerId===entryItem.id) {
-          match = true;
-        }
+        if (isPropertyMatch(flickerItem, entryItem)) match = true;
       });
       return match;
     },
     /** Returns check for id match between entry and present tags/errors */
     isEntryTagMatch(entryItem) {
       return this.matchItems(this.presentTags, entryItem) || this.matchItems(this.presentErrors, entryItem);
+    },
+
+    /** determines whether left/right arrow keys should move cursor in input field */
+    updateInputMode(isInputMode) {
+      this.store.isInputMode = isInputMode;
     },
   },
   created() {

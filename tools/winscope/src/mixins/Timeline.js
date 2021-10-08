@@ -142,10 +142,8 @@ export default {
     timelineTransitions() {
       const transitions = [];
 
-      //group tags by transition 'id' property
-      const groupedTags = _.mapValues(
-        _.groupBy(this.tags, 'id'), clist => clist.map(tag => _.omit(tag, 'id')))
-      ;
+      //group tags by transition and 'id' property
+      const groupedTags = _.groupBy(this.tags, tag => `"${tag.transition} ${tag.id}"`);
 
       for (const transitionId in groupedTags) {
         const id = groupedTags[transitionId];
@@ -154,46 +152,56 @@ export default {
         const startTimes = id.filter(tag => tag.isStartTag).map(tag => tag.timestamp);
         const endTimes = id.filter(tag => !tag.isStartTag).map(tag => tag.timestamp);
 
-        const transitionStartTime = Math.min(startTimes);
-        const transitionEndTime = Math.max(endTimes);
+        const transitionStartTime = Math.min(...startTimes);
+        const transitionEndTime = Math.max(...endTimes);
 
         //do not freeze new transition, as overlap still to be handled (defaulted to 0)
         const transition = this.generateTransition(
           transitionStartTime,
           transitionEndTime,
           id[0].transition,
-          0
+          0,
+          id[0].layerId,
+          id[0].taskId,
+          id[0].windowToken
         );
         transitions.push(transition);
       }
 
       //sort transitions in ascending start position in order to handle overlap
-      transitions.sort((a, b) => (a.startPos > b.startPos) ? 1: -1);
+      transitions.sort((a, b) => (a.startPos > b.startPos) ? 1 : -1);
 
       //compare each transition to the ones that came before
       for (let curr=0; curr<transitions.length; curr++) {
-        let overlapStore = [];
+        let processedTransitions = [];
 
         for (let prev=0; prev<curr; prev++) {
-          overlapStore.push(transitions[prev].overlap);
+          processedTransitions.push(transitions[prev]);
 
-          if (transitions[prev].startPos <= transitions[curr].startPos
-            && transitions[curr].startPos <= transitions[prev].startPos+transitions[prev].width
-            && transitions[curr].overlap === transitions[prev].overlap) {
+          if (this.isSimultaneousTransition(transitions[curr], transitions[prev])) {
             transitions[curr].overlap++;
           }
         }
 
-        if (overlapStore.length>0
-          && transitions[curr].overlap === Math.max(overlapStore)
-        ) transitions[curr].overlap++;
+        let overlapStore = processedTransitions.map(transition => transition.overlap);
+
+        if (transitions[curr].overlap === Math.max(...overlapStore)) {
+          let previousTransition = processedTransitions.find(transition => {
+            return transition.overlap===transitions[curr].overlap;
+          });
+          if (this.isSimultaneousTransition(transitions[curr], previousTransition)) {
+            transitions[curr].overlap++;
+          }
+        }
       }
 
       return Object.freeze(transitions);
     },
     errorPositions() {
       if (!this.flickerMode) return [];
-      const errorPositions = this.errors.map(error => this.position(error.timestamp));
+      const errorPositions = this.errors.map(
+        error => ({ pos: this.position(error.timestamp), ts: error.timestamp })
+      );
       return Object.freeze(errorPositions);
     },
   },
@@ -242,6 +250,12 @@ export default {
 
     objectWidth(startTs, endTs) {
       return this.position(endTs) - this.position(startTs) + this.pointWidth;
+    },
+
+    isSimultaneousTransition(currTransition, prevTransition) {
+      return prevTransition.startPos <= currTransition.startPos
+        && currTransition.startPos <= prevTransition.startPos+prevTransition.width
+        && currTransition.overlap === prevTransition.overlap;
     },
 
     /**
@@ -342,6 +356,16 @@ export default {
     },
 
     /**
+     * Handles the error click event.
+     * When an error in the timeline is clicked this function will update the timeline
+     * to match the error timestamp.
+     * @param {number} errorTimestamp
+     */
+    onErrorClick(errorTimestamp) {
+      this.$store.dispatch('updateTimelineTime', errorTimestamp);
+    },
+
+    /**
      * Generate a block object that can be used by the timeline SVG to render
      * a transformed block that starts at `startTs` and ends at `endTs`.
      * @param {number} startTs - The timestamp at which the block starts.
@@ -360,14 +384,24 @@ export default {
      * @param {number} endTs - The timestamp at which the transition ends.
      * @param {string} transitionType - The type of transition.
      * @param {number} overlap - The degree to which the transition overlaps with others.
+     * @param {number} layerId - Helps determine if transition is associated with SF trace.
+     * @param {number} taskId - Helps determine if transition is associated with WM trace.
+     * @param {number} windowToken - Helps determine if transition is associated with WM trace.
      * @return {Transition} A transition object transformed to the timeline's crop and
      *                 scale parameter.
      */
-    generateTransition(startTs, endTs, transitionType, overlap) {
+    generateTransition(startTs, endTs, transitionType, overlap, layerId, taskId, windowToken) {
       const transitionWidth = this.objectWidth(startTs, endTs);
       const transitionDesc = transitionMap.get(transitionType).desc;
       const transitionColor = transitionMap.get(transitionType).color;
-      const tooltip = `${transitionDesc}. Start: ${nanos_to_string(startTs)}. End: ${nanos_to_string(endTs)}.`;
+      var tooltip = `${transitionDesc}. Start: ${nanos_to_string(startTs)}. End: ${nanos_to_string(endTs)}.`;
+
+      if (layerId !== 0 && taskId === 0 && windowToken === "") {
+        tooltip += " SF only.";
+      } else if ((taskId !== 0 || windowToken !== "") && layerId === 0) {
+        tooltip += " WM only.";
+      }
+
       return new Transition(this.position(startTs), startTs, endTs, transitionWidth, transitionColor, overlap, tooltip);
     },
   },

@@ -16,13 +16,13 @@
   <div @click="onClick($event)">
     <flat-card v-if="hasDataView(file)">
       <md-card-header>
-        <button class="toggle-view-button" @click="toggleView">
-          <i aria-hidden="true" class="md-icon md-theme-default material-icons">
-            {{ isShowFileType(file.type) ? "expand_more" : "chevron_right" }}
-          </i>
-        </button>
         <md-card-header-text>
           <div class="md-title">
+            <button class="toggle-view-button" @click="toggleView">
+              <i aria-hidden="true" class="md-icon md-theme-default material-icons">
+                {{ isShowFileType(file.type) ? "expand_more" : "chevron_right" }}
+              </i>
+            </button>
             <md-icon>{{ TRACE_ICONS[file.type] }}</md-icon>
             {{ file.type }}
           </div>
@@ -160,6 +160,7 @@ export default {
       // Pass click event to parent, so that click event handler can be attached
       // to component.
       this.$emit('click', e);
+      this.newEventOccurred(e.toString());
     },
     /** Filter data view files by current show settings */
     updateShowFileTypes() {
