@@ -22,11 +22,14 @@ const transitionTypeMap = new Map([
   ['ROTATION', TransitionType.ROTATION],
   ['PIP_ENTER', TransitionType.PIP_ENTER],
   ['PIP_RESIZE', TransitionType.PIP_RESIZE],
+  ['PIP_CLOSE', TransitionType.PIP_CLOSE],
   ['PIP_EXIT', TransitionType.PIP_EXIT],
   ['APP_LAUNCH', TransitionType.APP_LAUNCH],
   ['APP_CLOSE', TransitionType.APP_CLOSE],
   ['IME_APPEAR', TransitionType.IME_APPEAR],
   ['IME_DISAPPEAR', TransitionType.IME_DISAPPEAR],
+  ['APP_PAIRS_ENTER', TransitionType.APP_PAIRS_ENTER],
+  ['APP_PAIRS_EXIT', TransitionType.APP_PAIRS_EXIT],
 ]);
 
 Tag.fromProto = function (proto: any): Tag {

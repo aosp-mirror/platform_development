@@ -122,6 +122,7 @@
 import DefaultTreeElement from './DefaultTreeElement.vue';
 import NodeContextMenu from './NodeContextMenu.vue';
 import {DiffType} from './utils/diff.js';
+import {isPropertyMatch} from './utils/utils.js';
 
 /* in px, must be kept in sync with css, maybe find a better solution... */
 const levelOffset = 24;
@@ -220,6 +221,9 @@ export default {
     },
     toggleTree() {
       this.setCollapseValue(!this.isCollapsed);
+      if (!this.isCollapsed) {
+        this.openedToSeeAttributeField(this.item.name)
+      }
     },
     expandTree() {
       this.setCollapseValue(false);
@@ -446,17 +450,13 @@ export default {
       }
     },
 
-    /** Check if tag/error id matches entry id */
-    isIdMatch(a, b) {
-      return a.taskId===b.taskId || a.layerId===b.id;
-    },
     /** Performs check for id match between entry and present tags/errors
      * exits once match has been found
      */
     matchItems(flickerItems) {
       var match = false;
       flickerItems.every(flickerItem => {
-        if (this.isIdMatch(flickerItem, this.item)) {
+        if (isPropertyMatch(flickerItem, this.item)) {
           match = true;
           return false;
         }
@@ -476,7 +476,7 @@ export default {
       var transitions = [];
       var ids = [];
       this.currentTags.forEach(tag => {
-        if (!ids.includes(tag.id) && this.isIdMatch(tag, this.item)) {
+        if (!ids.includes(tag.id) && isPropertyMatch(tag, this.item)) {
           transitions.push(tag.transition);
           ids.push(tag.id);
         }
@@ -484,7 +484,7 @@ export default {
       return transitions;
     },
     getCurrentErrorTags() {
-      return this.currentErrors.filter(error => this.isIdMatch(error, this.item));
+      return this.currentErrors.filter(error => isPropertyMatch(error, this.item));
     },
   },
   computed: {

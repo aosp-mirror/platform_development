@@ -46,7 +46,7 @@ WindowManagerState.fromProto = function (proto: any, timestamp: number = 0, wher
         proto.rootWindowContainer.pendingActivities.map(it => it.title),
         rootWindowContainer,
         keyguardControllerState,
-        timestamp = timestamp
+        /*timestamp */ `${timestamp}`
     );
 
     addAttributes(entry, proto);
