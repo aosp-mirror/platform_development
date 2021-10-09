@@ -31,7 +31,7 @@
         <p>Or get it from the AOSP repository.</p>
       </div>
       <div class="md-layout">
-        <md-button class="md-accent" :href="downloadProxyUrl">Download from AOSP</md-button>
+        <md-button class="md-accent" :href="downloadProxyUrl" @click="buttonClicked(`Download from AOSP`)">Download from AOSP</md-button>
         <md-button class="md-accent" @click="restart">Retry</md-button>
       </div>
     </md-card-content>
@@ -306,8 +306,10 @@ export default {
       if (requested.length < 1) {
         this.errorText = 'No targets selected';
         this.status = STATES.ERROR;
+        this.newEventOccurred("No targets selected");
         return;
       }
+      this.newEventOccurred("Start Trace");
       this.callProxy('POST', PROXY_ENDPOINTS.CONFIG_TRACE + this.deviceId() + '/', this, null, null, requestedConfig);
       this.status = STATES.END_TRACE;
       this.callProxy('POST', PROXY_ENDPOINTS.START_TRACE + this.deviceId() + '/', this, function(request, view) {
@@ -315,10 +317,12 @@ export default {
       }, null, requested);
     },
     dumpState() {
+      this.buttonClicked("Dump State");
       const requested = this.toDump();
       if (requested.length < 1) {
         this.errorText = 'No targets selected';
         this.status = STATES.ERROR;
+        this.newEventOccurred("No targets selected");
         return;
       }
       this.status = STATES.LOAD_DATA;
@@ -331,6 +335,7 @@ export default {
       this.callProxy('POST', PROXY_ENDPOINTS.END_TRACE + this.deviceId() + '/', this, function(request, view) {
         view.loadFile(view.toTrace(), 0);
       });
+      this.newEventOccurred("Ended Trace");
     },
     loadFile(files, idx) {
       this.callProxy('GET', PROXY_ENDPOINTS.FETCH + this.deviceId() + '/' + files[idx] + '/', this, function(request, view) {
@@ -388,9 +393,11 @@ export default {
       return this.selectedDevice;
     },
     restart() {
+      this.buttonClicked("Connect / Retry");
       this.status = STATES.CONNECTING;
     },
     resetLastDevice() {
+      this.buttonClicked("Change Device");
       this.adbStore.lastDevice = '';
       this.restart();
     },

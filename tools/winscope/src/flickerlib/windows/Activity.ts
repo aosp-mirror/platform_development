@@ -16,6 +16,7 @@
 
 import { shortenName } from '../mixin'
 import { Activity } from "../common"
+import { VISIBLE_CHIP } from '../treeview/Chips'
 import WindowContainer from "./WindowContainer"
 
 Activity.fromProto = function (proto: any): Activity {
@@ -50,6 +51,7 @@ function addAttributes(entry: Activity, proto: any) {
     entry.proto = proto;
     entry.kind = entry.constructor.name;
     entry.shortName = shortenName(entry.name);
+    entry.chips = entry.isVisible ? [VISIBLE_CHIP] : [];
 }
 
 export default Activity;

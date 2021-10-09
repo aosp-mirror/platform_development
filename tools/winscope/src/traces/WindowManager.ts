@@ -21,11 +21,14 @@ import { WindowManagerTrace } from '@/flickerlib';
 
 export default class WindowManager extends TraceBase {
   wmTraceFile: Object;
+  tagGenerationTrace: Object;
 
   constructor(files) {
     const wmTraceFile = files[FILE_TYPES.WINDOW_MANAGER_TRACE];
+    const tagGenerationTrace = files[FILE_TYPES.WINDOW_MANAGER_TRACE].tagGenerationTrace;
     super(wmTraceFile.data, wmTraceFile.timeline, files);
 
+    this.tagGenerationTrace = tagGenerationTrace;
     this.wmTraceFile = wmTraceFile;
   }
 
