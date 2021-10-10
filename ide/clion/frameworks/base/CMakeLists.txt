@@ -9,4 +9,3 @@ add_subdirectory(libs/hwui/hwui_unit_tests-arm64-android)
 
 # JNI
 add_subdirectory(core/jni/libandroid_runtime-arm64-android)
-add_subdirectory(core/jni/libandroid_graphics-arm64-android)
