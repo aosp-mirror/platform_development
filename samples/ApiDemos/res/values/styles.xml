@@ -129,4 +129,12 @@
 	<item name="android:windowAllowEnterTransitionOverlap">false</item>
     </style>
 
+    <!-- A theme without action bar -->
+    <style name="Theme.NoActionBar" parent="android:Theme.Material.Light">
+        <item name="windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <!-- toggle this flag to test letterbox behavior when auto-enter-pip from landscape -->
+        <!--item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item-->
+    </style>
+
 </resources>

@@ -54,28 +54,32 @@
         <uses-library android:name="android.test.runner" />
 
         <activity android:name="Development" android:label="Dev Tools"
-            android:icon="@mipmap/ic_launcher_devtools">
+            android:icon="@mipmap/ic_launcher_devtools" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="PackageBrowser" android:label="Package Browser">
+        <activity android:name="PackageBrowser" android:label="Package Browser"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.TEST" />
             </intent-filter>
         </activity>
-        <activity android:name="PackageSummary" android:label="Package Summary">
+        <activity android:name="PackageSummary" android:label="Package Summary"
+            android:exported="true">
         </activity>
-        <activity android:name="ShowActivity" android:label="Activity Detail">
+        <activity android:name="ShowActivity" android:label="Activity Detail"
+            android:exported="true">
         </activity>
         <activity android:name="AppPicker"
-                android:theme="@android:style/Theme.Dialog">
+                android:theme="@android:style/Theme.Dialog" android:exported="true">
         </activity>
         <activity android:name="PointerLocation" android:label="Pointer Location"
                 android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
-                android:configChanges="keyboard|keyboardHidden|navigation|orientation">
+                android:configChanges="keyboard|keyboardHidden|navigation|orientation"
+                android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.TEST" />
@@ -83,39 +87,42 @@
         </activity>
 
         <activity android:name="AccountsTester" android:label="AccountsTester"
-                  android:windowSoftInputMode="stateHidden">
+                  android:windowSoftInputMode="stateHidden" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.TEST" />
             </intent-filter>
         </activity>
 
-        <activity android:name="SyncAdapterDriver" android:label="Sync Tester">
+        <activity android:name="SyncAdapterDriver" android:label="Sync Tester"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.TEST" />
             </intent-filter>
         </activity>
 
-        <activity android:name="DataList">
+        <activity android:name="DataList" android:exported="true">
         </activity>
-        <activity android:name="Details">
+        <activity android:name="Details" android:exported="true">
         </activity>
-        <activity android:name="Connectivity" android:label="Connectivity" >
+        <activity android:name="Connectivity" android:label="Connectivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.TEST" />
             </intent-filter>
         </activity>
 
-        <activity android:name="InstrumentationList" android:label="Instrumentation">
+        <activity android:name="InstrumentationList" android:label="Instrumentation"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.TEST" />
             </intent-filter>
         </activity>
 
-        <activity android:name="MediaScannerActivity" android:label="Media Provider">
+        <activity android:name="MediaScannerActivity" android:label="Media Provider"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.TEST" />
@@ -131,13 +138,15 @@
         </activity>
     -->
 
-        <activity android:name="RunningProcesses" android:label="Running processes">
+        <activity android:name="RunningProcesses" android:label="Running processes"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.TEST" />
             </intent-filter>
         </activity>
-        <activity android:name="ProcessInfo" android:label="Process Information">
+        <activity android:name="ProcessInfo" android:label="Process Information"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -151,40 +160,44 @@
             </intent-filter>
         </activity>
     -->
-        <activity android:name="AppHwPref" android:label="Applications Hardware Preferences">
+        <activity android:name="AppHwPref" android:label="Applications Hardware Preferences"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name="PermissionDetails" android:label="Permission Info">
+        <activity android:name="PermissionDetails" android:label="Permission Info"
+            android:exported="true">
             <intent-filter>
                 <action android:name="com.android.development.VIEW_PERMISSION" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
 
-        <activity android:name="BadBehaviorActivity" android:label="Bad Behavior">
+        <activity android:name="BadBehaviorActivity" android:label="Bad Behavior"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.TEST" />
             </intent-filter>
         </activity>
-        <receiver android:name="BadBehaviorActivity$BadReceiver">
+        <receiver android:name="BadBehaviorActivity$BadReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="com.android.development.BAD_BEHAVIOR" />
             </intent-filter>
         </receiver>
         <service android:name="BadBehaviorActivity$BadService" />
 
-        <activity android:name="CacheAbuser" android:label="Cache Abuser">
+        <activity android:name="CacheAbuser" android:label="Cache Abuser" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.TEST" />
             </intent-filter>
         </activity>
 
-        <activity android:name="ConfigurationViewer" android:label="Configuration">
+        <activity android:name="ConfigurationViewer" android:label="Configuration"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.TEST" />
