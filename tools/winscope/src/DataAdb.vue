@@ -84,7 +84,7 @@
       <div class="trace-section">
         <h3>Trace targets:</h3>
         <div class="selection">
-          <md-checkbox class="md-primary" v-for="traceKey in Object.keys(TRACES)" :key="traceKey" v-model="adbStore[traceKey]">{{TRACES[traceKey].name}}</md-checkbox>
+          <md-checkbox class="md-primary" v-for="traceKey in Object.keys(DYNAMIC_TRACES)" :key="traceKey" v-model="adbStore[traceKey]">{{ DYNAMIC_TRACES[traceKey].name }}</md-checkbox>
         </div>
         <div class="trace-config">
             <h4>Surface Flinger config</h4>
@@ -173,35 +173,44 @@ const PROXY_ENDPOINTS = {
   DUMP: '/dump/',
   FETCH: '/fetch/',
   STATUS: '/status/',
+  CHECK_WAYLAND: '/checkwayland/',
 };
 
+// trace options should be added in a nested category
 const TRACES = {
-  'window_trace': {
-    name: 'Window Manager',
+  'default': {
+    'window_trace': {
+      name: 'Window Manager',
+    },
+    'accessibility_trace': {
+      name: 'Accessibility',
+    },
+    'layers_trace': {
+      name: 'Surface Flinger',
+    },
+    'transaction': {
+      name: 'Transactions',
+    },
+    'proto_log': {
+      name: 'ProtoLog',
+    },
+    'screen_recording': {
+      name: 'Screen Recording',
+    },
+    'ime_trace_clients': {
+      name: 'Input Method Clients',
+    },
+    'ime_trace_service': {
+      name: 'Input Method Service',
+    },
+    'ime_trace_managerservice': {
+      name: 'Input Method Manager Service',
+    },
   },
-  'accessibility_trace': {
-    name: 'Accessibility',
-  },
-  'layers_trace': {
-    name: 'Surface Flinger',
-  },
-  'transaction': {
-    name: 'Transactions',
-  },
-  'proto_log': {
-    name: 'ProtoLog',
-  },
-  'screen_recording': {
-    name: 'Screen Recording',
-  },
-  'ime_trace_clients': {
-    name: 'Input Method Clients',
-  },
-  'ime_trace_service': {
-    name: 'Input Method Service',
-  },
-  'ime_trace_managerservice': {
-    name: 'Input Method Manager Service',
+  'arc': {
+    'wayland_trace': {
+      name: 'Wayland',
+    },
   },
 };
 
@@ -275,6 +284,7 @@ export default {
     return {
       STATES,
       TRACES,
+      DYNAMIC_TRACES: TRACES['default'],
       TRACE_CONFIG,
       SF_SELECTED_CONFIG,
       WM_SELECTED_CONFIG,
@@ -298,7 +308,7 @@ export default {
                 proxyKey: '',
                 lastDevice: '',
               },
-              Object.keys(TRACES)
+              this.getAllTraceKeys(TRACES)
                   .concat(Object.keys(DUMPS))
                   .concat(CONFIGS)
                   .reduce(function(obj, key) {
@@ -337,6 +347,34 @@ export default {
           view.status = STATES.ERROR;
         }
       });
+    },
+    getAllTraceKeys(traces) {
+      let keys = [];
+      for (let dict_key in traces) {
+        for (let key in traces[dict_key]) {
+          keys.push(key);
+        }
+      }
+      return keys;
+    },
+    setAvailableTraces() {
+      this.DYNAMIC_TRACES = this.TRACES['default'];
+      this.callProxy('GET', PROXY_ENDPOINTS.CHECK_WAYLAND, this, function(request, view) {
+        try {
+          if(request.responseText == 'true') {
+            view.appendOptionalTraces('arc');
+          }
+        } catch(err) {
+          console.error(err);
+          view.errorText = request.responseText;
+          view.status = STATES.ERROR;
+        }
+      });
+    },
+    appendOptionalTraces(device_key) {
+      for(let key in this.TRACES[device_key]) {
+        this.$set(this.DYNAMIC_TRACES, key, this.TRACES[device_key][key]);
+      }
     },
     keepAliveTrace() {
       if (this.status !== STATES.END_TRACE) {
@@ -428,7 +466,7 @@ export default {
       }, 'arraybuffer');
     },
     toTrace() {
-      return Object.keys(TRACES)
+      return Object.keys(this.DYNAMIC_TRACES)
           .filter((traceKey) => this.adbStore[traceKey]);
     },
     toTraceConfig() {
@@ -526,6 +564,9 @@ export default {
       handler(st) {
         if (st == STATES.CONNECTING) {
           this.getDevices();
+        }
+        if (st == STATES.START_TRACE) {
+          this.setAvailableTraces();
         }
       },
     },
