@@ -34,11 +34,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
-
-
 
 // Need the following import to get access to the app resources, since this
 // class is in a sub-package.
@@ -83,15 +78,19 @@ public class ForegroundService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (ACTION_FOREGROUND.equals(intent.getAction())
-                || ACTION_FOREGROUND_WAKELOCK.equals(intent.getAction())) {
+        final boolean usingWakelock = ACTION_FOREGROUND_WAKELOCK.equals(intent.getAction());
+        if (ACTION_FOREGROUND.equals(intent.getAction()) || usingWakelock) {
             // In this sample, we'll use the same text for the ticker and the expanded notification
             CharSequence text = getText(R.string.foreground_service_started);
 
             PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
                     new Intent(this, Controller.class), 0);
 
-            // Set the info for the views that show in the notification panel.
+            int showMode = (usingWakelock)
+                    ? Notification.FOREGROUND_SERVICE_IMMEDIATE
+                    : Notification.FOREGROUND_SERVICE_DEFERRED;
+            // Set the info for the views that show in the notification panel.  In the
+            // wakelock flow, also force the notification to display immediately.
             Notification notification = new Notification.Builder(this)
                     .setSmallIcon(R.drawable.stat_sample)  // the status icon
                     .setTicker(text)  // the status text
@@ -99,6 +98,7 @@ public class ForegroundService extends Service {
                     .setContentTitle(getText(R.string.alarm_service_label))  // the label
                     .setContentText(text)  // the contents of the entry
                     .setContentIntent(contentIntent)  // The intent to send when clicked
+                    .setForegroundServiceBehavior(showMode)
                     .build();
 
             startForeground(R.string.foreground_service_started, notification);

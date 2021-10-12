@@ -125,8 +125,8 @@ CC_AR_VV_PAT = re.compile(r'^\[([^ ]*)[^\]]*\] running:? "(cc|ar)" (.*)$')
 # Rustc output of file location path pattern for a warning message.
 WARNING_FILE_PAT = re.compile('^ *--> ([^:]*):[0-9]+')
 
-# Rust package name with suffix -d1.d2.d3.
-VERSION_SUFFIX_PAT = re.compile(r'^(.*)-[0-9]+\.[0-9]+\.[0-9]+$')
+# Rust package name with suffix -d1.d2.d3(+.*)?.
+VERSION_SUFFIX_PAT = re.compile(r'^(.*)-[0-9]+\.[0-9]+\.[0-9]+(?:\+.*)?$')
 
 # Crate types corresponding to a C ABI library
 C_LIBRARY_CRATE_TYPES = ['staticlib', 'cdylib']
@@ -648,7 +648,8 @@ class Crate(object):
       self.dump_srcs_list()
     if self.cargo_env_compat:
       self.write('    cargo_env_compat: true,')
-      self.write('    cargo_pkg_version: "' + self.cargo_pkg_version + '",')
+      if not self.runner.args.no_pkg_vers:
+        self.write('    cargo_pkg_version: "' + self.cargo_pkg_version + '",')
     if 'test' in self.crate_types:
       self.write('    test_suites: ["general-tests"],')
       self.write('    auto_gen_config: true,')
@@ -883,7 +884,8 @@ class Crate(object):
       self.write('    crate_name: "' + self.crate_name + '",')
     if not self.defaults and self.cargo_env_compat:
       self.write('    cargo_env_compat: true,')
-      self.write('    cargo_pkg_version: "' + self.cargo_pkg_version + '",')
+      if not self.runner.args.no_pkg_vers:
+        self.write('    cargo_pkg_version: "' + self.cargo_pkg_version + '",')
     if not self.default_srcs:
       self.dump_srcs_list()
     if 'test' in self.crate_types and not self.defaults:

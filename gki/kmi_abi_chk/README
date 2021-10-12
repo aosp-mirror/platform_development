@@ -18,18 +18,18 @@
    $ cp vmlinux.symvers $ANDROID_BUILD_TOP/development/gki/kmi_abi_chk/vmlinux.symvers-$GKI_BID
 4. Replace the Module.symvers just built with the supported kernel symbol file.
    $ cp vmlinux.symvers $GKI_DIR/out/android12-5.10/common/Module.symvers
-5. Create the KMI symbol list
+5. Create the KMI symbol list include file:
    $ cd development/gki/kmi_abi_chk
    $ cp $GKI_DIR/out/android12-5.10/common/Module.symvers vmlinux.symvers-$GKI_BID
-   $ awk '{printf("\t.xword\t%s\n",$2)}' vmlinux.symvers-$GKI_BID >> kmi_sym_list.inc
-   Note that kmi_sym_list.inc included in the current directory is a version
-   modified from the one based on vmlinux.symvers of build 7618735, the initial
-   GKI 5.10 released in July, 2021. Search b/197035344 in it for details.
+   $ awk '{printf("\t.xword\t%s\n",$2)}' vmlinux.symvers-$GKI_BID >> kmi_sym_list-$GKI_BID.inc
+   Note that kmi_sym_list-7618735.inc included in the current directory is a
+   version modified from the one based on vmlinux.symvers of build 7618735, the
+   initial GKI 5.10 released in July, 2021. Search b/197035344 for details.
 6. Build the kernel module
    $ make ARCH=arm64 CROSS_COMPILE=aarch64 LLVM=1 LLVM_IAS=1 LTO=thin
 
-A prebuilt test kernel module, kmi_sym-7618735.ko, for arm64 GKI 5.10
-2021-07 and later builds is included in the current directory.
+A few prebuilt test kernel modules, kmi_sym-*.ko, for arm64 GKI 5.10
+2021-07 and later builds is included under prebuilts/ directory.
 
 #
 # How to use/run KMI test kernel module, kmi_sym.ko, on GKI
