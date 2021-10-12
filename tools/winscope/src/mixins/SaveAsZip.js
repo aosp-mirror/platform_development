@@ -57,7 +57,7 @@ export default {
     },
     async downloadAsZip(traces) {
       const zip = new JSZip();
-      this.buttonClicked("Download All")
+      this.recordButtonClickedEvent("Download All")
 
       for (const trace of traces) {
         const traceFolder = zip.folder(trace.type);

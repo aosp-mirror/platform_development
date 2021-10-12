@@ -206,6 +206,8 @@ export default {
   },
   computed: {
     data() {
+      // Record analytics event
+      this.recordOpenTraceEvent("TransactionsTrace");
       return this.transactionsTrace.data;
     },
     filteredData() {

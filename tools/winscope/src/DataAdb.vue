@@ -398,11 +398,11 @@ export default {
       if (requested.length < 1) {
         this.errorText = 'No targets selected';
         this.status = STATES.ERROR;
-        this.newEventOccurred("No targets selected");
+        this.recordNewEvent("No targets selected");
         return;
       }
 
-      this.newEventOccurred("Start Trace");
+      this.recordNewEvent("Start Trace");
       this.callProxy('POST', `${PROXY_ENDPOINTS.CONFIG_TRACE}${this.deviceId()}/`, this, null, null, requestedConfig);
       this.callProxy('POST', `${PROXY_ENDPOINTS.SELECTED_SF_CONFIG_TRACE}${this.deviceId()}/`, this, null, null, requestedSelectedSfConfig);
       this.callProxy('POST',  `${PROXY_ENDPOINTS.SELECTED_WM_CONFIG_TRACE}${this.deviceId()}/`, this, null, null, requestedSelectedWmConfig);
@@ -412,12 +412,12 @@ export default {
       }, null, requested);
     },
     dumpState() {
-      this.buttonClicked("Dump State");
+      this.recordButtonClickedEvent("Dump State");
       const requested = this.toDump();
       if (requested.length < 1) {
         this.errorText = 'No targets selected';
         this.status = STATES.ERROR;
-        this.newEventOccurred("No targets selected");
+        this.recordNewEvent("No targets selected");
         return;
       }
       this.status = STATES.LOAD_DATA;
@@ -430,7 +430,7 @@ export default {
       this.callProxy('POST', `${PROXY_ENDPOINTS.END_TRACE}${this.deviceId()}/`, this, function(request, view) {
         view.loadFile(view.toTrace(), 0);
       });
-      this.newEventOccurred("Ended Trace");
+      this.recordNewEvent("Ended Trace");
     },
     loadFile(files, idx) {
       this.callProxy('GET', `${PROXY_ENDPOINTS.FETCH}${this.deviceId()}/${files[idx]}/`, this, function(request, view) {
@@ -506,11 +506,11 @@ export default {
       return this.selectedDevice;
     },
     restart() {
-      this.buttonClicked("Connect / Retry");
+      this.recordButtonClickedEvent("Connect / Retry");
       this.status = STATES.CONNECTING;
     },
     resetLastDevice() {
-      this.buttonClicked("Change Device");
+      this.recordButtonClickedEvent("Change Device");
       this.adbStore.lastDevice = '';
       this.restart();
     },
