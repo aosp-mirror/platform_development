@@ -183,6 +183,11 @@ TRACE_TARGETS = {
         'su root ime tracing start\necho "ManagerService IME trace started."',
         'su root ime tracing stop >/dev/null 2>&1'
     ),
+    "wayland_trace": TraceTarget(
+        WinscopeFileMatcher("/data/misc/wltrace", "wl_trace", "wl_trace"),
+        'su root service call Wayland 26 i32 1 >/dev/null\necho "Wayland trace started."',
+        'su root service call Wayland 26 i32 0 >/dev/null'
+    ),
 }
 
 
@@ -438,6 +443,13 @@ def call_adb_outfile(params: str, outfile, device: str = None, stdin: bytes = No
             params, repr(ex)))
         raise AdbError(
             'Error executing adb command: adb {}\n{}'.format(params, repr(ex)))
+
+
+class CheckWaylandServiceEndpoint(RequestEndpoint):
+    def process(self, server, path):
+        raw_res = call_adb('shell service check Wayland')
+        res = 'false' if 'not found' in raw_res else 'true'
+        server.respond(HTTPStatus.OK, res.encode("utf-8"), "text/json")
 
 
 class ListDevicesEndpoint(RequestEndpoint):
@@ -799,6 +811,8 @@ class ADBWinscopeProxy(BaseHTTPRequestHandler):
             RequestType.POST, "selectedsfconfigtrace", SurfaceFlingerSelectedConfigTrace())
         self.router.register_endpoint(
             RequestType.POST, "selectedwmconfigtrace", WindowManagerSelectedConfigTrace())
+        self.router.register_endpoint(
+            RequestType.GET, "checkwayland", CheckWaylandServiceEndpoint())
         super().__init__(request, client_address, server)
 
     def respond(self, code: int, data: bytes, mime: str) -> None:
