@@ -152,7 +152,7 @@ export default {
     },
     hideSnackbarMessage() {
       this.showSnackbar = false;
-      this.buttonClicked("Hide Snackbar Message")
+      this.recordButtonClickedEvent("Hide Snackbar Message")
     },
     getFetchFilesLoadingAnimation() {
       let frame = 0;
@@ -247,13 +247,13 @@ export default {
       let droppedFiles = e.dataTransfer.files;
       if(!droppedFiles) return;
       // Record analytics event
-      this.draggedAndDropped(droppedFiles);
+      this.recordDragAndDropFileEvent(droppedFiles);
 
       this.processFiles(droppedFiles);
     },
     onLoadFile(e) {
       const files = event.target.files || event.dataTransfer.files;
-      this.uploadedFileThroughFilesystem(files);
+      this.recordFileUploadEvent(files);
       this.processFiles(files);
     },
     async processFiles(files) {

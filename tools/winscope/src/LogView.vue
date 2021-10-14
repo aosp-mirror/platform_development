@@ -98,6 +98,8 @@ export default {
   name: 'logview',
   data() {
     const data = this.file.data;
+    // Record analytics event
+    this.recordOpenTraceEvent("ProtoLog");
 
     const tags = new Set();
     const sourceFiles = new Set();

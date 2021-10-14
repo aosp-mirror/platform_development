@@ -203,7 +203,7 @@ export default {
       this.store.showFileTypes = [];
       this.tagFile = null;
       this.$store.commit('clearFiles');
-      this.buttonClicked("Clear")
+      this.recordButtonClickedEvent("Clear")
     },
     onDataViewFocus(file) {
       this.$store.commit('setActiveFile', file);
@@ -253,7 +253,7 @@ export default {
     },
     generateTags() {
       // generate tag file
-      this.buttonClicked("Generate Tags");
+      this.recordButtonClickedEvent("Generate Tags");
       const engine = new TaggingEngine(
         this.$store.getters.tagGenerationWmTrace,
         this.$store.getters.tagGenerationSfTrace,

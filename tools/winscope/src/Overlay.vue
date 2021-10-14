@@ -196,11 +196,11 @@
               >
                 <md-icon v-if="minimized">
                   expand_less
-                  <md-tooltip md-direction="top" @click="buttonClicked(`Expand Timeline`)">Expand timeline</md-tooltip>
+                  <md-tooltip md-direction="top" @click="recordButtonClickedEvent(`Expand Timeline`)">Expand timeline</md-tooltip>
                 </md-icon>
                 <md-icon v-else>
                   expand_more
-                  <md-tooltip md-direction="top" @click="buttonClicked(`Collapse Timeline`)">Collapse timeline</md-tooltip>
+                  <md-tooltip md-direction="top" @click="recordButtonClickedEvent(`Collapse Timeline`)">Collapse timeline</md-tooltip>
                 </md-icon>
               </md-button>
             </div>
@@ -503,7 +503,7 @@ export default {
   methods: {
     toggleSearch() {
       this.search = !(this.search);
-      this.buttonClicked("Toggle Search Bar");
+      this.recordButtonClickedEvent("Toggle Search Bar");
     },
     /**
      * determines whether left/right arrow keys should move cursor in input field
@@ -523,7 +523,7 @@ export default {
       const closestTimestamp = getClosestTimestamp(this.searchInput, this.mergedTimeline.timeline);
       this.$store.dispatch("updateTimelineTime", closestTimestamp);
       this.updateInputMode(false);
-      this.newEventOccurred("Searching for timestamp")
+      this.recordNewEvent("Searching for timestamp")
     },
 
     emitBottomHeightUpdate() {
@@ -638,15 +638,15 @@ export default {
     },
     closeVideoOverlay() {
       this.showVideoOverlay = false;
-      this.buttonClicked("Close Video Overlay")
+      this.recordButtonClickedEvent("Close Video Overlay")
     },
     openVideoOverlay() {
       this.showVideoOverlay = true;
-      this.buttonClicked("Open Video Overlay")
+      this.recordButtonClickedEvent("Open Video Overlay")
     },
     toggleVideoOverlay() {
       this.showVideoOverlay = !this.showVideoOverlay;
-      this.buttonClicked("Toggle Video Overlay")
+      this.recordButtonClickedEvent("Toggle Video Overlay")
     },
     videoLoaded() {
       this.$refs.videoOverlay.contentLoaded();
@@ -686,7 +686,7 @@ export default {
           navigationStyleFilter =
             (f) => f.type === fileType;
       }
-      this.changedNavigationStyle(this.navigationStyle);
+      this.recordChangedNavigationStyleEvent(this.navigationStyle);
       this.$store.commit('setNavigationFilesFilter', navigationStyleFilter);
     },
     updateVideoOverlayWidth(width) {

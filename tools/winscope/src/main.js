@@ -368,51 +368,59 @@ Vue.use(VueGtag, {
 
 Vue.mixin({
   methods: {
-    buttonClicked(button) {
-      const string = "Clicked " + button + " Button";
-      this.$gtag.event(string, {
+    recordButtonClickedEvent(button) {
+      const txt = "Clicked " + button + " Button";
+      this.$gtag.event(txt, {
         'event_category': 'Button Clicked',
         'event_label': "Winscope Interactions",
         'value': button,
       });
     },
-    draggedAndDropped(val) {
+    recordDragAndDropFileEvent(val) {
       this.$gtag.event("Dragged And DroppedFile", {
         'event_category': 'Uploaded file',
         'event_label': "Winscope Interactions",
         'value': val,
       });
     },
-    uploadedFileThroughFilesystem(val) {
+    recordFileUploadEvent(val) {
       this.$gtag.event("Uploaded File From Filesystem", {
         'event_category': 'Uploaded file',
         'event_label': "Winscope Interactions",
         'value': val,
       });
     },
-    newEventOccurred(event) {
+    recordNewEvent(event) {
       this.$gtag.event(event, {
         'event_category': event,
         'event_label': "Winscope Interactions",
         'value': 1,
       });
     },
-    seeingNewScreen(screenname) {
+    recordOpenTraceEvent(traceType) {
       this.$gtag.screenview({
         app_name: "Winscope",
-        screen_name: screenname,
+        screen_name: traceType,
       })
     },
-    openedToSeeAttributeField(field) {
-      const string = "Opened field " + field;
+    recordExpandedPropertyEvent(field) {
+      const string = "Property: " + field;
       this.$gtag.event(string, {
-        'event_category': "Opened attribute field",
+        'event_category': "Expanded property",
         'event_label': "Winscope Interactions",
         'value': field,
       });
     },
-    changedNavigationStyle(field) {
-      this.$gtag.event("Timeline navigation changed", {
+    recordOpenedEntryEvent(entryType) {
+      const string = "Trace: " + entryType;
+      this.$gtag.event(string, {
+        'event_category': "Opened trace",
+        'event_label': "Winscope Interactions",
+        'value': field,
+      });
+    },
+    recordChangedNavigationStyleEvent(field) {
+      this.$gtag.event("Navigation mode changed", {
         'event_category': "Timeline Navigation",
         'event_label': "Winscope Interactions",
         'value': field,
