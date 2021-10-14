@@ -12,7 +12,10 @@ android_test {
         "src/com/example/android/apis/app/IRemoteServiceCallback.aidl",
         "src/com/example/android/apis/app/ISecondary.aidl",
     ],
-    static_libs: ["androidx.legacy_legacy-support-v4"],
+    static_libs: [
+        "androidx-constraintlayout_constraintlayout",
+        "androidx.legacy_legacy-support-v4",
+    ],
     sdk_version: "current",
     dex_preopt: {
         enabled: false,
