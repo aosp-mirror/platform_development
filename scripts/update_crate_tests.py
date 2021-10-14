@@ -32,6 +32,7 @@ import glob
 import json
 import os
 import platform
+import re
 import subprocess
 import sys
 from datetime import datetime
@@ -62,6 +63,9 @@ EXCLUDE_PATHS = [
         "//external/libchromeos-rs",
         "//external/vm_tools"
 ]
+
+LABEL_PAT = re.compile('^//(.*):.*$')
+EXTERNAL_PAT = re.compile('^//external/rust/')
 
 
 class UpdaterException(Exception):
@@ -155,16 +159,25 @@ class Bazel(object):
                 return True
         return False
 
-    def query_rdep_tests(self, modules):
+    def query_rdep_tests_dirs(self, modules, path):
         """Returns all reverse dependency tests for modules in this package."""
         rdep_tests = set()
+        rdep_dirs = set()
+        path_pat = re.compile("^/%s:.*$" % path)
         for module in modules:
             for rdep in self.query_rdeps(module):
                 rule_type, _, mod = rdep.split(" ")
                 if rule_type == "rust_test_" or rule_type == "rust_test":
-                    if self.exclude_module(mod) == False:
+                    if self.exclude_module(mod):
+                        continue
+                    path_match = path_pat.match(mod)
+                    if path_match or not EXTERNAL_PAT.match(mod):
                         rdep_tests.add(mod.split(":")[1].split("--")[0])
-        return rdep_tests
+                    else:
+                        label_match = LABEL_PAT.match(mod)
+                        if label_match:
+                            rdep_dirs.add(label_match.group(1))
+        return (rdep_tests, rdep_dirs)
 
 
 class Package(object):
@@ -174,6 +187,7 @@ class Package(object):
       dir: The absolute path to this package.
       dir_rel: The relative path to this package.
       rdep_tests: The list of computed reverse dependencies.
+      rdep_dirs: The list of computed reverse dependency directories.
     """
     def __init__(self, path, env, bazel):
         """Constructor.
@@ -202,10 +216,10 @@ class Package(object):
         # Move to the package_directory.
         os.chdir(self.dir)
         modules = bazel.query_modules(self.dir_rel)
-        self.rdep_tests = bazel.query_rdep_tests(modules)
+        (self.rdep_tests, self.rdep_dirs) = bazel.query_rdep_tests_dirs(modules, self.dir_rel)
 
-    def get_rdep_tests(self):
-        return self.rdep_tests
+    def get_rdep_tests_dirs(self):
+        return (self.rdep_tests, self.rdep_dirs)
 
 
 class TestMapping(object):
@@ -226,15 +240,17 @@ class TestMapping(object):
 
     def create(self):
         """Generates the TEST_MAPPING file."""
-        tests = self.package.get_rdep_tests()
-        if not bool(tests):
+        (tests, dirs) = self.package.get_rdep_tests_dirs()
+        if not bool(tests) and not bool(dirs):
+            if os.path.isfile('TEST_MAPPING'):
+                os.remove('TEST_MAPPING')
             return
-        test_mapping = self.tests_to_mapping(tests)
+        test_mapping = self.tests_dirs_to_mapping(tests, dirs)
         self.write_test_mapping(test_mapping)
 
-    def tests_to_mapping(self, tests):
+    def tests_dirs_to_mapping(self, tests, dirs):
         """Translate the test list into a dictionary."""
-        test_mapping = {"presubmit": []}
+        test_mapping = {"presubmit": [], "imports": []}
         for test in tests:
             if test in TEST_EXCLUDE:
                 continue
@@ -242,7 +258,14 @@ class TestMapping(object):
                 test_mapping["presubmit"].append({"name": test, "options": TEST_OPTIONS[test]})
             else:
                 test_mapping["presubmit"].append({"name": test})
+        for dir in dirs:
+            test_mapping["imports"].append({"path": dir})
         test_mapping["presubmit"] = sorted(test_mapping["presubmit"], key=lambda t: t["name"])
+        test_mapping["imports"] = sorted(test_mapping["imports"], key=lambda t: t["path"])
+        if not test_mapping["presubmit"]:
+            del test_mapping["presubmit"]
+        if not test_mapping["imports"]:
+            del test_mapping["imports"]
         return test_mapping
 
     def write_test_mapping(self, test_mapping):
