@@ -60,6 +60,7 @@ public class DefaultActivity extends Activity {
 
             // Set physical keyboard layout based on the system property set by emulator host.
             String layoutName = SystemProperties.get("vendor.qemu.keyboard_layout");
+            String displaySettingsName = SystemProperties.get("ro.boot.qemu.display.settings.xml");
             String deviceName = "qwerty2";
             InputDevice device = getKeyboardDevice(deviceName);
             if (device != null && !layoutName.isEmpty()) {
@@ -90,7 +91,12 @@ public class DefaultActivity extends Activity {
             // the following blocks, TODO: find out why and fix it. disable this for now.
             // TelephonyManager mTelephony = getApplicationContext().getSystemService(TelephonyManager.class);
             // mTelephony.setPreferredNetworkTypeBitmask(TelephonyManager.NETWORK_TYPE_BITMASK_NR);
-
+            if ("freeform".equals(displaySettingsName)) {
+                Settings.Global.putInt(getContentResolver(), "sf", 1);
+                Settings.Global.putString(getContentResolver(), Settings.Global.DEVELOPMENT_ENABLE_FREEFORM_WINDOWS_SUPPORT, "1");
+                Settings.Global.putString(getContentResolver(), Settings.Global.DEVELOPMENT_FORCE_RESIZABLE_ACTIVITIES, "1");
+                Settings.Global.putString(getContentResolver(), Settings.Global.DEVELOPMENT_WM_DISPLAY_SETTINGS_PATH, "vendor/etc/display_settings_freeform.xml");
+            }
         }
 
         // remove this activity from the package manager.
