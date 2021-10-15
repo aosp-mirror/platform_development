@@ -1,0 +1,256 @@
+android_sdk_repo_host {
+    name: "build-tools",
+    product_variables: {
+        platform_version_name: {
+            base_dir: "android-%s",
+        },
+    },
+
+    srcs: [
+        ":build_tools_source_properties",
+        ":build_tools_runtime_properties",
+    ],
+
+    merge_zips: [
+        ":build-tools_renderscript_includes",
+        ":renderscript-clang-include",
+        ":renderscript_sdk_prebuilts",
+    ],
+
+    multilib: {
+        common: {
+            deps: [
+                "build-tools_core-lambda-stubs",
+            ],
+        },
+    },
+    deps_remap: [
+        {
+            from: "framework/build-tools_core-lambda-stubs.jar",
+            to: "core-lambda-stubs.jar",
+        },
+    ],
+
+    target: {
+        linux: {
+            merge_zips: [":build-tools-lld-linux"],
+            strip_files: [
+                "lib64/*.so",
+                "lld-bin/lld",
+                "lib64/libc++.so.1",
+            ],
+        },
+        darwin: {
+            merge_zips: [":build-tools-lld-darwin"],
+            strip_files: [
+                "lib64/*.dylib",
+                "lld-bin/lld",
+            ],
+        },
+        not_windows: {
+            deps: [
+                "aapt",
+                "aapt2",
+                "aidl",
+                "apksigner",
+                "bcc_compat",
+                "d8",
+                "dexdump",
+                "libaapt2_jni",
+                "llvm-rs-cc",
+                "split-select",
+                "zipalign",
+            ],
+            deps_remap: [
+                {
+                    from: "bin/*",
+                    to: "./",
+                },
+                {
+                    from: "framework/*",
+                    to: "./lib/",
+                },
+            ],
+            strip_files: [
+                "aapt",
+                "aapt2",
+                "aidl",
+                "bcc_compat",
+                "llvm-rs-cc",
+                "split-select",
+                "zipalign",
+            ],
+        },
+        windows: {
+            enabled: true,
+            merge_zips: [":build-tools-lld-windows"],
+
+            compile_multilib: "both",
+            multilib: {
+                lib32: {
+                    deps: [
+                        "aapt",
+                        "aapt2",
+                        "aidl",
+                        "apksigner",
+                        "bcc_compat",
+                        "d8",
+                        "dexdump",
+                        "libaapt2_jni",
+                        "libwinpthread-1",
+                        "lld",
+                        "llvm-rs-cc",
+                        "split-select",
+                        "zipalign",
+                    ],
+                },
+                lib64: {
+                    deps: [
+                        "libaapt2_jni",
+                        "libwinpthread-1",
+                    ],
+                },
+            },
+            deps_remap: [
+                {
+                    from: "bin/*",
+                    to: "./",
+                },
+                {
+                    from: "lib/*",
+                    to: "./",
+                },
+                {
+                    from: "framework/*",
+                    to: "./lib/",
+                },
+            ],
+            strip_files: [
+                "*.dll",
+                "aapt.exe",
+                "aapt2.exe",
+                "aidl.exe",
+                "bcc_compat.exe",
+                "dexdump.exe",
+                "lib64/*.dll",
+                "lld-bin/*.dll",
+                "lld-bin/*.exe",
+                "lld.exe",
+                "llvm-rs-cc.exe",
+                "split-select.exe",
+                "zipalign.exe",
+            ],
+        },
+    },
+}
+
+// Rename rs_script_api files to renderscript/include/...
+genrule {
+    name: "build-tools_renderscript_includes",
+    visibility: ["//visibility:private"],
+    tools: ["soong_zip"],
+    cmd: "echo $(in) >$(genDir)/list && " +
+        "$(location soong_zip) -o $(out) -P renderscript " +
+        "-C $$(dirname $$(dirname $$(awk '{ print $$1 }' $(genDir)/list))) -l $(genDir)/list",
+    srcs: [":rs_script_api"],
+    out: ["rs_script_api.zip"],
+}
+
+// This is a device library, so it can't be used by android_sdk_repo_host directly.
+java_device_for_host {
+    name: "build-tools_core-lambda-stubs-device",
+    visibility: ["//visibility:private"],
+    libs: ["core-lambda-stubs"],
+    target: {
+        windows: {
+            enabled: true,
+        },
+    },
+}
+
+java_library_host {
+    name: "build-tools_core-lambda-stubs",
+    visibility: ["//visibility:private"],
+    installable: true,
+    static_libs: ["build-tools_core-lambda-stubs-device"],
+    target: {
+        windows: {
+            enabled: true,
+        },
+    },
+}
+
+android_sdk_repo_host {
+    name: "platform-tools",
+    base_dir: "platform-tools",
+
+    deps: [
+        "adb",
+        "dmtracedump",
+        "etc1tool",
+        "fastboot",
+        "hprof-conv",
+        "make_f2fs",
+        "make_f2fs_casefold",
+        "mke2fs",
+        "sqlite3",
+    ],
+    deps_remap: [
+        {
+            from: "bin/*",
+            to: "./",
+        },
+    ],
+
+    srcs: [
+        ":mke2fs_conf",
+        ":platform_tools_properties",
+    ],
+
+    merge_zips: [":systrace-sdk-zip"],
+
+    target: {
+        linux: {
+            strip_files: ["lib64/*.so"],
+        },
+        darwin: {
+            strip_files: ["lib64/*.dylib"],
+        },
+        not_windows: {
+            deps: [
+                "e2fsdroid",
+                "sload_f2fs",
+            ],
+            strip_files: [
+                "adb",
+                "dmtracedump",
+                "e2fsdroid",
+                "etc1tool",
+                "fastboot",
+                "hprof-conv",
+                "make_f2fs_casefold",
+                "make_f2fs",
+                "mke2fs",
+                "sload_f2fs",
+                "sqlite3",
+            ],
+        },
+        windows: {
+            enabled: true,
+            deps: [
+                "AdbWinUsbApi",
+                "AdbWinApi",
+                "libwinpthread-1",
+            ],
+            deps_remap: [
+                {
+                    from: "lib/*",
+                    to: "./",
+                },
+            ],
+            strip_files: [
+                "*.exe",
+            ],
+        },
+    },
+}
