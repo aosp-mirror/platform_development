@@ -3,10 +3,9 @@ LOCAL_PATH := $(call my-dir)
 # ===== SDK source.property files =====
 
 # Add all files to be generated from the source.prop templates to the SDK pre-requisites
-sdk_props := $(patsubst \
-               $(TOPDIR)development/sdk/%_source.prop_template, \
-               $(HOST_OUT)/development/sdk/%_source.properties, \
-               $(wildcard $(TOPDIR)development/sdk/*_source.prop_template))
+sdk_props := $(HOST_OUT)/development/sdk/doc_source.properties \
+             $(HOST_OUT)/development/sdk/platform_source.properties \
+             $(HOST_OUT)/development/sdk/source_source.properties
 sample_props := $(patsubst \
                   $(TOPDIR)development/samples/%_source.prop_template, \
                   $(HOST_OUT)/development/samples/%_source.properties, \
@@ -100,9 +99,6 @@ ALL_SDK_FILES += $(OUT_DIR)/target/common/obj/JAVA_LIBRARIES/android.car-stubs_i
 ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android.test.mock.stubs_intermediates/classes.jar
 ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android.test.base.stubs_intermediates/classes.jar
 ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android.test.runner.stubs_intermediates/classes.jar
-
-# core-lambda-stubs
-ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/core-lambda-stubs_intermediates/classes.jar
 
 # ======= Lint API XML ===========
 full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework-doc-stubs_generated-api-versions.xml
