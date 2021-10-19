@@ -234,10 +234,13 @@ export default {
         filteredData = filteredData.filter(
             this.filterTransactions((transaction) => {
               for (const filter of this.filters) {
-                if (isNaN(filter) && transaction.layerName?.includes(filter)) {
-                // If filter isn't a number then check if the transaction's
-                // target surface's name matches the filter — if so keep it.
-                  return true;
+                if (isNaN(filter)) {
+                  // If filter isn't a number then check if the transaction's
+                  // target surface's name matches the filter — if so keep it.
+                  const regexFilter = new RegExp(filter, "i");
+                  if (regexFilter.test(transaction.layerName)) {
+                    return true;
+                  }
                 }
                 if (filter == transaction.obj.id) {
                 // If filteter is a number then check if the filter matches
