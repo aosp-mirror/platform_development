@@ -95,7 +95,7 @@ ${OUT_DIR}/target/common/obj/PACKAGING/framework-doc-stubs_generated-api-version
 
 # API annotations database for lint
 prebuilts/sdk/sdk-annotations/annotations.zip platforms/${PLATFORM_NAME}/data/annotations.zip
-${OUT_DIR}/target/common/obj/PACKAGING/framework-doc-stubs_annotations.zip platforms/${PLATFORM_NAME}/data/annotations.zip
+${OUT_DIR}/target/common/obj/PACKAGING/sdk-annotations.zip platforms/${PLATFORM_NAME}/data/annotations.zip
 
 # Eclipse Editors support
 frameworks/base/core/res/res              platforms/${PLATFORM_NAME}/data/res
