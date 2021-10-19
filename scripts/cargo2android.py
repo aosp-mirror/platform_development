@@ -125,6 +125,12 @@ CC_AR_VV_PAT = re.compile(r'^\[([^ ]*)[^\]]*\] running:? "(cc|ar)" (.*)$')
 # Rustc output of file location path pattern for a warning message.
 WARNING_FILE_PAT = re.compile('^ *--> ([^:]*):[0-9]+')
 
+# cargo test --list output of the start of running a binary.
+CARGO_TEST_LIST_START_PAT = re.compile('^\s*Running (.*) \(.*\)$')
+
+# cargo test --list output of the end of running a binary.
+CARGO_TEST_LIST_END_PAT = re.compile('^(\d+) tests, (\d+) benchmarks$')
+
 # Rust package name with suffix -d1.d2.d3(+.*)?.
 VERSION_SUFFIX_PAT = re.compile(r'^(.*)-[0-9]+\.[0-9]+\.[0-9]+(?:\+.*)?$')
 
@@ -313,8 +319,8 @@ class Crate(object):
     # which can be changed if self is a merged test module.
     self.decide_module_type()
     if should_merge_test:
-      if (self.main_src in self.runner.args.test_blocklist and
-          not other.main_src in self.runner.args.test_blocklist):
+      if (self.runner.should_ignore_test(self.main_src)
+          and not self.runner.should_ignore_test(other.main_src)):
         self.main_src = other.main_src
       self.srcs.append(other.main_src)
       # use a short unique name as the merged module name.
@@ -667,7 +673,7 @@ class Crate(object):
       return
     # Dump one test module per source file, and separate host and device tests.
     # crate_type == 'test'
-    self.srcs = [src for src in self.srcs if not src in self.runner.args.test_blocklist]
+    self.srcs = [src for src in self.srcs if not self.runner.should_ignore_test(src)]
     if ((self.host_supported and self.device_supported and len(self.srcs) > 0) or
         len(self.srcs) > 1):
       self.srcs = sorted(set(self.srcs))
@@ -1145,6 +1151,8 @@ class Runner(object):
       self.cargo = ['clean', 'build ' + default_target]
       if args.tests:
         self.cargo.append('build --tests ' + default_target)
+    self.empty_tests = set()
+    self.empty_unittests = False
 
   def setup_cargo_path(self):
     """Find cargo in the --cargo_bin or prebuilt rust bin directory."""
@@ -1329,7 +1337,8 @@ class Runner(object):
         os.remove(cargo_out)
       if not self.args.use_cargo_lock and had_cargo_lock:  # save it
         os.rename(cargo_lock, cargo_lock_saved)
-    cmd_tail = ' --target-dir ' + TARGET_TMP + ' >> ' + cargo_out + ' 2>&1'
+    cmd_tail_target = ' --target-dir ' + TARGET_TMP
+    cmd_tail_redir = ' >> ' + cargo_out + ' 2>&1'
     # set up search PATH for cargo to find the correct rustc
     saved_path = os.environ['PATH']
     os.environ['PATH'] = os.path.dirname(self.cargo_path) + ':' + saved_path
@@ -1356,20 +1365,13 @@ class Runner(object):
           features += ' --features ' + self.args.features
       cmd_v_flag = ' -vv ' if self.args.vv else ' -v '
       cmd = self.cargo_path + cmd_v_flag
-      cmd += c + features + cmd_tail
+      cmd += c + features + cmd_tail_target + cmd_tail_redir
       if self.args.rustflags and c != 'clean':
         cmd = 'RUSTFLAGS="' + self.args.rustflags + '" ' + cmd
-      if self.dry_run:
-        print('Dry-run skip:', cmd)
-      else:
-        if self.args.verbose:
-          print('Running:', cmd)
-        with open(cargo_out, 'a') as out_file:
-          out_file.write('### Running: ' + cmd + '\n')
-        ret = os.system(cmd)
-        if ret != 0:
-          print('*** There was an error while running cargo.  ' +
-                'See the cargo.out file for details.')
+      self.run_cmd(cmd, cargo_out)
+    if self.args.tests:
+      cmd = self.cargo_path + ' test' + features + cmd_tail_target + ' -- --list' + cmd_tail_redir
+      self.run_cmd(cmd, cargo_out)
     if added_workspace:  # restore original Cargo.toml
       with open(cargo_toml, 'w') as out_file:
         out_file.writelines(cargo_toml_lines)
@@ -1382,6 +1384,19 @@ class Runner(object):
       elif not self.args.use_cargo_lock:  # restore saved Cargo.lock
         os.rename(cargo_lock_saved, cargo_lock)
     return self
+
+  def run_cmd(self, cmd, cargo_out):
+    if self.dry_run:
+      print('Dry-run skip:', cmd)
+    else:
+      if self.args.verbose:
+        print('Running:', cmd)
+      with open(cargo_out, 'a') as out_file:
+        out_file.write('### Running: ' + cmd + '\n')
+      ret = os.system(cmd)
+      if ret != 0:
+        print('*** There was an error while running cargo.  ' +
+              'See the cargo.out file for details.')
 
   def dump_pkg_obj2cc(self):
     """Dump debug info of the pkg_obj2cc map."""
@@ -1522,9 +1537,36 @@ class Runner(object):
       self.append_to_bp('ERROR -vv line: ' + line)
     return ''
 
+  def add_empty_test(self, name):
+    if name == 'unittests':
+      self.empty_unittests = True
+    else:
+      self.empty_tests.add(name)
+
+  def should_ignore_test(self, src):
+    # cargo test outputs the source file for integration tests but "unittests"
+    # for unit tests.  To figure out to which crate this corresponds, we check
+    # if the current source file is the main source of a non-test crate, e.g.,
+    # a library or a binary.
+    return (src in self.args.test_blocklist or src in self.empty_tests
+            or (self.empty_unittests
+                and src in [c.main_src for c in self.crates if c.crate_types != ['test']]))
+
   def parse(self, inf, outf_name):
-    """Parse rustc and warning messages in inf, return a list of Crates."""
+    """Parse rustc, test, and warning messages in inf, return a list of Crates."""
     n = 0  # line number
+    # We read the file in two passes, where the first simply checks for empty tests.
+    # Otherwise we would add and merge tests before seeing they're empty.
+    cur_test_name = None
+    for line in inf:
+      if CARGO_TEST_LIST_START_PAT.match(line):
+        cur_test_name = CARGO_TEST_LIST_START_PAT.match(line).group(1)
+      elif cur_test_name and CARGO_TEST_LIST_END_PAT.match(line):
+        match = CARGO_TEST_LIST_END_PAT.match(line)
+        if int(match.group(1)) + int(match.group(2)) == 0:
+          self.add_empty_test(cur_test_name)
+        cur_test_name = None
+    inf.seek(0)
     prev_warning = False  # true if the previous line was warning: ...
     rustc_line = ''  # previous line(s) matching RUSTC_VV_PAT
     for line in inf:
