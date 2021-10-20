@@ -15,4 +15,5 @@ cc_binary_host {
     name: "line_endings",
     srcs: ["line_endings.c"],
     cflags: ["-Wall", "-Werror"],
+    stl: "none",
 }
