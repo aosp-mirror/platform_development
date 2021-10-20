@@ -537,6 +537,7 @@ function decodeAndTransformProto(buffer, params, displayDefaults) {
   // From S onwards, returns a LayerTrace object, iterating over multiple items allows
   // winscope to handle both the new and legacy formats
   // TODO Refactor the decode.js code into a set of decoders to clean up the code
+  let lastError = null;
   for (var x = 0; x < objTypesProto.length; x++) {
     const objType = objTypesProto[x];
     const transform = transforms[x];
@@ -546,8 +547,13 @@ function decodeAndTransformProto(buffer, params, displayDefaults) {
       const transformed = transform(decoded);
       return transformed;
     } catch (e) {
+      lastError = e;
       // check next parser
     }
+  }
+
+  if (lastError) {
+    throw lastError;
   }
   throw new UndetectableFileType('Unable to parse file');
 }

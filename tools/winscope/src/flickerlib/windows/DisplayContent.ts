@@ -24,7 +24,7 @@ DisplayContent.fromProto = function (proto: any, isActivityInTree: Boolean): Dis
     } else {
         const windowContainer = WindowContainer.fromProto(
             /* proto */ proto.rootDisplayArea.windowContainer,
-            /* protoChildren */ proto.rootDisplayArea.windowContainer.children.reverse(),
+            /* protoChildren */ proto.rootDisplayArea.windowContainer?.children?.reverse() ?? [],
             /* isActivityInTree */ isActivityInTree,
             /* nameOverride */ proto.displayInfo?.name ?? null
         );
