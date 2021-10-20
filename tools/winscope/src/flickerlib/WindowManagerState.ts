@@ -89,7 +89,8 @@ function createWindowManagerPolicy(proto: any): WindowManagerPolicy {
 function createRootWindowContainer(proto: any): RootWindowContainer {
     const windowContainer = WindowContainer.fromProto(
         /* proto */ proto.windowContainer,
-        /* childrenProto */ proto.windowContainer.children.reverse()
+        /* childrenProto */ proto.windowContainer?.children?.reverse() ?? [],
+        /* isActivityInTree */ false
     );
 
     if (windowContainer == null) {
