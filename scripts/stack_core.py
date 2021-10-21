@@ -261,7 +261,8 @@ class TraceConverter:
       print("Cannot find apk", apk)
       return None, None
 
-    cmd = subprocess.Popen(["zipinfo", "-v", apk_full_path], stdout=subprocess.PIPE)
+    cmd = subprocess.Popen(["zipinfo", "-v", apk_full_path], stdout=subprocess.PIPE,
+                           encoding='utf8')
     # Find the first central info marker.
     for line in cmd.stdout:
       if self.zipinfo_central_directory_line.search(line):
@@ -283,6 +284,10 @@ class TraceConverter:
       cur_name, start, end = self.ProcessCentralInfo(offset_list, central_info)
       if not file_name and offset >= start and offset < end:
         file_name = cur_name
+
+    # Make sure the offset_list is sorted, the zip file does not guarantee
+    # that the entries are in order.
+    offset_list = sorted(offset_list, key=lambda entry: entry[1])
 
     # Save the information from the zip.
     tmp_files = dict()
