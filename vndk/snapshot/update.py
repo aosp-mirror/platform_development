@@ -95,6 +95,13 @@ def install_snapshot(branch, build, local_dir, install_dir, temp_artifact_dir):
         logging.info('Unzipping VNDK snapshot: {}'.format(artifact))
         utils.check_call(['unzip', '-qn', artifact, '-d', install_dir])
 
+        # rename {install_dir}/{arch}/include/out/soong/.intermediates
+        for soong_intermediates_dir in glob.glob(install_dir + '/*/include/' + utils.SOONG_INTERMEDIATES_DIR):
+            generated_headers_dir = soong_intermediates_dir.replace(
+                utils.SOONG_INTERMEDIATES_DIR,
+                utils.GENERATED_HEADERS_DIR
+            )
+            os.rename(soong_intermediates_dir, generated_headers_dir)
 
 def gather_notice_files(install_dir):
     """Gathers all NOTICE files to a common NOTICE_FILES directory."""
@@ -158,6 +165,9 @@ def update_buildfiles(buildfile_generator):
     logging.info('Generating Android.bp files...')
     buildfile_generator.generate_android_bp()
 
+def copy_owners(install_dir):
+    path = os.path.dirname(__file__)
+    shutil.copy(os.path.join(path, 'OWNERS'), install_dir)
 
 def check_gpl_license(license_checker):
     try:
@@ -264,6 +274,8 @@ def main():
 
         buildfile_generator = GenBuildFile(install_dir, vndk_version)
         update_buildfiles(buildfile_generator)
+
+        copy_owners(install_dir)
 
         if not local:
             license_checker = GPLChecker(install_dir, ANDROID_BUILD_TOP,
