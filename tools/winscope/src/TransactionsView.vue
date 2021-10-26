@@ -40,15 +40,17 @@
 
         <div class="input">
           <div>
-            <md-autocomplete
-              v-model="selectedProperty"
-              :md-options="properties"
-            >
-              <label>Changed property</label>
-            </md-autocomplete>
-            <!-- TODO(b/159582192): Add way to select value a property has
-              changed to, figure out how to handle properties that are
-              objects... -->
+          <md-field>
+            <label>Changed property</label>
+            <md-select v-model="selectedProperties" multiple>
+              <md-option
+                v-for="property in properties"
+                :value="property"
+                v-bind:key="property">
+                {{ property }}
+              </md-option>
+            </md-select>
+          </md-field>
           </div>
         </div>
 
@@ -197,7 +199,7 @@ export default {
       searchInput: '',
       selectedTree: null,
       filters: [],
-      selectedProperty: null,
+      selectedProperties: [],
       selectedTransaction: null,
       transactionEntryComponent: TransactionEntry,
       transactionsTrace,
@@ -234,10 +236,13 @@ export default {
         filteredData = filteredData.filter(
             this.filterTransactions((transaction) => {
               for (const filter of this.filters) {
-                if (isNaN(filter) && transaction.layerName?.includes(filter)) {
-                // If filter isn't a number then check if the transaction's
-                // target surface's name matches the filter — if so keep it.
-                  return true;
+                if (isNaN(filter)) {
+                  // If filter isn't a number then check if the transaction's
+                  // target surface's name matches the filter — if so keep it.
+                  const regexFilter = new RegExp(filter, "i");
+                  if (regexFilter.test(transaction.layerName)) {
+                    return true;
+                  }
                 }
                 if (filter == transaction.obj.id) {
                 // If filteter is a number then check if the filter matches
@@ -252,12 +257,12 @@ export default {
         );
       }
 
-      if (this.selectedProperty) {
+      if (this.selectedProperties.length > 0) {
+        const regexFilter = new RegExp(this.selectedProperties.join("|"), "i");
         filteredData = filteredData.filter(
             this.filterTransactions((transaction) => {
               for (const key in transaction.obj) {
-                if (this.isMeaningfulChange(transaction.obj, key) &&
-                    key === this.selectedProperty) {
+                if (this.isMeaningfulChange(transaction.obj, key) && regexFilter.test(key)) {
                   return true;
                 }
               }
