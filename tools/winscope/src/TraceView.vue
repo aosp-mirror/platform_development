@@ -437,11 +437,11 @@ function getFilter(filterString) {
   const negative = [];
   filterStrings.forEach((f) => {
     if (f.startsWith('!')) {
-      const str = f.substring(1);
-      negative.push((s) => s.indexOf(str) === -1);
+      const regex = new RegExp(f.substring(1), "i");
+      negative.push((s) => !regex.test(s));
     } else {
-      const str = f;
-      positive.push((s) => s.indexOf(str) !== -1);
+      const regex = new RegExp(f, "i");
+      positive.push((s) => regex.test(s));
     }
   });
   const filter = (item) => {
