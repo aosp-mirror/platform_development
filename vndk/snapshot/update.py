@@ -165,6 +165,9 @@ def update_buildfiles(buildfile_generator):
     logging.info('Generating Android.bp files...')
     buildfile_generator.generate_android_bp()
 
+def copy_owners(install_dir):
+    path = os.path.dirname(__file__)
+    shutil.copy(os.path.join(path, 'OWNERS'), install_dir)
 
 def check_gpl_license(license_checker):
     try:
@@ -271,6 +274,8 @@ def main():
 
         buildfile_generator = GenBuildFile(install_dir, vndk_version)
         update_buildfiles(buildfile_generator)
+
+        copy_owners(install_dir)
 
         if not local:
             license_checker = GPLChecker(install_dir, ANDROID_BUILD_TOP,
