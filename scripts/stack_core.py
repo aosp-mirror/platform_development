@@ -313,7 +313,7 @@ class TraceConverter:
     return None, None
 
   # Find all files in the symbols directory and group them by basename (without directory).
-  @functools.cache
+  @functools.lru_cache(maxsize=None)
   def GlobSymbolsDir(self, symbols_dir):
     files_by_basename = {}
     for path in sorted(pathlib.Path(symbols_dir).glob("**/*")):
@@ -321,7 +321,7 @@ class TraceConverter:
     return files_by_basename
 
   # Use the "file" command line tool to find the bitness and build_id of given ELF file.
-  @functools.cache
+  @functools.lru_cache(maxsize=None)
   def GetLibraryInfo(self, lib):
     stdout = subprocess.check_output(["file", lib], text=True)
     match = self.file_tool_output.search(stdout)
@@ -330,7 +330,7 @@ class TraceConverter:
     return None
 
   # Search for a library with the given basename and build_id anywhere in the symbols directory.
-  @functools.cache
+  @functools.lru_cache(maxsize=None)
   def GetLibraryByBuildId(self, symbols_dir, basename, build_id):
     for candidate in self.GlobSymbolsDir(symbols_dir).get(basename):
       info = self.GetLibraryInfo(candidate)
@@ -484,10 +484,11 @@ class TraceConverter:
 
         if build_id:
           # If we have the build_id, do a brute-force search of the symbols directory.
-          lib = self.GetLibraryByBuildId(symbol.SYMBOLS_DIR, os.path.basename(lib), build_id)
+          basename = os.path.basename(lib)
+          lib = self.GetLibraryByBuildId(symbol.SYMBOLS_DIR, basename, build_id)
           if not lib:
             print("WARNING: Cannot find {} with build id {} in symbols directory."
-                  .format(os.path.basename(lib), build_id))
+                  .format(basename, build_id))
         else:
           # When using atest, test paths are different between the out/ directory
           # and device. Apply fixups.
