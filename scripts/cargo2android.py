@@ -1791,11 +1791,13 @@ def get_parser():
   parser.add_argument(
       '--add-toplevel-block',
       type=str,
-      help='Add the contents of the given file to the top level of the Android.bp.')
+      help=('Add the contents of the given file to the top level of the Android.bp. ' +
+            'The filename should start with cargo2android to work with the updater.'))
   parser.add_argument(
       '--add-module-block',
       type=str,
-      help='Add the contents of the given file to the main module.')
+      help=('Add the contents of the given file to the main module. '+
+            'The filename should start with cargo2android to work with the updater.'))
   parser.add_argument(
       '--verbose',
       action='store_true',

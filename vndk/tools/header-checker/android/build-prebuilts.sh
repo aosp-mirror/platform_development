@@ -71,7 +71,7 @@ if [ "${OS}" = "darwin" ]; then
 fi
 
 # Build binaries and shared libs
-build/soong/soong_ui.bash --make-mode --skip-make "${binaries[@]}" "${libs[@]}"
+build/soong/soong_ui.bash --make-mode --skip-config --soong-only "${binaries[@]}" "${libs[@]}"
 
 # Copy binaries and shared libs
 SOONG_DIST="${SOONG_OUT}/dist"
