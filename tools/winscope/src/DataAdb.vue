@@ -219,6 +219,7 @@ const TRACE_CONFIG = {
     'composition',
     'metadata',
     'hwc',
+    'tracebuffers',
   ],
 };
 

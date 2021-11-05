@@ -42,7 +42,7 @@ import base64
 
 # CONFIG #
 
-LOG_LEVEL = logging.WARNING
+LOG_LEVEL = logging.DEBUG
 
 PORT = 5544
 
@@ -258,7 +258,8 @@ class WindowManagerTraceSelectedConfig:
 CONFIG_FLAG = {
     "composition": 1 << 2,
     "metadata": 1 << 3,
-    "hwc": 1 << 4
+    "hwc": 1 << 4,
+    "tracebuffers": 1 << 5
 }
 
 #Keep up to date with options in DataAdb.vue
