@@ -132,7 +132,6 @@ class TraceTarget:
         self.trace_start = trace_start
         self.trace_stop = trace_stop
 
-
 # Order of files matters as they will be expected in that order and decoded in that order
 TRACE_TARGETS = {
     "window_trace": TraceTarget(
@@ -155,9 +154,14 @@ TRACE_TARGETS = {
         f'screenrecord --bit-rate 8M /data/local/tmp/screen.mp4 >/dev/null 2>&1 &\necho "ScreenRecorder started."',
         'pkill -l SIGINT screenrecord >/dev/null 2>&1'
     ),
-    "transaction": TraceTarget(
+    "transactions": TraceTarget(
+        WinscopeFileMatcher(WINSCOPE_DIR, "transactions_trace", "transactions"),
+        'su root service call SurfaceFlinger 1041 i32 1\necho "SF transactions recording started."',
+        'su root service call SurfaceFlinger 1041 i32 0 >/dev/null 2>&1'
+    ),
+    "transactions_legacy": TraceTarget(
         [
-            WinscopeFileMatcher(WINSCOPE_DIR, "transaction_trace", "transactions"),
+            WinscopeFileMatcher(WINSCOPE_DIR, "transaction_trace", "transactions_legacy"),
             FileMatcher(WINSCOPE_DIR, f'transaction_merges_*', "transaction_merges"),
         ],
         'su root service call SurfaceFlinger 1020 i32 1\necho "SF transactions recording started."',

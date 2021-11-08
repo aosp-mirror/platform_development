@@ -188,8 +188,8 @@ const TRACES = {
     'layers_trace': {
       name: 'Surface Flinger',
     },
-    'transaction': {
-      name: 'Transactions',
+    'transactions': {
+      name: 'Transaction',
     },
     'proto_log': {
       name: 'ProtoLog',
@@ -269,6 +269,7 @@ const proxyFileTypeAdapter = {
   'wl_dump': FILE_TYPES.WAYLAND_DUMP,
   'screen_recording': FILE_TYPES.SCREEN_RECORDING,
   'transactions': FILE_TYPES.TRANSACTIONS_TRACE,
+  'transactions_legacy': FILE_TYPES.TRANSACTIONS_TRACE_LEGACY,
   'proto_log': FILE_TYPES.PROTO_LOG,
   'system_ui_trace': FILE_TYPES.SYSTEM_UI,
   'launcher_trace': FILE_TYPES.LAUNCHER,

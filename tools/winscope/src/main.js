@@ -33,7 +33,7 @@ Vue.use(VueMaterial)
 const fileOrder = {
   [TRACE_TYPES.WINDOW_MANAGER]: 1,
   [TRACE_TYPES.SURFACE_FLINGER]: 2,
-  [TRACE_TYPES.TRANSACTION]: 3,
+  [TRACE_TYPES.TRANSACTION_LEGACY]: 3,
   [TRACE_TYPES.PROTO_LOG]: 4,
   [TRACE_TYPES.IME_CLIENTS]: 5,
   [TRACE_TYPES.IME_SERVICE]: 6,
@@ -416,7 +416,7 @@ Vue.mixin({
       this.$gtag.event(string, {
         'event_category': "Opened trace",
         'event_label': "Winscope Interactions",
-        'value': field,
+        'value': entryType,
       });
     },
     recordChangedNavigationStyleEvent(field) {

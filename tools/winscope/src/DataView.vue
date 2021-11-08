@@ -57,8 +57,8 @@
         :presentErrors="presentErrors"
         ref="view"
       />
-      <transactionsview
-        v-else-if="isTransactions(file) && isShowFileType(file.type)"
+      <transactionsviewlegacy
+        v-else-if="isTransactionsLegacy(file) && isShowFileType(file.type)"
         :trace="file"
         ref="view"
       />
@@ -87,7 +87,7 @@ import TraceView from '@/TraceView.vue';
 import AccessibilityTraceView from '@/AccessibilityTraceView.vue';
 import WindowManagerTraceView from '@/WindowManagerTraceView.vue';
 import SurfaceFlingerTraceView from '@/SurfaceFlingerTraceView.vue';
-import TransactionsView from '@/TransactionsView.vue';
+import TransactionsViewLegacy from '@/TransactionsViewLegacy.vue';
 import LogView from '@/LogView.vue';
 import FileType from '@/mixins/FileType.js';
 import FlatCard from '@/components/FlatCard.vue';
@@ -181,7 +181,7 @@ export default {
   mixins: [FileType],
   components: {
     'traceview': TraceView,
-    'transactionsview': TransactionsView,
+    'transactionsviewlegacy': TransactionsViewLegacy,
     'logview': LogView,
     'flat-card': FlatCard,
     AccessibilityTraceView,
