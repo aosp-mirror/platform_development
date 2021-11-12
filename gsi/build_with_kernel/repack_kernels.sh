@@ -18,6 +18,8 @@ source development/gsi/build_with_kernel/repack_kernels_common.sh
 
 set -e
 
+prepare_lz4
+
 prepare_kernel_image \
   "artifacts/common-android13-5_10-kernel_aarch64" \
   "5.10" \
