@@ -36,7 +36,7 @@ function prepare_lz4()
   if ! [ -f ${LZ4} ]; then
     echo "make $LZ4"
     cd ${WD}
-    make lz4
+    build/soong/soong_ui.bash --make-mode lz4
     cd -
   fi
 }
