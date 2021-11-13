@@ -19,7 +19,7 @@
       <div class="md-title">Open files</div>
     </md-card-header>
     <md-card-content>
-      <div class="dropbox" @click="$refs.fileUpload.click()">
+      <div class="dropbox" @click="$refs.fileUpload.click()" ref="dropbox">
         <md-list
           class="uploaded-files"
           v-show="Object.keys(dataFiles).length > 0"
@@ -151,6 +151,12 @@ export default {
     // Attempt to load files from extension if present
     this.loadFilesFromExtension();
   },
+  mounted() {
+    this.handleDropboxDragEvents();
+  },
+  beforeUnmount() {
+
+  },
   methods: {
     showSnackbarMessage(message, duration) {
       this.snackbarText = '\n' + message + '\n';
@@ -178,6 +184,32 @@ export default {
           this.showFetchingSnackbar = false;
           clearInterval(interval);
         },
+      });
+    },
+    handleDropboxDragEvents() {
+      // Counter used to keep track of when we actually exit the dropbox area
+      // When we drag over a child of the dropbox area the dragenter event will
+      // be called again and subsequently the dragleave so we don't want to just
+      // remove the class on the dragleave event.
+      let dropboxDragCounter = 0;
+
+      console.log(this.$refs["dropbox"])
+
+      this.$refs["dropbox"].addEventListener('dragenter', e => {
+        dropboxDragCounter++;
+        this.$refs["dropbox"].classList.add('dragover');
+      });
+
+      this.$refs["dropbox"].addEventListener('dragleave', e => {
+        dropboxDragCounter--;
+        if (dropboxDragCounter == 0) {
+          this.$refs["dropbox"].classList.remove('dragover');
+        }
+      });
+
+      this.$refs["dropbox"].addEventListener('drop', e => {
+        dropboxDragCounter = 0;
+        this.$refs["dropbox"].classList.remove('dragover');
       });
     },
     /**
@@ -557,7 +589,7 @@ export default {
 
 </script>
 <style>
-  .dropbox:hover {
+  .dropbox:hover, .dropbox.dragover {
       background: rgb(224, 224, 224);
     }
 
