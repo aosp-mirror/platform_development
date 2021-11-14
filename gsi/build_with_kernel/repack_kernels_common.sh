@@ -29,8 +29,17 @@ if [[ -z "${DIST_DIR}" ]]; then
 fi
 
 GZIP="gzip"
-LZ4="${WD}/prebuilts/misc/linux-x86/lz4/lz4"
+LZ4="${OUT_DIR}/host/linux-x86/bin/lz4"
 
+function prepare_lz4()
+{
+  if ! [ -f ${LZ4} ]; then
+    echo "make $LZ4"
+    cd ${WD}
+    build/soong/soong_ui.bash --make-mode lz4
+    cd -
+  fi
+}
 
 function prepare_kernel_image()
 {
