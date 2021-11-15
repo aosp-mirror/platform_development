@@ -19,27 +19,34 @@
       <div class="md-title">Open files</div>
     </md-card-header>
     <md-card-content>
-      <div class="dropbox">
-        <md-list style="background: none">
+      <div class="dropbox" @click="$refs.fileUpload.click()">
+        <md-list
+          class="uploaded-files"
+          v-show="Object.keys(dataFiles).length > 0"
+        >
           <md-list-item v-for="file in dataFiles" v-bind:key="file.filename">
             <md-icon>{{FILE_ICONS[file.type]}}</md-icon>
             <span class="md-list-item-text">{{file.filename}} ({{file.type}})
             </span>
             <md-button
               class="md-icon-button md-accent"
-              @click="onRemoveFile(file.type)"
+              @click="e => {
+                e.stopPropagation()
+                onRemoveFile(file.type)
+              }"
             >
               <md-icon>close</md-icon>
             </md-button>
           </md-list-item>
         </md-list>
-        <md-progress-spinner
-          :md-diameter="30"
-          :md-stroke="3"
-          md-mode="indeterminate"
-          v-show="loadingFiles"
-          class="progress-spinner"
-        />
+        <div class="progress-spinner-wrapper" v-show="loadingFiles">
+          <md-progress-spinner
+            :md-diameter="30"
+            :md-stroke="3"
+            md-mode="indeterminate"
+            class="progress-spinner"
+          />
+        </div>
         <input
           type="file"
           @change="onLoadFile"
@@ -49,8 +56,8 @@
           v-show="false"
           multiple
         />
-          <p v-if="!dataReady">
-            Drag your <b>.winscope</b> or <b>.zip</b> file(s) here to begin
+          <p v-if="!dataReady && !loadingFiles">
+            Drag your <b>.winscope</b> or <b>.zip</b> file(s) or click here to begin
           </p>
         </div>
 
@@ -554,12 +561,6 @@ export default {
       background: rgb(224, 224, 224);
     }
 
-  .dropbox p {
-    font-size: 1.2em;
-    text-align: center;
-    padding: 50px 10px;
-  }
-
   .dropbox {
     outline: 2px dashed #448aff; /* the dash box */
     outline-offset: -10px;
@@ -569,9 +570,29 @@ export default {
     min-height: 200px; /* minimum height */
     position: relative;
     cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-items: center;
   }
 
-  .progress-spinner {
+  .dropbox p, .dropbox .progress-spinner-wrapper {
+    font-size: 1.2em;
+    margin: auto;
+  }
+
+  .progress-spinner-wrapper, .progress-spinner {
+    width: fit-content;
+    height: fit-content;
     display: block;
+  }
+
+  .progress-spinner-wrapper {
+    padding: 1.5rem 0 1.5rem 0;
+  }
+
+  .dropbox .uploaded-files {
+    background: none!important;
+    width: 100%;
   }
 </style>
