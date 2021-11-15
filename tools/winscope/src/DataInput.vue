@@ -19,7 +19,7 @@
       <div class="md-title">Open files</div>
     </md-card-header>
     <md-card-content>
-      <div class="dropbox" @click="$refs.fileUpload.click()">
+      <div class="dropbox" @click="$refs.fileUpload.click()" ref="dropbox">
         <md-list
           class="uploaded-files"
           v-show="Object.keys(dataFiles).length > 0"
@@ -144,12 +144,19 @@ export default {
       snackbarDuration: 3500,
       snackbarText: '',
       fetchingSnackbarText: 'Fetching files...',
+      traceName: undefined,
     };
   },
   props: ['store'],
   created() {
     // Attempt to load files from extension if present
     this.loadFilesFromExtension();
+  },
+  mounted() {
+    this.handleDropboxDragEvents();
+  },
+  beforeUnmount() {
+
   },
   methods: {
     showSnackbarMessage(message, duration) {
@@ -178,6 +185,32 @@ export default {
           this.showFetchingSnackbar = false;
           clearInterval(interval);
         },
+      });
+    },
+    handleDropboxDragEvents() {
+      // Counter used to keep track of when we actually exit the dropbox area
+      // When we drag over a child of the dropbox area the dragenter event will
+      // be called again and subsequently the dragleave so we don't want to just
+      // remove the class on the dragleave event.
+      let dropboxDragCounter = 0;
+
+      console.log(this.$refs["dropbox"])
+
+      this.$refs["dropbox"].addEventListener('dragenter', e => {
+        dropboxDragCounter++;
+        this.$refs["dropbox"].classList.add('dragover');
+      });
+
+      this.$refs["dropbox"].addEventListener('dragleave', e => {
+        dropboxDragCounter--;
+        if (dropboxDragCounter == 0) {
+          this.$refs["dropbox"].classList.remove('dragover');
+        }
+      });
+
+      this.$refs["dropbox"].addEventListener('drop', e => {
+        dropboxDragCounter = 0;
+        this.$refs["dropbox"].classList.remove('dragover');
       });
     },
     /**
@@ -264,6 +297,21 @@ export default {
       this.processFiles(files);
     },
     async processFiles(files) {
+      console.log("Object.keys(this.dataFiles).length", Object.keys(this.dataFiles).length)
+      // The trace name to use if we manage to load the archive without errors.
+      let tmpTraceName;
+
+      if (Object.keys(this.dataFiles).length > 0) {
+        // We have already loaded some files so only want to use the name of
+        // this archive as the name of the trace if we override all loaded files
+      } else {
+        // No files have been uploaded yet so if we are uploading only 1 archive
+        // we want to use it's name as the trace name
+        if (files.length == 1 && this.isArchive(files[0])) {
+          tmpTraceName = this.getFileNameWithoutZipExtension(files[0])
+        }
+      }
+
       let error;
       const decodedFiles = [];
       for (const file of files) {
@@ -331,6 +379,19 @@ export default {
 
       if (overriddenFileTypes.size > 0) {
         this.displayFilesOverridenWarning(overriddenFiles);
+      }
+
+      if (tmpTraceName !== undefined) {
+        this.traceName = tmpTraceName;
+      }
+    },
+
+    getFileNameWithoutZipExtension(file) {
+      const fileNameSplitOnDot = file.name.split('.')
+      if (fileNameSplitOnDot.slice(-1)[0] == 'zip') {
+        return fileNameSplitOnDot.slice(0,-1).join('.');
+      } else {
+        return file.name;
       }
     },
 
@@ -451,8 +512,8 @@ export default {
 
       return undefined;
     },
-    async addFile(file) {
-      const decodedFiles = [];
+
+    isArchive(file) {
       const type = this.fileType;
 
       const extension = this.getFileExtensions(file);
@@ -461,9 +522,15 @@ export default {
       // 'application/zip' because when loaded from the extension the type is
       // incorrect. See comment in loadFilesFromExtension() for more
       // information.
-      if (type === 'bugreport' ||
+      return type === 'bugreport' ||
           (type === 'auto' && (extension === 'zip' ||
-            file.type === 'application/zip'))) {
+            file.type === 'application/zip'))
+    },
+
+    async addFile(file) {
+      const decodedFiles = [];
+
+      if (this.isArchive(file)) {
         const results = await this.decodeArchive(file);
         decodedFiles.push(...results);
       } else {
@@ -541,7 +608,7 @@ export default {
       this.$delete(this.dataFiles, typeName);
     },
     onSubmit() {
-      this.$emit('dataReady',
+      this.$emit('dataReady', this.formattedTraceName,
           Object.keys(this.dataFiles).map((key) => this.dataFiles[key]));
     },
   },
@@ -549,6 +616,14 @@ export default {
     dataReady: function() {
       return Object.keys(this.dataFiles).length > 0;
     },
+
+    formattedTraceName() {
+      if (this.traceName === undefined) {
+        return 'winscope-trace';
+      } else {
+        return this.traceName;
+      }
+    }
   },
   components: {
     'flat-card': FlatCard,
@@ -557,7 +632,7 @@ export default {
 
 </script>
 <style>
-  .dropbox:hover {
+  .dropbox:hover, .dropbox.dragover {
       background: rgb(224, 224, 224);
     }
 

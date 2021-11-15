@@ -55,7 +55,7 @@ export default {
         default: return fileName
       }
     },
-    async downloadAsZip(traces) {
+    async downloadAsZip(traces, traceName='winscope') {
       const zip = new JSZip();
       this.recordButtonClickedEvent("Download All")
 
@@ -70,7 +70,7 @@ export default {
 
       const zipFile = await zip.generateAsync({type: 'blob'});
 
-      this.saveAs(zipFile, 'winscope.zip');
+      this.saveAs(zipFile, `${traceName}.zip`);
     },
   },
 };
