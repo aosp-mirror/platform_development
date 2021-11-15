@@ -35,7 +35,6 @@ TaskFragment.fromProto = function (proto: any, isActivityInTree: Boolean): TaskF
         );
 
         addAttributes(entry, proto);
-        console.warn("Created ", entry.kind, " stableId=", entry.stableId);
         return entry;
     }
 }
