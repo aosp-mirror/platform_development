@@ -166,7 +166,7 @@ export default {
         'left': 0,
         'height': '100vh',
         'width': '100vw',
-        'z-index': 100,
+        'z-index': 10,
         'cursor': 'crosshair',
       });
 
@@ -350,7 +350,7 @@ export default {
 
 .selection, .selection-intent {
   position: absolute;
-  z-index: 100;
+  z-index: 10;
   background: rgba(255, 36, 36, 0.5);
   pointer-events: none;
 }

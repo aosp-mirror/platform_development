@@ -14,9 +14,28 @@
 -->
 <template>
   <div id="app">
+    <vue-title :appName="appName" :traceName="traceNameForTitle" />
+
+    <md-dialog-prompt
+          class="edit-trace-name-dialog"
+          :md-active.sync="editingTraceName"
+          v-model="traceName"
+          md-title="Edit trace name"
+          md-input-placeholder="Enter a new trace name"
+          md-confirm-text="Save" />
+
     <md-app>
       <md-app-toolbar md-tag="md-toolbar" class="top-toolbar">
-        <h1 class="md-title" style="flex: 1">{{title}}</h1>
+        <h1 class="md-title">{{appName}}</h1>
+
+        <div class="trace-name" v-if="dataLoaded">
+          <div>
+            <span>{{ traceName }}</span>
+            <!-- <input type="text" class="trace-name-editable" v-model="traceName" /> -->
+            <md-icon class="edit-trace-name-btn" @click.native="editTraceName()">edit</md-icon>
+          </div>
+        </div>
+
         <md-button
           class="md-primary md-theme-default download-all-btn"
           @click="generateTags()"
@@ -24,7 +43,7 @@
         >Generate Tags</md-button>
         <md-button
           class="md-primary md-theme-default"
-          @click="downloadAsZip(files)"
+          @click="downloadAsZip(files, traceName)"
           v-if="dataLoaded"
         >Download All</md-button>
         <md-button
@@ -39,11 +58,11 @@
         <section class="data-inputs" v-if="!dataLoaded">
           <div class="input">
             <dataadb class="adbinput" ref="adb" :store="store"
-              @dataReady="onDataReady" @statusChange="setStatus" />
+              @dataReady="onDataReady" />
           </div>
           <div class="input" @dragover.prevent @drop.prevent>
             <datainput class="fileinput" ref="input" :store="store"
-              @dataReady="onDataReady" @statusChange="setStatus" />
+              @dataReady="onDataReady" />
           </div>
         </section>
 
@@ -92,6 +111,7 @@ import Searchbar from './Searchbar.vue';
 import {NAVIGATION_STYLE, SEARCH_TYPE} from './utils/consts';
 import {TRACE_TYPES, FILE_TYPES, dataFile} from './decode.js';
 import { TaggingEngine } from './flickerlib/common';
+import titleComponent from './Title.vue';
 
 const APP_NAME = 'Winscope';
 
@@ -102,7 +122,7 @@ export default {
   mixins: [FileType, SaveAsZip, FocusedDataViewFinder],
   data() {
     return {
-      title: APP_NAME,
+      appName: APP_NAME,
       activeDataView: null,
       // eslint-disable-next-line new-cap
       store: LocalStore('app', {
@@ -124,12 +144,14 @@ export default {
       presentErrors: [],
       searchTypes: [SEARCH_TYPE.TIMESTAMP],
       hasTagOrErrorTraces: false,
+      traceName: "unnamed_winscope_trace",
+      editingTraceName: false
     };
   },
   created() {
     window.addEventListener('keydown', this.onKeyDown);
     window.addEventListener('scroll', this.onScroll);
-    document.title = this.title;
+    // document.title = this.traceName;
   },
   destroyed() {
     window.removeEventListener('keydown', this.onKeyDown);
@@ -226,7 +248,8 @@ export default {
       event.preventDefault();
       return true;
     },
-    onDataReady(files) {
+    onDataReady(traceName, files) {
+      this.traceName = traceName;
       this.$store.dispatch('setFiles', files);
 
       this.tagFile = this.tagFiles[0] ?? null;
@@ -281,6 +304,10 @@ export default {
         FILE_TYPES.TAG_TRACE
       );
     },
+
+    editTraceName() {
+      this.editingTraceName = true;
+    }
   },
   computed: {
     files() {
@@ -321,11 +348,18 @@ export default {
       return fileTypes.includes(TRACE_TYPES.WINDOW_MANAGER)
         && fileTypes.includes(TRACE_TYPES.SURFACE_FLINGER);
     },
+    traceNameForTitle() {
+      if (!this.dataLoaded) {
+        return undefined;
+      } else {
+        return this.traceName;
+      }
+    }
   },
   watch: {
-    title() {
-      document.title = this.title;
-    },
+    // title() {
+    //   document.title = this.title;
+    // },
   },
   components: {
     overlay: Overlay,
@@ -333,6 +367,7 @@ export default {
     datainput: DataInput,
     dataadb: DataAdb,
     searchbar: Searchbar,
+    ["vue-title"]: titleComponent,
   },
 };
 </script>
@@ -428,5 +463,38 @@ h1 {
   -webkit-hyphens: auto;
   hyphens: auto;
   padding: 10px 10px 10px 10px;
+}
+
+.trace-name {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  align-content: center;
+  justify-content: center;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 1rem;
+}
+
+.md-icon.edit-trace-name-btn {
+  color: rgba(0, 0, 0, 0.6)!important;
+  font-size: 1rem!important;
+  margin-bottom: 0.1rem;
+}
+
+.md-icon.edit-trace-name-btn:hover {
+  cursor: pointer;
+}
+
+.trace-name-editable {
+  all: unset;
+  cursor: default;
+}
+
+.edit-trace-name-dialog .md-dialog-container {
+  min-width: 350px;
+}
+
+.md-overlay.md-dialog-overlay {
+  z-index: 10;
 }
 </style>
