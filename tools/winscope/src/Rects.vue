@@ -82,8 +82,6 @@ export default {
     filteredRects() {
       return this.rects.filter((rect) => {
         const isVisible = rect.ref.isVisible;
-        console.warn(`Name: ${rect.ref.name}`, `Kind: ${rect.ref.kind}`,
-            `isVisible=${isVisible}`);
         return isVisible;
       });
     },
@@ -123,9 +121,6 @@ export default {
       const rectStyle = `top: ${y}px; left: ` +
             `${x}px; height: ${h}px; width: ${w}px; ` +
             `transform: ${tr}; transform-origin: 0 0;`;
-      if (rect && rect.ref) {
-        console.log(`${rect.ref.name} - ${rectStyle}`);
-      }
       return rectStyle;
     },
     onClick(rect) {

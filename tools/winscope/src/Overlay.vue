@@ -743,6 +743,7 @@ export default {
 
 .overlay-content {
   flex-grow: 1;
+  z-index: 10;
 }
 
 .bottom-nav {

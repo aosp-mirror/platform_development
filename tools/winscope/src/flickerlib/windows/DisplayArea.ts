@@ -32,7 +32,6 @@ DisplayArea.fromProto = function (proto: any, isActivityInTree: Boolean): Displa
         const entry = new DisplayArea(proto.isTaskDisplayArea, windowContainer);
 
         addAttributes(entry, proto);
-        console.warn("Created ", entry.kind, " stableId=", entry.stableId);
         return entry;
     }
 }
