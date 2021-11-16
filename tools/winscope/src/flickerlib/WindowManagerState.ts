@@ -50,7 +50,6 @@ WindowManagerState.fromProto = function (proto: any, timestamp: number = 0, wher
     );
 
     addAttributes(entry, proto);
-    console.warn("Created ", entry.kind, " stableId=", entry.stableId)
     return entry
 }
 

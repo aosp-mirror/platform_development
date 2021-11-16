@@ -423,18 +423,18 @@ export default {
       }
       this.status = STATES.LOAD_DATA;
       this.callProxy('POST', `${PROXY_ENDPOINTS.DUMP}${this.deviceId()}/`, this, function(request, view) {
-        view.loadFile(requested, 0);
+        view.loadFile(requested, 0, "dump");
       }, null, requested);
     },
     endTrace() {
       this.status = STATES.LOAD_DATA;
       this.callProxy('POST', `${PROXY_ENDPOINTS.END_TRACE}${this.deviceId()}/`, this, function(request, view) {
-        view.loadFile(view.toTrace(), 0);
+        view.loadFile(view.toTrace(), 0, "trace");
       });
       this.recordNewEvent("Ended Trace");
     },
-    loadFile(files, idx) {
-      this.callProxy('GET', `${PROXY_ENDPOINTS.FETCH}${this.deviceId()}/${files[idx]}/`, this, function(request, view) {
+    loadFile(files, idx, traceType) {
+      this.callProxy('GET', `${PROXY_ENDPOINTS.FETCH}${this.deviceId()}/${files[idx]}/`, this, (request, view) => {
         try {
           const enc = new TextDecoder('utf-8');
           const resp = enc.decode(request.response);
@@ -455,9 +455,12 @@ export default {
           }
 
           if (idx < files.length - 1) {
-            view.loadFile(files, idx + 1);
+            view.loadFile(files, idx + 1, traceType);
           } else {
-            view.$emit('dataReady', view.dataFiles);
+            const currentDate = new Date().toISOString();
+            view.$emit('dataReady',
+                `winscope-${traceType}-${currentDate}`,
+                view.dataFiles);
           }
         } catch (err) {
           console.error(err);

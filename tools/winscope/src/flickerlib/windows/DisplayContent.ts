@@ -57,7 +57,6 @@ DisplayContent.fromProto = function (proto: any, isActivityInTree: Boolean): Dis
         );
 
         addAttributes(entry, proto);
-        console.warn("Created ", entry.kind, " stableId=", entry.stableId);
         return entry;
     }
 }

@@ -42,7 +42,6 @@ Activity.fromProto = function (proto: any): Activity {
         );
 
         addAttributes(entry, proto);
-        console.warn("Created ", entry.kind, " stableId=", entry.stableId);
         return entry;
     }
 }
