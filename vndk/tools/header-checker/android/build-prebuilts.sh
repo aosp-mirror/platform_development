@@ -50,15 +50,21 @@ cat > "${SOONG_OUT}/soong.variables" << __EOF__
 __EOF__
 
 # Targets to be built
-SOONG_BINARIES=(
-    "cxx_extractor"
-    "header-abi-linker"
-    "header-abi-dumper"
-    "header-abi-diff"
-    "proto_metadata_plugin"
-    "protoc_extractor"
-    "versioner"
-)
+if [ "${OS}" = "darwin" ]; then
+    SOONG_BINARIES=(
+        "versioner"
+    )
+else
+    SOONG_BINARIES=(
+        "cxx_extractor"
+        "header-abi-linker"
+        "header-abi-dumper"
+        "header-abi-diff"
+        "proto_metadata_plugin"
+        "protoc_extractor"
+        "versioner"
+    )
+fi
 
 binaries=()
 for name in "${SOONG_BINARIES[@]}"; do
