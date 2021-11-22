@@ -22,6 +22,7 @@ import logging
 import os
 import sys
 
+import collect_licenses
 import utils
 
 
@@ -300,18 +301,33 @@ class GenBuildFile(object):
                     ind=self.INDENT,
                     version=self._vndk_version))
 
+    def _get_license_kinds(self):
+        """ Returns a set of license kinds """
+        license_collector = collect_licenses.LicenseCollector(self._install_dir)
+        license_collector.run()
+        return license_collector.license_kinds
+
     def _gen_license(self):
         """ Generates license module.
 
         It uses license files for all VNDK snapshot libraries in common/NOTICE_FILES directory.
         """
+        license_kinds = self._get_license_kinds()
+        license_kinds_string = ''
+        for license_kind in sorted(license_kinds):
+            license_kinds_string += '{ind}{ind}"{license_kind}",\n'.format(
+                                    ind=self.INDENT, license_kind=license_kind)
         return ('license {{\n'
                 '{ind}name: "prebuilts_vndk_v{version}_license",\n'
                 '{ind}visibility: [":__subpackages__"],\n'
+                '{ind}license_kinds: [\n'
+                '{license_kinds}'
+                '{ind}],\n'
                 '{ind}license_text: ["{notice_files}"],\n'
                 '}}\n'.format(
                     ind=self.INDENT,
                     version=self._vndk_version,
+                    license_kinds=license_kinds_string,
                     notice_files=os.path.join(utils.NOTICE_FILES_DIR_PATH, '*.txt')))
 
     def _get_versioned_name(self,
