@@ -352,14 +352,12 @@ class Crate(object):
     # 'prefer-dynamic' does not work with common flag -C lto
     # 'embed-bitcode' is ignored; we might control LTO with other .bp flag
     # 'codegen-units' is set in Android global config or by default
-    # 'lto' is used in Android, but it's set by the build system
     if not (flag.startswith('codegen-units=') or
             flag.startswith('debuginfo=') or
             flag.startswith('embed-bitcode=') or
             flag.startswith('extra-filename=') or
             flag.startswith('incremental=') or
             flag.startswith('metadata=') or
-            flag.startswith('lto=') or
             flag == 'prefer-dynamic'):
       self.codegens.append(flag)
 
@@ -1344,9 +1342,6 @@ class Runner(object):
     # set up search PATH for cargo to find the correct rustc
     saved_path = os.environ['PATH']
     os.environ['PATH'] = os.path.dirname(self.cargo_path) + ':' + saved_path
-    # We need to enable lto since our test prebuilts use it
-    saved_rustflags = os.environ.get('RUSTFLAGS', '')
-    os.environ['RUSTFLAGS'] = '-C lto=thin -C embed-bitcode=yes ' + saved_rustflags
     # Add [workspace] to Cargo.toml if it is not there.
     added_workspace = False
     if self.args.add_workspace:
@@ -1372,7 +1367,7 @@ class Runner(object):
       cmd = self.cargo_path + cmd_v_flag
       cmd += c + features + cmd_tail_target + cmd_tail_redir
       if self.args.rustflags and c != 'clean':
-        cmd = 'RUSTFLAGS="' + os.environ['RUSTFLAGS'] + ' ' + self.args.rustflags + '" ' + cmd
+        cmd = 'RUSTFLAGS="' + self.args.rustflags + '" ' + cmd
       self.run_cmd(cmd, cargo_out)
     if self.args.tests:
       cmd = self.cargo_path + ' test' + features + cmd_tail_target + ' -- --list' + cmd_tail_redir
@@ -1383,7 +1378,6 @@ class Runner(object):
       if self.args.verbose:
         print('### INFO: restored original Cargo.toml')
     os.environ['PATH'] = saved_path
-    os.environ['RUSTFLAGS'] = saved_rustflags
     if not self.dry_run:
       if not had_cargo_lock:  # restore to no Cargo.lock state
         os.remove(cargo_lock)
