@@ -1278,7 +1278,11 @@ class Runner(object):
       self.bp_files.add(name)
       license_section = self.read_license(name)
       with open(name, 'w') as outf:
-        outf.write(ANDROID_BP_HEADER.format(args=' '.join(sys.argv[1:])))
+        print_args = sys.argv[1:].copy()
+        if '--cargo_bin' in print_args:
+          index = print_args.index('--cargo_bin')
+          del print_args[index:index+2]
+        outf.write(ANDROID_BP_HEADER.format(args=' '.join(print_args)))
         outf.write('\n')
         outf.write(license_section)
         outf.write('\n')
@@ -1842,7 +1846,7 @@ def dump_config(parser, args):
   non_default_args = {}
   for arg in args_dict:
     if (args_dict[arg] != parser.get_default(arg) and arg != 'dump_config_and_exit'
-        and arg != 'config'):
+        and arg != 'config' and arg != 'cargo_bin'):
       non_default_args[arg.replace('_', '-')] = args_dict[arg]
   # Write to the specified file.
   with open(args.dump_config_and_exit, 'w') as f:
