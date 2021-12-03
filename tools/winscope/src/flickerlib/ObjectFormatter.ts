@@ -105,8 +105,11 @@ export default class ObjectFormatter {
             }
 
             if (value || this.displayDefaults) {
+                // raw values (e.g., false or 0)
+                if (!value) {
+                    result[key] = value
                 // flicker obj
-                if (value.prettyPrint) {
+                } else if (value.prettyPrint) {
                     const isEmpty = value.isEmpty === true;
                     if (!isEmpty || this.displayDefaults) {
                         result[key] = value.prettyPrint()
