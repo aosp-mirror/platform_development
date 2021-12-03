@@ -79,8 +79,7 @@ cc_binary_host {
 
     shared_libs: [
         "libprotobuf-cpp-full",
-        "libLLVM_host",
-        "libclang_cxx_host",
+        "libclang-cpp_host",
         "libc++_host",
     ],
 }
@@ -98,8 +97,7 @@ cc_defaults {
 
     shared_libs: [
         "libprotobuf-cpp-full",
-        "libLLVM_host",
-        "libclang_cxx_host",
+        "libclang-cpp_host",
         "libc++_host",
     ],
 }
@@ -169,7 +167,7 @@ cc_library_host_static {
     ],
 
     shared_libs: [
-        "libLLVM_host",
+        "libclang-cpp_host",
         "libc++_host",
         "libprotobuf-cpp-full",
     ],
@@ -204,7 +202,7 @@ cc_test_host {
     ],
 
     shared_libs: [
-        "libLLVM_host",
+        "libclang-cpp_host",
         "libc++_host",
     ],
 
