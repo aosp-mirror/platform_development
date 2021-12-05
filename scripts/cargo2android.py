@@ -131,6 +131,8 @@ CARGO_TEST_LIST_START_PAT = re.compile('^\s*Running (.*) \(.*\)$')
 # cargo test --list output of the end of running a binary.
 CARGO_TEST_LIST_END_PAT = re.compile('^(\d+) tests, (\d+) benchmarks$')
 
+CARGO2ANDROID_RUNNING_PAT = re.compile('^### Running: .*$')
+
 # Rust package name with suffix -d1.d2.d3(+.*)?.
 VERSION_SUFFIX_PAT = re.compile(r'^(.*)-[0-9]+\.[0-9]+\.[0-9]+(?:\+.*)?$')
 
@@ -352,14 +354,12 @@ class Crate(object):
     # 'prefer-dynamic' does not work with common flag -C lto
     # 'embed-bitcode' is ignored; we might control LTO with other .bp flag
     # 'codegen-units' is set in Android global config or by default
-    # 'lto' is used in Android, but it's set by the build system
     if not (flag.startswith('codegen-units=') or
             flag.startswith('debuginfo=') or
             flag.startswith('embed-bitcode=') or
             flag.startswith('extra-filename=') or
             flag.startswith('incremental=') or
             flag.startswith('metadata=') or
-            flag.startswith('lto=') or
             flag == 'prefer-dynamic'):
       self.codegens.append(flag)
 
@@ -1140,6 +1140,7 @@ class Runner(object):
     self.name_owners = {}
     # Save and dump all errors from cargo to Android.bp.
     self.errors = ''
+    self.test_errors = ''
     self.setup_cargo_path()
     # Default action is cargo clean, followed by build or user given actions.
     if args.cargo:
@@ -1280,7 +1281,11 @@ class Runner(object):
       self.bp_files.add(name)
       license_section = self.read_license(name)
       with open(name, 'w') as outf:
-        outf.write(ANDROID_BP_HEADER.format(args=' '.join(sys.argv[1:])))
+        print_args = sys.argv[1:].copy()
+        if '--cargo_bin' in print_args:
+          index = print_args.index('--cargo_bin')
+          del print_args[index:index+2]
+        outf.write(ANDROID_BP_HEADER.format(args=' '.join(print_args)))
         outf.write('\n')
         outf.write(license_section)
         outf.write('\n')
@@ -1344,9 +1349,6 @@ class Runner(object):
     # set up search PATH for cargo to find the correct rustc
     saved_path = os.environ['PATH']
     os.environ['PATH'] = os.path.dirname(self.cargo_path) + ':' + saved_path
-    # We need to enable lto since our test prebuilts use it
-    saved_rustflags = os.environ.get('RUSTFLAGS', '')
-    os.environ['RUSTFLAGS'] = '-C lto=thin -C embed-bitcode=yes ' + saved_rustflags
     # Add [workspace] to Cargo.toml if it is not there.
     added_workspace = False
     if self.args.add_workspace:
@@ -1372,7 +1374,7 @@ class Runner(object):
       cmd = self.cargo_path + cmd_v_flag
       cmd += c + features + cmd_tail_target + cmd_tail_redir
       if self.args.rustflags and c != 'clean':
-        cmd = 'RUSTFLAGS="' + os.environ['RUSTFLAGS'] + ' ' + self.args.rustflags + '" ' + cmd
+        cmd = 'RUSTFLAGS="' + self.args.rustflags + '" ' + cmd
       self.run_cmd(cmd, cargo_out)
     if self.args.tests:
       cmd = self.cargo_path + ' test' + features + cmd_tail_target + ' -- --list' + cmd_tail_redir
@@ -1383,7 +1385,6 @@ class Runner(object):
       if self.args.verbose:
         print('### INFO: restored original Cargo.toml')
     os.environ['PATH'] = saved_path
-    os.environ['RUSTFLAGS'] = saved_rustflags
     if not self.dry_run:
       if not had_cargo_lock:  # restore to no Cargo.lock state
         os.remove(cargo_lock)
@@ -1466,6 +1467,8 @@ class Runner(object):
             self.append_to_bp('\n' + f.read() + '\n')
         if self.errors:
           self.append_to_bp('\n' + ERRORS_LINE + '\n' + self.errors)
+        if self.test_errors:
+          self.append_to_bp('\n// Errors when listing tests:\n' + self.test_errors)
     return self
 
   def add_ar_object(self, obj):
@@ -1575,6 +1578,7 @@ class Runner(object):
     inf.seek(0)
     prev_warning = False  # true if the previous line was warning: ...
     rustc_line = ''  # previous line(s) matching RUSTC_VV_PAT
+    in_tests = False
     for line in inf:
       n += 1
       if line.startswith('warning: '):
@@ -1597,7 +1601,12 @@ class Runner(object):
           self.warning_files.add(fpath)
       elif line.startswith('error: ') or line.startswith('error[E'):
         if not self.args.ignore_cargo_errors:
-          self.errors += line
+          if in_tests:
+            self.test_errors += '// ' + line
+          else:
+            self.errors += line
+      elif CARGO2ANDROID_RUNNING_PAT.match(line):
+        in_tests = "cargo test" in line and "--list" in line
       prev_warning = False
       rustc_line = new_rustc
     self.find_warning_owners()
@@ -1848,7 +1857,7 @@ def dump_config(parser, args):
   non_default_args = {}
   for arg in args_dict:
     if (args_dict[arg] != parser.get_default(arg) and arg != 'dump_config_and_exit'
-        and arg != 'config'):
+        and arg != 'config' and arg != 'cargo_bin'):
       non_default_args[arg.replace('_', '-')] = args_dict[arg]
   # Write to the specified file.
   with open(args.dump_config_and_exit, 'w') as f:
