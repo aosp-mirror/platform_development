@@ -14,24 +14,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-source development/gsi/build_with_kernel/repack_kernels_common.sh
-
 set -e
 
-prepare_lz4
+FETCH=/google/data/ro/projects/android/fetch_artifact
+BCHAINING=`pwd`/out/prebuilt_cached/artifacts/
 
-prepare_kernel_image \
-  "artifacts/common-android13-5_10-kernel_aarch64" \
-  "5.10" \
-  "arm64"
+function local_fetch()
+{
+    local name=$1
+    local target=$2
+    mkdir -p ${BCHAINING}/${name}
+    cd ${BCHAINING}/${name}
+    ${FETCH} --branch aosp_kernel-common-android13-5.10 --target ${target} --latest
+    cd -
+}
 
-prepare_kernel_image \
-  "artifacts/common-android13-5_10-kernel_debug_aarch64" \
-  "5.10" \
-  "arm64" \
-  "debug"
+local_fetch common-android13-5_10-kernel_aarch64 kernel_aarch64
+local_fetch common-android13-5_10-kernel_debug_aarch64 kernel_debug_aarch64
+local_fetch common-android13-5_10-kernel_virt_aarch64 kernel_virt_aarch64
 
-prepare_kernel_modules \
-  "artifacts/common-android13-5_10-kernel_virt_aarch64" \
-  "5.10" \
-  "arm64" \

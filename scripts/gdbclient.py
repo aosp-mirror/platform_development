@@ -397,7 +397,7 @@ def do_main():
                         lldb-server connection. Press enter in this terminal once debugging is
                         finished to shut lldb-server down and close all the ports."""))
             print("")
-            raw_input("Press enter to shut down lldb-server")
+            input("Press enter to shut down lldb-server")
 
 
 def main():
