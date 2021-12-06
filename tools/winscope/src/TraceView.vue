@@ -216,8 +216,17 @@ export default {
     },
     getTransformedProperties(item) {
       ObjectFormatter.displayDefaults = this.displayDefaults;
+      // There are 2 types of object whose properties can appear in the property
+      // list: Flicker objects (WM/SF traces) and dictionaries
+      // (IME/Accessibilty/Transactions).
+      // While flicker objects have their properties directly in the main object,
+      // those created by a call to the transform function have their properties
+      // inside an obj property. This makes both cases work
+      // TODO(209452852) Refactor both flicker and winscope-native objects to
+      // implement a common display interface that can be better handled
+      const target = item.obj ?? item;
       const transformer = new ObjectTransformer(
-          getPropertiesForDisplay(item),
+          getPropertiesForDisplay(target),
           item.name,
           stableIdCompatibilityFixup(item),
       ).setOptions({
