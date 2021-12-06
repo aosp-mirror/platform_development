@@ -16,7 +16,10 @@
 
 """stack symbolizes native crash dumps."""
 
+import collections
+import functools
 import os
+import pathlib
 import re
 import subprocess
 import symbol
@@ -67,6 +70,11 @@ class TraceConverter:
     "x86_64": "rax|rbx|rcx|rdx|rsi|rdi|r8|r9|r10|r11|r12|r13|r14|r15|cs|ss|rip|rbp|rsp|eflags",
   }
 
+  # We use the "file" command line tool to extract BuildId from ELF files.
+  ElfInfo = collections.namedtuple("ElfInfo", ["bitness", "build_id"])
+  file_tool_output = re.compile(r"ELF (?P<bitness>32|64)-bit .*"
+                                r"BuildID(\[.*\])?=(?P<build_id>[0-9a-f]+)")
+
   def UpdateAbiRegexes(self):
     if symbol.ARCH == "arm64" or symbol.ARCH == "mips64" or symbol.ARCH == "x86_64":
       self.width = "{16}"
@@ -96,7 +104,9 @@ class TraceConverter:
                                                               #         0x prefix).
         r"(?P<dso>\[[^\]]+\]|[^\r\n \t]*)"                    # Library name.
         r"( \(offset (?P<so_offset>0x[0-9a-fA-F]+)\))?"       # Offset into the file to find the start of the shared so.
-        r"(?P<symbolpresent> \((?P<symbol>.*)\))?")           # Is the symbol there?
+        r"(?P<symbolpresent> \((?P<symbol>.*?)\))?"           # Is the symbol there? (non-greedy)
+        r"( \(BuildId: (?P<build_id>.*)\))?"                  # Optional build-id of the ELF file.
+        r"[ \t]*$")                                           # End of line (to expand non-greedy match).
                                                               # pylint: disable-msg=C6310
     # Sanitizer output. This is different from debuggerd output, and it is easier to handle this as
     # its own regex. Example:
@@ -183,22 +193,24 @@ class TraceConverter:
       self.DeleteApkTmpFiles()
 
   def MatchTraceLine(self, line):
-    if self.trace_line.match(line):
-      match = self.trace_line.match(line)
+    match = self.trace_line.match(line)
+    if match:
       return {"frame": match.group("frame"),
               "offset": match.group("offset"),
               "so_offset": match.group("so_offset"),
               "dso": match.group("dso"),
               "symbol_present": bool(match.group("symbolpresent")),
-              "symbol_name": match.group("symbol")}
-    if self.sanitizer_trace_line.match(line):
-      match = self.sanitizer_trace_line.match(line)
+              "symbol_name": match.group("symbol"),
+              "build_id": match.group("build_id")}
+    match = self.sanitizer_trace_line.match(line)
+    if match:
       return {"frame": match.group("frame"),
               "offset": match.group("offset"),
               "so_offset": None,
               "dso": match.group("dso"),
               "symbol_present": False,
-              "symbol_name": None}
+              "symbol_name": None,
+              "build_id": None}
     return None
 
   def ExtractLibFromApk(self, apk, shared_lib_name):
@@ -299,6 +311,32 @@ class TraceConverter:
       tmp_files[file_name] = tmp_shared_lib
       return file_name, tmp_shared_lib
     return None, None
+
+  # Find all files in the symbols directory and group them by basename (without directory).
+  @functools.lru_cache(maxsize=None)
+  def GlobSymbolsDir(self, symbols_dir):
+    files_by_basename = {}
+    for path in sorted(pathlib.Path(symbols_dir).glob("**/*")):
+      files_by_basename.setdefault(path.name, []).append(path)
+    return files_by_basename
+
+  # Use the "file" command line tool to find the bitness and build_id of given ELF file.
+  @functools.lru_cache(maxsize=None)
+  def GetLibraryInfo(self, lib):
+    stdout = subprocess.check_output(["file", lib], text=True)
+    match = self.file_tool_output.search(stdout)
+    if match:
+      return self.ElfInfo(bitness=match.group("bitness"), build_id=match.group("build_id"))
+    return None
+
+  # Search for a library with the given basename and build_id anywhere in the symbols directory.
+  @functools.lru_cache(maxsize=None)
+  def GetLibraryByBuildId(self, symbols_dir, basename, build_id):
+    for candidate in self.GlobSymbolsDir(symbols_dir).get(basename):
+      info = self.GetLibraryInfo(candidate)
+      if info and info.build_id == build_id:
+        return "/" + str(candidate.relative_to(symbols_dir))
+    return None
 
   def GetLibPath(self, lib):
     symbol_dir = symbol.SYMBOLS_DIR
@@ -401,6 +439,7 @@ class TraceConverter:
       so_offset = trace_line_dict["so_offset"]
       symbol_present = trace_line_dict["symbol_present"]
       symbol_name = trace_line_dict["symbol_name"]
+      build_id = trace_line_dict["build_id"]
 
       if frame <= self.last_frame and (self.trace_lines or self.value_lines):
         self.PrintOutput(self.trace_lines, self.value_lines)
@@ -443,9 +482,17 @@ class TraceConverter:
           lib = area
           lib_name = None
 
-        # When using atest, test paths are different between the out/ directory
-        # and device. Apply fixups.
-        lib = self.GetLibPath(lib)
+        if build_id:
+          # If we have the build_id, do a brute-force search of the symbols directory.
+          basename = os.path.basename(lib)
+          lib = self.GetLibraryByBuildId(symbol.SYMBOLS_DIR, basename, build_id)
+          if not lib:
+            print("WARNING: Cannot find {} with build id {} in symbols directory."
+                  .format(basename, build_id))
+        else:
+          # When using atest, test paths are different between the out/ directory
+          # and device. Apply fixups.
+          lib = self.GetLibPath(lib)
 
         # If a calls b which further calls c and c is inlined to b, we want to
         # display "a -> b -> c" in the stack trace instead of just "a -> c"
