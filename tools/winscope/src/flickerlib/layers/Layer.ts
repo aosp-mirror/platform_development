@@ -62,7 +62,8 @@ Layer.fromProto = function (proto: any): Layer {
         proto.backgroundBlurRadius,
         crop,
         proto.isRelativeOf,
-        proto.zOrderRelativeOf
+        proto.zOrderRelativeOf,
+        proto.layerStack
     );
 
     addAttributes(entry, proto);
