@@ -69,7 +69,7 @@
 import { shortenName } from './flickerlib/mixin'
 
 export default {
-  name: 'transaction-entry',
+  name: 'transaction-entry-legacy',
   props: {
     index: {
       type: Number,

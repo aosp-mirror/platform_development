@@ -21,7 +21,8 @@ import jsonProtoDefsAccessibility from 'frameworks/base/core/proto/android/serve
 import jsonProtoDefsWm from 'frameworks/base/core/proto/android/server/windowmanagertrace.proto';
 import jsonProtoDefsProtoLog from 'frameworks/base/core/proto/android/internal/protolog.proto';
 import jsonProtoDefsSf from 'frameworks/native/services/surfaceflinger/layerproto/layerstrace.proto';
-import jsonProtoDefsTransaction from 'frameworks/native/cmds/surfacereplayer/proto/src/trace.proto';
+import jsonProtoDefsTransaction from 'frameworks/native/services/surfaceflinger/layerproto/transactions.proto';
+import jsonProtoDefsTransactionLegacy from 'frameworks/native/cmds/surfacereplayer/proto/src/trace.proto';
 import jsonProtoDefsWl from 'WaylandSafePath/waylandtrace.proto';
 import jsonProtoDefsSysUi from 'frameworks/base/packages/SystemUI/src/com/android/systemui/tracing/sysui_trace.proto';
 import jsonProtoDefsLauncher from 'packages/apps/Launcher3/protos/launcher_trace_file.proto';
@@ -31,6 +32,7 @@ import jsonProtoDefsErrors from 'platform_testing/libraries/flicker/src/com/andr
 import protobuf from 'protobufjs';
 import {transform_accessibility_trace} from './transform_accessibility.js';
 import {transform_transaction_trace} from './transform_transaction.js';
+import {transform_transaction_trace_legacy} from './transform_transaction_legacy.js';
 import {transform_wl_outputstate, transform_wayland_trace} from './transform_wl.js';
 import {transformProtolog} from './transform_protolog.js';
 import {transform_sysui_trace} from './transform_sys_ui.js';
@@ -42,6 +44,7 @@ import AccessibilityTrace from '@/traces/Accessibility.ts';
 import SurfaceFlingerTrace from '@/traces/SurfaceFlinger.ts';
 import WindowManagerTrace from '@/traces/WindowManager.ts';
 import TransactionsTrace from '@/traces/Transactions.ts';
+import TransactionsTraceLegacy from '@/traces/TransactionsLegacy.ts';
 import ScreenRecordingTrace from '@/traces/ScreenRecording.ts';
 import WaylandTrace from '@/traces/Wayland.ts';
 import ProtoLogTrace from '@/traces/ProtoLog.ts';
@@ -63,7 +66,8 @@ const WmTraceMessage = lookup_type(jsonProtoDefsWm, 'com.android.server.wm.Windo
 const WmDumpMessage = lookup_type(jsonProtoDefsWm, 'com.android.server.wm.WindowManagerServiceDumpProto');
 const SfTraceMessage = lookup_type(jsonProtoDefsSf, 'android.surfaceflinger.LayersTraceFileProto');
 const SfDumpMessage = lookup_type(jsonProtoDefsSf, 'android.surfaceflinger.LayersProto');
-const SfTransactionTraceMessage = lookup_type(jsonProtoDefsTransaction, 'Trace');
+const SfTransactionTraceMessage = lookup_type(jsonProtoDefsTransaction, 'TransactionTraceFile');
+const SfTransactionTraceMessageLegacy = lookup_type(jsonProtoDefsTransactionLegacy, 'Trace');
 const WaylandTraceMessage = lookup_type(jsonProtoDefsWl, 'org.chromium.arc.wayland_composer.TraceFileProto');
 const WaylandDumpMessage = lookup_type(jsonProtoDefsWl, 'org.chromium.arc.wayland_composer.OutputStateProto');
 const ProtoLogMessage = lookup_type(jsonProtoDefsProtoLog, 'com.android.internal.protolog.ProtoLogFileProto');
@@ -77,6 +81,7 @@ const ErrorTraceMessage = lookup_type(jsonProtoDefsErrors, 'com.android.server.w
 
 const ACCESSIBILITY_MAGIC_NUMBER = [0x09, 0x41, 0x31, 0x31, 0x59, 0x54, 0x52, 0x41, 0x43]; // .A11YTRAC
 const LAYER_TRACE_MAGIC_NUMBER = [0x09, 0x4c, 0x59, 0x52, 0x54, 0x52, 0x41, 0x43, 0x45]; // .LYRTRACE
+const TRANSACTIONS_TRACE_MAGIC_NUMBER = [0x09, 0x54, 0x4e, 0x58, 0x54, 0x52, 0x41, 0x43, 0x45]; // .TNXTRACE
 const WINDOW_TRACE_MAGIC_NUMBER = [0x09, 0x57, 0x49, 0x4e, 0x54, 0x52, 0x41, 0x43, 0x45]; // .WINTRACE
 const MPEG4_MAGIC_NMBER = [0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x6d, 0x70, 0x34, 0x32]; // ....ftypmp42
 const WAYLAND_TRACE_MAGIC_NUMBER = [0x09, 0x57, 0x59, 0x4c, 0x54, 0x52, 0x41, 0x43, 0x45]; // .WYLTRACE
@@ -97,6 +102,7 @@ const FILE_TYPES = Object.freeze({
   SURFACE_FLINGER_DUMP: 'SurfaceFlingerDump',
   SCREEN_RECORDING: 'ScreenRecording',
   TRANSACTIONS_TRACE: 'TransactionsTrace',
+  TRANSACTIONS_TRACE_LEGACY: 'TransactionsTraceLegacy',
   WAYLAND_TRACE: 'WaylandTrace',
   WAYLAND_DUMP: 'WaylandDump',
   PROTO_LOG: 'ProtoLog',
@@ -130,6 +136,7 @@ const FILE_ICONS = {
   [FILE_TYPES.SURFACE_FLINGER_DUMP]: SURFACE_FLINGER_ICON,
   [FILE_TYPES.SCREEN_RECORDING]: SCREEN_RECORDING_ICON,
   [FILE_TYPES.TRANSACTIONS_TRACE]: TRANSACTION_ICON,
+  [FILE_TYPES.TRANSACTIONS_TRACE_LEGACY]: TRANSACTION_ICON,
   [FILE_TYPES.WAYLAND_TRACE]: WAYLAND_ICON,
   [FILE_TYPES.WAYLAND_DUMP]: WAYLAND_ICON,
   [FILE_TYPES.PROTO_LOG]: PROTO_LOG_ICON,
@@ -152,6 +159,7 @@ const TRACE_TYPES = Object.freeze({
   SURFACE_FLINGER: 'SurfaceFlingerTrace',
   SCREEN_RECORDING: 'ScreenRecording',
   TRANSACTION: 'Transaction',
+  TRANSACTION_LEGACY: 'Transaction (Legacy)',
   WAYLAND: 'Wayland',
   PROTO_LOG: 'ProtoLog',
   SYSTEM_UI: 'SystemUI',
@@ -195,6 +203,14 @@ const TRACE_INFO = {
       oneOf(FILE_TYPES.TRANSACTIONS_TRACE),
     ],
     constructor: TransactionsTrace,
+  },
+  [TRACE_TYPES.TRANSACTION_LEGACY]: {
+    name: 'Transactions (Legacy)',
+    icon: TRANSACTION_ICON,
+    files: [
+      oneOf(FILE_TYPES.TRANSACTIONS_TRACE_LEGACY),
+    ],
+    constructor: TransactionsTraceLegacy,
   },
   [TRACE_TYPES.WAYLAND]: {
     name: 'Wayland',
@@ -284,6 +300,7 @@ export const TRACE_ICONS = {
   [TRACE_TYPES.SURFACE_FLINGER]: SURFACE_FLINGER_ICON,
   [TRACE_TYPES.SCREEN_RECORDING]: SCREEN_RECORDING_ICON,
   [TRACE_TYPES.TRANSACTION]: TRANSACTION_ICON,
+  [TRACE_TYPES.TRANSACTION_LEGACY]: TRANSACTION_ICON,
   [TRACE_TYPES.WAYLAND]: WAYLAND_ICON,
   [TRACE_TYPES.PROTO_LOG]: PROTO_LOG_ICON,
   [TRACE_TYPES.SYSTEM_UI]: SYSTEM_UI_ICON,
@@ -393,6 +410,17 @@ const FILE_DECODERS = {
       mime: 'application/octet-stream',
       objTypeProto: SfTransactionTraceMessage,
       transform: transform_transaction_trace,
+      timeline: true,
+    },
+  },
+  [FILE_TYPES.TRANSACTIONS_TRACE_LEGACY]: {
+    name: 'Transactions (Legacy)',
+    decoder: protoDecoder,
+    decoderParams: {
+      type: FILE_TYPES.TRANSACTIONS_TRACE_LEGACY,
+      mime: 'application/octet-stream',
+      objTypeProto: SfTransactionTraceMessageLegacy,
+      transform: transform_transaction_trace_legacy,
       timeline: true,
     },
   },
@@ -643,6 +671,9 @@ function detectAndDecode(buffer, fileName, store) {
   if (arrayStartsWith(buffer, MPEG4_MAGIC_NMBER)) {
     return decodedFile(FILE_TYPES.SCREEN_RECORDING, buffer, fileName, store);
   }
+  if (arrayStartsWith(buffer, TRANSACTIONS_TRACE_MAGIC_NUMBER)) {
+    return decodedFile(FILE_TYPES.TRANSACTIONS_TRACE, buffer, fileName, store);
+  }
   if (arrayStartsWith(buffer, WAYLAND_TRACE_MAGIC_NUMBER)) {
     return decodedFile(FILE_TYPES.WAYLAND_TRACE, buffer, fileName, store);
   }
@@ -673,10 +704,10 @@ function detectAndDecode(buffer, fileName, store) {
 
   // TODO(b/169305853): Add magic number at beginning of file for better auto detection
   for (const [filetype, condition] of [
-    [FILE_TYPES.TRANSACTIONS_TRACE, (file) => file.data.length > 0],
+    [FILE_TYPES.TRANSACTIONS_TRACE_LEGACY, (file) => file.data.length > 0],
     [FILE_TYPES.WAYLAND_DUMP, (file) => (file.data.length > 0 && file.data.children[0] > 0) || file.data.length > 1],
     [FILE_TYPES.WINDOW_MANAGER_DUMP],
-    [FILE_TYPES.SURFACE_FLINGER_DUMP],
+    [FILE_TYPES.SURFACE_FLINGER_DUMP]
   ]) {
     try {
       const [, fileData] = decodedFile(filetype, buffer, fileName, store);
