@@ -152,14 +152,17 @@
 <script>
 import TreeView from './TreeView.vue';
 import VirtualList from '../libs/virtualList/VirtualList';
-import TransactionEntry from './TransactionEntry.vue';
+import TransactionEntryLegacy from './TransactionEntryLegacy.vue';
 import FlatCard from './components/FlatCard.vue';
 
 import {ObjectTransformer} from './transform.js';
-import {expandTransactionId} from '@/traces/Transactions.ts';
+import {expandTransactionId} from '@/traces/TransactionsLegacy.ts';
 
+/**
+ * @deprecated This trace has been replaced by the new transactions trace
+ */
 export default {
-  name: 'transactionsview',
+  name: 'transactionsviewlegacy',
   props: ['trace'],
   data() {
     const transactionTypes = new Set();
@@ -201,7 +204,7 @@ export default {
       filters: [],
       selectedProperties: [],
       selectedTransaction: null,
-      transactionEntryComponent: TransactionEntry,
+      transactionEntryComponent: TransactionEntryLegacy,
       transactionsTrace,
       expandTransactionId,
     };

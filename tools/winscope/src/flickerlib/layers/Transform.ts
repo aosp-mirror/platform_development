@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Transform, Matrix } from "../common"
+import { Transform, Matrix33 } from "../common"
 
 Transform.fromProto = function (transformProto, positionProto): Transform {
     const entry = new Transform(
@@ -24,7 +24,7 @@ Transform.fromProto = function (transformProto, positionProto): Transform {
     return entry
 }
 
-function getMatrix(transform, position): Matrix {
+function getMatrix(transform, position): Matrix33 {
     const x = position?.x ?? 0
     const y = position?.y ?? 0
 
@@ -32,33 +32,33 @@ function getMatrix(transform, position): Matrix {
         return getDefaultTransform(transform?.type, x, y)
     }
 
-    return new Matrix(transform.dsdx, transform.dtdx, x, transform.dsdy, transform.dtdy, y)
+    return new Matrix33(transform.dsdx, transform.dtdx, x, transform.dsdy, transform.dtdy, y)
 }
 
-function getDefaultTransform(type, x, y): Matrix {
+function getDefaultTransform(type, x, y): Matrix33 {
     // IDENTITY
     if (!type) {
-        return new Matrix(1, 0, x, 0, 1, y)
+        return new Matrix33(1, 0, x, 0, 1, y)
     }
 
     // ROT_270 = ROT_90|FLIP_H|FLIP_V
     if (isFlagSet(type, ROT_90_VAL | FLIP_V_VAL | FLIP_H_VAL)) {
-        return new Matrix(0, -1, x, 1, 0, y)
+        return new Matrix33(0, -1, x, 1, 0, y)
     }
 
     // ROT_180 = FLIP_H|FLIP_V
     if (isFlagSet(type, FLIP_V_VAL | FLIP_H_VAL)) {
-        return new Matrix(-1, 0, x, 0, -1, y)
+        return new Matrix33(-1, 0, x, 0, -1, y)
     }
 
     // ROT_90
     if (isFlagSet(type, ROT_90_VAL)) {
-        return new Matrix(0, 1, x, -1, 0, y)
+        return new Matrix33(0, 1, x, -1, 0, y)
     }
 
     // IDENTITY
     if (isFlagClear(type, SCALE_VAL | ROTATE_VAL)) {
-        return new Matrix(1, 0, x, 0, 1, y)
+        return new Matrix33(1, 0, x, 0, 1, y)
     }
 
     throw new Error(`Unknown transform type ${type}`)

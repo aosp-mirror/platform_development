@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {toSize, toBuffer, toColor, toPoint, toRect,
-    toRectF, toRegion, toTransform} from './common';
+import {toSize, toActiveBuffer, toColor, toColor3, toPoint, toRect,
+    toRectF, toRegion, toMatrix22, toTransform} from './common';
 import intDefMapping from
     '../../../../../prebuilts/misc/common/winscope/intDefMapping.json';
 import config from '../config/Configuration.json'
@@ -99,7 +99,7 @@ export default class ObjectFormatter {
 
             if (value === null || value === undefined) {
                 if (this.displayDefaults) {
-                    result[key] = value
+                    result[key] = value;
                 }
                 return
             }
@@ -112,31 +112,35 @@ export default class ObjectFormatter {
                 } else if (value.prettyPrint) {
                     const isEmpty = value.isEmpty === true;
                     if (!isEmpty || this.displayDefaults) {
-                        result[key] = value.prettyPrint()
+                        result[key] = value.prettyPrint();
                     }
                 } else {
                     // converted proto to flicker
-                    const translatedObject = this.translateObject(value)
+                    const translatedObject = this.translateObject(value);
                     if (translatedObject) {
-                        result[key] = translatedObject.prettyPrint()
+                        if (translatedObject.prettyPrint) {
+                          result[key] = translatedObject.prettyPrint();
+                        }
+                        else {
+                          result[key] = translatedObject;
+                        }
                     // objects - recursive call
                     } else if (value && typeof(value) == `object`) {
-                        const childObj = this.format(value) as any
-                        const isEmpty = Object.entries(childObj).length == 0 || childObj.isEmpty
+                        const childObj = this.format(value) as any;
+                        const isEmpty = Object.entries(childObj).length == 0 || childObj.isEmpty;
                         if (!isEmpty || this.displayDefaults) {
-                            result[key] = childObj
+                            result[key] = childObj;
                         }
                     } else {
                     // values
-                        result[key] = this.translateIntDef(obj, key, value)
+                        result[key] = this.translateIntDef(obj, key, value);
                     }
                 }
 
             }
         })
 
-        // return Object.freeze(result)
-        return result
+        return result;
     }
 
     /**
@@ -147,23 +151,25 @@ export default class ObjectFormatter {
      * @param obj Object to translate
      */
     private static translateObject(obj) {
-        const type = obj?.$type?.name
+        const type = obj?.$type?.name;
         switch(type) {
-            case `SizeProto`: return toSize(obj)
-            case `ActiveBufferProto`: return toBuffer(obj)
-            case `ColorProto`: return toColor(obj)
-            case `PointProto`: return toPoint(obj)
-            case `RectProto`: return toRect(obj)
-            case `FloatRectProto`: return toRectF(obj)
-            case `RegionProto`: return toRegion(obj)
-            case `TransformProto`: return toTransform(obj)
+            case `SizeProto`: return toSize(obj);
+            case `ActiveBufferProto`: return toActiveBuffer(obj);
+            case `Color3`: return toColor3(obj);
+            case `ColorProto`: return toColor(obj);
+            case `PointProto`: return toPoint(obj);
+            case `RectProto`: return toRect(obj);
+            case `Matrix22`: return toMatrix22(obj);
+            case `FloatRectProto`: return toRectF(obj);
+            case `RegionProto`: return toRegion(obj);
+            case `TransformProto`: return toTransform(obj);
             case 'ColorTransformProto': {
                 const formatted = this.formatColorTransform(obj.val);
                 return `${formatted}`;
             }
         }
 
-        return null
+        return null;
     }
 
     private static formatColorTransform(vals) {
@@ -184,17 +190,17 @@ export default class ObjectFormatter {
      * @param propertyName Property to search
      */
     private static getTypeDefSpec(obj: any, propertyName: string): string {
-        const fields = obj?.$type?.fields
+        const fields = obj?.$type?.fields;
         if (!fields) {
-            return null
+            return null;
         }
 
-        const options = fields[propertyName]?.options
+        const options = fields[propertyName]?.options;
         if (!options) {
-            return null
+            return null;
         }
 
-        return options["(.android.typedef)"]
+        return options["(.android.typedef)"];
     }
 
     /**
@@ -207,23 +213,23 @@ export default class ObjectFormatter {
      * @param value Property value
      */
     private static translateIntDef(parentObj: any, propertyName: string, value: any): string {
-        const parentClassName = parentObj.constructor.name
-        const propertyPath = `${parentClassName}.${propertyName}`
+        const parentClassName = parentObj.constructor.name;
+        const propertyPath = `${parentClassName}.${propertyName}`;
 
-        let translatedValue = value
+        let translatedValue = value;
         // Parse Flicker objects (no intdef annotation supported)
         if (this.FLICKER_INTDEF_MAP.has(propertyPath)) {
             translatedValue = this.getIntFlagsAsStrings(value,
-                this.FLICKER_INTDEF_MAP.get(propertyPath))
+                this.FLICKER_INTDEF_MAP.get(propertyPath));
         } else {
             // If it's a proto, search on the proto definition for the intdef type
-            const typeDefSpec = this.getTypeDefSpec(parentObj, propertyName)
+            const typeDefSpec = this.getTypeDefSpec(parentObj, propertyName);
             if (typeDefSpec) {
-                translatedValue = this.getIntFlagsAsStrings(value, typeDefSpec)
+                translatedValue = this.getIntFlagsAsStrings(value, typeDefSpec);
             }
         }
 
-        return translatedValue
+        return translatedValue;
     }
 
     /**
