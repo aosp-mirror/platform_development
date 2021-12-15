@@ -673,34 +673,20 @@ class Crate(object):
       # do not change self.stem or self.module_name
       self.dump_one_android_module(crate_type)
       return
-    # Dump one test module per source file, and separate host and device tests.
+    # Dump one test module per source file.
     # crate_type == 'test'
     self.srcs = [src for src in self.srcs if not self.runner.should_ignore_test(src)]
-    if ((self.host_supported and self.device_supported and len(self.srcs) > 0) or
-        len(self.srcs) > 1):
+    if len(self.srcs) > 1:
       self.srcs = sorted(set(self.srcs))
       self.dump_defaults_module()
     saved_srcs = self.srcs
     for src in saved_srcs:
       self.srcs = [src]
-      saved_device_supported = self.device_supported
-      saved_host_supported = self.host_supported
       saved_main_src = self.main_src
       self.main_src = src
-      if saved_host_supported:
-        self.device_supported = False
-        self.host_supported = True
-        self.module_name = self.test_module_name()
-        self.decide_one_module_type(crate_type)
-        self.dump_one_android_module(crate_type)
-      if saved_device_supported:
-        self.device_supported = True
-        self.host_supported = False
-        self.module_name = self.test_module_name()
-        self.decide_one_module_type(crate_type)
-        self.dump_one_android_module(crate_type)
-      self.host_supported = saved_host_supported
-      self.device_supported = saved_device_supported
+      self.module_name = self.test_module_name()
+      self.decide_one_module_type(crate_type)
+      self.dump_one_android_module(crate_type)
       self.main_src = saved_main_src
     self.srcs = saved_srcs
 
@@ -788,10 +774,7 @@ class Crate(object):
     """Return a unique name for a test module."""
     # root_pkg+(_host|_device) + '_test_'+source_file_name
     suffix = self.main_src_basename_path()
-    host_device = '_host'
-    if self.device_supported:
-      host_device = '_device'
-    return self.root_pkg + host_device + '_test_' + suffix
+    return self.root_pkg + '_test_' + suffix
 
   def decide_module_type(self):
     # Use the first crate type for the default/first module.
