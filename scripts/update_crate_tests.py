@@ -45,6 +45,13 @@ TEST_OPTIONS = {
     "ring_test_src_lib": [{"test-timeout": "100000"}],
 }
 
+# Groups to add tests to. "presubmit" runs x86_64 device tests+host tests, and
+# "presubmit-rust" runs arm64 device tests on physical devices.
+TEST_GROUPS = [
+    "presubmit",
+    "presubmit-rust"
+]
+
 # Excluded tests. These tests will be ignored by this script.
 TEST_EXCLUDE = [
         "aidl_test_rust_client",
@@ -250,22 +257,21 @@ class TestMapping(object):
 
     def tests_dirs_to_mapping(self, tests, dirs):
         """Translate the test list into a dictionary."""
-        test_mapping = {"presubmit": [], "imports": []}
-        for test in tests:
-            if test in TEST_EXCLUDE:
-                continue
-            if test in TEST_OPTIONS:
-                test_mapping["presubmit"].append({"name": test, "options": TEST_OPTIONS[test]})
-            else:
-                test_mapping["presubmit"].append({"name": test})
+        test_mapping = {"imports": []}
+        for test_group in TEST_GROUPS:
+            test_mapping[test_group] = []
+            for test in tests:
+                if test in TEST_EXCLUDE:
+                    continue
+                if test in TEST_OPTIONS:
+                    test_mapping[test_group].append({"name": test, "options": TEST_OPTIONS[test]})
+                else:
+                    test_mapping[test_group].append({"name": test})
+            test_mapping[test_group] = sorted(test_mapping[test_group], key=lambda t: t["name"])
         for dir in dirs:
             test_mapping["imports"].append({"path": dir})
-        test_mapping["presubmit"] = sorted(test_mapping["presubmit"], key=lambda t: t["name"])
         test_mapping["imports"] = sorted(test_mapping["imports"], key=lambda t: t["path"])
-        if not test_mapping["presubmit"]:
-            del test_mapping["presubmit"]
-        if not test_mapping["imports"]:
-            del test_mapping["imports"]
+        test_mapping = {section: entry for (section, entry) in test_mapping.items() if entry}
         return test_mapping
 
     def write_test_mapping(self, test_mapping):
