@@ -40,19 +40,19 @@ from pathlib import Path
 # Some tests requires specific options. Consider fixing the upstream crate
 # before updating this dictionary.
 TEST_OPTIONS = {
-    "ring_device_test_tests_digest_tests": [{"test-timeout": "600000"}],
-    "ring_device_test_src_lib": [{"test-timeout": "100000"}],
+    "ring_test_tests_digest_tests": [{"test-timeout": "600000"}],
+    "ring_test_src_lib": [{"test-timeout": "100000"}],
 }
 
 # Excluded tests. These tests will be ignored by this script.
 TEST_EXCLUDE = [
         "aidl_test_rust_client",
         "aidl_test_rust_service",
-        "ash_device_test_src_lib",
-        "ash_device_test_tests_constant_size_arrays",
-        "ash_device_test_tests_display",
-        "shared_library_device_test_src_lib",
-        "vulkano_device_test_src_lib"
+        "ash_test_src_lib",
+        "ash_test_tests_constant_size_arrays",
+        "ash_test_tests_display",
+        "shared_library_test_src_lib",
+        "vulkano_test_src_lib"
 ]
 
 # Excluded modules.
