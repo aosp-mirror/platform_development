@@ -59,7 +59,7 @@ public class ThemedNavBarKeyboard extends InputMethodService {
     @Override
     public void onCreate() {
         super.onCreate();
-        if (BuildCompat.EFFECTIVE_SDK_INT > Build.VERSION_CODES.P) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             // Disable contrast for extended navbar gradient.
             getWindow().getWindow().setNavigationBarContrastEnforced(false);
         }
