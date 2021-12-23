@@ -17,16 +17,21 @@
 package com.example.android.apis.app;
 
 import android.app.Activity;
+import android.app.ActivityOptions;
 import android.app.PictureInPictureParams;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Rect;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.ResultReceiver;
 import android.util.Rational;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.Switch;
@@ -38,6 +43,19 @@ public class PictureInPicture extends Activity {
     private static final String EXTRA_ENABLE_SOURCE_RECT_HINT = "source_rect_hint";
     private static final String EXTRA_ENABLE_SEAMLESS_RESIZE = "seamless_resize";
     private static final String EXTRA_CURRENT_POSITION = "current_position";
+
+    private static final int TABLET_BREAK_POINT_DP = 700;
+
+    public static final String KEY_ON_STOP_RECEIVER = "on_stop_receiver";
+    private final ResultReceiver mOnStopReceiver = new ResultReceiver(
+            new Handler(Looper.myLooper())) {
+        @Override
+        protected void onReceiveResult(int resultCode, Bundle resultData) {
+            // Container activity for content-pip has stopped, replace the placeholder
+            // with actual content in this host activity.
+            mImageView.setImageResource(R.drawable.sample_1);
+        }
+    };
 
     private final View.OnLayoutChangeListener mOnLayoutChangeListener =
             (v, oldLeft, oldTop, oldRight, oldBottom, newLeft, newTop, newRight, newBottom) -> {
@@ -51,7 +69,7 @@ public class PictureInPicture extends Activity {
             (v, id) -> updateContentPosition(id);
 
     private LinearLayout mContainer;
-    private View mImageView;
+    private ImageView mImageView;
     private View mControlGroup;
     private Switch mAutoPipToggle;
     private Switch mSourceRectHintToggle;
@@ -123,13 +141,30 @@ public class PictureInPicture extends Activity {
         }
     }
 
+    /**
+     * This is what we expect most host Activity would do to trigger content PiP.
+     * - Get the bounds of the view to be transferred to content PiP
+     * - Construct the PictureInPictureParams with source rect hint and aspect ratio from bounds
+     * - Start the new content PiP container Activity with the ActivityOptions
+     */
     private void enterContentPip() {
-        // TBD
+        final Intent intent = new Intent(this, ContentPictureInPicture.class);
+        intent.putExtra(KEY_ON_STOP_RECEIVER, mOnStopReceiver);
+        final Rect bounds = new Rect();
+        mImageView.getGlobalVisibleRect(bounds);
+        final PictureInPictureParams params = new PictureInPictureParams.Builder()
+                .setSourceRectHint(bounds)
+                .setAspectRatio(new Rational(bounds.width(), bounds.height()))
+                .build();
+        final ActivityOptions opts = ActivityOptions.makeLaunchIntoPip(params);
+        startActivity(intent, opts.toBundle());
+        // Swap the mImageView to placeholder content.
+        mImageView.setImageResource(R.drawable.black_box);
     }
 
     private void updateLayout(Configuration configuration) {
         mImageView.addOnLayoutChangeListener(mOnLayoutChangeListener);
-        final boolean isTablet = configuration.screenWidthDp >= 800;
+        final boolean isTablet = configuration.smallestScreenWidthDp >= TABLET_BREAK_POINT_DP;
         final boolean isLandscape =
                 (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE);
         final boolean isPictureInPicture = isInPictureInPictureMode();

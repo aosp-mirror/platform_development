@@ -35,13 +35,7 @@
     android:orientation="vertical">
 
     <!-- layout params would be changed programmatically -->
-    <com.example.android.apis.view.FixedAspectRatioImageView
-        android:id="@+id/image"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:scaleType="fitXY"
-        android:src="@drawable/sample_1"
-        app:aspectRatio="16/9" />
+    <include layout="@layout/picture_in_picture_content" />
 
     <ScrollView
         android:id="@+id/control_group"
