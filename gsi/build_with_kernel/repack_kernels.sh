@@ -34,4 +34,4 @@ prepare_kernel_image \
 prepare_kernel_modules \
   "artifacts/common-android13-5_10-kernel_virt_aarch64" \
   "5.10" \
-  "arm64" \
+  "arm64"

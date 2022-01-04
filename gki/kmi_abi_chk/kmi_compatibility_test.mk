@@ -38,6 +38,8 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := gki_5_4_kmi_compatibility_test
 LOCAL_MODULE_CLASS := FAKE
 LOCAL_MODULE_TAGS := optional
+LOCAL_LICENSE_KINDS := SPDX-license-identifier-Apache-2.0
+LOCAL_LICENSE_CONDITIONS := notice
 include $(BUILD_SYSTEM)/base_rules.mk
 
 $(LOCAL_BUILT_MODULE): $(KMI_CHK_SCRIPT) $(CURR_5_4_SYMVERS) $(PREV_5_4_SYMVERS)
@@ -49,6 +51,8 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := gki_5_10_kmi_compatibility_test
 LOCAL_MODULE_CLASS := FAKE
 LOCAL_MODULE_TAGS := optional
+LOCAL_LICENSE_KINDS := SPDX-license-identifier-Apache-2.0
+LOCAL_LICENSE_CONDITIONS := notice
 include $(BUILD_SYSTEM)/base_rules.mk
 
 $(LOCAL_BUILT_MODULE): $(KMI_CHK_SCRIPT) $(CURR_5_10_SYMVERS) $(PREV_5_10_SYMVERS)
@@ -59,4 +63,6 @@ $(LOCAL_BUILT_MODULE): $(KMI_CHK_SCRIPT) $(CURR_5_10_SYMVERS) $(PREV_5_10_SYMVER
 include $(CLEAR_VARS)
 LOCAL_MODULE := gki_kmi_compatibility_test
 LOCAL_REQUIRED_MODULES := gki_5_4_kmi_compatibility_test gki_5_10_kmi_compatibility_test
+LOCAL_LICENSE_KINDS := SPDX-license-identifier-Apache-2.0
+LOCAL_LICENSE_CONDITIONS := notice
 include $(BUILD_PHONY_PACKAGE)
