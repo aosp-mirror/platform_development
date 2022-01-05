@@ -103,21 +103,21 @@ ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android.test.
 # ======= Lint API XML ===========
 full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework-doc-stubs_generated-api-versions.xml
 ALL_SDK_FILES += $(full_target)
-$(call dist-for-goals,sdk win_sdk,$(full_target):data/api-versions.xml)
+$(call dist-for-goals,sdk,$(full_target):data/api-versions.xml)
 
 # ======= Lint Annotations zip ===========
 full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/sdk-annotations.zip
 $(eval $(call copy-one-file,$(call intermediates-dir-for,ETC,sdk-annotations.zip)/sdk-annotations.zip,$(full_target)))
 ALL_SDK_FILES += $(full_target)
-$(call dist-for-goals,sdk win_sdk,$(full_target):data/annotations.zip)
+$(call dist-for-goals,sdk,$(full_target):data/annotations.zip)
 
 # ======= Lint system API XML ===========
 full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework-doc-system-stubs_generated-api-versions.xml
-$(call dist-for-goals,sdk win_sdk,$(full_target):system-data/api-versions.xml)
+$(call dist-for-goals,sdk,$(full_target):system-data/api-versions.xml)
 
 # ======= Lint system Annotations zip ===========
 full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework-doc-system-stubs_annotations.zip
-$(call dist-for-goals,sdk win_sdk,$(full_target):system-data/annotations.zip)
+$(call dist-for-goals,sdk,$(full_target):system-data/annotations.zip)
 
 # ============ SDK AIDL ============
 $(eval $(call copy-one-file,$(FRAMEWORK_AIDL),$(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework.aidl))
