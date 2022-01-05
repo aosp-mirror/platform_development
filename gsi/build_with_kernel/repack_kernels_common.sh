@@ -151,3 +151,13 @@ function update_kernel_module_prebuilts_with_artifact
     cp -f ${x} ${prebuilts_dir}
   done
 }
+
+function pack_boot_for_certification
+{
+  local file=boot.zip
+  local dist=$1
+  pushd ${dist}
+  rm -f ${file}
+  zip ${file} boot*.img
+  popd
+}
