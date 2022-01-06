@@ -1370,7 +1370,8 @@ class Runner(object):
     os.environ['PATH'] = saved_path
     if not self.dry_run:
       if not had_cargo_lock:  # restore to no Cargo.lock state
-        os.remove(cargo_lock)
+        if os.path.exists(cargo_lock):
+          os.remove(cargo_lock)
       elif not self.args.use_cargo_lock:  # restore saved Cargo.lock
         os.rename(cargo_lock_saved, cargo_lock)
     return self
