@@ -41,6 +41,10 @@ function prepare_lz4()
   fi
 }
 
+#
+#  This function copies kernel prebuilts from build chaining path to a staging
+#  output directory.
+#
 function prepare_kernel_image()
 {
   local prebuilt_path=$1
@@ -58,6 +62,8 @@ function prepare_kernel_image()
   fi
 
   mkdir -p "${out_root}"
+
+  printf "%-38s %20s\n" "copy kernel ${kernel_version} ${arch} ${build_variant} to" "${out_root}"
   if [[ "$arch" == "x86_64" ]]; then
     cp "${prebuilts_root}/bzImage" "${out_root}/kernel-${kernel_version}${postfix}"
   else
@@ -80,6 +86,10 @@ function prepare_kernel_image()
 EOF
 }
 
+#
+#  This function copies kernel module prebuilts from the build chaining path to a
+#  staging output directory.
+#
 function prepare_kernel_modules()
 {
   local prebuilt_path=$1
@@ -91,11 +101,63 @@ function prepare_kernel_modules()
   local dist_root="${DIST_DIR}/kernel/${kernel_version}"
 
   local initramfs_root="${out_root}/initramfs"
+  rm -rf ${initramfs_root}
   mkdir -p "${initramfs_root}"
 
+  printf "%-38s %20s\n" "copy kernel modules ${kernel_version} ${arch} to" "${initramfs_root}"
   "${LZ4}" -dcfm "${prebuilts_root}/initramfs.img" | (cd "${initramfs_root}"; cpio -imd)
 
   for x in $(find "${initramfs_root}" -type f -name "*.ko"); do
     cp "$x" "${out_root}"
   done
+}
+
+#
+#  This function updates kernel prebuilts with the local staging directory.
+#
+function update_kernel_prebuilts_with_artifact
+{
+  local kernel_version=$1
+  local arch=$2
+  local out_root="${OUT_DIR}/target/kernel/${kernel_version}/${arch}"
+  local prebuilts_dir="kernel/prebuilts/${kernel_version}/${arch}/"
+  local list="\
+    kernel-5.10-allsyms \
+    kernel-5.10-gz-allsyms \
+    kernel-5.10-lz4-allsyms \
+    kernel-5.10 \
+    kernel-5.10-gz \
+    kernel-5.10-lz4"
+  printf "%20s\n --> %20s\n" "${out_root}" "${prebuilts_dir}"
+  for f in ${list}; do
+    cp -f ${out_root}/$f ${prebuilts_dir}
+  done
+}
+
+#
+#  This function updates kernel module prebuilts with the local staging directory.
+#
+function update_kernel_module_prebuilts_with_artifact
+{
+  local kernel_version=$1
+  local arch=$2
+  local out_root="${OUT_DIR}/target/kernel/${kernel_version}/${arch}"
+  local initramfs_root="${out_root}/initramfs"
+  local prebuilts_dir="kernel/prebuilts/common-modules/virtual-device/${kernel_version}/${arch}/"
+
+  printf "%20s\n --> %20s\n" "${initramfs_root}" "${prebuilts_dir}"
+  rm -f ${prebuilts_dir}/*.ko
+  for x in $(find "${initramfs_root}" -type f -name "*.ko"); do
+    cp -f ${x} ${prebuilts_dir}
+  done
+}
+
+function pack_boot_for_certification
+{
+  local file=boot.zip
+  local dist=$1
+  pushd ${dist}
+  rm -f ${file}
+  zip ${file} boot*.img
+  popd
 }
