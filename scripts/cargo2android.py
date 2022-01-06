@@ -131,6 +131,8 @@ CARGO_TEST_LIST_START_PAT = re.compile('^\s*Running (.*) \(.*\)$')
 # cargo test --list output of the end of running a binary.
 CARGO_TEST_LIST_END_PAT = re.compile('^(\d+) tests, (\d+) benchmarks$')
 
+CARGO2ANDROID_RUNNING_PAT = re.compile('^### Running: .*$')
+
 # Rust package name with suffix -d1.d2.d3(+.*)?.
 VERSION_SUFFIX_PAT = re.compile(r'^(.*)-[0-9]+\.[0-9]+\.[0-9]+(?:\+.*)?$')
 
@@ -671,34 +673,20 @@ class Crate(object):
       # do not change self.stem or self.module_name
       self.dump_one_android_module(crate_type)
       return
-    # Dump one test module per source file, and separate host and device tests.
+    # Dump one test module per source file.
     # crate_type == 'test'
     self.srcs = [src for src in self.srcs if not self.runner.should_ignore_test(src)]
-    if ((self.host_supported and self.device_supported and len(self.srcs) > 0) or
-        len(self.srcs) > 1):
+    if len(self.srcs) > 1:
       self.srcs = sorted(set(self.srcs))
       self.dump_defaults_module()
     saved_srcs = self.srcs
     for src in saved_srcs:
       self.srcs = [src]
-      saved_device_supported = self.device_supported
-      saved_host_supported = self.host_supported
       saved_main_src = self.main_src
       self.main_src = src
-      if saved_host_supported:
-        self.device_supported = False
-        self.host_supported = True
-        self.module_name = self.test_module_name()
-        self.decide_one_module_type(crate_type)
-        self.dump_one_android_module(crate_type)
-      if saved_device_supported:
-        self.device_supported = True
-        self.host_supported = False
-        self.module_name = self.test_module_name()
-        self.decide_one_module_type(crate_type)
-        self.dump_one_android_module(crate_type)
-      self.host_supported = saved_host_supported
-      self.device_supported = saved_device_supported
+      self.module_name = self.test_module_name()
+      self.decide_one_module_type(crate_type)
+      self.dump_one_android_module(crate_type)
       self.main_src = saved_main_src
     self.srcs = saved_srcs
 
@@ -786,10 +774,7 @@ class Crate(object):
     """Return a unique name for a test module."""
     # root_pkg+(_host|_device) + '_test_'+source_file_name
     suffix = self.main_src_basename_path()
-    host_device = '_host'
-    if self.device_supported:
-      host_device = '_device'
-    return self.root_pkg + host_device + '_test_' + suffix
+    return self.root_pkg + '_test_' + suffix
 
   def decide_module_type(self):
     # Use the first crate type for the default/first module.
@@ -1138,6 +1123,7 @@ class Runner(object):
     self.name_owners = {}
     # Save and dump all errors from cargo to Android.bp.
     self.errors = ''
+    self.test_errors = ''
     self.setup_cargo_path()
     # Default action is cargo clean, followed by build or user given actions.
     if args.cargo:
@@ -1278,7 +1264,11 @@ class Runner(object):
       self.bp_files.add(name)
       license_section = self.read_license(name)
       with open(name, 'w') as outf:
-        outf.write(ANDROID_BP_HEADER.format(args=' '.join(sys.argv[1:])))
+        print_args = sys.argv[1:].copy()
+        if '--cargo_bin' in print_args:
+          index = print_args.index('--cargo_bin')
+          del print_args[index:index+2]
+        outf.write(ANDROID_BP_HEADER.format(args=' '.join(print_args)))
         outf.write('\n')
         outf.write(license_section)
         outf.write('\n')
@@ -1380,7 +1370,8 @@ class Runner(object):
     os.environ['PATH'] = saved_path
     if not self.dry_run:
       if not had_cargo_lock:  # restore to no Cargo.lock state
-        os.remove(cargo_lock)
+        if os.path.exists(cargo_lock):
+          os.remove(cargo_lock)
       elif not self.args.use_cargo_lock:  # restore saved Cargo.lock
         os.rename(cargo_lock_saved, cargo_lock)
     return self
@@ -1460,6 +1451,8 @@ class Runner(object):
             self.append_to_bp('\n' + f.read() + '\n')
         if self.errors:
           self.append_to_bp('\n' + ERRORS_LINE + '\n' + self.errors)
+        if self.test_errors:
+          self.append_to_bp('\n// Errors when listing tests:\n' + self.test_errors)
     return self
 
   def add_ar_object(self, obj):
@@ -1569,6 +1562,7 @@ class Runner(object):
     inf.seek(0)
     prev_warning = False  # true if the previous line was warning: ...
     rustc_line = ''  # previous line(s) matching RUSTC_VV_PAT
+    in_tests = False
     for line in inf:
       n += 1
       if line.startswith('warning: '):
@@ -1591,7 +1585,12 @@ class Runner(object):
           self.warning_files.add(fpath)
       elif line.startswith('error: ') or line.startswith('error[E'):
         if not self.args.ignore_cargo_errors:
-          self.errors += line
+          if in_tests:
+            self.test_errors += '// ' + line
+          else:
+            self.errors += line
+      elif CARGO2ANDROID_RUNNING_PAT.match(line):
+        in_tests = "cargo test" in line and "--list" in line
       prev_warning = False
       rustc_line = new_rustc
     self.find_warning_owners()
@@ -1842,7 +1841,7 @@ def dump_config(parser, args):
   non_default_args = {}
   for arg in args_dict:
     if (args_dict[arg] != parser.get_default(arg) and arg != 'dump_config_and_exit'
-        and arg != 'config'):
+        and arg != 'config' and arg != 'cargo_bin'):
       non_default_args[arg.replace('_', '-')] = args_dict[arg]
   # Write to the specified file.
   with open(args.dump_config_and_exit, 'w') as f:
