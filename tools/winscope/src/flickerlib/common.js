@@ -80,7 +80,7 @@ const Color = require('flicker').com.android.server.wm.traces.common.Color;
 const Point = require('flicker').com.android.server.wm.traces.common.Point;
 const Rect = require('flicker').com.android.server.wm.traces.common.Rect;
 const RectF = require('flicker').com.android.server.wm.traces.common.RectF;
-const Region = require('flicker').com.android.server.wm.traces.common.Region;
+const Region = require('flicker').com.android.server.wm.traces.common.region.Region;
 
 //Tags
 const Tag = require('flicker').com.android.server.wm.traces.common.tags.Tag;

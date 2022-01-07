@@ -189,6 +189,29 @@ public class ThemedNavBarKeyboard extends InputMethodService {
             switchToSeparateNavBarMode(Color.DKGRAY, false /* lightNavBar */);
             setBackgroundColor(MINT_COLOR);
 
+            {
+                final LinearLayout subLayout = new LinearLayout(context);
+                {
+                    final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT);
+                    lp.weight = 50;
+                    subLayout.addView(createButton("BACK_DISPOSITION\nDEFAULT", () -> {
+                        setBackDisposition(BACK_DISPOSITION_DEFAULT);
+                    }), lp);
+                }
+                {
+                    final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT);
+                    lp.weight = 50;
+                    subLayout.addView(createButton("BACK_DISPOSITION\nADJUST_NOTHING", () -> {
+                        setBackDisposition(BACK_DISPOSITION_ADJUST_NOTHING);
+                    }), lp);
+                }
+                addView(subLayout);
+            }
+
             addView(createButton("Floating Mode", () -> {
                 switchToFloatingMode();
                 setBackgroundColor(Color.TRANSPARENT);

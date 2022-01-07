@@ -32,6 +32,7 @@ def main():
   group = parser.add_mutually_exclusive_group()
   group.add_argument('--symbols-dir', '--syms', '--symdir', help='the symbols directory')
   group.add_argument('--symbols-zip', help='the symbols.zip file from a build')
+  parser.add_argument('-v', '--verbose', action='store_true', help="include function parameters")
   parser.add_argument('file',
                       metavar='FILE',
                       default='-',
@@ -52,6 +53,7 @@ def main():
     with zipfile.ZipFile(args.symbols_zip) as zf:
       zf.extractall(tmp.name)
     symbol.SYMBOLS_DIR = glob.glob("%s/out/target/product/*/symbols" % tmp.name)[0]
+  symbol.VERBOSE = args.verbose
   if args.file == '-':
     print("Reading native crash info from stdin")
     f = sys.stdin
