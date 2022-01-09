@@ -432,6 +432,9 @@ class Crate(object):
         self.emit_list = arg.replace('--emit=', '')
       elif arg.startswith('--edition='):
         self.edition = arg.replace('--edition=', '')
+      elif arg.startswith('\'-Aclippy'):
+        # TODO: Consider storing these to include in the Android.bp.
+        _ = arg # ignored
       elif not arg.startswith('-'):
         # shorten imported crate main source paths like $HOME/.cargo/
         # registry/src/github.com-1ecc6299db9ec823/memchr-2.3.3/src/lib.rs
@@ -1370,7 +1373,8 @@ class Runner(object):
     os.environ['PATH'] = saved_path
     if not self.dry_run:
       if not had_cargo_lock:  # restore to no Cargo.lock state
-        os.remove(cargo_lock)
+        if os.path.exists(cargo_lock):
+          os.remove(cargo_lock)
       elif not self.args.use_cargo_lock:  # restore saved Cargo.lock
         os.rename(cargo_lock_saved, cargo_lock)
     return self
