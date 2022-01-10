@@ -896,7 +896,10 @@ class Crate(object):
       self.write('    auto_gen_config: true,')
     if 'test' in self.crate_types and self.host_supported:
       self.write('    test_options: {')
-      self.write('        unit_test: true,')
+      if self.runner.args.no_presubmit:
+        self.write('        unit_test: false,')
+      else:
+        self.write('        unit_test: true,')
       self.write('    },')
 
   def dump_android_externs(self):
@@ -1668,6 +1671,11 @@ def get_parser():
       action='store_true',
       default=False,
       help='do not run cargo for the host; only for the device target')
+  parser.add_argument(
+      '--no-presubmit',
+      action='store_true',
+      default=False,
+      help='set unit_test to false for test targets, to avoid host tests running in presubmit')
   parser.add_argument(
       '--no-subdir',
       action='store_true',
