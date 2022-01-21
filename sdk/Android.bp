@@ -1,14 +1,19 @@
 package {
     // See: http://go/android-license-faq
-    // A large-scale-change added 'default_applicable_licenses' to import
-    // all of the 'license_kinds' from "development_license"
-    // to get the below license kinds:
-    //   SPDX-license-identifier-BSD
-    //   SPDX-license-identifier-CPL-1.0
-    //   SPDX-license-identifier-MIT
-    //   SPDX-license-identifier-Unicode-DFS
-    //   SPDX-license-identifier-W3C
-    default_applicable_licenses: ["development_license"],
+    default_applicable_licenses: ["development_sdk_license"],
+}
+
+license {
+    name: "development_sdk_license",
+    visibility: [":__subpackages__"],
+    license_kinds: [
+        "SPDX-license-identifier-BSD",
+        "SPDX-license-identifier-CPL-1.0",
+        "SPDX-license-identifier-MIT",
+        "SPDX-license-identifier-Unicode-DFS",
+        "SPDX-license-identifier-W3C",
+    ],
+    license_text: ["sdk_files_NOTICE.txt"],
 }
 
 genrule {
