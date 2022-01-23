@@ -6,7 +6,8 @@
 # document the reason for each exclusion.
 #
 # Developers can also create an 'excluded-paths' file in the project's root
-# directory and add their own excludes to slim down their build.
+# directory or their vendor directory and add their own excludes to slim
+# down their build.
 #
 # Currently, we lump all the .java files together into one big module, so you
 # can't have two classes with the same name at once. In the future, we'll
