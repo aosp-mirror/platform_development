@@ -332,7 +332,7 @@ class TraceConverter:
   # Search for a library with the given basename and build_id anywhere in the symbols directory.
   @functools.lru_cache(maxsize=None)
   def GetLibraryByBuildId(self, symbols_dir, basename, build_id):
-    for candidate in self.GlobSymbolsDir(symbols_dir).get(basename):
+    for candidate in self.GlobSymbolsDir(symbols_dir).get(basename, []):
       info = self.GetLibraryInfo(candidate)
       if info and info.build_id == build_id:
         return "/" + str(candidate.relative_to(symbols_dir))
