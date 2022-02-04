@@ -165,9 +165,9 @@ def update_buildfiles(buildfile_generator):
     logging.info('Generating Android.bp files...')
     buildfile_generator.generate_android_bp()
 
-def copy_owners(install_dir):
+def copy_owners(root_dir, install_dir):
     path = os.path.dirname(__file__)
-    shutil.copy(os.path.join(path, 'OWNERS'), install_dir)
+    shutil.copy(os.path.join(root_dir, path, 'OWNERS'), install_dir)
 
 def check_gpl_license(license_checker):
     try:
@@ -253,7 +253,7 @@ def main():
             'before installing new snapshot.'.format(ver=vndk_version))
 
     utils.set_logging_config(args.verbose)
-
+    root_dir = os.getcwd()
     os.chdir(install_dir)
 
     if not args.use_current_branch:
@@ -275,7 +275,7 @@ def main():
         buildfile_generator = GenBuildFile(install_dir, vndk_version)
         update_buildfiles(buildfile_generator)
 
-        copy_owners(install_dir)
+        copy_owners(root_dir, install_dir)
 
         if not local:
             license_checker = GPLChecker(install_dir, ANDROID_BUILD_TOP,
