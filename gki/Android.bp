@@ -14,7 +14,7 @@
 // limitations under the License.
 
 package {
-    default_applicable_licenses: ["development_license"],
+    default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
 sh_test {
