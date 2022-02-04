@@ -432,6 +432,9 @@ class Crate(object):
         self.emit_list = arg.replace('--emit=', '')
       elif arg.startswith('--edition='):
         self.edition = arg.replace('--edition=', '')
+      elif arg.startswith('\'-Aclippy'):
+        # TODO: Consider storing these to include in the Android.bp.
+        _ = arg # ignored
       elif not arg.startswith('-'):
         # shorten imported crate main source paths like $HOME/.cargo/
         # registry/src/github.com-1ecc6299db9ec823/memchr-2.3.3/src/lib.rs
@@ -673,34 +676,20 @@ class Crate(object):
       # do not change self.stem or self.module_name
       self.dump_one_android_module(crate_type)
       return
-    # Dump one test module per source file, and separate host and device tests.
+    # Dump one test module per source file.
     # crate_type == 'test'
     self.srcs = [src for src in self.srcs if not self.runner.should_ignore_test(src)]
-    if ((self.host_supported and self.device_supported and len(self.srcs) > 0) or
-        len(self.srcs) > 1):
+    if len(self.srcs) > 1:
       self.srcs = sorted(set(self.srcs))
       self.dump_defaults_module()
     saved_srcs = self.srcs
     for src in saved_srcs:
       self.srcs = [src]
-      saved_device_supported = self.device_supported
-      saved_host_supported = self.host_supported
       saved_main_src = self.main_src
       self.main_src = src
-      if saved_host_supported:
-        self.device_supported = False
-        self.host_supported = True
-        self.module_name = self.test_module_name()
-        self.decide_one_module_type(crate_type)
-        self.dump_one_android_module(crate_type)
-      if saved_device_supported:
-        self.device_supported = True
-        self.host_supported = False
-        self.module_name = self.test_module_name()
-        self.decide_one_module_type(crate_type)
-        self.dump_one_android_module(crate_type)
-      self.host_supported = saved_host_supported
-      self.device_supported = saved_device_supported
+      self.module_name = self.test_module_name()
+      self.decide_one_module_type(crate_type)
+      self.dump_one_android_module(crate_type)
       self.main_src = saved_main_src
     self.srcs = saved_srcs
 
@@ -788,10 +777,7 @@ class Crate(object):
     """Return a unique name for a test module."""
     # root_pkg+(_host|_device) + '_test_'+source_file_name
     suffix = self.main_src_basename_path()
-    host_device = '_host'
-    if self.device_supported:
-      host_device = '_device'
-    return self.root_pkg + host_device + '_test_' + suffix
+    return self.root_pkg + '_test_' + suffix
 
   def decide_module_type(self):
     # Use the first crate type for the default/first module.
@@ -910,7 +896,10 @@ class Crate(object):
       self.write('    auto_gen_config: true,')
     if 'test' in self.crate_types and self.host_supported:
       self.write('    test_options: {')
-      self.write('        unit_test: true,')
+      if self.runner.args.no_presubmit:
+        self.write('        unit_test: false,')
+      else:
+        self.write('        unit_test: true,')
       self.write('    },')
 
   def dump_android_externs(self):
@@ -1387,7 +1376,8 @@ class Runner(object):
     os.environ['PATH'] = saved_path
     if not self.dry_run:
       if not had_cargo_lock:  # restore to no Cargo.lock state
-        os.remove(cargo_lock)
+        if os.path.exists(cargo_lock):
+          os.remove(cargo_lock)
       elif not self.args.use_cargo_lock:  # restore saved Cargo.lock
         os.rename(cargo_lock_saved, cargo_lock)
     return self
@@ -1681,6 +1671,11 @@ def get_parser():
       action='store_true',
       default=False,
       help='do not run cargo for the host; only for the device target')
+  parser.add_argument(
+      '--no-presubmit',
+      action='store_true',
+      default=False,
+      help='set unit_test to false for test targets, to avoid host tests running in presubmit')
   parser.add_argument(
       '--no-subdir',
       action='store_true',
