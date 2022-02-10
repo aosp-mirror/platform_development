@@ -566,6 +566,14 @@ export default {
 
       return {filetype, data};
     },
+    /**
+     * Decode a zip file
+     *
+     * Load all files that can be decoded, even if some failures occur.
+     * For example, a zip file with an mp4 recorded via MediaProjection
+     * doesn't include the winscope metadata (b/140855415), but the trace
+     * files within the zip should be nevertheless readable
+     */
     async decodeArchive(archive) {
       const buffer = await this.readFile(archive);
 
@@ -574,6 +582,7 @@ export default {
 
       const decodedFiles = [];
 
+      let lastError;
       for (const filename in content.files) {
         if (content.files.hasOwnProperty(filename)) {
           const file = content.files[filename];
@@ -592,14 +601,24 @@ export default {
             decodedFiles.push(decodedFile);
           } catch (e) {
             if (!(e instanceof UndetectableFileType)) {
-              throw e;
+              lastError = e;
             }
+
+            console.error(e);
           }
         }
       }
 
       if (decodedFiles.length == 0) {
+        if (lastError) {
+          throw lastError;
+        }
         throw new Error('No matching files found in archive', archive);
+      } else {
+        if (lastError) {
+          this.showSnackbarMessage(
+            'Unable to parse all files, check log for more details', 3500);
+        }
       }
 
       return decodedFiles;
