@@ -1152,8 +1152,14 @@ class Runner(object):
       self.cargo_path = os.path.join(self.args.cargo_bin, 'cargo')
       if not os.path.isfile(self.cargo_path):
         sys.exit('ERROR: cannot find cargo in ' + self.args.cargo_bin)
-      print('WARNING: using cargo in ' + self.args.cargo_bin)
+      print('INFO: using cargo in ' + self.args.cargo_bin)
       return
+    elif os.environ.get('ANDROID_BUILD_ENVIRONMENT_CONFIG', '') == 'googler':
+      sys.exit('ERROR: Not executed within the sandbox. Please see '
+               'go/cargo2android-sandbox for more information.')
+    else:
+      sys.exit('ERROR: the prebuilt cargo is not usable; please '
+               'use the --cargo_bin flag.')
     # We have only tested this on Linux.
     if platform.system() != 'Linux':
       sys.exit('ERROR: this script has only been tested on Linux with cargo.')
