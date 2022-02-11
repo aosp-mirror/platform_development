@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-import { getPropertiesForDisplay, shortenName } from '../mixin'
-import { asRawTreeViewObject } from '../../utils/diff.js'
+import { shortenName } from '../mixin'
 import { Activity } from "../common"
+import { VISIBLE_CHIP } from '../treeview/Chips'
 import WindowContainer from "./WindowContainer"
 
-Activity.fromProto = function (proto): Activity {
+Activity.fromProto = function (proto: any): Activity {
     if (proto == null) {
-        return null
+        return null;
     } else {
-        const children = proto.windowToken.windowContainer.children.reverse()
-            .filter(it => it != null)
-            .map(it => WindowContainer.childrenFromProto(it, /* isActivityInTree */ true))
-        const windowContainer = WindowContainer.fromProto({proto: proto.windowToken.windowContainer,
-            children: children, identifierOverride: proto.identifier})
-        if (windowContainer == null) {
-            throw "Window container should not be null: " + JSON.stringify(proto)
-        }
+        const windowContainer = WindowContainer.fromProto(
+            /* proto */ proto.windowToken.windowContainer,
+            /* protoChildren */ proto.windowToken.windowContainer.children.reverse(),
+            /* isActivityInTree */ true,
+            /* nameOverride */ null,
+            /* identifierOverride */ proto.identifier
+        );
+
         const entry = new Activity(
             proto.name,
             proto.state,
@@ -39,16 +39,19 @@ Activity.fromProto = function (proto): Activity {
             proto.procId,
             proto.translucent,
             windowContainer
-        )
+        );
 
-        entry.obj = getPropertiesForDisplay(proto, entry)
-        entry.kind = entry.constructor.name
-        entry.shortName = shortenName(entry.name)
-        entry.rawTreeViewObject = asRawTreeViewObject(entry)
-
-        console.warn("Created ", entry.kind, " stableId=", entry.stableId)
-        return entry
+        addAttributes(entry, proto);
+        console.warn("Created ", entry.kind, " stableId=", entry.stableId);
+        return entry;
     }
 }
 
-export default Activity
+function addAttributes(entry: Activity, proto: any) {
+    entry.proto = proto;
+    entry.kind = entry.constructor.name;
+    entry.shortName = shortenName(entry.name);
+    entry.chips = entry.isVisible ? [VISIBLE_CHIP] : [];
+}
+
+export default Activity;
