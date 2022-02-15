@@ -37,7 +37,14 @@ export default {
       const summary = [];
 
       if (layer?.visibilityReason) {
-        summary.push({key: 'Invisible due to', value: layer.visibilityReason});
+        let reason = "";
+        if (Array.isArray(layer.visibilityReason)) {
+          reason = layer.visibilityReason.join(", ");
+        } else {
+          reason = layer.visibilityReason;
+        }
+
+        summary.push({key: 'Invisible due to', value: reason});
       }
 
       if (layer?.occludedBy?.length > 0) {

@@ -332,7 +332,7 @@ class TraceConverter:
   # Search for a library with the given basename and build_id anywhere in the symbols directory.
   @functools.lru_cache(maxsize=None)
   def GetLibraryByBuildId(self, symbols_dir, basename, build_id):
-    for candidate in self.GlobSymbolsDir(symbols_dir).get(basename):
+    for candidate in self.GlobSymbolsDir(symbols_dir).get(basename, []):
       info = self.GetLibraryInfo(candidate)
       if info and info.build_id == build_id:
         return "/" + str(candidate.relative_to(symbols_dir))
@@ -498,12 +498,15 @@ class TraceConverter:
         # display "a -> b -> c" in the stack trace instead of just "a -> c"
         info = symbol.SymbolInformation(lib, code_addr)
         nest_count = len(info) - 1
-        for (source_symbol, source_location, object_symbol_with_offset) in info:
+        for (source_symbol, source_location, symbol_with_offset) in info:
           if not source_symbol:
             if symbol_present:
               source_symbol = symbol.CallCppFilt(symbol_name)
             else:
               source_symbol = "<unknown>"
+          if not symbol.VERBOSE:
+            source_symbol = symbol.FormatSymbolWithoutParameters(source_symbol)
+            symbol_with_offset = symbol.FormatSymbolWithoutParameters(symbol_with_offset)
           if not source_location:
             source_location = area
             if lib_name:
@@ -515,11 +518,9 @@ class TraceConverter:
               arrow = "v-------------->"
             self.trace_lines.append((arrow, source_symbol, source_location))
           else:
-            if not object_symbol_with_offset:
-              object_symbol_with_offset = source_symbol
-            self.trace_lines.append((code_addr,
-                                object_symbol_with_offset,
-                                source_location))
+            if not symbol_with_offset:
+              symbol_with_offset = source_symbol
+            self.trace_lines.append((code_addr, symbol_with_offset, source_location))
     if self.code_line.match(line):
       # Code lines should be ignored. If this were exluded the 'code around'
       # sections would trigger value_line matches.
