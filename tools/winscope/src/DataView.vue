@@ -73,6 +73,7 @@
         :file="file"
         :presentTags="[]"
         :presentErrors="[]"
+        :propertyGroups="false"
         ref="view"
       />
       <div v-else>

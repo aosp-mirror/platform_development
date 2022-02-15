@@ -111,11 +111,16 @@
           </md-field>
         </md-content>
         <div class="properties-content">
-          <div v-if="elementSummary" class="element-summary">
+          <div v-if="elementSummary && !propertyGroups" class="element-summary">
             <div v-for="elem in elementSummary" v-bind:key="elem.key">
-              <!-- eslint-disable-next-line max-len -->
               <span class="key">{{ elem.key }}:</span> <span class="value">{{ elem.value }}</span>
             </div>
+          </div>
+          <div v-if="selectedTree && propertyGroups" class="element-summary">
+            <sf-property-groups
+              :layer="this.hierarchySelected"
+              :visibilityReason="elementSummary"
+            />
           </div>
           <div v-if="selectedTree" class="tree-view-wrapper">
             <tree-view
@@ -143,6 +148,7 @@ import TreeView from './TreeView.vue';
 import Rects from './Rects.vue';
 import FlatCard from './components/FlatCard.vue';
 import PropertiesTreeElement from './PropertiesTreeElement.vue';
+import SurfaceFlingerPropertyGroups from '@/SurfaceFlingerPropertyGroups.vue';
 
 import {ObjectTransformer} from './transform.js';
 import {DiffGenerator, defaultModifiedCheck} from './utils/diff.js';
@@ -179,7 +185,7 @@ function findEntryInTree(tree, id) {
 
 export default {
   name: 'traceview',
-  props: ['store', 'file', 'summarizer', 'presentTags', 'presentErrors'],
+  props: ['store', 'file', 'summarizer', 'presentTags', 'presentErrors', 'propertyGroups'],
   data() {
     return {
       propertyFilterString: '',
@@ -437,6 +443,7 @@ export default {
     'tree-view': TreeView,
     'rects': Rects,
     'flat-card': FlatCard,
+    'sf-property-groups': SurfaceFlingerPropertyGroups,
   },
 };
 
@@ -478,7 +485,7 @@ function getFilter(filterString) {
   flex: 1;
   margin: 8px;
   min-width: 400px;
-  min-height: 50rem;
+  min-height: 70rem;
 }
 
 .rects,
