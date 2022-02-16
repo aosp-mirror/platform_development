@@ -14,13 +14,7 @@
 -->
 
 <template>
-  <TraceView
-    :store="store"
-    :file="file"
-    :summarizer="summarizer"
-    :presentTags="presentTags"
-    :presentErrors="presentErrors"
-  />
+  <TraceView :store="store" :file="file" :summarizer="summarizer" />
 </template>
 
 <script>
@@ -28,7 +22,7 @@ import TraceView from "@/TraceView.vue"
 
 export default {
   name: "WindowManagerTraceView",
-  props: ["store", "file", "presentTags", "presentErrors"],
+  props: ["store", "file"],
   components: {
     TraceView
   },
@@ -36,8 +30,8 @@ export default {
     summarizer(item) {
       const summary = [];
 
-      if (item.isIncompleteReason) {
-        summary.push({key: 'Incomplete state reason', value: item.isIncompleteReason});
+      if (item.obj.isIncompleteReason) {
+        summary.push({key: 'Incomplete state reason', value: item.obj.isIncompleteReason});
       }
 
       return summary;
