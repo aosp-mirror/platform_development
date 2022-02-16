@@ -58,6 +58,7 @@ public class FixedAspectRatioImageView extends ImageView {
             height = MeasureSpec.getSize(heightMeasureSpec);
             width = (int) (height * mAspectRatio.floatValue());
         }
+        android.util.Log.d("DebugMe", "onMeasure w=" + width + " h=" + height);
         setMeasuredDimension(width, height);
     }
 }

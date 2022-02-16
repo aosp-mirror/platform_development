@@ -18,13 +18,8 @@
       <md-card-header>
         <md-card-header-text>
           <div class="md-title">
-            <button class="toggle-view-button" @click="toggleView">
-              <i aria-hidden="true" class="md-icon md-theme-default material-icons">
-                {{ isShowFileType(file.type) ? "expand_more" : "chevron_right" }}
-              </i>
-            </button>
             <md-icon>{{ TRACE_ICONS[file.type] }}</md-icon>
-            {{ file.type }}
+            {{file.type}}
           </div>
         </md-card-header-text>
         <md-button
@@ -35,48 +30,37 @@
           <md-icon>save_alt</md-icon>
         </md-button>
       </md-card-header>
-      <AccessibilityTraceView
-        v-if="showInAccessibilityTraceView(file) && isShowFileType(file.type)"
-        :store="store"
-        :file="file"
-        ref="view"
-      />
+
       <WindowManagerTraceView
-        v-if="showInWindowManagerTraceView(file) && isShowFileType(file.type)"
+        v-if="showInWindowManagerTraceView(file)"
         :store="store"
         :file="file"
-        :presentTags="presentTags"
-        :presentErrors="presentErrors"
         ref="view"
       />
       <SurfaceFlingerTraceView
-        v-else-if="showInSurfaceFlingerTraceView(file) && isShowFileType(file.type)"
+        v-else-if="showInSurfaceFlingerTraceView(file)"
         :store="store"
         :file="file"
-        :presentTags="presentTags"
-        :presentErrors="presentErrors"
         ref="view"
       />
-      <transactionsviewlegacy
-        v-else-if="isTransactionsLegacy(file) && isShowFileType(file.type)"
+      <transactionsview
+        v-else-if="isTransactions(file)"
         :trace="file"
         ref="view"
       />
       <logview
-        v-else-if="isLog(file) && isShowFileType(file.type)"
+        v-else-if="isLog(file)"
         :file="file"
         ref="view"
       />
       <traceview
-        v-else-if="showInTraceView(file) && isShowFileType(file.type)"
+        v-else-if="showInTraceView(file)"
         :store="store"
         :file="file"
-        :presentTags="[]"
-        :presentErrors="[]"
         ref="view"
       />
       <div v-else>
-        <h1 v-if="isShowFileType(file.type)" class="bad">Unrecognized DataType</h1>
+        <h1 class="bad">Unrecognized DataType</h1>
       </div>
 
     </flat-card>
@@ -84,10 +68,9 @@
 </template>
 <script>
 import TraceView from '@/TraceView.vue';
-import AccessibilityTraceView from '@/AccessibilityTraceView.vue';
 import WindowManagerTraceView from '@/WindowManagerTraceView.vue';
 import SurfaceFlingerTraceView from '@/SurfaceFlingerTraceView.vue';
-import TransactionsViewLegacy from '@/TransactionsViewLegacy.vue';
+import TransactionsView from '@/TransactionsView.vue';
 import LogView from '@/LogView.vue';
 import FileType from '@/mixins/FileType.js';
 import FlatCard from '@/components/FlatCard.vue';
@@ -161,30 +144,14 @@ export default {
       // to component.
       this.$emit('click', e);
     },
-    /** Filter data view files by current show settings */
-    updateShowFileTypes() {
-      this.store.showFileTypes = this.dataViewFiles
-        .filter((file) => file.show)
-        .map(file => file.type);
-    },
-    /** Expand or collapse data view */
-    toggleView() {
-      this.file.show = !this.file.show;
-      this.updateShowFileTypes();
-    },
-    /** Check if data view file should be shown */
-    isShowFileType(type) {
-      return this.store.showFileTypes.find(fileType => fileType===type);
-    },
   },
-  props: ['store', 'file', 'presentTags', 'presentErrors', 'dataViewFiles'],
+  props: ['store', 'file'],
   mixins: [FileType],
   components: {
     'traceview': TraceView,
-    'transactionsviewlegacy': TransactionsViewLegacy,
+    'transactionsview': TransactionsView,
     'logview': LogView,
     'flat-card': FlatCard,
-    AccessibilityTraceView,
     WindowManagerTraceView,
     SurfaceFlingerTraceView,
   },
@@ -195,19 +162,5 @@ export default {
   margin: 1em 1em 1em 1em;
   font-size: 4em;
   color: red;
-}
-
-.toggle-view-button {
-  background: none;
-  color: inherit;
-  border: none;
-  font: inherit;
-  cursor: pointer;
-  padding-right: 10px;
-  display: inline-block;
-}
-
-.md-title {
-  display: inline-block;
 }
 </style>
