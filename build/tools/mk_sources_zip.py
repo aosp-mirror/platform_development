@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/python
 #
 # Copyright (C) 2011 The Android Open Source Project
 #
@@ -39,7 +39,7 @@ class Params(object):
         self.CNT_NOPKG = 0
         # DIR is the list of directories to scan in TOPDIR.
         self.DIR = "frameworks libcore"
-        self.IGNORE_DIR = [ "hosttests", "tools", "tests", "samples", "layoutlib" ]
+        self.IGNORE_DIR = [ "hosttests", "tools", "tests", "samples" ]
         # IGNORE is a list of namespaces to ignore. Must be java
         # package definitions (e.g. "com.blah.foo.")
         self.IGNORE = [ "sun.", "libcore.", "dalvik.",
