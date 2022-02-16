@@ -26,8 +26,7 @@ import os
 import sys
 
 from gerrit import (
-    create_url_opener_from_args, find_gerrit_name, normalize_gerrit_name,
-    query_change_lists, get_patch
+    create_url_opener_from_args, find_gerrit_name, query_change_lists, get_patch
 )
 
 def _parse_args():
@@ -40,10 +39,8 @@ def _parse_args():
     parser.add_argument('--gitcookies',
                         default=os.path.expanduser('~/.gitcookies'),
                         help='Gerrit cookie file')
-    parser.add_argument('--limits', default=1000, type=int,
+    parser.add_argument('--limits', default=1000,
                         help='Max number of change lists')
-    parser.add_argument('--start', default=0, type=int,
-                        help='Skip first N changes in query')
 
     return parser.parse_args()
 
@@ -52,9 +49,7 @@ def main():
     """Main function"""
     args = _parse_args()
 
-    if args.gerrit:
-        args.gerrit = normalize_gerrit_name(args.gerrit)
-    else:
+    if not args.gerrit:
         try:
             args.gerrit = find_gerrit_name()
         # pylint: disable=bare-except
@@ -65,7 +60,7 @@ def main():
     # Query change lists
     url_opener = create_url_opener_from_args(args)
     change_lists = query_change_lists(
-        url_opener, args.gerrit, args.query, args.start, args.limits)
+        url_opener, args.gerrit, args.query, args.limits)
 
     # Download patch files
     num_changes = len(change_lists)

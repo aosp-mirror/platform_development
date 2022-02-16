@@ -32,8 +32,8 @@ except ImportError:
 
 from gerrit import (
     abandon, add_reviewers, create_url_opener_from_args, delete_reviewer,
-    delete_topic, find_gerrit_name, normalize_gerrit_name, query_change_lists,
-    restore, set_hashtags, set_review, set_topic, submit
+    delete_topic, find_gerrit_name, query_change_lists, restore, set_hashtags,
+    set_review, set_topic, submit
 )
 
 
@@ -93,10 +93,8 @@ def _parse_args():
     parser.add_argument('--gitcookies',
                         default=os.path.expanduser('~/.gitcookies'),
                         help='Gerrit cookie file')
-    parser.add_argument('--limits', default=1000, type=int,
+    parser.add_argument('--limits', default=1000,
                         help='Max number of change lists')
-    parser.add_argument('--start', default=0, type=int,
-                        help='Skip first N changes in query')
 
     parser.add_argument('-l', '--label', nargs=2, action='append',
                         help='Labels to be added')
@@ -193,9 +191,7 @@ def main():
     # Parse and check the command line options
     args = _parse_args()
 
-    if args.gerrit:
-        args.gerrit = normalize_gerrit_name(args.gerrit)
-    else:
+    if not args.gerrit:
         try:
             args.gerrit = find_gerrit_name()
         # pylint: disable=bare-except
@@ -221,7 +217,7 @@ def main():
 
     # Retrieve change lists
     change_lists = query_change_lists(
-        url_opener, args.gerrit, args.query, args.start, args.limits)
+        url_opener, args.gerrit, args.query, args.limits)
     if not change_lists:
         print('error: No matching change lists.', file=sys.stderr)
         sys.exit(1)
