@@ -1,6 +1,32 @@
 import { DiffType } from "../src/utils/diff.js";
 import { ObjectTransformer } from "../src/transform.js";
-import { ObjNode, ObjDiffNode, toPlainObject } from "./utils/tree.js";
+import { Node, DiffNode, toPlainObject } from "./utils/tree.js";
+
+class ObjNode extends Node {
+    constructor(name, children, combined) {
+        const nodeDef = {
+            kind: '',
+            name: name,
+        };
+        if (combined) {
+            nodeDef.combined = true;
+        }
+        super(nodeDef, children);
+    }
+}
+
+class ObjDiffNode extends DiffNode {
+    constructor(name, diffType, children, combined) {
+        const nodeDef = {
+            kind: '',
+            name: name,
+        };
+        if (combined) {
+            nodeDef.combined = true;
+        }
+        super(nodeDef, diffType, children);
+    }
+}
 
 describe("ObjectTransformer", () => {
     it("can transform a simple object", () => {
@@ -20,19 +46,19 @@ describe("ObjectTransformer", () => {
         const expectedTransformedObj = toPlainObject(
             new ObjNode('root', [
                 new ObjNode('obj', [
-                    new ObjNode('string: string', [], true, 'root.obj.string'),
-                    new ObjNode('number: 3', [], true, 'root.obj.number'),
-                ], undefined, 'root.obj'),
+                    new ObjNode('string: string', [], true),
+                    new ObjNode('number: 3', [], true),
+                ]),
                 new ObjNode('array', [
                     new ObjNode('0', [
-                        new ObjNode('nested: item', [], true, 'root.array.0.nested'),
-                    ], undefined, 'root.array.0'),
-                    new ObjNode("1: two", [], true, 'root.array.1'),
-                ], undefined, 'root.array'),
-            ], undefined, 'root')
+                        new ObjNode('nested: item', [], true),
+                    ]),
+                    new ObjNode("1: two", [], true),
+                ]),
+            ])
         );
 
-        const transformedObj = new ObjectTransformer(obj, 'root', 'root')
+        const transformedObj = new ObjectTransformer(obj, 'root')
             .setOptions({ formatter: () => { } })
             .transform();
 
@@ -49,12 +75,12 @@ describe("ObjectTransformer", () => {
         const expectedTransformedObj = toPlainObject(
             new ObjNode('root', [
                 new ObjNode('obj', [
-                    new ObjNode('null: null', [], true, 'root.obj.null'),
-                ], undefined, 'root.obj'),
-            ], undefined, 'root')
+                    new ObjNode('null: null', [], true),
+                ]),
+            ])
         );
 
-        const transformedObj = new ObjectTransformer(obj, 'root', 'root')
+        const transformedObj = new ObjectTransformer(obj, 'root')
             .setOptions({ formatter: () => { } })
             .transform();
 
@@ -80,14 +106,14 @@ describe("ObjectTransformer", () => {
         const expectedTransformedObj = toPlainObject(
             new ObjDiffNode('root', DiffType.NONE, [
                 new ObjDiffNode('a', DiffType.NONE, [
-                    new ObjDiffNode('b: 1', DiffType.NONE, [], true, 'root.a.b'),
-                    new ObjDiffNode('d: 3', DiffType.ADDED, [], true, 'root.a.d'),
-                ], false, 'root.a'),
-                new ObjDiffNode('c: 2', DiffType.NONE, [], true, 'root.c'),
-            ], false, 'root')
+                    new ObjDiffNode('b: 1', DiffType.NONE, [], true),
+                    new ObjDiffNode('d: 3', DiffType.ADDED, [], true),
+                ]),
+                new ObjDiffNode('c: 2', DiffType.NONE, [], true),
+            ])
         );
 
-        const transformedObj = new ObjectTransformer(newObj, 'root', 'root')
+        const transformedObj = new ObjectTransformer(newObj, 'root')
             .setOptions({ formatter: () => { } })
             .withDiff(oldObj)
             .transform();
@@ -107,13 +133,13 @@ describe("ObjectTransformer", () => {
         const expectedTransformedObj = toPlainObject(
             new ObjDiffNode('root', DiffType.NONE, [
                 new ObjDiffNode('a', DiffType.NONE, [
-                    new ObjDiffNode('1', DiffType.ADDED, [], false, 'root.a.1'),
-                    new ObjDiffNode('null', DiffType.DELETED, [], false, 'root.a.null'),
-                ], false, 'root.a'),
-            ], false, 'root')
+                    new ObjDiffNode('1', DiffType.ADDED, []),
+                    new ObjDiffNode('null', DiffType.DELETED, []),
+                ]),
+            ])
         );
 
-        const transformedObj = new ObjectTransformer(newObj, 'root', 'root')
+        const transformedObj = new ObjectTransformer(newObj, 'root')
             .setOptions({ formatter: () => { } })
             .withDiff(oldObj)
             .transform();
@@ -140,15 +166,15 @@ describe("ObjectTransformer", () => {
             new ObjDiffNode('root', DiffType.NONE, [
                 new ObjDiffNode('a', DiffType.NONE, [
                     new ObjDiffNode('b', DiffType.NONE, [
-                        new ObjDiffNode('1', DiffType.ADDED, [], false, 'root.a.b.1'),
-                        new ObjDiffNode('null', DiffType.DELETED, [],  false, 'root.a.b.null'),
-                    ], false, 'root.a.b'),
-                ], false, 'root.a'),
-                new ObjDiffNode('c: 2', DiffType.NONE, [], true, 'root.c'),
-            ],  false, 'root')
+                        new ObjDiffNode('1', DiffType.ADDED, []),
+                        new ObjDiffNode('null', DiffType.DELETED, []),
+                    ]),
+                ]),
+                new ObjDiffNode('c: 2', DiffType.NONE, [], true),
+            ])
         );
 
-        const transformedObj = new ObjectTransformer(newObj, 'root', 'root')
+        const transformedObj = new ObjectTransformer(newObj, 'root')
             .setOptions({ formatter: () => { } })
             .withDiff(oldObj)
             .transform();
