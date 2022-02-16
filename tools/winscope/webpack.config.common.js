@@ -19,7 +19,7 @@
 const path = require('path');
 const fs = require('fs');
 
-const { VueLoaderPlugin } = require("vue-loader")
+const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const KotlinWebpackPlugin = require('@jetbrains/kotlin-webpack-plugin');
 const HtmlWebpackInlineSourcePlugin =
@@ -129,7 +129,7 @@ const webpackConfig = {
       inlineSource: isDev ? false : '.(js|css)',
       template: 'src/index_template.html',
     }),
-    new HtmlWebpackInlineSourcePlugin(HtmlWebpackPlugin),
+    new HtmlWebpackInlineSourcePlugin(),
     new KotlinWebpackPlugin({
       src: [
         path.join(__dirname, '../../../platform_testing/libraries/flicker/' +
