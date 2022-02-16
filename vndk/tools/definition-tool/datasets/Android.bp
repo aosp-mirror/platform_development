@@ -16,7 +16,11 @@
 
 package {
     // See: http://go/android-license-faq
-    default_applicable_licenses: ["Android-Apache-2.0"],
+    // A large-scale-change added 'default_applicable_licenses' to import
+    // all of the 'license_kinds' from "development_license"
+    // to get the below license kinds:
+    //   legacy_restricted
+    default_applicable_licenses: ["development_license"],
 }
 
 filegroup {
