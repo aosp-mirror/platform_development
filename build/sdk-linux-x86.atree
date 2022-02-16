@@ -1,0 +1,48 @@
+#
+# Copyright (C) 2007 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+##############################################################################
+# Platform Tools Component
+##############################################################################
+
+lib64/libc++.so                                        strip platform-tools/lib64/libc++.so
+
+##############################################################################
+# Build Tools Component
+##############################################################################
+# Note that the build-tools sub-folder uses the platform-name as a placeholder
+# at build-time. Packaging will later change that to the actual build-tools
+# revision as specified in the source.properties.
+
+
+lib64/libLLVM_android.so                               strip build-tools/${PLATFORM_NAME}/lib64/libLLVM_android.so
+lib64/libbcc.so                                        strip build-tools/${PLATFORM_NAME}/lib64/libbcc.so
+lib64/libbcinfo.so                                     strip build-tools/${PLATFORM_NAME}/lib64/libbcinfo.so
+lib64/libclang_android.so                              strip build-tools/${PLATFORM_NAME}/lib64/libclang_android.so
+lib64/libc++.so                                        strip build-tools/${PLATFORM_NAME}/lib64/libc++.so
+lib64/libaapt2_jni.so                                  strip build-tools/${PLATFORM_NAME}/lib64/libaapt2_jni.so
+
+prebuilts/sdk/tools/lld-dummy  build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld
+prebuilts/sdk/tools/lld-dummy  build-tools/${PLATFORM_NAME}/aarch64-linux-android-ld
+prebuilts/sdk/tools/lld-dummy  build-tools/${PLATFORM_NAME}/i686-linux-android-ld
+prebuilts/sdk/tools/lld-dummy  build-tools/${PLATFORM_NAME}/x86_64-linux-android-ld
+prebuilts/sdk/tools/lld-dummy  build-tools/${PLATFORM_NAME}/mipsel-linux-android-ld
+
+prebuilts/sdk/tools/lld                              build-tools/${PLATFORM_NAME}/lld
+prebuilts/sdk/tools/linux/lld-bin/lld          strip build-tools/${PLATFORM_NAME}/lld-bin/lld
+prebuilts/sdk/tools/linux/lib64/libc++.so.1    strip build-tools/${PLATFORM_NAME}/lib64/libc++.so.1
+
+dalvik/dx/etc/mainDexClasses                               build-tools/${PLATFORM_NAME}/mainDexClasses

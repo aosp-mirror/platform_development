@@ -30,9 +30,8 @@ for arg in "$@"; do
   esac
 done
 
-WINSCOPE_EXT=.winscope
-outfileTrans=${outfile}_transactiontrace$WINSCOPE_EXT
-outfileSurf=${outfile}_layerstrace$WINSCOPE_EXT
+outfileTrans=${outfile}_transactiontrace.pb
+outfileSurf=${outfile}_layerstrace.pb
 
 outfileTrans_abs="$(cd "$(dirname "$outfileTrans")"; pwd)/$(basename "$outfileTrans")"
 outfileSurf_abs="$(cd "$(dirname "$outfileSurf")"; pwd)/$(basename "$outfileSurf")"
@@ -40,8 +39,8 @@ outfileSurf_abs="$(cd "$(dirname "$outfileSurf")"; pwd)/$(basename "$outfileSurf
 if [ "$help" != "" ]; then
   echo "usage: $0 [-h | --help] [OUTFILE]"
   echo
-  echo "Records Transaction traces (default transactiontrace$WINSCOPE_EXT)."
-  echo "Records Surface traces (default layerstrace$WINSCOPE_EXT)."
+  echo "Records Transaction traces (default transactiontrace.pb)."
+  echo "Records Surface traces (default layerstrace.pb)."
   echo "To view the traces, use $WINSCOPE_URL."
   exit 1
 fi
@@ -76,8 +75,8 @@ start_tracing
 read -p "Press ENTER to stop recording" -s x
 echo
 stop_tracing
-adb exec-out su root cat /data/misc/wmtrace/transaction_trace$WINSCOPE_EXT >"$outfileTrans"
-adb exec-out su root cat /data/misc/wmtrace/layers_trace$WINSCOPE_EXT >"$outfileSurf"
+adb exec-out su root cat /data/misc/wmtrace/transaction_trace.pb >"$outfileTrans"
+adb exec-out su root cat /data/misc/wmtrace/layers_trace.pb >"$outfileSurf"
 
 echo
 echo "To view the trace, go to $WINSCOPE_URL, and open"
