@@ -1,246 +1,404 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="5" by="lint 4.1.0" client="cli" variant="all" version="4.1.0">
+<issues format="5" by="lint 7.2.0-dev" client="cli" variant="all" version="4.1.0">
 
     <issue
         id="NewApi"
-        message="Call requires API level R (current min is 29): `setZOrderedOnTop`"
-        errorLine1="        mScrollableSuggestionsClip.setZOrderedOnTop(false);"
-        errorLine2="                                   ~~~~~~~~~~~~~~~~">
+        message="Call requires API level 30 (current min is 29): `setZOrderedOnTop`">
         <location
             file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
-            line="82"
-            column="36"/>
+            line="82"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Call requires API level R (current min is 29): `setZOrderedOnTop`"
-        errorLine1="        mScrollableSuggestionsClip.setZOrderedOnTop(true);"
-        errorLine2="                                   ~~~~~~~~~~~~~~~~">
+        message="Call requires API level 30 (current min is 29): `setZOrderedOnTop`">
         <location
             file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
-            line="88"
-            column="36"/>
+            line="88"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Call requires API level R (current min is 29): `android.view.inputmethod.InlineSuggestionsResponse#getInlineSuggestions`"
-        errorLine1="        final List&lt;InlineSuggestion> inlineSuggestions = response.getInlineSuggestions();"
-        errorLine2="                                                                  ~~~~~~~~~~~~~~~~~~~~">
+        message="Call requires API level 30 (current min is 29): `android.view.inputmethod.InlineSuggestionsResponse#getInlineSuggestions`">
         <location
             file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
-            line="151"
-            column="67"/>
+            line="151"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Call requires API level R (current min is 29): `newStylesBuilder`"
-        errorLine1="        StylesBuilder stylesBuilder = UiVersions.newStylesBuilder();"
-        errorLine2="                                                 ~~~~~~~~~~~~~~~~">
+        message="Call requires API level 30 (current min is 29): `newStylesBuilder`">
         <location
             file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
-            line="229"
-            column="50"/>
+            line="229"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Call requires API level R (current min is 29): `newStyleBuilder`"
-        errorLine1="        Style style = InlineSuggestionUi.newStyleBuilder()"
-        errorLine2="                                         ~~~~~~~~~~~~~~~">
+        message="Call requires API level 30 (current min is 29): `newStyleBuilder`">
         <location
             file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
-            line="230"
-            column="42"/>
+            line="230"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Call requires API level R (current min is 29): `new android.widget.inline.InlinePresentationSpec.Builder`"
-        errorLine1="        presentationSpecs.add(new InlinePresentationSpec.Builder(new Size(100, getHeight()),"
-        errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        message="Call requires API level 30 (current min is 29): `Builder`">
         <location
             file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
-            line="262"
-            column="31"/>
+            line="232"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Call requires API level R (current min is 29): `android.widget.inline.InlinePresentationSpec.Builder#build`"
-        errorLine1="                new Size(740, getHeight())).setStyle(stylesBundle).build());"
-        errorLine2="                                                                   ~~~~~">
+        message="Call requires API level 30 (current min is 29): `setBackground`">
         <location
             file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
-            line="263"
-            column="68"/>
+            line="233"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Call requires API level R (current min is 29): `android.widget.inline.InlinePresentationSpec.Builder#setStyle`"
-        errorLine1="                new Size(740, getHeight())).setStyle(stylesBundle).build());"
-        errorLine2="                                            ~~~~~~~~">
+        message="Call requires API level 30 (current min is 29): `setPadding`">
         <location
             file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
-            line="263"
-            column="45"/>
+            line="235"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Call requires API level R (current min is 29): `new android.widget.inline.InlinePresentationSpec.Builder`"
-        errorLine1="        presentationSpecs.add(new InlinePresentationSpec.Builder(new Size(100, getHeight()),"
-        errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        message="Call requires API level 30 (current min is 29): `build`">
         <location
             file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
-            line="264"
-            column="31"/>
+            line="236"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Call requires API level R (current min is 29): `android.widget.inline.InlinePresentationSpec.Builder#build`"
-        errorLine1="                new Size(740, getHeight())).setStyle(stylesBundle).build());"
-        errorLine2="                                                                   ~~~~~">
+        message="Call requires API level 30 (current min is 29): `Builder`">
         <location
             file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
-            line="265"
-            column="68"/>
+            line="238"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Call requires API level R (current min is 29): `android.widget.inline.InlinePresentationSpec.Builder#setStyle`"
-        errorLine1="                new Size(740, getHeight())).setStyle(stylesBundle).build());"
-        errorLine2="                                            ~~~~~~~~">
+        message="Call requires API level 30 (current min is 29): `setBackground`">
         <location
             file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
-            line="265"
-            column="45"/>
+            line="239"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Call requires API level R (current min is 29): `new android.view.inputmethod.InlineSuggestionsRequest.Builder`"
-        errorLine1="        return new InlineSuggestionsRequest.Builder(presentationSpecs)"
-        errorLine2="               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        message="Call requires API level 30 (current min is 29): `setPadding`">
         <location
             file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
-            line="267"
-            column="16"/>
+            line="241"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Call requires API level R (current min is 29): `android.view.inputmethod.InlineSuggestionsRequest.Builder#setMaxSuggestionCount`"
-        errorLine1="                .setMaxSuggestionCount(6)"
-        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~">
+        message="Call requires API level 30 (current min is 29): `build`">
         <location
             file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
-            line="268"
-            column="18"/>
+            line="242"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Call requires API level R (current min is 29): `android.view.inputmethod.InlineSuggestionsRequest.Builder#build`"
-        errorLine1="                .build();"
-        errorLine2="                 ~~~~~">
+        message="Call requires API level 30 (current min is 29): `Builder`">
         <location
             file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
-            line="269"
-            column="18"/>
+            line="243"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Call requires API level R (current min is 29): `android.view.inputmethod.InlineSuggestionsResponse#getInlineSuggestions`"
-        errorLine1="                &quot;onInlineSuggestionsResponse() called: &quot; + response.getInlineSuggestions().size());"
-        errorLine2="                                                                    ~~~~~~~~~~~~~~~~~~~~">
+        message="Call requires API level 30 (current min is 29): `build`">
         <location
             file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
-            line="284"
-            column="69"/>
+            line="243"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Call requires API level R (current min is 29): `setBackgroundColor`"
-        errorLine1="        mScrollableSuggestionsClip.setBackgroundColor("
-        errorLine2="                                   ~~~~~~~~~~~~~~~~~~">
+        message="Call requires API level 30 (current min is 29): `setLayoutMargin`">
         <location
             file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
-            line="301"
-            column="36"/>
+            line="243"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Cast from `InlineContentView` to `View` requires API level 30 (current min is 29)"
-        errorLine1="                    mPinnedSuggestionsStart.addView(suggestionView);"
-        errorLine2="                                                    ~~~~~~~~~~~~~~">
+        message="Call requires API level 30 (current min is 29): `Builder`">
         <location
             file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
-            line="312"
-            column="53"/>
+            line="245"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Cast from `InlineContentView` to `View` requires API level 30 (current min is 29)"
-        errorLine1="                    mPinnedSuggestionsEnd.addView(suggestionView);"
-        errorLine2="                                                  ~~~~~~~~~~~~~~">
+        message="Call requires API level 30 (current min is 29): `setLayoutMargin`">
         <location
             file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
-            line="314"
-            column="51"/>
+            line="246"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Cast from `InlineContentView` to `View` requires API level 30 (current min is 29)"
-        errorLine1="                mScrollableSuggestions.addView(suggestionView);"
-        errorLine2="                                               ~~~~~~~~~~~~~~">
+        message="Call requires API level 30 (current min is 29): `setTextColor`">
         <location
             file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
-            line="317"
-            column="48"/>
+            line="247"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Call requires API level R (current min is 29): `android.view.inputmethod.InlineSuggestion#inflate`"
-        errorLine1="            inlineSuggestion.inflate(this, size, executor, suggestionView -> {"
-        errorLine2="                             ~~~~~~~">
+        message="Call requires API level 30 (current min is 29): `setTextColor`">
         <location
             file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
-            line="363"
-            column="30"/>
+            line="247"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Call requires API level R (current min is 29): `android.view.inputmethod.InlineSuggestion#getInfo`"
-        errorLine1="                            suggestionView, /*isAction*/ inlineSuggestion.getInfo().isPinned());"
-        errorLine2="                                                                          ~~~~~~~">
+        message="Call requires API level 30 (current min is 29): `setTextSize`">
         <location
             file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
-            line="374"
-            column="75"/>
+            line="248"/>
     </issue>
 
     <issue
         id="NewApi"
-        message="Call requires API level R (current min is 29): `android.view.inputmethod.InlineSuggestionInfo#isPinned`"
-        errorLine1="                            suggestionView, /*isAction*/ inlineSuggestion.getInfo().isPinned());"
-        errorLine2="                                                                                    ~~~~~~~~">
+        message="Call requires API level 30 (current min is 29): `build`">
         <location
             file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
-            line="374"
-            column="85"/>
+            line="249"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `Builder`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="251"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `setLayoutMargin`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="252"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `setTextColor`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="253"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `setTextColor`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="253"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `setTextSize`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="254"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `build`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="255"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `Builder`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="256"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `build`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="256"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `setLayoutMargin`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="256"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `addStyle`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="258"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `build`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="259"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `new android.widget.inline.InlinePresentationSpec.Builder`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="262"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `android.widget.inline.InlinePresentationSpec.Builder#build`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="263"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `android.widget.inline.InlinePresentationSpec.Builder#setStyle`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="263"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `new android.widget.inline.InlinePresentationSpec.Builder`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="264"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `android.widget.inline.InlinePresentationSpec.Builder#build`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="265"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `android.widget.inline.InlinePresentationSpec.Builder#setStyle`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="265"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `new android.view.inputmethod.InlineSuggestionsRequest.Builder`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="267"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `android.view.inputmethod.InlineSuggestionsRequest.Builder#setMaxSuggestionCount`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="268"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `android.view.inputmethod.InlineSuggestionsRequest.Builder#build`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="269"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `android.view.inputmethod.InlineSuggestionsResponse#getInlineSuggestions`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="284"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `setBackgroundColor`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="301"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Cast from `InlineContentView` to `View` requires API level 30 (current min is 29)">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="312"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Cast from `InlineContentView` to `View` requires API level 30 (current min is 29)">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="314"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Cast from `InlineContentView` to `View` requires API level 30 (current min is 29)">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="317"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `android.view.inputmethod.InlineSuggestion#inflate`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="363"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `android.view.inputmethod.InlineSuggestion#getInfo`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="374"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 30 (current min is 29): `android.view.inputmethod.InlineSuggestionInfo#isPinned`">
+        <location
+            file="development/samples/AutofillKeyboard/src/com/example/android/autofillkeyboard/AutofillImeService.java"
+            line="374"/>
     </issue>
 
 </issues>
