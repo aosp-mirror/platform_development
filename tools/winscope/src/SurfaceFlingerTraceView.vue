@@ -20,6 +20,7 @@
     :summarizer="summarizer"
     :presentTags="presentTags"
     :presentErrors="presentErrors"
+    :propertyGroups="true"
   />
 </template>
 
@@ -36,7 +37,7 @@ export default {
     summarizer(layer) {
       const summary = [];
 
-      if (layer?.visibilityReason) {
+      if (layer?.visibilityReason.length > 0) {
         let reason = "";
         if (Array.isArray(layer.visibilityReason)) {
           reason = layer.visibilityReason.join(", ");

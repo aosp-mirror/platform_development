@@ -20,6 +20,7 @@
     :summarizer="summarizer"
     :presentTags="presentTags"
     :presentErrors="presentErrors"
+    :propertyGroups="false"
   />
 </template>
 
