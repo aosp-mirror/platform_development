@@ -31,7 +31,7 @@
         <p>Or get it from the AOSP repository.</p>
       </div>
       <div class="md-layout">
-        <md-button class="md-accent" :href="downloadProxyUrl">Download from AOSP</md-button>
+        <md-button class="md-accent" :href="downloadProxyUrl" @click="buttonClicked(`Download from AOSP`)">Download from AOSP</md-button>
         <md-button class="md-accent" @click="restart">Retry</md-button>
       </div>
     </md-card-content>
@@ -84,12 +84,31 @@
       <div class="trace-section">
         <h3>Trace targets:</h3>
         <div class="selection">
-          <md-checkbox class="md-primary" v-for="traceKey in Object.keys(TRACES)" :key="traceKey" v-model="adbStore[traceKey]">{{TRACES[traceKey].name}}</md-checkbox>
+          <md-checkbox class="md-primary" v-for="traceKey in Object.keys(DYNAMIC_TRACES)" :key="traceKey" v-model="adbStore[traceKey]">{{ DYNAMIC_TRACES[traceKey].name }}</md-checkbox>
         </div>
-        <div class="trace-config" v-for="traceKey in Object.keys(TRACE_CONFIG)" :key="traceKey">
-            <h4>{{TRACES[traceKey].name}} config</h4>
+        <div class="trace-config">
+            <h4>Surface Flinger config</h4>
             <div class="selection">
-              <md-checkbox class="md-primary" v-for="config in TRACE_CONFIG[traceKey]" :key="config" v-model="adbStore[config]">{{config}}</md-checkbox>
+              <md-checkbox class="md-primary" v-for="config in TRACE_CONFIG['layers_trace']" :key="config" v-model="adbStore[config]">{{config}}</md-checkbox>
+              <div class="selection">
+                <md-field class="config-selection" v-for="selectConfig in Object.keys(SF_SELECTED_CONFIG)" :key="selectConfig">
+                  <md-select v-model="SF_SELECTED_CONFIG_VALUES[selectConfig]" :placeholder="selectConfig">
+                    <md-option value="">{{selectConfig}}</md-option>
+                    <md-option v-for="option in SF_SELECTED_CONFIG[selectConfig]" :key="option" :value="option">{{ option }}</md-option>
+                  </md-select>
+                </md-field>
+              </div>
+            </div>
+        </div>
+        <div class="trace-config">
+            <h4>Window Manager config</h4>
+            <div class="selection">
+              <md-field class="config-selection" v-for="selectConfig in Object.keys(WM_SELECTED_CONFIG)" :key="selectConfig">
+                <md-select v-model="WM_SELECTED_CONFIG_VALUES[selectConfig]" :placeholder="selectConfig">
+                  <md-option value="">{{selectConfig}}</md-option>
+                  <md-option v-for="option in WM_SELECTED_CONFIG[selectConfig]" :key="option" :value="option">{{ option }}</md-option>
+                </md-select>
+              </md-field>
             </div>
         </div>
         <md-button class="md-primary trace-btn" @click="startTrace">Start trace</md-button>
@@ -149,35 +168,49 @@ const PROXY_ENDPOINTS = {
   START_TRACE: '/start/',
   END_TRACE: '/end/',
   CONFIG_TRACE: '/configtrace/',
+  SELECTED_WM_CONFIG_TRACE: '/selectedwmconfigtrace/',
+  SELECTED_SF_CONFIG_TRACE: '/selectedsfconfigtrace/',
   DUMP: '/dump/',
   FETCH: '/fetch/',
   STATUS: '/status/',
+  CHECK_WAYLAND: '/checkwayland/',
 };
 
+// trace options should be added in a nested category
 const TRACES = {
-  'window_trace': {
-    name: 'Window Manager',
+  'default': {
+    'window_trace': {
+      name: 'Window Manager',
+    },
+    'accessibility_trace': {
+      name: 'Accessibility',
+    },
+    'layers_trace': {
+      name: 'Surface Flinger',
+    },
+    'transactions': {
+      name: 'Transaction',
+    },
+    'proto_log': {
+      name: 'ProtoLog',
+    },
+    'screen_recording': {
+      name: 'Screen Recording',
+    },
+    'ime_trace_clients': {
+      name: 'Input Method Clients',
+    },
+    'ime_trace_service': {
+      name: 'Input Method Service',
+    },
+    'ime_trace_managerservice': {
+      name: 'Input Method Manager Service',
+    },
   },
-  'layers_trace': {
-    name: 'Surface Flinger',
-  },
-  'transaction': {
-    name: 'Transactions',
-  },
-  'proto_log': {
-    name: 'ProtoLog',
-  },
-  'screen_recording': {
-    name: 'Screen Recording',
-  },
-  'ime_trace_clients': {
-    name: 'Input Method Clients',
-  },
-  'ime_trace_service': {
-    name: 'Input Method Service',
-  },
-  'ime_trace_managerservice': {
-    name: 'Input Method Manager Service',
+  'arc': {
+    'wayland_trace': {
+      name: 'Wayland',
+    },
   },
 };
 
@@ -186,6 +219,34 @@ const TRACE_CONFIG = {
     'composition',
     'metadata',
     'hwc',
+    'tracebuffers',
+  ],
+};
+
+const SF_SELECTED_CONFIG = {
+  'sfbuffersize': [
+    '4000',
+    '8000',
+    '16000',
+    '32000',
+  ],
+};
+
+const WM_SELECTED_CONFIG = {
+  'wmbuffersize': [
+    '4000',
+    '8000',
+    '16000',
+    '32000',
+  ],
+  'tracingtype': [
+    'frame',
+    'transaction',
+  ],
+  'tracinglevel': [
+    'verbose',
+    'debug',
+    'critical',
   ],
 };
 
@@ -200,6 +261,7 @@ const DUMPS = {
 
 const proxyFileTypeAdapter = {
   'window_trace': FILE_TYPES.WINDOW_MANAGER_TRACE,
+  'accessibility_trace': FILE_TYPES.ACCESSIBILITY_TRACE,
   'layers_trace': FILE_TYPES.SURFACE_FLINGER_TRACE,
   'wl_trace': FILE_TYPES.WAYLAND_TRACE,
   'layers_dump': FILE_TYPES.SURFACE_FLINGER_DUMP,
@@ -207,6 +269,7 @@ const proxyFileTypeAdapter = {
   'wl_dump': FILE_TYPES.WAYLAND_DUMP,
   'screen_recording': FILE_TYPES.SCREEN_RECORDING,
   'transactions': FILE_TYPES.TRANSACTIONS_TRACE,
+  'transactions_legacy': FILE_TYPES.TRANSACTIONS_TRACE_LEGACY,
   'proto_log': FILE_TYPES.PROTO_LOG,
   'system_ui_trace': FILE_TYPES.SYSTEM_UI,
   'launcher_trace': FILE_TYPES.LAUNCHER,
@@ -223,7 +286,12 @@ export default {
     return {
       STATES,
       TRACES,
+      DYNAMIC_TRACES: TRACES['default'],
       TRACE_CONFIG,
+      SF_SELECTED_CONFIG,
+      WM_SELECTED_CONFIG,
+      SF_SELECTED_CONFIG_VALUES: {},
+      WM_SELECTED_CONFIG_VALUES: {},
       DUMPS,
       FILE_DECODERS,
       WINSCOPE_PROXY_VERSION,
@@ -242,7 +310,7 @@ export default {
                 proxyKey: '',
                 lastDevice: '',
               },
-              Object.keys(TRACES)
+              this.getAllTraceKeys(TRACES)
                   .concat(Object.keys(DUMPS))
                   .concat(CONFIGS)
                   .reduce(function(obj, key) {
@@ -282,13 +350,41 @@ export default {
         }
       });
     },
+    getAllTraceKeys(traces) {
+      let keys = [];
+      for (let dict_key in traces) {
+        for (let key in traces[dict_key]) {
+          keys.push(key);
+        }
+      }
+      return keys;
+    },
+    setAvailableTraces() {
+      this.DYNAMIC_TRACES = this.TRACES['default'];
+      this.callProxy('GET', PROXY_ENDPOINTS.CHECK_WAYLAND, this, function(request, view) {
+        try {
+          if(request.responseText == 'true') {
+            view.appendOptionalTraces('arc');
+          }
+        } catch(err) {
+          console.error(err);
+          view.errorText = request.responseText;
+          view.status = STATES.ERROR;
+        }
+      });
+    },
+    appendOptionalTraces(device_key) {
+      for(let key in this.TRACES[device_key]) {
+        this.$set(this.DYNAMIC_TRACES, key, this.TRACES[device_key][key]);
+      }
+    },
     keepAliveTrace() {
       if (this.status !== STATES.END_TRACE) {
         clearInterval(this.keep_alive_worker);
         this.keep_alive_worker = null;
         return;
       }
-      this.callProxy('GET', PROXY_ENDPOINTS.STATUS + this.deviceId() + '/', this, function(request, view) {
+      this.callProxy('GET', `${PROXY_ENDPOINTS.STATUS}${this.deviceId()}/`, this, function(request, view) {
         if (request.responseText !== 'True') {
           view.endTrace();
         } else if (view.keep_alive_worker === null) {
@@ -299,37 +395,47 @@ export default {
     startTrace() {
       const requested = this.toTrace();
       const requestedConfig = this.toTraceConfig();
+      const requestedSelectedSfConfig = this.toSelectedSfTraceConfig();
+      const requestedSelectedWmConfig = this.toSelectedWmTraceConfig();
       if (requested.length < 1) {
         this.errorText = 'No targets selected';
         this.status = STATES.ERROR;
+        this.recordNewEvent("No targets selected");
         return;
       }
-      this.callProxy('POST', PROXY_ENDPOINTS.CONFIG_TRACE + this.deviceId() + '/', this, null, null, requestedConfig);
+
+      this.recordNewEvent("Start Trace");
+      this.callProxy('POST', `${PROXY_ENDPOINTS.CONFIG_TRACE}${this.deviceId()}/`, this, null, null, requestedConfig);
+      this.callProxy('POST', `${PROXY_ENDPOINTS.SELECTED_SF_CONFIG_TRACE}${this.deviceId()}/`, this, null, null, requestedSelectedSfConfig);
+      this.callProxy('POST',  `${PROXY_ENDPOINTS.SELECTED_WM_CONFIG_TRACE}${this.deviceId()}/`, this, null, null, requestedSelectedWmConfig);
       this.status = STATES.END_TRACE;
-      this.callProxy('POST', PROXY_ENDPOINTS.START_TRACE + this.deviceId() + '/', this, function(request, view) {
+      this.callProxy('POST', `${PROXY_ENDPOINTS.START_TRACE}${this.deviceId()}/`, this, function(request, view) {
         view.keepAliveTrace();
       }, null, requested);
     },
     dumpState() {
+      this.recordButtonClickedEvent("Dump State");
       const requested = this.toDump();
       if (requested.length < 1) {
         this.errorText = 'No targets selected';
         this.status = STATES.ERROR;
+        this.recordNewEvent("No targets selected");
         return;
       }
       this.status = STATES.LOAD_DATA;
-      this.callProxy('POST', PROXY_ENDPOINTS.DUMP + this.deviceId() + '/', this, function(request, view) {
-        view.loadFile(requested, 0);
+      this.callProxy('POST', `${PROXY_ENDPOINTS.DUMP}${this.deviceId()}/`, this, function(request, view) {
+        view.loadFile(requested, 0, "dump");
       }, null, requested);
     },
     endTrace() {
       this.status = STATES.LOAD_DATA;
-      this.callProxy('POST', PROXY_ENDPOINTS.END_TRACE + this.deviceId() + '/', this, function(request, view) {
-        view.loadFile(view.toTrace(), 0);
+      this.callProxy('POST', `${PROXY_ENDPOINTS.END_TRACE}${this.deviceId()}/`, this, function(request, view) {
+        view.loadFile(view.toTrace(), 0, "trace");
       });
+      this.recordNewEvent("Ended Trace");
     },
-    loadFile(files, idx) {
-      this.callProxy('GET', PROXY_ENDPOINTS.FETCH + this.deviceId() + '/' + files[idx] + '/', this, function(request, view) {
+    loadFile(files, idx, traceType) {
+      this.callProxy('GET', `${PROXY_ENDPOINTS.FETCH}${this.deviceId()}/${files[idx]}/`, this, (request, view) => {
         try {
           const enc = new TextDecoder('utf-8');
           const resp = enc.decode(request.response);
@@ -350,9 +456,12 @@ export default {
           }
 
           if (idx < files.length - 1) {
-            view.loadFile(files, idx + 1);
+            view.loadFile(files, idx + 1, traceType);
           } else {
-            view.$emit('dataReady', view.dataFiles);
+            const currentDate = new Date().toISOString();
+            view.$emit('dataReady',
+                `winscope-${traceType}-${currentDate}`,
+                view.dataFiles);
           }
         } catch (err) {
           console.error(err);
@@ -362,7 +471,7 @@ export default {
       }, 'arraybuffer');
     },
     toTrace() {
-      return Object.keys(TRACES)
+      return Object.keys(this.DYNAMIC_TRACES)
           .filter((traceKey) => this.adbStore[traceKey]);
     },
     toTraceConfig() {
@@ -370,6 +479,24 @@ export default {
           .filter((file) => this.adbStore[file])
           .flatMap((file) => TRACE_CONFIG[file])
           .filter((config) => this.adbStore[config]);
+    },
+    toSelectedSfTraceConfig() {
+      const requestedSelectedConfig = {};
+      for (const config in this.SF_SELECTED_CONFIG_VALUES) {
+        if (this.SF_SELECTED_CONFIG_VALUES[config] !== "") {
+          requestedSelectedConfig[config] = this.SF_SELECTED_CONFIG_VALUES[config];
+        }
+      }
+      return requestedSelectedConfig;
+    },
+    toSelectedWmTraceConfig() {
+      const requestedSelectedConfig = {};
+      for (const config in this.WM_SELECTED_CONFIG_VALUES) {
+        if (this.WM_SELECTED_CONFIG_VALUES[config] !== "") {
+          requestedSelectedConfig[config] = this.WM_SELECTED_CONFIG_VALUES[config];
+        }
+      }
+      return requestedSelectedConfig;
     },
     toDump() {
       return Object.keys(DUMPS)
@@ -384,9 +511,11 @@ export default {
       return this.selectedDevice;
     },
     restart() {
+      this.recordButtonClickedEvent("Connect / Retry");
       this.status = STATES.CONNECTING;
     },
     resetLastDevice() {
+      this.recordButtonClickedEvent("Change Device");
       this.adbStore.lastDevice = '';
       this.restart();
     },
@@ -441,6 +570,9 @@ export default {
         if (st == STATES.CONNECTING) {
           this.getDevices();
         }
+        if (st == STATES.START_TRACE) {
+          this.setAvailableTraces();
+        }
       },
     },
   },
@@ -448,6 +580,12 @@ export default {
 
 </script>
 <style scoped>
+.config-selection {
+  width: 150px;
+  display: inline-flex;
+  margin-left: 5px;
+  margin-right: 5px;
+}
 .device-choice {
   display: inline-flex;
 }
