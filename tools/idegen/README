@@ -61,9 +61,9 @@ Excluding source roots and jars
     use Java's regular expression parser (see java.util.regex.Parser).
 
     You can create your own additional exclusion list by creating an
-    "excluded-paths" file in the project's root directory. For example, you
-    might exclude all apps except the Browser in your IDE configuration with
-    this regular expression: "^packages/apps/(?!Browser)".
+    "excluded-paths" file in the project's root directory or your vendor
+    directory. For example, you might exclude all apps except the Browser in your
+    IDE configuration with this regular expression: "^packages/apps/(?!Browser)".
 
 Controlling source root ordering (Eclipse)
 

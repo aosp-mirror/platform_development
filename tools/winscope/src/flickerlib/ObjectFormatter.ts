@@ -14,66 +14,133 @@
  * limitations under the License.
  */
 
-import {toBounds, toBuffer, toColor, toPoint, toRect,
-    toRectF, toRegion, toTransform} from './common';
+import {toSize, toActiveBuffer, toColor, toColor3, toPoint, toRect,
+    toRectF, toRegion, toMatrix22, toTransform} from './common';
 import intDefMapping from
     '../../../../../prebuilts/misc/common/winscope/intDefMapping.json';
+import config from '../config/Configuration.json'
 
+function readIntdefMap(): Map<string, string> {
+    const map = new Map<string, string>();
+    const keys = Object.keys(config.intDefColumn);
+
+    keys.forEach(key => {
+        const value = config.intDefColumn[key];
+        map.set(key, value);
+    });
+
+    return map;
+}
 export default class ObjectFormatter {
-    private static INVALID_ELEMENT_PROPERTIES = ['length', 'name', 'prototype', 'children',
-    'childrenWindows', 'ref', 'root', 'layers', 'resolvedChildren']
+    static displayDefaults: boolean = false
+    private static INVALID_ELEMENT_PROPERTIES = config.invalidProperties;
 
-    private static FLICKER_INTDEF_MAP = new Map([
-        [`WindowLayoutParams.type`, `android.view.WindowManager.LayoutParams.WindowType`],
-        [`WindowLayoutParams.flags`, `android.view.WindowManager.LayoutParams.Flags`],
-        [`WindowLayoutParams.privateFlags`, `android.view.WindowManager.LayoutParams.PrivateFlags`],
-        [`WindowLayoutParams.gravity`, `android.view.Gravity.GravityFlags`],
-        [`WindowLayoutParams.softInputMode`, `android.view.WindowManager.LayoutParams.WindowType`],
-        [`WindowLayoutParams.systemUiVisibilityFlags`, `android.view.WindowManager.LayoutParams.SystemUiVisibilityFlags`],
-        [`WindowLayoutParams.subtreeSystemUiVisibilityFlags`, `android.view.WindowManager.LayoutParams.SystemUiVisibilityFlags`],
-        [`WindowLayoutParams.behavior`, `android.view.WindowInsetsController.Behavior`],
-        [`WindowLayoutParams.fitInsetsSides`, `android.view.WindowInsets.Side.InsetsSide`],
+    private static FLICKER_INTDEF_MAP = readIntdefMap();
 
-        [`Configuration.windowingMode`, `android.app.WindowConfiguration.WindowingMode`],
-        [`WindowConfiguration.windowingMode`, `android.app.WindowConfiguration.WindowingMode`],
-        [`Configuration.orientation`, `android.content.pm.ActivityInfo.ScreenOrientation`],
-        [`WindowConfiguration.orientation`, `android.content.pm.ActivityInfo.ScreenOrientation`],
-        [`WindowState.orientation`, `android.content.pm.ActivityInfo.ScreenOrientation`],
-    ])
+    static cloneObject(entry: any): any {
+        let obj: any = {}
+        const properties = ObjectFormatter.getProperties(entry);
+        properties.forEach(prop => obj[prop] = entry[prop]);
+        return obj;
+    }
 
+    /**
+     * Get the true properties of an entry excluding functions, kotlin gernerated
+     * variables, explicitly excluded properties, and flicker objects already in
+     * the hierarchy that shouldn't be traversed when formatting the entry
+     * @param entry The entry for which we want to get the properties for
+     * @return The "true" properties of the entry as described above
+     */
+    static getProperties(entry: any): string[] {
+        var props = [];
+        let obj = entry;
+
+        do {
+            const properties = Object.getOwnPropertyNames(obj).filter(it => {
+                // filter out functions
+                if (typeof(entry[it]) === 'function') return false;
+                // internal propertires from kotlinJs
+                if (it.includes(`$`)) return false;
+                // private kotlin variables from kotlin
+                if (it.startsWith(`_`)) return false;
+                // some predefined properties used only internally (e.g., children, ref, diff)
+                if (this.INVALID_ELEMENT_PROPERTIES.includes(it)) return false;
+
+                const value = entry[it];
+                // only non-empty arrays of non-flicker objects (otherwise they are in hierarchy)
+                if (Array.isArray(value) && value.length > 0) return !value[0].stableId;
+                // non-flicker object
+                return !(value?.stableId);
+            });
+            properties.forEach(function (prop) {
+                if (typeof(entry[prop]) !== 'function' && props.indexOf(prop) === -1) {
+                    props.push(prop);
+                }
+            });
+        } while (obj = Object.getPrototypeOf(obj));
+
+        return props;
+    }
+
+    /**
+     * Format a Winscope entry to be displayed in the UI
+     * Accounts for different user display settings (e.g. hiding empty/default values)
+     * @param obj The raw object to format
+     * @return The formatted object
+     */
     static format(obj: any): {} {
-        const entries = Object.entries(obj)
-            .filter(it => !it[0].includes(`$`))
-            .filter(it => !this.INVALID_ELEMENT_PROPERTIES.includes(it[0]))
-        const sortedEntries = entries.sort()
+        const properties = this.getProperties(obj);
+        const sortedProperties = properties.sort()
 
         const result: any = {}
-        sortedEntries.forEach(entry => {
-            const key = entry[0]
-            const value: any = entry[1]
+        sortedProperties.forEach(entry => {
+            const key = entry;
+            const value: any = obj[key];
 
-            if (value) {
+            if (value === null || value === undefined) {
+                if (this.displayDefaults) {
+                    result[key] = value;
+                }
+                return
+            }
+
+            if (value || this.displayDefaults) {
+                // raw values (e.g., false or 0)
+                if (!value) {
+                    result[key] = value
                 // flicker obj
-                if (value.prettyPrint) {
-                    result[key] = value.prettyPrint()
+                } else if (value.prettyPrint) {
+                    const isEmpty = value.isEmpty === true;
+                    if (!isEmpty || this.displayDefaults) {
+                        result[key] = value.prettyPrint();
+                    }
                 } else {
                     // converted proto to flicker
-                    const translatedObject = this.translateObject(value)
+                    const translatedObject = this.translateObject(value);
                     if (translatedObject) {
-                        result[key] = translatedObject.prettyPrint()
+                        if (translatedObject.prettyPrint) {
+                          result[key] = translatedObject.prettyPrint();
+                        }
+                        else {
+                          result[key] = translatedObject;
+                        }
                     // objects - recursive call
                     } else if (value && typeof(value) == `object`) {
-                        result[key] = this.format(value)
+                        const childObj = this.format(value) as any;
+                        const isEmpty = Object.entries(childObj).length == 0 || childObj.isEmpty;
+                        if (!isEmpty || this.displayDefaults) {
+                            result[key] = childObj;
+                        }
                     } else {
                     // values
-                        result[key] = this.translateIntDef(obj, key, value)
+                        result[key] = this.translateIntDef(obj, key, value);
                     }
                 }
 
             }
         })
 
-        return Object.freeze(result)
+        return result;
     }
 
     /**
@@ -84,23 +151,25 @@ export default class ObjectFormatter {
      * @param obj Object to translate
      */
     private static translateObject(obj) {
-        const type = obj?.$type?.name
+        const type = obj?.$type?.name;
         switch(type) {
-            case `SizeProto`: return toBounds(obj)
-            case `ActiveBufferProto`: return toBuffer(obj)
-            case `ColorProto`: return toColor(obj)
-            case `PointProto`: return toPoint(obj)
-            case `RectProto`: return toRect(obj)
-            case `FloatRectProto`: return toRectF(obj)
-            case `RegionProto`: return toRegion(obj)
-            case `TransformProto`: return toTransform(obj)
+            case `SizeProto`: return toSize(obj);
+            case `ActiveBufferProto`: return toActiveBuffer(obj);
+            case `Color3`: return toColor3(obj);
+            case `ColorProto`: return toColor(obj);
+            case `PointProto`: return toPoint(obj);
+            case `RectProto`: return toRect(obj);
+            case `Matrix22`: return toMatrix22(obj);
+            case `FloatRectProto`: return toRectF(obj);
+            case `RegionProto`: return toRegion(obj);
+            case `TransformProto`: return toTransform(obj);
             case 'ColorTransformProto': {
                 const formatted = this.formatColorTransform(obj.val);
                 return `${formatted}`;
             }
         }
 
-        return null
+        return null;
     }
 
     private static formatColorTransform(vals) {
@@ -121,17 +190,17 @@ export default class ObjectFormatter {
      * @param propertyName Property to search
      */
     private static getTypeDefSpec(obj: any, propertyName: string): string {
-        const fields = obj?.$type?.fields
+        const fields = obj?.$type?.fields;
         if (!fields) {
-            return null
+            return null;
         }
 
-        const options = fields[propertyName]?.options
+        const options = fields[propertyName]?.options;
         if (!options) {
-            return null
+            return null;
         }
 
-        return options["(.android.typedef)"]
+        return options["(.android.typedef)"];
     }
 
     /**
@@ -144,23 +213,23 @@ export default class ObjectFormatter {
      * @param value Property value
      */
     private static translateIntDef(parentObj: any, propertyName: string, value: any): string {
-        const parentClassName = parentObj.constructor.name
-        const propertyPath = `${parentClassName}.${propertyName}`
+        const parentClassName = parentObj.constructor.name;
+        const propertyPath = `${parentClassName}.${propertyName}`;
 
-        let translatedValue = value
+        let translatedValue = value;
         // Parse Flicker objects (no intdef annotation supported)
         if (this.FLICKER_INTDEF_MAP.has(propertyPath)) {
             translatedValue = this.getIntFlagsAsStrings(value,
-                this.FLICKER_INTDEF_MAP.get(propertyPath))
+                this.FLICKER_INTDEF_MAP.get(propertyPath));
         } else {
             // If it's a proto, search on the proto definition for the intdef type
-            const typeDefSpec = this.getTypeDefSpec(parentObj, propertyName)
+            const typeDefSpec = this.getTypeDefSpec(parentObj, propertyName);
             if (typeDefSpec) {
-                translatedValue = this.getIntFlagsAsStrings(value, typeDefSpec)
+                translatedValue = this.getIntFlagsAsStrings(value, typeDefSpec);
             }
         }
 
-        return translatedValue
+        return translatedValue;
     }
 
     /**
