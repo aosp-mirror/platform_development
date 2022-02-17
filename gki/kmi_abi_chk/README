@@ -1,0 +1,59 @@
+
+#
+# How to build the KMI ABI test kernel module, kmi_sym.ko
+#
+
+1. Set up the GKI source.
+   # Set up and export GKI_DIR to be used for kernel module building
+   $ cd $GKI_DIR
+   $ repo init -u https://android.googlesource.com/kernel/manifest \
+       -b common-android12-5.10
+   $ repo sync
+   See "GKI Monthly Branch Handbook" for details.
+2. Build arm64 GKI under $GKI_DIR
+   $ BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh -j16
+3. Download a supported kernel symbol file, vmlinux.symvers, from GKI AB:
+   $ export GKI_BID=7618735
+   https://ci.android.com/builds/submitted/$GKI_BID/kernel_aarch64/latest
+   $ cp vmlinux.symvers $ANDROID_BUILD_TOP/development/gki/kmi_abi_chk/vmlinux.symvers-$GKI_BID
+4. Replace the Module.symvers just built with the supported kernel symbol file.
+   $ cp vmlinux.symvers $GKI_DIR/out/android12-5.10/common/Module.symvers
+5. Create the KMI symbol list include file:
+   $ cd development/gki/kmi_abi_chk
+   $ cp $GKI_DIR/out/android12-5.10/common/Module.symvers vmlinux.symvers-$GKI_BID
+   $ awk '{printf("\t.xword\t%s\n",$2)}' vmlinux.symvers-$GKI_BID >> kmi_sym_list-$GKI_BID.inc
+   Note that kmi_sym_list-7618735.inc included in the current directory is a
+   version modified from the one based on vmlinux.symvers of build 7618735, the
+   initial GKI 5.10 released in July, 2021. Search b/197035344 for details.
+6. Build the kernel module
+   $ make ARCH=arm64 CROSS_COMPILE=aarch64 LLVM=1 LLVM_IAS=1 LTO=thin
+
+A few prebuilt test kernel modules, kmi_sym-*.ko, for arm64 GKI 5.10
+2021-07 and later builds is included under prebuilts/ directory.
+
+#
+# How to use/run KMI test kernel module, kmi_sym.ko, on GKI
+#
+
+1. Copy the test kernel module to the Android device
+   $ adb push kmi_sym.ko /data/local/tmp
+2. "Root" the Android device we'd like to run the test
+   $ adb root
+3. Check the kernel information on the device
+   emulator64_arm64:/ # uname -a
+   Linux localhost 5.10.43-android12-9-00005-g376ecc372342-ab7614753 #1 SMP PREEMPT Thu Aug 5 15:12:49 UTC 2021 aarch64
+4. Load the test kernel module
+   emulator64_arm64:/ # lsmod | grep kmi_sym
+   emulator64_arm64:/ # insmod /data/local/tmp/kmi_sym.ko; echo $?
+   0
+5. Verify the test kernel module is loaded successfully
+   emulator64_arm64:/ # lsmod | grep kmi_sym
+   kmi_sym                57344  0
+   emulator64_arm64:/ # dmesg | grep KMI
+   [ 1669.833480] 5317 KMI ABI symbols at 00000000d34c59ea
+6. Unload the test kernel module
+   emulator64_arm64:/ # rmmod kmi_sym; echo $?
+   0
+   emulator64_arm64:/ # dmesg | grep KMI
+   [ 1669.833480] 5317 KMI ABI symbols at 00000000d34c59ea
+   [ 1860.571944] Cleaning up KMI ABI.

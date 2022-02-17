@@ -43,13 +43,28 @@
         {{c.long}}
       </md-tooltip>
     </div>
+    <div class="flicker-tags" v-for="transition in transitions" :key="transition">
+      <Arrow
+        class="transition-arrow"
+        :style="{color: transitionArrowColor(transition)}"
+      />
+      <md-tooltip md-direction="right"> {{transitionTooltip(transition)}} </md-tooltip>
+    </div>
+    <div class="flicker-tags" v-for="error in errors" :key="error.message">
+      <Arrow class="error-arrow"/>
+      <md-tooltip md-direction="right"> {{errorTooltip(error.message)}} </md-tooltip>
+    </div>
   </span>
 </template>
 
 <script>
+
+import Arrow from './components/TagDisplay/Arrow.vue';
+import {transitionMap} from './utils/consts.js';
+
 export default {
   name: 'DefaultTreeElement',
-  props: ['item', 'simplify-names'],
+  props: ['item', 'simplify-names', 'errors', 'transitions'],
   methods: {
     chipClassForChip(c) {
       return [
@@ -59,6 +74,21 @@ export default {
           (c.type?.toString() || c.class?.toString() || 'default'),
       ];
     },
+    transitionArrowColor(transition) {
+      return transitionMap.get(transition).color;
+    },
+    transitionTooltip(transition) {
+      return transitionMap.get(transition).desc;
+    },
+    errorTooltip(errorMessage) {
+      if (errorMessage.length>100) {
+        return `Error: ${errorMessage.substring(0,100)}...`;
+      }
+      return `Error: ${errorMessage}`;
+    },
+  },
+  components: {
+    Arrow,
   },
 };
 </script>
@@ -99,5 +129,13 @@ span {
   overflow-wrap: break-word;
   flex: 1 1 auto;
   width: 0;
+}
+
+.flicker-tags {
+  display: inline-block;
+}
+
+.error-arrow {
+  color: red;
 }
 </style>
