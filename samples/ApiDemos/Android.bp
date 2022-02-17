@@ -1,0 +1,24 @@
+package {
+    // See: http://go/android-license-faq
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_test {
+    name: "ApiDemos",
+    // Only compile source java files in this apk.
+    srcs: [
+        "src/**/*.java",
+        "src/com/example/android/apis/app/IRemoteService.aidl",
+        "src/com/example/android/apis/app/IRemoteServiceCallback.aidl",
+        "src/com/example/android/apis/app/ISecondary.aidl",
+    ],
+    static_libs: [
+        "androidx-constraintlayout_constraintlayout",
+        "androidx.legacy_legacy-support-v4",
+    ],
+    sdk_version: "current",
+    dex_preopt: {
+        enabled: false,
+    },
+    test_suites: ["device-tests"],
+}
