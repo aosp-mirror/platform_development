@@ -31,6 +31,14 @@ Layer.fromProto = function (proto: any): Layer {
     const bufferTransform = Transform.fromProto(proto.bufferTransform, /* position */ null)
     const hwcCrop = toRectF(proto.hwcCrop)
     const hwcFrame = toRect(proto.hwcFrame)
+    const requestedColor = toColor(proto.requestedColor)
+    const requestedTransform =
+            Transform.fromProto(proto.requestedTransform, proto.requestedPosition)
+    const cornerRadiusCrop = toRectF(proto.cornerRadiusCrop)
+    const inputTransform =
+            Transform.fromProto(proto.inputWindowInfo ? proto.inputWindowInfo.transform : null)
+    const inputRegion =
+            toRegion(proto.inputWindowInfo ? proto.inputWindowInfo.touchableRegion : null)
     let crop: Rect
     if (proto.crop) {
         crop = toRect(proto.crop)
@@ -63,7 +71,12 @@ Layer.fromProto = function (proto: any): Layer {
         crop,
         proto.isRelativeOf,
         proto.zOrderRelativeOf,
-        proto.layerStack
+        proto.layerStack,
+        requestedTransform,
+        requestedColor,
+        cornerRadiusCrop,
+        inputTransform,
+        inputRegion,
     );
 
     addAttributes(entry, proto);
