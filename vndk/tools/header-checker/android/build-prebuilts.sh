@@ -56,6 +56,7 @@ if [ "${OS}" = "darwin" ]; then
     )
 else
     SOONG_BINARIES=(
+        "bindgen"
         "cxx_extractor"
         "header-abi-linker"
         "header-abi-dumper"
