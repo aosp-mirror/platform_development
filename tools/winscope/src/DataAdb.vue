@@ -39,7 +39,7 @@
       <md-icon class="md-accent">update</md-icon>
       <span class="md-subheading">The version of Winscope ADB Connect proxy running on your machine is incopatibile with Winscope.</span>
       <div class="md-body-2">
-        <p>Please update the proxy to version {{ WINSCOPE_PROXY_VERSION }}</p>
+        <p>Please update the proxy to version {{ proxyClient.VERSION }}</p>
         <p>Run:</p>
         <pre>python3 $ANDROID_BUILD_TOP/development/tools/winscope/adb_proxy/winscope_proxy.py</pre>
         <p>Or get it from the AOSP repository.</p>
@@ -54,7 +54,7 @@
       <span class="md-subheading">Proxy authorisation required</span>
       <md-field>
         <label>Enter Winscope proxy token</label>
-        <md-input v-model="adbStore.proxyKey"></md-input>
+        <md-input v-model="proxyClient.store.proxyKey"></md-input>
       </md-field>
       <div class="md-body-2">The proxy token is printed to console on proxy launch, copy and paste it above.</div>
       <div class="md-layout">
@@ -62,9 +62,9 @@
       </div>
     </md-card-content>
     <md-card-content v-if="status === STATES.DEVICES">
-      <div class="md-subheading">{{ Object.keys(devices).length > 0 ? "Connected devices:" : "No devices detected" }}</div>
+      <div class="md-subheading">{{ Object.keys(proxyClient.devices).length > 0 ? "Connected devices:" : "No devices detected" }}</div>
       <md-list>
-        <md-list-item v-for="(device, id) in devices" :key="id" @click="selectDevice(id)" :disabled="!device.authorised">
+        <md-list-item v-for="(device, id) in proxyClient.devices" :key="id" @click="proxyClient.selectDevice(id)" :disabled="!device.authorised">
           <md-icon>{{ device.authorised ? "smartphone" : "screen_lock_portrait" }}</md-icon>
           <span class="md-list-item-text">{{ device.authorised ? device.model : "unauthorised" }} ({{ id }})</span>
         </md-list-item>
@@ -76,7 +76,7 @@
         <md-list>
           <md-list-item>
             <md-icon>smartphone</md-icon>
-            <span class="md-list-item-text">{{ devices[selectedDevice].model }} ({{ selectedDevice }})</span>
+            <span class="md-list-item-text">{{ proxyClient.devices[proxyClient.selectedDevice].model }} ({{ proxyClient.selectedDevice }})</span>
           </md-list-item>
         </md-list>
         <md-button class="md-primary" @click="resetLastDevice">Change device</md-button>
@@ -84,12 +84,12 @@
       <div class="trace-section">
         <h3>Trace targets:</h3>
         <div class="selection">
-          <md-checkbox class="md-primary" v-for="traceKey in Object.keys(DYNAMIC_TRACES)" :key="traceKey" v-model="adbStore[traceKey]">{{ DYNAMIC_TRACES[traceKey].name }}</md-checkbox>
+          <md-checkbox class="md-primary" v-for="traceKey in Object.keys(DYNAMIC_TRACES)" :key="traceKey" v-model="traceStore[traceKey]">{{ DYNAMIC_TRACES[traceKey].name }}</md-checkbox>
         </div>
         <div class="trace-config">
             <h4>Surface Flinger config</h4>
             <div class="selection">
-              <md-checkbox class="md-primary" v-for="config in TRACE_CONFIG['layers_trace']" :key="config" v-model="adbStore[config]">{{config}}</md-checkbox>
+              <md-checkbox class="md-primary" v-for="config in TRACE_CONFIG['layers_trace']" :key="config" v-model="traceStore[config]">{{config}}</md-checkbox>
               <div class="selection">
                 <md-field class="config-selection" v-for="selectConfig in Object.keys(SF_SELECTED_CONFIG)" :key="selectConfig">
                   <md-select v-model="SF_SELECTED_CONFIG_VALUES[selectConfig]" :placeholder="selectConfig">
@@ -116,7 +116,7 @@
       <div class="dump-section">
         <h3>Dump targets:</h3>
         <div class="selection">
-          <md-checkbox class="md-primary" v-for="dumpKey in Object.keys(DUMPS)" :key="dumpKey" v-model="adbStore[dumpKey]">{{DUMPS[dumpKey].name}}</md-checkbox>
+          <md-checkbox class="md-primary" v-for="dumpKey in Object.keys(DUMPS)" :key="dumpKey" v-model="traceStore[dumpKey]">{{DUMPS[dumpKey].name}}</md-checkbox>
         </div>
         <div class="md-layout">
           <md-button class="md-primary dump-btn" @click="dumpState">Dump state</md-button>
@@ -145,36 +145,9 @@
   </flat-card>
 </template>
 <script>
-import {FILE_DECODERS, FILE_TYPES} from './decode.js';
 import LocalStore from './localstore.js';
 import FlatCard from './components/FlatCard.vue';
-
-const STATES = {
-  ERROR: 0,
-  CONNECTING: 1,
-  NO_PROXY: 2,
-  INVALID_VERSION: 3,
-  UNAUTH: 4,
-  DEVICES: 5,
-  START_TRACE: 6,
-  END_TRACE: 7,
-  LOAD_DATA: 8,
-};
-
-const WINSCOPE_PROXY_VERSION = '0.8';
-const WINSCOPE_PROXY_URL = 'http://localhost:5544';
-const PROXY_ENDPOINTS = {
-  DEVICES: '/devices/',
-  START_TRACE: '/start/',
-  END_TRACE: '/end/',
-  CONFIG_TRACE: '/configtrace/',
-  SELECTED_WM_CONFIG_TRACE: '/selectedwmconfigtrace/',
-  SELECTED_SF_CONFIG_TRACE: '/selectedsfconfigtrace/',
-  DUMP: '/dump/',
-  FETCH: '/fetch/',
-  STATUS: '/status/',
-  CHECK_WAYLAND: '/checkwayland/',
-};
+import {proxyClient, ProxyState, ProxyEndpoint} from './proxyclient/ProxyClient.ts';
 
 // trace options should be added in a nested category
 const TRACES = {
@@ -259,32 +232,15 @@ const DUMPS = {
   },
 };
 
-const proxyFileTypeAdapter = {
-  'window_trace': FILE_TYPES.WINDOW_MANAGER_TRACE,
-  'accessibility_trace': FILE_TYPES.ACCESSIBILITY_TRACE,
-  'layers_trace': FILE_TYPES.SURFACE_FLINGER_TRACE,
-  'wl_trace': FILE_TYPES.WAYLAND_TRACE,
-  'layers_dump': FILE_TYPES.SURFACE_FLINGER_DUMP,
-  'window_dump': FILE_TYPES.WINDOW_MANAGER_DUMP,
-  'wl_dump': FILE_TYPES.WAYLAND_DUMP,
-  'screen_recording': FILE_TYPES.SCREEN_RECORDING,
-  'transactions': FILE_TYPES.TRANSACTIONS_TRACE,
-  'transactions_legacy': FILE_TYPES.TRANSACTIONS_TRACE_LEGACY,
-  'proto_log': FILE_TYPES.PROTO_LOG,
-  'system_ui_trace': FILE_TYPES.SYSTEM_UI,
-  'launcher_trace': FILE_TYPES.LAUNCHER,
-  'ime_trace_clients': FILE_TYPES.IME_TRACE_CLIENTS,
-  'ime_trace_service': FILE_TYPES.IME_TRACE_SERVICE,
-  'ime_trace_managerservice': FILE_TYPES.IME_TRACE_MANAGERSERVICE,
-};
-
 const CONFIGS = Object.keys(TRACE_CONFIG).flatMap((file) => TRACE_CONFIG[file]);
 
 export default {
   name: 'dataadb',
   data() {
     return {
-      STATES,
+      proxyClient,
+      ProxyState,
+      STATES: ProxyState,
       TRACES,
       DYNAMIC_TRACES: TRACES['default'],
       TRACE_CONFIG,
@@ -293,23 +249,14 @@ export default {
       SF_SELECTED_CONFIG_VALUES: {},
       WM_SELECTED_CONFIG_VALUES: {},
       DUMPS,
-      FILE_DECODERS,
-      WINSCOPE_PROXY_VERSION,
-      status: STATES.CONNECTING,
+      status: ProxyState.CONNECTING,
       dataFiles: [],
-      devices: {},
-      selectedDevice: '',
-      refresh_worker: null,
       keep_alive_worker: null,
       errorText: '',
       loadProgress: 0,
-      adbStore: LocalStore(
-          'adb',
+      traceStore: LocalStore(
+          'trace',
           Object.assign(
-              {
-                proxyKey: '',
-                lastDevice: '',
-              },
               this.getAllTraceKeys(TRACES)
                   .concat(Object.keys(DUMPS))
                   .concat(CONFIGS)
@@ -319,6 +266,10 @@ export default {
           ),
       ),
       downloadProxyUrl: 'https://android.googlesource.com/platform/development/+/master/tools/winscope/adb_proxy/winscope_proxy.py',
+      onStateChangeFn: (newState, errorText) => {
+        this.status = newState;
+        this.errorText = errorText;
+      },
     };
   },
   props: ['store'],
@@ -326,30 +277,6 @@ export default {
     'flat-card': FlatCard,
   },
   methods: {
-    getDevices() {
-      if (this.status !== STATES.DEVICES && this.status !== STATES.CONNECTING) {
-        clearInterval(this.refresh_worker);
-        this.refresh_worker = null;
-        return;
-      }
-      this.callProxy('GET', PROXY_ENDPOINTS.DEVICES, this, function(request, view) {
-        try {
-          view.devices = JSON.parse(request.responseText);
-          if (view.adbStore.lastDevice && view.devices[view.adbStore.lastDevice] && view.devices[view.adbStore.lastDevice].authorised) {
-            view.selectDevice(view.adbStore.lastDevice);
-          } else {
-            if (view.refresh_worker === null) {
-              view.refresh_worker = setInterval(view.getDevices, 1000);
-            }
-            view.status = STATES.DEVICES;
-          }
-        } catch (err) {
-          console.error(err);
-          view.errorText = request.responseText;
-          view.status = STATES.ERROR;
-        }
-      });
-    },
     getAllTraceKeys(traces) {
       let keys = [];
       for (let dict_key in traces) {
@@ -361,15 +288,14 @@ export default {
     },
     setAvailableTraces() {
       this.DYNAMIC_TRACES = this.TRACES['default'];
-      this.callProxy('GET', PROXY_ENDPOINTS.CHECK_WAYLAND, this, function(request, view) {
+      proxyClient.call('GET', ProxyEndpoint.CHECK_WAYLAND, this, function(request, view) {
         try {
           if(request.responseText == 'true') {
             view.appendOptionalTraces('arc');
           }
         } catch(err) {
           console.error(err);
-          view.errorText = request.responseText;
-          view.status = STATES.ERROR;
+          proxyClient.setState(ProxyState.ERROR, request.responseText);
         }
       });
     },
@@ -379,12 +305,12 @@ export default {
       }
     },
     keepAliveTrace() {
-      if (this.status !== STATES.END_TRACE) {
+      if (this.status !== ProxyState.END_TRACE) {
         clearInterval(this.keep_alive_worker);
         this.keep_alive_worker = null;
         return;
       }
-      this.callProxy('GET', `${PROXY_ENDPOINTS.STATUS}${this.deviceId()}/`, this, function(request, view) {
+      proxyClient.call('GET', `${ProxyEndpoint.STATUS}${proxyClient.deviceId()}/`, this, function(request, view) {
         if (request.responseText !== 'True') {
           view.endTrace();
         } else if (view.keep_alive_worker === null) {
@@ -398,18 +324,17 @@ export default {
       const requestedSelectedSfConfig = this.toSelectedSfTraceConfig();
       const requestedSelectedWmConfig = this.toSelectedWmTraceConfig();
       if (requested.length < 1) {
-        this.errorText = 'No targets selected';
-        this.status = STATES.ERROR;
+        proxyClient.setState(ProxyState.ERROR, 'No targets selected');
         this.recordNewEvent("No targets selected");
         return;
       }
 
       this.recordNewEvent("Start Trace");
-      this.callProxy('POST', `${PROXY_ENDPOINTS.CONFIG_TRACE}${this.deviceId()}/`, this, null, null, requestedConfig);
-      this.callProxy('POST', `${PROXY_ENDPOINTS.SELECTED_SF_CONFIG_TRACE}${this.deviceId()}/`, this, null, null, requestedSelectedSfConfig);
-      this.callProxy('POST',  `${PROXY_ENDPOINTS.SELECTED_WM_CONFIG_TRACE}${this.deviceId()}/`, this, null, null, requestedSelectedWmConfig);
-      this.status = STATES.END_TRACE;
-      this.callProxy('POST', `${PROXY_ENDPOINTS.START_TRACE}${this.deviceId()}/`, this, function(request, view) {
+      proxyClient.call('POST', `${ProxyEndpoint.CONFIG_TRACE}${proxyClient.deviceId()}/`, this, null, null, requestedConfig);
+      proxyClient.call('POST', `${ProxyEndpoint.SELECTED_SF_CONFIG_TRACE}${proxyClient.deviceId()}/`, this, null, null, requestedSelectedSfConfig);
+      proxyClient.call('POST',  `${ProxyEndpoint.SELECTED_WM_CONFIG_TRACE}${proxyClient.deviceId()}/`, this, null, null, requestedSelectedWmConfig);
+      proxyClient.setState(ProxyState.END_TRACE);
+      proxyClient.call('POST', `${ProxyEndpoint.START_TRACE}${proxyClient.deviceId()}/`, this, function(request, view) {
         view.keepAliveTrace();
       }, null, requested);
     },
@@ -417,68 +342,31 @@ export default {
       this.recordButtonClickedEvent("Dump State");
       const requested = this.toDump();
       if (requested.length < 1) {
-        this.errorText = 'No targets selected';
-        this.status = STATES.ERROR;
+        proxyClient.setState(ProxyState.ERROR, 'No targets selected');
         this.recordNewEvent("No targets selected");
         return;
       }
-      this.status = STATES.LOAD_DATA;
-      this.callProxy('POST', `${PROXY_ENDPOINTS.DUMP}${this.deviceId()}/`, this, function(request, view) {
-        view.loadFile(requested, 0, "dump");
+      proxyClient.setState(ProxyState.LOAD_DATA);
+      proxyClient.call('POST', `${ProxyEndpoint.DUMP}${proxyClient.deviceId()}/`, this, function(request, view) {
+        proxyClient.loadFile(requested, 0, "dump", view);
       }, null, requested);
     },
     endTrace() {
-      this.status = STATES.LOAD_DATA;
-      this.callProxy('POST', `${PROXY_ENDPOINTS.END_TRACE}${this.deviceId()}/`, this, function(request, view) {
-        view.loadFile(view.toTrace(), 0, "trace");
+      proxyClient.setState(ProxyState.LOAD_DATA);
+      proxyClient.call('POST', `${ProxyEndpoint.END_TRACE}${proxyClient.deviceId()}/`, this, function(request, view) {
+        proxyClient.loadFile(view.toTrace(), 0, "trace", view);
       });
       this.recordNewEvent("Ended Trace");
     },
-    loadFile(files, idx, traceType) {
-      this.callProxy('GET', `${PROXY_ENDPOINTS.FETCH}${this.deviceId()}/${files[idx]}/`, this, (request, view) => {
-        try {
-          const enc = new TextDecoder('utf-8');
-          const resp = enc.decode(request.response);
-          const filesByType = JSON.parse(resp);
-
-          for (const filetype in filesByType) {
-            if (filesByType.hasOwnProperty(filetype)) {
-              const files = filesByType[filetype];
-              const fileDecoder = FILE_DECODERS[proxyFileTypeAdapter[filetype]];
-
-              for (const encodedFileBuffer of files) {
-                const buffer = Uint8Array.from(atob(encodedFileBuffer), (c) => c.charCodeAt(0));
-                const data = fileDecoder.decoder(buffer, fileDecoder.decoderParams, fileDecoder.name, view.store);
-                view.dataFiles.push(data);
-                view.loadProgress = 100 * (idx + 1) / files.length; // TODO: Update this
-              }
-            }
-          }
-
-          if (idx < files.length - 1) {
-            view.loadFile(files, idx + 1, traceType);
-          } else {
-            const currentDate = new Date().toISOString();
-            view.$emit('dataReady',
-                `winscope-${traceType}-${currentDate}`,
-                view.dataFiles);
-          }
-        } catch (err) {
-          console.error(err);
-          view.errorText = err;
-          view.status = STATES.ERROR;
-        }
-      }, 'arraybuffer');
-    },
     toTrace() {
       return Object.keys(this.DYNAMIC_TRACES)
-          .filter((traceKey) => this.adbStore[traceKey]);
+          .filter((traceKey) => this.traceStore[traceKey]);
     },
     toTraceConfig() {
       return Object.keys(TRACE_CONFIG)
-          .filter((file) => this.adbStore[file])
+          .filter((file) => this.traceStore[file])
           .flatMap((file) => TRACE_CONFIG[file])
-          .filter((config) => this.adbStore[config]);
+          .filter((config) => this.traceStore[config]);
     },
     toSelectedSfTraceConfig() {
       const requestedSelectedConfig = {};
@@ -500,77 +388,37 @@ export default {
     },
     toDump() {
       return Object.keys(DUMPS)
-          .filter((dumpKey) => this.adbStore[dumpKey]);
-    },
-    selectDevice(device_id) {
-      this.selectedDevice = device_id;
-      this.adbStore.lastDevice = device_id;
-      this.status = STATES.START_TRACE;
-    },
-    deviceId() {
-      return this.selectedDevice;
+          .filter((dumpKey) => this.traceStore[dumpKey]);
     },
     restart() {
       this.recordButtonClickedEvent("Connect / Retry");
-      this.status = STATES.CONNECTING;
+      proxyClient.setState(ProxyState.CONNECTING);
     },
     resetLastDevice() {
       this.recordButtonClickedEvent("Change Device");
-      this.adbStore.lastDevice = '';
+      this.proxyClient.resetLastDevice();
       this.restart();
-    },
-    callProxy(method, path, view, onSuccess, type, jsonRequest) {
-      const request = new XMLHttpRequest();
-      var view = this;
-      request.onreadystatechange = function() {
-        if (this.readyState !== 4) {
-          return;
-        }
-        if (this.status === 0) {
-          view.status = STATES.NO_PROXY;
-        } else if (this.status === 200) {
-          if (this.getResponseHeader('Winscope-Proxy-Version') !== WINSCOPE_PROXY_VERSION) {
-            view.status = STATES.INVALID_VERSION;
-          } else if (onSuccess) {
-            onSuccess(this, view);
-          }
-        } else if (this.status === 403) {
-          view.status = STATES.UNAUTH;
-        } else {
-          if (this.responseType === 'text' || !this.responseType) {
-            view.errorText = this.responseText;
-          } else if (this.responseType === 'arraybuffer') {
-            view.errorText = String.fromCharCode.apply(null, new Uint8Array(this.response));
-          }
-          view.status = STATES.ERROR;
-        }
-      };
-      request.responseType = type || '';
-      request.open(method, WINSCOPE_PROXY_URL + path);
-      request.setRequestHeader('Winscope-Token', this.adbStore.proxyKey);
-      if (jsonRequest) {
-        const json = JSON.stringify(jsonRequest);
-        request.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-        request.send(json);
-      } else {
-        request.send();
-      }
     },
   },
   created() {
+    proxyClient.setState(ProxyState.CONNECTING);
+    this.proxyClient.onStateChange(this.onStateChangeFn);
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('token')) {
-      this.adbStore.proxyKey = urlParams.get('token');
+      this.proxyClient.proxyKey = urlParams.get('token');
     }
-    this.getDevices();
+    this.proxyClient.getDevices();
+  },
+  beforeDestroy() {
+    this.proxyClient.removeOnStateChange(this.onStateChangeFn);
   },
   watch: {
     status: {
       handler(st) {
-        if (st == STATES.CONNECTING) {
-          this.getDevices();
+        if (st == ProxyState.CONNECTING) {
+          this.proxyClient.getDevices();
         }
-        if (st == STATES.START_TRACE) {
+        if (st == ProxyState.START_TRACE) {
           this.setAvailableTraces();
         }
       },
