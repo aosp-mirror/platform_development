@@ -122,14 +122,16 @@ function update_kernel_prebuilts_with_artifact
   local out_root="${OUT_DIR}/target/kernel/${kernel_version}/${arch}"
   local prebuilts_dir="kernel/prebuilts/${kernel_version}/${arch}/"
   local list="\
-    kernel-5.10-allsyms \
-    kernel-5.10-gz-allsyms \
-    kernel-5.10-lz4-allsyms \
-    kernel-5.10 \
-    kernel-5.10-gz \
-    kernel-5.10-lz4"
+    kernel-${kernel_version}-allsyms \
+    kernel-${kernel_version}-gz-allsyms \
+    kernel-${kernel_version}-lz4-allsyms \
+    kernel-${kernel_version} \
+    kernel-${kernel_version}-gz \
+    kernel-${kernel_version}-lz4"
   printf "%20s\n --> %20s\n" "${out_root}" "${prebuilts_dir}"
   for f in ${list}; do
+    echo \
+    cp -f ${out_root}/$f ${prebuilts_dir}
     cp -f ${out_root}/$f ${prebuilts_dir}
   done
 }
