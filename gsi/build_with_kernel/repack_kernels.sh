@@ -35,3 +35,19 @@ prepare_kernel_modules \
   "artifacts/common-android13-5_10-kernel_virt_aarch64" \
   "5.10" \
   "arm64"
+
+prepare_kernel_image \
+  "artifacts/common-android13-5_15-kernel_aarch64" \
+  "5.15" \
+  "arm64"
+
+prepare_kernel_image \
+  "artifacts/common-android13-5_15-kernel_debug_aarch64" \
+  "5.15" \
+  "arm64" \
+  "debug"
+
+prepare_kernel_modules \
+  "artifacts/common-android13-5_15-kernel_virt_aarch64" \
+  "5.15" \
+  "arm64"
