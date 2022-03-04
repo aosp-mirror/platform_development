@@ -54,13 +54,20 @@ TEST_GROUPS = [
 
 # Excluded tests. These tests will be ignored by this script.
 TEST_EXCLUDE = [
-        "aidl_test_rust_client",
-        "aidl_test_rust_service",
         "ash_test_src_lib",
         "ash_test_tests_constant_size_arrays",
         "ash_test_tests_display",
         "shared_library_test_src_lib",
-        "vulkano_test_src_lib"
+        "vulkano_test_src_lib",
+
+        # These are helper binaries for aidl_integration_test
+        # and aren't actually meant to run as individual tests.
+        "aidl_test_rust_client",
+        "aidl_test_rust_service",
+        "aidl_test_rust_service_async",
+
+        # TODO: Remove when b/198197213 is closed.
+        "diced_client_test",
 ]
 
 # Excluded modules.
