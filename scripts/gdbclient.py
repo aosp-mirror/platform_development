@@ -102,6 +102,9 @@ def parse_args():
     parser.add_argument(
         "--env", nargs=1, action="append", metavar="VAR=VALUE",
         help="set environment variable when running a binary")
+    parser.add_argument(
+        "--chroot", nargs='?', default="", metavar="PATH",
+        help="run command in a chroot in the given directory")
 
     return parser.parse_args()
 
@@ -315,7 +318,10 @@ def do_main():
     sysroot = os.path.join(os.environ["ANDROID_PRODUCT_OUT"], "symbols")
 
     # Make sure the environment matches the attached device.
-    verify_device(root, device)
+    # Skip when running in a chroot because the chroot lunch target may not
+    # match the device's lunch target.
+    if not args.chroot:
+        verify_device(root, device)
 
     debug_socket = "/data/local/tmp/debug_socket"
     pid = None
@@ -356,7 +362,7 @@ def do_main():
             gdbrunner.start_gdbserver(
                 device, server_local_path, server_remote_path,
                 target_pid=pid, run_cmd=run_cmd, debug_socket=debug_socket,
-                port=args.port, run_as_cmd=cmd_prefix, lldb=True)
+                port=args.port, run_as_cmd=cmd_prefix, lldb=True, chroot=args.chroot)
         else:
             print(
                 "Connecting to tracing pid {} using local port {}".format(
