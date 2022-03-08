@@ -19,6 +19,7 @@ import {TRACE_TYPES, DUMP_TYPES} from '@/decode.js';
 const mixin = {
   showInTraceView(file) {
     return file.type == TRACE_TYPES.WINDOW_MANAGER ||
+      file.type == TRACE_TYPES.ACCESSIBILITY ||
       file.type == TRACE_TYPES.SURFACE_FLINGER ||
       file.type == TRACE_TYPES.WAYLAND ||
       file.type == TRACE_TYPES.SYSTEM_UI ||
@@ -29,6 +30,9 @@ const mixin = {
       file.type == DUMP_TYPES.WINDOW_MANAGER ||
       file.type == DUMP_TYPES.SURFACE_FLINGER ||
       file.type == DUMP_TYPES.WAYLAND;
+  },
+  showInAccessibilityTraceView(file) {
+    return file.type == TRACE_TYPES.ACCESSIBILITY;
   },
   showInWindowManagerTraceView(file) {
     return file.type == TRACE_TYPES.WINDOW_MANAGER ||
