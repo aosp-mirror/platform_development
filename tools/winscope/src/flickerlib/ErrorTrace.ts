@@ -14,8 +14,20 @@
  * limitations under the License.
  */
 
-import ITreeViewElement from "./ITreeViewElement"
+import { ErrorTrace } from "./common"
+import ErrorState from "./errors/ErrorState"
 
-export default interface IClickableTreeViewElement extends ITreeViewElement {
-  obj: any
+ErrorTrace.fromProto = function (proto: any) {
+    const states = [];
+    for (const stateProto of proto.states) {
+        const transformedState = ErrorState.fromProto(
+            stateProto.errors,
+            stateProto.timestamp);
+
+            states.push(transformedState);
+    }
+    const source = null;
+    return new ErrorTrace(states, source);
 }
+
+export default ErrorTrace;

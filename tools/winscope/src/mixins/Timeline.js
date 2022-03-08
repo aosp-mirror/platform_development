@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+import _ from "lodash";
+import { nanos_to_string } from "../transform";
+import { transitionMap } from "../utils/consts";
 
 /**
  * Represents a continuous section of the timeline that is rendered into the
@@ -33,10 +36,36 @@ class Block {
   }
 }
 
+//Represents a continuous section of the tag display that relates to a specific transition
+class Transition {
+  /**
+   * Create a transition.
+   * @param {number} startPos - The position of the start tag as a percentage
+   * of the timeline width.
+   * @param {number} startTime - The start timestamp in ms of the transition.
+   * @param {number} endTime - The end timestamp in ms of the transition.
+   * @param {number} width - The width of the transition as a percentage of the
+   * timeline width.
+   * @param {string} color - the color of transition depending on type.
+   * @param {number} overlap - number of transitions with which this transition overlaps.
+   * @param {string} tooltip - The tooltip of the transition, minus the type of transition.
+   */
+  constructor(startPos, startTime, endTime, width, color, overlap, tooltip) {
+    this.startPos = startPos;
+    this.startTime = startTime;
+    this.endTime = endTime;
+    this.width = width;
+    this.color = color;
+    this.overlap = overlap;
+    this.tooltip = tooltip;
+  }
+}
+
 /**
  * This Mixin should only be injected into components which have the following:
  * - An element in the template referenced as 'timeline' (this.$refs.timeline).
  */
+
 export default {
   name: 'timeline',
   props: {
@@ -53,6 +82,15 @@ export default {
     'scale': {
       type: Array,
     },
+    'tags': {
+      type: Array,
+    },
+    'errors': {
+      type: Array,
+    },
+    'flickerMode': {
+      type: Boolean,
+    }
   },
   data() {
     return {
@@ -99,6 +137,73 @@ export default {
 
       return Object.freeze(blocks);
     },
+
+    //Generates list of transitions to be displayed in flicker mode
+    timelineTransitions() {
+      const transitions = [];
+
+      //group tags by transition and 'id' property
+      const groupedTags = _.groupBy(this.tags, tag => `"${tag.transition} ${tag.id}"`);
+
+      for (const transitionId in groupedTags) {
+        const id = groupedTags[transitionId];
+        //there are at least two tags per id, maybe more if multiple traces
+        // determine which tag is the start (min of start times), which is end (max of end times)
+        const startTimes = id.filter(tag => tag.isStartTag).map(tag => tag.timestamp);
+        const endTimes = id.filter(tag => !tag.isStartTag).map(tag => tag.timestamp);
+
+        const transitionStartTime = Math.min(...startTimes);
+        const transitionEndTime = Math.max(...endTimes);
+
+        //do not freeze new transition, as overlap still to be handled (defaulted to 0)
+        const transition = this.generateTransition(
+          transitionStartTime,
+          transitionEndTime,
+          id[0].transition,
+          0,
+          id[0].layerId,
+          id[0].taskId,
+          id[0].windowToken
+        );
+        transitions.push(transition);
+      }
+
+      //sort transitions in ascending start position in order to handle overlap
+      transitions.sort((a, b) => (a.startPos > b.startPos) ? 1 : -1);
+
+      //compare each transition to the ones that came before
+      for (let curr=0; curr<transitions.length; curr++) {
+        let processedTransitions = [];
+
+        for (let prev=0; prev<curr; prev++) {
+          processedTransitions.push(transitions[prev]);
+
+          if (this.isSimultaneousTransition(transitions[curr], transitions[prev])) {
+            transitions[curr].overlap++;
+          }
+        }
+
+        let overlapStore = processedTransitions.map(transition => transition.overlap);
+
+        if (transitions[curr].overlap === Math.max(...overlapStore)) {
+          let previousTransition = processedTransitions.find(transition => {
+            return transition.overlap===transitions[curr].overlap;
+          });
+          if (this.isSimultaneousTransition(transitions[curr], previousTransition)) {
+            transitions[curr].overlap++;
+          }
+        }
+      }
+
+      return Object.freeze(transitions);
+    },
+    errorPositions() {
+      if (!this.flickerMode) return [];
+      const errorPositions = this.errors.map(
+        error => ({ pos: this.position(error.timestamp), ts: error.timestamp })
+      );
+      return Object.freeze(errorPositions);
+    },
   },
   methods: {
     position(item) {
@@ -141,6 +246,16 @@ export default {
       }
 
       return pos * (this.crop.right - this.crop.left) + this.crop.left;
+    },
+
+    objectWidth(startTs, endTs) {
+      return this.position(endTs) - this.position(startTs) + this.pointWidth;
+    },
+
+    isSimultaneousTransition(currTransition, prevTransition) {
+      return prevTransition.startPos <= currTransition.startPos
+        && currTransition.startPos <= prevTransition.startPos+prevTransition.width
+        && currTransition.overlap === prevTransition.overlap;
     },
 
     /**
@@ -229,8 +344,25 @@ export default {
       if (this.disabled) {
         return;
       }
-      const timestamp = parseInt(this.timeline[clickedOnTsIndex]);
+
+      var timestamp = parseInt(this.timeline[clickedOnTsIndex]);
+
+      //pointWidth is always 1
+      //if offset percentage < 1, clickedOnTsIndex becomes negative, leading to a negative index
+      if (clickedOnTsIndex < 0) {
+        timestamp = parseInt(this.timeline[0])
+      }
       this.$store.dispatch('updateTimelineTime', timestamp);
+    },
+
+    /**
+     * Handles the error click event.
+     * When an error in the timeline is clicked this function will update the timeline
+     * to match the error timestamp.
+     * @param {number} errorTimestamp
+     */
+    onErrorClick(errorTimestamp) {
+      this.$store.dispatch('updateTimelineTime', errorTimestamp);
     },
 
     /**
@@ -242,9 +374,35 @@ export default {
      *                 scale parameter.
      */
     generateTimelineBlock(startTs, endTs) {
-      const blockWidth = this.position(endTs) - this.position(startTs) +
-        this.pointWidth;
+      const blockWidth = this.objectWidth(startTs, endTs);
       return Object.freeze(new Block(this.position(startTs), blockWidth));
+    },
+    /**
+     * Generate a transition object that can be used by the tag-timeline to render
+     * a transformed transition that starts at `startTs` and ends at `endTs`.
+     * @param {number} startTs - The timestamp at which the transition starts.
+     * @param {number} endTs - The timestamp at which the transition ends.
+     * @param {string} transitionType - The type of transition.
+     * @param {number} overlap - The degree to which the transition overlaps with others.
+     * @param {number} layerId - Helps determine if transition is associated with SF trace.
+     * @param {number} taskId - Helps determine if transition is associated with WM trace.
+     * @param {number} windowToken - Helps determine if transition is associated with WM trace.
+     * @return {Transition} A transition object transformed to the timeline's crop and
+     *                 scale parameter.
+     */
+    generateTransition(startTs, endTs, transitionType, overlap, layerId, taskId, windowToken) {
+      const transitionWidth = this.objectWidth(startTs, endTs);
+      const transitionDesc = transitionMap.get(transitionType).desc;
+      const transitionColor = transitionMap.get(transitionType).color;
+      var tooltip = `${transitionDesc}. Start: ${nanos_to_string(startTs)}. End: ${nanos_to_string(endTs)}.`;
+
+      if (layerId !== 0 && taskId === 0 && windowToken === "") {
+        tooltip += " SF only.";
+      } else if ((taskId !== 0 || windowToken !== "") && layerId === 0) {
+        tooltip += " WM only.";
+      }
+
+      return new Transition(this.position(startTs), startTs, endTs, transitionWidth, transitionColor, overlap, tooltip);
     },
   },
 };
