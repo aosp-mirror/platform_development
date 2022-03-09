@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import TransitionType from "../flickerlib/tags/TransitionType";
+
 /**
  * Should be kept in sync with ENUM is in Google3 under:
  * google3/wireless/android/tools/android_bug_tool/extension/common/actions
@@ -31,6 +33,12 @@ const NAVIGATION_STYLE = {
   TARGETED: 'Targeted',
 };
 
+const SEARCH_TYPE = {
+  TRANSITIONS: 'Transitions',
+  ERRORS: 'Errors',
+  TIMESTAMP: 'Timestamp',
+};
+
 const logLevel = {
   INFO: 'info',
   DEBUG: 'debug',
@@ -38,6 +46,23 @@ const logLevel = {
   WARN: 'warn',
   ERROR: 'error',
   WTF: 'wtf',
-}
+};
 
-export { WebContentScriptMessageType, NAVIGATION_STYLE, logLevel };
+const transitionMap = new Map([
+  [TransitionType.ROTATION, {desc: 'Rotation', color: '#9900ffff'}],
+  [TransitionType.PIP_ENTER, {desc: 'Entering PIP mode', color: '#4a86e8ff'}],
+  [TransitionType.PIP_RESIZE, {desc: 'Resizing PIP mode', color: '#2b9e94ff'}],
+  [TransitionType.PIP_CLOSE, {desc: 'Closing PIP mode', color: 'rgb(57, 57, 182)'}],
+  [TransitionType.PIP_EXIT, {desc: 'Exiting PIP mode', color: 'darkblue'}],
+  [TransitionType.APP_LAUNCH, {desc: 'Launching app', color: '#ef6befff'}],
+  [TransitionType.APP_CLOSE, {desc: 'Closing app', color: '#d10ddfff'}],
+  [TransitionType.IME_APPEAR, {desc: 'IME appearing', color: '#ff9900ff'}],
+  [TransitionType.IME_DISAPPEAR, {desc: 'IME disappearing', color: '#ad6800ff'}],
+  [TransitionType.APP_PAIRS_ENTER, {desc: 'Entering app pairs mode', color: 'rgb(58, 151, 39)'}],
+  [TransitionType.APP_PAIRS_EXIT, {desc: 'Exiting app pairs mode', color: 'rgb(45, 110, 32)'}],
+])
+
+//used to split timestamp search input by unit, to convert to nanoseconds
+const regExpTimestampSearch = new RegExp(/^\d+$/);
+
+export { WebContentScriptMessageType, NAVIGATION_STYLE, SEARCH_TYPE, logLevel, transitionMap, regExpTimestampSearch };

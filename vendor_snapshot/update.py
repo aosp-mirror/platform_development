@@ -102,6 +102,7 @@ JSON_TO_BP = {
     'SanitizeUbsanDep': 'sanitize_ubsan_dep',
     'Symlinks': 'symlinks',
     'StaticExecutable': 'static_executable',
+    'InstallInRoot': 'install_in_root',
     'InitRc': 'init_rc',
     'VintfFragments': 'vintf_fragments',
     'SharedLibs': 'shared_libs',
