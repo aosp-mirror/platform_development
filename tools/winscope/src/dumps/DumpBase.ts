@@ -23,7 +23,7 @@ export default abstract class DumpBase implements IDump {
     this._files = files;
   }
 
-  get files(): any[] {
+  get files(): readonly any[] {
     return Object.values(this._files).flat();
   }
 
@@ -31,6 +31,6 @@ export default abstract class DumpBase implements IDump {
 }
 
 interface IDump {
-  files: Array<Object>;
+  files: readonly Object[];
   type: String,
 }
