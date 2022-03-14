@@ -1,25 +1,28 @@
-import { detectAndDecode, decodeAndTransformProto, FILE_TYPES } from '../src/decode';
+import { decodeAndTransformProto, FILE_TYPES, FILE_DECODERS } from '../src/decode';
 import fs from 'fs';
 import path from 'path';
-
-const layers_traces = [
-  require('./traces/layers_trace/layers_trace_emptyregion.pb'),
-  require('./traces/layers_trace/layers_trace_invalid_layer_visibility.pb'),
-  require('./traces/layers_trace/layers_trace_orphanlayers.pb'),
-  require('./traces/layers_trace/layers_trace_root.pb'),
-  require('./traces/layers_trace/layers_trace_root_aosp.pb'),
-];
+import { expectedEntries, expectedLayers, layers_traces } from './traces/ExpectedTraces';
 
 describe("Proto Transformations", () => {
   it("can transform surface flinger traces", () => {
-    for (const trace of layers_traces) {
-      fs.readFileSync(path.resolve(__dirname, trace));
-      const traceBuffer = fs.readFileSync(path.resolve(__dirname, trace));
+    for (var i = 0; i < layers_traces.length; i++) {
+      const trace = layers_traces[i];
+      const buffer = new Uint8Array(fs.readFileSync(path.resolve(__dirname, trace)));
+      const data = decodeAndTransformProto(buffer, FILE_DECODERS[FILE_TYPES.SURFACE_FLINGER_TRACE].decoderParams, true);
 
-      const buffer = new Uint8Array(traceBuffer);
-      const data = decodeAndTransformProto(buffer, FILE_TYPES.layers_trace, true);
+      // use final entry as this determines if there was any error in previous entry parsing
+      const transformedEntry = data.entries[data.entries.length-1];
+      const expectedEntry = expectedEntries[i];
+      for (const property in expectedEntry) {
+        expect(transformedEntry[property]).toEqual(expectedEntry[property]);
+      }
 
-      expect(true).toBe(true);
+      // check final flattened layer
+      const transformedLayer = transformedEntry.flattenedLayers[transformedEntry.flattenedLayers.length-1];
+      const expectedLayer = expectedLayers[i];
+      for (const property in expectedLayer) {
+        expect(transformedLayer[property]).toEqual(expectedLayer[property]);
+      }
     }
   });
 });
