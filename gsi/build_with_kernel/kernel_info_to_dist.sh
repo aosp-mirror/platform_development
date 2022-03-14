@@ -23,6 +23,7 @@ KERNEL_INFO_FILES=(
   "modules.builtin"
   "modules.builtin.modinfo"
   "system_dlkm.img"
+  "system_dlkm_staging_archive.tar.gz"
 )
 
 function download_kernel_info_files {
