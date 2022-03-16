@@ -56,13 +56,9 @@ def find_and_remove_path(root_path, file_name=None):
             shutil.rmtree(root_path)
 
 
-def remove_references_for_all_arches_and_variants(ref_dump_dir,
-                                                  chosen_vndk_version,
-                                                  binder_bitness, targets,
-                                                  libs):
+def remove_references_for_all_arches(ref_dump_dir, chosen_vndk_version,
+                                     binder_bitness, targets, libs):
     for target in targets:
-        if target.arch == '' or target.arch_variant == '':
-            continue
         for category in ('ndk', 'platform', 'vndk'):
             dir_to_remove = get_ref_dump_dir_stem(
                 ref_dump_dir, category, chosen_vndk_version, binder_bitness,
@@ -107,12 +103,9 @@ def create_source_abi_reference_dumps(args, chosen_vndk_version,
                                       binder_bitness, lsdump_paths, targets):
     num_libs_copied = 0
     for target in targets:
-        if target.arch == '' or target.arch_variant == '':
-            continue
-
-        print('Creating dumps for target_arch:', target.arch, 'and variant ',
-              target.arch_variant)
         assert target.primary_arch != ''
+        print(f'Creating dumps for arch: {target.arch}, '
+              f'primary arch: {target.primary_arch}')
 
         num_libs_copied += find_and_copy_lib_lsdumps(
             args.ref_dump_dir, chosen_vndk_version, binder_bitness, target,
@@ -140,11 +133,12 @@ def create_source_abi_reference_dumps_for_all_products(args):
         chosen_vndk_version = choose_vndk_version(
             args.version, platform_vndk_version, board_vndk_version)
 
-        targets = [Target(True, product), Target(False, product)]
+        targets = [t for t in (Target(True, product), Target(False, product))
+                   if t.arch]
         # Remove reference ABI dumps specified in `args.libs` (or remove all of
         # them if none of them are specified) so that we may build these
         # libraries successfully.
-        remove_references_for_all_arches_and_variants(
+        remove_references_for_all_arches(
             args.ref_dump_dir, chosen_vndk_version, binder_bitness, targets,
             args.libs)
 
