@@ -66,6 +66,10 @@ TEST_EXCLUDE = [
         "aidl_test_rust_service",
         "aidl_test_rust_service_async",
 
+        # This is a helper binary for AuthFsHostTest and shouldn't
+        # be run directly.
+        "open_then_run",
+
         # TODO: Remove when b/198197213 is closed.
         "diced_client_test",
 ]
