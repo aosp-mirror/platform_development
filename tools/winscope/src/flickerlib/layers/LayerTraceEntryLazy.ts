@@ -15,10 +15,10 @@
  */
 
 
-import { AbstractLayerTraceEntry } from "../common";
+import { BaseLayerTraceEntry } from "../common";
 import LayerTraceEntry from "./LayerTraceEntry";
 
-class LayerTraceEntryLazy extends AbstractLayerTraceEntry {
+class LayerTraceEntryLazy extends BaseLayerTraceEntry {
   private _isInitialized: boolean = false;
   private _layersProto: any[];
   private _displayProtos: any[];
