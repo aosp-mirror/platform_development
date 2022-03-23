@@ -1,0 +1,7 @@
+<configuration description="Config for python tradefed symbol test">
+    <option name="test-suite-tag" value="python-native_heapdump_viewer_test" />
+    <test class="com.android.tradefed.testtype.python.PythonBinaryHostTest" >
+        <option name="par-file-name" value="python-native_heapdump_viewer_test" />
+        <option name="test-timeout" value="2m" />
+    </test>
+</configuration>

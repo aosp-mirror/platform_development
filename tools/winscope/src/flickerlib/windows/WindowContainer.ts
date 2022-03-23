@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import { shortenName } from '../mixin'
+import { getPropertiesForDisplay, shortenName } from '../mixin'
+import { asRawTreeViewObject } from '../../utils/diff.js'
 
 import {
     Configuration,
@@ -28,83 +29,73 @@ import {
 import Activity from "./Activity"
 import DisplayArea from "./DisplayArea"
 import DisplayContent from "./DisplayContent"
-import Task from "./Task"
-import TaskFragment from "./TaskFragment"
+import ActivityTask from "./ActivityTask"
 import WindowState from "./WindowState"
 import WindowToken from "./WindowToken"
 
-WindowContainer.fromProto = function (
-    proto: any,
-    protoChildren: any[],
-    isActivityInTree: boolean,
-    nameOverride: string = null,
-    identifierOverride: string = null,
-    tokenOverride = null,
-): WindowContainer {
+WindowContainer.fromProto = function ({
+    proto,
+    children,
+    nameOverride = null,
+    identifierOverride = null,
+    tokenOverride = null
+}): WindowContainer {
     if (proto == null) {
-        return null;
+        return null
     }
+    const identifier = identifierOverride ?? proto.identifier
+    var name = nameOverride ?? identifier?.title ?? ""
+    var token = tokenOverride?.toString(16) ?? identifier?.hashCode?.toString(16) ?? ""
 
-    const children = protoChildren
-        .filter(it => it != null)
-        .map(it => WindowContainer.childrenFromProto(it, isActivityInTree))
-        .filter(it => it != null);
-
-    const identifier = identifierOverride ?? proto.identifier;
-    var name = nameOverride ?? identifier?.title ?? "";
-    var token = tokenOverride?.toString(16) ?? identifier?.hashCode?.toString(16) ?? "";
-
-    const config = createConfigurationContainer(proto.configurationContainer);
+    const config = newConfigurationContainer(proto.configurationContainer)
     const entry = new WindowContainer(
         name,
         token,
         proto.orientation,
-        proto.surfaceControl?.layerId ?? 0,
         proto.visible,
         config,
         children
-    );
+    )
 
-    addAttributes(entry, proto);
-    return entry;
+    // we remove the children property from the object to avoid it showing the
+    // the properties view of the element as we can always see those elements'
+    // properties by changing the target element in the hierarchy tree view.
+    entry.obj = getPropertiesForDisplay(proto, entry)
+    entry.kind = entry.constructor.name
+    entry.shortName = shortenName(entry.name)
+    entry.rawTreeViewObject = asRawTreeViewObject(entry)
+    return entry
 }
 
-function addAttributes(entry: WindowContainer, proto: any) {
-    entry.proto = proto;
-    entry.kind = entry.constructor.name;
-    entry.shortName = shortenName(entry.name);
-}
-
-WindowContainer.childrenFromProto = function(proto: any, isActivityInTree: Boolean): WindowContainerChild {
+WindowContainer.childrenFromProto = function(proto, isActivityInTree: Boolean): WindowContainerChild {
     return DisplayContent.fromProto(proto.displayContent, isActivityInTree) ??
         DisplayArea.fromProto(proto.displayArea, isActivityInTree) ??
-        Task.fromProto(proto.task, isActivityInTree) ??
-        TaskFragment.fromProto(proto.taskFragment, isActivityInTree) ??
+        ActivityTask.fromProto(proto.task, isActivityInTree) ??
         Activity.fromProto(proto.activity) ??
         WindowToken.fromProto(proto.windowToken, isActivityInTree) ??
         WindowState.fromProto(proto.window, isActivityInTree) ??
-        WindowContainer.fromProto(proto.windowContainer);
+        WindowContainer.fromProto({proto: proto.windowContainer})
 }
 
-function createConfigurationContainer(proto: any): ConfigurationContainer {
+function newConfigurationContainer(proto): ConfigurationContainer {
     const entry = new ConfigurationContainer(
-        createConfiguration(proto?.overrideConfiguration ?? null),
-        createConfiguration(proto?.fullConfiguration ?? null),
-        createConfiguration(proto?.mergedOverrideConfiguration ?? null)
-    );
+        newConfiguration(proto?.overrideConfiguration ?? null),
+        newConfiguration(proto?.fullConfiguration ?? null),
+        newConfiguration(proto?.mergedOverrideConfiguration ?? null)
+    )
 
-    entry.obj = entry;
-    return entry;
+    entry.obj = entry
+    return entry
 }
 
-function createConfiguration(proto: any): Configuration {
+function newConfiguration(proto): Configuration {
     if (proto == null) {
-        return null;
+        return null
     }
-    var windowConfiguration = null;
+    var windowConfiguration = null
 
     if (proto != null && proto.windowConfiguration != null) {
-        windowConfiguration = createWindowConfiguration(proto.windowConfiguration);
+        windowConfiguration = newWindowConfiguration(proto.windowConfiguration)
     }
 
     return new Configuration(
@@ -116,17 +107,17 @@ function createConfiguration(proto: any): Configuration {
         proto?.smallestScreenWidthDp ?? 0,
         proto?.screenLayout ?? 0,
         proto?.uiMode ?? 0
-    );
+    )
 }
 
-function createWindowConfiguration(proto: any): WindowConfiguration {
+function newWindowConfiguration(proto): WindowConfiguration {
     return new WindowConfiguration(
         toRect(proto.appBounds),
         toRect(proto.bounds),
         toRect(proto.maxBounds),
         proto.windowingMode,
         proto.activityType
-    );
+    )
 }
 
-export default WindowContainer;
+export default WindowContainer
