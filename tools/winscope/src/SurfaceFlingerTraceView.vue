@@ -14,21 +14,15 @@
 -->
 
 <template>
-  <TraceView
-    :store="store"
-    :file="file"
-    :summarizer="summarizer"
-    :presentTags="presentTags"
-    :presentErrors="presentErrors"
-  />
+  <TraceView :store="store" :file="file" :summarizer="summarizer" />
 </template>
 
 <script>
 import TraceView from '@/TraceView.vue';
 
 export default {
-  name: 'SurfaceFlingerTraceView',
-  props: ['store', 'file', 'presentTags', 'presentErrors'],
+  name: 'WindowManagerTraceView',
+  props: ['store', 'file'],
   components: {
     TraceView,
   },
@@ -36,30 +30,23 @@ export default {
     summarizer(layer) {
       const summary = [];
 
-      if (layer?.visibilityReason) {
-        let reason = "";
-        if (Array.isArray(layer.visibilityReason)) {
-          reason = layer.visibilityReason.join(", ");
-        } else {
-          reason = layer.visibilityReason;
-        }
-
-        summary.push({key: 'Invisible due to', value: reason});
+      if (layer.invisibleDueTo) {
+        summary.push({key: 'Invisible due to', value: layer.invisibleDueTo});
       }
 
-      if (layer?.occludedBy?.length > 0) {
-        summary.push({key: 'Occluded by', value: layer.occludedBy.map(it => it.id).join(', ')});
+      if (layer.occludedBy?.length > 0) {
+        summary.push({key: 'Occluded by', value: layer.occludedBy.join(', ')});
       }
 
-      if (layer?.partiallyOccludedBy?.length > 0) {
+      if (layer.partiallyOccludedBy?.length > 0) {
         summary.push({
           key: 'Partially occluded by',
-          value: layer.partiallyOccludedBy.map(it => it.id).join(', '),
+          value: layer.partiallyOccludedBy.join(', '),
         });
       }
 
-      if (layer?.coveredBy?.length > 0) {
-        summary.push({key: 'Covered by', value: layer.coveredBy.map(it => it.id).join(', ')});
+      if (layer.coveredBy?.length > 0) {
+        summary.push({key: 'Covered by', value: layer.coveredBy.join(', ')});
       }
 
       return summary;

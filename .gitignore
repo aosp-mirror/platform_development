@@ -5,6 +5,4 @@
 Thumbs.db
 *.iml
 .idea/
-*.yarn/
-.yarnrc
 gen/
