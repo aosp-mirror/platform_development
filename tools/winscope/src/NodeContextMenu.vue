@@ -1,11 +1,15 @@
 <template>
   <vue-context ref="menu">
-
+    <li>
+      <a href="#" @click.prevent="$emit('collapseAllOtherNodes')">
+        Collapse all other nodes
+      </a>
+    </li>
   </vue-context>
 </template>
 
 <script>
-import VueContext from 'vue-context';
+import {VueContext} from 'vue-context';
 
 export default {
   name: 'NodeContextMenu',
@@ -37,7 +41,7 @@ export default {
   margin: 0;
   padding: 10px 0;
   min-width: 10rem;
-  z-index: 10;
+  z-index: 1500;
   position: fixed;
   list-style: none;
   box-sizing: border-box;

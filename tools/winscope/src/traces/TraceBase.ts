@@ -23,9 +23,9 @@ import JSZip from 'jszip';
 
 export default abstract class Trace implements ITrace {
   selectedIndex: Number;
-  readonly data: Object;
-  readonly timeline: Array<Number>;
-  readonly _files: File[];
+  data: Object;
+  timeline: Array<Number>;
+  _files: File[];
 
   constructor(data: any, timeline: Number[], files: any[]) {
     this.selectedIndex = 0;
@@ -34,7 +34,7 @@ export default abstract class Trace implements ITrace {
     this._files = files;
   }
 
-  get files(): readonly File[] {
+  get files(): File[] {
     return Object.values(this._files).flat();
   }
 
@@ -64,6 +64,6 @@ export default abstract class Trace implements ITrace {
 }
 
 interface ITrace {
-  files: readonly Object[];
+  files: Array<Object>;
   type: String,
 }

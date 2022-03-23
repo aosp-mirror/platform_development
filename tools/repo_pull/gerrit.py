@@ -171,31 +171,13 @@ def _decode_xssi_json(data):
     return json.loads(data)
 
 
-def _query_change_lists(url_opener, gerrit, query_string, start, count):
-    """Query change lists from the Gerrit server with a single request.
-
-    This function performs a single query of the Gerrit server based on the
-    input parameters for a list of changes.  The server may return less than
-    the number of changes requested.  The caller should check the last record
-    returned for the _more_changes attribute to determine if more changes are
-    available and perform additional queries adjusting the start index.
-
-    Args:
-        url_opener:  URL opener for request
-        gerrit: Gerrit server URL
-        query_string: Gerrit query string to select changes
-        start: Number of changes to be skipped from the beginning
-        count: Maximum number of changes to return
-
-    Returns:
-        List of changes
-    """
+def query_change_lists(url_opener, gerrit, query_string, limits):
+    """Query change lists."""
     data = [
         ('q', query_string),
         ('o', 'CURRENT_REVISION'),
         ('o', 'CURRENT_COMMIT'),
-        ('start', str(start)),
-        ('n', str(count)),
+        ('n', str(limits)),
     ]
     url = gerrit + '/a/changes/?' + urlencode(data)
 
@@ -204,40 +186,6 @@ def _query_change_lists(url_opener, gerrit, query_string, start, count):
         return _decode_xssi_json(response_file.read())
     finally:
         response_file.close()
-
-def query_change_lists(url_opener, gerrit, query_string, start, count):
-    """Query change lists from the Gerrit server.
-
-    This function queries the Gerrit server based on the input parameters for a
-    list of changes.  This function handles querying the server multiple times
-    if necessary and combining the results that are returned to the caller.
-
-    Args:
-        url_opener:  URL opener for request
-        gerrit: Gerrit server URL
-        query_string: Gerrit query string to select changes
-        start: Number of changes to be skipped from the beginning
-        count: Maximum number of changes to return
-
-    Returns:
-        List of changes
-    """
-    changes = []
-    while len(changes) < count:
-        chunk = _query_change_lists(url_opener, gerrit, query_string,
-                                    start + len(changes), count - len(changes))
-        if not chunk:
-            break
-
-        changes += chunk
-
-        # The last change object contains a _more_changes attribute if the
-        # number of changes exceeds the query parameter or the internal server
-        # limit.  Stop iteration if `_more_changes` attribute doesn't exist.
-        if '_more_changes' not in chunk[-1]:
-            break
-
-    return changes
 
 
 def _make_json_post_request(url_opener, url, data, method='POST'):
@@ -398,11 +346,6 @@ def find_gerrit_name():
 
     raise ValueError('cannot find gerrit URL from manifest')
 
-def normalize_gerrit_name(gerrit):
-    """Strip the trailing slashes because Gerrit will return 404 when there are
-    redundant trailing slashes."""
-    return gerrit.rstrip('/')
-
 def _parse_args():
     """Parse command line options."""
     parser = argparse.ArgumentParser()
@@ -413,23 +356,17 @@ def _parse_args():
     parser.add_argument('--gitcookies',
                         default=os.path.expanduser('~/.gitcookies'),
                         help='Gerrit cookie file')
-    parser.add_argument('--limits', default=1000, type=int,
+    parser.add_argument('--limits', default=1000,
                         help='Max number of change lists')
-    parser.add_argument('--start', default=0, type=int,
-                        help='Skip first N changes in query')
-    parser.add_argument('--format', default='json',
-                        choices=['json', 'oneline'],
-                        help='Print format')
 
     return parser.parse_args()
+
 
 def main():
     """Main function"""
     args = _parse_args()
 
-    if args.gerrit:
-        args.gerrit = normalize_gerrit_name(args.gerrit)
-    else:
+    if not args.gerrit:
         try:
             args.gerrit = find_gerrit_name()
         # pylint: disable=bare-except
@@ -440,23 +377,11 @@ def main():
     # Query change lists
     url_opener = create_url_opener_from_args(args)
     change_lists = query_change_lists(
-        url_opener, args.gerrit, args.query, args.start, args.limits)
+        url_opener, args.gerrit, args.query, args.limits)
 
     # Print the result
-    if args.format == 'json':
-        json.dump(change_lists, sys.stdout, indent=4, separators=(', ', ': '))
-        print()  # Print the end-of-line
-    elif args.format == 'oneline':
-        for i, change in enumerate(change_lists):
-            print('{i:<8} {number:<16} {status:<20} ' \
-                  '{change_id:<60} {project:<120} ' \
-                  '{subject}'.format(i=i,
-                                     project=change['project'],
-                                     change_id=change['change_id'],
-                                     status=change['status'],
-                                     number=change['_number'],
-                                     subject=change['subject']))
-
+    json.dump(change_lists, sys.stdout, indent=4, separators=(', ', ': '))
+    print()  # Print the end-of-line
 
 if __name__ == '__main__':
     main()
