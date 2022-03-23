@@ -18,7 +18,6 @@
       <rects
         :bounds="bounds"
         :rects="rects"
-        :displays="displays"
         :highlight="highlight"
         @rect-click="onRectClick"
       />
@@ -33,7 +32,7 @@
         >
           <h2 class="md-title" style="flex: 1;">Hierarchy</h2>
           <md-checkbox
-            v-model="showHierarchyDiff"
+            v-model="showHierachyDiff"
             v-if="diffVisualizationAvailable"
           >
             Show Diff
@@ -43,14 +42,9 @@
           </md-checkbox>
           <md-checkbox v-model="store.onlyVisible">Only visible</md-checkbox>
           <md-checkbox v-model="store.flattened">Flat</md-checkbox>
-          <md-checkbox v-if="hasTagsOrErrors" v-model="store.flickerTraceView">Flicker</md-checkbox>
           <md-field md-inline class="filter">
             <label>Filter...</label>
-            <md-input
-              v-model="hierarchyPropertyFilterString"
-              v-on:focus="updateInputMode(true)"
-              v-on:blur="updateInputMode(false)"
-            />
+            <md-input v-model="hierarchyPropertyFilterString"></md-input>
           </md-field>
         </md-content>
         <div class="tree-view-wrapper">
@@ -61,10 +55,6 @@
             :selected="hierarchySelected"
             :filter="hierarchyFilter"
             :flattened="store.flattened"
-            :onlyVisible="store.onlyVisible"
-            :flickerTraceView="store.flickerTraceView"
-            :presentTags="presentTags"
-            :presentErrors="presentErrors"
             :items-clickable="true"
             :useGlobalCollapsedState="true"
             :simplify-names="store.simplifyNames"
@@ -82,19 +72,6 @@
           class="card-toolbar md-transparent md-dense"
         >
           <h2 class="md-title" style="flex: 1">Properties</h2>
-          <div>
-            <md-checkbox
-              v-model="displayDefaults"
-              @change="checkboxChange"
-            >
-              Show Defaults
-            </md-checkbox>
-            <md-tooltip md-direction="bottom">
-                If checked, shows the value of all properties.
-                Otherwise, hides all properties whose value is
-                the default for its data type.
-            </md-tooltip>
-          </div>
           <md-checkbox
             v-model="showPropertiesDiff"
             v-if="diffVisualizationAvailable"
@@ -103,11 +80,7 @@
           </md-checkbox>
           <md-field md-inline class="filter">
             <label>Filter...</label>
-            <md-input
-              v-model="propertyFilterString"
-              v-on:focus="updateInputMode(true)"
-              v-on:blur="updateInputMode(false)"
-            />
+            <md-input v-model="propertyFilterString"></md-input>
           </md-field>
         </md-content>
         <div class="properties-content">
@@ -123,6 +96,7 @@
               :item="selectedTree"
               :filter="propertyFilter"
               :collapseChildren="true"
+              :useGlobalCollapsedState="true"
               :elementView="PropertiesTreeElement"
             />
           </div>
@@ -130,7 +104,7 @@
             <i class="material-icons none-icon">
               filter_none
             </i>
-            <span>No element selected in the hierarchy.</span>
+            <span>No element selected in the hierachy.</span>
           </div>
         </div>
       </flat-card>
@@ -147,10 +121,8 @@ import PropertiesTreeElement from './PropertiesTreeElement.vue';
 import {ObjectTransformer} from './transform.js';
 import {DiffGenerator, defaultModifiedCheck} from './utils/diff.js';
 import {TRACE_TYPES, DUMP_TYPES} from './decode.js';
-import {isPropertyMatch, stableIdCompatibilityFixup} from './utils/utils.js';
+import {stableIdCompatibilityFixup} from './utils/utils.js';
 import {CompatibleFeatures} from './utils/compatibility.js';
-import {getPropertiesForDisplay} from './flickerlib/mixin';
-import ObjectFormatter from './flickerlib/ObjectFormatter';
 
 function formatProto(obj) {
   if (obj?.prettyPrint) {
@@ -179,7 +151,7 @@ function findEntryInTree(tree, id) {
 
 export default {
   name: 'traceview',
-  props: ['store', 'file', 'summarizer', 'presentTags', 'presentErrors'],
+  props: ['store', 'file', 'summarizer'],
   data() {
     return {
       propertyFilterString: '',
@@ -189,44 +161,25 @@ export default {
       lastSelectedStableId: null,
       bounds: {},
       rects: [],
-      displays: [],
       item: null,
       tree: null,
       highlight: null,
-      showHierarchyDiff: false,
-      displayDefaults: false,
+      showHierachyDiff: false,
       showPropertiesDiff: false,
       PropertiesTreeElement,
     };
   },
   methods: {
-    checkboxChange(checked) {
-      this.itemSelected(this.item);
-    },
     itemSelected(item) {
       this.hierarchySelected = item;
       this.selectedTree = this.getTransformedProperties(item);
       this.highlight = item.rect;
       this.lastSelectedStableId = item.stableId;
-      // Record analytics event
-      if (item.type || item.kind || item.stableId) {
-        this.recordOpenedEntryEvent(item.type ?? item.kind ?? item.stableId);
-      }
       this.$emit('focus');
     },
     getTransformedProperties(item) {
-      ObjectFormatter.displayDefaults = this.displayDefaults;
-      // There are 2 types of object whose properties can appear in the property
-      // list: Flicker objects (WM/SF traces) and dictionaries
-      // (IME/Accessibilty/Transactions).
-      // While flicker objects have their properties directly in the main object,
-      // those created by a call to the transform function have their properties
-      // inside an obj property. This makes both cases work
-      // TODO(209452852) Refactor both flicker and winscope-native objects to
-      // implement a common display interface that can be better handled
-      const target = item.obj ?? item;
       const transformer = new ObjectTransformer(
-          getPropertiesForDisplay(target),
+          item.obj,
           item.name,
           stableIdCompatibilityFixup(item),
       ).setOptions({
@@ -236,7 +189,7 @@ export default {
 
       if (this.showPropertiesDiff && this.diffVisualizationAvailable) {
         const prevItem = this.getItemFromPrevTree(item);
-        transformer.withDiff(getPropertiesForDisplay(prevItem));
+        transformer.withDiff(prevItem?.obj);
       }
 
       return transformer.transform();
@@ -247,14 +200,12 @@ export default {
       }
     },
     generateTreeFromItem(item) {
-      if (!this.showHierarchyDiff || !this.diffVisualizationAvailable) {
+      if (!this.showHierachyDiff || !this.diffVisualizationAvailable) {
         return item;
       }
 
-      const thisItem = this.item;
-      const prevItem = this.getDataWithOffset(-1);
-      return new DiffGenerator(thisItem)
-          .compareWith(prevItem)
+      return new DiffGenerator(this.item)
+          .compareWith(this.getDataWithOffset(-1))
           .withUniqueNodeId((node) => {
             return node.stableId;
           })
@@ -265,16 +216,9 @@ export default {
       this.item = item;
       this.tree = this.generateTreeFromItem(item);
 
-      const rects = item.rects; // .toArray()
+      const rects = item.rects //.toArray()
       this.rects = [...rects].reverse();
       this.bounds = item.bounds;
-
-      //only update displays if item is SF trace and displays present
-      if (item.stableId==="LayerTraceEntry") {
-        this.displays = item.displays;
-      } else {
-        this.displays = [];
-      }
 
       this.hierarchySelected = null;
       this.selectedTree = null;
@@ -341,43 +285,15 @@ export default {
 
       return prevEntry;
     },
-
-    /** Performs check for id match between entry and present tags/errors
-     * must be carried out for every present tag/error
-     */
-    matchItems(flickerItems, entryItem) {
-      var match = false;
-      flickerItems.forEach(flickerItem => {
-        if (isPropertyMatch(flickerItem, entryItem)) match = true;
-      });
-      return match;
-    },
-    /** Returns check for id match between entry and present tags/errors */
-    isEntryTagMatch(entryItem) {
-      return this.matchItems(this.presentTags, entryItem) || this.matchItems(this.presentErrors, entryItem);
-    },
-
-    /** determines whether left/right arrow keys should move cursor in input field */
-    updateInputMode(isInputMode) {
-      this.store.isInputMode = isInputMode;
-    },
   },
   created() {
-    const item = this.file.data[this.file.selectedIndex ?? 0];
-    // Record analytics event
-    if (item.type || item.kind || item.stableId) {
-      this.recordOpenTraceEvent(item.type ?? item.kind ?? item.stableId);
-    }
-    this.setData(item);
-  },
-  destroyed() {
-    this.store.flickerTraceView = false;
+    this.setData(this.file.data[this.file.selectedIndex ?? 0]);
   },
   watch: {
     selectedIndex() {
       this.setData(this.file.data[this.file.selectedIndex ?? 0]);
     },
-    showHierarchyDiff() {
+    showHierachyDiff() {
       this.tree = this.generateTreeFromItem(this.item);
     },
     showPropertiesDiff() {
@@ -400,12 +316,9 @@ export default {
     hierarchyFilter() {
       const hierarchyPropertyFilter =
           getFilter(this.hierarchyPropertyFilterString);
-      var fil = this.store.onlyVisible ? (c) => {
-        return c.isVisible && hierarchyPropertyFilter(c);
+      return this.store.onlyVisible ? (c) => {
+        return c.visible && hierarchyPropertyFilter(c);
       } : hierarchyPropertyFilter;
-      return this.store.flickerTraceView ? (c) => {
-        return this.isEntryTagMatch(c);
-      } : fil;
     },
     propertyFilter() {
       return getFilter(this.propertyFilterString);
@@ -429,9 +342,6 @@ export default {
 
       return summary;
     },
-    hasTagsOrErrors() {
-      return this.presentTags.length > 0 || this.presentErrors.length > 0;
-    },
   },
   components: {
     'tree-view': TreeView,
@@ -446,11 +356,11 @@ function getFilter(filterString) {
   const negative = [];
   filterStrings.forEach((f) => {
     if (f.startsWith('!')) {
-      const regex = new RegExp(f.substring(1), "i");
-      negative.push((s) => !regex.test(s));
+      const str = f.substring(1);
+      negative.push((s) => s.indexOf(str) === -1);
     } else {
-      const regex = new RegExp(f, "i");
-      positive.push((s) => regex.test(s));
+      const str = f;
+      positive.push((s) => s.indexOf(str) !== -1);
     }
   });
   const filter = (item) => {
