@@ -50,22 +50,15 @@ cat > "${SOONG_OUT}/soong.variables" << __EOF__
 __EOF__
 
 # Targets to be built
-if [ "${OS}" = "darwin" ]; then
-    SOONG_BINARIES=(
-        "versioner"
-    )
-else
-    SOONG_BINARIES=(
-        "bindgen"
-        "cxx_extractor"
-        "header-abi-linker"
-        "header-abi-dumper"
-        "header-abi-diff"
-        "proto_metadata_plugin"
-        "protoc_extractor"
-        "versioner"
-    )
-fi
+SOONG_BINARIES=(
+    "cxx_extractor"
+    "header-abi-linker"
+    "header-abi-dumper"
+    "header-abi-diff"
+    "proto_metadata_plugin"
+    "protoc_extractor"
+    "versioner"
+)
 
 binaries=()
 for name in "${SOONG_BINARIES[@]}"; do
@@ -78,7 +71,7 @@ if [ "${OS}" = "darwin" ]; then
 fi
 
 # Build binaries and shared libs
-build/soong/soong_ui.bash --make-mode --skip-config --soong-only "${binaries[@]}" "${libs[@]}"
+build/soong/soong_ui.bash --make-mode --skip-make "${binaries[@]}" "${libs[@]}"
 
 # Copy binaries and shared libs
 SOONG_DIST="${SOONG_OUT}/dist"

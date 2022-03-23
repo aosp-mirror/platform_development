@@ -1,0 +1,173 @@
+#
+# Copyright (C) 2011 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+#
+# These are the files that comprise the *Windows* SDK.
+#
+# The Windows SDK is based on the Linux one so in this file we
+# need to remove Linux binaries and replace them by their
+# Windows counterparts.
+#
+# This file only includes platform-dependent files.
+# Tools-dependent files (and not tied to a specific platform)
+# are controled by sdk/build/tools.windows.atree.
+#
+
+##############################################################################
+# Platform Tools Component
+##############################################################################
+
+rm platform-tools/adb
+rm platform-tools/fastboot
+bin/adb.exe                             strip platform-tools/adb.exe
+bin/fastboot.exe                        strip platform-tools/fastboot.exe
+
+rm platform-tools/e2fsdroid
+rm platform-tools/mke2fs
+bin/mke2fs.exe                          strip platform-tools/mke2fs.exe
+
+rm platform-tools/sload_f2fs
+rm platform-tools/make_f2fs
+rm platform-tools/make_f2fs_casefold
+
+# libc++.so not needed on Windows, and that's the only thing here
+rm platform-tools/lib64
+
+bin/make_f2fs.exe                       strip platform-tools/make_f2fs.exe
+bin/make_f2fs_casefold.exe              strip platform-tools/make_f2fs_casefold.exe
+
+lib/AdbWinUsbApi.dll                          platform-tools/AdbWinUsbApi.dll
+lib/AdbWinApi.dll                             platform-tools/AdbWinApi.dll
+prebuilts/gcc/linux-x86/host/x86_64-w64-mingw32-4.8/x86_64-w64-mingw32/lib32/libwinpthread-1.dll platform-tools/libwinpthread-1.dll
+
+rm platform-tools/sqlite3
+bin/sqlite3.exe                        strip platform-tools/sqlite3.exe
+
+rm platform-tools/dmtracedump
+bin/dmtracedump.exe                    strip platform-tools/dmtracedump.exe
+
+rm platform-tools/hprof-conv
+bin/hprof-conv.exe                     strip platform-tools/hprof-conv.exe
+
+rm platform-tools/etc1tool
+bin/etc1tool.exe                       strip platform-tools/etc1tool.exe
+
+
+
+##############################################################################
+# Build Tools Component
+##############################################################################
+# Note that the build-tools sub-folder uses the platform-name as a placeholder
+# at build-time. Packaging will later change that to the actual build-tools
+# revision as specified in the source.properties.
+
+# Needed by all binaries compiled by mingw32-64
+prebuilts/gcc/linux-x86/host/x86_64-w64-mingw32-4.8/x86_64-w64-mingw32/lib32/libwinpthread-1.dll strip build-tools/${PLATFORM_NAME}/libwinpthread-1.dll
+
+rm build-tools/${PLATFORM_NAME}/aapt
+bin/aapt.exe                            strip build-tools/${PLATFORM_NAME}/aapt.exe
+
+rm build-tools/${PLATFORM_NAME}/aapt2
+bin/aapt2.exe                           strip build-tools/${PLATFORM_NAME}/aapt2.exe
+
+rm build-tools/${PLATFORM_NAME}/lib64/libaapt2_jni.so
+lib/libaapt2_jni.dll                    strip build-tools/${PLATFORM_NAME}/libaapt2_jni.dll
+
+# Also include a 64-bit version of libaapt2_jni.dll for use by 64-bit JVMs.
+lib64/libaapt2_jni.dll                  strip build-tools/${PLATFORM_NAME}/lib64/libaapt2_jni.dll
+
+# Also include the 64-bit libwinpthread-1.dll needed by libaapt2_jni.dll.
+prebuilts/gcc/linux-x86/host/x86_64-w64-mingw32-4.8/x86_64-w64-mingw32/bin/libwinpthread-1.dll strip build-tools/${PLATFORM_NAME}/lib64/libwinpthread-1.dll
+
+rm build-tools/${PLATFORM_NAME}/split-select
+bin/split-select.exe                    strip build-tools/${PLATFORM_NAME}/split-select.exe
+
+rm build-tools/${PLATFORM_NAME}/aidl
+bin/aidl.exe                            strip build-tools/${PLATFORM_NAME}/aidl.exe
+
+rm build-tools/${PLATFORM_NAME}/apksigner
+tools/apksig/etc/apksigner.bat                build-tools/${PLATFORM_NAME}/apksigner.bat
+
+rm build-tools/${PLATFORM_NAME}/zipalign
+bin/zipalign.exe                        strip build-tools/${PLATFORM_NAME}/zipalign.exe
+
+rm build-tools/${PLATFORM_NAME}/dexdump
+bin/dexdump.exe                         strip build-tools/${PLATFORM_NAME}/dexdump.exe
+
+rm build-tools/${PLATFORM_NAME}/d8
+prebuilts/r8/d8.bat build-tools/${PLATFORM_NAME}/d8.bat
+
+rm build-tools/${PLATFORM_NAME}/llvm-rs-cc
+bin/llvm-rs-cc.exe                      strip build-tools/${PLATFORM_NAME}/llvm-rs-cc.exe
+
+# libc++.so not needed on Windows.
+rm build-tools/${PLATFORM_NAME}/lib64/libc++.so
+
+rm build-tools/${PLATFORM_NAME}/lib64/libLLVM_android.so
+lib/libLLVM_android.dll                 strip build-tools/${PLATFORM_NAME}/libLLVM_android.dll
+
+rm build-tools/${PLATFORM_NAME}/lib64/libclang_android.so
+lib/libclang_android.dll                strip build-tools/${PLATFORM_NAME}/libclang_android.dll
+
+#bcc not yet compiled on windows
+
+rm build-tools/${PLATFORM_NAME}/lib64/libbcc.so
+lib/libbcc.dll                          strip build-tools/${PLATFORM_NAME}/libbcc.dll
+
+rm build-tools/${PLATFORM_NAME}/lib64/libbcinfo.so
+lib/libbcinfo.dll                       strip build-tools/${PLATFORM_NAME}/libbcinfo.dll
+
+rm build-tools/${PLATFORM_NAME}/bcc_compat
+bin/bcc_compat.exe                      strip build-tools/${PLATFORM_NAME}/bcc_compat.exe
+
+rm build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld
+prebuilts/sdk/tools/lld-dummy   build-tools/${PLATFORM_NAME}/arm-linux-androideabi-ld.exe
+
+rm build-tools/${PLATFORM_NAME}/aarch64-linux-android-ld
+prebuilts/sdk/tools/lld-dummy   build-tools/${PLATFORM_NAME}/aarch64-linux-android-ld.exe
+
+rm build-tools/${PLATFORM_NAME}/i686-linux-android-ld
+prebuilts/sdk/tools/lld-dummy   build-tools/${PLATFORM_NAME}/i686-linux-android-ld.exe
+
+rm build-tools/${PLATFORM_NAME}/x86_64-linux-android-ld
+prebuilts/sdk/tools/lld-dummy   build-tools/${PLATFORM_NAME}/x86_64-linux-android-ld.exe
+
+rm build-tools/${PLATFORM_NAME}/mipsel-linux-android-ld
+prebuilts/sdk/tools/lld-dummy   build-tools/${PLATFORM_NAME}/mipsel-linux-android-ld.exe
+
+rm build-tools/${PLATFORM_NAME}/lib64/libc++.so.1
+
+rm build-tools/${PLATFORM_NAME}/lld
+rm build-tools/${PLATFORM_NAME}/lld-bin/lld
+
+# lld linker trampoline (invokes actual lld linker at lld-bin/lld.exe)
+bin/lld.exe                                                 strip build-tools/${PLATFORM_NAME}/lld.exe
+
+# actual lld linker, and dependent library
+prebuilts/sdk/tools/windows/lld-bin/lld.exe                 strip build-tools/${PLATFORM_NAME}/lld-bin/lld.exe
+prebuilts/sdk/tools/windows/lld-bin/libwinpthread-1.dll     strip build-tools/${PLATFORM_NAME}/lld-bin/libwinpthread-1.dll
+
+dalvik/dx/etc/mainDexClasses.bat             build-tools/${PLATFORM_NAME}/mainDexClasses.bat
+
+
+##############################################################################
+# Docs Component
+##############################################################################
+
+external/sonivox/docs/JET_Authoring_Guidelines.html   docs/JetCreator/JET_Authoring_Guidelines.html
+external/sonivox/docs/JET_Authoring_Guidelines_files  docs/JetCreator/JET_Authoring_Guidelines_files
+external/sonivox/docs/JET_Creator_User_Manual.html    docs/JetCreator/JET_Creator_User_Manual.html
+external/sonivox/docs/JET_Creator_User_Manual_files   docs/JetCreator/JET_Creator_User_Manual_files
