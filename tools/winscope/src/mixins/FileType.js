@@ -19,9 +19,7 @@ import {TRACE_TYPES, DUMP_TYPES} from '@/decode.js';
 const mixin = {
   showInTraceView(file) {
     return file.type == TRACE_TYPES.WINDOW_MANAGER ||
-      file.type == TRACE_TYPES.ACCESSIBILITY ||
       file.type == TRACE_TYPES.SURFACE_FLINGER ||
-      file.type == TRACE_TYPES.TRANSACTION ||
       file.type == TRACE_TYPES.WAYLAND ||
       file.type == TRACE_TYPES.SYSTEM_UI ||
       file.type == TRACE_TYPES.LAUNCHER ||
@@ -31,9 +29,6 @@ const mixin = {
       file.type == DUMP_TYPES.WINDOW_MANAGER ||
       file.type == DUMP_TYPES.SURFACE_FLINGER ||
       file.type == DUMP_TYPES.WAYLAND;
-  },
-  showInAccessibilityTraceView(file) {
-    return file.type == TRACE_TYPES.ACCESSIBILITY;
   },
   showInWindowManagerTraceView(file) {
     return file.type == TRACE_TYPES.WINDOW_MANAGER ||
@@ -49,15 +44,12 @@ const mixin = {
   isTransactions(file) {
     return file.type == TRACE_TYPES.TRANSACTION;
   },
-  isTransactionsLegacy(file) {
-    return file.type == TRACE_TYPES.TRANSACTION_LEGACY;
-  },
   isLog(file) {
     return file.type == TRACE_TYPES.PROTO_LOG;
   },
   hasDataView(file) {
     return this.isLog(file) || this.showInTraceView(file) ||
-      this.isTransactionsLegacy(file);
+      this.isTransactions(file);
   },
 };
 
