@@ -33,14 +33,21 @@
           v-for="(surface, index) in sufacesAffectedBy(source)"
           v-bind:key="surface.id"
         >
-          <!-- eslint-disable-next-line max-len -->
-          <span v-if="surface.name" class="surface-name">{{ surface.name }}</span>
-          <span class="surface-id">
-            <!-- eslint-disable-next-line max-len -->
-            <span v-if="surface.name">(</span>{{surface.id}}<span v-if="surface.name">)</span>
+          <span
+            v-if="simplifyNames && surface.shortName &&
+                surface.shortName !== surface.name"
+            >{{surface.shortName}}>
           </span>
-          <!-- eslint-disable-next-line max-len -->
-          <span v-if="index + 1 < sufacesAffectedBy(source).length">,&nbsp;</span>
+          <span v-else>
+            <!-- eslint-disable-next-line max-len -->
+            <span v-if="surface.name" class="surface-name">{{ surface.name }}</span>
+            <span class="surface-id">
+              <!-- eslint-disable-next-line max-len -->
+              <span v-if="surface.name">(</span>{{surface.id}}<span v-if="surface.name">)</span>
+            </span>
+            <!-- eslint-disable-next-line max-len -->
+            <span v-if="index + 1 < sufacesAffectedBy(source).length">,&nbsp;</span>
+          </span>
         </span>
       </div>
       <div class="extra-info-column">
@@ -59,6 +66,8 @@
 </template>
 
 <script>
+import { shortenName } from './flickerlib/mixin'
+
 export default {
   name: 'transaction-entry',
   props: {
@@ -82,6 +91,9 @@ export default {
     },
     prettifyTransactionId: {
       type: Function,
+    },
+    simplifyNames: {
+      type: Boolean,
     },
   },
   computed: {
@@ -135,8 +147,12 @@ export default {
     },
     sufacesAffectedBy(transaction) {
       if (transaction.type !== 'transaction') {
-        // TODO (b/162402459): Shorten layer name
-        return [{name: transaction.layerName, id: transaction.obj.id}];
+        return [
+          {
+            name: transaction.layerName,
+            shortName: shortenName(transaction.layerName),
+            id: transaction.obj.id
+          }];
       }
 
       const surfaceIds = new Set();
@@ -145,7 +161,12 @@ export default {
         const id = transaction.obj.id;
         if (!surfaceIds.has(id)) {
           surfaceIds.add(id);
-          affectedSurfaces.push({name: transaction.layerName, id});
+          affectedSurfaces.push(
+            {
+              name: transaction.layerName,
+              shortName: shortenName(transaction.layerName),
+              id
+            });
         }
       }
 
