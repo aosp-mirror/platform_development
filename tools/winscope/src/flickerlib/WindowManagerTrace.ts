@@ -17,22 +17,23 @@
 import { WindowManagerTrace } from "./common"
 import WindowManagerState from "./WindowManagerState"
 
-WindowManagerTrace.fromProto = function (proto: any) {
-    const entries = [];
+WindowManagerTrace.fromProto = function (proto) {
+    const entries = []
     for (const entryProto of proto.entry) {
-        const transformedEntry = WindowManagerState.fromProto(
-            entryProto.windowManagerService,
-            entryProto.elapsedRealtimeNanos,
-            entryProto.where);
+        const transformedEntry = WindowManagerState.fromProto({
+            proto: entryProto.windowManagerService,
+            timestamp: entryProto.elapsedRealtimeNanos,
+            where: entryProto.where})
 
-        entries.push(transformedEntry);
+        entries.push(transformedEntry)
     }
-    const source = null;
-    return new WindowManagerTrace(entries, source);
+    const source = null
+    const sourceChecksum = null
+    return new WindowManagerTrace(entries, source, sourceChecksum)
 }
 
-WindowManagerTrace.fromDump = function(proto: any): WindowManagerTrace {
-    return WindowManagerState.fromProto(proto);
+WindowManagerTrace.fromDump = function(proto): WindowManagerTrace {
+    return WindowManagerState.fromProto({proto: proto})
 }
 
 export default WindowManagerTrace;

@@ -1,0 +1,206 @@
+#!/bin/bash
+
+echo "WARNING: gdbclient is deprecated in favor of gdbclient.py" >&2
+
+# TODO:
+# 1. Check for ANDROID_SERIAL/multiple devices
+
+if [ -z "$ANDROID_BUILD_TOP" ]; then
+  >&2 echo '$ANDROID_BUILD_TOP is not set. Source build/envsetup.sh.'
+  exit 1
+fi
+
+# We can use environment variables (like ANDROID_BUILD_TOP) from the user's
+# shell, but not functions (like gettop), so we need to source envsetup in here
+# as well.
+source $ANDROID_BUILD_TOP/build/envsetup.sh
+echo
+
+function adb_get_product_device() {
+  local candidate=`adb shell getprop ro.hardware | tr -d '\r\n'`
+  if [[ "$candidate" =~ ^(goldfish|ranchu)$ ]]; then
+    # Emulator builds use product.device for OUT folder
+    candidate=`adb shell getprop ro.product.device | tr -d '\r\n'`
+  fi
+  echo $candidate
+}
+
+# returns 0 when process is not traced
+function adb_get_traced_by() {
+  echo `adb shell cat /proc/$1/status | grep -e "^TracerPid:" | sed "s/^TracerPid:[[:blank:]]//" | tr -d '\r\n'`
+}
+
+function get_symbols_directory()
+{
+    echo $(get_abs_build_var TARGET_OUT_UNSTRIPPED)
+}
+
+function gdbwrapper()
+{
+    local GDB_CMD="$1"
+    shift 1
+    $GDB_CMD -x "$@"
+}
+
+function gdbclient() {
+  local PROCESS_NAME="n/a"
+  local PID=$1
+  local PORT=5039
+  if [ -z "$PID" ]; then
+    echo "Usage: gdbclient <pid|processname> [port number]"
+    return -1
+  fi
+  local DEVICE=$(adb_get_product_device)
+
+  if [ -z "$DEVICE" ]; then
+    echo "Error: Unable to get device name. Please check if device is connected and ANDROID_SERIAL is set."
+    return -2
+  fi
+
+  if [ -n "$2" ]; then
+    PORT=$2
+  fi
+
+  local ROOT=$(gettop)
+  if [ -z "$ROOT" ]; then
+    # This is for the situation with downloaded symbols (from the build server)
+    # we check if they are available.
+    ROOT=`realpath .`
+  fi
+
+  local SYS_OUT_ROOT=$(get_build_var OUT_DIR)
+  local OUT_ROOT="${SYS_OUT_ROOT:-${OUT_DIR:-$ROOT/out}}/target/product/$DEVICE"
+  local SYMBOLS_DIR="$OUT_ROOT/symbols"
+  local IS_TAPAS_USER="$(get_build_var TARGET_BUILD_APPS)"
+  local TAPAS_SYMBOLS_DIR=
+
+  if [ $IS_TAPAS_USER ]; then
+    TAPAS_SYMBOLS_DIR=$(get_symbols_directory)
+  fi
+
+  if [ ! -d $SYMBOLS_DIR ]; then
+    if [ $IS_TAPAS_USER ]; then
+      mkdir -p $SYMBOLS_DIR/system/bin
+    else
+      echo "Error: couldn't find symbols: $SYMBOLS_DIR does not exist or is not a directory."
+      return -3
+    fi
+  fi
+
+  # let's figure out which executable we are about to debug
+
+  # check if user specified a name -> resolve to pid
+  if [[ ! "$PID" =~ ^[0-9]+$ ]] ; then
+    PROCESS_NAME=$PID
+    PID=$(pid --exact $PROCESS_NAME)
+    if [ -z "$PID" ]; then
+      echo "Error: couldn't resolve pid by process name: $PROCESS_NAME"
+      return -4
+    else
+      echo "Resolved pid for $PROCESS_NAME is $PID"
+    fi
+  fi
+
+  local ID=`adb shell id -u`
+  if [ "$ID" != "0" ]; then
+    echo "Error: gdbclient only works if you've run 'adb root'"
+    return -4
+  fi
+
+  local EXE=`adb shell readlink /proc/$PID/exe | tr -d '\r\n'`
+  if [ -z "$EXE" ]; then
+    echo "Error: couldn't find executable for pid $PID --- is the process still alive?"
+    return -4
+  fi
+
+  local LOCAL_EXE_PATH=$SYMBOLS_DIR$EXE
+
+  if [ ! -f $LOCAL_EXE_PATH ]; then
+    if [ $IS_TAPAS_USER ]; then
+      adb pull $EXE $LOCAL_EXE_PATH
+    else
+      echo "Error: unable to find symbols for executable $EXE: file $LOCAL_EXE_PATH does not exist"
+      return -5
+    fi
+  fi
+
+  local USE64BIT=""
+
+  if [[ "$(file $LOCAL_EXE_PATH)" =~ 64-bit ]]; then
+    USE64BIT="64"
+  fi
+
+  # and now linker for tapas users...
+  if [ -n "$IS_TAPAS_USER" -a ! -f "$SYMBOLS_DIR/system/bin/linker$USE64BIT" ]; then
+    adb pull /system/bin/linker$USE64BIT $SYMBOLS_DIR/system/bin/linker$USE64BIT
+  fi
+
+  local GDB
+  case $(uname -s) in
+    Darwin)
+      GDB=$ANDROID_BUILD_TOP/prebuilts/gdb/darwin-x86/bin/gdb
+      ;;
+
+    Linux)
+      GDB=$ANDROID_BUILD_TOP/prebuilts/gdb/linux-x86/bin/gdb
+      ;;
+
+    *)
+      echo "Error: Unknown platform '$(uname -s)'"
+      return 1
+      ;;
+  esac
+
+  local CPU_ABI=`adb shell getprop ro.product.cpu.abilist | tr -d '\r\n'`
+
+  # TODO: check if tracing process is gdbserver and not some random strace...
+  if [ "$(adb_get_traced_by $PID)" -eq 0 ]; then
+    # start gdbserver
+    echo "Starting gdbserver..."
+    # TODO: check if adb is already listening $PORT
+    # to avoid unnecessary calls
+    echo ". adb forward for port=$PORT..."
+    adb forward tcp:$PORT tcp:$PORT
+    echo ". starting gdbserver to attach to pid=$PID..."
+    adb shell gdbserver$USE64BIT :$PORT --attach $PID &
+    echo ". give it couple of seconds to start..."
+    sleep 2
+    echo ". done"
+  else
+    echo "It looks like gdbserver is already attached to $PID (process is traced), trying to connect to it using local port=$PORT"
+    adb forward tcp:$PORT tcp:$PORT
+  fi
+
+  local OUT_SO_SYMBOLS=$SYMBOLS_DIR/system/lib$USE64BIT
+  local TAPAS_OUT_SO_SYMBOLS=$TAPAS_SYMBOLS_DIR/system/lib$USE64BIT
+  local OUT_VENDOR_SO_SYMBOLS=$SYMBOLS_DIR/vendor/lib$USE64BIT
+  local ART_CMD=""
+
+  local SOLIB_SYSROOT=$SYMBOLS_DIR
+  local SOLIB_SEARCHPATH=$OUT_SO_SYMBOLS:$OUT_SO_SYMBOLS/hw:$OUT_SO_SYMBOLS/ssl/engines:$OUT_SO_SYMBOLS/drm:$OUT_SO_SYMBOLS/egl:$OUT_SO_SYMBOLS/soundfx:$OUT_VENDOR_SO_SYMBOLS:$OUT_VENDOR_SO_SYMBOLS/hw:$OUT_VENDOR_SO_SYMBOLS/egl
+
+  if [ $IS_TAPAS_USER ]; then
+    SOLIB_SYSROOT=$TAPAS_SYMBOLS_DIR:$SOLIB_SYSROOT
+    SOLIB_SEARCHPATH=$TAPAS_OUT_SO_SYMBOLS:$SOLIB_SEARCHPATH
+  fi
+
+  echo >|"$OUT_ROOT/gdbclient.cmds" "set solib-absolute-prefix $SOLIB_SYSROOT"
+  echo >>"$OUT_ROOT/gdbclient.cmds" "set solib-search-path $SOLIB_SEARCHPATH"
+  local DALVIK_GDB_SCRIPT=$ROOT/development/scripts/gdb/dalvik.gdb
+  if [ -f $DALVIK_GDB_SCRIPT ]; then
+    echo >>"$OUT_ROOT/gdbclient.cmds" "source $DALVIK_GDB_SCRIPT"
+    ART_CMD="art-on"
+  else
+    echo "Warning: couldn't find $DALVIK_GDB_SCRIPT - ART debugging options will not be available"
+  fi
+  echo >>"$OUT_ROOT/gdbclient.cmds" "target remote :$PORT"
+  if [[ $EXE =~ (^|/)(app_process|dalvikvm)(|32|64)$ ]]; then
+    echo >> "$OUT_ROOT/gdbclient.cmds" $ART_CMD
+  fi
+
+  echo >>"$OUT_ROOT/gdbclient.cmds" ""
+
+  gdbwrapper $GDB "$OUT_ROOT/gdbclient.cmds" "$LOCAL_EXE_PATH"
+}
+
+gdbclient $*
