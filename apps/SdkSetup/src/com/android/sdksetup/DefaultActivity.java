@@ -96,6 +96,9 @@ public class DefaultActivity extends Activity {
                 Settings.Global.putString(getContentResolver(), Settings.Global.DEVELOPMENT_ENABLE_FREEFORM_WINDOWS_SUPPORT, "1");
                 Settings.Global.putString(getContentResolver(), Settings.Global.DEVELOPMENT_FORCE_RESIZABLE_ACTIVITIES, "1");
                 Settings.Global.putString(getContentResolver(), Settings.Global.DEVELOPMENT_WM_DISPLAY_SETTINGS_PATH, "vendor/etc/display_settings_freeform.xml");
+            } else if ("resizable".equals(displaySettingsName)) {
+            // Enable auto rotate for resizable AVD
+            Settings.System.putString(getContentResolver(), Settings.System.ACCELEROMETER_ROTATION, "1");
             }
         }
 
