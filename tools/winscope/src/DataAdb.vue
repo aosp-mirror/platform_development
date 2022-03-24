@@ -31,7 +31,7 @@
         <p>Or get it from the AOSP repository.</p>
       </div>
       <div class="md-layout">
-        <md-button class="md-accent" :href="downloadProxyUrl">Download from AOSP</md-button>
+        <md-button class="md-accent" :href="downloadProxyUrl" @click="buttonClicked(`Download from AOSP`)">Download from AOSP</md-button>
         <md-button class="md-accent" @click="restart">Retry</md-button>
       </div>
     </md-card-content>
@@ -86,10 +86,29 @@
         <div class="selection">
           <md-checkbox class="md-primary" v-for="traceKey in Object.keys(TRACES)" :key="traceKey" v-model="adbStore[traceKey]">{{TRACES[traceKey].name}}</md-checkbox>
         </div>
-        <div class="trace-config" v-for="traceKey in Object.keys(TRACE_CONFIG)" :key="traceKey">
-            <h4>{{TRACES[traceKey].name}} config</h4>
+        <div class="trace-config">
+            <h4>Surface Flinger config</h4>
             <div class="selection">
-              <md-checkbox class="md-primary" v-for="config in TRACE_CONFIG[traceKey]" :key="config" v-model="adbStore[config]">{{config}}</md-checkbox>
+              <md-checkbox class="md-primary" v-for="config in TRACE_CONFIG['layers_trace']" :key="config" v-model="adbStore[config]">{{config}}</md-checkbox>
+              <div class="selection">
+                <md-field class="config-selection" v-for="selectConfig in Object.keys(SF_SELECTED_CONFIG)" :key="selectConfig">
+                  <md-select v-model="SF_SELECTED_CONFIG_VALUES[selectConfig]" :placeholder="selectConfig">
+                    <md-option value="">{{selectConfig}}</md-option>
+                    <md-option v-for="option in SF_SELECTED_CONFIG[selectConfig]" :key="option" :value="option">{{ option }}</md-option>
+                  </md-select>
+                </md-field>
+              </div>
+            </div>
+        </div>
+        <div class="trace-config">
+            <h4>Window Manager config</h4>
+            <div class="selection">
+              <md-field class="config-selection" v-for="selectConfig in Object.keys(WM_SELECTED_CONFIG)" :key="selectConfig">
+                <md-select v-model="WM_SELECTED_CONFIG_VALUES[selectConfig]" :placeholder="selectConfig">
+                  <md-option value="">{{selectConfig}}</md-option>
+                  <md-option v-for="option in WM_SELECTED_CONFIG[selectConfig]" :key="option" :value="option">{{ option }}</md-option>
+                </md-select>
+              </md-field>
             </div>
         </div>
         <md-button class="md-primary trace-btn" @click="startTrace">Start trace</md-button>
@@ -149,6 +168,8 @@ const PROXY_ENDPOINTS = {
   START_TRACE: '/start/',
   END_TRACE: '/end/',
   CONFIG_TRACE: '/configtrace/',
+  SELECTED_WM_CONFIG_TRACE: '/selectedwmconfigtrace/',
+  SELECTED_SF_CONFIG_TRACE: '/selectedsfconfigtrace/',
   DUMP: '/dump/',
   FETCH: '/fetch/',
   STATUS: '/status/',
@@ -157,6 +178,9 @@ const PROXY_ENDPOINTS = {
 const TRACES = {
   'window_trace': {
     name: 'Window Manager',
+  },
+  'accessibility_trace': {
+    name: 'Accessibility',
   },
   'layers_trace': {
     name: 'Surface Flinger',
@@ -189,6 +213,33 @@ const TRACE_CONFIG = {
   ],
 };
 
+const SF_SELECTED_CONFIG = {
+  'sfbuffersize': [
+    '4000',
+    '8000',
+    '16000',
+    '32000',
+  ],
+};
+
+const WM_SELECTED_CONFIG = {
+  'wmbuffersize': [
+    '4000',
+    '8000',
+    '16000',
+    '32000',
+  ],
+  'tracingtype': [
+    'frame',
+    'transaction',
+  ],
+  'tracinglevel': [
+    'all',
+    'trim',
+    'critical',
+  ],
+};
+
 const DUMPS = {
   'window_dump': {
     name: 'Window Manager',
@@ -200,6 +251,7 @@ const DUMPS = {
 
 const proxyFileTypeAdapter = {
   'window_trace': FILE_TYPES.WINDOW_MANAGER_TRACE,
+  'accessibility_trace': FILE_TYPES.ACCESSIBILITY_TRACE,
   'layers_trace': FILE_TYPES.SURFACE_FLINGER_TRACE,
   'wl_trace': FILE_TYPES.WAYLAND_TRACE,
   'layers_dump': FILE_TYPES.SURFACE_FLINGER_DUMP,
@@ -224,6 +276,10 @@ export default {
       STATES,
       TRACES,
       TRACE_CONFIG,
+      SF_SELECTED_CONFIG,
+      WM_SELECTED_CONFIG,
+      SF_SELECTED_CONFIG_VALUES: {},
+      WM_SELECTED_CONFIG_VALUES: {},
       DUMPS,
       FILE_DECODERS,
       WINSCOPE_PROXY_VERSION,
@@ -288,7 +344,7 @@ export default {
         this.keep_alive_worker = null;
         return;
       }
-      this.callProxy('GET', PROXY_ENDPOINTS.STATUS + this.deviceId() + '/', this, function(request, view) {
+      this.callProxy('GET', `${PROXY_ENDPOINTS.STATUS}${this.deviceId()}/`, this, function(request, view) {
         if (request.responseText !== 'True') {
           view.endTrace();
         } else if (view.keep_alive_worker === null) {
@@ -299,37 +355,47 @@ export default {
     startTrace() {
       const requested = this.toTrace();
       const requestedConfig = this.toTraceConfig();
+      const requestedSelectedSfConfig = this.toSelectedSfTraceConfig();
+      const requestedSelectedWmConfig = this.toSelectedWmTraceConfig();
       if (requested.length < 1) {
         this.errorText = 'No targets selected';
         this.status = STATES.ERROR;
+        this.newEventOccurred("No targets selected");
         return;
       }
-      this.callProxy('POST', PROXY_ENDPOINTS.CONFIG_TRACE + this.deviceId() + '/', this, null, null, requestedConfig);
+
+      this.newEventOccurred("Start Trace");
+      this.callProxy('POST', `${PROXY_ENDPOINTS.CONFIG_TRACE}${this.deviceId()}/`, this, null, null, requestedConfig);
+      this.callProxy('POST', `${PROXY_ENDPOINTS.SELECTED_SF_CONFIG_TRACE}${this.deviceId()}/`, this, null, null, requestedSelectedSfConfig);
+      this.callProxy('POST',  `${PROXY_ENDPOINTS.SELECTED_WM_CONFIG_TRACE}${this.deviceId()}/`, this, null, null, requestedSelectedWmConfig);
       this.status = STATES.END_TRACE;
-      this.callProxy('POST', PROXY_ENDPOINTS.START_TRACE + this.deviceId() + '/', this, function(request, view) {
+      this.callProxy('POST', `${PROXY_ENDPOINTS.START_TRACE}${this.deviceId()}/`, this, function(request, view) {
         view.keepAliveTrace();
       }, null, requested);
     },
     dumpState() {
+      this.buttonClicked("Dump State");
       const requested = this.toDump();
       if (requested.length < 1) {
         this.errorText = 'No targets selected';
         this.status = STATES.ERROR;
+        this.newEventOccurred("No targets selected");
         return;
       }
       this.status = STATES.LOAD_DATA;
-      this.callProxy('POST', PROXY_ENDPOINTS.DUMP + this.deviceId() + '/', this, function(request, view) {
+      this.callProxy('POST', `${PROXY_ENDPOINTS.DUMP}${this.deviceId()}/`, this, function(request, view) {
         view.loadFile(requested, 0);
       }, null, requested);
     },
     endTrace() {
       this.status = STATES.LOAD_DATA;
-      this.callProxy('POST', PROXY_ENDPOINTS.END_TRACE + this.deviceId() + '/', this, function(request, view) {
+      this.callProxy('POST', `${PROXY_ENDPOINTS.END_TRACE}${this.deviceId()}/`, this, function(request, view) {
         view.loadFile(view.toTrace(), 0);
       });
+      this.newEventOccurred("Ended Trace");
     },
     loadFile(files, idx) {
-      this.callProxy('GET', PROXY_ENDPOINTS.FETCH + this.deviceId() + '/' + files[idx] + '/', this, function(request, view) {
+      this.callProxy('GET', `${PROXY_ENDPOINTS.FETCH}${this.deviceId()}/${files[idx]}/`, this, function(request, view) {
         try {
           const enc = new TextDecoder('utf-8');
           const resp = enc.decode(request.response);
@@ -371,6 +437,24 @@ export default {
           .flatMap((file) => TRACE_CONFIG[file])
           .filter((config) => this.adbStore[config]);
     },
+    toSelectedSfTraceConfig() {
+      const requestedSelectedConfig = {};
+      for (const config in this.SF_SELECTED_CONFIG_VALUES) {
+        if (this.SF_SELECTED_CONFIG_VALUES[config] !== "") {
+          requestedSelectedConfig[config] = this.SF_SELECTED_CONFIG_VALUES[config];
+        }
+      }
+      return requestedSelectedConfig;
+    },
+    toSelectedWmTraceConfig() {
+      const requestedSelectedConfig = {};
+      for (const config in this.WM_SELECTED_CONFIG_VALUES) {
+        if (this.WM_SELECTED_CONFIG_VALUES[config] !== "") {
+          requestedSelectedConfig[config] = this.WM_SELECTED_CONFIG_VALUES[config];
+        }
+      }
+      return requestedSelectedConfig;
+    },
     toDump() {
       return Object.keys(DUMPS)
           .filter((dumpKey) => this.adbStore[dumpKey]);
@@ -384,9 +468,11 @@ export default {
       return this.selectedDevice;
     },
     restart() {
+      this.buttonClicked("Connect / Retry");
       this.status = STATES.CONNECTING;
     },
     resetLastDevice() {
+      this.buttonClicked("Change Device");
       this.adbStore.lastDevice = '';
       this.restart();
     },
@@ -448,6 +534,12 @@ export default {
 
 </script>
 <style scoped>
+.config-selection {
+  width: 150px;
+  display: inline-flex;
+  margin-left: 5px;
+  margin-right: 5px;
+}
 .device-choice {
   display: inline-flex;
 }
