@@ -1,0 +1,35 @@
+{
+    "invalidProperties": [
+        "length",
+        "prototype",
+        "ref",
+        "diff",
+        "rects",
+        "chips",
+        "parent",
+        "timestamp",
+        "shortName",
+        "kind",
+        "resolvedChildren",
+        "visibilityReason",
+        "absoluteZ",
+        "children",
+        "stableId"
+    ],
+    "intDefColumn": {
+        "WindowLayoutParams.type": "android.view.WindowManager.LayoutParams.WindowType",
+        "WindowLayoutParams.flags": "android.view.WindowManager.LayoutParams.Flags",
+        "WindowLayoutParams.privateFlags": "android.view.WindowManager.LayoutParams.PrivateFlags",
+        "WindowLayoutParams.gravity": "android.view.Gravity.GravityFlags",
+        "WindowLayoutParams.softInputMode": "android.view.WindowManager.LayoutParams.WindowType",
+        "WindowLayoutParams.systemUiVisibilityFlags": "android.view.WindowManager.LayoutParams.SystemUiVisibilityFlags",
+        "WindowLayoutParams.subtreeSystemUiVisibilityFlags": "android.view.WindowManager.LayoutParams.SystemUiVisibilityFlags",
+        "WindowLayoutParams.behavior": "android.view.WindowInsetsController.Behavior",
+        "WindowLayoutParams.fitInsetsSides": "android.view.WindowInsets.Side.InsetsSide",
+        "Configuration.windowingMode": "android.app.WindowConfiguration.WindowingMode",
+        "WindowConfiguration.windowingMode": "android.app.WindowConfiguration.WindowingMode",
+        "Configuration.orientation": "android.content.pm.ActivityInfo.ScreenOrientation",
+        "WindowConfiguration.orientation": "android.content.pm.ActivityInfo.ScreenOrientation",
+        "WindowState.orientation": "android.content.pm.ActivityInfo.ScreenOrientation"
+    }
+}
