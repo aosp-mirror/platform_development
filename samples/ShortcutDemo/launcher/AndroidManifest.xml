@@ -21,7 +21,8 @@
 
     <application android:label="@string/app_title"
         android:resizeableActivity="true">
-        <activity android:name="ShortcutLauncherMain">
+        <activity android:name="ShortcutLauncherMain"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />

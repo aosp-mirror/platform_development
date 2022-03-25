@@ -17,6 +17,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import VueMaterial from 'vue-material'
+import VueGtag from "vue-gtag";
 
 import App from './App.vue'
 import { TRACE_TYPES, DUMP_TYPES, TRACE_INFO, DUMP_INFO } from './decode.js'
@@ -32,7 +33,7 @@ Vue.use(VueMaterial)
 const fileOrder = {
   [TRACE_TYPES.WINDOW_MANAGER]: 1,
   [TRACE_TYPES.SURFACE_FLINGER]: 2,
-  [TRACE_TYPES.TRANSACTION]: 3,
+  [TRACE_TYPES.TRANSACTION_LEGACY]: 3,
   [TRACE_TYPES.PROTO_LOG]: 4,
   [TRACE_TYPES.IME_CLIENTS]: 5,
   [TRACE_TYPES.IME_SERVICE]: 6,
@@ -66,6 +67,8 @@ const store = new Vuex.Store({
     dumps: {},
     excludeFromTimeline: [
       TRACE_TYPES.PROTO_LOG,
+      TRACE_TYPES.TAG,
+      TRACE_TYPES.ERROR
     ],
     activeFile: null,
     focusedFile: null,
@@ -93,12 +96,26 @@ const store = new Vuex.Store({
       return Object.values(state.traces)
         .filter(file => !state.excludeFromTimeline.includes(file.type));
     },
+    tagFiles(state, getters) {
+      return Object.values(state.traces)
+      .filter(file => file.type === TRACE_TYPES.TAG);
+    },
+    errorFiles(state, getters) {
+      return Object.values(state.traces)
+      .filter(file => file.type === TRACE_TYPES.ERROR);
+    },
     sortedTimelineFiles(state, getters) {
       return sortFiles(getters.timelineFiles);
     },
     video(state) {
       return state.traces[TRACE_TYPES.SCREEN_RECORDING];
     },
+    tagGenerationWmTrace(state, getters) {
+      return state.traces[TRACE_TYPES.WINDOW_MANAGER].tagGenerationTrace;
+    },
+    tagGenerationSfTrace(state, getters) {
+      return state.traces[TRACE_TYPES.SURFACE_FLINGER].tagGenerationTrace;
+    }
   },
   mutations: {
     setCurrentTimestamp(state, timestamp) {
@@ -148,7 +165,9 @@ const store = new Vuex.Store({
         }
 
         if (Object.keys(traceFiles).length > 0 && typeInfo.constructor) {
-          traces[traceType] = new typeInfo.constructor(traceFiles);
+          const newObj = new typeInfo.constructor(traceFiles);
+          newObj.data = Object.freeze(newObj.data);
+          traces[traceType] = newObj;
         }
       }
 
@@ -181,7 +200,9 @@ const store = new Vuex.Store({
         }
 
         if (Object.keys(dumpFiles).length > 0 && typeInfo.constructor) {
-          dumps[dumpType] = new typeInfo.constructor(dumpFiles);
+          const newObj = new typeInfo.constructor(dumpFiles);
+          newObj.data = Object.freeze(newObj.data);
+          dumps[dumpType] = newObj;
         }
 
       }
@@ -252,6 +273,9 @@ const store = new Vuex.Store({
     },
     updateTimelineTime(context, timestamp) {
       for (const file of context.getters.files) {
+        //dumps do not have a timeline, so only look at files with timelines to update the timestamp
+        if (!file.timeline) continue;
+
         const type = file.type;
         const entryIndex = findLastMatchingSorted(
           file.timeline,
@@ -338,6 +362,76 @@ const store = new Vuex.Store({
     }
   }
 })
+
+/**
+ * Make Google analytics functionalities available for recording events.
+ */
+Vue.use(VueGtag, {
+  config: { id: 'G-RRV0M08Y76'}
+})
+
+Vue.mixin({
+  methods: {
+    recordButtonClickedEvent(button) {
+      const txt = "Clicked " + button + " Button";
+      this.$gtag.event(txt, {
+        'event_category': 'Button Clicked',
+        'event_label': "Winscope Interactions",
+        'value': button,
+      });
+    },
+    recordDragAndDropFileEvent(val) {
+      this.$gtag.event("Dragged And DroppedFile", {
+        'event_category': 'Uploaded file',
+        'event_label': "Winscope Interactions",
+        'value': val,
+      });
+    },
+    recordFileUploadEvent(val) {
+      this.$gtag.event("Uploaded File From Filesystem", {
+        'event_category': 'Uploaded file',
+        'event_label': "Winscope Interactions",
+        'value': val,
+      });
+    },
+    recordNewEvent(event) {
+      this.$gtag.event(event, {
+        'event_category': event,
+        'event_label': "Winscope Interactions",
+        'value': 1,
+      });
+    },
+    recordOpenTraceEvent(traceType) {
+      this.$gtag.screenview({
+        app_name: "Winscope",
+        screen_name: traceType,
+      })
+    },
+    recordExpandedPropertyEvent(field) {
+      const string = "Property: " + field;
+      this.$gtag.event(string, {
+        'event_category': "Expanded property",
+        'event_label': "Winscope Interactions",
+        'value': field,
+      });
+    },
+    recordOpenedEntryEvent(entryType) {
+      const string = "Trace: " + entryType;
+      this.$gtag.event(string, {
+        'event_category': "Opened trace",
+        'event_label': "Winscope Interactions",
+        'value': entryType,
+      });
+    },
+    recordChangedNavigationStyleEvent(field) {
+      this.$gtag.event("Navigation mode changed", {
+        'event_category': "Timeline Navigation",
+        'event_label': "Winscope Interactions",
+        'value': field,
+      });
+    },
+  }
+});
 
 new Vue({
   el: '#app',
