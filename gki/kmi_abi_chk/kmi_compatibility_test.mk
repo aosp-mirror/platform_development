@@ -24,8 +24,12 @@ KMI_CHK_SCRIPT := $(LOCAL_PATH)/kmi_compatibility_test.sh
 # current kernel symbol file to be checked. E.g.,
 # $ m CURR_5_10_SYMVERS=kernel/prebuilts/5.10/arm64/vmlinux.symvers \
 #     gki_5_10_kmi_compatibility_test
-CURR_5_4_SYMVERS ?= development/gki/kmi_abi_chk/sym-5.4/Module.symvers
-CURR_5_10_SYMVERS ?= development/gki/kmi_abi_chk/sym-5.10/vmlinux.symvers
+#CURR_5_4_SYMVERS ?= development/gki/kmi_abi_chk/sym-5.4/Module.symvers
+#CURR_5_10_SYMVERS ?= development/gki/kmi_abi_chk/sym-5.10/vmlinux.symvers
+
+# Check the one under kernel/prebuilts for stable GKI KMI.
+CURR_5_4_SYMVERS ?= kernel/prebuilts/5.4/arm64/Module.symvers
+CURR_5_10_SYMVERS ?= kernel/prebuilts/5.10/arm64/vmlinux.symvers
 
 # Previous kernel symbol files, against which the latest one is checked
 # The file names of previous kernel symbol files are of this form:
