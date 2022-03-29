@@ -73,6 +73,20 @@
     <string name="label_position_start">Start</string>
     <string name="label_position_end">End</string>
 
+    <string name="activity_keep_clear">App/Activity/Keep Clear Rects</string>
+    <string name="keep_clear_property_set">
+        This view has android:preferKeepClear property set.
+    </string>
+    <string name="keep_clear_set_prefer_keep_clear_toggle">
+        Set the bottom right view as keep clear area, via setPreferKeepClear;
+    </string>
+    <string name="keep_clear_set_bottom_right_rectangle_keep_clear_toggle">
+        Set the bottom right view as keep clear area, via setPreferKeepClearRects.
+    </string>
+    <string name="keep_clear_view_bottom_right">
+        Use toggles to turn this into keep clear area.
+    </string>
+
     <string name="activity_max_aspect_ratio_square">App/Activity/Max Aspect Ratio/1:1</string>
     <string name="activity_max_aspect_ratio_16to9">App/Activity/Max Aspect Ratio/16:9</string>
     <string name="activity_max_aspect_ratio_any">App/Activity/Max Aspect Ratio/Any</string>
