@@ -286,6 +286,14 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".app.KeepClearRects"
+            android:label="@string/activity_keep_clear">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.SAMPLE_CODE" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".app.PictureInPicture"
                   android:label="@string/activity_picture_in_picture"
                   android:resizeableActivity="true"
