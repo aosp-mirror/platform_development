@@ -30,6 +30,8 @@
     <color name="solid_green">#f0f0</color>
     <color name="solid_yellow">#ffffff00</color>
     <color name="purply">#ff884488</color>
+    <color name="transparent_red">#0fff0000</color>
+    <color name="transparent_green">#0f00ff00</color>
 
     <!-- A custom theme that is a variation on the light them with a different
          background color. -->
