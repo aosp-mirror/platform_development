@@ -27,12 +27,15 @@ import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.view.IWindowManager;
 
+import java.util.HashMap;
+
 /**
  * monkey activity event
  */
 public class MonkeyActivityEvent extends MonkeyEvent {
     private ComponentName mApp;
     long mAlarmTime = 0;
+    private HashMap<ComponentName, String> mMainApps = new HashMap<>();
 
     public MonkeyActivityEvent(ComponentName app) {
         super(EVENT_TYPE_ACTIVITY);
@@ -45,12 +48,23 @@ public class MonkeyActivityEvent extends MonkeyEvent {
         mAlarmTime = arg;
     }
 
+    public MonkeyActivityEvent(ComponentName app,
+            HashMap<ComponentName, String> MainApps) {
+        super(EVENT_TYPE_ACTIVITY);
+        mApp = app;
+        mMainApps = MainApps;
+    }
+
     /**
      * @return Intent for the new activity
      */
     private Intent getEvent() {
         Intent intent = new Intent(Intent.ACTION_MAIN);
-        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+        if (mMainApps.containsKey(mApp)) {
+            intent.addCategory(mMainApps.get(mApp));
+        } else {
+            intent.addCategory(Intent.CATEGORY_LAUNCHER);
+        }
         intent.setComponent(mApp);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
         return intent;
