@@ -356,8 +356,12 @@ export default {
         }
         decodedFileTypes.add(dataType);
 
+        const frozenData = Object.freeze(decodedFile.data.data);
+        delete decodedFile.data.data;
+        decodedFile.data.data = frozenData;
+
         this.$set(this.dataFiles,
-            dataType, decodedFile.data);
+            dataType, Object.freeze(decodedFile.data));
       }
 
       // TODO(b/169305853): Remove this once we have magic numbers or another
@@ -369,7 +373,11 @@ export default {
 
           const selectedFile =
               this.getMostLikelyCandidateFile(dataType, files);
-          this.$set(this.dataFiles, dataType, selectedFile);
+          if (selectedFile.data) {
+            selectedFile.data = Object.freeze(selectedFile.data);
+          }
+
+          this.$set(this.dataFiles, dataType, Object.freeze(selectedFile));
 
           // Remove selected file from overriden list
           const index = files.indexOf(selectedFile);
@@ -584,28 +592,26 @@ export default {
 
       let lastError;
       for (const filename in content.files) {
-        if (content.files.hasOwnProperty(filename)) {
-          const file = content.files[filename];
-          if (file.dir) {
-            // Ignore directories
-            continue;
+        const file = content.files[filename];
+        if (file.dir) {
+          // Ignore directories
+          continue;
+        }
+
+        const fileBlob = await file.async('blob');
+        // Get only filename and remove rest of path
+        fileBlob.name = filename.split('/').slice(-1).pop();
+
+        try {
+          const decodedFile = await this.decodeFile(fileBlob);
+
+          decodedFiles.push(decodedFile);
+        } catch (e) {
+          if (!(e instanceof UndetectableFileType)) {
+            lastError = e;
           }
 
-          const fileBlob = await file.async('blob');
-          // Get only filename and remove rest of path
-          fileBlob.name = filename.split('/').slice(-1).pop();
-
-          try {
-            const decodedFile = await this.decodeFile(fileBlob);
-
-            decodedFiles.push(decodedFile);
-          } catch (e) {
-            if (!(e instanceof UndetectableFileType)) {
-              lastError = e;
-            }
-
-            console.error(e);
-          }
+          console.error(e);
         }
       }
 

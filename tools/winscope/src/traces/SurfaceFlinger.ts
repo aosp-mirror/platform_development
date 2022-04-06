@@ -19,15 +19,15 @@ import TraceBase from './TraceBase';
 import { LayersTrace } from '@/flickerlib';
 
 export default class SurfaceFlinger extends TraceBase {
-  sfTraceFile: Object;
-  tagGenerationTrace: Object;
+  readonly sfTraceFile: Object;
+  readonly tagGenerationTrace: Object;
 
   constructor(files) {
-    const sfTraceFile = files[FILE_TYPES.SURFACE_FLINGER_TRACE];
+    const sfTraceFile = Object.freeze(files[FILE_TYPES.SURFACE_FLINGER_TRACE]);
     const tagGenerationTrace = files[FILE_TYPES.SURFACE_FLINGER_TRACE].tagGenerationTrace;
     super(sfTraceFile.data, sfTraceFile.timeline, files);
 
-    this.tagGenerationTrace = tagGenerationTrace;
+    this.tagGenerationTrace = Object.freeze(tagGenerationTrace);
     this.sfTraceFile = sfTraceFile;
   }
 

@@ -15,12 +15,12 @@
  */
 
 import { LayersTrace } from "./common"
-import LayerTraceEntry from './layers/LayerTraceEntry'
+import LayerTraceEntryLazy from './layers/LayerTraceEntryLazy'
 
 LayersTrace.fromProto = function (proto: any): LayersTrace {
     const entries = []
     for (const entryProto of proto.entry) {
-        const transformedEntry = LayerTraceEntry.fromProto(
+        const transformedEntry = new LayerTraceEntryLazy(
             /* protos */ entryProto.layers.layers,
             /* displays */ entryProto.displays,
             /* timestamp */ entryProto.elapsedRealtimeNanos,
