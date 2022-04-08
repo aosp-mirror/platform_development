@@ -24,16 +24,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".RegularActivity" android:exported="true">
+        <activity android:name=".RegularActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".SingleInstancePerTaskActivity"
-            android:launchMode="singleInstancePerTask"
-        />
         <activity
             android:name=".SingleTopActivity"
             android:launchMode="singleTop" />

@@ -1,0 +1,12 @@
+samples/*/libs/
+samples/*/obj/
+samples/*/bin/
+samples/*/gen/
+platforms/android-*/samples/*/obj
+platforms/android-*/samples/*/libs
+tests/*/libs
+tests/*/obj/
+tests/*/bin/
+tests/*/gen/
+local.properties
+build.xml

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 #
 # Copyright (C) 2017 The Android Open Source Project
 #
@@ -16,7 +16,6 @@
 #
 """Utility functions for VNDK snapshot."""
 
-import argparse
 import glob
 import logging
 import os
@@ -36,7 +35,6 @@ MODULE_PATHS_FILE_NAME = 'module_paths.txt'
 NOTICE_FILES_DIR_NAME = 'NOTICE_FILES'
 NOTICE_FILES_DIR_PATH = os.path.join(COMMON_DIR_PATH, NOTICE_FILES_DIR_NAME)
 BINDER32 = 'binder32'
-MINIMUM_VNDK_VERSION = 28
 
 
 def set_logging_config(verbose_level):
@@ -54,22 +52,9 @@ def check_call(cmd):
 
 def check_output(cmd):
     logging.debug('Running `{}`'.format(' '.join(cmd)))
-    output = subprocess.check_output(cmd, encoding='utf-8')
+    output = subprocess.check_output(cmd)
     logging.debug('Output: `{}`'.format(output))
     return output
-
-
-def vndk_version_int(vndk_version):
-    """Used for a type keyword argument in the argparse.
-    It checks if vndk version is in the supported versions.
-    """
-    version_int = int(vndk_version)
-    if version_int < MINIMUM_VNDK_VERSION:
-        raise argparse.ArgumentTypeError(
-            'The VNDK version {input} is not supported. '
-            'It must be no smaller than {min_vndk}.'.format(
-                input=version_int, min_vndk=MINIMUM_VNDK_VERSION))
-    return version_int
 
 
 def get_android_build_top():
@@ -109,7 +94,7 @@ def get_snapshot_archs(install_dir):
         basename = os.path.basename(file)
         if os.path.isdir(file) and basename != COMMON_DIR_NAME:
             archs.append(basename)
-    return sorted(archs)
+    return archs
 
 
 def prebuilt_arch_from_path(path):

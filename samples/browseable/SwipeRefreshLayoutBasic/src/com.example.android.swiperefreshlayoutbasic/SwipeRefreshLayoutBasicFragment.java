@@ -203,7 +203,7 @@ public class SwipeRefreshLayoutBasicFragment extends Fragment {
     // END_INCLUDE (refresh_complete)
 
     /**
-     * Placeholder {@link AsyncTask} which simulates a long running task to fetch new cheeses.
+     * Dummy {@link AsyncTask} which simulates a long running task to fetch new cheeses.
      */
     private class DummyBackgroundTask extends AsyncTask<Void, Void, List<String>> {
 

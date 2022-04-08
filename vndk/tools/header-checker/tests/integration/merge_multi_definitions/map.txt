@@ -1,5 +1,0 @@
-libmerge_multi_definitions {
-  global:
-    func;
-    var;
-};

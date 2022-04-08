@@ -178,10 +178,10 @@ public class Monkey {
     /** If set, only match error if this text appears in the description text. */
     private String mMatchDescription;
 
-    /** Package denylist file. */
+    /** Package blacklist file. */
     private String mPkgBlacklistFile;
 
-    /** Package allowlist file. */
+    /** Package whitelist file. */
     private String mPkgWhitelistFile;
 
     /** Categories we are allowed to launch **/
@@ -966,7 +966,7 @@ public class Monkey {
     }
 
     /**
-     * Load package denylist or allowlist (if specified).
+     * Load package blacklist or whitelist (if specified).
      *
      * @return Returns false if any error occurs.
      */

@@ -101,7 +101,7 @@ public class MainActivity extends FragmentActivity implements LoaderCallbacks<Cu
     }
 
     /**
-     * Placeholder sendSms method, would need the "to" address to actually send a message :)
+     * Dummy sendSms method, would need the "to" address to actually send a message :)
      */
     private void sendSms(String smsText) {
         if (!TextUtils.isEmpty(smsText)) {

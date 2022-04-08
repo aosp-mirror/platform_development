@@ -53,8 +53,4 @@
         <attr name="android:label" />
     </declare-styleable>
 <!-- END_INCLUDE(fragment_arguments) -->
-
-    <declare-styleable name="FixedAspectRatioImageView">
-        <attr name="aspectRatio" format="string" />
-    </declare-styleable>
 </resources>

@@ -55,6 +55,7 @@ SOONG_BINARIES=(
     "header-abi-linker"
     "header-abi-dumper"
     "header-abi-diff"
+    "merge-abi-diff"
     "proto_metadata_plugin"
     "protoc_extractor"
     "versioner"

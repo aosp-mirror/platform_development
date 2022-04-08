@@ -1012,7 +1012,7 @@ public class PduComposer {
             }
 
             if (dataLength != (attachment.getLength() - headerLength)) {
-                throw new RuntimeException("BUG: Length check failed");
+                throw new RuntimeException("BUG: Length sanity check failed");
             }
 
             mStack.pop();

@@ -21,7 +21,7 @@ import android.content.Intent;
 import android.os.IBinder;
 
 /**
- * Placeholder service to make sure this app can be default SMS app
+ * Dummy service to make sure this app can be default SMS app
  */
 public class HeadlessSmsSendService extends Service {
 

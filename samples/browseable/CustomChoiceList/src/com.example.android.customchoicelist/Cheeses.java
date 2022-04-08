@@ -17,7 +17,7 @@
 package com.example.android.customchoicelist;
 
 /**
- * Placeholder data.
+ * Dummy data.
  */
 public class Cheeses {
     public static final String[] CHEESES = {

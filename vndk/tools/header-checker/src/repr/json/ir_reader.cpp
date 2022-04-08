@@ -154,13 +154,12 @@ GetElfSymbolBinding(const JsonObjectRef &elf_symbol) {
 
 bool JsonIRReader::ReadDumpImpl(const std::string &dump_file) {
   Json::Value tu_json;
-  Json::CharReaderBuilder builder;
-  builder["collectComments"] = false;
+  Json::Reader reader;
   std::ifstream input(dump_file);
 
-  std::string errorMessage;
-  if (!Json::parseFromStream(builder, input, &tu_json, &errorMessage)) {
-    llvm::errs() << "Failed to parse JSON: " << errorMessage << "\n";
+  if (!reader.parse(input, tu_json, /* collectComments */ false)) {
+    llvm::errs() << "Failed to parse JSON: "
+                 << reader.getFormattedErrorMessages() << "\n";
     return false;
   }
   bool ok = true;

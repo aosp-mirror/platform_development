@@ -33,6 +33,7 @@ import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
+import android.net.NetworkUtils;
 import android.net.RouteInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
@@ -84,6 +85,7 @@ import java.util.List;
 import java.util.Random;
 
 import static android.net.ConnectivityManager.CONNECTIVITY_ACTION;
+import static android.net.ConnectivityManager.INET_CONDITION_ACTION;
 import static android.net.NetworkCapabilities.*;
 
 public class Connectivity extends Activity {
@@ -278,24 +280,28 @@ public class Connectivity extends Activity {
     private static class DevToolsNetworkCallback extends NetworkCallback {
         private static final String TAG = "DevToolsNetworkCallback";
 
+        public void onPreCheck(Network network) {
+            Log.d(TAG, "onPreCheck: " + network.netId);
+        }
+
         public void onAvailable(Network network) {
-            Log.d(TAG, "onAvailable: " + network);
+            Log.d(TAG, "onAvailable: " + network.netId);
         }
 
         public void onCapabilitiesChanged(Network network, NetworkCapabilities nc) {
-            Log.d(TAG, "onCapabilitiesChanged: " + network + " " + nc.toString());
+            Log.d(TAG, "onCapabilitiesChanged: " + network.netId + " " + nc.toString());
         }
 
         public void onLinkPropertiesChanged(Network network, LinkProperties lp) {
-            Log.d(TAG, "onLinkPropertiesChanged: " + network + " " + lp.toString());
+            Log.d(TAG, "onLinkPropertiesChanged: " + network.netId + " " + lp.toString());
         }
 
         public void onLosing(Network network, int maxMsToLive) {
-            Log.d(TAG, "onLosing: " + network + " " + maxMsToLive);
+            Log.d(TAG, "onLosing: " + network.netId + " " + maxMsToLive);
         }
 
         public void onLost(Network network) {
-            Log.d(TAG, "onLost: " + network);
+            Log.d(TAG, "onLost: " + network.netId);
         }
     }
     private DevToolsNetworkCallback mCallback;
@@ -478,6 +484,7 @@ public class Connectivity extends Activity {
         IntentFilter broadcastFilter = new IntentFilter();
         broadcastFilter.addAction(CONNECTIVITY_ACTION);
         broadcastFilter.addAction(CONNECTIVITY_TEST_ALARM);
+        broadcastFilter.addAction(INET_CONDITION_ACTION);
         broadcastFilter.addAction(NETWORK_CONDITIONS_MEASURED);
 
         registerReceiver(mReceiver, broadcastFilter);

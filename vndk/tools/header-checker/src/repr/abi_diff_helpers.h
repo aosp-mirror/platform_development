@@ -17,6 +17,7 @@
 
 #include "repr/ir_diff_dumper.h"
 #include "repr/ir_diff_representation.h"
+#include "repr/ir_reader.h"
 #include "repr/ir_representation.h"
 
 #include <deque>
@@ -28,6 +29,8 @@ namespace repr {
 
 // Classes which act as middle-men between clang AST parsing routines and
 // message format specific dumpers.
+
+using MergeStatus = IRReader::MergeStatus;
 
 enum DiffStatus {
   // There was no diff found while comparing types.
@@ -80,10 +83,12 @@ class AbiDiffHelper {
       const AbiElementMap<const TypeIR *> &new_types,
       const DiffPolicyOptions &diff_policy_options,
       std::set<std::string> *type_cache,
-      IRDiffDumper *ir_diff_dumper = nullptr)
+      IRDiffDumper *ir_diff_dumper = nullptr,
+      AbiElementMap<MergeStatus> *local_to_global_type_id_map = nullptr)
       : old_types_(old_types), new_types_(new_types),
         diff_policy_options_(diff_policy_options), type_cache_(type_cache),
-        ir_diff_dumper_(ir_diff_dumper) {}
+        ir_diff_dumper_(ir_diff_dumper),
+        local_to_global_type_id_map_(local_to_global_type_id_map) {}
 
   DiffStatus CompareAndDumpTypeDiff(
       const std::string &old_type_str, const std::string &new_type_str,
@@ -209,6 +214,7 @@ class AbiDiffHelper {
   const DiffPolicyOptions &diff_policy_options_;
   std::set<std::string> *type_cache_;
   IRDiffDumper *ir_diff_dumper_;
+  AbiElementMap<MergeStatus> *local_to_global_type_id_map_;
 };
 
 void ReplaceTypeIdsWithTypeNames(

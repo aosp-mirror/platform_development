@@ -29,23 +29,19 @@ class HeaderCheckerOptions {
  public:
   std::string source_file_;
   std::string dump_name_;
-  const std::set<std::string> exported_headers_;
-  const std::string root_dir_;
+  std::set<std::string> exported_headers_;
   repr::TextFormatIR text_format_;
-  const bool dump_exported_only_;
   bool dump_function_declarations_;
   bool suppress_errors_;
 
  public:
   HeaderCheckerOptions(std::string source_file, std::string dump_name,
                        std::set<std::string> exported_headers,
-                       std::string root_dir, repr::TextFormatIR text_format,
-                       bool dump_exported_only,
+                       repr::TextFormatIR text_format,
                        bool dump_function_declarations, bool suppress_errors)
       : source_file_(std::move(source_file)), dump_name_(std::move(dump_name)),
         exported_headers_(std::move(exported_headers)),
-        root_dir_(std::move(root_dir)), text_format_(text_format),
-        dump_exported_only_(dump_exported_only),
+        text_format_(text_format),
         dump_function_declarations_(dump_function_declarations),
         suppress_errors_(suppress_errors) {}
 };

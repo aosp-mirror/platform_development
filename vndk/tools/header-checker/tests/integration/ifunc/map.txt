@@ -1,4 +1,0 @@
-libifunc {
-  global:
-    ifunc;
-};

@@ -1,0 +1,10 @@
+system/build.prop=ro.system.build.date
+system/build.prop=ro.system.build.fingerprint
+system/build.prop=ro.system.build.version.incremental
+system/build.prop=ro.build.display.id
+system/build.prop=ro.build.version.incremental
+system/build.prop=ro.build.date
+system/build.prop=ro.build.host
+system/build.prop=ro.build.product
+system/build.prop=ro.build.flavor
+system/build.prop=ro.build.description

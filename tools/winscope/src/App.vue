@@ -14,119 +14,124 @@
 -->
 <template>
   <div id="app">
-    <md-app>
-      <md-app-toolbar md-tag="md-toolbar" class="top-toolbar">
-        <h1 class="md-title" style="flex: 1">{{title}}</h1>
-        <md-button
-          class="md-primary md-theme-default download-all-btn"
-          @click="downloadAsZip(files)"
-          v-if="dataLoaded"
-        >Download All</md-button>
-        <md-button
-          class="md-accent md-raised md-theme-default clear-btn"
-          style="box-shadow: none;"
-          @click="clear()"
-          v-if="dataLoaded"
-        >Clear</md-button>
-      </md-app-toolbar>
-
-      <md-app-content class="main-content" :style="mainContentStyle">
-        <section class="data-inputs" v-if="!dataLoaded">
-          <div class="input">
-            <dataadb class="adbinput" ref="adb" :store="store"
-              @dataReady="onDataReady" @statusChange="setStatus" />
-          </div>
-          <div class="input">
-            <datainput class="fileinput" ref="input" :store="store"
-              @dataReady="onDataReady" @statusChange="setStatus" />
-          </div>
-        </section>
-
-        <section class="data-view">
-          <div
-            class="data-view-container"
-            v-for="file in dataViewFiles"
-            :key="file.type"
-          >
-            <dataview
-              :ref="file.type"
-              :store="store"
-              :file="file"
-              @click="onDataViewFocus(file)"
-            />
-          </div>
-
-          <overlay
-            :store="store"
-            :ref="overlayRef"
-            v-if="dataLoaded"
-            v-on:bottom-nav-height-change="handleBottomNavHeightChange"
-          />
-        </section>
-      </md-app-content>
-    </md-app>
+    <md-whiteframe md-tag="md-toolbar">
+      <h1 class="md-title" style="flex: 1">{{title}}</h1>
+      <a class="md-button md-accent md-raised md-theme-default" @click="clear()" v-if="dataLoaded">Clear</a>
+    </md-whiteframe>
+    <div class="main-content">
+      <md-layout v-if="!dataLoaded" class="m-2">
+        <dataadb ref="adb" :store="store" @dataReady="onDataReady" @statusChange="setStatus"/>
+        <datainput ref="input" :store="store" @dataReady="onDataReady" @statusChange="setStatus"/>
+      </md-layout>
+      <md-card v-if="dataLoaded">
+        <md-whiteframe md-tag="md-toolbar" md-elevation="0" class="card-toolbar md-transparent md-dense">
+          <h2 class="md-title">Timeline</h2>
+          <datafilter v-for="file in files" :key="file.filename" :store="store" :file="file" />
+        </md-whiteframe>
+        <md-list>
+          <md-list-item v-for="(file, idx) in files" :key="file.filename">
+            <md-icon>{{file.type.icon}}</md-icon>
+            <timeline :items="file.timeline" :selected-index="file.selectedIndex" :scale="scale" @item-selected="onTimelineItemSelected($event, idx)" class="timeline" />
+          </md-list-item>
+        </md-list>
+      </md-card>
+      <dataview v-for="file in files" :key="file.filename" :ref="file.filename" :store="store" :file="file" @focus="onDataViewFocus(file.filename)" />
+    </div>
   </div>
 </template>
 <script>
-import Overlay from './Overlay.vue';
-import DataView from './DataView.vue';
-import DataInput from './DataInput.vue';
-import LocalStore from './localstore.js';
-import DataAdb from './DataAdb.vue';
-import FileType from './mixins/FileType.js';
-import SaveAsZip from './mixins/SaveAsZip';
-import FocusedDataViewFinder from './mixins/FocusedDataViewFinder';
-import {DIRECTION} from './utils/utils';
-import {NAVIGATION_STYLE} from './utils/consts';
+import TreeView from './TreeView.vue'
+import Timeline from './Timeline.vue'
+import Rects from './Rects.vue'
+import DataView from './DataView.vue'
+import DataInput from './DataInput.vue'
+import LocalStore from './localstore.js'
+import DataAdb from './DataAdb.vue'
+import DataFilter from './DataFilter.vue'
 
-const APP_NAME = 'Winscope';
+const APP_NAME = "Winscope"
 
-const CONTENT_BOTTOM_PADDING = 25;
+// Find the index of the last element matching the predicate in a sorted array
+function findLastMatchingSorted(array, predicate) {
+  var a = 0;
+  var b = array.length - 1;
+  while (b - a > 1) {
+    var m = Math.floor((a + b) / 2);
+    if (predicate(array, m)) {
+      a = m;
+    } else {
+      b = m - 1;
+    }
+  }
+  return predicate(array, b) ? b : a;
+}
 
 export default {
   name: 'app',
-  mixins: [FileType, SaveAsZip, FocusedDataViewFinder],
   data() {
     return {
+      files: [],
       title: APP_NAME,
+      currentTimestamp: 0,
       activeDataView: null,
-      // eslint-disable-next-line new-cap
       store: LocalStore('app', {
         flattened: false,
         onlyVisible: false,
-        simplifyNames: true,
         displayDefaults: true,
-        navigationStyle: NAVIGATION_STYLE.GLOBAL,
       }),
-      overlayRef: 'overlay',
-      mainContentStyle: {
-        'padding-bottom': `${CONTENT_BOTTOM_PADDING}px`,
-      },
-    };
+    }
   },
   created() {
     window.addEventListener('keydown', this.onKeyDown);
-    window.addEventListener('scroll', this.onScroll);
     document.title = this.title;
-  },
-  destroyed() {
-    window.removeEventListener('keydown', this.onKeyDown);
-    window.removeEventListener('scroll', this.onScroll);
   },
   methods: {
     clear() {
-      this.$store.commit('clearFiles');
+      this.files.forEach(function(item) { item.destroy(); })
+      this.files = [];
+      this.activeDataView = null;
     },
-    onDataViewFocus(file) {
-      this.$store.commit('setActiveFile', file);
-      this.activeDataView = file.type;
+    onTimelineItemSelected(index, timelineIndex) {
+      this.files[timelineIndex].selectedIndex = index;
+      var t = parseInt(this.files[timelineIndex].timeline[index]);
+      for (var i = 0; i < this.files.length; i++) {
+        if (i != timelineIndex) {
+          this.files[i].selectedIndex = findLastMatchingSorted(this.files[i].timeline, function(array, idx) {
+            return parseInt(array[idx]) <= t;
+          });
+        }
+      }
+      this.currentTimestamp = t;
+    },
+    advanceTimeline(direction) {
+      var closestTimeline = -1;
+      var timeDiff = Infinity;
+      for (var idx = 0; idx < this.files.length; idx++) {
+        var file = this.files[idx];
+        var cur = file.selectedIndex;
+        if (cur + direction < 0 || cur + direction >= this.files[idx].timeline.length) {
+          continue;
+        }
+        var d = Math.abs(parseInt(file.timeline[cur + direction]) - this.currentTimestamp);
+        if (timeDiff > d) {
+          timeDiff = d;
+          closestTimeline = idx;
+        }
+      }
+      if (closestTimeline >= 0) {
+        this.files[closestTimeline].selectedIndex += direction;
+        this.currentTimestamp = parseInt(this.files[closestTimeline].timeline[this.files[closestTimeline].selectedIndex]);
+      }
+    },
+    onDataViewFocus(view) {
+      this.activeDataView = view;
     },
     onKeyDown(event) {
       event = event || window.event;
       if (event.keyCode == 37 /* left */ ) {
-        this.$store.dispatch('advanceTimeline', DIRECTION.BACKWARD);
+        this.advanceTimeline(-1);
       } else if (event.keyCode == 39 /* right */ ) {
-        this.$store.dispatch('advanceTimeline', DIRECTION.FORWARD);
+        this.advanceTimeline(1);
       } else if (event.keyCode == 38 /* up */ ) {
         this.$refs[this.activeView][0].arrowUp();
       } else if (event.keyCode == 40 /* down */ ) {
@@ -138,8 +143,7 @@ export default {
       return true;
     },
     onDataReady(files) {
-      this.$store.dispatch('setFiles', files);
-      this.updateFocusedView();
+      this.files = files;
     },
     setStatus(status) {
       if (status) {
@@ -147,80 +151,41 @@ export default {
       } else {
         this.title = APP_NAME;
       }
-    },
-    handleBottomNavHeightChange(newHeight) {
-      this.$set(
-          this.mainContentStyle,
-          'padding-bottom',
-          `${ CONTENT_BOTTOM_PADDING + newHeight }px`,
-      );
-    },
+    }
   },
   computed: {
-    files() {
-      return this.$store.getters.sortedFiles;
+    prettyDump: function() { return JSON.stringify(this.dump, null, 2); },
+    dataLoaded: function() { return this.files.length > 0 },
+    scale() {
+      var mx = Math.max(...(this.files.map(f => Math.max(...f.timeline))));
+      var mi = Math.min(...(this.files.map(f => Math.min(...f.timeline))));
+      return [mi, mx];
     },
-    prettyDump() {
-      return JSON.stringify(this.dump, null, 2);
-    },
-    dataLoaded() {
-      return this.files.length > 0;
-    },
-    activeView() {
+    activeView: function() {
       if (!this.activeDataView && this.files.length > 0) {
-        // eslint-disable-next-line vue/no-side-effects-in-computed-properties
-        this.activeDataView = this.files[0].type;
+        this.activeDataView = this.files[0].filename;
       }
       return this.activeDataView;
-    },
-    dataViewFiles() {
-      return this.files.filter((f) => this.hasDataView(f));
-    },
+    }
   },
   watch: {
     title() {
       document.title = this.title;
-    },
+    }
   },
   components: {
-    overlay: Overlay,
-    dataview: DataView,
-    datainput: DataInput,
-    dataadb: DataAdb,
+    'timeline': Timeline,
+    'dataview': DataView,
+    'datainput': DataInput,
+    'dataadb': DataAdb,
+    'datafilter': DataFilter,
   },
-};
+}
+
 </script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@600&display=swap');
-
-#app .md-app-container {
-  /* Get rid of tranforms which prevent fixed position from being used */
-  transform: none!important;
-  min-height: 100vh;
-}
-
-#app .top-toolbar {
-  box-shadow: none;
-  background-color: #fff;
-  background-color: var(--md-theme-default-background, #fff);
-  border-bottom: thin solid rgba(0,0,0,.12);
-  padding:  0 40px;
-}
-
-#app .top-toolbar .md-title {
-  font-family: 'Open Sans', sans-serif;
-  white-space: nowrap;
-  color: #5f6368;
-  margin: 0;
-  padding: 0;
-  font-size: 22px;
-  letter-spacing: 0;
-  font-weight: 600;
-}
-
-.data-view {
-  display: flex;
-  flex-direction: column;
+.main-content>* {
+  margin: 1em;
 }
 
 .card-toolbar {
@@ -234,6 +199,10 @@ export default {
 .container {
   display: flex;
   flex-wrap: wrap;
+}
+
+.md-layout > .md-card {
+  margin: 0.5em;
 }
 
 .md-button {
@@ -250,33 +219,13 @@ ul {
   padding: 0;
 }
 
+li {
+  display: inline-block;
+  margin: 0 10px;
+}
+
 a {
   color: #42b983;
 }
 
-.data-inputs {
-  display: flex;
-  flex-wrap: wrap;
-  height: 100%;
-  width: 100%;
-  align-self: center;
-  /* align-items: center; */
-  align-content: center;
-  justify-content: center;
-}
-
-.data-inputs .input {
-  padding: 15px;
-  flex: 1 1 0;
-  max-width: 840px;
-  /* align-self: center; */
-}
-
-.data-inputs .input > div {
-  height: 100%;
-}
-
-.data-view-container {
-  padding: 25px 20px 0 20px;
-}
 </style>

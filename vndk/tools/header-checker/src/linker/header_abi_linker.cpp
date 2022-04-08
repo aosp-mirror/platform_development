@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "linker/module_merger.h"
+#include "repr/ir_representation.h"
 #include "repr/ir_dumper.h"
 #include "repr/ir_reader.h"
-#include "repr/ir_representation.h"
 #include "repr/symbol/so_file_parser.h"
 #include "repr/symbol/version_script_parser.h"
 #include "utils/command_line_utils.h"
@@ -29,6 +28,7 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
@@ -39,9 +39,10 @@
 using namespace header_checker;
 using header_checker::repr::TextFormatIR;
 using header_checker::utils::CollectAllExportedHeaders;
-using header_checker::utils::GetCwd;
 using header_checker::utils::HideIrrelevantCommandLineOptions;
 
+
+static constexpr std::size_t kSourcesPerBatchThread = 7;
 
 static llvm::cl::OptionCategory header_linker_category(
     "header-abi-linker options");
@@ -57,12 +58,6 @@ static llvm::cl::opt<std::string> linked_dump(
 static llvm::cl::list<std::string> exported_header_dirs(
     "I", llvm::cl::desc("<export_include_dirs>"), llvm::cl::Prefix,
     llvm::cl::ZeroOrMore, llvm::cl::cat(header_linker_category));
-
-static llvm::cl::opt<std::string> root_dir(
-    "root-dir",
-    llvm::cl::desc("Specify the directory that the paths in the dump files are "
-                   "relative to. Default to current working directory"),
-    llvm::cl::Optional, llvm::cl::cat(header_linker_category));
 
 static llvm::cl::opt<std::string> version_script(
     "v", llvm::cl::desc("<version_script>"), llvm::cl::Optional,
@@ -109,12 +104,6 @@ static llvm::cl::opt<TextFormatIR> output_format(
     llvm::cl::init(TextFormatIR::Json),
     llvm::cl::cat(header_linker_category));
 
-static llvm::cl::opt<std::size_t> sources_per_thread(
-    "sources-per-thread",
-    llvm::cl::desc("Specify number of input dump files each thread parses, for "
-                   "debugging merging types"),
-    llvm::cl::init(7), llvm::cl::Hidden);
-
 class HeaderAbiLinker {
  public:
   HeaderAbiLinker(
@@ -141,7 +130,7 @@ class HeaderAbiLinker {
                 const repr::AbiElementMap<T> &src,
                 const std::function<bool(const std::string &)> &symbol_filter);
 
-  std::unique_ptr<linker::ModuleMerger> ReadInputDumpFiles();
+  std::unique_ptr<repr::IRReader> ReadInputDumpFiles();
 
   bool ReadExportedSymbols();
 
@@ -149,13 +138,11 @@ class HeaderAbiLinker {
 
   bool ReadExportedSymbolsFromSharedObjectFile();
 
-  bool LinkTypes(const repr::ModuleIR &module, repr::ModuleIR *linked_module);
+  bool LinkTypes(repr::ModuleIR &module, repr::ModuleIR *linked_module);
 
-  bool LinkFunctions(const repr::ModuleIR &module,
-                     repr::ModuleIR *linked_module);
+  bool LinkFunctions(repr::ModuleIR &module, repr::ModuleIR *linked_module);
 
-  bool LinkGlobalVars(const repr::ModuleIR &module,
-                      repr::ModuleIR *linked_module);
+  bool LinkGlobalVars(repr::ModuleIR &module, repr::ModuleIR *linked_module);
 
   bool LinkExportedSymbols(repr::ModuleIR *linked_module);
 
@@ -191,60 +178,61 @@ class HeaderAbiLinker {
 };
 
 static void DeDuplicateAbiElementsThread(
-    std::vector<std::string>::const_iterator dump_files_begin,
-    std::vector<std::string>::const_iterator dump_files_end,
+    const std::vector<std::string> &dump_files,
     const std::set<std::string> *exported_headers,
-    linker::ModuleMerger *merger) {
-  for (auto it = dump_files_begin; it != dump_files_end; it++) {
-    std::unique_ptr<repr::IRReader> reader =
-        repr::IRReader::CreateIRReader(input_format, exported_headers);
-    assert(reader != nullptr);
-    if (!reader->ReadDump(*it)) {
-      llvm::errs() << "ReadDump failed\n";
-      ::exit(1);
+    repr::IRReader *greader, std::mutex *greader_lock,
+    std::atomic<std::size_t> *cnt) {
+  std::unique_ptr<repr::IRReader> local_reader =
+      repr::IRReader::CreateIRReader(input_format, exported_headers);
+
+  auto begin_it = dump_files.begin();
+  std::size_t num_sources = dump_files.size();
+  while (1) {
+    std::size_t i = cnt->fetch_add(kSourcesPerBatchThread);
+    if (i >= num_sources) {
+      break;
     }
-    merger->MergeGraphs(reader->GetModule());
+    std::size_t end = std::min(i + kSourcesPerBatchThread, num_sources);
+    for (auto it = begin_it; it != begin_it + end; it++) {
+      std::unique_ptr<repr::IRReader> reader =
+          repr::IRReader::CreateIRReader(input_format, exported_headers);
+      assert(reader != nullptr);
+      if (!reader->ReadDump(*it)) {
+        llvm::errs() << "ReadDump failed\n";
+        ::exit(1);
+      }
+      // This merge is needed since the iterators might not be contigous.
+      local_reader->MergeGraphs(*reader);
+    }
   }
+
+  std::lock_guard<std::mutex> lock(*greader_lock);
+  greader->MergeGraphs(*local_reader);
 }
 
-std::unique_ptr<linker::ModuleMerger> HeaderAbiLinker::ReadInputDumpFiles() {
-  std::unique_ptr<linker::ModuleMerger> merger(
-      new linker::ModuleMerger(&exported_headers_));
+std::unique_ptr<repr::IRReader>
+HeaderAbiLinker::ReadInputDumpFiles() {
+  std::unique_ptr<repr::IRReader> greader =
+      repr::IRReader::CreateIRReader(input_format, &exported_headers_);
+
   std::size_t max_threads = std::thread::hardware_concurrency();
-  std::size_t num_threads = std::max<std::size_t>(
-      std::min(dump_files_.size() / sources_per_thread, max_threads), 1);
+  std::size_t num_threads = kSourcesPerBatchThread < dump_files_.size() ?
+      std::min(dump_files_.size() / kSourcesPerBatchThread, max_threads) : 0;
   std::vector<std::thread> threads;
-  std::vector<linker::ModuleMerger> thread_mergers;
-  thread_mergers.reserve(num_threads - 1);
-
-  std::size_t dump_files_index = 0;
-  std::size_t first_end_index = 0;
-  for (std::size_t i = 0; i < num_threads; i++) {
-    std::size_t cnt = dump_files_.size() / num_threads +
-                      (i < dump_files_.size() % num_threads ? 1 : 0);
-    if (i == 0) {
-      first_end_index = cnt;
-    } else {
-      thread_mergers.emplace_back(&exported_headers_);
-      threads.emplace_back(DeDuplicateAbiElementsThread,
-                           dump_files_.begin() + dump_files_index,
-                           dump_files_.begin() + dump_files_index + cnt,
-                           &exported_headers_, &thread_mergers.back());
-    }
-    dump_files_index += cnt;
+  std::atomic<std::size_t> cnt(0);
+  std::mutex greader_lock;
+  for (std::size_t i = 1; i < num_threads; i++) {
+    threads.emplace_back(DeDuplicateAbiElementsThread, dump_files_,
+                         &exported_headers_, greader.get(), &greader_lock,
+                         &cnt);
   }
-  assert(dump_files_index == dump_files_.size());
-
-  DeDuplicateAbiElementsThread(dump_files_.begin(),
-                               dump_files_.begin() + first_end_index,
-                               &exported_headers_, merger.get());
-
-  for (std::size_t i = 0; i < threads.size(); i++) {
-    threads[i].join();
-    merger->MergeGraphs(thread_mergers[i].GetModule());
+  DeDuplicateAbiElementsThread(dump_files_, &exported_headers_, greader.get(),
+                               &greader_lock, &cnt);
+  for (auto &thread : threads) {
+    thread.join();
   }
 
-  return merger;
+  return greader;
 }
 
 bool HeaderAbiLinker::LinkAndDump() {
@@ -255,13 +243,12 @@ bool HeaderAbiLinker::LinkAndDump() {
   }
 
   // Construct the list of exported headers for source location filtering.
-  exported_headers_ = CollectAllExportedHeaders(
-      exported_header_dirs_, root_dir.empty() ? GetCwd() : root_dir);
+  exported_headers_ = CollectAllExportedHeaders(exported_header_dirs_);
 
   // Read all input ABI dumps.
-  auto merger = ReadInputDumpFiles();
+  auto greader = ReadInputDumpFiles();
 
-  const repr::ModuleIR &module = merger->GetModule();
+  repr::ModuleIR &module = greader->GetModule();
 
   // Link input ABI dumps.
   std::unique_ptr<repr::ModuleIR> linked_module(
@@ -316,7 +303,7 @@ bool HeaderAbiLinker::LinkDecl(
   return true;
 }
 
-bool HeaderAbiLinker::LinkTypes(const repr::ModuleIR &module,
+bool HeaderAbiLinker::LinkTypes(repr::ModuleIR &module,
                                 repr::ModuleIR *linked_module) {
   auto no_filter = [](const std::string &symbol) { return true; };
   return LinkDecl(linked_module, module.GetRecordTypes(), no_filter) &&
@@ -340,7 +327,7 @@ bool HeaderAbiLinker::IsSymbolExported(const std::string &name) const {
   return true;
 }
 
-bool HeaderAbiLinker::LinkFunctions(const repr::ModuleIR &module,
+bool HeaderAbiLinker::LinkFunctions(repr::ModuleIR &module,
                                     repr::ModuleIR *linked_module) {
   auto symbol_filter = [this](const std::string &linker_set_key) {
     return IsSymbolExported(linker_set_key);
@@ -348,7 +335,7 @@ bool HeaderAbiLinker::LinkFunctions(const repr::ModuleIR &module,
   return LinkDecl(linked_module, module.GetFunctions(), symbol_filter);
 }
 
-bool HeaderAbiLinker::LinkGlobalVars(const repr::ModuleIR &module,
+bool HeaderAbiLinker::LinkGlobalVars(repr::ModuleIR &module,
                                      repr::ModuleIR *linked_module) {
   auto symbol_filter = [this](const std::string &linker_set_key) {
     return IsSymbolExported(linker_set_key);

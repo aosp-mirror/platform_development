@@ -123,7 +123,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                     return new LaunchpadSectionFragment();
 
                 default:
-                    // The other sections of the app are placeholder placeholders.
+                    // The other sections of the app are dummy placeholders.
                     Fragment fragment = new DummySectionFragment();
                     Bundle args = new Bundle();
                     args.putInt(DummySectionFragment.ARG_SECTION_NUMBER, i + 1);
@@ -185,7 +185,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     }
 
     /**
-     * A placeholder fragment representing a section of the app, but that simply displays placeholder text.
+     * A dummy fragment representing a section of the app, but that simply displays dummy text.
      */
     public static class DummySectionFragment extends Fragment {
 

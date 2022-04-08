@@ -395,7 +395,6 @@ public class PresentationActivity extends Activity
             cb.setTag(display);
             cb.setOnCheckedChangeListener(PresentationActivity.this);
             cb.setChecked(contents != null);
-            cb.setEnabled((display.getFlags() & Display.FLAG_PRESENTATION) != 0);
 
             TextView tv = (TextView)v.findViewById(R.id.display_id);
             tv.setText(v.getContext().getResources().getString(

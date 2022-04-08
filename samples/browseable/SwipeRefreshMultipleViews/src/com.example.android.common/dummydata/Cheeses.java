@@ -21,7 +21,7 @@ import java.util.HashSet;
 import java.util.Random;
 
 /**
- * Placeholder data.
+ * Dummy data.
  */
 public class Cheeses {
     static final String[] CHEESES = {

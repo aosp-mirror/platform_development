@@ -25,11 +25,9 @@
     <uses-permission android:name="android.permission.MODIFY_PHONE_STATE" />
     <uses-permission android:name="android.permission.WRITE_SYSTEM_SETTINGS" />
     <uses-permission android:name="android.permission.SET_KEYBOARD_LAYOUT" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <application>
         <activity android:name="DefaultActivity"
-                android:excludeFromRecents="true"
-                android:exported="true">
+                android:excludeFromRecents="true">
             <intent-filter android:priority="3">
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.HOME" />

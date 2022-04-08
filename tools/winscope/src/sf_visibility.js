@@ -20,7 +20,7 @@
  * composition state (visibleRegion), it will be used otherwise it will be
  * derived.
  */
-import {multiply_rect, is_simple_rotation} from './matrix_utils.js';
+import { multiply_rect, is_simple_rotation } from './matrix_utils.js'
 
 // Layer flags
 const FLAG_HIDDEN = 0x01;
@@ -29,27 +29,25 @@ const FLAG_SECURE = 0x80;
 
 function flags_to_string(flags) {
   if (!flags) return '';
-  const verboseFlags = [];
-  if (flags & FLAG_HIDDEN) verboseFlags.push('HIDDEN');
-  if (flags & FLAG_OPAQUE) verboseFlags.push('OPAQUE');
-  if (flags & FLAG_SECURE) verboseFlags.push('SECURE');
-  return verboseFlags.join('|') + ' (' + flags + ')';
+  var verboseFlags = [];
+  if (flags & FLAG_HIDDEN) verboseFlags.push("HIDDEN");
+  if (flags & FLAG_OPAQUE) verboseFlags.push("OPAQUE");
+  if (flags & FLAG_SECURE) verboseFlags.push("SECURE");
+  return verboseFlags.join('|') + " (" + flags + ")";
 }
 
 function is_empty(region) {
   return region == undefined ||
       region.rect == undefined ||
       region.rect.length == 0 ||
-      region.rect.every(function(r) {
-        return is_empty_rect(r);
-      } );
+      region.rect.every(function(r) { return is_empty_rect(r) } );
 }
 
 function is_empty_rect(rect) {
-  const right = rect.right || 0;
-  const left = rect.left || 0;
-  const top = rect.top || 0;
-  const bottom = rect.bottom || 0;
+  var right = rect.right || 0;
+  var left = rect.left || 0;
+  var top = rect.top || 0;
+  var bottom = rect.bottom || 0;
 
   return (right - left) <= 0 || (bottom - top) <= 0;
 }
@@ -75,7 +73,7 @@ function is_rect_empty_and_valid(rect) {
  */
 function is_transform_invalid(transform) {
   return !transform || (transform.dsdx * transform.dtdy ===
-      transform.dtdx * transform.dsdy); // determinant of transform
+      transform.dtdx * transform.dsdy); //determinant of transform
 }
 
 function is_opaque(layer) {
@@ -103,20 +101,21 @@ function has_effects(layer) {
 
   // Support newer effect layer
   return layer.type === 'EffectLayer' &&
-      (fills_color(layer) || draws_shadows(layer) || has_blur(layer));
+      (fills_color(layer) || draws_shadows(layer) || has_blur(layer))
 }
 
 function is_hidden_by_policy(layer) {
-  return layer.flags & FLAG_HIDDEN == FLAG_HIDDEN ||
+  return layer.flags & FLAG_HIDDEN == FLAG_HIDDEN || 
     // offscreen layer root has a unique layer id
     layer.id == 0x7FFFFFFD;
 }
 
 /**
  * Checks if the layer is visible based on its visibleRegion if available
- * or its type, active buffer content, alpha and properties.
+ * or its type, active buffer content, alpha and properties. 
  */
 function is_visible(layer, hiddenByPolicy, includesCompositionState) {
+
   if (includesCompositionState) {
     return !is_empty(layer.visibleRegion);
   }
@@ -132,7 +131,7 @@ function is_visible(layer, hiddenByPolicy, includesCompositionState) {
   if (!layer.color || !layer.color.a || layer.color.a == 0) {
     return false;
   }
-
+  
   if (layer.occludedBy && layer.occludedBy.length > 0) {
     return false;
   }
@@ -144,7 +143,7 @@ function is_visible(layer, hiddenByPolicy, includesCompositionState) {
   return true;
 }
 
-function get_visibility_reason(layer, includesCompositionState) {
+function get_visibility_reason(layer) {
   if (layer.type === 'ContainerLayer') {
     return 'ContainerLayer';
   }
@@ -157,8 +156,7 @@ function get_visibility_reason(layer, includesCompositionState) {
     return 'Hidden by parent';
   }
 
-  const isBufferLayer = (layer.type === 'BufferStateLayer' ||
-      layer.type === 'BufferQueueLayer');
+  let isBufferLayer = (layer.type === 'BufferStateLayer' || layer.type === 'BufferQueueLayer');
   if (isBufferLayer && (!layer.activeBuffer ||
     layer.activeBuffer.height === 0 || layer.activeBuffer.width === 0)) {
     return 'Buffer is empty';
@@ -172,7 +170,7 @@ function get_visibility_reason(layer, includesCompositionState) {
     return 'Crop is 0x0';
   }
 
-  if (!layer.bounds || is_empty_rect(layer.bounds)) {
+  if (!layer.bounds || is_empty_rect(layer.bounds)) {  
     return 'Bounds is 0x0';
   }
 
@@ -183,22 +181,17 @@ function get_visibility_reason(layer, includesCompositionState) {
     return 'RelativeOf layer has been removed';
   }
 
-  const isEffectLayer = (layer.type === 'EffectLayer');
-  if (isEffectLayer && !fills_color(layer) &&
-      !draws_shadows(layer) && !has_blur(layer)) {
+  let isEffectLayer = (layer.type === 'EffectLayer');
+  if (isEffectLayer && !fills_color(layer) && !draws_shadows(layer) && !has_blur(layer)) {
     return 'Effect layer does not have color fill, shadow or blur';
   }
-
+  
   if (layer.occludedBy && layer.occludedBy.length > 0) {
     return 'Layer is occluded by:' + layer.occludedBy.join();
-  }
-
-  if (includesCompositionState && is_empty(layer.visibleRegion)) {
-    return 'Visible region calculated by Composition Engine is empty';
-  }
+  } 
 
   if (layer.visible) {
-    return 'Unknown';
+    return "Unknown";
   };
 }
 
@@ -210,8 +203,7 @@ function overlaps(rectA, rectB) {
 
 // Returns true if outer rect contains inner rect
 function contains(outerLayer, innerLayer) {
-  if (!is_simple_rotation(outerLayer.transform) ||
-      !is_simple_rotation(innerLayer.transform)) {
+  if (!is_simple_rotation(outerLayer.transform) || !is_simple_rotation(innerLayer.transform)) {
     return false;
   }
   const outer = screen_bounds(outerLayer);
@@ -222,90 +214,67 @@ function contains(outerLayer, innerLayer) {
 
 function screen_bounds(layer) {
   if (layer.screenBounds) return layer.screenBounds;
-  const transformMatrix = layer.transform;
-  const tx = layer.position ? layer.position.x || 0 : 0;
-  const ty = layer.position ? layer.position.y || 0 : 0;
+  let transformMatrix = layer.transform;
+  var tx = layer.position ? layer.position.x || 0 : 0;
+  var ty = layer.position ? layer.position.y || 0 : 0;
 
-  transformMatrix.tx = tx;
-  transformMatrix.ty = ty;
+  transformMatrix.tx = tx
+  transformMatrix.ty = ty
   return multiply_rect(transformMatrix, layer.bounds);
 }
 
 // Traverse in z-order from top to bottom and fill in occlusion data
 function fill_occlusion_state(layerMap, rootLayers, includesCompositionState) {
-  const layers = rootLayers.filter((layer) => !layer.isRelativeOf);
-  traverse_top_to_bottom(layerMap, layers, {opaqueRects: [], transparentRects: [], screenBounds: null}, (layer, globalState) => {
-    if (layer.name.startsWith('Root#0') && layer.sourceBounds) {
-      globalState.screenBounds = {left: 0, top: 0, bottom: layer.sourceBounds.bottom, right: layer.sourceBounds.right};
-    }
+  const layers = rootLayers.filter(layer => !layer.isRelativeOf);
+  traverse_top_to_bottom(layerMap, layers, {opaqueRects:[], transparentRects:[], screenBounds:null}, (layer, globalState) => {
 
+    if (layer.name.startsWith("Root#0") && layer.sourceBounds) {
+      globalState.screenBounds = {left:0,  top:0, bottom:layer.sourceBounds.bottom, right:layer.sourceBounds.right};
+    }
+  
     const visible = is_visible(layer, layer.hidden, includesCompositionState);
     if (visible) {
-      const fullyOccludes = (testLayer) => contains(testLayer, layer) && !layer.cornerRadius;
-      const partiallyOccludes = (testLayer) => overlaps(screen_bounds(testLayer), screen_bounds(layer));
-      const covers = (testLayer) => overlaps(screen_bounds(testLayer), screen_bounds(layer));
-
-      layer.occludedBy = globalState.opaqueRects.filter(fullyOccludes).map((layer) => layer.id);
-      layer.partiallyOccludedBy = globalState.opaqueRects.filter(partiallyOccludes)
-        .filter((p) => layer.occludedBy.indexOf(p.id) == -1)
-        .map((layer) => layer.id);
-      layer.coveredBy = globalState.transparentRects.filter(covers).map((layer) => layer.id);
+      let fullyOccludes = (testLayer) => contains(testLayer, layer);
+      let partiallyOccludes = (testLayer) => overlaps(screen_bounds(testLayer), screen_bounds(layer));
+      let covers = (testLayer) => overlaps(screen_bounds(testLayer), screen_bounds(layer));
+  
+      layer.occludedBy = globalState.opaqueRects.filter(fullyOccludes).map(layer => layer.id);
+      layer.partiallyOccludedBy = globalState.opaqueRects.filter(partiallyOccludes).map(layer => layer.id);
+      layer.coveredBy = globalState.transparentRects.filter(covers).map(layer => layer.id);
 
       if (is_opaque(layer)) {
         globalState.opaqueRects.push(layer);
       } else {
-        globalState.transparentRects.push(layer);
+          globalState.transparentRects.push(layer);
       }
     }
 
     layer.visible = is_visible(layer, layer.hidden, includesCompositionState);
     if (!layer.visible) {
-      layer.invisibleDueTo = get_visibility_reason(layer, includesCompositionState);
-    }
+      layer.invisibleDueTo = get_visibility_reason(layer);
+    } 
   });
 }
 
 function traverse_top_to_bottom(layerMap, rootLayers, globalState, fn) {
-  for (let i = rootLayers.length-1; i >=0; i--) {
-    const relatives = [];
-    for (const id of rootLayers[i].relatives) {
-      if (!layerMap.hasOwnProperty(id)) {
-        // TODO (b/162500053): so that this doesn't need to be checked here
-        console.warn(
-            `Relative layer with id ${id} not found in dumped layers... ` +
-            `Skipping layer in traversal...`);
-      } else {
-        relatives.push(layerMap[id]);
-      }
-    }
-
-    const children = [];
-    for (const id of rootLayers[i].children) {
-      if (!layerMap.hasOwnProperty(id)) {
-        // TODO (b/162500053): so that this doesn't need to be checked here
-        console.warn(
-            `Child layer with id ${id} not found in dumped layers... ` +
-            `Skipping layer in traversal...`);
-      } else {
-        children.push(layerMap[id]);
-      }
-    }
+  for (var i = rootLayers.length-1; i >=0; i--) {   
+    const relatives = rootLayers[i].relatives.map(id => layerMap[id]);
+    const children = rootLayers[i].children.map(id => layerMap[id])
 
     // traverse through relatives and children that are not relatives
-    const traverseList = relatives
-        .concat(children.filter((layer) => !layer.isRelativeOf));
-
+    const traverseList = relatives.concat(children.filter(layer => !layer.isRelativeOf));
     traverseList.sort((lhs, rhs) => rhs.z - lhs.z);
-
-    traverseList.filter((layer) => layer.z >=0).forEach((layer) => {
+    
+    traverseList.filter((layer) => layer.z >=0).forEach(layer => {
       traverse_top_to_bottom(layerMap, [layer], globalState, fn);
     });
 
     fn(rootLayers[i], globalState);
-
-    traverseList.filter((layer) => layer.z < 0).forEach((layer) => {
+    
+    traverseList.filter((layer) => layer.z < 0).forEach(layer => {
       traverse_top_to_bottom(layerMap, [layer], globalState, fn);
     });
+
   }
 }
 
@@ -322,27 +291,18 @@ function fill_inherited_state(layerMap, rootLayers) {
       } else if (parent) {
         layer.bounds = parent.bounds;
       } else {
-        layer.bounds = {left: 0, top: 0, right: 0, bottom: 0};
+        layer.bounds = {left:0, top:0, right:0, bottom:0};
       }
     }
   });
-}
+} 
 
 function traverse(layerMap, rootLayers, fn) {
-  for (let i = rootLayers.length-1; i >=0; i--) {
+  for (var i = rootLayers.length-1; i >=0; i--) {
     const parentId = rootLayers[i].parent;
     const parent = parentId == -1 ? null : layerMap[parentId];
     fn(rootLayers[i], parent);
-    const children = rootLayers[i].children.map(
-      (id) => {
-        const child = layerMap[id];
-        if (child == null) {
-          console.warn(
-            `Child layer with id ${id} in parent layer id ${rootLayers[i].id} not found... ` +
-            `Skipping layer in traversal...`);
-        }
-        return child;
-      }).filter(item => item !== undefined);
+    const children = rootLayers[i].children.map(id => layerMap[id]);
     traverse(layerMap, children, fn);
   }
 }
