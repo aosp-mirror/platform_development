@@ -16,12 +16,21 @@
 
 package com.example.android.apis.app;
 
+import static android.app.PendingIntent.FLAG_IMMUTABLE;
+import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
+
 import android.app.Activity;
 import android.app.ActivityOptions;
+import android.app.PendingIntent;
 import android.app.PictureInPictureParams;
+import android.app.RemoteAction;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.graphics.Rect;
+import android.graphics.drawable.Icon;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -38,6 +47,9 @@ import android.widget.Switch;
 
 import com.example.android.apis.R;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class PictureInPicture extends Activity {
     private static final String EXTRA_ENABLE_AUTO_PIP = "auto_pip";
     private static final String EXTRA_ENABLE_SOURCE_RECT_HINT = "source_rect_hint";
@@ -45,6 +57,18 @@ public class PictureInPicture extends Activity {
     private static final String EXTRA_CURRENT_POSITION = "current_position";
 
     private static final int TABLET_BREAK_POINT_DP = 700;
+
+    private static final String ACTION_CUSTOM_CLOSE = "demo.pip.custom_close";
+    private final BroadcastReceiver mRemoteActionReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            switch (intent.getAction()) {
+                case ACTION_CUSTOM_CLOSE:
+                    finish();
+                    break;
+            }
+        }
+    };
 
     public static final String KEY_ON_STOP_RECEIVER = "on_stop_receiver";
     private final ResultReceiver mOnStopReceiver = new ResultReceiver(
@@ -75,6 +99,8 @@ public class PictureInPicture extends Activity {
     private Switch mSourceRectHintToggle;
     private Switch mSeamlessResizeToggle;
     private RadioGroup mCurrentPositionGroup;
+    private List<RemoteAction> mPipActions;
+    private RemoteAction mCloseAction;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,6 +142,12 @@ public class PictureInPicture extends Activity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        setupPipActions();
+    }
+
+    @Override
     protected void onUserLeaveHint() {
         // Only used when auto PiP is disabled. This is to simulate the behavior that an app
         // supports regular PiP but not auto PiP.
@@ -139,6 +171,12 @@ public class PictureInPicture extends Activity {
             // source rect hint behavior introduced in S.
             mCurrentPositionGroup.check(R.id.radio_current_start);
         }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unregisterReceiver(mRemoteActionReceiver);
     }
 
     /**
@@ -177,6 +215,23 @@ public class PictureInPicture extends Activity {
         } else {
             setupRegularLayout();
         }
+    }
+
+    private void setupPipActions() {
+        final IntentFilter remoteActionFilter = new IntentFilter();
+        remoteActionFilter.addAction(ACTION_CUSTOM_CLOSE);
+        registerReceiver(mRemoteActionReceiver, remoteActionFilter);
+        final Intent intent = new Intent(ACTION_CUSTOM_CLOSE).setPackage(getPackageName());
+        mCloseAction = new RemoteAction(
+                Icon.createWithResource(this, R.drawable.ic_call_end),
+                getString(R.string.action_custom_close),
+                getString(R.string.action_custom_close),
+                PendingIntent.getBroadcast(this, 0 /* requestCode */, intent,
+                        FLAG_UPDATE_CURRENT | FLAG_IMMUTABLE));
+
+        // Add close action as a regular PiP action
+        mPipActions = new ArrayList<>(1);
+        mPipActions.add(mCloseAction);
     }
 
     private void setupPictureInPictureLayout() {
@@ -284,7 +339,9 @@ public class PictureInPicture extends Activity {
                 .setSourceRectHint(mSourceRectHintToggle.isChecked()
                         ? new Rect(imageViewRect) : null)
                 .setSeamlessResizeEnabled(mSeamlessResizeToggle.isChecked())
-                .setAspectRatio(new Rational(imageViewRect.width(), imageViewRect.height()));
+                .setAspectRatio(new Rational(imageViewRect.width(), imageViewRect.height()))
+                .setActions(mPipActions)
+                .setCloseAction(mCloseAction);
         setPictureInPictureParams(builder.build());
     }
 
