@@ -343,6 +343,15 @@ class TraceConverter:
     if os.path.isfile(symbol_dir + lib):
       return lib
 
+    # Try and rewrite any apex files if not found in symbols.
+    # For some reason, the directory in symbols does not match
+    # the path on system.
+    # The path is com.android.<directory> on device, but
+    # com.google.android.<directory> in symbols.
+    new_lib = lib.replace("/com.android.", "/com.google.android.")
+    if os.path.isfile(symbol_dir + new_lib):
+      return new_lib
+
     # When using atest, test paths are different between the out/ directory
     # and device. Apply fixups.
     if not lib.startswith("/data/local/tests/") and not lib.startswith("/data/local/tmp/"):
