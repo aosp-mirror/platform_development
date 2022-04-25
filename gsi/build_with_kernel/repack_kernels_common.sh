@@ -78,12 +78,16 @@ function prepare_kernel_image()
   mkdir -p "${dist_root}"
 
   # Prepare prebuilt-info.txt
-  BID=$(cat "${prebuilts_root}/BUILD_INFO" | sed -n 's/^.*"bid":\s*"\(.*\)".*$/\1/p')
-  cat > "${dist_root}/prebuilt-info.txt" <<EOF
-{
-    "kernel-build-id": ${BID}
-}
-EOF
+#  BID=$(cat "${prebuilts_root}/BUILD_INFO" | sed -n 's/^.*"bid":\s*"\(.*\)".*$/\1/p')
+#  cat > "${dist_root}/prebuilt-info.txt" <<EOF
+#{
+#    "kernel-build-id": ${BID}
+#}
+#EOF
+  printf "generate ${dist_root}/prebuilt-info.txt with kernel\n"
+  cksum "${out_root}/kernel-${kernel_version}${postfix}"
+  strings "${out_root}/kernel-${kernel_version}${postfix}" |grep -E "Linux version [0-9]\." | sed -e 's/Linux version.*-ab//'| cut -f1 -d ' ' > "${dist_root}/prebuilt-info.txt"
+
 }
 
 #
