@@ -110,6 +110,8 @@ JSON_TO_BP = {
     'RuntimeLibs': 'runtime_libs',
     'Required': 'required',
     'Filename': 'filename',
+    'CrateName': 'crate_name',
+    'Prebuilt': 'prebuilt',
 }
 
 SANITIZER_VARIANT_PROPS = {
@@ -405,22 +407,35 @@ def convert_json_host_data_to_bp(mod, install_dir):
     All host modules are created as a cc_prebuilt_binary
     blueprint module with the prefer attribute set to true.
 
+    Modules that already have a prebuilt are not created.
+
     Args:
       mod: JSON definition of the module
       install_dir: installation directory of the host snapshot
     """
+    rust_proc_macro = mod.pop('RustProcMacro', False)
     prop = convert_json_data_to_bp_prop(mod, install_dir)
-    prop['host_supported'] = True
-    prop['device_supported'] = False
+    if 'prebuilt' in prop:
+        return
+
+    if not rust_proc_macro:
+        prop['host_supported'] = True
+        prop['device_supported'] = False
+        prop['stl'] = 'none'
+
     prop['prefer'] = True
-    prop['stl'] = 'none'
     ## Move install file to host source file
     prop['target'] = dict()
     prop['target']['host'] = dict()
     prop['target']['host']['srcs'] = [prop['filename']]
     del prop['filename']
 
-    bp = 'cc_prebuilt_binary {\n' + gen_bp_prop(prop, INDENT) + '}\n\n'
+    mod_type = 'cc_prebuilt_binary'
+
+    if rust_proc_macro:
+        mod_type = 'rust_prebuilt_proc_macro'
+
+    bp = mod_type + ' {\n' + gen_bp_prop(prop, INDENT) + '}\n\n'
     return bp
 
 def gen_host_bp_file(install_dir):
@@ -441,7 +456,8 @@ def gen_host_bp_file(install_dir):
                     props = json.load(rfp)
                     for mod in props:
                         prop = convert_json_host_data_to_bp(mod, install_dir)
-                        wfp.write(prop)
+                        if prop:
+                            wfp.write(prop)
 
 def gen_bp_files(image, vndk_dir, install_dir, snapshot_version):
     """Generates Android.bp for each archtecture.
@@ -649,7 +665,7 @@ def check_host_usage(install_dir, ninja_binary, ninja_file, goals, output):
     with open(output, 'w') as f:
         f.write('vsdk_host_tools = [ \n')
         for m in sorted(used_modules):
-            f.write('  "%s", \n' % m)
+            f.write('  "%s",\n' % m)
         f.write('] \n')
 
 def check_module_usage(install_dir, ninja_binary, image, ninja_file, goals,
