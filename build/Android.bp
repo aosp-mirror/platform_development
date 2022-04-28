@@ -208,8 +208,6 @@ android_sdk_repo_host {
         ":platform_tools_properties",
     ],
 
-    merge_zips: [":systrace-sdk-zip"],
-
     target: {
         linux: {
             strip_files: ["lib64/*.so"],
