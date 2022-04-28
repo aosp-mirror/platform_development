@@ -451,14 +451,26 @@ def call_adb_outfile(params: str, outfile, device: str = None, stdin: bytes = No
 
 
 class CheckWaylandServiceEndpoint(RequestEndpoint):
+    _listDevicesEndpoint = None
+
+    def __init__(self, listDevicesEndpoint):
+      self._listDevicesEndpoint = listDevicesEndpoint
+
     def process(self, server, path):
-        raw_res = call_adb('shell service check Wayland')
-        res = 'false' if 'not found' in raw_res else 'true'
+        self._listDevicesEndpoint.process(server, path)
+        foundDevices = self._listDevicesEndpoint._foundDevices
+
+        if len(foundDevices) > 1:
+          res = 'false'
+        else:
+          raw_res = call_adb('shell service check Wayland')
+          res = 'false' if 'not found' in raw_res else 'true'
         server.respond(HTTPStatus.OK, res.encode("utf-8"), "text/json")
 
 
 class ListDevicesEndpoint(RequestEndpoint):
     ADB_INFO_RE = re.compile("^([A-Za-z0-9.:\\-]+)\\s+(\\w+)(.*model:(\\w+))?")
+    _foundDevices = None
 
     def process(self, server, path):
         lines = list(filter(None, call_adb('devices -l').split('\n')))
@@ -466,6 +478,7 @@ class ListDevicesEndpoint(RequestEndpoint):
             'authorised': str(m.group(2)) != 'unauthorized',
             'model': m.group(4).replace('_', ' ') if m.group(4) else ''
         } for m in [ListDevicesEndpoint.ADB_INFO_RE.match(d) for d in lines[1:]] if m}
+        self._foundDevices = devices
         j = json.dumps(devices)
         log.debug("Detected devices: " + j)
         server.respond(HTTPStatus.OK, j.encode("utf-8"), "text/json")
@@ -801,8 +814,9 @@ class DumpEndpoint(DeviceRequestEndpoint):
 class ADBWinscopeProxy(BaseHTTPRequestHandler):
     def __init__(self, request, client_address, server):
         self.router = RequestRouter(self)
+        listDevicesEndpoint = ListDevicesEndpoint()
         self.router.register_endpoint(
-            RequestType.GET, "devices", ListDevicesEndpoint())
+            RequestType.GET, "devices", listDevicesEndpoint)
         self.router.register_endpoint(
             RequestType.GET, "status", StatusEndpoint())
         self.router.register_endpoint(
@@ -817,7 +831,7 @@ class ADBWinscopeProxy(BaseHTTPRequestHandler):
         self.router.register_endpoint(
             RequestType.POST, "selectedwmconfigtrace", WindowManagerSelectedConfigTrace())
         self.router.register_endpoint(
-            RequestType.GET, "checkwayland", CheckWaylandServiceEndpoint())
+            RequestType.GET, "checkwayland", CheckWaylandServiceEndpoint(listDevicesEndpoint))
         super().__init__(request, client_address, server)
 
     def respond(self, code: int, data: bytes, mime: str) -> None:
