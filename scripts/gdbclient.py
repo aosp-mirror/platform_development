@@ -242,7 +242,7 @@ def handle_switches(args, sysroot):
 
     return (binary_file, pid, run_cmd)
 
-def generate_vscode_lldb_script(root, sysroot, binary_name, port, solib_search_path):
+def generate_vscode_lldb_script(root, sysroot, binary_name, host, port, solib_search_path):
     # TODO It would be nice if we didn't need to copy this or run the
     #      lldbclient.py program manually. Doing this would probably require
     #      writing a vscode extension or modifying an existing one.
@@ -258,11 +258,11 @@ def generate_vscode_lldb_script(root, sysroot, binary_name, port, solib_search_p
         "initCommands": ['settings append target.exec-search-paths {}'.format(' '.join(solib_search_path))],
         "targetCreateCommands": ["target create {}".format(binary_name),
                                  "target modules search-paths add / {}/".format(sysroot)],
-        "processCreateCommands": ["gdb-remote {}".format(port)]
+        "processCreateCommands": ["gdb-remote {}:{}".format(host, port)]
     }
     return json.dumps(res, indent=4)
 
-def generate_lldb_script(root, sysroot, binary_name, port, solib_search_path):
+def generate_lldb_script(root, sysroot, binary_name, host, port, solib_search_path):
     commands = []
     commands.append(
         'settings append target.exec-search-paths {}'.format(' '.join(solib_search_path)))
@@ -272,11 +272,11 @@ def generate_lldb_script(root, sysroot, binary_name, port, solib_search_path):
     commands.append("settings append target.source-map '/b/f/w' '{}'".format(root))
     commands.append("settings append target.source-map '' '{}'".format(root))
     commands.append('target modules search-paths add / {}/'.format(sysroot))
-    commands.append('gdb-remote {}'.format(port))
+    commands.append('gdb-remote {}:{}'.format(host, port))
     return '\n'.join(commands)
 
 
-def generate_setup_script(debugger_path, sysroot, linker_search_dir, binary_file, is64bit, port, debugger, connect_timeout=5):
+def generate_setup_script(debugger_path, sysroot, linker_search_dir, binary_file, is64bit, host, port, debugger, connect_timeout=5):
     # Generate a setup script.
     root = os.environ["ANDROID_BUILD_TOP"]
     symbols_dir = os.path.join(sysroot, "system", "lib64" if is64bit else "lib")
@@ -292,10 +292,10 @@ def generate_setup_script(debugger_path, sysroot, linker_search_dir, binary_file
 
     if debugger == "vscode-lldb":
         return generate_vscode_lldb_script(
-            root, sysroot, binary_file.name, port, solib_search_path)
+            root, sysroot, binary_file.name, host, port, solib_search_path)
     elif debugger == 'lldb':
         return generate_lldb_script(
-            root, sysroot, binary_file.name, port, solib_search_path)
+            root, sysroot, binary_file.name, host, port, solib_search_path)
     else:
         raise Exception("Unknown debugger type " + debugger)
 
@@ -313,6 +313,11 @@ def do_main():
 
     if device is None:
         sys.exit("ERROR: Failed to find device.")
+
+    if ":" in device.serial:
+        host = device.serial.split(":")[0]
+    else:
+        host = "localhost"
 
     root = os.environ["ANDROID_BUILD_TOP"]
     sysroot = os.path.join(os.environ["ANDROID_PRODUCT_OUT"], "symbols")
@@ -379,6 +384,7 @@ def do_main():
                                                linker_search_dir=linker_search_dir,
                                                binary_file=binary_file,
                                                is64bit=is64bit,
+                                               host=host,
                                                port=args.port,
                                                debugger=debugger)
 
