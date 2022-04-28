@@ -16,28 +16,70 @@
 
 package com.example.android.apis.app;
 
+import static android.app.PendingIntent.FLAG_IMMUTABLE;
+import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
+
 import android.app.Activity;
+import android.app.ActivityOptions;
+import android.app.PendingIntent;
 import android.app.PictureInPictureParams;
+import android.app.RemoteAction;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.graphics.Rect;
+import android.graphics.drawable.Icon;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.ResultReceiver;
 import android.util.Rational;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.Switch;
 
 import com.example.android.apis.R;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class PictureInPicture extends Activity {
     private static final String EXTRA_ENABLE_AUTO_PIP = "auto_pip";
     private static final String EXTRA_ENABLE_SOURCE_RECT_HINT = "source_rect_hint";
     private static final String EXTRA_ENABLE_SEAMLESS_RESIZE = "seamless_resize";
     private static final String EXTRA_CURRENT_POSITION = "current_position";
+
+    private static final int TABLET_BREAK_POINT_DP = 700;
+
+    private static final String ACTION_CUSTOM_CLOSE = "demo.pip.custom_close";
+    private final BroadcastReceiver mRemoteActionReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            switch (intent.getAction()) {
+                case ACTION_CUSTOM_CLOSE:
+                    finish();
+                    break;
+            }
+        }
+    };
+
+    public static final String KEY_ON_STOP_RECEIVER = "on_stop_receiver";
+    private final ResultReceiver mOnStopReceiver = new ResultReceiver(
+            new Handler(Looper.myLooper())) {
+        @Override
+        protected void onReceiveResult(int resultCode, Bundle resultData) {
+            // Container activity for content-pip has stopped, replace the placeholder
+            // with actual content in this host activity.
+            mImageView.setImageResource(R.drawable.sample_1);
+        }
+    };
 
     private final View.OnLayoutChangeListener mOnLayoutChangeListener =
             (v, oldLeft, oldTop, oldRight, oldBottom, newLeft, newTop, newRight, newBottom) -> {
@@ -51,12 +93,14 @@ public class PictureInPicture extends Activity {
             (v, id) -> updateContentPosition(id);
 
     private LinearLayout mContainer;
-    private View mImageView;
+    private ImageView mImageView;
     private View mControlGroup;
     private Switch mAutoPipToggle;
     private Switch mSourceRectHintToggle;
     private Switch mSeamlessResizeToggle;
     private RadioGroup mCurrentPositionGroup;
+    private List<RemoteAction> mPipActions;
+    private RemoteAction mCloseAction;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,6 +142,12 @@ public class PictureInPicture extends Activity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        setupPipActions();
+    }
+
+    @Override
     protected void onUserLeaveHint() {
         // Only used when auto PiP is disabled. This is to simulate the behavior that an app
         // supports regular PiP but not auto PiP.
@@ -123,13 +173,36 @@ public class PictureInPicture extends Activity {
         }
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unregisterReceiver(mRemoteActionReceiver);
+    }
+
+    /**
+     * This is what we expect most host Activity would do to trigger content PiP.
+     * - Get the bounds of the view to be transferred to content PiP
+     * - Construct the PictureInPictureParams with source rect hint and aspect ratio from bounds
+     * - Start the new content PiP container Activity with the ActivityOptions
+     */
     private void enterContentPip() {
-        // TBD
+        final Intent intent = new Intent(this, ContentPictureInPicture.class);
+        intent.putExtra(KEY_ON_STOP_RECEIVER, mOnStopReceiver);
+        final Rect bounds = new Rect();
+        mImageView.getGlobalVisibleRect(bounds);
+        final PictureInPictureParams params = new PictureInPictureParams.Builder()
+                .setSourceRectHint(bounds)
+                .setAspectRatio(new Rational(bounds.width(), bounds.height()))
+                .build();
+        final ActivityOptions opts = ActivityOptions.makeLaunchIntoPip(params);
+        startActivity(intent, opts.toBundle());
+        // Swap the mImageView to placeholder content.
+        mImageView.setImageResource(R.drawable.black_box);
     }
 
     private void updateLayout(Configuration configuration) {
         mImageView.addOnLayoutChangeListener(mOnLayoutChangeListener);
-        final boolean isTablet = configuration.screenWidthDp >= 800;
+        final boolean isTablet = configuration.smallestScreenWidthDp >= TABLET_BREAK_POINT_DP;
         final boolean isLandscape =
                 (configuration.orientation == Configuration.ORIENTATION_LANDSCAPE);
         final boolean isPictureInPicture = isInPictureInPictureMode();
@@ -142,6 +215,23 @@ public class PictureInPicture extends Activity {
         } else {
             setupRegularLayout();
         }
+    }
+
+    private void setupPipActions() {
+        final IntentFilter remoteActionFilter = new IntentFilter();
+        remoteActionFilter.addAction(ACTION_CUSTOM_CLOSE);
+        registerReceiver(mRemoteActionReceiver, remoteActionFilter);
+        final Intent intent = new Intent(ACTION_CUSTOM_CLOSE).setPackage(getPackageName());
+        mCloseAction = new RemoteAction(
+                Icon.createWithResource(this, R.drawable.ic_call_end),
+                getString(R.string.action_custom_close),
+                getString(R.string.action_custom_close),
+                PendingIntent.getBroadcast(this, 0 /* requestCode */, intent,
+                        FLAG_UPDATE_CURRENT | FLAG_IMMUTABLE));
+
+        // Add close action as a regular PiP action
+        mPipActions = new ArrayList<>(1);
+        mPipActions.add(mCloseAction);
     }
 
     private void setupPictureInPictureLayout() {
@@ -249,7 +339,9 @@ public class PictureInPicture extends Activity {
                 .setSourceRectHint(mSourceRectHintToggle.isChecked()
                         ? new Rect(imageViewRect) : null)
                 .setSeamlessResizeEnabled(mSeamlessResizeToggle.isChecked())
-                .setAspectRatio(new Rational(imageViewRect.width(), imageViewRect.height()));
+                .setAspectRatio(new Rational(imageViewRect.width(), imageViewRect.height()))
+                .setActions(mPipActions)
+                .setCloseAction(mCloseAction);
         setPictureInPictureParams(builder.build());
     }
 

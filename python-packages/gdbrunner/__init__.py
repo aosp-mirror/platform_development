@@ -142,8 +142,8 @@ def get_pids(device, process_name):
 
 
 def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
-                    target_pid, run_cmd, debug_socket, port, run_as_cmd=None,
-                    lldb=False):
+                    target_pid, run_cmd, debug_socket, port, run_as_cmd=[],
+                    lldb=False, chroot=""):
     """Start gdbserver in the background and forward necessary ports.
 
     Args:
@@ -162,15 +162,15 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
 
     assert target_pid is None or run_cmd is None
 
+    if chroot:
+        run_as_cmd = ["chroot", chroot] + run_as_cmd
+
     # Remove the old socket file.
-    rm_cmd = ["rm", debug_socket]
-    if run_as_cmd:
-        rm_cmd = run_as_cmd + rm_cmd
-    device.shell_nocheck(rm_cmd)
+    device.shell_nocheck(run_as_cmd + ["rm", debug_socket])
 
     # Push gdbserver to the target.
     if gdbserver_local_path is not None:
-        device.push(gdbserver_local_path, gdbserver_remote_path)
+        device.push(gdbserver_local_path, chroot + gdbserver_remote_path)
 
     # Run gdbserver.
     gdbserver_cmd = [gdbserver_remote_path]
@@ -184,10 +184,9 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
     else:
         gdbserver_cmd += ["--"] + run_cmd
 
-    forward_gdbserver_port(device, local=port, remote="localfilesystem:{}".format(debug_socket))
+    forward_gdbserver_port(device, local=port, remote="localfilesystem:{}".format(chroot + debug_socket))
 
-    if run_as_cmd:
-        gdbserver_cmd = run_as_cmd + gdbserver_cmd
+    gdbserver_cmd = run_as_cmd + gdbserver_cmd
 
     if lldb:
         gdbserver_output_path = os.path.join(tempfile.gettempdir(),
