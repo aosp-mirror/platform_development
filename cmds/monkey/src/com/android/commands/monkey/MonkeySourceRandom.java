@@ -26,7 +26,8 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.Surface;
 
-import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 
 /**
@@ -94,7 +95,7 @@ public class MonkeySourceRandom implements MonkeyEventSource {
      * values after we read any optional values.
      **/
     private float[] mFactors = new float[FACTORZ_COUNT];
-    private List<ComponentName> mMainApps;
+    private HashMap<ComponentName, String> mMainApps;
     private int mEventCount = 0;  //total number of events generated so far
     private MonkeyEventQueue mQ;
     private Random mRandom;
@@ -119,7 +120,7 @@ public class MonkeySourceRandom implements MonkeyEventSource {
         return KeyEvent.keyCodeFromString(keyName);
     }
 
-    public MonkeySourceRandom(Random random, List<ComponentName> MainApps,
+    public MonkeySourceRandom(Random random, HashMap<ComponentName, String> MainApps,
             long throttle, boolean randomizeThrottle, boolean permissionTargetSystem) {
         // default values for random distributions
         // note, these are straight percentages, to match user input (cmd line args)
@@ -430,8 +431,8 @@ public class MonkeySourceRandom implements MonkeyEventSource {
             } else if (cls < mFactors[FACTOR_SYSOPS]) {
                 lastKey = SYS_KEYS[mRandom.nextInt(SYS_KEYS.length)];
             } else if (cls < mFactors[FACTOR_APPSWITCH]) {
-                MonkeyActivityEvent e = new MonkeyActivityEvent(mMainApps.get(
-                        mRandom.nextInt(mMainApps.size())));
+                MonkeyActivityEvent e = new MonkeyActivityEvent(new ArrayList<ComponentName>(mMainApps.keySet()).get(
+                        mRandom.nextInt(mMainApps.size())), mMainApps);
                 mQ.addLast(e);
                 return;
             } else if (cls < mFactors[FACTOR_FLIP]) {
@@ -479,8 +480,8 @@ public class MonkeySourceRandom implements MonkeyEventSource {
      * generate an activity event
      */
     public void generateActivity() {
-        MonkeyActivityEvent e = new MonkeyActivityEvent(mMainApps.get(
-                mRandom.nextInt(mMainApps.size())));
+        MonkeyActivityEvent e = new MonkeyActivityEvent(new ArrayList<ComponentName>(mMainApps.keySet()).get(
+            mRandom.nextInt(mMainApps.size())), mMainApps);
         mQ.addLast(e);
     }
 
