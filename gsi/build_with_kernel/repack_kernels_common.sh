@@ -78,12 +78,16 @@ function prepare_kernel_image()
   mkdir -p "${dist_root}"
 
   # Prepare prebuilt-info.txt
-  BID=$(cat "${prebuilts_root}/BUILD_INFO" | sed -n 's/^.*"bid":\s*"\(.*\)".*$/\1/p')
-  cat > "${dist_root}/prebuilt-info.txt" <<EOF
-{
-    "kernel-build-id": ${BID}
-}
-EOF
+#  BID=$(cat "${prebuilts_root}/BUILD_INFO" | sed -n 's/^.*"bid":\s*"\(.*\)".*$/\1/p')
+#  cat > "${dist_root}/prebuilt-info.txt" <<EOF
+#{
+#    "kernel-build-id": ${BID}
+#}
+#EOF
+  printf "generate ${dist_root}/prebuilt-info.txt with kernel\n"
+  cksum "${out_root}/kernel-${kernel_version}${postfix}"
+  strings "${out_root}/kernel-${kernel_version}${postfix}" |grep -E "Linux version [0-9]\." | sed -e 's/Linux version.*-ab//'| cut -f1 -d ' ' > "${dist_root}/prebuilt-info.txt"
+
 }
 
 #
@@ -122,14 +126,16 @@ function update_kernel_prebuilts_with_artifact
   local out_root="${OUT_DIR}/target/kernel/${kernel_version}/${arch}"
   local prebuilts_dir="kernel/prebuilts/${kernel_version}/${arch}/"
   local list="\
-    kernel-5.10-allsyms \
-    kernel-5.10-gz-allsyms \
-    kernel-5.10-lz4-allsyms \
-    kernel-5.10 \
-    kernel-5.10-gz \
-    kernel-5.10-lz4"
+    kernel-${kernel_version}-allsyms \
+    kernel-${kernel_version}-gz-allsyms \
+    kernel-${kernel_version}-lz4-allsyms \
+    kernel-${kernel_version} \
+    kernel-${kernel_version}-gz \
+    kernel-${kernel_version}-lz4"
   printf "%20s\n --> %20s\n" "${out_root}" "${prebuilts_dir}"
   for f in ${list}; do
+    echo \
+    cp -f ${out_root}/$f ${prebuilts_dir}
     cp -f ${out_root}/$f ${prebuilts_dir}
   done
 }

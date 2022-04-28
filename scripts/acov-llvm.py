@@ -33,7 +33,7 @@
 #   $ acov-llvm.py flush
 #
 # 4. Pull coverage from device and generate coverage report
-#   $ acov-llvm.py report -s <one-or-more-source-paths-in-$ANDROID_BUILD_TOP \
+#   $ acov-llvm.py report -s <one-or-more-source-paths-in-$ANDROID_BUILD_TOP> \
 #                         -b <one-or-more-binaries-in-$OUT> \
 # E.g.:
 # acov-llvm.py report \
