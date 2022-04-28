@@ -23,9 +23,10 @@ function local_fetch()
 {
     local name=$1
     local target=$2
+    local version=$(echo $name | sed -e 's/common-//g' -e 's/-kernel.*//g' -e 's/_/\./g')
     mkdir -p ${BCHAINING}/${name}
     cd ${BCHAINING}/${name}
-    ${FETCH} --branch aosp_kernel-common-android13-5.10 --target ${target} --latest
+    ${FETCH} --branch aosp_kernel-common-${version} --target ${target} --latest
     cd -
 }
 
@@ -33,3 +34,6 @@ local_fetch common-android13-5_10-kernel_aarch64 kernel_aarch64
 local_fetch common-android13-5_10-kernel_debug_aarch64 kernel_debug_aarch64
 local_fetch common-android13-5_10-kernel_virt_aarch64 kernel_virt_aarch64
 
+local_fetch common-android13-5_15-kernel_aarch64 kernel_aarch64
+local_fetch common-android13-5_15-kernel_debug_aarch64 kernel_debug_aarch64
+local_fetch common-android13-5_15-kernel_virt_aarch64 kernel_virt_aarch64
