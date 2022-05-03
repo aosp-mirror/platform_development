@@ -23,6 +23,7 @@ import android.service.autofill.FillCallback;
 import android.service.autofill.FillRequest;
 import android.service.autofill.FillResponse;
 import android.service.autofill.InlinePresentation;
+import android.service.autofill.Presentations;
 import android.service.autofill.SaveCallback;
 import android.service.autofill.SaveInfo;
 import android.service.autofill.SaveRequest;
@@ -95,14 +96,17 @@ public class InlineFillService extends AutofillService {
             InlinePresentation inlinePresentation =
                     InlineRequestHelper.maybeCreateInlineAuthenticationResponse(context,
                             inlineRequest);
+            final Presentations.Builder fieldPresentationsBuilder =
+                new Presentations.Builder();
+            fieldPresentationsBuilder.setMenuPresentation(presentation);
+            fieldPresentationsBuilder.setInlinePresentation(inlinePresentation);
             response = new FillResponse.Builder()
-                    .setAuthentication(ids, authentication, presentation, inlinePresentation)
+                    .setAuthentication(ids, authentication, fieldPresentationsBuilder.build())
                     .build();
         } else {
             response = createResponse(this, fields, maxSuggestionsCount, mAuthenticateDatasets,
                     inlineRequest);
         }
-
         callback.onSuccess(response);
     }
 
