@@ -59,8 +59,10 @@ class ResponseHelper {
             // Set presentation
             final Presentations.Builder fieldPresentationsBuilder =
                 new Presentations.Builder();
+            // Dropdown presentation
             final RemoteViews presentation = newDatasetPresentation(packageName, displayValue);
             fieldPresentationsBuilder.setMenuPresentation(presentation);
+            // Inline presentation
             if (inlineRequest.isPresent()) {
                 Log.d(TAG, "Found InlineSuggestionsRequest in FillRequest: " + inlineRequest);
                 final InlinePresentation inlinePresentation =
@@ -68,6 +70,11 @@ class ResponseHelper {
                         displayValue, index);
                 fieldPresentationsBuilder.setInlinePresentation(inlinePresentation);
             }
+            // Dialog presentation
+            RemoteViews dialogPresentation =
+                newDatasetPresentation(packageName, "Dialog Presentation " + (index + 1));
+            fieldPresentationsBuilder.setDialogPresentation(dialogPresentation);
+
             fieldBuilder.setPresentations(fieldPresentationsBuilder.build());
             dataset.setField(id, fieldBuilder.build());
         }
@@ -92,15 +99,22 @@ class ResponseHelper {
 
             Field.Builder fieldBuilder = new Field.Builder();
             fieldBuilder.setValue(AutofillValue.forText(value));
+            // Dropdown presentation
             final Presentations.Builder fieldPresentationsBuilder =
                 new Presentations.Builder();
             fieldPresentationsBuilder.setMenuPresentation(presentation);
+            // Inline presentation
             if (inlineRequest.isPresent()) {
                 final InlinePresentation inlinePresentation =
                         InlineRequestHelper.createInlineDataset(context, inlineRequest.get(),
                         displayValue, index);
                 fieldPresentationsBuilder.setInlinePresentation(inlinePresentation);
             }
+            // Dialog presentation
+            RemoteViews dialogPresentation =
+                newDatasetPresentation(packageName, "Dialog Presentation " + (index + 1));
+            fieldPresentationsBuilder.setDialogPresentation(dialogPresentation);
+
             fieldBuilder.setPresentations(fieldPresentationsBuilder.build());
             lockedDataset.setField(id, fieldBuilder.build());
             lockedDataset.setId(null).setAuthentication(authentication);
