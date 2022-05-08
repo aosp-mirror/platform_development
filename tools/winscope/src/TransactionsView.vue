@@ -16,6 +16,13 @@
   <md-card-content class="container">
 
     <flat-card class="changes card">
+      <md-content
+        md-tag="md-toolbar"
+        md-elevation="0"
+        class="card-toolbar md-transparent md-dense"
+      >
+        <h2 class="md-title" style="flex: 1">Transactions</h2>
+      </md-content>
       <div class="filters">
         <div class="input">
           <md-field>
@@ -75,6 +82,11 @@
             <div class="md-helper-text">Press enter to add</div>
           </md-chips>
         </div>
+
+        <md-checkbox v-model="trace.simplifyNames">
+            Simplify names
+        </md-checkbox>
+
       </div>
 
       <virtual-list style="height: 600px; overflow-y: auto;"
@@ -86,6 +98,7 @@
           selectedTransaction,
           transactionsTrace,
           prettifyTransactionId,
+          simplifyNames: trace.simplifyNames,
         }"
         ref="loglist"
       />
@@ -289,7 +302,6 @@ export default {
         const perpareForTreeViewTransform = (change) => {
           this.removeNullFields(change);
           change[META_DATA_KEY] = {
-            // TODO (b/162402459): Shorten layer name
             layerName: change.layerName,
           };
           // remove redundant properties

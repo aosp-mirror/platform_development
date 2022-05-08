@@ -486,52 +486,71 @@ class GenBuildFile(object):
           module_names: dict, module names for given prebuilts
         """
 
-        build_rules = []
+        module_prebuilts = dict()
         for prebuilt in prebuilts:
+            if prebuilt in module_names:
+                name = module_names[prebuilt]
+            else:
+                name = os.path.splitext(prebuilt)[0]
+
+            if name not in module_prebuilts:
+                module_prebuilts[name] = list()
+            module_prebuilts[name].append(prebuilt)
+
+        build_rules = []
+        for name in module_prebuilts:
             bp_module = self._gen_vndk_shared_prebuilt(
-                prebuilt,
+                name,
                 arch,
+                srcs=module_prebuilts[name],
                 is_llndk=is_llndk,
                 is_vndk_sp=is_vndk_sp,
-                is_binder32=is_binder32,
-                module_names=module_names)
+                is_binder32=is_binder32)
             if bp_module:
                 build_rules.append(bp_module)
         return build_rules
 
     def _gen_vndk_shared_prebuilt(self,
-                                  prebuilt,
+                                  name,
                                   arch,
+                                  srcs,
                                   is_llndk,
                                   is_vndk_sp,
-                                  is_binder32,
-                                  module_names):
-        """Returns build rule for given prebuilt, or an empty string if the
-        prebuilt is invalid (e.g. srcs doesn't exist).
+                                  is_binder32):
+        """Returns build rule for given prebuilt module, or an empty
+        string if the module is invalid (e.g. srcs doesn't exist).
 
         Args:
-          prebuilt: string, name of prebuilt object
+          name: string, name of prebuilt module
           arch: string, VNDK snapshot arch (e.g. 'arm64')
+          srcs: list, prebuilt source file names of this module
           is_llndk: bool, True if prebuilt is a LLNDK stub
           is_vndk_sp: bool, True if prebuilt is a VNDK_SP lib
           is_binder32: bool, True if binder interface is 32-bit
-          module_names: dict, module names for given prebuilts
         """
 
-        def get_notice_file(prebuilt):
+        def is_prebuilts_in_list(prebuilts, vndk_list):
+            for prebuilt in prebuilts:
+                if prebuilt in vndk_list:
+                    return True
+            return False
+
+        def get_notice_file(prebuilts):
             """Returns build rule for notice file (attribute 'notice').
 
             Args:
-              prebuilt: string, name of prebuilt object
+              prebuilts: list, names of prebuilt objects
             """
             notice = ''
-            if prebuilt in self._modules_with_notice:
-                notice = '{ind}notice: ":{notice_filegroup}",\n'.format(
-                    ind=self.INDENT,
-                    notice_filegroup=self._get_notice_filegroup_name(prebuilt))
+            for prebuilt in prebuilts:
+                if prebuilt in self._modules_with_notice:
+                    notice = '{ind}notice: ":{notice_filegroup}",\n'.format(
+                        ind=self.INDENT,
+                        notice_filegroup=self._get_notice_filegroup_name(prebuilt))
+                    break
             return notice
 
-        def get_arch_props(prebuilt, arch, src_paths):
+        def get_arch_props(name, arch, src_paths):
             """Returns build rule for arch specific srcs.
 
             e.g.,
@@ -553,7 +572,7 @@ class GenBuildFile(object):
                 }
 
             Args:
-              prebuilt: string, name of prebuilt object
+              name: string, name of prebuilt module
               arch: string, VNDK snapshot arch (e.g. 'arm64')
               src_paths: list of string paths, prebuilt source paths
             """
@@ -588,7 +607,7 @@ class GenBuildFile(object):
                     os.unlink(prop_path)
                 except:
                     # TODO(b/70312118): Parse from soong build system
-                    if prebuilt == 'android.hidl.memory@1.0-impl.so':
+                    if name == 'android.hidl.memory@1.0-impl':
                         props['RelativeInstallPath'] = 'hw'
                 if 'ExportedDirs' in props:
                     dirs = rename_generated_dirs(props['ExportedDirs'])
@@ -628,23 +647,18 @@ class GenBuildFile(object):
         if is_binder32:
             src_root = os.path.join(src_root, utils.BINDER32)
 
-        src_paths = utils.find(src_root, [prebuilt])
+        src_paths = utils.find(src_root, srcs)
         # filter out paths under 'binder32' subdirectory
         src_paths = list(filter(lambda src: not src.startswith(utils.BINDER32),
             src_paths))
-        # This prebuilt is invalid if no srcs are found.
+        # This module is invalid if no srcs are found.
         if not src_paths:
-            logging.info('No srcs found for {}; skipping'.format(prebuilt))
+            logging.info('No srcs found for {}; skipping'.format(name))
             return ""
-
-        if prebuilt in module_names:
-            name = module_names[prebuilt]
-        else:
-            name = os.path.splitext(prebuilt)[0]
 
         product_available = ''
         # if vndkproduct.libraries.txt is empty, make the VNDKs available to product by default.
-        if not self._vndk_product[arch] or prebuilt in self._vndk_product[arch] or is_llndk:
+        if is_llndk or not self._vndk_product[arch] or is_prebuilts_in_list(srcs, self._vndk_product[arch]):
             product_available = '{ind}product_available: true,\n'.format(
                 ind=self.INDENT)
 
@@ -656,7 +670,7 @@ class GenBuildFile(object):
                     ind=self.INDENT)
 
             vndk_private = ''
-            if prebuilt in self._vndk_private[arch]:
+            if is_prebuilts_in_list(srcs, self._vndk_private[arch]):
                 vndk_private = '{ind}{ind}private: true,\n'.format(
                     ind=self.INDENT)
 
@@ -670,8 +684,8 @@ class GenBuildFile(object):
                               vndk_sp=vndk_sp,
                               vndk_private=vndk_private))
 
-        notice = get_notice_file(prebuilt)
-        arch_props = get_arch_props(prebuilt, arch, src_paths)
+        notice = get_notice_file(srcs)
+        arch_props = get_arch_props(name, arch, src_paths)
 
         binder32bit = ''
         if is_binder32:
