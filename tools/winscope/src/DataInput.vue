@@ -13,40 +13,47 @@
      limitations under the License.
 -->
 <template>
+<div @dragleave="fileDragOut" @dragover="fileDragIn" @drop="handleFileDrop">
   <flat-card style="min-width: 50em">
     <md-card-header>
       <div class="md-title">Open files</div>
     </md-card-header>
     <md-card-content>
-      <md-list>
-        <md-list-item v-for="file in dataFiles" v-bind:key="file.filename">
-          <md-icon>{{FILE_ICONS[file.type]}}</md-icon>
-          <span class="md-list-item-text">{{file.filename}} ({{file.type}})
-          </span>
-          <md-button
-            class="md-icon-button md-accent"
-            @click="onRemoveFile(file.type)"
-          >
-            <md-icon>close</md-icon>
-          </md-button>
-        </md-list-item>
-      </md-list>
-      <md-progress-spinner
-        :md-diameter="30"
-        :md-stroke="3"
-        md-mode="indeterminate"
-        v-show="loadingFiles"
-      />
-      <div>
-        <md-checkbox v-model="store.displayDefaults" class="md-primary">
-          Show default properties
-          <md-tooltip md-direction="bottom">
-            If checked, shows the value of all properties.
-            Otherwise, hides all properties whose value is the default for its
-            data type.
-          </md-tooltip>
-        </md-checkbox>
-      </div>
+      <div class="dropbox">
+        <md-list style="background: none">
+          <md-list-item v-for="file in dataFiles" v-bind:key="file.filename">
+            <md-icon>{{FILE_ICONS[file.type]}}</md-icon>
+            <span class="md-list-item-text">{{file.filename}} ({{file.type}})
+            </span>
+            <md-button
+              class="md-icon-button md-accent"
+              @click="onRemoveFile(file.type)"
+            >
+              <md-icon>close</md-icon>
+            </md-button>
+          </md-list-item>
+        </md-list>
+        <md-progress-spinner
+          :md-diameter="30"
+          :md-stroke="3"
+          md-mode="indeterminate"
+          v-show="loadingFiles"
+          class="progress-spinner"
+        />
+        <input
+          type="file"
+          @change="onLoadFile"
+          v-on:drop="handleFileDrop"
+          ref="fileUpload"
+          id="dropzone"
+          v-show="false"
+          multiple
+        />
+          <p v-if="!dataReady">
+            Drag your <b>.winscope</b> or <b>.zip</b> file(s) here to begin
+          </p>
+        </div>
+
       <div class="md-layout">
         <div class="md-layout-item md-small-size-100">
           <md-field>
@@ -62,13 +69,6 @@
         </div>
       </div>
       <div class="md-layout">
-        <input
-          type="file"
-          @change="onLoadFile"
-          ref="fileUpload"
-          v-show="false"
-          :multiple="fileType === 'auto'"
-        />
         <md-button
           class="md-primary md-theme-default"
           @click="$refs.fileUpload.click()"
@@ -100,7 +100,7 @@
       :md-active.sync="showSnackbar"
       md-persistent
     >
-      <span style="white-space: pre-line;">{{ snackbarText }}</span>
+      <p class="snackbar-break-words">{{ snackbarText }}</p>
       <div @click="hideSnackbarMessage()">
         <md-button class="md-icon-button">
           <md-icon style="color: white">close</md-icon>
@@ -108,6 +108,7 @@
       </div>
     </md-snackbar>
   </flat-card>
+</div>
 </template>
 <script>
 import FlatCard from './components/FlatCard.vue';
@@ -145,12 +146,13 @@ export default {
   },
   methods: {
     showSnackbarMessage(message, duration) {
-      this.snackbarText = message;
+      this.snackbarText = '\n' + message + '\n';
       this.snackbarDuration = duration;
       this.showSnackbar = true;
     },
     hideSnackbarMessage() {
       this.showSnackbar = false;
+      this.buttonClicked("Hide Snackbar Message")
     },
     getFetchFilesLoadingAnimation() {
       let frame = 0;
@@ -234,8 +236,24 @@ export default {
         });
       }
     },
+    fileDragIn(e) {
+      e.preventDefault();
+    },
+    fileDragOut(e) {
+      e.preventDefault();
+    },
+    handleFileDrop(e) {
+      e.preventDefault();
+      let droppedFiles = e.dataTransfer.files;
+      if(!droppedFiles) return;
+      // Record analytics event
+      this.draggedAndDropped(droppedFiles);
+
+      this.processFiles(droppedFiles);
+    },
     onLoadFile(e) {
       const files = event.target.files || event.dataTransfer.files;
+      this.uploadedFileThroughFilesystem(files);
       this.processFiles(files);
     },
     async processFiles(files) {
@@ -531,3 +549,29 @@ export default {
 };
 
 </script>
+<style>
+  .dropbox:hover {
+      background: rgb(224, 224, 224);
+    }
+
+  .dropbox p {
+    font-size: 1.2em;
+    text-align: center;
+    padding: 50px 10px;
+  }
+
+  .dropbox {
+    outline: 2px dashed #448aff; /* the dash box */
+    outline-offset: -10px;
+    background: white;
+    color: #448aff;
+    padding: 10px 10px 10px 10px;
+    min-height: 200px; /* minimum height */
+    position: relative;
+    cursor: pointer;
+  }
+
+  .progress-spinner {
+    display: block;
+  }
+</style>
