@@ -69,7 +69,7 @@ ABIWrapper::ABIWrapper(
 
 std::string ABIWrapper::GetDeclSourceFile(const clang::Decl *decl,
                                           const clang::CompilerInstance *cip,
-                                          const std::string &root_dir) {
+                                          const utils::RootDirs &root_dirs) {
   clang::SourceManager &sm = cip->getSourceManager();
   clang::SourceLocation location = decl->getLocation();
   // We need to use the expansion location to identify whether we should recurse
@@ -80,7 +80,7 @@ std::string ABIWrapper::GetDeclSourceFile(const clang::Decl *decl,
   // belonging to the library.
   clang::SourceLocation expansion_location = sm.getExpansionLoc(location);
   return utils::NormalizePath(sm.getFilename(expansion_location).str(),
-                              root_dir);
+                              root_dirs);
 }
 
 std::string ABIWrapper::GetCachedDeclSourceFile(
@@ -88,7 +88,7 @@ std::string ABIWrapper::GetCachedDeclSourceFile(
   assert(decl != nullptr);
   auto result = ast_caches_->decl_to_source_file_cache_.find(decl);
   if (result == ast_caches_->decl_to_source_file_cache_.end()) {
-    return GetDeclSourceFile(decl, cip, ast_caches_->root_dir_);
+    return GetDeclSourceFile(decl, cip, ast_caches_->root_dirs_);
   }
   return result->second;
 }

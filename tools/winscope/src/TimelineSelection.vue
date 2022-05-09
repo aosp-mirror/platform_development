@@ -136,7 +136,7 @@ export default {
       cursorMask.style.position = 'fixed';
       cursorMask.style.top = '0';
       cursorMask.style.left = '0';
-      cursorMask.style['z-index'] = '1000';
+      cursorMask.style['z-index'] = '10';
 
       return {
         inject: () => {
