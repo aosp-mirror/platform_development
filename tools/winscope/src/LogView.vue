@@ -15,38 +15,45 @@
 <template>
   <md-card-content class="container">
     <div class="navigation">
-      <md-button
-        class="md-dense md-primary"
-        @click.native="scrollToRow(lastOccuredVisibleIndex)"
+      <md-content
+        md-tag="md-toolbar"
+        md-elevation="0"
+        class="card-toolbar md-transparent md-dense"
       >
-        Jump to latest entry
-      </md-button>
-      <md-button
-        class="md-icon-button" :class="{'md-primary': pinnedToLatest}"
-        @click.native="togglePin"
-      >
-        <md-icon>push_pin</md-icon>
-        <md-tooltip md-direction="top" v-if="pinnedToLatest">
-          Unpin to latest message
-        </md-tooltip>
-        <md-tooltip md-direction="top" v-else>
-          Pin to latest message
-        </md-tooltip>
-      </md-button>
+        <h2 class="md-title" style="flex: 1">Log View</h2>
+        <md-button
+          class="md-dense md-primary"
+          @click.native="scrollToRow(lastOccuredVisibleIndex)"
+        >
+          Jump to latest entry
+        </md-button>
+        <md-button
+          class="md-icon-button" :class="{'md-primary': pinnedToLatest}"
+          @click.native="togglePin"
+        >
+          <md-icon>push_pin</md-icon>
+          <md-tooltip md-direction="top" v-if="pinnedToLatest">
+            Unpin to latest message
+          </md-tooltip>
+          <md-tooltip md-direction="top" v-else>
+            Pin to latest message
+          </md-tooltip>
+        </md-button>
+      </md-content>
     </div>
 
     <div class="filters">
       <md-field>
         <label>Log Levels</label>
         <md-select v-model="selectedLogLevels" multiple>
-          <md-option v-for="level in logLevels" :value="level">{{ level }}</md-option>
+          <md-option v-for="level in logLevels" :value="level" v-bind:key="level">{{ level }}</md-option>
         </md-select>
       </md-field>
 
       <md-field>
         <label>Tags</label>
         <md-select v-model="selectedTags" multiple>
-          <md-option v-for="tag in tags" :value="tag">{{ tag }}</md-option>
+          <md-option v-for="tag in tags" :value="tag" v-bind:key="tag">{{ tag }}</md-option>
         </md-select>
       </md-field>
 
@@ -91,6 +98,8 @@ export default {
   name: 'logview',
   data() {
     const data = this.file.data;
+    // Record analytics event
+    this.recordOpenTraceEvent("ProtoLog");
 
     const tags = new Set();
     const sourceFiles = new Set();
