@@ -27,7 +27,8 @@
             android:label="@string/md_launcher"
             android:theme="@style/LauncherTheme"
             android:launchMode="singleTop"
-            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|colorMode|density">
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|colorMode|density"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.HOME" />
@@ -39,7 +40,8 @@
 
         <service
             android:name=".wallpaper.SampleWallpaper"
-            android:permission="android.permission.BIND_WALLPAPER">
+            android:permission="android.permission.BIND_WALLPAPER"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.service.wallpaper.WallpaperService">
                 </action>
