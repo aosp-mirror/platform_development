@@ -36,6 +36,8 @@ export default {
   name: 'videoview',
   props: ['file', 'height'],
   data() {
+    // Record analytics event
+    this.recordOpenTraceEvent("Video");
     return {};
   },
   computed: {

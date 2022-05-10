@@ -4,7 +4,6 @@ RUN apk --no-cache add \
       curl \
       git \
       build-base \
-      && curl https://raw.githubusercontent.com/golang/dep/5bdae264c61be23446d622ea84a1c97b895f78cc/install.sh | sh \
       && curl https://storage.googleapis.com/git-repo-downloads/repo > /bin/repo \
       && chmod a+x /bin/repo \
       && cd /go/src/repodiff \
