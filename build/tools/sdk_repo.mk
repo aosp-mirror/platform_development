@@ -10,7 +10,7 @@ SDK_SYSIMG_DEPS     :=
 SDK_SYSIMG_XML_ARGS :=
 
 # Define the name of a package zip file to generate
-# $1=OS (e.g. linux-x86, windows, etc)
+# $1=OS (e.g. linux, darwin)
 # $2=sdk zip (e.g. out/host/linux.../android-eng-sdk.zip)
 # $3=package to create (e.g. tools, docs, etc.)
 #
@@ -24,7 +24,7 @@ endef
 # this generates an sdk-repo-linux-tools that contains tools/*
 #
 # $1=variable where to accumulate args for mk_sdk_repo_xml.
-# $2=OS (e.g. linux-x86, windows, etc)
+# $2=OS (e.g. linux, darwin)
 # $3=sdk zip (e.g. out/host/linux.../android-eng-sdk.zip)
 # $4=package to create (e.g. tools, docs, etc.)
 #
@@ -47,7 +47,7 @@ endef
 # this generates an sdk-repo-linux-samples that contains android-N/*
 #
 # $1=variable where to accumulate args for mk_sdk_repo_xml.
-# $2=OS (e.g. linux-x86, windows, etc)
+# $2=OS (e.g. linux, darwin)
 # $3=sdk zip (e.g. out/host/linux.../android-eng-sdk.zip)
 # $4=package to create (e.g. platforms, samples, etc.)
 #
@@ -72,7 +72,7 @@ endef
 # unique.)
 #
 # $1=variable where to accumulate args for mk_sdk_repo_xml.
-# $2=OS (e.g. linux-x86, windows, etc)
+# $2=OS (e.g. linux, darwin)
 # $3=sdk zip (e.g. out/host/linux.../android-eng-sdk.zip)
 # $4=package to create (e.g. system-images, support, etc.)
 # $5=the root of directory to package in the sdk (e.g. extra/android).
@@ -94,7 +94,7 @@ endef
 # Defines the rule to build an SDK sources package.
 #
 # $1=variable where to accumulate args for mk_sdk_repo_xml.
-# $2=OS (e.g. linux-x86, windows, etc)
+# $2=OS (e.g. linux, darwin)
 # $3=sdk zip (e.g. out/host/linux.../android-eng-sdk.zip)
 # $4=package to create, must be "sources"
 #
@@ -125,7 +125,7 @@ endef
 # -----------------------------------------------------------------
 # Rules for main host sdk
 
-ifneq ($(filter sdk win_sdk,$(MAKECMDGOALS)),)
+ifneq ($(filter sdk,$(MAKECMDGOALS)),)
 
 # Similarly capture all sys-img.xml that are now split out of repository.xml
 $(eval $(call mk-sdk-repo-pkg-3,SDK_SYSIMG_XML_ARGS,$(HOST_OS),$(MAIN_SDK_ZIP),system-images,system-images/*))
@@ -134,35 +134,16 @@ SDK_SYSIMG_DEPS += \
     $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),system-images) \
 
 # All these go in the main repository.xml
-$(eval $(call mk-sdk-repo-pkg-2,SDK_REPO_XML_ARGS,$(HOST_OS),$(MAIN_SDK_ZIP),build-tools))
-$(eval $(call mk-sdk-repo-pkg-1,SDK_REPO_XML_ARGS,$(HOST_OS),$(MAIN_SDK_ZIP),platform-tools))
 $(eval $(call mk-sdk-repo-pkg-1,SDK_REPO_XML_ARGS,$(HOST_OS),$(MAIN_SDK_ZIP),docs))
 $(eval $(call mk-sdk-repo-pkg-2,SDK_REPO_XML_ARGS,$(HOST_OS),$(MAIN_SDK_ZIP),platforms))
 $(eval $(call mk-sdk-repo-pkg-2,SDK_REPO_XML_ARGS,$(HOST_OS),$(MAIN_SDK_ZIP),samples))
 $(eval $(call mk-sdk-repo-sources,SDK_REPO_XML_ARGS,$(HOST_OS),$(MAIN_SDK_ZIP),sources))
 
 SDK_REPO_DEPS += \
-    $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),build-tools) \
-    $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),platform-tools) \
     $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),docs) \
     $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),platforms) \
     $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),samples) \
     $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),sources)
-
-endif
-
-# -----------------------------------------------------------------
-# Rules for win_sdk
-
-ifneq ($(WIN_SDK_ZIP),)
-
-# docs, platforms and samples have nothing OS-dependent right now.
-$(eval $(call mk-sdk-repo-pkg-2,SDK_REPO_XML_ARGS,windows,$(WIN_SDK_ZIP),build-tools))
-$(eval $(call mk-sdk-repo-pkg-1,SDK_REPO_XML_ARGS,windows,$(WIN_SDK_ZIP),platform-tools))
-
-SDK_REPO_DEPS += \
-    $(call sdk-repo-pkg-zip,windows,$(WIN_SDK_ZIP),build-tools) \
-    $(call sdk-repo-pkg-zip,windows,$(WIN_SDK_ZIP),platform-tools)
 
 endif
 

@@ -15,6 +15,7 @@
  */
 
 import {DiffType} from './utils/diff.js';
+import {regExpTimestampSearch} from './utils/consts';
 
 // kind - a type used for categorization of different levels
 // name - name of the node
@@ -103,7 +104,7 @@ function transform({
     stableId: stableIdResolved,
     visible: call(visible, obj),
     childrenVisible: transformedChildren.some((c) => {
-      return c.childrenVisible || c.visible;
+      return c.childrenVisible || c.isVisible;
     }),
     flattened: call(flattened, obj),
   };
@@ -309,7 +310,7 @@ class ObjectTransformer {
 
       transformedObj = {
         kind: '',
-        name: name + ': ' + child.name,
+        name: (isTerminal(name) ? compareWithName : name) + ': ' + child.name,
         stableId,
         children: child.children,
         combined: true,
@@ -376,11 +377,42 @@ function nanos_to_string(elapsedRealtimeNanos) {
   return parts.reverse().join('');
 }
 
+function string_to_nanos(stringTime) {
+  //isolate the times for each unit in an array
+  var times = stringTime.split(/\D+/).filter(unit => unit.length > 0);
+
+  //add zeroes to start of array if only partial timestamp is input
+  while (times.length<5) {
+    times.unshift("0");
+  }
+
+  var units = [24*60*60, 60*60, 60, 1, 0.001];
+  var nanos = 0;
+  //multiply the times by the relevant unit and sum
+  for (var x=0; x<5; x++) {
+    nanos += units[x]*parseInt(times[x]);
+  }
+  return nanos*(10**9);
+}
+
 // Returns a UI element used highlight a visible entry.
 // eslint-disable-next-line camelcase
 function get_visible_chip() {
   return {short: 'V', long: 'visible', class: 'default'};
 }
 
+// Returns closest timestamp in timeline based on search input*/
+function getClosestTimestamp(searchInput, timeline) {
+  if (regExpTimestampSearch.test(searchInput)) {
+    var roundedTimestamp = parseInt(searchInput);
+  } else {
+    var roundedTimestamp = string_to_nanos(searchInput);
+  }
+  const closestTimestamp = timeline.reduce((prev, curr) => {
+    return Math.abs(curr-roundedTimestamp) < Math.abs(prev-roundedTimestamp) ? curr : prev;
+  });
+  return closestTimestamp;
+}
+
 // eslint-disable-next-line camelcase
-export {transform, ObjectTransformer, nanos_to_string, get_visible_chip};
+export {transform, ObjectTransformer, nanos_to_string, string_to_nanos, get_visible_chip, getClosestTimestamp};

@@ -53,8 +53,16 @@ class Target(object):
         self.cpu_variant = build_vars[3]
 
     def get_arch_str(self):
-        """Return a string that represents the architecture and the
-        architecture variant.
+        """Return a string that represents the architecture and the primary
+        architecture.
+        """
+        if not self.arch or self.arch == self.primary_arch:
+            return self.primary_arch
+        return self.arch + '_' + self.primary_arch
+
+    def get_arch_cpu_str(self):
+        """Return a string that represents the architecture, the architecture
+        variant, and the CPU variant.
 
         If TARGET_ARCH == TARGET_ARCH_VARIANT, soong makes targetArchVariant
         empty. This is the case for aosp_x86_64.
@@ -64,17 +72,12 @@ class Target(object):
         else:
             arch_variant = '_' + self.arch_variant
 
-        return self.arch + arch_variant
-
-    def get_arch_cpu_str(self):
-        """Return a string that represents the architecture, the architecture
-        variant, and the CPU variant."""
         if not self.cpu_variant or self.cpu_variant == 'generic':
             cpu_variant = ''
         else:
             cpu_variant = '_' + self.cpu_variant
 
-        return self.get_arch_str() + cpu_variant
+        return self.arch + arch_variant + cpu_variant
 
 
 def _validate_dump_content(dump_path):
