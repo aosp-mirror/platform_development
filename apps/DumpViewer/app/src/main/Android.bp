@@ -1,0 +1,28 @@
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_test {
+    name: "DumpViewer",
+
+    srcs: ["**/*.java"],
+
+    static_libs: [
+        "androidx.annotation_annotation",
+        "androidx.collection_collection",
+        "androidx.arch.core_core-common",
+        "androidx.lifecycle_lifecycle-common",
+        "androidx.lifecycle_lifecycle-runtime",
+        "androidx.percentlayout_percentlayout",
+        "androidx.transition_transition",
+        "androidx.core_core",
+        "androidx.legacy_legacy-support-core-ui",
+        "androidx.media_media",
+        "androidx.legacy_legacy-support-v13",
+        "androidx.preference_preference",
+        "androidx.appcompat_appcompat",
+        "androidx.gridlayout_gridlayout",
+        "androidx.recyclerview_recyclerview",
+    ],
+    sdk_version: "31",
+}

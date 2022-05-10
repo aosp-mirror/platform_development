@@ -64,7 +64,7 @@ module.exports = {
         },
       },
       {
-        test: /\.pb/,
+        test: /\.(pb|winscope)/,
         loader: 'file-loader',
         options: {
           paths: [
