@@ -21,6 +21,8 @@ package {
 android_app {
     name: "ThemedNavBarKeyboard",
     srcs: ["**/*.java"],
+    min_sdk_version: "28",
+    target_sdk_version: "31",
     sdk_version: "current",
     dex_preopt: {
         enabled: false,

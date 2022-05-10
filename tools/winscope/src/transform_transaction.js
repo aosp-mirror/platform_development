@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, The Android Open Source Project
+ * Copyright 2021, The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,69 +14,59 @@
  * limitations under the License.
  */
 
-import {nanos_to_string} from './transform.js';
+import {nanos_to_string, transform} from './transform.js'
 
-function transform_transaction(transaction, layerIdToName) {
-  const transactions = [];
-
-  for (const surfaceChange of transaction.surfaceChange) {
-    transactions.push(Object.freeze({
-      type: 'surfaceChange',
-      obj: surfaceChange,
-      layerName: layerIdToName[surfaceChange.id],
-    }));
-  }
-
-  for (const displayChange of transaction.displayChange) {
-    transactions.push(Object.freeze({
-      type: 'displayChange',
-      obj: displayChange,
-      layerName: layerIdToName[displayChange.id],
-    }));
-  }
-
-  return transactions;
+function transform_change(change_data) {
+  const kind = change_data.__proto__.$type.name;
+  const name = change_data.layerId || change_data.id;
+  return transform({
+    kind: kind,
+    name: name,
+    stableId: kind + name,
+    obj: change_data,
+    children: [],
+    isVisible: true,
+  });
 }
 
-function transform_entry(entry, layerIdToName) {
-  const type = entry.increment;
-  const timestamp = entry.timeStamp;
-  const time = nanos_to_string(timestamp);
-
-  switch (type) {
-    case 'transaction':
-
-      return Object.freeze({
-        type,
-        // TODO: Rename to changes
-        transactions: transform_transaction(entry.transaction, layerIdToName),
-        synchronous: entry.transaction.synchronous,
-        animation: entry.transaction.animation,
-        identifier: entry.transaction.id,
-        time,
-        origin: entry.transaction.origin,
-        timestamp,
-      });
-
-    case 'surfaceCreation':
-      // NOTE: There is no break on purpose — we want to fall through to default
-      layerIdToName[entry[type].id] = entry[type].name;
-
-    default:
-      return Object.freeze({
-        type,
-        obj: entry[type],
-        layerName: entry[type].name ?? layerIdToName[entry[type].id],
-        time,
-        timestamp,
-      });
-  }
+function transform_transaction_state(transaction_state) {
+  const obj = Object.assign({}, transaction_state)
+  if (obj.displayChanges) delete obj.displayChanges;
+  if (obj.layerChanges) delete obj.layerChanges;
+  const stableId = 'pid=' + transaction_state.pid +
+  ' uid=' + transaction_state.uid +
+  ' postTime=' + transaction_state.postTime;
+  return transform({
+    kind: 'TransactionState',
+    name: stableId,
+    stableId: stableId,
+    obj: obj,
+    children: [
+      [
+        [...transaction_state.layerChanges, ...transaction_state.displayChanges],
+        transform_change]
+      ]
+  });
 }
 
-function transform_transaction_trace(entries) {
-  const layerIdToName = {};
-  const data = entries.increment.map((entry) => transform_entry(entry, layerIdToName));
+function transform_transaction_trace_entry(entry) {
+  const obj = Object.assign({}, entry)
+  if (obj.transactions) delete obj.transactions;
 
+  return transform({
+    obj: obj,
+    kind: 'entry',
+    stableId: 'entry',
+    timestamp: entry.elapsedRealtimeNanos,
+    name: nanos_to_string(entry.elapsedRealtimeNanos),
+    children: [
+      [entry.transactions, transform_transaction_state]
+    ],
+  });
+}
+
+function transform_transaction_trace(trace) {
+  const data = trace.entry.map((entry) => transform_transaction_trace_entry(entry));
   return {children: data};
 }
 

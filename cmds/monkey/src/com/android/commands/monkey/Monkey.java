@@ -48,6 +48,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -187,8 +188,8 @@ public class Monkey {
     /** Categories we are allowed to launch **/
     private ArrayList<String> mMainCategories = new ArrayList<String>();
 
-    /** Applications we can switch to. */
-    private ArrayList<ComponentName> mMainApps = new ArrayList<ComponentName>();
+    /** Applications we can switch to, as well as their corresponding categories. */
+    private HashMap<ComponentName, String> mMainApps = new HashMap<>();
 
     /** The delay between event inputs **/
     long mThrottle = 0;
@@ -1073,7 +1074,8 @@ public class Monkey {
                             Logger.out.println("//   + Using main activity " + r.activityInfo.name
                                     + " (from package " + packageName + ")");
                         }
-                        mMainApps.add(new ComponentName(packageName, r.activityInfo.name));
+                        mMainApps.put(
+                            new ComponentName(packageName, r.activityInfo.name), category);
                     } else {
                         if (mVerbose >= 3) { // very very verbose
                             Logger.out.println("//   - NOT USING main activity "
