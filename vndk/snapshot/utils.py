@@ -37,7 +37,8 @@ NOTICE_FILES_DIR_NAME = 'NOTICE_FILES'
 NOTICE_FILES_DIR_PATH = os.path.join(COMMON_DIR_PATH, NOTICE_FILES_DIR_NAME)
 BINDER32 = 'binder32'
 MINIMUM_VNDK_VERSION = 28
-
+SOONG_INTERMEDIATES_DIR = 'out/soong/.intermediates'
+GENERATED_HEADERS_DIR = 'generated-headers'
 
 def set_logging_config(verbose_level):
     verbose_map = (logging.WARNING, logging.INFO, logging.DEBUG)
