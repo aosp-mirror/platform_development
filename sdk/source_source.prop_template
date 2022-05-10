@@ -2,3 +2,5 @@ Pkg.UserSrc=false
 Pkg.Revision=1
 AndroidVersion.ApiLevel=${PLATFORM_SDK_VERSION}
 AndroidVersion.CodeName=${PLATFORM_VERSION_CODENAME}
+AndroidVersion.ExtensionLevel=${PLATFORM_SDK_EXTENSION_VERSION}
+AndroidVersion.IsBaseSdk=${PLATFORM_IS_BASE_SDK}

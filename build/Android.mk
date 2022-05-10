@@ -3,10 +3,9 @@ LOCAL_PATH := $(call my-dir)
 # ===== SDK source.property files =====
 
 # Add all files to be generated from the source.prop templates to the SDK pre-requisites
-sdk_props := $(patsubst \
-               $(TOPDIR)development/sdk/%_source.prop_template, \
-               $(HOST_OUT)/development/sdk/%_source.properties, \
-               $(wildcard $(TOPDIR)development/sdk/*_source.prop_template))
+sdk_props := $(HOST_OUT)/development/sdk/doc_source.properties \
+             $(HOST_OUT)/development/sdk/platform_source.properties \
+             $(HOST_OUT)/development/sdk/source_source.properties
 sample_props := $(patsubst \
                   $(TOPDIR)development/samples/%_source.prop_template, \
                   $(HOST_OUT)/development/samples/%_source.properties, \
@@ -20,40 +19,35 @@ ALL_SDK_FILES += $(sdk_props) $(sample_props) $(sys_img_props)
 # Rule to convert a source.prop template into the desired source.property
 # This needs to vary based on the CPU ABI for the system-image files.
 # Rewritten variables:
-# - ${PLATFORM_VERSION}          e.g. "1.0"
-# - ${PLATFORM_SDK_VERSION}      e.g. "3", aka the API level
-# - ${PLATFORM_VERSION_CODENAME} e.g. "REL" (transformed into "") or "Cupcake"
-# - ${TARGET_ARCH}               e.g. "arm", "x86", "mips" and their 64-bit variants.
-# - ${TARGET_CPU_ABI}            e.g. "armeabi", "x86", "mips" and their 64-bit variants.
+# - ${PLATFORM_VERSION}               e.g. "1.0"
+# - ${PLATFORM_SDK_VERSION}           e.g. "3", aka the API level
+# - ${PLATFORM_EXTENSION_SDK_VERSION} e.g. "7" -- the extension sdk level
+# - ${PLATFORM_IS_BASE_SDK}           bool. -- whether the current extension sdk is the base extension for this api level
+# - ${PLATFORM_VERSION_CODENAME}      e.g. "REL" (transformed into "") or "Cupcake"
+# - ${TARGET_ARCH}                    e.g. "arm", "x86", "mips" and their 64-bit variants.
+# - ${TARGET_CPU_ABI}                 e.g. "armeabi", "x86", "mips" and their 64-bit variants.
+define process_prop_template
+@echo Generate $@
+$(hide) mkdir -p $(dir $@)
+$(hide) sed \
+	-e 's/$${PLATFORM_VERSION}/$(PLATFORM_VERSION)/' \
+	-e 's/$${PLATFORM_SDK_VERSION}/$(PLATFORM_SDK_VERSION)/' \
+	-e 's/$${PLATFORM_SDK_EXTENSION_VERSION}/$(PLATFORM_SDK_EXTENSION_VERSION)/' \
+	-e 's/$${PLATFORM_IS_BASE_SDK}/$(if $(filter $(PLATFORM_SDK_EXTENSION_VERSION),$(PLATFORM_BASE_SDK_EXTENSION_VERSION)),true,false)/' \
+	-e 's/$${PLATFORM_VERSION_CODENAME}/$(subst REL,,$(PLATFORM_VERSION_CODENAME))/' \
+	-e 's/$${TARGET_ARCH}/$(TARGET_ARCH)/' \
+	-e 's/$${TARGET_CPU_ABI}/$(TARGET_CPU_ABI)/' \
+	$< > $@ && sed -i -e '/^AndroidVersion.CodeName=\s*$$/d' $@
+endef
+
 $(sys_img_props) : $(HOST_OUT)/development/sys-img-$(TARGET_CPU_ABI)/%_source.properties : $(TOPDIR)development/sys-img/%_source.prop_template
-	@echo Generate $@
-	$(hide) mkdir -p $(dir $@)
-	$(hide) sed \
-		-e 's/$${PLATFORM_VERSION}/$(PLATFORM_VERSION)/' \
-		-e 's/$${PLATFORM_SDK_VERSION}/$(PLATFORM_SDK_VERSION)/' \
-		-e 's/$${PLATFORM_VERSION_CODENAME}/$(subst REL,,$(PLATFORM_VERSION_CODENAME))/' \
-		-e 's/$${TARGET_ARCH}/$(TARGET_ARCH)/' \
-		-e 's/$${TARGET_CPU_ABI}/$(TARGET_CPU_ABI)/' \
-		$< > $@ && sed -i -e '/^AndroidVersion.CodeName=\s*$$/d' $@
+	$(process_prop_template)
 
 $(sdk_props) : $(HOST_OUT)/development/sdk/%_source.properties : $(TOPDIR)development/sdk/%_source.prop_template
-	@echo Generate $@
-	$(hide) mkdir -p $(dir $@)
-	$(hide) sed \
-		-e 's/$${PLATFORM_VERSION}/$(PLATFORM_VERSION)/' \
-		-e 's/$${PLATFORM_SDK_VERSION}/$(PLATFORM_SDK_VERSION)/' \
-		-e 's/$${PLATFORM_VERSION_CODENAME}/$(subst REL,,$(PLATFORM_VERSION_CODENAME))/' \
-		$< > $@ && sed -i -e '/^AndroidVersion.CodeName=\s*$$/d' $@
+	$(process_prop_template)
 
 $(sample_props) : $(HOST_OUT)/development/samples/%_source.properties : $(TOPDIR)development/samples/%_source.prop_template
-	@echo Generate $@
-	$(hide) mkdir -p $(dir $@)
-	$(hide) sed\
-		-e 's/$${PLATFORM_VERSION}/$(PLATFORM_VERSION)/' \
-		-e 's/$${PLATFORM_SDK_VERSION}/$(PLATFORM_SDK_VERSION)/' \
-		-e 's/$${PLATFORM_VERSION_CODENAME}/$(subst REL,,$(PLATFORM_VERSION_CODENAME))/' \
-		$< > $@ && sed -i -e '/^AndroidVersion.CodeName=\s*$$/d' $@
-
+	$(process_prop_template)
 
 # ===== SDK jar file of stubs =====
 # A.k.a the "current" version of the public SDK (android.jar inside the SDK package).
@@ -106,21 +100,24 @@ ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android.test.
 ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android.test.base.stubs_intermediates/classes.jar
 ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android.test.runner.stubs_intermediates/classes.jar
 
-# core-lambda-stubs
-ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/core-lambda-stubs_intermediates/classes.jar
-
-# shrinkedAndroid.jar for multidex support
-ALL_SDK_FILES += $(HOST_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/shrinkedAndroid_intermediates/shrinkedAndroid.jar
-
 # ======= Lint API XML ===========
 full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework-doc-stubs_generated-api-versions.xml
 ALL_SDK_FILES += $(full_target)
-$(call dist-for-goals,sdk win_sdk,$(full_target):data/api-versions.xml)
+$(call dist-for-goals,sdk,$(full_target):data/api-versions.xml)
 
 # ======= Lint Annotations zip ===========
-full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework-doc-stubs_annotations.zip
+full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/sdk-annotations.zip
+$(eval $(call copy-one-file,$(call intermediates-dir-for,ETC,sdk-annotations.zip)/sdk-annotations.zip,$(full_target)))
 ALL_SDK_FILES += $(full_target)
-$(call dist-for-goals,sdk win_sdk,$(full_target):data/annotations.zip)
+$(call dist-for-goals,sdk,$(full_target):data/annotations.zip)
+
+# ======= Lint system API XML ===========
+full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework-doc-system-stubs_generated-api-versions.xml
+$(call dist-for-goals,sdk,$(full_target):system-data/api-versions.xml)
+
+# ======= Lint system Annotations zip ===========
+full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework-doc-system-stubs_annotations.zip
+$(call dist-for-goals,sdk,$(full_target):system-data/annotations.zip)
 
 # ============ SDK AIDL ============
 $(eval $(call copy-one-file,$(FRAMEWORK_AIDL),$(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework.aidl))
