@@ -1,0 +1,12 @@
+Pkg.Desc=AOSP Automated Test Device System Image ${TARGET_CPU_ABI}
+Pkg.Revision=1
+Pkg.Dependencies=emulator#30.9.2
+AndroidVersion.ApiLevel=${PLATFORM_SDK_VERSION}
+AndroidVersion.CodeName=${PLATFORM_VERSION_CODENAME}
+SystemImage.Abi=${TARGET_CPU_ABI}
+SystemImage.TagId=aosp_atd
+SystemImage.TagDisplay=AOSP ATD
+SystemImage.GpuSupport=true
+Addon.VendorId=google
+Addon.VendorDisplay=Google Inc.
+
