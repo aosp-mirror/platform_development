@@ -142,8 +142,8 @@ def get_pids(device, process_name):
 
 
 def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
-                    target_pid, run_cmd, debug_socket, port, run_as_cmd=None,
-                    lldb=False):
+                    target_pid, run_cmd, debug_socket, port, run_as_cmd=[],
+                    lldb=False, chroot=""):
     """Start gdbserver in the background and forward necessary ports.
 
     Args:
@@ -162,15 +162,15 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
 
     assert target_pid is None or run_cmd is None
 
+    if chroot:
+        run_as_cmd = ["chroot", chroot] + run_as_cmd
+
     # Remove the old socket file.
-    rm_cmd = ["rm", debug_socket]
-    if run_as_cmd:
-        rm_cmd = run_as_cmd + rm_cmd
-    device.shell_nocheck(rm_cmd)
+    device.shell_nocheck(run_as_cmd + ["rm", debug_socket])
 
     # Push gdbserver to the target.
     if gdbserver_local_path is not None:
-        device.push(gdbserver_local_path, gdbserver_remote_path)
+        device.push(gdbserver_local_path, chroot + gdbserver_remote_path)
 
     # Run gdbserver.
     gdbserver_cmd = [gdbserver_remote_path]
@@ -184,10 +184,9 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
     else:
         gdbserver_cmd += ["--"] + run_cmd
 
-    forward_gdbserver_port(device, local=port, remote="localfilesystem:{}".format(debug_socket))
+    forward_gdbserver_port(device, local=port, remote="localfilesystem:{}".format(chroot + debug_socket))
 
-    if run_as_cmd:
-        gdbserver_cmd = run_as_cmd + gdbserver_cmd
+    gdbserver_cmd = run_as_cmd + gdbserver_cmd
 
     if lldb:
         gdbserver_output_path = os.path.join(tempfile.gettempdir(),
@@ -197,7 +196,7 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
         gdbserver_output_path = os.path.join(tempfile.gettempdir(),
                                              "gdbclient.log")
         print("Redirecting gdbserver output to {}".format(gdbserver_output_path))
-    gdbserver_output = file(gdbserver_output_path, 'w')
+    gdbserver_output = open(gdbserver_output_path, 'w')
     return device.shell_popen(gdbserver_cmd, stdout=gdbserver_output,
                               stderr=gdbserver_output)
 
@@ -275,7 +274,7 @@ def find_file(device, executable_path, sysroot, run_as_cmd=None):
 
     for path, found_locally in generate_files():
         if os.path.isfile(path):
-            return (open(path, "r"), found_locally)
+            return (open(path, "rb"), found_locally)
     raise RuntimeError('Could not find executable {}'.format(executable_path))
 
 def find_executable_path(device, executable_name, run_as_cmd=None):
@@ -318,14 +317,14 @@ def get_binary_arch(binary_file):
         binary = binary_file.read(0x14)
     except IOError:
         raise RuntimeError("failed to read binary file")
-    ei_class = ord(binary[0x4]) # 1 = 32-bit, 2 = 64-bit
-    ei_data = ord(binary[0x5]) # Endianness
+    ei_class = binary[0x4] # 1 = 32-bit, 2 = 64-bit
+    ei_data = binary[0x5] # Endianness
 
     assert ei_class == 1 or ei_class == 2
     if ei_data != 1:
         raise RuntimeError("binary isn't little-endian?")
 
-    e_machine = ord(binary[0x13]) << 8 | ord(binary[0x12])
+    e_machine = binary[0x13] << 8 | binary[0x12]
     if e_machine == 0x28:
         assert ei_class == 1
         return "arm"
@@ -338,11 +337,6 @@ def get_binary_arch(binary_file):
     elif e_machine == 0x3E:
         assert ei_class == 2
         return "x86_64"
-    elif e_machine == 0x08:
-        if ei_class == 1:
-            return "mips"
-        else:
-            return "mips64"
     else:
         raise RuntimeError("unknown architecture: 0x{:x}".format(e_machine))
 
@@ -368,7 +362,7 @@ def start_gdb(gdb_path, gdb_commands, gdb_flags=None, lldb=False):
 
     # Windows disallows opening the file while it's open for writing.
     script_fd, script_path = tempfile.mkstemp()
-    os.write(script_fd, gdb_commands)
+    os.write(script_fd, gdb_commands.encode())
     os.close(script_fd)
     if lldb:
         script_parameter = "--source"
