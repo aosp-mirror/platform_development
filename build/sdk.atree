@@ -91,7 +91,7 @@ development/tools/templates/ic_launcher_hdpi.png            platforms/${PLATFORM
 development/tools/templates/ic_launcher_xhdpi.png           platforms/${PLATFORM_NAME}/templates/ic_launcher_xhdpi.png
 
 # API database for tools such as lint
-${OUT_DIR}/target/common/obj/PACKAGING/framework-doc-stubs_generated-api-versions.xml  platforms/${PLATFORM_NAME}/data/api-versions.xml
+${OUT_DIR}/target/common/obj/PACKAGING/api_versions_public_generated-api-versions.xml  platforms/${PLATFORM_NAME}/data/api-versions.xml
 
 # API annotations database for lint
 prebuilts/sdk/sdk-annotations/annotations.zip platforms/${PLATFORM_NAME}/data/annotations.zip
