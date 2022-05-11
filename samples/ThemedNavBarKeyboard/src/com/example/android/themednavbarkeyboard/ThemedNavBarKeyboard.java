@@ -59,7 +59,7 @@ public class ThemedNavBarKeyboard extends InputMethodService {
     @Override
     public void onCreate() {
         super.onCreate();
-        if (BuildCompat.EFFECTIVE_SDK_INT > Build.VERSION_CODES.P) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             // Disable contrast for extended navbar gradient.
             getWindow().getWindow().setNavigationBarContrastEnforced(false);
         }
@@ -188,6 +188,29 @@ public class ThemedNavBarKeyboard extends InputMethodService {
             // By default use "SeparateNavBarMode" mode.
             switchToSeparateNavBarMode(Color.DKGRAY, false /* lightNavBar */);
             setBackgroundColor(MINT_COLOR);
+
+            {
+                final LinearLayout subLayout = new LinearLayout(context);
+                {
+                    final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT);
+                    lp.weight = 50;
+                    subLayout.addView(createButton("BACK_DISPOSITION\nDEFAULT", () -> {
+                        setBackDisposition(BACK_DISPOSITION_DEFAULT);
+                    }), lp);
+                }
+                {
+                    final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT);
+                    lp.weight = 50;
+                    subLayout.addView(createButton("BACK_DISPOSITION\nADJUST_NOTHING", () -> {
+                        setBackDisposition(BACK_DISPOSITION_ADJUST_NOTHING);
+                    }), lp);
+                }
+                addView(subLayout);
+            }
 
             addView(createButton("Floating Mode", () -> {
                 switchToFloatingMode();

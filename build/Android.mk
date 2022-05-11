@@ -3,10 +3,9 @@ LOCAL_PATH := $(call my-dir)
 # ===== SDK source.property files =====
 
 # Add all files to be generated from the source.prop templates to the SDK pre-requisites
-sdk_props := $(patsubst \
-               $(TOPDIR)development/sdk/%_source.prop_template, \
-               $(HOST_OUT)/development/sdk/%_source.properties, \
-               $(wildcard $(TOPDIR)development/sdk/*_source.prop_template))
+sdk_props := $(HOST_OUT)/development/sdk/doc_source.properties \
+             $(HOST_OUT)/development/sdk/platform_source.properties \
+             $(HOST_OUT)/development/sdk/source_source.properties
 sample_props := $(patsubst \
                   $(TOPDIR)development/samples/%_source.prop_template, \
                   $(HOST_OUT)/development/samples/%_source.properties, \
@@ -101,21 +100,24 @@ ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android.test.
 ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android.test.base.stubs_intermediates/classes.jar
 ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android.test.runner.stubs_intermediates/classes.jar
 
-# core-lambda-stubs
-ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/core-lambda-stubs_intermediates/classes.jar
-
-# shrinkedAndroid.jar for multidex support
-ALL_SDK_FILES += $(HOST_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/shrinkedAndroid_intermediates/shrinkedAndroid.jar
-
 # ======= Lint API XML ===========
 full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework-doc-stubs_generated-api-versions.xml
 ALL_SDK_FILES += $(full_target)
-$(call dist-for-goals,sdk win_sdk,$(full_target):data/api-versions.xml)
+$(call dist-for-goals,sdk,$(full_target):data/api-versions.xml)
 
 # ======= Lint Annotations zip ===========
-full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework-doc-stubs_annotations.zip
+full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/sdk-annotations.zip
+$(eval $(call copy-one-file,$(call intermediates-dir-for,ETC,sdk-annotations.zip)/sdk-annotations.zip,$(full_target)))
 ALL_SDK_FILES += $(full_target)
-$(call dist-for-goals,sdk win_sdk,$(full_target):data/annotations.zip)
+$(call dist-for-goals,sdk,$(full_target):data/annotations.zip)
+
+# ======= Lint system API XML ===========
+full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework-doc-system-stubs_generated-api-versions.xml
+$(call dist-for-goals,sdk,$(full_target):system-data/api-versions.xml)
+
+# ======= Lint system Annotations zip ===========
+full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework-doc-system-stubs_annotations.zip
+$(call dist-for-goals,sdk,$(full_target):system-data/annotations.zip)
 
 # ============ SDK AIDL ============
 $(eval $(call copy-one-file,$(FRAMEWORK_AIDL),$(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework.aidl))
