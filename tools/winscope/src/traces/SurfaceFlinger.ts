@@ -16,18 +16,26 @@
 
 import { FILE_TYPES, TRACE_TYPES } from '@/decode.js';
 import TraceBase from './TraceBase';
+import { LayersTrace } from '@/flickerlib';
 
 export default class SurfaceFlinger extends TraceBase {
-  sfTraceFile: any;
+  readonly sfTraceFile: Object;
+  readonly tagGenerationTrace: Object;
 
   constructor(files) {
-    const sfTraceFile = files[FILE_TYPES.SURFACE_FLINGER_TRACE];
+    const sfTraceFile = Object.freeze(files[FILE_TYPES.SURFACE_FLINGER_TRACE]);
+    const tagGenerationTrace = files[FILE_TYPES.SURFACE_FLINGER_TRACE].tagGenerationTrace;
     super(sfTraceFile.data, sfTraceFile.timeline, files);
 
+    this.tagGenerationTrace = Object.freeze(tagGenerationTrace);
     this.sfTraceFile = sfTraceFile;
   }
 
   get type() {
     return TRACE_TYPES.SURFACE_FLINGER;
+  }
+
+  static fromProto(proto: any): LayersTrace {
+    return LayersTrace.fromProto(proto);
   }
 }
