@@ -1,18 +1,19 @@
 import { DiffGenerator, DiffType } from "../src/utils/diff.js";
-import { NodeBuilder, Node, DiffNode, toPlainObject } from "./utils/tree.js";
+import { NodeBuilder, toPlainObject } from "./utils/tree.js";
 
-const treeOne = new Node({ id: 1 }, [
-    new Node({ id: 2 }, []),
-    new Node({ id: 3 }, []),
-    new Node({ id: 4 }, []),
-]);
-const treeTwo = new Node({ id: 1 }, [
-    new Node({ id: 2 }, []),
-    new Node({ id: 3 }, [
-        new Node({ id: 5 }, []),
-    ]),
-    new Node({ id: 4 }, []),
-]);
+const treeOne = new NodeBuilder().setId(1).setChildren([
+    new NodeBuilder().setId(2).build(),
+    new NodeBuilder().setId(3).build(),
+    new NodeBuilder().setId(4).build(),
+]).build();
+
+const treeTwo = new NodeBuilder().setId(1).setChildren([
+    new NodeBuilder().setId(2).build(),
+    new NodeBuilder().setId(3).setChildren([
+        new NodeBuilder().setId(5).build(),
+    ]).build(),
+    new NodeBuilder().setId(4).build(),
+]).build();
 
 function checkDiffTreeWithNoModifiedCheck(oldTree, newTree, expectedDiffTree) {
     const diffTree = new DiffGenerator(newTree)
@@ -30,13 +31,13 @@ describe("DiffGenerator", () => {
         const newTree = treeTwo;
 
         const expectedDiffTree = toPlainObject(
-            new DiffNode({ id: 1 }, DiffType.NONE, [
-                new DiffNode({ id: 2 }, DiffType.NONE, []),
-                new DiffNode({ id: 3 }, DiffType.NONE, [
-                    new DiffNode({ id: 5 }, DiffType.ADDED, []),
-                ]),
-                new DiffNode({ id: 4 }, DiffType.NONE, []),
-            ])
+            new NodeBuilder().setId(1).setDiffType(DiffType.NONE).setChildren([
+                new NodeBuilder().setId(2).setDiffType(DiffType.NONE).build(),
+                new NodeBuilder().setId(3).setDiffType(DiffType.NONE).setChildren([
+                    new NodeBuilder().setId(5).setDiffType(DiffType.ADDED).build(),
+                ]).build(),
+                new NodeBuilder().setId(4).setDiffType(DiffType.NONE).build(),
+            ]).build()
         );
 
         checkDiffTreeWithNoModifiedCheck(oldTree, newTree, expectedDiffTree);
@@ -47,13 +48,13 @@ describe("DiffGenerator", () => {
         const newTree = treeOne;
 
         const expectedDiffTree = toPlainObject(
-            new DiffNode({ id: 1 }, DiffType.NONE, [
-                new DiffNode({ id: 2 }, DiffType.NONE, []),
-                new DiffNode({ id: 3 }, DiffType.NONE, [
-                    new DiffNode({ id: 5 }, DiffType.DELETED, []),
-                ]),
-                new DiffNode({ id: 4 }, DiffType.NONE, []),
-            ])
+            new NodeBuilder().setId(1).setDiffType(DiffType.NONE).setChildren([
+                new NodeBuilder().setId(2).setDiffType(DiffType.NONE).build(),
+                new NodeBuilder().setId(3).setDiffType(DiffType.NONE).setChildren([
+                    new NodeBuilder().setId(5).setDiffType(DiffType.DELETED).build(),
+                ]).build(),
+                new NodeBuilder().setId(4).setDiffType(DiffType.NONE).build(),
+            ]).build()
         );
 
         checkDiffTreeWithNoModifiedCheck(oldTree, newTree, expectedDiffTree);
@@ -62,45 +63,45 @@ describe("DiffGenerator", () => {
     it("can generate a simple move diff", () => {
         const oldTree = treeTwo;
 
-        const newTree = new Node({ id: 1 }, [
-            new Node({ id: 2 }, []),
-            new Node({ id: 3 }, []),
-            new Node({ id: 4 }, [
-                new Node({ id: 5 }, []),
-            ]),
-        ]);
+        const newTree = new NodeBuilder().setId(1).setChildren([
+            new NodeBuilder().setId(2).build(),
+            new NodeBuilder().setId(3).build(),
+            new NodeBuilder().setId(4).setChildren([
+                new NodeBuilder().setId(5).build(),
+            ]).build(),
+        ]).build();
 
         const expectedDiffTree = toPlainObject(
-            new DiffNode({ id: 1 }, DiffType.NONE, [
-                new DiffNode({ id: 2 }, DiffType.NONE, []),
-                new DiffNode({ id: 3 }, DiffType.NONE, [
-                    new DiffNode({ id: 5 }, DiffType.DELETED_MOVE, []),
-                ]),
-                new DiffNode({ id: 4 }, DiffType.NONE, [
-                    new DiffNode({ id: 5 }, DiffType.ADDED_MOVE, []),
-                ]),
-            ])
+            new NodeBuilder().setId(1).setDiffType(DiffType.NONE).setChildren([
+                new NodeBuilder().setId(2).setDiffType(DiffType.NONE).build(),
+                new NodeBuilder().setId(3).setDiffType(DiffType.NONE).setChildren([
+                    new NodeBuilder().setId(5).setDiffType(DiffType.DELETED_MOVE).build(),
+                ]).build(),
+                new NodeBuilder().setId(4).setDiffType(DiffType.NONE).setChildren([
+                    new NodeBuilder().setId(5).setDiffType(DiffType.ADDED_MOVE).build(),
+                ]).build(),
+            ]).build()
         );
 
         checkDiffTreeWithNoModifiedCheck(oldTree, newTree, expectedDiffTree);
     });
 
     it("can generate a simple modified diff", () => {
-        const oldTree = new Node({ id: 1, data: "xyz" }, [
-            new Node({ id: 2, data: "abc" }, []),
-            new Node({ id: 3, data: "123" }, []),
-        ]);
+        const oldTree = new NodeBuilder().setId(1).setData("xyz").setChildren([
+            new NodeBuilder().setId(2).setData("abc").build(),
+            new NodeBuilder().setId(3).setData("123").build(),
+        ]).build();
 
-        const newTree = new Node({ id: 1, data: "xyz" }, [
-            new Node({ id: 2, data: "def" }, []),
-            new Node({ id: 3, data: "123" }, []),
-        ]);
+        const newTree = new NodeBuilder().setId(1).setData("xyz").setChildren([
+            new NodeBuilder().setId(2).setData("def").build(),
+            new NodeBuilder().setId(3).setData("123").build(),
+        ]).build();
 
         const expectedDiffTree = toPlainObject(
-            new DiffNode({ id: 1, data: "xyz" }, DiffType.NONE, [
-                new DiffNode({ id: 2, data: "def" }, DiffType.MODIFIED, []),
-                new DiffNode({ id: 3, data: "123" }, DiffType.NONE, []),
-            ])
+            new NodeBuilder().setId(1).setData("xyz").setDiffType(DiffType.NONE).setChildren([
+                new NodeBuilder().setId(2).setData("def").setDiffType(DiffType.MODIFIED).build(),
+                new NodeBuilder().setId(3).setData("123").setDiffType(DiffType.NONE).build(),
+            ]).build()
         );
 
         const diffTree = new DiffGenerator(newTree)
@@ -114,132 +115,132 @@ describe("DiffGenerator", () => {
     });
 
     it("can handle move and inner addition diff", () => {
-        const oldTree = new Node({ id: 1 }, [
-            new Node({ id: 2 }, []),
-            new Node({ id: 3 }, [
-                new Node({ id: 4 }, []),
-            ]),
-        ]);
+        const oldTree = new NodeBuilder().setId(1).setChildren([
+            new NodeBuilder().setId(2).build(),
+            new NodeBuilder().setId(3).setChildren([
+                new NodeBuilder().setId(4).build(),
+            ]).build(),
+        ]).build();
 
-        const newTree = new Node({ id: 1 }, [
-            new Node({ id: 2 }, [
-                new Node({ id: 4 }, [
-                    new Node({ id: 5 }, []),
-                ]),
-            ]),
-            new Node({ id: 3 }, []),
-        ]);
+        const newTree = new NodeBuilder().setId(1).setChildren([
+            new NodeBuilder().setId(2).setChildren([
+                new NodeBuilder().setId(4).setChildren([
+                    new NodeBuilder().setId(5).build(),
+                ]).build(),
+            ]).build(),
+            new NodeBuilder().setId(3).build(),
+        ]).build();
 
         const expectedDiffTree = toPlainObject(
-            new DiffNode({ id: 1 }, DiffType.NONE, [
-                new DiffNode({ id: 2 }, DiffType.NONE, [
-                    new DiffNode({ id: 4 }, DiffType.ADDED_MOVE, [
-                        new DiffNode({ id: 5 }, DiffType.ADDED, []),
-                    ]),
-                ]),
-                new DiffNode({ id: 3 }, DiffType.NONE, [
-                    new DiffNode({ id: 4 }, DiffType.DELETED_MOVE, []),
-                ]),
-            ])
+            new NodeBuilder().setId(1).setDiffType(DiffType.NONE).setChildren([
+                new NodeBuilder().setId(2).setDiffType(DiffType.NONE).setChildren([
+                    new NodeBuilder().setId(4).setDiffType(DiffType.ADDED_MOVE).setChildren([
+                        new NodeBuilder().setId(5).setDiffType(DiffType.ADDED).build(),
+                    ]).build(),
+                ]).build(),
+                new NodeBuilder().setId(3).setDiffType(DiffType.NONE).setChildren([
+                    new NodeBuilder().setId(4).setDiffType(DiffType.DELETED_MOVE).build(),
+                ]).build(),
+            ]).build()
         );
 
         checkDiffTreeWithNoModifiedCheck(oldTree, newTree, expectedDiffTree);
     });
 
     it("can handle move within same level", () => {
-        const oldTree = new Node({ id: 1 }, [
-            new Node({ id: 2 }, []),
-            new Node({ id: 3 }, []),
-        ]);
+        const oldTree = new NodeBuilder().setId(1).setChildren([
+            new NodeBuilder().setId(2).build(),
+            new NodeBuilder().setId(3).build(),
+        ]).build();
 
-        const newTree = new Node({ id: 1 }, [
-            new Node({ id: 3 }, []),
-            new Node({ id: 2 }, []),
-        ]);
+        const newTree = new NodeBuilder().setId(1).setChildren([
+            new NodeBuilder().setId(3).build(),
+            new NodeBuilder().setId(2).build(),
+        ]).build();
 
         const expectedDiffTree = toPlainObject(
-            new DiffNode({ id: 1 }, DiffType.NONE, [
-                new DiffNode({ id: 3 }, DiffType.NONE, []),
-                new DiffNode({ id: 2 }, DiffType.NONE, []),
-            ])
+            new NodeBuilder().setId(1).setDiffType(DiffType.NONE).setChildren([
+                new NodeBuilder().setId(3).setDiffType(DiffType.NONE).build(),
+                new NodeBuilder().setId(2).setDiffType(DiffType.NONE).build(),
+            ]).build()
         );
 
         checkDiffTreeWithNoModifiedCheck(oldTree, newTree, expectedDiffTree);
     });
 
     it("can handle addition within middle of level", () => {
-        const oldTree = new Node({ id: 1 }, [
-            new Node({ id: 2 }, []),
-            new Node({ id: 3 }, []),
-        ]);
+        const oldTree = new NodeBuilder().setId(1).setChildren([
+            new NodeBuilder().setId(2).build(),
+            new NodeBuilder().setId(3).build(),
+        ]).build();
 
-        const newTree = new Node({ id: 1 }, [
-            new Node({ id: 2 }, []),
-            new Node({ id: 4 }, []),
-            new Node({ id: 3 }, []),
-        ]);
+        const newTree = new NodeBuilder().setId(1).setChildren([
+            new NodeBuilder().setId(2).build(),
+            new NodeBuilder().setId(4).build(),
+            new NodeBuilder().setId(3).build(),
+        ]).build();
 
         const expectedDiffTree = toPlainObject(
-            new DiffNode({ id: 1 }, DiffType.NONE, [
-                new DiffNode({ id: 2 }, DiffType.NONE, []),
-                new DiffNode({ id: 4 }, DiffType.ADDED, []),
-                new DiffNode({ id: 3 }, DiffType.NONE, []),
-            ])
+            new NodeBuilder().setId(1).setDiffType(DiffType.NONE).setChildren([
+                new NodeBuilder().setId(2).setDiffType(DiffType.NONE).build(),
+                new NodeBuilder().setId(4).setDiffType(DiffType.ADDED).build(),
+                new NodeBuilder().setId(3).setDiffType(DiffType.NONE).build(),
+            ]).build()
         );
 
         checkDiffTreeWithNoModifiedCheck(oldTree, newTree, expectedDiffTree);
     });
 
     it("can handle deletion within middle of level", () => {
-        const oldTree = new Node({ id: 1 }, [
-            new Node({ id: 2 }, []),
-            new Node({ id: 3 }, []),
-            new Node({ id: 4 }, []),
-        ]);
+        const oldTree = new NodeBuilder().setId(1).setChildren([
+            new NodeBuilder().setId(2).build(),
+            new NodeBuilder().setId(3).build(),
+            new NodeBuilder().setId(4).build(),
+        ]).build();
 
-        const newTree = new Node({ id: 1 }, [
-            new Node({ id: 2 }, []),
-            new Node({ id: 4 }, []),
-        ]);
+        const newTree = new NodeBuilder().setId(1).setChildren([
+            new NodeBuilder().setId(2).build(),
+            new NodeBuilder().setId(4).build(),
+        ]).build();
 
         const expectedDiffTree = toPlainObject(
-            new DiffNode({ id: 1 }, DiffType.NONE, [
-                new DiffNode({ id: 2 }, DiffType.NONE, []),
-                new DiffNode({ id: 3 }, DiffType.DELETED, []),
-                new DiffNode({ id: 4 }, DiffType.NONE, []),
-            ])
+            new NodeBuilder().setId(1).setDiffType(DiffType.NONE).setChildren([
+                new NodeBuilder().setId(2).setDiffType(DiffType.NONE).build(),
+                new NodeBuilder().setId(3).setDiffType(DiffType.DELETED).build(),
+                new NodeBuilder().setId(4).setDiffType(DiffType.NONE).build(),
+            ]).build()
         );
 
         checkDiffTreeWithNoModifiedCheck(oldTree, newTree, expectedDiffTree);
     });
 
     it("fully visits deletes nodes", () => {
-        const oldTree = new Node({ id: 1 }, [
-            new Node({ id: 2 }, [
-                new Node({ id: 3 }, [
-                    new Node({ id: 4 }, []),
-                ]),
-            ]),
-        ]);
+        const oldTree = new NodeBuilder().setId(1).setChildren([
+            new NodeBuilder().setId(2).setChildren([
+                new NodeBuilder().setId(3).setChildren([
+                    new NodeBuilder().setId(4).build(),
+                ]).build(),
+            ]).build(),
+        ]).build();
 
-        const newTree = new Node({ id: 1 }, [
-            new Node({ id: 2 }, []),
-            new Node({ id: 3 }, [
-                new Node({ id: 4 }, []),
-            ]),
-        ]);
+        const newTree = new NodeBuilder().setId(1).setChildren([
+            new NodeBuilder().setId(2).build(),
+            new NodeBuilder().setId(3).setChildren([
+                new NodeBuilder().setId(4).build(),
+            ]).build(),
+        ]).build();
 
         const expectedDiffTree = toPlainObject(
-            new DiffNode({ id: 1 }, DiffType.NONE, [
-                new DiffNode({ id: 2 }, DiffType.NONE, [
-                    new DiffNode({ id: 3 }, DiffType.DELETED_MOVE, [
-                        new DiffNode({ id: 4 }, DiffType.DELETED_MOVE, []),
-                    ]),
-                ]),
-                new DiffNode({ id: 3 }, DiffType.ADDED_MOVE, [
-                    new DiffNode({ id: 4 }, DiffType.NONE, []),
-                ]),
-            ])
+            new NodeBuilder().setId(1).setDiffType(DiffType.NONE).setChildren([
+                new NodeBuilder().setId(2).setDiffType(DiffType.NONE).setChildren([
+                    new NodeBuilder().setId(3).setDiffType(DiffType.DELETED_MOVE).setChildren([
+                        new NodeBuilder().setId(4).setDiffType(DiffType.DELETED_MOVE).build(),
+                    ]).build(),
+                ]).build(),
+                new NodeBuilder().setId(3).setDiffType(DiffType.ADDED_MOVE).setChildren([
+                    new NodeBuilder().setId(4).setDiffType(DiffType.NONE).build(),
+                ]).build(),
+            ]).build()
         );
 
         checkDiffTreeWithNoModifiedCheck(oldTree, newTree, expectedDiffTree);

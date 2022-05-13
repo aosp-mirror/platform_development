@@ -1,12 +1,32 @@
 class NodeBuilder {
-    setId(id) {
-        this.id = id;
-        this.chips = [];
+    constructor() {
+        this.isTransformed = false;
+    }
+
+    setTransformed() {
+        this.isTransformed = true;
         return this;
     }
 
-    setChildren(children) {
-        this.children = children;
+    setId(id) {
+        this.id = id;
+        this.chips = [];
+        this.combined = false;
+        return this;
+    }
+
+    setStableId(stableId) {
+        this.stableId = stableId;
+        return this;
+    }
+
+    setName(name) {
+        this.name = name;
+        return this;
+    }
+
+    setData(data) {
+        this.data = data;
         return this;
     }
 
@@ -15,73 +35,66 @@ class NodeBuilder {
         return this;
     }
 
+    setCombined() {
+        this.combined = true;
+        return this;
+    }
+
     setDiffType(diffType) {
         this.diffType = diffType;
+        return this;
+    }
+
+    setChildren(children) {
+        this.children = children;
         return this;
     }
 
     build() {
         var node = {
             name: undefined,
+            shortName: undefined,
             stableId: undefined,
             kind: undefined,
-            shortName: undefined
         };
+
+        if (this.isTransformed)
+        {
+            delete node.shortName;
+            node.kind = ''
+        }
 
         if ('id' in this) {
             node.id = this.id;
         }
 
-        node.children = 'children' in this ? this.children : [];
+        if ('stableId' in this) {
+            node.stableId = this.stableId;
+        }
+
+        if ('name' in this) {
+            node.name = this.name;
+        }
+
+        if ('data' in this) {
+            node.data = this.data;
+        }
 
         if ('chips' in this) {
             node.chips = this.chips;
         }
 
-        if ('diffType' in this) {
-            node.diff = { type: this.diffType }
+        if (this.combined) {
+            node.combined = true;
         }
+
+        if ('diffType' in this) {
+            node.diff = { type: this.diffType };
+        }
+
+        node.children = 'children' in this ? this.children : [];
 
         return node;
-    }
-}
-
-class Node {
-    constructor(nodeDef, children) {
-        Object.assign(this, nodeDef);
-        this.children = children;
-    }
-}
-
-class DiffNode extends Node {
-    constructor(nodeDef, diffType, children) {
-        super(nodeDef, children);
-        this.diff = { type: diffType };
-        this.name = undefined;
-        this.stableId = undefined;
-        this.kind = undefined;
-        this.shortName = undefined;
-    }
-}
-
-class ObjNode extends Node {
-    constructor(name, children, combined, stableId) {
-        const nodeDef = {
-            kind: '',
-            name: name,
-            stableId: stableId,
-        };
-        if (combined) {
-            nodeDef.combined = true;
-        }
-        super(nodeDef, children);
-    }
-}
-
-class ObjDiffNode extends ObjNode {
-    constructor(name, diffType, children, combined, stableId) {
-        super(name, children, combined, stableId);
-        this.diff = { type: diffType };
     }
 }
 
@@ -103,4 +116,4 @@ function toPlainObject(theClass) {
     }
 }
 
-export { NodeBuilder, Node, DiffNode, ObjNode, ObjDiffNode, toPlainObject };
+export { NodeBuilder, toPlainObject };
