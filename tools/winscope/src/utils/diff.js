@@ -119,6 +119,9 @@ export class DiffGenerator {
     clone.kind = node.kind;
     clone.stableId = node.stableId;
     clone.shortName = node.shortName;
+    if ('chips' in node) {
+      clone.chips = node.chips.slice();
+    }
     return clone;
   }
 
