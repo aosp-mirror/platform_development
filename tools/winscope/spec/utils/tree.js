@@ -1,3 +1,51 @@
+class NodeBuilder {
+    setId(id) {
+        this.id = id;
+        this.chips = [];
+        return this;
+    }
+
+    setChildren(children) {
+        this.children = children;
+        return this;
+    }
+
+    setChips(chips) {
+        this.chips = chips;
+        return this;
+    }
+
+    setDiffType(diffType) {
+        this.diffType = diffType;
+        return this;
+    }
+
+    build() {
+        var node = {
+            name: undefined,
+            stableId: undefined,
+            kind: undefined,
+            shortName: undefined
+        };
+
+        if ('id' in this) {
+            node.id = this.id;
+        }
+
+        node.children = 'children' in this ? this.children : [];
+
+        if ('chips' in this) {
+            node.chips = this.chips;
+        }
+
+        if ('diffType' in this) {
+            node.diff = { type: this.diffType }
+        }
+
+        return node;
+    }
+}
+
 class Node {
     constructor(nodeDef, children) {
         Object.assign(this, nodeDef);
@@ -55,4 +103,4 @@ function toPlainObject(theClass) {
     }
 }
 
-export { Node, DiffNode, ObjNode, ObjDiffNode, toPlainObject };
+export { NodeBuilder, Node, DiffNode, ObjNode, ObjDiffNode, toPlainObject };

@@ -1,5 +1,5 @@
 import { DiffGenerator, DiffType } from "../src/utils/diff.js";
-import { Node, DiffNode, toPlainObject } from "./utils/tree.js";
+import { NodeBuilder, Node, DiffNode, toPlainObject } from "./utils/tree.js";
 
 const treeOne = new Node({ id: 1 }, [
     new Node({ id: 2 }, []),
@@ -240,6 +240,28 @@ describe("DiffGenerator", () => {
                     new DiffNode({ id: 4 }, DiffType.NONE, []),
                 ]),
             ])
+        );
+
+        checkDiffTreeWithNoModifiedCheck(oldTree, newTree, expectedDiffTree);
+    });
+
+    it("preserves node chips", () => {
+        const oldTree = new NodeBuilder().setId(1).setChildren([
+            new NodeBuilder().setId(2).setChips(["CHIP2"]).build(),
+            new NodeBuilder().setId(3).build(),
+        ]).build();
+
+        const newTree = new NodeBuilder().setId(1).setChildren([
+            new NodeBuilder().setId(2).setChips(["CHIP2"]).build(),
+            new NodeBuilder().setId(4).setChips(["CHIP4"]).build(),
+        ]).build();
+
+        const expectedDiffTree = toPlainObject(
+            new NodeBuilder().setId(1).setDiffType(DiffType.NONE).setChildren([
+                new NodeBuilder().setId(2).setChips(["CHIP2"]).setDiffType(DiffType.NONE).build(),
+                new NodeBuilder().setId(3).setDiffType(DiffType.DELETED).build(),
+                new NodeBuilder().setId(4).setChips(["CHIP4"]).setDiffType(DiffType.ADDED).build(),
+            ]).build()
         );
 
         checkDiffTreeWithNoModifiedCheck(oldTree, newTree, expectedDiffTree);
