@@ -24,11 +24,24 @@ import glob
 import os
 import platform
 import re
+import shutil
 import signal
 import subprocess
 import unittest
 
 ANDROID_BUILD_TOP = os.environ.get("ANDROID_BUILD_TOP", ".")
+
+
+def FindClangDir():
+  get_clang_version = ANDROID_BUILD_TOP + "/build/soong/scripts/get_clang_version.py"
+  if os.path.exists(get_clang_version):
+    # We want the script to fail if get_clang_version.py exists but is unable
+    # to find the clang version.
+    version_output = subprocess.check_output(get_clang_version, text=True)
+    return ANDROID_BUILD_TOP + "/prebuilts/clang/host/linux-x86/" + version_output.strip()
+  else:
+    return None
+
 
 def FindSymbolsDir():
   saveddir = os.getcwd()
@@ -47,6 +60,7 @@ SYMBOLS_DIR = FindSymbolsDir()
 
 ARCH = None
 
+VERBOSE = False
 
 # These are private. Do not access them from other modules.
 _CACHED_TOOLCHAIN = None
@@ -132,7 +146,9 @@ for sig in (signal.SIGABRT, signal.SIGINT, signal.SIGTERM):
 
 
 def ToolPath(tool, toolchain=None):
-  """Return a fully-qualified path to the specified tool"""
+  """Return a fully-qualified path to the specified tool, or just the tool if it's on PATH """
+  if shutil.which(tool) is not None:
+      return tool
   if not toolchain:
     toolchain = FindToolchain()
   return os.path.join(toolchain, tool)
@@ -431,14 +447,24 @@ def CallCppFilt(mangled_symbol):
   if mangled_symbol in _SYMBOL_DEMANGLING_CACHE:
     return _SYMBOL_DEMANGLING_CACHE[mangled_symbol]
 
-  # TODO: Replace with llvm-cxxfilt when available.
   global _CACHED_CXX_FILT
   if not _CACHED_CXX_FILT:
-    os_name = platform.system().lower()
-    toolchains = glob.glob("%s/prebuilts/gcc/%s-*/host/*-linux-*/bin/*c++filt" %
-                           (ANDROID_BUILD_TOP, os_name))
+    toolchains = None
+    clang_dir = FindClangDir()
+    if clang_dir:
+      if os.path.exists(clang_dir + "/bin/llvm-cxxfilt"):
+        toolchains = [clang_dir + "/bin/llvm-cxxfilt"]
+      else:
+        raise Exception("bin/llvm-cxxfilt missing from " + clang_dir)
+    else:
+      # When run in CI, we don't have a way to find the clang version.  But
+      # llvm-cxxfilt should be available in the following relative path.
+      toolchains = glob.glob("./clang-r*/bin/llvm-cxxfilt")
+      if toolchains and len(toolchains) != 1:
+        raise Exception("Expected one llvm-cxxfilt but found many: " + \
+                        ", ".join(toolchains))
     if not toolchains:
-      raise Exception("Could not find gcc c++filt tool")
+      raise Exception("Could not find llvm-cxxfilt tool")
     _CACHED_CXX_FILT = sorted(toolchains)[-1]
 
   cmd = [_CACHED_CXX_FILT]
@@ -459,6 +485,37 @@ def FormatSymbolWithOffset(symbol, offset):
     return symbol
   return "%s+%d" % (symbol, offset)
 
+def FormatSymbolWithoutParameters(symbol):
+  """Remove parameters from function.
+
+  Rather than trying to parse the demangled C++ signature,
+  it just removes matching top level parenthesis.
+  """
+  if not symbol:
+    return symbol
+
+  result = symbol
+  result = result.replace(") const", ")")                  # Strip const keyword.
+  result = result.replace("operator<<", "operator\u00AB")  # Avoid unmatched '<'.
+  result = result.replace("operator>>", "operator\u00BB")  # Avoid unmatched '>'.
+  result = result.replace("operator->", "operator\u2192")  # Avoid unmatched '>'.
+
+  nested = []  # Keeps tract of current nesting level of parenthesis.
+  for i in reversed(range(len(result))):  # Iterate backward to make cutting easier.
+    c = result[i]
+    if c == ')' or c == '>':
+      if len(nested) == 0:
+        end = i + 1  # Mark the end of top-level pair.
+      nested.append(c)
+    if c == '(' or c == '<':
+      if len(nested) == 0 or {')':'(', '>':'<'}[nested.pop()] != c:
+        return symbol  # Malformed: character does not match its pair.
+      if len(nested) == 0 and c == '(' and (end - i) > 2:
+        result = result[:i] + result[end:]  # Remove substring (i, end).
+  if len(nested) > 0:
+    return symbol  # Malformed: missing pair.
+
+  return result.strip()
 
 def GetAbiFromToolchain(toolchain_var, bits):
   toolchain = os.environ.get(toolchain_var)
@@ -546,6 +603,11 @@ class FindToolchainTests(unittest.TestCase):
     self.assert_toolchain_found("mips")
     self.assert_toolchain_found("x86")
     self.assert_toolchain_found("x86_64")
+
+class FindClangDirTests(unittest.TestCase):
+  @unittest.skipIf(ANDROID_BUILD_TOP == '.', 'Test only supported in an Android tree.')
+  def test_clang_dir_found(self):
+    self.assertIsNotNone(FindClangDir())
 
 class SetArchTests(unittest.TestCase):
   def test_abi_check(self):
@@ -717,6 +779,33 @@ class SetArchTests(unittest.TestCase):
     self.assertRaisesRegex(Exception,
                            "Could not determine arch from input, use --arch=XXX to specify it",
                            SetAbi, [])
+
+class FormatSymbolWithoutParametersTests(unittest.TestCase):
+  def test_c(self):
+    self.assertEqual(FormatSymbolWithoutParameters("foo"), "foo")
+    self.assertEqual(FormatSymbolWithoutParameters("foo+42"), "foo+42")
+
+  def test_simple(self):
+    self.assertEqual(FormatSymbolWithoutParameters("foo(int i)"), "foo")
+    self.assertEqual(FormatSymbolWithoutParameters("foo(int i)+42"), "foo+42")
+    self.assertEqual(FormatSymbolWithoutParameters("bar::foo(int i)+42"), "bar::foo+42")
+    self.assertEqual(FormatSymbolWithoutParameters("operator()"), "operator()")
+
+  def test_templates(self):
+    self.assertEqual(FormatSymbolWithoutParameters("bar::foo<T>(vector<T>& v)"), "bar::foo<T>")
+    self.assertEqual(FormatSymbolWithoutParameters("bar<T>::foo(vector<T>& v)"), "bar<T>::foo")
+    self.assertEqual(FormatSymbolWithoutParameters("bar::foo<T>(vector<T<U>>& v)"), "bar::foo<T>")
+    self.assertEqual(FormatSymbolWithoutParameters("bar::foo<(EnumType)0>(vector<(EnumType)0>& v)"),
+                                                   "bar::foo<(EnumType)0>")
+
+  def test_nested(self):
+    self.assertEqual(FormatSymbolWithoutParameters("foo(int i)::bar(int j)"), "foo::bar")
+
+  def test_unballanced(self):
+    self.assertEqual(FormatSymbolWithoutParameters("foo(bar(int i)"), "foo(bar(int i)")
+    self.assertEqual(FormatSymbolWithoutParameters("foo)bar(int i)"), "foo)bar(int i)")
+    self.assertEqual(FormatSymbolWithoutParameters("foo<bar(int i)"), "foo<bar(int i)")
+    self.assertEqual(FormatSymbolWithoutParameters("foo>bar(int i)"), "foo>bar(int i)")
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

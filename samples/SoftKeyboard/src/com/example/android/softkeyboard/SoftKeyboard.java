@@ -96,8 +96,17 @@ public class SoftKeyboard extends InputMethodService
     }
 
     /**
-     * Create new context object whose resources are adjusted to match the metrics of the display
-     * which is managed by WindowManager.
+     * Returns the context object whose resources are adjusted to match the metrics of the display.
+     *
+     * Note that before {@link android.os.Build.VERSION_CODES#KITKAT}, there is no way to support
+     * multi-display scenarios, so the context object will just return the IME context itself.
+     *
+     * With initiating multi-display APIs from {@link android.os.Build.VERSION_CODES#KITKAT}, the
+     * context object has to return with re-creating the display context according the metrics
+     * of the display in runtime.
+     *
+     * Starts from {@link android.os.Build.VERSION_CODES#S_V2}, the returning context object has
+     * became to IME context self since it ends up capable of updating its resources internally.
      *
      * @see {@link Context#createDisplayContext(Display)}
      */
@@ -106,8 +115,10 @@ public class SoftKeyboard extends InputMethodService
             // createDisplayContext is not available.
             return this;
         }
-        // TODO (b/133825283): Non-activity components Resources / DisplayMetrics update when
-        //  moving to external display.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S_V2) {
+            // IME context sources is now managed by WindowProviderService from Android 12L.
+            return this;
+        }
         // An issue in Q that non-activity components Resources / DisplayMetrics in
         // Context doesn't well updated when the IME window moving to external display.
         // Currently we do a workaround is to create new display context directly and re-init
