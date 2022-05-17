@@ -101,7 +101,7 @@ ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android.test.
 ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android.test.runner.stubs_intermediates/classes.jar
 
 # ======= Lint API XML ===========
-full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework-doc-stubs_generated-api-versions.xml
+full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/api_versions_public_generated-api-versions.xml
 ALL_SDK_FILES += $(full_target)
 $(call dist-for-goals,sdk,$(full_target):data/api-versions.xml)
 
