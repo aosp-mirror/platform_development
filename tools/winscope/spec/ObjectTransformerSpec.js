@@ -1,6 +1,6 @@
 import { DiffType } from "../src/utils/diff.js";
 import { ObjectTransformer } from "../src/transform.js";
-import { ObjNode, ObjDiffNode, toPlainObject } from "./utils/tree.js";
+import { NodeBuilder, toPlainObject } from "./utils/tree.js";
 
 describe("ObjectTransformer", () => {
     it("can transform a simple object", () => {
@@ -18,18 +18,26 @@ describe("ObjectTransformer", () => {
         };
 
         const expectedTransformedObj = toPlainObject(
-            new ObjNode('root', [
-                new ObjNode('obj', [
-                    new ObjNode('string: string', [], true, 'root.obj.string'),
-                    new ObjNode('number: 3', [], true, 'root.obj.number'),
-                ], undefined, 'root.obj'),
-                new ObjNode('array', [
-                    new ObjNode('0', [
-                        new ObjNode('nested: item', [], true, 'root.array.0.nested'),
-                    ], undefined, 'root.array.0'),
-                    new ObjNode("1: two", [], true, 'root.array.1'),
-                ], undefined, 'root.array'),
-            ], undefined, 'root')
+            new NodeBuilder().setTransformed().setName('root')
+                .setStableId('root').setChildren([
+                new NodeBuilder().setTransformed().setName('obj')
+                    .setStableId('root.obj').setChildren([
+                    new NodeBuilder().setTransformed().setName('string: string')
+                        .setStableId('root.obj.string').setCombined().build(),
+                    new NodeBuilder().setTransformed().setName('number: 3')
+                        .setStableId('root.obj.number').setCombined().build(),
+                ]).build(),
+                new NodeBuilder().setTransformed().setName('array')
+                    .setStableId('root.array').setChildren([
+                    new NodeBuilder().setTransformed().setName('0')
+                        .setStableId('root.array.0').setChildren([
+                        new NodeBuilder().setTransformed().setName('nested: item')
+                            .setStableId('root.array.0.nested').setCombined().build(),
+                    ]).build(),
+                    new NodeBuilder().setTransformed().setName("1: two")
+                        .setStableId('root.array.1').setCombined().build(),
+                ]).build()
+            ]).build()
         );
 
         const transformedObj = new ObjectTransformer(obj, 'root', 'root')
@@ -47,11 +55,14 @@ describe("ObjectTransformer", () => {
         }
 
         const expectedTransformedObj = toPlainObject(
-            new ObjNode('root', [
-                new ObjNode('obj', [
-                    new ObjNode('null: null', [], true, 'root.obj.null'),
-                ], undefined, 'root.obj'),
-            ], undefined, 'root')
+            new NodeBuilder().setTransformed().setName('root')
+                .setStableId('root').setChildren([
+                new NodeBuilder().setTransformed().setName('obj')
+                    .setStableId('root.obj').setChildren([
+                    new NodeBuilder().setTransformed().setName('null: null')
+                        .setStableId('root.obj.null').setCombined().build(),
+                ]).build(),
+            ]).build()
         );
 
         const transformedObj = new ObjectTransformer(obj, 'root', 'root')
@@ -78,13 +89,17 @@ describe("ObjectTransformer", () => {
         };
 
         const expectedTransformedObj = toPlainObject(
-            new ObjDiffNode('root', DiffType.NONE, [
-                new ObjDiffNode('a', DiffType.NONE, [
-                    new ObjDiffNode('b: 1', DiffType.NONE, [], true, 'root.a.b'),
-                    new ObjDiffNode('d: 3', DiffType.ADDED, [], true, 'root.a.d'),
-                ], false, 'root.a'),
-                new ObjDiffNode('c: 2', DiffType.NONE, [], true, 'root.c'),
-            ], false, 'root')
+            new NodeBuilder().setTransformed().setName('root')
+                .setStableId('root').setDiffType(DiffType.NONE).setChildren([
+                new NodeBuilder().setTransformed().setName('a')
+                    .setStableId('root.a').setDiffType(DiffType.NONE).setChildren([
+                    new NodeBuilder().setTransformed().setName('b: 1')
+                        .setStableId('root.a.b').setDiffType(DiffType.NONE).setCombined().build(),
+                    new NodeBuilder().setTransformed().setName('d: 3')
+                        .setStableId('root.a.d').setDiffType(DiffType.ADDED).setCombined().build(),
+                ]).build(),
+                new NodeBuilder().setTransformed().setName('c: 2').setStableId('root.c').setDiffType(DiffType.NONE).setCombined().build(),
+            ]).build()
         );
 
         const transformedObj = new ObjectTransformer(newObj, 'root', 'root')
@@ -105,12 +120,16 @@ describe("ObjectTransformer", () => {
         };
 
         const expectedTransformedObj = toPlainObject(
-            new ObjDiffNode('root', DiffType.NONE, [
-                new ObjDiffNode('a', DiffType.NONE, [
-                    new ObjDiffNode('1', DiffType.ADDED, [], false, 'root.a.1'),
-                    new ObjDiffNode('null', DiffType.DELETED, [], false, 'root.a.null'),
-                ], false, 'root.a'),
-            ], false, 'root')
+          new NodeBuilder().setTransformed().setName('root')
+              .setStableId('root').setDiffType(DiffType.NONE).setChildren([
+              new NodeBuilder().setTransformed().setName('a')
+                  .setStableId('root.a').setDiffType(DiffType.NONE).setChildren([
+                  new NodeBuilder().setTransformed().setName('1')
+                      .setStableId('root.a.1').setDiffType(DiffType.ADDED).build(),
+                  new NodeBuilder().setTransformed().setName('null')
+                      .setStableId('root.a.null').setDiffType(DiffType.DELETED).build(),
+                ]).build(),
+            ]).build()
         );
 
         const transformedObj = new ObjectTransformer(newObj, 'root', 'root')
@@ -137,15 +156,21 @@ describe("ObjectTransformer", () => {
         };
 
         const expectedTransformedObj = toPlainObject(
-            new ObjDiffNode('root', DiffType.NONE, [
-                new ObjDiffNode('a', DiffType.NONE, [
-                    new ObjDiffNode('b', DiffType.NONE, [
-                        new ObjDiffNode('1', DiffType.ADDED, [], false, 'root.a.b.1'),
-                        new ObjDiffNode('null', DiffType.DELETED, [],  false, 'root.a.b.null'),
-                    ], false, 'root.a.b'),
-                ], false, 'root.a'),
-                new ObjDiffNode('c: 2', DiffType.NONE, [], true, 'root.c'),
-            ],  false, 'root')
+            new NodeBuilder().setTransformed().setName('root')
+                .setStableId('root').setDiffType(DiffType.NONE).setChildren([
+                new NodeBuilder().setTransformed().setName('a')
+                    .setStableId('root.a').setDiffType(DiffType.NONE).setChildren([
+                    new NodeBuilder().setTransformed().setName('b')
+                        .setStableId('root.a.b').setDiffType(DiffType.NONE).setChildren([
+                        new NodeBuilder().setTransformed().setName('1')
+                            .setStableId('root.a.b.1').setDiffType(DiffType.ADDED).build(),
+                        new NodeBuilder().setTransformed().setName('null')
+                            .setStableId('root.a.b.null').setDiffType(DiffType.DELETED).build(),
+                    ]).build(),
+                ]).build(),
+                new NodeBuilder().setTransformed().setName('c: 2')
+                    .setStableId('root.c').setDiffType(DiffType.NONE).setCombined().build(),
+            ]).build()
         );
 
         const transformedObj = new ObjectTransformer(newObj, 'root', 'root')
