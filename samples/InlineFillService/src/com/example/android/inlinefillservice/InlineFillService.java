@@ -23,6 +23,7 @@ import android.service.autofill.FillCallback;
 import android.service.autofill.FillRequest;
 import android.service.autofill.FillResponse;
 import android.service.autofill.InlinePresentation;
+import android.service.autofill.Presentations;
 import android.service.autofill.SaveCallback;
 import android.service.autofill.SaveInfo;
 import android.service.autofill.SaveRequest;
@@ -95,14 +96,17 @@ public class InlineFillService extends AutofillService {
             InlinePresentation inlinePresentation =
                     InlineRequestHelper.maybeCreateInlineAuthenticationResponse(context,
                             inlineRequest);
+            final Presentations.Builder fieldPresentationsBuilder =
+                new Presentations.Builder();
+            fieldPresentationsBuilder.setMenuPresentation(presentation);
+            fieldPresentationsBuilder.setInlinePresentation(inlinePresentation);
             response = new FillResponse.Builder()
-                    .setAuthentication(ids, authentication, presentation, inlinePresentation)
+                    .setAuthentication(ids, authentication, fieldPresentationsBuilder.build())
                     .build();
         } else {
             response = createResponse(this, fields, maxSuggestionsCount, mAuthenticateDatasets,
                     inlineRequest);
         }
-
         callback.onSuccess(response);
     }
 
@@ -130,8 +134,13 @@ public class InlineFillService extends AutofillService {
             response.addDataset(InlineRequestHelper.createInlineActionDataset(context, fields,
                     inlineRequest.get(), R.drawable.ic_settings));
         }
+        // 3. Add fill dialog
+        RemoteViews dialogPresentation =
+            ResponseHelper.newDatasetPresentation(packageName, "Dialog Header");
+        response.setDialogHeader(dialogPresentation);
+        response.setFillDialogTriggerIds(fields.valueAt(0), fields.valueAt(1));
 
-        // 3.Add save info
+        // 4.Add save info
         Collection<AutofillId> ids = fields.values();
         AutofillId[] requiredIds = new AutofillId[ids.size()];
         ids.toArray(requiredIds);
@@ -139,7 +148,7 @@ public class InlineFillService extends AutofillService {
                 // We're simple, so we're generic
                 new SaveInfo.Builder(SaveInfo.SAVE_DATA_TYPE_GENERIC, requiredIds).build());
 
-        // 4.Profit!
+        // 5.Profit!
         return response.build();
     }
 
