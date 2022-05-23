@@ -547,7 +547,7 @@ class FetchFilesEndpoint(DeviceRequestEndpoint):
 
 def check_root(device_id):
     log.debug("Checking root access on {}".format(device_id))
-    return call_adb('shell su root id -u', device_id) == "0\n"
+    return int(call_adb('shell su root id -u', device_id)) == 0
 
 
 TRACE_THREADS = {}
