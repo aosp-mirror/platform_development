@@ -268,14 +268,23 @@ export default {
      */
     mousedownHandler(e) {
       const selectionPositionsUpdater = this.selectionPositionsUpdater();
+      const startClientX = e.clientX;
+      const startClientY = e.clientY;
       selectionPositionsUpdater.init(e);
 
       let dragged = false;
 
       const mousemoveHandler = (e) => {
         if (!dragged) {
-          dragged = true;
-          this.addOverlay();
+          const xDiff = e.clientX - startClientX;
+          const yDiff = e.clientY - startClientY;
+          // Only start the cropping procedures and show the cropping overlay
+          // once we have dragged more than 5 pixels to mark a deliberate drag
+          // rather than an accidental subtle movement when clicking on an entry
+          if (xDiff > 10 || yDiff > 10) {
+            dragged = true;
+            this.addOverlay();
+          }
         }
 
         selectionPositionsUpdater.update(e);
