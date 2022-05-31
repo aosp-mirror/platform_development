@@ -244,7 +244,9 @@
 
                 <div class="timeline-selection">
                   <div class="timeline-selection-header">
-                    <label>Timeline Area Selection</label>
+                    <label style="user-select: none;">
+                      Timeline Area Selection
+                    </label>
                     <span class="material-icons help-icon">
                       help_outline
                       <md-tooltip md-direction="right">
@@ -864,10 +866,12 @@ export default {
 .help-icon-wrapper {
   margin-right: 20px;
   margin-bottom: 10px;
+  user-select: none;
 }
 
 .help-icon-wrapper .help-icon {
   cursor: help;
+  user-select: none;
 }
 
 .trace-icon {
@@ -926,6 +930,7 @@ export default {
   font-size: 15px;
   margin-bottom: 15px;
   cursor: help;
+  user-select: none;
 }
 
 .timestamp-search-input {
