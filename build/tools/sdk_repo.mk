@@ -127,12 +127,6 @@ endef
 
 ifneq ($(filter sdk,$(MAKECMDGOALS)),)
 
-# Similarly capture all sys-img.xml that are now split out of repository.xml
-$(eval $(call mk-sdk-repo-pkg-3,SDK_SYSIMG_XML_ARGS,$(HOST_OS),$(MAIN_SDK_ZIP),system-images,system-images/*))
-
-SDK_SYSIMG_DEPS += \
-    $(call sdk-repo-pkg-zip,$(HOST_OS),$(MAIN_SDK_ZIP),system-images) \
-
 # All these go in the main repository.xml
 $(eval $(call mk-sdk-repo-pkg-1,SDK_REPO_XML_ARGS,$(HOST_OS),$(MAIN_SDK_ZIP),docs))
 $(eval $(call mk-sdk-repo-pkg-2,SDK_REPO_XML_ARGS,$(HOST_OS),$(MAIN_SDK_ZIP),platforms))
