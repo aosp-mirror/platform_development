@@ -91,6 +91,8 @@
           <div>
             <ime-additional-properties
                 :entry="this.item"
+                :isImeManagerService="this.isImeManagerService"
+                :onSelectItem="itemSelected"
             />
           </div>
         </flat-card>
@@ -228,6 +230,7 @@ export default {
       displayDefaults: false,
       showPropertiesDiff: false,
       PropertiesTreeElement,
+      isImeManagerService: false,
     };
   },
   methods: {
@@ -332,6 +335,8 @@ export default {
           this.itemSelected(found);
         }
       }
+
+      this.isImeManagerService = this.file.type === TRACE_TYPES.IME_MANAGERSERVICE;
     },
     arrowUp() {
       return this.$refs.hierarchy.selectPrev();
@@ -395,11 +400,13 @@ export default {
   },
   created() {
     const item = this.file.data[this.file.selectedIndex ?? 0];
-    // Record analytics event
-    if (item.type || item.kind || item.stableId) {
-      this.recordOpenTraceEvent(item.type ?? item.kind ?? item.stableId);
+    if (item) {
+      // Record analytics event
+      if (item.type || item.kind || item.stableId) {
+        this.recordOpenTraceEvent(item.type ?? item.kind ?? item.stableId);
+      }
+      this.setData(item);
     }
-    this.setData(item);
   },
   destroyed() {
     this.store.flickerTraceView = false;

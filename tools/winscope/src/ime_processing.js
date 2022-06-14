@@ -48,7 +48,9 @@ function combineWmSfWithImeDataIfExisting(dataFiles) {
       combineWmSfPropertiesIntoImeData(imeTraceFile,
           filesAsDict[TRACE_TYPES.WINDOW_MANAGER]);
     }
-    if (filesAsDict[TRACE_TYPES.SURFACE_FLINGER]) {
+    if (filesAsDict[TRACE_TYPES.SURFACE_FLINGER] &&
+      imeTraceFile.type !== TRACE_TYPES.IME_MANAGERSERVICE) {
+      // don't need SF properties for ime manager service
       combineWmSfPropertiesIntoImeData(imeTraceFile,
           filesAsDict[TRACE_TYPES.SURFACE_FLINGER]);
     }
@@ -76,6 +78,7 @@ function combineWmSfPropertiesIntoImeData(imeTraceFile, wmOrSfTraceFile) {
   }
 
   for (let i = 0; i < imeTimestamps.length; i++) {
+    // TODO: abstract into one function
     const wmOrSfIntersectIndex = intersectWmOrSfIndices[i];
     let wmStateOrSfLayer = wmOrSfData[wmOrSfIntersectIndex];
     if (wmStateOrSfLayer) {
@@ -84,11 +87,17 @@ function combineWmSfPropertiesIntoImeData(imeTraceFile, wmOrSfTraceFile) {
         wmStateOrSfLayer = filterWmStateForIme(wmStateOrSfLayer);
         imeTraceFile.data[i].wmProperties = wmStateOrSfLayer;
       } else {
+        const sfImeContainerProperties =
+          extractImeContainerFields(wmStateOrSfLayer);
+        imeTraceFile.data[i].sfImeContainerProperties =
+          sfImeContainerProperties;
+
         wmStateOrSfLayer = filterSfLayerForIme(wmStateOrSfLayer);
+        // put SF entry in hierarchy view
+        imeTraceFile.data[i].children.push(wmStateOrSfLayer);
       }
       console.log('after pruning:', wmStateOrSfLayer);
       if (wmStateOrSfLayer) {
-        imeTraceFile.data[i].children.push(wmStateOrSfLayer);
         imeTraceFile.data[0].hasWmSfProperties = true;
         // Note: hasWmSfProperties is added into data because the
         // imeTraceFile object is inextensible if it's from file input
@@ -154,6 +163,26 @@ function findParentTaskNameOfImeContainer(curr) {
     }
   }
   return '';
+}
+
+function extractImeContainerFields(curr) {
+  const isImeContainer = getFilter('ImeContainer');
+  if (isImeContainer(curr)) {
+    return {
+      'bounds': curr.bounds,
+      'rect': curr.rect,
+      'zOrderRelativeOfId': curr.zOrderRelativeOfId,
+      'z': curr.z,
+    };
+  }
+  // search for ImeContainer in children
+  for (const child of curr.children) {
+    const result = extractImeContainerFields(child);
+    if (result) {
+      return result;
+    }
+  }
+  return null;
 }
 
 function pruneChildrenByFilter(curr, filter) {
