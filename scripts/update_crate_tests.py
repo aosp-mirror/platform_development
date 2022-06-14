@@ -298,6 +298,12 @@ class TestMapping(object):
                         continue
                     if test not in config['postsubmit_tests'] and 'postsubmit' in test_group:
                         continue
+                else:
+                    if 'postsubmit' in test_group:
+                        # If postsubmit_tests is not configured, do not place
+                        # anything in postsubmit - presubmit groups are
+                        # automatically included in postsubmit in CI.
+                        continue
                 if test in TEST_OPTIONS:
                     test_mapping[test_group].append({"name": test, "options": TEST_OPTIONS[test]})
                 else:
