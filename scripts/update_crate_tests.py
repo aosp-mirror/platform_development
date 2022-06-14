@@ -82,6 +82,10 @@ TEST_EXCLUDE = [
 
         # TODO: Remove when b/198197213 is closed.
         "diced_client_test",
+
+        "CoverageRustSmokeTest",
+        "libtrusty-rs-tests",
+        "terminal-size_test_src_lib",
 ]
 
 # Excluded modules.
