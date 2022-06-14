@@ -352,7 +352,10 @@ def main():
                 subprocess.check_output(['repo', 'start',
                                          'tmp_auto_test_mapping', '.'])
                 subprocess.check_output(['git', 'add', 'TEST_MAPPING'])
-                subprocess.check_output(['git', 'add', 'test_mapping_config.json'])
+                # test_mapping_config.json is not always present
+                subprocess.call(['git', 'add', 'test_mapping_config.json'],
+                                stderr=subprocess.DEVNULL,
+                                stdout=subprocess.DEVNULL)
                 subprocess.check_output(['git', 'commit', '-m',
                                          'Update TEST_MAPPING\n\nTest: None'])
             if args.push_change and (changed or untracked):
