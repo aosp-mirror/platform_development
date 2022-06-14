@@ -20,7 +20,8 @@ function transform_entry_clients(entry) {
       [[entry.client], transform_client_dump]
     ],
     timestamp: entry.elapsedRealtimeNanos,
-    stableId: 'entry'
+    stableId: 'entry',
+    freeze: false,
   });
 }
 
@@ -54,7 +55,8 @@ function transform_entry_service(entry) {
       [[entry.inputMethodService], transform_service_dump]
     ],
     timestamp: entry.elapsedRealtimeNanos,
-    stableId: 'entry'
+    stableId: 'entry',
+    freeze: false,
   });
 }
 
@@ -88,7 +90,8 @@ function transform_entry_managerservice(entry) {
       [[entry.inputMethodManagerService], transform_managerservice_dump]
     ],
     timestamp: entry.elapsedRealtimeNanos,
-    stableId: 'entry'
+    stableId: 'entry',
+    freeze: false,
   });
 }
 

@@ -24,6 +24,7 @@ import {getFilter} from '@/utils/utils';
 import {TRACE_TYPES} from '@/decode';
 
 function combineWmSfWithImeDataIfExisting(dataFiles) {
+  // TODO(b/237744706): Add tests for this function
   console.log('before combining', dataFiles);
   let filesAsDict;
   if (Array.isArray(dataFiles)) {
@@ -79,22 +80,80 @@ function combineWmSfPropertiesIntoImeData(imeTraceFile, wmOrSfTraceFile) {
     let wmStateOrSfLayer = wmOrSfData[wmOrSfIntersectIndex];
     if (wmStateOrSfLayer) {
       // filter to only relevant nodes & fields
-      // console.log('before pruning:', wmStateOrSfLayer);
-      if (wmStateOrSfLayer.kind !== 'WindowManagerState') {
+      if (wmStateOrSfLayer.kind === 'WindowManagerState') {
+        wmStateOrSfLayer = filterWmStateForIme(wmStateOrSfLayer);
+        imeTraceFile.data[i].wmProperties = wmStateOrSfLayer;
+      } else {
         wmStateOrSfLayer = filterSfLayerForIme(wmStateOrSfLayer);
       }
-      // console.log('after pruning:', wmStateOrSfLayer);
+      console.log('after pruning:', wmStateOrSfLayer);
       if (wmStateOrSfLayer) {
         imeTraceFile.data[i].children.push(wmStateOrSfLayer);
+        imeTraceFile.data[0].hasWmSfProperties = true;
+        // Note: hasWmSfProperties is added into data because the
+        // imeTraceFile object is inextensible if it's from file input
       }
     }
   }
 }
 
+
+function filterWmStateForIme(wmState) {
+  // create and return a custom entry that just contains relevant properties
+  const displayContent = wmState.children[0];
+  return {
+    'kind': 'WM State Properties',
+    'name': wmState.name,
+    'shortName': wmState.shortName, // not sure what this would be yet
+    'timestamp': wmState.timestamp, // not sure what this would be yet
+    'stableId': wmState.stableId,
+    'focusedApp': wmState.focusedApp,
+    'focusedWindow': wmState.focusedWindow,
+    'focusedActivity': wmState.focusedActivity,
+    'inputMethodControlTarget': displayContent.proto.inputMethodControlTarget,
+    'inputMethodInputTarget': displayContent.proto.inputMethodInputTarget,
+    'inputMethodTarget': displayContent.proto.inputMethodTarget,
+    'imeInsetsSourceProvider': displayContent.proto.imeInsetsSourceProvider,
+  };
+}
+
 function filterSfLayerForIme(sfLayer) {
-  const filter = getFilter('ImeContainer');
-  // prune all children that don't match filter
-  return pruneChildrenByFilter(sfLayer, filter);
+  const parentTaskName = findParentTaskNameOfImeContainer(sfLayer);
+  let resultLayer;
+  if (parentTaskName === '') {
+    // there is no ImeContainer; check for ime-snapshot
+    const snapshotFilter = getFilter('IME-snapshot');
+    resultLayer = pruneChildrenByFilter(sfLayer, snapshotFilter);
+  } else {
+    const imeParentTaskFilter = getFilter(parentTaskName);
+    // prune all children that are not part of the "parent task" of ImeContainer
+    resultLayer = pruneChildrenByFilter(sfLayer, imeParentTaskFilter);
+  }
+  resultLayer.kind = 'SurfaceFlinger Properties';
+  return resultLayer;
+}
+
+function findParentTaskNameOfImeContainer(curr) {
+  const isImeContainer = getFilter('ImeContainer');
+  if (isImeContainer(curr)) {
+    let parent = curr.parent;
+    const isTask = getFilter('Task');
+    while (parent && !isTask(parent)) {
+      if (parent.parent != null) {
+        parent = parent.parent;
+      }
+      // else 'parent' is already the root node; use it
+    }
+    return parent.name;
+  }
+  // search for ImeContainer in children
+  for (const child of curr.children) {
+    const result = findParentTaskNameOfImeContainer(child);
+    if (result !== '') {
+      return result;
+    }
+  }
+  return '';
 }
 
 function pruneChildrenByFilter(curr, filter) {
