@@ -160,7 +160,7 @@ import PropertiesTableView from './PropertiesTableView';
 import {ObjectTransformer} from './transform.js';
 import {DiffGenerator, defaultModifiedCheck} from './utils/diff.js';
 import {TRACE_TYPES, DUMP_TYPES} from './decode.js';
-import {isPropertyMatch, stableIdCompatibilityFixup} from './utils/utils.js';
+import {isPropertyMatch, stableIdCompatibilityFixup, getFilter} from './utils/utils.js';
 import {CompatibleFeatures} from './utils/compatibility.js';
 import {getPropertiesForDisplay} from './flickerlib/mixin';
 import ObjectFormatter from './flickerlib/ObjectFormatter';
@@ -475,27 +475,6 @@ export default {
     'properties-table-view': PropertiesTableView,
   },
 };
-
-function getFilter(filterString) {
-  const filterStrings = filterString.split(',');
-  const positive = [];
-  const negative = [];
-  filterStrings.forEach((f) => {
-    if (f.startsWith('!')) {
-      const regex = new RegExp(f.substring(1), "i");
-      negative.push((s) => !regex.test(s));
-    } else {
-      const regex = new RegExp(f, "i");
-      positive.push((s) => regex.test(s));
-    }
-  });
-  const filter = (item) => {
-    const apply = (f) => f(String(item.name));
-    return (positive.length === 0 || positive.some(apply)) &&
-          (negative.length === 0 || negative.every(apply));
-  };
-  return filter;
-}
 
 </script>
 <style scoped>
