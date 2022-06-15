@@ -42,7 +42,7 @@ import base64
 
 # CONFIG #
 
-LOG_LEVEL = logging.DEBUG
+LOG_LEVEL = logging.WARNING
 
 PORT = 5544
 
@@ -54,14 +54,6 @@ WINSCOPE_TOKEN_HEADER = "Winscope-Token"
 
 # Location to save the proxy security token
 WINSCOPE_TOKEN_LOCATION = os.path.expanduser('~/.config/winscope/.token')
-
-# Winscope traces extensions
-WINSCOPE_EXT = ".winscope"
-WINSCOPE_EXT_LEGACY = ".pb"
-WINSCOPE_EXTS = [WINSCOPE_EXT, WINSCOPE_EXT_LEGACY]
-
-# Winscope traces directory
-WINSCOPE_DIR = "/data/misc/wmtrace/"
 
 # Max interval between the client keep-alive requests in seconds
 KEEP_ALIVE_INTERVAL_S = 5
@@ -93,27 +85,10 @@ class FileMatcher:
         matchingFiles = call_adb(
             f"shell su root find {self.path} -name {self.matcher}", device_id)
 
-        log.debug("Found file %s", matchingFiles.split('\n')[:-1])
         return matchingFiles.split('\n')[:-1]
 
     def get_filetype(self):
         return self.type
-
-
-class WinscopeFileMatcher(FileMatcher):
-    def __init__(self, path, matcher, filetype) -> None:
-        self.path = path
-        self.internal_matchers = list(map(lambda ext: FileMatcher(path, f'{matcher}{ext}', filetype),
-            WINSCOPE_EXTS))
-        self.type = filetype
-
-    def get_filepaths(self, device_id):
-        for matcher in self.internal_matchers:
-            files = matcher.get_filepaths(device_id)
-            if len(files) > 0:
-                return files
-        log.debug("No files found")
-        return []
 
 
 class TraceTarget:
@@ -132,65 +107,52 @@ class TraceTarget:
         self.trace_start = trace_start
         self.trace_stop = trace_stop
 
+
 # Order of files matters as they will be expected in that order and decoded in that order
 TRACE_TARGETS = {
     "window_trace": TraceTarget(
-        WinscopeFileMatcher(WINSCOPE_DIR, "wm_trace", "window_trace"),
+        File("/data/misc/wmtrace/wm_trace.pb", "window_trace"),
         'su root cmd window tracing start\necho "WM trace started."',
         'su root cmd window tracing stop >/dev/null 2>&1'
     ),
-    "accessibility_trace": TraceTarget(
-        WinscopeFileMatcher("/data/misc/a11ytrace", "a11y_trace", "accessibility_trace"),
-        'su root cmd accessibility start-trace\necho "Accessibility trace started."',
-        'su root cmd accessibility stop-trace >/dev/null 2>&1'
-    ),
     "layers_trace": TraceTarget(
-        WinscopeFileMatcher(WINSCOPE_DIR, "layers_trace", "layers_trace"),
+        File("/data/misc/wmtrace/layers_trace.pb", "layers_trace"),
         'su root service call SurfaceFlinger 1025 i32 1\necho "SF trace started."',
         'su root service call SurfaceFlinger 1025 i32 0 >/dev/null 2>&1'
     ),
     "screen_recording": TraceTarget(
-        File(f'/data/local/tmp/screen.mp4', "screen_recording"),
-        f'screenrecord --bit-rate 8M /data/local/tmp/screen.mp4 >/dev/null 2>&1 &\necho "ScreenRecorder started."',
+        File("/data/local/tmp/screen.winscope.mp4", "screen_recording"),
+        'screenrecord --bit-rate 8M /data/local/tmp/screen.winscope.mp4 >/dev/null 2>&1 &\necho "ScreenRecorder started."',
         'pkill -l SIGINT screenrecord >/dev/null 2>&1'
     ),
-    "transactions": TraceTarget(
-        WinscopeFileMatcher(WINSCOPE_DIR, "transactions_trace", "transactions"),
-        'su root service call SurfaceFlinger 1041 i32 1\necho "SF transactions recording started."',
-        'su root service call SurfaceFlinger 1041 i32 0 >/dev/null 2>&1'
-    ),
-    "transactions_legacy": TraceTarget(
+    "transaction": TraceTarget(
         [
-            WinscopeFileMatcher(WINSCOPE_DIR, "transaction_trace", "transactions_legacy"),
-            FileMatcher(WINSCOPE_DIR, f'transaction_merges_*', "transaction_merges"),
+            File("/data/misc/wmtrace/transaction_trace.pb", "transactions"),
+            FileMatcher("/data/misc/wmtrace/", "transaction_merges_*.pb",
+                        "transaction_merges"),
         ],
         'su root service call SurfaceFlinger 1020 i32 1\necho "SF transactions recording started."',
         'su root service call SurfaceFlinger 1020 i32 0 >/dev/null 2>&1'
     ),
     "proto_log": TraceTarget(
-        WinscopeFileMatcher(WINSCOPE_DIR, "wm_log", "proto_log"),
+        File("/data/misc/wmtrace/wm_log.pb", "proto_log"),
         'su root cmd window logging start\necho "WM logging started."',
         'su root cmd window logging stop >/dev/null 2>&1'
     ),
     "ime_trace_clients": TraceTarget(
-        WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_clients", "ime_trace_clients"),
+        File("/data/misc/wmtrace/ime_trace_clients.pb", "ime_trace_clients"),
         'su root ime tracing start\necho "Clients IME trace started."',
         'su root ime tracing stop >/dev/null 2>&1'
     ),
    "ime_trace_service": TraceTarget(
-        WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_service", "ime_trace_service"),
+        File("/data/misc/wmtrace/ime_trace_service.pb", "ime_trace_service"),
         'su root ime tracing start\necho "Service IME trace started."',
         'su root ime tracing stop >/dev/null 2>&1'
     ),
     "ime_trace_managerservice": TraceTarget(
-        WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_managerservice", "ime_trace_managerservice"),
+        File("/data/misc/wmtrace/ime_trace_managerservice.pb", "ime_trace_managerservice"),
         'su root ime tracing start\necho "ManagerService IME trace started."',
         'su root ime tracing stop >/dev/null 2>&1'
-    ),
-    "wayland_trace": TraceTarget(
-        WinscopeFileMatcher("/data/misc/wltrace", "wl_trace", "wl_trace"),
-        'su root service call Wayland 26 i32 1 >/dev/null\necho "Wayland trace started."',
-        'su root service call Wayland 26 i32 0 >/dev/null'
     ),
 }
 
@@ -212,71 +174,13 @@ class SurfaceFlingerTraceConfig:
     def command(self) -> str:
         return f'su root service call SurfaceFlinger 1033 i32 {self.flags}'
 
-class SurfaceFlingerTraceSelectedConfig:
-    """Handles optional selected configuration for surfaceflinger traces.
-    """
-
-    def __init__(self) -> None:
-        # defaults set for all configs
-        self.selectedConfigs = {
-            "sfbuffersize": "16000"
-        }
-
-    def add(self, configType, configValue) -> None:
-        self.selectedConfigs[configType] = configValue
-
-    def is_valid(self, configType) -> bool:
-        return configType in CONFIG_SF_SELECTION
-
-    def setBufferSize(self) -> str:
-        return f'su root service call SurfaceFlinger 1029 i32 {self.selectedConfigs["sfbuffersize"]}'
-
-class WindowManagerTraceSelectedConfig:
-    """Handles optional selected configuration for windowmanager traces.
-    """
-
-    def __init__(self) -> None:
-        # defaults set for all configs
-        self.selectedConfigs = {
-            "wmbuffersize": "16000",
-            "tracinglevel": "debug",
-            "tracingtype": "frame",
-        }
-
-    def add(self, configType, configValue) -> None:
-        self.selectedConfigs[configType] = configValue
-
-    def is_valid(self, configType) -> bool:
-        return configType in CONFIG_WM_SELECTION
-
-    def setBufferSize(self) -> str:
-        return f'su root cmd window tracing size {self.selectedConfigs["wmbuffersize"]}'
-
-    def setTracingLevel(self) -> str:
-        return f'su root cmd window tracing level {self.selectedConfigs["tracinglevel"]}'
-
-    def setTracingType(self) -> str:
-        return f'su root cmd window tracing {self.selectedConfigs["tracingtype"]}'
-
 
 CONFIG_FLAG = {
     "composition": 1 << 2,
     "metadata": 1 << 3,
-    "hwc": 1 << 4,
-    "tracebuffers": 1 << 5
+    "hwc": 1 << 4
 }
 
-#Keep up to date with options in DataAdb.vue
-CONFIG_SF_SELECTION = [
-    "sfbuffersize",
-]
-
-#Keep up to date with options in DataAdb.vue
-CONFIG_WM_SELECTION = [
-    "wmbuffersize",
-    "tracingtype",
-    "tracinglevel",
-]
 
 class DumpTarget:
     """Defines a single parameter to trace.
@@ -295,12 +199,12 @@ class DumpTarget:
 
 DUMP_TARGETS = {
     "window_dump": DumpTarget(
-        File(f'/data/local/tmp/wm_dump{WINSCOPE_EXT}', "window_dump"),
-        f'su root dumpsys window --proto > /data/local/tmp/wm_dump{WINSCOPE_EXT}'
+        File("/data/local/tmp/wm_dump.pb", "window_dump"),
+        'su root dumpsys window --proto > /data/local/tmp/wm_dump.pb'
     ),
     "layers_dump": DumpTarget(
-        File(f'/data/local/tmp/sf_dump{WINSCOPE_EXT}', "layers_dump"),
-        f'su root dumpsys SurfaceFlinger --proto > /data/local/tmp/sf_dump{WINSCOPE_EXT}'
+        File("/data/local/tmp/sf_dump.pb", "layers_dump"),
+        'su root dumpsys SurfaceFlinger --proto > /data/local/tmp/sf_dump.pb'
     )
 }
 
@@ -450,27 +354,8 @@ def call_adb_outfile(params: str, outfile, device: str = None, stdin: bytes = No
             'Error executing adb command: adb {}\n{}'.format(params, repr(ex)))
 
 
-class CheckWaylandServiceEndpoint(RequestEndpoint):
-    _listDevicesEndpoint = None
-
-    def __init__(self, listDevicesEndpoint):
-      self._listDevicesEndpoint = listDevicesEndpoint
-
-    def process(self, server, path):
-        self._listDevicesEndpoint.process(server, path)
-        foundDevices = self._listDevicesEndpoint._foundDevices
-
-        if len(foundDevices) > 1:
-          res = 'false'
-        else:
-          raw_res = call_adb('shell service check Wayland')
-          res = 'false' if 'not found' in raw_res else 'true'
-        server.respond(HTTPStatus.OK, res.encode("utf-8"), "text/json")
-
-
 class ListDevicesEndpoint(RequestEndpoint):
     ADB_INFO_RE = re.compile("^([A-Za-z0-9.:\\-]+)\\s+(\\w+)(.*model:(\\w+))?")
-    _foundDevices = None
 
     def process(self, server, path):
         lines = list(filter(None, call_adb('devices -l').split('\n')))
@@ -478,7 +363,6 @@ class ListDevicesEndpoint(RequestEndpoint):
             'authorised': str(m.group(2)) != 'unauthorized',
             'model': m.group(4).replace('_', ' ') if m.group(4) else ''
         } for m in [ListDevicesEndpoint.ADB_INFO_RE.match(d) for d in lines[1:]] if m}
-        self._foundDevices = devices
         j = json.dumps(devices)
         log.debug("Detected devices: " + j)
         server.respond(HTTPStatus.OK, j.encode("utf-8"), "text/json")
@@ -535,9 +419,6 @@ class FetchFilesEndpoint(DeviceRequestEndpoint):
                         file_buffers[file_type] = []
                     buf = base64.encodebytes(tmp.read()).decode("utf-8")
                     file_buffers[file_type].append(buf)
-
-        if (len(file_buffers) == 0):
-            log.error("Proxy didn't find any file to fetch")
 
         # server.send_header('X-Content-Type-Options', 'nosniff')
         # add_standard_headers(server)
@@ -611,7 +492,7 @@ class TraceThread(threading.Thread):
         self.out, self.err = self.process.communicate(self.trace_command)
         log.debug("Trace ended on {}, waiting for cleanup".format(self._device_id))
         time.sleep(0.2)
-        for i in range(50):
+        for i in range(10):
             if call_adb("shell su root cat /data/local/tmp/winscope_status", device=self._device_id) == 'TRACE_OK\n':
                 call_adb(
                     "shell su root rm /data/local/tmp/winscope_status", device=self._device_id)
@@ -697,18 +578,6 @@ class EndTrace(DeviceRequestEndpoint):
                     "utf-8"))
 
 
-def execute_command(server, device_id, shell, configType, configValue):
-    process = subprocess.Popen(shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                   stdin=subprocess.PIPE, start_new_session=True)
-    log.debug(f"Changing trace config on device {device_id} {configType}:{configValue}")
-    out, err = process.communicate(configValue.encode('utf-8'))
-    if process.returncode != 0:
-        raise AdbError(
-            f"Error executing command:\n {configValue}\n\n### OUTPUT ###{out.decode('utf-8')}\n{err.decode('utf-8')}")
-    log.debug(f"Changing trace config finished on device {device_id}")
-    server.respond(HTTPStatus.OK, b'', "text/plain")
-
-
 class ConfigTrace(DeviceRequestEndpoint):
     def process_with_device(self, server, path, device_id):
         try:
@@ -729,50 +598,15 @@ class ConfigTrace(DeviceRequestEndpoint):
         command = config.command()
         shell = ['adb', '-s', device_id, 'shell']
         log.debug(f"Starting shell {' '.join(shell)}")
-        execute_command(server, device_id, shell, "sf buffer size", command)
-
-
-def add_selected_request_to_config(self, server, device_id, config):
-    try:
-        requested_configs = self.get_request(server)
-        for requested_config in requested_configs:
-            if config.is_valid(requested_config):
-                config.add(requested_config, requested_configs[requested_config])
-            else:
-                raise BadRequest(
-                        f"Unsupported config {requested_config}\n")
-    except KeyError as err:
-        raise BadRequest("Unsupported trace target\n" + str(err))
-    if device_id in TRACE_THREADS:
-        BadRequest(f"Trace in progress for {device_id}")
-    if not check_root(device_id):
-        raise AdbError(
-            f"Unable to acquire root privileges on the device - check the output of 'adb -s {device_id} shell su root id'")
-    return config
-
-
-class SurfaceFlingerSelectedConfigTrace(DeviceRequestEndpoint):
-    def process_with_device(self, server, path, device_id):
-        config = SurfaceFlingerTraceSelectedConfig()
-        config = add_selected_request_to_config(self, server, device_id, config)
-        setBufferSize = config.setBufferSize()
-        shell = ['adb', '-s', device_id, 'shell']
-        log.debug(f"Starting shell {' '.join(shell)}")
-        execute_command(server, device_id, shell, "sf buffer size", setBufferSize)
-
-
-class WindowManagerSelectedConfigTrace(DeviceRequestEndpoint):
-    def process_with_device(self, server, path, device_id):
-        config = WindowManagerTraceSelectedConfig()
-        config = add_selected_request_to_config(self, server, device_id, config)
-        setBufferSize = config.setBufferSize()
-        setTracingType = config.setTracingType()
-        setTracingLevel = config.setTracingLevel()
-        shell = ['adb', '-s', device_id, 'shell']
-        log.debug(f"Starting shell {' '.join(shell)}")
-        execute_command(server, device_id, shell, "wm buffer size", setBufferSize)
-        execute_command(server, device_id, shell, "tracing type", setTracingType)
-        execute_command(server, device_id, shell, "tracing level", setTracingLevel)
+        process = subprocess.Popen(shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                   stdin=subprocess.PIPE, start_new_session=True)
+        log.debug(f"Changing trace config on device {device_id} cmd:{command}")
+        out, err = process.communicate(command.encode('utf-8'))
+        if process.returncode != 0:
+            raise AdbError(
+                f"Error executing command:\n {command}\n\n### OUTPUT ###{out.decode('utf-8')}\n{err.decode('utf-8')}")
+        log.debug(f"Changing trace config finished on device {device_id}")
+        server.respond(HTTPStatus.OK, b'', "text/plain")
 
 
 class StatusEndpoint(DeviceRequestEndpoint):
@@ -814,9 +648,8 @@ class DumpEndpoint(DeviceRequestEndpoint):
 class ADBWinscopeProxy(BaseHTTPRequestHandler):
     def __init__(self, request, client_address, server):
         self.router = RequestRouter(self)
-        listDevicesEndpoint = ListDevicesEndpoint()
         self.router.register_endpoint(
-            RequestType.GET, "devices", listDevicesEndpoint)
+            RequestType.GET, "devices", ListDevicesEndpoint())
         self.router.register_endpoint(
             RequestType.GET, "status", StatusEndpoint())
         self.router.register_endpoint(
@@ -826,12 +659,6 @@ class ADBWinscopeProxy(BaseHTTPRequestHandler):
         self.router.register_endpoint(RequestType.POST, "dump", DumpEndpoint())
         self.router.register_endpoint(
             RequestType.POST, "configtrace", ConfigTrace())
-        self.router.register_endpoint(
-            RequestType.POST, "selectedsfconfigtrace", SurfaceFlingerSelectedConfigTrace())
-        self.router.register_endpoint(
-            RequestType.POST, "selectedwmconfigtrace", WindowManagerSelectedConfigTrace())
-        self.router.register_endpoint(
-            RequestType.GET, "checkwayland", CheckWaylandServiceEndpoint(listDevicesEndpoint))
         super().__init__(request, client_address, server)
 
     def respond(self, code: int, data: bytes, mime: str) -> None:

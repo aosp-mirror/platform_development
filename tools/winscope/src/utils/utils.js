@@ -84,21 +84,4 @@ function nanosToString(elapsedRealtimeNanos, precision) {
   return parts.reverse().join('');
 }
 
-/** Checks for match in window manager properties taskId, layerId, or windowToken,
- * or surface flinger property id
- */
-function isPropertyMatch(flickerItem, entryItem) {
-  return flickerItem.taskId === entryItem.taskId ||
-    (flickerItem.windowToken === entryItem.windowToken) ||
-    ((flickerItem.layerId === entryItem.layerId) && flickerItem.layerId !== 0) ||
-    flickerItem.layerId === entryItem.id;
-}
-
-export {
-  DIRECTION,
-  findLastMatchingSorted,
-  isPropertyMatch,
-  stableIdCompatibilityFixup,
-  nanosToString,
-  TimeUnits
-}
+export { DIRECTION, findLastMatchingSorted, stableIdCompatibilityFixup, nanosToString, TimeUnits }

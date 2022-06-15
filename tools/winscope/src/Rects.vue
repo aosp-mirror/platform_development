@@ -15,34 +15,25 @@
 <template>
   <div class="bounds" :style="boundsStyle">
     <div
-      class="rect" v-for="rect in filteredRects"
-      :style="rectToStyle(rect)"
-      @click="onClick(rect)"
-      v-bind:key="`${rect.left}-${rect.right}-${rect.top}-${rect.bottom}-${rect.ref.name}`"
+      class="rect" v-for="r in filteredRects"
+      :style="rectToStyle(r)"
+      @click="onClick(r)"
+      v-bind:key="`${r.left}-${r.right}-${r.top}-${r.bottom}-${r.ref.name}`"
     >
-      <span class="label">{{rect.label}}</span>
+      <span class="label">{{r.label}}</span>
     </div>
-    <div
-      class="highlight"
-      v-if="highlight"
-      :style="rectToStyle(highlight)"
-    />
-    <div
-      class="displayRect" v-for="rect in displayRects"
-      :style="rectToStyle(rect)"
-      v-bind:key="`${rect.left}-${rect.right}-${rect.top}-${rect.bottom}-${rect.id}`"
-    />
+    <div class="highlight" v-if="highlight" :style="rectToStyle(highlight)" />
   </div>
 </template>
 
 <script>
 
 // eslint-disable-next-line camelcase
-import {multiplyRect} from './matrix_utils.js';
+import {multiply_rect} from './matrix_utils.js';
 
 export default {
   name: 'rects',
-  props: ['bounds', 'rects', 'highlight','displays'],
+  props: ['bounds', 'rects', 'highlight'],
   data() {
     return {
       desiredHeight: 800,
@@ -54,26 +45,11 @@ export default {
       if (this.bounds) {
         return this.bounds;
       }
-      var width = Math.max(
-          ...this.rects.map((rect) => multiplyRect(rect.transform, rect).right));
-      var height = Math.max(
-          ...this.rects.map((rect) => multiplyRect(rect.transform, rect).bottom));
-
-      // constrain max bounds to prevent boundless layers from shrinking visible displays
-      if (this.hasDisplays) {
-        width = Math.min(width, this.maxWidth);
-        height = Math.min(height, this.maxHeight);
-      }
+      const width = Math.max(
+          ...this.rects.map((r) => multiply_rect(r.transform, r).right));
+      const height = Math.max(
+          ...this.rects.map((r) => multiply_rect(r.transform, r).bottom));
       return {width, height};
-    },
-    maxWidth() {
-      return Math.max(...this.displayRects.map(rect => rect.width)) * 1.3;
-    },
-    maxHeight() {
-      return Math.max(...this.displayRects.map(rect => rect.height)) * 1.3;
-    },
-    hasDisplays() {
-      return this.displays.length > 0;
     },
     boundsStyle() {
       return this.rectToStyle({top: 0, left: 0, right: this.boundsC.width,
@@ -81,15 +57,9 @@ export default {
     },
     filteredRects() {
       return this.rects.filter((rect) => {
-        const isVisible = rect.ref.isVisible;
+        const isVisible = rect.ref.visible ?? rect.ref.isVisible;
+        console.warn(`Name: ${rect.ref.name} Kind: ${rect.ref.kind} isVisible=${isVisible}`);
         return isVisible;
-      });
-    },
-    displayRects() {
-      return this.displays.map(display => {
-        var rect = display.layerStackSpace;
-        rect.id = display.id;
-        return rect;
       });
     },
   },
@@ -103,28 +73,19 @@ export default {
       }
       return sourceCoordinate * scale;
     },
-    rectToStyle(rect) {
-      const x = this.s(rect.left);
-      const y = this.s(rect.top);
-      const w = this.s(rect.right) - this.s(rect.left);
-      const h = this.s(rect.bottom) - this.s(rect.top);
-
-      let t;
-      if (rect.transform && rect.transform.matrix) {
-        t = rect.transform.matrix;
-      } else {
-        t = rect.transform;
-      }
-
+    rectToStyle(r) {
+      const x = this.s(r.left);
+      const y = this.s(r.top);
+      const w = this.s(r.right) - this.s(r.left);
+      const h = this.s(r.bottom) - this.s(r.top);
+      const t = r.transform;
       const tr = t ? `matrix(${t.dsdx}, ${t.dtdx}, ${t.dsdy}, ${t.dtdy}, ` +
           `${this.s(t.tx)}, ${this.s(t.ty)})` : '';
-      const rectStyle = `top: ${y}px; left: ` +
-            `${x}px; height: ${h}px; width: ${w}px; ` +
-            `transform: ${tr}; transform-origin: 0 0;`;
-      return rectStyle;
+      return `top: ${y}px; left: ${x}px; height: ${h}px; width: ${w}px;` +
+             `transform: ${tr}; transform-origin: 0 0;`;
     },
-    onClick(rect) {
-      this.$emit('rect-click', rect.ref);
+    onClick(r) {
+      this.$emit('rect-click', r.ref);
     },
   },
 };
@@ -135,7 +96,7 @@ export default {
   position: relative;
   overflow: hidden;
 }
-.highlight, .rect, .displayRect {
+.highlight, .rect {
   position: absolute;
   box-sizing: border-box;
   display: flex;
@@ -143,15 +104,10 @@ export default {
 }
 .rect {
   border: 1px solid black;
-  background-color: rgba(146, 149, 150, 0.8);
+  background-color: rgba(110, 114, 116, 0.8);
 }
 .highlight {
   border: 2px solid rgb(235, 52, 52);
-  background-color: rgba(243, 212, 212, 0.25);
-  pointer-events: none;
-}
-.displayRect {
-  border: 4px dashed #195aca;
   pointer-events: none;
 }
 .label {
