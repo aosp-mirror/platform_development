@@ -53,23 +53,29 @@
             />
           </md-field>
         </md-content>
-        <div class="tree-view-wrapper">
-          <tree-view
-            class="treeview"
-            :item="tree"
-            @item-selected="itemSelected"
-            :selected="hierarchySelected"
-            :filter="hierarchyFilter"
-            :flattened="store.flattened"
-            :onlyVisible="store.onlyVisible"
-            :flickerTraceView="store.flickerTraceView"
-            :presentTags="presentTags"
-            :presentErrors="presentErrors"
-            :items-clickable="true"
-            :useGlobalCollapsedState="true"
-            :simplify-names="store.simplifyNames"
-            ref="hierarchy"
+        <div class="hierarchy-content">
+          <properties-table-view
+              v-if="propertiesForTableView"
+              :tableEntries="propertiesForTableView"
           />
+          <div class="tree-view-wrapper">
+            <tree-view
+              class="treeview"
+              :item="tree"
+              @item-selected="itemSelected"
+              :selected="hierarchySelected"
+              :filter="hierarchyFilter"
+              :flattened="store.flattened"
+              :onlyVisible="store.onlyVisible"
+              :flickerTraceView="store.flickerTraceView"
+              :presentTags="presentTags"
+              :presentErrors="presentErrors"
+              :items-clickable="true"
+              :useGlobalCollapsedState="true"
+              :simplify-names="store.simplifyNames"
+              ref="hierarchy"
+            />
+          </div>
         </div>
       </flat-card>
     </div>
@@ -149,6 +155,7 @@ import Rects from './Rects.vue';
 import FlatCard from './components/FlatCard.vue';
 import PropertiesTreeElement from './PropertiesTreeElement.vue';
 import SurfaceFlingerPropertyGroups from '@/SurfaceFlingerPropertyGroups.vue';
+import PropertiesTableView from './PropertiesTableView';
 
 import {ObjectTransformer} from './transform.js';
 import {DiffGenerator, defaultModifiedCheck} from './utils/diff.js';
@@ -438,12 +445,34 @@ export default {
     hasTagsOrErrors() {
       return this.presentTags.length > 0 || this.presentErrors.length > 0;
     },
+    propertiesForTableView() {
+      if (this.file.type == TRACE_TYPES.IME_CLIENTS) {
+        return {
+          'methodId': this.item.obj.client?.inputMethodManager?.curId,
+          'packageName': this.item.obj.client?.editorInfo?.packageName,
+        };
+      } else if (this.file.type == TRACE_TYPES.IME_SERVICE) {
+        return {
+          'windowVisible': this.item.obj.inputMethodService?.windowVisible,
+          'decorViewVisible': this.item.obj.inputMethodService?.decorViewVisible,
+          'packageName': this.item.obj.inputMethodService?.inputEditorInfo?.packageName,
+        };
+      } else if (this.file.type == TRACE_TYPES.IME_MANAGERSERVICE) {
+        return {
+          'methodId': this.item.obj.inputMethodManagerService?.curMethodId,
+          'curFocusedWindow': this.item.obj.inputMethodManagerService?.curFocusedWindowName,
+          'lastImeTargetWindow': this.item.obj.inputMethodManagerService?.lastImeTargetWindowName,
+          'inputShown': this.item.obj.inputMethodManagerService?.inputShown,
+        };
+      }
+    },
   },
   components: {
     'tree-view': TreeView,
     'rects': Rects,
     'flat-card': FlatCard,
     'sf-property-groups': SurfaceFlingerPropertyGroups,
+    'properties-table-view': PropertiesTableView,
   },
 };
 
@@ -486,6 +515,7 @@ function getFilter(filterString) {
   margin: 8px;
   min-width: 400px;
   min-height: 70rem;
+  max-height: 70rem;
 }
 
 .rects,
@@ -508,6 +538,7 @@ function getFilter(filterString) {
 .treeview {
   overflow: auto;
   white-space: pre-line;
+  flex: 1 0 0;
 }
 
 .no-properties {
@@ -546,6 +577,7 @@ function getFilter(filterString) {
   color: rgba(0, 0, 0, 0.75);
 }
 
+.hierarchy-content,
 .properties-content {
   display: flex;
   flex-direction: column;
@@ -556,9 +588,5 @@ function getFilter(filterString) {
   display: flex;
   flex-direction: column;
   flex: 1;
-}
-
-.treeview {
-  flex: 1 0 0;
 }
 </style>
