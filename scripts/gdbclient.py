@@ -317,7 +317,8 @@ def do_main():
     if ":" in device.serial:
         host = device.serial.split(":")[0]
     else:
-        host = "localhost"
+        # lldb is broken with "localhost" right now (http://b/234034124)
+        host = "127.0.0.1"
 
     root = os.environ["ANDROID_BUILD_TOP"]
     sysroot = os.path.join(os.environ["ANDROID_PRODUCT_OUT"], "symbols")
