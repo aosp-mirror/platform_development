@@ -1205,10 +1205,10 @@ class Runner(object):
       result = version_pat.match(dir_name)
       if not result:
         continue
-      version = (result.group(1), result.group(2), result.group(3))
+      version = (int(result.group(1)), int(result.group(2)), int(result.group(3)))
       if version > rust_version:
         rust_version = version
-    return '.'.join(rust_version)
+    return '.'.join(map(str, rust_version))
 
   def find_out_files(self):
     # list1 has build.rs output for normal crates
