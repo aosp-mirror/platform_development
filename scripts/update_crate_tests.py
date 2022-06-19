@@ -82,6 +82,10 @@ TEST_EXCLUDE = [
 
         # TODO: Remove when b/198197213 is closed.
         "diced_client_test",
+
+        "CoverageRustSmokeTest",
+        "libtrusty-rs-tests",
+        "terminal-size_test_src_lib",
 ]
 
 # Excluded modules.
@@ -294,6 +298,12 @@ class TestMapping(object):
                         continue
                     if test not in config['postsubmit_tests'] and 'postsubmit' in test_group:
                         continue
+                else:
+                    if 'postsubmit' in test_group:
+                        # If postsubmit_tests is not configured, do not place
+                        # anything in postsubmit - presubmit groups are
+                        # automatically included in postsubmit in CI.
+                        continue
                 if test in TEST_OPTIONS:
                     test_mapping[test_group].append({"name": test, "options": TEST_OPTIONS[test]})
                 else:
@@ -352,7 +362,10 @@ def main():
                 subprocess.check_output(['repo', 'start',
                                          'tmp_auto_test_mapping', '.'])
                 subprocess.check_output(['git', 'add', 'TEST_MAPPING'])
-                subprocess.check_output(['git', 'add', 'test_mapping_config.json'])
+                # test_mapping_config.json is not always present
+                subprocess.call(['git', 'add', 'test_mapping_config.json'],
+                                stderr=subprocess.DEVNULL,
+                                stdout=subprocess.DEVNULL)
                 subprocess.check_output(['git', 'commit', '-m',
                                          'Update TEST_MAPPING\n\nTest: None'])
             if args.push_change and (changed or untracked):
