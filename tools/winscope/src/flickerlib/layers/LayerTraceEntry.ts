@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Display, LayerTraceEntry, LayerTraceEntryBuilder, toRect, toSize, toTransform } from "../common"
+import { Display, LayerTraceEntry, LayerTraceEntryBuilder, toRect, toSize, toTransform, SURFACE_FLINGER_KIND } from "../common"
 import Layer from './Layer'
 import { VISIBLE_CHIP, RELATIVE_Z_PARENT_CHIP, MISSING_LAYER } from '../treeview/Chips'
 
@@ -31,7 +31,7 @@ LayerTraceEntry.fromProto = function (protos: any[], displayProtos: any[],
 }
 
 function addAttributes(entry: LayerTraceEntry, protos: any) {
-    entry.kind = "entry"
+    entry.kind = SURFACE_FLINGER_KIND;
     // There no JVM/JS translation for Longs yet
     entry.timestampMs = entry.timestamp.toString()
     entry.rects = entry.visibleLayers
