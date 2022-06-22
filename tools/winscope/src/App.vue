@@ -56,6 +56,7 @@
 
       <md-app-content class="main-content" :style="mainContentStyle">
         <section class="data-inputs" v-if="!dataLoaded">
+          <betafeatures :setBetaImePanelFlag="this.setBetaImePanelFlag" />
           <div class="input">
             <dataadb class="adbinput" ref="adb" :store="store"
               @dataReady="onDataReady" />
@@ -112,6 +113,7 @@ import {NAVIGATION_STYLE, SEARCH_TYPE} from './utils/consts';
 import {TRACE_TYPES, FILE_TYPES, dataFile} from './decode.js';
 import { TaggingEngine } from './flickerlib/common';
 import titleComponent from './Title.vue';
+import BetaFeaturesToolbar from '@/BetaFeaturesToolbar';
 
 const APP_NAME = 'Winscope';
 
@@ -134,6 +136,9 @@ export default {
         flickerTraceView: false,
         showFileTypes: [],
         isInputMode: false,
+        betaFeatures: {
+          newImePanels: false,
+        },
       }),
       overlayRef: 'overlay',
       mainContentStyle: {
@@ -145,7 +150,7 @@ export default {
       searchTypes: [SEARCH_TYPE.TIMESTAMP],
       hasTagOrErrorTraces: false,
       traceName: "unnamed_winscope_trace",
-      editingTraceName: false
+      editingTraceName: false,
     };
   },
   created() {
@@ -307,7 +312,13 @@ export default {
 
     editTraceName() {
       this.editingTraceName = true;
-    }
+    },
+
+    setBetaImePanelFlag(flag) {
+      console.log('Beta IME feature (combining WM&SF properties in)' +
+          ' enabled:', flag);
+      this.store.betaFeatures.newImePanels = flag;
+    },
   },
   computed: {
     files() {
@@ -368,6 +379,7 @@ export default {
     dataadb: DataAdb,
     searchbar: Searchbar,
     ["vue-title"]: titleComponent,
+    betafeatures: BetaFeaturesToolbar,
   },
 };
 </script>
