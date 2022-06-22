@@ -48,28 +48,28 @@ export default {
   margin-bottom: 10px;
 }
 
-.table-heading {
+.properties-table-wrapper .table-heading {
   padding: 10px 16px;
 }
 
-.table-key-cell {
+.properties-table-wrapper .table-key-cell {
   background-color: rgba(158, 192, 200, 0.281);
 }
 
-.table-key-value {
+.properties-table-wrapper .table-key-value {
   overflow-wrap: anywhere;
   border-left: 1px solid rgba(0, 0, 0, 0.12);
 }
 
-.md-table-cell {
+.properties-table-wrapper .md-table-cell {
   height: auto;
 }
 
-.md-table-cell-container {
+.properties-table-wrapper .md-table-cell-container {
   padding: 8px 16px;
 }
 
-.md-table-cell:last-child .md-table-cell-container {
+.properties-table-wrapper .md-table-cell:last-child .md-table-cell-container {
   padding-right: 16px;
 }
 </style>
