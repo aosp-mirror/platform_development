@@ -46,11 +46,13 @@ function combineWmSfWithImeDataIfExisting(dataFiles) {
         filetype.includes('ImeTrace'))).map(([k, v]) => v);
   for (const imeTraceFile of imeTraceFiles) {
     if (filesAsDict[TRACE_TYPES.WINDOW_MANAGER]) {
+      console.log('combining WM file to', imeTraceFile.type, 'file');
       combineWmSfPropertiesIntoImeData(imeTraceFile,
           filesAsDict[TRACE_TYPES.WINDOW_MANAGER]);
     }
     if (filesAsDict[TRACE_TYPES.SURFACE_FLINGER] &&
       imeTraceFile.type !== TRACE_TYPES.IME_MANAGERSERVICE) {
+      console.log('combining SF file to', imeTraceFile.type, 'file');
       // don't need SF properties for ime manager service
       combineWmSfPropertiesIntoImeData(imeTraceFile,
           filesAsDict[TRACE_TYPES.SURFACE_FLINGER]);
@@ -61,25 +63,14 @@ function combineWmSfWithImeDataIfExisting(dataFiles) {
 
 function combineWmSfPropertiesIntoImeData(imeTraceFile, wmOrSfTraceFile) {
   const imeTimestamps = imeTraceFile.timeline;
-  const wmOrSfData = wmOrSfTraceFile.data;
   const wmOrSfTimestamps = wmOrSfTraceFile.timeline;
+  const intersectWmOrSfIndices =
+    matchCorrespondingTimestamps(imeTimestamps, wmOrSfTimestamps);
 
-  // find the latest sf / wm timestamp that comes before current ime timestamp
-  let wmOrSfIndex = 0;
-  const intersectWmOrSfIndices = [];
-  for (let imeIndex = 0; imeIndex < imeTimestamps.length; imeIndex++) {
-    const currImeTimestamp = imeTimestamps[imeIndex];
+  const wmOrSfData = wmOrSfTraceFile.data;
 
-    let currWmOrSfTimestamp = wmOrSfTimestamps[wmOrSfIndex];
-    while (currWmOrSfTimestamp < currImeTimestamp) {
-      wmOrSfIndex++;
-      currWmOrSfTimestamp = wmOrSfTimestamps[wmOrSfIndex];
-    }
-    intersectWmOrSfIndices.push(wmOrSfIndex - 1);
-  }
-
+  console.log('number of entries:', imeTimestamps.length);
   for (let i = 0; i < imeTimestamps.length; i++) {
-    // TODO: abstract into one function
     const wmOrSfIntersectIndex = intersectWmOrSfIndices[i];
     let wmStateOrSfLayer = wmOrSfData[wmOrSfIntersectIndex];
     if (wmStateOrSfLayer) {
@@ -106,6 +97,23 @@ function combineWmSfPropertiesIntoImeData(imeTraceFile, wmOrSfTraceFile) {
   }
 }
 
+function matchCorrespondingTimestamps(imeTimestamps, wmOrSfTimestamps) {
+  // find the latest sf / wm timestamp that comes before current ime timestamp
+  let wmOrSfIndex = 0;
+  const intersectWmOrSfIndices = [];
+  for (let imeIndex = 0; imeIndex < imeTimestamps.length; imeIndex++) {
+    const currImeTimestamp = imeTimestamps[imeIndex];
+
+    let currWmOrSfTimestamp = wmOrSfTimestamps[wmOrSfIndex];
+    while (currWmOrSfTimestamp < currImeTimestamp) {
+      wmOrSfIndex++;
+      currWmOrSfTimestamp = wmOrSfTimestamps[wmOrSfIndex];
+    }
+    intersectWmOrSfIndices.push(wmOrSfIndex - 1);
+  }
+  console.log('done matching corresponding timestamps');
+  return intersectWmOrSfIndices;
+}
 
 function filterWmStateForIme(wmState) {
   // create and return a custom entry that just contains relevant properties
@@ -131,9 +139,11 @@ function filterSfLayerForIme(sfLayer) {
   let resultLayer;
   if (parentTaskName === '') {
     // there is no ImeContainer; check for ime-snapshot
+    console.log('there is no ImeContainer; checking for IME-snapshot');
     const snapshotFilter = getFilter('IME-snapshot');
     resultLayer = pruneChildrenByFilter(sfLayer, snapshotFilter);
   } else {
+    console.log('found parent task of ImeContainer:', parentTaskName);
     const imeParentTaskFilter = getFilter(parentTaskName);
     // prune all children that are not part of the "parent task" of ImeContainer
     resultLayer = pruneChildrenByFilter(sfLayer, imeParentTaskFilter);
@@ -145,13 +155,14 @@ function filterSfLayerForIme(sfLayer) {
 function findParentTaskNameOfImeContainer(curr) {
   const isImeContainer = getFilter('ImeContainer');
   if (isImeContainer(curr)) {
+    console.log('found ImeContainer; searching for parent');
     let parent = curr.parent;
-    const isTask = getFilter('Task');
-    while (parent && !isTask(parent)) {
+    const isTask = getFilter('Task, ImePlaceholder');
+    while (parent.parent && !isTask(parent)) {
+      // if parent.parent is null, 'parent' is already the root node -- use it
       if (parent.parent != null) {
         parent = parent.parent;
       }
-      // else 'parent' is already the root node; use it
     }
     return parent.name;
   }
