@@ -709,10 +709,16 @@ class Crate(object):
       for header_dir in self.runner.args.exported_c_header_dir:
         self.write('        "%s",' % header_dir)
       self.write('    ],')
-    if self.runner.args.apex_available and crate_type in LIBRARY_CRATE_TYPES:
+    if crate_type in LIBRARY_CRATE_TYPES:
       self.write('    apex_available: [')
-      for apex in self.runner.args.apex_available:
-        self.write('        "%s",' % apex)
+      if self.runner.args.apex_available is None:
+        # If apex_available is not explicitly set, make it available to all
+        # apexes.
+        self.write('        "//apex_available:platform",')
+        self.write('        "//apex_available:anyapex",')
+      else:
+        for apex in self.runner.args.apex_available:
+          self.write('        "%s",' % apex)
       self.write('    ],')
     if crate_type != 'test':
       if self.runner.args.native_bridge_supported:
