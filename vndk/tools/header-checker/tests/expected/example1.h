@@ -448,7 +448,7 @@ enum_types {
 }
 enum_types {
   type_info {
-    name: "Hello::(anonymous enum at development/vndk/tools/header-checker/tests/input/example1.h:17:3)"
+    name: "Hello::(unnamed enum at development/vndk/tools/header-checker/tests/input/example1.h:17:3)"
     size: 4
     alignment: 4
     referenced_type: "_ZTIN5Hello2$AE"
@@ -469,7 +469,7 @@ enum_types {
 }
 enum_types {
   type_info {
-    name: "Hello::(anonymous enum at development/vndk/tools/header-checker/tests/input/example1.h:18:3)"
+    name: "Hello::(unnamed enum at development/vndk/tools/header-checker/tests/input/example1.h:18:3)"
     size: 4
     alignment: 4
     referenced_type: "_ZTIN5Hello2$CE"
@@ -786,7 +786,7 @@ builtin_types {
 }
 qualified_types {
   type_info {
-    name: "bool const[2]"
+    name: "const bool[2]"
     size: 2
     alignment: 1
     referenced_type: "_ZTIA2_b"
@@ -870,7 +870,7 @@ qualified_types {
 }
 array_types {
   type_info {
-    name: "bool [2]"
+    name: "bool[2]"
     size: 2
     alignment: 1
     referenced_type: "_ZTIb"
