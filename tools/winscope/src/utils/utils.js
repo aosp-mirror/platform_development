@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-// Find the index of the last element matching the predicate in a sorted array
+/**
+ * Find the index of the last element matching the predicate in a sorted array
+ */
 function findLastMatchingSorted(array, predicate) {
   let a = 0;
   let b = array.length - 1;
@@ -30,7 +32,9 @@ function findLastMatchingSorted(array, predicate) {
   return predicate(array, b) ? b : a;
 }
 
-// Make sure stableId is unique (makes old versions of proto compatible)
+/**
+ * Make sure stableId is unique (makes old versions of proto compatible)
+ */
 function stableIdCompatibilityFixup(item) {
   // For backwards compatibility
   // (the only item that doesn't have a unique stable ID in the tree)
@@ -84,8 +88,9 @@ function nanosToString(elapsedRealtimeNanos, precision) {
   return parts.reverse().join('');
 }
 
-/** Checks for match in window manager properties taskId, layerId, or windowToken,
- * or surface flinger property id
+/**
+ * Checks for match in window manager properties taskId, layerId, or
+ * windowToken, or surface flinger property id
  */
 function isPropertyMatch(flickerItem, entryItem) {
   return flickerItem.taskId === entryItem.taskId ||
@@ -94,11 +99,39 @@ function isPropertyMatch(flickerItem, entryItem) {
     flickerItem.layerId === entryItem.id;
 }
 
+/**
+ * Get a function that will filter tree items based on a filter string
+ * @param filterString a string of "queries" used to match tree items' names
+ * @return {function(*)} a filter function that determines whether a tree item's
+ * name matches what is wanted based on the filterString
+ */
+function getFilter(filterString) {
+  const filterStrings = filterString.split(',');
+  const positive = [];
+  const negative = [];
+  filterStrings.forEach((f) => {
+    if (f.startsWith('!')) {
+      const regex = new RegExp(f.substring(1), "i");
+      negative.push((s) => !regex.test(s));
+    } else {
+      const regex = new RegExp(f, "i");
+      positive.push((s) => regex.test(s));
+    }
+  });
+  const filter = (item) => {
+    const apply = (f) => f(String(item.name));
+    return (positive.length === 0 || positive.some(apply)) &&
+      (negative.length === 0 || negative.every(apply));
+  };
+  return filter;
+}
+
 export {
   DIRECTION,
   findLastMatchingSorted,
   isPropertyMatch,
   stableIdCompatibilityFixup,
   nanosToString,
-  TimeUnits
-}
+  TimeUnits,
+  getFilter,
+};
