@@ -16,6 +16,7 @@
 
 import LocalStore from '../localstore.js';
 import {FILE_DECODERS, FILE_TYPES} from '../decode.js';
+import {combineWmSfWithImeDataIfExisting} from '../ime_processing.js';
 
 export enum ProxyState {
   ERROR = 0,
@@ -199,6 +200,9 @@ class ProxyClient {
         if (idx < files.length - 1) {
           client.loadFile(files, idx + 1, traceType, view);
         } else {
+          if (view.store.betaFeatures.newImePanels) {
+            combineWmSfWithImeDataIfExisting(view.dataFiles);
+          }
           const currentDate = new Date().toISOString();
           view.$emit('dataReady',
               `winscope-${traceType}-${currentDate}`,
