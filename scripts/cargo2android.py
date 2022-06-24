@@ -1326,20 +1326,69 @@ class Runner(object):
         else:
           in_pkg = pkg_section.match(line) is not None
 
+  # Simple class for manipulation and error handling on Cargo.toml files.
+  class CargoToml(object):
+    cargo_toml = './Cargo.toml'
+    cargo_toml_orig = './Cargo.toml.orig'
+    cargo_toml_lines = None
+
+    def __init__(self, args):
+      if not os.access(self.cargo_toml, os.R_OK):
+        print('error: cannot find or read', self.cargo_toml)
+        return None
+
+      if args.orig_cargo_toml:
+        if not os.access(self.cargo_toml_orig, os.R_OK):
+          print('error: cannot find or read', self.cargo_toml_orig)
+          return None
+
+      # These arguments result in modifying the Cargo.toml.
+      # Save the original to be restored.
+      if args.orig_cargo_toml or args.add_workspace:
+        with open(self.cargo_toml, 'r') as in_file:
+          self.cargo_toml_lines = in_file.readlines()
+
+      # Temporarily replace Cargo.toml with Cargo.toml.orig.
+      # This is useful because crates.io removes dev-dependencies from Cargo.toml when
+      # version numbers are not specified, which is not possible for many crates due to
+      # https://github.com/rust-lang/cargo/issues/4242.
+      if args.orig_cargo_toml:
+        with open(self.cargo_toml, 'w') as out_file:
+          with open(self.cargo_toml_orig, 'r') as in_file:
+            lines = in_file.readlines()
+            out_file.writelines(lines)
+        if args.verbose:
+          print('### INFO: Overwrote Cargo.toml with Cargo.toml.orig')
+
+      # Add [workspace] to Cargo.toml if it is not there.
+      if args.add_workspace:
+        with open(self.cargo_toml, 'r') as in_file:
+          lines = in_file.readlines()
+        if '[workspace]\n' in lines:
+          print('### WARNING: found [workspace] in Cargo.toml')
+        else:
+          with open(self.cargo_toml, 'a') as out_file:
+            out_file.write('[workspace]\n')
+            if args.verbose:
+              print('### INFO: added [workspace] to Cargo.toml')
+
+    def restore(self, args):
+      if self.cargo_toml_lines is not None:
+        with open(self.cargo_toml, 'w') as out_file:
+          out_file.writelines(self.cargo_toml_lines)
+        if args.verbose:
+          print('### INFO: restored original Cargo.toml')
+
   def run_cargo(self):
     """Calls cargo -v and save its output to ./cargo.out."""
     if self.skip_cargo:
       return self
-    cargo_toml = './Cargo.toml'
     cargo_out = './cargo.out'
     # Do not use Cargo.lock, because .bp rules are designed to
     # run with "latest" crates avaialable on Android.
     cargo_lock = './Cargo.lock'
     cargo_lock_saved = './cargo.lock.saved'
     had_cargo_lock = os.path.exists(cargo_lock)
-    if not os.access(cargo_toml, os.R_OK):
-      print('ERROR: Cannot find or read', cargo_toml)
-      return self
     if not self.dry_run:
       if os.path.exists(cargo_out):
         os.remove(cargo_out)
@@ -1350,20 +1399,11 @@ class Runner(object):
     # set up search PATH for cargo to find the correct rustc
     saved_path = os.environ['PATH']
     os.environ['PATH'] = os.path.dirname(self.cargo_path) + ':' + saved_path
-    # Add [workspace] to Cargo.toml if it is not there.
-    added_workspace = False
-    if self.args.add_workspace:
-      with open(cargo_toml, 'r') as in_file:
-        cargo_toml_lines = in_file.readlines()
-      found_workspace = '[workspace]\n' in cargo_toml_lines
-      if found_workspace:
-        print('### WARNING: found [workspace] in Cargo.toml')
-      else:
-        with open(cargo_toml, 'a') as out_file:
-          out_file.write('[workspace]\n')
-          added_workspace = True
-          if self.args.verbose:
-            print('### INFO: added [workspace] to Cargo.toml')
+
+    cargo_toml = self.CargoToml(self.args)
+    if cargo_toml is None:
+      return self
+
     for c in self.cargo:
       features = ''
       if c != 'clean':
@@ -1380,11 +1420,9 @@ class Runner(object):
     if self.args.tests:
       cmd = self.cargo_path + ' test' + features + cmd_tail_target + ' -- --list' + cmd_tail_redir
       self.run_cmd(cmd, cargo_out)
-    if added_workspace:  # restore original Cargo.toml
-      with open(cargo_toml, 'w') as out_file:
-        out_file.writelines(cargo_toml_lines)
-      if self.args.verbose:
-        print('### INFO: restored original Cargo.toml')
+
+    cargo_toml.restore(self.args)
+
     os.environ['PATH'] = saved_path
     if not self.dry_run:
       if not had_cargo_lock:  # restore to no Cargo.lock state
@@ -1714,6 +1752,11 @@ def get_parser():
       action='store_true',
       default=False,
       help='skip cargo command, parse cargo.out, and generate Android.bp')
+  parser.add_argument(
+      '--orig-cargo-toml',
+      action='store_true',
+      default=False,
+      help='Use Cargo.toml.orig instead of Cargo.toml.')
   parser.add_argument(
       '--tests',
       action='store_true',
