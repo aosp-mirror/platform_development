@@ -116,7 +116,7 @@ full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework-doc-system
 $(call dist-for-goals,sdk,$(full_target):system-data/api-versions.xml)
 
 # ======= Lint system Annotations zip ===========
-full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework-doc-system-stubs_annotations.zip
+full_target := $(call intermediates-dir-for,ETC,sdk-annotations-system.zip)/sdk-annotations-system.zip
 $(call dist-for-goals,sdk,$(full_target):system-data/annotations.zip)
 
 # ============ SDK AIDL ============
