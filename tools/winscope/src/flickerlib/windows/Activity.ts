@@ -25,7 +25,7 @@ Activity.fromProto = function (proto: any): Activity {
     } else {
         const windowContainer = WindowContainer.fromProto(
             /* proto */ proto.windowToken.windowContainer,
-            /* protoChildren */ proto.windowToken.windowContainer.children.reverse(),
+            /* protoChildren */ proto.windowToken.windowContainer?.children?.reverse() ?? [],
             /* isActivityInTree */ true,
             /* nameOverride */ null,
             /* identifierOverride */ proto.identifier
@@ -42,7 +42,6 @@ Activity.fromProto = function (proto: any): Activity {
         );
 
         addAttributes(entry, proto);
-        console.warn("Created ", entry.kind, " stableId=", entry.stableId);
         return entry;
     }
 }
