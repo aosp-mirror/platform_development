@@ -69,6 +69,13 @@
                 android:padding="8dp"
                 android:text="@string/activity_picture_in_picture_seamless_resize_toggle" />
 
+            <Switch
+                android:id="@+id/enter_pip_on_back"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:text="@string/activity_picture_in_picture_enter_pip_on_back_toggle" />
+
             <RadioGroup
                 android:id="@+id/current_position"
                 android:layout_width="match_parent"
