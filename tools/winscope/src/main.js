@@ -165,7 +165,9 @@ const store = new Vuex.Store({
         }
 
         if (Object.keys(traceFiles).length > 0 && typeInfo.constructor) {
-          traces[traceType] = new typeInfo.constructor(traceFiles);
+          const newObj = new typeInfo.constructor(traceFiles);
+          newObj.data = Object.freeze(newObj.data);
+          traces[traceType] = newObj;
         }
       }
 
@@ -198,7 +200,9 @@ const store = new Vuex.Store({
         }
 
         if (Object.keys(dumpFiles).length > 0 && typeInfo.constructor) {
-          dumps[dumpType] = new typeInfo.constructor(dumpFiles);
+          const newObj = new typeInfo.constructor(dumpFiles);
+          newObj.data = Object.freeze(newObj.data);
+          dumps[dumpType] = newObj;
         }
 
       }
