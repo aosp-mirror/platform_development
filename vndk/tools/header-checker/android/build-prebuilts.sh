@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 # Copyright 2019 Google Inc. All rights reserved.
 #
@@ -14,14 +14,40 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+usage() {
+    echo "Usage: $(basename "$0") [build_target]..."
+    echo "    Build all targets if build_target is not specified."
+    echo "    Supported build targets for macOS: ${MACOS_SOONG_BINARIES[*]}"
+    echo "    Supported build targets for Linux: ${LINUX_SOONG_BINARIES[*]}"
+}
+
+valid_build_target () {
+    for i in "${VALID_SOONG_BINARIES[@]}"; do
+        if [ "$i" = "$1" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+SOONG_BINARIES=()
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -*) # Display help.
+            usage
+            exit 0
+            ;;
+        *) # Add specified build targets into SOONG_BINARIES
+            SOONG_BINARIES+=("$1")
+            ;;
+    esac
+    shift
+done
+
+set -ex
+
 source "$(dirname "$0")/envsetup.sh"
-
-if [ -z "${OUT_DIR}" ]; then
-    echo "error: Must set OUT_DIR"
-    exit 1
-fi
-
-TOP=$(pwd)
 
 UNAME="$(uname)"
 case "${UNAME}" in
@@ -37,6 +63,49 @@ Darwin)
     ;;
 esac
 
+LINUX_SOONG_BINARIES=(
+    "bindgen"
+    "cxx_extractor"
+    "header-abi-linker"
+    "header-abi-dumper"
+    "header-abi-diff"
+    "proto_metadata_plugin"
+    "protoc_extractor"
+    "versioner"
+)
+
+MACOS_SOONG_BINARIES=(
+    "versioner"
+)
+
+# Targets to be built
+if [ "${OS}" = "darwin" ]; then
+    VALID_SOONG_BINARIES=("${MACOS_SOONG_BINARIES[@]}")
+else
+    VALID_SOONG_BINARIES=("${LINUX_SOONG_BINARIES[@]}")
+fi
+
+if [ "${#SOONG_BINARIES[@]}" -eq 0 ]; then
+    # SOONG_BINARIES is empty, so there must be no commandline argument, thus we
+    # build everything.
+    SOONG_BINARIES=("${VALID_SOONG_BINARIES[@]}")
+fi
+
+# Check if all specified targets are valid
+for name in "${SOONG_BINARIES[@]}"; do
+  if ! valid_build_target "${name}"; then
+    echo "build_target ${name} is not one of the supported targets: ${VALID_SOONG_BINARIES[*]}"
+    exit 1
+  fi
+done
+
+if [ -z "${OUT_DIR}" ]; then
+    echo "error: Must set OUT_DIR"
+    exit 1
+fi
+
+TOP=$(pwd)
+
 # Setup Soong configuration
 SOONG_OUT="${OUT_DIR}/soong"
 SOONG_HOST_OUT="${OUT_DIR}/soong/host/${OS}-x86"
@@ -48,24 +117,6 @@ cat > "${SOONG_OUT}/soong.variables" << __EOF__
     "HostArch":"x86_64"
 }
 __EOF__
-
-# Targets to be built
-if [ "${OS}" = "darwin" ]; then
-    SOONG_BINARIES=(
-        "versioner"
-    )
-else
-    SOONG_BINARIES=(
-        "bindgen"
-        "cxx_extractor"
-        "header-abi-linker"
-        "header-abi-dumper"
-        "header-abi-diff"
-        "proto_metadata_plugin"
-        "protoc_extractor"
-        "versioner"
-    )
-fi
 
 binaries=()
 for name in "${SOONG_BINARIES[@]}"; do
