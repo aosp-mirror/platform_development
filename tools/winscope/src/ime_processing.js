@@ -20,9 +20,9 @@
  * to combine WM & SF trace properties into IME trace entries.
  */
 
-import {getFilter} from '@/utils/utils';
 import {TRACE_TYPES} from '@/decode';
 import {WINDOW_MANAGER_KIND} from '@/flickerlib/common';
+import {getFilter} from '@/utils/utils';
 
 function combineWmSfWithImeDataIfExisting(dataFiles) {
   // TODO(b/237744706): Add tests for this function
@@ -40,22 +40,25 @@ function combineWmSfWithImeDataIfExisting(dataFiles) {
     filesAsDict = dataFiles;
   }
 
-  const imeTraceFiles = Object.entries(filesAsDict).filter(
-      ([filetype]) => (
-      // mapping it to an array of files; removes the key which is filetype
-        filetype.includes('ImeTrace'))).map(([k, v]) => v);
+  const imeTraceFiles = Object.entries(filesAsDict)
+      .filter(
+          ([filetype]) => (
+            // mapping it to an array of files; removes
+            // the key which is filetype
+            filetype.includes('ImeTrace')))
+      .map(([k, v]) => v);
   for (const imeTraceFile of imeTraceFiles) {
     if (filesAsDict[TRACE_TYPES.WINDOW_MANAGER]) {
       console.log('combining WM file to', imeTraceFile.type, 'file');
-      combineWmSfPropertiesIntoImeData(imeTraceFile,
-          filesAsDict[TRACE_TYPES.WINDOW_MANAGER]);
+      combineWmSfPropertiesIntoImeData(
+          imeTraceFile, filesAsDict[TRACE_TYPES.WINDOW_MANAGER]);
     }
     if (filesAsDict[TRACE_TYPES.SURFACE_FLINGER] &&
-      imeTraceFile.type !== TRACE_TYPES.IME_MANAGERSERVICE) {
+        imeTraceFile.type !== TRACE_TYPES.IME_MANAGERSERVICE) {
       console.log('combining SF file to', imeTraceFile.type, 'file');
       // don't need SF properties for ime manager service
-      combineWmSfPropertiesIntoImeData(imeTraceFile,
-          filesAsDict[TRACE_TYPES.SURFACE_FLINGER]);
+      combineWmSfPropertiesIntoImeData(
+          imeTraceFile, filesAsDict[TRACE_TYPES.SURFACE_FLINGER]);
     }
   }
   console.log('after combining', dataFiles);
@@ -65,33 +68,34 @@ function combineWmSfPropertiesIntoImeData(imeTraceFile, wmOrSfTraceFile) {
   const imeTimestamps = imeTraceFile.timeline;
   const wmOrSfTimestamps = wmOrSfTraceFile.timeline;
   const intersectWmOrSfIndices =
-    matchCorrespondingTimestamps(imeTimestamps, wmOrSfTimestamps);
+      matchCorrespondingTimestamps(imeTimestamps, wmOrSfTimestamps);
 
   const wmOrSfData = wmOrSfTraceFile.data;
 
   console.log('number of entries:', imeTimestamps.length);
   for (let i = 0; i < imeTimestamps.length; i++) {
     const wmOrSfIntersectIndex = intersectWmOrSfIndices[i];
-    let wmStateOrSfLayer = wmOrSfData[wmOrSfIntersectIndex];
-    if (wmStateOrSfLayer) {
-      // filter to only relevant nodes & fields
-      if (wmStateOrSfLayer.kind === WINDOW_MANAGER_KIND) {
-        wmStateOrSfLayer = filterWmStateForIme(wmStateOrSfLayer);
-        imeTraceFile.data[i].wmProperties = wmStateOrSfLayer;
-      } else {
-        const sfImeContainerProperties =
+    const wmStateOrSfLayer = wmOrSfData[wmOrSfIntersectIndex];
+    // filter wmStateOrSfLayer to only relevant nodes & fields
+    if (wmStateOrSfLayer && wmStateOrSfLayer.kind === WINDOW_MANAGER_KIND) {
+      const wmProperties = filterWmStateForIme(wmStateOrSfLayer);
+      imeTraceFile.data[i].wmProperties = wmProperties;
+      imeTraceFile.data[0].hasWmSfProperties = true;
+      // hasWmSfProperties is added into data because the
+      // imeTraceFile object itself is inextensible if it's from file input
+    } else if (wmStateOrSfLayer) {
+      const sfImeContainerProperties =
           extractImeContainerFields(wmStateOrSfLayer);
-        imeTraceFile.data[i].sfImeContainerProperties =
-          sfImeContainerProperties;
+      imeTraceFile.data[i].sfImeContainerProperties = Object.assign(
+          {'name': wmStateOrSfLayer.name}, sfImeContainerProperties);
+      // 'name' is the ..d..h..m..s..ms timestamp
 
-        wmStateOrSfLayer = filterSfLayerForIme(wmStateOrSfLayer);
-        // put SF entry in hierarchy view
-        imeTraceFile.data[i].children.push(wmStateOrSfLayer);
-      }
-      if (wmStateOrSfLayer) {
+      const sfSubtrees = filterSfLayerForIme(
+          wmStateOrSfLayer); // for display in Hierarchy sub-panel
+      imeTraceFile.data[i].children.push(...sfSubtrees);
+
+      if (sfImeContainerProperties || sfSubtrees.length > 0) {
         imeTraceFile.data[0].hasWmSfProperties = true;
-        // Note: hasWmSfProperties is added into data because the
-        // imeTraceFile object is inextensible if it's from file input
       }
     }
   }
@@ -120,9 +124,7 @@ function filterWmStateForIme(wmState) {
   const displayContent = wmState.children[0];
   return {
     'kind': 'WM State Properties',
-    'name': wmState.name,
-    'shortName': wmState.shortName, // not sure what this would be yet
-    'timestamp': wmState.timestamp, // not sure what this would be yet
+    'name': wmState.name, // this is the ..d..h..m..s..ms timestamp
     'stableId': wmState.stableId,
     'focusedApp': wmState.focusedApp,
     'focusedWindow': wmState.focusedWindow,
@@ -135,27 +137,24 @@ function filterWmStateForIme(wmState) {
 }
 
 function filterSfLayerForIme(sfLayer) {
-  const parentTaskName = findParentTaskNameOfImeContainer(sfLayer);
-  let resultLayer;
-  if (parentTaskName === '') {
-    // there is no ImeContainer; check for ime-snapshot
-    console.log('there is no ImeContainer; checking for IME-snapshot');
-    const snapshotFilter = getFilter('IME-snapshot');
-    resultLayer = pruneChildrenByFilter(sfLayer, snapshotFilter);
-  } else {
-    console.log('found parent task of ImeContainer:', parentTaskName);
-    const imeParentTaskFilter = getFilter(parentTaskName);
-    // prune all children that are not part of the "parent task" of ImeContainer
-    resultLayer = pruneChildrenByFilter(sfLayer, imeParentTaskFilter);
-  }
-  resultLayer.kind = 'SurfaceFlinger Properties';
-  return resultLayer;
+  const parentTaskOfImeContainer =
+    findParentTaskOfNode(sfLayer, 'ImeContainer');
+  const parentTaskOfImeSnapshot = findParentTaskOfNode(sfLayer, 'IME-snapshot');
+  // we want to see both ImeContainer and IME-snapshot if there are
+  // cases where both exist
+  const resultSubtree = [parentTaskOfImeContainer, parentTaskOfImeSnapshot]
+      .filter((node) => node) // filter away null values
+      .map((node) => {
+        node.kind = 'SF subtree - ' + node.id;
+        return node;
+      });
+  return resultSubtree;
 }
 
-function findParentTaskNameOfImeContainer(curr) {
-  const isImeContainer = getFilter('ImeContainer');
+function findParentTaskOfNode(curr, nodeName) {
+  const isImeContainer = getFilter(nodeName);
   if (isImeContainer(curr)) {
-    console.log('found ImeContainer; searching for parent');
+    console.log('found ' + nodeName + '; searching for parent');
     let parent = curr.parent;
     const isTask = getFilter('Task, ImePlaceholder');
     while (parent.parent && !isTask(parent)) {
@@ -164,23 +163,23 @@ function findParentTaskNameOfImeContainer(curr) {
         parent = parent.parent;
       }
     }
-    return parent.name;
+    return parent;
   }
   // search for ImeContainer in children
   for (const child of curr.children) {
-    const result = findParentTaskNameOfImeContainer(child);
-    if (result !== '') {
+    const result = findParentTaskOfNode(child, nodeName);
+    if (result != null) {
       return result;
     }
   }
-  return '';
+  return null;
 }
 
 function extractImeContainerFields(curr) {
   const isImeContainer = getFilter('ImeContainer');
   if (isImeContainer(curr)) {
     return {
-      'bounds': curr.bounds,
+      'screenBounds': curr.screenBounds,
       'rect': curr.rect,
       'zOrderRelativeOfId': curr.zOrderRelativeOfId,
       'z': curr.z,
@@ -194,28 +193,6 @@ function extractImeContainerFields(curr) {
     }
   }
   return null;
-}
-
-function pruneChildrenByFilter(curr, filter) {
-  const prunedChildren = [];
-  if (filter(curr)) { // curr node passes filter; will keep all children
-    return curr;
-  }
-  // else, filter curr's children
-  for (const child of curr.children) {
-    const prunedChild = pruneChildrenByFilter(child, filter);
-    if (prunedChild) {
-      prunedChildren.push(prunedChild);
-    }
-    // else undefined - child does not match the filter; discard it
-  }
-  if (prunedChildren.length > 0) {
-    // make a copy because we can't set property 'children' of original object
-    const copy = Object.assign({}, curr);
-    copy.children = prunedChildren;
-    return copy;
-  }
-  return undefined; // no children match the filter; discard curr node
 }
 
 export {combineWmSfWithImeDataIfExisting};

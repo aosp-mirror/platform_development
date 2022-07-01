@@ -13,16 +13,35 @@
      limitations under the License.
 -->
 <template class="container">
-  <div v-if="isImeManagerService">
+  <div v-if="isAllPropertiesNull" class="group">
+    There is no corresponding WM / SF entry for this IME entry –
+    no WM / SF entry is recorded before this IME entry in time.
+    View later frames for WM & SF properties.
+  </div>
+  <div v-else-if="isImeManagerService">
     <div class="group">
-      <span class="group-header">Name</span>
+      <span class="group-header">WMState</span>
       <div class="full-width">
-        <span class="value">{{ entry.wmProperties.name }}</span>
+        <span class="value" v-if="entry.wmProperties">{{
+            entry.wmProperties.name }}</span>
+        <span v-else>There is no corresponding WMState entry.</span>
       </div>
     </div>
     <div class="group">
       <span class="group-header">IME Insets Source Provider</span>
-      <div class="left-column">
+      <div class="full-width">
+        <span class="key">Source Frame:</span>
+        <CoordinatesTable
+            :coordinates="wmInsetsSourceProviderSourceFrameOrNull" />
+        <div />
+        <span class="key">Source Visible:</span>
+        <span class="value">{{
+            wmInsetsSourceProviderSourceVisibleOrNull }}</span>
+        <div />
+        <span class="key">Source Visible Frame:</span>
+        <CoordinatesTable
+            :coordinates="wmInsetsSourceProviderSourceVisibleFrameOrNull" />
+        <div />
         <span class="key">Position:</span>
         <span class="value">{{ wmInsetsSourceProviderPositionOrNull }}</span>
         <div />
@@ -35,27 +54,15 @@
             wmInsetsSourceProviderControllableOrNull }}</span>
         <div />
       </div>
-      <div class="right-column">
-        <span class="key">Source Frame:</span>
-        <span class="value">{{ wmInsetsSourceProviderSourceFrameOrNull }}</span>
-        <div />
-        <span class="key">Source Visible:</span>
-        <span class="value">{{
-            wmInsetsSourceProviderSourceVisibleOrNull }}</span>
-        <div />
-        <span class="key">Source Visible Frame:</span>
-        <span class="value">{{
-            wmInsetsSourceProviderSourceVisibleFrameOrNull }}</span>
-        <div />
-      </div>
     </div>
     <div class="group">
       <span class="group-header">IMControl Target</span>
       <div class="full-width">
         <button
             class="text-button"
+            :class="{ 'selected': isSelected(wmIMControlTargetOrNull) }"
             v-if="wmIMControlTargetOrNull"
-            @click="onSelectItem(wmIMControlTargetOrNull)">
+            @click="onClickShowInPropertiesPanel(wmIMControlTargetOrNull)">
           Input Method Control Target
         </button>
         <span class="value" v-else>null</span>
@@ -66,8 +73,9 @@
       <div class="full-width">
         <button
             class="text-button"
+            :class="{ 'selected': isSelected(wmIMInputTargetOrNull) }"
             v-if="wmIMInputTargetOrNull"
-            @click="onSelectItem(wmIMInputTargetOrNull)">
+            @click="onClickShowInPropertiesPanel(wmIMInputTargetOrNull)">
           Input Method Input Target
         </button>
         <span class="value" v-else>null</span>
@@ -78,20 +86,32 @@
       <div class="full-width">
         <button
             class="text-button"
+            :class="{ 'selected': isSelected(wmIMTargetOrNull) }"
             v-if="wmIMTargetOrNull"
-            @click="onSelectItem(wmIMTargetOrNull)">
+            @click="onClickShowInPropertiesPanel(wmIMTargetOrNull)">
           Input Method Target
         </button>
         <span class="value" v-else>null</span>
       </div>
     </div>
   </div>
+
   <div v-else>
     <!-- Ime Client or Ime Service -->
     <div class="group">
-      <span class="group-header">Name</span>
+      <span class="group-header">WMState</span>
       <div class="full-width">
-        <span class="value">{{ entry.wmProperties.name }}</span>
+        <span class="value" v-if="entry.wmProperties">{{
+            entry.wmProperties.name }}</span>
+        <span v-else>There is no corresponding WMState entry.</span>
+      </div>
+    </div>
+    <div class="group">
+      <span class="group-header">SFLayer</span>
+      <div class="full-width">
+        <span class="value" v-if="entry.sfImeContainerProperties">{{
+            entry.sfImeContainerProperties.name }}</span>
+        <span v-else>There is no corresponding SFLayer entry.</span>
       </div>
     </div>
     <div class="group" v-if="entry.wmProperties">
@@ -107,22 +127,25 @@
         <span class="value">{{ entry.wmProperties.focusedWindow }}</span>
         <div />
         <span class="key">Frame:</span>
-        <span class="value">{{ wmControlTargetFrameOrNull }}</span>
+        <CoordinatesTable :coordinates="wmControlTargetFrameOrNull" />
         <div />
       </div>
     </div>
     <div class="group" v-if="entry.sfImeContainerProperties">
       <span class="group-header">Ime Container</span>
       <div class="full-width">
-        <span class="key">Bounds:</span>
-        <span class="value">{{ entry.sfImeContainerProperties.bounds }}</span>
+        <span class="key">ScreenBounds:</span>
+        <CoordinatesTable
+            :coordinates="sfImeContainerScreenBoundsOrNull" />
         <div />
         <span class="key">Rect:</span>
-        <span class="value">{{ entry.sfImeContainerProperties.rect }}</span>
+        <CoordinatesTable
+            :coordinates="sfImeContainerRectOrNull" />
         <div />
         <span class="key">ZOrderRelativeOfId:</span>
-        <span class="value">
-          {{ entry.sfImeContainerProperties.zOrderRelativeOfId }}</span>
+        <span class="value">{{
+            entry.sfImeContainerProperties.zOrderRelativeOfId
+          }}</span>
         <div />
         <span class="key">Z:</span>
         <span class="value">{{ entry.sfImeContainerProperties.z }}</span>
@@ -134,6 +157,7 @@
 
 <script>
 
+import CoordinatesTable from '@/CoordinatesTable';
 import ObjectFormatter from './flickerlib/ObjectFormatter';
 import {ObjectTransformer} from '@/transform';
 import {getPropertiesForDisplay} from '@/flickerlib/mixin';
@@ -147,18 +171,18 @@ function formatProto(obj) {
 
 export default {
   name: 'ImeAdditionalProperties',
+  components: {CoordinatesTable},
   props: ['entry', 'isImeManagerService', 'onSelectItem'],
+  data() {
+    return {
+      selected: null,
+    };
+  },
   methods: {
     getTransformedProperties(item) {
       // this function is similar to the one in TraceView.vue,
       // but without 'diff visualisation'
       ObjectFormatter.displayDefaults = this.displayDefaults;
-      // There are 2 types of object whose properties can appear in the property
-      // list: Flicker objects (WM/SF traces) and dictionaries
-      // (IME/Accessibilty/Transactions).
-      // While flicker objects have their properties directly in the main object
-      // those created by a call to the transform function have their properties
-      // inside an obj property. This makes both cases work
       // TODO(209452852) Refactor both flicker and winscope-native objects to
       // implement a common display interface that can be better handled
       const target = item.obj ?? item;
@@ -173,6 +197,16 @@ export default {
 
       return transformer.transform();
     },
+
+    onClickShowInPropertiesPanel(item) {
+      this.selected = item;
+      this.onSelectItem(item);
+    },
+
+    isSelected(item) {
+      return this.selected === item;
+    },
+
   },
   computed: {
     wmControlTargetFrameOrNull() {
@@ -221,13 +255,24 @@ export default {
               this.entry.wmProperties.inputMethodTarget) :
           null;
     },
+    sfImeContainerScreenBoundsOrNull() {
+      return this.entry.sfImeContainerProperties?.screenBounds || 'null';
+    },
+    sfImeContainerRectOrNull() {
+      return this.entry.sfImeContainerProperties?.rect || 'null';
+    },
+    isAllPropertiesNull() {
+      if (this.isImeManagerService) {
+        return !this.entry.wmProperties;
+      } else {
+        return !(this.entry.wmProperties ||
+            this.entry.sfImeContainerProperties);
+      }
+    },
   },
   watch: {
     entry() {
-      console.log(this.entry);
-    },
-    onSelectItem() {
-      console.log(this.onSelectItem);
+      console.log('Updated IME entry:', this.entry);
     },
   },
 };
@@ -243,7 +288,6 @@ export default {
   border-bottom: thin solid rgba(0, 0, 0, 0.12);
   flex-direction: row;
   display: flex;
-  max-height: 180px;
 }
 
 .group .key {
@@ -258,7 +302,7 @@ export default {
 .group-header {
   justify-content: center;
   padding: 0px 5px;
-  width: 90px;
+  width: 95px;
   display: inline-block;
   font-size: bigger;
   color: grey;
@@ -319,6 +363,14 @@ export default {
   text-decoration: underline;
   text-decoration-color: blue;
   background-color: inherit;
+}
+
+.text-button:focus {
+  color: purple;
+}
+
+.text-button.selected {
+  color: purple;
 }
 
 </style>
