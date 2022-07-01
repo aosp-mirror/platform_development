@@ -13,7 +13,7 @@
      limitations under the License.
 -->
 <template class="container">
-  <div v-if="entry.wmProperties">
+  <div v-if="isImeManagerService">
     <div class="group">
       <span class="group-header">Name</span>
       <div class="full-width">
@@ -21,9 +21,82 @@
       </div>
     </div>
     <div class="group">
+      <span class="group-header">IME Insets Source Provider</span>
+      <div class="left-column">
+        <span class="key">Position:</span>
+        <span class="value">{{ wmInsetsSourceProviderPositionOrNull }}</span>
+        <div />
+        <span class="key">IsLeashReadyForDispatching:</span>
+        <span class="value">{{
+            wmInsetsSourceProviderIsLeashReadyOrNull }}</span>
+        <div />
+        <span class="key">Controllable:</span>
+        <span class="value">{{
+            wmInsetsSourceProviderControllableOrNull }}</span>
+        <div />
+      </div>
+      <div class="right-column">
+        <span class="key">Source Frame:</span>
+        <span class="value">{{ wmInsetsSourceProviderSourceFrameOrNull }}</span>
+        <div />
+        <span class="key">Source Visible:</span>
+        <span class="value">{{
+            wmInsetsSourceProviderSourceVisibleOrNull }}</span>
+        <div />
+        <span class="key">Source Visible Frame:</span>
+        <span class="value">{{
+            wmInsetsSourceProviderSourceVisibleFrameOrNull }}</span>
+        <div />
+      </div>
+    </div>
+    <div class="group">
+      <span class="group-header">IMControl Target</span>
+      <div class="full-width">
+        <button
+            class="text-button"
+            v-if="wmIMControlTargetOrNull"
+            @click="onSelectItem(wmIMControlTargetOrNull)">
+          Input Method Control Target
+        </button>
+        <span class="value" v-else>null</span>
+      </div>
+    </div>
+    <div class="group">
+      <span class="group-header">IMInput Target</span>
+      <div class="full-width">
+        <button
+            class="text-button"
+            v-if="wmIMInputTargetOrNull"
+            @click="onSelectItem(wmIMInputTargetOrNull)">
+          Input Method Input Target
+        </button>
+        <span class="value" v-else>null</span>
+      </div>
+    </div>
+    <div class="group">
+      <span class="group-header">IM Target</span>
+      <div class="full-width">
+        <button
+            class="text-button"
+            v-if="wmIMTargetOrNull"
+            @click="onSelectItem(wmIMTargetOrNull)">
+          Input Method Target
+        </button>
+        <span class="value" v-else>null</span>
+      </div>
+    </div>
+  </div>
+  <div v-else>
+    <!-- Ime Client or Ime Service -->
+    <div class="group">
+      <span class="group-header">Name</span>
+      <div class="full-width">
+        <span class="value">{{ entry.wmProperties.name }}</span>
+      </div>
+    </div>
+    <div class="group" v-if="entry.wmProperties">
       <span class="group-header">Focus</span>
       <div class="full-width">
-        <div />
         <span class="key">Focused App:</span>
         <span class="value">{{ entry.wmProperties.focusedApp }}</span>
         <div />
@@ -33,54 +106,27 @@
         <span class="key">Focused Window:</span>
         <span class="value">{{ entry.wmProperties.focusedWindow }}</span>
         <div />
+        <span class="key">Frame:</span>
+        <span class="value">{{ wmControlTargetFrameOrNull }}</span>
+        <div />
       </div>
     </div>
-    <div class="group">
-      <span class="group-header">Insets Source Provider</span>
+    <div class="group" v-if="entry.sfImeContainerProperties">
+      <span class="group-header">Ime Container</span>
       <div class="full-width">
-        <tree-view
-            class="tree-view"
-            :collapse-children="true"
-            :item="getTransformedProperties(
-                entry.wmProperties
-                .imeInsetsSourceProvider.insetsSourceProvider)"
-        />
-      </div>
-    </div>
-    <div class="group">
-      <span class="group-header">IMControl Target</span>
-      <div class="full-width">
-        <tree-view
-            class="tree-view"
-            :collapse="true"
-            :collapse-children="true"
-            :item="getTransformedProperties(
-                entry.wmProperties.inputMethodControlTarget)"
-        />
-      </div>
-    </div>
-    <div class="group">
-      <span class="group-header">IMInput Target</span>
-      <div class="full-width">
-        <tree-view
-            class="tree-view"
-            :collapse="true"
-            :collapse-children="true"
-            :item="getTransformedProperties(
-                entry.wmProperties.inputMethodInputTarget)"
-        />
-      </div>
-    </div>
-    <div class="group">
-      <span class="group-header">IM Target</span>
-      <div class="full-width">
-        <tree-view
-            class="tree-view"
-            :collapse="true"
-            :collapse-children="true"
-            :item="getTransformedProperties(
-                entry.wmProperties.inputMethodTarget)"
-        />
+        <span class="key">Bounds:</span>
+        <span class="value">{{ entry.sfImeContainerProperties.bounds }}</span>
+        <div />
+        <span class="key">Rect:</span>
+        <span class="value">{{ entry.sfImeContainerProperties.rect }}</span>
+        <div />
+        <span class="key">ZOrderRelativeOfId:</span>
+        <span class="value">
+          {{ entry.sfImeContainerProperties.zOrderRelativeOfId }}</span>
+        <div />
+        <span class="key">Z:</span>
+        <span class="value">{{ entry.sfImeContainerProperties.z }}</span>
+        <div />
       </div>
     </div>
   </div>
@@ -88,7 +134,6 @@
 
 <script>
 
-import TreeView from '@/TreeView';
 import ObjectFormatter from './flickerlib/ObjectFormatter';
 import {ObjectTransformer} from '@/transform';
 import {getPropertiesForDisplay} from '@/flickerlib/mixin';
@@ -102,8 +147,7 @@ function formatProto(obj) {
 
 export default {
   name: 'ImeAdditionalProperties',
-  components: {TreeView},
-  props: ['entry'],
+  props: ['entry', 'isImeManagerService', 'onSelectItem'],
   methods: {
     getTransformedProperties(item) {
       // this function is similar to the one in TraceView.vue,
@@ -130,6 +174,62 @@ export default {
       return transformer.transform();
     },
   },
+  computed: {
+    wmControlTargetFrameOrNull() {
+      return this.entry.wmProperties?.imeInsetsSourceProvider
+          ?.insetsSourceProvider?.controlTarget?.windowFrames?.frame || 'null';
+    },
+    wmInsetsSourceProviderPositionOrNull() {
+      return this.entry.wmProperties?.imeInsetsSourceProvider
+          ?.insetsSourceProvider?.control?.position || 'null';
+    },
+    wmInsetsSourceProviderIsLeashReadyOrNull() {
+      return this.entry.wmProperties?.imeInsetsSourceProvider
+          ?.insetsSourceProvider?.isLeashReadyForDispatching || 'null';
+    },
+    wmInsetsSourceProviderControllableOrNull() {
+      return this.entry.wmProperties?.imeInsetsSourceProvider
+          ?.insetsSourceProvider?.controllable || 'null';
+    },
+    wmInsetsSourceProviderSourceFrameOrNull() {
+      return this.entry.wmProperties?.imeInsetsSourceProvider
+          ?.insetsSourceProvider?.source?.frame || 'null';
+    },
+    wmInsetsSourceProviderSourceVisibleOrNull() {
+      return this.entry.wmProperties?.imeInsetsSourceProvider
+          ?.insetsSourceProvider?.source?.visible || 'null';
+    },
+    wmInsetsSourceProviderSourceVisibleFrameOrNull() {
+      return this.entry.wmProperties?.imeInsetsSourceProvider
+          ?.insetsSourceProvider?.source?.visibleFrame || 'null';
+    },
+    wmIMControlTargetOrNull() {
+      return this.entry?.wmProperties?.inputMethodControlTarget ?
+          Object.assign({'name': 'Input Method Control Target'},
+              this.entry.wmProperties.inputMethodControlTarget) :
+          null;
+    },
+    wmIMInputTargetOrNull() {
+      return this.entry?.wmProperties?.inputMethodInputTarget ?
+          Object.assign({'name': 'Input Method Input Target'},
+              this.entry.wmProperties.inputMethodInputTarget) :
+          null;
+    },
+    wmIMTargetOrNull() {
+      return this.entry?.wmProperties?.inputMethodTarget ?
+          Object.assign({'name': 'Input Method Target'},
+              this.entry.wmProperties.inputMethodTarget) :
+          null;
+    },
+  },
+  watch: {
+    entry() {
+      console.log(this.entry);
+    },
+    onSelectItem() {
+      console.log(this.onSelectItem);
+    },
+  },
 };
 </script>
 
@@ -152,15 +252,17 @@ export default {
 
 .group .value {
   color: rgba(0, 0, 0, 0.75);
+  word-break: break-all !important;
 }
 
 .group-header {
   justify-content: center;
   padding: 0px 5px;
-  width: 80px;
+  width: 90px;
   display: inline-block;
   font-size: bigger;
   color: grey;
+  word-break: break-word;
 }
 
 .left-column {
@@ -207,4 +309,16 @@ export default {
 .tree-view {
   overflow: auto;
 }
+
+.text-button {
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: roboto;
+  color: blue;
+  text-decoration: underline;
+  text-decoration-color: blue;
+  background-color: inherit;
+}
+
 </style>
