@@ -22,6 +22,7 @@
 
 import {getFilter} from '@/utils/utils';
 import {TRACE_TYPES} from '@/decode';
+import {WINDOW_MANAGER_KIND} from '@/flickerlib/common';
 
 function combineWmSfWithImeDataIfExisting(dataFiles) {
   // TODO(b/237744706): Add tests for this function
@@ -83,7 +84,7 @@ function combineWmSfPropertiesIntoImeData(imeTraceFile, wmOrSfTraceFile) {
     let wmStateOrSfLayer = wmOrSfData[wmOrSfIntersectIndex];
     if (wmStateOrSfLayer) {
       // filter to only relevant nodes & fields
-      if (wmStateOrSfLayer.kind === 'WindowManagerState') {
+      if (wmStateOrSfLayer.kind === WINDOW_MANAGER_KIND) {
         wmStateOrSfLayer = filterWmStateForIme(wmStateOrSfLayer);
         imeTraceFile.data[i].wmProperties = wmStateOrSfLayer;
       } else {
@@ -96,7 +97,6 @@ function combineWmSfPropertiesIntoImeData(imeTraceFile, wmOrSfTraceFile) {
         // put SF entry in hierarchy view
         imeTraceFile.data[i].children.push(wmStateOrSfLayer);
       }
-      console.log('after pruning:', wmStateOrSfLayer);
       if (wmStateOrSfLayer) {
         imeTraceFile.data[0].hasWmSfProperties = true;
         // Note: hasWmSfProperties is added into data because the
