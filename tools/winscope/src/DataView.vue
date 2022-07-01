@@ -57,6 +57,14 @@
         :presentErrors="presentErrors"
         ref="view"
       />
+      <ImeTraceView
+          v-else-if="showInImeTraceView(file) && isShowFileType(file.type)"
+          :store="store"
+          :file="file"
+          :presentTags="presentTags"
+          :presentErrors="presentErrors"
+          ref="view"
+      />
       <transactionsviewlegacy
         v-else-if="isTransactionsLegacy(file) && isShowFileType(file.type)"
         :trace="file"
@@ -88,6 +96,7 @@ import TraceView from '@/TraceView.vue';
 import AccessibilityTraceView from '@/AccessibilityTraceView.vue';
 import WindowManagerTraceView from '@/WindowManagerTraceView.vue';
 import SurfaceFlingerTraceView from '@/SurfaceFlingerTraceView.vue';
+import ImeTraceView from '@/ImeTraceView';
 import TransactionsViewLegacy from '@/TransactionsViewLegacy.vue';
 import LogView from '@/LogView.vue';
 import FileType from '@/mixins/FileType.js';
@@ -188,6 +197,7 @@ export default {
     AccessibilityTraceView,
     WindowManagerTraceView,
     SurfaceFlingerTraceView,
+    ImeTraceView,
   },
 };
 </script>
