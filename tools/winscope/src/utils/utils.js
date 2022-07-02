@@ -110,6 +110,7 @@ function getFilter(filterString) {
   const positive = [];
   const negative = [];
   filterStrings.forEach((f) => {
+    f = f.trim();
     if (f.startsWith('!')) {
       const regex = new RegExp(f.substring(1), "i");
       negative.push((s) => !regex.test(s));

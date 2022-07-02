@@ -374,9 +374,6 @@ export default {
 
           const selectedFile =
               this.getMostLikelyCandidateFile(dataType, files);
-          if (selectedFile.data) {
-            selectedFile.data = Object.freeze(selectedFile.data);
-          }
 
           this.$set(this.dataFiles, dataType, Object.freeze(selectedFile));
 

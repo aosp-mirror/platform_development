@@ -52,6 +52,7 @@ const WindowState = require('flicker').com.android.server.wm.traces.common.
     windowmanager.windows.WindowState;
 const WindowToken = require('flicker').com.android.server.wm.traces.common.
     windowmanager.windows.WindowToken;
+const WINDOW_MANAGER_KIND = 'WindowManagerState';
 
 // SF
 const Layer = require('flicker').com.android.server.wm.traces.common.
@@ -72,6 +73,7 @@ const Transform = require('flicker').com.android.server.wm.traces.common.
     layers.Transform;
 const Display = require('flicker').com.android.server.wm.traces.common.
     layers.Display;
+const SURFACE_FLINGER_KIND = 'SurfaceFlingerLayer';
 
 // Common
 const Size = require('flicker').com.android.server.wm.traces.common.Size;
@@ -271,6 +273,7 @@ export {
   WindowManagerPolicy,
   WindowManagerTrace,
   WindowManagerState,
+  WINDOW_MANAGER_KIND,
   // SF
   BaseLayerTraceEntry,
   Layer,
@@ -281,6 +284,7 @@ export {
   Matrix22,
   Matrix33,
   Display,
+  SURFACE_FLINGER_KIND,
   // Tags
   Tag,
   TagState,

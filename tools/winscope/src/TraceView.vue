@@ -25,7 +25,7 @@
     </div>
 
     <div class="hierarchy">
-      <flat-card>
+      <flat-card v-bind:class ="imeAdditionalProperties ? 'height-fifty' : ''">
         <md-content
           md-tag="md-toolbar"
           md-elevation="0"
@@ -78,6 +78,25 @@
           </div>
         </div>
       </flat-card>
+
+      <div v-if="imeAdditionalProperties" class="ime-additional-properties">
+        <flat-card>
+          <md-content
+              md-tag="md-toolbar"
+              md-elevation="0"
+              class="card-toolbar md-transparent md-dense"
+          >
+            <h2 class="md-title" style="flex: 1;">WM & SF Properties</h2>
+          </md-content>
+          <div>
+            <ime-additional-properties
+                :entry="this.item"
+                :isImeManagerService="this.isImeManagerService"
+                :onSelectItem="itemSelected"
+            />
+          </div>
+        </flat-card>
+      </div>
     </div>
 
     <div class="properties">
@@ -156,6 +175,7 @@ import FlatCard from './components/FlatCard.vue';
 import PropertiesTreeElement from './PropertiesTreeElement.vue';
 import SurfaceFlingerPropertyGroups from '@/SurfaceFlingerPropertyGroups.vue';
 import PropertiesTableView from './PropertiesTableView';
+import ImeAdditionalProperties from '@/ImeAdditionalProperties';
 
 import {ObjectTransformer} from './transform.js';
 import {DiffGenerator, defaultModifiedCheck} from './utils/diff.js';
@@ -192,7 +212,7 @@ function findEntryInTree(tree, id) {
 
 export default {
   name: 'traceview',
-  props: ['store', 'file', 'summarizer', 'presentTags', 'presentErrors', 'propertyGroups'],
+  props: ['store', 'file', 'summarizer', 'presentTags', 'presentErrors', 'propertyGroups', 'imeAdditionalProperties'],
   data() {
     return {
       propertyFilterString: '',
@@ -210,6 +230,7 @@ export default {
       displayDefaults: false,
       showPropertiesDiff: false,
       PropertiesTreeElement,
+      isImeManagerService: false,
     };
   },
   methods: {
@@ -314,6 +335,8 @@ export default {
           this.itemSelected(found);
         }
       }
+
+      this.isImeManagerService = this.file.type === TRACE_TYPES.IME_MANAGERSERVICE;
     },
     arrowUp() {
       return this.$refs.hierarchy.selectPrev();
@@ -377,11 +400,13 @@ export default {
   },
   created() {
     const item = this.file.data[this.file.selectedIndex ?? 0];
-    // Record analytics event
-    if (item.type || item.kind || item.stableId) {
-      this.recordOpenTraceEvent(item.type ?? item.kind ?? item.stableId);
+    if (item) {
+      // Record analytics event
+      if (item.type || item.kind || item.stableId) {
+        this.recordOpenTraceEvent(item.type ?? item.kind ?? item.stableId);
+      }
+      this.setData(item);
     }
-    this.setData(item);
   },
   destroyed() {
     this.store.flickerTraceView = false;
@@ -473,6 +498,7 @@ export default {
     'flat-card': FlatCard,
     'sf-property-groups': SurfaceFlingerPropertyGroups,
     'properties-table-view': PropertiesTableView,
+    'ime-additional-properties': ImeAdditionalProperties,
   },
 };
 
@@ -567,5 +593,17 @@ export default {
   display: flex;
   flex-direction: column;
   flex: 1;
+}
+
+.height-fifty {
+  height: 50%;
+}
+
+.ime-additional-properties {
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 50%;
 }
 </style>

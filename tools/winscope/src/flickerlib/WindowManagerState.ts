@@ -18,7 +18,8 @@ import {
     KeyguardControllerState,
     RootWindowContainer,
     WindowManagerPolicy,
-    WindowManagerState
+    WindowManagerState,
+    WINDOW_MANAGER_KIND,
 } from "./common"
 
 import WindowContainer from "./windows/WindowContainer"
@@ -54,7 +55,7 @@ WindowManagerState.fromProto = function (proto: any, timestamp: number = 0, wher
 }
 
 function addAttributes(entry: WindowManagerState, proto: any) {
-    entry.kind = entry.constructor.name;
+    entry.kind = WINDOW_MANAGER_KIND;
     // There no JVM/JS translation for Longs yet
     entry.timestampMs = entry.timestamp.toString();
     entry.rects = entry.windowStates.reverse().map(it => it.rect);

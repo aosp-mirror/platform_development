@@ -14,13 +14,14 @@ function transform_ime_trace_clients(entries) {
 function transform_entry_clients(entry) {
   return transform({
     obj: entry,
-    kind: 'entry',
+    kind: 'InputMethodClient entry',
     name: nanos_to_string(entry.elapsedRealtimeNanos) + " - " + entry.where,
     children: [
       [[entry.client], transform_client_dump]
     ],
     timestamp: entry.elapsedRealtimeNanos,
-    stableId: 'entry'
+    stableId: 'entry',
+    freeze: false,
   });
 }
 
@@ -48,13 +49,14 @@ function transform_ime_trace_service(entries) {
 function transform_entry_service(entry) {
   return transform({
     obj: entry,
-    kind: 'entry',
+    kind: 'InputMethodService entry',
     name: nanos_to_string(entry.elapsedRealtimeNanos) + " - " + entry.where,
     children: [
       [[entry.inputMethodService], transform_service_dump]
     ],
     timestamp: entry.elapsedRealtimeNanos,
-    stableId: 'entry'
+    stableId: 'entry',
+    freeze: false,
   });
 }
 
@@ -82,13 +84,14 @@ function transform_ime_trace_managerservice(entries) {
 function transform_entry_managerservice(entry) {
   return transform({
     obj: entry,
-    kind: 'entry',
+    kind: 'InputMethodManagerService entry',
     name: nanos_to_string(entry.elapsedRealtimeNanos) + " - " + entry.where,
     children: [
       [[entry.inputMethodManagerService], transform_managerservice_dump]
     ],
     timestamp: entry.elapsedRealtimeNanos,
-    stableId: 'entry'
+    stableId: 'entry',
+    freeze: false,
   });
 }
 

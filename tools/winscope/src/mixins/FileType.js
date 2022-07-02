@@ -43,6 +43,11 @@ const mixin = {
     return file.type == TRACE_TYPES.SURFACE_FLINGER ||
         file.type == DUMP_TYPES.SURFACE_FLINGER;
   },
+  showInImeTraceView(file) {
+    return file.type == TRACE_TYPES.IME_CLIENTS ||
+      file.type == TRACE_TYPES.IME_SERVICE ||
+      file.type == TRACE_TYPES.IME_MANAGERSERVICE;
+  },
   isVideo(file) {
     return file.type == TRACE_TYPES.SCREEN_RECORDING;
   },
