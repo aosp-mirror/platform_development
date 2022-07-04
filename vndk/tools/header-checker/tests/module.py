@@ -145,16 +145,6 @@ class LsdumpModule(Module):
 
 
 TEST_MODULES = [
-    SdumpModule(
-        name='undeclared_types.h',
-        src='integration/cpp/header/undeclared_types.h',
-        arch='',
-        dumper_flags=['-suppress-errors', '-output-format', 'Json']),
-    SdumpModule(
-        name='known_issues.h',
-        src='integration/cpp/header/known_issues.h',
-        arch='',
-        dumper_flags=['-suppress-errors', '-output-format', 'Json']),
     LsdumpModule(
         name='libc_and_cpp',
         srcs=[
