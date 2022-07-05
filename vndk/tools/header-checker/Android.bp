@@ -63,8 +63,6 @@ cc_binary_host {
     srcs: [
         "src/dumper/abi_wrappers.cpp",
         "src/dumper/ast_processing.cpp",
-        "src/dumper/diagnostic_consumer.cpp",
-        "src/dumper/fake_decl_source.cpp",
         "src/dumper/fixed_argv.cpp",
         "src/dumper/frontend_action.cpp",
         "src/dumper/frontend_action_factory.cpp",
