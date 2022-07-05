@@ -2,9 +2,7 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "baseUrl": "./src",
-    "outDir": "./dist/out-tsc",
-    "allowJs": true,
+    "outDir": "../../../dist/e2e.spec",
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "noImplicitOverride": true,
@@ -18,16 +16,11 @@
     "experimentalDecorators": true,
     "moduleResolution": "node",
     "importHelpers": true,
-    "target": "es2020",
-    "module": "es2020",
-    "lib": [
-      "es2020",
-      "dom"
-    ],
+    "target": "es6",
+    "module": "commonjs",
     "resolveJsonModule": true,
   },
-  "include": ["src"],
-  "exclude": ["src/test/e2e"],
+  "include": ["."],
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,

@@ -13,14 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import fs from 'fs';
-import path from 'path';
+const fs = require("fs");
+const path = require("path");
 
 class TestUtils {
   static loadFixture(filename: string): Uint8Array {
-    const fullPath =  path.resolve(__dirname, path.join("../src/test/fixtures", filename));
-    const data = fs.readFileSync(fullPath);
+    const fullPath =  path.resolve(__dirname, path.join("../../src/test/fixtures", filename));
+    const data = fs.readFileSync(TestUtils.getFixturePath(filename));
     return new Uint8Array(data);
+  }
+
+  static getFixturePath(filename: string): string {
+    return path.join(TestUtils.getProjectRootPath(), "src/test/fixtures", filename);
+  }
+
+  static getProductionIndexHtmlPath(): string {
+    return path.join(TestUtils.getProjectRootPath(), "dist/prod/index.html");
+  }
+
+  static getProjectRootPath(): string {
+    return path.join(__dirname, "../..");
   }
 };
 

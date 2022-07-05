@@ -13,10 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const environment = (process.env.NODE_ENV || 'development').trim();
+import {browser, element, by} from 'protractor';
+import {TestUtils} from '../test_utils';
 
-if (environment === 'development') {
-  module.exports = require('./webpack.config.dev');
-} else {
-  module.exports = require('./webpack.config.prod');
-}
+describe("winscope", () => {
+  beforeAll(() => {
+    browser.get("file://" + TestUtils.getProductionIndexHtmlPath());
+  }),
+
+  it("processes trace and renders view", () => {
+    const inputfile = element(by.css("input[type=\"file\"]"));
+    inputfile.sendKeys(TestUtils.getFixturePath("trace_WindowManager.pb"));
+
+    const windowManagerViewerTitle = element(by.css(".viewer-window-manager .title"));
+    expect(windowManagerViewerTitle.getText()).toContain("Window Manager");
+  });
+});
