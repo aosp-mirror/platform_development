@@ -21,6 +21,10 @@ const HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin
 
 const configProd = {
   mode: 'production',
+  entry: {
+    polyfills: "./src/polyfills.ts",
+    app: "./src/main.prod.ts"
+  },
   output: {
     path: path.resolve(__dirname, 'dist'),
     publicPath: '/',
