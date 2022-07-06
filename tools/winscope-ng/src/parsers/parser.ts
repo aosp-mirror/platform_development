@@ -45,13 +45,19 @@ abstract class Parser {
     return this.processDecodedEntry(this.decodedEntries[index]);
   }
 
+  public getTraceEntries(): any[] {
+    throw new Error("Batch retrieval of trace entries not implemented for this parser!" +
+                    " Note that the usage of this functionality is discouraged," +
+                    " since creating all the trace entry objects may consume too much memory.");
+  }
+
   protected abstract getMagicNumber(): undefined|number[];
   protected abstract decodeTrace(buffer: Uint8Array): any[];
   protected abstract getTimestamp(decodedEntry: any): number;
   protected abstract processDecodedEntry(decodedEntry: any): any;
 
-  private decodedEntries: any[];
-  private timestamps: number[];
+  protected decodedEntries: any[];
+  protected timestamps: number[];
 }
 
 export {Parser};

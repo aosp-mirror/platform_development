@@ -75,6 +75,12 @@ class ParserProtoLog extends Parser {
     }
   }
 
+  override getTraceEntries(): LogMessage[] {
+    return this.decodedEntries.map((entryProto: any) => {
+      return this.processDecodedEntry(entryProto);
+    });
+  }
+
   private static readonly MAGIC_NUMBER = [0x09, 0x50, 0x52, 0x4f, 0x54, 0x4f, 0x4c, 0x4f, 0x47]; // .PROTOLOG
   private static readonly PROTOLOG_VERSION = "1.0.0";
 }
