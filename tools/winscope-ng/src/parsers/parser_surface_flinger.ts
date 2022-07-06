@@ -31,7 +31,7 @@ class ParserSurfaceFlinger extends Parser {
     return ParserSurfaceFlinger.MAGIC_NUMBER;
   }
 
-  override decodeProto(buffer: Uint8Array): any[] {
+  override decodeTrace(buffer: Uint8Array): any[] {
     return (<any>LayersTraceFileProto.decode(buffer)).entry;
   }
 
@@ -39,7 +39,7 @@ class ParserSurfaceFlinger extends Parser {
     return Number(entryProto.elapsedRealtimeNanos);
   }
 
-  override processTraceEntryProto(entryProto: any): any {
+  override processDecodedEntry(entryProto: any): any {
     return LayerTraceEntry.fromProto(entryProto.layers.layers, entryProto.displays, entryProto.elapsedRealtimeNanos, entryProto.hwcBlob);
   }
 

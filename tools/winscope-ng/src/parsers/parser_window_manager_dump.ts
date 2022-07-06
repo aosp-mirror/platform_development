@@ -15,10 +15,10 @@
  */
 import {TraceTypeId} from "common/trace/type_id";
 import {Parser} from './parser'
-import {WindowManagerTraceFileProto} from './proto_types';
+import {WindowManagerServiceDumpProto} from './proto_types';
 import {WindowManagerState} from 'common/trace/flickerlib/windows/WindowManagerState';
 
-class ParserWindowManager extends Parser {
+class ParserWindowManagerDump extends Parser {
   constructor(buffer: Uint8Array) {
     super(buffer);
   }
@@ -27,23 +27,21 @@ class ParserWindowManager extends Parser {
     return TraceTypeId.WINDOW_MANAGER;
   }
 
-  override getMagicNumber(): number[] {
-    return ParserWindowManager.MAGIC_NUMBER;
+  override getMagicNumber(): undefined {
+    return undefined;
   }
 
   override decodeTrace(buffer: Uint8Array): any[] {
-    return (<any>WindowManagerTraceFileProto.decode(buffer)).entry;
+    return [WindowManagerServiceDumpProto.decode(buffer)];
   }
 
   override getTimestamp(entryProto: any): number {
-    return Number(entryProto.elapsedRealtimeNanos);
+    return 0;
   }
 
   override processDecodedEntry(entryProto: any): WindowManagerState {
-    return WindowManagerState.fromProto(entryProto.windowManagerService, entryProto.elapsedRealtimeNanos, entryProto.where);
+    return WindowManagerState.fromProto(entryProto);
   }
-
-  private static readonly MAGIC_NUMBER = [0x09, 0x57, 0x49, 0x4e, 0x54, 0x52, 0x41, 0x43, 0x45]; // .WINTRACE
 }
 
-export {ParserWindowManager};
+export {ParserWindowManagerDump};

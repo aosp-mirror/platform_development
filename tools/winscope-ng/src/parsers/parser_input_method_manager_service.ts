@@ -30,7 +30,7 @@ class ParserInputMethodManagerService extends Parser {
     return ParserInputMethodManagerService.MAGIC_NUMBER;
   }
 
-  override decodeProto(buffer: Uint8Array): any[] {
+  override decodeTrace(buffer: Uint8Array): any[] {
     return (<any>InputMethodManagerServiceTraceFileProto.decode(buffer)).entry;
   }
 
@@ -38,7 +38,7 @@ class ParserInputMethodManagerService extends Parser {
     return Number(entryProto.elapsedRealtimeNanos);
   }
 
-  protected override processTraceEntryProto(entryProto: any): any {
+  protected override processDecodedEntry(entryProto: any): any {
     return entryProto;
   }
 

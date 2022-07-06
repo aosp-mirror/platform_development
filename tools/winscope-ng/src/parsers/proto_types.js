@@ -14,6 +14,7 @@ const InputMethodServiceTraceFileProto = protobuf.Root.fromJSON(inputMethodClien
 const LayersTraceFileProto = protobuf.Root.fromJSON(layersJson).lookupType("android.surfaceflinger.LayersTraceFileProto");
 const ProtoLogFileProto = protobuf.Root.fromJSON(protoLogJson).lookupType("com.android.internal.protolog.ProtoLogFileProto");
 const TransactionsTraceFileProto = protobuf.Root.fromJSON(transactionsJson).lookupType("android.surfaceflinger.proto.TransactionTraceFile");
+const WindowManagerServiceDumpProto = protobuf.Root.fromJSON(windowManagerJson).lookupType("com.android.server.wm.WindowManagerServiceDumpProto");
 const WindowManagerTraceFileProto = protobuf.Root.fromJSON(windowManagerJson).lookupType("com.android.server.wm.WindowManagerTraceFileProto");
 
 export {
@@ -24,5 +25,6 @@ export {
   LayersTraceFileProto,
   ProtoLogFileProto,
   TransactionsTraceFileProto,
+  WindowManagerServiceDumpProto,
   WindowManagerTraceFileProto
 };

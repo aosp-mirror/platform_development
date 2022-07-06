@@ -32,7 +32,7 @@ class ParserProtoLog extends Parser {
     return ParserProtoLog.MAGIC_NUMBER;
   }
 
-  override decodeProto(buffer: Uint8Array): any[] {
+  override decodeTrace(buffer: Uint8Array): any[] {
     const fileProto: any = ProtoLogFileProto.decode(buffer);
 
     if (fileProto.version !== ParserProtoLog.PROTOLOG_VERSION) {
@@ -58,7 +58,7 @@ class ParserProtoLog extends Parser {
     return Number(entryProto.elapsedRealtimeNanos);
   }
 
-  override processTraceEntryProto(entryProto: any): LogMessage {
+  override processDecodedEntry(entryProto: any): LogMessage {
     const message = (<any>configJson).messages[entryProto.messageHash];
     if (!message) {
       return new FormattedLogMessage(entryProto);
