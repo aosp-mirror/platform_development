@@ -133,14 +133,6 @@ class HeaderCheckerTest(unittest.TestCase):
     def test_example3_h(self):
         self.run_and_compare_name_cpp('example3.h')
 
-    def test_undeclared_types_h(self):
-        self.prepare_and_absolute_diff_all_archs(
-            'undeclared_types.h', 'undeclared_types.h')
-
-    def test_known_issues_h(self):
-        self.prepare_and_absolute_diff_all_archs(
-            'known_issues.h', 'known_issues.h')
-
     def test_libc_and_cpp(self):
         self.prepare_and_run_abi_diff_all_archs(
             "libc_and_cpp", "libc_and_cpp", 0)
