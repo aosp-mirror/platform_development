@@ -17,11 +17,6 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-  entry: {
-    polyfills: "./src/polyfills.ts",
-    app: "./src/main.ts"
-  },
-
   resolve: {
     extensions: [".ts", ".js"],
     modules: [

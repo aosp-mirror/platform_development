@@ -18,18 +18,22 @@ const glob = require('glob');
 
 let config = require('./webpack.config.common');
 
+config["mode"] = "development";
+
 const allTestFiles = [
   ...glob.sync('./src/**/*.spec.js'),
   ...glob.sync('./src/**/*.spec.ts')
 ]
-const unitTestFiles = allTestFiles.filter(file => !file.match(".*component\.spec\.(js|ts)$"))
+const unitTestFiles = allTestFiles
+    .filter(file => !file.match(".*component\.spec\.(js|ts)$"))
+    .filter(file => !file.match(".*e2e.*"))
 config["entry"] = {
   tests: unitTestFiles,
 };
 
 config["output"] = {
-  path: path.resolve(__dirname, './dist'),
-    filename: 'bundle.spec.js',
+  path: path.resolve(__dirname, 'dist/unit.spec'),
+    filename: 'bundle.js',
 };
 
 config["target"] = "node";

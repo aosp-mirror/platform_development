@@ -13,16 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const {merge} = require('webpack-merge');
-const configCommon = require('./webpack.config.common');
+import {browser, element, by} from 'protractor';
+import {TestUtils} from '../test_utils';
 
-const configDev = {
-  mode: 'development',
-  entry: {
-    polyfills: "./src/polyfills.ts",
-    app: "./src/main.dev.ts"
-  },
-  devtool: "source-map",
-};
+describe("winscope", () => {
+  beforeAll(() => {
+    browser.get("file://" + TestUtils.getProductionIndexHtmlPath());
+  }),
 
-module.exports = merge(configCommon, configDev);
+  it("processes trace and renders view", () => {
+    const inputfile = element(by.css("input[type=\"file\"]"));
+    inputfile.sendKeys(TestUtils.getFixturePath("trace_WindowManager.pb"));
+
+    const windowManagerViewerTitle = element(by.css(".viewer-window-manager .title"));
+    expect(windowManagerViewerTitle.getText()).toContain("Window Manager");
+  });
+});

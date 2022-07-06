@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const {merge} = require('webpack-merge');
-const configCommon = require('./webpack.config.common');
+import {browser, element, by} from 'protractor';
+import {TestUtils} from "../test_utils"
 
-const configDev = {
-  mode: 'development',
-  entry: {
-    polyfills: "./src/polyfills.ts",
-    app: "./src/main.dev.ts"
-  },
-  devtool: "source-map",
-};
+describe("winscope", () => {
+  beforeAll(() => {
+    browser.get("file://" + TestUtils.getProductionIndexHtmlPath());
+  }),
 
-module.exports = merge(configCommon, configDev);
+  it("has title", () => {
+    const title = element(by.css("#title"));
+    expect(title.getText()).toContain("Winscope");
+  })
+});
