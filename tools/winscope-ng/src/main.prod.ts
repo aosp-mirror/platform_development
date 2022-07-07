@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const environment = (process.env.NODE_ENV || 'development').trim();
+import {enableProdMode} from "@angular/core";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {AppModule} from "./app/app.module";
 
-if (environment === 'development') {
-  module.exports = require('./webpack.config.dev');
-} else {
-  module.exports = require('./webpack.config.prod');
-}
+enableProdMode();
+
+platformBrowserDynamic().bootstrapModule(AppModule)
+  .catch(err => console.error(err));

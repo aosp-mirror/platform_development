@@ -17,11 +17,6 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-  entry: {
-    polyfills: "./src/polyfills.ts",
-    app: "./src/main.ts"
-  },
-
   resolve: {
     extensions: [".ts", ".js"],
     modules: [
@@ -65,7 +60,9 @@ module.exports = {
 
   plugins: [
     new HtmlWebpackPlugin({
-      template: 'src/index.html'
+      template: "src/index.html",
+      inject: "body",
+      inlineSource: ".(css|js)$",
     })
   ]
 }
