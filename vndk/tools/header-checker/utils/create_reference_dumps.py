@@ -76,9 +76,9 @@ def remove_references_for_all_arches(ref_dump_dir, chosen_vndk_version,
 def tag_to_dir_name(tag):
     if tag == 'NDK':
         return 'ndk'
-    if tag == 'PLATFORM':
+    if tag in ('PLATFORM', 'LLNDK'):
         return 'platform'
-    if tag.startswith('VNDK') or tag == 'LLNDK':
+    if tag.startswith('VNDK'):
         return 'vndk'
     raise ValueError(tag + 'is not a known tag.')
 
