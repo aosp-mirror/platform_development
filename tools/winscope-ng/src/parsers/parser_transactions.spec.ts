@@ -21,9 +21,9 @@ import {TestUtils} from "test/test_utils";
 describe("ParserTransactions", () => {
   let parser: Parser;
 
-  beforeAll(() => {
-    const buffer = TestUtils.loadFixture("trace_Transactions.pb");
-    const parsers = new ParserFactory().createParsers([buffer]);
+  beforeAll(async () => {
+    const buffer = TestUtils.getFixtureBlob("trace_Transactions.pb");
+    const parsers = await new ParserFactory().createParsers([buffer]);
     expect(parsers.length).toEqual(1);
     parser = parsers[0];
   });

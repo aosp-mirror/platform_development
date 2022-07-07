@@ -51,11 +51,10 @@ export class AppComponent {
   }
 
   public async onInputFile(event: Event) {
-    const buffers = await this.readInputFiles(event);
-
+    const files = await this.getInputFiles(event);
 
     this.core = new Core();
-    await this.core.bootstrap(buffers);
+    await this.core.bootstrap(files);
 
     const viewersDiv = document.querySelector("div#viewers")!;
     viewersDiv.innerHTML = "";
@@ -71,25 +70,13 @@ export class AppComponent {
   }
 
   //TODO: extend with support for multiple files, archives, etc...
-  private async readInputFiles(event: Event): Promise<Uint8Array[]> {
+  private getInputFiles(event: Event): File[] {
     const files: any = (event?.target as HTMLInputElement)?.files;
 
     if (!files || !files[0]) {
-      console.log("Invalid input file");
       return [];
     }
 
-    const file: File = files[0];
-
-    const buffer: Uint8Array = await new Promise((resolve, _) => {
-      const reader = new FileReader();
-      reader.onloadend = async (e) => {
-        const buffer = new Uint8Array(<ArrayBuffer> e.target!.result);
-        resolve(buffer);
-      };
-      reader.readAsArrayBuffer(file);
-    });
-
-    return [buffer];
+    return [files[0]];
   }
 }

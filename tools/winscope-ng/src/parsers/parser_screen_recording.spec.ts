@@ -22,9 +22,9 @@ import {ParserFactory} from './parser_factory';
 describe("ParserScreenRecording", () => {
   let parser: Parser;
 
-  beforeAll(() => {
-    const buffer = TestUtils.loadFixture("screen_recording.mp4");
-    const parsers = new ParserFactory().createParsers([buffer]);
+  beforeAll(async () => {
+    const buffer = TestUtils.getFixtureBlob("screen_recording.mp4");
+    const parsers = await new ParserFactory().createParsers([buffer]);
     expect(parsers.length).toEqual(1);
     parser = parsers[0];
   });

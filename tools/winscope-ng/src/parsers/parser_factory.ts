@@ -39,13 +39,14 @@ class ParserFactory {
     ParserWindowManagerDump,
   ]
 
-  createParsers(buffers: Uint8Array[]): Parser[] {
+  async createParsers(traces: Blob[]): Promise<Parser[]> {
     const parsers: Parser[] = [];
 
-    for (const buffer of buffers) {
+    for (const trace of traces) {
       for (const ParserType of ParserFactory.PARSERS) {
         try {
-          const parser = new ParserType(buffer);
+          const parser = new ParserType(trace);
+          await parser.parse();
           parsers.push(parser);
           break;
         } catch(error) {

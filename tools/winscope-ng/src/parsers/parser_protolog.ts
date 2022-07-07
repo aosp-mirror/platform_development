@@ -20,8 +20,8 @@ import {ProtoLogFileProto} from "./proto_types";
 import configJson from "../../../../../frameworks/base/data/etc/services.core.protolog.json";
 
 class ParserProtoLog extends Parser {
-  constructor(buffer: Uint8Array) {
-    super(buffer);
+  constructor(trace: Blob) {
+    super(trace);
   }
 
   override getTraceTypeId(): TraceTypeId {

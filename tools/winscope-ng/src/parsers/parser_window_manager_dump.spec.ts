@@ -22,9 +22,9 @@ import {TestUtils} from "test/test_utils";
 describe("ParserWindowManagerDump", () => {
   let parser: Parser;
 
-  beforeAll(() => {
-    const buffer = TestUtils.loadFixture("dump_WindowManager.pb");
-    const parsers = new ParserFactory().createParsers([buffer]);
+  beforeAll(async () => {
+    const buffer = TestUtils.getFixtureBlob("dump_WindowManager.pb");
+    const parsers = await new ParserFactory().createParsers([buffer]);
     expect(parsers.length).toEqual(1);
     parser = parsers[0];
   });

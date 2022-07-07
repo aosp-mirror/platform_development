@@ -19,8 +19,8 @@ import {Parser} from './parser'
 import {LayersTraceFileProto} from './proto_types';
 
 class ParserSurfaceFlinger extends Parser {
-  constructor(buffer: Uint8Array) {
-    super(buffer);
+  constructor(trace: Blob) {
+    super(trace);
   }
 
   override getTraceTypeId(): TraceTypeId {

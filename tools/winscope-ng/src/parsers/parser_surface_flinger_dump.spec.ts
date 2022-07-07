@@ -22,9 +22,9 @@ import {ParserFactory} from './parser_factory';
 describe("ParserSurfaceFlingerDump", () => {
   let parser: Parser;
 
-  beforeAll(() => {
-    const buffer = TestUtils.loadFixture("dump_SurfaceFlinger.pb");
-    const parsers = new ParserFactory().createParsers([buffer]);
+  beforeAll(async () => {
+    const buffer = TestUtils.getFixtureBlob("dump_SurfaceFlinger.pb");
+    const parsers = await new ParserFactory().createParsers([buffer]);
     expect(parsers.length).toEqual(1);
     parser = parsers[0];
   });

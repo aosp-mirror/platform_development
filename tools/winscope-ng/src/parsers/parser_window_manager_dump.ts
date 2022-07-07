@@ -19,8 +19,8 @@ import {WindowManagerServiceDumpProto} from './proto_types';
 import {WindowManagerState} from 'common/trace/flickerlib/windows/WindowManagerState';
 
 class ParserWindowManagerDump extends Parser {
-  constructor(buffer: Uint8Array) {
-    super(buffer);
+  constructor(trace: Blob) {
+    super(trace);
   }
 
   override getTraceTypeId(): TraceTypeId {
