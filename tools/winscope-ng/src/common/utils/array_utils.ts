@@ -39,6 +39,25 @@ class ArrayUtils {
     return true;
   }
 
+  static searchSubarray<T>(array: T[] | TypedArray, subarray: T[] | TypedArray): number|undefined {
+    for (let i = 0; i + subarray.length <= array.length; ++i) {
+      let match = true;
+
+      for (let j = 0; j < subarray.length; ++j) {
+        if (array[i + j] != subarray[j]) {
+          match = false;
+          break;
+        }
+      }
+
+      if (match) {
+        return i;
+      }
+    }
+
+    return undefined;
+  }
+
   static binarySearchLowerOrEqual<T>(values: T[] | TypedArray, target: T): number|undefined {
     if (values.length == 0) {
       return undefined;
@@ -64,6 +83,15 @@ class ArrayUtils {
       }
     }
 
+    return result;
+  }
+
+  static toUintLittleEndian(buffer: Uint8Array, start: number, end: number) {
+    let result = 0;
+    for (let i = end-1; i>=start; --i) {
+      result *= 256;
+      result += buffer[i];
+    }
     return result;
   }
 }

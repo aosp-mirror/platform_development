@@ -32,7 +32,7 @@ class ParserProtoLog extends Parser {
     return ParserProtoLog.MAGIC_NUMBER;
   }
 
-  override decodeProto(buffer: Uint8Array): any[] {
+  override decodeTrace(buffer: Uint8Array): any[] {
     const fileProto: any = ProtoLogFileProto.decode(buffer);
 
     if (fileProto.version !== ParserProtoLog.PROTOLOG_VERSION) {
@@ -58,7 +58,7 @@ class ParserProtoLog extends Parser {
     return Number(entryProto.elapsedRealtimeNanos);
   }
 
-  override processTraceEntryProto(entryProto: any): LogMessage {
+  override processDecodedEntry(entryProto: any): LogMessage {
     const message = (<any>configJson).messages[entryProto.messageHash];
     if (!message) {
       return new FormattedLogMessage(entryProto);
@@ -73,6 +73,12 @@ class ParserProtoLog extends Parser {
       }
       throw error;
     }
+  }
+
+  override getTraceEntries(): LogMessage[] {
+    return this.decodedEntries.map((entryProto: any) => {
+      return this.processDecodedEntry(entryProto);
+    });
   }
 
   private static readonly MAGIC_NUMBER = [0x09, 0x50, 0x52, 0x4f, 0x54, 0x4f, 0x4c, 0x4f, 0x47]; // .PROTOLOG
