@@ -19,10 +19,8 @@ ARCH_TARGET_CFLAGS = {
     'arm64': ('-target', 'aarch64-linux-android'),
     'x86': ('-target', 'i386-linux-androideabi'),
     'x86_64': ('-target', 'x86_64-linux-android'),
-    'mips': ('-target', 'mips-linux-androideabi'),
-    'mips64': ('-target', 'mips64-linux-android'),
 }
-TARGET_ARCHES = ['arm', 'arm64', 'x86', 'x86_64', 'mips', 'mips64']
+TARGET_ARCHES = ['arm', 'arm64', 'x86', 'x86_64']
 
 
 def relative_to_abs_path(relative_path):
