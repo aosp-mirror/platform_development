@@ -25,7 +25,8 @@
     </div>
 
     <div class="hierarchy">
-      <flat-card v-bind:class ="imeAdditionalProperties ? 'height-fifty' : ''">
+      <flat-card
+          v-bind:class ="imeAdditionalProperties ? 'height-reduced' : ''">
         <md-content
           md-tag="md-toolbar"
           md-elevation="0"
@@ -43,7 +44,8 @@
           </md-checkbox>
           <md-checkbox v-model="store.onlyVisible">Only visible</md-checkbox>
           <md-checkbox v-model="store.flattened">Flat</md-checkbox>
-          <md-checkbox v-if="hasTagsOrErrors" v-model="store.flickerTraceView">Flicker</md-checkbox>
+          <md-checkbox v-if="hasTagsOrErrors" v-model="store.flickerTraceView">
+            Flicker</md-checkbox>
           <md-field md-inline class="filter">
             <label>Filter...</label>
             <md-input
@@ -138,7 +140,8 @@
         <div class="properties-content">
           <div v-if="elementSummary && !propertyGroups" class="element-summary">
             <div v-for="elem in elementSummary" v-bind:key="elem.key">
-              <span class="key">{{ elem.key }}:</span> <span class="value">{{ elem.value }}</span>
+              <span class="key">{{ elem.key }}:</span>
+              <span class="value">{{ elem.value }}</span>
             </div>
           </div>
           <div v-if="selectedTree && propertyGroups" class="element-summary">
@@ -180,7 +183,9 @@ import ImeAdditionalProperties from '@/ImeAdditionalProperties';
 import {ObjectTransformer} from './transform.js';
 import {DiffGenerator, defaultModifiedCheck} from './utils/diff.js';
 import {TRACE_TYPES, DUMP_TYPES} from './decode.js';
-import {isPropertyMatch, stableIdCompatibilityFixup, getFilter} from './utils/utils.js';
+import {
+  isPropertyMatch, stableIdCompatibilityFixup, getFilter,
+} from './utils/utils.js';
 import {CompatibleFeatures} from './utils/compatibility.js';
 import {getPropertiesForDisplay} from './flickerlib/mixin';
 import ObjectFormatter from './flickerlib/ObjectFormatter';
@@ -212,7 +217,8 @@ function findEntryInTree(tree, id) {
 
 export default {
   name: 'traceview',
-  props: ['store', 'file', 'summarizer', 'presentTags', 'presentErrors', 'propertyGroups', 'imeAdditionalProperties'],
+  props: ['store', 'file', 'summarizer', 'presentTags', 'presentErrors',
+    'propertyGroups', 'imeAdditionalProperties'],
   data() {
     return {
       propertyFilterString: '',
@@ -253,9 +259,9 @@ export default {
       // There are 2 types of object whose properties can appear in the property
       // list: Flicker objects (WM/SF traces) and dictionaries
       // (IME/Accessibilty/Transactions).
-      // While flicker objects have their properties directly in the main object,
-      // those created by a call to the transform function have their properties
-      // inside an obj property. This makes both cases work
+      // While flicker objects have their properties directly in the main
+      // object, those created by a call to the transform function have their
+      // properties inside an obj property. This makes both cases work
       // TODO(209452852) Refactor both flicker and winscope-native objects to
       // implement a common display interface that can be better handled
       const target = item.obj ?? item;
@@ -303,8 +309,8 @@ export default {
       this.rects = [...rects].reverse();
       this.bounds = item.bounds;
 
-      //only update displays if item is SF trace and displays present
-      if (item.stableId==="LayerTraceEntry") {
+      // only update displays if item is SF trace and displays present
+      if (item.stableId==='LayerTraceEntry') {
         this.displays = item.displays;
       } else {
         this.displays = [];
@@ -336,7 +342,8 @@ export default {
         }
       }
 
-      this.isImeManagerService = this.file.type === TRACE_TYPES.IME_MANAGERSERVICE;
+      this.isImeManagerService =
+          this.file.type === TRACE_TYPES.IME_MANAGERSERVICE;
     },
     arrowUp() {
       return this.$refs.hierarchy.selectPrev();
@@ -382,15 +389,16 @@ export default {
      * must be carried out for every present tag/error
      */
     matchItems(flickerItems, entryItem) {
-      var match = false;
-      flickerItems.forEach(flickerItem => {
+      let match = false;
+      flickerItems.forEach((flickerItem) => {
         if (isPropertyMatch(flickerItem, entryItem)) match = true;
       });
       return match;
     },
     /** Returns check for id match between entry and present tags/errors */
     isEntryTagMatch(entryItem) {
-      return this.matchItems(this.presentTags, entryItem) || this.matchItems(this.presentErrors, entryItem);
+      return this.matchItems(this.presentTags, entryItem) ||
+          this.matchItems(this.presentErrors, entryItem);
     },
 
     /** determines whether left/right arrow keys should move cursor in input field */
@@ -406,6 +414,8 @@ export default {
         this.recordOpenTraceEvent(item.type ?? item.kind ?? item.stableId);
       }
       this.setData(item);
+    } else {
+      console.log('Item passed into TraceView is null or undefined: ', item);
     }
   },
   destroyed() {
@@ -438,7 +448,7 @@ export default {
     hierarchyFilter() {
       const hierarchyPropertyFilter =
           getFilter(this.hierarchyPropertyFilterString);
-      var fil = this.store.onlyVisible ? (c) => {
+      const fil = this.store.onlyVisible ? (c) => {
         return c.isVisible && hierarchyPropertyFilter(c);
       } : hierarchyPropertyFilter;
       return this.store.flickerTraceView ? (c) => {
@@ -472,23 +482,41 @@ export default {
     },
     propertiesForTableView() {
       if (this.file.type == TRACE_TYPES.IME_CLIENTS) {
+        if (!this.item?.obj?.client) {
+          console.log('ImeTrace Clients: Client is null');
+        }
         return {
-          'methodId': this.item.obj.client?.inputMethodManager?.curId,
-          'packageName': this.item.obj.client?.editorInfo?.packageName,
+          'inputMethodId': this.item?.obj?.client?.inputMethodManager?.curId,
+          'packageName': this.item?.obj?.client?.editorInfo?.packageName,
         };
       } else if (this.file.type == TRACE_TYPES.IME_SERVICE) {
+        if (!this.item?.obj?.inputMethodService) {
+          console.log('ImeTrace InputMethodService: ' +
+              'inputMethodService is null');
+        }
         return {
-          'windowVisible': this.item.obj.inputMethodService?.windowVisible,
-          'decorViewVisible': this.item.obj.inputMethodService?.decorViewVisible,
-          'packageName': this.item.obj.inputMethodService?.inputEditorInfo?.packageName,
+          'windowVisible': this.item?.obj?.inputMethodService?.windowVisible,
+          'decorViewVisible':
+            this.item?.obj?.inputMethodService?.decorViewVisible,
+          'packageName':
+            this.item?.obj?.inputMethodService?.inputEditorInfo?.packageName,
         };
       } else if (this.file.type == TRACE_TYPES.IME_MANAGERSERVICE) {
+        if (!this.item?.obj?.inputMethodManagerService) {
+          console.log('ImeTrace InputMethodManagerService: ' +
+              'inputMethodManagerService is null');
+        }
         return {
-          'methodId': this.item.obj.inputMethodManagerService?.curMethodId,
-          'curFocusedWindow': this.item.obj.inputMethodManagerService?.curFocusedWindowName,
-          'lastImeTargetWindow': this.item.obj.inputMethodManagerService?.lastImeTargetWindowName,
-          'inputShown': this.item.obj.inputMethodManagerService?.inputShown,
+          'inputMethodId':
+            this.item?.obj?.inputMethodManagerService?.curMethodId,
+          'curFocusedWindow':
+            this.item?.obj?.inputMethodManagerService?.curFocusedWindowName,
+          'lastImeTargetWindow':
+            this.item?.obj?.inputMethodManagerService?.lastImeTargetWindowName,
+          'inputShown': this.item?.obj?.inputMethodManagerService?.inputShown,
         };
+      } else {
+        return null;
       }
     },
   },
@@ -533,6 +561,7 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow: auto;
 }
 
 .hierarchy>.tree-view,
@@ -595,8 +624,8 @@ export default {
   flex: 1;
 }
 
-.height-fifty {
-  height: 50%;
+.height-reduced {
+  height: 55%;
 }
 
 .ime-additional-properties {
@@ -604,6 +633,7 @@ export default {
   display: flex;
   flex-direction: column;
   flex: 1;
-  height: 50%;
+  height: 45%;
+  overflow: auto;
 }
 </style>

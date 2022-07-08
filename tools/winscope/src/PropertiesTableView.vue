@@ -14,7 +14,6 @@
 -->
 <template>
   <div class="properties-table-wrapper">
-    <md-card-header class="table-heading">Key properties</md-card-header>
     <md-table class="table">
       <md-table-row
           v-for="[propertyName, propertyValue] in propertyEntries"
