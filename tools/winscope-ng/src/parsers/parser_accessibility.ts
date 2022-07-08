@@ -30,7 +30,7 @@ class ParserAccessibility extends Parser {
     return ParserAccessibility.MAGIC_NUMBER;
   }
 
-  override decodeProto(buffer: Uint8Array): any[] {
+  override decodeTrace(buffer: Uint8Array): any[] {
     return (<any>AccessibilityTraceFileProto.decode(buffer)).entry;
   }
 
@@ -38,7 +38,7 @@ class ParserAccessibility extends Parser {
     return Number(entryProto.elapsedRealtimeNanos);
   }
 
-  override processTraceEntryProto(entryProto: any): any {
+  override processDecodedEntry(entryProto: any): any {
     return entryProto;
   }
 

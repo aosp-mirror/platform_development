@@ -19,13 +19,16 @@ import {TraceTypeId} from "common/trace/type_id";
 abstract class Parser {
   constructor(buffer: Uint8Array) {
     const magicNumber = this.getMagicNumber();
-    const bufferContainsMagicNumber = ArrayUtils.equal(magicNumber, buffer.slice(0, magicNumber.length));
-    if (!bufferContainsMagicNumber) {
-      throw TypeError("buffer doesn't contain expected magic number");
+    if (magicNumber !== undefined)
+    {
+      const bufferContainsMagicNumber = ArrayUtils.equal(magicNumber, buffer.slice(0, magicNumber.length));
+      if (!bufferContainsMagicNumber) {
+        throw TypeError("buffer doesn't contain expected magic number");
+      }
     }
 
-    this.traceEntriesProto = this.decodeProto(buffer);
-    this.timestamps = this.traceEntriesProto.map((entryProto: any) => this.getTimestamp(entryProto));
+    this.decodedEntries = this.decodeTrace(buffer);
+    this.timestamps = this.decodedEntries.map((entry: any) => this.getTimestamp(entry));
   }
 
   public abstract getTraceTypeId(): TraceTypeId;
@@ -34,21 +37,27 @@ abstract class Parser {
     return this.timestamps;
   }
 
-  public getTraceEntry(timestamp: number): any|undefined {
+  public getTraceEntry(timestamp: number): undefined|any {
     const index = ArrayUtils.binarySearchLowerOrEqual(this.getTimestamps(), timestamp);
     if (index === undefined) {
       return undefined;
     }
-    return this.processTraceEntryProto(this.traceEntriesProto[index]);
+    return this.processDecodedEntry(this.decodedEntries[index]);
   }
 
-  protected abstract getMagicNumber(): number[];
-  protected abstract decodeProto(buffer: Uint8Array): any[];
-  protected abstract getTimestamp(entryProto: any): number;
-  protected abstract processTraceEntryProto(entryProto: any): any;
+  public getTraceEntries(): any[] {
+    throw new Error("Batch retrieval of trace entries not implemented for this parser!" +
+                    " Note that the usage of this functionality is discouraged," +
+                    " since creating all the trace entry objects may consume too much memory.");
+  }
 
-  private traceEntriesProto: any[];
-  private timestamps: number[];
+  protected abstract getMagicNumber(): undefined|number[];
+  protected abstract decodeTrace(buffer: Uint8Array): any[];
+  protected abstract getTimestamp(decodedEntry: any): number;
+  protected abstract processDecodedEntry(decodedEntry: any): any;
+
+  protected decodedEntries: any[];
+  protected timestamps: number[];
 }
 
 export {Parser};

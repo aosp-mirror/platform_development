@@ -38,6 +38,24 @@ describe("ArrayUtils", () => {
     expect(ArrayUtils.equal(new Uint8Array([1, 2, 3]), new Uint8Array([1, 2, 3]))).toBeTrue();
   });
 
+  it("searchSubarray", () => {
+    expect(ArrayUtils.searchSubarray([], [0])).toEqual(undefined);
+    expect(ArrayUtils.searchSubarray([], [])).toEqual(0);
+    expect(ArrayUtils.searchSubarray([0], [])).toEqual(0);
+
+    expect(ArrayUtils.searchSubarray([0, 1, 2], [-1])).toEqual(undefined);
+    expect(ArrayUtils.searchSubarray([0, 1, 2], [])).toEqual(0);
+    expect(ArrayUtils.searchSubarray([0, 1, 2], [0])).toEqual(0);
+    expect(ArrayUtils.searchSubarray([0, 1, 2], [1])).toEqual(1);
+    expect(ArrayUtils.searchSubarray([0, 1, 2], [2])).toEqual(2);
+
+    expect(ArrayUtils.searchSubarray([0, 1, 2], [0, 1])).toEqual(0);
+    expect(ArrayUtils.searchSubarray([0, 1, 2], [1, 2])).toEqual(1);
+    expect(ArrayUtils.searchSubarray([0, 1, 2], [2])).toEqual(2);
+    expect(ArrayUtils.searchSubarray([0, 1, 2], [2, 3])).toEqual(undefined);
+
+  });
+
   it("binarySearchLowerOrEqual", () => {
     // no match
     expect(ArrayUtils.binarySearchLowerOrEqual([], 5)).toBeUndefined();
@@ -58,5 +76,20 @@ describe("ArrayUtils", () => {
     expect(ArrayUtils.binarySearchLowerOrEqual([3, 4, 5], 5)).toEqual(2);
     expect(ArrayUtils.binarySearchLowerOrEqual([3, 4, 5, 6], 5)).toEqual(2);
     expect(ArrayUtils.binarySearchLowerOrEqual([3, 4, 5, 6, 7], 5)).toEqual(2);
+  });
+
+  it("toUintLittleEndian", () => {
+    const buffer = new Uint8Array([0, 0, 1, 1]);
+
+    expect(ArrayUtils.toUintLittleEndian(buffer, 0, -1)).toEqual(0);
+    expect(ArrayUtils.toUintLittleEndian(buffer, 0, 0)).toEqual(0);
+
+    expect(ArrayUtils.toUintLittleEndian(buffer, 0, 1)).toEqual(0);
+    expect(ArrayUtils.toUintLittleEndian(buffer, 0, 2)).toEqual(0);
+
+    expect(ArrayUtils.toUintLittleEndian(buffer, 3, 4)).toEqual(1);
+    expect(ArrayUtils.toUintLittleEndian(buffer, 2, 4)).toEqual(1 + 256);
+    expect(ArrayUtils.toUintLittleEndian(buffer, 1, 4)).toEqual(256 + 256*256);
+    expect(ArrayUtils.toUintLittleEndian(buffer, 0, 3)).toEqual(256*256);
   });
 });

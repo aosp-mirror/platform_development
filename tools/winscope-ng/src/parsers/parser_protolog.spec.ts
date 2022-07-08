@@ -17,9 +17,19 @@ import {TraceTypeId} from "common/trace/type_id";
 import {ParserFactory} from "./parser_factory";
 import {Parser} from "./parser";
 import {TestUtils} from "test/test_utils";
+import {LogMessage} from '../common/trace/protolog';
 
 describe("ParserProtoLog", () => {
   let parser: Parser;
+
+  const expectedFirstLogMessage = {
+    text: "InsetsSource updateVisibility for ITYPE_IME, serverVisible: false clientVisible: false",
+    time: "14m10s746ms",
+    tag: "WindowManager",
+    level: "DEBUG",
+    at: "com/android/server/wm/InsetsSourceProvider.java",
+    timestamp: Number(850746266486),
+  };
 
   beforeAll(() => {
     const buffer = TestUtils.loadFixture("trace_ProtoLog.pb");
@@ -41,15 +51,22 @@ describe("ParserProtoLog", () => {
   });
 
   it("reconstructs human-readable log message", () => {
-    const actual = parser.getTraceEntry(850746266486)!;
-    const expected = {
-      text: "InsetsSource updateVisibility for ITYPE_IME, serverVisible: false clientVisible: false",
-      time: "14m10s746ms",
-      tag: "WindowManager",
-      level: "DEBUG",
-      at: "com/android/server/wm/InsetsSourceProvider.java",
-      timestamp: Number(850746266486),
-    };
-    expect(Object.assign({}, actual)).toEqual(expected);
+    const actualMessage = parser.getTraceEntry(850746266486)!;
+
+    expect(actualMessage).toBeInstanceOf(LogMessage);
+    expect(Object.assign({}, actualMessage)).toEqual(expectedFirstLogMessage);
+  });
+
+  it("allows retrieving all the log messages", () => {
+    const actualMessages = parser.getTraceEntries();
+
+    expect(actualMessages.length).toEqual(50);
+
+    actualMessages.forEach(message => {
+      expect(message).toBeInstanceOf(LogMessage);
+    });
+
+    const actualFirstLogMessage = Object.assign({}, actualMessages[0]);
+    expect(actualFirstLogMessage).toEqual(expectedFirstLogMessage);
   });
 });
