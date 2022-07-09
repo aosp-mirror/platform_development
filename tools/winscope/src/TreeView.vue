@@ -222,7 +222,7 @@ export default {
     toggleTree() {
       this.setCollapseValue(!this.isCollapsed);
       if (!this.isCollapsed) {
-        this.recordExpandedPropertyEvent(this.item.name)
+        this.recordExpandedPropertyEvent(this.item.name);
       }
     },
     expandTree() {
@@ -438,15 +438,15 @@ export default {
           marginLeft: '0px',
           paddingLeft: '0px',
           marginTop: '0px',
-        }
+        };
       } else {
-        //Aligns border with collapse arrows
+        // Aligns border with collapse arrows
         return {
           marginLeft: '12px',
           paddingLeft: '11px',
           borderLeft: '1px solid rgb(238, 238, 238)',
           marginTop: '0px',
-        }
+        };
       }
     },
 
@@ -454,8 +454,8 @@ export default {
      * exits once match has been found
      */
     matchItems(flickerItems) {
-      var match = false;
-      flickerItems.every(flickerItem => {
+      let match = false;
+      flickerItems.every((flickerItem) => {
         if (isPropertyMatch(flickerItem, this.item)) {
           match = true;
           return false;
@@ -470,12 +470,12 @@ export default {
 
     getCurrentItems(items) {
       if (!items) return [];
-      else return items.filter(item => item.timestamp===this.currentTimestamp);
+      else return items.filter((item) => item.timestamp===this.currentTimestamp);
     },
     getCurrentTransitions() {
-      var transitions = [];
-      var ids = [];
-      this.currentTags.forEach(tag => {
+      const transitions = [];
+      const ids = [];
+      this.currentTags.forEach((tag) => {
         if (!ids.includes(tag.id) && isPropertyMatch(tag, this.item)) {
           transitions.push(tag.transition);
           ids.push(tag.id);
@@ -484,7 +484,7 @@ export default {
       return transitions;
     },
     getCurrentErrorTags() {
-      return this.currentErrors.filter(error => isPropertyMatch(error, this.item));
+      return this.currentErrors.filter((error) => isPropertyMatch(error, this.item));
     },
   },
   computed: {
@@ -544,10 +544,10 @@ export default {
     nodeOffsetStyle() {
       const offset = levelOffset * (this.depth + this.isLeaf) + 'px';
 
-      var display = "";
-      if (!this.item.timestamp
-        && this.flattened
-        && (this.onlyVisible && !this.item.isVisible ||
+      let display = '';
+      if (!this.item.timestamp &&
+        this.flattened &&
+        (this.onlyVisible && !this.item.isVisible ||
             this.flickerTraceView && !this.isEntryTagMatch())) {
         display = 'none';
       }
@@ -709,6 +709,7 @@ export default {
 .description {
   display: flex;
   flex: 1 1 auto;
+  word-break: break-all;
 }
 
 .description > div {

@@ -30,8 +30,6 @@ export default {
   },
   watch: {
     betaImePanel() {
-      // this.$store.commit('setBetaImePanelFlag', this.betaImePanel());
-      // this.store.betaFeatures.newImePanels = this.betaImePanel();
       this.setBetaImePanelFlag(this.betaImePanel);
     },
   },
