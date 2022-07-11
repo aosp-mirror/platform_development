@@ -18,6 +18,11 @@ import {ArrayUtils} from "common/utils/array_utils";
 import {Parser} from "./parser";
 import {ScreenRecordingTraceEntry} from "common/trace/screen_recording";
 
+class ScreenRecordingMetadataEntry {
+  constructor(public timestampMonotonicNs: bigint, public timestampRealtimeNs: bigint) {
+  }
+}
+
 class ParserScreenRecording extends Parser {
   constructor(trace: Blob) {
     super(trace);
@@ -31,20 +36,29 @@ class ParserScreenRecording extends Parser {
     return ParserScreenRecording.MPEG4_MAGIC_NMBER;
   }
 
-  override decodeTrace(videoData: Uint8Array): number[] {
-    const posCount = this.searchMagicString(videoData);
-    const [posTimestamps, count] = this.parseTimestampsCount(videoData, posCount);
-    return this.parseTimestamps(videoData, posTimestamps, count);
+  override decodeTrace(videoData: Uint8Array): ScreenRecordingMetadataEntry[] {
+    const posVersion = this.searchMagicString(videoData);
+    const [posTimeOffset, metadataVersion] = this.parseMetadataVersion(videoData, posVersion);
+    if (metadataVersion !== 1) {
+      throw TypeError(`Metadata version "${metadataVersion}" not supported`);
+    }
+    const [posCount, timeOffsetNs] = this.parseRealToMonotonicTimeOffsetNs(videoData, posTimeOffset);
+    const [posTimestamps, count] = this.parseFramesCount(videoData, posCount);
+    const timestampsMonotonicNs = this.parseTimestampsMonotonicNs(videoData, posTimestamps, count);
+
+    return timestampsMonotonicNs.map((timestampMonotonicNs: bigint) => {
+      return new ScreenRecordingMetadataEntry(timestampMonotonicNs, timestampMonotonicNs + timeOffsetNs);
+    });
   }
 
-  override getTimestamp(decodedEntry: number): number {
-    return decodedEntry;
+  override getTimestamp(decodedEntry: ScreenRecordingMetadataEntry): number {
+    return Number(decodedEntry.timestampRealtimeNs);
   }
 
-  override processDecodedEntry(timestamp: number): ScreenRecordingTraceEntry {
-    const videoTimeSeconds = (timestamp - this.timestamps[0]) / 1000000000 + ParserScreenRecording.EPSILON;
+  override processDecodedEntry(entry: ScreenRecordingMetadataEntry): ScreenRecordingTraceEntry {
+    const videoTimeSeconds = (Number(entry.timestampRealtimeNs) - this.timestamps[0]) / 1000000000;
     const videoData = this.trace;
-    return new ScreenRecordingTraceEntry(timestamp, videoTimeSeconds, videoData);
+    return new ScreenRecordingTraceEntry(Number(entry.timestampRealtimeNs), videoTimeSeconds, videoData);
   }
 
   private searchMagicString(videoData: Uint8Array): number {
@@ -56,22 +70,42 @@ class ParserScreenRecording extends Parser {
     return pos;
   }
 
-  private parseTimestampsCount(videoData: Uint8Array, pos: number) : [number, number] {
-    if (pos + 4 >= videoData.length) {
-      throw new TypeError("video data is too short. Expected timestamps count doesn't fit");
+  private parseMetadataVersion(videoData: Uint8Array, pos: number) : [number, number] {
+    if (pos + 4 > videoData.length) {
+      throw new TypeError("Failed to parse metadata version. Video data is too short.");
     }
-    const timestampsCount = ArrayUtils.toUintLittleEndian(videoData, pos, pos+4);
+    const version = Number(ArrayUtils.toUintLittleEndian(videoData, pos, pos+4));
     pos += 4;
-    return [pos, timestampsCount];
+    return [pos, version];
   }
 
-  private parseTimestamps(videoData: Uint8Array, pos: number, count: number): number[] {
-    if (pos + count * 8 >= videoData.length) {
-      throw new TypeError("video data is too short. Expected timestamps do not fit");
+  private parseRealToMonotonicTimeOffsetNs(videoData: Uint8Array, pos: number) : [number, bigint] {
+    if (pos + 8 > videoData.length) {
+      throw new TypeError("Failed to parse realtime-to-monotonic time offset. Video data is too short.");
     }
-    const timestamps: number[] = [];
+    const offset = ArrayUtils.toIntLittleEndian(videoData, pos, pos+8);
+    pos += 8;
+    return [pos, offset];
+  }
+
+  private parseFramesCount(videoData: Uint8Array, pos: number) : [number, number] {
+    if (pos + 4 > videoData.length) {
+      throw new TypeError("Failed to parse frames count. Video data is too short.");
+    }
+    const count = Number(ArrayUtils.toUintLittleEndian(videoData, pos, pos+4));
+    pos += 4;
+    return [pos, count];
+  }
+
+  private parseTimestampsMonotonicNs(videoData: Uint8Array, pos: number, count: number) : bigint[] {
+    if (pos + count * 16 > videoData.length) {
+      throw new TypeError("Failed to parse monotonic timestamps. Video data is too short.");
+    }
+    const timestamps: bigint[] = [];
     for (let i = 0; i < count; ++i) {
-      const timestamp = ArrayUtils.toUintLittleEndian(videoData, pos, pos+8) * 1000;
+      const timestamp = ArrayUtils.toUintLittleEndian(videoData, pos, pos+8);
+      pos += 8;
+      //parse VSYNC ID here when available
       pos += 8;
       timestamps.push(timestamp);
     }
@@ -79,8 +113,7 @@ class ParserScreenRecording extends Parser {
   }
 
   private static readonly MPEG4_MAGIC_NMBER = [0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x6d, 0x70, 0x34, 0x32]; // ....ftypmp42
-  private static readonly WINSCOPE_META_MAGIC_STRING = [0x23, 0x56, 0x56, 0x31, 0x4e, 0x53, 0x43, 0x30, 0x50, 0x45, 0x54, 0x31, 0x4d, 0x45, 0x21, 0x23]; // #VV1NSC0PET1ME!#
-  private static readonly EPSILON = 0.00001;
+  private static readonly WINSCOPE_META_MAGIC_STRING = [0x23, 0x56, 0x56, 0x31, 0x4e, 0x53, 0x43, 0x30, 0x50, 0x45, 0x54, 0x31, 0x4d, 0x45, 0x32, 0x23]; // #VV1NSC0PET1ME2#
 }
 
 export {ParserScreenRecording};

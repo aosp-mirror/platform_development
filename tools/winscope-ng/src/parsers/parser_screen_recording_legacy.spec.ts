@@ -19,11 +19,11 @@ import {TestUtils} from "test/test_utils";
 import {Parser} from "./parser";
 import {ParserFactory} from "./parser_factory";
 
-describe("ParserScreenRecording", () => {
+describe("ParserScreenRecordingLegacy", () => {
   let parser: Parser;
 
   beforeAll(async () => {
-    const trace = TestUtils.getFixtureBlob("screen_recording.mp4");
+    const trace = TestUtils.getFixtureBlob("screen_recording_legacy.mp4");
     const parsers = await new ParserFactory().createParsers([trace]);
     expect(parsers.length).toEqual(1);
     parser = parsers[0];
@@ -37,23 +37,26 @@ describe("ParserScreenRecording", () => {
     const timestamps = parser.getTimestamps();
 
     expect(timestamps.length)
-      .toEqual(88);
+      .toEqual(85);
 
     expect(timestamps.slice(0, 3))
-      .toEqual([1658843852566916400, 1658843852889741300, 1658843852901528300]);
+      .toEqual([19446131807000, 19446158500000, 19446167117000]);
+
+    expect(timestamps.slice(timestamps.length-3, timestamps.length))
+      .toEqual([19448470076000, 19448487525000, 19448501007000]);
   });
 
   it("retrieves trace entry", () => {
     {
-      const entry = parser.getTraceEntry(1658843852566916400)!;
+      const entry = parser.getTraceEntry(19446131807000)!;
       expect(entry).toBeInstanceOf(ScreenRecordingTraceEntry);
       expect(Number(entry.videoTimeSeconds)).toBeCloseTo(0);
     }
 
     {
-      const entry = parser.getTraceEntry(1658843852889741300)!;
+      const entry = parser.getTraceEntry(19448501007000)!;
       expect(entry).toBeInstanceOf(ScreenRecordingTraceEntry);
-      expect(Number(entry.videoTimeSeconds)).toBeCloseTo(0.322, 0.001);
+      expect(Number(entry.videoTimeSeconds)).toBeCloseTo(2.37, 0.001);
     }
   });
 });
