@@ -17,17 +17,23 @@ import {ArrayUtils} from '../common/utils/array_utils';
 import {TraceTypeId} from "common/trace/type_id";
 
 abstract class Parser {
-  constructor(buffer: Uint8Array) {
+  protected constructor(trace: Blob) {
+    this.trace = trace;
+  }
+
+  public async parse() {
+    const traceBuffer = new Uint8Array(await this.trace.arrayBuffer());
+
     const magicNumber = this.getMagicNumber();
     if (magicNumber !== undefined)
     {
-      const bufferContainsMagicNumber = ArrayUtils.equal(magicNumber, buffer.slice(0, magicNumber.length));
+      const bufferContainsMagicNumber = ArrayUtils.equal(magicNumber, traceBuffer.slice(0, magicNumber.length));
       if (!bufferContainsMagicNumber) {
         throw TypeError("buffer doesn't contain expected magic number");
       }
     }
 
-    this.decodedEntries = this.decodeTrace(buffer);
+    this.decodedEntries = this.decodeTrace(traceBuffer);
     this.timestamps = this.decodedEntries.map((entry: any) => this.getTimestamp(entry));
   }
 
@@ -52,12 +58,13 @@ abstract class Parser {
   }
 
   protected abstract getMagicNumber(): undefined|number[];
-  protected abstract decodeTrace(buffer: Uint8Array): any[];
+  protected abstract decodeTrace(trace: Uint8Array): any[];
   protected abstract getTimestamp(decodedEntry: any): number;
   protected abstract processDecodedEntry(decodedEntry: any): any;
 
-  protected decodedEntries: any[];
-  protected timestamps: number[];
+  protected trace: Blob;
+  protected decodedEntries: any[] = [];
+  protected timestamps: number[] = [];
 }
 
 export {Parser};

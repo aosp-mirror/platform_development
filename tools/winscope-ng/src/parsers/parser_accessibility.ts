@@ -18,8 +18,8 @@ import {Parser} from './parser'
 import {AccessibilityTraceFileProto} from './proto_types';
 
 class ParserAccessibility extends Parser {
-  constructor(buffer: Uint8Array) {
-    super(buffer);
+  constructor(trace: Blob) {
+    super(trace);
   }
 
   override getTraceTypeId(): TraceTypeId {

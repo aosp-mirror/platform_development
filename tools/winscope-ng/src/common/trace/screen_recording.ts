@@ -16,7 +16,7 @@
 class ScreenRecordingTraceEntry {
   constructor(public timestamp: number,
               public videoTimeSeconds: number,
-              public videoData: Uint8Array) {
+              public videoData: Blob) {
   }
 };
 

@@ -21,9 +21,9 @@ import {TestUtils} from "test/test_utils";
 describe("ParserAccessibility", () => {
   let parser: Parser;
 
-  beforeAll(() => {
-    const buffer = TestUtils.loadFixture("trace_Accessibility.pb");
-    const parsers = new ParserFactory().createParsers([buffer]);
+  beforeAll(async () => {
+    const trace = TestUtils.getFixtureBlob("trace_Accessibility.pb");
+    const parsers = await new ParserFactory().createParsers([trace]);
     expect(parsers.length).toEqual(1);
     parser = parsers[0];
   });
