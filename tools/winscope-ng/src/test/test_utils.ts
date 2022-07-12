@@ -13,14 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const fs = require("fs");
-const path = require("path");
+import * as fs from "fs";
+import * as path from "path";
+import {Blob} from "./blob";
 
 class TestUtils {
-  static loadFixture(filename: string): Uint8Array {
-    const fullPath =  path.resolve(__dirname, path.join("../../src/test/fixtures", filename));
-    const data = fs.readFileSync(TestUtils.getFixturePath(filename));
-    return new Uint8Array(data);
+  static getFixtureBlob(filename: string): Blob {
+    const buffer = TestUtils.loadFixture(filename);
+    return new Blob(buffer);
+  }
+
+  static loadFixture(filename: string): ArrayBuffer {
+    return fs.readFileSync(TestUtils.getFixturePath(filename));
   }
 
   static getFixturePath(filename: string): string {
@@ -34,6 +38,6 @@ class TestUtils {
   static getProjectRootPath(): string {
     return path.join(__dirname, "../..");
   }
-};
+}
 
 export {TestUtils};

@@ -28,8 +28,8 @@ class Core {
     this.viewers = [];
   }
 
-  async bootstrap(buffers: Uint8Array[]) {
-    this.parsers = new ParserFactory().createParsers(buffers);
+  async bootstrap(traces: Blob[]) {
+    this.parsers = await new ParserFactory().createParsers(traces);
     console.log("created parsers: ", this.parsers);
 
     const activeTraceTypes = this.parsers.map(parser => parser.getTraceTypeId());

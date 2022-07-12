@@ -19,8 +19,8 @@ import {Parser} from "./parser"
 import {ScreenRecordingTraceEntry} from "common/trace/screen_recording";
 
 class ParserScreenRecording extends Parser {
-  constructor(private videoData: Uint8Array) {
-    super(videoData);
+  constructor(trace: Blob) {
+    super(trace);
   }
 
   override getTraceTypeId(): TraceTypeId {
@@ -43,7 +43,8 @@ class ParserScreenRecording extends Parser {
 
   override processDecodedEntry(timestamp: number): ScreenRecordingTraceEntry {
     const videoTimeSeconds = (timestamp - this.timestamps[0]) / 1000000000 + ParserScreenRecording.EPSILON;
-    return new ScreenRecordingTraceEntry(timestamp, videoTimeSeconds, this.videoData);
+    const videoData = this.trace;
+    return new ScreenRecordingTraceEntry(timestamp, videoTimeSeconds, videoData);
   }
 
   private searchMagicString(videoData: Uint8Array): number {

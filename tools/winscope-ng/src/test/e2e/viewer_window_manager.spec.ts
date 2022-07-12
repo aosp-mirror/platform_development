@@ -16,14 +16,15 @@
 import {browser, element, by} from 'protractor';
 import {TestUtils} from '../test_utils';
 
-describe("winscope", () => {
-  beforeAll(() => {
+describe("Viewer WindowManager", () => {
+  beforeAll(async () => {
+    browser.manage().timeouts().implicitlyWait(1000);
     browser.get("file://" + TestUtils.getProductionIndexHtmlPath());
   }),
 
   it("processes trace and renders view", () => {
-    const inputfile = element(by.css("input[type=\"file\"]"));
-    inputfile.sendKeys(TestUtils.getFixturePath("trace_WindowManager.pb"));
+    const inputFile = element(by.css("input[type=\"file\"]"));
+    inputFile.sendKeys(TestUtils.getFixturePath("trace_WindowManager.pb"));
 
     const windowManagerViewerTitle = element(by.css(".viewer-window-manager .title"));
     expect(windowManagerViewerTitle.getText()).toContain("Window Manager");

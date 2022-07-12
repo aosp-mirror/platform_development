@@ -31,8 +31,15 @@ exports.config = {
   },
   chromeDriver: "./node_modules/webdriver-manager/selenium/chromedriver_103.0.5060.53",
 
-  // allow specifying the file protocol within browser.get(...)
+  allScriptsTimeout: 10000,
+  getPageTimeout: 10000,
+
+  jasmineNodeOpts: {
+    defaultTimeoutInterval: 10000,
+  },
+
   onPrepare: function() {
+    // allow specifying the file protocol within browser.get(...)
     browser.ignoreSynchronization = true;
     browser.waitForAngular();
     browser.sleep(500);

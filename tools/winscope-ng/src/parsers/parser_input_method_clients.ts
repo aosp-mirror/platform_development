@@ -18,8 +18,8 @@ import {Parser} from './parser'
 import {InputMethodClientsTraceFileProto} from './proto_types';
 
 class ParserInputMethodClients extends Parser {
-  constructor(buffer: Uint8Array) {
-    super(buffer);
+  constructor(trace: Blob) {
+    super(trace);
   }
 
   getTraceTypeId(): TraceTypeId {
