@@ -23,6 +23,7 @@ const configProd = {
   mode: 'production',
   entry: {
     polyfills: "./src/polyfills.ts",
+    styles: "./src/styles.css",
     app: "./src/main.prod.ts"
   },
   output: {
