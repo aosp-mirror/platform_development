@@ -18,7 +18,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   resolve: {
-    extensions: [".ts", ".js"],
+    extensions: [".ts", ".js", ".css"],
     modules: [
       "node_modules",
       "src",
@@ -34,12 +34,16 @@ module.exports = {
   module: {
     rules:[
       {
-        test: /\.css$/,
-        use: ["style-loader", "css-loader"]
+        test: /\.ts$/,
+        use: ["ts-loader", "angular2-template-loader"]
       },
       {
         test: /\.html$/,
         use: ["html-loader"]
+      },
+      {
+        test: /\.css$/,
+        use: ["style-loader", "css-loader"]
       },
       {
         test: /\.proto$/,
@@ -50,10 +54,6 @@ module.exports = {
             path.resolve(__dirname, '../../../external/protobuf/src'),
           ]
         }
-      },
-      {
-        test: /\.ts$/,
-        use: ["ts-loader", "angular2-template-loader"]
       },
     ]
   },
