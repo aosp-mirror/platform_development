@@ -95,12 +95,16 @@ class LicenseCollector(object):
                     if self.read_and_check_licenses(file_string, RESTRICTED_LICENSE_KEYWORDS):
                         self.restricted.add(f)
 
-    def run(self):
+    def run(self, license_text=''):
         """ search licenses in vndk snapshots
         """
-        for path in self._paths_to_check:
-            logging.info('Reading {}'.format(path))
-            self.read_and_check_dir_for_licenses(path)
+        if license_text == '':
+            for path in self._paths_to_check:
+                logging.info('Reading {}'.format(path))
+                self.read_and_check_dir_for_licenses(path)
+        else:
+            logging.info('Reading {}'.format(license_text))
+            self.read_and_check_dir_for_licenses(license_text)
         self.license_kinds.update(LICENSE_INCLUDE)
 
 def get_args():
