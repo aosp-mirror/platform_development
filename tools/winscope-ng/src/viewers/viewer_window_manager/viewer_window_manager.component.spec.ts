@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ComponentFixture, TestBed} from '@angular/core/testing';
-import {ViewerWindowManagerComponent} from './viewer_window_manager.component';
+import {ComponentFixture, TestBed} from "@angular/core/testing";
+import {ViewerWindowManagerComponent} from "./viewer_window_manager.component";
+import {UiData} from "./ui_data";
 
 describe("ViewerWindowManagerComponent", () => {
   let fixture: ComponentFixture<ViewerWindowManagerComponent>;
@@ -43,11 +44,11 @@ describe("ViewerWindowManagerComponent", () => {
   });
 
   it("renders the input value", async () => {
-    component.inputValue = new Date("2012-12-12");
+    component.inputData = new UiData("UI Data Value");
     fixture.detectChanges();
 
     const divInputValue = htmlElement.querySelector(".viewer-window-manager div.input-value");
-    expect(divInputValue?.innerHTML).toContain("Wed Dec 12 2012 00:00:00 GMT+0000 (Coordinated Universal Time)");
+    expect(divInputValue?.innerHTML).toContain("UI Data Value");
   });
 
 });

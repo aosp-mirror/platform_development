@@ -18,20 +18,21 @@ import {
   EventEmitter,
   Input,
   Output
-} from '@angular/core';
+} from "@angular/core";
+import {UiData} from "./ui_data";
 
 @Component({
   template: `
     <div class="viewer-window-manager">
       <div class="title">Window Manager</div>
-      <div class="input-value">Input value: {{inputValue}}</div>
+      <div class="input-value">Input value: {{inputData.text}}</div>
       <div class="button"><button mat-icon-button (click)="generateOutputEvent($event)">Output event!</button></div>
     </div>
   `
 })
 export class ViewerWindowManagerComponent {
   @Input()
-  inputValue?: Date;
+  inputData?: UiData;
 
   @Output()
   outputEvent = new EventEmitter<DummyEvent>(); // or EventEmitter<void>()

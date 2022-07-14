@@ -14,27 +14,30 @@
  * limitations under the License.
  */
 import {TraceTypeId} from "common/trace/type_id";
-import {Viewer} from 'viewers/viewer';
+import {Viewer} from "viewers/viewer";
+import {Presenter} from "./presenter"
+import {UiData} from "./ui_data";
 
 class ViewerWindowManager implements Viewer {
-  public static readonly DEPENDENCIES: TraceTypeId[] = [TraceTypeId.WINDOW_MANAGER];
-  private view: HTMLElement;
-
   constructor() {
     this.view = document.createElement("viewer-window-manager");
-
-    //this.view.setAttribute("input-value", new Date() as unknown as string)
-    (this.view as any).inputValue = new Date();
-
-    this.view.addEventListener("outputEvent", () => console.log("Viewer component generated event!"));
+    this.presenter = new Presenter((uiData: UiData) => {
+      (this.view as any).inputData = uiData;
+    });
+    this.view.addEventListener("outputEvent", () => this.presenter.notifyUiEvent());
   }
 
   public notifyCurrentTraceEntries(entries: Map<TraceTypeId, any>): void {
+    this.presenter.notifyCurrentTraceEntries(entries);
   }
 
   public getView(): HTMLElement {
     return this.view;
   }
+
+  public static readonly DEPENDENCIES: TraceTypeId[] = [TraceTypeId.WINDOW_MANAGER];
+  private view: HTMLElement;
+  private presenter: Presenter;
 }
 
 export {ViewerWindowManager};
