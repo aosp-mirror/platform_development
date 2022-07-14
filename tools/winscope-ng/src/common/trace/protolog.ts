@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {StringUtils} from "common/utils/string_utils"
+import {StringUtils} from "common/utils/string_utils";
 import configJson from "../../../../../../frameworks/base/data/etc/services.core.protolog.json";
 
 class LogMessage {
@@ -38,17 +38,17 @@ class FormattedLogMessage extends LogMessage {
   constructor(proto: any) {
     const text = (
       proto.messageHash.toString() +
-      ' - [' + proto.strParams.toString() +
-      '] [' + proto.sint64Params.toString() +
-      '] [' + proto.doubleParams.toString() +
-      '] [' + proto.booleanParams.toString() + ']'
+      " - [" + proto.strParams.toString() +
+      "] [" + proto.sint64Params.toString() +
+      "] [" + proto.doubleParams.toString() +
+      "] [" + proto.booleanParams.toString() + "]"
     );
     super(
       text,
       StringUtils.nanosecondsToHuman(proto.elapsedRealtimeNanos),
-      'INVALID',
-      'invalid',
-      '',
+      "INVALID",
+      "invalid",
+      "",
       Number(proto.elapsedRealtimeNanos));
   }
 }
@@ -67,7 +67,7 @@ class UnformattedLogMessage extends LogMessage {
 }
 
 function formatText(messageFormat: any, data: any) {
-  let out = '';
+  let out = "";
 
   const strParams: string[] = data.strParams;
   let strParamsIdx = 0;
@@ -79,42 +79,42 @@ function formatText(messageFormat: any, data: any) {
   let booleanParamsIdx = 0;
 
   for (let i = 0; i < messageFormat.length;) {
-    if (messageFormat[i] == '%') {
+    if (messageFormat[i] == "%") {
       if (i + 1 >= messageFormat.length) {
         // Should never happen - protologtool checks for that
-        throw new Error('Invalid format string');
+        throw new Error("Invalid format string");
       }
       switch (messageFormat[i + 1]) {
-        case '%':
-          out += '%';
-          break;
-        case 'd':
-          out += getParam(sint64Params, sint64ParamsIdx++).toString(10);
-          break;
-        case 'o':
-          out += getParam(sint64Params, sint64ParamsIdx++).toString(8);
-          break;
-        case 'x':
-          out += getParam(sint64Params, sint64ParamsIdx++).toString(16);
-          break;
-        case 'f':
-          out += getParam(doubleParams, doubleParamsIdx++).toFixed(6);
-          break;
-        case 'e':
-          out += getParam(doubleParams, doubleParamsIdx++).toExponential();
-          break;
-        case 'g':
-          out += getParam(doubleParams, doubleParamsIdx++).toString();
-          break;
-        case 's':
-          out += getParam(strParams, strParamsIdx++);
-          break;
-        case 'b':
-          out += getParam(booleanParams, booleanParamsIdx++).toString();
-          break;
-        default:
-          // Should never happen - protologtool checks for that
-          throw new Error('Invalid format string conversion: ' +
+      case "%":
+        out += "%";
+        break;
+      case "d":
+        out += getParam(sint64Params, sint64ParamsIdx++).toString(10);
+        break;
+      case "o":
+        out += getParam(sint64Params, sint64ParamsIdx++).toString(8);
+        break;
+      case "x":
+        out += getParam(sint64Params, sint64ParamsIdx++).toString(16);
+        break;
+      case "f":
+        out += getParam(doubleParams, doubleParamsIdx++).toFixed(6);
+        break;
+      case "e":
+        out += getParam(doubleParams, doubleParamsIdx++).toExponential();
+        break;
+      case "g":
+        out += getParam(doubleParams, doubleParamsIdx++).toString();
+        break;
+      case "s":
+        out += getParam(strParams, strParamsIdx++);
+        break;
+      case "b":
+        out += getParam(booleanParams, booleanParamsIdx++).toString();
+        break;
+      default:
+        // Should never happen - protologtool checks for that
+        throw new Error("Invalid format string conversion: " +
             messageFormat[i + 1]);
       }
       i += 2;
@@ -128,7 +128,7 @@ function formatText(messageFormat: any, data: any) {
 
 function getParam<T>(arr: T[], idx: number): T {
   if (arr.length <= idx) {
-    throw new Error('No param for format string conversion');
+    throw new Error("No param for format string conversion");
   }
   return arr[idx];
 }

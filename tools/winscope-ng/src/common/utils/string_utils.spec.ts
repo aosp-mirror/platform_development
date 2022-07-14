@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {StringUtils} from './string_utils';
+import {StringUtils} from "./string_utils";
 
 describe("StringUtils", () => {
   it("nanosecondsToHuman", () => {

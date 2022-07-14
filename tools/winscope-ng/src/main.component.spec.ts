@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import 'zone.js';
-import 'zone.js/testing';
-import {TestBed} from '@angular/core/testing';
-import {BrowserDynamicTestingModule, platformBrowserDynamicTesting} from '@angular/platform-browser-dynamic/testing';
+import "zone.js";
+import "zone.js/testing";
+import {TestBed} from "@angular/core/testing";
+import {BrowserDynamicTestingModule, platformBrowserDynamicTesting} from "@angular/platform-browser-dynamic/testing";
 
 declare const require: {
   context(path: string, deep?: boolean, filter?: RegExp): {
@@ -31,5 +31,5 @@ TestBed.initTestEnvironment(
 );
 
 // load all tests of Angular components
-const context = require.context('./', true, /\.component\.spec\.ts$/);
+const context = require.context("./", true, /\.component\.spec\.ts$/);
 context.keys().forEach(context);

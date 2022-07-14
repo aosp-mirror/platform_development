@@ -15,7 +15,7 @@
  */
 import {LogMessage, FormattedLogMessage, UnformattedLogMessage} from "common/trace/protolog";
 import {TraceTypeId} from "common/trace/type_id";
-import {Parser} from "./parser"
+import {Parser} from "./parser";
 import {ProtoLogFileProto} from "./proto_types";
 import configJson from "../../../../../frameworks/base/data/etc/services.core.protolog.json";
 

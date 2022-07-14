@@ -17,7 +17,7 @@ import {TraceTypeId} from "common/trace/type_id";
 import {ParserFactory} from "./parser_factory";
 import {Parser} from "./parser";
 import {TestUtils} from "test/test_utils";
-import {LogMessage} from '../common/trace/protolog';
+import {LogMessage} from "../common/trace/protolog";
 
 describe("ParserProtoLog", () => {
   let parser: Parser;

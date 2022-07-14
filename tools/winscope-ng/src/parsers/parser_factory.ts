@@ -18,12 +18,12 @@ import {ParserAccessibility} from "./parser_accessibility";
 import {ParserInputMethodClients} from "./parser_input_method_clients";
 import {ParserInputMethodManagerService} from "./parser_input_method_manager_service";
 import {ParserInputMethodService} from "./parser_input_method_service";
-import {ParserProtoLog} from "./parser_protolog"
-import {ParserScreenRecording} from "./parser_screen_recording"
-import {ParserSurfaceFlinger} from "./parser_surface_flinger"
+import {ParserProtoLog} from "./parser_protolog";
+import {ParserScreenRecording} from "./parser_screen_recording";
+import {ParserSurfaceFlinger} from "./parser_surface_flinger";
 import {ParserTransactions} from "./parser_transactions";
-import {ParserWindowManager} from "./parser_window_manager"
-import {ParserWindowManagerDump} from "./parser_window_manager_dump"
+import {ParserWindowManager} from "./parser_window_manager";
+import {ParserWindowManagerDump} from "./parser_window_manager_dump";
 
 class ParserFactory {
   static readonly PARSERS = [
@@ -37,19 +37,23 @@ class ParserFactory {
     ParserTransactions,
     ParserWindowManager,
     ParserWindowManagerDump,
-  ]
+  ];
 
   async createParsers(traces: Blob[]): Promise<Parser[]> {
     const parsers: Parser[] = [];
 
-    for (const trace of traces) {
+    for (const [index, trace] of traces.entries()) {
+      console.log(`Loading trace #${index}`);
       for (const ParserType of ParserFactory.PARSERS) {
         try {
           const parser = new ParserType(trace);
           await parser.parse();
           parsers.push(parser);
+          console.log(`Successfully loaded trace with parser type ${ParserType.name}`);
           break;
-        } catch(error) {
+        }
+        catch(error) {
+          console.log(`Failed to load trace with parser type ${ParserType.name}`);
         }
       }
     }

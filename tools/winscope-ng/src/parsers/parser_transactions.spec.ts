@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 import {TraceTypeId} from "common/trace/type_id";
-import {Parser} from "./parser"
-import {ParserFactory} from './parser_factory';
+import {Parser} from "./parser";
+import {ParserFactory} from "./parser_factory";
 import {TestUtils} from "test/test_utils";
 
 describe("ParserTransactions", () => {
@@ -42,6 +42,6 @@ describe("ParserTransactions", () => {
 
   it("retrieves trace entry", () => {
     expect(Number(parser.getTraceEntry(14862317023)!.elapsedRealtimeNanos))
-     .toEqual(14862317023);
+      .toEqual(14862317023);
   });
 });

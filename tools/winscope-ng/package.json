@@ -2,6 +2,7 @@
   "name": "winscope-ng",
   "version": "0.0.0",
   "scripts": {
+    "eslint": "npx eslint --ignore-pattern flickerlib src/",
     "start": "webpack serve --config webpack.config.dev.js --open --hot",
     "build:kotlin": "rm -rf kotlin_build && npx kotlinc-js -source-map -source-map-embed-sources always -module-kind commonjs -output kotlin_build/flicker.js ../../../platform_testing/libraries/flicker/src/com/android/server/wm/traces/common",
     "build:prod": "webpack --config webpack.config.prod.js --progress",
@@ -46,6 +47,9 @@
     "@angular/cli": "~14.0.0",
     "@angular/compiler-cli": "^14.0.0",
     "@types/jasmine": "~4.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.30.6",
+    "@typescript-eslint/parser": "^5.30.6",
+    "eslint": "^8.19.0",
     "jasmine": "^4.2.1",
     "jasmine-core": "~4.1.0",
     "karma": "~6.3.0",

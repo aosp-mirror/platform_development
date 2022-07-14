@@ -15,9 +15,9 @@
  */
 import {ScreenRecordingTraceEntry} from "common/trace/screen_recording";
 import {TraceTypeId} from "common/trace/type_id";
-import {TestUtils} from 'test/test_utils';
-import {Parser} from './parser';
-import {ParserFactory} from './parser_factory';
+import {TestUtils} from "test/test_utils";
+import {Parser} from "./parser";
+import {ParserFactory} from "./parser_factory";
 
 describe("ParserScreenRecording", () => {
   let parser: Parser;
@@ -48,13 +48,13 @@ describe("ParserScreenRecording", () => {
 
   it("retrieves trace entry", () => {
     {
-      const entry = parser.getTraceEntry(19446131807000)!
+      const entry = parser.getTraceEntry(19446131807000)!;
       expect(entry).toBeInstanceOf(ScreenRecordingTraceEntry);
       expect(Number(entry.videoTimeSeconds)).toBeCloseTo(0);
     }
 
     {
-      const entry = parser.getTraceEntry(19448501007000)!
+      const entry = parser.getTraceEntry(19448501007000)!;
       expect(entry).toBeInstanceOf(ScreenRecordingTraceEntry);
       expect(Number(entry.videoTimeSeconds)).toBeCloseTo(2.37, 0.001);
     }

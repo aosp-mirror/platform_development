@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {WindowManagerState} from 'common/trace/flickerlib/windows/WindowManagerState';
+import {WindowManagerState} from "common/trace/flickerlib/windows/WindowManagerState";
 import {TraceTypeId} from "common/trace/type_id";
 import {ParserFactory} from "./parser_factory";
 import {Parser} from "./parser";
