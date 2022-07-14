@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 import { TraceTypeId } from "common/trace/type_id";
-import { Viewer } from './viewer';
-import { ViewerWindowManager } from './viewer_window_manager/viewer_window_manager';
+import { Viewer } from "./viewer";
+import { ViewerWindowManager } from "./viewer_window_manager/viewer_window_manager";
 
 class ViewerFactory {
   static readonly VIEWERS = [
     ViewerWindowManager,
-  ]
+  ];
 
   public createViewers(activeTraceTypes: Set<TraceTypeId>): Viewer[] {
     const viewers: Viewer[] = [];

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 import {TraceTypeId} from "common/trace/type_id";
-import {LayerTraceEntry} from 'common/trace/flickerlib/layers/LayerTraceEntry';
-import {TestUtils} from 'test/test_utils';
-import {Parser} from './parser';
-import {ParserFactory} from './parser_factory';
+import {LayerTraceEntry} from "common/trace/flickerlib/layers/LayerTraceEntry";
+import {TestUtils} from "test/test_utils";
+import {Parser} from "./parser";
+import {ParserFactory} from "./parser_factory";
 
 describe("ParserSurfaceFlinger", () => {
   let parser: Parser;
@@ -39,7 +39,7 @@ describe("ParserSurfaceFlinger", () => {
   });
 
   it("retrieves trace entry", () => {
-    const entry = parser.getTraceEntry(850335483446)!
+    const entry = parser.getTraceEntry(850335483446)!;
     expect(entry).toBeInstanceOf(LayerTraceEntry);
     expect(Number(entry.timestampMs)).toEqual(850335483446);
   });

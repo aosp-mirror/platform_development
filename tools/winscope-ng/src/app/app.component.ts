@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, Injector, Inject} from '@angular/core';
-import {createCustomElement} from '@angular/elements';
-import {ViewerWindowManagerComponent} from 'viewers/viewer_window_manager/viewer_window_manager.component';
-import {Core} from './core';
+import {Component, Injector, Inject} from "@angular/core";
+import {createCustomElement} from "@angular/elements";
+import {ViewerWindowManagerComponent} from "viewers/viewer_window_manager/viewer_window_manager.component";
+import {Core} from "./core";
 
 @Component({
-  selector: 'app-root',
+  selector: "app-root",
   template: `
     <div id="title">
       <span>Winscope Viewer 2.0</span>
@@ -41,12 +41,12 @@ import {Core} from './core';
   `
 })
 export class AppComponent {
-  title = 'winscope-ng';
+  title = "winscope-ng";
 
   private core!: Core;
 
   constructor(@Inject(Injector) injector: Injector) {
-    customElements.define('viewer-window-manager',
+    customElements.define("viewer-window-manager",
       createCustomElement(ViewerWindowManagerComponent, {injector}));
   }
 
@@ -66,7 +66,7 @@ export class AppComponent {
 
   public notifyCurrentTimestamp() {
     const dummyTimestamp = 1000000; //TODO: get timestamp from time scrub
-    this.core.notifyCurrentTimestamp(dummyTimestamp)
+    this.core.notifyCurrentTimestamp(dummyTimestamp);
   }
 
   //TODO: extend with support for multiple files, archives, etc...

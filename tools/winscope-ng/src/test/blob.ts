@@ -24,7 +24,7 @@ class Blob {
 
   arrayBuffer(): Promise<ArrayBuffer> {
     return new Promise<ArrayBuffer>((resolve, reject) => {
-        resolve(this.buffer);
+      resolve(this.buffer);
     });
   }
 

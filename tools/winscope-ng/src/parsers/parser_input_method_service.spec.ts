@@ -39,6 +39,6 @@ describe("ParserInputMethodService", () => {
 
   it("retrieves trace entry", () => {
     expect(Number(parser.getTraceEntry(1149230019887)!.elapsedRealtimeNanos))
-     .toEqual(1149230019887);
+      .toEqual(1149230019887);
   });
 });

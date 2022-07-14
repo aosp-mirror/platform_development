@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 import {TraceTypeId} from "common/trace/type_id";
-import {Parser} from 'parsers/parser'
-import {ParserFactory} from 'parsers/parser_factory'
-import {Viewer} from 'viewers/viewer'
-import {ViewerFactory} from 'viewers/viewer_factory'
+import {Parser} from "parsers/parser";
+import {ParserFactory} from "parsers/parser_factory";
+import {Viewer} from "viewers/viewer";
+import {ViewerFactory} from "viewers/viewer_factory";
 
 class Core {
   private parsers: Parser[];
@@ -69,7 +69,7 @@ class Core {
 
     this.viewers.forEach(viewer => {
       viewer.notifyCurrentTraceEntries(traceEntries);
-    })
+    });
   }
 }
 

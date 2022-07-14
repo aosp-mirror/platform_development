@@ -32,13 +32,13 @@ import {UiData} from "./ui_data";
 })
 export class ViewerWindowManagerComponent {
   @Input()
-  inputData?: UiData;
+    inputData?: UiData;
 
   @Output()
-  outputEvent = new EventEmitter<DummyEvent>(); // or EventEmitter<void>()
+    outputEvent = new EventEmitter<DummyEvent>(); // or EventEmitter<void>()
 
   public generateOutputEvent(event: MouseEvent) {
-    this.outputEvent.emit(new DummyEvent())
+    this.outputEvent.emit(new DummyEvent());
   }
 }
 

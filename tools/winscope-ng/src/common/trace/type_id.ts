@@ -30,6 +30,6 @@ enum TraceTypeId {
   INPUT_METHOD_SERVICE,
   TAG,
   ERROR,
-};
+}
 
 export {TraceTypeId};

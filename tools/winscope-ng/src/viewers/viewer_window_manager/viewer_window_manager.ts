@@ -15,7 +15,7 @@
  */
 import {TraceTypeId} from "common/trace/type_id";
 import {Viewer} from "viewers/viewer";
-import {Presenter} from "./presenter"
+import {Presenter} from "./presenter";
 import {UiData} from "./ui_data";
 
 class ViewerWindowManager implements Viewer {

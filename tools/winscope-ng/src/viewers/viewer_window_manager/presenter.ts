@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import {TraceTypeId} from "common/trace/type_id";
-import {UiData} from "./ui_data"
+import {UiData} from "./ui_data";
 
 type UiDataCallbackType = (uiData: UiData) => void;
 
@@ -39,6 +39,6 @@ class Presenter {
 
   private readonly uiDataCallback: UiDataCallbackType;
   private uiData?: UiData;
-};
+}
 
 export {Presenter, UiDataCallbackType};

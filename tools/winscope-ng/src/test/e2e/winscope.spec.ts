@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {browser, element, by} from 'protractor';
-import {TestUtils} from "../test_utils"
+import {browser, element, by} from "protractor";
+import {TestUtils} from "../test_utils";
 
 describe("winscope", () => {
   beforeAll(() => {
@@ -24,5 +24,5 @@ describe("winscope", () => {
   it("has title", () => {
     const title = element(by.css("#title"));
     expect(title.getText()).toContain("Winscope");
-  })
+  });
 });

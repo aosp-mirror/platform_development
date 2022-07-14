@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ArrayUtils} from './array_utils';
+import {ArrayUtils} from "./array_utils";
 
 describe("ArrayUtils", () => {
   it("equal", () => {

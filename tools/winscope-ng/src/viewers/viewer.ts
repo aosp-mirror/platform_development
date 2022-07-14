@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { TraceTypeId } from "common/trace/type_id"
+import { TraceTypeId } from "common/trace/type_id";
 
 interface Viewer {
   //TODO: add TraceEntry data type

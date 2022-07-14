@@ -35,26 +35,26 @@ describe("Parser", () => {
 
   it("retrieves trace entry (no timestamp matches)", () => {
     expect(parser.getTraceEntry(850254319342))
-     .toEqual(undefined);
+      .toEqual(undefined);
   });
 
   it("retrieves trace entry (equal timestamp matches)", () => {
     expect(Number(parser.getTraceEntry(850254319343)!.timestampMs))
-     .toEqual(850254319343);
+      .toEqual(850254319343);
   });
 
   it("retrieves trace entry (equal timestamp matches)", () => {
     expect(Number(parser.getTraceEntry(850763506110)!.timestampMs))
-        .toEqual(850763506110);
+      .toEqual(850763506110);
   });
 
   it("retrieves trace entry (lower timestamp matches)", () => {
     expect(Number(parser.getTraceEntry(850254319344)!.timestampMs))
-     .toEqual(850254319343);
+      .toEqual(850254319343);
   });
 
   it("retrieves trace entry (equal timestamp matches)", () => {
     expect(Number(parser.getTraceEntry(850763506111)!.timestampMs))
-        .toEqual(850763506110);
+      .toEqual(850763506110);
   });
 });

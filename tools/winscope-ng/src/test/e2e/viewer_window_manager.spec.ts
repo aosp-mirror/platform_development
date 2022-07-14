@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {browser, element, by} from 'protractor';
-import {TestUtils} from '../test_utils';
+import {browser, element, by} from "protractor";
+import {TestUtils} from "../test_utils";
 
 describe("Viewer WindowManager", () => {
   beforeAll(async () => {

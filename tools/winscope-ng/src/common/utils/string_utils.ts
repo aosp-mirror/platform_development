@@ -36,7 +36,7 @@ class StringUtils {
       }
     }
 
-    return parts.reverse().join('');
+    return parts.reverse().join("");
   }
 }
 
