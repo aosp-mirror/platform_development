@@ -24,21 +24,33 @@ import {Core} from "./core";
     <div id="title">
       <span>Winscope Viewer 2.0</span>
     </div>
+    <div class="card-container" fxLayout="row wrap" fxLayoutGap="10px grid">
+      <mat-card class="homepage-card">
+        <collect-traces></collect-traces>
+      </mat-card>
+      <mat-card class="homepage-card">
+        <mat-card-title>Upload Traces</mat-card-title>
+        <div id="inputfile">
+          <input mat-input type="file" (change)="onInputFile($event)" #fileUpload>
+        </div>
+      </mat-card>
+    </div>
 
     <div id="inputfile">
       <input type="file" (change)="onInputFile($event)" #fileUpload>
     </div>
 
     <div id="timescrub">
-    <button (click)="notifyCurrentTimestamp()">Update current timestamp</button>
-    </div>
-
-    <div id="viewers">
+      <button mat-raised-button (click)="notifyCurrentTimestamp()">Update current timestamp</button>
     </div>
 
     <div id="timestamps">
     </div>
-  `
+
+    <div id="viewers">
+    </div>
+  `,
+  styles: [".card-container{width: 100%; display:flex; flex-direction: row; overflow: auto;}"]
 })
 export class AppComponent {
   title = "winscope-ng";
