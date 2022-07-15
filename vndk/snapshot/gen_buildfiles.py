@@ -194,7 +194,7 @@ class GenBuildFile(object):
             bpfile.write(self._gen_license_package())
             for module in self._modules_with_notice:
                 bpfile.write('\n')
-                bpfile.write(self._gen_notice_filegroup(module))
+                bpfile.write(self._gen_notice_license(module))
 
     def generate_android_bp(self):
         """Autogenerates Android.bp."""
@@ -301,10 +301,10 @@ class GenBuildFile(object):
                     ind=self.INDENT,
                     version=self._vndk_version))
 
-    def _get_license_kinds(self):
+    def _get_license_kinds(self, license_text=''):
         """ Returns a set of license kinds """
         license_collector = collect_licenses.LicenseCollector(self._install_dir)
-        license_collector.run()
+        license_collector.run(license_text)
         return license_collector.license_kinds
 
     def _gen_license(self):
@@ -444,28 +444,39 @@ class GenBuildFile(object):
                                   '}}\n'.format(ind=self.INDENT))
         return cc_prebuilt_libraries
 
-    def _gen_notice_filegroup(self, module):
-        """Generates a notice filegroup build rule for a given module.
+    def _gen_notice_license(self, module):
+        """Generates a notice license build rule for a given module.
 
         Args:
           notice: string, module name
         """
-        return ('filegroup {{\n'
-                '{ind}name: "{filegroup_name}",\n'
-                '{ind}srcs: ["{notice_dir}/{module}.txt"],\n'
+        license_kinds = self._get_license_kinds('{notice_dir}/{module}.txt'.format(
+            notice_dir=utils.NOTICE_FILES_DIR_NAME,
+            module=module))
+        license_kinds_string = ''
+        for license_kind in sorted(license_kinds):
+            license_kinds_string += '{ind}{ind}"{license_kind}",\n'.format(
+                                    ind=self.INDENT, license_kind=license_kind)
+        return ('license {{\n'
+                '{ind}name: "{license_name}",\n'
+                '{ind}license_kinds: [\n'
+                '{license_kinds}'
+                '{ind}],\n'
+                '{ind}license_text: ["{notice_dir}/{module}.txt"],\n'
                 '}}\n'.format(
                     ind=self.INDENT,
-                    filegroup_name=self._get_notice_filegroup_name(module),
+                    license_name=self._get_notice_license_name(module),
+                    license_kinds=license_kinds_string,
                     module=module,
                     notice_dir=utils.NOTICE_FILES_DIR_NAME))
 
-    def _get_notice_filegroup_name(self, module):
-        """ Gets a notice filegroup module name for a given module.
+    def _get_notice_license_name(self, module):
+        """ Gets a notice license module name for a given module.
 
         Args:
           notice: string, module name.
         """
-        return 'vndk-v{ver}-{module}-notice'.format(
+        return 'vndk-v{ver}-{module}-license'.format(
             ver=self._vndk_version, module=module)
 
     def _gen_vndk_shared_prebuilts(self,
@@ -544,9 +555,9 @@ class GenBuildFile(object):
             notice = ''
             for prebuilt in prebuilts:
                 if prebuilt in self._modules_with_notice:
-                    notice = '{ind}notice: ":{notice_filegroup}",\n'.format(
+                    notice = '{ind}licenses: ["{notice_license}"],\n'.format(
                         ind=self.INDENT,
-                        notice_filegroup=self._get_notice_filegroup_name(prebuilt))
+                        notice_license=self._get_notice_license_name(prebuilt))
                     break
             return notice
 
