@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, Injector, Inject} from "@angular/core";
-import {createCustomElement} from "@angular/elements";
-import {ViewerWindowManagerComponent} from "viewers/viewer_window_manager/viewer_window_manager.component";
-import {Core} from "./core";
+import { Component, Injector, Inject } from "@angular/core";
+import { createCustomElement } from "@angular/elements";
+import { ViewerWindowManagerComponent } from "viewers/viewer_window_manager/viewer_window_manager.component";
+import { Core } from "./core";
+import { ProxyState } from "trace_collection/proxy_client";
+import { PersistentStore } from "../common/persistent_store";
 
 @Component({
   selector: "app-root",
@@ -26,7 +28,7 @@ import {Core} from "./core";
     </div>
     <div class="card-container" fxLayout="row wrap" fxLayoutGap="10px grid">
       <mat-card class="homepage-card">
-        <collect-traces></collect-traces>
+        <collect-traces [store]="store"></collect-traces>
       </mat-card>
       <mat-card class="homepage-card">
         <mat-card-title>Upload Traces</mat-card-title>
@@ -56,8 +58,12 @@ export class AppComponent {
   title = "winscope-ng";
 
   private core!: Core;
+  states = ProxyState;
+  store: PersistentStore = new PersistentStore();
 
-  constructor(@Inject(Injector) injector: Injector) {
+  constructor(
+    @Inject(Injector) injector: Injector
+  ) {
     customElements.define("viewer-window-manager",
       createCustomElement(ViewerWindowManagerComponent, {injector}));
   }

@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 import { Component, Input, Output, EventEmitter } from "@angular/core";
-import { ProxyState } from "./proxy_client";
+import { ProxyClient, ProxyState } from "./proxy_client";
+
 
 @Component({
   selector: "adb-proxy",
   template: `
-    <div *ngIf="status===states.NO_PROXY">
-        <div class="title">Unable to connect to Winscope ADB proxy</div>
+    <div *ngIf="proxy.state===states.NO_PROXY">
+        <div>
+            <mat-icon>error</mat-icon>
+            <span class="icon-message">Unable to connect to Winscope ADB proxy</span>
+        </div>
         <div class="md-body-2" layout="layout-md">
           <p>Launch the Winscope ADB Connect proxy to capture traces directly from your browser.</p>
           <p>Python 3.5+ and ADB are required.</p>
@@ -33,12 +37,15 @@ import { ProxyState } from "./proxy_client";
           <button mat-raised-button class="md-accent">
             <a href="{{downloadProxyUrl}}" target='_blank'>Download from AOSP</a>
           </button>
-          <button mat-raised-button class="md-accent" (click)="triggerUnauthComponent()">Retry</button>
+          <button mat-raised-button class="md-accent" (click)="restart()">Retry</button>
         </div>
     </div>
 
-    <div *ngIf="status===states.INVALID_VERSION">
-        <div class="title">Your local version of the ADB Connect proxy is incompatible with Winscope.</div>
+    <div *ngIf="proxy.state===states.INVALID_VERSION">
+        <div>
+            <mat-icon>update</mat-icon>
+            <span class="icon-message">Your local proxy version is incompatible with Winscope.</span>
+        </div>
         <div class="md-body-2" layout="layout-md">
           <p>Please update the proxy to version {{ proxyVersion }}.</p>
           <p>Run:</p>
@@ -54,12 +61,15 @@ import { ProxyState } from "./proxy_client";
         </div>
     </div>
 
-    <div *ngIf="status===states.UNAUTH">
-        <div class="title">Proxy authorisation required</div>
+    <div *ngIf="proxy.state===states.UNAUTH">
+        <div>
+            <mat-icon>lock</mat-icon>
+            <span class="icon-message">Proxy authorisation required</span>
+        </div>
         <div class="md-body-2" layout="layout-md">
           <p>Enter Winscope proxy token:</p>
           <mat-form-field class="proxy-key-field">
-            <input matInput [(ngModel)]="proxyKey" name="proxy-key" (keyup.enter)="onEnter()"/>
+            <input matInput [(ngModel)]="proxyKeyItem" name="proxy-key"/>
           </mat-form-field>
           <p>The proxy token is printed to console on proxy launch, copy and paste it above.</p>
         </div>
@@ -68,32 +78,31 @@ import { ProxyState } from "./proxy_client";
         </div>
     </div>
   `,
-  styles: [".proxy-key-field {width: 30rem}"]
+  styles: [".proxy-key-field {width: 30rem}", ".icon-message {vertical-align: middle;}"]
 })
 export class AdbProxyComponent {
-  readonly proxyVersion = "0.8";
-  states = ProxyState;
-
   @Input()
-    status = this.states.NO_PROXY;
+  proxy: any = {VERSION: 0.8};
 
   @Output()
-    statusChange = new EventEmitter<ProxyState>();
+  proxyChange = new EventEmitter<ProxyClient>();
 
-  proxyKey = "";
+  @Output()
+  addKey = new EventEmitter<string>();
+
+  states = ProxyState;
+  proxyKeyItem = "";
+  readonly proxyVersion = this.proxy.VERSION;
   readonly downloadProxyUrl: string = "https://android.googlesource.com/platform/development/+/master/tools/winscope/adb_proxy/winscope_proxy.py";
 
-  public onEnter() {
-    console.log("this is the key,", this.proxyKey);
-  }
-
   public restart() {
-    this.status = ProxyState.START_TRACE;
-    this.statusChange.emit(this.status);
+    this.addKey.emit(this.proxyKeyItem);
+    this.proxy.setState(this.states.CONNECTING);
+    this.proxyChange.emit(this.proxy);
   }
 
   public triggerUnauthComponent() {
-    this.status = ProxyState.UNAUTH;
-    this.statusChange.emit(this.status);
+    this.proxy.setState(this.states.UNAUTH);
+    this.proxyChange.emit(this.proxy);
   }
 }

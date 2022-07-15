@@ -13,23 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component} from "@angular/core";
-
-
-@Component({
-  selector: "web-adb",
-  template: `
-    <div class="title">Connect a new device</div>
-    <div class="md-body-2">
-      <p>Follow instructions in the Chrome pop-up.</p>
-    </div>
-    <div class="md-layout">
-      <button mat-raised-button class="md-accent" (click)="restart()">Retry</button>
-    </div>
-  `,
-})
-export class WebAdbComponent {
-  public restart() {
-    console.log("Try connecting again");
-  }
+export class PersistentStore {
+    public addToStore(key: string, value: string) {
+        localStorage.setItem(key, value);
+    }
+    public getFromStore(key: string) {
+        return localStorage.getItem(key);
+    }
 }

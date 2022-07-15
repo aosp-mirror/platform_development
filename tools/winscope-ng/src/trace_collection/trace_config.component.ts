@@ -13,30 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input, Output, EventEmitter } from "@angular/core";
-import { ProxyState } from "./proxy_client";
+
 import { ConfigurationOptions, SelectionConfiguration } from "./collect_traces.component";
+import { Component, Input, Output, EventEmitter } from "@angular/core";
+import { ProxyState, ProxyClient } from "./proxy_client";
 
 
 @Component({
   selector: "trace-config",
   template: `
-    <div class="card-block" *ngIf="status===states.START_TRACE">
-        <mat-checkbox class="md-primary" [checked]="defaultCheck">{{name}}</mat-checkbox>
-        <div class="adv-config" *ngIf="configs">
-          <mat-checkbox class="md-primary" *ngFor="let enableConfig of traceEnableConfigs()">{{enableConfig}}</mat-checkbox>
-          <div class="selection">
-            <mat-form-field appearance="fill" class="config-selection" *ngFor="let con of traceSelectionConfigs()">
-            <mat-label>{{con.name}}</mat-label>
-            <mat-select>
-                <mat-option
-                  *ngFor="let option of con.options"
-                  [value]="con.value"
-                >{{ option }}</mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
+    <div class="card-block" *ngIf="proxy.state===states.START_TRACE">
+      <mat-checkbox class="md-primary" [checked]="defaultCheck">{{name}}</mat-checkbox>
+      <div class="adv-config" *ngIf="configs">
+        <mat-checkbox class="md-primary" *ngFor="let enableConfig of traceEnableConfigs()">{{enableConfig}}</mat-checkbox>
+        <div class="selection">
+          <mat-form-field appearance="fill" class="config-selection" *ngFor="let con of traceSelectionConfigs()">
+          <mat-label>{{con.name}}</mat-label>
+          <mat-select>
+              <mat-option
+                *ngFor="let option of con.options"
+                [value]="con.value"
+              >{{ option }}</mat-option>
+            </mat-select>
+          </mat-form-field>
         </div>
+      </div>
     </div>
   `,
   styles: [".adv-config {margin-left: 5rem;}"],
@@ -47,19 +48,19 @@ export class TraceConfigComponent {
   objectKeys = Object.keys;
 
   @Input()
-    name = "";
+  name = "";
 
   @Input()
-    configs: ConfigurationOptions | null = null;
+  configs: ConfigurationOptions | null = null;
 
   @Input()
-    defaultCheck: boolean | undefined = false;
+  defaultCheck: boolean | undefined = false;
 
   @Input()
-    status = this.states.UNAUTH;
+  proxy: any = null;
 
   @Output()
-    statusChange = new EventEmitter<ProxyState>();
+  proxyChange = new EventEmitter<ProxyClient>();
 
   public traceEnableConfigs(): Array<string> {
     if (this.configs && this.configs.enableConfigs) {
@@ -78,8 +79,8 @@ export class TraceConfigComponent {
   }
 
   public restart() {
-    this.status = this.states.CONNECTING;
-    this.statusChange.emit(this.status);
+    this.proxy.setState(this.states.CONNECTING);
+    this.proxyChange.emit(this.proxy);
   }
 
   public resetLastDevice() {
