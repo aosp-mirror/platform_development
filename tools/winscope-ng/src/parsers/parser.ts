@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ArrayUtils} from '../common/utils/array_utils';
+import {ArrayUtils} from "../common/utils/array_utils";
 import {TraceTypeId} from "common/trace/type_id";
 
 abstract class Parser {

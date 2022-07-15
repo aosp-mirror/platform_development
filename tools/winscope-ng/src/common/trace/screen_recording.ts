@@ -18,6 +18,6 @@ class ScreenRecordingTraceEntry {
               public videoTimeSeconds: number,
               public videoData: Blob) {
   }
-};
+}
 
 export {ScreenRecordingTraceEntry};

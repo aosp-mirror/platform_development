@@ -15,7 +15,7 @@
  */
 import {TraceTypeId} from "common/trace/type_id";
 import {ArrayUtils} from "common/utils/array_utils";
-import {Parser} from "./parser"
+import {Parser} from "./parser";
 import {ScreenRecordingTraceEntry} from "common/trace/screen_recording";
 
 class ParserScreenRecording extends Parser {
@@ -32,8 +32,8 @@ class ParserScreenRecording extends Parser {
   }
 
   override decodeTrace(videoData: Uint8Array): number[] {
-    let posCount = this.searchMagicString(videoData);
-    let [posTimestamps, count] = this.parseTimestampsCount(videoData, posCount);
+    const posCount = this.searchMagicString(videoData);
+    const [posTimestamps, count] = this.parseTimestampsCount(videoData, posCount);
     return this.parseTimestamps(videoData, posTimestamps, count);
   }
 

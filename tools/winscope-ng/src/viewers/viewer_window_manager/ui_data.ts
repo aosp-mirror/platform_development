@@ -13,23 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-enum TraceTypeId {
-  ACCESSIBILITY,
-  WINDOW_MANAGER,
-  SURFACE_FLINGER,
-  SCREEN_RECORDING,
-  TRANSACTIONS,
-  TRANSACTIONS_LEGACY,
-  WAYLAND,
-  WAYLAND_DUMP,
-  PROTO_LOG,
-  SYSTEM_UI,
-  LAUNCHER,
-  INPUT_METHOD_CLIENTS,
-  INPUT_METHOD_MANAGER_SERVICE,
-  INPUT_METHOD_SERVICE,
-  TAG,
-  ERROR,
+
+class UiData {
+  constructor(public text: string) {
+  }
 }
 
-export {TraceTypeId};
+export {UiData};

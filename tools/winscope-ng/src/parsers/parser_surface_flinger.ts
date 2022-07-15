@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {LayerTraceEntry} from 'common/trace/flickerlib/layers/LayerTraceEntry';
+import {LayerTraceEntry} from "common/trace/flickerlib/layers/LayerTraceEntry";
 import {TraceTypeId} from "common/trace/type_id";
-import {Parser} from './parser'
-import {LayersTraceFileProto} from './proto_types';
+import {Parser} from "./parser";
+import {LayersTraceFileProto} from "./proto_types";
 
 class ParserSurfaceFlinger extends Parser {
   constructor(trace: Blob) {

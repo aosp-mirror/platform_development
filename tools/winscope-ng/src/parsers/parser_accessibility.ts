@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 import {TraceTypeId} from "common/trace/type_id";
-import {Parser} from './parser'
-import {AccessibilityTraceFileProto} from './proto_types';
+import {Parser} from "./parser";
+import {AccessibilityTraceFileProto} from "./proto_types";
 
 class ParserAccessibility extends Parser {
   constructor(trace: Blob) {
