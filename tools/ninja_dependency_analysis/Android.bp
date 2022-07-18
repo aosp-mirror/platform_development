@@ -1,0 +1,19 @@
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+python_binary_host {
+    name: "collect_ninja_inputs",
+    srcs: [
+        "collect_ninja_inputs.py",
+    ],
+    version: {
+        py2: {
+            enabled: false,
+        },
+        py3: {
+            enabled: true,
+            embedded_launcher: true,
+        },
+    }
+}
