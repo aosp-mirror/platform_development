@@ -30,7 +30,7 @@ def build_cmd(ninja_binary, ninja_file, target, exempted_file_list):
     if exempted_file_list and exempted_file_list.exists():
         with open(exempted_file_list) as fin:
             for l in map(str.strip, fin.readlines()):
-                if l:
+                if l and not l.startswith('#'):
                     cmd.extend(['-e', l])
     cmd.append(target)
 
