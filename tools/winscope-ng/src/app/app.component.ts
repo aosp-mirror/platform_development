@@ -39,6 +39,8 @@ import { PersistentStore } from "../common/persistent_store";
     </div>
 
     <div id="inputfile">
+      <button type="button" mat-raised-button (click)="fileInput.click()">Choose File</button>
+      <input hidden (change)="onInputFile($event)" #fileInput type="file" id="file">
       <input type="file" (change)="onInputFile($event)" #fileUpload>
     </div>
 

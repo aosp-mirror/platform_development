@@ -58,7 +58,7 @@ export class ProxyClient {
 
   call(method: string, path: string, view: any, onSuccess: any, type = null, jsonRequest = null) {
     const request = new XMLHttpRequest();
-    const client: ProxyClient = this;
+    const client = this;
     request.onreadystatechange = function() {
       if (this.readyState !== 4) {
         return;
@@ -88,7 +88,6 @@ export class ProxyClient {
     if (lastKey !== null) {
       client.proxyKey = lastKey;
     }
-
     request.setRequestHeader("Winscope-Token", client.proxyKey);
     if (jsonRequest) {
       const json = JSON.stringify(jsonRequest);
@@ -147,6 +146,7 @@ export class ProxyClient {
   selectDevice(device_id: string) {
     this.selectedDevice = device_id;
     this.store.addToStore("adb.lastDevice", device_id);
+    this.lastDevice = device_id;
     this.setState(ProxyState.START_TRACE);
   }
 

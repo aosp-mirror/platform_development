@@ -45,6 +45,10 @@ mat-form-field {
     height: 5px;
 }
 
+mat-icon {
+    margin: 5px;
+}
+
 .card-block {
     margin: 15px;
 }

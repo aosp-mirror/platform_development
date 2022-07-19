@@ -16,13 +16,12 @@
 import { Component, Input, Output, EventEmitter } from "@angular/core";
 import { ProxyClient, ProxyState } from "./proxy_client";
 
-
 @Component({
   selector: "adb-proxy",
   template: `
     <div *ngIf="proxy.state===states.NO_PROXY">
         <div>
-            <mat-icon>error</mat-icon>
+            <mat-icon class="icon-message">error</mat-icon>
             <span class="icon-message">Unable to connect to Winscope ADB proxy</span>
         </div>
         <div class="md-body-2" layout="layout-md">
@@ -30,7 +29,7 @@ import { ProxyClient, ProxyState } from "./proxy_client";
           <p>Python 3.5+ and ADB are required.</p>
           <p>Run:</p>
           <pre>python3</pre>
-          <pre>$ANDROID_BUILD_TOP/development/tools/winscope/adb_proxy/winscope_proxy.py</pre>
+          <pre>$ANDROID_BUILD_TOP/development/tools/winscope-ng/adb/winscope_proxy.py</pre>
           <p>Or get it from the AOSP repository.</p>
         </div>
         <div class="md-layout">
@@ -50,7 +49,7 @@ import { ProxyClient, ProxyState } from "./proxy_client";
           <p>Please update the proxy to version {{ proxyVersion }}.</p>
           <p>Run:</p>
           <pre>python3</pre>
-          <pre>$ANDROID_BUILD_TOP/development/tools/winscope/adb_proxy/winscope_proxy.py</pre>
+          <pre>$ANDROID_BUILD_TOP/development/tools/winscope-ng/adb/winscope_proxy.py</pre>
           <p>Or get it from the AOSP repository.</p>
         </div>
         <div class="md-layout">
@@ -77,32 +76,30 @@ import { ProxyClient, ProxyState } from "./proxy_client";
           <button mat-raised-button class="md-accent" (click)="restart()">Connect</button>
         </div>
     </div>
+
   `,
   styles: [".proxy-key-field {width: 30rem}", ".icon-message {vertical-align: middle;}"]
 })
 export class AdbProxyComponent {
-  @Input()
-  proxy: any = {VERSION: 0.8};
-
-  @Output()
-  proxyChange = new EventEmitter<ProxyClient>();
-
-  @Output()
-  addKey = new EventEmitter<string>();
-
   states = ProxyState;
+
   proxyKeyItem = "";
+
+  @Input()
+    proxy: any = {};
+
   readonly proxyVersion = this.proxy.VERSION;
-  readonly downloadProxyUrl: string = "https://android.googlesource.com/platform/development/+/master/tools/winscope/adb_proxy/winscope_proxy.py";
+
+  @Output()
+    proxyChange = new EventEmitter<ProxyClient>();
+
+  @Output() addKey = new EventEmitter<string>();
+
+  readonly downloadProxyUrl: string = "https://android.googlesource.com/platform/development/+/master/tools/winscope-ng/adb/winscope_proxy.py";
 
   public restart() {
     this.addKey.emit(this.proxyKeyItem);
     this.proxy.setState(this.states.CONNECTING);
-    this.proxyChange.emit(this.proxy);
-  }
-
-  public triggerUnauthComponent() {
-    this.proxy.setState(this.states.UNAUTH);
     this.proxyChange.emit(this.proxy);
   }
 }
