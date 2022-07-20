@@ -1,8 +1,12 @@
-
-interface TraceConfiguration {
-  name: string,
-  defaultCheck?: boolean,
+export interface TraceConfiguration {
+  name?: string,
+  run?: boolean,
+  isTraceCollection?: boolean,
   config?: ConfigurationOptions
+}
+
+interface TraceConfigurationMap {
+  [key: string]: TraceConfiguration
 }
 
 export interface ConfigurationOptions {
@@ -12,10 +16,12 @@ export interface ConfigurationOptions {
 
 export interface EnableConfiguration {
   name: string,
-  defaultCheck: boolean,
+  key: string,
+  enabled: boolean,
 }
 
 export interface SelectionConfiguration {
+  key: string,
   name: string,
   options: Array<string>,
   value: string
@@ -25,46 +31,10 @@ export type configMap = {
 [key: string]: Array<string> | string;
 }
 
-export const TRACES = {
-  "default": {
-    "window_trace": {
-      name: "Window Manager",
-    },
-    "accessibility_trace": {
-      name: "Accessibility",
-    },
-    "layers_trace": {
-      name: "Surface Flinger",
-    },
-    "transactions": {
-      name: "Transaction",
-    },
-    "proto_log": {
-      name: "ProtoLog",
-    },
-    "screen_recording": {
-      name: "Screen Recording",
-    },
-    "ime_trace_clients": {
-      name: "Input Method Clients",
-    },
-    "ime_trace_service": {
-      name: "Input Method Service",
-    },
-    "ime_trace_managerservice": {
-      name: "Input Method Manager Service",
-    },
-  },
-  "arc": {
-    "wayland_trace": {
-      name: "Wayland",
-    },
-  },
-};
-
-const wmTraceSelectionConfigs = [
+const wmTraceSelectionConfigs: Array<SelectionConfiguration> = [
   {
-    name: "wmbuffersize (KB)",
+    key: "wmbuffersize",
+    name: "buffer size (KB)",
     options: [
       "4000",
       "8000",
@@ -74,7 +44,8 @@ const wmTraceSelectionConfigs = [
     value: "4000"
   },
   {
-    name: "tracingtype",
+    key: "tracingtype",
+    name: "tracing type",
     options: [
       "frame",
       "transaction",
@@ -82,7 +53,8 @@ const wmTraceSelectionConfigs = [
     value: "frame"
   },
   {
-    name: "tracinglevel",
+    key: "tracinglevel",
+    name: "tracing level",
     options: [
       "verbose",
       "debug",
@@ -92,54 +64,126 @@ const wmTraceSelectionConfigs = [
   },
 ];
 
-
-export const traceConfigurations: Array<TraceConfiguration> = [
+const sfTraceEnableConfigs: Array<EnableConfiguration> = [
   {
-    name: "Surface Flinger",
-    defaultCheck: true,
-    config: {
-      enableConfigs: [
-        {name: "composition", defaultCheck: false},
-        {name: "metadata", defaultCheck: false},
-        {name: "hwc", defaultCheck: false},
-        {name: "tracebuffers", defaultCheck: false}
-      ],
-      selectionConfigs: [
-        {
-          name: "sfbuffersize (KB)",
-          options: ["4000","8000","16000","32000",],
-          value: "4000"
-        }
-      ]
-    }
+    name: "composition",
+    key: "composition",
+    enabled: true
   },
   {
+    name: "metadata",
+    key: "metadata",
+    enabled: true
+  },
+  {
+    name: "hwc",
+    key: "hwc",
+    enabled: true
+  },
+  {
+    name: "trace buffers",
+    key: "tracebuffers",
+    enabled: true
+  }
+];
+
+const sfTraceSelectionConfigs: Array<SelectionConfiguration> = [
+  {
+    key: "sfbuffersize",
+    name: "buffer size (KB)",
+    options: ["4000","8000","16000","32000"],
+    value: "4000"
+  }
+];
+
+export const traceConfigurations: TraceConfigurationMap = {
+  "layers_trace": {
+    name: "Surface Flinger",
+    run: true,
+    config: {
+      enableConfigs: sfTraceEnableConfigs,
+      selectionConfigs: sfTraceSelectionConfigs,
+    }
+  },
+  "window_trace": {
     name: "Window Manager",
-    defaultCheck: true,
+    run: true,
     config: {
       enableConfigs: [],
       selectionConfigs: wmTraceSelectionConfigs,
     }
   },
-  {
+  "screen_recording": {
     name: "Screen Recording",
+    run: true,
   },
-  {
-    name: "Accessibility",
-  },
-  {
-    name: "Transaction",
-  },
-  {
+  "ime_tracing": {
     name: "IME Tracing",
-    defaultCheck: true,
+    run: true,
+    isTraceCollection: true,
     config: {
       enableConfigs: [
-        {name: "Input Method Clients", defaultCheck: true},
-        {name: "Input Method Service", defaultCheck: true},
-        {name: "Input Method Manager Service", defaultCheck: true},
+        {
+          name: "Input Method Clients",
+          key: "ime_trace_clients",
+          enabled: true,
+        },
+        {
+          name: "Input Method Service",
+          key: "ime_trace_service",
+          enabled: true,
+        },
+        {
+          name: "Input Method Manager Service",
+          key: "ime_trace_managerservice",
+          enabled: true,
+        },
       ],
       selectionConfigs: []
     }
   },
-];
+  "ime_trace_clients": {
+    name: "Input Method Clients",
+    run: true,
+  },
+  "ime_trace_service": {
+    name: "Input Method Service",
+    run: true,
+  },
+  "ime_trace_managerservice": {
+    name: "Input Method Manager Service",
+    run: true,
+  },
+  "accessibility_trace": {
+    name: "Accessibility",
+    run: false,
+  },
+  "transactions": {
+    name: "Transaction",
+    run: false,
+  },
+  "proto_log": {
+    name: "ProtoLog",
+    run: false,
+  },
+  "wayland_trace": {
+    name: "Wayland",
+    run: false,
+  },
+};
+
+
+export const TRACES: { [key: string]: TraceConfigurationMap; } = {
+  "default": {
+    "window_trace": traceConfigurations["window_trace"],
+    "accessibility_trace": traceConfigurations["accessibility_trace"],
+    "layers_trace": traceConfigurations["layers_trace"],
+    "transactions": traceConfigurations["transactions"],
+    "proto_log": traceConfigurations["proto_log"],
+    "screen_recording": traceConfigurations["screen_recording"],
+    "ime_tracing": traceConfigurations["ime_tracing"],
+  },
+  "arc": {
+    "wayland_trace": traceConfigurations["wayland_trace"],
+  },
+};

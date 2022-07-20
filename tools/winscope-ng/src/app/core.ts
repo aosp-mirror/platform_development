@@ -71,6 +71,11 @@ class Core {
       viewer.notifyCurrentTraceEntries(traceEntries);
     });
   }
+
+  clearData() {
+    this.parsers = [];
+    this.viewers = [];
+  }
 }
 
 export { Core };

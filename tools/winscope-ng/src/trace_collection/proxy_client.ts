@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { PersistentStore } from "common/persistent_store";
+import { PersistentStore } from "../common/persistent_store";
+import { TRACES } from "./trace_collection_utils";
 
 export enum ProxyState {
   ERROR = 0,
@@ -40,25 +41,11 @@ export enum ProxyEndpoint {
   CHECK_WAYLAND = "/checkwayland/",
 }
 
-export class ProxyClient {
-  readonly WINSCOPE_PROXY_URL = "http://localhost:5544";
-  readonly VERSION = "0.8";
-
-  state: ProxyState = ProxyState.CONNECTING;
-  stateChangeListeners: {(param:ProxyState, errorText:string): void;}[] = [];
-  refresh_worker: NodeJS.Timeout | undefined = undefined;
-  devices: any = {};
-  selectedDevice = "";
-  errorText = "";
-
-  proxyKey = "";
-  lastDevice = "";
-
-  store = new PersistentStore();
-
-  call(method: string, path: string, view: any, onSuccess: any, type = null, jsonRequest = null) {
+// from here, all requests to the proxy are made
+class ProxyRequest {
+  async call(method: string, path: string, view: any, onSuccess: any, type: any = null, jsonRequest:any = null) {
     const request = new XMLHttpRequest();
-    const client = this;
+    const client = proxyClient;
     request.onreadystatechange = function() {
       if (this.readyState !== 4) {
         return;
@@ -79,7 +66,7 @@ export class ProxyClient {
         } else if (this.responseType === "arraybuffer") {
           client.errorText = String.fromCharCode.apply(null, new Array(this.response));
         }
-        client.setState(ProxyState.ERROR);
+        client.setState(ProxyState.ERROR, client.errorText);
       }
     };
     request.responseType = type || "";
@@ -97,6 +84,88 @@ export class ProxyClient {
       request.send();
     }
   }
+
+  getDevices = function(request: any, view: any) {
+    const client = proxyClient;
+    try {
+      client.devices = JSON.parse(request.responseText);
+      const last = client.store.getFromStore("adb.lastDevice");
+      if (last && client.devices[last] &&
+              client.devices[last].authorised) {
+        client.selectDevice(last);
+      } else {
+        if (client.refresh_worker === null) {
+          client.refresh_worker = setInterval(client.getDevices, 1000);
+        }
+        client.setState(ProxyState.DEVICES);
+      }
+    } catch (err) {
+      console.error(err);
+      client.errorText = request.responseText;
+      client.setState(ProxyState.ERROR, client.errorText);
+    }
+  };
+
+  setAvailableTraces = function(request:any, view:any) {
+    try {
+      view.DYNAMIC_TRACES = TRACES["default"];
+      if(request.responseText == "true") {
+        view.appendOptionalTraces(view, "arc");
+      }
+    } catch(err) {
+      proxyClient.setState(ProxyState.ERROR, request.responseText);
+    }
+  };
+
+  updateAdbData = async (request: any, view: any) => {
+    let idx = proxyClient.adbParams.idx;
+    let files = proxyClient.adbParams.files;
+    let traceType = proxyClient.adbParams.traceType;
+    try {
+      const enc = new TextDecoder("utf-8");
+      const resp = enc.decode(request.response);
+      const filesByType = JSON.parse(resp);
+
+      for (const filetype in filesByType) {
+        const files = filesByType[filetype];
+        for (const encodedFileBuffer of files) {
+          const buffer = Uint8Array.from(atob(encodedFileBuffer), (c) => c.charCodeAt(0));
+          const blob = new Blob([buffer]);
+          proxyClient.adbData.push(blob);
+        }
+      }
+      if (idx < files.length - 1) {
+        proxyClient.updateAdbData(files, idx + 1, traceType, view);
+      } else {
+        proxyClient.dataReady = true;
+      }
+    } catch (error) {
+      proxyClient.setState(ProxyState.ERROR, request.responseText);
+    }
+  }
+}
+export const proxyRequest = new ProxyRequest();
+
+// stores all the changing variables from proxy and sets up calls from ProxyRequest
+export class ProxyClient {
+  readonly WINSCOPE_PROXY_URL = "http://localhost:5544";
+  readonly VERSION = "0.8";
+  state: ProxyState = ProxyState.CONNECTING;
+  stateChangeListeners: {(param:ProxyState, errorText:string): void;}[] = [];
+  refresh_worker: NodeJS.Timer | null = null;
+  devices: any = {};
+  selectedDevice = "";
+  errorText = "";
+  adbData: Array<any> = [];
+  proxyKey = "";
+  lastDevice = "";
+  store = new PersistentStore();
+  dataReady: boolean = false;
+  adbParams = {
+    files: [],
+    idx: -1,
+    traceType: null,
+  };
 
   setState(state:ProxyState, errorText = "") {
     this.state = state;
@@ -117,46 +186,25 @@ export class ProxyClient {
 
   getDevices() {
     if (this.state !== ProxyState.DEVICES && this.state !== ProxyState.CONNECTING) {
-      clearInterval(this.refresh_worker);
-      this.refresh_worker = undefined;
+      clearInterval(this.refresh_worker!);
+      this.refresh_worker = null;
       return;
     }
-    const client = this;
-    this.call("GET", ProxyEndpoint.DEVICES, this, function(request: any, view: any) {
-      try {
-        client.devices = JSON.parse(request.responseText);
-        const last = client.store.getFromStore("adb.lastDevice");
-        if (last && client.devices[last] &&
-                client.devices[last].authorised) {
-          client.selectDevice(last);
-        } else {
-          if (client.refresh_worker === undefined) {
-            client.refresh_worker = setInterval(client.getDevices, 1000);
-          }
-          client.setState(ProxyState.DEVICES);
-        }
-      } catch (err) {
-        console.error(err);
-        client.errorText = request.responseText;
-        client.setState(ProxyState.ERROR);
-      }
-    });
+    proxyRequest.call("GET", ProxyEndpoint.DEVICES, this, proxyRequest.getDevices);
   }
 
   selectDevice(device_id: string) {
     this.selectedDevice = device_id;
     this.store.addToStore("adb.lastDevice", device_id);
-    this.lastDevice = device_id;
     this.setState(ProxyState.START_TRACE);
   }
 
-  deviceId() {
-    return this.selectedDevice;
-  }
-
-  resetLastDevice() {
-    this.lastDevice = "";
-    this.store.addToStore("adb.lastDevice", "");
+  async updateAdbData(files:any, idx:any, traceType:any, view: any) {
+    this.adbParams.files = files;
+    this.adbParams.idx = idx;
+    this.adbParams.traceType = traceType;
+    await proxyRequest.call("GET", `${ProxyEndpoint.FETCH}${this.selectedDevice}/${files[idx]}/`, view,
+      proxyRequest.updateAdbData, "arraybuffer");
   }
 }
 

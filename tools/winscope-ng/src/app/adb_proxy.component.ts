@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { Component, Input, Output, EventEmitter } from "@angular/core";
-import { ProxyClient, ProxyState } from "./proxy_client";
+import { ProxyClient, ProxyState } from "../trace_collection/proxy_client";
 
 @Component({
   selector: "adb-proxy",
@@ -29,7 +29,7 @@ import { ProxyClient, ProxyState } from "./proxy_client";
           <p>Python 3.5+ and ADB are required.</p>
           <p>Run:</p>
           <pre>python3</pre>
-          <pre>$ANDROID_BUILD_TOP/development/tools/winscope-ng/adb/winscope_proxy.py</pre>
+          <pre>$ANDROID_BUILD_TOP/development/tools/winscope-ng/src/adb/winscope_proxy.py</pre>
           <p>Or get it from the AOSP repository.</p>
         </div>
         <div class="md-layout">
@@ -42,14 +42,14 @@ import { ProxyClient, ProxyState } from "./proxy_client";
 
     <div *ngIf="proxy.state===states.INVALID_VERSION">
         <div>
-            <mat-icon>update</mat-icon>
+            <mat-icon class="icon-message">update</mat-icon>
             <span class="icon-message">Your local proxy version is incompatible with Winscope.</span>
         </div>
         <div class="md-body-2" layout="layout-md">
           <p>Please update the proxy to version {{ proxyVersion }}.</p>
           <p>Run:</p>
           <pre>python3</pre>
-          <pre>$ANDROID_BUILD_TOP/development/tools/winscope-ng/adb/winscope_proxy.py</pre>
+          <pre>$ANDROID_BUILD_TOP/development/tools/winscope-ng/src/adb/winscope_proxy.py</pre>
           <p>Or get it from the AOSP repository.</p>
         </div>
         <div class="md-layout">
@@ -62,7 +62,7 @@ import { ProxyClient, ProxyState } from "./proxy_client";
 
     <div *ngIf="proxy.state===states.UNAUTH">
         <div>
-            <mat-icon>lock</mat-icon>
+            <mat-icon class="icon-message">lock</mat-icon>
             <span class="icon-message">Proxy authorisation required</span>
         </div>
         <div class="md-body-2" layout="layout-md">
@@ -78,23 +78,20 @@ import { ProxyClient, ProxyState } from "./proxy_client";
     </div>
 
   `,
-  styles: [".proxy-key-field {width: 30rem}", ".icon-message {vertical-align: middle;}"]
+  styles: [".proxy-key-field {width: 30rem}"]
 })
 export class AdbProxyComponent {
-  states = ProxyState;
-
-  proxyKeyItem = "";
-
   @Input()
-    proxy: any = {};
-
-  readonly proxyVersion = this.proxy.VERSION;
+  proxy: any = {};
 
   @Output()
-    proxyChange = new EventEmitter<ProxyClient>();
+  proxyChange = new EventEmitter<ProxyClient>();
 
   @Output() addKey = new EventEmitter<string>();
 
+  states = ProxyState;
+  proxyKeyItem = "";
+  readonly proxyVersion = this.proxy.VERSION;
   readonly downloadProxyUrl: string = "https://android.googlesource.com/platform/development/+/master/tools/winscope-ng/adb/winscope_proxy.py";
 
   public restart() {

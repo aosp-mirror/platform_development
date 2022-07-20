@@ -26,9 +26,9 @@ import { PersistentStore } from "../common/persistent_store";
     <div id="title">
       <span>Winscope Viewer 2.0</span>
     </div>
-    <div class="card-container" fxLayout="row wrap" fxLayoutGap="10px grid">
+    <div *ngIf="!dataLoaded" class="card-container" fxLayout="row wrap" fxLayoutGap="10px grid">
       <mat-card class="homepage-card">
-        <collect-traces [store]="store"></collect-traces>
+        <collect-traces [(core)]="core" [(dataLoaded)]="dataLoaded" [store]="store"></collect-traces>
       </mat-card>
       <mat-card class="homepage-card">
         <mat-card-title>Upload Traces</mat-card-title>
@@ -38,10 +38,11 @@ import { PersistentStore } from "../common/persistent_store";
       </mat-card>
     </div>
 
-    <div id="inputfile">
-      <button type="button" mat-raised-button (click)="fileInput.click()">Choose File</button>
-      <input hidden (change)="onInputFile($event)" #fileInput type="file" id="file">
-      <input type="file" (change)="onInputFile($event)" #fileUpload>
+    <div *ngIf="dataLoaded">
+      <mat-card class="homepage-card">
+        <mat-card-title>Loaded data</mat-card-title>
+        <button mat-raised-button (click)="clearData()">Back to Home</button>
+      </mat-card>
     </div>
 
     <div id="timescrub">
@@ -59,9 +60,10 @@ import { PersistentStore } from "../common/persistent_store";
 export class AppComponent {
   title = "winscope-ng";
 
-  private core!: Core;
+  core: Core = new Core();
   states = ProxyState;
   store: PersistentStore = new PersistentStore();
+  dataLoaded: boolean = false;
 
   constructor(
     @Inject(Injector) injector: Injector
@@ -70,10 +72,16 @@ export class AppComponent {
       createCustomElement(ViewerWindowManagerComponent, {injector}));
   }
 
-  public async onInputFile(event: Event) {
-    const files = await this.getInputFiles(event);
+  onCoreChange(newCore: Core) {
+    this.core = newCore;
+  }
 
-    this.core = new Core();
+  onDataLoadedChange(loaded: boolean) {
+    this.dataLoaded = loaded;
+  }
+
+  public async onInputFile(event: Event) {
+    const files = this.getInputFiles(event);
     await this.core.bootstrap(files);
 
     const viewersDiv = document.querySelector("div#viewers")!;
@@ -98,5 +106,10 @@ export class AppComponent {
     }
 
     return [files[0]];
+  }
+
+  public clearData() {
+    this.dataLoaded = false;
+    this.core.clearData();
   }
 }

@@ -18,10 +18,10 @@ import { HttpClientModule } from "@angular/common/http";
 
 import { AppComponent } from "./app.component";
 import { ViewerWindowManagerComponent } from "viewers/viewer_window_manager/viewer_window_manager.component";
-import { CollectTracesComponent } from "trace_collection/collect_traces.component";
-import { AdbProxyComponent } from "trace_collection/adb_proxy.component";
-import { WebAdbComponent } from "trace_collection/web_adb/web_adb.component";
-import { TraceConfigComponent } from "trace_collection/trace_config.component";
+import { CollectTracesComponent } from "./collect_traces.component";
+import { AdbProxyComponent } from "./adb_proxy.component";
+import { WebAdbComponent } from "./web_adb.component";
+import { TraceConfigComponent } from "./trace_config.component";
 
 @NgModule({
   declarations: [
