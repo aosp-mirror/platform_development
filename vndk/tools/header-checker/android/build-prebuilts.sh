@@ -118,6 +118,10 @@ cat > "${SOONG_OUT}/soong.variables" << __EOF__
 }
 __EOF__
 
+# Allow unknown warning options since this may lag behind platform's compiler
+# version.
+export ALLOW_UNKNOWN_WARNING_OPTION=true
+
 binaries=()
 for name in "${SOONG_BINARIES[@]}"; do
     binaries+=("${SOONG_HOST_OUT}/bin/${name}")
