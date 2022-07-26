@@ -84,16 +84,6 @@ const Rect = require('flicker').com.android.server.wm.traces.common.Rect;
 const RectF = require('flicker').com.android.server.wm.traces.common.RectF;
 const Region = require('flicker').com.android.server.wm.traces.common.region.Region;
 
-//Tags
-const Tag = require('flicker').com.android.server.wm.traces.common.tags.Tag;
-const TagState = require('flicker').com.android.server.wm.traces.common.tags.TagState;
-const TagTrace = require('flicker').com.android.server.wm.traces.common.tags.TagTrace;
-
-//Errors
-const Error = require('flicker').com.android.server.wm.traces.common.errors.Error;
-const ErrorState = require('flicker').com.android.server.wm.traces.common.errors.ErrorState;
-const ErrorTrace = require('flicker').com.android.server.wm.traces.common.errors.ErrorTrace;
-
 // Service
 const TaggingEngine = require('flicker').com.android.server.wm.traces.common.service.TaggingEngine;
 
@@ -281,14 +271,6 @@ export {
   Matrix22,
   Matrix33,
   Display,
-  // Tags
-  Tag,
-  TagState,
-  TagTrace,
-  // Errors
-  Error,
-  ErrorState,
-  ErrorTrace,
   // Common
   Size,
   ActiveBuffer,
