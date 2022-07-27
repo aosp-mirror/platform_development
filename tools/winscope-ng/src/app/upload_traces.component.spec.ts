@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 import {ComponentFixture, TestBed} from "@angular/core/testing";
-import {WebAdbComponent} from "./web_adb.component";
-import { MatIconModule } from "@angular/material/icon";
+import {UploadTracesComponent} from "./upload_traces.component";
 import { MatCardModule } from "@angular/material/card";
 
-describe("WebAdbComponent", () => {
-  let fixture: ComponentFixture<WebAdbComponent>;
-  let component: WebAdbComponent;
+describe("CollectTracesComponent", () => {
+  let fixture: ComponentFixture<UploadTracesComponent>;
+  let component: UploadTracesComponent;
   let htmlElement: HTMLElement;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await TestBed.configureTestingModule({
-      imports: [MatIconModule, MatCardModule],
-      declarations: [WebAdbComponent],
+      imports: [MatCardModule],
+      declarations: [UploadTracesComponent],
     }).compileComponents();
-    fixture = TestBed.createComponent(WebAdbComponent);
+  });
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(UploadTracesComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
   });
@@ -37,9 +39,4 @@ describe("WebAdbComponent", () => {
     expect(component).toBeTruthy();
   });
 
-  it("renders the info message", () => {
-    fixture.detectChanges();
-    expect(htmlElement.querySelector(".adb-info")?.innerHTML).toBe("Add new device");
-    expect(htmlElement.querySelector(".adb-icon")?.innerHTML).toBe("info");
-  });
 });

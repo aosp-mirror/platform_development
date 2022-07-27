@@ -16,6 +16,8 @@
 import {TraceTypeId} from "common/trace/type_id";
 import {Parser} from "parsers/parser";
 import {ParserFactory} from "parsers/parser_factory";
+import { setTraces } from "trace_collection/set_traces";
+import { proxyClient } from "trace_collection/proxy_client";
 import {Viewer} from "viewers/viewer";
 import {ViewerFactory} from "viewers/viewer_factory";
 
@@ -29,6 +31,7 @@ class Core {
   }
 
   async bootstrap(traces: Blob[]) {
+    this.clearData();
     this.parsers = await new ParserFactory().createParsers(traces);
     console.log("created parsers: ", this.parsers);
 
@@ -75,6 +78,8 @@ class Core {
   clearData() {
     this.parsers = [];
     this.viewers = [];
+    setTraces.dataReady = false;
+    proxyClient.adbData = [];
   }
 }
 

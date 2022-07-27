@@ -22,12 +22,15 @@ import { CollectTracesComponent } from "./collect_traces.component";
 import { AdbProxyComponent } from "./adb_proxy.component";
 import { WebAdbComponent } from "./web_adb.component";
 import { TraceConfigComponent } from "./trace_config.component";
+import { UploadTracesComponent } from "./upload_traces.component";
+
 
 @NgModule({
   declarations: [
     AppComponent,
     ViewerWindowManagerComponent,
     CollectTracesComponent,
+    UploadTracesComponent,
     AdbProxyComponent,
     WebAdbComponent,
     TraceConfigComponent,

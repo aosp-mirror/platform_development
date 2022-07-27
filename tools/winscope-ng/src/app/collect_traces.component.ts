@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 import { Component, Input, OnInit, Output, EventEmitter } from "@angular/core";
-import { ProxyConnection, Device, configureTraces } from "../trace_collection/connection";
+import { ProxyConnection } from "trace_collection/proxy_connection";
+import { Connection } from "trace_collection/connection";
+import { setTraces } from "trace_collection/set_traces";
 import { ProxyState } from "../trace_collection/proxy_client";
-import { traceConfigurations, configMap, SelectionConfiguration } from "../trace_collection/trace_collection_utils";
+import { traceConfigurations, configMap, SelectionConfiguration, TraceConfigurationMap, EnableConfiguration } from "../trace_collection/trace_collection_utils";
 import { Core } from "app/core";
 import { PersistentStore } from "../common/persistent_store";
 
@@ -24,27 +26,27 @@ import { PersistentStore } from "../common/persistent_store";
 @Component({
   selector: "collect-traces",
   template: `
-      <mat-card-title>Collect Traces</mat-card-title>
+      <mat-card-title id="title">Collect Traces</mat-card-title>
       <mat-card-content>
 
-      <div *ngIf="connect.isConnectingState()">Connecting...</div>
+      <div class="connecting-message" *ngIf="connect.isConnectingState()">Connecting...</div>
 
-      <div id="set-up-adb" *ngIf="!adbSuccess()">
-        <button mat-raised-button [ngClass]="tabClass(true)" (click)="displayAdbProxyTab()">ADB Proxy</button>
-        <button mat-raised-button [ngClass]="tabClass(false)" (click)="displayWebAdbTab()">Web ADB</button>
-        <adb-proxy *ngIf="isAdbProxy" [(proxy)]="connect.proxy" (addKey)="onAddKey($event)"></adb-proxy>
+      <div class="set-up-adb" *ngIf="!connect.adbSuccess()">
+        <button id="proxy-tab" mat-raised-button [ngClass]="tabClass(true)" (click)="displayAdbProxyTab()">ADB Proxy</button>
+        <button id="web-tab" mat-raised-button [ngClass]="tabClass(false)" (click)="displayWebAdbTab()">Web ADB</button>
+        <adb-proxy *ngIf="isAdbProxy" [(proxy)]="connect.proxy!" (addKey)="onAddKey($event)"></adb-proxy>
         <web-adb *ngIf="!isAdbProxy"></web-adb>
       </div>
 
       <div id="devices-connecting" *ngIf="connect.isDevicesState()">
-        <div> {{ devices().length > 0 ? "Connected devices:" : "No devices detected" }}</div>
+        <div> {{ objectKeys(connect.devices()).length > 0 ? "Connected devices:" : "No devices detected" }}</div>
           <mat-list class="device-choice">
-            <mat-list-item *ngFor="let deviceId of devices()" (click)="selectDevice(deviceId)">
+            <mat-list-item *ngFor="let deviceId of objectKeys(connect.devices())" (click)="connect.selectDevice(deviceId)">
               <mat-icon class="icon-message">
-                {{ connect.proxy.devices[deviceId].authorised ? "smartphone" : "screen_lock_portrait" }}
+                {{ connect.devices()[deviceId].authorised ? "smartphone" : "screen_lock_portrait" }}
               </mat-icon>
               <span class="icon-message">
-                {{ connect.proxy.devices[deviceId].authorised ? connect.proxy.devices[deviceId].model : "unauthorised" }} ({{ deviceId }})
+                {{ connect.devices()[deviceId].authorised ? connect.devices()[deviceId].model : "unauthorised" }} ({{ deviceId }})
               </span>
             </mat-list-item>
           </mat-list>
@@ -56,22 +58,22 @@ import { PersistentStore } from "../common/persistent_store";
             <mat-list-item>
                 <mat-icon class="icon-message">smartphone</mat-icon>
                 <span class="icon-message">
-                  {{ selectedDevice().model }} ({{ connect.proxy.selectedDevice }})
+                  {{ connect.selectedDevice().model }} ({{ connect.selectedDeviceId() }})
                 </span>
             </mat-list-item>
             </mat-list>
         </div>
 
         <div class="trace-section">
-          <div class="md-layout">
-            <button mat-raised-button class="md-accent" (click)="startTracing()">Start Trace</button>
-            <button mat-raised-button (click)="dumpState()">Dump State</button>
-            <button mat-raised-button class="md-primary" (click)="resetLastDevice()">Change Device</button>
+          <div>
+            <button class="start-btn" mat-raised-button (click)="startTracing()">Start Trace</button>
+            <button class="dump-btn" mat-raised-button (click)="dumpState()">Dump State</button>
+            <button class="change-btn" mat-raised-button (click)="connect.resetLastDevice()">Change Device</button>
           </div>
           <h3>Trace targets:</h3>
           <trace-config
-            *ngFor="let traceKey of objectKeys(connect.DYNAMIC_TRACES())"
-            [trace]="connect.DYNAMIC_TRACES()[traceKey]"
+            *ngFor="let traceKey of objectKeys(setTraces.DYNAMIC_TRACES)"
+            [trace]="setTraces.DYNAMIC_TRACES[traceKey]"
           ></trace-config>
         </div>
 
@@ -79,31 +81,30 @@ import { PersistentStore } from "../common/persistent_store";
           <h3>Dump targets:</h3>
           <div class="selection">
             <mat-checkbox
-              class="md-primary"
-              *ngFor="let dumpKey of objectKeys(connect.DUMPS)"
-              [(ngModel)]="connect.DUMPS[dumpKey].enabled"
-            >{{connect.DUMPS[dumpKey].name}}</mat-checkbox>
+              *ngFor="let dumpKey of objectKeys(setTraces.DUMPS)"
+              [(ngModel)]="setTraces.DUMPS[dumpKey].run"
+            >{{setTraces.DUMPS[dumpKey].name}}</mat-checkbox>
           </div>
         </div>
       </div>
 
-      <div id="unknown-error" *ngIf="connect.isErrorState()">
+      <div class="unknown-error" *ngIf="connect.isErrorState()">
         <mat-icon class="icon-message">error</mat-icon>
         <span class="icon-message">Error:</span>
         <pre>
-            {{ connect.proxy.errorText }}
+            {{ connect.proxy?.errorText }}
         </pre>
-        <button mat-raised-button (click)="restart()">Retry</button>
+        <button class="retry-btn" mat-raised-button (click)="connect.restart()">Retry</button>
       </div>
 
-      <div id="end-tracing" *ngIf="connect.isEndTraceState()">
-        <span class="md-subheading">Tracing...</span>
+      <div class="end-tracing" *ngIf="connect.isEndTraceState()">
+        <span>Tracing...</span>
         <mat-progress-bar md-indeterminate value="{{connect.loadProgress}}"></mat-progress-bar>
-        <button mat-raised-button (click)="endTrace()">End trace</button>
+        <button class="end-btn" mat-raised-button (click)="endTrace()">End trace</button>
       </div>
 
-      <div id="load-data" *ngIf="connect.isLoadDataState()">
-        <span class="md-subheading">Loading data...</span>
+      <div class="load-data" *ngIf="connect.isLoadDataState()">
+        <span>Loading data...</span>
         <mat-progress-bar md-indeterminate></mat-progress-bar>
       </div>
 
@@ -114,26 +115,24 @@ import { PersistentStore } from "../common/persistent_store";
 export class CollectTracesComponent implements OnInit {
   objectKeys = Object.keys;
   isAdbProxy = true;
-  startTrace = false;
-  startDump = false;
   traceConfigurations = traceConfigurations;
-  connect: any = new ProxyConnection();
-  downloadProxyUrl = "https://android.googlesource.com/platform/development/+/master/tools/winscope-ng/adb/winscope_proxy.py";
+  connect: Connection = new ProxyConnection();
+  setTraces = setTraces;
 
   @Input()
-  store: PersistentStore = new PersistentStore();
+    store: PersistentStore = new PersistentStore();
 
   @Input()
-  core: Core = new Core();
+    core: Core = new Core();
 
   @Output()
-  coreChange = new EventEmitter<Core>();
+    coreChange = new EventEmitter<Core>();
 
   @Input()
-  dataLoaded: boolean = false;
+    dataLoaded = false;
 
   @Output()
-  dataLoadedChange = new EventEmitter<boolean>();
+    dataLoadedChange = new EventEmitter<boolean>();
 
   ngOnInit(): void {
     if (this.isAdbProxy) {
@@ -145,41 +144,19 @@ export class CollectTracesComponent implements OnInit {
   }
 
   ngOnDestroy(): void {
-    this.connect.proxy.removeOnProxyChange(this.onProxyChange);
+    this.connect.proxy?.removeOnProxyChange(this.onProxyChange);
   }
 
   public onAddKey(key: string) {
     this.store.addToStore("adb.proxyKey", key);
-    this.connect.setProxyKey(key);
-    this.restart();
+    if (this.connect.setProxyKey) {
+      this.connect.setProxyKey(key);
+    }
+    this.connect.restart();
   }
 
   public onProxyChange(newState: ProxyState) {
     this.connect.onConnectChange(newState);
-  }
-
-  public adbSuccess() {
-    return this.connect.adbSuccess();
-  }
-
-  public devices(): Array<string> {
-    return this.connect.devices();
-  }
-
-  public selectedDevice(): Device {
-    return this.connect.selectedDevice();
-  }
-
-  public restart() {
-    this.connect.restart();
-  }
-
-  public resetLastDevice() {
-    this.connect.resetLastDevice();
-  }
-
-  public selectDevice(id: string) {
-    this.connect.selectDevice(id);
   }
 
   public displayAdbProxyTab() {
@@ -194,12 +171,12 @@ export class CollectTracesComponent implements OnInit {
   }
 
   public requestedTraces() {
-    const tracesFromCollection: Array<any> = [];
-    const req = Object.keys(this.connect.DYNAMIC_TRACES())
+    const tracesFromCollection: Array<string> = [];
+    const req = Object.keys(setTraces.DYNAMIC_TRACES)
       .filter((traceKey:string) => {
-        const traceConfig = this.connect.DYNAMIC_TRACES()[traceKey];
+        const traceConfig = setTraces.DYNAMIC_TRACES[traceKey];
         if (traceConfig.isTraceCollection) {
-          traceConfig.config.enableConfigs.forEach((innerTrace:any) => {
+          traceConfig.config?.enableConfigs.forEach((innerTrace:EnableConfiguration) => {
             if (innerTrace.enabled) {
               tracesFromCollection.push(innerTrace.key);
             }
@@ -212,22 +189,22 @@ export class CollectTracesComponent implements OnInit {
   }
 
   public requestedDumps() {
-    return Object.keys(this.connect.DUMPS)
-      .filter((dumpKey:any) => {
-        return this.connect.DUMPS[dumpKey].enabled;
+    return Object.keys(setTraces.DUMPS)
+      .filter((dumpKey:string) => {
+        return setTraces.DUMPS[dumpKey].run;
       });
   }
 
-  public requestedEnableConfig(): Array<string> | null{
+  public requestedEnableConfig(): Array<string> | undefined {
     const req: Array<string> = [];
-    Object.keys(this.connect.DYNAMIC_TRACES())
-      .forEach((traceKey:any) => {
-        const trace = this.connect.DYNAMIC_TRACES()[traceKey];
+    Object.keys(setTraces.DYNAMIC_TRACES)
+      .forEach((traceKey:string) => {
+        const trace = setTraces.DYNAMIC_TRACES[traceKey];
         if(!trace.isTraceCollection
               && trace.run
               && trace.config
               && trace.config.enableConfigs) {
-          trace.config.enableConfigs.forEach((con:any) => {
+          trace.config.enableConfigs.forEach((con:EnableConfiguration) => {
             if (con.enabled) {
               req.push(con.key);
             }
@@ -235,17 +212,17 @@ export class CollectTracesComponent implements OnInit {
         }
       });
     if (req.length === 0) {
-      return null;
+      return undefined;
     }
     return req;
   }
 
-  public requestedSelection(traceType: string) {
-    if (!this.connect.DYNAMIC_TRACES()[traceType].run) {
-      return null;
+  public requestedSelection(traceType: string): configMap | undefined {
+    if (!setTraces.DYNAMIC_TRACES[traceType].run) {
+      return undefined;
     }
     const selected: configMap = {};
-    this.connect.DYNAMIC_TRACES()[traceType].config.selectionConfigs.forEach(
+    setTraces.DYNAMIC_TRACES[traceType].config?.selectionConfigs.forEach(
       (con: SelectionConfiguration) => {
         selected[con.key] = con.value;
       }
@@ -254,13 +231,12 @@ export class CollectTracesComponent implements OnInit {
   }
 
   public startTracing() {
-    this.startTrace = true;
     console.log("begin tracing");
-    configureTraces.reqTraces = this.requestedTraces();
+    setTraces.reqTraces = this.requestedTraces();
     const reqEnableConfig = this.requestedEnableConfig();
     const reqSelectedSfConfig = this.requestedSelection("layers_trace");
     const reqSelectedWmConfig = this.requestedSelection("window_trace");
-    if (configureTraces.reqTraces.length < 1) {
+    if (setTraces.reqTraces.length < 1) {
       this.connect.throwNoTargetsError();
       return;
     }
@@ -272,20 +248,23 @@ export class CollectTracesComponent implements OnInit {
   }
 
   public async dumpState() {
-    this.startDump = true;
     console.log("begin dump");
-    configureTraces.reqDumps = this.requestedDumps();
+    setTraces.reqDumps = this.requestedDumps();
     await this.connect.dumpState();
-    while (!this.connect.proxy.dataReady) {
+    while (!setTraces.dataReady && !setTraces.dumpError) {
       await this.waitForData(1000);
     }
-    await this.loadFiles();
+    if (!setTraces.dumpError) {
+      await this.loadFiles();
+    } else {
+      this.core.clearData();
+    }
   }
 
   public async endTrace() {
     console.log("end tracing");
     await this.connect.endTrace();
-    while (!this.connect.proxy.dataReady) {
+    while (!setTraces.dataReady) {
       await this.waitForData(1000);
     }
     await this.loadFiles();

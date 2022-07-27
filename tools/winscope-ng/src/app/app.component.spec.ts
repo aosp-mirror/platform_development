@@ -13,21 +13,50 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { ChangeDetectionStrategy } from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
-import {AppComponent} from "./app.component";
+import { CommonModule } from "@angular/common";
+import { MatCardModule } from "@angular/material/card";
+import { MatButtonModule } from "@angular/material/button";
+import { MatGridListModule } from "@angular/material/grid-list";
+
+import { AppComponent } from "./app.component";
+import { CollectTracesComponent } from "./collect_traces.component";
+import { UploadTracesComponent } from "./upload_traces.component";
+import { AdbProxyComponent } from "./adb_proxy.component";
+import { WebAdbComponent } from "./web_adb.component";
+import { TraceConfigComponent } from "./trace_config.component";
+
+import { ComponentFixtureAutoDetect } from "@angular/core/testing";
+
 
 describe("AppComponent", () => {
   let fixture: ComponentFixture<AppComponent>;
   let component: AppComponent;
   let htmlElement: HTMLElement;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [
-        AppComponent
+      providers: [
+        { provide: ComponentFixtureAutoDetect, useValue: true }
       ],
+      imports: [
+        CommonModule,
+        MatCardModule,
+        MatButtonModule,
+        MatGridListModule,
+      ],
+      declarations: [
+        AppComponent,
+        CollectTracesComponent,
+        UploadTracesComponent,
+        AdbProxyComponent,
+        WebAdbComponent,
+        TraceConfigComponent,
+      ],
+    }).overrideComponent(AppComponent, {
+      set: { changeDetection: ChangeDetectionStrategy.Default }
     }).compileComponents();
-
     fixture = TestBed.createComponent(AppComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
@@ -41,7 +70,23 @@ describe("AppComponent", () => {
     expect(component.title).toEqual("winscope-ng");
   });
 
-  it("renders the title", () => {
-    expect(htmlElement.querySelector("div#title")?.innerHTML).toContain("Winscope Viewer 2.0");
+  it("renders the page title", () => {
+    expect(htmlElement.querySelector("#title")?.innerHTML).toContain("Winscope Viewer 2.0");
+  });
+
+  it("displays correct elements when no data loaded", async () => {
+    component.dataLoaded = false;
+    fixture.detectChanges();
+    expect(htmlElement.querySelector("#collect-traces-card")).toBeTruthy();
+    expect(htmlElement.querySelector("#upload-traces-card")).toBeTruthy();
+    expect(htmlElement.querySelector("#loaded-data-card")).toBeFalsy();
+  });
+
+  it("displays correct elements when data loaded", async () => {
+    component.dataLoaded = true;
+    fixture.detectChanges();
+    expect(htmlElement.querySelector("#collect-traces-card")).toBeFalsy();
+    expect(htmlElement.querySelector("#upload-traces-card")).toBeFalsy();
+    expect(htmlElement.querySelector("#loaded-data-card")).toBeTruthy();
   });
 });

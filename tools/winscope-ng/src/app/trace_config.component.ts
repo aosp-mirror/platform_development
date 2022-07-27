@@ -13,14 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input, OnChanges, SimpleChanges } from "@angular/core";
+import { Component, Input } from "@angular/core";
 import { EnableConfiguration, SelectionConfiguration, TraceConfiguration } from "../trace_collection/trace_collection_utils";
 
 @Component({
   selector: "trace-config",
   template: `
     <div class="card-block">
+      <div>
         <mat-checkbox
+          class="trace-box"
           [checked]="trace.run"
           [indeterminate]="trace.isTraceCollection ? someTraces() : false"
           (change)="changeRunTrace($event.checked)"
@@ -29,6 +31,7 @@ import { EnableConfiguration, SelectionConfiguration, TraceConfiguration } from 
         <div class="adv-config" *ngIf="trace.config">
           <mat-checkbox
             *ngFor="let enableConfig of traceEnableConfigs()"
+            class="enable-config"
             [disabled]="!trace.run && !trace.isTraceCollection"
             [(ngModel)]="enableConfig.enabled"
             (ngModelChange)="changeTraceCollectionConfig()"
@@ -40,7 +43,7 @@ import { EnableConfiguration, SelectionConfiguration, TraceConfiguration } from 
               class="config-selection"
               *ngFor="let selectionConfig of traceSelectionConfigs()"
             ><mat-label>{{selectionConfig.name}}</mat-label>
-            <mat-select [(value)]="selectionConfig.value" [disabled]="!trace.run">
+            <mat-select class="selected-value" [(value)]="selectionConfig.value" [disabled]="!trace.run">
               <mat-option
                 *ngFor="let option of selectionConfig.options"
                 value="{{option}}"
@@ -56,7 +59,7 @@ import { EnableConfiguration, SelectionConfiguration, TraceConfiguration } from 
 
 export class TraceConfigComponent {
   @Input()
-  trace: TraceConfiguration = {};
+    trace: TraceConfiguration = {};
 
   public traceEnableConfigs(): Array<EnableConfiguration> {
     if (this.trace.config) {

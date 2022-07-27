@@ -49,7 +49,7 @@ mat-icon {
     margin: 5px;
 }
 
-.icon-message {
+.icon-message, .adb-icon, .adb-info {
     vertical-align: middle;
 }
 

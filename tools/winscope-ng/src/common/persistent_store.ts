@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 export class PersistentStore {
-    public addToStore(key: string, value: string) {
-        localStorage.setItem(key, value);
-    }
-    public getFromStore(key: string) {
-        return localStorage.getItem(key);
-    }
+  public addToStore(key: string, value: string) {
+    localStorage.setItem(key, value);
+  }
+  public getFromStore(key: string) {
+    return localStorage.getItem(key);
+  }
 }

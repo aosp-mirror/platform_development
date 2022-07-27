@@ -26,21 +26,19 @@ import { PersistentStore } from "../common/persistent_store";
     <div id="title">
       <span>Winscope Viewer 2.0</span>
     </div>
-    <div *ngIf="!dataLoaded" class="card-container" fxLayout="row wrap" fxLayoutGap="10px grid">
-      <mat-card class="homepage-card">
+
+    <div *ngIf="!dataLoaded" fxLayout="row wrap" fxLayoutGap="10px grid" class="home">
+      <mat-card class="homepage-card" id="collect-traces-card">
         <collect-traces [(core)]="core" [(dataLoaded)]="dataLoaded" [store]="store"></collect-traces>
       </mat-card>
-      <mat-card class="homepage-card">
-        <mat-card-title>Upload Traces</mat-card-title>
-        <div id="inputfile">
-          <input mat-input type="file" (change)="onInputFile($event)" #fileUpload>
-        </div>
+      <mat-card class="homepage-card" id="upload-traces-card">
+        <upload-traces [(core)]="core"></upload-traces>
       </mat-card>
     </div>
 
     <div *ngIf="dataLoaded">
-      <mat-card class="homepage-card">
-        <mat-card-title>Loaded data</mat-card-title>
+      <mat-card class="homepage-card" id="loaded-data-card">
+      <mat-card-title>Loaded data</mat-card-title>
         <button mat-raised-button (click)="clearData()">Back to Home</button>
       </mat-card>
     </div>
@@ -55,21 +53,23 @@ import { PersistentStore } from "../common/persistent_store";
     <div id="viewers">
     </div>
   `,
-  styles: [".card-container{width: 100%; display:flex; flex-direction: row; overflow: auto;}"]
+  styles: [".home{width: 100%; display:flex; flex-direction: row; overflow: auto;}"]
 })
 export class AppComponent {
   title = "winscope-ng";
-
-  core: Core = new Core();
+  core: Core;
   states = ProxyState;
   store: PersistentStore = new PersistentStore();
-  dataLoaded: boolean = false;
+  dataLoaded = false;
 
   constructor(
     @Inject(Injector) injector: Injector
   ) {
-    customElements.define("viewer-window-manager",
-      createCustomElement(ViewerWindowManagerComponent, {injector}));
+    this.core = new Core();
+    if (!customElements.get("viewer-window-manager")) {
+      customElements.define("viewer-window-manager",
+        createCustomElement(ViewerWindowManagerComponent, {injector}));
+    }
   }
 
   onCoreChange(newCore: Core) {
@@ -80,32 +80,9 @@ export class AppComponent {
     this.dataLoaded = loaded;
   }
 
-  public async onInputFile(event: Event) {
-    const files = this.getInputFiles(event);
-    await this.core.bootstrap(files);
-
-    const viewersDiv = document.querySelector("div#viewers")!;
-    viewersDiv.innerHTML = "";
-    this.core.getViews().forEach(view => viewersDiv!.appendChild(view) );
-
-    const timestampsDiv = document.querySelector("div#timestamps")!;
-    timestampsDiv.innerHTML = `Retrieved ${this.core.getTimestamps().length} unique timestamps`;
-  }
-
   public notifyCurrentTimestamp() {
     const dummyTimestamp = 1000000; //TODO: get timestamp from time scrub
     this.core.notifyCurrentTimestamp(dummyTimestamp);
-  }
-
-  //TODO: extend with support for multiple files, archives, etc...
-  private getInputFiles(event: Event): File[] {
-    const files: any = (event?.target as HTMLInputElement)?.files;
-
-    if (!files || !files[0]) {
-      return [];
-    }
-
-    return [files[0]];
   }
 
   public clearData() {

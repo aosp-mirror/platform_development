@@ -5,11 +5,12 @@ export interface TraceConfiguration {
   config?: ConfigurationOptions
 }
 
-interface TraceConfigurationMap {
+
+export interface TraceConfigurationMap {
   [key: string]: TraceConfiguration
 }
 
-export interface ConfigurationOptions {
+interface ConfigurationOptions {
   enableConfigs: Array<EnableConfiguration>,
   selectionConfigs: Array<SelectionConfiguration>
 }
