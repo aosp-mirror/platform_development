@@ -132,7 +132,7 @@ function filterWmStateForIme(wmState) {
   const isInputMethodWindowVisible = findInputMethodVisibility(displayContent);
   return {
     'kind': 'WM State Properties',
-    'name': wmState.name,  // this is the ..d..h..m..s..ms timestamp
+    'name': wmState.name,  // 'name' is a timestamp of ..d..h..m..s..ms format
     'stableId': wmState.stableId,
     'focusedApp': wmState.focusedApp,
     'focusedWindow': wmState.focusedWindow,
@@ -207,7 +207,7 @@ function extractSfProperties(curr) {
     return null;
   }
   return Object.assign({'name': curr.name, 'proto': curr}, imeFields);
-  // 'name' is the ..d..h..m..s..ms timestamp
+  // 'name' is a timestamp of ..d..h..m..s..ms format
 }
 
 function extractImeFields(curr) {
@@ -247,7 +247,7 @@ function findInputMethodVisibility(windowOrLayer) {
   const isInputMethod = getFilter('InputMethod');
   const inputMethodWindowOrLayer =
       findWindowOrLayerMatch(isInputMethod, windowOrLayer);
-  return inputMethodWindowOrLayer ? inputMethodWindowOrLayer.isVisible : false;
+  return inputMethodWindowOrLayer && inputMethodWindowOrLayer.isVisible;
 }
 
 function processImeAfterCombiningWmAndSfProperties(imeTraceFile) {
