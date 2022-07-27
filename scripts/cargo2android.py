@@ -1360,7 +1360,7 @@ class Runner(object):
         print('### WARNING: found [workspace] in Cargo.toml')
       else:
         with open(cargo_toml, 'a') as out_file:
-          out_file.write('[workspace]\n')
+          out_file.write('\n\n[workspace]\n')
           added_workspace = True
           if self.args.verbose:
             print('### INFO: added [workspace] to Cargo.toml')
