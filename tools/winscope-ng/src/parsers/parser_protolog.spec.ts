@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceTypeId} from "common/trace/type_id";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceType} from "common/trace/trace_type";
 import {ParserFactory} from "./parser_factory";
 import {Parser} from "./parser";
 import {TestUtils} from "test/test_utils";
@@ -39,19 +40,26 @@ describe("ParserProtoLog", () => {
   });
 
   it("has expected trace type", () => {
-    expect(parser.getTraceTypeId()).toEqual(TraceTypeId.PROTO_LOG);
+    expect(parser.getTraceType()).toEqual(TraceType.PROTO_LOG);
   });
 
-  it("provides timestamps", () => {
-    const timestamps = parser.getTimestamps();
+  it("provides elapsed timestamps", () => {
+    const timestamps = parser.getTimestamps(TimestampType.ELAPSED)!;
     expect(timestamps.length)
       .toEqual(50);
+
+    const expected = [
+      new Timestamp(TimestampType.ELAPSED, 850746266486n),
+      new Timestamp(TimestampType.ELAPSED, 850746336718n),
+      new Timestamp(TimestampType.ELAPSED, 850746350430n),
+    ];
     expect(timestamps.slice(0, 3))
-      .toEqual([850746266486, 850746336718, 850746350430]);
+      .toEqual(expected);
   });
 
   it("reconstructs human-readable log message", () => {
-    const actualMessage = parser.getTraceEntry(850746266486)!;
+    const timestamp = new Timestamp(TimestampType.ELAPSED, 850746266486n);
+    const actualMessage = parser.getTraceEntry(timestamp)!;
 
     expect(actualMessage).toBeInstanceOf(LogMessage);
     expect(Object.assign({}, actualMessage)).toEqual(expectedFirstLogMessage);

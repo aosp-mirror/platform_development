@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceTypeId} from "common/trace/type_id";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {ParserFactory} from "./parser_factory";
 import {Parser} from "./parser";
 import {TestUtils} from "test/test_utils";
@@ -28,33 +28,43 @@ describe("Parser", () => {
     parser = parsers[0];
   });
 
-  it("provides timestamps", () => {
-    expect(parser.getTimestamps())
-      .toEqual([850254319343, 850763506110, 850782750048]);
+  it("provides elapsed timestamps", () => {
+    const expected = [
+      new Timestamp(TimestampType.ELAPSED, 850254319343n),
+      new Timestamp(TimestampType.ELAPSED, 850763506110n),
+      new Timestamp(TimestampType.ELAPSED, 850782750048n)
+    ];
+    expect(parser.getTimestamps(TimestampType.ELAPSED))
+      .toEqual(expected);
   });
 
   it("retrieves trace entry (no timestamp matches)", () => {
-    expect(parser.getTraceEntry(850254319342))
+    const timestamp = new Timestamp(TimestampType.ELAPSED, 850254319342n);
+    expect(parser.getTraceEntry(timestamp))
       .toEqual(undefined);
   });
 
   it("retrieves trace entry (equal timestamp matches)", () => {
-    expect(Number(parser.getTraceEntry(850254319343)!.timestampMs))
-      .toEqual(850254319343);
+    const timestamp = new Timestamp(TimestampType.ELAPSED, 850254319343n);
+    expect(BigInt(parser.getTraceEntry(timestamp)!.timestampMs))
+      .toEqual(850254319343n);
   });
 
   it("retrieves trace entry (equal timestamp matches)", () => {
-    expect(Number(parser.getTraceEntry(850763506110)!.timestampMs))
-      .toEqual(850763506110);
+    const timestamp = new Timestamp(TimestampType.ELAPSED, 850763506110n);
+    expect(BigInt(parser.getTraceEntry(timestamp)!.timestampMs))
+      .toEqual(850763506110n);
   });
 
   it("retrieves trace entry (lower timestamp matches)", () => {
-    expect(Number(parser.getTraceEntry(850254319344)!.timestampMs))
-      .toEqual(850254319343);
+    const timestamp = new Timestamp(TimestampType.ELAPSED, 850254319344n);
+    expect(BigInt(parser.getTraceEntry(timestamp)!.timestampMs))
+      .toEqual(850254319343n);
   });
 
   it("retrieves trace entry (equal timestamp matches)", () => {
-    expect(Number(parser.getTraceEntry(850763506111)!.timestampMs))
-      .toEqual(850763506110);
+    const timestamp = new Timestamp(TimestampType.ELAPSED, 850763506111n);
+    expect(BigInt(parser.getTraceEntry(timestamp)!.timestampMs))
+      .toEqual(850763506110n);
   });
 });

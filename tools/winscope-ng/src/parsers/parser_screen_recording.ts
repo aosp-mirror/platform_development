@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceTypeId} from "common/trace/type_id";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceType} from "common/trace/trace_type";
 import {ArrayUtils} from "common/utils/array_utils";
 import {Parser} from "./parser";
 import {ScreenRecordingTraceEntry} from "common/trace/screen_recording";
@@ -28,8 +29,8 @@ class ParserScreenRecording extends Parser {
     super(trace);
   }
 
-  override getTraceTypeId(): TraceTypeId {
-    return TraceTypeId.SCREEN_RECORDING;
+  override getTraceType(): TraceType {
+    return TraceType.SCREEN_RECORDING;
   }
 
   override getMagicNumber(): number[] {
@@ -51,14 +52,33 @@ class ParserScreenRecording extends Parser {
     });
   }
 
-  override getTimestamp(decodedEntry: ScreenRecordingMetadataEntry): number {
-    return Number(decodedEntry.timestampRealtimeNs);
+  override getTimestamp(decodedEntry: ScreenRecordingMetadataEntry, type: TimestampType): undefined|Timestamp {
+    if (type !== TimestampType.ELAPSED && type !== TimestampType.REAL) {
+      return undefined;
+    }
+    if (type === TimestampType.ELAPSED) {
+      // Traces typically contain "elapsed" timestamps (SYSTEM_TIME_BOOTTIME).
+      // Screen recordings contain SYSTEM_TIME_MONOTONIC timestamps.
+      //
+      // Here we are pretending that screen recordings contain "elapsed" timestamps
+      // as well, in order to synchronize with the other traces.
+      //
+      // If no device suspensions are involved, SYSTEM_TIME_MONOTONIC should indeed
+      // correspond to SYSTEM_TIME_BOOTTIME and things should work as expected.
+      return new Timestamp(type, decodedEntry.timestampMonotonicNs);
+    }
+    else if (type === TimestampType.REAL) {
+      return new Timestamp(type, decodedEntry.timestampRealtimeNs);
+    }
+    return undefined;
   }
 
   override processDecodedEntry(entry: ScreenRecordingMetadataEntry): ScreenRecordingTraceEntry {
-    const videoTimeSeconds = (Number(entry.timestampRealtimeNs) - this.timestamps[0]) / 1000000000;
+    const initialTimestampNs = this.getTimestamps(TimestampType.ELAPSED)![0].getValueNs();
+    const currentTimestampNs = entry.timestampMonotonicNs;
+    const videoTimeSeconds = Number(currentTimestampNs - initialTimestampNs) / 1000000000;
     const videoData = this.trace;
-    return new ScreenRecordingTraceEntry(Number(entry.timestampRealtimeNs), videoTimeSeconds, videoData);
+    return new ScreenRecordingTraceEntry(videoTimeSeconds, videoData);
   }
 
   private searchMagicString(videoData: Uint8Array): number {

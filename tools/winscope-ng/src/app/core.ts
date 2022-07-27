@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceTypeId} from "common/trace/type_id";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceType} from "common/trace/trace_type";
 import {Parser} from "parsers/parser";
 import {ParserFactory} from "parsers/parser_factory";
 import { setTraces } from "trace_collection/set_traces";
@@ -35,10 +36,10 @@ class Core {
     this.parsers = await new ParserFactory().createParsers(traces);
     console.log("created parsers: ", this.parsers);
 
-    const activeTraceTypes = this.parsers.map(parser => parser.getTraceTypeId());
+    const activeTraceTypes = this.parsers.map(parser => parser.getTraceType());
     console.log("active trace types: ", activeTraceTypes);
 
-    this.viewers = new ViewerFactory().createViewers(new Set<TraceTypeId>(activeTraceTypes));
+    this.viewers = new ViewerFactory().createViewers(new Set<TraceType>(activeTraceTypes));
     console.log("created viewers: ", this.viewers);
   }
 
@@ -46,27 +47,37 @@ class Core {
     return this.viewers.map(viewer => viewer.getView());
   }
 
-  getTimestamps(): number[] {
-    const mergedTimestamps: number[] = [];
+  getTimestamps(): Timestamp[] {
+    for (const type of [TimestampType.REAL, TimestampType.ELAPSED]) {
+      const mergedTimestamps: Timestamp[] = [];
 
-    this.parsers
-      .map(parser => parser.getTimestamps())
-      .forEach(timestamps => {
-        mergedTimestamps.push(...timestamps);
-      });
+      let isTypeProvidedByAllParsers = true;
 
-    const uniqueTimestamps = [... new Set<number>(mergedTimestamps)];
+      for(const timestamps of this.parsers.map(parser => parser.getTimestamps(type))) {
+        if (timestamps === undefined) {
+          isTypeProvidedByAllParsers = false;
+          break;
+        }
+        mergedTimestamps.push(...timestamps!);
+      }
 
-    return uniqueTimestamps;
+      if (isTypeProvidedByAllParsers) {
+        const uniqueTimestamps = [... new Set<Timestamp>(mergedTimestamps)];
+        uniqueTimestamps.sort();
+        return uniqueTimestamps;
+      }
+    }
+
+    throw new Error("Failed to create aggregated timestamps (any type)");
   }
 
-  notifyCurrentTimestamp(timestamp: number) {
-    const traceEntries: Map<TraceTypeId, any> = new Map<TraceTypeId, any>();
+  notifyCurrentTimestamp(timestamp: Timestamp) {
+    const traceEntries: Map<TraceType, any> = new Map<TraceType, any>();
 
     this.parsers.forEach(parser => {
       const entry = parser.getTraceEntry(timestamp);
       if (entry != undefined) {
-        traceEntries.set(parser.getTraceTypeId(), entry);
+        traceEntries.set(parser.getTraceType(), entry);
       }
     });
 

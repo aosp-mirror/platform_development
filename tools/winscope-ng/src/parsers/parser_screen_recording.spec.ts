@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 import {ScreenRecordingTraceEntry} from "common/trace/screen_recording";
-import {TraceTypeId} from "common/trace/type_id";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceType} from "common/trace/trace_type";
 import {TestUtils} from "test/test_utils";
 import {Parser} from "./parser";
 import {ParserFactory} from "./parser_factory";
@@ -30,28 +31,66 @@ describe("ParserScreenRecording", () => {
   });
 
   it("has expected trace type", () => {
-    expect(parser.getTraceTypeId()).toEqual(TraceTypeId.SCREEN_RECORDING);
+    expect(parser.getTraceType()).toEqual(TraceType.SCREEN_RECORDING);
   });
 
-  it("provides timestamps", () => {
-    const timestamps = parser.getTimestamps();
+  it ("provides elapsed timestamps", () => {
+    const timestamps = parser.getTimestamps(TimestampType.ELAPSED)!;
 
     expect(timestamps.length)
       .toEqual(88);
 
+    const expected = [
+      new Timestamp(TimestampType.ELAPSED, 732949304000n),
+      new Timestamp(TimestampType.ELAPSED, 733272129000n),
+      new Timestamp(TimestampType.ELAPSED, 733283916000n),
+    ];
     expect(timestamps.slice(0, 3))
-      .toEqual([1658843852566916400, 1658843852889741300, 1658843852901528300]);
+      .toEqual(expected);
   });
 
-  it("retrieves trace entry", () => {
+  it("provides real timestamps", () => {
+    const timestamps = parser.getTimestamps(TimestampType.REAL)!;
+
+    expect(timestamps.length)
+      .toEqual(88);
+
+    const expected = [
+      new Timestamp(TimestampType.REAL, 1658843852566916386n),
+      new Timestamp(TimestampType.REAL, 1658843852889741386n),
+      new Timestamp(TimestampType.REAL, 1658843852901528386n),
+    ];
+    expect(timestamps.slice(0, 3))
+      .toEqual(expected);
+  });
+
+  it("retrieves trace entry from elapsed timestamp", () => {
     {
-      const entry = parser.getTraceEntry(1658843852566916400)!;
+      const timestamp = new Timestamp(TimestampType.ELAPSED, 732949304000n);
+      const entry = parser.getTraceEntry(timestamp)!;
       expect(entry).toBeInstanceOf(ScreenRecordingTraceEntry);
       expect(Number(entry.videoTimeSeconds)).toBeCloseTo(0);
     }
 
     {
-      const entry = parser.getTraceEntry(1658843852889741300)!;
+      const timestamp = new Timestamp(TimestampType.ELAPSED, 733272129000n);
+      const entry = parser.getTraceEntry(timestamp)!;
+      expect(entry).toBeInstanceOf(ScreenRecordingTraceEntry);
+      expect(Number(entry.videoTimeSeconds)).toBeCloseTo(0.322, 0.001);
+    }
+  });
+
+  it("retrieves trace entry from real timestamp", () => {
+    {
+      const timestamp = new Timestamp(TimestampType.REAL, 1658843852566916386n);
+      const entry = parser.getTraceEntry(timestamp)!;
+      expect(entry).toBeInstanceOf(ScreenRecordingTraceEntry);
+      expect(Number(entry.videoTimeSeconds)).toBeCloseTo(0);
+    }
+
+    {
+      const timestamp = new Timestamp(TimestampType.REAL, 1658843852889741386n);
+      const entry = parser.getTraceEntry(timestamp)!;
       expect(entry).toBeInstanceOf(ScreenRecordingTraceEntry);
       expect(Number(entry.videoTimeSeconds)).toBeCloseTo(0.322, 0.001);
     }

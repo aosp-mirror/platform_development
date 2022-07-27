@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceTypeId} from "common/trace/type_id";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceType} from "common/trace/trace_type";
 import {ArrayUtils} from "common/utils/array_utils";
 import {Parser} from "./parser";
 import {ScreenRecordingTraceEntry} from "common/trace/screen_recording";
@@ -23,28 +24,35 @@ class ParserScreenRecordingLegacy extends Parser {
     super(trace);
   }
 
-  override getTraceTypeId(): TraceTypeId {
-    return TraceTypeId.SCREEN_RECORDING;
+  override getTraceType(): TraceType {
+    return TraceType.SCREEN_RECORDING;
   }
 
   override getMagicNumber(): number[] {
     return ParserScreenRecordingLegacy.MPEG4_MAGIC_NMBER;
   }
 
-  override decodeTrace(videoData: Uint8Array): number[] {
+  override decodeTrace(videoData: Uint8Array): Timestamp[] {
     const posCount = this.searchMagicString(videoData);
     const [posTimestamps, count] = this.parseFramesCount(videoData, posCount);
     return this.parseTimestamps(videoData, posTimestamps, count);
   }
 
-  override getTimestamp(decodedEntry: number): number {
+  override getTimestamp(decodedEntry: Timestamp, type: TimestampType): undefined|Timestamp {
+    if (type !== TimestampType.ELAPSED) {
+      return undefined;
+    }
     return decodedEntry;
   }
 
-  override processDecodedEntry(timestamp: number): ScreenRecordingTraceEntry {
-    const videoTimeSeconds = (timestamp - this.timestamps[0]) / 1000000000 + ParserScreenRecordingLegacy.EPSILON;
+  override processDecodedEntry(entry: Timestamp): ScreenRecordingTraceEntry {
+    const currentTimestamp = entry;
+    const initialTimestamp = this.getTimestamps(TimestampType.ELAPSED)![0];
+    const videoTimeSeconds =
+      Number(currentTimestamp.getValueNs() - initialTimestamp.getValueNs()) / 1000000000
+      + ParserScreenRecordingLegacy.EPSILON;
     const videoData = this.trace;
-    return new ScreenRecordingTraceEntry(timestamp, videoTimeSeconds, videoData);
+    return new ScreenRecordingTraceEntry(videoTimeSeconds, videoData);
   }
 
   private searchMagicString(videoData: Uint8Array): number {
@@ -65,15 +73,15 @@ class ParserScreenRecordingLegacy extends Parser {
     return [pos, framesCount];
   }
 
-  private parseTimestamps(videoData: Uint8Array, pos: number, count: number): number[] {
+  private parseTimestamps(videoData: Uint8Array, pos: number, count: number): Timestamp[] {
     if (pos + count * 8 > videoData.length) {
       throw new TypeError("Failed to parse timestamps. Video data is too short.");
     }
-    const timestamps: number[] = [];
+    const timestamps: Timestamp[] = [];
     for (let i = 0; i < count; ++i) {
-      const timestamp = Number(ArrayUtils.toUintLittleEndian(videoData, pos, pos+8) * 1000n);
+      const value = ArrayUtils.toUintLittleEndian(videoData, pos, pos+8) * 1000n;
       pos += 8;
-      timestamps.push(timestamp);
+      timestamps.push(new Timestamp(TimestampType.ELAPSED, value));
     }
     return timestamps;
   }

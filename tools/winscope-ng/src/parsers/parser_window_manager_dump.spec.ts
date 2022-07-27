@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 import {WindowManagerState} from "common/trace/flickerlib/windows/WindowManagerState";
-import {TraceTypeId} from "common/trace/type_id";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceType} from "common/trace/trace_type";
 import {ParserFactory} from "./parser_factory";
 import {Parser} from "./parser";
 import {TestUtils} from "test/test_utils";
@@ -30,17 +31,23 @@ describe("ParserWindowManagerDump", () => {
   });
 
   it("has expected trace type", () => {
-    expect(parser.getTraceTypeId()).toEqual(TraceTypeId.WINDOW_MANAGER);
+    expect(parser.getTraceType()).toEqual(TraceType.WINDOW_MANAGER);
   });
 
   it("provides timestamps", () => {
-    expect(parser.getTimestamps())
-      .toEqual([0]);
+    const expected = [
+      new Timestamp(TimestampType.ELAPSED, 0n),
+    ];
+    expect(parser.getTimestamps(TimestampType.ELAPSED))
+      .toEqual(expected);
   });
 
   it("retrieves trace entry", () => {
-    const entry = parser.getTraceEntry(0)!;
+    const timestamp = new Timestamp(TimestampType.ELAPSED, 0n);
+    const entry = parser.getTraceEntry(timestamp)!;
     expect(entry).toBeInstanceOf(WindowManagerState);
-    expect(Number(entry.timestampMs)).toEqual(0);
+    expect(BigInt(entry.timestampMs)).toEqual(0n);
   });
+
+  //TODO: add real timestamp
 });

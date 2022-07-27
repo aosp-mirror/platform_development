@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 import {ScreenRecordingTraceEntry} from "common/trace/screen_recording";
-import {TraceTypeId} from "common/trace/type_id";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceType} from "common/trace/trace_type";
 import {TestUtils} from "test/test_utils";
 import {Parser} from "./parser";
 import {ParserFactory} from "./parser_factory";
@@ -30,31 +31,48 @@ describe("ParserScreenRecordingLegacy", () => {
   });
 
   it("has expected trace type", () => {
-    expect(parser.getTraceTypeId()).toEqual(TraceTypeId.SCREEN_RECORDING);
+    expect(parser.getTraceType()).toEqual(TraceType.SCREEN_RECORDING);
   });
 
-  it("provides timestamps", () => {
-    const timestamps = parser.getTimestamps();
+  it("provides elapsed timestamps", () => {
+    const timestamps = parser.getTimestamps(TimestampType.ELAPSED)!;
 
     expect(timestamps.length)
       .toEqual(85);
 
+    let expected = [
+      new Timestamp(TimestampType.ELAPSED, 19446131807000n),
+      new Timestamp(TimestampType.ELAPSED, 19446158500000n),
+      new Timestamp(TimestampType.ELAPSED, 19446167117000n),
+    ];
     expect(timestamps.slice(0, 3))
-      .toEqual([19446131807000, 19446158500000, 19446167117000]);
+      .toEqual(expected);
 
+    expected = [
+      new Timestamp(TimestampType.ELAPSED, 19448470076000n),
+      new Timestamp(TimestampType.ELAPSED, 19448487525000n),
+      new Timestamp(TimestampType.ELAPSED, 19448501007000n),
+    ];
     expect(timestamps.slice(timestamps.length-3, timestamps.length))
-      .toEqual([19448470076000, 19448487525000, 19448501007000]);
+      .toEqual(expected);
+  });
+
+  it("doesn't provide real timestamps", () => {
+    expect(parser.getTimestamps(TimestampType.REAL))
+      .toEqual(undefined);
   });
 
   it("retrieves trace entry", () => {
     {
-      const entry = parser.getTraceEntry(19446131807000)!;
+      const timestamp = new Timestamp(TimestampType.ELAPSED, 19446131807000n);
+      const entry = parser.getTraceEntry(timestamp)!;
       expect(entry).toBeInstanceOf(ScreenRecordingTraceEntry);
       expect(Number(entry.videoTimeSeconds)).toBeCloseTo(0);
     }
 
     {
-      const entry = parser.getTraceEntry(19448501007000)!;
+      const timestamp = new Timestamp(TimestampType.ELAPSED, 19448501007000n);
+      const entry = parser.getTraceEntry(timestamp)!;
       expect(entry).toBeInstanceOf(ScreenRecordingTraceEntry);
       expect(Number(entry.videoTimeSeconds)).toBeCloseTo(2.37, 0.001);
     }

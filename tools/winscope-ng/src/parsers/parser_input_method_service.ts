@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceTypeId} from "common/trace/type_id";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceType} from "common/trace/trace_type";
 import {Parser} from "./parser";
 import {InputMethodServiceTraceFileProto} from "./proto_types";
 
@@ -22,8 +23,8 @@ class ParserInputMethodService extends Parser {
     super(trace);
   }
 
-  getTraceTypeId(): TraceTypeId {
-    return TraceTypeId.INPUT_METHOD_SERVICE;
+  getTraceType(): TraceType {
+    return TraceType.INPUT_METHOD_SERVICE;
   }
 
   override getMagicNumber(): number[] {
@@ -34,8 +35,11 @@ class ParserInputMethodService extends Parser {
     return (<any>InputMethodServiceTraceFileProto.decode(buffer)).entry;
   }
 
-  override getTimestamp(entryProto: any): number {
-    return Number(entryProto.elapsedRealtimeNanos);
+  override getTimestamp(entryProto: any, type: TimestampType): undefined|Timestamp {
+    if (type !== TimestampType.ELAPSED) {
+      return undefined;
+    }
+    return new Timestamp(TimestampType.ELAPSED, BigInt(entryProto.elapsedRealtimeNanos));
   }
 
   override processDecodedEntry(entryProto: any): any {

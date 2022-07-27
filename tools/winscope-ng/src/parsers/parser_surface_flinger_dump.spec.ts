@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceTypeId} from "common/trace/type_id";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceType} from "common/trace/trace_type";
 import {LayerTraceEntry} from "common/trace/flickerlib/layers/LayerTraceEntry";
 import {TestUtils} from "test/test_utils";
 import {Parser} from "./parser";
@@ -30,16 +31,22 @@ describe("ParserSurfaceFlingerDump", () => {
   });
 
   it("has expected trace type", () => {
-    expect(parser.getTraceTypeId()).toEqual(TraceTypeId.SURFACE_FLINGER);
+    expect(parser.getTraceType()).toEqual(TraceType.SURFACE_FLINGER);
   });
 
   it("provides timestamp", () => {
-    expect(parser.getTimestamps()).toEqual([0]);
+    const expected = [
+      new Timestamp(TimestampType.ELAPSED, 0n),
+    ];
+    expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual(expected);
   });
 
   it("retrieves trace entry", () => {
-    const entry = parser.getTraceEntry(0)!;
+    const timestamp = new Timestamp(TimestampType.ELAPSED, 0n);
+    const entry = parser.getTraceEntry(timestamp)!;
     expect(entry).toBeInstanceOf(LayerTraceEntry);
-    expect(Number(entry.timestampMs)).toEqual(0);
+    expect(BigInt(entry.timestampMs)).toEqual(0n);
   });
+
+  //TODO: add real timestamp
 });

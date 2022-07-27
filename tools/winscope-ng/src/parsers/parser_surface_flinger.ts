@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {LayerTraceEntry} from "common/trace/flickerlib/layers/LayerTraceEntry";
-import {TraceTypeId} from "common/trace/type_id";
+import {TraceType} from "common/trace/trace_type";
 import {Parser} from "./parser";
 import {LayersTraceFileProto} from "./proto_types";
 
@@ -23,8 +24,8 @@ class ParserSurfaceFlinger extends Parser {
     super(trace);
   }
 
-  override getTraceTypeId(): TraceTypeId {
-    return TraceTypeId.SURFACE_FLINGER;
+  override getTraceType(): TraceType {
+    return TraceType.SURFACE_FLINGER;
   }
 
   override getMagicNumber(): number[] {
@@ -35,8 +36,11 @@ class ParserSurfaceFlinger extends Parser {
     return (<any>LayersTraceFileProto.decode(buffer)).entry;
   }
 
-  override getTimestamp(entryProto: any): number {
-    return Number(entryProto.elapsedRealtimeNanos);
+  override getTimestamp(entryProto: any, type: TimestampType): undefined|Timestamp {
+    if (type !== TimestampType.ELAPSED) {
+      return undefined;
+    }
+    return new Timestamp(TimestampType.ELAPSED, entryProto.elapsedRealtimeNanos);
   }
 
   override processDecodedEntry(entryProto: any): any {

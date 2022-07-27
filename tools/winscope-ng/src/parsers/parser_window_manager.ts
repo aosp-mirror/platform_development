@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceTypeId} from "common/trace/type_id";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceType} from "common/trace/trace_type";
 import {Parser} from "./parser";
 import {WindowManagerTraceFileProto} from "./proto_types";
 import {WindowManagerState} from "common/trace/flickerlib/windows/WindowManagerState";
@@ -23,8 +24,8 @@ class ParserWindowManager extends Parser {
     super(trace);
   }
 
-  override getTraceTypeId(): TraceTypeId {
-    return TraceTypeId.WINDOW_MANAGER;
+  override getTraceType(): TraceType {
+    return TraceType.WINDOW_MANAGER;
   }
 
   override getMagicNumber(): number[] {
@@ -35,8 +36,11 @@ class ParserWindowManager extends Parser {
     return (<any>WindowManagerTraceFileProto.decode(buffer)).entry;
   }
 
-  override getTimestamp(entryProto: any): number {
-    return Number(entryProto.elapsedRealtimeNanos);
+  override getTimestamp(entryProto: any, type: TimestampType): undefined|Timestamp {
+    if (type !== TimestampType.ELAPSED) {
+      return undefined;
+    }
+    return new Timestamp(TimestampType.ELAPSED, BigInt(entryProto.elapsedRealtimeNanos));
   }
 
   override processDecodedEntry(entryProto: any): WindowManagerState {

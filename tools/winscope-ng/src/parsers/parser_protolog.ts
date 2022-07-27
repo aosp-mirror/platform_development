@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {LogMessage, FormattedLogMessage, UnformattedLogMessage} from "common/trace/protolog";
-import {TraceTypeId} from "common/trace/type_id";
+import {FormattedLogMessage, LogMessage, UnformattedLogMessage} from "common/trace/protolog";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceType} from "common/trace/trace_type";
 import {Parser} from "./parser";
 import {ProtoLogFileProto} from "./proto_types";
 import configJson from "../../../../../frameworks/base/data/etc/services.core.protolog.json";
@@ -24,8 +25,8 @@ class ParserProtoLog extends Parser {
     super(trace);
   }
 
-  override getTraceTypeId(): TraceTypeId {
-    return TraceTypeId.PROTO_LOG;
+  override getTraceType(): TraceType {
+    return TraceType.PROTO_LOG;
   }
 
   override getMagicNumber(): number[] {
@@ -54,8 +55,11 @@ class ParserProtoLog extends Parser {
     return fileProto.log;
   }
 
-  override getTimestamp(entryProto: any): number {
-    return Number(entryProto.elapsedRealtimeNanos);
+  override getTimestamp(entryProto: any, type: TimestampType): undefined|Timestamp {
+    if (type !== TimestampType.ELAPSED) {
+      return undefined;
+    }
+    return new Timestamp(type, BigInt(entryProto.elapsedRealtimeNanos));
   }
 
   override processDecodedEntry(entryProto: any): LogMessage {

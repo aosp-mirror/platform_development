@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceTypeId} from "common/trace/type_id";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceType} from "common/trace/trace_type";
 import {Parser} from "./parser";
 import {ParserFactory} from "./parser_factory";
 import {TestUtils} from "test/test_utils";
@@ -29,19 +30,27 @@ describe("ParserTransactions", () => {
   });
 
   it("has expected trace type", () => {
-    expect(parser.getTraceTypeId()).toEqual(TraceTypeId.TRANSACTIONS);
+    expect(parser.getTraceType()).toEqual(TraceType.TRANSACTIONS);
   });
 
   it("provides timestamps", () => {
-    const timestamps = parser.getTimestamps();
+    const timestamps = parser.getTimestamps(TimestampType.ELAPSED)!;
+
     expect(timestamps.length)
       .toEqual(4997);
+
+    const expected = [
+      new Timestamp(TimestampType.ELAPSED, 14862317023n),
+      new Timestamp(TimestampType.ELAPSED, 14873423549n),
+      new Timestamp(TimestampType.ELAPSED, 14884850511n),
+    ];
     expect(timestamps.slice(0, 3))
-      .toEqual([14862317023, 14873423549, 14884850511]);
+      .toEqual(expected);
   });
 
   it("retrieves trace entry", () => {
-    expect(Number(parser.getTraceEntry(14862317023)!.elapsedRealtimeNanos))
-      .toEqual(14862317023);
+    const timestamp = new Timestamp(TimestampType.ELAPSED, 14862317023n);
+    expect(BigInt(parser.getTraceEntry(timestamp)!.elapsedRealtimeNanos))
+      .toEqual(14862317023n);
   });
 });
