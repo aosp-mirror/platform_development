@@ -159,13 +159,13 @@
     <div class="group">
       <span class="group-header">Visibility</span>
       <div class="full-width">
-        <span class="key">InputMethod Window:</span>
-        <span class="value">{{
+        <span class="key" v-if="entry.wmProperties">InputMethod Window:</span>
+        <span class="value" v-if="entry.wmProperties">{{
             entry.wmProperties.isInputMethodWindowVisible
           }}</span>
         <div />
-        <span class="key">InputMethod Surface:</span>
-        <span class="value">{{
+        <span class="key" v-if="entry.sfProperties">InputMethod Surface:</span>
+        <span class="value" v-if="entry.sfProperties">{{
             entry.sfProperties.isInputMethodSurfaceVisible }}</span>
         <div />
       </div>

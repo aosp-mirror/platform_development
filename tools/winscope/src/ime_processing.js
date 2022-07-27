@@ -100,23 +100,35 @@ function combineWmSfPropertiesIntoImeData(imeTraceFile, wmOrSfTraceFile) {
 }
 
 function matchCorrespondingTimestamps(imeTimestamps, wmOrSfTimestamps) {
-  // find the latest sf / wm timestamp that comes before current ime timestamp
+  // we want to take the earliest sf / wm entry that is within
+  // +-[FAULT_TOLERANCE] ns of the ime entry as the corresponding sf / wm entry
+  const FAULT_TOLERANCE = 200000000; // 200ms in ns
+
   let wmOrSfIndex = 0;
   const intersectWmOrSfIndices = [];
   for (let imeIndex = 0; imeIndex < imeTimestamps.length; imeIndex++) {
     const currImeTimestamp = imeTimestamps[imeIndex];
-
-    let currWmOrSfTimestamp = wmOrSfTimestamps[wmOrSfIndex];
-    while (currWmOrSfTimestamp < currImeTimestamp) {
+    let wmOrSfTimestamp = wmOrSfTimestamps[wmOrSfIndex];
+    while (wmOrSfTimestamp < currImeTimestamp) {
       wmOrSfIndex++;
-      currWmOrSfTimestamp = wmOrSfTimestamps[wmOrSfIndex];
+      wmOrSfTimestamp = wmOrSfTimestamps[wmOrSfIndex];
     }
-    // if wmOrSfIndex is 0, i.e. no corresponding entry is found,
-    // we take the first wm / sf entry
-    // intersectWmOrSfIndices.push(Math.max(0, wmOrSfIndex - 1));
-    intersectWmOrSfIndices.push(wmOrSfIndex - 1);
+    // wmOrSfIndex should now be at the first entry that is past
+    // [currImeTimestamp] ns. We want the most recent entry that comes
+    // before [currImeTimestamp] ns if it's within
+    // [currImeTimestamp - FAULT_TOLERANCE] ns. Otherwise, we want the most
+    // recent entry that comes after [currImeTimestamp] ns if it's within
+    // [currImeTimestamp + FAULT_TOLERANCE] ns.
+    const previousWmOrSfTimestamp = wmOrSfTimestamps[wmOrSfIndex - 1];
+    if (previousWmOrSfTimestamp >= currImeTimestamp - FAULT_TOLERANCE) {
+      intersectWmOrSfIndices.push(wmOrSfIndex - 1);
+    } else if (wmOrSfTimestamp <= currImeTimestamp + FAULT_TOLERANCE) {
+      intersectWmOrSfIndices.push(wmOrSfIndex);
+    } else {
+      intersectWmOrSfIndices.push(null);
+    }
   }
-  console.log('done matching corresponding timestamps');
+  console.log('done matching corresponding timestamps', intersectWmOrSfIndices);
   return intersectWmOrSfIndices;
 }
 
