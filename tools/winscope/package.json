@@ -20,7 +20,11 @@
     "vue": "^2.6.14",
     "vue-context": "^6.0.0",
     "vue-gtag": "^1.16.1",
-    "vue-material": "^1.0.0-beta-15",
+    "vue-material": "^1.0.0-beta-14",
+    "//": [
+      "upgrade vue-material version to latest once the following bug in v15",
+      "is fixed: https://github.com/vuematerial/vue-material/issues/2285"
+    ],
     "vuex": "^3.6.2"
   },
   "devDependencies": {
