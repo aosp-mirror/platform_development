@@ -18,16 +18,12 @@ import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
 import {UnitTestUtils} from "test/unit/utils";
 import {Parser} from "./parser";
-import {ParserFactory} from "./parser_factory";
 
 describe("ParserScreenRecordingLegacy", () => {
   let parser: Parser;
 
   beforeAll(async () => {
-    const trace = UnitTestUtils.getFixtureBlob("screen_recording_legacy.mp4");
-    const parsers = await new ParserFactory().createParsers([trace]);
-    expect(parsers.length).toEqual(1);
-    parser = parsers[0];
+    parser = await UnitTestUtils.getParser("traces/elapsed_timestamp/screen_recording.mp4");
   });
 
   it("has expected trace type", () => {

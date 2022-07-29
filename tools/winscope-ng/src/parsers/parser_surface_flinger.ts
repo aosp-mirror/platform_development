@@ -22,6 +22,7 @@ import {LayersTraceFileProto} from "./proto_types";
 class ParserSurfaceFlinger extends Parser {
   constructor(trace: Blob) {
     super(trace);
+    this.realToElapsedTimeOffsetNs = undefined;
   }
 
   override getTraceType(): TraceType {
@@ -33,20 +34,36 @@ class ParserSurfaceFlinger extends Parser {
   }
 
   override decodeTrace(buffer: Uint8Array): any[] {
-    return (<any>LayersTraceFileProto.decode(buffer)).entry;
+    const decoded = <any>LayersTraceFileProto.decode(buffer);
+    if (Object.prototype.hasOwnProperty.call(decoded, "realToElapsedTimeOffsetNanos")) {
+      this.realToElapsedTimeOffsetNs = BigInt(decoded.realToElapsedTimeOffsetNanos);
+    }
+    else {
+      this.realToElapsedTimeOffsetNs = undefined;
+    }
+    return decoded.entry;
   }
 
-  override getTimestamp(entryProto: any, type: TimestampType): undefined|Timestamp {
-    if (type !== TimestampType.ELAPSED) {
-      return undefined;
+  override getTimestamp(type: TimestampType, entryProto: any): undefined|Timestamp {
+    const isDump = !Object.prototype.hasOwnProperty.call(entryProto, "elapsedRealtimeNanos");
+    if (type === TimestampType.ELAPSED) {
+      return isDump
+        ? new Timestamp(type, 0n)
+        : new Timestamp(type, BigInt(entryProto.elapsedRealtimeNanos));
     }
-    return new Timestamp(TimestampType.ELAPSED, entryProto.elapsedRealtimeNanos);
+    else if (type === TimestampType.REAL && this.realToElapsedTimeOffsetNs !== undefined) {
+      return isDump
+        ? new Timestamp(type, 0n)
+        : new Timestamp(type, this.realToElapsedTimeOffsetNs + BigInt(entryProto.elapsedRealtimeNanos));
+    }
+    return undefined;
   }
 
   override processDecodedEntry(entryProto: any): any {
     return LayerTraceEntry.fromProto(entryProto.layers.layers, entryProto.displays, entryProto.elapsedRealtimeNanos, entryProto.hwcBlob);
   }
 
+  private realToElapsedTimeOffsetNs: undefined|bigint;
   private static readonly MAGIC_NUMBER = [0x09, 0x4c, 0x59, 0x52, 0x54, 0x52, 0x41, 0x43, 0x45]; // .LYRTRACE
 }
 

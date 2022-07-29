@@ -36,7 +36,7 @@ class ParserWindowManagerDump extends Parser {
     return [WindowManagerServiceDumpProto.decode(buffer)];
   }
 
-  override getTimestamp(entryProto: any, type: TimestampType): undefined|Timestamp {
+  override getTimestamp(type: TimestampType, entryProto: any): undefined|Timestamp {
     if (type !== TimestampType.ELAPSED) {
       return undefined;
     }

@@ -48,6 +48,8 @@ class ParserProtoLog extends Parser {
       throw new TypeError(message);
     }
 
+    this.realToElapsedTimeOffsetNs = BigInt(fileProto.realTimeToElapsedTimeOffsetMillis) * 1000000n;
+
     fileProto.log.sort((a: any, b: any) => {
       return Number(a.elapsedRealtimeNanos) - Number(b.elapsedRealtimeNanos);
     });
@@ -55,11 +57,14 @@ class ParserProtoLog extends Parser {
     return fileProto.log;
   }
 
-  override getTimestamp(entryProto: any, type: TimestampType): undefined|Timestamp {
-    if (type !== TimestampType.ELAPSED) {
-      return undefined;
+  override getTimestamp(type: TimestampType, entryProto: any): undefined|Timestamp {
+    if (type == TimestampType.ELAPSED) {
+      return new Timestamp(type, BigInt(entryProto.elapsedRealtimeNanos));
     }
-    return new Timestamp(type, BigInt(entryProto.elapsedRealtimeNanos));
+    else if (type == TimestampType.REAL) {
+      return new Timestamp(type, BigInt(entryProto.elapsedRealtimeNanos) + this.realToElapsedTimeOffsetNs!);
+    }
+    return undefined;
   }
 
   override processDecodedEntry(entryProto: any): LogMessage {
@@ -85,6 +90,7 @@ class ParserProtoLog extends Parser {
     });
   }
 
+  private realToElapsedTimeOffsetNs: undefined|bigint = undefined;
   private static readonly MAGIC_NUMBER = [0x09, 0x50, 0x52, 0x4f, 0x54, 0x4f, 0x4c, 0x4f, 0x47]; // .PROTOLOG
   private static readonly PROTOLOG_VERSION = "1.0.0";
 }

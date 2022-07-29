@@ -21,6 +21,7 @@ import {InputMethodManagerServiceTraceFileProto} from "./proto_types";
 class ParserInputMethodManagerService extends Parser {
   constructor(trace: Blob) {
     super(trace);
+    this.realToElapsedTimeOffsetNs = undefined;
   }
 
   getTraceType(): TraceType {
@@ -32,20 +33,31 @@ class ParserInputMethodManagerService extends Parser {
   }
 
   override decodeTrace(buffer: Uint8Array): any[] {
-    return (<any>InputMethodManagerServiceTraceFileProto.decode(buffer)).entry;
+    const decoded = <any>InputMethodManagerServiceTraceFileProto.decode(buffer);
+    if (Object.prototype.hasOwnProperty.call(decoded, "realToElapsedTimeOffsetNanos")) {
+      this.realToElapsedTimeOffsetNs = BigInt(decoded.realToElapsedTimeOffsetNanos);
+    }
+    else {
+      this.realToElapsedTimeOffsetNs = undefined;
+    }
+    return decoded.entry;
   }
 
-  protected override getTimestamp(entryProto: any, type: TimestampType): undefined|Timestamp {
-    if (type !== TimestampType.ELAPSED) {
-      return undefined;
+  protected override getTimestamp(type: TimestampType, entryProto: any): undefined|Timestamp {
+    if (type === TimestampType.ELAPSED) {
+      return new Timestamp(TimestampType.ELAPSED, BigInt(entryProto.elapsedRealtimeNanos));
     }
-    return new Timestamp(TimestampType.ELAPSED, BigInt(entryProto.elapsedRealtimeNanos));
+    else if (type === TimestampType.REAL && this.realToElapsedTimeOffsetNs !== undefined) {
+      return new Timestamp(type, this.realToElapsedTimeOffsetNs + BigInt(entryProto.elapsedRealtimeNanos));
+    }
+    return undefined;
   }
 
   protected override processDecodedEntry(entryProto: any): any {
     return entryProto;
   }
 
+  private realToElapsedTimeOffsetNs: undefined|bigint;
   private static readonly MAGIC_NUMBER = [0x09, 0x49, 0x4d, 0x4d, 0x54, 0x52, 0x41, 0x43, 0x45]; // .IMMTRACE
 }
 

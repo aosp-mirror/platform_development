@@ -16,41 +16,92 @@
 import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
 import {Parser} from "./parser";
-import {ParserFactory} from "./parser_factory";
 import {UnitTestUtils} from "test/unit/utils";
 
 describe("ParserTransactions", () => {
-  let parser: Parser;
+  describe("trace with elapsed + real timestamp", () => {
+    let parser: Parser;
 
-  beforeAll(async () => {
-    const buffer = UnitTestUtils.getFixtureBlob("trace_Transactions.pb");
-    const parsers = await new ParserFactory().createParsers([buffer]);
-    expect(parsers.length).toEqual(1);
-    parser = parsers[0];
+    beforeAll(async () => {
+      parser = await UnitTestUtils.getParser("traces/elapsed_and_real_timestamp/Transactions.pb");
+    });
+
+    it("has expected trace type", () => {
+      expect(parser.getTraceType()).toEqual(TraceType.TRANSACTIONS);
+    });
+
+    it("provides elapsed timestamps", () => {
+      const timestamps = parser.getTimestamps(TimestampType.ELAPSED)!;
+
+      expect(timestamps.length)
+        .toEqual(712);
+
+      const expected = [
+        new Timestamp(TimestampType.ELAPSED, 2450981445n),
+        new Timestamp(TimestampType.ELAPSED, 2517952515n),
+        new Timestamp(TimestampType.ELAPSED, 4021151449n),
+      ];
+      expect(timestamps.slice(0, 3))
+        .toEqual(expected);
+    });
+
+    it("provides real timestamps", () => {
+      const timestamps = parser.getTimestamps(TimestampType.REAL)!;
+
+      expect(timestamps.length)
+        .toEqual(712);
+
+      const expected = [
+        new Timestamp(TimestampType.REAL, 1659507541051480997n),
+        new Timestamp(TimestampType.REAL, 1659507541118452067n),
+        new Timestamp(TimestampType.REAL, 1659507542621651001n),
+      ];
+      expect(timestamps.slice(0, 3))
+        .toEqual(expected);
+    });
+
+    it("retrieves trace entry from elsapsed timestamp", () => {
+      const timestamp = new Timestamp(TimestampType.ELAPSED, 2517952515n);
+      expect(BigInt(parser.getTraceEntry(timestamp)!.elapsedRealtimeNanos))
+        .toEqual(2517952515n);
+    });
+
+    it("retrieves trace entry from real timestamp", () => {
+      const timestamp = new Timestamp(TimestampType.REAL, 1659507541118452067n);
+      expect(BigInt(parser.getTraceEntry(timestamp)!.elapsedRealtimeNanos))
+        .toEqual(2517952515n);
+    });
   });
 
-  it("has expected trace type", () => {
-    expect(parser.getTraceType()).toEqual(TraceType.TRANSACTIONS);
-  });
+  describe("trace with elapsed (only) timestamp", () => {
+    let parser: Parser;
 
-  it("provides timestamps", () => {
-    const timestamps = parser.getTimestamps(TimestampType.ELAPSED)!;
+    beforeAll(async () => {
+      parser = await UnitTestUtils.getParser("traces/elapsed_timestamp/Transactions.pb");
+    });
 
-    expect(timestamps.length)
-      .toEqual(4997);
+    it("has expected trace type", () => {
+      expect(parser.getTraceType()).toEqual(TraceType.TRANSACTIONS);
+    });
 
-    const expected = [
-      new Timestamp(TimestampType.ELAPSED, 14862317023n),
-      new Timestamp(TimestampType.ELAPSED, 14873423549n),
-      new Timestamp(TimestampType.ELAPSED, 14884850511n),
-    ];
-    expect(timestamps.slice(0, 3))
-      .toEqual(expected);
-  });
+    it("provides elapsed timestamps", () => {
+      const timestamps = parser.getTimestamps(TimestampType.ELAPSED)!;
 
-  it("retrieves trace entry", () => {
-    const timestamp = new Timestamp(TimestampType.ELAPSED, 14862317023n);
-    expect(BigInt(parser.getTraceEntry(timestamp)!.elapsedRealtimeNanos))
-      .toEqual(14862317023n);
+      expect(timestamps.length)
+        .toEqual(4997);
+
+      const expected = [
+        new Timestamp(TimestampType.ELAPSED, 14862317023n),
+        new Timestamp(TimestampType.ELAPSED, 14873423549n),
+        new Timestamp(TimestampType.ELAPSED, 14884850511n),
+      ];
+      expect(timestamps.slice(0, 3))
+        .toEqual(expected);
+    });
+
+    it("doesn't provide real timestamps", () => {
+      expect(parser.getTimestamps(TimestampType.REAL))
+        .toEqual(undefined);
+    });
   });
 });

@@ -52,19 +52,19 @@ class ParserScreenRecording extends Parser {
     });
   }
 
-  override getTimestamp(decodedEntry: ScreenRecordingMetadataEntry, type: TimestampType): undefined|Timestamp {
+  override getTimestamp(type: TimestampType, decodedEntry: ScreenRecordingMetadataEntry): undefined|Timestamp {
     if (type !== TimestampType.ELAPSED && type !== TimestampType.REAL) {
       return undefined;
     }
     if (type === TimestampType.ELAPSED) {
-      // Traces typically contain "elapsed" timestamps (SYSTEM_TIME_BOOTTIME).
-      // Screen recordings contain SYSTEM_TIME_MONOTONIC timestamps.
+      // Traces typically contain "elapsed" timestamps (SYSTEM_TIME_BOOTTIME),
+      // whereas screen recordings contain SYSTEM_TIME_MONOTONIC timestamps.
       //
       // Here we are pretending that screen recordings contain "elapsed" timestamps
       // as well, in order to synchronize with the other traces.
       //
       // If no device suspensions are involved, SYSTEM_TIME_MONOTONIC should indeed
-      // correspond to SYSTEM_TIME_BOOTTIME and things should work as expected.
+      // correspond to SYSTEM_TIME_BOOTTIME and things will work as expected.
       return new Timestamp(type, decodedEntry.timestampMonotonicNs);
     }
     else if (type === TimestampType.REAL) {
@@ -124,8 +124,6 @@ class ParserScreenRecording extends Parser {
     const timestamps: bigint[] = [];
     for (let i = 0; i < count; ++i) {
       const timestamp = ArrayUtils.toUintLittleEndian(videoData, pos, pos+8);
-      pos += 8;
-      //parse VSYNC ID here when available
       pos += 8;
       timestamps.push(timestamp);
     }

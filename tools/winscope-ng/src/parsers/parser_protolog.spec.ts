@@ -15,7 +15,6 @@
  */
 import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
-import {ParserFactory} from "./parser_factory";
 import {Parser} from "./parser";
 import {UnitTestUtils} from "test/unit/utils";
 import {LogMessage} from "../common/trace/protolog";
@@ -33,10 +32,7 @@ describe("ParserProtoLog", () => {
   };
 
   beforeAll(async () => {
-    const buffer = UnitTestUtils.getFixtureBlob("trace_ProtoLog.pb");
-    const parsers = await new ParserFactory().createParsers([buffer]);
-    expect(parsers.length).toEqual(1);
-    parser = parsers[0];
+    parser = await UnitTestUtils.getParser("traces/elapsed_and_real_timestamp/ProtoLog.pb");
   });
 
   it("has expected trace type", () => {
@@ -52,6 +48,20 @@ describe("ParserProtoLog", () => {
       new Timestamp(TimestampType.ELAPSED, 850746266486n),
       new Timestamp(TimestampType.ELAPSED, 850746336718n),
       new Timestamp(TimestampType.ELAPSED, 850746350430n),
+    ];
+    expect(timestamps.slice(0, 3))
+      .toEqual(expected);
+  });
+
+  it("provides real timestamps", () => {
+    const timestamps = parser.getTimestamps(TimestampType.REAL)!;
+    expect(timestamps.length)
+      .toEqual(50);
+
+    const expected = [
+      new Timestamp(TimestampType.REAL, 1655727125377266486n),
+      new Timestamp(TimestampType.REAL, 1655727125377336718n),
+      new Timestamp(TimestampType.REAL, 1655727125377350430n),
     ];
     expect(timestamps.slice(0, 3))
       .toEqual(expected);

@@ -41,7 +41,7 @@ abstract class Parser {
       let areTimestampsValid = true;
 
       for (const entry of this.decodedEntries) {
-        const timestamp = this.getTimestamp(entry, type);
+        const timestamp = this.getTimestamp(type, entry);
         if (timestamp === undefined) {
           areTimestampsValid = false;
           break;
@@ -82,8 +82,7 @@ abstract class Parser {
 
   protected abstract getMagicNumber(): undefined|number[];
   protected abstract decodeTrace(trace: Uint8Array): any[];
-  //TODO: invert parameters below
-  protected abstract getTimestamp(decodedEntry: any, type: TimestampType): undefined|Timestamp;
+  protected abstract getTimestamp(type: TimestampType, decodedEntry: any): undefined|Timestamp;
   protected abstract processDecodedEntry(decodedEntry: any): any;
 
   protected trace: Blob;

@@ -24,7 +24,7 @@ describe("Viewer WindowManager", () => {
 
   it("processes trace and renders view", () => {
     const inputFile = element(by.css("input[type=\"file\"]"));
-    inputFile.sendKeys(E2eTestUtils.getFixturePath("trace_WindowManager.pb"));
+    inputFile.sendKeys(E2eTestUtils.getFixturePath("traces/elapsed_and_real_timestamp/WindowManager.pb"));
 
     const windowManagerViewerTitle = element(by.css(".viewer-window-manager .title"));
     expect(windowManagerViewerTitle.getText()).toContain("Window Manager");

@@ -38,7 +38,7 @@ class ParserScreenRecordingLegacy extends Parser {
     return this.parseTimestamps(videoData, posTimestamps, count);
   }
 
-  override getTimestamp(decodedEntry: Timestamp, type: TimestampType): undefined|Timestamp {
+  override getTimestamp(type: TimestampType, decodedEntry: Timestamp): undefined|Timestamp {
     if (type !== TimestampType.ELAPSED) {
       return undefined;
     }

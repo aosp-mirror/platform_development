@@ -28,6 +28,9 @@ class CommonTestUtils {
   }
 
   static getFixturePath(filename: string): string {
+    if (path.isAbsolute(filename)) {
+      return filename;
+    }
     return path.join(CommonTestUtils.getProjectRootPath(), "src/test/fixtures", filename);
   }
 
