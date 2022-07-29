@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, Injector, Inject} from "@angular/core";
-import {createCustomElement} from "@angular/elements";
-import {ViewerWindowManagerComponent} from "viewers/viewer_window_manager/viewer_window_manager.component";
-import {Core} from "./core";
+import { Component, Injector, Inject } from "@angular/core";
+import { createCustomElement } from "@angular/elements";
+import { ViewerWindowManagerComponent } from "viewers/viewer_window_manager/viewer_window_manager.component";
+import { Core } from "./core";
+import { ProxyState } from "trace_collection/proxy_client";
+import { PersistentStore } from "../common/persistent_store";
 
 @Component({
   selector: "app-root",
@@ -25,43 +27,57 @@ import {Core} from "./core";
       <span>Winscope Viewer 2.0</span>
     </div>
 
-    <div id="inputfile">
-      <input type="file" (change)="onInputFile($event)" #fileUpload>
+    <div *ngIf="!dataLoaded" fxLayout="row wrap" fxLayoutGap="10px grid" class="home">
+      <mat-card class="homepage-card" id="collect-traces-card">
+        <collect-traces [(core)]="core" [(dataLoaded)]="dataLoaded" [store]="store"></collect-traces>
+      </mat-card>
+      <mat-card class="homepage-card" id="upload-traces-card">
+        <upload-traces [(core)]="core"></upload-traces>
+      </mat-card>
+    </div>
+
+    <div *ngIf="dataLoaded">
+      <mat-card class="homepage-card" id="loaded-data-card">
+      <mat-card-title>Loaded data</mat-card-title>
+        <button mat-raised-button (click)="clearData()">Back to Home</button>
+      </mat-card>
     </div>
 
     <div id="timescrub">
-    <button (click)="notifyCurrentTimestamp()">Update current timestamp</button>
-    </div>
-
-    <div id="viewers">
+      <button mat-raised-button (click)="notifyCurrentTimestamp()">Update current timestamp</button>
     </div>
 
     <div id="timestamps">
     </div>
-  `
+
+    <div id="viewers">
+    </div>
+  `,
+  styles: [".home{width: 100%; display:flex; flex-direction: row; overflow: auto;}"]
 })
 export class AppComponent {
   title = "winscope-ng";
+  core: Core;
+  states = ProxyState;
+  store: PersistentStore = new PersistentStore();
+  dataLoaded = false;
 
-  private core!: Core;
-
-  constructor(@Inject(Injector) injector: Injector) {
-    customElements.define("viewer-window-manager",
-      createCustomElement(ViewerWindowManagerComponent, {injector}));
+  constructor(
+    @Inject(Injector) injector: Injector
+  ) {
+    this.core = new Core();
+    if (!customElements.get("viewer-window-manager")) {
+      customElements.define("viewer-window-manager",
+        createCustomElement(ViewerWindowManagerComponent, {injector}));
+    }
   }
 
-  public async onInputFile(event: Event) {
-    const files = await this.getInputFiles(event);
+  onCoreChange(newCore: Core) {
+    this.core = newCore;
+  }
 
-    this.core = new Core();
-    await this.core.bootstrap(files);
-
-    const viewersDiv = document.querySelector("div#viewers")!;
-    viewersDiv.innerHTML = "";
-    this.core.getViews().forEach(view => viewersDiv!.appendChild(view) );
-
-    const timestampsDiv = document.querySelector("div#timestamps")!;
-    timestampsDiv.innerHTML = `Retrieved ${this.core.getTimestamps().length} unique timestamps`;
+  onDataLoadedChange(loaded: boolean) {
+    this.dataLoaded = loaded;
   }
 
   public notifyCurrentTimestamp() {
@@ -69,14 +85,8 @@ export class AppComponent {
     this.core.notifyCurrentTimestamp(dummyTimestamp);
   }
 
-  //TODO: extend with support for multiple files, archives, etc...
-  private getInputFiles(event: Event): File[] {
-    const files: any = (event?.target as HTMLInputElement)?.files;
-
-    if (!files || !files[0]) {
-      return [];
-    }
-
-    return [files[0]];
+  public clearData() {
+    this.dataLoaded = false;
+    this.core.clearData();
   }
 }
