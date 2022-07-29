@@ -301,10 +301,15 @@ class GenBuildFile(object):
                     ind=self.INDENT,
                     version=self._vndk_version))
 
-    def _get_license_kinds(self, license_text=''):
-        """ Returns a set of license kinds """
+    def _get_license_kinds(self, license_text_path=''):
+        """ Returns a set of license kinds
+
+        Args:
+          license_text_path: path to the license text file to check.
+                             If empty, check all license files.
+        """
         license_collector = collect_licenses.LicenseCollector(self._install_dir)
-        license_collector.run(license_text)
+        license_collector.run(license_text_path)
         return license_collector.license_kinds
 
     def _gen_license(self):
@@ -547,7 +552,7 @@ class GenBuildFile(object):
             return False
 
         def get_notice_file(prebuilts):
-            """Returns build rule for notice file (attribute 'notice').
+            """Returns build rule for notice file (attribute 'licenses').
 
             Args:
               prebuilts: list, names of prebuilt objects
