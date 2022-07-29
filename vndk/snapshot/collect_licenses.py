@@ -84,28 +84,35 @@ class LicenseCollector(object):
                 found = True
         return found
 
-    def read_and_check_dir_for_licenses(self, path):
-        """ Check licenses for all files under the directory
+    def check_licenses(self, filepath):
+        """ Read a license text file and find the license_kinds.
         """
-        for (root, _, files) in os.walk(path):
-            for f in files:
-                with open(os.path.join(root, f), 'r') as file_to_check:
-                    file_string = file_to_check.read()
-                    self.read_and_check_licenses(file_string, LICENSE_KEYWORDS)
-                    if self.read_and_check_licenses(file_string, RESTRICTED_LICENSE_KEYWORDS):
-                        self.restricted.add(f)
+        with open(filepath, 'r') as file_to_check:
+            file_string = file_to_check.read()
+            self.read_and_check_licenses(file_string, LICENSE_KEYWORDS)
+            if self.read_and_check_licenses(file_string, RESTRICTED_LICENSE_KEYWORDS):
+                self.restricted.add(os.path.basename(filepath))
 
-    def run(self, license_text=''):
+    def run(self, license_text_path=''):
         """ search licenses in vndk snapshots
+
+        Args:
+          license_text_path: path to the license text file to check.
+                             If empty, check all license files.
         """
-        if license_text == '':
+        if license_text_path == '':
             for path in self._paths_to_check:
                 logging.info('Reading {}'.format(path))
-                self.read_and_check_dir_for_licenses(path)
+                for (root, _, files) in os.walk(path):
+                    for f in files:
+                        self.check_licenses(os.path.join(root, f))
+            self.license_kinds.update(LICENSE_INCLUDE)
         else:
-            logging.info('Reading {}'.format(license_text))
-            self.read_and_check_dir_for_licenses(license_text)
-        self.license_kinds.update(LICENSE_INCLUDE)
+            logging.info('Reading {}'.format(license_text_path))
+            self.check_licenses(os.path.join(self._install_dir, utils.COMMON_DIR_PATH, license_text_path))
+            if not self.license_kinds:
+                # Add 'legacy_permissive' if no licenses are found for this file.
+                self.license_kinds.add('legacy_permissive')
 
 def get_args():
     parser = argparse.ArgumentParser()
