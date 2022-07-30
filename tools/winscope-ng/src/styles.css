@@ -13,6 +13,57 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@import "~@angular/material/prebuilt-themes/indigo-pink.css";
+@import 'https://fonts.googleapis.com/icon?family=Material+Icons';
+
 #title {
-  color: aqua;
+    font-weight: bold;
+    font-family: Arial, Helvetica, sans-serif;
+    color:rgb(194, 65, 108);
+    font-size: 20;
+}
+
+button {
+    cursor: pointer;
+}
+
+.homepage-card {
+    border: 1px solid rgb(129, 129, 129);
+    width: 45rem;
+    height: 30rem;
+    overflow: auto;
+    display: flex;
+    margin: 10px;
+}
+
+mat-checkbox {
+    margin-left: 10px;
+}
+
+mat-form-field {
+    margin: 10px;
+    height: 5px;
+}
+
+mat-icon {
+    margin: 5px;
+}
+
+.icon-message, .adb-icon, .adb-info {
+    vertical-align: middle;
+}
+
+.card-block {
+    margin: 15px;
+}
+
+button.mat-raised-button {
+    background-color:rgb(194, 65, 108);
+    color: white;
+    margin: 10px;
+}
+
+.tab.inactive {
+    background-color:white;
+    color: black;
 }
