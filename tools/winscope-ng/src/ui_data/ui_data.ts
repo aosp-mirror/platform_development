@@ -13,13 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { TraceType } from "common/trace/trace_type";
-
-interface Viewer {
-  //TODO: add TraceEntry data type
-  notifyCurrentTraceEntries(entries: Map<TraceType, any>): void;
-  getView(): HTMLElement;
-  getDependencies(): TraceType[];
+class UiData {
+  constructor(public text: string) {
+    console.log("new UI data", text);
+  }
 }
 
-export { Viewer };
+export {UiData};

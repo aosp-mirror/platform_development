@@ -13,27 +13,41 @@ import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
 import { MatSelectModule } from "@angular/material/select";
+import { MatRadioModule } from "@angular/material/radio";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { HttpClientModule } from "@angular/common/http";
+import { MatSliderModule } from "@angular/material/slider";
 
-import { AppComponent } from "./app.component";
+import { AppComponent } from "./components/app.component";
 import { ViewerWindowManagerComponent } from "viewers/viewer_window_manager/viewer_window_manager.component";
-import { CollectTracesComponent } from "./collect_traces.component";
-import { AdbProxyComponent } from "./adb_proxy.component";
-import { WebAdbComponent } from "./web_adb.component";
-import { TraceConfigComponent } from "./trace_config.component";
-import { UploadTracesComponent } from "./upload_traces.component";
-
+import { ViewerSurfaceFlingerComponent } from "viewers/viewer_surface_flinger/viewer_surface_flinger.component";
+import { CollectTracesComponent } from "./components/collect_traces.component";
+import { AdbProxyComponent } from "./components/adb_proxy.component";
+import { WebAdbComponent } from "./components/web_adb.component";
+import { TraceConfigComponent } from "./components/trace_config.component";
+import { UploadTracesComponent } from "./components/upload_traces.component";
+import { HierarchyComponent } from "viewers/hierarchy.component";
+import { PropertiesComponent } from "viewers/properties.component";
+import { RectsComponent } from "viewers/rects.component";
+import { TraceViewHeaderComponent } from "./components/trace_view_header.component";
+import { TraceViewComponent } from "./components/trace_view.component";
+import { CanvasService } from "viewers/canvas.service";
 
 @NgModule({
   declarations: [
     AppComponent,
     ViewerWindowManagerComponent,
+    ViewerSurfaceFlingerComponent,
     CollectTracesComponent,
     UploadTracesComponent,
     AdbProxyComponent,
     WebAdbComponent,
     TraceConfigComponent,
+    HierarchyComponent,
+    PropertiesComponent,
+    RectsComponent,
+    TraceViewHeaderComponent,
+    TraceViewComponent
   ],
   imports: [
     BrowserModule,
@@ -52,9 +66,11 @@ import { UploadTracesComponent } from "./upload_traces.component";
     MatInputModule,
     MatSelectModule,
     BrowserAnimationsModule,
-    HttpClientModule
+    HttpClientModule,
+    MatSliderModule,
+    MatRadioModule
   ],
-  providers: [],
+  providers: [CanvasService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

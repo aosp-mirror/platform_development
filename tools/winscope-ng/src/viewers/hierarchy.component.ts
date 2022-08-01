@@ -13,10 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { Component } from "@angular/core";
 
-class UiData {
-  constructor(public text: string) {
-  }
+@Component({
+  selector: "hierarchy-view",
+  template: `
+      <mat-card-title class="trace-view-subtitle">Hierarchy</mat-card-title>
+  `,
+  styles: [
+    ".trace-view-subtitle { font-size: 18px}"
+  ]
+})
+
+export class HierarchyComponent {
 }
-
-export {UiData};

@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input, OnInit, Output, EventEmitter, NgZone, Inject } from "@angular/core";
+import { Component, Inject, Input, Output, EventEmitter, NgZone } from "@angular/core";
 import { ProxyConnection } from "trace_collection/proxy_connection";
 import { Connection } from "trace_collection/connection";
 import { setTraces } from "trace_collection/set_traces";
-import { ProxyState } from "../trace_collection/proxy_client";
-import { traceConfigurations, configMap, SelectionConfiguration, EnableConfiguration } from "../trace_collection/trace_collection_utils";
-import { Core } from "app/core";
-import { PersistentStore } from "../common/persistent_store";
+import { ProxyState } from "../../trace_collection/proxy_client";
+import { traceConfigurations, configMap, SelectionConfiguration, EnableConfiguration } from "../../trace_collection/trace_collection_utils";
+import { TraceCoordinator } from "app/trace_coordinator";
+import { PersistentStore } from "../../common/persistent_store";
 
 
 @Component({
@@ -110,9 +110,13 @@ import { PersistentStore } from "../common/persistent_store";
 
       </mat-card-content>
   `,
-  styles: [".device-choice {cursor: pointer}"]
+  styles: [
+    ".device-choice {cursor: pointer}",
+    ".mat-checkbox .mat-checkbox-frame {transform: scale(0.7); font-size: 10;}",
+    ".mat-checkbox-checked .mat-checkbox-background {transform: scale(0.7); font-size: 10;}"
+  ]
 })
-export class CollectTracesComponent implements OnInit {
+export class CollectTracesComponent {
   objectKeys = Object.keys;
   isAdbProxy = true;
   traceConfigurations = traceConfigurations;
@@ -123,17 +127,17 @@ export class CollectTracesComponent implements OnInit {
     store: PersistentStore = new PersistentStore();
 
   @Input()
-    core?: Core;
+    traceCoordinator: TraceCoordinator;
 
   @Output()
-    coreChange = new EventEmitter<Core>();
+    traceCoordinatorChange = new EventEmitter<TraceCoordinator>();
 
   dataLoaded = false;
 
   @Output()
     dataLoadedChange = new EventEmitter<boolean>();
 
-  ngOnInit(): void {
+  constructor(@Inject(NgZone) private ngZone: NgZone) {
     if (this.isAdbProxy) {
       this.connect = new ProxyConnection();
     } else {
@@ -141,8 +145,6 @@ export class CollectTracesComponent implements OnInit {
       this.connect = new ProxyConnection();
     }
   }
-
-  constructor(@Inject(NgZone) private ngZone: NgZone) {}
 
   ngOnDestroy(): void {
     this.connect.proxy?.removeOnProxyChange(this.onProxyChange);
@@ -258,7 +260,7 @@ export class CollectTracesComponent implements OnInit {
     if (!setTraces.dumpError) {
       await this.loadFiles();
     } else {
-      this.core?.clearData();
+      this.traceCoordinator.clearData();
     }
   }
 
@@ -273,13 +275,15 @@ export class CollectTracesComponent implements OnInit {
 
   public async loadFiles() {
     console.log("loading files", this.connect.adbData());
-    this.core?.clearData();
-    await this.core?.addTraces(this.connect.adbData());
+    this.traceCoordinator.clearData();
+
+    await this.traceCoordinator.addTraces(this.connect.adbData());
+
     this.ngZone.run(() => {
       this.dataLoaded = true;
       this.dataLoadedChange.emit(this.dataLoaded);
-      console.log("finished loading data!");
     });
+    console.log("finished loading data!");
   }
 
   public tabClass(adbTab: boolean) {

@@ -13,16 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {browser, element, by} from "protractor";
+import {browser, element, by, ElementFinder} from "protractor";
 import {E2eTestUtils} from "./utils";
 
-describe("winscope", () => {
-  beforeAll(() => {
+describe("Viewer SurfaceFlinger", () => {
+  beforeAll(async () => {
+    browser.manage().timeouts().implicitlyWait(1000);
     browser.get("file://" + E2eTestUtils.getProductionIndexHtmlPath());
   }),
 
-  it("has title", () => {
-    const title = element(by.css("#app-title"));
-    expect(title.getText()).toContain("Winscope");
+  it("processes trace and renders view", () => {
+    const inputFile = element(by.css("input[type=\"file\"]"));
+    inputFile.sendKeys(E2eTestUtils.getFixturePath("traces/elapsed_and_real_timestamp/SurfaceFlinger.pb"));
+
+    const loadData = element(by.css(".load-btn"));
+    loadData.click();
+
+    const surfaceFlingerCard: ElementFinder = element(by.css("#card-2"));
+    expect(surfaceFlingerCard.getText()).toContain("Surface Flinger");
   });
 });

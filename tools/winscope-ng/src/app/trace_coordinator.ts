@@ -21,8 +21,10 @@ import { setTraces } from "trace_collection/set_traces";
 import { Viewer } from "viewers/viewer";
 import { ViewerFactory } from "viewers/viewer_factory";
 import { LoadedTrace } from "app/loaded_trace";
+import { TRACE_INFO } from "./trace_info";
+import { bigIntMath } from "common/utils/bigint_utils";
 
-class Core {
+class TraceCoordinator {
   private parsers: Parser[];
   private viewers: Viewer[];
 
@@ -36,7 +38,6 @@ class Core {
     this.parsers = await new ParserFactory().createParsers(traces);
     console.log("created parsers: ", this.parsers);
   }
-
 
   removeTrace(type: TraceType) {
     this.parsers = this.parsers.filter(parser => parser.getTraceType() !== type);
@@ -62,8 +63,17 @@ class Core {
     return this.viewers.map(viewer => viewer.getView());
   }
 
+  getViewers(): Viewer[] {
+    return this.viewers;
+  }
+
   loadedTraceTypes(): TraceType[] {
     return this.parsers.map(parser => parser.getTraceType());
+  }
+
+  findParser(fileType: TraceType): Parser | null {
+    const parser = this.parsers.find(parser => parser.getTraceType() === fileType);
+    return parser ?? null;
   }
 
   getTimestamps(): Timestamp[] {
@@ -94,9 +104,20 @@ class Core {
     const traceEntries: Map<TraceType, any> = new Map<TraceType, any>();
 
     this.parsers.forEach(parser => {
-      const entry = parser.getTraceEntry(timestamp);
-      if (entry != undefined) {
-        traceEntries.set(parser.getTraceType(), entry);
+      const targetTimestamp = timestamp;
+      const parserTimestamps = parser.getTimestamps(timestamp.getType());
+
+      const closestTimestamp = parserTimestamps?.reduce((prev, curr) => {
+        const prevDiff = bigIntMath.abs(prev.getValueNs() - targetTimestamp.getValueNs());
+        const currDiff = bigIntMath.abs(curr.getValueNs() - targetTimestamp.getValueNs());
+        return currDiff < prevDiff ? curr : prev;
+      });
+
+      if (closestTimestamp) {
+        const entry = parser.getTraceEntry(closestTimestamp);
+        if (entry != undefined) {
+          traceEntries.set(parser.getTraceType(), entry);
+        }
       }
     });
 
@@ -106,10 +127,31 @@ class Core {
   }
 
   clearData() {
+    this.getViews().forEach(view => view.remove());
     this.parsers = [];
     this.viewers = [];
     setTraces.dataReady = false;
   }
+
+  saveTraces(traceTypes: TraceType[]) {
+    const blobs: Blob[] = [];
+    traceTypes.forEach(type => {
+      const trace = this.findParser(type)?.getTrace();
+      if (trace) {
+        blobs.push(trace);
+      }
+    });
+    blobs.forEach((blob, idx) => {
+      const a = document.createElement("a");
+      document.body.appendChild(a);
+      const url = window.URL.createObjectURL(blob);
+      a.href = url;
+      a.download = (blob as any).name ?? `${TRACE_INFO[traceTypes[idx]].name}.pb`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    });
+  }
 }
 
-export { Core };
+export { TraceCoordinator };

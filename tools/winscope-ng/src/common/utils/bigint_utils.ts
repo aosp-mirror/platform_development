@@ -13,13 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { TraceType } from "common/trace/trace_type";
-
-interface Viewer {
-  //TODO: add TraceEntry data type
-  notifyCurrentTraceEntries(entries: Map<TraceType, any>): void;
-  getView(): HTMLElement;
-  getDependencies(): TraceType[];
-}
-
-export { Viewer };
+export const bigIntMath = {
+  abs(x: bigint) {
+    return x < 0n ? -x : x;
+  }
+};

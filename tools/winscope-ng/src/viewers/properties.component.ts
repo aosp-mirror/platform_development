@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { TraceType } from "common/trace/trace_type";
+import { Component } from "@angular/core";
 
-interface Viewer {
-  //TODO: add TraceEntry data type
-  notifyCurrentTraceEntries(entries: Map<TraceType, any>): void;
-  getView(): HTMLElement;
-  getDependencies(): TraceType[];
+@Component({
+  selector: "properties-view",
+  template: `
+      <mat-card-title class="trace-view-subtitle">Properties</mat-card-title>
+  `,
+})
+
+export class PropertiesComponent {
 }
-
-export { Viewer };

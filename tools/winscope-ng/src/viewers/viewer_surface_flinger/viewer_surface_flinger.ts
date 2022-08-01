@@ -15,16 +15,16 @@
  */
 import {TraceType} from "common/trace/trace_type";
 import {Viewer} from "viewers/viewer";
-import {Presenter} from "../../presenters/presenter";
-import {UiData} from "../../ui_data/ui_data";
+import {PresenterSurfaceFlinger} from "../../presenters/presenter_surface_flinger";
+import {UiDataSurfaceFlinger} from "../../ui_data/ui_data_surface_flinger";
 
-class ViewerWindowManager implements Viewer {
+class ViewerSurfaceFlinger implements Viewer {
   constructor() {
-    this.view = document.createElement("viewer-window-manager");
-    this.presenter = new Presenter((uiData: UiData) => {
+    this.view = document.createElement("viewer-surface-flinger");
+    this.presenter = new PresenterSurfaceFlinger((uiData: UiDataSurfaceFlinger) => {
       (this.view as any).inputData = uiData;
     });
-    this.view.addEventListener("outputEvent", () => this.presenter.notifyUiEvent());
+    this.view.addEventListener("highlightedChange", (event) => this.presenter.updateHighlightedRect(event));
   }
 
   public notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
@@ -36,12 +36,12 @@ class ViewerWindowManager implements Viewer {
   }
 
   public getDependencies(): TraceType[] {
-    return ViewerWindowManager.DEPENDENCIES;
+    return ViewerSurfaceFlinger.DEPENDENCIES;
   }
 
-  public static readonly DEPENDENCIES: TraceType[] = [TraceType.WINDOW_MANAGER];
+  public static readonly DEPENDENCIES: TraceType[] = [TraceType.SURFACE_FLINGER];
   private view: HTMLElement;
-  private presenter: Presenter;
+  private presenter: PresenterSurfaceFlinger;
 }
 
-export {ViewerWindowManager};
+export {ViewerSurfaceFlinger};

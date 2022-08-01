@@ -16,13 +16,13 @@
 import { CommonModule } from "@angular/common";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { AdbProxyComponent } from "./adb_proxy.component";
-import { proxyClient, ProxyState } from "../trace_collection/proxy_client";
+import { proxyClient, ProxyState } from "../../trace_collection/proxy_client";
 import { MatIconModule } from "@angular/material/icon";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { MatButtonModule } from "@angular/material/button";
-import { NO_ERRORS_SCHEMA } from "@angular/core";
+import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from "@angular/core";
 
 describe("AdbProxyComponent", () => {
   let fixture: ComponentFixture<AdbProxyComponent>;
@@ -40,7 +40,7 @@ describe("AdbProxyComponent", () => {
         MatButtonModule
       ],
       declarations: [AdbProxyComponent],
-      schemas: [NO_ERRORS_SCHEMA]
+      schemas: [NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA]
     }).compileComponents();
     fixture = TestBed.createComponent(AdbProxyComponent);
     component = fixture.componentInstance;

@@ -16,10 +16,12 @@
 import { TraceType } from "common/trace/trace_type";
 import { Viewer } from "./viewer";
 import { ViewerWindowManager } from "./viewer_window_manager/viewer_window_manager";
+import { ViewerSurfaceFlinger } from "./viewer_surface_flinger/viewer_surface_flinger";
 
 class ViewerFactory {
   static readonly VIEWERS = [
     ViewerWindowManager,
+    ViewerSurfaceFlinger
   ];
 
   public createViewers(activeTraceTypes: Set<TraceType>): Viewer[] {
@@ -29,7 +31,6 @@ class ViewerFactory {
       const areViewerDepsSatisfied = Viewer.DEPENDENCIES.every((traceType: TraceType) =>
         activeTraceTypes.has(traceType)
       );
-
       if (areViewerDepsSatisfied) {
         viewers.push(new Viewer());
       }

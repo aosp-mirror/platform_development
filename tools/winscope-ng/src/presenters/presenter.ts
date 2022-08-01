@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import {TraceType} from "common/trace/trace_type";
-import {UiData} from "./ui_data";
+import {UiData} from "../ui_data/ui_data";
 
 type UiDataCallbackType = (uiData: UiData) => void;
 
@@ -37,8 +37,8 @@ class Presenter {
     this.uiDataCallback(this.uiData!);
   }
 
-  private readonly uiDataCallback: UiDataCallbackType;
-  private uiData?: UiData;
+  readonly uiDataCallback: UiDataCallbackType;
+  uiData?: UiData;
 }
 
 export {Presenter, UiDataCallbackType};

@@ -21,7 +21,7 @@ import { MatFormFieldModule } from "@angular/material/form-field";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { MatInputModule } from "@angular/material/input";
 import { MatSelectModule } from "@angular/material/select";
-import { NO_ERRORS_SCHEMA } from "@angular/core";
+import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from "@angular/core";
 
 describe("TraceConfigComponent", () => {
   let fixture: ComponentFixture<TraceConfigComponent>;
@@ -39,7 +39,7 @@ describe("TraceConfigComponent", () => {
         BrowserAnimationsModule
       ],
       declarations: [TraceConfigComponent],
-      schemas: [NO_ERRORS_SCHEMA]
+      schemas: [NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA]
     }).compileComponents();
     fixture = TestBed.createComponent(TraceConfigComponent);
     component = fixture.componentInstance;
@@ -104,7 +104,7 @@ describe("TraceConfigComponent", () => {
     expect(adv?.innerHTML).toContain("tracing level");
   });
 
-  it("check that changing enable config causes box to change", async () => {    spyOn(component, "changeTraceCollectionConfig");
+  it("check that changing enable config causes box to change", async () => {
     component.trace.config!.enableConfigs[0].enabled = false;
     fixture.detectChanges();
     await fixture.whenStable();
