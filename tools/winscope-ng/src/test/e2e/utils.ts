@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {browser, element, by} from "protractor";
-import {E2eTestUtils} from "./utils";
+import * as path from "path";
+import {CommonTestUtils} from "../common/utils";
 
-describe("winscope", () => {
-  beforeAll(() => {
-    browser.get("file://" + E2eTestUtils.getProductionIndexHtmlPath());
-  }),
+class E2eTestUtils extends CommonTestUtils {
+  static getProductionIndexHtmlPath(): string {
+    return path.join(CommonTestUtils.getProjectRootPath(), "dist/prod/index.html");
+  }
+}
 
-  it("has title", () => {
-    const title = element(by.css("#title"));
-    expect(title.getText()).toContain("Winscope");
-  });
-});
+export {E2eTestUtils};

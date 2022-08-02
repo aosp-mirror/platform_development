@@ -16,7 +16,7 @@
 import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
 import {LayerTraceEntry} from "common/trace/flickerlib/layers/LayerTraceEntry";
-import {TestUtils} from "test/test_utils";
+import {UnitTestUtils} from "test/unit/utils";
 import {Parser} from "./parser";
 import {ParserFactory} from "./parser_factory";
 
@@ -24,7 +24,7 @@ describe("ParserSurfaceFlinger", () => {
   let parser: Parser;
 
   beforeAll(async () => {
-    const buffer = TestUtils.getFixtureBlob("trace_SurfaceFlinger.pb");
+    const buffer = UnitTestUtils.getFixtureBlob("trace_SurfaceFlinger.pb");
     const parsers = await new ParserFactory().createParsers([buffer]);
     expect(parsers.length).toEqual(1);
     parser = parsers[0];

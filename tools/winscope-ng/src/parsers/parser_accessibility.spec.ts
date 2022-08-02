@@ -17,16 +17,13 @@ import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
 import {Parser} from "./parser";
 import {ParserFactory} from "./parser_factory";
-import {TestUtils} from "test/test_utils";
+import {UnitTestUtils} from "test/unit/utils";
 
 describe("ParserAccessibility", () => {
   let parser: Parser;
 
   beforeAll(async () => {
-    const trace = TestUtils.getFixtureBlob("trace_Accessibility.pb");
-    const parsers = await new ParserFactory().createParsers([trace]);
-    expect(parsers.length).toEqual(1);
-    parser = parsers[0];
+    parser = await UnitTestUtils.getParser("traces/Accessibility.pb");
   });
 
   it("has expected trace type", () => {

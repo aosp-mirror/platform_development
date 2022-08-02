@@ -17,13 +17,13 @@ import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
 import {Parser} from "./parser";
 import {ParserFactory} from "./parser_factory";
-import {TestUtils} from "test/test_utils";
+import {UnitTestUtils} from "test/unit/utils";
 
 describe("ParserTransactions", () => {
   let parser: Parser;
 
   beforeAll(async () => {
-    const buffer = TestUtils.getFixtureBlob("trace_Transactions.pb");
+    const buffer = UnitTestUtils.getFixtureBlob("trace_Transactions.pb");
     const parsers = await new ParserFactory().createParsers([buffer]);
     expect(parsers.length).toEqual(1);
     parser = parsers[0];

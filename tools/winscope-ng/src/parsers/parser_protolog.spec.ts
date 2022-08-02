@@ -17,7 +17,7 @@ import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
 import {ParserFactory} from "./parser_factory";
 import {Parser} from "./parser";
-import {TestUtils} from "test/test_utils";
+import {UnitTestUtils} from "test/unit/utils";
 import {LogMessage} from "../common/trace/protolog";
 
 describe("ParserProtoLog", () => {
@@ -33,7 +33,7 @@ describe("ParserProtoLog", () => {
   };
 
   beforeAll(async () => {
-    const buffer = TestUtils.getFixtureBlob("trace_ProtoLog.pb");
+    const buffer = UnitTestUtils.getFixtureBlob("trace_ProtoLog.pb");
     const parsers = await new ParserFactory().createParsers([buffer]);
     expect(parsers.length).toEqual(1);
     parser = parsers[0];

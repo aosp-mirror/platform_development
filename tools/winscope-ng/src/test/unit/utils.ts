@@ -13,16 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {browser, element, by} from "protractor";
-import {E2eTestUtils} from "./utils";
+import {Parser} from "parsers/parser";
+import {ParserFactory} from "parsers/parser_factory";
+import {CommonTestUtils} from "test/common/utils";
 
-describe("winscope", () => {
-  beforeAll(() => {
-    browser.get("file://" + E2eTestUtils.getProductionIndexHtmlPath());
-  }),
+class UnitTestUtils extends CommonTestUtils {
+  static async getParser(filename: string): Promise<Parser> {
+    const trace = CommonTestUtils.getFixtureBlob(filename);
+    const parsers = await new ParserFactory().createParsers([trace]);
+    expect(parsers.length).toEqual(1);
+    return parsers[0];
+  }
+}
 
-  it("has title", () => {
-    const title = element(by.css("#title"));
-    expect(title.getText()).toContain("Winscope");
-  });
-});
+export {UnitTestUtils};
