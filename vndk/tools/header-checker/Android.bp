@@ -127,6 +127,10 @@ cc_binary_host {
         "src/diff/abi_diff_wrappers.cpp",
         "src/diff/header_abi_diff.cpp",
     ],
+
+    static_libs: [
+        "libjsoncpp",
+    ],
 }
 
 cc_library_host_static {
@@ -197,6 +201,7 @@ cc_test_host {
         "libgtest",
         "libgtest_main",
         "libheader-checker",
+        "libjsoncpp",
     ],
 
     shared_libs: [
