@@ -20,16 +20,29 @@
   </div>
   <div v-else-if="isImeManagerService">
     <div class="group">
-      <span class="group-header">WMState</span>
+      <button
+          class="text-button group-header"
+          v-if="wmProtoOrNull"
+          :class="{ 'selected': isSelected(wmProtoOrNull) }"
+          @click="onClickShowInPropertiesPanel(wmProtoOrNull)">
+        WMState
+      </button>
+      <span class="group-header" v-else>WMState</span>
       <div class="full-width">
         <span class="value" v-if="entry.wmProperties">{{
             entry.wmProperties.name }}</span>
         <span v-else>There is no corresponding WMState entry.</span>
       </div>
     </div>
-    <div class="group">
-      <span class="group-header">IME Insets Source Provider</span>
+    <div class="group" v-if="wmInsetsSourceProviderOrNull">
+      <button
+          class="text-button group-header"
+          :class="{ 'selected': isSelected(wmInsetsSourceProviderOrNull) }"
+          @click="onClickShowInPropertiesPanel(wmInsetsSourceProviderOrNull)">
+        IME Insets Source Provider
+      </button>
       <div class="full-width">
+        <div />
         <span class="key">Source Frame:</span>
         <CoordinatesTable
             :coordinates="wmInsetsSourceProviderSourceFrameOrNull" />
@@ -56,40 +69,40 @@
       </div>
     </div>
     <div class="group">
-      <span class="group-header">IMControl Target</span>
+      <span class="group-header">Control Target</span>
       <div class="full-width">
         <button
             class="text-button"
-            :class="{ 'selected': isSelected(wmIMControlTargetOrNull) }"
-            v-if="wmIMControlTargetOrNull"
-            @click="onClickShowInPropertiesPanel(wmIMControlTargetOrNull)">
-          Input Method Control Target
+            :class="{ 'selected': isSelected(wmImeControlTargetOrNull) }"
+            v-if="wmImeControlTargetOrNull"
+            @click="onClickShowInPropertiesPanel(wmImeControlTargetOrNull)">
+          IME Control Target
         </button>
         <span class="value" v-else>null</span>
       </div>
     </div>
     <div class="group">
-      <span class="group-header">IMInput Target</span>
+      <span class="group-header">Input Target</span>
       <div class="full-width">
         <button
             class="text-button"
-            :class="{ 'selected': isSelected(wmIMInputTargetOrNull) }"
-            v-if="wmIMInputTargetOrNull"
-            @click="onClickShowInPropertiesPanel(wmIMInputTargetOrNull)">
-          Input Method Input Target
+            :class="{ 'selected': isSelected(wmImeInputTargetOrNull) }"
+            v-if="wmImeInputTargetOrNull"
+            @click="onClickShowInPropertiesPanel(wmImeInputTargetOrNull)">
+          IME Input Target
         </button>
         <span class="value" v-else>null</span>
       </div>
     </div>
     <div class="group">
-      <span class="group-header">IM Target</span>
+      <span class="group-header">Layering Target</span>
       <div class="full-width">
         <button
             class="text-button"
-            :class="{ 'selected': isSelected(wmIMTargetOrNull) }"
-            v-if="wmIMTargetOrNull"
-            @click="onClickShowInPropertiesPanel(wmIMTargetOrNull)">
-          Input Method Target
+            :class="{ 'selected': isSelected(wmImeLayeringTargetOrNull) }"
+            v-if="wmImeLayeringTargetOrNull"
+            @click="onClickShowInPropertiesPanel(wmImeLayeringTargetOrNull)">
+          IME Layering Target
         </button>
         <span class="value" v-else>null</span>
       </div>
@@ -99,7 +112,14 @@
   <div v-else>
     <!-- Ime Client or Ime Service -->
     <div class="group">
-      <span class="group-header">WMState</span>
+      <button
+          class="text-button group-header"
+          v-if="wmProtoOrNull"
+          :class="{ 'selected': isSelected(wmProtoOrNull) }"
+          @click="onClickShowInPropertiesPanel(wmProtoOrNull)">
+        WMState
+      </button>
+      <span class="group-header" v-else>WMState</span>
       <div class="full-width">
         <span class="value" v-if="entry.wmProperties">{{
             entry.wmProperties.name }}</span>
@@ -109,8 +129,8 @@
     <div class="group">
       <span class="group-header">SFLayer</span>
       <div class="full-width">
-        <span class="value" v-if="entry.sfImeContainerProperties">{{
-            entry.sfImeContainerProperties.name }}</span>
+        <span class="value" v-if="entry.sfProperties">{{
+            entry.sfProperties.name }}</span>
         <span v-else>There is no corresponding SFLayer entry.</span>
       </div>
     </div>
@@ -126,29 +146,66 @@
         <span class="key">Focused Window:</span>
         <span class="value">{{ entry.wmProperties.focusedWindow }}</span>
         <div />
-        <span class="key">Frame:</span>
+        <span class="key" v-if="entry.sfProperties">Focused Window Color:</span>
+        <span class="value" v-if="entry.sfProperties">{{
+            entry.sfProperties.focusedWindowRgba
+          }}</span>
+        <div />
+        <span class="key">Input Control Target Frame:</span>
         <CoordinatesTable :coordinates="wmControlTargetFrameOrNull" />
         <div />
       </div>
     </div>
-    <div class="group" v-if="entry.sfImeContainerProperties">
-      <span class="group-header">Ime Container</span>
+    <div class="group">
+      <span class="group-header">Visibility</span>
       <div class="full-width">
-        <span class="key">ScreenBounds:</span>
-        <CoordinatesTable
-            :coordinates="sfImeContainerScreenBoundsOrNull" />
+        <span class="key" v-if="entry.wmProperties">InputMethod Window:</span>
+        <span class="value" v-if="entry.wmProperties">{{
+            entry.wmProperties.isInputMethodWindowVisible
+          }}</span>
         <div />
-        <span class="key">Rect:</span>
-        <CoordinatesTable
-            :coordinates="sfImeContainerRectOrNull" />
+        <span class="key" v-if="entry.sfProperties">InputMethod Surface:</span>
+        <span class="value" v-if="entry.sfProperties">{{
+            entry.sfProperties.isInputMethodSurfaceVisible }}</span>
         <div />
+      </div>
+    </div>
+    <div class="group" v-if="entry.sfProperties">
+      <button
+          class="text-button group-header"
+          :class="{ 'selected': isSelected(entry.sfProperties.imeContainer) }"
+          @click="onClickShowInPropertiesPanel(entry.sfProperties.imeContainer)">
+        Ime Container
+      </button>
+      <div class="full-width">
         <span class="key">ZOrderRelativeOfId:</span>
         <span class="value">{{
-            entry.sfImeContainerProperties.zOrderRelativeOfId
+            entry.sfProperties.zOrderRelativeOfId
           }}</span>
         <div />
         <span class="key">Z:</span>
-        <span class="value">{{ entry.sfImeContainerProperties.z }}</span>
+        <span class="value">{{ entry.sfProperties.z }}</span>
+        <div />
+      </div>
+    </div>
+    <div class="group" v-if="entry.sfProperties">
+      <button
+          class="text-button group-header"
+          :class="{
+            'selected': isSelected(entry.sfProperties.inputMethodSurface)
+          }"
+          @click="onClickShowInPropertiesPanel(
+              entry.sfProperties.inputMethodSurface)">
+        Input Method Surface
+      </button>
+      <div class="full-width">
+        <span class="key">ScreenBounds:</span>
+        <CoordinatesTable
+        :coordinates="sfImeContainerScreenBoundsOrNull" />
+        <div />
+        <span class="key">Rect:</span>
+        <CoordinatesTable
+        :coordinates="sfImeContainerRectOrNull" />
         <div />
       </div>
     </div>
@@ -209,6 +266,15 @@ export default {
 
   },
   computed: {
+    wmProtoOrNull() {
+      return this.entry.wmProperties?.proto;
+    },
+    wmInsetsSourceProviderOrNull() {
+      return this.entry.wmProperties?.imeInsetsSourceProvider ?
+          Object.assign({'name': 'Ime Insets Source Provider'},
+              this.entry.wmProperties.imeInsetsSourceProvider) :
+          null;
+    },
     wmControlTargetFrameOrNull() {
       return this.entry.wmProperties?.imeInsetsSourceProvider
           ?.insetsSourceProvider?.controlTarget?.windowFrames?.frame || 'null';
@@ -237,36 +303,36 @@ export default {
       return this.entry.wmProperties?.imeInsetsSourceProvider
           ?.insetsSourceProvider?.source?.visibleFrame || 'null';
     },
-    wmIMControlTargetOrNull() {
-      return this.entry?.wmProperties?.inputMethodControlTarget ?
-          Object.assign({'name': 'Input Method Control Target'},
-              this.entry.wmProperties.inputMethodControlTarget) :
+    wmImeControlTargetOrNull() {
+      return this.entry?.wmProperties?.imeControlTarget ?
+          Object.assign({'name': 'IME Control Target'},
+              this.entry.wmProperties.imeControlTarget) :
           null;
     },
-    wmIMInputTargetOrNull() {
-      return this.entry?.wmProperties?.inputMethodInputTarget ?
-          Object.assign({'name': 'Input Method Input Target'},
-              this.entry.wmProperties.inputMethodInputTarget) :
+    wmImeInputTargetOrNull() {
+      return this.entry?.wmProperties?.imeInputTarget ?
+          Object.assign({'name': 'IME Input Target'},
+              this.entry.wmProperties.imeInputTarget) :
           null;
     },
-    wmIMTargetOrNull() {
-      return this.entry?.wmProperties?.inputMethodTarget ?
-          Object.assign({'name': 'Input Method Target'},
-              this.entry.wmProperties.inputMethodTarget) :
+    wmImeLayeringTargetOrNull() {
+      return this.entry?.wmProperties?.imeLayeringTarget ?
+          Object.assign({'name': 'IME Layering Target'},
+              this.entry.wmProperties.imeLayeringTarget) :
           null;
     },
     sfImeContainerScreenBoundsOrNull() {
-      return this.entry.sfImeContainerProperties?.screenBounds || 'null';
+      return this.entry.sfProperties?.screenBounds || 'null';
     },
     sfImeContainerRectOrNull() {
-      return this.entry.sfImeContainerProperties?.rect || 'null';
+      return this.entry.sfProperties?.rect || 'null';
     },
     isAllPropertiesNull() {
       if (this.isImeManagerService) {
         return !this.entry.wmProperties;
       } else {
         return !(this.entry.wmProperties ||
-            this.entry.sfImeContainerProperties);
+            this.entry.sfProperties);
       }
     },
   },
@@ -301,6 +367,7 @@ export default {
 
 .group-header {
   justify-content: center;
+  text-align: left;
   padding: 0px 5px;
   width: 95px;
   display: inline-block;
