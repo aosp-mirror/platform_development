@@ -68,43 +68,43 @@
         <div />
       </div>
     </div>
-    <div class="group">
-      <span class="group-header">Control Target</span>
+    <div class="group" v-if="wmImeControlTargetOrNull">
+      <button
+          class="text-button group-header"
+          :class="{ 'selected': isSelected(wmImeControlTargetOrNull) }"
+          @click="onClickShowInPropertiesPanel(wmImeControlTargetOrNull)">
+        IME Control Target
+      </button>
       <div class="full-width">
-        <button
-            class="text-button"
-            :class="{ 'selected': isSelected(wmImeControlTargetOrNull) }"
-            v-if="wmImeControlTargetOrNull"
-            @click="onClickShowInPropertiesPanel(wmImeControlTargetOrNull)">
-          IME Control Target
-        </button>
-        <span class="value" v-else>null</span>
+        <span class="key" v-if="wmImeControlTargetTitleOrNull">Title:</span>
+        <span class="value" v-if="wmImeControlTargetTitleOrNull">{{
+            wmImeControlTargetTitleOrNull }}</span>
       </div>
     </div>
-    <div class="group">
-      <span class="group-header">Input Target</span>
+    <div class="group" v-if="wmImeInputTargetOrNull">
+      <button
+          class="text-button group-header"
+          :class="{ 'selected': isSelected(wmImeInputTargetOrNull) }"
+          @click="onClickShowInPropertiesPanel(wmImeInputTargetOrNull)">
+        IME Input Target
+      </button>
       <div class="full-width">
-        <button
-            class="text-button"
-            :class="{ 'selected': isSelected(wmImeInputTargetOrNull) }"
-            v-if="wmImeInputTargetOrNull"
-            @click="onClickShowInPropertiesPanel(wmImeInputTargetOrNull)">
-          IME Input Target
-        </button>
-        <span class="value" v-else>null</span>
+        <span class="key" v-if="wmImeInputTargetTitleOrNull">Title:</span>
+        <span class="value" v-if="wmImeInputTargetTitleOrNull">{{
+            wmImeInputTargetTitleOrNull }}</span>
       </div>
     </div>
-    <div class="group">
-      <span class="group-header">Layering Target</span>
+    <div class="group" v-if="wmImeLayeringTargetOrNull">
+      <button
+          class="text-button group-header"
+          :class="{ 'selected': isSelected(wmImeLayeringTargetOrNull) }"
+          @click="onClickShowInPropertiesPanel(wmImeLayeringTargetOrNull)">
+        IME Layering Target
+      </button>
       <div class="full-width">
-        <button
-            class="text-button"
-            :class="{ 'selected': isSelected(wmImeLayeringTargetOrNull) }"
-            v-if="wmImeLayeringTargetOrNull"
-            @click="onClickShowInPropertiesPanel(wmImeLayeringTargetOrNull)">
-          IME Layering Target
-        </button>
-        <span class="value" v-else>null</span>
+        <span class="key" v-if="wmImeLayeringTargetTitleOrNull">Title:</span>
+        <span class="value" v-if="wmImeLayeringTargetTitleOrNull">{{
+            wmImeLayeringTargetTitleOrNull }}</span>
       </div>
     </div>
   </div>
@@ -309,17 +309,29 @@ export default {
               this.entry.wmProperties.imeControlTarget) :
           null;
     },
+    wmImeControlTargetTitleOrNull() {
+      return this.entry?.wmProperties?.imeControlTarget?.windowContainer
+          ?.identifier?.title || 'null';
+    },
     wmImeInputTargetOrNull() {
       return this.entry?.wmProperties?.imeInputTarget ?
           Object.assign({'name': 'IME Input Target'},
               this.entry.wmProperties.imeInputTarget) :
           null;
     },
+    wmImeInputTargetTitleOrNull() {
+      return this.entry?.wmProperties?.imeInputTarget?.windowContainer
+          ?.identifier?.title || 'null';
+    },
     wmImeLayeringTargetOrNull() {
       return this.entry?.wmProperties?.imeLayeringTarget ?
           Object.assign({'name': 'IME Layering Target'},
               this.entry.wmProperties.imeLayeringTarget) :
           null;
+    },
+    wmImeLayeringTargetTitleOrNull() {
+      return this.entry?.wmProperties?.imeLayeringTarget?.windowContainer
+          ?.identifier?.title || 'null';
     },
     sfImeContainerScreenBoundsOrNull() {
       return this.entry.sfProperties?.screenBounds || 'null';
