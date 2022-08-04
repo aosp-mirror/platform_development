@@ -15,7 +15,7 @@
  */
 
 
-import { Layer, Rect, toActiveBuffer, toColor, toRect, toRectF, toRegion } from "../common"
+import { Layer, LayerProperties, Rect, toActiveBuffer, toColor, toRect, toRectF, toRegion } from "../common"
 import { shortenName } from '../mixin'
 import { RELATIVE_Z_CHIP, GPU_CHIP, HWC_CHIP } from '../treeview/Chips'
 import Transform from './Transform'
@@ -44,41 +44,44 @@ Layer.fromProto = function (proto: any): Layer {
         crop = toRect(proto.crop)
     };
 
-    const entry = new Layer(
-        proto.name ?? ``,
-        proto.id,
-        proto.parent,
-        proto.z,
+    const properties = new LayerProperties(
         visibleRegion,
-        activeBuffer,
-        proto.flags,
-        bounds,
-        color,
-        proto.isOpaque,
-        proto.shadowRadius,
-        proto.cornerRadius,
-        proto.type ?? ``,
+        activeBuffer, 
+        /* flags */ proto.flags,
+        bounds, 
+        color, 
+        /* isOpaque */ proto.isOpaque, 
+        /* shadowRadius */ proto.shadowRadius,
+        /* cornerRadius */ proto.cornerRadius,
+        /* type */ proto.type ?? ``,
         screenBounds,
         transform,
         sourceBounds,
-        proto.currFrame,
-        proto.effectiveScalingMode,
+        /* effectiveScalingMode */ proto.effectiveScalingMode,
         bufferTransform,
-        proto.hwcCompositionType,
+        /* hwcCompositionType */ proto.hwcCompositionType,
         hwcCrop,
         hwcFrame,
-        proto.backgroundBlurRadius,
+        /* backgroundBlurRadius */ proto.backgroundBlurRadius,
         crop,
-        proto.isRelativeOf,
-        proto.zOrderRelativeOf,
-        proto.layerStack,
+        /* isRelativeOf */ proto.isRelativeOf,
+        /* zOrderRelativeOfId */ proto.zOrderRelativeOf,
+        /* stackId */ proto.layerStack,
         requestedTransform,
         requestedColor,
         cornerRadiusCrop,
         inputTransform,
-        inputRegion,
+        inputRegion
     );
 
+    const entry = new Layer(
+        /* name */ proto.name ?? ``, 
+        /* id */ proto.id,
+        /*parentId */ proto.parent, 
+        /* z */ proto.z,
+        /* currFrame */ proto.currFrame,
+        properties
+    );
     addAttributes(entry, proto);
     return entry
 }
