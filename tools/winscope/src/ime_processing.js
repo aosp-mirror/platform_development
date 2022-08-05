@@ -60,6 +60,7 @@ function combineWmSfWithImeDataIfExisting(dataFiles) {
       combineWmSfPropertiesIntoImeData(
           imeTraceFile, filesAsDict[TRACE_TYPES.SURFACE_FLINGER]);
     }
+    processImeAfterCombiningWmAndSfProperties(imeTraceFile);
   }
   console.log('after combining', dataFiles);
 }
@@ -84,17 +85,14 @@ function combineWmSfPropertiesIntoImeData(imeTraceFile, wmOrSfTraceFile) {
       // hasWmSfProperties is added into data because the
       // imeTraceFile object itself is inextensible if it's from file input
     } else if (wmStateOrSfLayer) {
-      const sfImeContainerProperties =
-          extractImeContainerFields(wmStateOrSfLayer);
-      imeTraceFile.data[i].sfImeContainerProperties = Object.assign(
-          {'name': wmStateOrSfLayer.name}, sfImeContainerProperties);
-      // 'name' is the ..d..h..m..s..ms timestamp
+      const sfProperties = extractSfProperties(wmStateOrSfLayer);
+      imeTraceFile.data[i].sfProperties = sfProperties;
 
       const sfSubtrees = filterSfLayerForIme(
           wmStateOrSfLayer); // for display in Hierarchy sub-panel
       imeTraceFile.data[i].children.push(...sfSubtrees);
 
-      if (sfImeContainerProperties || sfSubtrees.length > 0) {
+      if (sfProperties || sfSubtrees.length > 0) {
         imeTraceFile.data[0].hasWmSfProperties = true;
       }
     }
@@ -102,38 +100,78 @@ function combineWmSfPropertiesIntoImeData(imeTraceFile, wmOrSfTraceFile) {
 }
 
 function matchCorrespondingTimestamps(imeTimestamps, wmOrSfTimestamps) {
-  // find the latest sf / wm timestamp that comes before current ime timestamp
+  // we want to take the earliest sf / wm entry that is within
+  // +-[FAULT_TOLERANCE] ns of the ime entry as the corresponding sf / wm entry
+  const FAULT_TOLERANCE = 200000000; // 200ms in ns
+
   let wmOrSfIndex = 0;
   const intersectWmOrSfIndices = [];
   for (let imeIndex = 0; imeIndex < imeTimestamps.length; imeIndex++) {
     const currImeTimestamp = imeTimestamps[imeIndex];
-
-    let currWmOrSfTimestamp = wmOrSfTimestamps[wmOrSfIndex];
-    while (currWmOrSfTimestamp < currImeTimestamp) {
+    let wmOrSfTimestamp = wmOrSfTimestamps[wmOrSfIndex];
+    while (wmOrSfTimestamp < currImeTimestamp) {
       wmOrSfIndex++;
-      currWmOrSfTimestamp = wmOrSfTimestamps[wmOrSfIndex];
+      wmOrSfTimestamp = wmOrSfTimestamps[wmOrSfIndex];
     }
-    intersectWmOrSfIndices.push(wmOrSfIndex - 1);
+    // wmOrSfIndex should now be at the first entry that is past
+    // [currImeTimestamp] ns. We want the most recent entry that comes
+    // before [currImeTimestamp] ns if it's within
+    // [currImeTimestamp - FAULT_TOLERANCE] ns. Otherwise, we want the most
+    // recent entry that comes after [currImeTimestamp] ns if it's within
+    // [currImeTimestamp + FAULT_TOLERANCE] ns.
+    const previousWmOrSfTimestamp = wmOrSfTimestamps[wmOrSfIndex - 1];
+    if (previousWmOrSfTimestamp >= currImeTimestamp - FAULT_TOLERANCE) {
+      intersectWmOrSfIndices.push(wmOrSfIndex - 1);
+    } else if (wmOrSfTimestamp <= currImeTimestamp + FAULT_TOLERANCE) {
+      intersectWmOrSfIndices.push(wmOrSfIndex);
+    } else {
+      intersectWmOrSfIndices.push(null);
+    }
   }
-  console.log('done matching corresponding timestamps');
+  console.log('done matching corresponding timestamps', intersectWmOrSfIndices);
   return intersectWmOrSfIndices;
 }
 
 function filterWmStateForIme(wmState) {
   // create and return a custom entry that just contains relevant properties
-  const displayContent = wmState.children[0];
+  const displayContent = wmState.root.children[0];
+  const controlTargetActualName = getActualFieldNameFromPossibilities(
+      'controlTarget', displayContent.proto);
+  const inputTargetActualName =
+      getActualFieldNameFromPossibilities('inputTarget', displayContent.proto);
+  const layeringTargetActualName = getActualFieldNameFromPossibilities(
+      'layeringTarget', displayContent.proto);
+  const isInputMethodWindowVisible = findInputMethodVisibility(displayContent);
   return {
     'kind': 'WM State Properties',
-    'name': wmState.name, // this is the ..d..h..m..s..ms timestamp
+    'name': wmState.name,  // 'name' is a timestamp of ..d..h..m..s..ms format
     'stableId': wmState.stableId,
     'focusedApp': wmState.focusedApp,
     'focusedWindow': wmState.focusedWindow,
     'focusedActivity': wmState.focusedActivity,
-    'inputMethodControlTarget': displayContent.proto.inputMethodControlTarget,
-    'inputMethodInputTarget': displayContent.proto.inputMethodInputTarget,
-    'inputMethodTarget': displayContent.proto.inputMethodTarget,
+    'isInputMethodWindowVisible': isInputMethodWindowVisible,
+    'imeControlTarget': displayContent.proto[controlTargetActualName],
+    'imeInputTarget': displayContent.proto[inputTargetActualName],
+    'imeLayeringTarget': displayContent.proto[layeringTargetActualName],
     'imeInsetsSourceProvider': displayContent.proto.imeInsetsSourceProvider,
+    'proto': wmState,
   };
+}
+
+function getActualFieldNameFromPossibilities(wantedKey, protoObject) {
+  // for backwards compatibility purposes: find the actual name in the
+  // protoObject out of a list of possible names, as field names may change
+  const possibleNamesMap = {
+    // inputMethod...Target is legacy name, ime...Target is new name
+    'controlTarget': ['inputMethodControlTarget', 'imeControlTarget'],
+    'inputTarget': ['inputMethodInputTarget', 'imeInputTarget'],
+    'layeringTarget': ['inputMethodTarget', 'imeLayeringTarget'],
+  };
+
+  const possibleNames = possibleNamesMap[wantedKey];
+  const actualName =
+      Object.keys(protoObject).find((el) => possibleNames.includes(el));
+  return actualName;
 }
 
 function filterSfLayerForIme(sfLayer) {
@@ -175,24 +213,71 @@ function findParentTaskOfNode(curr, nodeName) {
   return null;
 }
 
-function extractImeContainerFields(curr) {
+function extractSfProperties(curr) {
+  const imeFields = extractImeFields(curr);
+  if (imeFields == null) {
+    return null;
+  }
+  return Object.assign({'name': curr.name, 'proto': curr}, imeFields);
+  // 'name' is a timestamp of ..d..h..m..s..ms format
+}
+
+function extractImeFields(curr) {
   const isImeContainer = getFilter('ImeContainer');
-  if (isImeContainer(curr)) {
+  const imeContainer = findWindowOrLayerMatch(isImeContainer, curr);
+  if (imeContainer != null) {
+    const isInputMethodSurface = getFilter('InputMethod');
+    const inputMethodSurface =
+        findWindowOrLayerMatch(isInputMethodSurface, imeContainer);
     return {
-      'screenBounds': curr.screenBounds,
-      'rect': curr.rect,
-      'zOrderRelativeOfId': curr.zOrderRelativeOfId,
-      'z': curr.z,
+      'imeContainer': imeContainer,
+      'inputMethodSurface': inputMethodSurface,
+      'screenBounds': inputMethodSurface.screenBounds,
+      'rect': inputMethodSurface.rect,
+      'isInputMethodSurfaceVisible': inputMethodSurface.isVisible,
+      'zOrderRelativeOfId': imeContainer.zOrderRelativeOfId,
+      'z': imeContainer.z,
     };
   }
-  // search for ImeContainer in children
+  return null;
+}
+
+function findWindowOrLayerMatch(filter, curr) {
+  if (filter(curr)) {
+    return curr;
+  }
   for (const child of curr.children) {
-    const result = extractImeContainerFields(child);
+    const result = findWindowOrLayerMatch(filter, child);
     if (result) {
       return result;
     }
   }
   return null;
+}
+
+function findInputMethodVisibility(windowOrLayer) {
+  const isInputMethod = getFilter('InputMethod');
+  const inputMethodWindowOrLayer =
+      findWindowOrLayerMatch(isInputMethod, windowOrLayer);
+  return inputMethodWindowOrLayer && inputMethodWindowOrLayer.isVisible;
+}
+
+function processImeAfterCombiningWmAndSfProperties(imeTraceFile) {
+  for (const imeEntry of imeTraceFile.data) {
+    if (imeEntry.wmProperties?.focusedWindow && imeEntry.sfProperties?.proto) {
+      const focusedWindowRgba = findFocusedWindowRgba(
+          imeEntry.wmProperties.focusedWindow, imeEntry.sfProperties.proto);
+      imeEntry.sfProperties.focusedWindowRgba = focusedWindowRgba;
+    }
+  }
+}
+
+function findFocusedWindowRgba(focusedWindow, sfLayer) {
+  const focusedWindowToken = focusedWindow.token;
+  console.log(focusedWindowToken);
+  const isFocusedWindow = getFilter(focusedWindowToken);
+  const focusedWindowLayer = findWindowOrLayerMatch(isFocusedWindow, sfLayer);
+  return focusedWindowLayer.color;
 }
 
 export {combineWmSfWithImeDataIfExisting};

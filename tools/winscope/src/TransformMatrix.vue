@@ -13,7 +13,7 @@
      limitations under the License.
 -->
 <template>
-  <div class="matrix">
+  <div class="matrix" v-if="transform">
     <md-tooltip>{{ transform.getTypeAsString() }}</md-tooltip>
     <div class="cell">{{ formatFloat(transform.matrix.dsdx) }}</div>
     <div class="cell">{{ formatFloat(transform.matrix.dsdy) }}</div>

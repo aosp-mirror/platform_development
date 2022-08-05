@@ -37,7 +37,7 @@ export default {
     summarizer(layer) {
       const summary = [];
 
-      if (layer?.visibilityReason.length > 0) {
+      if (layer?.visibilityReason?.length > 0) {
         let reason = "";
         if (Array.isArray(layer.visibilityReason)) {
           reason = layer.visibilityReason.join(", ");
