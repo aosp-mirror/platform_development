@@ -18,9 +18,9 @@ import {TraceType} from "common/trace/trace_type";
 import {Parser} from "parsers/parser";
 import {ParserFactory} from "parsers/parser_factory";
 import { setTraces } from "trace_collection/set_traces";
-import { proxyClient } from "trace_collection/proxy_client";
-import {Viewer} from "viewers/viewer";
-import {ViewerFactory} from "viewers/viewer_factory";
+import { Viewer } from "viewers/viewer";
+import { ViewerFactory } from "viewers/viewer_factory";
+import { LoadedTrace } from "app/loaded_trace";
 
 class Core {
   private parsers: Parser[];
@@ -31,11 +31,18 @@ class Core {
     this.viewers = [];
   }
 
-  async bootstrap(traces: Blob[]) {
-    this.clearData();
+  async addTraces(traces: Blob[]) {
+    traces = this.parsers.map(parser => parser.getTrace()).concat(traces);
     this.parsers = await new ParserFactory().createParsers(traces);
     console.log("created parsers: ", this.parsers);
+  }
 
+
+  removeTrace(type: TraceType) {
+    this.parsers = this.parsers.filter(parser => parser.getTraceType() !== type);
+  }
+
+  createViewers() {
     const activeTraceTypes = this.parsers.map(parser => parser.getTraceType());
     console.log("active trace types: ", activeTraceTypes);
 
@@ -43,8 +50,20 @@ class Core {
     console.log("created viewers: ", this.viewers);
   }
 
+  getLoadedTraces(): LoadedTrace[] {
+    return this.parsers.map((parser: Parser) => {
+      const name = (<File>parser.getTrace()).name;
+      const type = parser.getTraceType();
+      return {name: name, type: type};
+    });
+  }
+
   getViews(): HTMLElement[] {
     return this.viewers.map(viewer => viewer.getView());
+  }
+
+  loadedTraceTypes(): TraceType[] {
+    return this.parsers.map(parser => parser.getTraceType());
   }
 
   getTimestamps(): Timestamp[] {
@@ -90,7 +109,6 @@ class Core {
     this.parsers = [];
     this.viewers = [];
     setTraces.dataReady = false;
-    proxyClient.adbData = [];
   }
 }
 
