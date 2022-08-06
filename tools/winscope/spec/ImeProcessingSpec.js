@@ -98,32 +98,43 @@ describe('Ime Processing', () => {
     expect(processedImeClientTrace.data[1].wmProperties.focusedApp)
         .toEqual(
             'com.google.android.apps.messaging/.ui.search.ZeroStateSearchActivity');
-    expect(processedImeClientTrace.data[1].wmProperties.focusedActivity)
-        .toBeDefined();
-    expect(processedImeClientTrace.data[1].wmProperties.focusedWindow)
-        .toBeDefined();
-    expect(processedImeClientTrace.data[1].wmProperties.imeControlTarget)
-        .toBeDefined();
-    expect(processedImeClientTrace.data[1].wmProperties.imeInputTarget)
-        .toBeDefined();
-    expect(processedImeClientTrace.data[1].wmProperties.imeInsetsSourceProvider)
-        .toBeDefined();
-    expect(processedImeClientTrace.data[1].wmProperties.imeLayeringTarget)
-        .toBeDefined();
+    expect(processedImeClientTrace.data[1].wmProperties.focusedActivity.token)
+        .toEqual("9d8c2ef");
+    expect(processedImeClientTrace.data[1].wmProperties.focusedActivity.layerId)
+        .toEqual(260);
+    expect(processedImeClientTrace.data[1].wmProperties.focusedWindow.token)
+        .toEqual("928b3d");
+    expect(processedImeClientTrace.data[1].wmProperties.focusedWindow.title)
+        .toEqual("com.google.android.apps.messaging/com.google.android.apps.messaging.ui.search.ZeroStateSearchActivity");
+    expect(processedImeClientTrace.data[1].wmProperties.imeControlTarget.windowContainer.identifier.title)
+        .toEqual("com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity");
+    expect(processedImeClientTrace.data[1].wmProperties.imeControlTarget.windowContainer.identifier.hashCode)
+        .toEqual(247026562);
+    expect(processedImeClientTrace.data[1].wmProperties.imeInputTarget.windowContainer.identifier.title)
+        .toEqual("com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity");
+    expect(processedImeClientTrace.data[1].wmProperties.imeInputTarget.windowContainer.identifier.hashCode)
+        .toEqual(247026562);
+    expect(processedImeClientTrace.data[1].wmProperties.imeInsetsSourceProvider
+        .insetsSourceProvider).toBeDefined();
+    expect(processedImeClientTrace.data[1].wmProperties.imeLayeringTarget.windowContainer.identifier.title)
+        .toEqual("SnapshotStartingWindow for taskId=1393");
+    expect(processedImeClientTrace.data[1].wmProperties.imeLayeringTarget.windowContainer.identifier.hashCode)
+        .toEqual(222907471);
     expect(
         processedImeClientTrace.data[1].wmProperties.isInputMethodWindowVisible)
-        .toBeDefined();
+        .toBeFalse();
     expect(processedImeClientTrace.data[1].wmProperties.proto).toBeDefined();
     expect(processedImeClientTrace.data[1].sfProperties.name)
         .toEqual('0d0h8m22s942ms');
     expect(processedImeClientTrace.data[1]
                .sfProperties.isInputMethodSurfaceVisible)
         .toEqual(false);
-    expect(processedImeClientTrace.data[1].sfProperties.imeContainer)
-        .toBeDefined();
-    expect(processedImeClientTrace.data[1].sfProperties.inputMethodSurface)
-        .toBeDefined();
-    expect(processedImeClientTrace.data[1].sfProperties.rect).toBeDefined();
+    expect(processedImeClientTrace.data[1].sfProperties.imeContainer.id)
+        .toEqual(12);
+    expect(processedImeClientTrace.data[1].sfProperties.inputMethodSurface.id)
+        .toEqual(280);
+    expect(processedImeClientTrace.data[1].sfProperties.rect.label).toEqual(
+        "Surface(name=77f1069 InputMethod)/@0xb4afb8f - animation-leash of insets_animation#280");
     expect(processedImeClientTrace.data[1].sfProperties.screenBounds)
         .toBeDefined();
     expect(processedImeClientTrace.data[1].sfProperties.z).toEqual(1);
@@ -139,33 +150,43 @@ describe('Ime Processing', () => {
     expect(processedImeClientTrace.data[10].wmProperties.focusedApp)
         .toEqual(
             'com.google.android.apps.messaging/.ui.search.ZeroStateSearchActivity');
-    expect(processedImeClientTrace.data[10].wmProperties.focusedActivity)
-        .toBeDefined();
-    expect(processedImeClientTrace.data[10].wmProperties.focusedWindow)
-        .toBeDefined();
-    expect(processedImeClientTrace.data[10].wmProperties.imeControlTarget)
-        .toBeDefined();
-    expect(processedImeClientTrace.data[10].wmProperties.imeInputTarget)
-        .toBeDefined();
+    expect(processedImeClientTrace.data[10].wmProperties.focusedActivity.token)
+        .toEqual("9d8c2ef");
+    expect(processedImeClientTrace.data[10].wmProperties.focusedActivity.layerId)
+        .toEqual(260);
+    expect(processedImeClientTrace.data[10].wmProperties.focusedWindow.token)
+        .toEqual("928b3d");
+    expect(processedImeClientTrace.data[10].wmProperties.focusedWindow.title)
+        .toEqual("com.google.android.apps.messaging/com.google.android.apps.messaging.ui.search.ZeroStateSearchActivity");
+    expect(processedImeClientTrace.data[10].wmProperties.imeControlTarget.windowContainer.identifier.title)
+        .toEqual("com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity");
+    expect(processedImeClientTrace.data[10].wmProperties.imeControlTarget.windowContainer.identifier.hashCode)
+        .toEqual(247026562);
+    expect(processedImeClientTrace.data[10].wmProperties.imeInputTarget.windowContainer.identifier.title)
+        .toEqual("com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity");
+    expect(processedImeClientTrace.data[10].wmProperties.imeInputTarget.windowContainer.identifier.hashCode)
+        .toEqual(247026562);
+    expect(processedImeClientTrace.data[10].wmProperties.imeInsetsSourceProvider
+        .insetsSourceProvider).toBeDefined();
+    expect(processedImeClientTrace.data[10].wmProperties.imeLayeringTarget.windowContainer.identifier.title)
+        .toEqual("SnapshotStartingWindow for taskId=1393");
+    expect(processedImeClientTrace.data[10].wmProperties.imeLayeringTarget.windowContainer.identifier.hashCode)
+        .toEqual(222907471);
     expect(
-        processedImeClientTrace.data[10].wmProperties.imeInsetsSourceProvider)
-        .toBeDefined();
-    expect(processedImeClientTrace.data[10].wmProperties.imeLayeringTarget)
-        .toBeDefined();
-    expect(processedImeClientTrace.data[10]
-               .wmProperties.isInputMethodWindowVisible)
-        .toBeDefined();
+        processedImeClientTrace.data[10].wmProperties.isInputMethodWindowVisible)
+        .toBeFalse();
     expect(processedImeClientTrace.data[10].wmProperties.proto).toBeDefined();
     expect(processedImeClientTrace.data[10].sfProperties.name)
         .toEqual('0d0h8m23s73ms');
     expect(processedImeClientTrace.data[10]
                .sfProperties.isInputMethodSurfaceVisible)
         .toEqual(false);
-    expect(processedImeClientTrace.data[10].sfProperties.imeContainer)
-        .toBeDefined();
-    expect(processedImeClientTrace.data[10].sfProperties.inputMethodSurface)
-        .toBeDefined();
-    expect(processedImeClientTrace.data[10].sfProperties.rect).toBeDefined();
+    expect(processedImeClientTrace.data[10].sfProperties.imeContainer.id)
+        .toEqual(12);
+    expect(processedImeClientTrace.data[10].sfProperties.inputMethodSurface.id)
+        .toEqual(280);
+    expect(processedImeClientTrace.data[10].sfProperties.rect.label).toEqual(
+        "Surface(name=77f1069 InputMethod)/@0xb4afb8f - animation-leash of insets_animation#280");
     expect(processedImeClientTrace.data[10].sfProperties.screenBounds)
         .toBeDefined();
     expect(processedImeClientTrace.data[10].sfProperties.z).toEqual(1);
@@ -189,39 +210,43 @@ describe('Ime Processing', () => {
     expect(processedInputMethodServiceTrace.data[1].wmProperties.focusedApp)
         .toEqual(
             'com.google.android.apps.messaging/.ui.search.ZeroStateSearchActivity');
+    expect(processedInputMethodServiceTrace.data[1].wmProperties.focusedActivity.token)
+        .toEqual("9d8c2ef");
+    expect(processedInputMethodServiceTrace.data[1].wmProperties.focusedActivity.layerId)
+        .toEqual(260);
+    expect(processedInputMethodServiceTrace.data[1].wmProperties.focusedWindow.token)
+        .toEqual("928b3d");
+    expect(processedInputMethodServiceTrace.data[1].wmProperties.focusedWindow.title)
+        .toEqual("com.google.android.apps.messaging/com.google.android.apps.messaging.ui.search.ZeroStateSearchActivity");
+    expect(processedInputMethodServiceTrace.data[1].wmProperties.imeControlTarget.windowContainer.identifier.title)
+        .toEqual("com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity");
+    expect(processedInputMethodServiceTrace.data[1].wmProperties.imeControlTarget.windowContainer.identifier.hashCode)
+        .toEqual(247026562);
+    expect(processedInputMethodServiceTrace.data[1].wmProperties.imeInputTarget.windowContainer.identifier.title)
+        .toEqual("com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity");
+    expect(processedInputMethodServiceTrace.data[1].wmProperties.imeInputTarget.windowContainer.identifier.hashCode)
+        .toEqual(247026562);
+    expect(processedInputMethodServiceTrace.data[1].wmProperties.imeInsetsSourceProvider
+        .insetsSourceProvider).toBeDefined();
+    expect(processedInputMethodServiceTrace.data[1].wmProperties.imeLayeringTarget.windowContainer.identifier.title)
+        .toEqual("SnapshotStartingWindow for taskId=1393");
+    expect(processedInputMethodServiceTrace.data[1].wmProperties.imeLayeringTarget.windowContainer.identifier.hashCode)
+        .toEqual(222907471);
     expect(
-        processedInputMethodServiceTrace.data[1].wmProperties.focusedActivity)
-        .toBeDefined();
-    expect(processedInputMethodServiceTrace.data[1].wmProperties.focusedWindow)
-        .toBeDefined();
-    expect(
-        processedInputMethodServiceTrace.data[1].wmProperties.imeControlTarget)
-        .toBeDefined();
-    expect(processedInputMethodServiceTrace.data[1].wmProperties.imeInputTarget)
-        .toBeDefined();
-    expect(processedInputMethodServiceTrace.data[1]
-               .wmProperties.imeInsetsSourceProvider)
-        .toBeDefined();
-    expect(
-        processedInputMethodServiceTrace.data[1].wmProperties.imeLayeringTarget)
-        .toBeDefined();
-    expect(processedInputMethodServiceTrace.data[1]
-               .wmProperties.isInputMethodWindowVisible)
-        .toBeDefined();
-    expect(processedInputMethodServiceTrace.data[1].wmProperties.proto)
-        .toBeDefined();
+        processedInputMethodServiceTrace.data[1].wmProperties.isInputMethodWindowVisible)
+        .toBeFalse();
+    expect(processedInputMethodServiceTrace.data[1].wmProperties.proto).toBeDefined();
     expect(processedInputMethodServiceTrace.data[1].sfProperties.name)
         .toEqual('0d0h8m23s26ms');
     expect(processedInputMethodServiceTrace.data[1]
                .sfProperties.isInputMethodSurfaceVisible)
         .toEqual(false);
-    expect(processedInputMethodServiceTrace.data[1].sfProperties.imeContainer)
-        .toBeDefined();
-    expect(processedInputMethodServiceTrace.data[1]
-               .sfProperties.inputMethodSurface)
-        .toBeDefined();
-    expect(processedInputMethodServiceTrace.data[1].sfProperties.rect)
-        .toBeDefined();
+    expect(processedInputMethodServiceTrace.data[1].sfProperties.imeContainer.id)
+        .toEqual(12);
+    expect(processedInputMethodServiceTrace.data[1].sfProperties.inputMethodSurface.id)
+        .toEqual(280);
+    expect(processedInputMethodServiceTrace.data[1].sfProperties.rect.label).toEqual(
+        "Surface(name=77f1069 InputMethod)/@0xb4afb8f - animation-leash of insets_animation#280");
     expect(processedInputMethodServiceTrace.data[1].sfProperties.screenBounds)
         .toBeDefined();
     expect(processedInputMethodServiceTrace.data[1].sfProperties.z).toEqual(1);
@@ -241,26 +266,31 @@ describe('Ime Processing', () => {
     expect(processedInputMethodServiceTrace.data[10].wmProperties.focusedApp)
         .toEqual(
             'com.google.android.apps.messaging/.ui.search.ZeroStateSearchActivity');
+    expect(processedInputMethodServiceTrace.data[10].wmProperties.focusedActivity.token)
+        .toEqual("9d8c2ef");
+    expect(processedInputMethodServiceTrace.data[10].wmProperties.focusedActivity.layerId)
+        .toEqual(260);
+    expect(processedInputMethodServiceTrace.data[10].wmProperties.focusedWindow.token)
+        .toEqual("928b3d");
+    expect(processedInputMethodServiceTrace.data[10].wmProperties.focusedWindow.title)
+        .toEqual("com.google.android.apps.messaging/com.google.android.apps.messaging.ui.search.ZeroStateSearchActivity");
+    expect(processedInputMethodServiceTrace.data[10].wmProperties.imeControlTarget.windowContainer.identifier.title)
+        .toEqual("com.google.android.apps.messaging/com.google.android.apps.messaging.ui.search.ZeroStateSearchActivity");
+    expect(processedInputMethodServiceTrace.data[10].wmProperties.imeControlTarget.windowContainer.identifier.hashCode)
+        .toEqual(9603901);
+    expect(processedInputMethodServiceTrace.data[10].wmProperties.imeInputTarget.windowContainer.identifier.title)
+        .toEqual("com.google.android.apps.messaging/com.google.android.apps.messaging.ui.search.ZeroStateSearchActivity");
+    expect(processedInputMethodServiceTrace.data[10].wmProperties.imeInputTarget.windowContainer.identifier.hashCode)
+        .toEqual(9603901);
+    expect(processedInputMethodServiceTrace.data[10].wmProperties.imeInsetsSourceProvider
+        .insetsSourceProvider).toBeDefined();
+    expect(processedInputMethodServiceTrace.data[10].wmProperties.imeLayeringTarget.windowContainer.identifier.title)
+        .toEqual("SnapshotStartingWindow for taskId=1393");
+    expect(processedInputMethodServiceTrace.data[10].wmProperties.imeLayeringTarget.windowContainer.identifier.hashCode)
+        .toEqual(222907471);
     expect(
-        processedInputMethodServiceTrace.data[10].wmProperties.focusedActivity)
-        .toBeDefined();
-    expect(processedInputMethodServiceTrace.data[10].wmProperties.focusedWindow)
-        .toBeDefined();
-    expect(
-        processedInputMethodServiceTrace.data[10].wmProperties.imeControlTarget)
-        .toBeDefined();
-    expect(
-        processedInputMethodServiceTrace.data[10].wmProperties.imeInputTarget)
-        .toBeDefined();
-    expect(processedInputMethodServiceTrace.data[10]
-               .wmProperties.imeInsetsSourceProvider)
-        .toBeDefined();
-    expect(processedInputMethodServiceTrace.data[10]
-               .wmProperties.imeLayeringTarget)
-        .toBeDefined();
-    expect(processedInputMethodServiceTrace.data[10]
-               .wmProperties.isInputMethodWindowVisible)
-        .toBeDefined();
+        processedInputMethodServiceTrace.data[10].wmProperties.isInputMethodWindowVisible)
+        .toBeTrue();
     expect(processedInputMethodServiceTrace.data[10].wmProperties.proto)
         .toBeDefined();
     expect(processedInputMethodServiceTrace.data[10].sfProperties.name)
@@ -268,13 +298,13 @@ describe('Ime Processing', () => {
     expect(processedInputMethodServiceTrace.data[10]
                .sfProperties.isInputMethodSurfaceVisible)
         .toEqual(false);
-    expect(processedInputMethodServiceTrace.data[10].sfProperties.imeContainer)
-        .toBeDefined();
-    expect(processedInputMethodServiceTrace.data[10]
-               .sfProperties.inputMethodSurface)
-        .toBeDefined();
-    expect(processedInputMethodServiceTrace.data[10].sfProperties.rect)
-        .toBeDefined();
+    expect(processedInputMethodServiceTrace.data[10].sfProperties.imeContainer.id)
+        .toEqual(12);
+    expect(processedInputMethodServiceTrace.data[10].sfProperties.inputMethodSurface.id)
+        .toEqual(291);
+    expect(processedInputMethodServiceTrace.data[10].sfProperties.rect.label).toEqual(
+        "Surface(name=77f1069 InputMethod)/@0xb4afb8f - animation-leash of" +
+        " insets_animation#291");
     expect(processedInputMethodServiceTrace.data[10].sfProperties.screenBounds)
         .toBeDefined();
     expect(processedInputMethodServiceTrace.data[10].sfProperties.z).toEqual(1);
@@ -304,29 +334,32 @@ describe('Ime Processing', () => {
         processedInputMethodManagerServiceTrace.data[1].wmProperties.focusedApp)
         .toEqual(
             'com.google.android.apps.messaging/.ui.search.ZeroStateSearchActivity');
-    expect(processedInputMethodManagerServiceTrace.data[1]
-               .wmProperties.focusedActivity)
-        .toBeDefined();
-    expect(processedInputMethodManagerServiceTrace.data[1]
-               .wmProperties.focusedWindow)
-        .toBeDefined();
-    expect(processedInputMethodManagerServiceTrace.data[1]
-               .wmProperties.imeControlTarget)
-        .toBeDefined();
-    expect(processedInputMethodManagerServiceTrace.data[1]
-               .wmProperties.imeInputTarget)
-        .toBeDefined();
-    expect(processedInputMethodManagerServiceTrace.data[1]
-               .wmProperties.imeInsetsSourceProvider)
-        .toBeDefined();
-    expect(processedInputMethodManagerServiceTrace.data[1]
-               .wmProperties.imeLayeringTarget)
-        .toBeDefined();
-    expect(processedInputMethodManagerServiceTrace.data[1]
-               .wmProperties.isInputMethodWindowVisible)
-        .toBeDefined();
-    expect(processedInputMethodManagerServiceTrace.data[1].wmProperties.proto)
-        .toBeDefined();
+    expect(processedInputMethodManagerServiceTrace.data[1].wmProperties.focusedActivity.token)
+        .toEqual("9d8c2ef");
+    expect(processedInputMethodManagerServiceTrace.data[1].wmProperties.focusedActivity.layerId)
+        .toEqual(260);
+    expect(processedInputMethodManagerServiceTrace.data[1].wmProperties.focusedWindow.token)
+        .toEqual("928b3d");
+    expect(processedInputMethodManagerServiceTrace.data[1].wmProperties.focusedWindow.title)
+        .toEqual("com.google.android.apps.messaging/com.google.android.apps.messaging.ui.search.ZeroStateSearchActivity");
+    expect(processedInputMethodManagerServiceTrace.data[1].wmProperties.imeControlTarget.windowContainer.identifier.title)
+        .toEqual("com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity");
+    expect(processedInputMethodManagerServiceTrace.data[1].wmProperties.imeControlTarget.windowContainer.identifier.hashCode)
+        .toEqual(247026562);
+    expect(processedInputMethodManagerServiceTrace.data[1].wmProperties.imeInputTarget.windowContainer.identifier.title)
+        .toEqual("com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity");
+    expect(processedInputMethodManagerServiceTrace.data[1].wmProperties.imeInputTarget.windowContainer.identifier.hashCode)
+        .toEqual(247026562);
+    expect(processedInputMethodManagerServiceTrace.data[1].wmProperties.imeInsetsSourceProvider
+        .insetsSourceProvider).toBeDefined();
+    expect(processedInputMethodManagerServiceTrace.data[1].wmProperties.imeLayeringTarget.windowContainer.identifier.title)
+        .toEqual("SnapshotStartingWindow for taskId=1393");
+    expect(processedInputMethodManagerServiceTrace.data[1].wmProperties.imeLayeringTarget.windowContainer.identifier.hashCode)
+        .toEqual(222907471);
+    expect(
+        processedInputMethodManagerServiceTrace.data[1].wmProperties.isInputMethodWindowVisible)
+        .toBeFalse();
+    expect(processedInputMethodManagerServiceTrace.data[1].wmProperties.proto).toBeDefined();
 
     expect(processedInputMethodManagerServiceTrace.data[10].wmProperties)
         .toBeDefined();
@@ -336,28 +369,32 @@ describe('Ime Processing', () => {
                .wmProperties.focusedApp)
         .toEqual(
             'com.google.android.apps.messaging/.ui.search.ZeroStateSearchActivity');
-    expect(processedInputMethodManagerServiceTrace.data[10]
-               .wmProperties.focusedActivity)
-        .toBeDefined();
-    expect(processedInputMethodManagerServiceTrace.data[10]
-               .wmProperties.focusedWindow)
-        .toBeDefined();
-    expect(processedInputMethodManagerServiceTrace.data[10]
-               .wmProperties.imeControlTarget)
-        .toBeDefined();
-    expect(processedInputMethodManagerServiceTrace.data[10]
-               .wmProperties.imeInputTarget)
-        .toBeDefined();
-    expect(processedInputMethodManagerServiceTrace.data[10]
-               .wmProperties.imeInsetsSourceProvider)
-        .toBeDefined();
-    expect(processedInputMethodManagerServiceTrace.data[10]
-               .wmProperties.imeLayeringTarget)
-        .toBeDefined();
-    expect(processedInputMethodManagerServiceTrace.data[10]
-               .wmProperties.isInputMethodWindowVisible)
-        .toBeDefined();
-    expect(processedInputMethodManagerServiceTrace.data[10].wmProperties.proto)
-        .toBeDefined();
+    expect(processedInputMethodManagerServiceTrace.data[10].wmProperties.focusedActivity.token)
+        .toEqual("b1ce2cd");
+    expect(processedInputMethodManagerServiceTrace.data[10].wmProperties.focusedActivity.layerId)
+        .toEqual(305);
+    expect(processedInputMethodManagerServiceTrace.data[10].wmProperties.focusedWindow.token)
+        .toEqual("31d0b");
+    expect(processedInputMethodManagerServiceTrace.data[10].wmProperties.focusedWindow.title)
+        .toEqual("com.google.android.apps.messaging/com.google.android.apps.messaging.ui.search.ZeroStateSearchActivity");
+    expect(processedInputMethodManagerServiceTrace.data[10].wmProperties.imeControlTarget.windowContainer.identifier.title)
+        .toEqual("com.google.android.apps.messaging/com.google.android.apps.messaging.ui.search.ZeroStateSearchActivity");
+    expect(processedInputMethodManagerServiceTrace.data[10].wmProperties.imeControlTarget.windowContainer.identifier.hashCode)
+        .toEqual(204043);
+    expect(processedInputMethodManagerServiceTrace.data[10].wmProperties.imeInputTarget.windowContainer.identifier.title)
+        .toEqual("com.google.android.apps.messaging/com.google.android.apps.messaging.ui.search.ZeroStateSearchActivity");
+    expect(processedInputMethodManagerServiceTrace.data[10].wmProperties.imeInputTarget.windowContainer.identifier.hashCode)
+        .toEqual(204043);
+    expect(processedInputMethodManagerServiceTrace.data[10].wmProperties.imeInsetsSourceProvider
+        .insetsSourceProvider).toBeDefined();
+    expect(processedInputMethodManagerServiceTrace.data[10].wmProperties.imeLayeringTarget.windowContainer.identifier.title)
+        .toEqual("com.google.android.apps.messaging/com.google.android.apps.messaging.ui.search.ZeroStateSearchActivity");
+    expect(processedInputMethodManagerServiceTrace.data[10].wmProperties.imeLayeringTarget.windowContainer.identifier.hashCode)
+        .toEqual(204043);
+    expect(
+        processedInputMethodManagerServiceTrace.data[10].wmProperties.isInputMethodWindowVisible)
+        .toBeTrue();
+    expect(processedInputMethodManagerServiceTrace.data[10].wmProperties.proto).toBeDefined();
+
   });
 });
