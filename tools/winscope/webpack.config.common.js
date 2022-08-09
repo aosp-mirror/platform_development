@@ -134,6 +134,8 @@ const webpackConfig = {
       src: [
         path.join(__dirname, '../../../platform_testing/libraries/flicker/' +
           'src/com/android/server/wm/traces/common/'),
+        path.join(__dirname, '../../../platform_testing/libraries/flicker/' +
+          'src/com/android/server/wm/flicker/service/config/common'),
       ],
       output: 'kotlin_build',
       moduleName: 'flicker',

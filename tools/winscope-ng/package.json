@@ -4,7 +4,7 @@
   "scripts": {
     "eslint": "npx eslint --ignore-pattern flickerlib src/",
     "start": "webpack serve --config webpack.config.dev.js --open --hot",
-    "build:kotlin": "rm -rf kotlin_build && npx kotlinc-js -source-map -source-map-embed-sources always -module-kind commonjs -output kotlin_build/flicker.js ../../../platform_testing/libraries/flicker/src/com/android/server/wm/traces/common",
+    "build:kotlin": "rm -rf kotlin_build && npx kotlinc-js -source-map -source-map-embed-sources always -module-kind commonjs -output kotlin_build/flicker.js ../../../platform_testing/libraries/flicker/src/com/android/server/wm/traces/common ../../../platform_testing/libraries/flicker/src/com/android/server/wm/flicker/service/config/common",
     "build:prod": "webpack --config webpack.config.prod.js --progress",
     "build:unit": "webpack --config webpack.config.unit.spec.js",
     "build:e2e": "rm -rf dist/e2e.spec && npx tsc -p ./src/test/e2e",
