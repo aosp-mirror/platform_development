@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-enum TraceTypeId {
+enum TraceType {
   ACCESSIBILITY,
   WINDOW_MANAGER,
   SURFACE_FLINGER,
@@ -32,4 +32,4 @@ enum TraceTypeId {
   ERROR,
 }
 
-export {TraceTypeId};
+export {TraceType};

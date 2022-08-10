@@ -13,11 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {Parser} from "parsers/parser";
+import {ParserFactory} from "parsers/parser_factory";
+import {CommonTestUtils} from "test/common/utils";
 
-class ScreenRecordingTraceEntry {
-  constructor(public videoTimeSeconds: number,
-              public videoData: Blob) {
+class UnitTestUtils extends CommonTestUtils {
+  static async getParser(filename: string): Promise<Parser> {
+    const trace = CommonTestUtils.getFixtureBlob(filename);
+    const parsers = await new ParserFactory().createParsers([trace]);
+    expect(parsers.length).toEqual(1);
+    return parsers[0];
   }
 }
 
-export {ScreenRecordingTraceEntry};
+export {UnitTestUtils};

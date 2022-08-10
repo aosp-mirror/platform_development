@@ -81,15 +81,74 @@ describe("ArrayUtils", () => {
   it("toUintLittleEndian", () => {
     const buffer = new Uint8Array([0, 0, 1, 1]);
 
-    expect(ArrayUtils.toUintLittleEndian(buffer, 0, -1)).toEqual(0);
-    expect(ArrayUtils.toUintLittleEndian(buffer, 0, 0)).toEqual(0);
+    expect(ArrayUtils.toUintLittleEndian(new Uint8Array([0xff, 0xff]), 0, -1)).toEqual(0n);
+    expect(ArrayUtils.toUintLittleEndian(new Uint8Array([0xff, 0xff]), 0, 0)).toEqual(0n);
+    expect(ArrayUtils.toUintLittleEndian(new Uint8Array([0xff, 0xff]), 1, 1)).toEqual(0n);
 
-    expect(ArrayUtils.toUintLittleEndian(buffer, 0, 1)).toEqual(0);
-    expect(ArrayUtils.toUintLittleEndian(buffer, 0, 2)).toEqual(0);
+    expect(ArrayUtils.toUintLittleEndian(new Uint8Array([0x00, 0x01, 0xff]), 0, 1)).toEqual(0n);
+    expect(ArrayUtils.toUintLittleEndian(new Uint8Array([0x00, 0x01, 0xff]), 1, 2)).toEqual(1n);
+    expect(ArrayUtils.toUintLittleEndian(new Uint8Array([0x00, 0x01, 0xff]), 2, 3)).toEqual(255n);
 
-    expect(ArrayUtils.toUintLittleEndian(buffer, 3, 4)).toEqual(1);
-    expect(ArrayUtils.toUintLittleEndian(buffer, 2, 4)).toEqual(1 + 256);
-    expect(ArrayUtils.toUintLittleEndian(buffer, 1, 4)).toEqual(256 + 256*256);
-    expect(ArrayUtils.toUintLittleEndian(buffer, 0, 3)).toEqual(256*256);
+    expect(ArrayUtils.toUintLittleEndian(new Uint8Array([0x00, 0x00]), 0, 2)).toEqual(0n);
+    expect(ArrayUtils.toUintLittleEndian(new Uint8Array([0x01, 0x00]), 0, 2)).toEqual(1n);
+    expect(ArrayUtils.toUintLittleEndian(new Uint8Array([0x00, 0x01]), 0, 2)).toEqual(256n);
+    expect(ArrayUtils.toUintLittleEndian(new Uint8Array([0xff, 0xff]), 0, 2)).toEqual(0xffffn);
+
+    expect(ArrayUtils.toUintLittleEndian(new Uint8Array([0xff, 0xff, 0xff, 0xff]), 0, 4)).toEqual(0xffffffffn);
+
+    expect(
+      ArrayUtils.toUintLittleEndian(new Uint8Array([0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]), 0, 8))
+      .toEqual(0xffffffffffffffffn);
+
+    expect(
+      ArrayUtils.toUintLittleEndian(new Uint8Array([0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]), 0, 9))
+      .toEqual(0xffffffffffffffffffn);
+  });
+
+  it("toIntLittleEndian", () => {
+    expect(ArrayUtils.toIntLittleEndian(new Uint8Array([0xff]), 0, -1)).toEqual(0n);
+    expect(ArrayUtils.toIntLittleEndian(new Uint8Array([0xff]), 0, 0)).toEqual(0n);
+
+    expect(ArrayUtils.toIntLittleEndian(new Uint8Array([0x00]), 0, 1)).toEqual(0n);
+    expect(ArrayUtils.toIntLittleEndian(new Uint8Array([0x01]), 0, 1)).toEqual(1n);
+    expect(ArrayUtils.toIntLittleEndian(new Uint8Array([0x7f]), 0, 1)).toEqual(127n);
+    expect(ArrayUtils.toIntLittleEndian(new Uint8Array([0x80]), 0, 1)).toEqual(-128n);
+    expect(ArrayUtils.toIntLittleEndian(new Uint8Array([0xff]), 0, 1)).toEqual(-1n);
+
+    expect(ArrayUtils.toIntLittleEndian(new Uint8Array([0xff, 0x7f]), 0, 2)).toEqual(32767n);
+    expect(ArrayUtils.toIntLittleEndian(new Uint8Array([0x00, 0x80]), 0, 2)).toEqual(-32768n);
+    expect(ArrayUtils.toIntLittleEndian(new Uint8Array([0x01, 0x80]), 0, 2)).toEqual(-32767n);
+    expect(ArrayUtils.toIntLittleEndian(new Uint8Array([0xff, 0xff]), 0, 2)).toEqual(-1n);
+
+    expect(ArrayUtils.toIntLittleEndian(new Uint8Array([0xff, 0xff, 0xff, 0x7f]), 0, 4)).toEqual(0x7fffffffn);
+    expect(ArrayUtils.toIntLittleEndian(new Uint8Array([0x00, 0x00, 0x00, 0x80]), 0, 4)).toEqual(-0x80000000n);
+    expect(ArrayUtils.toIntLittleEndian(new Uint8Array([0x01, 0x00, 0x00, 0x80]), 0, 4)).toEqual(-0x7fffffffn);
+    expect(ArrayUtils.toIntLittleEndian(new Uint8Array([0xff, 0xff, 0xff, 0xff]), 0, 4)).toEqual(-1n);
+
+    expect(
+      ArrayUtils.toIntLittleEndian(new Uint8Array([0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f]), 0, 8)
+    ).toEqual(0x7fffffffffffffffn);
+    expect(
+      ArrayUtils.toIntLittleEndian(new Uint8Array([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80]), 0, 8)
+    ).toEqual(-0x8000000000000000n);
+    expect(
+      ArrayUtils.toIntLittleEndian(new Uint8Array([0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80]), 0, 8)
+    ).toEqual(-0x7fffffffffffffffn);
+    expect(
+      ArrayUtils.toIntLittleEndian(new Uint8Array([0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]), 0, 8)
+    ).toEqual(-1n);
+
+    expect(
+      ArrayUtils.toIntLittleEndian(new Uint8Array([0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f]), 0, 9)
+    ).toEqual(0x7fffffffffffffffffn);
+    expect(
+      ArrayUtils.toIntLittleEndian(new Uint8Array([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80]), 0, 9)
+    ).toEqual(-0x800000000000000000n);
+    expect(
+      ArrayUtils.toIntLittleEndian(new Uint8Array([0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80]), 0, 9)
+    ).toEqual(-0x7fffffffffffffffffn);
+    expect(
+      ArrayUtils.toIntLittleEndian(new Uint8Array([0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]), 0, 9)
+    ).toEqual(-1n);
   });
 });

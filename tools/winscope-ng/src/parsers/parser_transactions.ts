@@ -13,17 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceTypeId} from "common/trace/type_id";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceType} from "common/trace/trace_type";
 import {Parser} from "./parser";
-import {TransactionsTraceFileProto} from "./proto_types";
+import {AccessibilityTraceFileProto, TransactionsTraceFileProto} from "./proto_types";
 
 class ParserTransactions extends Parser {
   constructor(trace: Blob) {
     super(trace);
+    this.realToElapsedTimeOffsetNs = undefined;
   }
 
-  override getTraceTypeId(): TraceTypeId {
-    return TraceTypeId.TRANSACTIONS;
+  override getTraceType(): TraceType {
+    return TraceType.TRANSACTIONS;
   }
 
   override getMagicNumber(): number[] {
@@ -31,17 +33,31 @@ class ParserTransactions extends Parser {
   }
 
   override decodeTrace(buffer: Uint8Array): any[] {
-    return (<any>TransactionsTraceFileProto.decode(buffer)).entry;
+    const decoded = <any>TransactionsTraceFileProto.decode(buffer);
+    if (Object.prototype.hasOwnProperty.call(decoded, "realToElapsedTimeOffsetNanos")) {
+      this.realToElapsedTimeOffsetNs = BigInt(decoded.realToElapsedTimeOffsetNanos);
+    }
+    else {
+      this.realToElapsedTimeOffsetNs = undefined;
+    }
+    return decoded.entry;
   }
 
-  override getTimestamp(entryProto: any): number {
-    return Number(entryProto.elapsedRealtimeNanos);
+  override getTimestamp(type: TimestampType, entryProto: any): undefined|Timestamp {
+    if (type === TimestampType.ELAPSED) {
+      return new Timestamp(type, BigInt(entryProto.elapsedRealtimeNanos));
+    }
+    else if (type === TimestampType.REAL && this.realToElapsedTimeOffsetNs !== undefined) {
+      return new Timestamp(type, this.realToElapsedTimeOffsetNs + BigInt(entryProto.elapsedRealtimeNanos));
+    }
+    return undefined;
   }
 
   override processDecodedEntry(entryProto: any): any {
     return entryProto;
   }
 
+  private realToElapsedTimeOffsetNs: undefined|bigint;
   private static readonly MAGIC_NUMBER = [0x09, 0x54, 0x4e, 0x58, 0x54, 0x52, 0x41, 0x43, 0x45]; // .TNXTRACE
 }
 

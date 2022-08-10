@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceTypeId} from "common/trace/type_id";
+import {TraceType} from "common/trace/trace_type";
 import {Viewer} from "viewers/viewer";
 import {Presenter} from "./presenter";
 import {UiData} from "./ui_data";
@@ -27,7 +27,7 @@ class ViewerWindowManager implements Viewer {
     this.view.addEventListener("outputEvent", () => this.presenter.notifyUiEvent());
   }
 
-  public notifyCurrentTraceEntries(entries: Map<TraceTypeId, any>): void {
+  public notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
     this.presenter.notifyCurrentTraceEntries(entries);
   }
 
@@ -35,7 +35,7 @@ class ViewerWindowManager implements Viewer {
     return this.view;
   }
 
-  public static readonly DEPENDENCIES: TraceTypeId[] = [TraceTypeId.WINDOW_MANAGER];
+  public static readonly DEPENDENCIES: TraceType[] = [TraceType.WINDOW_MANAGER];
   private view: HTMLElement;
   private presenter: Presenter;
 }

@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ArrayUtils} from "../common/utils/array_utils";
-import {TraceTypeId} from "common/trace/type_id";
+import {ArrayUtils} from "common/utils/array_utils";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceType} from "common/trace/trace_type";
 
 abstract class Parser {
   protected constructor(trace: Blob) {
@@ -34,17 +35,39 @@ abstract class Parser {
     }
 
     this.decodedEntries = this.decodeTrace(traceBuffer);
-    this.timestamps = this.decodedEntries.map((entry: any) => this.getTimestamp(entry));
+
+    for (const type of [TimestampType.ELAPSED, TimestampType.REAL]) {
+      const timestamps: Timestamp[] = [];
+      let areTimestampsValid = true;
+
+      for (const entry of this.decodedEntries) {
+        const timestamp = this.getTimestamp(type, entry);
+        if (timestamp === undefined) {
+          areTimestampsValid = false;
+          break;
+        }
+        timestamps.push(timestamp);
+      }
+
+      if (areTimestampsValid) {
+        this.timestamps.set(type, timestamps);
+      }
+    }
   }
 
-  public abstract getTraceTypeId(): TraceTypeId;
+  public abstract getTraceType(): TraceType;
 
-  public getTimestamps(): number[] {
-    return this.timestamps;
+  public getTimestamps(type: TimestampType): undefined|Timestamp[] {
+    return this.timestamps.get(type);
   }
 
-  public getTraceEntry(timestamp: number): undefined|any {
-    const index = ArrayUtils.binarySearchLowerOrEqual(this.getTimestamps(), timestamp);
+  public getTraceEntry(timestamp: Timestamp): undefined|any {
+    const timestamps = this.getTimestamps(timestamp.getType());
+    if (timestamps === undefined) {
+      throw TypeError(`Timestamps with type "${timestamp.getType()}" not available`);
+    }
+
+    const index = ArrayUtils.binarySearchLowerOrEqual(timestamps, timestamp);
     if (index === undefined) {
       return undefined;
     }
@@ -59,12 +82,12 @@ abstract class Parser {
 
   protected abstract getMagicNumber(): undefined|number[];
   protected abstract decodeTrace(trace: Uint8Array): any[];
-  protected abstract getTimestamp(decodedEntry: any): number;
+  protected abstract getTimestamp(type: TimestampType, decodedEntry: any): undefined|Timestamp;
   protected abstract processDecodedEntry(decodedEntry: any): any;
 
   protected trace: Blob;
   protected decodedEntries: any[] = [];
-  protected timestamps: number[] = [];
+  private timestamps: Map<TimestampType, Timestamp[]> = new Map<TimestampType, Timestamp[]>();
 }
 
 export {Parser};
