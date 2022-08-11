@@ -17,27 +17,30 @@ import * as fs from "fs";
 import * as path from "path";
 import {Blob} from "./blob";
 
-class TestUtils {
+class CommonTestUtils {
   static getFixtureBlob(filename: string): Blob {
-    const buffer = TestUtils.loadFixture(filename);
+    const buffer = CommonTestUtils.loadFixture(filename);
     return new Blob(buffer);
   }
 
   static loadFixture(filename: string): ArrayBuffer {
-    return fs.readFileSync(TestUtils.getFixturePath(filename));
+    return fs.readFileSync(CommonTestUtils.getFixturePath(filename));
   }
 
   static getFixturePath(filename: string): string {
-    return path.join(TestUtils.getProjectRootPath(), "src/test/fixtures", filename);
-  }
-
-  static getProductionIndexHtmlPath(): string {
-    return path.join(TestUtils.getProjectRootPath(), "dist/prod/index.html");
+    if (path.isAbsolute(filename)) {
+      return filename;
+    }
+    return path.join(CommonTestUtils.getProjectRootPath(), "src/test/fixtures", filename);
   }
 
   static getProjectRootPath(): string {
-    return path.join(__dirname, "../..");
+    let root = __dirname;
+    while (path.basename(root) !== "winscope-ng") {
+      root = path.dirname(root);
+    }
+    return root;
   }
 }
 
-export {TestUtils};
+export {CommonTestUtils};

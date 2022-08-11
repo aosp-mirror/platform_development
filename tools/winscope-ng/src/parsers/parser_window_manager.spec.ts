@@ -14,33 +14,84 @@
  * limitations under the License.
  */
 import {WindowManagerState} from "common/trace/flickerlib/windows/WindowManagerState";
-import {TraceTypeId} from "common/trace/type_id";
-import {ParserFactory} from "./parser_factory";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceType} from "common/trace/trace_type";
 import {Parser} from "./parser";
-import {TestUtils} from "test/test_utils";
+import {UnitTestUtils} from "test/unit/utils";
 
 describe("ParserWindowManager", () => {
-  let parser: Parser;
+  describe("trace with elapsed + real timestamp", () => {
+    let parser: Parser;
 
-  beforeAll(async () => {
-    const buffer = TestUtils.getFixtureBlob("trace_WindowManager.pb");
-    const parsers = await new ParserFactory().createParsers([buffer]);
-    expect(parsers.length).toEqual(1);
-    parser = parsers[0];
+    beforeAll(async () => {
+      parser = await UnitTestUtils.getParser("traces/elapsed_and_real_timestamp/WindowManager.pb");
+    });
+
+    it("has expected trace type", () => {
+      expect(parser.getTraceType()).toEqual(TraceType.WINDOW_MANAGER);
+    });
+
+    it("provides elapsed timestamps", () => {
+      const expected = [
+        new Timestamp(TimestampType.ELAPSED, 14474594000n),
+        new Timestamp(TimestampType.ELAPSED, 15398076788n),
+        new Timestamp(TimestampType.ELAPSED, 15409222011n),
+      ];
+      expect(parser.getTimestamps(TimestampType.ELAPSED)!.slice(0, 3))
+        .toEqual(expected);
+    });
+
+    it("provides real timestamps", () => {
+      const expected = [
+        new Timestamp(TimestampType.REAL, 1659107089075566202n),
+        new Timestamp(TimestampType.REAL, 1659107089999048990n),
+        new Timestamp(TimestampType.REAL, 1659107090010194213n),
+      ];
+      expect(parser.getTimestamps(TimestampType.REAL)!.slice(0, 3))
+        .toEqual(expected);
+    });
+
+    it("retrieves trace entry from elapsed timestamp", () => {
+      const timestamp = new Timestamp(TimestampType.ELAPSED, 15398076788n);
+      const entry = parser.getTraceEntry(timestamp)!;
+      expect(entry).toBeInstanceOf(WindowManagerState);
+      expect(BigInt(entry.timestampMs)).toEqual(15398076788n);
+    });
+
+    it("retrieves trace entry from real timestamp", () => {
+      const timestamp = new Timestamp(TimestampType.REAL, 1659107089999048990n);
+      const entry = parser.getTraceEntry(timestamp)!;
+      expect(entry).toBeInstanceOf(WindowManagerState);
+      expect(BigInt(entry.timestampMs)).toEqual(15398076788n);
+    });
   });
 
-  it("has expected trace type", () => {
-    expect(parser.getTraceTypeId()).toEqual(TraceTypeId.WINDOW_MANAGER);
-  });
+  describe("trace elapsed timestamp", () => {
+    let parser: Parser;
 
-  it("provides timestamps", () => {
-    expect(parser.getTimestamps())
-      .toEqual([850254319343, 850763506110, 850782750048]);
-  });
+    beforeAll(async () => {
+      parser = await UnitTestUtils.getParser("traces/elapsed_timestamp/WindowManager.pb");
+    });
 
-  it("retrieves trace entry", () => {
-    const entry = parser.getTraceEntry(850254319343)!;
-    expect(entry).toBeInstanceOf(WindowManagerState);
-    expect(Number(entry.timestampMs)).toEqual(850254319343);
+    it("has expected trace type", () => {
+      expect(parser.getTraceType()).toEqual(TraceType.WINDOW_MANAGER);
+    });
+
+    it("provides timestamps", () => {
+      const expected = [
+        new Timestamp(TimestampType.ELAPSED, 850254319343n),
+        new Timestamp(TimestampType.ELAPSED, 850763506110n),
+        new Timestamp(TimestampType.ELAPSED, 850782750048n),
+      ];
+      expect(parser.getTimestamps(TimestampType.ELAPSED))
+        .toEqual(expected);
+    });
+
+    it("retrieves trace entry", () => {
+      const timestamp = new Timestamp(TimestampType.ELAPSED, 850254319343n);
+      const entry = parser.getTraceEntry(timestamp)!;
+      expect(entry).toBeInstanceOf(WindowManagerState);
+      expect(BigInt(entry.timestampMs)).toEqual(850254319343n);
+    });
   });
 });

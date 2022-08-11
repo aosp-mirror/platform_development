@@ -13,34 +13,78 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceTypeId} from "common/trace/type_id";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceType} from "common/trace/trace_type";
 import {LayerTraceEntry} from "common/trace/flickerlib/layers/LayerTraceEntry";
-import {TestUtils} from "test/test_utils";
+import {UnitTestUtils} from "test/unit/utils";
 import {Parser} from "./parser";
-import {ParserFactory} from "./parser_factory";
 
 describe("ParserSurfaceFlinger", () => {
-  let parser: Parser;
+  describe("trace with elapsed + real timestamp", () => {
+    let parser: Parser;
 
-  beforeAll(async () => {
-    const buffer = TestUtils.getFixtureBlob("trace_SurfaceFlinger.pb");
-    const parsers = await new ParserFactory().createParsers([buffer]);
-    expect(parsers.length).toEqual(1);
-    parser = parsers[0];
+    beforeAll(async () => {
+      parser = await UnitTestUtils.getParser("traces/elapsed_and_real_timestamp/SurfaceFlinger.pb");
+    });
+
+    it("has expected trace type", () => {
+      expect(parser.getTraceType()).toEqual(TraceType.SURFACE_FLINGER);
+    });
+
+    it("provides elapsed timestamps", () => {
+      const expected = [
+        new Timestamp(TimestampType.ELAPSED, 14500282843n),
+        new Timestamp(TimestampType.ELAPSED, 14631249355n),
+        new Timestamp(TimestampType.ELAPSED, 15403446377n),
+      ];
+      expect(parser.getTimestamps(TimestampType.ELAPSED)!.slice(0, 3))
+        .toEqual(expected);
+    });
+
+    it("provides real timestamps", () => {
+      const expected = [
+        new Timestamp(TimestampType.REAL, 1659107089102062832n),
+        new Timestamp(TimestampType.REAL, 1659107089233029344n),
+        new Timestamp(TimestampType.REAL, 1659107090005226366n),
+      ];
+      expect(parser.getTimestamps(TimestampType.REAL)!.slice(0, 3))
+        .toEqual(expected);
+    });
+
+    it("retrieves trace entry from elapsed timestamp", () => {
+      const timestamp = new Timestamp(TimestampType.ELAPSED, 14631249355n);
+      const entry = parser.getTraceEntry(timestamp)!;
+      expect(entry).toBeInstanceOf(LayerTraceEntry);
+      expect(BigInt(entry.timestampMs)).toEqual(14631249355n);
+    });
+
+    it("retrieves trace entry from elapsed timestamp", () => {
+      const timestamp = new Timestamp(TimestampType.REAL, 1659107089233029344n);
+      const entry = parser.getTraceEntry(timestamp)!;
+      expect(entry).toBeInstanceOf(LayerTraceEntry);
+      expect(BigInt(entry.timestampMs)).toEqual(14631249355n);
+    });
   });
 
-  it("has expected trace type", () => {
-    expect(parser.getTraceTypeId()).toEqual(TraceTypeId.SURFACE_FLINGER);
-  });
+  describe("trace with elapsed (only) timestamp", () => {
+    let parser: Parser;
 
-  it("provides timestamps", () => {
-    expect(parser.getTimestamps())
-      .toEqual([850335483446, 850686322883, 850736507697]);
-  });
+    beforeAll(async () => {
+      parser = await UnitTestUtils.getParser("traces/elapsed_timestamp/SurfaceFlinger.pb");
+    });
 
-  it("retrieves trace entry", () => {
-    const entry = parser.getTraceEntry(850335483446)!;
-    expect(entry).toBeInstanceOf(LayerTraceEntry);
-    expect(Number(entry.timestampMs)).toEqual(850335483446);
+    it("has expected trace type", () => {
+      expect(parser.getTraceType()).toEqual(TraceType.SURFACE_FLINGER);
+    });
+
+    it("provides elapsed timestamps", () => {
+      expect(parser.getTimestamps(TimestampType.ELAPSED)![0])
+        .toEqual(new Timestamp(TimestampType.ELAPSED, 850335483446n));
+    });
+
+    it("doesn't provide real timestamps", () => {
+      expect(parser.getTimestamps(TimestampType.REAL))
+        .toEqual(undefined);
+    });
   });
 });

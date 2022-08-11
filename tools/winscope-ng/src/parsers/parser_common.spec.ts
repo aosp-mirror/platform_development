@@ -13,48 +13,98 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceTypeId} from "common/trace/type_id";
-import {ParserFactory} from "./parser_factory";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {Parser} from "./parser";
-import {TestUtils} from "test/test_utils";
+import {UnitTestUtils} from "test/unit/utils";
 
 describe("Parser", () => {
-  let parser: Parser;
+  describe("real timestamp", () => {
+    let parser: Parser;
 
-  beforeAll(async () => {
-    const buffer = TestUtils.getFixtureBlob("trace_WindowManager.pb");
-    const parsers = await new ParserFactory().createParsers([buffer]);
-    expect(parsers.length).toEqual(1);
-    parser = parsers[0];
+    beforeAll(async () => {
+      parser = await UnitTestUtils.getParser("traces/elapsed_and_real_timestamp/WindowManager.pb");
+    });
+
+    it("provides timestamps", () => {
+      const expected = [
+        new Timestamp(TimestampType.REAL, 1659107089075566202n),
+        new Timestamp(TimestampType.REAL, 1659107089999048990n),
+        new Timestamp(TimestampType.REAL, 1659107090010194213n)
+      ];
+      expect(parser.getTimestamps(TimestampType.REAL)!.slice(0, 3))
+        .toEqual(expected);
+    });
+
+    it("retrieves trace entry (no timestamp matches)", () => {
+      const timestamp = new Timestamp(TimestampType.REAL, 1659107089075566201n);
+      expect(parser.getTraceEntry(timestamp))
+        .toEqual(undefined);
+    });
+
+    it("retrieves trace entry (equal timestamp matches)", () => {
+      const timestamp = new Timestamp(TimestampType.REAL, 1659107089075566202n);
+      expect(BigInt(parser.getTraceEntry(timestamp)!.timestampMs))
+        .toEqual(14474594000n);
+    });
+
+    it("retrieves trace entry (equal timestamp matches)", () => {
+      const timestamp = new Timestamp(TimestampType.REAL, 1659107089999048990n);
+      expect(BigInt(parser.getTraceEntry(timestamp)!.timestampMs))
+        .toEqual(15398076788n);
+    });
+
+    it("retrieves trace entry (lower timestamp matches)", () => {
+      const timestamp = new Timestamp(TimestampType.REAL, 1659107089999048991n);
+      expect(BigInt(parser.getTraceEntry(timestamp)!.timestampMs))
+        .toEqual(15398076788n);
+    });
   });
 
-  it("provides timestamps", () => {
-    expect(parser.getTimestamps())
-      .toEqual([850254319343, 850763506110, 850782750048]);
-  });
+  describe("elapsed timestamp", () => {
+    let parser: Parser;
 
-  it("retrieves trace entry (no timestamp matches)", () => {
-    expect(parser.getTraceEntry(850254319342))
-      .toEqual(undefined);
-  });
+    beforeAll(async () => {
+      parser = await UnitTestUtils.getParser("traces/elapsed_timestamp/WindowManager.pb");
+    });
 
-  it("retrieves trace entry (equal timestamp matches)", () => {
-    expect(Number(parser.getTraceEntry(850254319343)!.timestampMs))
-      .toEqual(850254319343);
-  });
+    it("provides timestamps", () => {
+      const expected = [
+        new Timestamp(TimestampType.ELAPSED, 850254319343n),
+        new Timestamp(TimestampType.ELAPSED, 850763506110n),
+        new Timestamp(TimestampType.ELAPSED, 850782750048n)
+      ];
+      expect(parser.getTimestamps(TimestampType.ELAPSED))
+        .toEqual(expected);
+    });
 
-  it("retrieves trace entry (equal timestamp matches)", () => {
-    expect(Number(parser.getTraceEntry(850763506110)!.timestampMs))
-      .toEqual(850763506110);
-  });
+    it("retrieves trace entry (no timestamp matches)", () => {
+      const timestamp = new Timestamp(TimestampType.ELAPSED, 850254319342n);
+      expect(parser.getTraceEntry(timestamp))
+        .toEqual(undefined);
+    });
 
-  it("retrieves trace entry (lower timestamp matches)", () => {
-    expect(Number(parser.getTraceEntry(850254319344)!.timestampMs))
-      .toEqual(850254319343);
-  });
+    it("retrieves trace entry (equal timestamp matches)", () => {
+      const timestamp = new Timestamp(TimestampType.ELAPSED, 850254319343n);
+      expect(BigInt(parser.getTraceEntry(timestamp)!.timestampMs))
+        .toEqual(850254319343n);
+    });
 
-  it("retrieves trace entry (equal timestamp matches)", () => {
-    expect(Number(parser.getTraceEntry(850763506111)!.timestampMs))
-      .toEqual(850763506110);
+    it("retrieves trace entry (equal timestamp matches)", () => {
+      const timestamp = new Timestamp(TimestampType.ELAPSED, 850763506110n);
+      expect(BigInt(parser.getTraceEntry(timestamp)!.timestampMs))
+        .toEqual(850763506110n);
+    });
+
+    it("retrieves trace entry (lower timestamp matches)", () => {
+      const timestamp = new Timestamp(TimestampType.ELAPSED, 850254319344n);
+      expect(BigInt(parser.getTraceEntry(timestamp)!.timestampMs))
+        .toEqual(850254319343n);
+    });
+
+    it("retrieves trace entry (equal timestamp matches)", () => {
+      const timestamp = new Timestamp(TimestampType.ELAPSED, 850763506111n);
+      expect(BigInt(parser.getTraceEntry(timestamp)!.timestampMs))
+        .toEqual(850763506110n);
+    });
   });
 });

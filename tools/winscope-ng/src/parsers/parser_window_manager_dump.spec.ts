@@ -14,33 +14,39 @@
  * limitations under the License.
  */
 import {WindowManagerState} from "common/trace/flickerlib/windows/WindowManagerState";
-import {TraceTypeId} from "common/trace/type_id";
-import {ParserFactory} from "./parser_factory";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceType} from "common/trace/trace_type";
 import {Parser} from "./parser";
-import {TestUtils} from "test/test_utils";
+import {UnitTestUtils} from "test/unit/utils";
 
 describe("ParserWindowManagerDump", () => {
   let parser: Parser;
 
   beforeAll(async () => {
-    const buffer = TestUtils.getFixtureBlob("dump_WindowManager.pb");
-    const parsers = await new ParserFactory().createParsers([buffer]);
-    expect(parsers.length).toEqual(1);
-    parser = parsers[0];
+    parser = await UnitTestUtils.getParser("traces/dump_WindowManager.pb");
   });
 
   it("has expected trace type", () => {
-    expect(parser.getTraceTypeId()).toEqual(TraceTypeId.WINDOW_MANAGER);
+    expect(parser.getTraceType()).toEqual(TraceType.WINDOW_MANAGER);
   });
 
-  it("provides timestamps", () => {
-    expect(parser.getTimestamps())
-      .toEqual([0]);
+  it("provides elapsed timestamp (always zero)", () => {
+    const expected = [
+      new Timestamp(TimestampType.ELAPSED, 0n),
+    ];
+    expect(parser.getTimestamps(TimestampType.ELAPSED))
+      .toEqual(expected);
   });
 
-  it("retrieves trace entry", () => {
-    const entry = parser.getTraceEntry(0)!;
+  it("doesn't provide real timestamp (never)", () => {
+    expect(parser.getTimestamps(TimestampType.REAL))
+      .toEqual(undefined);
+  });
+
+  it("retrieves trace entry from elapsed timestamp", () => {
+    const timestamp = new Timestamp(TimestampType.ELAPSED, 0n);
+    const entry = parser.getTraceEntry(timestamp)!;
     expect(entry).toBeInstanceOf(WindowManagerState);
-    expect(Number(entry.timestampMs)).toEqual(0);
+    expect(BigInt(entry.timestampMs)).toEqual(0n);
   });
 });

@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import * as path from "path";
+import {CommonTestUtils} from "../common/utils";
 
-class ScreenRecordingTraceEntry {
-  constructor(public videoTimeSeconds: number,
-              public videoData: Blob) {
+class E2eTestUtils extends CommonTestUtils {
+  static getProductionIndexHtmlPath(): string {
+    return path.join(CommonTestUtils.getProjectRootPath(), "dist/prod/index.html");
   }
 }
 
-export {ScreenRecordingTraceEntry};
+export {E2eTestUtils};

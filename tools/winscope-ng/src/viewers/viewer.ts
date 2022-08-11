@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { TraceTypeId } from "common/trace/type_id";
+import { TraceType } from "common/trace/trace_type";
 
 interface Viewer {
   //TODO: add TraceEntry data type
-  notifyCurrentTraceEntries(entries: Map<TraceTypeId, any>): void;
+  notifyCurrentTraceEntries(entries: Map<TraceType, any>): void;
   getView(): HTMLElement;
 }
 
