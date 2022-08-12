@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceTypeId} from "common/trace/type_id";
+import {TraceType} from "common/trace/trace_type";
 import {UiData} from "./ui_data";
 
 type UiDataCallbackType = (uiData: UiData) => void;
@@ -25,7 +25,7 @@ class Presenter {
     this.uiDataCallback(this.uiData);
   }
 
-  public notifyCurrentTraceEntries(entries: Map<TraceTypeId, any>) {
+  public notifyCurrentTraceEntries(entries: Map<TraceType, any>) {
     this.uiData = new UiData("UI data selected by user on time scrub");
     this.uiDataCallback(this.uiData);
   }

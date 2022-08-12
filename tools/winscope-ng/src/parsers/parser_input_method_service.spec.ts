@@ -13,32 +13,72 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceTypeId} from "common/trace/type_id";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceType} from "common/trace/trace_type";
 import {ParserFactory} from "./parser_factory";
 import {Parser} from "./parser";
-import {TestUtils} from "test/test_utils";
+import {UnitTestUtils} from "test/unit/utils";
 
 describe("ParserInputMethodService", () => {
-  let parser: Parser;
+  describe("trace with elapsed + real timestamp", () => {
+    let parser: Parser;
 
-  beforeAll(async () => {
-    const buffer = TestUtils.getFixtureBlob("trace_InputMethodService.pb");
-    const parsers = await new ParserFactory().createParsers([buffer]);
-    expect(parsers.length).toEqual(1);
-    parser = parsers[0];
+    beforeAll(async () => {
+      parser = await UnitTestUtils.getParser("traces/elapsed_and_real_timestamp/InputMethodService.pb");
+    });
+
+    it("has expected trace type", () => {
+      expect(parser.getTraceType()).toEqual(TraceType.INPUT_METHOD_SERVICE);
+    });
+
+    it("provides elapsed timestamps", () => {
+      const expected = [
+        new Timestamp(TimestampType.ELAPSED,  16578752896n),
+      ];
+      expect(parser.getTimestamps(TimestampType.ELAPSED))
+        .toEqual(expected);
+    });
+
+    it("provides real timestamps", () => {
+      const expected = [
+        new Timestamp(TimestampType.REAL, 1659107091180519857n),
+      ];
+      expect(parser.getTimestamps(TimestampType.REAL))
+        .toEqual(expected);
+    });
+
+    it("retrieves trace entry from elapsed timestamp", () => {
+      const timestamp = new Timestamp(TimestampType.ELAPSED, 16578752896n);
+      expect(BigInt(parser.getTraceEntry(timestamp)!.elapsedRealtimeNanos))
+        .toEqual(16578752896n);
+    });
+
+    it("retrieves trace entry from elapsed timestamp", () => {
+      const timestamp = new Timestamp(TimestampType.REAL, 1659107091180519857n);
+      expect(BigInt(parser.getTraceEntry(timestamp)!.elapsedRealtimeNanos))
+        .toEqual(16578752896n);
+    });
   });
 
-  it("has expected trace type", () => {
-    expect(parser.getTraceTypeId()).toEqual(TraceTypeId.INPUT_METHOD_SERVICE);
-  });
+  describe("trace with elapsed (only) timestamp", () => {
+    let parser: Parser;
 
-  it("provides timestamps", () => {
-    expect(parser.getTimestamps())
-      .toEqual([1149230019887, 1149234359324, 1149241227244, 1149243083608, 1149249518016, 1149249784617, 1149272993520]);
-  });
+    beforeAll(async () => {
+      parser = await UnitTestUtils.getParser("traces/elapsed_timestamp/InputMethodService.pb");
+    });
 
-  it("retrieves trace entry", () => {
-    expect(Number(parser.getTraceEntry(1149230019887)!.elapsedRealtimeNanos))
-      .toEqual(1149230019887);
+    it("has expected trace type", () => {
+      expect(parser.getTraceType()).toEqual(TraceType.INPUT_METHOD_SERVICE);
+    });
+
+    it("provides elapsed timestamps", () => {
+      expect(parser.getTimestamps(TimestampType.ELAPSED)![0])
+        .toEqual(new Timestamp(TimestampType.ELAPSED, 1149230019887n));
+    });
+
+    it("doesn't provide real timestamps", () => {
+      expect(parser.getTimestamps(TimestampType.REAL))
+        .toEqual(undefined);
+    });
   });
 });

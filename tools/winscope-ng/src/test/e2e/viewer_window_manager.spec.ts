@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 import {browser, element, by} from "protractor";
-import {TestUtils} from "../test_utils";
+import {E2eTestUtils} from "./utils";
 
 describe("Viewer WindowManager", () => {
   beforeAll(async () => {
     browser.manage().timeouts().implicitlyWait(1000);
-    browser.get("file://" + TestUtils.getProductionIndexHtmlPath());
+    browser.get("file://" + E2eTestUtils.getProductionIndexHtmlPath());
   }),
 
   it("processes trace and renders view", () => {
     const inputFile = element(by.css("input[type=\"file\"]"));
-    inputFile.sendKeys(TestUtils.getFixturePath("trace_WindowManager.pb"));
+    inputFile.sendKeys(E2eTestUtils.getFixturePath("traces/elapsed_and_real_timestamp/WindowManager.pb"));
 
     const windowManagerViewerTitle = element(by.css(".viewer-window-manager .title"));
     expect(windowManagerViewerTitle.getText()).toContain("Window Manager");

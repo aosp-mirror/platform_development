@@ -20,6 +20,7 @@ import {ParserInputMethodManagerService} from "./parser_input_method_manager_ser
 import {ParserInputMethodService} from "./parser_input_method_service";
 import {ParserProtoLog} from "./parser_protolog";
 import {ParserScreenRecording} from "./parser_screen_recording";
+import {ParserScreenRecordingLegacy} from "./parser_screen_recording_legacy";
 import {ParserSurfaceFlinger} from "./parser_surface_flinger";
 import {ParserTransactions} from "./parser_transactions";
 import {ParserWindowManager} from "./parser_window_manager";
@@ -33,6 +34,7 @@ class ParserFactory {
     ParserInputMethodService,
     ParserProtoLog,
     ParserScreenRecording,
+    ParserScreenRecordingLegacy,
     ParserSurfaceFlinger,
     ParserTransactions,
     ParserWindowManager,

@@ -13,17 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceTypeId} from "common/trace/type_id";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceType} from "common/trace/trace_type";
 import {Parser} from "./parser";
 import {InputMethodServiceTraceFileProto} from "./proto_types";
 
 class ParserInputMethodService extends Parser {
   constructor(trace: Blob) {
     super(trace);
+    this.realToElapsedTimeOffsetNs = undefined;
   }
 
-  getTraceTypeId(): TraceTypeId {
-    return TraceTypeId.INPUT_METHOD_SERVICE;
+  getTraceType(): TraceType {
+    return TraceType.INPUT_METHOD_SERVICE;
   }
 
   override getMagicNumber(): number[] {
@@ -31,17 +33,31 @@ class ParserInputMethodService extends Parser {
   }
 
   override decodeTrace(buffer: Uint8Array): any[] {
-    return (<any>InputMethodServiceTraceFileProto.decode(buffer)).entry;
+    const decoded = <any>InputMethodServiceTraceFileProto.decode(buffer);
+    if (Object.prototype.hasOwnProperty.call(decoded, "realToElapsedTimeOffsetNanos")) {
+      this.realToElapsedTimeOffsetNs = BigInt(decoded.realToElapsedTimeOffsetNanos);
+    }
+    else {
+      this.realToElapsedTimeOffsetNs = undefined;
+    }
+    return decoded.entry;
   }
 
-  override getTimestamp(entryProto: any): number {
-    return Number(entryProto.elapsedRealtimeNanos);
+  override getTimestamp(type: TimestampType, entryProto: any): undefined|Timestamp {
+    if (type === TimestampType.ELAPSED) {
+      return new Timestamp(type, BigInt(entryProto.elapsedRealtimeNanos));
+    }
+    else if (type === TimestampType.REAL && this.realToElapsedTimeOffsetNs !== undefined) {
+      return new Timestamp(type, this.realToElapsedTimeOffsetNs + BigInt(entryProto.elapsedRealtimeNanos));
+    }
+    return undefined;
   }
 
   override processDecodedEntry(entryProto: any): any {
     return entryProto;
   }
 
+  private realToElapsedTimeOffsetNs: undefined|bigint;
   private static readonly MAGIC_NUMBER = [0x09, 0x49, 0x4d, 0x53, 0x54, 0x52, 0x41, 0x43, 0x45]; // .IMSTRACE
 }
 

@@ -86,12 +86,28 @@ class ArrayUtils {
     return result;
   }
 
-  static toUintLittleEndian(buffer: Uint8Array, start: number, end: number) {
-    let result = 0;
-    for (let i = end-1; i>=start; --i) {
-      result *= 256;
-      result += buffer[i];
+  static toUintLittleEndian(buffer: Uint8Array, start: number, end: number): bigint {
+    let result = 0n;
+    for (let i = end-1; i >= start; --i) {
+      result *= 256n;
+      result += BigInt(buffer[i]);
     }
+    return result;
+  }
+
+  static toIntLittleEndian(buffer: Uint8Array, start: number, end: number): bigint {
+    const numOfBits = BigInt(Math.max(0, 8 * (end-start)));
+    if (numOfBits <= 0n) {
+      return 0n;
+    }
+
+    let result = ArrayUtils.toUintLittleEndian(buffer, start, end);
+    const maxSignedValue = 2n ** (numOfBits - 1n) - 1n;
+    if (result > maxSignedValue) {
+      const valuesRange = 2n ** numOfBits;
+      result -= valuesRange;
+    }
+
     return result;
   }
 }

@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Injector, Inject } from "@angular/core";
-import { createCustomElement } from "@angular/elements";
-import { ViewerWindowManagerComponent } from "viewers/viewer_window_manager/viewer_window_manager.component";
-import { Core } from "./core";
-import { ProxyState } from "trace_collection/proxy_client";
-import { PersistentStore } from "../common/persistent_store";
+import {Component, Inject, Injector} from "@angular/core";
+import {createCustomElement} from "@angular/elements";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {PersistentStore} from "common/persistent_store";
+import {ViewerWindowManagerComponent} from "viewers/viewer_window_manager/viewer_window_manager.component";
+import {Core} from "./core";
+import {ProxyState} from "trace_collection/proxy_client";
 
 @Component({
   selector: "app-root",
@@ -81,7 +82,7 @@ export class AppComponent {
   }
 
   public notifyCurrentTimestamp() {
-    const dummyTimestamp = 1000000; //TODO: get timestamp from time scrub
+    const dummyTimestamp = new Timestamp(TimestampType.ELAPSED, 1000000n);
     this.core.notifyCurrentTimestamp(dummyTimestamp);
   }
 

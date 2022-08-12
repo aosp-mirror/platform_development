@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { TraceTypeId } from "common/trace/type_id";
+import { TraceType } from "common/trace/trace_type";
 import { Viewer } from "./viewer";
 import { ViewerWindowManager } from "./viewer_window_manager/viewer_window_manager";
 
@@ -22,11 +22,11 @@ class ViewerFactory {
     ViewerWindowManager,
   ];
 
-  public createViewers(activeTraceTypes: Set<TraceTypeId>): Viewer[] {
+  public createViewers(activeTraceTypes: Set<TraceType>): Viewer[] {
     const viewers: Viewer[] = [];
 
     for (const Viewer of ViewerFactory.VIEWERS) {
-      const areViewerDepsSatisfied = Viewer.DEPENDENCIES.every((traceType: TraceTypeId) =>
+      const areViewerDepsSatisfied = Viewer.DEPENDENCIES.every((traceType: TraceType) =>
         activeTraceTypes.has(traceType)
       );
 

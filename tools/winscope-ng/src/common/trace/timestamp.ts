@@ -14,10 +14,31 @@
  * limitations under the License.
  */
 
-class ScreenRecordingTraceEntry {
-  constructor(public videoTimeSeconds: number,
-              public videoData: Blob) {
-  }
+enum TimestampType {
+  ELAPSED,
+  REAL,
 }
 
-export {ScreenRecordingTraceEntry};
+class Timestamp {
+  constructor(type: TimestampType, valueNs: bigint) {
+    this.type = type;
+    this.valueNs = valueNs;
+  }
+
+  public getType(): TimestampType {
+    return this.type;
+  }
+
+  public getValueNs(): bigint {
+    return this.valueNs;
+  }
+
+  public valueOf(): bigint {
+    return this.getValueNs();
+  }
+
+  private readonly type: TimestampType;
+  private readonly valueNs: bigint;
+}
+
+export {Timestamp, TimestampType};
