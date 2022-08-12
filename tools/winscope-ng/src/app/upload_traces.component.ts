@@ -46,7 +46,7 @@ import { LoadedTrace } from "app/loaded_trace";
               Choose File
             </button>
             <div *ngIf="this.loadedTraces.length > 0">
-              <button mat-raised-button (click)="onLoadData()">Load Data</button>
+              <button mat-raised-button class="load-btn" (click)="onLoadData()">Load Data</button>
               <button mat-raised-button (click)="onClearData()">Clear All</button>
             </div>
           </div>

@@ -20,6 +20,7 @@ import {PersistentStore} from "common/persistent_store";
 import {ViewerWindowManagerComponent} from "viewers/viewer_window_manager/viewer_window_manager.component";
 import {Core} from "./core";
 import {ProxyState, proxyClient} from "trace_collection/proxy_client";
+import { Viewer } from "viewers/viewer";
 
 @Component({
   selector: "app-root",
@@ -77,11 +78,21 @@ export class AppComponent {
   onDataLoadedChange(dataLoaded: boolean) {
     if (dataLoaded && !this.viewersCreated) {
       this.core.createViewers();
+      this.createViewerElements();
       const dummyTimestamp = this.core.getTimestamps()[1]; //TODO: get timestamp from time scrub
       this.core.notifyCurrentTimestamp(dummyTimestamp);
       this.viewersCreated = true;
       this.dataLoaded = dataLoaded;
     }
+  }
+
+  createViewerElements() {
+    const viewersDiv = document.querySelector("div#viewers")!;
+    viewersDiv.innerHTML = "";
+
+    this.core.getViews().forEach((view: HTMLElement) => {
+      viewersDiv.appendChild(view);
+    });
   }
 
   public notifyCurrentTimestamp() {
