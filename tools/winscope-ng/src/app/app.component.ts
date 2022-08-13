@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, Inject, Injector} from "@angular/core";
+import {Component, Inject, Injector, Input} from "@angular/core";
 import {createCustomElement} from "@angular/elements";
 import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {PersistentStore} from "common/persistent_store";
 import {ViewerWindowManagerComponent} from "viewers/viewer_window_manager/viewer_window_manager.component";
 import {Core} from "./core";
-import {ProxyState} from "trace_collection/proxy_client";
+import {ProxyState, proxyClient} from "trace_collection/proxy_client";
+import { Viewer } from "viewers/viewer";
 
 @Component({
   selector: "app-root",
@@ -30,10 +31,10 @@ import {ProxyState} from "trace_collection/proxy_client";
 
     <div *ngIf="!dataLoaded" fxLayout="row wrap" fxLayoutGap="10px grid" class="home">
       <mat-card class="homepage-card" id="collect-traces-card">
-        <collect-traces [(core)]="core" [(dataLoaded)]="dataLoaded" [store]="store"></collect-traces>
+        <collect-traces [(core)]="core" (dataLoadedChange)="onDataLoadedChange($event)"[store]="store"></collect-traces>
       </mat-card>
       <mat-card class="homepage-card" id="upload-traces-card">
-        <upload-traces [(core)]="core"></upload-traces>
+        <upload-traces [(core)]="core" (dataLoadedChange)="onDataLoadedChange($event)"></upload-traces>
       </mat-card>
     </div>
 
@@ -61,7 +62,8 @@ export class AppComponent {
   core: Core;
   states = ProxyState;
   store: PersistentStore = new PersistentStore();
-  dataLoaded = false;
+  @Input() dataLoaded = false;
+  viewersCreated = false;
 
   constructor(
     @Inject(Injector) injector: Injector
@@ -73,12 +75,24 @@ export class AppComponent {
     }
   }
 
-  onCoreChange(newCore: Core) {
-    this.core = newCore;
+  onDataLoadedChange(dataLoaded: boolean) {
+    if (dataLoaded && !this.viewersCreated) {
+      this.core.createViewers();
+      this.createViewerElements();
+      const dummyTimestamp = this.core.getTimestamps()[1]; //TODO: get timestamp from time scrub
+      this.core.notifyCurrentTimestamp(dummyTimestamp);
+      this.viewersCreated = true;
+      this.dataLoaded = dataLoaded;
+    }
   }
 
-  onDataLoadedChange(loaded: boolean) {
-    this.dataLoaded = loaded;
+  createViewerElements() {
+    const viewersDiv = document.querySelector("div#viewers")!;
+    viewersDiv.innerHTML = "";
+
+    this.core.getViews().forEach((view: HTMLElement) => {
+      viewersDiv.appendChild(view);
+    });
   }
 
   public notifyCurrentTimestamp() {
@@ -88,6 +102,8 @@ export class AppComponent {
 
   public clearData() {
     this.dataLoaded = false;
+    this.viewersCreated = false;
     this.core.clearData();
+    proxyClient.adbData = [];
   }
 }

@@ -53,6 +53,12 @@ mat-icon {
     vertical-align: middle;
 }
 
+.file-icon {
+    vertical-align: middle;
+    outline: none !important;
+    background: none !important;
+}
+
 .card-block {
     margin: 15px;
 }
@@ -66,4 +72,36 @@ button.mat-raised-button {
 .tab.inactive {
     background-color:white;
     color: black;
+}
+
+.drop-box {
+    outline: 2px dashed rgb(194, 65, 108); /* the dash box */
+    outline-offset: -10px;
+    background: white;
+    color: rgb(194, 65, 108);
+    padding: 10px 10px 10px 10px;
+    min-height: 200px; /* minimum height */
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+    justify-items: center;
+}
+
+.input {
+    opacity: 0 !important;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    position: absolute;
+}
+
+.file-input-prompt {
+    color: white;
+    background-color: rgb(194, 65, 108);
+    border-radius: 21.5px;
+    cursor: pointer;
 }
