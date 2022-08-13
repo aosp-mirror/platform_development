@@ -57,6 +57,10 @@ abstract class Parser {
 
   public abstract getTraceType(): TraceType;
 
+  public getTrace(): Blob {
+    return this.trace;
+  }
+
   public getTimestamps(type: TimestampType): undefined|Timestamp[] {
     return this.timestamps.get(type);
   }

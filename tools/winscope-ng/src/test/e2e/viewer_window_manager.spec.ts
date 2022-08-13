@@ -26,6 +26,9 @@ describe("Viewer WindowManager", () => {
     const inputFile = element(by.css("input[type=\"file\"]"));
     inputFile.sendKeys(E2eTestUtils.getFixturePath("traces/elapsed_and_real_timestamp/WindowManager.pb"));
 
+    const loadData = element(by.css(".load-btn"));
+    loadData.click();
+
     const windowManagerViewerTitle = element(by.css(".viewer-window-manager .title"));
     expect(windowManagerViewerTitle.getText()).toContain("Window Manager");
   });

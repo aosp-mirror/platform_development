@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input, OnInit, Output, EventEmitter } from "@angular/core";
+import { Component, Input, OnInit, Output, EventEmitter, NgZone, Inject } from "@angular/core";
 import { ProxyConnection } from "trace_collection/proxy_connection";
 import { Connection } from "trace_collection/connection";
 import { setTraces } from "trace_collection/set_traces";
 import { ProxyState } from "../trace_collection/proxy_client";
-import { traceConfigurations, configMap, SelectionConfiguration, TraceConfigurationMap, EnableConfiguration } from "../trace_collection/trace_collection_utils";
+import { traceConfigurations, configMap, SelectionConfiguration, EnableConfiguration } from "../trace_collection/trace_collection_utils";
 import { Core } from "app/core";
 import { PersistentStore } from "../common/persistent_store";
 
@@ -123,13 +123,12 @@ export class CollectTracesComponent implements OnInit {
     store: PersistentStore = new PersistentStore();
 
   @Input()
-    core: Core = new Core();
+    core?: Core;
 
   @Output()
     coreChange = new EventEmitter<Core>();
 
-  @Input()
-    dataLoaded = false;
+  dataLoaded = false;
 
   @Output()
     dataLoadedChange = new EventEmitter<boolean>();
@@ -142,6 +141,8 @@ export class CollectTracesComponent implements OnInit {
       this.connect = new ProxyConnection();
     }
   }
+
+  constructor(@Inject(NgZone) private ngZone: NgZone) {}
 
   ngOnDestroy(): void {
     this.connect.proxy?.removeOnProxyChange(this.onProxyChange);
@@ -257,7 +258,7 @@ export class CollectTracesComponent implements OnInit {
     if (!setTraces.dumpError) {
       await this.loadFiles();
     } else {
-      this.core.clearData();
+      this.core?.clearData();
     }
   }
 
@@ -272,11 +273,13 @@ export class CollectTracesComponent implements OnInit {
 
   public async loadFiles() {
     console.log("loading files", this.connect.adbData());
-    await this.core.bootstrap(this.connect.adbData());
-    this.dataLoaded = true;
-    this.dataLoadedChange.emit(this.dataLoaded);
-    this.coreChange.emit(this.core);
-    console.log("finished loading data!");
+    this.core?.clearData();
+    await this.core?.addTraces(this.connect.adbData());
+    this.ngZone.run(() => {
+      this.dataLoaded = true;
+      this.dataLoadedChange.emit(this.dataLoaded);
+      console.log("finished loading data!");
+    });
   }
 
   public tabClass(adbTab: boolean) {
