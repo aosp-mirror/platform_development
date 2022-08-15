@@ -22,6 +22,7 @@ import { Viewer } from "viewers/viewer";
 import { ViewerFactory } from "viewers/viewer_factory";
 import { LoadedTrace } from "app/loaded_trace";
 import { TRACE_INFO } from "./trace_info";
+import { TimestampUtils } from "common/trace/timestamp_utils";
 
 class TraceCoordinator {
   private parsers: Parser[];
@@ -105,8 +106,17 @@ class TraceCoordinator {
     this.parsers.forEach(parser => {
       const targetTimestamp = timestamp;
       const entry = parser.getTraceEntry(targetTimestamp);
+      let prevEntry = null;
+
+      const parserTimestamps = parser.getTimestamps(timestamp.getType());
+      if (parserTimestamps) {
+        const closestIndex = TimestampUtils.getClosestIndex(targetTimestamp, parserTimestamps);
+        if (closestIndex) {
+          prevEntry = parser.getTraceEntry(parserTimestamps[closestIndex-1]) ?? null;
+        }
+      }
       if (entry !== undefined) {
-        traceEntries.set(parser.getTraceType(), entry);
+        traceEntries.set(parser.getTraceType(), [entry, prevEntry]);
       }
     });
 

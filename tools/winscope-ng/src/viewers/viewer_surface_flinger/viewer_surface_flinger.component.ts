@@ -20,6 +20,7 @@ import {
 import { UiData } from "./ui_data";
 import { TRACE_INFO } from "app/trace_info";
 import { TraceType } from "common/trace/trace_type";
+import { PersistentStore } from "common/persistent_store";
 
 @Component({
   selector: "viewer-surface-flinger",
@@ -29,33 +30,86 @@ import { TraceType } from "common/trace/trace_type";
           <rects-view
             [rects]="inputData?.rects ?? []"
             [displayIds]="inputData?.displayIds ?? []"
-            [highlighted]="inputData?.highlighted ?? ''"
-            class="rects-view"
+            [highlightedItems]="inputData?.highlightedItems ?? []"
           ></rects-view>
         </mat-card>
-        <mat-card id="sf-hierarchy-view" class="hierarchy-view">
-          <hierarchy-view></hierarchy-view>
-        </mat-card>
-        <mat-card id="sf-properties-view" class="properties-view">
-          <properties-view></properties-view>
-        </mat-card>
+        <div fxLayout="row wrap" fxLayoutGap="10px grid" class="card-grid">
+          <mat-card id="sf-hierarchy-view" class="hierarchy-view">
+            <hierarchy-view
+              [tree]="inputData?.tree"
+              [dependencies]="inputData?.dependencies ?? []"
+              [highlightedItems]="inputData?.highlightedItems ?? []"
+              [pinnedItems]="inputData?.pinnedItems ?? []"
+              [store]="store"
+              [userOptions]="inputData?.hierarchyUserOptions ?? {}"
+            ></hierarchy-view>
+          </mat-card>
+          <mat-card id="sf-properties-view" class="properties-view">
+            <properties-view></properties-view>
+          </mat-card>
+        </div>
       </div>
   `,
   styles: [
-    "@import 'https://fonts.googleapis.com/icon?family=Material+Icons';",
-    "mat-icon {margin: 5px}",
-    "viewer-surface-flinger {font-family: Arial, Helvetica, sans-serif;}",
-    ".trace-card-title {display: inline-block; vertical-align: middle;}",
-    ".header-button {background: none; border: none; display: inline-block; vertical-align: middle;}",
-    ".card-grid {width: 100%;height: 100%;display: flex;flex-direction: row;overflow: auto;}",
-    ".rects-view {font: inherit; flex: none !important;width: 400px;margin: 8px;}",
-    ".hierarchy-view, .properties-view {font: inherit; flex: 1;margin: 8px;min-width: 400px;min-height: 50rem;max-height: 50rem;}",
+    `
+      @import 'https://fonts.googleapis.com/icon?family=Material+Icons';
+
+      mat-icon {
+        margin: 5px
+      }
+
+      .icon-button {
+        background: none;
+        border: none;
+        display: inline-block;
+        vertical-align: middle;
+      }
+
+      viewer-surface-flinger {
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      .header-button {
+        background: none;
+        border: none;
+        display: inline-block;
+        vertical-align: middle;
+      }
+
+      .card-grid {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: row;
+        overflow: auto;
+      }
+
+      .rects-view {
+        font: inherit;
+        flex: none !important;
+        width: 350px;
+        height: 52.5rem;
+        margin: 0px;
+        border: 1px solid rgb(129, 129, 129);
+        border-radius: 0;
+      }
+
+      .hierarchy-view, .properties-view {
+        font: inherit;
+        margin: 0px;
+        width: 50%;
+        height: 52.5rem;
+        border-radius: 0;
+        border-top: 1px solid rgb(129, 129, 129);
+        border-right: 1px solid rgb(129, 129, 129);
+        border-bottom: 1px solid rgb(129, 129, 129);
+      }
+    `,
   ]
 })
 export class ViewerSurfaceFlingerComponent {
-  @Input()
-    inputData?: UiData;
-
+  @Input() inputData?: UiData;
+  @Input() store: PersistentStore = new PersistentStore();
   TRACE_INFO = TRACE_INFO;
   TraceType = TraceType;
 }

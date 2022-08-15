@@ -16,7 +16,6 @@
 
 import { shortenName } from '../mixin'
 import { toRect, Size, WindowState, WindowLayoutParams } from "../common"
-import { VISIBLE_CHIP } from '../treeview/Chips'
 import WindowContainer from "./WindowContainer"
 
  WindowState.fromProto = function (proto: any, isActivityInTree: Boolean): WindowState {
@@ -131,7 +130,7 @@ function addAttributes(entry: WindowState, proto: any) {
     entry.rect.label = entry.name;
     entry.proto = proto;
     entry.shortName = shortenName(entry.name);
-    entry.chips = entry.isVisible ? [VISIBLE_CHIP] : [];
+    entry.chips = [];
 }
 
 export default WindowState

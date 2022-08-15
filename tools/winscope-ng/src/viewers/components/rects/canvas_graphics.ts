@@ -41,8 +41,7 @@ export class CanvasGraphics {
     this.canvas!.style.width = "100%";
     this.canvas!.style.height = "40rem";
 
-    // TODO: click and drag rotation control
-    this.camera.position.set(this.xyCameraPos, this.xyCameraPos, 6);
+    this.camera.position.set(this.xCameraPos, Math.abs(this.xCameraPos), 6);
     this.camera.lookAt(0, 0, 0);
     this.camera.zoom = this.camZoom;
     this.camera.updateProjectionMatrix();
@@ -142,17 +141,17 @@ export class CanvasGraphics {
   ) {
     this.targetObjects = [];
     this.rects.forEach(rect => {
-      const visibleViewInvisibleRect = this.visibleView && !rect.isVisible;
-      const xrayViewNoVirtualDisplaysVirtualRect = !this.visibleView && !this.showVirtualDisplays && rect.isDisplay && rect.isVirtual;
-      if (visibleViewInvisibleRect || xrayViewNoVirtualDisplaysVirtualRect) {
+      const mustNotDrawInVisibleView = this.visibleView && !rect.isVisible;
+      const mustNotDrawInXrayViewWithoutVirtualDisplays = !this.visibleView && !this.showVirtualDisplays && rect.isDisplay && rect.isVirtual;
+      if (mustNotDrawInVisibleView || mustNotDrawInXrayViewWithoutVirtualDisplays) {
         rectCounter++;
         return;
       }
 
       //set colour mapping
       let planeColor;
-      if (this.highlighted === `${rect.id}`) {
-        planeColor = this.colorMapping("highlight", numberOfRects, 0);
+      if (this.highlightedItems.includes(`${rect.id}`)) {
+        planeColor = this.colorMapping("highlighted", numberOfRects, 0);
       } else if (rect.isVisible) {
         planeColor = this.colorMapping("green", visibleRects, visibleDarkFactor);
         visibleDarkFactor++;
@@ -178,7 +177,9 @@ export class CanvasGraphics {
       // label circular marker
       const circle = this.setCircleMaterial(planeRect, rect);
       scene.add(circle);
-      this.targetObjects.push(planeRect);
+
+      // if not a display rect, should be clickable
+      if (!rect.isDisplay) this.targetObjects.push(planeRect);
 
       // label line
       const [line, rectLabel] = this.createLabel(rect, circle, lowestY, rectCounter);
@@ -252,7 +253,7 @@ export class CanvasGraphics {
 
     const linePoints = [circle.position, cornerPos];
     if (this.isLandscape && cornerPos.x > 0 || !this.isLandscape) {
-      endPos = new THREE.Vector3(cornerPos.x - 1, cornerPos.y - this.labelShift, cornerPos.z);
+      endPos = new THREE.Vector3(cornerPos.x - 0.75, cornerPos.y - 0.75*this.labelShift, cornerPos.z);
     } else {
       endPos = cornerPos;
     }
@@ -313,8 +314,8 @@ export class CanvasGraphics {
     return this.visibleView;
   }
 
-  getXyCameraPos() {
-    return this.xyCameraPos;
+  getXCameraPos() {
+    return this.xCameraPos;
   }
 
   getShowVirtualDisplays() {
@@ -326,14 +327,14 @@ export class CanvasGraphics {
   }
 
   updateRotation(userInput: number) {
-    this.xyCameraPos = userInput;
+    this.xCameraPos = userInput;
     this.camZoom = userInput/4 * 0.2 + 0.9;
     this.labelShift = userInput/4 * this.maxLabelShift;
-    this.lowestYShift = userInput/4 + 2;
+    this.lowestYShift = Math.abs(userInput)/4 + 2;
   }
 
-  updateHighlighted(highlighted: string) {
-    this.highlighted = highlighted;
+  updateHighlightedItems(newItems: Array<string>) {
+    this.highlightedItems = newItems;
   }
 
   updateRects(rects: Rectangle[]) {
@@ -358,14 +359,16 @@ export class CanvasGraphics {
 
   updateZoom(isZoomIn: boolean) {
     if (isZoomIn && this.camZoom < 2) {
+      this.labelXFactor -= 0.001;
       this.camZoom += this.camZoomFactor * 1.5;
     } else if (!isZoomIn && this.camZoom > 0.5) {
+      this.labelXFactor += 0.001;
       this.camZoom -= this.camZoomFactor * 1.5;
     }
   }
 
   colorMapping(scale: string, numberOfRects: number, darkFactor:number): THREE.Color {
-    if (scale === "highlight") {
+    if (scale === "highlighted") {
       return new THREE.Color(0xD2E3FC);
     } else if (scale === "grey") {
       // darkness of grey rect depends on z order - darkest 64, lightest 128
@@ -387,8 +390,8 @@ export class CanvasGraphics {
   }
 
   shortenText(text: string): string {
-    if (text.length > 40) {
-      text = text.slice(0, 40);
+    if (text.length > 35) {
+      text = text.slice(0, 35);
     }
     return text;
   }
@@ -397,17 +400,17 @@ export class CanvasGraphics {
   readonly cameraHalfWidth = 2.8;
   readonly cameraHalfHeight = 3.2;
   private readonly maxLabelShift = 0.305;
-  private readonly labelXFactor = 0.008;
+  private labelXFactor = 0.009;
   private lowestYShift = 3;
   private camZoom = 1.1;
   private camZoomFactor = 0.1;
   private labelShift = this.maxLabelShift;
-  private highlighted = "";
   private visibleView = false;
   private isLandscape = false;
   private showVirtualDisplays = false;
   private layerSeparation = 0.4;
-  private xyCameraPos = 4;
+  private xCameraPos = 4;
+  private highlightedItems: Array<string> = [];
   private camera: THREE.OrthographicCamera;
   private rects: Rectangle[] = [];
   private labelElements: HTMLElement[] = [];

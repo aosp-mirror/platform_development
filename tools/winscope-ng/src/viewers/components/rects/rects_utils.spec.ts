@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { RectsUtils } from "./rects_utils";
+import { RectsUtils } from "viewers/components/rects/rects_utils";
 
 describe("RectsUtils", () => {
   it("transforms rect", () => {
@@ -38,7 +38,8 @@ describe("RectsUtils", () => {
       width: 1,
       ref: null,
       id: 12345,
-      displayId: 0
+      displayId: 0,
+      isVirtual: false
     };
     const expected = {
       topLeft: {x: 1, y: 1},
@@ -52,7 +53,7 @@ describe("RectsUtils", () => {
       ref: null,
       id: 12345,
       displayId: 0,
-      isVirtual: undefined
+      isVirtual: false
     };
     expect(RectsUtils.transformRect(rect.transform.matrix, rect)).toEqual(expected);
   });
