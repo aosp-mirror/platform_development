@@ -19,7 +19,7 @@ import {
   Input,
   Output
 } from "@angular/core";
-import {UiData} from "../../ui_data/ui_data";
+import {UiData} from "./ui_data";
 
 @Component({
   selector: "viewer-window-manager",

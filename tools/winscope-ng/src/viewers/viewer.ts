@@ -19,6 +19,7 @@ interface Viewer {
   //TODO: add TraceEntry data type
   notifyCurrentTraceEntries(entries: Map<TraceType, any>): void;
   getView(): HTMLElement;
+  getTitle(): string;
   getDependencies(): TraceType[];
 }
 

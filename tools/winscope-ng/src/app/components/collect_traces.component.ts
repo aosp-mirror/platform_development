@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Inject, Input, Output, EventEmitter, NgZone } from "@angular/core";
+import { Component, Inject, Input, Output, EventEmitter, OnInit, OnDestroy } from "@angular/core";
 import { ProxyConnection } from "trace_collection/proxy_connection";
 import { Connection } from "trace_collection/connection";
 import { setTraces } from "trace_collection/set_traces";
-import { ProxyState } from "../../trace_collection/proxy_client";
-import { traceConfigurations, configMap, SelectionConfiguration, EnableConfiguration } from "../../trace_collection/trace_collection_utils";
+import { ProxyState } from "trace_collection/proxy_client";
+import { traceConfigurations, configMap, SelectionConfiguration, EnableConfiguration } from "trace_collection/trace_collection_utils";
 import { TraceCoordinator } from "app/trace_coordinator";
-import { PersistentStore } from "../../common/persistent_store";
+import { PersistentStore } from "common/persistent_store";
 
 
 @Component({
@@ -33,9 +33,9 @@ import { PersistentStore } from "../../common/persistent_store";
 
       <div class="set-up-adb" *ngIf="!connect.adbSuccess()">
         <button id="proxy-tab" mat-raised-button [ngClass]="tabClass(true)" (click)="displayAdbProxyTab()">ADB Proxy</button>
-        <button id="web-tab" mat-raised-button [ngClass]="tabClass(false)" (click)="displayWebAdbTab()">Web ADB</button>
+        <!-- <button id="web-tab" mat-raised-button [ngClass]="tabClass(false)" (click)="displayWebAdbTab()">Web ADB</button> -->
         <adb-proxy *ngIf="isAdbProxy" [(proxy)]="connect.proxy!" (addKey)="onAddKey($event)"></adb-proxy>
-        <web-adb *ngIf="!isAdbProxy"></web-adb>
+        <!-- <web-adb *ngIf="!isAdbProxy"></web-adb> TODO: fix web adb workflow -->
       </div>
 
       <div id="devices-connecting" *ngIf="connect.isDevicesState()">
@@ -116,28 +116,20 @@ import { PersistentStore } from "../../common/persistent_store";
     ".mat-checkbox-checked .mat-checkbox-background {transform: scale(0.7); font-size: 10;}"
   ]
 })
-export class CollectTracesComponent {
+export class CollectTracesComponent implements OnInit, OnDestroy {
   objectKeys = Object.keys;
   isAdbProxy = true;
   traceConfigurations = traceConfigurations;
   connect: Connection = new ProxyConnection();
   setTraces = setTraces;
-
-  @Input()
-    store: PersistentStore = new PersistentStore();
-
-  @Input()
-    traceCoordinator: TraceCoordinator;
-
-  @Output()
-    traceCoordinatorChange = new EventEmitter<TraceCoordinator>();
-
   dataLoaded = false;
 
-  @Output()
-    dataLoadedChange = new EventEmitter<boolean>();
+  @Input() store!: PersistentStore;
+  @Input() traceCoordinator!: TraceCoordinator;
 
-  constructor(@Inject(NgZone) private ngZone: NgZone) {
+  @Output() dataLoadedChange = new EventEmitter<boolean>();
+
+  ngOnInit() {
     if (this.isAdbProxy) {
       this.connect = new ProxyConnection();
     } else {
@@ -278,11 +270,8 @@ export class CollectTracesComponent {
     this.traceCoordinator.clearData();
 
     await this.traceCoordinator.addTraces(this.connect.adbData());
-
-    this.ngZone.run(() => {
-      this.dataLoaded = true;
-      this.dataLoadedChange.emit(this.dataLoaded);
-    });
+    this.dataLoaded = true;
+    this.dataLoadedChange.emit(this.dataLoaded);
     console.log("finished loading data!");
   }
 

@@ -74,16 +74,11 @@ import { LoadedTrace } from "app/loaded_trace";
   ]
 })
 export class UploadTracesComponent {
-  @Input()
-    traceCoordinator: TraceCoordinator;
-
-  @Output()
-    traceCoordinatorChange = new EventEmitter<TraceCoordinator>();
+  @Input() traceCoordinator!: TraceCoordinator;
 
   dataLoaded = false;
 
-  @Output()
-    dataLoadedChange = new EventEmitter<boolean>();
+  @Output() dataLoadedChange = new EventEmitter<boolean>();
 
   constructor(@Inject(NgZone) private ngZone: NgZone) {}
 
@@ -121,7 +116,6 @@ export class UploadTracesComponent {
     this.dataLoaded = false;
     this.loadedTraces = [];
     this.dataLoadedChange.emit(this.dataLoaded);
-    this.traceCoordinatorChange.emit(this.traceCoordinator);
   }
 
   public onFileDragIn(e: DragEvent) {

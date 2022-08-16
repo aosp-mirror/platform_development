@@ -15,16 +15,16 @@
  */
 import {TraceType} from "common/trace/trace_type";
 import {Viewer} from "viewers/viewer";
-import {PresenterSurfaceFlinger} from "../../presenters/presenter_surface_flinger";
-import {UiDataSurfaceFlinger} from "../../ui_data/ui_data_surface_flinger";
+import {Presenter} from "./presenter";
+import {UiData} from "./ui_data";
 
 class ViewerSurfaceFlinger implements Viewer {
   constructor() {
     this.view = document.createElement("viewer-surface-flinger");
-    this.presenter = new PresenterSurfaceFlinger((uiData: UiDataSurfaceFlinger) => {
+    this.presenter = new Presenter((uiData: UiData) => {
       (this.view as any).inputData = uiData;
     });
-    this.view.addEventListener("highlightedChange", (event) => this.presenter.updateHighlightedRect(event));
+    this.view.addEventListener("highlightedChange", (event) => this.presenter.updateHighlightedRect((event as CustomEvent)));
   }
 
   public notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
@@ -35,13 +35,17 @@ class ViewerSurfaceFlinger implements Viewer {
     return this.view;
   }
 
+  public getTitle(): string {
+    return "Surface Flinger";
+  }
+
   public getDependencies(): TraceType[] {
     return ViewerSurfaceFlinger.DEPENDENCIES;
   }
 
   public static readonly DEPENDENCIES: TraceType[] = [TraceType.SURFACE_FLINGER];
   private view: HTMLElement;
-  private presenter: PresenterSurfaceFlinger;
+  private presenter: Presenter;
 }
 
 export {ViewerSurfaceFlinger};

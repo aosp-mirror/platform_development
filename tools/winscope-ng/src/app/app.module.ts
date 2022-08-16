@@ -31,7 +31,6 @@ import { PropertiesComponent } from "viewers/properties.component";
 import { RectsComponent } from "viewers/rects.component";
 import { TraceViewHeaderComponent } from "./components/trace_view_header.component";
 import { TraceViewComponent } from "./components/trace_view.component";
-import { CanvasService } from "viewers/canvas.service";
 
 @NgModule({
   declarations: [
@@ -70,7 +69,6 @@ import { CanvasService } from "viewers/canvas.service";
     MatSliderModule,
     MatRadioModule
   ],
-  providers: [CanvasService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

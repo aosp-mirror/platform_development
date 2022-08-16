@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input, OnChanges, OnDestroy, Inject, NgZone, ElementRef, SimpleChanges } from "@angular/core";
-import { MatrixUtils } from "common/utils/matrix_utils";
-import { Point, Rectangle, RectMatrix, RectTransform } from "ui_data/ui_data_surface_flinger";
+import { Component, Input, OnChanges, OnDestroy, Inject, ElementRef, SimpleChanges } from "@angular/core";
+import { RectsUtils } from "./rects_utils";
+import { Point, Rectangle, RectMatrix, RectTransform } from "viewers/viewer_surface_flinger/ui_data";
 import { interval, Subscription } from "rxjs";
-import { CanvasService } from "./canvas.service";
+import { CanvasGraphics } from "./canvas_graphics";
 import * as THREE from "three";
 
 @Component({
@@ -34,7 +34,7 @@ import * as THREE from "three";
           max="0.4"
           aria-label="units"
           [value]="getLayerSeparation()"
-          (input)="canvasService.updateLayerSeparation($event.value!)"
+          (input)="canvasGraphics.updateLayerSeparation($event.value!)"
         ></mat-slider>
         <mat-slider
           step="0.01"
@@ -42,24 +42,24 @@ import * as THREE from "three";
           max="4"
           aria-label="units"
           [value]="xyCameraPos()"
-          (input)="canvasService.updateRotation($event.value!)"
+          (input)="canvasGraphics.updateRotation($event.value!)"
         ></mat-slider>
         <mat-checkbox
           [hidden]="visibleView()"
           class="rects-checkbox"
           [checked]="showVirtualDisplays()"
-          (change)="canvasService.updateVirtualDisplays($event.checked!)"
+          (change)="canvasGraphics.updateVirtualDisplays($event.checked!)"
         >Show virtual displays</mat-checkbox>
     </mat-card-header>
     <mat-card-content class="rects-content">
       <div class="canvas-container">
         <div class="zoom-container">
-          <button id="zoom-btn" (click)="canvasService.updateZoom(true)">
+          <button id="zoom-btn" (click)="canvasGraphics.updateZoom(true)">
             <mat-icon aria-hidden="true">
               zoom_in
             </mat-icon>
           </button>
-          <button id="zoom-btn" (click)="canvasService.updateZoom(false)">
+          <button id="zoom-btn" (click)="canvasGraphics.updateZoom(false)">
             <mat-icon aria-hidden="true">
               zoom_out
             </mat-icon>
@@ -91,20 +91,15 @@ import * as THREE from "three";
 })
 
 export class RectsComponent implements OnChanges, OnDestroy {
-  @Input()
-    bounds: any;
+  @Input() rects!: Rectangle[];
 
-  @Input()
-    rects: Rectangle[];
-
-  @Input()
-    highlighted = "";
+  @Input() highlighted = "";
 
   constructor(
-    @Inject(NgZone) private ngZone: NgZone,
     @Inject(ElementRef) private elementRef: ElementRef,
-    @Inject(CanvasService) public canvasService: CanvasService
-  ) {}
+  ) {
+    this.canvasGraphics = new CanvasGraphics();
+  }
 
   ngOnDestroy() {
     if (this.canvasSubscription) {
@@ -115,13 +110,13 @@ export class RectsComponent implements OnChanges, OnDestroy {
   ngOnChanges(changes: SimpleChanges) {
     if (this.rects.length > 0) {
       //change in rects so they must undergo transformation and scaling before canvas refreshed
-      this.canvasService.clearLabelElements();
+      this.canvasGraphics.clearLabelElements();
       this.rects = this.rects.filter(rect => rect.isVisible || rect.isDisplay);
       this.displayRects = this.rects.filter(rect => rect.isDisplay);
       this.computeBounds();
       this.rects = this.rects.map(rect => {
         if (changes["rects"] && rect.transform) {
-          return MatrixUtils.transformRect(rect.transform.matrix ??  rect.transform, rect);
+          return RectsUtils.transformRect(rect.transform.matrix ??  rect.transform, rect);
         } else {
           return rect;
         }
@@ -133,32 +128,31 @@ export class RectsComponent implements OnChanges, OnDestroy {
     }
   }
 
-  onRectClick(event:any) {
+  onRectClick(event:PointerEvent) {
     this.setNormalisedMousePos(event);
     const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(this.mouse, this.canvasService.getCamera());
+    raycaster.setFromCamera(this.mouse, this.canvasGraphics.getCamera());
     // create an array containing all objects in the scene with which the ray intersects
-    const intersects = raycaster.intersectObjects(this.canvasService.getTargetObjects());
+    const intersects = raycaster.intersectObjects(this.canvasGraphics.getTargetObjects());
     // if there is one (or more) intersections
     if (intersects.length > 0){
       if (this.highlighted === intersects[0].object.name) {
         this.highlighted = "";
-        this.canvasService.updateHighlighted("");
+        this.canvasGraphics.updateHighlighted("");
       } else {
         this.highlighted = intersects[0].object.name;
-        this.canvasService.updateHighlighted(intersects[0].object.name);
+        this.canvasGraphics.updateHighlighted(intersects[0].object.name);
       }
-      this.ngZone.run(() => {
-        this.updateHighlightedRect();
-      });
+      this.updateHighlightedRect();
     }
   }
 
-  setNormalisedMousePos(event:any) {
+  setNormalisedMousePos(event:PointerEvent) {
     event.preventDefault();
-    const canvasOffset = event.target.getBoundingClientRect();
-    this.mouse.x = ((event.clientX-canvasOffset.left)/event.target.clientWidth) * 2 - 1;
-    this.mouse.y = -((event.clientY-canvasOffset.top)/event.target.clientHeight) * 2 + 1;
+    const canvas = (event.target as Element);
+    const canvasOffset = canvas.getBoundingClientRect();
+    this.mouse.x = ((event.clientX-canvasOffset.left)/canvas.clientWidth) * 2 - 1;
+    this.mouse.y = -((event.clientY-canvasOffset.top)/canvas.clientHeight) * 2 + 1;
     this.mouse.z = 0;
   }
 
@@ -174,22 +168,23 @@ export class RectsComponent implements OnChanges, OnDestroy {
     if (this.canvasSubscription) {
       this.canvasSubscription.unsubscribe();
     }
-    this.canvasService.initialise();
+    const canvas = document.getElementById("rects-canvas") as HTMLCanvasElement;
+    this.canvasGraphics.initialise(canvas);
     this.canvasSubscription = this.drawRectsInterval.subscribe(() => {
       this.updateVariablesBeforeRefresh();
-      this.canvasService.refreshCanvas();
+      this.canvasGraphics.refreshCanvas();
     });
   }
 
   updateVariablesBeforeRefresh() {
-    this.canvasService.updateRects(this.rects);
+    this.canvasGraphics.updateRects(this.rects);
     const biggestX = Math.max(...this.rects.map(rect => rect.topLeft.x + rect.width/2));
-    this.canvasService.updateIsLandscape(biggestX > this.s({x: this.boundsWidth, y:this.boundsHeight}).x/2);
+    this.canvasGraphics.updateIsLandscape(biggestX > this.s({x: this.boundsWidth, y:this.boundsHeight}).x/2);
   }
 
   onChangeView(visible: boolean) {
-    this.canvasService.updateVisibleView(visible);
-    this.canvasService.clearLabelElements();
+    this.canvasGraphics.updateVisibleView(visible);
+    this.canvasGraphics.clearLabelElements();
   }
 
   scaleRects() {
@@ -209,20 +204,17 @@ export class RectsComponent implements OnChanges, OnDestroy {
   }
 
   computeBounds(): any {
-    if (this.bounds) {
-      return this.bounds;
-    }
     this.boundsWidth = Math.max(...this.rects.map((rect) => {
       const mat = this.getMatrix(rect);
       if (mat) {
-        return MatrixUtils.transformRect(mat, rect).width;
+        return RectsUtils.transformRect(mat, rect).width;
       } else {
         return rect.width;
       }}));
     this.boundsHeight = Math.max(...this.rects.map((rect) => {
       const mat = this.getMatrix(rect);
       if (mat) {
-        return MatrixUtils.transformRect(mat, rect).height;
+        return RectsUtils.transformRect(mat, rect).height;
       } else {
         return rect.height;
       }}));
@@ -245,9 +237,9 @@ export class RectsComponent implements OnChanges, OnDestroy {
   s(sourceCoordinates: Point) {
     let scale;
     if (this.boundsWidth < this.boundsHeight) {
-      scale = this.canvasService.cameraHalfHeight*2 * 0.6 / this.boundsHeight;
+      scale = this.canvasGraphics.cameraHalfHeight*2 * 0.6 / this.boundsHeight;
     } else {
-      scale = this.canvasService.cameraHalfWidth*2 * 0.6 / this.boundsWidth;
+      scale = this.canvasGraphics.cameraHalfWidth*2 * 0.6 / this.boundsWidth;
     }
     return {
       x: sourceCoordinates.x * scale,
@@ -268,26 +260,27 @@ export class RectsComponent implements OnChanges, OnDestroy {
   }
 
   visibleView() {
-    return this.canvasService.getVisibleView();
+    return this.canvasGraphics.getVisibleView();
   }
 
   getLayerSeparation() {
-    return this.canvasService.getLayerSeparation();
+    return this.canvasGraphics.getLayerSeparation();
   }
 
   xyCameraPos() {
-    return this.canvasService.getXyCameraPos();
+    return this.canvasGraphics.getXyCameraPos();
   }
 
   showVirtualDisplays() {
-    return this.canvasService.getShowVirtualDisplays();
+    return this.canvasGraphics.getShowVirtualDisplays();
   }
 
+  canvasGraphics: CanvasGraphics;
   private readonly _60fpsInterval = 16.66666666666667;
   private drawRectsInterval = interval(this._60fpsInterval);
   private boundsWidth = 0;
   private boundsHeight = 0;
-  private displayRects: Rectangle[];
-  private canvasSubscription: Subscription;
+  private displayRects!: Rectangle[];
+  private canvasSubscription?: Subscription;
   private mouse = new THREE.Vector3(0, 0, 0);
 }

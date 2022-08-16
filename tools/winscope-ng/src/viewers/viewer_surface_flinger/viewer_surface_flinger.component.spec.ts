@@ -22,8 +22,7 @@ import { RectsComponent } from "viewers/rects.component";
 import { MatIconModule } from "@angular/material/icon";
 import { MatCardModule } from "@angular/material/card";
 import { ComponentFixtureAutoDetect } from "@angular/core/testing";
-import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from "@angular/core";
-import { CanvasService } from "viewers/canvas.service";
+import { CUSTOM_ELEMENTS_SCHEMA } from "@angular/core";
 
 describe("ViewerSurfaceFlingerComponent", () => {
   let fixture: ComponentFixture<ViewerSurfaceFlingerComponent>;
@@ -33,7 +32,6 @@ describe("ViewerSurfaceFlingerComponent", () => {
   beforeAll(async () => {
     await TestBed.configureTestingModule({
       providers: [
-        CanvasService,
         { provide: ComponentFixtureAutoDetect, useValue: true }
       ],
       imports: [
@@ -46,7 +44,7 @@ describe("ViewerSurfaceFlingerComponent", () => {
         PropertiesComponent,
         RectsComponent
       ],
-      schemas: [NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA]
+      schemas: [CUSTOM_ELEMENTS_SCHEMA]
     }).compileComponents();
   });
 

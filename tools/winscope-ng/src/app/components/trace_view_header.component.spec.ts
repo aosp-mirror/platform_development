@@ -18,7 +18,6 @@ import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { TraceViewHeaderComponent } from "./trace_view_header.component";
 import { MatIconModule } from "@angular/material/icon";
 import { MatButtonModule } from "@angular/material/button";
-import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from "@angular/core";
 import { TraceType } from "common/trace/trace_type";
 
 describe("TraceViewHeaderComponent", () => {
@@ -33,8 +32,7 @@ describe("TraceViewHeaderComponent", () => {
         MatIconModule,
         MatButtonModule
       ],
-      declarations: [TraceViewHeaderComponent],
-      schemas: [NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA]
+      declarations: [TraceViewHeaderComponent]
     }).compileComponents();
     fixture = TestBed.createComponent(TraceViewHeaderComponent);
     component = fixture.componentInstance;
@@ -85,6 +83,7 @@ describe("TraceViewHeaderComponent", () => {
   });
 
   it("check that title is displayed", () => {
+    component.title = "Surface Flinger, Window Manager";
     fixture.detectChanges();
     const title = htmlElement.querySelector(".trace-card-title-text");
     expect(title).toBeTruthy();

@@ -15,7 +15,7 @@
  */
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {ViewerWindowManagerComponent} from "./viewer_window_manager.component";
-import {UiData} from "../../ui_data/ui_data";
+import {UiData} from "./ui_data";
 
 describe("ViewerWindowManagerComponent", () => {
   let fixture: ComponentFixture<ViewerWindowManagerComponent>;

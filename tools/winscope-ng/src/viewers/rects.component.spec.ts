@@ -21,9 +21,8 @@ import { MatCheckboxModule } from "@angular/material/checkbox";
 import { MatCardModule } from "@angular/material/card";
 import { MatRadioModule } from "@angular/material/radio";
 import { MatSliderModule } from "@angular/material/slider";
-import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from "@angular/core";
-import { Rectangle } from "../ui_data/ui_data_surface_flinger";
-import { CanvasService } from "./canvas.service";
+import { CUSTOM_ELEMENTS_SCHEMA } from "@angular/core";
+import { Rectangle } from "./viewer_surface_flinger/ui_data";
 
 describe("RectsComponent", () => {
   let component: TestHostComponent;
@@ -40,8 +39,7 @@ describe("RectsComponent", () => {
         MatRadioModule
       ],
       declarations: [RectsComponent, TestHostComponent],
-      providers: [CanvasService],
-      schemas: [NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA]
+      schemas: [CUSTOM_ELEMENTS_SCHEMA]
     }).compileComponents();
   });
 
@@ -64,10 +62,10 @@ describe("RectsComponent", () => {
 
   it("check that layer separation slider causes view to change", () => {
     const slider = htmlElement.querySelector("mat-slider");
-    spyOn(component.rectsComponent.canvasService, "updateLayerSeparation");
+    spyOn(component.rectsComponent.canvasGraphics, "updateLayerSeparation");
     slider?.dispatchEvent(new MouseEvent("mousedown"));
     fixture.detectChanges();
-    expect(component.rectsComponent.canvasService.updateLayerSeparation).toHaveBeenCalled();
+    expect(component.rectsComponent.canvasGraphics.updateLayerSeparation).toHaveBeenCalled();
   });
 
   it("check that rects canvas is rendered", () => {
@@ -101,24 +99,23 @@ describe("RectsComponent", () => {
         stackId: 0,
       }
     ]);
-    spyOn(component.rectsComponent, "updateVariablesBeforeRefresh").and.callThrough();
+    spyOn(component.rectsComponent, "drawRects").and.callThrough();
     fixture.detectChanges();
-    await new Promise( resolve => setTimeout(resolve, 4000));
-    expect(component.rectsComponent.updateVariablesBeforeRefresh).toHaveBeenCalled();
+    expect(component.rectsComponent.drawRects).toHaveBeenCalled();
   });
 
   @Component({
     selector: "host-component",
-    template: "<rects-view [rects]=\"rects ?? []\"></rects-view>"
+    template: "<rects-view [rects]=\"rects\"></rects-view>"
   })
   class TestHostComponent {
-    public rects: Rectangle[];
+    public rects: Rectangle[] = [];
 
     addRects(newRects: Rectangle[]) {
       this.rects = newRects;
     }
 
     @ViewChild(RectsComponent)
-    public rectsComponent: RectsComponent;
+    public rectsComponent!: RectsComponent;
   }
 });

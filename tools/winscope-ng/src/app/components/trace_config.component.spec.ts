@@ -21,7 +21,7 @@ import { MatFormFieldModule } from "@angular/material/form-field";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { MatInputModule } from "@angular/material/input";
 import { MatSelectModule } from "@angular/material/select";
-import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from "@angular/core";
+import { NO_ERRORS_SCHEMA } from "@angular/core";
 
 describe("TraceConfigComponent", () => {
   let fixture: ComponentFixture<TraceConfigComponent>;
@@ -39,7 +39,7 @@ describe("TraceConfigComponent", () => {
         BrowserAnimationsModule
       ],
       declarations: [TraceConfigComponent],
-      schemas: [NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA]
+      schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
     fixture = TestBed.createComponent(TraceConfigComponent);
     component = fixture.componentInstance;

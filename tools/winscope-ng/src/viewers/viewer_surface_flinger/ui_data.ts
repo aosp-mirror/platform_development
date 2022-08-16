@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { UiData } from "./ui_data";
-
-class UiDataSurfaceFlinger extends UiData {
+class UiData {
+  constructor(public text: string) {
+    console.log(text);
+  }
   rects?: Rectangle[] = [];
   highlighted?: string = "";
 }
@@ -59,4 +60,4 @@ export interface RectMatrix {
   ty: number;
 }
 
-export {UiDataSurfaceFlinger};
+export {UiData};

@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Point, Rectangle, RectMatrix, RectTransform } from "ui_data/ui_data_surface_flinger";
+import { Point, Rectangle, RectMatrix, RectTransform } from "viewers/viewer_surface_flinger/ui_data";
 
-export const MatrixUtils = {
+export const RectsUtils = {
   multiplyMatrix(matrix:any, corner: Point): Point {
     if (!matrix) return corner;
     // |dsdx dsdy  tx|     | x |     |x*dsdx + y*dsdy + tx|

@@ -33,7 +33,7 @@ import html2canvas from "html2canvas";
     </button>
     <mat-icon id="dep-icon" *ngFor="let dep of dependencies" aria-hidden="true" class="icon-button">{{TRACE_INFO[dep].icon}}</mat-icon>
     <span class="trace-card-title-text">
-      {{getTitle()}}
+      {{title}}
     </span>
     <button id="save-btn" class="icon-button" (click)="saveTraces()">
       <mat-icon aria-hidden="true">save_alt</mat-icon>
@@ -47,17 +47,13 @@ import html2canvas from "html2canvas";
   ]
 })
 export class TraceViewHeaderComponent {
-  @Input()
-    dependencies: TraceType[];
+  @Input() title?: string;
+  @Input() dependencies?: TraceType[];
+  @Input() showTrace = true;
+  @Input() cardId!: number ;
 
-  @Input()
-    showTrace = true;
-
-  @Output()
-    showTraceChange = new EventEmitter<boolean>();
-
-  @Output()
-    saveTraceChange = new EventEmitter<TraceType[]>();
+  @Output() showTraceChange = new EventEmitter<boolean>();
+  @Output() saveTraceChange = new EventEmitter<TraceType[]>();
 
   TRACE_INFO = TRACE_INFO;
 
@@ -66,25 +62,12 @@ export class TraceViewHeaderComponent {
     this.showTraceChange.emit(this.showTrace);
   }
 
-  getTitle() {
-    if (this.dependencies === undefined) {
-      return "Unknown Trace";
-    }
-    let title = `${TRACE_INFO[this.dependencies[0]].name}`;
-    if (this.dependencies.length > 1) {
-      for (const dep of this.dependencies.slice(1)) {
-        title += `, ${TRACE_INFO[dep].name}`;
-      }
-    }
-    return title;
-  }
-
   public saveTraces() {
     this.saveTraceChange.emit(this.dependencies);
   }
 
   public takeScreenshot() {
-    const el = document.querySelector(`#card-${this.dependencies}`);
+    const el = document.querySelector(`#card-${this.cardId}`);
     if (el) {
       html2canvas((el as HTMLElement)).then((canvas) => {
         const uri = canvas.toDataURL();

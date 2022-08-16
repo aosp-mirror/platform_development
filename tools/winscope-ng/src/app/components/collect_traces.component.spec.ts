@@ -24,7 +24,7 @@ import { MatListModule } from "@angular/material/list";
 import { MatButtonModule } from "@angular/material/button";
 import { MatProgressBarModule } from "@angular/material/progress-bar";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
-import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from "@angular/core";
+import { NO_ERRORS_SCHEMA } from "@angular/core";
 
 describe("CollectTracesComponent", () => {
   let fixture: ComponentFixture<CollectTracesComponent>;
@@ -47,7 +47,7 @@ describe("CollectTracesComponent", () => {
         WebAdbComponent,
         TraceConfigComponent,
       ],
-      schemas: [NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA]
+      schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
     fixture = TestBed.createComponent(CollectTracesComponent);
     component = fixture.componentInstance;

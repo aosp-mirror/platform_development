@@ -15,8 +15,8 @@
  */
 import {TraceType} from "common/trace/trace_type";
 import {Viewer} from "viewers/viewer";
-import {Presenter} from "../../presenters/presenter";
-import {UiData} from "../../ui_data/ui_data";
+import {Presenter} from "./presenter";
+import {UiData} from "./ui_data";
 
 class ViewerWindowManager implements Viewer {
   constructor() {
@@ -25,6 +25,10 @@ class ViewerWindowManager implements Viewer {
       (this.view as any).inputData = uiData;
     });
     this.view.addEventListener("outputEvent", () => this.presenter.notifyUiEvent());
+  }
+
+  public getTitle() {
+    return "Window Manager";
   }
 
   public notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {

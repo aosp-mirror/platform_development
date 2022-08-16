@@ -13,30 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Rectangle, RectMatrix, UiDataSurfaceFlinger } from "ui_data/ui_data_surface_flinger";
-import { Presenter } from "./presenter";
-import { UiDataCallbackType } from "./presenter";
+import { Rectangle, RectMatrix, RectTransform, UiData } from "viewers/viewer_surface_flinger/ui_data";
 import { TraceType } from "common/trace/trace_type";
 
-class PresenterSurfaceFlinger extends Presenter {
-  constructor(uiDataCallback: UiDataCallbackType) {
-    super(uiDataCallback);
-    this.uiDataCallback = uiDataCallback;
-    this.uiData = new UiDataSurfaceFlinger("Initial UI data");
-    this.uiDataCallback(this.uiData);
+type NotifyViewCallbackType = (uiData: UiData) => void;
+
+class Presenter {
+  constructor(notifyViewCallback: NotifyViewCallbackType) {
+    this.notifyViewCallback = notifyViewCallback;
+    this.uiData = new UiData("Initial UI data");
+    this.notifyViewCallback(this.uiData);
   }
 
-  updateHighlightedRect(event: any) {
+  updateHighlightedRect(event: CustomEvent) {
     this.highlighted = event.detail.layerId;
     this.uiData.highlighted = this.highlighted;
     console.log("changed highlighted rect: ", this.uiData.highlighted);
-    this.uiDataCallback(this.uiData);
+    this.notifyViewCallback(this.uiData);
   }
 
-  override notifyCurrentTraceEntries(entries: Map<TraceType, any>) {
+  notifyCurrentTraceEntries(entries: Map<TraceType, any>) {
     const entry = entries.get(TraceType.SURFACE_FLINGER);
-    this.uiData = new UiDataSurfaceFlinger("New surface flinger ui data");
-    this.uiData.rects = [];
+    this.uiData = new UiData("New surface flinger ui data");
     const displayRects = entry.displays.map((display: any) => {
       const rect = display.layerStackSpace;
       rect.label = display.name;
@@ -45,13 +43,14 @@ class PresenterSurfaceFlinger extends Presenter {
       rect.isDisplay = true;
       rect.isVirtual = display.isVirtual;
       return rect;
-    });
+    }) ?? [];
     this.uiData.highlighted = this.highlighted;
-    this.rectToUiData(entry.rects.concat(displayRects));
-    this.uiDataCallback(this.uiData);
+    this.uiData.rects = this.rectsToUiData(entry.rects.concat(displayRects));
+    this.notifyViewCallback(this.uiData);
   }
 
-  rectToUiData(rects: any[]) {
+  rectsToUiData(rects: any[]): Rectangle[] {
+    const uiRects: Rectangle[] = [];
     rects.forEach((rect: any) => {
       let t = null;
       if (rect.transform && rect.transform.matrix) {
@@ -59,7 +58,7 @@ class PresenterSurfaceFlinger extends Presenter {
       } else if (rect.transform) {
         t = rect.transform;
       }
-      let transform = null;
+      let transform: RectTransform | null = null;
       if (t !== null) {
         const matrix: RectMatrix = {
           dsdx: t.dsdx,
@@ -96,13 +95,14 @@ class PresenterSurfaceFlinger extends Presenter {
         stackId: rect.stackId ?? rect.ref.stackId,
         isVirtual: rect.isVirtual
       };
-      this.uiData.rects?.push(newRect);
+      uiRects.push(newRect);
     });
+    return uiRects;
   }
 
-  override readonly uiDataCallback: UiDataCallbackType;
-  override uiData: UiDataSurfaceFlinger;
+  private readonly notifyViewCallback: NotifyViewCallbackType;
+  private uiData: UiData;
   private highlighted = "";
 }
 
-export {PresenterSurfaceFlinger};
+export {Presenter};

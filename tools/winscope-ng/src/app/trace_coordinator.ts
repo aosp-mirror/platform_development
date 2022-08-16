@@ -22,7 +22,6 @@ import { Viewer } from "viewers/viewer";
 import { ViewerFactory } from "viewers/viewer_factory";
 import { LoadedTrace } from "app/loaded_trace";
 import { TRACE_INFO } from "./trace_info";
-import { bigIntMath } from "common/utils/bigint_utils";
 
 class TraceCoordinator {
   private parsers: Parser[];
@@ -105,19 +104,9 @@ class TraceCoordinator {
 
     this.parsers.forEach(parser => {
       const targetTimestamp = timestamp;
-      const parserTimestamps = parser.getTimestamps(timestamp.getType());
-
-      const closestTimestamp = parserTimestamps?.reduce((prev, curr) => {
-        const prevDiff = bigIntMath.abs(prev.getValueNs() - targetTimestamp.getValueNs());
-        const currDiff = bigIntMath.abs(curr.getValueNs() - targetTimestamp.getValueNs());
-        return currDiff < prevDiff ? curr : prev;
-      });
-
-      if (closestTimestamp) {
-        const entry = parser.getTraceEntry(closestTimestamp);
-        if (entry != undefined) {
-          traceEntries.set(parser.getTraceType(), entry);
-        }
+      const entry = parser.getTraceEntry(targetTimestamp);
+      if (entry !== undefined) {
+        traceEntries.set(parser.getTraceType(), entry);
       }
     });
 

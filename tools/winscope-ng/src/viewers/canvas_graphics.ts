@@ -13,15 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import { Injectable } from "@angular/core";
-import {Rectangle } from "ui_data/ui_data_surface_flinger";
+import { Rectangle } from "viewers/viewer_surface_flinger/ui_data";
 import * as THREE from "three";
 import { CSS2DRenderer, CSS2DObject } from "three/examples/jsm/renderers/CSS2DRenderer";
 
-@Injectable()
-export class CanvasService {
-  initialise() {
+export class CanvasGraphics {
+  constructor() {
     //set up camera
     const left = -this.cameraHalfWidth,
       right = this.cameraHalfWidth,
@@ -32,16 +29,17 @@ export class CanvasService {
     this.camera = new THREE.OrthographicCamera(
       left,right,top,bottom,near,far
     );
+  }
 
+  initialise(canvas: HTMLCanvasElement) {
     // initialise canvas
-    this.canvas = document.getElementById("rects-canvas") as HTMLCanvasElement;
-    if (!this.canvas) return;
+    this.canvas = canvas;
   }
 
   refreshCanvas() {
     //set canvas size
-    this.canvas.style.width = "100%";
-    this.canvas.style.height = "40rem";
+    this.canvas!.style.width = "100%";
+    this.canvas!.style.height = "40rem";
 
     // TODO: click and drag rotation control
     this.camera.position.set(this.xyCameraPos, this.xyCameraPos, 6);
@@ -103,7 +101,7 @@ export class CanvasService {
       return y;
     })) - labelYShift;
 
-    this.createRects(
+    this.drawScene(
       rectCounter,
       numberOfVisibleRects,
       visibleDarkFactor,
@@ -121,15 +119,15 @@ export class CanvasService {
     // const gridHelper = new THREE.GridHelper(5);
     // scene.add(axesHelper, gridHelper)
 
-    renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight);
+    renderer.setSize(this.canvas!.clientWidth, this.canvas!.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.render(scene, this.camera);
 
-    labelRenderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight);
+    labelRenderer.setSize(this.canvas!.clientWidth, this.canvas!.clientHeight);
     labelRenderer.render(scene, this.camera);
   }
 
-  private createRects(
+  private drawScene(
     rectCounter: number,
     visibleRects: number,
     visibleDarkFactor:number,
@@ -144,12 +142,13 @@ export class CanvasService {
   ) {
     this.targetObjects = [];
     this.rects.forEach(rect => {
-      if (this.visibleView && !rect.isVisible ||
-        !this.visibleView && !this.showVirtualDisplays && rect.isDisplay && rect.isVirtual) {
-        document.querySelector(`.label-${rectCounter}`)?.remove();
+      const visibleViewInvisibleRect = this.visibleView && !rect.isVisible;
+      const xrayViewNoVirtualDisplaysVirtualRect = !this.visibleView && !this.showVirtualDisplays && rect.isDisplay && rect.isVirtual;
+      if (visibleViewInvisibleRect || xrayViewNoVirtualDisplaysVirtualRect) {
         rectCounter++;
         return;
       }
+
       //set colour mapping
       let planeColor;
       if (this.highlighted === `${rect.id}`) {
@@ -224,7 +223,7 @@ export class CanvasService {
 
   private setCircleMaterial(planeRect: THREE.Mesh, rect: Rectangle) {
     const labelCircle = new THREE.CircleGeometry(0.02, 200);
-    const circleMaterial = new THREE.MeshBasicMaterial({color: 0x000000 });
+    const circleMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
     const circle = new THREE.Mesh(labelCircle, circleMaterial);
     circle.position.set(
       planeRect.position.x + rect.width/2 - 0.05,
@@ -413,5 +412,5 @@ export class CanvasService {
   private rects: Rectangle[] = [];
   private labelElements: HTMLElement[] = [];
   private targetObjects: any[] = [];
-  private canvas: HTMLCanvasElement;
+  private canvas?: HTMLCanvasElement;
 }

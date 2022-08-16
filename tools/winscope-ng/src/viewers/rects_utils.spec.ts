@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { MatrixUtils } from "./matrix_utils";
+import { RectsUtils } from "./rects_utils";
 
-describe("MatrixUtils", () => {
+describe("RectsUtils", () => {
   it("transforms rect", () => {
     const transform = {
       matrix: {
@@ -54,6 +54,6 @@ describe("MatrixUtils", () => {
       stackId: 0,
       isVirtual: undefined
     };
-    expect(MatrixUtils.transformRect(rect.transform.matrix, rect)).toEqual(expected);
+    expect(RectsUtils.transformRect(rect.transform.matrix, rect)).toEqual(expected);
   });
 });

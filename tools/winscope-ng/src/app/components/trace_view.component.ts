@@ -29,8 +29,10 @@ import { TraceType } from "common/trace/trace_type";
       <mat-card-header>
         <mat-card-title class="trace-card-title" *ngIf="dependencies">
           <trace-view-header
+            [title]="title"
             [(showTrace)]="showTrace"
             [dependencies]="dependencies"
+            [cardId]="cardId"
             (saveTraceChange)="onSaveTraces($event)"
           ></trace-view-header>
         </mat-card-title>
@@ -41,14 +43,11 @@ import { TraceType } from "common/trace/trace_type";
   `,
 })
 export class TraceViewComponent {
-  @Input()
-    dependencies: TraceType[];
-
-  @Input()
-    showTrace: boolean;
-
-  @Output()
-    saveTraces = new EventEmitter<TraceType[]>();
+  @Input() title!: string;
+  @Input() dependencies!: TraceType[];
+  @Input() showTrace = true;
+  @Input() cardId = 0;
+  @Output() saveTraces = new EventEmitter<TraceType[]>();
 
   TRACE_INFO = TRACE_INFO;
 

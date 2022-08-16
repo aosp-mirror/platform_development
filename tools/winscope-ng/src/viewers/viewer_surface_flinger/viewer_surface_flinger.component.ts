@@ -17,7 +17,7 @@ import {
   Component,
   Input
 } from "@angular/core";
-import { UiDataSurfaceFlinger } from "../../ui_data/ui_data_surface_flinger";
+import { UiData } from "./ui_data";
 import { TRACE_INFO } from "app/trace_info";
 import { TraceType } from "common/trace/trace_type";
 
@@ -29,7 +29,6 @@ import { TraceType } from "common/trace/trace_type";
           <rects-view
             [rects]="inputData?.rects ?? []"
             [highlighted]="inputData?.highlighted ?? ''"
-            [id]="TraceType.SURFACE_FLINGER"
             class="rects-view"
           ></rects-view>
         </mat-card>
@@ -54,7 +53,7 @@ import { TraceType } from "common/trace/trace_type";
 })
 export class ViewerSurfaceFlingerComponent {
   @Input()
-    inputData?: UiDataSurfaceFlinger;
+    inputData?: UiData;
 
   TRACE_INFO = TRACE_INFO;
   TraceType = TraceType;

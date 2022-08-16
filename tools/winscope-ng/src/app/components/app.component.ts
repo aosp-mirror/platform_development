@@ -17,7 +17,7 @@ import { Component, Injector, Inject, ViewEncapsulation, Input } from "@angular/
 import { createCustomElement } from "@angular/elements";
 import { TraceCoordinator } from "../trace_coordinator";
 import { proxyClient, ProxyState } from "trace_collection/proxy_client";
-import { PersistentStore } from "../../common/persistent_store";
+import { PersistentStore } from "common/persistent_store";
 import { ViewerWindowManagerComponent } from "viewers/viewer_window_manager/viewer_window_manager.component";
 import { ViewerSurfaceFlingerComponent } from "viewers/viewer_surface_flinger/viewer_surface_flinger.component";
 import { TraceViewComponent } from "./trace_view.component";
@@ -36,7 +36,7 @@ import { Viewer } from "viewers/viewer";
           *ngIf="dataLoaded"
           step="1"
           min="0"
-          [max]="traceCoordinator.getTimestamps().length -1"
+          [max]="this.allTimestamps.length-1"
           aria-label="units"
           [value]="currentTimestampIndex"
           (input)="updateCurrentTimestamp($event)"
@@ -72,8 +72,9 @@ export class AppComponent {
   store: PersistentStore = new PersistentStore();
   @Input() dataLoaded = false;
   viewersCreated = false;
-  currentTimestamp: Timestamp;
+  currentTimestamp?: Timestamp;
   currentTimestampIndex = 0;
+  allTimestamps: Timestamp[] = [];
 
   constructor(
     @Inject(Injector) injector: Injector
@@ -95,6 +96,7 @@ export class AppComponent {
 
   onDataLoadedChange(dataLoaded: boolean) {
     if (dataLoaded && !this.viewersCreated) {
+      this.allTimestamps = this.traceCoordinator.getTimestamps();
       this.traceCoordinator.createViewers();
       this.createViewerElements();
       this.currentTimestampIndex = 0;
@@ -108,8 +110,10 @@ export class AppComponent {
     const viewersDiv = document.querySelector("div#viewers")!;
     viewersDiv.innerHTML = "";
 
+    let cardCounter = 0;
     this.traceCoordinator.getViewers().forEach((viewer: Viewer) => {
       const traceView = document.createElement("trace-view");
+      (traceView as any).title = viewer.getTitle();
       (traceView as any).dependencies = viewer.getDependencies();
       (traceView as any).showTrace = true;
       traceView.addEventListener("saveTraces", ($event: any) => {
@@ -118,15 +122,15 @@ export class AppComponent {
       viewersDiv.appendChild(traceView);
 
       const traceCard = traceView.querySelector(".trace-card")!;
-      traceCard.id = `card-${viewer.getDependencies()}`;
+      traceCard.id = `card-${cardCounter}`;
+      (traceView as any).cardId = cardCounter;
+      cardCounter++;
 
       const traceCardContent = traceCard.querySelector(".trace-card-content")!;
       const view = viewer.getView();
       (view as any).showTrace = (traceView as any).showTrace;
       traceCardContent.appendChild(view);
     });
-    this.currentTimestampIndex = 0;
-    this.notifyCurrentTimestamp();
   }
 
   updateCurrentTimestamp(event: MatSliderChange) {
@@ -137,13 +141,13 @@ export class AppComponent {
   }
 
   public notifyCurrentTimestamp() {
-    this.currentTimestamp = this.traceCoordinator.getTimestamps()[this.currentTimestampIndex];
+    this.currentTimestamp = this.allTimestamps[this.currentTimestampIndex];
     this.traceCoordinator.notifyCurrentTimestamp(this.currentTimestamp);
   }
 
   public toggleTimestamp() {
     if (this.currentTimestampIndex===0) {
-      this.currentTimestampIndex = this.traceCoordinator.getTimestamps().length-1;
+      this.currentTimestampIndex = this.allTimestamps.length-1;
     } else {
       this.currentTimestampIndex = 0;
     }
