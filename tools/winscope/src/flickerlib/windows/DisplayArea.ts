@@ -24,7 +24,7 @@ DisplayArea.fromProto = function (proto: any, isActivityInTree: Boolean): Displa
     } else {
         const windowContainer = WindowContainer.fromProto(
             /* proto */ proto.windowContainer,
-            /* protoChildren */ proto.windowContainer.children.reverse(),
+            /* protoChildren */ proto.windowContainer?.children?.reverse() ?? [],
             /* isActivityInTree */ isActivityInTree,
             /* nameOverride */ proto.name
         );
@@ -32,7 +32,6 @@ DisplayArea.fromProto = function (proto: any, isActivityInTree: Boolean): Displa
         const entry = new DisplayArea(proto.isTaskDisplayArea, windowContainer);
 
         addAttributes(entry, proto);
-        console.warn("Created ", entry.kind, " stableId=", entry.stableId);
         return entry;
     }
 }
