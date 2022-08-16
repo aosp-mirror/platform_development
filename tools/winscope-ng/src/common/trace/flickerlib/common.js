@@ -56,6 +56,8 @@ const WindowToken = require('flicker').com.android.server.wm.traces.common.
 // SF
 const Layer = require('flicker').com.android.server.wm.traces.common.
     layers.Layer;
+const LayerProperties = require('flicker').com.android.server.wm.traces.common.
+    layers.LayerProperties;
 const BaseLayerTraceEntry = require('flicker').com.android.server.wm.traces.common.
     layers.BaseLayerTraceEntry;
 const LayerTraceEntry = require('flicker').com.android.server.wm.traces.common.
@@ -264,6 +266,7 @@ export {
   // SF
   BaseLayerTraceEntry,
   Layer,
+  LayerProperties,
   LayerTraceEntry,
   LayerTraceEntryBuilder,
   LayersTrace,
