@@ -25,7 +25,7 @@ Task.fromProto = function (proto: any, isActivityInTree: Boolean): Task {
         const windowContainerProto = proto.taskFragment?.windowContainer ?? proto.windowContainer;
         const windowContainer = WindowContainer.fromProto(
             /* proto */ windowContainerProto,
-            /* protoChildren */ windowContainerProto.children.reverse(),
+            /* protoChildren */ windowContainerProto?.children?.reverse() ?? [],
             /* isActivityInTree */ isActivityInTree
         );
 
@@ -51,7 +51,6 @@ Task.fromProto = function (proto: any, isActivityInTree: Boolean): Task {
         );
 
         addAttributes(entry, proto);
-        console.warn("Created ", entry.kind, " stableId=", entry.stableId);
         return entry;
     }
 }

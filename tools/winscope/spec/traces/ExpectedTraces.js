@@ -1,7 +1,7 @@
-import { Buffer, RectF, Transform, Matrix, Color, Rect, Region } from '../../src/flickerlib/common.js';
+import { ActiveBuffer, RectF, Transform, Matrix33, Color, Rect, Region } from '../../src/flickerlib/common.js';
 import { VISIBLE_CHIP } from '../../src/flickerlib/treeview/Chips';
 
-const standardTransform = new Transform(0, new Matrix(1, 0, 0, 0, 1, 0));
+const standardTransform = new Transform(0, new Matrix33(1, 0, 0, 0, 1, 0));
 const standardRect = new Rect(0, 0, 0, 0);
 const standardColor = new Color(0, 0, 0, 1);
 const standardCrop = new Rect(0, 0, -1, -1);
@@ -23,13 +23,13 @@ const expectedEmptyRegionLayer = {
   z: -1,
   zOrderRelativeOf: null,
   parentId: 579,
-  activeBuffer: new Buffer(1440, 2614, 1472, 1),
+  activeBuffer: new ActiveBuffer(1440, 2614, 1472, 1),
   bufferTransform: standardTransform,
   color: new Color(0, 0, 0, 0.0069580078125),
   crop: standardCrop,
   hwcFrame: standardRect,
   screenBounds: new RectF(37, 43, 146, 152),
-  transform: new Transform(0, new Matrix(1, 0, 37.37078094482422, 0, 1, -3.5995326042175293)),
+  transform: new Transform(0, new Matrix33(1, 0, 37.37078094482422, 0, 1, -3.5995326042175293)),
   visibleRegion: new Region([new Rect(37, 43, 146, 152)]),
 };
 const emptyRegionProto = {
@@ -114,7 +114,7 @@ const expectedInvalidLayerVisibilityLayer = {
   zOrderRelativeOf: null,
   parentId: 1535,
   stableId: "BufferLayer 1536 com.google.android.apps.nexuslauncher/com.google.android.apps.nexuslauncher.NexusLauncherActivity#2",
-  activeBuffer: new Buffer(1440, 2880, 1472, 1),
+  activeBuffer: new ActiveBuffer(1440, 2880, 1472, 1),
   bufferTransform: standardTransform,
   color: new Color(-1, -1, -1, 0),
   hwcFrame: standardRect,
@@ -202,13 +202,13 @@ const expectedOrphanLayersLayer = {
   zOrderRelativeOf: null,
   parentId: 1011,
   stableId: "BufferLayer 1012 SurfaceView - com.android.chrome/com.google.android.apps.chrome.Main#0",
-  activeBuffer: new Buffer(1440, 2614, 1472, 1),
+  activeBuffer: new ActiveBuffer(1440, 2614, 1472, 1),
   bufferTransform: standardTransform,
   color: standardColor,
   crop: standardCrop,
   hwcFrame: standardRect,
   screenBounds: new RectF(0, 98, 1440, 2712),
-  transform: new Transform(0, new Matrix(1, 0, 0, 0, 1, 98)),
+  transform: new Transform(0, new Matrix33(1, 0, 0, 0, 1, 98)),
   visibleRegion: new Region([new Rect(0, 98, 1440, 2712)]),
 };
 const expectedOrphanLayersProto = {
@@ -294,7 +294,7 @@ const expectedRootLayer = {
   zOrderRelativeOf: null,
   parentId: 12541,
   stableId: "BufferQueueLayer 12545 com.android.server.wm.flicker.testapp/com.android.server.wm.flicker.testapp.SimpleActivity#0",
-  activeBuffer: new Buffer(1440, 2960, 1472, 1),
+  activeBuffer: new ActiveBuffer(1440, 2960, 1472, 1),
   chips: [VISIBLE_CHIP],
   bufferTransform: standardTransform,
   color: standardColor,
@@ -398,7 +398,7 @@ const expectedRootAospLayer = {
   z: 0,
   zOrderRelativeOf: null,
   parentId: 41,
-  activeBuffer: new Buffer(1440, 2880, 1472, 1),
+  activeBuffer: new ActiveBuffer(1440, 2880, 1472, 1),
   bufferTransform: standardTransform,
   chips: [VISIBLE_CHIP],
   color: standardColor,
