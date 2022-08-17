@@ -18,6 +18,7 @@
       <rects
         :bounds="bounds"
         :rects="rects"
+        :displays="displays"
         :highlight="highlight"
         @rect-click="onRectClick"
       />
@@ -188,6 +189,7 @@ export default {
       lastSelectedStableId: null,
       bounds: {},
       rects: [],
+      displays: [],
       item: null,
       tree: null,
       highlight: null,
@@ -206,12 +208,25 @@ export default {
       this.selectedTree = this.getTransformedProperties(item);
       this.highlight = item.rect;
       this.lastSelectedStableId = item.stableId;
+      // Record analytics event
+      if (item.type || item.kind || item.stableId) {
+        this.recordOpenedEntryEvent(item.type ?? item.kind ?? item.stableId);
+      }
       this.$emit('focus');
     },
     getTransformedProperties(item) {
       ObjectFormatter.displayDefaults = this.displayDefaults;
+      // There are 2 types of object whose properties can appear in the property
+      // list: Flicker objects (WM/SF traces) and dictionaries
+      // (IME/Accessibilty/Transactions).
+      // While flicker objects have their properties directly in the main object,
+      // those created by a call to the transform function have their properties
+      // inside an obj property. This makes both cases work
+      // TODO(209452852) Refactor both flicker and winscope-native objects to
+      // implement a common display interface that can be better handled
+      const target = item.obj ?? item;
       const transformer = new ObjectTransformer(
-          getPropertiesForDisplay(item),
+          getPropertiesForDisplay(target),
           item.name,
           stableIdCompatibilityFixup(item),
       ).setOptions({
@@ -253,6 +268,13 @@ export default {
       const rects = item.rects; // .toArray()
       this.rects = [...rects].reverse();
       this.bounds = item.bounds;
+
+      //only update displays if item is SF trace and displays present
+      if (item.stableId==="LayerTraceEntry") {
+        this.displays = item.displays;
+      } else {
+        this.displays = [];
+      }
 
       this.hierarchySelected = null;
       this.selectedTree = null;
@@ -341,7 +363,12 @@ export default {
     },
   },
   created() {
-    this.setData(this.file.data[this.file.selectedIndex ?? 0]);
+    const item = this.file.data[this.file.selectedIndex ?? 0];
+    // Record analytics event
+    if (item.type || item.kind || item.stableId) {
+      this.recordOpenTraceEvent(item.type ?? item.kind ?? item.stableId);
+    }
+    this.setData(item);
   },
   destroyed() {
     this.store.flickerTraceView = false;
@@ -419,11 +446,11 @@ function getFilter(filterString) {
   const negative = [];
   filterStrings.forEach((f) => {
     if (f.startsWith('!')) {
-      const str = f.substring(1);
-      negative.push((s) => s.indexOf(str) === -1);
+      const regex = new RegExp(f.substring(1), "i");
+      negative.push((s) => !regex.test(s));
     } else {
-      const str = f;
-      positive.push((s) => s.indexOf(str) !== -1);
+      const regex = new RegExp(f, "i");
+      positive.push((s) => regex.test(s));
     }
   });
   const filter = (item) => {

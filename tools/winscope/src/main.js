@@ -33,7 +33,7 @@ Vue.use(VueMaterial)
 const fileOrder = {
   [TRACE_TYPES.WINDOW_MANAGER]: 1,
   [TRACE_TYPES.SURFACE_FLINGER]: 2,
-  [TRACE_TYPES.TRANSACTION]: 3,
+  [TRACE_TYPES.TRANSACTION_LEGACY]: 3,
   [TRACE_TYPES.PROTO_LOG]: 4,
   [TRACE_TYPES.IME_CLIENTS]: 5,
   [TRACE_TYPES.IME_SERVICE]: 6,
@@ -165,7 +165,9 @@ const store = new Vuex.Store({
         }
 
         if (Object.keys(traceFiles).length > 0 && typeInfo.constructor) {
-          traces[traceType] = new typeInfo.constructor(traceFiles);
+          const newObj = new typeInfo.constructor(traceFiles);
+          newObj.data = Object.freeze(newObj.data);
+          traces[traceType] = newObj;
         }
       }
 
@@ -198,7 +200,9 @@ const store = new Vuex.Store({
         }
 
         if (Object.keys(dumpFiles).length > 0 && typeInfo.constructor) {
-          dumps[dumpType] = new typeInfo.constructor(dumpFiles);
+          const newObj = new typeInfo.constructor(dumpFiles);
+          newObj.data = Object.freeze(newObj.data);
+          dumps[dumpType] = newObj;
         }
 
       }
@@ -368,45 +372,60 @@ Vue.use(VueGtag, {
 
 Vue.mixin({
   methods: {
-    buttonClicked(button) {
-      const string = "Clicked " + button + " Button";
-      this.$gtag.event(string, {
+    recordButtonClickedEvent(button) {
+      const txt = "Clicked " + button + " Button";
+      this.$gtag.event(txt, {
         'event_category': 'Button Clicked',
         'event_label': "Winscope Interactions",
         'value': button,
       });
     },
-    draggedAndDropped(val) {
+    recordDragAndDropFileEvent(val) {
       this.$gtag.event("Dragged And DroppedFile", {
         'event_category': 'Uploaded file',
         'event_label': "Winscope Interactions",
         'value': val,
       });
     },
-    uploadedFileThroughFilesystem(val) {
+    recordFileUploadEvent(val) {
       this.$gtag.event("Uploaded File From Filesystem", {
         'event_category': 'Uploaded file',
         'event_label': "Winscope Interactions",
         'value': val,
       });
     },
-    newEventOccurred(event) {
+    recordNewEvent(event) {
       this.$gtag.event(event, {
         'event_category': event,
         'event_label': "Winscope Interactions",
         'value': 1,
       });
     },
-    seeingNewScreen(screenname) {
+    recordOpenTraceEvent(traceType) {
       this.$gtag.screenview({
         app_name: "Winscope",
-        screen_name: screenname,
+        screen_name: traceType,
       })
     },
-    openedToSeeAttributeField(field) {
-      const string = "Opened field " + field;
+    recordExpandedPropertyEvent(field) {
+      const string = "Property: " + field;
       this.$gtag.event(string, {
-        'event_category': "Opened attribute field",
+        'event_category': "Expanded property",
+        'event_label': "Winscope Interactions",
+        'value': field,
+      });
+    },
+    recordOpenedEntryEvent(entryType) {
+      const string = "Trace: " + entryType;
+      this.$gtag.event(string, {
+        'event_category': "Opened trace",
+        'event_label': "Winscope Interactions",
+        'value': entryType,
+      });
+    },
+    recordChangedNavigationStyleEvent(field) {
+      this.$gtag.event("Navigation mode changed", {
+        'event_category': "Timeline Navigation",
         'event_label': "Winscope Interactions",
         'value': field,
       });
