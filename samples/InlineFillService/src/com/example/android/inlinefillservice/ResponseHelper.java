@@ -21,7 +21,9 @@ import static com.example.android.inlinefillservice.InlineFillService.TAG;
 import android.content.Context;
 import android.content.IntentSender;
 import android.service.autofill.Dataset;
+import android.service.autofill.Field;
 import android.service.autofill.InlinePresentation;
+import android.service.autofill.Presentations;
 import android.util.Log;
 import android.view.autofill.AutofillId;
 import android.view.autofill.AutofillValue;
@@ -51,21 +53,31 @@ class ResponseHelper {
             Log.d(TAG, "hint: " + hint);
             final String displayValue = hint.contains("password") ? "password for #" + (index + 1)
                     : value;
-            final RemoteViews presentation = newDatasetPresentation(packageName, displayValue);
-
             // Add Inline Suggestion required info.
+            Field.Builder fieldBuilder = new Field.Builder();
+            fieldBuilder.setValue(AutofillValue.forText(value));
+            // Set presentation
+            final Presentations.Builder fieldPresentationsBuilder =
+                new Presentations.Builder();
+            // Dropdown presentation
+            final RemoteViews presentation = newDatasetPresentation(packageName, displayValue);
+            fieldPresentationsBuilder.setMenuPresentation(presentation);
+            // Inline presentation
             if (inlineRequest.isPresent()) {
                 Log.d(TAG, "Found InlineSuggestionsRequest in FillRequest: " + inlineRequest);
                 final InlinePresentation inlinePresentation =
-                        InlineRequestHelper.createInlineDataset(context, inlineRequest.get(),
-                                displayValue, index);
-                dataset.setValue(id, AutofillValue.forText(value), presentation,
-                        inlinePresentation);
-            } else {
-                dataset.setValue(id, AutofillValue.forText(value), presentation);
+                    InlineRequestHelper.createInlineDataset(context, inlineRequest.get(),
+                        displayValue, index);
+                fieldPresentationsBuilder.setInlinePresentation(inlinePresentation);
             }
-        }
+            // Dialog presentation
+            RemoteViews dialogPresentation =
+                newDatasetPresentation(packageName, "Dialog Presentation " + (index + 1));
+            fieldPresentationsBuilder.setDialogPresentation(dialogPresentation);
 
+            fieldBuilder.setPresentations(fieldPresentationsBuilder.build());
+            dataset.setField(id, fieldBuilder.build());
+        }
         return dataset.build();
     }
 
@@ -84,16 +96,28 @@ class ResponseHelper {
             IntentSender authentication =
                     AuthActivity.newIntentSenderForDataset(context, unlockedDataset);
             RemoteViews presentation = newDatasetPresentation(packageName, displayValue);
+
+            Field.Builder fieldBuilder = new Field.Builder();
+            fieldBuilder.setValue(AutofillValue.forText(value));
+            // Dropdown presentation
+            final Presentations.Builder fieldPresentationsBuilder =
+                new Presentations.Builder();
+            fieldPresentationsBuilder.setMenuPresentation(presentation);
+            // Inline presentation
             if (inlineRequest.isPresent()) {
                 final InlinePresentation inlinePresentation =
                         InlineRequestHelper.createInlineDataset(context, inlineRequest.get(),
                         displayValue, index);
-                lockedDataset.setValue(id, null, presentation, inlinePresentation)
-                        .setAuthentication(authentication);
-            } else {
-                lockedDataset.setValue(id, null, presentation)
-                        .setAuthentication(authentication);
+                fieldPresentationsBuilder.setInlinePresentation(inlinePresentation);
             }
+            // Dialog presentation
+            RemoteViews dialogPresentation =
+                newDatasetPresentation(packageName, "Dialog Presentation " + (index + 1));
+            fieldPresentationsBuilder.setDialogPresentation(dialogPresentation);
+
+            fieldBuilder.setPresentations(fieldPresentationsBuilder.build());
+            lockedDataset.setField(id, fieldBuilder.build());
+            lockedDataset.setId(null).setAuthentication(authentication);
         }
         return lockedDataset.build();
     }
