@@ -15,7 +15,6 @@
 #include "diff/abi_diff.h"
 
 #include "utils/config_file.h"
-#include "utils/string_utils.h"
 
 #include <llvm/ADT/SmallString.h>
 #include <llvm/Support/CommandLine.h>
@@ -31,8 +30,6 @@ using header_checker::repr::CompatibilityStatusIR;
 using header_checker::repr::DiffPolicyOptions;
 using header_checker::repr::TextFormatIR;
 using header_checker::utils::ConfigFile;
-using header_checker::utils::ConfigParser;
-using header_checker::utils::ParseBool;
 
 
 static llvm::cl::OptionCategory header_checker_category(
@@ -149,16 +146,19 @@ static std::set<std::string> LoadIgnoredSymbols(std::string &symbol_list_path) {
 static std::string GetConfigFilePath(const std::string &dump_file_path) {
   llvm::SmallString<128> config_file_path(dump_file_path);
   llvm::sys::path::remove_filename(config_file_path);
-  llvm::sys::path::append(config_file_path, "config.ini");
+  llvm::sys::path::append(config_file_path, "config.json");
   return std::string(config_file_path);
 }
 
 static void ReadConfigFile(const std::string &config_file_path) {
-  ConfigFile cfg = ConfigParser::ParseFile(config_file_path);
+  ConfigFile cfg;
+  if (!cfg.Load(config_file_path)) {
+    ::exit(1);
+  }
   if (cfg.HasSection("global")) {
     for (auto &&p : cfg.GetSection("global")) {
       auto &&key = p.first;
-      bool value_bool = ParseBool(p.second);
+      bool value_bool = p.second;
       if (key == "allow_adding_removing_weak_symbols") {
         allow_adding_removing_weak_symbols = value_bool;
       } else if (key == "advice_only") {

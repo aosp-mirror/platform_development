@@ -14,10 +14,10 @@
 
 #include "utils/config_file.h"
 
-#include "utils/string_utils.h"
+#include <json/json.h>
+#include <llvm/Support/raw_ostream.h>
 
 #include <fstream>
-#include <map>
 #include <string>
 
 
@@ -25,61 +25,28 @@ namespace header_checker {
 namespace utils {
 
 
-ConfigFile ConfigParser::ParseFile(std::istream &istream) {
-  ConfigParser parser(istream);
-  return parser.ParseFile();
-}
-
-
-ConfigFile ConfigParser::ParseFile(const std::string &path) {
-  std::ifstream stream(path, std::ios_base::in);
-  return ParseFile(stream);
-}
-
-
-ConfigFile ConfigParser::ParseFile() {
-  size_t line_no = 0;
-  std::string line;
-  while (std::getline(stream_, line)) {
-    ParseLine(++line_no, line);
+bool ConfigFile::Load(std::istream &istream) {
+  Json::Value root;
+  Json::CharReaderBuilder builder;
+  std::string errorMessage;
+  if (!Json::parseFromStream(builder, istream, &root, &errorMessage)) {
+    llvm::errs() << "Failed to parse JSON: " << errorMessage << "\n";
+    return false;
   }
-  return std::move(cfg_);
-}
-
-
-void ConfigParser::ParseLine(size_t line_no, std::string_view line) {
-  if (line.empty() || line[0] == ';' || line[0] == '#') {
-    // Skip empty or comment line.
-    return;
-  }
-
-  // Parse section name line.
-  if (line[0] == '[') {
-    std::string::size_type pos = line.rfind(']');
-    if (pos == std::string::npos) {
-      ReportError(line_no, "bad section name line");
-      return;
+  for (auto &key : root.getMemberNames()) {
+    map_[key] = ConfigSection();
+    if (root[key].isMember("flags")) {
+      for (auto &flag_keys : root[key]["flags"].getMemberNames()) {
+        map_[key].map_[flag_keys] = root[key]["flags"][flag_keys].asBool();
+      }
     }
-    std::string_view section_name = line.substr(1, pos - 1);
-    section_ = &cfg_.map_[std::string(section_name)];
-    return;
   }
+  return true;
+}
 
-  // Parse key-value line.
-  std::string::size_type pos = line.find('=');
-  if (pos == std::string::npos) {
-    ReportError(line_no, "bad key-value line");
-    return;
-  }
-
-  // Add key-value entry to current section.
-  std::string_view key = Trim(line.substr(0, pos));
-  std::string_view value = Trim(line.substr(pos + 1));
-
-  if (!section_) {
-    section_ = &cfg_.map_[""];
-  }
-  section_->map_[std::string(key)] = std::string(value);
+bool ConfigFile::Load(const std::string &path) {
+  std::ifstream stream(path);
+  return Load(stream);
 }
 
 
