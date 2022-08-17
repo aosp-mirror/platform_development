@@ -1,4 +1,4 @@
-import { TraceType } from "../common/trace/trace_type";
+import { TraceType } from "common/trace/trace_type";
 
 export interface LoadedTrace {
   name: string;

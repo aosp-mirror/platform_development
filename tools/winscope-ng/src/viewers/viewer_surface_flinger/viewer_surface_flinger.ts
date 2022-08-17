@@ -18,17 +18,13 @@ import {Viewer} from "viewers/viewer";
 import {Presenter} from "./presenter";
 import {UiData} from "./ui_data";
 
-class ViewerWindowManager implements Viewer {
+class ViewerSurfaceFlinger implements Viewer {
   constructor() {
-    this.view = document.createElement("viewer-window-manager");
+    this.view = document.createElement("viewer-surface-flinger");
     this.presenter = new Presenter((uiData: UiData) => {
       (this.view as any).inputData = uiData;
     });
-    this.view.addEventListener("outputEvent", () => this.presenter.notifyUiEvent());
-  }
-
-  public getTitle() {
-    return "Window Manager";
+    this.view.addEventListener("highlightedChange", (event) => this.presenter.updateHighlightedRect((event as CustomEvent)));
   }
 
   public notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
@@ -39,13 +35,17 @@ class ViewerWindowManager implements Viewer {
     return this.view;
   }
 
-  public getDependencies(): TraceType[] {
-    return ViewerWindowManager.DEPENDENCIES;
+  public getTitle(): string {
+    return "Surface Flinger";
   }
 
-  public static readonly DEPENDENCIES: TraceType[] = [TraceType.WINDOW_MANAGER];
+  public getDependencies(): TraceType[] {
+    return ViewerSurfaceFlinger.DEPENDENCIES;
+  }
+
+  public static readonly DEPENDENCIES: TraceType[] = [TraceType.SURFACE_FLINGER];
   private view: HTMLElement;
   private presenter: Presenter;
 }
 
-export {ViewerWindowManager};
+export {ViewerSurfaceFlinger};

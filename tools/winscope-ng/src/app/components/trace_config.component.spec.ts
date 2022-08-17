@@ -104,7 +104,7 @@ describe("TraceConfigComponent", () => {
     expect(adv?.innerHTML).toContain("tracing level");
   });
 
-  it("check that changing enable config causes box to change", async () => {    spyOn(component, "changeTraceCollectionConfig");
+  it("check that changing enable config causes box to change", async () => {
     component.trace.config!.enableConfigs[0].enabled = false;
     fixture.detectChanges();
     await fixture.whenStable();

@@ -16,29 +16,29 @@
 import {TraceType} from "common/trace/trace_type";
 import {UiData} from "./ui_data";
 
-type UiDataCallbackType = (uiData: UiData) => void;
+type NotifyViewCallbackType = (uiData: UiData) => void;
 
 class Presenter {
-  constructor(uiDataCallback: UiDataCallbackType) {
-    this.uiDataCallback = uiDataCallback;
+  constructor(notifyViewCallback: NotifyViewCallbackType) {
+    this.notifyViewCallback = notifyViewCallback;
     this.uiData = new UiData("Initial UI data");
-    this.uiDataCallback(this.uiData);
+    this.notifyViewCallback(this.uiData);
   }
 
   public notifyCurrentTraceEntries(entries: Map<TraceType, any>) {
     this.uiData = new UiData("UI data selected by user on time scrub");
-    this.uiDataCallback(this.uiData);
+    this.notifyViewCallback(this.uiData);
   }
 
   public notifyUiEvent() {
     const oldUiDataText = this.uiData ? this.uiData.text : "";
     this.uiData = new UiData(oldUiDataText);
     this.uiData.text += " | UI data updated because of UI event";
-    this.uiDataCallback(this.uiData!);
+    this.notifyViewCallback(this.uiData!);
   }
 
-  private readonly uiDataCallback: UiDataCallbackType;
-  private uiData?: UiData;
+  readonly notifyViewCallback: NotifyViewCallbackType;
+  uiData?: UiData;
 }
 
-export {Presenter, UiDataCallbackType};
+export {Presenter};

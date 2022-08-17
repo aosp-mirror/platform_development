@@ -50,5 +50,4 @@ describe("ViewerWindowManagerComponent", () => {
     const divInputValue = htmlElement.querySelector(".viewer-window-manager div.input-value");
     expect(divInputValue?.innerHTML).toContain("UI Data Value");
   });
-
 });

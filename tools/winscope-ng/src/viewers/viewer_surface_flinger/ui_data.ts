@@ -15,8 +15,49 @@
  */
 class UiData {
   constructor(public text: string) {
-    console.log("new UI data", text);
+    console.log(text);
   }
+  rects?: Rectangle[] = [];
+  highlighted?: string = "";
+}
+
+export interface Rectangle {
+  topLeft: Point;
+  bottomRight: Point;
+  label: string;
+  transform: RectTransform | null;
+  height: number;
+  width: number;
+  isVisible: boolean;
+  isDisplay: boolean;
+  ref: any;
+  id: number;
+  stackId: number;
+  isVirtual?: boolean;
+}
+
+export interface Point {
+  x: number,
+  y: number
+}
+
+export interface RectTransform {
+  matrix?: RectMatrix;
+  dsdx?: number;
+  dsdy?: number;
+  dtdx?: number;
+  dtdy?: number;
+  tx?: number;
+  ty?: number;
+}
+
+export interface RectMatrix {
+  dsdx: number;
+  dsdy: number;
+  dtdx: number;
+  dtdy: number;
+  tx: number;
+  ty: number;
 }
 
 export {UiData};

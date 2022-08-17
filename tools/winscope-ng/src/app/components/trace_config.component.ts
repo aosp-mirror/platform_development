@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { Component, Input } from "@angular/core";
-import { EnableConfiguration, SelectionConfiguration, TraceConfiguration } from "../trace_collection/trace_collection_utils";
+import { EnableConfiguration, SelectionConfiguration, TraceConfiguration } from "trace_collection/trace_collection_utils";
 
 @Component({
   selector: "trace-config",
