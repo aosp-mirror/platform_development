@@ -25,12 +25,9 @@ namespace header_checker {
 namespace utils {
 
 
-class ConfigParser;
-
-
 class ConfigSection {
  public:
-  using MapType = std::map<std::string, std::string>;
+  using MapType = std::map<std::string, bool>;
   using const_iterator = MapType::const_iterator;
 
 
@@ -43,15 +40,15 @@ class ConfigSection {
     return map_.find(name) != map_.end();
   }
 
-  std::string GetProperty(const std::string &name) const {
+  bool GetProperty(const std::string &name) const {
     auto &&it = map_.find(name);
     if (it == map_.end()) {
-      return "";
+      return false;
     }
     return it->second;
   }
 
-  std::string operator[](const std::string &name) const {
+  bool operator[](const std::string &name) const {
     return GetProperty(name);
   }
 
@@ -70,9 +67,9 @@ class ConfigSection {
 
 
  private:
-  std::map<std::string, std::string> map_;
+  MapType map_;
 
-  friend class ConfigParser;
+  friend class ConfigFile;
 };
 
 
@@ -86,6 +83,9 @@ class ConfigFile {
   ConfigFile() = default;
   ConfigFile(ConfigFile &&) = default;
   ConfigFile &operator=(ConfigFile &&) = default;
+
+  bool Load(const std::string &path);
+  bool Load(std::istream &istream);
 
   bool HasSection(const std::string &section_name) const {
     return map_.find(section_name) != map_.end();
@@ -110,11 +110,11 @@ class ConfigFile {
     return it->second.HasProperty(property_name);
   }
 
-  std::string GetProperty(const std::string &section_name,
+  bool GetProperty(const std::string &section_name,
                           const std::string &property_name) const {
     auto &&it = map_.find(section_name);
     if (it == map_.end()) {
-      return "";
+      return false;
     }
     return it->second.GetProperty(property_name);
   }
@@ -134,55 +134,7 @@ class ConfigFile {
 
 
  private:
-  std::map<std::string, ConfigSection> map_;
-
-  friend class ConfigParser;
-};
-
-
-class ConfigParser {
- public:
-  using ErrorListener = std::function<void (size_t, const char *)>;
-
-
- public:
-  ConfigParser(std::istream &stream)
-      : stream_(stream), section_(nullptr) { }
-
-  ConfigFile ParseFile();
-
-  static ConfigFile ParseFile(std::istream &istream);
-
-  static ConfigFile ParseFile(const std::string &path);
-
-  void SetErrorListener(ErrorListener listener) {
-    error_listener_ = std::move(listener);
-  }
-
-
- private:
-  void ParseLine(size_t line_no, std::string_view line);
-
-  void ReportError(size_t line_no, const char *cause) {
-    if (error_listener_) {
-      error_listener_(line_no, cause);
-    }
-  }
-
-
- private:
-  ConfigParser(const ConfigParser &) = delete;
-  ConfigParser &operator=(const ConfigParser &) = delete;
-
-
- private:
-  std::istream &stream_;
-
-  ErrorListener error_listener_;
-
-  ConfigSection *section_;
-
-  ConfigFile cfg_;
+  MapType map_;
 };
 
 
