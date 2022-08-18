@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input, Inject, Output, EventEmitter, NgZone } from "@angular/core";
-import { Core } from "app/core";
-import { TRACE_ICONS } from "app/trace_icons";
+import { Component, Input, Output, EventEmitter, Inject, NgZone } from "@angular/core";
+import { TraceCoordinator } from "app/trace_coordinator";
+import { TRACE_INFO } from "app/trace_info";
 import { LoadedTrace } from "app/loaded_trace";
 
 @Component({
@@ -57,35 +57,33 @@ import { LoadedTrace } from "app/loaded_trace";
           *ngIf="this.loadedTraces.length > 0"
         >
         <mat-list-item *ngFor="let trace of loadedTraces">
-            <mat-icon>{{TRACE_ICONS[trace.type]}}</mat-icon>
+            <mat-icon>{{TRACE_INFO[trace.type].icon}}</mat-icon>
             <span>{{trace.name}} ({{trace.type}})
             </span>
             <button
               (click)="onRemoveTrace(trace)"
-            ><mat-icon class="file-icon">close</mat-icon>
+              class="icon-button"
+            ><mat-icon>close</mat-icon>
             </button>
           </mat-list-item>
         </mat-list>
       </mat-card-content>
   `,
-  styles: [".drop-info{font-weight: normal;}"]
+  styles: [
+    ".drop-info{font-weight: normal; pointer-events: none;}",
+  ]
 })
 export class UploadTracesComponent {
-  @Input()
-    core?: Core;
-
-  @Output()
-    coreChange = new EventEmitter<Core>();
+  @Input() traceCoordinator!: TraceCoordinator;
 
   dataLoaded = false;
 
-  @Output()
-    dataLoadedChange = new EventEmitter<boolean>();
-
-  loadedTraces: LoadedTrace[] = [];
-  TRACE_ICONS = TRACE_ICONS;
+  @Output() dataLoadedChange = new EventEmitter<boolean>();
 
   constructor(@Inject(NgZone) private ngZone: NgZone) {}
+
+  loadedTraces: LoadedTrace[] = [];
+  TRACE_INFO = TRACE_INFO;
 
   public async onInputFile(event: Event) {
     const files = this.getInputFiles(event);
@@ -93,9 +91,9 @@ export class UploadTracesComponent {
   }
 
   public async processFiles(files: File[]) {
-    await this.core?.addTraces(files);
+    await this.traceCoordinator.addTraces(files);
     this.ngZone.run(() => {
-      if (this.core) this.loadedTraces = this.core.getLoadedTraces();
+      this.loadedTraces = this.traceCoordinator.getLoadedTraces();
     });
   }
 
@@ -114,7 +112,10 @@ export class UploadTracesComponent {
   }
 
   public onClearData() {
-    this.core?.clearData();
+    this.traceCoordinator.clearData();
+    this.dataLoaded = false;
+    this.loadedTraces = [];
+    this.dataLoadedChange.emit(this.dataLoaded);
   }
 
   public onFileDragIn(e: DragEvent) {
@@ -136,7 +137,7 @@ export class UploadTracesComponent {
   }
 
   public onRemoveTrace(trace: LoadedTrace) {
-    this.core?.removeTrace(trace.type);
+    this.traceCoordinator.removeTrace(trace.type);
     this.loadedTraces = this.loadedTraces.filter(loaded => loaded.type !== trace.type);
   }
 }

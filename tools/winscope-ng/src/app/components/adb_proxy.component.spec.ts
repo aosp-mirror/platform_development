@@ -16,7 +16,7 @@
 import { CommonModule } from "@angular/common";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { AdbProxyComponent } from "./adb_proxy.component";
-import { proxyClient, ProxyState } from "../trace_collection/proxy_client";
+import { proxyClient, ProxyState } from "trace_collection/proxy_client";
 import { MatIconModule } from "@angular/material/icon";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";

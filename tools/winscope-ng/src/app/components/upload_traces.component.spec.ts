@@ -17,7 +17,7 @@ import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {UploadTracesComponent} from "./upload_traces.component";
 import { MatCardModule } from "@angular/material/card";
 
-describe("CollectTracesComponent", () => {
+describe("UploadTracesComponent", () => {
   let fixture: ComponentFixture<UploadTracesComponent>;
   let component: UploadTracesComponent;
   let htmlElement: HTMLElement;

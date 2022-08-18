@@ -1,4 +1,4 @@
-import { TraceType } from "../common/trace/trace_type";
+import { TraceType } from "common/trace/trace_type";
 
 const WINDOW_MANAGER_ICON = "view_compact";
 const SURFACE_FLINGER_ICON = "filter_none";

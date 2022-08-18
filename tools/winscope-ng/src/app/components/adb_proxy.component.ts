@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { Component, Input, Output, EventEmitter } from "@angular/core";
-import { proxyClient, ProxyClient, ProxyState } from "../trace_collection/proxy_client";
+import { proxyClient, ProxyClient, ProxyState } from "trace_collection/proxy_client";
 
 @Component({
   selector: "adb-proxy",

@@ -13,14 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { TraceType } from "common/trace/trace_type";
+import { Component } from "@angular/core";
 
-interface Viewer {
-  //TODO: add TraceEntry data type
-  notifyCurrentTraceEntries(entries: Map<TraceType, any>): void;
-  getView(): HTMLElement;
-  getTitle(): string;
-  getDependencies(): TraceType[];
+@Component({
+  selector: "hierarchy-view",
+  template: `
+      <mat-card-title class="trace-view-subtitle">Hierarchy</mat-card-title>
+  `,
+  styles: [
+    ".trace-view-subtitle { font-size: 18px}"
+  ]
+})
+
+export class HierarchyComponent {
 }
-
-export { Viewer };
