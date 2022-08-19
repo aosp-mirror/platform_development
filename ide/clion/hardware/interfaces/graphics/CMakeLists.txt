@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.6)
+project(hardware_graphics)
+add_subdirectory(allocator/aidl/vts/VtsHalGraphicsAllocatorAidl_TargetTest-arm64-android)
+add_subdirectory(allocator/aidl/android.hardware.graphics.allocator-V1-ndk-arm64-android)
+add_subdirectory(composer/aidl/android.hardware.graphics.composer3-V1-ndk-arm64-android)
+add_subdirectory(composer/aidl/vts/VtsHalGraphicsComposer3_TargetTest-arm64-android)
+add_subdirectory(common/aidl/android.hardware.graphics.common-V3-ndk-arm64-android)
