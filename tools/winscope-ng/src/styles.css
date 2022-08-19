@@ -16,11 +16,18 @@
 @import "~@angular/material/prebuilt-themes/indigo-pink.css";
 @import 'https://fonts.googleapis.com/icon?family=Material+Icons';
 
+#app-title {
+    font-weight: bold;
+    font-family: Arial, Helvetica, sans-serif;
+    color:rgb(194, 65, 108);
+    font-size: 30;
+}
+
 #title {
     font-weight: bold;
     font-family: Arial, Helvetica, sans-serif;
     color:rgb(194, 65, 108);
-    font-size: 20;
+    font-size: 24;
 }
 
 button {
@@ -29,20 +36,53 @@ button {
 
 .homepage-card {
     border: 1px solid rgb(129, 129, 129);
-    width: 45rem;
-    height: 30rem;
+    width: 50%;
+    height: 35rem;
     overflow: auto;
     display: flex;
     margin: 10px;
 }
 
-mat-checkbox {
-    margin-left: 10px;
+.trace-card {
+    border: 1px solid rgb(129, 129, 129);
+    height: 100%;
+    overflow: auto;
+    display: flex;
+    margin: 10px;
 }
 
-mat-form-field {
-    margin: 10px;
-    height: 5px;
+.card-grid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    overflow: auto;
+}
+
+mat-checkbox {
+    margin-left: 5px;
+}
+
+.mat-checkbox .mat-checkbox-frame {
+    transform: scale(0.7);
+}
+
+.mat-checkbox-checked .mat-checkbox-background {
+    transform: scale(0.7);
+}
+
+.mat-checkbox-indeterminate .mat-checkbox-background {
+    transform: scale(0.7);
+}
+
+.mat-radio-button, .mat-radio-button-frame {
+    transform: scale(0.8);
+}
+
+.mat-form-field {
+    transform: scale(0.85);
+    margin: 2px;
+    padding: 0;
 }
 
 mat-icon {
@@ -75,12 +115,12 @@ button.mat-raised-button {
 }
 
 .drop-box {
-    outline: 2px dashed rgb(194, 65, 108); /* the dash box */
+    outline: 2px dashed rgb(194, 65, 108);
     outline-offset: -10px;
     background: white;
     color: rgb(194, 65, 108);
     padding: 10px 10px 10px 10px;
-    min-height: 200px; /* minimum height */
+    min-height: 200px;
     position: relative;
     cursor: pointer;
     display: flex;
@@ -104,4 +144,19 @@ button.mat-raised-button {
     background-color: rgb(194, 65, 108);
     border-radius: 21.5px;
     cursor: pointer;
+}
+
+.viewers.hide {
+    display: none !important;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+.icon-button {
+    background: none;
+    border: none;
+    display: inline-block;
+    vertical-align: middle;
 }

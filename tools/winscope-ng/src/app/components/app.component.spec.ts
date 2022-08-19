@@ -28,6 +28,8 @@ import { WebAdbComponent } from "./web_adb.component";
 import { TraceConfigComponent } from "./trace_config.component";
 
 import { ComponentFixtureAutoDetect } from "@angular/core/testing";
+import { ViewerSurfaceFlingerComponent } from "viewers/viewer_surface_flinger/viewer_surface_flinger.component";
+import { MatSliderModule } from "@angular/material/slider";
 
 
 describe("AppComponent", () => {
@@ -45,6 +47,7 @@ describe("AppComponent", () => {
         MatCardModule,
         MatButtonModule,
         MatGridListModule,
+        MatSliderModule
       ],
       declarations: [
         AppComponent,
@@ -53,6 +56,7 @@ describe("AppComponent", () => {
         AdbProxyComponent,
         WebAdbComponent,
         TraceConfigComponent,
+        ViewerSurfaceFlingerComponent
       ],
     }).overrideComponent(AppComponent, {
       set: { changeDetection: ChangeDetectionStrategy.Default }
@@ -71,7 +75,7 @@ describe("AppComponent", () => {
   });
 
   it("renders the page title", () => {
-    expect(htmlElement.querySelector("#title")?.innerHTML).toContain("Winscope Viewer 2.0");
+    expect(htmlElement.querySelector("#app-title")?.innerHTML).toContain("Winscope Viewer 2.0");
   });
 
   it("displays correct elements when no data loaded", async () => {
@@ -87,6 +91,6 @@ describe("AppComponent", () => {
     fixture.detectChanges();
     expect(htmlElement.querySelector("#collect-traces-card")).toBeFalsy();
     expect(htmlElement.querySelector("#upload-traces-card")).toBeFalsy();
-    expect(htmlElement.querySelector("#loaded-data-card")).toBeTruthy();
+    expect(htmlElement.querySelector(".viewers.show")).toBeTruthy();
   });
 });

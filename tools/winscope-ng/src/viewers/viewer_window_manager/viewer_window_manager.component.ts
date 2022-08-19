@@ -22,10 +22,11 @@ import {
 import {UiData} from "./ui_data";
 
 @Component({
+  selector: "viewer-window-manager",
   template: `
     <div class="viewer-window-manager">
       <div class="title">Window Manager</div>
-      <div class="input-value">Input value: {{inputData.text}}</div>
+      <div class="input-value">Input value: {{inputData?.text}}</div>
       <div class="button"><button mat-icon-button (click)="generateOutputEvent($event)">Output event!</button></div>
     </div>
   `

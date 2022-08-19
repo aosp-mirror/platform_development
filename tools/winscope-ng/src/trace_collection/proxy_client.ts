@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { PersistentStore } from "../common/persistent_store";
+import { PersistentStore } from "common/persistent_store";
 import { configMap, TRACES } from "./trace_collection_utils";
 import { setTraces, SetTraces } from "./set_traces";
 import { Device } from "./connection";
