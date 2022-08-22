@@ -129,7 +129,7 @@ WARNING_FILE_PAT = re.compile('^ *--> ([^:]*):[0-9]+')
 CARGO_TEST_LIST_START_PAT = re.compile('^\s*Running (.*) \(.*\)$')
 
 # cargo test --list output of the end of running a binary.
-CARGO_TEST_LIST_END_PAT = re.compile('^(\d+) tests, (\d+) benchmarks$')
+CARGO_TEST_LIST_END_PAT = re.compile('^(\d+) tests?, (\d+) benchmarks$')
 
 CARGO2ANDROID_RUNNING_PAT = re.compile('^### Running: .*$')
 

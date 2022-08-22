@@ -18,12 +18,34 @@
 #include <llvm/Support/raw_ostream.h>
 
 #include <fstream>
+#include <map>
 #include <string>
+
+
+static const std::string GLOBAL_SECTION_NAME = "global";
 
 
 namespace header_checker {
 namespace utils {
 
+
+static std::map<std::string, bool> LoadFlags(const Json::Value &section) {
+  std::map<std::string, bool> map;
+  if (section.isMember("flags")) {
+    for (auto &flag_keys : section["flags"].getMemberNames()) {
+      map[flag_keys] = section["flags"][flag_keys].asBool();
+    }
+  }
+  return map;
+}
+
+bool ConfigFile::HasGlobalSection() {
+  return HasSection(GLOBAL_SECTION_NAME, "");
+}
+
+const ConfigSection &ConfigFile::GetGlobalSection() {
+  return GetSection(GLOBAL_SECTION_NAME, "");
+}
 
 bool ConfigFile::Load(std::istream &istream) {
   Json::Value root;
@@ -34,11 +56,15 @@ bool ConfigFile::Load(std::istream &istream) {
     return false;
   }
   for (auto &key : root.getMemberNames()) {
-    map_[key] = ConfigSection();
-    if (root[key].isMember("flags")) {
-      for (auto &flag_keys : root[key]["flags"].getMemberNames()) {
-        map_[key].map_[flag_keys] = root[key]["flags"][flag_keys].asBool();
-      }
+    if (key == GLOBAL_SECTION_NAME) {
+      ConfigSection &config_section = map_[{GLOBAL_SECTION_NAME, ""}];
+      config_section.map_ = LoadFlags(root[GLOBAL_SECTION_NAME]);
+      continue;
+    }
+    for (auto &section : root[key]) {
+      ConfigSection &config_section =
+          map_[{key, section["target_version"].asString()}];
+      config_section.map_ = LoadFlags(section);
     }
   }
   return true;
@@ -46,9 +72,8 @@ bool ConfigFile::Load(std::istream &istream) {
 
 bool ConfigFile::Load(const std::string &path) {
   std::ifstream stream(path);
-  return Load(stream);
+  return stream && Load(stream);
 }
-
 
 }  // namespace utils
 }  // namespace header_checker
