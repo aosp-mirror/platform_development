@@ -35,7 +35,10 @@ import { TraceViewHeaderComponent } from "./components/trace_view_header.compone
 import { TraceViewComponent } from "./components/trace_view.component";
 import { TreeComponent } from "viewers/components/tree.component";
 import { TreeNodeComponent } from "viewers/components/tree_node.component";
-import { TreeElementComponent } from "viewers/components/tree_element.component";
+import { TreeNodeDataViewComponent } from "viewers/components/tree_node_data_view.component";
+import { TreeNodePropertiesDataViewComponent } from "viewers/components/tree_node_properties_data_view.component";
+import { PropertyGroupsComponent } from "viewers/components/property_groups.component";
+import { TransformMatrixComponent } from "viewers/components/transform_matrix.component";
 
 @NgModule({
   declarations: [
@@ -54,7 +57,10 @@ import { TreeElementComponent } from "viewers/components/tree_element.component"
     TraceViewComponent,
     TreeComponent,
     TreeNodeComponent,
-    TreeElementComponent
+    TreeNodeDataViewComponent,
+    TreeNodePropertiesDataViewComponent,
+    PropertyGroupsComponent,
+    TransformMatrixComponent
   ],
   imports: [
     BrowserModule,

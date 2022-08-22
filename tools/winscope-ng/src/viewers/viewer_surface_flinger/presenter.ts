@@ -16,19 +16,20 @@
 import { Rectangle, RectMatrix, RectTransform, UiData } from "viewers/viewer_surface_flinger/ui_data";
 import { TraceType } from "common/trace/trace_type";
 import { UserOptions } from "viewers/common/user_options";
-import { TreeGenerator, getFilter, FilterType, Tree } from "viewers/common/tree_utils";
+import { getFilter, FilterType, Tree, TreeSummary } from "viewers/common/tree_utils";
+import { TreeGenerator } from "viewers/common/tree_generator";
+import { TreeTransformer } from "viewers/common/tree_transformer";
 
 type NotifyViewCallbackType = (uiData: UiData) => void;
 
-class Presenter {
+export class Presenter {
   constructor(notifyViewCallback: NotifyViewCallbackType) {
     this.notifyViewCallback = notifyViewCallback;
     this.uiData = new UiData();
     this.notifyViewCallback(this.uiData);
   }
 
-  public updatePinnedItems(event: CustomEvent) {
-    const pinnedItem = event.detail.pinnedItem;
+  public updatePinnedItems(pinnedItem: Tree) {
     const pinnedId = `${pinnedItem.id}`;
     if (this.pinnedItems.map(item => `${item.id}`).includes(pinnedId)) {
       this.pinnedItems = this.pinnedItems.filter(pinned => `${pinned.id}` != pinnedId);
@@ -40,8 +41,7 @@ class Presenter {
     this.notifyViewCallback(this.uiData);
   }
 
-  public updateHighlightedItems(event: CustomEvent) {
-    const id = `${event.detail.id}`;
+  public updateHighlightedItems(id: string) {
     if (this.highlightedItems.includes(id)) {
       this.highlightedItems = this.highlightedItems.filter(hl => hl != id);
     } else {
@@ -52,23 +52,86 @@ class Presenter {
     this.notifyViewCallback(this.uiData);
   }
 
-  public updateHierarchyTree(event: CustomEvent) {
-    this.hierarchyUserOptions = event.detail.userOptions;
+  public updateHierarchyTree(userOptions: UserOptions) {
+    this.hierarchyUserOptions = userOptions;
     this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
     this.uiData.tree = this.generateTree();
     this.notifyViewCallback(this.uiData);
   }
 
-  public filterHierarchyTree(event: CustomEvent) {
-    this.hierarchyFilter = getFilter(event.detail.filterString);
+  public filterHierarchyTree(filterString: string) {
+    this.hierarchyFilter = getFilter(filterString);
     this.uiData.tree = this.generateTree();
     this.notifyViewCallback(this.uiData);
+  }
+
+  public updatePropertiesTree(userOptions: UserOptions) {
+    this.propertiesUserOptions = userOptions;
+    this.uiData.propertiesUserOptions = this.propertiesUserOptions;
+    this.updateSelectedTreeUiData();
+  }
+
+  public filterPropertiesTree(filterString: string) {
+    this.propertiesFilter = getFilter(filterString);
+    this.updateSelectedTreeUiData();
+  }
+
+  public newPropertiesTree(selectedItem: any) {
+    this.selectedTree = selectedItem;
+    this.updateSelectedTreeUiData();
+  }
+
+  private updateSelectedTreeUiData() {
+    this.uiData.selectedTree = this.getTreeWithTransformedProperties(this.selectedTree);
+    this.uiData.selectedTreeSummary = this.getSelectedTreeSummary(this.selectedTree);
+    this.notifyViewCallback(this.uiData);
+  }
+
+  private getSelectedTreeSummary(layer: Tree): TreeSummary | undefined {
+    const summary = [];
+
+    if (layer?.visibilityReason?.length > 0) {
+      let reason = "";
+      if (Array.isArray(layer.visibilityReason)) {
+        reason = layer.visibilityReason.join(", ");
+      } else {
+        reason = layer.visibilityReason;
+      }
+
+      summary.push({key: "Invisible due to", value: reason});
+    }
+
+    if (layer?.occludedBy?.length > 0) {
+      summary.push({key: "Occluded by", value: layer.occludedBy.map((it:Tree) => it.id).join(", ")});
+    }
+
+    if (layer?.partiallyOccludedBy?.length > 0) {
+      summary.push({
+        key: "Partially occluded by",
+        value: layer.partiallyOccludedBy.map((it:Tree) => it.id).join(", "),
+      });
+    }
+
+    if (layer?.coveredBy?.length > 0) {
+      summary.push({key: "Covered by", value: layer.coveredBy.map((it:Tree) => it.id).join(", ")});
+    }
+
+    if (summary.length === 0) {
+      return undefined;
+    }
+
+    return summary;
   }
 
   public notifyCurrentTraceEntries(entries: Map<TraceType, any>) {
     this.uiData = new UiData();
     const entry = entries.get(TraceType.SURFACE_FLINGER)[0];
-    this.uiData.rects = [];
+    this.previousEntry = entries.get(TraceType.SURFACE_FLINGER)[1];
+
+    this.uiData = new UiData();
+
+    this.uiData.highlightedItems = this.highlightedItems;
+
     const displayRects = entry.displays.map((display: any) => {
       const rect = display.layerStackSpace;
       rect.label = display.name;
@@ -78,7 +141,6 @@ class Presenter {
       rect.isVirtual = display.isVirtual ?? false;
       return rect;
     }) ?? [];
-
     this.displayIds = [];
     const rects = entry.visibleLayers
       .sort((a: any, b: any) => (b.absoluteZ > a.absoluteZ) ? 1 : (a.absoluteZ == b.absoluteZ) ? 0 : -1)
@@ -92,13 +154,12 @@ class Presenter {
       });
     this.uiData.rects = this.rectsToUiData(rects.concat(displayRects));
     this.uiData.displayIds = this.displayIds;
-    this.uiData.highlightedItems = this.highlightedItems;
-    this.uiData.rects = this.rectsToUiData(entry.rects.concat(displayRects));
-    this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
-    this.previousEntry = entries.get(TraceType.SURFACE_FLINGER)[1];
-    this.entry = entry;
 
+    this.entry = entry;
+    this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
+    this.uiData.propertiesUserOptions = this.propertiesUserOptions;
     this.uiData.tree = this.generateTree();
+
     this.notifyViewCallback(this.uiData);
   }
 
@@ -106,7 +167,11 @@ class Presenter {
     if (!this.entry) {
       return null;
     }
-    const generator = new TreeGenerator(this.entry, this.hierarchyUserOptions, this.hierarchyFilter, this.pinnedIds)
+
+    const generator = new TreeGenerator(this.entry, this.hierarchyFilter, this.pinnedIds)
+      .setIsOnlyVisibleView(this.hierarchyUserOptions["onlyVisible"]?.enabled)
+      .setIsSimplifyNames(this.hierarchyUserOptions["simplifyNames"]?.enabled)
+      .setIsFlatView(this.hierarchyUserOptions["flat"]?.enabled)
       .withUniqueNodeId();
     let tree: Tree;
     if (!this.hierarchyUserOptions["showDiff"]?.enabled) {
@@ -172,13 +237,26 @@ class Presenter {
     }
   }
 
+  private getTreeWithTransformedProperties(selectedTree: Tree) {
+    const transformer = new TreeTransformer(selectedTree, this.propertiesFilter)
+      .setIsShowDefaults(this.propertiesUserOptions["showDefaults"]?.enabled)
+      .setIsShowDiff(this.propertiesUserOptions["showDiff"]?.enabled)
+      .setTransformerOptions({skip: selectedTree.skip})
+      .setDiffProperties(this.previousEntry);
+    this.uiData.selectedLayer = transformer.getOriginalLayer(this.entry, selectedTree.stableId);
+    const transformedTree = transformer.transform();
+    return transformedTree;
+  }
+
   private readonly notifyViewCallback: NotifyViewCallbackType;
   private uiData: UiData;
-  private displayIds: Array<number> = [];
   private hierarchyFilter: FilterType = getFilter("");
+  private propertiesFilter: FilterType = getFilter("");
   private highlightedItems: Array<string> = [];
+  private displayIds: Array<number> = [];
   private pinnedItems: Array<Tree> = [];
   private pinnedIds: Array<string> = [];
+  private selectedTree: any = null;
   private previousEntry: any = null;
   private entry: any = null;
   private hierarchyUserOptions: UserOptions = {
@@ -199,6 +277,20 @@ class Presenter {
       enabled: false
     }
   };
-}
 
-export {Presenter};
+  private propertiesUserOptions: UserOptions = {
+    showDiff: {
+      name: "Show diff",
+      enabled: false
+    },
+    showDefaults: {
+      name: "Show defaults",
+      enabled: true,
+      tooltip: `
+                If checked, shows the value of all properties.
+                Otherwise, hides all properties whose value is
+                the default for its data type.
+              `
+    },
+  };
+}

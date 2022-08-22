@@ -80,7 +80,7 @@ import { ViewerEvents } from "viewers/common/viewer_events";
     </mat-card-header>
     <mat-card-content class="rects-content">
       <div class="canvas-container">
-        <canvas id="rects-canvas" (click)="onRectClick($event)">
+        <canvas class="rects-canvas" (click)="onRectClick($event)">
         </canvas>
       </div>
       <div class="tabs" *ngIf="displayIds.length > 1">
@@ -92,8 +92,8 @@ import { ViewerEvents } from "viewers/common/viewer_events";
     "@import 'https://fonts.googleapis.com/icon?family=Material+Icons';",
     ".rects-content {position: relative}",
     ".canvas-container {height: 40rem; width: 100%; position: relative}",
-    "#rects-canvas {height: 40rem; width: 100%; cursor: pointer; position: absolute; top: 0px}",
-    "#labels-canvas {height: 40rem; width: 100%; position: absolute; top: 0px}",
+    ".rects-canvas {height: 40rem; width: 100%; cursor: pointer; position: absolute; top: 0px}",
+    ".labels-canvas {height: 40rem; width: 100%; position: absolute; top: 0px}",
     ".view-controls {display: inline-block; position: relative; min-height: 4rem; width: 100%;}",
     ".slider-view-controls {display: inline-block; position: relative; height: 3rem; width: 100%;}",
     ".slider {display: inline-block}",
@@ -131,10 +131,15 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnInit() {
-    window.addEventListener('resize', () => this.refreshCanvas());
+    window.addEventListener("resize", () => this.refreshCanvas());
   }
 
   ngOnChanges(changes: SimpleChanges) {
+    if (changes["displayIds"]) {
+      if (!this.displayIds.includes(this.currentDisplayId)) {
+        this.currentDisplayId = this.displayIds[0];
+      }
+    }
     if (changes["highlightedItems"]) {
       this.canvasGraphics.updateHighlightedItems(this.highlightedItems);
     }
@@ -157,7 +162,7 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnDestroy() {
-    window.removeEventListener('resize', () => this.refreshCanvas());
+    window.removeEventListener("resize", () => this.refreshCanvas());
   }
 
   onRectClick(event:MouseEvent) {
@@ -193,7 +198,7 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   drawRects() {
-    const canvas = document.getElementById("rects-canvas") as HTMLCanvasElement;
+    const canvas = this.elementRef.nativeElement.querySelector(".rects-canvas") as HTMLCanvasElement;
     this.canvasGraphics.initialise(canvas);
     this.refreshCanvas();
   }
