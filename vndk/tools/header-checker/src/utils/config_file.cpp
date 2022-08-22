@@ -72,10 +72,7 @@ bool ConfigFile::Load(std::istream &istream) {
 
 bool ConfigFile::Load(const std::string &path) {
   std::ifstream stream(path);
-  if (stream.is_open()) {
-    return Load(stream);
-  }
-  return false;
+  return stream && Load(stream);
 }
 
 }  // namespace utils
