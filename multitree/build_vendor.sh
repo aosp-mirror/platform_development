@@ -17,12 +17,13 @@
 
 function usage() {
   cat <<EOF
-Usage: $0 -d device-name -p product-name -r dist-dir
+Usage: $0 -d device-name -p product-name -r dist-dir -i build-id
 Builds a vendor image for given product and analyze ninja inputs.
 
   -d  device name to build (e.g. vsoc_x86_64)
   -p  product name to build (e.g. cf_x86_64_phone)
   -r  directory for dist (e.g. out/dist)
+  -i  build ID
   -h  display this help and exit
 
 EOF
@@ -35,12 +36,13 @@ do
         d) device=${OPTARG};;
         p) product=${OPTARG};;
         r) dist_dir=${OPTARG};;
+        i) build_id=${OPTARG};;
         h) usage;;
         *) usage;;
     esac
 done
 
-if [[ -z "$device" || -z "$product" || -z "$dist_dir" ]]; then
+if [[ -z "$device" || -z "$product" || -z "$dist_dir" || -z "$build_id" ]]; then
   echo "missing arguments"
   usage
 fi
@@ -59,4 +61,5 @@ done
 cp out/target/product/$device/vendor.img $dist_dir
 
 out/host/linux-x86/bin/collect_ninja_inputs -n prebuilts/build-tools/linux-x86/bin/ninja \
-  -f out/combined-$product.ninja -t vendorimage > $dist_dir/ninja_inputs.json
+  -f out/combined-$product.ninja -t vendorimage -m $dist_dir/manifest_$build_id.xml \
+  > $dist_dir/ninja_inputs.json
