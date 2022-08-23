@@ -27,10 +27,10 @@ Builds a vendor image for given product and analyze ninja inputs.
   -h  display this help and exit
 
 EOF
-  exit
+  exit 1
 }
 
-while getopts d:p:r:h flag
+while getopts d:p:r:i:h flag
 do
     case "${flag}" in
         d) device=${OPTARG};;
