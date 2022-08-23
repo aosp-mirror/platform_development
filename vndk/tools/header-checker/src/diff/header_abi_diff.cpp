@@ -213,7 +213,10 @@ bool ShouldEmitWarningMessage(CompatibilityStatusIR status) {
 int main(int argc, const char **argv) {
   llvm::cl::ParseCommandLineOptions(argc, argv, "header-checker");
 
-  ReadConfigFile(GetConfigFilePath(old_dump));
+  const std::string config_file_path = GetConfigFilePath(old_dump);
+  if (llvm::sys::fs::exists(config_file_path)) {
+    ReadConfigFile(config_file_path);
+  }
 
   std::set<std::string> ignored_symbols;
   if (llvm::sys::fs::exists(ignore_symbol_list)) {
