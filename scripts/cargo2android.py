@@ -182,7 +182,7 @@ def test_base_name(path):
 
 
 def unquote(s):  # remove quotes around str
-  if s and len(s) > 1 and s[0] == '"' and s[-1] == '"':
+  if s and len(s) > 1 and s[0] == s[-1] and s[0] in ('"', "'"):
     return s[1:-1]
   return s
 
