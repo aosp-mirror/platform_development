@@ -433,9 +433,13 @@ class Crate(object):
         self.emit_list = arg.replace('--emit=', '')
       elif arg.startswith('--edition='):
         self.edition = arg.replace('--edition=', '')
-      elif arg.startswith('-Aclippy'):
+      elif arg.startswith('-Aclippy') or arg.startswith('-Wclippy'):
         # TODO: Consider storing these to include in the Android.bp.
         _ = arg # ignored
+      elif arg.startswith('-W'):
+        pass  # ignored
+      elif arg.startswith('-D'):
+        pass  # TODO: Consider storing these to include in the Android.bp.
       elif not arg.startswith('-'):
         # shorten imported crate main source paths like $HOME/.cargo/
         # registry/src/github.com-1ecc6299db9ec823/memchr-2.3.3/src/lib.rs
