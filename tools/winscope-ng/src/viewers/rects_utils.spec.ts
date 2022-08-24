@@ -38,7 +38,7 @@ describe("RectsUtils", () => {
       width: 1,
       ref: null,
       id: 12345,
-      stackId: 0
+      displayId: 0
     };
     const expected = {
       topLeft: {x: 1, y: 1},
@@ -51,7 +51,7 @@ describe("RectsUtils", () => {
       width: 1,
       ref: null,
       id: 12345,
-      stackId: 0,
+      displayId: 0,
       isVirtual: undefined
     };
     expect(RectsUtils.transformRect(rect.transform.matrix, rect)).toEqual(expected);
