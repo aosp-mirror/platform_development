@@ -367,8 +367,9 @@ class Crate(object):
     """Find important rustc arguments to convert to Android.bp properties."""
     self.line_num = line_num
     self.line = line
-    args = line.split()  # Loop through every argument of rustc.
+    args = list(map(unquote, line.split()))
     i = 0
+    # Loop through every argument of rustc.
     while i < len(args):
       arg = args[i]
       if arg == '--crate-name':
@@ -387,8 +388,8 @@ class Crate(object):
         self.target = args[i]
       elif arg == '--cfg':
         i += 1
-        if args[i].startswith('\'feature='):
-          self.features.append(unquote(args[i].replace('\'feature=', '')[:-1]))
+        if args[i].startswith('feature='):
+          self.features.append(unquote(args[i].replace('feature=', '')))
         else:
           self.cfgs.append(args[i])
       elif arg == '--extern':
@@ -432,7 +433,7 @@ class Crate(object):
         self.emit_list = arg.replace('--emit=', '')
       elif arg.startswith('--edition='):
         self.edition = arg.replace('--edition=', '')
-      elif arg.startswith('\'-Aclippy'):
+      elif arg.startswith('-Aclippy'):
         # TODO: Consider storing these to include in the Android.bp.
         _ = arg # ignored
       elif not arg.startswith('-'):
