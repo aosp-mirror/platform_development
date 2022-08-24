@@ -428,14 +428,13 @@ class Crate(object):
       elif arg == '--out-dir' or arg == '--color':  # ignored
         i += 1
       elif arg.startswith('--error-format=') or arg.startswith('--json='):
-        _ = arg  # ignored
+        pass  # ignored
       elif arg.startswith('--emit='):
         self.emit_list = arg.replace('--emit=', '')
       elif arg.startswith('--edition='):
         self.edition = arg.replace('--edition=', '')
       elif arg.startswith('-Aclippy') or arg.startswith('-Wclippy'):
-        # TODO: Consider storing these to include in the Android.bp.
-        _ = arg # ignored
+        pass  # TODO: Consider storing these to include in the Android.bp.
       elif arg.startswith('-W'):
         pass  # ignored
       elif arg.startswith('-D'):
