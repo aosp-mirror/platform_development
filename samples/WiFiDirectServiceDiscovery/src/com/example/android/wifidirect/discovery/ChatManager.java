@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Arrays;
 
 /**
  * Handles reading and writing of messages with socket buffers. Uses a Handler
@@ -47,7 +48,7 @@ public class ChatManager implements Runnable {
                     }
 
                     // Send the obtained bytes to the UI Activity
-                    Log.d(TAG, "Rec:" + String.valueOf(buffer));
+                    Log.d(TAG, "Rec:" + Arrays.toString(buffer));
                     handler.obtainMessage(WiFiServiceDiscoveryActivity.MESSAGE_READ,
                             bytes, -1, buffer).sendToTarget();
                 } catch (IOException e) {
