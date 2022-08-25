@@ -28,6 +28,7 @@ import { TraceType } from "common/trace/trace_type";
         <mat-card class="rects-view">
           <rects-view
             [rects]="inputData?.rects ?? []"
+            [displayIds]="inputData?.displayIds ?? []"
             [highlighted]="inputData?.highlighted ?? ''"
             class="rects-view"
           ></rects-view>

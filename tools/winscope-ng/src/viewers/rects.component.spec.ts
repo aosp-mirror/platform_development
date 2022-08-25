@@ -96,7 +96,7 @@ describe("RectsComponent", () => {
         isDisplay: false,
         ref: null,
         id: 12345,
-        stackId: 0,
+        displayId: 0,
       }
     ]);
     spyOn(component.rectsComponent, "drawRects").and.callThrough();

@@ -19,6 +19,7 @@ class UiData {
   }
   rects?: Rectangle[] = [];
   highlighted?: string = "";
+  displayIds?: number[] = [];
 }
 
 export interface Rectangle {
@@ -32,7 +33,7 @@ export interface Rectangle {
   isDisplay: boolean;
   ref: any;
   id: number;
-  stackId: number;
+  displayId: number;
   isVirtual?: boolean;
 }
 
