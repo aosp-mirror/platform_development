@@ -19,6 +19,7 @@
 
     <application android:label="ThemedNavBarKeyboard">
         <service android:name=".ThemedNavBarKeyboard"
+            android:exported="true"
             android:label="ThemedNavBarKeyboard"
             android:permission="android.permission.BIND_INPUT_METHOD">
             <intent-filter>

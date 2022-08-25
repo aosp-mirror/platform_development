@@ -23,87 +23,77 @@ namespace header_checker {
 namespace utils {
 
 
-TEST(ConfigParserTest, Parse) {
+TEST(ConfigFileTest, Parse) {
   std::stringstream stream(R"(
-# Comment line starts with hash symbol
-; Comment line starts with semicolon
-
-[section1]
-key1 = value1
-key2 = value2
-
-[section2]
-key1 = true
-key2 = false
+// Comment line starts with slash
+/* embedded comment */
+{
+  "global": {
+    "flags": {
+      "key1": true,
+      "key2": false,
+    },
+  },
+  "library1": [
+    {
+      "target_version": "current",
+      "flags": {
+        "key1": true,
+        "key2": false,
+      },
+    },
+    {
+      "target_version": "34",
+      "flags": {
+        "key1": false,
+        "key2": true,
+      },
+    },
+  ],
+}
 )");
 
-  auto &&cfg = ConfigParser::ParseFile(stream);
-  EXPECT_TRUE(cfg.HasSection("section1"));
-  EXPECT_TRUE(cfg.HasSection("section2"));
-  EXPECT_FALSE(cfg.HasSection("section3"));
+  ConfigFile cfg;
+  cfg.Load(stream);
+  EXPECT_TRUE(cfg.HasSection("global", ""));
+  EXPECT_TRUE(cfg.HasSection("library1", "current"));
+  EXPECT_FALSE(cfg.HasSection("library1", "35"));
+  EXPECT_FALSE(cfg.HasSection("library2", "current"));
 
-  auto &&section1 = cfg.GetSection("section1");
+  auto &&section1 = cfg.GetSection("global", "");
   EXPECT_TRUE(section1.HasProperty("key1"));
-  EXPECT_EQ("value1", section1.GetProperty("key1"));
+  EXPECT_TRUE(section1.GetProperty("key1"));
   EXPECT_TRUE(section1.HasProperty("key2"));
-  EXPECT_EQ("value2", section1.GetProperty("key2"));
+  EXPECT_FALSE(section1.GetProperty("key2"));
 
   EXPECT_FALSE(section1.HasProperty("key3"));
-  EXPECT_EQ("", section1.GetProperty("key3"));
+  EXPECT_FALSE(section1.GetProperty("key3"));
 
-  auto &&section2 = cfg.GetSection("section2");
+  auto &&section2 = cfg.GetSection("library1", "current");
   EXPECT_TRUE(section2.HasProperty("key1"));
-  EXPECT_EQ("true", section2.GetProperty("key1"));
+  EXPECT_TRUE(section2.GetProperty("key1"));
   EXPECT_TRUE(section2.HasProperty("key2"));
-  EXPECT_EQ("false", section2.GetProperty("key2"));
+  EXPECT_FALSE(section2.GetProperty("key2"));
 
-  EXPECT_EQ("value1", cfg.GetProperty("section1", "key1"));
-  EXPECT_EQ("value2", cfg.GetProperty("section1", "key2"));
+  EXPECT_TRUE(cfg.GetProperty("global", "", "key1"));
+  EXPECT_TRUE(cfg.GetProperty("library1", "34", "key2"));
 
-  EXPECT_EQ("value1", cfg["section1"]["key1"]);
-  EXPECT_EQ("value2", cfg["section1"]["key2"]);
+  EXPECT_TRUE(section1["key1"]);
+  EXPECT_FALSE(section2["key2"]);
 }
 
-
-TEST(ConfigParserTest, BadSectionNameLine) {
+TEST(ConfigFileTest, BadJsonFormat) {
   std::stringstream stream(R"(
-[section1
-key1 = value1
-)");
-
-  size_t num_errors = 0;
-
-  ConfigParser parser(stream);
-  parser.SetErrorListener(
-      [&num_errors](size_t line_no, const char *cause) {
-        ++num_errors;
-        EXPECT_EQ(2, line_no);
-        EXPECT_STREQ("bad section name line", cause);
-      });
-  parser.ParseFile();
-
-  EXPECT_EQ(1, num_errors);
+{
+  "section1: {
+  }
 }
-
-
-TEST(ConfigParserTest, BadKeyValueLine) {
-  std::stringstream stream(R"(
-[section1]
-key1
 )");
 
-  size_t num_errors = 0;
+  ConfigFile cfg;
+  bool result = cfg.Load(stream);
 
-  ConfigParser parser(stream);
-  parser.SetErrorListener(
-      [&num_errors](size_t line_no, const char *cause) {
-        ++num_errors;
-        EXPECT_EQ(3, line_no);
-        EXPECT_STREQ("bad key-value line", cause);
-      });
-  parser.ParseFile();
-
-  EXPECT_EQ(1, num_errors);
+  EXPECT_FALSE(result);
 }
 
 

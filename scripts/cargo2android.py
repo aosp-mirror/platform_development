@@ -129,7 +129,7 @@ WARNING_FILE_PAT = re.compile('^ *--> ([^:]*):[0-9]+')
 CARGO_TEST_LIST_START_PAT = re.compile('^\s*Running (.*) \(.*\)$')
 
 # cargo test --list output of the end of running a binary.
-CARGO_TEST_LIST_END_PAT = re.compile('^(\d+) tests, (\d+) benchmarks$')
+CARGO_TEST_LIST_END_PAT = re.compile('^(\d+) tests?, (\d+) benchmarks$')
 
 CARGO2ANDROID_RUNNING_PAT = re.compile('^### Running: .*$')
 
@@ -1160,12 +1160,6 @@ class Runner(object):
         sys.exit('ERROR: cannot find cargo in ' + self.args.cargo_bin)
       print('INFO: using cargo in ' + self.args.cargo_bin)
       return
-    elif os.environ.get('ANDROID_BUILD_ENVIRONMENT_CONFIG', '') == 'googler':
-      sys.exit('ERROR: Not executed within the sandbox. Please see '
-               'go/cargo2android-sandbox for more information.')
-    else:
-      sys.exit('ERROR: the prebuilt cargo is not usable; please '
-               'use the --cargo_bin flag.')
     # We have only tested this on Linux.
     if platform.system() != 'Linux':
       sys.exit('ERROR: this script has only been tested on Linux with cargo.')
@@ -1205,10 +1199,10 @@ class Runner(object):
       result = version_pat.match(dir_name)
       if not result:
         continue
-      version = (result.group(1), result.group(2), result.group(3))
+      version = (int(result.group(1)), int(result.group(2)), int(result.group(3)))
       if version > rust_version:
         rust_version = version
-    return '.'.join(rust_version)
+    return '.'.join(map(str, rust_version))
 
   def find_out_files(self):
     # list1 has build.rs output for normal crates

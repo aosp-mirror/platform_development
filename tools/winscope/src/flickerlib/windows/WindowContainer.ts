@@ -47,7 +47,8 @@ WindowContainer.fromProto = function (
 
     const children = protoChildren
         .filter(it => it != null)
-        .map(it => WindowContainer.childrenFromProto(it, isActivityInTree));
+        .map(it => WindowContainer.childrenFromProto(it, isActivityInTree))
+        .filter(it => it != null);
 
     const identifier = identifierOverride ?? proto.identifier;
     var name = nameOverride ?? identifier?.title ?? "";
