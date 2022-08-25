@@ -37,7 +37,7 @@ export default {
   margin: 0;
   padding: 10px 0;
   min-width: 10rem;
-  z-index: 1500;
+  z-index: 10;
   position: fixed;
   list-style: none;
   box-sizing: border-box;

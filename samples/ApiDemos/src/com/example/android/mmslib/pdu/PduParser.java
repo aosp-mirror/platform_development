@@ -790,7 +790,7 @@ public class PduParser {
                         try {
                             if (LOCAL_LOGV) {
                                 Log.v(LOG_TAG, "parseHeaders: CONTENT_TYPE: " + headerField +
-                                        contentType.toString());
+                                        Arrays.toString(contentType));
                             }
                             headers.setTextString(contentType, PduHeaders.CONTENT_TYPE);
                         } catch(NullPointerException e) {

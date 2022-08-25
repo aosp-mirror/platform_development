@@ -23,7 +23,8 @@ Error.fromProto = function (proto: any): Error {
         proto.message,
         proto.layerId,
         proto.windowToken,
-        proto.taskId
+        proto.taskId,
+        proto.assertionName
     );
     return error;
 }
