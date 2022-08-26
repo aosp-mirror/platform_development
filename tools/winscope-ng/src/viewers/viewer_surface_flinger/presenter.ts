@@ -39,13 +39,26 @@ class Presenter {
       const rect = display.layerStackSpace;
       rect.label = display.name;
       rect.id = display.id;
-      rect.stackId = display.layerStackId;
+      rect.displayId = display.layerStackId;
       rect.isDisplay = true;
       rect.isVirtual = display.isVirtual;
       return rect;
     }) ?? [];
     this.uiData.highlighted = this.highlighted;
-    this.uiData.rects = this.rectsToUiData(entry.rects.concat(displayRects));
+
+    this.displayIds = [];
+    const rects = entry.visibleLayers
+      .sort((a: any, b: any) => (b.absoluteZ > a.absoluteZ) ? 1 : (a.absoluteZ == b.absoluteZ) ? 0 : -1)
+      .map((it: any) => {
+        const rect = it.rect;
+        rect.displayId = it.stackId;
+        if (!this.displayIds.includes(it.stackId)) {
+          this.displayIds.push(it.stackId);
+        }
+        return rect;
+      });
+    this.uiData.rects = this.rectsToUiData(rects.concat(displayRects));
+    this.uiData.displayIds = this.displayIds;
     this.notifyViewCallback(this.uiData);
   }
 
@@ -92,7 +105,7 @@ class Presenter {
         isDisplay: isDisplay,
         ref: rect.ref,
         id: rect.id ?? rect.ref.id,
-        stackId: rect.stackId ?? rect.ref.stackId,
+        displayId: rect.displayId ?? rect.ref.stackId,
         isVirtual: rect.isVirtual
       };
       uiRects.push(newRect);
@@ -103,6 +116,7 @@ class Presenter {
   private readonly notifyViewCallback: NotifyViewCallbackType;
   private uiData: UiData;
   private highlighted = "";
+  private displayIds: Array<number> = [];
 }
 
 export {Presenter};

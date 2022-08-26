@@ -52,7 +52,7 @@ export const RectsUtils = {
       width: Math.abs(right - left),
       ref: rect.ref,
       id: rect.id,
-      stackId: rect.stackId,
+      displayId: rect.displayId,
       isVirtual: rect.isVirtual
     };
     return outrect;
