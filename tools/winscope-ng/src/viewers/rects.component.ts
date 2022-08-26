@@ -45,7 +45,7 @@ import * as THREE from "three";
           (input)="canvasGraphics.updateRotation($event.value!)"
         ></mat-slider>
         <mat-checkbox
-          [hidden]="visibleView()"
+          [disabled]="visibleView()"
           class="rects-checkbox"
           [checked]="showVirtualDisplays()"
           (change)="canvasGraphics.updateVirtualDisplays($event.checked!)"
@@ -67,6 +67,9 @@ import * as THREE from "three";
         </div>
         <canvas id="rects-canvas" (click)="onRectClick($event)">
         </canvas>
+      </div>
+      <div class="tabs" *ngIf="displayIds.length > 1">
+        <button mat-raised-button *ngFor="let displayId of displayIds" (click)="changeDisplayId(displayId)">{{displayId}}</button>
       </div>
     </mat-card-content>
   `,
@@ -92,13 +95,14 @@ import * as THREE from "three";
 
 export class RectsComponent implements OnChanges, OnDestroy {
   @Input() rects!: Rectangle[];
-
+  @Input() displayIds: Array<number> = [];
   @Input() highlighted = "";
 
   constructor(
     @Inject(ElementRef) private elementRef: ElementRef,
   ) {
     this.canvasGraphics = new CanvasGraphics();
+    this.currentDisplayId = this.displayIds[0] ?? 0; //default stack id is usually zero
   }
 
   ngOnDestroy() {
@@ -177,6 +181,7 @@ export class RectsComponent implements OnChanges, OnDestroy {
   }
 
   updateVariablesBeforeRefresh() {
+    this.rects = this.rects.filter(rect => rect.displayId === this.currentDisplayId);
     this.canvasGraphics.updateRects(this.rects);
     const biggestX = Math.max(...this.rects.map(rect => rect.topLeft.x + rect.width/2));
     this.canvasGraphics.updateIsLandscape(biggestX > this.s({x: this.boundsWidth, y:this.boundsHeight}).x/2);
@@ -275,6 +280,10 @@ export class RectsComponent implements OnChanges, OnDestroy {
     return this.canvasGraphics.getShowVirtualDisplays();
   }
 
+  changeDisplayId(displayId: number) {
+    this.currentDisplayId = displayId;
+  }
+
   canvasGraphics: CanvasGraphics;
   private readonly _60fpsInterval = 16.66666666666667;
   private drawRectsInterval = interval(this._60fpsInterval);
@@ -283,4 +292,5 @@ export class RectsComponent implements OnChanges, OnDestroy {
   private displayRects!: Rectangle[];
   private canvasSubscription?: Subscription;
   private mouse = new THREE.Vector3(0, 0, 0);
+  private currentDisplayId: number;
 }
