@@ -23,7 +23,7 @@ import sys
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
 from operator import itemgetter
-
+from ninja_metrics_proto import ninja_metrics
 
 def build_cmd(ninja_binary, ninja_file, target, exempted_file_list):
     cmd = [ninja_binary, '-f', ninja_file, '-t', 'inputs']
@@ -53,6 +53,7 @@ parser.add_argument('-n', '--ninja_binary', type=pathlib.Path, required=True)
 parser.add_argument('-f', '--ninja_file', type=pathlib.Path, required=True)
 parser.add_argument('-t', '--target', type=str, required=True)
 parser.add_argument('-e', '--exempted_file_list', type=pathlib.Path)
+parser.add_argument('-o', '--out', type=pathlib.Path)
 group = parser.add_mutually_exclusive_group()
 group.add_argument('-r', '--repo_project_list', type=pathlib.Path)
 group.add_argument('-m', '--repo_manifest', type=pathlib.Path)
@@ -82,4 +83,11 @@ if projects:
     result['total_project_count'] = len(project_to_count)
 
 result['total_input_count'] = len(input_files)
-print(json.dumps(result, indent=2))
+
+if args.out:
+    with open(os.path.join(args.out.parent, args.out.name + '.json'), 'w') as json_file:
+        json.dump(result, json_file, indent=2)
+    with open(os.path.join(args.out.parent, args.out.name + '.pb'), 'wb') as pb_file:
+        pb_file.write(ninja_metrics.generate_proto(result).SerializeToString())
+else:
+    print(json.dumps(result, indent=2))
