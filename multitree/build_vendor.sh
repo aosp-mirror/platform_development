@@ -60,6 +60,8 @@ done
 
 cp out/target/product/$device/vendor.img $dist_dir
 
+mkdir -p $dist_dir/logs
+
 out/host/linux-x86/bin/collect_ninja_inputs -n prebuilts/build-tools/linux-x86/bin/ninja \
   -f out/combined-$product.ninja -t vendorimage -m $dist_dir/manifest_$build_id.xml \
-  > $dist_dir/ninja_inputs.json
+  --out $dist_dir/logs/ninja_inputs
