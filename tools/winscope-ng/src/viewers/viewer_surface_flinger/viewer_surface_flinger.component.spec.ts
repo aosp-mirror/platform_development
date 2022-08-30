@@ -16,13 +16,13 @@
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {ViewerSurfaceFlingerComponent} from "./viewer_surface_flinger.component";
 
-import { HierarchyComponent } from "viewers/hierarchy.component";
-import { PropertiesComponent } from "viewers/properties.component";
-import { RectsComponent } from "viewers/rects.component";
+import { HierarchyComponent } from "viewers/components/hierarchy.component";
+import { PropertiesComponent } from "viewers/components/properties.component";
+import { RectsComponent } from "viewers/components/rects/rects.component";
 import { MatIconModule } from "@angular/material/icon";
 import { MatCardModule } from "@angular/material/card";
 import { ComponentFixtureAutoDetect } from "@angular/core/testing";
-import { CUSTOM_ELEMENTS_SCHEMA } from "@angular/core";
+import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from "@angular/core";
 
 describe("ViewerSurfaceFlingerComponent", () => {
   let fixture: ComponentFixture<ViewerSurfaceFlingerComponent>;
@@ -44,7 +44,7 @@ describe("ViewerSurfaceFlingerComponent", () => {
         PropertiesComponent,
         RectsComponent
       ],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA]
+      schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA]
     }).compileComponents();
   });
 

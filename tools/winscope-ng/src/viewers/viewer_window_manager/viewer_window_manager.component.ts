@@ -20,6 +20,7 @@ import {
   Output
 } from "@angular/core";
 import {UiData} from "./ui_data";
+import { PersistentStore } from "common/persistent_store";
 
 @Component({
   selector: "viewer-window-manager",
@@ -32,11 +33,10 @@ import {UiData} from "./ui_data";
   `
 })
 export class ViewerWindowManagerComponent {
-  @Input()
-    inputData?: UiData;
+  @Input() inputData?: UiData;
+  @Input() store?: PersistentStore;
 
-  @Output()
-    outputEvent = new EventEmitter<DummyEvent>(); // or EventEmitter<void>()
+  @Output() outputEvent = new EventEmitter<DummyEvent>(); // or EventEmitter<void>()
 
   public generateOutputEvent(event: MouseEvent) {
     this.outputEvent.emit(new DummyEvent());
