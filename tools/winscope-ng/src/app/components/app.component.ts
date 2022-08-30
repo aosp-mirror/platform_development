@@ -28,10 +28,14 @@ import { Viewer } from "viewers/viewer";
 @Component({
   selector: "app-root",
   template: `
-    <div id="app-title">
-      <span>Winscope Viewer 2.0</span>
-      <button mat-raised-button *ngIf="dataLoaded" (click)="toggleTimestamp()">Start/End Timestamp</button>
-      <button class="upload-new-btn" mat-raised-button *ngIf="dataLoaded" (click)="clearData()">Upload New</button>
+    <mat-toolbar class="app-toolbar">
+      <span id="app-title">Winscope</span>
+        <button mat-raised-button *ngIf="dataLoaded" (click)="clearData()">Back to Home</button>
+        <button mat-raised-button *ngIf="dataLoaded" (click)="toggleTimestamp()">Start/End Timestamp</button>
+    </mat-toolbar>
+
+    <div class="welcome-info" *ngIf="!dataLoaded">
+      <span>Welcome to Winscope. Please select source to view traces.</span>
     </div>
 
     <div *ngIf="!dataLoaded" fxLayout="row wrap" fxLayoutGap="10px grid" class="card-grid">
@@ -58,13 +62,26 @@ import { Viewer } from "viewers/viewer";
         class="time-slider"
       ></mat-slider>
     </div>
-
     <div id="timestamps">
     </div>
   `,
   styles: [
-    ".time-slider {width: 100%}",
-    ".upload-new-btn {float: right}"
+    `
+      .time-slider {width: 100%}
+      .upload-new-btn {float: right}
+      .app-toolbar {
+        border-bottom: 1px solid var(--default-border);
+        box-shadow: none;
+        background-color: rgba(1, 1, 1, 0);
+        height: 56px;
+      }
+
+      .welcome-info {
+        text-align: center;
+        font: inherit;
+        padding: 40px;
+      }
+    `
   ],
   encapsulation: ViewEncapsulation.None
 })

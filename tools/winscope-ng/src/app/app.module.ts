@@ -18,6 +18,7 @@ import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { HttpClientModule } from "@angular/common/http";
 import { MatSliderModule } from "@angular/material/slider";
 import { MatTooltipModule } from "@angular/material/tooltip";
+import { MatToolbarModule } from "@angular/material/toolbar";
 
 import { AppComponent } from "./components/app.component";
 import { ViewerWindowManagerComponent } from "viewers/viewer_window_manager/viewer_window_manager.component";
@@ -75,7 +76,8 @@ import { TreeElementComponent } from "viewers/components/tree_element.component"
     HttpClientModule,
     MatSliderModule,
     MatRadioModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatToolbarModule
   ],
   bootstrap: [AppComponent]
 })

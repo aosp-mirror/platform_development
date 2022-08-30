@@ -59,10 +59,10 @@ export const treeNodeStyles = `
 
 export const nodeInnerItemStyles = `
     .leaf-node-icon {content: ''; display: inline-block; margin-left: 40%; margin-top: 40%; height: 5px; width: 5px; border-radius: 50%;background-color: #9b9b9b;}
-    .leaf-node-icon-wrapper, .description, #toggle-tree-btn, #expand-tree-btn, #pin-node-btn { position: relative; display: inline-block;}
+    .leaf-node-icon-wrapper, .description, .toggle-tree-btn, .expand-tree-btn, .pin-node-btn { position: relative; display: inline-block;}
     mat-icon {margin: 0}
-    #pin-node-btn {padding: 0; transform: scale(0.7)}
-    .description {position: relative; align-items: center; flex: 1 1 auto; vertical-align: middle; word-break: break-all;}
+    .pin-node-btn {padding: 0; transform: scale(0.7)}
+    .description {align-items: center; flex: 1 1 auto; vertical-align: middle; word-break: break-all;}
     .leaf-node-icon-wrapper{padding-left: 6px; padding-right: 6px; min-height: 24px; width: 24px; position:relative; align-content: center; vertical-align: middle;}
     .icon-button { background: none;border: none;display: inline-block;vertical-align: middle;}
 `;

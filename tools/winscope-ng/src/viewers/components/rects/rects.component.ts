@@ -25,35 +25,37 @@ import { ViewerEvents } from "viewers/common/viewer_events";
   selector: "rects-view",
   template: `
     <mat-card-header class="view-controls">
-      <mat-card-title>Layers</mat-card-title>
+      <mat-card-title><span>Layers</span></mat-card-title>
       <div class="top-view-controls">
-        <mat-checkbox
-          class="rects-checkbox"
-          [checked]="visibleView()"
-          (change)="onChangeView($event.checked!)"
-        >Only visible layers</mat-checkbox>
-        <mat-checkbox
-          [disabled]="!visibleView()"
-          class="rects-checkbox"
-          [checked]="showVirtualDisplays()"
-          (change)="canvasGraphics.updateVirtualDisplays($event.checked!)"
-        >Show virtual</mat-checkbox>
-        <div class="zoom-container">
-          <button id="zoom-btn" (click)="canvasGraphics.updateZoom(true)">
-            <mat-icon aria-hidden="true">
-              zoom_in
-            </mat-icon>
-          </button>
-          <button id="zoom-btn" (click)="canvasGraphics.updateZoom(false)">
-            <mat-icon aria-hidden="true">
-              zoom_out
-            </mat-icon>
-          </button>
+        <div class="top-view-controls">
+          <mat-checkbox
+            class="rects-checkbox control-item"
+            [checked]="visibleView()"
+            (change)="onChangeView($event.checked!)"
+          >Only visible</mat-checkbox>
+          <mat-checkbox
+            [disabled]="!visibleView()"
+            class="rects-checkbox control-item"
+            [checked]="showVirtualDisplays()"
+            (change)="canvasGraphics.updateVirtualDisplays($event.checked!)"
+          >Show virtual</mat-checkbox>
+          <div class="zoom-container control-item">
+            <button class="zoom-btn" (click)="canvasGraphics.updateZoom(true)">
+              <mat-icon aria-hidden="true">
+                zoom_in
+              </mat-icon>
+            </button>
+            <button class="zoom-btn" (click)="canvasGraphics.updateZoom(false)">
+              <mat-icon aria-hidden="true">
+                zoom_out
+              </mat-icon>
+            </button>
+          </div>
         </div>
       </div>
       <div class="slider-view-controls">
         <div class="slider" [class.rotation]="true">
-          <span>Flat to isometric</span>
+          <span class="slider-label">Rotation</span>
           <mat-slider
             step="0.01"
             min="0"
@@ -64,7 +66,7 @@ import { ViewerEvents } from "viewers/common/viewer_events";
           ></mat-slider>
         </div>
         <div class="slider" [class.spacing]="true">
-          <span>Layer spacing</span>
+          <span class="slider-label">Spacing</span>
           <mat-slider
             class="spacing-slider"
             step="0.001"
@@ -93,14 +95,15 @@ import { ViewerEvents } from "viewers/common/viewer_events";
     ".canvas-container {height: 40rem; width: 100%; position: relative}",
     "#rects-canvas {height: 40rem; width: 100%; cursor: pointer; position: absolute; top: 0px}",
     "#labels-canvas {height: 40rem; width: 100%; position: absolute; top: 0px}",
-    ".view-controls, .slider-view-controls {display: inline-block; position: relative; min-height: 4.5rem; width: 100%}",
+    ".view-controls {display: inline-block; position: relative; min-height: 4rem; width: 100%;}",
+    ".slider-view-controls {display: inline-block; position: relative; height: 3rem; width: 100%;}",
     ".slider {display: inline-block}",
     ".slider.spacing {float: right}",
     ".slider span, .slider mat-slider { display: block; padding-left: 0px; padding-top:  0px; font-weight: bold}",
-    ".top-view-controls {min-height: 1.5rem; width: 100%; position: relative; display: inline-block; vertical-align: middle;}",
+    ".top-view-controls {height: 3rem; width: 100%; position: relative; display: inline-block; vertical-align: middle;}",
     ".zoom-container {position: relative; vertical-align: middle; float: right}",
-    "#zoom-btn {position:relative; display: inline-flex; background: none; border: none}",
-    "mat-card-title {font-size: 16px !important}",
+    ".zoom-btn {position:relative; display: inline-flex; background: none; border: none; padding: 0}",
+    "mat-card-title {font-size: 16px !important; font-weight: medium; font-family: inherit;}",
     ":host /deep/ .mat-card-header-text {width: 100%; margin: 0;}",
     "mat-radio-group {vertical-align: middle}",
     "mat-radio-button {font-size: 16px; font-weight: normal}",
@@ -111,6 +114,8 @@ import { ViewerEvents } from "viewers/common/viewer_events";
     ".mat-checkbox .mat-checkbox-frame { transform: scale(0.7);}",
     ".mat-checkbox-checked .mat-checkbox-background {transform: scale(0.7);}",
     ".mat-checkbox-indeterminate .mat-checkbox-background {transform: scale(0.7);}",
+    ".slider-label {position: absolute; top: 0}",
+    ".control-item {position: relative; display: inline-block;vertical-align: middle;align-items: center;}"
   ]
 })
 

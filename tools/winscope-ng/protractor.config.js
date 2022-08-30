@@ -17,7 +17,8 @@
 // Note:
 // Chrome driver must match the system's Chrome browser version.
 // Use this command to update to the specified Chrome driver version:
-// node node_modules/.bin/webdriver-manager update -- versions.chrome=103.0.5060.53
+// node node_modules/.bin/webdriver-manager update -- versions.chrome=<NEW VERSION>
+// and change the hardcoded version here
 
 exports.config = {
   specs: ["dist/e2e.spec/e2e/*.spec.js"],
@@ -29,7 +30,7 @@ exports.config = {
       args: ["--headless", "--disable-gpu", "--window-size=1280x1024"]
     }
   },
-  chromeDriver: "./node_modules/webdriver-manager/selenium/chromedriver_103.0.5060.53",
+  chromeDriver: "./node_modules/webdriver-manager/selenium/chromedriver_105.0.5195.52",
 
   allScriptsTimeout: 10000,
   getPageTimeout: 10000,

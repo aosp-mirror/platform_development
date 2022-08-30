@@ -47,37 +47,36 @@ describe("TraceViewHeaderComponent", () => {
   it("check that toggle button is displayed, expanded on default", () => {
     component.showTrace = true;
     fixture.detectChanges();
-    const toggleButton = htmlElement.querySelector("#toggle-btn");
+    const toggleButton = htmlElement.querySelector(".toggle-btn");
     expect(toggleButton).toBeTruthy();
     const chevronIcon = toggleButton?.querySelector("mat-icon");
     expect(chevronIcon).toBeTruthy;
-    expect(chevronIcon?.innerHTML).toContain("expand_more");
   });
 
   it("check that toggle button icon is a right chevron when minimised ", () => {
     component.showTrace = false;
     fixture.detectChanges();
-    const toggleButton = htmlElement.querySelector("#toggle-btn");
+    const toggleButton = htmlElement.querySelector(".toggle-btn");
     const chevronIcon = toggleButton?.querySelector("mat-icon");
-    expect(chevronIcon?.innerHTML).toContain("chevron_right");
+    expect(chevronIcon).toBeTruthy;
   });
 
   it("check that clicking toggle button causes view to minimise", async () => {
     component.showTrace = true;
     fixture.detectChanges();
     spyOn(component, "toggleView").and.callThrough();
-    const button: HTMLButtonElement | null = htmlElement.querySelector("#toggle-btn");
+    const button: HTMLButtonElement | null = htmlElement.querySelector(".toggle-btn");
     expect(button).toBeInstanceOf(HTMLButtonElement);
     button?.dispatchEvent(new Event("click"));
     await fixture.whenStable();
     expect(component.toggleView).toHaveBeenCalled();
     fixture.detectChanges();
-    expect (htmlElement.querySelector("#toggle-btn")?.querySelector("mat-icon")?.innerHTML).toContain("chevron_right");
+    expect (htmlElement.querySelector(".toggle-btn")?.querySelector("mat-icon")?.innerHTML).toContain("chevron_right");
   });
 
   it("check that dependency icons show", () => {
     fixture.detectChanges();
-    const dependencyIcons = htmlElement.querySelectorAll("#dep-icon");
+    const dependencyIcons = htmlElement.querySelectorAll(".dep-icon");
     expect(dependencyIcons).toBeTruthy();
     expect(dependencyIcons.length).toBe(2);
   });
@@ -93,14 +92,14 @@ describe("TraceViewHeaderComponent", () => {
 
   it("check that save button is displayed", () => {
     fixture.detectChanges();
-    const saveButton = htmlElement.querySelectorAll("#save-btn");
+    const saveButton = htmlElement.querySelectorAll(".save-btn");
     expect(saveButton).toBeTruthy();
   });
 
   it("check that clicking save button emits", async () => {
     spyOn(component, "saveTraces").and.callThrough();
     spyOn(component.saveTraceChange, "emit");
-    const button: HTMLButtonElement | null = htmlElement.querySelector("#save-btn");
+    const button: HTMLButtonElement | null = htmlElement.querySelector(".save-btn");
     expect(button).toBeInstanceOf(HTMLButtonElement);
     button?.dispatchEvent(new Event("click"));
     await fixture.whenStable();
