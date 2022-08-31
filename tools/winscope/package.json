@@ -5,9 +5,9 @@
   "author": "Adrian Roos <roosa@google.com>",
   "private": true,
   "scripts": {
-    "dev": "cross-env NODE_ENV=development webpack serve --open --hot",
-    "build": "cross-env NODE_ENV=production webpack --progress",
-    "test": "webpack --config webpack.spec.config.js && jasmine dist/bundleSpec.js"
+    "dev": "cross-env NODE_ENV=development NODE_OPTIONS=--openssl-legacy-provider webpack serve --open --hot",
+    "build": "cross-env NODE_ENV=production NODE_OPTIONS=--openssl-legacy-provider webpack --progress",
+    "test": "cross-env NODE_OPTIONS=--openssl-legacy-provider webpack --config webpack.spec.config.js && jasmine dist/bundleSpec.js"
   },
   "dependencies": {
     "cross-env": "^7.0.3",
