@@ -48,6 +48,7 @@ if [[ -z "$device" || -z "$product" || -z "$dist_dir" || -z "$build_id" ]]; then
 fi
 
 export ALLOW_MISSING_DEPENDENCIES=true
+export SKIP_VNDK_VARIANTS_CHECK=true
 
 build/soong/soong_ui.bash --make-mode vendorimage collect_ninja_inputs \
   TARGET_PRODUCT=$product TARGET_BUILD_VARIANT=userdebug
