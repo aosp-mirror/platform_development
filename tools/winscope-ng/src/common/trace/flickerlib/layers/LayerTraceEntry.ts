@@ -16,7 +16,6 @@
 
 import { Display, LayerTraceEntry, LayerTraceEntryBuilder, toRect, toSize, toTransform } from "../common"
 import Layer from './Layer'
-import { VISIBLE_CHIP, RELATIVE_Z_PARENT_CHIP, MISSING_LAYER } from '../treeview/Chips'
 
 LayerTraceEntry.fromProto = function (protos: any[], displayProtos: any[],
         timestamp: number, hwcBlob: string, where: string = ''): LayerTraceEntry {
@@ -25,7 +24,6 @@ LayerTraceEntry.fromProto = function (protos: any[], displayProtos: any[],
     const builder = new LayerTraceEntryBuilder(timestamp, layers, displays, hwcBlob, where);
     const entry: LayerTraceEntry = builder.build();
 
-    updateChildren(entry);
     addAttributes(entry, protos);
     return entry;
 }
@@ -49,20 +47,6 @@ function addAttributes(entry: LayerTraceEntry, protos: any) {
     entry.shortName = entry.name;
     entry.chips = [];
     entry.isVisible = true;
-}
-
-function updateChildren(entry: LayerTraceEntry) {
-    entry.flattenedLayers.forEach((it: any) => {
-        if (it.isVisible) {
-            it.chips.push(VISIBLE_CHIP);
-        }
-        if (it.zOrderRelativeOf) {
-            it.chips.push(RELATIVE_Z_PARENT_CHIP);
-        }
-        if (it.isMissing) {
-            it.chips.push(MISSING_LAYER);
-        }
-    });
 }
 
 function newDisplay(proto: any): Display {

@@ -17,6 +17,7 @@ import {TraceType} from "common/trace/trace_type";
 import {Viewer} from "viewers/viewer";
 import {Presenter} from "./presenter";
 import {UiData} from "./ui_data";
+import { ViewerEvents } from "viewers/common/viewer_events";
 
 class ViewerSurfaceFlinger implements Viewer {
   constructor() {
@@ -24,7 +25,10 @@ class ViewerSurfaceFlinger implements Viewer {
     this.presenter = new Presenter((uiData: UiData) => {
       (this.view as any).inputData = uiData;
     });
-    this.view.addEventListener("highlightedChange", (event) => this.presenter.updateHighlightedRect((event as CustomEvent)));
+    this.view.addEventListener(ViewerEvents.HierarchyPinnedChange, (event) => this.presenter.updatePinnedItems((event as CustomEvent)));
+    this.view.addEventListener(ViewerEvents.HighlightedChange, (event) => this.presenter.updateHighlightedItems((event as CustomEvent)));
+    this.view.addEventListener(ViewerEvents.HierarchyUserOptionsChange, (event) => this.presenter.updateHierarchyTree((event as CustomEvent)));
+    this.view.addEventListener(ViewerEvents.HierarchyFilterChange, (event) => this.presenter.filterHierarchyTree((event as CustomEvent)));
   }
 
   public notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {

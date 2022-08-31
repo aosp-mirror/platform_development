@@ -17,7 +17,6 @@
 
 import { Layer, LayerProperties, Rect, toActiveBuffer, toColor, toRect, toRectF, toRegion } from "../common"
 import { shortenName } from '../mixin'
-import { RELATIVE_Z_CHIP, GPU_CHIP, HWC_CHIP } from '../treeview/Chips'
 import Transform from './Transform'
 
 Layer.fromProto = function (proto: any): Layer {
@@ -96,18 +95,6 @@ function addAttributes(entry: Layer, proto: any) {
     entry.rect.ref = entry;
     entry.rect.label = entry.name;
     entry.chips = [];
-    updateChips(entry);
-}
-
-function updateChips(entry: Layer) {
-    if ((entry.zOrderRelativeOf || -1) !== -1) {
-        entry.chips.push(RELATIVE_Z_CHIP);
-    }
-    if (entry.hwcCompositionType === 'CLIENT') {
-        entry.chips.push(GPU_CHIP);
-    } else if (entry.hwcCompositionType === 'DEVICE' || entry.hwcCompositionType === 'SOLID_COLOR') {
-        entry.chips.push(HWC_CHIP);
-    }
 }
 
 export default Layer;
