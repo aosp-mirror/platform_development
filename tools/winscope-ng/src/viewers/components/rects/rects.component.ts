@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input, OnChanges, OnDestroy, Inject, ElementRef, SimpleChanges } from "@angular/core";
+import { Component, Input, OnChanges, OnDestroy, Inject, ElementRef, SimpleChanges, OnInit } from "@angular/core";
 import { RectsUtils } from "viewers/components/rects/rects_utils";
 import { Point, Rectangle, RectMatrix, RectTransform } from "viewers/viewer_surface_flinger/ui_data";
-import { interval, Subscription } from "rxjs";
 import { CanvasGraphics } from "viewers/components/rects/canvas_graphics";
 import * as THREE from "three";
 import { ViewerEvents } from "viewers/common/viewer_events";
@@ -37,15 +36,15 @@ import { ViewerEvents } from "viewers/common/viewer_events";
             [disabled]="!visibleView()"
             class="rects-checkbox control-item"
             [checked]="showVirtualDisplays()"
-            (change)="canvasGraphics.updateVirtualDisplays($event.checked!)"
+            (change)="updateVirtualDisplays($event.checked!)"
           >Show virtual</mat-checkbox>
           <div class="zoom-container control-item">
-            <button class="zoom-btn" (click)="canvasGraphics.updateZoom(true)">
+            <button class="zoom-btn" (click)="updateZoom(true)">
               <mat-icon aria-hidden="true">
                 zoom_in
               </mat-icon>
             </button>
-            <button class="zoom-btn" (click)="canvasGraphics.updateZoom(false)">
+            <button class="zoom-btn" (click)="updateZoom(false)">
               <mat-icon aria-hidden="true">
                 zoom_out
               </mat-icon>
@@ -62,7 +61,7 @@ import { ViewerEvents } from "viewers/common/viewer_events";
             max="4"
             aria-label="units"
             [value]="xCameraPos()"
-            (input)="canvasGraphics.updateRotation($event.value!)"
+            (input)="updateRotation($event.value!)"
           ></mat-slider>
         </div>
         <div class="slider" [class.spacing]="true">
@@ -74,7 +73,7 @@ import { ViewerEvents } from "viewers/common/viewer_events";
             max="0.4"
             aria-label="units"
             [value]="getLayerSeparation()"
-            (input)="canvasGraphics.updateLayerSeparation($event.value!)"
+            (input)="updateLayerSeparation($event.value!)"
           ></mat-slider>
         </div>
       </div>
@@ -119,7 +118,7 @@ import { ViewerEvents } from "viewers/common/viewer_events";
   ]
 })
 
-export class RectsComponent implements OnChanges, OnDestroy {
+export class RectsComponent implements OnInit, OnChanges, OnDestroy {
   @Input() rects!: Rectangle[];
   @Input() displayIds: Array<number> = [];
   @Input() highlightedItems: Array<string> = [];
@@ -131,10 +130,8 @@ export class RectsComponent implements OnChanges, OnDestroy {
     this.currentDisplayId = this.displayIds[0] ?? 0; //default stack id is usually zero
   }
 
-  ngOnDestroy() {
-    if (this.canvasSubscription) {
-      this.canvasSubscription.unsubscribe();
-    }
+  ngOnInit() {
+    window.addEventListener('resize', () => this.refreshCanvas());
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -155,12 +152,12 @@ export class RectsComponent implements OnChanges, OnDestroy {
         }
       });
       this.scaleRects();
-      if (changes["rects"]) {
-        this.drawRects();
-      }
-    } else if (this.canvasSubscription) {
-      this.canvasSubscription.unsubscribe();
+      this.drawRects();
     }
+  }
+
+  ngOnDestroy() {
+    window.removeEventListener('resize', () => this.refreshCanvas());
   }
 
   onRectClick(event:MouseEvent) {
@@ -196,15 +193,14 @@ export class RectsComponent implements OnChanges, OnDestroy {
   }
 
   drawRects() {
-    if (this.canvasSubscription) {
-      this.canvasSubscription.unsubscribe();
-    }
     const canvas = document.getElementById("rects-canvas") as HTMLCanvasElement;
     this.canvasGraphics.initialise(canvas);
-    this.canvasSubscription = this.drawRectsInterval.subscribe(() => {
-      this.updateVariablesBeforeRefresh();
-      this.canvasGraphics.refreshCanvas();
-    });
+    this.refreshCanvas();
+  }
+
+  refreshCanvas() {
+    this.updateVariablesBeforeRefresh();
+    this.canvasGraphics.refreshCanvas();
   }
 
   updateVariablesBeforeRefresh() {
@@ -217,6 +213,7 @@ export class RectsComponent implements OnChanges, OnDestroy {
   onChangeView(visible: boolean) {
     this.canvasGraphics.updateVisibleView(visible);
     this.canvasGraphics.clearLabelElements();
+    this.refreshCanvas();
   }
 
   scaleRects() {
@@ -299,6 +296,26 @@ export class RectsComponent implements OnChanges, OnDestroy {
     return this.canvasGraphics.getLayerSeparation();
   }
 
+  updateLayerSeparation(sep: number) {
+    this.canvasGraphics.updateLayerSeparation(sep);
+    this.refreshCanvas();
+  }
+
+  updateRotation(rot: number) {
+    this.canvasGraphics.updateRotation(rot);
+    this.refreshCanvas();
+  }
+
+  updateZoom(zoom: boolean) {
+    this.canvasGraphics.updateZoom(zoom);
+    this.refreshCanvas();
+  }
+
+  updateVirtualDisplays(show: boolean) {
+    this.canvasGraphics.updateVirtualDisplays(show);
+    this.refreshCanvas();
+  }
+
   xCameraPos() {
     return this.canvasGraphics.getXCameraPos();
   }
@@ -309,15 +326,13 @@ export class RectsComponent implements OnChanges, OnDestroy {
 
   changeDisplayId(displayId: number) {
     this.currentDisplayId = displayId;
+    this.refreshCanvas();
   }
 
   canvasGraphics: CanvasGraphics;
-  private readonly _60fpsInterval = 16.66666666666667;
-  private drawRectsInterval = interval(this._60fpsInterval);
   private boundsWidth = 0;
   private boundsHeight = 0;
   private displayRects!: Rectangle[];
-  private canvasSubscription?: Subscription;
   private mouse = new THREE.Vector3(0, 0, 0);
   private currentDisplayId: number;
 }
