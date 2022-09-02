@@ -14,74 +14,66 @@
 
 #include "utils/config_file.h"
 
-#include "utils/string_utils.h"
+#include <json/json.h>
+#include <llvm/Support/raw_ostream.h>
 
 #include <fstream>
 #include <map>
 #include <string>
 
 
+static const std::string GLOBAL_SECTION_NAME = "global";
+
+
 namespace header_checker {
 namespace utils {
 
 
-ConfigFile ConfigParser::ParseFile(std::istream &istream) {
-  ConfigParser parser(istream);
-  return parser.ParseFile();
-}
-
-
-ConfigFile ConfigParser::ParseFile(const std::string &path) {
-  std::ifstream stream(path, std::ios_base::in);
-  return ParseFile(stream);
-}
-
-
-ConfigFile ConfigParser::ParseFile() {
-  size_t line_no = 0;
-  std::string line;
-  while (std::getline(stream_, line)) {
-    ParseLine(++line_no, line);
-  }
-  return std::move(cfg_);
-}
-
-
-void ConfigParser::ParseLine(size_t line_no, std::string_view line) {
-  if (line.empty() || line[0] == ';' || line[0] == '#') {
-    // Skip empty or comment line.
-    return;
-  }
-
-  // Parse section name line.
-  if (line[0] == '[') {
-    std::string::size_type pos = line.rfind(']');
-    if (pos == std::string::npos) {
-      ReportError(line_no, "bad section name line");
-      return;
+static std::map<std::string, bool> LoadFlags(const Json::Value &section) {
+  std::map<std::string, bool> map;
+  if (section.isMember("flags")) {
+    for (auto &flag_keys : section["flags"].getMemberNames()) {
+      map[flag_keys] = section["flags"][flag_keys].asBool();
     }
-    std::string_view section_name = line.substr(1, pos - 1);
-    section_ = &cfg_.map_[std::string(section_name)];
-    return;
   }
-
-  // Parse key-value line.
-  std::string::size_type pos = line.find('=');
-  if (pos == std::string::npos) {
-    ReportError(line_no, "bad key-value line");
-    return;
-  }
-
-  // Add key-value entry to current section.
-  std::string_view key = Trim(line.substr(0, pos));
-  std::string_view value = Trim(line.substr(pos + 1));
-
-  if (!section_) {
-    section_ = &cfg_.map_[""];
-  }
-  section_->map_[std::string(key)] = std::string(value);
+  return map;
 }
 
+bool ConfigFile::HasGlobalSection() {
+  return HasSection(GLOBAL_SECTION_NAME, "");
+}
+
+const ConfigSection &ConfigFile::GetGlobalSection() {
+  return GetSection(GLOBAL_SECTION_NAME, "");
+}
+
+bool ConfigFile::Load(std::istream &istream) {
+  Json::Value root;
+  Json::CharReaderBuilder builder;
+  std::string errorMessage;
+  if (!Json::parseFromStream(builder, istream, &root, &errorMessage)) {
+    llvm::errs() << "Failed to parse JSON: " << errorMessage << "\n";
+    return false;
+  }
+  for (auto &key : root.getMemberNames()) {
+    if (key == GLOBAL_SECTION_NAME) {
+      ConfigSection &config_section = map_[{GLOBAL_SECTION_NAME, ""}];
+      config_section.map_ = LoadFlags(root[GLOBAL_SECTION_NAME]);
+      continue;
+    }
+    for (auto &section : root[key]) {
+      ConfigSection &config_section =
+          map_[{key, section["target_version"].asString()}];
+      config_section.map_ = LoadFlags(section);
+    }
+  }
+  return true;
+}
+
+bool ConfigFile::Load(const std::string &path) {
+  std::ifstream stream(path);
+  return stream && Load(stream);
+}
 
 }  // namespace utils
 }  // namespace header_checker

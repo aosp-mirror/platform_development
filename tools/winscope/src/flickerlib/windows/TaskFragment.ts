@@ -24,7 +24,7 @@ TaskFragment.fromProto = function (proto: any, isActivityInTree: Boolean): TaskF
     } else {
         const windowContainer = WindowContainer.fromProto(
             /* proto */ proto.windowContainer,
-            /* protoChildren */ proto.windowContainer.children.reverse(),
+            /* protoChildren */ proto.windowContainer?.children?.reverse() ?? [],
             /* isActivityInTree */ isActivityInTree);
         const entry = new TaskFragment(
             proto.activityType,
@@ -35,7 +35,6 @@ TaskFragment.fromProto = function (proto: any, isActivityInTree: Boolean): TaskF
         );
 
         addAttributes(entry, proto);
-        console.warn("Created ", entry.kind, " stableId=", entry.stableId);
         return entry;
     }
 }
