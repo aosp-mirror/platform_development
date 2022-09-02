@@ -29,8 +29,8 @@ import { MatSliderChange } from "@angular/material/slider";
     <mat-toolbar class="app-toolbar">
       <span id="app-title">Winscope</span>
       <span class="toolbar-wrapper">
-        <button mat-raised-button *ngIf="dataLoaded" (click)="toggleTimestamp()">Start/End Timestamp</button>
-        <button class="upload-new-btn white-btn" mat-raised-button *ngIf="dataLoaded" (click)="clearData()">Upload New</button>
+        <button mat-stroked-button *ngIf="dataLoaded" (click)="toggleTimestamp()">Start/End Timestamp</button>
+        <button class="upload-new-btn" mat-stroked-button *ngIf="dataLoaded" (click)="clearData()">Upload New</button>
       </span>
     </mat-toolbar>
 
@@ -159,7 +159,7 @@ export class AppComponent {
 
   public showViewers() {
     const isShown = this.dataLoaded ? "show" : "hide";
-    return ["viewers", isShown];
+    return `viewers ${isShown}`;
   }
 
   public onDataLoadedChange(dataLoaded: boolean) {

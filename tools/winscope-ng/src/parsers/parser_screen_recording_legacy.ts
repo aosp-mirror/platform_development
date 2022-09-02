@@ -20,7 +20,7 @@ import {Parser} from "./parser";
 import {ScreenRecordingTraceEntry} from "common/trace/screen_recording";
 
 class ParserScreenRecordingLegacy extends Parser {
-  constructor(trace: Blob) {
+  constructor(trace: File) {
     super(trace);
   }
 

@@ -13,17 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Parser} from "parsers/parser";
-import {ParserFactory} from "parsers/parser_factory";
-import {CommonTestUtils} from "test/common/utils";
 
-class UnitTestUtils extends CommonTestUtils {
-  static async getParser(filename: string): Promise<Parser> {
-    const trace = await CommonTestUtils.getFixtureFile(filename);
-    const [parsers, errors] = await new ParserFactory().createParsers([trace]);
-    expect(parsers.length).toEqual(1);
-    return parsers[0];
+// This class is needed for testing because Node.js doesn't provide the Web API's File type
+import { Blob } from "./blob";
+
+class File extends Blob {
+  constructor(buffer: ArrayBuffer, fileName: string) {
+    super(buffer);
+    this.name = fileName;
   }
+
+  readonly lastModified: number = 0;
+  readonly name: string;
+  readonly webkitRelativePath: string = "";
 }
 
-export {UnitTestUtils};
+export {File};

@@ -21,6 +21,7 @@ import {
 } from "@angular/core";
 import { TraceCoordinator } from "app/trace_coordinator";
 import { PersistentStore } from "common/persistent_store";
+import { FileUtils } from "common/utils/file_utils";
 import { Viewer } from "viewers/viewer";
 
 @Component({
@@ -39,9 +40,9 @@ import { Viewer } from "viewers/viewer";
             >{{tab.label}}</a>
           </nav>
           <button
-            mat-raised-button
-            class="icon-button white-btn save-btn"
-            (click)="saveTraces()"
+            mat-stroked-button
+            class="icon-button save-btn"
+            (click)="downloadAllTraces()"
           >Download all traces</button>
         </span>
       </mat-card-header>
@@ -128,12 +129,13 @@ export class TraceViewComponent {
     return this.activeViewerCardId === cardId;
   }
 
-  public async saveTraces() {
-    const zipFile = await this.traceCoordinator.saveTracesAsZip();
+  public async downloadAllTraces() {
+    const traces = await this.traceCoordinator.getAllTracesForDownload();
+    const zipFileBlob = await FileUtils.createZipArchive(traces);
     const zipFileName = "winscope.zip";
     const a = document.createElement("a");
     document.body.appendChild(a);
-    const url = window.URL.createObjectURL(zipFile);
+    const url = window.URL.createObjectURL(zipFileBlob);
     a.href = url;
     a.download = zipFileName;
     a.click();

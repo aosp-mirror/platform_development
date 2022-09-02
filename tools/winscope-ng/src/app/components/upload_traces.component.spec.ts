@@ -16,6 +16,8 @@
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {UploadTracesComponent} from "./upload_traces.component";
 import { MatCardModule } from "@angular/material/card";
+import { MatSnackBar, MatSnackBarModule } from "@angular/material/snack-bar";
+import { TraceCoordinator } from "app/trace_coordinator";
 
 describe("UploadTracesComponent", () => {
   let fixture: ComponentFixture<UploadTracesComponent>;
@@ -24,7 +26,8 @@ describe("UploadTracesComponent", () => {
 
   beforeAll(async () => {
     await TestBed.configureTestingModule({
-      imports: [MatCardModule],
+      imports: [MatCardModule, MatSnackBarModule],
+      providers: [MatSnackBar],
       declarations: [UploadTracesComponent],
     }).compileComponents();
   });
@@ -33,6 +36,7 @@ describe("UploadTracesComponent", () => {
     fixture = TestBed.createComponent(UploadTracesComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
+    component.traceCoordinator = new TraceCoordinator();
   });
 
   it("can be created", () => {

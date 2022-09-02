@@ -22,6 +22,32 @@
     --default-blue: #1A73E8;
 }
 
+:root .mat-stroked-button {
+    margin: 10px;
+}
+
+.mat-snack-bar-container, .close-snackbar {
+    color: white;
+}
+
+.mat-snack-bar-container .flex {
+    display: inline-flex;
+    align-items: baseline;
+    position: relative;
+    vertical-align: middle;
+    justify-content: space-between;
+}
+
+.mat-snack-bar-container .data {
+    display: block;
+}
+
+.mat-snack-bar-container .message-wrapper, .mat-snack-bar-container .close {
+    vertical-align: middle;
+    position: relative;
+    display: inline-block;
+}
+
 #app-title {
     font-family: 'Google Sans', sans-serif;
     font-size: 30;
@@ -161,14 +187,6 @@ button.mat-raised-button span {
     vertical-align: middle;
 }
 
-app-root .white-btn {
-  background: none;
-  box-shadow: none !important;
-  font-weight: normal;
-  color: var(--default-blue);
-  border: 1px solid var(--default-border);
-}
-
 #trace-collection-config button {
   background: none;
   box-shadow: none;
@@ -187,7 +205,7 @@ app-root .white-btn {
 .mat-accent .mat-option.mat-selected:not(.mat-option-disabled){color: var(--default-blue)}
 .mat-pseudo-checkbox-checked,.mat-pseudo-checkbox-indeterminate,.mat-accent .mat-pseudo-checkbox-checked,.mat-accent .mat-pseudo-checkbox-indeterminate{background:var(--default-blue)}
 .mat-badge-accent .mat-badge-content{background:var(--default-blue);}
-.mat-button.mat-accent,.mat-icon-button.mat-accent,.mat-stroked-button.mat-accent{color:var(--default-blue)}
+.mat-button.mat-accent,.mat-icon-button.mat-accent,.mat-stroked-button.mat-accent, .mat-stroked-button{color:var(--default-blue)}
 .mat-button.mat-accent .mat-button-focus-overlay,.mat-icon-button.mat-accent .mat-button-focus-overlay,.mat-stroked-button.mat-accent .mat-button-focus-overlay{background-color:var(--default-blue)}
 .mat-flat-button.mat-accent,.mat-raised-button.mat-accent,.mat-fab.mat-accent,.mat-mini-fab.mat-accent{background-color:var(--default-blue)}
 .mat-checkbox-checked.mat-accent .mat-checkbox-background{background-color:var(--default-blue)}

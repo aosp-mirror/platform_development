@@ -16,14 +16,14 @@
 import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
 import {Parser} from "parsers/parser";
-import {ParserFactory} from "parsers/parser_factory";
+import {ParserError, ParserFactory} from "parsers/parser_factory";
 import { setTraces } from "trace_collection/set_traces";
 import { Viewer } from "viewers/viewer";
 import { ViewerFactory } from "viewers/viewer_factory";
 import { LoadedTrace } from "app/loaded_trace";
-import { TRACE_INFO } from "./trace_info";
 import { TimestampUtils } from "common/trace/timestamp_utils";
 import { FileUtils } from "common/utils/file_utils";
+import { TRACE_INFO } from "app/trace_info";
 
 class TraceCoordinator {
   private parsers: Parser[];
@@ -34,10 +34,12 @@ class TraceCoordinator {
     this.viewers = [];
   }
 
-  async addTraces(traces: Blob[]) {
+  async addTraces(traces: File[]) {
     traces = this.parsers.map(parser => parser.getTrace()).concat(traces);
-    this.parsers = await new ParserFactory().createParsers(traces);
+    let parserErrors: ParserError[];
+    [this.parsers, parserErrors] = await new ParserFactory().createParsers(traces);
     console.log("created parsers: ", this.parsers);
+    return parserErrors;
   }
 
   removeTrace(type: TraceType) {
@@ -72,8 +74,8 @@ class TraceCoordinator {
     return this.parsers.map(parser => parser.getTraceType());
   }
 
-  findParser(fileType: TraceType): Parser | null {
-    const parser = this.parsers.find(parser => parser.getTraceType() === fileType);
+  findParser(traceType: TraceType): Parser | null {
+    const parser = this.parsers.find(parser => parser.getTraceType() === traceType);
     return parser ?? null;
   }
 
@@ -118,6 +120,9 @@ class TraceCoordinator {
       }
       if (entry !== undefined) {
         traceEntries.set(parser.getTraceType(), [entry, prevEntry]);
+      } else if (parserTimestamps) {
+        const firstEntry = parser.getTraceEntry(parserTimestamps[0]);
+        traceEntries.set(parser.getTraceType(), [firstEntry, prevEntry]);
       }
     });
 
@@ -133,26 +138,39 @@ class TraceCoordinator {
     setTraces.dataReady = false;
   }
 
-  getTraceTypeBlobMap(): Map<TraceType, Blob> {
-    const traceTypeBlobMap: Map<TraceType, Blob> = new Map();
-    this.parsers.forEach(parser => {
-      const type = parser.getTraceType();
-      const trace = parser.getTrace();
-      if (trace) {
-        traceTypeBlobMap.set(type, trace);
+  public async getUnzippedFiles(files: File[]): Promise<File[]> {
+    const unzippedFiles: File[] = [];
+    for (let i=0; i<files.length; i++) {
+      if (FileUtils.isZipFile(files[i])) {
+        const unzippedFile = await FileUtils.unzipFile(files[i]);
+        unzippedFiles.push(...unzippedFile);
+      } else {
+        unzippedFiles.push(files[i]);
       }
-    });
-    return traceTypeBlobMap;
+    }
+    return unzippedFiles;
   }
 
-  async saveTracesAsZip(): Promise<Blob> {
-    const traceTypeBlobMap: Map<TraceType, Blob> = this.getTraceTypeBlobMap();
-    const fileNameBlobMap = new Map<string, Blob>();
-    for (const [traceType, blob] of traceTypeBlobMap.entries()) {
-      fileNameBlobMap.set(TRACE_INFO[traceType].name, blob);
+  async getTraceForDownload(parser: Parser): Promise<File | null> {
+    const trace = parser.getTrace();
+    if (trace) {
+      const traceType = TRACE_INFO[parser.getTraceType()].name;
+      const name = traceType + "/" + FileUtils.removeDirFromFileName(trace.name);
+      const blob = await trace.arrayBuffer();
+      return new File([blob], name);
     }
+    return null;
+  }
 
-    return await FileUtils.createZipArchive(fileNameBlobMap);
+  async getAllTracesForDownload(): Promise<File[]> {
+    const traces: File[] = [];
+    for (let i=0; i < this.parsers.length; i++) {
+      const trace = await this.getTraceForDownload(this.parsers[i]);
+      if (trace) {
+        traces.push(trace);
+      }
+    }
+    return traces;
   }
 }
 

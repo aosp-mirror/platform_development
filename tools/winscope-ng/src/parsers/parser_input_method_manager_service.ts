@@ -19,7 +19,7 @@ import {Parser} from "./parser";
 import {InputMethodManagerServiceTraceFileProto} from "./proto_types";
 
 class ParserInputMethodManagerService extends Parser {
-  constructor(trace: Blob) {
+  constructor(trace: File) {
     super(trace);
     this.realToElapsedTimeOffsetNs = undefined;
   }

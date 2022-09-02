@@ -20,6 +20,7 @@ import { MatSliderModule } from "@angular/material/slider";
 import { MatTooltipModule } from "@angular/material/tooltip";
 import { MatToolbarModule } from "@angular/material/toolbar";
 import { MatTabsModule } from "@angular/material/tabs";
+import { MatSnackBarModule } from "@angular/material/snack-bar";
 
 import { AppComponent } from "./components/app.component";
 import { ViewerWindowManagerComponent } from "viewers/viewer_window_manager/viewer_window_manager.component";
@@ -39,6 +40,7 @@ import { TreeNodeDataViewComponent } from "viewers/components/tree_node_data_vie
 import { TreeNodePropertiesDataViewComponent } from "viewers/components/tree_node_properties_data_view.component";
 import { PropertyGroupsComponent } from "viewers/components/property_groups.component";
 import { TransformMatrixComponent } from "viewers/components/transform_matrix.component";
+import { ParserErrorSnackBarComponent } from "./components/parser_error_snack_bar_component";
 
 @NgModule({
   declarations: [
@@ -59,7 +61,8 @@ import { TransformMatrixComponent } from "viewers/components/transform_matrix.co
     TreeNodeDataViewComponent,
     TreeNodePropertiesDataViewComponent,
     PropertyGroupsComponent,
-    TransformMatrixComponent
+    TransformMatrixComponent,
+    ParserErrorSnackBarComponent
   ],
   imports: [
     BrowserModule,
@@ -83,7 +86,8 @@ import { TransformMatrixComponent } from "viewers/components/transform_matrix.co
     MatRadioModule,
     MatTooltipModule,
     MatToolbarModule,
-    MatTabsModule
+    MatTabsModule,
+    MatSnackBarModule
   ],
   bootstrap: [AppComponent]
 })

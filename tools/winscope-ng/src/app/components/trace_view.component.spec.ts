@@ -78,13 +78,13 @@ describe("TraceViewComponent", () => {
   });
 
   it("downloads all traces", async () => {
-    spyOn(component, "saveTraces").and.callThrough();
+    spyOn(component, "downloadAllTraces").and.callThrough();
     fixture.detectChanges();
     const downloadButton: HTMLButtonElement | null = htmlElement.querySelector(".save-btn");
     expect(downloadButton).toBeInstanceOf(HTMLButtonElement);
     downloadButton?.dispatchEvent(new Event("click"));
     fixture.detectChanges();
     await fixture.whenStable();
-    expect(component.saveTraces).toHaveBeenCalled();
+    expect(component.downloadAllTraces).toHaveBeenCalled();
   });
 });
