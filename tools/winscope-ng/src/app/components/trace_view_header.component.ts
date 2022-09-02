@@ -26,16 +26,16 @@ import html2canvas from "html2canvas";
 @Component({
   selector: "trace-view-header",
   template: `
-    <button class="icon-button" id="toggle-btn" (click)="toggleView()">
+    <button class="icon-button toggle-btn" (click)="toggleView()">
       <mat-icon aria-hidden="true">
-        {{ showTrace ? "expand_more" : "chevron_right" }}
+        {{ showTrace ? "arrow_drop_down" : "chevron_right" }}
       </mat-icon>
     </button>
-    <mat-icon id="dep-icon" *ngFor="let dep of dependencies" aria-hidden="true" class="icon-button">{{TRACE_INFO[dep].icon}}</mat-icon>
+    <mat-icon *ngFor="let dep of dependencies" aria-hidden="true" class="icon-button dep-icon">{{TRACE_INFO[dep].icon}}</mat-icon>
     <span class="trace-card-title-text">
       {{title}}
     </span>
-    <button id="save-btn" class="icon-button" (click)="saveTraces()">
+    <button class="icon-button save-btn" (click)="saveTraces()">
       <mat-icon aria-hidden="true">save_alt</mat-icon>
     </button>
     <button id="screenshot-btn" (click)="takeScreenshot()" class="icon-button">
@@ -43,7 +43,7 @@ import html2canvas from "html2canvas";
     </button>
   `,
   styles: [
-    ".trace-card-title {font: inherit; display: inline-block; vertical-align: middle;}",
+    ".trace-card-title-text {font: inherit; display: inline-block; vertical-align: middle;}",
   ]
 })
 export class TraceViewHeaderComponent {

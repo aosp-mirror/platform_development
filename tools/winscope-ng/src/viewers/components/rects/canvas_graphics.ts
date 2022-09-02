@@ -120,6 +120,7 @@ export class CanvasGraphics {
 
     renderer.setSize(this.canvas!.clientWidth, this.canvas!.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.compile(scene, this.camera);
     renderer.render(scene, this.camera);
 
     labelRenderer.setSize(this.canvas!.clientWidth, this.canvas!.clientHeight);

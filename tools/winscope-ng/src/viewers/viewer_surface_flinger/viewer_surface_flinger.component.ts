@@ -53,6 +53,9 @@ import { PersistentStore } from "common/persistent_store";
   styles: [
     `
       @import 'https://fonts.googleapis.com/icon?family=Material+Icons';
+      :root {
+        --default-border: #DADCE0;
+      }
 
       mat-icon {
         margin: 5px
@@ -90,7 +93,7 @@ import { PersistentStore } from "common/persistent_store";
         width: 350px;
         height: 52.5rem;
         margin: 0px;
-        border: 1px solid rgb(129, 129, 129);
+        border: 1px solid var(--default-border);
         border-radius: 0;
       }
 
@@ -100,9 +103,9 @@ import { PersistentStore } from "common/persistent_store";
         width: 50%;
         height: 52.5rem;
         border-radius: 0;
-        border-top: 1px solid rgb(129, 129, 129);
-        border-right: 1px solid rgb(129, 129, 129);
-        border-bottom: 1px solid rgb(129, 129, 129);
+        border-top: 1px solid var(--default-border);
+        border-right: 1px solid var(--default-border);
+        border-bottom: 1px solid var(--default-border);
       }
     `,
   ]

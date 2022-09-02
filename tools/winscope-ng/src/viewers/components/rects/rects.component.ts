@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input, OnChanges, OnDestroy, Inject, ElementRef, SimpleChanges } from "@angular/core";
+import { Component, Input, OnChanges, OnDestroy, Inject, ElementRef, SimpleChanges, OnInit } from "@angular/core";
 import { RectsUtils } from "viewers/components/rects/rects_utils";
 import { Point, Rectangle, RectMatrix, RectTransform } from "viewers/viewer_surface_flinger/ui_data";
-import { interval, Subscription } from "rxjs";
 import { CanvasGraphics } from "viewers/components/rects/canvas_graphics";
 import * as THREE from "three";
 import { ViewerEvents } from "viewers/common/viewer_events";
@@ -25,46 +24,48 @@ import { ViewerEvents } from "viewers/common/viewer_events";
   selector: "rects-view",
   template: `
     <mat-card-header class="view-controls">
-      <mat-card-title>Layers</mat-card-title>
+      <mat-card-title><span>Layers</span></mat-card-title>
       <div class="top-view-controls">
-        <mat-checkbox
-          class="rects-checkbox"
-          [checked]="visibleView()"
-          (change)="onChangeView($event.checked!)"
-        >Only visible layers</mat-checkbox>
-        <mat-checkbox
-          [disabled]="!visibleView()"
-          class="rects-checkbox"
-          [checked]="showVirtualDisplays()"
-          (change)="canvasGraphics.updateVirtualDisplays($event.checked!)"
-        >Show virtual</mat-checkbox>
-        <div class="zoom-container">
-          <button id="zoom-btn" (click)="canvasGraphics.updateZoom(true)">
-            <mat-icon aria-hidden="true">
-              zoom_in
-            </mat-icon>
-          </button>
-          <button id="zoom-btn" (click)="canvasGraphics.updateZoom(false)">
-            <mat-icon aria-hidden="true">
-              zoom_out
-            </mat-icon>
-          </button>
+        <div class="top-view-controls">
+          <mat-checkbox
+            class="rects-checkbox control-item"
+            [checked]="visibleView()"
+            (change)="onChangeView($event.checked!)"
+          >Only visible</mat-checkbox>
+          <mat-checkbox
+            [disabled]="!visibleView()"
+            class="rects-checkbox control-item"
+            [checked]="showVirtualDisplays()"
+            (change)="updateVirtualDisplays($event.checked!)"
+          >Show virtual</mat-checkbox>
+          <div class="zoom-container control-item">
+            <button class="zoom-btn" (click)="updateZoom(true)">
+              <mat-icon aria-hidden="true">
+                zoom_in
+              </mat-icon>
+            </button>
+            <button class="zoom-btn" (click)="updateZoom(false)">
+              <mat-icon aria-hidden="true">
+                zoom_out
+              </mat-icon>
+            </button>
+          </div>
         </div>
       </div>
       <div class="slider-view-controls">
         <div class="slider" [class.rotation]="true">
-          <span>Flat to isometric</span>
+          <span class="slider-label">Rotation</span>
           <mat-slider
             step="0.01"
             min="0"
             max="4"
             aria-label="units"
             [value]="xCameraPos()"
-            (input)="canvasGraphics.updateRotation($event.value!)"
+            (input)="updateRotation($event.value!)"
           ></mat-slider>
         </div>
         <div class="slider" [class.spacing]="true">
-          <span>Layer spacing</span>
+          <span class="slider-label">Spacing</span>
           <mat-slider
             class="spacing-slider"
             step="0.001"
@@ -72,7 +73,7 @@ import { ViewerEvents } from "viewers/common/viewer_events";
             max="0.4"
             aria-label="units"
             [value]="getLayerSeparation()"
-            (input)="canvasGraphics.updateLayerSeparation($event.value!)"
+            (input)="updateLayerSeparation($event.value!)"
           ></mat-slider>
         </div>
       </div>
@@ -93,14 +94,15 @@ import { ViewerEvents } from "viewers/common/viewer_events";
     ".canvas-container {height: 40rem; width: 100%; position: relative}",
     "#rects-canvas {height: 40rem; width: 100%; cursor: pointer; position: absolute; top: 0px}",
     "#labels-canvas {height: 40rem; width: 100%; position: absolute; top: 0px}",
-    ".view-controls, .slider-view-controls {display: inline-block; position: relative; min-height: 4.5rem; width: 100%}",
+    ".view-controls {display: inline-block; position: relative; min-height: 4rem; width: 100%;}",
+    ".slider-view-controls {display: inline-block; position: relative; height: 3rem; width: 100%;}",
     ".slider {display: inline-block}",
     ".slider.spacing {float: right}",
     ".slider span, .slider mat-slider { display: block; padding-left: 0px; padding-top:  0px; font-weight: bold}",
-    ".top-view-controls {min-height: 1.5rem; width: 100%; position: relative; display: inline-block; vertical-align: middle;}",
+    ".top-view-controls {height: 3rem; width: 100%; position: relative; display: inline-block; vertical-align: middle;}",
     ".zoom-container {position: relative; vertical-align: middle; float: right}",
-    "#zoom-btn {position:relative; display: inline-flex; background: none; border: none}",
-    "mat-card-title {font-size: 16px !important}",
+    ".zoom-btn {position:relative; display: inline-flex; background: none; border: none; padding: 0}",
+    "mat-card-title {font-size: 16px !important; font-weight: medium; font-family: inherit;}",
     ":host /deep/ .mat-card-header-text {width: 100%; margin: 0;}",
     "mat-radio-group {vertical-align: middle}",
     "mat-radio-button {font-size: 16px; font-weight: normal}",
@@ -111,10 +113,12 @@ import { ViewerEvents } from "viewers/common/viewer_events";
     ".mat-checkbox .mat-checkbox-frame { transform: scale(0.7);}",
     ".mat-checkbox-checked .mat-checkbox-background {transform: scale(0.7);}",
     ".mat-checkbox-indeterminate .mat-checkbox-background {transform: scale(0.7);}",
+    ".slider-label {position: absolute; top: 0}",
+    ".control-item {position: relative; display: inline-block;vertical-align: middle;align-items: center;}"
   ]
 })
 
-export class RectsComponent implements OnChanges, OnDestroy {
+export class RectsComponent implements OnInit, OnChanges, OnDestroy {
   @Input() rects!: Rectangle[];
   @Input() displayIds: Array<number> = [];
   @Input() highlightedItems: Array<string> = [];
@@ -126,10 +130,8 @@ export class RectsComponent implements OnChanges, OnDestroy {
     this.currentDisplayId = this.displayIds[0] ?? 0; //default stack id is usually zero
   }
 
-  ngOnDestroy() {
-    if (this.canvasSubscription) {
-      this.canvasSubscription.unsubscribe();
-    }
+  ngOnInit() {
+    window.addEventListener('resize', () => this.refreshCanvas());
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -150,12 +152,12 @@ export class RectsComponent implements OnChanges, OnDestroy {
         }
       });
       this.scaleRects();
-      if (changes["rects"]) {
-        this.drawRects();
-      }
-    } else if (this.canvasSubscription) {
-      this.canvasSubscription.unsubscribe();
+      this.drawRects();
     }
+  }
+
+  ngOnDestroy() {
+    window.removeEventListener('resize', () => this.refreshCanvas());
   }
 
   onRectClick(event:MouseEvent) {
@@ -191,15 +193,14 @@ export class RectsComponent implements OnChanges, OnDestroy {
   }
 
   drawRects() {
-    if (this.canvasSubscription) {
-      this.canvasSubscription.unsubscribe();
-    }
     const canvas = document.getElementById("rects-canvas") as HTMLCanvasElement;
     this.canvasGraphics.initialise(canvas);
-    this.canvasSubscription = this.drawRectsInterval.subscribe(() => {
-      this.updateVariablesBeforeRefresh();
-      this.canvasGraphics.refreshCanvas();
-    });
+    this.refreshCanvas();
+  }
+
+  refreshCanvas() {
+    this.updateVariablesBeforeRefresh();
+    this.canvasGraphics.refreshCanvas();
   }
 
   updateVariablesBeforeRefresh() {
@@ -212,6 +213,7 @@ export class RectsComponent implements OnChanges, OnDestroy {
   onChangeView(visible: boolean) {
     this.canvasGraphics.updateVisibleView(visible);
     this.canvasGraphics.clearLabelElements();
+    this.refreshCanvas();
   }
 
   scaleRects() {
@@ -294,6 +296,26 @@ export class RectsComponent implements OnChanges, OnDestroy {
     return this.canvasGraphics.getLayerSeparation();
   }
 
+  updateLayerSeparation(sep: number) {
+    this.canvasGraphics.updateLayerSeparation(sep);
+    this.refreshCanvas();
+  }
+
+  updateRotation(rot: number) {
+    this.canvasGraphics.updateRotation(rot);
+    this.refreshCanvas();
+  }
+
+  updateZoom(zoom: boolean) {
+    this.canvasGraphics.updateZoom(zoom);
+    this.refreshCanvas();
+  }
+
+  updateVirtualDisplays(show: boolean) {
+    this.canvasGraphics.updateVirtualDisplays(show);
+    this.refreshCanvas();
+  }
+
   xCameraPos() {
     return this.canvasGraphics.getXCameraPos();
   }
@@ -304,15 +326,13 @@ export class RectsComponent implements OnChanges, OnDestroy {
 
   changeDisplayId(displayId: number) {
     this.currentDisplayId = displayId;
+    this.refreshCanvas();
   }
 
   canvasGraphics: CanvasGraphics;
-  private readonly _60fpsInterval = 16.66666666666667;
-  private drawRectsInterval = interval(this._60fpsInterval);
   private boundsWidth = 0;
   private boundsHeight = 0;
   private displayRects!: Rectangle[];
-  private canvasSubscription?: Subscription;
   private mouse = new THREE.Vector3(0, 0, 0);
   private currentDisplayId: number;
 }

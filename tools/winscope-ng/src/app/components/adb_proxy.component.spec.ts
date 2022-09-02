@@ -55,8 +55,7 @@ describe("AdbProxyComponent", () => {
   it("check correct icon and message displays if no proxy", () => {
     component.proxy.setState(ProxyState.NO_PROXY);
     fixture.detectChanges();
-    expect(htmlElement.querySelector(".adb-info")?.innerHTML).toBe("Unable to connect to Winscope ADB proxy");
-    expect(htmlElement.querySelector(".adb-icon")?.innerHTML).toBe("error");
+    expect(htmlElement.querySelector(".further-adb-info")?.innerHTML).toContain("Launch the Winscope ADB Connect proxy");
   });
 
   it("check correct icon and message displays if invalid proxy", () => {
