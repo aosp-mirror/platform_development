@@ -66,7 +66,10 @@ button {
 }
 
 .trace-card {
-    border: 1px solid var(--default-border);
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none;
+    box-shadow: none !important;
     height: 100%;
     overflow: auto;
     display: flex;
@@ -101,8 +104,8 @@ mat-icon {
 
 .file-icon {
     vertical-align: middle;
-    outline: none !important;
-    background: none !important;
+    outline: none;
+    background: none;
 }
 
 .card-block {
@@ -125,7 +128,7 @@ button.mat-raised-button span {
 }
 
 .input {
-    opacity: 0 !important;
+    opacity: 0;
     width: 100%;
     height: 100%;
     top: 0;
@@ -150,9 +153,6 @@ button.mat-raised-button span {
     display: none !important;
 }
 
-[hidden] {
-    display: none !important;
-}
 
 .icon-button {
     background: none;
@@ -237,7 +237,7 @@ app-root .white-btn {
 .mat-slider-thumb-label-text{font-family:"Google Sans", sans-serif}
 .mat-stepper-vertical,.mat-stepper-horizontal{font-family:"Google Sans", sans-serif}
 .mat-tab-group{font-family:"Google Sans", sans-serif}
-.mat-tab-label,.mat-tab-link{font-family:"Google Sans", sans-serif;}
+.mat-tab-label,.mat-tab-link{font-family:"Google Sans", sans-serif; font-weight: 500;}
 .mat-toolbar,.mat-toolbar h1,.mat-toolbar h2,.mat-toolbar h3,.mat-toolbar h4,.mat-toolbar h5,.mat-toolbar h6{font-family:"Google Sans", sans-serif;}
 .mat-tooltip{font-family:"Google Sans", sans-serif;}
 .mat-list-item{font-family:"Google Sans", sans-serif}

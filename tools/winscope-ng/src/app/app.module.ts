@@ -19,6 +19,7 @@ import { HttpClientModule } from "@angular/common/http";
 import { MatSliderModule } from "@angular/material/slider";
 import { MatTooltipModule } from "@angular/material/tooltip";
 import { MatToolbarModule } from "@angular/material/toolbar";
+import { MatTabsModule } from "@angular/material/tabs";
 
 import { AppComponent } from "./components/app.component";
 import { ViewerWindowManagerComponent } from "viewers/viewer_window_manager/viewer_window_manager.component";
@@ -31,7 +32,6 @@ import { UploadTracesComponent } from "./components/upload_traces.component";
 import { HierarchyComponent } from "viewers/components/hierarchy.component";
 import { PropertiesComponent } from "viewers/components/properties.component";
 import { RectsComponent } from "viewers/components/rects/rects.component";
-import { TraceViewHeaderComponent } from "./components/trace_view_header.component";
 import { TraceViewComponent } from "./components/trace_view.component";
 import { TreeComponent } from "viewers/components/tree.component";
 import { TreeNodeComponent } from "viewers/components/tree_node.component";
@@ -53,7 +53,6 @@ import { TransformMatrixComponent } from "viewers/components/transform_matrix.co
     HierarchyComponent,
     PropertiesComponent,
     RectsComponent,
-    TraceViewHeaderComponent,
     TraceViewComponent,
     TreeComponent,
     TreeNodeComponent,
@@ -83,7 +82,8 @@ import { TransformMatrixComponent } from "viewers/components/transform_matrix.co
     MatSliderModule,
     MatRadioModule,
     MatTooltipModule,
-    MatToolbarModule
+    MatToolbarModule,
+    MatTabsModule
   ],
   bootstrap: [AppComponent]
 })

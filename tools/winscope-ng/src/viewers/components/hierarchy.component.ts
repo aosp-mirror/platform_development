@@ -25,7 +25,7 @@ import { TraceType } from "common/trace/trace_type";
   selector: "hierarchy-view",
   template: `
     <mat-card-header class="view-header">
-      <mat-card-title class="title-filter">
+      <div class="title-filter">
         <span class="hierarchy-title">Hierarchy</span>
         <mat-form-field class="filter-field">
           <mat-label>Filter...</mat-label>
@@ -36,7 +36,7 @@ import { TraceType } from "common/trace/trace_type";
             name="filter"
           />
         </mat-form-field>
-      </mat-card-title>
+      </div>
       <div class="view-controls">
         <mat-checkbox
           *ngFor="let option of objectKeys(userOptions)"
@@ -84,6 +84,7 @@ import { TraceType } from "common/trace/trace_type";
   styles: [
     `
       .view-header {
+        position: relative;
         display: block;
         width: 100%;
         min-height: 3.75rem;
@@ -96,6 +97,7 @@ import { TraceType } from "common/trace/trace_type";
         display: flex;
         align-items: center;
         width: 100%;
+        margin-bottom: 12px;
       }
 
       .hierarchy-title {
@@ -114,7 +116,7 @@ import { TraceType } from "common/trace/trace_type";
         display: inline-block;
         font-size: 12px;
         font-weight: normal;
-        margin-left: 5px
+        margin-left: 5px;
       }
 
       .hierarchy-content {

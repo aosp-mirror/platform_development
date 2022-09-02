@@ -29,6 +29,7 @@ import { AdbProxyComponent } from "./adb_proxy.component";
 import { WebAdbComponent } from "./web_adb.component";
 import { TraceConfigComponent } from "./trace_config.component";
 import { ViewerSurfaceFlingerComponent } from "viewers/viewer_surface_flinger/viewer_surface_flinger.component";
+import { TraceViewComponent } from "./trace_view.component";
 
 describe("AppComponent", () => {
   let fixture: ComponentFixture<AppComponent>;
@@ -55,7 +56,8 @@ describe("AppComponent", () => {
         AdbProxyComponent,
         WebAdbComponent,
         TraceConfigComponent,
-        ViewerSurfaceFlingerComponent
+        ViewerSurfaceFlingerComponent,
+        TraceViewComponent
       ],
     }).overrideComponent(AppComponent, {
       set: { changeDetection: ChangeDetectionStrategy.Default }

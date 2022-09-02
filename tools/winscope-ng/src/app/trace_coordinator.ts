@@ -23,6 +23,7 @@ import { ViewerFactory } from "viewers/viewer_factory";
 import { LoadedTrace } from "app/loaded_trace";
 import { TRACE_INFO } from "./trace_info";
 import { TimestampUtils } from "common/trace/timestamp_utils";
+import { FileUtils } from "common/utils/file_utils";
 
 class TraceCoordinator {
   private parsers: Parser[];
@@ -132,24 +133,26 @@ class TraceCoordinator {
     setTraces.dataReady = false;
   }
 
-  saveTraces(traceTypes: TraceType[]) {
-    const blobs: Blob[] = [];
-    traceTypes.forEach(type => {
-      const trace = this.findParser(type)?.getTrace();
+  getTraceTypeBlobMap(): Map<TraceType, Blob> {
+    const traceTypeBlobMap: Map<TraceType, Blob> = new Map();
+    this.parsers.forEach(parser => {
+      const type = parser.getTraceType();
+      const trace = parser.getTrace();
       if (trace) {
-        blobs.push(trace);
+        traceTypeBlobMap.set(type, trace);
       }
     });
-    blobs.forEach((blob, idx) => {
-      const a = document.createElement("a");
-      document.body.appendChild(a);
-      const url = window.URL.createObjectURL(blob);
-      a.href = url;
-      a.download = (blob as any).name ?? `${TRACE_INFO[traceTypes[idx]].name}.pb`;
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    });
+    return traceTypeBlobMap;
+  }
+
+  async saveTracesAsZip(): Promise<Blob> {
+    const traceTypeBlobMap: Map<TraceType, Blob> = this.getTraceTypeBlobMap();
+    const fileNameBlobMap = new Map<string, Blob>();
+    for (const [traceType, blob] of traceTypeBlobMap.entries()) {
+      fileNameBlobMap.set(TRACE_INFO[traceType].name, blob);
+    }
+
+    return await FileUtils.createZipArchive(fileNameBlobMap);
   }
 }
 

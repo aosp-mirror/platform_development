@@ -29,7 +29,7 @@ describe("Viewer SurfaceFlinger", () => {
     const loadData = element(by.css(".load-btn"));
     loadData.click();
 
-    const surfaceFlingerCard: ElementFinder = element(by.css(".trace-card-title-text"));
-    expect(surfaceFlingerCard.getText()).toContain("Surface Flinger");
+    const surfaceFlingerViewer: ElementFinder = element(by.css("viewer-surface-flinger"));
+    expect(surfaceFlingerViewer).toBeTruthy();
   });
 });

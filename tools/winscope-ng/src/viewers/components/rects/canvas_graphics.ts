@@ -144,7 +144,8 @@ export class CanvasGraphics {
     this.clearLabelElements();
     this.rects.forEach(rect => {
       const mustNotDrawInVisibleView = this.visibleView && !rect.isVisible;
-      const mustNotDrawInXrayViewWithoutVirtualDisplays = !this.visibleView && !this.showVirtualDisplays && rect.isDisplay && rect.isVirtual;
+      const mustNotDrawInXrayViewWithoutVirtualDisplays =
+            !this.visibleView && !this.showVirtualDisplays && rect.isDisplay && rect.isVirtual;
       if (mustNotDrawInVisibleView || mustNotDrawInXrayViewWithoutVirtualDisplays) {
         rectCounter++;
         return;
@@ -264,7 +265,7 @@ export class CanvasGraphics {
 
     //add rectangle label
     const rectLabelDiv: HTMLElement = document.createElement("div");
-    this.labelElements.push(rectLabelDiv);
+    rectLabelDiv.className = "rect-label";
     rectLabelDiv.textContent = labelText;
     rectLabelDiv.style.fontSize = "10px";
     if (isGrey) {
@@ -275,6 +276,7 @@ export class CanvasGraphics {
 
     const textCanvas = document.createElement("canvas");
     const labelContext = textCanvas.getContext("2d");
+
     let labelWidth = 0;
     if (labelContext?.font) {
       labelContext.font = rectLabelDiv.style.font;
@@ -288,7 +290,9 @@ export class CanvasGraphics {
       );
     } else {
       rectLabel.position.set(
-        endPos.x - labelWidth * this.labelXFactor, endPos.y - this.labelShift * labelWidth * this.labelXFactor, endPos.z
+        endPos.x - labelWidth * this.labelXFactor,
+        endPos.y - this.labelShift * labelWidth * this.labelXFactor,
+        endPos.z
       );
     }
 
@@ -355,7 +359,7 @@ export class CanvasGraphics {
   }
 
   clearLabelElements() {
-    this.labelElements.forEach(el => el.remove());
+    document.querySelectorAll(".rect-label").forEach(el => el.remove());
   }
 
   updateZoom(isZoomIn: boolean) {
@@ -414,7 +418,6 @@ export class CanvasGraphics {
   private highlightedItems: Array<string> = [];
   private camera: THREE.OrthographicCamera;
   private rects: Rectangle[] = [];
-  private labelElements: HTMLElement[] = [];
   private targetObjects: any[] = [];
   private canvas?: HTMLCanvasElement;
 }

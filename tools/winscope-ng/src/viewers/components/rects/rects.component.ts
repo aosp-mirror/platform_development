@@ -24,7 +24,9 @@ import { ViewerEvents } from "viewers/common/viewer_events";
   selector: "rects-view",
   template: `
     <mat-card-header class="view-controls">
-      <mat-card-title><span>Layers</span></mat-card-title>
+      <div class="rects-title">
+        <span>Layers</span>
+      </div>
       <div class="top-view-controls">
         <div class="top-view-controls">
           <mat-checkbox
@@ -89,37 +91,104 @@ import { ViewerEvents } from "viewers/common/viewer_events";
     </mat-card-content>
   `,
   styles: [
-    "@import 'https://fonts.googleapis.com/icon?family=Material+Icons';",
-    ".rects-content {position: relative}",
-    ".canvas-container {height: 40rem; width: 100%; position: relative}",
-    ".rects-canvas {height: 40rem; width: 100%; cursor: pointer; position: absolute; top: 0px}",
-    ".labels-canvas {height: 40rem; width: 100%; position: absolute; top: 0px}",
-    ".view-controls {display: inline-block; position: relative; min-height: 4rem; width: 100%;}",
-    ".slider-view-controls {display: inline-block; position: relative; height: 3rem; width: 100%;}",
-    ".slider {display: inline-block}",
-    ".slider.spacing {float: right}",
-    ".slider span, .slider mat-slider { display: block; padding-left: 0px; padding-top:  0px; font-weight: bold}",
-    ".top-view-controls {height: 3rem; width: 100%; position: relative; display: inline-block; vertical-align: middle;}",
-    ".zoom-container {position: relative; vertical-align: middle; float: right}",
-    ".zoom-btn {position:relative; display: inline-flex; background: none; border: none; padding: 0}",
-    "mat-card-title {font-size: 16px !important; font-weight: medium; font-family: inherit;}",
-    ":host /deep/ .mat-card-header-text {width: 100%; margin: 0;}",
-    "mat-radio-group {vertical-align: middle}",
-    "mat-radio-button {font-size: 16px; font-weight: normal}",
-    ".mat-radio-button, .mat-radio-button-frame {transform: scale(0.8);}",
-    ".rects-checkbox {font-size: 14px; font-weight: normal}",
-    "mat-icon {margin: 5px}",
-    "mat-checkbox {margin-left: 5px;}",
-    ".mat-checkbox .mat-checkbox-frame { transform: scale(0.7);}",
-    ".mat-checkbox-checked .mat-checkbox-background {transform: scale(0.7);}",
-    ".mat-checkbox-indeterminate .mat-checkbox-background {transform: scale(0.7);}",
-    ".slider-label {position: absolute; top: 0}",
-    ".control-item {position: relative; display: inline-block;vertical-align: middle;align-items: center;}"
+    `
+      @import 'https://fonts.googleapis.com/icon?family=Material+Icons';
+
+      :host /deep/ .mat-card-header-text {
+        width: 100%;
+        margin: 0;
+      }
+      .rects-title {
+        font-size: 16px;
+        font-weight: medium;
+        font-family: inherit;
+        width: 100%;
+        margin-bottom: 12px;
+      }
+      .rects-content {
+        position: relative;
+      }
+      .canvas-container {
+        height: 40rem;
+        width: 100%;
+        position: relative;
+      }
+      .labels-canvas, .rects-canvas {
+        height: 40rem;
+        width: 100%;
+        position: absolute;
+        top: 0px;
+      }
+      .rects-canvas {
+        cursor: pointer;
+      }
+      .view-controls {
+        display: inline-block;
+        position: relative;
+        min-height: 4rem;
+        width: 100%;
+      }
+      .slider-view-controls, .top-view-controls {
+        display: inline-block;
+        position: relative;
+        height: 3rem;
+        width: 100%;
+      }
+      .top-view-controls {
+        vertical-align: middle;
+      }
+      .slider {
+        display: inline-block;
+      }
+      .slider-label {
+        position: absolute;
+        top: 0;
+      }
+      .slider.spacing {
+        float: right;
+      }
+      .slider span, .slider mat-slider {
+        display: block;
+        padding-left: 0px;
+        padding-top: 0px;
+        font-weight: bold;
+      }
+      .zoom-container {
+        position: relative;
+        vertical-align: middle;
+        float: right;
+      }
+      .zoom-btn {
+        position: relative;
+        display: inline-flex;
+        background: none;
+        border: none;
+        padding: 0;
+      }
+      .rects-checkbox {
+        font-size: 14px;
+        font-weight: normal;
+        margin-left: 5px;
+      }
+      mat-icon {
+        margin: 5px
+      }
+      .mat-checkbox .mat-checkbox-frame, .mat-checkbox-checked .mat-checkbox-background, .mat-checkbox-indeterminate .mat-checkbox-background {
+        transform: scale(0.7);
+      }
+      .control-item {
+        position: relative;
+        display: inline-block;
+        vertical-align: middle;
+        align-items: center;
+      }
+    `
   ]
 })
 
 export class RectsComponent implements OnInit, OnChanges, OnDestroy {
   @Input() rects!: Rectangle[];
+  @Input() forceRefresh = false;
   @Input() displayIds: Array<number> = [];
   @Input() highlightedItems: Array<string> = [];
 
@@ -143,9 +212,8 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
     if (changes["highlightedItems"]) {
       this.canvasGraphics.updateHighlightedItems(this.highlightedItems);
     }
-    if (this.rects.length > 0) {
+    if (this.rects.length > 0 || changes["forceRefresh"]?.currentValue) {
       //change in rects so they must undergo transformation and scaling before canvas refreshed
-      this.canvasGraphics.clearLabelElements();
       this.rects = this.rects.filter(rect => rect.isVisible || rect.isDisplay);
       this.displayRects = this.rects.filter(rect => rect.isDisplay);
       this.computeBounds();
@@ -217,7 +285,6 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
 
   onChangeView(visible: boolean) {
     this.canvasGraphics.updateVisibleView(visible);
-    this.canvasGraphics.clearLabelElements();
     this.refreshCanvas();
   }
 
