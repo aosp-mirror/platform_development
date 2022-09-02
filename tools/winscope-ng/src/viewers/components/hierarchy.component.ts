@@ -87,7 +87,7 @@ import { TraceType } from "common/trace/trace_type";
         width: 100%;
         min-height: 3.75rem;
         align-items: center;
-        border-bottom: 1px solid lightgrey;
+        border-bottom: 1px solid var(--default-border);
       }
 
       .title-filter {
@@ -98,6 +98,7 @@ import { TraceType } from "common/trace/trace_type";
       }
 
       .hierarchy-title {
+        font-weight: medium;
         font-size: 16px;
       }
 
@@ -105,7 +106,7 @@ import { TraceType } from "common/trace/trace_type";
         font-size: 16px;
         transform: scale(0.7);
         right: 0px;
-        position: absolute
+        position: absolute;
       }
 
       .view-controls {
@@ -115,18 +116,18 @@ import { TraceType } from "common/trace/trace_type";
         margin-left: 5px
       }
 
-      .hierarchy-content{
+      .hierarchy-content {
         display: flex;
         flex-direction: column;
         overflow-y: auto;
-        overflow-x:hidden
+        overflow-x: hidden;
       }
 
       .tree-view {
         white-space: pre-line;
         flex: 1 0 0;
         height: 100%;
-        overflow-y: auto
+        overflow-y: auto;
       }
 
       .pinned-items {

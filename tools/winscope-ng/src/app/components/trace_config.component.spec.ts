@@ -44,26 +44,26 @@ describe("TraceConfigComponent", () => {
     fixture = TestBed.createComponent(TraceConfigComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
-    component.trace = {
-      name: "layers_trace",
-      run: false,
-      config: {
-        enableConfigs: [{
-          name:"trace buffers",
-          key:"tracebuffers",
-          enabled:true
-        }],
-        selectionConfigs: [{
-          key: "tracinglevel",
-          name: "tracing level",
-          options: [
-            "verbose",
-            "debug",
-            "critical",
-          ],
-          value: "debug"
-        }]
-      }
+    component.traces = {
+      "layers_trace": {name: "layers_trace",
+        run: false,
+        config: {
+          enableConfigs: [{
+            name:"trace buffers",
+            key:"tracebuffers",
+            enabled:true
+          }],
+          selectionConfigs: [{
+            key: "tracinglevel",
+            name: "tracing level",
+            options: [
+              "verbose",
+              "debug",
+              "critical",
+            ],
+            value: "debug"
+          }]
+        }}
     };
   });
 
@@ -72,7 +72,7 @@ describe("TraceConfigComponent", () => {
   });
 
   it("check that trace checkbox ticked on default run", () => {
-    component.trace.run = true;
+    component.traces["layers_trace"].run = true;
     fixture.detectChanges();
     const box = htmlElement.querySelector(".trace-box");
     expect(box?.innerHTML).toContain("aria-checked=\"true\"");
@@ -80,32 +80,32 @@ describe("TraceConfigComponent", () => {
   });
 
   it("check that trace checkbox not ticked on default run", () => {
-    component.trace.run = false;
+    component.traces["layers_trace"].run = false;
     fixture.detectChanges();
     const box = htmlElement.querySelector(".trace-box");
     expect(box?.innerHTML).toContain("aria-checked=\"false\"");
   });
 
   it("check that correct advanced enable config only shows", () => {
-    component.trace.config!.selectionConfigs = [];
+    component.traces["layers_trace"].config!.selectionConfigs = [];
     fixture.detectChanges();
-    const adv = htmlElement.querySelector(".adv-config");
+    const adv = htmlElement.querySelector(".config-opt");
     expect(adv).toBeTruthy();
     expect(adv?.innerHTML).toContain("trace buffers");
     expect(adv?.innerHTML).not.toContain("tracing level");
   });
 
   it("check that correct advanced selection config shows", () => {
-    component.trace.config!.enableConfigs = [];
+    component.traces["layers_trace"].config!.enableConfigs = [];
     fixture.detectChanges();
-    const adv = htmlElement.querySelector(".adv-config");
+    const adv = htmlElement.querySelector(".config-opt");
     expect(adv).toBeTruthy();
     expect(adv?.innerHTML).not.toContain("trace buffers");
     expect(adv?.innerHTML).toContain("tracing level");
   });
 
   it("check that changing enable config causes box to change", async () => {
-    component.trace.config!.enableConfigs[0].enabled = false;
+    component.traces["layers_trace"].config!.enableConfigs[0].enabled = false;
     fixture.detectChanges();
     await fixture.whenStable();
     expect(htmlElement.querySelector(".enable-config")?.innerHTML).toContain("aria-checked=\"false\"");
@@ -113,11 +113,11 @@ describe("TraceConfigComponent", () => {
 
   it("check that changing selected config causes select to change", async () => {
     fixture.detectChanges();
-    expect(htmlElement.querySelector(".selection")?.innerHTML).toContain("value=\"debug\"");
-    component.trace.config!.selectionConfigs[0].value = "verbose";
+    expect(htmlElement.querySelector(".config-selection")?.innerHTML).toContain("value=\"debug\"");
+    component.traces["layers_trace"].config!.selectionConfigs[0].value = "verbose";
     fixture.detectChanges();
     fixture.whenStable().then(() => {
-      expect(htmlElement.querySelector(".selection")?.innerHTML).toContain("value=\"verbose\"");
+      expect(htmlElement.querySelector(".config-selection")?.innerHTML).toContain("value=\"verbose\"");
     });
   });
 });

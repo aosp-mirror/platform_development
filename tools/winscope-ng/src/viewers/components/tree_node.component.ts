@@ -21,13 +21,12 @@ import { Tree } from "viewers/common/tree_utils";
   selector: "tree-node",
   template: `
     <button
-      id="toggle-tree-btn"
-      class="icon-button"
+      class="icon-button toggle-tree-btn"
       (click)="toggleTree($event)"
       *ngIf="showChevron()"
     >
       <mat-icon class="icon-button">
-        {{isCollapsed ? "chevron_right" : "expand_more"}}
+        {{isCollapsed ? "chevron_right" : "arrow_drop_down"}}
       </mat-icon>
     </button>
 
@@ -39,8 +38,7 @@ import { Tree } from "viewers/common/tree_utils";
     </div>
 
     <button
-      id="pin-node-btn"
-      class="icon-button"
+      class="icon-button pin-node-btn"
       (click)="pinNode($event)"
       *ngIf="!isEntryNode()"
     >
@@ -56,10 +54,9 @@ import { Tree } from "viewers/common/tree_utils";
     </div>
 
     <button
-      id="expand-tree-btn"
       *ngIf="hasChildren && isCollapsed"
       (click)="expandTree($event)"
-      class="icon-button"
+      class="icon-button expand-tree-btn"
     >
       <mat-icon
         aria-hidden="true"

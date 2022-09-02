@@ -29,17 +29,17 @@ import { PersistentStore } from "common/persistent_store";
       <mat-card-title id="title">Collect Traces</mat-card-title>
       <mat-card-content>
 
-      <div class="connecting-message" *ngIf="connect.isConnectingState()">Connecting...</div>
+      <div class="connecting-message" *ngIf="connect.isConnectingState()"><span>Connecting...</span></div>
 
       <div class="set-up-adb" *ngIf="!connect.adbSuccess()">
-        <button id="proxy-tab" mat-raised-button [ngClass]="tabClass(true)" (click)="displayAdbProxyTab()">ADB Proxy</button>
+        <button id="proxy-tab" class=".white-btn" mat-raised-button [ngClass]="tabClass(true)" (click)="displayAdbProxyTab()">ADB Proxy</button>
         <!-- <button id="web-tab" mat-raised-button [ngClass]="tabClass(false)" (click)="displayWebAdbTab()">Web ADB</button> -->
         <adb-proxy *ngIf="isAdbProxy" [(proxy)]="connect.proxy!" (addKey)="onAddKey($event)"></adb-proxy>
         <!-- <web-adb *ngIf="!isAdbProxy"></web-adb> TODO: fix web adb workflow -->
       </div>
 
       <div id="devices-connecting" *ngIf="connect.isDevicesState()">
-        <div> {{ objectKeys(connect.devices()).length > 0 ? "Connected devices:" : "No devices detected" }}</div>
+        <span> {{ objectKeys(connect.devices()).length > 0 ? "Connected devices:" : "No devices detected" }}</span>
           <mat-list class="device-choice">
             <mat-list-item *ngFor="let deviceId of objectKeys(connect.devices())" (click)="connect.selectDevice(deviceId)">
               <mat-icon class="icon-message">
@@ -60,30 +60,26 @@ import { PersistentStore } from "common/persistent_store";
                 <span class="icon-message">
                   {{ connect.selectedDevice().model }} ({{ connect.selectedDeviceId() }})
                 </span>
+                <button class="change-btn" mat-raised-button (click)="connect.resetLastDevice()">Change device</button>
             </mat-list-item>
             </mat-list>
         </div>
 
         <div class="trace-section">
-          <div>
-            <button class="start-btn" mat-raised-button (click)="startTracing()">Start Trace</button>
-            <button class="dump-btn" mat-raised-button (click)="dumpState()">Dump State</button>
-            <button class="change-btn" mat-raised-button (click)="connect.resetLastDevice()">Change Device</button>
-          </div>
-          <h3>Trace targets:</h3>
           <trace-config
-            *ngFor="let traceKey of objectKeys(setTraces.DYNAMIC_TRACES)"
-            [trace]="setTraces.DYNAMIC_TRACES[traceKey]"
+            [traces]="setTraces.DYNAMIC_TRACES"
           ></trace-config>
+          <button class="start-btn" mat-raised-button (click)="startTracing()">Start trace</button>
         </div>
 
         <div class="dump-section">
-          <h3>Dump targets:</h3>
+          <p class="subtitle">Dump targets</p>
           <div class="selection">
             <mat-checkbox
               *ngFor="let dumpKey of objectKeys(setTraces.DUMPS)"
               [(ngModel)]="setTraces.DUMPS[dumpKey].run"
             >{{setTraces.DUMPS[dumpKey].name}}</mat-checkbox>
+            <button class="dump-btn" mat-raised-button (click)="dumpState()">Dump state</button>
           </div>
         </div>
       </div>
@@ -112,8 +108,6 @@ import { PersistentStore } from "common/persistent_store";
   `,
   styles: [
     ".device-choice {cursor: pointer}",
-    ".mat-checkbox .mat-checkbox-frame {transform: scale(0.7); font-size: 10;}",
-    ".mat-checkbox-checked .mat-checkbox-background {transform: scale(0.7); font-size: 10;}"
   ]
 })
 export class CollectTracesComponent implements OnInit, OnDestroy {

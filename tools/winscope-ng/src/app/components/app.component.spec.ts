@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 import { ChangeDetectionStrategy } from "@angular/core";
-import {ComponentFixture, TestBed} from "@angular/core/testing";
+import {ComponentFixture, TestBed, ComponentFixtureAutoDetect} from "@angular/core/testing";
 import { CommonModule } from "@angular/common";
 import { MatCardModule } from "@angular/material/card";
 import { MatButtonModule } from "@angular/material/button";
 import { MatGridListModule } from "@angular/material/grid-list";
+import { MatSliderModule } from "@angular/material/slider";
+import { MatToolbarModule } from "@angular/material/toolbar";
 
 import { AppComponent } from "./app.component";
 import { CollectTracesComponent } from "./collect_traces.component";
@@ -26,11 +28,7 @@ import { UploadTracesComponent } from "./upload_traces.component";
 import { AdbProxyComponent } from "./adb_proxy.component";
 import { WebAdbComponent } from "./web_adb.component";
 import { TraceConfigComponent } from "./trace_config.component";
-
-import { ComponentFixtureAutoDetect } from "@angular/core/testing";
 import { ViewerSurfaceFlingerComponent } from "viewers/viewer_surface_flinger/viewer_surface_flinger.component";
-import { MatSliderModule } from "@angular/material/slider";
-
 
 describe("AppComponent", () => {
   let fixture: ComponentFixture<AppComponent>;
@@ -47,7 +45,8 @@ describe("AppComponent", () => {
         MatCardModule,
         MatButtonModule,
         MatGridListModule,
-        MatSliderModule
+        MatSliderModule,
+        MatToolbarModule
       ],
       declarations: [
         AppComponent,
@@ -75,7 +74,7 @@ describe("AppComponent", () => {
   });
 
   it("renders the page title", () => {
-    expect(htmlElement.querySelector("#app-title")?.innerHTML).toContain("Winscope Viewer 2.0");
+    expect(htmlElement.querySelector("#app-title")?.innerHTML).toContain("Winscope");
   });
 
   it("displays correct elements when no data loaded", async () => {
