@@ -25,6 +25,15 @@ argument is provided, it assumes the crate is the current directory.
   $ update_crate_tests.py $ANDROID_BUILD_TOP/external/rust/crates/libc
 
 This script is automatically called by external_updater.
+
+A test_mapping_config.json file can be defined in the project directory to
+configure the generated TEST_MAPPING file, for example:
+
+    {
+        // Run tests in postsubmit instead of presubmit.
+        "postsubmit_tests":["foo"]
+    }
+
 """
 
 import argparse
@@ -49,7 +58,8 @@ TEST_OPTIONS = {
 # "presubmit-rust" runs arm64 device tests on physical devices.
 TEST_GROUPS = [
     "presubmit",
-    "presubmit-rust"
+    "presubmit-rust",
+    "postsubmit",
 ]
 
 # Excluded tests. These tests will be ignored by this script.
@@ -72,6 +82,10 @@ TEST_EXCLUDE = [
 
         # TODO: Remove when b/198197213 is closed.
         "diced_client_test",
+
+        "CoverageRustSmokeTest",
+        "libtrusty-rs-tests",
+        "terminal-size_test_src_lib",
 ]
 
 # Excluded modules.
@@ -269,16 +283,33 @@ class TestMapping(object):
     def tests_dirs_to_mapping(self, tests, dirs):
         """Translate the test list into a dictionary."""
         test_mapping = {"imports": []}
+        config = None
+        if os.path.isfile(os.path.join(self.package.dir, "test_mapping_config.json")):
+            with open(os.path.join(self.package.dir, "test_mapping_config.json"), 'r') as fd:
+                config = json.load(fd)
+
         for test_group in TEST_GROUPS:
             test_mapping[test_group] = []
             for test in tests:
                 if test in TEST_EXCLUDE:
                     continue
+                if config and 'postsubmit_tests' in config:
+                    if test in config['postsubmit_tests'] and 'postsubmit' not in test_group:
+                        continue
+                    if test not in config['postsubmit_tests'] and 'postsubmit' in test_group:
+                        continue
+                else:
+                    if 'postsubmit' in test_group:
+                        # If postsubmit_tests is not configured, do not place
+                        # anything in postsubmit - presubmit groups are
+                        # automatically included in postsubmit in CI.
+                        continue
                 if test in TEST_OPTIONS:
                     test_mapping[test_group].append({"name": test, "options": TEST_OPTIONS[test]})
                 else:
                     test_mapping[test_group].append({"name": test})
             test_mapping[test_group] = sorted(test_mapping[test_group], key=lambda t: t["name"])
+
         for dir in dirs:
             test_mapping["imports"].append({"path": dir})
         test_mapping["imports"] = sorted(test_mapping["imports"], key=lambda t: t["path"])
@@ -331,6 +362,10 @@ def main():
                 subprocess.check_output(['repo', 'start',
                                          'tmp_auto_test_mapping', '.'])
                 subprocess.check_output(['git', 'add', 'TEST_MAPPING'])
+                # test_mapping_config.json is not always present
+                subprocess.call(['git', 'add', 'test_mapping_config.json'],
+                                stderr=subprocess.DEVNULL,
+                                stdout=subprocess.DEVNULL)
                 subprocess.check_output(['git', 'commit', '-m',
                                          'Update TEST_MAPPING\n\nTest: None'])
             if args.push_change and (changed or untracked):

@@ -19,10 +19,8 @@ ARCH_TARGET_CFLAGS = {
     'arm64': ('-target', 'aarch64-linux-android'),
     'x86': ('-target', 'i386-linux-androideabi'),
     'x86_64': ('-target', 'x86_64-linux-android'),
-    'mips': ('-target', 'mips-linux-androideabi'),
-    'mips64': ('-target', 'mips64-linux-android'),
 }
-TARGET_ARCHES = ['arm', 'arm64', 'x86', 'x86_64', 'mips', 'mips64']
+TARGET_ARCHES = ['arm', 'arm64', 'x86', 'x86_64']
 
 
 def relative_to_abs_path(relative_path):
@@ -37,13 +35,15 @@ def relative_to_abs_path_list(relative_path_list):
 
 
 class Module(object):
-    def __init__(self, name, arch, cflags, export_include_dirs):
+    def __init__(self, name, arch, cflags, export_include_dirs,
+                 has_reference_dump):
         self.name = name
         self.arch = arch
         self.cflags = tuple(cflags)
         self.arch_cflags = ARCH_TARGET_CFLAGS.get(self.arch, tuple())
         self.export_include_dirs = relative_to_abs_path_list(
             export_include_dirs)
+        self.has_reference_dump = has_reference_dump
 
     def get_dump_name(self):
         """Returns the module name followed by file extension."""
@@ -78,10 +78,11 @@ class Module(object):
 
 
 class SdumpModule(Module):
-    def __init__(self, name, src, export_include_dirs=tuple(), cflags=tuple(),
-                 arch='', dumper_flags=tuple()):
-        super(SdumpModule, self).__init__(name, arch, cflags,
-                                          export_include_dirs)
+    def __init__(self, name, src, export_include_dirs=tuple(),
+                 has_reference_dump=False, cflags=tuple(), arch='',
+                 dumper_flags=tuple()):
+        super().__init__(name, arch, cflags, export_include_dirs,
+                         has_reference_dump)
         self.src = relative_to_abs_path(src)
         self.dumper_flags = dumper_flags
 
@@ -96,15 +97,16 @@ class SdumpModule(Module):
 
     def mutate_for_arch(self, target_arch):
         return SdumpModule(self.name, self.src, self.export_include_dirs,
-                           self.cflags, target_arch, self.dumper_flags)
+                           self.has_reference_dump, self.cflags, target_arch,
+                           self.dumper_flags)
 
 
 class LsdumpModule(Module):
     def __init__(self, name, srcs, version_script, export_include_dirs,
-                 cflags=tuple(), arch='', api='current', dumper_flags=tuple(),
-                 linker_flags=tuple()):
-        super(LsdumpModule, self).__init__(name, arch, cflags,
-                                           export_include_dirs)
+                 has_reference_dump=False, cflags=tuple(), arch='',
+                 api='current', dumper_flags=tuple(), linker_flags=tuple()):
+        super().__init__(name, arch, cflags, export_include_dirs,
+                         has_reference_dump)
         self.srcs = relative_to_abs_path_list(srcs)
         self.version_script = relative_to_abs_path(version_script)
         self.api = api
@@ -140,21 +142,12 @@ class LsdumpModule(Module):
 
     def mutate_for_arch(self, target_arch):
         return LsdumpModule(self.name, self.srcs, self.version_script,
-                            self.export_include_dirs, self.cflags, target_arch,
-                            self.api, self.dumper_flags, self.linker_flags)
+                            self.export_include_dirs, self.has_reference_dump,
+                            self.cflags, target_arch, self.api,
+                            self.dumper_flags, self.linker_flags)
 
 
 TEST_MODULES = [
-    SdumpModule(
-        name='undeclared_types.h',
-        src='integration/cpp/header/undeclared_types.h',
-        arch='',
-        dumper_flags=['-suppress-errors', '-output-format', 'Json']),
-    SdumpModule(
-        name='known_issues.h',
-        src='integration/cpp/header/known_issues.h',
-        arch='',
-        dumper_flags=['-suppress-errors', '-output-format', 'Json']),
     LsdumpModule(
         name='libc_and_cpp',
         srcs=[
@@ -163,6 +156,7 @@ TEST_MODULES = [
         ],
         version_script='integration/c_and_cpp/map.txt',
         export_include_dirs=['integration/c_and_cpp/include'],
+        has_reference_dump=True,
     ),
     LsdumpModule(
         name='libc_and_cpp_with_opaque_ptr_a',
@@ -193,6 +187,7 @@ TEST_MODULES = [
         version_script='integration/c_and_cpp/map.txt',
         export_include_dirs=['integration/c_and_cpp/include'],
         cflags=['-DINCLUDE_UNUSED_STRUCTS=1'],
+        has_reference_dump=True,
     ),
     LsdumpModule(
         name='libc_and_cpp_with_unused_cstruct',
@@ -213,6 +208,7 @@ TEST_MODULES = [
         ],
         version_script='integration/cpp/gold/map.txt',
         export_include_dirs=['integration/cpp/gold/include'],
+        has_reference_dump=True,
     ),
     LsdumpModule(
         name='libgolden_cpp_odr',
@@ -235,6 +231,7 @@ TEST_MODULES = [
         version_script='integration/cpp/gold/map_add_function.txt',
         export_include_dirs=['integration/cpp/gold/include'],
         cflags=['-DGOLDEN_ADD_FUNCTION=1'],
+        has_reference_dump=True,
     ),
     LsdumpModule(
         name='libgolden_cpp_add_function_and_unexported_elf',
@@ -258,6 +255,7 @@ TEST_MODULES = [
         ],
         version_script='integration/cpp/gold/map_add_function.txt',
         export_include_dirs=['integration/cpp/gold/include'],
+        has_reference_dump=True,
     ),
     LsdumpModule(
         name='libgolden_cpp_change_function_access',
@@ -280,6 +278,7 @@ TEST_MODULES = [
         version_script='integration/cpp/gold/map_added_globvar.txt',
         export_include_dirs=['integration/cpp/gold/include'],
         cflags=['-DGOLDEN_ADD_GLOBVAR=1'],
+        has_reference_dump=True,
     ),
     LsdumpModule(
         name='libgolden_cpp_add_global_variable_private',
@@ -417,6 +416,7 @@ TEST_MODULES = [
         srcs=['integration/c_and_cpp/reproducability.c'],
         version_script='integration/c_and_cpp/repro_map.txt',
         export_include_dirs=['integration/c_and_cpp/include'],
+        has_reference_dump=True,
     ),
     LsdumpModule(
         name='libifunc',
@@ -427,7 +427,8 @@ TEST_MODULES = [
             '-so', relative_to_abs_path(
                 'integration/ifunc/prebuilts/libifunc.so'
             ),
-        ]
+        ],
+        has_reference_dump=True,
     ),
     LsdumpModule(
         name='libgolden_cpp_member_name_changed',
@@ -502,6 +503,7 @@ TEST_MODULES = [
         srcs=['integration/cpp/pure_virtual/pure_virtual_function.cpp'],
         export_include_dirs=['integration/cpp/pure_virtual/include'],
         version_script='',
+        has_reference_dump=True,
     ),
     LsdumpModule(
         name='libgolden_cpp_json',
@@ -513,7 +515,8 @@ TEST_MODULES = [
         version_script='integration/cpp/gold/map.txt',
         export_include_dirs=['integration/cpp/gold/include'],
         dumper_flags=['-output-format', 'Json'],
-        linker_flags=['-input-format', 'Json', '-output-format', 'Json']
+        linker_flags=['-input-format', 'Json', '-output-format', 'Json'],
+        has_reference_dump=True,
     ),
     LsdumpModule(
         name='libversion_script_example',
@@ -531,7 +534,8 @@ TEST_MODULES = [
                 'integration/version_script_example/prebuilts/' +
                 'libversion_script_example.so'
             ),
-        ]
+        ],
+        has_reference_dump=True,
     ),
     LsdumpModule(
         name='libversion_script_example_no_private',
@@ -550,7 +554,8 @@ TEST_MODULES = [
                 'libversion_script_example.so'
             ),
             '--exclude-symbol-version', 'LIBVERSION_SCRIPT_EXAMPLE_PRIVATE',
-        ]
+        ],
+        has_reference_dump=True,
     ),
     LsdumpModule(
         name='libversion_script_example_no_mytag',
@@ -569,7 +574,8 @@ TEST_MODULES = [
                 'libversion_script_example.so'
             ),
             '--exclude-symbol-tag', 'mytag',
-        ]
+        ],
+        has_reference_dump=True,
     ),
 
     # Test data for test_allow_adding_removing_weak_symbols
@@ -585,7 +591,8 @@ TEST_MODULES = [
         linker_flags=[
             '-input-format', 'Json',
             '-output-format', 'Json',
-        ]
+        ],
+        has_reference_dump=True,
     ),
     LsdumpModule(
         name='libweak_symbols_new',
@@ -600,7 +607,8 @@ TEST_MODULES = [
             '-input-format', 'Json',
             '-output-format', 'Json',
         ],
-        cflags=['-DNEW=1']
+        cflags=['-DNEW=1'],
+        has_reference_dump=True,
     ),
     LsdumpModule(
         name='libempty',
@@ -611,6 +619,7 @@ TEST_MODULES = [
         linker_flags=[
             '-output-format', 'Json',
         ],
+        has_reference_dump=True,
     ),
     LsdumpModule(
         name='libgolden_anonymous_enum',
@@ -618,7 +627,8 @@ TEST_MODULES = [
         srcs=['integration/cpp/anonymous_enum/include/golden.h'],
         version_script='',
         export_include_dirs=['integration/cpp/anonymous_enum/include'],
-        linker_flags=['-output-format', 'Json',],
+        linker_flags=['-output-format', 'Json'],
+        has_reference_dump=True,
     ),
     LsdumpModule(
         name='libswap_anonymous_enum',
@@ -646,6 +656,7 @@ TEST_MODULES = [
         version_script='',
         export_include_dirs=['integration/cpp/anonymous_enum/include'],
         linker_flags=['-output-format', 'Json'],
+        has_reference_dump=True,
     ),
     LsdumpModule(
         name='libmerge_multi_definitions',
@@ -657,6 +668,7 @@ TEST_MODULES = [
         version_script='integration/merge_multi_definitions/map.txt',
         export_include_dirs=['integration/merge_multi_definitions/include'],
         linker_flags=['-output-format', 'Json', '-sources-per-thread', '1'],
+        has_reference_dump=True,
     ),
 ]
 

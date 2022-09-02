@@ -15,14 +15,14 @@
  */
 
 
-import { Layer, Rect, toBuffer, toColor, toRect, toRectF, toRegion } from "../common"
+import { Layer, Rect, toActiveBuffer, toColor, toRect, toRectF, toRegion } from "../common"
 import { shortenName } from '../mixin'
 import { RELATIVE_Z_CHIP, GPU_CHIP, HWC_CHIP } from '../treeview/Chips'
 import Transform from './Transform'
 
 Layer.fromProto = function (proto: any): Layer {
     const visibleRegion = toRegion(proto.visibleRegion)
-    const activeBuffer = toBuffer(proto.activeBuffer)
+    const activeBuffer = toActiveBuffer(proto.activeBuffer)
     const bounds = toRectF(proto.bounds)
     const color = toColor(proto.color)
     const screenBounds = toRectF(proto.screenBounds)
@@ -62,7 +62,8 @@ Layer.fromProto = function (proto: any): Layer {
         proto.backgroundBlurRadius,
         crop,
         proto.isRelativeOf,
-        proto.zOrderRelativeOf
+        proto.zOrderRelativeOf,
+        proto.layerStack
     );
 
     addAttributes(entry, proto);

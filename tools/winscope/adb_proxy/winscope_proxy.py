@@ -42,7 +42,7 @@ import base64
 
 # CONFIG #
 
-LOG_LEVEL = logging.WARNING
+LOG_LEVEL = logging.DEBUG
 
 PORT = 5544
 
@@ -132,7 +132,6 @@ class TraceTarget:
         self.trace_start = trace_start
         self.trace_stop = trace_stop
 
-
 # Order of files matters as they will be expected in that order and decoded in that order
 TRACE_TARGETS = {
     "window_trace": TraceTarget(
@@ -155,9 +154,14 @@ TRACE_TARGETS = {
         f'screenrecord --bit-rate 8M /data/local/tmp/screen.mp4 >/dev/null 2>&1 &\necho "ScreenRecorder started."',
         'pkill -l SIGINT screenrecord >/dev/null 2>&1'
     ),
-    "transaction": TraceTarget(
+    "transactions": TraceTarget(
+        WinscopeFileMatcher(WINSCOPE_DIR, "transactions_trace", "transactions"),
+        'su root service call SurfaceFlinger 1041 i32 1\necho "SF transactions recording started."',
+        'su root service call SurfaceFlinger 1041 i32 0 >/dev/null 2>&1'
+    ),
+    "transactions_legacy": TraceTarget(
         [
-            WinscopeFileMatcher(WINSCOPE_DIR, "transaction_trace", "transactions"),
+            WinscopeFileMatcher(WINSCOPE_DIR, "transaction_trace", "transactions_legacy"),
             FileMatcher(WINSCOPE_DIR, f'transaction_merges_*', "transaction_merges"),
         ],
         'su root service call SurfaceFlinger 1020 i32 1\necho "SF transactions recording started."',
@@ -182,6 +186,11 @@ TRACE_TARGETS = {
         WinscopeFileMatcher(WINSCOPE_DIR, "ime_trace_managerservice", "ime_trace_managerservice"),
         'su root ime tracing start\necho "ManagerService IME trace started."',
         'su root ime tracing stop >/dev/null 2>&1'
+    ),
+    "wayland_trace": TraceTarget(
+        WinscopeFileMatcher("/data/misc/wltrace", "wl_trace", "wl_trace"),
+        'su root service call Wayland 26 i32 1 >/dev/null\necho "Wayland trace started."',
+        'su root service call Wayland 26 i32 0 >/dev/null'
     ),
 }
 
@@ -230,7 +239,7 @@ class WindowManagerTraceSelectedConfig:
         # defaults set for all configs
         self.selectedConfigs = {
             "wmbuffersize": "16000",
-            "tracinglevel": "all",
+            "tracinglevel": "debug",
             "tracingtype": "frame",
         }
 
@@ -253,7 +262,8 @@ class WindowManagerTraceSelectedConfig:
 CONFIG_FLAG = {
     "composition": 1 << 2,
     "metadata": 1 << 3,
-    "hwc": 1 << 4
+    "hwc": 1 << 4,
+    "tracebuffers": 1 << 5
 }
 
 #Keep up to date with options in DataAdb.vue
@@ -440,8 +450,27 @@ def call_adb_outfile(params: str, outfile, device: str = None, stdin: bytes = No
             'Error executing adb command: adb {}\n{}'.format(params, repr(ex)))
 
 
+class CheckWaylandServiceEndpoint(RequestEndpoint):
+    _listDevicesEndpoint = None
+
+    def __init__(self, listDevicesEndpoint):
+      self._listDevicesEndpoint = listDevicesEndpoint
+
+    def process(self, server, path):
+        self._listDevicesEndpoint.process(server, path)
+        foundDevices = self._listDevicesEndpoint._foundDevices
+
+        if len(foundDevices) > 1:
+          res = 'false'
+        else:
+          raw_res = call_adb('shell service check Wayland')
+          res = 'false' if 'not found' in raw_res else 'true'
+        server.respond(HTTPStatus.OK, res.encode("utf-8"), "text/json")
+
+
 class ListDevicesEndpoint(RequestEndpoint):
     ADB_INFO_RE = re.compile("^([A-Za-z0-9.:\\-]+)\\s+(\\w+)(.*model:(\\w+))?")
+    _foundDevices = None
 
     def process(self, server, path):
         lines = list(filter(None, call_adb('devices -l').split('\n')))
@@ -449,6 +478,7 @@ class ListDevicesEndpoint(RequestEndpoint):
             'authorised': str(m.group(2)) != 'unauthorized',
             'model': m.group(4).replace('_', ' ') if m.group(4) else ''
         } for m in [ListDevicesEndpoint.ADB_INFO_RE.match(d) for d in lines[1:]] if m}
+        self._foundDevices = devices
         j = json.dumps(devices)
         log.debug("Detected devices: " + j)
         server.respond(HTTPStatus.OK, j.encode("utf-8"), "text/json")
@@ -517,7 +547,7 @@ class FetchFilesEndpoint(DeviceRequestEndpoint):
 
 def check_root(device_id):
     log.debug("Checking root access on {}".format(device_id))
-    return call_adb('shell su root id -u', device_id) == "0\n"
+    return int(call_adb('shell su root id -u', device_id)) == 0
 
 
 TRACE_THREADS = {}
@@ -581,7 +611,7 @@ class TraceThread(threading.Thread):
         self.out, self.err = self.process.communicate(self.trace_command)
         log.debug("Trace ended on {}, waiting for cleanup".format(self._device_id))
         time.sleep(0.2)
-        for i in range(10):
+        for i in range(50):
             if call_adb("shell su root cat /data/local/tmp/winscope_status", device=self._device_id) == 'TRACE_OK\n':
                 call_adb(
                     "shell su root rm /data/local/tmp/winscope_status", device=self._device_id)
@@ -784,8 +814,9 @@ class DumpEndpoint(DeviceRequestEndpoint):
 class ADBWinscopeProxy(BaseHTTPRequestHandler):
     def __init__(self, request, client_address, server):
         self.router = RequestRouter(self)
+        listDevicesEndpoint = ListDevicesEndpoint()
         self.router.register_endpoint(
-            RequestType.GET, "devices", ListDevicesEndpoint())
+            RequestType.GET, "devices", listDevicesEndpoint)
         self.router.register_endpoint(
             RequestType.GET, "status", StatusEndpoint())
         self.router.register_endpoint(
@@ -799,6 +830,8 @@ class ADBWinscopeProxy(BaseHTTPRequestHandler):
             RequestType.POST, "selectedsfconfigtrace", SurfaceFlingerSelectedConfigTrace())
         self.router.register_endpoint(
             RequestType.POST, "selectedwmconfigtrace", WindowManagerSelectedConfigTrace())
+        self.router.register_endpoint(
+            RequestType.GET, "checkwayland", CheckWaylandServiceEndpoint(listDevicesEndpoint))
         super().__init__(request, client_address, server)
 
     def respond(self, code: int, data: bytes, mime: str) -> None:

@@ -78,12 +78,21 @@ function prepare_kernel_image()
   mkdir -p "${dist_root}"
 
   # Prepare prebuilt-info.txt
-  BID=$(cat "${prebuilts_root}/BUILD_INFO" | sed -n 's/^.*"bid":\s*"\(.*\)".*$/\1/p')
-  cat > "${dist_root}/prebuilt-info.txt" <<EOF
-{
-    "kernel-build-id": ${BID}
-}
-EOF
+#  BID=$(cat "${prebuilts_root}/BUILD_INFO" | sed -n 's/^.*"bid":\s*"\(.*\)".*$/\1/p')
+#  cat > "${dist_root}/prebuilt-info.txt" <<EOF
+#{
+#    "kernel-build-id": ${BID}
+#}
+#EOF
+  printf "generate ${dist_root}/prebuilt-info.txt with kernel\n"
+  cksum "${out_root}/kernel-${kernel_version}${postfix}"
+  local t="${out_root}/prebuilt-info.txt"
+  echo "{" > $t
+  echo -n "    \"kernel-build-id\": " >> $t
+  strings "${out_root}/kernel-${kernel_version}${postfix}" |grep -E "Linux version [0-9]\." | sed -e 's/Linux version.*-ab//'| cut -f1 -d ' ' >> $t
+  echo "}" >> $t
+  cp $t ${dist_root}/prebuilt-info.txt
+
 }
 
 #
@@ -127,7 +136,8 @@ function update_kernel_prebuilts_with_artifact
     kernel-${kernel_version}-lz4-allsyms \
     kernel-${kernel_version} \
     kernel-${kernel_version}-gz \
-    kernel-${kernel_version}-lz4"
+    kernel-${kernel_version}-lz4 \
+    prebuilt-info.txt"
   printf "%20s\n --> %20s\n" "${out_root}" "${prebuilts_dir}"
   for f in ${list}; do
     echo \

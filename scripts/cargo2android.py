@@ -129,7 +129,7 @@ WARNING_FILE_PAT = re.compile('^ *--> ([^:]*):[0-9]+')
 CARGO_TEST_LIST_START_PAT = re.compile('^\s*Running (.*) \(.*\)$')
 
 # cargo test --list output of the end of running a binary.
-CARGO_TEST_LIST_END_PAT = re.compile('^(\d+) tests, (\d+) benchmarks$')
+CARGO_TEST_LIST_END_PAT = re.compile('^(\d+) tests?, (\d+) benchmarks$')
 
 CARGO2ANDROID_RUNNING_PAT = re.compile('^### Running: .*$')
 
@@ -182,7 +182,7 @@ def test_base_name(path):
 
 
 def unquote(s):  # remove quotes around str
-  if s and len(s) > 1 and s[0] == '"' and s[-1] == '"':
+  if s and len(s) > 1 and s[0] == s[-1] and s[0] in ('"', "'"):
     return s[1:-1]
   return s
 
@@ -367,8 +367,9 @@ class Crate(object):
     """Find important rustc arguments to convert to Android.bp properties."""
     self.line_num = line_num
     self.line = line
-    args = line.split()  # Loop through every argument of rustc.
+    args = list(map(unquote, line.split()))
     i = 0
+    # Loop through every argument of rustc.
     while i < len(args):
       arg = args[i]
       if arg == '--crate-name':
@@ -387,8 +388,8 @@ class Crate(object):
         self.target = args[i]
       elif arg == '--cfg':
         i += 1
-        if args[i].startswith('\'feature='):
-          self.features.append(unquote(args[i].replace('\'feature=', '')[:-1]))
+        if args[i].startswith('feature='):
+          self.features.append(unquote(args[i].replace('feature=', '')))
         else:
           self.cfgs.append(args[i])
       elif arg == '--extern':
@@ -427,14 +428,17 @@ class Crate(object):
       elif arg == '--out-dir' or arg == '--color':  # ignored
         i += 1
       elif arg.startswith('--error-format=') or arg.startswith('--json='):
-        _ = arg  # ignored
+        pass  # ignored
       elif arg.startswith('--emit='):
         self.emit_list = arg.replace('--emit=', '')
       elif arg.startswith('--edition='):
         self.edition = arg.replace('--edition=', '')
-      elif arg.startswith('\'-Aclippy'):
-        # TODO: Consider storing these to include in the Android.bp.
-        _ = arg # ignored
+      elif arg.startswith('-Aclippy') or arg.startswith('-Wclippy'):
+        pass  # TODO: Consider storing these to include in the Android.bp.
+      elif arg.startswith('-W'):
+        pass  # ignored
+      elif arg.startswith('-D'):
+        pass  # TODO: Consider storing these to include in the Android.bp.
       elif not arg.startswith('-'):
         # shorten imported crate main source paths like $HOME/.cargo/
         # registry/src/github.com-1ecc6299db9ec823/memchr-2.3.3/src/lib.rs
@@ -709,10 +713,16 @@ class Crate(object):
       for header_dir in self.runner.args.exported_c_header_dir:
         self.write('        "%s",' % header_dir)
       self.write('    ],')
-    if self.runner.args.apex_available and crate_type in LIBRARY_CRATE_TYPES:
+    if crate_type in LIBRARY_CRATE_TYPES:
       self.write('    apex_available: [')
-      for apex in self.runner.args.apex_available:
-        self.write('        "%s",' % apex)
+      if self.runner.args.apex_available is None:
+        # If apex_available is not explicitly set, make it available to all
+        # apexes.
+        self.write('        "//apex_available:platform",')
+        self.write('        "//apex_available:anyapex",')
+      else:
+        for apex in self.runner.args.apex_available:
+          self.write('        "%s",' % apex)
       self.write('    ],')
     if crate_type != 'test':
       if self.runner.args.native_bridge_supported:
@@ -1154,12 +1164,6 @@ class Runner(object):
         sys.exit('ERROR: cannot find cargo in ' + self.args.cargo_bin)
       print('INFO: using cargo in ' + self.args.cargo_bin)
       return
-    elif os.environ.get('ANDROID_BUILD_ENVIRONMENT_CONFIG', '') == 'googler':
-      sys.exit('ERROR: Not executed within the sandbox. Please see '
-               'go/cargo2android-sandbox for more information.')
-    else:
-      sys.exit('ERROR: the prebuilt cargo is not usable; please '
-               'use the --cargo_bin flag.')
     # We have only tested this on Linux.
     if platform.system() != 'Linux':
       sys.exit('ERROR: this script has only been tested on Linux with cargo.')
@@ -1199,10 +1203,10 @@ class Runner(object):
       result = version_pat.match(dir_name)
       if not result:
         continue
-      version = (result.group(1), result.group(2), result.group(3))
+      version = (int(result.group(1)), int(result.group(2)), int(result.group(3)))
       if version > rust_version:
         rust_version = version
-    return '.'.join(rust_version)
+    return '.'.join(map(str, rust_version))
 
   def find_out_files(self):
     # list1 has build.rs output for normal crates
@@ -1354,7 +1358,7 @@ class Runner(object):
         print('### WARNING: found [workspace] in Cargo.toml')
       else:
         with open(cargo_toml, 'a') as out_file:
-          out_file.write('[workspace]\n')
+          out_file.write('\n\n[workspace]\n')
           added_workspace = True
           if self.args.verbose:
             print('### INFO: added [workspace] to Cargo.toml')

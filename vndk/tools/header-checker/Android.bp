@@ -63,8 +63,6 @@ cc_binary_host {
     srcs: [
         "src/dumper/abi_wrappers.cpp",
         "src/dumper/ast_processing.cpp",
-        "src/dumper/diagnostic_consumer.cpp",
-        "src/dumper/fake_decl_source.cpp",
         "src/dumper/fixed_argv.cpp",
         "src/dumper/frontend_action.cpp",
         "src/dumper/frontend_action_factory.cpp",
@@ -128,6 +126,10 @@ cc_binary_host {
         "src/diff/abi_diff.cpp",
         "src/diff/abi_diff_wrappers.cpp",
         "src/diff/header_abi_diff.cpp",
+    ],
+
+    static_libs: [
+        "libjsoncpp",
     ],
 }
 
@@ -199,6 +201,7 @@ cc_test_host {
         "libgtest",
         "libgtest_main",
         "libheader-checker",
+        "libjsoncpp",
     ],
 
     shared_libs: [
