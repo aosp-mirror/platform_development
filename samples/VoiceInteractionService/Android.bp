@@ -13,3 +13,10 @@ android_app {
         "androidx.annotation_annotation",
     ],
 }
+
+prebuilt_etc {
+    name: "com.example.android.voiceinteractor.xml",
+    src: "com.example.android.voiceinteractor.xml",
+    sub_dir: "permissions",
+    filename_from_src: true,
+}
