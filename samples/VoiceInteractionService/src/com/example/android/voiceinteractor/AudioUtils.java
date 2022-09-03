@@ -22,13 +22,16 @@ import android.util.Log;
 import java.util.Arrays;
 
 public class AudioUtils {
-    private static String TAG = "Hotword-AudioUtils";
+    private static final String TAG = "Hotword-AudioUtils";
 
     static int read(AudioRecord record, int bytesPerSecond, float secondsToRead, byte[] buffer) {
+        Log.i(TAG, "read(): bytesPerSecond=" + bytesPerSecond
+                + ", secondsToRead=" + secondsToRead + ", bufferSize=" + buffer.length);
         int numBytes = 0;
         int nextSecondToSample = 0;
         while (true) {
-            int bytesRead = record.read(buffer, numBytes, numBytes + 1024);
+            int bytesRead = record.read(buffer, numBytes, Math.round(bytesPerSecond * secondsToRead));
+            Log.i(TAG, "AudioRecord.read offset=" + numBytes + ", size=" + Math.round(bytesPerSecond * secondsToRead));
             numBytes += bytesRead;
 
             if (bytesRead <= 0) {
@@ -44,8 +47,9 @@ public class AudioUtils {
                                 (bytesPerSecond * curSecond) + 10)));
                 nextSecondToSample++;
             }
-            if (numBytes * 1.0 / bytesPerSecond >= secondsToRead) {
-                Log.i(TAG, "recorded enough. stopping.");
+            if ((numBytes * 1.0 / bytesPerSecond) >= secondsToRead) {
+                Log.i(TAG, "recorded enough. stopping. bytesRead=" + numBytes
+                        + ", secondsRead=" + (numBytes * 1.0 / bytesPerSecond));
                 break;
             }
         }
