@@ -18,5 +18,7 @@
 <permissions>
     <privapp-permissions package="com.example.android.voiceinteractor">
         <permission name="android.permission.CAPTURE_AUDIO_HOTWORD"/>
+        <permission name="android.permission.INTERACT_ACROSS_USERS"/>
+        <permission name="android.permission.MANAGE_HOTWORD_DETECTION"/>
     </privapp-permissions>
 </permissions>
