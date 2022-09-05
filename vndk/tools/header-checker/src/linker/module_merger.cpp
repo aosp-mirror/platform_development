@@ -63,7 +63,7 @@ MergeStatus ModuleMerger::LookupUserDefinedType(
   std::set<std::string> type_cache;
   repr::DiffPolicyOptions diff_policy_options(false);
   repr::AbiDiffHelper diff_helper(module_->type_graph_, addend.type_graph_,
-                                  diff_policy_options, &type_cache, nullptr);
+                                  diff_policy_options, &type_cache, {}, nullptr);
 
   // Compare each user-defined type with the latest input user-defined type.
   // If there is a match, re-use the existing user-defined type.
