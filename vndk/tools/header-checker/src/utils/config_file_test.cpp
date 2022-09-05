@@ -15,6 +15,8 @@
 #include "utils/config_file.h"
 
 #include <sstream>
+#include <string>
+#include <vector>
 
 #include <gtest/gtest.h>
 
@@ -29,6 +31,10 @@ TEST(ConfigFileTest, Parse) {
 /* embedded comment */
 {
   "global": {
+    "ignore_linker_set_keys": [
+      "set_key1",
+      "set_key3",
+    ],
     "flags": {
       "key1": true,
       "key2": false,
@@ -37,6 +43,10 @@ TEST(ConfigFileTest, Parse) {
   "library1": [
     {
       "target_version": "current",
+      "ignore_linker_set_keys": [
+        "set_key1",
+        "set_key2",
+      ],
       "flags": {
         "key1": true,
         "key2": false,
@@ -68,12 +78,14 @@ TEST(ConfigFileTest, Parse) {
 
   EXPECT_FALSE(section1.HasProperty("key3"));
   EXPECT_FALSE(section1.GetProperty("key3"));
+  EXPECT_EQ(std::vector<std::string>({"set_key1", "set_key3"}), section1.GetIgnoredLinkerSetKeys());
 
   auto &&section2 = cfg.GetSection("library1", "current");
   EXPECT_TRUE(section2.HasProperty("key1"));
   EXPECT_TRUE(section2.GetProperty("key1"));
   EXPECT_TRUE(section2.HasProperty("key2"));
   EXPECT_FALSE(section2.GetProperty("key2"));
+  EXPECT_EQ(std::vector<std::string>({"set_key1", "set_key2"}), section2.GetIgnoredLinkerSetKeys());
 
   EXPECT_TRUE(cfg.GetProperty("global", "", "key1"));
   EXPECT_TRUE(cfg.GetProperty("library1", "34", "key2"));
