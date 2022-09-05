@@ -90,11 +90,20 @@ header-abi-diff applies cli flags first, then the global config section and
 library config section.
 
 #### Target version
-The Soong Build System performs Cross-Version ABI Check. For example, when the
+The Soong Build System performs Cross-Version ABI Check on NDK and platform
+libraries to ensure their compatibility across versions. For example, when the
 future SDK version of current source is 34, the source ABI dump would be diffed
 with version 33 dump to check the backward compatibility. In this case, the
 `-target-version 34` is passed to header-abi-diff to select the corresponding
 config section.
+
+#### Linker Set Keys
+In some cases, it is necessary to skip the ABI check for specific types and
+functions. In the ABI dumps, every class, union, enum, and function has a
+unique linker set key. The cli option `-ignore-linker-set-key` and the key
+`ignore_linker_set_keys` in the config section specify the types and
+functions that should be skipped. The linker set key can be found in the
+generated .abidiff file and the .lsdump file.
 
 #### Format
 Here is an example of a config.json.
@@ -114,6 +123,9 @@ Here is an example of a config.json.
     },
     {
       "target_version": "34",
+      "ignore_linker_set_keys": [
+        "_ZTI14internal_state",
+      ],
       "flags": {
         "allow_extensions": true,
       }
@@ -123,14 +135,17 @@ Here is an example of a config.json.
 ```
 
 #### Library Config Section
-A library config section includes two members: "target_version" and "flags".
-header-abi-diff selects the config section that matches the target version
-given by cli.
+A library config section includes members: "target_version",
+"ignore_linker_set_keys" and "flags". header-abi-diff selects the config
+section that matches the target version given by cli.
 Take above config as an example, if `-target-version 34` and `-lib libfoo` are
 specified, the selected config section is:
 ```json
 {
   "target_version": "34",
+  "ignore_linker_set_keys": [
+    "_ZTI14internal_state",
+  ],
   "flags": {
     "allow_extensions": true,
   }
