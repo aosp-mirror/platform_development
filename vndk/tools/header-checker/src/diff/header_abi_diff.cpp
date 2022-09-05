@@ -139,6 +139,11 @@ static llvm::cl::opt<std::string> target_version(
     llvm::cl::init("current"), llvm::cl::Optional,
     llvm::cl::cat(header_checker_category));
 
+static llvm::cl::list<std::string> ignore_linker_set_keys(
+    "ignore-linker-set-key",
+    llvm::cl::desc("Ignore a specific type or function in the comparison."),
+    llvm::cl::ZeroOrMore, llvm::cl::cat(header_checker_category));
+
 static std::set<std::string> LoadIgnoredSymbols(std::string &symbol_list_path) {
   std::ifstream symbol_ifstream(symbol_list_path);
   std::set<std::string> ignored_symbols;
@@ -161,6 +166,9 @@ static std::string GetConfigFilePath(const std::string &dump_file_path) {
 }
 
 static void UpdateFlags(const ConfigSection &section) {
+  for (auto &&i : section.GetIgnoredLinkerSetKeys()) {
+    ignore_linker_set_keys.push_back(i);
+  }
   for (auto &&p : section) {
     auto &&key = p.first;
     bool value_bool = p.second;
@@ -223,12 +231,16 @@ int main(int argc, const char **argv) {
     ignored_symbols = LoadIgnoredSymbols(ignore_symbol_list);
   }
 
+  std::set<std::string> ignored_linker_set_keys_set(
+      ignore_linker_set_keys.begin(), ignore_linker_set_keys.end());
+
   DiffPolicyOptions diff_policy_options(consider_opaque_types_different);
 
   HeaderAbiDiff judge(lib_name, arch, old_dump, new_dump, compatibility_report,
-                      ignored_symbols, allow_adding_removing_weak_symbols,
-                      diff_policy_options, check_all_apis, text_format_old,
-                      text_format_new, text_format_diff);
+                      ignored_symbols, ignored_linker_set_keys_set,
+                      allow_adding_removing_weak_symbols, diff_policy_options,
+                      check_all_apis, text_format_old, text_format_new,
+                      text_format_diff);
 
   CompatibilityStatusIR status = judge.GenerateCompatibilityReport();
 
