@@ -39,6 +39,15 @@ static std::map<std::string, bool> LoadFlags(const Json::Value &section) {
   return map;
 }
 
+static std::vector<std::string>
+LoadIgnoreLinkerSetKeys(const Json::Value &section) {
+  std::vector<std::string> vec;
+  for (auto &key : section.get("ignore_linker_set_keys", {})) {
+    vec.emplace_back(key.asString());
+  }
+  return vec;
+}
+
 bool ConfigFile::HasGlobalSection() {
   return HasSection(GLOBAL_SECTION_NAME, "");
 }
@@ -59,12 +68,15 @@ bool ConfigFile::Load(std::istream &istream) {
     if (key == GLOBAL_SECTION_NAME) {
       ConfigSection &config_section = map_[{GLOBAL_SECTION_NAME, ""}];
       config_section.map_ = LoadFlags(root[GLOBAL_SECTION_NAME]);
+      config_section.ignored_linker_set_keys_ =
+          LoadIgnoreLinkerSetKeys(root[GLOBAL_SECTION_NAME]);
       continue;
     }
     for (auto &section : root[key]) {
       ConfigSection &config_section =
           map_[{key, section["target_version"].asString()}];
       config_section.map_ = LoadFlags(section);
+      config_section.ignored_linker_set_keys_ = LoadIgnoreLinkerSetKeys(section);
     }
   }
   return true;
