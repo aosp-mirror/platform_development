@@ -20,6 +20,7 @@
 #include "repr/ir_representation.h"
 
 #include <deque>
+#include <set>
 
 
 namespace header_checker {
@@ -80,9 +81,11 @@ class AbiDiffHelper {
       const AbiElementMap<const TypeIR *> &new_types,
       const DiffPolicyOptions &diff_policy_options,
       std::set<std::string> *type_cache,
+      const std::set<std::string> &ignored_linker_set_keys,
       IRDiffDumper *ir_diff_dumper = nullptr)
       : old_types_(old_types), new_types_(new_types),
         diff_policy_options_(diff_policy_options), type_cache_(type_cache),
+        ignored_linker_set_keys_(ignored_linker_set_keys),
         ir_diff_dumper_(ir_diff_dumper) {}
 
   DiffStatus CompareAndDumpTypeDiff(
@@ -208,6 +211,7 @@ class AbiDiffHelper {
   const AbiElementMap<const TypeIR *> &new_types_;
   const DiffPolicyOptions &diff_policy_options_;
   std::set<std::string> *type_cache_;
+  const std::set<std::string> &ignored_linker_set_keys_;
   IRDiffDumper *ir_diff_dumper_;
 };
 

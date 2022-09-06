@@ -732,6 +732,11 @@ DiffStatus AbiDiffHelper::CompareAndDumpTypeDiff(
     const TypeIR *old_type, const TypeIR *new_type,
     LinkableMessageKind kind, std::deque<std::string> *type_queue,
     DiffMessageIR::DiffKind diff_kind) {
+  if (ignored_linker_set_keys_.find(new_type->GetLinkerSetKey()) !=
+      ignored_linker_set_keys_.end()) {
+    return DiffStatus::no_diff;
+  }
+
   if (kind == LinkableMessageKind::BuiltinTypeKind) {
     return CompareBuiltinTypes(
         static_cast<const BuiltinTypeIR *>(old_type),
