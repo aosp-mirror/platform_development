@@ -287,7 +287,7 @@ export class PropertyGroupsComponent {
   @Input() item!: Layer;
   @Input() summary?: TreeSummary | null = null;
 
-  getDestinationFrame() {
+  public getDestinationFrame() {
     const frame = this.item.proto?.destinationFrame;
     if (frame) {
       return ` left: ${frame.left}, top: ${frame.top}, right: ${frame.right}, bottom: ${frame.bottom}`;
@@ -295,11 +295,11 @@ export class PropertyGroupsComponent {
     else return "";
   }
 
-  hasIgnoreDestinationFrame() {
+  public hasIgnoreDestinationFrame() {
     return (this.item.flags & 0x400) === 0x400;
   }
 
-  formatFloat(num: number) {
+  public formatFloat(num: number) {
     return Math.round(num * 100) / 100;
   }
 }

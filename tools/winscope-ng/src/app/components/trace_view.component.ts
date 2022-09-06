@@ -83,16 +83,17 @@ export class TraceViewComponent {
   @Input() store!: PersistentStore;
   @Input() traceCoordinator!: TraceCoordinator;
   viewerTabs: ViewerTab[] = [];
-  viewersAdded = false;
   activeViewerCardId = 0;
+  views: HTMLElement[] = [];
 
   constructor(
     @Inject(ElementRef) private elementRef: ElementRef,
   ) {}
 
   ngDoCheck() {
-    if (this.traceCoordinator.getViewers().length > 0 && !this.viewersAdded) {
+    if (this.traceCoordinator.getViewers().length > 0 && !this.viewersAdded()) {
       let cardCounter = 0;
+      this.activeViewerCardId = 0;
       this.viewerTabs = [];
       this.traceCoordinator.getViewers().forEach((viewer: Viewer) => {
         // create tab for viewer nav bar
@@ -110,12 +111,13 @@ export class TraceViewComponent {
 
         const traceViewContent = this.elementRef.nativeElement.querySelector(".trace-view-content")!;
         traceViewContent.appendChild(view);
+        this.views.push(view);
         cardCounter++;
       });
-      this.viewersAdded = true;
-    } else if (this.traceCoordinator.getViewers().length === 0  && this.viewersAdded) {
+    } else if (this.traceCoordinator.getViewers().length === 0  && this.viewersAdded()) {
       this.activeViewerCardId = 0;
-      this.viewersAdded = false;
+      this.views.forEach(view => view.remove());
+      this.views = [];
     }
   }
 
@@ -141,6 +143,10 @@ export class TraceViewComponent {
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
+  }
+
+  private viewersAdded() {
+    return this.views.length > 0;
   }
 
   private isActiveViewerCard(cardId: number) {

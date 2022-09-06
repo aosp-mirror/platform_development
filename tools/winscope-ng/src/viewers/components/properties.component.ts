@@ -145,14 +145,14 @@ export class PropertiesComponent {
     @Inject(ElementRef) private elementRef: ElementRef,
   ) {}
 
-  maxPropertiesHeight() {
+  public maxPropertiesHeight() {
     const headerHeight = this.elementRef.nativeElement.querySelector(".view-header").clientHeight;
     return {
       height: `${800 - headerHeight}px`
     };
   }
 
-  filterTree() {
+  public filterTree() {
     const event: CustomEvent = new CustomEvent(
       ViewerEvents.PropertiesFilterChange,
       {
@@ -162,7 +162,7 @@ export class PropertiesComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  updateTree() {
+  public updateTree() {
     const event: CustomEvent = new CustomEvent(
       ViewerEvents.PropertiesUserOptionsChange,
       {
@@ -172,13 +172,13 @@ export class PropertiesComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  showNode(item: any) {
+  public showNode(item: any) {
     return !(item instanceof Terminal)
     && !(item.name instanceof Terminal)
     && !(item.propertyKey instanceof Terminal);
   }
 
-  isLeaf(item: any) {
+  public isLeaf(item: any) {
     return !item.children || item.children.length === 0
           || item.children.filter((c: any) => !(c instanceof Terminal)).length === 0;
   }

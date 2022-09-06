@@ -31,12 +31,12 @@ export class CanvasGraphics {
     );
   }
 
-  initialise(canvas: HTMLCanvasElement) {
+  public initialise(canvas: HTMLCanvasElement) {
     // initialise canvas
     this.canvas = canvas;
   }
 
-  refreshCanvas() {
+  public refreshCanvas() {
     //set canvas size
     this.canvas!.style.width = "100%";
     this.canvas!.style.height = "40rem";
@@ -125,6 +125,71 @@ export class CanvasGraphics {
 
     labelRenderer.setSize(this.canvas!.clientWidth, this.canvas!.clientHeight);
     labelRenderer.render(scene, this.camera);
+  }
+
+  public getCamera() {
+    return this.camera;
+  }
+
+  public getTargetObjects() {
+    return this.targetObjects;
+  }
+
+  public getLayerSeparation() {
+    return this.layerSeparation;
+  }
+
+  public getVisibleView() {
+    return this.visibleView;
+  }
+
+  public getXCameraPos() {
+    return this.xCameraPos;
+  }
+
+  public getShowVirtualDisplays() {
+    return this.showVirtualDisplays;
+  }
+
+  public updateLayerSeparation(userInput: number) {
+    this.layerSeparation = userInput;
+  }
+
+  public updateRotation(userInput: number) {
+    this.xCameraPos = userInput;
+    this.camZoom = userInput/4 * 0.2 + 0.9;
+    this.labelShift = userInput/4 * this.maxLabelShift;
+    this.lowestYShift = Math.abs(userInput)/4 + 2;
+  }
+
+  public updateHighlightedItems(newItems: Array<string>) {
+    this.highlightedItems = newItems;
+  }
+
+  public updateRects(rects: Rectangle[]) {
+    this.rects = rects;
+  }
+
+  public updateIsLandscape(isLandscape: boolean) {
+    this.isLandscape = isLandscape;
+  }
+
+  public updateVisibleView(visible: boolean) {
+    this.visibleView = visible;
+  }
+
+  public updateVirtualDisplays(show: boolean) {
+    this.showVirtualDisplays = show;
+  }
+
+  public updateZoom(isZoomIn: boolean) {
+    if (isZoomIn && this.camZoom < 2) {
+      this.labelXFactor -= 0.001;
+      this.camZoom += this.camZoomFactor * 1.5;
+    } else if (!isZoomIn && this.camZoom > 0.5) {
+      this.labelXFactor += 0.001;
+      this.camZoom -= this.camZoomFactor * 1.5;
+    }
   }
 
   private drawScene(
@@ -303,76 +368,11 @@ export class CanvasGraphics {
     return [line, rectLabel];
   }
 
-  getCamera() {
-    return this.camera;
-  }
-
-  getTargetObjects() {
-    return this.targetObjects;
-  }
-
-  getLayerSeparation() {
-    return this.layerSeparation;
-  }
-
-  getVisibleView() {
-    return this.visibleView;
-  }
-
-  getXCameraPos() {
-    return this.xCameraPos;
-  }
-
-  getShowVirtualDisplays() {
-    return this.showVirtualDisplays;
-  }
-
-  updateLayerSeparation(userInput: number) {
-    this.layerSeparation = userInput;
-  }
-
-  updateRotation(userInput: number) {
-    this.xCameraPos = userInput;
-    this.camZoom = userInput/4 * 0.2 + 0.9;
-    this.labelShift = userInput/4 * this.maxLabelShift;
-    this.lowestYShift = Math.abs(userInput)/4 + 2;
-  }
-
-  updateHighlightedItems(newItems: Array<string>) {
-    this.highlightedItems = newItems;
-  }
-
-  updateRects(rects: Rectangle[]) {
-    this.rects = rects;
-  }
-
-  updateIsLandscape(isLandscape: boolean) {
-    this.isLandscape = isLandscape;
-  }
-
-  updateVisibleView(visible: boolean) {
-    this.visibleView = visible;
-  }
-
-  updateVirtualDisplays(show: boolean) {
-    this.showVirtualDisplays = show;
-  }
-
-  clearLabelElements() {
+  private clearLabelElements() {
     document.querySelectorAll(".rect-label").forEach(el => el.remove());
   }
 
-  updateZoom(isZoomIn: boolean) {
-    if (isZoomIn && this.camZoom < 2) {
-      this.labelXFactor -= 0.001;
-      this.camZoom += this.camZoomFactor * 1.5;
-    } else if (!isZoomIn && this.camZoom > 0.5) {
-      this.labelXFactor += 0.001;
-      this.camZoom -= this.camZoomFactor * 1.5;
-    }
-  }
-
-  colorMapping(scale: string, numberOfRects: number, darkFactor:number): THREE.Color {
+  private colorMapping(scale: string, numberOfRects: number, darkFactor:number): THREE.Color {
     if (scale === "highlighted") {
       return new THREE.Color(0xD2E3FC);
     } else if (scale === "grey") {
@@ -394,7 +394,7 @@ export class CanvasGraphics {
     }
   }
 
-  shortenText(text: string): string {
+  private shortenText(text: string): string {
     if (text.length > 35) {
       text = text.slice(0, 35);
     }

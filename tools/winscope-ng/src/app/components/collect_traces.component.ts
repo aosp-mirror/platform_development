@@ -150,10 +150,6 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     this.connect.restart();
   }
 
-  public onProxyChange(newState: ProxyState) {
-    this.connect.onConnectChange(newState);
-  }
-
   public displayAdbProxyTab() {
     this.isAdbProxy = true;
     this.connect = new ProxyConnection();
@@ -163,66 +159,6 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     this.isAdbProxy = false;
     //TODO: change to WebAdbConnection
     this.connect = new ProxyConnection();
-  }
-
-  public requestedTraces() {
-    const tracesFromCollection: Array<string> = [];
-    const req = Object.keys(setTraces.DYNAMIC_TRACES)
-      .filter((traceKey:string) => {
-        const traceConfig = setTraces.DYNAMIC_TRACES[traceKey];
-        if (traceConfig.isTraceCollection) {
-          traceConfig.config?.enableConfigs.forEach((innerTrace:EnableConfiguration) => {
-            if (innerTrace.enabled) {
-              tracesFromCollection.push(innerTrace.key);
-            }
-          });
-          return false;
-        }
-        return traceConfig.run;
-      });
-    return req.concat(tracesFromCollection);
-  }
-
-  public requestedDumps() {
-    return Object.keys(setTraces.DUMPS)
-      .filter((dumpKey:string) => {
-        return setTraces.DUMPS[dumpKey].run;
-      });
-  }
-
-  public requestedEnableConfig(): Array<string> | undefined {
-    const req: Array<string> = [];
-    Object.keys(setTraces.DYNAMIC_TRACES)
-      .forEach((traceKey:string) => {
-        const trace = setTraces.DYNAMIC_TRACES[traceKey];
-        if(!trace.isTraceCollection
-              && trace.run
-              && trace.config
-              && trace.config.enableConfigs) {
-          trace.config.enableConfigs.forEach((con:EnableConfiguration) => {
-            if (con.enabled) {
-              req.push(con.key);
-            }
-          });
-        }
-      });
-    if (req.length === 0) {
-      return undefined;
-    }
-    return req;
-  }
-
-  public requestedSelection(traceType: string): configMap | undefined {
-    if (!setTraces.DYNAMIC_TRACES[traceType].run) {
-      return undefined;
-    }
-    const selected: configMap = {};
-    setTraces.DYNAMIC_TRACES[traceType].config?.selectionConfigs.forEach(
-      (con: SelectionConfiguration) => {
-        selected[con.key] = con.value;
-      }
-    );
-    return selected;
   }
 
   public startTracing() {
@@ -265,7 +201,81 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     await this.loadFiles();
   }
 
-  public async loadFiles() {
+  public tabClass(adbTab: boolean) {
+    let isActive: string;
+    if (adbTab) {
+      isActive = this.isAdbProxy ? "active" : "inactive";
+    } else {
+      isActive = !this.isAdbProxy ? "active" : "inactive";
+    }
+    return ["tab", isActive];
+  }
+
+  private onProxyChange(newState: ProxyState) {
+    this.connect.onConnectChange(newState);
+  }
+
+  private requestedTraces() {
+    const tracesFromCollection: Array<string> = [];
+    const req = Object.keys(setTraces.DYNAMIC_TRACES)
+      .filter((traceKey:string) => {
+        const traceConfig = setTraces.DYNAMIC_TRACES[traceKey];
+        if (traceConfig.isTraceCollection) {
+          traceConfig.config?.enableConfigs.forEach((innerTrace:EnableConfiguration) => {
+            if (innerTrace.enabled) {
+              tracesFromCollection.push(innerTrace.key);
+            }
+          });
+          return false;
+        }
+        return traceConfig.run;
+      });
+    return req.concat(tracesFromCollection);
+  }
+
+  private requestedDumps() {
+    return Object.keys(setTraces.DUMPS)
+      .filter((dumpKey:string) => {
+        return setTraces.DUMPS[dumpKey].run;
+      });
+  }
+
+  private requestedEnableConfig(): Array<string> | undefined {
+    const req: Array<string> = [];
+    Object.keys(setTraces.DYNAMIC_TRACES)
+      .forEach((traceKey:string) => {
+        const trace = setTraces.DYNAMIC_TRACES[traceKey];
+        if(!trace.isTraceCollection
+              && trace.run
+              && trace.config
+              && trace.config.enableConfigs) {
+          trace.config.enableConfigs.forEach((con:EnableConfiguration) => {
+            if (con.enabled) {
+              req.push(con.key);
+            }
+          });
+        }
+      });
+    if (req.length === 0) {
+      return undefined;
+    }
+    return req;
+  }
+
+  private requestedSelection(traceType: string): configMap | undefined {
+    if (!setTraces.DYNAMIC_TRACES[traceType].run) {
+      return undefined;
+    }
+    const selected: configMap = {};
+    setTraces.DYNAMIC_TRACES[traceType].config?.selectionConfigs.forEach(
+      (con: SelectionConfiguration) => {
+        selected[con.key] = con.value;
+      }
+    );
+    return selected;
+  }
+
+  private async loadFiles() {
     console.log("loading files", this.connect.adbData());
     this.traceCoordinator.clearData();
 
@@ -276,16 +286,6 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     this.dataLoaded = true;
     this.dataLoadedChange.emit(this.dataLoaded);
     console.log("finished loading data!");
-  }
-
-  public tabClass(adbTab: boolean) {
-    let isActive: string;
-    if (adbTab) {
-      isActive = this.isAdbProxy ? "active" : "inactive";
-    } else {
-      isActive = !this.isAdbProxy ? "active" : "inactive";
-    }
-    return ["tab", isActive];
   }
 
   private waitForData(ms: number) {

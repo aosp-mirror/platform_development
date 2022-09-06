@@ -161,18 +161,18 @@ export class HierarchyComponent {
     @Inject(ElementRef) private elementRef: ElementRef,
   ) {}
 
-  isFlattened() {
+  public isFlattened() {
     return this.userOptions["flat"]?.enabled;
   }
 
-  maxHierarchyHeight() {
+  public maxHierarchyHeight() {
     const headerHeight = this.elementRef.nativeElement.querySelector(".view-header").clientHeight;
     return {
       height: `${800 - headerHeight}px`
     };
   }
 
-  onPinnedNodeClick(event: MouseEvent, pinnedItemId: string, pinnedItem: Tree) {
+  public onPinnedNodeClick(event: MouseEvent, pinnedItemId: string, pinnedItem: Tree) {
     event.preventDefault();
     if (window.getSelection()?.type === "range") {
       return;
@@ -181,7 +181,7 @@ export class HierarchyComponent {
     this.selectedTreeChange(pinnedItem);
   }
 
-  updateTree() {
+  public updateTree() {
     const event: CustomEvent = new CustomEvent(
       ViewerEvents.HierarchyUserOptionsChange,
       {
@@ -191,7 +191,7 @@ export class HierarchyComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  filterTree() {
+  public filterTree() {
     const event: CustomEvent = new CustomEvent(
       ViewerEvents.HierarchyFilterChange,
       {
@@ -201,7 +201,7 @@ export class HierarchyComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  highlightedItemChange(newId: string) {
+  public highlightedItemChange(newId: string) {
     const event: CustomEvent = new CustomEvent(
       ViewerEvents.HighlightedChange,
       {
@@ -211,7 +211,7 @@ export class HierarchyComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  selectedTreeChange(item: Tree) {
+  public selectedTreeChange(item: Tree) {
     const event: CustomEvent = new CustomEvent(
       ViewerEvents.SelectedTreeChange,
       {
@@ -221,7 +221,7 @@ export class HierarchyComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  pinnedItemChange(item: Tree) {
+  public pinnedItemChange(item: Tree) {
     const event: CustomEvent = new CustomEvent(
       ViewerEvents.HierarchyPinnedChange,
       {

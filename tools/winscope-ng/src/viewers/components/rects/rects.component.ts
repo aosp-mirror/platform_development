@@ -201,6 +201,13 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnInit() {
     window.addEventListener("resize", () => this.refreshCanvas());
+    this.canvasContainer = this.elementRef.nativeElement.querySelector(".canvas-container");
+    this.resizeObserver = new ResizeObserver((entries) => {
+      if (entries[0].contentRect.height > 0) {
+        this.refreshCanvas();
+      }
+    });
+    this.resizeObserver.observe(this.canvasContainer!);
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -213,27 +220,62 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
       this.canvasGraphics.updateHighlightedItems(this.highlightedItems);
     }
     if (this.rects.length > 0 || changes["forceRefresh"]?.currentValue) {
-      //change in rects so they must undergo transformation and scaling before canvas refreshed
-      this.rects = this.rects.filter(rect => rect.isVisible || rect.isDisplay);
-      this.displayRects = this.rects.filter(rect => rect.isDisplay);
-      this.computeBounds();
-      this.rects = this.rects.map(rect => {
-        if (changes["rects"] && rect.transform) {
-          return RectsUtils.transformRect(rect.transform.matrix ??  rect.transform, rect);
-        } else {
-          return rect;
-        }
-      });
-      this.scaleRects();
-      this.drawRects();
+      this.formatAndDrawRects(changes["rects"] !== undefined);
     }
   }
 
   ngOnDestroy() {
     window.removeEventListener("resize", () => this.refreshCanvas());
+    this.resizeObserver!.unobserve(this.canvasContainer!);
   }
 
-  onRectClick(event:MouseEvent) {
+  public onChangeView(visible: boolean) {
+    this.canvasGraphics.updateVisibleView(visible);
+    this.refreshCanvas();
+  }
+
+  public visibleView() {
+    return this.canvasGraphics.getVisibleView();
+  }
+
+  public getLayerSeparation() {
+    return this.canvasGraphics.getLayerSeparation();
+  }
+
+  public updateLayerSeparation(sep: number) {
+    this.canvasGraphics.updateLayerSeparation(sep);
+    this.refreshCanvas();
+  }
+
+  public updateRotation(rot: number) {
+    this.canvasGraphics.updateRotation(rot);
+    this.refreshCanvas();
+  }
+
+  public updateZoom(zoom: boolean) {
+    this.canvasGraphics.updateZoom(zoom);
+    this.refreshCanvas();
+  }
+
+  public updateVirtualDisplays(show: boolean) {
+    this.canvasGraphics.updateVirtualDisplays(show);
+    this.refreshCanvas();
+  }
+
+  public xCameraPos() {
+    return this.canvasGraphics.getXCameraPos();
+  }
+
+  public showVirtualDisplays() {
+    return this.canvasGraphics.getShowVirtualDisplays();
+  }
+
+  public changeDisplayId(displayId: number) {
+    this.currentDisplayId = displayId;
+    this.refreshCanvas();
+  }
+
+  public onRectClick(event:MouseEvent) {
     this.setNormalisedMousePos(event);
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(this.mouse, this.canvasGraphics.getCamera());
@@ -246,7 +288,29 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  setNormalisedMousePos(event:MouseEvent) {
+  public drawRects() {
+    const canvas = this.elementRef.nativeElement.querySelector(".rects-canvas") as HTMLCanvasElement;
+    this.canvasGraphics.initialise(canvas);
+    this.refreshCanvas();
+  }
+
+  private formatAndDrawRects(rectsChanged: boolean) {
+    //change in rects so they must undergo transformation and scaling before canvas refreshed
+    this.rects = this.rects.filter(rect => rect.isVisible || rect.isDisplay);
+    this.displayRects = this.rects.filter(rect => rect.isDisplay);
+    this.computeBounds();
+    this.rects = this.rects.map(rect => {
+      if (rectsChanged && rect.transform) {
+        return RectsUtils.transformRect(rect.transform.matrix ??  rect.transform, rect);
+      } else {
+        return rect;
+      }
+    });
+    this.scaleRects();
+    this.drawRects();
+  }
+
+  private setNormalisedMousePos(event:MouseEvent) {
     event.preventDefault();
     const canvas = (event.target as Element);
     const canvasOffset = canvas.getBoundingClientRect();
@@ -255,7 +319,7 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
     this.mouse.z = 0;
   }
 
-  updateHighlightedItems(newId: string) {
+  private updateHighlightedItems(newId: string) {
     const event: CustomEvent = new CustomEvent(
       ViewerEvents.HighlightedChange,
       {
@@ -265,30 +329,7 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  drawRects() {
-    const canvas = this.elementRef.nativeElement.querySelector(".rects-canvas") as HTMLCanvasElement;
-    this.canvasGraphics.initialise(canvas);
-    this.refreshCanvas();
-  }
-
-  refreshCanvas() {
-    this.updateVariablesBeforeRefresh();
-    this.canvasGraphics.refreshCanvas();
-  }
-
-  updateVariablesBeforeRefresh() {
-    const rects = this.rects.filter(rect => rect.displayId === this.currentDisplayId);
-    this.canvasGraphics.updateRects(rects);
-    const biggestX = Math.max(...this.rects.map(rect => rect.topLeft.x + rect.width/2));
-    this.canvasGraphics.updateIsLandscape(biggestX > this.s({x: this.boundsWidth, y:this.boundsHeight}).x/2);
-  }
-
-  onChangeView(visible: boolean) {
-    this.canvasGraphics.updateVisibleView(visible);
-    this.refreshCanvas();
-  }
-
-  scaleRects() {
+  private scaleRects() {
     this.rects = this.rects.map(rect => {
       rect.bottomRight = this.s(rect.bottomRight);
       rect.topLeft = this.s(rect.topLeft);
@@ -304,7 +345,19 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
-  computeBounds(): any {
+  private refreshCanvas() {
+    this.updateVariablesBeforeRefresh();
+    this.canvasGraphics.refreshCanvas();
+  }
+
+  private updateVariablesBeforeRefresh() {
+    const rects = this.rects.filter(rect => rect.displayId === this.currentDisplayId);
+    this.canvasGraphics.updateRects(rects);
+    const biggestX = Math.max(...this.rects.map(rect => rect.topLeft.x + rect.width/2));
+    this.canvasGraphics.updateIsLandscape(biggestX > this.s({x: this.boundsWidth, y:this.boundsHeight}).x/2);
+  }
+
+  private computeBounds(): any {
     this.boundsWidth = Math.max(...this.rects.map((rect) => {
       const mat = this.getMatrix(rect);
       if (mat) {
@@ -326,16 +379,16 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  maxWidth() {
+  private maxWidth(): number {
     return Math.max(...this.displayRects.map(rect => rect.width)) * 1.2;
   }
 
-  maxHeight() {
+  private maxHeight(): number {
     return Math.max(...this.displayRects.map(rect => rect.height)) * 1.2;
   }
 
   // scales coordinates to canvas
-  s(sourceCoordinates: Point) {
+  private s(sourceCoordinates: Point): Point {
     let scale;
     if (this.boundsWidth < this.boundsHeight) {
       scale = this.canvasGraphics.cameraHalfHeight*2 * 0.6 / this.boundsHeight;
@@ -348,7 +401,7 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
     };
   }
 
-  getMatrix(rect: Rectangle) {
+  private getMatrix(rect: Rectangle): RectTransform | RectMatrix | null {
     if (rect.transform) {
       let matrix: RectTransform | RectMatrix = rect.transform;
       if (rect.transform && rect.transform.matrix) {
@@ -356,55 +409,16 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
       }
       return matrix;
     } else {
-      return false;
+      return null;
     }
   }
 
-  visibleView() {
-    return this.canvasGraphics.getVisibleView();
-  }
-
-  getLayerSeparation() {
-    return this.canvasGraphics.getLayerSeparation();
-  }
-
-  updateLayerSeparation(sep: number) {
-    this.canvasGraphics.updateLayerSeparation(sep);
-    this.refreshCanvas();
-  }
-
-  updateRotation(rot: number) {
-    this.canvasGraphics.updateRotation(rot);
-    this.refreshCanvas();
-  }
-
-  updateZoom(zoom: boolean) {
-    this.canvasGraphics.updateZoom(zoom);
-    this.refreshCanvas();
-  }
-
-  updateVirtualDisplays(show: boolean) {
-    this.canvasGraphics.updateVirtualDisplays(show);
-    this.refreshCanvas();
-  }
-
-  xCameraPos() {
-    return this.canvasGraphics.getXCameraPos();
-  }
-
-  showVirtualDisplays() {
-    return this.canvasGraphics.getShowVirtualDisplays();
-  }
-
-  changeDisplayId(displayId: number) {
-    this.currentDisplayId = displayId;
-    this.refreshCanvas();
-  }
-
-  canvasGraphics: CanvasGraphics;
+  private canvasGraphics: CanvasGraphics;
   private boundsWidth = 0;
   private boundsHeight = 0;
   private displayRects!: Rectangle[];
   private mouse = new THREE.Vector3(0, 0, 0);
   private currentDisplayId: number;
+  private resizeObserver!: ResizeObserver;
+  private canvasContainer!: Element;
 }

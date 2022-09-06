@@ -149,14 +149,6 @@ export class UploadTracesComponent {
     });
   }
 
-  private getInputFiles(event: Event): File[] {
-    const files: FileList | null = (event?.target as HTMLInputElement)?.files;
-    if (!files || !files[0]) {
-      return [];
-    }
-    return Array.from(files);
-  }
-
   public onLoadData() {
     this.dataLoaded = true;
     this.dataLoadedChange.emit(this.dataLoaded);
@@ -199,5 +191,13 @@ export class UploadTracesComponent {
       data: parserErrors,
       duration: 7500,
     });
+  }
+
+  private getInputFiles(event: Event): File[] {
+    const files: FileList | null = (event?.target as HTMLInputElement)?.files;
+    if (!files || !files[0]) {
+      return [];
+    }
+    return Array.from(files);
   }
 }

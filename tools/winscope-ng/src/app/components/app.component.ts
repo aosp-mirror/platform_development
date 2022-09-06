@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Injector, Inject, ViewEncapsulation, Input, ViewChild } from "@angular/core";
+import { Component, Injector, Inject, ViewEncapsulation, Input } from "@angular/core";
 import { createCustomElement } from "@angular/elements";
 import { TraceCoordinator } from "../trace_coordinator";
 import { proxyClient, ProxyState } from "trace_collection/proxy_client";
@@ -137,11 +137,6 @@ export class AppComponent {
     }
   }
 
-  public notifyCurrentTimestamp() {
-    this.currentTimestamp = this.allTimestamps[this.currentTimestampIndex];
-    this.traceCoordinator.notifyCurrentTimestamp(this.currentTimestamp);
-  }
-
   public toggleTimestamp() {
     if (this.currentTimestampIndex===0) {
       this.currentTimestampIndex = this.allTimestamps.length-1;
@@ -170,5 +165,10 @@ export class AppComponent {
       this.notifyCurrentTimestamp();
       this.dataLoaded = dataLoaded;
     }
+  }
+
+  private notifyCurrentTimestamp() {
+    this.currentTimestamp = this.allTimestamps[this.currentTimestampIndex];
+    this.traceCoordinator.notifyCurrentTimestamp(this.currentTimestamp);
   }
 }
