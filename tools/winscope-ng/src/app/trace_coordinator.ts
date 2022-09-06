@@ -66,6 +66,10 @@ class TraceCoordinator {
     return this.viewers.map(viewer => viewer.getView());
   }
 
+  getParsers(): Parser[] {
+    return this.parsers;
+  }
+
   getViewers(): Viewer[] {
     return this.viewers;
   }
