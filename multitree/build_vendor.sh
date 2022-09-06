@@ -49,19 +49,12 @@ fi
 
 export ALLOW_MISSING_DEPENDENCIES=true
 export SKIP_VNDK_VARIANTS_CHECK=true
+export DIST_DIR=$dist_dir
 
-build/soong/soong_ui.bash --make-mode vendorimage collect_ninja_inputs \
+build/soong/soong_ui.bash --make-mode vendorimage collect_ninja_inputs dist \
   TARGET_PRODUCT=$product TARGET_BUILD_VARIANT=userdebug
 
-mkdir -p $dist_dir/soong
-
-for f in out/*.ninja out/soong/build.ninja; do
-  gzip -c $f > $dist_dir/${f#out/}.gz
-done
-
 cp out/target/product/$device/vendor.img $dist_dir
-
-mkdir -p $dist_dir/logs
 
 out/host/linux-x86/bin/collect_ninja_inputs -n prebuilts/build-tools/linux-x86/bin/ninja \
   -f out/combined-$product.ninja -t vendorimage -m $dist_dir/manifest_$build_id.xml \

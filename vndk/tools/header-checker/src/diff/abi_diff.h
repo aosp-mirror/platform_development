@@ -36,6 +36,7 @@ class HeaderAbiDiff {
                 const std::string &old_dump, const std::string &new_dump,
                 const std::string &compatibility_report,
                 const std::set<std::string> &ignored_symbols,
+                const std::set<std::string> &ignored_linker_set_keys,
                 bool allow_adding_removing_weak_symbols,
                 const DiffPolicyOptions &diff_policy_options,
                 bool check_all_apis, repr::TextFormatIR text_format_old,
@@ -44,6 +45,7 @@ class HeaderAbiDiff {
       : lib_name_(lib_name), arch_(arch), old_dump_(old_dump),
         new_dump_(new_dump), cr_(compatibility_report),
         ignored_symbols_(ignored_symbols),
+        ignored_linker_set_keys_(ignored_linker_set_keys),
         diff_policy_options_(diff_policy_options),
         allow_adding_removing_weak_symbols_(allow_adding_removing_weak_symbols),
         check_all_apis_(check_all_apis),
@@ -150,6 +152,7 @@ class HeaderAbiDiff {
   const std::string &new_dump_;
   const std::string &cr_;
   const std::set<std::string> &ignored_symbols_;
+  const std::set<std::string> &ignored_linker_set_keys_;
   const DiffPolicyOptions &diff_policy_options_;
   bool allow_adding_removing_weak_symbols_;
   bool check_all_apis_;
