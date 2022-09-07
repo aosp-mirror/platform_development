@@ -17,23 +17,18 @@ export const nodeStyles = `
     .node {position: relative;display: inline-block;padding: 2px; height: 100%; width: 100%;}
     .node.clickable {cursor: pointer;}
     .node:not(.selected).added,
-    .node:not(.selected).addedMove,
-    .expand-tree-btn.added,
-    .expand-tree-btn.addedMove {
+    .node:not(.selected).addedMove {
         background: #03ff35;
     }
 
     .node:not(.selected).deleted,
-    .node:not(.selected).deletedMove,
-    .expand-tree-btn.deleted,
-    .expand-tree-btn.deletedMove {
+    .node:not(.selected).deletedMove {
         background: #ff6b6b;
     }
 
     .node:hover:not(.selected) {background: #f1f1f1;}
 
-    .node:not(.selected).modified,
-    .expand-tree-btn.modified {
+    .node:not(.selected).modified {
         background: cyan;
     }
 
@@ -50,7 +45,7 @@ export const nodeStyles = `
     .selected {background-color: #365179;color: white;}
 `;
 
-export const treeNodeStyles = `
+export const treeNodeDataViewStyles = `
     .node.shaded:not(:hover):not(.selected):not(.added):not(.addedMove):not(.deleted):not(.deletedMove):not(.modified) {background: #f8f9fa}
     .node.selected + .children {border-left: 1px solid rgb(200, 200, 200);}
     .node.child-hover + .children {border-left: 1px solid #b4b4b4;}
@@ -65,4 +60,24 @@ export const nodeInnerItemStyles = `
     .description {align-items: center; flex: 1 1 auto; vertical-align: middle; word-break: break-all;}
     .leaf-node-icon-wrapper{padding-left: 6px; padding-right: 6px; min-height: 24px; width: 24px; position:relative; align-content: center; vertical-align: middle;}
     .icon-button { background: none;border: none;display: inline-block;vertical-align: middle;}
+
+    .expand-tree-btn {
+        float: right;
+        padding-left: 0px;
+        padding-right: 0px;
+    }
+
+    .expand-tree-btn.modified {
+        background: cyan;
+    }
+
+    .expand-tree-btn.deleted,
+    .expand-tree-btn.deletedMove {
+        background: #ff6b6b;
+    }
+
+    .expand-tree-btn.added,
+    .expand-tree-btn.addedMove {
+        background: #03ff35;
+    }
 `;
