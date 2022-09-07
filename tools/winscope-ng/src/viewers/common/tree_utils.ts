@@ -64,3 +64,13 @@ export function getFilter(filterString: string): FilterType {
   };
   return filter;
 }
+
+const parentNodeKinds = ["entry", "WindowManagerState"];
+
+export function isParentNode(kind: string) {
+  return parentNodeKinds.includes(kind);
+}
+
+export function isVisibleNode(kind: string, type?: string) {
+  return kind === "WindowState" || kind === "Activity" || type?.includes("Layer");
+}

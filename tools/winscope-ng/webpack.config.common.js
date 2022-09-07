@@ -15,6 +15,7 @@
  */
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const TerserPlugin = require("terser-webpack-plugin");
 
 module.exports = {
   resolve: {
@@ -64,5 +65,15 @@ module.exports = {
       inject: "body",
       inlineSource: ".(css|js)$",
     })
-  ]
+  ],
+
+  optimization: {
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          keep_fnames: true,
+        },
+      }),
+    ],
+  },
 }

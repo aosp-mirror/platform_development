@@ -16,9 +16,8 @@
 import { Component, Inject, Input, Output, ElementRef, EventEmitter } from "@angular/core";
 import { PersistentStore } from "common/persistent_store";
 import { nodeStyles, treeNodeDataViewStyles } from "viewers/components/styles/node.styles";
-import { Tree, diffClass, isHighlighted, PropertiesTree, Terminal } from "viewers/common/tree_utils";
+import { Tree, diffClass, isHighlighted, PropertiesTree, Terminal, isParentNode } from "viewers/common/tree_utils";
 import { TraceType } from "common/trace/trace_type";
-import { TreeNodePropertiesDataViewComponent } from "./tree_node_properties_data_view.component";
 
 @Component({
   selector: "tree-view",
@@ -218,7 +217,7 @@ export class TreeComponent {
   }
 
   public hasChildren() {
-    const isParentEntryInFlatView = this.item.kind === "entry" && this.isFlattened;
+    const isParentEntryInFlatView = isParentNode(this.item.kind) && this.isFlattened;
     return (!this.isFlattened || isParentEntryInFlatView) && !this.isLeaf(this.item);
   }
 

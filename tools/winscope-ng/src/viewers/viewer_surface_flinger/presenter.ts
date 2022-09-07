@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2022 The Android Open Source Project
  *
@@ -13,7 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Rectangle, RectMatrix, RectTransform, UiData } from "viewers/viewer_surface_flinger/ui_data";
+import { UiData } from "./ui_data";
+import { Rectangle, RectMatrix, RectTransform } from "viewers/common/rectangle";
 import { TraceType } from "common/trace/trace_type";
 import { UserOptions } from "viewers/common/user_options";
 import { getFilter, FilterType, Tree, TreeSummary } from "viewers/common/tree_utils";
@@ -82,13 +84,26 @@ export class Presenter {
   }
 
   public notifyCurrentTraceEntries(entries: Map<TraceType, any>) {
-    const entry = entries.get(TraceType.SURFACE_FLINGER)[0];
-    this.previousEntry = entries.get(TraceType.SURFACE_FLINGER)[1];
-    this.entry = entry;
-
     this.uiData = new UiData();
-    this.uiData.highlightedItems = this.highlightedItems;
-    const displayRects = entry.displays.map((display: any) => {
+    this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
+    this.uiData.propertiesUserOptions = this.propertiesUserOptions;
+
+    const sfEntries = entries.get(TraceType.SURFACE_FLINGER);
+    if (sfEntries) {
+      [this.entry, this.previousEntry] = sfEntries;
+      if (this.entry) {
+        this.uiData.highlightedItems = this.highlightedItems;
+        this.uiData.rects = this.generateRects();
+        this.uiData.hasVirtualDisplays = this.uiData.rects.filter(rect => rect.isVirtual).length > 0;
+        this.uiData.displayIds = this.displayIds;
+        this.uiData.tree = this.generateTree();
+      }
+    }
+    this.notifyViewCallback(this.uiData);
+  }
+
+  private generateRects(): Rectangle[] {
+    const displayRects = this.entry.displays.map((display: any) => {
       const rect = display.layerStackSpace;
       rect.label = display.name;
       rect.id = display.id;
@@ -98,7 +113,7 @@ export class Presenter {
       return rect;
     }) ?? [];
     this.displayIds = [];
-    const rects = entry.visibleLayers
+    const rects = this.entry.visibleLayers
       .sort((a: any, b: any) => (b.absoluteZ > a.absoluteZ) ? 1 : (a.absoluteZ == b.absoluteZ) ? 0 : -1)
       .map((it: any) => {
         const rect = it.rect;
@@ -108,14 +123,7 @@ export class Presenter {
         }
         return rect;
       });
-    this.uiData.rects = this.rectsToUiData(rects.concat(displayRects));
-    this.uiData.displayIds = this.displayIds;
-
-    this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
-    this.uiData.propertiesUserOptions = this.propertiesUserOptions;
-    this.uiData.tree = this.generateTree();
-
-    this.notifyViewCallback(this.uiData);
+    return this.rectsToUiData(rects.concat(displayRects));
   }
 
   private updateSelectedTreeUiData() {
@@ -221,7 +229,8 @@ export class Presenter {
         ref: rect.ref,
         id: rect.id ?? rect.ref.id,
         displayId: rect.displayId ?? rect.ref.stackId,
-        isVirtual: rect.isVirtual ?? false
+        isVirtual: rect.isVirtual ?? false,
+        isClickable: !(rect.isDisplay ?? false)
       };
       uiRects.push(newRect);
     });

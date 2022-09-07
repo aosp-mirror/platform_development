@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Rectangle } from "viewers/viewer_surface_flinger/ui_data";
+import { Rectangle } from "viewers/common/rectangle";
 import * as THREE from "three";
 import { CSS2DRenderer, CSS2DObject } from "three/examples/jsm/renderers/CSS2DRenderer";
 
@@ -31,9 +31,10 @@ export class CanvasGraphics {
     );
   }
 
-  public initialise(canvas: HTMLCanvasElement) {
+  public initialise(canvas: HTMLCanvasElement, canvasContainer: Element) {
     // initialise canvas
     this.canvas = canvas;
+    this.canvasContainer = canvasContainer;
   }
 
   public refreshCanvas() {
@@ -56,9 +57,9 @@ export class CanvasGraphics {
       alpha: true
     });
     let labelRenderer: CSS2DRenderer;
-    if (document.querySelector(".labels-canvas")) {
+    if (this.canvasContainer && this.canvasContainer.querySelector(".labels-canvas")) {
       labelRenderer = new CSS2DRenderer({
-        element: document.querySelector(".labels-canvas")! as HTMLElement
+        element: this.canvasContainer.querySelector(".labels-canvas")! as HTMLElement
       });
     } else {
       labelRenderer = new CSS2DRenderer();
@@ -68,14 +69,14 @@ export class CanvasGraphics {
       labelRenderer.domElement.style.height = "40rem";
       labelRenderer.domElement.className = "labels-canvas";
       labelRenderer.domElement.style.pointerEvents = "none";
-      document.querySelector(".canvas-container")?.appendChild(labelRenderer.domElement);
+      this.canvasContainer?.appendChild(labelRenderer.domElement);
     }
 
     // set various factors for shading and shifting
     const visibleDarkFactor = 0, nonVisibleDarkFactor = 0, rectCounter = 0;
     const numberOfRects = this.rects.length;
     const numberOfVisibleRects = this.rects.filter(rect => rect.isVisible).length;
-    const numberOfDisplayRects = this.rects.filter(rect => rect.isDisplay).length;
+    const numberOfNonVisibleRects = this.rects.filter(rect => !rect.isVisible).length;
 
     const zShift = numberOfRects*this.layerSeparation;
     let xShift = 0, yShift = 3.25, labelYShift = 0;
@@ -104,7 +105,7 @@ export class CanvasGraphics {
       rectCounter,
       numberOfVisibleRects,
       visibleDarkFactor,
-      numberOfDisplayRects,
+      numberOfNonVisibleRects,
       nonVisibleDarkFactor,
       numberOfRects,
       scene,
@@ -194,9 +195,9 @@ export class CanvasGraphics {
 
   private drawScene(
     rectCounter: number,
-    visibleRects: number,
+    numberOfVisibleRects: number,
     visibleDarkFactor:number,
-    displayRects: number,
+    numberOfNonVisibleRects: number,
     nonVisibleDarkFactor: number,
     numberOfRects: number,
     scene: THREE.Scene,
@@ -210,7 +211,7 @@ export class CanvasGraphics {
     this.rects.forEach(rect => {
       const mustNotDrawInVisibleView = this.visibleView && !rect.isVisible;
       const mustNotDrawInXrayViewWithoutVirtualDisplays =
-            !this.visibleView && !this.showVirtualDisplays && rect.isDisplay && rect.isVirtual;
+            !this.visibleView && !this.showVirtualDisplays && rect.isVirtual;
       if (mustNotDrawInVisibleView || mustNotDrawInXrayViewWithoutVirtualDisplays) {
         rectCounter++;
         return;
@@ -221,13 +222,11 @@ export class CanvasGraphics {
       if (this.highlightedItems.includes(`${rect.id}`)) {
         planeColor = this.colorMapping("highlighted", numberOfRects, 0);
       } else if (rect.isVisible) {
-        planeColor = this.colorMapping("green", visibleRects, visibleDarkFactor);
+        planeColor = this.colorMapping("green", numberOfVisibleRects, visibleDarkFactor);
         visibleDarkFactor++;
-      } else if (rect.isDisplay) {
-        planeColor = this.colorMapping("grey", displayRects, nonVisibleDarkFactor);
-        nonVisibleDarkFactor++;
       } else {
-        planeColor = this.colorMapping("unknown", numberOfRects, 0);
+        planeColor = this.colorMapping("grey", numberOfNonVisibleRects, nonVisibleDarkFactor);
+        nonVisibleDarkFactor++;
       }
 
       //set plane geometry and material
@@ -242,8 +241,8 @@ export class CanvasGraphics {
         scene.add(edgeSegments);
       }
 
-      // if not a display rect, should be clickable
-      if (!rect.isDisplay) this.targetObjects.push(planeRect);
+      // only some rects are clickable
+      if (rect.isClickable) this.targetObjects.push(planeRect);
 
       // labelling elements
       if (rect.label.length > 0) {
@@ -420,4 +419,5 @@ export class CanvasGraphics {
   private rects: Rectangle[] = [];
   private targetObjects: any[] = [];
   private canvas?: HTMLCanvasElement;
+  private canvasContainer?: Element;
 }

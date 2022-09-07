@@ -23,6 +23,10 @@ class ViewerSurfaceFlinger implements Viewer {
   constructor() {
     this.view = document.createElement("viewer-surface-flinger");
     this.presenter = new Presenter((uiData: UiData) => {
+      // Angular does not deep watch @Input properties. Clearing inputData to null before repopulating
+      // automatically ensures that the UI will change via the Angular change detection cycle. Without
+      // resetting, Angular does not auto-detect that inputData has changed.
+      (this.view as any).inputData = null;
       (this.view as any).inputData = uiData;
     });
     this.view.addEventListener(ViewerEvents.HierarchyPinnedChange, (event) => this.presenter.updatePinnedItems(((event as CustomEvent).detail.pinnedItem)));

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { RELATIVE_Z_CHIP } from "viewers/common/chip";
 import { DiffType, getFilter } from "viewers/common/tree_utils";
 import { TreeGenerator } from "viewers/common/tree_generator";
 
@@ -55,14 +54,14 @@ describe("TreeGenerator", () => {
             showInFilteredView: true,
             stableId: undefined,
             shortName: undefined,
-            chips: [ RELATIVE_Z_CHIP ]
+            chips: []
           }],
           kind: "3",
           simplifyNames: false,
           showInFilteredView: true,
           stableId: undefined,
           shortName: undefined,
-          chips: [ RELATIVE_Z_CHIP ],
+          chips: [],
         }
       ],
       kind: "entry",
@@ -120,13 +119,13 @@ describe("TreeGenerator", () => {
             stableId: "2",
             shortName: undefined,
             diffType: DiffType.NONE,
-            chips: [ RELATIVE_Z_CHIP ]
+            chips: []
           }],
           kind: "3",
           shortName: undefined,
           simplifyNames: false,
           showInFilteredView: true,
-          chips: [ RELATIVE_Z_CHIP ],
+          chips: [],
           diffType: DiffType.NONE
         }
       ],
@@ -210,13 +209,13 @@ describe("TreeGenerator", () => {
             stableId: "2",
             shortName: undefined,
             diffType: DiffType.ADDED_MOVE,
-            chips: [ RELATIVE_Z_CHIP ]
+            chips: []
           }],
           kind: "3",
           shortName: undefined,
           simplifyNames: false,
           showInFilteredView: true,
-          chips: [ RELATIVE_Z_CHIP ],
+          chips: [],
           diffType: DiffType.NONE
         },
         {
@@ -228,7 +227,7 @@ describe("TreeGenerator", () => {
           showInFilteredView: true,
           stableId: "2",
           shortName: undefined,
-          chips: [ RELATIVE_Z_CHIP ],
+          chips: [],
           diffType: DiffType.DELETED_MOVE
         }
       ],

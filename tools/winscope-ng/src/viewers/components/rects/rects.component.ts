@@ -15,7 +15,7 @@
  */
 import { Component, Input, OnChanges, OnDestroy, Inject, ElementRef, SimpleChanges, OnInit } from "@angular/core";
 import { RectsUtils } from "viewers/components/rects/rects_utils";
-import { Point, Rectangle, RectMatrix, RectTransform } from "viewers/viewer_surface_flinger/ui_data";
+import { Point, Rectangle, RectMatrix, RectTransform } from "viewers/common/rectangle";
 import { CanvasGraphics } from "viewers/components/rects/canvas_graphics";
 import * as THREE from "three";
 import { ViewerEvents } from "viewers/common/viewer_events";
@@ -35,7 +35,7 @@ import { ViewerEvents } from "viewers/common/viewer_events";
             (change)="onChangeView($event.checked!)"
           >Only visible</mat-checkbox>
           <mat-checkbox
-            [disabled]="!visibleView()"
+            [disabled]="visibleView() || !hasVirtualDisplays"
             class="rects-checkbox control-item"
             [checked]="showVirtualDisplays()"
             (change)="updateVirtualDisplays($event.checked!)"
@@ -189,6 +189,7 @@ import { ViewerEvents } from "viewers/common/viewer_events";
 export class RectsComponent implements OnInit, OnChanges, OnDestroy {
   @Input() rects!: Rectangle[];
   @Input() forceRefresh = false;
+  @Input() hasVirtualDisplays = false;
   @Input() displayIds: Array<number> = [];
   @Input() highlightedItems: Array<string> = [];
 
@@ -290,13 +291,12 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
 
   public drawRects() {
     const canvas = this.elementRef.nativeElement.querySelector(".rects-canvas") as HTMLCanvasElement;
-    this.canvasGraphics.initialise(canvas);
+    this.canvasGraphics.initialise(canvas, this.canvasContainer);
     this.refreshCanvas();
   }
 
   private formatAndDrawRects(rectsChanged: boolean) {
     //change in rects so they must undergo transformation and scaling before canvas refreshed
-    this.rects = this.rects.filter(rect => rect.isVisible || rect.isDisplay);
     this.displayRects = this.rects.filter(rect => rect.isDisplay);
     this.computeBounds();
     this.rects = this.rects.map(rect => {
