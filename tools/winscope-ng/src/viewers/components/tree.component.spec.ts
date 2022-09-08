@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ComponentFixture, TestBed} from "@angular/core/testing";
+import { ComponentFixture, TestBed, ComponentFixtureAutoDetect } from "@angular/core/testing";
 import { TreeComponent } from "./tree.component";
-import { ComponentFixtureAutoDetect } from "@angular/core/testing";
-import { NO_ERRORS_SCHEMA } from "@angular/core";
+import { Component, ViewChild, NO_ERRORS_SCHEMA } from "@angular/core";
+import { PersistentStore } from "common/persistent_store";
 
 describe("TreeComponent", () => {
-  let fixture: ComponentFixture<TreeComponent>;
-  let component: TreeComponent;
+  let fixture: ComponentFixture<TestHostComponent>;
+  let component: TestHostComponent;
   let htmlElement: HTMLElement;
 
   beforeAll(async () => {
@@ -29,28 +29,16 @@ describe("TreeComponent", () => {
         { provide: ComponentFixtureAutoDetect, useValue: true }
       ],
       declarations: [
-        TreeComponent
+        TreeComponent, TestHostComponent
       ],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(TreeComponent);
+    fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
-    component.isFlattened = true;
-    component.item = {
-      simplifyNames: false,
-      kind: "entry",
-      name: "BaseLayerTraceEntry",
-      shortName: "BLTE",
-      chips: [],
-      children: [{kind: "3", id: "3", name: "Child1"}]
-    };
-    component.diffClass = jasmine.createSpy().and.returnValue("none");
-    component.isHighlighted = jasmine.createSpy().and.returnValue(false);
-    component.hasChildren = jasmine.createSpy().and.returnValue(true);
   });
 
   it("can be created", () => {
@@ -58,9 +46,35 @@ describe("TreeComponent", () => {
     expect(component).toBeTruthy();
   });
 
-  it("creates node element", () => {
-    fixture.detectChanges();
-    const nodeElement = htmlElement.querySelector(".node");
-    expect(nodeElement).toBeTruthy();
-  });
+  @Component({
+    selector: "host-component",
+    template: `
+                <tree-view
+                  [item]="item"
+                  [store]="store"
+                  [isFlattened]="isFlattened"
+                  [diffClass]="diffClass"
+                  [isHighlighted]="isHighlighted"
+                  [hasChildren]="hasChildren"
+                ></tree-view>
+              `
+  })
+  class TestHostComponent {
+    isFlattened = true;
+    item = {
+      simplifyNames: false,
+      kind: "entry",
+      name: "BaseLayerTraceEntry",
+      shortName: "BLTE",
+      chips: [],
+      children: [{kind: "3", id: "3", name: "Child1"}]
+    };
+    store = new PersistentStore();
+    diffClass = jasmine.createSpy().and.returnValue("none");
+    isHighlighted = jasmine.createSpy().and.returnValue(false);
+    hasChildren = jasmine.createSpy().and.returnValue(true);
+
+    @ViewChild(TreeComponent)
+    public treeComponent!: TreeComponent;
+  }
 });

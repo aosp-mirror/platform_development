@@ -17,7 +17,7 @@ import { Component, Input, Inject, ElementRef } from "@angular/core";
 import { UserOptions } from "viewers/common/user_options";
 import { PersistentStore } from "common/persistent_store";
 import { Tree, diffClass, isHighlighted } from "viewers/common/tree_utils";
-import { nodeStyles } from "viewers/styles/node.styles";
+import { nodeStyles } from "viewers/components/styles/node.styles";
 import { ViewerEvents } from "viewers/common/viewer_events";
 import { TraceType } from "common/trace/trace_type";
 
@@ -56,7 +56,7 @@ import { TraceType } from "common/trace/trace_type";
           [isPinned]="true"
           [isInPinnedSection]="true"
           (pinNodeChange)="pinnedItemChange($event)"
-          (click)="onPinnedNodeClick($event, pinnedItem.id)"
+          (click)="onPinnedNodeClick($event, pinnedItem.id, pinnedItem)"
         ></tree-node>
       </div>
     </mat-card-header>
@@ -76,6 +76,7 @@ import { TraceType } from "common/trace/trace_type";
           [pinnedItems]="pinnedItems"
           (highlightedItemChange)="highlightedItemChange($event)"
           (pinnedItemChange)="pinnedItemChange($event)"
+          (selectedTreeChange)="selectedTreeChange($event)"
         ></tree-view>
       </div>
     </mat-card-content>
@@ -169,12 +170,13 @@ export class HierarchyComponent {
     };
   }
 
-  onPinnedNodeClick(event: MouseEvent, pinnedItemId: string) {
+  onPinnedNodeClick(event: MouseEvent, pinnedItemId: string, pinnedItem: Tree) {
     event.preventDefault();
     if (window.getSelection()?.type === "range") {
       return;
     }
     this.highlightedItemChange(`${pinnedItemId}`);
+    this.selectedTreeChange(pinnedItem);
   }
 
   updateTree() {
@@ -203,6 +205,16 @@ export class HierarchyComponent {
       {
         bubbles: true,
         detail: { id: newId }
+      });
+    this.elementRef.nativeElement.dispatchEvent(event);
+  }
+
+  selectedTreeChange(item: Tree) {
+    const event: CustomEvent = new CustomEvent(
+      ViewerEvents.SelectedTreeChange,
+      {
+        bubbles: true,
+        detail: { selectedItem: item }
       });
     this.elementRef.nativeElement.dispatchEvent(event);
   }

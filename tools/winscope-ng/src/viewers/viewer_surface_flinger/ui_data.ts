@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { TraceType } from "common/trace/trace_type";
-import { Tree } from "viewers/common/tree_utils";
+import { Tree, TreeSummary } from "viewers/common/tree_utils";
 import { UserOptions } from "viewers/common/user_options";
+import { Layer } from "common/trace/flickerlib/common";
+import { TraceType } from "common/trace/trace_type";
 
 export class UiData {
   dependencies: Array<TraceType> = [TraceType.SURFACE_FLINGER];
@@ -24,7 +25,11 @@ export class UiData {
   highlightedItems?: Array<string> = [];
   pinnedItems?: Array<Tree> = [];
   hierarchyUserOptions?: UserOptions = {};
+  propertiesUserOptions?: UserOptions = {};
   tree?:  Tree | null = null;
+  selectedTree?: any = {};
+  selectedLayer?: Layer = {};
+  selectedTreeSummary?: TreeSummary = [];
 }
 
 export interface Rectangle {

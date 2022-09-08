@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ComponentFixture, TestBed} from "@angular/core/testing";
+import { ComponentFixture, TestBed, ComponentFixtureAutoDetect } from "@angular/core/testing";
 import { TreeNodeComponent } from "./tree_node.component";
-import { ComponentFixtureAutoDetect } from "@angular/core/testing";
-import { NO_ERRORS_SCHEMA } from "@angular/core";
+import { Component, ViewChild, NO_ERRORS_SCHEMA } from "@angular/core";
 
 describe("TreeNodeComponent", () => {
-  let fixture: ComponentFixture<TreeNodeComponent>;
-  let component: TreeNodeComponent;
+  let fixture: ComponentFixture<TestHostComponent>;
+  let component: TestHostComponent;
   let htmlElement: HTMLElement;
 
   beforeAll(async () => {
@@ -29,27 +28,16 @@ describe("TreeNodeComponent", () => {
         { provide: ComponentFixtureAutoDetect, useValue: true }
       ],
       declarations: [
-        TreeNodeComponent
+        TreeNodeComponent, TestHostComponent
       ],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(TreeNodeComponent);
+    fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
-    component.item = {
-      simplifyNames: false,
-      kind: "entry",
-      name: "BaseLayerTraceEntry",
-      shortName: "BLTE",
-      chips: [],
-    };
-    component.isCollapsed = true;
-    component.hasChildren = false;
-    component.isPinned = false;
-    component.isInPinnedSection = false;
   });
 
   it("can be created", () => {
@@ -57,9 +45,29 @@ describe("TreeNodeComponent", () => {
     expect(component).toBeTruthy();
   });
 
-  it("creates tree element", () => {
-    fixture.detectChanges();
-    const treeElement = htmlElement.querySelector("tree-element");
-    expect(treeElement).toBeTruthy();
-  });
+  @Component({
+    selector: "host-component",
+    template: `
+                <tree-node
+                  [item]="item"
+                  [isCollapsed]="true"
+                  [isPinned]="false"
+                  [isInPinnedSection]="false"
+                  [hasChildren]="false"
+                  [isPropertiesTreeNode]="false"
+                ></tree-node>
+              `
+  })
+  class TestHostComponent {
+    item = {
+      simplifyNames: false,
+      kind: "entry",
+      name: "BaseLayerTraceEntry",
+      shortName: "BLTE",
+      chips: [],
+    };
+
+    @ViewChild(TreeNodeComponent)
+    public treeNodeComponent!: TreeNodeComponent;
+  }
 });

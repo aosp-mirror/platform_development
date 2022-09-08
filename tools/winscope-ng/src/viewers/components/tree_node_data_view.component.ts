@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 import { Component, Input } from "@angular/core";
-import { treeElementStyles } from "viewers/styles/tree_element.styles";
+import { treeNodeDataViewStyles } from "viewers/components/styles/tree_node_data_view.styles";
 import { Tree } from "viewers/common/tree_utils";
 import Chip from "viewers/common/chip";
 
 @Component({
-  selector: "tree-element",
+  selector: "tree-node-data-view",
   template: `
     <span>
       <span class="kind">{{item.kind}}</span>
@@ -33,10 +33,10 @@ import Chip from "viewers/common/chip";
       >{{chip.short}}</div>
     </span>
   `,
-  styles: [ treeElementStyles ]
+  styles: [ treeNodeDataViewStyles ]
 })
 
-export class TreeElementComponent {
+export class TreeNodeDataViewComponent {
   @Input() item!: Tree;
 
   showShortName() {

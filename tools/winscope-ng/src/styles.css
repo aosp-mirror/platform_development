@@ -21,6 +21,7 @@
     --default-border: #DADCE0;
     --default-blue: #1A73E8;
 }
+
 #app-title {
     font-family: 'Google Sans', sans-serif;
     font-size: 30;
@@ -29,6 +30,10 @@
 #title {
     font-family: 'Google Sans', sans-serif;
     font-size: 18px;
+}
+
+.labels-canvas div {
+    font-family: 'Google Sans', sans-serif;
 }
 
 h1, p, span {
