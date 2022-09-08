@@ -62,15 +62,15 @@ describe("RectsComponent", () => {
 
   it("check that layer separation slider causes view to change", () => {
     const slider = htmlElement.querySelector(".spacing-slider");
-    spyOn(component.rectsComponent.canvasGraphics, "updateLayerSeparation");
+    spyOn(component.rectsComponent, "updateLayerSeparation");
     slider?.dispatchEvent(new MouseEvent("mousedown"));
     fixture.detectChanges();
-    expect(component.rectsComponent.canvasGraphics.updateLayerSeparation).toHaveBeenCalled();
+    expect(component.rectsComponent.updateLayerSeparation).toHaveBeenCalled();
   });
 
   it("check that rects canvas is rendered", () => {
     fixture.detectChanges();
-    const rectsCanvas = htmlElement.querySelector("#rects-canvas");
+    const rectsCanvas = htmlElement.querySelector(".rects-canvas");
     expect(rectsCanvas).toBeTruthy();
   });
 

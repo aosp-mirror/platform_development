@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 import { RELATIVE_Z_CHIP } from "viewers/common/chip";
-import { getFilter, TreeGenerator } from "viewers/common/tree_utils";
+import { DiffType, getFilter } from "viewers/common/tree_utils";
+import { TreeGenerator } from "viewers/common/tree_generator";
 
 describe("TreeGenerator", () => {
   it("generates tree", () => {
@@ -71,9 +72,8 @@ describe("TreeGenerator", () => {
       showInFilteredView: true,
     };
 
-    const userOptions = {};
     const filter = getFilter("");
-    const generator = new TreeGenerator(tree, userOptions, filter);
+    const generator = new TreeGenerator(tree, filter);
     expect(generator.generateTree()).toEqual(expected);
   });
 
@@ -119,27 +119,26 @@ describe("TreeGenerator", () => {
             showInFilteredView: true,
             stableId: "2",
             shortName: undefined,
-            diff: "none",
+            diffType: DiffType.NONE,
             chips: [ RELATIVE_Z_CHIP ]
           }],
           kind: "3",
           shortName: undefined,
           simplifyNames: false,
           showInFilteredView: true,
-          diff: "none",
-          chips: [ RELATIVE_Z_CHIP ]
+          chips: [ RELATIVE_Z_CHIP ],
+          diffType: DiffType.NONE
         }
       ],
       kind: "entry",
       shortName: "BLTE",
       chips: [],
+      diffType: DiffType.NONE,
       showInFilteredView: true,
-      diff: "none"
     };
 
-    const userOptions = {};
     const filter = getFilter("");
-    const generator = new TreeGenerator(tree, userOptions, filter);
+    const generator = new TreeGenerator(tree, filter);
     expect(generator.withUniqueNodeId((node: any) => {
       if (node) return node.stableId;
       else return null;
@@ -201,48 +200,47 @@ describe("TreeGenerator", () => {
           id: "3",
           stableId: "3",
           name: "Child1",
-          diff: "none",
           children: [ {
             kind: "2",
             id: "2",
             name: "Child2",
-            diff: "addedMove",
             children: [],
             simplifyNames: false,
             showInFilteredView: true,
             stableId: "2",
             shortName: undefined,
+            diffType: DiffType.ADDED_MOVE,
             chips: [ RELATIVE_Z_CHIP ]
           }],
           kind: "3",
           shortName: undefined,
           simplifyNames: false,
           showInFilteredView: true,
-          chips: [ RELATIVE_Z_CHIP ]
+          chips: [ RELATIVE_Z_CHIP ],
+          diffType: DiffType.NONE
         },
         {
           kind: "2",
           id: "2",
           name: "Child2",
-          diff: "deletedMove",
           children: [],
           simplifyNames: false,
           showInFilteredView: true,
           stableId: "2",
           shortName: undefined,
-          chips: [ RELATIVE_Z_CHIP ]
+          chips: [ RELATIVE_Z_CHIP ],
+          diffType: DiffType.DELETED_MOVE
         }
       ],
       kind: "entry",
       shortName: "BLTE",
       chips: [],
-      showInFilteredView: true,
-      diff: "none"
+      diffType: DiffType.NONE,
+      showInFilteredView: true
     };
 
-    const userOptions = {};
     const filter = getFilter("");
-    const generator = new TreeGenerator(tree, userOptions, filter);
+    const generator = new TreeGenerator(tree, filter);
     const newDiffTree = generator.withUniqueNodeId((node: any) => {
       if (node) return node.stableId;
       else return null;

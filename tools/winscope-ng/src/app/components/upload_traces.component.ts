@@ -49,7 +49,7 @@ import { LoadedTrace } from "app/loaded_trace";
                 <mat-icon class= "listed-file-item">{{TRACE_INFO[trace.type].icon}}</mat-icon>
                 <span class="listed-file-item">{{trace.name}} ({{TRACE_INFO[trace.type].name}})</span>
                 <button
-                  (click)="onRemoveTrace(trace)"
+                  (click)="onRemoveTrace($event, trace)"
                   class="icon-button close-btn listed-file-item"
                 ><mat-icon>close</mat-icon>
                 </button>
@@ -180,7 +180,9 @@ export class UploadTracesComponent {
     await this.processFiles(Array.from(droppedFiles));
   }
 
-  public onRemoveTrace(trace: LoadedTrace) {
+  public onRemoveTrace(event: MouseEvent, trace: LoadedTrace) {
+    event.preventDefault();
+    event.stopPropagation();
     this.traceCoordinator.removeTrace(trace.type);
     this.loadedTraces = this.loadedTraces.filter(loaded => loaded.type !== trace.type);
   }

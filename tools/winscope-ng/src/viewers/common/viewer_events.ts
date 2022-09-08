@@ -17,5 +17,8 @@ export const ViewerEvents = {
   HierarchyPinnedChange: "HierarchyPinnedChange",
   HighlightedChange: "HighlightedChange",
   HierarchyUserOptionsChange: "HierarchyUserOptionsChange",
-  HierarchyFilterChange: "HierarchyFilterChange"
+  HierarchyFilterChange: "HierarchyFilterChange",
+  SelectedTreeChange: "SelectedTreeChange",
+  PropertiesUserOptionsChange: "PropertiesUserOptionsChange",
+  PropertiesFilterChange: "PropertiesFilterChange"
 };

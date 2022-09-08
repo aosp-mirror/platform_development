@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 import {ComponentFixture, TestBed} from "@angular/core/testing";
-import { TreeElementComponent } from "./tree_element.component";
+import { TreeNodePropertiesDataViewComponent } from "./tree_node_properties_data_view.component";
 import { ComponentFixtureAutoDetect } from "@angular/core/testing";
-import { NO_ERRORS_SCHEMA } from "@angular/core";
 
-describe("TreeElementComponent", () => {
-  let fixture: ComponentFixture<TreeElementComponent>;
-  let component: TreeElementComponent;
+describe("TreeNodePropertiesDataViewComponent", () => {
+  let fixture: ComponentFixture<TreeNodePropertiesDataViewComponent>;
+  let component: TreeNodePropertiesDataViewComponent;
   let htmlElement: HTMLElement;
 
   beforeAll(async () => {
@@ -29,14 +28,13 @@ describe("TreeElementComponent", () => {
         { provide: ComponentFixtureAutoDetect, useValue: true }
       ],
       declarations: [
-        TreeElementComponent
+        TreeNodePropertiesDataViewComponent
       ],
-      schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
   });
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(TreeElementComponent);
+    fixture = TestBed.createComponent(TreeNodePropertiesDataViewComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
   });

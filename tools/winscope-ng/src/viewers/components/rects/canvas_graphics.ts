@@ -56,9 +56,9 @@ export class CanvasGraphics {
       alpha: true
     });
     let labelRenderer: CSS2DRenderer;
-    if (document.querySelector("#labels-canvas")) {
+    if (document.querySelector(".labels-canvas")) {
       labelRenderer = new CSS2DRenderer({
-        element: document.querySelector("#labels-canvas")! as HTMLElement
+        element: document.querySelector(".labels-canvas")! as HTMLElement
       });
     } else {
       labelRenderer = new CSS2DRenderer();
@@ -66,7 +66,7 @@ export class CanvasGraphics {
       labelRenderer.domElement.style.top = "0px";
       labelRenderer.domElement.style.width = "100%";
       labelRenderer.domElement.style.height = "40rem";
-      labelRenderer.domElement.id = "labels-canvas";
+      labelRenderer.domElement.className = "labels-canvas";
       labelRenderer.domElement.style.pointerEvents = "none";
       document.querySelector(".canvas-container")?.appendChild(labelRenderer.domElement);
     }
@@ -141,6 +141,7 @@ export class CanvasGraphics {
     lowestY: number
   ) {
     this.targetObjects = [];
+    this.clearLabelElements();
     this.rects.forEach(rect => {
       const mustNotDrawInVisibleView = this.visibleView && !rect.isVisible;
       const mustNotDrawInXrayViewWithoutVirtualDisplays = !this.visibleView && !this.showVirtualDisplays && rect.isDisplay && rect.isVirtual;
@@ -175,17 +176,18 @@ export class CanvasGraphics {
         scene.add(edgeSegments);
       }
 
-      // label circular marker
-      const circle = this.setCircleMaterial(planeRect, rect);
-      scene.add(circle);
-
       // if not a display rect, should be clickable
       if (!rect.isDisplay) this.targetObjects.push(planeRect);
 
-      // label line
-      const [line, rectLabel] = this.createLabel(rect, circle, lowestY, rectCounter);
-      scene.add(line);
-      scene.add(rectLabel);
+      // labelling elements
+      if (rect.label.length > 0) {
+        const circle = this.setCircleMaterial(planeRect, rect);
+        scene.add(circle);
+        const [line, rectLabel] = this.createLabel(rect, circle, lowestY, rectCounter);
+        scene.add(line);
+        scene.add(rectLabel);
+      }
+
       rectCounter++;
     });
   }
@@ -261,10 +263,8 @@ export class CanvasGraphics {
     linePoints.push(endPos);
 
     //add rectangle label
-    document.querySelector(`.label-${rectCounter}`)?.remove();
     const rectLabelDiv: HTMLElement = document.createElement("div");
     this.labelElements.push(rectLabelDiv);
-    rectLabelDiv.className = `label-${rectCounter}`;
     rectLabelDiv.textContent = labelText;
     rectLabelDiv.style.fontSize = "10px";
     if (isGrey) {

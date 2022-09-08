@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export const treeElementStyles = `
+export const treeNodeDataViewStyles = `
     .kind {font-weight: bold}
 
     span {overflow-wrap: break-word; flex: 1 1 auto; width: 0; word-break: break-all}
@@ -47,5 +47,26 @@ export const treeElementStyles = `
     .tree-view-chip.tree-view-chip-hwc {
         background-color: #448aff;
         color: black;
+    }
+`;
+
+export const treeNodePropertiesDataViewStyles = `
+    .key {
+        color: #4b4b4b;
+    }
+    .value {
+        color: #8A2BE2;
+    }
+    .value.null {
+        color: #e1e1e1;
+    }
+    .value.number {
+        color: #4c75fd;
+    }
+    .value.true {
+        color: #2ECC40;
+    }
+    .value.false {
+        color: #FF4136;
     }
 `;
