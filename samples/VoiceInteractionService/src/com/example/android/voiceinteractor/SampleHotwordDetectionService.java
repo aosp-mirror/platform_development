@@ -41,8 +41,8 @@ public class SampleHotwordDetectionService extends HotwordDetectionService {
     static final String TAG = "SHotwordDetectionSrvc";
 
     // AudioRecord config
-    private static final Duration AUDIO_RECORD_BUFFER_DURATION = Duration.ofSeconds(1);
-    private static final Duration DSP_AUDIO_READ_DURATION = Duration.ofSeconds(5);
+    private static final Duration AUDIO_RECORD_BUFFER_DURATION = Duration.ofSeconds(5);
+    private static final Duration DSP_AUDIO_READ_DURATION = Duration.ofSeconds(3);
     private static final Duration AUDIO_RECORD_RELEASE_TIMEOUT = Duration.ofSeconds(10);
 
     private static AudioRecord createAudioRecord(AlwaysOnHotwordDetector.EventPayload eventPayload,
