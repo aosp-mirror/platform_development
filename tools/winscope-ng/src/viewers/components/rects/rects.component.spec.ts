@@ -101,9 +101,9 @@ describe("RectsComponent", () => {
         isClickable: false
       }
     ]);
-    spyOn(component.rectsComponent, "drawRects").and.callThrough();
+    spyOn(component.rectsComponent, "refreshCanvas").and.callThrough();
     fixture.detectChanges();
-    expect(component.rectsComponent.drawRects).toHaveBeenCalled();
+    expect(component.rectsComponent.refreshCanvas).toHaveBeenCalled();
   });
 
   @Component({

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input, OnChanges, OnDestroy, Inject, ElementRef, SimpleChanges, OnInit } from "@angular/core";
+import { Component, Input, OnChanges, OnDestroy, Inject, ElementRef, SimpleChanges, OnInit} from "@angular/core";
 import { RectsUtils } from "viewers/components/rects/rects_utils";
 import { Point, Rectangle, RectMatrix, RectTransform } from "viewers/common/rectangle";
 import { CanvasGraphics } from "viewers/components/rects/canvas_graphics";
@@ -40,15 +40,24 @@ import { ViewerEvents } from "viewers/common/viewer_events";
             [checked]="showVirtualDisplays()"
             (change)="updateVirtualDisplays($event.checked!)"
           >Show virtual</mat-checkbox>
-          <div class="zoom-container control-item">
-            <button class="zoom-btn" (click)="updateZoom(true)">
+          <div class="right-btn-container control-item">
+            <button class="right-btn" (click)="updateZoom(true)">
               <mat-icon aria-hidden="true">
                 zoom_in
               </mat-icon>
             </button>
-            <button class="zoom-btn" (click)="updateZoom(false)">
+            <button class="right-btn" (click)="updateZoom(false)">
               <mat-icon aria-hidden="true">
                 zoom_out
+              </mat-icon>
+            </button>
+            <button
+              class="right-btn"
+              (click)="resetCamera()"
+              matTooltip="Restore camera settings"
+            >
+              <mat-icon aria-hidden="true">
+                restore
               </mat-icon>
             </button>
           </div>
@@ -58,7 +67,7 @@ import { ViewerEvents } from "viewers/common/viewer_events";
         <div class="slider" [class.rotation]="true">
           <span class="slider-label">Rotation</span>
           <mat-slider
-            step="0.01"
+            step="0.001"
             min="0"
             max="4"
             aria-label="units"
@@ -82,7 +91,7 @@ import { ViewerEvents } from "viewers/common/viewer_events";
     </mat-card-header>
     <mat-card-content class="rects-content">
       <div class="canvas-container">
-        <canvas class="rects-canvas" (click)="onRectClick($event)">
+        <canvas class="rects-canvas" (click)="onRectClick($event)" oncontextmenu="return false">
         </canvas>
       </div>
       <div class="tabs" *ngIf="displayIds.length > 1">
@@ -153,12 +162,12 @@ import { ViewerEvents } from "viewers/common/viewer_events";
         padding-top: 0px;
         font-weight: bold;
       }
-      .zoom-container {
+      .right-btn-container {
         position: relative;
         vertical-align: middle;
         float: right;
       }
-      .zoom-btn {
+      .right-btn {
         position: relative;
         display: inline-flex;
         background: none;
@@ -192,26 +201,35 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
   @Input() hasVirtualDisplays = false;
   @Input() displayIds: Array<number> = [];
   @Input() highlightedItems: Array<string> = [];
+  canvasInitialised = false;
+  rectsComponentInitialised = false;
 
   constructor(
     @Inject(ElementRef) private elementRef: ElementRef,
   ) {
     this.canvasGraphics = new CanvasGraphics();
-    this.currentDisplayId = this.displayIds[0] ?? 0; //default stack id is usually zero
+    this.currentDisplayId = this.displayIds[0] ?? 0; // default stack id is usually zero
   }
 
   ngOnInit() {
+    this.canvas = this.elementRef.nativeElement.querySelector("canvas")! as HTMLCanvasElement;
+    this.canvasContainer = this.elementRef.nativeElement.querySelector(".canvas-container")!;
+
     window.addEventListener("resize", () => this.refreshCanvas());
-    this.canvasContainer = this.elementRef.nativeElement.querySelector(".canvas-container");
-    this.resizeObserver = new ResizeObserver((entries) => {
-      if (entries[0].contentRect.height > 0) {
-        this.refreshCanvas();
-      }
-    });
-    this.resizeObserver.observe(this.canvasContainer!);
+    this.addContainerResizeListener();
+
+    this.currentDisplayId = this.displayIds[0];
+    this.canvasGraphics.updateHighlightedItems(this.highlightedItems);
+    if (this.rects.length > 0) {
+      this.formatAndDrawRects(true);
+    }
+    this.rectsComponentInitialised = true; // prevent ngOnChanges from being called before ngOnInit
   }
 
   ngOnChanges(changes: SimpleChanges) {
+    if (!this.rectsComponentInitialised) {
+      return; // ngOnInit not yet called
+    }
     if (changes["displayIds"]) {
       if (!this.displayIds.includes(this.currentDisplayId)) {
         this.currentDisplayId = this.displayIds[0];
@@ -253,6 +271,11 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
     this.refreshCanvas();
   }
 
+  public resetCamera() {
+    this.canvasGraphics.resetCamera();
+    this.refreshCanvas();
+  }
+
   public updateZoom(zoom: boolean) {
     this.canvasGraphics.updateZoom(zoom);
     this.refreshCanvas();
@@ -276,22 +299,26 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
     this.refreshCanvas();
   }
 
-  public onRectClick(event:MouseEvent) {
+  public onRectClick(event: MouseEvent) {
     this.setNormalisedMousePos(event);
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(this.mouse, this.canvasGraphics.getCamera());
     // create an array containing all objects in the scene with which the ray intersects
     const intersects = raycaster.intersectObjects(this.canvasGraphics.getTargetObjects());
     // if there is one (or more) intersections
-    if (intersects.length > 0){
+    if (intersects.length > 0) {
       const id = intersects[0].object.name;
       this.updateHighlightedItems(id);
     }
   }
 
   public drawRects() {
-    const canvas = this.elementRef.nativeElement.querySelector(".rects-canvas") as HTMLCanvasElement;
-    this.canvasGraphics.initialise(canvas, this.canvasContainer);
+    if (!this.canvasContainer || !this.canvas) {
+      return;
+    } else if (!this.canvasInitialised) {
+      this.canvasGraphics.initialiseCanvas(this.canvas, this.canvasContainer);
+      this.canvasInitialised = true;
+    }
     this.refreshCanvas();
   }
 
@@ -310,7 +337,7 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
     this.drawRects();
   }
 
-  private setNormalisedMousePos(event:MouseEvent) {
+  private setNormalisedMousePos(event: MouseEvent) {
     event.preventDefault();
     const canvas = (event.target as Element);
     const canvasOffset = canvas.getBoundingClientRect();
@@ -345,7 +372,7 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
-  private refreshCanvas() {
+  public refreshCanvas() {
     this.updateVariablesBeforeRefresh();
     this.canvasGraphics.refreshCanvas();
   }
@@ -391,9 +418,9 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
   private s(sourceCoordinates: Point): Point {
     let scale;
     if (this.boundsWidth < this.boundsHeight) {
-      scale = this.canvasGraphics.cameraHalfHeight*2 * 0.6 / this.boundsHeight;
+      scale = this.canvasGraphics.CAMERA_HALF_HEIGHT * 2 * 0.6 / this.boundsHeight;
     } else {
-      scale = this.canvasGraphics.cameraHalfWidth*2 * 0.6 / this.boundsWidth;
+      scale = this.canvasGraphics.CAMERA_HALF_WIDTH * 2 * 0.6 / this.boundsWidth;
     }
     return {
       x: sourceCoordinates.x * scale,
@@ -413,6 +440,15 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
+  private addContainerResizeListener() {
+    this.resizeObserver = new ResizeObserver((entries) => {
+      if (entries[0].contentRect.height > 0 && this.canvasInitialised) {
+        this.refreshCanvas();
+      }
+    });
+    this.resizeObserver.observe(this.canvasContainer!);
+  }
+
   private canvasGraphics: CanvasGraphics;
   private boundsWidth = 0;
   private boundsHeight = 0;
@@ -421,4 +457,5 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
   private currentDisplayId: number;
   private resizeObserver!: ResizeObserver;
   private canvasContainer!: Element;
+  private canvas!: HTMLCanvasElement;
 }
