@@ -17,12 +17,15 @@
 package com.example.android.voiceinteractor;
 
 import android.media.AudioRecord;
+import android.os.Trace;
 import android.util.Log;
 
+import java.time.Duration;
 import java.util.Arrays;
 
 public class AudioUtils {
     private static final String TAG = "Hotword-AudioUtils";
+    private static final Duration AUDIO_RECORD_READ_DURATION = Duration.ofSeconds(1);
 
     static int read(AudioRecord record, int bytesPerSecond, float secondsToRead, byte[] buffer) {
         Log.i(TAG, "read(): bytesPerSecond=" + bytesPerSecond
@@ -30,8 +33,12 @@ public class AudioUtils {
         int numBytes = 0;
         int nextSecondToSample = 0;
         while (true) {
-            int bytesRead = record.read(buffer, numBytes, Math.round(bytesPerSecond * secondsToRead));
-            Log.i(TAG, "AudioRecord.read offset=" + numBytes + ", size=" + Math.round(bytesPerSecond * secondsToRead));
+            Trace.beginAsyncSection("AudioUtils.read", 0);
+            int bytesRead = record.read(buffer, numBytes,
+                    (int) (bytesPerSecond * AUDIO_RECORD_READ_DURATION.getSeconds()));
+            Trace.endAsyncSection("AudioUtils.read", 0);
+            Log.i(TAG, "AudioRecord.read offset=" + numBytes + ", size="
+                    + (bytesPerSecond * AUDIO_RECORD_READ_DURATION.getSeconds()));
             numBytes += bytesRead;
 
             if (bytesRead <= 0) {
