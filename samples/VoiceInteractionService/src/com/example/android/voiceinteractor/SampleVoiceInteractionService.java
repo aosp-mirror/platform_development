@@ -49,7 +49,7 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
 
     // AudioRecord config
     private static final Duration AUDIO_RECORD_BUFFER_DURATION = Duration.ofSeconds(5);
-    private static final Duration AUDIO_READ_DURATION = Duration.ofSeconds(5);
+    private static final Duration AUDIO_READ_DURATION = Duration.ofSeconds(3);
 
     // DSP model config
     private static final Locale DSP_MODEL_LOCALE = Locale.US;
@@ -192,8 +192,8 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
 //            AudioRecord record = createAudioRecord(eventPayload, bytesPerSecond, sessionId);
 
             AudioRecord record = createAudioRecord(eventPayload, bytesPerSecond);
+            Trace.endAsyncSection("SampleVoiceInteractionService.createAudioRecord", 1);
             if (record.getState() != AudioRecord.STATE_INITIALIZED) {
-                Trace.endAsyncSection("SampleVoiceInteractionService.createAudioRecord", 1);
                 Trace.setCounter("SampleVoiceInteractionService AudioRecord.STATE_INITIALIZED",
                         record.getState());
                 Log.e(TAG, "Failed to init first AudioRecord.");
@@ -206,9 +206,13 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
             }
 
             byte[] buffer = new byte[bytesPerSecond * (int) AUDIO_READ_DURATION.getSeconds()];
+            Trace.beginAsyncSection("SampleVoiceInteractionService.startRecording", 1);
             record.startRecording();
+            Trace.endAsyncSection("SampleVoiceInteractionService.startRecording", 1);
+            Trace.beginAsyncSection("SampleVoiceInteractionService.read", 1);
             int numBytes = AudioUtils.read(record, bytesPerSecond, AUDIO_READ_DURATION.getSeconds(),
                     buffer);
+            Trace.endAsyncSection("SampleVoiceInteractionService.read", 1);
 
 //            try {
 //                Thread.sleep(2000);
@@ -218,8 +222,6 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
 //            }
 
 
-            Trace.endAsyncSection("SampleVoiceInteractionService.createAudioRecord", 1);
-            Trace.setCounter("SampleVoiceInteractionService Read Complete", numBytes);
             record.stop();
             record.release();
 
