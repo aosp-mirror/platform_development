@@ -160,9 +160,9 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
 
         @Override
         public void onDetected(@NonNull EventPayload eventPayload) {
-            Trace.beginAsyncSection("SampleVoiceInteractionService.onDetected", 0);
+            Trace.beginAsyncSection("VIS.onDetected", 0);
             onDetected(eventPayload, false);
-            Trace.endAsyncSection("SampleVoiceInteractionService.onDetected", 0);
+            Trace.endAsyncSection("VIS.onDetected", 0);
         }
 
         public void onDetected(@NonNull EventPayload eventPayload, boolean generateSessionId) {
@@ -177,7 +177,7 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
             int bytesPerSecond =
                     eventPayload.getCaptureAudioFormat().getFrameSizeInBytes() * sampleRate;
 
-            Trace.beginAsyncSection("SampleVoiceInteractionService.createAudioRecord", 1);
+            Trace.beginAsyncSection("VIS.createAudioRecord", 1);
 
             // For Non-trusted:
 //            Integer captureSession = 0;
@@ -192,9 +192,9 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
 //            AudioRecord record = createAudioRecord(eventPayload, bytesPerSecond, sessionId);
 
             AudioRecord record = createAudioRecord(eventPayload, bytesPerSecond);
-            Trace.endAsyncSection("SampleVoiceInteractionService.createAudioRecord", 1);
+            Trace.endAsyncSection("VIS.createAudioRecord", 1);
             if (record.getState() != AudioRecord.STATE_INITIALIZED) {
-                Trace.setCounter("SampleVoiceInteractionService AudioRecord.STATE_INITIALIZED",
+                Trace.setCounter("VIS AudioRecord.getState",
                         record.getState());
                 Log.e(TAG, "Failed to init first AudioRecord.");
                 try {
@@ -206,13 +206,13 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
             }
 
             byte[] buffer = new byte[bytesPerSecond * (int) AUDIO_READ_DURATION.getSeconds()];
-            Trace.beginAsyncSection("SampleVoiceInteractionService.startRecording", 1);
+            Trace.beginAsyncSection("VIS.startRecording", 1);
             record.startRecording();
-            Trace.endAsyncSection("SampleVoiceInteractionService.startRecording", 1);
-            Trace.beginAsyncSection("SampleVoiceInteractionService.read", 1);
+            Trace.endAsyncSection("VIS.startRecording", 1);
+            Trace.beginAsyncSection("AudioUtils.read", 1);
             int numBytes = AudioUtils.read(record, bytesPerSecond, AUDIO_READ_DURATION.getSeconds(),
                     buffer);
-            Trace.endAsyncSection("SampleVoiceInteractionService.read", 1);
+            Trace.endAsyncSection("AudioUtils.read", 1);
 
 //            try {
 //                Thread.sleep(2000);
