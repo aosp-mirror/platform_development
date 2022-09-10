@@ -33,8 +33,59 @@ Tap directRecord to simulate the non-DSP case (must be done after a dsp trigger 
     reuses the previous data).
 
 Debugging:
-*  Set DEBUG to true in AlwaysOnHotwordDetector
-*  uncomment LOG_NDEBUG lines at the top in AudioFlinger.cpp, Threads.cpp, Tracks.cpp,
+* Set DEBUG to true in AlwaysOnHotwordDetector
+* uncomment LOG_NDEBUG lines at the top in AudioFlinger.cpp, Threads.cpp, Tracks.cpp,
    AudioPolicyInterfaceImpl.cpp, AudioPolicyService.cpp
-*  Use this logcat filter:
+* Use this logcat filter:
    com.example.android.voiceinteractor|AlwaysOnHotword|SoundTrigger|RecordingActivityMonitor|soundtrigger|AudioPolicyManager|AudioFlinger|AudioPolicyIntefaceImpl|AudioPolicyService|VIS|SHotwordDetectionSrvc|Hotword-AudioUtils
+
+Collecting trace events: \
+Trace events are used throughout the test app to measure the time it takes to read the AudioRecord
+data in both the VoiceInteractionService and the trusted HotwordDetectionService. This section can
+be used as a guide to collect and observe this trace data.
+
+* Trace events:
+    * 'VIS.onDetected' and 'HDS.onDetected'
+    * 'VIS.createAudioRecord' and 'HDS.createAudioRecord'
+    * 'VIS.startRecording' and 'HDS.startRecording'
+    * 'AudioUtils.read' and 'AudioRecord.read'
+    * 'AudioUtils.bytesRead'
+      * Counter trace value increasing as the AudioUtils.read call progresses. This value is reset after each new call.
+
+* How to capture a trace:
+  * Follow this guide or a similar one: https://developer.android.com/topic/performance/tracing/on-device
+  * Open https://perfetto.dev/#/running.md and upload a trace report
+  * Search for the events manually or run the below example SQL query to pull out the events.
+
+* Perfetto trace SQL query
+  * How to run a SQL query: https://perfetto.dev/docs/quickstart/trace-analysis
+    * Covers both command line and HTML implementations
+```
+WITH 
+    audio_events AS (
+        SELECT 
+            ts, 
+            (dur / 1000000) as dur_ms, 
+            name 
+        FROM 
+            slice 
+        WHERE 
+            (name LIKE "%AudioUtils.read%"
+             OR name LIKE "%AudioRecord.read%"
+             OR name LIKE "%onDetected%"
+             OR name LIKE "%startRecording%"
+             OR name LIKE "%createAudioRecord%")
+    ),
+    audio_counters AS (
+        SELECT ts, name, value
+        FROM counter
+        INNER JOIN track ON counter.track_id = track.id
+        WHERE name LIKE "%AudioUtils.bytesRead%"
+    )
+SELECT ts, 'event' as type, name, dur_ms as value
+FROM audio_events
+UNION ALL
+SELECT ts, 'counter' as type, name, value
+FROM audio_counters
+ORDER BY ts
+```
