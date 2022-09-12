@@ -43,8 +43,6 @@ If there are rustc warning messages, this script will add
 a warning comment to the owner crate module in Android.bp.
 """
 
-from __future__ import print_function
-
 import argparse
 import glob
 import json
@@ -58,7 +56,7 @@ import sys
 
 # Some Rust packages include extra unwanted crates.
 # This set contains all such excluded crate names.
-EXCLUDED_CRATES = set(['protobuf_bin_gen_rust_do_not_use'])
+EXCLUDED_CRATES = {'protobuf_bin_gen_rust_do_not_use'}
 
 RENAME_MAP = {
     # This map includes all changes to the default rust module names
