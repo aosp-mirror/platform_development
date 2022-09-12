@@ -1547,7 +1547,7 @@ class Runner(object):
     return ''
 
   def add_empty_test(self, name):
-    if name == 'unittests':
+    if name.startswith('unittests'):
       self.empty_unittests = True
     else:
       self.empty_tests.add(name)
