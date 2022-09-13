@@ -44,7 +44,7 @@ import java.time.Duration;
 import java.util.Locale;
 
 public class SampleVoiceInteractionService extends VoiceInteractionService {
-    public static final String DSP_MODEL_KEYPHRASE = "Test Keyphrase";
+    public static final String DSP_MODEL_KEYPHRASE = "X Google";
     private static final String TAG = "VIS";
 
     // AudioRecord config
