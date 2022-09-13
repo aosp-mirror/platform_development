@@ -39,9 +39,6 @@ $(call sdk-repo-pkg-zip,$(2),$(3),$(4)): $(3)
 $(call dist-for-goals, sdk_repo, $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
 $(1) += $(4) $(2) \
     $(call sdk-repo-pkg-zip,$(2),$(3),$(4)):$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
-
-$(call declare-1p-container,$(call sdk-repo-pkg-zip,$(2),$(3),$(4)),sdk_repo)
-$(call declare-container-license-deps,$(call sdk-repo-pkg-zip,$(2),$(3),$(4)),$(3),$(PRODUCT_OUT)/:/)
 endef
 
 # Defines the rule to build an SDK repository package when the
@@ -65,9 +62,6 @@ $(call sdk-repo-pkg-zip,$(2),$(3),$(4)): $(3)
 $(call dist-for-goals, sdk_repo, $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
 $(1) += $(4) $(2) \
     $(call sdk-repo-pkg-zip,$(2),$(3),$(4)):$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
-
-$(call declare-1p-container,$(call sdk-repo-pkg-zip,$(2),$(3),$(4)),sdk_repo)
-$(call declare-container-license-deps,$(call sdk-repo-pkg-zip,$(2),$(3),$(4)),$(3),$(PRODUCT_OUT)/:/)
 endef
 
 # Defines the rule to build an SDK repository package when the
@@ -95,9 +89,6 @@ $(call sdk-repo-pkg-zip,$(2),$(3),$(4)): $(3)
 $(call dist-for-goals, sdk_repo, $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
 $(1) += $(4) $(2) \
     $(call sdk-repo-pkg-zip,$(2),$(3),$(4)):$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
-
-$(call declare-1p-container,$(call sdk-repo-pkg-zip,$(2),$(3),$(4)),sdk_repo)
-$(call declare-container-license-deps,$(call sdk-repo-pkg-zip,$(2),$(3),$(4)),$(3),$(PRODUCT_OUT)/:/)
 endef
 
 # Defines the rule to build an SDK sources package.
@@ -116,9 +107,6 @@ $(call sdk-repo-pkg-zip,$(2),$(3),$(4)): $(3) development/build/tools/mk_sources
 $(call dist-for-goals, sdk_repo, $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
 $(1) += $(4) $(2) \
     $(call sdk-repo-pkg-zip,$(2),$(3),$(4)):$(notdir $(call sdk-repo-pkg-zip,$(2),$(3),$(4)))
-
-$(call declare-1p-container,$(call sdk-repo-pkg-zip,$(2),$(3),$(4)),sdk_repo)
-$(call declare-container-license-deps,$(call sdk-repo-pkg-zip,$(2),$(3),$(4)),$(3) $(HOST_OUT)/development/sdk/source_source.properties,$(PRODUCT_OUT)/:/)
 endef
 
 # Defines the rule to build an XML file for a package.
@@ -132,9 +120,6 @@ $(1): $$(XMLLINT) development/build/tools/mk_sdk_repo_xml.sh $(2) $(3)
 	XMLLINT=$$(XMLLINT) development/build/tools/mk_sdk_repo_xml.sh $$@ $(2) $(4)
 
 $$(call dist-for-goals,sdk_repo,$(1))
-
-$(call declare-1p-target,$(1),sdk_repo)
-$(call declare-container-license-deps,$(1),$(2) $(3),$(PRODUCT_OUT)/:/)
 endef
 
 # -----------------------------------------------------------------
