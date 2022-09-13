@@ -1,4 +1,4 @@
-9/*
+9;/*
  * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,64 +18,26 @@ import { UiData } from "./ui_data";
 import { UserOptions } from "viewers/common/user_options";
 import { TraceType } from "common/trace/trace_type";
 import { WindowManagerState } from "common/trace/flickerlib/common";
-import { DiffType, PropertiesTree, Terminal, Tree } from "viewers/common/tree_utils";
+import { PropertiesTree, Terminal, HierarchyTree } from "viewers/common/tree_utils";
 import { UnitTestUtils } from "test/unit/utils";
+import { HierarchyTreeBuilder } from "test/unit/hierarchy_tree_builder";
+import { VISIBLE_CHIP } from "viewers/common/chip";
 
 describe("PresenterWindowManager", () => {
   let presenter: Presenter;
   let uiData: UiData;
   let entries: Map<TraceType, any>;
-  let selectedItem: Tree;
+  let selectedTree: HierarchyTree;
 
   beforeAll(async () => {
     entries = new Map<TraceType, any>();
     const entry: WindowManagerState = await UnitTestUtils.getWindowManagerState();
-    selectedItem = {
-      layerId: "3",
-      name: "Child1",
-      displayId: 0,
-      isVisible: true,
-      stableId: "3 Child1",
-      shortName: undefined,
-      simplifyNames: true,
-      showInFilteredView: true,
-      proto: {
-        name: "KeepInFilter",
-      },
-      chips: [],
-      children: [
-        {
-          layerId: "2",
-          name: "Child2",
-          displayId: 0,
-          children: [],
-          stableId: "2 Child2",
-          shortName: undefined,
-          simplifyNames: true,
-          proto: {
-            name: "KeepInFilter",
-          },
-          isVisible: true,
-          showInFilteredView: true,
-          chips: [],
-        },
-        {
-          layerId: "8",
-          name: "Child8",
-          displayId: 0,
-          children: [],
-          stableId: "8 Child8",
-          shortName: undefined,
-          simplifyNames: true,
-          proto: {
-            name: "RejectFromFilter",
-          },
-          isVisible: true,
-          showInFilteredView: true,
-          chips: [],
-        },
-      ],
-    };
+
+    selectedTree = new HierarchyTreeBuilder().setName("ScreenDecorOverlayBottom")
+      .setStableId("WindowState 2088ac1 ScreenDecorOverlayBottom").setKind("WindowState")
+      .setSimplifyNames(true).setShortName("ScreenDecorOverlayBottom").setLayerId(61)
+      .setFilteredView(true).setIsVisible(true).setChips([VISIBLE_CHIP]).build();
+
     entries.set(TraceType.WINDOW_MANAGER, [entry, null]);
   });
 
@@ -100,12 +62,12 @@ describe("PresenterWindowManager", () => {
     expect(propertyOpts).toBeTruthy();
 
     // does not check specific tree values as tree generation method may change
-    expect(Object.keys(uiData.tree).length > 0).toBeTrue();
+    expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
   });
 
   it("can handle unavailable trace entry", () => {
     presenter.notifyCurrentTraceEntries(entries);
-    expect(Object.keys(uiData.tree).length > 0).toBeTrue();
+    expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
     const emptyEntries = new Map<TraceType, any>();
     presenter.notifyCurrentTraceEntries(emptyEntries);
     expect(uiData.tree).toBeFalsy();
@@ -114,11 +76,10 @@ describe("PresenterWindowManager", () => {
   it("can update pinned items", () => {
     presenter.notifyCurrentTraceEntries(entries);
     expect(uiData.pinnedItems).toEqual([]);
-    const pinnedItem = {
-      name: "FirstPinnedItem",
-      layerId: 4,
-      stableId: "TestItem 4 FirstPinnedItem"
-    };
+
+    const pinnedItem = new HierarchyTreeBuilder().setName("FirstPinnedItem")
+      .setStableId("TestItem 4").setLayerId(4).build();
+
     presenter.updatePinnedItems(pinnedItem);
     expect(uiData.pinnedItems).toContain(pinnedItem);
   });
@@ -152,12 +113,11 @@ describe("PresenterWindowManager", () => {
     };
 
     presenter.notifyCurrentTraceEntries(entries);
-    expect(uiData.tree.children.length).toEqual(1);
-
+    expect(uiData.tree?.children.length).toEqual(1);
     presenter.updateHierarchyTree(userOptions);
     expect(uiData.hierarchyUserOptions).toEqual(userOptions);
     // nested children should now be on same level initial parent
-    expect(uiData.tree.children.length).toEqual(72);
+    expect(uiData.tree?.children.length).toEqual(72);
   });
 
   it("can filter hierarchy tree", () => {
@@ -178,21 +138,21 @@ describe("PresenterWindowManager", () => {
         name: "Flat",
         enabled: true
       }
-    }
+    };
     presenter.notifyCurrentTraceEntries(entries);
     presenter.updateHierarchyTree(userOptions);
-    expect(uiData.tree.children.length).toEqual(72);
+    expect(uiData.tree?.children.length).toEqual(72);
     presenter.filterHierarchyTree("ScreenDecor");
     // All but two window states should be filtered out
-    expect(uiData.tree.children.length).toEqual(2);
+    expect(uiData.tree?.children.length).toEqual(2);
   });
 
 
   it("can set new properties tree and associated ui data", () => {
     presenter.notifyCurrentTraceEntries(entries);
-    presenter.newPropertiesTree(selectedItem);
+    presenter.newPropertiesTree(selectedTree);
     // does not check specific tree values as tree transformation method may change
-    expect(Object.keys(uiData.selectedTree).length > 0).toBeTrue();
+    expect(uiData.propertiesTree).toBeTruthy();
   });
 
   it("can update properties tree", () => {
@@ -214,31 +174,28 @@ describe("PresenterWindowManager", () => {
     };
 
     presenter.notifyCurrentTraceEntries(entries);
-    presenter.newPropertiesTree(selectedItem);
+    presenter.newPropertiesTree(selectedTree);
+    expect(uiData.propertiesTree?.diffType).toBeFalsy();
     presenter.updatePropertiesTree(userOptions);
     expect(uiData.propertiesUserOptions).toEqual(userOptions);
     //check that diff type added
-    expect(uiData.selectedTree.diffType).toEqual(DiffType.NONE);
+    expect(uiData.propertiesTree?.diffType).toBeTruthy();
   });
 
   it("can filter properties tree", () => {
     presenter.notifyCurrentTraceEntries(entries);
-    presenter.newPropertiesTree(selectedItem);
+    presenter.newPropertiesTree(selectedTree);
 
-    let nonTerminalChildren = uiData.selectedTree
-      .children.filter(
-        (child: PropertiesTree) => !(child.propertyKey instanceof Terminal)
-      );
+    let nonTerminalChildren = uiData.propertiesTree?.children?.filter(
+      (child: PropertiesTree) => typeof child.propertyKey === "string"
+    ) ?? [];
 
-    expect(nonTerminalChildren.length).toEqual(2);
+    expect(nonTerminalChildren.length).toEqual(45);
+    presenter.filterPropertiesTree("visible");
 
-    presenter.filterPropertiesTree("KeepInFilter");
-
-    // one child should be filtered out
-    nonTerminalChildren = uiData.selectedTree
-      .children.filter(
-        (child: PropertiesTree) => !(child.propertyKey instanceof Terminal)
-      );
-    expect(nonTerminalChildren.length).toEqual(1);
+    nonTerminalChildren = uiData.propertiesTree?.children?.filter(
+      (child: PropertiesTree) => typeof child.propertyKey === "string"
+    ) ?? [];
+    expect(nonTerminalChildren.length).toEqual(4);
   });
 });

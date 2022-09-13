@@ -38,7 +38,7 @@ import { PersistentStore } from "common/persistent_store";
         <div fxLayout="row wrap" fxLayoutGap="10px grid" class="card-grid">
           <mat-card id="sf-hierarchy-view" class="hierarchy-view">
             <hierarchy-view
-              [tree]="inputData?.tree"
+              [tree]="inputData?.tree ?? null"
               [dependencies]="inputData?.dependencies ?? []"
               [highlightedItems]="inputData?.highlightedItems ?? []"
               [pinnedItems]="inputData?.pinnedItems ?? []"
@@ -49,9 +49,8 @@ import { PersistentStore } from "common/persistent_store";
           <mat-card id="sf-properties-view" class="properties-view">
             <properties-view
               [userOptions]="inputData?.propertiesUserOptions ?? {}"
-              [selectedTree]="inputData?.selectedTree ?? {}"
-              [selectedLayer]="inputData?.selectedLayer ?? {}"
-              [summary]="inputData?.selectedTreeSummary ?? []"
+              [propertiesTree]="inputData?.propertiesTree ?? {}"
+              [selectedFlickerItem]="inputData?.selectedLayer ?? {}"
               [propertyGroups]="true"
             ></properties-view>
           </mat-card>

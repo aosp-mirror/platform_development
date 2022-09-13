@@ -15,7 +15,7 @@
  */
 import { Component, Input, Output, EventEmitter } from "@angular/core";
 import { nodeInnerItemStyles } from "viewers/components/styles/node.styles";
-import { PropertiesTree, Tree, DiffType, isParentNode } from "viewers/common/tree_utils";
+import { Tree, DiffType, isParentNode, HierarchyTree } from "viewers/common/tree_utils";
 
 @Component({
   selector: "tree-node",
@@ -50,11 +50,11 @@ import { PropertiesTree, Tree, DiffType, isParentNode } from "viewers/common/tre
     <div class="description">
       <tree-node-data-view
         [item]="item"
-        *ngIf="!isPropertiesTreeNode"
+        *ngIf="!isPropertiesTreeNode()"
       ></tree-node-data-view>
       <tree-node-properties-data-view
         [item]="item"
-        *ngIf="isPropertiesTreeNode"
+        *ngIf="isPropertiesTreeNode()"
       ></tree-node-properties-data-view>
     </div>
 
@@ -76,14 +76,13 @@ import { PropertiesTree, Tree, DiffType, isParentNode } from "viewers/common/tre
 })
 
 export class TreeNodeComponent {
-  @Input() item!: Tree | PropertiesTree;
+  @Input() item!: Tree;
   @Input() isLeaf?: boolean;
   @Input() flattened?: boolean;
   @Input() isCollapsed?: boolean;
   @Input() hasChildren?: boolean = false;
   @Input() isPinned?: boolean = false;
   @Input() isInPinnedSection?: boolean = false;
-  @Input() isPropertiesTreeNode?: boolean;
   @Input() isAlwaysCollapsed?: boolean;
 
   @Output() toggleTreeChange = new EventEmitter<void>();
@@ -96,8 +95,12 @@ export class TreeNodeComponent {
     this.collapseDiffClass = this.updateCollapseDiffClass();
   }
 
+  public isPropertiesTreeNode() {
+    return !(this.item instanceof HierarchyTree);
+  }
+
   public showPinNodeIcon() {
-    return (!this.isPropertiesTreeNode && !isParentNode(this.item.kind)) ?? false;
+    return (!this.isPropertiesTreeNode() && !isParentNode(this.item.kind ?? "")) ?? false;
   }
 
   public toggleTree(event: MouseEvent) {
@@ -145,7 +148,7 @@ export class TreeNodeComponent {
     return DiffType.MODIFIED;
   }
 
-  private getAllDiffTypesOfChildren(item: Tree | PropertiesTree) {
+  private getAllDiffTypesOfChildren(item: Tree) {
     if (!item.children) {
       return new Set();
     }

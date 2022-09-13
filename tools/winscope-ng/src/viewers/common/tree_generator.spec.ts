@@ -13,237 +13,105 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { DiffType, getFilter } from "viewers/common/tree_utils";
+import { DiffType, getFilter, HierarchyTree, TreeFlickerItem } from "viewers/common/tree_utils";
 import { TreeGenerator } from "viewers/common/tree_generator";
+import { HierarchyTreeBuilder } from "test/unit/hierarchy_tree_builder";
 
 describe("TreeGenerator", () => {
-  it("generates tree", () => {
-    const tree = {
+  let entry: TreeFlickerItem;
+  beforeAll(async () => {
+    entry = {
       kind: "entry",
       name: "BaseLayerTraceEntry",
-      shortName: "BLTE",
+      stableId: "BaseLayerTraceEntry",
       id: 0,
       chips: [],
       children: [{
         kind: "3",
-        id: "3",
+        id: 3,
         name: "Child1",
+        stableId: "3 Child1",
         children: [
           {
             kind: "2",
-            id: "2",
+            id: 2,
             name: "Child2",
+            stableId: "2 Child2",
             children: []
           }
         ]}]
     };
-    const expected = {
-      simplifyNames: false,
-      name: "BaseLayerTraceEntry",
-      id: 0,
-      children: [
-        {
-          id: "3",
-          name: "Child1",
-          children: [{
-            kind: "2",
-            id: "2",
-            name: "Child2",
-            children: [],
-            simplifyNames: false,
-            showInFilteredView: true,
-            stableId: undefined,
-            shortName: undefined,
-            chips: []
-          }],
-          kind: "3",
-          simplifyNames: false,
-          showInFilteredView: true,
-          stableId: undefined,
-          shortName: undefined,
-          chips: [],
-        }
-      ],
-      kind: "entry",
-      stableId: undefined,
-      shortName: "BLTE",
-      chips: [],
-      showInFilteredView: true,
-    };
+  });
+  it("generates tree", () => {
+    const expected: HierarchyTree = new HierarchyTreeBuilder().setName("BaseLayerTraceEntry").setKind("entry").setStableId("BaseLayerTraceEntry")
+      .setChildren([
+        new HierarchyTreeBuilder().setName("Child1").setStableId("3 Child1").setKind("3").setChildren([
+          new HierarchyTreeBuilder().setName("Child2").setStableId("2 Child2").setKind("2").setId(2).build()
+        ]).setId(3).build()
+      ]).setId(0).build();
 
     const filter = getFilter("");
-    const generator = new TreeGenerator(tree, filter);
+    const generator = new TreeGenerator(entry, filter);
     expect(generator.generateTree()).toEqual(expected);
   });
 
   it("generates diff tree with no diff", () => {
-    const tree = {
-      kind: "entry",
-      name: "BaseLayerTraceEntry",
-      shortName: "BLTE",
-      stableId: "0",
-      chips: [],
-      id: 0,
-      children: [{
-        kind: "3",
-        id: "3",
-        stableId: "3",
-        name: "Child1",
-        children: [
-          {
-            kind: "2",
-            id: "2",
-            stableId: "2",
-            name: "Child2",
-          }
-        ]}]
-    };
-    const newTree = tree;
-    const expected = {
-      simplifyNames: false,
-      name: "BaseLayerTraceEntry",
-      id: 0,
-      stableId: "0",
-      children: [
-        {
-          id: "3",
-          stableId: "3",
-          name: "Child1",
-          children: [{
-            kind: "2",
-            id: "2",
-            name: "Child2",
-            children: [],
-            simplifyNames: false,
-            showInFilteredView: true,
-            stableId: "2",
-            shortName: undefined,
-            diffType: DiffType.NONE,
-            chips: []
-          }],
-          kind: "3",
-          shortName: undefined,
-          simplifyNames: false,
-          showInFilteredView: true,
-          chips: [],
-          diffType: DiffType.NONE
-        }
-      ],
-      kind: "entry",
-      shortName: "BLTE",
-      chips: [],
-      diffType: DiffType.NONE,
-      showInFilteredView: true,
-    };
+    const expected: HierarchyTree = new HierarchyTreeBuilder().setName("BaseLayerTraceEntry").setKind("entry").setStableId("BaseLayerTraceEntry")
+      .setChildren([
+        new HierarchyTreeBuilder().setName("Child1").setStableId("3 Child1").setKind("3").setChildren([
+          new HierarchyTreeBuilder().setName("Child2").setStableId("2 Child2").setKind("2").setId(2).setDiffType(DiffType.NONE).build()
+        ]).setId(3).setDiffType(DiffType.NONE).build()
+      ]).setId(0).setDiffType(DiffType.NONE).build();
 
     const filter = getFilter("");
-    const generator = new TreeGenerator(tree, filter);
-    expect(generator.withUniqueNodeId((node: any) => {
+    const tree = new TreeGenerator(entry, filter).withUniqueNodeId((node: any) => {
       if (node) return node.stableId;
       else return null;
-    }).compareWith(newTree).generateFinalDiffTree()).toEqual(expected);
+    }).compareWith(entry).generateFinalTreeWithDiff();
+    expect(tree).toEqual(expected);
   });
 
   it("generates diff tree with moved node", () => {
-    const tree = {
+    const prevEntry: TreeFlickerItem = {
       kind: "entry",
       name: "BaseLayerTraceEntry",
-      shortName: "BLTE",
-      stableId: "0",
+      stableId: "BaseLayerTraceEntry",
       chips: [],
       id: 0,
-      children: [{
-        kind: "3",
-        id: "3",
-        stableId: "3",
-        name: "Child1",
-        children: [
-          {
-            kind: "2",
-            id: "2",
-            stableId: "2",
-            name: "Child2",
-          }
-        ]}]
-    };
-    const newTree =  {
-      kind: "entry",
-      name: "BaseLayerTraceEntry",
-      shortName: "BLTE",
-      stableId: "0",
-      chips: [],
-      id: 0,
+
       children: [
         {
           kind: "3",
-          id: "3",
-          stableId: "3",
+          id: 3,
+          stableId: "3 Child1",
           name: "Child1",
           children: []
         },
         {
           kind: "2",
-          id: "2",
-          stableId: "2",
+          id: 2,
+          stableId: "2 Child2",
           name: "Child2",
+          children: [],
         }
       ]
     };
-    const expected = {
-      simplifyNames: false,
-      name: "BaseLayerTraceEntry",
-      id: 0,
-      stableId: "0",
-      children: [
-        {
-          id: "3",
-          stableId: "3",
-          name: "Child1",
-          children: [ {
-            kind: "2",
-            id: "2",
-            name: "Child2",
-            children: [],
-            simplifyNames: false,
-            showInFilteredView: true,
-            stableId: "2",
-            shortName: undefined,
-            diffType: DiffType.ADDED_MOVE,
-            chips: []
-          }],
-          kind: "3",
-          shortName: undefined,
-          simplifyNames: false,
-          showInFilteredView: true,
-          chips: [],
-          diffType: DiffType.NONE
-        },
-        {
-          kind: "2",
-          id: "2",
-          name: "Child2",
-          children: [],
-          simplifyNames: false,
-          showInFilteredView: true,
-          stableId: "2",
-          shortName: undefined,
-          chips: [],
-          diffType: DiffType.DELETED_MOVE
-        }
-      ],
-      kind: "entry",
-      shortName: "BLTE",
-      chips: [],
-      diffType: DiffType.NONE,
-      showInFilteredView: true
-    };
+
+    const expected: HierarchyTree = new HierarchyTreeBuilder().setName("BaseLayerTraceEntry").setKind("entry").setStableId("BaseLayerTraceEntry")
+      .setChildren([
+        new HierarchyTreeBuilder().setName("Child1").setStableId("3 Child1").setKind("3").setChildren([
+          new HierarchyTreeBuilder().setName("Child2").setStableId("2 Child2").setKind("2").setId(2).setDiffType(DiffType.ADDED_MOVE).build()
+        ]).setId(3).setDiffType(DiffType.NONE).build(),
+        new HierarchyTreeBuilder().setName("Child2").setStableId("2 Child2").setKind("2").setId(2).setDiffType(DiffType.DELETED_MOVE).build()
+      ]).setId(0).setDiffType(DiffType.NONE).build();
 
     const filter = getFilter("");
-    const generator = new TreeGenerator(tree, filter);
+    const generator = new TreeGenerator(entry, filter);
     const newDiffTree = generator.withUniqueNodeId((node: any) => {
       if (node) return node.stableId;
       else return null;
-    }).compareWith(newTree).generateFinalDiffTree();
+    }).compareWith(prevEntry).generateFinalTreeWithDiff();
+
     expect(newDiffTree).toEqual(expected);
   });
 });

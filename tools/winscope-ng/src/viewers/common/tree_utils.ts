@@ -13,12 +13,87 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Layer, BaseLayerTraceEntry } from "common/trace/flickerlib/common";
 
-export type FilterType = (item: Tree | null) => boolean;
-export type Tree = Layer | BaseLayerTraceEntry;
-export type PropertiesTree = any; //TODO: make specific
-export type TreeSummary = Array<{key: string, value: string}>
+import Chip from "./chip";
+
+export type FilterType = (item: HierarchyTree | PropertiesTree | null) => boolean;
+
+export type Tree = HierarchyTree | PropertiesTree;
+
+export class HierarchyTree {
+  constructor(
+    public name: string,
+    public kind: string,
+    public stableId: string,
+    children?: HierarchyTree[]
+  ) {
+    this.children = children ?? [];
+  }
+
+  children: HierarchyTree[];
+  shortName?: string;
+  type?: string;
+  id?: string | number;
+  layerId?: number;
+  displayId?: number;
+  stackId?: number;
+  isVisible?: boolean;
+  isMissing?: boolean;
+  hwcCompositionType?: number;
+  zOrderRelativeOfId?: number;
+  zOrderRelativeOf?: any;
+  zOrderRelativeParentOf?: any;
+  isRootLayer?: boolean;
+  showInFilteredView?: boolean;
+  showInOnlyVisibleView?: boolean;
+  simplifyNames?: boolean;
+  chips?: Chip[] = [];
+  diffType?: string;
+  skip?: any;
+}
+
+export interface TreeFlickerItem {
+  children: TreeFlickerItem[];
+  name: string;
+  kind: string;
+  stableId: string;
+  displays?: TreeFlickerItem[];
+  windowStates?: TreeFlickerItem[];
+  shortName?: string;
+  type?: string;
+  id?: string | number;
+  layerId?: number;
+  displayId?: number;
+  stackId?: number;
+  isVisible?: boolean;
+  isMissing?: boolean;
+  hwcCompositionType?: number;
+  zOrderRelativeOfId?: number;
+  isRootLayer?: boolean;
+  chips?: Chip[];
+  diffType?: string;
+  skip?: any;
+  equals?: any;
+  obj?: any;
+  get?: any;
+  proto?: any;
+}
+
+export interface PropertiesDump {
+  [key: string]: any;
+}
+
+export interface PropertiesTree {
+  properties?: any;
+  kind?: string;
+  stableId?: string;
+  children?: PropertiesTree[];
+  propertyKey?: string | Terminal | null;
+  propertyValue?: string | Terminal | null;
+  name?: string | Terminal;
+  diffType?: string;
+  combined?: boolean;
+} //TODO: make specific
 
 export const DiffType = {
   NONE: "none",
@@ -32,18 +107,18 @@ export const DiffType = {
 export class Terminal {}
 
 export function diffClass(item: Tree): string {
-  const diffType = item!.diffType;
+  const diffType = item.diffType;
   return diffType ?? "";
 }
 
 export function isHighlighted(item: Tree, highlightedItems: Array<string>) {
-  return highlightedItems.includes(`${item.id}`);
+  return item instanceof HierarchyTree && highlightedItems.includes(`${item.id}`);
 }
 
 export function getFilter(filterString: string): FilterType {
   const filterStrings = filterString.split(",");
-  const positive: Tree | null[] = [];
-  const negative: Tree | null[] = [];
+  const positive: any[] = [];
+  const negative: any[] = [];
   filterStrings.forEach((f) => {
     f = f.trim();
     if (f.startsWith("!")) {

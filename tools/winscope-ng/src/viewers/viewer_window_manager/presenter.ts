@@ -17,7 +17,7 @@ import { UiData } from "./ui_data";
 import { Rectangle, RectMatrix, RectTransform } from "viewers/common/rectangle";
 import { TraceType } from "common/trace/trace_type";
 import { UserOptions } from "viewers/common/user_options";
-import { getFilter, FilterType, Tree } from "viewers/common/tree_utils";
+import { getFilter, FilterType, Tree, HierarchyTree, PropertiesTree, TreeFlickerItem } from "viewers/common/tree_utils";
 import { TreeGenerator } from "viewers/common/tree_generator";
 import { TreeTransformer } from "viewers/common/tree_transformer";
 import DisplayContent from "common/trace/flickerlib/windows/DisplayContent";
@@ -31,7 +31,7 @@ export class Presenter {
     this.notifyViewCallback(this.uiData);
   }
 
-  public updatePinnedItems(pinnedItem: Tree) {
+  public updatePinnedItems(pinnedItem: HierarchyTree) {
     const pinnedId = `${pinnedItem.id}`;
     if (this.pinnedItems.map(item => `${item.id}`).includes(pinnedId)) {
       this.pinnedItems = this.pinnedItems.filter(pinned => `${pinned.id}` != pinnedId);
@@ -78,8 +78,8 @@ export class Presenter {
     this.updateSelectedTreeUiData();
   }
 
-  public newPropertiesTree(selectedItem: any) {
-    this.selectedTree = selectedItem;
+  public newPropertiesTree(selectedTree: HierarchyTree) {
+    this.selectedHierarchyTree = selectedTree;
     this.updateSelectedTreeUiData();
   }
 
@@ -103,7 +103,7 @@ export class Presenter {
   }
 
   private generateRects(): Rectangle[] {
-    const displayRects = this.entry.displays.map((display: DisplayContent) => {
+    const displayRects = this.entry?.displays?.map((display: DisplayContent) => {
       const rect = display.displayRect;
       rect.label = display.title;
       rect.id = display.layerId;
@@ -113,7 +113,7 @@ export class Presenter {
       return rect;
     }) ?? [];
     this.displayIds = [];
-    const rects = this.entry.windowStates.reverse()
+    const rects = this.entry?.windowStates?.reverse()
       .map((it: any) => {
         const rect = it.rect;
         rect.id = it.layerId;
@@ -122,13 +122,13 @@ export class Presenter {
           this.displayIds.push(it.displayId);
         }
         return rect;
-      });
+      }) ?? [];
     return this.rectsToUiData(rects.concat(displayRects));
   }
 
   private updateSelectedTreeUiData() {
-    if (this.selectedTree) {
-      this.uiData.selectedTree = this.getTreeWithTransformedProperties(this.selectedTree);
+    if (this.selectedHierarchyTree) {
+      this.uiData.propertiesTree = this.getTreeWithTransformedProperties(this.selectedHierarchyTree);
     }
     this.notifyViewCallback(this.uiData);
   }
@@ -143,13 +143,13 @@ export class Presenter {
       .setIsSimplifyNames(this.hierarchyUserOptions["simplifyNames"]?.enabled)
       .setIsFlatView(this.hierarchyUserOptions["flat"]?.enabled)
       .withUniqueNodeId();
-    let tree: Tree;
+    let tree: HierarchyTree | null;
     if (!this.hierarchyUserOptions["showDiff"]?.enabled) {
       tree = generator.generateTree();
     } else {
       tree = generator.compareWith(this.previousEntry)
         .withModifiedCheck()
-        .generateFinalDiffTree();
+        .generateFinalTreeWithDiff();
     }
     this.pinnedItems = generator.getPinnedItems();
     this.uiData.pinnedItems = this.pinnedItems;
@@ -208,11 +208,16 @@ export class Presenter {
     }
   }
 
-  private getTreeWithTransformedProperties(selectedTree: Tree) {
+  private getTreeWithTransformedProperties(selectedTree: HierarchyTree): PropertiesTree {
+    if (!this.entry) {
+      return {};
+    }
     const transformer = new TreeTransformer(selectedTree, this.propertiesFilter)
+      .showOnlyProtoDump()
       .setIsShowDefaults(this.propertiesUserOptions["showDefaults"]?.enabled)
       .setIsShowDiff(this.propertiesUserOptions["showDiff"]?.enabled)
       .setTransformerOptions({skip: selectedTree.skip})
+      .setProperties(this.entry)
       .setDiffProperties(this.previousEntry);
     const transformedTree = transformer.transform();
     return transformedTree;
@@ -224,11 +229,11 @@ export class Presenter {
   private propertiesFilter: FilterType = getFilter("");
   private highlightedItems: Array<string> = [];
   private displayIds: Array<number> = [];
-  private pinnedItems: Array<Tree> = [];
+  private pinnedItems: Array<HierarchyTree> = [];
   private pinnedIds: Array<string> = [];
-  private selectedTree: any = null;
-  private previousEntry: any = null;
-  private entry: any = null;
+  private selectedHierarchyTree: HierarchyTree | null = null;
+  private previousEntry: TreeFlickerItem | null = null;
+  private entry: TreeFlickerItem | null = null;
   private hierarchyUserOptions: UserOptions = {
     showDiff: {
       name: "Show diff",

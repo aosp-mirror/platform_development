@@ -54,7 +54,6 @@ describe("TreeNodeComponent", () => {
                   [isPinned]="false"
                   [isInPinnedSection]="false"
                   [hasChildren]="false"
-                  [isPropertiesTreeNode]="false"
                 ></tree-node>
               `
   })

@@ -23,11 +23,11 @@ export class CanvasGraphics {
   constructor() {
     //set up camera
     const left = -this.CAMERA_HALF_WIDTH,
-          right = this.CAMERA_HALF_WIDTH,
-          top = this.CAMERA_HALF_HEIGHT,
-          bottom = -this.CAMERA_HALF_HEIGHT,
-          near = 0.001,
-          far = 100;
+      right = this.CAMERA_HALF_WIDTH,
+      top = this.CAMERA_HALF_HEIGHT,
+      bottom = -this.CAMERA_HALF_HEIGHT,
+      near = 0.001,
+      far = 100;
     this.camera = new THREE.OrthographicCamera(
       left, right, top, bottom, near, far
     );

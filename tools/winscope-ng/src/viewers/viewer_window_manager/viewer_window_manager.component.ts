@@ -37,7 +37,7 @@ import { PersistentStore } from "common/persistent_store";
         <div fxLayout="row wrap" fxLayoutGap="10px grid" class="card-grid">
           <mat-card id="wm-hierarchy-view" class="hierarchy-view">
             <hierarchy-view
-              [tree]="inputData?.tree"
+              [tree]="inputData?.tree ?? null"
               [dependencies]="inputData?.dependencies ?? []"
               [highlightedItems]="inputData?.highlightedItems ?? []"
               [pinnedItems]="inputData?.pinnedItems ?? []"
@@ -48,7 +48,7 @@ import { PersistentStore } from "common/persistent_store";
           <mat-card id="wm-properties-view" class="properties-view">
             <properties-view
               [userOptions]="inputData?.propertiesUserOptions ?? {}"
-              [selectedTree]="inputData?.selectedTree ?? {}"
+              [propertiesTree]="inputData?.propertiesTree ?? {}"
             ></properties-view>
           </mat-card>
         </div>

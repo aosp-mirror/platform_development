@@ -49,7 +49,7 @@ export class TreeNodePropertiesDataViewComponent {
       return "false";
     }
 
-    if (!isNaN(this.item.propertyValue)) {
+    if (!isNaN(Number(this.item.propertyValue))) {
       return "number";
     }
     return null;
