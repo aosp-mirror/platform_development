@@ -16,13 +16,26 @@ syntax = "proto3";
 
 package ninja_metrics;
 
+// NinjaMetrics is to deliver the information of input files to build a target
+// device or an image. These information is captured from ninja analysis
 message NinjaMetrics {
+    // Total number of input files to build a target or an image
     uint32 num_input_files = 1;
+
+    // The number of git projects that need to be checked out to build a target
+    // or an image
     uint32 num_projects = 2;
+
+    // Details of the all required git projects
     repeated ProjectInfo project_infos = 3;
 }
 
+// ProjectInfo is to describe each git project
 message ProjectInfo {
+    // Path of the git project
     string name = 1;
+
+    // The number of required files in the git project to build a target or an
+    // image
     uint32 num_input_files = 2;
 }
