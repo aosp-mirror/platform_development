@@ -25,7 +25,7 @@ class ScreenRecordingMetadataEntry {
 }
 
 class ParserScreenRecording extends Parser {
-  constructor(trace: Blob) {
+  constructor(trace: File) {
     super(trace);
   }
 

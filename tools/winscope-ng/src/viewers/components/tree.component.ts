@@ -138,7 +138,7 @@ export class TreeComponent {
     this.nodeElement?.removeEventListener("mouseleave", this.nodeMouseLeaveEventListener);
   }
 
-  onNodeClick(event: MouseEvent) {
+  public onNodeClick(event: MouseEvent) {
     event.preventDefault();
     if (window.getSelection()?.type === "range") {
       return;
@@ -153,7 +153,7 @@ export class TreeComponent {
     }
   }
 
-  nodeOffsetStyle() {
+  public nodeOffsetStyle() {
     const offset = this.levelOffset * (this.initialDepth) + "px";
 
     return {
@@ -162,7 +162,7 @@ export class TreeComponent {
     };
   }
 
-  updateHighlightedItems() {
+  private updateHighlightedItems() {
     if (this.item && this.item.id) {
       this.highlightedItemChange.emit(`${this.item.id}`);
     } else if (!this.item.id) {
@@ -170,38 +170,38 @@ export class TreeComponent {
     }
   }
 
-  isPinned() {
+  public isPinned() {
     if (this.item) {
       return this.pinnedItems?.map((item: Tree) => `${item.id}`).includes(`${this.item.id}`);
     }
     return false;
   }
 
-  propagateNewHighlightedItem(newId: string) {
+  public propagateNewHighlightedItem(newId: string) {
     this.highlightedItemChange.emit(newId);
   }
 
-  propagateNewPinnedItem(newPinnedItem: Tree) {
+  public propagateNewPinnedItem(newPinnedItem: Tree) {
     this.pinnedItemChange.emit(newPinnedItem);
   }
 
-  propagateNewSelectedTree(newTree: Tree) {
+  public propagateNewSelectedTree(newTree: Tree) {
     this.selectedTreeChange.emit(newTree);
   }
 
-  isClickable() {
+  public isClickable() {
     return !this.isLeaf(this.item) || this.itemsClickable;
   }
 
-  toggleTree() {
+  public toggleTree() {
     this.setCollapseValue(!this.isCollapsed());
   }
 
-  expandTree() {
+  public expandTree() {
     this.setCollapseValue(true);
   }
 
-  isCollapsed() {
+  public isCollapsed() {
     if (this.isAlwaysCollapsed || this.isLeaf(this.item)) {
       return true;
     }
@@ -213,24 +213,16 @@ export class TreeComponent {
     return this.localCollapsedState;
   }
 
-  children() {
+  public children() {
     return this.item.children;
   }
 
-  hasChildren() {
+  public hasChildren() {
     const isParentEntryInFlatView = this.item.kind === "entry" && this.isFlattened;
     return (!this.isFlattened || isParentEntryInFlatView) && !this.isLeaf(this.item);
   }
 
-  setCollapseValue(isCollapsed: boolean) {
-    if (this.useGlobalCollapsedState) {
-      this.store.addToStore(`collapsedState.item.${this.dependencies}.${this.item.id}`, `${isCollapsed}`);
-    } else {
-      this.localCollapsedState = isCollapsed;
-    }
-  }
-
-  childrenIndentation() {
+  public childrenIndentation() {
     if (this.isFlattened) {
       return {
         marginLeft: "0px",
@@ -248,7 +240,15 @@ export class TreeComponent {
     }
   }
 
-  nodeMouseDownEventListener = (event:MouseEvent) => {
+  private setCollapseValue(isCollapsed: boolean) {
+    if (this.useGlobalCollapsedState) {
+      this.store.addToStore(`collapsedState.item.${this.dependencies}.${this.item.id}`, `${isCollapsed}`);
+    } else {
+      this.localCollapsedState = isCollapsed;
+    }
+  }
+
+  private nodeMouseDownEventListener = (event:MouseEvent) => {
     if (event.detail > 1) {
       event.preventDefault();
       return false;
@@ -256,12 +256,12 @@ export class TreeComponent {
     return true;
   };
 
-  nodeMouseEnterEventListener = () => {
+  private nodeMouseEnterEventListener = () => {
     this.nodeHover = true;
     this.hoverStart.emit();
   };
 
-  nodeMouseLeaveEventListener = () => {
+  private nodeMouseLeaveEventListener = () => {
     this.nodeHover = false;
     this.hoverEnd.emit();
   };

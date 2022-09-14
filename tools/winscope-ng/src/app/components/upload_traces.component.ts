@@ -17,6 +17,9 @@ import { Component, Input, Output, EventEmitter, Inject, NgZone } from "@angular
 import { TraceCoordinator } from "app/trace_coordinator";
 import { TRACE_INFO } from "app/trace_info";
 import { LoadedTrace } from "app/loaded_trace";
+import { MatSnackBar } from "@angular/material/snack-bar";
+import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component";
+import { ParserError } from "parsers/parser_factory";
 
 @Component({
   selector: "upload-traces",
@@ -59,10 +62,10 @@ import { LoadedTrace } from "app/loaded_trace";
           <span *ngIf="this.loadedTraces.length === 0" class="drop-info">Drag your .winscope file(s) or click to upload</span>
         </div>
 
-        <div *ngIf="this.loadedTraces.length > 0">
+        <div class="load-traces-btns" *ngIf="this.loadedTraces.length > 0">
           <button mat-raised-button class="load-btn" (click)="onLoadData()">View traces</button>
-          <button class="white-btn" mat-raised-button for="fileDropRef" (click)="fileDropRef.click()">Upload another file</button>
-          <button class="white-btn" mat-raised-button (click)="onClearData()">Clear all</button>
+          <button mat-stroked-button for="fileDropRef" (click)="fileDropRef.click()">Upload another file</button>
+          <button mat-stroked-button (click)="onClearData()">Clear all</button>
         </div>
       </mat-card-content>
   `,
@@ -118,16 +121,17 @@ import { LoadedTrace } from "app/loaded_trace";
   ]
 })
 export class UploadTracesComponent {
-  @Input() traceCoordinator!: TraceCoordinator;
-
-  dataLoaded = false;
-
-  @Output() dataLoadedChange = new EventEmitter<boolean>();
-
-  constructor(@Inject(NgZone) private ngZone: NgZone) {}
-
   loadedTraces: LoadedTrace[] = [];
   TRACE_INFO = TRACE_INFO;
+  dataLoaded = false;
+
+  @Input() traceCoordinator!: TraceCoordinator;
+  @Output() dataLoadedChange = new EventEmitter<boolean>();
+
+  constructor(
+    @Inject(NgZone) private ngZone: NgZone,
+    @Inject(MatSnackBar) private snackBar: MatSnackBar
+  ) {}
 
   public async onInputFile(event: Event) {
     const files = this.getInputFiles(event);
@@ -135,19 +139,14 @@ export class UploadTracesComponent {
   }
 
   public async processFiles(files: File[]) {
-    await this.traceCoordinator.addTraces(files);
+    const unzippedFiles = await this.traceCoordinator.getUnzippedFiles(files);
+    const parserErrors = await this.traceCoordinator.addTraces(unzippedFiles);
+    if (parserErrors.length > 0) {
+      this.openTempSnackBar(parserErrors);
+    }
     this.ngZone.run(() => {
       this.loadedTraces = this.traceCoordinator.getLoadedTraces();
     });
-  }
-
-  //TODO: extend with support for multiple files, archives, etc...
-  private getInputFiles(event: Event): File[] {
-    const files: any = (event?.target as HTMLInputElement)?.files;
-    if (!files || !files[0]) {
-      return [];
-    }
-    return Array.from(files);
   }
 
   public onLoadData() {
@@ -172,7 +171,7 @@ export class UploadTracesComponent {
     e.stopPropagation();
   }
 
-  async onHandleFileDrop(e: DragEvent) {
+  public async onHandleFileDrop(e: DragEvent) {
     e.preventDefault();
     e.stopPropagation();
     const droppedFiles = e.dataTransfer?.files;
@@ -185,5 +184,20 @@ export class UploadTracesComponent {
     event.stopPropagation();
     this.traceCoordinator.removeTrace(trace.type);
     this.loadedTraces = this.loadedTraces.filter(loaded => loaded.type !== trace.type);
+  }
+
+  private openTempSnackBar(parserErrors: ParserError[]) {
+    this.snackBar.openFromComponent(ParserErrorSnackBarComponent, {
+      data: parserErrors,
+      duration: 7500,
+    });
+  }
+
+  private getInputFiles(event: Event): File[] {
+    const files: FileList | null = (event?.target as HTMLInputElement)?.files;
+    if (!files || !files[0]) {
+      return [];
+    }
+    return Array.from(files);
   }
 }

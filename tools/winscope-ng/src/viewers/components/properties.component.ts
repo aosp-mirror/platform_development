@@ -23,7 +23,7 @@ import { Layer } from "common/trace/flickerlib/common";
   selector: "properties-view",
   template: `
     <mat-card-header class="view-header">
-      <mat-card-title class="title-filter">
+      <div class="title-filter">
         <span class="properties-title">Properties</span>
         <mat-form-field class="filter-field">
           <mat-label>Filter...</mat-label>
@@ -34,7 +34,7 @@ import { Layer } from "common/trace/flickerlib/common";
             name="filter"
           />
         </mat-form-field>
-      </mat-card-title>
+      </div>
       <div class="view-controls">
         <mat-checkbox
           *ngFor="let option of objectKeys(userOptions)"
@@ -80,6 +80,7 @@ import { Layer } from "common/trace/flickerlib/common";
         display: flex;
         align-items: center;
         width: 100%;
+        margin-bottom: 12px;
       }
 
       .properties-title {
@@ -90,14 +91,14 @@ import { Layer } from "common/trace/flickerlib/common";
         font-size: 16px;
         transform: scale(0.7);
         right: 0px;
-        position: absolute
+        position: absolute;
       }
 
       .view-controls {
         display: inline-block;
         font-size: 12px;
         font-weight: normal;
-        margin-left: 5px
+        margin-left: 5px;
       }
 
       .properties-content{
@@ -144,14 +145,14 @@ export class PropertiesComponent {
     @Inject(ElementRef) private elementRef: ElementRef,
   ) {}
 
-  maxPropertiesHeight() {
+  public maxPropertiesHeight() {
     const headerHeight = this.elementRef.nativeElement.querySelector(".view-header").clientHeight;
     return {
       height: `${800 - headerHeight}px`
     };
   }
 
-  filterTree() {
+  public filterTree() {
     const event: CustomEvent = new CustomEvent(
       ViewerEvents.PropertiesFilterChange,
       {
@@ -161,7 +162,7 @@ export class PropertiesComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  updateTree() {
+  public updateTree() {
     const event: CustomEvent = new CustomEvent(
       ViewerEvents.PropertiesUserOptionsChange,
       {
@@ -171,13 +172,13 @@ export class PropertiesComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  showNode(item: any) {
+  public showNode(item: any) {
     return !(item instanceof Terminal)
     && !(item.name instanceof Terminal)
     && !(item.propertyKey instanceof Terminal);
   }
 
-  isLeaf(item: any) {
+  public isLeaf(item: any) {
     return !item.children || item.children.length === 0
           || item.children.filter((c: any) => !(c instanceof Terminal)).length === 0;
   }

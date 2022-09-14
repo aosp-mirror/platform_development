@@ -18,7 +18,7 @@ import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { TraceViewComponent } from "./trace_view.component";
 import { MatCardModule } from "@angular/material/card";
 import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from "@angular/core";
-import { TraceType } from "common/trace/trace_type";
+import { TraceCoordinator } from "app/trace_coordinator";
 
 describe("TraceViewComponent", () => {
   let fixture: ComponentFixture<TraceViewComponent>;
@@ -36,26 +36,55 @@ describe("TraceViewComponent", () => {
     }).compileComponents();
     fixture = TestBed.createComponent(TraceViewComponent);
     component = fixture.componentInstance;
+    component.traceCoordinator = new TraceCoordinator();
+    component.viewerTabs = [
+      {
+        label: "Surface Flinger",
+        cardId: 0,
+      },
+      {
+        label: "Window Manager",
+        cardId: 1,
+      }
+    ];
     htmlElement = fixture.nativeElement;
-    component.dependencies = [TraceType.SURFACE_FLINGER, TraceType.WINDOW_MANAGER];
-    component.showTrace = true;
   });
 
   it("can be created", () => {
+    fixture.detectChanges();
     expect(component).toBeTruthy();
   });
 
-  it("check that mat card title and contents are displayed", () => {
+  it("creates viewer tabs", () => {
     fixture.detectChanges();
-    const title = htmlElement.querySelector(".trace-card-title");
-    expect(title).toBeTruthy();
-    const header = title?.querySelector("trace-view-header");
-    expect(header).toBeTruthy();
+    const tabs = htmlElement.querySelectorAll(".viewer-tab");
+    expect(tabs.length).toEqual(2);
+    expect(component.activeViewerCardId).toEqual(0);
   });
 
-  it("check that card content is created", () => {
+  it("changes active viewer on click", async () => {
     fixture.detectChanges();
-    const content = htmlElement.querySelector(".trace-card-content") as HTMLElement;
-    expect(content).toBeTruthy();
+    expect(component.activeViewerCardId).toEqual(0);
+    const tabs = htmlElement.querySelectorAll(".viewer-tab");
+    tabs[0].dispatchEvent(new Event("click"));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const firstId = component.activeViewerCardId;
+    tabs[1].dispatchEvent(new Event("click"));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const secondId = component.activeViewerCardId;
+    expect(firstId !== secondId).toBeTrue;
+  });
+
+  it("downloads all traces", async () => {
+    spyOn(component, "downloadAllTraces").and.callThrough();
+    fixture.detectChanges();
+    const downloadButton: HTMLButtonElement | null = htmlElement.querySelector(".save-btn");
+    expect(downloadButton).toBeInstanceOf(HTMLButtonElement);
+    downloadButton?.dispatchEvent(new Event("click"));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(component.downloadAllTraces).toHaveBeenCalled();
   });
 });

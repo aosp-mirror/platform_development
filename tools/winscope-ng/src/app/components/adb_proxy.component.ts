@@ -26,8 +26,8 @@ import { proxyClient, ProxyClient, ProxyState } from "trace_collection/proxy_cli
         <p>Or get it from the AOSP repository.</p>
       </div>
       <div>
-        <button mat-raised-button class="white-btn" (click)="downloadFromAosp()">Download from AOSP</button>
-        <button mat-raised-button class="white-btn retry" (click)="restart()">Retry</button>
+        <button mat-stroked-button (click)="downloadFromAosp()">Download from AOSP</button>
+        <button mat-stroked-button class="retry" (click)="restart()">Retry</button>
       </div>
     </div>
 
@@ -42,8 +42,8 @@ import { proxyClient, ProxyClient, ProxyState } from "trace_collection/proxy_cli
         <p>Or get it from the AOSP repository.</p>
       </div>
       <div>
-        <button mat-raised-button class="white-btn" (click)="downloadFromAosp()">Download from AOSP</button>
-      <button mat-raised-button class="white-btn retry" (click)="restart()">Retry</button>
+        <button mat-stroked-button (click)="downloadFromAosp()">Download from AOSP</button>
+      <button mat-stroked-button class="retry" (click)="restart()">Retry</button>
       </div>
     </div>
 
@@ -60,7 +60,7 @@ import { proxyClient, ProxyClient, ProxyState } from "trace_collection/proxy_cli
         <p>The proxy token is printed to console on proxy launch, copy and paste it above.</p>
       </div>
       <div>
-        <button mat-raised-button class="white-btn retry" (click)="restart()">Connect</button>
+        <button mat-stroked-button class="retry" (click)="restart()">Connect</button>
       </div>
     </div>
   `,

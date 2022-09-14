@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { TraceType } from "common/trace/trace_type";
 import {Parser} from "./parser";
 import {ParserAccessibility} from "./parser_accessibility";
 import {ParserInputMethodClients} from "./parser_input_method_clients";
@@ -41,18 +42,23 @@ class ParserFactory {
     ParserWindowManagerDump,
   ];
 
-  async createParsers(traces: Blob[]): Promise<Parser[]> {
+  async createParsers(traces: File[]): Promise<[Parser[], ParserError[]]> {
     const parsers: Parser[] = [];
+    const errors: ParserError[] = [];
     const completedParserTypes: any[] = [];
 
     for (const [index, trace] of traces.entries()) {
       console.log(`Loading trace #${index}`);
+      const numberOfDetectedParsers = parsers.length;
+      let repeatType = false;
       for (const ParserType of ParserFactory.PARSERS) {
         try {
           const parser = new ParserType(trace);
           await parser.parse();
           if (completedParserTypes.includes(ParserType)) {
             console.log(`Already successfully loaded a trace with parser type ${ParserType.name}`);
+            repeatType = true;
+            errors.push(new ParserError(trace, ParserErrorType.ALREADY_LOADED).setTraceType(parser.getTraceType()));
             break;
           } else {
             parsers.push(parser);
@@ -65,9 +71,31 @@ class ParserFactory {
           console.log(`Failed to load trace with parser type ${ParserType.name}`);
         }
       }
+      if (numberOfDetectedParsers === parsers.length && !repeatType) {
+        errors.push(new ParserError(trace, ParserErrorType.UNSUPPORTED_FORMAT));
+      }
     }
 
-    return parsers;
+    return [parsers, errors];
+  }
+}
+
+export enum ParserErrorType {
+  ALREADY_LOADED,
+  UNSUPPORTED_FORMAT
+}
+
+export class ParserError {
+  public trace: File;
+  public type: ParserErrorType;
+  public traceType?: TraceType;
+  constructor(trace: File, type: ParserErrorType) {
+    this.trace = trace;
+    this.type = type;
+  }
+  public setTraceType(traceType: TraceType) {
+    this.traceType = traceType;
+    return this;
   }
 }
 

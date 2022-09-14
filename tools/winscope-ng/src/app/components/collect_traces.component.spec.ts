@@ -25,6 +25,7 @@ import { MatButtonModule } from "@angular/material/button";
 import { MatProgressBarModule } from "@angular/material/progress-bar";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { NO_ERRORS_SCHEMA } from "@angular/core";
+import { MatSnackBar, MatSnackBarModule } from "@angular/material/snack-bar";
 
 describe("CollectTracesComponent", () => {
   let fixture: ComponentFixture<CollectTracesComponent>;
@@ -39,8 +40,10 @@ describe("CollectTracesComponent", () => {
         MatListModule,
         MatButtonModule,
         MatProgressBarModule,
-        BrowserAnimationsModule
+        BrowserAnimationsModule,
+        MatSnackBarModule
       ],
+      providers: [MatSnackBar],
       declarations: [
         CollectTracesComponent,
         AdbProxyComponent,
