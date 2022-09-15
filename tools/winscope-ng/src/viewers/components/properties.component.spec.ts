@@ -55,6 +55,8 @@ describe("PropertiesComponent", () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
     component.selectedTree = {};
+    component.selectedLayer = {};
+    component.summary = [];
     component.userOptions = {
       showDefaults: {
         name: "Show defaults",

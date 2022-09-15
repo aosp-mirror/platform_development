@@ -60,7 +60,7 @@ describe("ParserTransactions", () => {
         .toEqual(expected);
     });
 
-    it("retrieves trace entry from elsapsed timestamp", () => {
+    it("retrieves trace entry from elapsed timestamp", () => {
       const timestamp = new Timestamp(TimestampType.ELAPSED, 2517952515n);
       expect(BigInt(parser.getTraceEntry(timestamp)!.elapsedRealtimeNanos))
         .toEqual(2517952515n);

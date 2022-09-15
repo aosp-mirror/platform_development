@@ -32,7 +32,7 @@ import { PropertiesTree } from "viewers/common/tree_utils";
 export class TreeNodePropertiesDataViewComponent {
   @Input() item!: PropertiesTree;
 
-  valueClass() {
+  public valueClass() {
     if (!this.item.propertyValue) {
       return null;
     }

@@ -16,11 +16,13 @@
 import * as fs from "fs";
 import * as path from "path";
 import {Blob} from "./blob";
+import {File} from "./file";
 
 class CommonTestUtils {
-  static getFixtureBlob(filename: string): Blob {
+  static async getFixtureFile(filename: string): Promise<File> {
     const buffer = CommonTestUtils.loadFixture(filename);
-    return new Blob(buffer);
+    const blob = new Blob(buffer);
+    return new File(await blob.arrayBuffer(), filename);
   }
 
   static loadFixture(filename: string): ArrayBuffer {

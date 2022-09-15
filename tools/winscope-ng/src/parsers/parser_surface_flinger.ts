@@ -20,7 +20,7 @@ import {Parser} from "./parser";
 import {LayersTraceFileProto} from "./proto_types";
 
 class ParserSurfaceFlinger extends Parser {
-  constructor(trace: Blob) {
+  constructor(trace: File) {
     super(trace);
     this.realToElapsedTimeOffsetNs = undefined;
   }

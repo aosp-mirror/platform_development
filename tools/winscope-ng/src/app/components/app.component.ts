@@ -20,18 +20,18 @@ import { proxyClient, ProxyState } from "trace_collection/proxy_client";
 import { PersistentStore } from "common/persistent_store";
 import { ViewerWindowManagerComponent } from "viewers/viewer_window_manager/viewer_window_manager.component";
 import { ViewerSurfaceFlingerComponent } from "viewers/viewer_surface_flinger/viewer_surface_flinger.component";
-import { TraceViewComponent } from "./trace_view.component";
 import { Timestamp } from "common/trace/timestamp";
 import { MatSliderChange } from "@angular/material/slider";
-import { Viewer } from "viewers/viewer";
 
 @Component({
   selector: "app-root",
   template: `
     <mat-toolbar class="app-toolbar">
       <span id="app-title">Winscope</span>
-        <button mat-raised-button *ngIf="dataLoaded" (click)="clearData()">Back to Home</button>
-        <button mat-raised-button *ngIf="dataLoaded" (click)="toggleTimestamp()">Start/End Timestamp</button>
+      <span class="toolbar-wrapper">
+        <button mat-stroked-button *ngIf="dataLoaded" (click)="toggleTimestamp()">Start/End Timestamp</button>
+        <button class="upload-new-btn" mat-stroked-button *ngIf="dataLoaded" (click)="clearData()">Upload New</button>
+      </span>
     </mat-toolbar>
 
     <div class="welcome-info" *ngIf="!dataLoaded">
@@ -48,6 +48,10 @@ import { Viewer } from "viewers/viewer";
     </div>
 
     <div id="viewers" [class]="showViewers()">
+      <trace-view
+      [store]="store"
+      [traceCoordinator]="traceCoordinator"
+      ></trace-view>
     </div>
 
     <div id="timescrub">
@@ -67,15 +71,32 @@ import { Viewer } from "viewers/viewer";
   `,
   styles: [
     `
-      .time-slider {width: 100%}
-      .upload-new-btn {float: right}
+      .time-slider {
+        width: 100%
+      }
+      .upload-new-btn {
+        float: right;
+        position: relative;
+        vertical-align: middle;
+        display: inline-block;
+      }
       .app-toolbar {
         border-bottom: 1px solid var(--default-border);
         box-shadow: none;
         background-color: rgba(1, 1, 1, 0);
         height: 56px;
+        vertical-align: middle;
+        position: relative;
+        display: inline-block;
       }
-
+      .toolbar-wrapper {
+        width: 100%;
+        height: 100%;
+        vertical-align: middle;
+        position: relative;
+        display: inline-block;
+        align-content: center;
+      }
       .welcome-info {
         text-align: center;
         font: inherit;
@@ -90,11 +111,10 @@ export class AppComponent {
   traceCoordinator: TraceCoordinator;
   states = ProxyState;
   store: PersistentStore = new PersistentStore();
-  @Input() dataLoaded = false;
-  viewersCreated = false;
   currentTimestamp?: Timestamp;
   currentTimestampIndex = 0;
   allTimestamps: Timestamp[] = [];
+  @Input() dataLoaded = false;
 
   constructor(
     @Inject(Injector) injector: Injector
@@ -108,61 +128,13 @@ export class AppComponent {
       customElements.define("viewer-surface-flinger",
         createCustomElement(ViewerSurfaceFlingerComponent, {injector}));
     }
-    if (!customElements.get("trace-view")) {
-      customElements.define("trace-view",
-        createCustomElement(TraceViewComponent, {injector}));
-    }
   }
 
-  onDataLoadedChange(dataLoaded: boolean) {
-    if (dataLoaded && !this.viewersCreated) {
-      this.allTimestamps = this.traceCoordinator.getTimestamps();
-      this.traceCoordinator.createViewers();
-      this.createViewerElements();
-      this.currentTimestampIndex = 0;
-      this.notifyCurrentTimestamp();
-      this.viewersCreated = true;
-      this.dataLoaded = dataLoaded;
-    }
-  }
-
-  createViewerElements() {
-    const viewersDiv = document.querySelector("div#viewers")!;
-    viewersDiv.innerHTML = "";
-
-    let cardCounter = 0;
-    this.traceCoordinator.getViewers().forEach((viewer: Viewer) => {
-      const traceView = document.createElement("trace-view");
-      (traceView as any).title = viewer.getTitle();
-      (traceView as any).dependencies = viewer.getDependencies();
-      (traceView as any).showTrace = true;
-      traceView.addEventListener("saveTraces", ($event: any) => {
-        this.traceCoordinator.saveTraces($event.detail);
-      });
-      viewersDiv.appendChild(traceView);
-
-      const traceCard = traceView.querySelector(".trace-card")!;
-      traceCard.id = `card-${cardCounter}`;
-      (traceView as any).cardId = cardCounter;
-      cardCounter++;
-
-      const traceCardContent = traceCard.querySelector(".trace-card-content")!;
-      const view = viewer.getView();
-      (view as any).store = this.store;
-      traceCardContent.appendChild(view);
-    });
-  }
-
-  updateCurrentTimestamp(event: MatSliderChange) {
+  public updateCurrentTimestamp(event: MatSliderChange) {
     if (event.value) {
       this.currentTimestampIndex = event.value;
       this.notifyCurrentTimestamp();
     }
-  }
-
-  public notifyCurrentTimestamp() {
-    this.currentTimestamp = this.allTimestamps[this.currentTimestampIndex];
-    this.traceCoordinator.notifyCurrentTimestamp(this.currentTimestamp);
   }
 
   public toggleTimestamp() {
@@ -176,13 +148,27 @@ export class AppComponent {
 
   public clearData() {
     this.dataLoaded = false;
-    this.viewersCreated = false;
     this.traceCoordinator.clearData();
     proxyClient.adbData = [];
   }
 
   public showViewers() {
     const isShown = this.dataLoaded ? "show" : "hide";
-    return ["viewers", isShown];
+    return `viewers ${isShown}`;
+  }
+
+  public onDataLoadedChange(dataLoaded: boolean) {
+    if (dataLoaded && !(this.traceCoordinator.getViewers().length > 0)) {
+      this.allTimestamps = this.traceCoordinator.getTimestamps();
+      this.traceCoordinator.createViewers();
+      this.currentTimestampIndex = 0;
+      this.notifyCurrentTimestamp();
+      this.dataLoaded = dataLoaded;
+    }
+  }
+
+  private notifyCurrentTimestamp() {
+    this.currentTimestamp = this.allTimestamps[this.currentTimestampIndex];
+    this.traceCoordinator.notifyCurrentTimestamp(this.currentTimestamp);
   }
 }

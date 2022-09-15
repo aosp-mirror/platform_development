@@ -49,7 +49,7 @@ export interface Connection {
       reqSelectedWmConfig?: configMap
     ): any;
     endTrace(): any;
-    adbData(): Array<Blob>;
+    adbData(): Array<File>;
     dumpState(): any;
     proxy?: ProxyClient;
     loadProgress: number;

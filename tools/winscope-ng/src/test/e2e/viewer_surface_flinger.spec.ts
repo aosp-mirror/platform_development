@@ -22,14 +22,14 @@ describe("Viewer SurfaceFlinger", () => {
     browser.get("file://" + E2eTestUtils.getProductionIndexHtmlPath());
   }),
 
-  it("processes trace and renders view", () => {
+  it("processes trace and renders view", async () => {
     const inputFile = element(by.css("input[type=\"file\"]"));
-    inputFile.sendKeys(E2eTestUtils.getFixturePath("traces/elapsed_and_real_timestamp/SurfaceFlinger.pb"));
+    await inputFile.sendKeys(E2eTestUtils.getFixturePath("traces/elapsed_and_real_timestamp/SurfaceFlinger.pb"));
 
     const loadData = element(by.css(".load-btn"));
-    loadData.click();
+    await loadData.click();
 
-    const surfaceFlingerCard: ElementFinder = element(by.css(".trace-card-title-text"));
-    expect(surfaceFlingerCard.getText()).toContain("Surface Flinger");
+    const surfaceFlingerViewer: ElementFinder = element(by.css("viewer-surface-flinger"));
+    expect(surfaceFlingerViewer).toBeTruthy();
   });
 });

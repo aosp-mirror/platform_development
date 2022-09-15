@@ -15,7 +15,8 @@
  */
 import {
   Component,
-  Input
+  Input,
+  SimpleChanges
 } from "@angular/core";
 import { UiData } from "./ui_data";
 import { TRACE_INFO } from "app/trace_info";
@@ -32,6 +33,7 @@ import { PersistentStore } from "common/persistent_store";
             [displayIds]="inputData?.displayIds ?? []"
             [highlightedItems]="inputData?.highlightedItems ?? []"
             [displayIds]="inputData?.displayIds ?? []"
+            [forceRefresh]="active"
           ></rects-view>
         </mat-card>
         <div fxLayout="row wrap" fxLayoutGap="10px grid" class="card-grid">
@@ -96,15 +98,16 @@ import { PersistentStore } from "common/persistent_store";
 
       .rects-view {
         font: inherit;
-        flex: none !important;
+        flex: none;
         width: 350px;
         height: 52.5rem;
         margin: 0px;
-        border: 1px solid var(--default-border);
+        border-top: 1px solid var(--default-border);
+        border-right: 1px solid var(--default-border);
         border-radius: 0;
       }
 
-      .hierarchy-view, .properties-view {
+      .hierarchy-view {
         font: inherit;
         margin: 0px;
         width: 50%;
@@ -112,7 +115,17 @@ import { PersistentStore } from "common/persistent_store";
         border-radius: 0;
         border-top: 1px solid var(--default-border);
         border-right: 1px solid var(--default-border);
-        border-bottom: 1px solid var(--default-border);
+        border-left: 1px solid var(--default-border);
+      }
+
+      .properties-view {
+        font: inherit;
+        margin: 0px;
+        width: 50%;
+        height: 52.5rem;
+        border-radius: 0;
+        border-top: 1px solid var(--default-border);
+        border-left: 1px solid var(--default-border);
       }
     `,
   ]
@@ -120,6 +133,7 @@ import { PersistentStore } from "common/persistent_store";
 export class ViewerSurfaceFlingerComponent {
   @Input() inputData?: UiData;
   @Input() store: PersistentStore = new PersistentStore();
+  @Input() active = false;
   TRACE_INFO = TRACE_INFO;
   TraceType = TraceType;
 }

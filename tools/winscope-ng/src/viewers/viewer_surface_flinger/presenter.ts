@@ -81,9 +81,48 @@ export class Presenter {
     this.updateSelectedTreeUiData();
   }
 
+  public notifyCurrentTraceEntries(entries: Map<TraceType, any>) {
+    const entry = entries.get(TraceType.SURFACE_FLINGER)[0];
+    this.previousEntry = entries.get(TraceType.SURFACE_FLINGER)[1];
+    this.entry = entry;
+
+    this.uiData = new UiData();
+    this.uiData.highlightedItems = this.highlightedItems;
+    const displayRects = entry.displays.map((display: any) => {
+      const rect = display.layerStackSpace;
+      rect.label = display.name;
+      rect.id = display.id;
+      rect.displayId = display.layerStackId;
+      rect.isDisplay = true;
+      rect.isVirtual = display.isVirtual ?? false;
+      return rect;
+    }) ?? [];
+    this.displayIds = [];
+    const rects = entry.visibleLayers
+      .sort((a: any, b: any) => (b.absoluteZ > a.absoluteZ) ? 1 : (a.absoluteZ == b.absoluteZ) ? 0 : -1)
+      .map((it: any) => {
+        const rect = it.rect;
+        rect.displayId = it.stackId;
+        if (!this.displayIds.includes(it.stackId)) {
+          this.displayIds.push(it.stackId);
+        }
+        return rect;
+      });
+    this.uiData.rects = this.rectsToUiData(rects.concat(displayRects));
+    this.uiData.displayIds = this.displayIds;
+
+    this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
+    this.uiData.propertiesUserOptions = this.propertiesUserOptions;
+    this.uiData.tree = this.generateTree();
+
+    this.notifyViewCallback(this.uiData);
+  }
+
   private updateSelectedTreeUiData() {
-    this.uiData.selectedTree = this.getTreeWithTransformedProperties(this.selectedTree);
-    this.uiData.selectedTreeSummary = this.getSelectedTreeSummary(this.selectedTree);
+    if (this.selectedTree) {
+      this.uiData.selectedTree = this.getTreeWithTransformedProperties(this.selectedTree);
+      this.uiData.selectedTreeSummary = this.getSelectedTreeSummary(this.selectedTree);
+    }
     this.notifyViewCallback(this.uiData);
   }
 
@@ -121,46 +160,6 @@ export class Presenter {
     }
 
     return summary;
-  }
-
-  public notifyCurrentTraceEntries(entries: Map<TraceType, any>) {
-    this.uiData = new UiData();
-    const entry = entries.get(TraceType.SURFACE_FLINGER)[0];
-    this.previousEntry = entries.get(TraceType.SURFACE_FLINGER)[1];
-
-    this.uiData = new UiData();
-
-    this.uiData.highlightedItems = this.highlightedItems;
-
-    const displayRects = entry.displays.map((display: any) => {
-      const rect = display.layerStackSpace;
-      rect.label = display.name;
-      rect.id = display.id;
-      rect.displayId = display.layerStackId;
-      rect.isDisplay = true;
-      rect.isVirtual = display.isVirtual ?? false;
-      return rect;
-    }) ?? [];
-    this.displayIds = [];
-    const rects = entry.visibleLayers
-      .sort((a: any, b: any) => (b.absoluteZ > a.absoluteZ) ? 1 : (a.absoluteZ == b.absoluteZ) ? 0 : -1)
-      .map((it: any) => {
-        const rect = it.rect;
-        rect.displayId = it.stackId;
-        if (!this.displayIds.includes(it.stackId)) {
-          this.displayIds.push(it.stackId);
-        }
-        return rect;
-      });
-    this.uiData.rects = this.rectsToUiData(rects.concat(displayRects));
-    this.uiData.displayIds = this.displayIds;
-
-    this.entry = entry;
-    this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
-    this.uiData.propertiesUserOptions = this.propertiesUserOptions;
-    this.uiData.tree = this.generateTree();
-
-    this.notifyViewCallback(this.uiData);
   }
 
   private generateTree() {

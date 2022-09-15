@@ -31,12 +31,12 @@ export class CanvasGraphics {
     );
   }
 
-  initialise(canvas: HTMLCanvasElement) {
+  public initialise(canvas: HTMLCanvasElement) {
     // initialise canvas
     this.canvas = canvas;
   }
 
-  refreshCanvas() {
+  public refreshCanvas() {
     //set canvas size
     this.canvas!.style.width = "100%";
     this.canvas!.style.height = "40rem";
@@ -127,6 +127,71 @@ export class CanvasGraphics {
     labelRenderer.render(scene, this.camera);
   }
 
+  public getCamera() {
+    return this.camera;
+  }
+
+  public getTargetObjects() {
+    return this.targetObjects;
+  }
+
+  public getLayerSeparation() {
+    return this.layerSeparation;
+  }
+
+  public getVisibleView() {
+    return this.visibleView;
+  }
+
+  public getXCameraPos() {
+    return this.xCameraPos;
+  }
+
+  public getShowVirtualDisplays() {
+    return this.showVirtualDisplays;
+  }
+
+  public updateLayerSeparation(userInput: number) {
+    this.layerSeparation = userInput;
+  }
+
+  public updateRotation(userInput: number) {
+    this.xCameraPos = userInput;
+    this.camZoom = userInput/4 * 0.2 + 0.9;
+    this.labelShift = userInput/4 * this.maxLabelShift;
+    this.lowestYShift = Math.abs(userInput)/4 + 2;
+  }
+
+  public updateHighlightedItems(newItems: Array<string>) {
+    this.highlightedItems = newItems;
+  }
+
+  public updateRects(rects: Rectangle[]) {
+    this.rects = rects;
+  }
+
+  public updateIsLandscape(isLandscape: boolean) {
+    this.isLandscape = isLandscape;
+  }
+
+  public updateVisibleView(visible: boolean) {
+    this.visibleView = visible;
+  }
+
+  public updateVirtualDisplays(show: boolean) {
+    this.showVirtualDisplays = show;
+  }
+
+  public updateZoom(isZoomIn: boolean) {
+    if (isZoomIn && this.camZoom < 2) {
+      this.labelXFactor -= 0.001;
+      this.camZoom += this.camZoomFactor * 1.5;
+    } else if (!isZoomIn && this.camZoom > 0.5) {
+      this.labelXFactor += 0.001;
+      this.camZoom -= this.camZoomFactor * 1.5;
+    }
+  }
+
   private drawScene(
     rectCounter: number,
     visibleRects: number,
@@ -144,7 +209,8 @@ export class CanvasGraphics {
     this.clearLabelElements();
     this.rects.forEach(rect => {
       const mustNotDrawInVisibleView = this.visibleView && !rect.isVisible;
-      const mustNotDrawInXrayViewWithoutVirtualDisplays = !this.visibleView && !this.showVirtualDisplays && rect.isDisplay && rect.isVirtual;
+      const mustNotDrawInXrayViewWithoutVirtualDisplays =
+            !this.visibleView && !this.showVirtualDisplays && rect.isDisplay && rect.isVirtual;
       if (mustNotDrawInVisibleView || mustNotDrawInXrayViewWithoutVirtualDisplays) {
         rectCounter++;
         return;
@@ -264,7 +330,7 @@ export class CanvasGraphics {
 
     //add rectangle label
     const rectLabelDiv: HTMLElement = document.createElement("div");
-    this.labelElements.push(rectLabelDiv);
+    rectLabelDiv.className = "rect-label";
     rectLabelDiv.textContent = labelText;
     rectLabelDiv.style.fontSize = "10px";
     if (isGrey) {
@@ -275,6 +341,7 @@ export class CanvasGraphics {
 
     const textCanvas = document.createElement("canvas");
     const labelContext = textCanvas.getContext("2d");
+
     let labelWidth = 0;
     if (labelContext?.font) {
       labelContext.font = rectLabelDiv.style.font;
@@ -288,7 +355,9 @@ export class CanvasGraphics {
       );
     } else {
       rectLabel.position.set(
-        endPos.x - labelWidth * this.labelXFactor, endPos.y - this.labelShift * labelWidth * this.labelXFactor, endPos.z
+        endPos.x - labelWidth * this.labelXFactor,
+        endPos.y - this.labelShift * labelWidth * this.labelXFactor,
+        endPos.z
       );
     }
 
@@ -299,76 +368,11 @@ export class CanvasGraphics {
     return [line, rectLabel];
   }
 
-  getCamera() {
-    return this.camera;
+  private clearLabelElements() {
+    document.querySelectorAll(".rect-label").forEach(el => el.remove());
   }
 
-  getTargetObjects() {
-    return this.targetObjects;
-  }
-
-  getLayerSeparation() {
-    return this.layerSeparation;
-  }
-
-  getVisibleView() {
-    return this.visibleView;
-  }
-
-  getXCameraPos() {
-    return this.xCameraPos;
-  }
-
-  getShowVirtualDisplays() {
-    return this.showVirtualDisplays;
-  }
-
-  updateLayerSeparation(userInput: number) {
-    this.layerSeparation = userInput;
-  }
-
-  updateRotation(userInput: number) {
-    this.xCameraPos = userInput;
-    this.camZoom = userInput/4 * 0.2 + 0.9;
-    this.labelShift = userInput/4 * this.maxLabelShift;
-    this.lowestYShift = Math.abs(userInput)/4 + 2;
-  }
-
-  updateHighlightedItems(newItems: Array<string>) {
-    this.highlightedItems = newItems;
-  }
-
-  updateRects(rects: Rectangle[]) {
-    this.rects = rects;
-  }
-
-  updateIsLandscape(isLandscape: boolean) {
-    this.isLandscape = isLandscape;
-  }
-
-  updateVisibleView(visible: boolean) {
-    this.visibleView = visible;
-  }
-
-  updateVirtualDisplays(show: boolean) {
-    this.showVirtualDisplays = show;
-  }
-
-  clearLabelElements() {
-    this.labelElements.forEach(el => el.remove());
-  }
-
-  updateZoom(isZoomIn: boolean) {
-    if (isZoomIn && this.camZoom < 2) {
-      this.labelXFactor -= 0.001;
-      this.camZoom += this.camZoomFactor * 1.5;
-    } else if (!isZoomIn && this.camZoom > 0.5) {
-      this.labelXFactor += 0.001;
-      this.camZoom -= this.camZoomFactor * 1.5;
-    }
-  }
-
-  colorMapping(scale: string, numberOfRects: number, darkFactor:number): THREE.Color {
+  private colorMapping(scale: string, numberOfRects: number, darkFactor:number): THREE.Color {
     if (scale === "highlighted") {
       return new THREE.Color(0xD2E3FC);
     } else if (scale === "grey") {
@@ -390,7 +394,7 @@ export class CanvasGraphics {
     }
   }
 
-  shortenText(text: string): string {
+  private shortenText(text: string): string {
     if (text.length > 35) {
       text = text.slice(0, 35);
     }
@@ -414,7 +418,6 @@ export class CanvasGraphics {
   private highlightedItems: Array<string> = [];
   private camera: THREE.OrthographicCamera;
   private rects: Rectangle[] = [];
-  private labelElements: HTMLElement[] = [];
   private targetObjects: any[] = [];
   private canvas?: HTMLCanvasElement;
 }
