@@ -109,6 +109,31 @@ export class Terminal {}
 
 export class TreeUtils
 {
+  public static findDescendantNode(node: TreeNodeTrace, isTargetNode: FilterType): TreeNodeTrace|undefined {
+    if (isTargetNode(node)) {
+      return node;
+    }
+
+    for (const child of node.children) {
+      const target = this.findDescendantNode(child, isTargetNode);
+      if (target) {
+        return target;
+      }
+    }
+
+    return undefined;
+  }
+
+  public static findAncestorNode(node: TreeNodeTrace, isTargetNode: FilterType): TreeNodeTrace|undefined {
+    let ancestor = node.parent;
+
+    while (ancestor && !isTargetNode(ancestor)) {
+      ancestor = ancestor.parent;
+    }
+
+    return ancestor;
+  }
+
   public static makeNodeFilter(filterString: string): FilterType {
     const filterStrings = filterString.split(",");
     const positive: any[] = [];
