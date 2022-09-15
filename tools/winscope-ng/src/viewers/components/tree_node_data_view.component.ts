@@ -39,11 +39,11 @@ import Chip from "viewers/common/chip";
 export class TreeNodeDataViewComponent {
   @Input() item!: Tree;
 
-  showShortName() {
+  public showShortName() {
     return this.item.simplifyNames && this.item.shortName !== this.item.name;
   }
 
-  chipClass(chip: Chip) {
+  public chipClass(chip: Chip) {
     return [
       "tree-view-internal-chip",
       "tree-view-chip",

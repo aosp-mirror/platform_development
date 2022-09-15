@@ -19,7 +19,7 @@ import {Parser} from "./parser";
 import {AccessibilityTraceFileProto, TransactionsTraceFileProto} from "./proto_types";
 
 class ParserTransactions extends Parser {
-  constructor(trace: Blob) {
+  constructor(trace: File) {
     super(trace);
     this.realToElapsedTimeOffsetNs = undefined;
   }

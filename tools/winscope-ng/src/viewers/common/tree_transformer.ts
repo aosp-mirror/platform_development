@@ -55,6 +55,7 @@ export class TreeTransformer {
     this.rootName = tree.name;
     this.filter = filter;
     this.setProperties(tree);
+    this.setTransformerOptions({});
   }
 
   public setIsShowDefaults(enabled: boolean) {

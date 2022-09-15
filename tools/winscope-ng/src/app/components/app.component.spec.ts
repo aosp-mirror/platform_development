@@ -29,6 +29,7 @@ import { AdbProxyComponent } from "./adb_proxy.component";
 import { WebAdbComponent } from "./web_adb.component";
 import { TraceConfigComponent } from "./trace_config.component";
 import { ViewerSurfaceFlingerComponent } from "viewers/viewer_surface_flinger/viewer_surface_flinger.component";
+import { TraceViewComponent } from "./trace_view.component";
 
 describe("AppComponent", () => {
   let fixture: ComponentFixture<AppComponent>;
@@ -55,7 +56,8 @@ describe("AppComponent", () => {
         AdbProxyComponent,
         WebAdbComponent,
         TraceConfigComponent,
-        ViewerSurfaceFlingerComponent
+        ViewerSurfaceFlingerComponent,
+        TraceViewComponent
       ],
     }).overrideComponent(AppComponent, {
       set: { changeDetection: ChangeDetectionStrategy.Default }
@@ -80,9 +82,8 @@ describe("AppComponent", () => {
   it("displays correct elements when no data loaded", async () => {
     component.dataLoaded = false;
     fixture.detectChanges();
-    expect(htmlElement.querySelector("#collect-traces-card")).toBeTruthy();
-    expect(htmlElement.querySelector("#upload-traces-card")).toBeTruthy();
-    expect(htmlElement.querySelector("#loaded-data-card")).toBeFalsy();
+    expect(htmlElement.querySelector(".welcome-info")).toBeTruthy();
+    expect(htmlElement.querySelector(".viewers.hide")).toBeTruthy();
   });
 
   it("displays correct elements when data loaded", async () => {

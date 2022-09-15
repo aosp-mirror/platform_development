@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from "@angular/core";
+import { Component, Input, Inject, Output, EventEmitter, OnInit, OnDestroy } from "@angular/core";
 import { ProxyConnection } from "trace_collection/proxy_connection";
 import { Connection } from "trace_collection/connection";
 import { setTraces } from "trace_collection/set_traces";
@@ -21,7 +21,9 @@ import { ProxyState } from "trace_collection/proxy_client";
 import { traceConfigurations, configMap, SelectionConfiguration, EnableConfiguration } from "trace_collection/trace_collection_utils";
 import { TraceCoordinator } from "app/trace_coordinator";
 import { PersistentStore } from "common/persistent_store";
-
+import { MatSnackBar } from "@angular/material/snack-bar";
+import { ParserError } from "parsers/parser_factory";
+import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component";
 
 @Component({
   selector: "collect-traces",
@@ -32,7 +34,7 @@ import { PersistentStore } from "common/persistent_store";
       <div class="connecting-message" *ngIf="connect.isConnectingState()"><span>Connecting...</span></div>
 
       <div class="set-up-adb" *ngIf="!connect.adbSuccess()">
-        <button id="proxy-tab" class=".white-btn" mat-raised-button [ngClass]="tabClass(true)" (click)="displayAdbProxyTab()">ADB Proxy</button>
+        <button id="proxy-tab" mat-stroked-button [ngClass]="tabClass(true)" (click)="displayAdbProxyTab()">ADB Proxy</button>
         <!-- <button id="web-tab" mat-raised-button [ngClass]="tabClass(false)" (click)="displayWebAdbTab()">Web ADB</button> -->
         <adb-proxy *ngIf="isAdbProxy" [(proxy)]="connect.proxy!" (addKey)="onAddKey($event)"></adb-proxy>
         <!-- <web-adb *ngIf="!isAdbProxy"></web-adb> TODO: fix web adb workflow -->
@@ -69,7 +71,7 @@ import { PersistentStore } from "common/persistent_store";
           <trace-config
             [traces]="setTraces.DYNAMIC_TRACES"
           ></trace-config>
-          <button class="start-btn" mat-raised-button (click)="startTracing()">Start trace</button>
+          <button class="start-btn" mat-stroked-button (click)="startTracing()">Start trace</button>
         </div>
 
         <div class="dump-section">
@@ -79,7 +81,7 @@ import { PersistentStore } from "common/persistent_store";
               *ngFor="let dumpKey of objectKeys(setTraces.DUMPS)"
               [(ngModel)]="setTraces.DUMPS[dumpKey].run"
             >{{setTraces.DUMPS[dumpKey].name}}</mat-checkbox>
-            <button class="dump-btn" mat-raised-button (click)="dumpState()">Dump state</button>
+            <button class="dump-btn" mat-stroked-button (click)="dumpState()">Dump state</button>
           </div>
         </div>
       </div>
@@ -123,6 +125,10 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
 
   @Output() dataLoadedChange = new EventEmitter<boolean>();
 
+  constructor(
+    @Inject(MatSnackBar) private snackBar: MatSnackBar
+  ) {}
+
   ngOnInit() {
     if (this.isAdbProxy) {
       this.connect = new ProxyConnection();
@@ -144,10 +150,6 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     this.connect.restart();
   }
 
-  public onProxyChange(newState: ProxyState) {
-    this.connect.onConnectChange(newState);
-  }
-
   public displayAdbProxyTab() {
     this.isAdbProxy = true;
     this.connect = new ProxyConnection();
@@ -157,66 +159,6 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     this.isAdbProxy = false;
     //TODO: change to WebAdbConnection
     this.connect = new ProxyConnection();
-  }
-
-  public requestedTraces() {
-    const tracesFromCollection: Array<string> = [];
-    const req = Object.keys(setTraces.DYNAMIC_TRACES)
-      .filter((traceKey:string) => {
-        const traceConfig = setTraces.DYNAMIC_TRACES[traceKey];
-        if (traceConfig.isTraceCollection) {
-          traceConfig.config?.enableConfigs.forEach((innerTrace:EnableConfiguration) => {
-            if (innerTrace.enabled) {
-              tracesFromCollection.push(innerTrace.key);
-            }
-          });
-          return false;
-        }
-        return traceConfig.run;
-      });
-    return req.concat(tracesFromCollection);
-  }
-
-  public requestedDumps() {
-    return Object.keys(setTraces.DUMPS)
-      .filter((dumpKey:string) => {
-        return setTraces.DUMPS[dumpKey].run;
-      });
-  }
-
-  public requestedEnableConfig(): Array<string> | undefined {
-    const req: Array<string> = [];
-    Object.keys(setTraces.DYNAMIC_TRACES)
-      .forEach((traceKey:string) => {
-        const trace = setTraces.DYNAMIC_TRACES[traceKey];
-        if(!trace.isTraceCollection
-              && trace.run
-              && trace.config
-              && trace.config.enableConfigs) {
-          trace.config.enableConfigs.forEach((con:EnableConfiguration) => {
-            if (con.enabled) {
-              req.push(con.key);
-            }
-          });
-        }
-      });
-    if (req.length === 0) {
-      return undefined;
-    }
-    return req;
-  }
-
-  public requestedSelection(traceType: string): configMap | undefined {
-    if (!setTraces.DYNAMIC_TRACES[traceType].run) {
-      return undefined;
-    }
-    const selected: configMap = {};
-    setTraces.DYNAMIC_TRACES[traceType].config?.selectionConfigs.forEach(
-      (con: SelectionConfiguration) => {
-        selected[con.key] = con.value;
-      }
-    );
-    return selected;
   }
 
   public startTracing() {
@@ -259,16 +201,6 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     await this.loadFiles();
   }
 
-  public async loadFiles() {
-    console.log("loading files", this.connect.adbData());
-    this.traceCoordinator.clearData();
-
-    await this.traceCoordinator.addTraces(this.connect.adbData());
-    this.dataLoaded = true;
-    this.dataLoadedChange.emit(this.dataLoaded);
-    console.log("finished loading data!");
-  }
-
   public tabClass(adbTab: boolean) {
     let isActive: string;
     if (adbTab) {
@@ -279,7 +211,91 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     return ["tab", isActive];
   }
 
+  private onProxyChange(newState: ProxyState) {
+    this.connect.onConnectChange(newState);
+  }
+
+  private requestedTraces() {
+    const tracesFromCollection: Array<string> = [];
+    const req = Object.keys(setTraces.DYNAMIC_TRACES)
+      .filter((traceKey:string) => {
+        const traceConfig = setTraces.DYNAMIC_TRACES[traceKey];
+        if (traceConfig.isTraceCollection) {
+          traceConfig.config?.enableConfigs.forEach((innerTrace:EnableConfiguration) => {
+            if (innerTrace.enabled) {
+              tracesFromCollection.push(innerTrace.key);
+            }
+          });
+          return false;
+        }
+        return traceConfig.run;
+      });
+    return req.concat(tracesFromCollection);
+  }
+
+  private requestedDumps() {
+    return Object.keys(setTraces.DUMPS)
+      .filter((dumpKey:string) => {
+        return setTraces.DUMPS[dumpKey].run;
+      });
+  }
+
+  private requestedEnableConfig(): Array<string> | undefined {
+    const req: Array<string> = [];
+    Object.keys(setTraces.DYNAMIC_TRACES)
+      .forEach((traceKey:string) => {
+        const trace = setTraces.DYNAMIC_TRACES[traceKey];
+        if(!trace.isTraceCollection
+              && trace.run
+              && trace.config
+              && trace.config.enableConfigs) {
+          trace.config.enableConfigs.forEach((con:EnableConfiguration) => {
+            if (con.enabled) {
+              req.push(con.key);
+            }
+          });
+        }
+      });
+    if (req.length === 0) {
+      return undefined;
+    }
+    return req;
+  }
+
+  private requestedSelection(traceType: string): configMap | undefined {
+    if (!setTraces.DYNAMIC_TRACES[traceType].run) {
+      return undefined;
+    }
+    const selected: configMap = {};
+    setTraces.DYNAMIC_TRACES[traceType].config?.selectionConfigs.forEach(
+      (con: SelectionConfiguration) => {
+        selected[con.key] = con.value;
+      }
+    );
+    return selected;
+  }
+
+  private async loadFiles() {
+    console.log("loading files", this.connect.adbData());
+    this.traceCoordinator.clearData();
+
+    const parserErrors = await this.traceCoordinator.addTraces(this.connect.adbData());
+    if (parserErrors.length > 0) {
+      this.openTempSnackBar(parserErrors);
+    }
+    this.dataLoaded = true;
+    this.dataLoadedChange.emit(this.dataLoaded);
+    console.log("finished loading data!");
+  }
+
   private waitForData(ms: number) {
     return new Promise( resolve => setTimeout(resolve, ms) );
+  }
+
+  private openTempSnackBar(parserErrors: ParserError[]) {
+    this.snackBar.openFromComponent(ParserErrorSnackBarComponent, {
+      data: parserErrors,
+      duration: 7500,
+    });
   }
 }

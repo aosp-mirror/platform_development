@@ -18,7 +18,7 @@ import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
 
 abstract class Parser {
-  protected constructor(trace: Blob) {
+  protected constructor(trace: File) {
     this.trace = trace;
   }
 
@@ -57,7 +57,7 @@ abstract class Parser {
 
   public abstract getTraceType(): TraceType;
 
-  public getTrace(): Blob {
+  public getTrace(): File {
     return this.trace;
   }
 
@@ -89,7 +89,7 @@ abstract class Parser {
   protected abstract getTimestamp(type: TimestampType, decodedEntry: any): undefined|Timestamp;
   protected abstract processDecodedEntry(decodedEntry: any): any;
 
-  protected trace: Blob;
+  protected trace: File;
   protected decodedEntries: any[] = [];
   private timestamps: Map<TimestampType, Timestamp[]> = new Map<TimestampType, Timestamp[]>();
 }

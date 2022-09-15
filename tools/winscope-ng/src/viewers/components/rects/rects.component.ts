@@ -24,7 +24,9 @@ import { ViewerEvents } from "viewers/common/viewer_events";
   selector: "rects-view",
   template: `
     <mat-card-header class="view-controls">
-      <mat-card-title><span>Layers</span></mat-card-title>
+      <div class="rects-title">
+        <span>Layers</span>
+      </div>
       <div class="top-view-controls">
         <div class="top-view-controls">
           <mat-checkbox
@@ -89,37 +91,104 @@ import { ViewerEvents } from "viewers/common/viewer_events";
     </mat-card-content>
   `,
   styles: [
-    "@import 'https://fonts.googleapis.com/icon?family=Material+Icons';",
-    ".rects-content {position: relative}",
-    ".canvas-container {height: 40rem; width: 100%; position: relative}",
-    ".rects-canvas {height: 40rem; width: 100%; cursor: pointer; position: absolute; top: 0px}",
-    ".labels-canvas {height: 40rem; width: 100%; position: absolute; top: 0px}",
-    ".view-controls {display: inline-block; position: relative; min-height: 4rem; width: 100%;}",
-    ".slider-view-controls {display: inline-block; position: relative; height: 3rem; width: 100%;}",
-    ".slider {display: inline-block}",
-    ".slider.spacing {float: right}",
-    ".slider span, .slider mat-slider { display: block; padding-left: 0px; padding-top:  0px; font-weight: bold}",
-    ".top-view-controls {height: 3rem; width: 100%; position: relative; display: inline-block; vertical-align: middle;}",
-    ".zoom-container {position: relative; vertical-align: middle; float: right}",
-    ".zoom-btn {position:relative; display: inline-flex; background: none; border: none; padding: 0}",
-    "mat-card-title {font-size: 16px !important; font-weight: medium; font-family: inherit;}",
-    ":host /deep/ .mat-card-header-text {width: 100%; margin: 0;}",
-    "mat-radio-group {vertical-align: middle}",
-    "mat-radio-button {font-size: 16px; font-weight: normal}",
-    ".mat-radio-button, .mat-radio-button-frame {transform: scale(0.8);}",
-    ".rects-checkbox {font-size: 14px; font-weight: normal}",
-    "mat-icon {margin: 5px}",
-    "mat-checkbox {margin-left: 5px;}",
-    ".mat-checkbox .mat-checkbox-frame { transform: scale(0.7);}",
-    ".mat-checkbox-checked .mat-checkbox-background {transform: scale(0.7);}",
-    ".mat-checkbox-indeterminate .mat-checkbox-background {transform: scale(0.7);}",
-    ".slider-label {position: absolute; top: 0}",
-    ".control-item {position: relative; display: inline-block;vertical-align: middle;align-items: center;}"
+    `
+      @import 'https://fonts.googleapis.com/icon?family=Material+Icons';
+
+      :host /deep/ .mat-card-header-text {
+        width: 100%;
+        margin: 0;
+      }
+      .rects-title {
+        font-size: 16px;
+        font-weight: medium;
+        font-family: inherit;
+        width: 100%;
+        margin-bottom: 12px;
+      }
+      .rects-content {
+        position: relative;
+      }
+      .canvas-container {
+        height: 40rem;
+        width: 100%;
+        position: relative;
+      }
+      .labels-canvas, .rects-canvas {
+        height: 40rem;
+        width: 100%;
+        position: absolute;
+        top: 0px;
+      }
+      .rects-canvas {
+        cursor: pointer;
+      }
+      .view-controls {
+        display: inline-block;
+        position: relative;
+        min-height: 4rem;
+        width: 100%;
+      }
+      .slider-view-controls, .top-view-controls {
+        display: inline-block;
+        position: relative;
+        height: 3rem;
+        width: 100%;
+      }
+      .top-view-controls {
+        vertical-align: middle;
+      }
+      .slider {
+        display: inline-block;
+      }
+      .slider-label {
+        position: absolute;
+        top: 0;
+      }
+      .slider.spacing {
+        float: right;
+      }
+      .slider span, .slider mat-slider {
+        display: block;
+        padding-left: 0px;
+        padding-top: 0px;
+        font-weight: bold;
+      }
+      .zoom-container {
+        position: relative;
+        vertical-align: middle;
+        float: right;
+      }
+      .zoom-btn {
+        position: relative;
+        display: inline-flex;
+        background: none;
+        border: none;
+        padding: 0;
+      }
+      .rects-checkbox {
+        font-size: 14px;
+        font-weight: normal;
+        margin-left: 5px;
+      }
+      mat-icon {
+        margin: 5px
+      }
+      .mat-checkbox .mat-checkbox-frame, .mat-checkbox-checked .mat-checkbox-background, .mat-checkbox-indeterminate .mat-checkbox-background {
+        transform: scale(0.7);
+      }
+      .control-item {
+        position: relative;
+        display: inline-block;
+        vertical-align: middle;
+        align-items: center;
+      }
+    `
   ]
 })
 
 export class RectsComponent implements OnInit, OnChanges, OnDestroy {
   @Input() rects!: Rectangle[];
+  @Input() forceRefresh = false;
   @Input() displayIds: Array<number> = [];
   @Input() highlightedItems: Array<string> = [];
 
@@ -132,6 +201,13 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnInit() {
     window.addEventListener("resize", () => this.refreshCanvas());
+    this.canvasContainer = this.elementRef.nativeElement.querySelector(".canvas-container");
+    this.resizeObserver = new ResizeObserver((entries) => {
+      if (entries[0].contentRect.height > 0) {
+        this.refreshCanvas();
+      }
+    });
+    this.resizeObserver.observe(this.canvasContainer!);
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -143,29 +219,63 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
     if (changes["highlightedItems"]) {
       this.canvasGraphics.updateHighlightedItems(this.highlightedItems);
     }
-    if (this.rects.length > 0) {
-      //change in rects so they must undergo transformation and scaling before canvas refreshed
-      this.canvasGraphics.clearLabelElements();
-      this.rects = this.rects.filter(rect => rect.isVisible || rect.isDisplay);
-      this.displayRects = this.rects.filter(rect => rect.isDisplay);
-      this.computeBounds();
-      this.rects = this.rects.map(rect => {
-        if (changes["rects"] && rect.transform) {
-          return RectsUtils.transformRect(rect.transform.matrix ??  rect.transform, rect);
-        } else {
-          return rect;
-        }
-      });
-      this.scaleRects();
-      this.drawRects();
+    if (this.rects.length > 0 || changes["forceRefresh"]?.currentValue) {
+      this.formatAndDrawRects(changes["rects"] !== undefined);
     }
   }
 
   ngOnDestroy() {
     window.removeEventListener("resize", () => this.refreshCanvas());
+    this.resizeObserver!.unobserve(this.canvasContainer!);
   }
 
-  onRectClick(event:MouseEvent) {
+  public onChangeView(visible: boolean) {
+    this.canvasGraphics.updateVisibleView(visible);
+    this.refreshCanvas();
+  }
+
+  public visibleView() {
+    return this.canvasGraphics.getVisibleView();
+  }
+
+  public getLayerSeparation() {
+    return this.canvasGraphics.getLayerSeparation();
+  }
+
+  public updateLayerSeparation(sep: number) {
+    this.canvasGraphics.updateLayerSeparation(sep);
+    this.refreshCanvas();
+  }
+
+  public updateRotation(rot: number) {
+    this.canvasGraphics.updateRotation(rot);
+    this.refreshCanvas();
+  }
+
+  public updateZoom(zoom: boolean) {
+    this.canvasGraphics.updateZoom(zoom);
+    this.refreshCanvas();
+  }
+
+  public updateVirtualDisplays(show: boolean) {
+    this.canvasGraphics.updateVirtualDisplays(show);
+    this.refreshCanvas();
+  }
+
+  public xCameraPos() {
+    return this.canvasGraphics.getXCameraPos();
+  }
+
+  public showVirtualDisplays() {
+    return this.canvasGraphics.getShowVirtualDisplays();
+  }
+
+  public changeDisplayId(displayId: number) {
+    this.currentDisplayId = displayId;
+    this.refreshCanvas();
+  }
+
+  public onRectClick(event:MouseEvent) {
     this.setNormalisedMousePos(event);
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(this.mouse, this.canvasGraphics.getCamera());
@@ -178,7 +288,29 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  setNormalisedMousePos(event:MouseEvent) {
+  public drawRects() {
+    const canvas = this.elementRef.nativeElement.querySelector(".rects-canvas") as HTMLCanvasElement;
+    this.canvasGraphics.initialise(canvas);
+    this.refreshCanvas();
+  }
+
+  private formatAndDrawRects(rectsChanged: boolean) {
+    //change in rects so they must undergo transformation and scaling before canvas refreshed
+    this.rects = this.rects.filter(rect => rect.isVisible || rect.isDisplay);
+    this.displayRects = this.rects.filter(rect => rect.isDisplay);
+    this.computeBounds();
+    this.rects = this.rects.map(rect => {
+      if (rectsChanged && rect.transform) {
+        return RectsUtils.transformRect(rect.transform.matrix ??  rect.transform, rect);
+      } else {
+        return rect;
+      }
+    });
+    this.scaleRects();
+    this.drawRects();
+  }
+
+  private setNormalisedMousePos(event:MouseEvent) {
     event.preventDefault();
     const canvas = (event.target as Element);
     const canvasOffset = canvas.getBoundingClientRect();
@@ -187,7 +319,7 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
     this.mouse.z = 0;
   }
 
-  updateHighlightedItems(newId: string) {
+  private updateHighlightedItems(newId: string) {
     const event: CustomEvent = new CustomEvent(
       ViewerEvents.HighlightedChange,
       {
@@ -197,31 +329,7 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  drawRects() {
-    const canvas = this.elementRef.nativeElement.querySelector(".rects-canvas") as HTMLCanvasElement;
-    this.canvasGraphics.initialise(canvas);
-    this.refreshCanvas();
-  }
-
-  refreshCanvas() {
-    this.updateVariablesBeforeRefresh();
-    this.canvasGraphics.refreshCanvas();
-  }
-
-  updateVariablesBeforeRefresh() {
-    const rects = this.rects.filter(rect => rect.displayId === this.currentDisplayId);
-    this.canvasGraphics.updateRects(rects);
-    const biggestX = Math.max(...this.rects.map(rect => rect.topLeft.x + rect.width/2));
-    this.canvasGraphics.updateIsLandscape(biggestX > this.s({x: this.boundsWidth, y:this.boundsHeight}).x/2);
-  }
-
-  onChangeView(visible: boolean) {
-    this.canvasGraphics.updateVisibleView(visible);
-    this.canvasGraphics.clearLabelElements();
-    this.refreshCanvas();
-  }
-
-  scaleRects() {
+  private scaleRects() {
     this.rects = this.rects.map(rect => {
       rect.bottomRight = this.s(rect.bottomRight);
       rect.topLeft = this.s(rect.topLeft);
@@ -237,7 +345,19 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
-  computeBounds(): any {
+  private refreshCanvas() {
+    this.updateVariablesBeforeRefresh();
+    this.canvasGraphics.refreshCanvas();
+  }
+
+  private updateVariablesBeforeRefresh() {
+    const rects = this.rects.filter(rect => rect.displayId === this.currentDisplayId);
+    this.canvasGraphics.updateRects(rects);
+    const biggestX = Math.max(...this.rects.map(rect => rect.topLeft.x + rect.width/2));
+    this.canvasGraphics.updateIsLandscape(biggestX > this.s({x: this.boundsWidth, y:this.boundsHeight}).x/2);
+  }
+
+  private computeBounds(): any {
     this.boundsWidth = Math.max(...this.rects.map((rect) => {
       const mat = this.getMatrix(rect);
       if (mat) {
@@ -259,16 +379,16 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  maxWidth() {
+  private maxWidth(): number {
     return Math.max(...this.displayRects.map(rect => rect.width)) * 1.2;
   }
 
-  maxHeight() {
+  private maxHeight(): number {
     return Math.max(...this.displayRects.map(rect => rect.height)) * 1.2;
   }
 
   // scales coordinates to canvas
-  s(sourceCoordinates: Point) {
+  private s(sourceCoordinates: Point): Point {
     let scale;
     if (this.boundsWidth < this.boundsHeight) {
       scale = this.canvasGraphics.cameraHalfHeight*2 * 0.6 / this.boundsHeight;
@@ -281,7 +401,7 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
     };
   }
 
-  getMatrix(rect: Rectangle) {
+  private getMatrix(rect: Rectangle): RectTransform | RectMatrix | null {
     if (rect.transform) {
       let matrix: RectTransform | RectMatrix = rect.transform;
       if (rect.transform && rect.transform.matrix) {
@@ -289,55 +409,16 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
       }
       return matrix;
     } else {
-      return false;
+      return null;
     }
   }
 
-  visibleView() {
-    return this.canvasGraphics.getVisibleView();
-  }
-
-  getLayerSeparation() {
-    return this.canvasGraphics.getLayerSeparation();
-  }
-
-  updateLayerSeparation(sep: number) {
-    this.canvasGraphics.updateLayerSeparation(sep);
-    this.refreshCanvas();
-  }
-
-  updateRotation(rot: number) {
-    this.canvasGraphics.updateRotation(rot);
-    this.refreshCanvas();
-  }
-
-  updateZoom(zoom: boolean) {
-    this.canvasGraphics.updateZoom(zoom);
-    this.refreshCanvas();
-  }
-
-  updateVirtualDisplays(show: boolean) {
-    this.canvasGraphics.updateVirtualDisplays(show);
-    this.refreshCanvas();
-  }
-
-  xCameraPos() {
-    return this.canvasGraphics.getXCameraPos();
-  }
-
-  showVirtualDisplays() {
-    return this.canvasGraphics.getShowVirtualDisplays();
-  }
-
-  changeDisplayId(displayId: number) {
-    this.currentDisplayId = displayId;
-    this.refreshCanvas();
-  }
-
-  canvasGraphics: CanvasGraphics;
+  private canvasGraphics: CanvasGraphics;
   private boundsWidth = 0;
   private boundsHeight = 0;
   private displayRects!: Rectangle[];
   private mouse = new THREE.Vector3(0, 0, 0);
   private currentDisplayId: number;
+  private resizeObserver!: ResizeObserver;
+  private canvasContainer!: Element;
 }

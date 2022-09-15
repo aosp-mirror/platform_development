@@ -188,7 +188,8 @@ class ProxyRequest {
         for (const encodedFileBuffer of files) {
           const buffer = Uint8Array.from(atob(encodedFileBuffer), (c) => c.charCodeAt(0));
           const blob = new Blob([buffer]);
-          proxyClient.adbData.push(blob);
+          const newFile = new File([blob], filetype);
+          proxyClient.adbData.push(newFile);
         }
       }
       if (idx < files.length - 1) {
@@ -219,7 +220,7 @@ export class ProxyClient {
   devices: Device = {};
   selectedDevice = "";
   errorText = "";
-  adbData: Array<Blob> = [];
+  adbData: Array<File> = [];
   proxyKey = "";
   lastDevice = "";
   store = new PersistentStore();
