@@ -21,12 +21,4 @@ python_library_host {
   srcs: [
     "adb/*.py",
   ],
-  version: {
-    py2: {
-      enabled: true,
-    },
-    py3: {
-      enabled: true,
-    },
-  },
 }

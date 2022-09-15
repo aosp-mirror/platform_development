@@ -24,19 +24,21 @@ Builds a vendor image for given product and analyze ninja inputs.
   -p  product name to build (e.g. cf_x86_64_phone)
   -r  directory for dist (e.g. out/dist)
   -i  build ID
+  -u  whether it is an unbundled build
   -h  display this help and exit
 
 EOF
   exit 1
 }
 
-while getopts d:p:r:i:h flag
+while getopts d:p:r:i:uh flag
 do
     case "${flag}" in
         d) device=${OPTARG};;
         p) product=${OPTARG};;
         r) dist_dir=${OPTARG};;
         i) build_id=${OPTARG};;
+        u) unbundled_build=true;;
         h) usage;;
         *) usage;;
     esac
@@ -45,6 +47,10 @@ done
 if [[ -z "$device" || -z "$product" || -z "$dist_dir" || -z "$build_id" ]]; then
   echo "missing arguments"
   usage
+fi
+
+if [[ "$unbundled_build" = true ]]; then
+  export TARGET_BUILD_UNBUNDLED_IMAGE=true
 fi
 
 export ALLOW_MISSING_DEPENDENCIES=true
