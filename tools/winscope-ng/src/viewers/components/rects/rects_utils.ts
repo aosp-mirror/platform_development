@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Point, Rectangle, RectMatrix, RectTransform } from "viewers/viewer_surface_flinger/ui_data";
+import { Point, Rectangle, RectMatrix, RectTransform } from "viewers/common/rectangle";
 
 export const RectsUtils = {
   multiplyMatrix(matrix:any, corner: Point): Point {
@@ -53,7 +53,8 @@ export const RectsUtils = {
       ref: rect.ref,
       id: rect.id,
       displayId: rect.displayId,
-      isVirtual: rect.isVirtual
+      isVirtual: rect.isVirtual,
+      isClickable: rect.isClickable
     };
     return outrect;
   }

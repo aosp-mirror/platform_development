@@ -29,7 +29,7 @@ describe("Viewer SurfaceFlinger", () => {
     const loadData = element(by.css(".load-btn"));
     await loadData.click();
 
-    const surfaceFlingerViewer: ElementFinder = element(by.css("viewer-surface-flinger"));
-    expect(surfaceFlingerViewer).toBeTruthy();
+    const viewerPresent = await element(by.css("viewer-surface-flinger")).isPresent();
+    expect(viewerPresent).toBeTruthy();
   });
 });

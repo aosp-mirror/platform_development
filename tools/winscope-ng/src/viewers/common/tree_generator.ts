@@ -16,7 +16,9 @@
 import {
   FilterType,
   Tree,
-  DiffType
+  DiffType,
+  isVisibleNode,
+  isParentNode
 } from "./tree_utils";
 import ObjectFormatter from "common/trace/flickerlib/ObjectFormatter";
 import {
@@ -141,7 +143,8 @@ export class TreeGenerator {
   private flattenChildren(children: Array<Tree>): Tree {
     for (let i = 0; i < children.length; i++) {
       const child = children[i];
-      const showInOnlyVisibleView = this.isOnlyVisibleView && child.isVisible;
+      const childIsVisibleNode = child.isVisible && isVisibleNode(child.kind, child.type);
+      const showInOnlyVisibleView = this.isOnlyVisibleView && childIsVisibleNode;
       const passVisibleCheck = !this.isOnlyVisibleView || showInOnlyVisibleView;
       if (this.filterMatches(child) && passVisibleCheck) {
         this.flattenedChildren.push(child);
@@ -192,10 +195,15 @@ export class TreeGenerator {
                 tree.hwcCompositionType == HwcCompositionType.SOLID_COLOR)) {
       tree.chips.push(HWC_CHIP);
     }
-    if (tree.isVisible && tree.kind !== "entry") {
+    if (tree.isVisible && isVisibleNode(tree.kind, tree.type)) {
       tree.chips.push(VISIBLE_CHIP);
     }
-    if (tree.zOrderRelativeOfId !== -1 && tree.kind !== "entry" && !tree.isRootLayer) {
+    if (
+      tree.zOrderRelativeOfId !== undefined
+      && tree.zOrderRelativeOfId !== -1
+      && !isParentNode(tree.kind)
+      && !tree.isRootLayer
+    ) {
       tree.chips.push(RELATIVE_Z_CHIP);
       this.relZParentIds.push(tree.zOrderRelativeOfId);
     }
@@ -214,11 +222,16 @@ export class TreeGenerator {
       return null;
     }
 
+    // add id field to tree if id does not exist (e.g. for WM traces)
+    if (!newTree.id && newTree.layerId) {
+      newTree.id = newTree.layerId;
+    }
+
     // simplify names check
     newTree.simplifyNames = this.isSimplifyNames;
 
     // check item either matches filter, or has parents/children matching filter
-    if (tree.kind === "entry" || parentFilterMatch) {
+    if (isParentNode(tree.kind) || parentFilterMatch) {
       newTree.showInFilteredView = true;
     } else {
       newTree.showInFilteredView = this.filterMatches(tree);
@@ -322,7 +335,7 @@ export class TreeGenerator {
       // Default to no changes
       diffTree.diffType = DiffType.NONE;
 
-      if (newTree.kind !== "entry" && newId !== oldId) {
+      if (!isParentNode(newTree.kind) && newId !== oldId) {
         // A move, addition, or deletion has occurred
         let nextOldTree = null;
 
@@ -422,7 +435,7 @@ export class TreeGenerator {
   private defaultModifiedCheck(newNode: Tree | null, oldNode: Tree | null): boolean {
     if (!newNode && !oldNode) {
       return false;
-    } else if (newNode && newNode.kind==="entry") {
+    } else if (newNode && isParentNode(newNode.kind)) {
       return false;
     } else if ((newNode && !oldNode) || (!newNode && oldNode)) {
       return true;
