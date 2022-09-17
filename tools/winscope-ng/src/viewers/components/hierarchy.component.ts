@@ -16,7 +16,7 @@
 import { Component, Input, Inject, ElementRef } from "@angular/core";
 import { UserOptions } from "viewers/common/user_options";
 import { PersistentStore } from "common/persistent_store";
-import { Tree, diffClass, isHighlighted } from "viewers/common/tree_utils";
+import { HierarchyTree, diffClass, isHighlighted, Tree } from "viewers/common/tree_utils";
 import { nodeStyles } from "viewers/components/styles/node.styles";
 import { ViewerEvents } from "viewers/common/viewer_events";
 import { TraceType } from "common/trace/trace_type";
@@ -56,7 +56,7 @@ import { TraceType } from "common/trace/trace_type";
           [isPinned]="true"
           [isInPinnedSection]="true"
           (pinNodeChange)="pinnedItemChange($event)"
-          (click)="onPinnedNodeClick($event, pinnedItem.id, pinnedItem)"
+          (click)="onPinnedNodeClick($event, pinnedItem)"
         ></tree-node>
       </div>
     </mat-card-header>
@@ -150,10 +150,10 @@ export class HierarchyComponent {
   diffClass = diffClass;
   isHighlighted = isHighlighted;
 
-  @Input() tree!: Tree | null;
+  @Input() tree!: HierarchyTree | null;
   @Input() dependencies: Array<TraceType> = [];
   @Input() highlightedItems: Array<string> = [];
-  @Input() pinnedItems: Array<Tree> = [];
+  @Input() pinnedItems: Array<HierarchyTree> = [];
   @Input() store!: PersistentStore;
   @Input() userOptions: UserOptions = {};
 
@@ -172,12 +172,12 @@ export class HierarchyComponent {
     };
   }
 
-  public onPinnedNodeClick(event: MouseEvent, pinnedItemId: string, pinnedItem: Tree) {
+  public onPinnedNodeClick(event: MouseEvent, pinnedItem: HierarchyTree) {
     event.preventDefault();
     if (window.getSelection()?.type === "range") {
       return;
     }
-    this.highlightedItemChange(`${pinnedItemId}`);
+    if (pinnedItem.id) this.highlightedItemChange(`${pinnedItem.id}`);
     this.selectedTreeChange(pinnedItem);
   }
 
@@ -212,6 +212,9 @@ export class HierarchyComponent {
   }
 
   public selectedTreeChange(item: Tree) {
+    if (!(item instanceof HierarchyTree)) {
+      return;
+    }
     const event: CustomEvent = new CustomEvent(
       ViewerEvents.SelectedTreeChange,
       {
@@ -222,6 +225,9 @@ export class HierarchyComponent {
   }
 
   public pinnedItemChange(item: Tree) {
+    if (!(item instanceof HierarchyTree)) {
+      return;
+    }
     const event: CustomEvent = new CustomEvent(
       ViewerEvents.HierarchyPinnedChange,
       {

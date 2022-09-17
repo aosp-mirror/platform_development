@@ -22,7 +22,7 @@ import { MatCardModule } from "@angular/material/card";
 import { MatRadioModule } from "@angular/material/radio";
 import { MatSliderModule } from "@angular/material/slider";
 import { CUSTOM_ELEMENTS_SCHEMA } from "@angular/core";
-import { Rectangle } from "viewers/viewer_surface_flinger/ui_data";
+import { Rectangle } from "viewers/common/rectangle";
 
 describe("RectsComponent", () => {
   let component: TestHostComponent;
@@ -97,12 +97,13 @@ describe("RectsComponent", () => {
         ref: null,
         id: 12345,
         displayId: 0,
-        isVirtual: false
+        isVirtual: false,
+        isClickable: false
       }
     ]);
-    spyOn(component.rectsComponent, "drawRects").and.callThrough();
+    spyOn(component.rectsComponent, "refreshCanvas").and.callThrough();
     fixture.detectChanges();
-    expect(component.rectsComponent.drawRects).toHaveBeenCalled();
+    expect(component.rectsComponent.refreshCanvas).toHaveBeenCalled();
   });
 
   @Component({

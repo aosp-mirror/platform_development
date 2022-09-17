@@ -88,7 +88,7 @@ export default class ObjectFormatter {
      * @param obj The raw object to format
      * @return The formatted object
      */
-    static format(obj: any): {} {
+    static format(obj: any): any {
         const properties = this.getProperties(obj);
         const sortedProperties = properties.sort()
 

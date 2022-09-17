@@ -15,7 +15,14 @@
  */
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {ViewerWindowManagerComponent} from "./viewer_window_manager.component";
-import {UiData} from "./ui_data";
+
+import { HierarchyComponent } from "viewers/components/hierarchy.component";
+import { PropertiesComponent } from "viewers/components/properties.component";
+import { RectsComponent } from "viewers/components/rects/rects.component";
+import { MatIconModule } from "@angular/material/icon";
+import { MatCardModule } from "@angular/material/card";
+import { ComponentFixtureAutoDetect } from "@angular/core/testing";
+import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from "@angular/core";
 
 describe("ViewerWindowManagerComponent", () => {
   let fixture: ComponentFixture<ViewerWindowManagerComponent>;
@@ -24,7 +31,20 @@ describe("ViewerWindowManagerComponent", () => {
 
   beforeAll(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ViewerWindowManagerComponent],
+      providers: [
+        { provide: ComponentFixtureAutoDetect, useValue: true }
+      ],
+      imports: [
+        MatIconModule,
+        MatCardModule
+      ],
+      declarations: [
+        ViewerWindowManagerComponent,
+        HierarchyComponent,
+        PropertiesComponent,
+        RectsComponent
+      ],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA]
     }).compileComponents();
   });
 
@@ -38,16 +58,18 @@ describe("ViewerWindowManagerComponent", () => {
     expect(component).toBeTruthy();
   });
 
-  it("renders the title", () => {
-    const divTitle = htmlElement.querySelector(".viewer-window-manager div.title");
-    expect(divTitle?.innerHTML).toContain("Window Manager");
+  it("creates rects view", () => {
+    const rectsView = htmlElement.querySelector("#wm-rects-view");
+    expect(rectsView).toBeTruthy();
   });
 
-  it("renders the input value", async () => {
-    component.inputData = new UiData("UI Data Value");
-    fixture.detectChanges();
+  it("creates hierarchy view", () => {
+    const hierarchyView = htmlElement.querySelector("#wm-hierarchy-view");
+    expect(hierarchyView).toBeTruthy();
+  });
 
-    const divInputValue = htmlElement.querySelector(".viewer-window-manager div.input-value");
-    expect(divInputValue?.innerHTML).toContain("UI Data Value");
+  it("creates properties view", () => {
+    const propertiesView = htmlElement.querySelector("#wm-properties-view");
+    expect(propertiesView).toBeTruthy();
   });
 });

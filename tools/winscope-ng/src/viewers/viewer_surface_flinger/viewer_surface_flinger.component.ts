@@ -16,7 +16,6 @@
 import {
   Component,
   Input,
-  SimpleChanges
 } from "@angular/core";
 import { UiData } from "./ui_data";
 import { TRACE_INFO } from "app/trace_info";
@@ -27,19 +26,19 @@ import { PersistentStore } from "common/persistent_store";
   selector: "viewer-surface-flinger",
   template: `
       <div fxLayout="row wrap" fxLayoutGap="10px grid" class="card-grid">
-        <mat-card class="rects-view">
+        <mat-card id="sf-rects-view" class="rects-view">
           <rects-view
             [rects]="inputData?.rects ?? []"
-            [displayIds]="inputData?.displayIds ?? []"
             [highlightedItems]="inputData?.highlightedItems ?? []"
             [displayIds]="inputData?.displayIds ?? []"
             [forceRefresh]="active"
+            [hasVirtualDisplays]="inputData?.hasVirtualDisplays ?? false"
           ></rects-view>
         </mat-card>
         <div fxLayout="row wrap" fxLayoutGap="10px grid" class="card-grid">
           <mat-card id="sf-hierarchy-view" class="hierarchy-view">
             <hierarchy-view
-              [tree]="inputData?.tree"
+              [tree]="inputData?.tree ?? null"
               [dependencies]="inputData?.dependencies ?? []"
               [highlightedItems]="inputData?.highlightedItems ?? []"
               [pinnedItems]="inputData?.pinnedItems ?? []"
@@ -50,9 +49,8 @@ import { PersistentStore } from "common/persistent_store";
           <mat-card id="sf-properties-view" class="properties-view">
             <properties-view
               [userOptions]="inputData?.propertiesUserOptions ?? {}"
-              [selectedTree]="inputData?.selectedTree ?? {}"
-              [selectedLayer]="inputData?.selectedLayer ?? {}"
-              [summary]="inputData?.selectedTreeSummary ?? []"
+              [propertiesTree]="inputData?.propertiesTree ?? {}"
+              [selectedFlickerItem]="inputData?.selectedLayer ?? {}"
               [propertyGroups]="true"
             ></properties-view>
           </mat-card>
@@ -131,7 +129,7 @@ import { PersistentStore } from "common/persistent_store";
   ]
 })
 export class ViewerSurfaceFlingerComponent {
-  @Input() inputData?: UiData;
+  @Input() inputData: UiData | null = null;
   @Input() store: PersistentStore = new PersistentStore();
   @Input() active = false;
   TRACE_INFO = TRACE_INFO;

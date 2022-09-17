@@ -59,7 +59,7 @@ describe("ViewerSurfaceFlingerComponent", () => {
   });
 
   it("creates rects view", () => {
-    const rectsView = htmlElement.querySelector(".rects-view");
+    const rectsView = htmlElement.querySelector("#sf-rects-view");
     expect(rectsView).toBeTruthy();
   });
 

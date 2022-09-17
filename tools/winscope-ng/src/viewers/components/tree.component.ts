@@ -16,9 +16,8 @@
 import { Component, Inject, Input, Output, ElementRef, EventEmitter } from "@angular/core";
 import { PersistentStore } from "common/persistent_store";
 import { nodeStyles, treeNodeDataViewStyles } from "viewers/components/styles/node.styles";
-import { Tree, diffClass, isHighlighted, PropertiesTree, Terminal } from "viewers/common/tree_utils";
+import { Tree, diffClass, isHighlighted, PropertiesTree, Terminal, isParentNode, HierarchyTree } from "viewers/common/tree_utils";
 import { TraceType } from "common/trace/trace_type";
-import { TreeNodePropertiesDataViewComponent } from "./tree_node_properties_data_view.component";
 
 @Component({
   selector: "tree-view",
@@ -40,7 +39,6 @@ import { TreeNodePropertiesDataViewComponent } from "./tree_node_properties_data
           [flattened]="isFlattened"
           [isLeaf]="isLeaf(this.item)"
           [isCollapsed]="isAlwaysCollapsed ?? isCollapsed()"
-          [isPropertiesTreeNode]="isPropertiesTree"
           [hasChildren]="hasChildren()"
           [isPinned]="isPinned()"
           (toggleTreeChange)="toggleTree()"
@@ -59,7 +57,6 @@ import { TreeNodePropertiesDataViewComponent } from "./tree_node_properties_data
                 [isLeaf]="isLeaf"
                 [dependencies]="dependencies"
                 [isFlattened]="isFlattened"
-                [isPropertiesTree]="isPropertiesTree"
                 [isShaded]="!isShaded"
                 [useGlobalCollapsedState]="useGlobalCollapsedState"
                 [initialDepth]="initialDepth + 1"
@@ -83,17 +80,16 @@ export class TreeComponent {
   diffClass = diffClass;
   isHighlighted = isHighlighted;
 
-  @Input() item!: Tree | PropertiesTree | Terminal;
+  @Input() item!: Tree;
   @Input() dependencies: Array<TraceType> = [];
   @Input() store!: PersistentStore;
   @Input() isFlattened? = false;
   @Input() isShaded? = false;
   @Input() initialDepth = 0;
   @Input() highlightedItems: Array<string> = [];
-  @Input() pinnedItems?: Array<Tree> = [];
+  @Input() pinnedItems?: Array<HierarchyTree> = [];
   @Input() itemsClickable?: boolean;
   @Input() useGlobalCollapsedState?: boolean;
-  @Input() isPropertiesTree?: boolean;
   @Input() isAlwaysCollapsed?: boolean;
   @Input() showNode: (item?: any) => boolean = () => true;
   @Input() isLeaf: (item: any) => boolean = (item: any) => !item.children || item.children.length === 0;
@@ -127,7 +123,7 @@ export class TreeComponent {
   }
 
   ngOnChanges() {
-    if (isHighlighted(this.item, this.highlightedItems)) {
+    if (this.item instanceof HierarchyTree && isHighlighted(this.item, this.highlightedItems)) {
       this.selectedTreeChange.emit(this.item);
     }
   }
@@ -163,16 +159,18 @@ export class TreeComponent {
   }
 
   private updateHighlightedItems() {
-    if (this.item && this.item.id) {
-      this.highlightedItemChange.emit(`${this.item.id}`);
-    } else if (!this.item.id) {
-      this.selectedTreeChange.emit(this.item);
+    if (this.item instanceof HierarchyTree) {
+      if (this.item && this.item.id) {
+        this.highlightedItemChange.emit(`${this.item.id}`);
+      } else if (!this.item.id) {
+        this.selectedTreeChange.emit(this.item);
+      }
     }
   }
 
   public isPinned() {
-    if (this.item) {
-      return this.pinnedItems?.map((item: Tree) => `${item.id}`).includes(`${this.item.id}`);
+    if (this.item instanceof HierarchyTree) {
+      return this.pinnedItems?.map(item => `${item.id}`).includes(`${this.item.id}`);
     }
     return false;
   }
@@ -207,18 +205,18 @@ export class TreeComponent {
     }
 
     if (this.useGlobalCollapsedState) {
-      return this.store.getFromStore(`collapsedState.item.${this.dependencies}.${this.item.id}`)==="true"
+      return this.store.getFromStore(`collapsedState.item.${this.dependencies}.${this.item.stableId}`)==="true"
         ?? this.isCollapsedByDefault;
     }
     return this.localCollapsedState;
   }
 
-  public children() {
-    return this.item.children;
+  public children(): Tree[] {
+    return this.item.children ?? [];
   }
 
   public hasChildren() {
-    const isParentEntryInFlatView = this.item.kind === "entry" && this.isFlattened;
+    const isParentEntryInFlatView = isParentNode(this.item.kind ?? "") && this.isFlattened;
     return (!this.isFlattened || isParentEntryInFlatView) && !this.isLeaf(this.item);
   }
 
@@ -242,7 +240,7 @@ export class TreeComponent {
 
   private setCollapseValue(isCollapsed: boolean) {
     if (this.useGlobalCollapsedState) {
-      this.store.addToStore(`collapsedState.item.${this.dependencies}.${this.item.id}`, `${isCollapsed}`);
+      this.store.addToStore(`collapsedState.item.${this.dependencies}.${this.item.stableId}`, `${isCollapsed}`);
     } else {
       this.localCollapsedState = isCollapsed;
     }

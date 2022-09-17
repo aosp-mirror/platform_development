@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { Rectangle } from "viewers/common/rectangle";
 import { RectsUtils } from "viewers/components/rects/rects_utils";
 
 describe("RectsUtils", () => {
@@ -24,10 +25,10 @@ describe("RectsUtils", () => {
         dtdx: 0,
         dtdy: 1,
         tx: 1,
-        ty: 1
+        ty: 1,
       }
     };
-    const rect = {
+    const rect: Rectangle = {
       topLeft: {x: 0, y: 0},
       bottomRight: {x: 1, y: -1},
       label: "TestRect",
@@ -39,9 +40,10 @@ describe("RectsUtils", () => {
       ref: null,
       id: 12345,
       displayId: 0,
-      isVirtual: false
+      isVirtual: false,
+      isClickable: false,
     };
-    const expected = {
+    const expected: Rectangle = {
       topLeft: {x: 1, y: 1},
       bottomRight: {x: 2, y: 0},
       label: "TestRect",
@@ -53,8 +55,9 @@ describe("RectsUtils", () => {
       ref: null,
       id: 12345,
       displayId: 0,
-      isVirtual: false
+      isVirtual: false,
+      isClickable: false,
     };
-    expect(RectsUtils.transformRect(rect.transform.matrix, rect)).toEqual(expected);
+    expect(RectsUtils.transformRect(rect.transform!.matrix!, rect)).toEqual(expected);
   });
 });
