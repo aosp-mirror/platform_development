@@ -14,13 +14,28 @@
  * limitations under the License.
  */
 import { Component, Input } from "@angular/core";
-import { TreeSummary } from "viewers/common/tree_utils";
 import { Layer } from "common/trace/flickerlib/common";
 
 @Component({
   selector: "property-groups",
   template: `
    <div>
+    <div class="group">
+        <span class="group-header">
+          <span class="group-heading">Visibility</span>
+        </span>
+        <div class="left-column">
+          <span class="key">Flags:</span>
+          <span class="value">{{ item.flags }}</span>
+          <div></div>
+          <div *ngIf="summary().length > 0">
+            <div *ngFor="let reason of summary()">
+              <span class="key">{{ reason.key }}:</span>
+              <span class="value">{{ reason.value }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="group">
         <span class="group-header">Geometry</span>
         <div class="left-column">
@@ -76,24 +91,24 @@ import { Layer } from "common/trace/flickerlib/common";
           <span
             class="key"
             matTooltip="Scales buffer to the frame by overriding the requested transform
-              for this layer."
+              for this item."
           >Destination Frame:</span>
           <span class="value">{{ getDestinationFrame() }}</span>
           <div></div>
           <span
             *ngIf="hasIgnoreDestinationFrame()"
             class="value"
-            >Destination Frame ignored because layer has eIgnoreDestinationFrame
+            >Destination Frame ignored because item has eIgnoreDestinationFrame
             flag set.
           </span>
         </div>
         <div *ngIf="item.isContainerLayer" class="left-column">
           <span class="key"></span>
-          <span class="value">Container layer</span>
+          <span class="value">Container item</span>
         </div>
         <div *ngIf="item.isEffectLayer" class="left-column">
           <span class="key"></span>
-          <span class="value">Effect layer</span>
+          <span class="value">Effect item</span>
         </div>
       </div>
       <div class="group">
@@ -107,7 +122,7 @@ import { Layer } from "common/trace/flickerlib/common";
           <div></div>
           <span
             class="key"
-            matTooltip="Layer is z-ordered relative to its relative parents but its bounds
+            matTooltip="item is z-ordered relative to its relative parents but its bounds
               and other properties are inherited from its parents."
           >relative parent:</span>
           <span class="value">
@@ -133,7 +148,7 @@ import { Layer } from "common/trace/flickerlib/common";
           <span
             class="key"
             matTooltip="Crop used to define the bounds of the corner radii. If the bounds
-              are greater than the layer bounds then the rounded corner will not
+              are greater than the item bounds then the rounded corner will not
               be visible."
           >Corner Radius Crop:</span>
           <span class="value">{{ item.cornerRadiusCrop }}</span>
@@ -175,21 +190,21 @@ import { Layer } from "common/trace/flickerlib/common";
         <span class="group-header">
           <span class="group-heading">Input</span>
         </span>
-        <div *ngIf="item.proto?.inputWindowInfo" class="left-column">
+        <div *ngIf="hasInputChannel()" class="left-column">
           <span class="key">To Display Transform:</span>
           <transform-matrix [transform]="item.inputTransform" [formatFloat]="formatFloat"></transform-matrix>
           <div></div>
           <span class="key">Touchable Region:</span>
           <span class="value">{{ item.inputRegion }}</span>
         </div>
-        <div *ngIf="item.proto?.inputWindowInfo" class="right-column">
+        <div *ngIf="hasInputChannel()" class="right-column">
           <span class="key">Config:</span>
           <span class="value"></span>
           <div></div>
           <span class="key">Focusable:</span>
           <span class="value">{{ item.proto?.inputWindowInfo.focusable }}</span>
           <div></div>
-          <span class="key">Crop touch region with layer:</span>
+          <span class="key">Crop touch region with item:</span>
           <span class="value">
             {{
               item.proto?.inputWindowInfo.cropLayerId &lt;= 0
@@ -205,26 +220,9 @@ import { Layer } from "common/trace/flickerlib/common";
             }}
           </span>
         </div>
-        <div *ngIf="!item.proto?.inputWindowInfo" class="left-column">
+        <div *ngIf="!hasInputChannel()" class="left-column">
           <span class="key"></span>
           <span class="value">No input channel set</span>
-        </div>
-      </div>
-
-      <div class="group">
-        <span class="group-header">
-          <span class="group-heading">Visibility</span>
-        </span>
-        <div class="left-column">
-          <span class="key">Flags:</span>
-          <span class="value">{{ item.flags }}</span>
-          <div></div>
-          <div *ngIf="summary">
-            <div *ngFor="let reason of summary">
-              <span class="key">{{ reason.key }}:</span>
-              <span class="value">{{ reason.value }}</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -285,7 +283,10 @@ import { Layer } from "common/trace/flickerlib/common";
 
 export class PropertyGroupsComponent {
   @Input() item!: Layer;
-  @Input() summary?: TreeSummary | null = null;
+
+  public hasInputChannel() {
+    return this.item.proto?.inputWindowInfo;
+  }
 
   public getDestinationFrame() {
     const frame = this.item.proto?.destinationFrame;
@@ -302,4 +303,41 @@ export class PropertyGroupsComponent {
   public formatFloat(num: number) {
     return Math.round(num * 100) / 100;
   }
+
+
+  public summary(): TreeSummary {
+    const summary = [];
+
+    if (this.item?.visibilityReason?.length > 0) {
+      let reason = "";
+      if (Array.isArray(this.item.visibilityReason)) {
+        reason = this.item.visibilityReason.join(", ");
+      } else {
+        reason = this.item.visibilityReason;
+      }
+
+      summary.push({key: "Invisible due to", value: reason});
+    }
+
+    if (this.item?.occludedBy?.length > 0) {
+      summary.push({key: "Occluded by", value: this.item.occludedBy.map((it: any) => it.id).join(", ")});
+    }
+
+    if (this.item?.partiallyOccludedBy?.length > 0) {
+      summary.push({
+        key: "Partially occluded by",
+        value: this.item.partiallyOccludedBy.map((it: any) => it.id).join(", "),
+      });
+    }
+
+    if (this.item?.coveredBy?.length > 0) {
+      summary.push({key: "Covered by", value: this.item.coveredBy.map((it: any) => it.id).join(", ")});
+    }
+
+    return summary;
+  }
+
 }
+
+
+type TreeSummary = Array<{key: string, value: string}>

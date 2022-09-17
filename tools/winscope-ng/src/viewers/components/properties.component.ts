@@ -16,8 +16,7 @@
 import { Component, Input, Inject, ElementRef } from "@angular/core";
 import { UserOptions } from "viewers/common/user_options";
 import { ViewerEvents } from "viewers/common/viewer_events";
-import { PropertiesTree, TreeSummary, Terminal } from "viewers/common/tree_utils";
-import { Layer } from "common/trace/flickerlib/common";
+import { PropertiesTree, Terminal, TreeFlickerItem } from "viewers/common/tree_utils";
 
 @Component({
   selector: "properties-view",
@@ -44,22 +43,21 @@ import { Layer } from "common/trace/flickerlib/common";
           [matTooltip]="userOptions[option].tooltip ?? ''"
         >{{userOptions[option].name}}</mat-checkbox>
       </div>
-      <div *ngIf="objectKeys(selectedLayer).length > 0 && propertyGroups" class="element-summary">
+      <div *ngIf="itemIsSelected() && propertyGroups" class="element-summary">
         <property-groups
-          [item]="selectedLayer"
-          [summary]="summary"
+          [item]="selectedFlickerItem"
         ></property-groups>
       </div>
     </mat-card-header>
     <mat-card-content class="properties-content" [style]="maxPropertiesHeight()">
+      <span *ngIf="objectKeys(propertiesTree).length > 0" class="properties-title"> Properties - Proto Dump </span>
       <div class="tree-wrapper">
         <tree-view
           class="tree-view"
-          [item]="selectedTree"
+          [item]="propertiesTree"
           [showNode]="showNode"
           [isLeaf]="isLeaf"
-          *ngIf="objectKeys(selectedTree).length > 0"
-          [isPropertiesTree]="true"
+          *ngIf="objectKeys(propertiesTree).length > 0"
           [isAlwaysCollapsed]="true"
         ></tree-view>
       </div>
@@ -136,10 +134,9 @@ export class PropertiesComponent {
   filterString = "";
 
   @Input() userOptions: UserOptions = {};
-  @Input() selectedTree: PropertiesTree = {};
-  @Input() selectedLayer: Layer = {};
+  @Input() propertiesTree: PropertiesTree = {};
+  @Input() selectedFlickerItem: TreeFlickerItem | null = null;
   @Input() propertyGroups = false;
-  @Input() summary?: TreeSummary = [];
 
   constructor(
     @Inject(ElementRef) private elementRef: ElementRef,
@@ -181,5 +178,9 @@ export class PropertiesComponent {
   public isLeaf(item: any) {
     return !item.children || item.children.length === 0
           || item.children.filter((c: any) => !(c instanceof Terminal)).length === 0;
+  }
+
+  public itemIsSelected() {
+    return this.selectedFlickerItem && Object.keys(this.selectedFlickerItem).length > 0;
   }
 }

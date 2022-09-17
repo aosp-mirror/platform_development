@@ -18,9 +18,11 @@ import ObjectFormatter from "common/trace/flickerlib/ObjectFormatter";
 import {
   FilterType,
   PropertiesTree,
-  Tree,
   DiffType,
-  Terminal
+  Terminal,
+  TreeFlickerItem,
+  HierarchyTree,
+  PropertiesDump
 } from "./tree_utils";
 
 interface TransformOptions {
@@ -32,10 +34,6 @@ interface TreeTransformerOptions {
   skip?: any;
   formatter?: any;
 }
-interface TransformedPropertiesObject {
-  properties: any;
-  diffType?: string;
-}
 
 export class TreeTransformer {
   private stableId: string;
@@ -43,32 +41,37 @@ export class TreeTransformer {
   private isShowDefaults = false;
   private isShowDiff = false;
   private filter: FilterType;
-  private properties: PropertiesTree;
-  private compareWithProperties: PropertiesTree | null = null;
+  private properties: PropertiesDump | Terminal | null = null;
+  private compareWithProperties: PropertiesDump | Terminal | null = null;
   private options?: TreeTransformerOptions;
+  private onlyProtoDump = false;
   private transformOptions: TransformOptions = {
     keepOriginal: false, freeze: true, metadataKey: null,
   };
 
-  constructor(tree: Tree, filter: FilterType) {
-    this.stableId = this.compatibleStableId(tree);
-    this.rootName = tree.name;
+  constructor(selectedTree: HierarchyTree, filter: FilterType) {
+    this.stableId = this.compatibleStableId(selectedTree);
+    this.rootName = selectedTree.name;
     this.filter = filter;
-    this.setProperties(tree);
     this.setTransformerOptions({});
   }
 
-  public setIsShowDefaults(enabled: boolean) {
+  public showOnlyProtoDump(): TreeTransformer {
+    this.onlyProtoDump = true;
+    return this;
+  }
+
+  public setIsShowDefaults(enabled: boolean): TreeTransformer {
     this.isShowDefaults = enabled;
     return this;
   }
 
-  public setIsShowDiff(enabled: boolean) {
+  public setIsShowDiff(enabled: boolean): TreeTransformer {
     this.isShowDiff = enabled;
     return this;
   }
 
-  public setTransformerOptions(options: TreeTransformerOptions) {
+  public setTransformerOptions(options: TreeTransformerOptions): TreeTransformer {
     this.options = options;
     if (!this.options.formatter) {
       this.options.formatter = this.formatProto;
@@ -76,66 +79,97 @@ export class TreeTransformer {
     return this;
   }
 
-  public setProperties(tree: Tree) {
-    const target = tree.obj ?? tree;
+  public setProperties(currentEntry: TreeFlickerItem): TreeTransformer {
+    const currFlickerItem = this.getOriginalFlickerItem(currentEntry, this.stableId);
+    const target = currFlickerItem ? currFlickerItem.obj ?? currFlickerItem : null;
     ObjectFormatter.displayDefaults = this.isShowDefaults;
-    this.properties = this.getPropertiesForDisplay(target);
+    this.properties = this.onlyProtoDump ? this.getProtoDumpPropertiesForDisplay(target) : this.getPropertiesForDisplay(target);
+    return this;
   }
 
-  public setDiffProperties(previousEntry: any) {
+  public setDiffProperties(previousEntry: TreeFlickerItem  | null): TreeTransformer {
     if (this.isShowDiff) {
-      const tree = this.findTree(previousEntry, this.stableId);
-      const target = tree ? tree.obj ?? tree : null;
-      this.compareWithProperties = this.getPropertiesForDisplay(target);
+      const prevFlickerItem = this.findFlickerItem(previousEntry, this.stableId);
+      const target = prevFlickerItem ? prevFlickerItem.obj ?? prevFlickerItem : null;
+      this.compareWithProperties = this.onlyProtoDump ? this.getProtoDumpPropertiesForDisplay(target) : this.getPropertiesForDisplay(target);
     }
     return this;
   }
 
-  public getOriginalLayer(entry: any, stableId: string) {
-    return this.findTree(entry, stableId);
+  public getOriginalFlickerItem(entry: TreeFlickerItem, stableId: string): TreeFlickerItem  | null {
+    return this.findFlickerItem(entry, stableId);
   }
 
-  private getPropertiesForDisplay(entry: any): any {
+  private getProtoDumpPropertiesForDisplay(entry: TreeFlickerItem): PropertiesDump | null {
     if (!entry) {
-      return;
+      return null;
     }
 
-    let obj: any = {};
-    obj.proto = Object.assign({}, entry.proto);
-    if (obj.proto.children) delete obj.proto.children;
-    if (obj.proto.childWindows) delete obj.proto.childWindows;
-    if (obj.proto.childrenWindows) delete obj.proto.childrenWindows;
-    if (obj.proto.childContainers) delete obj.proto.childContainers;
-    if (obj.proto.windowToken) delete obj.proto.windowToken;
-    if (obj.proto.rootDisplayArea) delete obj.proto.rootDisplayArea;
-    if (obj.proto.rootWindowContainer) delete obj.proto.rootWindowContainer;
-    if (obj.proto.windowContainer?.children) delete obj.proto.windowContainer.children;
+    const obj: PropertiesDump = {};
+    const proto = ObjectFormatter.format(entry.proto);
+    if (proto) {
+      Object.keys(proto).forEach((prop: string) => {
+        obj[prop] = proto[prop] ?? "empty";
 
-    obj = ObjectFormatter.format(obj);
+        if (Object.keys(obj[prop]).length === 0) {
+          obj[prop]= "empty";
+        }
+      });
+    }
 
-    Object.keys(obj.proto).forEach((prop: string) => {
-      if (Object.keys(obj.proto[prop]).length === 0) {
-        obj.proto[prop] = "empty";
-      }
-    });
     return obj;
   }
 
-  private findTree(tree: any, stableId: string) {
-    if (!tree) {
+  private getPropertiesForDisplay(entry: TreeFlickerItem): PropertiesDump | null {
+    if (!entry) {
       return null;
     }
 
-    if (tree.stableId && tree.stableId === stableId) {
-      return tree;
-    }
+    let obj: PropertiesDump = {};
 
-    if (!tree.children) {
+    const properties = ObjectFormatter.getProperties(entry);
+    properties.forEach(prop => {
+      if (entry.get) obj[prop] = entry.get(prop);
+    });
+    if (obj["children"]) delete obj["children"];
+    if (obj["proto"]) delete obj["proto"];
+
+    obj["proto"] = Object.assign({}, entry.proto);
+    if (obj["proto"].children) delete obj["proto"].children;
+    if (obj["proto"].childWindows) delete obj["proto"].childWindows;
+    if (obj["proto"].childrenWindows) delete obj["proto"].childrenWindows;
+    if (obj["proto"].childContainers) delete obj["proto"].childContainers;
+    if (obj["proto"].windowToken) delete obj["proto"].windowToken;
+    if (obj["proto"].rootDisplayArea) delete obj["proto"].rootDisplayArea;
+    if (obj["proto"].rootWindowContainer) delete obj["proto"].rootWindowContainer;
+    if (obj["proto"].windowContainer?.children) delete obj["proto"].windowContainer.children;
+
+    obj = ObjectFormatter.format(obj);
+
+    Object.keys(obj["proto"]).forEach((prop: string) => {
+      if (Object.keys(obj["proto"][prop]).length === 0) {
+        obj["proto"][prop] = "empty";
+      }
+    });
+
+    return obj;
+  }
+
+  private findFlickerItem(entryFlickerItem: TreeFlickerItem | null, stableId: string): TreeFlickerItem | null {
+    if (!entryFlickerItem) {
       return null;
     }
 
-    for (const child of tree.children) {
-      const foundEntry: any = this.findTree(child, stableId);
+    if (entryFlickerItem.stableId && entryFlickerItem.stableId === stableId) {
+      return entryFlickerItem;
+    }
+
+    if (!entryFlickerItem.children) {
+      return null;
+    }
+
+    for (const child of entryFlickerItem.children) {
+      const foundEntry: any = this.findFlickerItem(child, stableId);
       if (foundEntry) {
         return foundEntry;
       }
@@ -145,7 +179,7 @@ export class TreeTransformer {
   }
 
 
-  public transform() {
+  public transform(): PropertiesTree {
     const {formatter} = this.options!;
     if (!formatter) {
       throw new Error("Missing formatter, please set with setOptions()");
@@ -154,18 +188,17 @@ export class TreeTransformer {
     const transformedTree = this.transformTree(this.properties, this.rootName,
       this.compareWithProperties, this.rootName,
       this.stableId, this.transformOptions);
-
     return transformedTree;
   }
 
   private transformTree(
-    properties: PropertiesTree | Terminal,
+    properties: PropertiesDump | null | Terminal,
     name: string | Terminal,
-    compareWithProperties: PropertiesTree | Terminal,
+    compareWithProperties: PropertiesDump | null | Terminal,
     compareWithName: string | Terminal,
     stableId: string,
     transformOptions: TransformOptions,
-  ) {
+  ): PropertiesTree {
     const originalProperties = properties;
     const metadata = this.getMetadata(
       originalProperties, transformOptions.metadataKey
@@ -173,12 +206,12 @@ export class TreeTransformer {
 
     const children: any[] = [];
 
-    if (!this.isTerminal(properties)) {
+    if (properties && !this.isTerminal(properties)) {
       const transformedProperties = this.transformProperties(properties, transformOptions.metadataKey);
       properties = transformedProperties.properties;
     }
 
-    if (!this.isTerminal(compareWithProperties)) {
+    if (compareWithProperties && !this.isTerminal(compareWithProperties)) {
       const transformedProperties = this.transformProperties(
         compareWithProperties,
         transformOptions.metadataKey
@@ -187,10 +220,10 @@ export class TreeTransformer {
     }
 
     for (const key in properties) {
-      if (properties[key]) {
+      if (!(properties instanceof Terminal) && properties[key]) {
         let compareWithChild = new Terminal();
         let compareWithChildName = new Terminal();
-        if (compareWithProperties[key]) {
+        if (compareWithProperties && !(compareWithProperties instanceof Terminal) && compareWithProperties[key]) {
           compareWithChild = compareWithProperties[key];
           compareWithChildName = key;
         }
@@ -204,7 +237,8 @@ export class TreeTransformer {
 
     // Takes care of adding deleted items to final tree
     for (const key in compareWithProperties) {
-      if (!properties[key] && compareWithProperties[key]) {
+      if (properties && !(properties instanceof Terminal) && !properties[key] &&
+          !(compareWithProperties instanceof Terminal) && compareWithProperties[key]) {
         const child = this.transformTree(new Terminal(), new Terminal(),
           compareWithProperties[key], key,
           `${stableId}.${key}`, transformOptions);
@@ -268,11 +302,10 @@ export class TreeTransformer {
         !this.hasChildMatchingFilter(transformedProperties?.children)) {
       transformedProperties.propertyKey = new Terminal();
     }
-
     return transformOptions.freeze ? Object.freeze(transformedProperties) : transformedProperties;
   }
 
-  private hasChildMatchingFilter(children: PropertiesTree[] | null | undefined) {
+  private hasChildMatchingFilter(children: PropertiesTree[] | null | undefined): boolean {
     if (!children || children.length === 0) return false;
 
     let match = false;
@@ -285,8 +318,11 @@ export class TreeTransformer {
     return match;
   }
 
-  private getMetadata(obj: PropertiesTree, metadataKey: string | null) {
-    if (metadataKey && obj[metadataKey]) {
+  private getMetadata(obj: PropertiesDump | null | Terminal, metadataKey: string | null): any {
+    if (obj == null) {
+      return null;
+    }
+    if (metadataKey && !(obj instanceof Terminal) && obj[metadataKey]) {
       const metadata = obj[metadataKey];
       obj[metadataKey] = undefined;
       return metadata;
@@ -295,28 +331,28 @@ export class TreeTransformer {
     }
   }
 
-  private getPropertyKey(item: PropertiesTree) {
-    if (!item.children || item.children.length === 0) {
-      return item.name.split(": ")[0];
+  private getPropertyKey(item: PropertiesDump): string {
+    if (item["name"] && (!item["children"] || item["children"].length === 0)) {
+      return item["name"].split(": ")[0];
     }
-    return item.name;
+    return item["name"];
   }
 
-  private getPropertyValue(item: PropertiesTree) {
-    if (!item.children || item.children.length === 0) {
-      return item.name.split(": ").slice(1).join(": ");
+  private getPropertyValue(item: PropertiesDump): string | null {
+    if (item["name"] && (!item["children"] || item["children"].length === 0)) {
+      return item["name"].split(": ").slice(1).join(": ");
     }
     return null;
   }
 
 
-  private filterMatches(item: PropertiesTree | null): boolean {
+  private filterMatches(item: PropertiesDump | null): boolean {
     return this.filter(item) ?? false;
   }
 
-  private transformProperties(properties: PropertiesTree, metadataKey: string | null) {
+  private transformProperties(properties: PropertiesDump, metadataKey: string | null): PropertiesTree {
     const {skip, formatter} = this.options!;
-    const transformedProperties: TransformedPropertiesObject = {
+    const transformedProperties: PropertiesTree = {
       properties: {},
     };
     let formatted = undefined;
@@ -351,7 +387,7 @@ export class TreeTransformer {
     return transformedProperties;
   }
 
-  private getDiff(val: string | Terminal, compareVal: string | Terminal) {
+  private getDiff(val: string | Terminal, compareVal: string | Terminal): string {
     if (val && this.isTerminal(compareVal)) {
       return DiffType.ADDED;
     } else if (this.isTerminal(val) && compareVal) {
@@ -363,7 +399,7 @@ export class TreeTransformer {
     }
   }
 
-  private compatibleStableId(item: Tree) {
+  private compatibleStableId(item: HierarchyTree): string {
     // For backwards compatibility
     // (the only item that doesn't have a unique stable ID in the tree)
     if (item.stableId === "winToken|-|") {
@@ -378,7 +414,7 @@ export class TreeTransformer {
     }
   }
 
-  private isTerminal(item: any) {
+  private isTerminal(item: any): boolean {
     return item instanceof Terminal;
   }
 }

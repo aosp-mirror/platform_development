@@ -15,33 +15,120 @@
  */
 import {
   Component,
-  EventEmitter,
   Input,
-  Output
 } from "@angular/core";
 import {UiData} from "./ui_data";
+import { TRACE_INFO } from "app/trace_info";
+import { TraceType } from "common/trace/trace_type";
 import { PersistentStore } from "common/persistent_store";
 
 @Component({
   selector: "viewer-window-manager",
   template: `
-    <div class="viewer-window-manager">
-      <div class="title">Window Manager</div>
-      <div class="input-value">Input value: {{inputData?.text}}</div>
-      <div class="button"><button mat-icon-button (click)="generateOutputEvent($event)">Output event!</button></div>
-    </div>
-  `
+      <div fxLayout="row wrap" fxLayoutGap="10px grid" class="card-grid">
+        <mat-card id="wm-rects-view" class="rects-view">
+          <rects-view
+            [rects]="inputData?.rects ?? []"
+            [displayIds]="inputData?.displayIds ?? []"
+            [highlightedItems]="inputData?.highlightedItems ?? []"
+            [forceRefresh]="active"
+          ></rects-view>
+        </mat-card>
+        <div fxLayout="row wrap" fxLayoutGap="10px grid" class="card-grid">
+          <mat-card id="wm-hierarchy-view" class="hierarchy-view">
+            <hierarchy-view
+              [tree]="inputData?.tree ?? null"
+              [dependencies]="inputData?.dependencies ?? []"
+              [highlightedItems]="inputData?.highlightedItems ?? []"
+              [pinnedItems]="inputData?.pinnedItems ?? []"
+              [store]="store"
+              [userOptions]="inputData?.hierarchyUserOptions ?? {}"
+            ></hierarchy-view>
+          </mat-card>
+          <mat-card id="wm-properties-view" class="properties-view">
+            <properties-view
+              [userOptions]="inputData?.propertiesUserOptions ?? {}"
+              [propertiesTree]="inputData?.propertiesTree ?? {}"
+            ></properties-view>
+          </mat-card>
+        </div>
+      </div>
+  `,
+  styles: [
+    `
+      @import 'https://fonts.googleapis.com/icon?family=Material+Icons';
+      :root {
+        --default-border: #DADCE0;
+      }
+
+      mat-icon {
+        margin: 5px
+      }
+
+      .icon-button {
+        background: none;
+        border: none;
+        display: inline-block;
+        vertical-align: middle;
+      }
+
+      viewer-window-manager {
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      .header-button {
+        background: none;
+        border: none;
+        display: inline-block;
+        vertical-align: middle;
+      }
+
+      .card-grid {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: row;
+        overflow: auto;
+      }
+
+      .rects-view {
+        font: inherit;
+        flex: none;
+        width: 350px;
+        height: 52.5rem;
+        margin: 0px;
+        border-top: 1px solid var(--default-border);
+        border-right: 1px solid var(--default-border);
+        border-radius: 0;
+      }
+
+      .hierarchy-view {
+        font: inherit;
+        margin: 0px;
+        width: 50%;
+        height: 52.5rem;
+        border-radius: 0;
+        border-top: 1px solid var(--default-border);
+        border-right: 1px solid var(--default-border);
+        border-left: 1px solid var(--default-border);
+      }
+
+      .properties-view {
+        font: inherit;
+        margin: 0px;
+        width: 50%;
+        height: 52.5rem;
+        border-radius: 0;
+        border-top: 1px solid var(--default-border);
+        border-left: 1px solid var(--default-border);
+      }
+    `,
+  ]
 })
 export class ViewerWindowManagerComponent {
-  @Input() inputData?: UiData;
-  @Input() store?: PersistentStore;
-
-  @Output() outputEvent = new EventEmitter<DummyEvent>(); // or EventEmitter<void>()
-
-  public generateOutputEvent(event: MouseEvent) {
-    this.outputEvent.emit(new DummyEvent());
-  }
-}
-
-export class DummyEvent {
+  @Input() inputData: UiData | null = null;
+  @Input() store: PersistentStore = new PersistentStore();
+  @Input() active = false;
+  TRACE_INFO = TRACE_INFO;
+  TraceType = TraceType;
 }

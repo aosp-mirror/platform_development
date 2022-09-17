@@ -1,4 +1,4 @@
-/*
+9;/*
  * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -9,7 +9,7 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANYf KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -17,12 +17,13 @@ import { Presenter } from "./presenter";
 import { UiData } from "./ui_data";
 import { UserOptions } from "viewers/common/user_options";
 import { TraceType } from "common/trace/trace_type";
-import { LayerTraceEntry } from "common/trace/flickerlib/common";
-import { HierarchyTree, PropertiesTree } from "viewers/common/tree_utils";
+import { WindowManagerState } from "common/trace/flickerlib/common";
+import { PropertiesTree, Terminal, HierarchyTree } from "viewers/common/tree_utils";
 import { UnitTestUtils } from "test/unit/utils";
 import { HierarchyTreeBuilder } from "test/unit/hierarchy_tree_builder";
+import { VISIBLE_CHIP } from "viewers/common/chip";
 
-describe("PresenterSurfaceFlinger", () => {
+describe("PresenterWindowManager", () => {
   let presenter: Presenter;
   let uiData: UiData;
   let entries: Map<TraceType, any>;
@@ -30,13 +31,14 @@ describe("PresenterSurfaceFlinger", () => {
 
   beforeAll(async () => {
     entries = new Map<TraceType, any>();
-    const entry: LayerTraceEntry = await UnitTestUtils.getLayerTraceEntry();
+    const entry: WindowManagerState = await UnitTestUtils.getWindowManagerState();
 
+    selectedTree = new HierarchyTreeBuilder().setName("ScreenDecorOverlayBottom")
+      .setStableId("WindowState 2088ac1 ScreenDecorOverlayBottom").setKind("WindowState")
+      .setSimplifyNames(true).setShortName("ScreenDecorOverlayBottom").setLayerId(61)
+      .setFilteredView(true).setIsVisible(true).setChips([VISIBLE_CHIP]).build();
 
-    selectedTree = new HierarchyTreeBuilder().setName("Dim layer#53").setStableId("EffectLayer 53 Dim layer#53")
-      .setFilteredView(true).setKind("53").setDiffType("EffectLayer").setId(53).build();
-
-    entries.set(TraceType.SURFACE_FLINGER, [entry, null]);
+    entries.set(TraceType.WINDOW_MANAGER, [entry, null]);
   });
 
   beforeEach(async () => {
@@ -54,7 +56,7 @@ describe("PresenterSurfaceFlinger", () => {
     const propertyOpts = uiData.propertiesUserOptions ?
       Object.keys(uiData.propertiesUserOptions) : null;
     expect(uiData.highlightedItems?.length).toEqual(0);
-    expect(filteredUiDataRectLabels?.length).toEqual(7);
+    expect(filteredUiDataRectLabels?.length).toEqual(14);
     expect(uiData.displayIds).toContain(0);
     expect(hierarchyOpts).toBeTruthy();
     expect(propertyOpts).toBeTruthy();
@@ -72,9 +74,12 @@ describe("PresenterSurfaceFlinger", () => {
   });
 
   it("can update pinned items", () => {
+    presenter.notifyCurrentTraceEntries(entries);
     expect(uiData.pinnedItems).toEqual([]);
+
     const pinnedItem = new HierarchyTreeBuilder().setName("FirstPinnedItem")
       .setStableId("TestItem 4").setLayerId(4).build();
+
     presenter.updatePinnedItems(pinnedItem);
     expect(uiData.pinnedItems).toContain(pinnedItem);
   });
@@ -108,12 +113,11 @@ describe("PresenterSurfaceFlinger", () => {
     };
 
     presenter.notifyCurrentTraceEntries(entries);
-    expect(uiData.tree?.children.length).toEqual(3);
-
+    expect(uiData.tree?.children.length).toEqual(1);
     presenter.updateHierarchyTree(userOptions);
     expect(uiData.hierarchyUserOptions).toEqual(userOptions);
-    // nested children should now be on same level as initial parents
-    expect(uiData.tree?.children.length).toEqual(94);
+    // nested children should now be on same level initial parent
+    expect(uiData.tree?.children.length).toEqual(72);
   });
 
   it("can filter hierarchy tree", () => {
@@ -137,10 +141,10 @@ describe("PresenterSurfaceFlinger", () => {
     };
     presenter.notifyCurrentTraceEntries(entries);
     presenter.updateHierarchyTree(userOptions);
-    expect(uiData.tree?.children.length).toEqual(94);
-    presenter.filterHierarchyTree("Wallpaper");
-    // All but four layers should be filtered out
-    expect(uiData.tree?.children.length).toEqual(4);
+    expect(uiData.tree?.children.length).toEqual(72);
+    presenter.filterHierarchyTree("ScreenDecor");
+    // All but two window states should be filtered out
+    expect(uiData.tree?.children.length).toEqual(2);
   });
 
 
@@ -181,16 +185,17 @@ describe("PresenterSurfaceFlinger", () => {
   it("can filter properties tree", () => {
     presenter.notifyCurrentTraceEntries(entries);
     presenter.newPropertiesTree(selectedTree);
+
     let nonTerminalChildren = uiData.propertiesTree?.children?.filter(
       (child: PropertiesTree) => typeof child.propertyKey === "string"
     ) ?? [];
 
-    expect(nonTerminalChildren.length).toEqual(55);
-    presenter.filterPropertiesTree("bound");
+    expect(nonTerminalChildren.length).toEqual(45);
+    presenter.filterPropertiesTree("visible");
 
     nonTerminalChildren = uiData.propertiesTree?.children?.filter(
       (child: PropertiesTree) => typeof child.propertyKey === "string"
     ) ?? [];
-    expect(nonTerminalChildren.length).toEqual(3);
+    expect(nonTerminalChildren.length).toEqual(4);
   });
 });

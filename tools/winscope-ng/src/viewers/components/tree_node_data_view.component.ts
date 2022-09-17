@@ -15,7 +15,7 @@
  */
 import { Component, Input } from "@angular/core";
 import { treeNodeDataViewStyles } from "viewers/components/styles/tree_node_data_view.styles";
-import { Tree } from "viewers/common/tree_utils";
+import { Terminal, HierarchyTree, Tree } from "viewers/common/tree_utils";
 import Chip from "viewers/common/chip";
 
 @Component({
@@ -24,10 +24,10 @@ import Chip from "viewers/common/chip";
     <span>
       <span class="kind">{{item.kind}}</span>
       <span *ngIf="item.kind && item.name">-</span>
-      <span *ngIf="showShortName()" [matTooltip]="item.name">{{ item.shortName }}</span>
+      <span *ngIf="showShortName()" [matTooltip]="itemTooltip()">{{ itemShortName() }}</span>
       <span *ngIf="!showShortName()">{{item.name}}</span>
       <div
-        *ngFor="let chip of item.chips"
+        *ngFor="let chip of chips()"
         [class]="chipClass(chip)"
         [matTooltip]="chip.long"
       >{{chip.short}}</div>
@@ -39,8 +39,23 @@ import Chip from "viewers/common/chip";
 export class TreeNodeDataViewComponent {
   @Input() item!: Tree;
 
+  public chips() {
+    return (this.item instanceof HierarchyTree) ? this.item.chips : [];
+  }
+
+  public itemShortName() {
+    return (this.item instanceof HierarchyTree)? this.item.shortName : "";
+  }
+
+  public itemTooltip() {
+    if (this.item.name instanceof Terminal) {
+      return "";
+    }
+    return this.item.name ?? "";
+  }
+
   public showShortName() {
-    return this.item.simplifyNames && this.item.shortName !== this.item.name;
+    return (this.item instanceof HierarchyTree) && this.item.simplifyNames && this.item.shortName !== this.item.name;
   }
 
   public chipClass(chip: Chip) {

@@ -54,9 +54,8 @@ describe("PropertiesComponent", () => {
     fixture = TestBed.createComponent(PropertiesComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
-    component.selectedTree = {};
-    component.selectedLayer = {};
-    component.summary = [];
+    component.propertiesTree = {};
+    component.selectedFlickerItem = null;
     component.userOptions = {
       showDefaults: {
         name: "Show defaults",

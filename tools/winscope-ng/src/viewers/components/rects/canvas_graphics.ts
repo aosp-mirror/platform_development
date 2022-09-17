@@ -13,72 +13,78 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Rectangle } from "viewers/viewer_surface_flinger/ui_data";
+import { Rectangle } from "viewers/common/rectangle";
 import * as THREE from "three";
 import { CSS2DRenderer, CSS2DObject } from "three/examples/jsm/renderers/CSS2DRenderer";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { ViewerEvents } from "viewers/common/viewer_events";
 
 export class CanvasGraphics {
   constructor() {
     //set up camera
-    const left = -this.cameraHalfWidth,
-      right = this.cameraHalfWidth,
-      top = this.cameraHalfHeight,
-      bottom = -this.cameraHalfHeight,
+    const left = -this.CAMERA_HALF_WIDTH,
+      right = this.CAMERA_HALF_WIDTH,
+      top = this.CAMERA_HALF_HEIGHT,
+      bottom = -this.CAMERA_HALF_HEIGHT,
       near = 0.001,
       far = 100;
     this.camera = new THREE.OrthographicCamera(
-      left,right,top,bottom,near,far
+      left, right, top, bottom, near, far
     );
+    this.resetCamera();
   }
 
-  public initialise(canvas: HTMLCanvasElement) {
+  public initialiseCanvas(canvas: HTMLCanvasElement, canvasContainer: Element) {
     // initialise canvas
     this.canvas = canvas;
+    this.canvasContainer = canvasContainer;
+    this.enableOrbitControls();
   }
 
   public refreshCanvas() {
-    //set canvas size
-    this.canvas!.style.width = "100%";
-    this.canvas!.style.height = "40rem";
+    if (!this.canvas) {
+      return;
+    }
 
-    this.camera.position.set(this.xCameraPos, Math.abs(this.xCameraPos), 6);
-    this.camera.lookAt(0, 0, 0);
-    this.camera.zoom = this.camZoom;
-    this.camera.updateProjectionMatrix();
+    //set canvas size
+    this.canvas.style.width = "100%";
+    this.canvas.style.height = "40rem";
+
+    this.orbit?.reset();
 
     // scene
-    const scene = new THREE.Scene();
+    this.scene = new THREE.Scene();
 
     // renderers
-    const renderer = new THREE.WebGLRenderer({
+    this.renderer = new THREE.WebGLRenderer({
       antialias: true,
       canvas: this.canvas,
       alpha: true
     });
-    let labelRenderer: CSS2DRenderer;
-    if (document.querySelector(".labels-canvas")) {
-      labelRenderer = new CSS2DRenderer({
-        element: document.querySelector(".labels-canvas")! as HTMLElement
+
+    if (this.canvasContainer && this.canvasContainer.querySelector(".labels-canvas")) {
+      this.labelRenderer = new CSS2DRenderer({
+        element: this.canvasContainer.querySelector(".labels-canvas")! as HTMLElement
       });
     } else {
-      labelRenderer = new CSS2DRenderer();
-      labelRenderer.domElement.style.position = "absolute";
-      labelRenderer.domElement.style.top = "0px";
-      labelRenderer.domElement.style.width = "100%";
-      labelRenderer.domElement.style.height = "40rem";
-      labelRenderer.domElement.className = "labels-canvas";
-      labelRenderer.domElement.style.pointerEvents = "none";
-      document.querySelector(".canvas-container")?.appendChild(labelRenderer.domElement);
+      this.labelRenderer = new CSS2DRenderer();
+      this.labelRenderer.domElement.style.position = "absolute";
+      this.labelRenderer.domElement.style.top = "0px";
+      this.labelRenderer.domElement.style.width = "100%";
+      this.labelRenderer.domElement.style.height = "40rem";
+      this.labelRenderer.domElement.className = "labels-canvas";
+      this.labelRenderer.domElement.style.pointerEvents = "none";
+      this.canvasContainer?.appendChild(this.labelRenderer.domElement);
     }
 
     // set various factors for shading and shifting
     const visibleDarkFactor = 0, nonVisibleDarkFactor = 0, rectCounter = 0;
     const numberOfRects = this.rects.length;
     const numberOfVisibleRects = this.rects.filter(rect => rect.isVisible).length;
-    const numberOfDisplayRects = this.rects.filter(rect => rect.isDisplay).length;
+    const numberOfNonVisibleRects = this.rects.filter(rect => !rect.isVisible).length;
 
-    const zShift = numberOfRects*this.layerSeparation;
-    let xShift = 0, yShift = 3.25, labelYShift = 0;
+    const zShift = numberOfRects * this.layerSeparation;
+    let xShift = 0, yShift = 3.5, labelYShift = 0;
 
     if (this.isLandscape) {
       xShift = 1;
@@ -89,7 +95,7 @@ export class CanvasGraphics {
     const lowestY = Math.min(...this.rects.map(rect => {
       const y = rect.topLeft.y - rect.height + this.lowestYShift;
       if (this.isLandscape) {
-        if (y<0) {
+        if (y < 0) {
           return 0;
         } else if (y > 2) {
           return 2;
@@ -104,27 +110,44 @@ export class CanvasGraphics {
       rectCounter,
       numberOfVisibleRects,
       visibleDarkFactor,
-      numberOfDisplayRects,
+      numberOfNonVisibleRects,
       nonVisibleDarkFactor,
       numberOfRects,
-      scene,
       xShift,
       yShift,
       zShift,
       lowestY
     );
 
-    // const axesHelper = new THREE.AxesHelper(1);
-    // const gridHelper = new THREE.GridHelper(5);
-    // scene.add(axesHelper, gridHelper)
+    this.renderer.setSize(this.canvas!.clientWidth, this.canvas!.clientHeight);
+    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.compile(this.scene, this.camera);
+    this.renderer.render(this.scene, this.camera);
 
-    renderer.setSize(this.canvas!.clientWidth, this.canvas!.clientHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.compile(scene, this.camera);
-    renderer.render(scene, this.camera);
+    this.labelRenderer.setSize(this.canvas!.clientWidth, this.canvas!.clientHeight);
+    this.labelRenderer.render(this.scene, this.camera);
+  }
 
-    labelRenderer.setSize(this.canvas!.clientWidth, this.canvas!.clientHeight);
-    labelRenderer.render(scene, this.camera);
+  public enableOrbitControls() {
+    this.orbit = new OrbitControls(this.camera, this.canvas);
+    this.orbit.enablePan = true;
+    this.orbit.enableDamping = true;
+    this.orbit.enableZoom = true;
+    this.orbit.maxZoom = this.MAX_ZOOM;
+    this.orbit.minZoom = this.MIN_ZOOM;
+    this.orbit.panSpeed = this.PAN_SPEED;
+    this.orbit.mouseButtons = { RIGHT: THREE.MOUSE.PAN };
+    this.orbit.addEventListener("change", () => {
+      this.fontSize = this.camera.zoom * this.INIT_FONT_SIZE;
+      this.updateLabelsFontSize();
+      if (this.scene && this.renderer && this.labelRenderer) {
+        this.clearLabelElements();
+        this.renderer.compile(this.scene, this.camera);
+        this.renderer.render(this.scene, this.camera);
+        this.labelRenderer.render(this.scene, this.camera);
+        this.orbit?.saveState();
+      }
+    });
   }
 
   public getCamera() {
@@ -144,7 +167,7 @@ export class CanvasGraphics {
   }
 
   public getXCameraPos() {
-    return this.xCameraPos;
+    return this.camera.position.x;
   }
 
   public getShowVirtualDisplays() {
@@ -156,10 +179,11 @@ export class CanvasGraphics {
   }
 
   public updateRotation(userInput: number) {
-    this.xCameraPos = userInput;
-    this.camZoom = userInput/4 * 0.2 + 0.9;
-    this.labelShift = userInput/4 * this.maxLabelShift;
-    this.lowestYShift = Math.abs(userInput)/4 + 2;
+    this.camera.position.x = userInput;
+    this.camera.position.y = Math.abs(userInput);
+    this.labelShift = userInput / 4 * this.MAX_LABEL_SHIFT;
+    this.lowestYShift = Math.abs(userInput) / 4 + 2;
+    this.updateCameraAndControls();
   }
 
   public updateHighlightedItems(newItems: Array<string>) {
@@ -182,24 +206,54 @@ export class CanvasGraphics {
     this.showVirtualDisplays = show;
   }
 
-  public updateZoom(isZoomIn: boolean) {
-    if (isZoomIn && this.camZoom < 2) {
-      this.labelXFactor -= 0.001;
-      this.camZoom += this.camZoomFactor * 1.5;
-    } else if (!isZoomIn && this.camZoom > 0.5) {
-      this.labelXFactor += 0.001;
-      this.camZoom -= this.camZoomFactor * 1.5;
+  public resetCamera() {
+    this.camera.lookAt(
+      this.INIT_TARGET.x,
+      this.INIT_TARGET.y,
+      this.INIT_TARGET.z
+    );
+    this.camera.position.set(
+      this.INIT_CAMERA_POS.x,
+      this.INIT_CAMERA_POS.y,
+      this.INIT_CAMERA_POS.z
+    );
+    this.camera.zoom = this.INIT_ZOOM;
+    this.fontSize = this.INIT_FONT_SIZE;
+    this.labelShift = this.MAX_LABEL_SHIFT;
+    this.lowestYShift = this.INIT_LOWEST_Y_SHIFT;
+    this.layerSeparation = this.INIT_LAYER_SEPARATION;
+    this.camera.updateProjectionMatrix();
+    if (this.canvas) {
+      this.enableOrbitControls();
     }
+    this.refreshCanvas();
+  }
+
+  public updateZoom(isZoomIn: boolean) {
+    if (isZoomIn && this.camera.zoom < this.MAX_ZOOM) {
+      this.camera.zoom += this.CAM_ZOOM_FACTOR;
+      if (this.camera.zoom > this.MAX_ZOOM) this.camera.zoom = this.MAX_ZOOM;
+    } else if (!isZoomIn && this.camera.zoom > this.MIN_ZOOM) {
+      this.camera.zoom -= this.CAM_ZOOM_FACTOR;
+      if (this.camera.zoom < this.MIN_ZOOM) this.camera.zoom = this.MIN_ZOOM;
+    }
+    this.fontSize = this.camera.zoom * this.INIT_FONT_SIZE;
+    this.updateCameraAndControls();
+  }
+
+  private updateCameraAndControls() {
+    this.camera.updateProjectionMatrix();
+    this.orbit?.update();
+    this.orbit?.saveState();
   }
 
   private drawScene(
     rectCounter: number,
-    visibleRects: number,
-    visibleDarkFactor:number,
-    displayRects: number,
+    numberOfVisibleRects: number,
+    visibleDarkFactor: number,
+    numberOfNonVisibleRects: number,
     nonVisibleDarkFactor: number,
     numberOfRects: number,
-    scene: THREE.Scene,
     xShift: number,
     yShift: number,
     zShift: number,
@@ -210,7 +264,7 @@ export class CanvasGraphics {
     this.rects.forEach(rect => {
       const mustNotDrawInVisibleView = this.visibleView && !rect.isVisible;
       const mustNotDrawInXrayViewWithoutVirtualDisplays =
-            !this.visibleView && !this.showVirtualDisplays && rect.isDisplay && rect.isVirtual;
+        !this.visibleView && !this.showVirtualDisplays && rect.isVirtual;
       if (mustNotDrawInVisibleView || mustNotDrawInXrayViewWithoutVirtualDisplays) {
         rectCounter++;
         return;
@@ -221,37 +275,35 @@ export class CanvasGraphics {
       if (this.highlightedItems.includes(`${rect.id}`)) {
         planeColor = this.colorMapping("highlighted", numberOfRects, 0);
       } else if (rect.isVisible) {
-        planeColor = this.colorMapping("green", visibleRects, visibleDarkFactor);
+        planeColor = this.colorMapping("green", numberOfVisibleRects, visibleDarkFactor);
         visibleDarkFactor++;
-      } else if (rect.isDisplay) {
-        planeColor = this.colorMapping("grey", displayRects, nonVisibleDarkFactor);
-        nonVisibleDarkFactor++;
       } else {
-        planeColor = this.colorMapping("unknown", numberOfRects, 0);
+        planeColor = this.colorMapping("grey", numberOfNonVisibleRects, nonVisibleDarkFactor);
+        nonVisibleDarkFactor++;
       }
 
       //set plane geometry and material
       const geometry = new THREE.PlaneGeometry(rect.width, rect.height);
       const planeRect = this.setPlaneMaterial(rect, geometry, planeColor, xShift, yShift, zShift);
-      scene.add(planeRect);
+      this.scene?.add(planeRect);
       zShift -= this.layerSeparation;
 
       // bolder edges of each plane if in x-ray view
       if (!this.visibleView) {
         const edgeSegments = this.setEdgeMaterial(planeRect, geometry);
-        scene.add(edgeSegments);
+        this.scene?.add(edgeSegments);
       }
 
-      // if not a display rect, should be clickable
-      if (!rect.isDisplay) this.targetObjects.push(planeRect);
+      // only some rects are clickable
+      if (rect.isClickable) this.targetObjects.push(planeRect);
 
       // labelling elements
       if (rect.label.length > 0) {
         const circle = this.setCircleMaterial(planeRect, rect);
-        scene.add(circle);
+        this.scene?.add(circle);
         const [line, rectLabel] = this.createLabel(rect, circle, lowestY, rectCounter);
-        scene.add(line);
-        scene.add(rectLabel);
+        this.scene?.add(line);
+        this.scene?.add(rectLabel);
       }
 
       rectCounter++;
@@ -273,9 +325,9 @@ export class CanvasGraphics {
         opacity: this.visibleView ? 1 : 0.75,
         transparent: true,
       }));
-    planeRect.position.y = rect.topLeft.y - rect.height/2 + yShift;
-    planeRect.position.x = rect.topLeft.x + rect.width/2 - xShift;
-    planeRect.position.z =  zShift;
+    planeRect.position.y = rect.topLeft.y - rect.height / 2 + yShift;
+    planeRect.position.x = rect.topLeft.x + rect.width / 2 - xShift;
+    planeRect.position.z = zShift;
     planeRect.name = `${rect.id}`;
     return planeRect;
   }
@@ -283,7 +335,7 @@ export class CanvasGraphics {
   private setEdgeMaterial(planeRect: THREE.Mesh, geometry: THREE.PlaneGeometry) {
     const edgeColor = 0x000000;
     const edgeGeo = new THREE.EdgesGeometry(geometry);
-    const edgeMaterial = new THREE.LineBasicMaterial({color: edgeColor, linewidth: 1});
+    const edgeMaterial = new THREE.LineBasicMaterial({ color: edgeColor, linewidth: 1 });
     const edgeSegments = new THREE.LineSegments(
       edgeGeo, edgeMaterial
     );
@@ -296,7 +348,7 @@ export class CanvasGraphics {
     const circleMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
     const circle = new THREE.Mesh(labelCircle, circleMaterial);
     circle.position.set(
-      planeRect.position.x + rect.width/2 - 0.05,
+      planeRect.position.x + rect.width / 2 - 0.05,
       planeRect.position.y,
       planeRect.position.z + 0.05
     );
@@ -308,34 +360,35 @@ export class CanvasGraphics {
     [THREE.Line, CSS2DObject] {
     const labelText = this.shortenText(rect.label);
     const isGrey = !this.visibleView && !rect.isVisible;
-    let cornerPos, endPos;
-    const labelYSeparation = 0.3;
+    let endPos;
+    const labelYSeparation = 0.5;
     if (this.isLandscape) {
-      cornerPos = new THREE.Vector3(
-        circle.position.x, lowestY - 0.5 - rectCounter*labelYSeparation, circle.position.z
+      endPos = new THREE.Vector3(
+        circle.position.x, lowestY - 0.5 - rectCounter * labelYSeparation, circle.position.z
       );
     } else {
-      cornerPos = new THREE.Vector3(
-        circle.position.x, lowestY + 0.5 - rectCounter*labelYSeparation, circle.position.z
+      endPos = new THREE.Vector3(
+        circle.position.x, lowestY + 0.5 - rectCounter * labelYSeparation, circle.position.z
       );
     }
 
-    const linePoints = [circle.position, cornerPos];
-    if (this.isLandscape && cornerPos.x > 0 || !this.isLandscape) {
-      endPos = new THREE.Vector3(cornerPos.x - 0.75, cornerPos.y - 0.75*this.labelShift, cornerPos.z);
-    } else {
-      endPos = cornerPos;
-    }
-    linePoints.push(endPos);
+    const linePoints = [circle.position, endPos];
+
 
     //add rectangle label
     const rectLabelDiv: HTMLElement = document.createElement("div");
     rectLabelDiv.className = "rect-label";
     rectLabelDiv.textContent = labelText;
-    rectLabelDiv.style.fontSize = "10px";
+    rectLabelDiv.style.fontSize = `${this.fontSize}` + "px";
+    rectLabelDiv.style.marginTop = "5px";
     if (isGrey) {
       rectLabelDiv.style.color = "grey";
     }
+    rectLabelDiv.style.pointerEvents = "auto";
+    rectLabelDiv.style.cursor = "pointer";
+    rectLabelDiv.addEventListener(
+      "click", (event) => this.propagateUpdateHighlightedItems(event, rect.id)
+    );
     const rectLabel = new CSS2DObject(rectLabelDiv);
     rectLabel.name = rect.label;
 
@@ -351,28 +404,45 @@ export class CanvasGraphics {
 
     if (this.isLandscape && endPos.x < 0) {
       rectLabel.position.set(
-        endPos.x + 0.6, endPos.y - 0.15, endPos.z - 0.6
+        endPos.x + 0.6, endPos.y, endPos.z - 0.6
       );
     } else {
       rectLabel.position.set(
-        endPos.x - labelWidth * this.labelXFactor,
-        endPos.y - this.labelShift * labelWidth * this.labelXFactor,
+        endPos.x - labelWidth * this.LABEL_X_FACTOR,
+        endPos.y - this.labelShift * labelWidth * this.LABEL_X_FACTOR,
         endPos.z
       );
     }
 
     const lineGeo = new THREE.BufferGeometry().setFromPoints(linePoints);
-    const lineMaterial = new THREE.LineBasicMaterial({color: isGrey ? 0x808080 : 0x000000});
+    const lineMaterial = new THREE.LineBasicMaterial({ color: isGrey ? 0x808080 : 0x000000 });
     const line = new THREE.Line(lineGeo, lineMaterial);
 
     return [line, rectLabel];
+  }
+
+  private propagateUpdateHighlightedItems(event: MouseEvent, newId: number) {
+    event.preventDefault();
+    const highlightedChangeEvent: CustomEvent = new CustomEvent(
+      ViewerEvents.HighlightedChange,
+      {
+        bubbles: true,
+        detail: { id: `${newId}` }
+      });
+    event.target?.dispatchEvent(highlightedChangeEvent);
+  }
+
+  private updateLabelsFontSize() {
+    document.querySelectorAll(".rect-label").forEach(
+      el => (el as HTMLElement).style.fontSize = `${this.fontSize}` + "px"
+    );
   }
 
   private clearLabelElements() {
     document.querySelectorAll(".rect-label").forEach(el => el.remove());
   }
 
-  private colorMapping(scale: string, numberOfRects: number, darkFactor:number): THREE.Color {
+  private colorMapping(scale: string, numberOfRects: number, darkFactor: number): THREE.Color {
     if (scale === "highlighted") {
       return new THREE.Color(0xD2E3FC);
     } else if (scale === "grey") {
@@ -380,14 +450,14 @@ export class CanvasGraphics {
       //Separate RGB values between 0 and 1
       const lower = 120;
       const upper = 220;
-      const darkness = ((upper-lower)*(numberOfRects-darkFactor)/numberOfRects + lower)/255;
+      const darkness = ((upper - lower) * (numberOfRects - darkFactor) / numberOfRects + lower) / 255;
       return new THREE.Color(darkness, darkness, darkness);
     } else if (scale === "green") {
       // darkness of green rect depends on z order
       //Separate RGB values between 0 and 1
-      const red = ((200-45)*(numberOfRects-darkFactor)/numberOfRects + 45)/255;
-      const green = ((232-182)*(numberOfRects-darkFactor)/numberOfRects + 182)/255;
-      const blue = ((183-44)*(numberOfRects-darkFactor)/numberOfRects + 44)/255;
+      const red = ((200 - 45) * (numberOfRects - darkFactor) / numberOfRects + 45) / 255;
+      const green = ((232 - 182) * (numberOfRects - darkFactor) / numberOfRects + 182) / 255;
+      const blue = ((183 - 44) * (numberOfRects - darkFactor) / numberOfRects + 44) / 255;
       return new THREE.Color(red, green, blue);
     } else {
       return new THREE.Color(0, 0, 0);
@@ -402,22 +472,37 @@ export class CanvasGraphics {
   }
 
   // dynamic scaling and canvas variables
-  readonly cameraHalfWidth = 2.8;
-  readonly cameraHalfHeight = 3.2;
-  private readonly maxLabelShift = 0.305;
-  private labelXFactor = 0.009;
-  private lowestYShift = 3;
-  private camZoom = 1.1;
-  private camZoomFactor = 0.1;
-  private labelShift = this.maxLabelShift;
+  readonly CAMERA_HALF_WIDTH = 2.8;
+  readonly CAMERA_HALF_HEIGHT = 3.2;
+  private readonly MAX_LABEL_SHIFT = 0.305;
+  private readonly MAX_ZOOM = 2.5;
+  private readonly MIN_ZOOM = 0.5;
+  private readonly INIT_ZOOM = 1;
+  private readonly INIT_FONT_SIZE = 10;
+  private readonly INIT_CAMERA_POS = new THREE.Vector3(4, 4, 6);
+  private readonly INIT_TARGET = new THREE.Vector3(0, 0, 0);
+  private readonly INIT_LAYER_SEPARATION = 0.4;
+  private readonly INIT_LOWEST_Y_SHIFT = 3;
+  private readonly PAN_SPEED = 1;
+  private readonly LABEL_X_FACTOR = 0.009;
+  private readonly CAM_ZOOM_FACTOR = 0.15;
+
+  private fontSize = this.INIT_FONT_SIZE;
+  private labelShift = this.MAX_LABEL_SHIFT;
+  private lowestYShift = this.INIT_LOWEST_Y_SHIFT;
+  private layerSeparation = this.INIT_LAYER_SEPARATION;
+
   private visibleView = false;
   private isLandscape = false;
   private showVirtualDisplays = false;
-  private layerSeparation = 0.4;
-  private xCameraPos = 4;
   private highlightedItems: Array<string> = [];
   private camera: THREE.OrthographicCamera;
+  private scene?: THREE.Scene;
+  private renderer?: THREE.WebGLRenderer;
+  private labelRenderer?: CSS2DRenderer;
+  private orbit?: OrbitControls;
   private rects: Rectangle[] = [];
   private targetObjects: any[] = [];
   private canvas?: HTMLCanvasElement;
+  private canvasContainer?: Element;
 }

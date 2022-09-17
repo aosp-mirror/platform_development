@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {browser, element, by} from "protractor";
+import {browser, element, by, ElementFinder} from "protractor";
 import {E2eTestUtils} from "./utils";
 
 describe("Viewer WindowManager", () => {
@@ -22,14 +22,14 @@ describe("Viewer WindowManager", () => {
     browser.get("file://" + E2eTestUtils.getProductionIndexHtmlPath());
   }),
 
-  it("processes trace and renders view", () => {
+  it("processes trace and renders view", async () => {
     const inputFile = element(by.css("input[type=\"file\"]"));
-    inputFile.sendKeys(E2eTestUtils.getFixturePath("traces/elapsed_and_real_timestamp/WindowManager.pb"));
+    await inputFile.sendKeys(E2eTestUtils.getFixturePath("traces/elapsed_and_real_timestamp/WindowManager.pb"));
 
     const loadData = element(by.css(".load-btn"));
-    loadData.click();
+    await loadData.click();
 
-    const windowManagerViewerTitle = element(by.css(".viewer-window-manager .title"));
-    expect(windowManagerViewerTitle.getText()).toContain("Window Manager");
+    const viewerPresent = await element(by.css("viewer-window-manager")).isPresent();
+    expect(viewerPresent).toBeTruthy();
   });
 });

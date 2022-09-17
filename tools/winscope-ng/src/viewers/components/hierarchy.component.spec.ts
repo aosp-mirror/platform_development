@@ -22,6 +22,8 @@ import { MatInputModule } from "@angular/material/input";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatCheckboxModule } from "@angular/material/checkbox";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
+import { HierarchyTree } from "viewers/common/tree_utils";
+import { HierarchyTreeBuilder } from "test/unit/hierarchy_tree_builder";
 
 describe("HierarchyComponent", () => {
   let fixture: ComponentFixture<HierarchyComponent>;
@@ -51,14 +53,11 @@ describe("HierarchyComponent", () => {
     fixture = TestBed.createComponent(HierarchyComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
-    component.tree = {
-      simplifyNames: false,
-      kind: "entry",
-      name: "BaseLayerTraceEntry",
-      shortName: "BLTE",
-      chips: [],
-      children: [{kind: "3", id: "3", name: "Child1"}]
-    };
+
+    component.tree = new HierarchyTreeBuilder().setName("BaseLayerTraceEntry").setKind("entry").setStableId("BaseEntry")
+      .setChildren([new HierarchyTreeBuilder().setName("Child1").setStableId("3 Child1").build()])
+      .build();
+
     component.store = new PersistentStore();
     component.userOptions = {
       onlyVisible: {
@@ -66,14 +65,7 @@ describe("HierarchyComponent", () => {
         enabled: false
       },
     };
-    component.pinnedItems = [{
-      simplifyNames: false,
-      kind: "entry",
-      name: "BaseLayerTraceEntry",
-      shortName: "BLTE",
-      chips: [],
-      children: [{kind: "3", id: "3", name: "Child1"}]
-    }];
+    component.pinnedItems = [component.tree];
     component.diffClass = jasmine.createSpy().and.returnValue("none");
   });
 
