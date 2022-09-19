@@ -15,7 +15,7 @@
  */
 import { Component, Input } from "@angular/core";
 import { treeNodePropertiesDataViewStyles } from "viewers/components/styles/tree_node_data_view.styles";
-import { PropertiesTree } from "viewers/common/tree_utils";
+import { PropertiesTreeNode } from "viewers/common/tree_utils";
 
 @Component({
   selector: "tree-node-properties-data-view",
@@ -30,7 +30,7 @@ import { PropertiesTree } from "viewers/common/tree_utils";
 })
 
 export class TreeNodePropertiesDataViewComponent {
-  @Input() item!: PropertiesTree;
+  @Input() item!: PropertiesTreeNode;
 
   public valueClass() {
     if (!this.item.propertyValue) {

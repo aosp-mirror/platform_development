@@ -1,4 +1,4 @@
-9;/*
+/*
  * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,7 @@ import { UiData } from "./ui_data";
 import { UserOptions } from "viewers/common/user_options";
 import { TraceType } from "common/trace/trace_type";
 import { WindowManagerState } from "common/trace/flickerlib/common";
-import { PropertiesTree, Terminal, HierarchyTree } from "viewers/common/tree_utils";
+import { PropertiesTreeNode, Terminal, HierarchyTreeNode } from "viewers/common/tree_utils";
 import { UnitTestUtils } from "test/unit/utils";
 import { HierarchyTreeBuilder } from "test/unit/hierarchy_tree_builder";
 import { VISIBLE_CHIP } from "viewers/common/chip";
@@ -27,7 +27,7 @@ describe("PresenterWindowManager", () => {
   let presenter: Presenter;
   let uiData: UiData;
   let entries: Map<TraceType, any>;
-  let selectedTree: HierarchyTree;
+  let selectedTree: HierarchyTreeNode;
 
   beforeAll(async () => {
     entries = new Map<TraceType, any>();
@@ -187,14 +187,14 @@ describe("PresenterWindowManager", () => {
     presenter.newPropertiesTree(selectedTree);
 
     let nonTerminalChildren = uiData.propertiesTree?.children?.filter(
-      (child: PropertiesTree) => typeof child.propertyKey === "string"
+      (child: PropertiesTreeNode) => typeof child.propertyKey === "string"
     ) ?? [];
 
     expect(nonTerminalChildren.length).toEqual(45);
     presenter.filterPropertiesTree("visible");
 
     nonTerminalChildren = uiData.propertiesTree?.children?.filter(
-      (child: PropertiesTree) => typeof child.propertyKey === "string"
+      (child: PropertiesTreeNode) => typeof child.propertyKey === "string"
     ) ?? [];
     expect(nonTerminalChildren.length).toEqual(4);
   });

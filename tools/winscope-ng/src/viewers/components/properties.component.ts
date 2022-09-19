@@ -16,7 +16,7 @@
 import { Component, Input, Inject, ElementRef } from "@angular/core";
 import { UserOptions } from "viewers/common/user_options";
 import { ViewerEvents } from "viewers/common/viewer_events";
-import { PropertiesTree, Terminal, TreeFlickerItem } from "viewers/common/tree_utils";
+import { PropertiesTreeNode, Terminal, TreeNodeTrace } from "viewers/common/tree_utils";
 
 @Component({
   selector: "properties-view",
@@ -134,8 +134,8 @@ export class PropertiesComponent {
   filterString = "";
 
   @Input() userOptions: UserOptions = {};
-  @Input() propertiesTree: PropertiesTree = {};
-  @Input() selectedFlickerItem: TreeFlickerItem | null = null;
+  @Input() propertiesTree: PropertiesTreeNode = {};
+  @Input() selectedFlickerItem: TreeNodeTrace | null = null;
   @Input() propertyGroups = false;
 
   constructor(

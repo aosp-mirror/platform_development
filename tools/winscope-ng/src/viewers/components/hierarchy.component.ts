@@ -16,7 +16,7 @@
 import { Component, Input, Inject, ElementRef } from "@angular/core";
 import { UserOptions } from "viewers/common/user_options";
 import { PersistentStore } from "common/persistent_store";
-import { HierarchyTree, diffClass, isHighlighted, Tree } from "viewers/common/tree_utils";
+import { TreeUtils, HierarchyTreeNode, UiTreeNode } from "viewers/common/tree_utils";
 import { nodeStyles } from "viewers/components/styles/node.styles";
 import { ViewerEvents } from "viewers/common/viewer_events";
 import { TraceType } from "common/trace/trace_type";
@@ -147,13 +147,13 @@ import { TraceType } from "common/trace/trace_type";
 export class HierarchyComponent {
   objectKeys = Object.keys;
   filterString = "";
-  diffClass = diffClass;
-  isHighlighted = isHighlighted;
+  diffClass = TreeUtils.diffClass;
+  isHighlighted = TreeUtils.isHighlighted;
 
-  @Input() tree!: HierarchyTree | null;
+  @Input() tree!: HierarchyTreeNode | null;
   @Input() dependencies: Array<TraceType> = [];
   @Input() highlightedItems: Array<string> = [];
-  @Input() pinnedItems: Array<HierarchyTree> = [];
+  @Input() pinnedItems: Array<HierarchyTreeNode> = [];
   @Input() store!: PersistentStore;
   @Input() userOptions: UserOptions = {};
 
@@ -172,7 +172,7 @@ export class HierarchyComponent {
     };
   }
 
-  public onPinnedNodeClick(event: MouseEvent, pinnedItem: HierarchyTree) {
+  public onPinnedNodeClick(event: MouseEvent, pinnedItem: HierarchyTreeNode) {
     event.preventDefault();
     if (window.getSelection()?.type === "range") {
       return;
@@ -211,8 +211,8 @@ export class HierarchyComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  public selectedTreeChange(item: Tree) {
-    if (!(item instanceof HierarchyTree)) {
+  public selectedTreeChange(item: UiTreeNode) {
+    if (!(item instanceof HierarchyTreeNode)) {
       return;
     }
     const event: CustomEvent = new CustomEvent(
@@ -224,8 +224,8 @@ export class HierarchyComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  public pinnedItemChange(item: Tree) {
-    if (!(item instanceof HierarchyTree)) {
+  public pinnedItemChange(item: UiTreeNode) {
+    if (!(item instanceof HierarchyTreeNode)) {
       return;
     }
     const event: CustomEvent = new CustomEvent(
