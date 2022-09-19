@@ -16,11 +16,7 @@ python_binary_host {
         canonical_path_from_root: false,
     },
     version: {
-        py2: {
-            enabled: false,
-        },
         py3: {
-            enabled: true,
             embedded_launcher: true,
         },
     }

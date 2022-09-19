@@ -22,15 +22,6 @@ python_binary_host {
   srcs: [
     "repack_super_image.py",
   ],
-  version: {
-    py2: {
-      enabled: false,
-    },
-    py3: {
-      enabled: true,
-      embedded_launcher: false,
-    },
-  },
   dist: {
     targets: ["gsi_utils"],
   },
