@@ -327,7 +327,9 @@ bool HeaderAbiDiff::DumpLoneElements(
 
   for (auto &&element : elements) {
     if (IgnoreSymbol<T>(element, ignored_symbols_,
-                        [](const T *e) {return e->GetLinkerSetKey();})) {
+                        [](const T *e) {return e->GetLinkerSetKey();}) ||
+        ignored_linker_set_keys_.find(element->GetLinkerSetKey()) !=
+            ignored_linker_set_keys_.end()) {
       continue;
     }
 
