@@ -16,21 +16,49 @@
 
 import Chip from "./chip";
 
-export type FilterType = (item: HierarchyTree | PropertiesTree | null) => boolean;
+export type FilterType = (item: HierarchyTreeNode | PropertiesTreeNode | null) => boolean;
 
-export type Tree = HierarchyTree | PropertiesTree;
+export type UiTreeNode = HierarchyTreeNode | PropertiesTreeNode;
 
-export class HierarchyTree {
+export interface TreeNodeTrace {
+  parent: TreeNodeTrace|undefined;
+  children: TreeNodeTrace[];
+  name: string;
+  kind: string;
+  stableId: string;
+  displays?: TreeNodeTrace[];
+  windowStates?: TreeNodeTrace[];
+  shortName?: string;
+  type?: string;
+  id?: string | number;
+  layerId?: number;
+  displayId?: number;
+  stackId?: number;
+  isVisible?: boolean;
+  isMissing?: boolean;
+  hwcCompositionType?: number;
+  zOrderRelativeOfId?: number;
+  isRootLayer?: boolean;
+  chips?: Chip[];
+  diffType?: string;
+  skip?: any;
+  equals?: any;
+  obj?: any;
+  get?: any;
+  proto?: any;
+}
+
+export class HierarchyTreeNode {
   constructor(
     public name: string,
     public kind: string,
     public stableId: string,
-    children?: HierarchyTree[]
+    children?: HierarchyTreeNode[]
   ) {
     this.children = children ?? [];
   }
 
-  children: HierarchyTree[];
+  children: HierarchyTreeNode[];
   shortName?: string;
   type?: string;
   id?: string | number;
@@ -52,42 +80,15 @@ export class HierarchyTree {
   skip?: any;
 }
 
-export interface TreeFlickerItem {
-  children: TreeFlickerItem[];
-  name: string;
-  kind: string;
-  stableId: string;
-  displays?: TreeFlickerItem[];
-  windowStates?: TreeFlickerItem[];
-  shortName?: string;
-  type?: string;
-  id?: string | number;
-  layerId?: number;
-  displayId?: number;
-  stackId?: number;
-  isVisible?: boolean;
-  isMissing?: boolean;
-  hwcCompositionType?: number;
-  zOrderRelativeOfId?: number;
-  isRootLayer?: boolean;
-  chips?: Chip[];
-  diffType?: string;
-  skip?: any;
-  equals?: any;
-  obj?: any;
-  get?: any;
-  proto?: any;
-}
-
 export interface PropertiesDump {
   [key: string]: any;
 }
 
-export interface PropertiesTree {
+export interface PropertiesTreeNode {
   properties?: any;
   kind?: string;
   stableId?: string;
-  children?: PropertiesTree[];
+  children?: PropertiesTreeNode[];
   propertyKey?: string | Terminal | null;
   propertyValue?: string | Terminal | null;
   name?: string | Terminal;
@@ -106,46 +107,74 @@ export const DiffType = {
 
 export class Terminal {}
 
-export function diffClass(item: Tree): string {
-  const diffType = item.diffType;
-  return diffType ?? "";
-}
-
-export function isHighlighted(item: Tree, highlightedItems: Array<string>) {
-  return item instanceof HierarchyTree && highlightedItems.includes(`${item.id}`);
-}
-
-export function getFilter(filterString: string): FilterType {
-  const filterStrings = filterString.split(",");
-  const positive: any[] = [];
-  const negative: any[] = [];
-  filterStrings.forEach((f) => {
-    f = f.trim();
-    if (f.startsWith("!")) {
-      const regex = new RegExp(f.substring(1), "i");
-      negative.push((s:any) => !regex.test(s));
-    } else {
-      const regex = new RegExp(f, "i");
-      positive.push((s:any) => regex.test(s));
+export class TreeUtils
+{
+  public static findDescendantNode(node: TreeNodeTrace, isTargetNode: FilterType): TreeNodeTrace|undefined {
+    if (isTargetNode(node)) {
+      return node;
     }
-  });
-  const filter = (item: any) => {
-    if (item) {
-      const apply = (f:any) => f(`${item.name}`);
-      return (positive.length === 0 || positive.some(apply)) &&
-        (negative.length === 0 || negative.every(apply));
+
+    for (const child of node.children) {
+      const target = this.findDescendantNode(child, isTargetNode);
+      if (target) {
+        return target;
+      }
     }
-    return false;
-  };
-  return filter;
-}
 
-const parentNodeKinds = ["entry", "WindowManagerState"];
+    return undefined;
+  }
 
-export function isParentNode(kind: string) {
-  return parentNodeKinds.includes(kind);
-}
+  public static findAncestorNode(node: TreeNodeTrace, isTargetNode: FilterType): TreeNodeTrace|undefined {
+    let ancestor = node.parent;
 
-export function isVisibleNode(kind: string, type?: string) {
-  return kind === "WindowState" || kind === "Activity" || type?.includes("Layer");
+    while (ancestor && !isTargetNode(ancestor)) {
+      ancestor = ancestor.parent;
+    }
+
+    return ancestor;
+  }
+
+  public static makeNodeFilter(filterString: string): FilterType {
+    const filterStrings = filterString.split(",");
+    const positive: any[] = [];
+    const negative: any[] = [];
+    filterStrings.forEach((f) => {
+      f = f.trim();
+      if (f.startsWith("!")) {
+        const regex = new RegExp(f.substring(1), "i");
+        negative.push((s: any) => !regex.test(s));
+      } else {
+        const regex = new RegExp(f, "i");
+        positive.push((s: any) => regex.test(s));
+      }
+    });
+    const filter = (item: any) => {
+      if (item) {
+        const apply = (f: any) => f(`${item.name}`);
+        return (positive.length === 0 || positive.some(apply)) &&
+          (negative.length === 0 || negative.every(apply));
+      }
+      return false;
+    };
+    return filter;
+  }
+
+  public static diffClass(item: UiTreeNode): string {
+    const diffType = item.diffType;
+    return diffType ?? "";
+  }
+
+  public static isHighlighted(item: UiTreeNode, highlightedItems: Array<string>) {
+    return item instanceof HierarchyTreeNode && highlightedItems.includes(`${item.id}`);
+  }
+
+  public static isVisibleNode(kind: string, type?: string) {
+    return kind === "WindowState" || kind === "Activity" || type?.includes("Layer");
+  }
+
+  public static isParentNode(kind: string) {
+    return this.PARENT_NODE_KINDS.includes(kind);
+  }
+
+  private static readonly PARENT_NODE_KINDS = ["entry", "WindowManagerState"];
 }

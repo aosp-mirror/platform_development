@@ -16,7 +16,7 @@
 import { Component, Inject, Input, Output, ElementRef, EventEmitter } from "@angular/core";
 import { PersistentStore } from "common/persistent_store";
 import { nodeStyles, treeNodeDataViewStyles } from "viewers/components/styles/node.styles";
-import { Tree, diffClass, isHighlighted, PropertiesTree, Terminal, isParentNode, HierarchyTree } from "viewers/common/tree_utils";
+import { TreeUtils, UiTreeNode, HierarchyTreeNode } from "viewers/common/tree_utils";
 import { TraceType } from "common/trace/trace_type";
 
 @Component({
@@ -77,17 +77,17 @@ import { TraceType } from "common/trace/trace_type";
 })
 
 export class TreeComponent {
-  diffClass = diffClass;
-  isHighlighted = isHighlighted;
+  diffClass = TreeUtils.diffClass;
+  isHighlighted = TreeUtils.isHighlighted;
 
-  @Input() item!: Tree;
+  @Input() item!: UiTreeNode;
   @Input() dependencies: Array<TraceType> = [];
   @Input() store!: PersistentStore;
   @Input() isFlattened? = false;
   @Input() isShaded? = false;
   @Input() initialDepth = 0;
   @Input() highlightedItems: Array<string> = [];
-  @Input() pinnedItems?: Array<HierarchyTree> = [];
+  @Input() pinnedItems?: Array<HierarchyTreeNode> = [];
   @Input() itemsClickable?: boolean;
   @Input() useGlobalCollapsedState?: boolean;
   @Input() isAlwaysCollapsed?: boolean;
@@ -95,8 +95,8 @@ export class TreeComponent {
   @Input() isLeaf: (item: any) => boolean = (item: any) => !item.children || item.children.length === 0;
 
   @Output() highlightedItemChange = new EventEmitter<string>();
-  @Output() selectedTreeChange = new EventEmitter<Tree>();
-  @Output() pinnedItemChange = new EventEmitter<Tree>();
+  @Output() selectedTreeChange = new EventEmitter<UiTreeNode>();
+  @Output() pinnedItemChange = new EventEmitter<UiTreeNode>();
   @Output() hoverStart = new EventEmitter<void>();
   @Output() hoverEnd = new EventEmitter<void>();
 
@@ -123,7 +123,7 @@ export class TreeComponent {
   }
 
   ngOnChanges() {
-    if (this.item instanceof HierarchyTree && isHighlighted(this.item, this.highlightedItems)) {
+    if (this.item instanceof HierarchyTreeNode && TreeUtils.isHighlighted(this.item, this.highlightedItems)) {
       this.selectedTreeChange.emit(this.item);
     }
   }
@@ -159,7 +159,7 @@ export class TreeComponent {
   }
 
   private updateHighlightedItems() {
-    if (this.item instanceof HierarchyTree) {
+    if (this.item instanceof HierarchyTreeNode) {
       if (this.item && this.item.id) {
         this.highlightedItemChange.emit(`${this.item.id}`);
       } else if (!this.item.id) {
@@ -169,7 +169,7 @@ export class TreeComponent {
   }
 
   public isPinned() {
-    if (this.item instanceof HierarchyTree) {
+    if (this.item instanceof HierarchyTreeNode) {
       return this.pinnedItems?.map(item => `${item.id}`).includes(`${this.item.id}`);
     }
     return false;
@@ -179,11 +179,11 @@ export class TreeComponent {
     this.highlightedItemChange.emit(newId);
   }
 
-  public propagateNewPinnedItem(newPinnedItem: Tree) {
+  public propagateNewPinnedItem(newPinnedItem: UiTreeNode) {
     this.pinnedItemChange.emit(newPinnedItem);
   }
 
-  public propagateNewSelectedTree(newTree: Tree) {
+  public propagateNewSelectedTree(newTree: UiTreeNode) {
     this.selectedTreeChange.emit(newTree);
   }
 
@@ -211,12 +211,12 @@ export class TreeComponent {
     return this.localCollapsedState;
   }
 
-  public children(): Tree[] {
+  public children(): UiTreeNode[] {
     return this.item.children ?? [];
   }
 
   public hasChildren() {
-    const isParentEntryInFlatView = isParentNode(this.item.kind ?? "") && this.isFlattened;
+    const isParentEntryInFlatView = TreeUtils.isParentNode(this.item.kind ?? "") && this.isFlattened;
     return (!this.isFlattened || isParentEntryInFlatView) && !this.isLeaf(this.item);
   }
 
