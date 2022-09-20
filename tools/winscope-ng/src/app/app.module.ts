@@ -41,12 +41,14 @@ import { TreeNodePropertiesDataViewComponent } from "viewers/components/tree_nod
 import { PropertyGroupsComponent } from "viewers/components/property_groups.component";
 import { TransformMatrixComponent } from "viewers/components/transform_matrix.component";
 import { ParserErrorSnackBarComponent } from "./components/parser_error_snack_bar_component";
+import { ViewerInputMethodComponent } from "viewers/components/viewer_input_method.component";
 
 @NgModule({
   declarations: [
     AppComponent,
     ViewerWindowManagerComponent,
     ViewerSurfaceFlingerComponent,
+    ViewerInputMethodComponent,
     CollectTracesComponent,
     UploadTracesComponent,
     AdbProxyComponent,

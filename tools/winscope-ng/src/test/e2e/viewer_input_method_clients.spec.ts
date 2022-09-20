@@ -16,7 +16,7 @@
 import {browser, element, by} from "protractor";
 import {E2eTestUtils} from "./utils";
 
-describe("Viewer SurfaceFlinger", () => {
+describe("Viewer InputMethodClients", () => {
   beforeAll(async () => {
     browser.manage().timeouts().implicitlyWait(1000);
     browser.get("file://" + E2eTestUtils.getProductionIndexHtmlPath());
@@ -24,12 +24,12 @@ describe("Viewer SurfaceFlinger", () => {
 
   it("processes trace and renders view", async () => {
     const inputFile = element(by.css("input[type=\"file\"]"));
-    await inputFile.sendKeys(E2eTestUtils.getFixturePath("traces/elapsed_and_real_timestamp/SurfaceFlinger.pb"));
+    await inputFile.sendKeys(E2eTestUtils.getFixturePath("traces/elapsed_and_real_timestamp/InputMethodClients.pb"));
 
     const loadData = element(by.css(".load-btn"));
     await loadData.click();
 
-    const viewerPresent = await element(by.css("viewer-surface-flinger")).isPresent();
+    const viewerPresent = await element(by.css("viewer-input-method")).isPresent();
     expect(viewerPresent).toBeTruthy();
   });
 });

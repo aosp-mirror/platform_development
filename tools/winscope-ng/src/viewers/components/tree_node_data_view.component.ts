@@ -44,7 +44,7 @@ export class TreeNodeDataViewComponent {
   }
 
   public itemShortName() {
-    return (this.item instanceof HierarchyTreeNode)? this.item.shortName : "";
+    return (this.item instanceof HierarchyTreeNode && this.item.shortName) ? this.item.shortName : this.item.name;
   }
 
   public itemTooltip() {
@@ -55,7 +55,7 @@ export class TreeNodeDataViewComponent {
   }
 
   public showShortName() {
-    return (this.item instanceof HierarchyTreeNode) && this.item.simplifyNames && this.item.shortName !== this.item.name;
+    return (this.item instanceof HierarchyTreeNode) && this.item.simplifyNames && this.item.shortName && this.item.shortName !== this.item.name;
   }
 
   public chipClass(chip: Chip) {

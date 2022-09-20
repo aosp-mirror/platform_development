@@ -13,24 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { HierarchyTreeNode, PropertiesTreeNode } from "viewers/common/ui_tree_utils";
+import { HierarchyTreeNode, PropertiesTreeNode } from "./ui_tree_utils";
 import { UserOptions } from "viewers/common/user_options";
-import { Layer } from "common/trace/flickerlib/common";
 import { TraceType } from "common/trace/trace_type";
-import { Rectangle } from "viewers/common/rectangle";
 
-export class UiData {
+export class ImeUiData {
   dependencies: Array<TraceType>;
-  rects: Rectangle[] = [];
-  displayIds: number[] = [];
-  hasVirtualDisplays = false;
   highlightedItems: Array<string> = [];
   pinnedItems: Array<HierarchyTreeNode> = [];
   hierarchyUserOptions: UserOptions = {};
   propertiesUserOptions: UserOptions = {};
   tree: HierarchyTreeNode | null = null;
   propertiesTree: PropertiesTreeNode | null = null;
-  selectedLayer: Layer = {};
 
   constructor(dependencies?: Array<TraceType>) {
     this.dependencies = dependencies ?? [];

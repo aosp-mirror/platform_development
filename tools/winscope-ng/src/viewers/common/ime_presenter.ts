@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2022 The Android Open Source Project
  *
@@ -13,23 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { UiData } from "./ui_data";
-import { Rectangle, RectMatrix, RectTransform } from "viewers/common/rectangle";
+import { ImeUiData } from "./ime_ui_data";
 import { TraceType } from "common/trace/trace_type";
-import { TraceTreeNode } from "common/trace/trace_tree_node";
-import { TreeUtils, FilterType } from "common/utils/tree_utils";
 import { UserOptions } from "viewers/common/user_options";
 import { HierarchyTreeNode, PropertiesTreeNode } from "viewers/common/ui_tree_utils";
 import { TreeGenerator } from "viewers/common/tree_generator";
 import { TreeTransformer } from "viewers/common/tree_transformer";
-import DisplayContent from "common/trace/flickerlib/windows/DisplayContent";
+import { TreeUtils, FilterType } from "common/utils/tree_utils";
 
-type NotifyViewCallbackType = (uiData: UiData) => void;
+export type NotifyImeViewCallbackType = (uiData: ImeUiData) => void;
 
-export class Presenter {
-  constructor(notifyViewCallback: NotifyViewCallbackType) {
+export class ImePresenter {
+  constructor(
+    notifyViewCallback: NotifyImeViewCallbackType,
+    dependencies: Array<TraceType>
+  ) {
     this.notifyViewCallback = notifyViewCallback;
-    this.uiData = new UiData([TraceType.WINDOW_MANAGER]);
+    this.dependencies = dependencies;
+    this.uiData = new ImeUiData(dependencies);
     this.notifyViewCallback(this.uiData);
   }
 
@@ -49,7 +51,7 @@ export class Presenter {
     if (this.highlightedItems.includes(id)) {
       this.highlightedItems = this.highlightedItems.filter(hl => hl != id);
     } else {
-      this.highlightedItems = []; //if multi-select implemented, remove this line
+      this.highlightedItems = []; //if multi-select surfaces implemented, remove this line
       this.highlightedItems.push(id);
     }
     this.uiData.highlightedItems = this.highlightedItems;
@@ -80,52 +82,25 @@ export class Presenter {
     this.updateSelectedTreeUiData();
   }
 
-  public newPropertiesTree(selectedTree: HierarchyTreeNode) {
-    this.selectedHierarchyTree = selectedTree;
+  public newPropertiesTree(selectedItem: HierarchyTreeNode) {
+    this.selectedHierarchyTree = selectedItem;
     this.updateSelectedTreeUiData();
   }
 
   public notifyCurrentTraceEntries(entries: Map<TraceType, [any, any]>) {
-    this.uiData = new UiData();
+    this.uiData = new ImeUiData(this.dependencies);
     this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
     this.uiData.propertiesUserOptions = this.propertiesUserOptions;
 
-    const wmEntries = entries.get(TraceType.WINDOW_MANAGER);
-    if (wmEntries) {
-      [this.entry, this.previousEntry] = wmEntries;
+    const imeEntries = entries.get(this.dependencies[0]);
+    if (imeEntries) {
+      this.entry = imeEntries[0];
       if (this.entry) {
         this.uiData.highlightedItems = this.highlightedItems;
-        this.uiData.rects = this.generateRects();
-        this.uiData.displayIds = this.displayIds;
         this.uiData.tree = this.generateTree();
       }
     }
-
     this.notifyViewCallback(this.uiData);
-  }
-
-  private generateRects(): Rectangle[] {
-    const displayRects = this.entry?.displays?.map((display: DisplayContent) => {
-      const rect = display.displayRect;
-      rect.label = display.title;
-      rect.id = display.layerId;
-      rect.displayId = display.id;
-      rect.isDisplay = true;
-      rect.isVirtual = false;
-      return rect;
-    }) ?? [];
-    this.displayIds = [];
-    const rects = this.entry?.windowStates?.reverse()
-      .map((it: any) => {
-        const rect = it.rect;
-        rect.id = it.layerId;
-        rect.displayId = it.displayId;
-        if (!this.displayIds.includes(it.displayId)) {
-          this.displayIds.push(it.displayId);
-        }
-        return rect;
-      }) ?? [];
-    return this.rectsToUiData(rects.concat(displayRects));
   }
 
   private updateSelectedTreeUiData() {
@@ -145,61 +120,10 @@ export class Presenter {
       .setIsSimplifyNames(this.hierarchyUserOptions["simplifyNames"]?.enabled)
       .setIsFlatView(this.hierarchyUserOptions["flat"]?.enabled)
       .withUniqueNodeId();
-    let tree: HierarchyTreeNode | null;
-    if (!this.hierarchyUserOptions["showDiff"]?.enabled) {
-      tree = generator.generateTree();
-    } else {
-      tree = generator.compareWith(this.previousEntry)
-        .withModifiedCheck()
-        .generateFinalTreeWithDiff();
-    }
+    const tree: HierarchyTreeNode | null = generator.generateTree();
     this.pinnedItems = generator.getPinnedItems();
     this.uiData.pinnedItems = this.pinnedItems;
     return tree;
-  }
-
-  private rectsToUiData(rects: any[]): Rectangle[] {
-    const uiRects: Rectangle[] = [];
-    rects.forEach((rect: any) => {
-      let t = null;
-      if (rect.transform && rect.transform.matrix) {
-        t = rect.transform.matrix;
-      } else if (rect.transform) {
-        t = rect.transform;
-      }
-      let transform: RectTransform | null = null;
-      if (t !== null) {
-        const matrix: RectMatrix = {
-          dsdx: t.dsdx,
-          dsdy: t.dsdy,
-          dtdx: t.dtdx,
-          dtdy: t.dtdy,
-          tx: t.tx,
-          ty: -t.ty
-        };
-        transform = {
-          matrix: matrix,
-        };
-      }
-
-      const newRect: Rectangle = {
-        topLeft: {x: rect.left, y: rect.top},
-        bottomRight: {x: rect.right, y: -rect.bottom},
-        height: rect.height,
-        width: rect.width,
-        label: rect.label,
-        transform: transform,
-        isVisible: rect.ref?.isVisible ?? false,
-        isDisplay: rect.isDisplay ?? false,
-        ref: rect.ref,
-        id: rect.id ?? rect.ref.id,
-        displayId: rect.displayId ?? rect.ref.stackId,
-        isVirtual: rect.isVirtual ?? false,
-        isClickable: !rect.isDisplay,
-      };
-      uiRects.push(newRect);
-    });
-    return uiRects;
   }
 
   private updatePinnedIds(newId: string) {
@@ -211,36 +135,25 @@ export class Presenter {
   }
 
   private getTreeWithTransformedProperties(selectedTree: HierarchyTreeNode): PropertiesTreeNode {
-    if (!this.entry) {
-      return {};
-    }
     const transformer = new TreeTransformer(selectedTree, this.propertiesFilter)
-      .showOnlyProtoDump()
       .setIsShowDefaults(this.propertiesUserOptions["showDefaults"]?.enabled)
-      .setIsShowDiff(this.propertiesUserOptions["showDiff"]?.enabled)
       .setTransformerOptions({skip: selectedTree.skip})
-      .setProperties(this.entry)
-      .setDiffProperties(this.previousEntry);
+      .setProperties(this.entry);
     const transformedTree = transformer.transform();
     return transformedTree;
   }
 
-  private readonly notifyViewCallback: NotifyViewCallbackType;
-  private uiData: UiData;
+  readonly notifyViewCallback: NotifyImeViewCallbackType;
+  readonly dependencies: Array<TraceType>;
+  uiData: ImeUiData;
   private hierarchyFilter: FilterType = TreeUtils.makeNodeFilter("");
   private propertiesFilter: FilterType = TreeUtils.makeNodeFilter("");
   private highlightedItems: Array<string> = [];
-  private displayIds: Array<number> = [];
   private pinnedItems: Array<HierarchyTreeNode> = [];
   private pinnedIds: Array<string> = [];
   private selectedHierarchyTree: HierarchyTreeNode | null = null;
-  private previousEntry: TraceTreeNode | null = null;
-  private entry: TraceTreeNode | null = null;
+  private entry: any = null;
   private hierarchyUserOptions: UserOptions = {
-    showDiff: {
-      name: "Show diff",
-      enabled: false
-    },
     simplifyNames: {
       name: "Simplify names",
       enabled: true
@@ -254,11 +167,8 @@ export class Presenter {
       enabled: false
     }
   };
+
   private propertiesUserOptions: UserOptions = {
-    showDiff: {
-      name: "Show diff",
-      enabled: false
-    },
     showDefaults: {
       name: "Show defaults",
       enabled: true,
