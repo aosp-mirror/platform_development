@@ -38,11 +38,7 @@ python_binary_host {
         "fix_android_mk_prebuilt.py",
     ],
     version: {
-        py2: {
-            enabled: false,
-        },
         py3: {
-            enabled: true,
             embedded_launcher: true,
         },
     },
