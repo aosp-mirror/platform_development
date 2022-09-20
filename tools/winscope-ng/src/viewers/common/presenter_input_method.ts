@@ -14,17 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { ImeUiData } from "./ime_ui_data";
+import { ImeUiData } from "viewers/common/ime_ui_data";
 import { TraceType } from "common/trace/trace_type";
 import { UserOptions } from "viewers/common/user_options";
 import { HierarchyTreeNode, PropertiesTreeNode } from "viewers/common/ui_tree_utils";
 import { TreeGenerator } from "viewers/common/tree_generator";
 import { TreeTransformer } from "viewers/common/tree_transformer";
 import { TreeUtils, FilterType } from "common/utils/tree_utils";
+import { TraceTreeNode } from "common/trace/trace_tree_node";
+import { ImeLayers, ImeUtils, ProcessedWindowManagerState } from "viewers/common/ime_utils";
+import { ImeAdditionalProperties } from "viewers/common/ime_additional_properties";
+import { TableProperties } from "viewers/common/table_properties";
 
-export type NotifyImeViewCallbackType = (uiData: ImeUiData) => void;
+type NotifyImeViewCallbackType = (uiData: ImeUiData) => void;
 
-export class ImePresenter {
+export abstract class PresenterInputMethod {
   constructor(
     notifyViewCallback: NotifyImeViewCallbackType,
     dependencies: Array<TraceType>
@@ -83,7 +87,20 @@ export class ImePresenter {
   }
 
   public newPropertiesTree(selectedItem: HierarchyTreeNode) {
+    this.additionalPropertyEntry = null;
     this.selectedHierarchyTree = selectedItem;
+    this.updateSelectedTreeUiData();
+  }
+
+  public newAdditionalPropertiesTree(selectedItem: any) {
+    this.selectedHierarchyTree = new HierarchyTreeNode(selectedItem.name, "AdditionalProperty", "AdditionalProperty");
+    this.additionalPropertyEntry = {
+      name: selectedItem.name,
+      kind: "AdditionalProperty",
+      children: [],
+      stableId: "AdditionalProperty",
+      proto: selectedItem.proto,
+    };
     this.updateSelectedTreeUiData();
   }
 
@@ -92,25 +109,49 @@ export class ImePresenter {
     this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
     this.uiData.propertiesUserOptions = this.propertiesUserOptions;
 
-    const imeEntries = entries.get(this.dependencies[0]);
-    if (imeEntries) {
-      this.entry = imeEntries[0];
-      if (this.entry) {
-        this.uiData.highlightedItems = this.highlightedItems;
-        this.uiData.tree = this.generateTree();
-      }
+    const imEntries = entries.get(this.dependencies[0]);
+    if (imEntries && imEntries[0]) {
+      this.entry = imEntries[0];
+      this.uiData.highlightedItems = this.highlightedItems;
+
+      const wmEntries = entries.get(TraceType.WINDOW_MANAGER);
+      const sfEntries = entries.get(TraceType.SURFACE_FLINGER);
+
+      this.uiData.additionalProperties = this.getAdditionalProperties(
+        wmEntries ? wmEntries[0] : undefined,
+        sfEntries ? sfEntries[0] : undefined
+      );
+
+      this.uiData.tree = this.generateTree();
+      this.uiData.hierarchyTableProperties = this.updateHierarchyTableProperties();
     }
     this.notifyViewCallback(this.uiData);
   }
 
-  private updateSelectedTreeUiData() {
-    if (this.selectedHierarchyTree) {
-      this.uiData.propertiesTree = this.getTreeWithTransformedProperties(this.selectedHierarchyTree);
+  protected getAdditionalProperties(wmEntry: TraceTreeNode | undefined, sfEntry: TraceTreeNode | undefined) {
+    let wmProperties: ProcessedWindowManagerState | undefined;
+    let sfProperties: ImeLayers | undefined;
+    let sfSubtrees: any[];
+    if (wmEntry) {
+      wmProperties = ImeUtils.processWindowManagerTraceEntry(wmEntry);
+      sfProperties = ImeUtils.getImeLayers(sfEntry, wmProperties);
+      sfSubtrees = [sfProperties?.taskOfImeContainer, sfProperties?.taskOfImeSnapshot]
+        .filter((node) => node) // filter away null values
+        .map((node) => {
+          node.kind = "SF subtree - " + node.id;
+          return node;
+        });
+      this.entry?.children.push(...sfSubtrees);
     }
-    this.notifyViewCallback(this.uiData);
+
+    return new ImeAdditionalProperties(
+      wmProperties,
+      sfProperties,
+    );
   }
 
-  private generateTree() {
+
+  protected generateTree() {
     if (!this.entry) {
       return null;
     }
@@ -126,6 +167,12 @@ export class ImePresenter {
     return tree;
   }
 
+  private updateSelectedTreeUiData() {
+    if (this.selectedHierarchyTree) {
+      this.uiData.propertiesTree = this.getTreeWithTransformedProperties(this.selectedHierarchyTree);
+    }
+    this.notifyViewCallback(this.uiData);
+  }
   private updatePinnedIds(newId: string) {
     if (this.pinnedIds.includes(newId)) {
       this.pinnedIds = this.pinnedIds.filter(pinned => pinned != newId);
@@ -136,24 +183,27 @@ export class ImePresenter {
 
   private getTreeWithTransformedProperties(selectedTree: HierarchyTreeNode): PropertiesTreeNode {
     const transformer = new TreeTransformer(selectedTree, this.propertiesFilter)
+      .setOnlyProtoDump(this.additionalPropertyEntry != null)
       .setIsShowDefaults(this.propertiesUserOptions["showDefaults"]?.enabled)
       .setTransformerOptions({skip: selectedTree.skip})
-      .setProperties(this.entry);
+      .setProperties(this.additionalPropertyEntry ?? this.entry);
     const transformedTree = transformer.transform();
     return transformedTree;
   }
 
-  readonly notifyViewCallback: NotifyImeViewCallbackType;
-  readonly dependencies: Array<TraceType>;
-  uiData: ImeUiData;
   private hierarchyFilter: FilterType = TreeUtils.makeNodeFilter("");
   private propertiesFilter: FilterType = TreeUtils.makeNodeFilter("");
-  private highlightedItems: Array<string> = [];
   private pinnedItems: Array<HierarchyTreeNode> = [];
   private pinnedIds: Array<string> = [];
   private selectedHierarchyTree: HierarchyTreeNode | null = null;
-  private entry: any = null;
-  private hierarchyUserOptions: UserOptions = {
+
+  readonly notifyViewCallback: NotifyImeViewCallbackType;
+  protected readonly dependencies: Array<TraceType>;
+  protected uiData: ImeUiData;
+  protected highlightedItems: Array<string> = [];
+  protected entry: TraceTreeNode | null  = null;
+  protected additionalPropertyEntry: TraceTreeNode | null = null;
+  protected hierarchyUserOptions: UserOptions = {
     simplifyNames: {
       name: "Simplify names",
       enabled: true
@@ -167,8 +217,7 @@ export class ImePresenter {
       enabled: false
     }
   };
-
-  private propertiesUserOptions: UserOptions = {
+  protected propertiesUserOptions: UserOptions = {
     showDefaults: {
       name: "Show defaults",
       enabled: true,
@@ -179,4 +228,6 @@ export class ImePresenter {
               `
     },
   };
+
+  protected abstract updateHierarchyTableProperties(): TableProperties;
 }

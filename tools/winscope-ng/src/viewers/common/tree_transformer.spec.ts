@@ -109,7 +109,7 @@ describe("TreeTransformer", () => {
 
     const filter = TreeUtils.makeNodeFilter("");
     const transformer = new TreeTransformer(selectedTree, filter)
-      .showOnlyProtoDump()
+      .setOnlyProtoDump(true)
       .setProperties(entry);
 
     const transformedTree = transformer.transform();
@@ -151,7 +151,7 @@ describe("TreeTransformer", () => {
     const filter = TreeUtils.makeNodeFilter("");
     const transformer = new TreeTransformer(selectedTree, filter)
       .setIsShowDiff(true)
-      .showOnlyProtoDump()
+      .setOnlyProtoDump(true)
       .setProperties(entry)
       .setDiffProperties(null);
 

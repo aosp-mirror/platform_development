@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2022 The Android Open Source Project
  *
@@ -13,13 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export const ViewerEvents = {
-  HierarchyPinnedChange: "HierarchyPinnedChange",
-  HighlightedChange: "HighlightedChange",
-  HierarchyUserOptionsChange: "HierarchyUserOptionsChange",
-  HierarchyFilterChange: "HierarchyFilterChange",
-  SelectedTreeChange: "SelectedTreeChange",
-  PropertiesUserOptionsChange: "PropertiesUserOptionsChange",
-  PropertiesFilterChange: "PropertiesFilterChange",
-  AdditionalPropertySelected: "AdditionalPropertySelected"
-};
+import { PresenterInputMethod } from "viewers/common/presenter_input_method";
+
+export class PresenterInputMethodClients extends PresenterInputMethod {
+  protected updateHierarchyTableProperties() {
+    return {...new ImClientsTableProperties(
+      this.entry?.obj?.client?.inputMethodManager?.curId,
+      this.entry?.obj?.client?.editorInfo?.packageName,
+    )};
+  }
+}
+
+class ImClientsTableProperties {
+  constructor(
+    public inputMethodId: string | undefined,
+    public packageName: string | undefined,
+  ) {}
+}

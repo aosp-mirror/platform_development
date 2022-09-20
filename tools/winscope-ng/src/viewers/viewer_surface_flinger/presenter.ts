@@ -213,7 +213,7 @@ export class Presenter {
 
   private getTreeWithTransformedProperties(selectedTree: HierarchyTreeNode): PropertiesTreeNode {
     const transformer = new TreeTransformer(selectedTree, this.propertiesFilter)
-      .showOnlyProtoDump()
+      .setOnlyProtoDump(true)
       .setIsShowDefaults(this.propertiesUserOptions["showDefaults"]?.enabled)
       .setIsShowDiff(this.propertiesUserOptions["showDiff"]?.enabled)
       .setTransformerOptions({skip: selectedTree.skip})
