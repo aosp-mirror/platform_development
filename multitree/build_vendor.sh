@@ -24,19 +24,21 @@ Builds a vendor image for given product and analyze ninja inputs.
   -p  product name to build (e.g. cf_x86_64_phone)
   -r  directory for dist (e.g. out/dist)
   -i  build ID
+  -u  whether it is an unbundled build
   -h  display this help and exit
 
 EOF
   exit 1
 }
 
-while getopts d:p:r:i:h flag
+while getopts d:p:r:i:uh flag
 do
     case "${flag}" in
         d) device=${OPTARG};;
         p) product=${OPTARG};;
         r) dist_dir=${OPTARG};;
         i) build_id=${OPTARG};;
+        u) unbundled_build=true;;
         h) usage;;
         *) usage;;
     esac
@@ -47,20 +49,18 @@ if [[ -z "$device" || -z "$product" || -z "$dist_dir" || -z "$build_id" ]]; then
   usage
 fi
 
-export ALLOW_MISSING_DEPENDENCIES=true
+if [[ "$unbundled_build" = true ]]; then
+  export TARGET_BUILD_UNBUNDLED_IMAGE=true
+fi
 
-build/soong/soong_ui.bash --make-mode vendorimage collect_ninja_inputs \
+export ALLOW_MISSING_DEPENDENCIES=true
+export SKIP_VNDK_VARIANTS_CHECK=true
+export DIST_DIR=$dist_dir
+
+build/soong/soong_ui.bash --make-mode vendorimage collect_ninja_inputs dist \
   TARGET_PRODUCT=$product TARGET_BUILD_VARIANT=userdebug
 
-mkdir -p $dist_dir/soong
-
-for f in out/*.ninja out/soong/build.ninja; do
-  gzip -c $f > $dist_dir/${f#out/}.gz
-done
-
 cp out/target/product/$device/vendor.img $dist_dir
-
-mkdir -p $dist_dir/logs
 
 out/host/linux-x86/bin/collect_ninja_inputs -n prebuilts/build-tools/linux-x86/bin/ninja \
   -f out/combined-$product.ninja -t vendorimage -m $dist_dir/manifest_$build_id.xml \

@@ -19,6 +19,7 @@
 #include <iosfwd>
 #include <map>
 #include <string>
+#include <vector>
 
 
 namespace header_checker {
@@ -48,6 +49,10 @@ class ConfigSection {
     return it->second;
   }
 
+  const std::vector<std::string> &GetIgnoredLinkerSetKeys() const {
+    return ignored_linker_set_keys_;
+  }
+
   bool operator[](const std::string &name) const { return GetProperty(name); }
 
   const_iterator begin() const { return map_.begin(); }
@@ -61,6 +66,7 @@ class ConfigSection {
 
  private:
   MapType map_;
+  std::vector<std::string> ignored_linker_set_keys_;
 
   friend class ConfigFile;
 };
