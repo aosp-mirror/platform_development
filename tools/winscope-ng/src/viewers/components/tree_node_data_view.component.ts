@@ -15,7 +15,7 @@
  */
 import { Component, Input } from "@angular/core";
 import { treeNodeDataViewStyles } from "viewers/components/styles/tree_node_data_view.styles";
-import { Terminal, HierarchyTree, Tree } from "viewers/common/tree_utils";
+import { Terminal, HierarchyTreeNode, UiTreeNode } from "viewers/common/tree_utils";
 import Chip from "viewers/common/chip";
 
 @Component({
@@ -37,14 +37,14 @@ import Chip from "viewers/common/chip";
 })
 
 export class TreeNodeDataViewComponent {
-  @Input() item!: Tree;
+  @Input() item!: UiTreeNode;
 
   public chips() {
-    return (this.item instanceof HierarchyTree) ? this.item.chips : [];
+    return (this.item instanceof HierarchyTreeNode) ? this.item.chips : [];
   }
 
   public itemShortName() {
-    return (this.item instanceof HierarchyTree)? this.item.shortName : "";
+    return (this.item instanceof HierarchyTreeNode)? this.item.shortName : "";
   }
 
   public itemTooltip() {
@@ -55,7 +55,7 @@ export class TreeNodeDataViewComponent {
   }
 
   public showShortName() {
-    return (this.item instanceof HierarchyTree) && this.item.simplifyNames && this.item.shortName !== this.item.name;
+    return (this.item instanceof HierarchyTreeNode) && this.item.simplifyNames && this.item.shortName !== this.item.name;
   }
 
   public chipClass(chip: Chip) {

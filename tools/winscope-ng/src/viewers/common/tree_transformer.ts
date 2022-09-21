@@ -17,11 +17,11 @@ import ObjectFormatter from "common/trace/flickerlib/ObjectFormatter";
 
 import {
   FilterType,
-  PropertiesTree,
+  PropertiesTreeNode,
   DiffType,
   Terminal,
-  TreeFlickerItem,
-  HierarchyTree,
+  TreeNodeTrace,
+  HierarchyTreeNode,
   PropertiesDump
 } from "./tree_utils";
 
@@ -49,7 +49,7 @@ export class TreeTransformer {
     keepOriginal: false, freeze: true, metadataKey: null,
   };
 
-  constructor(selectedTree: HierarchyTree, filter: FilterType) {
+  constructor(selectedTree: HierarchyTreeNode, filter: FilterType) {
     this.stableId = this.compatibleStableId(selectedTree);
     this.rootName = selectedTree.name;
     this.filter = filter;
@@ -79,7 +79,7 @@ export class TreeTransformer {
     return this;
   }
 
-  public setProperties(currentEntry: TreeFlickerItem): TreeTransformer {
+  public setProperties(currentEntry: TreeNodeTrace): TreeTransformer {
     const currFlickerItem = this.getOriginalFlickerItem(currentEntry, this.stableId);
     const target = currFlickerItem ? currFlickerItem.obj ?? currFlickerItem : null;
     ObjectFormatter.displayDefaults = this.isShowDefaults;
@@ -87,7 +87,7 @@ export class TreeTransformer {
     return this;
   }
 
-  public setDiffProperties(previousEntry: TreeFlickerItem  | null): TreeTransformer {
+  public setDiffProperties(previousEntry: TreeNodeTrace  | null): TreeTransformer {
     if (this.isShowDiff) {
       const prevFlickerItem = this.findFlickerItem(previousEntry, this.stableId);
       const target = prevFlickerItem ? prevFlickerItem.obj ?? prevFlickerItem : null;
@@ -96,11 +96,11 @@ export class TreeTransformer {
     return this;
   }
 
-  public getOriginalFlickerItem(entry: TreeFlickerItem, stableId: string): TreeFlickerItem  | null {
+  public getOriginalFlickerItem(entry: TreeNodeTrace, stableId: string): TreeNodeTrace  | null {
     return this.findFlickerItem(entry, stableId);
   }
 
-  private getProtoDumpPropertiesForDisplay(entry: TreeFlickerItem): PropertiesDump | null {
+  private getProtoDumpPropertiesForDisplay(entry: TreeNodeTrace): PropertiesDump | null {
     if (!entry) {
       return null;
     }
@@ -120,7 +120,7 @@ export class TreeTransformer {
     return obj;
   }
 
-  private getPropertiesForDisplay(entry: TreeFlickerItem): PropertiesDump | null {
+  private getPropertiesForDisplay(entry: TreeNodeTrace): PropertiesDump | null {
     if (!entry) {
       return null;
     }
@@ -155,7 +155,7 @@ export class TreeTransformer {
     return obj;
   }
 
-  private findFlickerItem(entryFlickerItem: TreeFlickerItem | null, stableId: string): TreeFlickerItem | null {
+  private findFlickerItem(entryFlickerItem: TreeNodeTrace | null, stableId: string): TreeNodeTrace | null {
     if (!entryFlickerItem) {
       return null;
     }
@@ -179,7 +179,7 @@ export class TreeTransformer {
   }
 
 
-  public transform(): PropertiesTree {
+  public transform(): PropertiesTreeNode {
     const {formatter} = this.options!;
     if (!formatter) {
       throw new Error("Missing formatter, please set with setOptions()");
@@ -198,7 +198,7 @@ export class TreeTransformer {
     compareWithName: string | Terminal,
     stableId: string,
     transformOptions: TransformOptions,
-  ): PropertiesTree {
+  ): PropertiesTreeNode {
     const originalProperties = properties;
     const metadata = this.getMetadata(
       originalProperties, transformOptions.metadataKey
@@ -305,7 +305,7 @@ export class TreeTransformer {
     return transformOptions.freeze ? Object.freeze(transformedProperties) : transformedProperties;
   }
 
-  private hasChildMatchingFilter(children: PropertiesTree[] | null | undefined): boolean {
+  private hasChildMatchingFilter(children: PropertiesTreeNode[] | null | undefined): boolean {
     if (!children || children.length === 0) return false;
 
     let match = false;
@@ -350,9 +350,9 @@ export class TreeTransformer {
     return this.filter(item) ?? false;
   }
 
-  private transformProperties(properties: PropertiesDump, metadataKey: string | null): PropertiesTree {
+  private transformProperties(properties: PropertiesDump, metadataKey: string | null): PropertiesTreeNode {
     const {skip, formatter} = this.options!;
-    const transformedProperties: PropertiesTree = {
+    const transformedProperties: PropertiesTreeNode = {
       properties: {},
     };
     let formatted = undefined;
@@ -399,7 +399,7 @@ export class TreeTransformer {
     }
   }
 
-  private compatibleStableId(item: HierarchyTree): string {
+  private compatibleStableId(item: HierarchyTreeNode): string {
     // For backwards compatibility
     // (the only item that doesn't have a unique stable ID in the tree)
     if (item.stableId === "winToken|-|") {

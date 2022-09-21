@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { HierarchyTree, PropertiesTree } from "viewers/common/tree_utils";
+import { HierarchyTreeNode, PropertiesTreeNode } from "viewers/common/tree_utils";
 import { UserOptions } from "viewers/common/user_options";
 import { TraceType } from "common/trace/trace_type";
 import { Rectangle } from "viewers/common/rectangle";
@@ -23,9 +23,9 @@ export class UiData {
   rects: Rectangle[] = [];
   displayIds: number[] = [];
   highlightedItems: Array<string> = [];
-  pinnedItems: Array<HierarchyTree> = [];
+  pinnedItems: Array<HierarchyTreeNode> = [];
   hierarchyUserOptions: UserOptions = {};
   propertiesUserOptions: UserOptions = {};
-  tree: HierarchyTree | null = null;
-  propertiesTree: PropertiesTree | null = null;
+  tree: HierarchyTreeNode | null = null;
+  propertiesTree: PropertiesTreeNode | null = null;
 }

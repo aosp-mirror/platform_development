@@ -18,7 +18,7 @@ import { UiData } from "./ui_data";
 import { UserOptions } from "viewers/common/user_options";
 import { TraceType } from "common/trace/trace_type";
 import { LayerTraceEntry } from "common/trace/flickerlib/common";
-import { HierarchyTree, PropertiesTree } from "viewers/common/tree_utils";
+import { HierarchyTreeNode, PropertiesTreeNode } from "viewers/common/tree_utils";
 import { UnitTestUtils } from "test/unit/utils";
 import { HierarchyTreeBuilder } from "test/unit/hierarchy_tree_builder";
 
@@ -26,7 +26,7 @@ describe("PresenterSurfaceFlinger", () => {
   let presenter: Presenter;
   let uiData: UiData;
   let entries: Map<TraceType, any>;
-  let selectedTree: HierarchyTree;
+  let selectedTree: HierarchyTreeNode;
 
   beforeAll(async () => {
     entries = new Map<TraceType, any>();
@@ -182,14 +182,14 @@ describe("PresenterSurfaceFlinger", () => {
     presenter.notifyCurrentTraceEntries(entries);
     presenter.newPropertiesTree(selectedTree);
     let nonTerminalChildren = uiData.propertiesTree?.children?.filter(
-      (child: PropertiesTree) => typeof child.propertyKey === "string"
+      (child: PropertiesTreeNode) => typeof child.propertyKey === "string"
     ) ?? [];
 
     expect(nonTerminalChildren.length).toEqual(55);
     presenter.filterPropertiesTree("bound");
 
     nonTerminalChildren = uiData.propertiesTree?.children?.filter(
-      (child: PropertiesTree) => typeof child.propertyKey === "string"
+      (child: PropertiesTreeNode) => typeof child.propertyKey === "string"
     ) ?? [];
     expect(nonTerminalChildren.length).toEqual(3);
   });
