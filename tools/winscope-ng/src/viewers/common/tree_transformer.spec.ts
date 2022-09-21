@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 import { TreeTransformer } from "viewers/common/tree_transformer";
-import { DiffType, getFilter, HierarchyTree, Terminal, TreeFlickerItem } from "viewers/common/tree_utils";
+import { TreeUtils, DiffType, HierarchyTreeNode, Terminal, TreeNodeTrace } from "viewers/common/tree_utils";
 
 describe("TreeTransformer", () => {
-  let entry: TreeFlickerItem;
-  let selectedTree: HierarchyTree;
+  let entry: TreeNodeTrace;
+  let selectedTree: HierarchyTreeNode;
   beforeAll(async () => {
     entry = {
       id: 3,
@@ -34,10 +34,12 @@ describe("TreeTransformer", () => {
         type: "ContainerLayer",
       },
       chips: [],
+      parent: undefined,
       children: [{
         id: 2,
         name: "Child2",
         stackId: 0,
+        parent: undefined,
         children: [],
         kind: "2",
         stableId: "2 Child2",
@@ -104,7 +106,7 @@ describe("TreeTransformer", () => {
       propertyValue: null
     };
 
-    const filter = getFilter("");
+    const filter = TreeUtils.makeNodeFilter("");
     const transformer = new TreeTransformer(selectedTree, filter)
       .showOnlyProtoDump()
       .setProperties(entry);
@@ -145,7 +147,7 @@ describe("TreeTransformer", () => {
       propertyValue: null,
     };
 
-    const filter = getFilter("");
+    const filter = TreeUtils.makeNodeFilter("");
     const transformer = new TreeTransformer(selectedTree, filter)
       .setIsShowDiff(true)
       .showOnlyProtoDump()

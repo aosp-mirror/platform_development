@@ -15,7 +15,7 @@
  */
 import { Component, Input, Output, EventEmitter } from "@angular/core";
 import { nodeInnerItemStyles } from "viewers/components/styles/node.styles";
-import { Tree, DiffType, isParentNode, HierarchyTree } from "viewers/common/tree_utils";
+import { TreeUtils, UiTreeNode, DiffType, HierarchyTreeNode } from "viewers/common/tree_utils";
 
 @Component({
   selector: "tree-node",
@@ -76,7 +76,7 @@ import { Tree, DiffType, isParentNode, HierarchyTree } from "viewers/common/tree
 })
 
 export class TreeNodeComponent {
-  @Input() item!: Tree;
+  @Input() item!: UiTreeNode;
   @Input() isLeaf?: boolean;
   @Input() flattened?: boolean;
   @Input() isCollapsed?: boolean;
@@ -87,7 +87,7 @@ export class TreeNodeComponent {
 
   @Output() toggleTreeChange = new EventEmitter<void>();
   @Output() expandTreeChange = new EventEmitter<boolean>();
-  @Output() pinNodeChange = new EventEmitter<Tree>();
+  @Output() pinNodeChange = new EventEmitter<UiTreeNode>();
 
   collapseDiffClass = "";
 
@@ -96,11 +96,11 @@ export class TreeNodeComponent {
   }
 
   public isPropertiesTreeNode() {
-    return !(this.item instanceof HierarchyTree);
+    return !(this.item instanceof HierarchyTreeNode);
   }
 
   public showPinNodeIcon() {
-    return (!this.isPropertiesTreeNode() && !isParentNode(this.item.kind ?? "")) ?? false;
+    return (!this.isPropertiesTreeNode() && !TreeUtils.isParentNode(this.item.kind ?? "")) ?? false;
   }
 
   public toggleTree(event: MouseEvent) {
@@ -148,7 +148,7 @@ export class TreeNodeComponent {
     return DiffType.MODIFIED;
   }
 
-  private getAllDiffTypesOfChildren(item: Tree) {
+  private getAllDiffTypesOfChildren(item: UiTreeNode) {
     if (!item.children) {
       return new Set();
     }

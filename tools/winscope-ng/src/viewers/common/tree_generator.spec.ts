@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { DiffType, getFilter, HierarchyTree, TreeFlickerItem } from "viewers/common/tree_utils";
+import { TreeUtils, DiffType, HierarchyTreeNode, TreeNodeTrace } from "viewers/common/tree_utils";
 import { TreeGenerator } from "viewers/common/tree_generator";
 import { HierarchyTreeBuilder } from "test/unit/hierarchy_tree_builder";
 
 describe("TreeGenerator", () => {
-  let entry: TreeFlickerItem;
+  let entry: TreeNodeTrace;
   beforeAll(async () => {
     entry = {
       kind: "entry",
@@ -26,44 +26,47 @@ describe("TreeGenerator", () => {
       stableId: "BaseLayerTraceEntry",
       id: 0,
       chips: [],
+      parent: undefined,
       children: [{
         kind: "3",
         id: 3,
         name: "Child1",
         stableId: "3 Child1",
+        parent: undefined,
         children: [
           {
             kind: "2",
             id: 2,
             name: "Child2",
             stableId: "2 Child2",
-            children: []
+            parent: undefined,
+            children: [],
           }
         ]}]
     };
   });
   it("generates tree", () => {
-    const expected: HierarchyTree = new HierarchyTreeBuilder().setName("BaseLayerTraceEntry").setKind("entry").setStableId("BaseLayerTraceEntry")
+    const expected: HierarchyTreeNode = new HierarchyTreeBuilder().setName("BaseLayerTraceEntry").setKind("entry").setStableId("BaseLayerTraceEntry")
       .setChildren([
         new HierarchyTreeBuilder().setName("Child1").setStableId("3 Child1").setKind("3").setChildren([
           new HierarchyTreeBuilder().setName("Child2").setStableId("2 Child2").setKind("2").setId(2).build()
         ]).setId(3).build()
       ]).setId(0).build();
 
-    const filter = getFilter("");
+    const filter = TreeUtils.makeNodeFilter("");
     const generator = new TreeGenerator(entry, filter);
     expect(generator.generateTree()).toEqual(expected);
   });
 
   it("generates diff tree with no diff", () => {
-    const expected: HierarchyTree = new HierarchyTreeBuilder().setName("BaseLayerTraceEntry").setKind("entry").setStableId("BaseLayerTraceEntry")
+    const expected: HierarchyTreeNode = new HierarchyTreeBuilder().setName("BaseLayerTraceEntry").setKind("entry").setStableId("BaseLayerTraceEntry")
       .setChildren([
         new HierarchyTreeBuilder().setName("Child1").setStableId("3 Child1").setKind("3").setChildren([
           new HierarchyTreeBuilder().setName("Child2").setStableId("2 Child2").setKind("2").setId(2).setDiffType(DiffType.NONE).build()
         ]).setId(3).setDiffType(DiffType.NONE).build()
       ]).setId(0).setDiffType(DiffType.NONE).build();
 
-    const filter = getFilter("");
+    const filter = TreeUtils.makeNodeFilter("");
     const tree = new TreeGenerator(entry, filter).withUniqueNodeId((node: any) => {
       if (node) return node.stableId;
       else return null;
@@ -72,19 +75,20 @@ describe("TreeGenerator", () => {
   });
 
   it("generates diff tree with moved node", () => {
-    const prevEntry: TreeFlickerItem = {
+    const prevEntry: TreeNodeTrace = {
       kind: "entry",
       name: "BaseLayerTraceEntry",
       stableId: "BaseLayerTraceEntry",
       chips: [],
       id: 0,
-
+      parent: undefined,
       children: [
         {
           kind: "3",
           id: 3,
           stableId: "3 Child1",
           name: "Child1",
+          parent: undefined,
           children: []
         },
         {
@@ -92,12 +96,13 @@ describe("TreeGenerator", () => {
           id: 2,
           stableId: "2 Child2",
           name: "Child2",
+          parent: undefined,
           children: [],
         }
       ]
     };
 
-    const expected: HierarchyTree = new HierarchyTreeBuilder().setName("BaseLayerTraceEntry").setKind("entry").setStableId("BaseLayerTraceEntry")
+    const expected: HierarchyTreeNode = new HierarchyTreeBuilder().setName("BaseLayerTraceEntry").setKind("entry").setStableId("BaseLayerTraceEntry")
       .setChildren([
         new HierarchyTreeBuilder().setName("Child1").setStableId("3 Child1").setKind("3").setChildren([
           new HierarchyTreeBuilder().setName("Child2").setStableId("2 Child2").setKind("2").setId(2).setDiffType(DiffType.ADDED_MOVE).build()
@@ -105,7 +110,7 @@ describe("TreeGenerator", () => {
         new HierarchyTreeBuilder().setName("Child2").setStableId("2 Child2").setKind("2").setId(2).setDiffType(DiffType.DELETED_MOVE).build()
       ]).setId(0).setDiffType(DiffType.NONE).build();
 
-    const filter = getFilter("");
+    const filter = TreeUtils.makeNodeFilter("");
     const generator = new TreeGenerator(entry, filter);
     const newDiffTree = generator.withUniqueNodeId((node: any) => {
       if (node) return node.stableId;

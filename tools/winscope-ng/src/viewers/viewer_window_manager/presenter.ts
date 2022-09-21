@@ -17,7 +17,7 @@ import { UiData } from "./ui_data";
 import { Rectangle, RectMatrix, RectTransform } from "viewers/common/rectangle";
 import { TraceType } from "common/trace/trace_type";
 import { UserOptions } from "viewers/common/user_options";
-import { getFilter, FilterType, Tree, HierarchyTree, PropertiesTree, TreeFlickerItem } from "viewers/common/tree_utils";
+import { TreeUtils, FilterType, HierarchyTreeNode, PropertiesTreeNode, TreeNodeTrace } from "viewers/common/tree_utils";
 import { TreeGenerator } from "viewers/common/tree_generator";
 import { TreeTransformer } from "viewers/common/tree_transformer";
 import DisplayContent from "common/trace/flickerlib/windows/DisplayContent";
@@ -31,7 +31,7 @@ export class Presenter {
     this.notifyViewCallback(this.uiData);
   }
 
-  public updatePinnedItems(pinnedItem: HierarchyTree) {
+  public updatePinnedItems(pinnedItem: HierarchyTreeNode) {
     const pinnedId = `${pinnedItem.id}`;
     if (this.pinnedItems.map(item => `${item.id}`).includes(pinnedId)) {
       this.pinnedItems = this.pinnedItems.filter(pinned => `${pinned.id}` != pinnedId);
@@ -62,7 +62,7 @@ export class Presenter {
   }
 
   public filterHierarchyTree(filterString: string) {
-    this.hierarchyFilter = getFilter(filterString);
+    this.hierarchyFilter = TreeUtils.makeNodeFilter(filterString);
     this.uiData.tree = this.generateTree();
     this.notifyViewCallback(this.uiData);
   }
@@ -74,11 +74,11 @@ export class Presenter {
   }
 
   public filterPropertiesTree(filterString: string) {
-    this.propertiesFilter = getFilter(filterString);
+    this.propertiesFilter = TreeUtils.makeNodeFilter(filterString);
     this.updateSelectedTreeUiData();
   }
 
-  public newPropertiesTree(selectedTree: HierarchyTree) {
+  public newPropertiesTree(selectedTree: HierarchyTreeNode) {
     this.selectedHierarchyTree = selectedTree;
     this.updateSelectedTreeUiData();
   }
@@ -143,7 +143,7 @@ export class Presenter {
       .setIsSimplifyNames(this.hierarchyUserOptions["simplifyNames"]?.enabled)
       .setIsFlatView(this.hierarchyUserOptions["flat"]?.enabled)
       .withUniqueNodeId();
-    let tree: HierarchyTree | null;
+    let tree: HierarchyTreeNode | null;
     if (!this.hierarchyUserOptions["showDiff"]?.enabled) {
       tree = generator.generateTree();
     } else {
@@ -208,7 +208,7 @@ export class Presenter {
     }
   }
 
-  private getTreeWithTransformedProperties(selectedTree: HierarchyTree): PropertiesTree {
+  private getTreeWithTransformedProperties(selectedTree: HierarchyTreeNode): PropertiesTreeNode {
     if (!this.entry) {
       return {};
     }
@@ -225,15 +225,15 @@ export class Presenter {
 
   private readonly notifyViewCallback: NotifyViewCallbackType;
   private uiData: UiData;
-  private hierarchyFilter: FilterType = getFilter("");
-  private propertiesFilter: FilterType = getFilter("");
+  private hierarchyFilter: FilterType = TreeUtils.makeNodeFilter("");
+  private propertiesFilter: FilterType = TreeUtils.makeNodeFilter("");
   private highlightedItems: Array<string> = [];
   private displayIds: Array<number> = [];
-  private pinnedItems: Array<HierarchyTree> = [];
+  private pinnedItems: Array<HierarchyTreeNode> = [];
   private pinnedIds: Array<string> = [];
-  private selectedHierarchyTree: HierarchyTree | null = null;
-  private previousEntry: TreeFlickerItem | null = null;
-  private entry: TreeFlickerItem | null = null;
+  private selectedHierarchyTree: HierarchyTreeNode | null = null;
+  private previousEntry: TreeNodeTrace | null = null;
+  private entry: TreeNodeTrace | null = null;
   private hierarchyUserOptions: UserOptions = {
     showDiff: {
       name: "Show diff",

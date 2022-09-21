@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { HierarchyTree } from "viewers/common/tree_utils";
+import { HierarchyTreeNode } from "viewers/common/tree_utils";
 import Chip from "viewers/common/chip";
 
 class HierarchyTreeBuilder {
   stableId = "";
   name = "";
   kind = "";
-  children: HierarchyTree[] = [];
+  children: HierarchyTreeNode[] = [];
   shortName?: string;
   type?: string;
   id?: string | number;
@@ -76,7 +76,7 @@ class HierarchyTreeBuilder {
     return this;
   }
 
-  setChildren(children: HierarchyTree[]) {
+  setChildren(children: HierarchyTreeNode[]) {
     this.children = children;
     return this;
   }
@@ -116,8 +116,8 @@ class HierarchyTreeBuilder {
     return this;
   }
 
-  build(): HierarchyTree {
-    const node = new HierarchyTree(this.name, this.kind, this.stableId, this.children);
+  build(): HierarchyTreeNode {
+    const node = new HierarchyTreeNode(this.name, this.kind, this.stableId, this.children);
 
     node.chips = this.chips;
     node.showInFilteredView = this.showInFilteredView;
