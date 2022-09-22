@@ -204,6 +204,7 @@ DiffStatus AbiDiffHelper::CompareEnumTypes(
   }
   auto enum_type_diff_ir = std::make_unique<EnumTypeDiffIR>();
   enum_type_diff_ir->SetName(old_type->GetName());
+  enum_type_diff_ir->SetLinkerSetKey(old_type->GetLinkerSetKey());
   const std::string &old_underlying_type =
       ConvertTypeIdToString(old_types_, old_type->GetUnderlyingType());
   const std::string &new_underlying_type =
@@ -555,6 +556,7 @@ DiffStatus AbiDiffHelper::CompareRecordTypes(
   }
   DiffStatus final_diff_status = DiffStatus::no_diff;
   record_type_diff_ir->SetName(old_type->GetName());
+  record_type_diff_ir->SetLinkerSetKey(old_type->GetLinkerSetKey());
   if (IsAccessDownGraded(old_type->GetAccess(), new_type->GetAccess())) {
     final_diff_status = DiffStatus::indirect_diff;
     record_type_diff_ir->SetAccessDiff(
