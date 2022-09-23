@@ -130,7 +130,6 @@ function addAttributes(entry: WindowState, proto: any) {
     entry.rect.label = entry.name;
     entry.proto = proto;
     entry.shortName = shortenName(entry.name);
-    entry.chips = [];
 }
 
 export default WindowState

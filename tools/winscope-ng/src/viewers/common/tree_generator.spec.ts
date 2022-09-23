@@ -27,7 +27,6 @@ describe("TreeGenerator", () => {
       name: "BaseLayerTraceEntry",
       stableId: "BaseLayerTraceEntry",
       id: 0,
-      chips: [],
       parent: undefined,
       children: [{
         kind: "3",
@@ -81,7 +80,6 @@ describe("TreeGenerator", () => {
       kind: "entry",
       name: "BaseLayerTraceEntry",
       stableId: "BaseLayerTraceEntry",
-      chips: [],
       id: 0,
       parent: undefined,
       children: [
