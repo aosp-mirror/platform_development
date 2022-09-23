@@ -15,7 +15,7 @@
  */
 import { Component, Input } from "@angular/core";
 import { treeNodeDataViewStyles } from "viewers/components/styles/tree_node_data_view.styles";
-import { Terminal, HierarchyTreeNode, UiTreeNode } from "viewers/common/tree_utils";
+import { Terminal, HierarchyTreeNode, UiTreeNode } from "viewers/common/ui_tree_utils";
 import Chip from "viewers/common/chip";
 
 @Component({
