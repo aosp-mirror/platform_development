@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 import ObjectFormatter from "common/trace/flickerlib/ObjectFormatter";
+import {TraceTreeNode} from "common/trace/trace_tree_node";
+import {TreeNode, FilterType} from "common/utils/tree_utils";
 
 import {
-  FilterType,
   PropertiesTreeNode,
   DiffType,
   Terminal,
-  TreeNodeTrace,
   HierarchyTreeNode,
   PropertiesDump
-} from "./tree_utils";
+} from "./ui_tree_utils";
 
 interface TransformOptions {
   freeze: boolean;
@@ -79,7 +79,7 @@ export class TreeTransformer {
     return this;
   }
 
-  public setProperties(currentEntry: TreeNodeTrace): TreeTransformer {
+  public setProperties(currentEntry: TraceTreeNode): TreeTransformer {
     const currFlickerItem = this.getOriginalFlickerItem(currentEntry, this.stableId);
     const target = currFlickerItem ? currFlickerItem.obj ?? currFlickerItem : null;
     ObjectFormatter.displayDefaults = this.isShowDefaults;
@@ -87,7 +87,7 @@ export class TreeTransformer {
     return this;
   }
 
-  public setDiffProperties(previousEntry: TreeNodeTrace  | null): TreeTransformer {
+  public setDiffProperties(previousEntry: TraceTreeNode  | null): TreeTransformer {
     if (this.isShowDiff) {
       const prevFlickerItem = this.findFlickerItem(previousEntry, this.stableId);
       const target = prevFlickerItem ? prevFlickerItem.obj ?? prevFlickerItem : null;
@@ -96,11 +96,11 @@ export class TreeTransformer {
     return this;
   }
 
-  public getOriginalFlickerItem(entry: TreeNodeTrace, stableId: string): TreeNodeTrace  | null {
+  public getOriginalFlickerItem(entry: TraceTreeNode, stableId: string): TraceTreeNode  | null {
     return this.findFlickerItem(entry, stableId);
   }
 
-  private getProtoDumpPropertiesForDisplay(entry: TreeNodeTrace): PropertiesDump | null {
+  private getProtoDumpPropertiesForDisplay(entry: TraceTreeNode): PropertiesDump | null {
     if (!entry) {
       return null;
     }
@@ -120,7 +120,7 @@ export class TreeTransformer {
     return obj;
   }
 
-  private getPropertiesForDisplay(entry: TreeNodeTrace): PropertiesDump | null {
+  private getPropertiesForDisplay(entry: TraceTreeNode): PropertiesDump | null {
     if (!entry) {
       return null;
     }
@@ -129,33 +129,37 @@ export class TreeTransformer {
 
     const properties = ObjectFormatter.getProperties(entry);
     properties.forEach(prop => {
-      if (entry.get) obj[prop] = entry.get(prop);
+      obj[prop] = entry[prop as keyof typeof entry];
     });
     if (obj["children"]) delete obj["children"];
     if (obj["proto"]) delete obj["proto"];
 
-    obj["proto"] = Object.assign({}, entry.proto);
-    if (obj["proto"].children) delete obj["proto"].children;
-    if (obj["proto"].childWindows) delete obj["proto"].childWindows;
-    if (obj["proto"].childrenWindows) delete obj["proto"].childrenWindows;
-    if (obj["proto"].childContainers) delete obj["proto"].childContainers;
-    if (obj["proto"].windowToken) delete obj["proto"].windowToken;
-    if (obj["proto"].rootDisplayArea) delete obj["proto"].rootDisplayArea;
-    if (obj["proto"].rootWindowContainer) delete obj["proto"].rootWindowContainer;
-    if (obj["proto"].windowContainer?.children) delete obj["proto"].windowContainer.children;
+    if (entry.proto) {
+      obj["proto"] = Object.assign({}, entry.proto);
+      if (obj["proto"].children) delete obj["proto"].children;
+      if (obj["proto"].childWindows) delete obj["proto"].childWindows;
+      if (obj["proto"].childrenWindows) delete obj["proto"].childrenWindows;
+      if (obj["proto"].childContainers) delete obj["proto"].childContainers;
+      if (obj["proto"].windowToken) delete obj["proto"].windowToken;
+      if (obj["proto"].rootDisplayArea) delete obj["proto"].rootDisplayArea;
+      if (obj["proto"].rootWindowContainer) delete obj["proto"].rootWindowContainer;
+      if (obj["proto"].windowContainer?.children) delete obj["proto"].windowContainer.children;
+    }
 
     obj = ObjectFormatter.format(obj);
 
-    Object.keys(obj["proto"]).forEach((prop: string) => {
-      if (Object.keys(obj["proto"][prop]).length === 0) {
-        obj["proto"][prop] = "empty";
-      }
-    });
+    if (obj["proto"]) {
+      Object.keys(obj["proto"]).forEach((prop: string) => {
+        if (Object.keys(obj["proto"][prop]).length === 0) {
+          obj["proto"][prop] = "empty";
+        }
+      });
+    }
 
     return obj;
   }
 
-  private findFlickerItem(entryFlickerItem: TreeNodeTrace | null, stableId: string): TreeNodeTrace | null {
+  private findFlickerItem(entryFlickerItem: TraceTreeNode | null, stableId: string): TraceTreeNode | null {
     if (!entryFlickerItem) {
       return null;
     }
@@ -347,7 +351,8 @@ export class TreeTransformer {
 
 
   private filterMatches(item: PropertiesDump | null): boolean {
-    return this.filter(item) ?? false;
+    //TODO: fix PropertiesDump type. What is it? Why does it declare only a "key" property and yet it is used as a TreeNode?
+    return this.filter(<TreeNode>item) ?? false;
   }
 
   private transformProperties(properties: PropertiesDump, metadataKey: string | null): PropertiesTreeNode {

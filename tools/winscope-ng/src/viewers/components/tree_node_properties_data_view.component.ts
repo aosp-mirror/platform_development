@@ -15,7 +15,7 @@
  */
 import { Component, Input } from "@angular/core";
 import { treeNodePropertiesDataViewStyles } from "viewers/components/styles/tree_node_data_view.styles";
-import { PropertiesTreeNode } from "viewers/common/tree_utils";
+import { PropertiesTreeNode } from "viewers/common/ui_tree_utils";
 
 @Component({
   selector: "tree-node-properties-data-view",

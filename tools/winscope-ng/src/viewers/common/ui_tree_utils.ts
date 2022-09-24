@@ -16,37 +16,7 @@
 
 import Chip from "./chip";
 
-export type FilterType = (item: HierarchyTreeNode | PropertiesTreeNode | null) => boolean;
-
 export type UiTreeNode = HierarchyTreeNode | PropertiesTreeNode;
-
-export interface TreeNodeTrace {
-  parent: TreeNodeTrace|undefined;
-  children: TreeNodeTrace[];
-  name: string;
-  kind: string;
-  stableId: string;
-  displays?: TreeNodeTrace[];
-  windowStates?: TreeNodeTrace[];
-  shortName?: string;
-  type?: string;
-  id?: string | number;
-  layerId?: number;
-  displayId?: number;
-  stackId?: number;
-  isVisible?: boolean;
-  isMissing?: boolean;
-  hwcCompositionType?: number;
-  zOrderRelativeOfId?: number;
-  isRootLayer?: boolean;
-  chips?: Chip[];
-  diffType?: string;
-  skip?: any;
-  equals?: any;
-  obj?: any;
-  get?: any;
-  proto?: any;
-}
 
 export class HierarchyTreeNode {
   constructor(
@@ -107,58 +77,8 @@ export const DiffType = {
 
 export class Terminal {}
 
-export class TreeUtils
+export class UiTreeUtils
 {
-  public static findDescendantNode(node: TreeNodeTrace, isTargetNode: FilterType): TreeNodeTrace|undefined {
-    if (isTargetNode(node)) {
-      return node;
-    }
-
-    for (const child of node.children) {
-      const target = this.findDescendantNode(child, isTargetNode);
-      if (target) {
-        return target;
-      }
-    }
-
-    return undefined;
-  }
-
-  public static findAncestorNode(node: TreeNodeTrace, isTargetNode: FilterType): TreeNodeTrace|undefined {
-    let ancestor = node.parent;
-
-    while (ancestor && !isTargetNode(ancestor)) {
-      ancestor = ancestor.parent;
-    }
-
-    return ancestor;
-  }
-
-  public static makeNodeFilter(filterString: string): FilterType {
-    const filterStrings = filterString.split(",");
-    const positive: any[] = [];
-    const negative: any[] = [];
-    filterStrings.forEach((f) => {
-      f = f.trim();
-      if (f.startsWith("!")) {
-        const regex = new RegExp(f.substring(1), "i");
-        negative.push((s: any) => !regex.test(s));
-      } else {
-        const regex = new RegExp(f, "i");
-        positive.push((s: any) => regex.test(s));
-      }
-    });
-    const filter = (item: any) => {
-      if (item) {
-        const apply = (f: any) => f(`${item.name}`);
-        return (positive.length === 0 || positive.some(apply)) &&
-          (negative.length === 0 || negative.every(apply));
-      }
-      return false;
-    };
-    return filter;
-  }
-
   public static diffClass(item: UiTreeNode): string {
     const diffType = item.diffType;
     return diffType ?? "";

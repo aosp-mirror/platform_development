@@ -16,7 +16,7 @@
 import { Component, Inject, Input, Output, ElementRef, EventEmitter } from "@angular/core";
 import { PersistentStore } from "common/persistent_store";
 import { nodeStyles, treeNodeDataViewStyles } from "viewers/components/styles/node.styles";
-import { TreeUtils, UiTreeNode, HierarchyTreeNode } from "viewers/common/tree_utils";
+import { UiTreeUtils, UiTreeNode, HierarchyTreeNode } from "viewers/common/ui_tree_utils";
 import { TraceType } from "common/trace/trace_type";
 
 @Component({
@@ -77,8 +77,8 @@ import { TraceType } from "common/trace/trace_type";
 })
 
 export class TreeComponent {
-  diffClass = TreeUtils.diffClass;
-  isHighlighted = TreeUtils.isHighlighted;
+  diffClass = UiTreeUtils.diffClass;
+  isHighlighted = UiTreeUtils.isHighlighted;
 
   @Input() item!: UiTreeNode;
   @Input() dependencies: Array<TraceType> = [];
@@ -123,7 +123,7 @@ export class TreeComponent {
   }
 
   ngOnChanges() {
-    if (this.item instanceof HierarchyTreeNode && TreeUtils.isHighlighted(this.item, this.highlightedItems)) {
+    if (this.item instanceof HierarchyTreeNode && UiTreeUtils.isHighlighted(this.item, this.highlightedItems)) {
       this.selectedTreeChange.emit(this.item);
     }
   }
@@ -216,7 +216,7 @@ export class TreeComponent {
   }
 
   public hasChildren() {
-    const isParentEntryInFlatView = TreeUtils.isParentNode(this.item.kind ?? "") && this.isFlattened;
+    const isParentEntryInFlatView = UiTreeUtils.isParentNode(this.item.kind ?? "") && this.isFlattened;
     return (!this.isFlattened || isParentEntryInFlatView) && !this.isLeaf(this.item);
   }
 

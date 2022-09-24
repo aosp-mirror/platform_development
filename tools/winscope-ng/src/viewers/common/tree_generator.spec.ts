@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { TreeUtils, DiffType, HierarchyTreeNode, TreeNodeTrace } from "viewers/common/tree_utils";
+import { TraceTreeNode } from "common/trace/trace_tree_node";
+import { TreeUtils } from "common/utils/tree_utils";
+import { DiffType, HierarchyTreeNode} from "viewers/common/ui_tree_utils";
 import { TreeGenerator } from "viewers/common/tree_generator";
 import { HierarchyTreeBuilder } from "test/unit/hierarchy_tree_builder";
 
 describe("TreeGenerator", () => {
-  let entry: TreeNodeTrace;
+  let entry: TraceTreeNode;
   beforeAll(async () => {
     entry = {
       kind: "entry",
@@ -75,7 +77,7 @@ describe("TreeGenerator", () => {
   });
 
   it("generates diff tree with moved node", () => {
-    const prevEntry: TreeNodeTrace = {
+    const prevEntry: TraceTreeNode = {
       kind: "entry",
       name: "BaseLayerTraceEntry",
       stableId: "BaseLayerTraceEntry",
