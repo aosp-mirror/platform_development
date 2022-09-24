@@ -15,7 +15,7 @@
  */
 import { Component, Input, Output, EventEmitter } from "@angular/core";
 import { nodeInnerItemStyles } from "viewers/components/styles/node.styles";
-import { TreeUtils, UiTreeNode, DiffType, HierarchyTreeNode } from "viewers/common/tree_utils";
+import { UiTreeUtils, UiTreeNode, DiffType, HierarchyTreeNode } from "viewers/common/ui_tree_utils";
 
 @Component({
   selector: "tree-node",
@@ -100,7 +100,7 @@ export class TreeNodeComponent {
   }
 
   public showPinNodeIcon() {
-    return (!this.isPropertiesTreeNode() && !TreeUtils.isParentNode(this.item.kind ?? "")) ?? false;
+    return (!this.isPropertiesTreeNode() && !UiTreeUtils.isParentNode(this.item.kind ?? "")) ?? false;
   }
 
   public toggleTree(event: MouseEvent) {

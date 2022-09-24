@@ -16,9 +16,10 @@
 import Activity from "common/trace/flickerlib/windows/Activity";
 import Layer from "common/trace/flickerlib/layers/Layer";
 import {LayerTraceEntry} from "common/trace/flickerlib/layers/LayerTraceEntry";
+import {WindowContainer} from "common/trace/flickerlib/common";
 import {WindowManagerState} from "common/trace/flickerlib/windows/WindowManagerState";
 import WindowState from "common/trace/flickerlib/windows/WindowState";
-import {TreeUtils, FilterType} from "./tree_utils";
+import {TreeUtils, FilterType} from "common/utils/tree_utils";
 
 class ProcessedWindowManagerState {
   constructor(
@@ -134,10 +135,10 @@ class ImeUtils {
     return key ? object[key] : undefined;
   }
 
-  private static isInputMethodVisible(windowOrLayer: any) : boolean {
+  private static isInputMethodVisible(displayContent: WindowContainer) : boolean {
     const isInputMethod = TreeUtils.makeNodeFilter("InputMethod");
     const inputMethodWindowOrLayer =
-      TreeUtils.findDescendantNode(windowOrLayer, isInputMethod);
+      <WindowContainer>TreeUtils.findDescendantNode(displayContent, isInputMethod);
     return inputMethodWindowOrLayer?.isVisible == true;
   }
 }

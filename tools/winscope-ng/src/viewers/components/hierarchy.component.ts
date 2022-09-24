@@ -16,7 +16,7 @@
 import { Component, Input, Inject, ElementRef } from "@angular/core";
 import { UserOptions } from "viewers/common/user_options";
 import { PersistentStore } from "common/persistent_store";
-import { TreeUtils, HierarchyTreeNode, UiTreeNode } from "viewers/common/tree_utils";
+import { UiTreeUtils, HierarchyTreeNode, UiTreeNode } from "viewers/common/ui_tree_utils";
 import { nodeStyles } from "viewers/components/styles/node.styles";
 import { ViewerEvents } from "viewers/common/viewer_events";
 import { TraceType } from "common/trace/trace_type";
@@ -147,8 +147,8 @@ import { TraceType } from "common/trace/trace_type";
 export class HierarchyComponent {
   objectKeys = Object.keys;
   filterString = "";
-  diffClass = TreeUtils.diffClass;
-  isHighlighted = TreeUtils.isHighlighted;
+  diffClass = UiTreeUtils.diffClass;
+  isHighlighted = UiTreeUtils.isHighlighted;
 
   @Input() tree!: HierarchyTreeNode | null;
   @Input() dependencies: Array<TraceType> = [];

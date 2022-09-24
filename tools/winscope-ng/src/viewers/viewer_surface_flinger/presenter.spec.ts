@@ -18,7 +18,7 @@ import { UiData } from "./ui_data";
 import { UserOptions } from "viewers/common/user_options";
 import { TraceType } from "common/trace/trace_type";
 import { LayerTraceEntry } from "common/trace/flickerlib/common";
-import { HierarchyTreeNode, PropertiesTreeNode } from "viewers/common/tree_utils";
+import { HierarchyTreeNode, PropertiesTreeNode } from "viewers/common/ui_tree_utils";
 import { UnitTestUtils } from "test/unit/utils";
 import { HierarchyTreeBuilder } from "test/unit/hierarchy_tree_builder";
 
@@ -31,7 +31,6 @@ describe("PresenterSurfaceFlinger", () => {
   beforeAll(async () => {
     entries = new Map<TraceType, any>();
     const entry: LayerTraceEntry = await UnitTestUtils.getLayerTraceEntry();
-
 
     selectedTree = new HierarchyTreeBuilder().setName("Dim layer#53").setStableId("EffectLayer 53 Dim layer#53")
       .setFilteredView(true).setKind("53").setDiffType("EffectLayer").setId(53).build();

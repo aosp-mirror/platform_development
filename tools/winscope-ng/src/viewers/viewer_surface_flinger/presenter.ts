@@ -17,8 +17,9 @@
 import { UiData } from "./ui_data";
 import { Rectangle, RectMatrix, RectTransform } from "viewers/common/rectangle";
 import { TraceType } from "common/trace/trace_type";
+import { TreeUtils, FilterType } from "common/utils/tree_utils";
 import { UserOptions } from "viewers/common/user_options";
-import { TreeUtils, FilterType, HierarchyTreeNode, PropertiesTreeNode } from "viewers/common/tree_utils";
+import { HierarchyTreeNode, PropertiesTreeNode } from "viewers/common/ui_tree_utils";
 import { TreeGenerator } from "viewers/common/tree_generator";
 import { TreeTransformer } from "viewers/common/tree_transformer";
 import { Layer, LayerTraceEntry } from "common/trace/flickerlib/common";

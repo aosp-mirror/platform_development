@@ -22,7 +22,7 @@ import { MatInputModule } from "@angular/material/input";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatCheckboxModule } from "@angular/material/checkbox";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
-import { HierarchyTreeNode } from "viewers/common/tree_utils";
+import { HierarchyTreeNode } from "viewers/common/ui_tree_utils";
 import { HierarchyTreeBuilder } from "test/unit/hierarchy_tree_builder";
 
 describe("HierarchyComponent", () => {
