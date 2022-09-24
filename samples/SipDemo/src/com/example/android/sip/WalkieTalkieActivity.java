@@ -137,7 +137,7 @@ public class WalkieTalkieActivity extends Activity implements View.OnTouchListen
 
             Intent i = new Intent();
             i.setAction("android.SipDemo.INCOMING_CALL");
-            PendingIntent pi = PendingIntent.getBroadcast(this, 0, i, Intent.FILL_IN_DATA);
+            PendingIntent pi = PendingIntent.getBroadcast(this, 0, i, Intent.FILL_IN_DATA | PendingIntent.FLAG_IMMUTABLE);
             manager.open(me, pi, null);
 
 
