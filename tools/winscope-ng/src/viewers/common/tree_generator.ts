@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {FilterType} from "common/utils/tree_utils";
+import {TraceTreeNode} from "common/trace/trace_tree_node";
 import {
-  TreeUtils,
-  FilterType,
-  TreeNodeTrace,
+  UiTreeUtils,
   DiffType,
   HierarchyTreeNode
-} from "./tree_utils";
+} from "./ui_tree_utils";
 import ObjectFormatter from "common/trace/flickerlib/ObjectFormatter";
 import {
   HWC_CHIP,
@@ -30,8 +30,8 @@ import {
   RELATIVE_Z_PARENT_CHIP
 } from "viewers/common/chip";
 
-type GetNodeIdCallbackType = (node: TreeNodeTrace | null) => string | null;
-type IsModifiedCallbackType = (newTree: TreeNodeTrace | null, oldTree: TreeNodeTrace | null) => boolean;
+type GetNodeIdCallbackType = (node: TraceTreeNode | null) => string | null;
+type IsModifiedCallbackType = (newTree: TraceTreeNode | null, oldTree: TraceTreeNode | null) => boolean;
 
 const HwcCompositionType = {
   CLIENT: 1,
@@ -44,18 +44,18 @@ export class TreeGenerator {
   private isSimplifyNames = false;
   private isFlatView = false;
   private filter: FilterType;
-  private inputEntry: TreeNodeTrace;
-  private previousEntry: TreeNodeTrace | null = null;
+  private inputEntry: TraceTreeNode;
+  private previousEntry: TraceTreeNode | null = null;
   private getNodeId?: GetNodeIdCallbackType;
   private isModified?: IsModifiedCallbackType;
-  private newMapping: Map<string, TreeNodeTrace> | null = null;
-  private oldMapping: Map<string, TreeNodeTrace> | null = null;
+  private newMapping: Map<string, TraceTreeNode> | null = null;
+  private oldMapping: Map<string, TraceTreeNode> | null = null;
   private readonly pinnedIds: Array<string>;
   private pinnedItems: Array<HierarchyTreeNode> = [];
   private relZParentIds: Array<string> = [];
   private flattenedChildren: Array<HierarchyTreeNode> = [];
 
-  constructor(inputEntry: TreeNodeTrace, filter: FilterType, pinnedIds?: Array<string>) {
+  constructor(inputEntry: TraceTreeNode, filter: FilterType, pinnedIds?: Array<string>) {
     this.inputEntry = inputEntry;
     this.filter = filter;
     this.pinnedIds = pinnedIds ?? [];
@@ -80,13 +80,13 @@ export class TreeGenerator {
     return this.getCustomisedTree(this.inputEntry);
   }
 
-  public compareWith(previousEntry: TreeNodeTrace | null): TreeGenerator {
+  public compareWith(previousEntry: TraceTreeNode | null): TreeGenerator {
     this.previousEntry = previousEntry;
     return this;
   }
 
   public withUniqueNodeId(getNodeId?: GetNodeIdCallbackType): TreeGenerator {
-    this.getNodeId = (node: TreeNodeTrace | null) => {
+    this.getNodeId = (node: TraceTreeNode | null) => {
       const id = getNodeId ? getNodeId(node) : this.defaultNodeIdCallback(node);
       if (id === null || id === undefined) {
         console.error("Null node ID for node", node);
@@ -108,7 +108,7 @@ export class TreeGenerator {
 
     const diffTrees = this.generateDiffTree(this.inputEntry, this.previousEntry, [], []);
 
-    let diffTree: TreeNodeTrace;
+    let diffTree: TraceTreeNode;
     if (diffTrees.length > 1) {
       diffTree = {
         kind: "",
@@ -123,7 +123,7 @@ export class TreeGenerator {
     return this.getCustomisedTree(diffTree);
   }
 
-  private getCustomisedTree(tree: TreeNodeTrace | null): HierarchyTreeNode | null {
+  private getCustomisedTree(tree: TraceTreeNode | null): HierarchyTreeNode | null {
     if (!tree) return null;
     let newTree = this.generateTreeWithUserOptions(tree, false);
     if (!newTree) return null;
@@ -143,7 +143,7 @@ export class TreeGenerator {
   private flattenChildren(children: Array<HierarchyTreeNode>) {
     for (let i = 0; i < children.length; i++) {
       const child = children[i];
-      const childIsVisibleNode = child.isVisible && TreeUtils.isVisibleNode(child.kind, child.type);
+      const childIsVisibleNode = child.isVisible && UiTreeUtils.isVisibleNode(child.kind, child.type);
       const showInOnlyVisibleView = this.isOnlyVisibleView && childIsVisibleNode;
       const passVisibleCheck = !this.isOnlyVisibleView || showInOnlyVisibleView;
       if (this.filterMatches(child) && passVisibleCheck) {
@@ -155,12 +155,12 @@ export class TreeGenerator {
     }
   }
 
-  private filterMatches(item: HierarchyTreeNode | null): boolean {
+  private filterMatches(item?: HierarchyTreeNode | null): boolean {
     return this.filter(item) ?? false;
   }
 
   private generateTreeWithUserOptions(
-    tree: TreeNodeTrace,
+    tree: TraceTreeNode,
     parentFilterMatch: boolean
   ): HierarchyTreeNode | null {
     return this.applyChecks(
@@ -194,13 +194,13 @@ export class TreeGenerator {
                 tree.hwcCompositionType == HwcCompositionType.SOLID_COLOR)) {
       tree.chips.push(HWC_CHIP);
     }
-    if (tree.isVisible && TreeUtils.isVisibleNode(tree.kind, tree.type)) {
+    if (tree.isVisible && UiTreeUtils.isVisibleNode(tree.kind, tree.type)) {
       tree.chips.push(VISIBLE_CHIP);
     }
     if (
       tree.zOrderRelativeOfId !== undefined
       && tree.zOrderRelativeOfId !== -1
-      && !TreeUtils.isParentNode(tree.kind)
+      && !UiTreeUtils.isParentNode(tree.kind)
       && !tree.isRootLayer
     ) {
       tree.chips.push(RELATIVE_Z_CHIP);
@@ -213,7 +213,7 @@ export class TreeGenerator {
   }
 
   private applyChecks(
-    tree: TreeNodeTrace,
+    tree: TraceTreeNode,
     parentFilterMatch: boolean
   ): HierarchyTreeNode | null {
     let newTree = this.getTreeNode(tree);
@@ -227,7 +227,7 @@ export class TreeGenerator {
     newTree.simplifyNames = this.isSimplifyNames;
 
     // check item either matches filter, or has parents/children matching filter
-    if (TreeUtils.isParentNode(tree.kind) || parentFilterMatch) {
+    if (UiTreeUtils.isParentNode(tree.kind) || parentFilterMatch) {
       newTree.showInFilteredView = true;
     } else {
       newTree.showInFilteredView = this.filterMatches(tree);
@@ -271,8 +271,8 @@ export class TreeGenerator {
     return newTree;
   }
 
-  private generateIdToNodeMapping(node: TreeNodeTrace, acc?: Map<string, TreeNodeTrace>): Map<string, TreeNodeTrace> {
-    acc = acc || new Map<string, TreeNodeTrace>();
+  private generateIdToNodeMapping(node: TraceTreeNode, acc?: Map<string, TraceTreeNode>): Map<string, TraceTreeNode> {
+    acc = acc || new Map<string, TraceTreeNode>();
 
     const nodeId: string = this.getNodeId!(node)!;
 
@@ -289,7 +289,7 @@ export class TreeGenerator {
     return acc;
   }
 
-  private cloneDiffTreeNode(node: TreeNodeTrace | null): TreeNodeTrace | null {
+  private cloneDiffTreeNode(node: TraceTreeNode | null): TraceTreeNode | null {
     const clone = ObjectFormatter.cloneObject(node);
     if (node) {
       clone.children = node.children;
@@ -304,7 +304,7 @@ export class TreeGenerator {
     return clone;
   }
 
-  private getTreeNode(node: TreeNodeTrace): HierarchyTreeNode {
+  private getTreeNode(node: TraceTreeNode): HierarchyTreeNode {
     const clone = new HierarchyTreeNode(
       node.name,
       node.kind,
@@ -327,11 +327,11 @@ export class TreeGenerator {
   }
 
   private generateDiffTree(
-    newTree: TreeNodeTrace | null,
-    oldTree: TreeNodeTrace | null,
-    newTreeSiblings: Array<TreeNodeTrace | null>,
-    oldTreeSiblings: Array<TreeNodeTrace | null>
-  ): Array<TreeNodeTrace> {
+    newTree: TraceTreeNode | null,
+    oldTree: TraceTreeNode | null,
+    newTreeSiblings: Array<TraceTreeNode | null>,
+    oldTreeSiblings: Array<TraceTreeNode | null>
+  ): Array<TraceTreeNode> {
     const diffTrees = [];
     // NOTE: A null ID represents a non existent node.
     if (!this.getNodeId) {
@@ -350,9 +350,9 @@ export class TreeGenerator {
       // Default to no changes
       diffTree.diffType = DiffType.NONE;
 
-      if (!TreeUtils.isParentNode(newTree.kind) && newId !== oldId) {
+      if (!UiTreeUtils.isParentNode(newTree.kind) && newId !== oldId) {
         // A move, addition, or deletion has occurred
-        let nextOldTree: TreeNodeTrace | null = null;
+        let nextOldTree: TraceTreeNode | null = null;
 
         // Check if newTree has been added or moved
         if (newId && !oldTreeSiblingIds.includes(newId)) {
@@ -422,7 +422,7 @@ export class TreeGenerator {
     return diffTrees;
   }
 
-  private visitChildren(newTree: TreeNodeTrace | null, oldTree: TreeNodeTrace | null): Array<TreeNodeTrace> {
+  private visitChildren(newTree: TraceTreeNode | null, oldTree: TraceTreeNode | null): Array<TraceTreeNode> {
     // Recursively traverse all children of new and old tree.
     const diffChildren = [];
     const numOfChildren = Math.max(newTree?.children?.length ?? 0, oldTree?.children?.length ?? 0);
@@ -440,14 +440,14 @@ export class TreeGenerator {
     return diffChildren;
   }
 
-  private defaultNodeIdCallback(node: TreeNodeTrace | null): string | null {
+  private defaultNodeIdCallback(node: TraceTreeNode | null): string | null {
     return node ? node.stableId : null;
   }
 
-  private defaultModifiedCheck(newNode: TreeNodeTrace | null, oldNode: TreeNodeTrace | null): boolean {
+  private defaultModifiedCheck(newNode: TraceTreeNode | null, oldNode: TraceTreeNode | null): boolean {
     if (!newNode && !oldNode) {
       return false;
-    } else if (newNode && TreeUtils.isParentNode(newNode.kind)) {
+    } else if (newNode && UiTreeUtils.isParentNode(newNode.kind)) {
       return false;
     } else if ((newNode && !oldNode) || (!newNode && oldNode)) {
       return true;

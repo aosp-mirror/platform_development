@@ -17,7 +17,7 @@ import {TraceType} from "common/trace/trace_type";
 import {Viewer} from "viewers/viewer";
 import {Presenter} from "./presenter";
 import {UiData} from "./ui_data";
-import { ViewerEvents } from "viewers/common/viewer_events";
+import {ViewerEvents} from "viewers/common/viewer_events";
 
 class ViewerSurfaceFlinger implements Viewer {
   constructor() {

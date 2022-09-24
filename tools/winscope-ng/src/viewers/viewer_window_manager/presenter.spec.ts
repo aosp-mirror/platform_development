@@ -18,7 +18,7 @@ import { UiData } from "./ui_data";
 import { UserOptions } from "viewers/common/user_options";
 import { TraceType } from "common/trace/trace_type";
 import { WindowManagerState } from "common/trace/flickerlib/common";
-import { PropertiesTreeNode, Terminal, HierarchyTreeNode } from "viewers/common/tree_utils";
+import { PropertiesTreeNode, HierarchyTreeNode } from "viewers/common/ui_tree_utils";
 import { UnitTestUtils } from "test/unit/utils";
 import { HierarchyTreeBuilder } from "test/unit/hierarchy_tree_builder";
 import { VISIBLE_CHIP } from "viewers/common/chip";
