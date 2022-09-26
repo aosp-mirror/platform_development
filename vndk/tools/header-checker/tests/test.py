@@ -150,7 +150,11 @@ class HeaderCheckerTest(unittest.TestCase):
     def test_libc_and_cpp_and_libc_and_cpp_with_unused_struct_check_all(self):
         self.prepare_and_run_abi_diff_all_archs(
             "libc_and_cpp", "libc_and_cpp_with_unused_struct", 1,
-            ['-check-all-apis'])
+            ["-check-all-apis"])
+        self.prepare_and_run_abi_diff_all_archs(
+            "libc_and_cpp", "libc_and_cpp_with_unused_struct", 0,
+            ["-check-all-apis",
+             "-ignore-linker-set-key", "_ZTI12UnusedStruct"])
 
     def test_libc_and_cpp_with_unused_struct_and_libc_and_cpp_with_unused_cstruct(
             self):
@@ -227,6 +231,9 @@ class HeaderCheckerTest(unittest.TestCase):
     def test_libgolden_cpp_member_diff(self):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp", "libgolden_cpp_member_diff", 8)
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp", "libgolden_cpp_member_diff", 0,
+            ["-ignore-linker-set-key", "_ZTI16LowVolumeSpeaker"])
 
     def test_libgolden_cpp_change_member_access(self):
         self.prepare_and_run_abi_diff_all_archs(
@@ -239,6 +246,9 @@ class HeaderCheckerTest(unittest.TestCase):
     def test_libgolden_cpp_enum_diff(self):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp", "libgolden_cpp_enum_diff", 8)
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp", "libgolden_cpp_enum_diff", 0,
+            ["-ignore-linker-set-key", "_ZTIN12SuperSpeaker6VolumeE"])
 
     def test_libgolden_cpp_member_fake_diff(self):
         self.prepare_and_run_abi_diff_all_archs(
