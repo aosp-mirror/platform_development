@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {FilterType} from "common/utils/tree_utils";
+import {TreeNode, FilterType} from "common/utils/tree_utils";
 import {TraceTreeNode} from "common/trace/trace_tree_node";
 import {
   UiTreeUtils,
@@ -155,7 +155,7 @@ export class TreeGenerator {
     }
   }
 
-  private filterMatches(item?: HierarchyTreeNode | null): boolean {
+  private filterMatches(item?: TreeNode | null): boolean {
     return this.filter(item) ?? false;
   }
 
@@ -174,7 +174,7 @@ export class TreeGenerator {
   }
 
   private applyRelZParentCheck(tree: HierarchyTreeNode) {
-    if (tree.id && tree.chips && this.relZParentIds.includes(`${tree.id}`)) {
+    if (tree.id && this.relZParentIds.includes(`${tree.id}`)) {
       tree.chips.push(RELATIVE_Z_PARENT_CHIP);
     }
 
@@ -187,7 +187,6 @@ export class TreeGenerator {
   }
 
   private addChips(tree: HierarchyTreeNode): HierarchyTreeNode {
-    tree.chips = [];
     if (tree.hwcCompositionType == HwcCompositionType.CLIENT) {
       tree.chips.push(GPU_CHIP);
     } else if ((tree.hwcCompositionType == HwcCompositionType.DEVICE ||
@@ -216,7 +215,7 @@ export class TreeGenerator {
     tree: TraceTreeNode,
     parentFilterMatch: boolean
   ): HierarchyTreeNode | null {
-    let newTree = this.getTreeNode(tree);
+    let newTree = this.makeTreeNode(tree);
 
     // add id field to tree if id does not exist (e.g. for WM traces)
     if (!newTree?.id && newTree?.layerId) {
@@ -297,14 +296,11 @@ export class TreeGenerator {
       clone.kind = node.kind;
       clone.stableId = node.stableId;
       clone.shortName = node.shortName;
-      if (node.chips) {
-        clone.chips = node.chips.slice();
-      }
     }
     return clone;
   }
 
-  private getTreeNode(node: TraceTreeNode): HierarchyTreeNode {
+  private makeTreeNode(node: TraceTreeNode): HierarchyTreeNode {
     const clone = new HierarchyTreeNode(
       node.name,
       node.kind,
@@ -319,7 +315,6 @@ export class TreeGenerator {
     if (node.hwcCompositionType) clone.hwcCompositionType = node.hwcCompositionType;
     if (node.zOrderRelativeOfId) clone.zOrderRelativeOfId = node.zOrderRelativeOfId;
     if (node.isRootLayer) clone.isRootLayer = node.isRootLayer;
-    if (node.chips) clone.chips = node.chips.slice();
     if (node.diffType) clone.diffType = node.diffType;
     if (node.skip) clone.skip = node.skip;
 

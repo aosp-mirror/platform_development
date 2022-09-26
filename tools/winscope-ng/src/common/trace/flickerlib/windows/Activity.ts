@@ -49,7 +49,6 @@ function addAttributes(entry: Activity, proto: any) {
     entry.proto = proto;
     entry.kind = entry.constructor.name;
     entry.shortName = shortenName(entry.name);
-    entry.chips = [];
 }
 
 export default Activity;

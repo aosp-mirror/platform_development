@@ -94,7 +94,6 @@ function addAttributes(entry: Layer, proto: any) {
     entry.rect.transform = entry.transform;
     entry.rect.ref = entry;
     entry.rect.label = entry.name;
-    entry.chips = [];
 }
 
 export default Layer;

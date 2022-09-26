@@ -35,7 +35,6 @@ describe("TreeTransformer", () => {
         parent: 1,
         type: "ContainerLayer",
       },
-      chips: [],
       parent: undefined,
       children: [{
         id: 2,
