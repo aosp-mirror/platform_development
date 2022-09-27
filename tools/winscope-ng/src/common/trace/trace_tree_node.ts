@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-//TODO: remove
-import Chip from "viewers/common/chip";
 
 export interface TraceTreeNode {
   children: TraceTreeNode[];
@@ -40,7 +38,6 @@ export interface TraceTreeNode {
   hwcCompositionType?: number;
   zOrderRelativeOfId?: number;
   isRootLayer?: boolean;
-  chips?: Chip[];
   diffType?: string;
   skip?: any;
   obj?: any;
