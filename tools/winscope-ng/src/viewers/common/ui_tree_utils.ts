@@ -45,7 +45,7 @@ export class HierarchyTreeNode {
   showInFilteredView?: boolean;
   showInOnlyVisibleView?: boolean;
   simplifyNames?: boolean;
-  chips?: Chip[] = [];
+  chips: Chip[] = [];
   diffType?: string;
   skip?: any;
 }

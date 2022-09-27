@@ -45,7 +45,6 @@ function addAttributes(entry: LayerTraceEntry, protos: any) {
     );
     entry.proto = entryIds;
     entry.shortName = entry.name;
-    entry.chips = [];
     entry.isVisible = true;
 }
 

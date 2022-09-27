@@ -63,7 +63,6 @@ function addAttributes(entry: WindowManagerState, proto: any) {
     }
     entry.proto = proto;
     entry.shortName = entry.name;
-    entry.chips = [];
     entry.isVisible = true;
 }
 
