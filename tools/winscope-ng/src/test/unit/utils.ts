@@ -38,6 +38,18 @@ class UnitTestUtils extends CommonTestUtils {
     return await this.getTraceEntry("traces/elapsed_timestamp/SurfaceFlinger.pb");
   }
 
+  static async getInputMethodClientsEntry(): Promise<LayerTraceEntry> {
+    return await this.getTraceEntry("traces/elapsed_timestamp/InputMethodClients.pb");
+  }
+
+  static async getInputMethodServiceEntry(): Promise<LayerTraceEntry> {
+    return await this.getTraceEntry("traces/elapsed_timestamp/InputMethodService.pb");
+  }
+
+  static async getInputMethodManagerServiceEntry(): Promise<LayerTraceEntry> {
+    return await this.getTraceEntry("traces/elapsed_timestamp/InputMethodManagerService.pb");
+  }
+
   private static async getTraceEntry(filename: string) {
     const parser = await this.getParser(filename);
     const timestamp = parser.getTimestamps(TimestampType.ELAPSED)![0];

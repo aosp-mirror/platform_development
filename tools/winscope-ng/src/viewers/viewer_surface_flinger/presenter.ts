@@ -29,7 +29,7 @@ type NotifyViewCallbackType = (uiData: UiData) => void;
 export class Presenter {
   constructor(notifyViewCallback: NotifyViewCallbackType) {
     this.notifyViewCallback = notifyViewCallback;
-    this.uiData = new UiData();
+    this.uiData = new UiData([TraceType.SURFACE_FLINGER]);
     this.notifyViewCallback(this.uiData);
   }
 

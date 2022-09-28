@@ -17,11 +17,17 @@ import { TraceType } from "common/trace/trace_type";
 import { Viewer } from "./viewer";
 import { ViewerWindowManager } from "./viewer_window_manager/viewer_window_manager";
 import { ViewerSurfaceFlinger } from "./viewer_surface_flinger/viewer_surface_flinger";
+import { ViewerInputMethodClients } from "./viewer_input_method_clients/viewer_input_method_clients";
+import { ViewerInputMethodService } from "./viewer_input_method_service/viewer_input_method_service";
+import { ViewerInputMethodManagerService } from "./viewer_input_method_manager_service/viewer_input_method_manager_service";
 
 class ViewerFactory {
   static readonly VIEWERS = [
     ViewerWindowManager,
-    ViewerSurfaceFlinger
+    ViewerSurfaceFlinger,
+    ViewerInputMethodClients,
+    ViewerInputMethodService,
+    ViewerInputMethodManagerService,
   ];
 
   public createViewers(activeTraceTypes: Set<TraceType>): Viewer[] {
@@ -31,6 +37,7 @@ class ViewerFactory {
       const areViewerDepsSatisfied = Viewer.DEPENDENCIES.every((traceType: TraceType) =>
         activeTraceTypes.has(traceType)
       );
+
       if (areViewerDepsSatisfied) {
         viewers.push(new Viewer());
       }

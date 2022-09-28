@@ -17,6 +17,9 @@ import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
 import {Parser} from "./parser";
 import {InputMethodClientsTraceFileProto} from "./proto_types";
+import { TraceTreeNode } from "common/trace/trace_tree_node";
+import { StringUtils } from "common/utils/string_utils";
+import { ImeUtils } from "viewers/common/ime_utils";
 
 class ParserInputMethodClients extends Parser {
   constructor(trace: File) {
@@ -54,8 +57,25 @@ class ParserInputMethodClients extends Parser {
     return undefined;
   }
 
-  override processDecodedEntry(entryProto: any): any {
-    return entryProto;
+  override processDecodedEntry(entryProto: TraceTreeNode): TraceTreeNode {
+    return {
+      name: StringUtils.nanosecondsToHuman(entryProto.elapsedRealtimeNanos ?? 0) + " - " + entryProto.where,
+      kind: "InputMethodClient entry",
+      children: [
+        {
+          obj: ImeUtils.transformInputConnectionCall(entryProto.client),
+          kind: "Client",
+          name: entryProto.client?.viewRootImpl?.view ?? "",
+          children: [],
+          stableId: "client",
+          id: "client",
+        }
+      ],
+      obj: entryProto,
+      stableId: "entry",
+      id: "entry",
+      elapsedRealtimeNanos: entryProto.elapsedRealtimeNanos,
+    };
   }
 
   private realToElapsedTimeOffsetNs: undefined|bigint;

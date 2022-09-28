@@ -17,42 +17,31 @@ import {
   Component,
   Input,
 } from "@angular/core";
-import {UiData} from "./ui_data";
 import { TRACE_INFO } from "app/trace_info";
 import { TraceType } from "common/trace/trace_type";
 import { PersistentStore } from "common/persistent_store";
+import { ImeUiData } from "viewers/common/ime_ui_data";
 
 @Component({
-  selector: "viewer-window-manager",
+  selector: "viewer-input-method",
   template: `
       <div fxLayout="row wrap" fxLayoutGap="10px grid" class="card-grid">
-        <mat-card id="wm-rects-view" class="rects-view">
-          <rects-view
-            [rects]="inputData?.rects ?? []"
-            [displayIds]="inputData?.displayIds ?? []"
+        <mat-card class="hierarchy-view">
+          <hierarchy-view
+            [tree]="inputData?.tree ?? null"
+            [dependencies]="inputData?.dependencies ?? []"
             [highlightedItems]="inputData?.highlightedItems ?? []"
-            [forceRefresh]="active"
-          ></rects-view>
+            [pinnedItems]="inputData?.pinnedItems ?? []"
+            [store]="store"
+            [userOptions]="inputData?.hierarchyUserOptions ?? {}"
+          ></hierarchy-view>
         </mat-card>
-        <div fxLayout="row wrap" fxLayoutGap="10px grid" class="card-grid">
-          <mat-card id="wm-hierarchy-view" class="hierarchy-view">
-            <hierarchy-view
-              [tree]="inputData?.tree ?? null"
-              [dependencies]="inputData?.dependencies ?? []"
-              [highlightedItems]="inputData?.highlightedItems ?? []"
-              [pinnedItems]="inputData?.pinnedItems ?? []"
-              [store]="store"
-              [userOptions]="inputData?.hierarchyUserOptions ?? {}"
-            ></hierarchy-view>
-          </mat-card>
-          <mat-card id="wm-properties-view" class="properties-view">
-            <properties-view
-              [userOptions]="inputData?.propertiesUserOptions ?? {}"
-              [propertiesTree]="inputData?.propertiesTree ?? {}"
-              [isProtoDump]="true"
-            ></properties-view>
-          </mat-card>
-        </div>
+        <mat-card class="properties-view">
+          <properties-view
+            [userOptions]="inputData?.propertiesUserOptions ?? {}"
+            [propertiesTree]="inputData?.propertiesTree ?? {}"
+          ></properties-view>
+        </mat-card>
       </div>
   `,
   styles: [
@@ -73,7 +62,7 @@ import { PersistentStore } from "common/persistent_store";
         vertical-align: middle;
       }
 
-      viewer-window-manager {
+      viewer-input-method {
         font-family: Arial, Helvetica, sans-serif;
       }
 
@@ -90,17 +79,6 @@ import { PersistentStore } from "common/persistent_store";
         display: flex;
         flex-direction: row;
         overflow: auto;
-      }
-
-      .rects-view {
-        font: inherit;
-        flex: none;
-        width: 350px;
-        height: 52.5rem;
-        margin: 0px;
-        border-top: 1px solid var(--default-border);
-        border-right: 1px solid var(--default-border);
-        border-radius: 0;
       }
 
       .hierarchy-view {
@@ -126,8 +104,8 @@ import { PersistentStore } from "common/persistent_store";
     `,
   ]
 })
-export class ViewerWindowManagerComponent {
-  @Input() inputData: UiData | null = null;
+export class ViewerInputMethodComponent {
+  @Input() inputData: ImeUiData | null = null;
   @Input() store: PersistentStore = new PersistentStore();
   @Input() active = false;
   TRACE_INFO = TRACE_INFO;

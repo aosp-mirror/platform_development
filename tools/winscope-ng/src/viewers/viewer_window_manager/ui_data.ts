@@ -19,7 +19,7 @@ import { TraceType } from "common/trace/trace_type";
 import { Rectangle } from "viewers/common/rectangle";
 
 export class UiData {
-  dependencies: Array<TraceType> = [TraceType.WINDOW_MANAGER];
+  dependencies: Array<TraceType>;
   rects: Rectangle[] = [];
   displayIds: number[] = [];
   highlightedItems: Array<string> = [];
@@ -28,4 +28,8 @@ export class UiData {
   propertiesUserOptions: UserOptions = {};
   tree: HierarchyTreeNode | null = null;
   propertiesTree: PropertiesTreeNode | null = null;
+
+  constructor(dependencies?: Array<TraceType>) {
+    this.dependencies = dependencies ?? [];
+  }
 }
