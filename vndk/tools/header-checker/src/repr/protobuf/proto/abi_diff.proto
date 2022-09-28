@@ -87,6 +87,8 @@ message TranslationUnitDiff {
   repeated RecordTypeDiff unreferenced_record_type_diffs = 4;
   repeated abi_dump.RecordType unreferenced_record_types_removed = 5;
   repeated abi_dump.RecordType unreferenced_record_types_added = 6;
+  repeated RecordTypeDiff record_type_extension_diffs = 24;
+  repeated RecordTypeDiff unreferenced_record_type_extension_diffs = 25;
 
   // Enums
   repeated EnumTypeDiff enum_type_diffs = 7;

@@ -670,6 +670,24 @@ TEST_MODULES = [
         linker_flags=['-output-format', 'Json', '-sources-per-thread', '1'],
         has_reference_dump=True,
     ),
+    LsdumpModule(
+        name='libstruct_extensions',
+        arch='arm64',
+        srcs=['integration/struct_extensions/include/base.h'],
+        version_script='integration/struct_extensions/map.txt',
+        export_include_dirs=['integration/struct_extensions/include'],
+        linker_flags=['-output-format', 'Json'],
+        has_reference_dump=True,
+    ),
+    LsdumpModule(
+        name='liballowed_struct_extensions',
+        arch='arm64',
+        srcs=['integration/struct_extensions/include/extensions.h'],
+        version_script='integration/struct_extensions/map.txt',
+        export_include_dirs=['integration/struct_extensions/include'],
+        linker_flags=['-output-format', 'Json'],
+        has_reference_dump=True,
+    ),
 ]
 
 TEST_MODULES = {m.name: m for m in TEST_MODULES}
