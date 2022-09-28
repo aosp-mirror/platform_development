@@ -70,6 +70,11 @@ enum AccessSpecifierIR {
   PrivateAccess = 3
 };
 
+static inline bool IsAccessDowngraded(AccessSpecifierIR old_access,
+                                      AccessSpecifierIR new_access) {
+  return old_access < new_access;
+}
+
 enum LinkableMessageKind {
   RecordTypeKind,
   EnumTypeKind,
