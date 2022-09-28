@@ -56,8 +56,8 @@ export class TreeTransformer {
     this.setTransformerOptions({});
   }
 
-  public showOnlyProtoDump(): TreeTransformer {
-    this.onlyProtoDump = true;
+  public setOnlyProtoDump(onlyProto: boolean): TreeTransformer {
+    this.onlyProtoDump = onlyProto;
     return this;
   }
 
@@ -79,7 +79,7 @@ export class TreeTransformer {
     return this;
   }
 
-  public setProperties(currentEntry: TraceTreeNode): TreeTransformer {
+  public setProperties(currentEntry: TraceTreeNode | null): TreeTransformer {
     const currFlickerItem = this.getOriginalFlickerItem(currentEntry, this.stableId);
     const target = currFlickerItem ? currFlickerItem.obj ?? currFlickerItem : null;
     ObjectFormatter.displayDefaults = this.isShowDefaults;
@@ -96,7 +96,7 @@ export class TreeTransformer {
     return this;
   }
 
-  public getOriginalFlickerItem(entry: TraceTreeNode, stableId: string): TraceTreeNode  | null {
+  public getOriginalFlickerItem(entry: TraceTreeNode | null, stableId: string): TraceTreeNode  | null {
     return this.findFlickerItem(entry, stableId);
   }
 

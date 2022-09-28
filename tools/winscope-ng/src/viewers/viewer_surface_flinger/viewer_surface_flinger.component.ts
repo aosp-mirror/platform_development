@@ -76,10 +76,6 @@ import { PersistentStore } from "common/persistent_store";
         vertical-align: middle;
       }
 
-      viewer-surface-flinger {
-        font-family: Arial, Helvetica, sans-serif;
-      }
-
       .header-button {
         background: none;
         border: none;
