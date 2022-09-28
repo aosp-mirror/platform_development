@@ -401,6 +401,12 @@ class HeaderCheckerTest(unittest.TestCase):
                          os.path.join(common_dir, "lib64", "clang"))
         self.assertRegex(os.path.basename(resource_dir), r"^[\d.]+$")
 
+    def test_struct_extensions(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libstruct_extensions", "liballowed_struct_extensions", 4,
+            flags=["-input-format-new", "Json", "-input-format-old", "Json"],
+            create_old=False, create_new=False)
+
 
 if __name__ == '__main__':
     unittest.main()

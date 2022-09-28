@@ -1,0 +1,139 @@
+{
+ "array_types" :
+ [
+  {
+   "alignment" : 4,
+   "linker_set_key" : "_ZTIA2_i",
+   "name" : "int[2]",
+   "referenced_type" : "_ZTIi",
+   "self_type" : "_ZTIA2_i",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/struct_extensions/include/extensions.h"
+  }
+ ],
+ "builtin_types" :
+ [
+  {
+   "alignment" : 4,
+   "is_integral" : true,
+   "linker_set_key" : "_ZTIi",
+   "name" : "int",
+   "referenced_type" : "_ZTIi",
+   "self_type" : "_ZTIi",
+   "size" : 4
+  }
+ ],
+ "elf_functions" :
+ [
+  {
+   "name" : "_Z15PassByReferenceR7Struct1R7Struct2"
+  }
+ ],
+ "elf_objects" : [],
+ "enum_types" : [],
+ "function_types" : [],
+ "functions" :
+ [
+  {
+   "function_name" : "PassByReference",
+   "linker_set_key" : "_Z15PassByReferenceR7Struct1R7Struct2",
+   "parameters" :
+   [
+    {
+     "referenced_type" : "_ZTIR7Struct1"
+    },
+    {
+     "referenced_type" : "_ZTIR7Struct2"
+    }
+   ],
+   "return_type" : "_ZTIR7Struct1",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/struct_extensions/include/extensions.h"
+  }
+ ],
+ "global_vars" : [],
+ "lvalue_reference_types" :
+ [
+  {
+   "alignment" : 8,
+   "linker_set_key" : "_ZTIR7Struct1",
+   "name" : "Struct1 &",
+   "referenced_type" : "_ZTI7Struct1",
+   "self_type" : "_ZTIR7Struct1",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/struct_extensions/include/extensions.h"
+  },
+  {
+   "alignment" : 8,
+   "linker_set_key" : "_ZTIR7Struct2",
+   "name" : "Struct2 &",
+   "referenced_type" : "_ZTI7Struct2",
+   "self_type" : "_ZTIR7Struct2",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/struct_extensions/include/extensions.h"
+  }
+ ],
+ "pointer_types" : [],
+ "qualified_types" : [],
+ "record_types" :
+ [
+  {
+   "alignment" : 4,
+   "fields" :
+   [
+    {
+     "field_name" : "member",
+     "referenced_type" : "_ZTIi"
+    },
+    {
+     "field_name" : "added_member",
+     "field_offset" : 32,
+     "referenced_type" : "_ZTIi"
+    }
+   ],
+   "linker_set_key" : "_ZTI7Struct1",
+   "name" : "Struct1",
+   "referenced_type" : "_ZTI7Struct1",
+   "self_type" : "_ZTI7Struct1",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/struct_extensions/include/extensions.h"
+  },
+  {
+   "alignment" : 4,
+   "fields" :
+   [
+    {
+     "field_name" : "member",
+     "referenced_type" : "_ZTIN7Struct26NestedE"
+    }
+   ],
+   "linker_set_key" : "_ZTI7Struct2",
+   "name" : "Struct2",
+   "referenced_type" : "_ZTI7Struct2",
+   "self_type" : "_ZTI7Struct2",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/struct_extensions/include/extensions.h"
+  },
+  {
+   "alignment" : 4,
+   "fields" :
+   [
+    {
+     "field_name" : "nested_member",
+     "referenced_type" : "_ZTIi"
+    },
+    {
+     "field_name" : "added_member",
+     "referenced_type" : "_ZTIA2_i"
+    }
+   ],
+   "linker_set_key" : "_ZTIN7Struct26NestedE",
+   "name" : "Struct2::Nested",
+   "record_kind" : "union",
+   "referenced_type" : "_ZTIN7Struct26NestedE",
+   "self_type" : "_ZTIN7Struct26NestedE",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/struct_extensions/include/extensions.h"
+  }
+ ],
+ "rvalue_reference_types" : []
+}
