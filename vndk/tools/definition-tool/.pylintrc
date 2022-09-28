@@ -1,8 +1,0 @@
-[MESSAGES CONTROL]
-
-disable=
-    fixme,
-    invalid-name,
-    missing-docstring,
-    ungrouped-imports,
-    useless-object-inheritance,
