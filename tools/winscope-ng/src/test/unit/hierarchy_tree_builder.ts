@@ -41,7 +41,7 @@ class HierarchyTreeBuilder {
   diffType?: string;
   skip?: any;
 
-  setId(id: number) {
+  setId(id: string | number) {
     this.id = id;
     return this;
   }

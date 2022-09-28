@@ -15,7 +15,6 @@
  */
 import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
-import {ParserFactory} from "./parser_factory";
 import {Parser} from "./parser";
 import {UnitTestUtils} from "test/unit/utils";
 

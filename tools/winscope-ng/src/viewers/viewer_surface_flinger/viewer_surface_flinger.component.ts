@@ -52,6 +52,7 @@ import { PersistentStore } from "common/persistent_store";
               [propertiesTree]="inputData?.propertiesTree ?? {}"
               [selectedFlickerItem]="inputData?.selectedLayer ?? {}"
               [propertyGroups]="true"
+              [isProtoDump]="true"
             ></properties-view>
           </mat-card>
         </div>

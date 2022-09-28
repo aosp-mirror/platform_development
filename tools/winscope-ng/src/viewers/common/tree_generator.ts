@@ -234,7 +234,7 @@ export class TreeGenerator {
     }
 
     if (this.isOnlyVisibleView) {
-      newTree.showInOnlyVisibleView = newTree.isVisible;
+      newTree.showInOnlyVisibleView = UiTreeUtils.isParentNode(tree.kind) ? true : newTree.isVisible;
     }
 
     newTree.children = [];

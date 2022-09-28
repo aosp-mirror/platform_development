@@ -96,5 +96,11 @@ export class UiTreeUtils
     return this.PARENT_NODE_KINDS.includes(kind);
   }
 
-  private static readonly PARENT_NODE_KINDS = ["entry", "WindowManagerState"];
+  private static readonly PARENT_NODE_KINDS = [
+    "entry",
+    "WindowManagerState",
+    "InputMethodClient entry",
+    "InputMethodService entry",
+    "InputMethodManagerService entry"
+  ];
 }

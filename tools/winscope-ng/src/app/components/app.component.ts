@@ -22,6 +22,7 @@ import { ViewerWindowManagerComponent } from "viewers/viewer_window_manager/view
 import { ViewerSurfaceFlingerComponent } from "viewers/viewer_surface_flinger/viewer_surface_flinger.component";
 import { Timestamp } from "common/trace/timestamp";
 import { MatSliderChange } from "@angular/material/slider";
+import { ViewerInputMethodComponent } from "viewers/components/viewer_input_method.component";
 
 @Component({
   selector: "app-root",
@@ -127,6 +128,10 @@ export class AppComponent {
     if (!customElements.get("viewer-surface-flinger")) {
       customElements.define("viewer-surface-flinger",
         createCustomElement(ViewerSurfaceFlingerComponent, {injector}));
+    }
+    if (!customElements.get("viewer-input-method")) {
+      customElements.define("viewer-input-method",
+        createCustomElement(ViewerInputMethodComponent, {injector}));
     }
   }
 
