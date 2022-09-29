@@ -215,7 +215,7 @@ export class Presenter {
       return {};
     }
     const transformer = new TreeTransformer(selectedTree, this.propertiesFilter)
-      .showOnlyProtoDump()
+      .setOnlyProtoDump(true)
       .setIsShowDefaults(this.propertiesUserOptions["showDefaults"]?.enabled)
       .setIsShowDiff(this.propertiesUserOptions["showDiff"]?.enabled)
       .setTransformerOptions({skip: selectedTree.skip})

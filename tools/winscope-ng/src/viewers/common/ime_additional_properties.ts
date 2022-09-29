@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export const ViewerEvents = {
-  HierarchyPinnedChange: "HierarchyPinnedChange",
-  HighlightedChange: "HighlightedChange",
-  HierarchyUserOptionsChange: "HierarchyUserOptionsChange",
-  HierarchyFilterChange: "HierarchyFilterChange",
-  SelectedTreeChange: "SelectedTreeChange",
-  PropertiesUserOptionsChange: "PropertiesUserOptionsChange",
-  PropertiesFilterChange: "PropertiesFilterChange",
-  AdditionalPropertySelected: "AdditionalPropertySelected"
-};
+import { ImeLayers, ProcessedWindowManagerState } from "./ime_utils";
+
+export class ImeAdditionalProperties {
+  constructor(
+    public wm: ProcessedWindowManagerState | undefined,
+    public sf: ImeLayers | undefined,
+  ) {}
+}

@@ -23,6 +23,7 @@ import {TreeUtils, FilterType} from "common/utils/tree_utils";
 
 class ProcessedWindowManagerState {
   constructor(
+    public name: string,
     public stableId: string,
     public focusedApp: string,
     public focusedWindow: WindowState,
@@ -31,17 +32,20 @@ class ProcessedWindowManagerState {
     public protoImeControlTarget: any,
     public protoImeInputTarget: any,
     public protoImeLayeringTarget: any,
-    public protoImeInsetsSourceProvider: any) {
-  }
+    public protoImeInsetsSourceProvider: any,
+    public proto: any
+  ) {}
 }
 
 class ImeLayers {
   constructor(
+    public name: string,
     public imeContainer: Layer,
     public inputMethodSurface: Layer,
     public focusedWindow: Layer|undefined,
     public taskOfImeContainer: Layer|undefined,
-    public taskOfImeSnapshot: Layer|undefined) {
+    public taskOfImeSnapshot: Layer|undefined
+  ) {
   }
 }
 
@@ -50,6 +54,7 @@ class ImeUtils {
     const displayContent = entry.root.children[0];
 
     return new ProcessedWindowManagerState(
+      entry.name,
       entry.stableId,
       entry.focusedApp,
       entry.focusedWindow,
@@ -58,7 +63,8 @@ class ImeUtils {
       this.getImeControlTargetProperty(displayContent.proto),
       this.getImeInputTargetProperty(displayContent.proto),
       this.getImeLayeringTargetProperty(displayContent.proto),
-      displayContent.proto.imeInsetsSourceProvider
+      displayContent.proto.imeInsetsSourceProvider,
+      entry.proto,
     );
   }
 
@@ -91,6 +97,7 @@ class ImeUtils {
       this.findAncestorTaskLayerOfImeLayer(entry, TreeUtils.makeNodeFilter("IME-snapshot"));
 
     return new ImeLayers(
+      entry.name,
       imeContainer,
       inputMethodSurface,
       focusedWindowLayer,
@@ -154,4 +161,4 @@ class ImeUtils {
   }
 }
 
-export {ImeUtils};
+export {ImeUtils, ProcessedWindowManagerState, ImeLayers};

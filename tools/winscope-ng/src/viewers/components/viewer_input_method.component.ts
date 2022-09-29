@@ -26,16 +26,24 @@ import { ImeUiData } from "viewers/common/ime_ui_data";
   selector: "viewer-input-method",
   template: `
       <div fxLayout="row wrap" fxLayoutGap="10px grid" class="card-grid">
-        <mat-card class="hierarchy-view">
-          <hierarchy-view
-            [tree]="inputData?.tree ?? null"
-            [dependencies]="inputData?.dependencies ?? []"
-            [highlightedItems]="inputData?.highlightedItems ?? []"
-            [pinnedItems]="inputData?.pinnedItems ?? []"
-            [store]="store"
-            [userOptions]="inputData?.hierarchyUserOptions ?? {}"
-          ></hierarchy-view>
-        </mat-card>
+        <div class="left-views">
+          <mat-card class="hierarchy-view" [style]="hierarchyHeight()">
+            <hierarchy-view
+              [tree]="inputData?.tree ?? null"
+              [dependencies]="inputData?.dependencies ?? []"
+              [highlightedItems]="inputData?.highlightedItems ?? []"
+              [pinnedItems]="inputData?.pinnedItems ?? []"
+              [tableProperties]="inputData?.hierarchyTableProperties"
+              [store]="store"
+              [userOptions]="inputData?.hierarchyUserOptions ?? {}"
+            ></hierarchy-view>
+          </mat-card>
+          <mat-card *ngIf="inputData?.additionalProperties" class="ime-additional-properties-view">
+            <ime-additional-properties
+              [additionalProperties]="inputData?.additionalProperties!"
+            ></ime-additional-properties>
+          </mat-card>
+        </div>
         <mat-card class="properties-view">
           <properties-view
             [userOptions]="inputData?.propertiesUserOptions ?? {}"
@@ -62,10 +70,6 @@ import { ImeUiData } from "viewers/common/ime_ui_data";
         vertical-align: middle;
       }
 
-      viewer-input-method {
-        font-family: Arial, Helvetica, sans-serif;
-      }
-
       .header-button {
         background: none;
         border: none;
@@ -81,15 +85,27 @@ import { ImeUiData } from "viewers/common/ime_ui_data";
         overflow: auto;
       }
 
-      .hierarchy-view {
+      .left-views {
         font: inherit;
         margin: 0px;
         width: 50%;
-        height: 52.5rem;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+      }
+
+      .hierarchy-view, .ime-additional-properties-view {
+        font: inherit;
+        margin: 0px;
         border-radius: 0;
         border-top: 1px solid var(--default-border);
         border-right: 1px solid var(--default-border);
-        border-left: 1px solid var(--default-border);
+        box-shadow: none !important;
+      }
+
+      .ime-additional-properties-view {
+        height: 404px;
       }
 
       .properties-view {
@@ -100,6 +116,7 @@ import { ImeUiData } from "viewers/common/ime_ui_data";
         border-radius: 0;
         border-top: 1px solid var(--default-border);
         border-left: 1px solid var(--default-border);
+        box-shadow: none !important;
       }
     `,
   ]
@@ -110,4 +127,10 @@ export class ViewerInputMethodComponent {
   @Input() active = false;
   TRACE_INFO = TRACE_INFO;
   TraceType = TraceType;
+
+  public hierarchyHeight() {
+    return {
+      height: `${this.inputData?.additionalProperties ? 404 : 840}px`
+    };
+  }
 }

@@ -20,6 +20,7 @@ import { UiTreeUtils, HierarchyTreeNode, UiTreeNode } from "viewers/common/ui_tr
 import { nodeStyles } from "viewers/components/styles/node.styles";
 import { ViewerEvents } from "viewers/common/viewer_events";
 import { TraceType } from "common/trace/trace_type";
+import { TableProperties } from "viewers/common/table_properties";
 
 @Component({
   selector: "hierarchy-view",
@@ -45,6 +46,11 @@ import { TraceType } from "common/trace/trace_type";
           (ngModelChange)="updateTree()"
         >{{userOptions[option].name}}</mat-checkbox>
       </div>
+      <properties-table
+        *ngIf="tableProperties"
+        class="properties-table"
+        [properties]="tableProperties"
+      ></properties-table>
       <div class="pinned-items" *ngIf="pinnedItems.length > 0">
         <tree-node
           *ngFor="let pinnedItem of pinnedItems"
@@ -133,6 +139,13 @@ import { TraceType } from "common/trace/trace_type";
         overflow-y: auto;
       }
 
+      .properties-table {
+        padding-top: 5px;
+        position: relative;
+        display: block;
+        width: 100%;
+      }
+
       .pinned-items {
         border: 2px solid yellow;
         position: relative;
@@ -151,6 +164,7 @@ export class HierarchyComponent {
   isHighlighted = UiTreeUtils.isHighlighted;
 
   @Input() tree!: HierarchyTreeNode | null;
+  @Input() tableProperties?: TableProperties | null;
   @Input() dependencies: Array<TraceType> = [];
   @Input() highlightedItems: Array<string> = [];
   @Input() pinnedItems: Array<HierarchyTreeNode> = [];
@@ -167,8 +181,9 @@ export class HierarchyComponent {
 
   public maxHierarchyHeight() {
     const headerHeight = this.elementRef.nativeElement.querySelector(".view-header").clientHeight;
+    const max = this.tableProperties ? 400 : 800;
     return {
-      height: `${800 - headerHeight}px`
+      height: `${max - headerHeight}px`
     };
   }
 

@@ -49,26 +49,6 @@ static void TypeQueueCheckAndPop(std::deque<std::string> *type_queue) {
   }
 }
 
-static bool IsAccessDownGraded(AccessSpecifierIR old_access,
-                               AccessSpecifierIR new_access) {
-  bool access_downgraded = false;
-  switch (old_access) {
-    case AccessSpecifierIR::ProtectedAccess:
-      if (new_access == AccessSpecifierIR::PrivateAccess) {
-        access_downgraded = true;
-      }
-      break;
-    case AccessSpecifierIR::PublicAccess:
-      if (new_access != AccessSpecifierIR::PublicAccess) {
-        access_downgraded = true;
-      }
-      break;
-    default:
-      break;
-  }
-  return access_downgraded;
-}
-
 static std::string ConvertTypeIdToString(
     const AbiElementMap<const TypeIR *> &type_graph,
     const std::string &type_id) {
@@ -302,7 +282,7 @@ AbiDiffHelper::CompareCommonRecordFields(
   if (old_field->GetOffset() != new_field->GetOffset() ||
       // TODO: Should this be an inquality check instead ? Some compilers can
       // make signatures dependant on absolute values of access specifiers.
-      IsAccessDownGraded(old_field->GetAccess(), new_field->GetAccess()) ||
+      IsAccessDowngraded(old_field->GetAccess(), new_field->GetAccess()) ||
       (field_diff_status == DiffStatus::direct_diff)) {
     return std::make_pair(
         DiffStatus::direct_diff,
@@ -557,7 +537,7 @@ DiffStatus AbiDiffHelper::CompareRecordTypes(
   DiffStatus final_diff_status = DiffStatus::no_diff;
   record_type_diff_ir->SetName(old_type->GetName());
   record_type_diff_ir->SetLinkerSetKey(old_type->GetLinkerSetKey());
-  if (IsAccessDownGraded(old_type->GetAccess(), new_type->GetAccess())) {
+  if (IsAccessDowngraded(old_type->GetAccess(), new_type->GetAccess())) {
     final_diff_status = DiffStatus::indirect_diff;
     record_type_diff_ir->SetAccessDiff(
         std::make_unique<AccessSpecifierDiffIR>(
