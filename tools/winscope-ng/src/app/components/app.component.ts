@@ -15,14 +15,15 @@
  */
 import { Component, Injector, Inject, ViewEncapsulation, Input } from "@angular/core";
 import { createCustomElement } from "@angular/elements";
-import { TraceCoordinator } from "../trace_coordinator";
-import { proxyClient, ProxyState } from "trace_collection/proxy_client";
-import { PersistentStore } from "common/persistent_store";
-import { ViewerWindowManagerComponent } from "viewers/viewer_window_manager/viewer_window_manager.component";
-import { ViewerSurfaceFlingerComponent } from "viewers/viewer_surface_flinger/viewer_surface_flinger.component";
-import { Timestamp } from "common/trace/timestamp";
 import { MatSliderChange } from "@angular/material/slider";
+import { TraceCoordinator } from "app/trace_coordinator";
+import { PersistentStore } from "common/persistent_store";
+import { Timestamp } from "common/trace/timestamp";
+import { proxyClient, ProxyState } from "trace_collection/proxy_client";
 import { ViewerInputMethodComponent } from "viewers/components/viewer_input_method.component";
+import { ViewerProtologComponent} from "viewers/viewer_protolog/viewer_protolog.component";
+import { ViewerSurfaceFlingerComponent } from "viewers/viewer_surface_flinger/viewer_surface_flinger.component";
+import { ViewerWindowManagerComponent } from "viewers/viewer_window_manager/viewer_window_manager.component";
 
 @Component({
   selector: "app-root",
@@ -133,17 +134,22 @@ export class AppComponent {
     @Inject(Injector) injector: Injector
   ) {
     this.traceCoordinator = new TraceCoordinator();
-    if (!customElements.get("viewer-window-manager")) {
-      customElements.define("viewer-window-manager",
-        createCustomElement(ViewerWindowManagerComponent, {injector}));
+
+    if (!customElements.get("viewer-input-method")) {
+      customElements.define("viewer-input-method",
+        createCustomElement(ViewerInputMethodComponent, {injector}));
+    }
+    if (!customElements.get("viewer-protolog")) {
+      customElements.define("viewer-protolog",
+        createCustomElement(ViewerProtologComponent, {injector}));
     }
     if (!customElements.get("viewer-surface-flinger")) {
       customElements.define("viewer-surface-flinger",
         createCustomElement(ViewerSurfaceFlingerComponent, {injector}));
     }
-    if (!customElements.get("viewer-input-method")) {
-      customElements.define("viewer-input-method",
-        createCustomElement(ViewerInputMethodComponent, {injector}));
+    if (!customElements.get("viewer-window-manager")) {
+      customElements.define("viewer-window-manager",
+        createCustomElement(ViewerWindowManagerComponent, {injector}));
     }
   }
 

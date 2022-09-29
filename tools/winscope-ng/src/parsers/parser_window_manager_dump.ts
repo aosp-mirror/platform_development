@@ -43,7 +43,7 @@ class ParserWindowManagerDump extends Parser {
     return new Timestamp(TimestampType.ELAPSED, 0n);
   }
 
-  override processDecodedEntry(entryProto: any): WindowManagerState {
+  override processDecodedEntry(index: number, entryProto: any): WindowManagerState {
     return WindowManagerState.fromProto(entryProto);
   }
 }

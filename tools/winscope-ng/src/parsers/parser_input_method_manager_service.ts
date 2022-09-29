@@ -55,7 +55,7 @@ class ParserInputMethodManagerService extends Parser {
     return undefined;
   }
 
-  protected override processDecodedEntry(entryProto: TraceTreeNode): TraceTreeNode {
+  protected override processDecodedEntry(index: number, entryProto: TraceTreeNode): TraceTreeNode {
     return {
       name: StringUtils.nanosecondsToHuman(entryProto.elapsedRealtimeNanos ?? 0) + " - " + entryProto.where,
       kind: "InputMethodManagerService entry",
