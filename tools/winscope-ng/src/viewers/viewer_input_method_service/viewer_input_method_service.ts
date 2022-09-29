@@ -14,18 +14,23 @@
  * limitations under the License.
  */
 import {TraceType} from "common/trace/trace_type";
+import { PresenterInputMethodService } from "./presenter_input_method_service";
 import { ViewerInputMethod } from "viewers/common/viewer_input_method";
 
 class ViewerInputMethodService extends ViewerInputMethod {
-  public override getTitle(): string {
+  public getTitle(): string {
     return "Input Method Service";
   }
 
-  public override getDependencies(): TraceType[] {
+  public getDependencies(): TraceType[] {
     return ViewerInputMethodService.DEPENDENCIES;
   }
 
-  public static override readonly DEPENDENCIES: TraceType[] = [TraceType.INPUT_METHOD_SERVICE];
+  protected initialisePresenter() {
+    return new PresenterInputMethodService(this.imeUiCallback, this.getDependencies());
+  }
+
+  public static readonly DEPENDENCIES: TraceType[] = [TraceType.INPUT_METHOD_SERVICE];
 }
 
 export {ViewerInputMethodService};

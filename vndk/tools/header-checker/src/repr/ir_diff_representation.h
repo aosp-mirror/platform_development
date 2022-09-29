@@ -31,7 +31,6 @@ namespace repr {
 class DiffMessageIR {
  public:
   enum DiffKind {
-    Extension,  // Applicable for enums.
     Added,
     Removed,
     Referenced,
@@ -60,6 +59,10 @@ class AccessSpecifierDiffIR {
   AccessSpecifierDiffIR(AccessSpecifierIR old_access,
                         AccessSpecifierIR new_access)
       : old_access_(old_access), new_access_(new_access) {}
+
+  AccessSpecifierIR GetOldAccess() const { return old_access_; }
+
+  AccessSpecifierIR GetNewAccess() const { return new_access_; }
 
  protected:
   AccessSpecifierIR old_access_;
@@ -196,9 +199,12 @@ class RecordTypeDiffIR : public DiffMessageIR {
 
   bool DiffExists() const {
     return (type_diff_ != nullptr) || (vtable_diffs_ != nullptr) ||
-        (fields_removed_.size() != 0) || (field_diffs_.size() != 0) ||
-        (access_diff_ != nullptr) || (base_specifier_diffs_ != nullptr);
+           (field_diffs_.size() != 0) || (fields_removed_.size() != 0) ||
+           (fields_added_.size() != 0) || (access_diff_ != nullptr) ||
+           (base_specifier_diffs_ != nullptr);
   }
+
+  bool IsExtended() const;
 
   const TypeDiffIR *GetTypeDiff() const {
     return type_diff_.get();
