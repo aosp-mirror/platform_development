@@ -54,17 +54,19 @@ CompatibilityStatusIR ProtobufIRDiffDumper::GetCompatibilityStatusIR() {
 
   if (diff_tu_->enum_type_extension_diffs().size() != 0 ||
       diff_tu_->functions_added().size() != 0 ||
-      diff_tu_->global_vars_added().size() != 0) {
+      diff_tu_->global_vars_added().size() != 0 ||
+      diff_tu_->record_type_extension_diffs().size() != 0) {
     combined_status = combined_status | CompatibilityStatusIR::Extension;
   }
 
   if (diff_tu_->unreferenced_enum_type_diffs().size() != 0 ||
-      diff_tu_->unreferenced_enum_types_removed().size() != 0 ||
-      diff_tu_->unreferenced_record_types_removed().size() != 0 ||
-      diff_tu_->unreferenced_record_type_diffs().size() != 0 ||
       diff_tu_->unreferenced_enum_type_extension_diffs().size() != 0 ||
+      diff_tu_->unreferenced_enum_types_added().size() != 0 ||
+      diff_tu_->unreferenced_enum_types_removed().size() != 0 ||
+      diff_tu_->unreferenced_record_type_diffs().size() != 0 ||
+      diff_tu_->unreferenced_record_type_extension_diffs().size() != 0 ||
       diff_tu_->unreferenced_record_types_added().size() != 0 ||
-      diff_tu_->unreferenced_enum_types_added().size()) {
+      diff_tu_->unreferenced_record_types_removed().size() != 0) {
     combined_status =
         combined_status | CompatibilityStatusIR::UnreferencedChanges;
   }
@@ -279,12 +281,22 @@ bool ProtobufIRDiffDumper::AddRecordTypeDiffIR(
     const RecordTypeDiffIR *record_diff_ir, const std::string &type_stack,
     DiffKind diff_kind) {
   abi_diff::RecordTypeDiff *added_record_type_diff = nullptr;
+  bool is_extended = record_diff_ir->IsExtended();
   switch (diff_kind) {
     case DiffKind::Unreferenced:
-      added_record_type_diff = diff_tu_->add_unreferenced_record_type_diffs();
+      if (is_extended) {
+        added_record_type_diff =
+            diff_tu_->add_unreferenced_record_type_extension_diffs();
+      } else {
+        added_record_type_diff = diff_tu_->add_unreferenced_record_type_diffs();
+      }
       break;
     case DiffKind::Referenced:
-      added_record_type_diff = diff_tu_->add_record_type_diffs();
+      if (is_extended) {
+        added_record_type_diff = diff_tu_->add_record_type_extension_diffs();
+      } else {
+        added_record_type_diff = diff_tu_->add_record_type_diffs();
+      }
       break;
     default:
       break;
