@@ -1,6 +1,7 @@
 struct Struct1 {
  protected:
-  int member;
+  short offset_0;
+  int offset_32;
 };
 
 struct Struct2 {
