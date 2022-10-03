@@ -276,8 +276,7 @@ public class Configuration {
      */
     public static void parseFile(File file, Collection<Pattern> patterns)
             throws IOException {
-        BufferedReader in = new BufferedReader(new FileReader(file));
-        try {
+        try (BufferedReader in = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = in.readLine()) != null) {
                 String trimmed = line.trim();
@@ -285,8 +284,6 @@ public class Configuration {
                     patterns.add(Pattern.compile(trimmed));
                 }
             }
-        } finally {
-            in.close();
         }
     }
 }
