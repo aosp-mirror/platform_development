@@ -21,6 +21,15 @@
    "referenced_type" : "_ZTIi",
    "self_type" : "_ZTIi",
    "size" : 4
+  },
+  {
+   "alignment" : 2,
+   "is_integral" : true,
+   "linker_set_key" : "_ZTIs",
+   "name" : "short",
+   "referenced_type" : "_ZTIs",
+   "self_type" : "_ZTIs",
+   "size" : 2
   }
  ],
  "elf_functions" :
@@ -81,12 +90,22 @@
    "fields" :
    [
     {
-     "field_name" : "member",
+     "field_name" : "offset_0",
+     "referenced_type" : "_ZTIs"
+    },
+    {
+     "field_name" : "offset_16",
+     "field_offset" : 16,
+     "referenced_type" : "_ZTIs"
+    },
+    {
+     "field_name" : "offset_32",
+     "field_offset" : 32,
      "referenced_type" : "_ZTIi"
     },
     {
-     "field_name" : "added_member",
-     "field_offset" : 32,
+     "field_name" : "offset_64",
+     "field_offset" : 64,
      "referenced_type" : "_ZTIi"
     }
    ],
@@ -94,7 +113,7 @@
    "name" : "Struct1",
    "referenced_type" : "_ZTI7Struct1",
    "self_type" : "_ZTI7Struct1",
-   "size" : 8,
+   "size" : 12,
    "source_file" : "development/vndk/tools/header-checker/tests/integration/struct_extensions/include/extensions.h"
   },
   {

@@ -53,15 +53,6 @@ bool RecordTypeDiffIR::IsExtended() const {
     return false;
   }
   if (fields_added_.size() != 0) {
-    if (type_diff_ != nullptr) {
-      const uint64_t old_size = type_diff_->GetSizes().first;
-      for (const RecordFieldIR *field_added : fields_added_) {
-        // The offset is in bits; the size is in bytes.
-        if (field_added->GetOffset() < old_size * 8) {
-          return false;
-        }
-      }
-    }
     is_extended = true;
   }
   return is_extended;
