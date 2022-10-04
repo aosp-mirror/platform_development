@@ -102,6 +102,8 @@ class VTableLayoutDiffIR {
     return new_layout_;
   }
 
+  bool IsExtended() const;
+
  protected:
   const VTableLayoutIR &old_layout_;
   const VTableLayoutIR &new_layout_;

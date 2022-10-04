@@ -246,18 +246,13 @@ bool AbiDiffHelper::CompareVTables(
       old_record->GetVTableLayout().GetVTableComponents();
   const std::vector<VTableComponentIR> &new_components =
       new_record->GetVTableLayout().GetVTableComponents();
-  if (old_components.size() > new_components.size()) {
-    // Something in the vtable got deleted.
+  if (old_components.size() != new_components.size()) {
     return false;
   }
-  uint32_t i = 0;
-  while (i < old_components.size()) {
-    auto &old_element = old_components.at(i);
-    auto &new_element = new_components.at(i);
-    if (!CompareVTableComponents(old_element, new_element)) {
+  for (size_t i = 0; i < old_components.size(); i++) {
+    if (!CompareVTableComponents(old_components[i], new_components[i])) {
       return false;
     }
-    i++;
   }
   return true;
 }
