@@ -50,7 +50,7 @@
       <span class="group-header">
         <span class="group-heading">Buffer</span>
       </span>
-      <div v-if="layer.isBufferLayer" class="left-column">
+      <div v-if="layer.activeBuffer.isNotEmpty" class="left-column">
         <div />
         <span class="key">Size:</span>
         <span class="value">{{ layer.activeBuffer }}</span>
@@ -67,7 +67,7 @@
         >
         <span class="value">{{ layer.bufferTransform }}</span>
       </div>
-      <div v-if="layer.isBufferLayer" class="right-column">
+      <div v-if="layer.activeBuffer.isNotEmpty" class="right-column">
         <div />
         <span class="key"
           >Destination Frame:<md-tooltip
