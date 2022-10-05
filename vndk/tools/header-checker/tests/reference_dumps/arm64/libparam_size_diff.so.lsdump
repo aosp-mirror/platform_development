@@ -1,0 +1,99 @@
+{
+ "array_types" : [],
+ "builtin_types" :
+ [
+  {
+   "alignment" : 4,
+   "is_integral" : true,
+   "linker_set_key" : "_ZTIi",
+   "name" : "int",
+   "referenced_type" : "_ZTIi",
+   "self_type" : "_ZTIi",
+   "size" : 4
+  },
+  {
+   "linker_set_key" : "_ZTIv",
+   "name" : "void",
+   "referenced_type" : "_ZTIv",
+   "self_type" : "_ZTIv"
+  }
+ ],
+ "elf_functions" :
+ [
+  {
+   "name" : "_Z11PassByValue9Parameter"
+  },
+  {
+   "name" : "_Z13ReturnByValuev"
+  }
+ ],
+ "elf_objects" : [],
+ "enum_types" : [],
+ "function_types" : [],
+ "functions" :
+ [
+  {
+   "function_name" : "PassByValue",
+   "linker_set_key" : "_Z11PassByValue9Parameter",
+   "parameters" :
+   [
+    {
+     "referenced_type" : "_ZTI9Parameter"
+    }
+   ],
+   "return_type" : "_ZTIv",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/pass_by_value/include/param_size_diff.h"
+  },
+  {
+   "function_name" : "ReturnByValue",
+   "linker_set_key" : "_Z13ReturnByValuev",
+   "return_type" : "_ZTI6Return",
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/pass_by_value/include/param_size_diff.h"
+  }
+ ],
+ "global_vars" : [],
+ "lvalue_reference_types" : [],
+ "pointer_types" : [],
+ "qualified_types" : [],
+ "record_types" :
+ [
+  {
+   "alignment" : 4,
+   "fields" :
+   [
+    {
+     "field_name" : "member",
+     "referenced_type" : "_ZTIi"
+    }
+   ],
+   "linker_set_key" : "_ZTI6Return",
+   "name" : "Return",
+   "referenced_type" : "_ZTI6Return",
+   "self_type" : "_ZTI6Return",
+   "size" : 4,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/pass_by_value/include/param_size_diff.h"
+  },
+  {
+   "alignment" : 4,
+   "fields" :
+   [
+    {
+     "field_name" : "member",
+     "referenced_type" : "_ZTIi"
+    },
+    {
+     "field_name" : "extra_member",
+     "field_offset" : 32,
+     "referenced_type" : "_ZTIi"
+    }
+   ],
+   "linker_set_key" : "_ZTI9Parameter",
+   "name" : "Parameter",
+   "referenced_type" : "_ZTI9Parameter",
+   "self_type" : "_ZTI9Parameter",
+   "size" : 8,
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/pass_by_value/include/param_size_diff.h"
+  }
+ ],
+ "rvalue_reference_types" : []
+}
