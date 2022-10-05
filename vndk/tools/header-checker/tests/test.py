@@ -311,12 +311,11 @@ class HeaderCheckerTest(unittest.TestCase):
              "-input-format-new", "Json"])
 
     def test_opaque_type_self_diff(self):
-        lsdump = os.path.join(
-            SCRIPT_DIR, "abi_dumps", "opaque_ptr_types.lsdump")
-        self.run_and_compare_abi_diff(
-            lsdump, lsdump, "libexample", "arm64", 0,
+        self.prepare_and_run_abi_diff_all_archs(
+            "libopaque_type", "libopaque_type", 0,
             ["-input-format-old", "Json", "-input-format-new", "Json",
-             "-consider-opaque-types-different"])
+             "-consider-opaque-types-different"],
+            create_old=False, create_new=False)
 
     def test_allow_adding_removing_weak_symbols(self):
         module_old = Module.get_test_modules_by_name("libweak_symbols_old")[0]
