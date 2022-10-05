@@ -688,6 +688,33 @@ TEST_MODULES = [
         linker_flags=['-output-format', 'Json'],
         has_reference_dump=True,
     ),
+    LsdumpModule(
+        name='libpass_by_value',
+        arch='arm64',
+        srcs=['integration/pass_by_value/include/base.h'],
+        version_script='integration/pass_by_value/map.txt',
+        export_include_dirs=['integration/pass_by_value/include'],
+        linker_flags=['-output-format', 'Json'],
+        has_reference_dump=True,
+    ),
+    LsdumpModule(
+        name='libparam_size_diff',
+        arch='arm64',
+        srcs=['integration/pass_by_value/include/param_size_diff.h'],
+        version_script='integration/pass_by_value/map.txt',
+        export_include_dirs=['integration/pass_by_value/include'],
+        linker_flags=['-output-format', 'Json'],
+        has_reference_dump=True,
+    ),
+    LsdumpModule(
+        name='libreturn_size_diff',
+        arch='arm64',
+        srcs=['integration/pass_by_value/include/return_size_diff.h'],
+        version_script='integration/pass_by_value/map.txt',
+        export_include_dirs=['integration/pass_by_value/include'],
+        linker_flags=['-output-format', 'Json'],
+        has_reference_dump=True,
+    ),
 ]
 
 TEST_MODULES = {m.name: m for m in TEST_MODULES}

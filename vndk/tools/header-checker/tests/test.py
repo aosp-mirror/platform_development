@@ -407,6 +407,18 @@ class HeaderCheckerTest(unittest.TestCase):
             flags=["-input-format-new", "Json", "-input-format-old", "Json"],
             create_old=False, create_new=False)
 
+    def test_param_size_diff(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libpass_by_value", "libparam_size_diff", 8,
+            flags=["-input-format-new", "Json", "-input-format-old", "Json"],
+            create_old=False, create_new=False)
+
+    def test_return_size_diff(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libpass_by_value", "libreturn_size_diff", 8,
+            flags=["-input-format-new", "Json", "-input-format-old", "Json"],
+            create_old=False, create_new=False)
+
 
 if __name__ == '__main__':
     unittest.main()
