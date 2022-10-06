@@ -260,11 +260,24 @@ bool AbiDiffHelper::CompareVTables(
   return true;
 }
 
-bool AbiDiffHelper::CompareSizeAndAlignment(
-    const TypeIR *old_type,
-    const TypeIR *new_type) {
+static bool CompareSizeAndAlignment(const TypeIR *old_type,
+                                    const TypeIR *new_type) {
   return old_type->GetSize() == new_type->GetSize() &&
       old_type->GetAlignment() == new_type->GetAlignment();
+}
+
+bool AbiDiffHelper::AreTypeSizeAndAlignmentEqual(
+    const std::string &old_type_id, const std::string &new_type_id) const {
+  AbiElementMap<const TypeIR *>::const_iterator old_it =
+      old_types_.find(old_type_id);
+  AbiElementMap<const TypeIR *>::const_iterator new_it =
+      new_types_.find(new_type_id);
+
+  if (old_it == old_types_.end() || new_it == new_types_.end()) {
+    return !diff_policy_options_.consider_opaque_types_different_;
+  }
+
+  return CompareSizeAndAlignment(old_it->second, new_it->second);
 }
 
 DiffStatusPair<std::unique_ptr<RecordFieldDiffIR>>
@@ -496,17 +509,14 @@ AbiDiffHelper::FixupDiffedFieldTypeIds(
 }
 
 DiffStatus AbiDiffHelper::CompareFunctionTypes(
-    const FunctionTypeIR *old_type,
-    const FunctionTypeIR *new_type,
-    std::deque<std::string> *type_queue,
-    DiffMessageIR::DiffKind diff_kind) {
+    const CFunctionLikeIR *old_type, const CFunctionLikeIR *new_type,
+    std::deque<std::string> *type_queue, DiffMessageIR::DiffKind diff_kind) {
   DiffStatus param_diffs = CompareFunctionParameters(old_type->GetParameters(),
                                                      new_type->GetParameters(),
                                                      type_queue, diff_kind);
-  DiffStatus return_type_diff =
-      CompareAndDumpTypeDiff(old_type->GetReturnType(),
-                             new_type->GetReturnType(),
-                             type_queue, diff_kind);
+  DiffStatus return_type_diff = CompareParameterOrReturnType(
+      old_type->GetReturnType(), new_type->GetReturnType(), type_queue,
+      diff_kind);
 
   if (param_diffs == DiffStatus::direct_diff ||
       return_type_diff == DiffStatus::direct_diff) {
@@ -698,16 +708,26 @@ DiffStatus AbiDiffHelper::CompareFunctionParameters(
   while (i < old_parameters_size) {
     const ParamIR &old_parameter = old_parameters.at(i);
     const ParamIR &new_parameter = new_parameters.at(i);
-    if ((CompareAndDumpTypeDiff(old_parameter.GetReferencedType(),
-                               new_parameter.GetReferencedType(),
-                               type_queue, diff_kind) ==
-        DiffStatus::direct_diff) ||
+    if (CompareParameterOrReturnType(old_parameter.GetReferencedType(),
+                                     new_parameter.GetReferencedType(),
+                                     type_queue,
+                                     diff_kind) == DiffStatus::direct_diff ||
         (old_parameter.GetIsDefault() != new_parameter.GetIsDefault())) {
       return DiffStatus::direct_diff;
     }
     i++;
   }
   return DiffStatus::no_diff;
+}
+
+DiffStatus AbiDiffHelper::CompareParameterOrReturnType(
+    const std::string &old_type_id, const std::string &new_type_id,
+    std::deque<std::string> *type_queue, DiffMessageIR::DiffKind diff_kind) {
+  if (!AreTypeSizeAndAlignmentEqual(old_type_id, new_type_id)) {
+    return DiffStatus::direct_diff;
+  }
+  return CompareAndDumpTypeDiff(old_type_id, new_type_id, type_queue,
+                                diff_kind);
 }
 
 DiffStatus AbiDiffHelper::CompareAndDumpTypeDiff(
