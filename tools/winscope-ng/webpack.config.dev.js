@@ -20,7 +20,10 @@ const configDev = {
   mode: 'development',
   entry: {
     polyfills: "./src/polyfills.ts",
-    styles: "./src/styles.css",
+    styles: [
+      "./src/material-theme.scss",
+      "./src/styles.css"
+    ],
     app: "./src/main.dev.ts"
   },
   devtool: "source-map",

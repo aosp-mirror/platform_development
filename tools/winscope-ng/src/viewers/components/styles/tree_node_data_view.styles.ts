@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 export const treeNodeDataViewStyles = `
-    .kind {font-weight: bold}
-
-    span {overflow-wrap: break-word; flex: 1 1 auto; width: 0; word-break: break-all}
-
     .tree-view-internal-chip {
         display: inline-block;
     }
 
     .tree-view-chip {
+        margin: 0 5px;
         padding: 0 10px;
         border-radius: 10px;
         background-color: #aaa;
@@ -31,22 +28,18 @@ export const treeNodeDataViewStyles = `
 
     .tree-view-chip.tree-view-chip-warn {
         background-color: #ffaa6b;
-        color: black;
     }
 
     .tree-view-chip.tree-view-chip-error {
         background-color: #ff6b6b;
-        color: black;
     }
 
     .tree-view-chip.tree-view-chip-gpu {
         background-color: #00c853;
-        color: black;
     }
 
     .tree-view-chip.tree-view-chip-hwc {
         background-color: #448aff;
-        color: black;
     }
 `;
 

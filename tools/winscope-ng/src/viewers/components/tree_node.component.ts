@@ -21,53 +21,50 @@ import { UiTreeUtils, UiTreeNode, DiffType, HierarchyTreeNode } from "viewers/co
   selector: "tree-node",
   template: `
     <button
+      *ngIf="showChevron()"
+      color="primary"
       class="icon-button toggle-tree-btn"
       (click)="toggleTree($event)"
-      *ngIf="showChevron()"
     >
-      <mat-icon class="icon-button">
+      <mat-icon>
         {{isCollapsed ? "arrow_drop_down" : "chevron_right"}}
       </mat-icon>
     </button>
 
-    <div
-      class="leaf-node-icon-wrapper"
-      *ngIf="showLeafNodeIcon()"
-    >
+    <div *ngIf="showLeafNodeIcon()" class="leaf-node-icon-wrapper">
       <mat-icon class="leaf-node-icon"></mat-icon>
     </div>
 
     <button
+      *ngIf="showPinNodeIcon()"
+      color="primary"
       class="icon-button pin-node-btn"
       (click)="pinNode($event)"
-      *ngIf="showPinNodeIcon()"
     >
-      <mat-icon class="icon-button">
+      <mat-icon>
         {{isPinned ? "star" : "star_border"}}
       </mat-icon>
     </button>
 
     <div class="description">
       <tree-node-data-view
-        [item]="item"
         *ngIf="!isPropertiesTreeNode()"
+        [item]="item"
       ></tree-node-data-view>
       <tree-node-properties-data-view
-        [item]="item"
         *ngIf="isPropertiesTreeNode()"
+        [item]="item"
       ></tree-node-properties-data-view>
     </div>
 
     <button
       *ngIf="hasChildren && !isCollapsed"
-      (click)="expandTree($event)"
+      color="primary"
       class="icon-button expand-tree-btn"
       [class]="collapseDiffClass"
+      (click)="expandTree($event)"
     >
-      <mat-icon
-        aria-hidden="true"
-        class="icon-button"
-      >
+      <mat-icon aria-hidden="true">
         more_horiz
       </mat-icon>
     </button>

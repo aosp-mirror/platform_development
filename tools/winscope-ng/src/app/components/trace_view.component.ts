@@ -27,54 +27,47 @@ import { Viewer } from "viewers/viewer";
 @Component({
   selector: "trace-view",
   template: `
-    <mat-card class="trace-card">
-      <mat-card-header class="trace-view-header">
-        <span class="header-items-wrapper">
-          <nav mat-tab-nav-bar class="viewer-nav-bar">
-            <a
-              mat-tab-link
-              *ngFor="let tab of viewerTabs"
-              [active]="isCurrentActiveCard(tab.cardId)"
-              (click)="showViewer(tab.cardId)"
-              class="viewer-tab"
-            >{{tab.label}}</a>
-          </nav>
-          <button
-            mat-stroked-button
-            class="icon-button save-btn"
-            (click)="downloadAllTraces()"
-          >Download all traces</button>
-        </span>
-      </mat-card-header>
-      <mat-card-content class="trace-view-content">
-      </mat-card-content>
-    </mat-card>
+    <div class="header-items-wrapper">
+      <nav mat-tab-nav-bar class="viewer-nav-bar">
+        <a
+          *ngFor="let tab of viewerTabs"
+          mat-tab-link
+          [active]="isCurrentActiveCard(tab.cardId)"
+          (click)="showViewer(tab.cardId)"
+          class="viewer-tab"
+        >{{tab.label}}</a>
+      </nav>
+      <button
+        color="primary"
+        mat-button
+        class="save-btn"
+        (click)="downloadAllTraces()"
+      >Download all traces</button>
+    </div>
+    <div class="trace-view-content">
+    </div>
   `,
   styles: [
     `
-      :host /deep/ .trace-view-header .mat-card-header-text {
-        margin: 0;
-      }
-
       .header-items-wrapper {
         width: 100%;
-        vertical-align: middle;
-        position: relative;
-        display: inline-block;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
       }
 
       .viewer-nav-bar {
-        vertical-align: middle;
-        display: inline-block;
+        height: 100%;
+      }
+
+      .trace-view-content {
+        height: 0;
+        flex-grow: 1;
       }
 
       .save-btn {
-        float: right;
-        vertical-align: middle;
-        border: none;
         height: 100%;
-        margin: 0;
-        display: inline-block;
       }
     `
   ]

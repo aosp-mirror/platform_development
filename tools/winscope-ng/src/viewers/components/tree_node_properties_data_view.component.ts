@@ -20,11 +20,13 @@ import { PropertiesTreeNode } from "viewers/common/ui_tree_utils";
 @Component({
   selector: "tree-node-properties-data-view",
   template: `
-    <span>
+    <p class="mat-body-1">
       <span class="key">{{ item.propertyKey }}</span>
-      <span *ngIf="item.propertyValue">: </span>
-      <span class="value" *ngIf="item.propertyValue" [class]="[valueClass()]">{{ item.propertyValue }}</span>
-    </span>
+      <ng-container *ngIf="item.propertyValue">
+        :&ngsp;
+        <span [class]="[valueClass()]" class="value">{{ item.propertyValue }}</span>
+      </ng-container>
+    </p>
   `,
   styles: [ treeNodePropertiesDataViewStyles ]
 })
@@ -52,6 +54,7 @@ export class TreeNodePropertiesDataViewComponent {
     if (!isNaN(Number(this.item.propertyValue))) {
       return "number";
     }
+
     return null;
   }
 }
