@@ -18,6 +18,8 @@
 
 #include <llvm/Support/raw_ostream.h>
 
+#include <unordered_set>
+
 
 namespace header_checker {
 namespace repr {
@@ -260,6 +262,20 @@ bool AbiDiffHelper::CompareVTables(
   return true;
 }
 
+bool AbiDiffHelper::AreOpaqueTypesEqual(const std::string &old_type_id,
+                                        const std::string &new_type_id) const {
+  if (!diff_policy_options_.consider_opaque_types_different_ ||
+      old_type_id == new_type_id) {
+    return true;
+  }
+  // __va_list is an opaque type defined by the compiler. ARM ABI requires
+  // __va_list to be in std namespace. Its mangled name is _ZTISt9__va_list, but
+  // some versions of clang produce _ZTI9__va_list. The names are equivalent.
+  static const std::unordered_set<std::string> va_list_names{
+      "_ZTI9__va_list", "_ZTISt9__va_list"};
+  return va_list_names.count(old_type_id) && va_list_names.count(new_type_id);
+}
+
 static bool CompareSizeAndAlignment(const TypeIR *old_type,
                                     const TypeIR *new_type) {
   return old_type->GetSize() == new_type->GetSize() &&
@@ -274,7 +290,7 @@ bool AbiDiffHelper::AreTypeSizeAndAlignmentEqual(
       new_types_.find(new_type_id);
 
   if (old_it == old_types_.end() || new_it == new_types_.end()) {
-    return !diff_policy_options_.consider_opaque_types_different_;
+    return AreOpaqueTypesEqual(old_type_id, new_type_id);
   }
 
   return CompareSizeAndAlignment(old_it->second, new_it->second);
@@ -825,10 +841,9 @@ DiffStatus AbiDiffHelper::CompareAndDumpTypeDiff(
   if (old_it == old_types_.end() || new_it == new_types_.end()) {
     TypeQueueCheckAndPop(type_queue);
     // One of the types were hidden, we cannot compare further.
-    if (diff_policy_options_.consider_opaque_types_different_) {
-      return DiffStatus::opaque_diff;
-    }
-    return DiffStatus::no_diff;
+    return AreOpaqueTypesEqual(old_type_id, new_type_id)
+               ? DiffStatus::no_diff
+               : DiffStatus::opaque_diff;
   }
 
   LinkableMessageKind old_kind = old_it->second->GetKind();

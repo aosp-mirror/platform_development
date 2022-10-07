@@ -519,6 +519,15 @@ TEST_MODULES = [
         has_reference_dump=True,
     ),
     LsdumpModule(
+        name='libopaque_type',
+        arch='arm64',
+        srcs=['integration/opaque_type/include/opaque_type.h'],
+        version_script='integration/opaque_type/map.txt',
+        export_include_dirs=['integration/opaque_type/include'],
+        linker_flags=['-output-format', 'Json'],
+        has_reference_dump=True,
+    ),
+    LsdumpModule(
         name='libversion_script_example',
         arch='arm64',
         srcs=[
