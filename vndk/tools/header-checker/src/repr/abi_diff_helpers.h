@@ -88,6 +88,9 @@ class AbiDiffHelper {
         ignored_linker_set_keys_(ignored_linker_set_keys),
         ir_diff_dumper_(ir_diff_dumper) {}
 
+  bool AreOpaqueTypesEqual(const std::string &old_type_str,
+                           const std::string &new_type_str) const;
+
   bool AreTypeSizeAndAlignmentEqual(const std::string &old_type_str,
                                     const std::string &new_type_str) const;
 
