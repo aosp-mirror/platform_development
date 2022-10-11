@@ -24,6 +24,7 @@ import { ViewerInputMethodComponent } from "viewers/components/viewer_input_meth
 import { ViewerProtologComponent} from "viewers/viewer_protolog/viewer_protolog.component";
 import { ViewerSurfaceFlingerComponent } from "viewers/viewer_surface_flinger/viewer_surface_flinger.component";
 import { ViewerWindowManagerComponent } from "viewers/viewer_window_manager/viewer_window_manager.component";
+import { ViewerTransactionsComponent } from "viewers/viewer_transactions/viewer_transactions.component";
 
 @Component({
   selector: "app-root",
@@ -146,6 +147,10 @@ export class AppComponent {
     if (!customElements.get("viewer-surface-flinger")) {
       customElements.define("viewer-surface-flinger",
         createCustomElement(ViewerSurfaceFlingerComponent, {injector}));
+    }
+    if (!customElements.get("viewer-transactions")) {
+      customElements.define("viewer-transactions",
+        createCustomElement(ViewerTransactionsComponent, {injector}));
     }
     if (!customElements.get("viewer-window-manager")) {
       customElements.define("viewer-window-manager",
