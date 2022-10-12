@@ -337,6 +337,9 @@ def get_binary_arch(binary_file):
     elif e_machine == 0x3E:
         assert ei_class == 2
         return "x86_64"
+    elif e_machine == 0xF3:
+        assert ei_class == 2
+        return "riscv64"
     else:
         raise RuntimeError("unknown architecture: 0x{:x}".format(e_machine))
 
