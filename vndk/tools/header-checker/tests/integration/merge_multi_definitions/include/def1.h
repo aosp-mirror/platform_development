@@ -6,4 +6,8 @@ struct Struct {
 
 struct Opaque;
 
-void func(const struct Struct *, const struct Opaque *);
+struct DefinedInOneHeader;
+
+extern "C" {
+void func(Struct *, Opaque *, DefinedInOneHeader *);
+}
