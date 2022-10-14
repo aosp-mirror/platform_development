@@ -680,6 +680,18 @@ TEST_MODULES = [
         has_reference_dump=True,
     ),
     LsdumpModule(
+        name='libdiff_multi_definitions',
+        arch='arm64',
+        srcs=[
+            'integration/merge_multi_definitions/include/def1.h',
+            'integration/merge_multi_definitions/include/link_to_def2.h',
+        ],
+        version_script='integration/merge_multi_definitions/map.txt',
+        export_include_dirs=['integration/merge_multi_definitions/include'],
+        linker_flags=['-output-format', 'Json', '-sources-per-thread', '1'],
+        has_reference_dump=True,
+    ),
+    LsdumpModule(
         name='libstruct_extensions',
         arch='arm64',
         srcs=['integration/struct_extensions/include/base.h'],
