@@ -18,19 +18,23 @@ import {Component} from "@angular/core";
 @Component({
   selector: "web-adb",
   template: `
-      <div id="info-message">
+      <p class="text-icon-wrapper mat-body-1">
         <mat-icon class="adb-icon">info</mat-icon>
         <span class="adb-info">Add new device</span>
-      </div>
-      <div>
-        <p>Click the button below to follow instructions in the Chrome pop-up.</p>
-        <p>Selecting a device will kill all existing ADB connections.</p>
-      </div>
-      <div>
-        <button mat-raised-button>Select a device</button>
-      </div>
+      </p>
+      <p class="mat-body-1">Click the button below to follow instructions in the Chrome pop-up.</p>
+      <p class="mat-body-1">Selecting a device will kill all existing ADB connections.</p>
+      <button color="primary" mat-raised-button>Select a device</button>
   `,
-  styles: [".icon-message {vertical-align: middle;}"]
+  styles: [
+    `
+      .text-icon-wrapper {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+      }
+    `
+  ]
 })
 export class WebAdbComponent {
   adbDevice = null;

@@ -25,99 +25,60 @@ import { PersistentStore } from "common/persistent_store";
 @Component({
   selector: "viewer-window-manager",
   template: `
-      <div fxLayout="row wrap" fxLayoutGap="10px grid" class="card-grid">
-        <mat-card id="wm-rects-view" class="rects-view">
-          <rects-view
-            [rects]="inputData?.rects ?? []"
-            [displayIds]="inputData?.displayIds ?? []"
-            [highlightedItems]="inputData?.highlightedItems ?? []"
-            [forceRefresh]="active"
-          ></rects-view>
-        </mat-card>
-        <div fxLayout="row wrap" fxLayoutGap="10px grid" class="card-grid">
-          <mat-card id="wm-hierarchy-view" class="hierarchy-view">
-            <hierarchy-view
-              [tree]="inputData?.tree ?? null"
-              [dependencies]="inputData?.dependencies ?? []"
-              [highlightedItems]="inputData?.highlightedItems ?? []"
-              [pinnedItems]="inputData?.pinnedItems ?? []"
-              [store]="store"
-              [userOptions]="inputData?.hierarchyUserOptions ?? {}"
-            ></hierarchy-view>
-          </mat-card>
-          <mat-card id="wm-properties-view" class="properties-view">
-            <properties-view
-              [userOptions]="inputData?.propertiesUserOptions ?? {}"
-              [propertiesTree]="inputData?.propertiesTree ?? {}"
-              [isProtoDump]="true"
-            ></properties-view>
-          </mat-card>
-        </div>
+      <div class="card-grid">
+        <rects-view
+          id="wm-rects-view"
+          class="rects-view"
+          [rects]="inputData?.rects ?? []"
+          [displayIds]="inputData?.displayIds ?? []"
+          [highlightedItems]="inputData?.highlightedItems ?? []"
+          [forceRefresh]="active"
+        ></rects-view>
+        <hierarchy-view
+          id="wm-hierarchy-view"
+          class="hierarchy-view"
+          [tree]="inputData?.tree ?? null"
+          [dependencies]="inputData?.dependencies ?? []"
+          [highlightedItems]="inputData?.highlightedItems ?? []"
+          [pinnedItems]="inputData?.pinnedItems ?? []"
+          [store]="store"
+          [userOptions]="inputData?.hierarchyUserOptions ?? {}"
+        ></hierarchy-view>
+        <properties-view
+          id="wm-properties-view"
+          class="properties-view"
+          [userOptions]="inputData?.propertiesUserOptions ?? {}"
+          [propertiesTree]="inputData?.propertiesTree ?? {}"
+          [isProtoDump]="true"
+        ></properties-view>
       </div>
   `,
   styles: [
     `
-      @import 'https://fonts.googleapis.com/icon?family=Material+Icons';
-      :root {
-        --default-border: #DADCE0;
-      }
-
-      mat-icon {
-        margin: 5px
-      }
-
-      .icon-button {
-        background: none;
-        border: none;
-        display: inline-block;
-        vertical-align: middle;
-      }
-
-      .header-button {
-        background: none;
-        border: none;
-        display: inline-block;
-        vertical-align: middle;
-      }
-
-      .card-grid {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        flex-direction: row;
-        overflow: auto;
-      }
-
       .rects-view {
-        font: inherit;
-        flex: none;
-        width: 350px;
-        height: 52.5rem;
-        margin: 0px;
+        flex: 1;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
         border-top: 1px solid var(--default-border);
         border-right: 1px solid var(--default-border);
-        border-radius: 0;
       }
 
       .hierarchy-view {
-        font: inherit;
-        margin: 0px;
-        width: 50%;
-        height: 52.5rem;
-        border-radius: 0;
+        flex: 1;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
         border-top: 1px solid var(--default-border);
         border-right: 1px solid var(--default-border);
-        border-left: 1px solid var(--default-border);
       }
 
       .properties-view {
-        font: inherit;
-        margin: 0px;
-        width: 50%;
-        height: 52.5rem;
-        border-radius: 0;
+        flex: 1;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
         border-top: 1px solid var(--default-border);
-        border-left: 1px solid var(--default-border);
       }
     `,
   ]

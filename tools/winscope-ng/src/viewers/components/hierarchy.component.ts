@@ -25,10 +25,10 @@ import { TableProperties } from "viewers/common/table_properties";
 @Component({
   selector: "hierarchy-view",
   template: `
-    <mat-card-header class="view-header">
+    <div class="view-header">
       <div class="title-filter">
-        <span class="hierarchy-title">Hierarchy</span>
-        <mat-form-field class="filter-field">
+        <h2 class="hierarchy-title mat-title">Hierarchy</h2>
+        <mat-form-field>
           <mat-label>Filter...</mat-label>
           <input
             matInput
@@ -40,6 +40,7 @@ import { TableProperties } from "viewers/common/table_properties";
       </div>
       <div class="view-controls">
         <mat-checkbox
+          color="primary"
           *ngFor="let option of objectKeys(userOptions)"
           class="trace-box"
           [(ngModel)]="userOptions[option].enabled"
@@ -51,7 +52,7 @@ import { TableProperties } from "viewers/common/table_properties";
         class="properties-table"
         [properties]="tableProperties"
       ></properties-table>
-      <div class="pinned-items" *ngIf="pinnedItems.length > 0">
+      <div *ngIf="pinnedItems.length > 0" class="pinned-items">
         <tree-node
           *ngFor="let pinnedItem of pinnedItems"
           class="node"
@@ -65,11 +66,10 @@ import { TableProperties } from "viewers/common/table_properties";
           (click)="onPinnedNodeClick($event, pinnedItem)"
         ></tree-node>
       </div>
-    </mat-card-header>
-    <mat-card-content class="hierarchy-content" [style]="maxHierarchyHeight()">
+    </div>
+    <div class="hierarchy-content">
       <div class="tree-wrapper">
         <tree-view
-          class="tree-view"
           *ngIf="tree"
           [isFlattened]="isFlattened()"
           [isShaded]="true"
@@ -85,72 +85,48 @@ import { TableProperties } from "viewers/common/table_properties";
           (selectedTreeChange)="selectedTreeChange($event)"
         ></tree-view>
       </div>
-    </mat-card-content>
+    </div>
   `,
   styles: [
     `
       .view-header {
-        position: relative;
-        display: block;
-        width: 100%;
-        min-height: 3.75rem;
-        align-items: center;
+        display: flex;
+        flex-direction: column;
         border-bottom: 1px solid var(--default-border);
+        padding-bottom: 12px;
       }
 
       .title-filter {
-        position: relative;
         display: flex;
-        align-items: center;
-        width: 100%;
-        margin-bottom: 12px;
-      }
-
-      .hierarchy-title {
-        font-weight: medium;
-        font-size: 16px;
-      }
-
-      .filter-field {
-        font-size: 16px;
-        transform: scale(0.7);
-        right: 0px;
-        position: absolute;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
       }
 
       .view-controls {
-        display: inline-block;
-        font-size: 12px;
-        font-weight: normal;
-        margin-left: 5px;
-      }
-
-      .hierarchy-content {
         display: flex;
-        flex-direction: column;
-        overflow-y: auto;
-        overflow-x: hidden;
-      }
-
-      .tree-view {
-        white-space: pre-line;
-        flex: 1 0 0;
-        height: 100%;
-        overflow-y: auto;
+        flex-direction: row;
+        flex-wrap: wrap;
       }
 
       .properties-table {
         padding-top: 5px;
-        position: relative;
-        display: block;
-        width: 100%;
+      }
+
+      .hierarchy-content {
+        height: 0;
+        flex-grow: 1;
+        overflow-y: auto;
       }
 
       .pinned-items {
-        border: 2px solid yellow;
-        position: relative;
-        display: block;
         width: 100%;
+        box-sizing: border-box;
+        border: 2px solid yellow;
+      }
+
+      .tree-wrapper {
+        overflow-y: auto
       }
     `,
     nodeStyles
@@ -177,14 +153,6 @@ export class HierarchyComponent {
 
   public isFlattened() {
     return this.userOptions["flat"]?.enabled;
-  }
-
-  public maxHierarchyHeight() {
-    const headerHeight = this.elementRef.nativeElement.querySelector(".view-header").clientHeight;
-    const max = this.tableProperties ? 400 : 800;
-    return {
-      height: `${max - headerHeight}px`
-    };
   }
 
   public onPinnedNodeClick(event: MouseEvent, pinnedItem: HierarchyTreeNode) {

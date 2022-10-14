@@ -19,49 +19,33 @@ import { TableProperties } from "viewers/common/table_properties";
 @Component({
   selector: "properties-table",
   template: `
-   <div class="properties-table-wrapper">
     <table class="table">
       <tr *ngFor="let entry of objectEntries(properties)">
         <td class="table-cell-name">
-          <span>{{ entry[0] }}</span>
+          <p class="mat-body-1">{{ entry[0] }}</p>
         </td>
         <td class="table-cell-value">
-          <span>{{ entry[1] != undefined ? entry[1] : 'undefined' }}</span>
+          <p class="mat-body-1">{{ entry[1] != undefined ? entry[1] : 'undefined' }}</p>
         </td>
       </tr>
     </table>
-  </div>
   `,
   styles: [
     `
-      .properties-table-wrapper {
-        border-bottom: 1px solid var(--default-border);
-      }
-
-      .properties-table-wrapper .table-cell-name {
-        background-color: rgba(158, 192, 200, 0.281);
-        border: 1px solid var(--default-border);
-        height: 20px;
-        padding: 0;
-        width: 20%;
-      }
-
-      .properties-table-wrapper .table-cell-value {
-        overflow-wrap: anywhere;
-        border: 1px solid var(--default-border);
-        height: 20px;
-        padding: 0;
-        width: 80%;
-      }
-
-      .properties-table-wrapper table {
-        height: auto;
-        border-collapse: collapse;
+      .table {
         width: 100%;
+        border-collapse: collapse;
       }
 
-      .properties-table-wrapper span {
-        padding: 5px;
+      .table-cell-name, .table-cell-value {
+        padding: 1px 5px;
+        border: 1px solid var(--default-border);
+        overflow-wrap: anywhere;
+      }
+
+      .table-cell-name {
+        width: 20%;
+        background-color: rgba(158, 192, 200, 0.281);
       }
     `
   ],

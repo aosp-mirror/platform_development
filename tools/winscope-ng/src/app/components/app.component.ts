@@ -28,43 +28,41 @@ import { ViewerInputMethodComponent } from "viewers/components/viewer_input_meth
   selector: "app-root",
   template: `
     <mat-toolbar class="app-toolbar">
-      <span id="app-title">Winscope</span>
+      <p id="app-title" class="mat-display-1">Winscope</p>
       <span class="toolbar-wrapper">
-        <button mat-stroked-button *ngIf="dataLoaded" (click)="toggleTimestamp()">Start/End Timestamp</button>
-        <button class="upload-new-btn" mat-stroked-button *ngIf="dataLoaded" (click)="clearData()">Upload New</button>
+        <button *ngIf="dataLoaded" color="primary" mat-stroked-button (click)="toggleTimestamp()">Start/End Timestamp</button>
+        <button *ngIf="dataLoaded" color="primary" mat-stroked-button (click)="clearData()">Upload New</button>
       </span>
     </mat-toolbar>
 
-    <div class="welcome-info" *ngIf="!dataLoaded">
-      <span>Welcome to Winscope. Please select source to view traces.</span>
-    </div>
+    <h1 *ngIf="!dataLoaded" class="welcome-info mat-headline">Welcome to Winscope. Please select source to view traces.</h1>
 
-    <div *ngIf="!dataLoaded" fxLayout="row wrap" fxLayoutGap="10px grid" class="card-grid">
-      <mat-card class="homepage-card" id="collect-traces-card">
-        <collect-traces [traceCoordinator]="traceCoordinator" (dataLoadedChange)="onDataLoadedChange($event)"[store]="store"></collect-traces>
+    <div *ngIf="!dataLoaded" class="card-grid">
+      <mat-card id="collect-traces-card" class="homepage-card">
+        <collect-traces [traceCoordinator]="traceCoordinator" (dataLoadedChange)="onDataLoadedChange($event)" [store]="store"></collect-traces>
       </mat-card>
-      <mat-card class="homepage-card" id="upload-traces-card">
+      <mat-card id="upload-traces-card" class="homepage-card">
         <upload-traces [traceCoordinator]="traceCoordinator" (dataLoadedChange)="onDataLoadedChange($event)"></upload-traces>
       </mat-card>
     </div>
 
-    <div id="viewers" [class]="showViewers()">
-      <trace-view
+    <trace-view
+      *ngIf="dataLoaded"
+      id="viewers"
       [store]="store"
       [traceCoordinator]="traceCoordinator"
-      ></trace-view>
-    </div>
+    ></trace-view>
 
-    <div id="timescrub">
+    <div *ngIf="dataLoaded" id="timescrub">
       <mat-slider
-        *ngIf="dataLoaded"
+        color="primary"
+        class="time-slider"
         step="1"
         min="0"
         [max]="this.allTimestamps.length-1"
         aria-label="units"
         [value]="currentTimestampIndex"
         (input)="updateCurrentTimestamp($event)"
-        class="time-slider"
       ></mat-slider>
     </div>
     <div id="timestamps">
@@ -72,36 +70,50 @@ import { ViewerInputMethodComponent } from "viewers/components/viewer_input_meth
   `,
   styles: [
     `
-      .time-slider {
-        width: 100%
-      }
-      .upload-new-btn {
-        float: right;
-        position: relative;
-        vertical-align: middle;
-        display: inline-block;
-      }
       .app-toolbar {
+        background-color: white;
         border-bottom: 1px solid var(--default-border);
-        box-shadow: none;
-        background-color: rgba(1, 1, 1, 0);
-        height: 56px;
-        vertical-align: middle;
-        position: relative;
-        display: inline-block;
+      }
+      #app-title {
+        margin: 12px 0;
       }
       .toolbar-wrapper {
         width: 100%;
         height: 100%;
-        vertical-align: middle;
-        position: relative;
-        display: inline-block;
-        align-content: center;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
       }
       .welcome-info {
+        margin: 16px 0;
         text-align: center;
-        font: inherit;
-        padding: 40px;
+      }
+      .homepage-card {
+        flex: 1;
+        margin: 10px;
+        overflow: auto;
+        border: 1px solid var(--default-border);
+      }
+
+      .homepage-card mat-card-content {
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+      }
+      #viewers {
+        height: 100%;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+      }
+      #timescrub {
+        padding: 8px;
+        border-top: 1px solid var(--default-border);
+      }
+      .time-slider {
+        width: 100%
       }
     `
   ],
@@ -155,11 +167,6 @@ export class AppComponent {
     this.dataLoaded = false;
     this.traceCoordinator.clearData();
     proxyClient.adbData = [];
-  }
-
-  public showViewers() {
-    const isShown = this.dataLoaded ? "show" : "hide";
-    return `viewers ${isShown}`;
   }
 
   public onDataLoadedChange(dataLoaded: boolean) {
