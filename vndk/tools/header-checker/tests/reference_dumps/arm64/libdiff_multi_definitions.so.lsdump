@@ -69,11 +69,11 @@
    "parameters" :
    [
     {
-     "referenced_type" : "_ZTIP18DefinedInOneHeader#ODR:/def2.h.sdump"
+     "referenced_type" : "_ZTIP18DefinedInOneHeader#ODR:/link_to_def2.h.sdump"
     }
    ],
    "return_type" : "_ZTIv",
-   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def2.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/link_to_def2.h"
   }
  ],
  "global_vars" :
@@ -119,10 +119,10 @@
    "alignment" : 8,
    "linker_set_key" : "_ZTIP6Struct",
    "name" : "Struct *",
-   "referenced_type" : "_ZTI6Struct#ODR:/def2.h.sdump",
-   "self_type" : "_ZTIP6Struct#ODR:/def2.h.sdump",
+   "referenced_type" : "_ZTI6Struct#ODR:/link_to_def2.h.sdump",
+   "self_type" : "_ZTIP6Struct#ODR:/link_to_def2.h.sdump",
    "size" : 8,
-   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def2.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/link_to_def2.h"
   }
  ],
  "qualified_types" : [],
@@ -135,7 +135,7 @@
    "referenced_type" : "_ZTI18DefinedInOneHeader",
    "self_type" : "_ZTI18DefinedInOneHeader",
    "size" : 1,
-   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def2.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/link_to_def2.h"
   },
   {
    "alignment" : 8,
@@ -159,15 +159,15 @@
    [
     {
      "field_name" : "member2",
-     "referenced_type" : "_ZTIP6Struct#ODR:/def2.h.sdump"
+     "referenced_type" : "_ZTIP6Struct#ODR:/link_to_def2.h.sdump"
     }
    ],
    "linker_set_key" : "_ZTI6Struct",
    "name" : "Struct",
-   "referenced_type" : "_ZTI6Struct#ODR:/def2.h.sdump",
-   "self_type" : "_ZTI6Struct#ODR:/def2.h.sdump",
+   "referenced_type" : "_ZTI6Struct#ODR:/link_to_def2.h.sdump",
+   "self_type" : "_ZTI6Struct#ODR:/link_to_def2.h.sdump",
    "size" : 8,
-   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/def2.h"
+   "source_file" : "development/vndk/tools/header-checker/tests/integration/merge_multi_definitions/include/link_to_def2.h"
   }
  ],
  "rvalue_reference_types" : []
