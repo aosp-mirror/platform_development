@@ -22,10 +22,10 @@ import { PropertiesTreeNode, Terminal} from "viewers/common/ui_tree_utils";
 @Component({
   selector: "properties-view",
   template: `
-    <mat-card-header class="view-header">
+    <div class="view-header">
       <div class="title-filter">
-        <span class="properties-title">Properties</span>
-        <mat-form-field class="filter-field">
+        <h2 class="properties-title mat-title">Properties</h2>
+        <mat-form-field>
           <mat-label>Filter...</mat-label>
           <input
             matInput
@@ -38,92 +38,69 @@ import { PropertiesTreeNode, Terminal} from "viewers/common/ui_tree_utils";
       <div class="view-controls">
         <mat-checkbox
           *ngFor="let option of objectKeys(userOptions)"
+          color="primary"
           class="trace-box"
           [(ngModel)]="userOptions[option].enabled"
           (ngModelChange)="updateTree()"
           [matTooltip]="userOptions[option].tooltip ?? ''"
         >{{userOptions[option].name}}</mat-checkbox>
       </div>
-      <div *ngIf="itemIsSelected() && propertyGroups" class="element-summary">
-        <property-groups
-          [item]="selectedFlickerItem"
-        ></property-groups>
-      </div>
-    </mat-card-header>
-    <mat-card-content class="properties-content" [style]="maxPropertiesHeight()">
-      <span *ngIf="objectKeys(propertiesTree).length > 0 && isProtoDump" class="properties-title"> Properties - Proto Dump </span>
+      <property-groups
+        *ngIf="itemIsSelected() && propertyGroups"
+        class="property-groups"
+        [item]="selectedFlickerItem"
+      ></property-groups>
+    </div>
+    <div class="properties-content">
+      <h3 *ngIf="objectKeys(propertiesTree).length > 0 && isProtoDump" class="properties-title mat-subheading-2">Properties - Proto Dump</h3>
       <div class="tree-wrapper">
         <tree-view
-          class="tree-view"
+          *ngIf="objectKeys(propertiesTree).length > 0"
           [item]="propertiesTree"
           [showNode]="showNode"
           [isLeaf]="isLeaf"
-          *ngIf="objectKeys(propertiesTree).length > 0"
           [isAlwaysCollapsed]="true"
         ></tree-view>
       </div>
-    </mat-card-content>
+    </div>
   `,
   styles: [
     `
       .view-header {
-        display: block;
-        width: 100%;
-        min-height: 3.75rem;
-        align-items: center;
-        border-bottom: 1px solid lightgrey;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        border-bottom: 1px solid var(--default-border);
+        padding-bottom: 12px;
+        overflow-y: auto;
       }
 
       .title-filter {
-        position: relative;
         display: flex;
-        align-items: center;
-        width: 100%;
-        margin-bottom: 12px;
-      }
-
-      .properties-title {
-        font-size: 16px;
-      }
-
-      .filter-field {
-        font-size: 16px;
-        transform: scale(0.7);
-        right: 0px;
-        position: absolute;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
       }
 
       .view-controls {
-        display: inline-block;
-        font-size: 12px;
-        font-weight: normal;
-        margin-left: 5px;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
       }
 
-      .properties-content{
+      .properties-content {
+        flex: 1;
         display: flex;
         flex-direction: column;
         overflow-y: auto;
-        overflow-x:hidden
       }
 
-      .element-summary {
-        padding: 1rem;
-        border-bottom: thin solid rgba(0,0,0,.12);
+      .property-groups {
+        overflow-y: auto;
       }
 
-      .element-summary .key {
-        font-weight: 500;
-      }
-
-      .element-summary .value {
-        color: rgba(0, 0, 0, 0.75);
-      }
-
-      .tree-view {
-        white-space: pre-line;
-        flex: 1 0 0;
-        height: 100%;
+      .tree-wrapper {
         overflow-y: auto
       }
     `,
@@ -143,13 +120,6 @@ export class PropertiesComponent {
   constructor(
     @Inject(ElementRef) private elementRef: ElementRef,
   ) {}
-
-  public maxPropertiesHeight() {
-    const headerHeight = this.elementRef.nativeElement.querySelector(".view-header").clientHeight;
-    return {
-      height: `${800 - headerHeight}px`
-    };
-  }
 
   public filterTree() {
     const event: CustomEvent = new CustomEvent(

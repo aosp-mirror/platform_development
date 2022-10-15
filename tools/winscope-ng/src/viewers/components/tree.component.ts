@@ -22,56 +22,53 @@ import { TraceType } from "common/trace/trace_type";
 @Component({
   selector: "tree-view",
   template: `
-      <div class="tree-view">
-        <tree-node
-          class="node"
-          *ngIf="showNode(item)"
-          [class.leaf]="isLeaf(this.item)"
-          [class.selected]="isHighlighted(item, highlightedItems)"
-          [class.clickable]="isClickable()"
-          [class.shaded]="isShaded"
-          [class.hover]="nodeHover"
-          [class.childHover]="childHover"
-          [isAlwaysCollapsed]="isAlwaysCollapsed"
-          [class]="diffClass(item)"
-          [style]="nodeOffsetStyle()"
-          [item]="item"
-          [flattened]="isFlattened"
-          [isLeaf]="isLeaf(this.item)"
-          [isCollapsed]="isAlwaysCollapsed ?? isCollapsed()"
-          [hasChildren]="hasChildren()"
-          [isPinned]="isPinned()"
-          (toggleTreeChange)="toggleTree()"
-          (click)="onNodeClick($event)"
-          (expandTreeChange)="expandTree()"
-          (pinNodeChange)="propagateNewPinnedItem($event)"
-        ></tree-node>
+    <tree-node
+      *ngIf="showNode(item)"
+      class="node"
+      [class.leaf]="isLeaf(this.item)"
+      [class.selected]="isHighlighted(item, highlightedItems)"
+      [class.clickable]="isClickable()"
+      [class.shaded]="isShaded"
+      [class.hover]="nodeHover"
+      [class.childHover]="childHover"
+      [isAlwaysCollapsed]="isAlwaysCollapsed"
+      [class]="diffClass(item)"
+      [style]="nodeOffsetStyle()"
+      [item]="item"
+      [flattened]="isFlattened"
+      [isLeaf]="isLeaf(this.item)"
+      [isCollapsed]="isAlwaysCollapsed ?? isCollapsed()"
+      [hasChildren]="hasChildren()"
+      [isPinned]="isPinned()"
+      (toggleTreeChange)="toggleTree()"
+      (click)="onNodeClick($event)"
+      (expandTreeChange)="expandTree()"
+      (pinNodeChange)="propagateNewPinnedItem($event)"
+    ></tree-node>
 
-        <div class="children" *ngIf="hasChildren()" [hidden]="!isCollapsed()" [style]="childrenIndentation()">
-          <ng-container *ngFor="let child of children()">
-            <tree-view
-                class="childrenTree"
-                [item]="child"
-                [store]="store"
-                [showNode]="showNode"
-                [isLeaf]="isLeaf"
-                [dependencies]="dependencies"
-                [isFlattened]="isFlattened"
-                [isShaded]="!isShaded"
-                [useGlobalCollapsedState]="useGlobalCollapsedState"
-                [initialDepth]="initialDepth + 1"
-                [highlightedItems]="highlightedItems"
-                [pinnedItems]="pinnedItems"
-                (highlightedItemChange)="propagateNewHighlightedItem($event)"
-                (pinnedItemChange)="propagateNewPinnedItem($event)"
-                (selectedTreeChange)="propagateNewSelectedTree($event)"
-                [itemsClickable]="itemsClickable"
-                (hoverStart)="childHover = true"
-                (hoverEnd)="childHover = false"
-              ></tree-view>
-          </ng-container>
-        </div>
-      </div>
+    <div *ngIf="hasChildren()" class="children" [hidden]="!isCollapsed()" [style]="childrenIndentation()">
+      <tree-view
+          *ngFor="let child of children()"
+          class="childrenTree"
+          [item]="child"
+          [store]="store"
+          [showNode]="showNode"
+          [isLeaf]="isLeaf"
+          [dependencies]="dependencies"
+          [isFlattened]="isFlattened"
+          [isShaded]="!isShaded"
+          [useGlobalCollapsedState]="useGlobalCollapsedState"
+          [initialDepth]="initialDepth + 1"
+          [highlightedItems]="highlightedItems"
+          [pinnedItems]="pinnedItems"
+          (highlightedItemChange)="propagateNewHighlightedItem($event)"
+          (pinnedItemChange)="propagateNewPinnedItem($event)"
+          (selectedTreeChange)="propagateNewSelectedTree($event)"
+          [itemsClickable]="itemsClickable"
+          (hoverStart)="childHover = true"
+          (hoverEnd)="childHover = false"
+        ></tree-view>
+    </div>
   `,
   styles: [nodeStyles, treeNodeDataViewStyles]
 })

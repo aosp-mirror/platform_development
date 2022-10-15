@@ -68,7 +68,7 @@ describe("AdbProxyComponent", () => {
   it("check correct icon and message displays if unauthorised proxy", () => {
     component.proxy.setState(ProxyState.UNAUTH);
     fixture.detectChanges();
-    expect(htmlElement.querySelector(".adb-info")?.innerHTML).toBe("Proxy authorisation required");
+    expect(htmlElement.querySelector(".adb-info")?.innerHTML).toBe("Proxy authorisation required.");
     expect(htmlElement.querySelector(".adb-icon")?.innerHTML).toBe("lock");
   });
 

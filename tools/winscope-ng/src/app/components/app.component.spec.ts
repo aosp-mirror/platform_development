@@ -83,7 +83,7 @@ describe("AppComponent", () => {
     component.dataLoaded = false;
     fixture.detectChanges();
     expect(htmlElement.querySelector(".welcome-info")).toBeTruthy();
-    expect(htmlElement.querySelector(".viewers.hide")).toBeTruthy();
+    expect(htmlElement.querySelector("#viewers")).toBeNull();
   });
 
   it("displays correct elements when data loaded", async () => {
@@ -91,6 +91,6 @@ describe("AppComponent", () => {
     fixture.detectChanges();
     expect(htmlElement.querySelector("#collect-traces-card")).toBeFalsy();
     expect(htmlElement.querySelector("#upload-traces-card")).toBeFalsy();
-    expect(htmlElement.querySelector(".viewers.show")).toBeTruthy();
+    expect(htmlElement.querySelector("#viewers")).toBeTruthy();
   });
 });
