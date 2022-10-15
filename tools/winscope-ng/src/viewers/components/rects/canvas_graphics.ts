@@ -48,7 +48,7 @@ export class CanvasGraphics {
 
     //set canvas size
     this.canvas.style.width = "100%";
-    this.canvas.style.height = "40rem";
+    this.canvas.style.height = "100%";
 
     this.orbit?.reset();
 
@@ -71,7 +71,7 @@ export class CanvasGraphics {
       this.labelRenderer.domElement.style.position = "absolute";
       this.labelRenderer.domElement.style.top = "0px";
       this.labelRenderer.domElement.style.width = "100%";
-      this.labelRenderer.domElement.style.height = "40rem";
+      this.labelRenderer.domElement.style.height = "100%";
       this.labelRenderer.domElement.className = "labels-canvas";
       this.labelRenderer.domElement.style.pointerEvents = "none";
       this.canvasContainer?.appendChild(this.labelRenderer.domElement);
@@ -87,8 +87,8 @@ export class CanvasGraphics {
     let xShift = 0, yShift = 3.5, labelYShift = 0;
 
     if (this.isLandscape) {
-      xShift = 1;
-      yShift = 1.5;
+      xShift = -1;
+      yShift = 2.5;
       labelYShift = 1.25;
     }
 
@@ -477,7 +477,7 @@ export class CanvasGraphics {
   private readonly MAX_LABEL_SHIFT = 0.305;
   private readonly MAX_ZOOM = 2.5;
   private readonly MIN_ZOOM = 0.5;
-  private readonly INIT_ZOOM = 1;
+  private readonly INIT_ZOOM = 0.75;
   private readonly INIT_FONT_SIZE = 10;
   private readonly INIT_CAMERA_POS = new THREE.Vector3(4, 4, 6);
   private readonly INIT_TARGET = new THREE.Vector3(0, 0, 0);

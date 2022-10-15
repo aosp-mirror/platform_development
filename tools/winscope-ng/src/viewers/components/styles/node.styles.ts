@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 export const nodeStyles = `
-    .node {position: relative;display: inline-block;padding: 2px; height: 100%; width: 100%;}
+    .node {position: relative;display: inline-block;padding: 2px 0; width: 100%;}
     .node.clickable {cursor: pointer;}
     .node:not(.selected).added,
     .node:not(.selected).addedMove {
@@ -59,12 +59,18 @@ export const nodeInnerItemStyles = `
     .pin-node-btn {padding: 0; transform: scale(0.7)}
     .description {align-items: center; flex: 1 1 auto; vertical-align: middle; word-break: break-all;}
     .leaf-node-icon-wrapper{padding-left: 6px; padding-right: 6px; min-height: 24px; width: 24px; position:relative; align-content: center; vertical-align: middle;}
-    .icon-button { background: none;border: none;display: inline-block;vertical-align: middle;}
+
+    .icon-button {
+        background: none;
+        border: none;
+        display: inline-block;
+        vertical-align: middle;
+    }
 
     .expand-tree-btn {
         float: right;
-        padding-left: 0px;
-        padding-right: 0px;
+        padding-left: 0;
+        padding-right: 0;
     }
 
     .expand-tree-btn.modified {

@@ -19,22 +19,36 @@ import { Transform } from "common/trace/flickerlib/common";
 @Component({
   selector: "transform-matrix",
   template: `
-      <div class="matrix" *ngIf="transform" [matTooltip]="transform.getTypeAsString()">
-        <div class="cell">{{ formatFloat(transform.matrix.dsdx) }}</div>
-        <div class="cell">{{ formatFloat(transform.matrix.dsdy) }}</div>
-        <div class="cell" matTooltip="Translate x">
+      <div *ngIf="transform" class="matrix" [matTooltip]="transform.getTypeAsString()">
+        <p class="cell mat-body-1">
+          {{ formatFloat(transform.matrix.dsdx) }}
+        </p>
+        <p class="cell mat-body-1">
+          {{ formatFloat(transform.matrix.dsdy) }}
+        </p>
+        <p class="cell mat-body-1" matTooltip="Translate x">
           {{ formatFloat(transform.matrix.tx) }}
-        </div>
+        </p>
 
-        <div class="cell">{{ formatFloat(transform.matrix.dtdx) }}</div>
-        <div class="cell">{{ formatFloat(transform.matrix.dtdy) }}</div>
-        <div class="cell" matTooltip="Translate y">
+        <p class="cell mat-body-1">
+          {{ formatFloat(transform.matrix.dtdx) }}
+        </p>
+        <p class="cell mat-body-1">
+          {{ formatFloat(transform.matrix.dtdy) }}
+        </p>
+        <p class="cell mat-body-1" matTooltip="Translate y">
           {{ formatFloat(transform.matrix.ty) }}
-        </div>
+        </p>
 
-        <div class="cell">0</div>
-        <div class="cell">0</div>
-        <div class="cell">1</div>
+        <p class="cell mat-body-1">
+          0
+        </p>
+        <p class="cell mat-body-1">
+          0
+        </p>
+        <p class="cell mat-body-1">
+          1
+        </p>
       </div>
   `,
   styles: [
@@ -43,10 +57,10 @@ import { Transform } from "common/trace/flickerlib/common";
         display: grid;
         grid-gap: 1px;
         grid-template-columns: repeat(3, 1fr);
+        text-align: center;
       }
 
       .cell {
-        padding-left: 10px;
         background-color: #F8F9FA;
       }
     `

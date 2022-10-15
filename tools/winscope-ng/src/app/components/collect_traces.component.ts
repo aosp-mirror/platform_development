@@ -28,88 +28,90 @@ import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component
 @Component({
   selector: "collect-traces",
   template: `
-      <mat-card-title id="title">Collect Traces</mat-card-title>
-      <mat-card-content>
+    <mat-card-title id="title">Collect Traces</mat-card-title>
+    <mat-card-content>
 
-      <div class="connecting-message" *ngIf="connect.isConnectingState()"><span>Connecting...</span></div>
+      <p *ngIf="connect.isConnectingState()" class="connecting-message mat-body-1">Connecting...</p>
 
-      <div class="set-up-adb" *ngIf="!connect.adbSuccess()">
-        <button id="proxy-tab" mat-stroked-button [ngClass]="tabClass(true)" (click)="displayAdbProxyTab()">ADB Proxy</button>
-        <!-- <button id="web-tab" mat-raised-button [ngClass]="tabClass(false)" (click)="displayWebAdbTab()">Web ADB</button> -->
+      <div *ngIf="!connect.adbSuccess()" class="set-up-adb">
+        <button id="proxy-tab" color="primary" mat-stroked-button [ngClass]="tabClass(true)" (click)="displayAdbProxyTab()">ADB Proxy</button>
+        <!-- <button id="web-tab" color="primary" mat-raised-button [ngClass]="tabClass(false)" (click)="displayWebAdbTab()">Web ADB</button> -->
         <adb-proxy *ngIf="isAdbProxy" [(proxy)]="connect.proxy!" (addKey)="onAddKey($event)"></adb-proxy>
         <!-- <web-adb *ngIf="!isAdbProxy"></web-adb> TODO: fix web adb workflow -->
       </div>
 
       <div id="devices-connecting" *ngIf="connect.isDevicesState()">
-        <span> {{ objectKeys(connect.devices()).length > 0 ? "Connected devices:" : "No devices detected" }}</span>
-          <mat-list class="device-choice">
-            <mat-list-item *ngFor="let deviceId of objectKeys(connect.devices())" (click)="connect.selectDevice(deviceId)">
-              <mat-icon class="icon-message">
-                {{ connect.devices()[deviceId].authorised ? "smartphone" : "screen_lock_portrait" }}
-              </mat-icon>
-              <span class="icon-message">
-                {{ connect.devices()[deviceId].authorised ? connect.devices()[deviceId].model : "unauthorised" }} ({{ deviceId }})
-              </span>
-            </mat-list-item>
-          </mat-list>
+        <p class="mat-body-1"> {{ objectKeys(connect.devices()).length > 0 ? "Connected devices:" : "No devices detected" }}</p>
+        <mat-list *ngIf="objectKeys(connect.devices()).length > 0">
+          <mat-list-item *ngFor="let deviceId of objectKeys(connect.devices())" (click)="connect.selectDevice(deviceId)">
+            <mat-icon>
+              {{ connect.devices()[deviceId].authorised ? "smartphone" : "screen_lock_portrait" }}
+            </mat-icon>
+            {{ connect.devices()[deviceId].authorised ? connect.devices()[deviceId].model : "unauthorised" }} ({{ deviceId }})
+          </mat-list-item>
+        </mat-list>
       </div>
 
       <div id="trace-collection-config" *ngIf="connect.isStartTraceState()">
-        <div class="device-choice">
-            <mat-list class="device-choice">
-            <mat-list-item>
-                <mat-icon class="icon-message">smartphone</mat-icon>
-                <span class="icon-message">
-                  {{ connect.selectedDevice().model }} ({{ connect.selectedDeviceId() }})
-                </span>
-                <button class="change-btn" mat-raised-button (click)="connect.resetLastDevice()">Change device</button>
-            </mat-list-item>
-            </mat-list>
-        </div>
+        <mat-list>
+          <mat-list-item>
+            <mat-icon>smartphone</mat-icon>
+            {{ connect.selectedDevice().model }} ({{ connect.selectedDeviceId() }})
+            <button color="primary" class="change-btn" mat-button (click)="connect.resetLastDevice()">Change device</button>
+          </mat-list-item>
+        </mat-list>
 
         <div class="trace-section">
-          <trace-config
-            [traces]="setTraces.DYNAMIC_TRACES"
-          ></trace-config>
-          <button class="start-btn" mat-stroked-button (click)="startTracing()">Start trace</button>
+          <trace-config [traces]="setTraces.DYNAMIC_TRACES"></trace-config>
+          <button color="primary" mat-stroked-button class="start-btn" (click)="startTracing()">Start trace</button>
         </div>
 
         <div class="dump-section">
-          <p class="subtitle">Dump targets</p>
+          <h3 class="mat-subheading-2">Dump targets</h3>
           <div class="selection">
             <mat-checkbox
               *ngFor="let dumpKey of objectKeys(setTraces.DUMPS)"
+              color="primary"
               [(ngModel)]="setTraces.DUMPS[dumpKey].run"
             >{{setTraces.DUMPS[dumpKey].name}}</mat-checkbox>
-            <button class="dump-btn" mat-stroked-button (click)="dumpState()">Dump state</button>
+            <button color="primary" class="dump-btn" mat-stroked-button (click)="dumpState()">Dump state</button>
           </div>
         </div>
       </div>
 
-      <div class="unknown-error" *ngIf="connect.isErrorState()">
-        <mat-icon class="icon-message">error</mat-icon>
-        <span class="icon-message">Error:</span>
-        <pre>
-            {{ connect.proxy?.errorText }}
-        </pre>
-        <button class="retry-btn" mat-raised-button (click)="connect.restart()">Retry</button>
+      <div *ngIf="connect.isErrorState()" class="unknown-error">
+        <p class="error-wrapper mat-body-1">
+          <mat-icon>error</mat-icon>
+          Error:
+        </p>
+        <pre> {{ connect.proxy?.errorText }} </pre>
+        <button color="primary" class="retry-btn" mat-raised-button (click)="connect.restart()">Retry</button>
       </div>
 
-      <div class="end-tracing" *ngIf="connect.isEndTraceState()">
-        <span>Tracing...</span>
+      <div *ngIf="connect.isEndTraceState()" class="end-tracing">
+        <p class="mat-body-1">Tracing...</p>
         <mat-progress-bar md-indeterminate value="{{connect.loadProgress}}"></mat-progress-bar>
-        <button class="end-btn" mat-raised-button (click)="endTrace()">End trace</button>
+        <button color="primary" class="end-btn" mat-raised-button (click)="endTrace()">End trace</button>
       </div>
 
-      <div class="load-data" *ngIf="connect.isLoadDataState()">
-        <span>Loading data...</span>
+      <div *ngIf="connect.isLoadDataState()" class="load-data">
+        <p class="mat-body-1">Loading data...</p>
         <mat-progress-bar md-indeterminate></mat-progress-bar>
       </div>
 
-      </mat-card-content>
+    </mat-card-content>
   `,
   styles: [
-    ".device-choice {cursor: pointer}",
+    `
+      .change-btn {
+        margin-left: 5px;
+      }
+      .error-wrapper {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+      }
+    `
   ]
 })
 export class CollectTracesComponent implements OnInit, OnDestroy {

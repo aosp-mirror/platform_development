@@ -18,44 +18,54 @@ import { Component, Input } from "@angular/core";
 @Component({
   selector: "coordinates-table",
   template: `
-    <span class="coord-null-value" *ngIf="!hasCoordinates()">null</span>
-    <div class="coord-table-wrapper" *ngIf="hasCoordinates()">
-      <table class="table">
-        <tr class="header-row">
-          <td>Left</td>
-          <td>Top</td>
-          <td>Right</td>
-          <td>Bottom</td>
-        </tr>
-        <tr>
-          <td>{{ coordinates.left }}</td>
-          <td>{{ coordinates.top }}</td>
-          <td>{{ coordinates.right }}</td>
-          <td>{{ coordinates.bottom }}</td>
-        </tr>
-      </table>
-    </div>
+    <p *ngIf="!hasCoordinates()" class="mat-body-1">null</p>
+    <table *ngIf="hasCoordinates()" class="table">
+      <tr class="header-row">
+        <td>
+          <p class="mat-body-1">Left</p>
+        </td>
+        <td>
+          <p class="mat-body-1">Top</p>
+        </td>
+        <td>
+          <p class="mat-body-1">Right</p>
+        </td>
+        <td>
+          <p class="mat-body-1">Bottom</p>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <p class="mat-body-1">{{ coordinates.left }}</p>
+        </td>
+        <td>
+          <p class="mat-body-1">{{ coordinates.top }}</p>
+        </td>
+        <td>
+          <p class="mat-body-1">{{ coordinates.right }}</p>
+        </td>
+        <td>
+          <p class="mat-body-1">{{ coordinates.bottom }}</p>
+        </td>
+      </tr>
+    </table>
   `,
   styles: [
     `
-      .coord-null-value {
-        color: rgba(0, 0, 0, 0.75);
+      .table {
+        width: 100%;
+        border-collapse: collapse;
       }
 
-      .coord-table-wrapper {
-        margin-left: 10px;
-        display: inline-flex;
-        padding: 3px 0px;
+      .table td {
+        padding: 1px 5px;
+        border: 1px solid var(--default-border);
+        text-align: center;
+        overflow-wrap: anywhere;
       }
 
-      .coord-table-wrapper td, .coord-table-wrapper th {
-        height: auto;
-        border: 1px solid ar(--default-border);
-      }
-
-      .coord-table-wrapper .header-row td {
+      .header-row td {
         color: gray;
-        font-weight: 600;
       }
     `
   ],

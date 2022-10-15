@@ -21,15 +21,28 @@ import { ParserError, ParserErrorType } from "parsers/parser_factory";
 @Component({
   selector: "upload-snack-bar",
   template: `
-    <div class="flex">
-      <div class="message-wrapper">
-        <p class="data" *ngFor="let msg of errorMessages">{{msg}}</p>
-      </div>
-      <button class="icon-button close" (click)="snackBarRef.dismiss()">
-        <mat-icon class="icon-button close-snackbar">close</mat-icon>
+    <div class="snack-bar-container">
+      <p *ngFor="let msg of errorMessages" class="snack-bar-content mat-body-1">{{msg}}</p>
+      <button color="primary" mat-button class="snack-bar-action" (click)="snackBarRef.dismiss()">
+        Close
       </button>
     </div>
   `,
+  styles: [
+    `
+      .snack-bar-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+      }
+      .snack-bar-content {
+        color: white;
+      }
+      .snack-bar-action {
+        margin-left: 12px;
+      }
+    `
+  ]
 })
 
 export class ParserErrorSnackBarComponent {

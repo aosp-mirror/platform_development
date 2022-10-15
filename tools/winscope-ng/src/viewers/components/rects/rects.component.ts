@@ -23,49 +23,46 @@ import { ViewerEvents } from "viewers/common/viewer_events";
 @Component({
   selector: "rects-view",
   template: `
-    <mat-card-header class="view-controls">
-      <div class="rects-title">
-        <span>Layers</span>
-      </div>
+    <div class="view-controls">
+      <h2 class="mat-title">Layers</h2>
       <div class="top-view-controls">
-        <div class="top-view-controls">
-          <mat-checkbox
-            class="rects-checkbox control-item"
-            [checked]="visibleView()"
-            (change)="onChangeView($event.checked!)"
-          >Only visible</mat-checkbox>
-          <mat-checkbox
-            [disabled]="visibleView() || !hasVirtualDisplays"
-            class="rects-checkbox control-item"
-            [checked]="showVirtualDisplays()"
-            (change)="updateVirtualDisplays($event.checked!)"
-          >Show virtual</mat-checkbox>
-          <div class="right-btn-container control-item">
-            <button class="right-btn" (click)="updateZoom(true)">
-              <mat-icon aria-hidden="true">
-                zoom_in
-              </mat-icon>
-            </button>
-            <button class="right-btn" (click)="updateZoom(false)">
-              <mat-icon aria-hidden="true">
-                zoom_out
-              </mat-icon>
-            </button>
-            <button
-              class="right-btn"
-              (click)="resetCamera()"
-              matTooltip="Restore camera settings"
-            >
-              <mat-icon aria-hidden="true">
-                restore
-              </mat-icon>
-            </button>
-          </div>
+        <mat-checkbox
+          color="primary"
+          [checked]="visibleView()"
+          (change)="onChangeView($event.checked!)"
+        >Only visible</mat-checkbox>
+        <mat-checkbox
+          color="primary"
+          [disabled]="visibleView() || !hasVirtualDisplays"
+          [checked]="showVirtualDisplays()"
+          (change)="updateVirtualDisplays($event.checked!)"
+        >Show virtual</mat-checkbox>
+        <div class="right-btn-container">
+          <button color="primary" mat-icon-button (click)="updateZoom(true)">
+            <mat-icon aria-hidden="true">
+              zoom_in
+            </mat-icon>
+          </button>
+          <button color="primary" mat-icon-button (click)="updateZoom(false)">
+            <mat-icon aria-hidden="true">
+              zoom_out
+            </mat-icon>
+          </button>
+          <button
+            color="primary"
+            mat-icon-button
+            matTooltip="Restore camera settings"
+            (click)="resetCamera()"
+          >
+            <mat-icon aria-hidden="true">
+              restore
+            </mat-icon>
+          </button>
         </div>
       </div>
       <div class="slider-view-controls">
         <div class="slider" [class.rotation]="true">
-          <span class="slider-label">Rotation</span>
+          <p class="slider-label mat-body-2">Rotation</p>
           <mat-slider
             step="0.001"
             min="0"
@@ -73,10 +70,11 @@ import { ViewerEvents } from "viewers/common/viewer_events";
             aria-label="units"
             [value]="xCameraPos()"
             (input)="updateRotation($event.value!)"
+            color="primary"
           ></mat-slider>
         </div>
         <div class="slider" [class.spacing]="true">
-          <span class="slider-label">Spacing</span>
+          <p class="slider-label mat-body-2">Spacing</p>
           <mat-slider
             class="spacing-slider"
             step="0.001"
@@ -85,111 +83,63 @@ import { ViewerEvents } from "viewers/common/viewer_events";
             aria-label="units"
             [value]="getLayerSeparation()"
             (input)="updateLayerSeparation($event.value!)"
+            color="primary"
           ></mat-slider>
         </div>
       </div>
-    </mat-card-header>
-    <mat-card-content class="rects-content">
+    </div>
+    <div class="rects-content">
       <div class="canvas-container">
         <canvas class="rects-canvas" (click)="onRectClick($event)" oncontextmenu="return false">
         </canvas>
       </div>
-      <div class="tabs" *ngIf="displayIds.length > 1">
-        <button mat-raised-button *ngFor="let displayId of displayIds" (click)="changeDisplayId(displayId)">{{displayId}}</button>
+      <div *ngIf="displayIds.length > 1" class="tabs">
+        <button color="primary" mat-raised-button *ngFor="let displayId of displayIds" (click)="changeDisplayId(displayId)">{{displayId}}</button>
       </div>
-    </mat-card-content>
+    </div>
   `,
   styles: [
     `
-      @import 'https://fonts.googleapis.com/icon?family=Material+Icons';
-
-      :host /deep/ .mat-card-header-text {
-        width: 100%;
-        margin: 0;
+      .view-controls {
+        display: flex;
+        flex-direction: column;
+        border-bottom: 1px solid var(--default-border);
       }
-      .rects-title {
-        font-size: 16px;
-        font-weight: medium;
-        font-family: inherit;
-        width: 100%;
+      .top-view-controls, .slider-view-controls {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
         margin-bottom: 12px;
       }
-      .rects-content {
-        position: relative;
+      .right-btn-container {
+        margin-left: auto;
       }
-      .canvas-container {
-        height: 40rem;
-        width: 100%;
-        position: relative;
-      }
-      .labels-canvas, .rects-canvas {
-        height: 40rem;
-        width: 100%;
-        position: absolute;
-        top: 0px;
-      }
-      .rects-canvas {
-        cursor: pointer;
-      }
-      .view-controls {
-        display: inline-block;
-        position: relative;
-        min-height: 4rem;
-        width: 100%;
-      }
-      .slider-view-controls, .top-view-controls {
-        display: inline-block;
-        position: relative;
-        height: 3rem;
-        width: 100%;
-      }
-      .top-view-controls {
-        vertical-align: middle;
+      .slider-view-controls {
+        justify-content: space-between;
       }
       .slider {
-        display: inline-block;
+        position: relative;
       }
       .slider-label {
         position: absolute;
         top: 0;
       }
-      .slider.spacing {
-        float: right;
+      .rects-content {
+        height: 0;
+        flex-grow: 1;
       }
-      .slider span, .slider mat-slider {
-        display: block;
-        padding-left: 0px;
-        padding-top: 0px;
-        font-weight: bold;
-      }
-      .right-btn-container {
+      .canvas-container {
+        height: 100%;
+        width: 100%;
         position: relative;
-        vertical-align: middle;
-        float: right;
       }
-      .right-btn {
-        position: relative;
-        display: inline-flex;
-        background: none;
-        border: none;
-        padding: 0;
+      .labels-canvas, .rects-canvas {
+        position: absolute;
+        top: 0;
       }
-      .rects-checkbox {
-        font-size: 14px;
-        font-weight: normal;
-        margin-left: 5px;
-      }
-      mat-icon {
-        margin: 5px
-      }
-      .mat-checkbox .mat-checkbox-frame, .mat-checkbox-checked .mat-checkbox-background, .mat-checkbox-indeterminate .mat-checkbox-background {
-        transform: scale(0.7);
-      }
-      .control-item {
-        position: relative;
-        display: inline-block;
-        vertical-align: middle;
-        align-items: center;
+      .rects-canvas {
+        cursor: pointer;
       }
     `
   ]

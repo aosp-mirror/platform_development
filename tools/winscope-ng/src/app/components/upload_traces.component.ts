@@ -24,98 +24,70 @@ import { ParserError } from "parsers/parser_factory";
 @Component({
   selector: "upload-traces",
   template: `
-      <mat-card-title id="title">Upload Traces</mat-card-title>
-      <mat-card-content>
-        <div
-          class="drop-box"
-          ref="drop-box"
-          (dragleave)="onFileDragOut($event)"
-          (dragover)="onFileDragIn($event)"
-          (drop)="onHandleFileDrop($event)"
-          (click)="fileDropRef.click()"
-        >
-          <input
-            hidden
-            class="input-files"
-            id="fileDropRef"
-            type="file"
-            (change)="onInputFile($event)"
-            #fileDropRef
-            multiple
-          />
-          <mat-list
-            class="uploaded-files"
-            *ngIf="this.loadedTraces.length > 0"
-          >
-            <mat-list-item *ngFor="let trace of loadedTraces" class="listed-file">
-              <span class="listed-file">
-                <mat-icon class= "listed-file-item">{{TRACE_INFO[trace.type].icon}}</mat-icon>
-                <span class="listed-file-item">{{trace.name}} ({{TRACE_INFO[trace.type].name}})</span>
-                <button
-                  (click)="onRemoveTrace($event, trace)"
-                  class="icon-button close-btn listed-file-item"
-                ><mat-icon>close</mat-icon>
-                </button>
-              </span>
-            </mat-list-item>
-          </mat-list>
-          <span *ngIf="this.loadedTraces.length === 0" class="drop-info">Drag your .winscope file(s) or click to upload</span>
-        </div>
+    <mat-card-title id="title">Upload Traces</mat-card-title>
+    <mat-card-content>
+      <div
+        class="drop-box"
+        ref="drop-box"
+        (dragleave)="onFileDragOut($event)"
+        (dragover)="onFileDragIn($event)"
+        (drop)="onHandleFileDrop($event)"
+        (click)="fileDropRef.click()"
+      >
+        <input
+          id="fileDropRef"
+          hidden
+          type="file"
+          multiple
+          #fileDropRef
+          (change)="onInputFile($event)"
+        />
+        <mat-list *ngIf="this.loadedTraces.length > 0" class="uploaded-files">
+          <mat-list-item *ngFor="let trace of loadedTraces">
+            <mat-icon>{{TRACE_INFO[trace.type].icon}}</mat-icon>
+            {{trace.name}} ({{TRACE_INFO[trace.type].name}})
+            <button
+              color="primary"
+              mat-icon-button
+              class="close-btn"
+              (click)="onRemoveTrace($event, trace)"
+            ><mat-icon>close</mat-icon>
+            </button>
+          </mat-list-item>
+        </mat-list>
+        <p *ngIf="this.loadedTraces.length === 0" class="drop-info mat-body-1">Drag your .winscope file(s) or click to upload</p>
+      </div>
 
-        <div class="load-traces-btns" *ngIf="this.loadedTraces.length > 0">
-          <button mat-raised-button class="load-btn" (click)="onLoadData()">View traces</button>
-          <button mat-stroked-button for="fileDropRef" (click)="fileDropRef.click()">Upload another file</button>
-          <button mat-stroked-button (click)="onClearData()">Clear all</button>
-        </div>
-      </mat-card-content>
+      <div *ngIf="this.loadedTraces.length > 0">
+        <button color="primary" mat-raised-button class="load-btn" (click)="onLoadData()">View traces</button>
+        <button color="primary" mat-stroked-button for="fileDropRef" (click)="fileDropRef.click()">Upload another file</button>
+        <button color="primary" mat-stroked-button (click)="onClearData()">Clear all</button>
+      </div>
+    </mat-card-content>
   `,
   styles: [
     `
       .drop-box {
-        outline: 2px dashed var(--default-border);
-        outline-offset: -10px;
-        background: white;
-        padding: 10px 10px 10px 10px;
         height: 400px;
-        position: relative;
-        cursor: pointer;
+        padding: 10px;
         display: flex;
         flex-direction: column;
         overflow: auto;
-        text-align: center;
-        align-items: center;
-        justify-items: center;
-        vertical-align: middle;
-      }
-      .drop-info {
-        font-weight: normal;
-        pointer-events: none;
-        margin: auto;
-      }
-      #inputfile {
-        margin: auto;
+        outline: 2px dashed var(--default-border);
+        outline-offset: -10px;
+        cursor: pointer;
       }
       .uploaded-files {
-        text-align: left;
-        height: 400px;
-        overflow: auto;
-        width: 100%;
-      }
-      .listed-file {
-        width: 100%;
-        position: relative;
-        display: inline-block;
         height: 100%;
         width: 100%;
-      }
-      .listed-file-item {
-        position: relative;
-        display: inline-block;
-        vertical-align: middle;
-        align-items: center;
+        overflow: auto;
       }
       .close-btn {
-        float: right;
+        margin-left: auto;
+      }
+      .drop-info {
+        pointer-events: none;
+        margin: auto;
       }
     `
   ]

@@ -21,343 +21,289 @@ import { ViewerEvents } from "viewers/common/viewer_events";
 @Component({
   selector: "ime-additional-properties",
   template: `
-    <mat-card-header class="view-header">
-      <div class="title-filter">
-        <span class="additional-properties-title">WM & SF Properties</span>
-      </div>
-    </mat-card-header>
-    <mat-card-content class="additional-properties-content">
+    <h2 class="view-header mat-title">WM & SF Properties</h2>
+    <div class="additional-properties-content">
       <div *ngIf="isAllPropertiesNull()" class="group">
-        There is no corresponding WM / SF additionalProperties for this IME entry –
-        no WM / SF entry is recorded before this IME entry in time.
-        View later frames for WM & SF properties.
+        <p class="mat-body-1">
+          There is no corresponding WM / SF additionalProperties for this IME entry –
+          no WM / SF entry is recorded before this IME entry in time.
+          View later frames for WM & SF properties.
+        </p>
       </div>
 
-      <div *ngIf="isImeManagerService">
+      <ng-container *ngIf="isImeManagerService">
         <div class="group">
           <button
-              class="text-button group-header"
               *ngIf="wmProtoOrNull()"
+              color="primary"
+              mat-button
+              class="group-header"
               [class]="{ 'selected': isHighlighted(wmProtoOrNull()) }"
               (click)="onClickShowInPropertiesPanel(wmProtoOrNull(), additionalProperties.wm?.name)">
             WMState
           </button>
-          <span class="group-header" *ngIf="!wmProtoOrNull()">WMState</span>
-          <div class="full-width">
-            <span class="value" *ngIf="additionalProperties.wm">{{
-              additionalProperties.wm.name }}</span>
-            <span *ngIf="!additionalProperties.wm">There is no corresponding WMState entry.</span>
+          <h3 *ngIf="!wmProtoOrNull()" class="group-header mat-subheading-2">WMState</h3>
+          <div class="left-column">
+            <p *ngIf="additionalProperties.wm" class="mat-body-1">
+              {{ additionalProperties.wm.name }}
+            </p>
+            <p *ngIf="!additionalProperties.wm" class="mat-body-1">
+              There is no corresponding WMState entry.
+            </p>
           </div>
         </div>
-        <div class="group" *ngIf="wmInsetsSourceProviderOrNull()">
+        <div *ngIf="wmInsetsSourceProviderOrNull()" class="group">
           <button
-              class="text-button group-header"
+              color="primary"
+              mat-button
+              class="group-header"
               [class]="{ 'selected': isHighlighted(wmInsetsSourceProviderOrNull()) }"
               (click)="onClickShowInPropertiesPanel(wmInsetsSourceProviderOrNull(), 'Ime Insets Source Provider')">
             IME Insets Source Provider
           </button>
-          <div class="full-width">
-            <div></div>
-            <span class="key">Source Frame:</span>
-            <coordinates-table
-              [coordinates]="wmInsetsSourceProviderSourceFrameOrNull()"
-            ></coordinates-table>
-            <div></div>
-            <span class="key">Source Visible:</span>
-            <span class="value">{{
-                wmInsetsSourceProviderSourceVisibleOrNull() }}</span>
-            <div></div>
-            <span class="key">Source Visible Frame:</span>
-            <coordinates-table
-              [coordinates]="wmInsetsSourceProviderSourceVisibleFrameOrNull()"
-            ></coordinates-table>
-            <div></div>
-            <span class="key">Position:</span>
-            <span class="value">{{ wmInsetsSourceProviderPositionOrNull() }}</span>
-            <div></div>
-            <span class="key">IsLeashReadyForDispatching:</span>
-            <span class="value">{{
-                wmInsetsSourceProviderIsLeashReadyOrNull() }}</span>
-            <div></div>
-            <span class="key">Controllable:</span>
-            <span class="value">{{
-                wmInsetsSourceProviderControllableOrNull() }}</span>
-            <div></div>
+          <div class="left-column">
+            <p class="mat-body-2">Source Frame:</p>
+            <coordinates-table [coordinates]="wmInsetsSourceProviderSourceFrameOrNull()"></coordinates-table>
+            <p class="mat-body-1">
+              <span class="mat-body-2">Source Visible:</span>
+              &ngsp;
+              {{ wmInsetsSourceProviderSourceVisibleOrNull() }}
+            </p>
+            <p class="mat-body-2">Source Visible Frame:</p>
+            <coordinates-table [coordinates]="wmInsetsSourceProviderSourceVisibleFrameOrNull()"></coordinates-table>
+            <p class="mat-body-1">
+              <span class="mat-body-2">Position:</span>
+              &ngsp;
+              {{ wmInsetsSourceProviderPositionOrNull() }}
+            </p>
+            <p class="mat-body-1">
+              <span class="mat-body-2">IsLeashReadyForDispatching:</span>
+              &ngsp;
+              {{ wmInsetsSourceProviderIsLeashReadyOrNull() }}
+            </p>
+            <p class="mat-body-1">
+              <span class="mat-body-2">Controllable:</span>
+              &ngsp;
+              {{ wmInsetsSourceProviderControllableOrNull() }}
+            </p>
           </div>
         </div>
-        <div class="group" *ngIf="wmImeControlTargetOrNull()">
+        <div *ngIf="wmImeControlTargetOrNull()" class="group">
           <button
-              class="text-button group-header"
+              color="primary"
+              mat-button
+              class="group-header"
               [class]="{ 'selected': isHighlighted(wmImeControlTargetOrNull()) }"
               (click)="onClickShowInPropertiesPanel(wmImeControlTargetOrNull(), 'Ime Control Target')">
             IME Control Target
           </button>
-          <div class="full-width">
-            <span class="key" *ngIf="wmImeControlTargetTitleOrNull()">Title:</span>
-            <span class="value" *ngIf="wmImeControlTargetTitleOrNull()">{{
-                wmImeControlTargetTitleOrNull() }}</span>
+          <div class="left-column">
+            <p *ngIf="wmImeControlTargetTitleOrNull()" class="mat-body-1">
+              <span class="mat-body-2">Title:</span>
+              &ngsp;
+              {{ wmImeControlTargetTitleOrNull() }}
+            </p>
           </div>
         </div>
-        <div class="group" *ngIf="wmImeInputTargetOrNull()">
+        <div *ngIf="wmImeInputTargetOrNull()" class="group">
           <button
-              class="text-button group-header"
+              color="primary"
+              mat-button
+              class="group-header"
               [class]="{ 'selected': isHighlighted(wmImeInputTargetOrNull()) }"
               (click)="onClickShowInPropertiesPanel(wmImeInputTargetOrNull(), 'Ime Input Target')">
             IME Input Target
           </button>
-          <div class="full-width">
-            <span class="key" *ngIf="wmImeInputTargetTitleOrNull()">Title:</span>
-            <span class="value" *ngIf="wmImeInputTargetTitleOrNull()">{{
-                wmImeInputTargetTitleOrNull() }}</span>
+          <div class="left-column">
+            <p *ngIf="wmImeInputTargetTitleOrNull()" class="mat-body-1">
+              <span class="mat-body-2">Title:</span>
+              &ngsp;
+              {{ wmImeInputTargetTitleOrNull() }}
+            </p>
           </div>
         </div>
-        <div class="group" *ngIf="wmImeLayeringTargetOrNull()">
+        <div *ngIf="wmImeLayeringTargetOrNull()" class="group">
           <button
-              class="text-button group-header"
+              color="primary"
+              mat-button
+              class="group-header"
               [class]="{ 'selected': isHighlighted(wmImeLayeringTargetOrNull()) }"
               (click)="onClickShowInPropertiesPanel(wmImeLayeringTargetOrNull(), 'Ime Layering Target')">
             IME Layering Target
           </button>
-          <div class="full-width">
-            <span class="key" *ngIf="wmImeLayeringTargetTitleOrNull()">Title:</span>
-            <span class="value" *ngIf="wmImeLayeringTargetTitleOrNull()">{{
-                wmImeLayeringTargetTitleOrNull() }}</span>
+          <div class="left-column">
+            <p *ngIf="wmImeLayeringTargetTitleOrNull()" class="mat-body-1">
+              <span class="mat-body-2">Title:</span>
+              &ngsp;
+              {{ wmImeLayeringTargetTitleOrNull() }}
+            </p>
           </div>
         </div>
-      </div>
+      </ng-container>
 
-      <div *ngIf="!isImeManagerService">
+      <ng-container *ngIf="!isImeManagerService">
         <!-- Ime Client or Ime Service -->
         <div class="group">
           <button
-              class="text-button group-header"
               *ngIf="wmProtoOrNull()"
+              color="primary"
+              mat-button
+              class="group-header"
               [class]="{ 'selected': isHighlighted(wmProtoOrNull()) }"
               (click)="onClickShowInPropertiesPanel(wmProtoOrNull(), additionalProperties.wm?.name)">
             WMState
           </button>
-          <span class="group-header" *ngIf="!wmProtoOrNull()">WMState</span>
-          <div class="full-width">
-            <span class="value" *ngIf="additionalProperties.wm">{{
-              additionalProperties.wm.name }}</span>
-            <span *ngIf="!additionalProperties.wm">There is no corresponding WMState entry.</span>
+          <h3 *ngIf="!wmProtoOrNull()" class="group-header mat-subheading-2">WMState</h3>
+          <div class="left-column">
+            <p *ngIf="additionalProperties.wm" class="mat-body-1">{{
+              additionalProperties.wm.name
+            }}</p>
+            <p *ngIf="!additionalProperties.wm" class="mat-body-1">
+              There is no corresponding WMState entry.
+            </p>
           </div>
         </div>
         <div class="group">
-          <span class="group-header">SFLayer</span>
-          <div class="full-width">
-            <span class="value" *ngIf="additionalProperties.sf">{{
-              additionalProperties.sf.name }}</span>
-            <span *ngIf="!additionalProperties.sf">There is no corresponding SFLayer entry.</span>
+          <h3 class="group-header mat-subheading-2">SFLayer</h3>
+          <div class="left-column">
+            <p *ngIf="additionalProperties.sf" class="mat-body-1">{{
+              additionalProperties.sf.name
+            }}</p>
+            <p *ngIf="!additionalProperties.sf" class="mat-body-1">
+              There is no corresponding SFLayer entry.
+            </p>
           </div>
         </div>
-        <div class="group" *ngIf="additionalProperties.wm">
-          <span class="group-header">Focus</span>
-          <div class="full-width">
-            <span class="key">Focused App:</span>
-            <span class="value">{{ additionalProperties.wm.focusedApp }}</span>
-            <div></div>
-            <span class="key">Focused Activity:</span>
-            <span class="value">{{ additionalProperties.wm.focusedActivity }}</span>
-            <div></div>
-            <span class="key">Focused Window:</span>
-            <span class="value">{{ additionalProperties.wm.focusedWindow }}</span>
-            <div></div>
-            <span class="key" *ngIf="additionalProperties.sf">Focused Window Color:</span>
-            <span class="value" *ngIf="additionalProperties.sf">{{
-              additionalProperties.sf.focusedWindow.color
-              }}</span>
-            <div></div>
-            <span class="key">Input Control Target Frame:</span>
-            <coordinates-table
-              [coordinates]="wmControlTargetFrameOrNull()"
-            ></coordinates-table>
-            <div></div>
+        <div *ngIf="additionalProperties.wm" class="group">
+          <h3 class="group-header mat-subheading-2">Focus</h3>
+          <div class="left-column">
+            <p class="mat-body-1">
+              <span class="mat-body-2">Focused App:</span>
+              &ngsp;
+              {{ additionalProperties.wm.focusedApp }}
+            </p>
+            <p class="mat-body-1">
+              <span class="mat-body-2">Focused Activity:</span>
+              &ngsp;
+              {{ additionalProperties.wm.focusedActivity }}
+            </p>
+            <p class="mat-body-1">
+              <span class="mat-body-2">Focused Window:</span>
+              &ngsp;
+              {{ additionalProperties.wm.focusedWindow }}
+            </p>
+            <p *ngIf="additionalProperties.sf" class="mat-body-1">
+              <span class="mat-body-2">Focused Window Color:</span>
+              &ngsp;
+              {{ additionalProperties.sf.focusedWindow.color }}
+            </p>
+            <p class="mat-body-2">Input Control Target Frame:</p>
+            <coordinates-table [coordinates]="wmControlTargetFrameOrNull()"></coordinates-table>
           </div>
         </div>
         <div class="group">
-          <span class="group-header">Visibility</span>
-          <div class="full-width">
-            <span class="key" *ngIf="additionalProperties.wm">InputMethod Window:</span>
-            <span class="value" *ngIf="additionalProperties.wm">{{
-              additionalProperties.wm.isInputMethodWindowVisible
-              }}</span>
-            <div></div>
-            <span class="key" *ngIf="additionalProperties.sf">InputMethod Surface:</span>
-            <span class="value" *ngIf="additionalProperties.sf">{{
-              additionalProperties.sf.inputMethodSurface.isInputMethodSurfaceVisible }}</span>
-            <div></div>
+          <h3 class="group-header mat-subheading-2">Visibility</h3>
+          <div class="left-column">
+            <p *ngIf="additionalProperties.wm" class="mat-body-1">
+              <span class="mat-body-2">InputMethod Window:</span>
+              &ngsp;
+              {{ additionalProperties.wm.isInputMethodWindowVisible }}
+            </p>
+            <p *ngIf="additionalProperties.sf" class="mat-body-1">
+              <span class="mat-body-2">InputMethod Surface:</span>
+              &ngsp;
+              {{ additionalProperties.sf.inputMethodSurface.isInputMethodSurfaceVisible }}
+            </p>
           </div>
         </div>
-        <div class="group" *ngIf="additionalProperties.sf">
+        <div *ngIf="additionalProperties.sf" class="group">
           <button
-              class="text-button group-header"
+              color="primary"
+              mat-button
+              class="group-header"
               [class]="{ 'selected': isHighlighted(additionalProperties.sf.imeContainer) }"
               (click)="onClickShowInPropertiesPanel(additionalProperties.sf.imeContainer)">
             Ime Container
           </button>
-          <div class="full-width">
-            <span class="key">ZOrderRelativeOfId:</span>
-            <span class="value">{{
-              additionalProperties.sf.imeContainer.zOrderRelativeOfId
-              }}</span>
-            <div></div>
-            <span class="key">Z:</span>
-            <span class="value">{{ additionalProperties.sf.imeContainer.z }}</span>
-            <div></div>
+          <div class="left-column">
+            <p class="mat-body-1">
+              <span class="mat-body-2">ZOrderRelativeOfId:</span>
+              &ngsp;
+              {{ additionalProperties.sf.imeContainer.zOrderRelativeOfId }}
+            </p>
+            <p class="mat-body-1">
+              <span class="mat-body-2">Z:</span>
+              &ngsp;
+              {{ additionalProperties.sf.imeContainer.z }}
+            </p>
           </div>
         </div>
-        <div class="group" *ngIf="additionalProperties.sf">
+        <div *ngIf="additionalProperties.sf" class="group">
           <button
-              class="text-button group-header"
-              [class]="{
-                'selected': isHighlighted(additionalProperties.sf.inputMethodSurface)
-              }"
-              (click)="onClickShowInPropertiesPanel(
-                additionalProperties.sf.inputMethodSurface)">
+              color="primary"
+              mat-button
+              class="group-header"
+              [class]="{ 'selected': isHighlighted(additionalProperties.sf.inputMethodSurface) }"
+              (click)="onClickShowInPropertiesPanel(additionalProperties.sf.inputMethodSurface)">
             Input Method Surface
           </button>
-          <div class="full-width">
-            <span class="key">ScreenBounds:</span>
-            <coordinates-table
-              [coordinates]="sfImeContainerScreenBoundsOrNull()"
-            ></coordinates-table>
-            <div></div>
-            <span class="key">Rect:</span>
-            <coordinates-table
-              [coordinates]="sfImeContainerRectOrNull()"
-            ></coordinates-table>
-            <div></div>
+          <div class="left-column">
+            <p class="mat-body-2">ScreenBounds:</p>
+            <coordinates-table [coordinates]="sfImeContainerScreenBoundsOrNull()"></coordinates-table>
+          </div>
+          <div class="right-column">
+            <p class="mat-body-2">Rect:</p>
+            <coordinates-table [coordinates]="sfImeContainerRectOrNull()"></coordinates-table>
           </div>
         </div>
-      </div>
-    </mat-card-content>
+      </ng-container>
+    </div>
   `,
   styles: [
     `
       .view-header {
-        width: 100%;
-        height: 2.5rem;
         border-bottom: 1px solid var(--default-border);
       }
 
-      .title-filter {
-        position: relative;
-        display: flex;
-        align-items: center;
-        width: 100%;
-        margin-bottom: 12px;
-      }
-
-      .additional-properties-title {
-        font-weight: medium;
-        font-size: 16px;
-      }
-
       .additional-properties-content {
-        display: flex;
-        flex-direction: column;
-        height: 375px;
+        height: 0;
+        flex-grow: 1;
         overflow-y: auto;
-        overflow-x: hidden;
-      }
-
-      .container {
-        overflow: auto;
       }
 
       .group {
-        padding: 0.5rem;
-        border-bottom: thin solid rgba(0, 0, 0, 0.12);
-        flex-direction: row;
+        padding: 8px;
         display: flex;
+        flex-direction: row;
+        border-bottom: 1px solid var(--default-border);
       }
 
-      .group .key {
-        font-weight: bold;
-      }
-
-      .group .value {
-        color: rgba(0, 0, 0, 0.75);
-        word-break: break-all !important;
+      .mat-body-1 {
+        overflow-wrap: anywhere;
       }
 
       .group-header {
-        justify-content: center;
-        text-align: left;
-        padding: 0px 5px;
-        width: 95px;
-        display: inline-block;
-        font-size: bigger;
+        height: 100%;
+        width: 80px;
+        padding: 0;
+        text-align: center;
+        line-height: normal;
+        white-space: normal;
+      }
+
+      p.group-header {
         color: grey;
-        word-break: break-word;
       }
 
       .left-column {
-        width: 320px;
-        max-width: 100%;
-        display: inline-block;
-        vertical-align: top;
-        overflow: auto;
-        padding-right: 20px;
+        flex: 1;
+        padding: 0 5px;
       }
 
       .right-column {
-        width: 320px;
-        max-width: 100%;
-        display: inline-block;
-        vertical-align: top;
-        overflow: auto;
+        flex: 1;
+        padding: 0 5px;
       }
-
-      .full-width {
-        width: 100%;
-        display: inline-block;
-        vertical-align: top;
-        overflow: auto;
-      }
-
-      .column-header {
-        font-weight: medium;
-        font-size: smaller;
-      }
-
-      .element-summary {
-        padding-top: 1rem;
-      }
-
-      .element-summary .key {
-        font-weight: bold;
-      }
-
-      .element-summary .value {
-        color: rgba(0, 0, 0, 0.75);
-      }
-
-      .tree-view {
-        overflow: auto;
-      }
-
-      .text-button {
-        border: none;
-        cursor: pointer;
-        font-size: 14px;
-        font-family: roboto;
-        color: blue;
-        text-decoration: underline;
-        text-decoration-color: blue;
-        background-color: inherit;
-      }
-
-      .text-button:focus {
-        color: purple;
-      }
-
-      .text-button.selected {
-        color: purple;
-      }
-
-
     `
   ],
 })
