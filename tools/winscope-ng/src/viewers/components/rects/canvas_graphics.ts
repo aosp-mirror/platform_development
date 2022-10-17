@@ -52,10 +52,8 @@ export class CanvasGraphics {
 
     this.orbit?.reset();
 
-    // scene
     this.scene = new THREE.Scene();
 
-    // renderers
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
       canvas: this.canvas,
@@ -181,7 +179,6 @@ export class CanvasGraphics {
   public updateRotation(userInput: number) {
     this.camera.position.x = userInput;
     this.camera.position.y = Math.abs(userInput);
-    this.labelShift = userInput / 4 * this.MAX_LABEL_SHIFT;
     this.lowestYShift = Math.abs(userInput) / 4 + 2;
     this.updateCameraAndControls();
   }
@@ -219,7 +216,6 @@ export class CanvasGraphics {
     );
     this.camera.zoom = this.INIT_ZOOM;
     this.fontSize = this.INIT_FONT_SIZE;
-    this.labelShift = this.MAX_LABEL_SHIFT;
     this.lowestYShift = this.INIT_LOWEST_Y_SHIFT;
     this.layerSeparation = this.INIT_LAYER_SEPARATION;
     this.camera.updateProjectionMatrix();
@@ -295,7 +291,9 @@ export class CanvasGraphics {
       }
 
       // only some rects are clickable
-      if (rect.isClickable) this.targetObjects.push(planeRect);
+      if (rect.isClickable) {
+        this.targetObjects.push(planeRect);
+      }
 
       // labelling elements
       if (rect.label.length > 0) {
@@ -376,43 +374,41 @@ export class CanvasGraphics {
 
 
     //add rectangle label
-    const rectLabelDiv: HTMLElement = document.createElement("div");
-    rectLabelDiv.className = "rect-label";
-    rectLabelDiv.textContent = labelText;
-    rectLabelDiv.style.fontSize = `${this.fontSize}` + "px";
-    rectLabelDiv.style.marginTop = "5px";
+    const spanText: HTMLElement = document.createElement("span");
+    spanText.innerText = labelText;
+    spanText.className = "mat-body-1";
+
+    // Hack: transparent/placeholder text used to push the visible text to the left (negative x)
+    // and properly align it with the label's line
+    const spanPlaceholder: HTMLElement = document.createElement("span");
+    spanPlaceholder.innerText = labelText;
+    spanPlaceholder.className = "mat-body-1";
+    spanPlaceholder.style.opacity = "0";
+
+    const div: HTMLElement = document.createElement("div");
+    div.className = "rect-label";
+    div.style.display = "inline";
+    div.appendChild(spanText);
+    div.appendChild(spanPlaceholder);
+
+    div.style.marginTop = "5px";
     if (isGrey) {
-      rectLabelDiv.style.color = "grey";
+      div.style.color = "grey";
     }
-    rectLabelDiv.style.pointerEvents = "auto";
-    rectLabelDiv.style.cursor = "pointer";
-    rectLabelDiv.addEventListener(
+    div.style.pointerEvents = "auto";
+    div.style.cursor = "pointer";
+    div.addEventListener(
       "click", (event) => this.propagateUpdateHighlightedItems(event, rect.id)
     );
-    const rectLabel = new CSS2DObject(rectLabelDiv);
+
+    const rectLabel = new CSS2DObject(div);
     rectLabel.name = rect.label;
 
-    const textCanvas = document.createElement("canvas");
-    const labelContext = textCanvas.getContext("2d");
-
-    let labelWidth = 0;
-    if (labelContext?.font) {
-      labelContext.font = rectLabelDiv.style.font;
-      labelWidth = labelContext?.measureText(labelText).width;
-    }
-    textCanvas.remove();
-
-    if (this.isLandscape && endPos.x < 0) {
-      rectLabel.position.set(
-        endPos.x + 0.6, endPos.y, endPos.z - 0.6
-      );
-    } else {
-      rectLabel.position.set(
-        endPos.x - labelWidth * this.LABEL_X_FACTOR,
-        endPos.y - this.labelShift * labelWidth * this.LABEL_X_FACTOR,
-        endPos.z
-      );
-    }
+    rectLabel.position.set(
+      endPos.x,
+      endPos.y,
+      endPos.z
+    );
 
     const lineGeo = new THREE.BufferGeometry().setFromPoints(linePoints);
     const lineMaterial = new THREE.LineBasicMaterial({ color: isGrey ? 0x808080 : 0x000000 });
@@ -474,7 +470,6 @@ export class CanvasGraphics {
   // dynamic scaling and canvas variables
   readonly CAMERA_HALF_WIDTH = 2.8;
   readonly CAMERA_HALF_HEIGHT = 3.2;
-  private readonly MAX_LABEL_SHIFT = 0.305;
   private readonly MAX_ZOOM = 2.5;
   private readonly MIN_ZOOM = 0.5;
   private readonly INIT_ZOOM = 0.75;
@@ -484,11 +479,9 @@ export class CanvasGraphics {
   private readonly INIT_LAYER_SEPARATION = 0.4;
   private readonly INIT_LOWEST_Y_SHIFT = 3;
   private readonly PAN_SPEED = 1;
-  private readonly LABEL_X_FACTOR = 0.009;
   private readonly CAM_ZOOM_FACTOR = 0.15;
 
   private fontSize = this.INIT_FONT_SIZE;
-  private labelShift = this.MAX_LABEL_SHIFT;
   private lowestYShift = this.INIT_LOWEST_Y_SHIFT;
   private layerSeparation = this.INIT_LAYER_SEPARATION;
 
