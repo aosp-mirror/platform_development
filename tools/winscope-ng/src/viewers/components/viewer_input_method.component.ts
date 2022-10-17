@@ -70,8 +70,6 @@ import { ImeUiData } from "viewers/common/ime_ui_data";
       .properties-view {
         flex: 1;
         padding: 16px;
-        display: flex;
-        flex-direction: column;
         border-top: 1px solid var(--default-border);
       }
     `,
