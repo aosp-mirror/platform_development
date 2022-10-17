@@ -72,10 +72,19 @@ describe("ArrayUtils", () => {
 
     // match (equal)
     expect(ArrayUtils.binarySearchLowerOrEqual([5], 5)).toEqual(0);
+    expect(ArrayUtils.binarySearchLowerOrEqual([5, 6], 5)).toEqual(0);
     expect(ArrayUtils.binarySearchLowerOrEqual([4, 5], 5)).toEqual(1);
     expect(ArrayUtils.binarySearchLowerOrEqual([3, 4, 5], 5)).toEqual(2);
     expect(ArrayUtils.binarySearchLowerOrEqual([3, 4, 5, 6], 5)).toEqual(2);
     expect(ArrayUtils.binarySearchLowerOrEqual([3, 4, 5, 6, 7], 5)).toEqual(2);
+
+    // match (equal with repeated values)
+    expect(ArrayUtils.binarySearchLowerOrEqual([5, 5], 5)).toEqual(0);
+    expect(ArrayUtils.binarySearchLowerOrEqual([5, 5, 5], 5)).toEqual(0);
+    expect(ArrayUtils.binarySearchLowerOrEqual([5, 5, 5, 5], 5)).toEqual(0);
+    expect(ArrayUtils.binarySearchLowerOrEqual([4, 5, 5, 6], 5)).toEqual(1);
+    expect(ArrayUtils.binarySearchLowerOrEqual([4, 4, 5, 5, 5, 6], 5)).toEqual(2);
+    expect(ArrayUtils.binarySearchLowerOrEqual([4, 4, 4, 5, 5, 5, 5, 6], 5)).toEqual(3);
   });
 
   it("toUintLittleEndian", () => {
