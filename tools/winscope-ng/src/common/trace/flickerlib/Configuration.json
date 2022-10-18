@@ -26,6 +26,7 @@
         "WindowLayoutParams.subtreeSystemUiVisibilityFlags": "android.view.WindowManager.LayoutParams.SystemUiVisibilityFlags",
         "WindowLayoutParams.behavior": "android.view.WindowInsetsController.Behavior",
         "WindowLayoutParams.fitInsetsSides": "android.view.WindowInsets.Side.InsetsSide",
+        "InputWindowInfoProto.layoutParamsFlags": "android.view.WindowManager.LayoutParams.Flags",
         "Configuration.windowingMode": "android.app.WindowConfiguration.WindowingMode",
         "WindowConfiguration.windowingMode": "android.app.WindowConfiguration.WindowingMode",
         "Configuration.orientation": "android.content.pm.ActivityInfo.ScreenOrientation",
