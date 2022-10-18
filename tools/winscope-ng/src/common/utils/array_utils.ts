@@ -72,14 +72,17 @@ class ArrayUtils {
       const mid = (low + high) >> 1;
 
       if (values[mid] < target) {
-        result = mid;
+        if (result === undefined || result < mid) {
+          result = mid;
+        }
         low = mid + 1;
       }
       else if (values[mid] > target) {
         high = mid - 1;
       }
       else {
-        return mid;
+        result = mid;
+        high = mid - 1;
       }
     }
 
