@@ -22,21 +22,26 @@ import { MatInputModule } from "@angular/material/input";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatCheckboxModule } from "@angular/material/checkbox";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
-import { HierarchyTreeNode } from "viewers/common/ui_tree_utils";
 import { HierarchyTreeBuilder } from "test/unit/hierarchy_tree_builder";
+import { TreeComponent } from "viewers/components/tree.component";
+import { TreeNodeComponent } from "viewers/components/tree_node.component";
+import { TreeNodeDataViewComponent } from "viewers/components/tree_node_data_view.component";
 
 describe("HierarchyComponent", () => {
   let fixture: ComponentFixture<HierarchyComponent>;
   let component: HierarchyComponent;
   let htmlElement: HTMLElement;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [
         { provide: ComponentFixtureAutoDetect, useValue: true }
       ],
       declarations: [
-        HierarchyComponent
+        HierarchyComponent,
+        TreeComponent,
+        TreeNodeComponent,
+        TreeNodeDataViewComponent
       ],
       imports: [
         CommonModule,
@@ -47,16 +52,14 @@ describe("HierarchyComponent", () => {
       ],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
-  });
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(HierarchyComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
 
-    component.tree = new HierarchyTreeBuilder().setName("BaseLayerTraceEntry").setKind("entry").setStableId("BaseEntry")
-      .setChildren([new HierarchyTreeBuilder().setName("Child1").setStableId("3 Child1").build()])
-      .build();
+    component.tree = new HierarchyTreeBuilder().setName("Root node").setChildren([
+      new HierarchyTreeBuilder().setName("Child node").build()
+    ]).build();
 
     component.store = new PersistentStore();
     component.userOptions = {
@@ -66,29 +69,28 @@ describe("HierarchyComponent", () => {
       },
     };
     component.pinnedItems = [component.tree];
-    component.diffClass = jasmine.createSpy().and.returnValue("none");
+
+    fixture.detectChanges();
   });
 
   it("can be created", () => {
-    fixture.detectChanges();
     expect(component).toBeTruthy();
   });
 
-  it("creates title", () => {
-    fixture.detectChanges();
+  it("renders title", () => {
     const title = htmlElement.querySelector(".hierarchy-title");
     expect(title).toBeTruthy();
   });
 
-  it("creates view controls", () => {
-    fixture.detectChanges();
+  it("renders view controls", () => {
     const viewControls = htmlElement.querySelector(".view-controls");
     expect(viewControls).toBeTruthy();
   });
 
-  it("creates initial tree elements", () => {
-    fixture.detectChanges();
-    const tree = htmlElement.querySelector(".tree-wrapper");
-    expect(tree).toBeTruthy();
+  it("renders initial tree elements", async () => {
+    const treeView = htmlElement.querySelector("tree-view");
+    expect(treeView).toBeTruthy();
+    expect(treeView!.innerHTML).toContain("Root node");
+    expect(treeView!.innerHTML).toContain("Child node");
   });
 });
