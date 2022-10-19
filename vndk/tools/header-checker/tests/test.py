@@ -387,6 +387,11 @@ class HeaderCheckerTest(unittest.TestCase):
     def test_merge_multi_definitions(self):
         self.prepare_and_absolute_diff_all_archs(
             "libmerge_multi_definitions", "libmerge_multi_definitions")
+        self.prepare_and_run_abi_diff_all_archs(
+            "libmerge_multi_definitions", "libdiff_multi_definitions", 0,
+            flags=["-input-format-new", "Json", "-input-format-old", "Json",
+                   "-consider-opaque-types-different"],
+            create_old=False, create_new=False)
 
     def test_print_resource_dir(self):
         dumper_path = shutil.which("header-abi-dumper")
