@@ -93,7 +93,7 @@ ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android_uiaut
 ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/org.apache.http.legacy.stubs_intermediates/classes.jar
 
 # Android Automotive OS stubs
-ALL_SDK_FILES += $(OUT_DIR)/target/common/obj/JAVA_LIBRARIES/android.car-stubs_intermediates/classes.jar
+ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android.car-stubs_intermediates/classes.jar
 
 # test stubs
 ALL_SDK_FILES += $(TARGET_OUT_COMMON_INTERMEDIATES)/JAVA_LIBRARIES/android.test.mock.stubs_intermediates/classes.jar
@@ -112,12 +112,28 @@ ALL_SDK_FILES += $(full_target)
 $(call dist-for-goals,sdk,$(full_target):data/annotations.zip)
 
 # ======= Lint system API XML ===========
-full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework-doc-system-stubs_generated-api-versions.xml
+full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/api_versions_system_generated-api-versions.xml
 $(call dist-for-goals,sdk,$(full_target):system-data/api-versions.xml)
 
 # ======= Lint system Annotations zip ===========
 full_target := $(call intermediates-dir-for,ETC,sdk-annotations-system.zip)/sdk-annotations-system.zip
 $(call dist-for-goals,sdk,$(full_target):system-data/annotations.zip)
+
+# ======= Lint module-lib API XML ===========
+full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/api_versions_module_lib_generated-api-versions.xml
+$(call dist-for-goals,sdk,$(full_target):module-lib-data/api-versions.xml)
+
+# ======= Lint module-lib Annotations zip ===========
+full_target := $(call intermediates-dir-for,ETC,sdk-annotations-module-lib.zip)/sdk-annotations-module-lib.zip
+$(call dist-for-goals,sdk,$(full_target):module-lib-data/annotations.zip)
+
+# ======= Lint system-server API XML ===========
+full_target := $(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/api_versions_system_server_generated-api-versions.xml
+$(call dist-for-goals,sdk,$(full_target):system-server-data/api-versions.xml)
+
+# ======= Lint system-server Annotations zip ===========
+full_target := $(call intermediates-dir-for,ETC,sdk-annotations-system-server.zip)/sdk-annotations-system-server.zip
+$(call dist-for-goals,sdk,$(full_target):system-server-data/annotations.zip)
 
 # ============ SDK AIDL ============
 $(eval $(call copy-one-file,$(FRAMEWORK_AIDL),$(TARGET_OUT_COMMON_INTERMEDIATES)/PACKAGING/framework.aidl))

@@ -171,6 +171,10 @@ def start_gdbserver(device, gdbserver_local_path, gdbserver_remote_path,
     # Push gdbserver to the target.
     if gdbserver_local_path is not None:
         device.push(gdbserver_local_path, chroot + gdbserver_remote_path)
+        # If the user here is potentially on Windows, adb cannot inspect execute
+        # permissions. Since we don't know where the users are, chmod
+        # gdbserver_remote_path on device regardless.
+        device.shell(["chmod", "+x", gdbserver_remote_path])
 
     # Run gdbserver.
     gdbserver_cmd = [gdbserver_remote_path]
@@ -337,6 +341,9 @@ def get_binary_arch(binary_file):
     elif e_machine == 0x3E:
         assert ei_class == 2
         return "x86_64"
+    elif e_machine == 0xF3:
+        assert ei_class == 2
+        return "riscv64"
     else:
         raise RuntimeError("unknown architecture: 0x{:x}".format(e_machine))
 
