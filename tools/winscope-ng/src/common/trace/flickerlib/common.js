@@ -82,6 +82,7 @@ const ActiveBuffer = require('flicker').com.android.server.wm.traces.common
 const Color3 = require('flicker').com.android.server.wm.traces.common.Color3;
 const Color = require('flicker').com.android.server.wm.traces.common.Color;
 const Point = require('flicker').com.android.server.wm.traces.common.Point;
+const PointF = require('flicker').com.android.server.wm.traces.common.PointF;
 const Rect = require('flicker').com.android.server.wm.traces.common.Rect;
 const RectF = require('flicker').com.android.server.wm.traces.common.RectF;
 const Region = require('flicker').com.android.server.wm.traces.common.region.Region;
@@ -95,6 +96,7 @@ const EMPTY_COLOR = new Color(-1, -1, -1, 0);
 const EMPTY_RECT = new Rect(0, 0, 0, 0);
 const EMPTY_RECTF = new RectF(0, 0, 0, 0);
 const EMPTY_POINT = new Point(0, 0);
+const EMPTY_POINTF = new PointF(0, 0);
 const EMPTY_MATRIX22 = new Matrix22(0, 0, 0, 0, 0, 0);
 const EMPTY_MATRIX33 = new Matrix33(0, 0, 0, 0, 0, 0);
 const EMPTY_TRANSFORM = new Transform(0, EMPTY_MATRIX33);
@@ -160,6 +162,18 @@ function toPoint(proto) {
     return new Point(x, y);
   }
   return EMPTY_POINT;
+}
+
+function toPointF(proto) {
+  if (proto == null) {
+    return null;
+  }
+  const x = proto.x ?? 0;
+  const y = proto.y ?? 0;
+  if (x || y) {
+    return new PointF(x, y);
+  }
+  return EMPTY_POINTF;
 }
 
 function toRect(proto) {
@@ -290,6 +304,7 @@ export {
   toColor,
   toColor3,
   toPoint,
+  toPointF,
   toRect,
   toRectF,
   toRegion,
