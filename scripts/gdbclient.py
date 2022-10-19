@@ -242,6 +242,11 @@ def handle_switches(args, sysroot):
 
     return (binary_file, pid, run_cmd)
 
+def format_hostport(host, port):
+    if host is not None:
+        return "{}:{}".format(host, port)
+    return str(port)
+
 def generate_vscode_lldb_script(root, sysroot, binary_name, host, port, solib_search_path):
     # TODO It would be nice if we didn't need to copy this or run the
     #      lldbclient.py program manually. Doing this would probably require
@@ -258,7 +263,7 @@ def generate_vscode_lldb_script(root, sysroot, binary_name, host, port, solib_se
         "initCommands": ['settings append target.exec-search-paths {}'.format(' '.join(solib_search_path))],
         "targetCreateCommands": ["target create {}".format(binary_name),
                                  "target modules search-paths add / {}/".format(sysroot)],
-        "processCreateCommands": ["gdb-remote {}:{}".format(host, port)]
+        "processCreateCommands": ["gdb-remote {}".format(format_hostport(host, port))]
     }
     return json.dumps(res, indent=4)
 
@@ -272,7 +277,7 @@ def generate_lldb_script(root, sysroot, binary_name, host, port, solib_search_pa
     commands.append("settings append target.source-map '/b/f/w' '{}'".format(root))
     commands.append("settings append target.source-map '' '{}'".format(root))
     commands.append('target modules search-paths add / {}/'.format(sysroot))
-    commands.append('gdb-remote {}:{}'.format(host, port))
+    commands.append('gdb-remote {}'.format(format_hostport(host, port)))
     return '\n'.join(commands)
 
 
@@ -317,8 +322,7 @@ def do_main():
     if ":" in device.serial:
         host = device.serial.split(":")[0]
     else:
-        # lldb is broken with "localhost" right now (http://b/234034124)
-        host = "127.0.0.1"
+        host = None
 
     root = os.environ["ANDROID_BUILD_TOP"]
     sysroot = os.path.join(os.environ["ANDROID_PRODUCT_OUT"], "symbols")
