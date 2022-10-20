@@ -16,6 +16,11 @@
 import {StringUtils} from "common/utils/string_utils";
 import configJson from "../../../../../../frameworks/base/data/etc/services.core.protolog.json";
 
+class ProtoLogTraceEntry {
+  constructor(public messages: LogMessage[], public currentMessageIndex: number) {
+  }
+}
+
 class LogMessage {
   text: string;
   time: string;
@@ -133,4 +138,4 @@ function getParam<T>(arr: T[], idx: number): T {
   return arr[idx];
 }
 
-export {FormattedLogMessage, LogMessage, UnformattedLogMessage};
+export {FormattedLogMessage, LogMessage, ProtoLogTraceEntry, UnformattedLogMessage};
