@@ -1,5 +1,6 @@
 import { NgModule } from "@angular/core";
 import { BrowserModule } from "@angular/platform-browser";
+import { ScrollingModule } from "@angular/cdk/scrolling";
 import { CommonModule } from "@angular/common";
 import { MatCardModule } from "@angular/material/card";
 import { MatButtonModule } from "@angular/material/button";
@@ -22,29 +23,31 @@ import { MatToolbarModule } from "@angular/material/toolbar";
 import { MatTabsModule } from "@angular/material/tabs";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
 
-import { AppComponent } from "./components/app.component";
-import { ViewerWindowManagerComponent } from "viewers/viewer_window_manager/viewer_window_manager.component";
-import { ViewerSurfaceFlingerComponent } from "viewers/viewer_surface_flinger/viewer_surface_flinger.component";
-import { CollectTracesComponent } from "./components/collect_traces.component";
 import { AdbProxyComponent } from "./components/adb_proxy.component";
-import { WebAdbComponent } from "./components/web_adb.component";
+import { AppComponent } from "./components/app.component";
+import { CollectTracesComponent } from "./components/collect_traces.component";
+import { ParserErrorSnackBarComponent } from "./components/parser_error_snack_bar_component";
 import { TraceConfigComponent } from "./components/trace_config.component";
-import { UploadTracesComponent } from "./components/upload_traces.component";
-import { HierarchyComponent } from "viewers/components/hierarchy.component";
-import { PropertiesComponent } from "viewers/components/properties.component";
-import { RectsComponent } from "viewers/components/rects/rects.component";
 import { TraceViewComponent } from "./components/trace_view.component";
+import { UploadTracesComponent } from "./components/upload_traces.component";
+import { WebAdbComponent } from "./components/web_adb.component";
+
+import { CoordinatesTableComponent } from "viewers/components/coordinates_table.component";
+import { HierarchyComponent } from "viewers/components/hierarchy.component";
+import { ImeAdditionalPropertiesComponent } from "viewers/components/ime_additional_properties.component";
+import { PropertiesComponent } from "viewers/components/properties.component";
+import { PropertiesTableComponent } from "viewers/components/properties_table.component";
+import { PropertyGroupsComponent } from "viewers/components/property_groups.component";
+import { RectsComponent } from "viewers/components/rects/rects.component";
+import { TransformMatrixComponent } from "viewers/components/transform_matrix.component";
 import { TreeComponent } from "viewers/components/tree.component";
 import { TreeNodeComponent } from "viewers/components/tree_node.component";
 import { TreeNodeDataViewComponent } from "viewers/components/tree_node_data_view.component";
 import { TreeNodePropertiesDataViewComponent } from "viewers/components/tree_node_properties_data_view.component";
-import { PropertyGroupsComponent } from "viewers/components/property_groups.component";
-import { TransformMatrixComponent } from "viewers/components/transform_matrix.component";
-import { ParserErrorSnackBarComponent } from "./components/parser_error_snack_bar_component";
 import { ViewerInputMethodComponent } from "viewers/components/viewer_input_method.component";
-import { PropertiesTableComponent } from "viewers/components/properties_table.component";
-import { ImeAdditionalPropertiesComponent } from "viewers/components/ime_additional_properties.component";
-import { CoordinatesTableComponent } from "viewers/components/coordinates_table.component";
+import { ViewerProtologComponent} from "viewers/viewer_protolog/viewer_protolog.component";
+import { ViewerSurfaceFlingerComponent } from "viewers/viewer_surface_flinger/viewer_surface_flinger.component";
+import { ViewerWindowManagerComponent } from "viewers/viewer_window_manager/viewer_window_manager.component";
 
 @NgModule({
   declarations: [
@@ -52,6 +55,7 @@ import { CoordinatesTableComponent } from "viewers/components/coordinates_table.
     ViewerWindowManagerComponent,
     ViewerSurfaceFlingerComponent,
     ViewerInputMethodComponent,
+    ViewerProtologComponent,
     CollectTracesComponent,
     UploadTracesComponent,
     AdbProxyComponent,
@@ -96,6 +100,7 @@ import { CoordinatesTableComponent } from "viewers/components/coordinates_table.
     MatToolbarModule,
     MatTabsModule,
     MatSnackBarModule,
+    ScrollingModule,
   ],
   bootstrap: [AppComponent]
 })

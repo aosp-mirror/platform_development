@@ -53,7 +53,7 @@ class ParserTransactions extends Parser {
     return undefined;
   }
 
-  override processDecodedEntry(entryProto: any): any {
+  override processDecodedEntry(index: number, entryProto: any): any {
     return entryProto;
   }
 

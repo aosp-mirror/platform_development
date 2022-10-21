@@ -22,7 +22,6 @@ import jsonProtoDefsWm from 'frameworks/base/core/proto/android/server/windowman
 import jsonProtoDefsProtoLog from 'frameworks/base/core/proto/android/internal/protolog.proto';
 import jsonProtoDefsSf from 'frameworks/native/services/surfaceflinger/layerproto/layerstrace.proto';
 import jsonProtoDefsTransaction from 'frameworks/native/services/surfaceflinger/layerproto/transactions.proto';
-import jsonProtoDefsTransactionLegacy from 'frameworks/native/cmds/surfacereplayer/proto/src/trace.proto';
 import jsonProtoDefsWl from 'WaylandSafePath/waylandtrace.proto';
 import jsonProtoDefsSysUi from 'frameworks/base/packages/SystemUI/src/com/android/systemui/tracing/sysui_trace.proto';
 import jsonProtoDefsLauncher from 'packages/apps/Launcher3/protos/launcher_trace_file.proto';
@@ -32,7 +31,6 @@ import jsonProtoDefsErrors from 'platform_testing/libraries/flicker/src/com/andr
 import protobuf from 'protobufjs';
 import {transform_accessibility_trace} from './transform_accessibility.js';
 import {transform_transaction_trace} from './transform_transaction.js';
-import {transform_transaction_trace_legacy} from './transform_transaction_legacy.js';
 import {transform_wl_outputstate, transform_wayland_trace} from './transform_wl.js';
 import {transformProtolog} from './transform_protolog.js';
 import {transform_sysui_trace} from './transform_sys_ui.js';
@@ -67,7 +65,6 @@ const WmDumpMessage = lookup_type(jsonProtoDefsWm, 'com.android.server.wm.Window
 const SfTraceMessage = lookup_type(jsonProtoDefsSf, 'android.surfaceflinger.LayersTraceFileProto');
 const SfDumpMessage = lookup_type(jsonProtoDefsSf, 'android.surfaceflinger.LayersProto');
 const SfTransactionTraceMessage = lookup_type(jsonProtoDefsTransaction, 'TransactionTraceFile');
-const SfTransactionTraceMessageLegacy = lookup_type(jsonProtoDefsTransactionLegacy, 'Trace');
 const WaylandTraceMessage = lookup_type(jsonProtoDefsWl, 'org.chromium.arc.wayland_composer.TraceFileProto');
 const WaylandDumpMessage = lookup_type(jsonProtoDefsWl, 'org.chromium.arc.wayland_composer.OutputStateProto');
 const ProtoLogMessage = lookup_type(jsonProtoDefsProtoLog, 'com.android.internal.protolog.ProtoLogFileProto');
@@ -410,17 +407,6 @@ const FILE_DECODERS = {
       mime: 'application/octet-stream',
       objTypeProto: SfTransactionTraceMessage,
       transform: transform_transaction_trace,
-      timeline: true,
-    },
-  },
-  [FILE_TYPES.TRANSACTIONS_TRACE_LEGACY]: {
-    name: 'Transactions (Legacy)',
-    decoder: protoDecoder,
-    decoderParams: {
-      type: FILE_TYPES.TRANSACTIONS_TRACE_LEGACY,
-      mime: 'application/octet-stream',
-      objTypeProto: SfTransactionTraceMessageLegacy,
-      transform: transform_transaction_trace_legacy,
       timeline: true,
     },
   },

@@ -65,6 +65,7 @@ abstract class Parser {
     return this.timestamps.get(type);
   }
 
+  //TODO: factor out timestamp search policy. Receive index parameter instead.
   public getTraceEntry(timestamp: Timestamp): undefined|any {
     const timestamps = this.getTimestamps(timestamp.getType());
     if (timestamps === undefined) {
@@ -75,19 +76,13 @@ abstract class Parser {
     if (index === undefined) {
       return undefined;
     }
-    return this.processDecodedEntry(this.decodedEntries[index]);
-  }
-
-  public getTraceEntries(): any[] {
-    throw new Error("Batch retrieval of trace entries not implemented for this parser!" +
-                    " Note that the usage of this functionality is discouraged," +
-                    " since creating all the trace entry objects may consume too much memory.");
+    return this.processDecodedEntry(index, this.decodedEntries[index]);
   }
 
   protected abstract getMagicNumber(): undefined|number[];
   protected abstract decodeTrace(trace: Uint8Array): any[];
   protected abstract getTimestamp(type: TimestampType, decodedEntry: any): undefined|Timestamp;
-  protected abstract processDecodedEntry(decodedEntry: any): any;
+  protected abstract processDecodedEntry(index: number, decodedEntry: any): any;
 
   protected trace: File;
   protected decodedEntries: any[] = [];
