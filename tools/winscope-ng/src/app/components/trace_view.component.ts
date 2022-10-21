@@ -13,20 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  Component,
-  Input,
-  Inject,
-  ElementRef,
-} from "@angular/core";
-import { TraceCoordinator } from "app/trace_coordinator";
-import { PersistentStore } from "common/persistent_store";
-import { FileUtils } from "common/utils/file_utils";
-import { Viewer } from "viewers/viewer";
+import {Component, ElementRef, EventEmitter, Inject, Input, Output} from "@angular/core";
+import {PersistentStore} from "common/persistent_store";
+import {Viewer, View, ViewType} from "viewers/viewer";
 
 @Component({
   selector: "trace-view",
   template: `
+    <div class="container-overlay">
+    </div>
     <div class="header-items-wrapper">
       <nav mat-tab-nav-bar class="viewer-nav-bar">
         <a
@@ -41,7 +36,7 @@ import { Viewer } from "viewers/viewer";
         color="primary"
         mat-button
         class="save-btn"
-        (click)="downloadAllTraces()"
+        (click)="downloadTracesButtonClick.emit()"
       >Download all traces</button>
     </div>
     <div class="trace-view-content">
@@ -49,6 +44,16 @@ import { Viewer } from "viewers/viewer";
   `,
   styles: [
     `
+      .container-overlay {
+        z-index: 10;
+        position: fixed;
+        top: 0px;
+        left: 0px;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
       .header-items-wrapper {
         width: 100%;
         display: flex;
@@ -73,45 +78,21 @@ import { Viewer } from "viewers/viewer";
   ]
 })
 export class TraceViewComponent {
+  @Input() viewers!: Viewer[];
   @Input() store!: PersistentStore;
-  @Input() traceCoordinator!: TraceCoordinator;
-  viewerTabs: ViewerTab[] = [];
-  activeViewerCardId = 0;
-  views: HTMLElement[] = [];
+  @Output() downloadTracesButtonClick = new EventEmitter<void>();
 
-  constructor(
-    @Inject(ElementRef) private elementRef: ElementRef,
-  ) {}
+  private elementRef: ElementRef;
+  private viewerTabs: ViewerTab[] = [];
+  private activeViewerCardId = 0;
 
-  ngDoCheck() {
-    if (this.traceCoordinator.getViewers().length > 0 && !this.viewersAdded()) {
-      let cardCounter = 0;
-      this.activeViewerCardId = 0;
-      this.viewerTabs = [];
-      this.traceCoordinator.getViewers().forEach((viewer: Viewer) => {
-        // create tab for viewer nav bar
-        const tab = {
-          label: viewer.getTitle(),
-          cardId: cardCounter,
-        };
-        this.viewerTabs.push(tab);
+  constructor(@Inject(ElementRef) elementRef: ElementRef) {
+    this.elementRef = elementRef;
+  }
 
-        // add properties to view and add view to trace view card
-        const view = viewer.getView();
-        (view as any).store = this.store;
-        view.id = `card-${cardCounter}`;
-        view.style.display = this.isActiveViewerCard(cardCounter) ? "" : "none";
-
-        const traceViewContent = this.elementRef.nativeElement.querySelector(".trace-view-content")!;
-        traceViewContent.appendChild(view);
-        this.views.push(view);
-        cardCounter++;
-      });
-    } else if (this.traceCoordinator.getViewers().length === 0  && this.viewersAdded()) {
-      this.activeViewerCardId = 0;
-      this.views.forEach(view => view.remove());
-      this.views = [];
-    }
+  ngOnChanges() {
+    this.renderViewsTab();
+    this.renderViewsOverlay();
   }
 
   public showViewer(cardId: number) {
@@ -124,22 +105,56 @@ export class TraceViewComponent {
     return this.activeViewerCardId === cardId;
   }
 
-  public async downloadAllTraces() {
-    const traces = await this.traceCoordinator.getAllTracesForDownload();
-    const zipFileBlob = await FileUtils.createZipArchive(traces);
-    const zipFileName = "winscope.zip";
-    const a = document.createElement("a");
-    document.body.appendChild(a);
-    const url = window.URL.createObjectURL(zipFileBlob);
-    a.href = url;
-    a.download = zipFileName;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
+  private renderViewsTab() {
+    this.activeViewerCardId = 0;
+    this.viewerTabs = [];
+
+    const views: View[] = this.viewers
+      .map(viewer => viewer.getViews())
+      .flat()
+      .filter(view => (view.type === ViewType.TAB));
+
+    for (const [cardCounter, view] of views.entries()) {
+      if (!view) {
+        continue;
+      }
+
+      // create tab for viewer nav bar
+      const tab = {
+        label: view.title,
+        cardId: cardCounter,
+      };
+      this.viewerTabs.push(tab);
+
+      // add properties to view and add view to trace view card
+      (view as any).store = this.store;
+      view.htmlElement.id = `card-${cardCounter}`;
+      view.htmlElement.style.display = this.isActiveViewerCard(cardCounter) ? "" : "none";
+
+      const traceViewContent = this.elementRef.nativeElement.querySelector(".trace-view-content")!;
+      traceViewContent.appendChild(view.htmlElement);
+    }
   }
 
-  private viewersAdded() {
-    return this.views.length > 0;
+  private renderViewsOverlay() {
+    const views: View[] = this.viewers
+      .map(viewer => viewer.getViews())
+      .flat()
+      .filter(view => (view.type === ViewType.OVERLAY));
+
+    views.forEach(view => {
+      view.htmlElement.style.pointerEvents = "all";
+      view.htmlElement.style.position = "absolute";
+      view.htmlElement.style.bottom = "10%";
+      view.htmlElement.style.right = "0px";
+
+      const containerOverlay = this.elementRef.nativeElement.querySelector(".container-overlay");
+      if (!containerOverlay) {
+        throw new Error("Failed to find overlay container sub-element");
+      }
+
+      containerOverlay!.appendChild(view.htmlElement);
+    });
   }
 
   private isActiveViewerCard(cardId: number) {

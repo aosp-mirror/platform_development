@@ -14,29 +14,29 @@
  * limitations under the License.
  */
 import {TraceType} from "common/trace/trace_type";
-import {Viewer} from "viewers/viewer";
+import {View, Viewer, ViewType} from "viewers/viewer";
 import {Presenter} from "./presenter";
 import {Events} from "./events";
 import {UiData} from "./ui_data";
 
 class ViewerProtoLog implements Viewer {
   constructor() {
-    this.view = document.createElement("viewer-protolog");
+    this.htmlElement = document.createElement("viewer-protolog");
 
     this.presenter = new Presenter((data: UiData) => {
-      (this.view as any).inputData = data;
+      (this.htmlElement as any).inputData = data;
     });
 
-    this.view.addEventListener(Events.LogLevelsFilterChanged, (event) => {
+    this.htmlElement.addEventListener(Events.LogLevelsFilterChanged, (event) => {
       return this.presenter.onLogLevelsFilterChanged((event as CustomEvent).detail);
     });
-    this.view.addEventListener(Events.TagsFilterChanged, (event) => {
+    this.htmlElement.addEventListener(Events.TagsFilterChanged, (event) => {
       return this.presenter.onTagsFilterChanged((event as CustomEvent).detail);
     });
-    this.view.addEventListener(Events.SourceFilesFilterChanged, (event) => {
+    this.htmlElement.addEventListener(Events.SourceFilesFilterChanged, (event) => {
       return this.presenter.onSourceFilesFilterChanged((event as CustomEvent).detail);
     });
-    this.view.addEventListener(Events.SearchStringFilterChanged, (event) => {
+    this.htmlElement.addEventListener(Events.SearchStringFilterChanged, (event) => {
       return this.presenter.onSearchStringFilterChanged((event as CustomEvent).detail);
     });
   }
@@ -45,12 +45,8 @@ class ViewerProtoLog implements Viewer {
     this.presenter.notifyCurrentTraceEntries(entries);
   }
 
-  public getView(): HTMLElement {
-    return this.view;
-  }
-
-  public getTitle() {
-    return "ProtoLog";
+  public getViews(): View[] {
+    return [new View(ViewType.TAB, this.htmlElement, "ProtoLog")];
   }
 
   public getDependencies(): TraceType[] {
@@ -58,7 +54,7 @@ class ViewerProtoLog implements Viewer {
   }
 
   public static readonly DEPENDENCIES: TraceType[] = [TraceType.PROTO_LOG];
-  private view: HTMLElement;
+  private htmlElement: HTMLElement;
   private presenter: Presenter;
 }
 

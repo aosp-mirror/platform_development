@@ -14,19 +14,20 @@
  * limitations under the License.
  */
 import {TraceType} from "common/trace/trace_type";
-import { PresenterInputMethodClients } from "./presenter_input_method_clients";
-import { ViewerInputMethod } from "viewers/common/viewer_input_method";
+import {PresenterInputMethodClients} from "./presenter_input_method_clients";
+import {ViewerInputMethod} from "viewers/common/viewer_input_method";
+import {View, ViewType} from "viewers/viewer";
 
 class ViewerInputMethodClients extends ViewerInputMethod {
-  public getTitle(): string {
-    return "Input Method Clients";
+  override getViews(): View[] {
+    return [new View(ViewType.TAB, this.htmlElement, "Input Method Clients")];
   }
 
-  public getDependencies(): TraceType[] {
+  override getDependencies(): TraceType[] {
     return ViewerInputMethodClients.DEPENDENCIES;
   }
 
-  protected initialisePresenter() {
+  override initialisePresenter() {
     return new PresenterInputMethodClients(this.imeUiCallback, this.getDependencies());
   }
 
