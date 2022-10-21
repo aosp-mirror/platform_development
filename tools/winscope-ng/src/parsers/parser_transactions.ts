@@ -15,8 +15,9 @@
  */
 import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
+import {TransactionsTraceEntry} from "common/trace/transactions";
 import {Parser} from "./parser";
-import {AccessibilityTraceFileProto, TransactionsTraceFileProto} from "./proto_types";
+import {TransactionsTraceFileProto} from "./proto_types";
 
 class ParserTransactions extends Parser {
   constructor(trace: File) {
@@ -33,14 +34,60 @@ class ParserTransactions extends Parser {
   }
 
   override decodeTrace(buffer: Uint8Array): any[] {
-    const decoded = <any>TransactionsTraceFileProto.decode(buffer);
-    if (Object.prototype.hasOwnProperty.call(decoded, "realToElapsedTimeOffsetNanos")) {
-      this.realToElapsedTimeOffsetNs = BigInt(decoded.realToElapsedTimeOffsetNanos);
+    const decodedProto = <any>TransactionsTraceFileProto.decode(buffer);
+    this.decodeWhatFields(decodedProto);
+
+    if (Object.prototype.hasOwnProperty.call(decodedProto, "realToElapsedTimeOffsetNanos")) {
+      this.realToElapsedTimeOffsetNs = BigInt(decodedProto.realToElapsedTimeOffsetNanos);
     }
     else {
       this.realToElapsedTimeOffsetNs = undefined;
     }
-    return decoded.entry;
+    return decodedProto.entry;
+  }
+
+  private decodeWhatFields(decodedProto: any) {
+    const decodeBitset32 = (bitset: number, EnumProto: any) => {
+      return Object.keys(EnumProto).filter(key => {
+        const value = EnumProto[key];
+        return (bitset & value) != 0;
+      });
+    };
+
+    const concatBitsetTokens = (tokens: string[]) => {
+      if (tokens.length == 0) {
+        return "0";
+      }
+      return tokens.join(" | ");
+    };
+
+    const LayerStateChangesLsbEnum = (<any>TransactionsTraceFileProto?.parent).LayerState.ChangesLsb;
+    const LayerStateChangesMsbEnum = (<any>TransactionsTraceFileProto?.parent).LayerState.ChangesMsb;
+    const DisplayStateChangesEnum = (<any>TransactionsTraceFileProto?.parent).DisplayState.Changes;
+
+    decodedProto.entry.forEach((transactionTraceEntry: any) => {
+      transactionTraceEntry.transactions.forEach((transactionState: any) => {
+        transactionState.layerChanges.forEach((layerState: any) => {
+          layerState.what = concatBitsetTokens(
+            decodeBitset32(layerState.what.low, LayerStateChangesLsbEnum).concat(
+              decodeBitset32(layerState.what.high, LayerStateChangesMsbEnum)
+            )
+          );
+        });
+
+        transactionState.displayChanges.forEach((displayState: any) => {
+          displayState.what = concatBitsetTokens(
+            decodeBitset32(displayState.what, DisplayStateChangesEnum)
+          );
+        });
+      });
+
+      transactionTraceEntry.addedDisplays.forEach((displayState: any) => {
+        displayState.what = concatBitsetTokens(
+          decodeBitset32(displayState.what, DisplayStateChangesEnum)
+        );
+      });
+    });
   }
 
   override getTimestamp(type: TimestampType, entryProto: any): undefined|Timestamp {
@@ -53,8 +100,8 @@ class ParserTransactions extends Parser {
     return undefined;
   }
 
-  override processDecodedEntry(index: number, entryProto: any): any {
-    return entryProto;
+  override processDecodedEntry(index: number, entryProto: any): TransactionsTraceEntry {
+    return new TransactionsTraceEntry(this.decodedEntries, index);
   }
 
   private realToElapsedTimeOffsetNs: undefined|bigint;

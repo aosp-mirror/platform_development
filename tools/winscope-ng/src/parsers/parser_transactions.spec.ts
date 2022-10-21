@@ -17,6 +17,7 @@ import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
 import {Parser} from "./parser";
 import {UnitTestUtils} from "test/unit/utils";
+import {TransactionsTraceEntry} from "../common/trace/transactions";
 
 describe("ParserTransactions", () => {
   describe("trace with elapsed + real timestamp", () => {
@@ -62,14 +63,30 @@ describe("ParserTransactions", () => {
 
     it("retrieves trace entry from elapsed timestamp", () => {
       const timestamp = new Timestamp(TimestampType.ELAPSED, 2517952515n);
-      expect(BigInt(parser.getTraceEntry(timestamp)!.elapsedRealtimeNanos))
+      const entry: TransactionsTraceEntry = parser.getTraceEntry(timestamp)!;
+      expect(entry.currentEntryIndex).toEqual(1);
+      expect(BigInt(entry.entriesProto[entry.currentEntryIndex].elapsedRealtimeNanos))
         .toEqual(2517952515n);
     });
 
     it("retrieves trace entry from real timestamp", () => {
       const timestamp = new Timestamp(TimestampType.REAL, 1659507541118452067n);
-      expect(BigInt(parser.getTraceEntry(timestamp)!.elapsedRealtimeNanos))
+      const entry: TransactionsTraceEntry = parser.getTraceEntry(timestamp)!;
+      expect(entry.currentEntryIndex).toEqual(1);
+      expect(BigInt(entry.entriesProto[entry.currentEntryIndex].elapsedRealtimeNanos))
         .toEqual(2517952515n);
+    });
+
+    it("decodes 'what' field in proto", () => {
+      const timestamp = new Timestamp(TimestampType.ELAPSED, 2517952515n);
+      const entry: TransactionsTraceEntry = parser.getTraceEntry(timestamp)!;
+
+      expect(entry.entriesProto[0].transactions[0].layerChanges[0].what)
+        .toEqual("eLayerChanged");
+      expect(entry.entriesProto[0].transactions[1].layerChanges[0].what)
+        .toEqual("eFlagsChanged | eDestinationFrameChanged");
+      expect(entry.entriesProto[222].transactions[1].displayChanges[0].what)
+        .toEqual("eLayerStackChanged | eDisplayProjectionChanged | eFlagsChanged");
     });
   });
 

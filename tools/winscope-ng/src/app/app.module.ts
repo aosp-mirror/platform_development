@@ -47,6 +47,7 @@ import { TreeNodePropertiesDataViewComponent } from "viewers/components/tree_nod
 import { ViewerInputMethodComponent } from "viewers/components/viewer_input_method.component";
 import { ViewerProtologComponent} from "viewers/viewer_protolog/viewer_protolog.component";
 import { ViewerSurfaceFlingerComponent } from "viewers/viewer_surface_flinger/viewer_surface_flinger.component";
+import { ViewerTransactionsComponent } from "viewers/viewer_transactions/viewer_transactions.component";
 import { ViewerWindowManagerComponent } from "viewers/viewer_window_manager/viewer_window_manager.component";
 
 @NgModule({
@@ -56,6 +57,7 @@ import { ViewerWindowManagerComponent } from "viewers/viewer_window_manager/view
     ViewerSurfaceFlingerComponent,
     ViewerInputMethodComponent,
     ViewerProtologComponent,
+    ViewerTransactionsComponent,
     CollectTracesComponent,
     UploadTracesComponent,
     AdbProxyComponent,
