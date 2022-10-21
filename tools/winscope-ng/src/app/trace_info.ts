@@ -5,7 +5,7 @@ const SURFACE_FLINGER_ICON = "layers";
 const SCREEN_RECORDING_ICON = "videocam";
 const TRANSACTION_ICON = "show_chart";
 const WAYLAND_ICON = "filter_none";
-const PROTO_LOG_ICON = "text_ad";
+const PROTO_LOG_ICON = "notes";
 const SYSTEM_UI_ICON = "filter_none";
 const LAUNCHER_ICON = "filter_none";
 const IME_ICON = "keyboard_alt";
@@ -54,7 +54,7 @@ export const TRACE_INFO: traceInfoMap = {
     icon: WAYLAND_ICON
   },
   [TraceType.PROTO_LOG]: {
-    name: "Proto Log",
+    name: "ProtoLog",
     icon: PROTO_LOG_ICON
   },
   [TraceType.SYSTEM_UI]: {

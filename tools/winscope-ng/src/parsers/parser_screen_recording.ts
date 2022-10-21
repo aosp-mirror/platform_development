@@ -73,7 +73,7 @@ class ParserScreenRecording extends Parser {
     return undefined;
   }
 
-  override processDecodedEntry(entry: ScreenRecordingMetadataEntry): ScreenRecordingTraceEntry {
+  override processDecodedEntry(index: number, entry: ScreenRecordingMetadataEntry): ScreenRecordingTraceEntry {
     const initialTimestampNs = this.getTimestamps(TimestampType.ELAPSED)![0].getValueNs();
     const currentTimestampNs = entry.timestampMonotonicNs;
     const videoTimeSeconds = Number(currentTimestampNs - initialTimestampNs) / 1000000000;

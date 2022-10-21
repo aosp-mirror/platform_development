@@ -54,7 +54,7 @@ class ParserWindowManager extends Parser {
     return undefined;
   }
 
-  override processDecodedEntry(entryProto: any): WindowManagerState {
+  override processDecodedEntry(index: number, entryProto: any): WindowManagerState {
     return WindowManagerState.fromProto(entryProto.windowManagerService, entryProto.elapsedRealtimeNanos, entryProto.where);
   }
 

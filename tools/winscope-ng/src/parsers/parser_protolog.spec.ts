@@ -69,22 +69,14 @@ describe("ParserProtoLog", () => {
 
   it("reconstructs human-readable log message", () => {
     const timestamp = new Timestamp(TimestampType.ELAPSED, 850746266486n);
-    const actualMessage = parser.getTraceEntry(timestamp)!;
+    const entry = parser.getTraceEntry(timestamp)!;
 
-    expect(actualMessage).toBeInstanceOf(LogMessage);
-    expect(Object.assign({}, actualMessage)).toEqual(expectedFirstLogMessage);
-  });
+    expect(entry.currentMessageIndex).toEqual(0);
 
-  it("allows retrieving all the log messages", () => {
-    const actualMessages = parser.getTraceEntries();
-
-    expect(actualMessages.length).toEqual(50);
-
-    actualMessages.forEach(message => {
+    expect(entry.messages.length).toEqual(50);
+    expect(Object.assign({}, entry.messages[0])).toEqual(expectedFirstLogMessage);
+    entry.messages.forEach((message: any) => {
       expect(message).toBeInstanceOf(LogMessage);
     });
-
-    const actualFirstLogMessage = Object.assign({}, actualMessages[0]);
-    expect(actualFirstLogMessage).toEqual(expectedFirstLogMessage);
   });
 });

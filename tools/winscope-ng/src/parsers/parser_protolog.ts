@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {FormattedLogMessage, LogMessage, UnformattedLogMessage} from "common/trace/protolog";
+import {FormattedLogMessage, LogMessage, ProtoLogTraceEntry, UnformattedLogMessage} from "common/trace/protolog";
 import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
 import {Parser} from "./parser";
@@ -67,7 +67,17 @@ class ParserProtoLog extends Parser {
     return undefined;
   }
 
-  override processDecodedEntry(entryProto: any): LogMessage {
+  override processDecodedEntry(index: number, entryProto: any): ProtoLogTraceEntry {
+    if (!this.decodedMessages) {
+      this.decodedMessages = this.decodedEntries.map((entryProto: any) => {
+        return this.decodeProtoLogMessage(entryProto);
+      });
+    }
+
+    return new ProtoLogTraceEntry(this.decodedMessages, index);
+  }
+
+  private decodeProtoLogMessage(entryProto: any): LogMessage {
     const message = (<any>configJson).messages[entryProto.messageHash];
     if (!message) {
       return new FormattedLogMessage(entryProto);
@@ -84,12 +94,7 @@ class ParserProtoLog extends Parser {
     }
   }
 
-  override getTraceEntries(): LogMessage[] {
-    return this.decodedEntries.map((entryProto: any) => {
-      return this.processDecodedEntry(entryProto);
-    });
-  }
-
+  private decodedMessages?: LogMessage[];
   private realToElapsedTimeOffsetNs: undefined|bigint = undefined;
   private static readonly MAGIC_NUMBER = [0x09, 0x50, 0x52, 0x4f, 0x54, 0x4f, 0x4c, 0x4f, 0x47]; // .PROTOLOG
   private static readonly PROTOLOG_VERSION = "1.0.0";
