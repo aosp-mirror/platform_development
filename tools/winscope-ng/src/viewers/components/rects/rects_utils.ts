@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Point, Rectangle, RectMatrix, RectTransform } from "viewers/common/rectangle";
+import {Point, Rectangle, RectMatrix, RectTransform} from "viewers/common/rectangle";
 
-export const RectsUtils = {
-  multiplyMatrix(matrix:any, corner: Point): Point {
+class RectsUtils {
+  static multiplyMatrix(matrix:any, corner: Point): Point {
     if (!matrix) return corner;
     // |dsdx dsdy  tx|     | x |     |x*dsdx + y*dsdy + tx|
     // |dtdx dtdy  ty|  x  | y |  =  |x*dtdx + y*dtdy + ty|
@@ -25,9 +25,9 @@ export const RectsUtils = {
       x: matrix.dsdx * corner.x + matrix.dsdy * corner.y + matrix.tx,
       y: matrix.dtdx * corner.x + matrix.dtdy * corner.y + matrix.ty,
     };
-  },
+  }
 
-  transformRect(matrix: RectMatrix | RectTransform, rect:Rectangle): Rectangle {
+  static transformRect(matrix: RectMatrix | RectTransform, rect:Rectangle): Rectangle {
     //          | dsdx   dsdy   tx |         | left   top     1    |
     // matrix = | dtdx   dtdy   ty |  rect = |   1     1      1    |
     //          |  0      0      1 |         |   1   right  bottom |
@@ -58,4 +58,6 @@ export const RectsUtils = {
     };
     return outrect;
   }
-};
+}
+
+export {RectsUtils};

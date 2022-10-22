@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { TraceType } from "common/trace/trace_type";
-import { Viewer } from "./viewer";
-import { ViewerInputMethodClients } from "./viewer_input_method_clients/viewer_input_method_clients";
-import { ViewerInputMethodService } from "./viewer_input_method_service/viewer_input_method_service";
-import { ViewerInputMethodManagerService } from "./viewer_input_method_manager_service/viewer_input_method_manager_service";
-import { ViewerProtoLog } from "./viewer_protolog/viewer_protolog";
-import { ViewerSurfaceFlinger } from "./viewer_surface_flinger/viewer_surface_flinger";
-import { ViewerWindowManager } from "./viewer_window_manager/viewer_window_manager";
+import {TraceType} from "common/trace/trace_type";
+import {Viewer} from "./viewer";
+import {ViewerInputMethodClients} from "./viewer_input_method_clients/viewer_input_method_clients";
+import {ViewerInputMethodService} from "./viewer_input_method_service/viewer_input_method_service";
+import {ViewerInputMethodManagerService} from "./viewer_input_method_manager_service/viewer_input_method_manager_service";
+import {ViewerProtoLog} from "./viewer_protolog/viewer_protolog";
+import {ViewerSurfaceFlinger} from "./viewer_surface_flinger/viewer_surface_flinger";
+import {ViewerWindowManager} from "./viewer_window_manager/viewer_window_manager";
+import {ViewerTransactions} from "./viewer_transactions/viewer_transactions";
 
 class ViewerFactory {
   static readonly VIEWERS = [
@@ -29,6 +30,7 @@ class ViewerFactory {
     ViewerInputMethodService,
     ViewerProtoLog,
     ViewerSurfaceFlinger,
+    ViewerTransactions,
     ViewerWindowManager,
   ];
 
@@ -49,4 +51,4 @@ class ViewerFactory {
   }
 }
 
-export { ViewerFactory };
+export {ViewerFactory};

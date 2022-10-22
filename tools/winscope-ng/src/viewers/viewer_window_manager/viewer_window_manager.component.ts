@@ -76,8 +76,6 @@ import { PersistentStore } from "common/persistent_store";
       .properties-view {
         flex: 1;
         padding: 16px;
-        display: flex;
-        flex-direction: column;
         border-top: 1px solid var(--default-border);
       }
     `,

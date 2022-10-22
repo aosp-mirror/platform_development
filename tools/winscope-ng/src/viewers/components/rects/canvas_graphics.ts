@@ -52,10 +52,8 @@ export class CanvasGraphics {
 
     this.orbit?.reset();
 
-    // scene
     this.scene = new THREE.Scene();
 
-    // renderers
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
       canvas: this.canvas,
@@ -78,10 +76,7 @@ export class CanvasGraphics {
     }
 
     // set various factors for shading and shifting
-    const visibleDarkFactor = 0, nonVisibleDarkFactor = 0, rectCounter = 0;
     const numberOfRects = this.rects.length;
-    const numberOfVisibleRects = this.rects.filter(rect => rect.isVisible).length;
-    const numberOfNonVisibleRects = this.rects.filter(rect => !rect.isVisible).length;
 
     const zShift = numberOfRects * this.layerSeparation;
     let xShift = 0, yShift = 3.5, labelYShift = 0;
@@ -107,12 +102,6 @@ export class CanvasGraphics {
     })) - labelYShift;
 
     this.drawScene(
-      rectCounter,
-      numberOfVisibleRects,
-      visibleDarkFactor,
-      numberOfNonVisibleRects,
-      nonVisibleDarkFactor,
-      numberOfRects,
       xShift,
       yShift,
       zShift,
@@ -181,7 +170,6 @@ export class CanvasGraphics {
   public updateRotation(userInput: number) {
     this.camera.position.x = userInput;
     this.camera.position.y = Math.abs(userInput);
-    this.labelShift = userInput / 4 * this.MAX_LABEL_SHIFT;
     this.lowestYShift = Math.abs(userInput) / 4 + 2;
     this.updateCameraAndControls();
   }
@@ -219,7 +207,6 @@ export class CanvasGraphics {
     );
     this.camera.zoom = this.INIT_ZOOM;
     this.fontSize = this.INIT_FONT_SIZE;
-    this.labelShift = this.MAX_LABEL_SHIFT;
     this.lowestYShift = this.INIT_LOWEST_Y_SHIFT;
     this.layerSeparation = this.INIT_LAYER_SEPARATION;
     this.camera.updateProjectionMatrix();
@@ -248,12 +235,6 @@ export class CanvasGraphics {
   }
 
   private drawScene(
-    rectCounter: number,
-    numberOfVisibleRects: number,
-    visibleDarkFactor: number,
-    numberOfNonVisibleRects: number,
-    nonVisibleDarkFactor: number,
-    numberOfRects: number,
     xShift: number,
     yShift: number,
     zShift: number,
@@ -261,164 +242,194 @@ export class CanvasGraphics {
   ) {
     this.targetObjects = [];
     this.clearLabelElements();
-    this.rects.forEach(rect => {
+
+    const darkFactors = this.computeRectDarkFactors(this.rects);
+
+    for (const [rectIndex, rect] of this.rects.entries()) {
       const mustNotDrawInVisibleView = this.visibleView && !rect.isVisible;
       const mustNotDrawInXrayViewWithoutVirtualDisplays =
         !this.visibleView && !this.showVirtualDisplays && rect.isVirtual;
       if (mustNotDrawInVisibleView || mustNotDrawInXrayViewWithoutVirtualDisplays) {
-        rectCounter++;
         return;
       }
 
-      //set colour mapping
-      let planeColor;
-      if (this.highlightedItems.includes(`${rect.id}`)) {
-        planeColor = this.colorMapping("highlighted", numberOfRects, 0);
-      } else if (rect.isVisible) {
-        planeColor = this.colorMapping("green", numberOfVisibleRects, visibleDarkFactor);
-        visibleDarkFactor++;
-      } else {
-        planeColor = this.colorMapping("grey", numberOfNonVisibleRects, nonVisibleDarkFactor);
-        nonVisibleDarkFactor++;
-      }
+      const darkFactor = darkFactors[rectIndex];
+      const rectGeometry = new THREE.PlaneGeometry(rect.width, rect.height);
+      const rectMesh = this.makeRectMesh(rect, rectGeometry, xShift, yShift, zShift, darkFactor);
+      this.scene?.add(rectMesh);
 
-      //set plane geometry and material
-      const geometry = new THREE.PlaneGeometry(rect.width, rect.height);
-      const planeRect = this.setPlaneMaterial(rect, geometry, planeColor, xShift, yShift, zShift);
-      this.scene?.add(planeRect);
-      zShift -= this.layerSeparation;
-
-      // bolder edges of each plane if in x-ray view
+      // rect with bolder edges in x-ray view
       if (!this.visibleView) {
-        const edgeSegments = this.setEdgeMaterial(planeRect, geometry);
-        this.scene?.add(edgeSegments);
+        const rectEdges = this.makeRectLineSegments(rectMesh, rectGeometry);
+        this.scene?.add(rectEdges);
       }
 
-      // only some rects are clickable
-      if (rect.isClickable) this.targetObjects.push(planeRect);
-
-      // labelling elements
-      if (rect.label.length > 0) {
-        const circle = this.setCircleMaterial(planeRect, rect);
-        this.scene?.add(circle);
-        const [line, rectLabel] = this.createLabel(rect, circle, lowestY, rectCounter);
-        this.scene?.add(line);
-        this.scene?.add(rectLabel);
+      if (rect.isClickable) {
+        this.targetObjects.push(rectMesh);
       }
 
-      rectCounter++;
-    });
+      this.drawLabel(rect, rectMesh, lowestY, rectIndex);
+
+      zShift -= this.layerSeparation;
+    }
   }
 
-  private setPlaneMaterial(
+  private computeRectDarkFactors(rects: Rectangle[]): number[] {
+    let visibleRectsSoFar = 0;
+    const visibleRectsTotal = rects.reduce((count, rect) => {
+      return rect.isVisible ? count + 1 : count;
+    }, 0);
+
+    let nonVisibleRectsSoFar = 0;
+    const nonVisibleRectsTotal = rects.reduce((count, rect) => {
+      return rect.isVisible ? count : count + 1;
+    }, 0);
+
+    const factors = rects.map(rect => {
+      if (rect.isVisible) {
+        return (visibleRectsTotal - visibleRectsSoFar++) / visibleRectsTotal;
+      } else {
+        return (nonVisibleRectsTotal - nonVisibleRectsSoFar++) / nonVisibleRectsTotal;
+      }
+    });
+
+    return factors;
+  }
+
+  private drawLabel(rect: Rectangle, rectMesh: THREE.Mesh, lowestY: number, rectCounter: number) {
+    if (rect.label.length == 0) {
+      return;
+    }
+
+    const circleMesh = this.makeLabelCircleMesh(rectMesh, rect);
+    this.scene?.add(circleMesh);
+
+    const isGrey = !this.visibleView && !rect.isVisible;
+
+    let lineEndPos;
+    const labelYSeparation = 0.5;
+    if (this.isLandscape) {
+      lineEndPos = new THREE.Vector3(
+        circleMesh.position.x, lowestY - 0.5 - rectCounter * labelYSeparation, circleMesh.position.z
+      );
+    } else {
+      lineEndPos = new THREE.Vector3(
+        circleMesh.position.x, lowestY + 0.5 - rectCounter * labelYSeparation, circleMesh.position.z
+      );
+    }
+
+    const linePoints = [circleMesh.position, lineEndPos];
+    const lineGeo = new THREE.BufferGeometry().setFromPoints(linePoints);
+    const lineMaterial = new THREE.LineBasicMaterial({ color: isGrey ? 0x808080 : 0x000000 });
+    const line = new THREE.Line(lineGeo, lineMaterial);
+    this.scene?.add(line);
+
+    this.drawLabelTextHtml(lineEndPos, rect, isGrey);
+  }
+
+  private drawLabelTextHtml(position: THREE.Vector3, rect: Rectangle, isGrey: boolean) {
+    // Add rectangle label
+    const spanText: HTMLElement = document.createElement("span");
+    spanText.innerText = this.shortenText(rect.label);
+    spanText.className = "mat-body-1";
+
+    // Hack: transparent/placeholder text used to push the visible text towards left
+    // (towards negative x) and properly align it with the label's vertical segment
+    const spanPlaceholder: HTMLElement = document.createElement("span");
+    spanPlaceholder.innerText = this.shortenText(rect.label);
+    spanPlaceholder.className = "mat-body-1";
+    spanPlaceholder.style.opacity = "0";
+
+    const div: HTMLElement = document.createElement("div");
+    div.className = "rect-label";
+    div.style.display = "inline";
+    div.appendChild(spanText);
+    div.appendChild(spanPlaceholder);
+
+    div.style.marginTop = "5px";
+    if (isGrey) {
+      div.style.color = "grey";
+    }
+    div.style.pointerEvents = "auto";
+    div.style.cursor = "pointer";
+    div.addEventListener(
+      "click", (event) => this.propagateUpdateHighlightedItems(event, rect.id)
+    );
+
+    const label = new CSS2DObject(div);
+    label.name = rect.label;
+    label.position.set(
+      position.x,
+      position.y,
+      position.z
+    );
+
+    this.scene?.add(label);
+  }
+
+  private makeRectMesh(
     rect: Rectangle,
     geometry: THREE.PlaneGeometry,
-    color: THREE.Color,
     xShift: number,
     yShift: number,
-    zShift: number
-  ) {
-    const planeRect = new THREE.Mesh(
+    zShift: number,
+    darkFactor: number,
+  ): THREE.Mesh {
+    let color: THREE.Color;
+
+    if (this.highlightedItems.includes(`${rect.id}`)) {
+      color = new THREE.Color(0xD2E3FC);
+    } else if (rect.isVisible) {
+      // green (darkness depends on z order)
+      const red = ((200 - 45) * darkFactor + 45) / 255;
+      const green = ((232 - 182) * darkFactor + 182) / 255;
+      const blue = ((183 - 44) * darkFactor + 44) / 255;
+      color = new THREE.Color(red, green, blue);
+    } else {
+      // grey (darkness depends on z order)
+      const lower = 120;
+      const upper = 220;
+      const darkness = ((upper - lower) * darkFactor + lower) / 255;
+      color = new THREE.Color(darkness, darkness, darkness);
+    }
+
+    const mesh = new THREE.Mesh(
       geometry,
       new THREE.MeshBasicMaterial({
         color: color,
         opacity: this.visibleView ? 1 : 0.75,
         transparent: true,
       }));
-    planeRect.position.y = rect.topLeft.y - rect.height / 2 + yShift;
-    planeRect.position.x = rect.topLeft.x + rect.width / 2 - xShift;
-    planeRect.position.z = zShift;
-    planeRect.name = `${rect.id}`;
-    return planeRect;
+    mesh.position.y = rect.topLeft.y - rect.height / 2 + yShift;
+    mesh.position.x = rect.topLeft.x + rect.width / 2 - xShift;
+    mesh.position.z = zShift;
+    mesh.name = `${rect.id}`;
+
+    return mesh;
   }
 
-  private setEdgeMaterial(planeRect: THREE.Mesh, geometry: THREE.PlaneGeometry) {
+  private makeRectLineSegments(rectMesh: THREE.Mesh, geometry: THREE.PlaneGeometry): THREE.LineSegments {
     const edgeColor = 0x000000;
     const edgeGeo = new THREE.EdgesGeometry(geometry);
     const edgeMaterial = new THREE.LineBasicMaterial({ color: edgeColor, linewidth: 1 });
     const edgeSegments = new THREE.LineSegments(
       edgeGeo, edgeMaterial
     );
-    edgeSegments.position.set(planeRect.position.x, planeRect.position.y, planeRect.position.z);
+    edgeSegments.position.set(rectMesh.position.x, rectMesh.position.y, rectMesh.position.z);
     return edgeSegments;
   }
 
-  private setCircleMaterial(planeRect: THREE.Mesh, rect: Rectangle) {
-    const labelCircle = new THREE.CircleGeometry(0.02, 200);
-    const circleMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
-    const circle = new THREE.Mesh(labelCircle, circleMaterial);
-    circle.position.set(
-      planeRect.position.x + rect.width / 2 - 0.05,
-      planeRect.position.y,
-      planeRect.position.z + 0.05
+  private makeLabelCircleMesh(rectMesh: THREE.Mesh, rect: Rectangle): THREE.Mesh {
+    const geometry = new THREE.CircleGeometry(0.02, 200);
+    const material = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(
+      rectMesh.position.x + rect.width / 2 - 0.05,
+      rectMesh.position.y,
+      rectMesh.position.z + 0.05
     );
-    circle.rotateY(THREE.MathUtils.degToRad(30));
-    return circle;
-  }
-
-  private createLabel(rect: Rectangle, circle: THREE.Mesh, lowestY: number, rectCounter: number):
-    [THREE.Line, CSS2DObject] {
-    const labelText = this.shortenText(rect.label);
-    const isGrey = !this.visibleView && !rect.isVisible;
-    let endPos;
-    const labelYSeparation = 0.5;
-    if (this.isLandscape) {
-      endPos = new THREE.Vector3(
-        circle.position.x, lowestY - 0.5 - rectCounter * labelYSeparation, circle.position.z
-      );
-    } else {
-      endPos = new THREE.Vector3(
-        circle.position.x, lowestY + 0.5 - rectCounter * labelYSeparation, circle.position.z
-      );
-    }
-
-    const linePoints = [circle.position, endPos];
-
-
-    //add rectangle label
-    const rectLabelDiv: HTMLElement = document.createElement("div");
-    rectLabelDiv.className = "rect-label";
-    rectLabelDiv.textContent = labelText;
-    rectLabelDiv.style.fontSize = `${this.fontSize}` + "px";
-    rectLabelDiv.style.marginTop = "5px";
-    if (isGrey) {
-      rectLabelDiv.style.color = "grey";
-    }
-    rectLabelDiv.style.pointerEvents = "auto";
-    rectLabelDiv.style.cursor = "pointer";
-    rectLabelDiv.addEventListener(
-      "click", (event) => this.propagateUpdateHighlightedItems(event, rect.id)
-    );
-    const rectLabel = new CSS2DObject(rectLabelDiv);
-    rectLabel.name = rect.label;
-
-    const textCanvas = document.createElement("canvas");
-    const labelContext = textCanvas.getContext("2d");
-
-    let labelWidth = 0;
-    if (labelContext?.font) {
-      labelContext.font = rectLabelDiv.style.font;
-      labelWidth = labelContext?.measureText(labelText).width;
-    }
-    textCanvas.remove();
-
-    if (this.isLandscape && endPos.x < 0) {
-      rectLabel.position.set(
-        endPos.x + 0.6, endPos.y, endPos.z - 0.6
-      );
-    } else {
-      rectLabel.position.set(
-        endPos.x - labelWidth * this.LABEL_X_FACTOR,
-        endPos.y - this.labelShift * labelWidth * this.LABEL_X_FACTOR,
-        endPos.z
-      );
-    }
-
-    const lineGeo = new THREE.BufferGeometry().setFromPoints(linePoints);
-    const lineMaterial = new THREE.LineBasicMaterial({ color: isGrey ? 0x808080 : 0x000000 });
-    const line = new THREE.Line(lineGeo, lineMaterial);
-
-    return [line, rectLabel];
+    mesh.rotateY(THREE.MathUtils.degToRad(30));
+    return mesh;
   }
 
   private propagateUpdateHighlightedItems(event: MouseEvent, newId: number) {
@@ -442,28 +453,6 @@ export class CanvasGraphics {
     document.querySelectorAll(".rect-label").forEach(el => el.remove());
   }
 
-  private colorMapping(scale: string, numberOfRects: number, darkFactor: number): THREE.Color {
-    if (scale === "highlighted") {
-      return new THREE.Color(0xD2E3FC);
-    } else if (scale === "grey") {
-      // darkness of grey rect depends on z order - darkest 64, lightest 128
-      //Separate RGB values between 0 and 1
-      const lower = 120;
-      const upper = 220;
-      const darkness = ((upper - lower) * (numberOfRects - darkFactor) / numberOfRects + lower) / 255;
-      return new THREE.Color(darkness, darkness, darkness);
-    } else if (scale === "green") {
-      // darkness of green rect depends on z order
-      //Separate RGB values between 0 and 1
-      const red = ((200 - 45) * (numberOfRects - darkFactor) / numberOfRects + 45) / 255;
-      const green = ((232 - 182) * (numberOfRects - darkFactor) / numberOfRects + 182) / 255;
-      const blue = ((183 - 44) * (numberOfRects - darkFactor) / numberOfRects + 44) / 255;
-      return new THREE.Color(red, green, blue);
-    } else {
-      return new THREE.Color(0, 0, 0);
-    }
-  }
-
   private shortenText(text: string): string {
     if (text.length > 35) {
       text = text.slice(0, 35);
@@ -474,7 +463,6 @@ export class CanvasGraphics {
   // dynamic scaling and canvas variables
   readonly CAMERA_HALF_WIDTH = 2.8;
   readonly CAMERA_HALF_HEIGHT = 3.2;
-  private readonly MAX_LABEL_SHIFT = 0.305;
   private readonly MAX_ZOOM = 2.5;
   private readonly MIN_ZOOM = 0.5;
   private readonly INIT_ZOOM = 0.75;
@@ -484,11 +472,9 @@ export class CanvasGraphics {
   private readonly INIT_LAYER_SEPARATION = 0.4;
   private readonly INIT_LOWEST_Y_SHIFT = 3;
   private readonly PAN_SPEED = 1;
-  private readonly LABEL_X_FACTOR = 0.009;
   private readonly CAM_ZOOM_FACTOR = 0.15;
 
   private fontSize = this.INIT_FONT_SIZE;
-  private labelShift = this.MAX_LABEL_SHIFT;
   private lowestYShift = this.INIT_LOWEST_Y_SHIFT;
   private layerSeparation = this.INIT_LAYER_SEPARATION;
 
