@@ -65,7 +65,9 @@ abstract class Parser {
     return this.timestamps.get(type);
   }
 
-  //TODO: factor out timestamp search policy. Receive index parameter instead.
+  //TODO:
+  // - factor out timestamp search policy. Receive index parameter instead.
+  // - make async for possible lazy disk reads in the future
   public getTraceEntry(timestamp: Timestamp): undefined|any {
     const timestamps = this.getTimestamps(timestamp.getType());
     if (timestamps === undefined) {

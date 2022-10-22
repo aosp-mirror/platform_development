@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "eslint": "npx eslint --ignore-pattern flickerlib src/",
+    "prettier": "npx prettier --write src/",
     "start": "webpack serve --config webpack.config.dev.js --open --hot",
     "build:kotlin": "rm -rf kotlin_build && npx kotlinc-js -source-map -source-map-embed-sources always -module-kind commonjs -output kotlin_build/flicker.js ../../../platform_testing/libraries/flicker/src/com/android/server/wm/traces/common",
     "build:prod": "webpack --config webpack.config.prod.js --progress",
@@ -73,6 +74,7 @@
     "karma-jasmine": "~5.0.0",
     "karma-sourcemap-loader": "^0.3.8",
     "karma-webpack": "^5.0.0",
+    "prettier": "^2.7.1",
     "protractor": "^7.0.0",
     "three": "^0.143.0",
     "webgl-utils": "^1.0.1",

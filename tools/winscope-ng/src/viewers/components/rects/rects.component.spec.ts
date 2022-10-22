@@ -41,9 +41,7 @@ describe("RectsComponent", () => {
       declarations: [RectsComponent, TestHostComponent],
       schemas: [CUSTOM_ELEMENTS_SCHEMA]
     }).compileComponents();
-  });
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
@@ -54,13 +52,13 @@ describe("RectsComponent", () => {
     expect(component).toBeTruthy();
   });
 
-  it("check that layer separation slider is rendered", () => {
+  it("renders layer separation slider", () => {
     fixture.detectChanges();
     const slider = htmlElement.querySelector("mat-slider");
     expect(slider).toBeTruthy();
   });
 
-  it("check that layer separation slider causes view to change", () => {
+  it("updates rendered layer separation when slider changes", () => {
     const slider = htmlElement.querySelector(".spacing-slider");
     spyOn(component.rectsComponent, "updateLayerSeparation");
     slider?.dispatchEvent(new MouseEvent("mousedown"));
@@ -68,13 +66,13 @@ describe("RectsComponent", () => {
     expect(component.rectsComponent.updateLayerSeparation).toHaveBeenCalled();
   });
 
-  it("check that rects canvas is rendered", () => {
+  it("renders rects canvas", () => {
     fixture.detectChanges();
     const rectsCanvas = htmlElement.querySelector(".rects-canvas");
     expect(rectsCanvas).toBeTruthy();
   });
 
-  it("check that canvas is refreshed if rects are present", async () => {
+  it("refreshes canvas if rects are present", async () => {
     component.addRects([
       {
         topLeft: {x:0, y:0},
