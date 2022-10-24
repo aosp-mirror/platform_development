@@ -522,3 +522,11 @@ class AndroidDevice(object):
 
     def set_prop(self, prop_name, value):
         self.shell(['setprop', prop_name, value])
+
+    def logcat(self) -> str:
+        """Returns the contents of logcat."""
+        return self._simple_call(['logcat', '-d'])
+
+    def clear_logcat(self) -> None:
+        """Clears the logcat buffer."""
+        self._simple_call(['logcat', '-c'])
