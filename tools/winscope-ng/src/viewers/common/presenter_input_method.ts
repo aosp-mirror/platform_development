@@ -132,16 +132,20 @@ export abstract class PresenterInputMethod {
     let wmProperties: ProcessedWindowManagerState | undefined;
     let sfProperties: ImeLayers | undefined;
     let sfSubtrees: any[];
+
     if (wmEntry) {
       wmProperties = ImeUtils.processWindowManagerTraceEntry(wmEntry);
-      sfProperties = ImeUtils.getImeLayers(sfEntry, wmProperties);
-      sfSubtrees = [sfProperties?.taskOfImeContainer, sfProperties?.taskOfImeSnapshot]
-        .filter((node) => node) // filter away null values
-        .map((node) => {
-          node.kind = "SF subtree - " + node.id;
-          return node;
-        });
-      this.entry?.children.push(...sfSubtrees);
+
+      if (sfEntry) {
+        sfProperties = ImeUtils.getImeLayers(sfEntry, wmProperties);
+        sfSubtrees = [sfProperties?.taskOfImeContainer, sfProperties?.taskOfImeSnapshot]
+          .filter((node) => node) // filter away null values
+          .map((node) => {
+            node.kind = "SF subtree - " + node.id;
+            return node;
+          });
+        this.entry?.children.push(...sfSubtrees);
+      }
     }
 
     return new ImeAdditionalProperties(

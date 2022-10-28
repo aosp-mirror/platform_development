@@ -15,27 +15,13 @@
  */
 import {ImeUtils} from "./ime_utils";
 import {UnitTestUtils} from "test/unit/utils";
-
-import {LayerTraceEntry} from "common/trace/flickerlib/layers/LayerTraceEntry";
-import {WindowManagerState} from "common/trace/flickerlib/windows/WindowManagerState";
-import {Timestamp, TimestampType} from "common/trace/timestamp";
-
-async function getWindowManagerTraceEntry(): WindowManagerState {
-  const parser = await UnitTestUtils.getParser("traces/WindowManager_with_IME.pb");
-  const timestamp = new Timestamp(TimestampType.ELAPSED, 502938057652n);
-  return parser.getTraceEntry(timestamp)!;
-}
-
-async function getSurfaceFlingerTraceEntry(): LayerTraceEntry {
-  const parser = await UnitTestUtils.getParser("traces/SurfaceFlinger_with_IME.pb");
-  const timestamp = new Timestamp(TimestampType.ELAPSED, 502942319579n);
-  return parser.getTraceEntry(timestamp);
-}
+import {TraceType} from "common/trace/trace_type";
 
 describe("ImeUtils", () => {
   it("processes WindowManager trace entry", async () => {
-    const entry = await getWindowManagerTraceEntry();
-    const processed = ImeUtils.processWindowManagerTraceEntry(entry);
+    const entries = await UnitTestUtils.getImeTraceEntries();
+    const processed = ImeUtils.processWindowManagerTraceEntry(
+      entries.get(TraceType.WINDOW_MANAGER)[0]);
 
     expect(processed.focusedApp)
       .toEqual("com.google.android.apps.messaging/.ui.search.ZeroStateSearchActivity");
@@ -74,10 +60,12 @@ describe("ImeUtils", () => {
   });
 
   it("processes SurfaceFlinger trace entry", async () => {
+    const entries = await UnitTestUtils.getImeTraceEntries();
     const processedWindowManagerState = ImeUtils.processWindowManagerTraceEntry(
-      await getWindowManagerTraceEntry());
-    const entry = await getSurfaceFlingerTraceEntry();
-    const layers = ImeUtils.getImeLayers(entry, processedWindowManagerState)!;
+      entries.get(TraceType.WINDOW_MANAGER)[0]);
+    const layers = ImeUtils.getImeLayers(
+      entries.get(TraceType.SURFACE_FLINGER)[0],
+      processedWindowManagerState)!;
 
     expect(layers.inputMethodSurface.id)
       .toEqual(280);
