@@ -19,6 +19,7 @@ import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {MatCardModule} from "@angular/material/card";
 import {TraceViewComponent} from "./trace_view.component";
 import {View, Viewer, ViewType} from "viewers/viewer";
+import {content} from "html2canvas/dist/types/css/property-descriptors/content";
 
 class FakeViewer implements Viewer {
   constructor(title: string, content: string) {
@@ -74,49 +75,53 @@ describe("TraceViewComponent", () => {
   });
 
   it("creates viewer tabs", () => {
-    const tabs: NodeList = htmlElement.querySelectorAll(".viewer-tab");
+    const tabs: NodeList = htmlElement.querySelectorAll(".tab");
     expect(tabs.length).toEqual(2);
     expect(tabs.item(0)!.textContent).toEqual("Title0");
     expect(tabs.item(1)!.textContent).toEqual("Title1");
   });
 
-  it("changes active viewer on click", () => {
-    const tabs = htmlElement.querySelectorAll(".viewer-tab");
-    const tabsContent =
-      htmlElement.querySelectorAll(".trace-view-content div");
+  it("changes active view on click", () => {
+    const getVisibleTabContents = () => {
+      const contents: HTMLElement[] = [];
+      htmlElement
+        .querySelectorAll(".trace-view-content div")
+        .forEach(content => {
+          if ((content as HTMLElement).style.display != "none") {
+            contents.push(content as HTMLElement);
+          }
+        });
+      return contents;
+    };
+
+    const tabButtons = htmlElement.querySelectorAll(".tab");
 
     // Initially tab 0
     fixture.detectChanges();
-    expect(tabsContent.length).toEqual(2);
-    expect(tabsContent[0].innerHTML).toEqual("Content0");
-    expect(tabsContent[1].innerHTML).toEqual("Content1");
-    expect((<any>tabsContent[0]).style?.display).toEqual("");
-    expect((<any>tabsContent[1]).style?.display).toEqual("none");
+    let visibleTabContents = getVisibleTabContents();
+    expect(visibleTabContents.length).toEqual(1);
+    expect(visibleTabContents[0].innerHTML).toEqual("Content0");
 
     // Switch to tab 1
-    tabs[1].dispatchEvent(new Event("click"));
+    tabButtons[1].dispatchEvent(new Event("click"));
     fixture.detectChanges();
-    expect(tabsContent.length).toEqual(2);
-    expect(tabsContent[0].innerHTML).toEqual("Content0");
-    expect(tabsContent[1].innerHTML).toEqual("Content1");
-    expect((<any>tabsContent[0]).style?.display).toEqual("none");
-    expect((<any>tabsContent[1]).style?.display).toEqual("");
+    visibleTabContents = getVisibleTabContents();
+    expect(visibleTabContents.length).toEqual(1);
+    expect(visibleTabContents[0].innerHTML).toEqual("Content1");
 
     // Switch to tab 0
-    tabs[0].dispatchEvent(new Event("click"));
+    tabButtons[0].dispatchEvent(new Event("click"));
     fixture.detectChanges();
-    expect(tabsContent.length).toEqual(2);
-    expect(tabsContent[0].innerHTML).toEqual("Content0");
-    expect(tabsContent[1].innerHTML).toEqual("Content1");
-    expect((<any>tabsContent[0]).style?.display).toEqual("");
-    expect((<any>tabsContent[1]).style?.display).toEqual("none");
+    visibleTabContents = getVisibleTabContents();
+    expect(visibleTabContents.length).toEqual(1);
+    expect(visibleTabContents[0].innerHTML).toEqual("Content0");
   });
 
   it("emits event on download button click", () => {
     const spy = spyOn(component.downloadTracesButtonClick, "emit");
 
     const downloadButton: null|HTMLButtonElement =
-      htmlElement.querySelector(".save-btn");
+      htmlElement.querySelector(".save-button");
     expect(downloadButton).toBeInstanceOf(HTMLButtonElement);
 
     downloadButton?.dispatchEvent(new Event("click"));
