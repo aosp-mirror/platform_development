@@ -18,6 +18,8 @@
 
 #include <llvm/Support/raw_ostream.h>
 
+#include <unordered_set>
+
 
 namespace header_checker {
 namespace repr {
@@ -260,11 +262,42 @@ bool AbiDiffHelper::CompareVTables(
   return true;
 }
 
-bool AbiDiffHelper::CompareSizeAndAlignment(
-    const TypeIR *old_type,
-    const TypeIR *new_type) {
+bool AbiDiffHelper::AreOpaqueTypesEqual(const std::string &old_type_id,
+                                        const std::string &new_type_id) const {
+  // b/253095767: In T, some dump files contain opaque types whose IDs end with
+  // "#ODR:" and the source paths. This function removes the suffixes before
+  // comparing the type IDs.
+  if (!diff_policy_options_.consider_opaque_types_different_ ||
+      ExtractMultiDefinitionTypeId(old_type_id) ==
+          ExtractMultiDefinitionTypeId(new_type_id)) {
+    return true;
+  }
+  // __va_list is an opaque type defined by the compiler. ARM ABI requires
+  // __va_list to be in std namespace. Its mangled name is _ZTISt9__va_list, but
+  // some versions of clang produce _ZTI9__va_list. The names are equivalent.
+  static const std::unordered_set<std::string> va_list_names{
+      "_ZTI9__va_list", "_ZTISt9__va_list"};
+  return va_list_names.count(old_type_id) && va_list_names.count(new_type_id);
+}
+
+static bool CompareSizeAndAlignment(const TypeIR *old_type,
+                                    const TypeIR *new_type) {
   return old_type->GetSize() == new_type->GetSize() &&
       old_type->GetAlignment() == new_type->GetAlignment();
+}
+
+bool AbiDiffHelper::AreTypeSizeAndAlignmentEqual(
+    const std::string &old_type_id, const std::string &new_type_id) const {
+  AbiElementMap<const TypeIR *>::const_iterator old_it =
+      old_types_.find(old_type_id);
+  AbiElementMap<const TypeIR *>::const_iterator new_it =
+      new_types_.find(new_type_id);
+
+  if (old_it == old_types_.end() || new_it == new_types_.end()) {
+    return AreOpaqueTypesEqual(old_type_id, new_type_id);
+  }
+
+  return CompareSizeAndAlignment(old_it->second, new_it->second);
 }
 
 DiffStatusPair<std::unique_ptr<RecordFieldDiffIR>>
@@ -496,17 +529,14 @@ AbiDiffHelper::FixupDiffedFieldTypeIds(
 }
 
 DiffStatus AbiDiffHelper::CompareFunctionTypes(
-    const FunctionTypeIR *old_type,
-    const FunctionTypeIR *new_type,
-    std::deque<std::string> *type_queue,
-    DiffMessageIR::DiffKind diff_kind) {
+    const CFunctionLikeIR *old_type, const CFunctionLikeIR *new_type,
+    std::deque<std::string> *type_queue, DiffMessageIR::DiffKind diff_kind) {
   DiffStatus param_diffs = CompareFunctionParameters(old_type->GetParameters(),
                                                      new_type->GetParameters(),
                                                      type_queue, diff_kind);
-  DiffStatus return_type_diff =
-      CompareAndDumpTypeDiff(old_type->GetReturnType(),
-                             new_type->GetReturnType(),
-                             type_queue, diff_kind);
+  DiffStatus return_type_diff = CompareParameterOrReturnType(
+      old_type->GetReturnType(), new_type->GetReturnType(), type_queue,
+      diff_kind);
 
   if (param_diffs == DiffStatus::direct_diff ||
       return_type_diff == DiffStatus::direct_diff) {
@@ -698,16 +728,26 @@ DiffStatus AbiDiffHelper::CompareFunctionParameters(
   while (i < old_parameters_size) {
     const ParamIR &old_parameter = old_parameters.at(i);
     const ParamIR &new_parameter = new_parameters.at(i);
-    if ((CompareAndDumpTypeDiff(old_parameter.GetReferencedType(),
-                               new_parameter.GetReferencedType(),
-                               type_queue, diff_kind) ==
-        DiffStatus::direct_diff) ||
+    if (CompareParameterOrReturnType(old_parameter.GetReferencedType(),
+                                     new_parameter.GetReferencedType(),
+                                     type_queue,
+                                     diff_kind) == DiffStatus::direct_diff ||
         (old_parameter.GetIsDefault() != new_parameter.GetIsDefault())) {
       return DiffStatus::direct_diff;
     }
     i++;
   }
   return DiffStatus::no_diff;
+}
+
+DiffStatus AbiDiffHelper::CompareParameterOrReturnType(
+    const std::string &old_type_id, const std::string &new_type_id,
+    std::deque<std::string> *type_queue, DiffMessageIR::DiffKind diff_kind) {
+  if (!AreTypeSizeAndAlignmentEqual(old_type_id, new_type_id)) {
+    return DiffStatus::direct_diff;
+  }
+  return CompareAndDumpTypeDiff(old_type_id, new_type_id, type_queue,
+                                diff_kind);
 }
 
 DiffStatus AbiDiffHelper::CompareAndDumpTypeDiff(
@@ -805,10 +845,9 @@ DiffStatus AbiDiffHelper::CompareAndDumpTypeDiff(
   if (old_it == old_types_.end() || new_it == new_types_.end()) {
     TypeQueueCheckAndPop(type_queue);
     // One of the types were hidden, we cannot compare further.
-    if (diff_policy_options_.consider_opaque_types_different_) {
-      return DiffStatus::opaque_diff;
-    }
-    return DiffStatus::no_diff;
+    return AreOpaqueTypesEqual(old_type_id, new_type_id)
+               ? DiffStatus::no_diff
+               : DiffStatus::opaque_diff;
   }
 
   LinkableMessageKind old_kind = old_it->second->GetKind();

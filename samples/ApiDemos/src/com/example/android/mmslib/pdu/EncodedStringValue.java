@@ -188,7 +188,6 @@ public class EncodedStringValue implements Cloneable {
      */
     @Override
     public Object clone() throws CloneNotSupportedException {
-        super.clone();
         int len = mData.length;
         byte[] dstBytes = new byte[len];
         System.arraycopy(mData, 0, dstBytes, 0, len);
