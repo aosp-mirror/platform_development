@@ -15,9 +15,17 @@
  */
 import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {Parser} from "./parser";
+import {CommonTestUtils} from "test/common/utils";
 import {UnitTestUtils} from "test/unit/utils";
+import {ParserFactory} from "./parser_factory";
 
 describe("Parser", () => {
+  it("is robust to empty trace file", async () => {
+    const trace = await CommonTestUtils.getFixtureFile("traces/empty.pb");
+    const [parsers, errors] = await new ParserFactory().createParsers([trace]);
+    expect(parsers.length).toEqual(0);
+  });
+
   describe("real timestamp", () => {
     let parser: Parser;
 
