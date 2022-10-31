@@ -18,12 +18,27 @@ import {Parser} from "./parser";
 import {CommonTestUtils} from "test/common/utils";
 import {UnitTestUtils} from "test/unit/utils";
 import {ParserFactory} from "./parser_factory";
+import {TraceType} from "../common/trace/trace_type";
 
 describe("Parser", () => {
   it("is robust to empty trace file", async () => {
     const trace = await CommonTestUtils.getFixtureFile("traces/empty.pb");
     const [parsers, errors] = await new ParserFactory().createParsers([trace]);
     expect(parsers.length).toEqual(0);
+  });
+
+  it("is robust to trace with no entries", async () => {
+    const parser = await UnitTestUtils.getParser("traces/no_entries_InputMethodClients.pb");
+
+    expect(parser.getTraceType()).toEqual(TraceType.INPUT_METHOD_CLIENTS);
+    expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual([]);
+    expect(parser.getTimestamps(TimestampType.REAL)).toEqual([]);
+
+    const timestampElapsed = new Timestamp(TimestampType.ELAPSED, 0n);
+    expect(parser.getTraceEntry(timestampElapsed)).toBeUndefined();
+
+    const timestampReal = new Timestamp(TimestampType.REAL, 0n);
+    expect(parser.getTraceEntry(timestampReal)).toBeUndefined();
   });
 
   describe("real timestamp", () => {
