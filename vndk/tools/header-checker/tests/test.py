@@ -311,12 +311,11 @@ class HeaderCheckerTest(unittest.TestCase):
              "-input-format-new", "Json"])
 
     def test_opaque_type_self_diff(self):
-        lsdump = os.path.join(
-            SCRIPT_DIR, "abi_dumps", "opaque_ptr_types.lsdump")
-        self.run_and_compare_abi_diff(
-            lsdump, lsdump, "libexample", "arm64", 0,
+        self.prepare_and_run_abi_diff_all_archs(
+            "libopaque_type", "libopaque_type", 0,
             ["-input-format-old", "Json", "-input-format-new", "Json",
-             "-consider-opaque-types-different"])
+             "-consider-opaque-types-different"],
+            create_old=False, create_new=False)
 
     def test_allow_adding_removing_weak_symbols(self):
         module_old = Module.get_test_modules_by_name("libweak_symbols_old")[0]
@@ -388,6 +387,11 @@ class HeaderCheckerTest(unittest.TestCase):
     def test_merge_multi_definitions(self):
         self.prepare_and_absolute_diff_all_archs(
             "libmerge_multi_definitions", "libmerge_multi_definitions")
+        self.prepare_and_run_abi_diff_all_archs(
+            "libmerge_multi_definitions", "libdiff_multi_definitions", 0,
+            flags=["-input-format-new", "Json", "-input-format-old", "Json",
+                   "-consider-opaque-types-different"],
+            create_old=False, create_new=False)
 
     def test_print_resource_dir(self):
         dumper_path = shutil.which("header-abi-dumper")
@@ -404,6 +408,18 @@ class HeaderCheckerTest(unittest.TestCase):
     def test_struct_extensions(self):
         self.prepare_and_run_abi_diff_all_archs(
             "libstruct_extensions", "liballowed_struct_extensions", 4,
+            flags=["-input-format-new", "Json", "-input-format-old", "Json"],
+            create_old=False, create_new=False)
+
+    def test_param_size_diff(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libpass_by_value", "libparam_size_diff", 8,
+            flags=["-input-format-new", "Json", "-input-format-old", "Json"],
+            create_old=False, create_new=False)
+
+    def test_return_size_diff(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libpass_by_value", "libreturn_size_diff", 8,
             flags=["-input-format-new", "Json", "-input-format-old", "Json"],
             create_old=False, create_new=False)
 
