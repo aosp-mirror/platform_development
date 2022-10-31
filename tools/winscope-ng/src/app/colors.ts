@@ -13,31 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-class StringUtils {
-  static nanosecondsToHuman(nanoseconds: number): string {
-    const units: [number, string][] = [
-      [1000, "ms"],
-      [60, "s"],
-      [60, "m"],
-      [24, "h"],
-      [Infinity, "d"],
-    ];
 
-    let remainder = Math.floor(nanoseconds / 1000000);
-    const parts = [];
-
-    for(const [factor, unit] of units) {
-      const part = (remainder % factor).toFixed();
-      parts.push(part + unit);
-
-      remainder = Math.floor(remainder / factor);
-      if (remainder == 0) {
-        break;
-      }
-    }
-
-    return parts.reverse().join("");
-  }
+export enum Color {
+  SELECTOR_COLOR = "#8AB4F8",
+  SELECTION_BACKGROUND = "#E8F0FE",
+  ACTIVE_POINTER = "#1967D2",
+  GUIDE_BAR = "#3C4043",
+  GUIDE_BAR_LIGHT = "#9AA0A6",
 }
-
-export {StringUtils};

@@ -43,7 +43,7 @@ class ViewerSurfaceFlinger implements Viewer {
   }
 
   public getViews(): View[] {
-    return [new View(ViewType.TAB, this.htmlElement, "Surface Flinger")];
+    return [new View(ViewType.TAB, this.getDependencies(), this.htmlElement, "Surface Flinger")];
   }
 
   public getDependencies(): TraceType[] {
