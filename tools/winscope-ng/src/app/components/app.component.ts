@@ -19,12 +19,15 @@ import { MatSliderChange } from "@angular/material/slider";
 import { TraceCoordinator } from "app/trace_coordinator";
 import { PersistentStore } from "common/persistent_store";
 import { Timestamp } from "common/trace/timestamp";
+import { FileUtils } from "common/utils/file_utils";
 import { proxyClient, ProxyState } from "trace_collection/proxy_client";
 import { ViewerInputMethodComponent } from "viewers/components/viewer_input_method.component";
+import { Viewer } from "viewers/viewer";
 import { ViewerProtologComponent} from "viewers/viewer_protolog/viewer_protolog.component";
 import { ViewerSurfaceFlingerComponent } from "viewers/viewer_surface_flinger/viewer_surface_flinger.component";
 import { ViewerWindowManagerComponent } from "viewers/viewer_window_manager/viewer_window_manager.component";
 import { ViewerTransactionsComponent } from "viewers/viewer_transactions/viewer_transactions.component";
+import { ViewerScreenRecordingComponent } from "viewers/viewer_screen_recording/viewer_screen_recording.component";
 
 @Component({
   selector: "app-root",
@@ -51,8 +54,9 @@ import { ViewerTransactionsComponent } from "viewers/viewer_transactions/viewer_
     <trace-view
       *ngIf="dataLoaded"
       id="viewers"
+      [viewers]="allViewers"
       [store]="store"
-      [traceCoordinator]="traceCoordinator"
+      (downloadTracesButtonClick)="onDownloadTracesButtonClick()"
     ></trace-view>
 
     <div *ngIf="dataLoaded" id="timescrub">
@@ -129,6 +133,7 @@ export class AppComponent {
   currentTimestamp?: Timestamp;
   currentTimestampIndex = 0;
   allTimestamps: Timestamp[] = [];
+  allViewers: Viewer[] = [];
   @Input() dataLoaded = false;
 
   constructor(
@@ -143,6 +148,10 @@ export class AppComponent {
     if (!customElements.get("viewer-protolog")) {
       customElements.define("viewer-protolog",
         createCustomElement(ViewerProtologComponent, {injector}));
+    }
+    if (!customElements.get("viewer-screen-recording")) {
+      customElements.define("viewer-screen-recording",
+        createCustomElement(ViewerScreenRecordingComponent, {injector}));
     }
     if (!customElements.get("viewer-surface-flinger")) {
       customElements.define("viewer-surface-flinger",
@@ -182,8 +191,9 @@ export class AppComponent {
 
   public onDataLoadedChange(dataLoaded: boolean) {
     if (dataLoaded && !(this.traceCoordinator.getViewers().length > 0)) {
-      this.allTimestamps = this.traceCoordinator.getTimestamps();
       this.traceCoordinator.createViewers();
+      this.allViewers = this.traceCoordinator.getViewers();
+      this.allTimestamps = this.traceCoordinator.getTimestamps();
       this.currentTimestampIndex = 0;
       this.notifyCurrentTimestamp();
       this.dataLoaded = dataLoaded;
@@ -193,5 +203,19 @@ export class AppComponent {
   private notifyCurrentTimestamp() {
     this.currentTimestamp = this.allTimestamps[this.currentTimestampIndex];
     this.traceCoordinator.notifyCurrentTimestamp(this.currentTimestamp);
+  }
+
+  private async onDownloadTracesButtonClick() {
+    const traces = await this.traceCoordinator.getAllTracesForDownload();
+    const zipFileBlob = await FileUtils.createZipArchive(traces);
+    const zipFileName = "winscope.zip";
+    const a = document.createElement("a");
+    document.body.appendChild(a);
+    const url = window.URL.createObjectURL(zipFileBlob);
+    a.href = url;
+    a.download = zipFileName;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
   }
 }

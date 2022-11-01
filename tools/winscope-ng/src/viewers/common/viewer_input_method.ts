@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 import {TraceType} from "common/trace/trace_type";
-import {Viewer} from "viewers/viewer";
+import {View, Viewer, ViewType} from "viewers/viewer";
 import {ViewerEvents} from "viewers/common/viewer_events";
-import { PresenterInputMethod } from "viewers/common/presenter_input_method";
-import { ImeUiData } from "viewers/common/ime_ui_data";
+import {PresenterInputMethod} from "viewers/common/presenter_input_method";
+import {ImeUiData} from "viewers/common/ime_ui_data";
 
 abstract class ViewerInputMethod implements Viewer {
   constructor() {
-    this.view = document.createElement("viewer-input-method");
+    this.htmlElement = document.createElement("viewer-input-method");
     this.presenter = this.initialisePresenter();
     this.addViewerEventListeners();
   }
@@ -30,35 +30,31 @@ abstract class ViewerInputMethod implements Viewer {
     this.presenter.notifyCurrentTraceEntries(entries);
   }
 
-  public getView(): HTMLElement {
-    return this.view;
-  }
-
+  public abstract getViews(): View[];
+  public abstract getDependencies(): TraceType[];
 
   protected imeUiCallback = (uiData: ImeUiData) => {
     // Angular does not deep watch @Input properties. Clearing inputData to null before repopulating
     // automatically ensures that the UI will change via the Angular change detection cycle. Without
     // resetting, Angular does not auto-detect that inputData has changed.
-    (this.view as any).inputData = null;
-    (this.view as any).inputData = uiData;
+    (this.htmlElement as any).inputData = null;
+    (this.htmlElement as any).inputData = uiData;
   };
 
   protected addViewerEventListeners() {
-    this.view.addEventListener(ViewerEvents.HierarchyPinnedChange, (event) => this.presenter.updatePinnedItems(((event as CustomEvent).detail.pinnedItem)));
-    this.view.addEventListener(ViewerEvents.HighlightedChange, (event) => this.presenter.updateHighlightedItems(`${(event as CustomEvent).detail.id}`));
-    this.view.addEventListener(ViewerEvents.HierarchyUserOptionsChange, (event) => this.presenter.updateHierarchyTree((event as CustomEvent).detail.userOptions));
-    this.view.addEventListener(ViewerEvents.HierarchyFilterChange, (event) => this.presenter.filterHierarchyTree((event as CustomEvent).detail.filterString));
-    this.view.addEventListener(ViewerEvents.PropertiesUserOptionsChange, (event) => this.presenter.updatePropertiesTree((event as CustomEvent).detail.userOptions));
-    this.view.addEventListener(ViewerEvents.PropertiesFilterChange, (event) => this.presenter.filterPropertiesTree((event as CustomEvent).detail.filterString));
-    this.view.addEventListener(ViewerEvents.SelectedTreeChange, (event) => this.presenter.newPropertiesTree((event as CustomEvent).detail.selectedItem));
-    this.view.addEventListener(ViewerEvents.AdditionalPropertySelected, (event) => this.presenter.newAdditionalPropertiesTree((event as CustomEvent).detail.selectedItem));
+    this.htmlElement.addEventListener(ViewerEvents.HierarchyPinnedChange, (event) => this.presenter.updatePinnedItems(((event as CustomEvent).detail.pinnedItem)));
+    this.htmlElement.addEventListener(ViewerEvents.HighlightedChange, (event) => this.presenter.updateHighlightedItems(`${(event as CustomEvent).detail.id}`));
+    this.htmlElement.addEventListener(ViewerEvents.HierarchyUserOptionsChange, (event) => this.presenter.updateHierarchyTree((event as CustomEvent).detail.userOptions));
+    this.htmlElement.addEventListener(ViewerEvents.HierarchyFilterChange, (event) => this.presenter.filterHierarchyTree((event as CustomEvent).detail.filterString));
+    this.htmlElement.addEventListener(ViewerEvents.PropertiesUserOptionsChange, (event) => this.presenter.updatePropertiesTree((event as CustomEvent).detail.userOptions));
+    this.htmlElement.addEventListener(ViewerEvents.PropertiesFilterChange, (event) => this.presenter.filterPropertiesTree((event as CustomEvent).detail.filterString));
+    this.htmlElement.addEventListener(ViewerEvents.SelectedTreeChange, (event) => this.presenter.newPropertiesTree((event as CustomEvent).detail.selectedItem));
+    this.htmlElement.addEventListener(ViewerEvents.AdditionalPropertySelected, (event) => this.presenter.newAdditionalPropertiesTree((event as CustomEvent).detail.selectedItem));
   }
 
-  abstract getDependencies(): TraceType[];
-  abstract getTitle(): string;
   protected abstract initialisePresenter(): PresenterInputMethod;
 
-  protected view: HTMLElement;
+  protected htmlElement: HTMLElement;
   protected presenter: PresenterInputMethod;
 }
 

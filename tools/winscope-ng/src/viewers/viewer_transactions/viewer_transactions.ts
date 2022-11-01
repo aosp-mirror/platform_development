@@ -14,36 +14,36 @@
  * limitations under the License.
  */
 import {TraceType} from "common/trace/trace_type";
-import {Viewer} from "viewers/viewer";
+import {View, Viewer, ViewType} from "viewers/viewer";
 import {Presenter} from "./presenter";
 import {Events} from "./events";
 import {UiData} from "./ui_data";
 
 class ViewerTransactions implements Viewer {
   constructor() {
-    this.view = document.createElement("viewer-transactions");
+    this.htmlElement = document.createElement("viewer-transactions");
 
     this.presenter = new Presenter((data: UiData) => {
-      (this.view as any).inputData = data;
+      (this.htmlElement as any).inputData = data;
     });
 
-    this.view.addEventListener(Events.PidFilterChanged, (event) => {
+    this.htmlElement.addEventListener(Events.PidFilterChanged, (event) => {
       this.presenter.onPidFilterChanged((event as CustomEvent).detail);
     });
 
-    this.view.addEventListener(Events.UidFilterChanged, (event) => {
+    this.htmlElement.addEventListener(Events.UidFilterChanged, (event) => {
       this.presenter.onUidFilterChanged((event as CustomEvent).detail);
     });
 
-    this.view.addEventListener(Events.TypeFilterChanged, (event) => {
+    this.htmlElement.addEventListener(Events.TypeFilterChanged, (event) => {
       this.presenter.onTypeFilterChanged((event as CustomEvent).detail);
     });
 
-    this.view.addEventListener(Events.IdFilterChanged, (event) => {
+    this.htmlElement.addEventListener(Events.IdFilterChanged, (event) => {
       this.presenter.onIdFilterChanged((event as CustomEvent).detail);
     });
 
-    this.view.addEventListener(Events.EntryClicked, (event) => {
+    this.htmlElement.addEventListener(Events.EntryClicked, (event) => {
       this.presenter.onEntryClicked((event as CustomEvent).detail);
     });
   }
@@ -52,12 +52,8 @@ class ViewerTransactions implements Viewer {
     this.presenter.notifyCurrentTraceEntries(entries);
   }
 
-  public getView(): HTMLElement {
-    return this.view;
-  }
-
-  public getTitle() {
-    return "Transactions";
+  public getViews(): View[] {
+    return [new View(ViewType.TAB, this.htmlElement, "Transactions")];
   }
 
   public getDependencies(): TraceType[] {
@@ -65,7 +61,7 @@ class ViewerTransactions implements Viewer {
   }
 
   public static readonly DEPENDENCIES: TraceType[] = [TraceType.TRANSACTIONS];
-  private view: HTMLElement;
+  private htmlElement: HTMLElement;
   private presenter: Presenter;
 }
 

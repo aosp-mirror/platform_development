@@ -14,19 +14,24 @@
  * limitations under the License.
  */
 import {TraceType} from "common/trace/trace_type";
-import { PresenterInputMethodManagerService } from "./presenter_input_method_manager_service";
-import { ViewerInputMethod } from "viewers/common/viewer_input_method";
+import {PresenterInputMethodManagerService} from "./presenter_input_method_manager_service";
+import {ViewerInputMethod} from "viewers/common/viewer_input_method";
+import {View, ViewType} from "viewers/viewer";
 
 class ViewerInputMethodManagerService extends ViewerInputMethod {
-  public getTitle(): string {
-    return "Input Method Manager Service";
+  override getViews(): View[] {
+    return [
+      new View(ViewType.TAB,
+        this.htmlElement,
+        "Input Method Manager Service")
+    ];
   }
 
-  public getDependencies(): TraceType[] {
+  override getDependencies(): TraceType[] {
     return ViewerInputMethodManagerService.DEPENDENCIES;
   }
 
-  protected initialisePresenter() {
+  override initialisePresenter() {
     return new PresenterInputMethodManagerService(this.imeUiCallback, this.getDependencies());
   }
 

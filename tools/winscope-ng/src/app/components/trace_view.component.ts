@@ -13,35 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  Component,
-  Input,
-  Inject,
-  ElementRef,
-} from "@angular/core";
-import { TraceCoordinator } from "app/trace_coordinator";
-import { PersistentStore } from "common/persistent_store";
-import { FileUtils } from "common/utils/file_utils";
-import { Viewer } from "viewers/viewer";
+import {Component, ElementRef, EventEmitter, Inject, Input, Output} from "@angular/core";
+import {PersistentStore} from "common/persistent_store";
+import {Viewer, View, ViewType} from "viewers/viewer";
+
+interface Tab extends View {
+  addedToDom: boolean;
+}
 
 @Component({
   selector: "trace-view",
   template: `
+    <div class="container-overlay">
+    </div>
     <div class="header-items-wrapper">
-      <nav mat-tab-nav-bar class="viewer-nav-bar">
+      <nav mat-tab-nav-bar class="tabs-navigation-bar">
         <a
-          *ngFor="let tab of viewerTabs"
+          *ngFor="let tab of tabs"
           mat-tab-link
-          [active]="isCurrentActiveCard(tab.cardId)"
-          (click)="showViewer(tab.cardId)"
-          class="viewer-tab"
-        >{{tab.label}}</a>
+          [active]="isCurrentActiveTab(tab)"
+          (click)="onTabClick(tab)"
+          class="tab"
+        >{{tab.title}}</a>
       </nav>
       <button
         color="primary"
         mat-button
-        class="save-btn"
-        (click)="downloadAllTraces()"
+        class="save-button"
+        (click)="downloadTracesButtonClick.emit()"
       >Download all traces</button>
     </div>
     <div class="trace-view-content">
@@ -49,6 +48,16 @@ import { Viewer } from "viewers/viewer";
   `,
   styles: [
     `
+      .container-overlay {
+        z-index: 10;
+        position: fixed;
+        top: 0px;
+        left: 0px;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
       .header-items-wrapper {
         width: 100%;
         display: flex;
@@ -57,7 +66,7 @@ import { Viewer } from "viewers/viewer";
         align-items: center;
       }
 
-      .viewer-nav-bar {
+      .tabs-navigation-bar {
         height: 100%;
       }
 
@@ -66,96 +75,106 @@ import { Viewer } from "viewers/viewer";
         flex-grow: 1;
       }
 
-      .save-btn {
+      .save-button {
         height: 100%;
       }
     `
   ]
 })
 export class TraceViewComponent {
+  @Input() viewers!: Viewer[];
   @Input() store!: PersistentStore;
-  @Input() traceCoordinator!: TraceCoordinator;
-  viewerTabs: ViewerTab[] = [];
-  activeViewerCardId = 0;
-  views: HTMLElement[] = [];
+  @Output() downloadTracesButtonClick = new EventEmitter<void>();
 
-  constructor(
-    @Inject(ElementRef) private elementRef: ElementRef,
-  ) {}
+  private elementRef: ElementRef;
 
-  ngDoCheck() {
-    if (this.traceCoordinator.getViewers().length > 0 && !this.viewersAdded()) {
-      let cardCounter = 0;
-      this.activeViewerCardId = 0;
-      this.viewerTabs = [];
-      this.traceCoordinator.getViewers().forEach((viewer: Viewer) => {
-        // create tab for viewer nav bar
-        const tab = {
-          label: viewer.getTitle(),
-          cardId: cardCounter,
+  private tabs: Tab[] = [];
+  private currentActiveTab: undefined|Tab;
+
+  constructor(@Inject(ElementRef) elementRef: ElementRef) {
+    this.elementRef = elementRef;
+  }
+
+  ngOnChanges() {
+    this.renderViewsTab();
+    this.renderViewsOverlay();
+  }
+
+  public onTabClick(tab: Tab) {
+    this.showTab(tab);
+  }
+
+  private renderViewsTab() {
+    this.tabs = this.viewers
+      .map(viewer => viewer.getViews())
+      .flat()
+      .filter(view => (view.type === ViewType.TAB))
+      .map(view => {
+        return {
+          type: view.type,
+          htmlElement: view.htmlElement,
+          title: view.title,
+          addedToDom: false
         };
-        this.viewerTabs.push(tab);
-
-        // add properties to view and add view to trace view card
-        const view = viewer.getView();
-        (view as any).store = this.store;
-        view.id = `card-${cardCounter}`;
-        view.style.display = this.isActiveViewerCard(cardCounter) ? "" : "none";
-
-        const traceViewContent = this.elementRef.nativeElement.querySelector(".trace-view-content")!;
-        traceViewContent.appendChild(view);
-        this.views.push(view);
-        cardCounter++;
       });
-    } else if (this.traceCoordinator.getViewers().length === 0  && this.viewersAdded()) {
-      this.activeViewerCardId = 0;
-      this.views.forEach(view => view.remove());
-      this.views = [];
+
+    const traceViewContent = this.elementRef.nativeElement.querySelector(".trace-view-content")!;
+
+    this.tabs.forEach(tab => {
+      // TODO: setting "store" this way is a hack.
+      //       Store should be part of View's interface.
+      (tab.htmlElement as any).store = this.store;
+    });
+
+    if (this.tabs.length > 0) {
+      this.showTab(this.tabs[0]);
     }
   }
 
-  public showViewer(cardId: number) {
-    this.changeViewerVisibility(false);
-    this.activeViewerCardId = cardId;
-    this.changeViewerVisibility(true);
+  private renderViewsOverlay() {
+    const views: View[] = this.viewers
+      .map(viewer => viewer.getViews())
+      .flat()
+      .filter(view => (view.type === ViewType.OVERLAY));
+
+    views.forEach(view => {
+      view.htmlElement.style.pointerEvents = "all";
+      view.htmlElement.style.position = "absolute";
+      view.htmlElement.style.bottom = "10%";
+      view.htmlElement.style.right = "0px";
+
+      const containerOverlay = this.elementRef.nativeElement.querySelector(".container-overlay");
+      if (!containerOverlay) {
+        throw new Error("Failed to find overlay container sub-element");
+      }
+
+      containerOverlay!.appendChild(view.htmlElement);
+    });
   }
 
-  public isCurrentActiveCard(cardId: number) {
-    return this.activeViewerCardId === cardId;
-  }
-
-  public async downloadAllTraces() {
-    const traces = await this.traceCoordinator.getAllTracesForDownload();
-    const zipFileBlob = await FileUtils.createZipArchive(traces);
-    const zipFileName = "winscope.zip";
-    const a = document.createElement("a");
-    document.body.appendChild(a);
-    const url = window.URL.createObjectURL(zipFileBlob);
-    a.href = url;
-    a.download = zipFileName;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-  }
-
-  private viewersAdded() {
-    return this.views.length > 0;
-  }
-
-  private isActiveViewerCard(cardId: number) {
-    return this.activeViewerCardId === cardId;
-  }
-
-  private changeViewerVisibility(show: boolean) {
-    const view = document.querySelector(`#card-${this.activeViewerCardId}`);
-    if (view) {
-      (view as HTMLElement).style.display = show ? "" : "none";
-      (view as any).active = show;
+  private showTab(tab: Tab) {
+    if (this.currentActiveTab) {
+      this.currentActiveTab.htmlElement.style.display = "none";
     }
-  }
-}
 
-interface ViewerTab {
-  label: string,
-  cardId: number
+    if (!tab.addedToDom) {
+      // Workaround for b/255966194:
+      // make sure that the first time a tab content is rendered
+      // (added to the DOM) it has style.display == "". This fixes the
+      // initialization/rendering issues with cdk-virtual-scroll-viewport
+      // components inside the tab contents.
+      const traceViewContent = this.elementRef.nativeElement.querySelector(".trace-view-content")!;
+      traceViewContent.appendChild(tab.htmlElement);
+      tab.addedToDom = true;
+    }
+    else {
+      tab.htmlElement.style.display = "";
+    }
+
+    this.currentActiveTab = tab;
+  }
+
+  private isCurrentActiveTab(tab: Tab) {
+    return tab === this.currentActiveTab;
+  }
 }

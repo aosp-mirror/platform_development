@@ -14,40 +14,36 @@
  * limitations under the License.
  */
 import {TraceType} from "common/trace/trace_type";
-import {Viewer} from "viewers/viewer";
+import {View, Viewer, ViewType} from "viewers/viewer";
 import {Presenter} from "./presenter";
 import {UiData} from "./ui_data";
 import {ViewerEvents} from "viewers/common/viewer_events";
 
 class ViewerSurfaceFlinger implements Viewer {
   constructor() {
-    this.view = document.createElement("viewer-surface-flinger");
+    this.htmlElement = document.createElement("viewer-surface-flinger");
     this.presenter = new Presenter((uiData: UiData) => {
       // Angular does not deep watch @Input properties. Clearing inputData to null before repopulating
       // automatically ensures that the UI will change via the Angular change detection cycle. Without
       // resetting, Angular does not auto-detect that inputData has changed.
-      (this.view as any).inputData = null;
-      (this.view as any).inputData = uiData;
+      (this.htmlElement as any).inputData = null;
+      (this.htmlElement as any).inputData = uiData;
     });
-    this.view.addEventListener(ViewerEvents.HierarchyPinnedChange, (event) => this.presenter.updatePinnedItems(((event as CustomEvent).detail.pinnedItem)));
-    this.view.addEventListener(ViewerEvents.HighlightedChange, (event) => this.presenter.updateHighlightedItems(`${(event as CustomEvent).detail.id}`));
-    this.view.addEventListener(ViewerEvents.HierarchyUserOptionsChange, (event) => this.presenter.updateHierarchyTree((event as CustomEvent).detail.userOptions));
-    this.view.addEventListener(ViewerEvents.HierarchyFilterChange, (event) => this.presenter.filterHierarchyTree((event as CustomEvent).detail.filterString));
-    this.view.addEventListener(ViewerEvents.PropertiesUserOptionsChange, (event) => this.presenter.updatePropertiesTree((event as CustomEvent).detail.userOptions));
-    this.view.addEventListener(ViewerEvents.PropertiesFilterChange, (event) => this.presenter.filterPropertiesTree((event as CustomEvent).detail.filterString));
-    this.view.addEventListener(ViewerEvents.SelectedTreeChange, (event) => this.presenter.newPropertiesTree((event as CustomEvent).detail.selectedItem));
+    this.htmlElement.addEventListener(ViewerEvents.HierarchyPinnedChange, (event) => this.presenter.updatePinnedItems(((event as CustomEvent).detail.pinnedItem)));
+    this.htmlElement.addEventListener(ViewerEvents.HighlightedChange, (event) => this.presenter.updateHighlightedItems(`${(event as CustomEvent).detail.id}`));
+    this.htmlElement.addEventListener(ViewerEvents.HierarchyUserOptionsChange, (event) => this.presenter.updateHierarchyTree((event as CustomEvent).detail.userOptions));
+    this.htmlElement.addEventListener(ViewerEvents.HierarchyFilterChange, (event) => this.presenter.filterHierarchyTree((event as CustomEvent).detail.filterString));
+    this.htmlElement.addEventListener(ViewerEvents.PropertiesUserOptionsChange, (event) => this.presenter.updatePropertiesTree((event as CustomEvent).detail.userOptions));
+    this.htmlElement.addEventListener(ViewerEvents.PropertiesFilterChange, (event) => this.presenter.filterPropertiesTree((event as CustomEvent).detail.filterString));
+    this.htmlElement.addEventListener(ViewerEvents.SelectedTreeChange, (event) => this.presenter.newPropertiesTree((event as CustomEvent).detail.selectedItem));
   }
 
   public notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
     this.presenter.notifyCurrentTraceEntries(entries);
   }
 
-  public getView(): HTMLElement {
-    return this.view;
-  }
-
-  public getTitle(): string {
-    return "Surface Flinger";
+  public getViews(): View[] {
+    return [new View(ViewType.TAB, this.htmlElement, "Surface Flinger")];
   }
 
   public getDependencies(): TraceType[] {
@@ -55,7 +51,7 @@ class ViewerSurfaceFlinger implements Viewer {
   }
 
   public static readonly DEPENDENCIES: TraceType[] = [TraceType.SURFACE_FLINGER];
-  private view: HTMLElement;
+  private htmlElement: HTMLElement;
   private presenter: Presenter;
 }
 
