@@ -198,7 +198,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     console.log("end tracing");
     await this.connect.endTrace();
     while (!setTraces.dataReady) {
-      await this.waitForData(1000);
+      await this.waitForData(100);
     }
     await this.loadFiles();
   }
