@@ -22,6 +22,7 @@ import {ViewerProtoLog} from "./viewer_protolog/viewer_protolog";
 import {ViewerSurfaceFlinger} from "./viewer_surface_flinger/viewer_surface_flinger";
 import {ViewerWindowManager} from "./viewer_window_manager/viewer_window_manager";
 import {ViewerTransactions} from "./viewer_transactions/viewer_transactions";
+import {ViewerScreenRecording} from "./viewer_screen_recording/viewer_screen_recording";
 
 class ViewerFactory {
   static readonly VIEWERS = [
@@ -29,6 +30,7 @@ class ViewerFactory {
     ViewerInputMethodManagerService,
     ViewerInputMethodService,
     ViewerProtoLog,
+    ViewerScreenRecording,
     ViewerSurfaceFlinger,
     ViewerTransactions,
     ViewerWindowManager,

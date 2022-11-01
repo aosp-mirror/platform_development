@@ -20,7 +20,7 @@ import {Parser} from "./parser";
 import {ScreenRecordingTraceEntry} from "common/trace/screen_recording";
 
 class ScreenRecordingMetadataEntry {
-  constructor(public timestampMonotonicNs: bigint, public timestampRealtimeNs: bigint) {
+  constructor(public timestampElapsedNs: bigint, public timestampRealtimeNs: bigint) {
   }
 }
 
@@ -40,15 +40,31 @@ class ParserScreenRecording extends Parser {
   override decodeTrace(videoData: Uint8Array): ScreenRecordingMetadataEntry[] {
     const posVersion = this.searchMagicString(videoData);
     const [posTimeOffset, metadataVersion] = this.parseMetadataVersion(videoData, posVersion);
-    if (metadataVersion !== 1) {
+
+    if (metadataVersion !== 1 && metadataVersion !== 2) {
       throw TypeError(`Metadata version "${metadataVersion}" not supported`);
     }
-    const [posCount, timeOffsetNs] = this.parseRealToMonotonicTimeOffsetNs(videoData, posTimeOffset);
-    const [posTimestamps, count] = this.parseFramesCount(videoData, posCount);
-    const timestampsMonotonicNs = this.parseTimestampsMonotonicNs(videoData, posTimestamps, count);
 
-    return timestampsMonotonicNs.map((timestampMonotonicNs: bigint) => {
-      return new ScreenRecordingMetadataEntry(timestampMonotonicNs, timestampMonotonicNs + timeOffsetNs);
+    if (metadataVersion === 1) {
+      // UI traces contain "elapsed" timestamps (SYSTEM_TIME_BOOTTIME), whereas
+      // metadata Version 1 contains SYSTEM_TIME_MONOTONIC timestamps.
+      //
+      // Here we are pretending that metadata Version 1 contains "elapsed"
+      // timestamps as well, in order to synchronize with the other traces.
+      //
+      // If no device suspensions are involved, SYSTEM_TIME_MONOTONIC should
+      // indeed correspond to SYSTEM_TIME_BOOTTIME and things will work as
+      // expected.
+      console.warn(`Screen recording may not be synchronized with the
+        other traces. Metadata contains monotonic time instead of elapsed.`);
+    }
+
+    const [posCount, timeOffsetNs] = this.parseRealToElapsedTimeOffsetNs(videoData, posTimeOffset);
+    const [posTimestamps, count] = this.parseFramesCount(videoData, posCount);
+    const timestampsElapsedNs = this.parseTimestampsElapsedNs(videoData, posTimestamps, count);
+
+    return timestampsElapsedNs.map((timestampElapsedNs: bigint) => {
+      return new ScreenRecordingMetadataEntry(timestampElapsedNs, timestampElapsedNs + timeOffsetNs);
     });
   }
 
@@ -57,15 +73,7 @@ class ParserScreenRecording extends Parser {
       return undefined;
     }
     if (type === TimestampType.ELAPSED) {
-      // Traces typically contain "elapsed" timestamps (SYSTEM_TIME_BOOTTIME),
-      // whereas screen recordings contain SYSTEM_TIME_MONOTONIC timestamps.
-      //
-      // Here we are pretending that screen recordings contain "elapsed" timestamps
-      // as well, in order to synchronize with the other traces.
-      //
-      // If no device suspensions are involved, SYSTEM_TIME_MONOTONIC should indeed
-      // correspond to SYSTEM_TIME_BOOTTIME and things will work as expected.
-      return new Timestamp(type, decodedEntry.timestampMonotonicNs);
+      return new Timestamp(type, decodedEntry.timestampElapsedNs);
     }
     else if (type === TimestampType.REAL) {
       return new Timestamp(type, decodedEntry.timestampRealtimeNs);
@@ -75,7 +83,7 @@ class ParserScreenRecording extends Parser {
 
   override processDecodedEntry(index: number, entry: ScreenRecordingMetadataEntry): ScreenRecordingTraceEntry {
     const initialTimestampNs = this.getTimestamps(TimestampType.ELAPSED)![0].getValueNs();
-    const currentTimestampNs = entry.timestampMonotonicNs;
+    const currentTimestampNs = entry.timestampElapsedNs;
     const videoTimeSeconds = Number(currentTimestampNs - initialTimestampNs) / 1000000000;
     const videoData = this.trace;
     return new ScreenRecordingTraceEntry(videoTimeSeconds, videoData);
@@ -99,9 +107,9 @@ class ParserScreenRecording extends Parser {
     return [pos, version];
   }
 
-  private parseRealToMonotonicTimeOffsetNs(videoData: Uint8Array, pos: number) : [number, bigint] {
+  private parseRealToElapsedTimeOffsetNs(videoData: Uint8Array, pos: number) : [number, bigint] {
     if (pos + 8 > videoData.length) {
-      throw new TypeError("Failed to parse realtime-to-monotonic time offset. Video data is too short.");
+      throw new TypeError("Failed to parse realtime-to-elapsed time offset. Video data is too short.");
     }
     const offset = ArrayUtils.toIntLittleEndian(videoData, pos, pos+8);
     pos += 8;
@@ -117,9 +125,9 @@ class ParserScreenRecording extends Parser {
     return [pos, count];
   }
 
-  private parseTimestampsMonotonicNs(videoData: Uint8Array, pos: number, count: number) : bigint[] {
-    if (pos + count * 16 > videoData.length) {
-      throw new TypeError("Failed to parse monotonic timestamps. Video data is too short.");
+  private parseTimestampsElapsedNs(videoData: Uint8Array, pos: number, count: number) : bigint[] {
+    if (pos + count * 8 > videoData.length) {
+      throw new TypeError("Failed to parse timestamps. Video data is too short.");
     }
     const timestamps: bigint[] = [];
     for (let i = 0; i < count; ++i) {

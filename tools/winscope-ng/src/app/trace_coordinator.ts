@@ -38,7 +38,6 @@ class TraceCoordinator {
     traces = this.parsers.map(parser => parser.getTrace()).concat(traces);
     let parserErrors: ParserError[];
     [this.parsers, parserErrors] = await new ParserFactory().createParsers(traces);
-    console.log("created parsers: ", this.parsers);
     return parserErrors;
   }
 
