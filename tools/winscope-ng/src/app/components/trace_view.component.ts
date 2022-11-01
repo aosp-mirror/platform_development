@@ -43,6 +43,7 @@ interface Tab extends View {
         (click)="downloadTracesButtonClick.emit()"
       >Download all traces</button>
     </div>
+    <mat-divider></mat-divider>
     <div class="trace-view-content">
     </div>
   `,
@@ -59,11 +60,9 @@ interface Tab extends View {
       }
 
       .header-items-wrapper {
-        width: 100%;
         display: flex;
         flex-direction: row;
         justify-content: space-between;
-        align-items: center;
       }
 
       .tabs-navigation-bar {
@@ -71,12 +70,8 @@ interface Tab extends View {
       }
 
       .trace-view-content {
-        height: 0;
-        flex-grow: 1;
-      }
-
-      .save-button {
         height: 100%;
+        overflow: auto;
       }
     `
   ]

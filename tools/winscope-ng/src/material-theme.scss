@@ -31,14 +31,17 @@ $theme: mat.define-light-theme((
  color: (
    primary: $primary,
    accent: $accent,
- )
+ ),
+ density: 0,
 ));
 
 @include mat.core-theme($theme);
 
 @include mat.button-theme($theme);
+@include mat.button-toggle-theme($theme);
 @include mat.card-theme($theme);
 @include mat.checkbox-theme($theme);
+@include mat.divider-theme($theme);
 @include mat.form-field-theme($theme);
 @include mat.grid-list-theme($theme);
 @include mat.icon-theme($theme);
@@ -51,5 +54,5 @@ $theme: mat.define-light-theme((
 @include mat.slider-theme($theme);
 @include mat.snack-bar-theme($theme);
 @include mat.tabs-theme($theme);
-@include mat.tooltip-theme($theme);
 @include mat.toolbar-theme($theme);
+@include mat.tooltip-theme($theme);

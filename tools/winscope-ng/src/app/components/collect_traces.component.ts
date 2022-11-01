@@ -28,88 +28,131 @@ import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component
 @Component({
   selector: "collect-traces",
   template: `
-    <mat-card-title id="title">Collect Traces</mat-card-title>
-    <mat-card-content>
+    <mat-card class="collect-card">
+      <mat-card-title class="title">Collect Traces</mat-card-title>
 
-      <p *ngIf="connect.isConnectingState()" class="connecting-message mat-body-1">Connecting...</p>
+      <mat-card-content class="collect-card-content">
+        <p *ngIf="connect.isConnectingState()" class="connecting-message mat-body-1">Connecting...</p>
 
-      <div *ngIf="!connect.adbSuccess()" class="set-up-adb">
-        <button id="proxy-tab" color="primary" mat-stroked-button [ngClass]="tabClass(true)" (click)="displayAdbProxyTab()">ADB Proxy</button>
-        <!-- <button id="web-tab" color="primary" mat-raised-button [ngClass]="tabClass(false)" (click)="displayWebAdbTab()">Web ADB</button> -->
-        <adb-proxy *ngIf="isAdbProxy" [(proxy)]="connect.proxy!" (addKey)="onAddKey($event)"></adb-proxy>
-        <!-- <web-adb *ngIf="!isAdbProxy"></web-adb> TODO: fix web adb workflow -->
-      </div>
-
-      <div id="devices-connecting" *ngIf="connect.isDevicesState()">
-        <p class="mat-body-1"> {{ objectKeys(connect.devices()).length > 0 ? "Connected devices:" : "No devices detected" }}</p>
-        <mat-list *ngIf="objectKeys(connect.devices()).length > 0">
-          <mat-list-item *ngFor="let deviceId of objectKeys(connect.devices())" (click)="connect.selectDevice(deviceId)">
-            <mat-icon>
-              {{ connect.devices()[deviceId].authorised ? "smartphone" : "screen_lock_portrait" }}
-            </mat-icon>
-            {{ connect.devices()[deviceId].authorised ? connect.devices()[deviceId].model : "unauthorised" }} ({{ deviceId }})
-          </mat-list-item>
-        </mat-list>
-      </div>
-
-      <div id="trace-collection-config" *ngIf="connect.isStartTraceState()">
-        <mat-list>
-          <mat-list-item>
-            <mat-icon>smartphone</mat-icon>
-            {{ connect.selectedDevice().model }} ({{ connect.selectedDeviceId() }})
-            <button color="primary" class="change-btn" mat-button (click)="connect.resetLastDevice()">Change device</button>
-          </mat-list-item>
-        </mat-list>
-
-        <div class="trace-section">
-          <trace-config [traces]="setTraces.DYNAMIC_TRACES"></trace-config>
-          <button color="primary" mat-stroked-button class="start-btn" (click)="startTracing()">Start trace</button>
+        <div *ngIf="!connect.adbSuccess()" class="set-up-adb">
+          <button class="proxy-tab" color="primary" mat-stroked-button [ngClass]="tabClass(true)" (click)="displayAdbProxyTab()">ADB Proxy</button>
+          <!-- <button class="web-tab" color="primary" mat-raised-button [ngClass]="tabClass(false)" (click)="displayWebAdbTab()">Web ADB</button> -->
+          <adb-proxy *ngIf="isAdbProxy" [(proxy)]="connect.proxy!" (addKey)="onAddKey($event)"></adb-proxy>
+          <!-- <web-adb *ngIf="!isAdbProxy"></web-adb> TODO: fix web adb workflow -->
         </div>
 
-        <div class="dump-section">
-          <h3 class="mat-subheading-2">Dump targets</h3>
-          <div class="selection">
-            <mat-checkbox
-              *ngFor="let dumpKey of objectKeys(setTraces.DUMPS)"
-              color="primary"
-              [(ngModel)]="setTraces.DUMPS[dumpKey].run"
-            >{{setTraces.DUMPS[dumpKey].name}}</mat-checkbox>
+        <div *ngIf="connect.isDevicesState()" class="devices-connecting">
+          <p class="mat-body-1">{{ objectKeys(connect.devices()).length > 0 ? "Connected devices:" : "No devices detected" }}</p>
+          <mat-list *ngIf="objectKeys(connect.devices()).length > 0">
+            <mat-list-item *ngFor="let deviceId of objectKeys(connect.devices())" (click)="connect.selectDevice(deviceId)">
+              <mat-icon matListIcon>
+                {{ connect.devices()[deviceId].authorised ? "smartphone" : "screen_lock_portrait" }}
+              </mat-icon>
+              <p matLine>
+                {{ connect.devices()[deviceId].authorised ? connect.devices()[deviceId].model : "unauthorised" }} ({{ deviceId }})
+              </p>
+            </mat-list-item>
+          </mat-list>
+        </div>
+
+        <div *ngIf="connect.isStartTraceState()" class="trace-collection-config">
+          <mat-list>
+            <mat-list-item>
+              <mat-icon matListIcon>smartphone</mat-icon>
+              <p matLine>
+                {{ connect.selectedDevice().model }} ({{ connect.selectedDeviceId() }})
+
+                <button color="primary" class="change-btn" mat-button (click)="connect.resetLastDevice()">Change device</button>
+              </p>
+            </mat-list-item>
+          </mat-list>
+
+          <div class="trace-section">
+            <trace-config [traces]="setTraces.DYNAMIC_TRACES"></trace-config>
+            <button color="primary" class="start-btn" mat-stroked-button (click)="startTracing()">Start trace</button>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <div class="dump-section">
+            <h3 class="mat-subheading-2">Dump targets</h3>
+            <div class="selection">
+              <mat-checkbox
+                *ngFor="let dumpKey of objectKeys(setTraces.DUMPS)"
+                color="primary"
+                class="dump-checkbox"
+                [(ngModel)]="setTraces.DUMPS[dumpKey].run"
+              >{{setTraces.DUMPS[dumpKey].name}}</mat-checkbox>
+            </div>
             <button color="primary" class="dump-btn" mat-stroked-button (click)="dumpState()">Dump state</button>
           </div>
         </div>
-      </div>
 
-      <div *ngIf="connect.isErrorState()" class="unknown-error">
-        <p class="error-wrapper mat-body-1">
-          <mat-icon>error</mat-icon>
-          Error:
-        </p>
-        <pre> {{ connect.proxy?.errorText }} </pre>
-        <button color="primary" class="retry-btn" mat-raised-button (click)="connect.restart()">Retry</button>
-      </div>
+        <div *ngIf="connect.isErrorState()" class="unknown-error">
+          <p class="error-wrapper mat-body-1">
+            <mat-icon class="error-icon">error</mat-icon>
+            Error:
+          </p>
+          <pre> {{ connect.proxy?.errorText }} </pre>
+          <button color="primary" class="retry-btn" mat-raised-button (click)="connect.restart()">Retry</button>
+        </div>
 
-      <div *ngIf="connect.isEndTraceState()" class="end-tracing">
-        <p class="mat-body-1">Tracing...</p>
-        <mat-progress-bar md-indeterminate value="{{connect.loadProgress}}"></mat-progress-bar>
-        <button color="primary" class="end-btn" mat-raised-button (click)="endTrace()">End trace</button>
-      </div>
+        <div *ngIf="connect.isEndTraceState()" class="end-tracing">
+          <p class="mat-body-1">Tracing...</p>
+          <mat-progress-bar md-indeterminate value="{{connect.loadProgress}}"></mat-progress-bar>
+          <button color="primary" class="end-btn" mat-raised-button (click)="endTrace()">End trace</button>
+        </div>
 
-      <div *ngIf="connect.isLoadDataState()" class="load-data">
-        <p class="mat-body-1">Loading data...</p>
-        <mat-progress-bar md-indeterminate></mat-progress-bar>
-      </div>
+        <div *ngIf="connect.isLoadDataState()" class="load-data">
+          <p class="mat-body-1">Loading data...</p>
+          <mat-progress-bar md-indeterminate></mat-progress-bar>
+        </div>
 
-    </mat-card-content>
+      </mat-card-content>
+    </mat-card>
   `,
   styles: [
     `
-      .change-btn {
+      .change-btn, .retry-btn, .edn-btn {
         margin-left: 5px;
+      }
+      .collect-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+        margin: 10px;
+      }
+      .collect-card-content {
+        overflow: auto;
+      }
+      .selection {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .set-up-adb,
+      .trace-collection-config,
+      .trace-section,
+      .dump-section,
+      .end-tracing,
+      .load-data,
+      trace-config {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .proxy-tab, .web-tab, .start-btn, .dump-btn, .end-btn {
+        align-self: flex-start;
       }
       .error-wrapper {
         display: flex;
         flex-direction: row;
         align-items: center;
+      }
+      .error-icon {
+        margin-right: 5px;
       }
     `
   ]

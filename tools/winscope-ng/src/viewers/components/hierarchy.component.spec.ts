@@ -21,6 +21,7 @@ import { CommonModule } from "@angular/common";
 import { MatInputModule } from "@angular/material/input";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatCheckboxModule } from "@angular/material/checkbox";
+import { MatDividerModule } from "@angular/material/divider";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { HierarchyTreeBuilder } from "test/unit/hierarchy_tree_builder";
 import { TreeComponent } from "viewers/components/tree.component";
@@ -45,9 +46,10 @@ describe("HierarchyComponent", () => {
       ],
       imports: [
         CommonModule,
+        MatCheckboxModule,
+        MatDividerModule,
         MatInputModule,
         MatFormFieldModule,
-        MatCheckboxModule,
         BrowserAnimationsModule
       ],
       schemas: [NO_ERRORS_SCHEMA]

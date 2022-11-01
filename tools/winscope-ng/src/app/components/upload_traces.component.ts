@@ -24,9 +24,10 @@ import { ParserError } from "parsers/parser_factory";
 @Component({
   selector: "upload-traces",
   template: `
-    <mat-card-title id="title">Upload Traces</mat-card-title>
-    <mat-card-content>
-      <div
+    <mat-card class="upload-card">
+      <mat-card-title class="title">Upload Traces</mat-card-title>
+
+      <mat-card-content
         class="drop-box"
         ref="drop-box"
         (dragleave)="onFileDragOut($event)"
@@ -42,52 +43,78 @@ import { ParserError } from "parsers/parser_factory";
           #fileDropRef
           (change)="onInputFile($event)"
         />
+
         <mat-list *ngIf="this.loadedTraces.length > 0" class="uploaded-files">
           <mat-list-item *ngFor="let trace of loadedTraces">
-            <mat-icon>{{TRACE_INFO[trace.type].icon}}</mat-icon>
-            {{trace.name}} ({{TRACE_INFO[trace.type].name}})
-            <button
-              color="primary"
-              mat-icon-button
-              class="close-btn"
-              (click)="onRemoveTrace($event, trace)"
-            ><mat-icon>close</mat-icon>
+            <mat-icon matListIcon>
+              {{TRACE_INFO[trace.type].icon}}
+            </mat-icon>
+
+            <p matLine>
+              {{trace.name}} ({{TRACE_INFO[trace.type].name}})
+            </p>
+
+            <button color="primary" mat-icon-button (click)="onRemoveTrace($event, trace)">
+              <mat-icon>close</mat-icon>
             </button>
           </mat-list-item>
         </mat-list>
-        <p *ngIf="this.loadedTraces.length === 0" class="drop-info mat-body-1">Drag your .winscope file(s) or click to upload</p>
-      </div>
 
-      <div *ngIf="this.loadedTraces.length > 0">
-        <button color="primary" mat-raised-button class="load-btn" (click)="onLoadData()">View traces</button>
-        <button color="primary" mat-stroked-button for="fileDropRef" (click)="fileDropRef.click()">Upload another file</button>
-        <button color="primary" mat-stroked-button (click)="onClearData()">Clear all</button>
+        <div *ngIf="this.loadedTraces.length === 0" class="drop-info">
+          <p class="mat-body-1">
+            Drag your .winscope file(s) or click to upload
+          </p>
+        </div>
+      </mat-card-content>
+
+      <div *ngIf="this.loadedTraces.length > 0" class="trace-actions-container">
+        <button color="primary" mat-raised-button class="load-btn" (click)="onLoadData()">
+          View traces
+        </button>
+
+        <button color="primary" mat-stroked-button for="fileDropRef" (click)="fileDropRef.click()">
+          Upload another file
+        </button>
+
+        <button color="primary" mat-stroked-button (click)="onClearData()">
+          Clear all
+        </button>
       </div>
-    </mat-card-content>
+    </mat-card>
   `,
   styles: [
     `
-      .drop-box {
-        height: 400px;
-        padding: 10px;
+      .upload-card {
+        height: 100%;
         display: flex;
         flex-direction: column;
         overflow: auto;
-        outline: 2px dashed var(--default-border);
-        outline-offset: -10px;
+        margin: 10px;
+      }
+      .drop-box {
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+        border: 2px dashed var(--default-border);
         cursor: pointer;
       }
       .uploaded-files {
-        height: 100%;
-        width: 100%;
-        overflow: auto;
-      }
-      .close-btn {
-        margin-left: auto;
+        flex: 400px;
+        padding: 0;
       }
       .drop-info {
+        flex: 400px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
         pointer-events: none;
-        margin: auto;
+      }
+      .trace-actions-container {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 10px;
       }
     `
   ]

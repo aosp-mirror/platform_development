@@ -17,6 +17,7 @@ import {CommonModule} from "@angular/common";
 import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {MatCardModule} from "@angular/material/card";
+import {MatDividerModule} from "@angular/material/divider";
 import {TraceViewComponent} from "./trace_view.component";
 import {View, Viewer, ViewType} from "viewers/viewer";
 import {content} from "html2canvas/dist/types/css/property-descriptors/content";
@@ -54,7 +55,8 @@ describe("TraceViewComponent", () => {
       declarations: [TraceViewComponent],
       imports: [
         CommonModule,
-        MatCardModule
+        MatCardModule,
+        MatDividerModule
       ],
       schemas: [NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA]
     }).compileComponents();

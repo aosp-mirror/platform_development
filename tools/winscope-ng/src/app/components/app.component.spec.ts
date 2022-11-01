@@ -18,8 +18,9 @@ import {ComponentFixture, TestBed, ComponentFixtureAutoDetect} from "@angular/co
 import { CommonModule } from "@angular/common";
 import { MatCardModule } from "@angular/material/card";
 import { MatButtonModule } from "@angular/material/button";
-import { MatGridListModule } from "@angular/material/grid-list";
+import { MatDividerModule } from "@angular/material/divider";
 import { MatSliderModule } from "@angular/material/slider";
+import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { MatToolbarModule } from "@angular/material/toolbar";
 
 import { AppComponent } from "./app.component";
@@ -45,8 +46,9 @@ describe("AppComponent", () => {
         CommonModule,
         MatCardModule,
         MatButtonModule,
-        MatGridListModule,
+        MatDividerModule,
         MatSliderModule,
+        MatSnackBarModule,
         MatToolbarModule
       ],
       declarations: [
@@ -76,21 +78,24 @@ describe("AppComponent", () => {
   });
 
   it("renders the page title", () => {
-    expect(htmlElement.querySelector("#app-title")?.innerHTML).toContain("Winscope");
+    expect(htmlElement.querySelector(".app-title")?.innerHTML).toContain("Winscope");
   });
 
-  it("displays correct elements when no data loaded", async () => {
+  it("displays correct elements when no data loaded", () => {
     component.dataLoaded = false;
     fixture.detectChanges();
     expect(htmlElement.querySelector(".welcome-info")).toBeTruthy();
-    expect(htmlElement.querySelector("#viewers")).toBeNull();
+    expect(htmlElement.querySelector(".collect-traces-card")).toBeTruthy();
+    expect(htmlElement.querySelector(".upload-traces-card")).toBeTruthy();
+    expect(htmlElement.querySelector(".viewers")).toBeFalsy();
   });
 
-  it("displays correct elements when data loaded", async () => {
+  it("displays correct elements when data loaded", () => {
     component.dataLoaded = true;
     fixture.detectChanges();
-    expect(htmlElement.querySelector("#collect-traces-card")).toBeFalsy();
-    expect(htmlElement.querySelector("#upload-traces-card")).toBeFalsy();
-    expect(htmlElement.querySelector("#viewers")).toBeTruthy();
+    expect(htmlElement.querySelector(".welcome-info")).toBeFalsy();
+    expect(htmlElement.querySelector(".collect-traces-card")).toBeFalsy();
+    expect(htmlElement.querySelector(".upload-traces-card")).toBeFalsy();
+    expect(htmlElement.querySelector(".viewers")).toBeTruthy();
   });
 });

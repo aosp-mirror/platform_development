@@ -111,6 +111,8 @@ import {UiData} from "./ui_data";
         </cdk-virtual-scroll-viewport>
       </div>
 
+      <mat-divider [vertical]="true"></mat-divider>
+
       <div class="container-properties">
         <h3 class="properties-title mat-title">Properties - Proto Dump</h3>
         <tree-view
@@ -127,16 +129,11 @@ import {UiData} from "./ui_data";
         display: flex;
         flex-direction: column;
         padding: 16px;
-        box-sizing: border-box;
-        border-top: 1px solid var(--default-border);
-        border-right: 1px solid var(--default-border);
       }
 
       .container-properties {
         flex: 1;
         padding: 16px;
-        box-sizing: border-box;
-        border-top: 1px solid var(--default-border);
       }
 
       .entries .filters {

@@ -17,8 +17,8 @@ import {ComponentFixture, TestBed} from "@angular/core/testing";
 import { ViewerInputMethodComponent } from "./viewer_input_method.component";
 import { HierarchyComponent } from "viewers/components/hierarchy.component";
 import { PropertiesComponent } from "viewers/components/properties.component";
+import { MatDividerModule } from "@angular/material/divider";
 import { MatIconModule } from "@angular/material/icon";
-import { MatCardModule } from "@angular/material/card";
 import { ComponentFixtureAutoDetect } from "@angular/core/testing";
 import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from "@angular/core";
 
@@ -34,7 +34,7 @@ describe("ViewerInputMethodComponent", () => {
       ],
       imports: [
         MatIconModule,
-        MatCardModule
+        MatDividerModule
       ],
       declarations: [
         ViewerInputMethodComponent,

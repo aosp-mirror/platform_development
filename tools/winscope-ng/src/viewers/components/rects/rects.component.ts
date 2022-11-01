@@ -88,13 +88,19 @@ import { ViewerEvents } from "viewers/common/viewer_events";
         </div>
       </div>
     </div>
+    <mat-divider></mat-divider>
     <div class="rects-content">
       <div class="canvas-container">
         <canvas class="rects-canvas" (click)="onRectClick($event)" oncontextmenu="return false">
         </canvas>
       </div>
-      <div *ngIf="displayIds.length > 1" class="tabs">
-        <button color="primary" mat-raised-button *ngFor="let displayId of displayIds" (click)="changeDisplayId(displayId)">{{displayId}}</button>
+      <div *ngIf="displayIds.length > 1" class="display-button-container">
+        <button
+          *ngFor="let displayId of displayIds"
+          color="primary"
+          mat-raised-button
+          (click)="changeDisplayId(displayId)"
+        >{{displayId}}</button>
       </div>
     </div>
   `,
@@ -103,12 +109,12 @@ import { ViewerEvents } from "viewers/common/viewer_events";
       .view-controls {
         display: flex;
         flex-direction: column;
-        border-bottom: 1px solid var(--default-border);
       }
       .top-view-controls, .slider-view-controls {
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
+        column-gap: 10px;
         align-items: center;
         margin-bottom: 12px;
       }
@@ -126,8 +132,10 @@ import { ViewerEvents } from "viewers/common/viewer_events";
         top: 0;
       }
       .rects-content {
-        height: 0;
-        flex-grow: 1;
+        height: 100%;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
       }
       .canvas-container {
         height: 100%;
@@ -140,6 +148,12 @@ import { ViewerEvents } from "viewers/common/viewer_events";
       }
       .rects-canvas {
         cursor: pointer;
+      }
+      .display-button-container {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        column-gap: 10px;
       }
     `
   ]
