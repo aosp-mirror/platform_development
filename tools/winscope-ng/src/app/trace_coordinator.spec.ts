@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { TraceCoordinator } from "./trace_coordinator";
-import { UnitTestUtils } from "test/unit/utils";
-import { TraceType } from "common/trace/trace_type";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceType} from "common/trace/trace_type";
+import {TraceCoordinator} from "./trace_coordinator";
+import {UnitTestUtils} from "test/unit/utils";
+import {ViewerFactory} from "viewers/viewer_factory";
+import {ViewerStub} from "viewers/viewer_stub";
 
 describe("TraceCoordinator", () => {
   let traceCoordinator: TraceCoordinator;
@@ -24,7 +27,7 @@ describe("TraceCoordinator", () => {
     traceCoordinator = new TraceCoordinator();
   });
 
-  it("adds parsers from recognised traces", async () => {
+  it("processes trace files", async () => {
     expect(traceCoordinator.getParsers().length).toEqual(0);
     const traces = [
       await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/dump_SurfaceFlinger.pb"),
@@ -35,7 +38,7 @@ describe("TraceCoordinator", () => {
     expect(errors.length).toEqual(0);
   });
 
-  it("handles unrecognised file types added", async () => {
+  it("it is robust to invalid trace files", async () => {
     expect(traceCoordinator.getParsers().length).toEqual(0);
     const traces = [
       await UnitTestUtils.getFixtureFile("winscope_homepage.png"),
@@ -45,7 +48,18 @@ describe("TraceCoordinator", () => {
     expect(errors.length).toEqual(1);
   });
 
-  it("handles both recognised and unrecognised file types added", async () => {
+  it("is robust to trace files with no entries", async () => {
+    const traces = [
+      await UnitTestUtils.getFixtureFile(
+        "traces/no_entries_InputMethodClients.pb")
+    ];
+    await traceCoordinator.addTraces(traces);
+
+    const timestamp = new Timestamp(TimestampType.ELAPSED, 0n);
+    traceCoordinator.notifyCurrentTimestamp(timestamp);
+  });
+
+  it("processes mixed valid and invalid trace files", async () => {
     expect(traceCoordinator.getParsers().length).toEqual(0);
     const traces = [
       await UnitTestUtils.getFixtureFile("winscope_homepage.png"),
@@ -77,6 +91,7 @@ describe("TraceCoordinator", () => {
 
     const parser = traceCoordinator.findParser(TraceType.SURFACE_FLINGER);
     expect(parser).toBeTruthy();
+    expect(parser!.getTraceType()).toEqual(TraceType.SURFACE_FLINGER);
   });
 
   it("cannot find parser that does not exist", async () => {
@@ -93,5 +108,41 @@ describe("TraceCoordinator", () => {
     await traceCoordinator.addTraces(traces);
     const timestamps = traceCoordinator.getTimestamps();
     expect(timestamps.length).toEqual(48);
+  });
+
+  it("can create viewers and notify current trace entries", async () => {
+    const viewerStub = new ViewerStub("Title");
+
+    spyOn(ViewerFactory.prototype, "createViewers").and.returnValue([viewerStub]);
+    spyOn(viewerStub, "notifyCurrentTraceEntries");
+
+    const traces = [
+      await UnitTestUtils.getFixtureFile(
+        "traces/elapsed_and_real_timestamp/SurfaceFlinger.pb"),
+      await UnitTestUtils.getFixtureFile(
+        "traces/elapsed_and_real_timestamp/WindowManager.pb"),
+      // trace file with no entries for some more robustness checks
+      await UnitTestUtils.getFixtureFile(
+        "traces/no_entries_InputMethodClients.pb")
+    ];
+    await traceCoordinator.addTraces(traces);
+
+    // create viewers (mocked factory)
+    expect(traceCoordinator.getViewers()).toEqual([]);
+    traceCoordinator.createViewers();
+    expect(traceCoordinator.getViewers()).toEqual([viewerStub]);
+
+    // notify invalid timestamp
+    traceCoordinator.notifyCurrentTimestamp(undefined);
+    expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(0);
+
+    // notify timestamp
+    const timestamp = new Timestamp(TimestampType.ELAPSED, 14500282843n);
+    traceCoordinator.notifyCurrentTimestamp(timestamp);
+    expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(1);
+
+    // notify timestamp again
+    traceCoordinator.notifyCurrentTimestamp(timestamp);
+    expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(2);
   });
 });

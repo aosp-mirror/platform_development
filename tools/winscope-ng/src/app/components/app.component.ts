@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Injector, Inject, ViewEncapsulation, Input } from "@angular/core";
+import {Component, Injector, Inject, ViewEncapsulation, Input, ChangeDetectorRef} from "@angular/core";
 import { createCustomElement } from "@angular/elements";
 import { MatSliderChange } from "@angular/material/slider";
 import { TraceCoordinator } from "app/trace_coordinator";
@@ -36,7 +36,7 @@ import { ViewerScreenRecordingComponent } from "viewers/viewer_screen_recording/
       <p id="app-title" class="mat-display-1">Winscope</p>
       <span class="toolbar-wrapper">
         <button *ngIf="dataLoaded" color="primary" mat-stroked-button (click)="toggleTimestamp()">Start/End Timestamp</button>
-        <button *ngIf="dataLoaded" color="primary" mat-stroked-button (click)="clearData()">Upload New</button>
+        <button *ngIf="dataLoaded" color="primary" mat-stroked-button (click)="onUploadNewClick()">Upload New</button>
       </span>
     </mat-toolbar>
 
@@ -127,6 +127,7 @@ import { ViewerScreenRecordingComponent } from "viewers/viewer_screen_recording/
 })
 export class AppComponent {
   title = "winscope-ng";
+  changeDetectorRef: ChangeDetectorRef;
   traceCoordinator: TraceCoordinator;
   states = ProxyState;
   store: PersistentStore = new PersistentStore();
@@ -137,8 +138,10 @@ export class AppComponent {
   @Input() dataLoaded = false;
 
   constructor(
-    @Inject(Injector) injector: Injector
+    @Inject(Injector) injector: Injector,
+    @Inject(ChangeDetectorRef) changeDetectorRef: ChangeDetectorRef
   ) {
+    this.changeDetectorRef = changeDetectorRef;
     this.traceCoordinator = new TraceCoordinator();
 
     if (!customElements.get("viewer-input-method")) {
@@ -183,10 +186,11 @@ export class AppComponent {
     this.notifyCurrentTimestamp();
   }
 
-  public clearData() {
+  public onUploadNewClick() {
     this.dataLoaded = false;
     this.traceCoordinator.clearData();
     proxyClient.adbData = [];
+    this.changeDetectorRef.detectChanges();
   }
 
   public onDataLoadedChange(dataLoaded: boolean) {
@@ -197,6 +201,7 @@ export class AppComponent {
       this.currentTimestampIndex = 0;
       this.notifyCurrentTimestamp();
       this.dataLoaded = dataLoaded;
+      this.changeDetectorRef.detectChanges();
     }
   }
 

@@ -17,26 +17,17 @@ import { TraceType } from "common/trace/trace_type";
 import { HierarchyTreeBuilder } from "test/unit/hierarchy_tree_builder";
 import { PresenterInputMethodClients } from "./presenter_input_method_clients";
 import { executePresenterInputMethodTests } from "viewers/common/presenter_input_method_test_utils";
-import { UnitTestUtils } from "test/unit/utils";
 
 describe("PresenterInputMethodClients", () => {
-  async function getEntry() {
-    return await UnitTestUtils.getInputMethodClientsEntry();
-  }
-
   describe("PresenterInputMethod tests:", () => {
-    const selectedTree = new HierarchyTreeBuilder().setName("8m23s29ms - InputMethodManager#showSoftInput")
-      .setFilteredView(true).setKind("InputMethodClient entry").setId("entry").setStableId("entry")
-      .setChildren([
-        new HierarchyTreeBuilder().setKind("Client").setId("client").setFilteredView(true)
-          .setStableId("client").build()
-      ]).build();
+    const selectedTree = new HierarchyTreeBuilder()
+      .setId("entry").setStableId("entry").build();
 
     executePresenterInputMethodTests(
-      getEntry,
       selectedTree,
       "elapsed",
-      [3, 1],
+      [2, 1],
+      true,
       PresenterInputMethodClients,
       TraceType.INPUT_METHOD_CLIENTS,
     );

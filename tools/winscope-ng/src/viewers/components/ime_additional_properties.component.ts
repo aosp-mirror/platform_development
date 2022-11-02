@@ -195,7 +195,7 @@ import { ViewerEvents } from "viewers/common/viewer_events";
             <p *ngIf="additionalProperties.sf" class="mat-body-1">
               <span class="mat-body-2">Focused Window Color:</span>
               &ngsp;
-              {{ additionalProperties.sf.focusedWindow.color }}
+              {{ additionalProperties.sf.focusedWindow?.color }}
             </p>
             <p class="mat-body-2">Input Control Target Frame:</p>
             <coordinates-table [coordinates]="wmControlTargetFrameOrNull()"></coordinates-table>
