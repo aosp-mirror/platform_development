@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {ArrayUtils} from "common/utils/array_utils";
 import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
 import {Parser} from "parsers/parser";
@@ -21,7 +22,6 @@ import { setTraces } from "trace_collection/set_traces";
 import { Viewer } from "viewers/viewer";
 import { ViewerFactory } from "viewers/viewer_factory";
 import { LoadedTrace } from "app/loaded_trace";
-import { TimestampUtils } from "common/trace/timestamp_utils";
 import { FileUtils } from "common/utils/file_utils";
 import { TRACE_INFO } from "app/trace_info";
 
@@ -98,7 +98,11 @@ class TraceCoordinator {
     throw new Error("Failed to create aggregated timestamps (any type)");
   }
 
-  public notifyCurrentTimestamp(timestamp: Timestamp) {
+  public notifyCurrentTimestamp(timestamp: Timestamp|undefined) {
+    if (!timestamp) {
+      return;
+    }
+
     const traceEntries: Map<TraceType, any> = new Map<TraceType, any>();
 
     this.parsers.forEach(parser => {
@@ -107,17 +111,18 @@ class TraceCoordinator {
       let prevEntry = null;
 
       const parserTimestamps = parser.getTimestamps(timestamp.getType());
-      if (parserTimestamps) {
-        const closestIndex = TimestampUtils.getClosestIndex(targetTimestamp, parserTimestamps);
-        if (closestIndex) {
-          prevEntry = parser.getTraceEntry(parserTimestamps[closestIndex-1]) ?? null;
-        }
+      if (parserTimestamps === undefined) {
+        throw new Error(`Unexpected timestamp type ${timestamp.getType()}.`
+          + ` Not supported by parser for trace type: ${parser.getTraceType()}`);
       }
+
+      const index = ArrayUtils.binarySearchLowerOrEqual(parserTimestamps, targetTimestamp);
+      if (index !== undefined && index > 0) {
+        prevEntry = parser.getTraceEntry(parserTimestamps[index-1]);
+      }
+
       if (entry !== undefined) {
         traceEntries.set(parser.getTraceType(), [entry, prevEntry]);
-      } else if (parserTimestamps) {
-        const firstEntry = parser.getTraceEntry(parserTimestamps[0]);
-        traceEntries.set(parser.getTraceType(), [firstEntry, prevEntry]);
       }
     });
 

@@ -13,21 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.d
  */
-import { ImeUiData } from "viewers/common/ime_ui_data";
-import { UserOptions } from "viewers/common/user_options";
-import { TraceType } from "common/trace/trace_type";
-import { HierarchyTreeNode, PropertiesTreeNode } from "viewers/common/ui_tree_utils";
-import { HierarchyTreeBuilder } from "test/unit/hierarchy_tree_builder";
-import { PresenterInputMethod } from "./presenter_input_method";
-import { PresenterInputMethodClients } from "viewers/viewer_input_method_clients/presenter_input_method_clients";
-import { PresenterInputMethodService } from "viewers/viewer_input_method_service/presenter_input_method_service";
-import { PresenterInputMethodManagerService } from "viewers/viewer_input_method_manager_service/presenter_input_method_manager_service";
+
+import {TraceType} from "common/trace/trace_type";
+import {PresenterInputMethod} from "./presenter_input_method";
+import {HierarchyTreeBuilder} from "test/unit/hierarchy_tree_builder";
+import {UnitTestUtils} from "test/unit/utils";
+import {ImeUiData} from "viewers/common/ime_ui_data";
+import {HierarchyTreeNode, PropertiesTreeNode} from "viewers/common/ui_tree_utils";
+import {UserOptions} from "viewers/common/user_options";
+import {PresenterInputMethodClients} from "viewers/viewer_input_method_clients/presenter_input_method_clients";
+import {PresenterInputMethodService} from "viewers/viewer_input_method_service/presenter_input_method_service";
+import {PresenterInputMethodManagerService} from "viewers/viewer_input_method_manager_service/presenter_input_method_manager_service";
 
 export function executePresenterInputMethodTests(
-  getEntry: () => any,
   selected: HierarchyTreeNode,
   propertiesTreeFilterString: string,
   expectedChildren: [number, number],
+  expectHierarchyTreeWithSfSubtree: boolean,
   PresenterInputMethod: typeof PresenterInputMethodClients | typeof PresenterInputMethodService | typeof PresenterInputMethodManagerService,
   traceType: TraceType,
 ) {
@@ -37,14 +39,9 @@ export function executePresenterInputMethodTests(
     let entries: Map<TraceType, any>;
     let selectedTree: HierarchyTreeNode;
 
-    beforeAll(async () => {
-      const entry = await getEntry();
-      entries = new Map<TraceType, any>();
-      entries.set(traceType, [entry, null]);
-      selectedTree = selected;
-    });
-
     beforeEach(async () => {
+      entries = await UnitTestUtils.getImeTraceEntries();
+      selectedTree = selected;
       presenter = new PresenterInputMethod((newData: ImeUiData) => {
         uiData = newData;
       }, [traceType]);
@@ -54,8 +51,31 @@ export function executePresenterInputMethodTests(
       presenter.notifyCurrentTraceEntries(entries);
       expect(uiData.hierarchyUserOptions).toBeTruthy();
       expect(uiData.propertiesUserOptions).toBeTruthy();
+      expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
+    });
 
-      // does not check specific tree values as tree generation method may change
+    it("is robust to trace entry without SF", () => {
+      entries.delete(TraceType.SURFACE_FLINGER);
+      presenter.notifyCurrentTraceEntries(entries);
+      expect(uiData.hierarchyUserOptions).toBeTruthy();
+      expect(uiData.propertiesUserOptions).toBeTruthy();
+      expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
+    });
+
+    it("is robust to trace entry without WM", () => {
+      entries.delete(TraceType.WINDOW_MANAGER);
+      presenter.notifyCurrentTraceEntries(entries);
+      expect(uiData.hierarchyUserOptions).toBeTruthy();
+      expect(uiData.propertiesUserOptions).toBeTruthy();
+      expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
+    });
+
+    it("is robust to trace entry without WM and SF", () => {
+      entries.delete(TraceType.SURFACE_FLINGER);
+      entries.delete(TraceType.WINDOW_MANAGER);
+      presenter.notifyCurrentTraceEntries(entries);
+      expect(uiData.hierarchyUserOptions).toBeTruthy();
+      expect(uiData.propertiesUserOptions).toBeTruthy();
       expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
     });
 
@@ -99,13 +119,15 @@ export function executePresenterInputMethodTests(
         }
       };
 
+      let expectedChildren = expectHierarchyTreeWithSfSubtree ? 2 : 1;
       presenter.notifyCurrentTraceEntries(entries);
-      expect(uiData.tree?.children.length).toEqual(1);
+      expect(uiData.tree?.children.length).toEqual(expectedChildren);
 
+      // Filter out non-visible child
+      expectedChildren = expectHierarchyTreeWithSfSubtree ? 1 : 0;
       presenter.updateHierarchyTree(userOptions);
       expect(uiData.hierarchyUserOptions).toEqual(userOptions);
-      // non visible child filtered out
-      expect(uiData.tree?.children.length).toEqual(0);
+      expect(uiData.tree?.children.length).toEqual(expectedChildren);
     });
 
     it("can filter hierarchy tree", () => {
@@ -123,11 +145,14 @@ export function executePresenterInputMethodTests(
           enabled: true
         }
       };
+
+      const expectedChildren = expectHierarchyTreeWithSfSubtree ? 12 : 1;
       presenter.notifyCurrentTraceEntries(entries);
       presenter.updateHierarchyTree(userOptions);
-      expect(uiData.tree?.children.length).toEqual(1);
+      expect(uiData.tree?.children.length).toEqual(expectedChildren);
+
+      // Filter out all children
       presenter.filterHierarchyTree("Reject all");
-      // All children should be filtered out
       expect(uiData.tree?.children.length).toEqual(0);
     });
 

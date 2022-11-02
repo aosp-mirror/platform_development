@@ -33,7 +33,16 @@ class ParserWindowManagerDump extends Parser {
   }
 
   override decodeTrace(buffer: Uint8Array): any[] {
-    return [WindowManagerServiceDumpProto.decode(buffer)];
+    const entryProto = WindowManagerServiceDumpProto.decode(buffer);
+
+    // This parser is prone to accepting invalid inputs because it lacks a magic
+    // number. Let's reduce the chances of accepting invalid inputs by making
+    // sure that a trace entry can actually be created from the decoded proto.
+    // If the trace entry creation fails, an exception is thrown and the parser
+    // will be considered unsuited for this input data.
+    this.processDecodedEntry(0, entryProto);
+
+    return [entryProto];
   }
 
   override getTimestamp(type: TimestampType, entryProto: any): undefined|Timestamp {

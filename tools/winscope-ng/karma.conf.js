@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const glob = require("glob");
-
 let webpackConfig = require("./webpack.config.common");
 delete webpackConfig.entry;
 delete webpackConfig.output;

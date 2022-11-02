@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Parser } from "parsers/parser";
-import { ParserFactory } from "parsers/parser_factory";
-import { CommonTestUtils } from "test/common/utils";
+import {Parser} from "parsers/parser";
+import {ParserFactory} from "parsers/parser_factory";
+import {CommonTestUtils} from "test/common/utils";
 import {
   LayerTraceEntry,
-  WindowManagerState,
+  WindowManagerState
 } from "common/trace/flickerlib/common";
-import { TimestampType } from "common/trace/timestamp";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceType} from "common/trace/trace_type";
 
 class UnitTestUtils extends CommonTestUtils {
   static async getParser(filename: string): Promise<Parser> {
@@ -38,16 +39,34 @@ class UnitTestUtils extends CommonTestUtils {
     return await this.getTraceEntry("traces/elapsed_timestamp/SurfaceFlinger.pb");
   }
 
-  static async getInputMethodClientsEntry(): Promise<LayerTraceEntry> {
-    return await this.getTraceEntry("traces/elapsed_timestamp/InputMethodClients.pb");
-  }
+  static async getImeTraceEntries(): Promise<Map<TraceType, any>> {
+    let surfaceFlingerEntry: LayerTraceEntry|undefined;
+    {
+      const parser = await UnitTestUtils.getParser("traces/ime/SurfaceFlinger_with_IME.pb");
+      const timestamp = new Timestamp(TimestampType.ELAPSED, 502942319579n);
+      surfaceFlingerEntry = await parser.getTraceEntry(timestamp);
+    }
 
-  static async getInputMethodServiceEntry(): Promise<LayerTraceEntry> {
-    return await this.getTraceEntry("traces/elapsed_timestamp/InputMethodService.pb");
-  }
+    let windowManagerEntry: WindowManagerState|undefined;
+    {
+      const parser = await UnitTestUtils.getParser("traces/ime/WindowManager_with_IME.pb");
+      const timestamp = new Timestamp(TimestampType.ELAPSED, 502938057652n);
+      windowManagerEntry = await parser.getTraceEntry(timestamp)!;
+    }
 
-  static async getInputMethodManagerServiceEntry(): Promise<LayerTraceEntry> {
-    return await this.getTraceEntry("traces/elapsed_timestamp/InputMethodManagerService.pb");
+    const entries = new Map<TraceType, any>();
+    entries.set(TraceType.INPUT_METHOD_CLIENTS,
+      [await this.getTraceEntry("traces/ime/InputMethodClients.pb"), null]);
+    entries.set(TraceType.INPUT_METHOD_MANAGER_SERVICE,
+      [await this.getTraceEntry("traces/ime/InputMethodManagerService.pb"), null]);
+    entries.set(TraceType.INPUT_METHOD_SERVICE,
+      [await this.getTraceEntry("traces/ime/InputMethodService.pb"), null]);
+    entries.set(TraceType.SURFACE_FLINGER,
+      [surfaceFlingerEntry, null]);
+    entries.set(TraceType.WINDOW_MANAGER,
+      [windowManagerEntry, null]);
+
+    return entries;
   }
 
   private static async getTraceEntry(filename: string) {

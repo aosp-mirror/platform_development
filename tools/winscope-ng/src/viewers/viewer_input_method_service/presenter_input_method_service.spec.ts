@@ -20,19 +20,15 @@ import { executePresenterInputMethodTests } from "viewers/common/presenter_input
 import { UnitTestUtils } from "test/unit/utils";
 
 describe("PresenterInputMethodService", () => {
-  async function getEntry() {
-    return await UnitTestUtils.getInputMethodServiceEntry();
-  }
-
   describe("PresenterInputMethod tests:", () => {
-    const selectedTree = new HierarchyTreeBuilder().setKind("InputMethodService")
-      .setId("service").setFilteredView(true).setStableId("service").build();
+    const selectedTree = new HierarchyTreeBuilder()
+      .setId("service").setStableId("service").build();
 
     executePresenterInputMethodTests(
-      getEntry,
       selectedTree,
       "visib",
       [13, 3],
+      true,
       PresenterInputMethodService,
       TraceType.INPUT_METHOD_SERVICE,
     );

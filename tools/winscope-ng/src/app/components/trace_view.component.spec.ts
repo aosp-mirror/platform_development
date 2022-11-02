@@ -18,31 +18,7 @@ import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from "@angular/core";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {MatCardModule} from "@angular/material/card";
 import {TraceViewComponent} from "./trace_view.component";
-import {View, Viewer, ViewType} from "viewers/viewer";
-import {content} from "html2canvas/dist/types/css/property-descriptors/content";
-
-class FakeViewer implements Viewer {
-  constructor(title: string, content: string) {
-    this.title = title;
-    this.htmlElement = document.createElement("div");
-    this.htmlElement.innerText = content;
-  }
-
-  notifyCurrentTraceEntries(entries: any) {
-    // do nothing
-  }
-
-  getViews(): View[] {
-    return [new View(ViewType.TAB, this.htmlElement, this.title)];
-  }
-
-  getDependencies(): any[] {
-    return [];
-  }
-
-  private htmlElement: HTMLElement;
-  private title: string;
-}
+import {ViewerStub} from "viewers/viewer_stub";
 
 describe("TraceViewComponent", () => {
   let fixture: ComponentFixture<TraceViewComponent>;
@@ -62,8 +38,8 @@ describe("TraceViewComponent", () => {
     htmlElement = fixture.nativeElement;
     component = fixture.componentInstance;
     component.viewers = [
-      new FakeViewer("Title0", "Content0"),
-      new FakeViewer("Title1", "Content1")
+      new ViewerStub("Title0", "Content0"),
+      new ViewerStub("Title1", "Content1")
     ];
     component.ngOnChanges();
     fixture.detectChanges();
