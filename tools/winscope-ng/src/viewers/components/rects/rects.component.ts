@@ -91,8 +91,10 @@ import { ViewerEvents } from "viewers/common/viewer_events";
     <mat-divider></mat-divider>
     <div class="rects-content">
       <div class="canvas-container">
-        <canvas class="rects-canvas" (click)="onRectClick($event)" oncontextmenu="return false">
+        <canvas class="canvas-rects" (click)="onRectClick($event)" oncontextmenu="return false">
         </canvas>
+        <div class="canvas-labels">
+        </div>
       </div>
       <div *ngIf="displayIds.length > 1" class="display-button-container">
         <button
@@ -142,11 +144,9 @@ import { ViewerEvents } from "viewers/common/viewer_events";
         width: 100%;
         position: relative;
       }
-      .labels-canvas, .rects-canvas {
+      .canvas-rects {
         position: absolute;
         top: 0;
-      }
-      .rects-canvas {
         cursor: pointer;
       }
       .display-button-container {
@@ -154,6 +154,13 @@ import { ViewerEvents } from "viewers/common/viewer_events";
         flex-direction: row;
         flex-wrap: wrap;
         column-gap: 10px;
+      }
+      .canvas-labels {
+        position: absolute;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
       }
     `
   ]
@@ -165,19 +172,21 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
   @Input() hasVirtualDisplays = false;
   @Input() displayIds: Array<number> = [];
   @Input() highlightedItems: Array<string> = [];
-  canvasInitialised = false;
   rectsComponentInitialised = false;
 
   constructor(
     @Inject(ElementRef) private elementRef: ElementRef,
   ) {
-    this.canvasGraphics = new CanvasGraphics();
     this.currentDisplayId = this.displayIds[0] ?? 0; // default stack id is usually zero
   }
 
   ngOnInit() {
-    this.canvas = this.elementRef.nativeElement.querySelector("canvas")! as HTMLCanvasElement;
     this.canvasContainer = this.elementRef.nativeElement.querySelector(".canvas-container")!;
+    this.canvasRects =
+      this.elementRef.nativeElement.querySelector(".canvas-rects")! as HTMLCanvasElement;
+    this.canvasLabels = this.elementRef.nativeElement.querySelector(".canvas-labels")!;
+
+    this.canvasGraphics = new CanvasGraphics(this.canvasRects, this.canvasLabels);
 
     window.addEventListener("resize", () => this.refreshCanvas());
     this.addContainerResizeListener();
@@ -200,7 +209,7 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
       }
     }
     if (changes["highlightedItems"]) {
-      this.canvasGraphics.updateHighlightedItems(this.highlightedItems);
+      this.canvasGraphics!.updateHighlightedItems(this.highlightedItems);
     }
     if (this.rects.length > 0 || changes["forceRefresh"]?.currentValue) {
       this.formatAndDrawRects(changes["rects"] !== undefined);
@@ -213,49 +222,49 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   public onChangeView(visible: boolean) {
-    this.canvasGraphics.updateVisibleView(visible);
+    this.canvasGraphics!.updateVisibleView(visible);
     this.refreshCanvas();
   }
 
   public visibleView() {
-    return this.canvasGraphics.getVisibleView();
+    return this.canvasGraphics!.getVisibleView();
   }
 
   public getLayerSeparation() {
-    return this.canvasGraphics.getLayerSeparation();
+    return this.canvasGraphics!.getLayerSeparation();
   }
 
   public updateLayerSeparation(sep: number) {
-    this.canvasGraphics.updateLayerSeparation(sep);
+    this.canvasGraphics!.updateLayerSeparation(sep);
     this.refreshCanvas();
   }
 
   public updateRotation(rot: number) {
-    this.canvasGraphics.updateRotation(rot);
+    this.canvasGraphics!.updateRotation(rot);
     this.refreshCanvas();
   }
 
   public resetCamera() {
-    this.canvasGraphics.resetCamera();
+    this.canvasGraphics!.resetCamera();
     this.refreshCanvas();
   }
 
   public updateZoom(zoom: boolean) {
-    this.canvasGraphics.updateZoom(zoom);
+    this.canvasGraphics!.updateZoom(zoom);
     this.refreshCanvas();
   }
 
   public updateVirtualDisplays(show: boolean) {
-    this.canvasGraphics.updateVirtualDisplays(show);
+    this.canvasGraphics!.updateVirtualDisplays(show);
     this.refreshCanvas();
   }
 
   public xCameraPos() {
-    return this.canvasGraphics.getXCameraPos();
+    return this.canvasGraphics!.getXCameraPos();
   }
 
   public showVirtualDisplays() {
-    return this.canvasGraphics.getShowVirtualDisplays();
+    return this.canvasGraphics!.getShowVirtualDisplays();
   }
 
   public changeDisplayId(displayId: number) {
@@ -266,9 +275,9 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
   public onRectClick(event: MouseEvent) {
     this.setNormalisedMousePos(event);
     const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(this.mouse, this.canvasGraphics.getCamera());
+    raycaster.setFromCamera(this.mouse, this.canvasGraphics!.getCamera());
     // create an array containing all objects in the scene with which the ray intersects
-    const intersects = raycaster.intersectObjects(this.canvasGraphics.getTargetObjects());
+    const intersects = raycaster.intersectObjects(this.canvasGraphics!.getTargetObjects());
     // if there is one (or more) intersections
     if (intersects.length > 0) {
       const id = intersects[0].object.name;
@@ -277,11 +286,8 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   public drawRects() {
-    if (!this.canvasContainer || !this.canvas) {
+    if (!this.canvasContainer || !this.canvasRects) {
       return;
-    } else if (!this.canvasInitialised) {
-      this.canvasGraphics.initialiseCanvas(this.canvas, this.canvasContainer);
-      this.canvasInitialised = true;
     }
     this.refreshCanvas();
   }
@@ -338,14 +344,14 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
 
   public refreshCanvas() {
     this.updateVariablesBeforeRefresh();
-    this.canvasGraphics.refreshCanvas();
+    this.canvasGraphics!.refreshCanvas();
   }
 
   private updateVariablesBeforeRefresh() {
     const rects = this.rects.filter(rect => rect.displayId === this.currentDisplayId);
-    this.canvasGraphics.updateRects(rects);
+    this.canvasGraphics!.updateRects(rects);
     const biggestX = Math.max(...this.rects.map(rect => rect.topLeft.x + rect.width/2));
-    this.canvasGraphics.updateIsLandscape(biggestX > this.s({x: this.boundsWidth, y:this.boundsHeight}).x/2);
+    this.canvasGraphics!.updateIsLandscape(biggestX > this.s({x: this.boundsWidth, y:this.boundsHeight}).x/2);
   }
 
   private computeBounds(): any {
@@ -382,9 +388,9 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
   private s(sourceCoordinates: Point): Point {
     let scale;
     if (this.boundsWidth < this.boundsHeight) {
-      scale = this.canvasGraphics.CAMERA_HALF_HEIGHT * 2 * 0.6 / this.boundsHeight;
+      scale = this.canvasGraphics!.CAMERA_HALF_HEIGHT * 2 * 0.6 / this.boundsHeight;
     } else {
-      scale = this.canvasGraphics.CAMERA_HALF_WIDTH * 2 * 0.6 / this.boundsWidth;
+      scale = this.canvasGraphics!.CAMERA_HALF_WIDTH * 2 * 0.6 / this.boundsWidth;
     }
     return {
       x: sourceCoordinates.x * scale,
@@ -406,14 +412,14 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
 
   private addContainerResizeListener() {
     this.resizeObserver = new ResizeObserver((entries) => {
-      if (entries[0].contentRect.height > 0 && this.canvasInitialised) {
+      if (entries[0].contentRect.height > 0) {
         this.refreshCanvas();
       }
     });
     this.resizeObserver.observe(this.canvasContainer!);
   }
 
-  private canvasGraphics: CanvasGraphics;
+  private canvasGraphics?: CanvasGraphics;
   private boundsWidth = 0;
   private boundsHeight = 0;
   private displayRects!: Rectangle[];
@@ -421,5 +427,6 @@ export class RectsComponent implements OnInit, OnChanges, OnDestroy {
   private currentDisplayId: number;
   private resizeObserver!: ResizeObserver;
   private canvasContainer!: Element;
-  private canvas!: HTMLCanvasElement;
+  private canvasRects!: HTMLCanvasElement;
+  private canvasLabels!: HTMLElement;
 }
