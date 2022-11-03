@@ -49,14 +49,14 @@ describe("ViewerScreenRecordingComponent", () => {
     const video = htmlElement.querySelector("video");
     expect(buttonMinimize).toBeTruthy();
     expect(video).toBeTruthy();
-    expect(video!.style.visibility).toEqual("visible");
+    expect(video!.style.height).toEqual("");
 
     buttonMinimize!.dispatchEvent(new Event("click"));
     fixture.detectChanges();
-    expect(video!.style.visibility).toEqual("hidden");
+    expect(video!.style.height).toEqual("0px");
 
     buttonMinimize!.dispatchEvent(new Event("click"));
     fixture.detectChanges();
-    expect(video!.style.visibility).toEqual("visible");
+    expect(video!.style.height).toEqual("");
   });
 });
