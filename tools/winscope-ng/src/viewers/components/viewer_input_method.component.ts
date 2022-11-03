@@ -37,12 +37,19 @@ import { ImeUiData } from "viewers/common/ime_ui_data";
             [store]="store"
             [userOptions]="inputData?.hierarchyUserOptions ?? {}"
           ></hierarchy-view>
-          <ime-additional-properties
-            *ngIf="inputData?.additionalProperties"
-            class="ime-additional-properties-view"
-            [additionalProperties]="inputData?.additionalProperties!"
-          ></ime-additional-properties>
+
+          <ng-container *ngIf="inputData?.additionalProperties">
+            <mat-divider></mat-divider>
+
+            <ime-additional-properties
+              class="ime-additional-properties"
+              [additionalProperties]="inputData?.additionalProperties!"
+            ></ime-additional-properties>
+          </ng-container>
         </div>
+
+        <mat-divider [vertical]="true"></mat-divider>
+
         <properties-view
           class="properties-view"
           [userOptions]="inputData?.propertiesUserOptions ?? {}"
@@ -58,19 +65,12 @@ import { ImeUiData } from "viewers/common/ime_ui_data";
         flex-direction: column;
       }
 
-      .hierarchy-view, .ime-additional-properties-view {
+      .hierarchy-view, .ime-additional-properties, .properties-view {
         flex: 1;
         padding: 16px;
         display: flex;
         flex-direction: column;
-        border-top: 1px solid var(--default-border);
-        border-right: 1px solid var(--default-border);
-      }
-
-      .properties-view {
-        flex: 1;
-        padding: 16px;
-        border-top: 1px solid var(--default-border);
+        overflow: auto;
       }
     `,
   ]

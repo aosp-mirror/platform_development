@@ -16,6 +16,7 @@
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import { PropertyGroupsComponent } from "./property_groups.component";
 import { ComponentFixtureAutoDetect } from "@angular/core/testing";
+import { MatDividerModule } from "@angular/material/divider";
 import { TransformMatrixComponent } from "./transform_matrix.component";
 
 describe("PropertyGroupsComponent", () => {
@@ -25,6 +26,9 @@ describe("PropertyGroupsComponent", () => {
 
   beforeAll(async () => {
     await TestBed.configureTestingModule({
+      imports: [
+        MatDividerModule
+      ],
       providers: [
         { provide: ComponentFixtureAutoDetect, useValue: true }
       ],

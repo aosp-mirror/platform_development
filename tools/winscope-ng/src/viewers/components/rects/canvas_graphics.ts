@@ -304,7 +304,7 @@ export class CanvasGraphics {
     const circleMesh = this.makeLabelCircleMesh(rectMesh, rect);
     this.scene?.add(circleMesh);
 
-    const isGrey = !this.visibleView && !rect.isVisible;
+    const isGray = !this.visibleView && !rect.isVisible;
 
     let lineEndPos;
     const labelYSeparation = 0.5;
@@ -320,14 +320,14 @@ export class CanvasGraphics {
 
     const linePoints = [circleMesh.position, lineEndPos];
     const lineGeo = new THREE.BufferGeometry().setFromPoints(linePoints);
-    const lineMaterial = new THREE.LineBasicMaterial({ color: isGrey ? 0x808080 : 0x000000 });
+    const lineMaterial = new THREE.LineBasicMaterial({ color: isGray ? 0x808080 : 0x000000 });
     const line = new THREE.Line(lineGeo, lineMaterial);
     this.scene?.add(line);
 
-    this.drawLabelTextHtml(lineEndPos, rect, isGrey);
+    this.drawLabelTextHtml(lineEndPos, rect, isGray);
   }
 
-  private drawLabelTextHtml(position: THREE.Vector3, rect: Rectangle, isGrey: boolean) {
+  private drawLabelTextHtml(position: THREE.Vector3, rect: Rectangle, isGray: boolean) {
     // Add rectangle label
     const spanText: HTMLElement = document.createElement("span");
     spanText.innerText = this.shortenText(rect.label);
@@ -347,8 +347,8 @@ export class CanvasGraphics {
     div.appendChild(spanPlaceholder);
 
     div.style.marginTop = "5px";
-    if (isGrey) {
-      div.style.color = "grey";
+    if (isGray) {
+      div.style.color = "gray";
     }
     div.style.pointerEvents = "auto";
     div.style.cursor = "pointer";
@@ -386,7 +386,7 @@ export class CanvasGraphics {
       const blue = ((183 - 44) * darkFactor + 44) / 255;
       color = new THREE.Color(red, green, blue);
     } else {
-      // grey (darkness depends on z order)
+      // gray (darkness depends on z order)
       const lower = 120;
       const upper = 220;
       const darkness = ((upper - lower) * darkFactor + lower) / 255;

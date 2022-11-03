@@ -65,6 +65,7 @@ import {ScreenRecordingTraceEntry} from "common/trace/screen_recording";
 
       .drag-icon {
         float: left;
+        margin: 5px 0;
       }
 
       .button-minimize {

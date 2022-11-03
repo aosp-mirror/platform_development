@@ -292,7 +292,7 @@ import { ViewerEvents } from "viewers/common/viewer_events";
       }
 
       p.group-header {
-        color: grey;
+        color: gray;
       }
 
       .left-column {

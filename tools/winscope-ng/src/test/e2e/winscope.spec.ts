@@ -22,7 +22,7 @@ describe("winscope", () => {
   }),
 
   it("has title", () => {
-    const title = element(by.css("#app-title"));
+    const title = element(by.css(".app-title"));
     expect(title.getText()).toContain("Winscope");
   });
 });
