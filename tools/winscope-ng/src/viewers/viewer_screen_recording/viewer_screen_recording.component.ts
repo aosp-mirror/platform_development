@@ -20,7 +20,7 @@ import {ScreenRecordingTraceEntry} from "common/trace/screen_recording";
 @Component({
   selector: "viewer-screen-recording",
   template: `
-    <div class="container" cdkDrag cdkDragBoundary=".container-overlay">
+    <div class="container">
       <div class="header">
         <button mat-button class="button-drag" cdkDragHandle>
           <mat-icon class="drag-icon">drag_indicator</mat-icon>
@@ -37,7 +37,7 @@ import {ScreenRecordingTraceEntry} from "common/trace/screen_recording";
       <video
         [currentTime]="videoCurrentTime"
         [src]=videoUrl
-        [style.visibility]="isMinimized ? 'hidden' : 'visible'"
+        [style.height]="isMinimized ? '0px' : ''"
         cdkDragHandle>
       </video>
     </div>
@@ -73,7 +73,7 @@ import {ScreenRecordingTraceEntry} from "common/trace/screen_recording";
       }
 
       video {
-        height: 50vh;
+        width: 15vw;
         cursor: grab;
       }
     `,

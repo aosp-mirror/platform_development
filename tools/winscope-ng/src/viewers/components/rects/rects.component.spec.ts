@@ -68,7 +68,7 @@ describe("RectsComponent", () => {
 
   it("renders rects canvas", () => {
     fixture.detectChanges();
-    const rectsCanvas = htmlElement.querySelector(".rects-canvas");
+    const rectsCanvas = htmlElement.querySelector(".canvas-rects");
     expect(rectsCanvas).toBeTruthy();
   });
 

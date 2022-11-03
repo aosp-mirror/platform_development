@@ -24,7 +24,16 @@ interface Tab extends View {
 @Component({
   selector: "trace-view",
   template: `
-    <div class="container-overlay">
+    <div class="overlay">
+      <div class="draggable-container" cdkDrag cdkDragBoundary=".overlay">
+        <!--
+        TODO:
+        this draggable div is a temporary hack. We should remove the div and move the cdkDrag
+        directives into the overlay view (e.g. ViewerScreenReocordingComponent) as soon as the new
+        Angular's directive composition API is available
+        (https://github.com/angular/angular/issues/8785).
+         -->
+      </div>
     </div>
     <div class="header-items-wrapper">
       <nav mat-tab-nav-bar class="tabs-navigation-bar">
@@ -49,7 +58,7 @@ interface Tab extends View {
   `,
   styles: [
     `
-      .container-overlay {
+      .overlay {
         z-index: 10;
         position: fixed;
         top: 0px;
@@ -57,6 +66,12 @@ interface Tab extends View {
         width: 100%;
         height: 100%;
         pointer-events: none;
+      }
+
+      .overlay .draggable-container {
+        position: absolute;
+        right: 0;
+        top: 20vh;
       }
 
       .header-items-wrapper {
@@ -132,18 +147,18 @@ export class TraceViewComponent {
       .flat()
       .filter(view => (view.type === ViewType.OVERLAY));
 
+    if (views.length > 1) {
+      throw new Error(
+        "Only one overlay view is supported. To allow more overlay views, either create more than" +
+        " one draggable containers in this component or move the cdkDrag directives into the" +
+        " overlay view when the new Angular's directive composition API is available" +
+        " (https://github.com/angular/angular/issues/8785).");
+    }
+
     views.forEach(view => {
       view.htmlElement.style.pointerEvents = "all";
-      view.htmlElement.style.position = "absolute";
-      view.htmlElement.style.bottom = "10%";
-      view.htmlElement.style.right = "0px";
-
-      const containerOverlay = this.elementRef.nativeElement.querySelector(".container-overlay");
-      if (!containerOverlay) {
-        throw new Error("Failed to find overlay container sub-element");
-      }
-
-      containerOverlay!.appendChild(view.htmlElement);
+      const container = this.elementRef.nativeElement.querySelector(".overlay .draggable-container")!;
+      container.appendChild(view.htmlElement);
     });
   }
 
