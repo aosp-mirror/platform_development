@@ -27,15 +27,14 @@ import { PersistentStore } from "common/persistent_store";
   template: `
       <div class="card-grid">
         <rects-view
-          id="wm-rects-view"
           class="rects-view"
           [rects]="inputData?.rects ?? []"
           [displayIds]="inputData?.displayIds ?? []"
           [highlightedItems]="inputData?.highlightedItems ?? []"
           [forceRefresh]="active"
         ></rects-view>
+        <mat-divider [vertical]="true"></mat-divider>
         <hierarchy-view
-          id="wm-hierarchy-view"
           class="hierarchy-view"
           [tree]="inputData?.tree ?? null"
           [dependencies]="inputData?.dependencies ?? []"
@@ -44,8 +43,8 @@ import { PersistentStore } from "common/persistent_store";
           [store]="store"
           [userOptions]="inputData?.hierarchyUserOptions ?? {}"
         ></hierarchy-view>
+        <mat-divider [vertical]="true"></mat-divider>
         <properties-view
-          id="wm-properties-view"
           class="properties-view"
           [userOptions]="inputData?.propertiesUserOptions ?? {}"
           [propertiesTree]="inputData?.propertiesTree ?? {}"
@@ -55,28 +54,12 @@ import { PersistentStore } from "common/persistent_store";
   `,
   styles: [
     `
-      .rects-view {
+      .rects-view, .hierarchy-view, .properties-view {
         flex: 1;
         padding: 16px;
         display: flex;
         flex-direction: column;
-        border-top: 1px solid var(--default-border);
-        border-right: 1px solid var(--default-border);
-      }
-
-      .hierarchy-view {
-        flex: 1;
-        padding: 16px;
-        display: flex;
-        flex-direction: column;
-        border-top: 1px solid var(--default-border);
-        border-right: 1px solid var(--default-border);
-      }
-
-      .properties-view {
-        flex: 1;
-        padding: 16px;
-        border-top: 1px solid var(--default-border);
+        overflow: auto;
       }
     `,
   ]

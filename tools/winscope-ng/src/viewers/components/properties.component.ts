@@ -25,8 +25,10 @@ import { PropertiesTreeNode, Terminal} from "viewers/common/ui_tree_utils";
     <div class="view-header">
       <div class="title-filter">
         <h2 class="properties-title mat-title">Properties</h2>
+
         <mat-form-field>
           <mat-label>Filter...</mat-label>
+
           <input
             matInput
             [(ngModel)]="filterString"
@@ -35,24 +37,29 @@ import { PropertiesTreeNode, Terminal} from "viewers/common/ui_tree_utils";
           />
         </mat-form-field>
       </div>
+
       <div class="view-controls">
         <mat-checkbox
           *ngFor="let option of objectKeys(userOptions)"
           color="primary"
-          class="trace-box"
           [(ngModel)]="userOptions[option].enabled"
           (ngModelChange)="updateTree()"
           [matTooltip]="userOptions[option].tooltip ?? ''"
         >{{userOptions[option].name}}</mat-checkbox>
       </div>
+
       <property-groups
         *ngIf="itemIsSelected() && propertyGroups"
         class="property-groups"
         [item]="selectedFlickerItem"
       ></property-groups>
     </div>
+
+    <mat-divider></mat-divider>
+
     <div class="properties-content">
       <h3 *ngIf="objectKeys(propertiesTree).length > 0 && isProtoDump" class="properties-title mat-subheading-2">Properties - Proto Dump</h3>
+
       <div class="tree-wrapper">
         <tree-view
           *ngIf="objectKeys(propertiesTree).length > 0"
@@ -67,12 +74,10 @@ import { PropertiesTreeNode, Terminal} from "viewers/common/ui_tree_utils";
   styles: [
     `
       .view-header {
-        flex: 1;
         display: flex;
         flex-direction: column;
-        border-bottom: 1px solid var(--default-border);
-        padding-bottom: 12px;
         overflow-y: auto;
+        margin-bottom: 12px;
       }
 
       .title-filter {
@@ -86,6 +91,7 @@ import { PropertiesTreeNode, Terminal} from "viewers/common/ui_tree_utils";
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
+        column-gap: 10px;
         margin-bottom: 16px;
       }
 
@@ -97,11 +103,12 @@ import { PropertiesTreeNode, Terminal} from "viewers/common/ui_tree_utils";
       }
 
       .property-groups {
+        height: 100%;
         overflow-y: auto;
       }
 
       .tree-wrapper {
-        overflow-y: auto
+        overflow: auto
       }
     `,
   ],

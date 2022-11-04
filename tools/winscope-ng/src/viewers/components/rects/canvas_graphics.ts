@@ -20,7 +20,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { ViewerEvents } from "viewers/common/viewer_events";
 
 export class CanvasGraphics {
-  constructor() {
+  constructor(canvasRects: HTMLCanvasElement, canvasLabels: HTMLElement) {
     //set up camera
     const left = -this.CAMERA_HALF_WIDTH,
       right = this.CAMERA_HALF_WIDTH,
@@ -31,24 +31,21 @@ export class CanvasGraphics {
     this.camera = new THREE.OrthographicCamera(
       left, right, top, bottom, near, far
     );
+
+    this.canvasRects = canvasRects;
+    this.canvasLabels = canvasLabels;
+
     this.resetCamera();
   }
 
-  public initialiseCanvas(canvas: HTMLCanvasElement, canvasContainer: Element) {
-    // initialise canvas
-    this.canvas = canvas;
-    this.canvasContainer = canvasContainer;
-    this.enableOrbitControls();
-  }
-
   public refreshCanvas() {
-    if (!this.canvas) {
+    if (!this.canvasRects) {
       return;
     }
 
     //set canvas size
-    this.canvas.style.width = "100%";
-    this.canvas.style.height = "100%";
+    this.canvasRects.style.width = "100%";
+    this.canvasRects.style.height = "100%";
 
     this.orbit?.reset();
 
@@ -56,24 +53,11 @@ export class CanvasGraphics {
 
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
-      canvas: this.canvas,
+      canvas: this.canvasRects,
       alpha: true
     });
 
-    if (this.canvasContainer && this.canvasContainer.querySelector(".labels-canvas")) {
-      this.labelRenderer = new CSS2DRenderer({
-        element: this.canvasContainer.querySelector(".labels-canvas")! as HTMLElement
-      });
-    } else {
-      this.labelRenderer = new CSS2DRenderer();
-      this.labelRenderer.domElement.style.position = "absolute";
-      this.labelRenderer.domElement.style.top = "0px";
-      this.labelRenderer.domElement.style.width = "100%";
-      this.labelRenderer.domElement.style.height = "100%";
-      this.labelRenderer.domElement.className = "labels-canvas";
-      this.labelRenderer.domElement.style.pointerEvents = "none";
-      this.canvasContainer?.appendChild(this.labelRenderer.domElement);
-    }
+    this.labelRenderer = new CSS2DRenderer({element: this.canvasLabels});
 
     // set various factors for shading and shifting
     const numberOfRects = this.rects.length;
@@ -108,17 +92,17 @@ export class CanvasGraphics {
       lowestY
     );
 
-    this.renderer.setSize(this.canvas!.clientWidth, this.canvas!.clientHeight);
+    this.renderer.setSize(this.canvasRects!.clientWidth, this.canvasRects!.clientHeight);
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.compile(this.scene, this.camera);
     this.renderer.render(this.scene, this.camera);
 
-    this.labelRenderer.setSize(this.canvas!.clientWidth, this.canvas!.clientHeight);
+    this.labelRenderer.setSize(this.canvasRects!.clientWidth, this.canvasRects!.clientHeight);
     this.labelRenderer.render(this.scene, this.camera);
   }
 
   public enableOrbitControls() {
-    this.orbit = new OrbitControls(this.camera, this.canvas);
+    this.orbit = new OrbitControls(this.camera, this.canvasRects);
     this.orbit.enablePan = true;
     this.orbit.enableDamping = true;
     this.orbit.enableZoom = true;
@@ -130,7 +114,7 @@ export class CanvasGraphics {
       this.fontSize = this.camera.zoom * this.INIT_FONT_SIZE;
       this.updateLabelsFontSize();
       if (this.scene && this.renderer && this.labelRenderer) {
-        this.clearLabelElements();
+        this.clearLabels();
         this.renderer.compile(this.scene, this.camera);
         this.renderer.render(this.scene, this.camera);
         this.labelRenderer.render(this.scene, this.camera);
@@ -210,7 +194,7 @@ export class CanvasGraphics {
     this.lowestYShift = this.INIT_LOWEST_Y_SHIFT;
     this.layerSeparation = this.INIT_LAYER_SEPARATION;
     this.camera.updateProjectionMatrix();
-    if (this.canvas) {
+    if (this.canvasRects) {
       this.enableOrbitControls();
     }
     this.refreshCanvas();
@@ -241,7 +225,7 @@ export class CanvasGraphics {
     lowestY: number
   ) {
     this.targetObjects = [];
-    this.clearLabelElements();
+    this.clearLabels();
 
     const darkFactors = this.computeRectDarkFactors(this.rects);
 
@@ -304,7 +288,7 @@ export class CanvasGraphics {
     const circleMesh = this.makeLabelCircleMesh(rectMesh, rect);
     this.scene?.add(circleMesh);
 
-    const isGrey = !this.visibleView && !rect.isVisible;
+    const isGray = !this.visibleView && !rect.isVisible;
 
     let lineEndPos;
     const labelYSeparation = 0.5;
@@ -320,14 +304,14 @@ export class CanvasGraphics {
 
     const linePoints = [circleMesh.position, lineEndPos];
     const lineGeo = new THREE.BufferGeometry().setFromPoints(linePoints);
-    const lineMaterial = new THREE.LineBasicMaterial({ color: isGrey ? 0x808080 : 0x000000 });
+    const lineMaterial = new THREE.LineBasicMaterial({ color: isGray ? 0x808080 : 0x000000 });
     const line = new THREE.Line(lineGeo, lineMaterial);
     this.scene?.add(line);
 
-    this.drawLabelTextHtml(lineEndPos, rect, isGrey);
+    this.drawLabelTextHtml(lineEndPos, rect, isGray);
   }
 
-  private drawLabelTextHtml(position: THREE.Vector3, rect: Rectangle, isGrey: boolean) {
+  private drawLabelTextHtml(position: THREE.Vector3, rect: Rectangle, isGray: boolean) {
     // Add rectangle label
     const spanText: HTMLElement = document.createElement("span");
     spanText.innerText = this.shortenText(rect.label);
@@ -347,8 +331,8 @@ export class CanvasGraphics {
     div.appendChild(spanPlaceholder);
 
     div.style.marginTop = "5px";
-    if (isGrey) {
-      div.style.color = "grey";
+    if (isGray) {
+      div.style.color = "gray";
     }
     div.style.pointerEvents = "auto";
     div.style.cursor = "pointer";
@@ -386,7 +370,7 @@ export class CanvasGraphics {
       const blue = ((183 - 44) * darkFactor + 44) / 255;
       color = new THREE.Color(red, green, blue);
     } else {
-      // grey (darkness depends on z order)
+      // gray (darkness depends on z order)
       const lower = 120;
       const upper = 220;
       const darkness = ((upper - lower) * darkFactor + lower) / 255;
@@ -449,8 +433,8 @@ export class CanvasGraphics {
     );
   }
 
-  private clearLabelElements() {
-    document.querySelectorAll(".rect-label").forEach(el => el.remove());
+  private clearLabels() {
+    this.canvasLabels.innerHTML = "";
   }
 
   private shortenText(text: string): string {
@@ -489,6 +473,6 @@ export class CanvasGraphics {
   private orbit?: OrbitControls;
   private rects: Rectangle[] = [];
   private targetObjects: any[] = [];
-  private canvas?: HTMLCanvasElement;
-  private canvasContainer?: Element;
+  private canvasRects?: HTMLCanvasElement;
+  private canvasLabels: HTMLElement;
 }

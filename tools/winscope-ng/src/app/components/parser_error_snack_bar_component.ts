@@ -22,7 +22,7 @@ import { ParserError, ParserErrorType } from "parsers/parser_factory";
   selector: "upload-snack-bar",
   template: `
     <div class="snack-bar-container">
-      <p *ngFor="let msg of errorMessages" class="snack-bar-content mat-body-1">{{msg}}</p>
+      <p *ngFor="let msg of errorMessages" class="mat-body-1">{{msg}}</p>
       <button color="primary" mat-button class="snack-bar-action" (click)="snackBarRef.dismiss()">
         Close
       </button>
@@ -34,9 +34,6 @@ import { ParserError, ParserErrorType } from "parsers/parser_factory";
         display: flex;
         flex-direction: row;
         align-items: center;
-      }
-      .snack-bar-content {
-        color: white;
       }
       .snack-bar-action {
         margin-left: 12px;
@@ -61,7 +58,7 @@ export class ParserErrorSnackBarComponent {
     if (error.type === ParserErrorType.ALREADY_LOADED && error.traceType) {
       errorString = `Cannot load ${error.trace.name}; Already loaded a trace of type ${TRACE_INFO[error.traceType].name}`;
     } else if (error.type === ParserErrorType.UNSUPPORTED_FORMAT) {
-      errorString =  `Cannot load ${error.trace.name}; File format is unsupported`;
+      errorString = `Cannot load ${error.trace.name}; File format is unsupported`;
     }
     return errorString;
   }

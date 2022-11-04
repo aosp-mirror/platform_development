@@ -34,6 +34,7 @@ import { Layer } from "common/trace/flickerlib/common";
         </p>
       </div>
     </div>
+    <mat-divider></mat-divider>
     <div class="group">
       <h3 class="group-header mat-subheading-2">Geometry</h3>
       <div class="left-column">
@@ -72,6 +73,7 @@ import { Layer } from "common/trace/flickerlib/common";
         </p>
       </div>
     </div>
+    <mat-divider></mat-divider>
     <div class="group">
       <h3 class="group-header mat-subheading-2">Buffer</h3>
       <div class="left-column">
@@ -112,6 +114,7 @@ import { Layer } from "common/trace/flickerlib/common";
         </p>
       </div>
     </div>
+    <mat-divider></mat-divider>
     <div class="group">
       <h3 class="group-header mat-subheading-2">Hierarchy</h3>
       <div class="left-column">
@@ -135,6 +138,7 @@ import { Layer } from "common/trace/flickerlib/common";
         </p>
       </div>
     </div>
+    <mat-divider></mat-divider>
     <div class="group">
       <h3 class="group-header mat-subheading-2">Effects</h3>
       <div class="left-column">
@@ -201,39 +205,42 @@ import { Layer } from "common/trace/flickerlib/common";
         </p>
       </div>
     </div>
+    <mat-divider></mat-divider>
     <div class="group">
       <h3 class="group-header mat-subheading-2">Input</h3>
-      <div *ngIf="hasInputChannel()" class="left-column">
-        <p class="property mat-body-2">To Display Transform:</p>
-        <transform-matrix [transform]="item.inputTransform" [formatFloat]="formatFloat"></transform-matrix>
-        <p class="mat-body-1">
-          <span class="mat-body-2">Touchable Region:</span>
-          &ngsp;
-          {{ item.inputRegion }}
-        </p>
-      </div>
-      <div *ngIf="hasInputChannel()" class="right-column">
-        <p class="column-header mat-small">Config</p>
-        <p class="mat-body-1">
-          <span class="mat-body-2">Focusable:</span>
-          &ngsp;
-          {{ item.proto?.inputWindowInfo.focusable }}
-        </p>
-        <p class="mat-body-1">
-          <span class="mat-body-2">Crop touch region with item:</span>
-          &ngsp;
-          {{
-            item.proto?.inputWindowInfo.cropLayerId &lt;= 0
-              ? "none"
-              : item.proto?.inputWindowInfo.cropLayerId
-          }}
-        </p>
-        <p class="mat-body-1">
-          <span class="mat-body-2">Replace touch region with crop:</span>
-          &ngsp;
-          {{ item.proto?.inputWindowInfo.replaceTouchableRegionWithCrop }}
-        </p>
-      </div>
+      <ng-container *ngIf="hasInputChannel()">
+        <div class="left-column">
+          <p class="property mat-body-2">To Display Transform:</p>
+          <transform-matrix [transform]="item.inputTransform" [formatFloat]="formatFloat"></transform-matrix>
+          <p class="mat-body-1">
+            <span class="mat-body-2">Touchable Region:</span>
+            &ngsp;
+            {{ item.inputRegion }}
+          </p>
+        </div>
+        <div class="right-column">
+          <p class="column-header mat-small">Config</p>
+          <p class="mat-body-1">
+            <span class="mat-body-2">Focusable:</span>
+            &ngsp;
+            {{ item.proto?.inputWindowInfo.focusable }}
+          </p>
+          <p class="mat-body-1">
+            <span class="mat-body-2">Crop touch region with item:</span>
+            &ngsp;
+            {{
+              item.proto?.inputWindowInfo.cropLayerId &lt;= 0
+                ? "none"
+                : item.proto?.inputWindowInfo.cropLayerId
+            }}
+          </p>
+          <p class="mat-body-1">
+            <span class="mat-body-2">Replace touch region with crop:</span>
+            &ngsp;
+            {{ item.proto?.inputWindowInfo.replaceTouchableRegionWithCrop }}
+          </p>
+        </div>
+      </ng-container>
       <div *ngIf="!hasInputChannel()" class="left-column">
         <p class="mat-body-1">
           <span class="mat-body-2">Input channel:</span>
@@ -249,12 +256,11 @@ import { Layer } from "common/trace/flickerlib/common";
         display: flex;
         flex-direction: row;
         padding: 8px;
-        border-bottom: 1px solid var(--default-border);
       }
 
       .group-header {
         width: 80px;
-        color: grey;
+        color: gray;
       }
 
       .left-column {
@@ -270,7 +276,7 @@ import { Layer } from "common/trace/flickerlib/common";
       }
 
       .column-header {
-        color: grey;
+        color: gray;
       }
     `
   ],

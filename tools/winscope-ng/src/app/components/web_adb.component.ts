@@ -24,7 +24,7 @@ import {Component} from "@angular/core";
       </p>
       <p class="mat-body-1">Click the button below to follow instructions in the Chrome pop-up.</p>
       <p class="mat-body-1">Selecting a device will kill all existing ADB connections.</p>
-      <button color="primary" mat-raised-button>Select a device</button>
+      <button color="primary" class="web-select-btn" mat-raised-button>Select a device</button>
   `,
   styles: [
     `
@@ -32,6 +32,9 @@ import {Component} from "@angular/core";
         display: flex;
         flex-direction: row;
         align-items: center;
+      }
+      .adb-info, .web-select-btn {
+        margin-left: 5px;
       }
     `
   ]

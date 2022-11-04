@@ -20,6 +20,7 @@ import { NO_ERRORS_SCHEMA } from "@angular/core";
 import { MatInputModule } from "@angular/material/input";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatCheckboxModule } from "@angular/material/checkbox";
+import { MatDividerModule } from "@angular/material/divider";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { PropertyGroupsComponent } from "./property_groups.component";
 import { TreeComponent } from "./tree.component";
@@ -44,6 +45,7 @@ describe("PropertiesComponent", () => {
         MatInputModule,
         MatFormFieldModule,
         MatCheckboxModule,
+        MatDividerModule,
         BrowserAnimationsModule
       ],
       schemas: [NO_ERRORS_SCHEMA]

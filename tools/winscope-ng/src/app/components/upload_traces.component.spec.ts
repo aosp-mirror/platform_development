@@ -26,7 +26,10 @@ describe("UploadTracesComponent", () => {
 
   beforeAll(async () => {
     await TestBed.configureTestingModule({
-      imports: [MatCardModule, MatSnackBarModule],
+      imports: [
+        MatCardModule,
+        MatSnackBarModule
+      ],
       providers: [MatSnackBar],
       declarations: [UploadTracesComponent],
     }).compileComponents();
