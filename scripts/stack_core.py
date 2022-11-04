@@ -60,6 +60,7 @@ class TraceConverter:
   width = "{8}"
   spacing = ""
   apk_info = dict()
+  lib_to_path = dict()
 
   register_names = {
     "arm": "r0|r1|r2|r3|r4|r5|r6|r7|r8|r9|sl|fp|ip|sp|lr|pc|cpsr",
@@ -72,8 +73,9 @@ class TraceConverter:
 
   # We use the "file" command line tool to extract BuildId from ELF files.
   ElfInfo = collections.namedtuple("ElfInfo", ["bitness", "build_id"])
-  file_tool_output = re.compile(r"ELF (?P<bitness>32|64)-bit .*"
-                                r"BuildID(\[.*\])?=(?P<build_id>[0-9a-f]+)")
+  readelf_output = re.compile(r"Class:\s*ELF(?P<bitness>32|64).*"
+                              r"Build ID:\s*(?P<build_id>[0-9a-f]+)",
+                              flags=re.DOTALL)
 
   def UpdateAbiRegexes(self):
     if symbol.ARCH == "arm64" or symbol.ARCH == "mips64" or symbol.ARCH == "x86_64":
@@ -317,14 +319,16 @@ class TraceConverter:
   def GlobSymbolsDir(self, symbols_dir):
     files_by_basename = {}
     for path in sorted(pathlib.Path(symbols_dir).glob("**/*")):
+      if os.path.isdir(path):
+        next
       files_by_basename.setdefault(path.name, []).append(path)
     return files_by_basename
 
   # Use the "file" command line tool to find the bitness and build_id of given ELF file.
   @functools.lru_cache(maxsize=None)
   def GetLibraryInfo(self, lib):
-    stdout = subprocess.check_output(["file", lib], text=True)
-    match = self.file_tool_output.search(stdout)
+    stdout = subprocess.check_output([symbol.ToolPath("llvm-readelf"), "-h", "-n", lib], text=True)
+    match = self.readelf_output.search(stdout)
     if match:
       return self.ElfInfo(bitness=match.group("bitness"), build_id=match.group("build_id"))
     return None
@@ -339,6 +343,14 @@ class TraceConverter:
     return None
 
   def GetLibPath(self, lib):
+    if lib in self.lib_to_path:
+      return self.lib_to_path[lib]
+
+    lib_path = self.FindLibPath(lib)
+    self.lib_to_path[lib] = lib_path
+    return lib_path
+
+  def FindLibPath(self, lib):
     symbol_dir = symbol.SYMBOLS_DIR
     if os.path.isfile(symbol_dir + lib):
       return lib
@@ -373,9 +385,9 @@ class TraceConverter:
     # This is in vendor, look for the value in:
     #   /data/nativetest{64}/vendor/test_name/test_name
     if lib.startswith("/data/local/tests/vendor/"):
-       lib_path = os.path.join(test_dir + test_dir_bitness, "vendor", test_name, test_name)
-       if os.path.isfile(symbol_dir + lib_path):
-         return lib_path
+      lib_path = os.path.join(test_dir + test_dir_bitness, "vendor", test_name, test_name)
+      if os.path.isfile(symbol_dir + lib_path):
+        return lib_path
 
     # Look for the path in:
     #   /data/nativetest{64}/test_name/test_name

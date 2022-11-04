@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 import { MatProgressBarModule } from "@angular/material/progress-bar";
 import { FormsModule } from "@angular/forms";
 import { MatCheckboxModule } from "@angular/material/checkbox";
+import { MatDividerModule } from "@angular/material/divider";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
@@ -91,6 +92,7 @@ import { ViewerWindowManagerComponent } from "viewers/viewer_window_manager/view
     FormsModule,
     MatListModule,
     MatCheckboxModule,
+    MatDividerModule,
     MatIconModule,
     MatProgressSpinnerModule,
     MatProgressBarModule,

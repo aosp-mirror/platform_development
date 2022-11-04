@@ -40,9 +40,8 @@ import { TableProperties } from "viewers/common/table_properties";
       </div>
       <div class="view-controls">
         <mat-checkbox
-          color="primary"
           *ngFor="let option of objectKeys(userOptions)"
-          class="trace-box"
+          color="primary"
           [(ngModel)]="userOptions[option].enabled"
           (ngModelChange)="updateTree()"
         >{{userOptions[option].name}}</mat-checkbox>
@@ -67,24 +66,23 @@ import { TableProperties } from "viewers/common/table_properties";
         ></tree-node>
       </div>
     </div>
+    <mat-divider></mat-divider>
     <div class="hierarchy-content">
-      <div class="tree-wrapper">
-        <tree-view
-          *ngIf="tree"
-          [isFlattened]="isFlattened()"
-          [isShaded]="true"
-          [item]="tree"
-          [dependencies]="dependencies"
-          [store]="store"
-          [useGlobalCollapsedState]="true"
-          [itemsClickable]="true"
-          [highlightedItems]="highlightedItems"
-          [pinnedItems]="pinnedItems"
-          (highlightedItemChange)="highlightedItemChange($event)"
-          (pinnedItemChange)="pinnedItemChange($event)"
-          (selectedTreeChange)="selectedTreeChange($event)"
-        ></tree-view>
-      </div>
+      <tree-view
+        *ngIf="tree"
+        [isFlattened]="isFlattened()"
+        [isShaded]="true"
+        [item]="tree"
+        [dependencies]="dependencies"
+        [store]="store"
+        [useGlobalCollapsedState]="true"
+        [itemsClickable]="true"
+        [highlightedItems]="highlightedItems"
+        [pinnedItems]="pinnedItems"
+        (highlightedItemChange)="highlightedItemChange($event)"
+        (pinnedItemChange)="pinnedItemChange($event)"
+        (selectedTreeChange)="selectedTreeChange($event)"
+      ></tree-view>
     </div>
   `,
   styles: [
@@ -92,8 +90,7 @@ import { TableProperties } from "viewers/common/table_properties";
       .view-header {
         display: flex;
         flex-direction: column;
-        border-bottom: 1px solid var(--default-border);
-        padding-bottom: 12px;
+        margin-bottom: 12px;
       }
 
       .title-filter {
@@ -107,6 +104,7 @@ import { TableProperties } from "viewers/common/table_properties";
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
+        column-gap: 10px;
       }
 
       .properties-table {
@@ -114,9 +112,8 @@ import { TableProperties } from "viewers/common/table_properties";
       }
 
       .hierarchy-content {
-        height: 0;
-        flex-grow: 1;
-        overflow-y: auto;
+        height: 100%;
+        overflow: auto;
       }
 
       .pinned-items {
@@ -125,8 +122,8 @@ import { TableProperties } from "viewers/common/table_properties";
         border: 2px solid yellow;
       }
 
-      .tree-wrapper {
-        overflow-y: auto
+      tree-view {
+        overflow: auto;
       }
     `,
     nodeStyles

@@ -32,94 +32,96 @@ import { ViewerScreenRecordingComponent } from "viewers/viewer_screen_recording/
 @Component({
   selector: "app-root",
   template: `
-    <mat-toolbar class="app-toolbar">
-      <p id="app-title" class="mat-display-1">Winscope</p>
-      <span class="toolbar-wrapper">
-        <button *ngIf="dataLoaded" color="primary" mat-stroked-button (click)="toggleTimestamp()">Start/End Timestamp</button>
-        <button *ngIf="dataLoaded" color="primary" mat-stroked-button (click)="onUploadNewClick()">Upload New</button>
-      </span>
+    <mat-toolbar>
+      <span class="app-title">Winscope</span>
+
+      <ng-container *ngIf="dataLoaded">
+        <button color="primary" mat-stroked-button (click)="toggleTimestamp()">
+          Start/End Timestamp
+        </button>
+
+        <div class="spacer"></div>
+
+        <button color="primary" mat-stroked-button (click)="onUploadNewClick()">
+          Upload New
+        </button>
+      </ng-container>
     </mat-toolbar>
 
-    <h1 *ngIf="!dataLoaded" class="welcome-info mat-headline">Welcome to Winscope. Please select source to view traces.</h1>
+    <mat-divider></mat-divider>
 
-    <div *ngIf="!dataLoaded" class="card-grid">
-      <mat-card id="collect-traces-card" class="homepage-card">
-        <collect-traces [traceCoordinator]="traceCoordinator" (dataLoadedChange)="onDataLoadedChange($event)" [store]="store"></collect-traces>
-      </mat-card>
-      <mat-card id="upload-traces-card" class="homepage-card">
-        <upload-traces [traceCoordinator]="traceCoordinator" (dataLoadedChange)="onDataLoadedChange($event)"></upload-traces>
-      </mat-card>
-    </div>
+    <ng-container *ngIf="dataLoaded; else noLoadedTracesBlock">
+      <trace-view
+        class="viewers"
+        [viewers]="allViewers"
+        [store]="store"
+        (downloadTracesButtonClick)="onDownloadTracesButtonClick()"
+      ></trace-view>
 
-    <trace-view
-      *ngIf="dataLoaded"
-      id="viewers"
-      [viewers]="allViewers"
-      [store]="store"
-      (downloadTracesButtonClick)="onDownloadTracesButtonClick()"
-    ></trace-view>
+      <mat-divider></mat-divider>
 
-    <div *ngIf="dataLoaded" id="timescrub">
       <mat-slider
+        class="timescrub"
         color="primary"
-        class="time-slider"
         step="1"
         min="0"
-        [max]="this.allTimestamps.length-1"
+        [max]="this.allTimestamps.length - 1"
         aria-label="units"
         [value]="currentTimestampIndex"
         (input)="updateCurrentTimestamp($event)"
       ></mat-slider>
-    </div>
-    <div id="timestamps">
+    </ng-container>
+
+    <ng-template #noLoadedTracesBlock>
+      <h1 class="welcome-info mat-headline">
+        Welcome to Winscope. Please select source to view traces.
+      </h1>
+
+      <div class="card-grid">
+        <collect-traces
+          class="collect-traces-card homepage-card"
+          [traceCoordinator]="traceCoordinator"
+          (dataLoadedChange)="onDataLoadedChange($event)"
+          [store]="store"
+        ></collect-traces>
+
+        <upload-traces
+          class="upload-traces-card homepage-card"
+          [traceCoordinator]="traceCoordinator"
+          (dataLoadedChange)="onDataLoadedChange($event)"
+        ></upload-traces>
+      </div>
+    </ng-template>
+
+    <div class="timestamps">
     </div>
   `,
   styles: [
     `
-      .app-toolbar {
-        background-color: white;
-        border-bottom: 1px solid var(--default-border);
-      }
-      #app-title {
-        margin: 12px 0;
-      }
-      .toolbar-wrapper {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
+      .app-title {
+        margin-right: 10px;
       }
       .welcome-info {
-        margin: 16px 0;
+        margin: 16px 0 6px 0;
         text-align: center;
       }
       .homepage-card {
+        display: flex;
+        flex-direction: column;
         flex: 1;
-        margin: 10px;
-        overflow: auto;
-        border: 1px solid var(--default-border);
-      }
-
-      .homepage-card mat-card-content {
-        display: flex;
-        flex-direction: column;
         overflow: auto;
       }
-      #viewers {
+      .spacer {
+        flex: 1;
+      }
+      .viewers {
         height: 100%;
-        width: 100%;
         display: flex;
         flex-direction: column;
         overflow: auto;
       }
-      #timescrub {
-        padding: 8px;
-        border-top: 1px solid var(--default-border);
-      }
-      .time-slider {
-        width: 100%
+      .timescrub {
+        margin: 8px;
       }
     `
   ],

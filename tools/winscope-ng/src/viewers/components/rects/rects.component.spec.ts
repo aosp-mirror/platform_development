@@ -18,7 +18,7 @@ import { Component, ViewChild } from "@angular/core";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { RectsComponent } from "viewers/components/rects/rects.component";
 import { MatCheckboxModule } from "@angular/material/checkbox";
-import { MatCardModule } from "@angular/material/card";
+import { MatDividerModule  } from "@angular/material/divider";
 import { MatRadioModule } from "@angular/material/radio";
 import { MatSliderModule } from "@angular/material/slider";
 import { CUSTOM_ELEMENTS_SCHEMA } from "@angular/core";
@@ -34,7 +34,7 @@ describe("RectsComponent", () => {
       imports: [
         CommonModule,
         MatCheckboxModule,
-        MatCardModule,
+        MatDividerModule,
         MatSliderModule,
         MatRadioModule
       ],
@@ -68,7 +68,7 @@ describe("RectsComponent", () => {
 
   it("renders rects canvas", () => {
     fixture.detectChanges();
-    const rectsCanvas = htmlElement.querySelector(".rects-canvas");
+    const rectsCanvas = htmlElement.querySelector(".canvas-rects");
     expect(rectsCanvas).toBeTruthy();
   });
 

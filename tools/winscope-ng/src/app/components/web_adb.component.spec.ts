@@ -16,7 +16,6 @@
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {WebAdbComponent} from "./web_adb.component";
 import { MatIconModule } from "@angular/material/icon";
-import { MatCardModule } from "@angular/material/card";
 
 describe("WebAdbComponent", () => {
   let fixture: ComponentFixture<WebAdbComponent>;
@@ -25,7 +24,9 @@ describe("WebAdbComponent", () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MatIconModule, MatCardModule],
+      imports: [
+        MatIconModule
+      ],
       declarations: [WebAdbComponent],
     }).compileComponents();
     fixture = TestBed.createComponent(WebAdbComponent);

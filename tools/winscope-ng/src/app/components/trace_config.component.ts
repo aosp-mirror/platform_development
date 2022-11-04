@@ -19,62 +19,65 @@ import { EnableConfiguration, SelectionConfiguration, TraceConfiguration, TraceC
 @Component({
   selector: "trace-config",
   template: `
-    <div class="card-block">
-      <h3 class="mat-subheading-2">Trace targets</h3>
-      <div class="checkboxes">
+    <h3 class="mat-subheading-2">Trace targets</h3>
+
+    <div class="checkboxes">
+      <mat-checkbox
+        *ngFor="let traceKey of objectKeys(traces)"
+        color="primary"
+        class="trace-checkbox"
+        [checked]="traces[traceKey].run"
+        [indeterminate]="traces[traceKey].isTraceCollection ? someTraces(traces[traceKey]) : false"
+        (change)="changeRunTrace($event.checked, traces[traceKey])"
+      >{{traces[traceKey].name}}</mat-checkbox>
+    </div>
+
+    <ng-container *ngFor="let traceKey of advancedConfigTraces()">
+      <mat-divider></mat-divider>
+
+      <h3 class="mat-subheading-2">{{traces[traceKey].name}} configuration</h3>
+
+      <div *ngIf="traces[traceKey].config?.enableConfigs.length > 0" class="enable-config-opt">
         <mat-checkbox
-          *ngFor="let traceKey of objectKeys(traces)"
+          *ngFor="let enableConfig of traceEnableConfigs(traces[traceKey])"
           color="primary"
-          class="trace-box"
-          [checked]="traces[traceKey].run"
-          [indeterminate]="traces[traceKey].isTraceCollection ? someTraces(traces[traceKey]) : false"
-          (change)="changeRunTrace($event.checked, traces[traceKey])"
-        >{{traces[traceKey].name}}</mat-checkbox>
+          class="enable-config"
+          [disabled]="!traces[traceKey].run && !traces[traceKey].isTraceCollection"
+          [(ngModel)]="enableConfig.enabled"
+          (ngModelChange)="changeTraceCollectionConfig(traces[traceKey])"
+        >{{enableConfig.name}}</mat-checkbox>
       </div>
 
-      <ng-container *ngFor="let traceKey of advancedConfigTraces()">
-        <h3 class="mat-subheading-2">{{traces[traceKey].name}} configuration</h3>
+      <div *ngIf="traces[traceKey].config?.selectionConfigs.length > 0" class="selection-config-opt">
+        <mat-form-field
+          *ngFor="let selectionConfig of traceSelectionConfigs(traces[traceKey])"
+          class="config-selection"
+          appearance="fill">
 
-        <div *ngIf="traces[traceKey].config?.enableConfigs" class="config-opt">
-          <mat-checkbox
-            *ngFor="let enableConfig of traceEnableConfigs(traces[traceKey])"
-            color="primary"
-            class="enable-config"
-            [disabled]="!traces[traceKey].run && !traces[traceKey].isTraceCollection"
-            [(ngModel)]="enableConfig.enabled"
-            (ngModelChange)="changeTraceCollectionConfig(traces[traceKey])"
-          >{{enableConfig.name}}</mat-checkbox>
+          <mat-label>{{selectionConfig.name}}</mat-label>
 
-          <div *ngIf="traces[traceKey].config?.selectionConfigs" class="config-opt">
-            <mat-form-field
-                *ngFor="let selectionConfig of traceSelectionConfigs(traces[traceKey])"
-                class="config-selection"
-                appearance="fill">
-              <mat-label>{{selectionConfig.name}}</mat-label>
-              <mat-select class="selected-value" [(value)]="selectionConfig.value" [disabled]="!traces[traceKey].run">
-                <mat-option
-                  *ngFor="let option of selectionConfig.options"
-                  value="{{option}}"
-                >{{ option }}</mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
-        </div>
-      </ng-container>
-    </div>
+          <mat-select class="selected-value" [(value)]="selectionConfig.value" [disabled]="!traces[traceKey].run">
+            <mat-option
+              *ngFor="let option of selectionConfig.options"
+              value="{{option}}"
+            >{{ option }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </ng-container>
   `,
   styles: [
     `
-      .card-block {
-        margin: 15px;
-      }
       .checkboxes {
-        padding: 0;
         display: grid;
         grid-template-columns: repeat(3, 1fr);
+        column-gap: 10px;
       }
-      .config-selection {
-        margin: 0 5px;
+      .enable-config-opt, .selection-config-opt {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 10px;
       }
     `
   ]

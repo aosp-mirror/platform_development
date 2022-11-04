@@ -15,7 +15,7 @@
  */
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import { ImeAdditionalPropertiesComponent } from "./ime_additional_properties.component";
-import { MatCardModule } from "@angular/material/card";
+import { MatDividerModule } from "@angular/material/divider";
 
 describe("ImeAdditionalPropertiesComponent", () => {
   let fixture: ComponentFixture<ImeAdditionalPropertiesComponent>;
@@ -25,7 +25,7 @@ describe("ImeAdditionalPropertiesComponent", () => {
   beforeAll(async () => {
     await TestBed.configureTestingModule({
       imports: [
-        MatCardModule,
+        MatDividerModule
       ],
       declarations: [
         ImeAdditionalPropertiesComponent

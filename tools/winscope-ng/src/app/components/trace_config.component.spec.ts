@@ -17,6 +17,7 @@ import { CommonModule } from "@angular/common";
 import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {TraceConfigComponent} from "./trace_config.component";
 import { MatCheckboxModule } from "@angular/material/checkbox";
+import { MatDividerModule } from "@angular/material/divider";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { MatInputModule } from "@angular/material/input";
@@ -33,6 +34,7 @@ describe("TraceConfigComponent", () => {
       imports: [
         CommonModule,
         MatCheckboxModule,
+        MatDividerModule,
         MatFormFieldModule,
         MatInputModule,
         MatSelectModule,
@@ -74,7 +76,7 @@ describe("TraceConfigComponent", () => {
   it("check that trace checkbox ticked on default run", () => {
     component.traces["layers_trace"].run = true;
     fixture.detectChanges();
-    const box = htmlElement.querySelector(".trace-box");
+    const box = htmlElement.querySelector(".trace-checkbox");
     expect(box?.innerHTML).toContain("aria-checked=\"true\"");
     expect(box?.innerHTML).toContain("layers_trace");
   });
@@ -82,26 +84,34 @@ describe("TraceConfigComponent", () => {
   it("check that trace checkbox not ticked on default run", () => {
     component.traces["layers_trace"].run = false;
     fixture.detectChanges();
-    const box = htmlElement.querySelector(".trace-box");
+    const box = htmlElement.querySelector(".trace-checkbox");
     expect(box?.innerHTML).toContain("aria-checked=\"false\"");
   });
 
-  it("check that correct advanced enable config only shows", () => {
+  it("check that correct advanced enable config shows", () => {
     component.traces["layers_trace"].config!.selectionConfigs = [];
     fixture.detectChanges();
-    const adv = htmlElement.querySelector(".config-opt");
-    expect(adv).toBeTruthy();
-    expect(adv?.innerHTML).toContain("trace buffers");
-    expect(adv?.innerHTML).not.toContain("tracing level");
+
+    const enable_config_opt = htmlElement.querySelector(".enable-config-opt");
+    expect(enable_config_opt).toBeTruthy();
+    expect(enable_config_opt?.innerHTML).toContain("trace buffers");
+    expect(enable_config_opt?.innerHTML).not.toContain("tracing level");
+
+    const selection_config_opt = htmlElement.querySelector(".selection-config-opt");
+    expect(selection_config_opt).toBeFalsy();
   });
 
   it("check that correct advanced selection config shows", () => {
     component.traces["layers_trace"].config!.enableConfigs = [];
     fixture.detectChanges();
-    const adv = htmlElement.querySelector(".config-opt");
-    expect(adv).toBeTruthy();
-    expect(adv?.innerHTML).not.toContain("trace buffers");
-    expect(adv?.innerHTML).toContain("tracing level");
+
+    const enable_config_opt = htmlElement.querySelector(".enable-config-opt");
+    expect(enable_config_opt).toBeFalsy();
+
+    const selection_config_opt = htmlElement.querySelector(".selection-config-opt");
+    expect(selection_config_opt).toBeTruthy();
+    expect(selection_config_opt?.innerHTML).not.toContain("trace buffers");
+    expect(selection_config_opt?.innerHTML).toContain("tracing level");
   });
 
   it("check that changing enable config causes box to change", async () => {
@@ -116,8 +126,7 @@ describe("TraceConfigComponent", () => {
     expect(htmlElement.querySelector(".config-selection")?.innerHTML).toContain("value=\"debug\"");
     component.traces["layers_trace"].config!.selectionConfigs[0].value = "verbose";
     fixture.detectChanges();
-    fixture.whenStable().then(() => {
-      expect(htmlElement.querySelector(".config-selection")?.innerHTML).toContain("value=\"verbose\"");
-    });
+    await fixture.whenStable();
+    expect(htmlElement.querySelector(".config-selection")?.innerHTML).toContain("value=\"verbose\"");
   });
 });

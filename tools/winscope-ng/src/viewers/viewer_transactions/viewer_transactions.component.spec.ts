@@ -16,6 +16,7 @@
 import {ScrollingModule} from "@angular/cdk/scrolling";
 import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from "@angular/core";
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from "@angular/core/testing";
+import {MatDividerModule} from "@angular/material/divider";
 import {UiData, UiDataEntry} from "./ui_data";
 import {PropertiesTreeGenerator} from "viewers/common/properties_tree_generator";
 import {ViewerTransactionsComponent} from "./viewer_transactions.component";
@@ -31,6 +32,7 @@ describe("ViewerTransactionsComponent", () => {
         { provide: ComponentFixtureAutoDetect, useValue: true }
       ],
       imports: [
+        MatDividerModule,
         ScrollingModule
       ],
       declarations: [

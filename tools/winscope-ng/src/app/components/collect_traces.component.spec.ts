@@ -22,6 +22,7 @@ import { WebAdbComponent } from "./web_adb.component";
 import { TraceConfigComponent } from "./trace_config.component";
 import { MatListModule } from "@angular/material/list";
 import { MatButtonModule } from "@angular/material/button";
+import { MatDividerModule } from "@angular/material/divider";
 import { MatProgressBarModule } from "@angular/material/progress-bar";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { NO_ERRORS_SCHEMA } from "@angular/core";
@@ -39,6 +40,7 @@ describe("CollectTracesComponent", () => {
         MatCardModule,
         MatListModule,
         MatButtonModule,
+        MatDividerModule,
         MatProgressBarModule,
         BrowserAnimationsModule,
         MatSnackBarModule
@@ -64,7 +66,7 @@ describe("CollectTracesComponent", () => {
 
   it("renders the expected card title", () => {
     fixture.detectChanges();
-    expect(htmlElement.querySelector("#title")?.innerHTML).toContain("Collect Traces");
+    expect(htmlElement.querySelector(".title")?.innerHTML).toContain("Collect Traces");
   });
 
   it("displays connecting message", () => {
@@ -78,9 +80,9 @@ describe("CollectTracesComponent", () => {
     fixture.detectChanges();
     fixture.whenStable().then( () => {
       expect(htmlElement.querySelector(".set-up-adb")).toBeTruthy();
-      const proxyTab: HTMLButtonElement | null = htmlElement.querySelector("#proxy-tab");
+      const proxyTab: HTMLButtonElement | null = htmlElement.querySelector(".proxy-tab");
       expect(proxyTab).toBeInstanceOf(HTMLButtonElement);
-      const webTab: HTMLButtonElement | null = htmlElement.querySelector("#web-tab");
+      const webTab: HTMLButtonElement | null = htmlElement.querySelector(".web-tab");
       expect(webTab).toBeInstanceOf(HTMLButtonElement);
     });
   });
@@ -110,7 +112,7 @@ describe("CollectTracesComponent", () => {
     component.isAdbProxy = true;
     fixture.detectChanges();
     fixture.whenStable().then(() => {
-      const webTab: HTMLButtonElement | null = htmlElement.querySelector("#web-tab");
+      const webTab: HTMLButtonElement | null = htmlElement.querySelector(".web-tab");
       expect(webTab).toBeInstanceOf(HTMLButtonElement);
       webTab?.dispatchEvent(new Event("click"));
       fixture.whenStable().then(() => {
@@ -124,7 +126,7 @@ describe("CollectTracesComponent", () => {
     component.connect.devices = jasmine.createSpy().and.returnValue({});
     fixture.detectChanges();
     fixture.whenStable().then( () => {
-      const el = htmlElement.querySelector("devices-connecting");
+      const el = htmlElement.querySelector(".devices-connecting");
       expect(el).toBeTruthy();
       expect(el?.innerHTML).toContain("No devices detected");
     });
@@ -135,7 +137,7 @@ describe("CollectTracesComponent", () => {
     component.connect.devices = jasmine.createSpy().and.returnValue({"35562": {model: "Pixel 6", authorised:true}});
     fixture.detectChanges();
     fixture.whenStable().then( () => {
-      const el = htmlElement.querySelector("devices-connecting");
+      const el = htmlElement.querySelector(".devices-connecting");
       expect(el).toBeTruthy();
       expect(el?.innerHTML).toContain("Connected devices:");
       expect(el?.innerHTML).toContain("Pixel 6");
@@ -148,7 +150,7 @@ describe("CollectTracesComponent", () => {
     component.connect.devices = jasmine.createSpy().and.returnValue({"35562": {model: "Pixel 6", authorised:false}});
     fixture.detectChanges();
     fixture.whenStable().then( () => {
-      const el = htmlElement.querySelector("devices-connecting");
+      const el = htmlElement.querySelector(".devices-connecting");
       expect(el).toBeTruthy();
       expect(el?.innerHTML).toContain("Connected devices:");
       expect(el?.innerHTML).toContain("unauthorised");
@@ -164,16 +166,16 @@ describe("CollectTracesComponent", () => {
     fixture.detectChanges();
 
     fixture.whenStable().then( () => {
-      const el = htmlElement.querySelector("trace-collection-config");
+      const el = htmlElement.querySelector(".trace-collection-config");
       expect(el).toBeTruthy();
       expect(el?.innerHTML).toContain("smartphone");
       expect(el?.innerHTML).toContain("Pixel 6");
       expect(el?.innerHTML).toContain("35562");
 
-      const traceSection = htmlElement.querySelector("trace-section");
+      const traceSection = htmlElement.querySelector(".trace-section");
       expect(traceSection).toBeTruthy();
 
-      const dumpSection = htmlElement.querySelector("dump-section");
+      const dumpSection = htmlElement.querySelector(".dump-section");
       expect(dumpSection).toBeTruthy();
     });
   });
