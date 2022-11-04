@@ -310,4 +310,15 @@ export {
   toRegion,
   toMatrix22,
   toTransform,
+  // Constants
+  EMPTY_BUFFER,
+  EMPTY_COLOR3,
+  EMPTY_COLOR,
+  EMPTY_RECT,
+  EMPTY_RECTF,
+  EMPTY_POINT,
+  EMPTY_POINTF,
+  EMPTY_MATRIX22,
+  EMPTY_MATRIX33,
+  EMPTY_TRANSFORM,
 };

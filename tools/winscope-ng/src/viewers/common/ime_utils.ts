@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import Activity from "common/trace/flickerlib/windows/Activity";
-import Layer from "common/trace/flickerlib/layers/Layer";
+import {Layer} from "common/trace/flickerlib/layers/Layer";
 import {LayerTraceEntry} from "common/trace/flickerlib/layers/LayerTraceEntry";
 import {WindowContainer} from "common/trace/flickerlib/common";
 import {WindowManagerState} from "common/trace/flickerlib/windows/WindowManagerState";

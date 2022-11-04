@@ -16,10 +16,37 @@
 import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
 import {LayerTraceEntry} from "common/trace/flickerlib/layers/LayerTraceEntry";
+import {Layer} from "common/trace/flickerlib/layers/Layer";
 import {UnitTestUtils} from "test/unit/utils";
 import {Parser} from "./parser";
 
 describe("ParserSurfaceFlinger", () => {
+  it("decodes layer state flags", async () => {
+    const parser =
+      await UnitTestUtils.getParser("traces/elapsed_and_real_timestamp/SurfaceFlinger.pb");
+    const timestamp = new Timestamp(TimestampType.REAL, 1659107089102062832n);
+    const entry = parser.getTraceEntry(timestamp);
+
+    {
+      const layer = entry.flattenedLayers.find((layer: Layer) => layer.id === 27);
+      expect(layer.name).toEqual("Leaf:24:25#27");
+      expect(layer.flags).toEqual(0x0);
+      expect(layer.verboseFlags).toEqual("");
+    }
+    {
+      const layer = entry.flattenedLayers.find((layer: Layer) => layer.id === 48);
+      expect(layer.name).toEqual("Task=4#48");
+      expect(layer.flags).toEqual(0x1);
+      expect(layer.verboseFlags).toEqual("HIDDEN (0x1)");
+    }
+    {
+      const layer = entry.flattenedLayers.find((layer: Layer) => layer.id === 77);
+      expect(layer.name).toEqual("Wallpaper BBQ wrapper#77");
+      expect(layer.flags).toEqual(0x100);
+      expect(layer.verboseFlags).toEqual("ENABLE_BACKPRESSURE (0x100)");
+    }
+  });
+
   describe("trace with elapsed + real timestamp", () => {
     let parser: Parser;
 
