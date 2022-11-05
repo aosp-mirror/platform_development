@@ -22,7 +22,7 @@ java_binary_host {
     manifest: "etc/manifest.txt",
     wrapper: "etc/rmtypedefs",
     static_libs: [
-        "asm-5.2",
-        "guava-21.0",
+        "asm-9.2",
+        "guava",
     ],
 }
