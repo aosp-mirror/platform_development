@@ -103,6 +103,11 @@ class TraceCoordinator implements TimestampChangeObserver {
 
     this.viewers = new ViewerFactory().createViewers(new Set<TraceType>(activeTraceTypes));
     console.log("created viewers: ", this.viewers);
+
+    // Make sure to update the viewers active entries as soon as they are created.
+    if (this.timelineCoordinator.currentTimestamp) {
+      this.onCurrentTimestampChanged(this.timelineCoordinator.currentTimestamp);
+    }
   }
 
   public getLoadedTraces(): LoadedTrace[] {
