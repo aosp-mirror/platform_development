@@ -91,6 +91,7 @@ export class TimelineCoordinator {
 
   public registerObserver(observer: TimestampChangeObserver) {
     this.observers.push(observer);
+    this.notifyOfTimestampUpdate();
   }
 
   public addTimeline(traceType: TraceType, timeline: Timestamp[]) {

@@ -25,11 +25,11 @@ import {
   ViewChild,
   HostListener,
 } from "@angular/core";
-import {FormControl} from "@angular/forms";
+import {FormBuilder, FormControl, FormGroup, Validators} from "@angular/forms";
 import { DomSanitizer, SafeUrl } from "@angular/platform-browser";
 import { TraceType } from "common/trace/trace_type";
 import { TRACE_INFO } from "app/trace_info";
-import { TimelineCoordinator } from "app/timeline_coordinator";
+import { TimelineCoordinator, TimestampChangeObserver } from "app/timeline_coordinator";
 import { MiniTimelineComponent } from "./mini_timeline.component";
 import { Timestamp } from "common/trace/timestamp";
 import { TimeUtils } from "common/utils/time_utils";
@@ -65,12 +65,12 @@ const MAX_SELECTED_TRACES = 3;
             <button mat-icon-button color="primary" (click)="moveToPreviousEntry()">
                 <mat-icon>chevron_left</mat-icon>
             </button>
-            <form class="time-selector-form">
-                <mat-form-field class="time-input" appearance="fill">
-                    <input matInput="number" [value]="selectedTime">
+            <form [formGroup]="timestampForm" class="time-selector-form" (ngSubmit)="onTimestampFormSubmitted()">
+                <mat-form-field class="time-input" appearance="fill" (change)="inputTimeChanged($event)">
+                    <input matInput="number" formControlName="selectedTime">
                 </mat-form-field>
-                <mat-form-field class="time-input" appearance="fill">
-                    <input matInput="number" [value]="currentTimestamp.getValueNs()">
+                <mat-form-field class="time-input" appearance="fill" (change)="inputTimeChanged($event)">
+                    <input matInput="number" formControlName="selectedNs">
                 </mat-form-field>
             </form>
             <!-- TODO: Disable button if there are no timestamps after -->
@@ -229,7 +229,7 @@ const MAX_SELECTED_TRACES = 3;
     }
   `],
 })
-export class TimelineComponent {
+export class TimelineComponent implements TimestampChangeObserver {
   @Input() expanded = false;
   @Input() activeTrace: TraceType = TraceType.SURFACE_FLINGER;
   @Input() availableTraces: TraceType[] = [];
@@ -247,6 +247,18 @@ export class TimelineComponent {
 
   selectedTraces: TraceType[] = [];
   selectedTracesFormControl = new FormControl();
+
+  selectedTimeFormControl = new FormControl("", Validators.compose([
+    Validators.required,
+    Validators.pattern(TimeUtils.HUMAN_TIMESTAMP_REGEX)]));
+  selectedNsFormControl = new FormControl(BigInt(0), Validators.compose([
+    Validators.required,
+    Validators.pattern(TimeUtils.NS_TIMESTAMP_REGEX)]));
+  timestampForm = new FormGroup({
+    selectedTime: this.selectedTimeFormControl,
+    selectedNs: this.selectedNsFormControl,
+  });
+
   videoUrl: SafeUrl|undefined;
 
   TRACE_INFO = TRACE_INFO;
@@ -274,19 +286,11 @@ export class TimelineComponent {
     return timestamp;
   }
 
-  get selectedTime() {
-    return TimeUtils.nanosecondsToHuman(this.currentTimestamp.getValueNs());
-  }
-
   constructor(
     @Inject(TimelineCoordinator) private timelineCoordinator: TimelineCoordinator,
     @Inject(DomSanitizer) private sanitizer: DomSanitizer
-  ) {}
-
-  ngOnInit(): void {
-    if (this.timelineCoordinator == null) {
-      throw Error("Timeline coordinator not set");
-    }
+  ) {
+    this.timelineCoordinator.registerObserver(this);
   }
 
   ngAfterViewInit() {
@@ -317,6 +321,10 @@ export class TimelineComponent {
     }
   }
 
+  onCurrentTimestampChanged(_: Timestamp): void {
+    this.updateTimeInputValuesToCurrentTimestamp();
+  }
+
   toggleExpand() {
     this.expanded = !this.expanded;
   }
@@ -325,8 +333,14 @@ export class TimelineComponent {
     this.timelineCoordinator.updateCurrentTimestamp(timestamp);
   }
 
-  updateSeekTimestamp(timestamp: Timestamp) {
+  updateSeekTimestamp(timestamp: Timestamp|undefined) {
     this.seekTimestamp = timestamp;
+    this.updateTimeInputValuesToCurrentTimestamp();
+  }
+
+  private updateTimeInputValuesToCurrentTimestamp() {
+    this.selectedTimeFormControl.setValue(TimeUtils.nanosecondsToHuman(this.currentTimestamp.getValueNs(), false));
+    this.selectedNsFormControl.setValue(this.currentTimestamp.getValueNs());
   }
 
   isOptionDisabled(trace: TraceType) {
@@ -371,5 +385,32 @@ export class TimelineComponent {
 
   moveToNextEntry() {
     this.timelineCoordinator.moveToNextEntryFor(this.activeTrace);
+  }
+
+  inputTimeChanged(event: Event) {
+    console.error("Input time changed to", event);
+    if (event.type !== "change") {
+      return;
+    }
+
+    const target = event.target as HTMLInputElement;
+
+    if (TimeUtils.NS_TIMESTAMP_REGEX.test(target.value)) {
+      const timestamp = new Timestamp(this.timelineCoordinator.getTimestampType()!, BigInt(target.value));
+      this.timelineCoordinator.updateCurrentTimestamp(timestamp);
+    } else if (TimeUtils.HUMAN_TIMESTAMP_REGEX.test(target.value)) {
+      const timestamp = new Timestamp(this.timelineCoordinator.getTimestampType()!,
+        TimeUtils.humanToNanoseconds(target.value));
+      this.timelineCoordinator.updateCurrentTimestamp(timestamp);
+    } else {
+      console.warn(`Invalid timestamp input provided "${target.value}" and can't be processed.`);
+      return;
+    }
+
+    this.updateTimeInputValuesToCurrentTimestamp();
+  }
+
+  onTimestampFormSubmitted() {
+    console.log("onTimestampFormSubmitted");
   }
 }
