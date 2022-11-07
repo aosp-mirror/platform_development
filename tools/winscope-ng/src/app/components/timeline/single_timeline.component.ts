@@ -15,6 +15,7 @@
  */
 
 import { Component, ElementRef, EventEmitter, HostListener, Input, Output, SimpleChanges, ViewChild } from "@angular/core";
+import { Color } from "app/colors";
 
 export type entry = bigint;
 
@@ -149,7 +150,7 @@ export class SingleTimelineComponent {
     this.defineEntryPath(this.hoveringEntry);
 
     this.ctx.globalAlpha = 1.0;
-    this.ctx.strokeStyle = "#1967D2";
+    this.ctx.strokeStyle = Color.ACTIVE_BORDER;
     this.ctx.lineWidth = 2;
     this.ctx.save();
     this.ctx.clip();
@@ -245,11 +246,12 @@ export class SingleTimelineComponent {
     }
 
     this.ctx.globalAlpha = 1.0;
-
     this.defineEntryPath(this.selected, 1);
-    this.ctx.strokeStyle = "#1967D2"; // colorShade(this.color, -30);
+    this.ctx.fillStyle = this.color;
+    this.ctx.strokeStyle = Color.ACTIVE_BORDER;
     this.ctx.lineWidth = 3;
     this.ctx.stroke();
+    this.ctx.fill();
 
     this.ctx.restore();
   }
@@ -259,8 +261,9 @@ export class SingleTimelineComponent {
 function rect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
   ctx.beginPath();
   ctx.moveTo(x, y);
-  ctx.lineTo(x + w, x);
-  ctx.lineTo(x + w, h);
-  ctx.lineTo(x, h);
+  ctx.lineTo(x + w, y);
+  ctx.lineTo(x + w, y + h);
+  ctx.lineTo(x, y + h);
+  ctx.lineTo(x, y);
   ctx.closePath();
 }
