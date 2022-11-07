@@ -20,7 +20,7 @@ import { DraggableCanvasObject } from "./draggable_canvas_object";
 export type DragListener = (x: number, y: number) => void;
 export type DropListener = DragListener;
 
-export class DraggableCanvasObjectHandler {
+export class CanvasMouseHandler {
 
   // Ordered top most element to bottom most
   private draggableObjects = new Array<DraggableCanvasObject>();
@@ -30,7 +30,9 @@ export class DraggableCanvasObjectHandler {
   private onDrop = new Map<DraggableCanvasObject, DropListener>();
 
   constructor(
-    private drawer: CanvasDrawer
+    private drawer: CanvasDrawer,
+    private defaultCursor: string = "auto",
+    private onUnhandledMouseDown: (x: number, y: number) => void = (x, y) => {}
   ) {
     this.drawer.canvas.addEventListener("mousemove", (event) => { this.handleMouseMove(event); });
     this.drawer.canvas.addEventListener("mousedown", (event) => { this.handleMouseDown(event); });
@@ -38,7 +40,7 @@ export class DraggableCanvasObjectHandler {
     this.drawer.canvas.addEventListener("mouseout", (event) => { this.handleMouseUp(event); });
   }
 
-  public register(
+  public registerDraggableObject(
     draggableObject: DraggableCanvasObject,
     onDrag: DragListener,
     onDrop: DropListener,
@@ -63,6 +65,8 @@ export class DraggableCanvasObjectHandler {
     const clickedObject = this.objectAt(mouseX, mouseY);
     if (clickedObject !== undefined) {
       this.draggingObject = clickedObject;
+    } else {
+      this.onUnhandledMouseDown(mouseX, mouseY);
     }
     this.updateCursor(mouseX, mouseY);
   }
@@ -122,7 +126,7 @@ export class DraggableCanvasObjectHandler {
         this.drawer.canvas.style.cursor = "grab";
       }
     } else {
-      this.drawer.canvas.style.cursor = "auto";
+      this.drawer.canvas.style.cursor = this.defaultCursor;
     }
   }
 

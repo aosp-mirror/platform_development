@@ -22,27 +22,30 @@ export type drawConfig = {
 }
 
 export class DraggableCanvasObject {
+  private draggingPosition: number|undefined;
+
   constructor(
     private drawer: CanvasDrawer,
-    private position: number,
+    private positionGetter: () => number,
     private definePathFunc: (ctx: CanvasRenderingContext2D, position: number) => void,
     private drawConfig: drawConfig,
     private onDrag: (x: number) => void,
     private onDrop: (x: number) => void,
   ) {
-    this.drawer.handler.register(this, (x, ) => {
-      this.position = x;
+    this.drawer.handler.registerDraggableObject(this, (x, ) => {
+      this.draggingPosition = x;
       this.onDrag(x);
       this.drawer.draw();
-    }, (x, ) => {
-      this.position = x;
+    }, (x: number, ) => {
+      this.draggingPosition = undefined;
       this.onDrop(x);
       this.drawer.draw();
     });
   }
 
   public definePath(ctx: CanvasRenderingContext2D) {
-    this.definePathFunc(ctx, this.position);
+    const position = this.draggingPosition !== undefined ? this.draggingPosition : this.positionGetter();
+    this.definePathFunc(ctx, position);
   }
 
   public draw(ctx: CanvasRenderingContext2D) {

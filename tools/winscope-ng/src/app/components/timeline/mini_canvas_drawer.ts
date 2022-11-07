@@ -19,7 +19,7 @@ import { Color } from "../../colors";
 import { TraceType } from "common/trace/trace_type";
 import { CanvasDrawer } from "../canvas/canvas_drawer";
 import { DraggableCanvasObject } from "../canvas/draggable_canvas_object";
-import { DraggableCanvasObjectHandler } from "../canvas/draggable_canvas_object_handler";
+import { CanvasMouseHandler } from "../canvas/draggable_canvas_object_handler";
 import { BigIntSegment, Segment, TimelineData } from "./utils";
 
 export class MiniCanvasDrawerInput {
@@ -113,7 +113,7 @@ class MiniCanvasDrawerData {
 export class MiniCanvasDrawer implements CanvasDrawer {
 
   public ctx: CanvasRenderingContext2D;
-  public handler: DraggableCanvasObjectHandler;
+  public handler: CanvasMouseHandler;
 
   private activePointer: DraggableCanvasObject;
   private leftFocusSectionSelector: DraggableCanvasObject;
@@ -139,7 +139,8 @@ export class MiniCanvasDrawer implements CanvasDrawer {
     private inputGetter: () => MiniCanvasDrawerInput,
     private onPointerPositionDragging: (pos: bigint) => void,
     private onPointerPositionChanged: (pos: bigint) => void,
-    private onSelectionChanged: (selection: BigIntSegment) => void
+    private onSelectionChanged: (selection: BigIntSegment) => void,
+    private onUnhandledClick: (pos: bigint) => void,
   ) {
     const ctx = canvas.getContext("2d");
 
@@ -148,13 +149,15 @@ export class MiniCanvasDrawer implements CanvasDrawer {
     }
 
     this.ctx = ctx;
-    // DraggableCanvasObjectHandler.getInstance()
-    //   .registerCanvas("MiniTimelineCanvas", this.canvas, this.ctx);
-    this.handler = new DraggableCanvasObjectHandler(this);
+
+    const onUnhandledClickInternal = (x: number, y: number) => {
+      this.onUnhandledClick(this.input.transformer.untransform(x));
+    };
+    this.handler = new CanvasMouseHandler(this, "pointer", onUnhandledClickInternal);
 
     this.activePointer = new DraggableCanvasObject(
       this,
-      this.selectedPosition,
+      () => this.selectedPosition,
       (ctx: CanvasRenderingContext2D, position: number) => {
         const barWidth = 3;
         const triangleHeight = this.pointerWidth / 2;
@@ -187,9 +190,24 @@ export class MiniCanvasDrawer implements CanvasDrawer {
       fill: true,
     };
 
+    const onLeftSelectionChanged = (x: number) => {
+      this.selection.from = x;
+      this.onSelectionChanged({
+        from: this.input.transformer.untransform(x),
+        to: this.input.transformer.untransform(this.selection.to)
+      });
+    };
+    const onRightSelectionChanged = (x: number) => {
+      this.selection.to = x;
+      this.onSelectionChanged({
+        from: this.input.transformer.untransform(this.selection.from),
+        to: this.input.transformer.untransform(x)
+      });
+    };
+
     this.leftFocusSectionSelector = new DraggableCanvasObject(
       this,
-      this.selection.from,
+      () => this.selection.from,
       (ctx: CanvasRenderingContext2D, position: number) => {
         const barWidth = 6;
         const triangleHeight = this.innerHeight / 6;
@@ -205,25 +223,13 @@ export class MiniCanvasDrawer implements CanvasDrawer {
         ctx.closePath();
       },
       focusSelectorDrawConfig,
-      (x) => {
-        this.selection.from = x;
-        this.onSelectionChanged({
-          from: this.input.transformer.untransform(x),
-          to: this.input.transformer.untransform(this.selection.to)
-        });
-      },
-      (x) => {
-        this.selection.from = x;
-        this.onSelectionChanged({
-          from: this.input.transformer.untransform(x),
-          to: this.input.transformer.untransform(this.selection.to)
-        });
-      },
+      onLeftSelectionChanged,
+      onLeftSelectionChanged,
     );
 
     this.rightFocusSectionSelector = new DraggableCanvasObject(
       this,
-      this.selection.to,
+      () => this.selection.to,
       (ctx: CanvasRenderingContext2D, position: number) => {
         const barWidth = 6;
         const triangleHeight = this.innerHeight / 6;
@@ -238,20 +244,8 @@ export class MiniCanvasDrawer implements CanvasDrawer {
         ctx.closePath();
       },
       focusSelectorDrawConfig,
-      (x) => {
-        this.selection.to = x;
-        this.onSelectionChanged({
-          from: this.input.transformer.untransform(this.selection.from),
-          to: this.input.transformer.untransform(x)
-        });
-      },
-      (x) => {
-        this.selection.to = x;
-        this.onSelectionChanged({
-          from: this.input.transformer.untransform(this.selection.from),
-          to: this.input.transformer.untransform(x)
-        });
-      },
+      onRightSelectionChanged,
+      onRightSelectionChanged,
     );
   }
 

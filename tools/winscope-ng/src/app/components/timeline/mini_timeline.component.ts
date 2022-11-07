@@ -56,6 +56,12 @@ export class MiniTimelineComponent {
   ngAfterViewInit(): void {
     this.makeHiPPICanvas();
 
+    const updateTimestampCallback = (position: bigint) => {
+      const timestampType = this.timelineCoordinator.getTimestampType()!;
+      this.changeSeekTimestamp.emit(undefined);
+      this.changeTimestamp.emit(new Timestamp(timestampType, position));
+    };
+
     this.drawer = new MiniCanvasDrawer(
       this.canvas,
       () => this.getMiniCanvasDrawerInput(),
@@ -63,18 +69,15 @@ export class MiniTimelineComponent {
         const timestampType = this.timelineCoordinator.getTimestampType()!;
         this.changeSeekTimestamp.emit(new Timestamp(timestampType, position));
       },
-      (position) => {
-        const timestampType = this.timelineCoordinator.getTimestampType()!;
-        this.changeSeekTimestamp.emit(undefined);
-        this.changeTimestamp.emit(new Timestamp(timestampType, position));
-      },
+      updateTimestampCallback,
       (selection) => {
         const timestampType = this.timelineCoordinator.getTimestampType()!;
         this.timelineCoordinator.setSelection({
           from: new Timestamp(timestampType, selection.from),
           to: new Timestamp(timestampType, selection.to)
         });
-      }
+      },
+      updateTimestampCallback
     );
     this.drawer.draw();
   }

@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import { DraggableCanvasObjectHandler } from "./draggable_canvas_object_handler";
+import { CanvasMouseHandler } from "./draggable_canvas_object_handler";
 
 export type padding = {left: number, top: number, right: number, bottom: number};
 
 export interface CanvasDrawer {
   draw(): void;
-  handler: DraggableCanvasObjectHandler;
+  handler: CanvasMouseHandler;
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D
   padding: padding
