@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Component, ElementRef, EventEmitter, Input, Output, SimpleChanges, ViewChild } from "@angular/core";
+import { Component, ElementRef, EventEmitter, HostListener, Input, Output, SimpleChanges, ViewChild } from "@angular/core";
 
 export type entry = bigint;
 
@@ -42,7 +42,7 @@ export class SingleTimelineComponent {
   @Output() onTimestampChanged = new EventEmitter<bigint>();
 
   @ViewChild("canvas", {static: false}) canvasRef!: ElementRef;
-  @ViewChild("wrapper", {static: false}) warpperRef!: ElementRef;
+  @ViewChild("wrapper", {static: false}) wrapperRef!: ElementRef;
 
   hoveringEntry: entry|null = null;
 
@@ -70,15 +70,20 @@ export class SingleTimelineComponent {
 
   ngAfterViewInit() {
     // TODO: Clear observer at some point
-    new ResizeObserver(() => this.initializeCanvas()).observe(this.warpperRef.nativeElement);
+    new ResizeObserver(() => this.initializeCanvas()).observe(this.wrapperRef.nativeElement);
     this.initializeCanvas();
   }
 
-  private initializeCanvas() {
-    this.viewInitialized = true;
-    const computedStyle = getComputedStyle(this.warpperRef.nativeElement);
-    const width = this.warpperRef.nativeElement.offsetWidth;
-    const height = this.warpperRef.nativeElement.offsetHeight
+  public initializeCanvas() {
+    // Reset any size before computing new size to avoid it interfering with size computations
+    this.canvas.width = 0;
+    this.canvas.height = 0;
+    this.canvas.style.width = "auto";
+    this.canvas.style.height = "auto";
+
+    const computedStyle = getComputedStyle(this.wrapperRef.nativeElement);
+    const width = this.wrapperRef.nativeElement.offsetWidth;
+    const height = this.wrapperRef.nativeElement.offsetHeight
       - parseFloat(computedStyle.paddingTop)
       - parseFloat(computedStyle.paddingBottom);
 
@@ -95,6 +100,8 @@ export class SingleTimelineComponent {
     this.canvas.addEventListener("mousemove", (event: MouseEvent) => { this.handleMouseMove(event); });
     this.canvas.addEventListener("mousedown", (event: MouseEvent) => { this.handleMouseDown(event); });
     this.canvas.addEventListener("mouseout", (event: MouseEvent) => { this.handleMouseOut(event); });
+
+    this.viewInitialized = true;
   }
 
   ngOnChanges(changes: SimpleChanges) {
