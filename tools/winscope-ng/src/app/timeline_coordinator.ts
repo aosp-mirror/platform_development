@@ -222,6 +222,16 @@ export class TimelineCoordinator {
     this.videoData = undefined;
     this.screenRecordingTimeMapping = new Map<Timestamp, number>();
   }
+
+  public moveToPreviousEntryFor(type: TraceType) {
+    const prevTimestamp = this.getPreviousTimestampFor(type);
+    this.updateCurrentTimestamp(prevTimestamp);
+  }
+
+  public moveToNextEntryFor(type: TraceType) {
+    const nextTimestamp = this.getNextTimestampFor(type);
+    this.updateCurrentTimestamp(nextTimestamp);
+  }
 }
 
 export interface TimestampChangeObserver {

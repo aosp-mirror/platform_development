@@ -23,6 +23,7 @@ import {
   Output,
   EventEmitter,
   ViewChild,
+  HostListener,
 } from "@angular/core";
 import {FormControl} from "@angular/forms";
 import { DomSanitizer, SafeUrl } from "@angular/platform-browser";
@@ -350,13 +351,25 @@ export class TimelineComponent {
     this.selectedTraces = this.selectedTracesFormControl.value;
   }
 
+  @HostListener("document:keydown", ["$event"])
+  handleKeyboardEvent(event: KeyboardEvent) {
+    switch (event.key) {
+      case "ArrowLeft": {
+        this.moveToPreviousEntry();
+        break;
+      }
+      case "ArrowRight": {
+        this.moveToNextEntry();
+        break;
+      }
+    }
+  }
+
   moveToPreviousEntry() {
-    const prevTimestamp = this.timelineCoordinator.getPreviousTimestampFor(this.activeTrace);
-    this.timelineCoordinator.updateCurrentTimestamp(prevTimestamp);
+    this.timelineCoordinator.moveToPreviousEntryFor(this.activeTrace);
   }
 
   moveToNextEntry() {
-    const nextTimestamp = this.timelineCoordinator.getNextTimestampFor(this.activeTrace);
-    this.timelineCoordinator.updateCurrentTimestamp(nextTimestamp);
+    this.timelineCoordinator.moveToNextEntryFor(this.activeTrace);
   }
 }
