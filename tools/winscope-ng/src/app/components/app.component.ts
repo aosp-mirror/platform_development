@@ -133,7 +133,8 @@ import { TimelineCoordinator } from "app/timeline_coordinator";
         flex: 1;
       }
       .viewers {
-        height: 100%;
+        height: 0;
+        flex-grow: 1;
         display: flex;
         flex-direction: column;
         overflow: auto;
