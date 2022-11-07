@@ -78,7 +78,7 @@ const MAX_SELECTED_TRACES = 3;
             </button>
         </div>
         <div id="trace-selector">
-            <mat-form-field>
+            <mat-form-field appearance="none">
                 <mat-select #traceSelector [formControl]="selectedTracesFormControl" multiple (closed)="onTraceSelectionClosed()">
                   <div class="tip">
                     Select up to 2 additional traces to display.
@@ -99,6 +99,14 @@ const MAX_SELECTED_TRACES = 3;
                     <button mat-button color="primary" (click)="traceSelector.close()">Cancel</button>
                     <button mat-flat-button color="primary" (click)="applyNewTraceSelection(); traceSelector.close()">Apply</button>
                   </div>
+                  <mat-select-trigger class="shown-selection">
+                    <mat-icon
+                      *ngFor="let selectedTrace of selectedTraces"
+                      [style]="{color: TRACE_INFO[selectedTrace].color}"
+                    >
+                      {{ TRACE_INFO[selectedTrace].icon }}
+                    </mat-icon>
+                  </mat-select-trigger>
                 </mat-select>
             </mat-form-field>
         </div>
@@ -175,6 +183,27 @@ const MAX_SELECTED_TRACES = 3;
     }
     #expanded-timeline {
       flex-grow: 1;
+    }
+    #trace-selector .mat-form-field-infix {
+      width: 50px;
+      padding: 0 0.75rem 0 0.5rem;
+      border-top: unset;
+    }
+    #trace-selector .mat-icon {
+      padding: 2px;
+    }
+    #trace-selector .shown-selection {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: auto;
+    }
+    #trace-selector .mat-select-trigger {
+      height: unset;
+    }
+    #trace-selector .mat-form-field-wrapper {
+      padding: 0;
     }
     .mat-select-panel {
       max-height: unset!important;
