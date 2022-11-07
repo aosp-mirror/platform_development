@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 import {ComponentFixture, TestBed} from "@angular/core/testing";
-import { PropertyGroupsComponent } from "./property_groups.component";
-import { ComponentFixtureAutoDetect } from "@angular/core/testing";
 import { MatDividerModule } from "@angular/material/divider";
+import { MatTooltipModule } from "@angular/material/tooltip";
+import { PropertyGroupsComponent } from "./property_groups.component";
+import { LayerBuilder } from "test/unit/layer_builder";
 import { TransformMatrixComponent } from "./transform_matrix.component";
 
 describe("PropertyGroupsComponent", () => {
@@ -24,13 +25,11 @@ describe("PropertyGroupsComponent", () => {
   let component: PropertyGroupsComponent;
   let htmlElement: HTMLElement;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [
-        MatDividerModule
-      ],
-      providers: [
-        { provide: ComponentFixtureAutoDetect, useValue: true }
+        MatDividerModule,
+        MatTooltipModule
       ],
       declarations: [
         PropertyGroupsComponent,
@@ -38,9 +37,6 @@ describe("PropertyGroupsComponent", () => {
       ],
       schemas: []
     }).compileComponents();
-  });
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(PropertyGroupsComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
@@ -48,5 +44,25 @@ describe("PropertyGroupsComponent", () => {
 
   it("can be created", () => {
     expect(component).toBeTruthy();
+  });
+
+  it("it renders verbose flags if available", async () => {
+    const layer = new LayerBuilder().setFlags(3).build();
+    component.item = layer;
+    fixture.detectChanges();
+
+    const flags = htmlElement.querySelector(".flags");
+    expect(flags).toBeTruthy();
+    expect(flags!.innerHTML).toMatch("Flags:.*HIDDEN|OPAQUE \\(0x3\\)");
+  });
+
+  it("it renders numeric flags if verbose flags not available", async () => {
+    const layer = new LayerBuilder().setFlags(0).build();
+    component.item = layer;
+    fixture.detectChanges();
+
+    const flags = htmlElement.querySelector(".flags");
+    expect(flags).toBeTruthy();
+    expect(flags!.innerHTML).toMatch("Flags:.*0");
   });
 });
