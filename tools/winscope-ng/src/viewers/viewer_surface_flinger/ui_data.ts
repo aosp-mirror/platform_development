@@ -23,7 +23,6 @@ export class UiData {
   dependencies: Array<TraceType>;
   rects: Rectangle[] = [];
   displayIds: number[] = [];
-  hasVirtualDisplays = false;
   highlightedItems: Array<string> = [];
   pinnedItems: Array<HierarchyTreeNode> = [];
   hierarchyUserOptions: UserOptions = {};

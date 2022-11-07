@@ -16,7 +16,6 @@
 
 import {Component, Injector, Inject, ViewEncapsulation, Input, ChangeDetectorRef} from "@angular/core";
 import { createCustomElement } from "@angular/elements";
-import { MatSliderChange } from "@angular/material/slider";
 import { TraceCoordinator } from "app/trace_coordinator";
 import { PersistentStore } from "common/persistent_store";
 import { Timestamp } from "common/trace/timestamp";
