@@ -15,7 +15,7 @@
  */
 
 import { Display, LayerTraceEntry, LayerTraceEntryBuilder, toRect, toSize, toTransform } from "../common"
-import Layer from './Layer'
+import {Layer} from "./Layer";
 
 LayerTraceEntry.fromProto = function (protos: any[], displayProtos: any[],
         timestamp: number, hwcBlob: string, where: string = ''): LayerTraceEntry {
