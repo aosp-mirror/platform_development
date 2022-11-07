@@ -86,6 +86,7 @@ import { TimelineCoordinator } from "app/timeline_coordinator";
           *ngIf="dataLoaded"
           [activeTrace]="activeTraceType"
           [availableTraces]="availableTraces"
+          [videoData]="videoData"
           (onCollapsedTimelineSizeChanged)="onCollapsedTimelineSizeChanged($event)"
         ></timeline>
       </mat-drawer>
@@ -207,6 +208,10 @@ export class AppComponent {
 
   get availableTraces(): TraceType[] {
     return this.traceCoordinator.getLoadedTraces().map((trace) => trace.type);
+  }
+
+  get videoData(): Blob|undefined {
+    return this.timelineCoordinator.getVideoData();
   }
 
   public onUploadNewClick() {

@@ -232,6 +232,13 @@ export class TimelineComponent {
   @Input() expanded = false;
   @Input() activeTrace: TraceType = TraceType.SURFACE_FLINGER;
   @Input() availableTraces: TraceType[] = [];
+  @Input() set videoData(value: Blob|undefined) {
+    if (value !== undefined) {
+      this.videoUrl = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(value));
+    } else {
+      this.videoUrl = undefined;
+    }
+  }
 
   @Output() onCollapsedTimelineSizeChanged = new EventEmitter<number>();
 
@@ -239,6 +246,7 @@ export class TimelineComponent {
 
   selectedTraces: TraceType[] = [];
   selectedTracesFormControl = new FormControl();
+  videoUrl: SafeUrl|undefined;
 
   TRACE_INFO = TRACE_INFO;
 
@@ -269,14 +277,6 @@ export class TimelineComponent {
     return TimeUtils.nanosecondsToHuman(this.currentTimestamp.getValueNs());
   }
 
-  get videoUrl(): SafeUrl|undefined {
-    const videoData = this.timelineCoordinator.getVideoData();
-    if (videoData === undefined) {
-      return undefined;
-    }
-    return this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(videoData));
-  }
-
   constructor(
     @Inject(TimelineCoordinator) private timelineCoordinator: TimelineCoordinator,
     @Inject(DomSanitizer) private sanitizer: DomSanitizer
@@ -291,6 +291,29 @@ export class TimelineComponent {
   ngAfterViewInit() {
     const height = this.miniTimelineComponent.miniTimelineWraper.nativeElement.offsetHeight;
     this.onCollapsedTimelineSizeChanged.emit(height);
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes["activeTrace"] !== undefined) {
+      if (this.selectedTraces.length < MAX_SELECTED_TRACES) {
+        const newSelection = new Set(this.selectedTraces)
+          .add(changes["activeTrace"].currentValue);
+        this.selectedTraces = [...newSelection];
+      } else {
+        if (this.selectedTraces
+          .find((trace: TraceType) => trace === changes["activeTrace"].currentValue)) {
+          // Active trace already selected, no need to change anything
+        } else {
+          // At max length so remove current active trace
+          const newSelection = new Set<TraceType>(this.selectedTraces);
+          newSelection.delete(changes["activeTrace"].previousValue);
+          newSelection.add(changes["activeTrace"].currentValue);
+          this.selectedTraces = [...newSelection];
+        }
+      }
+
+      this.selectedTracesFormControl.setValue(this.selectedTraces);
+    }
   }
 
   toggleExpand() {
@@ -325,29 +348,6 @@ export class TimelineComponent {
 
   applyNewTraceSelection() {
     this.selectedTraces = this.selectedTracesFormControl.value;
-  }
-
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes["activeTrace"] !== undefined) {
-      if (this.selectedTraces.length < MAX_SELECTED_TRACES) {
-        const newSelection = new Set(this.selectedTraces)
-          .add(changes["activeTrace"].currentValue);
-        this.selectedTraces = [...newSelection];
-      } else {
-        if (this.selectedTraces
-          .find((trace: TraceType) => trace === changes["activeTrace"].currentValue)) {
-          // Active trace already selected, no need to change anything
-        } else {
-          // At max length so remove current active trace
-          const newSelection = new Set<TraceType>(this.selectedTraces);
-          newSelection.delete(changes["activeTrace"].previousValue);
-          newSelection.add(changes["activeTrace"].currentValue);
-          this.selectedTraces = [...newSelection];
-        }
-      }
-
-      this.selectedTracesFormControl.setValue(this.selectedTraces);
-    }
   }
 
   moveToPreviousEntry() {
