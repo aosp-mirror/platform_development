@@ -15,6 +15,12 @@ android_sdk_repo_host {
         ":build_tools_runtime_properties",
     ],
 
+    merge_zips: [
+        ":build-tools_renderscript_includes",
+        ":renderscript-clang-include",
+        ":renderscript_sdk_prebuilts",
+    ],
+
     multilib: {
         common: {
             deps: [
@@ -51,8 +57,10 @@ android_sdk_repo_host {
                 "aapt2",
                 "aidl",
                 "apksigner",
+                "bcc_compat",
                 "d8",
                 "dexdump",
+                "llvm-rs-cc",
                 "split-select",
                 "zipalign",
             ],
@@ -70,6 +78,8 @@ android_sdk_repo_host {
                 "aapt",
                 "aapt2",
                 "aidl",
+                "bcc_compat",
+                "llvm-rs-cc",
                 "split-select",
                 "zipalign",
             ],
@@ -86,9 +96,12 @@ android_sdk_repo_host {
                         "aapt2",
                         "aidl",
                         "apksigner",
+                        "bcc_compat",
                         "d8",
                         "dexdump",
                         "libwinpthread-1",
+                        "lld",
+                        "llvm-rs-cc",
                         "split-select",
                         "zipalign",
                     ],
@@ -118,16 +131,30 @@ android_sdk_repo_host {
                 "aapt.exe",
                 "aapt2.exe",
                 "aidl.exe",
+                "bcc_compat.exe",
                 "dexdump.exe",
                 "lib64/*.dll",
                 "lld-bin/*.dll",
                 "lld-bin/*.exe",
                 "lld.exe",
+                "llvm-rs-cc.exe",
                 "split-select.exe",
                 "zipalign.exe",
             ],
         },
     },
+}
+
+// Rename rs_script_api files to renderscript/include/...
+genrule {
+    name: "build-tools_renderscript_includes",
+    visibility: ["//visibility:private"],
+    tools: ["soong_zip"],
+    cmd: "echo $(in) >$(genDir)/list && " +
+        "$(location soong_zip) -o $(out) -P renderscript " +
+        "-C $$(dirname $$(dirname $$(awk '{ print $$1 }' $(genDir)/list))) -l $(genDir)/list",
+    srcs: [":rs_script_api"],
+    out: ["rs_script_api.zip"],
 }
 
 // This is a device library, so it can't be used by android_sdk_repo_host directly.
