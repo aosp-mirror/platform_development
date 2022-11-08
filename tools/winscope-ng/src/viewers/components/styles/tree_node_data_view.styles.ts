@@ -44,9 +44,6 @@ export const treeNodeDataViewStyles = `
 `;
 
 export const treeNodePropertiesDataViewStyles = `
-    .key {
-        color: #4b4b4b;
-    }
     .value {
         color: #8A2BE2;
     }

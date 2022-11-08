@@ -22,7 +22,6 @@ import { UiTreeUtils, UiTreeNode, DiffType, HierarchyTreeNode } from "viewers/co
   template: `
     <button
       *ngIf="showChevron()"
-      color="primary"
       class="icon-button toggle-tree-btn"
       (click)="toggleTree($event)"
     >
@@ -37,7 +36,6 @@ import { UiTreeUtils, UiTreeNode, DiffType, HierarchyTreeNode } from "viewers/co
 
     <button
       *ngIf="showPinNodeIcon()"
-      color="primary"
       class="icon-button pin-node-btn"
       (click)="pinNode($event)"
     >
@@ -59,7 +57,6 @@ import { UiTreeUtils, UiTreeNode, DiffType, HierarchyTreeNode } from "viewers/co
 
     <button
       *ngIf="hasChildren && !isCollapsed"
-      color="primary"
       class="icon-button expand-tree-btn"
       [class]="collapseDiffClass"
       (click)="expandTree($event)"

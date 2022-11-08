@@ -26,7 +26,7 @@ export const nodeStyles = `
         background: #ff6b6b;
     }
 
-    .node:hover:not(.selected) {background: #f1f1f1;}
+    .node:hover:not(.selected) {background-color: rgba(127, 127, 127, 0.5)}
 
     .node:not(.selected).modified {
         background: cyan;
@@ -45,11 +45,12 @@ export const nodeStyles = `
     .selected {background-color: #365179;color: white;}
 `;
 
+// FIXME: child-hover selector is not working.
 export const treeNodeDataViewStyles = `
-    .node.shaded:not(:hover):not(.selected):not(.added):not(.addedMove):not(.deleted):not(.deletedMove):not(.modified) {background: #f8f9fa}
-    .node.selected + .children {border-left: 1px solid rgb(200, 200, 200);}
+    .node + .children:not(.flattened) {margin-left: 12px;padding-left: 11px;border-left: 1px solid var(--border-color);}
+    .node.selected + .children {border-left: 1px solid rgb(150, 150, 150);}
+    .node:hover + .children {border-left: 1px solid rgba(150, 150, 150, 0.75);}
     .node.child-hover + .children {border-left: 1px solid #b4b4b4;}
-    .node.hover + .children { border-left: 1px solid rgb(200, 200, 200);}
 `;
 
 export const nodeInnerItemStyles = `
@@ -64,6 +65,7 @@ export const nodeInnerItemStyles = `
         border: none;
         display: inline-block;
         vertical-align: middle;
+        color: inherit;
     }
 
     .expand-tree-btn {

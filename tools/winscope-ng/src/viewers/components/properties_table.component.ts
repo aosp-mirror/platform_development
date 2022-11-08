@@ -39,7 +39,7 @@ import { TableProperties } from "viewers/common/table_properties";
 
       .table-cell-name, .table-cell-value {
         padding: 1px 5px;
-        border: 1px solid var(--default-border);
+        border: 1px solid var(--border-color);
         overflow-wrap: anywhere;
       }
 

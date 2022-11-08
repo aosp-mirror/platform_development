@@ -28,7 +28,6 @@ import { TraceType } from "common/trace/trace_type";
       [class.leaf]="isLeaf(this.item)"
       [class.selected]="isHighlighted(item, highlightedItems)"
       [class.clickable]="isClickable()"
-      [class.shaded]="isShaded"
       [class.hover]="nodeHover"
       [class.childHover]="childHover"
       [isAlwaysCollapsed]="isAlwaysCollapsed"
@@ -46,7 +45,7 @@ import { TraceType } from "common/trace/trace_type";
       (pinNodeChange)="propagateNewPinnedItem($event)"
     ></tree-node>
 
-    <div *ngIf="hasChildren()" class="children" [hidden]="!isCollapsed()" [style]="childrenIndentation()">
+    <div *ngIf="hasChildren()" class="children" [class.flattened]="isFlattened" [hidden]="!isCollapsed()">
       <tree-view
           *ngFor="let child of children()"
           class="childrenTree"
@@ -56,7 +55,6 @@ import { TraceType } from "common/trace/trace_type";
           [isLeaf]="isLeaf"
           [dependencies]="dependencies"
           [isFlattened]="isFlattened"
-          [isShaded]="!isShaded"
           [useGlobalCollapsedState]="useGlobalCollapsedState"
           [initialDepth]="initialDepth + 1"
           [highlightedItems]="highlightedItems"
@@ -81,7 +79,6 @@ export class TreeComponent {
   @Input() dependencies: Array<TraceType> = [];
   @Input() store!: PersistentStore;
   @Input() isFlattened? = false;
-  @Input() isShaded? = false;
   @Input() initialDepth = 0;
   @Input() highlightedItems: Array<string> = [];
   @Input() pinnedItems?: Array<HierarchyTreeNode> = [];
@@ -215,24 +212,6 @@ export class TreeComponent {
   public hasChildren() {
     const isParentEntryInFlatView = UiTreeUtils.isParentNode(this.item.kind ?? "") && this.isFlattened;
     return (!this.isFlattened || isParentEntryInFlatView) && !this.isLeaf(this.item);
-  }
-
-  public childrenIndentation() {
-    if (this.isFlattened) {
-      return {
-        marginLeft: "0px",
-        paddingLeft: "0px",
-        marginTop: "0px",
-      };
-    } else {
-      // Aligns border with collapse arrows
-      return {
-        marginLeft: "12px",
-        paddingLeft: "11px",
-        borderLeft: "1px solid rgb(238, 238, 238)",
-        marginTop: "0px",
-      };
-    }
   }
 
   private setCollapseValue(isCollapsed: boolean) {
