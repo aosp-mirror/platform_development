@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import { Injectable } from "@angular/core";
+import { Injectable, Type } from "@angular/core";
 import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
 import { ArrayUtils } from "common/utils/array_utils";
-import { BigIntSegment, TimeRange } from "./components/timeline/utils";
+import { TimeRange } from "./components/timeline/utils";
 
 type TimestampWithIndex = {index: number, timestamp: Timestamp};
 @Injectable()
@@ -30,13 +30,40 @@ export class TimelineCoordinator {
   private explicitlySetSelection: TimeRange|undefined = undefined;
   private videoData: Blob|undefined = undefined;
   private screenRecordingTimeMapping = new Map<Timestamp, number>();
+  // The trace type the currently active view depends on
+  private activeTraceTypes: TraceType[] = [];
 
   get currentTimestamp(): Timestamp|undefined {
     if (this.explicitlySetTimestamp === undefined) {
-      return this.getFirstTimestamp();
+      if (this.timelines.size === 0) {
+        return undefined;
+      }
+      if (this.activeTraceTypes.length === 0) {
+        return this.getFirstTimestamp();
+      }
+      return this.getFirstTimestampOfActiveTraces();
     } else {
       return this.explicitlySetTimestamp;
     }
+  }
+
+  getFirstTimestampOfActiveTraces(): Timestamp|undefined {
+    if (this.activeTraceTypes.length === 0) {
+      return undefined;
+    }
+    const activeTimestamps = this.activeTraceTypes.map(it => this.timelines.get(it)!).flatMap(it => it).sort();
+    if (activeTimestamps.length === 0) {
+      return undefined;
+    }
+    return activeTimestamps[0];
+  }
+
+  public setActiveTraceTypes(types: TraceType[]) {
+    this.activeTraceTypes = types;
+  }
+
+  public getActiveTraceTypes(): TraceType[] {
+    return this.activeTraceTypes;
   }
 
   public getTimestampType(): TimestampType|undefined {
@@ -222,6 +249,7 @@ export class TimelineCoordinator {
     this.explicitlySetSelection = undefined;
     this.videoData = undefined;
     this.screenRecordingTimeMapping = new Map<Timestamp, number>();
+    this.activeTraceTypes = [];
   }
 
   public moveToPreviousEntryFor(type: TraceType) {
