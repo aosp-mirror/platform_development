@@ -22,10 +22,10 @@ import { Layer } from "common/trace/flickerlib/common";
     <div class="group">
       <h3 class="group-header mat-subheading-2">Visibility</h3>
       <div class="left-column">
-        <p class="mat-body-1 flags">
+        <p class="mat-body-1">
           <span class="mat-body-2">Flags:</span>
           &ngsp;
-          {{ item.verboseFlags ? item.verboseFlags : item.flags }}
+          {{ item.flags }}
         </p>
         <p *ngFor="let reason of summary()" class="mat-body-1">
           <span class="mat-body-2">{{ reason.key }}:</span>

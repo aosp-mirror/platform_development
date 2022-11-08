@@ -96,4 +96,4 @@ function addAttributes(entry: Layer, proto: any) {
     entry.rect.label = entry.name;
 }
 
-export {Layer};
+export default Layer;
