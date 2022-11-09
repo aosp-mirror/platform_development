@@ -254,12 +254,16 @@ export class TimelineCoordinator {
 
   public moveToPreviousEntryFor(type: TraceType) {
     const prevTimestamp = this.getPreviousTimestampFor(type);
-    this.updateCurrentTimestamp(prevTimestamp);
+    if (prevTimestamp !== undefined) {
+      this.updateCurrentTimestamp(prevTimestamp);
+    }
   }
 
   public moveToNextEntryFor(type: TraceType) {
     const nextTimestamp = this.getNextTimestampFor(type);
-    this.updateCurrentTimestamp(nextTimestamp);
+    if (nextTimestamp !== undefined) {
+      this.updateCurrentTimestamp(nextTimestamp);
+    }
   }
 }
 
