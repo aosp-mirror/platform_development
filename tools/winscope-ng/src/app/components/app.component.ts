@@ -84,7 +84,7 @@ import { TimelineCoordinator } from "app/timeline_coordinator";
       <mat-drawer #drawer mode="push" opened="true" [baseHeight]="collapsedTimelineHeight">
         <timeline
           *ngIf="dataLoaded"
-          [activeTrace]="activeTraceType"
+          [activeTrace]="activeTraceType!"
           [availableTraces]="availableTraces"
           [videoData]="videoData"
           (onCollapsedTimelineSizeChanged)="onCollapsedTimelineSizeChanged($event)"
@@ -133,7 +133,8 @@ import { TimelineCoordinator } from "app/timeline_coordinator";
         flex: 1;
       }
       .viewers {
-        height: 100%;
+        height: 0;
+        flex-grow: 1;
         display: flex;
         flex-direction: column;
         overflow: auto;
@@ -257,15 +258,16 @@ export class AppComponent {
 
   handleActiveViewChanged(view: View) {
     this.activeView = view;
+    this.timelineCoordinator.setActiveTraceTypes(view.dependencies);
   }
 
-  get activeTraceType() {
+  get activeTraceType(): TraceType|undefined {
     if (this.activeView === undefined) {
       return undefined;
     }
-    if (this.activeView.dependencies.length !== 1) {
+    if (this.timelineCoordinator.getActiveTraceTypes().length !== 1) {
       throw Error("Viewers with more or less than one dependency not handled.");
     }
-    return this.activeView.dependencies[0];
+    return this.timelineCoordinator.getActiveTraceTypes()[0];
   }
 }

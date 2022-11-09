@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Component, ElementRef, EventEmitter, Inject, Input, Output, SimpleChanges, ViewChild } from "@angular/core";
+import { Component, ElementRef, EventEmitter, HostListener, Inject, Input, Output, SimpleChanges, ViewChild } from "@angular/core";
 import { TimelineCoordinator } from "app/timeline_coordinator";
 import { Timestamp } from "common/trace/timestamp";
 import { TraceType } from "common/trace/trace_type";
@@ -112,6 +112,12 @@ export class MiniTimelineComponent {
   }
 
   private makeHiPPICanvas() {
+    // Reset any size before computing new size to avoid it interfering with size computations
+    this.canvas.width = 0;
+    this.canvas.height = 0;
+    this.canvas.style.width = "auto";
+    this.canvas.style.height = "auto";
+
     const width = this.miniTimelineWraper.nativeElement.offsetWidth;
     const height = this.miniTimelineWraper.nativeElement.offsetHeight;
 
@@ -122,5 +128,11 @@ export class MiniTimelineComponent {
     this.canvas.height = HiPPIheight;
     this.canvas.style.width = width + "px";
     this.canvas.style.height = height + "px";
+  }
+
+  @HostListener("window:resize", ["$event"])
+  onResize(event: Event) {
+    this.makeHiPPICanvas();
+    this.drawer?.draw();
   }
 }

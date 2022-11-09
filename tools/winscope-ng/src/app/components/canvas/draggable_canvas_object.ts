@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { MathUtils } from "three/src/Three";
+import { Segment } from "../timeline/utils";
 import { CanvasDrawer } from "./canvas_drawer";
 
 export type drawConfig = {
@@ -31,21 +33,29 @@ export class DraggableCanvasObject {
     private drawConfig: drawConfig,
     private onDrag: (x: number) => void,
     private onDrop: (x: number) => void,
+    private rangeGetter: () => Segment,
   ) {
     this.drawer.handler.registerDraggableObject(this, (x, ) => {
-      this.draggingPosition = x;
-      this.onDrag(x);
+      this.draggingPosition = this.clampPositionToRange(x);
+      this.onDrag(this.draggingPosition);
       this.drawer.draw();
     }, (x: number, ) => {
       this.draggingPosition = undefined;
-      this.onDrop(x);
+      this.onDrop(this.clampPositionToRange(x));
       this.drawer.draw();
     });
   }
 
+  get range(): Segment {
+    return this.rangeGetter();
+  }
+
+  get position(): number {
+    return this.draggingPosition !== undefined ? this.draggingPosition : this.positionGetter();
+  }
+
   public definePath(ctx: CanvasRenderingContext2D) {
-    const position = this.draggingPosition !== undefined ? this.draggingPosition : this.positionGetter();
-    this.definePathFunc(ctx, position);
+    this.definePathFunc(ctx, this.position);
   }
 
   public draw(ctx: CanvasRenderingContext2D) {
@@ -59,5 +69,9 @@ export class DraggableCanvasObject {
     if (this.drawConfig.fill) {
       ctx.fill();
     }
+  }
+
+  private clampPositionToRange(x: number): number {
+    return MathUtils.clamp(x, this.range.from, this.range.to);
   }
 }

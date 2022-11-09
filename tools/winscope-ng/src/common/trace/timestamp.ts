@@ -15,8 +15,8 @@
  */
 
 enum TimestampType {
-  ELAPSED,
-  REAL,
+  ELAPSED = "ELAPSED",
+  REAL = "REAL",
 }
 
 class Timestamp {

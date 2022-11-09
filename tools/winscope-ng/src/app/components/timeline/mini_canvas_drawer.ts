@@ -183,6 +183,7 @@ export class MiniCanvasDrawer implements CanvasDrawer {
         this.input.selectedPosition = x;
         this.onPointerPositionChanged(this.input.transformer.untransform(x));
       },
+      () => this.usableRange
     );
 
     const focusSelectorDrawConfig = {
@@ -205,18 +206,19 @@ export class MiniCanvasDrawer implements CanvasDrawer {
       });
     };
 
+    const barWidth = 6;
+    const selectorArrowWidth = this.innerHeight / 12;
+    const selectorArrowHeight = selectorArrowWidth * 2;
+
     this.leftFocusSectionSelector = new DraggableCanvasObject(
       this,
       () => this.selection.from,
       (ctx: CanvasRenderingContext2D, position: number) => {
-        const barWidth = 6;
-        const triangleHeight = this.innerHeight / 6;
-
         ctx.beginPath();
         ctx.moveTo(position - barWidth, this.padding.top);
         ctx.lineTo(position, this.padding.top);
-        ctx.lineTo(position + triangleHeight / 2, this.padding.top + triangleHeight / 2);
-        ctx.lineTo(position, this.padding.top + triangleHeight);
+        ctx.lineTo(position + selectorArrowWidth, this.padding.top + selectorArrowWidth);
+        ctx.lineTo(position, this.padding.top + selectorArrowHeight);
         ctx.lineTo(position, this.padding.top + this.innerHeight);
         ctx.lineTo(position - barWidth, this.padding.top + this.innerHeight);
         ctx.lineTo(position - barWidth, this.padding.top);
@@ -225,20 +227,23 @@ export class MiniCanvasDrawer implements CanvasDrawer {
       focusSelectorDrawConfig,
       onLeftSelectionChanged,
       onLeftSelectionChanged,
+      () => {
+        return {
+          from: this.usableRange.from,
+          to: this.rightFocusSectionSelector.position - selectorArrowWidth - barWidth
+        };
+      }
     );
 
     this.rightFocusSectionSelector = new DraggableCanvasObject(
       this,
       () => this.selection.to,
       (ctx: CanvasRenderingContext2D, position: number) => {
-        const barWidth = 6;
-        const triangleHeight = this.innerHeight / 6;
-
         ctx.beginPath();
         ctx.moveTo(position + barWidth, this.padding.top);
         ctx.lineTo(position, this.padding.top);
-        ctx.lineTo(position - triangleHeight / 2, this.padding.top + triangleHeight / 2);
-        ctx.lineTo(position, this.padding.top + triangleHeight);
+        ctx.lineTo(position - selectorArrowWidth, this.padding.top + selectorArrowWidth);
+        ctx.lineTo(position, this.padding.top + selectorArrowHeight);
         ctx.lineTo(position, this.padding.top + this.innerHeight);
         ctx.lineTo(position + barWidth, this.padding.top + this.innerHeight);
         ctx.closePath();
@@ -246,6 +251,12 @@ export class MiniCanvasDrawer implements CanvasDrawer {
       focusSelectorDrawConfig,
       onRightSelectionChanged,
       onRightSelectionChanged,
+      () => {
+        return {
+          from: this.leftFocusSectionSelector.position + selectorArrowWidth + barWidth,
+          to: this.usableRange.to
+        };
+      }
     );
   }
 

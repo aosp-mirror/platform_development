@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-import { Component, ElementRef, EventEmitter, Inject, Input, Output, ViewChild } from "@angular/core";
+import { Component, ElementRef, EventEmitter, HostListener, Inject, Input, Output, QueryList, ViewChild, ViewChildren } from "@angular/core";
 import { TimelineCoordinator } from "app/timeline_coordinator";
 import { TRACE_INFO } from "app/trace_info";
 import { Timestamp } from "common/trace/timestamp";
+import { SingleTimelineComponent } from "./single_timeline.component";
 
 @Component({
   selector: "expanded-timeline",
@@ -32,7 +33,7 @@ import { Timestamp } from "common/trace/timestamp";
         <single-timeline
           [color]="TRACE_INFO[timeline.key].color"
           [entries]="timeline.value"
-          [selected]="timelineCoordinator.getActiveTimestampFor(timeline.key)?.timestamp ?? undefined"
+          [selected]="timelineCoordinator.getActiveTimestampFor(timeline.key)?.timestamp?.getValueNs() ?? undefined"
           [start]="start"
           [end]="end"
           (onTimestampChanged)="onTimestampChanged.emit($event)"
@@ -127,10 +128,11 @@ export class ExpandedTimelineComponent {
 
   @ViewChild("canvas", {static: false}) canvasRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild("expandedTimelineWrapper", {static: false}) warpperRef!: ElementRef;
+  @ViewChildren(SingleTimelineComponent) singleTimelines!: QueryList<SingleTimelineComponent>;
 
   TRACE_INFO = TRACE_INFO;
 
-  constructor(@Inject(TimelineCoordinator) private timelineCoordinator: TimelineCoordinator) {}
+  constructor(@Inject(TimelineCoordinator) public timelineCoordinator: TimelineCoordinator) {}
 
   get canvas(): HTMLCanvasElement {
     return this.canvasRef.nativeElement;
@@ -150,5 +152,29 @@ export class ExpandedTimelineComponent {
 
   get end() {
     return this.timelineCoordinator.selection.to;
+  }
+
+  @HostListener("window:resize", ["$event"])
+  onResize(event: Event) {
+    this.resizeCanvases();
+  }
+
+  private resizeCanvases() {
+    // Reset any size before computing new size to avoid it interfering with size computations.
+    // Needs to be done together because otherwise the sizes of each timeline will interfere with
+    // each other, since if one timeline is still too big the container will stretch to that size.
+    for (const timeline of this.singleTimelines) {
+      timeline.canvas.width = 0;
+      timeline.canvas.height = 0;
+      timeline.canvas.style.width = "auto";
+      timeline.canvas.style.height = "auto";
+    }
+
+    for (const timeline of this.singleTimelines) {
+      timeline.initializeCanvas();
+      timeline.canvas.height = 0;
+      timeline.canvas.style.width = "auto";
+      timeline.canvas.style.height = "auto";
+    }
   }
 }
