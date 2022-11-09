@@ -71,7 +71,6 @@ import { TableProperties } from "viewers/common/table_properties";
       <tree-view
         *ngIf="tree"
         [isFlattened]="isFlattened()"
-        [isShaded]="true"
         [item]="tree"
         [dependencies]="dependencies"
         [store]="store"

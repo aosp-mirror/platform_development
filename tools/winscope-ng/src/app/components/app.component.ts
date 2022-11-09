@@ -32,20 +32,27 @@ import { ViewerScreenRecordingComponent } from "viewers/viewer_screen_recording/
 @Component({
   selector: "app-root",
   template: `
-    <mat-toolbar>
+    <mat-toolbar class="toolbar">
       <span class="app-title">Winscope</span>
 
-      <ng-container *ngIf="dataLoaded">
-        <button color="primary" mat-stroked-button (click)="toggleTimestamp()">
-          Start/End Timestamp
-        </button>
+      <button *ngIf="dataLoaded" color="primary" mat-stroked-button (click)="toggleTimestamp()">
+        Start/End Timestamp
+      </button>
 
-        <div class="spacer"></div>
+      <div class="spacer"></div>
 
-        <button color="primary" mat-stroked-button (click)="onUploadNewClick()">
-          Upload New
-        </button>
-      </ng-container>
+      <button *ngIf="dataLoaded" color="primary" mat-stroked-button (click)="onUploadNewClick()">
+        Upload New
+      </button>
+
+      <button
+        mat-icon-button
+        matTooltip="Switch to {{ isDarkModeOn ? 'light' : 'dark'}} mode"
+        (click)="setDarkMode(!isDarkModeOn)">
+        <mat-icon>
+          {{ isDarkModeOn ? "brightness_5" : "brightness_4" }}
+        </mat-icon>
+      </button>
     </mat-toolbar>
 
     <mat-divider></mat-divider>
@@ -98,8 +105,8 @@ import { ViewerScreenRecordingComponent } from "viewers/viewer_screen_recording/
   `,
   styles: [
     `
-      .app-title {
-        margin-right: 10px;
+      .toolbar {
+        gap: 10px;
       }
       .welcome-info {
         margin: 16px 0 6px 0;
@@ -137,6 +144,7 @@ export class AppComponent {
   currentTimestampIndex = 0;
   allTimestamps: Timestamp[] = [];
   allViewers: Viewer[] = [];
+  isDarkModeOn!: boolean;
   @Input() dataLoaded = false;
 
   constructor(
@@ -145,6 +153,10 @@ export class AppComponent {
   ) {
     this.changeDetectorRef = changeDetectorRef;
     this.traceCoordinator = new TraceCoordinator();
+
+    const storeDarkMode = this.store.getFromStore("dark-mode");
+    const prefersDarkQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
+    this.setDarkMode(storeDarkMode != null ? storeDarkMode == "true" : prefersDarkQuery.matches);
 
     if (!customElements.get("viewer-input-method")) {
       customElements.define("viewer-input-method",
@@ -193,6 +205,12 @@ export class AppComponent {
     this.traceCoordinator.clearData();
     proxyClient.adbData = [];
     this.changeDetectorRef.detectChanges();
+  }
+
+  public setDarkMode(enabled: boolean) {
+    document.body.classList.toggle("dark-mode", enabled);
+    this.store.addToStore("dark-mode", `${enabled}`);
+    this.isDarkModeOn = enabled;
   }
 
   public onDataLoadedChange(dataLoaded: boolean) {

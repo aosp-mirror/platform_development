@@ -19,9 +19,11 @@ import { CommonModule } from "@angular/common";
 import { MatCardModule } from "@angular/material/card";
 import { MatButtonModule } from "@angular/material/button";
 import { MatDividerModule } from "@angular/material/divider";
+import { MatIconModule } from "@angular/material/icon";
 import { MatSliderModule } from "@angular/material/slider";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { MatToolbarModule } from "@angular/material/toolbar";
+import { MatTooltipModule } from "@angular/material/tooltip";
 
 import { AppComponent } from "./app.component";
 import { CollectTracesComponent } from "./collect_traces.component";
@@ -47,9 +49,11 @@ describe("AppComponent", () => {
         MatCardModule,
         MatButtonModule,
         MatDividerModule,
+        MatIconModule,
         MatSliderModule,
         MatSnackBarModule,
-        MatToolbarModule
+        MatToolbarModule,
+        MatTooltipModule
       ],
       declarations: [
         AppComponent,

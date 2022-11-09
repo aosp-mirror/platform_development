@@ -15,6 +15,7 @@
  */
 import { CUSTOM_ELEMENTS_SCHEMA } from "@angular/core";
 import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from "@angular/core/testing";
+import {MatCardModule} from "@angular/material/card";
 import {ViewerScreenRecordingComponent} from "./viewer_screen_recording.component";
 
 describe("ViewerScreenRecordingComponent", () => {
@@ -26,6 +27,9 @@ describe("ViewerScreenRecordingComponent", () => {
     await TestBed.configureTestingModule({
       providers: [
         { provide: ComponentFixtureAutoDetect, useValue: true }
+      ],
+      imports: [
+        MatCardModule,
       ],
       declarations: [
         ViewerScreenRecordingComponent,

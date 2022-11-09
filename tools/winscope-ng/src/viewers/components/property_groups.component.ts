@@ -270,7 +270,7 @@ import { Layer } from "common/trace/flickerlib/common";
 
       .right-column {
         flex: 1;
-        border: 1px solid var(--default-border);
+        border: 1px solid var(--border-color);
         border-left-width: 5px;
         padding: 0 5px;
       }
