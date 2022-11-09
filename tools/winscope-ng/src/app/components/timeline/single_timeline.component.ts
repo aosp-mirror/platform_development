@@ -96,6 +96,12 @@ export class SingleTimelineComponent {
     this.canvas.style.width = width + "px";
     this.canvas.style.height = height + "px";
 
+    // ensure all drawing operations are scaled
+    if (window.devicePixelRatio !== 1) {
+      const context = this.canvas.getContext("2d")!;
+      context.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+
     this.redraw();
 
     this.canvas.addEventListener("mousemove", (event: MouseEvent) => { this.handleMouseMove(event); });
@@ -119,11 +125,19 @@ export class SingleTimelineComponent {
     this.hoveringEntry = null;
   }
 
+  getXScale(): number {
+    return this.ctx.getTransform().m11;
+  }
+
+  getYScale(): number {
+    return this.ctx.getTransform().m22;
+  }
+
   private handleMouseMove(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    const mouseX = e.offsetX;
-    const mouseY = e.offsetY;
+    const mouseX = e.offsetX * this.getXScale();
+    const mouseY = e.offsetY * this.getYScale();
 
     this.updateCursor(mouseX, mouseY);
     this.drawEntryHover(mouseX, mouseY);
@@ -190,8 +204,8 @@ export class SingleTimelineComponent {
   private handleMouseDown(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    const mouseX = e.offsetX;
-    const mouseY = e.offsetY;
+    const mouseX = e.offsetX * this.getXScale();
+    const mouseY = e.offsetY * this.getYScale();
 
     const clickedEntry = this.getEntryAt(mouseX, mouseY);
 
@@ -204,12 +218,20 @@ export class SingleTimelineComponent {
     }
   }
 
+  getScaledCanvasWidth() {
+    return this.canvas.width / this.getXScale();
+  }
+
+  getScaledCanvasHeight() {
+    return this.canvas.height / this.getYScale();
+  }
+
   get entryWidth() {
-    return this.canvas.height;
+    return this.getScaledCanvasHeight();
   }
 
   get availableWidth() {
-    return this.canvas.width - this.entryWidth;
+    return this.getScaledCanvasWidth() - this.entryWidth;
   }
 
   private defineEntryPath(entry: entry, padding = 0) {

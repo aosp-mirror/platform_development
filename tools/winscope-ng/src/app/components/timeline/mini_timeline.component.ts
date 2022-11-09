@@ -128,6 +128,12 @@ export class MiniTimelineComponent {
     this.canvas.height = HiPPIheight;
     this.canvas.style.width = width + "px";
     this.canvas.style.height = height + "px";
+
+    // ensure all drawing operations are scaled
+    if (window.devicePixelRatio !== 1) {
+      const context = this.canvas.getContext("2d")!;
+      context.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
   }
 
   @HostListener("window:resize", ["$event"])
