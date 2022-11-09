@@ -95,7 +95,7 @@ import { ParserError } from "parsers/parser_factory";
         display: flex;
         flex-direction: column;
         overflow: auto;
-        border: 2px dashed var(--default-border);
+        border: 2px dashed var(--border-color);
         cursor: pointer;
       }
       .uploaded-files {

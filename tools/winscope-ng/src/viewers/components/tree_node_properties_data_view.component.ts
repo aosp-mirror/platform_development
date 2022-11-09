@@ -21,7 +21,7 @@ import { PropertiesTreeNode } from "viewers/common/ui_tree_utils";
   selector: "tree-node-properties-data-view",
   template: `
     <p class="mat-body-1">
-      <span class="key">{{ item.propertyKey }}</span>
+      {{ item.propertyKey }}
       <ng-container *ngIf="item.propertyValue">
         :&ngsp;
         <span [class]="[valueClass()]" class="value">{{ item.propertyValue }}</span>

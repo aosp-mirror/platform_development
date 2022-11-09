@@ -59,7 +59,7 @@ import { Component, Input } from "@angular/core";
 
       .table td {
         padding: 1px 5px;
-        border: 1px solid var(--default-border);
+        border: 1px solid var(--border-color);
         text-align: center;
         overflow-wrap: anywhere;
       }

@@ -262,7 +262,7 @@ import { ViewerEvents } from "viewers/common/viewer_events";
   styles: [
     `
       .view-header {
-        border-bottom: 1px solid var(--default-border);
+        border-bottom: 1px solid var(--border-color);
       }
 
       .additional-properties-content {
@@ -275,7 +275,7 @@ import { ViewerEvents } from "viewers/common/viewer_events";
         padding: 8px;
         display: flex;
         flex-direction: row;
-        border-bottom: 1px solid var(--default-border);
+        border-bottom: 1px solid var(--border-color);
       }
 
       .mat-body-1 {

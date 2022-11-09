@@ -20,33 +20,33 @@ import { Transform } from "common/trace/flickerlib/common";
   selector: "transform-matrix",
   template: `
       <div *ngIf="transform" class="matrix" [matTooltip]="transform.getTypeAsString()">
-        <p class="cell mat-body-1">
+        <p class="mat-body-1">
           {{ formatFloat(transform.matrix.dsdx) }}
         </p>
-        <p class="cell mat-body-1">
+        <p class="mat-body-1">
           {{ formatFloat(transform.matrix.dsdy) }}
         </p>
-        <p class="cell mat-body-1" matTooltip="Translate x">
+        <p class="mat-body-1" matTooltip="Translate x">
           {{ formatFloat(transform.matrix.tx) }}
         </p>
 
-        <p class="cell mat-body-1">
+        <p class="mat-body-1">
           {{ formatFloat(transform.matrix.dtdx) }}
         </p>
-        <p class="cell mat-body-1">
+        <p class="mat-body-1">
           {{ formatFloat(transform.matrix.dtdy) }}
         </p>
-        <p class="cell mat-body-1" matTooltip="Translate y">
+        <p class="mat-body-1" matTooltip="Translate y">
           {{ formatFloat(transform.matrix.ty) }}
         </p>
 
-        <p class="cell mat-body-1">
+        <p class="mat-body-1">
           0
         </p>
-        <p class="cell mat-body-1">
+        <p class="mat-body-1">
           0
         </p>
-        <p class="cell mat-body-1">
+        <p class="mat-body-1">
           1
         </p>
       </div>
@@ -58,10 +58,6 @@ import { Transform } from "common/trace/flickerlib/common";
         grid-gap: 1px;
         grid-template-columns: repeat(3, 1fr);
         text-align: center;
-      }
-
-      .cell {
-        background-color: #F8F9FA;
       }
     `
   ],
