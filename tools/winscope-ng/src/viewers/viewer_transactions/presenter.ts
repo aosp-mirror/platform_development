@@ -19,7 +19,7 @@ import {TraceType} from "common/trace/trace_type";
 import {TransactionsTraceEntry} from "common/trace/transactions";
 import {PropertiesTreeGenerator} from "viewers/common/properties_tree_generator";
 import {PropertiesTreeNode} from "viewers/common/ui_tree_utils";
-import {StringUtils} from "common/utils/string_utils";
+import {TimeUtils} from "common/utils/time_utils";
 
 class Presenter {
   constructor(notifyUiDataCallback: (data: UiData) => void) {
@@ -176,7 +176,7 @@ class Presenter {
         for (const layerStateProto of transactionStateProto.layerChanges) {
           entries.push(new UiDataEntry(
             originalIndex,
-            StringUtils.nanosecondsToHuman(Number(entryProto.elapsedRealtimeNanos)),
+            TimeUtils.nanosecondsToHuman(Number(entryProto.elapsedRealtimeNanos)),
             Number(entryProto.vsyncId),
             transactionStateProto.pid.toString(),
             transactionStateProto.uid.toString(),
@@ -189,7 +189,7 @@ class Presenter {
         for (const displayStateProto of transactionStateProto.displayChanges) {
           entries.push(new UiDataEntry(
             originalIndex,
-            StringUtils.nanosecondsToHuman(Number(entryProto.elapsedRealtimeNanos)),
+            TimeUtils.nanosecondsToHuman(Number(entryProto.elapsedRealtimeNanos)),
             Number(entryProto.vsyncId),
             transactionStateProto.pid.toString(),
             transactionStateProto.uid.toString(),
@@ -203,7 +203,7 @@ class Presenter {
       for (const layerCreationArgsProto of entryProto.addedLayers) {
         entries.push(new UiDataEntry(
           originalIndex,
-          StringUtils.nanosecondsToHuman(Number(entryProto.elapsedRealtimeNanos)),
+          TimeUtils.nanosecondsToHuman(Number(entryProto.elapsedRealtimeNanos)),
           Number(entryProto.vsyncId),
           Presenter.VALUE_NA,
           Presenter.VALUE_NA,
@@ -216,7 +216,7 @@ class Presenter {
       for (const removedLayerId of entryProto.removedLayers) {
         entries.push(new UiDataEntry(
           originalIndex,
-          StringUtils.nanosecondsToHuman(Number(entryProto.elapsedRealtimeNanos)),
+          TimeUtils.nanosecondsToHuman(Number(entryProto.elapsedRealtimeNanos)),
           Number(entryProto.vsyncId),
           Presenter.VALUE_NA,
           Presenter.VALUE_NA,
@@ -229,7 +229,7 @@ class Presenter {
       for (const displayStateProto of entryProto.addedDisplays) {
         entries.push(new UiDataEntry(
           originalIndex,
-          StringUtils.nanosecondsToHuman(Number(entryProto.elapsedRealtimeNanos)),
+          TimeUtils.nanosecondsToHuman(Number(entryProto.elapsedRealtimeNanos)),
           Number(entryProto.vsyncId),
           Presenter.VALUE_NA,
           Presenter.VALUE_NA,
@@ -242,7 +242,7 @@ class Presenter {
       for (const removedDisplayId of entryProto.removedDisplays) {
         entries.push(new UiDataEntry(
           originalIndex,
-          StringUtils.nanosecondsToHuman(Number(entryProto.elapsedRealtimeNanos)),
+          TimeUtils.nanosecondsToHuman(Number(entryProto.elapsedRealtimeNanos)),
           Number(entryProto.vsyncId),
           Presenter.VALUE_NA,
           Presenter.VALUE_NA,
@@ -255,7 +255,7 @@ class Presenter {
       for (const removedLayerHandleId of entryProto.removedLayerHandles) {
         entries.push(new UiDataEntry(
           originalIndex,
-          StringUtils.nanosecondsToHuman(Number(entryProto.elapsedRealtimeNanos)),
+          TimeUtils.nanosecondsToHuman(Number(entryProto.elapsedRealtimeNanos)),
           Number(entryProto.vsyncId),
           Presenter.VALUE_NA,
           Presenter.VALUE_NA,

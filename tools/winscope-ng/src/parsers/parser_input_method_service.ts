@@ -16,7 +16,7 @@
 import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
 import { TraceTreeNode } from "common/trace/trace_tree_node";
-import { StringUtils } from "common/utils/string_utils";
+import { TimeUtils } from "common/utils/time_utils";
 import { ImeUtils } from "viewers/common/ime_utils";
 import {Parser} from "./parser";
 import {InputMethodServiceTraceFileProto} from "./proto_types";
@@ -58,7 +58,7 @@ class ParserInputMethodService extends Parser {
 
   override processDecodedEntry(index: number, entryProto: TraceTreeNode): TraceTreeNode {
     return {
-      name: StringUtils.nanosecondsToHuman(entryProto.elapsedRealtimeNanos ?? 0) + " - " + entryProto.where,
+      name: TimeUtils.nanosecondsToHuman(entryProto.elapsedRealtimeNanos ?? 0) + " - " + entryProto.where,
       kind: "InputMethodService entry",
       children: [
         {

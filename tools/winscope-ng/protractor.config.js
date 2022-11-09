@@ -25,7 +25,7 @@ exports.config = {
 
   directConnect: true,
   capabilities: {
-    browserName: 'chrome',
+    browserName: "chrome",
     chromeOptions: {
       args: ["--headless", "--disable-gpu", "--window-size=1280x1024"]
     }

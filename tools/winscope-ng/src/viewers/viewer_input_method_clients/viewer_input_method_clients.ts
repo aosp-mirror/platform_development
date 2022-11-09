@@ -20,7 +20,7 @@ import {View, ViewType} from "viewers/viewer";
 
 class ViewerInputMethodClients extends ViewerInputMethod {
   override getViews(): View[] {
-    return [new View(ViewType.TAB, this.htmlElement, "Input Method Clients")];
+    return [new View(ViewType.TAB, this.getDependencies(), this.htmlElement, "Input Method Clients")];
   }
 
   override getDependencies(): TraceType[] {

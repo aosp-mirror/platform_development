@@ -53,7 +53,7 @@ class ViewerTransactions implements Viewer {
   }
 
   public getViews(): View[] {
-    return [new View(ViewType.TAB, this.htmlElement, "Transactions")];
+    return [new View(ViewType.TAB, this.getDependencies(), this.htmlElement, "Transactions")];
   }
 
   public getDependencies(): TraceType[] {

@@ -13,31 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-class StringUtils {
-  static nanosecondsToHuman(nanoseconds: number): string {
-    const units: [number, string][] = [
-      [1000, "ms"],
-      [60, "s"],
-      [60, "m"],
-      [24, "h"],
-      [Infinity, "d"],
-    ];
 
-    let remainder = Math.floor(nanoseconds / 1000000);
-    const parts = [];
+import { CanvasMouseHandler } from "./draggable_canvas_object_handler";
 
-    for(const [factor, unit] of units) {
-      const part = (remainder % factor).toFixed();
-      parts.push(part + unit);
+export type padding = {left: number, top: number, right: number, bottom: number};
 
-      remainder = Math.floor(remainder / factor);
-      if (remainder == 0) {
-        break;
-      }
-    }
-
-    return parts.reverse().join("");
-  }
+export interface CanvasDrawer {
+  draw(): void;
+  handler: CanvasMouseHandler;
+  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D
+  padding: padding
 }
-
-export {StringUtils};

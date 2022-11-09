@@ -13,20 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const {merge} = require("webpack-merge");
-const configCommon = require("./webpack.config.common");
 
-const configDev = {
-  mode: "development",
-  entry: {
-    polyfills: "./src/polyfills.ts",
-    styles: [
-      "./src/material-theme.scss",
-      "./src/styles.css"
-    ],
-    app: "./src/main.dev.ts"
-  },
-  devtool: "source-map",
-};
-
-module.exports = merge(configCommon, configDev);
+export enum Color {
+  SELECTOR_COLOR = "#8AB4F8",
+  SELECTION_BACKGROUND = "#E8F0FE",
+  ACTIVE_POINTER = "#1967D2",
+  GUIDE_BAR = "#3C4043",
+  GUIDE_BAR_LIGHT = "#9AA0A6",
+}

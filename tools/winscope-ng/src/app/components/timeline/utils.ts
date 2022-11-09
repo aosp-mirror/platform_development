@@ -13,20 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const {merge} = require("webpack-merge");
-const configCommon = require("./webpack.config.common");
 
-const configDev = {
-  mode: "development",
-  entry: {
-    polyfills: "./src/polyfills.ts",
-    styles: [
-      "./src/material-theme.scss",
-      "./src/styles.css"
-    ],
-    app: "./src/main.dev.ts"
-  },
-  devtool: "source-map",
-};
+import { Timestamp } from "common/trace/timestamp";
+import { TraceType } from "common/trace/trace_type";
 
-module.exports = merge(configCommon, configDev);
+export type Segment = { from: number, to: number }
+export type BigIntSegment = { from: bigint, to: bigint }
+export type TimeRange = { from: Timestamp, to: Timestamp }
+export type MiniTimelineData = {
+  width: bigint,
+  selection: BigIntSegment
+  traceSegments: Map<TraceType, BigIntSegment[]>
+}
+export type TimelineData = Map<TraceType, bigint[]>
