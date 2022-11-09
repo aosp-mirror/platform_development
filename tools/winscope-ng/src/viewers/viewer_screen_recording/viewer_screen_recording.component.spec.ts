@@ -50,17 +50,17 @@ describe("ViewerScreenRecordingComponent", () => {
 
   it("can be minimized and maximized", () => {
     const buttonMinimize = htmlElement.querySelector(".button-minimize");
-    const video = htmlElement.querySelector("video");
+    const videoContainer = htmlElement.querySelector(".video-container") as HTMLElement;
     expect(buttonMinimize).toBeTruthy();
-    expect(video).toBeTruthy();
-    expect(video!.style.height).toEqual("");
+    expect(videoContainer).toBeTruthy();
+    expect(videoContainer!.style.height).toEqual("");
 
     buttonMinimize!.dispatchEvent(new Event("click"));
     fixture.detectChanges();
-    expect(video!.style.height).toEqual("0px");
+    expect(videoContainer!.style.height).toEqual("0px");
 
     buttonMinimize!.dispatchEvent(new Event("click"));
     fixture.detectChanges();
-    expect(video!.style.height).toEqual("");
+    expect(videoContainer!.style.height).toEqual("");
   });
 });

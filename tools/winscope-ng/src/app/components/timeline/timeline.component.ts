@@ -25,7 +25,7 @@ import {
   ViewChild,
   HostListener,
 } from "@angular/core";
-import {FormBuilder, FormControl, FormGroup, Validators} from "@angular/forms";
+import { FormControl, FormGroup, Validators} from "@angular/forms";
 import { DomSanitizer, SafeUrl } from "@angular/platform-browser";
 import { TraceType } from "common/trace/trace_type";
 import { TRACE_INFO } from "app/trace_info";
