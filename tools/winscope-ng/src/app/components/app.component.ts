@@ -39,10 +39,6 @@ import { TimelineCoordinator } from "app/timeline_coordinator";
     <mat-toolbar class="toolbar">
       <span class="app-title">Winscope</span>
 
-      <button *ngIf="dataLoaded" color="primary" mat-stroked-button (click)="toggleTimestamp()">
-        Start/End Timestamp
-      </button>
-
       <div class="spacer"></div>
 
       <button *ngIf="dataLoaded" color="primary" mat-stroked-button (click)="onUploadNewClick()">
