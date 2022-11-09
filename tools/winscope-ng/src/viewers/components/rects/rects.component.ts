@@ -24,7 +24,7 @@ import { ViewerEvents } from "viewers/common/viewer_events";
   selector: "rects-view",
   template: `
     <div class="view-controls">
-      <h2 class="mat-title">Layers</h2>
+      <h2 class="mat-title">{{title}}</h2>
       <div class="top-view-controls">
         <mat-checkbox
           color="primary"
@@ -167,6 +167,7 @@ import { ViewerEvents } from "viewers/common/viewer_events";
 })
 
 export class RectsComponent implements OnInit, OnChanges, OnDestroy {
+  @Input() title!: string;
   @Input() rects!: Rectangle[];
   @Input() forceRefresh = false;
   @Input() hasVirtualDisplays = false;

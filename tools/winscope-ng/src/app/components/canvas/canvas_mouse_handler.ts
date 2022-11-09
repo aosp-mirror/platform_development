@@ -133,7 +133,7 @@ export class CanvasMouseHandler {
   private objectAt(mouseX: number, mouseY: number): DraggableCanvasObject|undefined {
     for (const object of this.draggableObjects) {
       object.definePath(this.drawer.ctx);
-      if(this.drawer.ctx.isPointInPath(mouseX,mouseY)) {
+      if (this.drawer.ctx.isPointInPath(mouseX * this.drawer.getXScale(), mouseY * this.drawer.getYScale())) {
         return object;
       }
     }

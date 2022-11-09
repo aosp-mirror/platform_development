@@ -35,7 +35,7 @@ export class DraggableCanvasObject {
     private onDrop: (x: number) => void,
     private rangeGetter: () => Segment,
   ) {
-    this.drawer.handler.registerDraggableObject(this, (x, ) => {
+    this.drawer.handler.registerDraggableObject(this, (x: number, ) => {
       this.draggingPosition = this.clampPositionToRange(x);
       this.onDrag(this.draggingPosition);
       this.drawer.draw();
