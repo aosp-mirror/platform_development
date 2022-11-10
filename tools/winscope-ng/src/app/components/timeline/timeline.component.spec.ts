@@ -22,6 +22,7 @@ import {MatIconModule} from "@angular/material/icon";
 import {MatSelectModule} from "@angular/material/select";
 
 import {MatDrawer, MatDrawerContainer, MatDrawerContent} from "app/components/bottomnav/bottom_drawer.component";
+import {SingleTimelineComponent} from "./single_timeline.component";
 import {TimelineComponent} from "./timeline.component";
 import {ExpandedTimelineComponent} from "./expanded_timeline.component";
 import {MiniTimelineComponent} from "./mini_timeline.component";
@@ -58,6 +59,7 @@ describe("TimelineComponent", () => {
         MatDrawerContainer,
         MatDrawerContent,
         MiniTimelineComponent,
+        SingleTimelineComponent,
         TimelineComponent,
       ]
     }).overrideComponent(TimelineComponent, {

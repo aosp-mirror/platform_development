@@ -349,7 +349,10 @@ export class TimelineComponent implements TimestampChangeObserver {
     }
   }
 
-  onCurrentTimestampChanged(_: Timestamp): void {
+  onCurrentTimestampChanged(timestamp: Timestamp|undefined): void {
+    if (!timestamp) {
+      return;
+    }
     this.updateTimeInputValuesToCurrentTimestamp();
   }
 

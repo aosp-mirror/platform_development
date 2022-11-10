@@ -120,7 +120,7 @@ export class TimelineCoordinator {
 
   public registerObserver(observer: TimestampChangeObserver) {
     this.observers.add(observer);
-    this.notifyOfTimestampUpdate();
+    observer.onCurrentTimestampChanged(this.currentTimestamp);
   }
 
   public unregisterObserver(observer: TimestampChangeObserver) {
@@ -235,13 +235,15 @@ export class TimelineCoordinator {
   }
 
   public clearData() {
-    this.timelines.clear();
-    this.explicitlySetTimestamp = undefined;
-    this.timestampType = undefined;
-    this.explicitlySetSelection = undefined;
-    this.videoData = undefined;
-    this.screenRecordingTimeMapping = new Map<Timestamp, number>();
-    this.activeTraceTypes = [];
+    this.applyOperationAndNotifyObserversIfTimestampChanged(() => {
+      this.timelines.clear();
+      this.explicitlySetTimestamp = undefined;
+      this.timestampType = undefined;
+      this.explicitlySetSelection = undefined;
+      this.videoData = undefined;
+      this.screenRecordingTimeMapping = new Map<Timestamp, number>();
+      this.activeTraceTypes = [];
+    });
   }
 
   public moveToPreviousEntryFor(type: TraceType) {
@@ -268,9 +270,6 @@ export class TimelineCoordinator {
 
   private notifyOfTimestampUpdate() {
     const timestamp = this.currentTimestamp;
-    if (timestamp === undefined) {
-      return;
-    }
     this.observers.forEach(observer =>
       observer.onCurrentTimestampChanged(timestamp));
   }
@@ -282,5 +281,5 @@ export interface Timeline {
 }
 
 export interface TimestampChangeObserver {
-  onCurrentTimestampChanged(timestamp: Timestamp): void;
+  onCurrentTimestampChanged(timestamp: undefined|Timestamp): void;
 }
