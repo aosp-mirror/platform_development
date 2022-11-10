@@ -76,7 +76,7 @@ import { TimelineCoordinator } from "app/timeline_coordinator";
 
       </mat-drawer-content>
 
-      <mat-drawer #drawer mode="push" opened="true" [baseHeight]="collapsedTimelineHeight">
+      <mat-drawer #drawer mode="overlay" opened="true" [baseHeight]="collapsedTimelineHeight">
         <timeline
           *ngIf="dataLoaded"
           [activeTrace]="activeTraceType!"
