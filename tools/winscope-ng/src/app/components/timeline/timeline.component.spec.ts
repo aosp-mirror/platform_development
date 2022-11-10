@@ -26,6 +26,11 @@ import {TimelineComponent} from "./timeline.component";
 import {ExpandedTimelineComponent} from "./expanded_timeline.component";
 import {MiniTimelineComponent} from "./mini_timeline.component";
 import {TimelineCoordinator} from "app/timeline_coordinator";
+import { TraceType } from "common/trace/trace_type";
+import { RealTimestamp, Timestamp } from "common/trace/timestamp";
+import { By } from "@angular/platform-browser";
+import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
+import { MatInputModule } from "@angular/material/input";
 
 describe("TimelineComponent", () => {
   let fixture: ComponentFixture<TimelineComponent>;
@@ -41,9 +46,11 @@ describe("TimelineComponent", () => {
         FormsModule,
         MatButtonModule,
         MatFormFieldModule,
+        MatInputModule,
         MatIconModule,
         MatSelectModule,
-        ReactiveFormsModule
+        ReactiveFormsModule,
+        BrowserAnimationsModule,
       ],
       declarations: [
         ExpandedTimelineComponent,
@@ -66,16 +73,42 @@ describe("TimelineComponent", () => {
   });
 
   it("can be expanded", () => {
-    const button = htmlElement.querySelector(".button-toggle-expansion");
+    const timestamps = [new RealTimestamp(BigInt(100)), new RealTimestamp(BigInt(110))];
+    component.timelineCoordinator.addTimeline(TraceType.SURFACE_FLINGER, timestamps);
+    fixture.detectChanges();
+
+    const button = htmlElement.querySelector(`.${component.TOGGLE_BUTTON_CLASS}`);
     expect(button).toBeTruthy();
 
     // initially not expanded
-    expect(htmlElement.querySelector("expanded-timeline")).toBeFalsy();
+    let expandedTimelineElement = fixture.debugElement.query(By.directive(ExpandedTimelineComponent));
+    expect(expandedTimelineElement).toBeFalsy();
 
     button!.dispatchEvent(new Event("click"));
-    expect(htmlElement.querySelector("expanded-timeline")).toBeTruthy();
+    expandedTimelineElement = fixture.debugElement.query(By.directive(ExpandedTimelineComponent));
+    expect(expandedTimelineElement).toBeTruthy();
 
     button!.dispatchEvent(new Event("click"));
-    expect(htmlElement.querySelector("expanded-timeline")).toBeFalsy();
+    expandedTimelineElement = fixture.debugElement.query(By.directive(ExpandedTimelineComponent));
+    expect(expandedTimelineElement).toBeFalsy();
+  });
+
+  it("handles traces with no timestamps", () => {
+    const timestamps: Timestamp[] = [];
+    component.timelineCoordinator.addTimeline(TraceType.SURFACE_FLINGER, timestamps);
+    fixture.detectChanges();
+
+    // no expand button
+    const button = htmlElement.querySelector(`.${component.TOGGLE_BUTTON_CLASS}`);
+    expect(button).toBeFalsy();
+
+    // no timelines shown
+    const miniTimelineElement = fixture.debugElement.query(By.directive(MiniTimelineComponent));
+    expect(miniTimelineElement).toBeFalsy();
+
+    // error message shown
+    const errorMessageContainer = htmlElement.querySelector(".no-timestamps-msg");
+    expect(errorMessageContainer).toBeTruthy();
+    expect(errorMessageContainer!.textContent).toContain("No timeline to show!");
   });
 });

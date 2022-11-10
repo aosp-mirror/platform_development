@@ -43,7 +43,7 @@ export class MiniTimelineComponent {
   @Output() changeTimestamp = new EventEmitter<Timestamp>();
   @Output() changeSeekTimestamp = new EventEmitter<Timestamp|undefined>();
 
-  @ViewChild("miniTimelineWrapper", {static: false}) miniTimelineWraper!: ElementRef;
+  @ViewChild("miniTimelineWrapper", {static: false}) miniTimelineWrapper!: ElementRef;
   @ViewChild("canvas", {static: false}) canvasRef!: ElementRef;
   get canvas(): HTMLCanvasElement {
     return this.canvasRef.nativeElement;
@@ -118,8 +118,8 @@ export class MiniTimelineComponent {
     this.canvas.style.width = "auto";
     this.canvas.style.height = "auto";
 
-    const width = this.miniTimelineWraper.nativeElement.offsetWidth;
-    const height = this.miniTimelineWraper.nativeElement.offsetHeight;
+    const width = this.miniTimelineWrapper.nativeElement.offsetWidth;
+    const height = this.miniTimelineWrapper.nativeElement.offsetHeight;
 
     const HiPPIwidth = window.devicePixelRatio * width;
     const HiPPIheight = window.devicePixelRatio * height;
