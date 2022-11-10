@@ -64,20 +64,18 @@ const MAX_SELECTED_TRACES = 3;
     <div class="navbar" #collapsedTimeline>
       <ng-template [ngIf]="hasTimestamps()">
         <div id="time-selector">
-          <!-- TODO: Disable button if there are no timestamps before -->
-            <button mat-icon-button color="primary" (click)="moveToPreviousEntry()">
+            <button mat-icon-button color="primary" (click)="moveToPreviousEntry()" [disabled]="!hasPrevEntry()">
                 <mat-icon>chevron_left</mat-icon>
             </button>
-            <!-- <form [formGroup]="timestampForm" class="time-selector-form" (ngSubmit)="onTimestampFormSubmitted()">
+            <form [formGroup]="timestampForm" class="time-selector-form" (ngSubmit)="onTimestampFormSubmitted()">
                 <mat-form-field class="time-input" appearance="fill" (change)="inputTimeChanged($event)">
                     <input matInput name="humanTimeInput" [formControl]="selectedTimeFormControl" />
                 </mat-form-field>
                 <mat-form-field class="time-input" appearance="fill" (change)="inputTimeChanged($event)">
                     <input matInput name="nsTimeInput" [formControl]="selectedNsFormControl" />
                 </mat-form-field>
-            </form> -->
-            <!-- TODO: Disable button if there are no timestamps after -->
-            <button mat-icon-button color="primary" (click)="moveToNextEntry()">
+            </form>
+            <button mat-icon-button color="primary" (click)="moveToNextEntry()" [disabled]="!hasNextEntry()">
                 <mat-icon>chevron_right</mat-icon>
             </button>
         </div>
@@ -408,6 +406,20 @@ export class TimelineComponent implements TimestampChangeObserver {
         break;
       }
     }
+  }
+
+  hasPrevEntry(): boolean {
+    if ((this.timelineCoordinator.getTimelines().get(this.activeTrace)?.length ?? 0) === 0) {
+      return false;
+    }
+    return this.timelineCoordinator.getPreviousTimestampFor(this.activeTrace) !== undefined;
+  }
+
+  hasNextEntry(): boolean {
+    if ((this.timelineCoordinator.getTimelines().get(this.activeTrace)?.length ?? 0) === 0) {
+      return false;
+    }
+    return this.timelineCoordinator.getNextTimestampFor(this.activeTrace) !== undefined;
   }
 
   moveToPreviousEntry() {
