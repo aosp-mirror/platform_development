@@ -159,6 +159,7 @@ export class AppComponent {
 
   public onCollapsedTimelineSizeChanged(height: number) {
     this.collapsedTimelineHeight = height;
+    this.changeDetectorRef.detectChanges();
   }
 
   constructor(
