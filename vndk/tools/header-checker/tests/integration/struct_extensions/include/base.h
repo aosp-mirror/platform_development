@@ -11,4 +11,24 @@ struct Struct2 {
   } member;
 };
 
-Struct1 &PassByReference(Struct1 &, Struct2 &);
+struct Vtable1 {
+  int member_1;
+
+  virtual ~Vtable1();
+  virtual void function_1() = 0;
+};
+
+struct Vtable2 {
+  int member_2;
+
+  virtual void function_2() = 0;
+};
+
+struct Vtable3 : virtual public Vtable1, virtual public Vtable2 {
+  int member_3;
+
+  virtual ~Vtable3();
+  virtual void function_3();
+};
+
+Vtable3 &PassByReference(Struct1 &, Struct2 &);
