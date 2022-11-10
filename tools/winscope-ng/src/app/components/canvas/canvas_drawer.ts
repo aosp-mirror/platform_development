@@ -20,10 +20,12 @@ export type padding = {left: number, top: number, right: number, bottom: number}
 
 export interface CanvasDrawer {
   draw(): void;
-  handler: CanvasMouseHandler;
-  canvas: HTMLCanvasElement,
+  handler: CanvasMouseHandler
+  canvas: HTMLCanvasElement
   ctx: CanvasRenderingContext2D
   padding: padding
   getXScale(): number
   getYScale(): number
+  getWidth(): number
+  getHeight(): number
 }

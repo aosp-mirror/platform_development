@@ -110,8 +110,8 @@ export class CanvasMouseHandler {
       mouseX = this.drawer.padding.left;
     }
 
-    if (mouseX > this.drawer.canvas.width - this.drawer.padding.right) {
-      mouseX = this.drawer.canvas.width - this.drawer.padding.right;
+    if (mouseX > this.drawer.getWidth() - this.drawer.padding.right) {
+      mouseX = this.drawer.getWidth()- this.drawer.padding.right;
     }
 
     return { mouseX, mouseY };
