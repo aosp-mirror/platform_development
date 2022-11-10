@@ -22,6 +22,7 @@ class ViewerInputMethodManagerService extends ViewerInputMethod {
   override getViews(): View[] {
     return [
       new View(ViewType.TAB,
+        this.getDependencies(),
         this.htmlElement,
         "Input Method Manager Service")
     ];

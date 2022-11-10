@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
+const path = require("path");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
 
 module.exports = {
@@ -24,12 +24,12 @@ module.exports = {
       "node_modules",
       "src",
       "kotlin_build",
-      path.resolve(__dirname, '../../..'),
+      path.resolve(__dirname, "../../.."),
     ]
   },
 
   resolveLoader: {
-    modules: ['node_modules', path.resolve(__dirname, 'loaders')],
+    modules: ["node_modules", path.resolve(__dirname, "loaders")],
   },
 
   module: {
@@ -52,11 +52,11 @@ module.exports = {
       },
       {
         test: /\.proto$/,
-        loader: 'proto-loader',
+        loader: "proto-loader",
         options: {
           paths: [
-            path.resolve(__dirname, '../../..'),
-            path.resolve(__dirname, '../../../external/protobuf/src'),
+            path.resolve(__dirname, "../../.."),
+            path.resolve(__dirname, "../../../external/protobuf/src"),
           ]
         }
       },
@@ -80,4 +80,4 @@ module.exports = {
       }),
     ],
   },
-}
+};

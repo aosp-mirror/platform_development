@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {Component, ElementRef, EventEmitter, Inject, Input, Output} from "@angular/core";
 import {PersistentStore} from "common/persistent_store";
+import { TraceType } from "common/trace/trace_type";
 import {Viewer, View, ViewType} from "viewers/viewer";
 
 interface Tab extends View {
@@ -49,7 +51,7 @@ interface Tab extends View {
         color="primary"
         mat-button
         class="save-button"
-        (click)="downloadTracesButtonClick.emit()"
+        (click)="onDownloadTracesButtonClick.emit()"
       >Download all traces</button>
     </div>
     <mat-divider></mat-divider>
@@ -94,11 +96,12 @@ interface Tab extends View {
 export class TraceViewComponent {
   @Input() viewers!: Viewer[];
   @Input() store!: PersistentStore;
-  @Output() downloadTracesButtonClick = new EventEmitter<void>();
+  @Output() onDownloadTracesButtonClick = new EventEmitter<void>();
+  @Output() onActiveViewChanged = new EventEmitter<View>();
 
   private elementRef: ElementRef;
 
-  private tabs: Tab[] = [];
+  public tabs: Tab[] = [];
   private currentActiveTab: undefined|Tab;
 
   constructor(@Inject(ElementRef) elementRef: ElementRef) {
@@ -124,11 +127,10 @@ export class TraceViewComponent {
           type: view.type,
           htmlElement: view.htmlElement,
           title: view.title,
-          addedToDom: false
+          addedToDom: false,
+          dependencies: view.dependencies,
         };
       });
-
-    const traceViewContent = this.elementRef.nativeElement.querySelector(".trace-view-content")!;
 
     this.tabs.forEach(tab => {
       // TODO: setting "store" this way is a hack.
@@ -182,9 +184,10 @@ export class TraceViewComponent {
     }
 
     this.currentActiveTab = tab;
+    this.onActiveViewChanged.emit(tab);
   }
 
-  private isCurrentActiveTab(tab: Tab) {
+  public isCurrentActiveTab(tab: Tab) {
     return tab === this.currentActiveTab;
   }
 }

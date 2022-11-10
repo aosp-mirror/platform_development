@@ -43,7 +43,7 @@ class ViewerWindowManager implements Viewer {
   }
 
   public getViews(): View[] {
-    return [new View(ViewType.TAB, this.htmlElement, "Window Manager")];
+    return [new View(ViewType.TAB, this.getDependencies(), this.htmlElement, "Window Manager")];
   }
 
   public getDependencies(): TraceType[] {

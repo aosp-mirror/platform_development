@@ -13,20 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const {merge} = require("webpack-merge");
-const configCommon = require("./webpack.config.common");
 
-const configDev = {
-  mode: "development",
-  entry: {
-    polyfills: "./src/polyfills.ts",
-    styles: [
-      "./src/material-theme.scss",
-      "./src/styles.css"
-    ],
-    app: "./src/main.dev.ts"
-  },
-  devtool: "source-map",
-};
+import { CanvasMouseHandler } from "./canvas_mouse_handler";
 
-module.exports = merge(configCommon, configDev);
+export type padding = {left: number, top: number, right: number, bottom: number};
+
+export interface CanvasDrawer {
+  draw(): void;
+  handler: CanvasMouseHandler;
+  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D
+  padding: padding
+  getXScale(): number
+  getYScale(): number
+}

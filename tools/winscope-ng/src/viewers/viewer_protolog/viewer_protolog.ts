@@ -46,7 +46,7 @@ class ViewerProtoLog implements Viewer {
   }
 
   public getViews(): View[] {
-    return [new View(ViewType.TAB, this.htmlElement, "ProtoLog")];
+    return [new View(ViewType.TAB, this.getDependencies(), this.htmlElement, "ProtoLog")];
   }
 
   public getDependencies(): TraceType[] {

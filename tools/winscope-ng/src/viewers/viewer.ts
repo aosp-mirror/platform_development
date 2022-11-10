@@ -23,6 +23,7 @@ enum ViewType {
 class View {
   constructor(
     public type: ViewType,
+    public dependencies: TraceType[],
     public htmlElement: HTMLElement,
     public title: string
   ) {
