@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {Component, Injector, Inject, ViewEncapsulation, Input, ChangeDetectorRef} from "@angular/core";
 import { createCustomElement } from "@angular/elements";
 import { MatSliderChange } from "@angular/material/slider";
@@ -22,22 +23,21 @@ import { Timestamp } from "common/trace/timestamp";
 import { FileUtils } from "common/utils/file_utils";
 import { proxyClient, ProxyState } from "trace_collection/proxy_client";
 import { ViewerInputMethodComponent } from "viewers/components/viewer_input_method.component";
-import { Viewer } from "viewers/viewer";
+import { View, Viewer } from "viewers/viewer";
 import { ViewerProtologComponent} from "viewers/viewer_protolog/viewer_protolog.component";
 import { ViewerSurfaceFlingerComponent } from "viewers/viewer_surface_flinger/viewer_surface_flinger.component";
 import { ViewerWindowManagerComponent } from "viewers/viewer_window_manager/viewer_window_manager.component";
 import { ViewerTransactionsComponent } from "viewers/viewer_transactions/viewer_transactions.component";
 import { ViewerScreenRecordingComponent } from "viewers/viewer_screen_recording/viewer_screen_recording.component";
+import { TraceType } from "common/trace/trace_type";
+import { TimelineCoordinator } from "app/timeline_coordinator";
 
 @Component({
   selector: "app-root",
+  providers: [TimelineCoordinator, TraceCoordinator],
   template: `
     <mat-toolbar class="toolbar">
       <span class="app-title">Winscope</span>
-
-      <button *ngIf="dataLoaded" color="primary" mat-stroked-button (click)="toggleTimestamp()">
-        Start/End Timestamp
-      </button>
 
       <div class="spacer"></div>
 
@@ -57,27 +57,37 @@ import { ViewerScreenRecordingComponent } from "viewers/viewer_screen_recording/
 
     <mat-divider></mat-divider>
 
-    <ng-container *ngIf="dataLoaded; else noLoadedTracesBlock">
-      <trace-view
-        class="viewers"
-        [viewers]="allViewers"
-        [store]="store"
-        (downloadTracesButtonClick)="onDownloadTracesButtonClick()"
-      ></trace-view>
+    <mat-drawer-container class="example-container" autosize disableClose autoFocus>
 
-      <mat-divider></mat-divider>
+      <mat-drawer-content>
 
-      <mat-slider
-        class="timescrub"
-        color="primary"
-        step="1"
-        min="0"
-        [max]="this.allTimestamps.length - 1"
-        aria-label="units"
-        [value]="currentTimestampIndex"
-        (input)="updateCurrentTimestamp($event)"
-      ></mat-slider>
-    </ng-container>
+        <ng-container *ngIf="dataLoaded; else noLoadedTracesBlock">
+
+          <trace-view
+            class="viewers"
+            [viewers]="allViewers"
+            [store]="store"
+            (onDownloadTracesButtonClick)="onDownloadTracesButtonClick()"
+            (onActiveViewChanged)="handleActiveViewChanged($event)"
+          ></trace-view>
+
+          <mat-divider></mat-divider>
+
+        </ng-container>
+
+      </mat-drawer-content>
+
+      <mat-drawer #drawer mode="push" opened="true" [baseHeight]="collapsedTimelineHeight">
+        <timeline
+          *ngIf="dataLoaded"
+          [activeTrace]="activeTraceType!"
+          [availableTraces]="availableTraces"
+          [videoData]="videoData"
+          (onCollapsedTimelineSizeChanged)="onCollapsedTimelineSizeChanged($event)"
+        ></timeline>
+      </mat-drawer>
+
+    </mat-drawer-container>
 
     <ng-template #noLoadedTracesBlock>
       <h1 class="welcome-info mat-headline">
@@ -99,9 +109,6 @@ import { ViewerScreenRecordingComponent } from "viewers/viewer_screen_recording/
         ></upload-traces>
       </div>
     </ng-template>
-
-    <div class="timestamps">
-    </div>
   `,
   styles: [
     `
@@ -122,7 +129,8 @@ import { ViewerScreenRecordingComponent } from "viewers/viewer_screen_recording/
         flex: 1;
       }
       .viewers {
-        height: 100%;
+        height: 0;
+        flex-grow: 1;
         display: flex;
         flex-direction: column;
         overflow: auto;
@@ -138,21 +146,32 @@ export class AppComponent {
   title = "winscope-ng";
   changeDetectorRef: ChangeDetectorRef;
   traceCoordinator: TraceCoordinator;
+  timelineCoordinator: TimelineCoordinator;
   states = ProxyState;
   store: PersistentStore = new PersistentStore();
   currentTimestamp?: Timestamp;
   currentTimestampIndex = 0;
-  allTimestamps: Timestamp[] = [];
   allViewers: Viewer[] = [];
   isDarkModeOn!: boolean;
-  @Input() dataLoaded = false;
+  dataLoaded = false;
+  activeView: View|undefined;
+
+  collapsedTimelineHeight = 0;
+
+  public onCollapsedTimelineSizeChanged(height: number) {
+    this.collapsedTimelineHeight = height;
+  }
 
   constructor(
     @Inject(Injector) injector: Injector,
-    @Inject(ChangeDetectorRef) changeDetectorRef: ChangeDetectorRef
+    @Inject(ChangeDetectorRef) changeDetectorRef: ChangeDetectorRef,
+    @Inject(TimelineCoordinator) timelineCoordinator: TimelineCoordinator,
+    @Inject(TraceCoordinator) traceCoordinator: TraceCoordinator,
   ) {
     this.changeDetectorRef = changeDetectorRef;
-    this.traceCoordinator = new TraceCoordinator();
+    this.timelineCoordinator = timelineCoordinator;
+    this.traceCoordinator = traceCoordinator;
+    this.timelineCoordinator.registerObserver(this.traceCoordinator);
 
     const storeDarkMode = this.store.getFromStore("dark-mode");
     const prefersDarkQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
@@ -184,20 +203,12 @@ export class AppComponent {
     }
   }
 
-  public updateCurrentTimestamp(event: MatSliderChange) {
-    if (event.value) {
-      this.currentTimestampIndex = event.value;
-      this.notifyCurrentTimestamp();
-    }
+  get availableTraces(): TraceType[] {
+    return this.traceCoordinator.getLoadedTraces().map((trace) => trace.type);
   }
 
-  public toggleTimestamp() {
-    if (this.currentTimestampIndex===0) {
-      this.currentTimestampIndex = this.allTimestamps.length-1;
-    } else {
-      this.currentTimestampIndex = 0;
-    }
-    this.notifyCurrentTimestamp();
+  get videoData(): Blob|undefined {
+    return this.timelineCoordinator.getVideoData();
   }
 
   public onUploadNewClick() {
@@ -217,20 +228,17 @@ export class AppComponent {
     if (dataLoaded && !(this.traceCoordinator.getViewers().length > 0)) {
       this.traceCoordinator.createViewers();
       this.allViewers = this.traceCoordinator.getViewers();
-      this.allTimestamps = this.traceCoordinator.getTimestamps();
+      // TODO: Update to handle viewers with more than one dependency
+      if (this.traceCoordinator.getViewers()[0].getDependencies().length !== 1) {
+        throw Error("Viewers with more than 1 dependency not yet handled.");
+      }
       this.currentTimestampIndex = 0;
-      this.notifyCurrentTimestamp();
       this.dataLoaded = dataLoaded;
       this.changeDetectorRef.detectChanges();
     }
   }
 
-  private notifyCurrentTimestamp() {
-    this.currentTimestamp = this.allTimestamps[this.currentTimestampIndex];
-    this.traceCoordinator.notifyCurrentTimestamp(this.currentTimestamp);
-  }
-
-  private async onDownloadTracesButtonClick() {
+  async onDownloadTracesButtonClick() {
     const traces = await this.traceCoordinator.getAllTracesForDownload();
     const zipFileBlob = await FileUtils.createZipArchive(traces);
     const zipFileName = "winscope.zip";
@@ -242,5 +250,20 @@ export class AppComponent {
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
+  }
+
+  handleActiveViewChanged(view: View) {
+    this.activeView = view;
+    this.timelineCoordinator.setActiveTraceTypes(view.dependencies);
+  }
+
+  get activeTraceType(): TraceType|undefined {
+    if (this.activeView === undefined) {
+      return undefined;
+    }
+    if (this.timelineCoordinator.getActiveTraceTypes().length !== 1) {
+      throw Error("Viewers with more or less than one dependency not handled.");
+    }
+    return this.timelineCoordinator.getActiveTraceTypes()[0];
   }
 }

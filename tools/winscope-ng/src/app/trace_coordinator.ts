@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {ArrayUtils} from "common/utils/array_utils";
 import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
@@ -24,25 +25,76 @@ import { ViewerFactory } from "viewers/viewer_factory";
 import { LoadedTrace } from "app/loaded_trace";
 import { FileUtils } from "common/utils/file_utils";
 import { TRACE_INFO } from "app/trace_info";
+import { TimelineCoordinator, TimestampChangeObserver } from "./timeline_coordinator";
+import { Inject, Injectable } from "@angular/core";
+import { ScreenRecordingTraceEntry } from "common/trace/screen_recording";
+import { time } from "console";
 
-class TraceCoordinator {
-  private parsers: Parser[];
-  private viewers: Viewer[];
+@Injectable()
+class TraceCoordinator implements TimestampChangeObserver {
+  private parsers: Parser[] = [];
+  private viewers: Viewer[] = [];
 
-  constructor() {
-    this.parsers = [];
-    this.viewers = [];
+  constructor(@Inject(TimelineCoordinator) private timelineCoordinator: TimelineCoordinator) {
+    this.timelineCoordinator.registerObserver(this);
   }
 
   public async addTraces(traces: File[]) {
     traces = this.parsers.map(parser => parser.getTrace()).concat(traces);
     let parserErrors: ParserError[];
     [this.parsers, parserErrors] = await new ParserFactory().createParsers(traces);
+    this.addAllTracesToTimelineCoordinator();
+    this.addScreenRecodingTimeMappingToTraceCooordinator();
     return parserErrors;
   }
 
   public removeTrace(type: TraceType) {
     this.parsers = this.parsers.filter(parser => parser.getTraceType() !== type);
+    this.timelineCoordinator.removeTimeline(type);
+  }
+
+  private addAllTracesToTimelineCoordinator() {
+    for (const parser of this.parsers) {
+      const timestamps = parser.getTimestamps(this.timestampTypeToUse());
+      if (timestamps === undefined) {
+        throw Error("Couldn't get timestamps from trace parser.");
+      }
+      this.timelineCoordinator.addTimeline(parser.getTraceType(), timestamps);
+    }
+  }
+
+  private addScreenRecodingTimeMappingToTraceCooordinator() {
+    const parser = this.getParserFor(TraceType.SCREEN_RECORDING);
+    if (parser === undefined) {
+      return;
+    }
+
+    const timestampMapping = new Map<Timestamp, number>();
+    let videoData: Blob|undefined = undefined;
+    for (const timestamp of parser.getTimestamps(this.timestampTypeToUse()) ?? []) {
+      const entry = parser.getTraceEntry(timestamp) as ScreenRecordingTraceEntry;
+      timestampMapping.set(timestamp, entry.videoTimeSeconds);
+      if (videoData === undefined) {
+        videoData = entry.videoData;
+      }
+    }
+
+    if (videoData === undefined) {
+      throw Error("No video data available!");
+    }
+
+    this.timelineCoordinator.setScreenRecordingData(videoData, timestampMapping);
+  }
+
+  private timestampTypeToUse() {
+    const priorityOrder = [TimestampType.REAL, TimestampType.ELAPSED];
+    for (const type of priorityOrder) {
+      if (this.parsers.every(it => it.getTimestamps(type) !== undefined)) {
+        return type;
+      }
+    }
+
+    throw Error("No common timestamp type across all traces");
   }
 
   public createViewers() {
@@ -51,6 +103,11 @@ class TraceCoordinator {
 
     this.viewers = new ViewerFactory().createViewers(new Set<TraceType>(activeTraceTypes));
     console.log("created viewers: ", this.viewers);
+
+    // Make sure to update the viewers active entries as soon as they are created.
+    if (this.timelineCoordinator.currentTimestamp) {
+      this.onCurrentTimestampChanged(this.timelineCoordinator.currentTimestamp);
+    }
   }
 
   public getLoadedTraces(): LoadedTrace[] {
@@ -74,35 +131,11 @@ class TraceCoordinator {
     return parser ?? null;
   }
 
-  public getTimestamps(): Timestamp[] {
-    for (const type of [TimestampType.REAL, TimestampType.ELAPSED]) {
-      const mergedTimestamps: Timestamp[] = [];
-
-      let isTypeProvidedByAllParsers = true;
-
-      for(const timestamps of this.parsers.map(parser => parser.getTimestamps(type))) {
-        if (timestamps === undefined) {
-          isTypeProvidedByAllParsers = false;
-          break;
-        }
-        mergedTimestamps.push(...timestamps!);
-      }
-
-      if (isTypeProvidedByAllParsers) {
-        const uniqueTimestamps = [... new Set<Timestamp>(mergedTimestamps)];
-        uniqueTimestamps.sort();
-        return uniqueTimestamps;
-      }
-    }
-
-    throw new Error("Failed to create aggregated timestamps (any type)");
+  public onCurrentTimestampChanged(timestamp: Timestamp) {
+    this.notifyActiveTraceEntry(timestamp);
   }
 
-  public notifyCurrentTimestamp(timestamp: Timestamp|undefined) {
-    if (!timestamp) {
-      return;
-    }
-
+  private notifyActiveTraceEntry(timestamp: Timestamp) {
     const traceEntries: Map<TraceType, any> = new Map<TraceType, any>();
 
     this.parsers.forEach(parser => {
@@ -135,6 +168,7 @@ class TraceCoordinator {
     this.parsers = [];
     this.viewers = [];
     setTraces.dataReady = false;
+    this.timelineCoordinator.clearData();
   }
 
   public async getUnzippedFiles(files: File[]): Promise<File[]> {
@@ -170,6 +204,21 @@ class TraceCoordinator {
       }
     }
     return traces;
+  }
+
+  public getParserFor(traceType: TraceType): undefined|Parser {
+    const matchingParsers = this.getParsers()
+      .filter((parser) => parser.getTraceType() === traceType);
+
+    if (matchingParsers.length === 0) {
+      return undefined;
+    }
+
+    if (matchingParsers.length > 1) {
+      throw Error(`Too many matching parsers for trace type ${traceType}. `);
+    }
+
+    return matchingParsers[0];
   }
 }
 

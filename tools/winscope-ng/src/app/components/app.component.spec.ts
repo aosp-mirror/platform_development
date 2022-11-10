@@ -16,22 +16,28 @@
 import { ChangeDetectionStrategy } from "@angular/core";
 import {ComponentFixture, TestBed, ComponentFixtureAutoDetect} from "@angular/core/testing";
 import { CommonModule } from "@angular/common";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { MatCardModule } from "@angular/material/card";
 import { MatButtonModule } from "@angular/material/button";
 import { MatDividerModule } from "@angular/material/divider";
+import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
+import { MatSelectModule } from "@angular/material/select";
 import { MatSliderModule } from "@angular/material/slider";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { MatToolbarModule } from "@angular/material/toolbar";
 import { MatTooltipModule } from "@angular/material/tooltip";
 
 import { AppComponent } from "./app.component";
+import { MatDrawer, MatDrawerContainer, MatDrawerContent } from "./bottomnav/bottom_drawer.component";
 import { CollectTracesComponent } from "./collect_traces.component";
 import { UploadTracesComponent } from "./upload_traces.component";
 import { AdbProxyComponent } from "./adb_proxy.component";
 import { WebAdbComponent } from "./web_adb.component";
 import { TraceConfigComponent } from "./trace_config.component";
 import { ViewerSurfaceFlingerComponent } from "viewers/viewer_surface_flinger/viewer_surface_flinger.component";
+import { TimelineComponent } from "./timeline/timeline.component";
+import { MiniTimelineComponent } from "./timeline/mini_timeline.component";
 import { TraceViewComponent } from "./trace_view.component";
 
 describe("AppComponent", () => {
@@ -46,24 +52,33 @@ describe("AppComponent", () => {
       ],
       imports: [
         CommonModule,
+        FormsModule,
         MatCardModule,
         MatButtonModule,
         MatDividerModule,
+        MatFormFieldModule,
         MatIconModule,
+        MatSelectModule,
         MatSliderModule,
         MatSnackBarModule,
         MatToolbarModule,
-        MatTooltipModule
+        MatTooltipModule,
+        ReactiveFormsModule
       ],
       declarations: [
+        AdbProxyComponent,
         AppComponent,
         CollectTracesComponent,
-        UploadTracesComponent,
-        AdbProxyComponent,
-        WebAdbComponent,
+        MatDrawer,
+        MatDrawerContainer,
+        MatDrawerContent,
+        MiniTimelineComponent,
+        TimelineComponent,
         TraceConfigComponent,
+        TraceViewComponent,
+        UploadTracesComponent,
         ViewerSurfaceFlingerComponent,
-        TraceViewComponent
+        WebAdbComponent
       ],
     }).overrideComponent(AppComponent, {
       set: { changeDetection: ChangeDetectionStrategy.Default }

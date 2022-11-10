@@ -31,7 +31,7 @@ class ViewerScreenRecording implements Viewer {
   }
 
   public getViews(): View[] {
-    return [new View(ViewType.OVERLAY, this.htmlElement, "ScreenRecording")];
+    return [new View(ViewType.OVERLAY, this.getDependencies(), this.htmlElement, "ScreenRecording")];
   }
 
   public getDependencies(): TraceType[] {

@@ -32,11 +32,11 @@ class ViewerStub implements Viewer {
   }
 
   getViews(): View[] {
-    return [new View(ViewType.TAB, this.htmlElement, this.title)];
+    return [new View(ViewType.TAB, this.getDependencies(), this.htmlElement, this.title)];
   }
 
-  getDependencies(): any[] {
-    return [];
+  getDependencies(): any {
+    return;
   }
 
   private htmlElement: HTMLElement;

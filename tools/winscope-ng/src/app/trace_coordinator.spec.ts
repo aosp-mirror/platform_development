@@ -19,12 +19,15 @@ import {TraceCoordinator} from "./trace_coordinator";
 import {UnitTestUtils} from "test/unit/utils";
 import {ViewerFactory} from "viewers/viewer_factory";
 import {ViewerStub} from "viewers/viewer_stub";
+import { TimelineCoordinator } from "./timeline_coordinator";
 
 describe("TraceCoordinator", () => {
   let traceCoordinator: TraceCoordinator;
+  let timelineCoordinator: TimelineCoordinator;
 
   beforeEach(async () => {
-    traceCoordinator = new TraceCoordinator();
+    timelineCoordinator = new TimelineCoordinator();
+    traceCoordinator = new TraceCoordinator(timelineCoordinator);
   });
 
   it("processes trace files", async () => {
@@ -55,8 +58,11 @@ describe("TraceCoordinator", () => {
     ];
     await traceCoordinator.addTraces(traces);
 
-    const timestamp = new Timestamp(TimestampType.ELAPSED, 0n);
-    traceCoordinator.notifyCurrentTimestamp(timestamp);
+    let timestamp = new Timestamp(TimestampType.REAL, 0n);
+    timelineCoordinator.updateCurrentTimestamp(timestamp);
+
+    timestamp = new Timestamp(TimestampType.ELAPSED, 0n);
+    timelineCoordinator.updateCurrentTimestamp(timestamp);
   });
 
   it("processes mixed valid and invalid trace files", async () => {
@@ -106,7 +112,7 @@ describe("TraceCoordinator", () => {
       await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/WindowManager.pb"),
     ];
     await traceCoordinator.addTraces(traces);
-    const timestamps = traceCoordinator.getTimestamps();
+    const timestamps = timelineCoordinator.getAllTimestamps();
     expect(timestamps.length).toEqual(48);
   });
 
@@ -132,17 +138,28 @@ describe("TraceCoordinator", () => {
     traceCoordinator.createViewers();
     expect(traceCoordinator.getViewers()).toEqual([viewerStub]);
 
-    // notify invalid timestamp
-    traceCoordinator.notifyCurrentTimestamp(undefined);
-    expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(0);
-
-    // notify timestamp
-    const timestamp = new Timestamp(TimestampType.ELAPSED, 14500282843n);
-    traceCoordinator.notifyCurrentTimestamp(timestamp);
+    // Gets notified of the current timestamp on creation
     expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(1);
 
-    // notify timestamp again
-    traceCoordinator.notifyCurrentTimestamp(timestamp);
+    // When we update to an undefined timestamp we reset to the default selected
+    // timestamp based on the active trace and loaded timelines. Given that
+    // we haven't set a timestamp we should still be in the default timestamp
+    // and require no update to the current trace entries.
+    timelineCoordinator.updateCurrentTimestamp(undefined);
+    expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(1);
+
+    // notify timestamp
+    const timestamp = new Timestamp(TimestampType.REAL, 14500282843n);
+    expect(timelineCoordinator.getTimestampType()).toBe(TimestampType.REAL);
+    timelineCoordinator.updateCurrentTimestamp(timestamp);
     expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(2);
+
+    // notify timestamp again
+    timelineCoordinator.updateCurrentTimestamp(timestamp);
+    expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(2);
+
+    // reset back to the default timestamp should trigger a change
+    timelineCoordinator.updateCurrentTimestamp(undefined);
+    expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(3);
   });
 });

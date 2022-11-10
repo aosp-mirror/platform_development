@@ -28,6 +28,7 @@ import { PersistentStore } from "common/persistent_store";
       <div class="card-grid">
         <rects-view
           class="rects-view"
+          title="Windows"
           [rects]="inputData?.rects ?? []"
           [displayIds]="inputData?.displayIds ?? []"
           [highlightedItems]="inputData?.highlightedItems ?? []"
