@@ -26,7 +26,7 @@ export class TimelineCoordinator {
   private timelines = new Map<TraceType, Timestamp[]>();
   private explicitlySetTimestamp: undefined|Timestamp = undefined;
   private timestampType: undefined|TimestampType = undefined;
-  private observers: TimestampChangeObserver[] = [];
+  private observers = new Set<TimestampChangeObserver>();
   private explicitlySetSelection: TimeRange|undefined = undefined;
   private videoData: Blob|undefined = undefined;
   private screenRecordingTimeMapping = new Map<Timestamp, number>();
@@ -117,8 +117,12 @@ export class TimelineCoordinator {
   }
 
   public registerObserver(observer: TimestampChangeObserver) {
-    this.observers.push(observer);
+    this.observers.add(observer);
     this.notifyOfTimestampUpdate();
+  }
+
+  public unregisterObserver(observer: TimestampChangeObserver) {
+    this.observers.delete(observer);
   }
 
   public addTimeline(traceType: TraceType, timeline: Timestamp[]) {
@@ -245,11 +249,14 @@ export class TimelineCoordinator {
     this.timelines.clear();
     this.explicitlySetTimestamp = undefined;
     this.timestampType = undefined;
-    this.observers = [];
     this.explicitlySetSelection = undefined;
     this.videoData = undefined;
     this.screenRecordingTimeMapping = new Map<Timestamp, number>();
     this.activeTraceTypes = [];
+
+    // NOTE: Observers are not cleared those persist through data clears and are
+    //       notified about changes stemming from clearing data.
+    this.notifyOfTimestampUpdate();
   }
 
   public moveToPreviousEntryFor(type: TraceType) {

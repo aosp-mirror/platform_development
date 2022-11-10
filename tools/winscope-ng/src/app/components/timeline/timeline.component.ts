@@ -319,6 +319,10 @@ export class TimelineComponent implements TimestampChangeObserver {
     this.timelineCoordinator.registerObserver(this);
   }
 
+  ngOnDestroy() {
+    this.timelineCoordinator.unregisterObserver(this);
+  }
+
   ngAfterViewInit() {
     const height = this.collapsedTimelineRef.nativeElement.offsetHeight;
     this.onCollapsedTimelineSizeChanged.emit(height);
