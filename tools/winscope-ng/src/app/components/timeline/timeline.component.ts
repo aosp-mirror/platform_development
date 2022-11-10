@@ -15,6 +15,7 @@
 */
 
 import {
+  ChangeDetectorRef,
   Component,
   Input,
   Inject,
@@ -120,9 +121,13 @@ const MAX_SELECTED_TRACES = 3;
           #miniTimeline
         ></mini-timeline>
         <div id="toggle">
-            <button mat-icon-button color="primary" aria-label="Toogle Expanded Timeline" (click)="toggleExpand()">
-                <mat-icon *ngIf="!_expanded">expand_less</mat-icon>
-                <mat-icon *ngIf="_expanded">expand_more</mat-icon>
+            <button mat-icon-button
+                    class="button-toggle-expansion"
+                    color="primary"
+                    aria-label="Toogle Expanded Timeline"
+                    (click)="toggleExpand()">
+                <mat-icon *ngIf="!expanded">expand_less</mat-icon>
+                <mat-icon *ngIf="expanded">expand_more</mat-icon>
             </button>
         </div>
     </div>
@@ -230,7 +235,6 @@ const MAX_SELECTED_TRACES = 3;
   `],
 })
 export class TimelineComponent implements TimestampChangeObserver {
-  @Input() expanded = false;
   @Input() activeTrace: TraceType = TraceType.SURFACE_FLINGER;
   @Input() availableTraces: TraceType[] = [];
   @Input() set videoData(value: Blob|undefined) {
@@ -261,6 +265,8 @@ export class TimelineComponent implements TimestampChangeObserver {
 
   videoUrl: SafeUrl|undefined;
 
+  private expanded = false;
+
   TRACE_INFO = TRACE_INFO;
 
   get hasVideo() {
@@ -288,8 +294,8 @@ export class TimelineComponent implements TimestampChangeObserver {
 
   constructor(
     @Inject(TimelineCoordinator) private timelineCoordinator: TimelineCoordinator,
-    @Inject(DomSanitizer) private sanitizer: DomSanitizer
-  ) {
+    @Inject(DomSanitizer) private sanitizer: DomSanitizer,
+    @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef) {
     this.timelineCoordinator.registerObserver(this);
   }
 
@@ -327,6 +333,7 @@ export class TimelineComponent implements TimestampChangeObserver {
 
   toggleExpand() {
     this.expanded = !this.expanded;
+    this.changeDetectorRef.detectChanges();
   }
 
   updateCurrentTimestamp(timestamp: Timestamp) {
