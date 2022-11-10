@@ -47,7 +47,7 @@ export class TimelineCoordinator {
     }
   }
 
-  getFirstTimestampOfActiveTraces(): Timestamp|undefined {
+  private getFirstTimestampOfActiveTraces(): Timestamp|undefined {
     if (this.activeTraceTypes.length === 0) {
       return undefined;
     }
@@ -59,7 +59,9 @@ export class TimelineCoordinator {
   }
 
   public setActiveTraceTypes(types: TraceType[]) {
-    this.activeTraceTypes = types;
+    this.applyOperationAndNotifyObserversIfTimestampChanged(() => {
+      this.activeTraceTypes = types;
+    });
   }
 
   public getActiveTraceTypes(): TraceType[] {
@@ -125,31 +127,29 @@ export class TimelineCoordinator {
     this.observers.delete(observer);
   }
 
-  public addTimeline(traceType: TraceType, timeline: Timestamp[]) {
-    if (timeline.length === 0) {
-      this.timelines.set(traceType, []);
-      return;
-    }
-
-    if (!timeline.every(timestamp => timestamp.getType() === timeline[0].getType())) {
+  public setTimelines(timelines: Timeline[]) {
+    const allTimestamps = timelines.flatMap(timeline => timeline.timestamps);
+    if (allTimestamps.some(timestamp => timestamp.getType() != allTimestamps[0].getType())) {
       throw Error("Added timeline has inconsistent timestamps.");
     }
-    if (this.timestampType === undefined) {
-      this.timestampType = timeline[0].getType();
-    } else if (this.timestampType !== timeline[0].getType()) {
-      throw Error("Timestamp types across added timelines don't match!");
+
+    if (allTimestamps.length > 0) {
+      this.timestampType = allTimestamps[0].getType();
     }
 
-    const previousTimestamp = this.currentTimestamp;
-    this.timelines.set(traceType, timeline);
+    this.timelines.clear();
+    timelines.forEach(timeline => {
+      this.timelines.set(timeline.traceType, timeline.timestamps);
+    });
 
-    if (this.currentTimestamp !== previousTimestamp) {
-      this.notifyOfTimestampUpdate();
-    }
+    this.notifyOfTimestampUpdate();
   }
 
-  public removeTimeline(type: TraceType) {
-    this.timelines.delete(type);
+  public removeTimeline(typeToRemove: TraceType) {
+    this.applyOperationAndNotifyObserversIfTimestampChanged(() => {
+      this.timelines.delete(typeToRemove);
+      this.activeTraceTypes = this.activeTraceTypes.filter(type => type != typeToRemove);
+    });
   }
 
   public setScreenRecordingData(videoData: Blob, timeMapping: Map<Timestamp, number>) {
@@ -176,20 +176,9 @@ export class TimelineCoordinator {
       }
     }
 
-    const prevTimestamp = this.currentTimestamp;
-    this.explicitlySetTimestamp = timestamp;
-    if (prevTimestamp !== this.currentTimestamp) {
-      this.notifyOfTimestampUpdate();
-    }
-  }
-
-  private notifyOfTimestampUpdate() {
-    const timestamp = this.currentTimestamp;
-    if (timestamp === undefined) {
-      return;
-    }
-    this.observers.forEach(observer =>
-      observer.onCurrentTimestampChanged(timestamp));
+    this.applyOperationAndNotifyObserversIfTimestampChanged(() => {
+      this.explicitlySetTimestamp = timestamp;
+    });
   }
 
   public getAllTimestamps(): Timestamp[] {
@@ -253,10 +242,6 @@ export class TimelineCoordinator {
     this.videoData = undefined;
     this.screenRecordingTimeMapping = new Map<Timestamp, number>();
     this.activeTraceTypes = [];
-
-    // NOTE: Observers are not cleared those persist through data clears and are
-    //       notified about changes stemming from clearing data.
-    this.notifyOfTimestampUpdate();
   }
 
   public moveToPreviousEntryFor(type: TraceType) {
@@ -272,6 +257,28 @@ export class TimelineCoordinator {
       this.updateCurrentTimestamp(nextTimestamp);
     }
   }
+
+  private applyOperationAndNotifyObserversIfTimestampChanged(op: () => void) {
+    const prevTimestamp = this.currentTimestamp;
+    op();
+    if (prevTimestamp !== this.currentTimestamp) {
+      this.notifyOfTimestampUpdate();
+    }
+  }
+
+  private notifyOfTimestampUpdate() {
+    const timestamp = this.currentTimestamp;
+    if (timestamp === undefined) {
+      return;
+    }
+    this.observers.forEach(observer =>
+      observer.onCurrentTimestampChanged(timestamp));
+  }
+}
+
+export interface Timeline {
+  traceType: TraceType;
+  timestamps: Timestamp[];
 }
 
 export interface TimestampChangeObserver {

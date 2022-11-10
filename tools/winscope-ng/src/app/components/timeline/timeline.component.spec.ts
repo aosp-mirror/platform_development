@@ -74,7 +74,10 @@ describe("TimelineComponent", () => {
 
   it("can be expanded", () => {
     const timestamps = [new RealTimestamp(BigInt(100)), new RealTimestamp(BigInt(110))];
-    component.timelineCoordinator.addTimeline(TraceType.SURFACE_FLINGER, timestamps);
+    component.timelineCoordinator.setTimelines([{
+      traceType: TraceType.SURFACE_FLINGER,
+      timestamps: timestamps
+    }]);
     fixture.detectChanges();
 
     const button = htmlElement.querySelector(`.${component.TOGGLE_BUTTON_CLASS}`);
@@ -95,7 +98,10 @@ describe("TimelineComponent", () => {
 
   it("handles traces with no timestamps", () => {
     const timestamps: Timestamp[] = [];
-    component.timelineCoordinator.addTimeline(TraceType.SURFACE_FLINGER, timestamps);
+    component.timelineCoordinator.setTimelines([{
+      traceType: TraceType.SURFACE_FLINGER,
+      timestamps: timestamps
+    }]);
     fixture.detectChanges();
 
     // no expand button
