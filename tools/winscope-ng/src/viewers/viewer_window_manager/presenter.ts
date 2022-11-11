@@ -183,7 +183,7 @@ export class Presenter {
       }
 
       const newRect: Rectangle = {
-        topLeft: {x: rect.left, y: rect.top},
+        topLeft: {x: rect.left, y: -rect.top},
         bottomRight: {x: rect.right, y: -rect.bottom},
         height: rect.height,
         width: rect.width,
