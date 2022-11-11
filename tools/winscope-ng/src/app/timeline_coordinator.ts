@@ -196,6 +196,11 @@ export class TimelineCoordinator {
   public getPreviousTimestampFor(traceType: TraceType): Timestamp|undefined {
     const activeIndex = this.getActiveTimestampFor(traceType)?.index;
     if (activeIndex === undefined) {
+      // Only acceptable reason for this to be undefined is if we are before the first entry for this type
+      if (this.timelines.get(traceType)!.length === 0 ||
+          this.currentTimestamp!.getValueNs() < this.timelines.get(traceType)![0].getValueNs()) {
+        return undefined;
+      }
       throw Error(`Missing active timestamp for trace type ${traceType}`);
     }
 
