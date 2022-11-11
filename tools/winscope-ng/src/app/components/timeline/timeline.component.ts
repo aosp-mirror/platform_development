@@ -61,7 +61,11 @@ import { TimeUtils } from "common/utils/time_utils";
     <div class="navbar" #collapsedTimeline>
       <ng-template [ngIf]="hasTimestamps()">
         <div id="time-selector">
-            <button mat-icon-button color="primary" (click)="moveToPreviousEntry()" [disabled]="!hasPrevEntry()">
+            <button mat-icon-button
+              id="prev_entry_button"
+              color="primary"
+              (click)="moveToPreviousEntry()"
+              [disabled]="!hasPrevEntry()">
                 <mat-icon>chevron_left</mat-icon>
             </button>
             <form [formGroup]="timestampForm" class="time-selector-form">
@@ -72,7 +76,11 @@ import { TimeUtils } from "common/utils/time_utils";
                     <input matInput name="nsTimeInput" [formControl]="selectedNsFormControl" />
                 </mat-form-field>
             </form>
-            <button mat-icon-button color="primary" (click)="moveToNextEntry()" [disabled]="!hasNextEntry()">
+            <button mat-icon-button
+              id="next_entry_button"
+              color="primary"
+              (click)="moveToNextEntry()"
+              [disabled]="!hasNextEntry()">
                 <mat-icon>chevron_right</mat-icon>
             </button>
         </div>
