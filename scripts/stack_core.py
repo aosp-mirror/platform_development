@@ -319,9 +319,8 @@ class TraceConverter:
   def GlobSymbolsDir(self, symbols_dir):
     files_by_basename = {}
     for path in sorted(pathlib.Path(symbols_dir).glob("**/*")):
-      if os.path.isdir(path):
-        next
-      files_by_basename.setdefault(path.name, []).append(path)
+      if os.path.isfile(path):
+        files_by_basename.setdefault(path.name, []).append(path)
     return files_by_basename
 
   # Use the "file" command line tool to find the bitness and build_id of given ELF file.

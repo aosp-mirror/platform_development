@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-enum TimestampType {
+export enum TimestampType {
   ELAPSED = "ELAPSED",
   REAL = "REAL",
 }
 
-class Timestamp {
+export class Timestamp {
   constructor(type: TimestampType, valueNs: bigint) {
     this.type = type;
     this.valueNs = valueNs;
@@ -41,4 +41,14 @@ class Timestamp {
   private readonly valueNs: bigint;
 }
 
-export {Timestamp, TimestampType};
+export class RealTimestamp extends Timestamp {
+  constructor(valueNs: bigint) {
+    super(TimestampType.REAL, valueNs);
+  }
+}
+
+export class ElapsedTimestamp extends Timestamp {
+  constructor(valueNs: bigint) {
+    super(TimestampType.ELAPSED, valueNs);
+  }
+}

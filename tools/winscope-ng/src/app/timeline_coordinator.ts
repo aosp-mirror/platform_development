@@ -26,7 +26,7 @@ export class TimelineCoordinator {
   private timelines = new Map<TraceType, Timestamp[]>();
   private explicitlySetTimestamp: undefined|Timestamp = undefined;
   private timestampType: undefined|TimestampType = undefined;
-  private observers: TimestampChangeObserver[] = [];
+  private observers = new Set<TimestampChangeObserver>();
   private explicitlySetSelection: TimeRange|undefined = undefined;
   private videoData: Blob|undefined = undefined;
   private screenRecordingTimeMapping = new Map<Timestamp, number>();
@@ -47,7 +47,7 @@ export class TimelineCoordinator {
     }
   }
 
-  getFirstTimestampOfActiveTraces(): Timestamp|undefined {
+  private getFirstTimestampOfActiveTraces(): Timestamp|undefined {
     if (this.activeTraceTypes.length === 0) {
       return undefined;
     }
@@ -59,7 +59,9 @@ export class TimelineCoordinator {
   }
 
   public setActiveTraceTypes(types: TraceType[]) {
-    this.activeTraceTypes = types;
+    this.applyOperationAndNotifyObserversIfTimestampChanged(() => {
+      this.activeTraceTypes = types;
+    });
   }
 
   public getActiveTraceTypes(): TraceType[] {
@@ -117,35 +119,37 @@ export class TimelineCoordinator {
   }
 
   public registerObserver(observer: TimestampChangeObserver) {
-    this.observers.push(observer);
+    this.observers.add(observer);
     this.notifyOfTimestampUpdate();
   }
 
-  public addTimeline(traceType: TraceType, timeline: Timestamp[]) {
-    if (timeline.length === 0) {
-      this.timelines.set(traceType, []);
-      return;
-    }
-
-    if (!timeline.every(timestamp => timestamp.getType() === timeline[0].getType())) {
-      throw Error("Added timeline has inconsistent timestamps.");
-    }
-    if (this.timestampType === undefined) {
-      this.timestampType = timeline[0].getType();
-    } else if (this.timestampType !== timeline[0].getType()) {
-      throw Error("Timestamp types across added timelines don't match!");
-    }
-
-    const previousTimestamp = this.currentTimestamp;
-    this.timelines.set(traceType, timeline);
-
-    if (this.currentTimestamp !== previousTimestamp) {
-      this.notifyOfTimestampUpdate();
-    }
+  public unregisterObserver(observer: TimestampChangeObserver) {
+    this.observers.delete(observer);
   }
 
-  public removeTimeline(type: TraceType) {
-    this.timelines.delete(type);
+  public setTimelines(timelines: Timeline[]) {
+    const allTimestamps = timelines.flatMap(timeline => timeline.timestamps);
+    if (allTimestamps.some(timestamp => timestamp.getType() != allTimestamps[0].getType())) {
+      throw Error("Added timeline has inconsistent timestamps.");
+    }
+
+    if (allTimestamps.length > 0) {
+      this.timestampType = allTimestamps[0].getType();
+    }
+
+    this.timelines.clear();
+    timelines.forEach(timeline => {
+      this.timelines.set(timeline.traceType, timeline.timestamps);
+    });
+
+    this.notifyOfTimestampUpdate();
+  }
+
+  public removeTimeline(typeToRemove: TraceType) {
+    this.applyOperationAndNotifyObserversIfTimestampChanged(() => {
+      this.timelines.delete(typeToRemove);
+      this.activeTraceTypes = this.activeTraceTypes.filter(type => type != typeToRemove);
+    });
   }
 
   public setScreenRecordingData(videoData: Blob, timeMapping: Map<Timestamp, number>) {
@@ -172,20 +176,9 @@ export class TimelineCoordinator {
       }
     }
 
-    const prevTimestamp = this.currentTimestamp;
-    this.explicitlySetTimestamp = timestamp;
-    if (prevTimestamp !== this.currentTimestamp) {
-      this.notifyOfTimestampUpdate();
-    }
-  }
-
-  private notifyOfTimestampUpdate() {
-    const timestamp = this.currentTimestamp;
-    if (timestamp === undefined) {
-      return;
-    }
-    this.observers.forEach(observer =>
-      observer.onCurrentTimestampChanged(timestamp));
+    this.applyOperationAndNotifyObserversIfTimestampChanged(() => {
+      this.explicitlySetTimestamp = timestamp;
+    });
   }
 
   public getAllTimestamps(): Timestamp[] {
@@ -245,7 +238,6 @@ export class TimelineCoordinator {
     this.timelines.clear();
     this.explicitlySetTimestamp = undefined;
     this.timestampType = undefined;
-    this.observers = [];
     this.explicitlySetSelection = undefined;
     this.videoData = undefined;
     this.screenRecordingTimeMapping = new Map<Timestamp, number>();
@@ -265,6 +257,28 @@ export class TimelineCoordinator {
       this.updateCurrentTimestamp(nextTimestamp);
     }
   }
+
+  private applyOperationAndNotifyObserversIfTimestampChanged(op: () => void) {
+    const prevTimestamp = this.currentTimestamp;
+    op();
+    if (prevTimestamp !== this.currentTimestamp) {
+      this.notifyOfTimestampUpdate();
+    }
+  }
+
+  private notifyOfTimestampUpdate() {
+    const timestamp = this.currentTimestamp;
+    if (timestamp === undefined) {
+      return;
+    }
+    this.observers.forEach(observer =>
+      observer.onCurrentTimestampChanged(timestamp));
+  }
+}
+
+export interface Timeline {
+  traceType: TraceType;
+  timestamps: Timestamp[];
 }
 
 export interface TimestampChangeObserver {

@@ -32,8 +32,6 @@ import { PersistentStore } from "common/persistent_store";
         [rects]="inputData?.rects ?? []"
         [highlightedItems]="inputData?.highlightedItems ?? []"
         [displayIds]="inputData?.displayIds ?? []"
-        [forceRefresh]="active"
-        [hasVirtualDisplays]="inputData?.hasVirtualDisplays ?? false"
       ></rects-view>
       <mat-divider [vertical]="true"></mat-divider>
       <hierarchy-view

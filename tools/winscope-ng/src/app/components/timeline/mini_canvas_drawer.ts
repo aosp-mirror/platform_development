@@ -120,7 +120,7 @@ export class MiniCanvasDrawer implements CanvasDrawer {
   private rightFocusSectionSelector: DraggableCanvasObject;
 
   private get pointerWidth() {
-    return this.getScaledCanvasHeight() / 6;
+    return this.getHeight() / 6;
   }
 
   public getXScale() {
@@ -131,18 +131,18 @@ export class MiniCanvasDrawer implements CanvasDrawer {
     return this.ctx.getTransform().m22;
   }
 
-  getScaledCanvasWidth() {
+  public getWidth() {
     return this.canvas.width / this.getXScale();
   }
 
-  getScaledCanvasHeight() {
+  public getHeight() {
     return this.canvas.height / this.getYScale();
   }
 
   get usableRange() {
     return {
       from: this.padding.left,
-      to: this.getScaledCanvasWidth() - this.padding.left - this.padding.right
+      to: this.getWidth() - this.padding.left - this.padding.right
     };
   }
 
@@ -182,8 +182,8 @@ export class MiniCanvasDrawer implements CanvasDrawer {
         ctx.moveTo(position - triangleHeight, 0);
         ctx.lineTo(position + triangleHeight, 0);
         ctx.lineTo(position + barWidth / 2, triangleHeight);
-        ctx.lineTo(position + barWidth / 2, this.getScaledCanvasHeight());
-        ctx.lineTo(position - barWidth / 2, this.getScaledCanvasHeight());
+        ctx.lineTo(position + barWidth / 2, this.getHeight());
+        ctx.lineTo(position - barWidth / 2, this.getHeight());
         ctx.lineTo(position - barWidth / 2, triangleHeight);
         ctx.closePath();
       },
@@ -290,19 +290,19 @@ export class MiniCanvasDrawer implements CanvasDrawer {
 
   get padding() {
     return {
-      top: Math.ceil(this.getScaledCanvasHeight() / 5),
-      bottom: Math.ceil(this.getScaledCanvasHeight() / 5),
+      top: Math.ceil(this.getHeight() / 5),
+      bottom: Math.ceil(this.getHeight() / 5),
       left: Math.ceil(this.pointerWidth / 2),
       right: Math.ceil(this.pointerWidth / 2),
     };
   }
 
   get innerHeight() {
-    return this.getScaledCanvasHeight() - this.padding.top - this.padding.bottom;
+    return this.getHeight() - this.padding.top - this.padding.bottom;
   }
 
   public draw() {
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.clearRect(0, 0, this.getWidth(), this.getHeight());
 
     this.drawSelectionBackground();
 
@@ -359,7 +359,7 @@ export class MiniCanvasDrawer implements CanvasDrawer {
 
     const minSpacing = lightBarWidth * 7;
     const barsInSetWidth = (9 * lightBarWidth + boldBarWidth);
-    const barSets = Math.floor((this.getScaledCanvasWidth() - edgeBarWidth * 2 - minSpacing) / (barsInSetWidth + 10 * minSpacing));
+    const barSets = Math.floor((this.getWidth() - edgeBarWidth * 2 - minSpacing) / (barsInSetWidth + 10 * minSpacing));
     const bars = barSets * 10;
 
     // Draw start bar
@@ -368,9 +368,9 @@ export class MiniCanvasDrawer implements CanvasDrawer {
 
     // Draw end bar
     this.ctx.fillStyle = Color.GUIDE_BAR;
-    this.ctx.fillRect(this.getScaledCanvasWidth() - edgeBarWidth, this.padding.top + this.innerHeight - edgeBarHeight, edgeBarWidth, edgeBarHeight);
+    this.ctx.fillRect(this.getWidth() - edgeBarWidth, this.padding.top + this.innerHeight - edgeBarHeight, edgeBarWidth, edgeBarHeight);
 
-    const spacing = (this.getScaledCanvasWidth() - barSets * barsInSetWidth - edgeBarWidth) / (bars);
+    const spacing = (this.getWidth() - barSets * barsInSetWidth - edgeBarWidth) / (bars);
     let start = edgeBarWidth + spacing;
     for (let i = 1; i < bars; i++) {
       if (i % 10 == 0) {
