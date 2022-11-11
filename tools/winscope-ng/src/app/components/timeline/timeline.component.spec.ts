@@ -27,11 +27,11 @@ import {TimelineComponent} from "./timeline.component";
 import {ExpandedTimelineComponent} from "./expanded_timeline.component";
 import {MiniTimelineComponent} from "./mini_timeline.component";
 import {TimelineCoordinator} from "app/timeline_coordinator";
-import { TraceType } from "common/trace/trace_type";
-import { RealTimestamp, Timestamp } from "common/trace/timestamp";
-import { By } from "@angular/platform-browser";
-import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
-import { MatInputModule } from "@angular/material/input";
+import {TraceType} from "common/trace/trace_type";
+import {RealTimestamp, Timestamp} from "common/trace/timestamp";
+import {By} from "@angular/platform-browser";
+import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
+import {MatInputModule} from "@angular/material/input";
 
 describe("TimelineComponent", () => {
   let fixture: ComponentFixture<TimelineComponent>;
@@ -118,5 +118,52 @@ describe("TimelineComponent", () => {
     const errorMessageContainer = htmlElement.querySelector(".no-timestamps-msg");
     expect(errorMessageContainer).toBeTruthy();
     expect(errorMessageContainer!.textContent).toContain("No timeline to show!");
+  });
+
+  it("processes active trace input and updates selected traces", () => {
+    component.activeTrace = TraceType.SURFACE_FLINGER;
+    expect(component.wrappedActiveTrace).toEqual(TraceType.SURFACE_FLINGER);
+    expect(component.selectedTraces).toEqual([TraceType.SURFACE_FLINGER]);
+
+    component.activeTrace = TraceType.SURFACE_FLINGER;
+    expect(component.wrappedActiveTrace).toEqual(TraceType.SURFACE_FLINGER);
+    expect(component.selectedTraces).toEqual([TraceType.SURFACE_FLINGER]);
+
+    component.activeTrace = TraceType.TRANSACTIONS;
+    expect(component.wrappedActiveTrace).toEqual(TraceType.TRANSACTIONS);
+    expect(component.selectedTraces).toEqual([
+      TraceType.SURFACE_FLINGER,
+      TraceType.TRANSACTIONS
+    ]);
+
+    component.activeTrace = TraceType.WINDOW_MANAGER;
+    expect(component.wrappedActiveTrace).toEqual(TraceType.WINDOW_MANAGER);
+    expect(component.selectedTraces).toEqual([
+      TraceType.SURFACE_FLINGER,
+      TraceType.TRANSACTIONS,
+      TraceType.WINDOW_MANAGER
+    ]);
+
+    component.activeTrace = TraceType.PROTO_LOG;
+    expect(component.wrappedActiveTrace).toEqual(TraceType.PROTO_LOG);
+    expect(component.selectedTraces).toEqual([
+      TraceType.TRANSACTIONS,
+      TraceType.WINDOW_MANAGER,
+      TraceType.PROTO_LOG
+    ]);
+  });
+
+  it("handles undefined active trace input", () => {
+    component.activeTrace = undefined;
+    expect(component.wrappedActiveTrace).toBeUndefined();
+    expect(component.selectedTraces).toEqual([]);
+
+    component.activeTrace = TraceType.SURFACE_FLINGER;
+    expect(component.wrappedActiveTrace).toEqual(TraceType.SURFACE_FLINGER);
+    expect(component.selectedTraces).toEqual([TraceType.SURFACE_FLINGER]);
+
+    component.activeTrace = undefined;
+    expect(component.wrappedActiveTrace).toEqual(TraceType.SURFACE_FLINGER);
+    expect(component.selectedTraces).toEqual([TraceType.SURFACE_FLINGER]);
   });
 });

@@ -20,7 +20,6 @@ import {
   Input,
   Inject,
   ViewEncapsulation,
-  SimpleChanges,
   Output,
   EventEmitter,
   ViewChild,
@@ -35,8 +34,6 @@ import { TimelineCoordinator, TimestampChangeObserver } from "app/timeline_coord
 import { MiniTimelineComponent } from "./mini_timeline.component";
 import { Timestamp } from "common/trace/timestamp";
 import { TimeUtils } from "common/utils/time_utils";
-
-const MAX_SELECTED_TRACES = 3;
 
 @Component({
   selector: "timeline",
@@ -67,7 +64,7 @@ const MAX_SELECTED_TRACES = 3;
             <button mat-icon-button color="primary" (click)="moveToPreviousEntry()" [disabled]="!hasPrevEntry()">
                 <mat-icon>chevron_left</mat-icon>
             </button>
-            <form [formGroup]="timestampForm" class="time-selector-form" (ngSubmit)="onTimestampFormSubmitted()">
+            <form [formGroup]="timestampForm" class="time-selector-form">
                 <mat-form-field class="time-input" appearance="fill" (change)="inputTimeChanged($event)">
                     <input matInput name="humanTimeInput" [formControl]="selectedTimeFormControl" />
                 </mat-form-field>
@@ -247,8 +244,28 @@ const MAX_SELECTED_TRACES = 3;
 })
 export class TimelineComponent implements TimestampChangeObserver {
   public readonly TOGGLE_BUTTON_CLASS: string = "button-toggle-expansion";
+  public readonly MAX_SELECTED_TRACES = 3;
 
-  @Input() activeTrace: TraceType = TraceType.SURFACE_FLINGER;
+  @Input() set activeTrace(trace: TraceType|undefined) {
+    if (!trace) {
+      return;
+    }
+
+    this.wrappedActiveTrace = trace;
+
+    if (!this.selectedTraces.includes(trace)) {
+      this.selectedTraces.push(trace);
+    }
+
+    if (this.selectedTraces.length > this.MAX_SELECTED_TRACES) {
+      // Maxed capacity so remove oldest selected trace
+      this.selectedTraces = this.selectedTraces.slice(1, 1 + this.MAX_SELECTED_TRACES);
+    }
+
+    this.selectedTracesFormControl.setValue(this.selectedTraces);
+  }
+  public wrappedActiveTrace: TraceType|undefined = undefined;
+
   @Input() availableTraces: TraceType[] = [];
   @Input() set videoData(value: Blob|undefined) {
     if (value !== undefined) {
@@ -326,29 +343,6 @@ export class TimelineComponent implements TimestampChangeObserver {
     this.onCollapsedTimelineSizeChanged.emit(height);
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes["activeTrace"] !== undefined) {
-      if (this.selectedTraces.length < MAX_SELECTED_TRACES) {
-        const newSelection = new Set(this.selectedTraces)
-          .add(changes["activeTrace"].currentValue);
-        this.selectedTraces = [...newSelection];
-      } else {
-        if (this.selectedTraces
-          .find((trace: TraceType) => trace === changes["activeTrace"].currentValue)) {
-          // Active trace already selected, no need to change anything
-        } else {
-          // At max length so remove current active trace
-          const newSelection = new Set<TraceType>(this.selectedTraces);
-          newSelection.delete(changes["activeTrace"].previousValue);
-          newSelection.add(changes["activeTrace"].currentValue);
-          this.selectedTraces = [...newSelection];
-        }
-      }
-
-      this.selectedTracesFormControl.setValue(this.selectedTraces);
-    }
-  }
-
   onCurrentTimestampChanged(timestamp: Timestamp|undefined): void {
     if (!timestamp) {
       return;
@@ -376,12 +370,12 @@ export class TimelineComponent implements TimestampChangeObserver {
   }
 
   isOptionDisabled(trace: TraceType) {
-    if (this.activeTrace === trace) {
+    if (this.wrappedActiveTrace === trace) {
       return true;
     }
 
     // Reached limit of options and is not a selected element
-    if ((this.selectedTracesFormControl.value?.length ?? 0) >= MAX_SELECTED_TRACES
+    if ((this.selectedTracesFormControl.value?.length ?? 0) >= this.MAX_SELECTED_TRACES
       && this.selectedTracesFormControl.value?.find((el: TraceType) => el === trace) === undefined) {
       return true;
     }
@@ -412,25 +406,33 @@ export class TimelineComponent implements TimestampChangeObserver {
   }
 
   hasPrevEntry(): boolean {
-    if ((this.timelineCoordinator.getTimelines().get(this.activeTrace)?.length ?? 0) === 0) {
+    if (!this.wrappedActiveTrace ||
+      (this.timelineCoordinator.getTimelines().get(this.wrappedActiveTrace)?.length ?? 0) === 0) {
       return false;
     }
-    return this.timelineCoordinator.getPreviousTimestampFor(this.activeTrace) !== undefined;
+    return this.timelineCoordinator.getPreviousTimestampFor(this.wrappedActiveTrace) !== undefined;
   }
 
   hasNextEntry(): boolean {
-    if ((this.timelineCoordinator.getTimelines().get(this.activeTrace)?.length ?? 0) === 0) {
+    if (!this.wrappedActiveTrace ||
+      (this.timelineCoordinator.getTimelines().get(this.wrappedActiveTrace)?.length ?? 0) === 0) {
       return false;
     }
-    return this.timelineCoordinator.getNextTimestampFor(this.activeTrace) !== undefined;
+    return this.timelineCoordinator.getNextTimestampFor(this.wrappedActiveTrace) !== undefined;
   }
 
   moveToPreviousEntry() {
-    this.timelineCoordinator.moveToPreviousEntryFor(this.activeTrace);
+    if (!this.wrappedActiveTrace) {
+      return;
+    }
+    this.timelineCoordinator.moveToPreviousEntryFor(this.wrappedActiveTrace);
   }
 
   moveToNextEntry() {
-    this.timelineCoordinator.moveToNextEntryFor(this.activeTrace);
+    if (!this.wrappedActiveTrace) {
+      return;
+    }
+    this.timelineCoordinator.moveToNextEntryFor(this.wrappedActiveTrace);
   }
 
   inputTimeChanged(event: Event) {
@@ -454,9 +456,5 @@ export class TimelineComponent implements TimestampChangeObserver {
     }
 
     this.updateTimeInputValuesToCurrentTimestamp();
-  }
-
-  onTimestampFormSubmitted() {
-    console.log("onTimestampFormSubmitted");
   }
 }
