@@ -151,12 +151,13 @@ export default class ObjectFormatter {
      * @param obj Object to translate
      */
     private static translateObject(obj: any) {
-        const type = obj?.$type?.name;
+        const type = obj?.$type?.name ?? obj?.constructor?.name;
         switch(type) {
             case `SizeProto`: return toSize(obj);
             case `ActiveBufferProto`: return toActiveBuffer(obj);
             case `Color3`: return toColor3(obj);
             case `ColorProto`: return toColor(obj);
+            case `Long`: return obj?.toString();
             case `PointProto`: return toPoint(obj);
             case `PositionProto`: return toPointF(obj);
             case `RectProto`: return toRect(obj);
