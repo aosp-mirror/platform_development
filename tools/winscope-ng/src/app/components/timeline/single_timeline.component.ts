@@ -179,7 +179,7 @@ export class SingleTimelineComponent {
 
   private clearCanvas() {
     // Clear canvas
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.clearRect(0, 0, this.getScaledCanvasWidth(), this.getScaledCanvasHeight());
   }
 
   private getEntryAt(mouseX: number, mouseY: number) {
@@ -219,11 +219,11 @@ export class SingleTimelineComponent {
   }
 
   getScaledCanvasWidth() {
-    return this.canvas.width / this.getXScale();
+    return Math.floor(this.canvas.width / this.getXScale());
   }
 
   getScaledCanvasHeight() {
-    return this.canvas.height / this.getYScale();
+    return Math.floor(this.canvas.height / this.getYScale());
   }
 
   get entryWidth() {
@@ -231,7 +231,7 @@ export class SingleTimelineComponent {
   }
 
   get availableWidth() {
-    return this.getScaledCanvasWidth() - this.entryWidth;
+    return Math.floor(this.getScaledCanvasWidth() - this.entryWidth);
   }
 
   private defineEntryPath(entry: entry, padding = 0) {

@@ -15,6 +15,7 @@
 */
 
 import {
+  ChangeDetectorRef,
   Component,
   Input,
   Inject,
@@ -24,6 +25,7 @@ import {
   EventEmitter,
   ViewChild,
   HostListener,
+  ElementRef,
 } from "@angular/core";
 import { FormControl, FormGroup, Validators} from "@angular/forms";
 import { DomSanitizer, SafeUrl } from "@angular/platform-browser";
@@ -59,22 +61,21 @@ const MAX_SELECTED_TRACES = 3;
           id="expanded-timeline"
         ></expanded-timeline>
     </div>
-    <div class="navbar">
+    <div class="navbar" #collapsedTimeline>
+      <ng-template [ngIf]="hasTimestamps()">
         <div id="time-selector">
-          <!-- TODO: Disable button if there are no timestamps before -->
-            <button mat-icon-button color="primary" (click)="moveToPreviousEntry()">
+            <button mat-icon-button color="primary" (click)="moveToPreviousEntry()" [disabled]="!hasPrevEntry()">
                 <mat-icon>chevron_left</mat-icon>
             </button>
             <form [formGroup]="timestampForm" class="time-selector-form" (ngSubmit)="onTimestampFormSubmitted()">
                 <mat-form-field class="time-input" appearance="fill" (change)="inputTimeChanged($event)">
-                    <input matInput="number" formControlName="selectedTime">
+                    <input matInput name="humanTimeInput" [formControl]="selectedTimeFormControl" />
                 </mat-form-field>
                 <mat-form-field class="time-input" appearance="fill" (change)="inputTimeChanged($event)">
-                    <input matInput="number" formControlName="selectedNs">
+                    <input matInput name="nsTimeInput" [formControl]="selectedNsFormControl" />
                 </mat-form-field>
             </form>
-            <!-- TODO: Disable button if there are no timestamps after -->
-            <button mat-icon-button color="primary" (click)="moveToNextEntry()">
+            <button mat-icon-button color="primary" (click)="moveToNextEntry()" [disabled]="!hasNextEntry()">
                 <mat-icon>chevron_right</mat-icon>
             </button>
         </div>
@@ -119,12 +120,21 @@ const MAX_SELECTED_TRACES = 3;
           id="mini-timeline"
           #miniTimeline
         ></mini-timeline>
-        <div id="toggle">
-            <button mat-icon-button color="primary" aria-label="Toogle Expanded Timeline" (click)="toggleExpand()">
-                <mat-icon *ngIf="!_expanded">expand_less</mat-icon>
-                <mat-icon *ngIf="_expanded">expand_more</mat-icon>
+        <div id="toggle" *ngIf="hasTimestamps()">
+            <button mat-icon-button
+                    [class]="TOGGLE_BUTTON_CLASS"
+                    color="primary"
+                    aria-label="Toggle Expanded Timeline"
+                    (click)="toggleExpand()">
+                <mat-icon *ngIf="!expanded">expand_less</mat-icon>
+                <mat-icon *ngIf="expanded">expand_more</mat-icon>
             </button>
         </div>
+      </ng-template >
+      <div *ngIf="!hasTimestamps()" class="no-timestamps-msg">
+        <p class="mat-body-2">No timeline to show!</p>
+        <p class="mat-body-1">All loaded traces contain no timestamps!</p>
+      </div>
     </div>
 `,
   styles: [`
@@ -227,10 +237,17 @@ const MAX_SELECTED_TRACES = 3;
       padding: 1rem;
       font-family: 'Roboto', sans-serif;
     }
+    .no-timestamps-msg {
+      padding: 1rem;
+      align-items: center;
+      display: flex;
+      flex-direction: column;
+    }
   `],
 })
 export class TimelineComponent implements TimestampChangeObserver {
-  @Input() expanded = false;
+  public readonly TOGGLE_BUTTON_CLASS: string = "button-toggle-expansion";
+
   @Input() activeTrace: TraceType = TraceType.SURFACE_FLINGER;
   @Input() availableTraces: TraceType[] = [];
   @Input() set videoData(value: Blob|undefined) {
@@ -244,6 +261,7 @@ export class TimelineComponent implements TimestampChangeObserver {
   @Output() onCollapsedTimelineSizeChanged = new EventEmitter<number>();
 
   @ViewChild("miniTimeline") private miniTimelineComponent!: MiniTimelineComponent;
+  @ViewChild("collapsedTimeline") private collapsedTimelineRef!: ElementRef;
 
   selectedTraces: TraceType[] = [];
   selectedTracesFormControl = new FormControl();
@@ -261,6 +279,8 @@ export class TimelineComponent implements TimestampChangeObserver {
 
   videoUrl: SafeUrl|undefined;
 
+  private expanded = false;
+
   TRACE_INFO = TRACE_INFO;
 
   get hasVideo() {
@@ -272,6 +292,10 @@ export class TimelineComponent implements TimestampChangeObserver {
   }
 
   private seekTimestamp: Timestamp|undefined;
+
+  hasTimestamps(): boolean {
+    return this.timelineCoordinator.getAllTimestamps().length > 0;
+  }
 
   get currentTimestamp(): Timestamp {
     if (this.seekTimestamp !== undefined) {
@@ -287,14 +311,18 @@ export class TimelineComponent implements TimestampChangeObserver {
   }
 
   constructor(
-    @Inject(TimelineCoordinator) private timelineCoordinator: TimelineCoordinator,
-    @Inject(DomSanitizer) private sanitizer: DomSanitizer
-  ) {
+    @Inject(TimelineCoordinator) public timelineCoordinator: TimelineCoordinator,
+    @Inject(DomSanitizer) private sanitizer: DomSanitizer,
+    @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef) {
     this.timelineCoordinator.registerObserver(this);
   }
 
+  ngOnDestroy() {
+    this.timelineCoordinator.unregisterObserver(this);
+  }
+
   ngAfterViewInit() {
-    const height = this.miniTimelineComponent.miniTimelineWraper.nativeElement.offsetHeight;
+    const height = this.collapsedTimelineRef.nativeElement.offsetHeight;
     this.onCollapsedTimelineSizeChanged.emit(height);
   }
 
@@ -327,6 +355,7 @@ export class TimelineComponent implements TimestampChangeObserver {
 
   toggleExpand() {
     this.expanded = !this.expanded;
+    this.changeDetectorRef.detectChanges();
   }
 
   updateCurrentTimestamp(timestamp: Timestamp) {
@@ -377,6 +406,20 @@ export class TimelineComponent implements TimestampChangeObserver {
         break;
       }
     }
+  }
+
+  hasPrevEntry(): boolean {
+    if ((this.timelineCoordinator.getTimelines().get(this.activeTrace)?.length ?? 0) === 0) {
+      return false;
+    }
+    return this.timelineCoordinator.getPreviousTimestampFor(this.activeTrace) !== undefined;
+  }
+
+  hasNextEntry(): boolean {
+    if ((this.timelineCoordinator.getTimelines().get(this.activeTrace)?.length ?? 0) === 0) {
+      return false;
+    }
+    return this.timelineCoordinator.getNextTimestampFor(this.activeTrace) !== undefined;
   }
 
   moveToPreviousEntry() {

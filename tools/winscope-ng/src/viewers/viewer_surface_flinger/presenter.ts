@@ -96,7 +96,6 @@ export class Presenter {
       if (this.entry) {
         this.uiData.highlightedItems = this.highlightedItems;
         this.uiData.rects = this.generateRects();
-        this.uiData.hasVirtualDisplays = this.uiData.rects.filter(rect => rect.isVirtual).length > 0;
         this.uiData.displayIds = this.displayIds;
         this.uiData.tree = this.generateTree();
       }

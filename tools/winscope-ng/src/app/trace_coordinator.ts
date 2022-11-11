@@ -25,10 +25,9 @@ import { ViewerFactory } from "viewers/viewer_factory";
 import { LoadedTrace } from "app/loaded_trace";
 import { FileUtils } from "common/utils/file_utils";
 import { TRACE_INFO } from "app/trace_info";
-import { TimelineCoordinator, TimestampChangeObserver } from "./timeline_coordinator";
+import { TimelineCoordinator, TimestampChangeObserver, Timeline} from "./timeline_coordinator";
 import { Inject, Injectable } from "@angular/core";
 import { ScreenRecordingTraceEntry } from "common/trace/screen_recording";
-import { time } from "console";
 
 @Injectable()
 class TraceCoordinator implements TimestampChangeObserver {
@@ -54,13 +53,14 @@ class TraceCoordinator implements TimestampChangeObserver {
   }
 
   private addAllTracesToTimelineCoordinator() {
-    for (const parser of this.parsers) {
+    const timelines: Timeline[] = this.parsers.map(parser => {
       const timestamps = parser.getTimestamps(this.timestampTypeToUse());
       if (timestamps === undefined) {
         throw Error("Couldn't get timestamps from trace parser.");
       }
-      this.timelineCoordinator.addTimeline(parser.getTraceType(), timestamps);
-    }
+      return {traceType: parser.getTraceType(), timestamps: timestamps};
+    });
+   this.timelineCoordinator.setTimelines(timelines);
   }
 
   private addScreenRecodingTimeMappingToTraceCooordinator() {
