@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Presenter } from "./presenter";
-import { UiData } from "./ui_data";
-import { UserOptions } from "viewers/common/user_options";
-import { TraceType } from "common/trace/trace_type";
-import { LayerTraceEntry } from "common/trace/flickerlib/common";
-import { HierarchyTreeNode, PropertiesTreeNode } from "viewers/common/ui_tree_utils";
-import { UnitTestUtils } from "test/unit/utils";
-import { HierarchyTreeBuilder } from "test/unit/hierarchy_tree_builder";
+import {Presenter} from "./presenter";
+import {UiData} from "./ui_data";
+import {UserOptions} from "viewers/common/user_options";
+import {TraceType} from "common/trace/trace_type";
+import {LayerTraceEntry} from "common/trace/flickerlib/common";
+import {HierarchyTreeNode, PropertiesTreeNode} from "viewers/common/ui_tree_utils";
+import {UnitTestUtils} from "test/unit/utils";
+import {HierarchyTreeBuilder} from "test/unit/hierarchy_tree_builder";
 
 describe("PresenterSurfaceFlinger", () => {
   let presenter: Presenter;
@@ -44,48 +44,58 @@ describe("PresenterSurfaceFlinger", () => {
     });
   });
 
-  it("can notify current trace entries", () => {
+  it("processes current trace entries", () => {
     presenter.notifyCurrentTraceEntries(entries);
-    const filteredUiDataRectLabels = uiData.rects?.filter(rect => rect.isVisible != undefined)
-      .map(rect => rect.label);
+
+    expect(uiData.rects.length).toBeGreaterThan(0);
+    expect(uiData.highlightedItems?.length).toEqual(0);
+    expect(uiData.displayIds).toContain(0);
     const hierarchyOpts = uiData.hierarchyUserOptions ?
       Object.keys(uiData.hierarchyUserOptions) : null;
+    expect(hierarchyOpts).toBeTruthy();
     const propertyOpts = uiData.propertiesUserOptions ?
       Object.keys(uiData.propertiesUserOptions) : null;
-    expect(uiData.highlightedItems?.length).toEqual(0);
-    expect(filteredUiDataRectLabels?.length).toEqual(7);
-    expect(uiData.displayIds).toContain(0);
-    expect(hierarchyOpts).toBeTruthy();
     expect(propertyOpts).toBeTruthy();
-
-    // does not check specific tree values as tree generation method may change
     expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
   });
 
-  it("can handle unavailable trace entry", () => {
+  it("handles unavailable trace entry", () => {
     presenter.notifyCurrentTraceEntries(entries);
+    expect(uiData.tree).toBeDefined();
     expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
+
     const emptyEntries = new Map<TraceType, any>();
     presenter.notifyCurrentTraceEntries(emptyEntries);
     expect(uiData.tree).toBeFalsy();
   });
 
-  it("can update pinned items", () => {
+  it("creates input data for rects view", () => {
+    presenter.notifyCurrentTraceEntries(entries);
+    expect(uiData.rects.length).toBeGreaterThan(0);
+    expect(uiData.rects[0].topLeft).toEqual({x: 0, y: -0});
+    expect(uiData.rects[0].bottomRight).toEqual({x: 1080, y: -118});
+    expect(uiData.rects[0].width).toEqual(1080);
+    expect(uiData.rects[0].height).toEqual(118);
+  });
+
+  it("updates pinned items", () => {
     expect(uiData.pinnedItems).toEqual([]);
+
     const pinnedItem = new HierarchyTreeBuilder().setName("FirstPinnedItem")
       .setStableId("TestItem 4").setLayerId(4).build();
     presenter.updatePinnedItems(pinnedItem);
     expect(uiData.pinnedItems).toContain(pinnedItem);
   });
 
-  it("can update highlighted items", () => {
+  it("updates highlighted items", () => {
     expect(uiData.highlightedItems).toEqual([]);
+
     const id = "4";
     presenter.updateHighlightedItems(id);
     expect(uiData.highlightedItems).toContain(id);
   });
 
-  it("can update hierarchy tree", () => {
+  it("updates hierarchy tree", () => {
     //change flat view to true
     const userOptions: UserOptions = {
       showDiff: {
@@ -115,7 +125,7 @@ describe("PresenterSurfaceFlinger", () => {
     expect(uiData.tree?.children.length).toEqual(94);
   });
 
-  it("can filter hierarchy tree", () => {
+  it("filters hierarchy tree", () => {
     const userOptions: UserOptions = {
       showDiff: {
         name: "Show diff",
@@ -143,14 +153,14 @@ describe("PresenterSurfaceFlinger", () => {
   });
 
 
-  it("can set new properties tree and associated ui data", () => {
+  it("sets properties tree and associated ui data", () => {
     presenter.notifyCurrentTraceEntries(entries);
     presenter.newPropertiesTree(selectedTree);
     // does not check specific tree values as tree transformation method may change
     expect(uiData.propertiesTree).toBeTruthy();
   });
 
-  it("can update properties tree", () => {
+  it("updates properties tree", () => {
     //change flat view to true
     const userOptions: UserOptions = {
       showDiff: {
@@ -171,13 +181,13 @@ describe("PresenterSurfaceFlinger", () => {
     presenter.notifyCurrentTraceEntries(entries);
     presenter.newPropertiesTree(selectedTree);
     expect(uiData.propertiesTree?.diffType).toBeFalsy();
+
     presenter.updatePropertiesTree(userOptions);
     expect(uiData.propertiesUserOptions).toEqual(userOptions);
-    //check that diff type added
     expect(uiData.propertiesTree?.diffType).toBeTruthy();
   });
 
-  it("can filter properties tree", () => {
+  it("filters properties tree", () => {
     presenter.notifyCurrentTraceEntries(entries);
     presenter.newPropertiesTree(selectedTree);
     let nonTerminalChildren = uiData.propertiesTree?.children?.filter(
