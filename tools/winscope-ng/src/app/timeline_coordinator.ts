@@ -120,7 +120,7 @@ export class TimelineCoordinator {
 
   public registerObserver(observer: TimestampChangeObserver) {
     this.observers.add(observer);
-    this.notifyOfTimestampUpdate();
+    observer.onCurrentTimestampChanged(this.currentTimestamp);
   }
 
   public unregisterObserver(observer: TimestampChangeObserver) {
@@ -196,6 +196,11 @@ export class TimelineCoordinator {
   public getPreviousTimestampFor(traceType: TraceType): Timestamp|undefined {
     const activeIndex = this.getActiveTimestampFor(traceType)?.index;
     if (activeIndex === undefined) {
+      // Only acceptable reason for this to be undefined is if we are before the first entry for this type
+      if (this.timelines.get(traceType)!.length === 0 ||
+          this.currentTimestamp!.getValueNs() < this.timelines.get(traceType)![0].getValueNs()) {
+        return undefined;
+      }
       throw Error(`Missing active timestamp for trace type ${traceType}`);
     }
 
@@ -235,13 +240,15 @@ export class TimelineCoordinator {
   }
 
   public clearData() {
-    this.timelines.clear();
-    this.explicitlySetTimestamp = undefined;
-    this.timestampType = undefined;
-    this.explicitlySetSelection = undefined;
-    this.videoData = undefined;
-    this.screenRecordingTimeMapping = new Map<Timestamp, number>();
-    this.activeTraceTypes = [];
+    this.applyOperationAndNotifyObserversIfTimestampChanged(() => {
+      this.timelines.clear();
+      this.explicitlySetTimestamp = undefined;
+      this.timestampType = undefined;
+      this.explicitlySetSelection = undefined;
+      this.videoData = undefined;
+      this.screenRecordingTimeMapping = new Map<Timestamp, number>();
+      this.activeTraceTypes = [];
+    });
   }
 
   public moveToPreviousEntryFor(type: TraceType) {
@@ -268,9 +275,6 @@ export class TimelineCoordinator {
 
   private notifyOfTimestampUpdate() {
     const timestamp = this.currentTimestamp;
-    if (timestamp === undefined) {
-      return;
-    }
     this.observers.forEach(observer =>
       observer.onCurrentTimestampChanged(timestamp));
   }
@@ -282,5 +286,5 @@ export interface Timeline {
 }
 
 export interface TimestampChangeObserver {
-  onCurrentTimestampChanged(timestamp: Timestamp): void;
+  onCurrentTimestampChanged(timestamp: undefined|Timestamp): void;
 }

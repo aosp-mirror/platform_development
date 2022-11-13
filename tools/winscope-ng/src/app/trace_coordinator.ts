@@ -60,7 +60,8 @@ class TraceCoordinator implements TimestampChangeObserver {
       }
       return {traceType: parser.getTraceType(), timestamps: timestamps};
     });
-   this.timelineCoordinator.setTimelines(timelines);
+
+    this.timelineCoordinator.setTimelines(timelines);
   }
 
   private addScreenRecodingTimeMappingToTraceCooordinator() {
@@ -99,10 +100,7 @@ class TraceCoordinator implements TimestampChangeObserver {
 
   public createViewers() {
     const activeTraceTypes = this.parsers.map(parser => parser.getTraceType());
-    console.log("active trace types: ", activeTraceTypes);
-
     this.viewers = new ViewerFactory().createViewers(new Set<TraceType>(activeTraceTypes));
-    console.log("created viewers: ", this.viewers);
 
     // Make sure to update the viewers active entries as soon as they are created.
     if (this.timelineCoordinator.currentTimestamp) {
@@ -131,12 +129,19 @@ class TraceCoordinator implements TimestampChangeObserver {
     return parser ?? null;
   }
 
-  public onCurrentTimestampChanged(timestamp: Timestamp) {
-    this.notifyActiveTraceEntry(timestamp);
+  public onCurrentTimestampChanged(timestamp: Timestamp|undefined) {
+    const entries = this.getCurrentTraceEntries(timestamp);
+    this.viewers.forEach(viewer => {
+      viewer.notifyCurrentTraceEntries(entries);
+    });
   }
 
-  private notifyActiveTraceEntry(timestamp: Timestamp) {
+  private getCurrentTraceEntries(timestamp: Timestamp|undefined): Map<TraceType, any> {
     const traceEntries: Map<TraceType, any> = new Map<TraceType, any>();
+
+    if (!timestamp) {
+      return traceEntries;
+    }
 
     this.parsers.forEach(parser => {
       const targetTimestamp = timestamp;
@@ -159,9 +164,7 @@ class TraceCoordinator implements TimestampChangeObserver {
       }
     });
 
-    this.viewers.forEach(viewer => {
-      viewer.notifyCurrentTraceEntries(traceEntries);
-    });
+    return traceEntries;
   }
 
   public clearData() {

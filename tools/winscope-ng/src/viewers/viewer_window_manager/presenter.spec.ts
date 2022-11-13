@@ -47,7 +47,7 @@ describe("PresenterWindowManager", () => {
     });
   });
 
-  it("can notify current trace entries", () => {
+  it("processes current trace entries", () => {
     presenter.notifyCurrentTraceEntries(entries);
     const filteredUiDataRectLabels = uiData.rects?.filter(rect => rect.isVisible != undefined)
       .map(rect => rect.label);
@@ -65,7 +65,7 @@ describe("PresenterWindowManager", () => {
     expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
   });
 
-  it("can handle unavailable trace entry", () => {
+  it("handles unavailable trace entry", () => {
     presenter.notifyCurrentTraceEntries(entries);
     expect(Object.keys(uiData.tree!).length > 0).toBeTrue();
     const emptyEntries = new Map<TraceType, any>();
@@ -73,7 +73,16 @@ describe("PresenterWindowManager", () => {
     expect(uiData.tree).toBeFalsy();
   });
 
-  it("can update pinned items", () => {
+  it("creates input data for rects view", () => {
+    presenter.notifyCurrentTraceEntries(entries);
+    expect(uiData.rects.length).toBeGreaterThan(0);
+    expect(uiData.rects[0].topLeft).toEqual({x: 0, y: -2326});
+    expect(uiData.rects[0].bottomRight).toEqual({x: 1080, y: -2400});
+    expect(uiData.rects[0].width).toEqual(1080);
+    expect(uiData.rects[0].height).toEqual(74);
+  });
+
+  it("updates pinned items", () => {
     presenter.notifyCurrentTraceEntries(entries);
     expect(uiData.pinnedItems).toEqual([]);
 
@@ -84,14 +93,14 @@ describe("PresenterWindowManager", () => {
     expect(uiData.pinnedItems).toContain(pinnedItem);
   });
 
-  it("can update highlighted items", () => {
+  it("updates highlighted items", () => {
     expect(uiData.highlightedItems).toEqual([]);
     const id = "4";
     presenter.updateHighlightedItems(id);
     expect(uiData.highlightedItems).toContain(id);
   });
 
-  it("can update hierarchy tree", () => {
+  it("updates hierarchy tree", () => {
     //change flat view to true
     const userOptions: UserOptions = {
       showDiff: {
@@ -120,7 +129,7 @@ describe("PresenterWindowManager", () => {
     expect(uiData.tree?.children.length).toEqual(72);
   });
 
-  it("can filter hierarchy tree", () => {
+  it("filters hierarchy tree", () => {
     const userOptions: UserOptions = {
       showDiff: {
         name: "Show diff",
@@ -148,14 +157,14 @@ describe("PresenterWindowManager", () => {
   });
 
 
-  it("can set new properties tree and associated ui data", () => {
+  it("sets properties tree and associated ui data", () => {
     presenter.notifyCurrentTraceEntries(entries);
     presenter.newPropertiesTree(selectedTree);
     // does not check specific tree values as tree transformation method may change
     expect(uiData.propertiesTree).toBeTruthy();
   });
 
-  it("can update properties tree", () => {
+  it("updates properties tree", () => {
     //change flat view to true
     const userOptions: UserOptions = {
       showDiff: {
@@ -182,7 +191,7 @@ describe("PresenterWindowManager", () => {
     expect(uiData.propertiesTree?.diffType).toBeTruthy();
   });
 
-  it("can filter properties tree", () => {
+  it("filters properties tree", () => {
     presenter.notifyCurrentTraceEntries(entries);
     presenter.newPropertiesTree(selectedTree);
 

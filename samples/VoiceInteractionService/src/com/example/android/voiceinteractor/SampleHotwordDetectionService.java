@@ -23,6 +23,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.PersistableBundle;
 import android.os.SharedMemory;
+import android.os.Trace;
 import android.service.voice.AlwaysOnHotwordDetector;
 import android.service.voice.HotwordDetectedResult;
 import android.service.voice.HotwordDetectionService;
@@ -85,6 +86,7 @@ public class SampleHotwordDetectionService extends HotwordDetectionService {
             long timeoutMillis,
             @NonNull Callback callback) {
         Log.d(TAG, "onDetect (Hardware trigger): " + eventPayload);
+        Trace.beginAsyncSection("HDS.onDetected", 0);
 
         int sampleRate = eventPayload.getCaptureAudioFormat().getSampleRate();
         int bytesPerSecond =
@@ -101,7 +103,9 @@ public class SampleHotwordDetectionService extends HotwordDetectionService {
 //                generateSessionId ?
 //                AudioManager.AUDIO_SESSION_ID_GENERATE :
                 captureSession;
+        Trace.beginAsyncSection("HDS.createAudioRecord", 1);
         AudioRecord record = createAudioRecord(eventPayload, bytesPerSecond, sessionId);
+        Trace.endAsyncSection("HDS.createAudioRecord", 1);
         if (record.getState() != AudioRecord.STATE_INITIALIZED) {
             Log.e(TAG, "Failed to init first AudioRecord.");
             callback.onRejected(new HotwordRejectedResult.Builder().build());
@@ -111,8 +115,12 @@ public class SampleHotwordDetectionService extends HotwordDetectionService {
         byte[] buffer = new byte[bytesPerSecond * (int) DSP_AUDIO_READ_DURATION.getSeconds()];
         Log.d(TAG, "starting read: bytesPerSecond=" + bytesPerSecond
                 + ", totalBufferSize=" + buffer.length);
+        Trace.beginAsyncSection("HDS.startRecording", 1);
         record.startRecording();
+        Trace.endAsyncSection("HDS.startRecording", 1);
+        Trace.beginAsyncSection("AudioUtils.read", 1);
         AudioUtils.read(record, bytesPerSecond, DSP_AUDIO_READ_DURATION.getSeconds(), buffer);
+        Trace.endAsyncSection("AudioUtils.read", 1);
 
         callback.onDetected(
                 new HotwordDetectedResult.Builder()
@@ -125,6 +133,7 @@ public class SampleHotwordDetectionService extends HotwordDetectionService {
             record.stop();
             record.release();
         }, AUDIO_RECORD_RELEASE_TIMEOUT.toMillis());
+        Trace.endAsyncSection("HDS.onDetected", 0);
     }
 
     private int getKeyphraseId(AlwaysOnHotwordDetector.EventPayload payload) {

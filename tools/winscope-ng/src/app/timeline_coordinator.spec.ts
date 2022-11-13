@@ -139,4 +139,15 @@ describe("TimelineCoordinator", () => {
     coordinator.removeTimeline(TraceType.WINDOW_MANAGER);
     expect(observer.onCurrentTimestampChanged).toHaveBeenCalledTimes(0);
   });
+
+  it("uses first timestamp if no active trace or timestamp is specified", () => {
+    coordinator.setTimelines(timelines);
+    expect(coordinator.currentTimestamp?.getValueNs()).toEqual(10n);
+  });
+
+  it("sets first timestamp of active trace if no timestamp is specified", () => {
+    coordinator.setTimelines(timelines);
+    coordinator.setActiveTraceTypes([TraceType.WINDOW_MANAGER]);
+    expect(coordinator.currentTimestamp?.getValueNs()).toEqual(11n);
+  });
 });

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Component, Injector, Inject, ViewEncapsulation, Input, ChangeDetectorRef} from "@angular/core";
+import {Component, Injector, Inject, ViewEncapsulation, ChangeDetectorRef} from "@angular/core";
 import { createCustomElement } from "@angular/elements";
 import { TraceCoordinator } from "app/trace_coordinator";
 import { PersistentStore } from "common/persistent_store";
@@ -40,14 +40,15 @@ import { TimelineCoordinator } from "app/timeline_coordinator";
 
       <div class="spacer"></div>
 
-      <button *ngIf="dataLoaded" color="primary" mat-stroked-button (click)="onUploadNewClick()">
+      <button *ngIf="dataLoaded" color="primary" mat-stroked-button
+              (click)="onUploadNewClick()">
         Upload New
       </button>
 
       <button
-        mat-icon-button
-        matTooltip="Switch to {{ isDarkModeOn ? 'light' : 'dark'}} mode"
-        (click)="setDarkMode(!isDarkModeOn)">
+          mat-icon-button
+          matTooltip="Switch to {{ isDarkModeOn ? 'light' : 'dark'}} mode"
+          (click)="setDarkMode(!isDarkModeOn)">
         <mat-icon>
           {{ isDarkModeOn ? "brightness_5" : "brightness_4" }}
         </mat-icon>
@@ -56,18 +57,19 @@ import { TimelineCoordinator } from "app/timeline_coordinator";
 
     <mat-divider></mat-divider>
 
-    <mat-drawer-container class="example-container" autosize disableClose autoFocus>
+    <mat-drawer-container class="example-container" autosize disableClose
+                          autoFocus>
 
       <mat-drawer-content>
 
         <ng-container *ngIf="dataLoaded; else noLoadedTracesBlock">
 
           <trace-view
-            class="viewers"
-            [viewers]="allViewers"
-            [store]="store"
-            (onDownloadTracesButtonClick)="onDownloadTracesButtonClick()"
-            (onActiveViewChanged)="handleActiveViewChanged($event)"
+              class="viewers"
+              [viewers]="allViewers"
+              [store]="store"
+              (onDownloadTracesButtonClick)="onDownloadTracesButtonClick()"
+              (onActiveViewChanged)="handleActiveViewChanged($event)"
           ></trace-view>
 
           <mat-divider></mat-divider>
@@ -76,13 +78,14 @@ import { TimelineCoordinator } from "app/timeline_coordinator";
 
       </mat-drawer-content>
 
-      <mat-drawer #drawer mode="overlay" opened="true" [baseHeight]="collapsedTimelineHeight">
+      <mat-drawer #drawer mode="overlay" opened="true"
+                  [baseHeight]="collapsedTimelineHeight">
         <timeline
-          *ngIf="dataLoaded"
-          [activeTrace]="activeTraceType!"
-          [availableTraces]="availableTraces"
-          [videoData]="videoData"
-          (onCollapsedTimelineSizeChanged)="onCollapsedTimelineSizeChanged($event)"
+            *ngIf="dataLoaded"
+            [activeTrace]="getActiveTraceType()"
+            [availableTraces]="availableTraces"
+            [videoData]="videoData"
+            (onCollapsedTimelineSizeChanged)="onCollapsedTimelineSizeChanged($event)"
         ></timeline>
       </mat-drawer>
 
@@ -95,16 +98,16 @@ import { TimelineCoordinator } from "app/timeline_coordinator";
 
       <div class="card-grid">
         <collect-traces
-          class="collect-traces-card homepage-card"
-          [traceCoordinator]="traceCoordinator"
-          (dataLoadedChange)="onDataLoadedChange($event)"
-          [store]="store"
+            class="collect-traces-card homepage-card"
+            [traceCoordinator]="traceCoordinator"
+            (dataLoadedChange)="onDataLoadedChange($event)"
+            [store]="store"
         ></collect-traces>
 
         <upload-traces
-          class="upload-traces-card homepage-card"
-          [traceCoordinator]="traceCoordinator"
-          (dataLoadedChange)="onDataLoadedChange($event)"
+            class="upload-traces-card homepage-card"
+            [traceCoordinator]="traceCoordinator"
+            (dataLoadedChange)="onDataLoadedChange($event)"
         ></upload-traces>
       </div>
     </ng-template>
@@ -257,13 +260,13 @@ export class AppComponent {
     this.timelineCoordinator.setActiveTraceTypes(view.dependencies);
   }
 
-  get activeTraceType(): TraceType|undefined {
+  getActiveTraceType(): TraceType|undefined {
     if (this.activeView === undefined) {
       return undefined;
     }
-    if (this.timelineCoordinator.getActiveTraceTypes().length !== 1) {
-      throw Error("Viewers with more or less than one dependency not handled.");
+    if (this.activeView.dependencies.length !== 1) {
+      throw Error("Viewers with dependencies length !== 1 are not supported.");
     }
-    return this.timelineCoordinator.getActiveTraceTypes()[0];
+    return this.activeView.dependencies[0];
   }
 }
