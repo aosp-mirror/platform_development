@@ -33,10 +33,10 @@ public class AudioUtils {
         int numBytes = 0;
         int nextSecondToSample = 0;
         while (true) {
-            Trace.beginAsyncSection("AudioUtils.read", 0);
+            Trace.beginAsyncSection("AudioRecord.read", 0);
             int bytesRead = record.read(buffer, numBytes,
                     (int) (bytesPerSecond * AUDIO_RECORD_READ_DURATION.getSeconds()));
-            Trace.endAsyncSection("AudioUtils.read", 0);
+            Trace.endAsyncSection("AudioRecord.read", 0);
             Log.i(TAG, "AudioRecord.read offset=" + numBytes + ", size="
                     + (bytesPerSecond * AUDIO_RECORD_READ_DURATION.getSeconds()));
             numBytes += bytesRead;
