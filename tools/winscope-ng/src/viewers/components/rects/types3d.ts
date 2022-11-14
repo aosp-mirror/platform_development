@@ -36,6 +36,16 @@ interface Rect3D {
   darkFactor: number;
   colorType: ColorType;
   isClickable: boolean;
+  transform: Transform3D;
+}
+
+interface Transform3D {
+  dsdx: number;
+  dsdy: number;
+  tx: number;
+  dtdx: number;
+  dtdy: number;
+  ty: number;
 }
 
 interface Point3D {
@@ -70,4 +80,4 @@ interface Camera {
   zoomFactor: number;
 }
 
-export {Box3D, Circle3D, ColorType, Label3D, Point3D, Rect3D, Scene3D};
+export {Box3D, Circle3D, ColorType, Label3D, Point3D, Rect3D, Scene3D, Transform3D};

@@ -18,7 +18,7 @@ import * as THREE from "three";
 import {CSS2DObject, CSS2DRenderer} from "three/examples/jsm/renderers/CSS2DRenderer";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 import {ViewerEvents} from "viewers/common/viewer_events";
-import {Circle3D, ColorType, Label3D, Point3D, Rect3D, Scene3D} from "./types3d";
+import {Circle3D, ColorType, Label3D, Point3D, Rect3D, Scene3D, Transform3D} from "./types3d";
 
 export class Canvas {
   private static readonly TARGET_SCENE_DIAGONAL = 4;
@@ -60,9 +60,9 @@ export class Canvas {
 
     this.scene = new THREE.Scene();
     const scaleFactor = Canvas.TARGET_SCENE_DIAGONAL / scene.boundingBox.diagonal * scene.camera.zoomFactor;
-    this.scene.scale.set(scaleFactor, scaleFactor, scaleFactor);
+    this.scene.scale.set(scaleFactor, -scaleFactor, scaleFactor);
     this.scene.translateX(scaleFactor * -scene.boundingBox.center.x);
-    this.scene.translateY(scaleFactor * -scene.boundingBox.center.y);
+    this.scene.translateY(scaleFactor * scene.boundingBox.center.y);
     this.scene.translateZ(scaleFactor * -scene.boundingBox.center.z);
 
     this.camera = new THREE.OrthographicCamera(
@@ -117,10 +117,14 @@ export class Canvas {
     this.clickableObjects = [];
     rects.forEach(rect => {
       const rectGeometry = new THREE.PlaneGeometry(rect.width, rect.height);
-      const rectMesh = this.makeRectMesh(rect, rectGeometry);
-      this.scene?.add(rectMesh);
 
+      const rectMesh = this.makeRectMesh(rect, rectGeometry);
       const rectEdges = this.makeRectLineSegments(rectMesh, rectGeometry);
+      const transform = this.toMatrix4(rect.transform);
+      rectMesh.applyMatrix4(transform);
+      rectEdges.applyMatrix4(transform);
+
+      this.scene?.add(rectMesh);
       this.scene?.add(rectEdges);
 
       if (rect.isClickable) {
@@ -184,6 +188,16 @@ export class Canvas {
     this.scene?.add(labelCss);
   }
 
+  private toMatrix4(transform: Transform3D): THREE.Matrix4 {
+    return new THREE.Matrix4().setFromMatrix3(
+      new THREE.Matrix3().set(
+        transform.dsdx, transform.dsdy, transform.tx,
+        transform.dtdx, transform.dtdy, transform.ty,
+        0, 0, 1
+      )
+    );
+  }
+
   private makeRectMesh(
     rect: Rect3D,
     geometry: THREE.PlaneGeometry,
@@ -191,26 +205,26 @@ export class Canvas {
     let color: THREE.Color;
 
     switch (rect.colorType) {
-    case ColorType.VISIBLE: {
-      // green (darkness depends on z order)
-      const red = ((200 - 45) * rect.darkFactor + 45) / 255;
-      const green = ((232 - 182) * rect.darkFactor + 182) / 255;
-      const blue = ((183 - 44) * rect.darkFactor + 44) / 255;
-      color = new THREE.Color(red, green, blue);
-      break;
-    }
-    case ColorType.NOT_VISIBLE: {
-      // gray (darkness depends on z order)
-      const lower = 120;
-      const upper = 220;
-      const darkness = ((upper - lower) * rect.darkFactor + lower) / 255;
-      color = new THREE.Color(darkness, darkness, darkness);
-      break;
-    }
-    case ColorType.HIGHLIGHTED: {
-      color = Canvas.RECT_COLOR_HIGHLIGHTED;
-      break;
-    }
+      case ColorType.VISIBLE: {
+        // green (darkness depends on z order)
+        const red = ((200 - 45) * rect.darkFactor + 45) / 255;
+        const green = ((232 - 182) * rect.darkFactor + 182) / 255;
+        const blue = ((183 - 44) * rect.darkFactor + 44) / 255;
+        color = new THREE.Color(red, green, blue);
+        break;
+      }
+      case ColorType.NOT_VISIBLE: {
+        // gray (darkness depends on z order)
+        const lower = 120;
+        const upper = 220;
+        const darkness = ((upper - lower) * rect.darkFactor + lower) / 255;
+        color = new THREE.Color(darkness, darkness, darkness);
+        break;
+      }
+      case ColorType.HIGHLIGHTED: {
+        color = Canvas.RECT_COLOR_HIGHLIGHTED;
+        break;
+      }
     }
 
     const mesh = new THREE.Mesh(

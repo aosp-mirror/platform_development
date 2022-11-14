@@ -111,6 +111,9 @@ export class Presenter {
       rect.displayId = display.layerStackId;
       rect.isDisplay = true;
       rect.isVirtual = display.isVirtual ?? false;
+      rect.transform = {
+        matrix: display.transform.matrix
+      };
       return rect;
     }) ?? [];
     this.displayIds = [];
@@ -133,6 +136,9 @@ export class Presenter {
         if (!this.displayIds.includes(it.stackId)) {
           this.displayIds.push(it.stackId);
         }
+        rect.transform = {
+          matrix: rect.transform.matrix
+        };
         return rect;
       });
     return this.rectsToUiData(rects.concat(displayRects));
@@ -186,7 +192,7 @@ export class Presenter {
           dtdx: t.dtdx,
           dtdy: t.dtdy,
           tx: t.tx,
-          ty: -t.ty
+          ty: t.ty
         };
         transform = {
           matrix: matrix,
@@ -194,8 +200,8 @@ export class Presenter {
       }
 
       const newRect: Rectangle = {
-        topLeft: {x: rect.left, y: -rect.top},
-        bottomRight: {x: rect.right, y: -rect.bottom},
+        topLeft: {x: rect.left, y: rect.top},
+        bottomRight: {x: rect.right, y: rect.bottom},
         height: rect.height,
         width: rect.width,
         label: rect.label,
