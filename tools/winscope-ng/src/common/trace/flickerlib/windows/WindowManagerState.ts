@@ -59,7 +59,6 @@ function addAttributes(entry: WindowManagerState, proto: any) {
     entry.kind = entry.constructor.name;
     // There no JVM/JS translation for Longs yet
     entry.timestampMs = entry.timestamp.toString();
-    entry.rects = entry.windowStates.map((it: any) => it.rect);
     if (!entry.isComplete()) {
         entry.isIncompleteReason = entry.getIsIncompleteReason();
     }
