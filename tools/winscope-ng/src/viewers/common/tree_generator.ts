@@ -77,7 +77,7 @@ export class TreeGenerator {
   }
 
   public generateTree(): HierarchyTreeNode | null {
-    return this.getCustomisedTree(this.inputEntry);
+    return this.getCustomizedTree(this.inputEntry);
   }
 
   public compareWith(previousEntry: TraceTreeNode | null): TreeGenerator {
@@ -120,10 +120,10 @@ export class TreeGenerator {
     } else {
       diffTree = diffTrees[0];
     }
-    return this.getCustomisedTree(diffTree);
+    return this.getCustomizedTree(diffTree);
   }
 
-  private getCustomisedTree(tree: TraceTreeNode | null): HierarchyTreeNode | null {
+  private getCustomizedTree(tree: TraceTreeNode | null): HierarchyTreeNode | null {
     if (!tree) return null;
     let newTree = this.generateTreeWithUserOptions(tree, false);
     if (!newTree) return null;
