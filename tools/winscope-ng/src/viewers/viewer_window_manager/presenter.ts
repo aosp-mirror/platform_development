@@ -107,7 +107,7 @@ export class Presenter {
   private generateRects(): Rectangle[] {
     const displayRects = this.entry?.displays?.map((display: DisplayContent) => {
       const rect = display.displayRect;
-      rect.label = display.title;
+      rect.label = `Display - ${display.title}`;
       rect.id = display.layerId;
       rect.displayId = display.id;
       rect.isDisplay = true;
