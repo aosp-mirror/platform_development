@@ -34,7 +34,18 @@ function addAttributes(entry: LayerTraceEntry, protos: any) {
     // There no JVM/JS translation for Longs yet
     entry.timestampMs = entry.timestamp.toString()
     entry.rects = entry.visibleLayers
-        .sort((a: any, b: any) => (b.absoluteZ > a.absoluteZ) ? 1 : (a.absoluteZ == b.absoluteZ) ? 0 : -1)
+        .sort((layer1: any, layer2: any) => {
+            const absZLayer1 = layer1.zOrderPath;
+            const absZLayer2 = layer2.zOrderPath;
+            var elA, elB, i, len;
+            for (i = 0, len = Math.min(absZLayer1.length, absZLayer2.length); i < len; i++) {
+                elA = absZLayer1[i];
+                elB = absZLayer2[i];
+                if (elA > elB) return -1;
+                if (elA < elB) return 1;
+            }
+            return absZLayer2.length - absZLayer1.length;
+        })
         .map((it: any) => it.rect);
 
     // Avoid parsing the entry root because it is an array of layers
