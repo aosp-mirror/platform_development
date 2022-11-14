@@ -18,7 +18,7 @@ import { shortenName } from '../mixin'
 import { toRect, Size, WindowState, WindowLayoutParams } from "../common"
 import WindowContainer from "./WindowContainer"
 
- WindowState.fromProto = function (proto: any, isActivityInTree: Boolean): WindowState {
+ WindowState.fromProto = function (proto: any, isActivityInTree: Boolean, nextSeq: () => number): WindowState {
     if (proto == null) {
         return null;
     } else {
@@ -28,8 +28,9 @@ import WindowContainer from "./WindowContainer"
         const name = getName(identifierName);
         const windowContainer = WindowContainer.fromProto(
             /* proto */ proto.windowContainer,
-            /* protoChildren */ proto.windowContainer?.children.reverse() ?? [],
+            /* protoChildren */ proto.windowContainer?.children ?? [],
             /* isActivityInTree */ isActivityInTree,
+            /* computedZ */ nextSeq,
             /* nameOverride */ name,
             /* identifierOverride */ proto.identifier
         );

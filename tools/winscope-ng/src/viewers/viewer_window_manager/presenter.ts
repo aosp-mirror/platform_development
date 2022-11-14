@@ -115,7 +115,8 @@ export class Presenter {
       return rect;
     }) ?? [];
     this.displayIds = [];
-    const rects = this.entry?.windowStates?.reverse()
+    const rects = this.entry?.windowStates
+      ?.sort((a: any, b: any) => b.computedZ - a.computedZ)
       .map((it: any) => {
         const rect = it.rect;
         rect.id = it.layerId;

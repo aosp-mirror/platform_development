@@ -29,7 +29,9 @@ WindowManagerState.fromProto = function (proto: any, timestamp: number = 0, wher
         proto.inputMethodWindow.hashCode.toString(16)
     };
 
-    const rootWindowContainer = createRootWindowContainer(proto.rootWindowContainer);
+    let parseOrder = 0;
+    const nextSeq = () => ++parseOrder;
+    const rootWindowContainer = createRootWindowContainer(proto.rootWindowContainer, nextSeq);
     const keyguardControllerState = createKeyguardControllerState(
         proto.rootWindowContainer.keyguardController);
     const policy = createWindowManagerPolicy(proto.policy);
@@ -57,7 +59,7 @@ function addAttributes(entry: WindowManagerState, proto: any) {
     entry.kind = entry.constructor.name;
     // There no JVM/JS translation for Longs yet
     entry.timestampMs = entry.timestamp.toString();
-    entry.rects = entry.windowStates.reverse().map((it: any) => it.rect);
+    entry.rects = entry.windowStates.map((it: any) => it.rect);
     if (!entry.isComplete()) {
         entry.isIncompleteReason = entry.getIsIncompleteReason();
     }
@@ -84,11 +86,12 @@ function createWindowManagerPolicy(proto: any): WindowManagerPolicy {
     );
 }
 
-function createRootWindowContainer(proto: any): RootWindowContainer {
+function createRootWindowContainer(proto: any, nextSeq: () => number): RootWindowContainer {
     const windowContainer = WindowContainer.fromProto(
         /* proto */ proto.windowContainer,
-        /* childrenProto */ proto.windowContainer?.children?.reverse() ?? [],
-        /* isActivityInTree */ false
+        /* childrenProto */ proto.windowContainer?.children ?? [],
+        /* isActivityInTree */ false,
+        /* computedZ */ nextSeq
     );
 
     if (windowContainer == null) {
