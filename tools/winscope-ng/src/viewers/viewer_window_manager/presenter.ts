@@ -175,7 +175,7 @@ export class Presenter {
           dtdx: t.dtdx,
           dtdy: t.dtdy,
           tx: t.tx,
-          ty: -t.ty
+          ty: t.ty
         };
         transform = {
           matrix: matrix,
