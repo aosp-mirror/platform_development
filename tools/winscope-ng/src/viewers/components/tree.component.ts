@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Inject, Input, Output, ElementRef, EventEmitter } from "@angular/core";
+import { Component, Inject, Input, Output, ElementRef, EventEmitter, ChangeDetectionStrategy } from "@angular/core";
 import { PersistentStore } from "common/persistent_store";
 import { nodeStyles, treeNodeDataViewStyles } from "viewers/components/styles/node.styles";
-import { UiTreeUtils, UiTreeNode, HierarchyTreeNode } from "viewers/common/ui_tree_utils";
+import { UiTreeUtils, UiTreeNode, HierarchyTreeNode, PropertiesTreeNode } from "viewers/common/ui_tree_utils";
 import { TraceType } from "common/trace/trace_type";
 
 @Component({
   selector: "tree-view",
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <tree-node
       *ngIf="showNode(item)"
@@ -47,7 +48,7 @@ import { TraceType } from "common/trace/trace_type";
 
     <div *ngIf="hasChildren()" class="children" [class.flattened]="isFlattened" [hidden]="!isCollapsed()">
       <tree-view
-          *ngFor="let child of children()"
+          *ngFor="let child of children(); trackBy:childTrackById"
           class="childrenTree"
           [item]="child"
           [store]="store"
@@ -100,6 +101,13 @@ export class TreeComponent {
   childHover = false;
   readonly levelOffset = 24;
   nodeElement: HTMLElement;
+
+  public childTrackById(index: number, child: UiTreeNode): string {
+    if (child.stableId === undefined) {
+      throw Error("Missing stable id on node");
+    }
+    return `${index}_${child.stableId}`;
+  }
 
   constructor(
     @Inject(ElementRef) public elementRef: ElementRef,

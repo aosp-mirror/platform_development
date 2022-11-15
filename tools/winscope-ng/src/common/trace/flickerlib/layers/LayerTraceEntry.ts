@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import { Display, LayerTraceEntry, LayerTraceEntryBuilder, toRect, toSize, toTransform } from "../common"
+import { Display, LayerTraceEntry, LayerTraceEntryBuilder, toRect, toSize, toTransform } from "../common";
 import {Layer} from "./Layer";
+import {getPropertiesForDisplay} from "../mixin";
 
 LayerTraceEntry.fromProto = function (protos: any[], displayProtos: any[],
         timestamp: number, hwcBlob: string, where: string = ''): LayerTraceEntry {
@@ -39,11 +40,13 @@ function addAttributes(entry: LayerTraceEntry, protos: any) {
     // Avoid parsing the entry root because it is an array of layers
     // containing all trace information, this slows down the property tree.
     // Instead parse only key properties for debugging
-    const entryIds: any = {}
-    protos.forEach((it: any) =>
-        entryIds[<keyof typeof entryIds>it.id] = `\nparent=${it.parent}\ntype=${it.type}\nname=${it.name}`
-    );
-    entry.proto = entryIds;
+    const newObj = getPropertiesForDisplay(entry);
+    if (newObj.rects) delete newObj.rects;
+    if (newObj.flattenedLayers) delete newObj.flattenedLayers;
+    if (newObj.physicalDisplays) delete newObj.physicalDisplays;
+    if (newObj.physicalDisplayBounds) delete newObj.physicalDisplayBounds;
+    if (newObj.isVisible) delete newObj.isVisible;
+    entry.proto = newObj;
     entry.shortName = entry.name;
     entry.isVisible = true;
 }
