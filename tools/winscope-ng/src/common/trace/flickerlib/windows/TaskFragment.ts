@@ -18,20 +18,22 @@ import { shortenName } from '../mixin'
 import { TaskFragment } from "../common"
 import WindowContainer from "./WindowContainer"
 
-TaskFragment.fromProto = function (proto: any, isActivityInTree: Boolean): TaskFragment {
+TaskFragment.fromProto = function (proto: any, isActivityInTree: Boolean, nextSeq: () => number): TaskFragment {
     if (proto == null) {
         return null;
     } else {
         const windowContainer = WindowContainer.fromProto(
             /* proto */ proto.windowContainer,
-            /* protoChildren */ proto.windowContainer?.children?.reverse() ?? [],
-            /* isActivityInTree */ isActivityInTree);
+            /* protoChildren */ proto.windowContainer?.children ?? [],
+            /* isActivityInTree */ isActivityInTree,
+            /* computedZ */ nextSeq,
+        );
         const entry = new TaskFragment(
             proto.activityType,
             proto.displayId,
             proto.minWidth,
             proto.minHeight,
-            windowContainer
+            windowContainer,
         );
 
         addAttributes(entry, proto);

@@ -36,6 +36,7 @@ WindowContainer.fromProto = function (
     proto: any,
     protoChildren: any[],
     isActivityInTree: boolean,
+    nextSeq: () => number,
     nameOverride: string|null = null,
     identifierOverride: string|null = null,
     tokenOverride: any = null,
@@ -44,9 +45,10 @@ WindowContainer.fromProto = function (
         return null;
     }
 
+    const containerOrder = nextSeq();
     const children = protoChildren
         .filter(it => it != null)
-        .map(it => WindowContainer.childrenFromProto(it, isActivityInTree))
+        .map(it => WindowContainer.childrenFromProto(it, isActivityInTree, nextSeq))
         .filter(it => it != null);
 
     const identifier: any = identifierOverride ?? proto.identifier;
@@ -61,7 +63,8 @@ WindowContainer.fromProto = function (
         proto.surfaceControl?.layerId ?? 0,
         proto.visible,
         config,
-        children
+        children,
+        containerOrder
     );
 
     addAttributes(entry, proto);
@@ -76,15 +79,15 @@ function addAttributes(entry: WindowContainer, proto: any) {
 
 type WindowContainerChildType = DisplayContent|DisplayArea|Task|TaskFragment|Activity|WindowToken|WindowState|WindowContainer;
 
-WindowContainer.childrenFromProto = function(proto: any, isActivityInTree: Boolean): WindowContainerChildType {
-    return DisplayContent.fromProto(proto.displayContent, isActivityInTree) ??
-        DisplayArea.fromProto(proto.displayArea, isActivityInTree) ??
-        Task.fromProto(proto.task, isActivityInTree) ??
-        TaskFragment.fromProto(proto.taskFragment, isActivityInTree) ??
-        Activity.fromProto(proto.activity) ??
-        WindowToken.fromProto(proto.windowToken, isActivityInTree) ??
-        WindowState.fromProto(proto.window, isActivityInTree) ??
-        WindowContainer.fromProto(proto.windowContainer);
+WindowContainer.childrenFromProto = function(proto: any, isActivityInTree: Boolean, nextSeq: () => number): WindowContainerChildType {
+    return DisplayContent.fromProto(proto.displayContent, isActivityInTree, nextSeq) ??
+        DisplayArea.fromProto(proto.displayArea, isActivityInTree, nextSeq) ??
+        Task.fromProto(proto.task, isActivityInTree, nextSeq) ??
+        TaskFragment.fromProto(proto.taskFragment, isActivityInTree, nextSeq) ??
+        Activity.fromProto(proto.activity, nextSeq) ??
+        WindowToken.fromProto(proto.windowToken, isActivityInTree, nextSeq) ??
+        WindowState.fromProto(proto.window, isActivityInTree, nextSeq) ??
+        WindowContainer.fromProto(proto.windowContainer, nextSeq);
 }
 
 function createConfigurationContainer(proto: any): ConfigurationContainer {

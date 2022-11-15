@@ -18,15 +18,16 @@ import { shortenName } from '../mixin'
 import { WindowToken } from "../common"
 import WindowContainer from "./WindowContainer"
 
-WindowToken.fromProto = function (proto: any, isActivityInTree: Boolean): WindowToken {
+WindowToken.fromProto = function (proto: any, isActivityInTree: Boolean, nextSeq: () => number): WindowToken {
     if (proto == null) {
         return null;
     }
 
     const windowContainer = WindowContainer.fromProto(
         /* proto */ proto.windowContainer,
-        /* protoChildren */ proto.windowContainer?.children?.reverse() ?? [],
+        /* protoChildren */ proto.windowContainer?.children ?? [],
         /* isActivityInTree */ isActivityInTree,
+        /* computedZ */ nextSeq,
         /* nameOverride */ null,
         /* identifierOverride */ null,
         /* tokenOverride */ proto.hashCode
