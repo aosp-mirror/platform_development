@@ -38,7 +38,7 @@ class TraceCoordinator implements TimestampChangeObserver {
     this.timelineCoordinator.registerObserver(this);
   }
 
-  public async addTraces(traces: File[]) {
+  public async setTraces(traces: File[]) {
     traces = this.parsers.map(parser => parser.getTrace()).concat(traces);
     let parserErrors: ParserError[];
     [this.parsers, parserErrors] = await new ParserFactory().createParsers(traces);
@@ -50,6 +50,9 @@ class TraceCoordinator implements TimestampChangeObserver {
   public removeTrace(type: TraceType) {
     this.parsers = this.parsers.filter(parser => parser.getTraceType() !== type);
     this.timelineCoordinator.removeTimeline(type);
+    if (type === TraceType.SCREEN_RECORDING) {
+      this.timelineCoordinator.removeScreenRecordingData();
+    }
   }
 
   private addAllTracesToTimelineCoordinator() {

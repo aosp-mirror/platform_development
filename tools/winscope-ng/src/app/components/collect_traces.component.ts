@@ -324,7 +324,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     console.log("loading files", this.connect.adbData());
     this.traceCoordinator.clearData();
 
-    const parserErrors = await this.traceCoordinator.addTraces(this.connect.adbData());
+    const parserErrors = await this.traceCoordinator.setTraces(this.connect.adbData());
     if (parserErrors.length > 0) {
       this.openTempSnackBar(parserErrors);
     }

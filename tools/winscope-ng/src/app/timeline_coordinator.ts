@@ -29,7 +29,7 @@ export class TimelineCoordinator {
   private observers = new Set<TimestampChangeObserver>();
   private explicitlySetSelection: TimeRange|undefined = undefined;
   private videoData: Blob|undefined = undefined;
-  private screenRecordingTimeMapping = new Map<Timestamp, number>();
+  private screenRecordingTimeMapping: Map<Timestamp, number>|undefined = undefined;
   // The trace type the currently active view depends on
   private activeTraceTypes: TraceType[] = [];
 
@@ -86,7 +86,7 @@ export class TimelineCoordinator {
 
     const timeline = this.timelines.get(type);
     if (timeline === undefined) {
-      throw Error("No timeline for requested trace type");
+      throw Error(`No timeline for requested trace type ${type}`);
     }
     const index = ArrayUtils.binarySearchLowerOrEqual(timeline, timestamp);
     if (index === undefined) {
@@ -155,6 +155,11 @@ export class TimelineCoordinator {
   public setScreenRecordingData(videoData: Blob, timeMapping: Map<Timestamp, number>) {
     this.videoData = videoData;
     this.screenRecordingTimeMapping = timeMapping;
+  }
+
+  public removeScreenRecordingData() {
+    this.videoData = undefined;
+    this.screenRecordingTimeMapping = undefined;
   }
 
   public getVideoData(): Blob|undefined {
@@ -236,7 +241,7 @@ export class TimelineCoordinator {
       return undefined;
     }
 
-    return this.screenRecordingTimeMapping.get(latestScreenRecordingEntry);
+    return this.screenRecordingTimeMapping!.get(latestScreenRecordingEntry);
   }
 
   public clearData() {
