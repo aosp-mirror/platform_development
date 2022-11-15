@@ -67,19 +67,19 @@ describe("Parser", () => {
     it("retrieves trace entry (equal timestamp matches)", () => {
       const timestamp = new Timestamp(TimestampType.REAL, 1659107089075566202n);
       expect(BigInt(parser.getTraceEntry(timestamp)!.timestampMs))
-        .toEqual(14474594000n);
+        .toEqual(1659107089075566202n);
     });
 
     it("retrieves trace entry (equal timestamp matches)", () => {
       const timestamp = new Timestamp(TimestampType.REAL, 1659107089999048990n);
       expect(BigInt(parser.getTraceEntry(timestamp)!.timestampMs))
-        .toEqual(15398076788n);
+        .toEqual(1659107089999048990n);
     });
 
     it("retrieves trace entry (lower timestamp matches)", () => {
       const timestamp = new Timestamp(TimestampType.REAL, 1659107089999048991n);
       expect(BigInt(parser.getTraceEntry(timestamp)!.timestampMs))
-        .toEqual(15398076788n);
+        .toEqual(1659107089999048990n);
     });
   });
 

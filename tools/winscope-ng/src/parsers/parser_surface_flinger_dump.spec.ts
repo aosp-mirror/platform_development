@@ -22,6 +22,7 @@ import {Parser} from "./parser";
 describe("ParserSurfaceFlingerDump", () => {
   describe("trace with elapsed + real timestamp", () => {
     let parser: Parser;
+    const DUMP_REAL_TIME = 1659176624505188647n;
 
     beforeAll(async () => {
       parser = await UnitTestUtils.getParser("traces/elapsed_and_real_timestamp/dump_SurfaceFlinger.pb");
@@ -49,14 +50,14 @@ describe("ParserSurfaceFlingerDump", () => {
       const timestamp = new Timestamp(TimestampType.ELAPSED, 0n);
       const entry = parser.getTraceEntry(timestamp)!;
       expect(entry).toBeInstanceOf(LayerTraceEntry);
-      expect(BigInt(entry.timestampMs)).toEqual(0n);
+      expect(BigInt(entry.timestampMs)).toEqual(DUMP_REAL_TIME);
     });
 
-    it("retrieves trace entry from elapsed timestamp", () => {
+    it("retrieves trace entry from real timestamp", () => {
       const timestamp = new Timestamp(TimestampType.REAL, 0n);
       const entry = parser.getTraceEntry(timestamp)!;
       expect(entry).toBeInstanceOf(LayerTraceEntry);
-      expect(BigInt(entry.timestampMs)).toEqual(0n);
+      expect(BigInt(entry.timestampMs)).toEqual(DUMP_REAL_TIME);
     });
   });
 

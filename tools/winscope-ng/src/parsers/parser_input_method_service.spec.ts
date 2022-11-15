@@ -52,7 +52,7 @@ describe("ParserInputMethodService", () => {
         .toEqual(16578752896n);
     });
 
-    it("retrieves trace entry from elapsed timestamp", () => {
+    it("retrieves trace entry from real timestamp", () => {
       const timestamp = new Timestamp(TimestampType.REAL, 1659107091180519857n);
       expect(BigInt(parser.getTraceEntry(timestamp)!.elapsedRealtimeNanos))
         .toEqual(16578752896n);

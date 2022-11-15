@@ -40,7 +40,7 @@ class ParserWindowManagerDump extends Parser {
     // sure that a trace entry can actually be created from the decoded proto.
     // If the trace entry creation fails, an exception is thrown and the parser
     // will be considered unsuited for this input data.
-    this.processDecodedEntry(0, entryProto);
+    this.processDecodedEntry(0, TimestampType.ELAPSED /*irrelevant for dump*/, entryProto);
 
     return [entryProto];
   }
@@ -52,7 +52,7 @@ class ParserWindowManagerDump extends Parser {
     return new Timestamp(TimestampType.ELAPSED, 0n);
   }
 
-  override processDecodedEntry(index: number, entryProto: any): WindowManagerState {
+  override processDecodedEntry(index: number, timestampType: TimestampType, entryProto: any): WindowManagerState {
     return WindowManagerState.fromProto(entryProto);
   }
 }

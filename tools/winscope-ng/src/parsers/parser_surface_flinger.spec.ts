@@ -82,14 +82,20 @@ describe("ParserSurfaceFlinger", () => {
       const timestamp = new Timestamp(TimestampType.ELAPSED, 14631249355n);
       const entry = parser.getTraceEntry(timestamp)!;
       expect(entry).toBeInstanceOf(LayerTraceEntry);
-      expect(BigInt(entry.timestampMs)).toEqual(14631249355n);
+      expect(BigInt(entry.timestampMs)).toEqual(1659107089233029344n);
     });
 
-    it("retrieves trace entry from elapsed timestamp", () => {
+    it("retrieves trace entry from real timestamp", () => {
       const timestamp = new Timestamp(TimestampType.REAL, 1659107089233029344n);
       const entry = parser.getTraceEntry(timestamp)!;
       expect(entry).toBeInstanceOf(LayerTraceEntry);
-      expect(BigInt(entry.timestampMs)).toEqual(14631249355n);
+      expect(BigInt(entry.timestampMs)).toEqual(1659107089233029344n);
+    });
+
+    it("formats entry timestamps", () => {
+      const timestamp = new Timestamp(TimestampType.REAL, 1659107089233029344n);
+      const entry = parser.getTraceEntry(timestamp)!;
+      expect(entry.name).toEqual("15h04m49s233ms29376ns, 29 Jul 2022 UTC");
     });
   });
 
@@ -112,6 +118,17 @@ describe("ParserSurfaceFlinger", () => {
     it("doesn't provide real timestamps", () => {
       expect(parser.getTimestamps(TimestampType.REAL))
         .toEqual(undefined);
+    });
+
+    it("formats entry timestamps", () => {
+      expect(() => {
+        const timestamp = new Timestamp(TimestampType.REAL, 1659107089233029344n);
+        parser.getTraceEntry(timestamp);
+      }).toThrow(Error("Timestamps with type \"REAL\" not available"));
+
+      const timestamp = new Timestamp(TimestampType.ELAPSED, 850335483446n);
+      const entry = parser.getTraceEntry(timestamp)!;
+      expect(entry.name).toEqual("14m10s335ms");
     });
   });
 });

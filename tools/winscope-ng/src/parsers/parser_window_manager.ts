@@ -54,8 +54,14 @@ class ParserWindowManager extends Parser {
     return undefined;
   }
 
-  override processDecodedEntry(index: number, entryProto: any): WindowManagerState {
-    return WindowManagerState.fromProto(entryProto.windowManagerService, entryProto.elapsedRealtimeNanos, entryProto.where);
+  override processDecodedEntry(index: number, timestampType: TimestampType, entryProto: any): WindowManagerState {
+    return WindowManagerState.fromProto(
+      entryProto.windowManagerService,
+      entryProto.elapsedRealtimeNanos,
+      entryProto.where,
+      this.realToElapsedTimeOffsetNs,
+      timestampType === TimestampType.ELAPSED /*useElapsedTime*/
+    );
   }
 
   private realToElapsedTimeOffsetNs: undefined|bigint;

@@ -59,8 +59,17 @@ class ParserSurfaceFlinger extends Parser {
     return undefined;
   }
 
-  override processDecodedEntry(index: number, entryProto: any): LayerTraceEntry {
-    return LayerTraceEntry.fromProto(entryProto.layers.layers, entryProto.displays, entryProto.elapsedRealtimeNanos, entryProto.hwcBlob);
+  override processDecodedEntry(index: number, timestampType: TimestampType, entryProto: any): LayerTraceEntry {
+    return LayerTraceEntry.fromProto(
+      entryProto.layers.layers,
+      entryProto.displays,
+      entryProto.elapsedRealtimeNanos,
+      entryProto.vsyncId,
+      entryProto.hwcBlob,
+      entryProto.where,
+      this.realToElapsedTimeOffsetNs,
+      timestampType === TimestampType.ELAPSED /*useElapsedTime*/
+    );
   }
 
   private realToElapsedTimeOffsetNs: undefined|bigint;
