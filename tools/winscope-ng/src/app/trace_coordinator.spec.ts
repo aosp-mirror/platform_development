@@ -36,7 +36,7 @@ describe("TraceCoordinator", () => {
       await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/dump_SurfaceFlinger.pb"),
       await UnitTestUtils.getFixtureFile("traces/dump_WindowManager.pb"),
     ];
-    const errors = await traceCoordinator.addTraces(traces);
+    const errors = await traceCoordinator.setTraces(traces);
     expect(traceCoordinator.getParsers().length).toEqual(2);
     expect(errors.length).toEqual(0);
   });
@@ -46,7 +46,7 @@ describe("TraceCoordinator", () => {
     const traces = [
       await UnitTestUtils.getFixtureFile("winscope_homepage.png"),
     ];
-    const errors = await traceCoordinator.addTraces(traces);
+    const errors = await traceCoordinator.setTraces(traces);
     expect(traceCoordinator.getParsers().length).toEqual(0);
     expect(errors.length).toEqual(1);
   });
@@ -56,7 +56,7 @@ describe("TraceCoordinator", () => {
       await UnitTestUtils.getFixtureFile(
         "traces/no_entries_InputMethodClients.pb")
     ];
-    await traceCoordinator.addTraces(traces);
+    await traceCoordinator.setTraces(traces);
 
     let timestamp = new Timestamp(TimestampType.REAL, 0n);
     timelineCoordinator.updateCurrentTimestamp(timestamp);
@@ -71,7 +71,7 @@ describe("TraceCoordinator", () => {
       await UnitTestUtils.getFixtureFile("winscope_homepage.png"),
       await UnitTestUtils.getFixtureFile("traces/dump_WindowManager.pb"),
     ];
-    const errors = await traceCoordinator.addTraces(traces);
+    const errors = await traceCoordinator.setTraces(traces);
     expect(traceCoordinator.getParsers().length).toEqual(1);
     expect(errors.length).toEqual(1);
   });
@@ -81,7 +81,7 @@ describe("TraceCoordinator", () => {
     const traces = [
       await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/dump_SurfaceFlinger.pb"),
     ];
-    await traceCoordinator.addTraces(traces);
+    await traceCoordinator.setTraces(traces);
     expect(traceCoordinator.getParsers().length).toEqual(1);
 
     traceCoordinator.removeTrace(TraceType.SURFACE_FLINGER);
@@ -93,7 +93,7 @@ describe("TraceCoordinator", () => {
       await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/dump_SurfaceFlinger.pb"),
       await UnitTestUtils.getFixtureFile("traces/dump_WindowManager.pb"),
     ];
-    await traceCoordinator.addTraces(traces);
+    await traceCoordinator.setTraces(traces);
 
     const parser = traceCoordinator.findParser(TraceType.SURFACE_FLINGER);
     expect(parser).toBeTruthy();
@@ -111,7 +111,7 @@ describe("TraceCoordinator", () => {
       await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/SurfaceFlinger.pb"),
       await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/WindowManager.pb"),
     ];
-    await traceCoordinator.addTraces(traces);
+    await traceCoordinator.setTraces(traces);
     const timestamps = timelineCoordinator.getAllTimestamps();
     expect(timestamps.length).toEqual(48);
   });
@@ -131,7 +131,7 @@ describe("TraceCoordinator", () => {
       await UnitTestUtils.getFixtureFile(
         "traces/no_entries_InputMethodClients.pb")
     ];
-    await traceCoordinator.addTraces(traces);
+    await traceCoordinator.setTraces(traces);
 
     // create viewers (mocked factory)
     expect(traceCoordinator.getViewers()).toEqual([]);
@@ -161,5 +161,27 @@ describe("TraceCoordinator", () => {
     // reset back to the default timestamp should trigger a change
     timelineCoordinator.updateCurrentTimestamp(undefined);
     expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(3);
+  });
+
+  it("video data is removed if video trace is deleted", async () => {
+    expect(traceCoordinator.getParsers().length).toEqual(0);
+    const traces = [
+      await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/SurfaceFlinger.pb"),
+      await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/WindowManager.pb"),
+      await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4"),
+    ];
+    const errors = await traceCoordinator.setTraces(traces);
+    expect(traceCoordinator.getParsers().length).toEqual(3);
+    expect(errors.length).toEqual(0);
+
+    expect(timelineCoordinator.getVideoData()).toBeDefined();
+    expect(timelineCoordinator.timestampAsElapsedScreenrecordingSeconds(
+      new Timestamp(TimestampType.REAL, 100n))).toBeDefined();
+
+    traceCoordinator.removeTrace(TraceType.SCREEN_RECORDING);
+
+    expect(timelineCoordinator.getVideoData()).toBeUndefined();
+    expect(timelineCoordinator.timestampAsElapsedScreenrecordingSeconds(
+      new Timestamp(TimestampType.REAL, 100n))).toBeUndefined();
   });
 });

@@ -139,7 +139,7 @@ export class UploadTracesComponent {
 
   public async processFiles(files: File[]) {
     const unzippedFiles = await this.traceCoordinator.getUnzippedFiles(files);
-    const parserErrors = await this.traceCoordinator.addTraces(unzippedFiles);
+    const parserErrors = await this.traceCoordinator.setTraces(unzippedFiles);
     if (parserErrors.length > 0) {
       this.openTempSnackBar(parserErrors);
     }
