@@ -18,16 +18,17 @@ import { shortenName } from '../mixin'
 import { Activity } from "../common"
 import WindowContainer from "./WindowContainer"
 
-Activity.fromProto = function (proto: any): Activity {
+Activity.fromProto = function (proto: any, nextSeq: () => number): Activity {
     if (proto == null) {
         return null;
     } else {
         const windowContainer = WindowContainer.fromProto(
             /* proto */ proto.windowToken.windowContainer,
-            /* protoChildren */ proto.windowToken.windowContainer?.children?.reverse() ?? [],
+            /* protoChildren */ proto.windowToken.windowContainer?.children ?? [],
             /* isActivityInTree */ true,
+            /* computedZ */ nextSeq,
             /* nameOverride */ null,
-            /* identifierOverride */ proto.identifier
+            /* identifierOverride */ proto.identifier,
         );
 
         const entry = new Activity(

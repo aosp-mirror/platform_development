@@ -115,7 +115,8 @@ export class Presenter {
       return rect;
     }) ?? [];
     this.displayIds = [];
-    const rects = this.entry?.windowStates?.reverse()
+    const rects = this.entry?.windowStates
+      ?.sort((a: any, b: any) => b.computedZ - a.computedZ)
       .map((it: any) => {
         const rect = it.rect;
         rect.id = it.layerId;
@@ -160,31 +161,22 @@ export class Presenter {
 
   private rectsToUiData(rects: any[]): Rectangle[] {
     const uiRects: Rectangle[] = [];
+    const identityMatrix: RectMatrix = {
+      dsdx: 1,
+      dsdy: 0,
+      tx: 0,
+      dtdx: 0,
+      dtdy: 1,
+      ty: 0
+    };
     rects.forEach((rect: any) => {
-      let t = null;
-      if (rect.transform && rect.transform.matrix) {
-        t = rect.transform.matrix;
-      } else if (rect.transform) {
-        t = rect.transform;
-      }
-      let transform: RectTransform | null = null;
-      if (t !== null) {
-        const matrix: RectMatrix = {
-          dsdx: t.dsdx,
-          dsdy: t.dsdy,
-          dtdx: t.dtdx,
-          dtdy: t.dtdy,
-          tx: t.tx,
-          ty: t.ty
-        };
-        transform = {
-          matrix: matrix,
-        };
-      }
+      const transform: RectTransform = {
+        matrix: identityMatrix,
+      };
 
       const newRect: Rectangle = {
-        topLeft: {x: rect.left, y: -rect.top},
-        bottomRight: {x: rect.right, y: -rect.bottom},
+        topLeft: {x: rect.left, y: rect.top},
+        bottomRight: {x: rect.right, y: rect.bottom},
         height: rect.height,
         width: rect.width,
         label: rect.label,

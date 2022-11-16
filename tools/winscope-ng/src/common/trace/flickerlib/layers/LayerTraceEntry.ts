@@ -33,10 +33,6 @@ function addAttributes(entry: LayerTraceEntry, protos: any) {
     entry.kind = "entry"
     // There no JVM/JS translation for Longs yet
     entry.timestampMs = entry.timestamp.toString()
-    entry.rects = entry.visibleLayers
-        .sort((a: any, b: any) => (b.absoluteZ > a.absoluteZ) ? 1 : (a.absoluteZ == b.absoluteZ) ? 0 : -1)
-        .map((it: any) => it.rect);
-
     // Avoid parsing the entry root because it is an array of layers
     // containing all trace information, this slows down the property tree.
     // Instead parse only key properties for debugging

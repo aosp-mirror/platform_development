@@ -76,8 +76,8 @@ describe("PresenterWindowManager", () => {
   it("creates input data for rects view", () => {
     presenter.notifyCurrentTraceEntries(entries);
     expect(uiData.rects.length).toBeGreaterThan(0);
-    expect(uiData.rects[0].topLeft).toEqual({x: 0, y: -2326});
-    expect(uiData.rects[0].bottomRight).toEqual({x: 1080, y: -2400});
+    expect(uiData.rects[0].topLeft).toEqual({x: 0, y: 2326});
+    expect(uiData.rects[0].bottomRight).toEqual({x: 1080, y: 2400});
     expect(uiData.rects[0].width).toEqual(1080);
     expect(uiData.rects[0].height).toEqual(74);
   });
