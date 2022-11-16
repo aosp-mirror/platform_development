@@ -178,6 +178,10 @@ class HeaderCheckerTest(unittest.TestCase):
     def test_libgolden_cpp_return_type_diff(self):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp", "libgolden_cpp_return_type_diff", 8)
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp", "libgolden_cpp_return_type_diff", 0,
+            ["-ignore-linker-set-key", "_ZN17HighVolumeSpeaker6ListenEv",
+             "-ignore-linker-set-key", "_ZN16LowVolumeSpeaker6ListenEv"])
 
     def test_libgolden_cpp_add_odr(self):
         self.prepare_and_run_abi_diff_all_archs(
