@@ -60,10 +60,6 @@ update_prebuilts () {
   rm .fetch* || true
 
   find . | xargs touch
-
-  # create symlink lib -> lib64 as toolchain libraries have a RUNPATH pointing
-  # to $ORIGIN/../lib instead of lib64
-  ln -s lib64 lib
 }
 
 
