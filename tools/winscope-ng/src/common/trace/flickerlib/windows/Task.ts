@@ -18,15 +18,16 @@ import { shortenName } from '../mixin'
 import { Task, toRect } from "../common"
 import WindowContainer from "./WindowContainer"
 
-Task.fromProto = function (proto: any, isActivityInTree: Boolean): Task {
+Task.fromProto = function (proto: any, isActivityInTree: Boolean, nextSeq: () => number): Task {
     if (proto == null) {
         return null;
     } else {
         const windowContainerProto = proto.taskFragment?.windowContainer ?? proto.windowContainer;
         const windowContainer = WindowContainer.fromProto(
             /* proto */ windowContainerProto,
-            /* protoChildren */ windowContainerProto?.children?.reverse() ?? [],
-            /* isActivityInTree */ isActivityInTree
+            /* protoChildren */ windowContainerProto?.children ?? [],
+            /* isActivityInTree */ isActivityInTree,
+            /* computedZ */ nextSeq,
         );
 
         const entry = new Task(

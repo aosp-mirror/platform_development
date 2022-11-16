@@ -18,15 +18,16 @@ import { shortenName } from '../mixin'
 import { DisplayArea } from "../common"
 import WindowContainer from "./WindowContainer"
 
-DisplayArea.fromProto = function (proto: any, isActivityInTree: Boolean): DisplayArea {
+DisplayArea.fromProto = function (proto: any, isActivityInTree: Boolean, nextSeq: () => number): DisplayArea {
     if (proto == null) {
         return null;
     } else {
         const windowContainer = WindowContainer.fromProto(
             /* proto */ proto.windowContainer,
-            /* protoChildren */ proto.windowContainer?.children?.reverse() ?? [],
+            /* protoChildren */ proto.windowContainer?.children ?? [],
             /* isActivityInTree */ isActivityInTree,
-            /* nameOverride */ proto.name
+            /* computedZ */ nextSeq,
+            /* nameOverride */ proto.name,
         );
 
         const entry = new DisplayArea(proto.isTaskDisplayArea, windowContainer);

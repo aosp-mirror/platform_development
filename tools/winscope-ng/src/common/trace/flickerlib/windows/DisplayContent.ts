@@ -18,15 +18,16 @@ import { shortenName } from '../mixin'
 import { toRect, DisplayContent, Rect } from "../common"
 import WindowContainer from "./WindowContainer"
 
-DisplayContent.fromProto = function (proto: any, isActivityInTree: Boolean): DisplayContent {
+DisplayContent.fromProto = function (proto: any, isActivityInTree: Boolean, nextSeq: () => number): DisplayContent {
     if (proto == null) {
         return null;
     } else {
         const windowContainer = WindowContainer.fromProto(
             /* proto */ proto.rootDisplayArea.windowContainer,
-            /* protoChildren */ proto.rootDisplayArea.windowContainer?.children?.reverse() ?? [],
+            /* protoChildren */ proto.rootDisplayArea.windowContainer?.children ?? [],
             /* isActivityInTree */ isActivityInTree,
-            /* nameOverride */ proto.displayInfo?.name ?? null
+            /* computedZ */ nextSeq,
+            /* nameOverride */ proto.displayInfo?.name ?? null,
         );
         const displayRectWidth = proto.displayInfo?.logicalWidth ?? 0;
         const displayRectHeight = proto.displayInfo?.logicalHeight ?? 0;

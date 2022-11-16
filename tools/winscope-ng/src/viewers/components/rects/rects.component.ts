@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, Input, OnDestroy, Inject, ElementRef, SimpleChanges, OnInit} from "@angular/core";
+import {Component, Input, OnDestroy, Inject, ElementRef, SimpleChanges, OnInit, HostListener} from "@angular/core";
 import {Rectangle} from "viewers/common/rectangle";
 import {Canvas} from "./canvas";
 import {ViewerEvents} from "viewers/common/viewer_events";
@@ -245,14 +245,21 @@ export class RectsComponent implements OnInit, OnDestroy {
     this.drawScene();
   }
 
+  @HostListener("wheel", ["$event"])
+  public onScroll(event: WheelEvent) {
+    if (event.deltaY > 0) {
+      this.doZoomOut();
+    } else {
+      this.doZoomIn();
+    }
+  }
+
   public onZoomInClick() {
-    this.mapper3d.increaseZoomFactor();
-    this.drawScene();
+    this.doZoomIn();
   }
 
   public onZoomOutClick() {
-    this.mapper3d.decreaseZoomFactor();
-    this.drawScene();
+    this.doZoomOut();
   }
 
   public onShowOnlyVisibleModeChange(enabled: boolean) {
@@ -284,6 +291,16 @@ export class RectsComponent implements OnInit, OnDestroy {
     if (id !== undefined) {
       this.notifyHighlightedItem(id);
     }
+  }
+
+  private doZoomIn() {
+    this.mapper3d.increaseZoomFactor();
+    this.drawScene();
+  }
+
+  private doZoomOut() {
+    this.mapper3d.decreaseZoomFactor();
+    this.drawScene();
   }
 
   private drawScene() {
