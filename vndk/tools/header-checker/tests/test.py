@@ -405,8 +405,9 @@ class HeaderCheckerTest(unittest.TestCase):
         resource_dir = subprocess.check_output(
             ["header-abi-dumper", "-print-resource-dir"], text=True,
             stderr=subprocess.DEVNULL).strip()
-        self.assertEqual(os.path.dirname(resource_dir),
-                         os.path.join(common_dir, "lib64", "clang"))
+        self.assertIn(os.path.dirname(resource_dir),
+                      (os.path.join(common_dir, "lib64", "clang"),
+                       os.path.join(common_dir, "lib", "clang")))
         self.assertRegex(os.path.basename(resource_dir), r"^[\d.]+$")
 
     def test_struct_extensions(self):
