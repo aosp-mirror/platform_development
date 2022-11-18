@@ -189,12 +189,11 @@ export class Canvas {
   }
 
   private toMatrix4(transform: Transform3D): THREE.Matrix4 {
-    return new THREE.Matrix4().setFromMatrix3(
-      new THREE.Matrix3().set(
-        transform.dsdx, transform.dsdy, transform.tx,
-        transform.dtdx, transform.dtdy, transform.ty,
-        0, 0, 1
-      )
+    return new THREE.Matrix4().set(
+      transform.dsdx, transform.dsdy, 0, transform.tx,
+      transform.dtdx, transform.dtdy, 0, transform.ty,
+      0, 0, 1, 0,
+      0, 0, 0, 1,
     );
   }
 
