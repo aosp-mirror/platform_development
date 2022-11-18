@@ -103,10 +103,15 @@ export class TreeComponent {
   nodeElement: HTMLElement;
 
   public childTrackById(index: number, child: UiTreeNode): string {
-    if (child.stableId === undefined) {
-      throw Error("Missing stable id on node");
+    if (child.stableId !== undefined) {
+      return child.stableId;
     }
-    return `${index}_${child.stableId}`;
+    if (!(child instanceof HierarchyTreeNode)
+      && typeof child.propertyKey === "string") {
+      return child.propertyKey;
+    }
+
+    throw Error("Missing stable id or property key on node");
   }
 
   constructor(
