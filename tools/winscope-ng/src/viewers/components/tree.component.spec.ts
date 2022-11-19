@@ -17,6 +17,7 @@ import { ComponentFixture, TestBed, ComponentFixtureAutoDetect } from "@angular/
 import { TreeComponent } from "./tree.component";
 import { Component, ViewChild, NO_ERRORS_SCHEMA } from "@angular/core";
 import { PersistentStore } from "common/persistent_store";
+import { UiTreeNode } from "viewers/common/ui_tree_utils";
 
 describe("TreeComponent", () => {
   let fixture: ComponentFixture<TestHostComponent>;
@@ -61,13 +62,13 @@ describe("TreeComponent", () => {
   })
   class TestHostComponent {
     isFlattened = true;
-    item = {
+    item: UiTreeNode = {
       simplifyNames: false,
       kind: "entry",
       name: "BaseLayerTraceEntry",
       shortName: "BLTE",
       chips: [],
-      children: [{kind: "3", id: "3", name: "Child1"}]
+      children: [{kind: "3", stableId: "3", name: "Child1"}],
     };
     store = new PersistentStore();
     diffClass = jasmine.createSpy().and.returnValue("none");
