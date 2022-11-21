@@ -39,6 +39,8 @@ export class ProxyConnection implements Connection {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has("token")) {
       this.proxy.proxyKey = urlParams.get("token")!;
+    } else if (this.proxy.store.getFromStore("adb.proxyKey")) {
+      this.proxy.proxyKey = this.proxy.store.getFromStore("adb.proxyKey")!;
     }
     this.proxy.getDevices();
   }
@@ -85,6 +87,7 @@ export class ProxyConnection implements Connection {
 
   public setProxyKey(key: string) {
     this.proxy.proxyKey = key;
+    this.proxy.store.addToStore("adb.proxyKey", key);
     this.restart();
   }
 
