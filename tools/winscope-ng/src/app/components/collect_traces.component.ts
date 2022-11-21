@@ -188,7 +188,6 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   }
 
   public onAddKey(key: string) {
-    this.store.addToStore("adb.proxyKey", key);
     if (this.connect.setProxyKey) {
       this.connect.setProxyKey(key);
     }
