@@ -47,6 +47,15 @@ import { TimelineCoordinator } from "app/timeline_coordinator";
 
       <button
           mat-icon-button
+          matTooltip="Report bug"
+          (click)="goToLink('https://b.corp.google.com/issues/new?component=909476')">
+        <mat-icon>
+          bug_report
+        </mat-icon>
+      </button>
+
+      <button
+          mat-icon-button
           matTooltip="Switch to {{ isDarkModeOn ? 'light' : 'dark'}} mode"
           (click)="setDarkMode(!isDarkModeOn)">
         <mat-icon>
@@ -268,5 +277,9 @@ export class AppComponent {
       throw Error("Viewers with dependencies length !== 1 are not supported.");
     }
     return this.activeView.dependencies[0];
+  }
+
+  goToLink(url: string){
+    window.open(url, "_blank");
   }
 }
