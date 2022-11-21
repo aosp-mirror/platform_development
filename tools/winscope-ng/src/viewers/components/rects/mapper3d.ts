@@ -151,6 +151,12 @@ class Mapper3D {
 
     let z = 0;
 
+    // Arbitrary max size for a rect
+    const maxDimension = Math.max(
+      ...rects2d.filter((rect2d) => rect2d.isDisplay)
+        .map((rect2d): number => Math.max(rect2d.width, rect2d.height))
+    ) * 2;
+
     const rects3d = rects2d.map((rect2d): Rect3D => {
       const identity: Transform3D = {
         dsdx: 1,
@@ -161,7 +167,7 @@ class Mapper3D {
         ty: 0
       };
 
-      const center: Point3D = {
+      let center: Point3D = {
         x: rect2d.topLeft.x + rect2d.width / 2,
         y: rect2d.topLeft.y + rect2d.height / 2,
         z: z
@@ -197,11 +203,26 @@ class Mapper3D {
         transform = identity;
       }
 
+      let height = rect2d.height;
+      let width = rect2d.width;
+
+      // Crop oversized rectangles (e.g. BackColorSurface to make it easier to see elements)
+      if (width > maxDimension && height > maxDimension) {
+        width = maxDimension;
+        height = maxDimension;
+        // centralize the new rect
+        center = {
+          x: maxDimension / 4,
+          y: 0,
+          z: center.z
+        };
+      }
+
       return {
         id: rect2d.id,
         center: center,
-        width: rect2d.width,
-        height: rect2d.height,
+        width: width,
+        height: height,
         darkFactor: darkFactor,
         colorType: colorType,
         isClickable: rect2d.isClickable,
