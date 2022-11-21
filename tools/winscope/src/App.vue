@@ -55,7 +55,7 @@
       </md-app-toolbar>
 
       <md-app-content class="main-content" :style="mainContentStyle">
-        <section class="use-new-winscope-banner">
+        <section class="use-new-winscope-banner" v-if="!dataLoaded">
           <icon>🚀</icon>
           <h2>New Winscope<span>beta</span></br>is available!</h2>
           <a href="http://go/winscope-beta">
