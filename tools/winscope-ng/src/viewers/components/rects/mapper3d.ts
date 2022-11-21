@@ -34,8 +34,8 @@ class Mapper3D {
   private cameraRotationFactor = Mapper3D.CAMERA_ROTATION_FACTOR_INIT;
   private zSpacingFactor = Mapper3D.Z_SPACING_FACTOR_INIT;
   private zoomFactor = Mapper3D.ZOOM_FACTOR_INIT;
-  private showOnlyVisibleMode = false;
-  private showVirtualMode = true;
+  private showOnlyVisibleMode = false; // by default show all
+  private showVirtualMode = false; // by default don't show virtual displays
   private currentDisplayId = 0; // default stack id is usually 0
 
   setRects(rects: Rectangle[]) {
@@ -125,7 +125,7 @@ class Mapper3D {
     rects = rects.filter(rect => rect.displayId == this.currentDisplayId);
 
     if (this.showOnlyVisibleMode) {
-      rects = rects.filter(rect => rect.isVisible);
+      rects = rects.filter(rect => rect.isVisible || rect.isDisplay);
     }
 
     if (!this.showVirtualMode) {
@@ -151,11 +151,15 @@ class Mapper3D {
 
     let z = 0;
 
-    // Arbitrary max size for a rect
-    const maxDimension = Math.max(
-      ...rects2d.filter((rect2d) => rect2d.isDisplay)
-        .map((rect2d): number => Math.max(rect2d.width, rect2d.height))
-    ) * 2;
+    const displays = rects2d.filter((rect2d) => rect2d.isDisplay);
+    // Arbitrary max size for a rect (2x the maximum display)
+    let maxDimension = Number.MAX_VALUE;
+
+    if (displays.length > 0) {
+      maxDimension = Math.max(
+        ...displays.map((rect2d): number => Math.max(rect2d.width, rect2d.height))
+      ) * 2;
+    }
 
     const rects3d = rects2d.map((rect2d): Rect3D => {
       const identity: Transform3D = {

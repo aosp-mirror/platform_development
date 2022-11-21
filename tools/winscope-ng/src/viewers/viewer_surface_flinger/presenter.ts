@@ -106,7 +106,10 @@ export class Presenter {
   private generateRects(): Rectangle[] {
     const displayRects = this.entry.displays.map((display: any) => {
       const rect = display.layerStackSpace;
-      rect.label = `Display - ${display.name}`;
+      rect.label = `Display`;
+      if (display.name) {
+        rect.label += ` - ${display.name}`;
+      }
       rect.id = display.id;
       rect.displayId = display.layerStackId;
       rect.isDisplay = true;
