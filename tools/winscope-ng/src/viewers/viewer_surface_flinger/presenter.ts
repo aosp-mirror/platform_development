@@ -278,7 +278,7 @@ export class Presenter {
     },
     showDefaults: {
       name: "Show defaults",
-      enabled: true,
+      enabled: false,
       tooltip: `
                 If checked, shows the value of all properties.
                 Otherwise, hides all properties whose value is
