@@ -17,7 +17,7 @@
 
 function usage() {
   cat <<EOF
-Usage: $0 -d device-name -p product-name -r dist-dir -i build-id
+Usage: $0 -d device-name -p product-name -r dist-dir -i build-id [targets]
 Builds a vendor image for given product and analyze ninja inputs.
 
   -d  device name to build (e.g. vsoc_x86_64)
@@ -44,6 +44,8 @@ do
     esac
 done
 
+extra_targets=${@: ${OPTIND}}
+
 if [[ -z "$device" || -z "$product" || -z "$dist_dir" || -z "$build_id" ]]; then
   echo "missing arguments"
   usage
@@ -57,7 +59,7 @@ export ALLOW_MISSING_DEPENDENCIES=true
 export SKIP_VNDK_VARIANTS_CHECK=true
 export DIST_DIR=$dist_dir
 
-build/soong/soong_ui.bash --make-mode vendorimage collect_ninja_inputs dist \
+build/soong/soong_ui.bash --make-mode vendorimage collect_ninja_inputs dist $extra_targets \
   TARGET_PRODUCT=$product TARGET_BUILD_VARIANT=userdebug
 
 cp out/target/product/$device/vendor.img $dist_dir
