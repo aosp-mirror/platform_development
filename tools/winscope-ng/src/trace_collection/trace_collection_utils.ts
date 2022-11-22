@@ -42,7 +42,7 @@ const wmTraceSelectionConfigs: Array<SelectionConfiguration> = [
       "16000",
       "32000",
     ],
-    value: "4000"
+    value: "32000"
   },
   {
     key: "tracingtype",
@@ -67,6 +67,11 @@ const wmTraceSelectionConfigs: Array<SelectionConfiguration> = [
 
 const sfTraceEnableConfigs: Array<EnableConfiguration> = [
   {
+    name: "input",
+    key: "input",
+    enabled: true
+  },
+  {
     name: "composition",
     key: "composition",
     enabled: true
@@ -74,7 +79,7 @@ const sfTraceEnableConfigs: Array<EnableConfiguration> = [
   {
     name: "metadata",
     key: "metadata",
-    enabled: true
+    enabled: false
   },
   {
     name: "hwc",
@@ -85,6 +90,11 @@ const sfTraceEnableConfigs: Array<EnableConfiguration> = [
     name: "trace buffers",
     key: "tracebuffers",
     enabled: true
+  },
+  {
+    name: "virtual displays",
+    key: "virtualdisplays",
+    enabled: false
   }
 ];
 
@@ -93,7 +103,7 @@ const sfTraceSelectionConfigs: Array<SelectionConfiguration> = [
     key: "sfbuffersize",
     name: "buffer size (KB)",
     options: ["4000","8000","16000","32000"],
-    value: "4000"
+    value: "32000"
   }
 ];
 

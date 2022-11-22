@@ -200,8 +200,9 @@ class SurfaceFlingerTraceConfig:
     """
 
     def __init__(self) -> None:
-        # default config flags CRITICAL | INPUT | SYNC
-        self.flags = 1 << 0 | 1 << 1 | 1 << 6
+        # default config flags from frameworks/native/services/surfaceflinger/Tracing/LayerTracing.h
+        # TRACE_INPUT | TRACE_COMPOSITION | TRACE_EXTRA
+        self.flags = 1 << 1 | 1 << 2 | 1 << 3
 
     def add(self, config: str) -> None:
         self.flags |= CONFIG_FLAG[config]
@@ -260,10 +261,12 @@ class WindowManagerTraceSelectedConfig:
 
 
 CONFIG_FLAG = {
+    "input": 1 << 1,
     "composition": 1 << 2,
     "metadata": 1 << 3,
     "hwc": 1 << 4,
-    "tracebuffers": 1 << 5
+    "tracebuffers": 1 << 5,
+    "virtualdisplays": 1 << 6
 }
 
 #Keep up to date with options in DataAdb.vue
