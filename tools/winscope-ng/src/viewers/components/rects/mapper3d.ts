@@ -34,8 +34,8 @@ class Mapper3D {
   private cameraRotationFactor = Mapper3D.CAMERA_ROTATION_FACTOR_INIT;
   private zSpacingFactor = Mapper3D.Z_SPACING_FACTOR_INIT;
   private zoomFactor = Mapper3D.ZOOM_FACTOR_INIT;
-  private showOnlyVisibleMode = false;
-  private showVirtualMode = true;
+  private showOnlyVisibleMode = false; // by default show all
+  private showVirtualMode = false; // by default don't show virtual displays
   private currentDisplayId = 0; // default stack id is usually 0
 
   setRects(rects: Rectangle[]) {
@@ -125,7 +125,7 @@ class Mapper3D {
     rects = rects.filter(rect => rect.displayId == this.currentDisplayId);
 
     if (this.showOnlyVisibleMode) {
-      rects = rects.filter(rect => rect.isVisible);
+      rects = rects.filter(rect => rect.isVisible || rect.isDisplay);
     }
 
     if (!this.showVirtualMode) {
@@ -151,6 +151,16 @@ class Mapper3D {
 
     let z = 0;
 
+    const displays = rects2d.filter((rect2d) => rect2d.isDisplay);
+    // Arbitrary max size for a rect (2x the maximum display)
+    let maxDimension = Number.MAX_VALUE;
+
+    if (displays.length > 0) {
+      maxDimension = Math.max(
+        ...displays.map((rect2d): number => Math.max(rect2d.width, rect2d.height))
+      ) * 2;
+    }
+
     const rects3d = rects2d.map((rect2d): Rect3D => {
       const identity: Transform3D = {
         dsdx: 1,
@@ -161,7 +171,7 @@ class Mapper3D {
         ty: 0
       };
 
-      const center: Point3D = {
+      let center: Point3D = {
         x: rect2d.topLeft.x + rect2d.width / 2,
         y: rect2d.topLeft.y + rect2d.height / 2,
         z: z
@@ -197,11 +207,26 @@ class Mapper3D {
         transform = identity;
       }
 
+      let height = rect2d.height;
+      let width = rect2d.width;
+
+      // Crop oversized rectangles (e.g. BackColorSurface to make it easier to see elements)
+      if (width > maxDimension && height > maxDimension) {
+        width = maxDimension;
+        height = maxDimension;
+        // centralize the new rect
+        center = {
+          x: maxDimension / 4,
+          y: 0,
+          z: center.z
+        };
+      }
+
       return {
         id: rect2d.id,
         center: center,
-        width: rect2d.width,
-        height: rect2d.height,
+        width: width,
+        height: height,
         darkFactor: darkFactor,
         colorType: colorType,
         isClickable: rect2d.isClickable,

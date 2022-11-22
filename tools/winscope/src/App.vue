@@ -26,7 +26,7 @@
 
     <md-app>
       <md-app-toolbar md-tag="md-toolbar" class="top-toolbar">
-        <h1 class="md-title">{{appName}}</h1>
+        <h1 class="md-title">{{appName}} <span>Legacy</span></h1>
 
         <div class="trace-name" v-if="dataLoaded">
           <div>
@@ -55,8 +55,15 @@
       </md-app-toolbar>
 
       <md-app-content class="main-content" :style="mainContentStyle">
+        <section class="use-new-winscope-banner">
+          <icon>🚀</icon>
+          <h2>New Winscope<span>beta</span></br>is available!</h2>
+          <a href="http://go/winscope-beta">
+            <md-button class="md-primary">try it now!</md-button>
+          </a>
+        </section>
+
         <section class="data-inputs" v-if="!dataLoaded">
-          <betafeatures :setBetaImePanelFlag="this.setBetaImePanelFlag" />
           <div class="input">
             <dataadb class="adbinput" ref="adb" :store="store"
               @dataReady="onDataReady" />
@@ -65,6 +72,7 @@
             <datainput class="fileinput" ref="input" :store="store"
               @dataReady="onDataReady" />
           </div>
+
         </section>
 
         <section class="data-view">
@@ -411,6 +419,10 @@ export default {
   font-weight: 600;
 }
 
+#app .top-toolbar .md-title span {
+  color: rgba(95, 99, 104, 0.5);
+}
+
 .data-view {
   display: flex;
   flex-direction: column;
@@ -508,5 +520,33 @@ h1 {
 
 .md-overlay.md-dialog-overlay {
   z-index: 10;
+}
+
+section.use-new-winscope-banner {
+  display: flex;
+  align-content: center;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 1rem calc(1rem + 16px) 1rem;
+  border-bottom: thin solid rgba(0,0,0,.12);;
+  margin-bottom: 1rem;
+}
+
+section.use-new-winscope-banner h2 {
+  font-weight: 300;
+  margin: 1rem;
+}
+
+section.use-new-winscope-banner icon {
+  font-size: 2rem;
+}
+
+section.use-new-winscope-banner span {
+  font-size: 1rem;
+  color: rgba(0, 0, 0, 0.5);
+  margin-bottom: -1rem;
+  display: inline-block;
+  transform: translateY(-10px);
+  padding: 2px;
 }
 </style>
