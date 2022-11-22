@@ -22,5 +22,5 @@ java_library_host {
     name: "mkstubs",
     srcs: ["src/**/*.java"],
     manifest: "manifest.txt",
-    static_libs: ["asm-9.2"],
+    static_libs: ["ow2-asm"],
 }
