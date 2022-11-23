@@ -87,7 +87,7 @@ class ProxyRequest {
     };
     request.responseType = type || "";
     request.open(method, client.WINSCOPE_PROXY_URL + path);
-    const lastKey = client.store.getFromStore("adb.proxyKey");
+    const lastKey = client.store.get("adb.proxyKey");
     if (lastKey !== null) {
       client.proxyKey = lastKey;
     }
@@ -152,7 +152,7 @@ class ProxyRequest {
     const client = proxyClient;
     try {
       client.devices = JSON.parse(request.responseText);
-      const last = client.store.getFromStore("adb.lastDevice");
+      const last = client.store.get("adb.lastDevice");
       if (last && client.devices[last] &&
               client.devices[last].authorised) {
         client.selectDevice(last);
@@ -253,7 +253,7 @@ export class ProxyClient {
 
   selectDevice(device_id: string) {
     this.selectedDevice = device_id;
-    this.store.addToStore("adb.lastDevice", device_id);
+    this.store.add("adb.lastDevice", device_id);
     this.setState(ProxyState.START_TRACE);
   }
 

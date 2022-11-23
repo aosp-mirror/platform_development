@@ -15,7 +15,7 @@
  */
 import { Component, Input, Inject, ElementRef } from "@angular/core";
 import { UserOptions } from "viewers/common/user_options";
-import { PersistentStore } from "common/persistent_store";
+import { PersistentStore } from "common/utils/persistent_store";
 import { UiTreeUtils, HierarchyTreeNode, UiTreeNode } from "viewers/common/ui_tree_utils";
 import { nodeStyles } from "viewers/components/styles/node.styles";
 import { ViewerEvents } from "viewers/common/viewer_events";
