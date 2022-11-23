@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { PersistentStore } from "common/persistent_store";
+import { PersistentStore } from "common/utils/persistent_store";
 import { configMap, TRACES } from "./trace_collection_utils";
 import { setTraces, SetTraces } from "./set_traces";
 import { Device } from "./connection";
@@ -49,8 +49,7 @@ class ProxyRequest {
   async call(
     method: string,
     path: string,
-    view: any,
-    onSuccess: any,
+    onSuccess: ((request: XMLHttpRequest) => void) | undefined,
     type?: XMLHttpRequestResponseType,
     jsonRequest: any = null
   ) {
@@ -66,7 +65,14 @@ class ProxyRequest {
         if (this.getResponseHeader("Winscope-Proxy-Version") !== client.VERSION) {
           client.setState(ProxyState.INVALID_VERSION);
         } else if (onSuccess) {
-          onSuccess(this, view);
+          try {
+            onSuccess(this);
+          } catch(err) {
+            console.error(err);
+            proxyClient.setState(ProxyState.ERROR,
+              `Error handling request response:\n${err}\n\n`+
+              `Request:\n ${request.responseText}`);
+          }
         }
       } else if (this.status === 403) {
         client.setState(ProxyState.UNAUTH);
@@ -96,53 +102,53 @@ class ProxyRequest {
   }
 
   getDevices(view:any) {
-    proxyRequest.call("GET", ProxyEndpoint.DEVICES, view, proxyRequest.onSuccessGetDevices);
+    proxyRequest.call("GET", ProxyEndpoint.DEVICES, proxyRequest.onSuccessGetDevices);
   }
 
   async fetchFiles(dev:string, files: Array<string>, idx: number, view:any) {
-    await proxyRequest.call("GET", `${ProxyEndpoint.FETCH}${dev}/${files[idx]}/`, view,
-      proxyRequest.onSuccessUpdateAdbData, "arraybuffer");
+    await proxyRequest.call("GET", `${ProxyEndpoint.FETCH}${dev}/${files[idx]}/`,
+      (request) => proxyRequest.onSuccessUpdateAdbData(request, view), "arraybuffer");
   }
 
   setEnabledConfig(view:any, req: Array<string>) {
-    proxyRequest.call("POST", `${ProxyEndpoint.ENABLE_CONFIG_TRACE}${view.proxy.selectedDevice}/`, view, null, undefined, req);
+    proxyRequest.call("POST", `${ProxyEndpoint.ENABLE_CONFIG_TRACE}${view.proxy.selectedDevice}/`, undefined, undefined, req);
   }
 
   setSelectedConfig(endpoint: ProxyEndpoint, view:any, req: configMap) {
-    proxyRequest.call("POST", `${endpoint}${view.proxy.selectedDevice}/`, view, null, undefined, req);
+    proxyRequest.call("POST", `${endpoint}${view.proxy.selectedDevice}/`, undefined, undefined, req);
   }
 
   startTrace(view:any) {
-    proxyRequest.call("POST", `${ProxyEndpoint.START_TRACE}${view.proxy.selectedDevice}/`, view, function(request:XMLHttpRequest, newView:ProxyConnection) {
-      newView.keepAliveTrace(newView);
+    proxyRequest.call("POST", `${ProxyEndpoint.START_TRACE}${view.proxy.selectedDevice}/`, (request:XMLHttpRequest) => {
+      view.keepAliveTrace(view);
     }, undefined, setTraces.reqTraces);
   }
 
   async endTrace(view:any) {
-    await proxyRequest.call("POST", `${ProxyEndpoint.END_TRACE}${view.proxy.selectedDevice}/`, view,
-      async function (request:XMLHttpRequest, newView:ProxyConnection) {
-        await proxyClient.updateAdbData(setTraces.reqTraces, 0, "trace", newView);
+    await proxyRequest.call("POST", `${ProxyEndpoint.END_TRACE}${view.proxy.selectedDevice}/`,
+      async (request:XMLHttpRequest) => {
+        await proxyClient.updateAdbData(setTraces.reqTraces, 0, "trace", view);
       });
   }
 
   keepTraceAlive(view:any) {
-    this.call("GET", `${ProxyEndpoint.STATUS}${view.proxy.selectedDevice}/`, view, function(request:XMLHttpRequest, newView:ProxyConnection) {
+    this.call("GET", `${ProxyEndpoint.STATUS}${view.proxy.selectedDevice}/`, (request: XMLHttpRequest) => {
       if (request.responseText !== "True") {
-        newView.endTrace();
-      } else if (newView.keep_alive_worker === null) {
-        newView.keep_alive_worker = setInterval(newView.keepAliveTrace, 1000, newView);
+        view.endTrace();
+      } else if (view.keep_alive_worker === null) {
+        view.keep_alive_worker = setInterval(view.keepAliveTrace, 1000, view);
       }
     });
   }
 
   async dumpState(view:any) {
-    await proxyRequest.call("POST", `${ProxyEndpoint.DUMP}${view.proxy.selectedDevice}/`, view,
-      async function(request:XMLHttpRequest, newView:ProxyConnection) {
-        await proxyClient.updateAdbData(setTraces.reqDumps, 0, "dump", newView);
+    await proxyRequest.call("POST", `${ProxyEndpoint.DUMP}${view.proxy.selectedDevice}/`,
+      async (request:XMLHttpRequest) => {
+        await proxyClient.updateAdbData(setTraces.reqDumps, 0, "dump", view);
       }, undefined, setTraces.reqDumps);
   }
 
-  onSuccessGetDevices = function(request: XMLHttpRequest, view: ProxyClient) {
+  onSuccessGetDevices = function(request: XMLHttpRequest) {
     const client = proxyClient;
     try {
       client.devices = JSON.parse(request.responseText);
@@ -160,17 +166,6 @@ class ProxyRequest {
       console.error(err);
       client.errorText = request.responseText;
       client.setState(ProxyState.ERROR, client.errorText);
-    }
-  };
-
-  onSuccessSetAvailableTraces = function(request:XMLHttpRequest, view:SetTraces) {
-    try {
-      view.DYNAMIC_TRACES = TRACES["default"];
-      if(request.responseText == "true") {
-        view.appendOptionalTraces(view, "arc");
-      }
-    } catch(err) {
-      proxyClient.setState(ProxyState.ERROR, request.responseText);
     }
   };
 
