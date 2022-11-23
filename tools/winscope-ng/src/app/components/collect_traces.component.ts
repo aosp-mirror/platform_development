@@ -20,7 +20,7 @@ import { setTraces } from "trace_collection/set_traces";
 import { ProxyState } from "trace_collection/proxy_client";
 import { traceConfigurations, configMap, SelectionConfiguration, EnableConfiguration } from "trace_collection/trace_collection_utils";
 import { TraceCoordinator } from "app/trace_coordinator";
-import { PersistentStore } from "common/persistent_store";
+import { PersistentStore } from "common/utils/persistent_store";
 import { MatSnackBar } from "@angular/material/snack-bar";
 import { ParserError } from "parsers/parser_factory";
 import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component";
@@ -72,7 +72,7 @@ import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component
           </mat-list>
 
           <div class="trace-section">
-            <trace-config [traces]="setTraces.DYNAMIC_TRACES"></trace-config>
+            <trace-config [traces]="setTraces.getTracingConfig()"></trace-config>
             <button color="primary" class="start-btn" mat-stroked-button (click)="startTracing()">Start trace</button>
           </div>
 
@@ -82,11 +82,11 @@ import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component
             <h3 class="mat-subheading-2">Dump targets</h3>
             <div class="selection">
               <mat-checkbox
-                *ngFor="let dumpKey of objectKeys(setTraces.DUMPS)"
+                *ngFor="let dumpKey of objectKeys(setTraces.getDumpConfig())"
                 color="primary"
                 class="dump-checkbox"
-                [(ngModel)]="setTraces.DUMPS[dumpKey].run"
-              >{{setTraces.DUMPS[dumpKey].name}}</mat-checkbox>
+                [(ngModel)]="setTraces.getDumpConfig()[dumpKey].run"
+              >{{setTraces.getDumpConfig()[dumpKey].name}}</mat-checkbox>
             </div>
             <button color="primary" class="dump-btn" mat-stroked-button (click)="dumpState()">Dump state</button>
           </div>
@@ -268,9 +268,10 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
 
   private requestedTraces() {
     const tracesFromCollection: Array<string> = [];
-    const req = Object.keys(setTraces.DYNAMIC_TRACES)
+    const tracingConfig = setTraces.getTracingConfig();
+    const req = Object.keys(tracingConfig)
       .filter((traceKey:string) => {
-        const traceConfig = setTraces.DYNAMIC_TRACES[traceKey];
+        const traceConfig = tracingConfig[traceKey];
         if (traceConfig.isTraceCollection) {
           traceConfig.config?.enableConfigs.forEach((innerTrace:EnableConfiguration) => {
             if (innerTrace.enabled) {
@@ -285,17 +286,19 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   }
 
   private requestedDumps() {
-    return Object.keys(setTraces.DUMPS)
+    const dumpConfig = setTraces.getDumpConfig();
+    return Object.keys(dumpConfig)
       .filter((dumpKey:string) => {
-        return setTraces.DUMPS[dumpKey].run;
+        return dumpConfig[dumpKey].run;
       });
   }
 
   private requestedEnableConfig(): Array<string> | undefined {
     const req: Array<string> = [];
-    Object.keys(setTraces.DYNAMIC_TRACES)
+    const tracingConfig = setTraces.getTracingConfig();
+    Object.keys(tracingConfig)
       .forEach((traceKey:string) => {
-        const trace = setTraces.DYNAMIC_TRACES[traceKey];
+        const trace = tracingConfig[traceKey];
         if(!trace.isTraceCollection
               && trace.run
               && trace.config
@@ -314,11 +317,12 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   }
 
   private requestedSelection(traceType: string): configMap | undefined {
-    if (!setTraces.DYNAMIC_TRACES[traceType].run) {
+    const tracingConfig = setTraces.getTracingConfig();
+    if (!tracingConfig[traceType].run) {
       return undefined;
     }
     const selected: configMap = {};
-    setTraces.DYNAMIC_TRACES[traceType].config?.selectionConfigs.forEach(
+    tracingConfig[traceType].config?.selectionConfigs.forEach(
       (con: SelectionConfiguration) => {
         selected[con.key] = con.value;
       }

@@ -163,7 +163,7 @@ export class ProxyConnection implements Connection {
       proxyClient.getDevices();
     }
     if (newState == ProxyState.START_TRACE) {
-      setTraces.setAvailableTraces();
+      setTraces.fetchAndSetTracingConfigForAvailableTraces();
     }
   }
 }

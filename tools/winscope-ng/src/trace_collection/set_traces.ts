@@ -18,32 +18,51 @@ import {
   proxyRequest,
   ProxyEndpoint
 } from "trace_collection/proxy_client";
+import { PersistentStoreObject } from "common/utils/persistent_store_object";
 
 export class SetTraces {
-  DYNAMIC_TRACES = TRACES["default"];
+  private tracingConfig = PersistentStoreObject.new<TraceConfigurationMap>("TracingSettings", TRACES["default"]);
   reqTraces: string[] = [];
   reqDumps: string[] = [];
   dataReady = false;
   dumpError = false;
 
-  DUMPS: TraceConfigurationMap = {
+  private dumpConfig: TraceConfigurationMap = PersistentStoreObject.new<TraceConfigurationMap>("DumpSettings", {
     "window_dump": {
       name: "Window Manager",
+      isTraceCollection: undefined,
       run: true,
+      config: undefined
     },
     "layers_dump": {
       name: "Surface Flinger",
+      isTraceCollection: undefined,
       run: true,
+      config: undefined
     }
-  };
+  });
 
-  setAvailableTraces() {
-    proxyRequest.call("GET", ProxyEndpoint.CHECK_WAYLAND, this, proxyRequest.onSuccessSetAvailableTraces);
+  // TODO: Might make sense to split this into two function calls
+  public fetchAndSetTracingConfigForAvailableTraces() {
+    proxyRequest.call("GET", ProxyEndpoint.CHECK_WAYLAND, (request:XMLHttpRequest) => {
+      const availableTracesConfig = TRACES["default"];
+      if(request.responseText == "true") {
+        Object.assign(availableTracesConfig, TRACES["arc"]);
+      }
+      this.setTracingConfig(availableTracesConfig);
+    });
   }
-  appendOptionalTraces(view:any, device_key:string) {
-    for(const key in TRACES[device_key]) {
-      view.DYNAMIC_TRACES[key] = TRACES[device_key][key];
-    }
+
+  public getTracingConfig(): TraceConfigurationMap {
+    return this.tracingConfig;
+  }
+
+  private setTracingConfig(traceConfig: TraceConfigurationMap) {
+    this.tracingConfig = PersistentStoreObject.new<TraceConfigurationMap>("TraceConfiguration", traceConfig);
+  }
+
+  public getDumpConfig(): TraceConfigurationMap {
+    return this.dumpConfig;
   }
 }
 export const setTraces = new SetTraces();
