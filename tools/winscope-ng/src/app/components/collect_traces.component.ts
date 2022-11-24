@@ -44,7 +44,11 @@ import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component
         <div *ngIf="connect.isDevicesState()" class="devices-connecting">
           <p class="mat-body-1">{{ objectKeys(connect.devices()).length > 0 ? "Connected devices:" : "No devices detected" }}</p>
           <mat-list *ngIf="objectKeys(connect.devices()).length > 0">
-            <mat-list-item *ngFor="let deviceId of objectKeys(connect.devices())" (click)="connect.selectDevice(deviceId)">
+            <mat-list-item
+              *ngFor="let deviceId of objectKeys(connect.devices())"
+              (click)="connect.selectDevice(deviceId)"
+              class="available-device"
+            >
               <mat-icon matListIcon>
                 {{ connect.devices()[deviceId].authorised ? "smartphone" : "screen_lock_portrait" }}
               </mat-icon>
@@ -153,6 +157,9 @@ import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component
       }
       .error-icon {
         margin-right: 5px;
+      }
+      .available-device {
+        cursor: pointer;
       }
     `
   ]
