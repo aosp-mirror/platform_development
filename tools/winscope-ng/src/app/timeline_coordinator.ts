@@ -96,9 +96,13 @@ export class TimelineCoordinator {
   }
 
   get fullRange() {
+    const timestamps = this.getAllUniqueTimestamps();
+    if (timestamps.length === 0) {
+      throw Error("Trying to get full range when there are no timestamps");
+    }
     return {
-      from: this.getAllTimestamps()[0],
-      to: this.getAllTimestamps()[this.getAllTimestamps().length - 1]
+      from: timestamps[0],
+      to: timestamps[timestamps.length - 1]
     };
   }
 
@@ -167,7 +171,7 @@ export class TimelineCoordinator {
   }
 
   public updateCurrentTimestamp(timestamp: Timestamp|undefined) {
-    if (this.getAllTimestamps().length === 0) {
+    if (this.getAllUniqueTimestamps().length === 0) {
       console.warn("Setting timestamp on traces with no timestamps/entries...");
       return;
     }
@@ -186,16 +190,26 @@ export class TimelineCoordinator {
     });
   }
 
-  public getAllTimestamps(): Timestamp[] {
-    return Array.from(this.timelines.values()).flatMap(num => num).sort();
+  public getAllUniqueTimestamps(): Timestamp[] {
+    const allTimestamps = Array.from(this.timelines.values()).flatMap(num => num).sort();
+    const uniqueTimestamps: Timestamp[] = [];
+
+    let prevTimestamp: Timestamp | undefined = undefined;
+    for (const timestamp of allTimestamps) {
+      if (prevTimestamp?.getValueNs() !== timestamp.getValueNs()) {
+        uniqueTimestamps.push(timestamp);
+      }
+      prevTimestamp = timestamp;
+    }
+    return uniqueTimestamps;
   }
 
   private getFirstTimestamp(): Timestamp|undefined {
-    if (this.getAllTimestamps().length === 0) {
+    if (this.getAllUniqueTimestamps().length === 0) {
       return undefined;
     }
 
-    return this.getAllTimestamps()[0];
+    return this.getAllUniqueTimestamps()[0];
   }
 
   public getPreviousTimestampFor(traceType: TraceType): Timestamp|undefined {
