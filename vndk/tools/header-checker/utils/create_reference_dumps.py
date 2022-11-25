@@ -15,35 +15,33 @@ from utils import (
 
 PRODUCTS_DEFAULT = ['aosp_arm', 'aosp_arm64', 'aosp_x86', 'aosp_x86_64']
 
-PREBUILTS_ABI_DUMPS_DEFAULT = os.path.join(AOSP_DIR, 'prebuilts', 'abi-dumps')
+PREBUILTS_ABI_DUMPS_DIR = os.path.join(AOSP_DIR, 'prebuilts', 'abi-dumps')
+PREBUILTS_ABI_DUMPS_SUBDIRS = ('ndk', 'platform', 'vndk')
 
 SOONG_DIR = os.path.join(AOSP_DIR, 'out', 'soong', '.intermediates')
 
 
 class GetRefDumpDirStem:
-    def __init__(self, ref_dump_dir, chosen_vndk_version,
-                 chosen_platform_version, binder_bitness):
+    def __init__(self, ref_dump_dir):
         self.ref_dump_dir = ref_dump_dir
+
+    def __call__(self, subdir, arch):
+        return os.path.join(self.ref_dump_dir, arch)
+
+
+class GetVersionedRefDumpDirStem:
+    def __init__(self, chosen_vndk_version, chosen_platform_version,
+                 binder_bitness):
         self.chosen_vndk_version = chosen_vndk_version
         self.chosen_platform_version = chosen_platform_version
         self.binder_bitness = binder_bitness
 
-    def __call__(self, category, arch):
+    def __call__(self, subdir, arch):
         version_stem = (self.chosen_vndk_version
-                        if category == 'vndk'
+                        if subdir == 'vndk'
                         else self.chosen_platform_version)
-        return os.path.join(self.ref_dump_dir, category, version_stem,
+        return os.path.join(PREBUILTS_ABI_DUMPS_DIR, subdir, version_stem,
                             self.binder_bitness, arch)
-
-
-def choose_vndk_version(version, platform_vndk_version, board_vndk_version):
-    if version is None:
-        # This logic must be in sync with the logic for reference ABI dumps
-        # directory in `build/soong/cc/library.go`.
-        version = platform_vndk_version
-        if board_vndk_version not in ('current', ''):
-            version = board_vndk_version
-    return version
 
 
 def make_libs_for_product(libs, product, variant, vndk_version, targets):
@@ -66,19 +64,16 @@ def find_and_remove_path(root_path, file_name=None):
             shutil.rmtree(root_path)
 
 
-def remove_references_for_all_arches(get_ref_dump_dir_stem, targets, libs):
-    for target in targets:
-        for category in ('ndk', 'platform', 'vndk'):
-            dir_to_remove = get_ref_dump_dir_stem(category,
-                                                  target.get_arch_str())
-            if libs:
-                for lib in libs:
-                    find_and_remove_path(dir_to_remove,
-                                         lib + SOURCE_ABI_DUMP_EXT)
-                    find_and_remove_path(dir_to_remove,
-                                         lib + COMPRESSED_SOURCE_ABI_DUMP_EXT)
-            else:
-                find_and_remove_path(dir_to_remove)
+def remove_reference_dumps(ref_dump_dir_stems, libs):
+    for ref_dump_dir_stem in ref_dump_dir_stems:
+        if libs:
+            for lib in libs:
+                find_and_remove_path(ref_dump_dir_stem,
+                                     lib + SOURCE_ABI_DUMP_EXT)
+                find_and_remove_path(ref_dump_dir_stem,
+                                     lib + COMPRESSED_SOURCE_ABI_DUMP_EXT)
+        else:
+            find_and_remove_path(ref_dump_dir_stem)
 
 
 def tag_to_dir_name(tag):
@@ -139,26 +134,41 @@ def create_source_abi_reference_dumps_for_all_products(args):
         else:
             binder_bitness = '64'
 
-        chosen_vndk_version = choose_vndk_version(
-            args.version, platform_vndk_version, board_vndk_version)
-        # chosen_vndk_version is expected to be the finalized
+        # This logic must be in sync with the logic for reference ABI dumps
+        # directory in `build/soong/cc/library.go`.
+        # chosen_vndk_version is either the codename or the finalized
+        # PLATFORM_SDK_VERSION.
+        chosen_vndk_version = (platform_vndk_version
+                               if board_vndk_version in ('current', '')
+                               else board_vndk_version)
+        # chosen_platform_version is expected to be the finalized
         # PLATFORM_SDK_VERSION if the codename is REL.
         chosen_platform_version = (platform_sdk_version
                                    if platform_version_codename == 'REL'
                                    else 'current')
 
-        get_ref_dump_dir_stem = GetRefDumpDirStem(args.ref_dump_dir,
-                                                  chosen_vndk_version,
-                                                  chosen_platform_version,
-                                                  binder_bitness)
-
         targets = [t for t in (Target(True, product), Target(False, product))
                    if t.arch]
+
+        if args.ref_dump_dir:
+            get_ref_dump_dir_stem = GetRefDumpDirStem(args.ref_dump_dir)
+            ref_dump_dir_stems = [
+                get_ref_dump_dir_stem(None, target.get_arch_str())
+                for target in targets]
+        else:
+            get_ref_dump_dir_stem = GetVersionedRefDumpDirStem(
+                chosen_vndk_version,
+                chosen_platform_version,
+                binder_bitness)
+            ref_dump_dir_stems = [
+                get_ref_dump_dir_stem(subdir, target.get_arch_str())
+                for target in targets
+                for subdir in PREBUILTS_ABI_DUMPS_SUBDIRS]
+
         # Remove reference ABI dumps specified in `args.libs` (or remove all of
         # them if none of them are specified) so that we may build these
         # libraries successfully.
-        remove_references_for_all_arches(get_ref_dump_dir_stem, targets,
-                                         args.libs)
+        remove_reference_dumps(ref_dump_dir_stems, args.libs)
 
         if not args.no_make_lib:
             # Build all the specified libs, or build `findlsdumps` if no libs
@@ -180,11 +190,9 @@ def _parse_args():
     """Parse the command line arguments."""
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--version', help='VNDK version')
+    parser.add_argument('--version', help=argparse.SUPPRESS)
     parser.add_argument('--no-make-lib', action='store_true',
                         help='no m -j lib.vendor while creating reference')
-    parser.add_argument('--llndk', action='store_true',
-                        help='the flag is deprecated and has no effect')
     parser.add_argument('-libs', action='append',
                         help='libs to create references for')
     parser.add_argument('-products', action='append',
@@ -194,16 +202,23 @@ def _parse_args():
     parser.add_argument('--compress', action='store_true',
                         help='compress reference dump with gzip')
     parser.add_argument('-ref-dump-dir',
-                        help='directory to copy reference abi dumps into',
-                        default=PREBUILTS_ABI_DUMPS_DEFAULT)
+                        help='directory to copy reference abi dumps into')
 
     args = parser.parse_args()
+
+    if args.version is not None:
+        parser.error('--version is deprecated. Please specify the version in '
+                     'the reference dump directory path. e.g., '
+                     '-ref-dump-dir prebuilts/abi-dumps/platform/current/64')
 
     if args.libs:
         if any(lib_name.endswith(SOURCE_ABI_DUMP_EXT_END) or
                lib_name.endswith(SO_EXT) for lib_name in args.libs):
             parser.error('-libs should be followed by a base name without '
                          'file extension.')
+
+    if args.ref_dump_dir and not args.libs:
+        parser.error('-libs must be given if -ref-dump-dir is given.')
 
     if args.products is None:
         # If `args.products` is unspecified, generate reference ABI dumps for
