@@ -7,10 +7,9 @@ import shutil
 import time
 
 from utils import (
-    AOSP_DIR, COMPRESSED_SOURCE_ABI_DUMP_EXT, SOURCE_ABI_DUMP_EXT,
-    SOURCE_ABI_DUMP_EXT_END, SO_EXT, Target, copy_reference_dump,
-    find_lib_lsdumps, get_build_vars_for_product, make_libraries, make_tree,
-    read_lsdump_paths)
+    AOSP_DIR, SOURCE_ABI_DUMP_EXT, SOURCE_ABI_DUMP_EXT_END, SO_EXT, Target,
+    copy_reference_dump, find_lib_lsdumps, get_build_vars_for_product,
+    make_libraries, make_tree, read_lsdump_paths)
 
 
 PRODUCTS_DEFAULT = ['aosp_arm', 'aosp_arm64', 'aosp_x86', 'aosp_x86_64']
@@ -52,28 +51,18 @@ def make_libs_for_product(libs, product, variant, vndk_version, targets):
         make_tree(product, variant)
 
 
-def find_and_remove_path(root_path, file_name=None):
-    if file_name is not None:
-        root_path = os.path.join(root_path, 'source-based', file_name)
-
-    if os.path.exists(root_path):
-        print('removing', root_path)
-        if os.path.isfile(root_path):
-            os.remove(root_path)
-        else:
-            shutil.rmtree(root_path)
-
-
 def remove_reference_dumps(ref_dump_dir_stems, libs):
     for ref_dump_dir_stem in ref_dump_dir_stems:
         if libs:
             for lib in libs:
-                find_and_remove_path(ref_dump_dir_stem,
-                                     lib + SOURCE_ABI_DUMP_EXT)
-                find_and_remove_path(ref_dump_dir_stem,
-                                     lib + COMPRESSED_SOURCE_ABI_DUMP_EXT)
-        else:
-            find_and_remove_path(ref_dump_dir_stem)
+                file_path = os.path.join(ref_dump_dir_stem, 'source-based',
+                                         lib + SOURCE_ABI_DUMP_EXT)
+                if os.path.isfile(file_path):
+                    print('removing', file_path)
+                    os.remove(file_path)
+        elif os.path.isdir(ref_dump_dir_stem):
+            print('removing', ref_dump_dir_stem)
+            shutil.rmtree(ref_dump_dir_stem)
 
 
 def tag_to_dir_name(tag):
@@ -87,7 +76,7 @@ def tag_to_dir_name(tag):
 
 
 def find_and_copy_lib_lsdumps(get_ref_dump_dir_stem, target, libs,
-                              lsdump_paths, compress):
+                              lsdump_paths):
     arch_lsdump_paths = find_lib_lsdumps(lsdump_paths, libs, target)
 
     num_created = 0
@@ -95,7 +84,7 @@ def find_and_copy_lib_lsdumps(get_ref_dump_dir_stem, target, libs,
         ref_dump_dir_stem = get_ref_dump_dir_stem(tag_to_dir_name(tag),
                                                   target.get_arch_str())
         copy_reference_dump(
-            path, os.path.join(ref_dump_dir_stem, 'source-based'), compress)
+            path, os.path.join(ref_dump_dir_stem, 'source-based'))
         num_created += 1
     return num_created
 
@@ -109,8 +98,7 @@ def create_source_abi_reference_dumps(args, get_ref_dump_dir_stem,
               f'primary arch: {target.primary_arch}')
 
         num_libs_copied += find_and_copy_lib_lsdumps(
-            get_ref_dump_dir_stem, target, args.libs, lsdump_paths,
-            args.compress)
+            get_ref_dump_dir_stem, target, args.libs, lsdump_paths)
     return num_libs_copied
 
 
@@ -200,7 +188,7 @@ def _parse_args():
     parser.add_argument('--build-variant', default='userdebug',
                         help='build variant to create references for')
     parser.add_argument('--compress', action='store_true',
-                        help='compress reference dump with gzip')
+                        help=argparse.SUPPRESS)
     parser.add_argument('-ref-dump-dir',
                         help='directory to copy reference abi dumps into')
 
@@ -210,6 +198,9 @@ def _parse_args():
         parser.error('--version is deprecated. Please specify the version in '
                      'the reference dump directory path. e.g., '
                      '-ref-dump-dir prebuilts/abi-dumps/platform/current/64')
+
+    if args.compress:
+        parser.error("Compressed reference dumps are deprecated.")
 
     if args.libs:
         if any(lib_name.endswith(SOURCE_ABI_DUMP_EXT_END) or
