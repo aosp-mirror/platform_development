@@ -59,7 +59,7 @@ import { TimeUtils } from "common/utils/time_utils";
         ></expanded-timeline>
     </div>
     <div class="navbar" #collapsedTimeline>
-      <ng-template [ngIf]="hasTimestamps()">
+      <ng-template [ngIf]="hasMoreThanOneDistinctTimestamp()">
         <div id="time-selector">
             <button mat-icon-button
               id="prev_entry_button"
@@ -125,7 +125,7 @@ import { TimeUtils } from "common/utils/time_utils";
           id="mini-timeline"
           #miniTimeline
         ></mini-timeline>
-        <div id="toggle" *ngIf="hasTimestamps()">
+        <div id="toggle" *ngIf="hasMoreThanOneDistinctTimestamp()">
             <button mat-icon-button
                     [class]="TOGGLE_BUTTON_CLASS"
                     color="primary"
@@ -139,6 +139,10 @@ import { TimeUtils } from "common/utils/time_utils";
       <div *ngIf="!hasTimestamps()" class="no-timestamps-msg">
         <p class="mat-body-2">No timeline to show!</p>
         <p class="mat-body-1">All loaded traces contain no timestamps!</p>
+      </div>
+      <div *ngIf="!hasMoreThanOneDistinctTimestamp()" class="no-timestamps-msg">
+        <p class="mat-body-2">No timeline to show!</p>
+        <p class="mat-body-1">Only a single timestamp has been recorded.</p>
       </div>
     </div>
 `,
@@ -319,7 +323,11 @@ export class TimelineComponent implements TimestampChangeObserver {
   private seekTimestamp: Timestamp|undefined;
 
   hasTimestamps(): boolean {
-    return this.timelineCoordinator.getAllTimestamps().length > 0;
+    return this.timelineCoordinator.getAllUniqueTimestamps().length > 0;
+  }
+
+  hasMoreThanOneDistinctTimestamp(): boolean {
+    return this.timelineCoordinator.getAllUniqueTimestamps().length > 1;
   }
 
   get currentTimestamp(): Timestamp {
