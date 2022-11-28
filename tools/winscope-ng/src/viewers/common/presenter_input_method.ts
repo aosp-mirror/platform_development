@@ -32,7 +32,8 @@ type NotifyImeViewCallbackType = (uiData: ImeUiData) => void;
 export abstract class PresenterInputMethod {
   constructor(
     notifyViewCallback: NotifyImeViewCallbackType,
-    dependencies: Array<TraceType>
+    dependencies: Array<TraceType>,
+    private storage: Storage
   ) {
     this.notifyViewCallback = notifyViewCallback;
     this.dependencies = dependencies;
@@ -221,7 +222,7 @@ export abstract class PresenterInputMethod {
       name: "Flat",
       enabled: false
     }
-  });
+  }, this.storage);
   protected propertiesUserOptions: UserOptions = PersistentStoreObject.new<UserOptions>("ImePropertiesOptions", {
     showDefaults: {
       name: "Show defaults",
@@ -232,7 +233,7 @@ export abstract class PresenterInputMethod {
                 the default for its data type.
               `
     },
-  });
+  }, this.storage);
 
   protected abstract updateHierarchyTableProperties(): TableProperties;
 }

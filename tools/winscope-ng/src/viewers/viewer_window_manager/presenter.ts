@@ -28,7 +28,7 @@ import { PersistentStoreObject } from "common/utils/persistent_store_object";
 type NotifyViewCallbackType = (uiData: UiData) => void;
 
 export class Presenter {
-  constructor(notifyViewCallback: NotifyViewCallbackType) {
+  constructor(notifyViewCallback: NotifyViewCallbackType, private storage: Storage) {
     this.notifyViewCallback = notifyViewCallback;
     this.uiData = new UiData([TraceType.WINDOW_MANAGER]);
     this.notifyViewCallback(this.uiData);
@@ -246,7 +246,7 @@ export class Presenter {
       name: "Flat",
       enabled: false
     }
-  });
+  }, this.storage);
   private propertiesUserOptions: UserOptions = PersistentStoreObject.new<UserOptions>("WmPropertyOptions", {
     showDiff: {
       name: "Show diff",
@@ -261,5 +261,5 @@ export class Presenter {
                 the default for its data type.
               `
     },
-  });
+  }, this.storage);
 }

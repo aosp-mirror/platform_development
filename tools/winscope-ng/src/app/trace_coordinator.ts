@@ -101,9 +101,9 @@ class TraceCoordinator implements TimestampChangeObserver {
     throw Error("No common timestamp type across all traces");
   }
 
-  public createViewers() {
+  public createViewers(storage: Storage) {
     const activeTraceTypes = this.parsers.map(parser => parser.getTraceType());
-    this.viewers = new ViewerFactory().createViewers(new Set<TraceType>(activeTraceTypes));
+    this.viewers = new ViewerFactory().createViewers(new Set<TraceType>(activeTraceTypes), storage);
 
     // Make sure to update the viewers active entries as soon as they are created.
     if (this.timelineCoordinator.currentTimestamp) {

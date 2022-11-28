@@ -238,7 +238,7 @@ export class AppComponent {
 
   public onDataLoadedChange(dataLoaded: boolean) {
     if (dataLoaded && !(this.traceCoordinator.getViewers().length > 0)) {
-      this.traceCoordinator.createViewers();
+      this.traceCoordinator.createViewers(localStorage);
       this.allViewers = this.traceCoordinator.getViewers();
       // TODO: Update to handle viewers with more than one dependency
       if (this.traceCoordinator.getViewers()[0].getDependencies().length !== 1) {

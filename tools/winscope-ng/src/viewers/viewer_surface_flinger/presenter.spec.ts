@@ -21,6 +21,7 @@ import {LayerTraceEntry} from "common/trace/flickerlib/common";
 import {HierarchyTreeNode, PropertiesTreeNode} from "viewers/common/ui_tree_utils";
 import {UnitTestUtils} from "test/unit/utils";
 import {HierarchyTreeBuilder} from "test/unit/hierarchy_tree_builder";
+import { MockStorage } from "test/unit/mock_storage";
 
 describe("PresenterSurfaceFlinger", () => {
   let presenter: Presenter;
@@ -41,7 +42,7 @@ describe("PresenterSurfaceFlinger", () => {
   beforeEach(async () => {
     presenter = new Presenter((newData: UiData) => {
       uiData = newData;
-    });
+    }, new MockStorage());
   });
 
   it("processes current trace entries", () => {
