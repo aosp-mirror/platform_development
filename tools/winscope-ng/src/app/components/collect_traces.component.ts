@@ -42,54 +42,63 @@ import { TracingConfig } from "trace_collection/tracing_config";
         </div>
 
         <div *ngIf="connect.isDevicesState()" class="devices-connecting">
-          <p class="mat-body-1">{{ objectKeys(connect.devices()).length > 0 ? "Connected devices:" : "No devices detected" }}</p>
-          <mat-list *ngIf="objectKeys(connect.devices()).length > 0">
-            <mat-list-item
-              *ngFor="let deviceId of objectKeys(connect.devices())"
-              (click)="connect.selectDevice(deviceId)"
-              class="available-device"
-            >
-              <mat-icon matListIcon>
-                {{ connect.devices()[deviceId].authorised ? "smartphone" : "screen_lock_portrait" }}
-              </mat-icon>
-              <p matLine>
-                {{ connect.devices()[deviceId].authorised ? connect.devices()[deviceId].model : "unauthorised" }} ({{ deviceId }})
-              </p>
-            </mat-list-item>
-          </mat-list>
+          <div *ngIf="objectKeys(connect.devices()).length === 0" class="no-device-detected">
+            <p class="mat-body-3 icon"><mat-icon inline fontIcon="phonelink_erase"></mat-icon></p>
+            <p class="mat-body-1">No devices detected</p>
+          </div>
+          <div *ngIf="objectKeys(connect.devices()).length > 0">
+          <p class="mat-body-1">Connected devices:</p>
+            <mat-list *ngIf="objectKeys(connect.devices()).length > 0">
+              <mat-list-item
+                *ngFor="let deviceId of objectKeys(connect.devices())"
+                (click)="connect.selectDevice(deviceId)"
+                class="available-device"
+              >
+                <mat-icon matListIcon>
+                  {{ connect.devices()[deviceId].authorised ? "smartphone" : "screen_lock_portrait" }}
+                </mat-icon>
+                <p matLine>
+                  {{ connect.devices()[deviceId].authorised ? connect.devices()[deviceId].model : "unauthorised" }} ({{ deviceId }})
+                </p>
+              </mat-list-item>
+            </mat-list>
+          </div>
         </div>
 
         <div *ngIf="connect.isStartTraceState()" class="trace-collection-config">
-          <mat-list>
-            <mat-list-item>
-              <mat-icon matListIcon>smartphone</mat-icon>
-              <p matLine>
-                {{ connect.selectedDevice().model }} ({{ connect.selectedDeviceId() }})
+          <mat-tab-group>
+            <mat-tab label="Trace">
+              <mat-list>
+                <mat-list-item>
+                  <mat-icon matListIcon>smartphone</mat-icon>
+                  <p matLine>
+                    {{ connect.selectedDevice().model }} ({{ connect.selectedDeviceId() }})
 
-                <button color="primary" class="change-btn" mat-button (click)="connect.resetLastDevice()">Change device</button>
-              </p>
-            </mat-list-item>
-          </mat-list>
+                    <button color="primary" class="change-btn" mat-button (click)="connect.resetLastDevice()">Change device</button>
+                  </p>
+                </mat-list-item>
+              </mat-list>
 
-          <div class="trace-section">
-            <trace-config [traces]="tracingConfig.getTracingConfig()"></trace-config>
-            <button color="primary" class="start-btn" mat-stroked-button (click)="startTracing()">Start trace</button>
-          </div>
-
-          <mat-divider></mat-divider>
-
-          <div class="dump-section">
-            <h3 class="mat-subheading-2">Dump targets</h3>
-            <div class="selection">
-              <mat-checkbox
-                *ngFor="let dumpKey of objectKeys(tracingConfig.getDumpConfig())"
-                color="primary"
-                class="dump-checkbox"
-                [(ngModel)]="tracingConfig.getDumpConfig()[dumpKey].run"
-              >{{tracingConfig.getDumpConfig()[dumpKey].name}}</mat-checkbox>
-            </div>
-            <button color="primary" class="dump-btn" mat-stroked-button (click)="dumpState()">Dump state</button>
-          </div>
+              <div class="trace-section">
+                <trace-config [traces]="tracingConfig.getTracingConfig()"></trace-config>
+                <button color="primary" class="start-btn" mat-stroked-button (click)="startTracing()">Start trace</button>
+              </div>
+            </mat-tab>
+            <mat-tab label="Dump">
+              <div class="dump-section">
+                <h3 class="mat-subheading-2">Dump targets</h3>
+                <div class="selection">
+                  <mat-checkbox
+                    *ngFor="let dumpKey of objectKeys(tracingConfig.getDumpConfig())"
+                    color="primary"
+                    class="dump-checkbox"
+                    [(ngModel)]="tracingConfig.getDumpConfig()[dumpKey].run"
+                  >{{tracingConfig.getDumpConfig()[dumpKey].name}}</mat-checkbox>
+                </div>
+                <button color="primary" class="dump-btn" mat-stroked-button (click)="dumpState()">Dump state</button>
+              </div>
+            </mat-tab>
+          </mat-tab-group>
         </div>
 
         <div *ngIf="connect.isErrorState()" class="unknown-error">
@@ -160,6 +169,33 @@ import { TracingConfig } from "trace_collection/tracing_config";
       }
       .available-device {
         cursor: pointer;
+      }
+
+      .no-device-detected {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-content: center;
+        align-items: center;
+        height: 100%;
+      }
+
+      .no-device-detected p {
+        opacity: 0.6;
+        font-size: 1.2rem;
+      }
+
+      .no-device-detected .icon {
+        font-size: 3rem;
+        margin: 0 0 0.2rem 0;
+      }
+
+      .devices-connecting {
+        height: 100%;
+      }
+
+      mat-card-content {
+        flex-grow: 1;
       }
     `
   ]
