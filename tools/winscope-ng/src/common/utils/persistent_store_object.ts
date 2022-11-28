@@ -17,15 +17,15 @@
 export type StoreObject = { [key: string|number]: StoreObject|string|boolean|undefined } | StoreObject[] | string[] | boolean[]
 
 export class PersistentStoreObject {
-  public static new<T extends StoreObject>(key: string, initialState: T): T {
-    const storedState = JSON.parse(localStorage.getItem(key) ?? "{}");
+  public static new<T extends StoreObject>(key: string, initialState: T, storage: Storage): T {
+    const storedState = JSON.parse(storage.getItem(key) ?? "{}");
     const currentState = mergeDeep({}, deepClone(initialState));
     mergeDeep(currentState, storedState);
-    return wrapWithPersistentStoreProxy<T>(key, currentState);
+    return wrapWithPersistentStoreProxy<T>(key, currentState, storage);
   }
 }
 
-function wrapWithPersistentStoreProxy<T extends StoreObject>(storeKey: string, object: T, baseObject: T = object): T {
+function wrapWithPersistentStoreProxy<T extends StoreObject>(storeKey: string, object: T, storage: Storage, baseObject: T = object): T {
   const updatableProps: string[] = [];
 
   let key: number|string;
@@ -36,7 +36,7 @@ function wrapWithPersistentStoreProxy<T extends StoreObject>(storeKey: string, o
         updatableProps.push(key);
       }
     } else {
-      object[key] = wrapWithPersistentStoreProxy(storeKey, value, baseObject);
+      object[key] = wrapWithPersistentStoreProxy(storeKey, value, storage, baseObject);
     }
   }
 
@@ -47,15 +47,15 @@ function wrapWithPersistentStoreProxy<T extends StoreObject>(storeKey: string, o
       }
       if (Array.isArray(target) && typeof prop === "number") {
         target[prop] = newValue;
-        localStorage.setItem(storeKey, JSON.stringify(baseObject));
+        storage.setItem(storeKey, JSON.stringify(baseObject));
         return true;
       }
       if (!Array.isArray(target) && updatableProps.includes(prop)) {
         target[prop] = newValue;
-        localStorage.setItem(storeKey, JSON.stringify(baseObject));
+        storage.setItem(storeKey, JSON.stringify(baseObject));
         return true;
       }
-      throw Error("Object not updatable");
+      throw Error(`Object property '${prop}' is not updatable. Can only update leaf keys: [${updatableProps}]`);
     }
   });
 
