@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import gzip
 import os
 import re
 import shutil
@@ -29,7 +28,6 @@ BUILTIN_HEADERS_DIR = (
 SO_EXT = '.so'
 SOURCE_ABI_DUMP_EXT_END = '.lsdump'
 SOURCE_ABI_DUMP_EXT = SO_EXT + SOURCE_ABI_DUMP_EXT_END
-COMPRESSED_SOURCE_ABI_DUMP_EXT = SOURCE_ABI_DUMP_EXT + '.gz'
 VENDOR_SUFFIX = '.vendor'
 
 DEFAULT_CPPFLAGS = ['-x', 'c++', '-std=c++11']
@@ -98,19 +96,12 @@ def _validate_dump_content(dump_path):
                 start += len(AOSP_DIR)
 
 
-def copy_reference_dump(lib_path, reference_dump_dir, compress):
+def copy_reference_dump(lib_path, reference_dump_dir):
     reference_dump_path = os.path.join(
         reference_dump_dir, os.path.basename(lib_path))
-    if compress:
-        reference_dump_path += '.gz'
     os.makedirs(os.path.dirname(reference_dump_path), exist_ok=True)
     _validate_dump_content(lib_path)
-    if compress:
-        with open(lib_path, 'rb') as src_file:
-            with gzip.open(reference_dump_path, 'wb') as dst_file:
-                shutil.copyfileobj(src_file, dst_file)
-    else:
-        shutil.copyfile(lib_path, reference_dump_path)
+    shutil.copyfile(lib_path, reference_dump_path)
     print('Created abi dump at', reference_dump_path)
     return reference_dump_path
 

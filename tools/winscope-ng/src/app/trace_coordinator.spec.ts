@@ -114,7 +114,7 @@ describe("TraceCoordinator", () => {
       await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/WindowManager.pb"),
     ];
     await traceCoordinator.setTraces(traces);
-    const timestamps = timelineCoordinator.getAllTimestamps();
+    const timestamps = timelineCoordinator.getAllUniqueTimestamps();
     expect(timestamps.length).toEqual(48);
   });
 
