@@ -16,7 +16,6 @@
 import { Component, Input, Inject, Output, EventEmitter, OnInit, OnDestroy } from "@angular/core";
 import { ProxyConnection } from "trace_collection/proxy_connection";
 import { Connection } from "trace_collection/connection";
-import { setTraces } from "trace_collection/set_traces";
 import { ProxyState } from "trace_collection/proxy_client";
 import { traceConfigurations, configMap, SelectionConfiguration, EnableConfiguration } from "trace_collection/trace_collection_utils";
 import { TraceCoordinator } from "app/trace_coordinator";
@@ -24,6 +23,7 @@ import { PersistentStore } from "common/utils/persistent_store";
 import { MatSnackBar } from "@angular/material/snack-bar";
 import { ParserError } from "parsers/parser_factory";
 import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component";
+import { TracingConfig } from "trace_collection/tracing_config";
 
 @Component({
   selector: "collect-traces",
@@ -72,7 +72,7 @@ import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component
           </mat-list>
 
           <div class="trace-section">
-            <trace-config [traces]="setTraces.getTracingConfig()"></trace-config>
+            <trace-config [traces]="tracingConfig.getTracingConfig()"></trace-config>
             <button color="primary" class="start-btn" mat-stroked-button (click)="startTracing()">Start trace</button>
           </div>
 
@@ -82,11 +82,11 @@ import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component
             <h3 class="mat-subheading-2">Dump targets</h3>
             <div class="selection">
               <mat-checkbox
-                *ngFor="let dumpKey of objectKeys(setTraces.getDumpConfig())"
+                *ngFor="let dumpKey of objectKeys(tracingConfig.getDumpConfig())"
                 color="primary"
                 class="dump-checkbox"
-                [(ngModel)]="setTraces.getDumpConfig()[dumpKey].run"
-              >{{setTraces.getDumpConfig()[dumpKey].name}}</mat-checkbox>
+                [(ngModel)]="tracingConfig.getDumpConfig()[dumpKey].run"
+              >{{tracingConfig.getDumpConfig()[dumpKey].name}}</mat-checkbox>
             </div>
             <button color="primary" class="dump-btn" mat-stroked-button (click)="dumpState()">Dump state</button>
           </div>
@@ -169,7 +169,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   isAdbProxy = true;
   traceConfigurations = traceConfigurations;
   connect: Connection = new ProxyConnection();
-  setTraces = setTraces;
+  tracingConfig = TracingConfig.getInstance();
   dataLoaded = false;
 
   @Input() store!: PersistentStore;
@@ -214,11 +214,11 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
 
   public startTracing() {
     console.log("begin tracing");
-    setTraces.reqTraces = this.requestedTraces();
+    this.tracingConfig.requestedTraces = this.requestedTraces();
     const reqEnableConfig = this.requestedEnableConfig();
     const reqSelectedSfConfig = this.requestedSelection("layers_trace");
     const reqSelectedWmConfig = this.requestedSelection("window_trace");
-    if (setTraces.reqTraces.length < 1) {
+    if (this.tracingConfig.requestedTraces.length < 1) {
       this.connect.throwNoTargetsError();
       return;
     }
@@ -231,12 +231,9 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
 
   public async dumpState() {
     console.log("begin dump");
-    setTraces.reqDumps = this.requestedDumps();
-    await this.connect.dumpState();
-    while (!setTraces.dataReady && !setTraces.dumpError) {
-      await this.waitForData(1000);
-    }
-    if (!setTraces.dumpError) {
+    this.tracingConfig.requestedDumps = this.requestedDumps();
+    const dumpError = await this.connect.dumpState();
+    if (!dumpError) {
       await this.loadFiles();
     } else {
       this.traceCoordinator.clearData();
@@ -246,9 +243,6 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   public async endTrace() {
     console.log("end tracing");
     await this.connect.endTrace();
-    while (!setTraces.dataReady) {
-      await this.waitForData(100);
-    }
     await this.loadFiles();
   }
 
@@ -268,7 +262,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
 
   private requestedTraces() {
     const tracesFromCollection: Array<string> = [];
-    const tracingConfig = setTraces.getTracingConfig();
+    const tracingConfig = this.tracingConfig.getTracingConfig();
     const req = Object.keys(tracingConfig)
       .filter((traceKey:string) => {
         const traceConfig = tracingConfig[traceKey];
@@ -286,7 +280,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   }
 
   private requestedDumps() {
-    const dumpConfig = setTraces.getDumpConfig();
+    const dumpConfig = this.tracingConfig.getDumpConfig();
     return Object.keys(dumpConfig)
       .filter((dumpKey:string) => {
         return dumpConfig[dumpKey].run;
@@ -295,7 +289,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
 
   private requestedEnableConfig(): Array<string> | undefined {
     const req: Array<string> = [];
-    const tracingConfig = setTraces.getTracingConfig();
+    const tracingConfig = this.tracingConfig.getTracingConfig();
     Object.keys(tracingConfig)
       .forEach((traceKey:string) => {
         const trace = tracingConfig[traceKey];
@@ -317,7 +311,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   }
 
   private requestedSelection(traceType: string): configMap | undefined {
-    const tracingConfig = setTraces.getTracingConfig();
+    const tracingConfig = this.tracingConfig.getTracingConfig();
     if (!tracingConfig[traceType].run) {
       return undefined;
     }
@@ -341,10 +335,6 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     this.dataLoaded = true;
     this.dataLoadedChange.emit(this.dataLoaded);
     console.log("finished loading data!");
-  }
-
-  private waitForData(ms: number) {
-    return new Promise( resolve => setTimeout(resolve, ms) );
   }
 
   private openTempSnackBar(parserErrors: ParserError[]) {
