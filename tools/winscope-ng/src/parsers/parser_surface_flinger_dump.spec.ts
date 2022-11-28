@@ -50,14 +50,8 @@ describe("ParserSurfaceFlingerDump", () => {
       const timestamp = new Timestamp(TimestampType.ELAPSED, 0n);
       const entry = parser.getTraceEntry(timestamp)!;
       expect(entry).toBeInstanceOf(LayerTraceEntry);
-      expect(BigInt(entry.timestampMs)).toEqual(DUMP_REAL_TIME);
-    });
-
-    it("retrieves trace entry from real timestamp", () => {
-      const timestamp = new Timestamp(TimestampType.REAL, 0n);
-      const entry = parser.getTraceEntry(timestamp)!;
-      expect(entry).toBeInstanceOf(LayerTraceEntry);
-      expect(BigInt(entry.timestampMs)).toEqual(DUMP_REAL_TIME);
+      expect(BigInt(entry.timestamp.systemUptimeNanos.toString())).toEqual(0n);
+      expect(BigInt(entry.timestamp.unixNanos.toString())).toEqual(DUMP_REAL_TIME);
     });
   });
 

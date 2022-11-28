@@ -55,14 +55,16 @@ describe("ParserWindowManager", () => {
       const timestamp = new Timestamp(TimestampType.ELAPSED, 15398076788n);
       const entry = parser.getTraceEntry(timestamp)!;
       expect(entry).toBeInstanceOf(WindowManagerState);
-      expect(BigInt(entry.timestampMs)).toEqual(1659107089999048990n);
+      expect(BigInt(entry.timestamp.elapsedNanos.toString())).toEqual(15398076788n);
+      expect(BigInt(entry.timestamp.unixNanos.toString())).toEqual(1659107089999048990n);
     });
 
     it("retrieves trace entry from real timestamp", () => {
       const timestamp = new Timestamp(TimestampType.REAL, 1659107089999048990n);
       const entry = parser.getTraceEntry(timestamp)!;
       expect(entry).toBeInstanceOf(WindowManagerState);
-      expect(BigInt(entry.timestampMs)).toEqual(1659107089999048990n);
+      expect(BigInt(entry.timestamp.elapsedNanos.toString())).toEqual(15398076788n);
+      expect(BigInt(entry.timestamp.unixNanos.toString())).toEqual(1659107089999048990n);
     });
 
     it("formats entry timestamps", () => {
@@ -97,7 +99,7 @@ describe("ParserWindowManager", () => {
       const timestamp = new Timestamp(TimestampType.ELAPSED, 850254319343n);
       const entry = parser.getTraceEntry(timestamp)!;
       expect(entry).toBeInstanceOf(WindowManagerState);
-      expect(BigInt(entry.timestampMs)).toEqual(850254319343n);
+      expect(BigInt(entry.timestamp.elapsedNanos.toString())).toEqual(850254319343n);
     });
 
     it("formats entry timestamps", () => {

@@ -22,10 +22,10 @@ import { TimeUtils } from "common/utils/time_utils";
 LayerTraceEntry.fromProto = function (
     protos: any[],
     displayProtos: any[],
-    elapsedTimestamp: number,
+    elapsedTimestamp: bigint,
     vSyncId: number,
     hwcBlob: string,
-    where: string = '',
+    where = "",
     realToElapsedTimeOffsetNs: bigint|undefined = undefined,
     useElapsedTime = false
 ): LayerTraceEntry {
@@ -49,8 +49,6 @@ LayerTraceEntry.fromProto = function (
 
 function addAttributes(entry: LayerTraceEntry, protos: any, useElapsedTime = false) {
     entry.kind = "entry";
-    // There no JVM/JS translation for Longs yet
-    entry.timestampMs = entry.timestamp.toString()
     // Avoid parsing the entry root because it is an array of layers
     // containing all trace information, this slows down the property tree.
     // Instead parse only key properties for debugging

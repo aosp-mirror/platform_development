@@ -27,7 +27,7 @@ import WindowContainer from "./WindowContainer"
 
 WindowManagerState.fromProto = function (
     proto: any,
-    elapsedTimestamp: number = 0,
+    elapsedTimestamp: bigint = 0n,
     where: string = "",
     realToElapsedTimeOffsetNs: bigint|undefined = undefined,
     useElapsedTime = false,
@@ -66,8 +66,6 @@ WindowManagerState.fromProto = function (
 
 function addAttributes(entry: WindowManagerState, proto: any, useElapsedTime = false) {
     entry.kind = entry.constructor.name;
-    // There no JVM/JS translation for Longs yet
-    entry.timestampMs = entry.timestamp.toString();
     if (!entry.isComplete()) {
         entry.isIncompleteReason = entry.getIsIncompleteReason();
     }

@@ -57,7 +57,7 @@ class ParserWindowManager extends Parser {
   override processDecodedEntry(index: number, timestampType: TimestampType, entryProto: any): WindowManagerState {
     return WindowManagerState.fromProto(
       entryProto.windowManagerService,
-      entryProto.elapsedRealtimeNanos,
+      BigInt(entryProto.elapsedRealtimeNanos.toString()),
       entryProto.where,
       this.realToElapsedTimeOffsetNs,
       timestampType === TimestampType.ELAPSED /*useElapsedTime*/

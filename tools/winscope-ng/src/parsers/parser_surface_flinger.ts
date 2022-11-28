@@ -63,7 +63,7 @@ class ParserSurfaceFlinger extends Parser {
     return LayerTraceEntry.fromProto(
       entryProto.layers.layers,
       entryProto.displays,
-      entryProto.elapsedRealtimeNanos,
+      BigInt(entryProto.elapsedRealtimeNanos.toString()),
       entryProto.vsyncId,
       entryProto.hwcBlob,
       entryProto.where,
