@@ -53,7 +53,7 @@ class ParserAccessibility extends Parser {
     return undefined;
   }
 
-  override processDecodedEntry(index: number, entryProto: any): any {
+  override processDecodedEntry(index: number, timestampType: TimestampType, entryProto: any): any {
     return entryProto;
   }
 

@@ -73,6 +73,7 @@ import { MiniTimelineComponent } from "./components/timeline/mini_timeline.compo
 import { ExpandedTimelineComponent } from "./components/timeline/expanded_timeline.component";
 import { SingleTimelineComponent } from "./components/timeline/single_timeline.component";
 import { MatDrawerContent, MatDrawer, MatDrawerContainer } from "./components/bottomnav/bottom_drawer.component";
+import { TimeUtils } from "common/utils/time_utils";
 
 @NgModule({
   declarations: [

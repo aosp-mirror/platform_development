@@ -57,9 +57,19 @@ class ParserInputMethodClients extends Parser {
     return undefined;
   }
 
-  override processDecodedEntry(index: number, entryProto: TraceTreeNode): TraceTreeNode {
+  override processDecodedEntry(index: number, timestampType: TimestampType, entryProto: TraceTreeNode): TraceTreeNode {
+    if (entryProto.elapsedRealtimeNanos === undefined) {
+      throw Error("Missing elapsedRealtimeNanos on entry");
+    }
+
+    let clockTimeNanos: bigint|undefined = undefined;
+    if (this.realToElapsedTimeOffsetNs !== undefined
+      && entryProto.elapsedRealtimeNanos !== undefined) {
+      clockTimeNanos = BigInt(entryProto.elapsedRealtimeNanos) + this.realToElapsedTimeOffsetNs;
+    }
+
     return {
-      name: TimeUtils.nanosecondsToHuman(entryProto.elapsedRealtimeNanos ?? 0) + " - " + entryProto.where,
+      name: TimeUtils.format(timestampType, BigInt(entryProto.elapsedRealtimeNanos), this.realToElapsedTimeOffsetNs) + " - " + entryProto.where,
       kind: "InputMethodClient entry",
       children: [
         {
@@ -75,6 +85,7 @@ class ParserInputMethodClients extends Parser {
       stableId: "entry",
       id: "entry",
       elapsedRealtimeNanos: entryProto.elapsedRealtimeNanos,
+      clockTimeNanos,
     };
   }
 

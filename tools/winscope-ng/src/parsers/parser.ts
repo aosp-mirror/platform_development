@@ -78,13 +78,13 @@ abstract class Parser {
     if (index === undefined) {
       return undefined;
     }
-    return this.processDecodedEntry(index, this.decodedEntries[index]);
+    return this.processDecodedEntry(index, timestamp.getType(), this.decodedEntries[index]);
   }
 
   protected abstract getMagicNumber(): undefined|number[];
   protected abstract decodeTrace(trace: Uint8Array): any[];
   protected abstract getTimestamp(type: TimestampType, decodedEntry: any): undefined|Timestamp;
-  protected abstract processDecodedEntry(index: number, decodedEntry: any): any;
+  protected abstract processDecodedEntry(index: number, timestampType: TimestampType, decodedEntry: any): any;
 
   protected trace: File;
   protected decodedEntries: any[] = [];

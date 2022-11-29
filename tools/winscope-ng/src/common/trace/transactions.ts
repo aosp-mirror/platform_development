@@ -14,8 +14,15 @@
  * limitations under the License.
  */
 
+import { TimestampType } from "./timestamp";
+
 class TransactionsTraceEntry {
-  constructor(public entriesProto: any[], public currentEntryIndex: number) {
+  constructor(
+    public entriesProto: any[],
+    public timestampType: TimestampType,
+    public realToElapsedTimeOffsetNs: bigint|undefined,
+    public currentEntryIndex: number,
+  ) {
   }
 }
 
