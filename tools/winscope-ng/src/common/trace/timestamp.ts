@@ -25,6 +25,22 @@ export class Timestamp {
     this.valueNs = valueNs;
   }
 
+  static from(timestampType: TimestampType, elapsedTimestamp: bigint, realToElapsedTimeOffsetNs: bigint | undefined = undefined) {
+    switch (timestampType) {
+    case TimestampType.REAL:
+      if (realToElapsedTimeOffsetNs === undefined) {
+        throw new Error("realToElapsedTimeOffsetNs can't be undefined to use real timestamp");
+      }
+      return new Timestamp(TimestampType.REAL, elapsedTimestamp + realToElapsedTimeOffsetNs);
+      break;
+    case TimestampType.ELAPSED:
+      return new Timestamp(TimestampType.ELAPSED, elapsedTimestamp);
+      break;
+    default:
+      throw new Error("Unhandled timestamp type");
+    }
+  }
+
   public getType(): TimestampType {
     return this.type;
   }
