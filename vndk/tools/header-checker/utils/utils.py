@@ -162,10 +162,11 @@ def make_tree(product, variant):
     return make_targets(product, variant, ['findlsdumps'])
 
 
-def make_libraries(product, variant, vndk_version, targets, libs):
+def make_libraries(product, variant, vndk_version, targets, libs,
+                   exclude_tags):
     """Build lsdump files for specific libs."""
     lsdump_paths = read_lsdump_paths(product, variant, vndk_version, targets,
-                                     build=True)
+                                     exclude_tags, build=True)
     make_target_paths = []
     for name in libs:
         if not (name in lsdump_paths and lsdump_paths[name]):
@@ -196,13 +197,16 @@ def _get_module_variant_dir_name(tag, vndk_version, arch_cpu_str):
     For example, android_x86_shared, android_vendor.R_arm_armv7-a-neon_shared.
     """
     if tag in ('LLNDK', 'NDK', 'PLATFORM'):
-        return 'android_%s_shared' % arch_cpu_str
-    if tag.startswith('VNDK'):
-        return 'android_vendor.%s_%s_shared' % (vndk_version, arch_cpu_str)
+        return f'android_{arch_cpu_str}_shared'
+    if tag.startswith('VNDK') or tag == 'VENDOR':
+        return f'android_vendor.{vndk_version}_{arch_cpu_str}_shared'
+    if tag == 'PRODUCT':
+        return f'android_product.{vndk_version}_{arch_cpu_str}_shared'
     raise ValueError(tag + ' is not a known tag.')
 
 
-def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, targets):
+def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, targets,
+                       exclude_tags):
     """Read lsdump paths from lsdump_paths.txt for each libname and variant.
 
     This function returns a dictionary, {lib_name: {arch_cpu: {tag: path}}}.
@@ -222,7 +226,7 @@ def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, targets):
     with open(lsdump_paths_file_path, 'r') as lsdump_paths_file:
         for line in lsdump_paths_file:
             tag, path = (x.strip() for x in line.split(':', 1))
-            if not path:
+            if not path or tag in exclude_tags:
                 continue
             dirname, filename = os.path.split(path)
             if not filename.endswith(SOURCE_ABI_DUMP_EXT):
@@ -249,7 +253,8 @@ def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, targets):
     return lsdump_paths
 
 
-def read_lsdump_paths(product, variant, vndk_version, targets, build=True):
+def read_lsdump_paths(product, variant, vndk_version, targets, exclude_tags,
+                      build):
     """Build lsdump_paths.txt and read the paths."""
     lsdump_paths_file_path = get_lsdump_paths_file_path(product, variant)
     lsdump_paths_file_abspath = os.path.join(AOSP_DIR, lsdump_paths_file_path)
@@ -258,7 +263,7 @@ def read_lsdump_paths(product, variant, vndk_version, targets, build=True):
             os.unlink(lsdump_paths_file_abspath)
         make_targets(product, variant, [lsdump_paths_file_path])
     return _read_lsdump_paths(lsdump_paths_file_abspath, vndk_version,
-                              targets)
+                              targets, exclude_tags)
 
 
 def find_lib_lsdumps(lsdump_paths, libs, target):
