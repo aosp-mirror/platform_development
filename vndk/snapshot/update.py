@@ -188,6 +188,97 @@ def commit(branch, build, version):
     utils.check_call(['git', 'commit', '-m', message])
 
 
+def run(vndk_version, branch, build_id, local, use_current_branch, remote,
+        verbose):
+    ''' Fetch and updtate the VNDK snapshots
+
+    Args:
+      vndk_version: int, VNDK snapshot version to install.
+      branch: string, Branch to pull build from.
+      build: string, Build number to pull.
+      local: string, Fetch local VNDK snapshot artifacts from specified local
+             directory instead of Android Build server.
+      use-current-branch: boolean, Perform the update in the current branch.
+                          Do not repo start.
+      remote: string, Remote name to fetch and check if the revision of VNDK
+              snapshot is included in the source to conform GPL license.
+      verbose: int, Increase log output verbosity.
+    '''
+    local_path = None
+    if local:
+        local_path = os.path.abspath(os.path.expanduser(local))
+
+    if local_path:
+        if build_id or branch:
+            raise ValueError(
+                'When --local option is set, --branch or --build cannot be '
+                'specified.')
+        elif not os.path.isdir(local_path):
+            raise RuntimeError(
+                'The specified local directory, {}, does not exist.'.format(
+                    local_path))
+    else:
+        if not (build_id and branch):
+            raise ValueError(
+                'Please provide both --branch and --build or set --local '
+                'option.')
+
+    install_dir = os.path.join(PREBUILTS_VNDK_DIR, 'v{}'.format(vndk_version))
+    if not os.path.isdir(install_dir):
+        raise RuntimeError(
+            'The directory for VNDK snapshot version {ver} does not exist.\n'
+            'Please request a new git project for prebuilts/vndk/v{ver} '
+            'before installing new snapshot.'.format(ver=vndk_version))
+
+    utils.set_logging_config(verbose)
+    root_dir = os.getcwd()
+    os.chdir(install_dir)
+
+    if not use_current_branch:
+        start_branch(build_id)
+
+    remove_old_snapshot(install_dir)
+    os.makedirs(utils.COMMON_DIR_PATH)
+
+    temp_artifact_dir = None
+    if not local_path:
+        temp_artifact_dir = tempfile.mkdtemp()
+
+    try:
+        install_snapshot(branch, build_id, local_path, install_dir,
+                         temp_artifact_dir)
+        gather_notice_files(install_dir)
+        post_processe_files_if_needed(vndk_version)
+
+        buildfile_generator = GenBuildFile(install_dir, vndk_version)
+        update_buildfiles(buildfile_generator)
+
+        copy_owners(root_dir, install_dir)
+
+        if not local_path and not branch.startswith('android'):
+            license_checker = GPLChecker(install_dir, ANDROID_BUILD_TOP,
+                                         temp_artifact_dir, remote)
+            check_gpl_license(license_checker)
+            logging.info(
+                'Successfully updated VNDK snapshot v{}'.format(vndk_version))
+    except Exception as error:
+        logging.error('FAILED TO INSTALL SNAPSHOT: {}'.format(error))
+        raise
+    finally:
+        if temp_artifact_dir:
+            logging.info(
+                'Deleting temp_artifact_dir: {}'.format(temp_artifact_dir))
+            shutil.rmtree(temp_artifact_dir)
+
+    if not local_path:
+        commit(branch, build_id, vndk_version)
+        logging.info(
+            'Successfully created commit for VNDK snapshot v{}'.format(
+                vndk_version))
+
+    logging.info('Done.')
+
+
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -223,82 +314,8 @@ def get_args():
 def main():
     """Program entry point."""
     args = get_args()
-
-    local = None
-    if args.local:
-        local = os.path.abspath(os.path.expanduser(args.local))
-
-    if local:
-        if args.build or args.branch:
-            raise ValueError(
-                'When --local option is set, --branch or --build cannot be '
-                'specified.')
-        elif not os.path.isdir(local):
-            raise RuntimeError(
-                'The specified local directory, {}, does not exist.'.format(
-                    local))
-    else:
-        if not (args.build and args.branch):
-            raise ValueError(
-                'Please provide both --branch and --build or set --local '
-                'option.')
-
-    vndk_version = args.vndk_version
-
-    install_dir = os.path.join(PREBUILTS_VNDK_DIR, 'v{}'.format(vndk_version))
-    if not os.path.isdir(install_dir):
-        raise RuntimeError(
-            'The directory for VNDK snapshot version {ver} does not exist.\n'
-            'Please request a new git project for prebuilts/vndk/v{ver} '
-            'before installing new snapshot.'.format(ver=vndk_version))
-
-    utils.set_logging_config(args.verbose)
-    root_dir = os.getcwd()
-    os.chdir(install_dir)
-
-    if not args.use_current_branch:
-        start_branch(args.build)
-
-    remove_old_snapshot(install_dir)
-    os.makedirs(utils.COMMON_DIR_PATH)
-
-    temp_artifact_dir = None
-    if not local:
-        temp_artifact_dir = tempfile.mkdtemp()
-
-    try:
-        install_snapshot(args.branch, args.build, local, install_dir,
-                         temp_artifact_dir)
-        gather_notice_files(install_dir)
-        post_processe_files_if_needed(vndk_version)
-
-        buildfile_generator = GenBuildFile(install_dir, vndk_version)
-        update_buildfiles(buildfile_generator)
-
-        copy_owners(root_dir, install_dir)
-
-        if not local:
-            license_checker = GPLChecker(install_dir, ANDROID_BUILD_TOP,
-                                         temp_artifact_dir, args.remote)
-            check_gpl_license(license_checker)
-            logging.info(
-                'Successfully updated VNDK snapshot v{}'.format(vndk_version))
-    except Exception as error:
-        logging.error('FAILED TO INSTALL SNAPSHOT: {}'.format(error))
-        raise
-    finally:
-        if temp_artifact_dir:
-            logging.info(
-                'Deleting temp_artifact_dir: {}'.format(temp_artifact_dir))
-            shutil.rmtree(temp_artifact_dir)
-
-    if not local:
-        commit(args.branch, args.build, vndk_version)
-        logging.info(
-            'Successfully created commit for VNDK snapshot v{}'.format(
-                vndk_version))
-
-    logging.info('Done.')
+    run(args.vndk_version, args.branch, args.build, args.local,
+        args.use_current_branch, args.remote, args.verbose)
 
 
 if __name__ == '__main__':
