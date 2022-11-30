@@ -80,6 +80,7 @@ class ProxyRequest {
               reject();
             }
           }
+          resolve();
         } else if (this.status === 403) {
           client.setState(ProxyState.UNAUTH);
           reject();
@@ -129,7 +130,7 @@ class ProxyRequest {
     }, undefined, requestedTraces);
   }
 
-  async endTrace(view: any): Promise<void> {
+  async endTrace(view: any, progressCallback: (progress: number) => void): Promise<void> {
     const requestedTraces = this.tracingTraces;
     this.tracingTraces = undefined;
     if (requestedTraces === undefined) {
@@ -137,7 +138,7 @@ class ProxyRequest {
     }
     await proxyRequest.call("POST", `${ProxyEndpoint.END_TRACE}${view.proxy.selectedDevice}/`,
       async (request: XMLHttpRequest) => {
-        await proxyClient.updateAdbData(requestedTraces, "trace");
+        await proxyClient.updateAdbData(requestedTraces, "trace", progressCallback);
       });
   }
 
@@ -151,10 +152,10 @@ class ProxyRequest {
     });
   }
 
-  async dumpState(view: any, requestedDumps: string[]) {
+  async dumpState(view: any, requestedDumps: string[], progressCallback: (progress: number) => void) {
     await proxyRequest.call("POST", `${ProxyEndpoint.DUMP}${view.proxy.selectedDevice}/`,
       async (request: XMLHttpRequest) => {
-        await proxyClient.updateAdbData(requestedDumps, "dump");
+        await proxyClient.updateAdbData(requestedDumps, "dump", progressCallback);
       }, undefined, requestedDumps);
   }
 
@@ -261,7 +262,7 @@ export class ProxyClient {
     this.setState(ProxyState.START_TRACE);
   }
 
-  async updateAdbData(files: Array<string>, traceType: string) {
+  async updateAdbData(files: Array<string>, traceType: string, progressCallback: (progress: number) => void) {
     for (let idx = 0; idx < files.length; idx++) {
       const adbParams = {
         files,
@@ -269,6 +270,7 @@ export class ProxyClient {
         traceType
       };
       await proxyRequest.fetchFiles(this.selectedDevice, adbParams);
+      progressCallback(100 * (idx + 1) / files.length);
     }
   }
 }

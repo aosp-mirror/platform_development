@@ -31,9 +31,8 @@ export class ProxyConnection implements Connection {
     ProxyState.UNAUTH,
     ProxyState.INVALID_VERSION,
   ];
-  loadProgress = 0;
 
-  constructor() {
+  constructor(private progressCallback: (progress: number) => void = () => {}) {
     this.proxy.setState(ProxyState.CONNECTING);
     this.proxy.onProxyChange(() => this.onConnectChange);
     const urlParams = new URLSearchParams(window.location.search);
@@ -144,17 +143,19 @@ export class ProxyConnection implements Connection {
   }
 
   public async endTrace() {
+    this.progressCallback(0);
     this.proxy.setState(ProxyState.LOAD_DATA);
-    await proxyRequest.endTrace(this);
+    await proxyRequest.endTrace(this, this.progressCallback);
   }
 
   public async dumpState(): Promise<boolean> {
+    this.progressCallback(0);
     if (TracingConfig.getInstance().requestedDumps.length < 1) {
       this.proxy.setState(ProxyState.ERROR, "No targets selected");
       return false;
     }
     this.proxy.setState(ProxyState.LOAD_DATA);
-    await proxyRequest.dumpState(this, TracingConfig.getInstance().requestedDumps);
+    await proxyRequest.dumpState(this, TracingConfig.getInstance().requestedDumps, this.progressCallback);
     return true;
   }
 

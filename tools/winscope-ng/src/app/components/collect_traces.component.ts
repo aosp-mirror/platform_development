@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input, Inject, Output, EventEmitter, OnInit, OnDestroy, ViewEncapsulation } from "@angular/core";
+import { Component, Input, Inject, Output, EventEmitter, OnInit, OnDestroy, ViewEncapsulation, ChangeDetectorRef } from "@angular/core";
 import { ProxyConnection } from "trace_collection/proxy_connection";
 import { Connection } from "trace_collection/connection";
 import { ProxyState } from "trace_collection/proxy_client";
@@ -93,6 +93,7 @@ import { TracingConfig } from "trace_collection/tracing_config";
                 <div *ngIf="connect.isEndTraceState()" class="end-tracing">
                   <div class="progress-desc">
                     <p class="mat-body-3"><mat-icon fontIcon="cable"></mat-icon></p>
+                    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
                     <p class="mat-body-1">Tracing...</p>
                   </div>
                   <div class="end-btn">
@@ -104,8 +105,11 @@ import { TracingConfig } from "trace_collection/tracing_config";
                 <div *ngIf="connect.isLoadDataState()" class="load-data">
                   <div class="progress-desc">
                     <p class="mat-body-3"><mat-icon fontIcon="sync"></mat-icon></p>
+                    <mat-progress-bar mode="determinate" [value]="loadProgress"></mat-progress-bar>
                     <p class="mat-body-1">Loading data...</p>
-                    <mat-progress-bar md-indeterminate [value]="connect.loadProgress"></mat-progress-bar>
+                  </div>
+                  <div class="end-btn">
+                    <button color="primary" mat-raised-button (click)="endTrace()" disabled="true">End trace</button>
                   </div>
                 </div>
               </div>
@@ -134,8 +138,8 @@ import { TracingConfig } from "trace_collection/tracing_config";
                 <div *ngIf="connect.isLoadDataState()" class="load-data">
                   <div class="progress-desc">
                     <p class="mat-body-3"><mat-icon fontIcon="sync"></mat-icon></p>
+                    <mat-progress-bar mode="determinate" [value]="loadProgress"></mat-progress-bar>
                     <p class="mat-body-1">Loading data...</p>
-                    <mat-progress-bar md-indeterminate [value]="connect.loadProgress"></mat-progress-bar>
                   </div>
                 </div>
               </div>
@@ -195,10 +199,10 @@ import { TracingConfig } from "trace_collection/tracing_config";
       .trace-collection-config {
         height: 100%;
       }
-      .proxy-tab, .web-tab, .start-btn, .dump-btn, .end-btn {
+      .proxy-tab, .web-tab, .start-btn, .dump-btn, .end-btn, .cancel-btn {
         align-self: flex-start;
       }
-      .start-btn, .dump-btn, .end-btn {
+      .start-btn, .dump-btn, .end-btn, .cancel-btn {
         margin: auto 0 0 0;
         padding: 1rem 0 0 0;
       }
@@ -284,7 +288,10 @@ import { TracingConfig } from "trace_collection/tracing_config";
         font-size: 3rem;
         width: unset;
         height: unset;
-        padding-bottom: 0.2rem;
+      }
+
+      .progress-desc mat-progress-bar {
+        margin: 0.2rem 0;
       }
     `
   ],
@@ -297,6 +304,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   connect: Connection = new ProxyConnection();
   tracingConfig = TracingConfig.getInstance();
   dataLoaded = false;
+  loadProgress = 0;
 
   @Input() store!: PersistentStore;
   @Input() traceCoordinator!: TraceCoordinator;
@@ -304,15 +312,16 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   @Output() dataLoadedChange = new EventEmitter<boolean>();
 
   constructor(
-    @Inject(MatSnackBar) private snackBar: MatSnackBar
+    @Inject(MatSnackBar) private snackBar: MatSnackBar,
+    @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
     if (this.isAdbProxy) {
-      this.connect = new ProxyConnection();
+      this.connect = new ProxyConnection((progress) => this.onLoadProgressUpdate(progress));
     } else {
-      //TODO: change to WebAdbConnection
-      this.connect = new ProxyConnection();
+      // TODO: change to WebAdbConnection
+      this.connect = new ProxyConnection((progress) => this.onLoadProgressUpdate(progress));
     }
   }
 
@@ -468,5 +477,10 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
       data: parserErrors,
       duration: 7500,
     });
+  }
+
+  private onLoadProgressUpdate(progress: number) {
+    this.loadProgress = progress;
+    this.changeDetectorRef.detectChanges();
   }
 }
