@@ -14,71 +14,181 @@
  * limitations under the License.
  */
 
-import {Timestamp} from "common/trace/timestamp";
-import {TraceType} from "common/trace/trace_type";
-import {FunctionUtils} from "common/utils/function_utils";
-import { Viewer } from "viewers/viewer";
-import { ViewerFactory } from "viewers/viewer_factory";
+import {AppComponentDependencyInversion} from "./components/app_component_dependency_inversion";
+import {TimelineComponentDependencyInversion} from "./components/timeline/timeline_component_dependency_inversion";
 import {TimelineData} from "./timeline_data";
 import {TraceData} from "./trace_data";
+import {CrossToolProtocolDependencyInversion} from "cross_tool/cross_tool_protocol_dependency_inversion";
+import {FileUtils} from "common/utils/file_utils";
+import {FunctionUtils} from "common/utils/function_utils";
+import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceType} from "common/trace/trace_type";
+import {Viewer} from "viewers/viewer";
+import {ViewerFactory} from "viewers/viewer_factory";
 
-type CurrentTimestampChangedCallback = (timestamp: Timestamp|undefined) => void;
-
-class Mediator {
+export class Mediator {
   private traceData: TraceData;
   private timelineData: TimelineData;
+  private crossToolProtocol: CrossToolProtocolDependencyInversion;
+  private appComponent: AppComponentDependencyInversion;
+  private timelineComponent?: TimelineComponentDependencyInversion;
+  private storage: Storage;
   private viewers: Viewer[] = [];
-  private notifyCurrentTimestampChangedToTimelineComponent: CurrentTimestampChangedCallback =
-    FunctionUtils.DO_NOTHING;
+  private isChangingCurrentTimestamp = false;
+  private blockWhileRemoteToolBugreportIsBeingLoaded = Promise.resolve();
 
-  constructor(traceData: TraceData, timelineData: TimelineData) {
+  constructor(
+    traceData: TraceData,
+    timelineData: TimelineData,
+    crossToolProtocol: CrossToolProtocolDependencyInversion,
+    appComponent: AppComponentDependencyInversion,
+    storage: Storage) {
+
     this.traceData = traceData;
     this.timelineData = timelineData;
-    this.timelineData.setOnCurrentTimestampChangedCallback(timestamp => {
-      this.onCurrentTimestampChanged(timestamp);
+    this.crossToolProtocol = crossToolProtocol;
+    this.appComponent = appComponent;
+    this.storage = storage;
+
+    this.timelineData.setOnCurrentTimestampChanged(timestamp => {
+      this.onWinscopeCurrentTimestampChanged(timestamp);
+    });
+
+    this.crossToolProtocol.setOnBugreportReceived(async (bugreport: File, timestamp?: Timestamp) => {
+      await this.onRemoteToolBugreportReceived(bugreport, timestamp);
+    });
+
+    this.crossToolProtocol.setOnTimestampReceived(async (timestamp: Timestamp) => {
+      await this.onRemoteToolTimestampReceived(timestamp);
     });
   }
 
-  public setNotifyCurrentTimestampChangedToTimelineComponentCallback(callback: CurrentTimestampChangedCallback) {
-    this.notifyCurrentTimestampChangedToTimelineComponent = callback;
+  public setTimelineComponent(timelineComponent: TimelineComponentDependencyInversion|undefined) {
+    this.timelineComponent = timelineComponent;
   }
 
-  public getViewers(): Viewer[] {
-    return this.viewers;
+  public onWinscopeTraceDataLoaded() {
+    this.onTraceDataLoaded();
   }
 
-  public onTraceDataLoaded(storage: Storage) {
-    this.timelineData.initialize(
-      this.traceData.getTimelines(),
-      this.traceData.getScreenRecordingVideo()
-    );
-    this.createViewers(storage);
-  }
+  public async onRemoteToolBugreportReceived(bugreport: File, timestamp?: Timestamp) {
+    let unblockOtherRemoteToolEventHandlers = FunctionUtils.DO_NOTHING;
 
-  public onCurrentTimestampChanged(timestamp: Timestamp|undefined) {
-    const entries = this.traceData.getTraceEntries(timestamp);
-    this.viewers.forEach(viewer => {
-      viewer.notifyCurrentTraceEntries(entries);
+    this.blockWhileRemoteToolBugreportIsBeingLoaded = new Promise<void>(resolve => {
+      unblockOtherRemoteToolEventHandlers = resolve;
     });
 
-    this.notifyCurrentTimestampChangedToTimelineComponent(timestamp);
+    try {
+      const unzippedFiles = await FileUtils.unzipFilesIfNeeded([bugreport]);
+      this.traceData.clear();
+      await this.traceData.loadTraces(unzippedFiles);
+      this.onTraceDataLoaded();
+    } finally {
+      unblockOtherRemoteToolEventHandlers();
+    }
+
+    if (timestamp !== undefined) {
+      await this.onRemoteToolTimestampReceived(timestamp);
+    }
   }
 
-  public clearData() {
+  public onWinscopeCurrentTimestampChanged(timestamp: Timestamp|undefined) {
+    this.executeIgnoringRecursiveTimestampNotifications(() => {
+      const entries = this.traceData.getTraceEntries(timestamp);
+      this.viewers.forEach(viewer => {
+        viewer.notifyCurrentTraceEntries(entries);
+      });
+
+      if (timestamp) {
+        if (timestamp.getType() !== TimestampType.REAL) {
+          console.warn(
+            "Cannot propagate timestamp change to remote tool." +
+            ` Remote tool expects timestamp type ${TimestampType.REAL},` +
+            ` but Winscope wants to notify timestamp type ${timestamp.getType()}.`
+          );
+        } else {
+          this.crossToolProtocol.sendTimestamp(timestamp);
+        }
+      }
+
+      this.timelineComponent?.onCurrentTimestampChanged(timestamp);
+    });
+  }
+
+  public async onRemoteToolTimestampReceived(timestamp: Timestamp) {
+    await this.executeIgnoringRecursiveTimestampNotificationsAsync(async () => {
+      if (this.timelineData.getTimestampType() != TimestampType.REAL) {
+        console.warn(
+          "Cannot apply new timestamp received from remote tool." +
+          ` Remote tool notified timestamp type type ${TimestampType.REAL},` +
+          ` but Winscope is accepting timestamp type ${this.timelineData.getTimestampType()}.`
+        );
+      }
+
+      if (this.timelineData.getCurrentTimestamp() === timestamp) {
+        return; // no timestamp change
+      }
+
+      // Make sure we finished loading the bugreport, before notifying the timestamp to the rest of
+      // the system. Otherwise, the timestamp notification would just get lost.
+      await this.blockWhileRemoteToolBugreportIsBeingLoaded;
+
+      const entries = this.traceData.getTraceEntries(timestamp);
+      this.viewers.forEach(viewer => {
+        viewer.notifyCurrentTraceEntries(entries);
+      });
+
+      this.timelineData.setCurrentTimestamp(timestamp);
+      this.timelineComponent?.onCurrentTimestampChanged(timestamp);
+    });
+  }
+
+  public onWinscopeUploadNew() {
     this.traceData.clear();
     this.timelineData.clear();
     this.viewers = [];
   }
 
-  private createViewers(storage: Storage) {
+  private onTraceDataLoaded() {
+    this.timelineData.initialize(
+      this.traceData.getTimelines(),
+      this.traceData.getScreenRecordingVideo()
+    );
+    this.createViewers();
+    this.appComponent.onTraceDataLoaded(this.viewers);
+  }
+
+  private createViewers() {
     const traceTypes = this.traceData.getLoadedTraces().map(trace => trace.type);
-    this.viewers = new ViewerFactory().createViewers(new Set<TraceType>(traceTypes), storage);
+    this.viewers = new ViewerFactory().createViewers(new Set<TraceType>(traceTypes), this.storage);
 
     // Make sure to update the viewers active entries as soon as they are created.
     if (this.timelineData.getCurrentTimestamp()) {
-      this.onCurrentTimestampChanged(this.timelineData.getCurrentTimestamp());
+      this.onWinscopeCurrentTimestampChanged(this.timelineData.getCurrentTimestamp());
+    }
+  }
+
+  private executeIgnoringRecursiveTimestampNotifications(op: () => void) {
+    if (this.isChangingCurrentTimestamp) {
+      return;
+    }
+    this.isChangingCurrentTimestamp = true;
+    try {
+      op();
+    } finally {
+      this.isChangingCurrentTimestamp = false;
+    }
+  }
+
+  private async executeIgnoringRecursiveTimestampNotificationsAsync(op: () => Promise<void>) {
+    if (this.isChangingCurrentTimestamp) {
+      return;
+    }
+    this.isChangingCurrentTimestamp = true;
+    try {
+      await op();
+    } finally {
+      this.isChangingCurrentTimestamp = false;
     }
   }
 }
-
-export { Mediator };

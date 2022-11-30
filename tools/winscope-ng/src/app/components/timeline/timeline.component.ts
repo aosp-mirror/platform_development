@@ -31,10 +31,10 @@ import { DomSanitizer, SafeUrl } from "@angular/platform-browser";
 import { TraceType } from "common/trace/trace_type";
 import { TRACE_INFO } from "app/trace_info";
 import { Mediator } from "app/mediator";
+import { TimelineComponentDependencyInversion } from "./timeline_component_dependency_inversion";
 import { TimelineData } from "app/timeline_data";
 import { MiniTimelineComponent } from "./mini_timeline.component";
 import { ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType } from "common/trace/timestamp";
-import { FunctionUtils } from "common/utils/function_utils";
 import { TimeUtils } from "common/utils/time_utils";
 
 @Component({
@@ -272,7 +272,7 @@ import { TimeUtils } from "common/utils/time_utils";
     }
   `],
 })
-export class TimelineComponent {
+export class TimelineComponent implements TimelineComponentDependencyInversion {
   public readonly TOGGLE_BUTTON_CLASS: string = "button-toggle-expansion";
   public readonly MAX_SELECTED_TRACES = 3;
 
@@ -339,9 +339,7 @@ export class TimelineComponent {
   }
 
   ngOnInit() {
-    this.mediator.setNotifyCurrentTimestampChangedToTimelineComponentCallback((timestamp: Timestamp|undefined) => {
-      this.onCurrentTimestampChanged(timestamp);
-    });
+    this.mediator.setTimelineComponent(this);
 
     if (this.timelineData.hasTimestamps()) {
       this.updateTimeInputValuesToCurrentTimestamp();
@@ -355,9 +353,7 @@ export class TimelineComponent {
   }
 
   ngOnDestroy() {
-    this.mediator.setNotifyCurrentTimestampChangedToTimelineComponentCallback(
-      FunctionUtils.DO_NOTHING
-    );
+    this.mediator.setTimelineComponent(undefined);
   }
 
   ngAfterViewInit() {

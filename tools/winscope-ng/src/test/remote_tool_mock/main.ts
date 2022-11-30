@@ -13,28 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const {merge} = require("webpack-merge");
-const configCommon = require("./webpack.config.common");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {AppModule} from "./app.module";
 
-const configDev = {
-  mode: "development",
-  entry: {
-    polyfills: "./src/polyfills.ts",
-    styles: [
-      "./src/material-theme.scss",
-      "./src/styles.css"
-    ],
-    app: "./src/main.dev.ts"
-  },
-  devtool: "source-map",
-  plugins: [
-    new HtmlWebpackPlugin({
-      template: "src/index.html",
-      inject: "body",
-      inlineSource: ".(css|js)$",
-    })
-  ]
-};
-
-module.exports = merge(configCommon, configDev);
+platformBrowserDynamic().bootstrapModule(AppModule)
+  .catch(err => console.error(err));

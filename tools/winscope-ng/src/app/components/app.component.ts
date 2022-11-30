@@ -23,13 +23,14 @@ import {
   ViewEncapsulation
 } from "@angular/core";
 import { createCustomElement } from "@angular/elements";
+import { AppComponentDependencyInversion } from "./app_component_dependency_inversion";
 import { TimelineComponent} from "./timeline/timeline.component";
+import {CrossToolProtocol} from "cross_tool/cross_tool_protocol";
 import { Mediator } from "app/mediator";
 import { TraceData } from "app/trace_data";
 import { PersistentStore } from "common/utils/persistent_store";
 import { Timestamp } from "common/trace/timestamp";
 import { FileUtils } from "common/utils/file_utils";
-import { FunctionUtils } from "common/utils/function_utils";
 import { proxyClient, ProxyState } from "trace_collection/proxy_client";
 import { ViewerInputMethodComponent } from "viewers/components/viewer_input_method.component";
 import { View, Viewer } from "viewers/viewer";
@@ -124,14 +125,14 @@ import {TRACE_INFO} from "app/trace_info";
             <collect-traces
                 class="collect-traces-card homepage-card"
                 [traceData]="traceData"
-                (traceDataLoaded)="onTraceDataLoaded()"
+                (traceDataLoaded)="mediator.onWinscopeTraceDataLoaded()"
                 [store]="store"
             ></collect-traces>
 
             <upload-traces
                 class="upload-traces-card homepage-card"
                 [traceData]="traceData"
-                (traceDataLoaded)="onTraceDataLoaded()"
+                (traceDataLoaded)="mediator.onWinscopeTraceDataLoaded()"
             ></upload-traces>
           </div>
         </div>
@@ -164,9 +165,6 @@ import {TRACE_INFO} from "app/trace_info";
         flex-direction: column;
         overflow: auto;
       }
-      .timescrub {
-        margin: 8px;
-      }
       .center {
         display: flex;
         align-content: center;
@@ -188,12 +186,13 @@ import {TRACE_INFO} from "app/trace_info";
   ],
   encapsulation: ViewEncapsulation.None
 })
-export class AppComponent {
+export class AppComponent implements AppComponentDependencyInversion {
   title = "winscope-ng";
   changeDetectorRef: ChangeDetectorRef;
   traceData = new TraceData();
   timelineData = new TimelineData();
-  mediator = new Mediator(this.traceData, this.timelineData);
+  crossToolProtocol = new CrossToolProtocol();
+  mediator = new Mediator(this.traceData, this.timelineData, this.crossToolProtocol, this, localStorage);
   states = ProxyState;
   store: PersistentStore = new PersistentStore();
   currentTimestamp?: Timestamp;
@@ -257,8 +256,14 @@ export class AppComponent {
 
   public onUploadNewClick() {
     this.dataLoaded = false;
-    this.mediator.clearData();
+    this.mediator.onWinscopeUploadNew();
     proxyClient.adbData = [];
+    this.changeDetectorRef.detectChanges();
+  }
+
+  public onTraceDataLoaded(viewers: Viewer[]) {
+    this.viewers = viewers;
+    this.dataLoaded = true;
     this.changeDetectorRef.detectChanges();
   }
 
@@ -266,13 +271,6 @@ export class AppComponent {
     document.body.classList.toggle("dark-mode", enabled);
     this.store.add("dark-mode", `${enabled}`);
     this.isDarkModeOn = enabled;
-  }
-
-  public onTraceDataLoaded() {
-    this.mediator.onTraceDataLoaded(localStorage);
-    this.viewers = this.mediator.getViewers();
-    this.dataLoaded = true;
-    this.changeDetectorRef.detectChanges();
   }
 
   async onDownloadTracesButtonClick() {

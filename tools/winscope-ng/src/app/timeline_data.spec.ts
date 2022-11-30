@@ -43,7 +43,7 @@ describe("TimelineData", () => {
 
   beforeEach(() => {
     timelineData = new TimelineData();
-    timelineData.setOnCurrentTimestampChangedCallback(timestamp => {
+    timelineData.setOnCurrentTimestampChanged(timestamp => {
       timestampChangedObserver.onCurrentTimestampChanged(timestamp);
     });
   });

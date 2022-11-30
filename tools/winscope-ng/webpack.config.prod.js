@@ -60,6 +60,11 @@ const configProd = {
     },
   },
   plugins: [
+    new HtmlWebpackPlugin({
+      template: "src/index.html",
+      inject: "body",
+      inlineSource: ".(css|js)$",
+    }),
     new HtmlWebpackInlineSourcePlugin(HtmlWebpackPlugin),
   ]
 };
