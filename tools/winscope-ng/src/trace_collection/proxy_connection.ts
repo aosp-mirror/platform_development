@@ -35,7 +35,7 @@ export class ProxyConnection implements Connection {
 
   constructor() {
     this.proxy.setState(ProxyState.CONNECTING);
-    this.proxy.onProxyChange(this.onConnectChange);
+    this.proxy.onProxyChange(() => this.onConnectChange);
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has("token")) {
       this.proxy.proxyKey = urlParams.get("token")!;
@@ -170,7 +170,7 @@ export class ProxyConnection implements Connection {
     if (newState === ProxyState.CONNECTING) {
       proxyClient.getDevices();
     }
-    if (newState == ProxyState.START_TRACE) {
+    if (newState === ProxyState.START_TRACE) {
       const isWaylandAvailable = await this.isWaylandAvailable();
       TracingConfig.getInstance().setTracingConfigForAvailableTraces(isWaylandAvailable);
     }
