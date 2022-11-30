@@ -55,14 +55,22 @@ describe("ParserWindowManager", () => {
       const timestamp = new Timestamp(TimestampType.ELAPSED, 15398076788n);
       const entry = parser.getTraceEntry(timestamp)!;
       expect(entry).toBeInstanceOf(WindowManagerState);
-      expect(BigInt(entry.timestampMs)).toEqual(15398076788n);
+      expect(BigInt(entry.timestamp.elapsedNanos.toString())).toEqual(15398076788n);
+      expect(BigInt(entry.timestamp.unixNanos.toString())).toEqual(1659107089999048990n);
     });
 
     it("retrieves trace entry from real timestamp", () => {
       const timestamp = new Timestamp(TimestampType.REAL, 1659107089999048990n);
       const entry = parser.getTraceEntry(timestamp)!;
       expect(entry).toBeInstanceOf(WindowManagerState);
-      expect(BigInt(entry.timestampMs)).toEqual(15398076788n);
+      expect(BigInt(entry.timestamp.elapsedNanos.toString())).toEqual(15398076788n);
+      expect(BigInt(entry.timestamp.unixNanos.toString())).toEqual(1659107089999048990n);
+    });
+
+    it("formats entry timestamps", () => {
+      const timestamp = new Timestamp(TimestampType.REAL, 1659107089999048990n);
+      const entry = parser.getTraceEntry(timestamp)!;
+      expect(entry.name).toEqual("15h04m49s999ms48960ns, 29 Jul 2022 UTC");
     });
   });
 
@@ -91,7 +99,18 @@ describe("ParserWindowManager", () => {
       const timestamp = new Timestamp(TimestampType.ELAPSED, 850254319343n);
       const entry = parser.getTraceEntry(timestamp)!;
       expect(entry).toBeInstanceOf(WindowManagerState);
-      expect(BigInt(entry.timestampMs)).toEqual(850254319343n);
+      expect(BigInt(entry.timestamp.elapsedNanos.toString())).toEqual(850254319343n);
+    });
+
+    it("formats entry timestamps", () => {
+      expect(() => {
+        const timestamp = new Timestamp(TimestampType.REAL, 1659107089999048990n);
+        parser.getTraceEntry(timestamp);
+      }).toThrow(Error("Timestamps with type \"REAL\" not available"));
+
+      const timestamp = new Timestamp(TimestampType.ELAPSED, 850254319343n);
+      const entry = parser.getTraceEntry(timestamp)!;
+      expect(entry.name).toEqual("14m10s254ms");
     });
   });
 });

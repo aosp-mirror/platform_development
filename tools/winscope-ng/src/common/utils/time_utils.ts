@@ -13,8 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import { TimestampType } from "common/trace/timestamp";
+import dateFormat, { masks } from "dateformat";
+
 export class TimeUtils {
-  static nanosecondsToHuman(timestampNanos: number|bigint, hideNs = true): string {
+  static format(timestampType: TimestampType,
+    elapsedTime: bigint, clockTimeOffset: bigint|undefined = undefined): string {
+    switch (timestampType) {
+      case TimestampType.ELAPSED: {
+        return TimeUtils.nanosecondsToHumanElapsed(elapsedTime);
+      }
+      case TimestampType.REAL: {
+        if (clockTimeOffset === undefined) {
+          throw Error("clockTimeOffset required to format real timestamp");
+        }
+        return TimeUtils.nanosecondsToHumanReal(elapsedTime + clockTimeOffset);
+      }
+      default: {
+        throw Error("Unhandled timestamp type");
+      }
+    }
+  }
+
+  static nanosecondsToHumanElapsed(timestampNanos: number|bigint, hideNs = true): string {
     timestampNanos = BigInt(timestampNanos);
     const units = TimeUtils.units;
 
@@ -40,9 +62,19 @@ export class TimeUtils {
     return parts.join("");
   }
 
-  static humanToNanoseconds(timestampHuman: string): bigint {
-    if (!TimeUtils.HUMAN_TIMESTAMP_REGEX.test(timestampHuman)) {
-      throw Error("Invalid timestamp format");
+  static nanosecondsToHumanReal(timestampNanos: number|bigint): string {
+    timestampNanos = BigInt(timestampNanos);
+    const ms = timestampNanos / 1000000n;
+    const extraNanos = timestampNanos % 1000000n;
+    const formattedTime = dateFormat(new Date(Number(ms)), "HH\"h\"MM\"m\"ss\"s\"l\"ms\"");
+    const formattedDate = dateFormat(new Date(Number(ms)), "d mmm yyyy Z");
+
+    return `${formattedTime}${extraNanos}ns, ${formattedDate}`;
+  }
+
+  static humanElapsedToNanoseconds(timestampHuman: string): bigint {
+    if (!TimeUtils.HUMAN_ELAPSED_TIMESTAMP_REGEX.test(timestampHuman)) {
+      throw Error("Invalid elapsed timestamp format");
     }
 
     const units = TimeUtils.units;
@@ -62,16 +94,55 @@ export class TimeUtils {
     return ns;
   }
 
+  static humanRealToNanoseconds(timestampHuman: string): bigint {
+    if (!TimeUtils.HUMAN_REAL_TIMESTAMP_REGEX.test(timestampHuman)) {
+      throw Error("Invalid real timestamp format");
+    }
+
+    const time = timestampHuman.split(",")[0];
+    const date = timestampHuman.split(",")[1];
+
+    let timeRest = time;
+    const hours = parseInt(timeRest.split("h")[0]);
+    timeRest = time.split("h")[1];
+    const minutes = parseInt(timeRest.split("m")[0]);
+    timeRest = time.split("m")[1];
+    const seconds = parseInt(timeRest.split("s")[0]);
+    timeRest = time.split("s")[1];
+    const milliseconds = parseInt(timeRest.split("ms")[0]);
+    timeRest = time.split("ms")[1];
+    const nanoseconds = parseInt(timeRest);
+
+    const dateMilliseconds = new Date(date).getTime();
+
+    return BigInt(hours) * BigInt(TimeUtils.TO_NANO["h"]) +
+      BigInt(minutes) * BigInt(TimeUtils.TO_NANO["m"]) +
+      BigInt(seconds) * BigInt(TimeUtils.TO_NANO["s"]) +
+      BigInt(milliseconds) * BigInt(TimeUtils.TO_NANO["ms"]) +
+      BigInt(nanoseconds) * BigInt(TimeUtils.TO_NANO["ns"]) +
+      BigInt(dateMilliseconds) * BigInt(TimeUtils.TO_NANO["ms"]);
+  }
+
+  static TO_NANO = {
+    "ns": 1,
+    "ms": 1000000,
+    "s": 1000000 * 1000,
+    "m": 1000000 * 1000 * 60,
+    "h": 1000000 * 1000 * 60 * 60,
+    "d": 1000000 * 1000 * 60 * 60 * 24
+  };
+
   static units = [
-    {nanosInUnit: 1, unit: "ns"},
-    {nanosInUnit: 1000000, unit: "ms"},
-    {nanosInUnit: 1000000 * 1000, unit: "s"},
-    {nanosInUnit: 1000000 * 1000 * 60, unit: "m"},
-    {nanosInUnit: 1000000 * 1000 * 60 * 60, unit: "h"},
-    {nanosInUnit: 1000000 * 1000 * 60 * 60 * 24, unit: "d"},
+    {nanosInUnit: TimeUtils.TO_NANO["ns"], unit: "ns"},
+    {nanosInUnit: TimeUtils.TO_NANO["ms"], unit: "ms"},
+    {nanosInUnit: TimeUtils.TO_NANO["s"], unit: "s"},
+    {nanosInUnit: TimeUtils.TO_NANO["m"], unit: "m"},
+    {nanosInUnit: TimeUtils.TO_NANO["h"], unit: "h"},
+    {nanosInUnit: TimeUtils.TO_NANO["d"], unit: "d"},
   ];
 
   // (?=.) checks there is at least one character with a lookahead match
-  static readonly HUMAN_TIMESTAMP_REGEX = /^(?=.)([0-9]+d)?([0-9]+h)?([0-9]+m)?([0-9]+s)?([0-9]+ms)?([0-9]+ns)?$/;
-  static readonly NS_TIMESTAMP_REGEX = /^[0-9]+$/;
+  static readonly HUMAN_ELAPSED_TIMESTAMP_REGEX = /^(?=.)([0-9]+d)?([0-9]+h)?([0-9]+m)?([0-9]+s)?([0-9]+ms)?([0-9]+ns)?$/;
+  static readonly HUMAN_REAL_TIMESTAMP_REGEX = /^[0-9]([0-9])?h[0-9]([0-9])?m[0-9]([0-9])?s[0-9]([0-9])?([0-9])?ms[0-9]([0-9])?([0-9])?([0-9])?([0-9])?([0-9])?ns, [0-9]([0-9])? [A-Za-z][A-Za-z][A-Za-z] [0-9][0-9][0-9][0-9]( [A-Za-z][A-Za-z][A-Za-z])?$/;
+  static readonly NS_TIMESTAMP_REGEX = /^\s*[0-9]+(\s?ns)?\s*$/;
 }

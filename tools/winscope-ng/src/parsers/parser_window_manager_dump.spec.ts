@@ -47,6 +47,6 @@ describe("ParserWindowManagerDump", () => {
     const timestamp = new Timestamp(TimestampType.ELAPSED, 0n);
     const entry = parser.getTraceEntry(timestamp)!;
     expect(entry).toBeInstanceOf(WindowManagerState);
-    expect(BigInt(entry.timestampMs)).toEqual(0n);
+    expect(BigInt(entry.timestamp.elapsedNanos.toString())).toEqual(0n);
   });
 });

@@ -17,22 +17,38 @@
 import { Display, LayerTraceEntry, LayerTraceEntryBuilder, toRect, toSize, toTransform } from "../common";
 import {Layer} from "./Layer";
 import {getPropertiesForDisplay} from "../mixin";
+import { TimeUtils } from "common/utils/time_utils";
 
-LayerTraceEntry.fromProto = function (protos: any[], displayProtos: any[],
-        timestamp: number, hwcBlob: string, where: string = ''): LayerTraceEntry {
+LayerTraceEntry.fromProto = function (
+    protos: any[],
+    displayProtos: any[],
+    elapsedTimestamp: bigint,
+    vSyncId: number,
+    hwcBlob: string,
+    where = "",
+    realToElapsedTimeOffsetNs: bigint|undefined = undefined,
+    useElapsedTime = false
+): LayerTraceEntry {
     const layers = protos.map(it => Layer.fromProto(it));
     const displays = (displayProtos || []).map(it => newDisplay(it));
-    const builder = new LayerTraceEntryBuilder(timestamp, layers, displays, hwcBlob, where);
+    const builder = new LayerTraceEntryBuilder(
+        `${elapsedTimestamp}`,
+        layers,
+        displays,
+        vSyncId,
+        hwcBlob,
+        where,
+        `${realToElapsedTimeOffsetNs ?? 0}`
+    );
     const entry: LayerTraceEntry = builder.build();
 
-    addAttributes(entry, protos);
+    addAttributes(entry, protos,
+        realToElapsedTimeOffsetNs === undefined || useElapsedTime);
     return entry;
 }
 
-function addAttributes(entry: LayerTraceEntry, protos: any) {
-    entry.kind = "entry"
-    // There no JVM/JS translation for Longs yet
-    entry.timestampMs = entry.timestamp.toString()
+function addAttributes(entry: LayerTraceEntry, protos: any, useElapsedTime = false) {
+    entry.kind = "entry";
     // Avoid parsing the entry root because it is an array of layers
     // containing all trace information, this slows down the property tree.
     // Instead parse only key properties for debugging
@@ -43,7 +59,13 @@ function addAttributes(entry: LayerTraceEntry, protos: any) {
     if (newObj.physicalDisplayBounds) delete newObj.physicalDisplayBounds;
     if (newObj.isVisible) delete newObj.isVisible;
     entry.proto = newObj;
-    entry.shortName = entry.name;
+    if (useElapsedTime || entry.clockTimestamp == undefined) {
+        entry.name = TimeUtils.nanosecondsToHumanElapsed(BigInt(entry.elapsedTimestamp));
+        entry.shortName = entry.name;
+    } else {
+        entry.name = TimeUtils.nanosecondsToHumanReal(BigInt(entry.clockTimestamp));
+        entry.shortName = entry.name;
+    }
     entry.isVisible = true;
 }
 

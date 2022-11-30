@@ -15,6 +15,7 @@
  */
 import {TimeUtils} from "common/utils/time_utils";
 import configJson from "../../../../../../frameworks/base/data/etc/services.core.protolog.json";
+import { TimestampType } from "./timestamp";
 
 class ProtoLogTraceEntry {
   constructor(public messages: LogMessage[], public currentMessageIndex: number) {
@@ -27,9 +28,9 @@ class LogMessage {
   tag: string;
   level: string;
   at: string;
-  timestamp: number;
+  timestamp: bigint;
 
-  constructor(text: string, time: string, tag: string, level: string, at: string, timestamp: number) {
+  constructor(text: string, time: string, tag: string, level: string, at: string, timestamp: bigint) {
     this.text = text;
     this.time = time;
     this.tag = tag;
@@ -40,7 +41,7 @@ class LogMessage {
 }
 
 class FormattedLogMessage extends LogMessage {
-  constructor(proto: any) {
+  constructor(proto: any, timestampType: TimestampType, realToElapsedTimeOffsetNs: bigint|undefined) {
     const text = (
       proto.messageHash.toString() +
       " - [" + proto.strParams.toString() +
@@ -48,25 +49,46 @@ class FormattedLogMessage extends LogMessage {
       "] [" + proto.doubleParams.toString() +
       "] [" + proto.booleanParams.toString() + "]"
     );
+
+    let time: string;
+    let timestamp: bigint;
+    if (timestampType === TimestampType.REAL && realToElapsedTimeOffsetNs !== undefined && realToElapsedTimeOffsetNs != 0n) {
+      timestamp = realToElapsedTimeOffsetNs + BigInt(proto.elapsedRealtimeNanos);
+      time = TimeUtils.nanosecondsToHumanReal(realToElapsedTimeOffsetNs + BigInt(proto.elapsedRealtimeNanos));
+    } else {
+      timestamp = BigInt(proto.elapsedRealtimeNanos);
+      time = TimeUtils.nanosecondsToHumanElapsed(timestamp);
+    }
+
     super(
       text,
-      TimeUtils.nanosecondsToHuman(proto.elapsedRealtimeNanos),
+      time,
       "INVALID",
       "invalid",
       "",
-      Number(proto.elapsedRealtimeNanos));
+      timestamp);
   }
 }
 
 class UnformattedLogMessage extends LogMessage {
-  constructor(proto: any, message: any) {
+  constructor(proto: any, timestampType: TimestampType, realToElapsedTimeOffsetNs: bigint|undefined, message: any) {
+    let time: string;
+    let timestamp: bigint;
+    if (timestampType === TimestampType.REAL && realToElapsedTimeOffsetNs !== undefined && realToElapsedTimeOffsetNs != 0n) {
+      timestamp = realToElapsedTimeOffsetNs + BigInt(proto.elapsedRealtimeNanos);
+      time = TimeUtils.nanosecondsToHumanReal(realToElapsedTimeOffsetNs + BigInt(proto.elapsedRealtimeNanos));
+    } else {
+      timestamp = BigInt(proto.elapsedRealtimeNanos);
+      time = TimeUtils.nanosecondsToHumanElapsed(timestamp);
+    }
+
     super(
       formatText(message.message, proto),
-      TimeUtils.nanosecondsToHuman(proto.elapsedRealtimeNanos),
+      time,
       (<any>configJson).groups[message.group].tag,
       message.level,
       message.at,
-      Number(proto.elapsedRealtimeNanos)
+      timestamp
     );
   }
 }

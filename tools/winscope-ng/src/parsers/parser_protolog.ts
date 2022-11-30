@@ -61,40 +61,42 @@ class ParserProtoLog extends Parser {
     if (type == TimestampType.ELAPSED) {
       return new Timestamp(type, BigInt(entryProto.elapsedRealtimeNanos));
     }
-    else if (type == TimestampType.REAL) {
-      return new Timestamp(type, BigInt(entryProto.elapsedRealtimeNanos) + this.realToElapsedTimeOffsetNs!);
+    if (type == TimestampType.REAL && this.realToElapsedTimeOffsetNs !== undefined) {
+      return new Timestamp(type, BigInt(entryProto.elapsedRealtimeNanos) + this.realToElapsedTimeOffsetNs);
     }
     return undefined;
   }
 
-  override processDecodedEntry(index: number, entryProto: any): ProtoLogTraceEntry {
-    if (!this.decodedMessages) {
+  override processDecodedEntry(index: number, timestampType: TimestampType, entryProto: any): ProtoLogTraceEntry {
+    if (!this.decodedMessages || this.decodedTimestampType !== timestampType) {
+      this.decodedTimestampType = timestampType;
       this.decodedMessages = this.decodedEntries.map((entryProto: any) => {
-        return this.decodeProtoLogMessage(entryProto);
+        return this.decodeProtoLogMessage(entryProto, timestampType);
       });
     }
 
     return new ProtoLogTraceEntry(this.decodedMessages, index);
   }
 
-  private decodeProtoLogMessage(entryProto: any): LogMessage {
+  private decodeProtoLogMessage(entryProto: any, timestampType: TimestampType): LogMessage {
     const message = (<any>configJson).messages[entryProto.messageHash];
     if (!message) {
-      return new FormattedLogMessage(entryProto);
+      return new FormattedLogMessage(entryProto, timestampType, this.realToElapsedTimeOffsetNs);
     }
 
     try {
-      return new UnformattedLogMessage(entryProto, message);
+      return new UnformattedLogMessage(entryProto, timestampType, this.realToElapsedTimeOffsetNs, message);
     }
     catch (error) {
       if (error instanceof FormatStringMismatchError) {
-        return new FormattedLogMessage(entryProto);
+        return new FormattedLogMessage(entryProto, timestampType, this.realToElapsedTimeOffsetNs);
       }
       throw error;
     }
   }
 
   private decodedMessages?: LogMessage[];
+  private decodedTimestampType?: TimestampType;
   private realToElapsedTimeOffsetNs: undefined|bigint = undefined;
   private static readonly MAGIC_NUMBER = [0x09, 0x50, 0x52, 0x4f, 0x54, 0x4f, 0x4c, 0x4f, 0x47]; // .PROTOLOG
   private static readonly PROTOLOG_VERSION = "1.0.0";

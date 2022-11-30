@@ -88,6 +88,14 @@ describe("ParserTransactions", () => {
       expect(entry.entriesProto[222].transactions[1].displayChanges[0].what)
         .toEqual("eLayerStackChanged | eDisplayProjectionChanged | eFlagsChanged");
     });
+
+    it("includes timestamp type in TransactionsTraceEntry", () => {
+      const timestamp = new Timestamp(TimestampType.REAL, 1659507541118452067n);
+      const entry: TransactionsTraceEntry = parser.getTraceEntry(timestamp)!;
+
+      expect(entry.timestampType).toEqual(TimestampType.REAL);
+      expect(entry.realToElapsedTimeOffsetNs).toEqual(1659507538600499552n);
+    });
   });
 
   describe("trace with elapsed (only) timestamp", () => {
@@ -119,6 +127,13 @@ describe("ParserTransactions", () => {
     it("doesn't provide real timestamps", () => {
       expect(parser.getTimestamps(TimestampType.REAL))
         .toEqual(undefined);
+    });
+
+    it("includes timestamp type in TransactionsTraceEntry", () => {
+      const timestamp = new Timestamp(TimestampType.ELAPSED, 14884850511n);
+      const entry: TransactionsTraceEntry = parser.getTraceEntry(timestamp)!;
+
+      expect(entry.timestampType).toEqual(TimestampType.ELAPSED);
     });
   });
 });

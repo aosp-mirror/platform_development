@@ -81,7 +81,7 @@ export class TimelineCoordinator {
 
   public getActiveTimestampForTraceAt(type: TraceType, timestamp: Timestamp): TimestampWithIndex|undefined {
     if (timestamp.getType() !== this.timestampType) {
-      throw Error("Invalid timestampt type");
+      throw Error("Invalid timestamp type");
     }
 
     const timeline = this.timelines.get(type);

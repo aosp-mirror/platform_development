@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { TimeUtils } from 'common/utils/time_utils';
+
 // Imports all the compiled common Flicker library classes and exports them
 // as clean es6 modules rather than having them be commonjs modules
 
@@ -22,6 +24,8 @@ const WindowManagerTrace = require('flicker').com.android.server.wm.traces.
     common.windowmanager.WindowManagerTrace;
 const WindowManagerState = require('flicker').com.android.server.wm.traces.
     common.windowmanager.WindowManagerState;
+const WindowManagerTraceEntryBuilder = require('flicker').com.android.server.wm.
+    traces.common.windowmanager.WindowManagerTraceEntryBuilder;
 const Activity = require('flicker').com.android.server.wm.traces.common.
     windowmanager.windows.Activity;
 const Configuration = require('flicker').com.android.server.wm.traces.common.
@@ -277,6 +281,7 @@ export {
   WindowManagerPolicy,
   WindowManagerTrace,
   WindowManagerState,
+  WindowManagerTraceEntryBuilder,
   // SF
   BaseLayerTraceEntry,
   Layer,

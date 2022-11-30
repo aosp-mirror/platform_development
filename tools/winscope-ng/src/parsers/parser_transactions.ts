@@ -100,8 +100,8 @@ class ParserTransactions extends Parser {
     return undefined;
   }
 
-  override processDecodedEntry(index: number, entryProto: any): TransactionsTraceEntry {
-    return new TransactionsTraceEntry(this.decodedEntries, index);
+  override processDecodedEntry(index: number, timestampType: TimestampType, entryProto: any): TransactionsTraceEntry {
+    return new TransactionsTraceEntry(this.decodedEntries, timestampType, this.realToElapsedTimeOffsetNs, index);
   }
 
   private realToElapsedTimeOffsetNs: undefined|bigint;

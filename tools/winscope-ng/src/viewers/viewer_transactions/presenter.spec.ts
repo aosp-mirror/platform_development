@@ -24,8 +24,10 @@ import {TransactionsTraceEntry} from "../../common/trace/transactions";
 describe("ViewerTransactionsPresenter", () => {
   let parser: Parser;
   let presenter: Presenter;
-  let inputTraceEntry: TransactionsTraceEntry;
-  let inputTraceEntries: Map<TraceType, any>;
+  let inputTraceEntryElapsed: TransactionsTraceEntry;
+  let inputTraceEntriesElapsed: Map<TraceType, any>;
+  let inputTraceEntryReal: TransactionsTraceEntry;
+  let inputTraceEntriesReal: Map<TraceType, any>;
   let outputUiData: undefined|UiData;
   const TOTAL_OUTPUT_ENTRIES = 1504;
 
@@ -34,10 +36,16 @@ describe("ViewerTransactionsPresenter", () => {
   });
 
   beforeEach(() => {
-    const timestamp = new Timestamp(TimestampType.ELAPSED, 2450981445n);
-    inputTraceEntry = parser.getTraceEntry(timestamp)!;
-    inputTraceEntries = new Map<TraceType, any>();
-    inputTraceEntries.set(TraceType.TRANSACTIONS, [inputTraceEntry]);
+    const elapsedTimestamp = new Timestamp(TimestampType.ELAPSED, 2450981445n);
+    inputTraceEntryElapsed = parser.getTraceEntry(elapsedTimestamp)!;
+    inputTraceEntriesElapsed = new Map<TraceType, any>();
+    inputTraceEntriesElapsed.set(TraceType.TRANSACTIONS, [inputTraceEntryElapsed]);
+
+    const realTimestamp = new Timestamp(TimestampType.REAL, 16595075386004995520n);
+    inputTraceEntryReal = parser.getTraceEntry(realTimestamp)!;
+    inputTraceEntriesReal = new Map<TraceType, any>();
+    inputTraceEntriesReal.set(TraceType.TRANSACTIONS, [inputTraceEntryReal]);
+
     outputUiData = undefined;
 
     presenter = new Presenter((data: UiData) => {
@@ -46,13 +54,13 @@ describe("ViewerTransactionsPresenter", () => {
   });
 
   it("is robust to undefined trace entry", () => {
-    inputTraceEntries = new Map<TraceType, any>();
-    presenter.notifyCurrentTraceEntries(inputTraceEntries);
+    inputTraceEntriesElapsed = new Map<TraceType, any>();
+    presenter.notifyCurrentTraceEntries(inputTraceEntriesElapsed);
     expect(outputUiData).toEqual(UiData.EMPTY);
   });
 
   it("processes trace entry and computes output UI data", () => {
-    presenter.notifyCurrentTraceEntries(inputTraceEntries);
+    presenter.notifyCurrentTraceEntries(inputTraceEntriesElapsed);
 
     expect(outputUiData!.allPids).toEqual(["N/A", "0", "515", "1593", "2022", "2322", "2463", "3300"]);
     expect(outputUiData!.allUids).toEqual(["N/A", "1000", "1003", "10169", "10235", "10239"]);
@@ -68,7 +76,7 @@ describe("ViewerTransactionsPresenter", () => {
   });
 
   it("ignores undefined trace entry and doesn't discard previously computed UI data", () => {
-    presenter.notifyCurrentTraceEntries(inputTraceEntries);
+    presenter.notifyCurrentTraceEntries(inputTraceEntriesElapsed);
     expect(outputUiData!.entries.length).toEqual(TOTAL_OUTPUT_ENTRIES);
 
     presenter.notifyCurrentTraceEntries(new Map<TraceType, any>());
@@ -76,18 +84,18 @@ describe("ViewerTransactionsPresenter", () => {
   });
 
   it("processes trace entry and updates current entry and scroll position", () => {
-    presenter.notifyCurrentTraceEntries(inputTraceEntries);
+    presenter.notifyCurrentTraceEntries(inputTraceEntriesElapsed);
     expect(outputUiData!.currentEntryIndex).toEqual(0);
     expect(outputUiData!.scrollToIndex).toEqual(0);
 
-    (<TransactionsTraceEntry>inputTraceEntries.get(TraceType.TRANSACTIONS)[0]).currentEntryIndex = 10;
-    presenter.notifyCurrentTraceEntries(inputTraceEntries);
+    (<TransactionsTraceEntry>inputTraceEntriesElapsed.get(TraceType.TRANSACTIONS)[0]).currentEntryIndex = 10;
+    presenter.notifyCurrentTraceEntries(inputTraceEntriesElapsed);
     expect(outputUiData!.currentEntryIndex).toEqual(13);
     expect(outputUiData!.scrollToIndex).toEqual(13);
   });
 
   it("filters entries according to PID filter", () => {
-    presenter.notifyCurrentTraceEntries(inputTraceEntries);
+    presenter.notifyCurrentTraceEntries(inputTraceEntriesElapsed);
 
     presenter.onPidFilterChanged([]);
     expect(new Set(outputUiData!.entries.map(entry => entry.pid)))
@@ -103,7 +111,7 @@ describe("ViewerTransactionsPresenter", () => {
   });
 
   it("filters entries according to UID filter", () => {
-    presenter.notifyCurrentTraceEntries(inputTraceEntries);
+    presenter.notifyCurrentTraceEntries(inputTraceEntriesElapsed);
 
     presenter.onUidFilterChanged([]);
     expect(new Set(outputUiData!.entries.map(entry => entry.uid)))
@@ -119,7 +127,7 @@ describe("ViewerTransactionsPresenter", () => {
   });
 
   it("filters entries according to type filter", () => {
-    presenter.notifyCurrentTraceEntries(inputTraceEntries);
+    presenter.notifyCurrentTraceEntries(inputTraceEntriesElapsed);
 
     presenter.onTypeFilterChanged([]);
     expect(new Set(outputUiData!.entries.map(entry => entry.type)))
@@ -141,7 +149,7 @@ describe("ViewerTransactionsPresenter", () => {
   });
 
   it("filters entries according to ID filter", () => {
-    presenter.notifyCurrentTraceEntries(inputTraceEntries);
+    presenter.notifyCurrentTraceEntries(inputTraceEntriesElapsed);
 
     presenter.onIdFilterChanged([]);
     expect(new Set(outputUiData!.entries.map(entry => entry.id)).size)
@@ -157,7 +165,7 @@ describe("ViewerTransactionsPresenter", () => {
   });
 
   it ("updates selected entry and properties tree when entry is clicked", () => {
-    presenter.notifyCurrentTraceEntries(inputTraceEntries);
+    presenter.notifyCurrentTraceEntries(inputTraceEntriesElapsed);
     expect(outputUiData!.currentEntryIndex).toEqual(0);
     expect(outputUiData!.selectedEntryIndex).toBeUndefined();
     expect(outputUiData!.scrollToIndex).toEqual(0);
@@ -181,17 +189,17 @@ describe("ViewerTransactionsPresenter", () => {
   });
 
   it("computes current entry index", () => {
-    presenter.notifyCurrentTraceEntries(inputTraceEntries);
+    presenter.notifyCurrentTraceEntries(inputTraceEntriesElapsed);
     expect(outputUiData!.currentEntryIndex).toEqual(0);
 
-    (<TransactionsTraceEntry>inputTraceEntries.get(TraceType.TRANSACTIONS)[0]).currentEntryIndex = 10;
-    presenter.notifyCurrentTraceEntries(inputTraceEntries);
+    (<TransactionsTraceEntry>inputTraceEntriesElapsed.get(TraceType.TRANSACTIONS)[0]).currentEntryIndex = 10;
+    presenter.notifyCurrentTraceEntries(inputTraceEntriesElapsed);
     expect(outputUiData!.currentEntryIndex).toEqual(13);
   });
 
   it("updates current entry index when filters change", () => {
-    (<TransactionsTraceEntry>inputTraceEntries.get(TraceType.TRANSACTIONS)[0]).currentEntryIndex = 10;
-    presenter.notifyCurrentTraceEntries(inputTraceEntries);
+    (<TransactionsTraceEntry>inputTraceEntriesElapsed.get(TraceType.TRANSACTIONS)[0]).currentEntryIndex = 10;
+    presenter.notifyCurrentTraceEntries(inputTraceEntriesElapsed);
 
     presenter.onPidFilterChanged([]);
     expect(outputUiData!.currentEntryIndex).toEqual(13);
@@ -204,5 +212,19 @@ describe("ViewerTransactionsPresenter", () => {
 
     presenter.onPidFilterChanged(["0", "515", "N/A"]);
     expect(outputUiData!.currentEntryIndex).toEqual(13);
+  });
+
+  it("formats real time", () => {
+    (<TransactionsTraceEntry>inputTraceEntriesReal.get(TraceType.TRANSACTIONS)[0]).currentEntryIndex = 10;
+    presenter.notifyCurrentTraceEntries(inputTraceEntriesReal);
+
+    expect(outputUiData!.entries[0].time).toEqual("06h19m01s051ms480997ns, 3 Aug 2022 UTC");
+  });
+
+  it("formats elapsed time", () => {
+    (<TransactionsTraceEntry>inputTraceEntriesElapsed.get(TraceType.TRANSACTIONS)[0]).currentEntryIndex = 10;
+    presenter.notifyCurrentTraceEntries(inputTraceEntriesElapsed);
+
+    expect(outputUiData!.entries[0].time).toEqual("2s450ms");
   });
 });
