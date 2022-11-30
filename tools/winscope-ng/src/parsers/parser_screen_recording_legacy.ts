@@ -45,7 +45,7 @@ class ParserScreenRecordingLegacy extends Parser {
     return decodedEntry;
   }
 
-  override processDecodedEntry(index: number, entry: Timestamp): ScreenRecordingTraceEntry {
+  override processDecodedEntry(index: number, timestampType: TimestampType, entry: Timestamp): ScreenRecordingTraceEntry {
     const currentTimestamp = entry;
     const initialTimestamp = this.getTimestamps(TimestampType.ELAPSED)![0];
     const videoTimeSeconds =

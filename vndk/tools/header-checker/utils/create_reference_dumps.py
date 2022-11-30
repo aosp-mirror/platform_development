@@ -16,6 +16,7 @@ PRODUCTS_DEFAULT = ['aosp_arm', 'aosp_arm64', 'aosp_x86', 'aosp_x86_64']
 
 PREBUILTS_ABI_DUMPS_DIR = os.path.join(AOSP_DIR, 'prebuilts', 'abi-dumps')
 PREBUILTS_ABI_DUMPS_SUBDIRS = ('ndk', 'platform', 'vndk')
+NON_AOSP_TAGS = {'VENDOR', 'PRODUCT', 'VNDK-ext', 'VNDK-SP-ext'}
 
 SOONG_DIR = os.path.join(AOSP_DIR, 'out', 'soong', '.intermediates')
 
@@ -36,6 +37,9 @@ class GetVersionedRefDumpDirStem:
         self.binder_bitness = binder_bitness
 
     def __call__(self, subdir, arch):
+        if subdir not in PREBUILTS_ABI_DUMPS_SUBDIRS:
+            raise ValueError(f'"{subdir}" is not a valid dump directory under '
+                             f'{PREBUILTS_ABI_DUMPS_DIR}.')
         version_stem = (self.chosen_vndk_version
                         if subdir == 'vndk'
                         else self.chosen_platform_version)
@@ -43,10 +47,12 @@ class GetVersionedRefDumpDirStem:
                             self.binder_bitness, arch)
 
 
-def make_libs_for_product(libs, product, variant, vndk_version, targets):
+def make_libs_for_product(libs, product, variant, vndk_version, targets,
+                          exclude_tags):
     print('making libs for', product + '-' + variant)
     if libs:
-        make_libraries(product, variant, vndk_version, targets, libs)
+        make_libraries(product, variant, vndk_version, targets, libs,
+                       exclude_tags)
     else:
         make_tree(product, variant)
 
@@ -66,19 +72,20 @@ def remove_reference_dumps(ref_dump_dir_stems, libs):
 
 
 def tag_to_dir_name(tag):
+    if tag in NON_AOSP_TAGS:
+        return ''
     if tag == 'NDK':
         return 'ndk'
     if tag in ('PLATFORM', 'LLNDK'):
         return 'platform'
     if tag.startswith('VNDK'):
         return 'vndk'
-    raise ValueError(tag + 'is not a known tag.')
+    raise ValueError(tag + ' is not a known tag.')
 
 
 def find_and_copy_lib_lsdumps(get_ref_dump_dir_stem, target, libs,
                               lsdump_paths):
     arch_lsdump_paths = find_lib_lsdumps(lsdump_paths, libs, target)
-
     num_created = 0
     for tag, path in arch_lsdump_paths:
         ref_dump_dir_stem = get_ref_dump_dir_stem(tag_to_dir_name(tag),
@@ -143,6 +150,7 @@ def create_source_abi_reference_dumps_for_all_products(args):
             ref_dump_dir_stems = [
                 get_ref_dump_dir_stem(None, target.get_arch_str())
                 for target in targets]
+            exclude_tags = ()
         else:
             get_ref_dump_dir_stem = GetVersionedRefDumpDirStem(
                 chosen_vndk_version,
@@ -152,24 +160,34 @@ def create_source_abi_reference_dumps_for_all_products(args):
                 get_ref_dump_dir_stem(subdir, target.get_arch_str())
                 for target in targets
                 for subdir in PREBUILTS_ABI_DUMPS_SUBDIRS]
+            exclude_tags = NON_AOSP_TAGS
 
         # Remove reference ABI dumps specified in `args.libs` (or remove all of
         # them if none of them are specified) so that we may build these
         # libraries successfully.
         remove_reference_dumps(ref_dump_dir_stems, args.libs)
 
-        if not args.no_make_lib:
-            # Build all the specified libs, or build `findlsdumps` if no libs
-            # are specified.
-            make_libs_for_product(args.libs, product, args.build_variant,
-                                  platform_vndk_version, targets)
+        try:
+            if not args.no_make_lib:
+                # Build all the specified libs, or build `findlsdumps` if no
+                # libs are specified.
+                make_libs_for_product(args.libs, product, args.build_variant,
+                                      platform_vndk_version, targets,
+                                      exclude_tags)
 
-        lsdump_paths = read_lsdump_paths(product, args.build_variant,
-                                         platform_vndk_version, targets,
-                                         build=False)
+            lsdump_paths = read_lsdump_paths(product, args.build_variant,
+                                             platform_vndk_version, targets,
+                                             exclude_tags, build=False)
 
-        num_processed += create_source_abi_reference_dumps(
-            args, get_ref_dump_dir_stem, lsdump_paths, targets)
+            num_processed += create_source_abi_reference_dumps(
+                args, get_ref_dump_dir_stem, lsdump_paths, targets)
+        except KeyError as e:
+            if args.libs or not args.ref_dump_dir:
+                raise RuntimeError('Please check the lib name or specify '
+                                   '-ref-dump-dir if you are updating '
+                                   'reference dumps for product or vendor '
+                                   'libraries.') from e
+            raise
 
     return num_processed
 

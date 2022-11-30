@@ -20,6 +20,7 @@ import {TransactionsTraceEntry} from "common/trace/transactions";
 import {PropertiesTreeGenerator} from "viewers/common/properties_tree_generator";
 import {PropertiesTreeNode} from "viewers/common/ui_tree_utils";
 import {TimeUtils} from "common/utils/time_utils";
+import { TimestampType } from "common/trace/timestamp";
 
 class Presenter {
   constructor(notifyUiDataCallback: (data: UiData) => void) {
@@ -95,7 +96,7 @@ class Presenter {
       return;
     }
 
-    const entries = this.makeUiDataEntries(this.entry!.entriesProto);
+    const entries = this.makeUiDataEntries(this.entry!);
 
     const allPids = this.getUniqueUiDataEntryValues(entries, (entry: UiDataEntry) => entry.pid);
     const allUids = this.getUniqueUiDataEntryValues(entries, (entry: UiDataEntry) => entry.uid);
@@ -166,7 +167,10 @@ class Presenter {
     return undefined;
   }
 
-  private makeUiDataEntries(entriesProto: any[]): UiDataEntry[] {
+  private makeUiDataEntries(entry: TransactionsTraceEntry): UiDataEntry[] {
+    const entriesProto: any[] = entry.entriesProto;
+    const timestampType = entry.timestampType;
+    const realToElapsedTimeOffsetNs = entry.realToElapsedTimeOffsetNs;
     const treeGenerator = new PropertiesTreeGenerator();
 
     const entries: UiDataEntry[] = [];
@@ -176,7 +180,7 @@ class Presenter {
         for (const layerStateProto of transactionStateProto.layerChanges) {
           entries.push(new UiDataEntry(
             originalIndex,
-            TimeUtils.nanosecondsToHuman(Number(entryProto.elapsedRealtimeNanos)),
+            this.formatTime(entryProto, timestampType, realToElapsedTimeOffsetNs),
             Number(entryProto.vsyncId),
             transactionStateProto.pid.toString(),
             transactionStateProto.uid.toString(),
@@ -189,7 +193,7 @@ class Presenter {
         for (const displayStateProto of transactionStateProto.displayChanges) {
           entries.push(new UiDataEntry(
             originalIndex,
-            TimeUtils.nanosecondsToHuman(Number(entryProto.elapsedRealtimeNanos)),
+            this.formatTime(entryProto, timestampType, realToElapsedTimeOffsetNs),
             Number(entryProto.vsyncId),
             transactionStateProto.pid.toString(),
             transactionStateProto.uid.toString(),
@@ -203,7 +207,7 @@ class Presenter {
       for (const layerCreationArgsProto of entryProto.addedLayers) {
         entries.push(new UiDataEntry(
           originalIndex,
-          TimeUtils.nanosecondsToHuman(Number(entryProto.elapsedRealtimeNanos)),
+          this.formatTime(entryProto, timestampType, realToElapsedTimeOffsetNs),
           Number(entryProto.vsyncId),
           Presenter.VALUE_NA,
           Presenter.VALUE_NA,
@@ -216,7 +220,7 @@ class Presenter {
       for (const removedLayerId of entryProto.removedLayers) {
         entries.push(new UiDataEntry(
           originalIndex,
-          TimeUtils.nanosecondsToHuman(Number(entryProto.elapsedRealtimeNanos)),
+          this.formatTime(entryProto, timestampType, realToElapsedTimeOffsetNs),
           Number(entryProto.vsyncId),
           Presenter.VALUE_NA,
           Presenter.VALUE_NA,
@@ -229,7 +233,7 @@ class Presenter {
       for (const displayStateProto of entryProto.addedDisplays) {
         entries.push(new UiDataEntry(
           originalIndex,
-          TimeUtils.nanosecondsToHuman(Number(entryProto.elapsedRealtimeNanos)),
+          this.formatTime(entryProto, timestampType, realToElapsedTimeOffsetNs),
           Number(entryProto.vsyncId),
           Presenter.VALUE_NA,
           Presenter.VALUE_NA,
@@ -242,7 +246,7 @@ class Presenter {
       for (const removedDisplayId of entryProto.removedDisplays) {
         entries.push(new UiDataEntry(
           originalIndex,
-          TimeUtils.nanosecondsToHuman(Number(entryProto.elapsedRealtimeNanos)),
+          this.formatTime(entryProto, timestampType, realToElapsedTimeOffsetNs),
           Number(entryProto.vsyncId),
           Presenter.VALUE_NA,
           Presenter.VALUE_NA,
@@ -255,7 +259,7 @@ class Presenter {
       for (const removedLayerHandleId of entryProto.removedLayerHandles) {
         entries.push(new UiDataEntry(
           originalIndex,
-          TimeUtils.nanosecondsToHuman(Number(entryProto.elapsedRealtimeNanos)),
+          this.formatTime(entryProto, timestampType, realToElapsedTimeOffsetNs),
           Number(entryProto.vsyncId),
           Presenter.VALUE_NA,
           Presenter.VALUE_NA,
@@ -267,6 +271,14 @@ class Presenter {
     }
 
     return entries;
+  }
+
+  private formatTime(entryProto: any, timestampType: TimestampType, realToElapsedTimeOffsetNs: bigint|undefined): string {
+    if (timestampType === TimestampType.REAL && realToElapsedTimeOffsetNs !== undefined) {
+      return TimeUtils.nanosecondsToHumanReal(BigInt(entryProto.elapsedRealtimeNanos) + realToElapsedTimeOffsetNs);
+    } else {
+      return TimeUtils.nanosecondsToHumanElapsed(Number(entryProto.elapsedRealtimeNanos));
+    }
   }
 
   private getUniqueUiDataEntryValues(entries: UiDataEntry[], getValue: (entry: UiDataEntry) => string): string[] {

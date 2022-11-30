@@ -26,9 +26,9 @@ describe("ViewerProtoLogPresenter", () => {
 
   beforeEach(async () => {
     inputMessages = [
-      new LogMessage("text0", "time", "tag0", "level0", "sourcefile0", 10),
-      new LogMessage("text1", "time", "tag1", "level1", "sourcefile1", 10),
-      new LogMessage("text2", "time", "tag2", "level2", "sourcefile2", 10),
+      new LogMessage("text0", "time", "tag0", "level0", "sourcefile0", 10n),
+      new LogMessage("text1", "time", "tag1", "level1", "sourcefile1", 10n),
+      new LogMessage("text2", "time", "tag2", "level2", "sourcefile2", 10n),
     ];
     inputTraceEntries = new Map<TraceType, any>();
     inputTraceEntries.set(TraceType.PROTO_LOG, [new ProtoLogTraceEntry(inputMessages, 0)]);

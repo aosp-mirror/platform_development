@@ -22,13 +22,22 @@ import {LogMessage} from "../common/trace/protolog";
 describe("ParserProtoLog", () => {
   let parser: Parser;
 
-  const expectedFirstLogMessage = {
+  const expectedFirstLogMessageElapsed = {
     text: "InsetsSource updateVisibility for ITYPE_IME, serverVisible: false clientVisible: false",
     time: "14m10s746ms",
     tag: "WindowManager",
     level: "DEBUG",
     at: "com/android/server/wm/InsetsSourceProvider.java",
-    timestamp: Number(850746266486),
+    timestamp: 850746266486n,
+  };
+
+  const expectedFirstLogMessageReal = {
+    text: "InsetsSource updateVisibility for ITYPE_IME, serverVisible: false clientVisible: false",
+    time: "12h12m05s377ms266486ns, 20 Jun 2022 UTC",
+    tag: "WindowManager",
+    level: "DEBUG",
+    at: "com/android/server/wm/InsetsSourceProvider.java",
+    timestamp: 1655727125377266486n,
   };
 
   beforeAll(async () => {
@@ -67,14 +76,27 @@ describe("ParserProtoLog", () => {
       .toEqual(expected);
   });
 
-  it("reconstructs human-readable log message", () => {
+  it("reconstructs human-readable log message (ELAPSED time)", () => {
     const timestamp = new Timestamp(TimestampType.ELAPSED, 850746266486n);
     const entry = parser.getTraceEntry(timestamp)!;
 
     expect(entry.currentMessageIndex).toEqual(0);
 
     expect(entry.messages.length).toEqual(50);
-    expect(Object.assign({}, entry.messages[0])).toEqual(expectedFirstLogMessage);
+    expect(Object.assign({}, entry.messages[0])).toEqual(expectedFirstLogMessageElapsed);
+    entry.messages.forEach((message: any) => {
+      expect(message).toBeInstanceOf(LogMessage);
+    });
+  });
+
+  it("reconstructs human-readable log message (REAL time)", () => {
+    const timestamp = new Timestamp(TimestampType.REAL, 1655727125377266486n);
+    const entry = parser.getTraceEntry(timestamp)!;
+
+    expect(entry.currentMessageIndex).toEqual(0);
+
+    expect(entry.messages.length).toEqual(50);
+    expect(Object.assign({}, entry.messages[0])).toEqual(expectedFirstLogMessageReal);
     entry.messages.forEach((message: any) => {
       expect(message).toBeInstanceOf(LogMessage);
     });
