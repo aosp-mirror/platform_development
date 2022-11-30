@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { TraceConfigurationMap, TRACES } from "./trace_collection_utils";
-import { PersistentStoreObject } from "common/utils/persistent_store_object";
+import { PersistentStoreProxy } from "common/utils/persistent_store_proxy";
 
 export class TracingConfig {
   public requestedTraces: string[] = [];
@@ -30,8 +30,8 @@ export class TracingConfig {
 
   public initialize(storage: Storage) {
     this.storage = storage;
-    this.tracingConfig = PersistentStoreObject.new<TraceConfigurationMap>("TracingSettings", TRACES["default"], this.storage);
-    this.dumpConfig = PersistentStoreObject.new<TraceConfigurationMap>("DumpSettings", {
+    this.tracingConfig = PersistentStoreProxy.new<TraceConfigurationMap>("TracingSettings", TRACES["default"], this.storage);
+    this.dumpConfig = PersistentStoreProxy.new<TraceConfigurationMap>("DumpSettings", {
       "window_dump": {
         name: "Window Manager",
         isTraceCollection: undefined,
@@ -66,7 +66,7 @@ export class TracingConfig {
     if (this.storage === undefined) {
       throw Error("not initialized");
     }
-    this.tracingConfig = PersistentStoreObject.new<TraceConfigurationMap>("TraceConfiguration", traceConfig, this.storage);
+    this.tracingConfig = PersistentStoreProxy.new<TraceConfigurationMap>("TraceConfiguration", traceConfig, this.storage);
   }
 
   public getDumpConfig(): TraceConfigurationMap {

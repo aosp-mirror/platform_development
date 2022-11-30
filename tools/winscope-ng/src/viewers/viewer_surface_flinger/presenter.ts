@@ -23,8 +23,7 @@ import { HierarchyTreeNode, PropertiesTreeNode } from "viewers/common/ui_tree_ut
 import { TreeGenerator } from "viewers/common/tree_generator";
 import { TreeTransformer } from "viewers/common/tree_transformer";
 import { Layer, LayerTraceEntry } from "common/trace/flickerlib/common";
-import { PersistentStore } from "common/utils/persistent_store";
-import { PersistentStoreObject } from "common/utils/persistent_store_object";
+import { PersistentStoreProxy } from "common/utils/persistent_store_proxy";
 
 type NotifyViewCallbackType = (uiData: UiData) => void;
 
@@ -257,7 +256,7 @@ export class Presenter {
   private selectedLayer: LayerTraceEntry | Layer | null = null;
   private previousEntry: LayerTraceEntry | null = null;
   private entry: LayerTraceEntry | null = null;
-  private hierarchyUserOptions: UserOptions = PersistentStoreObject.new<UserOptions>("SfHierarchyOptions", {
+  private hierarchyUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>("SfHierarchyOptions", {
     showDiff: {
       name: "Show diff", // TODO: PersistentStoreObject.Ignored("Show diff") or something like that to instruct to not store this info
       enabled: false
@@ -276,7 +275,7 @@ export class Presenter {
     }
   }, this.storage);
 
-  private propertiesUserOptions: UserOptions = PersistentStoreObject.new<UserOptions>("SfPropertyOptions", {
+  private propertiesUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>("SfPropertyOptions", {
     showDiff: {
       name: "Show diff",
       enabled: false

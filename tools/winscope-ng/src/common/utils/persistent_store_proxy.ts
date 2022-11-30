@@ -16,7 +16,7 @@
 
 export type StoreObject = { [key: string|number]: StoreObject|string|boolean|undefined } | StoreObject[] | string[] | boolean[]
 
-export class PersistentStoreObject {
+export class PersistentStoreProxy {
   public static new<T extends StoreObject>(key: string, initialState: T, storage: Storage): T {
     const storedState = JSON.parse(storage.getItem(key) ?? "{}");
     const currentState = mergeDeep({}, deepClone(initialState));
