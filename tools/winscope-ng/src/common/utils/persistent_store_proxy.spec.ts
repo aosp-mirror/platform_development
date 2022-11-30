@@ -112,13 +112,13 @@ describe("PersistentStoreObject", () => {
     const mockStorage = new MockStorage();
 
     const schema1 = {
-      "key1": "value",
+      "key1": "value1",
       "key2": {
         "key3": true
       }
     };
     const storeObject1 = PersistentStoreProxy.new("storeKey", schema1, mockStorage);
-    expect(storeObject1["key1"]).toBe("value");
+    expect(storeObject1["key1"]).toBe("value1");
     expect(storeObject1["key2"]["key3"]).toBe(true);
 
     // Change from default value to ensure we update the storage
@@ -127,12 +127,12 @@ describe("PersistentStoreObject", () => {
 
     const schema2 = {
       "key1": {
-        "key3": "value"
+        "key3": "value2"
       },
       "key2": true
     };
     const storeObject2 = PersistentStoreProxy.new("storeKey", schema2, mockStorage);
-    expect(storeObject2["key1"]["key3"]).toBe("value");
+    expect(storeObject2["key1"]["key3"]).toBe("value2");
     expect(storeObject2["key2"]).toBe(true);
   });
 });

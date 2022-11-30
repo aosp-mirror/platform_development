@@ -17,10 +17,10 @@
 export type StoreObject = { [key: string|number]: StoreObject|string|boolean|undefined } | StoreObject[] | string[] | boolean[]
 
 export class PersistentStoreProxy {
-  public static new<T extends StoreObject>(key: string, initialState: T, storage: Storage): T {
+  public static new<T extends StoreObject>(key: string, defaultState: T, storage: Storage): T {
     const storedState = JSON.parse(storage.getItem(key) ?? "{}");
-    const currentState = mergeDeep({}, deepClone(initialState));
-    mergeDeep(currentState, storedState);
+    const currentState = mergeDeep({}, deepClone(defaultState));
+    mergeDeepKeepingStructure(currentState, storedState);
     return wrapWithPersistentStoreProxy<T>(key, currentState, storage);
   }
 }
@@ -64,6 +64,34 @@ function wrapWithPersistentStoreProxy<T extends StoreObject>(storeKey: string, o
 
 function isObject(item: any): boolean {
   return (item && typeof item === "object" && !Array.isArray(item));
+}
+
+/**
+ * Merge sources into the target keeping the structure of the target.
+ * @param target the object we mutate by merging the data from source into, but keep the object structure of
+ * @param source the object we merge into target
+ * @return the mutated target object
+ */
+function mergeDeepKeepingStructure(target: any, source: any): any {
+  if (isObject(target) && isObject(source)) {
+    for (const key in target) {
+      if (source[key] === undefined) {
+        continue;
+      }
+
+      if (isObject(target[key]) && isObject(source[key])) {
+        mergeDeepKeepingStructure(target[key], source[key]);
+        continue;
+      }
+
+      if (!isObject(target[key]) && !isObject(source[key])) {
+        Object.assign(target, { [key]: source[key] });
+        continue;
+      }
+    }
+  }
+
+  return target;
 }
 
 function mergeDeep(target: any, ...sources: any): any {
