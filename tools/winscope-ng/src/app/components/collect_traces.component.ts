@@ -301,7 +301,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   objectKeys = Object.keys;
   isAdbProxy = true;
   traceConfigurations = traceConfigurations;
-  connect: Connection = new ProxyConnection();
+  connect: Connection;
   tracingConfig = TracingConfig.getInstance();
   dataLoaded = false;
   loadProgress = 0;
@@ -314,14 +314,25 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   constructor(
     @Inject(MatSnackBar) private snackBar: MatSnackBar,
     @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef
-  ) {}
+  ) {
+    this.connect = new ProxyConnection(
+      (newState) => this.changeDetectorRef.detectChanges(),
+      (progress) => this.onLoadProgressUpdate(progress)
+    );
+  }
 
   ngOnInit() {
     if (this.isAdbProxy) {
-      this.connect = new ProxyConnection((progress) => this.onLoadProgressUpdate(progress));
+      this.connect = new ProxyConnection(
+        (newState) => this.changeDetectorRef.detectChanges(),
+        (progress) => this.onLoadProgressUpdate(progress)
+      );
     } else {
       // TODO: change to WebAdbConnection
-      this.connect = new ProxyConnection((progress) => this.onLoadProgressUpdate(progress));
+      this.connect = new ProxyConnection(
+        (newState) => this.changeDetectorRef.detectChanges(),
+        (progress) => this.onLoadProgressUpdate(progress)
+      );
     }
   }
 
@@ -338,13 +349,19 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
 
   public displayAdbProxyTab() {
     this.isAdbProxy = true;
-    this.connect = new ProxyConnection();
+    this.connect = new ProxyConnection(
+      (newState) => this.changeDetectorRef.detectChanges(),
+      (progress) => this.onLoadProgressUpdate(progress)
+    );
   }
 
   public displayWebAdbTab() {
     this.isAdbProxy = false;
     //TODO: change to WebAdbConnection
-    this.connect = new ProxyConnection();
+    this.connect = new ProxyConnection(
+      (newState) => this.changeDetectorRef.detectChanges(),
+      (progress) => this.onLoadProgressUpdate(progress)
+    );
   }
 
   public startTracing() {
@@ -367,8 +384,8 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   public async dumpState() {
     console.log("begin dump");
     this.tracingConfig.requestedDumps = this.requestedDumps();
-    const dumpError = await this.connect.dumpState();
-    if (!dumpError) {
+    const dumpSuccessful = await this.connect.dumpState();
+    if (dumpSuccessful) {
       await this.loadFiles();
     } else {
       this.traceCoordinator.clearData();

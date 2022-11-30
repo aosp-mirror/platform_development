@@ -32,9 +32,9 @@ export class ProxyConnection implements Connection {
     ProxyState.INVALID_VERSION,
   ];
 
-  constructor(private progressCallback: (progress: number) => void = () => {}) {
+  constructor(private proxyStateChangeCallback: (state: ProxyState) => void, private progressCallback: (progress: number) => void = () => {}) {
     this.proxy.setState(ProxyState.CONNECTING);
-    this.proxy.onProxyChange(() => this.onConnectChange);
+    this.proxy.onProxyChange((newState) => this.onConnectChange(newState));
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has("token")) {
       this.proxy.proxyKey = urlParams.get("token")!;
@@ -151,6 +151,7 @@ export class ProxyConnection implements Connection {
   public async dumpState(): Promise<boolean> {
     this.progressCallback(0);
     if (TracingConfig.getInstance().requestedDumps.length < 1) {
+      console.error("No targets selected");
       this.proxy.setState(ProxyState.ERROR, "No targets selected");
       return false;
     }
@@ -175,5 +176,6 @@ export class ProxyConnection implements Connection {
       const isWaylandAvailable = await this.isWaylandAvailable();
       TracingConfig.getInstance().setTracingConfigForAvailableTraces(isWaylandAvailable);
     }
+    this.proxyStateChangeCallback(newState);
   }
 }
