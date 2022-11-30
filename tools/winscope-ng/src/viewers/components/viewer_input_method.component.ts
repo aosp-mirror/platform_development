@@ -19,7 +19,7 @@ import {
 } from "@angular/core";
 import { TRACE_INFO } from "app/trace_info";
 import { TraceType } from "common/trace/trace_type";
-import { PersistentStore } from "common/persistent_store";
+import { PersistentStore } from "common/utils/persistent_store";
 import { ImeUiData } from "viewers/common/ime_ui_data";
 
 @Component({

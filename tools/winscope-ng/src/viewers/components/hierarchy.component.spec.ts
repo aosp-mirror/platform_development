@@ -16,7 +16,7 @@
 import {ComponentFixture, TestBed, ComponentFixtureAutoDetect} from "@angular/core/testing";
 import { HierarchyComponent } from "./hierarchy.component";
 import { NO_ERRORS_SCHEMA } from "@angular/core";
-import { PersistentStore } from "common/persistent_store";
+import { PersistentStore } from "common/utils/persistent_store";
 import { CommonModule } from "@angular/common";
 import { MatInputModule } from "@angular/material/input";
 import { MatFormFieldModule } from "@angular/material/form-field";

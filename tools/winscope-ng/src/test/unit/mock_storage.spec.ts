@@ -13,11 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export class PersistentStore {
-  public addToStore(key: string, value: string) {
-    localStorage.setItem(key, value);
-  }
-  public getFromStore(key: string) {
-    return localStorage.getItem(key);
-  }
-}
+
+import { MockStorage } from "./mock_storage";
+
+describe("MockStorage", () => {
+  it("can store values", () => {
+    const mockStorage = new MockStorage();
+
+    mockStorage.setItem("key", "value");
+
+    expect(mockStorage.getItem("key")).toBe("value");
+  });
+});
