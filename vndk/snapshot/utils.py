@@ -169,3 +169,25 @@ def fetch_artifact(branch, build, pattern, destination='.'):
         build, pattern, destination
     ]
     check_call(cmd)
+
+
+def get_latest_vndk_bid(branch):
+    """Get the build id of the latest green build of the vndk target
+    from the Android Build Server.
+
+    Args:
+      branch: string, branch to pull build artifacts from
+
+    Returns:
+      string: bid of the latest green build
+    """
+    ab_tool_path = '/google/data/ro/projects/android/ab'
+    cmd = [
+        ab_tool_path, 'lkgb', '--branch', branch, '--target', 'vndk'
+    ]
+
+    # output will be 'branch target build_id status successful'
+    output = check_output(cmd).strip()
+
+    # return build_id from the output
+    return output.split()[2]

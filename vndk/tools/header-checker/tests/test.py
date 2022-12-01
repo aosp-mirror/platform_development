@@ -178,6 +178,10 @@ class HeaderCheckerTest(unittest.TestCase):
     def test_libgolden_cpp_return_type_diff(self):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp", "libgolden_cpp_return_type_diff", 8)
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp", "libgolden_cpp_return_type_diff", 0,
+            ["-ignore-linker-set-key", "_ZN17HighVolumeSpeaker6ListenEv",
+             "-ignore-linker-set-key", "_ZN16LowVolumeSpeaker6ListenEv"])
 
     def test_libgolden_cpp_add_odr(self):
         self.prepare_and_run_abi_diff_all_archs(
@@ -401,8 +405,9 @@ class HeaderCheckerTest(unittest.TestCase):
         resource_dir = subprocess.check_output(
             ["header-abi-dumper", "-print-resource-dir"], text=True,
             stderr=subprocess.DEVNULL).strip()
-        self.assertEqual(os.path.dirname(resource_dir),
-                         os.path.join(common_dir, "lib64", "clang"))
+        self.assertIn(os.path.dirname(resource_dir),
+                      (os.path.join(common_dir, "lib64", "clang"),
+                       os.path.join(common_dir, "lib", "clang")))
         self.assertRegex(os.path.basename(resource_dir), r"^[\d.]+$")
 
     def test_struct_extensions(self):
