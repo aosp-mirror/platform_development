@@ -37,7 +37,7 @@ class TraceCoordinator implements TimestampChangeObserver {
     this.timelineCoordinator.registerObserver(this);
   }
 
-  public async setTraces(traces: File[]) {
+  public async setTraces(traces: File[]): Promise<ParserError[]> {
     traces = this.parsers.map(parser => parser.getTrace()).concat(traces);
     let parserErrors: ParserError[];
     [this.parsers, parserErrors] = await new ParserFactory().createParsers(traces);

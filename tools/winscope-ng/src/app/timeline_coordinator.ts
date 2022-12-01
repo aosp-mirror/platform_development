@@ -95,7 +95,7 @@ export class TimelineCoordinator {
     return { index, timestamp: timeline[index] };
   }
 
-  get fullRange() {
+  get fullRange(): TimeRange {
     const timestamps = this.getAllUniqueTimestamps();
     if (timestamps.length === 0) {
       throw Error("Trying to get full range when there are no timestamps");

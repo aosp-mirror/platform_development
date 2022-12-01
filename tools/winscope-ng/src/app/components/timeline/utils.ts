@@ -20,9 +20,4 @@ import { TraceType } from "common/trace/trace_type";
 export type Segment = { from: number, to: number }
 export type BigIntSegment = { from: bigint, to: bigint }
 export type TimeRange = { from: Timestamp, to: Timestamp }
-export type MiniTimelineData = {
-  width: bigint,
-  selection: BigIntSegment
-  traceSegments: Map<TraceType, BigIntSegment[]>
-}
 export type TimelineData = Map<TraceType, bigint[]>
