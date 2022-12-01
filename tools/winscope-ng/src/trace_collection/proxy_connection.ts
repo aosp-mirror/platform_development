@@ -31,11 +31,10 @@ export class ProxyConnection implements Connection {
     ProxyState.UNAUTH,
     ProxyState.INVALID_VERSION,
   ];
-  loadProgress = 0;
 
-  constructor() {
+  constructor(private proxyStateChangeCallback: (state: ProxyState) => void, private progressCallback: (progress: number) => void = () => {}) {
     this.proxy.setState(ProxyState.CONNECTING);
-    this.proxy.onProxyChange(this.onConnectChange);
+    this.proxy.onProxyChange((newState) => this.onConnectChange(newState));
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has("token")) {
       this.proxy.proxyKey = urlParams.get("token")!;
@@ -144,17 +143,20 @@ export class ProxyConnection implements Connection {
   }
 
   public async endTrace() {
+    this.progressCallback(0);
     this.proxy.setState(ProxyState.LOAD_DATA);
-    await proxyRequest.endTrace(this);
+    await proxyRequest.endTrace(this, this.progressCallback);
   }
 
   public async dumpState(): Promise<boolean> {
+    this.progressCallback(0);
     if (TracingConfig.getInstance().requestedDumps.length < 1) {
+      console.error("No targets selected");
       this.proxy.setState(ProxyState.ERROR, "No targets selected");
       return false;
     }
     this.proxy.setState(ProxyState.LOAD_DATA);
-    await proxyRequest.dumpState(this, TracingConfig.getInstance().requestedDumps);
+    await proxyRequest.dumpState(this, TracingConfig.getInstance().requestedDumps, this.progressCallback);
     return true;
   }
 
@@ -170,9 +172,10 @@ export class ProxyConnection implements Connection {
     if (newState === ProxyState.CONNECTING) {
       proxyClient.getDevices();
     }
-    if (newState == ProxyState.START_TRACE) {
+    if (newState === ProxyState.START_TRACE) {
       const isWaylandAvailable = await this.isWaylandAvailable();
       TracingConfig.getInstance().setTracingConfigForAvailableTraces(isWaylandAvailable);
     }
+    this.proxyStateChangeCallback(newState);
   }
 }

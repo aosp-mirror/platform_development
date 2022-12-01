@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input, Inject, Output, EventEmitter, OnInit, OnDestroy } from "@angular/core";
+import { Component, Input, Inject, Output, EventEmitter, OnInit, OnDestroy, ViewEncapsulation, ChangeDetectorRef } from "@angular/core";
 import { ProxyConnection } from "trace_collection/proxy_connection";
 import { Connection } from "trace_collection/connection";
 import { ProxyState } from "trace_collection/proxy_client";
@@ -46,8 +46,8 @@ import { TracingConfig } from "trace_collection/tracing_config";
             <p class="mat-body-3 icon"><mat-icon inline fontIcon="phonelink_erase"></mat-icon></p>
             <p class="mat-body-1">No devices detected</p>
           </div>
-          <div *ngIf="objectKeys(connect.devices()).length > 0">
-          <p class="mat-body-1">Connected devices:</p>
+          <div *ngIf="objectKeys(connect.devices()).length > 0" class="device-selection">
+            <p class="mat-body-1 instruction">Select a device:</p>
             <mat-list *ngIf="objectKeys(connect.devices()).length > 0">
               <mat-list-item
                 *ngFor="let deviceId of objectKeys(connect.devices())"
@@ -65,37 +65,83 @@ import { TracingConfig } from "trace_collection/tracing_config";
           </div>
         </div>
 
-        <div *ngIf="connect.isStartTraceState()" class="trace-collection-config">
-          <mat-tab-group>
-            <mat-tab label="Trace">
-              <mat-list>
-                <mat-list-item>
-                  <mat-icon matListIcon>smartphone</mat-icon>
-                  <p matLine>
-                    {{ connect.selectedDevice().model }} ({{ connect.selectedDeviceId() }})
+        <div *ngIf="connect.isStartTraceState() || connect.isEndTraceState() || connect.isLoadDataState()" class="trace-collection-config">
+          <mat-list>
+            <mat-list-item>
+              <mat-icon matListIcon>smartphone</mat-icon>
+              <p matLine>
+                {{ connect.selectedDevice().model }} ({{ connect.selectedDeviceId() }})
 
-                    <button color="primary" class="change-btn" mat-button (click)="connect.resetLastDevice()">Change device</button>
-                  </p>
-                </mat-list-item>
-              </mat-list>
+                <button color="primary" class="change-btn" mat-button (click)="connect.resetLastDevice()" [disabled]="connect.isEndTraceState() || connect.isLoadDataState()">Change device</button>
+              </p>
+            </mat-list-item>
+          </mat-list>
 
-              <div class="trace-section">
-                <trace-config [traces]="tracingConfig.getTracingConfig()"></trace-config>
-                <button color="primary" class="start-btn" mat-stroked-button (click)="startTracing()">Start trace</button>
+          <mat-tab-group class="tracing-tabs">
+            <mat-tab label="Trace" [disabled]="connect.isEndTraceState() || connect.isLoadDataState()">
+              <div class="tabbed-section">
+                <div class="trace-section" *ngIf="tracingConfig.tracingConfigIsSet() && connect.isStartTraceState()">
+                  <trace-config [traces]="tracingConfig.getTracingConfig()"></trace-config>
+                  <div class="start-btn">
+                    <button color="primary" mat-stroked-button (click)="startTracing()">Start trace</button>
+                  </div>
+                </div>
+                <div class="loading-info" *ngIf="!tracingConfig.tracingConfigIsSet() && connect.isStartTraceState()">
+                  <p class="mat-body-1">Loading tracing config...</p>
+                </div>
+
+                <div *ngIf="connect.isEndTraceState()" class="end-tracing">
+                  <div class="progress-desc">
+                    <p class="mat-body-3"><mat-icon fontIcon="cable"></mat-icon></p>
+                    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+                    <p class="mat-body-1">Tracing...</p>
+                  </div>
+                  <div class="end-btn">
+                    <button color="primary" mat-raised-button (click)="endTrace()">End trace</button>
+                  </div>
+                </div>
+
+                <!-- TODO: Extract this out to avoid duplication -->
+                <div *ngIf="connect.isLoadDataState()" class="load-data">
+                  <div class="progress-desc">
+                    <p class="mat-body-3"><mat-icon fontIcon="sync"></mat-icon></p>
+                    <mat-progress-bar mode="determinate" [value]="loadProgress"></mat-progress-bar>
+                    <p class="mat-body-1">Loading data...</p>
+                  </div>
+                  <div class="end-btn">
+                    <button color="primary" mat-raised-button (click)="endTrace()" disabled="true">End trace</button>
+                  </div>
+                </div>
               </div>
             </mat-tab>
-            <mat-tab label="Dump">
-              <div class="dump-section">
-                <h3 class="mat-subheading-2">Dump targets</h3>
-                <div class="selection">
-                  <mat-checkbox
-                    *ngFor="let dumpKey of objectKeys(tracingConfig.getDumpConfig())"
-                    color="primary"
-                    class="dump-checkbox"
-                    [(ngModel)]="tracingConfig.getDumpConfig()[dumpKey].run"
-                  >{{tracingConfig.getDumpConfig()[dumpKey].name}}</mat-checkbox>
+            <mat-tab label="Dump" [disabled]="connect.isEndTraceState() || connect.isLoadDataState()">
+              <div class="tabbed-section">
+                <div class="dump-section" *ngIf="tracingConfig.tracingConfigIsSet() && connect.isStartTraceState()">
+                  <h3 class="mat-subheading-2">Dump targets</h3>
+                  <div class="selection">
+                    <mat-checkbox
+                      *ngFor="let dumpKey of objectKeys(tracingConfig.getDumpConfig())"
+                      color="primary"
+                      class="dump-checkbox"
+                      [(ngModel)]="tracingConfig.getDumpConfig()[dumpKey].run"
+                    >{{tracingConfig.getDumpConfig()[dumpKey].name}}</mat-checkbox>
+                  </div>
+                  <div class="dump-btn">
+                    <button color="primary" mat-stroked-button (click)="dumpState()">Dump state</button>
+                  </div>
                 </div>
-                <button color="primary" class="dump-btn" mat-stroked-button (click)="dumpState()">Dump state</button>
+
+                <div class="loading-info" *ngIf="!tracingConfig.tracingConfigIsSet()">
+                  <p class="mat-body-1">Loading dumping config...</p>
+                </div>
+
+                <div *ngIf="connect.isLoadDataState()" class="load-data">
+                  <div class="progress-desc">
+                    <p class="mat-body-3"><mat-icon fontIcon="sync"></mat-icon></p>
+                    <mat-progress-bar mode="determinate" [value]="loadProgress"></mat-progress-bar>
+                    <p class="mat-body-1">Loading data...</p>
+                  </div>
+                </div>
               </div>
             </mat-tab>
           </mat-tab-group>
@@ -110,17 +156,6 @@ import { TracingConfig } from "trace_collection/tracing_config";
           <button color="primary" class="retry-btn" mat-raised-button (click)="connect.restart()">Retry</button>
         </div>
 
-        <div *ngIf="connect.isEndTraceState()" class="end-tracing">
-          <p class="mat-body-1">Tracing...</p>
-          <mat-progress-bar md-indeterminate value="{{connect.loadProgress}}"></mat-progress-bar>
-          <button color="primary" class="end-btn" mat-raised-button (click)="endTrace()">End trace</button>
-        </div>
-
-        <div *ngIf="connect.isLoadDataState()" class="load-data">
-          <p class="mat-body-1">Loading data...</p>
-          <mat-progress-bar md-indeterminate></mat-progress-bar>
-        </div>
-
       </mat-card-content>
     </mat-card>
   `,
@@ -129,9 +164,11 @@ import { TracingConfig } from "trace_collection/tracing_config";
       .change-btn, .retry-btn, .edn-btn {
         margin-left: 5px;
       }
+      .mat-card.collect-card {
+        display: flex;
+      }
       .collect-card {
         height: 100%;
-        display: flex;
         flex-direction: column;
         overflow: auto;
         margin: 10px;
@@ -156,8 +193,18 @@ import { TracingConfig } from "trace_collection/tracing_config";
         flex-direction: column;
         gap: 10px;
       }
-      .proxy-tab, .web-tab, .start-btn, .dump-btn, .end-btn {
+      .trace-section, .dump-section, .end-tracing, .load-data {
+        height: 100%;
+      }
+      .trace-collection-config {
+        height: 100%;
+      }
+      .proxy-tab, .web-tab, .start-btn, .dump-btn, .end-btn, .cancel-btn {
         align-self: flex-start;
+      }
+      .start-btn, .dump-btn, .end-btn, .cancel-btn {
+        margin: auto 0 0 0;
+        padding: 1rem 0 0 0;
       }
       .error-wrapper {
         display: flex;
@@ -180,7 +227,8 @@ import { TracingConfig } from "trace_collection/tracing_config";
         height: 100%;
       }
 
-      .no-device-detected p {
+      .no-device-detected p, .device-selection p.instruction {
+        padding-top: 1rem;
         opacity: 0.6;
         font-size: 1.2rem;
       }
@@ -197,16 +245,66 @@ import { TracingConfig } from "trace_collection/tracing_config";
       mat-card-content {
         flex-grow: 1;
       }
+
+      mat-tab-body {
+        padding: 1rem;
+      }
+
+      .loading-info {
+        opacity: 0.8;
+        padding: 1rem 0;
+      }
+
+      .tracing-tabs {
+        flex-grow: 1;
+      }
+
+      .tracing-tabs .mat-tab-body-wrapper {
+        flex-grow: 1;
+      }
+
+      .tabbed-section {
+        height: 100%;
+      }
+
+      .load-data p, .end-tracing p {
+        opacity: 0.7;
+      }
+
+      .progress-desc {
+        display: flex;
+        height: 100%;
+        flex-direction: column;
+        justify-content: center;
+        align-content: center;
+        align-items: center;
+      }
+
+      .progress-desc > * {
+        max-width: 250px;
+      }
+
+      .progress-desc mat-icon {
+        font-size: 3rem;
+        width: unset;
+        height: unset;
+      }
+
+      .progress-desc mat-progress-bar {
+        margin: 0.2rem 0;
+      }
     `
-  ]
+  ],
+  encapsulation: ViewEncapsulation.None
 })
 export class CollectTracesComponent implements OnInit, OnDestroy {
   objectKeys = Object.keys;
   isAdbProxy = true;
   traceConfigurations = traceConfigurations;
-  connect: Connection = new ProxyConnection();
+  connect: Connection;
   tracingConfig = TracingConfig.getInstance();
   dataLoaded = false;
+  loadProgress = 0;
 
   @Input() store!: PersistentStore;
   @Input() traceCoordinator!: TraceCoordinator;
@@ -214,15 +312,27 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   @Output() dataLoadedChange = new EventEmitter<boolean>();
 
   constructor(
-    @Inject(MatSnackBar) private snackBar: MatSnackBar
-  ) {}
+    @Inject(MatSnackBar) private snackBar: MatSnackBar,
+    @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef
+  ) {
+    this.connect = new ProxyConnection(
+      (newState) => this.changeDetectorRef.detectChanges(),
+      (progress) => this.onLoadProgressUpdate(progress)
+    );
+  }
 
   ngOnInit() {
     if (this.isAdbProxy) {
-      this.connect = new ProxyConnection();
+      this.connect = new ProxyConnection(
+        (newState) => this.changeDetectorRef.detectChanges(),
+        (progress) => this.onLoadProgressUpdate(progress)
+      );
     } else {
-      //TODO: change to WebAdbConnection
-      this.connect = new ProxyConnection();
+      // TODO: change to WebAdbConnection
+      this.connect = new ProxyConnection(
+        (newState) => this.changeDetectorRef.detectChanges(),
+        (progress) => this.onLoadProgressUpdate(progress)
+      );
     }
   }
 
@@ -239,13 +349,19 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
 
   public displayAdbProxyTab() {
     this.isAdbProxy = true;
-    this.connect = new ProxyConnection();
+    this.connect = new ProxyConnection(
+      (newState) => this.changeDetectorRef.detectChanges(),
+      (progress) => this.onLoadProgressUpdate(progress)
+    );
   }
 
   public displayWebAdbTab() {
     this.isAdbProxy = false;
     //TODO: change to WebAdbConnection
-    this.connect = new ProxyConnection();
+    this.connect = new ProxyConnection(
+      (newState) => this.changeDetectorRef.detectChanges(),
+      (progress) => this.onLoadProgressUpdate(progress)
+    );
   }
 
   public startTracing() {
@@ -268,8 +384,8 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   public async dumpState() {
     console.log("begin dump");
     this.tracingConfig.requestedDumps = this.requestedDumps();
-    const dumpError = await this.connect.dumpState();
-    if (!dumpError) {
+    const dumpSuccessful = await this.connect.dumpState();
+    if (dumpSuccessful) {
       await this.loadFiles();
     } else {
       this.traceCoordinator.clearData();
@@ -293,7 +409,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   }
 
   private onProxyChange(newState: ProxyState) {
-    this.connect.onConnectChange(newState);
+    this.connect.onConnectChange.bind(this.connect)(newState);
   }
 
   private requestedTraces() {
@@ -378,5 +494,10 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
       data: parserErrors,
       duration: 7500,
     });
+  }
+
+  private onLoadProgressUpdate(progress: number) {
+    this.loadProgress = progress;
+    this.changeDetectorRef.detectChanges();
   }
 }

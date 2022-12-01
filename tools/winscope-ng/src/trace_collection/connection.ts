@@ -52,5 +52,4 @@ export interface Connection {
     adbData(): Array<File>;
     dumpState(): any;
     proxy?: ProxyClient;
-    loadProgress: number;
 }

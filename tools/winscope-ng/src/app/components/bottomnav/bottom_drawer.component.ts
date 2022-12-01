@@ -128,6 +128,7 @@ export class MatDrawer {
         z-index: 1;
         height: unset;
         overflow: unset;
+        width: 100%;
         flex-grow: 1;
       }
   `],
@@ -173,7 +174,9 @@ export class MatDrawerContent /*extends MatDrawerContentBase*/ {
       display: flex;
       flex-direction: column;
       flex-grow: 1;
-      overflow: hidden;
+      align-items: center;
+      align-content: center;
+      justify-content: center;
     }
   `],
   host: {

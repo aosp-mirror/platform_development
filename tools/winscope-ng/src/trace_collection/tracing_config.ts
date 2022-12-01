@@ -55,6 +55,10 @@ export class TracingConfig {
     this.setTracingConfig(availableTracesConfig);
   }
 
+  public tracingConfigIsSet(): boolean {
+    return this.tracingConfig !== undefined;
+  }
+
   public getTracingConfig(): TraceConfigurationMap {
     if (this.tracingConfig === undefined) {
       throw Error("Tracing config not initialized yet");
