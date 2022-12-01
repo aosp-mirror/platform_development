@@ -16,7 +16,7 @@
 import { ComponentFixture, TestBed, ComponentFixtureAutoDetect } from "@angular/core/testing";
 import { TreeComponent } from "./tree.component";
 import { Component, ViewChild, NO_ERRORS_SCHEMA } from "@angular/core";
-import { PersistentStore } from "common/persistent_store";
+import { PersistentStore } from "common/utils/persistent_store";
 import { UiTreeNode } from "viewers/common/ui_tree_utils";
 
 describe("TreeComponent", () => {

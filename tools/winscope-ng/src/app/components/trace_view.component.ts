@@ -15,8 +15,8 @@
  */
 
 import {Component, ElementRef, EventEmitter, Inject, Input, Output} from "@angular/core";
-import {PersistentStore} from "common/persistent_store";
 import { TraceType } from "common/trace/trace_type";
+import { PersistentStore } from "common/utils/persistent_store";
 import {Viewer, View, ViewType} from "viewers/viewer";
 
 interface Tab extends View {

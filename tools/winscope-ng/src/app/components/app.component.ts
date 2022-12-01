@@ -17,7 +17,7 @@
 import {Component, Injector, Inject, ViewEncapsulation, ChangeDetectorRef} from "@angular/core";
 import { createCustomElement } from "@angular/elements";
 import { TraceCoordinator } from "app/trace_coordinator";
-import { PersistentStore } from "common/persistent_store";
+import { PersistentStore } from "common/utils/persistent_store";
 import { Timestamp } from "common/trace/timestamp";
 import { FileUtils } from "common/utils/file_utils";
 import { proxyClient, ProxyState } from "trace_collection/proxy_client";
@@ -185,7 +185,7 @@ export class AppComponent {
     this.traceCoordinator = traceCoordinator;
     this.timelineCoordinator.registerObserver(this.traceCoordinator);
 
-    const storeDarkMode = this.store.getFromStore("dark-mode");
+    const storeDarkMode = this.store.get("dark-mode");
     const prefersDarkQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
     this.setDarkMode(storeDarkMode != null ? storeDarkMode == "true" : prefersDarkQuery.matches);
 
@@ -232,7 +232,7 @@ export class AppComponent {
 
   public setDarkMode(enabled: boolean) {
     document.body.classList.toggle("dark-mode", enabled);
-    this.store.addToStore("dark-mode", `${enabled}`);
+    this.store.add("dark-mode", `${enabled}`);
     this.isDarkModeOn = enabled;
   }
 
