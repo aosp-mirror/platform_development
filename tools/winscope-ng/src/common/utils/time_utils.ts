@@ -14,25 +14,21 @@
  * limitations under the License.
  */
 
-import { TimestampType } from "common/trace/timestamp";
+import { Timestamp, TimestampType } from "common/trace/timestamp";
 import dateFormat, { masks } from "dateformat";
 
 export class TimeUtils {
-  static format(timestampType: TimestampType,
-    elapsedTime: bigint, clockTimeOffset: bigint|undefined = undefined): string {
-    switch (timestampType) {
-      case TimestampType.ELAPSED: {
-        return TimeUtils.nanosecondsToHumanElapsed(elapsedTime);
-      }
-      case TimestampType.REAL: {
-        if (clockTimeOffset === undefined) {
-          throw Error("clockTimeOffset required to format real timestamp");
-        }
-        return TimeUtils.nanosecondsToHumanReal(elapsedTime + clockTimeOffset);
-      }
-      default: {
-        throw Error("Unhandled timestamp type");
-      }
+  static format(timestamp: Timestamp, hideNs = false): string {
+    switch (timestamp.getType()) {
+    case TimestampType.ELAPSED: {
+      return TimeUtils.nanosecondsToHumanElapsed(timestamp.getValueNs(), hideNs);
+    }
+    case TimestampType.REAL: {
+      return TimeUtils.nanosecondsToHumanReal(timestamp.getValueNs(), hideNs);
+    }
+    default: {
+      throw Error("Unhandled timestamp type");
+    }
     }
   }
 
@@ -62,14 +58,18 @@ export class TimeUtils {
     return parts.join("");
   }
 
-  static nanosecondsToHumanReal(timestampNanos: number|bigint): string {
+  static nanosecondsToHumanReal(timestampNanos: number|bigint, hideNs = false): string {
     timestampNanos = BigInt(timestampNanos);
     const ms = timestampNanos / 1000000n;
     const extraNanos = timestampNanos % 1000000n;
     const formattedTime = dateFormat(new Date(Number(ms)), "HH\"h\"MM\"m\"ss\"s\"l\"ms\"");
     const formattedDate = dateFormat(new Date(Number(ms)), "d mmm yyyy Z");
 
-    return `${formattedTime}${extraNanos}ns, ${formattedDate}`;
+    if (hideNs) {
+      return `${formattedTime}, ${formattedDate}`;
+    } else {
+      return `${formattedTime}${extraNanos}ns, ${formattedDate}`;
+    }
   }
 
   static humanElapsedToNanoseconds(timestampHuman: string): bigint {

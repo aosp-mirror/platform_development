@@ -25,7 +25,7 @@ import { TraceTreeNode } from "common/trace/trace_tree_node";
 import { ImeLayers, ImeUtils, ProcessedWindowManagerState } from "viewers/common/ime_utils";
 import { ImeAdditionalProperties } from "viewers/common/ime_additional_properties";
 import { TableProperties } from "viewers/common/table_properties";
-import { PersistentStoreObject } from "common/utils/persistent_store_object";
+import { PersistentStoreProxy } from "common/utils/persistent_store_proxy";
 
 type NotifyImeViewCallbackType = (uiData: ImeUiData) => void;
 
@@ -209,7 +209,7 @@ export abstract class PresenterInputMethod {
   protected highlightedItems: Array<string> = [];
   protected entry: TraceTreeNode | null  = null;
   protected additionalPropertyEntry: TraceTreeNode | null = null;
-  protected hierarchyUserOptions: UserOptions = PersistentStoreObject.new<UserOptions>("ImeHierarchyOptions", {
+  protected hierarchyUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>("ImeHierarchyOptions", {
     simplifyNames: {
       name: "Simplify names",
       enabled: true
@@ -223,7 +223,7 @@ export abstract class PresenterInputMethod {
       enabled: false
     }
   }, this.storage);
-  protected propertiesUserOptions: UserOptions = PersistentStoreObject.new<UserOptions>("ImePropertiesOptions", {
+  protected propertiesUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>("ImePropertiesOptions", {
     showDefaults: {
       name: "Show defaults",
       enabled: false,

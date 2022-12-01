@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { TimestampType } from "common/trace/timestamp";
+import { Timestamp, TimestampType } from "common/trace/timestamp";
 import {TimeUtils} from "./time_utils";
 
 describe("TimeUtils", () => {
@@ -142,14 +142,14 @@ describe("TimeUtils", () => {
   });
 
   it("format real", () => {
-    expect(TimeUtils.format(TimestampType.REAL, 100n, 500n)).toEqual("00h00m00s000ms600ns, 1 Jan 1970 UTC");
-    expect(() => {
-      TimeUtils.format(TimestampType.REAL, 100n);
-    }).toThrow(Error("clockTimeOffset required to format real timestamp"));
+    expect(TimeUtils.format(Timestamp.from(TimestampType.REAL, 100n, 500n))).toEqual("00h00m00s000ms600ns, 1 Jan 1970 UTC");
+    expect(TimeUtils.format(Timestamp.from(TimestampType.REAL, 100n * MILLISECOND, 500n), true)).toEqual("00h00m00s100ms, 1 Jan 1970 UTC");
   });
 
   it("format elapsed", () => {
-    expect(TimeUtils.format(TimestampType.ELAPSED, 100n * MILLISECOND, 500n)).toEqual("100ms");
-    expect(TimeUtils.format(TimestampType.ELAPSED, 100n * MILLISECOND)).toEqual("100ms");
+    expect(TimeUtils.format(Timestamp.from(TimestampType.ELAPSED, 100n * MILLISECOND, 500n), true)).toEqual("100ms");
+    expect(TimeUtils.format(Timestamp.from(TimestampType.ELAPSED, 100n * MILLISECOND), true)).toEqual("100ms");
+    expect(TimeUtils.format(Timestamp.from(TimestampType.ELAPSED, 100n * MILLISECOND, 500n))).toEqual("100ms0ns");
+    expect(TimeUtils.format(Timestamp.from(TimestampType.ELAPSED, 100n * MILLISECOND))).toEqual("100ms0ns");
   });
 });
