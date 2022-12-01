@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 import { Component, Input, Output, EventEmitter, Inject, NgZone } from "@angular/core";
+import { MatSnackBar } from "@angular/material/snack-bar";
 import { Mediator } from "app/mediator";
 import { TRACE_INFO } from "app/trace_info";
 import { LoadedTrace } from "app/loaded_trace";
-import { MatSnackBar } from "@angular/material/snack-bar";
-import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component";
+import {FileUtils} from "common/utils/file_utils";
 import { ParserError } from "parsers/parser_factory";
+import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component";
 
 @Component({
   selector: "upload-traces",
@@ -153,7 +154,7 @@ export class UploadTracesComponent {
   }
 
   public async processFiles(files: File[]) {
-    const unzippedFiles = await this.mediator.getUnzippedFiles(files);
+    const unzippedFiles = await FileUtils.getUnzippedFiles(files);
     const parserErrors = await this.mediator.setTraces(unzippedFiles);
     if (parserErrors.length > 0) {
       this.openTempSnackBar(parserErrors);

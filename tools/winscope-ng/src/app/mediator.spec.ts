@@ -166,7 +166,7 @@ describe("Mediator", () => {
     expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(3);
   });
 
-  it("trace coordinator sets video data on timelineData when screenrecording is loaded", async () => {
+  it("sets video data on timelineData when screenrecording is loaded", async () => {
     expect(mediator.getParsers().length).toEqual(0);
     const traces = [
       await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/SurfaceFlinger.pb"),

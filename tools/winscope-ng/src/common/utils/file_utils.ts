@@ -16,16 +16,6 @@
 import JSZip from "jszip";
 
 class FileUtils {
-  static async createZipArchive(files: File[]): Promise<Blob> {
-    const zip = new JSZip();
-    for (let i=0; i < files.length; i++) {
-      const file = files[i];
-      const blob = await file.arrayBuffer();
-      zip.file(file.name, blob);
-    }
-    return await zip.generateAsync({type: "blob"});
-  }
-
   static async readFile(file: File): Promise<Uint8Array> {
     return await new Promise((resolve, _) => {
       const reader = new FileReader();
@@ -35,10 +25,6 @@ class FileUtils {
       };
       reader.readAsArrayBuffer(file);
     });
-  }
-
-  static isZipFile(file: File) {
-    return this.getFileExtension(file) === "zip";
   }
 
   static getFileExtension(file: File) {
@@ -56,6 +42,30 @@ class FileUtils {
     } else {
       return name;
     }
+  }
+
+  static async createZipArchive(files: File[]): Promise<Blob> {
+    const zip = new JSZip();
+    for (let i=0; i < files.length; i++) {
+      const file = files[i];
+      const blob = await file.arrayBuffer();
+      zip.file(file.name, blob);
+    }
+    return await zip.generateAsync({type: "blob"});
+  }
+
+  //TODO: remove/replace with flatMap(unzipFile(...)) ?
+  static async getUnzippedFiles(files: File[]): Promise<File[]> {
+    const unzippedFiles: File[] = [];
+    for (let i=0; i<files.length; i++) {
+      if (FileUtils.isZipFile(files[i])) {
+        const unzippedFile = await FileUtils.unzipFile(files[i]);
+        unzippedFiles.push(...unzippedFile);
+      } else {
+        unzippedFiles.push(files[i]);
+      }
+    }
+    return unzippedFiles;
   }
 
   static async unzipFile(file: File): Promise<File[]> {
@@ -76,6 +86,10 @@ class FileUtils {
       }
     }
     return unzippedFiles;
+  }
+
+  static isZipFile(file: File) {
+    return this.getFileExtension(file) === "zip";
   }
 }
 

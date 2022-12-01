@@ -175,19 +175,6 @@ class Mediator implements TimestampChangeObserver {
     this.timelineData.clearData();
   }
 
-  public async getUnzippedFiles(files: File[]): Promise<File[]> {
-    const unzippedFiles: File[] = [];
-    for (let i=0; i<files.length; i++) {
-      if (FileUtils.isZipFile(files[i])) {
-        const unzippedFile = await FileUtils.unzipFile(files[i]);
-        unzippedFiles.push(...unzippedFile);
-      } else {
-        unzippedFiles.push(files[i]);
-      }
-    }
-    return unzippedFiles;
-  }
-
   public async getTraceForDownload(parser: Parser): Promise<File | null> {
     const trace = parser.getTrace();
     if (trace) {
