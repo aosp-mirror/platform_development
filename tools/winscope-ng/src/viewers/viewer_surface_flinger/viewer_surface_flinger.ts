@@ -20,7 +20,7 @@ import {UiData} from "./ui_data";
 import {ViewerEvents} from "viewers/common/viewer_events";
 
 class ViewerSurfaceFlinger implements Viewer {
-  constructor() {
+  constructor(storage: Storage) {
     this.htmlElement = document.createElement("viewer-surface-flinger");
     this.presenter = new Presenter((uiData: UiData) => {
       // Angular does not deep watch @Input properties. Clearing inputData to null before repopulating
@@ -28,7 +28,7 @@ class ViewerSurfaceFlinger implements Viewer {
       // resetting, Angular does not auto-detect that inputData has changed.
       (this.htmlElement as any).inputData = null;
       (this.htmlElement as any).inputData = uiData;
-    });
+    }, storage);
     this.htmlElement.addEventListener(ViewerEvents.HierarchyPinnedChange, (event) => this.presenter.updatePinnedItems(((event as CustomEvent).detail.pinnedItem)));
     this.htmlElement.addEventListener(ViewerEvents.HighlightedChange, (event) => this.presenter.updateHighlightedItems(`${(event as CustomEvent).detail.id}`));
     this.htmlElement.addEventListener(ViewerEvents.HierarchyUserOptionsChange, (event) => this.presenter.updateHierarchyTree((event as CustomEvent).detail.userOptions));

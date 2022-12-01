@@ -24,6 +24,7 @@ import {UserOptions} from "viewers/common/user_options";
 import {PresenterInputMethodClients} from "viewers/viewer_input_method_clients/presenter_input_method_clients";
 import {PresenterInputMethodService} from "viewers/viewer_input_method_service/presenter_input_method_service";
 import {PresenterInputMethodManagerService} from "viewers/viewer_input_method_manager_service/presenter_input_method_manager_service";
+import { MockStorage } from "test/unit/mock_storage";
 
 export function executePresenterInputMethodTests(
   selected: HierarchyTreeNode,
@@ -44,7 +45,7 @@ export function executePresenterInputMethodTests(
       selectedTree = selected;
       presenter = new PresenterInputMethod((newData: ImeUiData) => {
         uiData = newData;
-      }, [traceType]);
+      }, [traceType], new MockStorage());
     });
 
     it("can notify current trace entries", () => {

@@ -39,7 +39,7 @@ class ViewerFactory {
     ViewerScreenRecording,
   ];
 
-  public createViewers(activeTraceTypes: Set<TraceType>): Viewer[] {
+  public createViewers(activeTraceTypes: Set<TraceType>, storage: Storage): Viewer[] {
     const viewers: Viewer[] = [];
 
     for (const Viewer of ViewerFactory.VIEWERS) {
@@ -48,7 +48,7 @@ class ViewerFactory {
       );
 
       if (areViewerDepsSatisfied) {
-        viewers.push(new Viewer());
+        viewers.push(new Viewer(storage));
       }
     }
 

@@ -32,8 +32,8 @@ class ViewerInputMethodManagerService extends ViewerInputMethod {
     return ViewerInputMethodManagerService.DEPENDENCIES;
   }
 
-  override initialisePresenter() {
-    return new PresenterInputMethodManagerService(this.imeUiCallback, this.getDependencies());
+  override initialisePresenter(storage: Storage) {
+    return new PresenterInputMethodManagerService(this.imeUiCallback, this.getDependencies(), storage);
   }
 
   public static readonly DEPENDENCIES: TraceType[] = [TraceType.INPUT_METHOD_MANAGER_SERVICE];

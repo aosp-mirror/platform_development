@@ -16,14 +16,14 @@
 import { Component, Input, Inject, Output, EventEmitter, OnInit, OnDestroy } from "@angular/core";
 import { ProxyConnection } from "trace_collection/proxy_connection";
 import { Connection } from "trace_collection/connection";
-import { setTraces } from "trace_collection/set_traces";
 import { ProxyState } from "trace_collection/proxy_client";
 import { traceConfigurations, configMap, SelectionConfiguration, EnableConfiguration } from "trace_collection/trace_collection_utils";
 import { TraceCoordinator } from "app/trace_coordinator";
-import { PersistentStore } from "common/persistent_store";
+import { PersistentStore } from "common/utils/persistent_store";
 import { MatSnackBar } from "@angular/material/snack-bar";
 import { ParserError } from "parsers/parser_factory";
 import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component";
+import { TracingConfig } from "trace_collection/tracing_config";
 
 @Component({
   selector: "collect-traces",
@@ -42,54 +42,63 @@ import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component
         </div>
 
         <div *ngIf="connect.isDevicesState()" class="devices-connecting">
-          <p class="mat-body-1">{{ objectKeys(connect.devices()).length > 0 ? "Connected devices:" : "No devices detected" }}</p>
-          <mat-list *ngIf="objectKeys(connect.devices()).length > 0">
-            <mat-list-item
-              *ngFor="let deviceId of objectKeys(connect.devices())"
-              (click)="connect.selectDevice(deviceId)"
-              class="available-device"
-            >
-              <mat-icon matListIcon>
-                {{ connect.devices()[deviceId].authorised ? "smartphone" : "screen_lock_portrait" }}
-              </mat-icon>
-              <p matLine>
-                {{ connect.devices()[deviceId].authorised ? connect.devices()[deviceId].model : "unauthorised" }} ({{ deviceId }})
-              </p>
-            </mat-list-item>
-          </mat-list>
+          <div *ngIf="objectKeys(connect.devices()).length === 0" class="no-device-detected">
+            <p class="mat-body-3 icon"><mat-icon inline fontIcon="phonelink_erase"></mat-icon></p>
+            <p class="mat-body-1">No devices detected</p>
+          </div>
+          <div *ngIf="objectKeys(connect.devices()).length > 0">
+          <p class="mat-body-1">Connected devices:</p>
+            <mat-list *ngIf="objectKeys(connect.devices()).length > 0">
+              <mat-list-item
+                *ngFor="let deviceId of objectKeys(connect.devices())"
+                (click)="connect.selectDevice(deviceId)"
+                class="available-device"
+              >
+                <mat-icon matListIcon>
+                  {{ connect.devices()[deviceId].authorised ? "smartphone" : "screen_lock_portrait" }}
+                </mat-icon>
+                <p matLine>
+                  {{ connect.devices()[deviceId].authorised ? connect.devices()[deviceId].model : "unauthorised" }} ({{ deviceId }})
+                </p>
+              </mat-list-item>
+            </mat-list>
+          </div>
         </div>
 
         <div *ngIf="connect.isStartTraceState()" class="trace-collection-config">
-          <mat-list>
-            <mat-list-item>
-              <mat-icon matListIcon>smartphone</mat-icon>
-              <p matLine>
-                {{ connect.selectedDevice().model }} ({{ connect.selectedDeviceId() }})
+          <mat-tab-group>
+            <mat-tab label="Trace">
+              <mat-list>
+                <mat-list-item>
+                  <mat-icon matListIcon>smartphone</mat-icon>
+                  <p matLine>
+                    {{ connect.selectedDevice().model }} ({{ connect.selectedDeviceId() }})
 
-                <button color="primary" class="change-btn" mat-button (click)="connect.resetLastDevice()">Change device</button>
-              </p>
-            </mat-list-item>
-          </mat-list>
+                    <button color="primary" class="change-btn" mat-button (click)="connect.resetLastDevice()">Change device</button>
+                  </p>
+                </mat-list-item>
+              </mat-list>
 
-          <div class="trace-section">
-            <trace-config [traces]="setTraces.DYNAMIC_TRACES"></trace-config>
-            <button color="primary" class="start-btn" mat-stroked-button (click)="startTracing()">Start trace</button>
-          </div>
-
-          <mat-divider></mat-divider>
-
-          <div class="dump-section">
-            <h3 class="mat-subheading-2">Dump targets</h3>
-            <div class="selection">
-              <mat-checkbox
-                *ngFor="let dumpKey of objectKeys(setTraces.DUMPS)"
-                color="primary"
-                class="dump-checkbox"
-                [(ngModel)]="setTraces.DUMPS[dumpKey].run"
-              >{{setTraces.DUMPS[dumpKey].name}}</mat-checkbox>
-            </div>
-            <button color="primary" class="dump-btn" mat-stroked-button (click)="dumpState()">Dump state</button>
-          </div>
+              <div class="trace-section">
+                <trace-config [traces]="tracingConfig.getTracingConfig()"></trace-config>
+                <button color="primary" class="start-btn" mat-stroked-button (click)="startTracing()">Start trace</button>
+              </div>
+            </mat-tab>
+            <mat-tab label="Dump">
+              <div class="dump-section">
+                <h3 class="mat-subheading-2">Dump targets</h3>
+                <div class="selection">
+                  <mat-checkbox
+                    *ngFor="let dumpKey of objectKeys(tracingConfig.getDumpConfig())"
+                    color="primary"
+                    class="dump-checkbox"
+                    [(ngModel)]="tracingConfig.getDumpConfig()[dumpKey].run"
+                  >{{tracingConfig.getDumpConfig()[dumpKey].name}}</mat-checkbox>
+                </div>
+                <button color="primary" class="dump-btn" mat-stroked-button (click)="dumpState()">Dump state</button>
+              </div>
+            </mat-tab>
+          </mat-tab-group>
         </div>
 
         <div *ngIf="connect.isErrorState()" class="unknown-error">
@@ -161,6 +170,33 @@ import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component
       .available-device {
         cursor: pointer;
       }
+
+      .no-device-detected {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-content: center;
+        align-items: center;
+        height: 100%;
+      }
+
+      .no-device-detected p {
+        opacity: 0.6;
+        font-size: 1.2rem;
+      }
+
+      .no-device-detected .icon {
+        font-size: 3rem;
+        margin: 0 0 0.2rem 0;
+      }
+
+      .devices-connecting {
+        height: 100%;
+      }
+
+      mat-card-content {
+        flex-grow: 1;
+      }
     `
   ]
 })
@@ -169,7 +205,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   isAdbProxy = true;
   traceConfigurations = traceConfigurations;
   connect: Connection = new ProxyConnection();
-  setTraces = setTraces;
+  tracingConfig = TracingConfig.getInstance();
   dataLoaded = false;
 
   @Input() store!: PersistentStore;
@@ -214,11 +250,11 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
 
   public startTracing() {
     console.log("begin tracing");
-    setTraces.reqTraces = this.requestedTraces();
+    this.tracingConfig.requestedTraces = this.requestedTraces();
     const reqEnableConfig = this.requestedEnableConfig();
     const reqSelectedSfConfig = this.requestedSelection("layers_trace");
     const reqSelectedWmConfig = this.requestedSelection("window_trace");
-    if (setTraces.reqTraces.length < 1) {
+    if (this.tracingConfig.requestedTraces.length < 1) {
       this.connect.throwNoTargetsError();
       return;
     }
@@ -231,12 +267,9 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
 
   public async dumpState() {
     console.log("begin dump");
-    setTraces.reqDumps = this.requestedDumps();
-    await this.connect.dumpState();
-    while (!setTraces.dataReady && !setTraces.dumpError) {
-      await this.waitForData(1000);
-    }
-    if (!setTraces.dumpError) {
+    this.tracingConfig.requestedDumps = this.requestedDumps();
+    const dumpError = await this.connect.dumpState();
+    if (!dumpError) {
       await this.loadFiles();
     } else {
       this.traceCoordinator.clearData();
@@ -246,9 +279,6 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   public async endTrace() {
     console.log("end tracing");
     await this.connect.endTrace();
-    while (!setTraces.dataReady) {
-      await this.waitForData(100);
-    }
     await this.loadFiles();
   }
 
@@ -268,9 +298,10 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
 
   private requestedTraces() {
     const tracesFromCollection: Array<string> = [];
-    const req = Object.keys(setTraces.DYNAMIC_TRACES)
+    const tracingConfig = this.tracingConfig.getTracingConfig();
+    const req = Object.keys(tracingConfig)
       .filter((traceKey:string) => {
-        const traceConfig = setTraces.DYNAMIC_TRACES[traceKey];
+        const traceConfig = tracingConfig[traceKey];
         if (traceConfig.isTraceCollection) {
           traceConfig.config?.enableConfigs.forEach((innerTrace:EnableConfiguration) => {
             if (innerTrace.enabled) {
@@ -285,17 +316,19 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   }
 
   private requestedDumps() {
-    return Object.keys(setTraces.DUMPS)
+    const dumpConfig = this.tracingConfig.getDumpConfig();
+    return Object.keys(dumpConfig)
       .filter((dumpKey:string) => {
-        return setTraces.DUMPS[dumpKey].run;
+        return dumpConfig[dumpKey].run;
       });
   }
 
   private requestedEnableConfig(): Array<string> | undefined {
     const req: Array<string> = [];
-    Object.keys(setTraces.DYNAMIC_TRACES)
+    const tracingConfig = this.tracingConfig.getTracingConfig();
+    Object.keys(tracingConfig)
       .forEach((traceKey:string) => {
-        const trace = setTraces.DYNAMIC_TRACES[traceKey];
+        const trace = tracingConfig[traceKey];
         if(!trace.isTraceCollection
               && trace.run
               && trace.config
@@ -314,11 +347,12 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   }
 
   private requestedSelection(traceType: string): configMap | undefined {
-    if (!setTraces.DYNAMIC_TRACES[traceType].run) {
+    const tracingConfig = this.tracingConfig.getTracingConfig();
+    if (!tracingConfig[traceType].run) {
       return undefined;
     }
     const selected: configMap = {};
-    setTraces.DYNAMIC_TRACES[traceType].config?.selectionConfigs.forEach(
+    tracingConfig[traceType].config?.selectionConfigs.forEach(
       (con: SelectionConfiguration) => {
         selected[con.key] = con.value;
       }
@@ -337,10 +371,6 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     this.dataLoaded = true;
     this.dataLoadedChange.emit(this.dataLoaded);
     console.log("finished loading data!");
-  }
-
-  private waitForData(ms: number) {
-    return new Promise( resolve => setTimeout(resolve, ms) );
   }
 
   private openTempSnackBar(parserErrors: ParserError[]) {

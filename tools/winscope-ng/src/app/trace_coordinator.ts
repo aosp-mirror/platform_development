@@ -19,7 +19,6 @@ import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
 import {Parser} from "parsers/parser";
 import {ParserError, ParserFactory} from "parsers/parser_factory";
-import { setTraces } from "trace_collection/set_traces";
 import { Viewer } from "viewers/viewer";
 import { ViewerFactory } from "viewers/viewer_factory";
 import { LoadedTrace } from "app/loaded_trace";
@@ -101,9 +100,9 @@ class TraceCoordinator implements TimestampChangeObserver {
     throw Error("No common timestamp type across all traces");
   }
 
-  public createViewers() {
+  public createViewers(storage: Storage) {
     const activeTraceTypes = this.parsers.map(parser => parser.getTraceType());
-    this.viewers = new ViewerFactory().createViewers(new Set<TraceType>(activeTraceTypes));
+    this.viewers = new ViewerFactory().createViewers(new Set<TraceType>(activeTraceTypes), storage);
 
     // Make sure to update the viewers active entries as soon as they are created.
     if (this.timelineCoordinator.currentTimestamp) {
@@ -173,7 +172,6 @@ class TraceCoordinator implements TimestampChangeObserver {
   public clearData() {
     this.parsers = [];
     this.viewers = [];
-    setTraces.dataReady = false;
     this.timelineCoordinator.clearData();
   }
 

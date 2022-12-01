@@ -23,11 +23,12 @@ import { HierarchyTreeNode, PropertiesTreeNode } from "viewers/common/ui_tree_ut
 import { TreeGenerator } from "viewers/common/tree_generator";
 import { TreeTransformer } from "viewers/common/tree_transformer";
 import DisplayContent from "common/trace/flickerlib/windows/DisplayContent";
+import { PersistentStoreObject } from "common/utils/persistent_store_object";
 
 type NotifyViewCallbackType = (uiData: UiData) => void;
 
 export class Presenter {
-  constructor(notifyViewCallback: NotifyViewCallbackType) {
+  constructor(notifyViewCallback: NotifyViewCallbackType, private storage: Storage) {
     this.notifyViewCallback = notifyViewCallback;
     this.uiData = new UiData([TraceType.WINDOW_MANAGER]);
     this.notifyViewCallback(this.uiData);
@@ -228,7 +229,7 @@ export class Presenter {
   private selectedHierarchyTree: HierarchyTreeNode | null = null;
   private previousEntry: TraceTreeNode | null = null;
   private entry: TraceTreeNode | null = null;
-  private hierarchyUserOptions: UserOptions = {
+  private hierarchyUserOptions: UserOptions = PersistentStoreObject.new<UserOptions>("WmHierarchyOptions", {
     showDiff: {
       name: "Show diff",
       enabled: false
@@ -245,8 +246,8 @@ export class Presenter {
       name: "Flat",
       enabled: false
     }
-  };
-  private propertiesUserOptions: UserOptions = {
+  }, this.storage);
+  private propertiesUserOptions: UserOptions = PersistentStoreObject.new<UserOptions>("WmPropertyOptions", {
     showDiff: {
       name: "Show diff",
       enabled: false
@@ -260,5 +261,5 @@ export class Presenter {
                 the default for its data type.
               `
     },
-  };
+  }, this.storage);
 }
