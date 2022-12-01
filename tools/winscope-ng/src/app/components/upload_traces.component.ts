@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { Component, Input, Output, EventEmitter, Inject, NgZone } from "@angular/core";
-import { TraceCoordinator } from "app/trace_coordinator";
+import { Mediator } from "app/mediator";
 import { TRACE_INFO } from "app/trace_info";
 import { LoadedTrace } from "app/loaded_trace";
 import { MatSnackBar } from "@angular/material/snack-bar";
@@ -139,7 +139,7 @@ export class UploadTracesComponent {
   TRACE_INFO = TRACE_INFO;
   dataLoaded = false;
 
-  @Input() traceCoordinator!: TraceCoordinator;
+  @Input() mediator!: Mediator;
   @Output() dataLoadedChange = new EventEmitter<boolean>();
 
   constructor(
@@ -153,13 +153,13 @@ export class UploadTracesComponent {
   }
 
   public async processFiles(files: File[]) {
-    const unzippedFiles = await this.traceCoordinator.getUnzippedFiles(files);
-    const parserErrors = await this.traceCoordinator.setTraces(unzippedFiles);
+    const unzippedFiles = await this.mediator.getUnzippedFiles(files);
+    const parserErrors = await this.mediator.setTraces(unzippedFiles);
     if (parserErrors.length > 0) {
       this.openTempSnackBar(parserErrors);
     }
     this.ngZone.run(() => {
-      this.loadedTraces = this.traceCoordinator.getLoadedTraces();
+      this.loadedTraces = this.mediator.getLoadedTraces();
     });
   }
 
@@ -169,7 +169,7 @@ export class UploadTracesComponent {
   }
 
   public onClearData() {
-    this.traceCoordinator.clearData();
+    this.mediator.clearData();
     this.dataLoaded = false;
     this.loadedTraces = [];
     this.dataLoadedChange.emit(this.dataLoaded);
@@ -196,7 +196,7 @@ export class UploadTracesComponent {
   public onRemoveTrace(event: MouseEvent, trace: LoadedTrace) {
     event.preventDefault();
     event.stopPropagation();
-    this.traceCoordinator.removeTrace(trace.type);
+    this.mediator.removeTrace(trace.type);
     this.loadedTraces = this.loadedTraces.filter(loaded => loaded.type !== trace.type);
   }
 

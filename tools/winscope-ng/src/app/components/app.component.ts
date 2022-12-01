@@ -16,7 +16,7 @@
 
 import {Component, Injector, Inject, ViewEncapsulation, ChangeDetectorRef} from "@angular/core";
 import { createCustomElement } from "@angular/elements";
-import { TraceCoordinator } from "app/trace_coordinator";
+import { Mediator } from "app/mediator";
 import { PersistentStore } from "common/utils/persistent_store";
 import { Timestamp } from "common/trace/timestamp";
 import { FileUtils } from "common/utils/file_utils";
@@ -34,7 +34,7 @@ import { TracingConfig } from "trace_collection/tracing_config";
 
 @Component({
   selector: "app-root",
-  providers: [TimelineData, TraceCoordinator],
+  providers: [TimelineData, Mediator],
   template: `
     <mat-toolbar class="toolbar">
       <span class="app-title">Winscope</span>
@@ -111,14 +111,14 @@ import { TracingConfig } from "trace_collection/tracing_config";
           <div class="card-grid landing-grid">
             <collect-traces
                 class="collect-traces-card homepage-card"
-                [traceCoordinator]="traceCoordinator"
+                [mediator]="mediator"
                 (dataLoadedChange)="onDataLoadedChange($event)"
                 [store]="store"
             ></collect-traces>
 
             <upload-traces
                 class="upload-traces-card homepage-card"
-                [traceCoordinator]="traceCoordinator"
+                [mediator]="mediator"
                 (dataLoadedChange)="onDataLoadedChange($event)"
             ></upload-traces>
           </div>
@@ -179,7 +179,7 @@ import { TracingConfig } from "trace_collection/tracing_config";
 export class AppComponent {
   title = "winscope-ng";
   changeDetectorRef: ChangeDetectorRef;
-  traceCoordinator: TraceCoordinator;
+  mediator: Mediator;
   timelineData: TimelineData;
   states = ProxyState;
   store: PersistentStore = new PersistentStore();
@@ -200,14 +200,14 @@ export class AppComponent {
   constructor(
     @Inject(Injector) injector: Injector,
     @Inject(ChangeDetectorRef) changeDetectorRef: ChangeDetectorRef,
-    //TODO: do not inject TimelineData + TraceCoordinator (make Angular independent)
+    //TODO: do not inject TimelineData + Mediator (make Angular independent)
     @Inject(TimelineData) timelineData: TimelineData,
-    @Inject(TraceCoordinator) traceCoordinator: TraceCoordinator,
+    @Inject(Mediator) mediator: Mediator,
   ) {
     this.changeDetectorRef = changeDetectorRef;
     this.timelineData = timelineData;
-    this.traceCoordinator = traceCoordinator;
-    this.timelineData.registerObserver(this.traceCoordinator);
+    this.mediator = mediator;
+    this.timelineData.registerObserver(this.mediator);
 
     const storeDarkMode = this.store.get("dark-mode");
     const prefersDarkQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
@@ -242,7 +242,7 @@ export class AppComponent {
   }
 
   get availableTraces(): TraceType[] {
-    return this.traceCoordinator.getLoadedTraces().map((trace) => trace.type);
+    return this.mediator.getLoadedTraces().map((trace) => trace.type);
   }
 
   get videoData(): Blob|undefined {
@@ -251,7 +251,7 @@ export class AppComponent {
 
   public onUploadNewClick() {
     this.dataLoaded = false;
-    this.traceCoordinator.clearData();
+    this.mediator.clearData();
     proxyClient.adbData = [];
     this.changeDetectorRef.detectChanges();
   }
@@ -263,9 +263,9 @@ export class AppComponent {
   }
 
   public onDataLoadedChange(dataLoaded: boolean) {
-    if (dataLoaded && !(this.traceCoordinator.getViewers().length > 0)) {
-      this.traceCoordinator.createViewers(localStorage);
-      this.allViewers = this.traceCoordinator.getViewers();
+    if (dataLoaded && !(this.mediator.getViewers().length > 0)) {
+      this.mediator.createViewers(localStorage);
+      this.allViewers = this.mediator.getViewers();
       // TODO: Update to handle viewers with more than one dependency
       if (this.allViewers[0].getDependencies().length !== 1) {
         throw Error("Viewers with more than 1 dependency not yet handled.");
@@ -277,7 +277,7 @@ export class AppComponent {
   }
 
   async onDownloadTracesButtonClick() {
-    const traces = await this.traceCoordinator.getAllTracesForDownload();
+    const traces = await this.mediator.getAllTracesForDownload();
     const zipFileBlob = await FileUtils.createZipArchive(traces);
     const zipFileName = "winscope.zip";
     const a = document.createElement("a");

@@ -28,8 +28,8 @@ import { TimelineData, TimestampChangeObserver, Timeline} from "./timeline_data"
 import { Inject, Injectable } from "@angular/core";
 import { ScreenRecordingTraceEntry } from "common/trace/screen_recording";
 
-@Injectable()
-class TraceCoordinator implements TimestampChangeObserver {
+@Injectable() //TODO: remove Injectable
+class Mediator implements TimestampChangeObserver {
   private parsers: Parser[] = [];
   private viewers: Viewer[] = [];
 
@@ -42,7 +42,7 @@ class TraceCoordinator implements TimestampChangeObserver {
     let parserErrors: ParserError[];
     [this.parsers, parserErrors] = await new ParserFactory().createParsers(traces);
     this.addAllTracesToTimelineData();
-    this.addScreenRecodingTimeMappingToTraceCooordinator();
+    this.addScreenRecodingTimeMappingToTimelineData();
     return parserErrors;
   }
 
@@ -66,7 +66,7 @@ class TraceCoordinator implements TimestampChangeObserver {
     this.timelineData.setTimelines(timelines);
   }
 
-  private addScreenRecodingTimeMappingToTraceCooordinator() {
+  private addScreenRecodingTimeMappingToTimelineData() {
     const parser = this.getParserFor(TraceType.SCREEN_RECORDING);
     if (parser === undefined) {
       return;
@@ -226,4 +226,4 @@ class TraceCoordinator implements TimestampChangeObserver {
   }
 }
 
-export { TraceCoordinator };
+export { Mediator };

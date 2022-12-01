@@ -18,7 +18,7 @@ import { ProxyConnection } from "trace_collection/proxy_connection";
 import { Connection } from "trace_collection/connection";
 import { ProxyState } from "trace_collection/proxy_client";
 import { traceConfigurations, configMap, SelectionConfiguration, EnableConfiguration } from "trace_collection/trace_collection_utils";
-import { TraceCoordinator } from "app/trace_coordinator";
+import { Mediator } from "app/mediator";
 import { PersistentStore } from "common/utils/persistent_store";
 import { MatSnackBar } from "@angular/material/snack-bar";
 import { ParserError } from "parsers/parser_factory";
@@ -307,7 +307,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   loadProgress = 0;
 
   @Input() store!: PersistentStore;
-  @Input() traceCoordinator!: TraceCoordinator;
+  @Input() mediator!: Mediator;
 
   @Output() dataLoadedChange = new EventEmitter<boolean>();
 
@@ -388,7 +388,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     if (dumpSuccessful) {
       await this.loadFiles();
     } else {
-      this.traceCoordinator.clearData();
+      this.mediator.clearData();
     }
   }
 
@@ -478,9 +478,9 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
 
   private async loadFiles() {
     console.log("loading files", this.connect.adbData());
-    this.traceCoordinator.clearData();
+    this.mediator.clearData();
 
-    const parserErrors = await this.traceCoordinator.setTraces(this.connect.adbData());
+    const parserErrors = await this.mediator.setTraces(this.connect.adbData());
     if (parserErrors.length > 0) {
       this.openTempSnackBar(parserErrors);
     }
