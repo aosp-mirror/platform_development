@@ -55,7 +55,7 @@ class ProxyRequest {
     type?: XMLHttpRequestResponseType,
     jsonRequest: any = null
   ): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const request = new XMLHttpRequest();
       const client = proxyClient;
       request.onreadystatechange = async function() {
@@ -64,11 +64,11 @@ class ProxyRequest {
         }
         if (this.status === XMLHttpRequest.UNSENT) {
           client.setState(ProxyState.NO_PROXY);
-          reject();
+          resolve();
         } else if (this.status === 200) {
           if (this.getResponseHeader("Winscope-Proxy-Version") !== client.VERSION) {
             client.setState(ProxyState.INVALID_VERSION);
-            reject();
+            resolve();
           } else if (onSuccess) {
             try {
               await onSuccess(this);
@@ -77,13 +77,13 @@ class ProxyRequest {
               proxyClient.setState(ProxyState.ERROR,
                 `Error handling request response:\n${err}\n\n`+
                 `Request:\n ${request.responseText}`);
-              reject();
+              resolve();
             }
           }
           resolve();
         } else if (this.status === 403) {
           client.setState(ProxyState.UNAUTH);
-          reject();
+          resolve();
         } else {
           if (this.responseType === "text" || !this.responseType) {
             client.errorText = this.responseText;
@@ -91,7 +91,7 @@ class ProxyRequest {
             client.errorText = String.fromCharCode.apply(null, new Array(this.response));
           }
           client.setState(ProxyState.ERROR, client.errorText);
-          reject();
+          resolve();
         }
       };
       request.responseType = type || "";
