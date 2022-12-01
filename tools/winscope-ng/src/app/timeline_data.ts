@@ -21,8 +21,8 @@ import { ArrayUtils } from "common/utils/array_utils";
 import { TimeRange } from "./components/timeline/utils";
 
 type TimestampWithIndex = {index: number, timestamp: Timestamp};
-@Injectable()
-export class TimelineCoordinator {
+@Injectable() //TODO: remove Injectable
+export class TimelineData {
   private timelines = new Map<TraceType, Timestamp[]>();
   private explicitlySetTimestamp: undefined|Timestamp = undefined;
   private timestampType: undefined|TimestampType = undefined;
@@ -118,7 +118,7 @@ export class TimelineCoordinator {
     this.explicitlySetSelection = selection;
   }
 
-  public getTimelines() {
+  public getTimelines(): Map<TraceType, Timestamp[]>  {
     return this.timelines;
   }
 

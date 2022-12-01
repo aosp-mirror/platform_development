@@ -19,18 +19,18 @@ import {TraceCoordinator} from "./trace_coordinator";
 import {UnitTestUtils} from "test/unit/utils";
 import {ViewerFactory} from "viewers/viewer_factory";
 import {ViewerStub} from "viewers/viewer_stub";
-import { TimelineCoordinator } from "./timeline_coordinator";
+import { TimelineData } from "./timeline_data";
 import { MockStorage } from "test/unit/mock_storage";
 
 describe("TraceCoordinator", () => {
   let traceCoordinator: TraceCoordinator;
-  let timelineCoordinator: TimelineCoordinator;
+  let timelineData: TimelineData;
 
   beforeEach(async () => {
-    spyOn(TimelineCoordinator.prototype, "setScreenRecordingData").and.callThrough();
-    spyOn(TimelineCoordinator.prototype, "removeScreenRecordingData").and.callThrough();
-    timelineCoordinator = new TimelineCoordinator();
-    traceCoordinator = new TraceCoordinator(timelineCoordinator);
+    spyOn(TimelineData.prototype, "setScreenRecordingData").and.callThrough();
+    spyOn(TimelineData.prototype, "removeScreenRecordingData").and.callThrough();
+    timelineData = new TimelineData();
+    traceCoordinator = new TraceCoordinator(timelineData);
   });
 
   it("processes trace files", async () => {
@@ -62,10 +62,10 @@ describe("TraceCoordinator", () => {
     await traceCoordinator.setTraces(traces);
 
     let timestamp = new Timestamp(TimestampType.REAL, 0n);
-    timelineCoordinator.updateCurrentTimestamp(timestamp);
+    timelineData.updateCurrentTimestamp(timestamp);
 
     timestamp = new Timestamp(TimestampType.ELAPSED, 0n);
-    timelineCoordinator.updateCurrentTimestamp(timestamp);
+    timelineData.updateCurrentTimestamp(timestamp);
   });
 
   it("processes mixed valid and invalid trace files", async () => {
@@ -115,7 +115,7 @@ describe("TraceCoordinator", () => {
       await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/WindowManager.pb"),
     ];
     await traceCoordinator.setTraces(traces);
-    const timestamps = timelineCoordinator.getAllUniqueTimestamps();
+    const timestamps = timelineData.getAllUniqueTimestamps();
     expect(timestamps.length).toEqual(48);
   });
 
@@ -148,25 +148,25 @@ describe("TraceCoordinator", () => {
     // timestamp based on the active trace and loaded timelines. Given that
     // we haven't set a timestamp we should still be in the default timestamp
     // and require no update to the current trace entries.
-    timelineCoordinator.updateCurrentTimestamp(undefined);
+    timelineData.updateCurrentTimestamp(undefined);
     expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(1);
 
     // notify timestamp
     const timestamp = new Timestamp(TimestampType.REAL, 14500282843n);
-    expect(timelineCoordinator.getTimestampType()).toBe(TimestampType.REAL);
-    timelineCoordinator.updateCurrentTimestamp(timestamp);
+    expect(timelineData.getTimestampType()).toBe(TimestampType.REAL);
+    timelineData.updateCurrentTimestamp(timestamp);
     expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(2);
 
     // notify timestamp again
-    timelineCoordinator.updateCurrentTimestamp(timestamp);
+    timelineData.updateCurrentTimestamp(timestamp);
     expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(2);
 
     // reset back to the default timestamp should trigger a change
-    timelineCoordinator.updateCurrentTimestamp(undefined);
+    timelineData.updateCurrentTimestamp(undefined);
     expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(3);
   });
 
-  it("trace coordinator sets video data on timelineCoordinator when screenrecording is loaded", async () => {
+  it("trace coordinator sets video data on timelineData when screenrecording is loaded", async () => {
     expect(traceCoordinator.getParsers().length).toEqual(0);
     const traces = [
       await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/SurfaceFlinger.pb"),
@@ -177,7 +177,7 @@ describe("TraceCoordinator", () => {
     expect(traceCoordinator.getParsers().length).toEqual(3);
     expect(errors.length).toEqual(0);
 
-    expect(timelineCoordinator.setScreenRecordingData).toHaveBeenCalledTimes(1);
+    expect(timelineData.setScreenRecordingData).toHaveBeenCalledTimes(1);
   });
 
   it("video data is removed if video trace is deleted", async () => {
@@ -192,21 +192,21 @@ describe("TraceCoordinator", () => {
     expect(errors.length).toEqual(0);
     expect(traceCoordinator.getParserFor(TraceType.SCREEN_RECORDING))
       .withContext("Should have screen recording parser").toBeDefined();
-    expect(timelineCoordinator.getTimelines().keys())
+    expect(timelineData.getTimelines().keys())
       .withContext("Should have screen recording timeline").toContain(TraceType.SCREEN_RECORDING);
 
-    expect(timelineCoordinator.setScreenRecordingData).toHaveBeenCalledTimes(1);
-    expect(timelineCoordinator.getVideoData()).withContext("Should have video data").toBeDefined();
-    expect(timelineCoordinator.timestampAsElapsedScreenrecordingSeconds(
+    expect(timelineData.setScreenRecordingData).toHaveBeenCalledTimes(1);
+    expect(timelineData.getVideoData()).withContext("Should have video data").toBeDefined();
+    expect(timelineData.timestampAsElapsedScreenrecordingSeconds(
       new Timestamp(TimestampType.REAL, 1666361049372271045n)))
       .withContext("Should be able to covert timestamp to video seconds").toBeDefined();
 
     traceCoordinator.removeTrace(TraceType.SCREEN_RECORDING);
 
-    expect(timelineCoordinator.removeScreenRecordingData).toHaveBeenCalledTimes(1);
-    expect(timelineCoordinator.getVideoData()).withContext("Should no longer have video data").toBeUndefined();
+    expect(timelineData.removeScreenRecordingData).toHaveBeenCalledTimes(1);
+    expect(timelineData.getVideoData()).withContext("Should no longer have video data").toBeUndefined();
     expect(() => {
-      timelineCoordinator.timestampAsElapsedScreenrecordingSeconds(new Timestamp(TimestampType.REAL, 1666361049372271045n))
+      timelineData.timestampAsElapsedScreenrecordingSeconds(new Timestamp(TimestampType.REAL, 1666361049372271045n))
     }).toThrow(new Error("No timeline for requested trace type 3"));
   });
 });

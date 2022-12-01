@@ -25,7 +25,7 @@ import {MatDrawer, MatDrawerContainer, MatDrawerContent} from "app/components/bo
 import {TimelineComponent} from "./timeline.component";
 import {ExpandedTimelineComponent} from "./expanded_timeline.component";
 import {MiniTimelineComponent} from "./mini_timeline.component";
-import {TimelineCoordinator} from "app/timeline_coordinator";
+import {TimelineData} from "app/timeline_data";
 import {TraceType} from "common/trace/trace_type";
 import {RealTimestamp, Timestamp} from "common/trace/timestamp";
 import {By} from "@angular/platform-browser";
@@ -41,7 +41,7 @@ describe("TimelineComponent", () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [
-        TimelineCoordinator
+        TimelineData
       ],
       imports: [
         FormsModule,
@@ -76,7 +76,7 @@ describe("TimelineComponent", () => {
 
   it("can be expanded", () => {
     const timestamps = [timestamp(100), timestamp(110)];
-    component.timelineCoordinator.setTimelines([{
+    component.timelineData.setTimelines([{
       traceType: TraceType.SURFACE_FLINGER,
       timestamps: timestamps
     }]);
@@ -100,7 +100,7 @@ describe("TimelineComponent", () => {
 
   it("handles no timestamps", () => {
     const timestamps: Timestamp[] = [];
-    component.timelineCoordinator.setTimelines([{
+    component.timelineData.setTimelines([{
       traceType: TraceType.SURFACE_FLINGER,
       timestamps: timestamps
     }]);
@@ -168,7 +168,7 @@ describe("TimelineComponent", () => {
   });
 
   it("handles some traces with no timestamps", () => {
-    component.timelineCoordinator.setTimelines([{
+    component.timelineData.setTimelines([{
       traceType: TraceType.SURFACE_FLINGER,
       timestamps: []
     }, {
@@ -179,7 +179,7 @@ describe("TimelineComponent", () => {
   });
 
   it("next button disabled if no next entry", () => {
-    component.timelineCoordinator.setTimelines([{
+    component.timelineData.setTimelines([{
       traceType: TraceType.SURFACE_FLINGER,
       timestamps: [timestamp(100), timestamp(110)]
     }, {
@@ -189,27 +189,27 @@ describe("TimelineComponent", () => {
     component.activeTrace = TraceType.SURFACE_FLINGER;
     fixture.detectChanges();
 
-    expect(component.timelineCoordinator.currentTimestamp?.getValueNs()).toEqual(100n);
+    expect(component.timelineData.currentTimestamp?.getValueNs()).toEqual(100n);
 
     const nextEntryButton = fixture.debugElement.query(By.css("#next_entry_button"));
     expect(nextEntryButton).toBeTruthy();
     expect(nextEntryButton.nativeElement.getAttribute("disabled")).toBeFalsy();
 
-    component.timelineCoordinator.updateCurrentTimestamp(timestamp(90));
+    component.timelineData.updateCurrentTimestamp(timestamp(90));
     fixture.detectChanges();
     expect(nextEntryButton.nativeElement.getAttribute("disabled")).toBeFalsy();
 
-    component.timelineCoordinator.updateCurrentTimestamp(timestamp(110));
+    component.timelineData.updateCurrentTimestamp(timestamp(110));
     fixture.detectChanges();
     expect(nextEntryButton.nativeElement.getAttribute("disabled")).toBeTruthy();
 
-    component.timelineCoordinator.updateCurrentTimestamp(timestamp(112));
+    component.timelineData.updateCurrentTimestamp(timestamp(112));
     fixture.detectChanges();
     expect(nextEntryButton.nativeElement.getAttribute("disabled")).toBeTruthy();
   });
 
   it("prev button disabled if no prev entry", () => {
-    component.timelineCoordinator.setTimelines([{
+    component.timelineData.setTimelines([{
       traceType: TraceType.SURFACE_FLINGER,
       timestamps: [timestamp(100), timestamp(110)]
     }, {
@@ -219,26 +219,26 @@ describe("TimelineComponent", () => {
     component.activeTrace = TraceType.SURFACE_FLINGER;
     fixture.detectChanges();
 
-    expect(component.timelineCoordinator.currentTimestamp?.getValueNs()).toEqual(100n);
+    expect(component.timelineData.currentTimestamp?.getValueNs()).toEqual(100n);
     const prevEntryButton = fixture.debugElement.query(By.css("#prev_entry_button"));
     expect(prevEntryButton).toBeTruthy();
     expect(prevEntryButton.nativeElement.getAttribute("disabled")).toBeTruthy();
 
-    component.timelineCoordinator.updateCurrentTimestamp(timestamp(90));
+    component.timelineData.updateCurrentTimestamp(timestamp(90));
     fixture.detectChanges();
     expect(prevEntryButton.nativeElement.getAttribute("disabled")).toBeTruthy();
 
-    component.timelineCoordinator.updateCurrentTimestamp(timestamp(110));
+    component.timelineData.updateCurrentTimestamp(timestamp(110));
     fixture.detectChanges();
     expect(prevEntryButton.nativeElement.getAttribute("disabled")).toBeFalsy();
 
-    component.timelineCoordinator.updateCurrentTimestamp(timestamp(112));
+    component.timelineData.updateCurrentTimestamp(timestamp(112));
     fixture.detectChanges();
     expect(prevEntryButton.nativeElement.getAttribute("disabled")).toBeFalsy();
   });
 
   it("changes timestamp on next entry button press", () => {
-    component.timelineCoordinator.setTimelines([{
+    component.timelineData.setTimelines([{
       traceType: TraceType.SURFACE_FLINGER,
       timestamps: [timestamp(100), timestamp(110)]
     }, {
@@ -247,40 +247,40 @@ describe("TimelineComponent", () => {
     }]);
     component.activeTrace = TraceType.SURFACE_FLINGER;
     fixture.detectChanges();
-    expect(component.timelineCoordinator.currentTimestamp?.getValueNs()).toEqual(100n);
+    expect(component.timelineData.currentTimestamp?.getValueNs()).toEqual(100n);
     const nextEntryButton = fixture.debugElement.query(By.css("#next_entry_button"));
     expect(nextEntryButton).toBeTruthy();
 
-    component.timelineCoordinator.updateCurrentTimestamp(timestamp(105));
+    component.timelineData.updateCurrentTimestamp(timestamp(105));
     fixture.detectChanges();
     nextEntryButton.nativeElement.click();
-    expect(component.timelineCoordinator.currentTimestamp?.getValueNs()).toEqual(110n);
+    expect(component.timelineData.currentTimestamp?.getValueNs()).toEqual(110n);
 
-    component.timelineCoordinator.updateCurrentTimestamp(timestamp(100));
+    component.timelineData.updateCurrentTimestamp(timestamp(100));
     fixture.detectChanges();
     nextEntryButton.nativeElement.click();
-    expect(component.timelineCoordinator.currentTimestamp?.getValueNs()).toEqual(110n);
+    expect(component.timelineData.currentTimestamp?.getValueNs()).toEqual(110n);
 
-    component.timelineCoordinator.updateCurrentTimestamp(timestamp(90));
+    component.timelineData.updateCurrentTimestamp(timestamp(90));
     fixture.detectChanges();
     nextEntryButton.nativeElement.click();
-    expect(component.timelineCoordinator.currentTimestamp?.getValueNs()).toEqual(100n);
+    expect(component.timelineData.currentTimestamp?.getValueNs()).toEqual(100n);
 
     // No change when we are already on the last timestamp of the active trace
-    component.timelineCoordinator.updateCurrentTimestamp(timestamp(110));
+    component.timelineData.updateCurrentTimestamp(timestamp(110));
     fixture.detectChanges();
     nextEntryButton.nativeElement.click();
-    expect(component.timelineCoordinator.currentTimestamp?.getValueNs()).toEqual(110n);
+    expect(component.timelineData.currentTimestamp?.getValueNs()).toEqual(110n);
 
     // No change when we are after the last entry of the active trace
-    component.timelineCoordinator.updateCurrentTimestamp(timestamp(112));
+    component.timelineData.updateCurrentTimestamp(timestamp(112));
     fixture.detectChanges();
     nextEntryButton.nativeElement.click();
-    expect(component.timelineCoordinator.currentTimestamp?.getValueNs()).toEqual(112n);
+    expect(component.timelineData.currentTimestamp?.getValueNs()).toEqual(112n);
   });
 
   it("changes timestamp on previous entry button press", () => {
-    component.timelineCoordinator.setTimelines([{
+    component.timelineData.setTimelines([{
       traceType: TraceType.SURFACE_FLINGER,
       timestamps: [timestamp(100), timestamp(110)]
     }, {
@@ -289,39 +289,39 @@ describe("TimelineComponent", () => {
     }]);
     component.activeTrace = TraceType.SURFACE_FLINGER;
     fixture.detectChanges();
-    expect(component.timelineCoordinator.currentTimestamp?.getValueNs()).toEqual(100n);
+    expect(component.timelineData.currentTimestamp?.getValueNs()).toEqual(100n);
     const prevEntryButton = fixture.debugElement.query(By.css("#prev_entry_button"));
     expect(prevEntryButton).toBeTruthy();
 
     // In this state we are already on the first entry at timestamp 100, so
     // there is no entry to move to before and we just don't update the timestamp
-    component.timelineCoordinator.updateCurrentTimestamp(timestamp(105));
+    component.timelineData.updateCurrentTimestamp(timestamp(105));
     fixture.detectChanges();
     prevEntryButton.nativeElement.click();
-    expect(component.timelineCoordinator.currentTimestamp?.getValueNs()).toEqual(105n);
+    expect(component.timelineData.currentTimestamp?.getValueNs()).toEqual(105n);
 
-    component.timelineCoordinator.updateCurrentTimestamp(timestamp(110));
+    component.timelineData.updateCurrentTimestamp(timestamp(110));
     fixture.detectChanges();
     prevEntryButton.nativeElement.click();
-    expect(component.timelineCoordinator.currentTimestamp?.getValueNs()).toEqual(100n);
+    expect(component.timelineData.currentTimestamp?.getValueNs()).toEqual(100n);
 
     // Active entry here should be 110 so moving back means moving to 100.
-    component.timelineCoordinator.updateCurrentTimestamp(timestamp(112));
+    component.timelineData.updateCurrentTimestamp(timestamp(112));
     fixture.detectChanges();
     prevEntryButton.nativeElement.click();
-    expect(component.timelineCoordinator.currentTimestamp?.getValueNs()).toEqual(100n);
+    expect(component.timelineData.currentTimestamp?.getValueNs()).toEqual(100n);
 
     // No change when we are already on the first timestamp of the active trace
-    component.timelineCoordinator.updateCurrentTimestamp(timestamp(100));
+    component.timelineData.updateCurrentTimestamp(timestamp(100));
     fixture.detectChanges();
     prevEntryButton.nativeElement.click();
-    expect(component.timelineCoordinator.currentTimestamp?.getValueNs()).toEqual(100n);
+    expect(component.timelineData.currentTimestamp?.getValueNs()).toEqual(100n);
 
     // No change when we are before the first entry of the active trace
-    component.timelineCoordinator.updateCurrentTimestamp(timestamp(90));
+    component.timelineData.updateCurrentTimestamp(timestamp(90));
     fixture.detectChanges();
     prevEntryButton.nativeElement.click();
-    expect(component.timelineCoordinator.currentTimestamp?.getValueNs()).toEqual(90n);
+    expect(component.timelineData.currentTimestamp?.getValueNs()).toEqual(90n);
   });
 });
 

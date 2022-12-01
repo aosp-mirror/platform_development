@@ -29,12 +29,12 @@ import { ViewerWindowManagerComponent } from "viewers/viewer_window_manager/view
 import { ViewerTransactionsComponent } from "viewers/viewer_transactions/viewer_transactions.component";
 import { ViewerScreenRecordingComponent } from "viewers/viewer_screen_recording/viewer_screen_recording.component";
 import { TraceType } from "common/trace/trace_type";
-import { TimelineCoordinator } from "app/timeline_coordinator";
+import { TimelineData } from "app/timeline_data";
 import { TracingConfig } from "trace_collection/tracing_config";
 
 @Component({
   selector: "app-root",
-  providers: [TimelineCoordinator, TraceCoordinator],
+  providers: [TimelineData, TraceCoordinator],
   template: `
     <mat-toolbar class="toolbar">
       <span class="app-title">Winscope</span>
@@ -180,7 +180,7 @@ export class AppComponent {
   title = "winscope-ng";
   changeDetectorRef: ChangeDetectorRef;
   traceCoordinator: TraceCoordinator;
-  timelineCoordinator: TimelineCoordinator;
+  timelineData: TimelineData;
   states = ProxyState;
   store: PersistentStore = new PersistentStore();
   currentTimestamp?: Timestamp;
@@ -200,13 +200,14 @@ export class AppComponent {
   constructor(
     @Inject(Injector) injector: Injector,
     @Inject(ChangeDetectorRef) changeDetectorRef: ChangeDetectorRef,
-    @Inject(TimelineCoordinator) timelineCoordinator: TimelineCoordinator,
+    //TODO: do not inject TimelineData + TraceCoordinator (make Angular independent)
+    @Inject(TimelineData) timelineData: TimelineData,
     @Inject(TraceCoordinator) traceCoordinator: TraceCoordinator,
   ) {
     this.changeDetectorRef = changeDetectorRef;
-    this.timelineCoordinator = timelineCoordinator;
+    this.timelineData = timelineData;
     this.traceCoordinator = traceCoordinator;
-    this.timelineCoordinator.registerObserver(this.traceCoordinator);
+    this.timelineData.registerObserver(this.traceCoordinator);
 
     const storeDarkMode = this.store.get("dark-mode");
     const prefersDarkQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
@@ -245,7 +246,7 @@ export class AppComponent {
   }
 
   get videoData(): Blob|undefined {
-    return this.timelineCoordinator.getVideoData();
+    return this.timelineData.getVideoData();
   }
 
   public onUploadNewClick() {
@@ -291,7 +292,7 @@ export class AppComponent {
 
   handleActiveViewChanged(view: View) {
     this.activeView = view;
-    this.timelineCoordinator.setActiveTraceTypes(view.dependencies);
+    this.timelineData.setActiveTraceTypes(view.dependencies);
   }
 
   getActiveTraceType(): TraceType|undefined {

@@ -24,7 +24,7 @@ import { ViewerFactory } from "viewers/viewer_factory";
 import { LoadedTrace } from "app/loaded_trace";
 import { FileUtils } from "common/utils/file_utils";
 import { TRACE_INFO } from "app/trace_info";
-import { TimelineCoordinator, TimestampChangeObserver, Timeline} from "./timeline_coordinator";
+import { TimelineData, TimestampChangeObserver, Timeline} from "./timeline_data";
 import { Inject, Injectable } from "@angular/core";
 import { ScreenRecordingTraceEntry } from "common/trace/screen_recording";
 
@@ -33,28 +33,28 @@ class TraceCoordinator implements TimestampChangeObserver {
   private parsers: Parser[] = [];
   private viewers: Viewer[] = [];
 
-  constructor(@Inject(TimelineCoordinator) private timelineCoordinator: TimelineCoordinator) {
-    this.timelineCoordinator.registerObserver(this);
+  constructor(@Inject(TimelineData) private timelineData: TimelineData) {
+    this.timelineData.registerObserver(this);
   }
 
   public async setTraces(traces: File[]): Promise<ParserError[]> {
     traces = this.parsers.map(parser => parser.getTrace()).concat(traces);
     let parserErrors: ParserError[];
     [this.parsers, parserErrors] = await new ParserFactory().createParsers(traces);
-    this.addAllTracesToTimelineCoordinator();
+    this.addAllTracesToTimelineData();
     this.addScreenRecodingTimeMappingToTraceCooordinator();
     return parserErrors;
   }
 
   public removeTrace(type: TraceType) {
     this.parsers = this.parsers.filter(parser => parser.getTraceType() !== type);
-    this.timelineCoordinator.removeTimeline(type);
+    this.timelineData.removeTimeline(type);
     if (type === TraceType.SCREEN_RECORDING) {
-      this.timelineCoordinator.removeScreenRecordingData();
+      this.timelineData.removeScreenRecordingData();
     }
   }
 
-  private addAllTracesToTimelineCoordinator() {
+  private addAllTracesToTimelineData() {
     const timelines: Timeline[] = this.parsers.map(parser => {
       const timestamps = parser.getTimestamps(this.timestampTypeToUse());
       if (timestamps === undefined) {
@@ -63,7 +63,7 @@ class TraceCoordinator implements TimestampChangeObserver {
       return {traceType: parser.getTraceType(), timestamps: timestamps};
     });
 
-    this.timelineCoordinator.setTimelines(timelines);
+    this.timelineData.setTimelines(timelines);
   }
 
   private addScreenRecodingTimeMappingToTraceCooordinator() {
@@ -86,7 +86,7 @@ class TraceCoordinator implements TimestampChangeObserver {
       throw Error("No video data available!");
     }
 
-    this.timelineCoordinator.setScreenRecordingData(videoData, timestampMapping);
+    this.timelineData.setScreenRecordingData(videoData, timestampMapping);
   }
 
   private timestampTypeToUse() {
@@ -105,8 +105,8 @@ class TraceCoordinator implements TimestampChangeObserver {
     this.viewers = new ViewerFactory().createViewers(new Set<TraceType>(activeTraceTypes), storage);
 
     // Make sure to update the viewers active entries as soon as they are created.
-    if (this.timelineCoordinator.currentTimestamp) {
-      this.onCurrentTimestampChanged(this.timelineCoordinator.currentTimestamp);
+    if (this.timelineData.currentTimestamp) {
+      this.onCurrentTimestampChanged(this.timelineData.currentTimestamp);
     }
   }
 
@@ -172,7 +172,7 @@ class TraceCoordinator implements TimestampChangeObserver {
   public clearData() {
     this.parsers = [];
     this.viewers = [];
-    this.timelineCoordinator.clearData();
+    this.timelineData.clearData();
   }
 
   public async getUnzippedFiles(files: File[]): Promise<File[]> {

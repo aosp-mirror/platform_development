@@ -15,7 +15,7 @@
  */
 
 import { Component, ElementRef, EventEmitter, HostListener, Inject, Input, Output, SimpleChanges, ViewChild } from "@angular/core";
-import { TimelineCoordinator } from "app/timeline_coordinator";
+import { TimelineData } from "app/timeline_data";
 import { Timestamp } from "common/trace/timestamp";
 import { TraceType } from "common/trace/trace_type";
 import { MiniCanvasDrawer, MiniCanvasDrawerInput } from "./mini_canvas_drawer";
@@ -49,7 +49,7 @@ export class MiniTimelineComponent {
     return this.canvasRef.nativeElement;
   }
 
-  constructor(@Inject(TimelineCoordinator) private timelineCoordinator: TimelineCoordinator) {}
+  constructor(@Inject(TimelineData) private timelineData: TimelineData) {}
 
   private drawer: MiniCanvasDrawer|undefined = undefined;
 
@@ -57,7 +57,7 @@ export class MiniTimelineComponent {
     this.makeHiPPICanvas();
 
     const updateTimestampCallback = (position: bigint) => {
-      const timestampType = this.timelineCoordinator.getTimestampType()!;
+      const timestampType = this.timelineData.getTimestampType()!;
       this.changeSeekTimestamp.emit(undefined);
       this.changeTimestamp.emit(new Timestamp(timestampType, position));
     };
@@ -66,13 +66,13 @@ export class MiniTimelineComponent {
       this.canvas,
       () => this.getMiniCanvasDrawerInput(),
       (position) => {
-        const timestampType = this.timelineCoordinator.getTimestampType()!;
+        const timestampType = this.timelineData.getTimestampType()!;
         this.changeSeekTimestamp.emit(new Timestamp(timestampType, position));
       },
       updateTimestampCallback,
       (selection) => {
-        const timestampType = this.timelineCoordinator.getTimestampType()!;
-        this.timelineCoordinator.setSelection({
+        const timestampType = this.timelineData.getTimestampType()!;
+        this.timelineData.setSelection({
           from: new Timestamp(timestampType, selection.from),
           to: new Timestamp(timestampType, selection.to)
         });
@@ -91,13 +91,13 @@ export class MiniTimelineComponent {
   private getMiniCanvasDrawerInput() {
     return new MiniCanvasDrawerInput(
       {
-        from: this.timelineCoordinator.fullRange.from.getValueNs(),
-        to: this.timelineCoordinator.fullRange.to.getValueNs()
+        from: this.timelineData.fullRange.from.getValueNs(),
+        to: this.timelineData.fullRange.to.getValueNs()
       },
       this.currentTimestamp.getValueNs(),
       {
-        from: this.timelineCoordinator.selection.from.getValueNs(),
-        to: this.timelineCoordinator.selection.to.getValueNs()
+        from: this.timelineData.selection.from.getValueNs(),
+        to: this.timelineData.selection.to.getValueNs()
       },
       this.getTimelinesToShow()
     );
@@ -106,7 +106,7 @@ export class MiniTimelineComponent {
   private getTimelinesToShow() {
     const timelines = new Map<TraceType, bigint[]>();
     for (const type of this.selectedTraces) {
-      timelines.set(type, this.timelineCoordinator.getTimelines().get(type)!.map(it => it.getValueNs()));
+      timelines.set(type, this.timelineData.getTimelines().get(type)!.map(it => it.getValueNs()));
     }
     return timelines;
   }

@@ -30,7 +30,7 @@ import { FormControl, FormGroup, Validators} from "@angular/forms";
 import { DomSanitizer, SafeUrl } from "@angular/platform-browser";
 import { TraceType } from "common/trace/trace_type";
 import { TRACE_INFO } from "app/trace_info";
-import { TimelineCoordinator, TimestampChangeObserver } from "app/timeline_coordinator";
+import { TimelineData, TimestampChangeObserver } from "app/timeline_data";
 import { MiniTimelineComponent } from "./mini_timeline.component";
 import { Timestamp, TimestampType } from "common/trace/timestamp";
 import { TimeUtils } from "common/utils/time_utils";
@@ -331,21 +331,21 @@ export class TimelineComponent implements TimestampChangeObserver {
   TRACE_INFO = TRACE_INFO;
 
   get hasVideo() {
-    return this.timelineCoordinator.getTimelines().get(TraceType.SCREEN_RECORDING) !== undefined;
+    return this.timelineData.getTimelines().get(TraceType.SCREEN_RECORDING) !== undefined;
   }
 
   get videoCurrentTime() {
-    return this.timelineCoordinator.timestampAsElapsedScreenrecordingSeconds(this.currentTimestamp);
+    return this.timelineData.timestampAsElapsedScreenrecordingSeconds(this.currentTimestamp);
   }
 
   private seekTimestamp: Timestamp|undefined;
 
   hasTimestamps(): boolean {
-    return this.timelineCoordinator.getAllUniqueTimestamps().length > 0;
+    return this.timelineData.getAllUniqueTimestamps().length > 0;
   }
 
   hasMoreThanOneDistinctTimestamp(): boolean {
-    return this.timelineCoordinator.getAllUniqueTimestamps().length > 1;
+    return this.timelineData.getAllUniqueTimestamps().length > 1;
   }
 
   get currentTimestamp(): Timestamp {
@@ -353,7 +353,7 @@ export class TimelineComponent implements TimestampChangeObserver {
       return this.seekTimestamp;
     }
 
-    const timestamp = this.timelineCoordinator.currentTimestamp;
+    const timestamp = this.timelineData.currentTimestamp;
     if (timestamp === undefined) {
       throw Error("A timestamp should have been set by the time the timeline is loaded");
     }
@@ -362,14 +362,14 @@ export class TimelineComponent implements TimestampChangeObserver {
   }
 
   constructor(
-    @Inject(TimelineCoordinator) public timelineCoordinator: TimelineCoordinator,
+    @Inject(TimelineData) public timelineData: TimelineData,
     @Inject(DomSanitizer) private sanitizer: DomSanitizer,
     @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef) {
-    this.timelineCoordinator.registerObserver(this);
+    this.timelineData.registerObserver(this);
   }
 
   ngOnDestroy() {
-    this.timelineCoordinator.unregisterObserver(this);
+    this.timelineData.unregisterObserver(this);
   }
 
   ngAfterViewInit() {
@@ -390,11 +390,11 @@ export class TimelineComponent implements TimestampChangeObserver {
   }
 
   updateCurrentTimestamp(timestamp: Timestamp) {
-    this.timelineCoordinator.updateCurrentTimestamp(timestamp);
+    this.timelineData.updateCurrentTimestamp(timestamp);
   }
 
   usingRealtime(): boolean {
-    return this.timelineCoordinator.getTimestampType() === TimestampType.REAL;
+    return this.timelineData.getTimestampType() === TimestampType.REAL;
   }
 
   updateSeekTimestamp(timestamp: Timestamp|undefined) {
@@ -446,32 +446,32 @@ export class TimelineComponent implements TimestampChangeObserver {
 
   hasPrevEntry(): boolean {
     if (!this.wrappedActiveTrace ||
-      (this.timelineCoordinator.getTimelines().get(this.wrappedActiveTrace)?.length ?? 0) === 0) {
+      (this.timelineData.getTimelines().get(this.wrappedActiveTrace)?.length ?? 0) === 0) {
       return false;
     }
-    return this.timelineCoordinator.getPreviousTimestampFor(this.wrappedActiveTrace) !== undefined;
+    return this.timelineData.getPreviousTimestampFor(this.wrappedActiveTrace) !== undefined;
   }
 
   hasNextEntry(): boolean {
     if (!this.wrappedActiveTrace ||
-      (this.timelineCoordinator.getTimelines().get(this.wrappedActiveTrace)?.length ?? 0) === 0) {
+      (this.timelineData.getTimelines().get(this.wrappedActiveTrace)?.length ?? 0) === 0) {
       return false;
     }
-    return this.timelineCoordinator.getNextTimestampFor(this.wrappedActiveTrace) !== undefined;
+    return this.timelineData.getNextTimestampFor(this.wrappedActiveTrace) !== undefined;
   }
 
   moveToPreviousEntry() {
     if (!this.wrappedActiveTrace) {
       return;
     }
-    this.timelineCoordinator.moveToPreviousEntryFor(this.wrappedActiveTrace);
+    this.timelineData.moveToPreviousEntryFor(this.wrappedActiveTrace);
   }
 
   moveToNextEntry() {
     if (!this.wrappedActiveTrace) {
       return;
     }
-    this.timelineCoordinator.moveToNextEntryFor(this.wrappedActiveTrace);
+    this.timelineData.moveToNextEntryFor(this.wrappedActiveTrace);
   }
 
   humanElapsedTimeInputChange(event: Event) {
@@ -479,9 +479,9 @@ export class TimelineComponent implements TimestampChangeObserver {
       return;
     }
     const target = event.target as HTMLInputElement;
-    const timestamp = new Timestamp(this.timelineCoordinator.getTimestampType()!,
+    const timestamp = new Timestamp(this.timelineData.getTimestampType()!,
       TimeUtils.humanElapsedToNanoseconds(target.value));
-    this.timelineCoordinator.updateCurrentTimestamp(timestamp);
+    this.timelineData.updateCurrentTimestamp(timestamp);
     this.updateTimeInputValuesToCurrentTimestamp();
   }
 
@@ -491,9 +491,9 @@ export class TimelineComponent implements TimestampChangeObserver {
     }
     const target = event.target as HTMLInputElement;
 
-    const timestamp = new Timestamp(this.timelineCoordinator.getTimestampType()!,
+    const timestamp = new Timestamp(this.timelineData.getTimestampType()!,
       TimeUtils.humanRealToNanoseconds(target.value));
-    this.timelineCoordinator.updateCurrentTimestamp(timestamp);
+    this.timelineData.updateCurrentTimestamp(timestamp);
     this.updateTimeInputValuesToCurrentTimestamp();
   }
 
@@ -503,8 +503,8 @@ export class TimelineComponent implements TimestampChangeObserver {
     }
     const target = event.target as HTMLInputElement;
 
-    const timestamp = new Timestamp(this.timelineCoordinator.getTimestampType()!, BigInt(target.value));
-    this.timelineCoordinator.updateCurrentTimestamp(timestamp);
+    const timestamp = new Timestamp(this.timelineData.getTimestampType()!, BigInt(target.value));
+    this.timelineData.updateCurrentTimestamp(timestamp);
     this.updateTimeInputValuesToCurrentTimestamp();
   }
 }

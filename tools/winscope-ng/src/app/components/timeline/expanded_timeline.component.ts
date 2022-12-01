@@ -15,7 +15,7 @@
  */
 
 import { Component, ElementRef, EventEmitter, HostListener, Inject, Input, Output, QueryList, ViewChild, ViewChildren } from "@angular/core";
-import { TimelineCoordinator } from "app/timeline_coordinator";
+import { TimelineData } from "app/timeline_data";
 import { TRACE_INFO } from "app/trace_info";
 import { Timestamp } from "common/trace/timestamp";
 import { SingleTimelineComponent } from "./single_timeline.component";
@@ -26,18 +26,20 @@ import { SingleTimelineComponent } from "./single_timeline.component";
     <div id="expanded-timeline-wrapper" #expandedTimelineWrapper>
       <div *ngFor="let timeline of this.data | keyvalue" class="timeline">
         <div class="icon-wrapper">
-          <mat-icon class="icon" [style]="{ color: TRACE_INFO[timeline.key].color }">
+          <mat-icon class="icon"
+                    [style]="{ color: TRACE_INFO[timeline.key].color }">
             {{ TRACE_INFO[timeline.key].icon }}
           </mat-icon>
         </div>
+        <!-- TODO: Timestamp variables are passed to single-timeline, but single-timeline takes bigint parameters. Why the heck is this working??? -->
         <single-timeline
-          [color]="TRACE_INFO[timeline.key].color"
-          [entries]="timeline.value"
-          [selected]="timelineCoordinator.getActiveTimestampFor(timeline.key)?.timestamp?.getValueNs() ?? undefined"
-          [start]="start"
-          [end]="end"
-          (onTimestampChanged)="onTimestampChanged.emit($event)"
-          class="single-timeline"
+            [color]="TRACE_INFO[timeline.key].color"
+            [entries]="timeline.value"
+            [selected]="timelineData.getActiveTimestampFor(timeline.key)?.timestamp?.getValueNs() ?? undefined"
+            [start]="start"
+            [end]="end"
+            (onTimestampChanged)="onTimestampChanged.emit($event)"
+            class="single-timeline"
         ></single-timeline>
         <div class="icon-wrapper">
           <mat-icon class="icon placeholder-icon"></mat-icon>
@@ -132,14 +134,14 @@ export class ExpandedTimelineComponent {
 
   TRACE_INFO = TRACE_INFO;
 
-  constructor(@Inject(TimelineCoordinator) public timelineCoordinator: TimelineCoordinator) {}
+  constructor(@Inject(TimelineData) public timelineData: TimelineData) {}
 
   get canvas(): HTMLCanvasElement {
     return this.canvasRef.nativeElement;
   }
 
   get data() {
-    return this.timelineCoordinator.getTimelines();
+    return this.timelineData.getTimelines();
   }
 
   get sortedMergedTimestamps() {
@@ -147,11 +149,11 @@ export class ExpandedTimelineComponent {
   }
 
   get start() {
-    return this.timelineCoordinator.selection.from;
+    return this.timelineData.selection.from;
   }
 
   get end() {
-    return this.timelineCoordinator.selection.to;
+    return this.timelineData.selection.to;
   }
 
   @HostListener("window:resize", ["$event"])
