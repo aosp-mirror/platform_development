@@ -46,8 +46,8 @@ LOG_LEVEL = logging.DEBUG
 
 PORT = 5544
 
-# Keep in sync with WINSCOPE_PROXY_VERSION in Winscope DataAdb.vue
-VERSION = '0.8'
+# Keep in sync with ProxyClient#VERSION in Winscope
+VERSION = '1.0'
 
 WINSCOPE_VERSION_HEADER = "Winscope-Proxy-Version"
 WINSCOPE_TOKEN_HEADER = "Winscope-Token"
