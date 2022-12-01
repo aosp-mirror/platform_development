@@ -20,7 +20,7 @@ import {
 import { UiData } from "./ui_data";
 import { TRACE_INFO } from "app/trace_info";
 import { TraceType } from "common/trace/trace_type";
-import { PersistentStore } from "common/persistent_store";
+import { PersistentStore } from "common/utils/persistent_store";
 
 @Component({
   selector: "viewer-surface-flinger",

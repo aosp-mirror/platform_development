@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { Component, Inject, Input, Output, ElementRef, EventEmitter, ChangeDetectionStrategy } from "@angular/core";
-import { PersistentStore } from "common/persistent_store";
+import { PersistentStore } from "common/utils/persistent_store";
 import { nodeStyles, treeNodeDataViewStyles } from "viewers/components/styles/node.styles";
 import { UiTreeUtils, UiTreeNode, HierarchyTreeNode, PropertiesTreeNode } from "viewers/common/ui_tree_utils";
 import { TraceType } from "common/trace/trace_type";
@@ -212,7 +212,7 @@ export class TreeComponent {
     }
 
     if (this.useGlobalCollapsedState) {
-      return this.store.getFromStore(`collapsedState.item.${this.dependencies}.${this.item.stableId}`)==="true"
+      return this.store.get(`collapsedState.item.${this.dependencies}.${this.item.stableId}`)==="true"
         ?? this.isCollapsedByDefault;
     }
     return this.localCollapsedState;
@@ -229,7 +229,7 @@ export class TreeComponent {
 
   private setCollapseValue(isCollapsed: boolean) {
     if (this.useGlobalCollapsedState) {
-      this.store.addToStore(`collapsedState.item.${this.dependencies}.${this.item.stableId}`, `${isCollapsed}`);
+      this.store.add(`collapsedState.item.${this.dependencies}.${this.item.stableId}`, `${isCollapsed}`);
     } else {
       this.localCollapsedState = isCollapsed;
     }
