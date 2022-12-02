@@ -121,22 +121,22 @@ describe("TimelineComponent", () => {
   });
 
   it("processes active trace input and updates selected traces", () => {
-    component.activeTrace = TraceType.SURFACE_FLINGER;
+    component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
     expect(component.wrappedActiveTrace).toEqual(TraceType.SURFACE_FLINGER);
     expect(component.selectedTraces).toEqual([TraceType.SURFACE_FLINGER]);
 
-    component.activeTrace = TraceType.SURFACE_FLINGER;
+    component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
     expect(component.wrappedActiveTrace).toEqual(TraceType.SURFACE_FLINGER);
     expect(component.selectedTraces).toEqual([TraceType.SURFACE_FLINGER]);
 
-    component.activeTrace = TraceType.TRANSACTIONS;
+    component.activeViewTraceTypes = [TraceType.TRANSACTIONS];
     expect(component.wrappedActiveTrace).toEqual(TraceType.TRANSACTIONS);
     expect(component.selectedTraces).toEqual([
       TraceType.SURFACE_FLINGER,
       TraceType.TRANSACTIONS
     ]);
 
-    component.activeTrace = TraceType.WINDOW_MANAGER;
+    component.activeViewTraceTypes = [TraceType.WINDOW_MANAGER];
     expect(component.wrappedActiveTrace).toEqual(TraceType.WINDOW_MANAGER);
     expect(component.selectedTraces).toEqual([
       TraceType.SURFACE_FLINGER,
@@ -144,7 +144,7 @@ describe("TimelineComponent", () => {
       TraceType.WINDOW_MANAGER
     ]);
 
-    component.activeTrace = TraceType.PROTO_LOG;
+    component.activeViewTraceTypes = [TraceType.PROTO_LOG];
     expect(component.wrappedActiveTrace).toEqual(TraceType.PROTO_LOG);
     expect(component.selectedTraces).toEqual([
       TraceType.TRANSACTIONS,
@@ -154,15 +154,15 @@ describe("TimelineComponent", () => {
   });
 
   it("handles undefined active trace input", () => {
-    component.activeTrace = undefined;
+    component.activeViewTraceTypes = undefined;
     expect(component.wrappedActiveTrace).toBeUndefined();
     expect(component.selectedTraces).toEqual([]);
 
-    component.activeTrace = TraceType.SURFACE_FLINGER;
+    component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
     expect(component.wrappedActiveTrace).toEqual(TraceType.SURFACE_FLINGER);
     expect(component.selectedTraces).toEqual([TraceType.SURFACE_FLINGER]);
 
-    component.activeTrace = undefined;
+    component.activeViewTraceTypes = undefined;
     expect(component.wrappedActiveTrace).toEqual(TraceType.SURFACE_FLINGER);
     expect(component.selectedTraces).toEqual([TraceType.SURFACE_FLINGER]);
   });
@@ -186,7 +186,7 @@ describe("TimelineComponent", () => {
       traceType: TraceType.WINDOW_MANAGER,
       timestamps: [timestamp(90), timestamp(101), timestamp(110), timestamp(112)]
     }]);
-    component.activeTrace = TraceType.SURFACE_FLINGER;
+    component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
     fixture.detectChanges();
 
     expect(component.timelineData.currentTimestamp?.getValueNs()).toEqual(100n);
@@ -216,7 +216,7 @@ describe("TimelineComponent", () => {
       traceType: TraceType.WINDOW_MANAGER,
       timestamps: [timestamp(90), timestamp(101), timestamp(110), timestamp(112)]
     }]);
-    component.activeTrace = TraceType.SURFACE_FLINGER;
+    component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
     fixture.detectChanges();
 
     expect(component.timelineData.currentTimestamp?.getValueNs()).toEqual(100n);
@@ -245,7 +245,7 @@ describe("TimelineComponent", () => {
       traceType: TraceType.WINDOW_MANAGER,
       timestamps: [timestamp(90), timestamp(101), timestamp(110), timestamp(112)]
     }]);
-    component.activeTrace = TraceType.SURFACE_FLINGER;
+    component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
     fixture.detectChanges();
     expect(component.timelineData.currentTimestamp?.getValueNs()).toEqual(100n);
     const nextEntryButton = fixture.debugElement.query(By.css("#next_entry_button"));
@@ -287,7 +287,7 @@ describe("TimelineComponent", () => {
       traceType: TraceType.WINDOW_MANAGER,
       timestamps: [timestamp(90), timestamp(101), timestamp(110), timestamp(112)]
     }]);
-    component.activeTrace = TraceType.SURFACE_FLINGER;
+    component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
     fixture.detectChanges();
     expect(component.timelineData.currentTimestamp?.getValueNs()).toEqual(100n);
     const prevEntryButton = fixture.debugElement.query(By.css("#prev_entry_button"));

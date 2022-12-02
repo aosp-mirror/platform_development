@@ -17,8 +17,7 @@ import {ComponentFixture, TestBed} from "@angular/core/testing";
 import {UploadTracesComponent} from "./upload_traces.component";
 import { MatCardModule } from "@angular/material/card";
 import { MatSnackBar, MatSnackBarModule } from "@angular/material/snack-bar";
-import { Mediator } from "app/mediator";
-import { TimelineData } from "app/timeline_data";
+import {TraceData} from "app/trace_data";
 
 describe("UploadTracesComponent", () => {
   let fixture: ComponentFixture<UploadTracesComponent>;
@@ -40,8 +39,8 @@ describe("UploadTracesComponent", () => {
     fixture = TestBed.createComponent(UploadTracesComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
-    const timelineData = new TimelineData();
-    component.mediator = new Mediator(timelineData);
+    const traceData = new TraceData();
+    component.traceData = traceData;
   });
 
   it("can be created", () => {

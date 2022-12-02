@@ -272,15 +272,19 @@ export class TimelineComponent implements TimestampChangeObserver {
   public readonly TOGGLE_BUTTON_CLASS: string = "button-toggle-expansion";
   public readonly MAX_SELECTED_TRACES = 3;
 
-  @Input() set activeTrace(trace: TraceType|undefined) {
-    if (!trace) {
+  @Input() set activeViewTraceTypes(types: TraceType[]|undefined) {
+    if (!types) {
       return;
     }
 
-    this.wrappedActiveTrace = trace;
+    if (types.length !== 1) {
+      throw Error("Timeline component doesn't support viewers with dependencies length !== 1");
+    }
 
-    if (!this.selectedTraces.includes(trace)) {
-      this.selectedTraces.push(trace);
+    this.wrappedActiveTrace = types[0];
+
+    if (!this.selectedTraces.includes(this.wrappedActiveTrace)) {
+      this.selectedTraces.push(this.wrappedActiveTrace);
     }
 
     if (this.selectedTraces.length > this.MAX_SELECTED_TRACES) {

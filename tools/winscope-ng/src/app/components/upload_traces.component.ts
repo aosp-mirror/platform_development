@@ -13,11 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input, Output, EventEmitter, Inject, NgZone } from "@angular/core";
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  Inject,
+  NgZone,
+  ChangeDetectorRef} from "@angular/core";
 import { MatSnackBar } from "@angular/material/snack-bar";
-import { Mediator } from "app/mediator";
+import { TraceData} from "app/trace_data";
 import { TRACE_INFO } from "app/trace_info";
-import { LoadedTrace } from "app/loaded_trace";
+import {Trace} from "common/trace/trace";
 import {FileUtils} from "common/utils/file_utils";
 import { ParserError } from "parsers/parser_factory";
 import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component";
@@ -45,14 +52,15 @@ import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component
           (change)="onInputFile($event)"
         />
 
-        <mat-list *ngIf="this.loadedTraces.length > 0" class="uploaded-files">
-          <mat-list-item *ngFor="let trace of loadedTraces">
+        <mat-list *ngIf="this.traceData.getLoadedTraces().length > 0"
+                  class="uploaded-files">
+          <mat-list-item *ngFor="let trace of this.traceData.getLoadedTraces()">
             <mat-icon matListIcon>
               {{TRACE_INFO[trace.type].icon}}
             </mat-icon>
 
             <p matLine>
-              {{trace.name}} ({{TRACE_INFO[trace.type].name}})
+              {{trace.file.name}} ({{TRACE_INFO[trace.type].name}})
             </p>
 
             <button color="primary" mat-icon-button (click)="onRemoveTrace($event, trace)">
@@ -72,7 +80,7 @@ import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component
       </mat-card-content>
 
       <div *ngIf="this.loadedTraces.length > 0" class="trace-actions-container">
-        <button color="primary" mat-raised-button class="load-btn" (click)="onLoadData()">
+        <button color="primary" mat-raised-button class="load-btn" (click)="onViewTracesButtonClick()">
           View traces
         </button>
 
@@ -80,7 +88,7 @@ import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component
           Upload another file
         </button>
 
-        <button color="primary" mat-stroked-button (click)="onClearData()">
+        <button color="primary" mat-stroked-button (click)="onClearButtonClick()">
           Clear all
         </button>
       </div>
@@ -136,14 +144,14 @@ import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component
   ]
 })
 export class UploadTracesComponent {
-  loadedTraces: LoadedTrace[] = [];
+  loadedTraces: Trace[] = [];
   TRACE_INFO = TRACE_INFO;
-  dataLoaded = false;
 
-  @Input() mediator!: Mediator;
-  @Output() dataLoadedChange = new EventEmitter<boolean>();
+  @Input() traceData!: TraceData;
+  @Output() traceDataLoaded = new EventEmitter<void>();
 
   constructor(
+    @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
     @Inject(NgZone) private ngZone: NgZone,
     @Inject(MatSnackBar) private snackBar: MatSnackBar
   ) {}
@@ -155,25 +163,21 @@ export class UploadTracesComponent {
 
   public async processFiles(files: File[]) {
     const unzippedFiles = await FileUtils.getUnzippedFiles(files);
-    const parserErrors = await this.mediator.setTraces(unzippedFiles);
+    const parserErrors = await this.traceData.loadTraces(unzippedFiles);
     if (parserErrors.length > 0) {
       this.openTempSnackBar(parserErrors);
     }
     this.ngZone.run(() => {
-      this.loadedTraces = this.mediator.getLoadedTraces();
+      this.loadedTraces = this.traceData.getLoadedTraces();
     });
   }
 
-  public onLoadData() {
-    this.dataLoaded = true;
-    this.dataLoadedChange.emit(this.dataLoaded);
+  public onViewTracesButtonClick() {
+    this.traceDataLoaded.emit();
   }
 
-  public onClearData() {
-    this.mediator.clearData();
-    this.dataLoaded = false;
-    this.loadedTraces = [];
-    this.dataLoadedChange.emit(this.dataLoaded);
+  public onClearButtonClick() {
+    this.traceData.clear();
   }
 
   public onFileDragIn(e: DragEvent) {
@@ -194,11 +198,11 @@ export class UploadTracesComponent {
     await this.processFiles(Array.from(droppedFiles));
   }
 
-  public onRemoveTrace(event: MouseEvent, trace: LoadedTrace) {
+  public onRemoveTrace(event: MouseEvent, trace: Trace) {
     event.preventDefault();
     event.stopPropagation();
-    this.mediator.removeTrace(trace.type);
-    this.loadedTraces = this.loadedTraces.filter(loaded => loaded.type !== trace.type);
+    this.traceData.removeTrace(trace.type);
+    this.changeDetectorRef.detectChanges();
   }
 
   private openTempSnackBar(parserErrors: ParserError[]) {

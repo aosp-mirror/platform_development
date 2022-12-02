@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import { Injectable, Type } from "@angular/core";
+import { Injectable } from "@angular/core";
+import {Timeline, ScreenRecordingData} from "./trace_data";
 import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
 import { ArrayUtils } from "common/utils/array_utils";
@@ -156,9 +157,9 @@ export class TimelineData {
     });
   }
 
-  public setScreenRecordingData(videoData: Blob, timeMapping: Map<Timestamp, number>) {
-    this.videoData = videoData;
-    this.screenRecordingTimeMapping = timeMapping;
+  public setScreenRecordingData(data: ScreenRecordingData) {
+    this.videoData = data.video;
+    this.screenRecordingTimeMapping = data.timestampsMapping;
   }
 
   public removeScreenRecordingData() {
@@ -258,7 +259,7 @@ export class TimelineData {
     return this.screenRecordingTimeMapping!.get(latestScreenRecordingEntry);
   }
 
-  public clearData() {
+  public clear() {
     this.applyOperationAndNotifyObserversIfTimestampChanged(() => {
       this.timelines.clear();
       this.explicitlySetTimestamp = undefined;
@@ -297,11 +298,6 @@ export class TimelineData {
     this.observers.forEach(observer =>
       observer.onCurrentTimestampChanged(timestamp));
   }
-}
-
-export interface Timeline {
-  traceType: TraceType;
-  timestamps: Timestamp[];
 }
 
 export interface TimestampChangeObserver {

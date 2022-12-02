@@ -31,6 +31,7 @@ import { ViewerScreenRecordingComponent } from "viewers/viewer_screen_recording/
 import { TraceType } from "common/trace/trace_type";
 import { TimelineData } from "app/timeline_data";
 import { TracingConfig } from "trace_collection/tracing_config";
+import {TRACE_INFO} from "app/trace_info";
 
 @Component({
   selector: "app-root",
@@ -76,7 +77,7 @@ import { TracingConfig } from "trace_collection/tracing_config";
 
           <trace-view
               class="viewers"
-              [viewers]="allViewers"
+              [viewers]="viewers"
               [store]="store"
               (onDownloadTracesButtonClick)="onDownloadTracesButtonClick()"
               (onActiveViewChanged)="handleActiveViewChanged($event)"
@@ -92,8 +93,8 @@ import { TracingConfig } from "trace_collection/tracing_config";
                   [baseHeight]="collapsedTimelineHeight">
         <timeline
             *ngIf="dataLoaded"
-            [activeTrace]="getActiveTraceType()"
-            [availableTraces]="availableTraces"
+            [activeViewTraceTypes]="activeView?.dependencies"
+            [availableTraces]="getAvailableTraces()"
             [videoData]="videoData"
             (onCollapsedTimelineSizeChanged)="onCollapsedTimelineSizeChanged($event)"
         ></timeline>
@@ -111,15 +112,15 @@ import { TracingConfig } from "trace_collection/tracing_config";
           <div class="card-grid landing-grid">
             <collect-traces
                 class="collect-traces-card homepage-card"
-                [mediator]="mediator"
-                (dataLoadedChange)="onDataLoadedChange($event)"
+                [traceData]="mediator.getTraceData()"
+                (traceDataLoaded)="onTraceDataLoaded()"
                 [store]="store"
             ></collect-traces>
 
             <upload-traces
                 class="upload-traces-card homepage-card"
-                [mediator]="mediator"
-                (dataLoadedChange)="onDataLoadedChange($event)"
+                [traceData]="mediator.getTraceData()"
+                (traceDataLoaded)="onTraceDataLoaded()"
             ></upload-traces>
           </div>
         </div>
@@ -184,8 +185,7 @@ export class AppComponent {
   states = ProxyState;
   store: PersistentStore = new PersistentStore();
   currentTimestamp?: Timestamp;
-  currentTimestampIndex = 0;
-  allViewers: Viewer[] = [];
+  viewers: Viewer[] = [];
   isDarkModeOn!: boolean;
   dataLoaded = false;
   activeView: View|undefined;
@@ -241,8 +241,8 @@ export class AppComponent {
     TracingConfig.getInstance().initialize(localStorage);
   }
 
-  get availableTraces(): TraceType[] {
-    return this.mediator.getLoadedTraces().map((trace) => trace.type);
+  getAvailableTraces(): TraceType[] {
+    return this.mediator.getTraceData().getLoadedTraces().map((trace) => trace.type);
   }
 
   get videoData(): Blob|undefined {
@@ -262,24 +262,18 @@ export class AppComponent {
     this.isDarkModeOn = enabled;
   }
 
-  public onDataLoadedChange(dataLoaded: boolean) {
-    if (dataLoaded && !(this.mediator.getViewers().length > 0)) {
-      this.mediator.createViewers(localStorage);
-      this.allViewers = this.mediator.getViewers();
-      // TODO: Update to handle viewers with more than one dependency
-      if (this.allViewers[0].getDependencies().length !== 1) {
-        throw Error("Viewers with more than 1 dependency not yet handled.");
-      }
-      this.currentTimestampIndex = 0;
-      this.dataLoaded = dataLoaded;
-      this.changeDetectorRef.detectChanges();
-    }
+  public onTraceDataLoaded() {
+    this.mediator.onTraceDataLoaded(localStorage);
+    this.viewers = this.mediator.getViewers();
+    this.dataLoaded = true;
+    this.changeDetectorRef.detectChanges();
   }
 
   async onDownloadTracesButtonClick() {
-    const traces = await this.mediator.getAllTracesForDownload();
-    const zipFileBlob = await FileUtils.createZipArchive(traces);
+    const traceFiles = await this.makeTraceFilesForDownload();
+    const zipFileBlob = await FileUtils.createZipArchive(traceFiles);
     const zipFileName = "winscope.zip";
+
     const a = document.createElement("a");
     document.body.appendChild(a);
     const url = window.URL.createObjectURL(zipFileBlob);
@@ -288,6 +282,14 @@ export class AppComponent {
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
+  }
+
+  private async makeTraceFilesForDownload(): Promise<File[]> {
+    return this.mediator.getTraceData().getLoadedTraces().map(trace => {
+      const traceType = TRACE_INFO[trace.type].name;
+      const newName = traceType + "/" + FileUtils.removeDirFromFileName(trace.file.name);
+      return new File([trace.file], newName);
+    });
   }
 
   handleActiveViewChanged(view: View) {
