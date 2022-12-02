@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Component, ElementRef, EventEmitter, HostListener, Inject, Input, Output, QueryList, ViewChild, ViewChildren } from "@angular/core";
+import { Component, ElementRef, EventEmitter, HostListener, Input, Output, QueryList, ViewChild, ViewChildren } from "@angular/core";
 import { TimelineData } from "app/timeline_data";
 import { TRACE_INFO } from "app/trace_info";
 import { Timestamp } from "common/trace/timestamp";
@@ -124,6 +124,7 @@ import { SingleTimelineComponent } from "./single_timeline.component";
   `]
 })
 export class ExpandedTimelineComponent {
+  @Input() timelineData!: TimelineData;
   @Input() currentTimestamp!: Timestamp;
 
   @Output() onTimestampChanged = new EventEmitter<Timestamp>();
@@ -133,8 +134,6 @@ export class ExpandedTimelineComponent {
   @ViewChildren(SingleTimelineComponent) singleTimelines!: QueryList<SingleTimelineComponent>;
 
   TRACE_INFO = TRACE_INFO;
-
-  constructor(@Inject(TimelineData) public timelineData: TimelineData) {}
 
   get canvas(): HTMLCanvasElement {
     return this.canvasRef.nativeElement;

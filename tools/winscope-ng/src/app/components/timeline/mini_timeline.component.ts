@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Component, ElementRef, EventEmitter, HostListener, Inject, Input, Output, SimpleChanges, ViewChild } from "@angular/core";
+import { Component, ElementRef, EventEmitter, HostListener, Input, Output, SimpleChanges, ViewChild } from "@angular/core";
 import { TimelineData } from "app/timeline_data";
 import { Timestamp } from "common/trace/timestamp";
 import { TraceType } from "common/trace/trace_type";
@@ -36,7 +36,7 @@ import { MiniCanvasDrawer, MiniCanvasDrawerInput } from "./mini_canvas_drawer";
   `]
 })
 export class MiniTimelineComponent {
-
+  @Input() timelineData!: TimelineData;
   @Input() currentTimestamp!: Timestamp;
   @Input() selectedTraces!: TraceType[];
 
@@ -48,8 +48,6 @@ export class MiniTimelineComponent {
   get canvas(): HTMLCanvasElement {
     return this.canvasRef.nativeElement;
   }
-
-  constructor(@Inject(TimelineData) private timelineData: TimelineData) {}
 
   private drawer: MiniCanvasDrawer|undefined = undefined;
 

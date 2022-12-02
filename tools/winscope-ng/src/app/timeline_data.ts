@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { Injectable } from "@angular/core";
 import {Timeline, ScreenRecordingData} from "./trace_data";
 import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
@@ -23,9 +22,8 @@ import { FunctionUtils} from "common/utils/function_utils";
 import { TimeRange } from "./components/timeline/utils";
 
 type TimestampCallbackType = (timestamp: Timestamp|undefined) => void;
-
 type TimestampWithIndex = {index: number, timestamp: Timestamp};
-@Injectable() //TODO: remove Injectable
+
 export class TimelineData {
   private timelines = new Map<TraceType, Timestamp[]>();
   private explicitlySetTimestamp: undefined|Timestamp = undefined;

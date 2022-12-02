@@ -25,6 +25,7 @@ import {
 import { createCustomElement } from "@angular/elements";
 import { TimelineComponent} from "./timeline/timeline.component";
 import { Mediator } from "app/mediator";
+import { TraceData } from "app/trace_data";
 import { PersistentStore } from "common/utils/persistent_store";
 import { Timestamp } from "common/trace/timestamp";
 import { FileUtils } from "common/utils/file_utils";
@@ -44,7 +45,6 @@ import {TRACE_INFO} from "app/trace_info";
 
 @Component({
   selector: "app-root",
-  providers: [TimelineData, Mediator],
   template: `
     <mat-toolbar class="toolbar">
       <span class="app-title">Winscope</span>
@@ -102,6 +102,7 @@ import {TRACE_INFO} from "app/trace_info";
                   [baseHeight]="collapsedTimelineHeight">
         <timeline
             *ngIf="dataLoaded"
+            [timelineData]="timelineData"
             [activeViewTraceTypes]="activeView?.dependencies"
             [availableTraces]="getAvailableTraces()"
             [videoData]="videoData"
@@ -123,14 +124,14 @@ import {TRACE_INFO} from "app/trace_info";
           <div class="card-grid landing-grid">
             <collect-traces
                 class="collect-traces-card homepage-card"
-                [traceData]="mediator.getTraceData()"
+                [traceData]="traceData"
                 (traceDataLoaded)="onTraceDataLoaded()"
                 [store]="store"
             ></collect-traces>
 
             <upload-traces
                 class="upload-traces-card homepage-card"
-                [traceData]="mediator.getTraceData()"
+                [traceData]="traceData"
                 (traceDataLoaded)="onTraceDataLoaded()"
             ></upload-traces>
           </div>
@@ -191,8 +192,9 @@ import {TRACE_INFO} from "app/trace_info";
 export class AppComponent {
   title = "winscope-ng";
   changeDetectorRef: ChangeDetectorRef;
-  mediator: Mediator;
-  timelineData: TimelineData;
+  traceData = new TraceData();
+  timelineData = new TimelineData();
+  mediator = new Mediator(this.traceData, this.timelineData);
   states = ProxyState;
   store: PersistentStore = new PersistentStore();
   currentTimestamp?: Timestamp;
@@ -205,14 +207,9 @@ export class AppComponent {
 
   constructor(
     @Inject(Injector) injector: Injector,
-    @Inject(ChangeDetectorRef) changeDetectorRef: ChangeDetectorRef,
-    //TODO: do not inject TimelineData + Mediator (make Angular independent)
-    @Inject(TimelineData) timelineData: TimelineData,
-    @Inject(Mediator) mediator: Mediator,
+    @Inject(ChangeDetectorRef) changeDetectorRef: ChangeDetectorRef
   ) {
     this.changeDetectorRef = changeDetectorRef;
-    this.timelineData = timelineData;
-    this.mediator = mediator;
 
     const storeDarkMode = this.store.get("dark-mode");
     const prefersDarkQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
@@ -264,7 +261,7 @@ export class AppComponent {
   }
 
   getAvailableTraces(): TraceType[] {
-    return this.mediator.getTraceData().getLoadedTraces().map((trace) => trace.type);
+    return this.traceData.getLoadedTraces().map((trace) => trace.type);
   }
 
   get videoData(): Blob|undefined {
@@ -307,7 +304,7 @@ export class AppComponent {
   }
 
   private async makeTraceFilesForDownload(): Promise<File[]> {
-    return this.mediator.getTraceData().getLoadedTraces().map(trace => {
+    return this.traceData.getLoadedTraces().map(trace => {
       const traceType = TRACE_INFO[trace.type].name;
       const newName = traceType + "/" + FileUtils.removeDirFromFileName(trace.file.name);
       return new File([trace.file], newName);

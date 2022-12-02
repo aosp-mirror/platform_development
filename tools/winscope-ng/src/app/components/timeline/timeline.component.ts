@@ -53,6 +53,7 @@ import { TimeUtils } from "common/utils/time_utils";
           </div>
         </div>
         <expanded-timeline
+          [timelineData]="timelineData"
           [currentTimestamp]="currentTimestamp"
           (onTimestampChanged)="updateCurrentTimestamp($event)"
           id="expanded-timeline"
@@ -132,6 +133,7 @@ import { TimeUtils } from "common/utils/time_utils";
             </mat-form-field>
         </div>
         <mini-timeline
+          [timelineData]="timelineData"
           [currentTimestamp]="currentTimestamp"
           [selectedTraces]="selectedTraces"
           (changeTimestamp)="updateCurrentTimestamp($event)"
@@ -296,6 +298,7 @@ export class TimelineComponent {
   }
   public wrappedActiveTrace: TraceType|undefined = undefined;
 
+  @Input() timelineData!: TimelineData;
   @Input() availableTraces: TraceType[] = [];
   @Input() set videoData(value: Blob|undefined) {
     if (value !== undefined) {
@@ -336,6 +339,24 @@ export class TimelineComponent {
 
   TRACE_INFO = TRACE_INFO;
 
+  constructor(
+    @Inject(DomSanitizer) private sanitizer: DomSanitizer,
+    @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef) {
+  }
+
+  ngOnInit() {
+    this.init.emit();
+  }
+
+  ngOnDestroy() {
+    this.destroy.emit();
+  }
+
+  ngAfterViewInit() {
+    const height = this.collapsedTimelineRef.nativeElement.offsetHeight;
+    this.collapsedTimelineSizeChanged.emit(height);
+  }
+
   get hasVideo() {
     return this.timelineData.getTimelines().get(TraceType.SCREEN_RECORDING) !== undefined;
   }
@@ -365,25 +386,6 @@ export class TimelineComponent {
     }
 
     return timestamp;
-  }
-
-  constructor(
-    @Inject(TimelineData) public timelineData: TimelineData,
-    @Inject(DomSanitizer) private sanitizer: DomSanitizer,
-    @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef) {
-  }
-
-  ngOnInit() {
-    this.init.emit();
-  }
-
-  ngOnDestroy() {
-    this.destroy.emit();
-  }
-
-  ngAfterViewInit() {
-    const height = this.collapsedTimelineRef.nativeElement.offsetHeight;
-    this.collapsedTimelineSizeChanged.emit(height);
   }
 
   onCurrentTimestampChanged(timestamp: Timestamp|undefined): void {

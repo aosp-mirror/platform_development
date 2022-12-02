@@ -40,9 +40,6 @@ describe("TimelineComponent", () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      providers: [
-        TimelineData
-      ],
       imports: [
         FormsModule,
         MatButtonModule,
@@ -68,6 +65,8 @@ describe("TimelineComponent", () => {
     fixture = TestBed.createComponent(TimelineComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
+
+    component.timelineData = new TimelineData();
   });
 
   it("can be created", () => {
