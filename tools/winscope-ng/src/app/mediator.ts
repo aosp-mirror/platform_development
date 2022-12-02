@@ -16,21 +16,32 @@
 
 import {Timestamp} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
+import {FunctionUtils} from "common/utils/function_utils";
 import { Viewer } from "viewers/viewer";
 import { ViewerFactory } from "viewers/viewer_factory";
-import {TimelineData, TimestampChangeObserver} from "./timeline_data";
+import {TimelineData} from "./timeline_data";
 import { Inject, Injectable } from "@angular/core";
 import {TraceData} from "./trace_data";
 
+type CurrentTimestampChangedCallback = (timestamp: Timestamp|undefined) => void;
+
 @Injectable() //TODO: remove Injectable
-class Mediator implements TimestampChangeObserver {
+class Mediator {
   private traceData = new TraceData();
   private timelineData: TimelineData;
   private viewers: Viewer[] = [];
+  private notifyCurrentTimestampChangedToTimelineComponent: CurrentTimestampChangedCallback =
+    FunctionUtils.DO_NOTHING;
 
   constructor(@Inject(TimelineData) timelineData: TimelineData) {
     this.timelineData = timelineData;
-    this.timelineData.registerObserver(this);
+    this.timelineData.setOnCurrentTimestampChangedCallback(timestamp => {
+      this.onCurrentTimestampChanged(timestamp);
+    });
+  }
+
+  public setNotifyCurrentTimestampChangedToTimelineComponentCallback(callback: CurrentTimestampChangedCallback) {
+    this.notifyCurrentTimestampChangedToTimelineComponent = callback;
   }
 
   public getTraceData(): TraceData {
@@ -58,6 +69,8 @@ class Mediator implements TimestampChangeObserver {
     this.viewers.forEach(viewer => {
       viewer.notifyCurrentTraceEntries(entries);
     });
+
+    this.notifyCurrentTimestampChangedToTimelineComponent(timestamp);
   }
 
   public clearData() {

@@ -19,7 +19,10 @@ import {Timeline, ScreenRecordingData} from "./trace_data";
 import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
 import { ArrayUtils } from "common/utils/array_utils";
+import { FunctionUtils} from "common/utils/function_utils";
 import { TimeRange } from "./components/timeline/utils";
+
+type TimestampCallbackType = (timestamp: Timestamp|undefined) => void;
 
 type TimestampWithIndex = {index: number, timestamp: Timestamp};
 @Injectable() //TODO: remove Injectable
@@ -27,12 +30,17 @@ export class TimelineData {
   private timelines = new Map<TraceType, Timestamp[]>();
   private explicitlySetTimestamp: undefined|Timestamp = undefined;
   private timestampType: undefined|TimestampType = undefined;
-  private observers = new Set<TimestampChangeObserver>();
   private explicitlySetSelection: TimeRange|undefined = undefined;
   private videoData: Blob|undefined = undefined;
   private screenRecordingTimeMapping: Map<Timestamp, number>|undefined = undefined;
   // The trace type the currently active view depends on
   private activeTraceTypes: TraceType[] = [];
+
+  private onCurrentTimestampChanged: TimestampCallbackType = FunctionUtils.DO_NOTHING;
+
+  setOnCurrentTimestampChangedCallback(callback: TimestampCallbackType) {
+    this.onCurrentTimestampChanged = callback;
+  }
 
   get currentTimestamp(): Timestamp|undefined {
     if (this.explicitlySetTimestamp === undefined) {
@@ -123,15 +131,6 @@ export class TimelineData {
     return this.timelines;
   }
 
-  public registerObserver(observer: TimestampChangeObserver) {
-    this.observers.add(observer);
-    observer.onCurrentTimestampChanged(this.currentTimestamp);
-  }
-
-  public unregisterObserver(observer: TimestampChangeObserver) {
-    this.observers.delete(observer);
-  }
-
   public setTimelines(timelines: Timeline[]) {
     const allTimestamps = timelines.flatMap(timeline => timeline.timestamps);
     if (allTimestamps.some(timestamp => timestamp.getType() != allTimestamps[0].getType())) {
@@ -147,7 +146,7 @@ export class TimelineData {
       this.timelines.set(timeline.traceType, timeline.timestamps);
     });
 
-    this.notifyOfTimestampUpdate();
+    this.onCurrentTimestampChanged(this.currentTimestamp);
   }
 
   public removeTimeline(typeToRemove: TraceType) {
@@ -160,11 +159,6 @@ export class TimelineData {
   public setScreenRecordingData(data: ScreenRecordingData) {
     this.videoData = data.video;
     this.screenRecordingTimeMapping = data.timestampsMapping;
-  }
-
-  public removeScreenRecordingData() {
-    this.videoData = undefined;
-    this.screenRecordingTimeMapping = undefined;
   }
 
   public getVideoData(): Blob|undefined {
@@ -289,17 +283,7 @@ export class TimelineData {
     const prevTimestamp = this.currentTimestamp;
     op();
     if (prevTimestamp !== this.currentTimestamp) {
-      this.notifyOfTimestampUpdate();
+      this.onCurrentTimestampChanged(this.currentTimestamp);
     }
   }
-
-  private notifyOfTimestampUpdate() {
-    const timestamp = this.currentTimestamp;
-    this.observers.forEach(observer =>
-      observer.onCurrentTimestampChanged(timestamp));
-  }
-}
-
-export interface TimestampChangeObserver {
-  onCurrentTimestampChanged(timestamp: undefined|Timestamp): void;
 }

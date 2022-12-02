@@ -14,12 +14,21 @@
  * limitations under the License.
  */
 
-import {Component, Injector, Inject, ViewEncapsulation, ChangeDetectorRef} from "@angular/core";
+import {
+  ChangeDetectorRef,
+  Component,
+  Injector,
+  Inject,
+  ViewChild,
+  ViewEncapsulation
+} from "@angular/core";
 import { createCustomElement } from "@angular/elements";
+import { TimelineComponent} from "./timeline/timeline.component";
 import { Mediator } from "app/mediator";
 import { PersistentStore } from "common/utils/persistent_store";
 import { Timestamp } from "common/trace/timestamp";
 import { FileUtils } from "common/utils/file_utils";
+import { FunctionUtils } from "common/utils/function_utils";
 import { proxyClient, ProxyState } from "trace_collection/proxy_client";
 import { ViewerInputMethodComponent } from "viewers/components/viewer_input_method.component";
 import { View, Viewer } from "viewers/viewer";
@@ -96,7 +105,9 @@ import {TRACE_INFO} from "app/trace_info";
             [activeViewTraceTypes]="activeView?.dependencies"
             [availableTraces]="getAvailableTraces()"
             [videoData]="videoData"
-            (onCollapsedTimelineSizeChanged)="onCollapsedTimelineSizeChanged($event)"
+            (init)="onTimelineInit()"
+            (destroy)="onTimelineDestroy()"
+            (collapsedTimelineSizeChanged)="onCollapsedTimelineSizeChanged($event)"
         ></timeline>
       </mat-drawer>
 
@@ -189,13 +200,8 @@ export class AppComponent {
   isDarkModeOn!: boolean;
   dataLoaded = false;
   activeView: View|undefined;
-
   collapsedTimelineHeight = 0;
-
-  public onCollapsedTimelineSizeChanged(height: number) {
-    this.collapsedTimelineHeight = height;
-    this.changeDetectorRef.detectChanges();
-  }
+  @ViewChild(TimelineComponent) timelineComponent?: TimelineComponent;
 
   constructor(
     @Inject(Injector) injector: Injector,
@@ -207,7 +213,6 @@ export class AppComponent {
     this.changeDetectorRef = changeDetectorRef;
     this.timelineData = timelineData;
     this.mediator = mediator;
-    this.timelineData.registerObserver(this.mediator);
 
     const storeDarkMode = this.store.get("dark-mode");
     const prefersDarkQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
@@ -239,6 +244,23 @@ export class AppComponent {
     }
 
     TracingConfig.getInstance().initialize(localStorage);
+  }
+
+  onTimelineInit() {
+    this.mediator.setNotifyCurrentTimestampChangedToTimelineComponentCallback((timestamp: Timestamp|undefined) => {
+      this.timelineComponent?.onCurrentTimestampChanged(timestamp);
+    });
+  }
+
+  onTimelineDestroy() {
+    this.mediator.setNotifyCurrentTimestampChangedToTimelineComponentCallback(
+      FunctionUtils.DO_NOTHING
+    );
+  }
+
+  onCollapsedTimelineSizeChanged(height: number) {
+    this.collapsedTimelineHeight = height;
+    this.changeDetectorRef.detectChanges();
   }
 
   getAvailableTraces(): TraceType[] {

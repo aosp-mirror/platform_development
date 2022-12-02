@@ -30,7 +30,7 @@ import { FormControl, FormGroup, Validators} from "@angular/forms";
 import { DomSanitizer, SafeUrl } from "@angular/platform-browser";
 import { TraceType } from "common/trace/trace_type";
 import { TRACE_INFO } from "app/trace_info";
-import { TimelineData, TimestampChangeObserver } from "app/timeline_data";
+import { TimelineData } from "app/timeline_data";
 import { MiniTimelineComponent } from "./mini_timeline.component";
 import { Timestamp, TimestampType } from "common/trace/timestamp";
 import { TimeUtils } from "common/utils/time_utils";
@@ -268,7 +268,7 @@ import { TimeUtils } from "common/utils/time_utils";
     }
   `],
 })
-export class TimelineComponent implements TimestampChangeObserver {
+export class TimelineComponent {
   public readonly TOGGLE_BUTTON_CLASS: string = "button-toggle-expansion";
   public readonly MAX_SELECTED_TRACES = 3;
 
@@ -305,7 +305,9 @@ export class TimelineComponent implements TimestampChangeObserver {
     }
   }
 
-  @Output() onCollapsedTimelineSizeChanged = new EventEmitter<number>();
+  @Output() init = new EventEmitter<void>();
+  @Output() destroy = new EventEmitter<void>();
+  @Output() collapsedTimelineSizeChanged = new EventEmitter<number>();
 
   @ViewChild("miniTimeline") private miniTimelineComponent!: MiniTimelineComponent;
   @ViewChild("collapsedTimeline") private collapsedTimelineRef!: ElementRef;
@@ -369,16 +371,19 @@ export class TimelineComponent implements TimestampChangeObserver {
     @Inject(TimelineData) public timelineData: TimelineData,
     @Inject(DomSanitizer) private sanitizer: DomSanitizer,
     @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef) {
-    this.timelineData.registerObserver(this);
+  }
+
+  ngOnInit() {
+    this.init.emit();
   }
 
   ngOnDestroy() {
-    this.timelineData.unregisterObserver(this);
+    this.destroy.emit();
   }
 
   ngAfterViewInit() {
     const height = this.collapsedTimelineRef.nativeElement.offsetHeight;
-    this.onCollapsedTimelineSizeChanged.emit(height);
+    this.collapsedTimelineSizeChanged.emit(height);
   }
 
   onCurrentTimestampChanged(timestamp: Timestamp|undefined): void {

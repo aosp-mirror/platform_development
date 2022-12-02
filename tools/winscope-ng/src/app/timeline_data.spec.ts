@@ -16,13 +16,7 @@
 
 import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
-import {TimelineData, TimestampChangeObserver} from "./timeline_data";
-
-class TimestampChangeObserverStub implements TimestampChangeObserver {
-  onCurrentTimestampChanged(timestamp: Timestamp): void {
-    // do nothing - function meant to be spied
-  }
-}
+import {TimelineData} from "./timeline_data";
 
 //TODO
 /*
