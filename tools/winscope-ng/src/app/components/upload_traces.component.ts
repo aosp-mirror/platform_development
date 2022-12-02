@@ -61,6 +61,9 @@ import { ParserError } from "parsers/parser_factory";
         </mat-list>
 
         <div *ngIf="this.loadedTraces.length === 0" class="drop-info">
+          <p class="mat-body-3 icon">
+            <mat-icon inline fontIcon="upload"></mat-icon>
+          </p>
           <p class="mat-body-1">
             Drag your .winscope file(s) or click to upload
           </p>
@@ -110,11 +113,23 @@ import { ParserError } from "parsers/parser_factory";
         align-items: center;
         pointer-events: none;
       }
+      .drop-info p {
+        opacity: 0.6;
+        font-size: 1.2rem;
+      }
+      .drop-info .icon {
+        font-size: 3rem;
+        margin: 0;
+      }
       .trace-actions-container {
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
         gap: 10px;
+      }
+
+      mat-card-content {
+        flex-grow: 1;
       }
     `
   ]

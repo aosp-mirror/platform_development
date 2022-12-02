@@ -22,6 +22,7 @@ import { PropertiesTreeNode, HierarchyTreeNode } from "viewers/common/ui_tree_ut
 import { UnitTestUtils } from "test/unit/utils";
 import { HierarchyTreeBuilder } from "test/unit/hierarchy_tree_builder";
 import { VISIBLE_CHIP } from "viewers/common/chip";
+import { MockStorage } from "test/unit/mock_storage";
 
 describe("PresenterWindowManager", () => {
   let presenter: Presenter;
@@ -44,7 +45,7 @@ describe("PresenterWindowManager", () => {
   beforeEach(async () => {
     presenter = new Presenter((newData: UiData) => {
       uiData = newData;
-    });
+    }, new MockStorage());
   });
 
   it("processes current trace entries", () => {

@@ -47,7 +47,9 @@ describe("TraceConfigComponent", () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
     component.traces = {
-      "layers_trace": {name: "layers_trace",
+      "layers_trace": {
+        name: "layers_trace",
+        isTraceCollection: undefined,
         run: false,
         config: {
           enableConfigs: [{
