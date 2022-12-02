@@ -27,8 +27,8 @@ class ViewerInputMethodClients extends ViewerInputMethod {
     return ViewerInputMethodClients.DEPENDENCIES;
   }
 
-  override initialisePresenter() {
-    return new PresenterInputMethodClients(this.imeUiCallback, this.getDependencies());
+  override initialisePresenter(storage: Storage) {
+    return new PresenterInputMethodClients(this.imeUiCallback, this.getDependencies(), storage);
   }
 
   public static readonly DEPENDENCIES: TraceType[] = [TraceType.INPUT_METHOD_CLIENTS];

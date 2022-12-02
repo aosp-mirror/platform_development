@@ -20,6 +20,7 @@ import {UnitTestUtils} from "test/unit/utils";
 import {ViewerFactory} from "viewers/viewer_factory";
 import {ViewerStub} from "viewers/viewer_stub";
 import { TimelineCoordinator } from "./timeline_coordinator";
+import { MockStorage } from "test/unit/mock_storage";
 
 describe("TraceCoordinator", () => {
   let traceCoordinator: TraceCoordinator;
@@ -137,7 +138,7 @@ describe("TraceCoordinator", () => {
 
     // create viewers (mocked factory)
     expect(traceCoordinator.getViewers()).toEqual([]);
-    traceCoordinator.createViewers();
+    traceCoordinator.createViewers(new MockStorage());
     expect(traceCoordinator.getViewers()).toEqual([viewerStub]);
 
     // Gets notified of the current timestamp on creation

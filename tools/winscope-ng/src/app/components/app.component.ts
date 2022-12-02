@@ -30,6 +30,7 @@ import { ViewerTransactionsComponent } from "viewers/viewer_transactions/viewer_
 import { ViewerScreenRecordingComponent } from "viewers/viewer_screen_recording/viewer_screen_recording.component";
 import { TraceType } from "common/trace/trace_type";
 import { TimelineCoordinator } from "app/timeline_coordinator";
+import { TracingConfig } from "trace_collection/tracing_config";
 
 @Component({
   selector: "app-root",
@@ -101,23 +102,27 @@ import { TimelineCoordinator } from "app/timeline_coordinator";
     </mat-drawer-container>
 
     <ng-template #noLoadedTracesBlock>
-      <h1 class="welcome-info mat-headline">
-        Welcome to Winscope. Please select source to view traces.
-      </h1>
+      <div class="center">
+        <div class="landing-content">
+          <h1 class="welcome-info mat-headline">
+            Welcome to Winscope. Please select source to view traces.
+          </h1>
 
-      <div class="card-grid">
-        <collect-traces
-            class="collect-traces-card homepage-card"
-            [traceCoordinator]="traceCoordinator"
-            (dataLoadedChange)="onDataLoadedChange($event)"
-            [store]="store"
-        ></collect-traces>
+          <div class="card-grid landing-grid">
+            <collect-traces
+                class="collect-traces-card homepage-card"
+                [traceCoordinator]="traceCoordinator"
+                (dataLoadedChange)="onDataLoadedChange($event)"
+                [store]="store"
+            ></collect-traces>
 
-        <upload-traces
-            class="upload-traces-card homepage-card"
-            [traceCoordinator]="traceCoordinator"
-            (dataLoadedChange)="onDataLoadedChange($event)"
-        ></upload-traces>
+            <upload-traces
+                class="upload-traces-card homepage-card"
+                [traceCoordinator]="traceCoordinator"
+                (dataLoadedChange)="onDataLoadedChange($event)"
+            ></upload-traces>
+          </div>
+        </div>
       </div>
     </ng-template>
   `,
@@ -135,6 +140,7 @@ import { TimelineCoordinator } from "app/timeline_coordinator";
         flex-direction: column;
         flex: 1;
         overflow: auto;
+        height: 820px;
       }
       .spacer {
         flex: 1;
@@ -148,6 +154,23 @@ import { TimelineCoordinator } from "app/timeline_coordinator";
       }
       .timescrub {
         margin: 8px;
+      }
+      .center {
+        display: flex;
+        align-content: center;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        justify-items: center;
+        flex-grow: 1;
+      }
+      .landing-content {
+        width: 100%;
+      }
+      .landing-content .card-grid {
+        max-width: 1800px;
+        flex-grow: 1;
+        margin: auto;
       }
     `
   ],
@@ -213,6 +236,8 @@ export class AppComponent {
       customElements.define("viewer-window-manager",
         createCustomElement(ViewerWindowManagerComponent, {injector}));
     }
+
+    TracingConfig.getInstance().initialize(localStorage);
   }
 
   get availableTraces(): TraceType[] {
@@ -238,10 +263,10 @@ export class AppComponent {
 
   public onDataLoadedChange(dataLoaded: boolean) {
     if (dataLoaded && !(this.traceCoordinator.getViewers().length > 0)) {
-      this.traceCoordinator.createViewers();
+      this.traceCoordinator.createViewers(localStorage);
       this.allViewers = this.traceCoordinator.getViewers();
       // TODO: Update to handle viewers with more than one dependency
-      if (this.traceCoordinator.getViewers()[0].getDependencies().length !== 1) {
+      if (this.allViewers[0].getDependencies().length !== 1) {
         throw Error("Viewers with more than 1 dependency not yet handled.");
       }
       this.currentTimestampIndex = 0;

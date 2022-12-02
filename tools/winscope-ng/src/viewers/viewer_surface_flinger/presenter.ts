@@ -23,11 +23,12 @@ import { HierarchyTreeNode, PropertiesTreeNode } from "viewers/common/ui_tree_ut
 import { TreeGenerator } from "viewers/common/tree_generator";
 import { TreeTransformer } from "viewers/common/tree_transformer";
 import { Layer, LayerTraceEntry } from "common/trace/flickerlib/common";
+import { PersistentStoreProxy } from "common/utils/persistent_store_proxy";
 
 type NotifyViewCallbackType = (uiData: UiData) => void;
 
 export class Presenter {
-  constructor(notifyViewCallback: NotifyViewCallbackType) {
+  constructor(notifyViewCallback: NotifyViewCallbackType, private storage: Storage) {
     this.notifyViewCallback = notifyViewCallback;
     this.uiData = new UiData([TraceType.SURFACE_FLINGER]);
     this.notifyViewCallback(this.uiData);
@@ -255,9 +256,9 @@ export class Presenter {
   private selectedLayer: LayerTraceEntry | Layer | null = null;
   private previousEntry: LayerTraceEntry | null = null;
   private entry: LayerTraceEntry | null = null;
-  private hierarchyUserOptions: UserOptions = {
+  private hierarchyUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>("SfHierarchyOptions", {
     showDiff: {
-      name: "Show diff",
+      name: "Show diff", // TODO: PersistentStoreObject.Ignored("Show diff") or something like that to instruct to not store this info
       enabled: false
     },
     simplifyNames: {
@@ -272,9 +273,9 @@ export class Presenter {
       name: "Flat",
       enabled: false
     }
-  };
+  }, this.storage);
 
-  private propertiesUserOptions: UserOptions = {
+  private propertiesUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>("SfPropertyOptions", {
     showDiff: {
       name: "Show diff",
       enabled: false
@@ -288,5 +289,5 @@ export class Presenter {
                 the default for its data type.
               `
     },
-  };
+  }, this.storage);
 }

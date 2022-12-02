@@ -68,8 +68,10 @@ class ParserInputMethodClients extends Parser {
       clockTimeNanos = BigInt(entryProto.elapsedRealtimeNanos) + this.realToElapsedTimeOffsetNs;
     }
 
+    const timestamp = Timestamp.from(timestampType, BigInt(entryProto.elapsedRealtimeNanos), this.realToElapsedTimeOffsetNs);
+
     return {
-      name: TimeUtils.format(timestampType, BigInt(entryProto.elapsedRealtimeNanos), this.realToElapsedTimeOffsetNs) + " - " + entryProto.where,
+      name: TimeUtils.format(timestamp) + " - " + entryProto.where,
       kind: "InputMethodClient entry",
       children: [
         {

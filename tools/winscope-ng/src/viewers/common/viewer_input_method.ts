@@ -20,9 +20,9 @@ import {PresenterInputMethod} from "viewers/common/presenter_input_method";
 import {ImeUiData} from "viewers/common/ime_ui_data";
 
 abstract class ViewerInputMethod implements Viewer {
-  constructor() {
+  constructor(storage: Storage) {
     this.htmlElement = document.createElement("viewer-input-method");
-    this.presenter = this.initialisePresenter();
+    this.presenter = this.initialisePresenter(storage);
     this.addViewerEventListeners();
   }
 
@@ -52,7 +52,7 @@ abstract class ViewerInputMethod implements Viewer {
     this.htmlElement.addEventListener(ViewerEvents.AdditionalPropertySelected, (event) => this.presenter.newAdditionalPropertiesTree((event as CustomEvent).detail.selectedItem));
   }
 
-  protected abstract initialisePresenter(): PresenterInputMethod;
+  protected abstract initialisePresenter(storage: Storage): PresenterInputMethod;
 
   protected htmlElement: HTMLElement;
   protected presenter: PresenterInputMethod;

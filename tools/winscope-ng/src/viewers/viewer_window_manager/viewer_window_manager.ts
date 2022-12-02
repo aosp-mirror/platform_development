@@ -18,6 +18,7 @@ import {Viewer, View, ViewType} from "viewers/viewer";
 import {Presenter} from "./presenter";
 import {UiData} from "./ui_data";
 import { ViewerEvents } from "viewers/common/viewer_events";
+import { MockStorage } from "test/unit/mock_storage";
 
 class ViewerWindowManager implements Viewer {
   constructor() {
@@ -28,7 +29,7 @@ class ViewerWindowManager implements Viewer {
       // resetting, Angular does not auto-detect that inputData has changed.
       (this.htmlElement as any).inputData = null;
       (this.htmlElement as any).inputData = uiData;
-    });
+    }, new MockStorage());
     this.htmlElement.addEventListener(ViewerEvents.HierarchyPinnedChange, (event) => this.presenter.updatePinnedItems(((event as CustomEvent).detail.pinnedItem)));
     this.htmlElement.addEventListener(ViewerEvents.HighlightedChange, (event) => this.presenter.updateHighlightedItems(`${(event as CustomEvent).detail.id}`));
     this.htmlElement.addEventListener(ViewerEvents.HierarchyUserOptionsChange, (event) => this.presenter.updateHierarchyTree((event as CustomEvent).detail.userOptions));

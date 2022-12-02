@@ -1,35 +1,38 @@
-export interface TraceConfiguration {
-  name?: string,
-  run?: boolean,
-  isTraceCollection?: boolean,
-  config?: ConfigurationOptions
+import { StoreObject } from "common/utils/persistent_store_proxy";
+
+export type TraceConfiguration = {
+  [key: string]: string|boolean|undefined|StoreObject,
+  name: string|undefined,
+  run: boolean|undefined,
+  isTraceCollection: boolean|undefined,
+  config: ConfigurationOptions|undefined
 }
 
-
-export interface TraceConfigurationMap {
+export type TraceConfigurationMap = {
   [key: string]: TraceConfiguration
 }
 
-interface ConfigurationOptions {
-  enableConfigs: Array<EnableConfiguration>,
-  selectionConfigs: Array<SelectionConfiguration>
+type ConfigurationOptions = {
+  [key: string]: string|boolean|undefined|StoreObject,
+  enableConfigs: EnableConfiguration[],
+  selectionConfigs: SelectionConfiguration[]
 }
 
-export interface EnableConfiguration {
+export type EnableConfiguration = {
   name: string,
   key: string,
   enabled: boolean,
 }
 
-export interface SelectionConfiguration {
+export type SelectionConfiguration = {
   key: string,
   name: string,
-  options: Array<string>,
+  options: string[],
   value: string
 }
 
 export type configMap = {
-[key: string]: Array<string> | string;
+[key: string]: string[] | string;
 }
 
 const wmTraceSelectionConfigs: Array<SelectionConfiguration> = [
@@ -111,6 +114,7 @@ export const traceConfigurations: TraceConfigurationMap = {
   "layers_trace": {
     name: "Surface Flinger",
     run: true,
+    isTraceCollection: undefined,
     config: {
       enableConfigs: sfTraceEnableConfigs,
       selectionConfigs: sfTraceSelectionConfigs,
@@ -119,6 +123,7 @@ export const traceConfigurations: TraceConfigurationMap = {
   "window_trace": {
     name: "Window Manager",
     run: true,
+    isTraceCollection: undefined,
     config: {
       enableConfigs: [],
       selectionConfigs: wmTraceSelectionConfigs,
@@ -126,7 +131,9 @@ export const traceConfigurations: TraceConfigurationMap = {
   },
   "screen_recording": {
     name: "Screen Recording",
+    isTraceCollection: undefined,
     run: true,
+    config: undefined
   },
   "ime_tracing": {
     name: "IME Tracing",
@@ -155,31 +162,45 @@ export const traceConfigurations: TraceConfigurationMap = {
   },
   "ime_trace_clients": {
     name: "Input Method Clients",
+    isTraceCollection: undefined,
     run: true,
+    config: undefined
   },
   "ime_trace_service": {
     name: "Input Method Service",
+    isTraceCollection: undefined,
     run: true,
+    config: undefined
   },
   "ime_trace_managerservice": {
     name: "Input Method Manager Service",
+    isTraceCollection: undefined,
     run: true,
+    config: undefined
   },
   "accessibility_trace": {
     name: "Accessibility",
+    isTraceCollection: undefined,
     run: false,
+    config: undefined
   },
   "transactions": {
     name: "Transaction",
+    isTraceCollection: undefined,
     run: false,
+    config: undefined
   },
   "proto_log": {
     name: "ProtoLog",
+    isTraceCollection: undefined,
     run: false,
+    config: undefined
   },
   "wayland_trace": {
     name: "Wayland",
+    isTraceCollection: undefined,
     run: false,
+    config: undefined
   },
 };
 
