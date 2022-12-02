@@ -70,6 +70,11 @@ enum AccessSpecifierIR {
   PrivateAccess = 3
 };
 
+static inline bool IsAccessDowngraded(AccessSpecifierIR old_access,
+                                      AccessSpecifierIR new_access) {
+  return old_access < new_access;
+}
+
 enum LinkableMessageKind {
   RecordTypeKind,
   EnumTypeKind,
@@ -91,6 +96,16 @@ std::map<V, K> CreateInverseMap(const std::map<K, V> &m) {
     inverse_map[it.second] = it.first;
   }
   return inverse_map;
+}
+
+static inline std::string FormatMultiDefinitionTypeId(
+    const std::string &type_id, const std::string &compilation_unit_path) {
+  return type_id + "#ODR:" + compilation_unit_path;
+}
+
+static inline std::string_view ExtractMultiDefinitionTypeId(
+    std::string_view type_id) {
+  return type_id.substr(0, type_id.find("#ODR:"));
 }
 
 class LinkableMessageIR {

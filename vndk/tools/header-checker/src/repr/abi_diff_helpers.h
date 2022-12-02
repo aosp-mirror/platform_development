@@ -88,6 +88,12 @@ class AbiDiffHelper {
         ignored_linker_set_keys_(ignored_linker_set_keys),
         ir_diff_dumper_(ir_diff_dumper) {}
 
+  bool AreOpaqueTypesEqual(const std::string &old_type_str,
+                           const std::string &new_type_str) const;
+
+  bool AreTypeSizeAndAlignmentEqual(const std::string &old_type_str,
+                                    const std::string &new_type_str) const;
+
   DiffStatus CompareAndDumpTypeDiff(
       const std::string &old_type_str, const std::string &new_type_str,
       std::deque<std::string> *type_queue = nullptr,
@@ -110,8 +116,8 @@ class AbiDiffHelper {
                               std::deque<std::string> *type_queue,
                               IRDiffDumper::DiffKind diff_kind);
 
-  DiffStatus CompareFunctionTypes(const FunctionTypeIR *old_type,
-                                  const FunctionTypeIR *new_type,
+  DiffStatus CompareFunctionTypes(const CFunctionLikeIR *old_type,
+                                  const CFunctionLikeIR *new_type,
                                   std::deque<std::string> *type_queue,
                                   DiffMessageIR::DiffKind diff_kind);
 
@@ -120,6 +126,11 @@ class AbiDiffHelper {
       const std::vector<ParamIR> &new_parameters,
       std::deque<std::string> *type_queue,
       IRDiffDumper::DiffKind diff_kind);
+
+  DiffStatus CompareParameterOrReturnType(const std::string &old_type_id,
+                                          const std::string &new_type_id,
+                                          std::deque<std::string> *type_queue,
+                                          IRDiffDumper::DiffKind diff_kind);
 
   DiffStatus CompareTemplateInfo(
       const std::vector<TemplateElementIR> &old_template_elements,
@@ -197,9 +208,6 @@ class AbiDiffHelper {
   bool CompareVTableComponents(
       const VTableComponentIR &old_component,
       const VTableComponentIR &new_component);
-
-  bool CompareSizeAndAlignment(const TypeIR *old_ti,
-                               const TypeIR *new_ti);
 
   template <typename DiffType, typename DiffElement>
   bool AddToDiff(DiffType *mutable_diff, const DiffElement *oldp,
