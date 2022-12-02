@@ -327,7 +327,9 @@ bool HeaderAbiDiff::DumpLoneElements(
 
   for (auto &&element : elements) {
     if (IgnoreSymbol<T>(element, ignored_symbols_,
-                        [](const T *e) {return e->GetLinkerSetKey();})) {
+                        [](const T *e) {return e->GetLinkerSetKey();}) ||
+        ignored_linker_set_keys_.find(element->GetLinkerSetKey()) !=
+            ignored_linker_set_keys_.end()) {
       continue;
     }
 
@@ -380,8 +382,11 @@ bool HeaderAbiDiff::DumpDiffElements(
     const T *old_element = pair.first;
     const T *new_element = pair.second;
 
+    // The old and new linker set keys are supposed to be equal.
     if (IgnoreSymbol<T>(old_element, ignored_symbols_,
-                        [](const T *e) {return e->GetLinkerSetKey();})) {
+                        [](const T *e) { return e->GetLinkerSetKey(); }) ||
+        ignored_linker_set_keys_.find(old_element->GetLinkerSetKey()) !=
+            ignored_linker_set_keys_.end()) {
       continue;
     }
 

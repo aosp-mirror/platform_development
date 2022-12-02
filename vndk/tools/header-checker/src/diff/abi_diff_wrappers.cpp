@@ -32,10 +32,6 @@ template <>
 bool DiffWrapper<repr::RecordTypeIR>::DumpDiff(
     repr::DiffMessageIR::DiffKind diff_kind) {
   std::deque<std::string> type_queue;
-  if (oldp_->GetLinkerSetKey() != newp_->GetLinkerSetKey()) {
-    llvm::errs() << "Comparing two different unreferenced records\n";
-    return false;
-  }
   if (!type_cache_->insert(
           oldp_->GetSelfType() + newp_->GetSelfType()).second) {
     return true;
@@ -48,10 +44,6 @@ template <>
 bool DiffWrapper<repr::EnumTypeIR>::DumpDiff(
     repr::DiffMessageIR::DiffKind diff_kind) {
   std::deque<std::string> type_queue;
-  if (oldp_->GetLinkerSetKey() != newp_->GetLinkerSetKey()) {
-    llvm::errs() << "Comparing two different unreferenced enums\n";
-    return false;
-  }
   if (!type_cache_->insert(
       oldp_->GetSelfType() + newp_->GetSelfType()).second) {
     return true;
@@ -90,18 +82,14 @@ bool DiffWrapper<repr::FunctionIR>::DumpDiff(
   std::deque<std::string> type_queue;
   type_queue.push_back(oldp_->GetName());
 
-  DiffStatus param_diffs = CompareFunctionParameters(
-      oldp_->GetParameters(), newp_->GetParameters(), &type_queue, diff_kind);
-
-  DiffStatus return_type_diff = CompareAndDumpTypeDiff(
-      oldp_->GetReturnType(), newp_->GetReturnType(), &type_queue, diff_kind);
+  DiffStatus function_type_diff =
+      CompareFunctionTypes(oldp_, newp_, &type_queue, diff_kind);
 
   CompareTemplateInfo(oldp_->GetTemplateElements(),
                       newp_->GetTemplateElements(),
                       &type_queue, diff_kind);
 
-  if ((param_diffs == DiffStatus::direct_diff ||
-       return_type_diff == DiffStatus::direct_diff) ||
+  if ((function_type_diff == DiffStatus::direct_diff) ||
       (oldp_->GetAccess() != newp_->GetAccess())) {
     repr::FunctionIR old_function = *oldp_;
     repr::FunctionIR new_function = *newp_;

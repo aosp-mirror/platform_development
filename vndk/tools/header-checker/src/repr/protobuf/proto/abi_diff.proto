@@ -30,6 +30,7 @@ message CXXBaseSpecifierDiff {
 }
 
 message RecordTypeDiff {
+  // Template diffs are not needed since they have different linker set keys.
   optional string name = 1;
   optional string type_stack = 2;
   optional TypeInfoDiff type_info_diff = 3;
@@ -38,6 +39,7 @@ message RecordTypeDiff {
   repeated RecordFieldDeclDiff fields_diff = 6;
   optional CXXBaseSpecifierDiff bases_diff = 7;
   optional VTableLayoutDiff vtable_layout_diff = 8;
+  optional string linker_set_key = 9;
 }
 
 message UnderlyingTypeDiff {
@@ -57,6 +59,7 @@ message EnumTypeDiff {
   optional UnderlyingTypeDiff underlying_type_diff = 4;
   repeated abi_dump.EnumFieldDecl fields_added = 5;
   repeated abi_dump.EnumFieldDecl fields_removed = 6;
+  optional string linker_set_key = 7;
 }
 
 message FunctionDeclDiff {
@@ -84,6 +87,8 @@ message TranslationUnitDiff {
   repeated RecordTypeDiff unreferenced_record_type_diffs = 4;
   repeated abi_dump.RecordType unreferenced_record_types_removed = 5;
   repeated abi_dump.RecordType unreferenced_record_types_added = 6;
+  repeated RecordTypeDiff record_type_extension_diffs = 24;
+  repeated RecordTypeDiff unreferenced_record_type_extension_diffs = 25;
 
   // Enums
   repeated EnumTypeDiff enum_type_diffs = 7;

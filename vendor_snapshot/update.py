@@ -112,6 +112,7 @@ JSON_TO_BP = {
     'Filename': 'filename',
     'CrateName': 'crate_name',
     'Prebuilt': 'prebuilt',
+    'Overrides': 'overrides',
 }
 
 SANITIZER_VARIANT_PROPS = {
