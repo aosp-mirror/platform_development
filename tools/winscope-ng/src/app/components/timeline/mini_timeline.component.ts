@@ -70,7 +70,7 @@ export class MiniTimelineComponent {
       updateTimestampCallback,
       (selection) => {
         const timestampType = this.timelineData.getTimestampType()!;
-        this.timelineData.setSelection({
+        this.timelineData.setSelectionRange({
           from: new Timestamp(timestampType, selection.from),
           to: new Timestamp(timestampType, selection.to)
         });
@@ -89,13 +89,13 @@ export class MiniTimelineComponent {
   private getMiniCanvasDrawerInput() {
     return new MiniCanvasDrawerInput(
       {
-        from: this.timelineData.fullRange.from.getValueNs(),
-        to: this.timelineData.fullRange.to.getValueNs()
+        from: this.timelineData.getFullRange().from.getValueNs(),
+        to: this.timelineData.getFullRange().to.getValueNs()
       },
       this.currentTimestamp.getValueNs(),
       {
-        from: this.timelineData.selection.from.getValueNs(),
-        to: this.timelineData.selection.to.getValueNs()
+        from: this.timelineData.getSelectionRange().from.getValueNs(),
+        to: this.timelineData.getSelectionRange().to.getValueNs()
       },
       this.getTimelinesToShow()
     );

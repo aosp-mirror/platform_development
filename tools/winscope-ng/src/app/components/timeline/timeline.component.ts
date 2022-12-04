@@ -42,12 +42,12 @@ import { TimeUtils } from "common/utils/time_utils";
     <div id="expanded-nav" *ngIf="expanded">
         <div id="video-content" *ngIf="videoUrl !== undefined">
           <video
-            *ngIf="videoCurrentTime !== undefined"
+            *ngIf="getVideoCurrentTime() !== undefined"
             id="video"
-            [currentTime]="videoCurrentTime"
+            [currentTime]="getVideoCurrentTime()"
             [src]="videoUrl">
           </video>
-          <div *ngIf="videoCurrentTime === undefined" class="no-video-message">
+          <div *ngIf="getVideoCurrentTime() === undefined" class="no-video-message">
             <p>No screenrecording frame to show</p>
             <p>Current timestamp before first screenrecording frame.</p>
           </div>
@@ -346,6 +346,9 @@ export class TimelineComponent {
 
   ngOnInit() {
     this.init.emit();
+    if (this.hasTimestamps()) {
+      this.updateTimeInputValuesToCurrentTimestamp();
+    }
   }
 
   ngOnDestroy() {
@@ -357,12 +360,8 @@ export class TimelineComponent {
     this.collapsedTimelineSizeChanged.emit(height);
   }
 
-  get hasVideo() {
-    return this.timelineData.getTimelines().get(TraceType.SCREEN_RECORDING) !== undefined;
-  }
-
-  get videoCurrentTime() {
-    return this.timelineData.timestampAsElapsedScreenrecordingSeconds(this.currentTimestamp);
+  getVideoCurrentTime() {
+    return this.timelineData.searchCorrespondingScreenRecordingTimeInSeconds(this.currentTimestamp);
   }
 
   private seekTimestamp: Timestamp|undefined;
@@ -380,7 +379,7 @@ export class TimelineComponent {
       return this.seekTimestamp;
     }
 
-    const timestamp = this.timelineData.currentTimestamp;
+    const timestamp = this.timelineData.getCurrentTimestamp();
     if (timestamp === undefined) {
       throw Error("A timestamp should have been set by the time the timeline is loaded");
     }
@@ -401,7 +400,7 @@ export class TimelineComponent {
   }
 
   updateCurrentTimestamp(timestamp: Timestamp) {
-    this.timelineData.updateCurrentTimestamp(timestamp);
+    this.timelineData.setCurrentTimestamp(timestamp);
   }
 
   usingRealtime(): boolean {
@@ -475,14 +474,14 @@ export class TimelineComponent {
     if (!this.wrappedActiveTrace) {
       return;
     }
-    this.timelineData.moveToPreviousEntryFor(this.wrappedActiveTrace);
+    this.timelineData.moveToPreviousTimestampFor(this.wrappedActiveTrace);
   }
 
   moveToNextEntry() {
     if (!this.wrappedActiveTrace) {
       return;
     }
-    this.timelineData.moveToNextEntryFor(this.wrappedActiveTrace);
+    this.timelineData.moveToNextTimestampFor(this.wrappedActiveTrace);
   }
 
   humanElapsedTimeInputChange(event: Event) {
@@ -492,7 +491,7 @@ export class TimelineComponent {
     const target = event.target as HTMLInputElement;
     const timestamp = new Timestamp(this.timelineData.getTimestampType()!,
       TimeUtils.humanElapsedToNanoseconds(target.value));
-    this.timelineData.updateCurrentTimestamp(timestamp);
+    this.timelineData.setCurrentTimestamp(timestamp);
     this.updateTimeInputValuesToCurrentTimestamp();
   }
 
@@ -504,7 +503,7 @@ export class TimelineComponent {
 
     const timestamp = new Timestamp(this.timelineData.getTimestampType()!,
       TimeUtils.humanRealToNanoseconds(target.value));
-    this.timelineData.updateCurrentTimestamp(timestamp);
+    this.timelineData.setCurrentTimestamp(timestamp);
     this.updateTimeInputValuesToCurrentTimestamp();
   }
 
@@ -515,7 +514,7 @@ export class TimelineComponent {
     const target = event.target as HTMLInputElement;
 
     const timestamp = new Timestamp(this.timelineData.getTimestampType()!, BigInt(target.value));
-    this.timelineData.updateCurrentTimestamp(timestamp);
+    this.timelineData.setCurrentTimestamp(timestamp);
     this.updateTimeInputValuesToCurrentTimestamp();
   }
 }

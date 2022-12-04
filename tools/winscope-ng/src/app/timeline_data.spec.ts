@@ -17,12 +17,17 @@
 import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
 import {TimelineData} from "./timeline_data";
+import {Timeline} from "./trace_data";
 
-//TODO
-/*
+class TimestampChangedObserver {
+  onCurrentTimestampChanged(timestamp: Timestamp|undefined) {
+    // do nothing
+  }
+}
+
 describe("TimelineData", () => {
   let timelineData: TimelineData;
-  let observer: TimestampChangeObserver;
+  const timestampChangedObserver = new TimestampChangedObserver();
 
   const timestamp10 = new Timestamp(TimestampType.REAL, 10n);
   const timestamp11 = new Timestamp(TimestampType.REAL, 11n);
@@ -38,113 +43,72 @@ describe("TimelineData", () => {
 
   beforeEach(() => {
     timelineData = new TimelineData();
-    observer = new TimestampChangeObserverStub();
-    timelineData.registerObserver(observer);
+    timelineData.setOnCurrentTimestampChangedCallback(timestamp => {
+      timestampChangedObserver.onCurrentTimestampChanged(timestamp);
+    });
   });
 
   it("sets timelines", () => {
-    expect(timelineData.currentTimestamp).toBeUndefined();
+    expect(timelineData.getCurrentTimestamp()).toBeUndefined();
 
-    timelineData.setTimelines(timelines);
-    expect(timelineData.currentTimestamp).toEqual(timestamp10);
+    timelineData.initialize(timelines);
+    expect(timelineData.getCurrentTimestamp()).toEqual(timestamp10);
   });
 
-  it("removes timeline", () => {
-    timelineData.setTimelines(timelines);
-    expect(timelineData.currentTimestamp).toEqual(timestamp10);
-
-    timelineData.removeTimeline(TraceType.SURFACE_FLINGER);
-    expect(timelineData.currentTimestamp).toEqual(timestamp11);
-
-    timelineData.removeTimeline(TraceType.WINDOW_MANAGER);
-    expect(timelineData.currentTimestamp).toBeUndefined();
+  it("uses first timestamp by default", () => {
+    timelineData.initialize(timelines);
+    expect(timelineData.getCurrentTimestamp()?.getValueNs()).toEqual(10n);
   });
 
-  it("removes timeline even if currently active", () => {
-    timelineData.setTimelines(timelines);
-    timelineData.setActiveTraceTypes([TraceType.WINDOW_MANAGER]);
-    timelineData.removeTimeline(TraceType.WINDOW_MANAGER);
-    expect(timelineData.currentTimestamp).toEqual(timestamp10);
+  it("uses explicit timestamp if set", () => {
+    timelineData.initialize(timelines);
+    expect(timelineData.getCurrentTimestamp()?.getValueNs()).toEqual(10n);
+
+    const explicitTimestamp = new Timestamp(TimestampType.REAL, 1000n);
+    timelineData.setCurrentTimestamp(explicitTimestamp);
+    expect(timelineData.getCurrentTimestamp()).toEqual(explicitTimestamp);
+
+    timelineData.setActiveViewTraceTypes([TraceType.WINDOW_MANAGER]);
+    expect(timelineData.getCurrentTimestamp()).toEqual(explicitTimestamp);
   });
 
-  it("sets active trace types and update timestamp", () => {
-    timelineData.setTimelines(timelines);
+  it("sets active trace types and update current timestamp accordingly", () => {
+    timelineData.initialize(timelines);
 
-    timelineData.setActiveTraceTypes([]);
-    expect(timelineData.currentTimestamp).toEqual(timestamp10);
+    timelineData.setActiveViewTraceTypes([]);
+    expect(timelineData.getCurrentTimestamp()).toEqual(timestamp10);
 
-    timelineData.setActiveTraceTypes([TraceType.WINDOW_MANAGER]);
-    expect(timelineData.currentTimestamp).toEqual(timestamp11);
+    timelineData.setActiveViewTraceTypes([TraceType.WINDOW_MANAGER]);
+    expect(timelineData.getCurrentTimestamp()).toEqual(timestamp11);
 
-    timelineData.setActiveTraceTypes([TraceType.SURFACE_FLINGER]);
-    expect(timelineData.currentTimestamp).toEqual(timestamp10);
+    timelineData.setActiveViewTraceTypes([TraceType.SURFACE_FLINGER]);
+    expect(timelineData.getCurrentTimestamp()).toEqual(timestamp10);
 
-    timelineData.setActiveTraceTypes([TraceType.SURFACE_FLINGER, TraceType.WINDOW_MANAGER]);
-    expect(timelineData.currentTimestamp).toEqual(timestamp10);
+    timelineData.setActiveViewTraceTypes([TraceType.SURFACE_FLINGER, TraceType.WINDOW_MANAGER]);
+    expect(timelineData.getCurrentTimestamp()).toEqual(timestamp10);
   });
 
-  it("sets/gets active trace types", () => {
-    timelineData.setTimelines(timelines);
-    expect(timelineData.getActiveTraceTypes()).toEqual([]);
+  it("notifies callback when current timestamp changes", () => {
+    spyOn(timestampChangedObserver, "onCurrentTimestampChanged");
+    expect(timestampChangedObserver.onCurrentTimestampChanged).toHaveBeenCalledTimes(0);
 
-    timelineData.setActiveTraceTypes([]);
-    expect(timelineData.getActiveTraceTypes()).toEqual([]);
+    timelineData.initialize(timelines);
+    expect(timestampChangedObserver.onCurrentTimestampChanged).toHaveBeenCalledTimes(1);
 
-    timelineData.setActiveTraceTypes([TraceType.WINDOW_MANAGER]);
-    expect(timelineData.getActiveTraceTypes()).toEqual([TraceType.WINDOW_MANAGER]);
-
-    timelineData.setActiveTraceTypes([TraceType.SURFACE_FLINGER, TraceType.WINDOW_MANAGER]);
-    expect(timelineData.getActiveTraceTypes()).toEqual([
-      TraceType.SURFACE_FLINGER,
-      TraceType.WINDOW_MANAGER
-    ]);
-
-    timelineData.removeTimeline(TraceType.SURFACE_FLINGER);
-    expect(timelineData.getActiveTraceTypes()).toEqual([TraceType.WINDOW_MANAGER]);
-
-    timelineData.removeTimeline(TraceType.WINDOW_MANAGER);
-    expect(timelineData.getActiveTraceTypes()).toEqual([]);
-  });
-
-  it("notifies observers when current timestamp changes", () => {
-    spyOn(observer, "onCurrentTimestampChanged");
-    expect(observer.onCurrentTimestampChanged).toHaveBeenCalledTimes(0);
-
-    timelineData.setTimelines(timelines);
-    expect(observer.onCurrentTimestampChanged).toHaveBeenCalledTimes(1);
-
-    timelineData.setActiveTraceTypes([TraceType.WINDOW_MANAGER]);
-    expect(observer.onCurrentTimestampChanged).toHaveBeenCalledTimes(2);
-
-    timelineData.removeTimeline(TraceType.WINDOW_MANAGER);
-    expect(observer.onCurrentTimestampChanged).toHaveBeenCalledTimes(3);
+    timelineData.setActiveViewTraceTypes([TraceType.WINDOW_MANAGER]);
+    expect(timestampChangedObserver.onCurrentTimestampChanged).toHaveBeenCalledTimes(2);
   });
 
   it("doesn't notify observers when current timestamp doesn't change", () => {
-    timelineData.setTimelines(timelines);
+    timelineData.initialize(timelines);
 
-    spyOn(observer, "onCurrentTimestampChanged");
-    expect(observer.onCurrentTimestampChanged).toHaveBeenCalledTimes(0);
+    spyOn(timestampChangedObserver, "onCurrentTimestampChanged");
+    expect(timestampChangedObserver.onCurrentTimestampChanged).toHaveBeenCalledTimes(0);
 
-    timelineData.setActiveTraceTypes([TraceType.SURFACE_FLINGER]);
-    expect(observer.onCurrentTimestampChanged).toHaveBeenCalledTimes(0);
+    timelineData.setActiveViewTraceTypes([TraceType.SURFACE_FLINGER]);
+    expect(timestampChangedObserver.onCurrentTimestampChanged).toHaveBeenCalledTimes(0);
 
-    timelineData.setActiveTraceTypes([TraceType.SURFACE_FLINGER, TraceType.WINDOW_MANAGER]);
-    expect(observer.onCurrentTimestampChanged).toHaveBeenCalledTimes(0);
-
-    timelineData.removeTimeline(TraceType.WINDOW_MANAGER);
-    expect(observer.onCurrentTimestampChanged).toHaveBeenCalledTimes(0);
-  });
-
-  it("uses first timestamp if no active trace or timestamp is specified", () => {
-    timelineData.setTimelines(timelines);
-    expect(timelineData.currentTimestamp?.getValueNs()).toEqual(10n);
-  });
-
-  it("sets first timestamp of active trace if no timestamp is specified", () => {
-    timelineData.setTimelines(timelines);
-    timelineData.setActiveTraceTypes([TraceType.WINDOW_MANAGER]);
-    expect(timelineData.currentTimestamp?.getValueNs()).toEqual(11n);
+    timelineData.setActiveViewTraceTypes([TraceType.SURFACE_FLINGER, TraceType.WINDOW_MANAGER]);
+    expect(timestampChangedObserver.onCurrentTimestampChanged).toHaveBeenCalledTimes(0);
   });
 });
-*/

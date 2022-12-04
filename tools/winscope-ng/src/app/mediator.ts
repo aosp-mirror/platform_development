@@ -48,8 +48,7 @@ class Mediator {
   }
 
   public onTraceDataLoaded(storage: Storage) {
-    this.timelineData.clear();
-    this.timelineData.setTimelines(this.traceData.getTimelines());
+    this.timelineData.initialize(this.traceData.getTimelines());
 
     const screenRecordingData = this.traceData.getScreenRecordingData();
     if (screenRecordingData) {
@@ -79,8 +78,8 @@ class Mediator {
     this.viewers = new ViewerFactory().createViewers(new Set<TraceType>(traceTypes), storage);
 
     // Make sure to update the viewers active entries as soon as they are created.
-    if (this.timelineData.currentTimestamp) {
-      this.onCurrentTimestampChanged(this.timelineData.currentTimestamp);
+    if (this.timelineData.getCurrentTimestamp()) {
+      this.onCurrentTimestampChanged(this.timelineData.getCurrentTimestamp());
     }
   }
 }

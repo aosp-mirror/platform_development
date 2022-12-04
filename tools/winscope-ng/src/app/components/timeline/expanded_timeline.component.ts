@@ -35,7 +35,7 @@ import { SingleTimelineComponent } from "./single_timeline.component";
         <single-timeline
             [color]="TRACE_INFO[timeline.key].color"
             [entries]="timeline.value"
-            [selected]="timelineData.getActiveTimestampFor(timeline.key)?.timestamp?.getValueNs() ?? undefined"
+            [selected]="timelineData.getCurrentTimestampFor(timeline.key)?.timestamp?.getValueNs() ?? undefined"
             [start]="start"
             [end]="end"
             (onTimestampChanged)="onTimestampChanged.emit($event)"
@@ -148,11 +148,11 @@ export class ExpandedTimelineComponent {
   }
 
   get start() {
-    return this.timelineData.selection.from;
+    return this.timelineData.getSelectionRange().from;
   }
 
   get end() {
-    return this.timelineData.selection.to;
+    return this.timelineData.getSelectionRange().to;
   }
 
   @HostListener("window:resize", ["$event"])

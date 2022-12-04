@@ -100,12 +100,14 @@ import {TRACE_INFO} from "app/trace_info";
 
       <mat-drawer #drawer mode="overlay" opened="true"
                   [baseHeight]="collapsedTimelineHeight">
+
+        <!-- TODO: remove redundant videoData parameter below -->
         <timeline
             *ngIf="dataLoaded"
             [timelineData]="timelineData"
             [activeViewTraceTypes]="activeView?.dependencies"
-            [availableTraces]="getAvailableTraces()"
-            [videoData]="videoData"
+            [availableTraces]="getLoadedTraceTypes()"
+            [videoData]="timelineData.getVideoData()"
             (init)="onTimelineInit()"
             (destroy)="onTimelineDestroy()"
             (collapsedTimelineSizeChanged)="onCollapsedTimelineSizeChanged($event)"
@@ -260,11 +262,11 @@ export class AppComponent {
     this.changeDetectorRef.detectChanges();
   }
 
-  getAvailableTraces(): TraceType[] {
+  getLoadedTraceTypes(): TraceType[] {
     return this.traceData.getLoadedTraces().map((trace) => trace.type);
   }
 
-  get videoData(): Blob|undefined {
+  getVideoData(): Blob|undefined {
     return this.timelineData.getVideoData();
   }
 
@@ -313,7 +315,7 @@ export class AppComponent {
 
   handleActiveViewChanged(view: View) {
     this.activeView = view;
-    this.timelineData.setActiveTraceTypes(view.dependencies);
+    this.timelineData.setActiveViewTraceTypes(view.dependencies);
   }
 
   getActiveTraceType(): TraceType|undefined {
