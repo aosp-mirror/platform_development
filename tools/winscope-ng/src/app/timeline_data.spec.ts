@@ -111,4 +111,48 @@ describe("TimelineData", () => {
     timelineData.setActiveViewTraceTypes([TraceType.SURFACE_FLINGER, TraceType.WINDOW_MANAGER]);
     expect(timestampChangedObserver.onCurrentTimestampChanged).toHaveBeenCalledTimes(0);
   });
+
+  it("hasTimestamps()", () => {
+    expect(timelineData.hasTimestamps()).toBeFalse();
+
+    timelineData.initialize([]);
+    expect(timelineData.hasTimestamps()).toBeFalse();
+
+    timelineData.initialize([{
+      traceType: TraceType.SURFACE_FLINGER,
+      timestamps: []
+    }]);
+    expect(timelineData.hasTimestamps()).toBeFalse();
+
+    timelineData.initialize([{
+      traceType: TraceType.SURFACE_FLINGER,
+      timestamps: [new Timestamp(TimestampType.REAL, 10n)]
+    }]);
+    expect(timelineData.hasTimestamps()).toBeTrue();
+  });
+
+  it("hasMoreThanOneDistinctTimestamp()", () => {
+    expect(timelineData.hasMoreThanOneDistinctTimestamp()).toBeFalse();
+
+    timelineData.initialize([]);
+    expect(timelineData.hasMoreThanOneDistinctTimestamp()).toBeFalse();
+
+    timelineData.initialize([{
+      traceType: TraceType.SURFACE_FLINGER,
+      timestamps: [new Timestamp(TimestampType.REAL, 10n)]
+    }, {
+      traceType: TraceType.WINDOW_MANAGER,
+      timestamps: [new Timestamp(TimestampType.REAL, 10n)]
+    }]);
+    expect(timelineData.hasMoreThanOneDistinctTimestamp()).toBeFalse();
+
+    timelineData.initialize([{
+      traceType: TraceType.SURFACE_FLINGER,
+      timestamps: [new Timestamp(TimestampType.REAL, 10n)]
+    }, {
+      traceType: TraceType.WINDOW_MANAGER,
+      timestamps: [new Timestamp(TimestampType.REAL, 11n)]
+    }]);
+    expect(timelineData.hasMoreThanOneDistinctTimestamp()).toBeTrue();
+  });
 });

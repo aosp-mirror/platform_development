@@ -60,7 +60,7 @@ import { TimeUtils } from "common/utils/time_utils";
         ></expanded-timeline>
     </div>
     <div class="navbar" #collapsedTimeline>
-      <ng-template [ngIf]="hasMoreThanOneDistinctTimestamp()">
+      <ng-template [ngIf]="timelineData.hasMoreThanOneDistinctTimestamp()">
         <div id="time-selector">
             <button mat-icon-button
               id="prev_entry_button"
@@ -141,7 +141,7 @@ import { TimeUtils } from "common/utils/time_utils";
           id="mini-timeline"
           #miniTimeline
         ></mini-timeline>
-        <div id="toggle" *ngIf="hasMoreThanOneDistinctTimestamp()">
+        <div id="toggle" *ngIf="timelineData.hasMoreThanOneDistinctTimestamp()">
             <button mat-icon-button
                     [class]="TOGGLE_BUTTON_CLASS"
                     color="primary"
@@ -152,11 +152,11 @@ import { TimeUtils } from "common/utils/time_utils";
             </button>
         </div>
       </ng-template >
-      <div *ngIf="!hasTimestamps()" class="no-timestamps-msg">
+      <div *ngIf="!timelineData.hasTimestamps()" class="no-timestamps-msg">
         <p class="mat-body-2">No timeline to show!</p>
         <p class="mat-body-1">All loaded traces contain no timestamps!</p>
       </div>
-      <div *ngIf="!hasMoreThanOneDistinctTimestamp()" class="no-timestamps-msg">
+      <div *ngIf="!timelineData.hasMoreThanOneDistinctTimestamp()" class="no-timestamps-msg">
         <p class="mat-body-2">No timeline to show!</p>
         <p class="mat-body-1">Only a single timestamp has been recorded.</p>
       </div>
@@ -346,7 +346,7 @@ export class TimelineComponent {
 
   ngOnInit() {
     this.init.emit();
-    if (this.hasTimestamps()) {
+    if (this.timelineData.hasTimestamps()) {
       this.updateTimeInputValuesToCurrentTimestamp();
     }
   }
@@ -365,14 +365,6 @@ export class TimelineComponent {
   }
 
   private seekTimestamp: Timestamp|undefined;
-
-  hasTimestamps(): boolean {
-    return this.timelineData.getAllUniqueTimestamps().length > 0;
-  }
-
-  hasMoreThanOneDistinctTimestamp(): boolean {
-    return this.timelineData.getAllUniqueTimestamps().length > 1;
-  }
 
   get currentTimestamp(): Timestamp {
     if (this.seekTimestamp !== undefined) {

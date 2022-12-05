@@ -186,6 +186,7 @@ describe("TimelineComponent", () => {
       timestamps: [timestamp(90), timestamp(101), timestamp(110), timestamp(112)]
     }]);
     component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
+    component.timelineData.setCurrentTimestamp(timestamp(100));
     fixture.detectChanges();
 
     expect(component.timelineData.getCurrentTimestamp()?.getValueNs()).toEqual(100n);
@@ -216,6 +217,7 @@ describe("TimelineComponent", () => {
       timestamps: [timestamp(90), timestamp(101), timestamp(110), timestamp(112)]
     }]);
     component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
+    component.timelineData.setCurrentTimestamp(timestamp(100));
     fixture.detectChanges();
 
     expect(component.timelineData.getCurrentTimestamp()?.getValueNs()).toEqual(100n);
@@ -245,6 +247,7 @@ describe("TimelineComponent", () => {
       timestamps: [timestamp(90), timestamp(101), timestamp(110), timestamp(112)]
     }]);
     component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
+    component.timelineData.setCurrentTimestamp(timestamp(100));
     fixture.detectChanges();
     expect(component.timelineData.getCurrentTimestamp()?.getValueNs()).toEqual(100n);
     const nextEntryButton = fixture.debugElement.query(By.css("#next_entry_button"));
@@ -287,6 +290,7 @@ describe("TimelineComponent", () => {
       timestamps: [timestamp(90), timestamp(101), timestamp(110), timestamp(112)]
     }]);
     component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
+    component.timelineData.setCurrentTimestamp(timestamp(100));
     fixture.detectChanges();
     expect(component.timelineData.getCurrentTimestamp()?.getValueNs()).toEqual(100n);
     const prevEntryButton = fixture.debugElement.query(By.css("#prev_entry_button"));

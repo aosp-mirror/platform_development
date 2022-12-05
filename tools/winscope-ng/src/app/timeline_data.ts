@@ -67,7 +67,7 @@ export class TimelineData {
   }
 
   public setCurrentTimestamp(timestamp: Timestamp|undefined) {
-    if (this.getAllUniqueTimestamps().length === 0) {
+    if (!this.hasTimestamps()) {
       console.warn("Attempted to set timestamp on traces with no timestamps/entries...");
       return;
     }
@@ -98,13 +98,12 @@ export class TimelineData {
   }
 
   public getFullRange(): TimeRange {
-    const timestamps = this.getAllUniqueTimestamps();
-    if (timestamps.length === 0) {
+    if (!this.hasTimestamps()) {
       throw Error("Trying to get full range when there are no timestamps");
     }
     return {
-      from: timestamps[0],
-      to: timestamps[timestamps.length - 1]
+      from: this.getFirstTimestamp()!,
+      to: this.getLastTimestamp()!
     };
   }
 
@@ -141,19 +140,12 @@ export class TimelineData {
     return this.screenRecordingData?.timestampsMapping.get(screenRecordingTimestamp);
   }
 
-  //TODO: do not expose
-  public getAllUniqueTimestamps(): Timestamp[] {
-    const allTimestamps = Array.from(this.timelines.values()).flatMap(num => num).sort();
-    const uniqueTimestamps: Timestamp[] = [];
+  public hasTimestamps(): boolean {
+    return Array.from(this.timelines.values()).some(timestamps => timestamps.length > 0);
+  }
 
-    let prevTimestamp: Timestamp | undefined = undefined;
-    for (const timestamp of allTimestamps) {
-      if (prevTimestamp?.getValueNs() !== timestamp.getValueNs()) {
-        uniqueTimestamps.push(timestamp);
-      }
-      prevTimestamp = timestamp;
-    }
-    return uniqueTimestamps;
+  public hasMoreThanOneDistinctTimestamp(): boolean {
+    return this.hasTimestamps() && this.getFirstTimestamp() !== this.getLastTimestamp();
   }
 
   public getCurrentTimestampFor(type: TraceType): Timestamp|undefined {
@@ -227,11 +219,25 @@ export class TimelineData {
   }
 
   private getFirstTimestamp(): Timestamp|undefined {
-    if (this.getAllUniqueTimestamps().length === 0) {
+    if (!this.hasTimestamps()) {
       return undefined;
     }
 
-    return this.getAllUniqueTimestamps()[0];
+    return Array.from(this.timelines.values())
+      .map(timestamps => timestamps[0])
+      .filter(timestamp => timestamp !== undefined)
+      .reduce((prev, current) => prev < current ? prev : current);
+  }
+
+  private getLastTimestamp(): Timestamp|undefined {
+    if (!this.hasTimestamps()) {
+      return undefined;
+    }
+
+    return Array.from(this.timelines.values())
+      .map(timestamps => timestamps[timestamps.length-1])
+      .filter(timestamp => timestamp !== undefined)
+      .reduce((prev, current) => prev > current ? prev : current);
   }
 
   private searchCorrespondingTimestampFor(type: TraceType, timestamp: Timestamp|undefined):
@@ -259,7 +265,11 @@ export class TimelineData {
     if (this.activeViewTraceTypes.length === 0) {
       return undefined;
     }
-    const activeTimestamps = this.activeViewTraceTypes.map(it => this.timelines.get(it)!).flatMap(it => it).sort();
+    const activeTimestamps = this.activeViewTraceTypes
+      .map(traceType => this.timelines.get(traceType)!)
+      .map(timestamps => timestamps[0])
+      .filter(timestamp => timestamp !== undefined)
+      .sort();
     if (activeTimestamps.length === 0) {
       return undefined;
     }
