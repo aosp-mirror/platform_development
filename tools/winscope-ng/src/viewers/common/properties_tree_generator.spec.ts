@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import Long from "long";
 import { PropertiesTreeGenerator } from "viewers/common/properties_tree_generator";
 import {PropertiesTreeNode} from "./ui_tree_utils";
 
@@ -36,6 +37,18 @@ describe("PropertiesTreeGenerator", () => {
     const expected: PropertiesTreeNode = {
       propertyKey: "root",
       propertyValue: "10"
+    };
+
+    expect(actual).toEqual(expected);
+  });
+
+  it("handles longs", () => {
+    const input = new Long(10, 100, false);
+    const actual = new PropertiesTreeGenerator().generate("root", input);
+
+    const expected: PropertiesTreeNode = {
+      propertyKey: "root",
+      propertyValue: "429496729610"
     };
 
     expect(actual).toEqual(expected);
