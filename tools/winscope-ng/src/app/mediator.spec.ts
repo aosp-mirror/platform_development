@@ -14,116 +14,97 @@
  * limitations under the License.
  */
 import {Timestamp, TimestampType} from "common/trace/timestamp";
-import {TraceType} from "common/trace/trace_type";
 import {Mediator} from "./mediator";
 import {UnitTestUtils} from "test/unit/utils";
 import {ViewerFactory} from "viewers/viewer_factory";
 import {ViewerStub} from "viewers/viewer_stub";
-import { TimelineData } from "./timeline_data";
-import { MockStorage } from "test/unit/mock_storage";
+import {TimelineData} from "./timeline_data";
+import {TraceData} from "./trace_data";
+import {MockStorage} from "test/unit/mock_storage";
 
-//TODO: uncomment/fix tests
-/*
+class TimelineComponentStub {
+  onCurrentTimestampChanged(timestamp: Timestamp|undefined) {
+    // do nothing
+  }
+}
+
 describe("Mediator", () => {
-  let mediator: Mediator;
+  const viewerStub = new ViewerStub("Title");
+  let timelineComponent: TimelineComponentStub;
+  let traceData: TraceData;
   let timelineData: TimelineData;
+  let mediator: Mediator;
 
   beforeEach(async () => {
-    spyOn(TimelineData.prototype, "setScreenRecordingData").and.callThrough();
-    spyOn(TimelineData.prototype, "removeScreenRecordingData").and.callThrough();
+    timelineComponent = new TimelineComponentStub();
+    traceData = new TraceData();
     timelineData = new TimelineData();
-    mediator = new Mediator(timelineData);
-  });
-
-  it("can create viewers and notify current trace entries", async () => {
-    const viewerStub = new ViewerStub("Title");
+    mediator = new Mediator(traceData, timelineData);
+    mediator.setNotifyCurrentTimestampChangedToTimelineComponentCallback(timestamp => {
+      timelineComponent.onCurrentTimestampChanged(timestamp);
+    });
 
     spyOn(ViewerFactory.prototype, "createViewers").and.returnValue([viewerStub]);
+  });
+
+  it("it processes data load event and create viewers", async () => {
     spyOn(viewerStub, "notifyCurrentTraceEntries");
 
-    const traces = [
-      await UnitTestUtils.getFixtureFile(
-        "traces/elapsed_and_real_timestamp/SurfaceFlinger.pb"),
-      await UnitTestUtils.getFixtureFile(
-        "traces/elapsed_and_real_timestamp/WindowManager.pb"),
-      // trace file with no entries for some more robustness checks
-      await UnitTestUtils.getFixtureFile(
-        "traces/no_entries_InputMethodClients.pb")
-    ];
-    await mediator.setTraces(traces);
-
-    // create viewers (mocked factory)
+    await loadTraces();
     expect(mediator.getViewers()).toEqual([]);
-    mediator.createViewers(new MockStorage());
+
+    mediator.onTraceDataLoaded(new MockStorage());
     expect(mediator.getViewers()).toEqual([viewerStub]);
 
-    // Gets notified of the current timestamp on creation
+    // notifies viewer about current timestamp on creation
     expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(1);
+  });
 
-    // When we update to an undefined timestamp we reset to the default selected
-    // timestamp based on the active trace and loaded timelines. Given that
-    // we haven't set a timestamp we should still be in the default timestamp
-    // and require no update to the current trace entries.
-    timelineData.updateCurrentTimestamp(undefined);
-    expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(1);
+  it("forwards timestamp changed events/notifications", async () => {
+    const timestamp10 = new Timestamp(TimestampType.REAL, 10n);
+    const timestamp11 = new Timestamp(TimestampType.REAL, 11n);
+
+    await loadTraces();
+    mediator.onTraceDataLoaded(new MockStorage());
+    expect(mediator.getViewers()).toEqual([viewerStub]);
+
+    spyOn(viewerStub, "notifyCurrentTraceEntries");
+    spyOn(timelineComponent, "onCurrentTimestampChanged");
+    expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(0);
+    expect(timelineComponent.onCurrentTimestampChanged).toHaveBeenCalledTimes(0);
 
     // notify timestamp
-    const timestamp = new Timestamp(TimestampType.REAL, 14500282843n);
-    expect(timelineData.getTimestampType()).toBe(TimestampType.REAL);
-    timelineData.updateCurrentTimestamp(timestamp);
-    expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(2);
+    timelineData.setCurrentTimestamp(timestamp10);
+    expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(1);
+    expect(timelineComponent.onCurrentTimestampChanged).toHaveBeenCalledTimes(1);
 
-    // notify timestamp again
-    timelineData.updateCurrentTimestamp(timestamp);
-    expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(2);
+    // notify timestamp again (no timestamp change)
+    timelineData.setCurrentTimestamp(timestamp10);
+    expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(1);
+    expect(timelineComponent.onCurrentTimestampChanged).toHaveBeenCalledTimes(1);
 
     // reset back to the default timestamp should trigger a change
-    timelineData.updateCurrentTimestamp(undefined);
-    expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(3);
+    timelineData.setCurrentTimestamp(timestamp11);
+    expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(2);
+    expect(timelineComponent.onCurrentTimestampChanged).toHaveBeenCalledTimes(2);
   });
 
   it("sets video data on timelineData when screenrecording is loaded", async () => {
-    expect(mediator.getParsers().length).toEqual(0);
+    spyOn(timelineData, "setScreenRecordingData").and.callThrough();
+
+    await loadTraces();
+    expect(timelineData.setScreenRecordingData).toHaveBeenCalledTimes(0);
+
+    mediator.onTraceDataLoaded(new MockStorage());
+    expect(timelineData.setScreenRecordingData).toHaveBeenCalledTimes(1);
+  });
+
+  const loadTraces = async () => {
     const traces = [
       await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/SurfaceFlinger.pb"),
       await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/WindowManager.pb"),
       await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4"),
     ];
-    const errors = await mediator.setTraces(traces);
-    expect(mediator.getParsers().length).toEqual(3);
-    expect(errors.length).toEqual(0);
-
-    expect(timelineData.setScreenRecordingData).toHaveBeenCalledTimes(1);
-  });
-
-  it("video data is removed if video trace is deleted", async () => {
-    expect(mediator.getParsers().length).toEqual(0);
-    const traces = [
-      await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/SurfaceFlinger.pb"),
-      await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/WindowManager.pb"),
-      await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4"),
-    ];
-    const errors = await mediator.setTraces(traces);
-    expect(mediator.getParsers().length).toEqual(3);
-    expect(errors.length).toEqual(0);
-    expect(mediator.getParserFor(TraceType.SCREEN_RECORDING))
-      .withContext("Should have screen recording parser").toBeDefined();
-    expect(timelineData.getTimelines().keys())
-      .withContext("Should have screen recording timeline").toContain(TraceType.SCREEN_RECORDING);
-
-    expect(timelineData.setScreenRecordingData).toHaveBeenCalledTimes(1);
-    expect(timelineData.getVideoData()).withContext("Should have video data").toBeDefined();
-    expect(timelineData.timestampAsElapsedScreenrecordingSeconds(
-      new Timestamp(TimestampType.REAL, 1666361049372271045n)))
-      .withContext("Should be able to covert timestamp to video seconds").toBeDefined();
-
-    mediator.removeTrace(TraceType.SCREEN_RECORDING);
-
-    expect(timelineData.removeScreenRecordingData).toHaveBeenCalledTimes(1);
-    expect(timelineData.getVideoData()).withContext("Should no longer have video data").toBeUndefined();
-    expect(() => {
-      timelineData.timestampAsElapsedScreenrecordingSeconds(new Timestamp(TimestampType.REAL, 1666361049372271045n))
-    }).toThrow(new Error("No timeline for requested trace type 3"));
-  });
+    const errors = await traceData.loadTraces(traces);
+  };
 });
-*/
