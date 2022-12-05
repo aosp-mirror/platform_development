@@ -19,6 +19,8 @@ import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
 import { ArrayUtils } from "common/utils/array_utils";
 import { FunctionUtils} from "common/utils/function_utils";
+import {TimeUtils} from "common/utils/time_utils";
+import {ScreenRecordingUtils} from "common/trace/screen_recording_utils";
 
 export type TimestampCallbackType = (timestamp: Timestamp|undefined) => void;
 export type TimeRange = { from: Timestamp, to: Timestamp }
@@ -269,7 +271,7 @@ export class TimelineData {
       .map(traceType => this.timelines.get(traceType)!)
       .map(timestamps => timestamps[0])
       .filter(timestamp => timestamp !== undefined)
-      .sort();
+      .sort(TimeUtils.compareFn);
     if (activeTimestamps.length === 0) {
       return undefined;
     }
