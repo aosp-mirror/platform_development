@@ -22,13 +22,6 @@ import {TraceType} from "common/trace/trace_type";
 import {Parser} from "parsers/parser";
 import {ParserError, ParserFactory} from "parsers/parser_factory";
 
-//TODO: get rid of this data type. timestampsMapping is just redundant data.
-//      TimelineData can easily compute the video time looking at timestamps in the screenrecording trace.
-interface ScreenRecordingData {
-  video: Blob;
-  timestampsMapping: Map<Timestamp, number>;
-}
-
 interface Timeline {
   traceType: TraceType;
   timestamps: Timestamp[];
@@ -96,7 +89,7 @@ class TraceData {
     return timelines;
   }
 
-  public getScreenRecordingData(): undefined|ScreenRecordingData {
+  public getScreenRecordingVideo(): undefined|Blob {
     const parser = this.parsers
       .find((parser) => parser.getTraceType() === TraceType.SCREEN_RECORDING);
     if (!parser) {
@@ -108,24 +101,7 @@ class TraceData {
       return undefined;
     }
 
-    const timestampsMapping = new Map<Timestamp, number>();
-    let videoData: Blob|undefined = undefined;
-    for (const timestamp of timestamps) {
-      const entry = parser.getTraceEntry(timestamp) as ScreenRecordingTraceEntry;
-      timestampsMapping.set(timestamp, entry.videoTimeSeconds);
-      if (videoData === undefined) {
-        videoData = entry.videoData;
-      }
-    }
-
-    if (!videoData) {
-      return undefined;
-    }
-
-    return {
-      video: videoData,
-      timestampsMapping: timestampsMapping
-    };
+    return (parser.getTraceEntry(timestamps[0]) as ScreenRecordingTraceEntry)?.videoData;
   }
 
   public clear() {
@@ -150,4 +126,4 @@ class TraceData {
   }
 }
 
-export {ScreenRecordingData, Timeline, TraceData};
+export {Timeline, TraceData};

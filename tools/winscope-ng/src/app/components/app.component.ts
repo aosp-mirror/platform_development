@@ -107,7 +107,7 @@ import {TRACE_INFO} from "app/trace_info";
             [timelineData]="timelineData"
             [activeViewTraceTypes]="activeView?.dependencies"
             [availableTraces]="getLoadedTraceTypes()"
-            [videoData]="timelineData.getVideoData()"
+            [videoData]="timelineData.getScreenRecordingVideo()"
             (init)="onTimelineInit()"
             (destroy)="onTimelineDestroy()"
             (collapsedTimelineSizeChanged)="onCollapsedTimelineSizeChanged($event)"
@@ -267,7 +267,7 @@ export class AppComponent {
   }
 
   getVideoData(): Blob|undefined {
-    return this.timelineData.getVideoData();
+    return this.timelineData.getScreenRecordingVideo();
   }
 
   public onUploadNewClick() {

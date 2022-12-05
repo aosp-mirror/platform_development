@@ -78,7 +78,7 @@ describe("TimelineComponent", () => {
     component.timelineData.initialize([{
       traceType: TraceType.SURFACE_FLINGER,
       timestamps: timestamps
-    }]);
+    }], undefined);
     fixture.detectChanges();
 
     const button = htmlElement.querySelector(`.${component.TOGGLE_BUTTON_CLASS}`);
@@ -102,7 +102,7 @@ describe("TimelineComponent", () => {
     component.timelineData.initialize([{
       traceType: TraceType.SURFACE_FLINGER,
       timestamps: timestamps
-    }]);
+    }], undefined);
     fixture.detectChanges();
 
     // no expand button
@@ -173,7 +173,7 @@ describe("TimelineComponent", () => {
     }, {
       traceType: TraceType.WINDOW_MANAGER,
       timestamps: [timestamp(100)]
-    }]);
+    }], undefined);
     fixture.detectChanges();
   });
 
@@ -184,7 +184,7 @@ describe("TimelineComponent", () => {
     }, {
       traceType: TraceType.WINDOW_MANAGER,
       timestamps: [timestamp(90), timestamp(101), timestamp(110), timestamp(112)]
-    }]);
+    }], undefined);
     component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
     component.timelineData.setCurrentTimestamp(timestamp(100));
     fixture.detectChanges();
@@ -215,7 +215,7 @@ describe("TimelineComponent", () => {
     }, {
       traceType: TraceType.WINDOW_MANAGER,
       timestamps: [timestamp(90), timestamp(101), timestamp(110), timestamp(112)]
-    }]);
+    }], undefined);
     component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
     component.timelineData.setCurrentTimestamp(timestamp(100));
     fixture.detectChanges();
@@ -245,7 +245,7 @@ describe("TimelineComponent", () => {
     }, {
       traceType: TraceType.WINDOW_MANAGER,
       timestamps: [timestamp(90), timestamp(101), timestamp(110), timestamp(112)]
-    }]);
+    }], undefined);
     component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
     component.timelineData.setCurrentTimestamp(timestamp(100));
     fixture.detectChanges();
@@ -288,7 +288,7 @@ describe("TimelineComponent", () => {
     }, {
       traceType: TraceType.WINDOW_MANAGER,
       timestamps: [timestamp(90), timestamp(101), timestamp(110), timestamp(112)]
-    }]);
+    }], undefined);
     component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
     component.timelineData.setCurrentTimestamp(timestamp(100));
     fixture.detectChanges();

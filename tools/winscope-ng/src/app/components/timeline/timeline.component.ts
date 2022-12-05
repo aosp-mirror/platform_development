@@ -361,7 +361,7 @@ export class TimelineComponent {
   }
 
   getVideoCurrentTime() {
-    return this.timelineData.searchCorrespondingScreenRecordingTimeInSeconds(this.currentTimestamp);
+    return this.timelineData.searchCorrespondingScreenRecordingTimeSeconds(this.currentTimestamp);
   }
 
   private seekTimestamp: Timestamp|undefined;

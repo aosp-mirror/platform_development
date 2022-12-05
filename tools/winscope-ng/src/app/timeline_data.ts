@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Timeline, ScreenRecordingData} from "./trace_data";
+import {Timeline} from "./trace_data";
 import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
 import { ArrayUtils } from "common/utils/array_utils";
@@ -31,12 +31,14 @@ export class TimelineData {
   private timestampType?: TimestampType = undefined;
   private explicitlySetTimestamp?: Timestamp = undefined;
   private explicitlySetSelection?: TimeRange = undefined;
-  private screenRecordingData?: ScreenRecordingData = undefined;
+  private screenRecordingVideo?: Blob = undefined;
   private activeViewTraceTypes: TraceType[] = []; // dependencies of current active view
   private onCurrentTimestampChanged: TimestampCallbackType = FunctionUtils.DO_NOTHING;
 
-  public initialize(timelines: Timeline[]) {
+  public initialize(timelines: Timeline[], screenRecordingVideo: Blob|undefined) {
     this.clear();
+
+    this.screenRecordingVideo = screenRecordingVideo;
 
     const allTimestamps = timelines.flatMap(timeline => timeline.timestamps);
     if (allTimestamps.some(timestamp => timestamp.getType() != allTimestamps[0].getType())) {
@@ -76,10 +78,10 @@ export class TimelineData {
 
     if (timestamp !== undefined) {
       if (this.timestampType === undefined) {
-        throw Error("Timestamp type wasn't set before calling updateCurrentTimestamp");
+        throw Error("Attempted to set explicit timestamp but no timestamp type is available");
       }
       if (timestamp.getType() !== this.timestampType) {
-        throw Error("Timeline based on different timestamp type");
+        throw Error("Attempted to set explicit timestamp with incompatible type");
       }
     }
 
@@ -125,21 +127,24 @@ export class TimelineData {
     return this.timelines;
   }
 
-  public setScreenRecordingData(data: ScreenRecordingData) {
-    this.screenRecordingData = data;
+  public getScreenRecordingVideo(): Blob|undefined {
+    return this.screenRecordingVideo;
   }
 
-  public getVideoData(): Blob|undefined {
-    return this.screenRecordingData?.video;
-  }
-
-  public searchCorrespondingScreenRecordingTimeInSeconds(timestamp: Timestamp): number|undefined {
-    const screenRecordingTimestamp = this.searchCorrespondingTimestampFor(TraceType.SCREEN_RECORDING, timestamp)?.timestamp;
-    if (screenRecordingTimestamp === undefined) {
+  public searchCorrespondingScreenRecordingTimeSeconds(timestamp: Timestamp): number|undefined {
+    const timestamps = this.timelines.get(TraceType.SCREEN_RECORDING);
+    if (!timestamps) {
       return undefined;
     }
 
-    return this.screenRecordingData?.timestampsMapping.get(screenRecordingTimestamp);
+    const firstTimestamp = timestamps[0];
+
+    const correspondingTimestamp = this.searchCorrespondingTimestampFor(TraceType.SCREEN_RECORDING, timestamp)?.timestamp;
+    if (correspondingTimestamp === undefined) {
+      return undefined;
+    }
+
+    return ScreenRecordingUtils.timestampToVideoTimeSeconds(firstTimestamp, correspondingTimestamp);
   }
 
   public hasTimestamps(): boolean {
@@ -215,7 +220,7 @@ export class TimelineData {
       this.explicitlySetTimestamp = undefined;
       this.timestampType = undefined;
       this.explicitlySetSelection = undefined;
-      this.screenRecordingData = undefined;
+      this.screenRecordingVideo = undefined;
       this.activeViewTraceTypes = [];
     });
   }

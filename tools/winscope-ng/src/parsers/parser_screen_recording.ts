@@ -18,6 +18,7 @@ import {TraceType} from "common/trace/trace_type";
 import {ArrayUtils} from "common/utils/array_utils";
 import {Parser} from "./parser";
 import {ScreenRecordingTraceEntry} from "common/trace/screen_recording";
+import {ScreenRecordingUtils} from "common/trace/screen_recording_utils";
 
 class ScreenRecordingMetadataEntry {
   constructor(public timestampElapsedNs: bigint, public timestampRealtimeNs: bigint) {
@@ -82,9 +83,10 @@ class ParserScreenRecording extends Parser {
   }
 
   override processDecodedEntry(index: number, timestampType: TimestampType, entry: ScreenRecordingMetadataEntry): ScreenRecordingTraceEntry {
-    const initialTimestampNs = this.getTimestamps(TimestampType.ELAPSED)![0].getValueNs();
-    const currentTimestampNs = entry.timestampElapsedNs;
-    const videoTimeSeconds = Number(currentTimestampNs - initialTimestampNs) / 1000000000;
+    const initialTimestamp = this.getTimestamps(TimestampType.ELAPSED)![0];
+    const currentTimestamp = new Timestamp(TimestampType.ELAPSED, entry.timestampElapsedNs);
+    const videoTimeSeconds =
+      ScreenRecordingUtils.timestampToVideoTimeSeconds(initialTimestamp, currentTimestamp);
     const videoData = this.trace;
     return new ScreenRecordingTraceEntry(videoTimeSeconds, videoData);
   }

@@ -132,17 +132,16 @@ describe("TraceData", () => {
   });
 
   it("gets screenrecording data", async () => {
-    expect(traceData.getScreenRecordingData()).toBeUndefined();
+    expect(traceData.getScreenRecordingVideo()).toBeUndefined();
 
     const traceFiles = [
       await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4"),
     ];
     await traceData.loadTraces(traceFiles);
 
-    const screenRecordingData = traceData.getScreenRecordingData();
-    expect(screenRecordingData).toBeDefined();
-    expect(screenRecordingData!.video.size).toBeGreaterThan(0);
-    expect(screenRecordingData!.timestampsMapping.size).toBeGreaterThan(0);
+    const video = traceData.getScreenRecordingVideo();
+    expect(video).toBeDefined();
+    expect(video!.size).toBeGreaterThan(0);
   });
 
   it("can be cleared", async () => {

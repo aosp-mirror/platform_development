@@ -48,13 +48,10 @@ class Mediator {
   }
 
   public onTraceDataLoaded(storage: Storage) {
-    this.timelineData.initialize(this.traceData.getTimelines());
-
-    const screenRecordingData = this.traceData.getScreenRecordingData();
-    if (screenRecordingData) {
-      this.timelineData.setScreenRecordingData(screenRecordingData);
-    }
-
+    this.timelineData.initialize(
+      this.traceData.getTimelines(),
+      this.traceData.getScreenRecordingVideo()
+    );
     this.createViewers(storage);
   }
 

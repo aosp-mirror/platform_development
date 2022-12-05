@@ -47,7 +47,18 @@ describe("Mediator", () => {
     spyOn(ViewerFactory.prototype, "createViewers").and.returnValue([viewerStub]);
   });
 
-  it("it processes data load event and create viewers", async () => {
+  it("initializes TimelineData on data load event", async () => {
+    spyOn(timelineData, "initialize").and.callThrough();
+
+    await loadTraces();
+    expect(timelineData.initialize).toHaveBeenCalledTimes(0);
+
+    mediator.onTraceDataLoaded(new MockStorage());
+    expect(timelineData.initialize).toHaveBeenCalledTimes(1);
+  });
+
+
+  it("it creates viewers on data load event", async () => {
     spyOn(viewerStub, "notifyCurrentTraceEntries");
 
     await loadTraces();
@@ -87,16 +98,6 @@ describe("Mediator", () => {
     timelineData.setCurrentTimestamp(timestamp11);
     expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(2);
     expect(timelineComponent.onCurrentTimestampChanged).toHaveBeenCalledTimes(2);
-  });
-
-  it("sets video data on timelineData when screenrecording is loaded", async () => {
-    spyOn(timelineData, "setScreenRecordingData").and.callThrough();
-
-    await loadTraces();
-    expect(timelineData.setScreenRecordingData).toHaveBeenCalledTimes(0);
-
-    mediator.onTraceDataLoaded(new MockStorage());
-    expect(timelineData.setScreenRecordingData).toHaveBeenCalledTimes(1);
   });
 
   const loadTraces = async () => {
