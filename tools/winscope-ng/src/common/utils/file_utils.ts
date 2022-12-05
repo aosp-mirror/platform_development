@@ -54,20 +54,6 @@ class FileUtils {
     return await zip.generateAsync({type: "blob"});
   }
 
-  //TODO: remove/replace with flatMap(unzipFile(...)) ?
-  static async getUnzippedFiles(files: File[]): Promise<File[]> {
-    const unzippedFiles: File[] = [];
-    for (let i=0; i<files.length; i++) {
-      if (FileUtils.isZipFile(files[i])) {
-        const unzippedFile = await FileUtils.unzipFile(files[i]);
-        unzippedFiles.push(...unzippedFile);
-      } else {
-        unzippedFiles.push(files[i]);
-      }
-    }
-    return unzippedFiles;
-  }
-
   static async unzipFile(file: File): Promise<File[]> {
     const unzippedFiles: File[] = [];
     const buffer: Uint8Array = await this.readFile(file);
@@ -83,6 +69,19 @@ class FileUtils {
         const fileBlob = await file.async("blob");
         const unzippedFile = new File([fileBlob], name);
         unzippedFiles.push(unzippedFile);
+      }
+    }
+    return unzippedFiles;
+  }
+
+  static async unzipFilesIfNeeded(files: File[]): Promise<File[]> {
+    const unzippedFiles: File[] = [];
+    for (let i=0; i<files.length; i++) {
+      if (FileUtils.isZipFile(files[i])) {
+        const unzippedFile = await FileUtils.unzipFile(files[i]);
+        unzippedFiles.push(...unzippedFile);
+      } else {
+        unzippedFiles.push(files[i]);
       }
     }
     return unzippedFiles;

@@ -162,7 +162,7 @@ export class UploadTracesComponent {
   }
 
   public async processFiles(files: File[]) {
-    const unzippedFiles = await FileUtils.getUnzippedFiles(files);
+    const unzippedFiles = await FileUtils.unzipFilesIfNeeded(files);
     const parserErrors = await this.traceData.loadTraces(unzippedFiles);
     if (parserErrors.length > 0) {
       this.openTempSnackBar(parserErrors);
