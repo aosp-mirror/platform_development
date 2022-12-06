@@ -57,6 +57,9 @@ class PropertiesTreeGenerator {
     if (typeof value === "string") {
       return value;
     }
+    if (this.isLong(value)) {
+      return value.toString();
+    }
     if (Array.isArray(value) && value.length === 0) {
       return "[]";
     }
@@ -64,6 +67,12 @@ class PropertiesTreeGenerator {
       return "{}";
     }
     return undefined;
+  }
+
+  private isLong(value: any) {
+    return Object.prototype.hasOwnProperty.call(value, "high") &&
+      Object.prototype.hasOwnProperty.call(value, "low") &&
+      Object.prototype.hasOwnProperty.call(value, "unsigned");
   }
 }
 
