@@ -842,7 +842,7 @@ DiffStatus AbiDiffHelper::CompareAndDumpTypeDiff(
     // One of the types were hidden, we cannot compare further.
     return AreOpaqueTypesEqual(old_type_id, new_type_id)
                ? DiffStatus::no_diff
-               : DiffStatus::opaque_diff;
+               : DiffStatus::direct_diff;
   }
 
   LinkableMessageKind old_kind = old_it->second->GetKind();
@@ -856,16 +856,6 @@ DiffStatus AbiDiffHelper::CompareAndDumpTypeDiff(
   }
 
   TypeQueueCheckAndPop(type_queue);
-
-  if (diff_policy_options_.consider_opaque_types_different_ &&
-      diff_status == DiffStatus::opaque_diff) {
-    // If `-considered-opaque-types-different` is specified and the comparison
-    // of `referenced_type` results in `opaque_diff`, then check the type name
-    // at this level.
-    return (old_it->second->GetName() == new_it->second->GetName() ?
-            DiffStatus::no_diff : DiffStatus::direct_diff);
-  }
-
   return diff_status;
 }
 
