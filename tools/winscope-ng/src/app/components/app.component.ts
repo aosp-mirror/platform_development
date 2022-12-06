@@ -101,13 +101,11 @@ import {TRACE_INFO} from "app/trace_info";
       <mat-drawer #drawer mode="overlay" opened="true"
                   [baseHeight]="collapsedTimelineHeight">
 
-        <!-- TODO: remove redundant videoData parameter below -->
         <timeline
             *ngIf="dataLoaded"
             [timelineData]="timelineData"
             [activeViewTraceTypes]="activeView?.dependencies"
             [availableTraces]="getLoadedTraceTypes()"
-            [videoData]="timelineData.getScreenRecordingVideo()"
             (init)="onTimelineInit()"
             (destroy)="onTimelineDestroy()"
             (collapsedTimelineSizeChanged)="onCollapsedTimelineSizeChanged($event)"

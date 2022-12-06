@@ -300,13 +300,6 @@ export class TimelineComponent {
 
   @Input() timelineData!: TimelineData;
   @Input() availableTraces: TraceType[] = [];
-  @Input() set videoData(value: Blob|undefined) {
-    if (value !== undefined) {
-      this.videoUrl = this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(value));
-    } else {
-      this.videoUrl = undefined;
-    }
-  }
 
   @Output() init = new EventEmitter<void>();
   @Output() destroy = new EventEmitter<void>();
@@ -346,8 +339,15 @@ export class TimelineComponent {
 
   ngOnInit() {
     this.init.emit();
+
     if (this.timelineData.hasTimestamps()) {
       this.updateTimeInputValuesToCurrentTimestamp();
+    }
+
+    const screenRecordingVideo = this.timelineData.getScreenRecordingVideo();
+    if (screenRecordingVideo) {
+      this.videoUrl =
+        this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(screenRecordingVideo));
     }
   }
 
