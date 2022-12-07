@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import { TraceType } from "common/trace/trace_type";
+class FunctionUtils {
+  static readonly DO_NOTHING = () => {
+    // do nothing
+  };
+}
 
-export type Segment = { from: number, to: number }
-export type BigIntSegment = { from: bigint, to: bigint }
-export type TimelineData = Map<TraceType, bigint[]>
+export {FunctionUtils};
