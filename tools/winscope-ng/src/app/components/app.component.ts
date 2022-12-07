@@ -103,11 +103,10 @@ import {TRACE_INFO} from "app/trace_info";
 
         <timeline
             *ngIf="dataLoaded"
+            [mediator]="mediator"
             [timelineData]="timelineData"
             [activeViewTraceTypes]="activeView?.dependencies"
             [availableTraces]="getLoadedTraceTypes()"
-            (init)="onTimelineInit()"
-            (destroy)="onTimelineDestroy()"
             (collapsedTimelineSizeChanged)="onCollapsedTimelineSizeChanged($event)"
         ></timeline>
       </mat-drawer>
@@ -241,18 +240,6 @@ export class AppComponent {
     }
 
     TracingConfig.getInstance().initialize(localStorage);
-  }
-
-  onTimelineInit() {
-    this.mediator.setNotifyCurrentTimestampChangedToTimelineComponentCallback((timestamp: Timestamp|undefined) => {
-      this.timelineComponent?.onCurrentTimestampChanged(timestamp);
-    });
-  }
-
-  onTimelineDestroy() {
-    this.mediator.setNotifyCurrentTimestampChangedToTimelineComponentCallback(
-      FunctionUtils.DO_NOTHING
-    );
   }
 
   onCollapsedTimelineSizeChanged(height: number) {

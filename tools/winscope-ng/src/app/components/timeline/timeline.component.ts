@@ -30,9 +30,11 @@ import { FormControl, FormGroup, Validators} from "@angular/forms";
 import { DomSanitizer, SafeUrl } from "@angular/platform-browser";
 import { TraceType } from "common/trace/trace_type";
 import { TRACE_INFO } from "app/trace_info";
+import { Mediator } from "app/mediator";
 import { TimelineData } from "app/timeline_data";
 import { MiniTimelineComponent } from "./mini_timeline.component";
 import { Timestamp, TimestampType } from "common/trace/timestamp";
+import { FunctionUtils } from "common/utils/function_utils";
 import { TimeUtils } from "common/utils/time_utils";
 
 @Component({
@@ -298,11 +300,10 @@ export class TimelineComponent {
   }
   public wrappedActiveTrace: TraceType|undefined = undefined;
 
+  @Input() mediator!: Mediator;
   @Input() timelineData!: TimelineData;
   @Input() availableTraces: TraceType[] = [];
 
-  @Output() init = new EventEmitter<void>();
-  @Output() destroy = new EventEmitter<void>();
   @Output() collapsedTimelineSizeChanged = new EventEmitter<number>();
 
   @ViewChild("miniTimeline") private miniTimelineComponent!: MiniTimelineComponent;
@@ -338,7 +339,9 @@ export class TimelineComponent {
   }
 
   ngOnInit() {
-    this.init.emit();
+    this.mediator.setNotifyCurrentTimestampChangedToTimelineComponentCallback((timestamp: Timestamp|undefined) => {
+      this.onCurrentTimestampChanged(timestamp);
+    });
 
     if (this.timelineData.hasTimestamps()) {
       this.updateTimeInputValuesToCurrentTimestamp();
@@ -352,7 +355,9 @@ export class TimelineComponent {
   }
 
   ngOnDestroy() {
-    this.destroy.emit();
+    this.mediator.setNotifyCurrentTimestampChangedToTimelineComponentCallback(
+      FunctionUtils.DO_NOTHING
+    );
   }
 
   ngAfterViewInit() {
