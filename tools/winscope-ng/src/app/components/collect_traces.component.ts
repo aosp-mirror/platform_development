@@ -101,13 +101,9 @@ import { TracingConfig } from "trace_collection/tracing_config";
                   </div>
                 </div>
 
-                <!-- TODO: Extract this out to avoid duplication -->
                 <div *ngIf="connect.isLoadDataState()" class="load-data">
-                  <div class="progress-desc">
-                    <p class="mat-body-3"><mat-icon fontIcon="sync"></mat-icon></p>
-                    <mat-progress-bar mode="determinate" [value]="loadProgress"></mat-progress-bar>
-                    <p class="mat-body-1">Loading data...</p>
-                  </div>
+                  <load-progress [progressPercentage]="loadProgress" [message]="'Loading data...'">
+                  </load-progress>
                   <div class="end-btn">
                     <button color="primary" mat-raised-button (click)="endTrace()" disabled="true">End trace</button>
                   </div>
@@ -135,13 +131,10 @@ import { TracingConfig } from "trace_collection/tracing_config";
                   <p class="mat-body-1">Loading dumping config...</p>
                 </div>
 
-                <div *ngIf="connect.isLoadDataState()" class="load-data">
-                  <div class="progress-desc">
-                    <p class="mat-body-3"><mat-icon fontIcon="sync"></mat-icon></p>
-                    <mat-progress-bar mode="determinate" [value]="loadProgress"></mat-progress-bar>
-                    <p class="mat-body-1">Loading data...</p>
-                  </div>
-                </div>
+                <load-progress *ngIf="connect.isLoadDataState()"
+                               [progressPercentage]="loadProgress"
+                               [message]="'Loading data...'">
+                </load-progress>
               </div>
             </mat-tab>
           </mat-tab-group>
@@ -161,7 +154,7 @@ import { TracingConfig } from "trace_collection/tracing_config";
   `,
   styles: [
     `
-      .change-btn, .retry-btn, .edn-btn {
+      .change-btn, .retry-btn {
         margin-left: 5px;
       }
       .mat-card.collect-card {
@@ -199,10 +192,10 @@ import { TracingConfig } from "trace_collection/tracing_config";
       .trace-collection-config {
         height: 100%;
       }
-      .proxy-tab, .web-tab, .start-btn, .dump-btn, .end-btn, .cancel-btn {
+      .proxy-tab, .web-tab, .start-btn, .dump-btn, .end-btn {
         align-self: flex-start;
       }
-      .start-btn, .dump-btn, .end-btn, .cancel-btn {
+      .start-btn, .dump-btn, .end-btn {
         margin: auto 0 0 0;
         padding: 1rem 0 0 0;
       }
@@ -284,14 +277,8 @@ import { TracingConfig } from "trace_collection/tracing_config";
         max-width: 250px;
       }
 
-      .progress-desc mat-icon {
-        font-size: 3rem;
-        width: unset;
-        height: unset;
-      }
-
-      .progress-desc mat-progress-bar {
-        margin: 0.2rem 0;
+      load-progress {
+        height: 100%;
       }
     `
   ],
