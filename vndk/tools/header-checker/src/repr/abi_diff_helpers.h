@@ -38,8 +38,6 @@ enum DiffStatus {
   // There was a diff found, however it need not be added as a part of a diff
   // message, since it would have already been noted elsewhere.
   indirect_diff = 2,
-
-  opaque_diff = 3,
 };
 
 static inline DiffStatus operator|(DiffStatus f, DiffStatus s) {
