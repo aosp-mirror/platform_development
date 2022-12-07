@@ -15,7 +15,7 @@
  */
 import {TimeUtils} from "common/utils/time_utils";
 import configJson from "../../../../../../frameworks/base/data/etc/services.core.protolog.json";
-import { TimestampType } from "./timestamp";
+import { ElapsedTimestamp, RealTimestamp, TimestampType } from "./timestamp";
 
 class ProtoLogTraceEntry {
   constructor(public messages: LogMessage[], public currentMessageIndex: number) {
@@ -54,10 +54,10 @@ class FormattedLogMessage extends LogMessage {
     let timestamp: bigint;
     if (timestampType === TimestampType.REAL && realToElapsedTimeOffsetNs !== undefined && realToElapsedTimeOffsetNs != 0n) {
       timestamp = realToElapsedTimeOffsetNs + BigInt(proto.elapsedRealtimeNanos);
-      time = TimeUtils.nanosecondsToHumanReal(realToElapsedTimeOffsetNs + BigInt(proto.elapsedRealtimeNanos));
+      time = TimeUtils.format(new RealTimestamp(timestamp));
     } else {
       timestamp = BigInt(proto.elapsedRealtimeNanos);
-      time = TimeUtils.nanosecondsToHumanElapsed(timestamp);
+      time = TimeUtils.format(new ElapsedTimestamp(timestamp));
     }
 
     super(
@@ -76,10 +76,10 @@ class UnformattedLogMessage extends LogMessage {
     let timestamp: bigint;
     if (timestampType === TimestampType.REAL && realToElapsedTimeOffsetNs !== undefined && realToElapsedTimeOffsetNs != 0n) {
       timestamp = realToElapsedTimeOffsetNs + BigInt(proto.elapsedRealtimeNanos);
-      time = TimeUtils.nanosecondsToHumanReal(realToElapsedTimeOffsetNs + BigInt(proto.elapsedRealtimeNanos));
+      time = TimeUtils.format(new RealTimestamp(realToElapsedTimeOffsetNs + BigInt(proto.elapsedRealtimeNanos)));
     } else {
       timestamp = BigInt(proto.elapsedRealtimeNanos);
-      time = TimeUtils.nanosecondsToHumanElapsed(timestamp);
+      time = TimeUtils.format(new ElapsedTimestamp(timestamp));
     }
 
     super(

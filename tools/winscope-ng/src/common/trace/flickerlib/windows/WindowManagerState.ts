@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { ElapsedTimestamp, RealTimestamp } from "common/trace/timestamp";
 import { TimeUtils } from "common/utils/time_utils";
 import {
     KeyguardControllerState,
@@ -71,10 +72,10 @@ function addAttributes(entry: WindowManagerState, proto: any, useElapsedTime = f
     }
     entry.proto = proto;
     if (useElapsedTime || entry.clockTimestamp == undefined) {
-        entry.name = TimeUtils.nanosecondsToHumanElapsed(BigInt(entry.elapsedTimestamp));
+        entry.name = TimeUtils.format(new ElapsedTimestamp(BigInt(entry.elapsedTimestamp)));
         entry.shortName = entry.name;
     } else {
-        entry.name = TimeUtils.nanosecondsToHumanReal(BigInt(entry.clockTimestamp));
+        entry.name = TimeUtils.format(new RealTimestamp(BigInt(entry.clockTimestamp)));
         entry.shortName = entry.name;
     }
     entry.isVisible = true;
