@@ -39,14 +39,18 @@ import android.util.Rational;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
+import android.widget.Spinner;
 import android.widget.Switch;
 import android.window.OnBackInvokedDispatcher;
 
 import com.example.android.apis.R;
+import com.example.android.apis.view.FixedAspectRatioImageView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,6 +61,7 @@ public class PictureInPicture extends Activity {
     private static final String EXTRA_ENABLE_SEAMLESS_RESIZE = "seamless_resize";
     private static final String EXTRA_ENTER_PIP_ON_BACK = "enter_pip_on_back";
     private static final String EXTRA_CURRENT_POSITION = "current_position";
+    private static final String EXTRA_ASPECT_RATIO = "aspect_ratio";
 
     private static final int TABLET_BREAK_POINT_DP = 700;
 
@@ -95,13 +100,14 @@ public class PictureInPicture extends Activity {
             (v, id) -> updateContentPosition(id);
 
     private LinearLayout mContainer;
-    private ImageView mImageView;
+    private FixedAspectRatioImageView mImageView;
     private View mControlGroup;
     private Switch mAutoPipToggle;
     private Switch mSourceRectHintToggle;
     private Switch mSeamlessResizeToggle;
     private Switch mEnterPipOnBackToggle;
     private RadioGroup mCurrentPositionGroup;
+    private Spinner mAspectRatioSpinner;
     private List<RemoteAction> mPipActions;
     private RemoteAction mCloseAction;
 
@@ -119,6 +125,13 @@ public class PictureInPicture extends Activity {
         mSeamlessResizeToggle = findViewById(R.id.seamless_resize_toggle);
         mEnterPipOnBackToggle = findViewById(R.id.enter_pip_on_back);
         mCurrentPositionGroup = findViewById(R.id.current_position);
+        mAspectRatioSpinner = findViewById(R.id.aspect_ratio);
+
+        // Initiate views if applicable
+        final ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.aspect_ratio_list, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mAspectRatioSpinner.setAdapter(adapter);
 
         // Attach listeners
         mImageView.addOnLayoutChangeListener(mOnLayoutChangeListener);
@@ -135,6 +148,22 @@ public class PictureInPicture extends Activity {
                     }
                 });
         mCurrentPositionGroup.setOnCheckedChangeListener(mOnPositionChangedListener);
+        mAspectRatioSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                final String rawText = parent.getItemAtPosition(position).toString();
+                final String textToParse = rawText.substring(
+                        rawText.indexOf('(') + 1,
+                        rawText.indexOf(')'));
+                mImageView.addOnLayoutChangeListener(mOnLayoutChangeListener);
+                mImageView.setAspectRatio(Rational.parseRational(textToParse));
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Do nothing.
+            }
+        });
         findViewById(R.id.enter_pip_button).setOnClickListener(v -> enterPictureInPictureMode());
         findViewById(R.id.enter_content_pip_button).setOnClickListener(v -> enterContentPip());
 
@@ -152,6 +181,7 @@ public class PictureInPicture extends Activity {
                 ? R.id.radio_current_end
                 : R.id.radio_current_start;
         mCurrentPositionGroup.check(positionId);
+        mAspectRatioSpinner.setSelection(1);
 
         updateLayout(getResources().getConfiguration());
     }
