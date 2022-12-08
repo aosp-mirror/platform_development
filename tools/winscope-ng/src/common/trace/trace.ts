@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-import { TraceType } from "common/trace/trace_type";
+import {TraceType} from "./trace_type";
 
-export type Segment = { from: number, to: number }
-export type BigIntSegment = { from: bigint, to: bigint }
-export type TimelineData = Map<TraceType, bigint[]>
+interface Trace {
+  type: TraceType
+  file: File,
+}
+
+export {Trace};

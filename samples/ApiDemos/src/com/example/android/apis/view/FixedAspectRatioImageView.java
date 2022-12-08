@@ -29,7 +29,7 @@ import com.example.android.apis.R;
  * one of the dimension is in exact while the other one in wrap_content size mode.
  */
 public class FixedAspectRatioImageView extends ImageView {
-    private final Rational mAspectRatio;
+    private Rational mAspectRatio;
 
     public FixedAspectRatioImageView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -40,6 +40,13 @@ public class FixedAspectRatioImageView extends ImageView {
                     a.getString(R.styleable.FixedAspectRatioImageView_aspectRatio));
         } finally {
             a.recycle();
+        }
+    }
+
+    public void setAspectRatio(Rational aspectRatio) {
+        if (!mAspectRatio.equals(aspectRatio)) {
+            mAspectRatio = aspectRatio;
+            requestLayout();
         }
     }
 

@@ -18,6 +18,13 @@ import { Timestamp, TimestampType } from "common/trace/timestamp";
 import dateFormat, { masks } from "dateformat";
 
 export class TimeUtils {
+  static compareFn(a: Timestamp, b: Timestamp): number {
+    if (a.getType() !== b.getType()) {
+      throw new Error("Attempted to compare two timestamps with different type");
+    }
+    return Number(a.getValueNs() - b.getValueNs());
+  }
+
   static format(timestamp: Timestamp, hideNs = false): string {
     switch (timestamp.getType()) {
     case TimestampType.ELAPSED: {

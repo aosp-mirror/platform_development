@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Timestamp, TimestampType } from "common/trace/timestamp";
+import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from "common/trace/timestamp";
 import {TimeUtils} from "./time_utils";
 
 describe("TimeUtils", () => {
@@ -22,6 +22,37 @@ describe("TimeUtils", () => {
   const MINUTE = BigInt(60) * SECOND;
   const HOUR = BigInt(60) * MINUTE;
   const DAY = BigInt(24) * HOUR;
+
+  describe("compareFn", () => {
+    it("throws if timestamps have different type", () => {
+      const real = new RealTimestamp(10n);
+      const elapsed = new ElapsedTimestamp(10n);
+
+      expect(() => {
+        TimeUtils.compareFn(real, elapsed);
+      }).toThrow();
+    });
+
+    it("allows to sort arrays", () => {
+      const array = [
+        new RealTimestamp(100n),
+        new RealTimestamp(10n),
+        new RealTimestamp(12n),
+        new RealTimestamp(110n),
+        new RealTimestamp(11n),
+      ];
+      array.sort(TimeUtils.compareFn);
+
+      const expected = [
+        new RealTimestamp(10n),
+        new RealTimestamp(11n),
+        new RealTimestamp(12n),
+        new RealTimestamp(100n),
+        new RealTimestamp(110n),
+      ];
+      expect(array).toEqual(expected);
+    });
+  });
 
   it("nanosecondsToHuman", () => {
     expect(TimeUtils.nanosecondsToHumanElapsed(0)) .toEqual("0ms");
