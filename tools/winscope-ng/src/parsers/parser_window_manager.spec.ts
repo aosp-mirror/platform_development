@@ -70,7 +70,7 @@ describe("ParserWindowManager", () => {
     it("formats entry timestamps", () => {
       const timestamp = new Timestamp(TimestampType.REAL, 1659107089999048990n);
       const entry = parser.getTraceEntry(timestamp)!;
-      expect(entry.name).toEqual("15h04m49s999ms48960ns, 29 Jul 2022 UTC");
+      expect(entry.name).toEqual("2022-07-29T15:04:49.999048960");
     });
   });
 
@@ -110,7 +110,7 @@ describe("ParserWindowManager", () => {
 
       const timestamp = new Timestamp(TimestampType.ELAPSED, 850254319343n);
       const entry = parser.getTraceEntry(timestamp)!;
-      expect(entry.name).toEqual("14m10s254ms");
+      expect(entry.name).toEqual("14m10s254ms319343ns");
     });
   });
 });

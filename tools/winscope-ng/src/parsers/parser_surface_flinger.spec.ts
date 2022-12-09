@@ -97,7 +97,7 @@ describe("ParserSurfaceFlinger", () => {
     it("formats entry timestamps", () => {
       const timestamp = new Timestamp(TimestampType.REAL, 1659107089233029344n);
       const entry = parser.getTraceEntry(timestamp)!;
-      expect(entry.name).toEqual("15h04m49s233ms29376ns, 29 Jul 2022 UTC");
+      expect(entry.name).toEqual("2022-07-29T15:04:49.233029376");
     });
   });
 
@@ -130,7 +130,7 @@ describe("ParserSurfaceFlinger", () => {
 
       const timestamp = new Timestamp(TimestampType.ELAPSED, 850335483446n);
       const entry = parser.getTraceEntry(timestamp)!;
-      expect(entry.name).toEqual("14m10s335ms");
+      expect(entry.name).toEqual("14m10s335ms483446ns");
     });
   });
 });

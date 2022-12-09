@@ -24,7 +24,7 @@ describe("ParserProtoLog", () => {
 
   const expectedFirstLogMessageElapsed = {
     text: "InsetsSource updateVisibility for ITYPE_IME, serverVisible: false clientVisible: false",
-    time: "14m10s746ms",
+    time: "14m10s746ms266486ns",
     tag: "WindowManager",
     level: "DEBUG",
     at: "com/android/server/wm/InsetsSourceProvider.java",
@@ -33,7 +33,7 @@ describe("ParserProtoLog", () => {
 
   const expectedFirstLogMessageReal = {
     text: "InsetsSource updateVisibility for ITYPE_IME, serverVisible: false clientVisible: false",
-    time: "12h12m05s377ms266486ns, 20 Jun 2022 UTC",
+    time: "2022-06-20T12:12:05.377266486",
     tag: "WindowManager",
     level: "DEBUG",
     at: "com/android/server/wm/InsetsSourceProvider.java",

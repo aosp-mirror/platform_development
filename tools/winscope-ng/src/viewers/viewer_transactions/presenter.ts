@@ -20,7 +20,7 @@ import {TransactionsTraceEntry} from "common/trace/transactions";
 import {PropertiesTreeGenerator} from "viewers/common/properties_tree_generator";
 import {PropertiesTreeNode} from "viewers/common/ui_tree_utils";
 import {TimeUtils} from "common/utils/time_utils";
-import { TimestampType } from "common/trace/timestamp";
+import { ElapsedTimestamp, RealTimestamp, TimestampType } from "common/trace/timestamp";
 
 class Presenter {
   constructor(notifyUiDataCallback: (data: UiData) => void) {
@@ -275,9 +275,9 @@ class Presenter {
 
   private formatTime(entryProto: any, timestampType: TimestampType, realToElapsedTimeOffsetNs: bigint|undefined): string {
     if (timestampType === TimestampType.REAL && realToElapsedTimeOffsetNs !== undefined) {
-      return TimeUtils.nanosecondsToHumanReal(BigInt(entryProto.elapsedRealtimeNanos) + realToElapsedTimeOffsetNs);
+      return TimeUtils.format(new RealTimestamp(BigInt(entryProto.elapsedRealtimeNanos) + realToElapsedTimeOffsetNs));
     } else {
-      return TimeUtils.nanosecondsToHumanElapsed(Number(entryProto.elapsedRealtimeNanos));
+      return TimeUtils.format(new ElapsedTimestamp(BigInt(entryProto.elapsedRealtimeNanos)));
     }
   }
 
