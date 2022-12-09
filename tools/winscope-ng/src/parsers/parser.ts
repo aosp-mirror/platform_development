@@ -15,9 +15,14 @@
  */
 import {ArrayUtils} from "common/utils/array_utils";
 import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {Trace} from "common/trace/trace";
 import {TraceType} from "common/trace/trace_type";
 
 abstract class Parser {
+  protected trace: File;
+  protected decodedEntries: any[] = [];
+  private timestamps: Map<TimestampType, Timestamp[]> = new Map<TimestampType, Timestamp[]>();
+
   protected constructor(trace: File) {
     this.trace = trace;
   }
@@ -57,8 +62,11 @@ abstract class Parser {
 
   public abstract getTraceType(): TraceType;
 
-  public getTrace(): File {
-    return this.trace;
+  public getTrace(): Trace {
+    return {
+      type: this.getTraceType(),
+      file: this.trace
+    };
   }
 
   public getTimestamps(type: TimestampType): undefined|Timestamp[] {
@@ -85,10 +93,6 @@ abstract class Parser {
   protected abstract decodeTrace(trace: Uint8Array): any[];
   protected abstract getTimestamp(type: TimestampType, decodedEntry: any): undefined|Timestamp;
   protected abstract processDecodedEntry(index: number, timestampType: TimestampType, decodedEntry: any): any;
-
-  protected trace: File;
-  protected decodedEntries: any[] = [];
-  private timestamps: Map<TimestampType, Timestamp[]> = new Map<TimestampType, Timestamp[]>();
 }
 
 export {Parser};

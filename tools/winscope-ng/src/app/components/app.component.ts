@@ -14,12 +14,22 @@
  * limitations under the License.
  */
 
-import {Component, Injector, Inject, ViewEncapsulation, ChangeDetectorRef} from "@angular/core";
+import {
+  ChangeDetectorRef,
+  Component,
+  Injector,
+  Inject,
+  ViewChild,
+  ViewEncapsulation
+} from "@angular/core";
 import { createCustomElement } from "@angular/elements";
-import { TraceCoordinator } from "app/trace_coordinator";
+import { TimelineComponent} from "./timeline/timeline.component";
+import { Mediator } from "app/mediator";
+import { TraceData } from "app/trace_data";
 import { PersistentStore } from "common/utils/persistent_store";
 import { Timestamp } from "common/trace/timestamp";
 import { FileUtils } from "common/utils/file_utils";
+import { FunctionUtils } from "common/utils/function_utils";
 import { proxyClient, ProxyState } from "trace_collection/proxy_client";
 import { ViewerInputMethodComponent } from "viewers/components/viewer_input_method.component";
 import { View, Viewer } from "viewers/viewer";
@@ -29,12 +39,12 @@ import { ViewerWindowManagerComponent } from "viewers/viewer_window_manager/view
 import { ViewerTransactionsComponent } from "viewers/viewer_transactions/viewer_transactions.component";
 import { ViewerScreenRecordingComponent } from "viewers/viewer_screen_recording/viewer_screen_recording.component";
 import { TraceType } from "common/trace/trace_type";
-import { TimelineCoordinator } from "app/timeline_coordinator";
+import { TimelineData } from "app/timeline_data";
 import { TracingConfig } from "trace_collection/tracing_config";
+import {TRACE_INFO} from "app/trace_info";
 
 @Component({
   selector: "app-root",
-  providers: [TimelineCoordinator, TraceCoordinator],
   template: `
     <mat-toolbar class="toolbar">
       <span class="app-title">Winscope</span>
@@ -76,7 +86,7 @@ import { TracingConfig } from "trace_collection/tracing_config";
 
           <trace-view
               class="viewers"
-              [viewers]="allViewers"
+              [viewers]="viewers"
               [store]="store"
               (onDownloadTracesButtonClick)="onDownloadTracesButtonClick()"
               (onActiveViewChanged)="handleActiveViewChanged($event)"
@@ -90,12 +100,14 @@ import { TracingConfig } from "trace_collection/tracing_config";
 
       <mat-drawer #drawer mode="overlay" opened="true"
                   [baseHeight]="collapsedTimelineHeight">
+
         <timeline
             *ngIf="dataLoaded"
-            [activeTrace]="getActiveTraceType()"
-            [availableTraces]="availableTraces"
-            [videoData]="videoData"
-            (onCollapsedTimelineSizeChanged)="onCollapsedTimelineSizeChanged($event)"
+            [mediator]="mediator"
+            [timelineData]="timelineData"
+            [activeViewTraceTypes]="activeView?.dependencies"
+            [availableTraces]="getLoadedTraceTypes()"
+            (collapsedTimelineSizeChanged)="onCollapsedTimelineSizeChanged($event)"
         ></timeline>
       </mat-drawer>
 
@@ -111,15 +123,15 @@ import { TracingConfig } from "trace_collection/tracing_config";
           <div class="card-grid landing-grid">
             <collect-traces
                 class="collect-traces-card homepage-card"
-                [traceCoordinator]="traceCoordinator"
-                (dataLoadedChange)="onDataLoadedChange($event)"
+                [traceData]="traceData"
+                (traceDataLoaded)="onTraceDataLoaded()"
                 [store]="store"
             ></collect-traces>
 
             <upload-traces
                 class="upload-traces-card homepage-card"
-                [traceCoordinator]="traceCoordinator"
-                (dataLoadedChange)="onDataLoadedChange($event)"
+                [traceData]="traceData"
+                (traceDataLoaded)="onTraceDataLoaded()"
             ></upload-traces>
           </div>
         </div>
@@ -179,34 +191,24 @@ import { TracingConfig } from "trace_collection/tracing_config";
 export class AppComponent {
   title = "winscope-ng";
   changeDetectorRef: ChangeDetectorRef;
-  traceCoordinator: TraceCoordinator;
-  timelineCoordinator: TimelineCoordinator;
+  traceData = new TraceData();
+  timelineData = new TimelineData();
+  mediator = new Mediator(this.traceData, this.timelineData);
   states = ProxyState;
   store: PersistentStore = new PersistentStore();
   currentTimestamp?: Timestamp;
-  currentTimestampIndex = 0;
-  allViewers: Viewer[] = [];
+  viewers: Viewer[] = [];
   isDarkModeOn!: boolean;
   dataLoaded = false;
   activeView: View|undefined;
-
   collapsedTimelineHeight = 0;
-
-  public onCollapsedTimelineSizeChanged(height: number) {
-    this.collapsedTimelineHeight = height;
-    this.changeDetectorRef.detectChanges();
-  }
+  @ViewChild(TimelineComponent) timelineComponent?: TimelineComponent;
 
   constructor(
     @Inject(Injector) injector: Injector,
-    @Inject(ChangeDetectorRef) changeDetectorRef: ChangeDetectorRef,
-    @Inject(TimelineCoordinator) timelineCoordinator: TimelineCoordinator,
-    @Inject(TraceCoordinator) traceCoordinator: TraceCoordinator,
+    @Inject(ChangeDetectorRef) changeDetectorRef: ChangeDetectorRef
   ) {
     this.changeDetectorRef = changeDetectorRef;
-    this.timelineCoordinator = timelineCoordinator;
-    this.traceCoordinator = traceCoordinator;
-    this.timelineCoordinator.registerObserver(this.traceCoordinator);
 
     const storeDarkMode = this.store.get("dark-mode");
     const prefersDarkQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
@@ -240,17 +242,22 @@ export class AppComponent {
     TracingConfig.getInstance().initialize(localStorage);
   }
 
-  get availableTraces(): TraceType[] {
-    return this.traceCoordinator.getLoadedTraces().map((trace) => trace.type);
+  onCollapsedTimelineSizeChanged(height: number) {
+    this.collapsedTimelineHeight = height;
+    this.changeDetectorRef.detectChanges();
   }
 
-  get videoData(): Blob|undefined {
-    return this.timelineCoordinator.getVideoData();
+  getLoadedTraceTypes(): TraceType[] {
+    return this.traceData.getLoadedTraces().map((trace) => trace.type);
+  }
+
+  getVideoData(): Blob|undefined {
+    return this.timelineData.getScreenRecordingVideo();
   }
 
   public onUploadNewClick() {
     this.dataLoaded = false;
-    this.traceCoordinator.clearData();
+    this.mediator.clearData();
     proxyClient.adbData = [];
     this.changeDetectorRef.detectChanges();
   }
@@ -261,24 +268,18 @@ export class AppComponent {
     this.isDarkModeOn = enabled;
   }
 
-  public onDataLoadedChange(dataLoaded: boolean) {
-    if (dataLoaded && !(this.traceCoordinator.getViewers().length > 0)) {
-      this.traceCoordinator.createViewers(localStorage);
-      this.allViewers = this.traceCoordinator.getViewers();
-      // TODO: Update to handle viewers with more than one dependency
-      if (this.allViewers[0].getDependencies().length !== 1) {
-        throw Error("Viewers with more than 1 dependency not yet handled.");
-      }
-      this.currentTimestampIndex = 0;
-      this.dataLoaded = dataLoaded;
-      this.changeDetectorRef.detectChanges();
-    }
+  public onTraceDataLoaded() {
+    this.mediator.onTraceDataLoaded(localStorage);
+    this.viewers = this.mediator.getViewers();
+    this.dataLoaded = true;
+    this.changeDetectorRef.detectChanges();
   }
 
   async onDownloadTracesButtonClick() {
-    const traces = await this.traceCoordinator.getAllTracesForDownload();
-    const zipFileBlob = await FileUtils.createZipArchive(traces);
+    const traceFiles = await this.makeTraceFilesForDownload();
+    const zipFileBlob = await FileUtils.createZipArchive(traceFiles);
     const zipFileName = "winscope.zip";
+
     const a = document.createElement("a");
     document.body.appendChild(a);
     const url = window.URL.createObjectURL(zipFileBlob);
@@ -289,9 +290,17 @@ export class AppComponent {
     document.body.removeChild(a);
   }
 
+  private async makeTraceFilesForDownload(): Promise<File[]> {
+    return this.traceData.getLoadedTraces().map(trace => {
+      const traceType = TRACE_INFO[trace.type].name;
+      const newName = traceType + "/" + FileUtils.removeDirFromFileName(trace.file.name);
+      return new File([trace.file], newName);
+    });
+  }
+
   handleActiveViewChanged(view: View) {
     this.activeView = view;
-    this.timelineCoordinator.setActiveTraceTypes(view.dependencies);
+    this.timelineData.setActiveViewTraceTypes(view.dependencies);
   }
 
   getActiveTraceType(): TraceType|undefined {

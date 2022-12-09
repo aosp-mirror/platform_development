@@ -14,8 +14,17 @@
  * limitations under the License.
  */
 
-import { TraceType } from "common/trace/trace_type";
+import {Timestamp} from "./timestamp";
 
-export type Segment = { from: number, to: number }
-export type BigIntSegment = { from: bigint, to: bigint }
-export type TimelineData = Map<TraceType, bigint[]>
+class ScreenRecordingUtils {
+  static timestampToVideoTimeSeconds(firstTimestamp: Timestamp, currentTimestamp: Timestamp) {
+    if (firstTimestamp.getType() !== currentTimestamp.getType()) {
+      throw new Error("Attempted to use timestamps with different type");
+    }
+    const videoTimeSeconds =
+      Number(currentTimestamp.getValueNs() - firstTimestamp.getValueNs()) / 1000000000;
+    return videoTimeSeconds;
+  }
+}
+
+export {ScreenRecordingUtils};
