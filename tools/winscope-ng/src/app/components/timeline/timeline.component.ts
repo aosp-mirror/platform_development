@@ -33,7 +33,7 @@ import { TRACE_INFO } from "app/trace_info";
 import { Mediator } from "app/mediator";
 import { TimelineData } from "app/timeline_data";
 import { MiniTimelineComponent } from "./mini_timeline.component";
-import { Timestamp, TimestampType } from "common/trace/timestamp";
+import { ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType } from "common/trace/timestamp";
 import { FunctionUtils } from "common/utils/function_utils";
 import { TimeUtils } from "common/utils/time_utils";
 
@@ -410,8 +410,8 @@ export class TimelineComponent {
   }
 
   private updateTimeInputValuesToCurrentTimestamp() {
-    this.selectedElapsedTimeFormControl.setValue(TimeUtils.nanosecondsToHumanElapsed(this.currentTimestamp.getValueNs(), false));
-    this.selectedRealTimeFormControl.setValue(TimeUtils.nanosecondsToHumanReal(this.currentTimestamp.getValueNs()));
+    this.selectedElapsedTimeFormControl.setValue(TimeUtils.format(new ElapsedTimestamp(this.currentTimestamp.getValueNs()), false));
+    this.selectedRealTimeFormControl.setValue(TimeUtils.format(new RealTimestamp(this.currentTimestamp.getValueNs())));
     this.selectedNsFormControl.setValue(`${this.currentTimestamp.getValueNs()} ns`);
   }
 
@@ -487,7 +487,7 @@ export class TimelineComponent {
     }
     const target = event.target as HTMLInputElement;
     const timestamp = new Timestamp(this.timelineData.getTimestampType()!,
-      TimeUtils.humanElapsedToNanoseconds(target.value));
+      TimeUtils.parseHumanElapsed(target.value));
     this.timelineData.setCurrentTimestamp(timestamp);
     this.updateTimeInputValuesToCurrentTimestamp();
   }
@@ -499,7 +499,7 @@ export class TimelineComponent {
     const target = event.target as HTMLInputElement;
 
     const timestamp = new Timestamp(this.timelineData.getTimestampType()!,
-      TimeUtils.humanRealToNanoseconds(target.value));
+      TimeUtils.parseHumanReal(target.value));
     this.timelineData.setCurrentTimestamp(timestamp);
     this.updateTimeInputValuesToCurrentTimestamp();
   }

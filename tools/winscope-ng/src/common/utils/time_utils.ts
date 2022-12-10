@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import { Timestamp, TimestampType } from "common/trace/timestamp";
-import dateFormat, { masks } from "dateformat";
+import { ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType } from "common/trace/timestamp";
 
 export class TimeUtils {
   static compareFn(a: Timestamp, b: Timestamp): number {
@@ -39,7 +38,7 @@ export class TimeUtils {
     }
   }
 
-  static nanosecondsToHumanElapsed(timestampNanos: number|bigint, hideNs = true): string {
+  private static nanosecondsToHumanElapsed(timestampNanos: number|bigint, hideNs = true): string {
     timestampNanos = BigInt(timestampNanos);
     const units = TimeUtils.units;
 
@@ -65,21 +64,20 @@ export class TimeUtils {
     return parts.join("");
   }
 
-  static nanosecondsToHumanReal(timestampNanos: number|bigint, hideNs = false): string {
+  private static nanosecondsToHumanReal(timestampNanos: number|bigint, hideNs = true): string {
     timestampNanos = BigInt(timestampNanos);
     const ms = timestampNanos / 1000000n;
     const extraNanos = timestampNanos % 1000000n;
-    const formattedTime = dateFormat(new Date(Number(ms)), "HH\"h\"MM\"m\"ss\"s\"l\"ms\"");
-    const formattedDate = dateFormat(new Date(Number(ms)), "d mmm yyyy Z");
+    const formattedTimestamp = new Date(Number(ms)).toISOString().replace("Z", "");
 
     if (hideNs) {
-      return `${formattedTime}, ${formattedDate}`;
+      return formattedTimestamp;
     } else {
-      return `${formattedTime}${extraNanos}ns, ${formattedDate}`;
+      return `${formattedTimestamp}${extraNanos.toString().padStart(6, "0")}`;
     }
   }
 
-  static humanElapsedToNanoseconds(timestampHuman: string): bigint {
+  static parseHumanElapsed(timestampHuman: string): Timestamp {
     if (!TimeUtils.HUMAN_ELAPSED_TIMESTAMP_REGEX.test(timestampHuman)) {
       throw Error("Invalid elapsed timestamp format");
     }
@@ -98,10 +96,10 @@ export class TimeUtils {
       ns += BigInt(unitData.nanosInUnit) * BigInt(value);
     }
 
-    return ns;
+    return new ElapsedTimestamp(ns);
   }
 
-  static humanRealToNanoseconds(timestampHuman: string): bigint {
+  static parseHumanReal(timestampHuman: string): Timestamp {
     if (!TimeUtils.HUMAN_REAL_TIMESTAMP_REGEX.test(timestampHuman)) {
       throw Error("Invalid real timestamp format");
     }
@@ -122,12 +120,12 @@ export class TimeUtils {
 
     const dateMilliseconds = new Date(date).getTime();
 
-    return BigInt(hours) * BigInt(TimeUtils.TO_NANO["h"]) +
+    return new RealTimestamp(BigInt(hours) * BigInt(TimeUtils.TO_NANO["h"]) +
       BigInt(minutes) * BigInt(TimeUtils.TO_NANO["m"]) +
       BigInt(seconds) * BigInt(TimeUtils.TO_NANO["s"]) +
       BigInt(milliseconds) * BigInt(TimeUtils.TO_NANO["ms"]) +
       BigInt(nanoseconds) * BigInt(TimeUtils.TO_NANO["ns"]) +
-      BigInt(dateMilliseconds) * BigInt(TimeUtils.TO_NANO["ms"]);
+      BigInt(dateMilliseconds) * BigInt(TimeUtils.TO_NANO["ms"]));
   }
 
   static TO_NANO = {
