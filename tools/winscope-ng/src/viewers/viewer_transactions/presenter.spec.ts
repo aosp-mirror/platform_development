@@ -218,13 +218,13 @@ describe("ViewerTransactionsPresenter", () => {
     (<TransactionsTraceEntry>inputTraceEntriesReal.get(TraceType.TRANSACTIONS)[0]).currentEntryIndex = 10;
     presenter.notifyCurrentTraceEntries(inputTraceEntriesReal);
 
-    expect(outputUiData!.entries[0].time).toEqual("06h19m01s051ms480997ns, 3 Aug 2022 UTC");
+    expect(outputUiData!.entries[0].time).toEqual("2022-08-03T06:19:01.051480997");
   });
 
   it("formats elapsed time", () => {
     (<TransactionsTraceEntry>inputTraceEntriesElapsed.get(TraceType.TRANSACTIONS)[0]).currentEntryIndex = 10;
     presenter.notifyCurrentTraceEntries(inputTraceEntriesElapsed);
 
-    expect(outputUiData!.entries[0].time).toEqual("2s450ms");
+    expect(outputUiData!.entries[0].time).toEqual("2s450ms981445ns");
   });
 });
