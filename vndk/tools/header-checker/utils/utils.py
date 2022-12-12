@@ -305,12 +305,13 @@ def run_abi_diff(old_test_dump_path, new_test_dump_path, arch, lib_name,
             abi_diff_cmd += ['-input-format-old', DEFAULT_FORMAT]
         if '-input-format-new' not in flags:
             abi_diff_cmd += ['-input-format-new', DEFAULT_FORMAT]
-        try:
-            subprocess.check_call(abi_diff_cmd)
-        except subprocess.CalledProcessError as err:
-            return err.returncode
 
-    return 0
+        result = subprocess.run(abi_diff_cmd)
+        output = ""
+        if os.path.isfile(output_name):
+            with open(output_name, 'r') as output_file:
+                output = output_file.read()
+    return result.returncode, output
 
 
 def get_build_vars_for_product(names, product=None, variant=None):
