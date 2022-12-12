@@ -13,21 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  Component,
-  Input,
-  Output,
-  EventEmitter,
-  Inject,
-  NgZone,
-  ChangeDetectorRef} from "@angular/core";
-import { MatSnackBar } from "@angular/material/snack-bar";
-import { TraceData} from "app/trace_data";
-import { TRACE_INFO } from "app/trace_info";
+import {ChangeDetectorRef, Component, EventEmitter, Inject, Input, Output} from "@angular/core";
+import {MatSnackBar} from "@angular/material/snack-bar";
+import {TraceData} from "app/trace_data";
+import {TRACE_INFO} from "app/trace_info";
 import {Trace} from "common/trace/trace";
 import {FileUtils} from "common/utils/file_utils";
-import { ParserError } from "parsers/parser_factory";
-import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component";
+import {ParserErrorSnackBarComponent} from "./parser_error_snack_bar_component";
 
 @Component({
   selector: "upload-traces",
@@ -49,10 +41,15 @@ import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component
           type="file"
           multiple
           #fileDropRef
-          (change)="onInputFile($event)"
+          (change)="onInputFiles($event)"
         />
 
-        <mat-list *ngIf="this.traceData.getLoadedTraces().length > 0"
+        <load-progress *ngIf="isLoadingFiles"
+                       [progressPercentage]="loadFilesProgress"
+                       [message]="loadFilesMessage">
+        </load-progress>
+
+        <mat-list *ngIf="!isLoadingFiles && this.traceData.getLoadedTraces().length > 0"
                   class="uploaded-files">
           <mat-list-item *ngFor="let trace of this.traceData.getLoadedTraces()">
             <mat-icon matListIcon>
@@ -69,7 +66,7 @@ import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component
           </mat-list-item>
         </mat-list>
 
-        <div *ngIf="this.loadedTraces.length === 0" class="drop-info">
+        <div *ngIf="!isLoadingFiles && traceData.getLoadedTraces().length === 0" class="drop-info">
           <p class="mat-body-3 icon">
             <mat-icon inline fontIcon="upload"></mat-icon>
           </p>
@@ -79,7 +76,7 @@ import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component
         </div>
       </mat-card-content>
 
-      <div *ngIf="this.loadedTraces.length > 0" class="trace-actions-container">
+      <div *ngIf="!isLoadingFiles && traceData.getLoadedTraces().length > 0" class="trace-actions-container">
         <button color="primary" mat-raised-button class="load-btn" (click)="onViewTracesButtonClick()">
           View traces
         </button>
@@ -136,7 +133,25 @@ import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component
         flex-wrap: wrap;
         gap: 10px;
       }
-
+      .div-progress {
+        display: flex;
+        height: 100%;
+        flex-direction: column;
+        justify-content: center;
+        align-content: center;
+        align-items: center;
+      }
+      .div-progress p {
+        opacity: 0.6;
+      }
+      .div-progress mat-icon {
+        font-size: 3rem;
+        width: unset;
+        height: unset;
+      }
+      .div-progress mat-progress-bar {
+        max-width: 250px;
+      }
       mat-card-content {
         flex-grow: 1;
       }
@@ -144,32 +159,63 @@ import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component
   ]
 })
 export class UploadTracesComponent {
-  loadedTraces: Trace[] = [];
   TRACE_INFO = TRACE_INFO;
+  isLoadingFiles = false;
+  loadFilesMessage = "Unzipping files...";
+  loadFilesProgress = 0;
 
   @Input() traceData!: TraceData;
   @Output() traceDataLoaded = new EventEmitter<void>();
 
   constructor(
     @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
-    @Inject(NgZone) private ngZone: NgZone,
     @Inject(MatSnackBar) private snackBar: MatSnackBar
-  ) {}
-
-  public async onInputFile(event: Event) {
-    const files = this.getInputFiles(event);
-    await this.processFiles(files);
+  ) {
   }
 
-  public async processFiles(files: File[]) {
-    const unzippedFiles = await FileUtils.unzipFilesIfNeeded(files);
-    const parserErrors = await this.traceData.loadTraces(unzippedFiles);
-    if (parserErrors.length > 0) {
-      this.openTempSnackBar(parserErrors);
-    }
-    this.ngZone.run(() => {
-      this.loadedTraces = this.traceData.getLoadedTraces();
+  ngOnInit() {
+    this.traceData.clear();
+  }
+
+  public async onInputFiles(event: Event) {
+    const files = this.getInputFiles(event);
+    await this.processInputFiles(files);
+  }
+
+  public async processInputFiles(files: File[]) {
+    const UI_PROGRESS_UPDATE_PERIOD_MS = 200;
+    let lastUiProgressUpdate = Date.now();
+
+    const onProgressUpdate = (progress: number) => {
+      const now = Date.now();
+      if ((Date.now() - lastUiProgressUpdate) < UI_PROGRESS_UPDATE_PERIOD_MS) {
+        // Let's limit the amount of UI updates, because the progress bar component
+        // renders weird stuff when updated too frequently
+        return;
+      }
+      lastUiProgressUpdate = now;
+
+      this.loadFilesProgress = progress;
+      this.changeDetectorRef.detectChanges();
+    };
+
+    this.isLoadingFiles = true;
+    this.loadFilesMessage = "Unzipping files...";
+    this.changeDetectorRef.detectChanges();
+    const unzippedFiles = await FileUtils.unzipFilesIfNeeded(files, onProgressUpdate);
+
+    this.loadFilesMessage = "Parsing files...";
+    this.changeDetectorRef.detectChanges();
+    const parserErrors = await this.traceData.loadTraces(unzippedFiles, onProgressUpdate);
+
+    this.isLoadingFiles = false;
+    this.changeDetectorRef.detectChanges();
+
+    this.snackBar.openFromComponent(ParserErrorSnackBarComponent, {
+      data: parserErrors,
+      duration: 10000,
     });
+
   }
 
   public onViewTracesButtonClick() {
@@ -178,6 +224,7 @@ export class UploadTracesComponent {
 
   public onClearButtonClick() {
     this.traceData.clear();
+    this.changeDetectorRef.detectChanges();
   }
 
   public onFileDragIn(e: DragEvent) {
@@ -195,7 +242,7 @@ export class UploadTracesComponent {
     e.stopPropagation();
     const droppedFiles = e.dataTransfer?.files;
     if(!droppedFiles) return;
-    await this.processFiles(Array.from(droppedFiles));
+    await this.processInputFiles(Array.from(droppedFiles));
   }
 
   public onRemoveTrace(event: MouseEvent, trace: Trace) {
@@ -203,13 +250,6 @@ export class UploadTracesComponent {
     event.stopPropagation();
     this.traceData.removeTrace(trace.type);
     this.changeDetectorRef.detectChanges();
-  }
-
-  private openTempSnackBar(parserErrors: ParserError[]) {
-    this.snackBar.openFromComponent(ParserErrorSnackBarComponent, {
-      data: parserErrors,
-      duration: 7500,
-    });
   }
 
   private getInputFiles(event: Event): File[] {

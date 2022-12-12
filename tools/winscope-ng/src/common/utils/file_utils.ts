@@ -14,19 +14,9 @@
  * limitations under the License.
  */
 import JSZip from "jszip";
+import {FunctionUtils, OnProgressUpdateType} from "./function_utils";
 
 class FileUtils {
-  static async readFile(file: File): Promise<Uint8Array> {
-    return await new Promise((resolve, _) => {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const buffer = new Uint8Array(e.target!.result as ArrayBuffer);
-        resolve(buffer);
-      };
-      reader.readAsArrayBuffer(file);
-    });
-  }
-
   static getFileExtension(file: File) {
     const split = file.name.split(".");
     if (split.length > 1) {
@@ -54,12 +44,15 @@ class FileUtils {
     return await zip.generateAsync({type: "blob"});
   }
 
-  static async unzipFile(file: File): Promise<File[]> {
+  static async unzipFile(
+    file: File,
+    onProgressUpdate: OnProgressUpdateType = FunctionUtils.DO_NOTHING): Promise<File[]> {
     const unzippedFiles: File[] = [];
-    const buffer: Uint8Array = await this.readFile(file);
     const zip = new JSZip();
-    const content = await zip.loadAsync(buffer);
-    for (const filename in content.files) {
+    const content = await zip.loadAsync(file);
+
+    const filenames = Object.keys(content.files);
+    for (const [index, filename] of filenames.entries()) {
       const file = content.files[filename];
       if (file.dir) {
         // Ignore directories
@@ -70,20 +63,33 @@ class FileUtils {
         const unzippedFile = new File([fileBlob], name);
         unzippedFiles.push(unzippedFile);
       }
+
+      onProgressUpdate(100 * (index + 1) / filenames.length);
     }
+
     return unzippedFiles;
   }
 
-  static async unzipFilesIfNeeded(files: File[]): Promise<File[]> {
+  static async unzipFilesIfNeeded(
+    files: File[],
+    onProgressUpdate: OnProgressUpdateType = FunctionUtils.DO_NOTHING): Promise<File[]> {
     const unzippedFiles: File[] = [];
+
     for (let i=0; i<files.length; i++) {
+      const onSubprogressUpdate = (subPercentage: number) => {
+        const percentage = 100 * i / files.length
+          + subPercentage / files.length;
+        onProgressUpdate(percentage);
+      };
+
       if (FileUtils.isZipFile(files[i])) {
-        const unzippedFile = await FileUtils.unzipFile(files[i]);
+        const unzippedFile = await FileUtils.unzipFile(files[i], onSubprogressUpdate);
         unzippedFiles.push(...unzippedFile);
       } else {
         unzippedFiles.push(files[i]);
       }
     }
+
     return unzippedFiles;
   }
 

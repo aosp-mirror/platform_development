@@ -44,6 +44,7 @@ import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { AdbProxyComponent } from "./components/adb_proxy.component";
 import { AppComponent } from "./components/app.component";
 import { CollectTracesComponent } from "./components/collect_traces.component";
+import { LoadProgressComponent } from "./components/load_progress.component";
 import { ParserErrorSnackBarComponent } from "./components/parser_error_snack_bar_component";
 import { TraceConfigComponent } from "./components/trace_config.component";
 import { TraceViewComponent } from "./components/trace_view.component";
@@ -73,7 +74,6 @@ import { MiniTimelineComponent } from "./components/timeline/mini_timeline.compo
 import { ExpandedTimelineComponent } from "./components/timeline/expanded_timeline.component";
 import { SingleTimelineComponent } from "./components/timeline/single_timeline.component";
 import { MatDrawerContent, MatDrawer, MatDrawerContainer } from "./components/bottomnav/bottom_drawer.component";
-import { TimeUtils } from "common/utils/time_utils";
 
 @NgModule({
   declarations: [
@@ -110,6 +110,7 @@ import { TimeUtils } from "common/utils/time_utils";
     MatDrawer,
     MatDrawerContent,
     MatDrawerContainer,
+    LoadProgressComponent
   ],
   imports: [
     BrowserModule,

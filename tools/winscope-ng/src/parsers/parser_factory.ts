@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { TraceType } from "common/trace/trace_type";
+
+import {TraceType} from "common/trace/trace_type";
+import {FunctionUtils, OnProgressUpdateType} from "common/utils/function_utils";
 import {Parser} from "./parser";
 import {ParserAccessibility} from "./parser_accessibility";
 import {ParserInputMethodClients} from "./parser_input_method_clients";
@@ -42,60 +44,86 @@ class ParserFactory {
     ParserWindowManagerDump,
   ];
 
-  async createParsers(traces: File[]): Promise<[Parser[], ParserError[]]> {
-    const parsers: Parser[] = [];
+  private parsers = new Map<TraceType, Parser>();
+
+  async createParsers(
+    traces: File[],
+    onProgressUpdate: OnProgressUpdateType = FunctionUtils.DO_NOTHING):
+    Promise<[Parser[], ParserError[]]> {
     const errors: ParserError[] = [];
-    const completedParserTypes: any[] = [];
 
     for (const [index, trace] of traces.entries()) {
-      console.log(`Loading trace #${index}`);
-      const numberOfDetectedParsers = parsers.length;
-      let repeatType = false;
+      let hasFoundParser = false;
+
       for (const ParserType of ParserFactory.PARSERS) {
         try {
           const parser = new ParserType(trace);
           await parser.parse();
-          if (completedParserTypes.includes(ParserType)) {
-            console.log(`Already successfully loaded a trace with parser type ${ParserType.name}`);
-            repeatType = true;
-            errors.push(new ParserError(trace, ParserErrorType.ALREADY_LOADED).setTraceType(parser.getTraceType()));
-            break;
-          } else {
-            parsers.push(parser);
-            completedParserTypes.push(ParserType);
-            console.log(`Successfully loaded trace with parser type ${ParserType.name}`);
-            break;
+          hasFoundParser = true;
+          if (this.shouldUseParser(parser, errors)) {
+            this.parsers.set(parser.getTraceType(), parser);
           }
+          break;
         }
         catch(error) {
-          console.log(`Failed to load trace with parser type ${ParserType.name}`);
+          // skip current parser
         }
       }
-      if (numberOfDetectedParsers === parsers.length && !repeatType) {
+
+      if (!hasFoundParser) {
+        console.log(`Failed to load trace ${trace.name}`);
         errors.push(new ParserError(trace, ParserErrorType.UNSUPPORTED_FORMAT));
       }
+
+      onProgressUpdate(100 * (index + 1) / traces.length);
     }
 
-    return [parsers, errors];
+    return [Array.from(this.parsers.values()), errors];
+  }
+
+  private shouldUseParser(newParser: Parser, errors: ParserError[]): boolean {
+    const oldParser = this.parsers.get(newParser.getTraceType());
+    if (!oldParser) {
+      console.log(`Loaded trace ${newParser.getTrace().file.name} (trace type: ${newParser.getTraceType()})`);
+      return true;
+    }
+
+    if (newParser.getEntriesLength() > oldParser.getEntriesLength()) {
+      console.log(
+        `Loaded trace ${newParser.getTrace().file.name} (trace type: ${newParser.getTraceType()}).` +
+        ` Replace trace ${oldParser.getTrace().file.name}`
+      );
+      errors.push(
+        new ParserError(
+          oldParser.getTrace().file, ParserErrorType.OVERRIDE, oldParser.getTraceType()
+        )
+      );
+      return true;
+    }
+
+    console.log(
+      `Skipping trace ${newParser.getTrace().file.name} (trace type: ${newParser.getTraceType()}).` +
+      ` Keep trace ${oldParser.getTrace().file.name}`
+    );
+    errors.push(
+      new ParserError(
+        newParser.getTrace().file, ParserErrorType.OVERRIDE, newParser.getTraceType()
+      )
+    );
+    return false;
   }
 }
 
 export enum ParserErrorType {
-  ALREADY_LOADED,
-  UNSUPPORTED_FORMAT
+  UNSUPPORTED_FORMAT,
+  OVERRIDE
 }
 
 export class ParserError {
-  public trace: File;
-  public type: ParserErrorType;
-  public traceType?: TraceType;
-  constructor(trace: File, type: ParserErrorType) {
-    this.trace = trace;
-    this.type = type;
-  }
-  public setTraceType(traceType: TraceType) {
-    this.traceType = traceType;
-    return this;
+  constructor(
+    public trace: File,
+    public type: ParserErrorType,
+    public traceType: TraceType|undefined = undefined) {
   }
 }
 

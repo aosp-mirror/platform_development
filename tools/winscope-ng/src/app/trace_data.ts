@@ -19,6 +19,7 @@ import {ScreenRecordingTraceEntry} from "common/trace/screen_recording";
 import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {Trace} from "common/trace/trace";
 import {TraceType} from "common/trace/trace_type";
+import {FunctionUtils, OnProgressUpdateType} from "common/utils/function_utils";
 import {Parser} from "parsers/parser";
 import {ParserError, ParserFactory} from "parsers/parser_factory";
 
@@ -28,13 +29,17 @@ interface Timeline {
 }
 
 class TraceData {
+  private parserFactory = new ParserFactory();
   private parsers: Parser[] = [];
   private commonTimestampType?: TimestampType;
 
-  public async loadTraces(traces: File[]): Promise<ParserError[]> {
-    traces = this.parsers.map(parser => parser.getTrace().file).concat(traces);
-    let parserErrors: ParserError[];
-    [this.parsers, parserErrors] = await new ParserFactory().createParsers(traces);
+  public async loadTraces(
+    traces: File[],
+    onLoadProgressUpdate: OnProgressUpdateType = FunctionUtils.DO_NOTHING):
+    Promise<ParserError[]> {
+    const [parsers, parserErrors] =
+      await this.parserFactory.createParsers(traces, onLoadProgressUpdate);
+    this.parsers = parsers;
     return parserErrors;
   }
 
@@ -105,6 +110,7 @@ class TraceData {
   }
 
   public clear() {
+    this.parserFactory = new ParserFactory();
     this.parsers = [];
     this.commonTimestampType = undefined;
   }
