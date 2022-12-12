@@ -486,8 +486,7 @@ export class TimelineComponent {
       return;
     }
     const target = event.target as HTMLInputElement;
-    const timestamp = new Timestamp(this.timelineData.getTimestampType()!,
-      TimeUtils.parseHumanElapsed(target.value));
+    const timestamp = TimeUtils.parseHumanElapsed(target.value);
     this.timelineData.setCurrentTimestamp(timestamp);
     this.updateTimeInputValuesToCurrentTimestamp();
   }
@@ -498,8 +497,7 @@ export class TimelineComponent {
     }
     const target = event.target as HTMLInputElement;
 
-    const timestamp = new Timestamp(this.timelineData.getTimestampType()!,
-      TimeUtils.parseHumanReal(target.value));
+    const timestamp = TimeUtils.parseHumanReal(target.value);
     this.timelineData.setCurrentTimestamp(timestamp);
     this.updateTimeInputValuesToCurrentTimestamp();
   }
