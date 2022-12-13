@@ -13,14 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {AppModule} from "./app/app.module";
-import {globalConfig} from "common/utils/global_config";
 
-globalConfig.set({
-  MODE: "DEV",
-  REMOTE_TOOL_URL: "http://localhost:8081"
-});
+export interface Schema {
+  MODE: "DEV"|"PROD";
+  REMOTE_TOOL_URL: "http://localhost:8081"|"https://android-build.googleplex.com/builds/bug_tool";
+}
 
-platformBrowserDynamic().bootstrapModule(AppModule)
-  .catch(err => console.error(err));
+export class GlobalConfig implements Schema {
+  readonly MODE = "PROD" as const;
+  readonly REMOTE_TOOL_URL = "https://android-build.googleplex.com/builds/bug_tool" as const;
+
+  set(config: Schema) {
+    Object.assign(this, config);
+  }
+}
+
+export const globalConfig = new GlobalConfig();

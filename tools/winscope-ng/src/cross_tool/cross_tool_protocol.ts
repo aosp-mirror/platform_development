@@ -21,10 +21,9 @@ import {
   OnTimestampReceived} from "cross_tool/cross_tool_protocol_dependency_inversion";
 import {RealTimestamp} from "common/trace/timestamp";
 import {FunctionUtils} from "common/utils/function_utils";
+import {globalConfig} from "common/utils/global_config";
 
 class CrossToolProtocol implements CrossToolProtocolDependencyInversion {
-  static readonly TARGET = "http://localhost:8081";
-
   private remoteToolWindow?: Window;
   private onBugreportReceived: OnBugreportReceived = FunctionUtils.DO_NOTHING_ASYNC;
   private onTimestampReceived: OnTimestampReceived = FunctionUtils.DO_NOTHING_ASYNC;
@@ -49,12 +48,12 @@ class CrossToolProtocol implements CrossToolProtocolDependencyInversion {
     }
 
     const message = new MessageTimestamp(timestamp.getValueNs());
-    this.remoteToolWindow.postMessage(message, CrossToolProtocol.TARGET);
+    this.remoteToolWindow.postMessage(message, globalConfig.REMOTE_TOOL_URL);
     console.log("Cross-tool protocol sent timestamp message:", message);
   }
 
   private async onMessageReceived(event: MessageEvent) {
-    if (event.origin !== CrossToolProtocol.TARGET) {
+    if (event.origin !== globalConfig.REMOTE_TOOL_URL) {
       console.log("Cross-tool protocol ignoring message from unexpected origin.",
         "Origin:", event.origin, "Message:", event.data);
       return;
@@ -71,7 +70,7 @@ class CrossToolProtocol implements CrossToolProtocolDependencyInversion {
     switch(message.type) {
     case MessageType.PING:
       console.log("Cross-tool protocol received ping message:", message);
-      (event.source as Window).postMessage(new MessagePong(), CrossToolProtocol.TARGET);
+      (event.source as Window).postMessage(new MessagePong(), globalConfig.REMOTE_TOOL_URL);
       break;
     case MessageType.PONG:
       console.log("Cross-tool protocol received unexpected pong message:", message);
