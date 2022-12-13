@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import { OnProgressUpdateType } from "common/utils/function_utils";
 import { PersistentStore } from "common/utils/persistent_store";
-import { configMap, TRACES } from "./trace_collection_utils";
+import { configMap } from "./trace_collection_utils";
 import { Device } from "./connection";
-import { ProxyConnection } from "./proxy_connection";
 
 export enum ProxyState {
   ERROR = 0,
@@ -130,7 +131,7 @@ class ProxyRequest {
     }, undefined, requestedTraces);
   }
 
-  async endTrace(view: any, progressCallback: (progress: number) => void): Promise<void> {
+  async endTrace(view: any, progressCallback: OnProgressUpdateType): Promise<void> {
     const requestedTraces = this.tracingTraces;
     this.tracingTraces = undefined;
     if (requestedTraces === undefined) {
@@ -152,7 +153,7 @@ class ProxyRequest {
     });
   }
 
-  async dumpState(view: any, requestedDumps: string[], progressCallback: (progress: number) => void) {
+  async dumpState(view: any, requestedDumps: string[], progressCallback: OnProgressUpdateType) {
     await proxyRequest.call("POST", `${ProxyEndpoint.DUMP}${view.proxy.selectedDevice}/`,
       async (request: XMLHttpRequest) => {
         await proxyClient.updateAdbData(requestedDumps, "dump", progressCallback);
@@ -262,7 +263,7 @@ export class ProxyClient {
     this.setState(ProxyState.START_TRACE);
   }
 
-  async updateAdbData(files: Array<string>, traceType: string, progressCallback: (progress: number) => void) {
+  async updateAdbData(files: Array<string>, traceType: string, progressCallback: OnProgressUpdateType) {
     for (let idx = 0; idx < files.length; idx++) {
       const adbParams = {
         files,
