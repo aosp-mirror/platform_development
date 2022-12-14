@@ -71,7 +71,7 @@ MergeStatus ModuleMerger::LookupUserDefinedType(
     const repr::TypeIR *contender_ud = definition.type_ir_;
     repr::DiffStatus result = diff_helper.CompareAndDumpTypeDiff(
         contender_ud->GetSelfType(), ud_type->GetSelfType());
-    if (result == repr::DiffStatus::no_diff) {
+    if (!result.HasDiff()) {
       local_to_global_type_id_map_->emplace(
           ud_type->GetSelfType(),
           MergeStatus(false, contender_ud->GetSelfType()));
