@@ -148,12 +148,20 @@ describe("TimeUtils", () => {
 
   it("humanRealToNanoseconds", () => {
     const NOV_10_2022 = 1668038400000n * MILLISECOND;
-    expect(TimeUtils.parseHumanReal("22h04m54s186ms123212ns, 10 Nov 2022 UTC"))
+    expect(TimeUtils.parseHumanReal("2022-11-10T22:04:54.186123212"))
       .toEqual(new RealTimestamp(NOV_10_2022 + 22n * HOUR + 4n * MINUTE + 54n * SECOND + 186n * MILLISECOND + 123212n));
-    expect(TimeUtils.parseHumanReal("22h04m54s186ms123212ns, 10 Nov 2022")).toEqual(new RealTimestamp(1668117894186123212n));
-    expect(TimeUtils.parseHumanReal("22h04m54s186ms212ns, 10 Nov 2022 UTC")).toEqual(new RealTimestamp(1668117894186000212n));
-    expect(TimeUtils.parseHumanReal("22h04m54s6ms2ns, 10 Nov 2022")).toEqual(new RealTimestamp(1668117894006000002n));
-    expect(TimeUtils.parseHumanReal("06h4m54s6ms2ns, 10 Nov 2022")).toEqual(new RealTimestamp(1668060294006000002n));
+    expect(TimeUtils.parseHumanReal("2022-11-10T22:04:54.186123212Z")).toEqual(new RealTimestamp(1668117894186123212n));
+    expect(TimeUtils.parseHumanReal("2022-11-10T22:04:54.186000212")).toEqual(new RealTimestamp(1668117894186000212n));
+    expect(TimeUtils.parseHumanReal("2022-11-10T22:04:54.006000002")).toEqual(new RealTimestamp(1668117894006000002n));
+    expect(TimeUtils.parseHumanReal("2022-11-10T06:04:54.006000002")).toEqual(new RealTimestamp(1668060294006000002n));
+  });
+
+  it("canReverseDateFormatting", () => {
+    let timestamp = new RealTimestamp(1668117894186123212n);
+    expect(TimeUtils.parseHumanReal(TimeUtils.format(timestamp))).toEqual(timestamp);
+
+    timestamp = new ElapsedTimestamp(DAY + HOUR + MINUTE + SECOND + MILLISECOND + 1n);
+    expect(TimeUtils.parseHumanElapsed(TimeUtils.format(timestamp))).toEqual(timestamp);
   });
 
   it("humanToNanoseconds throws on invalid input format", () => {
