@@ -78,14 +78,16 @@ class HeaderCheckerTest(unittest.TestCase):
 
     def run_and_compare_abi_diff(self, old_dump, new_dump, lib, arch,
                                  expected_return_code, flags=[]):
-        actual_output = run_abi_diff(old_dump, new_dump, arch, lib, flags)
-        self.assertEqual(actual_output, expected_return_code)
+        return_code, output = run_abi_diff(old_dump, new_dump, arch, lib,
+                                           flags)
+        self.assertEqual(return_code, expected_return_code)
+        return output
 
     def prepare_and_run_abi_diff(self, old_ref_dump_path, new_ref_dump_path,
                                  target_arch, expected_return_code, flags=[]):
-        self.run_and_compare_abi_diff(old_ref_dump_path, new_ref_dump_path,
-                                      'test', target_arch,
-                                      expected_return_code, flags)
+        return self.run_and_compare_abi_diff(
+            old_ref_dump_path, new_ref_dump_path, 'test', target_arch,
+            expected_return_code, flags)
 
     def get_or_create_dump(self, module, create):
         if create:
@@ -101,14 +103,18 @@ class HeaderCheckerTest(unittest.TestCase):
         old_modules = Module.get_test_modules_by_name(old_lib)
         new_modules = Module.get_test_modules_by_name(new_lib)
         self.assertEqual(len(old_modules), len(new_modules))
+        self.assertTrue(len(old_modules))
 
         for old_module, new_module in zip(old_modules, new_modules):
             self.assertEqual(old_module.arch, new_module.arch)
             old_dump_path = self.get_or_create_dump(old_module, create_old)
             new_dump_path = self.get_or_create_dump(new_module, create_new)
-            self.prepare_and_run_abi_diff(
+            output = self.prepare_and_run_abi_diff(
                 old_dump_path, new_dump_path, new_module.arch,
                 expected_return_code, flags)
+        # Since most test cases are independent of architecture, verifying one
+        # of the reports is sufficient.
+        return output
 
     def prepare_and_absolute_diff_all_archs(self, old_lib, new_lib):
         old_modules = Module.get_test_modules_by_name(old_lib)
@@ -411,10 +417,17 @@ class HeaderCheckerTest(unittest.TestCase):
         self.assertRegex(os.path.basename(resource_dir), r"^[\d.]+$")
 
     def test_struct_extensions(self):
-        self.prepare_and_run_abi_diff_all_archs(
+        output = self.prepare_and_run_abi_diff_all_archs(
             "libstruct_extensions", "liballowed_struct_extensions", 4,
             flags=["-input-format-new", "Json", "-input-format-old", "Json"],
             create_old=False, create_new=False)
+        self.assertEqual(output.count("record_type_extension_diffs"), 6)
+
+        output = self.prepare_and_run_abi_diff_all_archs(
+            "liballowed_struct_extensions", "libstruct_extensions", 8,
+            flags=["-input-format-new", "Json", "-input-format-old", "Json"],
+            create_old=False, create_new=False)
+        self.assertEqual(output.count("record_type_diffs"), 6)
 
     def test_param_size_diff(self):
         self.prepare_and_run_abi_diff_all_archs(
