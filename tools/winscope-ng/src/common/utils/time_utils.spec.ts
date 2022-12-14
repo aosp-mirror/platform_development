@@ -85,30 +85,30 @@ describe("TimeUtils", () => {
   });
 
   it("humanElapsedToNanoseconds", () => {
-    expect(TimeUtils.parseHumanElapsed("0ns")) .toEqual(BigInt(0));
-    expect(TimeUtils.parseHumanElapsed("1000ns")) .toEqual(BigInt(1000));
-    expect(TimeUtils.parseHumanElapsed("0ms")).toEqual(BigInt(0));
-    expect(TimeUtils.parseHumanElapsed("1ms")).toEqual(MILLISECOND);
-    expect(TimeUtils.parseHumanElapsed("10ms")).toEqual(BigInt(10) * MILLISECOND);
+    expect(TimeUtils.parseHumanElapsed("0ns")).toEqual(new ElapsedTimestamp(0n));
+    expect(TimeUtils.parseHumanElapsed("1000ns")).toEqual(new ElapsedTimestamp(1000n));
+    expect(TimeUtils.parseHumanElapsed("0ms")).toEqual(new ElapsedTimestamp(0n));
+    expect(TimeUtils.parseHumanElapsed("1ms")).toEqual(new ElapsedTimestamp(MILLISECOND));
+    expect(TimeUtils.parseHumanElapsed("10ms")).toEqual(new ElapsedTimestamp(10n * MILLISECOND));
 
-    expect(TimeUtils.parseHumanElapsed("999ms")).toEqual(BigInt(999) * MILLISECOND);
-    expect(TimeUtils.parseHumanElapsed("1s")).toEqual(SECOND);
-    expect(TimeUtils.parseHumanElapsed("1s0ms")).toEqual(SECOND);
-    expect(TimeUtils.parseHumanElapsed("1s0ms0ns")).toEqual(SECOND);
-    expect(TimeUtils.parseHumanElapsed("1s0ms1ns")).toEqual(SECOND + BigInt(1));
-    expect(TimeUtils.parseHumanElapsed("0d1s1ms")).toEqual(SECOND + MILLISECOND);
+    expect(TimeUtils.parseHumanElapsed("999ms")).toEqual(new ElapsedTimestamp(999n * MILLISECOND));
+    expect(TimeUtils.parseHumanElapsed("1s")).toEqual(new ElapsedTimestamp(SECOND));
+    expect(TimeUtils.parseHumanElapsed("1s0ms")).toEqual(new ElapsedTimestamp(SECOND));
+    expect(TimeUtils.parseHumanElapsed("1s0ms0ns")).toEqual(new ElapsedTimestamp(SECOND));
+    expect(TimeUtils.parseHumanElapsed("1s0ms1ns")).toEqual(new ElapsedTimestamp(SECOND + 1n));
+    expect(TimeUtils.parseHumanElapsed("0d1s1ms")).toEqual(new ElapsedTimestamp(SECOND + MILLISECOND));
 
-    expect(TimeUtils.parseHumanElapsed("1m0s0ms")).toEqual(MINUTE);
-    expect(TimeUtils.parseHumanElapsed("1m1s1ms")).toEqual(MINUTE + SECOND + MILLISECOND);
+    expect(TimeUtils.parseHumanElapsed("1m0s0ms")).toEqual(new ElapsedTimestamp(MINUTE));
+    expect(TimeUtils.parseHumanElapsed("1m1s1ms")).toEqual(new ElapsedTimestamp(MINUTE + SECOND + MILLISECOND));
 
-    expect(TimeUtils.parseHumanElapsed("1h0m")).toEqual(HOUR);
-    expect(TimeUtils.parseHumanElapsed("1h1m1s1ms")).toEqual(HOUR + MINUTE + SECOND + MILLISECOND);
+    expect(TimeUtils.parseHumanElapsed("1h0m")).toEqual(new ElapsedTimestamp(HOUR));
+    expect(TimeUtils.parseHumanElapsed("1h1m1s1ms")).toEqual(new ElapsedTimestamp(HOUR + MINUTE + SECOND + MILLISECOND));
 
-    expect(TimeUtils.parseHumanElapsed("1d0s1ms")).toEqual(DAY + MILLISECOND);
-    expect(TimeUtils.parseHumanElapsed("1d1h1m1s1ms")).toEqual(DAY + HOUR + MINUTE + SECOND + MILLISECOND);
+    expect(TimeUtils.parseHumanElapsed("1d0s1ms")).toEqual(new ElapsedTimestamp(DAY + MILLISECOND));
+    expect(TimeUtils.parseHumanElapsed("1d1h1m1s1ms")).toEqual(new ElapsedTimestamp(DAY + HOUR + MINUTE + SECOND + MILLISECOND));
 
-    expect(TimeUtils.parseHumanElapsed("1d")).toEqual(DAY);
-    expect(TimeUtils.parseHumanElapsed("1d1ms")).toEqual(DAY + MILLISECOND);
+    expect(TimeUtils.parseHumanElapsed("1d")).toEqual(new ElapsedTimestamp(DAY));
+    expect(TimeUtils.parseHumanElapsed("1d1ms")).toEqual(new ElapsedTimestamp(DAY + MILLISECOND));
   });
 
   it("humanToNanoseconds throws on invalid input format", () => {
@@ -149,11 +149,11 @@ describe("TimeUtils", () => {
   it("humanRealToNanoseconds", () => {
     const NOV_10_2022 = 1668038400000n * MILLISECOND;
     expect(TimeUtils.parseHumanReal("22h04m54s186ms123212ns, 10 Nov 2022 UTC"))
-      .toEqual(NOV_10_2022 + 22n * HOUR + 4n * MINUTE + 54n * SECOND + 186n * MILLISECOND + 123212n);
-    expect(TimeUtils.parseHumanReal("22h04m54s186ms123212ns, 10 Nov 2022")).toEqual(1668117894186123212n);
-    expect(TimeUtils.parseHumanReal("22h04m54s186ms212ns, 10 Nov 2022 UTC")).toEqual(1668117894186000212n);
-    expect(TimeUtils.parseHumanReal("22h04m54s6ms2ns, 10 Nov 2022")).toEqual(1668117894006000002n);
-    expect(TimeUtils.parseHumanReal("06h4m54s6ms2ns, 10 Nov 2022")).toEqual(1668060294006000002n);
+      .toEqual(new RealTimestamp(NOV_10_2022 + 22n * HOUR + 4n * MINUTE + 54n * SECOND + 186n * MILLISECOND + 123212n));
+    expect(TimeUtils.parseHumanReal("22h04m54s186ms123212ns, 10 Nov 2022")).toEqual(new RealTimestamp(1668117894186123212n));
+    expect(TimeUtils.parseHumanReal("22h04m54s186ms212ns, 10 Nov 2022 UTC")).toEqual(new RealTimestamp(1668117894186000212n));
+    expect(TimeUtils.parseHumanReal("22h04m54s6ms2ns, 10 Nov 2022")).toEqual(new RealTimestamp(1668117894006000002n));
+    expect(TimeUtils.parseHumanReal("06h4m54s6ms2ns, 10 Nov 2022")).toEqual(new RealTimestamp(1668060294006000002n));
   });
 
   it("humanToNanoseconds throws on invalid input format", () => {

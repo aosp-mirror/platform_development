@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-class FunctionUtils {
+export type OnProgressUpdateType = (percentage: number) => void;
+
+export class FunctionUtils {
   static readonly DO_NOTHING = () => {
     // do nothing
   };
 }
-
-export {FunctionUtils};

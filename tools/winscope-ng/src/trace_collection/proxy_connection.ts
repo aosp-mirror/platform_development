@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import {FunctionUtils, OnProgressUpdateType} from "common/utils/function_utils";
 import {
   proxyRequest,
   proxyClient,
@@ -32,7 +34,9 @@ export class ProxyConnection implements Connection {
     ProxyState.INVALID_VERSION,
   ];
 
-  constructor(private proxyStateChangeCallback: (state: ProxyState) => void, private progressCallback: (progress: number) => void = () => {}) {
+  constructor(
+    private proxyStateChangeCallback: (state: ProxyState) => void,
+    private progressCallback: OnProgressUpdateType = FunctionUtils.DO_NOTHING) {
     this.proxy.setState(ProxyState.CONNECTING);
     this.proxy.onProxyChange((newState) => this.onConnectChange(newState));
     const urlParams = new URLSearchParams(window.location.search);

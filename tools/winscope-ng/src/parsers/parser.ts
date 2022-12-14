@@ -73,7 +73,12 @@ abstract class Parser {
     return this.timestamps.get(type);
   }
 
-  //TODO:
+  //TODO (b/256564627): include this into the new type/abstraction passed to viewers
+  public getEntriesLength(): number {
+    return this.decodedEntries.length;
+  }
+
+  //TODO (b/256564627):
   // - factor out timestamp search policy. Receive index parameter instead.
   // - make async for possible lazy disk reads in the future
   public getTraceEntry(timestamp: Timestamp): undefined|any {
