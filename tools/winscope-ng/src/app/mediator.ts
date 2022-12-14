@@ -15,12 +15,15 @@
  */
 
 import {AppComponentDependencyInversion} from "./components/app_component_dependency_inversion";
-import {TimelineComponentDependencyInversion} from "./components/timeline/timeline_component_dependency_inversion";
+import {TimelineComponentDependencyInversion}
+  from "./components/timeline/timeline_component_dependency_inversion";
 import {TimelineData} from "./timeline_data";
 import {TraceData} from "./trace_data";
-import {CrossToolProtocolDependencyInversion} from "cross_tool/cross_tool_protocol_dependency_inversion";
+import {AbtChromeExtensionProtocolDependencyInversion}
+  from "abt_chrome_extension/abt_chrome_extension_protocol_dependency_inversion";
+import {CrossToolProtocolDependencyInversion}
+  from "cross_tool/cross_tool_protocol_dependency_inversion";
 import {FileUtils} from "common/utils/file_utils";
-import {FunctionUtils} from "common/utils/function_utils";
 import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
 import {Viewer} from "viewers/viewer";
@@ -29,6 +32,7 @@ import {ViewerFactory} from "viewers/viewer_factory";
 export class Mediator {
   private traceData: TraceData;
   private timelineData: TimelineData;
+  private abtChromeExtensionProtocol: AbtChromeExtensionProtocolDependencyInversion;
   private crossToolProtocol: CrossToolProtocolDependencyInversion;
   private appComponent: AppComponentDependencyInversion;
   private timelineComponent?: TimelineComponentDependencyInversion;
@@ -40,12 +44,14 @@ export class Mediator {
   constructor(
     traceData: TraceData,
     timelineData: TimelineData,
+    abtChromeExtensionProtocol: AbtChromeExtensionProtocolDependencyInversion,
     crossToolProtocol: CrossToolProtocolDependencyInversion,
     appComponent: AppComponentDependencyInversion,
     storage: Storage) {
 
     this.traceData = traceData;
     this.timelineData = timelineData;
+    this.abtChromeExtensionProtocol = abtChromeExtensionProtocol;
     this.crossToolProtocol = crossToolProtocol;
     this.appComponent = appComponent;
     this.storage = storage;
@@ -61,6 +67,11 @@ export class Mediator {
     this.crossToolProtocol.setOnTimestampReceived(async (timestamp: Timestamp) => {
       await this.onRemoteToolTimestampReceived(timestamp);
     });
+
+    this.abtChromeExtensionProtocol.setOnBugAttachmentsReceived(async (attachments: File[]) => {
+      await this.onAbtChromeExtensionBugAttachmentsReceived(attachments);
+    });
+    this.abtChromeExtensionProtocol.run();
   }
 
   public setTimelineComponent(timelineComponent: TimelineComponentDependencyInversion|undefined) {
@@ -68,28 +79,29 @@ export class Mediator {
   }
 
   public onWinscopeTraceDataLoaded() {
-    this.onTraceDataLoaded();
+    this.processTraceData();
   }
 
   public async onRemoteToolBugreportReceived(bugreport: File, timestamp?: Timestamp) {
-    let unblockOtherRemoteToolEventHandlers = FunctionUtils.DO_NOTHING;
+    let unblockOtherRemoteToolEventHandlers: () => void;
 
     this.blockWhileRemoteToolBugreportIsBeingLoaded = new Promise<void>(resolve => {
       unblockOtherRemoteToolEventHandlers = resolve;
     });
 
     try {
-      const unzippedFiles = await FileUtils.unzipFilesIfNeeded([bugreport]);
-      this.traceData.clear();
-      await this.traceData.loadTraces(unzippedFiles);
-      this.onTraceDataLoaded();
+      await this.processFiles([bugreport]);
     } finally {
-      unblockOtherRemoteToolEventHandlers();
+      unblockOtherRemoteToolEventHandlers!();
     }
 
     if (timestamp !== undefined) {
       await this.onRemoteToolTimestampReceived(timestamp);
     }
+  }
+
+  public async onAbtChromeExtensionBugAttachmentsReceived(attachments: File[]) {
+    await this.processFiles(attachments);
   }
 
   public onWinscopeCurrentTimestampChanged(timestamp: Timestamp|undefined) {
@@ -149,7 +161,14 @@ export class Mediator {
     this.viewers = [];
   }
 
-  private onTraceDataLoaded() {
+  private async processFiles(files: File[]) {
+    const unzippedFiles = await FileUtils.unzipFilesIfNeeded(files);
+    this.traceData.clear();
+    await this.traceData.loadTraces(unzippedFiles);
+    this.processTraceData();
+  }
+
+  private processTraceData() {
     this.timelineData.initialize(
       this.traceData.getTimelines(),
       this.traceData.getScreenRecordingVideo()

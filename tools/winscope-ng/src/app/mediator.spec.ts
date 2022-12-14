@@ -17,6 +17,7 @@
 import {AppComponentStub} from "./components/app_component_stub";
 import {TimelineComponentStub} from "./components/timeline/timeline_component_stub";
 import {Mediator} from "./mediator";
+import {AbtChromeExtensionProtocolStub} from "abt_chrome_extension/abt_chrome_extension_protocol_stub";
 import {CrossToolProtocolStub} from "cross_tool/cross_tool_protocol_stub";
 import {RealTimestamp} from "common/trace/timestamp";
 import {UnitTestUtils} from "test/unit/utils";
@@ -30,6 +31,7 @@ describe("Mediator", () => {
   const viewerStub = new ViewerStub("Title");
   let traceData: TraceData;
   let timelineData: TimelineData;
+  let abtChromeExtensionProtocol: AbtChromeExtensionProtocolStub;
   let crossToolProtocol: CrossToolProtocolStub;
   let appComponent: AppComponentStub;
   let timelineComponent: TimelineComponentStub;
@@ -39,10 +41,18 @@ describe("Mediator", () => {
     timelineComponent = new TimelineComponentStub();
     traceData = new TraceData();
     timelineData = new TimelineData();
+    abtChromeExtensionProtocol = new AbtChromeExtensionProtocolStub();
     crossToolProtocol = new CrossToolProtocolStub();
     appComponent = new AppComponentStub();
     timelineComponent = new TimelineComponentStub();
-    mediator = new Mediator(traceData, timelineData, crossToolProtocol, appComponent, new MockStorage());
+    mediator = new Mediator(
+      traceData,
+      timelineData,
+      abtChromeExtensionProtocol,
+      crossToolProtocol,
+      appComponent,
+      new MockStorage()
+    );
     mediator.setTimelineComponent(timelineComponent);
 
     spyOn(ViewerFactory.prototype, "createViewers").and.returnValue([viewerStub]);

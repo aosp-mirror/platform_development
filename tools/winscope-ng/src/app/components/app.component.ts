@@ -25,6 +25,7 @@ import {
 import { createCustomElement } from "@angular/elements";
 import { AppComponentDependencyInversion } from "./app_component_dependency_inversion";
 import { TimelineComponent} from "./timeline/timeline.component";
+import {AbtChromeExtensionProtocol} from "abt_chrome_extension/abt_chrome_extension_protocol";
 import {CrossToolProtocol} from "cross_tool/cross_tool_protocol";
 import { Mediator } from "app/mediator";
 import { TraceData } from "app/trace_data";
@@ -191,8 +192,16 @@ export class AppComponent implements AppComponentDependencyInversion {
   changeDetectorRef: ChangeDetectorRef;
   traceData = new TraceData();
   timelineData = new TimelineData();
+  abtChromeExtensionProtocol = new AbtChromeExtensionProtocol();
   crossToolProtocol = new CrossToolProtocol();
-  mediator = new Mediator(this.traceData, this.timelineData, this.crossToolProtocol, this, localStorage);
+  mediator = new Mediator(
+    this.traceData,
+    this.timelineData,
+    this.abtChromeExtensionProtocol,
+    this.crossToolProtocol,
+    this,
+    localStorage
+  );
   states = ProxyState;
   store: PersistentStore = new PersistentStore();
   currentTimestamp?: Timestamp;

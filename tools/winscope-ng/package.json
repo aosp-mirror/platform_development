@@ -66,6 +66,7 @@
     "@angular/cli": "~14.0.0",
     "@angular/compiler-cli": "^14.0.0",
     "@ngxs/devtools-plugin": "^3.7.4",
+    "@types/chrome": "^0.0.204",
     "@types/dateformat": "^5.0.0",
     "@types/jasmine": "~4.3.1",
     "@types/jquery": "^3.5.14",
