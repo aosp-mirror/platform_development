@@ -200,9 +200,7 @@ class SurfaceFlingerTraceConfig:
     """
 
     def __init__(self) -> None:
-        # default config flags from frameworks/native/services/surfaceflinger/Tracing/LayerTracing.h
-        # TRACE_INPUT | TRACE_COMPOSITION | TRACE_EXTRA
-        self.flags = 1 << 1 | 1 << 2 | 1 << 3
+        self.flags = 0
 
     def add(self, config: str) -> None:
         self.flags |= CONFIG_FLAG[config]
