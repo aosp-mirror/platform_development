@@ -164,73 +164,6 @@ def get_emulator_device(adb_path: str = 'adb') -> AndroidDevice:
     return _get_device_by_type('-e', adb_path=adb_path)
 
 
-# TODO: Refactor so this invoked subprocess rather than returning arguments for it.
-# This function is pretty type-resistant because it returns the arguments that should be
-# passed to subprocess rather than the result of the call. Most of what's here looks
-# like python2 workarounds anyway, so it might be something that can be done away with.
-# For now, just return Any :(
-#
-# If necessary, modifies subprocess.check_output() or subprocess.Popen() args
-# to run the subprocess via Windows PowerShell to work-around an issue in
-# Python 2's subprocess class on Windows where it doesn't support Unicode.
-def _get_subprocess_args(args: tuple[Any, ...]) -> tuple[Any, ...]:
-    # Only do this slow work-around if Unicode is in the cmd line on Windows.
-    # PowerShell takes 600-700ms to startup on a 2013-2014 machine, which is
-    # very slow.
-    if os.name != 'nt' or all(not isinstance(arg, unicode) for arg in args[0]):
-        return tuple(args)
-
-    def escape_arg(arg: str) -> str:
-        # Escape for the parsing that the C Runtime does in Windows apps. In
-        # particular, this will take care of double-quotes.
-        arg = subprocess.list2cmdline([arg])
-        # Escape single-quote with another single-quote because we're about
-        # to...
-        arg = arg.replace("'", "''")
-        # ...put the arg in a single-quoted string for PowerShell to parse.
-        arg = "'" + arg + "'"
-        return arg
-
-    # Escape command line args.
-    argv = map(escape_arg, args[0])
-    # Cause script errors (such as adb not found) to stop script immediately
-    # with an error.
-    ps_code = u'$ErrorActionPreference = "Stop"\r\n'
-    # Add current directory to the PATH var, to match cmd.exe/CreateProcess()
-    # behavior.
-    ps_code += u'$env:Path = ".;" + $env:Path\r\n'
-    # Precede by &, the PowerShell call operator, and separate args by space.
-    ps_code += u'& ' + u' '.join(argv)
-    # Make the PowerShell exit code the exit code of the subprocess.
-    ps_code += u'\r\nExit $LastExitCode'
-    # Encode as UTF-16LE (without Byte-Order-Mark) which Windows natively
-    # understands.
-    ps_code_encoded = ps_code.encode('utf-16le')
-
-    # Encode the PowerShell command as base64 and use the special
-    # -EncodedCommand option that base64 decodes. Base64 is just plain ASCII,
-    # so it should have no problem passing through Win32 CreateProcessA()
-    # (which python erroneously calls instead of CreateProcessW()).
-    return (['powershell.exe', '-NoProfile', '-NonInteractive',
-             '-EncodedCommand', base64.b64encode(ps_code_encoded)],) + args[1:]
-
-
-# Call this instead of subprocess.check_output() to work-around issue in Python
-# 2's subprocess class on Windows where it doesn't support Unicode.
-def _subprocess_check_output(*args: Any, **kwargs: Any) -> Any:
-    try:
-        return subprocess.check_output(*_get_subprocess_args(args), **kwargs)
-    except subprocess.CalledProcessError as e:
-        # Show real command line instead of the powershell.exe command line.
-        raise subprocess.CalledProcessError(e.returncode, args[0],
-                                            output=e.output)
-
-
-# Call this instead of subprocess.Popen(). Like _subprocess_check_output().
-def _subprocess_Popen(*args: Any, **kwargs: Any) -> Any:
-    return subprocess.Popen(*_get_subprocess_args(args), **kwargs)
-
-
 def split_lines(s: str) -> list[str]:
     """Splits lines in a way that works even on Windows and old devices.
 
@@ -345,7 +278,7 @@ class AndroidDevice(object):
 
     def _simple_call(self, cmd: list[str]) -> str:
         logging.info(' '.join(self.adb_cmd + cmd))
-        return _subprocess_check_output(
+        return subprocess.check_output(
             self.adb_cmd + cmd, stderr=subprocess.STDOUT).decode('utf-8')
 
     def shell(self, cmd: list[str]) -> tuple[str, str]:
@@ -378,11 +311,9 @@ class AndroidDevice(object):
         """
         cmd = self._make_shell_cmd(cmd)
         logging.info(' '.join(cmd))
-        p = _subprocess_Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
         stdout, stderr = p.communicate()
-        stdout = stdout.decode('utf-8')
-        stderr = stderr.decode('utf-8')
         if self.has_shell_protocol():
             exit_code = p.returncode
         else:
@@ -429,8 +360,8 @@ class AndroidDevice(object):
                     os.setpgrp()
                 preexec_fn = _wrapper
 
-        p = _subprocess_Popen(command, creationflags=creationflags,
-                              preexec_fn=preexec_fn, **kwargs)
+        p = subprocess.Popen(command, creationflags=creationflags,
+                             preexec_fn=preexec_fn, **kwargs)
 
         if kill_atexit:
             atexit.register(p.kill)
