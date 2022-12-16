@@ -23,7 +23,7 @@ import {FunctionUtils} from "common/utils/function_utils";
 
 export class CrossToolProtocolStub implements CrossToolProtocolDependencyInversion {
   onBugreportReceived: OnBugreportReceived = FunctionUtils.DO_NOTHING_ASYNC;
-  onTimestampReceived: OnTimestampReceived = FunctionUtils.DO_NOTHING_ASYNC;
+  onTimestampReceived: OnTimestampReceived = FunctionUtils.DO_NOTHING;
 
   setOnBugreportReceived(callback: OnBugreportReceived) {
     this.onBugreportReceived = callback;

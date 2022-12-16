@@ -18,4 +18,5 @@ import {Viewer} from "viewers/viewer";
 
 export interface AppComponentDependencyInversion {
   onTraceDataLoaded(viewers: Viewer[]): void;
+  onUploadNewClick(): void;
 }

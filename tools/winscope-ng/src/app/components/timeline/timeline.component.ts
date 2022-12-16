@@ -30,7 +30,6 @@ import { FormControl, FormGroup, Validators} from "@angular/forms";
 import { DomSanitizer, SafeUrl } from "@angular/platform-browser";
 import { TraceType } from "common/trace/trace_type";
 import { TRACE_INFO } from "app/trace_info";
-import { Mediator } from "app/mediator";
 import { TimelineComponentDependencyInversion } from "./timeline_component_dependency_inversion";
 import { TimelineData } from "app/timeline_data";
 import { MiniTimelineComponent } from "./mini_timeline.component";
@@ -300,7 +299,6 @@ export class TimelineComponent implements TimelineComponentDependencyInversion {
   }
   public wrappedActiveTrace: TraceType|undefined = undefined;
 
-  @Input() mediator!: Mediator;
   @Input() timelineData!: TimelineData;
   @Input() availableTraces: TraceType[] = [];
 
@@ -339,8 +337,6 @@ export class TimelineComponent implements TimelineComponentDependencyInversion {
   }
 
   ngOnInit() {
-    this.mediator.setTimelineComponent(this);
-
     if (this.timelineData.hasTimestamps()) {
       this.updateTimeInputValuesToCurrentTimestamp();
     }
@@ -350,10 +346,6 @@ export class TimelineComponent implements TimelineComponentDependencyInversion {
       this.videoUrl =
         this.sanitizer.bypassSecurityTrustUrl(URL.createObjectURL(screenRecordingVideo));
     }
-  }
-
-  ngOnDestroy() {
-    this.mediator.setTimelineComponent(undefined);
   }
 
   ngAfterViewInit() {
