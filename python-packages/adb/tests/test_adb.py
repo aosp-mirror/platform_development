@@ -15,7 +15,7 @@
 #
 import os
 import unittest
-import mock
+from unittest.mock import Mock, patch
 
 import adb
 
@@ -32,42 +32,42 @@ class GetDeviceTest(unittest.TestCase):
             if 'ANDROID_SERIAL' in os.environ:
                 del os.environ['ANDROID_SERIAL']
 
-    @mock.patch('adb.device.get_devices')
-    def test_explicit(self, mock_get_devices: mock.Mock) -> None:
+    @patch('adb.get_devices')
+    def test_explicit(self, mock_get_devices: Mock) -> None:
         mock_get_devices.return_value = ['foo', 'bar']
         device = adb.get_device('foo')
         self.assertEqual(device.serial, 'foo')
 
-    @mock.patch('adb.device.get_devices')
-    def test_from_env(self, mock_get_devices: mock.Mock) -> None:
+    @patch('adb.get_devices')
+    def test_from_env(self, mock_get_devices: Mock) -> None:
         mock_get_devices.return_value = ['foo', 'bar']
         os.environ['ANDROID_SERIAL'] = 'foo'
         device = adb.get_device()
         self.assertEqual(device.serial, 'foo')
 
-    @mock.patch('adb.device.get_devices')
-    def test_arg_beats_env(self, mock_get_devices: mock.Mock) -> None:
+    @patch('adb.get_devices')
+    def test_arg_beats_env(self, mock_get_devices: Mock) -> None:
         mock_get_devices.return_value = ['foo', 'bar']
         os.environ['ANDROID_SERIAL'] = 'bar'
         device = adb.get_device('foo')
         self.assertEqual(device.serial, 'foo')
 
-    @mock.patch('adb.device.get_devices')
-    def test_no_such_device(self, mock_get_devices: mock.Mock) -> None:
+    @patch('adb.get_devices')
+    def test_no_such_device(self, mock_get_devices: Mock) -> None:
         mock_get_devices.return_value = ['foo', 'bar']
         self.assertRaises(adb.DeviceNotFoundError, adb.get_device, ['baz'])
 
         os.environ['ANDROID_SERIAL'] = 'baz'
         self.assertRaises(adb.DeviceNotFoundError, adb.get_device)
 
-    @mock.patch('adb.device.get_devices')
-    def test_unique_device(self, mock_get_devices: mock.Mock) -> None:
+    @patch('adb.get_devices')
+    def test_unique_device(self, mock_get_devices: Mock) -> None:
         mock_get_devices.return_value = ['foo']
         device = adb.get_device()
         self.assertEqual(device.serial, 'foo')
 
-    @mock.patch('adb.device.get_devices')
-    def test_no_unique_device(self, mock_get_devices: mock.Mock) -> None:
+    @patch('adb.get_devices')
+    def test_no_unique_device(self, mock_get_devices: Mock) -> None:
         mock_get_devices.return_value = ['foo', 'bar']
         self.assertRaises(adb.NoUniqueDeviceError, adb.get_device)
 
