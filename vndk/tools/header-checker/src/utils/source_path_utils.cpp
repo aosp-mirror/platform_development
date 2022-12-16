@@ -18,23 +18,26 @@
 #include <llvm/Support/Path.h>
 #include <llvm/Support/raw_ostream.h>
 
+#include <algorithm>
 #include <set>
 #include <string>
 #include <vector>
 
-
 namespace header_checker {
 namespace utils {
 
+static const std::vector<std::string> header_extensions{
+    ".h", ".hh", ".hpp", ".hxx", ".h++", ".inl", ".inc", ".ipp", ".h.generic"};
 
 static bool ShouldSkipFile(llvm::StringRef &file_name) {
-  // Ignore swap files, hidden files, and hidden directories. Do not recurse
-  // into hidden directories either. We should also not look at source files.
-  // Many projects include source files in their exports.
-  return (file_name.empty() || file_name.startswith(".") ||
-          file_name.endswith(".swp") || file_name.endswith(".swo") ||
-          file_name.endswith("#") || file_name.endswith(".cpp") ||
-          file_name.endswith(".cc") || file_name.endswith(".c"));
+  // Look for header files only
+  if (file_name.empty() || file_name.startswith(".")) {
+    return true;
+  }
+  return std::find_if(header_extensions.begin(), header_extensions.end(),
+                      [file_name](const std::string &e) {
+                        return file_name.endswith(e);
+                      }) == header_extensions.end();
 }
 
 static std::string GetCwd() {
@@ -132,9 +135,7 @@ static bool CollectExportedHeaderSet(const std::string &dir_name,
     const std::string &file_path = walker->path();
 
     llvm::StringRef file_name(llvm::sys::path::filename(file_path));
-    // Ignore swap files and hidden files / dirs. Do not recurse into them too.
-    // We should also not look at source files. Many projects include source
-    // files in their exports.
+    // Ignore non header files.
     if (ShouldSkipFile(file_name)) {
       walker.no_push();
       continue;
