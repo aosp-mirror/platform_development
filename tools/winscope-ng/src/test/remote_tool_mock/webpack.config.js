@@ -13,22 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const path = require("path");
-const TerserPlugin = require("terser-webpack-plugin");
+
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin');
 
 module.exports = {
   resolve: {
     extensions: [".ts", ".js", ".css"],
     modules: [
-      "node_modules",
-      "src",
-      "kotlin_build",
-      path.resolve(__dirname, "../../.."),
+      __dirname + "/../../../node_modules",
+      __dirname + "/../../../src",
+      __dirname
     ]
-  },
-
-  resolveLoader: {
-    modules: ["node_modules", path.resolve(__dirname, "loaders")],
   },
 
   module: {
@@ -48,27 +44,32 @@ module.exports = {
       {
         test: /\.s[ac]ss$/i,
         use: ["style-loader", "css-loader", "sass-loader"]
-      },
-      {
-        test: /\.proto$/,
-        loader: "proto-loader",
-        options: {
-          paths: [
-            path.resolve(__dirname, "../../.."),
-            path.resolve(__dirname, "../../../external/protobuf/src"),
-          ]
-        }
-      },
+      }
     ]
   },
 
-  optimization: {
-    minimizer: [
-      new TerserPlugin({
-        terserOptions: {
-          keep_fnames: true,
-        },
-      }),
-    ],
+  mode: "development",
+
+  entry: {
+    polyfills: __dirname + "/polyfills.ts",
+    app: __dirname + "/main.ts"
   },
+
+  output: {
+    path: __dirname + "/../../../dist/remote_tool_mock",
+    publicPath: "/",
+    filename: "js/[name].[hash].js",
+    chunkFilename: "js/[name].[id].[hash].chunk.js",
+  },
+
+  devtool: "source-map",
+
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: __dirname + "/index.html",
+      inject: "body",
+      inlineSource: ".(css|js)$",
+    }),
+    new HtmlWebpackInlineSourcePlugin(HtmlWebpackPlugin),
+  ]
 };
