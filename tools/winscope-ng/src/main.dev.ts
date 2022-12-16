@@ -19,7 +19,6 @@ import {globalConfig} from "common/utils/global_config";
 
 globalConfig.set({
   MODE: "DEV",
-  REMOTE_TOOL_URL: "http://localhost:8081"
 });
 
 platformBrowserDynamic().bootstrapModule(AppModule)

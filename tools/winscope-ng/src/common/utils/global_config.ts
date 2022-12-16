@@ -14,14 +14,10 @@
  * limitations under the License.
  */
 
-export interface Schema {
-  MODE: "DEV"|"PROD";
-  REMOTE_TOOL_URL: "http://localhost:8081"|"https://android-build.googleplex.com/builds/bug_tool";
-}
+export type Schema = Omit<GlobalConfig, "set">;
 
-export class GlobalConfig implements Schema {
-  readonly MODE = "PROD" as const;
-  readonly REMOTE_TOOL_URL = "https://android-build.googleplex.com/builds/bug_tool" as const;
+class GlobalConfig {
+  readonly MODE: "DEV"|"PROD" = "PROD" as const;
 
   set(config: Schema) {
     Object.assign(this, config);
