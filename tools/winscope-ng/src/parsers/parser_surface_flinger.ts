@@ -37,8 +37,8 @@ class ParserSurfaceFlinger extends Parser {
     const decoded = <any>LayersTraceFileProto.decode(buffer);
     if (Object.prototype.hasOwnProperty.call(decoded, "realToElapsedTimeOffsetNanos")) {
       this.realToElapsedTimeOffsetNs = BigInt(decoded.realToElapsedTimeOffsetNanos);
-    }
-    else {
+    } else {
+      console.warn("Missing realToElapsedTimeOffsetNanos property on SF trace proto");
       this.realToElapsedTimeOffsetNs = undefined;
     }
     return decoded.entry;
@@ -68,7 +68,8 @@ class ParserSurfaceFlinger extends Parser {
       entryProto.hwcBlob,
       entryProto.where,
       this.realToElapsedTimeOffsetNs,
-      timestampType === TimestampType.ELAPSED /*useElapsedTime*/
+      timestampType === TimestampType.ELAPSED /*useElapsedTime*/,
+      entryProto.excludesCompositionState ?? false
     );
   }
 

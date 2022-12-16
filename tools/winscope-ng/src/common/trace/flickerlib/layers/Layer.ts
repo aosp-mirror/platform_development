@@ -19,7 +19,7 @@ import { Layer, LayerProperties, Rect, toActiveBuffer, toColor, toRect, toRectF,
 import { shortenName } from '../mixin'
 import Transform from './Transform'
 
-Layer.fromProto = function (proto: any): Layer {
+Layer.fromProto = function (proto: any, excludesCompositionState = false): Layer {
     const visibleRegion = toRegion(proto.visibleRegion)
     const activeBuffer = toActiveBuffer(proto.activeBuffer)
     const bounds = toRectF(proto.bounds)
@@ -45,11 +45,11 @@ Layer.fromProto = function (proto: any): Layer {
 
     const properties = new LayerProperties(
         visibleRegion,
-        activeBuffer, 
+        activeBuffer,
         /* flags */ proto.flags,
-        bounds, 
-        color, 
-        /* isOpaque */ proto.isOpaque, 
+        bounds,
+        color,
+        /* isOpaque */ proto.isOpaque,
         /* shadowRadius */ proto.shadowRadius,
         /* cornerRadius */ proto.cornerRadius,
         /* type */ proto.type ?? ``,
@@ -70,13 +70,14 @@ Layer.fromProto = function (proto: any): Layer {
         requestedColor,
         cornerRadiusCrop,
         inputTransform,
-        inputRegion
+        inputRegion,
+        excludesCompositionState
     );
 
     const entry = new Layer(
-        /* name */ proto.name ?? ``, 
+        /* name */ proto.name ?? ``,
         /* id */ proto.id,
-        /*parentId */ proto.parent, 
+        /*parentId */ proto.parent,
         /* z */ proto.z,
         /* currFrame */ proto.currFrame,
         properties
