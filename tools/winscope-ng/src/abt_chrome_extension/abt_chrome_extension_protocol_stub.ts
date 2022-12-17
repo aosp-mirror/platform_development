@@ -13,28 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const {merge} = require("webpack-merge");
-const configCommon = require("./webpack.config.common");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
 
-const configDev = {
-  mode: "development",
-  entry: {
-    polyfills: "./src/polyfills.ts",
-    styles: [
-      "./src/material-theme.scss",
-      "./src/styles.css"
-    ],
-    app: "./src/main.dev.ts"
-  },
-  devtool: "source-map",
-  plugins: [
-    new HtmlWebpackPlugin({
-      template: "src/index.html",
-      inject: "body",
-      inlineSource: ".(css|js)$",
-    })
-  ]
-};
+import {
+  OnBugAttachmentsReceived,
+  AbtChromeExtensionProtocolDependencyInversion
+} from "./abt_chrome_extension_protocol_dependency_inversion";
 
-module.exports = merge(configCommon, configDev);
+export class AbtChromeExtensionProtocolStub implements AbtChromeExtensionProtocolDependencyInversion {
+  setOnBugAttachmentsReceived(callback: OnBugAttachmentsReceived) {
+    // do nothing
+  }
+
+  run() {
+    // do nothing
+  }
+}

@@ -56,7 +56,7 @@ export class TimelineData {
     this.onCurrentTimestampChanged(this.getCurrentTimestamp());
   }
 
-  setOnCurrentTimestampChangedCallback(callback: TimestampCallbackType) {
+  setOnCurrentTimestampChanged(callback: TimestampCallbackType) {
     this.onCurrentTimestampChanged = callback;
   }
 

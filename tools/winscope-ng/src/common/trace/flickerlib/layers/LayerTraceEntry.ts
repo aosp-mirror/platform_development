@@ -28,9 +28,10 @@ LayerTraceEntry.fromProto = function (
     hwcBlob: string,
     where = "",
     realToElapsedTimeOffsetNs: bigint|undefined = undefined,
-    useElapsedTime = false
+    useElapsedTime = false,
+    excludesCompositionState = false
 ): LayerTraceEntry {
-    const layers = protos.map(it => Layer.fromProto(it));
+    const layers = protos.map(it => Layer.fromProto(it, excludesCompositionState));
     const displays = (displayProtos || []).map(it => newDisplay(it));
     const builder = new LayerTraceEntryBuilder(
         `${elapsedTimestamp}`,
