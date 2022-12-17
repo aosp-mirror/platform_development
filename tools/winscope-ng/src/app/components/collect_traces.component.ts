@@ -425,7 +425,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
       });
   }
 
-  private requestedEnableConfig(): Array<string> | undefined {
+  private requestedEnableConfig(): Array<string> {
     const req: Array<string> = [];
     const tracingConfig = this.tracingConfig.getTracingConfig();
     Object.keys(tracingConfig)
@@ -442,9 +442,6 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
           });
         }
       });
-    if (req.length === 0) {
-      return undefined;
-    }
     return req;
   }
 

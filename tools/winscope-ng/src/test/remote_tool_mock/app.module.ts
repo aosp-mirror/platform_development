@@ -13,28 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const {merge} = require("webpack-merge");
-const configCommon = require("./webpack.config.common");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
 
-const configDev = {
-  mode: "development",
-  entry: {
-    polyfills: "./src/polyfills.ts",
-    styles: [
-      "./src/material-theme.scss",
-      "./src/styles.css"
-    ],
-    app: "./src/main.dev.ts"
-  },
-  devtool: "source-map",
-  plugins: [
-    new HtmlWebpackPlugin({
-      template: "src/index.html",
-      inject: "body",
-      inlineSource: ".(css|js)$",
-    })
-  ]
-};
+import {CommonModule} from "@angular/common";
+import {NgModule} from "@angular/core";
+import {BrowserModule} from "@angular/platform-browser";
+import {AppComponent} from "./app.component";
 
-module.exports = merge(configCommon, configDev);
+@NgModule({
+  declarations: [
+    AppComponent,
+  ],
+  imports: [
+    BrowserModule,
+    CommonModule,
+  ],
+  bootstrap: [AppComponent]
+})
+class AppModule {
+}
+
+export {AppModule};

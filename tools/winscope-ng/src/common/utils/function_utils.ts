@@ -20,4 +20,8 @@ export class FunctionUtils {
   static readonly DO_NOTHING = () => {
     // do nothing
   };
+
+  static readonly DO_NOTHING_ASYNC = (): Promise<void> => {
+    return Promise.resolve();
+  };
 }

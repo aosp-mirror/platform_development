@@ -15,6 +15,11 @@
  */
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {AppModule} from "./app/app.module";
+import {globalConfig} from "common/utils/global_config";
+
+globalConfig.set({
+  MODE: "DEV",
+});
 
 platformBrowserDynamic().bootstrapModule(AppModule)
   .catch(err => console.error(err));
