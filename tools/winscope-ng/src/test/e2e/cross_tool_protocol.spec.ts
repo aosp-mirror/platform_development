@@ -41,6 +41,7 @@ describe("Cross-Tool Protocol", () => {
 
     await sendBugreportToWinscope();
     await checkWinscopeRendersUploadView();
+    await closeWinscopeSnackBarIfNeeded();
 
     await clickWinscopeViewTracesButton();
     await checkWinscopeRenderedSurfaceFlingerView();
@@ -83,6 +84,11 @@ describe("Cross-Tool Protocol", () => {
   const clickWinscopeViewTracesButton = async () => {
     await browser.switchTo().window(await getWindowHandleWinscope());
     await E2eTestUtils.clickViewTracesButton();
+  };
+
+  const closeWinscopeSnackBarIfNeeded = async () => {
+    await browser.switchTo().window(await getWindowHandleWinscope());
+    await E2eTestUtils.closeSnackBarIfNeeded();
   };
 
   const waitWinscopeTabIsOpen = async () => {

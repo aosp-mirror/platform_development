@@ -28,6 +28,7 @@ describe("Upload traces", () => {
 
   it("can process bugreport", async () => {
     await E2eTestUtils.uploadFixture("bugreports/bugreport_stripped.zip");
+    await E2eTestUtils.closeSnackBarIfNeeded();
     await checkHasLoadedTraces();
     await checkEmitsUnsupportedFileFormatMessages();
     await checkEmitsOverriddenTracesMessages();

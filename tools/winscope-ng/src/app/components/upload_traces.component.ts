@@ -13,7 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ChangeDetectorRef, Component, EventEmitter, Inject, Input, Output} from "@angular/core";
+import {
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Inject,
+  Input,
+  NgZone,
+  Output
+} from "@angular/core";
 import {MatSnackBar} from "@angular/material/snack-bar";
 import {UploadTracesComponentDependencyInversion} from "./upload_traces_component_dependency_inversion";
 import {TraceData} from "app/trace_data";
@@ -170,7 +178,8 @@ export class UploadTracesComponent implements UploadTracesComponentDependencyInv
 
   constructor(
     @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
-    @Inject(MatSnackBar) private snackBar: MatSnackBar
+    @Inject(MatSnackBar) private snackBar: MatSnackBar,
+    @Inject(NgZone) private ngZone: NgZone
   ) {
   }
 
@@ -212,11 +221,7 @@ export class UploadTracesComponent implements UploadTracesComponentDependencyInv
     this.isLoadingFiles = false;
     this.changeDetectorRef.detectChanges();
 
-    this.snackBar.openFromComponent(ParserErrorSnackBarComponent, {
-      data: parserErrors,
-      duration: 10000,
-    });
-
+    ParserErrorSnackBarComponent.open(this.ngZone, this.snackBar, parserErrors);
   }
 
   public onViewTracesButtonClick() {
