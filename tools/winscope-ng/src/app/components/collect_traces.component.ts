@@ -13,7 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input, Inject, Output, EventEmitter, OnInit, OnDestroy, ViewEncapsulation, ChangeDetectorRef } from "@angular/core";
+import {
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Input,
+  Inject,
+  Output,
+  OnInit,
+  OnDestroy,
+  NgZone,
+  ViewEncapsulation
+} from "@angular/core";
 import { TraceData} from "app/trace_data";
 import { ProxyConnection } from "trace_collection/proxy_connection";
 import { Connection } from "trace_collection/connection";
@@ -21,7 +32,6 @@ import { ProxyState } from "trace_collection/proxy_client";
 import { traceConfigurations, configMap, SelectionConfiguration, EnableConfiguration } from "trace_collection/trace_collection_utils";
 import { PersistentStore } from "common/utils/persistent_store";
 import { MatSnackBar } from "@angular/material/snack-bar";
-import { ParserError } from "parsers/parser_factory";
 import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component";
 import { TracingConfig } from "trace_collection/tracing_config";
 
@@ -299,7 +309,8 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
 
   constructor(
     @Inject(MatSnackBar) private snackBar: MatSnackBar,
-    @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef
+    @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
+    @Inject(NgZone) private ngZone: NgZone
   ) {
     this.connect = new ProxyConnection(
       (newState) => this.changeDetectorRef.detectChanges(),
@@ -464,18 +475,9 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     this.traceData.clear();
 
     const parserErrors = await this.traceData.loadTraces(this.connect.adbData());
-    if (parserErrors.length > 0) {
-      this.openTempSnackBar(parserErrors);
-    }
+    ParserErrorSnackBarComponent.open(this.ngZone, this.snackBar, parserErrors);
     this.traceDataLoaded.emit();
     console.log("finished loading data!");
-  }
-
-  private openTempSnackBar(parserErrors: ParserError[]) {
-    this.snackBar.openFromComponent(ParserErrorSnackBarComponent, {
-      data: parserErrors,
-      duration: 7500,
-    });
   }
 
   private onLoadProgressUpdate(progress: number) {

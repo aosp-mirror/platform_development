@@ -24,6 +24,7 @@ describe("Viewer Transactions", () => {
 
   it("processes trace and renders view", async () => {
     await E2eTestUtils.uploadFixture("traces/elapsed_and_real_timestamp/Transactions.pb");
+    await E2eTestUtils.closeSnackBarIfNeeded();
     await E2eTestUtils.clickViewTracesButton();
 
     const isViewerRendered = await element(by.css("viewer-transactions")).isPresent();

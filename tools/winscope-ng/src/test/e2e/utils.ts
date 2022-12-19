@@ -28,8 +28,16 @@ class E2eTestUtils extends CommonTestUtils {
   }
 
   static async clickViewTracesButton() {
-    const loadData = element(by.css(".load-btn"));
-    await loadData.click();
+    const button = element(by.css(".load-btn"));
+    await button.click();
+  }
+
+  static async closeSnackBarIfNeeded() {
+    const closeButton = element(by.css(".snack-bar-action"));
+    const isPresent = await closeButton.isPresent();
+    if (isPresent) {
+      await closeButton.click();
+    }
   }
 }
 

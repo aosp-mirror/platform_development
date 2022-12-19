@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, Inject} from "@angular/core";
-import {MAT_SNACK_BAR_DATA, MatSnackBarRef} from "@angular/material/snack-bar";
+import {Component, Inject, NgZone} from "@angular/core";
+import {MAT_SNACK_BAR_DATA, MatSnackBar, MatSnackBarRef} from "@angular/material/snack-bar";
 import {TRACE_INFO} from "app/trace_info";
 import {ParserError, ParserErrorType} from "parsers/parser_factory";
 
@@ -45,6 +45,17 @@ import {ParserError, ParserErrorType} from "parsers/parser_factory";
 
 export class ParserErrorSnackBarComponent {
   messages: string[] = [];
+
+  static open(ngZone: NgZone, snackBar: MatSnackBar, parserErrors: ParserError[]) {
+    ngZone.run(() => {
+      // The snackbar needs to be opened within ngZone,
+      // otherwise it will first display on the left and then will jump to the center
+      snackBar.openFromComponent(ParserErrorSnackBarComponent, {
+        data: parserErrors,
+        duration: 10000,
+      });
+    });
+  }
 
   constructor(
     @Inject(MatSnackBarRef) public snackBarRef: MatSnackBarRef<ParserErrorSnackBarComponent>,
