@@ -36,6 +36,8 @@ const DisplayArea = require('flicker').com.android.server.wm.traces.common.
     windowmanager.windows.DisplayArea;
 const DisplayContent = require('flicker').com.android.server.wm.traces.common.
     windowmanager.windows.DisplayContent;
+const DisplayCutout = require('flicker').com.android.server.wm.traces.common.
+  windowmanager.windows.DisplayCutout;
 const KeyguardControllerState = require('flicker').com.android.server.wm.
     traces.common.windowmanager.windows.KeyguardControllerState;
 const RootWindowContainer = require('flicker').com.android.server.wm.traces.
@@ -85,6 +87,9 @@ const ActiveBuffer = require('flicker').com.android.server.wm.traces.common
     .ActiveBuffer;
 const Color3 = require('flicker').com.android.server.wm.traces.common.Color3;
 const Color = require('flicker').com.android.server.wm.traces.common.Color;
+const Insets = require('flicker').com.android.server.wm.traces.common.Insets;
+const PlatformConsts = require('flicker').com.android.server.wm.traces.common
+  .service.PlatformConsts;
 const Point = require('flicker').com.android.server.wm.traces.common.Point;
 const PointF = require('flicker').com.android.server.wm.traces.common.PointF;
 const Rect = require('flicker').com.android.server.wm.traces.common.Rect;
@@ -97,6 +102,7 @@ const TaggingEngine = require('flicker').com.android.server.wm.traces.common.ser
 const EMPTY_BUFFER = ActiveBuffer.Companion.EMPTY;
 const EMPTY_COLOR3 = Color3.Companion.EMPTY;
 const EMPTY_COLOR = Color.Companion.EMPTY;
+const EMPTY_INSETS = Insets.Companion.EMPTY;
 const EMPTY_RECT = Rect.Companion.EMPTY;
 const EMPTY_RECTF = RectF.Companion.EMPTY;
 const EMPTY_POINT = Point.Companion.EMPTY;
@@ -179,6 +185,22 @@ function toPointF(proto) {
   }
   return EMPTY_POINTF;
 }
+
+function toInsets(proto) {
+  if (proto == null) {
+    return EMPTY_INSETS;
+  }
+
+  const left = proto?.left ?? 0;
+  const top = proto?.top ?? 0;
+  const right = proto?.right ?? 0;
+  const bottom = proto?.bottom ?? 0;
+  if (left || top || right || bottom) {
+    return new Insets(left, top, right, bottom);
+  }
+  return EMPTY_INSETS;
+}
+
 
 function toRect(proto) {
   if (proto == null) {
@@ -270,6 +292,7 @@ export {
   DisplayArea,
   DisplayContent,
   KeyguardControllerState,
+  DisplayCutout,
   RootWindowContainer,
   Task,
   TaskFragment,
@@ -298,6 +321,8 @@ export {
   ActiveBuffer,
   Color,
   Color3,
+  Insets,
+  PlatformConsts,
   Point,
   Rect,
   RectF,
@@ -308,6 +333,7 @@ export {
   toActiveBuffer,
   toColor,
   toColor3,
+  toInsets,
   toPoint,
   toPointF,
   toRect,
