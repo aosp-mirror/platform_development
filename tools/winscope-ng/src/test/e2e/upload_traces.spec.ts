@@ -27,18 +27,13 @@ describe("Upload traces", () => {
   });
 
   it("can process bugreport", async () => {
-    await uploadBugreport();
+    await E2eTestUtils.uploadFixture("bugreports/bugreport_stripped.zip");
     await checkHasLoadedTraces();
     await checkEmitsUnsupportedFileFormatMessages();
     await checkEmitsOverriddenTracesMessages();
-    await clickLoadButton();
+    await E2eTestUtils.clickViewTracesButton();
     await checkRendersSurfaceFlingerView();
   });
-
-  const uploadBugreport = async () => {
-    const inputFile = element(by.css("input[type=\"file\"]"));
-    await inputFile.sendKeys(E2eTestUtils.getFixturePath("bugreports/bugreport_stripped.zip"));
-  };
 
   const checkHasLoadedTraces = async () => {
     const text = await element(by.css(".uploaded-files")).getText();
@@ -59,11 +54,6 @@ describe("Upload traces", () => {
   const checkEmitsOverriddenTracesMessages = async () => {
     const text = await element(by.css("upload-snack-bar")).getText();
     expect(text).toContain("overridden by another trace");
-  };
-
-  const clickLoadButton = async () => {
-    const button = element(by.css(".load-btn"));
-    await button.click();
   };
 
   const checkRendersSurfaceFlingerView = async () => {

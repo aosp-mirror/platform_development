@@ -23,11 +23,8 @@ describe("Viewer ProtoLog", () => {
   }),
 
   it("processes trace and renders view", async () => {
-    const inputFile = element(by.css("input[type=\"file\"]"));
-    await inputFile.sendKeys(E2eTestUtils.getFixturePath("traces/elapsed_and_real_timestamp/ProtoLog.pb"));
-
-    const loadData = element(by.css(".load-btn"));
-    await loadData.click();
+    await E2eTestUtils.uploadFixture("traces/elapsed_and_real_timestamp/ProtoLog.pb");
+    await E2eTestUtils.clickViewTracesButton();
 
     const isViewerRendered = await element(by.css("viewer-protolog")).isPresent();
     expect(isViewerRendered).toBeTruthy();

@@ -32,7 +32,6 @@ describe("ParserScreenRecording", () => {
 
   it ("provides elapsed timestamps", () => {
     const timestamps = parser.getTimestamps(TimestampType.ELAPSED)!;
-    console.log(timestamps[timestamps.length-1]);
 
     expect(timestamps.length)
       .toEqual(123);

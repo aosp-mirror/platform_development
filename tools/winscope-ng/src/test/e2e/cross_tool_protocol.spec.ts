@@ -82,8 +82,7 @@ describe("Cross-Tool Protocol", () => {
 
   const clickWinscopeViewTracesButton = async () => {
     await browser.switchTo().window(await getWindowHandleWinscope());
-    const button = element(by.css(".load-btn"));
-    await button.click();
+    await E2eTestUtils.clickViewTracesButton();
   };
 
   const waitWinscopeTabIsOpen = async () => {
