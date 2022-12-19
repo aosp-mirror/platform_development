@@ -18,6 +18,7 @@
         package="com.example.android.toyvpn">
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <uses-sdk android:minSdkVersion="14"/>
@@ -33,7 +34,9 @@
         </activity>
 
         <service android:name=".ToyVpnService"
-                android:permission="android.permission.BIND_VPN_SERVICE">
+            android:permission="android.permission.BIND_VPN_SERVICE"
+            android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="vpn" />
             <intent-filter>
                 <action android:name="android.net.VpnService"/>
             </intent-filter>
