@@ -28,12 +28,18 @@ describe("Upload traces", () => {
 
   it("can process bugreport", async () => {
     await E2eTestUtils.uploadFixture("bugreports/bugreport_stripped.zip");
-    await E2eTestUtils.closeSnackBarIfNeeded();
     await checkHasLoadedTraces();
+    expect(await areMessagesEmitted()).toBeTruthy();
     await checkEmitsUnsupportedFileFormatMessages();
     await checkEmitsOverriddenTracesMessages();
+    await E2eTestUtils.closeSnackBarIfNeeded();
     await E2eTestUtils.clickViewTracesButton();
     await checkRendersSurfaceFlingerView();
+  });
+
+  it("doesn't emit messages for valid trace file", async () => {
+    await E2eTestUtils.uploadFixture("traces/elapsed_and_real_timestamp/SurfaceFlinger.pb");
+    expect(await areMessagesEmitted()).toBeFalsy();
   });
 
   const checkHasLoadedTraces = async () => {
@@ -55,6 +61,10 @@ describe("Upload traces", () => {
   const checkEmitsOverriddenTracesMessages = async () => {
     const text = await element(by.css("upload-snack-bar")).getText();
     expect(text).toContain("overridden by another trace");
+  };
+
+  const areMessagesEmitted = async (): Promise<boolean> => {
+    return element(by.css("upload-snack-bar")).isPresent();
   };
 
   const checkRendersSurfaceFlingerView = async () => {

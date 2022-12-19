@@ -475,7 +475,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     this.traceData.clear();
 
     const parserErrors = await this.traceData.loadTraces(this.connect.adbData());
-    ParserErrorSnackBarComponent.open(this.ngZone, this.snackBar, parserErrors);
+    ParserErrorSnackBarComponent.showIfNeeded(this.ngZone, this.snackBar, parserErrors);
     this.traceDataLoaded.emit();
     console.log("finished loading data!");
   }

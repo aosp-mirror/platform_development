@@ -44,31 +44,30 @@ import {ParserError, ParserErrorType} from "parsers/parser_factory";
 })
 
 export class ParserErrorSnackBarComponent {
-  messages: string[] = [];
+  constructor(
+    @Inject(MatSnackBarRef) public snackBarRef: MatSnackBarRef<ParserErrorSnackBarComponent>,
+    @Inject(MAT_SNACK_BAR_DATA) public messages: string[]
+  ) {
+  }
 
-  static open(ngZone: NgZone, snackBar: MatSnackBar, parserErrors: ParserError[]) {
+  static showIfNeeded(ngZone: NgZone, snackBar: MatSnackBar, errors: ParserError[]) {
+    const messages = this.convertErrorsToMessages(errors);
+
+    if (messages.length === 0) {
+      return;
+    }
+
     ngZone.run(() => {
       // The snackbar needs to be opened within ngZone,
       // otherwise it will first display on the left and then will jump to the center
       snackBar.openFromComponent(ParserErrorSnackBarComponent, {
-        data: parserErrors,
+        data: messages,
         duration: 10000,
       });
     });
   }
 
-  constructor(
-    @Inject(MatSnackBarRef) public snackBarRef: MatSnackBarRef<ParserErrorSnackBarComponent>,
-    @Inject(MAT_SNACK_BAR_DATA) errors: ParserError[]
-  ) {
-    this.messages = this.convertErrorsToMessages(errors);
-
-    if (this.messages.length === 0) {
-      this.snackBarRef.dismiss();
-    }
-  }
-
-  private convertErrorsToMessages(errors: ParserError[]): string[] {
+  private static convertErrorsToMessages(errors: ParserError[]): string[] {
     const messages: string[] = [];
     const groups = this.groupErrorsByType(errors);
 
@@ -89,7 +88,7 @@ export class ParserErrorSnackBarComponent {
     return messages;
   }
 
-  private convertErrorToMessage(error: ParserError): string {
+  private static convertErrorToMessage(error: ParserError): string {
     let message = `${error.trace.name}: unknown error occurred`;
     if (error.type === ParserErrorType.OVERRIDE && error.traceType) {
       message = `${error.trace.name}:` +
@@ -100,7 +99,7 @@ export class ParserErrorSnackBarComponent {
     return message;
   }
 
-  private makeCroppedMessage(type: ParserErrorType, count: number): string {
+  private static makeCroppedMessage(type: ParserErrorType, count: number): string {
     switch(type) {
     case ParserErrorType.OVERRIDE:
       return `... (cropped ${count} overridden trace messages)`;
@@ -111,7 +110,7 @@ export class ParserErrorSnackBarComponent {
     }
   }
 
-  private groupErrorsByType(errors: ParserError[]): Map<ParserErrorType, ParserError[]> {
+  private static groupErrorsByType(errors: ParserError[]): Map<ParserErrorType, ParserError[]> {
     const groups = new Map<ParserErrorType, ParserError[]>();
 
     errors.forEach(error => {

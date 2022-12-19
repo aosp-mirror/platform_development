@@ -221,7 +221,7 @@ export class UploadTracesComponent implements UploadTracesComponentDependencyInv
     this.isLoadingFiles = false;
     this.changeDetectorRef.detectChanges();
 
-    ParserErrorSnackBarComponent.open(this.ngZone, this.snackBar, parserErrors);
+    ParserErrorSnackBarComponent.showIfNeeded(this.ngZone, this.snackBar, parserErrors);
   }
 
   public onViewTracesButtonClick() {
