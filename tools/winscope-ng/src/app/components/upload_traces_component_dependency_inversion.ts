@@ -14,15 +14,6 @@
  * limitations under the License.
  */
 
-import {AppComponentDependencyInversion} from "./app_component_dependency_inversion";
-import {Viewer} from "viewers/viewer";
-
-export class AppComponentStub implements AppComponentDependencyInversion {
-  onTraceDataLoaded(viewers: Viewer[]) {
-    // do nothing
-  }
-
-  onUploadNewClick() {
-    // do nothing
-  }
+export interface UploadTracesComponentDependencyInversion {
+  processFiles(files: File[]): Promise<void>;
 }

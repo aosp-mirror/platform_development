@@ -40,6 +40,9 @@ describe("Cross-Tool Protocol", () => {
     await waitWinscopeTabIsOpen();
 
     await sendBugreportToWinscope();
+    await checkWinscopeRendersUploadView();
+
+    await clickWinscopeViewTracesButton();
     await checkWinscopeRenderedSurfaceFlingerView();
     await checkWinscopeRenderedAllViewTabs();
     await checkWinscopeAppliedTimestampInBugreportMessage();
@@ -69,6 +72,17 @@ describe("Cross-Tool Protocol", () => {
     await browser.switchTo().window(await getWindowHandleRemoteToolMock());
     const inputFileElement = element(by.css(".button-upload-bugreport"));
     await inputFileElement.sendKeys(E2eTestUtils.getFixturePath("bugreports/bugreport_stripped.zip"));
+  };
+
+  const checkWinscopeRendersUploadView = async () => {
+    await browser.switchTo().window(await getWindowHandleWinscope());
+    const isPresent = await element(by.css(".uploaded-files")).isPresent();
+    expect(isPresent).toBeTruthy();
+  };
+
+  const clickWinscopeViewTracesButton = async () => {
+    await browser.switchTo().window(await getWindowHandleWinscope());
+    await E2eTestUtils.clickViewTracesButton();
   };
 
   const waitWinscopeTabIsOpen = async () => {

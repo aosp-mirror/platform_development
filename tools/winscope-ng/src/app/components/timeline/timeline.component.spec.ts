@@ -32,12 +32,6 @@ import {By} from "@angular/platform-browser";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {MatInputModule} from "@angular/material/input";
 import { SingleTimelineComponent } from "./single_timeline.component";
-import {Mediator} from "app/mediator";
-import {TraceData} from "app/trace_data";
-import {AbtChromeExtensionProtocolStub} from "abt_chrome_extension/abt_chrome_extension_protocol_stub";
-import {CrossToolProtocolStub} from "cross_tool/cross_tool_protocol_stub";
-import {AppComponentStub} from "app/components/app_component_stub";
-import {MockStorage} from "test/unit/mock_storage";
 
 describe("TimelineComponent", () => {
   let fixture: ComponentFixture<TimelineComponent>;
@@ -72,19 +66,7 @@ describe("TimelineComponent", () => {
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
 
-    const traceData = new TraceData();
     const timelineData = new TimelineData();
-    const abtChromeExtensionProtocol = new AbtChromeExtensionProtocolStub();
-    const crossToolProtocol = new CrossToolProtocolStub();
-    const appComponent = new AppComponentStub();
-    component.mediator = new Mediator(
-      traceData,
-      timelineData,
-      abtChromeExtensionProtocol,
-      crossToolProtocol,
-      appComponent,
-      new MockStorage()
-    );
     component.timelineData = timelineData;
   });
 

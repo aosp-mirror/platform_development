@@ -23,11 +23,8 @@ describe("Viewer InputMethodManagerService", () => {
   }),
 
   it("processes trace and renders view", async () => {
-    const inputFile = element(by.css("input[type=\"file\"]"));
-    await inputFile.sendKeys(E2eTestUtils.getFixturePath("traces/elapsed_and_real_timestamp/InputMethodManagerService.pb"));
-
-    const loadData = element(by.css(".load-btn"));
-    await loadData.click();
+    await E2eTestUtils.uploadFixture("traces/elapsed_and_real_timestamp/InputMethodManagerService.pb");
+    await E2eTestUtils.clickViewTracesButton();
 
     const viewerPresent = await element(by.css("viewer-input-method")).isPresent();
     expect(viewerPresent).toBeTruthy();

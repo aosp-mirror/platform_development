@@ -23,12 +23,8 @@ describe("Viewer ScreenRecording", () => {
   }),
 
   it("processes trace and renders view", async () => {
-    const inputFile = element(by.css("input[type=\"file\"]"));
-    await inputFile.sendKeys(E2eTestUtils.getFixturePath(
-      "traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4"));
-
-    const loadData = element(by.css(".load-btn"));
-    await loadData.click();
+    await E2eTestUtils.uploadFixture("traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4");
+    await E2eTestUtils.clickViewTracesButton();
 
     const viewer = element(by.css("viewer-screen-recording"));
     expect(await viewer.isPresent())

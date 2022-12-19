@@ -23,11 +23,8 @@ describe("Viewer SurfaceFlinger", () => {
   }),
 
   it("processes trace and renders view", async () => {
-    const inputFile = element(by.css("input[type=\"file\"]"));
-    await inputFile.sendKeys(E2eTestUtils.getFixturePath("traces/elapsed_and_real_timestamp/SurfaceFlinger.pb"));
-
-    const loadData = element(by.css(".load-btn"));
-    await loadData.click();
+    await E2eTestUtils.uploadFixture("traces/elapsed_and_real_timestamp/SurfaceFlinger.pb");
+    await E2eTestUtils.clickViewTracesButton();
 
     const viewerPresent = await element(by.css("viewer-surface-flinger")).isPresent();
     expect(viewerPresent).toBeTruthy();

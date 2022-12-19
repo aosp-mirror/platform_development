@@ -37,6 +37,9 @@ describe("Mediator", () => {
   let timelineComponent: TimelineComponentStub;
   let mediator: Mediator;
 
+  const TIMESTAMP_10 = new RealTimestamp(10n);
+  const TIMESTAMP_11 = new RealTimestamp(11n);
+
   beforeEach(async () => {
     timelineComponent = new TimelineComponentStub();
     traceData = new TraceData();
@@ -75,29 +78,13 @@ describe("Mediator", () => {
     expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(1);
   });
 
+  //TODO: test "bugreport data from cross-tool protocol" when FileUtils is fully compatible with
+  //      Node.js (b/262269229). FileUtils#unzipFile() currently can't execute on Node.js.
 
-  //TODO: enable/adapt this test once FileUtils is fully compatible with Node.js (b/262269229).
-  //      FileUtils#unzipFile() currently can't execute on Node.js.
-  //it("processes bugreport message from remote tool", async () => {
-  //  spyOn(traceData, "loadTraces").and.callThrough();
-  //  spyOn(timelineData, "initialize").and.callThrough();
-  //  spyOn(appComponent, "onTraceDataLoaded");
-  //  spyOn(viewerStub, "notifyCurrentTraceEntries");
-
-  //  const bugreport = await UnitTestUtils.getFixtureFile("bugreports/bugreport_stripped.zip");
-  //  const timestamp = new RealTimestamp(10n);
-  //  await crossToolProtocol.onBugreportReceived(bugreport, timestamp);
-
-  //  expect(traceData.loadTraces).toHaveBeenCalledOnceWith([bugreport]);
-  //  expect(timelineData.initialize).toHaveBeenCalledTimes(1);
-  //  expect(appComponent.onTraceDataLoaded).toHaveBeenCalledOnceWith([viewerStub]);
-  //  expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(1);
-  //});
+  //TODO: test "data from ABT chrome extension" when FileUtils is fully compatible with Node.js
+  //      (b/262269229).
 
   it("propagates current timestamp changed through timeline", async () => {
-    const timestamp10 = new RealTimestamp(10n);
-    const timestamp11 = new RealTimestamp(11n);
-
     await loadTraces();
     mediator.onWinscopeTraceDataLoaded();
 
@@ -109,55 +96,79 @@ describe("Mediator", () => {
     expect(crossToolProtocol.sendTimestamp).toHaveBeenCalledTimes(0);
 
     // notify timestamp
-    timelineData.setCurrentTimestamp(timestamp10);
+    timelineData.setCurrentTimestamp(TIMESTAMP_10);
     expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(1);
     expect(timelineComponent.onCurrentTimestampChanged).toHaveBeenCalledTimes(1);
     expect(crossToolProtocol.sendTimestamp).toHaveBeenCalledTimes(1);
 
     // notify same timestamp again (ignored, no timestamp change)
-    timelineData.setCurrentTimestamp(timestamp10);
+    timelineData.setCurrentTimestamp(TIMESTAMP_10);
     expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(1);
     expect(timelineComponent.onCurrentTimestampChanged).toHaveBeenCalledTimes(1);
     expect(crossToolProtocol.sendTimestamp).toHaveBeenCalledTimes(1);
 
     // notify another timestamp
-    timelineData.setCurrentTimestamp(timestamp11);
+    timelineData.setCurrentTimestamp(TIMESTAMP_11);
     expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(2);
     expect(timelineComponent.onCurrentTimestampChanged).toHaveBeenCalledTimes(2);
     expect(crossToolProtocol.sendTimestamp).toHaveBeenCalledTimes(2);
   });
 
-  it("propagates timestamp received from remote tool", async () => {
-    const timestamp10 = new RealTimestamp(10n);
-    const timestamp11 = new RealTimestamp(11n);
+  describe("timestamp received from remote tool", () => {
+    it("propagates timestamp changes", async () => {
+      await loadTraces();
+      mediator.onWinscopeTraceDataLoaded();
 
-    await loadTraces();
-    mediator.onWinscopeTraceDataLoaded();
+      spyOn(viewerStub, "notifyCurrentTraceEntries");
+      spyOn(timelineComponent, "onCurrentTimestampChanged");
+      expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(0);
+      expect(timelineComponent.onCurrentTimestampChanged).toHaveBeenCalledTimes(0);
 
-    spyOn(viewerStub, "notifyCurrentTraceEntries");
-    spyOn(timelineComponent, "onCurrentTimestampChanged");
-    spyOn(crossToolProtocol, "sendTimestamp");
-    expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(0);
-    expect(timelineComponent.onCurrentTimestampChanged).toHaveBeenCalledTimes(0);
-    expect(crossToolProtocol.sendTimestamp).toHaveBeenCalledTimes(0);
+      // receive timestamp
+      await crossToolProtocol.onTimestampReceived(TIMESTAMP_10);
+      expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(1);
+      expect(timelineComponent.onCurrentTimestampChanged).toHaveBeenCalledTimes(1);
 
-    // receive timestamp
-    await crossToolProtocol.onTimestampReceived(timestamp10);
-    expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(1);
-    expect(timelineComponent.onCurrentTimestampChanged).toHaveBeenCalledTimes(1);
-    expect(crossToolProtocol.sendTimestamp).toHaveBeenCalledTimes(0);
+      // receive same timestamp again (ignored, no timestamp change)
+      await crossToolProtocol.onTimestampReceived(TIMESTAMP_10);
+      expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(1);
+      expect(timelineComponent.onCurrentTimestampChanged).toHaveBeenCalledTimes(1);
 
-    // receive same timestamp again (ignored, no timestamp change)
-    await crossToolProtocol.onTimestampReceived(timestamp10);
-    expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(1);
-    expect(timelineComponent.onCurrentTimestampChanged).toHaveBeenCalledTimes(1);
-    expect(crossToolProtocol.sendTimestamp).toHaveBeenCalledTimes(0);
+      // receive another
+      await crossToolProtocol.onTimestampReceived(TIMESTAMP_11);
+      expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(2);
+      expect(timelineComponent.onCurrentTimestampChanged).toHaveBeenCalledTimes(2);
+    });
 
-    // receive another
-    await crossToolProtocol.onTimestampReceived(timestamp11);
-    expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(2);
-    expect(timelineComponent.onCurrentTimestampChanged).toHaveBeenCalledTimes(2);
-    expect(crossToolProtocol.sendTimestamp).toHaveBeenCalledTimes(0);
+    it("doesn't propagate timestamp back to remote tool", async () => {
+      await loadTraces();
+      mediator.onWinscopeTraceDataLoaded();
+
+      spyOn(viewerStub, "notifyCurrentTraceEntries");
+      spyOn(crossToolProtocol, "sendTimestamp");
+
+      // receive timestamp
+      await crossToolProtocol.onTimestampReceived(TIMESTAMP_10);
+      expect(viewerStub.notifyCurrentTraceEntries).toHaveBeenCalledTimes(1);
+      expect(crossToolProtocol.sendTimestamp).toHaveBeenCalledTimes(0);
+    });
+
+    it("defers propagation till traces are loaded and visualized", async () => {
+      spyOn(timelineComponent, "onCurrentTimestampChanged");
+
+      // keep timestamp for later
+      await crossToolProtocol.onTimestampReceived(TIMESTAMP_10);
+      expect(timelineComponent.onCurrentTimestampChanged).toHaveBeenCalledTimes(0);
+
+      // keep timestamp for later (replace previous one)
+      await crossToolProtocol.onTimestampReceived(TIMESTAMP_11);
+      expect(timelineComponent.onCurrentTimestampChanged).toHaveBeenCalledTimes(0);
+
+      // apply timestamp
+      await loadTraces();
+      mediator.onWinscopeTraceDataLoaded();
+      expect(timelineComponent.onCurrentTimestampChanged).toHaveBeenCalledWith(TIMESTAMP_11);
+    });
   });
 
   const loadTraces = async () => {

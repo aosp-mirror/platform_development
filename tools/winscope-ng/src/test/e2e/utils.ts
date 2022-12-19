@@ -15,10 +15,21 @@
  */
 import * as path from "path";
 import {CommonTestUtils} from "../common/utils";
+import {by, element} from "protractor";
 
 class E2eTestUtils extends CommonTestUtils {
   static getProductionIndexHtmlPath(): string {
     return path.join(CommonTestUtils.getProjectRootPath(), "dist/prod/index.html");
+  }
+
+  static async uploadFixture(path: string) {
+    const inputFile = element(by.css("input[type=\"file\"]"));
+    await inputFile.sendKeys(E2eTestUtils.getFixturePath(path));
+  }
+
+  static async clickViewTracesButton() {
+    const loadData = element(by.css(".load-btn"));
+    await loadData.click();
   }
 }
 
