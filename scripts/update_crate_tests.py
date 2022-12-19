@@ -144,7 +144,7 @@ class Bazel(object):
         """
         if platform.system() != 'Linux':
             raise UpdaterException('This script has only been tested on Linux.')
-        self.path = os.path.join(env.ANDROID_BUILD_TOP, "tools", "bazel")
+        self.path = os.path.join(env.ANDROID_BUILD_TOP, "build", "bazel", "bin", "bazel")
         soong_ui = os.path.join(env.ANDROID_BUILD_TOP, "build", "soong", "soong_ui.bash")
 
         # soong_ui requires to be at the root of the repository.

@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 
 import argparse
-import collections
 import os
-import shutil
 import time
 
 from utils import (
-    AOSP_DIR, SOURCE_ABI_DUMP_EXT, SOURCE_ABI_DUMP_EXT_END, SO_EXT, Target,
+    AOSP_DIR, SOURCE_ABI_DUMP_EXT_END, SO_EXT, Target,
     copy_reference_dump, find_lib_lsdumps, get_build_vars_for_product,
     make_libraries, make_tree, read_lsdump_paths)
 
@@ -55,20 +53,6 @@ def make_libs_for_product(libs, product, variant, vndk_version, targets,
                        exclude_tags)
     else:
         make_tree(product, variant)
-
-
-def remove_reference_dumps(ref_dump_dir_stems, libs):
-    for ref_dump_dir_stem in ref_dump_dir_stems:
-        if libs:
-            for lib in libs:
-                file_path = os.path.join(ref_dump_dir_stem, 'source-based',
-                                         lib + SOURCE_ABI_DUMP_EXT)
-                if os.path.isfile(file_path):
-                    print('removing', file_path)
-                    os.remove(file_path)
-        elif os.path.isdir(ref_dump_dir_stem):
-            print('removing', ref_dump_dir_stem)
-            shutil.rmtree(ref_dump_dir_stem)
 
 
 def tag_to_dir_name(tag):
@@ -147,30 +131,18 @@ def create_source_abi_reference_dumps_for_all_products(args):
 
         if args.ref_dump_dir:
             get_ref_dump_dir_stem = GetRefDumpDirStem(args.ref_dump_dir)
-            ref_dump_dir_stems = [
-                get_ref_dump_dir_stem(None, target.get_arch_str())
-                for target in targets]
             exclude_tags = ()
         else:
             get_ref_dump_dir_stem = GetVersionedRefDumpDirStem(
                 chosen_vndk_version,
                 chosen_platform_version,
                 binder_bitness)
-            ref_dump_dir_stems = [
-                get_ref_dump_dir_stem(subdir, target.get_arch_str())
-                for target in targets
-                for subdir in PREBUILTS_ABI_DUMPS_SUBDIRS]
             exclude_tags = NON_AOSP_TAGS
-
-        # Remove reference ABI dumps specified in `args.libs` (or remove all of
-        # them if none of them are specified) so that we may build these
-        # libraries successfully.
-        remove_reference_dumps(ref_dump_dir_stems, args.libs)
 
         try:
             if not args.no_make_lib:
-                # Build all the specified libs, or build `findlsdumps` if no
-                # libs are specified.
+                # Build .lsdump for all the specified libs, or build
+                # `findlsdumps` if no libs are specified.
                 make_libs_for_product(args.libs, product, args.build_variant,
                                       platform_vndk_version, targets,
                                       exclude_tags)
@@ -198,7 +170,7 @@ def _parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--version', help=argparse.SUPPRESS)
     parser.add_argument('--no-make-lib', action='store_true',
-                        help='no m -j lib.vendor while creating reference')
+                        help='skip building dumps while creating references')
     parser.add_argument('-libs', action='append',
                         help='libs to create references for')
     parser.add_argument('-products', action='append',

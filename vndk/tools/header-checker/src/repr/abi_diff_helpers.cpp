@@ -182,7 +182,7 @@ DiffStatus AbiDiffHelper::CompareEnumTypes(
     std::deque<std::string> *type_queue,
     DiffMessageIR::DiffKind diff_kind) {
   if (old_type->GetLinkerSetKey() != new_type->GetLinkerSetKey()) {
-    return DiffStatus::direct_diff;
+    return DiffStatus::kDirectDiff;
   }
   auto enum_type_diff_ir = std::make_unique<EnumTypeDiffIR>();
   enum_type_diff_ir->SetName(old_type->GetName());
@@ -205,7 +205,7 @@ DiffStatus AbiDiffHelper::CompareEnumTypes(
     llvm::errs() << "AddDiffMessage on EnumTypeDiffIR failed\n";
     ::exit(1);
   }
-  return DiffStatus::no_diff;
+  return DiffStatus::kNoDiff;
 }
 
 static std::string RemoveThunkInfoFromMangledName(const std::string &name) {
@@ -311,11 +311,10 @@ AbiDiffHelper::CompareCommonRecordFields(
       // TODO: Should this be an inquality check instead ? Some compilers can
       // make signatures dependant on absolute values of access specifiers.
       IsAccessDowngraded(old_field->GetAccess(), new_field->GetAccess()) ||
-      (field_diff_status == DiffStatus::direct_diff)) {
+      field_diff_status.IsDirectDiff()) {
     return std::make_pair(
-        DiffStatus::direct_diff,
-        std::make_unique<RecordFieldDiffIR>(old_field, new_field)
-        );
+        DiffStatus::kDirectDiff,
+        std::make_unique<RecordFieldDiffIR>(old_field, new_field));
   }
   return std::make_pair(field_diff_status, nullptr);
 }
@@ -353,7 +352,6 @@ AbiDiffHelper::CompareRecordFields(
   // If a field is removed from the map field_name -> offset see if another
   // field is present at the same offset and compare the size and type etc,
   // remove it from the removed fields if they're compatible.
-  DiffStatus final_diff_status = DiffStatus::no_diff;
   std::vector<const RecordFieldIR *> removed_fields =
       utils::FindRemovedElements(old_fields_map, new_fields_map);
 
@@ -399,10 +397,8 @@ AbiDiffHelper::CompareRecordFields(
   for (auto &&common_fields : cf) {
     auto diffed_field_ptr = CompareCommonRecordFields(
         common_fields.first, common_fields.second, type_queue, diff_kind);
-    if (!common_field_diff_exists &&
-        (diffed_field_ptr.first &
-        (DiffStatus::direct_diff | DiffStatus::indirect_diff))) {
-        common_field_diff_exists = true;
+    if (diffed_field_ptr.first.HasDiff()) {
+      common_field_diff_exists = true;
     }
     if (diffed_field_ptr.second != nullptr) {
       diffed_removed_added_fields.diffed_fields_.emplace_back(
@@ -411,11 +407,12 @@ AbiDiffHelper::CompareRecordFields(
   }
   if (diffed_removed_added_fields.diffed_fields_.size() != 0 ||
       diffed_removed_added_fields.removed_fields_.size() != 0) {
-    final_diff_status = DiffStatus::direct_diff;
+    diffed_removed_added_fields.diff_status_ = DiffStatus::kDirectDiff;
   } else if (common_field_diff_exists) {
-    final_diff_status = DiffStatus::indirect_diff;
+    diffed_removed_added_fields.diff_status_ = DiffStatus::kIndirectDiff;
+  } else {
+    diffed_removed_added_fields.diff_status_ = DiffStatus::kNoDiff;
   }
-  diffed_removed_added_fields.diff_status_ = final_diff_status;
   return diffed_removed_added_fields;
 }
 
@@ -431,8 +428,8 @@ bool AbiDiffHelper::CompareBaseSpecifiers(
   while (i < old_base_specifiers.size()) {
     if (CompareAndDumpTypeDiff(old_base_specifiers.at(i).GetReferencedType(),
                                new_base_specifiers.at(i).GetReferencedType(),
-                               type_queue, diff_kind) ==
-        DiffStatus::direct_diff ||
+                               type_queue, diff_kind)
+            .IsDirectDiff() ||
         (old_base_specifiers.at(i).GetAccess() !=
          new_base_specifiers.at(i).GetAccess())) {
       return false;
@@ -450,9 +447,9 @@ DiffStatus AbiDiffHelper::CompareTemplateInfo(
   uint32_t old_template_size = old_template_elements.size();
   uint32_t i = 0;
   if (old_template_size != new_template_elements.size()) {
-    return DiffStatus::direct_diff;
+    return DiffStatus::kDirectDiff;
   }
-  DiffStatus final_diff_status = DiffStatus::no_diff;
+  DiffStatus final_diff_status = DiffStatus::kNoDiff;
   while (i < old_template_size) {
     const TemplateElementIR &old_template_element =
         old_template_elements[i];
@@ -462,9 +459,8 @@ DiffStatus AbiDiffHelper::CompareTemplateInfo(
         CompareAndDumpTypeDiff(old_template_element.GetReferencedType(),
                                new_template_element.GetReferencedType(),
                                type_queue, diff_kind);
-    if (template_element_diff &
-        (DiffStatus::direct_diff | DiffStatus::indirect_diff)) {
-      final_diff_status = template_element_diff;
+    if (template_element_diff.HasDiff()) {
+      final_diff_status.CombineWith(template_element_diff);
     }
     i++;
   }
@@ -533,17 +529,7 @@ DiffStatus AbiDiffHelper::CompareFunctionTypes(
       old_type->GetReturnType(), new_type->GetReturnType(), type_queue,
       diff_kind);
 
-  if (param_diffs == DiffStatus::direct_diff ||
-      return_type_diff == DiffStatus::direct_diff) {
-    return DiffStatus::direct_diff;
-  }
-
-  if (param_diffs == DiffStatus::indirect_diff ||
-      return_type_diff == DiffStatus::indirect_diff) {
-    return DiffStatus::indirect_diff;
-  }
-
-  return DiffStatus::no_diff;
+  return param_diffs.CombineWith(return_type_diff);
 }
 
 DiffStatus AbiDiffHelper::CompareRecordTypes(
@@ -557,20 +543,20 @@ DiffStatus AbiDiffHelper::CompareRecordTypes(
       old_type->GetLinkerSetKey() != new_type->GetLinkerSetKey()) {
     // Do not dump anything since the record types themselves are fundamentally
     // different.
-    return DiffStatus::direct_diff;
+    return DiffStatus::kDirectDiff;
   }
-  DiffStatus final_diff_status = DiffStatus::no_diff;
+  DiffStatus final_diff_status = DiffStatus::kNoDiff;
   record_type_diff_ir->SetName(old_type->GetName());
   record_type_diff_ir->SetLinkerSetKey(old_type->GetLinkerSetKey());
   if (IsAccessDowngraded(old_type->GetAccess(), new_type->GetAccess())) {
-    final_diff_status = DiffStatus::indirect_diff;
+    final_diff_status.CombineWith(DiffStatus::kIndirectDiff);
     record_type_diff_ir->SetAccessDiff(
         std::make_unique<AccessSpecifierDiffIR>(
             old_type->GetAccess(), new_type->GetAccess()));
   }
 
   if (!CompareSizeAndAlignment(old_type, new_type)) {
-    final_diff_status = DiffStatus::indirect_diff;
+    final_diff_status.CombineWith(DiffStatus::kIndirectDiff);
     record_type_diff_ir->SetTypeDiff(
         std::make_unique<TypeDiffIR>(
             std::make_pair(old_type->GetSize(), new_type->GetSize()),
@@ -578,7 +564,7 @@ DiffStatus AbiDiffHelper::CompareRecordTypes(
                            new_type->GetAlignment())));
   }
   if (!CompareVTables(old_type, new_type)) {
-    final_diff_status = DiffStatus::indirect_diff;
+    final_diff_status.CombineWith(DiffStatus::kIndirectDiff);
     record_type_diff_ir->SetVTableLayoutDiff(
         std::make_unique<VTableLayoutDiffIR>(
             old_type->GetVTableLayout(), new_type->GetVTableLayout()));
@@ -588,7 +574,7 @@ DiffStatus AbiDiffHelper::CompareRecordTypes(
   auto field_status_and_diffs = CompareRecordFields(
       old_fields_dup, new_fields_dup, type_queue, diff_kind);
   // TODO: Combine this with base class diffs as well.
-  final_diff_status = final_diff_status | field_status_and_diffs.diff_status_;
+  final_diff_status.CombineWith(field_status_and_diffs.diff_status_);
 
   std::vector<CXXBaseSpecifierIR> old_bases = old_type->GetBases();
   std::vector<CXXBaseSpecifierIR> new_bases = new_type->GetBases();
@@ -634,15 +620,12 @@ DiffStatus AbiDiffHelper::CompareRecordTypes(
     }
   }
 
-  final_diff_status = final_diff_status |
-      CompareTemplateInfo(old_type->GetTemplateElements(),
-                          new_type->GetTemplateElements(),
-                          type_queue, diff_kind);
+  final_diff_status.CombineWith(CompareTemplateInfo(
+      old_type->GetTemplateElements(), new_type->GetTemplateElements(),
+      type_queue, diff_kind));
 
-  // Records cannot be 'extended' compatibly, without a certain amount of risk.
-  return ((final_diff_status &
-           (DiffStatus::direct_diff | DiffStatus::indirect_diff)) ?
-          DiffStatus::indirect_diff : DiffStatus::no_diff);
+  return (final_diff_status.HasDiff() ? DiffStatus::kIndirectDiff
+                                      : DiffStatus::kNoDiff);
 }
 
 DiffStatus AbiDiffHelper::CompareLvalueReferenceTypes(
@@ -675,7 +658,7 @@ DiffStatus AbiDiffHelper::CompareQualifiedTypes(
   if (old_type->IsConst() != new_type->IsConst() ||
       old_type->IsVolatile() != new_type->IsVolatile() ||
       old_type->IsRestricted() != new_type->IsRestricted()) {
-    return DiffStatus::direct_diff;
+    return DiffStatus::kDirectDiff;
   }
   return CompareAndDumpTypeDiff(old_type->GetReferencedType(),
                                 new_type->GetReferencedType(),
@@ -705,9 +688,9 @@ DiffStatus AbiDiffHelper::CompareBuiltinTypes(
   if (!CompareSizeAndAlignment(old_type, new_type) ||
       old_type->IsUnsigned() != new_type->IsUnsigned() ||
       old_type->IsIntegralType() != new_type->IsIntegralType()) {
-    return DiffStatus::direct_diff;
+    return DiffStatus::kDirectDiff;
   }
-  return DiffStatus::no_diff;
+  return DiffStatus::kNoDiff;
 }
 
 DiffStatus AbiDiffHelper::CompareFunctionParameters(
@@ -717,7 +700,7 @@ DiffStatus AbiDiffHelper::CompareFunctionParameters(
     DiffMessageIR::DiffKind diff_kind) {
   size_t old_parameters_size = old_parameters.size();
   if (old_parameters_size != new_parameters.size()) {
-    return DiffStatus::direct_diff;
+    return DiffStatus::kDirectDiff;
   }
   uint64_t i = 0;
   while (i < old_parameters_size) {
@@ -725,21 +708,21 @@ DiffStatus AbiDiffHelper::CompareFunctionParameters(
     const ParamIR &new_parameter = new_parameters.at(i);
     if (CompareParameterOrReturnType(old_parameter.GetReferencedType(),
                                      new_parameter.GetReferencedType(),
-                                     type_queue,
-                                     diff_kind) == DiffStatus::direct_diff ||
+                                     type_queue, diff_kind)
+            .IsDirectDiff() ||
         (old_parameter.GetIsDefault() != new_parameter.GetIsDefault())) {
-      return DiffStatus::direct_diff;
+      return DiffStatus::kDirectDiff;
     }
     i++;
   }
-  return DiffStatus::no_diff;
+  return DiffStatus::kNoDiff;
 }
 
 DiffStatus AbiDiffHelper::CompareParameterOrReturnType(
     const std::string &old_type_id, const std::string &new_type_id,
     std::deque<std::string> *type_queue, DiffMessageIR::DiffKind diff_kind) {
   if (!AreTypeSizeAndAlignmentEqual(old_type_id, new_type_id)) {
-    return DiffStatus::direct_diff;
+    return DiffStatus::kDirectDiff;
   }
   return CompareAndDumpTypeDiff(old_type_id, new_type_id, type_queue,
                                 diff_kind);
@@ -751,7 +734,7 @@ DiffStatus AbiDiffHelper::CompareAndDumpTypeDiff(
     DiffMessageIR::DiffKind diff_kind) {
   if (ignored_linker_set_keys_.find(new_type->GetLinkerSetKey()) !=
       ignored_linker_set_keys_.end()) {
-    return DiffStatus::no_diff;
+    return DiffStatus::kNoDiff;
   }
 
   if (kind == LinkableMessageKind::BuiltinTypeKind) {
@@ -808,7 +791,7 @@ DiffStatus AbiDiffHelper::CompareAndDumpTypeDiff(
         static_cast<const FunctionTypeIR *>(new_type),
         type_queue, diff_kind);
   }
-  return DiffStatus::no_diff;
+  return DiffStatus::kNoDiff;
 }
 
 static DiffStatus CompareDistinctKindMessages(
@@ -816,7 +799,7 @@ static DiffStatus CompareDistinctKindMessages(
   // For these types to be considered ABI compatible, the very least requirement
   // is that their sizes and alignments should be equal.
   // TODO: Fill in
-  return DiffStatus::direct_diff;
+  return DiffStatus::kDirectDiff;
 }
 
 DiffStatus AbiDiffHelper::CompareAndDumpTypeDiff(
@@ -826,7 +809,7 @@ DiffStatus AbiDiffHelper::CompareAndDumpTypeDiff(
   // Check the map for type ids which have already been compared
   // These types have already been diffed, return without further comparison.
   if (!type_cache_->insert(old_type_id + new_type_id).second) {
-    return DiffStatus::no_diff;
+    return DiffStatus::kNoDiff;
   }
 
   TypeQueueCheckAndPushBack(
@@ -841,13 +824,13 @@ DiffStatus AbiDiffHelper::CompareAndDumpTypeDiff(
     TypeQueueCheckAndPop(type_queue);
     // One of the types were hidden, we cannot compare further.
     return AreOpaqueTypesEqual(old_type_id, new_type_id)
-               ? DiffStatus::no_diff
-               : DiffStatus::direct_diff;
+               ? DiffStatus::kNoDiff
+               : DiffStatus::kDirectDiff;
   }
 
   LinkableMessageKind old_kind = old_it->second->GetKind();
   LinkableMessageKind new_kind = new_it->second->GetKind();
-  DiffStatus diff_status = DiffStatus::no_diff;
+  DiffStatus diff_status = DiffStatus::kNoDiff;
   if (old_kind != new_kind) {
     diff_status = CompareDistinctKindMessages(old_it->second, new_it->second);
   } else {
