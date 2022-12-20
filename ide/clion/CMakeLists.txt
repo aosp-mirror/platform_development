@@ -21,8 +21,8 @@ function(try_add_subdir path)
     endif()
 
     if (${has_arm64} AND ${has_x64})
-        if ("${CMAKE_CURRENT_SOURCE_DIR}/${path_arm64}" IS_NEWER_THAN
-                "${CMAKE_CURRENT_SOURCE_DIR}/${path_x64}")
+        if ("${CMAKE_CURRENT_SOURCE_DIR}/${path_arm64}/CMakeLists.txt" IS_NEWER_THAN
+                "${CMAKE_CURRENT_SOURCE_DIR}/${path_x64}/CMakeLists.txt")
             add_subdirectory(${path_arm64})
         else()
             add_subdirectory(${path_x64})
