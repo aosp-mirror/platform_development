@@ -15,5 +15,6 @@
  */
 
 export interface UploadTracesComponentDependencyInversion {
+  onFilesDownloadStart(): void;
   processFiles(files: File[]): Promise<void>;
 }

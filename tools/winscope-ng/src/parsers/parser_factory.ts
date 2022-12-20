@@ -29,7 +29,7 @@ import {ParserTransactions} from "./parser_transactions";
 import {ParserWindowManager} from "./parser_window_manager";
 import {ParserWindowManagerDump} from "./parser_window_manager_dump";
 
-class ParserFactory {
+export class ParserFactory {
   static readonly PARSERS = [
     ParserAccessibility,
     ParserInputMethodClients,
@@ -52,6 +52,10 @@ class ParserFactory {
     Promise<[Parser[], ParserError[]]> {
     const errors: ParserError[] = [];
 
+    if (traces.length === 0) {
+      errors.push(new ParserError(ParserErrorType.NO_INPUT_FILES));
+    }
+
     for (const [index, trace] of traces.entries()) {
       let hasFoundParser = false;
 
@@ -72,7 +76,7 @@ class ParserFactory {
 
       if (!hasFoundParser) {
         console.log(`Failed to load trace ${trace.name}`);
-        errors.push(new ParserError(trace, ParserErrorType.UNSUPPORTED_FORMAT));
+        errors.push(new ParserError(ParserErrorType.UNSUPPORTED_FORMAT, trace));
       }
 
       onProgressUpdate(100 * (index + 1) / traces.length);
@@ -95,7 +99,7 @@ class ParserFactory {
       );
       errors.push(
         new ParserError(
-          oldParser.getTrace().file, ParserErrorType.OVERRIDE, oldParser.getTraceType()
+          ParserErrorType.OVERRIDE, oldParser.getTrace().file, oldParser.getTraceType()
         )
       );
       return true;
@@ -107,7 +111,7 @@ class ParserFactory {
     );
     errors.push(
       new ParserError(
-        newParser.getTrace().file, ParserErrorType.OVERRIDE, newParser.getTraceType()
+        ParserErrorType.OVERRIDE, newParser.getTrace().file, newParser.getTraceType()
       )
     );
     return false;
@@ -115,16 +119,15 @@ class ParserFactory {
 }
 
 export enum ParserErrorType {
+  NO_INPUT_FILES,
   UNSUPPORTED_FORMAT,
   OVERRIDE
 }
 
 export class ParserError {
   constructor(
-    public trace: File,
     public type: ParserErrorType,
+    public trace: File|undefined = undefined,
     public traceType: TraceType|undefined = undefined) {
   }
 }
-
-export {ParserFactory};

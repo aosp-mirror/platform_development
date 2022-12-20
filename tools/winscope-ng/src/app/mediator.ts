@@ -74,7 +74,11 @@ export class Mediator {
     this.abtChromeExtensionProtocol.setOnBugAttachmentsReceived(async (attachments: File[]) => {
       await this.onAbtChromeExtensionBugAttachmentsReceived(attachments);
     });
-    this.abtChromeExtensionProtocol.run();
+
+    this.abtChromeExtensionProtocol.setOnBugAttachmentsDownloadStart(() => {
+      console.log("Mediator notifying onFilesDownloadStart()");
+      this.uploadTracesComponent?.onFilesDownloadStart();
+    });
   }
 
   public setUploadTracesComponent(
@@ -85,6 +89,10 @@ export class Mediator {
 
   public setTimelineComponent(timelineComponent: TimelineComponentDependencyInversion|undefined) {
     this.timelineComponent = timelineComponent;
+  }
+
+  public onWinscopeInitialized() {
+    this.abtChromeExtensionProtocol.run();
   }
 
   public onWinscopeTraceDataLoaded() {

@@ -16,6 +16,7 @@
 
 import {AppComponentStub} from "./components/app_component_stub";
 import {TimelineComponentStub} from "./components/timeline/timeline_component_stub";
+import {UploadTracesComponentStub} from "./components/upload_traces_component_stub";
 import {Mediator} from "./mediator";
 import {AbtChromeExtensionProtocolStub} from "abt_chrome_extension/abt_chrome_extension_protocol_stub";
 import {CrossToolProtocolStub} from "cross_tool/cross_tool_protocol_stub";
@@ -35,6 +36,7 @@ describe("Mediator", () => {
   let crossToolProtocol: CrossToolProtocolStub;
   let appComponent: AppComponentStub;
   let timelineComponent: TimelineComponentStub;
+  let uploadTracesComponent: UploadTracesComponentStub;
   let mediator: Mediator;
 
   const TIMESTAMP_10 = new RealTimestamp(10n);
@@ -48,6 +50,7 @@ describe("Mediator", () => {
     crossToolProtocol = new CrossToolProtocolStub();
     appComponent = new AppComponentStub();
     timelineComponent = new TimelineComponentStub();
+    uploadTracesComponent = new UploadTracesComponentStub();
     mediator = new Mediator(
       traceData,
       timelineData,
@@ -57,6 +60,7 @@ describe("Mediator", () => {
       new MockStorage()
     );
     mediator.setTimelineComponent(timelineComponent);
+    mediator.setUploadTracesComponent(uploadTracesComponent);
 
     spyOn(ViewerFactory.prototype, "createViewers").and.returnValue([viewerStub]);
   });
@@ -83,6 +87,24 @@ describe("Mediator", () => {
 
   //TODO: test "data from ABT chrome extension" when FileUtils is fully compatible with Node.js
   //      (b/262269229).
+
+  it("handles start download event from ABT chrome extension", () => {
+    spyOn(uploadTracesComponent, "onFilesDownloadStart");
+    expect(uploadTracesComponent.onFilesDownloadStart).toHaveBeenCalledTimes(0);
+
+    abtChromeExtensionProtocol.onBugAttachmentsDownloadStart();
+    expect(uploadTracesComponent.onFilesDownloadStart).toHaveBeenCalledTimes(1);
+  });
+
+  it("handles empty downloaded files from ABT chrome extension", async () => {
+    spyOn(uploadTracesComponent, "processFiles");
+    expect(uploadTracesComponent.processFiles).toHaveBeenCalledTimes(0);
+
+    // Pass files even if empty so that the upload component will update the progress bar
+    // and display error messages
+    await abtChromeExtensionProtocol.onBugAttachmentsReceived([]);
+    expect(uploadTracesComponent.processFiles).toHaveBeenCalledTimes(1);
+  });
 
   it("propagates current timestamp changed through timeline", async () => {
     await loadTraces();

@@ -251,8 +251,12 @@ export class AppComponent implements AppComponentDependencyInversion {
     TracingConfig.getInstance().initialize(localStorage);
   }
 
-  ngAfterViewChecked() {
+  ngAfterViewInit() {
     this.mediator.setUploadTracesComponent(this.uploadTracesComponent);
+    this.mediator.onWinscopeInitialized();
+  }
+
+  ngAfterViewChecked() {
     this.mediator.setTimelineComponent(this.timelineComponent);
   }
 
