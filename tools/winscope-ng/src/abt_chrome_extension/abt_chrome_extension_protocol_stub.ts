@@ -15,13 +15,22 @@
  */
 
 import {
+  OnBugAttachmentsDownloadStart,
   OnBugAttachmentsReceived,
   AbtChromeExtensionProtocolDependencyInversion
 } from "./abt_chrome_extension_protocol_dependency_inversion";
+import {FunctionUtils} from "../common/utils/function_utils";
 
 export class AbtChromeExtensionProtocolStub implements AbtChromeExtensionProtocolDependencyInversion {
+  onBugAttachmentsDownloadStart: OnBugAttachmentsDownloadStart = FunctionUtils.DO_NOTHING;
+  onBugAttachmentsReceived: OnBugAttachmentsReceived = FunctionUtils.DO_NOTHING_ASYNC;
+
+  setOnBugAttachmentsDownloadStart(callback: OnBugAttachmentsDownloadStart) {
+    this.onBugAttachmentsDownloadStart = callback;
+  }
+
   setOnBugAttachmentsReceived(callback: OnBugAttachmentsReceived) {
-    // do nothing
+    this.onBugAttachmentsReceived = callback;
   }
 
   run() {

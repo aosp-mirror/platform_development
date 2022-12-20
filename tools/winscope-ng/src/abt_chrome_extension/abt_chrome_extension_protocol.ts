@@ -16,6 +16,7 @@
 
 import {
   AbtChromeExtensionProtocolDependencyInversion,
+  OnBugAttachmentsDownloadStart,
   OnBugAttachmentsReceived
 } from "./abt_chrome_extension_protocol_dependency_inversion";
 import {
@@ -27,7 +28,12 @@ import {FunctionUtils} from "common/utils/function_utils";
 
 export class AbtChromeExtensionProtocol implements AbtChromeExtensionProtocolDependencyInversion {
   static readonly ABT_EXTENSION_ID = "mbbaofdfoekifkfpgehgffcpagbbjkmj";
-  onBugAttachmentsReceived: OnBugAttachmentsReceived = FunctionUtils.DO_NOTHING_ASYNC;
+  private onBugAttachmentsDownloadStart: OnBugAttachmentsDownloadStart = FunctionUtils.DO_NOTHING;
+  private onBugAttachmentsReceived: OnBugAttachmentsReceived = FunctionUtils.DO_NOTHING_ASYNC;
+
+  setOnBugAttachmentsDownloadStart(callback: OnBugAttachmentsDownloadStart) {
+    this.onBugAttachmentsDownloadStart = callback;
+  }
 
   setOnBugAttachmentsReceived(callback: OnBugAttachmentsReceived) {
     this.onBugAttachmentsReceived = callback;
@@ -38,6 +44,8 @@ export class AbtChromeExtensionProtocol implements AbtChromeExtensionProtocolDep
     if (urlParams.get("source") !== "openFromExtension" || !chrome) {
       return;
     }
+
+    this.onBugAttachmentsDownloadStart();
 
     const openRequestMessage: OpenRequest = {
       action: MessageType.OPEN_REQUEST
@@ -65,7 +73,6 @@ export class AbtChromeExtensionProtocol implements AbtChromeExtensionProtocolDep
 
     if (message.attachments.length === 0) {
       console.warn("ABT chrome extension protocol received no attachments");
-      return;
     }
 
     const filesBlobPromises = message.attachments.map(async attachment => {

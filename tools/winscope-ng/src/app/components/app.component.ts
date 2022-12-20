@@ -52,6 +52,12 @@ import {UploadTracesComponent} from "./upload_traces.component";
     <mat-toolbar class="toolbar">
       <span class="app-title">Winscope</span>
 
+      <a href="http://go/winscope-legacy">
+        <button color="primary" mat-button>
+          Open legacy Winscope
+        </button>
+      </a>
+
       <div class="spacer"></div>
 
       <button *ngIf="dataLoaded" color="primary" mat-stroked-button
@@ -251,8 +257,12 @@ export class AppComponent implements AppComponentDependencyInversion {
     TracingConfig.getInstance().initialize(localStorage);
   }
 
-  ngAfterViewChecked() {
+  ngAfterViewInit() {
     this.mediator.setUploadTracesComponent(this.uploadTracesComponent);
+    this.mediator.onWinscopeInitialized();
+  }
+
+  ngAfterViewChecked() {
     this.mediator.setTimelineComponent(this.timelineComponent);
   }
 
