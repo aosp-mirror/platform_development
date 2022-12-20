@@ -22,7 +22,6 @@ import {
   OnTimestampReceived} from "cross_tool/cross_tool_protocol_dependency_inversion";
 import {RealTimestamp} from "common/trace/timestamp";
 import {FunctionUtils} from "common/utils/function_utils";
-import {globalConfig} from "common/utils/global_config";
 
 class RemoteTool {
   constructor(
@@ -34,7 +33,7 @@ class RemoteTool {
 export class CrossToolProtocol implements CrossToolProtocolDependencyInversion {
   private remoteTool?: RemoteTool;
   private onBugreportReceived: OnBugreportReceived = FunctionUtils.DO_NOTHING_ASYNC;
-  private onTimestampReceived: OnTimestampReceived = FunctionUtils.DO_NOTHING_ASYNC;
+  private onTimestampReceived: OnTimestampReceived = FunctionUtils.DO_NOTHING;
 
   constructor() {
     window.addEventListener("message", async (event) => {
@@ -91,7 +90,7 @@ export class CrossToolProtocol implements CrossToolProtocolDependencyInversion {
       break;
     case MessageType.TIMESTAMP:
       console.log("Cross-tool protocol received timestamp message:", message);
-      await this.onMessageTimestampReceived(message as MessageTimestamp);
+      this.onMessageTimestampReceived(message as MessageTimestamp);
       break;
     case MessageType.FILES:
       console.log("Cross-tool protocol received unexpected files message", message);
@@ -109,8 +108,8 @@ export class CrossToolProtocol implements CrossToolProtocolDependencyInversion {
     this.onBugreportReceived(message.file, timestamp);
   }
 
-  private async onMessageTimestampReceived(message: MessageTimestamp) {
+  private onMessageTimestampReceived(message: MessageTimestamp) {
     const timestamp = new RealTimestamp(message.timestampNs);
-    await this.onTimestampReceived(timestamp);
+    this.onTimestampReceived(timestamp);
   }
 }

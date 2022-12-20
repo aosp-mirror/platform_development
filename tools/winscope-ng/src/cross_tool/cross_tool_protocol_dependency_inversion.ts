@@ -17,7 +17,7 @@
 import {RealTimestamp} from "common/trace/timestamp";
 
 export type OnBugreportReceived = (bugreport: File, timestamp?: RealTimestamp) => Promise<void>;
-export type OnTimestampReceived = (timestamp: RealTimestamp) => Promise<void>;
+export type OnTimestampReceived = (timestamp: RealTimestamp) => void;
 
 export interface CrossToolProtocolDependencyInversion {
   setOnBugreportReceived(callback: OnBugreportReceived): void;

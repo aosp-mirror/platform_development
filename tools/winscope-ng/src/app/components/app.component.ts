@@ -44,6 +44,7 @@ import { TraceType } from "common/trace/trace_type";
 import { TimelineData } from "app/timeline_data";
 import { TracingConfig } from "trace_collection/tracing_config";
 import {TRACE_INFO} from "app/trace_info";
+import {UploadTracesComponent} from "./upload_traces.component";
 
 @Component({
   selector: "app-root",
@@ -105,7 +106,6 @@ import {TRACE_INFO} from "app/trace_info";
 
         <timeline
             *ngIf="dataLoaded"
-            [mediator]="mediator"
             [timelineData]="timelineData"
             [activeViewTraceTypes]="activeView?.dependencies"
             [availableTraces]="getLoadedTraceTypes()"
@@ -210,6 +210,7 @@ export class AppComponent implements AppComponentDependencyInversion {
   dataLoaded = false;
   activeView: View|undefined;
   collapsedTimelineHeight = 0;
+  @ViewChild(UploadTracesComponent) uploadTracesComponent?: UploadTracesComponent;
   @ViewChild(TimelineComponent) timelineComponent?: TimelineComponent;
 
   constructor(
@@ -248,6 +249,11 @@ export class AppComponent implements AppComponentDependencyInversion {
     }
 
     TracingConfig.getInstance().initialize(localStorage);
+  }
+
+  ngAfterViewChecked() {
+    this.mediator.setUploadTracesComponent(this.uploadTracesComponent);
+    this.mediator.setTimelineComponent(this.timelineComponent);
   }
 
   onCollapsedTimelineSizeChanged(height: number) {

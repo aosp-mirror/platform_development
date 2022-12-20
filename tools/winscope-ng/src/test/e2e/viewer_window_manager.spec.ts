@@ -23,11 +23,9 @@ describe("Viewer WindowManager", () => {
   }),
 
   it("processes trace and renders view", async () => {
-    const inputFile = element(by.css("input[type=\"file\"]"));
-    await inputFile.sendKeys(E2eTestUtils.getFixturePath("traces/elapsed_and_real_timestamp/WindowManager.pb"));
-
-    const loadData = element(by.css(".load-btn"));
-    await loadData.click();
+    await E2eTestUtils.uploadFixture("traces/elapsed_and_real_timestamp/WindowManager.pb");
+    await E2eTestUtils.closeSnackBarIfNeeded();
+    await E2eTestUtils.clickViewTracesButton();
 
     const viewerPresent = await element(by.css("viewer-window-manager")).isPresent();
     expect(viewerPresent).toBeTruthy();
