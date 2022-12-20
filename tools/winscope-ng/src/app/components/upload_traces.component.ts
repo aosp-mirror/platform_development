@@ -13,8 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ChangeDetectorRef, Component, EventEmitter, Inject, Input, Output} from "@angular/core";
+import {
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Inject,
+  Input,
+  NgZone,
+  Output
+} from "@angular/core";
 import {MatSnackBar} from "@angular/material/snack-bar";
+import {UploadTracesComponentDependencyInversion} from "./upload_traces_component_dependency_inversion";
 import {TraceData} from "app/trace_data";
 import {TRACE_INFO} from "app/trace_info";
 import {Trace} from "common/trace/trace";
@@ -158,7 +167,7 @@ import {ParserErrorSnackBarComponent} from "./parser_error_snack_bar_component";
     `
   ]
 })
-export class UploadTracesComponent {
+export class UploadTracesComponent implements UploadTracesComponentDependencyInversion {
   TRACE_INFO = TRACE_INFO;
   isLoadingFiles = false;
   loadFilesMessage = "Unzipping files...";
@@ -169,7 +178,8 @@ export class UploadTracesComponent {
 
   constructor(
     @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
-    @Inject(MatSnackBar) private snackBar: MatSnackBar
+    @Inject(MatSnackBar) private snackBar: MatSnackBar,
+    @Inject(NgZone) private ngZone: NgZone
   ) {
   }
 
@@ -179,10 +189,10 @@ export class UploadTracesComponent {
 
   public async onInputFiles(event: Event) {
     const files = this.getInputFiles(event);
-    await this.processInputFiles(files);
+    await this.processFiles(files);
   }
 
-  public async processInputFiles(files: File[]) {
+  public async processFiles(files: File[]) {
     const UI_PROGRESS_UPDATE_PERIOD_MS = 200;
     let lastUiProgressUpdate = Date.now();
 
@@ -211,11 +221,7 @@ export class UploadTracesComponent {
     this.isLoadingFiles = false;
     this.changeDetectorRef.detectChanges();
 
-    this.snackBar.openFromComponent(ParserErrorSnackBarComponent, {
-      data: parserErrors,
-      duration: 10000,
-    });
-
+    ParserErrorSnackBarComponent.showIfNeeded(this.ngZone, this.snackBar, parserErrors);
   }
 
   public onViewTracesButtonClick() {
@@ -242,7 +248,7 @@ export class UploadTracesComponent {
     e.stopPropagation();
     const droppedFiles = e.dataTransfer?.files;
     if(!droppedFiles) return;
-    await this.processInputFiles(Array.from(droppedFiles));
+    await this.processFiles(Array.from(droppedFiles));
   }
 
   public onRemoveTrace(event: MouseEvent, trace: Trace) {
