@@ -25,7 +25,11 @@ import {Component, Input} from "@angular/core";
         </mat-icon>
       </p>
 
-      <mat-progress-bar mode="determinate"
+      <mat-progress-bar *ngIf="progressPercentage === undefined"
+                        mode="indeterminate">
+      </mat-progress-bar>
+      <mat-progress-bar *ngIf="progressPercentage !== undefined"
+                        mode="determinate"
                         [value]="progressPercentage">
       </mat-progress-bar>
 
@@ -60,6 +64,6 @@ import {Component, Input} from "@angular/core";
   ]
 })
 export class LoadProgressComponent {
-  @Input() progressPercentage = 0;
+  @Input() progressPercentage?: number;
   @Input() message = "Loading...";
 }

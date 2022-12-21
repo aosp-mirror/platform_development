@@ -37,29 +37,30 @@ import {ParserErrorSnackBarComponent} from "./parser_error_snack_bar_component";
       <mat-card-title class="title">Upload Traces</mat-card-title>
 
       <mat-card-content
-        class="drop-box"
-        ref="drop-box"
-        (dragleave)="onFileDragOut($event)"
-        (dragover)="onFileDragIn($event)"
-        (drop)="onHandleFileDrop($event)"
-        (click)="fileDropRef.click()"
+          class="drop-box"
+          ref="drop-box"
+          (dragleave)="onFileDragOut($event)"
+          (dragover)="onFileDragIn($event)"
+          (drop)="onHandleFileDrop($event)"
+          (click)="fileDropRef.click()"
       >
         <input
-          id="fileDropRef"
-          hidden
-          type="file"
-          multiple
-          #fileDropRef
-          (change)="onInputFiles($event)"
+            id="fileDropRef"
+            hidden
+            type="file"
+            multiple
+            #fileDropRef
+            (change)="onInputFiles($event)"
         />
 
         <load-progress *ngIf="isLoadingFiles"
-                       [progressPercentage]="loadFilesProgress"
-                       [message]="loadFilesMessage">
+                       [progressPercentage]="progresPercentage"
+                       [message]="progressMessage">
         </load-progress>
 
-        <mat-list *ngIf="!isLoadingFiles && this.traceData.getLoadedTraces().length > 0"
-                  class="uploaded-files">
+        <mat-list
+            *ngIf="!isLoadingFiles && this.traceData.getLoadedTraces().length > 0"
+            class="uploaded-files">
           <mat-list-item *ngFor="let trace of this.traceData.getLoadedTraces()">
             <mat-icon matListIcon>
               {{TRACE_INFO[trace.type].icon}}
@@ -69,13 +70,15 @@ import {ParserErrorSnackBarComponent} from "./parser_error_snack_bar_component";
               {{trace.file.name}} ({{TRACE_INFO[trace.type].name}})
             </p>
 
-            <button color="primary" mat-icon-button (click)="onRemoveTrace($event, trace)">
+            <button color="primary" mat-icon-button
+                    (click)="onRemoveTrace($event, trace)">
               <mat-icon>close</mat-icon>
             </button>
           </mat-list-item>
         </mat-list>
 
-        <div *ngIf="!isLoadingFiles && traceData.getLoadedTraces().length === 0" class="drop-info">
+        <div *ngIf="!isLoadingFiles && traceData.getLoadedTraces().length === 0"
+             class="drop-info">
           <p class="mat-body-3 icon">
             <mat-icon inline fontIcon="upload"></mat-icon>
           </p>
@@ -85,16 +88,20 @@ import {ParserErrorSnackBarComponent} from "./parser_error_snack_bar_component";
         </div>
       </mat-card-content>
 
-      <div *ngIf="!isLoadingFiles && traceData.getLoadedTraces().length > 0" class="trace-actions-container">
-        <button color="primary" mat-raised-button class="load-btn" (click)="onViewTracesButtonClick()">
+      <div *ngIf="!isLoadingFiles && traceData.getLoadedTraces().length > 0"
+           class="trace-actions-container">
+        <button color="primary" mat-raised-button class="load-btn"
+                (click)="onViewTracesButtonClick()">
           View traces
         </button>
 
-        <button color="primary" mat-stroked-button for="fileDropRef" (click)="fileDropRef.click()">
+        <button color="primary" mat-stroked-button for="fileDropRef"
+                (click)="fileDropRef.click()">
           Upload another file
         </button>
 
-        <button color="primary" mat-stroked-button (click)="onClearButtonClick()">
+        <button color="primary" mat-stroked-button
+                (click)="onClearButtonClick()">
           Clear all
         </button>
       </div>
@@ -170,8 +177,8 @@ import {ParserErrorSnackBarComponent} from "./parser_error_snack_bar_component";
 export class UploadTracesComponent implements UploadTracesComponentDependencyInversion {
   TRACE_INFO = TRACE_INFO;
   isLoadingFiles = false;
-  loadFilesMessage = "Unzipping files...";
-  loadFilesProgress = 0;
+  progressMessage = "";
+  progresPercentage?: number;
 
   @Input() traceData!: TraceData;
   @Output() traceDataLoaded = new EventEmitter<void>();
@@ -185,6 +192,13 @@ export class UploadTracesComponent implements UploadTracesComponentDependencyInv
 
   ngOnInit() {
     this.traceData.clear();
+  }
+
+  public onFilesDownloadStart() {
+    this.isLoadingFiles = true;
+    this.progressMessage = "Downloading files...";
+    this.progresPercentage = undefined;
+    this.changeDetectorRef.detectChanges();
   }
 
   public async onInputFiles(event: Event) {
@@ -205,16 +219,16 @@ export class UploadTracesComponent implements UploadTracesComponentDependencyInv
       }
       lastUiProgressUpdate = now;
 
-      this.loadFilesProgress = progress;
+      this.progresPercentage = progress;
       this.changeDetectorRef.detectChanges();
     };
 
     this.isLoadingFiles = true;
-    this.loadFilesMessage = "Unzipping files...";
+    this.progressMessage = "Unzipping files...";
     this.changeDetectorRef.detectChanges();
     const unzippedFiles = await FileUtils.unzipFilesIfNeeded(files, onProgressUpdate);
 
-    this.loadFilesMessage = "Parsing files...";
+    this.progressMessage = "Parsing files...";
     this.changeDetectorRef.detectChanges();
     const parserErrors = await this.traceData.loadTraces(unzippedFiles, onProgressUpdate);
 
