@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-export type OnBugAttachmentsDownloadStart = () => void;
-export type OnBugAttachmentsReceived = (attachments: File[]) => Promise<void>;
+import {UploadTracesComponentDependencyInversion} from "./upload_traces_component_dependency_inversion";
 
-export interface AbtChromeExtensionProtocolDependencyInversion {
-  setOnBugAttachmentsDownloadStart(callback: OnBugAttachmentsDownloadStart): void;
-  setOnBugAttachmentsReceived(callback: OnBugAttachmentsReceived): void;
-  run(): void;
+export class UploadTracesComponentStub implements UploadTracesComponentDependencyInversion {
+  onFilesDownloadStart() {
+    // do nothing
+  }
+
+  async processFiles(files: File[]) {
+    // do nothing
+  }
 }

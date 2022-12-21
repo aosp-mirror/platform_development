@@ -15,8 +15,8 @@
  */
 import {Component, Inject, NgZone} from "@angular/core";
 import {MAT_SNACK_BAR_DATA, MatSnackBar, MatSnackBarRef} from "@angular/material/snack-bar";
-import {TRACE_INFO} from "app/trace_info";
 import {ParserError, ParserErrorType} from "parsers/parser_factory";
+import {TRACE_INFO} from "app/trace_info";
 
 @Component({
   selector: "upload-snack-bar",
@@ -89,14 +89,22 @@ export class ParserErrorSnackBarComponent {
   }
 
   private static convertErrorToMessage(error: ParserError): string {
-    let message = `${error.trace.name}: unknown error occurred`;
-    if (error.type === ParserErrorType.OVERRIDE && error.traceType) {
-      message = `${error.trace.name}:` +
-        ` overridden by another trace of type ${TRACE_INFO[error.traceType].name}`;
-    } else if (error.type === ParserErrorType.UNSUPPORTED_FORMAT) {
-      message = `${error.trace.name}: unsupported file format`;
+    const fileName = error.trace !== undefined ?
+      error.trace.name : "<no file name>";
+    const traceTypeName = error.traceType !== undefined ?
+      TRACE_INFO[error.traceType].name : "<unknown>";
+
+    switch (error.type) {
+    case ParserErrorType.NO_INPUT_FILES:
+      return "No input files";
+    case ParserErrorType.UNSUPPORTED_FORMAT:
+      return `${fileName}: unsupported file format`;
+    case ParserErrorType.OVERRIDE: {
+      return `${fileName}: overridden by another trace of type ${traceTypeName}`;
     }
-    return message;
+    default:
+      return `${fileName}: unknown error occurred`;
+    }
   }
 
   private static makeCroppedMessage(type: ParserErrorType, count: number): string {
