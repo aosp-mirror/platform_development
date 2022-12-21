@@ -121,11 +121,11 @@ export class Presenter {
       return rect;
     }) ?? [];
     this.displayIds = [];
-    const rects = this.getLayersForRectsView();
+    const rects = this.getLayersForRectsView()
       .sort((layer1: any, layer2: any) => {
         const absZLayer1 = layer1.zOrderPath;
         const absZLayer2 = layer2.zOrderPath;
-        var elA, elB, i, len;
+        let elA, elB, i, len;
         for (i = 0, len = Math.min(absZLayer1.length, absZLayer2.length); i < len; i++) {
           elA = absZLayer1[i];
           elB = absZLayer2[i];
