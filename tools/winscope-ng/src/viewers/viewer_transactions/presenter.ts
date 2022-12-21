@@ -21,6 +21,7 @@ import {PropertiesTreeGenerator} from "viewers/common/properties_tree_generator"
 import {PropertiesTreeNode} from "viewers/common/ui_tree_utils";
 import {TimeUtils} from "common/utils/time_utils";
 import { ElapsedTimestamp, RealTimestamp, TimestampType } from "common/trace/timestamp";
+import ObjectFormatter from "common/trace/flickerlib/ObjectFormatter";
 
 class Presenter {
   constructor(notifyUiDataCallback: (data: UiData) => void) {
@@ -175,6 +176,8 @@ class Presenter {
 
     const entries: UiDataEntry[] = [];
 
+    const formattingOptions = ObjectFormatter.displayDefaults;
+    ObjectFormatter.displayDefaults = false;
     for (const [originalIndex, entryProto] of entriesProto.entries()) {
       for (const transactionStateProto of entryProto.transactions) {
         for (const layerStateProto of transactionStateProto.layerChanges) {
@@ -186,7 +189,7 @@ class Presenter {
             transactionStateProto.uid.toString(),
             UiDataEntryType.LayerChanged,
             layerStateProto.layerId.toString(),
-            treeGenerator.generate("LayerState", layerStateProto)
+            treeGenerator.generate("LayerState", ObjectFormatter.format(layerStateProto))
           ));
         }
 
@@ -199,7 +202,7 @@ class Presenter {
             transactionStateProto.uid.toString(),
             UiDataEntryType.DisplayChanged,
             displayStateProto.id.toString(),
-            treeGenerator.generate("DisplayState", displayStateProto)
+            treeGenerator.generate("DisplayState", ObjectFormatter.format(displayStateProto))
           ));
         }
       }
@@ -213,7 +216,7 @@ class Presenter {
           Presenter.VALUE_NA,
           UiDataEntryType.LayerAdded,
           layerCreationArgsProto.layerId.toString(),
-          treeGenerator.generate("LayerCreationArgs", layerCreationArgsProto)
+          treeGenerator.generate("LayerCreationArgs", ObjectFormatter.format(layerCreationArgsProto))
         ));
       }
 
@@ -226,7 +229,7 @@ class Presenter {
           Presenter.VALUE_NA,
           UiDataEntryType.LayerRemoved,
           removedLayerId.toString(),
-          treeGenerator.generate("RemovedLayerId", removedLayerId)
+          treeGenerator.generate("RemovedLayerId", ObjectFormatter.format(removedLayerId))
         ));
       }
 
@@ -239,7 +242,7 @@ class Presenter {
           Presenter.VALUE_NA,
           UiDataEntryType.DisplayAdded,
           displayStateProto.id.toString(),
-          treeGenerator.generate("DisplayState", displayStateProto)
+          treeGenerator.generate("DisplayState", ObjectFormatter.format(displayStateProto))
         ));
       }
 
@@ -252,7 +255,7 @@ class Presenter {
           Presenter.VALUE_NA,
           UiDataEntryType.DisplayRemoved,
           removedDisplayId.toString(),
-          treeGenerator.generate("RemovedDisplayId", removedDisplayId)
+          treeGenerator.generate("RemovedDisplayId", ObjectFormatter.format(removedDisplayId))
         ));
       }
 
@@ -265,10 +268,11 @@ class Presenter {
           Presenter.VALUE_NA,
           UiDataEntryType.LayerHandleRemoved,
           removedLayerHandleId.toString(),
-          treeGenerator.generate("RemovedLayerHandleId", removedLayerHandleId)
+          treeGenerator.generate("RemovedLayerHandleId", ObjectFormatter.format(removedLayerHandleId))
         ));
       }
     }
+    ObjectFormatter.displayDefaults = formattingOptions;
 
     return entries;
   }
