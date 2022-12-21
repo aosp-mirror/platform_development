@@ -16,6 +16,8 @@
 
 import {toSize, toActiveBuffer, toColor, toColor3, toPoint, toPointF, toRect,
     toRectF, toRegion, toMatrix22, toTransform} from './common';
+import { PropertiesDump } from "viewers/common/ui_tree_utils";
+
 import intDefMapping from
       '../../../../../../../prebuilts/misc/common/winscope/intDefMapping.json';
 import config from './Configuration.json'
@@ -88,11 +90,11 @@ export default class ObjectFormatter {
      * @param obj The raw object to format
      * @return The formatted object
      */
-    static format(obj: any): any {
+    static format(obj: any): PropertiesDump {
         const properties = this.getProperties(obj);
         const sortedProperties = properties.sort()
 
-        const result: any = {}
+        const result: PropertiesDump = {};
         sortedProperties.forEach(entry => {
             const key = entry;
             const value: any = obj[key];

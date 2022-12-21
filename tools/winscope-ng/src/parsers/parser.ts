@@ -39,7 +39,7 @@ abstract class Parser {
       }
     }
 
-    this.decodedEntries = this.decodeTrace(traceBuffer);
+    this.decodedEntries = this.decodeTrace(traceBuffer).map((it) => this.addDefaultProtoFields(it));
 
     for (const type of [TimestampType.ELAPSED, TimestampType.REAL]) {
       const timestamps: Timestamp[] = [];
@@ -58,6 +58,39 @@ abstract class Parser {
         this.timestamps.set(type, timestamps);
       }
     }
+  }
+
+  // Add default values to the proto objects.
+  private addDefaultProtoFields(protoObj: any): any {
+    if (!protoObj || protoObj !== Object(protoObj) || !protoObj.$type) {
+      return protoObj;
+    }
+
+    for (const fieldName in protoObj.$type.fields) {
+      if (protoObj.$type.fields.hasOwnProperty(fieldName)) {
+        const fieldProperties = protoObj.$type.fields[fieldName];
+        const field = protoObj[fieldName];
+
+        if (Array.isArray(field)) {
+          field.forEach((item, _) => {
+            this.addDefaultProtoFields(item);
+          });
+          continue;
+        }
+
+        if (!field) {
+          protoObj[fieldName] = fieldProperties.defaultValue;
+        }
+
+        if (fieldProperties.resolvedType && fieldProperties.resolvedType.valuesById) {
+          protoObj[fieldName] = fieldProperties.resolvedType.valuesById[protoObj[fieldProperties.name]];
+          continue;
+        }
+        this.addDefaultProtoFields(protoObj[fieldName]);
+      }
+    }
+
+    return protoObj;
   }
 
   public abstract getTraceType(): TraceType;
