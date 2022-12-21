@@ -122,22 +122,22 @@ describe("TimelineComponent", () => {
 
   it("processes active trace input and updates selected traces", () => {
     component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
-    expect(component.wrappedActiveTrace).toEqual(TraceType.SURFACE_FLINGER);
+    expect(component.internalActiveTrace).toEqual(TraceType.SURFACE_FLINGER);
     expect(component.selectedTraces).toEqual([TraceType.SURFACE_FLINGER]);
 
     component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
-    expect(component.wrappedActiveTrace).toEqual(TraceType.SURFACE_FLINGER);
+    expect(component.internalActiveTrace).toEqual(TraceType.SURFACE_FLINGER);
     expect(component.selectedTraces).toEqual([TraceType.SURFACE_FLINGER]);
 
     component.activeViewTraceTypes = [TraceType.TRANSACTIONS];
-    expect(component.wrappedActiveTrace).toEqual(TraceType.TRANSACTIONS);
+    expect(component.internalActiveTrace).toEqual(TraceType.TRANSACTIONS);
     expect(component.selectedTraces).toEqual([
       TraceType.SURFACE_FLINGER,
       TraceType.TRANSACTIONS
     ]);
 
     component.activeViewTraceTypes = [TraceType.WINDOW_MANAGER];
-    expect(component.wrappedActiveTrace).toEqual(TraceType.WINDOW_MANAGER);
+    expect(component.internalActiveTrace).toEqual(TraceType.WINDOW_MANAGER);
     expect(component.selectedTraces).toEqual([
       TraceType.SURFACE_FLINGER,
       TraceType.TRANSACTIONS,
@@ -145,7 +145,7 @@ describe("TimelineComponent", () => {
     ]);
 
     component.activeViewTraceTypes = [TraceType.PROTO_LOG];
-    expect(component.wrappedActiveTrace).toEqual(TraceType.PROTO_LOG);
+    expect(component.internalActiveTrace).toEqual(TraceType.PROTO_LOG);
     expect(component.selectedTraces).toEqual([
       TraceType.TRANSACTIONS,
       TraceType.WINDOW_MANAGER,
@@ -155,15 +155,15 @@ describe("TimelineComponent", () => {
 
   it("handles undefined active trace input", () => {
     component.activeViewTraceTypes = undefined;
-    expect(component.wrappedActiveTrace).toBeUndefined();
+    expect(component.internalActiveTrace).toBeUndefined();
     expect(component.selectedTraces).toEqual([]);
 
     component.activeViewTraceTypes = [TraceType.SURFACE_FLINGER];
-    expect(component.wrappedActiveTrace).toEqual(TraceType.SURFACE_FLINGER);
+    expect(component.internalActiveTrace).toEqual(TraceType.SURFACE_FLINGER);
     expect(component.selectedTraces).toEqual([TraceType.SURFACE_FLINGER]);
 
     component.activeViewTraceTypes = undefined;
-    expect(component.wrappedActiveTrace).toEqual(TraceType.SURFACE_FLINGER);
+    expect(component.internalActiveTrace).toEqual(TraceType.SURFACE_FLINGER);
     expect(component.selectedTraces).toEqual([TraceType.SURFACE_FLINGER]);
   });
 

@@ -99,10 +99,10 @@ import {Mapper3D} from "./mapper3d";
         <div class="canvas-labels">
         </div>
       </div>
-      <div *ngIf="wrappedDisplayIds.length > 1"
+      <div *ngIf="internalDisplayIds.length > 1"
            class="display-button-container">
         <button
-            *ngFor="let displayId of wrappedDisplayIds"
+            *ngFor="let displayId of internalDisplayIds"
             color="primary"
             mat-raised-button
             (click)="onDisplayIdChange(displayId)"
@@ -177,27 +177,27 @@ import {Mapper3D} from "./mapper3d";
 export class RectsComponent implements OnInit, OnDestroy {
   @Input() title = "title";
   @Input() set rects(rects: Rectangle[]) {
-    this.wrappedRects = rects;
+    this.internalRects = rects;
     this.drawScene();
   }
 
   @Input() set displayIds(ids: number[]) {
-    this.wrappedDisplayIds = ids;
-    if (!this.wrappedDisplayIds.includes(this.mapper3d.getCurrentDisplayId())) {
-      this.mapper3d.setCurrentDisplayId(this.wrappedDisplayIds[0]);
+    this.internalDisplayIds = ids;
+    if (!this.internalDisplayIds.includes(this.mapper3d.getCurrentDisplayId())) {
+      this.mapper3d.setCurrentDisplayId(this.internalDisplayIds[0]);
       this.drawScene();
     }
   }
 
   @Input() set highlightedItems(ids: string[]) {
-    this.wrappedHighlightedItems = ids.map(id => Number(id));
-    this.mapper3d.setHighlightedRectIds(this.wrappedHighlightedItems);
+    this.internalHighlightedItems = ids.map(id => Number(id));
+    this.mapper3d.setHighlightedRectIds(this.internalHighlightedItems);
     this.drawScene();
   }
 
-  private wrappedRects: Rectangle[] = [];
-  private wrappedDisplayIds: number[] = [];
-  private wrappedHighlightedItems: number[] = [];
+  private internalRects: Rectangle[] = [];
+  private internalDisplayIds: number[] = [];
+  private internalHighlightedItems: number[] = [];
 
   private mapper3d: Mapper3D;
   private canvas?: Canvas;
@@ -222,7 +222,7 @@ export class RectsComponent implements OnInit, OnDestroy {
     this.canvasLabels = canvasContainer.querySelector(".canvas-labels");
     this.canvas = new Canvas(this.canvasRects, this.canvasLabels!);
 
-    this.mapper3d.setCurrentDisplayId(this.wrappedDisplayIds[0] ?? 0);
+    this.mapper3d.setCurrentDisplayId(this.internalDisplayIds[0] ?? 0);
     this.drawScene();
   }
 
@@ -308,7 +308,7 @@ export class RectsComponent implements OnInit, OnDestroy {
     //  (rotation, spacing, ...) we can just update the camera and/or update the mesh positions.
     //  We'd probably need to get rid of the intermediate layer (Scene3D, Rect3D, ... types) and
     //  work directly with three.js's meshes.
-    this.mapper3d.setRects(this.wrappedRects);
+    this.mapper3d.setRects(this.internalRects);
     this.canvas?.draw(this.mapper3d.computeScene());
   }
 
