@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceFile} from "common/trace/trace";
 import {TraceType} from "common/trace/trace_type";
 import {TraceData} from "./trace_data";
 import {UnitTestUtils} from "test/unit/utils";
@@ -33,7 +34,7 @@ describe("TraceData", () => {
 
   it("is robust to invalid trace files", async () => {
     const invalidTraceFiles = [
-      await UnitTestUtils.getFixtureFile("winscope_homepage.png"),
+      new TraceFile(await UnitTestUtils.getFixtureFile("winscope_homepage.png"))
     ];
 
     const errors = await traceData.loadTraces(invalidTraceFiles);
@@ -44,8 +45,8 @@ describe("TraceData", () => {
   it("is robust to mixed valid and invalid trace files", async () => {
     expect(traceData.getLoadedTraces().length).toEqual(0);
     const traces = [
-      await UnitTestUtils.getFixtureFile("winscope_homepage.png"),
-      await UnitTestUtils.getFixtureFile("traces/dump_WindowManager.pb"),
+      new TraceFile(await UnitTestUtils.getFixtureFile("winscope_homepage.png")),
+      new TraceFile(await UnitTestUtils.getFixtureFile("traces/dump_WindowManager.pb"))
     ];
     const errors = await traceData.loadTraces(traces);
     expect(traceData.getLoadedTraces().length).toEqual(1);
@@ -54,8 +55,9 @@ describe("TraceData", () => {
 
   it("is robust to trace files with no entries", async () => {
     const traceFilesWithNoEntries = [
-      await UnitTestUtils.getFixtureFile(
-        "traces/no_entries_InputMethodClients.pb")
+      new TraceFile(
+        await UnitTestUtils.getFixtureFile("traces/no_entries_InputMethodClients.pb")
+      )
     ];
 
     const errors = await traceData.loadTraces(traceFilesWithNoEntries);
@@ -85,7 +87,7 @@ describe("TraceData", () => {
 
     const traces = traceData.getLoadedTraces();
     expect(traces.length).toEqual(2);
-    expect(traces[0].file).toBeTruthy();
+    expect(traces[0].traceFile.file).toBeTruthy();
 
     const actualTraceTypes = new Set(traces.map(trace => trace.type));
     const expectedTraceTypes = new Set([TraceType.SURFACE_FLINGER, TraceType.WINDOW_MANAGER]);
@@ -94,8 +96,10 @@ describe("TraceData", () => {
 
   it("gets trace entries for a given timestamp", async () => {
     const traceFiles = [
-      await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/SurfaceFlinger.pb"),
-      await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/WindowManager.pb"),
+      new TraceFile(await UnitTestUtils.getFixtureFile(
+        "traces/elapsed_and_real_timestamp/SurfaceFlinger.pb")),
+      new TraceFile(await UnitTestUtils.getFixtureFile(
+        "traces/elapsed_and_real_timestamp/WindowManager.pb"))
     ];
 
     const errors = await traceData.loadTraces(traceFiles);
@@ -111,7 +115,10 @@ describe("TraceData", () => {
       expect(entries.size).toEqual(0);
     }
     {
-      const twoHundredYearsTimestamp = new Timestamp(TimestampType.REAL, 200n * 365n * 24n * 60n * 3600n * 1000000000n);
+      const twoHundredYearsTimestamp = new Timestamp(
+        TimestampType.REAL,
+        200n * 365n * 24n * 60n * 3600n * 1000000000n
+      );
       const entries = traceData.getTraceEntries(twoHundredYearsTimestamp);
       expect(entries.size).toEqual(2);
     }
@@ -135,7 +142,8 @@ describe("TraceData", () => {
     expect(traceData.getScreenRecordingVideo()).toBeUndefined();
 
     const traceFiles = [
-      await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4"),
+      new TraceFile(await UnitTestUtils.getFixtureFile(
+        "traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4"))
     ];
     await traceData.loadTraces(traceFiles);
 
@@ -156,8 +164,10 @@ describe("TraceData", () => {
 
   const loadValidSfWmTraces = async () => {
     const traceFiles = [
-      await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/SurfaceFlinger.pb"),
-      await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/WindowManager.pb"),
+      new TraceFile(await UnitTestUtils.getFixtureFile(
+        "traces/elapsed_and_real_timestamp/SurfaceFlinger.pb")),
+      new TraceFile(await UnitTestUtils.getFixtureFile(
+        "traces/elapsed_and_real_timestamp/WindowManager.pb")),
     ];
 
     const errors = await traceData.loadTraces(traceFiles);

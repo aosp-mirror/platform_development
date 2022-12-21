@@ -13,22 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {ArrayUtils} from "common/utils/array_utils";
 import {Timestamp, TimestampType} from "common/trace/timestamp";
-import {Trace} from "common/trace/trace";
+import {Trace, TraceFile} from "common/trace/trace";
 import {TraceType} from "common/trace/trace_type";
 
 abstract class Parser {
-  protected trace: File;
+  protected trace: TraceFile;
   protected decodedEntries: any[] = [];
   private timestamps: Map<TimestampType, Timestamp[]> = new Map<TimestampType, Timestamp[]>();
 
-  protected constructor(trace: File) {
+  protected constructor(trace: TraceFile) {
     this.trace = trace;
   }
 
   public async parse() {
-    const traceBuffer = new Uint8Array(await this.trace.arrayBuffer());
+    const traceBuffer = new Uint8Array(await this.trace.file.arrayBuffer());
 
     const magicNumber = this.getMagicNumber();
     if (magicNumber !== undefined)
@@ -98,7 +99,7 @@ abstract class Parser {
   public getTrace(): Trace {
     return {
       type: this.getTraceType(),
-      file: this.trace
+      traceFile: this.trace
     };
   }
 

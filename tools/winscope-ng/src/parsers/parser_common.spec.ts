@@ -18,11 +18,15 @@ import {Parser} from "./parser";
 import {CommonTestUtils} from "test/common/utils";
 import {UnitTestUtils} from "test/unit/utils";
 import {ParserFactory} from "./parser_factory";
-import {TraceType} from "../common/trace/trace_type";
+import {TraceFile} from "common/trace/trace";
+import {TraceType} from "common/trace/trace_type";
 
 describe("Parser", () => {
   it("is robust to empty trace file", async () => {
-    const trace = await CommonTestUtils.getFixtureFile("traces/empty.pb");
+    const trace = new TraceFile(
+      await CommonTestUtils.getFixtureFile("traces/empty.pb"),
+      undefined
+    );
     const [parsers, errors] = await new ParserFactory().createParsers([trace]);
     expect(parsers.length).toEqual(0);
   });

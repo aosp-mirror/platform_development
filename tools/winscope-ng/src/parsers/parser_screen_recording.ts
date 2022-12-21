@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceFile} from "common/trace/trace";
 import {TraceType} from "common/trace/trace_type";
 import {ArrayUtils} from "common/utils/array_utils";
 import {Parser} from "./parser";
@@ -26,7 +28,7 @@ class ScreenRecordingMetadataEntry {
 }
 
 class ParserScreenRecording extends Parser {
-  constructor(trace: File) {
+  constructor(trace: TraceFile) {
     super(trace);
   }
 
@@ -87,7 +89,7 @@ class ParserScreenRecording extends Parser {
     const currentTimestamp = new Timestamp(TimestampType.ELAPSED, entry.timestampElapsedNs);
     const videoTimeSeconds =
       ScreenRecordingUtils.timestampToVideoTimeSeconds(initialTimestamp, currentTimestamp);
-    const videoData = this.trace;
+    const videoData = this.trace.file;
     return new ScreenRecordingTraceEntry(videoTimeSeconds, videoData);
   }
 

@@ -16,6 +16,8 @@
 import JSZip from "jszip";
 import {FunctionUtils, OnProgressUpdateType} from "./function_utils";
 
+export type OnFile = (file: File, parentArchive: File|undefined) => void;
+
 class FileUtils {
   static getFileExtension(file: File) {
     const split = file.name.split(".");
@@ -72,25 +74,24 @@ class FileUtils {
 
   static async unzipFilesIfNeeded(
     files: File[],
-    onProgressUpdate: OnProgressUpdateType = FunctionUtils.DO_NOTHING): Promise<File[]> {
-    const unzippedFiles: File[] = [];
-
+    onFile: OnFile,
+    onProgressUpdate: OnProgressUpdateType = FunctionUtils.DO_NOTHING) {
     for (let i=0; i<files.length; i++) {
+      const file = files[i];
+
       const onSubprogressUpdate = (subPercentage: number) => {
         const percentage = 100 * i / files.length
           + subPercentage / files.length;
         onProgressUpdate(percentage);
       };
 
-      if (FileUtils.isZipFile(files[i])) {
-        const unzippedFile = await FileUtils.unzipFile(files[i], onSubprogressUpdate);
-        unzippedFiles.push(...unzippedFile);
+      if (FileUtils.isZipFile(file)) {
+        const unzippedFile = await FileUtils.unzipFile(file, onSubprogressUpdate);
+        unzippedFile.forEach(unzippedFile => onFile(unzippedFile, file));
       } else {
-        unzippedFiles.push(files[i]);
+        onFile(file, undefined);
       }
     }
-
-    return unzippedFiles;
   }
 
   static isZipFile(file: File) {
