@@ -15,7 +15,7 @@
  */
 
 import { shortenName } from '../mixin'
-import { toRect, DisplayContent, Rect } from "../common"
+import { toInsets, toRect, DisplayContent, DisplayCutout, PlatformConsts, Rect } from "../common"
 import WindowContainer from "./WindowContainer"
 
 DisplayContent.fromProto = function (proto: any, isActivityInTree: Boolean, nextSeq: () => number): DisplayContent {
@@ -52,13 +52,29 @@ DisplayContent.fromProto = function (proto: any, isActivityInTree: Boolean, next
             proto.focusedApp,
             proto.appTransition?.lastUsedAppTransition ?? "",
             proto.appTransition?.appTransitionState ?? "",
-            proto.displayRotation?.rotation ?? 0,
+            PlatformConsts.Rotation.Companion.getByValue(proto.displayRotation?.rotation ?? 0),
             proto.displayRotation?.lastOrientation ?? 0,
+            createDisplayCutout(proto.displayInfo?.cutout),
             windowContainer
         );
 
         addAttributes(entry, proto);
         return entry;
+    }
+}
+
+function createDisplayCutout(proto: any | null): DisplayCutout | null {
+    if(proto == null) {
+        return null;
+    } else {
+        return new DisplayCutout(
+            toInsets(proto?.insets),
+            toRect(proto?.boundLeft),
+            toRect(proto?.boundTop),
+            toRect(proto?.boundRight),
+            toRect(proto?.boundBottom),
+            toInsets(proto?.waterfallInsets)
+        );
     }
 }
 
