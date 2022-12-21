@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, Input, OnDestroy, Inject, ElementRef, SimpleChanges, OnInit, HostListener} from "@angular/core";
-import {Rectangle} from "viewers/common/rectangle";
+import {Component, Input, OnDestroy, Inject, ElementRef, OnInit, HostListener} from "@angular/core";
+import {Rectangle, Point} from "viewers/common/rectangle";
 import {Canvas} from "./canvas";
 import {ViewerEvents} from "viewers/common/viewer_events";
 import {Mapper3D} from "./mapper3d";
+import {Distance2D} from "./types3d";
 
 @Component({
   selector: "rects-view",
@@ -204,6 +205,8 @@ export class RectsComponent implements OnInit, OnDestroy {
   private resizeObserver: ResizeObserver;
   private canvasRects?: HTMLCanvasElement;
   private canvasLabels?: HTMLElement;
+  private mouseMoveListener = (event: MouseEvent) => this.onMouseMove(event);
+  private mouseUpListener = (event: MouseEvent) => this.onMouseUp(event);
 
   constructor(
     @Inject(ElementRef) private elementRef: ElementRef,
@@ -221,6 +224,8 @@ export class RectsComponent implements OnInit, OnDestroy {
     this.canvasRects = canvasContainer.querySelector(".canvas-rects")! as HTMLCanvasElement;
     this.canvasLabels = canvasContainer.querySelector(".canvas-labels");
     this.canvas = new Canvas(this.canvasRects, this.canvasLabels!);
+
+    this.canvasRects.addEventListener("mousedown", event => this.onCanvasMouseDown(event));
 
     this.mapper3d.setCurrentDisplayId(this.internalDisplayIds[0] ?? 0);
     this.drawScene();
@@ -252,6 +257,22 @@ export class RectsComponent implements OnInit, OnDestroy {
     } else {
       this.doZoomIn();
     }
+  }
+
+  public onCanvasMouseDown(event: MouseEvent) {
+    document.addEventListener("mousemove", this.mouseMoveListener);
+    document.addEventListener("mouseup", this.mouseUpListener);
+  }
+
+  public onMouseMove(event: MouseEvent) {
+    const distance = new Distance2D(event.movementX, event.movementY);
+    this.mapper3d.addPanScreenDistance(distance);
+    this.drawScene();
+  }
+
+  public onMouseUp(event: MouseEvent) {
+    document.removeEventListener("mousemove", this.mouseMoveListener);
+    document.removeEventListener("mouseup", this.mouseUpListener);
   }
 
   public onZoomInClick() {
