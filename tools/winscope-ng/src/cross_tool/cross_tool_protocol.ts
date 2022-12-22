@@ -67,8 +67,7 @@ export class CrossToolProtocol implements CrossToolProtocolDependencyInversion {
     }
 
     const message = event.data as Message;
-    if (!message.type) {
-      console.log("Cross-tool protocol received invalid message:", message);
+    if (message.type === undefined) {
       return;
     }
 

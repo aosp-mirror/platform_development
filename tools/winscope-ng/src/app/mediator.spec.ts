@@ -20,6 +20,7 @@ import {UploadTracesComponentStub} from "./components/upload_traces_component_st
 import {Mediator} from "./mediator";
 import {AbtChromeExtensionProtocolStub} from "abt_chrome_extension/abt_chrome_extension_protocol_stub";
 import {CrossToolProtocolStub} from "cross_tool/cross_tool_protocol_stub";
+import {TraceFile} from "common/trace/trace";
 import {RealTimestamp} from "common/trace/timestamp";
 import {UnitTestUtils} from "test/unit/utils";
 import {ViewerFactory} from "viewers/viewer_factory";
@@ -195,10 +196,14 @@ describe("Mediator", () => {
 
   const loadTraces = async () => {
     const traces = [
-      await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/SurfaceFlinger.pb"),
-      await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/WindowManager.pb"),
-      await UnitTestUtils.getFixtureFile("traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4"),
+      new TraceFile(await UnitTestUtils.getFixtureFile(
+        "traces/elapsed_and_real_timestamp/SurfaceFlinger.pb")),
+      new TraceFile(await UnitTestUtils.getFixtureFile(
+        "traces/elapsed_and_real_timestamp/WindowManager.pb")),
+      new TraceFile(await UnitTestUtils.getFixtureFile(
+        "traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4")),
     ];
     const errors = await traceData.loadTraces(traces);
+    expect(errors).toEqual([]);
   };
 });
