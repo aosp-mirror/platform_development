@@ -13,22 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {ArrayUtils} from "common/utils/array_utils";
 import {Timestamp, TimestampType} from "common/trace/timestamp";
-import {Trace} from "common/trace/trace";
+import {Trace, TraceFile} from "common/trace/trace";
 import {TraceType} from "common/trace/trace_type";
 
 abstract class Parser {
-  protected trace: File;
+  protected trace: TraceFile;
   protected decodedEntries: any[] = [];
   private timestamps: Map<TimestampType, Timestamp[]> = new Map<TimestampType, Timestamp[]>();
 
-  protected constructor(trace: File) {
+  protected constructor(trace: TraceFile) {
     this.trace = trace;
   }
 
   public async parse() {
-    const traceBuffer = new Uint8Array(await this.trace.arrayBuffer());
+    const traceBuffer = new Uint8Array(await this.trace.file.arrayBuffer());
 
     const magicNumber = this.getMagicNumber();
     if (magicNumber !== undefined)
@@ -39,7 +40,7 @@ abstract class Parser {
       }
     }
 
-    this.decodedEntries = this.decodeTrace(traceBuffer);
+    this.decodedEntries = this.decodeTrace(traceBuffer).map((it) => this.addDefaultProtoFields(it));
 
     for (const type of [TimestampType.ELAPSED, TimestampType.REAL]) {
       const timestamps: Timestamp[] = [];
@@ -60,12 +61,45 @@ abstract class Parser {
     }
   }
 
+  // Add default values to the proto objects.
+  private addDefaultProtoFields(protoObj: any): any {
+    if (!protoObj || protoObj !== Object(protoObj) || !protoObj.$type) {
+      return protoObj;
+    }
+
+    for (const fieldName in protoObj.$type.fields) {
+      if (protoObj.$type.fields.hasOwnProperty(fieldName)) {
+        const fieldProperties = protoObj.$type.fields[fieldName];
+        const field = protoObj[fieldName];
+
+        if (Array.isArray(field)) {
+          field.forEach((item, _) => {
+            this.addDefaultProtoFields(item);
+          });
+          continue;
+        }
+
+        if (!field) {
+          protoObj[fieldName] = fieldProperties.defaultValue;
+        }
+
+        if (fieldProperties.resolvedType && fieldProperties.resolvedType.valuesById) {
+          protoObj[fieldName] = fieldProperties.resolvedType.valuesById[protoObj[fieldProperties.name]];
+          continue;
+        }
+        this.addDefaultProtoFields(protoObj[fieldName]);
+      }
+    }
+
+    return protoObj;
+  }
+
   public abstract getTraceType(): TraceType;
 
   public getTrace(): Trace {
     return {
       type: this.getTraceType(),
-      file: this.trace
+      traceFile: this.trace
     };
   }
 

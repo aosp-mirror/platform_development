@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {Parser} from "parsers/parser";
 import {ParserFactory} from "parsers/parser_factory";
 import {CommonTestUtils} from "test/common/utils";
@@ -21,12 +22,15 @@ import {
   WindowManagerState
 } from "common/trace/flickerlib/common";
 import {Timestamp, TimestampType} from "common/trace/timestamp";
+import {TraceFile} from "common/trace/trace";
 import {TraceType} from "common/trace/trace_type";
 
 class UnitTestUtils extends CommonTestUtils {
   static async getParser(filename: string): Promise<Parser> {
-    const trace = await CommonTestUtils.getFixtureFile(filename);
-    const [parsers, errors] = await new ParserFactory().createParsers([trace]);
+    const file = new TraceFile(
+      await CommonTestUtils.getFixtureFile(filename),
+      undefined);
+    const [parsers, errors] = await new ParserFactory().createParsers([file]);
     expect(parsers.length).toEqual(1);
     return parsers[0];
   }
