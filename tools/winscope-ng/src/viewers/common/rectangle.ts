@@ -24,7 +24,7 @@ export interface Rectangle {
   isVisible: boolean;
   isDisplay: boolean;
   ref: any;
-  id: number;
+  id: string;
   displayId: number;
   isVirtual: boolean;
   isClickable: boolean;

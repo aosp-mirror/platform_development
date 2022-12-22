@@ -85,7 +85,7 @@ export class UiTreeUtils
   }
 
   public static isHighlighted(item: UiTreeNode, highlightedItems: Array<string>) {
-    return item instanceof HierarchyTreeNode && highlightedItems.includes(`${item.id}`);
+    return item instanceof HierarchyTreeNode && highlightedItems.includes(`${item.stableId}`);
   }
 
   public static isVisibleNode(kind: string, type?: string) {

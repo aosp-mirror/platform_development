@@ -106,17 +106,17 @@ export class Presenter {
   }
 
   private generateRects(): Rectangle[] {
-    const displayRects = this.entry?.displays?.map((display: DisplayContent) => {
+    const displayRects: Rectangle[] = this.entry?.displays?.map((display: DisplayContent) => {
       const rect = display.displayRect;
       rect.label = `Display - ${display.title}`;
-      rect.id = display.layerId;
+      rect.stableId = display.stableId;
       rect.displayId = display.id;
       rect.isDisplay = true;
       rect.isVirtual = false;
       return rect;
     }) ?? [];
     this.displayIds = [];
-    const rects = this.entry?.windowStates
+    const rects: Rectangle[] = this.entry?.windowStates
       ?.sort((a: any, b: any) => b.computedZ - a.computedZ)
       .map((it: any) => {
         const rect = it.rect;
@@ -185,7 +185,7 @@ export class Presenter {
         isVisible: rect.ref?.isVisible ?? false,
         isDisplay: rect.isDisplay ?? false,
         ref: rect.ref,
-        id: rect.id ?? rect.ref.id,
+        id: rect.stableId ?? rect.ref.stableId,
         displayId: rect.displayId ?? rect.ref.stackId,
         isVirtual: rect.isVirtual ?? false,
         isClickable: !rect.isDisplay,

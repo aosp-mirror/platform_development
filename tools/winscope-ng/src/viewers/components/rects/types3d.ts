@@ -34,7 +34,7 @@ export interface Box3D {
 }
 
 export interface Rect3D {
-  id: number;
+  id: string;
   center: Point3D;
   width: number;
   height: number;
@@ -65,7 +65,7 @@ export interface Label3D {
   textCenter: Point3D;
   text: string;
   isHighlighted: boolean;
-  rectId: number;
+  rectId: string;
 }
 
 export interface Circle3D {
