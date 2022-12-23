@@ -17,7 +17,7 @@
 import {ArrayUtils} from "common/utils/array_utils";
 import {ScreenRecordingTraceEntry} from "common/trace/screen_recording";
 import {Timestamp, TimestampType} from "common/trace/timestamp";
-import {Trace, TraceFile} from "common/trace/trace";
+import {Trace} from "common/trace/trace";
 import {TraceType} from "common/trace/trace_type";
 import {FunctionUtils, OnProgressUpdateType} from "common/utils/function_utils";
 import {Parser} from "parsers/parser";
@@ -34,11 +34,11 @@ class TraceData {
   private commonTimestampType?: TimestampType;
 
   public async loadTraces(
-    traceFiles: TraceFile[],
+    traces: File[],
     onLoadProgressUpdate: OnProgressUpdateType = FunctionUtils.DO_NOTHING):
     Promise<ParserError[]> {
     const [parsers, parserErrors] =
-      await this.parserFactory.createParsers(traceFiles, onLoadProgressUpdate);
+      await this.parserFactory.createParsers(traces, onLoadProgressUpdate);
     this.parsers = parsers;
     return parserErrors;
   }

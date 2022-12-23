@@ -212,7 +212,7 @@ import { ViewerEvents } from "viewers/common/viewer_events";
             <p *ngIf="additionalProperties.sf" class="mat-body-1">
               <span class="mat-body-2">InputMethod Surface:</span>
               &ngsp;
-              {{ additionalProperties.sf.inputMethodSurface?.isInputMethodSurfaceVisible ?? false}}
+              {{ additionalProperties.sf.inputMethodSurface.isInputMethodSurfaceVisible }}
             </p>
           </div>
         </div>
@@ -409,11 +409,11 @@ export class ImeAdditionalPropertiesComponent {
   }
 
   public sfImeContainerScreenBoundsOrNull() {
-    return this.additionalProperties.sf?.inputMethodSurface?.screenBounds || "null";
+    return this.additionalProperties.sf?.inputMethodSurface.screenBounds || "null";
   }
 
   public sfImeContainerRectOrNull() {
-    return this.additionalProperties.sf?.inputMethodSurface?.rect || "null";
+    return this.additionalProperties.sf?.inputMethodSurface.rect || "null";
   }
 
   public isAllPropertiesNull() {

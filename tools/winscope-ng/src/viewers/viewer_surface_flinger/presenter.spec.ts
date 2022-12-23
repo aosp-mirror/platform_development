@@ -195,7 +195,7 @@ describe("PresenterSurfaceFlinger", () => {
       (child: PropertiesTreeNode) => typeof child.propertyKey === "string"
     ) ?? [];
 
-    expect(nonTerminalChildren.length).toEqual(22);
+    expect(nonTerminalChildren.length).toEqual(21);
     presenter.filterPropertiesTree("bound");
 
     nonTerminalChildren = uiData.propertiesTree?.children?.filter(

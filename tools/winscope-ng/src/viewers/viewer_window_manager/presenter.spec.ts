@@ -200,12 +200,12 @@ describe("PresenterWindowManager", () => {
       (child: PropertiesTreeNode) => typeof child.propertyKey === "string"
     ) ?? [];
 
-    expect(nonTerminalChildren.length).toEqual(14);
+    expect(nonTerminalChildren.length).toEqual(15);
     presenter.filterPropertiesTree("visible");
 
     nonTerminalChildren = uiData.propertiesTree?.children?.filter(
       (child: PropertiesTreeNode) => typeof child.propertyKey === "string"
     ) ?? [];
-    expect(nonTerminalChildren.length).toEqual(1);
+    expect(nonTerminalChildren.length).toEqual(2);
   });
 });

@@ -105,7 +105,19 @@ export class TreeTransformer {
       return null;
     }
 
-    return ObjectFormatter.format(entry.proto);
+    const obj: PropertiesDump = {};
+    const proto = ObjectFormatter.format(entry.proto);
+    if (proto) {
+      Object.keys(proto).forEach((prop: string) => {
+        obj[prop] = proto[prop] ?? "empty";
+
+        if (Object.keys(obj[prop]).length === 0) {
+          obj[prop]= "empty";
+        }
+      });
+    }
+
+    return obj;
   }
 
   private getPropertiesForDisplay(entry: TraceTreeNode): PropertiesDump | null {
@@ -113,7 +125,38 @@ export class TreeTransformer {
       return null;
     }
 
-    return ObjectFormatter.format(entry);
+    let obj: PropertiesDump = {};
+
+    const properties = ObjectFormatter.getProperties(entry);
+    properties.forEach(prop => {
+      obj[prop] = entry[prop as keyof typeof entry];
+    });
+    if (obj["children"]) delete obj["children"];
+    if (obj["proto"]) delete obj["proto"];
+
+    if (entry.proto) {
+      obj["proto"] = Object.assign({}, entry.proto);
+      if (obj["proto"].children) delete obj["proto"].children;
+      if (obj["proto"].childWindows) delete obj["proto"].childWindows;
+      if (obj["proto"].childrenWindows) delete obj["proto"].childrenWindows;
+      if (obj["proto"].childContainers) delete obj["proto"].childContainers;
+      if (obj["proto"].windowToken) delete obj["proto"].windowToken;
+      if (obj["proto"].rootDisplayArea) delete obj["proto"].rootDisplayArea;
+      if (obj["proto"].rootWindowContainer) delete obj["proto"].rootWindowContainer;
+      if (obj["proto"].windowContainer?.children) delete obj["proto"].windowContainer.children;
+    }
+
+    obj = ObjectFormatter.format(obj);
+
+    if (obj["proto"]) {
+      Object.keys(obj["proto"]).forEach((prop: string) => {
+        if (Object.keys(obj["proto"][prop]).length === 0) {
+          obj["proto"][prop] = "empty";
+        }
+      });
+    }
+
+    return obj;
   }
 
   private findFlickerItem(entryFlickerItem: TraceTreeNode | null, stableId: string): TraceTreeNode | null {
@@ -167,11 +210,7 @@ export class TreeTransformer {
 
     const children: any[] = [];
 
-    if (properties === null) {
-      properties = "null";
-    }
-
-    if (!this.isTerminal(properties)) {
+    if (properties && !this.isTerminal(properties)) {
       const transformedProperties = this.transformProperties(properties, transformOptions.metadataKey);
       properties = transformedProperties.properties;
     }
@@ -185,7 +224,7 @@ export class TreeTransformer {
     }
 
     for (const key in properties) {
-      if (!(properties instanceof Terminal)/* && properties[key]*/) {
+      if (!(properties instanceof Terminal) && properties[key]) {
         let compareWithChild = new Terminal();
         let compareWithChildName = new Terminal();
         if (compareWithProperties && !(compareWithProperties instanceof Terminal) && compareWithProperties[key]) {
@@ -340,18 +379,12 @@ export class TreeTransformer {
       // Similar to above — primitive type node has no children.
       transformedProperties.properties["" + properties] = new Terminal();
     } else if (properties && typeof properties == "object") {
-      // Empty objects
-      if (Object.keys(properties).length == 0) {
-        transformedProperties.properties["[empty]"] = new Terminal();
-      } else {
-        // Non empty objects
-        Object.keys(properties).forEach((key) => {
-          if (key === metadataKey) {
-            return;
-          }
-          transformedProperties.properties[key] = properties[key];
-        });
-      }
+      Object.keys(properties).forEach((key) => {
+        if (key === metadataKey) {
+          return;
+        }
+        transformedProperties.properties[key] = properties[key];
+      });
     } else if (properties === null) {
       // Null object has no children — set to be terminal node.
       transformedProperties.properties.null = new Terminal();

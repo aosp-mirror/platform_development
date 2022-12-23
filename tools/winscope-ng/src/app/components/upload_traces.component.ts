@@ -26,8 +26,8 @@ import {MatSnackBar} from "@angular/material/snack-bar";
 import {UploadTracesComponentDependencyInversion} from "./upload_traces_component_dependency_inversion";
 import {TraceData} from "app/trace_data";
 import {TRACE_INFO} from "app/trace_info";
-import {Trace, TraceFile} from "common/trace/trace";
-import {FileUtils, OnFile} from "common/utils/file_utils";
+import {Trace} from "common/trace/trace";
+import {FileUtils} from "common/utils/file_utils";
 import {ParserErrorSnackBarComponent} from "./parser_error_snack_bar_component";
 
 @Component({
@@ -67,7 +67,7 @@ import {ParserErrorSnackBarComponent} from "./parser_error_snack_bar_component";
             </mat-icon>
 
             <p matLine>
-              {{trace.traceFile.file.name}} ({{TRACE_INFO[trace.type].name}})
+              {{trace.file.name}} ({{TRACE_INFO[trace.type].name}})
             </p>
 
             <button color="primary" mat-icon-button
@@ -223,19 +223,14 @@ export class UploadTracesComponent implements UploadTracesComponentDependencyInv
       this.changeDetectorRef.detectChanges();
     };
 
-    const traceFiles: TraceFile[] = [];
-    const onFile: OnFile = (file: File, parentArchive?: File) => {
-      traceFiles.push(new TraceFile(file, parentArchive));
-    };
-
     this.isLoadingFiles = true;
     this.progressMessage = "Unzipping files...";
     this.changeDetectorRef.detectChanges();
-    await FileUtils.unzipFilesIfNeeded(files, onFile, onProgressUpdate);
+    const unzippedFiles = await FileUtils.unzipFilesIfNeeded(files, onProgressUpdate);
 
     this.progressMessage = "Parsing files...";
     this.changeDetectorRef.detectChanges();
-    const parserErrors = await this.traceData.loadTraces(traceFiles, onProgressUpdate);
+    const parserErrors = await this.traceData.loadTraces(unzippedFiles, onProgressUpdate);
 
     this.isLoadingFiles = false;
     this.changeDetectorRef.detectChanges();

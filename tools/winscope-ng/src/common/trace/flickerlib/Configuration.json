@@ -14,13 +14,6 @@
         "visibilityReason",
         "absoluteZ",
         "children",
-        "childWindows",
-        "childContainers",
-        "windowToken",
-        "rootDisplayArea",
-        "rootWindowContainer",
-        "windowContainer",
-        "children",
         "stableId"
     ],
     "intDefColumn": {

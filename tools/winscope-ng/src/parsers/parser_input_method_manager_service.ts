@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import {Timestamp, TimestampType} from "common/trace/timestamp";
-import {TraceFile} from "common/trace/trace";
 import {TraceType} from "common/trace/trace_type";
 import { TraceTreeNode } from "common/trace/trace_tree_node";
 import { TimeUtils } from "common/utils/time_utils";
@@ -23,7 +21,7 @@ import {Parser} from "./parser";
 import {InputMethodManagerServiceTraceFileProto} from "./proto_types";
 
 class ParserInputMethodManagerService extends Parser {
-  constructor(trace: TraceFile) {
+  constructor(trace: File) {
     super(trace);
     this.realToElapsedTimeOffsetNs = undefined;
   }

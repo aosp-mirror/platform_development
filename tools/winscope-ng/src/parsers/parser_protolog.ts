@@ -13,17 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import {FormattedLogMessage, LogMessage, ProtoLogTraceEntry, UnformattedLogMessage} from "common/trace/protolog";
 import {Timestamp, TimestampType} from "common/trace/timestamp";
-import {TraceFile} from "common/trace/trace";
 import {TraceType} from "common/trace/trace_type";
 import {Parser} from "./parser";
 import {ProtoLogFileProto} from "./proto_types";
 import configJson from "../../../../../frameworks/base/data/etc/services.core.protolog.json";
 
 class ParserProtoLog extends Parser {
-  constructor(trace: TraceFile) {
+  constructor(trace: File) {
     super(trace);
   }
 

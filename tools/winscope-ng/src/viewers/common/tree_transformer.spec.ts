@@ -86,12 +86,12 @@ describe("TreeTransformer", () => {
       children: [
         {
           kind: "",
-          name: "id: 3",
+          name: "id: empty",
           stableId: "3 Child1.id",
           children: [],
           combined: true,
           propertyKey: "id",
-          propertyValue: "3"
+          propertyValue: "empty"
         },
         {
           kind: "",
@@ -124,13 +124,13 @@ describe("TreeTransformer", () => {
       children: [
         {
           kind: "",
-          name: "id: 3",
+          name: "id: empty",
           diffType: DiffType.ADDED,
           stableId: "3 Child1.id",
           children: [],
           combined: true,
           propertyKey: "id",
-          propertyValue: "3"
+          propertyValue: "empty"
         },
         {
           kind: "",

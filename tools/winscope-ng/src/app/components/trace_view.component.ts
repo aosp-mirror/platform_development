@@ -40,20 +40,19 @@ interface Tab extends View {
     <div class="header-items-wrapper">
       <nav mat-tab-nav-bar class="tabs-navigation-bar">
         <a
-            *ngFor="let tab of tabs"
-            mat-tab-link
-            [active]="isCurrentActiveTab(tab)"
-            (click)="onTabClick(tab)"
-            class="tab"
+          *ngFor="let tab of tabs"
+          mat-tab-link
+          [active]="isCurrentActiveTab(tab)"
+          (click)="onTabClick(tab)"
+          class="tab"
         >{{tab.title}}</a>
       </nav>
       <button
-          color="primary"
-          mat-button
-          class="save-button"
-          (click)="downloadTracesButtonClick.emit()"
-      >Download all traces
-      </button>
+        color="primary"
+        mat-button
+        class="save-button"
+        (click)="onDownloadTracesButtonClick.emit()"
+      >Download all traces</button>
     </div>
     <mat-divider></mat-divider>
     <div class="trace-view-content">
@@ -97,8 +96,8 @@ interface Tab extends View {
 export class TraceViewComponent {
   @Input() viewers!: Viewer[];
   @Input() store!: PersistentStore;
-  @Output() downloadTracesButtonClick = new EventEmitter<void>();
-  @Output() activeViewChanged = new EventEmitter<View>();
+  @Output() onDownloadTracesButtonClick = new EventEmitter<void>();
+  @Output() onActiveViewChanged = new EventEmitter<View>();
 
   private elementRef: ElementRef;
 
@@ -185,7 +184,7 @@ export class TraceViewComponent {
     }
 
     this.currentActiveTab = tab;
-    this.activeViewChanged.emit(tab);
+    this.onActiveViewChanged.emit(tab);
   }
 
   public isCurrentActiveTab(tab: Tab) {

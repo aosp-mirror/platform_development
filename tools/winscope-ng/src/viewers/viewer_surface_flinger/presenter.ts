@@ -121,11 +121,11 @@ export class Presenter {
       return rect;
     }) ?? [];
     this.displayIds = [];
-    const rects = this.getLayersForRectsView()
+    const rects = this.entry.visibleLayers
       .sort((layer1: any, layer2: any) => {
         const absZLayer1 = layer1.zOrderPath;
         const absZLayer2 = layer2.zOrderPath;
-        let elA, elB, i, len;
+        var elA, elB, i, len;
         for (i = 0, len = Math.min(absZLayer1.length, absZLayer2.length); i < len; i++) {
           elA = absZLayer1[i];
           elB = absZLayer2[i];
@@ -146,14 +146,6 @@ export class Presenter {
         return rect;
       });
     return this.rectsToUiData(rects.concat(displayRects));
-  }
-
-  private getLayersForRectsView(): Layer[] {
-    const onlyVisible = this.hierarchyUserOptions["onlyVisible"]?.enabled ?? false;
-    // Show only visible layers or Visible + Occluded layers. Don't show all layers
-    // (flattenedLayers) because container layers are never meant to be displayed
-    return this.entry.flattenedLayers
-      .filter((it: any) => it.isVisible || (!onlyVisible && it.occludedBy.length > 0));
   }
 
   private updateSelectedTreeUiData() {

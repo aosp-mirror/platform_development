@@ -48,9 +48,6 @@ class PropertiesTreeGenerator {
   }
 
   private leafToString(value: any): undefined|string {
-    if (value == null) {
-      return "";
-    }
     if (typeof value === "boolean") {
       return "" + value;
     }

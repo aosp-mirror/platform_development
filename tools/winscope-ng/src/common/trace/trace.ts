@@ -16,15 +16,9 @@
 
 import {TraceType} from "./trace_type";
 
-export interface Trace {
-  type: TraceType;
-  traceFile: TraceFile;
+interface Trace {
+  type: TraceType
+  file: File,
 }
 
-export class TraceFile {
-  constructor(
-    public file: File,
-    public parentArchive?: File
-  ) {
-  }
-}
+export {Trace};

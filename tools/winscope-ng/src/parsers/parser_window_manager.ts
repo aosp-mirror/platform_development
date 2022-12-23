@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 import {Timestamp, TimestampType} from "common/trace/timestamp";
-import {TraceFile} from "common/trace/trace";
 import {TraceType} from "common/trace/trace_type";
 import {Parser} from "./parser";
 import {WindowManagerTraceFileProto} from "./proto_types";
 import {WindowManagerState} from "common/trace/flickerlib/windows/WindowManagerState";
 
 class ParserWindowManager extends Parser {
-  constructor(trace: TraceFile) {
+  constructor(trace: File) {
     super(trace);
     this.realToElapsedTimeOffsetNs = undefined;
   }

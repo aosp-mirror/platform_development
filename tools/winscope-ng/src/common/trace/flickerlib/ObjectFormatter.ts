@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-import {
-    toSize, toActiveBuffer, toColor, toColor3, toPoint, toPointF, toRect,
-    toRectF, toRegion, toMatrix22, toTransform, toInsets
-} from './common';
-import { PropertiesDump } from "viewers/common/ui_tree_utils";
+import {toSize, toActiveBuffer, toColor, toColor3, toPoint, toPointF, toRect,
+    toRectF, toRegion, toMatrix22, toTransform} from './common';
 import intDefMapping from
-    '../../../../../../../prebuilts/misc/common/winscope/intDefMapping.json';
+      '../../../../../../../prebuilts/misc/common/winscope/intDefMapping.json';
 import config from './Configuration.json'
 
 function readIntdefMap(): Map<string, string> {
@@ -61,7 +58,7 @@ export default class ObjectFormatter {
         do {
             const properties = Object.getOwnPropertyNames(obj).filter(it => {
                 // filter out functions
-                if (typeof (entry[it]) === 'function') return false;
+                if (typeof(entry[it]) === 'function') return false;
                 // internal propertires from kotlinJs
                 if (it.includes(`$`)) return false;
                 // private kotlin variables from kotlin
@@ -76,7 +73,7 @@ export default class ObjectFormatter {
                 return !(value?.stableId);
             });
             properties.forEach(function (prop) {
-                if (typeof (entry[prop]) !== 'function' && props.indexOf(prop) === -1) {
+                if (typeof(entry[prop]) !== 'function' && props.indexOf(prop) === -1) {
                     props.push(prop);
                 }
             });
@@ -91,11 +88,11 @@ export default class ObjectFormatter {
      * @param obj The raw object to format
      * @return The formatted object
      */
-    static format(obj: any): PropertiesDump {
+    static format(obj: any): any {
         const properties = this.getProperties(obj);
         const sortedProperties = properties.sort()
 
-        const result: PropertiesDump = {};
+        const result: any = {}
         sortedProperties.forEach(entry => {
             const key = entry;
             const value: any = obj[key];
@@ -111,7 +108,7 @@ export default class ObjectFormatter {
                 // raw values (e.g., false or 0)
                 if (!value) {
                     result[key] = value
-                    // flicker obj
+                // flicker obj
                 } else if (value.prettyPrint) {
                     const isEmpty = value.isEmpty === true;
                     if (!isEmpty || this.displayDefaults) {
@@ -119,23 +116,23 @@ export default class ObjectFormatter {
                     }
                 } else {
                     // converted proto to flicker
-                    const translatedObject = this.translateObject(key, value);
+                    const translatedObject = this.translateObject(value);
                     if (translatedObject) {
                         if (translatedObject.prettyPrint) {
-                            result[key] = translatedObject.prettyPrint();
+                          result[key] = translatedObject.prettyPrint();
                         }
                         else {
-                            result[key] = translatedObject;
+                          result[key] = translatedObject;
                         }
-                        // objects - recursive call
-                    } else if (value && typeof (value) == `object`) {
+                    // objects - recursive call
+                    } else if (value && typeof(value) == `object`) {
                         const childObj = this.format(value) as any;
                         const isEmpty = Object.entries(childObj).length == 0 || childObj.isEmpty;
                         if (!isEmpty || this.displayDefaults) {
                             result[key] = childObj;
                         }
                     } else {
-                        // values
+                    // values
                         result[key] = this.translateIntDef(obj, key, value);
                     }
                 }
@@ -153,9 +150,9 @@ export default class ObjectFormatter {
      *
      * @param obj Object to translate
      */
-    private static translateObject(key: string, obj: any) {
+    private static translateObject(obj: any) {
         const type = obj?.$type?.name ?? obj?.constructor?.name;
-        switch (type) {
+        switch(type) {
             case `SizeProto`: return toSize(obj);
             case `ActiveBufferProto`: return toActiveBuffer(obj);
             case `Color3`: return toColor3(obj);
@@ -163,9 +160,7 @@ export default class ObjectFormatter {
             case `Long`: return obj?.toString();
             case `PointProto`: return toPoint(obj);
             case `PositionProto`: return toPointF(obj);
-            // It is necessary to check for a keyword insets because the proto
-            // definition of insets and rects uses the same object type
-            case `RectProto`: return key.toLowerCase().includes("insets") ? toInsets(obj) : toRect(obj);
+            case `RectProto`: return toRect(obj);
             case `Matrix22`: return toMatrix22(obj);
             case `FloatRectProto`: return toRectF(obj);
             case `RegionProto`: return toRegion(obj);
@@ -196,7 +191,7 @@ export default class ObjectFormatter {
      * @param obj Proto object
      * @param propertyName Property to search
      */
-    private static getTypeDefSpec(obj: any, propertyName: string): string | null {
+    private static getTypeDefSpec(obj: any, propertyName: string): string|null {
         const fields = obj?.$type?.fields;
         if (!fields) {
             return null;
@@ -227,7 +222,7 @@ export default class ObjectFormatter {
         // Parse Flicker objects (no intdef annotation supported)
         if (this.FLICKER_INTDEF_MAP.has(propertyPath)) {
             translatedValue = this.getIntFlagsAsStrings(value,
-                <string>this.FLICKER_INTDEF_MAP.get(propertyPath));
+              <string>this.FLICKER_INTDEF_MAP.get(propertyPath));
         } else {
             // If it's a proto, search on the proto definition for the intdef type
             const typeDefSpec = this.getTypeDefSpec(parentObj, propertyName);
@@ -261,25 +256,25 @@ export default class ObjectFormatter {
         let leftOver = parsedIntFlags;
 
         for (const flagValue of knownFlagValues) {
-            if (((leftOver & flagValue) && ((intFlags & flagValue) === flagValue))
+          if (((leftOver & flagValue) && ((intFlags & flagValue) === flagValue))
                 || (parsedIntFlags === 0 && flagValue === 0)) {
-                flags.push(mapping[<keyof typeof mapping>flagValue]);
+            flags.push(mapping[<keyof typeof mapping>flagValue]);
 
-                leftOver = leftOver & ~flagValue;
-            }
+            leftOver = leftOver & ~flagValue;
+          }
         }
 
         if (flags.length === 0) {
-            console.error('No valid flag mappings found for ',
-                intFlags, 'of type', annotationType);
+          console.error('No valid flag mappings found for ',
+              intFlags, 'of type', annotationType);
         }
 
         if (leftOver) {
-            // If 0 is a valid flag value that isn't in the intDefMapping
-            // it will be ignored
-            flags.push(leftOver);
+          // If 0 is a valid flag value that isn't in the intDefMapping
+          // it will be ignored
+          flags.push(leftOver);
         }
 
         return flags.join(' | ');
-    }
+      }
 }
