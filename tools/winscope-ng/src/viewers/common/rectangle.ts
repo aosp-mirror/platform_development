@@ -19,8 +19,6 @@ export interface Rectangle {
   bottomRight: Point;
   label: string;
   transform: RectTransform | null;
-  height: number;
-  width: number;
   isVisible: boolean;
   isDisplay: boolean;
   ref: any;
@@ -28,11 +26,17 @@ export interface Rectangle {
   displayId: number;
   isVirtual: boolean;
   isClickable: boolean;
+  cornerRadius: number;
 }
 
 export interface Point {
   x: number,
   y: number
+}
+
+export interface Size {
+  width: number,
+  height: number
 }
 
 export interface RectTransform {

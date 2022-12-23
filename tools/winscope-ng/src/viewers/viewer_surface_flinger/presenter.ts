@@ -114,6 +114,7 @@ export class Presenter {
       rect.stableId = `Display - ${display.id}`;
       rect.displayId = display.layerStackId;
       rect.isDisplay = true;
+      rect.cornerRadius = 0;
       rect.isVirtual = display.isVirtual ?? false;
       rect.transform = {
         matrix: display.transform.matrix
@@ -126,6 +127,7 @@ export class Presenter {
       .map((it: any) => {
         const rect = it.rect;
         rect.displayId = it.stackId;
+        rect.cornerRadius = it.cornerRadius;
         if (!this.displayIds.includes(it.stackId)) {
           this.displayIds.push(it.stackId);
         }
@@ -214,8 +216,6 @@ export class Presenter {
       const newRect: Rectangle = {
         topLeft: {x: rect.left, y: rect.top},
         bottomRight: {x: rect.right, y: rect.bottom},
-        height: rect.height,
-        width: rect.width,
         label: rect.label,
         transform: transform,
         isVisible: rect.ref?.isVisible ?? false,
@@ -224,7 +224,8 @@ export class Presenter {
         id: rect.stableId ?? rect.ref.stableId,
         displayId: rect.displayId ?? rect.ref.stackId,
         isVirtual: rect.isVirtual ?? false,
-        isClickable: !(rect.isDisplay ?? false)
+        isClickable: !(rect.isDisplay ?? false),
+        cornerRadius: rect.cornerRadius
       };
       uiRects.push(newRect);
     });
