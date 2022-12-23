@@ -15,7 +15,16 @@
  */
 
 import {Rectangle} from "viewers/common/rectangle";
-import {Box3D, ColorType, Label3D, Point3D, Rect3D, Scene3D, Transform3D} from "./types3d";
+import {
+  Box3D,
+  ColorType,
+  Distance2D,
+  Label3D,
+  Point3D,
+  Rect3D,
+  Scene3D,
+  Transform3D
+} from "./types3d";
 
 class Mapper3D {
   private static readonly CAMERA_ROTATION_FACTOR_INIT = 1;
@@ -34,6 +43,7 @@ class Mapper3D {
   private cameraRotationFactor = Mapper3D.CAMERA_ROTATION_FACTOR_INIT;
   private zSpacingFactor = Mapper3D.Z_SPACING_FACTOR_INIT;
   private zoomFactor = Mapper3D.ZOOM_FACTOR_INIT;
+  private panScreenDistance: Distance2D = new Distance2D(0, 0);
   private showOnlyVisibleMode = false; // by default show all
   private showVirtualMode = false; // by default don't show virtual displays
   private currentDisplayId = 0; // default stack id is usually 0
@@ -72,10 +82,17 @@ class Mapper3D {
     this.zoomFactor = Math.max(this.zoomFactor, Mapper3D.ZOOM_FACTOR_MIN);
   }
 
+  addPanScreenDistance(distance: Distance2D) {
+    this.panScreenDistance.dx += distance.dx;
+    this.panScreenDistance.dy += distance.dy;
+  }
+
   resetCamera() {
     this.cameraRotationFactor = Mapper3D.CAMERA_ROTATION_FACTOR_INIT;
     this.zSpacingFactor = Mapper3D.Z_SPACING_FACTOR_INIT;
     this.zoomFactor = Mapper3D.ZOOM_FACTOR_INIT;
+    this.panScreenDistance.dx = 0;
+    this.panScreenDistance.dy = 0;
   }
 
   getShowOnlyVisibleMode(): boolean {
@@ -112,7 +129,8 @@ class Mapper3D {
       boundingBox: boundingBox,
       camera: {
         rotationFactor: this.cameraRotationFactor,
-        zoomFactor: this.zoomFactor
+        zoomFactor: this.zoomFactor,
+        panScreenDistance: this.panScreenDistance,
       },
       rects: rects3d,
       labels: labels3d

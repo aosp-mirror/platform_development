@@ -284,10 +284,10 @@ export class TimelineComponent implements TimelineComponentDependencyInversion {
       throw Error("Timeline component doesn't support viewers with dependencies length !== 1");
     }
 
-    this.wrappedActiveTrace = types[0];
+    this.internalActiveTrace = types[0];
 
-    if (!this.selectedTraces.includes(this.wrappedActiveTrace)) {
-      this.selectedTraces.push(this.wrappedActiveTrace);
+    if (!this.selectedTraces.includes(this.internalActiveTrace)) {
+      this.selectedTraces.push(this.internalActiveTrace);
     }
 
     if (this.selectedTraces.length > this.MAX_SELECTED_TRACES) {
@@ -297,7 +297,7 @@ export class TimelineComponent implements TimelineComponentDependencyInversion {
 
     this.selectedTracesFormControl.setValue(this.selectedTraces);
   }
-  public wrappedActiveTrace: TraceType|undefined = undefined;
+  public internalActiveTrace: TraceType|undefined = undefined;
 
   @Input() timelineData!: TimelineData;
   @Input() availableTraces: TraceType[] = [];
@@ -404,7 +404,7 @@ export class TimelineComponent implements TimelineComponentDependencyInversion {
   }
 
   isOptionDisabled(trace: TraceType) {
-    if (this.wrappedActiveTrace === trace) {
+    if (this.internalActiveTrace === trace) {
       return true;
     }
 
@@ -440,33 +440,33 @@ export class TimelineComponent implements TimelineComponentDependencyInversion {
   }
 
   hasPrevEntry(): boolean {
-    if (!this.wrappedActiveTrace ||
-      (this.timelineData.getTimelines().get(this.wrappedActiveTrace)?.length ?? 0) === 0) {
+    if (!this.internalActiveTrace ||
+      (this.timelineData.getTimelines().get(this.internalActiveTrace)?.length ?? 0) === 0) {
       return false;
     }
-    return this.timelineData.getPreviousTimestampFor(this.wrappedActiveTrace) !== undefined;
+    return this.timelineData.getPreviousTimestampFor(this.internalActiveTrace) !== undefined;
   }
 
   hasNextEntry(): boolean {
-    if (!this.wrappedActiveTrace ||
-      (this.timelineData.getTimelines().get(this.wrappedActiveTrace)?.length ?? 0) === 0) {
+    if (!this.internalActiveTrace ||
+      (this.timelineData.getTimelines().get(this.internalActiveTrace)?.length ?? 0) === 0) {
       return false;
     }
-    return this.timelineData.getNextTimestampFor(this.wrappedActiveTrace) !== undefined;
+    return this.timelineData.getNextTimestampFor(this.internalActiveTrace) !== undefined;
   }
 
   moveToPreviousEntry() {
-    if (!this.wrappedActiveTrace) {
+    if (!this.internalActiveTrace) {
       return;
     }
-    this.timelineData.moveToPreviousTimestampFor(this.wrappedActiveTrace);
+    this.timelineData.moveToPreviousTimestampFor(this.internalActiveTrace);
   }
 
   moveToNextEntry() {
-    if (!this.wrappedActiveTrace) {
+    if (!this.internalActiveTrace) {
       return;
     }
-    this.timelineData.moveToNextTimestampFor(this.wrappedActiveTrace);
+    this.timelineData.moveToNextTimestampFor(this.internalActiveTrace);
   }
 
   humanElapsedTimeInputChange(event: Event) {
