@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import {
+  ChangeDetectionStrategy,
   Component,
   Input,
 } from "@angular/core";
@@ -24,6 +25,7 @@ import { PersistentStore } from "common/utils/persistent_store";
 
 @Component({
   selector: "viewer-surface-flinger",
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="card-grid">
       <rects-view
@@ -49,7 +51,7 @@ import { PersistentStore } from "common/utils/persistent_store";
         [userOptions]="inputData?.propertiesUserOptions ?? {}"
         [propertiesTree]="inputData?.propertiesTree ?? {}"
         [selectedFlickerItem]="inputData?.selectedLayer ?? {}"
-        [propertyGroups]="true"
+        [displayPropertyGroups]="inputData?.displayPropertyGroups"
         [isProtoDump]="true"
       ></properties-view>
     </div>
@@ -67,7 +69,7 @@ import { PersistentStore } from "common/utils/persistent_store";
   ]
 })
 export class ViewerSurfaceFlingerComponent {
-  @Input() inputData: UiData | null = null;
+  @Input() inputData?: UiData;
   @Input() store: PersistentStore = new PersistentStore();
   @Input() active = false;
   TRACE_INFO = TRACE_INFO;
