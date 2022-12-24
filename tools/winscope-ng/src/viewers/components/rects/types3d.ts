@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-enum ColorType {
+export enum ColorType {
   VISIBLE,
   NOT_VISIBLE,
   HIGHLIGHTED
 }
 
-interface Box3D {
+export class Distance2D{
+  constructor(public dx: number, public dy: number) {
+  }
+}
+
+export interface Box3D {
   width: number,
   height: number,
   depth: number,
@@ -28,8 +33,8 @@ interface Box3D {
   diagonal: number;
 }
 
-interface Rect3D {
-  id: number;
+export interface Rect3D {
+  id: string;
   center: Point3D;
   width: number;
   height: number;
@@ -39,7 +44,7 @@ interface Rect3D {
   transform: Transform3D;
 }
 
-interface Transform3D {
+export interface Transform3D {
   dsdx: number;
   dsdy: number;
   tx: number;
@@ -48,36 +53,35 @@ interface Transform3D {
   ty: number;
 }
 
-interface Point3D {
+export interface Point3D {
   x: number;
   y: number;
   z: number;
 }
 
-interface Label3D {
+export interface Label3D {
   circle: Circle3D;
   linePoints: Point3D[];
   textCenter: Point3D;
   text: string;
   isHighlighted: boolean;
-  rectId: number;
+  rectId: string;
 }
 
-interface Circle3D {
+export interface Circle3D {
   radius: number;
   center: Point3D;
 }
 
-interface Scene3D {
+export interface Scene3D {
   boundingBox: Box3D;
   camera: Camera;
   rects: Rect3D[];
   labels: Label3D[];
 }
 
-interface Camera {
+export interface Camera {
   rotationFactor: number;
   zoomFactor: number;
+  panScreenDistance: Distance2D;
 }
-
-export {Box3D, Circle3D, ColorType, Label3D, Point3D, Rect3D, Scene3D, Transform3D};

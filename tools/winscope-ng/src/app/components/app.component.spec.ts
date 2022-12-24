@@ -104,6 +104,7 @@ describe("AppComponent", () => {
     component.dataLoaded = false;
     fixture.detectChanges();
     expect(htmlElement.querySelector(".welcome-info")).toBeTruthy();
+    expect(htmlElement.querySelector(".active-trace-file-info")).toBeFalsy();
     expect(htmlElement.querySelector(".collect-traces-card")).toBeTruthy();
     expect(htmlElement.querySelector(".upload-traces-card")).toBeTruthy();
     expect(htmlElement.querySelector(".viewers")).toBeFalsy();
@@ -113,6 +114,7 @@ describe("AppComponent", () => {
     component.dataLoaded = true;
     fixture.detectChanges();
     expect(htmlElement.querySelector(".welcome-info")).toBeFalsy();
+    expect(htmlElement.querySelector(".active-trace-file-info")).toBeTruthy();
     expect(htmlElement.querySelector(".collect-traces-card")).toBeFalsy();
     expect(htmlElement.querySelector(".upload-traces-card")).toBeFalsy();
     expect(htmlElement.querySelector(".viewers")).toBeTruthy();

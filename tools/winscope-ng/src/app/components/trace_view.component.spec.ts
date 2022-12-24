@@ -96,7 +96,7 @@ describe("TraceViewComponent", () => {
   });
 
   it("emits event on download button click", () => {
-    const spy = spyOn(component.onDownloadTracesButtonClick, "emit");
+    const spy = spyOn(component.downloadTracesButtonClick, "emit");
 
     const downloadButton: null|HTMLButtonElement =
       htmlElement.querySelector(".save-button");

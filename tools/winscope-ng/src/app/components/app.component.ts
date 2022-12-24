@@ -58,7 +58,11 @@ import {UploadTracesComponent} from "./upload_traces.component";
         </button>
       </a>
 
-      <div class="spacer"></div>
+      <div class="spacer">
+        <span *ngIf="dataLoaded" class="active-trace-file-info mat-body-2">
+          {{activeTraceFileInfo}}
+        </span>
+      </div>
 
       <button *ngIf="dataLoaded" color="primary" mat-stroked-button
               (click)="onUploadNewClick()">
@@ -97,8 +101,8 @@ import {UploadTracesComponent} from "./upload_traces.component";
               class="viewers"
               [viewers]="viewers"
               [store]="store"
-              (onDownloadTracesButtonClick)="onDownloadTracesButtonClick()"
-              (onActiveViewChanged)="handleActiveViewChanged($event)"
+              (downloadTracesButtonClick)="onDownloadTracesButtonClick()"
+              (activeViewChanged)="onActiveViewChanged($event)"
           ></trace-view>
 
           <mat-divider></mat-divider>
@@ -164,6 +168,7 @@ import {UploadTracesComponent} from "./upload_traces.component";
       }
       .spacer {
         flex: 1;
+        text-align: center;
       }
       .viewers {
         height: 0;
@@ -214,7 +219,8 @@ export class AppComponent implements AppComponentDependencyInversion {
   viewers: Viewer[] = [];
   isDarkModeOn!: boolean;
   dataLoaded = false;
-  activeView: View|undefined;
+  activeView?: View;
+  activeTraceFileInfo = "";
   collapsedTimelineHeight = 0;
   @ViewChild(UploadTracesComponent) uploadTracesComponent?: UploadTracesComponent;
   @ViewChild(TimelineComponent) timelineComponent?: TimelineComponent;
@@ -313,30 +319,38 @@ export class AppComponent implements AppComponentDependencyInversion {
     document.body.removeChild(a);
   }
 
-  private async makeTraceFilesForDownload(): Promise<File[]> {
-    return this.traceData.getLoadedTraces().map(trace => {
-      const traceType = TRACE_INFO[trace.type].name;
-      const newName = traceType + "/" + FileUtils.removeDirFromFileName(trace.file.name);
-      return new File([trace.file], newName);
-    });
-  }
-
-  handleActiveViewChanged(view: View) {
+  onActiveViewChanged(view: View) {
     this.activeView = view;
+    this.activeTraceFileInfo = this.makeActiveTraceFileInfo(view);
     this.timelineData.setActiveViewTraceTypes(view.dependencies);
-  }
-
-  getActiveTraceType(): TraceType|undefined {
-    if (this.activeView === undefined) {
-      return undefined;
-    }
-    if (this.activeView.dependencies.length !== 1) {
-      throw Error("Viewers with dependencies length !== 1 are not supported.");
-    }
-    return this.activeView.dependencies[0];
   }
 
   goToLink(url: string){
     window.open(url, "_blank");
+  }
+
+  private makeActiveTraceFileInfo(view: View): string {
+    const traceFile = this.traceData
+      .getLoadedTraces()
+      .find(trace => trace.type === view.dependencies[0])
+      ?.traceFile;
+
+    if (!traceFile) {
+      return "";
+    }
+
+    if (!traceFile.parentArchive) {
+      return traceFile.file.name;
+    }
+
+    return `${traceFile.parentArchive.name} - ${traceFile.file.name}`;
+  }
+
+  private async makeTraceFilesForDownload(): Promise<File[]> {
+    return this.traceData.getLoadedTraces().map(trace => {
+      const traceType = TRACE_INFO[trace.type].name;
+      const newName = traceType + "/" + FileUtils.removeDirFromFileName(trace.traceFile.file.name);
+      return new File([trace.traceFile.file], newName);
+    });
   }
 }

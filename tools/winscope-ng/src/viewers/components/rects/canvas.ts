@@ -16,7 +16,6 @@
 import {Rectangle} from "viewers/common/rectangle";
 import * as THREE from "three";
 import {CSS2DObject, CSS2DRenderer} from "three/examples/jsm/renderers/CSS2DRenderer";
-import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 import {ViewerEvents} from "viewers/common/viewer_events";
 import {Circle3D, ColorType, Label3D, Point3D, Rect3D, Scene3D, Transform3D} from "./types3d";
 
@@ -58,16 +57,22 @@ export class Canvas {
       widthAspectRatioAdjustFactor = 1;
     }
 
+    const cameraWidth = Canvas.TARGET_SCENE_DIAGONAL * widthAspectRatioAdjustFactor;
+    const cameraHeight = Canvas.TARGET_SCENE_DIAGONAL * heightAspectRatioAdjustFactor;
+
+    const panFactorX = scene.camera.panScreenDistance.dx / this.canvasRects.clientWidth;
+    const panFactorY = scene.camera.panScreenDistance.dy / this.canvasRects.clientHeight;
+
     this.scene = new THREE.Scene();
     const scaleFactor = Canvas.TARGET_SCENE_DIAGONAL / scene.boundingBox.diagonal * scene.camera.zoomFactor;
     this.scene.scale.set(scaleFactor, -scaleFactor, scaleFactor);
-    this.scene.translateX(scaleFactor * -scene.boundingBox.center.x);
-    this.scene.translateY(scaleFactor * scene.boundingBox.center.y);
+    this.scene.translateX(scaleFactor * -scene.boundingBox.center.x + cameraWidth * panFactorX);
+    this.scene.translateY(scaleFactor * scene.boundingBox.center.y - cameraHeight * panFactorY);
     this.scene.translateZ(scaleFactor * -scene.boundingBox.center.z);
 
     this.camera = new THREE.OrthographicCamera(
-      -Canvas.TARGET_SCENE_DIAGONAL / 2 * widthAspectRatioAdjustFactor, Canvas.TARGET_SCENE_DIAGONAL / 2 * widthAspectRatioAdjustFactor,
-      Canvas.TARGET_SCENE_DIAGONAL / 2 * heightAspectRatioAdjustFactor, -Canvas.TARGET_SCENE_DIAGONAL / 2 * heightAspectRatioAdjustFactor,
+      - cameraWidth / 2, cameraWidth / 2,
+      cameraHeight / 2, - cameraHeight / 2,
       0, 100,
     );
 
@@ -236,7 +241,7 @@ export class Canvas {
     mesh.position.x = rect.center.x;
     mesh.position.y = rect.center.y;
     mesh.position.z = rect.center.z;
-    mesh.name = `${rect.id}`;
+    mesh.name = rect.id;
 
     return mesh;
   }
@@ -261,13 +266,13 @@ export class Canvas {
     return mesh;
   }
 
-  private propagateUpdateHighlightedItems(event: MouseEvent, newId: number) {
+  private propagateUpdateHighlightedItems(event: MouseEvent, newId: string) {
     event.preventDefault();
     const highlightedChangeEvent: CustomEvent = new CustomEvent(
       ViewerEvents.HighlightedChange,
       {
         bubbles: true,
-        detail: { id: `${newId}` }
+        detail: { id: newId }
       });
     event.target?.dispatchEvent(highlightedChangeEvent);
   }

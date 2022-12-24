@@ -107,11 +107,11 @@ export class Presenter {
   private generateRects(): Rectangle[] {
     const displayRects = this.entry.displays.map((display: any) => {
       const rect = display.layerStackSpace;
-      rect.label = `Display`;
+      rect.label = "Display";
       if (display.name) {
         rect.label += ` - ${display.name}`;
       }
-      rect.id = display.id;
+      rect.stableId = `Display - ${display.id}`;
       rect.displayId = display.layerStackId;
       rect.isDisplay = true;
       rect.isVirtual = display.isVirtual ?? false;
@@ -121,19 +121,8 @@ export class Presenter {
       return rect;
     }) ?? [];
     this.displayIds = [];
-    const rects = this.entry.visibleLayers
-      .sort((layer1: any, layer2: any) => {
-        const absZLayer1 = layer1.zOrderPath;
-        const absZLayer2 = layer2.zOrderPath;
-        var elA, elB, i, len;
-        for (i = 0, len = Math.min(absZLayer1.length, absZLayer2.length); i < len; i++) {
-          elA = absZLayer1[i];
-          elB = absZLayer2[i];
-          if (elA > elB) return -1;
-          if (elA < elB) return 1;
-        }
-        return absZLayer2.length - absZLayer1.length;
-      })
+    const rects = this.getLayersForRectsView()
+      .sort(this.compareLayerZ)
       .map((it: any) => {
         const rect = it.rect;
         rect.displayId = it.stackId;
@@ -146,6 +135,25 @@ export class Presenter {
         return rect;
       });
     return this.rectsToUiData(rects.concat(displayRects));
+  }
+
+  private getLayersForRectsView(): Layer[] {
+    const onlyVisible = this.hierarchyUserOptions["onlyVisible"]?.enabled ?? false;
+    // Show only visible layers or Visible + Occluded layers. Don't show all layers
+    // (flattenedLayers) because container layers are never meant to be displayed
+    return this.entry.flattenedLayers
+      .filter((it: any) => it.isVisible || (!onlyVisible && it.occludedBy.length > 0));
+  }
+
+  private compareLayerZ(a: Layer, b: Layer): number {
+    const zipLength = Math.min(a.zOrderPath.length, b.zOrderPath.length);
+    for (let i = 0; i < zipLength; ++i) {
+      const zOrderA = a.zOrderPath[i];
+      const zOrderB = b.zOrderPath[i];
+      if (zOrderA > zOrderB) return -1;
+      if (zOrderA < zOrderB) return 1;
+    }
+    return b.zOrderPath.length - a.zOrderPath.length;
   }
 
   private updateSelectedTreeUiData() {
@@ -213,7 +221,7 @@ export class Presenter {
         isVisible: rect.ref?.isVisible ?? false,
         isDisplay: rect.isDisplay ?? false,
         ref: rect.ref,
-        id: rect.id ?? rect.ref.id,
+        id: rect.stableId ?? rect.ref.stableId,
         displayId: rect.displayId ?? rect.ref.stackId,
         isVirtual: rect.isVirtual ?? false,
         isClickable: !(rect.isDisplay ?? false)

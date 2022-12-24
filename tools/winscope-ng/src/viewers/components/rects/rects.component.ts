@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, Input, OnDestroy, Inject, ElementRef, SimpleChanges, OnInit, HostListener} from "@angular/core";
-import {Rectangle} from "viewers/common/rectangle";
+import {Component, Input, OnDestroy, Inject, ElementRef, OnInit, HostListener} from "@angular/core";
+import {Rectangle, Point} from "viewers/common/rectangle";
 import {Canvas} from "./canvas";
 import {ViewerEvents} from "viewers/common/viewer_events";
 import {Mapper3D} from "./mapper3d";
+import {Distance2D} from "./types3d";
 
 @Component({
   selector: "rects-view",
@@ -99,10 +100,10 @@ import {Mapper3D} from "./mapper3d";
         <div class="canvas-labels">
         </div>
       </div>
-      <div *ngIf="wrappedDisplayIds.length > 1"
+      <div *ngIf="internalDisplayIds.length > 1"
            class="display-button-container">
         <button
-            *ngFor="let displayId of wrappedDisplayIds"
+            *ngFor="let displayId of internalDisplayIds"
             color="primary"
             mat-raised-button
             (click)="onDisplayIdChange(displayId)"
@@ -177,33 +178,35 @@ import {Mapper3D} from "./mapper3d";
 export class RectsComponent implements OnInit, OnDestroy {
   @Input() title = "title";
   @Input() set rects(rects: Rectangle[]) {
-    this.wrappedRects = rects;
+    this.internalRects = rects;
     this.drawScene();
   }
 
   @Input() set displayIds(ids: number[]) {
-    this.wrappedDisplayIds = ids;
-    if (!this.wrappedDisplayIds.includes(this.mapper3d.getCurrentDisplayId())) {
-      this.mapper3d.setCurrentDisplayId(this.wrappedDisplayIds[0]);
+    this.internalDisplayIds = ids;
+    if (!this.internalDisplayIds.includes(this.mapper3d.getCurrentDisplayId())) {
+      this.mapper3d.setCurrentDisplayId(this.internalDisplayIds[0]);
       this.drawScene();
     }
   }
 
-  @Input() set highlightedItems(ids: string[]) {
-    this.wrappedHighlightedItems = ids.map(id => Number(id));
-    this.mapper3d.setHighlightedRectIds(this.wrappedHighlightedItems);
+  @Input() set highlightedItems(stableIds: string[]) {
+    this.internalHighlightedItems = stableIds;
+    this.mapper3d.setHighlightedRectIds(this.internalHighlightedItems);
     this.drawScene();
   }
 
-  private wrappedRects: Rectangle[] = [];
-  private wrappedDisplayIds: number[] = [];
-  private wrappedHighlightedItems: number[] = [];
+  private internalRects: Rectangle[] = [];
+  private internalDisplayIds: number[] = [];
+  private internalHighlightedItems: string[] = [];
 
   private mapper3d: Mapper3D;
   private canvas?: Canvas;
   private resizeObserver: ResizeObserver;
   private canvasRects?: HTMLCanvasElement;
   private canvasLabels?: HTMLElement;
+  private mouseMoveListener = (event: MouseEvent) => this.onMouseMove(event);
+  private mouseUpListener = (event: MouseEvent) => this.onMouseUp(event);
 
   constructor(
     @Inject(ElementRef) private elementRef: ElementRef,
@@ -222,7 +225,9 @@ export class RectsComponent implements OnInit, OnDestroy {
     this.canvasLabels = canvasContainer.querySelector(".canvas-labels");
     this.canvas = new Canvas(this.canvasRects, this.canvasLabels!);
 
-    this.mapper3d.setCurrentDisplayId(this.wrappedDisplayIds[0] ?? 0);
+    this.canvasRects.addEventListener("mousedown", event => this.onCanvasMouseDown(event));
+
+    this.mapper3d.setCurrentDisplayId(this.internalDisplayIds[0] ?? 0);
     this.drawScene();
   }
 
@@ -252,6 +257,22 @@ export class RectsComponent implements OnInit, OnDestroy {
     } else {
       this.doZoomIn();
     }
+  }
+
+  public onCanvasMouseDown(event: MouseEvent) {
+    document.addEventListener("mousemove", this.mouseMoveListener);
+    document.addEventListener("mouseup", this.mouseUpListener);
+  }
+
+  public onMouseMove(event: MouseEvent) {
+    const distance = new Distance2D(event.movementX, event.movementY);
+    this.mapper3d.addPanScreenDistance(distance);
+    this.drawScene();
+  }
+
+  public onMouseUp(event: MouseEvent) {
+    document.removeEventListener("mousemove", this.mouseMoveListener);
+    document.removeEventListener("mouseup", this.mouseUpListener);
   }
 
   public onZoomInClick() {
@@ -308,7 +329,7 @@ export class RectsComponent implements OnInit, OnDestroy {
     //  (rotation, spacing, ...) we can just update the camera and/or update the mesh positions.
     //  We'd probably need to get rid of the intermediate layer (Scene3D, Rect3D, ... types) and
     //  work directly with three.js's meshes.
-    this.mapper3d.setRects(this.wrappedRects);
+    this.mapper3d.setRects(this.internalRects);
     this.canvas?.draw(this.mapper3d.computeScene());
   }
 

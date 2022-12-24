@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {
   ChangeDetectorRef,
   Component,
@@ -25,6 +26,7 @@ import {
   NgZone,
   ViewEncapsulation
 } from "@angular/core";
+import { TraceFile} from "common/trace/trace";
 import { TraceData} from "app/trace_data";
 import { ProxyConnection } from "trace_collection/proxy_connection";
 import { Connection } from "trace_collection/connection";
@@ -473,8 +475,8 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   private async loadFiles() {
     console.log("loading files", this.connect.adbData());
     this.traceData.clear();
-
-    const parserErrors = await this.traceData.loadTraces(this.connect.adbData());
+    const traceFiles = this.connect.adbData().map(file => new TraceFile(file));
+    const parserErrors = await this.traceData.loadTraces(traceFiles);
     ParserErrorSnackBarComponent.showIfNeeded(this.ngZone, this.snackBar, parserErrors);
     this.traceDataLoaded.emit();
     console.log("finished loading data!");
