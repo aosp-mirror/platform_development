@@ -15,6 +15,7 @@
  */
 import { CommonModule } from "@angular/common";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { Rectangle } from "viewers/common/rectangle";
 import { RectsComponent } from "viewers/components/rects/rects.component";
 import { MatCheckboxModule } from "@angular/material/checkbox";
 import { MatDividerModule  } from "@angular/material/divider";
@@ -69,7 +70,7 @@ describe("RectsComponent", () => {
   it("draws scene when input data changes", async () => {
     spyOn(Canvas.prototype, "draw").and.callThrough();
 
-    const inputRect = {
+    const inputRect: Rectangle = {
       topLeft: {x:0, y:0},
       bottomRight: {x:1, y:-1},
       label: "rectangle1",
@@ -88,7 +89,7 @@ describe("RectsComponent", () => {
       isVisible: true,
       isDisplay: false,
       ref: null,
-      id: 12345,
+      id: "test-id-1234",
       displayId: 0,
       isVirtual: false,
       isClickable: false

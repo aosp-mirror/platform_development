@@ -147,8 +147,8 @@ export class TreeComponent {
       return;
     }
 
-    if (!this.isLeaf(this.item) && event.detail % 2 === 0) {
-      // Double click collapsable node
+    const isDoubleClick = event.detail % 2 === 0;
+    if (!this.isLeaf(this.item) && isDoubleClick) {
       event.preventDefault();
       this.toggleTree();
     } else {
@@ -167,10 +167,10 @@ export class TreeComponent {
 
   private updateHighlightedItems() {
     if (this.item instanceof HierarchyTreeNode) {
-      if (this.item && this.item.id) {
-        this.highlightedItemChange.emit(`${this.item.id}`);
-      } else if (!this.item.id) {
-        this.selectedTreeChange.emit(this.item);
+      if (this.item.stableId) {
+        this.highlightedItemChange.emit(`${this.item.stableId}`);
+      } else if (!this.item.stableId) {
+        //this.selectedTreeChange.emit(this.item);
       }
     }
   }

@@ -241,7 +241,7 @@ export class Canvas {
     mesh.position.x = rect.center.x;
     mesh.position.y = rect.center.y;
     mesh.position.z = rect.center.z;
-    mesh.name = `${rect.id}`;
+    mesh.name = rect.id;
 
     return mesh;
   }
@@ -266,13 +266,13 @@ export class Canvas {
     return mesh;
   }
 
-  private propagateUpdateHighlightedItems(event: MouseEvent, newId: number) {
+  private propagateUpdateHighlightedItems(event: MouseEvent, newId: string) {
     event.preventDefault();
     const highlightedChangeEvent: CustomEvent = new CustomEvent(
       ViewerEvents.HighlightedChange,
       {
         bubbles: true,
-        detail: { id: `${newId}` }
+        detail: { id: newId }
       });
     event.target?.dispatchEvent(highlightedChangeEvent);
   }

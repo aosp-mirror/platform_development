@@ -39,7 +39,7 @@ class Mapper3D {
   private static readonly ZOOM_FACTOR_STEP = 0.2;
 
   private rects: Rectangle[] = [];
-  private highlightedRectIds: number[] = [];
+  private highlightedRectIds: string[] = [];
   private cameraRotationFactor = Mapper3D.CAMERA_ROTATION_FACTOR_INIT;
   private zSpacingFactor = Mapper3D.Z_SPACING_FACTOR_INIT;
   private zoomFactor = Mapper3D.ZOOM_FACTOR_INIT;
@@ -52,7 +52,7 @@ class Mapper3D {
     this.rects = rects;
   }
 
-  setHighlightedRectIds(ids: number[]) {
+  setHighlightedRectIds(ids: string[]) {
     this.highlightedRectIds = ids;
   }
 
@@ -297,7 +297,7 @@ class Mapper3D {
         })
       ];
       let maxIndex = 0;
-      for (var i = 1; i < lineStarts.length; i++) {
+      for (let i = 1; i < lineStarts.length; i++) {
         if (lineStarts[i].x > lineStarts[maxIndex].x) {
           maxIndex = i;
         }
