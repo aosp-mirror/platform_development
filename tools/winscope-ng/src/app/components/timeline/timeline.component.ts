@@ -157,7 +157,7 @@ import { TimeUtils } from "common/utils/time_utils";
         <p class="mat-body-2">No timeline to show!</p>
         <p class="mat-body-1">All loaded traces contain no timestamps!</p>
       </div>
-      <div *ngIf="!timelineData.hasMoreThanOneDistinctTimestamp()" class="no-timestamps-msg">
+      <div *ngIf="timelineData.hasTimestamps() && !timelineData.hasMoreThanOneDistinctTimestamp()" class="no-timestamps-msg">
         <p class="mat-body-2">No timeline to show!</p>
         <p class="mat-body-1">Only a single timestamp has been recorded.</p>
       </div>
