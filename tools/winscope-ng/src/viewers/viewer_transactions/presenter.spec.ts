@@ -94,6 +94,22 @@ describe("ViewerTransactionsPresenter", () => {
     expect(outputUiData!.scrollToIndex).toEqual(13);
   });
 
+  it("filters entries according to VSYNC ID filter", () => {
+    presenter.notifyCurrentTraceEntries(inputTraceEntriesElapsed);
+
+    presenter.onVSyncIdFilterChanged([]);
+    expect(outputUiData!.entries.length)
+      .toEqual(TOTAL_OUTPUT_ENTRIES);
+
+    presenter.onVSyncIdFilterChanged(["1"]);
+    expect(new Set(outputUiData!.entries.map(entry => entry.vsyncId)))
+      .toEqual(new Set([1]));
+
+    presenter.onVSyncIdFilterChanged(["1", "3", "10"]);
+    expect(new Set(outputUiData!.entries.map(entry => entry.vsyncId)))
+      .toEqual(new Set([1, 3, 10]));
+  });
+
   it("filters entries according to PID filter", () => {
     presenter.notifyCurrentTraceEntries(inputTraceEntriesElapsed);
 
@@ -162,6 +178,20 @@ describe("ViewerTransactionsPresenter", () => {
     presenter.onIdFilterChanged(["1", "3"]);
     expect(new Set(outputUiData!.entries.map(entry => entry.id)))
       .toEqual(new Set(["1", "3"]));
+  });
+
+  it("filters entries according to \"what\" search string", () => {
+    presenter.notifyCurrentTraceEntries(inputTraceEntriesElapsed);
+    expect(outputUiData!.entries.length).toEqual(TOTAL_OUTPUT_ENTRIES);
+
+    presenter.onWhatSearchStringChanged("");
+    expect(outputUiData!.entries.length).toEqual(TOTAL_OUTPUT_ENTRIES);
+
+    presenter.onWhatSearchStringChanged("Crop");
+    expect(outputUiData!.entries.length).toBeLessThan(TOTAL_OUTPUT_ENTRIES);
+
+    presenter.onWhatSearchStringChanged("STRING_WITH_NO_MATCHES");
+    expect(outputUiData!.entries.length).toEqual(0);
   });
 
   it ("updates selected entry and properties tree when entry is clicked", () => {

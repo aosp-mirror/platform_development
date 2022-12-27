@@ -17,6 +17,7 @@ import {PropertiesTreeNode} from "viewers/common/ui_tree_utils";
 
 class UiData {
   constructor(
+    public allVSyncIds: string[],
     public allPids: string[],
     public allUids: string[],
     public allTypes: string[],
@@ -29,6 +30,7 @@ class UiData {
   }
 
   public static EMPTY = new UiData(
+    [],
     [],
     [],
     [],
@@ -49,6 +51,7 @@ class UiDataEntry {
     public uid: string,
     public type: string,
     public id: string,
+    public what: string,
     public propertiesTree?: PropertiesTreeNode
   ) {
   }

@@ -27,6 +27,10 @@ class ViewerTransactions implements Viewer {
       (this.htmlElement as any).inputData = data;
     });
 
+    this.htmlElement.addEventListener(Events.VSyncIdFilterChanged, (event) => {
+      this.presenter.onVSyncIdFilterChanged((event as CustomEvent).detail);
+    });
+
     this.htmlElement.addEventListener(Events.PidFilterChanged, (event) => {
       this.presenter.onPidFilterChanged((event as CustomEvent).detail);
     });
@@ -41,6 +45,10 @@ class ViewerTransactions implements Viewer {
 
     this.htmlElement.addEventListener(Events.IdFilterChanged, (event) => {
       this.presenter.onIdFilterChanged((event as CustomEvent).detail);
+    });
+
+    this.htmlElement.addEventListener(Events.WhatSearchStringChanged, (event) => {
+      this.presenter.onWhatSearchStringChanged((event as CustomEvent).detail);
     });
 
     this.htmlElement.addEventListener(Events.EntryClicked, (event) => {

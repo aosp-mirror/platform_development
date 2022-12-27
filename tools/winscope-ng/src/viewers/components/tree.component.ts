@@ -24,7 +24,7 @@ import { TraceType } from "common/trace/trace_type";
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <tree-node
-      *ngIf="showNode(item)"
+      *ngIf="item && showNode(item)"
       class="node"
       [class.leaf]="isLeaf(this.item)"
       [class.selected]="isHighlighted(item, highlightedItems)"
@@ -76,7 +76,7 @@ export class TreeComponent {
   diffClass = UiTreeUtils.diffClass;
   isHighlighted = UiTreeUtils.isHighlighted;
 
-  @Input() item!: UiTreeNode;
+  @Input() item?: UiTreeNode;
   @Input() dependencies: Array<TraceType> = [];
   @Input() store!: PersistentStore;
   @Input() isFlattened? = false;
@@ -86,8 +86,10 @@ export class TreeComponent {
   @Input() itemsClickable?: boolean;
   @Input() useGlobalCollapsedState?: boolean;
   @Input() isAlwaysCollapsed?: boolean;
-  @Input() showNode: (item?: any) => boolean = () => true;
-  @Input() isLeaf: (item: any) => boolean = (item: any) => !item.children || item.children.length === 0;
+  @Input() showNode = (item: UiTreeNode) => true;
+  @Input() isLeaf = (item?: UiTreeNode) => {
+    return !item || !item.children || item.children.length === 0;
+  };
 
   @Output() highlightedItemChange = new EventEmitter<string>();
   @Output() selectedTreeChange = new EventEmitter<UiTreeNode>();
@@ -212,24 +214,27 @@ export class TreeComponent {
     }
 
     if (this.useGlobalCollapsedState) {
-      return this.store.get(`collapsedState.item.${this.dependencies}.${this.item.stableId}`)==="true"
+      return this.store.get(`collapsedState.item.${this.dependencies}.${this.item?.stableId}`)==="true"
         ?? this.isCollapsedByDefault;
     }
     return this.localCollapsedState;
   }
 
   public children(): UiTreeNode[] {
-    return this.item.children ?? [];
+    return this.item?.children ?? [];
   }
 
   public hasChildren() {
+    if (!this.item) {
+      return false;
+    }
     const isParentEntryInFlatView = UiTreeUtils.isParentNode(this.item.kind ?? "") && this.isFlattened;
     return (!this.isFlattened || isParentEntryInFlatView) && !this.isLeaf(this.item);
   }
 
   private setCollapseValue(isCollapsed: boolean) {
     if (this.useGlobalCollapsedState) {
-      this.store.add(`collapsedState.item.${this.dependencies}.${this.item.stableId}`, `${isCollapsed}`);
+      this.store.add(`collapsedState.item.${this.dependencies}.${this.item?.stableId}`, `${isCollapsed}`);
     } else {
       this.localCollapsedState = isCollapsed;
     }
