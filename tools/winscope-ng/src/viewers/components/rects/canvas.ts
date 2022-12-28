@@ -23,9 +23,12 @@ export class Canvas {
   private static readonly TARGET_SCENE_DIAGONAL = 4;
   private static readonly RECT_COLOR_HIGHLIGHTED = new THREE.Color(0xD2E3FC);
   private static readonly RECT_EDGE_COLOR = 0x000000;
+  private static readonly RECT_EDGE_COLOR_ROUNDED = 0x848884;
   private static readonly LABEL_CIRCLE_COLOR = 0x000000;
   private static readonly LABEL_LINE_COLOR = 0x000000;
   private static readonly LABEL_LINE_COLOR_HIGHLIGHTED = 0x808080;
+  private static readonly OPACITY_REGULAR = 0.75;
+  private static readonly OPACITY_OVERSIZED = 0.25;
 
   private canvasRects: HTMLCanvasElement;
   private canvasLabels: HTMLElement;
@@ -121,16 +124,11 @@ export class Canvas {
   private drawRects(rects: Rect3D[]) {
     this.clickableObjects = [];
     rects.forEach(rect => {
-      const rectGeometry = new THREE.PlaneGeometry(rect.width, rect.height);
-
-      const rectMesh = this.makeRectMesh(rect, rectGeometry);
-      const rectEdges = this.makeRectLineSegments(rectMesh, rectGeometry);
+      const rectMesh = this.makeRectMesh(rect);
       const transform = this.toMatrix4(rect.transform);
       rectMesh.applyMatrix4(transform);
-      rectEdges.applyMatrix4(transform);
 
       this.scene?.add(rectMesh);
-      this.scene?.add(rectEdges);
 
       if (rect.isClickable) {
         this.clickableObjects.push(rectMesh);
@@ -203,11 +201,54 @@ export class Canvas {
   }
 
   private makeRectMesh(
-    rect: Rect3D,
-    geometry: THREE.PlaneGeometry,
+    rect: Rect3D
   ): THREE.Mesh {
-    let color: THREE.Color;
+    const rectShape = this.createRectShape(rect);
+    const rectGeometry = new THREE.ShapeGeometry(rectShape);
+    const rectBorders = this.createRectBorders(rect, rectGeometry);
 
+    let opacity = Canvas.OPACITY_REGULAR;
+    if (rect.isOversized) {
+      opacity = Canvas.OPACITY_OVERSIZED;
+    }
+
+    // Crate mesh to draw
+    const mesh = new THREE.Mesh(
+      rectGeometry,
+      new THREE.MeshBasicMaterial({
+        color: this.getColor(rect),
+        opacity: opacity,
+        transparent: true,
+      }));
+
+    mesh.add(rectBorders);
+    mesh.position.x = 0;
+    mesh.position.y = 0;
+    mesh.position.z = rect.topLeft.z;
+    mesh.name = rect.id;
+
+    return mesh;
+  }
+
+  private createRectShape(rect: Rect3D): THREE.Shape {
+    const bottomLeft: Point3D = { x: rect.topLeft.x, y: rect.bottomRight.y, z: rect.topLeft.z };
+    const topRight: Point3D = { x: rect.bottomRight.x, y: rect.topLeft.y, z: rect.bottomRight.z };
+
+    // Create (rounded) rect shape
+    return new THREE.Shape()
+      .moveTo(rect.topLeft.x, rect.topLeft.y + rect.cornerRadius)
+      .lineTo(bottomLeft.x, bottomLeft.y - rect.cornerRadius)
+      .quadraticCurveTo(bottomLeft.x, bottomLeft.y, bottomLeft.x + rect.cornerRadius, bottomLeft.y)
+      .lineTo(rect.bottomRight.x - rect.cornerRadius, rect.bottomRight.y)
+      .quadraticCurveTo(rect.bottomRight.x, rect.bottomRight.y, rect.bottomRight.x, rect.bottomRight.y - rect.cornerRadius)
+      .lineTo(topRight.x, topRight.y + rect.cornerRadius)
+      .quadraticCurveTo(topRight.x, topRight.y, topRight.x - rect.cornerRadius, topRight.y)
+      .lineTo(rect.topLeft.x + rect.cornerRadius, rect.topLeft.y)
+      .quadraticCurveTo(rect.topLeft.x, rect.topLeft.y, rect.topLeft.x, rect.topLeft.y + rect.cornerRadius);
+  }
+
+  private getColor(rect: Rect3D): THREE.Color {
+    let color: THREE.Color = Canvas.RECT_COLOR_HIGHLIGHTED;
     switch (rect.colorType) {
       case ColorType.VISIBLE: {
         // green (darkness depends on z order)
@@ -230,32 +271,29 @@ export class Canvas {
         break;
       }
     }
-
-    const mesh = new THREE.Mesh(
-      geometry,
-      new THREE.MeshBasicMaterial({
-        color: color,
-        opacity: 0.75,
-        transparent: true,
-      }));
-    mesh.position.x = rect.center.x;
-    mesh.position.y = rect.center.y;
-    mesh.position.z = rect.center.z;
-    mesh.name = rect.id;
-
-    return mesh;
+    return color;
   }
 
-  private makeRectLineSegments(rectMesh: THREE.Mesh, geometry: THREE.PlaneGeometry): THREE.LineSegments {
-    const edgeGeo = new THREE.EdgesGeometry(geometry);
-    const edgeMaterial = new THREE.LineBasicMaterial({
-      color: Canvas.RECT_EDGE_COLOR, linewidth: 1
-    });
-    const edgeSegments = new THREE.LineSegments(
+  private createRectBorders(rect: Rect3D, rectGeometry: THREE.ShapeGeometry): THREE.LineSegments {
+    // create line edges for rect
+    const edgeGeo = new THREE.EdgesGeometry(rectGeometry);
+    let edgeMaterial: THREE.Material;
+    if (rect.cornerRadius) {
+      edgeMaterial = new THREE.LineBasicMaterial({
+        color: Canvas.RECT_EDGE_COLOR_ROUNDED,
+        linewidth: 1
+      });
+    } else {
+        edgeMaterial = new THREE.LineBasicMaterial({
+          color: Canvas.RECT_EDGE_COLOR,
+          linewidth: 1
+        });
+    }
+    const lineSegments = new THREE.LineSegments(
       edgeGeo, edgeMaterial
     );
-    edgeSegments.position.set(rectMesh.position.x, rectMesh.position.y, rectMesh.position.z);
-    return edgeSegments;
+    lineSegments.computeLineDistances();
+    return lineSegments;
   }
 
   private makeLabelCircleMesh(circle: Circle3D): THREE.Mesh {

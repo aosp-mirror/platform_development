@@ -178,8 +178,6 @@ export class Presenter {
       const newRect: Rectangle = {
         topLeft: {x: rect.left, y: rect.top},
         bottomRight: {x: rect.right, y: rect.bottom},
-        height: rect.height,
-        width: rect.width,
         label: rect.label,
         transform: transform,
         isVisible: rect.ref?.isVisible ?? false,
@@ -189,6 +187,7 @@ export class Presenter {
         displayId: rect.displayId ?? rect.ref.stackId,
         isVirtual: rect.isVirtual ?? false,
         isClickable: !rect.isDisplay,
+        cornerRadius: rect.cornerRadius,
       };
       uiRects.push(newRect);
     });

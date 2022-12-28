@@ -84,15 +84,14 @@ describe("RectsComponent", () => {
           ty: 0
         }
       },
-      height: 1,
-      width: 1,
       isVisible: true,
       isDisplay: false,
       ref: null,
       id: "test-id-1234",
       displayId: 0,
       isVirtual: false,
-      isClickable: false
+      isClickable: false,
+      cornerRadius: 0
     };
 
     expect(Canvas.prototype.draw).toHaveBeenCalledTimes(0);
