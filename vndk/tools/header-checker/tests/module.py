@@ -736,6 +736,24 @@ TEST_MODULES = [
         linker_flags=['-output-format', 'Json'],
         has_reference_dump=True,
     ),
+    LsdumpModule(
+        name='libfunction_extensions',
+        arch='arm64',
+        srcs=['integration/function_extensions/include/base.h'],
+        version_script='integration/function_extensions/map.txt',
+        export_include_dirs=['integration/function_extensions/include'],
+        linker_flags=['-output-format', 'Json'],
+        has_reference_dump=True,
+    ),
+    LsdumpModule(
+        name='liballowed_function_extensions',
+        arch='arm64',
+        srcs=['integration/function_extensions/include/extensions.h'],
+        version_script='integration/function_extensions/map.txt',
+        export_include_dirs=['integration/function_extensions/include'],
+        linker_flags=['-output-format', 'Json'],
+        has_reference_dump=True,
+    ),
 ]
 
 TEST_MODULES = {m.name: m for m in TEST_MODULES}

@@ -55,7 +55,8 @@ CompatibilityStatusIR ProtobufIRDiffDumper::GetCompatibilityStatusIR() {
   if (diff_tu_->enum_type_extension_diffs().size() != 0 ||
       diff_tu_->functions_added().size() != 0 ||
       diff_tu_->global_vars_added().size() != 0 ||
-      diff_tu_->record_type_extension_diffs().size() != 0) {
+      diff_tu_->record_type_extension_diffs().size() != 0 ||
+      diff_tu_->function_extension_diffs().size() != 0) {
     combined_status = combined_status | CompatibilityStatusIR::Extension;
   }
 
@@ -315,7 +316,8 @@ bool ProtobufIRDiffDumper::AddFunctionDiffIR(
     const FunctionDiffIR *function_diff_ir, const std::string &type_stack,
     DiffKind diff_kind) {
   abi_diff::FunctionDeclDiff *added_function_diff =
-      diff_tu_->add_function_diffs();
+      function_diff_ir->IsExtended() ? diff_tu_->add_function_extension_diffs()
+                                     : diff_tu_->add_function_diffs();
   if (!added_function_diff) {
     return false;
   }
