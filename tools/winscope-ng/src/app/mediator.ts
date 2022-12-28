@@ -72,29 +72,29 @@ export class Mediator {
     });
 
     this.crossToolProtocol.setOnBugreportReceived(async (bugreport: File, timestamp?: Timestamp) => {
-      await this.onRemoteToolBugreportReceived(bugreport, timestamp);
+      await this.onRemoteBugreportReceived(bugreport, timestamp);
     });
 
     this.crossToolProtocol.setOnTimestampReceived(async (timestamp: Timestamp) => {
-      this.onRemoteToolTimestampReceived(timestamp);
+      this.onRemoteTimestampReceived(timestamp);
     });
 
     this.abtChromeExtensionProtocol.setOnBuganizerAttachmentsDownloadStart(() => {
-      this.onAbtChromeExtensionBuganizerAttachmentsDownloadStart();
+      this.onBuganizerAttachmentsDownloadStart();
     });
 
     this.abtChromeExtensionProtocol.setOnBuganizerAttachmentsDownloaded(async (attachments: File[]) => {
-      await this.onAbtChromeExtensionBuganizerAttachmentsReceived(attachments);
+      await this.onBuganizerAttachmentsDownloaded(attachments);
     });
   }
 
   public setUploadTracesComponent(
-    uploadTracesComponent: FilesDownloadListener|undefined
+    uploadTracesComponent: UploadTracesComponentDependencyInversion|undefined
   ) {
     this.uploadTracesComponent = uploadTracesComponent;
   }
 
-  public setTimelineComponent(timelineComponent: TimestampChangeListener|undefined) {
+  public setTimelineComponent(timelineComponent: TimelineComponentDependencyInversion|undefined) {
     this.timelineComponent = timelineComponent;
   }
 
@@ -102,25 +102,12 @@ export class Mediator {
     this.abtChromeExtensionProtocol.run();
   }
 
+  public onWinscopeUploadNew() {
+    this.resetAppToInitialState();
+  }
+
   public onWinscopeTraceDataLoaded() {
     this.processTraceData();
-  }
-
-  public async onRemoteToolBugreportReceived(bugreport: File, timestamp?: Timestamp) {
-    await this.processRemoteFilesReceived([bugreport]);
-    if (timestamp !== undefined) {
-      this.onRemoteToolTimestampReceived(timestamp);
-    }
-  }
-
-  private onAbtChromeExtensionBuganizerAttachmentsDownloadStart() {
-    this.reset();
-    this.appComponent.onTraceDataUnloaded();
-    this.uploadTracesComponent?.onFilesDownloadStart();
-  }
-
-  private async onAbtChromeExtensionBuganizerAttachmentsReceived(attachments: File[]) {
-    await this.processRemoteFilesReceived(attachments);
   }
 
   public onWinscopeCurrentTimestampChanged(timestamp: Timestamp|undefined) {
@@ -146,7 +133,23 @@ export class Mediator {
     });
   }
 
-  public onRemoteToolTimestampReceived(timestamp: Timestamp) {
+  private onBuganizerAttachmentsDownloadStart() {
+    this.resetAppToInitialState();
+    this.uploadTracesComponent?.onFilesDownloadStart();
+  }
+
+  private async onBuganizerAttachmentsDownloaded(attachments: File[]) {
+    await this.processRemoteFilesReceived(attachments);
+  }
+
+  private async onRemoteBugreportReceived(bugreport: File, timestamp?: Timestamp) {
+    await this.processRemoteFilesReceived([bugreport]);
+    if (timestamp !== undefined) {
+      this.onRemoteTimestampReceived(timestamp);
+    }
+  }
+
+  private onRemoteTimestampReceived(timestamp: Timestamp) {
     this.executeIgnoringRecursiveTimestampNotifications(() => {
       this.lastRemoteToolTimestampReceived = timestamp;
 
@@ -177,16 +180,9 @@ export class Mediator {
     });
   }
 
-  public onWinscopeUploadNew() {
-    this.reset();
-    this.appComponent.onTraceDataUnloaded();
-  }
-
   private async processRemoteFilesReceived(files: File[]) {
-    this.traceData.clear();
-    this.appComponent.onTraceDataUnloaded();
-    this.uploadTracesComponent?.onFilesDownloaded(files); // will notify back "trace data loaded"
-    this.isTraceDataVisualized = false;
+    this.resetAppToInitialState();
+    this.uploadTracesComponent?.onFilesDownloaded(files);
   }
 
   private processTraceData() {
@@ -199,7 +195,7 @@ export class Mediator {
     this.isTraceDataVisualized = true;
 
     if (this.lastRemoteToolTimestampReceived !== undefined) {
-      this.onRemoteToolTimestampReceived(this.lastRemoteToolTimestampReceived);
+      this.onRemoteTimestampReceived(this.lastRemoteToolTimestampReceived);
     }
   }
 
@@ -225,11 +221,12 @@ export class Mediator {
     }
   }
 
-  private reset() {
+  private resetAppToInitialState() {
     this.traceData.clear();
     this.timelineData.clear();
     this.viewers = [];
     this.isTraceDataVisualized = false;
     this.lastRemoteToolTimestampReceived = undefined;
+    this.appComponent.onTraceDataUnloaded();
   }
 }
