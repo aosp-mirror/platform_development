@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-export interface UploadTracesComponentDependencyInversion {
+export interface FilesDownloadListener {
   onFilesDownloadStart(): void;
-  processFiles(files: File[]): Promise<void>;
+  onFilesDownloaded(files: File[]): Promise<void>;
 }

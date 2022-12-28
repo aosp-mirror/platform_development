@@ -14,14 +14,6 @@
  * limitations under the License.
  */
 
-import {FilesDownloadListener} from "interfaces/files_download_listener";
-
-export class UploadTracesComponentStub implements FilesDownloadListener {
-  onFilesDownloadStart() {
-    // do nothing
-  }
-
-  async onFilesDownloaded(files: File[]) {
-    // do nothing
-  }
+export interface Runnable {
+  run(): void;
 }

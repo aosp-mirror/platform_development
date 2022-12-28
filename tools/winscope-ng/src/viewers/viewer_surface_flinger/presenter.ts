@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2022 The Android Open Source Project
  *
@@ -31,7 +30,7 @@ export class Presenter {
   constructor(notifyViewCallback: NotifyViewCallbackType, private storage: Storage) {
     this.notifyViewCallback = notifyViewCallback;
     this.uiData = new UiData([TraceType.SURFACE_FLINGER]);
-    this.notifyViewCallback(this.uiData);
+    this.copyUiDataAndNotifyView();
   }
 
   public updatePinnedItems(pinnedItem: HierarchyTreeNode) {
@@ -43,7 +42,7 @@ export class Presenter {
     }
     this.updatePinnedIds(pinnedId);
     this.uiData.pinnedItems = this.pinnedItems;
-    this.notifyViewCallback(this.uiData);
+    this.copyUiDataAndNotifyView();
   }
 
   public updateHighlightedItems(id: string) {
@@ -54,20 +53,20 @@ export class Presenter {
       this.highlightedItems.push(id);
     }
     this.uiData.highlightedItems = this.highlightedItems;
-    this.notifyViewCallback(this.uiData);
+    this.copyUiDataAndNotifyView();
   }
 
   public updateHierarchyTree(userOptions: UserOptions) {
     this.hierarchyUserOptions = userOptions;
     this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
     this.uiData.tree = this.generateTree();
-    this.notifyViewCallback(this.uiData);
+    this.copyUiDataAndNotifyView();
   }
 
   public filterHierarchyTree(filterString: string) {
     this.hierarchyFilter = TreeUtils.makeNodeFilter(filterString);
     this.uiData.tree = this.generateTree();
-    this.notifyViewCallback(this.uiData);
+    this.copyUiDataAndNotifyView();
   }
 
   public updatePropertiesTree(userOptions: UserOptions) {
@@ -101,7 +100,7 @@ export class Presenter {
         this.uiData.tree = this.generateTree();
       }
     }
-    this.notifyViewCallback(this.uiData);
+    this.copyUiDataAndNotifyView();
   }
 
   private generateRects(): Rectangle[] {
@@ -162,8 +161,9 @@ export class Presenter {
     if (this.selectedHierarchyTree) {
       this.uiData.propertiesTree = this.getTreeWithTransformedProperties(this.selectedHierarchyTree);
       this.uiData.selectedLayer = this.selectedLayer;
+      this.uiData.displayPropertyGroups = this.shouldDisplayPropertyGroups(this.selectedLayer);
     }
-    this.notifyViewCallback(this.uiData);
+    this.copyUiDataAndNotifyView();
   }
 
   private generateTree() {
@@ -251,6 +251,20 @@ export class Presenter {
     this.selectedLayer = transformer.getOriginalFlickerItem(this.entry, selectedTree.stableId);
     const transformedTree = transformer.transform();
     return transformedTree;
+  }
+
+  private shouldDisplayPropertyGroups(selectedLayer: Layer): boolean {
+    // Do not display property groups when the root layer is selected. The root layer doesn't
+    // provide property groups info (visibility, geometry transforms, ...).
+    const isRoot = selectedLayer === this.entry;
+    return !isRoot;
+  }
+
+  private copyUiDataAndNotifyView() {
+    // Create a shallow copy of the data, otherwise the Angular OnPush change detection strategy
+    // won't detect the new input
+    const copy = Object.assign({}, this.uiData);
+    this.notifyViewCallback(copy);
   }
 
   private readonly notifyViewCallback: NotifyViewCallbackType;

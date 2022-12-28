@@ -16,12 +16,11 @@
 
 import {Message, MessageBugReport, MessagePong, MessageTimestamp, MessageType} from "./messages";
 import {OriginAllowList} from "./origin_allow_list";
-import {
-  CrossToolProtocolDependencyInversion,
-  OnBugreportReceived,
-  OnTimestampReceived} from "cross_tool/cross_tool_protocol_dependency_inversion";
 import {RealTimestamp} from "common/trace/timestamp";
 import {FunctionUtils} from "common/utils/function_utils";
+import {RemoteBugreportReceiver, OnBugreportReceived} from "interfaces/remote_bugreport_receiver";
+import {RemoteTimestampReceiver, OnTimestampReceived} from "interfaces/remote_timestamp_receiver";
+import {RemoteTimestampSender} from "interfaces/remote_timestamp_sender";
 
 class RemoteTool {
   constructor(
@@ -30,7 +29,10 @@ class RemoteTool {
   }
 }
 
-export class CrossToolProtocol implements CrossToolProtocolDependencyInversion {
+export class CrossToolProtocol implements
+  RemoteBugreportReceiver,
+  RemoteTimestampReceiver,
+  RemoteTimestampSender {
   private remoteTool?: RemoteTool;
   private onBugreportReceived: OnBugreportReceived = FunctionUtils.DO_NOTHING_ASYNC;
   private onTimestampReceived: OnTimestampReceived = FunctionUtils.DO_NOTHING;

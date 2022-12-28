@@ -65,7 +65,7 @@ import { PersistentStore } from "common/utils/persistent_store";
   ]
 })
 export class ViewerWindowManagerComponent {
-  @Input() inputData: UiData | null = null;
+  @Input() inputData?: UiData;
   @Input() store: PersistentStore = new PersistentStore();
   @Input() active = false;
   TRACE_INFO = TRACE_INFO;

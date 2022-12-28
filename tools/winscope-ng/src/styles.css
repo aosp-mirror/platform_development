@@ -39,7 +39,3 @@ app-root {
     flex-direction: row;
     overflow: auto;
 }
-
-viewer-surface-flinger .properties-view .view-header {
-    flex: 3;
-}

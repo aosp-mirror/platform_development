@@ -14,20 +14,28 @@
  * limitations under the License.
  */
 
-import {AppComponentDependencyInversion} from "./components/app_component_dependency_inversion";
-import {TimelineComponentDependencyInversion}
-  from "./components/timeline/timeline_component_dependency_inversion";
-import {UploadTracesComponentDependencyInversion} from "./components/upload_traces_component_dependency_inversion";
 import {TimelineData} from "./timeline_data";
 import {TraceData} from "./trace_data";
-import {AbtChromeExtensionProtocolDependencyInversion}
-  from "abt_chrome_extension/abt_chrome_extension_protocol_dependency_inversion";
-import {CrossToolProtocolDependencyInversion}
-  from "cross_tool/cross_tool_protocol_dependency_inversion";
 import {Timestamp, TimestampType} from "common/trace/timestamp";
 import {TraceType} from "common/trace/trace_type";
+import {BuganizerAttachmentsDownloadEmitter} from "interfaces/buganizer_attachments_download_emitter";
+import {FilesDownloadListener} from "interfaces/files_download_listener";
+import {RemoteBugreportReceiver} from "interfaces/remote_bugreport_receiver";
+import {RemoteTimestampReceiver} from "interfaces/remote_timestamp_receiver";
+import {RemoteTimestampSender} from "interfaces/remote_timestamp_sender";
+import {Runnable} from "interfaces/runnable";
+import {TimestampChangeListener} from "interfaces/timestamp_change_listener";
+import {TraceDataListener} from "interfaces/trace_data_listener";
 import {Viewer} from "viewers/viewer";
 import {ViewerFactory} from "viewers/viewer_factory";
+
+export type CrossToolProtocolDependencyInversion =
+  RemoteBugreportReceiver & RemoteTimestampReceiver & RemoteTimestampSender;
+export type AbtChromeExtensionProtocolDependencyInversion =
+  BuganizerAttachmentsDownloadEmitter & Runnable;
+export type AppComponentDependencyInversion = TraceDataListener;
+export type TimelineComponentDependencyInversion = TimestampChangeListener;
+export type UploadTracesComponentDependencyInversion = FilesDownloadListener;
 
 export class Mediator {
   private abtChromeExtensionProtocol: AbtChromeExtensionProtocolDependencyInversion;
@@ -64,20 +72,19 @@ export class Mediator {
     });
 
     this.crossToolProtocol.setOnBugreportReceived(async (bugreport: File, timestamp?: Timestamp) => {
-      await this.onRemoteToolBugreportReceived(bugreport, timestamp);
+      await this.onRemoteBugreportReceived(bugreport, timestamp);
     });
 
     this.crossToolProtocol.setOnTimestampReceived(async (timestamp: Timestamp) => {
-      this.onRemoteToolTimestampReceived(timestamp);
+      this.onRemoteTimestampReceived(timestamp);
     });
 
-    this.abtChromeExtensionProtocol.setOnBugAttachmentsReceived(async (attachments: File[]) => {
-      await this.onAbtChromeExtensionBugAttachmentsReceived(attachments);
+    this.abtChromeExtensionProtocol.setOnBuganizerAttachmentsDownloadStart(() => {
+      this.onBuganizerAttachmentsDownloadStart();
     });
 
-    this.abtChromeExtensionProtocol.setOnBugAttachmentsDownloadStart(() => {
-      console.log("Mediator notifying onFilesDownloadStart()");
-      this.uploadTracesComponent?.onFilesDownloadStart();
+    this.abtChromeExtensionProtocol.setOnBuganizerAttachmentsDownloaded(async (attachments: File[]) => {
+      await this.onBuganizerAttachmentsDownloaded(attachments);
     });
   }
 
@@ -95,19 +102,12 @@ export class Mediator {
     this.abtChromeExtensionProtocol.run();
   }
 
+  public onWinscopeUploadNew() {
+    this.resetAppToInitialState();
+  }
+
   public onWinscopeTraceDataLoaded() {
     this.processTraceData();
-  }
-
-  public async onRemoteToolBugreportReceived(bugreport: File, timestamp?: Timestamp) {
-    await this.processRemoteFilesReceived([bugreport]);
-    if (timestamp !== undefined) {
-      this.onRemoteToolTimestampReceived(timestamp);
-    }
-  }
-
-  public async onAbtChromeExtensionBugAttachmentsReceived(attachments: File[]) {
-    await this.processRemoteFilesReceived(attachments);
   }
 
   public onWinscopeCurrentTimestampChanged(timestamp: Timestamp|undefined) {
@@ -133,7 +133,23 @@ export class Mediator {
     });
   }
 
-  public onRemoteToolTimestampReceived(timestamp: Timestamp) {
+  private onBuganizerAttachmentsDownloadStart() {
+    this.resetAppToInitialState();
+    this.uploadTracesComponent?.onFilesDownloadStart();
+  }
+
+  private async onBuganizerAttachmentsDownloaded(attachments: File[]) {
+    await this.processRemoteFilesReceived(attachments);
+  }
+
+  private async onRemoteBugreportReceived(bugreport: File, timestamp?: Timestamp) {
+    await this.processRemoteFilesReceived([bugreport]);
+    if (timestamp !== undefined) {
+      this.onRemoteTimestampReceived(timestamp);
+    }
+  }
+
+  private onRemoteTimestampReceived(timestamp: Timestamp) {
     this.executeIgnoringRecursiveTimestampNotifications(() => {
       this.lastRemoteToolTimestampReceived = timestamp;
 
@@ -164,15 +180,9 @@ export class Mediator {
     });
   }
 
-  public onWinscopeUploadNew() {
-    this.reset();
-  }
-
   private async processRemoteFilesReceived(files: File[]) {
-    this.appComponent.onUploadNewClick();
-    this.traceData.clear();
-    this.uploadTracesComponent?.processFiles(files); // will notify back "trace data loaded"
-    this.isTraceDataVisualized = false;
+    this.resetAppToInitialState();
+    this.uploadTracesComponent?.onFilesDownloaded(files);
   }
 
   private processTraceData() {
@@ -185,7 +195,7 @@ export class Mediator {
     this.isTraceDataVisualized = true;
 
     if (this.lastRemoteToolTimestampReceived !== undefined) {
-      this.onRemoteToolTimestampReceived(this.lastRemoteToolTimestampReceived);
+      this.onRemoteTimestampReceived(this.lastRemoteToolTimestampReceived);
     }
   }
 
@@ -211,12 +221,12 @@ export class Mediator {
     }
   }
 
-  private reset() {
+  private resetAppToInitialState() {
     this.traceData.clear();
     this.timelineData.clear();
     this.viewers = [];
-    this.isChangingCurrentTimestamp = false;
     this.isTraceDataVisualized = false;
     this.lastRemoteToolTimestampReceived = undefined;
+    this.appComponent.onTraceDataUnloaded();
   }
 }
