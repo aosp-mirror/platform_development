@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import {Timestamp} from "common/trace/timestamp";
+import {RealTimestamp} from "common/trace/timestamp";
 
-export interface TimelineComponentDependencyInversion {
-  onCurrentTimestampChanged(timestamp: Timestamp|undefined): void;
+export type OnTimestampReceived = (timestamp: RealTimestamp) => void;
+
+export interface RemoteTimestampReceiver {
+  setOnTimestampReceived(callback: OnTimestampReceived): void;
 }

@@ -14,14 +14,10 @@
  * limitations under the License.
  */
 
-import {FilesDownloadListener} from "interfaces/files_download_listener";
+import {RealTimestamp} from "common/trace/timestamp";
 
-export class UploadTracesComponentStub implements FilesDownloadListener {
-  onFilesDownloadStart() {
-    // do nothing
-  }
+export type OnBugreportReceived = (bugreport: File, timestamp?: RealTimestamp) => Promise<void>;
 
-  async onFilesDownloaded(files: File[]) {
-    // do nothing
-  }
+export interface RemoteBugreportReceiver {
+  setOnBugreportReceived(callback: OnBugreportReceived): void;
 }

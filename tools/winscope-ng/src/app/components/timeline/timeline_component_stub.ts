@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import {TimelineComponentDependencyInversion} from "./timeline_component_dependency_inversion";
 import {Timestamp} from "common/trace/timestamp";
+import {TimestampChangeListener} from "interfaces/timestamp_change_listener";
 
-export class TimelineComponentStub implements TimelineComponentDependencyInversion {
+export class TimelineComponentStub implements TimestampChangeListener {
   onCurrentTimestampChanged(timestamp: Timestamp|undefined) {
     // do nothing
   }

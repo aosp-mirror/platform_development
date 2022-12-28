@@ -14,14 +14,10 @@
  * limitations under the License.
  */
 
-import {FilesDownloadListener} from "interfaces/files_download_listener";
+export type OnBuganizerAttachmentsDownloadStart = () => void;
+export type OnBuganizerAttachmentsDownloaded = (attachments: File[]) => Promise<void>;
 
-export class UploadTracesComponentStub implements FilesDownloadListener {
-  onFilesDownloadStart() {
-    // do nothing
-  }
-
-  async onFilesDownloaded(files: File[]) {
-    // do nothing
-  }
+export interface BuganizerAttachmentsDownloadEmitter {
+  setOnBuganizerAttachmentsDownloadStart(callback: OnBuganizerAttachmentsDownloadStart): void;
+  setOnBuganizerAttachmentsDownloaded(callback: OnBuganizerAttachmentsDownloaded): void;
 }

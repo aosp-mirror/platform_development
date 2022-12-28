@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import {AppComponentDependencyInversion} from "./app_component_dependency_inversion";
 import {Viewer} from "viewers/viewer";
+import {TraceDataListener} from "interfaces/trace_data_listener";
 
-export class AppComponentStub implements AppComponentDependencyInversion {
+export class AppComponentStub implements TraceDataListener {
   onTraceDataLoaded(viewers: Viewer[]) {
     // do nothing
   }
 
-  onUploadNewClick() {
+  onTraceDataUnloaded() {
     // do nothing
   }
 }

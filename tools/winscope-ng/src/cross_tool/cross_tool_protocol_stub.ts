@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-import {
-  CrossToolProtocolDependencyInversion,
-  OnBugreportReceived,
-  OnTimestampReceived} from "cross_tool/cross_tool_protocol_dependency_inversion";
 import {RealTimestamp} from "common/trace/timestamp";
 import {FunctionUtils} from "common/utils/function_utils";
+import {RemoteBugreportReceiver, OnBugreportReceived} from "interfaces/remote_bugreport_receiver";
+import {RemoteTimestampReceiver, OnTimestampReceived} from "interfaces/remote_timestamp_receiver";
+import {RemoteTimestampSender} from "interfaces/remote_timestamp_sender";
 
-export class CrossToolProtocolStub implements CrossToolProtocolDependencyInversion {
+export class CrossToolProtocolStub implements
+  RemoteBugreportReceiver,
+  RemoteTimestampReceiver,
+  RemoteTimestampSender {
   onBugreportReceived: OnBugreportReceived = FunctionUtils.DO_NOTHING_ASYNC;
   onTimestampReceived: OnTimestampReceived = FunctionUtils.DO_NOTHING;
 
