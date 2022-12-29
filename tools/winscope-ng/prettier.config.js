@@ -15,12 +15,15 @@
  */
 
 module.exports = {
-  arrowParens: "always",
+  arrowParens: 'always',
   bracketSameLine: true,
   bracketSpacing: false,
   printWidth: 100,
-  singleQuote: false,
+  singleQuote: true,
   semi: true,
   tabWidth: 2,
   useTabs: false,
+  trailingComma: 'es5',
+  //enable this setting in case prettier-plugin-organize-imports starts breaking stuff
+  //organizeImportsSkipDestructiveCodeActions: true,
 };
