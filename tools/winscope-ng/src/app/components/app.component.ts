@@ -23,7 +23,6 @@ import {
   ViewEncapsulation
 } from "@angular/core";
 import { createCustomElement } from "@angular/elements";
-import { AppComponentDependencyInversion } from "./app_component_dependency_inversion";
 import { TimelineComponent} from "./timeline/timeline.component";
 import {AbtChromeExtensionProtocol} from "abt_chrome_extension/abt_chrome_extension_protocol";
 import {CrossToolProtocol} from "cross_tool/cross_tool_protocol";
@@ -45,6 +44,7 @@ import { TimelineData } from "app/timeline_data";
 import { TracingConfig } from "trace_collection/tracing_config";
 import {TRACE_INFO} from "app/trace_info";
 import {UploadTracesComponent} from "./upload_traces.component";
+import {TraceDataListener} from "interfaces/trace_data_listener";
 
 @Component({
   selector: "app-root",
@@ -65,7 +65,7 @@ import {UploadTracesComponent} from "./upload_traces.component";
       </div>
 
       <button *ngIf="dataLoaded" color="primary" mat-stroked-button
-              (click)="onUploadNewClick()">
+              (click)="mediator.onWinscopeUploadNew()">
         Upload New
       </button>
 
@@ -198,7 +198,7 @@ import {UploadTracesComponent} from "./upload_traces.component";
   ],
   encapsulation: ViewEncapsulation.None
 })
-export class AppComponent implements AppComponentDependencyInversion {
+export class AppComponent implements TraceDataListener {
   title = "winscope-ng";
   changeDetectorRef: ChangeDetectorRef;
   traceData = new TraceData();
@@ -285,16 +285,15 @@ export class AppComponent implements AppComponentDependencyInversion {
     return this.timelineData.getScreenRecordingVideo();
   }
 
-  public onUploadNewClick() {
-    this.dataLoaded = false;
-    this.mediator.onWinscopeUploadNew();
-    proxyClient.adbData = [];
-    this.changeDetectorRef.detectChanges();
-  }
-
   public onTraceDataLoaded(viewers: Viewer[]) {
     this.viewers = viewers;
     this.dataLoaded = true;
+    this.changeDetectorRef.detectChanges();
+  }
+
+  public onTraceDataUnloaded() {
+    proxyClient.adbData = [];
+    this.dataLoaded = false;
     this.changeDetectorRef.detectChanges();
   }
 

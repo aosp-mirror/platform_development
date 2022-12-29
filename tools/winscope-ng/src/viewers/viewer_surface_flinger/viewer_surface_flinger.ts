@@ -13,22 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceType} from "common/trace/trace_type";
-import {View, Viewer, ViewType} from "viewers/viewer";
 import {Presenter} from "./presenter";
 import {UiData} from "./ui_data";
+import {TraceType} from "common/trace/trace_type";
+import {View, Viewer, ViewType} from "viewers/viewer";
 import {ViewerEvents} from "viewers/common/viewer_events";
 
 class ViewerSurfaceFlinger implements Viewer {
+  public static readonly DEPENDENCIES: TraceType[] = [TraceType.SURFACE_FLINGER];
+  private htmlElement: HTMLElement;
+  private presenter: Presenter;
+
   constructor(storage: Storage) {
     this.htmlElement = document.createElement("viewer-surface-flinger");
+
     this.presenter = new Presenter((uiData: UiData) => {
-      // Angular does not deep watch @Input properties. Clearing inputData to null before repopulating
-      // automatically ensures that the UI will change via the Angular change detection cycle. Without
-      // resetting, Angular does not auto-detect that inputData has changed.
-      (this.htmlElement as any).inputData = null;
       (this.htmlElement as any).inputData = uiData;
     }, storage);
+
     this.htmlElement.addEventListener(ViewerEvents.HierarchyPinnedChange, (event) => this.presenter.updatePinnedItems(((event as CustomEvent).detail.pinnedItem)));
     this.htmlElement.addEventListener(ViewerEvents.HighlightedChange, (event) => this.presenter.updateHighlightedItems(`${(event as CustomEvent).detail.id}`));
     this.htmlElement.addEventListener(ViewerEvents.HierarchyUserOptionsChange, (event) => this.presenter.updateHierarchyTree((event as CustomEvent).detail.userOptions));
@@ -49,10 +51,6 @@ class ViewerSurfaceFlinger implements Viewer {
   public getDependencies(): TraceType[] {
     return ViewerSurfaceFlinger.DEPENDENCIES;
   }
-
-  public static readonly DEPENDENCIES: TraceType[] = [TraceType.SURFACE_FLINGER];
-  private htmlElement: HTMLElement;
-  private presenter: Presenter;
 }
 
 export {ViewerSurfaceFlinger};

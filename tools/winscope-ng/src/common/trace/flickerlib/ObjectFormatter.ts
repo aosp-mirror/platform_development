@@ -18,6 +18,7 @@ import {
     toSize, toActiveBuffer, toColor, toColor3, toPoint, toPointF, toRect,
     toRectF, toRegion, toMatrix22, toTransform, toInsets
 } from './common';
+import {ArrayUtils} from "common/utils/array_utils";
 import { PropertiesDump } from "viewers/common/ui_tree_utils";
 import intDefMapping from
     '../../../../../../../prebuilts/misc/common/winscope/intDefMapping.json';
@@ -174,6 +175,16 @@ export default class ObjectFormatter {
                 const formatted = this.formatColorTransform(obj.val);
                 return `${formatted}`;
             }
+        }
+
+        // Raw long number (no type name, no constructor name, no useful toString() method)
+        if (ArrayUtils.equal(Object.keys(obj).sort(), ["high_", "low_"])) {
+            const high = BigInt(obj.high_) << 32n;
+            let low = BigInt(obj.low_);
+            if (low < 0) {
+                low = -low;
+            }
+            return (high | low).toString();
         }
 
         return null;

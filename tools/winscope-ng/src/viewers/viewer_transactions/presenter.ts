@@ -23,7 +23,19 @@ import {TimeUtils} from "common/utils/time_utils";
 import { ElapsedTimestamp, RealTimestamp, TimestampType } from "common/trace/timestamp";
 import ObjectFormatter from "common/trace/flickerlib/ObjectFormatter";
 
-class Presenter {
+export class Presenter {
+  private entry?: TransactionsTraceEntry;
+  private originalIndicesOfUiDataEntries: number[];
+  private uiData: UiData;
+  private readonly notifyUiDataCallback: (data: UiData) => void;
+  private static readonly VALUE_NA = "N/A";
+  private vsyncIdFilter: string[] = [];
+  private pidFilter: string[] = [];
+  private uidFilter: string[] = [];
+  private typeFilter: string[] = [];
+  private idFilter: string[] = [];
+  private whatSearchString = "";
+
   constructor(notifyUiDataCallback: (data: UiData) => void) {
     this.notifyUiDataCallback = notifyUiDataCallback;
     this.originalIndicesOfUiDataEntries = [];
@@ -50,6 +62,12 @@ class Presenter {
     this.notifyUiDataCallback(this.uiData);
   }
 
+  public onVSyncIdFilterChanged(vsyncIds: string[]) {
+    this.vsyncIdFilter = vsyncIds;
+    this.computeUiData();
+    this.notifyUiDataCallback(this.uiData);
+  }
+
   public onPidFilterChanged(pids: string[]) {
     this.pidFilter = pids;
     this.computeUiData();
@@ -70,6 +88,12 @@ class Presenter {
 
   public onIdFilterChanged(ids: string[]) {
     this.idFilter = ids;
+    this.computeUiData();
+    this.notifyUiDataCallback(this.uiData);
+  }
+
+  public onWhatSearchStringChanged(searchString: string) {
+    this.whatSearchString = searchString;
     this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
@@ -99,12 +123,21 @@ class Presenter {
 
     const entries = this.makeUiDataEntries(this.entry!);
 
+    const allVSyncIds = this.getUniqueUiDataEntryValues(
+      entries,
+      (entry: UiDataEntry) => entry.vsyncId.toString()
+    );
     const allPids = this.getUniqueUiDataEntryValues(entries, (entry: UiDataEntry) => entry.pid);
     const allUids = this.getUniqueUiDataEntryValues(entries, (entry: UiDataEntry) => entry.uid);
     const allTypes = this.getUniqueUiDataEntryValues(entries, (entry: UiDataEntry) => entry.type);
     const allIds = this.getUniqueUiDataEntryValues(entries, (entry: UiDataEntry) => entry.id);
 
     let filteredEntries = entries;
+
+    if (this.vsyncIdFilter.length > 0) {
+      filteredEntries =
+        filteredEntries.filter(entry => this.vsyncIdFilter.includes(entry.vsyncId.toString()));
+    }
 
     if (this.pidFilter.length > 0) {
       filteredEntries =
@@ -126,6 +159,8 @@ class Presenter {
         filteredEntries.filter(entry => this.idFilter.includes(entry.id));
     }
 
+    filteredEntries = filteredEntries.filter(entry => entry.what.includes(this.whatSearchString));
+
     this.originalIndicesOfUiDataEntries = filteredEntries.map(entry => entry.originalIndexInTraceEntry);
 
     const currentEntryIndex = this.computeCurrentEntryIndex();
@@ -133,6 +168,7 @@ class Presenter {
     const currentPropertiesTree = this.computeCurrentPropertiesTree(filteredEntries, currentEntryIndex, selectedEntryIndex);
 
     this.uiData = new UiData(
+      allVSyncIds,
       allPids,
       allUids,
       allTypes,
@@ -189,6 +225,7 @@ class Presenter {
             transactionStateProto.uid.toString(),
             UiDataEntryType.LayerChanged,
             layerStateProto.layerId.toString(),
+            layerStateProto.what,
             treeGenerator.generate("LayerState", ObjectFormatter.format(layerStateProto))
           ));
         }
@@ -202,6 +239,7 @@ class Presenter {
             transactionStateProto.uid.toString(),
             UiDataEntryType.DisplayChanged,
             displayStateProto.id.toString(),
+            displayStateProto.what,
             treeGenerator.generate("DisplayState", ObjectFormatter.format(displayStateProto))
           ));
         }
@@ -216,6 +254,7 @@ class Presenter {
           Presenter.VALUE_NA,
           UiDataEntryType.LayerAdded,
           layerCreationArgsProto.layerId.toString(),
+          "",
           treeGenerator.generate("LayerCreationArgs", ObjectFormatter.format(layerCreationArgsProto))
         ));
       }
@@ -229,6 +268,7 @@ class Presenter {
           Presenter.VALUE_NA,
           UiDataEntryType.LayerRemoved,
           removedLayerId.toString(),
+          "",
           treeGenerator.generate("RemovedLayerId", ObjectFormatter.format(removedLayerId))
         ));
       }
@@ -242,6 +282,7 @@ class Presenter {
           Presenter.VALUE_NA,
           UiDataEntryType.DisplayAdded,
           displayStateProto.id.toString(),
+          displayStateProto.what,
           treeGenerator.generate("DisplayState", ObjectFormatter.format(displayStateProto))
         ));
       }
@@ -255,6 +296,7 @@ class Presenter {
           Presenter.VALUE_NA,
           UiDataEntryType.DisplayRemoved,
           removedDisplayId.toString(),
+          "",
           treeGenerator.generate("RemovedDisplayId", ObjectFormatter.format(removedDisplayId))
         ));
       }
@@ -268,6 +310,7 @@ class Presenter {
           Presenter.VALUE_NA,
           UiDataEntryType.LayerHandleRemoved,
           removedLayerHandleId.toString(),
+          "",
           treeGenerator.generate("RemovedLayerHandleId", ObjectFormatter.format(removedLayerHandleId))
         ));
       }
@@ -285,8 +328,8 @@ class Presenter {
     }
   }
 
-  private getUniqueUiDataEntryValues(entries: UiDataEntry[], getValue: (entry: UiDataEntry) => string): string[] {
-    const uniqueValues = new Set<string>();
+  private getUniqueUiDataEntryValues<T>(entries: UiDataEntry[], getValue: (entry: UiDataEntry) => T): T[] {
+    const uniqueValues = new Set<T>();
     entries.forEach((entry: UiDataEntry) => {
       uniqueValues.add(getValue(entry));
     });
@@ -321,16 +364,4 @@ class Presenter {
 
     return result;
   }
-
-  private entry?: TransactionsTraceEntry;
-  private originalIndicesOfUiDataEntries: number[];
-  private uiData: UiData;
-  private readonly notifyUiDataCallback: (data: UiData) => void;
-  private static readonly VALUE_NA = "N/A";
-  private pidFilter: string[] = [];
-  private uidFilter: string[] = [];
-  private typeFilter: string[] = [];
-  private idFilter: string[] = [];
 }
-
-export {Presenter};

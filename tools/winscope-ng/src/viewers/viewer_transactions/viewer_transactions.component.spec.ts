@@ -71,6 +71,7 @@ describe("ViewerTransactionsComponent", () => {
     expect(entry!.innerHTML).toContain("UID_VALUE");
     expect(entry!.innerHTML).toContain("TYPE_VALUE");
     expect(entry!.innerHTML).toContain("ID_VALUE");
+    expect(entry!.innerHTML).toContain("flag1 | flag2 | ...");
   });
 
   it("renders properties", () => {
@@ -89,9 +90,11 @@ async function makeUiData(): Promise<UiData> {
     "UID_VALUE",
     "TYPE_VALUE",
     "ID_VALUE",
+    "flag1 | flag2 | ...",
     propertiesTree);
 
   return new UiData(
+    [],
     [],
     [],
     [],

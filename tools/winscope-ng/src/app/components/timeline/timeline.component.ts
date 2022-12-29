@@ -30,11 +30,11 @@ import { FormControl, FormGroup, Validators} from "@angular/forms";
 import { DomSanitizer, SafeUrl } from "@angular/platform-browser";
 import { TraceType } from "common/trace/trace_type";
 import { TRACE_INFO } from "app/trace_info";
-import { TimelineComponentDependencyInversion } from "./timeline_component_dependency_inversion";
 import { TimelineData } from "app/timeline_data";
 import { MiniTimelineComponent } from "./mini_timeline.component";
 import { ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType } from "common/trace/timestamp";
 import { TimeUtils } from "common/utils/time_utils";
+import {TimestampChangeListener} from "interfaces/timestamp_change_listener";
 
 @Component({
   selector: "timeline",
@@ -157,7 +157,7 @@ import { TimeUtils } from "common/utils/time_utils";
         <p class="mat-body-2">No timeline to show!</p>
         <p class="mat-body-1">All loaded traces contain no timestamps!</p>
       </div>
-      <div *ngIf="!timelineData.hasMoreThanOneDistinctTimestamp()" class="no-timestamps-msg">
+      <div *ngIf="timelineData.hasTimestamps() && !timelineData.hasMoreThanOneDistinctTimestamp()" class="no-timestamps-msg">
         <p class="mat-body-2">No timeline to show!</p>
         <p class="mat-body-1">Only a single timestamp has been recorded.</p>
       </div>
@@ -271,7 +271,7 @@ import { TimeUtils } from "common/utils/time_utils";
     }
   `],
 })
-export class TimelineComponent implements TimelineComponentDependencyInversion {
+export class TimelineComponent implements TimestampChangeListener {
   public readonly TOGGLE_BUTTON_CLASS: string = "button-toggle-expansion";
   public readonly MAX_SELECTED_TRACES = 3;
 
