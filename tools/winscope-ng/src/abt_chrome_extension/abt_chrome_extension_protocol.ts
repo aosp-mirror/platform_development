@@ -15,28 +15,28 @@
  */
 
 import {
-  AbtChromeExtensionProtocolDependencyInversion,
-  OnBugAttachmentsDownloadStart,
-  OnBugAttachmentsReceived
-} from "./abt_chrome_extension_protocol_dependency_inversion";
-import {
   MessageType,
   OpenBuganizerResponse,
   OpenRequest,
   WebCommandMessage} from "./messages";
 import {FunctionUtils} from "common/utils/function_utils";
+import {
+  BuganizerAttachmentsDownloadEmitter,
+  OnBuganizerAttachmentsDownloadStart,
+  OnBuganizerAttachmentsDownloaded
+} from "interfaces/buganizer_attachments_download_emitter";
 
-export class AbtChromeExtensionProtocol implements AbtChromeExtensionProtocolDependencyInversion {
+export class AbtChromeExtensionProtocol implements BuganizerAttachmentsDownloadEmitter {
   static readonly ABT_EXTENSION_ID = "mbbaofdfoekifkfpgehgffcpagbbjkmj";
-  private onBugAttachmentsDownloadStart: OnBugAttachmentsDownloadStart = FunctionUtils.DO_NOTHING;
-  private onBugAttachmentsReceived: OnBugAttachmentsReceived = FunctionUtils.DO_NOTHING_ASYNC;
+  private onAttachmentsDownloadStart: OnBuganizerAttachmentsDownloadStart = FunctionUtils.DO_NOTHING;
+  private onttachmentsDownloaded: OnBuganizerAttachmentsDownloaded = FunctionUtils.DO_NOTHING_ASYNC;
 
-  setOnBugAttachmentsDownloadStart(callback: OnBugAttachmentsDownloadStart) {
-    this.onBugAttachmentsDownloadStart = callback;
+  setOnBuganizerAttachmentsDownloadStart(callback: OnBuganizerAttachmentsDownloadStart) {
+    this.onAttachmentsDownloadStart = callback;
   }
 
-  setOnBugAttachmentsReceived(callback: OnBugAttachmentsReceived) {
-    this.onBugAttachmentsReceived = callback;
+  setOnBuganizerAttachmentsDownloaded(callback: OnBuganizerAttachmentsDownloaded) {
+    this.onttachmentsDownloaded = callback;
   }
 
   run() {
@@ -45,7 +45,7 @@ export class AbtChromeExtensionProtocol implements AbtChromeExtensionProtocolDep
       return;
     }
 
-    this.onBugAttachmentsDownloadStart();
+    this.onAttachmentsDownloadStart();
 
     const openRequestMessage: OpenRequest = {
       action: MessageType.OPEN_REQUEST
@@ -88,7 +88,7 @@ export class AbtChromeExtensionProtocol implements AbtChromeExtensionProtocolDep
     });
 
     const files = await Promise.all(filesBlobPromises);
-    await this.onBugAttachmentsReceived(files);
+    await this.onttachmentsDownloaded(files);
   }
 
   private isOpenBuganizerResponseMessage(message: WebCommandMessage):

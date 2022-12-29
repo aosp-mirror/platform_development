@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Inject, Input, Output, ElementRef, EventEmitter, ChangeDetectionStrategy } from "@angular/core";
+import {Component, Inject, Input, Output, ElementRef, EventEmitter, ChangeDetectionStrategy} from "@angular/core";
 import { PersistentStore } from "common/utils/persistent_store";
 import { nodeStyles, treeNodeDataViewStyles } from "viewers/components/styles/node.styles";
-import { UiTreeUtils, UiTreeNode, HierarchyTreeNode, PropertiesTreeNode } from "viewers/common/ui_tree_utils";
+import { UiTreeUtils, UiTreeNode, HierarchyTreeNode } from "viewers/common/ui_tree_utils";
 import { TraceType } from "common/trace/trace_type";
 
 @Component({
@@ -76,8 +76,12 @@ export class TreeComponent {
   diffClass = UiTreeUtils.diffClass;
   isHighlighted = UiTreeUtils.isHighlighted;
 
-  @Input() item?: UiTreeNode;
+  // TODO (b/263779536): this array is passed down from viewers/presenters and is used to generate
+  //  an identifier supposed to be unique for each viewer. Let's just use a proper identifier
+  //  instead. Each viewer/presenter could pass down a random magic number, an UUID, ...
   @Input() dependencies: Array<TraceType> = [];
+
+  @Input() item?: UiTreeNode;
   @Input() store!: PersistentStore;
   @Input() isFlattened? = false;
   @Input() initialDepth = 0;
@@ -117,7 +121,7 @@ export class TreeComponent {
   }
 
   constructor(
-    @Inject(ElementRef) public elementRef: ElementRef,
+    @Inject(ElementRef) public elementRef: ElementRef
   ) {
     this.nodeElement = elementRef.nativeElement.querySelector(".node");
     this.nodeElement?.addEventListener("mousedown", this.nodeMouseDownEventListener);
@@ -168,18 +172,14 @@ export class TreeComponent {
   }
 
   private updateHighlightedItems() {
-    if (this.item instanceof HierarchyTreeNode) {
-      if (this.item.stableId) {
-        this.highlightedItemChange.emit(`${this.item.stableId}`);
-      } else if (!this.item.stableId) {
-        //this.selectedTreeChange.emit(this.item);
-      }
+    if (this.item?.stableId) {
+      this.highlightedItemChange.emit(`${this.item.stableId}`);
     }
   }
 
   public isPinned() {
     if (this.item instanceof HierarchyTreeNode) {
-      return this.pinnedItems?.map(item => `${item.id}`).includes(`${this.item.id}`);
+      return this.pinnedItems?.map(item => `${item.stableId}`).includes(`${this.item.stableId}`);
     }
     return false;
   }

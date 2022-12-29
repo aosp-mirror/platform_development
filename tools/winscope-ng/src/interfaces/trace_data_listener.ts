@@ -16,7 +16,7 @@
 
 import {Viewer} from "viewers/viewer";
 
-export interface AppComponentDependencyInversion {
+export interface TraceDataListener {
+  onTraceDataUnloaded(): void;
   onTraceDataLoaded(viewers: Viewer[]): void;
-  onUploadNewClick(): void;
 }

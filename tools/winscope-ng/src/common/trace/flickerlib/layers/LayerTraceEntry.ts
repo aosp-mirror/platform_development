@@ -21,8 +21,8 @@ import { TimeUtils } from "common/utils/time_utils";
 import { ElapsedTimestamp, RealTimestamp } from "common/trace/timestamp";
 
 LayerTraceEntry.fromProto = function (
-    protos: any[],
-    displayProtos: any[],
+    protos: object[],
+    displayProtos: object[],
     elapsedTimestamp: bigint,
     vSyncId: number,
     hwcBlob: string,
@@ -49,7 +49,7 @@ LayerTraceEntry.fromProto = function (
     return entry;
 }
 
-function addAttributes(entry: LayerTraceEntry, protos: any, useElapsedTime = false) {
+function addAttributes(entry: LayerTraceEntry, protos: object[], useElapsedTime = false) {
     entry.kind = "entry";
     // Avoid parsing the entry root because it is an array of layers
     // containing all trace information, this slows down the property tree.

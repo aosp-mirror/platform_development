@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-export type OnBugAttachmentsDownloadStart = () => void;
-export type OnBugAttachmentsReceived = (attachments: File[]) => Promise<void>;
+import {Timestamp} from "common/trace/timestamp";
 
-export interface AbtChromeExtensionProtocolDependencyInversion {
-  setOnBugAttachmentsDownloadStart(callback: OnBugAttachmentsDownloadStart): void;
-  setOnBugAttachmentsReceived(callback: OnBugAttachmentsReceived): void;
-  run(): void;
+export interface TimestampChangeListener {
+  onCurrentTimestampChanged(timestamp: Timestamp|undefined): void;
 }

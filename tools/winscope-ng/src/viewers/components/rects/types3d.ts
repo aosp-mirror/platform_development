@@ -35,13 +35,14 @@ export interface Box3D {
 
 export interface Rect3D {
   id: string;
-  center: Point3D;
-  width: number;
-  height: number;
+  topLeft: Point3D;
+  bottomRight: Point3D;
+  cornerRadius: number;
   darkFactor: number;
   colorType: ColorType;
   isClickable: boolean;
   transform: Transform3D;
+  isOversized: boolean;
 }
 
 export interface Transform3D {

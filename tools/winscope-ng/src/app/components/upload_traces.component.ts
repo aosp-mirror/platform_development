@@ -23,12 +23,12 @@ import {
   Output
 } from "@angular/core";
 import {MatSnackBar} from "@angular/material/snack-bar";
-import {UploadTracesComponentDependencyInversion} from "./upload_traces_component_dependency_inversion";
 import {TraceData} from "app/trace_data";
 import {TRACE_INFO} from "app/trace_info";
 import {Trace, TraceFile} from "common/trace/trace";
 import {FileUtils, OnFile} from "common/utils/file_utils";
 import {ParserErrorSnackBarComponent} from "./parser_error_snack_bar_component";
+import {FilesDownloadListener} from "interfaces/files_download_listener";
 
 @Component({
   selector: "upload-traces",
@@ -54,7 +54,7 @@ import {ParserErrorSnackBarComponent} from "./parser_error_snack_bar_component";
         />
 
         <load-progress *ngIf="isLoadingFiles"
-                       [progressPercentage]="progresPercentage"
+                       [progressPercentage]="progressPercentage"
                        [message]="progressMessage">
         </load-progress>
 
@@ -174,11 +174,11 @@ import {ParserErrorSnackBarComponent} from "./parser_error_snack_bar_component";
     `
   ]
 })
-export class UploadTracesComponent implements UploadTracesComponentDependencyInversion {
+export class UploadTracesComponent implements FilesDownloadListener {
   TRACE_INFO = TRACE_INFO;
   isLoadingFiles = false;
   progressMessage = "";
-  progresPercentage?: number;
+  progressPercentage?: number;
 
   @Input() traceData!: TraceData;
   @Output() traceDataLoaded = new EventEmitter<void>();
@@ -197,50 +197,17 @@ export class UploadTracesComponent implements UploadTracesComponentDependencyInv
   public onFilesDownloadStart() {
     this.isLoadingFiles = true;
     this.progressMessage = "Downloading files...";
-    this.progresPercentage = undefined;
+    this.progressPercentage = undefined;
     this.changeDetectorRef.detectChanges();
+  }
+
+  public async onFilesDownloaded(files: File[]) {
+    await this.processFiles(files);
   }
 
   public async onInputFiles(event: Event) {
     const files = this.getInputFiles(event);
     await this.processFiles(files);
-  }
-
-  public async processFiles(files: File[]) {
-    const UI_PROGRESS_UPDATE_PERIOD_MS = 200;
-    let lastUiProgressUpdate = Date.now();
-
-    const onProgressUpdate = (progress: number) => {
-      const now = Date.now();
-      if ((Date.now() - lastUiProgressUpdate) < UI_PROGRESS_UPDATE_PERIOD_MS) {
-        // Let's limit the amount of UI updates, because the progress bar component
-        // renders weird stuff when updated too frequently
-        return;
-      }
-      lastUiProgressUpdate = now;
-
-      this.progresPercentage = progress;
-      this.changeDetectorRef.detectChanges();
-    };
-
-    const traceFiles: TraceFile[] = [];
-    const onFile: OnFile = (file: File, parentArchive?: File) => {
-      traceFiles.push(new TraceFile(file, parentArchive));
-    };
-
-    this.isLoadingFiles = true;
-    this.progressMessage = "Unzipping files...";
-    this.changeDetectorRef.detectChanges();
-    await FileUtils.unzipFilesIfNeeded(files, onFile, onProgressUpdate);
-
-    this.progressMessage = "Parsing files...";
-    this.changeDetectorRef.detectChanges();
-    const parserErrors = await this.traceData.loadTraces(traceFiles, onProgressUpdate);
-
-    this.isLoadingFiles = false;
-    this.changeDetectorRef.detectChanges();
-
-    ParserErrorSnackBarComponent.showIfNeeded(this.ngZone, this.snackBar, parserErrors);
   }
 
   public onViewTracesButtonClick() {
@@ -275,6 +242,43 @@ export class UploadTracesComponent implements UploadTracesComponentDependencyInv
     event.stopPropagation();
     this.traceData.removeTrace(trace.type);
     this.changeDetectorRef.detectChanges();
+  }
+
+  private async processFiles(files: File[]) {
+    const UI_PROGRESS_UPDATE_PERIOD_MS = 200;
+    let lastUiProgressUpdate = Date.now();
+
+    const onProgressUpdate = (progress: number) => {
+      const now = Date.now();
+      if ((Date.now() - lastUiProgressUpdate) < UI_PROGRESS_UPDATE_PERIOD_MS) {
+        // Let's limit the amount of UI updates, because the progress bar component
+        // renders weird stuff when updated too frequently
+        return;
+      }
+      lastUiProgressUpdate = now;
+
+      this.progressPercentage = progress;
+      this.changeDetectorRef.detectChanges();
+    };
+
+    const traceFiles: TraceFile[] = [];
+    const onFile: OnFile = (file: File, parentArchive?: File) => {
+      traceFiles.push(new TraceFile(file, parentArchive));
+    };
+
+    this.isLoadingFiles = true;
+    this.progressMessage = "Unzipping files...";
+    this.changeDetectorRef.detectChanges();
+    await FileUtils.unzipFilesIfNeeded(files, onFile, onProgressUpdate);
+
+    this.progressMessage = "Parsing files...";
+    this.changeDetectorRef.detectChanges();
+    const parserErrors = await this.traceData.loadTraces(traceFiles, onProgressUpdate);
+
+    this.isLoadingFiles = false;
+    this.changeDetectorRef.detectChanges();
+
+    ParserErrorSnackBarComponent.showIfNeeded(this.ngZone, this.snackBar, parserErrors);
   }
 
   private getInputFiles(event: Event): File[] {

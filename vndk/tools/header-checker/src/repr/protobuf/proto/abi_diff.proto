@@ -100,6 +100,7 @@ message TranslationUnitDiff {
 
   // Functions and Global variables.
   repeated FunctionDeclDiff function_diffs = 13;
+  repeated FunctionDeclDiff function_extension_diffs = 26;
   repeated GlobalVarDeclDiff global_var_diffs = 14;
 
   repeated abi_dump.FunctionDecl functions_removed = 15;

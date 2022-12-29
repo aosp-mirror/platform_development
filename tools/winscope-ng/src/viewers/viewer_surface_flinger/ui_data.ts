@@ -30,6 +30,7 @@ export class UiData {
   tree: HierarchyTreeNode | null = null;
   propertiesTree: PropertiesTreeNode | null = null;
   selectedLayer: Layer = {};
+  displayPropertyGroups = true;
 
   constructor(dependencies?: Array<TraceType>) {
     this.dependencies = dependencies ?? [];

@@ -22,7 +22,8 @@ import { PropertiesTreeNode, Terminal} from "viewers/common/ui_tree_utils";
 @Component({
   selector: "properties-view",
   template: `
-    <div class="view-header">
+    <div class="view-header"
+         [class.view-header-with-property-groups]="displayPropertyGroups">
       <div class="title-filter">
         <h2 class="properties-title mat-title">Properties</h2>
 
@@ -49,7 +50,7 @@ import { PropertiesTreeNode, Terminal} from "viewers/common/ui_tree_utils";
       </div>
 
       <property-groups
-        *ngIf="itemIsSelected() && propertyGroups"
+        *ngIf="itemIsSelected() && displayPropertyGroups"
         class="property-groups"
         [item]="selectedFlickerItem"
       ></property-groups>
@@ -58,7 +59,8 @@ import { PropertiesTreeNode, Terminal} from "viewers/common/ui_tree_utils";
     <mat-divider></mat-divider>
 
     <div class="properties-content">
-      <h3 *ngIf="objectKeys(propertiesTree).length > 0 && isProtoDump" class="properties-title mat-subheading-2">Properties - Proto Dump</h3>
+      <h3 *ngIf="objectKeys(propertiesTree).length > 0 && isProtoDump"
+          class="properties-title mat-subheading-2">Properties - Proto Dump</h3>
 
       <div class="tree-wrapper">
         <tree-view
@@ -78,6 +80,10 @@ import { PropertiesTreeNode, Terminal} from "viewers/common/ui_tree_utils";
         flex-direction: column;
         overflow-y: auto;
         margin-bottom: 12px;
+      }
+
+      .view-header-with-property-groups {
+        flex: 3;
       }
 
       .title-filter {
@@ -121,7 +127,7 @@ export class PropertiesComponent {
   @Input() userOptions: UserOptions = {};
   @Input() propertiesTree: PropertiesTreeNode = {};
   @Input() selectedFlickerItem: TraceTreeNode | null = null;
-  @Input() propertyGroups = false;
+  @Input() displayPropertyGroups = false;
   @Input() isProtoDump = false;
 
   constructor(

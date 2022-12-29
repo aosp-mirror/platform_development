@@ -93,18 +93,18 @@ describe("Mediator", () => {
     spyOn(uploadTracesComponent, "onFilesDownloadStart");
     expect(uploadTracesComponent.onFilesDownloadStart).toHaveBeenCalledTimes(0);
 
-    abtChromeExtensionProtocol.onBugAttachmentsDownloadStart();
+    abtChromeExtensionProtocol.onBuganizerAttachmentsDownloadStart();
     expect(uploadTracesComponent.onFilesDownloadStart).toHaveBeenCalledTimes(1);
   });
 
   it("handles empty downloaded files from ABT chrome extension", async () => {
-    spyOn(uploadTracesComponent, "processFiles");
-    expect(uploadTracesComponent.processFiles).toHaveBeenCalledTimes(0);
+    spyOn(uploadTracesComponent, "onFilesDownloaded");
+    expect(uploadTracesComponent.onFilesDownloaded).toHaveBeenCalledTimes(0);
 
     // Pass files even if empty so that the upload component will update the progress bar
     // and display error messages
-    await abtChromeExtensionProtocol.onBugAttachmentsReceived([]);
-    expect(uploadTracesComponent.processFiles).toHaveBeenCalledTimes(1);
+    await abtChromeExtensionProtocol.onBuganizerAttachmentsDownloaded([]);
+    expect(uploadTracesComponent.onFilesDownloaded).toHaveBeenCalledTimes(1);
   });
 
   it("propagates current timestamp changed through timeline", async () => {

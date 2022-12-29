@@ -36,8 +36,11 @@ class DiffStatus {
     kNoDiff = 0,
     // The diff has been added to the IRDiffDumper.
     kIndirectDiff = 1,
+    // The diff has not been added to the IRDiffDumper, and the new ABI is
+    // an extension to the old ABI.
+    kDirectExt = 2,
     // The diff has not been added to the IRDiffDumper.
-    kDirectDiff = 2,
+    kDirectDiff = 3,
   };
 
   // Allow implicit conversion.
@@ -45,7 +48,11 @@ class DiffStatus {
 
   bool HasDiff() const { return status_ != kNoDiff; }
 
-  bool IsDirectDiff() const { return status_ == kDirectDiff; }
+  bool IsDirectDiff() const {
+    return status_ == kDirectDiff || status_ == kDirectExt;
+  }
+
+  bool IsExtension() const { return status_ == kDirectExt; }
 
   DiffStatus &CombineWith(DiffStatus other) {
     status_ = std::max(status_, other.status_);
@@ -93,9 +100,6 @@ class AbiDiffHelper {
   bool AreOpaqueTypesEqual(const std::string &old_type_str,
                            const std::string &new_type_str) const;
 
-  bool AreTypeSizeAndAlignmentEqual(const std::string &old_type_str,
-                                    const std::string &new_type_str) const;
-
   DiffStatus CompareAndDumpTypeDiff(
       const std::string &old_type_str, const std::string &new_type_str,
       std::deque<std::string> *type_queue = nullptr,
@@ -122,17 +126,6 @@ class AbiDiffHelper {
                                   const CFunctionLikeIR *new_type,
                                   std::deque<std::string> *type_queue,
                                   DiffMessageIR::DiffKind diff_kind);
-
-  DiffStatus CompareFunctionParameters(
-      const std::vector<ParamIR> &old_parameters,
-      const std::vector<ParamIR> &new_parameters,
-      std::deque<std::string> *type_queue,
-      IRDiffDumper::DiffKind diff_kind);
-
-  DiffStatus CompareParameterOrReturnType(const std::string &old_type_id,
-                                          const std::string &new_type_id,
-                                          std::deque<std::string> *type_queue,
-                                          IRDiffDumper::DiffKind diff_kind);
 
   DiffStatus CompareTemplateInfo(
       const std::vector<TemplateElementIR> &old_template_elements,
@@ -210,6 +203,21 @@ class AbiDiffHelper {
   bool CompareVTableComponents(
       const VTableComponentIR &old_component,
       const VTableComponentIR &new_component);
+
+  DiffStatus CompareFunctionParameters(
+      const std::vector<ParamIR> &old_parameters,
+      const std::vector<ParamIR> &new_parameters,
+      std::deque<std::string> *type_queue, IRDiffDumper::DiffKind diff_kind);
+
+  DiffStatus CompareParameterTypes(const std::string &old_type_id,
+                                   const std::string &new_type_id,
+                                   std::deque<std::string> *type_queue,
+                                   IRDiffDumper::DiffKind diff_kind);
+
+  DiffStatus CompareReturnTypes(const std::string &old_type_id,
+                                const std::string &new_type_id,
+                                std::deque<std::string> *type_queue,
+                                IRDiffDumper::DiffKind diff_kind);
 
   template <typename DiffType, typename DiffElement>
   bool AddToDiff(DiffType *mutable_diff, const DiffElement *oldp,
