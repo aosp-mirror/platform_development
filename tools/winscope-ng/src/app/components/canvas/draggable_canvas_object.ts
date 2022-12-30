@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import { MathUtils } from "three/src/Three";
-import { Segment } from "../timeline/utils";
-import { CanvasDrawer } from "./canvas_drawer";
+import {MathUtils} from 'three/src/Three';
+import {Segment} from '../timeline/utils';
+import {CanvasDrawer} from './canvas_drawer';
 
 export type drawConfig = {
-  fillStyle: string,
-  fill: boolean
-}
+  fillStyle: string;
+  fill: boolean;
+};
 
 export class DraggableCanvasObject {
-  private draggingPosition: number|undefined;
+  private draggingPosition: number | undefined;
 
   constructor(
     private drawer: CanvasDrawer,
@@ -33,17 +33,21 @@ export class DraggableCanvasObject {
     private drawConfig: drawConfig,
     private onDrag: (x: number) => void,
     private onDrop: (x: number) => void,
-    private rangeGetter: () => Segment,
+    private rangeGetter: () => Segment
   ) {
-    this.drawer.handler.registerDraggableObject(this, (x: number, ) => {
-      this.draggingPosition = this.clampPositionToRange(x);
-      this.onDrag(this.draggingPosition);
-      this.drawer.draw();
-    }, (x: number, ) => {
-      this.draggingPosition = undefined;
-      this.onDrop(this.clampPositionToRange(x));
-      this.drawer.draw();
-    });
+    this.drawer.handler.registerDraggableObject(
+      this,
+      (x: number) => {
+        this.draggingPosition = this.clampPositionToRange(x);
+        this.onDrag(this.draggingPosition);
+        this.drawer.draw();
+      },
+      (x: number) => {
+        this.draggingPosition = undefined;
+        this.onDrop(this.clampPositionToRange(x));
+        this.drawer.draw();
+      }
+    );
   }
 
   get range(): Segment {

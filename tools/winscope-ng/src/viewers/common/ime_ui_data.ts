@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { HierarchyTreeNode, PropertiesTreeNode } from "viewers/common/ui_tree_utils";
-import { UserOptions } from "viewers/common/user_options";
-import { TraceType } from "common/trace/trace_type";
-import { TableProperties } from "viewers/common/table_properties";
-import { ImeAdditionalProperties } from "viewers/common/ime_additional_properties";
+import {TraceType} from 'common/trace/trace_type';
+import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
+import {TableProperties} from 'viewers/common/table_properties';
+import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {UserOptions} from 'viewers/common/user_options';
 
 export class ImeUiData {
   dependencies: Array<TraceType>;

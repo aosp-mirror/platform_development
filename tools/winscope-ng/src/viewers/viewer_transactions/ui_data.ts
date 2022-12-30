@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {PropertiesTreeNode} from "viewers/common/ui_tree_utils";
+import {PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 
 class UiData {
   constructor(
@@ -23,11 +23,11 @@ class UiData {
     public allTypes: string[],
     public allIds: string[],
     public entries: UiDataEntry[],
-    public currentEntryIndex: undefined|number,
-    public selectedEntryIndex: undefined|number,
-    public scrollToIndex: undefined|number,
-    public currentPropertiesTree: undefined|PropertiesTreeNode) {
-  }
+    public currentEntryIndex: undefined | number,
+    public selectedEntryIndex: undefined | number,
+    public scrollToIndex: undefined | number,
+    public currentPropertiesTree: undefined | PropertiesTreeNode
+  ) {}
 
   public static EMPTY = new UiData(
     [],
@@ -39,7 +39,8 @@ class UiData {
     undefined,
     undefined,
     undefined,
-    undefined);
+    undefined
+  );
 }
 
 class UiDataEntry {
@@ -53,18 +54,17 @@ class UiDataEntry {
     public id: string,
     public what: string,
     public propertiesTree?: PropertiesTreeNode
-  ) {
-  }
+  ) {}
 }
 
 class UiDataEntryType {
-  public static DisplayAdded = "DISPLAY_ADDED";
-  public static DisplayRemoved = "DISPLAY_REMOVED";
-  public static DisplayChanged = "DISPLAY_CHANGED";
-  public static LayerAdded = "LAYER_ADDED";
-  public static LayerRemoved = "LAYER_REMOVED";
-  public static LayerChanged = "LAYER_CHANGED";
-  public static LayerHandleRemoved = "LAYER_HANDLE_REMOVED";
+  public static DisplayAdded = 'DISPLAY_ADDED';
+  public static DisplayRemoved = 'DISPLAY_REMOVED';
+  public static DisplayChanged = 'DISPLAY_CHANGED';
+  public static LayerAdded = 'LAYER_ADDED';
+  public static LayerRemoved = 'LAYER_REMOVED';
+  public static LayerChanged = 'LAYER_CHANGED';
+  public static LayerHandleRemoved = 'LAYER_HANDLE_REMOVED';
 }
 
 export {UiData, UiDataEntry, UiDataEntryType};

@@ -14,29 +14,33 @@
  * limitations under the License.
  */
 
-import { shortenName } from '../mixin'
-import { WindowToken } from "../common"
-import WindowContainer from "./WindowContainer"
+import {WindowToken} from '../common';
+import {shortenName} from '../mixin';
+import WindowContainer from './WindowContainer';
 
-WindowToken.fromProto = function (proto: any, isActivityInTree: Boolean, nextSeq: () => number): WindowToken {
-    if (proto == null) {
-        return null;
-    }
+WindowToken.fromProto = function (
+  proto: any,
+  isActivityInTree: Boolean,
+  nextSeq: () => number
+): WindowToken {
+  if (proto == null) {
+    return null;
+  }
 
-    const windowContainer = WindowContainer.fromProto(
-        /* proto */ proto.windowContainer,
-        /* protoChildren */ proto.windowContainer?.children ?? [],
-        /* isActivityInTree */ isActivityInTree,
-        /* computedZ */ nextSeq,
-        /* nameOverride */ null,
-        /* identifierOverride */ null,
-        /* tokenOverride */ proto.hashCode
-    );
-    const entry = new WindowToken(windowContainer);
-    entry.kind = entry.constructor.name;
-    entry.proto = proto;
-    entry.shortName = shortenName(entry.name);
-    return entry;
-}
+  const windowContainer = WindowContainer.fromProto(
+    /* proto */ proto.windowContainer,
+    /* protoChildren */ proto.windowContainer?.children ?? [],
+    /* isActivityInTree */ isActivityInTree,
+    /* computedZ */ nextSeq,
+    /* nameOverride */ null,
+    /* identifierOverride */ null,
+    /* tokenOverride */ proto.hashCode
+  );
+  const entry = new WindowToken(windowContainer);
+  entry.kind = entry.constructor.name;
+  entry.proto = proto;
+  entry.shortName = shortenName(entry.name);
+  return entry;
+};
 
 export default WindowToken;

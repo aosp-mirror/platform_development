@@ -14,33 +14,37 @@
  * limitations under the License.
  */
 
-import { shortenName } from '../mixin'
-import { DisplayArea } from "../common"
-import WindowContainer from "./WindowContainer"
+import {DisplayArea} from '../common';
+import {shortenName} from '../mixin';
+import WindowContainer from './WindowContainer';
 
-DisplayArea.fromProto = function (proto: any, isActivityInTree: Boolean, nextSeq: () => number): DisplayArea {
-    if (proto == null) {
-        return null;
-    } else {
-        const windowContainer = WindowContainer.fromProto(
-            /* proto */ proto.windowContainer,
-            /* protoChildren */ proto.windowContainer?.children ?? [],
-            /* isActivityInTree */ isActivityInTree,
-            /* computedZ */ nextSeq,
-            /* nameOverride */ proto.name,
-        );
+DisplayArea.fromProto = function (
+  proto: any,
+  isActivityInTree: Boolean,
+  nextSeq: () => number
+): DisplayArea {
+  if (proto == null) {
+    return null;
+  } else {
+    const windowContainer = WindowContainer.fromProto(
+      /* proto */ proto.windowContainer,
+      /* protoChildren */ proto.windowContainer?.children ?? [],
+      /* isActivityInTree */ isActivityInTree,
+      /* computedZ */ nextSeq,
+      /* nameOverride */ proto.name
+    );
 
-        const entry = new DisplayArea(proto.isTaskDisplayArea, windowContainer);
+    const entry = new DisplayArea(proto.isTaskDisplayArea, windowContainer);
 
-        addAttributes(entry, proto);
-        return entry;
-    }
-}
+    addAttributes(entry, proto);
+    return entry;
+  }
+};
 
 function addAttributes(entry: DisplayArea, proto: any) {
-    entry.proto = proto;
-    entry.kind = entry.constructor.name;
-    entry.shortName = shortenName(entry.name);
+  entry.proto = proto;
+  entry.kind = entry.constructor.name;
+  entry.shortName = shortenName(entry.name);
 }
 
 export default DisplayArea;

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {Viewer} from "viewers/viewer";
-import {TraceDataListener} from "interfaces/trace_data_listener";
+import {TraceDataListener} from 'interfaces/trace_data_listener';
+import {Viewer} from 'viewers/viewer';
 
 export class AppComponentStub implements TraceDataListener {
   onTraceDataLoaded(viewers: Viewer[]) {

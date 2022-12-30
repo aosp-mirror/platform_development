@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { ImeLayers, ProcessedWindowManagerState } from "./ime_utils";
+import {ImeLayers, ProcessedWindowManagerState} from './ime_utils';
 
 export class ImeAdditionalProperties {
   constructor(
     public wm: ProcessedWindowManagerState | undefined,
-    public sf: ImeLayers | undefined,
+    public sf: ImeLayers | undefined
   ) {}
 }

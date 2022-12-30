@@ -15,9 +15,7 @@
  */
 
 class ScreenRecordingTraceEntry {
-  constructor(public videoTimeSeconds: number,
-              public videoData: Blob) {
-  }
+  constructor(public videoTimeSeconds: number, public videoData: Blob) {}
 }
 
 export {ScreenRecordingTraceEntry};

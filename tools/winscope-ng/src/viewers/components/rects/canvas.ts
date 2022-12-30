@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Rectangle} from "viewers/common/rectangle";
-import * as THREE from "three";
-import {CSS2DObject, CSS2DRenderer} from "three/examples/jsm/renderers/CSS2DRenderer";
-import {ViewerEvents} from "viewers/common/viewer_events";
-import {Circle3D, ColorType, Label3D, Point3D, Rect3D, Scene3D, Transform3D} from "./types3d";
+import * as THREE from 'three';
+import {CSS2DObject, CSS2DRenderer} from 'three/examples/jsm/renderers/CSS2DRenderer';
+import {Rectangle} from 'viewers/common/rectangle';
+import {ViewerEvents} from 'viewers/common/viewer_events';
+import {Circle3D, ColorType, Label3D, Point3D, Rect3D, Scene3D, Transform3D} from './types3d';
 
 export class Canvas {
   private static readonly TARGET_SCENE_DIAGONAL = 4;
-  private static readonly RECT_COLOR_HIGHLIGHTED = new THREE.Color(0xD2E3FC);
+  private static readonly RECT_COLOR_HIGHLIGHTED = new THREE.Color(0xd2e3fc);
   private static readonly RECT_EDGE_COLOR = 0x000000;
   private static readonly RECT_EDGE_COLOR_ROUNDED = 0x848884;
   private static readonly LABEL_CIRCLE_COLOR = 0x000000;
@@ -47,8 +47,8 @@ export class Canvas {
   draw(scene: Scene3D) {
     // Must set 100% width and height so the HTML element expands to the parent's
     // boundaries and the correct clientWidth and clientHeight values can be read
-    this.canvasRects.style.width = "100%";
-    this.canvasRects.style.height = "100%";
+    this.canvasRects.style.width = '100%';
+    this.canvasRects.style.height = '100%';
     let widthAspectRatioAdjustFactor: number;
     let heightAspectRatioAdjustFactor: number;
 
@@ -67,19 +67,23 @@ export class Canvas {
     const panFactorY = scene.camera.panScreenDistance.dy / this.canvasRects.clientHeight;
 
     this.scene = new THREE.Scene();
-    const scaleFactor = Canvas.TARGET_SCENE_DIAGONAL / scene.boundingBox.diagonal * scene.camera.zoomFactor;
+    const scaleFactor =
+      (Canvas.TARGET_SCENE_DIAGONAL / scene.boundingBox.diagonal) * scene.camera.zoomFactor;
     this.scene.scale.set(scaleFactor, -scaleFactor, scaleFactor);
     this.scene.translateX(scaleFactor * -scene.boundingBox.center.x + cameraWidth * panFactorX);
     this.scene.translateY(scaleFactor * scene.boundingBox.center.y - cameraHeight * panFactorY);
     this.scene.translateZ(scaleFactor * -scene.boundingBox.center.z);
 
     this.camera = new THREE.OrthographicCamera(
-      - cameraWidth / 2, cameraWidth / 2,
-      cameraHeight / 2, - cameraHeight / 2,
-      0, 100,
+      -cameraWidth / 2,
+      cameraWidth / 2,
+      cameraHeight / 2,
+      -cameraHeight / 2,
+      0,
+      100
     );
 
-    const rotationAngleX = scene.camera.rotationFactor * Math.PI * 45 / 360;
+    const rotationAngleX = (scene.camera.rotationFactor * Math.PI * 45) / 360;
     const rotationAngleY = rotationAngleX * 1.5;
     const cameraPosition = new THREE.Vector3(0, 0, Canvas.TARGET_SCENE_DIAGONAL);
     cameraPosition.applyAxisAngle(new THREE.Vector3(1, 0, 0), -rotationAngleX);
@@ -91,7 +95,7 @@ export class Canvas {
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
       canvas: this.canvasRects,
-      alpha: true
+      alpha: true,
     });
 
     this.labelRenderer = new CSS2DRenderer({element: this.canvasLabels});
@@ -110,7 +114,7 @@ export class Canvas {
     this.labelRenderer.render(this.scene, this.camera);
   }
 
-  public getClickedRectId(x: number, y: number, z: number): undefined|string {
+  public getClickedRectId(x: number, y: number, z: number): undefined | string {
     const clickPosition = new THREE.Vector3(x, y, z);
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(clickPosition, this.camera!);
@@ -123,7 +127,7 @@ export class Canvas {
 
   private drawRects(rects: Rect3D[]) {
     this.clickableObjects = [];
-    rects.forEach(rect => {
+    rects.forEach((rect) => {
       const rectMesh = this.makeRectMesh(rect);
       const transform = this.toMatrix4(rect.transform);
       rectMesh.applyMatrix4(transform);
@@ -147,7 +151,7 @@ export class Canvas {
       });
       const lineGeometry = new THREE.BufferGeometry().setFromPoints(linePoints);
       const lineMaterial = new THREE.LineBasicMaterial({
-        color: label.isHighlighted ? Canvas.LABEL_LINE_COLOR_HIGHLIGHTED : Canvas.LABEL_LINE_COLOR
+        color: label.isHighlighted ? Canvas.LABEL_LINE_COLOR_HIGHLIGHTED : Canvas.LABEL_LINE_COLOR,
       });
       const line = new THREE.Line(lineGeometry, lineMaterial);
       this.scene?.add(line);
@@ -158,31 +162,31 @@ export class Canvas {
 
   private drawLabelTextHtml(label: Label3D) {
     // Add rectangle label
-    const spanText: HTMLElement = document.createElement("span");
+    const spanText: HTMLElement = document.createElement('span');
     spanText.innerText = label.text;
-    spanText.className = "mat-body-1";
+    spanText.className = 'mat-body-1';
 
     // Hack: transparent/placeholder text used to push the visible text towards left
     // (towards negative x) and properly align it with the label's vertical segment
-    const spanPlaceholder: HTMLElement = document.createElement("span");
+    const spanPlaceholder: HTMLElement = document.createElement('span');
     spanPlaceholder.innerText = label.text;
-    spanPlaceholder.className = "mat-body-1";
-    spanPlaceholder.style.opacity = "0";
+    spanPlaceholder.className = 'mat-body-1';
+    spanPlaceholder.style.opacity = '0';
 
-    const div: HTMLElement = document.createElement("div");
-    div.className = "rect-label";
-    div.style.display = "inline";
+    const div: HTMLElement = document.createElement('div');
+    div.className = 'rect-label';
+    div.style.display = 'inline';
     div.appendChild(spanText);
     div.appendChild(spanPlaceholder);
 
-    div.style.marginTop = "5px";
+    div.style.marginTop = '5px';
     if (label.isHighlighted) {
-      div.style.color = "gray";
+      div.style.color = 'gray';
     }
-    div.style.pointerEvents = "auto";
-    div.style.cursor = "pointer";
-    div.addEventListener(
-      "click", (event) => this.propagateUpdateHighlightedItems(event, label.rectId)
+    div.style.pointerEvents = 'auto';
+    div.style.cursor = 'pointer';
+    div.addEventListener('click', (event) =>
+      this.propagateUpdateHighlightedItems(event, label.rectId)
     );
 
     const labelCss = new CSS2DObject(div);
@@ -193,16 +197,26 @@ export class Canvas {
 
   private toMatrix4(transform: Transform3D): THREE.Matrix4 {
     return new THREE.Matrix4().set(
-      transform.dsdx, transform.dsdy, 0, transform.tx,
-      transform.dtdx, transform.dtdy, 0, transform.ty,
-      0, 0, 1, 0,
-      0, 0, 0, 1,
+      transform.dsdx,
+      transform.dsdy,
+      0,
+      transform.tx,
+      transform.dtdx,
+      transform.dtdy,
+      0,
+      transform.ty,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      1
     );
   }
 
-  private makeRectMesh(
-    rect: Rect3D
-  ): THREE.Mesh {
+  private makeRectMesh(rect: Rect3D): THREE.Mesh {
     const rectShape = this.createRectShape(rect);
     const rectGeometry = new THREE.ShapeGeometry(rectShape);
     const rectBorders = this.createRectBorders(rect, rectGeometry);
@@ -219,7 +233,8 @@ export class Canvas {
         color: this.getColor(rect),
         opacity: opacity,
         transparent: true,
-      }));
+      })
+    );
 
     mesh.add(rectBorders);
     mesh.position.x = 0;
@@ -231,8 +246,8 @@ export class Canvas {
   }
 
   private createRectShape(rect: Rect3D): THREE.Shape {
-    const bottomLeft: Point3D = { x: rect.topLeft.x, y: rect.bottomRight.y, z: rect.topLeft.z };
-    const topRight: Point3D = { x: rect.bottomRight.x, y: rect.topLeft.y, z: rect.bottomRight.z };
+    const bottomLeft: Point3D = {x: rect.topLeft.x, y: rect.bottomRight.y, z: rect.topLeft.z};
+    const topRight: Point3D = {x: rect.bottomRight.x, y: rect.topLeft.y, z: rect.bottomRight.z};
 
     // Create (rounded) rect shape
     return new THREE.Shape()
@@ -240,11 +255,21 @@ export class Canvas {
       .lineTo(bottomLeft.x, bottomLeft.y - rect.cornerRadius)
       .quadraticCurveTo(bottomLeft.x, bottomLeft.y, bottomLeft.x + rect.cornerRadius, bottomLeft.y)
       .lineTo(rect.bottomRight.x - rect.cornerRadius, rect.bottomRight.y)
-      .quadraticCurveTo(rect.bottomRight.x, rect.bottomRight.y, rect.bottomRight.x, rect.bottomRight.y - rect.cornerRadius)
+      .quadraticCurveTo(
+        rect.bottomRight.x,
+        rect.bottomRight.y,
+        rect.bottomRight.x,
+        rect.bottomRight.y - rect.cornerRadius
+      )
       .lineTo(topRight.x, topRight.y + rect.cornerRadius)
       .quadraticCurveTo(topRight.x, topRight.y, topRight.x - rect.cornerRadius, topRight.y)
       .lineTo(rect.topLeft.x + rect.cornerRadius, rect.topLeft.y)
-      .quadraticCurveTo(rect.topLeft.x, rect.topLeft.y, rect.topLeft.x, rect.topLeft.y + rect.cornerRadius);
+      .quadraticCurveTo(
+        rect.topLeft.x,
+        rect.topLeft.y,
+        rect.topLeft.x,
+        rect.topLeft.y + rect.cornerRadius
+      );
   }
 
   private getColor(rect: Rect3D): THREE.Color {
@@ -281,24 +306,22 @@ export class Canvas {
     if (rect.cornerRadius) {
       edgeMaterial = new THREE.LineBasicMaterial({
         color: Canvas.RECT_EDGE_COLOR_ROUNDED,
-        linewidth: 1
+        linewidth: 1,
       });
     } else {
-        edgeMaterial = new THREE.LineBasicMaterial({
-          color: Canvas.RECT_EDGE_COLOR,
-          linewidth: 1
-        });
+      edgeMaterial = new THREE.LineBasicMaterial({
+        color: Canvas.RECT_EDGE_COLOR,
+        linewidth: 1,
+      });
     }
-    const lineSegments = new THREE.LineSegments(
-      edgeGeo, edgeMaterial
-    );
+    const lineSegments = new THREE.LineSegments(edgeGeo, edgeMaterial);
     lineSegments.computeLineDistances();
     return lineSegments;
   }
 
   private makeLabelCircleMesh(circle: Circle3D): THREE.Mesh {
     const geometry = new THREE.CircleGeometry(circle.radius, 20);
-    const material = new THREE.MeshBasicMaterial({ color: Canvas.LABEL_CIRCLE_COLOR });
+    const material = new THREE.MeshBasicMaterial({color: Canvas.LABEL_CIRCLE_COLOR});
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(circle.center.x, circle.center.y, circle.center.z);
     return mesh;
@@ -306,16 +329,14 @@ export class Canvas {
 
   private propagateUpdateHighlightedItems(event: MouseEvent, newId: string) {
     event.preventDefault();
-    const highlightedChangeEvent: CustomEvent = new CustomEvent(
-      ViewerEvents.HighlightedChange,
-      {
-        bubbles: true,
-        detail: { id: newId }
-      });
+    const highlightedChangeEvent: CustomEvent = new CustomEvent(ViewerEvents.HighlightedChange, {
+      bubbles: true,
+      detail: {id: newId},
+    });
     event.target?.dispatchEvent(highlightedChangeEvent);
   }
 
   private clearLabels() {
-    this.canvasLabels.innerHTML = "";
+    this.canvasLabels.innerHTML = '';
   }
 }

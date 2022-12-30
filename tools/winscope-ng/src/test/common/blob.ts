@@ -18,7 +18,7 @@
 class Blob {
   constructor(buffer: ArrayBuffer) {
     this.size = buffer.byteLength;
-    this.type = "application/octet-stream";
+    this.type = 'application/octet-stream';
     this.buffer = buffer;
   }
 
@@ -29,15 +29,15 @@ class Blob {
   }
 
   slice(start?: number, end?: number, contentType?: string): Blob {
-    throw new Error("Not implemented!");
+    throw new Error('Not implemented!');
   }
 
   stream(): any {
-    throw new Error("Not implemented!");
+    throw new Error('Not implemented!');
   }
 
   text(): Promise<string> {
-    throw new Error("Not implemented!");
+    throw new Error('Not implemented!');
   }
 
   readonly size: number;

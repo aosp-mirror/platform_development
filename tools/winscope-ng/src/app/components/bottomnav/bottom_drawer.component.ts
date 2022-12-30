@@ -1,46 +1,43 @@
 /*
-* Copyright (C) 2022 The Android Open Source Project
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*      http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright (C) 2022 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
+import {
+  animate,
+  AnimationTriggerMetadata,
+  state,
+  style,
+  transition,
+  trigger,
+} from '@angular/animations';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   ContentChild,
+  ElementRef,
   forwardRef,
   Inject,
-  ViewEncapsulation,
-  ElementRef,
-  NgZone,
   Injectable,
-  ViewChild,
   Input,
-} from "@angular/core";
-import {
-  animate,
-  state,
-  style,
-  transition,
-  trigger,
-  AnimationTriggerMetadata,
-} from "@angular/animations";
-import {Subject} from "rxjs";
-import {
-  debounceTime,
-  takeUntil,
-} from "rxjs/operators";
+  NgZone,
+  ViewChild,
+  ViewEncapsulation,
+} from '@angular/core';
+import {Subject} from 'rxjs';
+import {debounceTime, takeUntil} from 'rxjs/operators';
 
 /**
  * Animations used by the Material drawers.
@@ -50,30 +47,30 @@ export const matDrawerAnimations: {
   readonly transformDrawer: AnimationTriggerMetadata;
 } = {
   /** Animation that slides a drawer in and out. */
-  transformDrawer: trigger("transform", [
+  transformDrawer: trigger('transform', [
     // We remove the `transform` here completely, rather than setting it to zero, because:
     // 1. Having a transform can cause elements with ripples or an animated
     //    transform to shift around in Chrome with an RTL layout (see #10023).
     // 2. 3d transforms causes text to appear blurry on IE and Edge.
     state(
-      "open, open-instant",
+      'open, open-instant',
       style({
-        "transform": "none",
-        "visibility": "visible",
-      }),
+        transform: 'none',
+        visibility: 'visible',
+      })
     ),
     state(
-      "void",
+      'void',
       style({
         // Avoids the shadow showing up when closed in SSR.
-        "box-shadow": "none",
-        "visibility": "hidden",
-      }),
+        'box-shadow': 'none',
+        visibility: 'hidden',
+      })
     ),
-    transition("void => open-instant", animate("0ms")),
+    transition('void => open-instant', animate('0ms')),
     transition(
-      "void <=> open, open-instant => void",
-      animate("400ms cubic-bezier(0.25, 0.8, 0.25, 1)"),
+      'void <=> open, open-instant => void',
+      animate('400ms cubic-bezier(0.25, 0.8, 0.25, 1)')
     ),
   ]),
 };
@@ -83,33 +80,38 @@ export const matDrawerAnimations: {
  */
 @Injectable()
 @Component({
-  selector: "mat-drawer",
-  exportAs: "matDrawer",
+  selector: 'mat-drawer',
+  exportAs: 'matDrawer',
   template: `
     <div class="mat-drawer-inner-container" #content>
       <ng-content></ng-content>
     </div>
   `,
-  styles: [`
-    .mat-drawer.mat-drawer-bottom {
-      left: 0; right: 0; bottom: 0; top: unset;
-      position: fixed;
-      z-index: 5;
-      background-color: #F8F9FA;
-      box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
-    }
-  `],
+  styles: [
+    `
+      .mat-drawer.mat-drawer-bottom {
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: unset;
+        position: fixed;
+        z-index: 5;
+        background-color: #f8f9fa;
+        box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+      }
+    `,
+  ],
   animations: [matDrawerAnimations.transformDrawer],
   host: {
-    "class": "mat-drawer mat-drawer-bottom",
+    class: 'mat-drawer mat-drawer-bottom',
     // must prevent the browser from aligning text based on value
-    "[attr.align]": "null",
+    '[attr.align]': 'null',
   },
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
 })
 export class MatDrawer {
-  @Input() mode: "push"|"overlay" = "overlay";
+  @Input() mode: 'push' | 'overlay' = 'overlay';
   @Input() baseHeight = 0;
 
   public getBaseHeight() {
@@ -118,9 +120,10 @@ export class MatDrawer {
 }
 
 @Component({
-  selector: "mat-drawer-content",
-  template: "<ng-content></ng-content>",
-  styles: [`
+  selector: 'mat-drawer-content',
+  template: '<ng-content></ng-content>',
+  styles: [
+    `
       .mat-drawer-content {
         display: flex;
         flex-direction: column;
@@ -131,22 +134,22 @@ export class MatDrawer {
         width: 100%;
         flex-grow: 1;
       }
-  `],
+    `,
+  ],
   host: {
-    "class": "mat-drawer-content",
-    "[style.margin-top.px]": "contentMargins.top",
-    "[style.margin-bottom.px]": "contentMargins.bottom",
+    class: 'mat-drawer-content',
+    '[style.margin-top.px]': 'contentMargins.top',
+    '[style.margin-bottom.px]': 'contentMargins.bottom',
   },
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
 })
 export class MatDrawerContent /*extends MatDrawerContentBase*/ {
-
   private contentMargins: {top: number | null; bottom: number | null} = {top: null, bottom: null};
 
   constructor(
     @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
-    @Inject(forwardRef(() => MatDrawerContainer)) public container: MatDrawerContainer,
+    @Inject(forwardRef(() => MatDrawerContainer)) public container: MatDrawerContainer
   ) {}
 
   ngAfterContentInit() {
@@ -161,26 +164,27 @@ export class MatDrawerContent /*extends MatDrawerContentBase*/ {
 }
 
 @Component({
-  selector: "mat-drawer-container",
-  exportAs: "matDrawerContainer",
+  selector: 'mat-drawer-container',
+  exportAs: 'matDrawerContainer',
   template: `
-    <ng-content select="mat-drawer-content">
-    </ng-content>
+    <ng-content select="mat-drawer-content"> </ng-content>
 
     <ng-content select="mat-drawer"></ng-content>
   `,
-  styles: [`
-    .mat-drawer-container {
-      display: flex;
-      flex-direction: column;
-      flex-grow: 1;
-      align-items: center;
-      align-content: center;
-      justify-content: center;
-    }
-  `],
+  styles: [
+    `
+      .mat-drawer-container {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        align-items: center;
+        align-content: center;
+        justify-content: center;
+      }
+    `,
+  ],
   host: {
-    "class": "mat-drawer-container",
+    class: 'mat-drawer-container',
   },
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
@@ -189,7 +193,7 @@ export class MatDrawerContent /*extends MatDrawerContentBase*/ {
 export class MatDrawerContainer /*extends MatDrawerContainerBase*/ {
   /** Drawer that belong to this container. */
   @ContentChild(MatDrawer) drawer!: MatDrawer;
-  @ContentChild(MatDrawer, { read: ElementRef }) drawerView!: ElementRef;
+  @ContentChild(MatDrawer, {read: ElementRef}) drawerView!: ElementRef;
 
   @ContentChild(MatDrawerContent) content!: MatDrawerContent;
   @ViewChild(MatDrawerContent) userContent!: MatDrawerContent;
@@ -209,9 +213,7 @@ export class MatDrawerContainer /*extends MatDrawerContainerBase*/ {
   /** Emits when the component is destroyed. */
   private readonly destroyed = new Subject<void>();
 
-  constructor(
-    @Inject(NgZone) private ngZone: NgZone,
-  ) {}
+  constructor(@Inject(NgZone) private ngZone: NgZone) {}
 
   ngAfterContentInit() {
     this.updateContentMargins();
@@ -221,7 +223,7 @@ export class MatDrawerContainer /*extends MatDrawerContainerBase*/ {
       this.doCheckSubject
         .pipe(
           debounceTime(10), // Arbitrary debounce time, less than a frame at 60fps
-          takeUntil(this.destroyed),
+          takeUntil(this.destroyed)
         )
         .subscribe(() => this.updateContentMargins());
     });
@@ -250,7 +252,7 @@ export class MatDrawerContainer /*extends MatDrawerContainerBase*/ {
 
     const baseHeight = this.drawer.getBaseHeight();
     const height = this.getDrawerHeight();
-    const shiftAmount = this.drawer.mode === "push" ? Math.max(0, height - baseHeight) : 0;
+    const shiftAmount = this.drawer.mode === 'push' ? Math.max(0, height - baseHeight) : 0;
 
     top -= shiftAmount;
     bottom += baseHeight + shiftAmount;

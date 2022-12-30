@@ -13,18 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceType} from "common/trace/trace_type";
-import {PresenterInputMethodManagerService} from "./presenter_input_method_manager_service";
-import {ViewerInputMethod} from "viewers/common/viewer_input_method";
-import {View, ViewType} from "viewers/viewer";
+import {TraceType} from 'common/trace/trace_type';
+import {ViewerInputMethod} from 'viewers/common/viewer_input_method';
+import {View, ViewType} from 'viewers/viewer';
+import {PresenterInputMethodManagerService} from './presenter_input_method_manager_service';
 
 class ViewerInputMethodManagerService extends ViewerInputMethod {
   override getViews(): View[] {
     return [
-      new View(ViewType.TAB,
+      new View(
+        ViewType.TAB,
         this.getDependencies(),
         this.htmlElement,
-        "Input Method Manager Service")
+        'Input Method Manager Service'
+      ),
     ];
   }
 
@@ -33,7 +35,11 @@ class ViewerInputMethodManagerService extends ViewerInputMethod {
   }
 
   override initialisePresenter(storage: Storage) {
-    return new PresenterInputMethodManagerService(this.imeUiCallback, this.getDependencies(), storage);
+    return new PresenterInputMethodManagerService(
+      this.imeUiCallback,
+      this.getDependencies(),
+      storage
+    );
   }
 
   public static readonly DEPENDENCIES: TraceType[] = [TraceType.INPUT_METHOD_MANAGER_SERVICE];

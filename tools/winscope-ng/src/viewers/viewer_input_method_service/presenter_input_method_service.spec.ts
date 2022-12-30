@@ -13,24 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { TraceType } from "common/trace/trace_type";
-import { HierarchyTreeBuilder } from "test/unit/hierarchy_tree_builder";
-import { PresenterInputMethodService } from "./presenter_input_method_service";
-import { executePresenterInputMethodTests } from "viewers/common/presenter_input_method_test_utils";
-import { UnitTestUtils } from "test/unit/utils";
+import {TraceType} from 'common/trace/trace_type';
+import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
+import {executePresenterInputMethodTests} from 'viewers/common/presenter_input_method_test_utils';
+import {PresenterInputMethodService} from './presenter_input_method_service';
 
-describe("PresenterInputMethodService", () => {
-  describe("PresenterInputMethod tests:", () => {
-    const selectedTree = new HierarchyTreeBuilder()
-      .setId("service").setStableId("service").build();
+describe('PresenterInputMethodService', () => {
+  describe('PresenterInputMethod tests:', () => {
+    const selectedTree = new HierarchyTreeBuilder().setId('service').setStableId('service').build();
 
     executePresenterInputMethodTests(
       selectedTree,
-      "visib",
+      'visib',
       [13, 3],
       true,
       PresenterInputMethodService,
-      TraceType.INPUT_METHOD_SERVICE,
+      TraceType.INPUT_METHOD_SERVICE
     );
   });
 });

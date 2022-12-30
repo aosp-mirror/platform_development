@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import {Timestamp, TimestampType} from "common/trace/timestamp";
-import {TraceFile} from "common/trace/trace";
-import {TraceType} from "common/trace/trace_type";
-import {TransactionsTraceEntry} from "common/trace/transactions";
-import {Parser} from "./parser";
-import {TransactionsTraceFileProto} from "./proto_types";
+import {Timestamp, TimestampType} from 'common/trace/timestamp';
+import {TraceFile} from 'common/trace/trace';
+import {TraceType} from 'common/trace/trace_type';
+import {TransactionsTraceEntry} from 'common/trace/transactions';
+import {Parser} from './parser';
+import {TransactionsTraceFileProto} from './proto_types';
 
 class ParserTransactions extends Parser {
   constructor(trace: TraceFile) {
@@ -39,10 +39,9 @@ class ParserTransactions extends Parser {
     const decodedProto = <any>TransactionsTraceFileProto.decode(buffer);
     this.decodeWhatFields(decodedProto);
 
-    if (Object.prototype.hasOwnProperty.call(decodedProto, "realToElapsedTimeOffsetNanos")) {
+    if (Object.prototype.hasOwnProperty.call(decodedProto, 'realToElapsedTimeOffsetNanos')) {
       this.realToElapsedTimeOffsetNs = BigInt(decodedProto.realToElapsedTimeOffsetNanos);
-    }
-    else {
+    } else {
       this.realToElapsedTimeOffsetNs = undefined;
     }
     return decodedProto.entry;
@@ -50,7 +49,7 @@ class ParserTransactions extends Parser {
 
   private decodeWhatFields(decodedProto: any) {
     const decodeBitset32 = (bitset: number, EnumProto: any) => {
-      return Object.keys(EnumProto).filter(key => {
+      return Object.keys(EnumProto).filter((key) => {
         const value = EnumProto[key];
         return (bitset & value) != 0;
       });
@@ -58,13 +57,15 @@ class ParserTransactions extends Parser {
 
     const concatBitsetTokens = (tokens: string[]) => {
       if (tokens.length == 0) {
-        return "0";
+        return '0';
       }
-      return tokens.join(" | ");
+      return tokens.join(' | ');
     };
 
-    const LayerStateChangesLsbEnum = (<any>TransactionsTraceFileProto?.parent).LayerState.ChangesLsb;
-    const LayerStateChangesMsbEnum = (<any>TransactionsTraceFileProto?.parent).LayerState.ChangesMsb;
+    const LayerStateChangesLsbEnum = (<any>TransactionsTraceFileProto?.parent).LayerState
+      .ChangesLsb;
+    const LayerStateChangesMsbEnum = (<any>TransactionsTraceFileProto?.parent).LayerState
+      .ChangesMsb;
     const DisplayStateChangesEnum = (<any>TransactionsTraceFileProto?.parent).DisplayState.Changes;
 
     decodedProto.entry.forEach((transactionTraceEntry: any) => {
@@ -92,21 +93,32 @@ class ParserTransactions extends Parser {
     });
   }
 
-  override getTimestamp(type: TimestampType, entryProto: any): undefined|Timestamp {
+  override getTimestamp(type: TimestampType, entryProto: any): undefined | Timestamp {
     if (type === TimestampType.ELAPSED) {
       return new Timestamp(type, BigInt(entryProto.elapsedRealtimeNanos));
-    }
-    else if (type === TimestampType.REAL && this.realToElapsedTimeOffsetNs !== undefined) {
-      return new Timestamp(type, this.realToElapsedTimeOffsetNs + BigInt(entryProto.elapsedRealtimeNanos));
+    } else if (type === TimestampType.REAL && this.realToElapsedTimeOffsetNs !== undefined) {
+      return new Timestamp(
+        type,
+        this.realToElapsedTimeOffsetNs + BigInt(entryProto.elapsedRealtimeNanos)
+      );
     }
     return undefined;
   }
 
-  override processDecodedEntry(index: number, timestampType: TimestampType, entryProto: any): TransactionsTraceEntry {
-    return new TransactionsTraceEntry(this.decodedEntries, timestampType, this.realToElapsedTimeOffsetNs, index);
+  override processDecodedEntry(
+    index: number,
+    timestampType: TimestampType,
+    entryProto: any
+  ): TransactionsTraceEntry {
+    return new TransactionsTraceEntry(
+      this.decodedEntries,
+      timestampType,
+      this.realToElapsedTimeOffsetNs,
+      index
+    );
   }
 
-  private realToElapsedTimeOffsetNs: undefined|bigint;
+  private realToElapsedTimeOffsetNs: undefined | bigint;
   private static readonly MAGIC_NUMBER = [0x09, 0x54, 0x4e, 0x58, 0x54, 0x52, 0x41, 0x43, 0x45]; // .TNXTRACE
 }
 

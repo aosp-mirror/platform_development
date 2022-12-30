@@ -13,27 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import * as path from "path";
-import {CommonTestUtils} from "../common/utils";
-import {by, element} from "protractor";
+import * as path from 'path';
+import {by, element} from 'protractor';
+import {CommonTestUtils} from '../common/utils';
 
 class E2eTestUtils extends CommonTestUtils {
   static getProductionIndexHtmlPath(): string {
-    return path.join(CommonTestUtils.getProjectRootPath(), "dist/prod/index.html");
+    return path.join(CommonTestUtils.getProjectRootPath(), 'dist/prod/index.html');
   }
 
   static async uploadFixture(path: string) {
-    const inputFile = element(by.css("input[type=\"file\"]"));
+    const inputFile = element(by.css('input[type="file"]'));
     await inputFile.sendKeys(E2eTestUtils.getFixturePath(path));
   }
 
   static async clickViewTracesButton() {
-    const button = element(by.css(".load-btn"));
+    const button = element(by.css('.load-btn'));
     await button.click();
   }
 
   static async closeSnackBarIfNeeded() {
-    const closeButton = element(by.css(".snack-bar-action"));
+    const closeButton = element(by.css('.snack-bar-action'));
     const isPresent = await closeButton.isPresent();
     if (isPresent) {
       await closeButton.click();

@@ -13,30 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {CdkVirtualScrollViewport} from "@angular/cdk/scrolling";
-import {
-  Component, ElementRef, Inject, Input, ViewChild
-} from "@angular/core";
-import {MatSelectChange} from "@angular/material/select";
-import {Events} from "./events";
-import {UiData} from "./ui_data";
+import {CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
+import {Component, ElementRef, Inject, Input, ViewChild} from '@angular/core';
+import {MatSelectChange} from '@angular/material/select';
+import {Events} from './events';
+import {UiData} from './ui_data';
 
 @Component({
-  selector: "viewer-transactions",
+  selector: 'viewer-transactions',
   template: `
     <div class="card-grid">
       <div class="entries">
         <div class="filters">
-          <div class="time">
-          </div>
+          <div class="time"></div>
           <div class="vsyncid">
             <mat-form-field appearance="fill">
               <mat-label>VSYNC ID</mat-label>
-              <mat-select (selectionChange)="onVSyncIdFilterChanged($event)"
-                          multiple>
-                <mat-option *ngFor="let vsyncId of uiData.allVSyncIds"
-                            [value]="vsyncId">
-                  {{vsyncId}}
+              <mat-select (selectionChange)="onVSyncIdFilterChanged($event)" multiple>
+                <mat-option *ngFor="let vsyncId of uiData.allVSyncIds" [value]="vsyncId">
+                  {{ vsyncId }}
                 </mat-option>
               </mat-select>
             </mat-form-field>
@@ -44,11 +39,9 @@ import {UiData} from "./ui_data";
           <div class="pid">
             <mat-form-field appearance="fill">
               <mat-label>PID</mat-label>
-              <mat-select (selectionChange)="onPidFilterChanged($event)"
-                          multiple>
-                <mat-option *ngFor="let pid of uiData.allPids"
-                            [value]="pid">
-                  {{pid}}
+              <mat-select (selectionChange)="onPidFilterChanged($event)" multiple>
+                <mat-option *ngFor="let pid of uiData.allPids" [value]="pid">
+                  {{ pid }}
                 </mat-option>
               </mat-select>
             </mat-form-field>
@@ -56,11 +49,9 @@ import {UiData} from "./ui_data";
           <div class="uid">
             <mat-form-field appearance="fill">
               <mat-label>UID</mat-label>
-              <mat-select (selectionChange)="onUidFilterChanged($event)"
-                          multiple>
-                <mat-option *ngFor="let uid of uiData.allUids"
-                            [value]="uid">
-                  {{uid}}
+              <mat-select (selectionChange)="onUidFilterChanged($event)" multiple>
+                <mat-option *ngFor="let uid of uiData.allUids" [value]="uid">
+                  {{ uid }}
                 </mat-option>
               </mat-select>
             </mat-form-field>
@@ -68,11 +59,9 @@ import {UiData} from "./ui_data";
           <div class="type">
             <mat-form-field appearance="fill">
               <mat-label>Type</mat-label>
-              <mat-select (selectionChange)="onTypeFilterChanged($event)"
-                          multiple>
-                <mat-option *ngFor="let type of uiData.allTypes"
-                            [value]="type">
-                  {{type}}
+              <mat-select (selectionChange)="onTypeFilterChanged($event)" multiple>
+                <mat-option *ngFor="let type of uiData.allTypes" [value]="type">
+                  {{ type }}
                 </mat-option>
               </mat-select>
             </mat-form-field>
@@ -80,11 +69,9 @@ import {UiData} from "./ui_data";
           <div class="id">
             <mat-form-field appearance="fill">
               <mat-label>LAYER/DISP ID</mat-label>
-              <mat-select (selectionChange)="onIdFilterChanged($event)"
-                          multiple>
-                <mat-option *ngFor="let id of uiData.allIds"
-                            [value]="id">
-                  {{id}}
+              <mat-select (selectionChange)="onIdFilterChanged($event)" multiple>
+                <mat-option *ngFor="let id of uiData.allIds" [value]="id">
+                  {{ id }}
                 </mat-option>
               </mat-select>
             </mat-form-field>
@@ -92,38 +79,38 @@ import {UiData} from "./ui_data";
           <div class="what">
             <mat-form-field appearance="fill">
               <mat-label>Search text</mat-label>
-              <input matInput [(ngModel)]="whatSearchString"
-                     (input)="onWhatSearchStringChange()">
+              <input matInput [(ngModel)]="whatSearchString" (input)="onWhatSearchStringChange()" />
             </mat-form-field>
           </div>
         </div>
 
         <cdk-virtual-scroll-viewport itemSize="24" class="scroll">
-          <div *cdkVirtualFor="let entry of uiData.entries; let i = index;"
-               class="entry"
-               [class.current-entry]="isCurrentEntry(i)"
-               [class.selected-entry]="isSelectedEntry(i)"
-               (click)="onEntryClicked(i)">
+          <div
+            *cdkVirtualFor="let entry of uiData.entries; let i = index"
+            class="entry"
+            [class.current-entry]="isCurrentEntry(i)"
+            [class.selected-entry]="isSelectedEntry(i)"
+            (click)="onEntryClicked(i)">
             <div class="time">
-              <span class="mat-body-1">{{entry.time}}</span>
+              <span class="mat-body-1">{{ entry.time }}</span>
             </div>
             <div class="vsyncid">
-              <span class="mat-body-1">{{entry.vsyncId}}</span>
+              <span class="mat-body-1">{{ entry.vsyncId }}</span>
             </div>
             <div class="pid">
-              <span class="mat-body-1">{{entry.pid}}</span>
+              <span class="mat-body-1">{{ entry.pid }}</span>
             </div>
             <div class="uid">
-              <span class="mat-body-1">{{entry.uid}}</span>
+              <span class="mat-body-1">{{ entry.uid }}</span>
             </div>
             <div class="type">
-              <span class="mat-body-1">{{entry.type}}</span>
+              <span class="mat-body-1">{{ entry.type }}</span>
             </div>
             <div class="id">
-              <span class="mat-body-1">{{entry.id}}</span>
+              <span class="mat-body-1">{{ entry.id }}</span>
             </div>
             <div class="what">
-              <span class="mat-body-1">{{entry.what}}</span>
+              <span class="mat-body-1">{{ entry.what }}</span>
             </div>
           </div>
         </cdk-virtual-scroll-viewport>
@@ -134,10 +121,9 @@ import {UiData} from "./ui_data";
       <div class="container-properties">
         <h3 class="properties-title mat-title">Properties - Proto Dump</h3>
         <tree-view
-            *ngIf="uiData.currentPropertiesTree"
-            class="properties-tree"
-            [item]="uiData.currentPropertiesTree"
-        ></tree-view>
+          *ngIf="uiData.currentPropertiesTree"
+          class="properties-tree"
+          [item]="uiData.currentPropertiesTree"></tree-view>
       </div>
     </div>
   `,
@@ -232,11 +218,11 @@ import {UiData} from "./ui_data";
         max-height: 75vh;
       }
     `,
-  ]
+  ],
 })
 class ViewerTransactionsComponent {
   public uiData: UiData = UiData.EMPTY;
-  public whatSearchString = "";
+  public whatSearchString = '';
 
   @ViewChild(CdkVirtualScrollViewport) private scrollComponent?: CdkVirtualScrollViewport;
   private elementRef: ElementRef;
@@ -290,12 +276,10 @@ class ViewerTransactionsComponent {
   }
 
   private emitEvent(event: string, data: any) {
-    const customEvent = new CustomEvent(
-      event,
-      {
-        bubbles: true,
-        detail: data
-      });
+    const customEvent = new CustomEvent(event, {
+      bubbles: true,
+      detail: data,
+    });
     this.elementRef.nativeElement.dispatchEvent(customEvent);
   }
 }

@@ -13,11 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input } from "@angular/core";
-import { EnableConfiguration, SelectionConfiguration, TraceConfiguration, TraceConfigurationMap } from "trace_collection/trace_collection_utils";
+import {Component, Input} from '@angular/core';
+import {
+  EnableConfiguration,
+  SelectionConfiguration,
+  TraceConfiguration,
+  TraceConfigurationMap,
+} from 'trace_collection/trace_collection_utils';
 
 @Component({
-  selector: "trace-config",
+  selector: 'trace-config',
   template: `
     <h3 class="mat-subheading-2">Trace targets</h3>
 
@@ -29,13 +34,14 @@ import { EnableConfiguration, SelectionConfiguration, TraceConfiguration, TraceC
         [checked]="traces[traceKey].run"
         [indeterminate]="traces[traceKey].isTraceCollection ? someTraces(traces[traceKey]) : false"
         (change)="changeRunTrace($event.checked, traces[traceKey])"
-      >{{traces[traceKey].name}}</mat-checkbox>
+        >{{ traces[traceKey].name }}</mat-checkbox
+      >
     </div>
 
     <ng-container *ngFor="let traceKey of advancedConfigTraces()">
       <mat-divider></mat-divider>
 
-      <h3 class="mat-subheading-2">{{traces[traceKey].name}} configuration</h3>
+      <h3 class="mat-subheading-2">{{ traces[traceKey].name }} configuration</h3>
 
       <div *ngIf="traces[traceKey].config?.enableConfigs.length > 0" class="enable-config-opt">
         <mat-checkbox
@@ -45,22 +51,26 @@ import { EnableConfiguration, SelectionConfiguration, TraceConfiguration, TraceC
           [disabled]="!traces[traceKey].run && !traces[traceKey].isTraceCollection"
           [(ngModel)]="enableConfig.enabled"
           (ngModelChange)="changeTraceCollectionConfig(traces[traceKey])"
-        >{{enableConfig.name}}</mat-checkbox>
+          >{{ enableConfig.name }}</mat-checkbox
+        >
       </div>
 
-      <div *ngIf="traces[traceKey].config?.selectionConfigs.length > 0" class="selection-config-opt">
+      <div
+        *ngIf="traces[traceKey].config?.selectionConfigs.length > 0"
+        class="selection-config-opt">
         <mat-form-field
           *ngFor="let selectionConfig of traceSelectionConfigs(traces[traceKey])"
           class="config-selection"
           appearance="fill">
+          <mat-label>{{ selectionConfig.name }}</mat-label>
 
-          <mat-label>{{selectionConfig.name}}</mat-label>
-
-          <mat-select class="selected-value" [(value)]="selectionConfig.value" [disabled]="!traces[traceKey].run">
-            <mat-option
-              *ngFor="let option of selectionConfig.options"
-              value="{{option}}"
-            >{{ option }}</mat-option>
+          <mat-select
+            class="selected-value"
+            [(value)]="selectionConfig.value"
+            [disabled]="!traces[traceKey].run">
+            <mat-option *ngFor="let option of selectionConfig.options" value="{{ option }}">{{
+              option
+            }}</mat-option>
           </mat-select>
         </mat-form-field>
       </div>
@@ -73,16 +83,16 @@ import { EnableConfiguration, SelectionConfiguration, TraceConfiguration, TraceC
         grid-template-columns: repeat(3, 1fr);
         column-gap: 10px;
       }
-      .enable-config-opt, .selection-config-opt {
+      .enable-config-opt,
+      .selection-config-opt {
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
         gap: 10px;
       }
-    `
-  ]
+    `,
+  ],
 })
-
 export class TraceConfigComponent {
   objectKeys = Object.keys;
   @Input() traces!: TraceConfigurationMap;
@@ -114,8 +124,7 @@ export class TraceConfigComponent {
   }
 
   public someTraces(trace: TraceConfiguration): boolean {
-    return this.traceEnableConfigs(trace).filter(trace => trace.enabled).length > 0
-      && !trace.run;
+    return this.traceEnableConfigs(trace).filter((trace) => trace.enabled).length > 0 && !trace.run;
   }
 
   public changeRunTrace(run: boolean, trace: TraceConfiguration): void {
@@ -127,7 +136,7 @@ export class TraceConfigComponent {
 
   public changeTraceCollectionConfig(trace: TraceConfiguration): void {
     if (trace.isTraceCollection) {
-      trace.run =  this.traceEnableConfigs(trace).every((c: EnableConfiguration) => c.enabled);
+      trace.run = this.traceEnableConfigs(trace).every((c: EnableConfiguration) => c.enabled);
     }
   }
 }

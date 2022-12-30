@@ -22,9 +22,8 @@ interface TreeNode {
 
 type FilterType = (node: TreeNode | undefined | null) => boolean;
 
-class TreeUtils
-{
-  public static findDescendantNode(node: TreeNode, isTargetNode: FilterType): TreeNode|undefined {
+class TreeUtils {
+  public static findDescendantNode(node: TreeNode, isTargetNode: FilterType): TreeNode | undefined {
     if (isTargetNode(node)) {
       return node;
     }
@@ -43,7 +42,7 @@ class TreeUtils
     return undefined;
   }
 
-  public static findAncestorNode(node: TreeNode, isTargetNode: FilterType): TreeNode|undefined {
+  public static findAncestorNode(node: TreeNode, isTargetNode: FilterType): TreeNode | undefined {
     let ancestor = node.parent;
 
     while (ancestor && !isTargetNode(ancestor)) {
@@ -54,24 +53,26 @@ class TreeUtils
   }
 
   public static makeNodeFilter(filterString: string): FilterType {
-    const filterStrings = filterString.split(",");
+    const filterStrings = filterString.split(',');
     const positive: any[] = [];
     const negative: any[] = [];
     filterStrings.forEach((f) => {
       f = f.trim();
-      if (f.startsWith("!")) {
-        const regex = new RegExp(f.substring(1), "i");
+      if (f.startsWith('!')) {
+        const regex = new RegExp(f.substring(1), 'i');
         negative.push((s: any) => !regex.test(s));
       } else {
-        const regex = new RegExp(f, "i");
+        const regex = new RegExp(f, 'i');
         positive.push((s: any) => regex.test(s));
       }
     });
     const filter = (item: TreeNode | undefined | null) => {
       if (item) {
         const apply = (f: any) => f(`${item.name}`);
-        return (positive.length === 0 || positive.some(apply)) &&
-          (negative.length === 0 || negative.every(apply));
+        return (
+          (positive.length === 0 || positive.some(apply)) &&
+          (negative.length === 0 || negative.every(apply))
+        );
       }
       return false;
     };

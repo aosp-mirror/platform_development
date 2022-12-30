@@ -15,8 +15,8 @@
  */
 
 export enum TimestampType {
-  ELAPSED = "ELAPSED",
-  REAL = "REAL",
+  ELAPSED = 'ELAPSED',
+  REAL = 'REAL',
 }
 
 export class Timestamp {
@@ -25,17 +25,21 @@ export class Timestamp {
     this.valueNs = valueNs;
   }
 
-  static from(timestampType: TimestampType, elapsedTimestamp: bigint, realToElapsedTimeOffsetNs: bigint | undefined = undefined) {
+  static from(
+    timestampType: TimestampType,
+    elapsedTimestamp: bigint,
+    realToElapsedTimeOffsetNs: bigint | undefined = undefined
+  ) {
     switch (timestampType) {
-    case TimestampType.REAL:
-      if (realToElapsedTimeOffsetNs === undefined) {
-        throw new Error("realToElapsedTimeOffsetNs can't be undefined to use real timestamp");
-      }
-      return new Timestamp(TimestampType.REAL, elapsedTimestamp + realToElapsedTimeOffsetNs);
-    case TimestampType.ELAPSED:
-      return new Timestamp(TimestampType.ELAPSED, elapsedTimestamp);
-    default:
-      throw new Error("Unhandled timestamp type");
+      case TimestampType.REAL:
+        if (realToElapsedTimeOffsetNs === undefined) {
+          throw new Error("realToElapsedTimeOffsetNs can't be undefined to use real timestamp");
+        }
+        return new Timestamp(TimestampType.REAL, elapsedTimestamp + realToElapsedTimeOffsetNs);
+      case TimestampType.ELAPSED:
+        return new Timestamp(TimestampType.ELAPSED, elapsedTimestamp);
+      default:
+        throw new Error('Unhandled timestamp type');
     }
   }
 

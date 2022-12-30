@@ -13,29 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input, Inject, ElementRef } from "@angular/core";
-import { UserOptions } from "viewers/common/user_options";
-import { PersistentStore } from "common/utils/persistent_store";
-import { UiTreeUtils, HierarchyTreeNode, UiTreeNode } from "viewers/common/ui_tree_utils";
-import { nodeStyles } from "viewers/components/styles/node.styles";
-import { ViewerEvents } from "viewers/common/viewer_events";
-import { TraceType } from "common/trace/trace_type";
-import { TableProperties } from "viewers/common/table_properties";
+import {Component, ElementRef, Inject, Input} from '@angular/core';
+import {TraceType} from 'common/trace/trace_type';
+import {PersistentStore} from 'common/utils/persistent_store';
+import {TableProperties} from 'viewers/common/table_properties';
+import {HierarchyTreeNode, UiTreeNode, UiTreeUtils} from 'viewers/common/ui_tree_utils';
+import {UserOptions} from 'viewers/common/user_options';
+import {ViewerEvents} from 'viewers/common/viewer_events';
+import {nodeStyles} from 'viewers/components/styles/node.styles';
 
 @Component({
-  selector: "hierarchy-view",
+  selector: 'hierarchy-view',
   template: `
     <div class="view-header">
       <div class="title-filter">
         <h2 class="hierarchy-title mat-title">Hierarchy</h2>
         <mat-form-field>
           <mat-label>Filter...</mat-label>
-          <input
-            matInput
-            [(ngModel)]="filterString"
-            (ngModelChange)="filterTree()"
-            name="filter"
-          />
+          <input matInput [(ngModel)]="filterString" (ngModelChange)="filterTree()" name="filter" />
         </mat-form-field>
       </div>
       <div class="view-controls">
@@ -44,13 +39,13 @@ import { TableProperties } from "viewers/common/table_properties";
           color="primary"
           [(ngModel)]="userOptions[option].enabled"
           (ngModelChange)="updateTree()"
-        >{{userOptions[option].name}}</mat-checkbox>
+          >{{ userOptions[option].name }}</mat-checkbox
+        >
       </div>
       <properties-table
         *ngIf="tableProperties"
         class="properties-table"
-        [properties]="tableProperties"
-      ></properties-table>
+        [properties]="tableProperties"></properties-table>
       <div *ngIf="pinnedItems.length > 0" class="pinned-items">
         <tree-node
           *ngFor="let pinnedItem of pinnedItems"
@@ -62,8 +57,7 @@ import { TableProperties } from "viewers/common/table_properties";
           [isPinned]="true"
           [isInPinnedSection]="true"
           (pinNodeChange)="pinnedItemChange($event)"
-          (click)="onPinnedNodeClick($event, pinnedItem)"
-        ></tree-node>
+          (click)="onPinnedNodeClick($event, pinnedItem)"></tree-node>
       </div>
     </div>
     <mat-divider></mat-divider>
@@ -80,8 +74,7 @@ import { TableProperties } from "viewers/common/table_properties";
         [pinnedItems]="pinnedItems"
         (highlightedItemChange)="highlightedItemChange($event)"
         (pinnedItemChange)="pinnedItemChange($event)"
-        (selectedTreeChange)="selectedTreeChange($event)"
-      ></tree-view>
+        (selectedTreeChange)="selectedTreeChange($event)"></tree-view>
     </div>
   `,
   styles: [
@@ -125,13 +118,12 @@ import { TableProperties } from "viewers/common/table_properties";
         overflow: auto;
       }
     `,
-    nodeStyles
+    nodeStyles,
   ],
 })
-
 export class HierarchyComponent {
   objectKeys = Object.keys;
-  filterString = "";
+  filterString = '';
   diffClass = UiTreeUtils.diffClass;
   isHighlighted = UiTreeUtils.isHighlighted;
 
@@ -143,17 +135,15 @@ export class HierarchyComponent {
   @Input() store!: PersistentStore;
   @Input() userOptions: UserOptions = {};
 
-  constructor(
-    @Inject(ElementRef) private elementRef: ElementRef,
-  ) {}
+  constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
   public isFlattened() {
-    return this.userOptions["flat"]?.enabled;
+    return this.userOptions['flat']?.enabled;
   }
 
   public onPinnedNodeClick(event: MouseEvent, pinnedItem: HierarchyTreeNode) {
     event.preventDefault();
-    if (window.getSelection()?.type === "range") {
+    if (window.getSelection()?.type === 'range') {
       return;
     }
     if (pinnedItem.id) this.highlightedItemChange(`${pinnedItem.id}`);
@@ -161,32 +151,26 @@ export class HierarchyComponent {
   }
 
   public updateTree() {
-    const event: CustomEvent = new CustomEvent(
-      ViewerEvents.HierarchyUserOptionsChange,
-      {
-        bubbles: true,
-        detail: { userOptions: this.userOptions }
-      });
+    const event: CustomEvent = new CustomEvent(ViewerEvents.HierarchyUserOptionsChange, {
+      bubbles: true,
+      detail: {userOptions: this.userOptions},
+    });
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
   public filterTree() {
-    const event: CustomEvent = new CustomEvent(
-      ViewerEvents.HierarchyFilterChange,
-      {
-        bubbles: true,
-        detail: { filterString: this.filterString }
-      });
+    const event: CustomEvent = new CustomEvent(ViewerEvents.HierarchyFilterChange, {
+      bubbles: true,
+      detail: {filterString: this.filterString},
+    });
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
   public highlightedItemChange(newId: string) {
-    const event: CustomEvent = new CustomEvent(
-      ViewerEvents.HighlightedChange,
-      {
-        bubbles: true,
-        detail: { id: newId }
-      });
+    const event: CustomEvent = new CustomEvent(ViewerEvents.HighlightedChange, {
+      bubbles: true,
+      detail: {id: newId},
+    });
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
@@ -194,12 +178,10 @@ export class HierarchyComponent {
     if (!(item instanceof HierarchyTreeNode)) {
       return;
     }
-    const event: CustomEvent = new CustomEvent(
-      ViewerEvents.SelectedTreeChange,
-      {
-        bubbles: true,
-        detail: { selectedItem: item }
-      });
+    const event: CustomEvent = new CustomEvent(ViewerEvents.SelectedTreeChange, {
+      bubbles: true,
+      detail: {selectedItem: item},
+    });
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
@@ -207,12 +189,10 @@ export class HierarchyComponent {
     if (!(item instanceof HierarchyTreeNode)) {
       return;
     }
-    const event: CustomEvent = new CustomEvent(
-      ViewerEvents.HierarchyPinnedChange,
-      {
-        bubbles: true,
-        detail: { pinnedItem: item }
-      });
+    const event: CustomEvent = new CustomEvent(ViewerEvents.HierarchyPinnedChange, {
+      bubbles: true,
+      detail: {pinnedItem: item},
+    });
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 }

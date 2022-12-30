@@ -14,108 +14,108 @@
  * limitations under the License.
  */
 
-import { TraceType } from "common/trace/trace_type";
+import {TraceType} from 'common/trace/trace_type';
 
-const WINDOW_MANAGER_ICON = "web";
-const SURFACE_FLINGER_ICON = "layers";
-const SCREEN_RECORDING_ICON = "videocam";
-const TRANSACTION_ICON = "show_chart";
-const WAYLAND_ICON = "filter_none";
-const PROTO_LOG_ICON = "notes";
-const SYSTEM_UI_ICON = "filter_none";
-const LAUNCHER_ICON = "filter_none";
-const IME_ICON = "keyboard_alt";
-const ACCESSIBILITY_ICON = "accessibility_new";
-const TAG_ICON = "details";
-const TRACE_ERROR_ICON = "warning";
+const WINDOW_MANAGER_ICON = 'web';
+const SURFACE_FLINGER_ICON = 'layers';
+const SCREEN_RECORDING_ICON = 'videocam';
+const TRANSACTION_ICON = 'show_chart';
+const WAYLAND_ICON = 'filter_none';
+const PROTO_LOG_ICON = 'notes';
+const SYSTEM_UI_ICON = 'filter_none';
+const LAUNCHER_ICON = 'filter_none';
+const IME_ICON = 'keyboard_alt';
+const ACCESSIBILITY_ICON = 'accessibility_new';
+const TAG_ICON = 'details';
+const TRACE_ERROR_ICON = 'warning';
 
 type traceInfoMap = {
-    [key: number]: {
-      name: string,
-      icon: string,
-      color: string,
-    };
-}
+  [key: number]: {
+    name: string;
+    icon: string;
+    color: string;
+  };
+};
 
 export const TRACE_INFO: traceInfoMap = {
   [TraceType.ACCESSIBILITY]: {
-    name: "Accessibility",
+    name: 'Accessibility',
     icon: ACCESSIBILITY_ICON,
-    color: "#FF63B8",
+    color: '#FF63B8',
   },
   [TraceType.WINDOW_MANAGER]: {
-    name: "Window Manager",
+    name: 'Window Manager',
     icon: WINDOW_MANAGER_ICON,
-    color: "#AF5CF7",
+    color: '#AF5CF7',
   },
   [TraceType.SURFACE_FLINGER]: {
-    name: "Surface Flinger",
+    name: 'Surface Flinger',
     icon: SURFACE_FLINGER_ICON,
-    color: "#4ECDE6",
+    color: '#4ECDE6',
   },
   [TraceType.SCREEN_RECORDING]: {
-    name: "Screen Recording",
+    name: 'Screen Recording',
     icon: SCREEN_RECORDING_ICON,
-    color: "#8A9CF9",
+    color: '#8A9CF9',
   },
   [TraceType.TRANSACTIONS]: {
-    name: "Transactions",
+    name: 'Transactions',
     icon: TRANSACTION_ICON,
-    color: "#5BB974",
+    color: '#5BB974',
   },
   [TraceType.TRANSACTIONS_LEGACY]: {
-    name: "Transactions Legacy",
+    name: 'Transactions Legacy',
     icon: TRANSACTION_ICON,
-    color: "#5BB974",
+    color: '#5BB974',
   },
   [TraceType.WAYLAND]: {
-    name: "Wayland",
+    name: 'Wayland',
     icon: WAYLAND_ICON,
-    color: "#FDC274",
+    color: '#FDC274',
   },
   [TraceType.WAYLAND_DUMP]: {
-    name: "Wayland Dump",
+    name: 'Wayland Dump',
     icon: WAYLAND_ICON,
-    color: "#D01884",
+    color: '#D01884',
   },
   [TraceType.PROTO_LOG]: {
-    name: "ProtoLog",
+    name: 'ProtoLog',
     icon: PROTO_LOG_ICON,
-    color: "#40A58A",
+    color: '#40A58A',
   },
   [TraceType.SYSTEM_UI]: {
-    name: "System UI",
+    name: 'System UI',
     icon: SYSTEM_UI_ICON,
-    color: "#7A86FF",
+    color: '#7A86FF',
   },
   [TraceType.LAUNCHER]: {
-    name: "Launcher",
+    name: 'Launcher',
     icon: LAUNCHER_ICON,
-    color: "#137333",
+    color: '#137333',
   },
   [TraceType.INPUT_METHOD_CLIENTS]: {
-    name: "IME Clients",
+    name: 'IME Clients',
     icon: IME_ICON,
-    color: "#FA903E",
+    color: '#FA903E',
   },
   [TraceType.INPUT_METHOD_SERVICE]: {
-    name: "IME Service",
+    name: 'IME Service',
     icon: IME_ICON,
-    color: "#F29900",
+    color: '#F29900',
   },
   [TraceType.INPUT_METHOD_MANAGER_SERVICE]: {
-    name: "IME Manager Service",
+    name: 'IME Manager Service',
     icon: IME_ICON,
-    color: "#D93025",
+    color: '#D93025',
   },
   [TraceType.TAG]: {
-    name: "Tag",
+    name: 'Tag',
     icon: TAG_ICON,
-    color: "#4575B4",
+    color: '#4575B4',
   },
   [TraceType.ERROR]: {
-    name: "Error",
+    name: 'Error',
     icon: TRACE_ERROR_ICON,
-    color: "#D73027",
+    color: '#D73027',
   },
 };

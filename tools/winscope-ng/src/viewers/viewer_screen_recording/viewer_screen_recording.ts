@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceType} from "common/trace/trace_type";
-import {View, Viewer, ViewType} from "viewers/viewer";
-import {ScreenRecordingTraceEntry} from "common/trace/screen_recording";
+import {ScreenRecordingTraceEntry} from 'common/trace/screen_recording';
+import {TraceType} from 'common/trace/trace_type';
+import {View, Viewer, ViewType} from 'viewers/viewer';
 
 class ViewerScreenRecording implements Viewer {
   constructor() {
-    this.htmlElement = document.createElement("viewer-screen-recording");
+    this.htmlElement = document.createElement('viewer-screen-recording');
   }
 
   public notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
@@ -31,7 +31,9 @@ class ViewerScreenRecording implements Viewer {
   }
 
   public getViews(): View[] {
-    return [new View(ViewType.OVERLAY, this.getDependencies(), this.htmlElement, "ScreenRecording")];
+    return [
+      new View(ViewType.OVERLAY, this.getDependencies(), this.htmlElement, 'ScreenRecording'),
+    ];
   }
 
   public getDependencies(): TraceType[] {

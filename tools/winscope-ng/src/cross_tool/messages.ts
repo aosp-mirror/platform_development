@@ -38,28 +38,17 @@ export class MessagePong implements Message {
 export class MessageBugReport implements Message {
   type = MessageType.BUGREPORT;
 
-  constructor(
-    public file: File,
-    public timestampNs?: bigint,
-    public issueId?: string
-  ) {}
+  constructor(public file: File, public timestampNs?: bigint, public issueId?: string) {}
 }
 
 export class MessageTimestamp implements Message {
   type = MessageType.TIMESTAMP;
 
-  constructor(
-    public timestampNs: bigint,
-    public sections?: string[]
-  ) {}
+  constructor(public timestampNs: bigint, public sections?: string[]) {}
 }
 
 export class MessageFiles implements Message {
   type = MessageType.FILES;
 
-  constructor(
-    public files: File[],
-    public timestampNs?: bigint,
-    public issueId?: string
-  ) {}
+  constructor(public files: File[], public timestampNs?: bigint, public issueId?: string) {}
 }

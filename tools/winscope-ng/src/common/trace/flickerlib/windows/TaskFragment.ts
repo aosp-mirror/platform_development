@@ -14,37 +14,41 @@
  * limitations under the License.
  */
 
-import { shortenName } from '../mixin'
-import { TaskFragment } from "../common"
-import WindowContainer from "./WindowContainer"
+import {TaskFragment} from '../common';
+import {shortenName} from '../mixin';
+import WindowContainer from './WindowContainer';
 
-TaskFragment.fromProto = function (proto: any, isActivityInTree: Boolean, nextSeq: () => number): TaskFragment {
-    if (proto == null) {
-        return null;
-    } else {
-        const windowContainer = WindowContainer.fromProto(
-            /* proto */ proto.windowContainer,
-            /* protoChildren */ proto.windowContainer?.children ?? [],
-            /* isActivityInTree */ isActivityInTree,
-            /* computedZ */ nextSeq,
-        );
-        const entry = new TaskFragment(
-            proto.activityType,
-            proto.displayId,
-            proto.minWidth,
-            proto.minHeight,
-            windowContainer,
-        );
+TaskFragment.fromProto = function (
+  proto: any,
+  isActivityInTree: Boolean,
+  nextSeq: () => number
+): TaskFragment {
+  if (proto == null) {
+    return null;
+  } else {
+    const windowContainer = WindowContainer.fromProto(
+      /* proto */ proto.windowContainer,
+      /* protoChildren */ proto.windowContainer?.children ?? [],
+      /* isActivityInTree */ isActivityInTree,
+      /* computedZ */ nextSeq
+    );
+    const entry = new TaskFragment(
+      proto.activityType,
+      proto.displayId,
+      proto.minWidth,
+      proto.minHeight,
+      windowContainer
+    );
 
-        addAttributes(entry, proto);
-        return entry;
-    }
-}
+    addAttributes(entry, proto);
+    return entry;
+  }
+};
 
 function addAttributes(entry: TaskFragment, proto: any) {
-    entry.proto = proto;
-    entry.kind = entry.constructor.name;
-    entry.shortName = shortenName(entry.name);
+  entry.proto = proto;
+  entry.kind = entry.constructor.name;
+  entry.shortName = shortenName(entry.name);
 }
 
 export default TaskFragment;

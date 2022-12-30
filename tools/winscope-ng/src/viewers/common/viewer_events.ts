@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 export const ViewerEvents = {
-  HierarchyPinnedChange: "HierarchyPinnedChange",
-  HighlightedChange: "HighlightedChange",
-  HierarchyUserOptionsChange: "HierarchyUserOptionsChange",
-  HierarchyFilterChange: "HierarchyFilterChange",
-  SelectedTreeChange: "SelectedTreeChange",
-  PropertiesUserOptionsChange: "PropertiesUserOptionsChange",
-  PropertiesFilterChange: "PropertiesFilterChange",
-  AdditionalPropertySelected: "AdditionalPropertySelected"
+  HierarchyPinnedChange: 'HierarchyPinnedChange',
+  HighlightedChange: 'HighlightedChange',
+  HierarchyUserOptionsChange: 'HierarchyUserOptionsChange',
+  HierarchyFilterChange: 'HierarchyFilterChange',
+  SelectedTreeChange: 'SelectedTreeChange',
+  PropertiesUserOptionsChange: 'PropertiesUserOptionsChange',
+  PropertiesFilterChange: 'PropertiesFilterChange',
+  AdditionalPropertySelected: 'AdditionalPropertySelected',
 };

@@ -13,29 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ScrollingModule} from "@angular/cdk/scrolling";
-import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from "@angular/core/testing";
-import {ViewerProtologComponent} from "./viewer_protolog.component";
+import {ScrollingModule} from '@angular/cdk/scrolling';
+import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {ViewerProtologComponent} from './viewer_protolog.component';
 
-import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from "@angular/core";
+import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
 
-describe("ViewerProtologComponent", () => {
+describe('ViewerProtologComponent', () => {
   let fixture: ComponentFixture<ViewerProtologComponent>;
   let component: ViewerProtologComponent;
   let htmlElement: HTMLElement;
 
   beforeAll(async () => {
     await TestBed.configureTestingModule({
-      providers: [
-        { provide: ComponentFixtureAutoDetect, useValue: true }
-      ],
-      imports: [
-        ScrollingModule
-      ],
-      declarations: [
-        ViewerProtologComponent,
-      ],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA]
+      providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
+      imports: [ScrollingModule],
+      declarations: [ViewerProtologComponent],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
     }).compileComponents();
   });
 
@@ -45,18 +39,18 @@ describe("ViewerProtologComponent", () => {
     htmlElement = fixture.nativeElement;
   });
 
-  it("can be created", () => {
+  it('can be created', () => {
     expect(component).toBeTruthy();
   });
 
-  it("creates message filters", () => {
-    expect(htmlElement.querySelector(".filters .log-level")).toBeTruthy();
-    expect(htmlElement.querySelector(".filters .tag")).toBeTruthy();
-    expect(htmlElement.querySelector(".filters .source-file")).toBeTruthy();
-    expect(htmlElement.querySelector(".filters .text")).toBeTruthy();
+  it('creates message filters', () => {
+    expect(htmlElement.querySelector('.filters .log-level')).toBeTruthy();
+    expect(htmlElement.querySelector('.filters .tag')).toBeTruthy();
+    expect(htmlElement.querySelector('.filters .source-file')).toBeTruthy();
+    expect(htmlElement.querySelector('.filters .text')).toBeTruthy();
   });
 
-  it("renders log messages", () => {
-    expect(htmlElement.querySelector(".scroll-messages")).toBeTruthy();
+  it('renders log messages', () => {
+    expect(htmlElement.querySelector('.scroll-messages')).toBeTruthy();
   });
 });

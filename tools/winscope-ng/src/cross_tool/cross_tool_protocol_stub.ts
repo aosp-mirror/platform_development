@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-import {RealTimestamp} from "common/trace/timestamp";
-import {FunctionUtils} from "common/utils/function_utils";
-import {RemoteBugreportReceiver, OnBugreportReceived} from "interfaces/remote_bugreport_receiver";
-import {RemoteTimestampReceiver, OnTimestampReceived} from "interfaces/remote_timestamp_receiver";
-import {RemoteTimestampSender} from "interfaces/remote_timestamp_sender";
+import {RealTimestamp} from 'common/trace/timestamp';
+import {FunctionUtils} from 'common/utils/function_utils';
+import {OnBugreportReceived, RemoteBugreportReceiver} from 'interfaces/remote_bugreport_receiver';
+import {OnTimestampReceived, RemoteTimestampReceiver} from 'interfaces/remote_timestamp_receiver';
+import {RemoteTimestampSender} from 'interfaces/remote_timestamp_sender';
 
-export class CrossToolProtocolStub implements
-  RemoteBugreportReceiver,
-  RemoteTimestampReceiver,
-  RemoteTimestampSender {
+export class CrossToolProtocolStub
+  implements RemoteBugreportReceiver, RemoteTimestampReceiver, RemoteTimestampSender
+{
   onBugreportReceived: OnBugreportReceived = FunctionUtils.DO_NOTHING_ASYNC;
   onTimestampReceived: OnTimestampReceived = FunctionUtils.DO_NOTHING;
 

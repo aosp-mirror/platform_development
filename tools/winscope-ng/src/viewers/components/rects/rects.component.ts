@@ -13,52 +13,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, Input, OnDestroy, Inject, ElementRef, OnInit, HostListener} from "@angular/core";
-import {Rectangle, Point} from "viewers/common/rectangle";
-import {Canvas} from "./canvas";
-import {ViewerEvents} from "viewers/common/viewer_events";
-import {Mapper3D} from "./mapper3d";
-import {Distance2D} from "./types3d";
+import {Component, ElementRef, HostListener, Inject, Input, OnDestroy, OnInit} from '@angular/core';
+import {Rectangle} from 'viewers/common/rectangle';
+import {ViewerEvents} from 'viewers/common/viewer_events';
+import {Canvas} from './canvas';
+import {Mapper3D} from './mapper3d';
+import {Distance2D} from './types3d';
 
 @Component({
-  selector: "rects-view",
+  selector: 'rects-view',
   template: `
     <div class="view-controls">
-      <h2 class="mat-title">{{title}}</h2>
+      <h2 class="mat-title">{{ title }}</h2>
       <div class="top-view-controls">
         <mat-checkbox
-            color="primary"
-            [checked]="mapper3d.getShowOnlyVisibleMode()"
-            (change)="onShowOnlyVisibleModeChange($event.checked!)"
-        >Only visible
+          color="primary"
+          [checked]="mapper3d.getShowOnlyVisibleMode()"
+          (change)="onShowOnlyVisibleModeChange($event.checked!)"
+          >Only visible
         </mat-checkbox>
         <mat-checkbox
-            color="primary"
-            [disabled]="mapper3d.getShowOnlyVisibleMode()"
-            [checked]="mapper3d.getShowVirtualMode()"
-            (change)="onShowVirtualModeChange($event.checked!)"
-        >Show virtual
+          color="primary"
+          [disabled]="mapper3d.getShowOnlyVisibleMode()"
+          [checked]="mapper3d.getShowVirtualMode()"
+          (change)="onShowVirtualModeChange($event.checked!)"
+          >Show virtual
         </mat-checkbox>
         <div class="right-btn-container">
           <button color="primary" mat-icon-button (click)="onZoomInClick()">
-            <mat-icon aria-hidden="true">
-              zoom_in
-            </mat-icon>
+            <mat-icon aria-hidden="true"> zoom_in </mat-icon>
           </button>
           <button color="primary" mat-icon-button (click)="onZoomOutClick()">
-            <mat-icon aria-hidden="true">
-              zoom_out
-            </mat-icon>
+            <mat-icon aria-hidden="true"> zoom_out </mat-icon>
           </button>
           <button
-              color="primary"
-              mat-icon-button
-              matTooltip="Restore camera settings"
-              (click)="resetCamera()"
-          >
-            <mat-icon aria-hidden="true">
-              restore
-            </mat-icon>
+            color="primary"
+            mat-icon-button
+            matTooltip="Restore camera settings"
+            (click)="resetCamera()">
+            <mat-icon aria-hidden="true"> restore </mat-icon>
           </button>
         </div>
       </div>
@@ -66,48 +59,44 @@ import {Distance2D} from "./types3d";
         <div class="slider-container">
           <p class="slider-label mat-body-2">Rotation</p>
           <mat-slider
-              class="slider-rotation"
-              step="0.02"
-              min="0"
-              max="1"
-              aria-label="units"
-              [value]="mapper3d.getCameraRotationFactor()"
-              (input)="onRotationSliderChange($event.value!)"
-              color="primary"
-          ></mat-slider>
+            class="slider-rotation"
+            step="0.02"
+            min="0"
+            max="1"
+            aria-label="units"
+            [value]="mapper3d.getCameraRotationFactor()"
+            (input)="onRotationSliderChange($event.value!)"
+            color="primary"></mat-slider>
         </div>
         <div class="slider-container">
           <p class="slider-label mat-body-2">Spacing</p>
           <mat-slider
-              class="slider-spacing"
-              step="0.02"
-              min="0.02"
-              max="1"
-              aria-label="units"
-              [value]="mapper3d.getZSpacingFactor()"
-              (input)="onSeparationSliderChange($event.value!)"
-              color="primary"
-          ></mat-slider>
+            class="slider-spacing"
+            step="0.02"
+            min="0.02"
+            max="1"
+            aria-label="units"
+            [value]="mapper3d.getZSpacingFactor()"
+            (input)="onSeparationSliderChange($event.value!)"
+            color="primary"></mat-slider>
         </div>
       </div>
     </div>
     <mat-divider></mat-divider>
     <div class="rects-content">
       <div class="canvas-container">
-        <canvas class="canvas-rects" (click)="onRectClick($event)"
-                oncontextmenu="return false">
+        <canvas class="canvas-rects" (click)="onRectClick($event)" oncontextmenu="return false">
         </canvas>
-        <div class="canvas-labels">
-        </div>
+        <div class="canvas-labels"></div>
       </div>
-      <div *ngIf="internalDisplayIds.length > 1"
-           class="display-button-container">
+      <div *ngIf="internalDisplayIds.length > 1" class="display-button-container">
         <button
-            *ngFor="let displayId of internalDisplayIds"
-            color="primary"
-            mat-raised-button
-            (click)="onDisplayIdChange(displayId)"
-        >{{displayId}}</button>
+          *ngFor="let displayId of internalDisplayIds"
+          color="primary"
+          mat-raised-button
+          (click)="onDisplayIdChange(displayId)">
+          {{ displayId }}
+        </button>
       </div>
     </div>
   `,
@@ -117,7 +106,8 @@ import {Distance2D} from "./types3d";
         display: flex;
         flex-direction: column;
       }
-      .top-view-controls, .slider-view-controls {
+      .top-view-controls,
+      .slider-view-controls {
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
@@ -171,12 +161,11 @@ import {Distance2D} from "./types3d";
         flex-wrap: wrap;
         column-gap: 10px;
       }
-    `
-  ]
+    `,
+  ],
 })
-
 export class RectsComponent implements OnInit, OnDestroy {
-  @Input() title = "title";
+  @Input() title = 'title';
   @Input() set rects(rects: Rectangle[]) {
     this.internalRects = rects;
     this.drawScene();
@@ -208,9 +197,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   private mouseMoveListener = (event: MouseEvent) => this.onMouseMove(event);
   private mouseUpListener = (event: MouseEvent) => this.onMouseUp(event);
 
-  constructor(
-    @Inject(ElementRef) private elementRef: ElementRef,
-  ) {
+  constructor(@Inject(ElementRef) private elementRef: ElementRef) {
     this.mapper3d = new Mapper3D();
     this.resizeObserver = new ResizeObserver((entries) => {
       this.drawScene();
@@ -218,14 +205,14 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    const canvasContainer = this.elementRef.nativeElement.querySelector(".canvas-container");
+    const canvasContainer = this.elementRef.nativeElement.querySelector('.canvas-container');
     this.resizeObserver.observe(canvasContainer);
 
-    this.canvasRects = canvasContainer.querySelector(".canvas-rects")! as HTMLCanvasElement;
-    this.canvasLabels = canvasContainer.querySelector(".canvas-labels");
+    this.canvasRects = canvasContainer.querySelector('.canvas-rects')! as HTMLCanvasElement;
+    this.canvasLabels = canvasContainer.querySelector('.canvas-labels');
     this.canvas = new Canvas(this.canvasRects, this.canvasLabels!);
 
-    this.canvasRects.addEventListener("mousedown", event => this.onCanvasMouseDown(event));
+    this.canvasRects.addEventListener('mousedown', (event) => this.onCanvasMouseDown(event));
 
     this.mapper3d.setCurrentDisplayId(this.internalDisplayIds[0] ?? 0);
     this.drawScene();
@@ -250,7 +237,7 @@ export class RectsComponent implements OnInit, OnDestroy {
     this.drawScene();
   }
 
-  @HostListener("wheel", ["$event"])
+  @HostListener('wheel', ['$event'])
   public onScroll(event: WheelEvent) {
     if (event.deltaY > 0) {
       this.doZoomOut();
@@ -260,8 +247,8 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   public onCanvasMouseDown(event: MouseEvent) {
-    document.addEventListener("mousemove", this.mouseMoveListener);
-    document.addEventListener("mouseup", this.mouseUpListener);
+    document.addEventListener('mousemove', this.mouseMoveListener);
+    document.addEventListener('mouseup', this.mouseUpListener);
   }
 
   public onMouseMove(event: MouseEvent) {
@@ -271,8 +258,8 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   public onMouseUp(event: MouseEvent) {
-    document.removeEventListener("mousemove", this.mouseMoveListener);
-    document.removeEventListener("mouseup", this.mouseUpListener);
+    document.removeEventListener('mousemove', this.mouseMoveListener);
+    document.removeEventListener('mouseup', this.mouseUpListener);
   }
 
   public onZoomInClick() {
@@ -301,11 +288,11 @@ export class RectsComponent implements OnInit, OnDestroy {
   public onRectClick(event: MouseEvent) {
     event.preventDefault();
 
-    const canvas = (event.target as Element);
+    const canvas = event.target as Element;
     const canvasOffset = canvas.getBoundingClientRect();
 
-    const x = ((event.clientX-canvasOffset.left)/canvas.clientWidth) * 2 - 1;
-    const y = -((event.clientY-canvasOffset.top)/canvas.clientHeight) * 2 + 1;
+    const x = ((event.clientX - canvasOffset.left) / canvas.clientWidth) * 2 - 1;
+    const y = -((event.clientY - canvasOffset.top) / canvas.clientHeight) * 2 + 1;
     const z = 0;
 
     const id = this.canvas?.getClickedRectId(x, y, z);
@@ -334,12 +321,10 @@ export class RectsComponent implements OnInit, OnDestroy {
   }
 
   private notifyHighlightedItem(id: string) {
-    const event: CustomEvent = new CustomEvent(
-      ViewerEvents.HighlightedChange,
-      {
-        bubbles: true,
-        detail: { id: id }
-      });
+    const event: CustomEvent = new CustomEvent(ViewerEvents.HighlightedChange, {
+      bubbles: true,
+      detail: {id: id},
+    });
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 }

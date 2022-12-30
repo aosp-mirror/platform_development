@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 class Events {
-  public static LogLevelsFilterChanged = "ViewerProtoLogEvent_LogLevelsFilterChanged";
-  public static TagsFilterChanged = "ViewerProtoLogEvent_TagsFilterChanged";
-  public static SourceFilesFilterChanged = "ViewerProtoLogEvent_SourceFilesFilterChanged";
-  public static SearchStringFilterChanged = "ViewerProtoLogEvent_SearchStringFilterChanged";
+  public static LogLevelsFilterChanged = 'ViewerProtoLogEvent_LogLevelsFilterChanged';
+  public static TagsFilterChanged = 'ViewerProtoLogEvent_TagsFilterChanged';
+  public static SourceFilesFilterChanged = 'ViewerProtoLogEvent_SourceFilesFilterChanged';
+  public static SearchStringFilterChanged = 'ViewerProtoLogEvent_SearchStringFilterChanged';
 }
 
 export {Events};

@@ -13,24 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { ComponentFixture, TestBed, ComponentFixtureAutoDetect } from "@angular/core/testing";
-import { TreeNodeComponent } from "./tree_node.component";
-import { Component, ViewChild, NO_ERRORS_SCHEMA } from "@angular/core";
+import {Component, NO_ERRORS_SCHEMA, ViewChild} from '@angular/core';
+import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {TreeNodeComponent} from './tree_node.component';
 
-describe("TreeNodeComponent", () => {
+describe('TreeNodeComponent', () => {
   let fixture: ComponentFixture<TestHostComponent>;
   let component: TestHostComponent;
   let htmlElement: HTMLElement;
 
   beforeAll(async () => {
     await TestBed.configureTestingModule({
-      providers: [
-        { provide: ComponentFixtureAutoDetect, useValue: true }
-      ],
-      declarations: [
-        TreeNodeComponent, TestHostComponent
-      ],
-      schemas: [NO_ERRORS_SCHEMA]
+      providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
+      declarations: [TreeNodeComponent, TestHostComponent],
+      schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
   });
 
@@ -40,29 +36,28 @@ describe("TreeNodeComponent", () => {
     htmlElement = fixture.nativeElement;
   });
 
-  it("can be created", () => {
+  it('can be created', () => {
     fixture.detectChanges();
     expect(component).toBeTruthy();
   });
 
   @Component({
-    selector: "host-component",
+    selector: 'host-component',
     template: `
-                <tree-node
-                  [item]="item"
-                  [isCollapsed]="true"
-                  [isPinned]="false"
-                  [isInPinnedSection]="false"
-                  [hasChildren]="false"
-                ></tree-node>
-              `
+      <tree-node
+        [item]="item"
+        [isCollapsed]="true"
+        [isPinned]="false"
+        [isInPinnedSection]="false"
+        [hasChildren]="false"></tree-node>
+    `,
   })
   class TestHostComponent {
     item = {
       simplifyNames: false,
-      kind: "entry",
-      name: "BaseLayerTraceEntry",
-      shortName: "BLTE",
+      kind: 'entry',
+      name: 'BaseLayerTraceEntry',
+      shortName: 'BLTE',
       chips: [],
     };
 

@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceType} from "common/trace/trace_type";
-import {View, Viewer, ViewType} from "viewers/viewer";
-import {ViewerEvents} from "viewers/common/viewer_events";
-import {PresenterInputMethod} from "viewers/common/presenter_input_method";
-import {ImeUiData} from "viewers/common/ime_ui_data";
+import {TraceType} from 'common/trace/trace_type';
+import {ImeUiData} from 'viewers/common/ime_ui_data';
+import {PresenterInputMethod} from 'viewers/common/presenter_input_method';
+import {ViewerEvents} from 'viewers/common/viewer_events';
+import {View, Viewer} from 'viewers/viewer';
 
 abstract class ViewerInputMethod implements Viewer {
   constructor(storage: Storage) {
-    this.htmlElement = document.createElement("viewer-input-method");
+    this.htmlElement = document.createElement('viewer-input-method');
     this.presenter = this.initialisePresenter(storage);
     this.addViewerEventListeners();
   }
@@ -42,14 +42,30 @@ abstract class ViewerInputMethod implements Viewer {
   };
 
   protected addViewerEventListeners() {
-    this.htmlElement.addEventListener(ViewerEvents.HierarchyPinnedChange, (event) => this.presenter.updatePinnedItems(((event as CustomEvent).detail.pinnedItem)));
-    this.htmlElement.addEventListener(ViewerEvents.HighlightedChange, (event) => this.presenter.updateHighlightedItems(`${(event as CustomEvent).detail.id}`));
-    this.htmlElement.addEventListener(ViewerEvents.HierarchyUserOptionsChange, (event) => this.presenter.updateHierarchyTree((event as CustomEvent).detail.userOptions));
-    this.htmlElement.addEventListener(ViewerEvents.HierarchyFilterChange, (event) => this.presenter.filterHierarchyTree((event as CustomEvent).detail.filterString));
-    this.htmlElement.addEventListener(ViewerEvents.PropertiesUserOptionsChange, (event) => this.presenter.updatePropertiesTree((event as CustomEvent).detail.userOptions));
-    this.htmlElement.addEventListener(ViewerEvents.PropertiesFilterChange, (event) => this.presenter.filterPropertiesTree((event as CustomEvent).detail.filterString));
-    this.htmlElement.addEventListener(ViewerEvents.SelectedTreeChange, (event) => this.presenter.newPropertiesTree((event as CustomEvent).detail.selectedItem));
-    this.htmlElement.addEventListener(ViewerEvents.AdditionalPropertySelected, (event) => this.presenter.newAdditionalPropertiesTree((event as CustomEvent).detail.selectedItem));
+    this.htmlElement.addEventListener(ViewerEvents.HierarchyPinnedChange, (event) =>
+      this.presenter.updatePinnedItems((event as CustomEvent).detail.pinnedItem)
+    );
+    this.htmlElement.addEventListener(ViewerEvents.HighlightedChange, (event) =>
+      this.presenter.updateHighlightedItems(`${(event as CustomEvent).detail.id}`)
+    );
+    this.htmlElement.addEventListener(ViewerEvents.HierarchyUserOptionsChange, (event) =>
+      this.presenter.updateHierarchyTree((event as CustomEvent).detail.userOptions)
+    );
+    this.htmlElement.addEventListener(ViewerEvents.HierarchyFilterChange, (event) =>
+      this.presenter.filterHierarchyTree((event as CustomEvent).detail.filterString)
+    );
+    this.htmlElement.addEventListener(ViewerEvents.PropertiesUserOptionsChange, (event) =>
+      this.presenter.updatePropertiesTree((event as CustomEvent).detail.userOptions)
+    );
+    this.htmlElement.addEventListener(ViewerEvents.PropertiesFilterChange, (event) =>
+      this.presenter.filterPropertiesTree((event as CustomEvent).detail.filterString)
+    );
+    this.htmlElement.addEventListener(ViewerEvents.SelectedTreeChange, (event) =>
+      this.presenter.newPropertiesTree((event as CustomEvent).detail.selectedItem)
+    );
+    this.htmlElement.addEventListener(ViewerEvents.AdditionalPropertySelected, (event) =>
+      this.presenter.newAdditionalPropertiesTree((event as CustomEvent).detail.selectedItem)
+    );
   }
 
   protected abstract initialisePresenter(storage: Storage): PresenterInputMethod;

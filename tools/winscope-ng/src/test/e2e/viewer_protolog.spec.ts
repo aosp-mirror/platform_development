@@ -13,24 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {browser, element, by} from "protractor";
-import {E2eTestUtils} from "./utils";
+import {browser, by, element} from 'protractor';
+import {E2eTestUtils} from './utils';
 
-describe("Viewer ProtoLog", () => {
+describe('Viewer ProtoLog', () => {
   beforeAll(async () => {
     browser.manage().timeouts().implicitlyWait(1000);
-    browser.get("file://" + E2eTestUtils.getProductionIndexHtmlPath());
+    browser.get('file://' + E2eTestUtils.getProductionIndexHtmlPath());
   }),
+    it('processes trace and renders view', async () => {
+      await E2eTestUtils.uploadFixture('traces/elapsed_and_real_timestamp/ProtoLog.pb');
+      await E2eTestUtils.closeSnackBarIfNeeded();
+      await E2eTestUtils.clickViewTracesButton();
 
-  it("processes trace and renders view", async () => {
-    await E2eTestUtils.uploadFixture("traces/elapsed_and_real_timestamp/ProtoLog.pb");
-    await E2eTestUtils.closeSnackBarIfNeeded();
-    await E2eTestUtils.clickViewTracesButton();
+      const isViewerRendered = await element(by.css('viewer-protolog')).isPresent();
+      expect(isViewerRendered).toBeTruthy();
 
-    const isViewerRendered = await element(by.css("viewer-protolog")).isPresent();
-    expect(isViewerRendered).toBeTruthy();
-
-    const isFirstMessageRendered = await element(by.css("viewer-protolog .scroll-messages .message")).isPresent();
-    expect(isFirstMessageRendered).toBeTruthy();
-  });
+      const isFirstMessageRendered = await element(
+        by.css('viewer-protolog .scroll-messages .message')
+      ).isPresent();
+      expect(isFirstMessageRendered).toBeTruthy();
+    });
 });

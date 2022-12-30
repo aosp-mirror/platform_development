@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input } from "@angular/core";
-import { Layer } from "common/trace/flickerlib/common";
+import {Component, Input} from '@angular/core';
+import {Layer} from 'common/trace/flickerlib/common';
 
 @Component({
-  selector: "property-groups",
+  selector: 'property-groups',
   template: `
     <div class="group">
       <h3 class="group-header mat-subheading-2">Visibility</h3>
@@ -40,21 +40,27 @@ import { Layer } from "common/trace/flickerlib/common";
       <div class="left-column">
         <p class="column-header mat-small">Calculated</p>
         <p class="property mat-body-2">Transform:</p>
-        <transform-matrix [transform]="item.transform" [formatFloat]="formatFloat"></transform-matrix>
+        <transform-matrix
+          [transform]="item.transform"
+          [formatFloat]="formatFloat"></transform-matrix>
         <p class="mat-body-1">
           <span
             class="mat-body-2"
             matTooltip="Raw value read from proto.bounds. This is the buffer size or
               requested crop cropped by parent bounds."
-          >Crop:</span>
+            >Crop:</span
+          >
           &ngsp;
           {{ item.bounds }}
+        </p>
+
         <p class="mat-body-1">
           <span
             class="mat-body-2"
             matTooltip="Raw value read from proto.screenBounds. This is the calculated crop
               transformed."
-          >Final Bounds:</span>
+            >Final Bounds:</span
+          >
           &ngsp;
           {{ item.screenBounds }}
         </p>
@@ -62,14 +68,13 @@ import { Layer } from "common/trace/flickerlib/common";
       <div class="right-column">
         <p class="column-header mat-small">Requested</p>
         <p class="property mat-body-2">Transform:</p>
-        <transform-matrix [transform]="item.requestedTransform" [formatFloat]="formatFloat"></transform-matrix>
+        <transform-matrix
+          [transform]="item.requestedTransform"
+          [formatFloat]="formatFloat"></transform-matrix>
         <p class="mat-body-1">
           <span class="mat-body-2">Crop:</span>
           &ngsp;
-          {{ item.crop
-              ? item.crop
-              : "[empty]"
-          }}
+          {{ item.crop ? item.crop : '[empty]' }}
         </p>
       </div>
     </div>
@@ -93,7 +98,8 @@ import { Layer } from "common/trace/flickerlib/common";
             matTooltip="Rotates or flips the buffer in place. Used with display transform
               hint to cancel out any buffer transformation when sending to
               HWC."
-          >Transform:</span>
+            >Transform:</span
+          >
           &ngsp;
           {{ item.bufferTransform }}
         </p>
@@ -104,13 +110,13 @@ import { Layer } from "common/trace/flickerlib/common";
             class="mat-body-2"
             matTooltip="Scales buffer to the frame by overriding the requested transform
               for this item."
-          >Destination Frame:</span>
+            >Destination Frame:</span
+          >
           &ngsp;
           {{ getDestinationFrame() }}
         </p>
         <p *ngIf="hasIgnoreDestinationFrame()" class="mat-body-1">
-          Destination Frame ignored because item has eIgnoreDestinationFrame
-          flag set.
+          Destination Frame ignored because item has eIgnoreDestinationFrame flag set.
         </p>
       </div>
     </div>
@@ -128,13 +134,10 @@ import { Layer } from "common/trace/flickerlib/common";
             class="mat-body-2"
             matTooltip="item is z-ordered relative to its relative parents but its bounds
               and other properties are inherited from its parents."
-          >relative parent:</span>
+            >relative parent:</span
+          >
           &ngsp;
-          {{
-            item.zOrderRelativeOfId == -1
-              ? "none"
-              : item.zOrderRelativeOfId
-          }}
+          {{ item.zOrderRelativeOfId == -1 ? 'none' : item.zOrderRelativeOfId }}
         </p>
       </div>
     </div>
@@ -164,18 +167,15 @@ import { Layer } from "common/trace/flickerlib/common";
             matTooltip="Crop used to define the bounds of the corner radii. If the bounds
               are greater than the item bounds then the rounded corner will not
               be visible."
-          >Corner Radius Crop:</span>
+            >Corner Radius Crop:</span
+          >
           &ngsp;
           {{ item.cornerRadiusCrop }}
         </p>
         <p class="mat-body-1">
           <span class="mat-body-2">Blur:</span>
           &ngsp;
-          {{
-            item.proto?.backgroundBlurRadius
-              ? item.proto?.backgroundBlurRadius
-              : 0
-          }} px
+          {{ item.proto?.backgroundBlurRadius ? item.proto?.backgroundBlurRadius : 0 }} px
         </p>
       </div>
       <div class="right-column">
@@ -188,20 +188,15 @@ import { Layer } from "common/trace/flickerlib/common";
         <p class="mat-body-1">
           <span class="mat-body-2">Shadow:</span>
           &ngsp;
-          {{
-            item.proto?.requestedShadowRadius
-              ? item.proto?.requestedShadowRadius
-              : 0
-          }} px
+          {{ item.proto?.requestedShadowRadius ? item.proto?.requestedShadowRadius : 0 }} px
         </p>
         <p class="mat-body-1">
           <span class="mat-body-2">Corner Radius:</span>
           &ngsp;
           {{
-            item.proto?.requestedCornerRadius
-              ? formatFloat(item.proto?.requestedCornerRadius)
-              : 0
-          }} px
+            item.proto?.requestedCornerRadius ? formatFloat(item.proto?.requestedCornerRadius) : 0
+          }}
+          px
         </p>
       </div>
     </div>
@@ -211,7 +206,9 @@ import { Layer } from "common/trace/flickerlib/common";
       <ng-container *ngIf="hasInputChannel()">
         <div class="left-column">
           <p class="property mat-body-2">To Display Transform:</p>
-          <transform-matrix [transform]="item.inputTransform" [formatFloat]="formatFloat"></transform-matrix>
+          <transform-matrix
+            [transform]="item.inputTransform"
+            [formatFloat]="formatFloat"></transform-matrix>
           <p class="mat-body-1">
             <span class="mat-body-2">Touchable Region:</span>
             &ngsp;
@@ -244,8 +241,7 @@ import { Layer } from "common/trace/flickerlib/common";
       <div *ngIf="!hasInputChannel()" class="left-column">
         <p class="mat-body-1">
           <span class="mat-body-2">Input channel:</span>
-          &ngsp;
-          not set
+          &ngsp; not set
         </p>
       </div>
     </div>
@@ -278,10 +274,9 @@ import { Layer } from "common/trace/flickerlib/common";
       .column-header {
         color: gray;
       }
-    `
+    `,
   ],
 })
-
 export class PropertyGroupsComponent {
   @Input() item!: Layer;
 
@@ -293,8 +288,7 @@ export class PropertyGroupsComponent {
     const frame = this.item.proto?.destinationFrame;
     if (frame) {
       return ` left: ${frame.left}, top: ${frame.top}, right: ${frame.right}, bottom: ${frame.bottom}`;
-    }
-    else return "";
+    } else return '';
   }
 
   public hasIgnoreDestinationFrame() {
@@ -305,40 +299,43 @@ export class PropertyGroupsComponent {
     return Math.round(num * 100) / 100;
   }
 
-
   public summary(): TreeSummary {
     const summary = [];
 
     if (this.item?.visibilityReason?.length > 0) {
-      let reason = "";
+      let reason = '';
       if (Array.isArray(this.item.visibilityReason)) {
-        reason = this.item.visibilityReason.join(", ");
+        reason = this.item.visibilityReason.join(', ');
       } else {
         reason = this.item.visibilityReason;
       }
 
-      summary.push({key: "Invisible due to", value: reason});
+      summary.push({key: 'Invisible due to', value: reason});
     }
 
     if (this.item?.occludedBy?.length > 0) {
-      summary.push({key: "Occluded by", value: this.item.occludedBy.map((it: any) => it.id).join(", ")});
+      summary.push({
+        key: 'Occluded by',
+        value: this.item.occludedBy.map((it: any) => it.id).join(', '),
+      });
     }
 
     if (this.item?.partiallyOccludedBy?.length > 0) {
       summary.push({
-        key: "Partially occluded by",
-        value: this.item.partiallyOccludedBy.map((it: any) => it.id).join(", "),
+        key: 'Partially occluded by',
+        value: this.item.partiallyOccludedBy.map((it: any) => it.id).join(', '),
       });
     }
 
     if (this.item?.coveredBy?.length > 0) {
-      summary.push({key: "Covered by", value: this.item.coveredBy.map((it: any) => it.id).join(", ")});
+      summary.push({
+        key: 'Covered by',
+        value: this.item.coveredBy.map((it: any) => it.id).join(', '),
+      });
     }
 
     return summary;
   }
-
 }
 
-
-type TreeSummary = Array<{key: string, value: string}>
+type TreeSummary = Array<{key: string; value: string}>;

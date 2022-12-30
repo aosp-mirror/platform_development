@@ -13,37 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ComponentFixture, TestBed} from "@angular/core/testing";
-import {ViewerWindowManagerComponent} from "./viewer_window_manager.component";
-import { HierarchyComponent } from "viewers/components/hierarchy.component";
-import { PropertiesComponent } from "viewers/components/properties.component";
-import { RectsComponent } from "viewers/components/rects/rects.component";
-import { MatIconModule } from "@angular/material/icon";
-import { MatDividerModule } from "@angular/material/divider";
-import { ComponentFixtureAutoDetect } from "@angular/core/testing";
-import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from "@angular/core";
+import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
+import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {MatDividerModule} from '@angular/material/divider';
+import {MatIconModule} from '@angular/material/icon';
+import {HierarchyComponent} from 'viewers/components/hierarchy.component';
+import {PropertiesComponent} from 'viewers/components/properties.component';
+import {RectsComponent} from 'viewers/components/rects/rects.component';
+import {ViewerWindowManagerComponent} from './viewer_window_manager.component';
 
-describe("ViewerWindowManagerComponent", () => {
+describe('ViewerWindowManagerComponent', () => {
   let fixture: ComponentFixture<ViewerWindowManagerComponent>;
   let component: ViewerWindowManagerComponent;
   let htmlElement: HTMLElement;
 
   beforeAll(async () => {
     await TestBed.configureTestingModule({
-      providers: [
-        { provide: ComponentFixtureAutoDetect, useValue: true }
-      ],
-      imports: [
-        MatIconModule,
-        MatDividerModule
-      ],
+      providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
+      imports: [MatIconModule, MatDividerModule],
       declarations: [
         ViewerWindowManagerComponent,
         HierarchyComponent,
         PropertiesComponent,
-        RectsComponent
+        RectsComponent,
       ],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA]
+      schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
     }).compileComponents();
   });
 
@@ -53,22 +47,22 @@ describe("ViewerWindowManagerComponent", () => {
     htmlElement = fixture.nativeElement;
   });
 
-  it("can be created", () => {
+  it('can be created', () => {
     expect(component).toBeTruthy();
   });
 
-  it("creates rects view", () => {
-    const rectsView = htmlElement.querySelector(".rects-view");
+  it('creates rects view', () => {
+    const rectsView = htmlElement.querySelector('.rects-view');
     expect(rectsView).toBeTruthy();
   });
 
-  it("creates hierarchy view", () => {
-    const hierarchyView = htmlElement.querySelector(".hierarchy-view");
+  it('creates hierarchy view', () => {
+    const hierarchyView = htmlElement.querySelector('.hierarchy-view');
     expect(hierarchyView).toBeTruthy();
   });
 
-  it("creates properties view", () => {
-    const propertiesView = htmlElement.querySelector(".properties-view");
+  it('creates properties view', () => {
+    const propertiesView = htmlElement.querySelector('.properties-view');
     expect(propertiesView).toBeTruthy();
   });
 });

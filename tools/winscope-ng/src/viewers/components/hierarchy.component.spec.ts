@@ -13,36 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ComponentFixture, TestBed, ComponentFixtureAutoDetect} from "@angular/core/testing";
-import { HierarchyComponent } from "./hierarchy.component";
-import { NO_ERRORS_SCHEMA } from "@angular/core";
-import { PersistentStore } from "common/utils/persistent_store";
-import { CommonModule } from "@angular/common";
-import { MatInputModule } from "@angular/material/input";
-import { MatFormFieldModule } from "@angular/material/form-field";
-import { MatCheckboxModule } from "@angular/material/checkbox";
-import { MatDividerModule } from "@angular/material/divider";
-import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
-import { HierarchyTreeBuilder } from "test/unit/hierarchy_tree_builder";
-import { TreeComponent } from "viewers/components/tree.component";
-import { TreeNodeComponent } from "viewers/components/tree_node.component";
-import { TreeNodeDataViewComponent } from "viewers/components/tree_node_data_view.component";
+import {CommonModule} from '@angular/common';
+import {NO_ERRORS_SCHEMA} from '@angular/core';
+import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatDividerModule} from '@angular/material/divider';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {PersistentStore} from 'common/utils/persistent_store';
+import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
+import {TreeComponent} from 'viewers/components/tree.component';
+import {TreeNodeComponent} from 'viewers/components/tree_node.component';
+import {TreeNodeDataViewComponent} from 'viewers/components/tree_node_data_view.component';
+import {HierarchyComponent} from './hierarchy.component';
 
-describe("HierarchyComponent", () => {
+describe('HierarchyComponent', () => {
   let fixture: ComponentFixture<HierarchyComponent>;
   let component: HierarchyComponent;
   let htmlElement: HTMLElement;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      providers: [
-        { provide: ComponentFixtureAutoDetect, useValue: true }
-      ],
+      providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
       declarations: [
         HierarchyComponent,
         TreeComponent,
         TreeNodeComponent,
-        TreeNodeDataViewComponent
+        TreeNodeDataViewComponent,
       ],
       imports: [
         CommonModule,
@@ -50,24 +48,25 @@ describe("HierarchyComponent", () => {
         MatDividerModule,
         MatInputModule,
         MatFormFieldModule,
-        BrowserAnimationsModule
+        BrowserAnimationsModule,
       ],
-      schemas: [NO_ERRORS_SCHEMA]
+      schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
     fixture = TestBed.createComponent(HierarchyComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
 
-    component.tree = new HierarchyTreeBuilder().setName("Root node").setChildren([
-      new HierarchyTreeBuilder().setName("Child node").build()
-    ]).build();
+    component.tree = new HierarchyTreeBuilder()
+      .setName('Root node')
+      .setChildren([new HierarchyTreeBuilder().setName('Child node').build()])
+      .build();
 
     component.store = new PersistentStore();
     component.userOptions = {
       onlyVisible: {
-        name: "Only visible",
-        enabled: false
+        name: 'Only visible',
+        enabled: false,
       },
     };
     component.pinnedItems = [component.tree];
@@ -75,24 +74,24 @@ describe("HierarchyComponent", () => {
     fixture.detectChanges();
   });
 
-  it("can be created", () => {
+  it('can be created', () => {
     expect(component).toBeTruthy();
   });
 
-  it("renders title", () => {
-    const title = htmlElement.querySelector(".hierarchy-title");
+  it('renders title', () => {
+    const title = htmlElement.querySelector('.hierarchy-title');
     expect(title).toBeTruthy();
   });
 
-  it("renders view controls", () => {
-    const viewControls = htmlElement.querySelector(".view-controls");
+  it('renders view controls', () => {
+    const viewControls = htmlElement.querySelector('.view-controls');
     expect(viewControls).toBeTruthy();
   });
 
-  it("renders initial tree elements", async () => {
-    const treeView = htmlElement.querySelector("tree-view");
+  it('renders initial tree elements', async () => {
+    const treeView = htmlElement.querySelector('tree-view');
     expect(treeView).toBeTruthy();
-    expect(treeView!.innerHTML).toContain("Root node");
-    expect(treeView!.innerHTML).toContain("Child node");
+    expect(treeView!.innerHTML).toContain('Root node');
+    expect(treeView!.innerHTML).toContain('Child node');
   });
 });

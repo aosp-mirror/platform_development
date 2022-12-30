@@ -13,56 +13,50 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ComponentFixture, TestBed} from "@angular/core/testing";
-import { MatDividerModule } from "@angular/material/divider";
-import { MatTooltipModule } from "@angular/material/tooltip";
-import { PropertyGroupsComponent } from "./property_groups.component";
-import { LayerBuilder } from "test/unit/layer_builder";
-import { TransformMatrixComponent } from "./transform_matrix.component";
+import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {MatDividerModule} from '@angular/material/divider';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {LayerBuilder} from 'test/unit/layer_builder';
+import {PropertyGroupsComponent} from './property_groups.component';
+import {TransformMatrixComponent} from './transform_matrix.component';
 
-describe("PropertyGroupsComponent", () => {
+describe('PropertyGroupsComponent', () => {
   let fixture: ComponentFixture<PropertyGroupsComponent>;
   let component: PropertyGroupsComponent;
   let htmlElement: HTMLElement;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [
-        MatDividerModule,
-        MatTooltipModule
-      ],
-      declarations: [
-        PropertyGroupsComponent,
-        TransformMatrixComponent
-      ],
-      schemas: []
+      imports: [MatDividerModule, MatTooltipModule],
+      declarations: [PropertyGroupsComponent, TransformMatrixComponent],
+      schemas: [],
     }).compileComponents();
     fixture = TestBed.createComponent(PropertyGroupsComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
   });
 
-  it("can be created", () => {
+  it('can be created', () => {
     expect(component).toBeTruthy();
   });
 
-  it("it renders verbose flags if available", async () => {
+  it('it renders verbose flags if available', async () => {
     const layer = new LayerBuilder().setFlags(3).build();
     component.item = layer;
     fixture.detectChanges();
 
-    const flags = htmlElement.querySelector(".flags");
+    const flags = htmlElement.querySelector('.flags');
     expect(flags).toBeTruthy();
-    expect(flags!.innerHTML).toMatch("Flags:.*HIDDEN|OPAQUE \\(0x3\\)");
+    expect(flags!.innerHTML).toMatch('Flags:.*HIDDEN|OPAQUE \\(0x3\\)');
   });
 
-  it("it renders numeric flags if verbose flags not available", async () => {
+  it('it renders numeric flags if verbose flags not available', async () => {
     const layer = new LayerBuilder().setFlags(0).build();
     component.item = layer;
     fixture.detectChanges();
 
-    const flags = htmlElement.querySelector(".flags");
+    const flags = htmlElement.querySelector('.flags');
     expect(flags).toBeTruthy();
-    expect(flags!.innerHTML).toMatch("Flags:.*0");
+    expect(flags!.innerHTML).toMatch('Flags:.*0');
   });
 });

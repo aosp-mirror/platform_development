@@ -14,19 +14,21 @@
  * limitations under the License.
  */
 
-import {FunctionUtils} from "common/utils/function_utils";
+import {FunctionUtils} from 'common/utils/function_utils';
 import {
   BuganizerAttachmentsDownloadEmitter,
+  OnBuganizerAttachmentsDownloaded,
   OnBuganizerAttachmentsDownloadStart,
-  OnBuganizerAttachmentsDownloaded
-} from "interfaces/buganizer_attachments_download_emitter";
-import {Runnable} from "interfaces/runnable";
+} from 'interfaces/buganizer_attachments_download_emitter';
+import {Runnable} from 'interfaces/runnable';
 
-export class AbtChromeExtensionProtocolStub implements
-  BuganizerAttachmentsDownloadEmitter,
-  Runnable {
-  onBuganizerAttachmentsDownloadStart: OnBuganizerAttachmentsDownloadStart = FunctionUtils.DO_NOTHING;
-  onBuganizerAttachmentsDownloaded: OnBuganizerAttachmentsDownloaded = FunctionUtils.DO_NOTHING_ASYNC;
+export class AbtChromeExtensionProtocolStub
+  implements BuganizerAttachmentsDownloadEmitter, Runnable
+{
+  onBuganizerAttachmentsDownloadStart: OnBuganizerAttachmentsDownloadStart =
+    FunctionUtils.DO_NOTHING;
+  onBuganizerAttachmentsDownloaded: OnBuganizerAttachmentsDownloaded =
+    FunctionUtils.DO_NOTHING_ASYNC;
 
   setOnBuganizerAttachmentsDownloadStart(callback: OnBuganizerAttachmentsDownloadStart) {
     this.onBuganizerAttachmentsDownloadStart = callback;

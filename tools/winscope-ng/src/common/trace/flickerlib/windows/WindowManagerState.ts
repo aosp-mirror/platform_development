@@ -14,120 +14,124 @@
  * limitations under the License.
  */
 
-import { ElapsedTimestamp, RealTimestamp } from "common/trace/timestamp";
-import { TimeUtils } from "common/utils/time_utils";
+import {ElapsedTimestamp, RealTimestamp} from 'common/trace/timestamp';
+import {TimeUtils} from 'common/utils/time_utils';
 import {
-    KeyguardControllerState,
-    PlatformConsts,
-    RootWindowContainer,
-    WindowManagerPolicy,
-    WindowManagerState,
-    WindowManagerTraceEntryBuilder
-} from "../common"
+  KeyguardControllerState,
+  PlatformConsts,
+  RootWindowContainer,
+  WindowManagerPolicy,
+  WindowManagerState,
+  WindowManagerTraceEntryBuilder,
+} from '../common';
 
-import WindowContainer from "./WindowContainer"
+import WindowContainer from './WindowContainer';
 
 WindowManagerState.fromProto = function (
-    proto: any,
-    elapsedTimestamp: bigint = 0n,
-    where: string = "",
-    realToElapsedTimeOffsetNs: bigint|undefined = undefined,
-    useElapsedTime = false,
+  proto: any,
+  elapsedTimestamp: bigint = 0n,
+  where: string = '',
+  realToElapsedTimeOffsetNs: bigint | undefined = undefined,
+  useElapsedTime = false
 ): WindowManagerState {
-    const inputMethodWIndowAppToken = "";
-    if (proto.inputMethodWindow != null) {
-        proto.inputMethodWindow.hashCode.toString(16)
-    }
+  const inputMethodWIndowAppToken = '';
+  if (proto.inputMethodWindow != null) {
+    proto.inputMethodWindow.hashCode.toString(16);
+  }
 
-    let parseOrder = 0;
-    const nextSeq = () => ++parseOrder;
-    const rootWindowContainer = createRootWindowContainer(proto.rootWindowContainer, nextSeq);
-    const keyguardControllerState = createKeyguardControllerState(
-        proto.rootWindowContainer.keyguardController);
-    const policy = createWindowManagerPolicy(proto.policy);
+  let parseOrder = 0;
+  const nextSeq = () => ++parseOrder;
+  const rootWindowContainer = createRootWindowContainer(proto.rootWindowContainer, nextSeq);
+  const keyguardControllerState = createKeyguardControllerState(
+    proto.rootWindowContainer.keyguardController
+  );
+  const policy = createWindowManagerPolicy(proto.policy);
 
-    const entry = new WindowManagerTraceEntryBuilder(
-        `${elapsedTimestamp}`,
-        policy,
-        proto.focusedApp,
-        proto.focusedDisplayId,
-        proto.focusedWindow?.title ?? "",
-        inputMethodWIndowAppToken,
-        proto.rootWindowContainer.isHomeRecentsComponent,
-        proto.displayFrozen,
-        proto.rootWindowContainer.pendingActivities.map((it: any) => it.title),
-        rootWindowContainer,
-        keyguardControllerState,
-        where,
-        `${realToElapsedTimeOffsetNs ?? 0}`,
-    ).build();
+  const entry = new WindowManagerTraceEntryBuilder(
+    `${elapsedTimestamp}`,
+    policy,
+    proto.focusedApp,
+    proto.focusedDisplayId,
+    proto.focusedWindow?.title ?? '',
+    inputMethodWIndowAppToken,
+    proto.rootWindowContainer.isHomeRecentsComponent,
+    proto.displayFrozen,
+    proto.rootWindowContainer.pendingActivities.map((it: any) => it.title),
+    rootWindowContainer,
+    keyguardControllerState,
+    where,
+    `${realToElapsedTimeOffsetNs ?? 0}`
+  ).build();
 
-    addAttributes(entry, proto, realToElapsedTimeOffsetNs === undefined || useElapsedTime);
-    return entry
-}
+  addAttributes(entry, proto, realToElapsedTimeOffsetNs === undefined || useElapsedTime);
+  return entry;
+};
 
 function addAttributes(entry: WindowManagerState, proto: any, useElapsedTime = false) {
-    entry.kind = entry.constructor.name;
-    if (!entry.isComplete()) {
-        entry.isIncompleteReason = entry.getIsIncompleteReason();
-    }
-    entry.proto = proto;
-    if (useElapsedTime || entry.clockTimestamp == undefined) {
-        entry.name = TimeUtils.format(new ElapsedTimestamp(BigInt(entry.elapsedTimestamp)));
-        entry.shortName = entry.name;
-    } else {
-        entry.name = TimeUtils.format(new RealTimestamp(BigInt(entry.clockTimestamp)));
-        entry.shortName = entry.name;
-    }
-    entry.isVisible = true;
+  entry.kind = entry.constructor.name;
+  if (!entry.isComplete()) {
+    entry.isIncompleteReason = entry.getIsIncompleteReason();
+  }
+  entry.proto = proto;
+  if (useElapsedTime || entry.clockTimestamp == undefined) {
+    entry.name = TimeUtils.format(new ElapsedTimestamp(BigInt(entry.elapsedTimestamp)));
+    entry.shortName = entry.name;
+  } else {
+    entry.name = TimeUtils.format(new RealTimestamp(BigInt(entry.clockTimestamp)));
+    entry.shortName = entry.name;
+  }
+  entry.isVisible = true;
 }
 
 function createWindowManagerPolicy(proto: any): WindowManagerPolicy {
-    return new WindowManagerPolicy(
-        proto.focusedAppToken ?? "",
-        proto.forceStatusBar,
-        proto.forceStatusBarFromKeyguard,
-        proto.keyguardDrawComplete,
-        proto.keyguardOccluded,
-        proto.keyguardOccludedChanged,
-        proto.keyguardOccludedPending,
-        proto.lastSystemUiFlags,
-        proto.orientation,
-        PlatformConsts.Rotation.Companion.getByValue(proto.rotation),
-        proto.rotationMode,
-        proto.screenOnFully,
-        proto.windowManagerDrawComplete
-    );
+  return new WindowManagerPolicy(
+    proto.focusedAppToken ?? '',
+    proto.forceStatusBar,
+    proto.forceStatusBarFromKeyguard,
+    proto.keyguardDrawComplete,
+    proto.keyguardOccluded,
+    proto.keyguardOccludedChanged,
+    proto.keyguardOccludedPending,
+    proto.lastSystemUiFlags,
+    proto.orientation,
+    PlatformConsts.Rotation.Companion.getByValue(proto.rotation),
+    proto.rotationMode,
+    proto.screenOnFully,
+    proto.windowManagerDrawComplete
+  );
 }
 
 function createRootWindowContainer(proto: any, nextSeq: () => number): RootWindowContainer {
-    const windowContainer = WindowContainer.fromProto(
-        /* proto */ proto.windowContainer,
-        /* childrenProto */ proto.windowContainer?.children ?? [],
-        /* isActivityInTree */ false,
-        /* computedZ */ nextSeq
-    );
+  const windowContainer = WindowContainer.fromProto(
+    /* proto */ proto.windowContainer,
+    /* childrenProto */ proto.windowContainer?.children ?? [],
+    /* isActivityInTree */ false,
+    /* computedZ */ nextSeq
+  );
 
-    if (windowContainer == null) {
-        throw new Error(`Window container should not be null.\n${JSON.stringify(proto)}`);
-    }
-    const entry = new RootWindowContainer(windowContainer);
-    return entry;
+  if (windowContainer == null) {
+    throw new Error(`Window container should not be null.\n${JSON.stringify(proto)}`);
+  }
+  const entry = new RootWindowContainer(windowContainer);
+  return entry;
 }
 
 function createKeyguardControllerState(proto: any): KeyguardControllerState {
-    const keyguardOccludedStates: any = {};
+  const keyguardOccludedStates: any = {};
 
-    if (proto) {
-        proto.keyguardOccludedStates.forEach((it: any) =>
-            keyguardOccludedStates[<keyof typeof keyguardOccludedStates>it.displayId] = it.keyguardOccluded);
-    }
-
-    return new KeyguardControllerState(
-        proto?.isAodShowing ?? false,
-        proto?.isKeyguardShowing ?? false,
-        keyguardOccludedStates
+  if (proto) {
+    proto.keyguardOccludedStates.forEach(
+      (it: any) =>
+        (keyguardOccludedStates[<keyof typeof keyguardOccludedStates>it.displayId] =
+          it.keyguardOccluded)
     );
+  }
+
+  return new KeyguardControllerState(
+    proto?.isAodShowing ?? false,
+    proto?.isKeyguardShowing ?? false,
+    keyguardOccludedStates
+  );
 }
 
 export {WindowManagerState};

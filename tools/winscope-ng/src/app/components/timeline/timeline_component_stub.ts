@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import {Timestamp} from "common/trace/timestamp";
-import {TimestampChangeListener} from "interfaces/timestamp_change_listener";
+import {Timestamp} from 'common/trace/timestamp';
+import {TimestampChangeListener} from 'interfaces/timestamp_change_listener';
 
 export class TimelineComponentStub implements TimestampChangeListener {
-  onCurrentTimestampChanged(timestamp: Timestamp|undefined) {
+  onCurrentTimestampChanged(timestamp: Timestamp | undefined) {
     // do nothing
   }
 }

@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input } from "@angular/core";
-import { TableProperties } from "viewers/common/table_properties";
+import {Component, Input} from '@angular/core';
+import {TableProperties} from 'viewers/common/table_properties';
 
 @Component({
-  selector: "properties-table",
+  selector: 'properties-table',
   template: `
     <table class="table">
       <tr *ngFor="let entry of objectEntries(properties)">
@@ -37,7 +37,8 @@ import { TableProperties } from "viewers/common/table_properties";
         border-collapse: collapse;
       }
 
-      .table-cell-name, .table-cell-value {
+      .table-cell-name,
+      .table-cell-value {
         padding: 1px 5px;
         border: 1px solid var(--border-color);
         overflow-wrap: anywhere;
@@ -47,13 +48,11 @@ import { TableProperties } from "viewers/common/table_properties";
         width: 20%;
         background-color: rgba(158, 192, 200, 0.281);
       }
-    `
+    `,
   ],
 })
-
 export class PropertiesTableComponent {
   objectEntries = Object.entries;
 
   @Input() properties!: TableProperties;
-
 }

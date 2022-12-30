@@ -39,7 +39,10 @@ class ArrayUtils {
     return true;
   }
 
-  static searchSubarray<T>(array: T[] | TypedArray, subarray: T[] | TypedArray): number|undefined {
+  static searchSubarray<T>(
+    array: T[] | TypedArray,
+    subarray: T[] | TypedArray
+  ): number | undefined {
     for (let i = 0; i + subarray.length <= array.length; ++i) {
       let match = true;
 
@@ -58,7 +61,7 @@ class ArrayUtils {
     return undefined;
   }
 
-  static binarySearchLowerOrEqual<T>(values: T[] | TypedArray, target: T): number|undefined {
+  static binarySearchLowerOrEqual<T>(values: T[] | TypedArray, target: T): number | undefined {
     if (values.length == 0) {
       return undefined;
     }
@@ -66,9 +69,9 @@ class ArrayUtils {
     let low = 0;
     let high = values.length - 1;
 
-    let result: number|undefined = undefined;
+    let result: number | undefined = undefined;
 
-    while(low <= high) {
+    while (low <= high) {
       const mid = (low + high) >> 1;
 
       if (values[mid] < target) {
@@ -76,11 +79,9 @@ class ArrayUtils {
           result = mid;
         }
         low = mid + 1;
-      }
-      else if (values[mid] > target) {
+      } else if (values[mid] > target) {
         high = mid - 1;
-      }
-      else {
+      } else {
         result = mid;
         high = mid - 1;
       }
@@ -91,7 +92,7 @@ class ArrayUtils {
 
   static toUintLittleEndian(buffer: Uint8Array, start: number, end: number): bigint {
     let result = 0n;
-    for (let i = end-1; i >= start; --i) {
+    for (let i = end - 1; i >= start; --i) {
       result *= 256n;
       result += BigInt(buffer[i]);
     }
@@ -99,7 +100,7 @@ class ArrayUtils {
   }
 
   static toIntLittleEndian(buffer: Uint8Array, start: number, end: number): bigint {
-    const numOfBits = BigInt(Math.max(0, 8 * (end-start)));
+    const numOfBits = BigInt(Math.max(0, 8 * (end - start)));
     if (numOfBits <= 0n) {
       return 0n;
     }
