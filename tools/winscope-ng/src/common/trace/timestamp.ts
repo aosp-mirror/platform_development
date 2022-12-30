@@ -32,10 +32,8 @@ export class Timestamp {
         throw new Error("realToElapsedTimeOffsetNs can't be undefined to use real timestamp");
       }
       return new Timestamp(TimestampType.REAL, elapsedTimestamp + realToElapsedTimeOffsetNs);
-      break;
     case TimestampType.ELAPSED:
       return new Timestamp(TimestampType.ELAPSED, elapsedTimestamp);
-      break;
     default:
       throw new Error("Unhandled timestamp type");
     }

@@ -16,7 +16,7 @@
 const path = require('path');
 const glob = require('glob');
 
-let config = require('./webpack.config.common');
+const config = require('./webpack.config.common');
 
 config["mode"] = "development";
 
@@ -25,7 +25,7 @@ const allTestFiles = [
   ...glob.sync('./src/**/*.spec.ts')
 ]
 const unitTestFiles = allTestFiles
-    .filter(file => !file.match(".*component\.spec\.(js|ts)$"))
+    .filter(file => !file.match(".*component\\.spec\\.(js|ts)$"))
     .filter(file => !file.match(".*e2e.*"))
 config["entry"] = {
   tests: unitTestFiles,

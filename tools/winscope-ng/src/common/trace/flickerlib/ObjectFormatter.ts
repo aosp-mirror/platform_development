@@ -42,7 +42,7 @@ export default class ObjectFormatter {
     private static FLICKER_INTDEF_MAP = readIntdefMap();
 
     static cloneObject(entry: any): any {
-        let obj: any = {}
+        const obj: any = {}
         const properties = ObjectFormatter.getProperties(entry);
         properties.forEach(prop => obj[prop] = entry[prop]);
         return obj;
@@ -81,7 +81,8 @@ export default class ObjectFormatter {
                     props.push(prop);
                 }
             });
-        } while (obj = Object.getPrototypeOf(obj));
+            obj = Object.getPrototypeOf(obj);
+        } while (obj);
 
         return props;
     }

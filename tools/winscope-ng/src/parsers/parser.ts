@@ -68,7 +68,7 @@ abstract class Parser {
     }
 
     for (const fieldName in protoObj.$type.fields) {
-      if (protoObj.$type.fields.hasOwnProperty(fieldName)) {
+      if (Object.prototype.hasOwnProperty.call(protoObj.$type.fields, fieldName)) {
         const fieldProperties = protoObj.$type.fields[fieldName];
         const field = protoObj[fieldName];
 

@@ -105,7 +105,7 @@ function createConfiguration(proto: any): Configuration {
     if (proto == null) {
         return null;
     }
-    var windowConfiguration = null;
+    let windowConfiguration = null;
 
     if (proto != null && proto.windowConfiguration != null) {
         windowConfiguration = createWindowConfiguration(proto.windowConfiguration);

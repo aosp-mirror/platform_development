@@ -53,7 +53,7 @@ class ProxyRequest {
     method: string,
     path: string,
     onSuccess: ((request: XMLHttpRequest) => void|Promise<void>) | undefined,
-    type?: XMLHttpRequestResponseType,
+    type?: XMLHttpRequest['responseType'],
     jsonRequest: any = null
   ): Promise<void> {
     return new Promise((resolve) => {

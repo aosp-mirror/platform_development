@@ -99,6 +99,7 @@ const Region = require('flicker').com.android.server.wm.traces.common.region.Reg
 // Service
 const TaggingEngine = require('flicker').com.android.server.wm.traces.common.service.TaggingEngine;
 
+const EMPTY_SIZE = Size.Companion.EMPTY;
 const EMPTY_BUFFER = ActiveBuffer.Companion.EMPTY;
 const EMPTY_COLOR3 = Color3.Companion.EMPTY;
 const EMPTY_COLOR = Color.Companion.EMPTY;
@@ -113,14 +114,14 @@ const EMPTY_TRANSFORM = new Transform(0, EMPTY_MATRIX33);
 
 function toSize(proto) {
   if (proto == null) {
-    return EMPTY_BOUNDS;
+    return EMPTY_SIZE;
   }
   const width = proto.width ?? proto.w ?? 0;
   const height = proto.height ?? proto.h ?? 0;
   if (width || height) {
     return new Size(width, height);
   }
-  return EMPTY_BOUNDS;
+  return EMPTY_SIZE;
 }
 
 function toActiveBuffer(proto) {

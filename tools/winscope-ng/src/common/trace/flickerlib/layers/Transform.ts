@@ -65,7 +65,7 @@ function getDefaultTransform(type: number, x: number, y: number): Matrix33 {
 }
 
 export function isFlagSet(type: number, bits: number): Boolean {
-    var type = type || 0;
+    type = type || 0;
     return (type & bits) === bits;
 }
 

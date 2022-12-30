@@ -109,7 +109,7 @@ function getWindowType(proto: any, identifierName: string): number {
 }
 
 function getName(identifierName: string): string {
-    var name = identifierName;
+    let name = identifierName;
 
     if (identifierName.startsWith(WindowState.STARTING_WINDOW_PREFIX)) {
         name = identifierName.substring(WindowState.STARTING_WINDOW_PREFIX.length);

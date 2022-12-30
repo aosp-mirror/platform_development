@@ -60,7 +60,7 @@ export class AppComponent {
   static readonly TARGET = "http://localhost:8080";
   static readonly TIMESTAMP_IN_BUGREPORT_MESSAGE = 1670509911000000000n;
 
-  private winscope: WindowProxy|null = null;
+  private winscope: Window|null = null;
   private isWinscopeUp = false;
   private onMessagePongReceived = FunctionUtils.DO_NOTHING;
 

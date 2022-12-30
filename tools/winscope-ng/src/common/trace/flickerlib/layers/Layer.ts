@@ -41,7 +41,7 @@ Layer.fromProto = function (proto: any, excludesCompositionState = false): Layer
     let crop: Rect
     if (proto.crop) {
         crop = toRect(proto.crop)
-    };
+    }
 
     const properties = new LayerProperties(
         visibleRegion,

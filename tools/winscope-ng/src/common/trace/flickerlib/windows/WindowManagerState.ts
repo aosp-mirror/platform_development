@@ -34,10 +34,10 @@ WindowManagerState.fromProto = function (
     realToElapsedTimeOffsetNs: bigint|undefined = undefined,
     useElapsedTime = false,
 ): WindowManagerState {
-    var inputMethodWIndowAppToken = "";
+    const inputMethodWIndowAppToken = "";
     if (proto.inputMethodWindow != null) {
         proto.inputMethodWindow.hashCode.toString(16)
-    };
+    }
 
     let parseOrder = 0;
     const nextSeq = () => ++parseOrder;
