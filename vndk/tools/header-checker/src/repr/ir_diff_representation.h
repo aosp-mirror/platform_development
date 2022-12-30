@@ -102,8 +102,6 @@ class VTableLayoutDiffIR {
     return new_layout_;
   }
 
-  bool IsExtended() const;
-
  protected:
   const VTableLayoutIR &old_layout_;
   const VTableLayoutIR &new_layout_;
@@ -199,14 +197,7 @@ class RecordTypeDiffIR : public DiffMessageIR {
     linker_set_key_ = std::move(linker_set_key);
   }
 
-  bool DiffExists() const {
-    return (type_diff_ != nullptr) || (vtable_diffs_ != nullptr) ||
-           (field_diffs_.size() != 0) || (fields_removed_.size() != 0) ||
-           (fields_added_.size() != 0) || (access_diff_ != nullptr) ||
-           (base_specifier_diffs_ != nullptr);
-  }
-
-  bool IsExtended() const;
+  void SetExtended(bool is_extended) { is_extended_ = is_extended; }
 
   const TypeDiffIR *GetTypeDiff() const {
     return type_diff_.get();
@@ -222,6 +213,8 @@ class RecordTypeDiffIR : public DiffMessageIR {
 
   const std::string &GetLinkerSetKey() const { return linker_set_key_; }
 
+  bool IsExtended() const { return is_extended_; }
+
  protected:
   // optional implemented with vector / std::unique_ptr.
   std::unique_ptr<TypeDiffIR> type_diff_;
@@ -232,6 +225,7 @@ class RecordTypeDiffIR : public DiffMessageIR {
   std::unique_ptr<AccessSpecifierDiffIR> access_diff_;
   std::unique_ptr<CXXBaseSpecifierDiffIR> base_specifier_diffs_;
   std::string linker_set_key_;
+  bool is_extended_ = false;
 };
 
 class EnumFieldDiffIR {
