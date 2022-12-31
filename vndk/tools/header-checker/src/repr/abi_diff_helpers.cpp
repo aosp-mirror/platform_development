@@ -220,9 +220,8 @@ static std::string RemoveThunkInfoFromMangledName(const std::string &name) {
   return "_Z" + name.substr(base_name_pos);
 }
 
-bool AbiDiffHelper::CompareVTableComponents(
-    const VTableComponentIR &old_component,
-    const VTableComponentIR &new_component) {
+static bool CompareVTableComponents(const VTableComponentIR &old_component,
+                                    const VTableComponentIR &new_component) {
   // Vtable components in prebuilts/abi-dumps/vndk/28 don't have thunk info.
   if (old_component.GetName() != new_component.GetName()) {
     if (RemoveThunkInfoFromMangledName(old_component.GetName()) ==
@@ -238,14 +237,9 @@ bool AbiDiffHelper::CompareVTableComponents(
          old_component.GetKind() == new_component.GetKind();
 }
 
-bool AbiDiffHelper::CompareVTables(
-    const RecordTypeIR *old_record,
-    const RecordTypeIR *new_record) {
-
-  const std::vector<VTableComponentIR> &old_components =
-      old_record->GetVTableLayout().GetVTableComponents();
-  const std::vector<VTableComponentIR> &new_components =
-      new_record->GetVTableLayout().GetVTableComponents();
+static bool CompareVTables(
+    const std::vector<VTableComponentIR> &old_components,
+    const std::vector<VTableComponentIR> &new_components) {
   if (old_components.size() != new_components.size()) {
     return false;
   }
@@ -255,6 +249,97 @@ bool AbiDiffHelper::CompareVTables(
     }
   }
   return true;
+}
+
+static inline bool IsVOffset(VTableComponentIR::Kind kind) {
+  return kind == VTableComponentIR::VBaseOffset ||
+         kind == VTableComponentIR::VCallOffset;
+}
+
+static inline bool IsFunctionPointer(VTableComponentIR::Kind kind) {
+  return kind == VTableComponentIR::FunctionPointer ||
+         kind == VTableComponentIR::CompleteDtorPointer ||
+         kind == VTableComponentIR::DeletingDtorPointer;
+}
+
+// A Vtable consists of one or more sub-vtables. Each sub-vtable is a sequence
+// of components in the following order:
+//   Zero or more VCallOffset or VBaseOffset.
+//   One OffsetToTop.
+//   One RTTI.
+//   Zero or more FunctionPointer, CompleteDtorPointer, or DeletingDtorPointer.
+//
+// An object's vtable pointer points to the next component of the RTTI
+// component. Hence, new components can be appended or prepended to sub-vtables
+// without breaking compatibility.
+static bool IsVTableExtended(
+    const std::vector<VTableComponentIR> &old_components,
+    const std::vector<VTableComponentIR> &new_components) {
+  const auto old_end = old_components.end();
+  const auto new_end = new_components.end();
+  auto old_it = old_components.begin();
+  auto new_it = new_components.begin();
+  bool is_extended = false;
+  while (old_it != old_end) {
+    const auto old_begin = old_it;
+    const auto new_begin = new_it;
+    // Iterate VCallOffset and VBaseOffset.
+    while (old_it != old_end && IsVOffset(old_it->GetKind())) {
+      old_it++;
+    }
+    while (new_it != new_end && IsVOffset(new_it->GetKind())) {
+      new_it++;
+    }
+    // Compare VCallOffset and VBaseOffset.
+    auto old_back_it = old_it;
+    auto new_back_it = new_it;
+    while (old_back_it != old_begin) {
+      if (new_back_it == new_begin) {
+        return false;
+      }
+      old_back_it--;
+      new_back_it--;
+      if (old_back_it->GetKind() != new_back_it->GetKind()) {
+        return false;
+      }
+    }
+    // The new sub-vtable has additional VOffsets at the beginning.
+    if (new_back_it != new_begin) {
+      is_extended = true;
+    }
+    // Compare OffsetToTop.
+    if (old_it == old_end || new_it == new_end ||
+        old_it->GetKind() != VTableComponentIR::OffsetToTop ||
+        new_it->GetKind() != VTableComponentIR::OffsetToTop) {
+      return false;
+    }
+    old_it++;
+    new_it++;
+    // Compare RTTI.
+    if (old_it == old_end || new_it == new_end ||
+        old_it->GetKind() != VTableComponentIR::RTTI ||
+        new_it->GetKind() != VTableComponentIR::RTTI ||
+        old_it->GetName() != new_it->GetName()) {
+      return false;
+    }
+    old_it++;
+    new_it++;
+    // Compare function pointers.
+    while (old_it != old_end && IsFunctionPointer(old_it->GetKind())) {
+      if (new_it == new_end || old_it->GetKind() != new_it->GetKind() ||
+          old_it->GetName() != new_it->GetName()) {
+        return false;
+      }
+      old_it++;
+      new_it++;
+    }
+    // The new sub-vtable has additional function pointers at the end.
+    while (new_it != new_end && IsFunctionPointer(new_it->GetKind())) {
+      is_extended = true;
+      new_it++;
+    }
+  }
+  return new_it == new_end ? is_extended : false;
 }
 
 bool AbiDiffHelper::AreOpaqueTypesEqual(const std::string &old_type_id,
@@ -391,13 +476,18 @@ AbiDiffHelper::CompareRecordFields(
           std::move(*(diffed_field_ptr.second.release())));
     }
   }
+
+  DiffStatus &diff_status = diffed_removed_added_fields.diff_status_;
+  diff_status = DiffStatus::kNoDiff;
   if (diffed_removed_added_fields.diffed_fields_.size() != 0 ||
       diffed_removed_added_fields.removed_fields_.size() != 0) {
-    diffed_removed_added_fields.diff_status_ = DiffStatus::kDirectDiff;
-  } else if (common_field_diff_exists) {
-    diffed_removed_added_fields.diff_status_ = DiffStatus::kIndirectDiff;
-  } else {
-    diffed_removed_added_fields.diff_status_ = DiffStatus::kNoDiff;
+    diff_status.CombineWith(DiffStatus::kDirectDiff);
+  }
+  if (diffed_removed_added_fields.added_fields_.size() != 0) {
+    diff_status.CombineWith(DiffStatus::kDirectExt);
+  }
+  if (common_field_diff_exists) {
+    diff_status.CombineWith(DiffStatus::kIndirectDiff);
   }
   return diffed_removed_added_fields;
 }
@@ -533,44 +623,58 @@ DiffStatus AbiDiffHelper::CompareRecordTypes(
   DiffStatus final_diff_status = DiffStatus::kNoDiff;
   record_type_diff_ir->SetName(old_type->GetName());
   record_type_diff_ir->SetLinkerSetKey(old_type->GetLinkerSetKey());
+
   if (IsAccessDowngraded(old_type->GetAccess(), new_type->GetAccess())) {
-    final_diff_status.CombineWith(DiffStatus::kIndirectDiff);
+    final_diff_status.CombineWith(DiffStatus::kDirectDiff);
     record_type_diff_ir->SetAccessDiff(
         std::make_unique<AccessSpecifierDiffIR>(
             old_type->GetAccess(), new_type->GetAccess()));
   }
 
   if (!CompareSizeAndAlignment(old_type, new_type)) {
-    final_diff_status.CombineWith(DiffStatus::kIndirectDiff);
+    if (old_type->GetSize() < new_type->GetSize() &&
+        old_type->GetAlignment() == new_type->GetAlignment()) {
+      final_diff_status.CombineWith(DiffStatus::kDirectExt);
+    } else {
+      final_diff_status.CombineWith(DiffStatus::kDirectDiff);
+    }
     record_type_diff_ir->SetTypeDiff(
         std::make_unique<TypeDiffIR>(
             std::make_pair(old_type->GetSize(), new_type->GetSize()),
             std::make_pair(old_type->GetAlignment(),
                            new_type->GetAlignment())));
   }
-  if (!CompareVTables(old_type, new_type)) {
-    final_diff_status.CombineWith(DiffStatus::kIndirectDiff);
+
+  const std::vector<VTableComponentIR> &old_vtable =
+      old_type->GetVTableLayout().GetVTableComponents();
+  const std::vector<VTableComponentIR> &new_vtable =
+      new_type->GetVTableLayout().GetVTableComponents();
+  if (!CompareVTables(old_vtable, new_vtable)) {
+    if (IsVTableExtended(old_vtable, new_vtable)) {
+      final_diff_status.CombineWith(DiffStatus::kDirectExt);
+    } else {
+      final_diff_status.CombineWith(DiffStatus::kDirectDiff);
+    }
     record_type_diff_ir->SetVTableLayoutDiff(
         std::make_unique<VTableLayoutDiffIR>(
             old_type->GetVTableLayout(), new_type->GetVTableLayout()));
   }
+
   auto &old_fields_dup = old_type->GetFields();
   auto &new_fields_dup = new_type->GetFields();
   auto field_status_and_diffs = CompareRecordFields(
       old_fields_dup, new_fields_dup, type_queue, diff_kind);
-  // TODO: Combine this with base class diffs as well.
   final_diff_status.CombineWith(field_status_and_diffs.diff_status_);
 
   std::vector<CXXBaseSpecifierIR> old_bases = old_type->GetBases();
   std::vector<CXXBaseSpecifierIR> new_bases = new_type->GetBases();
-
   if (!CompareBaseSpecifiers(old_bases, new_bases, type_queue, diff_kind) &&
       ir_diff_dumper_) {
+    final_diff_status.CombineWith(DiffStatus::kDirectDiff);
     ReplaceReferencesOtherTypeIdWithName(old_types_, old_bases);
     ReplaceReferencesOtherTypeIdWithName(new_types_, new_bases);
-    record_type_diff_ir->SetBaseSpecifierDiffs (
-        std::make_unique<CXXBaseSpecifierDiffIR>(old_bases,
-                                                           new_bases));
+    record_type_diff_ir->SetBaseSpecifierDiffs(
+        std::make_unique<CXXBaseSpecifierDiffIR>(old_bases, new_bases));
   }
   if (ir_diff_dumper_) {
     // Make copies of the fields removed and diffed, since we have to change
@@ -596,8 +700,9 @@ DiffStatus AbiDiffHelper::CompareRecordTypes(
     record_type_diff_ir->SetFieldDiffs(std::move(field_diffs_fixed));
     record_type_diff_ir->SetFieldsRemoved(std::move(fields_removed_fixed));
     record_type_diff_ir->SetFieldsAdded(std::move(fields_added_fixed));
+    record_type_diff_ir->SetExtended(final_diff_status.IsExtension());
 
-    if (record_type_diff_ir->DiffExists() &&
+    if (final_diff_status.IsDirectDiff() &&
         !ir_diff_dumper_->AddDiffMessageIR(record_type_diff_ir.get(),
                                            Unwind(type_queue), diff_kind)) {
       llvm::errs() << "AddDiffMessage on record type failed\n";
