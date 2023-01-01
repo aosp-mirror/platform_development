@@ -15,38 +15,35 @@
  */
 
 module.exports = {
-    "env": {
-        "browser": true,
-        "es2021": true
-    },
-    "extends": [
-        "eslint:recommended",
-        "plugin:@typescript-eslint/recommended"
-    ],
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-        "ecmaVersion": "latest",
-        "sourceType": "module"
-    },
-    "plugins": [
-        "@typescript-eslint"
-    ],
-    "rules": {
-        "indent": [
-            "error",
-            2
-        ],
-        "linebreak-style": [
-            "error",
-            "unix"
-        ],
-        "quotes": [
-            "error",
-            "double"
-        ],
-        "semi": [
-            "error",
-            "always"
-        ]
-    }
+  extends: ['eslint-config-prettier', 'eslint:recommended'],
+  plugins: ['eslint-plugin-prettier', '@typescript-eslint'],
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
+  },
+  env: {
+    es2022: true,
+    node: true,
+    browser: true,
+    webextensions: true,
+    jasmine: true,
+    protractor: true,
+  },
+  rules: {
+    'no-unused-vars': 'off', // not very robust rule
+
+    // Partially taken from https://github.com/google/eslint-config-google
+    // Omitted layout & formatting rules because that's handled by prettier
+    'no-var': 'error',
+    'prefer-const': ['error', {destructuring: 'all'}],
+    'prefer-rest-params': 'error',
+    'prefer-spread': 'error',
+  },
+  globals: {
+    // Specify NodeJS global as temporary workaround for eslint bug:
+    // https://stackoverflow.com/questions/64089216/after-upgrade-eslint-says-nodejs-is-undefined
+    // https://github.com/Chatie/eslint-config/issues/45
+    NodeJS: true,
+  },
 };
