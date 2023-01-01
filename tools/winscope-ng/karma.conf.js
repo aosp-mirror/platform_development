@@ -13,25 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-let webpackConfig = require("./webpack.config.common");
+const webpackConfig = require('./webpack.config.common');
 delete webpackConfig.entry;
 delete webpackConfig.output;
 
 module.exports = (config) => {
   config.set({
-    frameworks: ["jasmine", "webpack"],
-    plugins: [
-      "karma-webpack",
-      "karma-chrome-launcher",
-      "karma-jasmine",
-      "karma-sourcemap-loader",
-    ],
-    files: [{ pattern: "src/main.component.spec.ts", watched: false }],
+    frameworks: ['jasmine', 'webpack'],
+    plugins: ['karma-webpack', 'karma-chrome-launcher', 'karma-jasmine', 'karma-sourcemap-loader'],
+    files: [{pattern: 'src/main.component.spec.ts', watched: false}],
     preprocessors: {
-      'src/main.component.spec.ts': ['webpack', 'sourcemap']
+      'src/main.component.spec.ts': ['webpack', 'sourcemap'],
     },
     singleRun: true,
-    browsers: ["ChromeHeadless"],
-    webpack: webpackConfig
+    browsers: ['ChromeHeadless'],
+    webpack: webpackConfig,
   });
-}
+};

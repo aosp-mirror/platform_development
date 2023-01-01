@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, Inject, NgZone} from "@angular/core";
-import {MAT_SNACK_BAR_DATA, MatSnackBar, MatSnackBarRef} from "@angular/material/snack-bar";
-import {ParserError, ParserErrorType} from "parsers/parser_factory";
-import {TRACE_INFO} from "app/trace_info";
+import {Component, Inject, NgZone} from '@angular/core';
+import {MatSnackBar, MatSnackBarRef, MAT_SNACK_BAR_DATA} from '@angular/material/snack-bar';
+import {TRACE_INFO} from 'app/trace_info';
+import {ParserError, ParserErrorType} from 'parsers/parser_factory';
 
 @Component({
-  selector: "upload-snack-bar",
+  selector: 'upload-snack-bar',
   template: `
     <div class="snack-bar-container">
       <p *ngFor="let message of messages" class="mat-body-1">
-        {{message}}
+        {{ message }}
       </p>
       <button color="primary" mat-button class="snack-bar-action" (click)="snackBarRef.dismiss()">
         Close
@@ -39,16 +39,14 @@ import {TRACE_INFO} from "app/trace_info";
       .snack-bar-action {
         margin-left: 12px;
       }
-    `
-  ]
+    `,
+  ],
 })
-
 export class ParserErrorSnackBarComponent {
   constructor(
     @Inject(MatSnackBarRef) public snackBarRef: MatSnackBarRef<ParserErrorSnackBarComponent>,
     @Inject(MAT_SNACK_BAR_DATA) public messages: string[]
-  ) {
-  }
+  ) {}
 
   static showIfNeeded(ngZone: NgZone, snackBar: MatSnackBar, errors: ParserError[]) {
     const messages = this.convertErrorsToMessages(errors);
@@ -76,7 +74,7 @@ export class ParserErrorSnackBarComponent {
       const countUsed = Math.min(groupedErrors.length, CROP_THRESHOLD);
       const countCropped = groupedErrors.length - countUsed;
 
-      groupedErrors.slice(0, countUsed).forEach(error => {
+      groupedErrors.slice(0, countUsed).forEach((error) => {
         messages.push(this.convertErrorToMessage(error));
       });
 
@@ -89,39 +87,38 @@ export class ParserErrorSnackBarComponent {
   }
 
   private static convertErrorToMessage(error: ParserError): string {
-    const fileName = error.trace !== undefined ?
-      error.trace.name : "<no file name>";
-    const traceTypeName = error.traceType !== undefined ?
-      TRACE_INFO[error.traceType].name : "<unknown>";
+    const fileName = error.trace !== undefined ? error.trace.name : '<no file name>';
+    const traceTypeName =
+      error.traceType !== undefined ? TRACE_INFO[error.traceType].name : '<unknown>';
 
     switch (error.type) {
-    case ParserErrorType.NO_INPUT_FILES:
-      return "No input files";
-    case ParserErrorType.UNSUPPORTED_FORMAT:
-      return `${fileName}: unsupported file format`;
-    case ParserErrorType.OVERRIDE: {
-      return `${fileName}: overridden by another trace of type ${traceTypeName}`;
-    }
-    default:
-      return `${fileName}: unknown error occurred`;
+      case ParserErrorType.NO_INPUT_FILES:
+        return 'No input files';
+      case ParserErrorType.UNSUPPORTED_FORMAT:
+        return `${fileName}: unsupported file format`;
+      case ParserErrorType.OVERRIDE: {
+        return `${fileName}: overridden by another trace of type ${traceTypeName}`;
+      }
+      default:
+        return `${fileName}: unknown error occurred`;
     }
   }
 
   private static makeCroppedMessage(type: ParserErrorType, count: number): string {
-    switch(type) {
-    case ParserErrorType.OVERRIDE:
-      return `... (cropped ${count} overridden trace messages)`;
-    case ParserErrorType.UNSUPPORTED_FORMAT:
-      return `... (cropped ${count} unsupported file format messages)`;
-    default:
-      return `... (cropped ${count} unknown error messages)`;
+    switch (type) {
+      case ParserErrorType.OVERRIDE:
+        return `... (cropped ${count} overridden trace messages)`;
+      case ParserErrorType.UNSUPPORTED_FORMAT:
+        return `... (cropped ${count} unsupported file format messages)`;
+      default:
+        return `... (cropped ${count} unknown error messages)`;
     }
   }
 
   private static groupErrorsByType(errors: ParserError[]): Map<ParserErrorType, ParserError[]> {
     const groups = new Map<ParserErrorType, ParserError[]>();
 
-    errors.forEach(error => {
+    errors.forEach((error) => {
       if (groups.get(error.type) === undefined) {
         groups.set(error.type, []);
       }

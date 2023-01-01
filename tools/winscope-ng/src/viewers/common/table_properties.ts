@@ -15,4 +15,4 @@
  */
 export type TableProperties = {
   [key: string]: string | boolean | undefined;
-}
+};

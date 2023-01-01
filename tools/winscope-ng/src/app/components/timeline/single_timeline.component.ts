@@ -14,38 +14,48 @@
  * limitations under the License.
  */
 
-import { Component, ElementRef, EventEmitter, HostListener, Input, Output, SimpleChanges, ViewChild } from "@angular/core";
-import { Color } from "app/colors";
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  Output,
+  SimpleChanges,
+  ViewChild,
+} from '@angular/core';
+import {Color} from 'app/colors';
 
 export type entry = bigint;
 
 @Component({
-  selector: "single-timeline",
+  selector: 'single-timeline',
   template: `
     <div class="single-timeline" #wrapper>
       <canvas #canvas></canvas>
     </div>
   `,
-  styles: [`
-    .single-timeline {
-      height: 2rem;
-      padding: 1rem 0;
-    }
-  `]
+  styles: [
+    `
+      .single-timeline {
+        height: 2rem;
+        padding: 1rem 0;
+      }
+    `,
+  ],
 })
 export class SingleTimelineComponent {
   @Input() selected: bigint | undefined = undefined;
-  @Input() color = "#AF5CF7";
+  @Input() color = '#AF5CF7';
   @Input() start!: bigint;
   @Input() end!: bigint;
   @Input() entries!: bigint[];
 
   @Output() onTimestampChanged = new EventEmitter<bigint>();
 
-  @ViewChild("canvas", {static: false}) canvasRef!: ElementRef;
-  @ViewChild("wrapper", {static: false}) wrapperRef!: ElementRef;
+  @ViewChild('canvas', {static: false}) canvasRef!: ElementRef;
+  @ViewChild('wrapper', {static: false}) wrapperRef!: ElementRef;
 
-  hoveringEntry: entry|null = null;
+  hoveringEntry: entry | null = null;
 
   private viewInitialized = false;
 
@@ -54,10 +64,10 @@ export class SingleTimelineComponent {
   }
 
   get ctx(): CanvasRenderingContext2D {
-    const ctx = this.canvas.getContext("2d");
+    const ctx = this.canvas.getContext('2d');
 
     if (ctx == null) {
-      throw Error("Failed to get canvas context!");
+      throw Error('Failed to get canvas context!');
     }
 
     return ctx;
@@ -65,7 +75,7 @@ export class SingleTimelineComponent {
 
   ngOnInit() {
     if (this.start == undefined || this.end == undefined || this.entries == undefined) {
-      throw Error("Not all required inputs have been set");
+      throw Error('Not all required inputs have been set');
     }
   }
 
@@ -79,34 +89,41 @@ export class SingleTimelineComponent {
     // Reset any size before computing new size to avoid it interfering with size computations
     this.canvas.width = 0;
     this.canvas.height = 0;
-    this.canvas.style.width = "auto";
-    this.canvas.style.height = "auto";
+    this.canvas.style.width = 'auto';
+    this.canvas.style.height = 'auto';
 
     const computedStyle = getComputedStyle(this.wrapperRef.nativeElement);
     const width = this.wrapperRef.nativeElement.offsetWidth;
-    const height = this.wrapperRef.nativeElement.offsetHeight
-      - parseFloat(computedStyle.paddingTop)
-      - parseFloat(computedStyle.paddingBottom);
+    const height =
+      this.wrapperRef.nativeElement.offsetHeight -
+      parseFloat(computedStyle.paddingTop) -
+      parseFloat(computedStyle.paddingBottom);
 
     const HiPPIwidth = window.devicePixelRatio * width;
     const HiPPIheight = window.devicePixelRatio * height;
 
     this.canvas.width = HiPPIwidth;
     this.canvas.height = HiPPIheight;
-    this.canvas.style.width = width + "px";
-    this.canvas.style.height = height + "px";
+    this.canvas.style.width = width + 'px';
+    this.canvas.style.height = height + 'px';
 
     // ensure all drawing operations are scaled
     if (window.devicePixelRatio !== 1) {
-      const context = this.canvas.getContext("2d")!;
+      const context = this.canvas.getContext('2d')!;
       context.scale(window.devicePixelRatio, window.devicePixelRatio);
     }
 
     this.redraw();
 
-    this.canvas.addEventListener("mousemove", (event: MouseEvent) => { this.handleMouseMove(event); });
-    this.canvas.addEventListener("mousedown", (event: MouseEvent) => { this.handleMouseDown(event); });
-    this.canvas.addEventListener("mouseout", (event: MouseEvent) => { this.handleMouseOut(event); });
+    this.canvas.addEventListener('mousemove', (event: MouseEvent) => {
+      this.handleMouseMove(event);
+    });
+    this.canvas.addEventListener('mousedown', (event: MouseEvent) => {
+      this.handleMouseDown(event);
+    });
+    this.canvas.addEventListener('mouseout', (event: MouseEvent) => {
+      this.handleMouseOut(event);
+    });
 
     this.viewInitialized = true;
   }
@@ -187,7 +204,7 @@ export class SingleTimelineComponent {
     for (const entry of this.entries) {
       this.defineEntryPath(entry);
       if (this.ctx.isPointInPath(mouseX, mouseY)) {
-        this.canvas.style.cursor = "pointer";
+        this.canvas.style.cursor = 'pointer';
         return entry;
       }
     }
@@ -196,9 +213,9 @@ export class SingleTimelineComponent {
 
   private updateCursor(mouseX: number, mouseY: number) {
     if (this.getEntryAt(mouseX, mouseY) != null) {
-      this.canvas.style.cursor = "pointer";
+      this.canvas.style.cursor = 'pointer';
     }
-    this.canvas.style.cursor = "auto";
+    this.canvas.style.cursor = 'auto';
   }
 
   private handleMouseDown(e: MouseEvent) {
@@ -235,9 +252,17 @@ export class SingleTimelineComponent {
   }
 
   private defineEntryPath(entry: entry, padding = 0) {
-    const xPos = Number(BigInt(this.availableWidth) * (entry - this.start) / (this.end - this.start));
+    const xPos = Number(
+      (BigInt(this.availableWidth) * (entry - this.start)) / (this.end - this.start)
+    );
 
-    rect(this.ctx, xPos + padding, padding, this.entryWidth - 2 * padding, this.entryWidth - 2 * padding);
+    rect(
+      this.ctx,
+      xPos + padding,
+      padding,
+      this.entryWidth - 2 * padding,
+      this.entryWidth - 2 * padding
+    );
   }
 
   private redraw() {
@@ -277,7 +302,6 @@ export class SingleTimelineComponent {
 
     this.ctx.restore();
   }
-
 }
 
 function rect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {

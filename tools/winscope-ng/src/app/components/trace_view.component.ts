@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-import {Component, ElementRef, EventEmitter, Inject, Input, Output} from "@angular/core";
-import { TraceType } from "common/trace/trace_type";
-import { PersistentStore } from "common/utils/persistent_store";
-import {Viewer, View, ViewType} from "viewers/viewer";
+import {Component, ElementRef, EventEmitter, Inject, Input, Output} from '@angular/core';
+import {PersistentStore} from 'common/utils/persistent_store';
+import {View, Viewer, ViewType} from 'viewers/viewer';
 
 interface Tab extends View {
   addedToDom: boolean;
 }
 
 @Component({
-  selector: "trace-view",
+  selector: 'trace-view',
   template: `
     <div class="overlay">
       <div class="draggable-container" cdkDrag cdkDragBoundary=".overlay">
@@ -40,24 +39,24 @@ interface Tab extends View {
     <div class="header-items-wrapper">
       <nav mat-tab-nav-bar class="tabs-navigation-bar">
         <a
-            *ngFor="let tab of tabs"
-            mat-tab-link
-            [active]="isCurrentActiveTab(tab)"
-            (click)="onTabClick(tab)"
-            class="tab"
-        >{{tab.title}}</a>
+          *ngFor="let tab of tabs"
+          mat-tab-link
+          [active]="isCurrentActiveTab(tab)"
+          (click)="onTabClick(tab)"
+          class="tab">
+          {{ tab.title }}
+        </a>
       </nav>
       <button
-          color="primary"
-          mat-button
-          class="save-button"
-          (click)="downloadTracesButtonClick.emit()"
-      >Download all traces
+        color="primary"
+        mat-button
+        class="save-button"
+        (click)="downloadTracesButtonClick.emit()">
+        Download all traces
       </button>
     </div>
     <mat-divider></mat-divider>
-    <div class="trace-view-content">
-    </div>
+    <div class="trace-view-content"></div>
   `,
   styles: [
     `
@@ -91,8 +90,8 @@ interface Tab extends View {
         height: 100%;
         overflow: auto;
       }
-    `
-  ]
+    `,
+  ],
 })
 export class TraceViewComponent {
   @Input() viewers!: Viewer[];
@@ -103,7 +102,7 @@ export class TraceViewComponent {
   private elementRef: ElementRef;
 
   public tabs: Tab[] = [];
-  private currentActiveTab: undefined|Tab;
+  private currentActiveTab: undefined | Tab;
 
   constructor(@Inject(ElementRef) elementRef: ElementRef) {
     this.elementRef = elementRef;
@@ -120,10 +119,10 @@ export class TraceViewComponent {
 
   private renderViewsTab() {
     this.tabs = this.viewers
-      .map(viewer => viewer.getViews())
+      .map((viewer) => viewer.getViews())
       .flat()
-      .filter(view => (view.type === ViewType.TAB))
-      .map(view => {
+      .filter((view) => view.type === ViewType.TAB)
+      .map((view) => {
         return {
           type: view.type,
           htmlElement: view.htmlElement,
@@ -133,7 +132,7 @@ export class TraceViewComponent {
         };
       });
 
-    this.tabs.forEach(tab => {
+    this.tabs.forEach((tab) => {
       // TODO: setting "store" this way is a hack.
       //       Store should be part of View's interface.
       (tab.htmlElement as any).store = this.store;
@@ -146,28 +145,31 @@ export class TraceViewComponent {
 
   private renderViewsOverlay() {
     const views: View[] = this.viewers
-      .map(viewer => viewer.getViews())
+      .map((viewer) => viewer.getViews())
       .flat()
-      .filter(view => (view.type === ViewType.OVERLAY));
+      .filter((view) => view.type === ViewType.OVERLAY);
 
     if (views.length > 1) {
       throw new Error(
-        "Only one overlay view is supported. To allow more overlay views, either create more than" +
-        " one draggable containers in this component or move the cdkDrag directives into the" +
-        " overlay view when the new Angular's directive composition API is available" +
-        " (https://github.com/angular/angular/issues/8785).");
+        'Only one overlay view is supported. To allow more overlay views, either create more than' +
+          ' one draggable containers in this component or move the cdkDrag directives into the' +
+          " overlay view when the new Angular's directive composition API is available" +
+          ' (https://github.com/angular/angular/issues/8785).'
+      );
     }
 
-    views.forEach(view => {
-      view.htmlElement.style.pointerEvents = "all";
-      const container = this.elementRef.nativeElement.querySelector(".overlay .draggable-container")!;
+    views.forEach((view) => {
+      view.htmlElement.style.pointerEvents = 'all';
+      const container = this.elementRef.nativeElement.querySelector(
+        '.overlay .draggable-container'
+      )!;
       container.appendChild(view.htmlElement);
     });
   }
 
   private showTab(tab: Tab) {
     if (this.currentActiveTab) {
-      this.currentActiveTab.htmlElement.style.display = "none";
+      this.currentActiveTab.htmlElement.style.display = 'none';
     }
 
     if (!tab.addedToDom) {
@@ -176,12 +178,11 @@ export class TraceViewComponent {
       // (added to the DOM) it has style.display == "". This fixes the
       // initialization/rendering issues with cdk-virtual-scroll-viewport
       // components inside the tab contents.
-      const traceViewContent = this.elementRef.nativeElement.querySelector(".trace-view-content")!;
+      const traceViewContent = this.elementRef.nativeElement.querySelector('.trace-view-content')!;
       traceViewContent.appendChild(tab.htmlElement);
       tab.addedToDom = true;
-    }
-    else {
-      tab.htmlElement.style.display = "";
+    } else {
+      tab.htmlElement.style.display = '';
     }
 
     this.currentActiveTab = tab;

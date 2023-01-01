@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { TraceConfigurationMap, TRACES } from "./trace_collection_utils";
-import { PersistentStoreProxy } from "common/utils/persistent_store_proxy";
+import {PersistentStoreProxy} from 'common/utils/persistent_store_proxy';
+import {TraceConfigurationMap, TRACES} from './trace_collection_utils';
 
 export class TracingConfig {
   public requestedTraces: string[] = [];
   public requestedDumps: string[] = [];
 
-  private storage: Storage|undefined;
-  private tracingConfig: TraceConfigurationMap|undefined;
-  private dumpConfig: TraceConfigurationMap|undefined;
+  private storage: Storage | undefined;
+  private tracingConfig: TraceConfigurationMap | undefined;
+  private dumpConfig: TraceConfigurationMap | undefined;
 
   static getInstance(): TracingConfig {
     return setTracesInstance;
@@ -30,27 +30,35 @@ export class TracingConfig {
 
   public initialize(storage: Storage) {
     this.storage = storage;
-    this.tracingConfig = PersistentStoreProxy.new<TraceConfigurationMap>("TracingSettings", TRACES["default"], this.storage);
-    this.dumpConfig = PersistentStoreProxy.new<TraceConfigurationMap>("DumpSettings", {
-      "window_dump": {
-        name: "Window Manager",
-        isTraceCollection: undefined,
-        run: true,
-        config: undefined
+    this.tracingConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
+      'TracingSettings',
+      TRACES['default'],
+      this.storage
+    );
+    this.dumpConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
+      'DumpSettings',
+      {
+        window_dump: {
+          name: 'Window Manager',
+          isTraceCollection: undefined,
+          run: true,
+          config: undefined,
+        },
+        layers_dump: {
+          name: 'Surface Flinger',
+          isTraceCollection: undefined,
+          run: true,
+          config: undefined,
+        },
       },
-      "layers_dump": {
-        name: "Surface Flinger",
-        isTraceCollection: undefined,
-        run: true,
-        config: undefined
-      }
-    }, this.storage);
+      this.storage
+    );
   }
 
   public setTracingConfigForAvailableTraces(isWaylandAvailable = false) {
-    const availableTracesConfig = TRACES["default"];
+    const availableTracesConfig = TRACES['default'];
     if (isWaylandAvailable) {
-      Object.assign(availableTracesConfig, TRACES["arc"]);
+      Object.assign(availableTracesConfig, TRACES['arc']);
     }
     this.setTracingConfig(availableTracesConfig);
   }
@@ -61,21 +69,25 @@ export class TracingConfig {
 
   public getTracingConfig(): TraceConfigurationMap {
     if (this.tracingConfig === undefined) {
-      throw Error("Tracing config not initialized yet");
+      throw Error('Tracing config not initialized yet');
     }
     return this.tracingConfig;
   }
 
   private setTracingConfig(traceConfig: TraceConfigurationMap) {
     if (this.storage === undefined) {
-      throw Error("not initialized");
+      throw Error('not initialized');
     }
-    this.tracingConfig = PersistentStoreProxy.new<TraceConfigurationMap>("TraceConfiguration", traceConfig, this.storage);
+    this.tracingConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
+      'TraceConfiguration',
+      traceConfig,
+      this.storage
+    );
   }
 
   public getDumpConfig(): TraceConfigurationMap {
     if (this.dumpConfig === undefined) {
-      throw Error("Dump config not initialized yet");
+      throw Error('Dump config not initialized yet');
     }
     return this.dumpConfig;
   }

@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {AppModule} from "./app/app.module";
-import {globalConfig} from "common/utils/global_config";
+import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
+import {globalConfig} from 'common/utils/global_config';
+import {AppModule} from './app/app.module';
 
 globalConfig.set({
-  MODE: "DEV",
+  MODE: 'DEV',
 });
 
-platformBrowserDynamic().bootstrapModule(AppModule)
-  .catch(err => console.error(err));
+platformBrowserDynamic()
+  .bootstrapModule(AppModule)
+  .catch((err) => console.error(err));

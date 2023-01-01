@@ -13,16 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {CdkVirtualScrollViewport} from "@angular/cdk/scrolling";
-import {
-  Component, ElementRef, Inject, Input, ViewChild
-} from "@angular/core";
-import {MatSelectChange} from "@angular/material/select";
-import {Events} from "./events";
-import {UiData} from "./ui_data";
+import {CdkVirtualScrollViewport} from '@angular/cdk/scrolling';
+import {Component, ElementRef, Inject, Input, ViewChild} from '@angular/core';
+import {MatSelectChange} from '@angular/material/select';
+import {Events} from './events';
+import {UiData} from './ui_data';
 
 @Component({
-  selector: "viewer-protolog",
+  selector: 'viewer-protolog',
   template: `
     <div class="card-grid container">
       <div class="filters">
@@ -30,9 +28,8 @@ import {UiData} from "./ui_data";
           <mat-form-field appearance="fill">
             <mat-label>Log level</mat-label>
             <mat-select (selectionChange)="onLogLevelsChange($event)" multiple>
-              <mat-option *ngFor="let level of uiData.allLogLevels"
-                          [value]="level">
-                {{level}}
+              <mat-option *ngFor="let level of uiData.allLogLevels" [value]="level">
+                {{ level }}
               </mat-option>
             </mat-select>
           </mat-form-field>
@@ -41,9 +38,8 @@ import {UiData} from "./ui_data";
           <mat-form-field appearance="fill">
             <mat-label>Tags</mat-label>
             <mat-select (selectionChange)="onTagsChange($event)" multiple>
-              <mat-option *ngFor="let tag of uiData.allTags"
-                          [value]="tag">
-                {{tag}}
+              <mat-option *ngFor="let tag of uiData.allTags" [value]="tag">
+                {{ tag }}
               </mat-option>
             </mat-select>
           </mat-form-field>
@@ -52,9 +48,8 @@ import {UiData} from "./ui_data";
           <mat-form-field appearance="fill">
             <mat-label>Source files</mat-label>
             <mat-select (selectionChange)="onSourceFilesChange($event)" multiple>
-              <mat-option *ngFor="let file of uiData.allSourceFiles"
-                          [value]="file">
-                {{file}}
+              <mat-option *ngFor="let file of uiData.allSourceFiles" [value]="file">
+                {{ file }}
               </mat-option>
             </mat-select>
           </mat-form-field>
@@ -62,17 +57,30 @@ import {UiData} from "./ui_data";
         <div class="text">
           <mat-form-field appearance="fill">
             <mat-label>Search text</mat-label>
-            <input matInput [(ngModel)]="searchString" (input)="onSearchStringChange()">
+            <input matInput [(ngModel)]="searchString" (input)="onSearchStringChange()" />
           </mat-form-field>
         </div>
       </div>
       <cdk-virtual-scroll-viewport itemSize="16" class="scroll-messages">
-        <div *cdkVirtualFor="let message of uiData.messages; let i = index;" class="message" [class.current-message]="isCurrentMessage(i)">
-          <div class="time"><span class="mat-body-1">{{message.time}}</span></div>
-          <div class="log-level"><span class="mat-body-1">{{message.level}}</span></div>
-          <div class="tag"><span class="mat-body-1">{{message.tag}}</span></div>
-          <div class="source-file"><span class="mat-body-1">{{message.at}}</span></div>
-          <div class="text"><span class="mat-body-1">{{message.text}}</span></div>
+        <div
+          *cdkVirtualFor="let message of uiData.messages; let i = index"
+          class="message"
+          [class.current-message]="isCurrentMessage(i)">
+          <div class="time">
+            <span class="mat-body-1">{{ message.time }}</span>
+          </div>
+          <div class="log-level">
+            <span class="mat-body-1">{{ message.level }}</span>
+          </div>
+          <div class="tag">
+            <span class="mat-body-1">{{ message.tag }}</span>
+          </div>
+          <div class="source-file">
+            <span class="mat-body-1">{{ message.at }}</span>
+          </div>
+          <div class="text">
+            <span class="mat-body-1">{{ message.text }}</span>
+          </div>
         </div>
       </cdk-virtual-scroll-viewport>
     </div>
@@ -104,7 +112,8 @@ import {UiData} from "./ui_data";
       }
 
       .message.current-message {
-        background-color: #365179;color: white;
+        background-color: #365179;
+        color: white;
       }
 
       .time {
@@ -143,7 +152,7 @@ import {UiData} from "./ui_data";
         width: 100%;
       }
     `,
-  ]
+  ],
 })
 export class ViewerProtologComponent {
   constructor(@Inject(ElementRef) elementRef: ElementRef) {
@@ -179,18 +188,16 @@ export class ViewerProtologComponent {
   }
 
   private emitEvent(event: string, data: any) {
-    const customEvent = new CustomEvent(
-      event,
-      {
-        bubbles: true,
-        detail: data
-      });
+    const customEvent = new CustomEvent(event, {
+      bubbles: true,
+      detail: data,
+    });
     this.elementRef.nativeElement.dispatchEvent(customEvent);
   }
 
   @ViewChild(CdkVirtualScrollViewport) scrollComponent!: CdkVirtualScrollViewport;
 
   public uiData: UiData = UiData.EMPTY;
-  private searchString = "";
+  private searchString = '';
   private elementRef: ElementRef;
 }

@@ -13,14 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, Inject, Input, Output, ElementRef, EventEmitter, ChangeDetectionStrategy} from "@angular/core";
-import { PersistentStore } from "common/utils/persistent_store";
-import { nodeStyles, treeNodeDataViewStyles } from "viewers/components/styles/node.styles";
-import { UiTreeUtils, UiTreeNode, HierarchyTreeNode } from "viewers/common/ui_tree_utils";
-import { TraceType } from "common/trace/trace_type";
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  EventEmitter,
+  Inject,
+  Input,
+  Output,
+} from '@angular/core';
+import {TraceType} from 'common/trace/trace_type';
+import {PersistentStore} from 'common/utils/persistent_store';
+import {HierarchyTreeNode, UiTreeNode, UiTreeUtils} from 'viewers/common/ui_tree_utils';
+import {nodeStyles, treeNodeDataViewStyles} from 'viewers/components/styles/node.styles';
 
 @Component({
-  selector: "tree-view",
+  selector: 'tree-view',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <tree-node
@@ -43,35 +51,36 @@ import { TraceType } from "common/trace/trace_type";
       (toggleTreeChange)="toggleTree()"
       (click)="onNodeClick($event)"
       (expandTreeChange)="expandTree()"
-      (pinNodeChange)="propagateNewPinnedItem($event)"
-    ></tree-node>
+      (pinNodeChange)="propagateNewPinnedItem($event)"></tree-node>
 
-    <div *ngIf="hasChildren()" class="children" [class.flattened]="isFlattened" [hidden]="!isCollapsed()">
+    <div
+      *ngIf="hasChildren()"
+      class="children"
+      [class.flattened]="isFlattened"
+      [hidden]="!isCollapsed()">
       <tree-view
-          *ngFor="let child of children(); trackBy:childTrackById"
-          class="childrenTree"
-          [item]="child"
-          [store]="store"
-          [showNode]="showNode"
-          [isLeaf]="isLeaf"
-          [dependencies]="dependencies"
-          [isFlattened]="isFlattened"
-          [useGlobalCollapsedState]="useGlobalCollapsedState"
-          [initialDepth]="initialDepth + 1"
-          [highlightedItems]="highlightedItems"
-          [pinnedItems]="pinnedItems"
-          (highlightedItemChange)="propagateNewHighlightedItem($event)"
-          (pinnedItemChange)="propagateNewPinnedItem($event)"
-          (selectedTreeChange)="propagateNewSelectedTree($event)"
-          [itemsClickable]="itemsClickable"
-          (hoverStart)="childHover = true"
-          (hoverEnd)="childHover = false"
-        ></tree-view>
+        *ngFor="let child of children(); trackBy: childTrackById"
+        class="childrenTree"
+        [item]="child"
+        [store]="store"
+        [showNode]="showNode"
+        [isLeaf]="isLeaf"
+        [dependencies]="dependencies"
+        [isFlattened]="isFlattened"
+        [useGlobalCollapsedState]="useGlobalCollapsedState"
+        [initialDepth]="initialDepth + 1"
+        [highlightedItems]="highlightedItems"
+        [pinnedItems]="pinnedItems"
+        (highlightedItemChange)="propagateNewHighlightedItem($event)"
+        (pinnedItemChange)="propagateNewPinnedItem($event)"
+        (selectedTreeChange)="propagateNewSelectedTree($event)"
+        [itemsClickable]="itemsClickable"
+        (hoverStart)="childHover = true"
+        (hoverEnd)="childHover = false"></tree-view>
     </div>
   `,
-  styles: [nodeStyles, treeNodeDataViewStyles]
+  styles: [nodeStyles, treeNodeDataViewStyles],
 })
-
 export class TreeComponent {
   diffClass = UiTreeUtils.diffClass;
   isHighlighted = UiTreeUtils.isHighlighted;
@@ -112,21 +121,18 @@ export class TreeComponent {
     if (child.stableId !== undefined) {
       return child.stableId;
     }
-    if (!(child instanceof HierarchyTreeNode)
-      && typeof child.propertyKey === "string") {
+    if (!(child instanceof HierarchyTreeNode) && typeof child.propertyKey === 'string') {
       return child.propertyKey;
     }
 
-    throw Error("Missing stable id or property key on node");
+    throw Error('Missing stable id or property key on node');
   }
 
-  constructor(
-    @Inject(ElementRef) public elementRef: ElementRef
-  ) {
-    this.nodeElement = elementRef.nativeElement.querySelector(".node");
-    this.nodeElement?.addEventListener("mousedown", this.nodeMouseDownEventListener);
-    this.nodeElement?.addEventListener("mouseenter", this.nodeMouseEnterEventListener);
-    this.nodeElement?.addEventListener("mouseleave", this.nodeMouseLeaveEventListener);
+  constructor(@Inject(ElementRef) public elementRef: ElementRef) {
+    this.nodeElement = elementRef.nativeElement.querySelector('.node');
+    this.nodeElement?.addEventListener('mousedown', this.nodeMouseDownEventListener);
+    this.nodeElement?.addEventListener('mouseenter', this.nodeMouseEnterEventListener);
+    this.nodeElement?.addEventListener('mouseleave', this.nodeMouseLeaveEventListener);
   }
 
   ngOnInit() {
@@ -136,20 +142,23 @@ export class TreeComponent {
   }
 
   ngOnChanges() {
-    if (this.item instanceof HierarchyTreeNode && UiTreeUtils.isHighlighted(this.item, this.highlightedItems)) {
+    if (
+      this.item instanceof HierarchyTreeNode &&
+      UiTreeUtils.isHighlighted(this.item, this.highlightedItems)
+    ) {
       this.selectedTreeChange.emit(this.item);
     }
   }
 
   ngOnDestroy() {
-    this.nodeElement?.removeEventListener("mousedown", this.nodeMouseDownEventListener);
-    this.nodeElement?.removeEventListener("mouseenter", this.nodeMouseEnterEventListener);
-    this.nodeElement?.removeEventListener("mouseleave", this.nodeMouseLeaveEventListener);
+    this.nodeElement?.removeEventListener('mousedown', this.nodeMouseDownEventListener);
+    this.nodeElement?.removeEventListener('mouseenter', this.nodeMouseEnterEventListener);
+    this.nodeElement?.removeEventListener('mouseleave', this.nodeMouseLeaveEventListener);
   }
 
   public onNodeClick(event: MouseEvent) {
     event.preventDefault();
-    if (window.getSelection()?.type === "range") {
+    if (window.getSelection()?.type === 'range') {
       return;
     }
 
@@ -163,10 +172,10 @@ export class TreeComponent {
   }
 
   public nodeOffsetStyle() {
-    const offset = this.levelOffset * (this.initialDepth) + "px";
+    const offset = this.levelOffset * this.initialDepth + 'px';
 
     return {
-      marginLeft: "-" + offset,
+      marginLeft: '-' + offset,
       paddingLeft: offset,
     };
   }
@@ -179,7 +188,7 @@ export class TreeComponent {
 
   public isPinned() {
     if (this.item instanceof HierarchyTreeNode) {
-      return this.pinnedItems?.map(item => `${item.stableId}`).includes(`${this.item.stableId}`);
+      return this.pinnedItems?.map((item) => `${item.stableId}`).includes(`${this.item.stableId}`);
     }
     return false;
   }
@@ -214,8 +223,10 @@ export class TreeComponent {
     }
 
     if (this.useGlobalCollapsedState) {
-      return this.store.get(`collapsedState.item.${this.dependencies}.${this.item?.stableId}`)==="true"
-        ?? this.isCollapsedByDefault;
+      return (
+        this.store.get(`collapsedState.item.${this.dependencies}.${this.item?.stableId}`) ===
+          'true' ?? this.isCollapsedByDefault
+      );
     }
     return this.localCollapsedState;
   }
@@ -228,19 +239,23 @@ export class TreeComponent {
     if (!this.item) {
       return false;
     }
-    const isParentEntryInFlatView = UiTreeUtils.isParentNode(this.item.kind ?? "") && this.isFlattened;
+    const isParentEntryInFlatView =
+      UiTreeUtils.isParentNode(this.item.kind ?? '') && this.isFlattened;
     return (!this.isFlattened || isParentEntryInFlatView) && !this.isLeaf(this.item);
   }
 
   private setCollapseValue(isCollapsed: boolean) {
     if (this.useGlobalCollapsedState) {
-      this.store.add(`collapsedState.item.${this.dependencies}.${this.item?.stableId}`, `${isCollapsed}`);
+      this.store.add(
+        `collapsedState.item.${this.dependencies}.${this.item?.stableId}`,
+        `${isCollapsed}`
+      );
     } else {
       this.localCollapsedState = isCollapsed;
     }
   }
 
-  private nodeMouseDownEventListener = (event:MouseEvent) => {
+  private nodeMouseDownEventListener = (event: MouseEvent) => {
     if (event.detail > 1) {
       event.preventDefault();
       return false;

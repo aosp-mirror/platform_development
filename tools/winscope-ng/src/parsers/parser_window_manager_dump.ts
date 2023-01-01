@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import {Timestamp, TimestampType} from "common/trace/timestamp";
-import {TraceFile} from "common/trace/trace";
-import {TraceType} from "common/trace/trace_type";
-import {Parser} from "./parser";
-import {WindowManagerServiceDumpProto} from "./proto_types";
-import {WindowManagerState} from "common/trace/flickerlib/windows/WindowManagerState";
+import {WindowManagerState} from 'common/trace/flickerlib/windows/WindowManagerState';
+import {Timestamp, TimestampType} from 'common/trace/timestamp';
+import {TraceFile} from 'common/trace/trace';
+import {TraceType} from 'common/trace/trace_type';
+import {Parser} from './parser';
+import {WindowManagerServiceDumpProto} from './proto_types';
 
 class ParserWindowManagerDump extends Parser {
   constructor(trace: TraceFile) {
@@ -47,14 +47,18 @@ class ParserWindowManagerDump extends Parser {
     return [entryProto];
   }
 
-  override getTimestamp(type: TimestampType, entryProto: any): undefined|Timestamp {
+  override getTimestamp(type: TimestampType, entryProto: any): undefined | Timestamp {
     if (type !== TimestampType.ELAPSED) {
       return undefined;
     }
     return new Timestamp(TimestampType.ELAPSED, 0n);
   }
 
-  override processDecodedEntry(index: number, timestampType: TimestampType, entryProto: any): WindowManagerState {
+  override processDecodedEntry(
+    index: number,
+    timestampType: TimestampType,
+    entryProto: any
+  ): WindowManagerState {
     return WindowManagerState.fromProto(entryProto);
   }
 }

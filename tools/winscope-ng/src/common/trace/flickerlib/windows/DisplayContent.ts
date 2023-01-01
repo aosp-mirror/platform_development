@@ -14,74 +14,78 @@
  * limitations under the License.
  */
 
-import { shortenName } from '../mixin'
-import { toInsets, toRect, DisplayContent, DisplayCutout, PlatformConsts, Rect } from "../common"
-import WindowContainer from "./WindowContainer"
+import {DisplayContent, DisplayCutout, PlatformConsts, Rect, toInsets, toRect} from '../common';
+import {shortenName} from '../mixin';
+import WindowContainer from './WindowContainer';
 
-DisplayContent.fromProto = function (proto: any, isActivityInTree: Boolean, nextSeq: () => number): DisplayContent {
-    if (proto == null) {
-        return null;
-    } else {
-        const windowContainer = WindowContainer.fromProto(
-            /* proto */ proto.rootDisplayArea.windowContainer,
-            /* protoChildren */ proto.rootDisplayArea.windowContainer?.children ?? [],
-            /* isActivityInTree */ isActivityInTree,
-            /* computedZ */ nextSeq,
-            /* nameOverride */ proto.displayInfo?.name ?? null,
-        );
-        const displayRectWidth = proto.displayInfo?.logicalWidth ?? 0;
-        const displayRectHeight = proto.displayInfo?.logicalHeight ?? 0;
-        const appRectWidth = proto.displayInfo?.appWidth ?? 0;
-        const appRectHeight = proto.displayInfo?.appHeight ?? 0;
-        const defaultBounds = proto.pinnedStackController?.defaultBounds ?? null;
-        const movementBounds = proto.pinnedStackController?.movementBounds ?? null;
+DisplayContent.fromProto = function (
+  proto: any,
+  isActivityInTree: Boolean,
+  nextSeq: () => number
+): DisplayContent {
+  if (proto == null) {
+    return null;
+  } else {
+    const windowContainer = WindowContainer.fromProto(
+      /* proto */ proto.rootDisplayArea.windowContainer,
+      /* protoChildren */ proto.rootDisplayArea.windowContainer?.children ?? [],
+      /* isActivityInTree */ isActivityInTree,
+      /* computedZ */ nextSeq,
+      /* nameOverride */ proto.displayInfo?.name ?? null
+    );
+    const displayRectWidth = proto.displayInfo?.logicalWidth ?? 0;
+    const displayRectHeight = proto.displayInfo?.logicalHeight ?? 0;
+    const appRectWidth = proto.displayInfo?.appWidth ?? 0;
+    const appRectHeight = proto.displayInfo?.appHeight ?? 0;
+    const defaultBounds = proto.pinnedStackController?.defaultBounds ?? null;
+    const movementBounds = proto.pinnedStackController?.movementBounds ?? null;
 
-        const entry = new DisplayContent(
-            proto.id,
-            proto.focusedRootTaskId,
-            proto.resumedActivity?.title ?? "",
-            proto.singleTaskInstance,
-            toRect(defaultBounds),
-            toRect(movementBounds),
-            new Rect(0, 0, displayRectWidth, displayRectHeight),
-            new Rect(0, 0, appRectWidth, appRectHeight),
-            proto.dpi,
-            proto.displayInfo?.flags ?? 0,
-            toRect(proto.displayFrames?.stableBounds),
-            proto.surfaceSize,
-            proto.focusedApp,
-            proto.appTransition?.lastUsedAppTransition ?? "",
-            proto.appTransition?.appTransitionState ?? "",
-            PlatformConsts.Rotation.Companion.getByValue(proto.displayRotation?.rotation ?? 0),
-            proto.displayRotation?.lastOrientation ?? 0,
-            createDisplayCutout(proto.displayInfo?.cutout),
-            windowContainer
-        );
+    const entry = new DisplayContent(
+      proto.id,
+      proto.focusedRootTaskId,
+      proto.resumedActivity?.title ?? '',
+      proto.singleTaskInstance,
+      toRect(defaultBounds),
+      toRect(movementBounds),
+      new Rect(0, 0, displayRectWidth, displayRectHeight),
+      new Rect(0, 0, appRectWidth, appRectHeight),
+      proto.dpi,
+      proto.displayInfo?.flags ?? 0,
+      toRect(proto.displayFrames?.stableBounds),
+      proto.surfaceSize,
+      proto.focusedApp,
+      proto.appTransition?.lastUsedAppTransition ?? '',
+      proto.appTransition?.appTransitionState ?? '',
+      PlatformConsts.Rotation.Companion.getByValue(proto.displayRotation?.rotation ?? 0),
+      proto.displayRotation?.lastOrientation ?? 0,
+      createDisplayCutout(proto.displayInfo?.cutout),
+      windowContainer
+    );
 
-        addAttributes(entry, proto);
-        return entry;
-    }
-}
+    addAttributes(entry, proto);
+    return entry;
+  }
+};
 
 function createDisplayCutout(proto: any | null): DisplayCutout | null {
-    if(proto == null) {
-        return null;
-    } else {
-        return new DisplayCutout(
-            toInsets(proto?.insets),
-            toRect(proto?.boundLeft),
-            toRect(proto?.boundTop),
-            toRect(proto?.boundRight),
-            toRect(proto?.boundBottom),
-            toInsets(proto?.waterfallInsets)
-        );
-    }
+  if (proto == null) {
+    return null;
+  } else {
+    return new DisplayCutout(
+      toInsets(proto?.insets),
+      toRect(proto?.boundLeft),
+      toRect(proto?.boundTop),
+      toRect(proto?.boundRight),
+      toRect(proto?.boundBottom),
+      toInsets(proto?.waterfallInsets)
+    );
+  }
 }
 
 function addAttributes(entry: DisplayContent, proto: any) {
-    entry.proto = proto;
-    entry.kind = entry.constructor.name;
-    entry.shortName = shortenName(entry.name);
+  entry.proto = proto;
+  entry.kind = entry.constructor.name;
+  entry.shortName = shortenName(entry.name);
 }
 
 export default DisplayContent;

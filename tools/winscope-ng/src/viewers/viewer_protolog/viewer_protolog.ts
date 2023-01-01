@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceType} from "common/trace/trace_type";
-import {View, Viewer, ViewType} from "viewers/viewer";
-import {Presenter} from "./presenter";
-import {Events} from "./events";
-import {UiData} from "./ui_data";
+import {TraceType} from 'common/trace/trace_type';
+import {View, Viewer, ViewType} from 'viewers/viewer';
+import {Events} from './events';
+import {Presenter} from './presenter';
+import {UiData} from './ui_data';
 
 class ViewerProtoLog implements Viewer {
   constructor() {
-    this.htmlElement = document.createElement("viewer-protolog");
+    this.htmlElement = document.createElement('viewer-protolog');
 
     this.presenter = new Presenter((data: UiData) => {
       (this.htmlElement as any).inputData = data;
@@ -46,7 +46,7 @@ class ViewerProtoLog implements Viewer {
   }
 
   public getViews(): View[] {
-    return [new View(ViewType.TAB, this.getDependencies(), this.htmlElement, "ProtoLog")];
+    return [new View(ViewType.TAB, this.getDependencies(), this.htmlElement, 'ProtoLog')];
   }
 
   public getDependencies(): TraceType[] {

@@ -14,33 +14,43 @@
  * limitations under the License.
  */
 
-import { Component, ElementRef, EventEmitter, HostListener, Input, Output, QueryList, ViewChild, ViewChildren } from "@angular/core";
-import { TimelineData } from "app/timeline_data";
-import { TRACE_INFO } from "app/trace_info";
-import { Timestamp } from "common/trace/timestamp";
-import { SingleTimelineComponent } from "./single_timeline.component";
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  HostListener,
+  Input,
+  Output,
+  QueryList,
+  ViewChild,
+  ViewChildren,
+} from '@angular/core';
+import {TimelineData} from 'app/timeline_data';
+import {TRACE_INFO} from 'app/trace_info';
+import {Timestamp} from 'common/trace/timestamp';
+import {SingleTimelineComponent} from './single_timeline.component';
 
 @Component({
-  selector: "expanded-timeline",
+  selector: 'expanded-timeline',
   template: `
     <div id="expanded-timeline-wrapper" #expandedTimelineWrapper>
       <div *ngFor="let timeline of this.data | keyvalue" class="timeline">
         <div class="icon-wrapper">
-          <mat-icon class="icon"
-                    [style]="{ color: TRACE_INFO[timeline.key].color }">
+          <mat-icon class="icon" [style]="{color: TRACE_INFO[timeline.key].color}">
             {{ TRACE_INFO[timeline.key].icon }}
           </mat-icon>
         </div>
         <!-- TODO: Timestamp variables are passed to single-timeline, but single-timeline takes bigint parameters. Why the heck is this working??? -->
         <single-timeline
-            [color]="TRACE_INFO[timeline.key].color"
-            [entries]="timeline.value"
-            [selected]="timelineData.getCurrentTimestampFor(timeline.key)?.timestamp?.getValueNs() ?? undefined"
-            [start]="start"
-            [end]="end"
-            (onTimestampChanged)="onTimestampChanged.emit($event)"
-            class="single-timeline"
-        ></single-timeline>
+          [color]="TRACE_INFO[timeline.key].color"
+          [entries]="timeline.value"
+          [selected]="
+            timelineData.getCurrentTimestampFor(timeline.key)?.timestamp?.getValueNs() ?? undefined
+          "
+          [start]="start"
+          [end]="end"
+          (onTimestampChanged)="onTimestampChanged.emit($event)"
+          class="single-timeline"></single-timeline>
         <div class="icon-wrapper">
           <mat-icon class="icon placeholder-icon"></mat-icon>
         </div>
@@ -71,57 +81,59 @@ import { SingleTimelineComponent } from "./single_timeline.component";
       </div> -->
     </div>
   `,
-  styles: [`
-    #expanded-timeline-wrapper {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      position: relative;
-    }
-    #pointer-overlay {
-      pointer-events:none;
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      display: flex;
-      align-items: stretch;
-    }
-    .timeline {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-    }
-    .timeline .single-timeline {
-      flex-grow: 1;
-    }
-    .selection-cursor {
-      flex-grow: 1;
-    }
-    .timeline {
-      border-bottom: 1px solid #F1F3F4;
-    }
-    .icon-wrapper {
-      background-color: #F1F3F4;
-      align-self: stretch;
-      display: flex;
-      justify-content: center;
-    }
-    .icon {
-      margin: 1rem;
-      align-self: center;
-    }
-    .units-row {
-      flex-grow: 1;
-      align-self: baseline;
-    }
-    .units-row .placeholder-icon {
-      visibility: hidden;
-    }
-  `]
+  styles: [
+    `
+      #expanded-timeline-wrapper {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        position: relative;
+      }
+      #pointer-overlay {
+        pointer-events: none;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        align-items: stretch;
+      }
+      .timeline {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+      }
+      .timeline .single-timeline {
+        flex-grow: 1;
+      }
+      .selection-cursor {
+        flex-grow: 1;
+      }
+      .timeline {
+        border-bottom: 1px solid #f1f3f4;
+      }
+      .icon-wrapper {
+        background-color: #f1f3f4;
+        align-self: stretch;
+        display: flex;
+        justify-content: center;
+      }
+      .icon {
+        margin: 1rem;
+        align-self: center;
+      }
+      .units-row {
+        flex-grow: 1;
+        align-self: baseline;
+      }
+      .units-row .placeholder-icon {
+        visibility: hidden;
+      }
+    `,
+  ],
 })
 export class ExpandedTimelineComponent {
   @Input() timelineData!: TimelineData;
@@ -129,8 +141,8 @@ export class ExpandedTimelineComponent {
 
   @Output() onTimestampChanged = new EventEmitter<Timestamp>();
 
-  @ViewChild("canvas", {static: false}) canvasRef!: ElementRef<HTMLCanvasElement>;
-  @ViewChild("expandedTimelineWrapper", {static: false}) warpperRef!: ElementRef;
+  @ViewChild('canvas', {static: false}) canvasRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('expandedTimelineWrapper', {static: false}) warpperRef!: ElementRef;
   @ViewChildren(SingleTimelineComponent) singleTimelines!: QueryList<SingleTimelineComponent>;
 
   TRACE_INFO = TRACE_INFO;
@@ -144,7 +156,9 @@ export class ExpandedTimelineComponent {
   }
 
   get sortedMergedTimestamps() {
-    return Array.from(this.data.values()).flatMap( it => it ).sort();
+    return Array.from(this.data.values())
+      .flatMap((it) => it)
+      .sort();
   }
 
   get start() {
@@ -155,7 +169,7 @@ export class ExpandedTimelineComponent {
     return this.timelineData.getSelectionRange().to;
   }
 
-  @HostListener("window:resize", ["$event"])
+  @HostListener('window:resize', ['$event'])
   onResize(event: Event) {
     this.resizeCanvases();
   }
@@ -167,15 +181,15 @@ export class ExpandedTimelineComponent {
     for (const timeline of this.singleTimelines) {
       timeline.canvas.width = 0;
       timeline.canvas.height = 0;
-      timeline.canvas.style.width = "auto";
-      timeline.canvas.style.height = "auto";
+      timeline.canvas.style.width = 'auto';
+      timeline.canvas.style.height = 'auto';
     }
 
     for (const timeline of this.singleTimelines) {
       timeline.initializeCanvas();
       timeline.canvas.height = 0;
-      timeline.canvas.style.width = "auto";
-      timeline.canvas.style.height = "auto";
+      timeline.canvas.style.width = 'auto';
+      timeline.canvas.style.height = 'auto';
     }
   }
 }

@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-import {browser, element, by} from "protractor";
-import {E2eTestUtils} from "./utils";
+import {browser, by, element} from 'protractor';
+import {E2eTestUtils} from './utils';
 
-describe("Upload traces", () => {
+describe('Upload traces', () => {
   beforeAll(async () => {
     await browser.manage().timeouts().implicitlyWait(5000);
   });
 
   beforeEach(async () => {
-    browser.get("file://" + E2eTestUtils.getProductionIndexHtmlPath());
+    browser.get('file://' + E2eTestUtils.getProductionIndexHtmlPath());
   });
 
-  it("can process bugreport", async () => {
-    await E2eTestUtils.uploadFixture("bugreports/bugreport_stripped.zip");
+  it('can process bugreport', async () => {
+    await E2eTestUtils.uploadFixture('bugreports/bugreport_stripped.zip');
     await checkHasLoadedTraces();
     expect(await areMessagesEmitted()).toBeTruthy();
     await checkEmitsUnsupportedFileFormatMessages();
@@ -38,37 +38,37 @@ describe("Upload traces", () => {
   });
 
   it("doesn't emit messages for valid trace file", async () => {
-    await E2eTestUtils.uploadFixture("traces/elapsed_and_real_timestamp/SurfaceFlinger.pb");
+    await E2eTestUtils.uploadFixture('traces/elapsed_and_real_timestamp/SurfaceFlinger.pb');
     expect(await areMessagesEmitted()).toBeFalsy();
   });
 
   const checkHasLoadedTraces = async () => {
-    const text = await element(by.css(".uploaded-files")).getText();
-    expect(text).toContain("wm_log.winscope (ProtoLog)");
-    expect(text).toContain("ime_trace_service.winscope (IME Service)");
-    expect(text).toContain("ime_trace_managerservice.winscope (IME Manager Service)");
-    expect(text).toContain("wm_trace.winscope (Window Manager)");
-    expect(text).toContain("layers_trace_from_transactions.winscope (Surface Flinger)");
-    expect(text).toContain("ime_trace_clients.winscope (IME Clients)");
-    expect(text).toContain("transactions_trace.winscope (Transactions)");
+    const text = await element(by.css('.uploaded-files')).getText();
+    expect(text).toContain('wm_log.winscope (ProtoLog)');
+    expect(text).toContain('ime_trace_service.winscope (IME Service)');
+    expect(text).toContain('ime_trace_managerservice.winscope (IME Manager Service)');
+    expect(text).toContain('wm_trace.winscope (Window Manager)');
+    expect(text).toContain('layers_trace_from_transactions.winscope (Surface Flinger)');
+    expect(text).toContain('ime_trace_clients.winscope (IME Clients)');
+    expect(text).toContain('transactions_trace.winscope (Transactions)');
   };
 
   const checkEmitsUnsupportedFileFormatMessages = async () => {
-    const text = await element(by.css("upload-snack-bar")).getText();
-    expect(text).toContain("unsupported file format");
+    const text = await element(by.css('upload-snack-bar')).getText();
+    expect(text).toContain('unsupported file format');
   };
 
   const checkEmitsOverriddenTracesMessages = async () => {
-    const text = await element(by.css("upload-snack-bar")).getText();
-    expect(text).toContain("overridden by another trace");
+    const text = await element(by.css('upload-snack-bar')).getText();
+    expect(text).toContain('overridden by another trace');
   };
 
   const areMessagesEmitted = async (): Promise<boolean> => {
-    return element(by.css("upload-snack-bar")).isPresent();
+    return element(by.css('upload-snack-bar')).isPresent();
   };
 
   const checkRendersSurfaceFlingerView = async () => {
-    const viewerPresent = await element(by.css("viewer-surface-flinger")).isPresent();
+    const viewerPresent = await element(by.css('viewer-surface-flinger')).isPresent();
     expect(viewerPresent).toBeTruthy();
   };
 });

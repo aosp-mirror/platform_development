@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TimeUtils} from "common/utils/time_utils";
-import configJson from "../../../../../../frameworks/base/data/etc/services.core.protolog.json";
-import { ElapsedTimestamp, RealTimestamp, TimestampType } from "./timestamp";
+import {TimeUtils} from 'common/utils/time_utils';
+import configJson from '../../../../../../frameworks/base/data/etc/services.core.protolog.json';
+import {ElapsedTimestamp, RealTimestamp, TimestampType} from './timestamp';
 
 class ProtoLogTraceEntry {
-  constructor(public messages: LogMessage[], public currentMessageIndex: number) {
-  }
+  constructor(public messages: LogMessage[], public currentMessageIndex: number) {}
 }
 
 class LogMessage {
@@ -30,7 +29,14 @@ class LogMessage {
   at: string;
   timestamp: bigint;
 
-  constructor(text: string, time: string, tag: string, level: string, at: string, timestamp: bigint) {
+  constructor(
+    text: string,
+    time: string,
+    tag: string,
+    level: string,
+    at: string,
+    timestamp: bigint
+  ) {
     this.text = text;
     this.time = time;
     this.tag = tag;
@@ -41,18 +47,30 @@ class LogMessage {
 }
 
 class FormattedLogMessage extends LogMessage {
-  constructor(proto: any, timestampType: TimestampType, realToElapsedTimeOffsetNs: bigint|undefined) {
-    const text = (
+  constructor(
+    proto: any,
+    timestampType: TimestampType,
+    realToElapsedTimeOffsetNs: bigint | undefined
+  ) {
+    const text =
       proto.messageHash.toString() +
-      " - [" + proto.strParams.toString() +
-      "] [" + proto.sint64Params.toString() +
-      "] [" + proto.doubleParams.toString() +
-      "] [" + proto.booleanParams.toString() + "]"
-    );
+      ' - [' +
+      proto.strParams.toString() +
+      '] [' +
+      proto.sint64Params.toString() +
+      '] [' +
+      proto.doubleParams.toString() +
+      '] [' +
+      proto.booleanParams.toString() +
+      ']';
 
     let time: string;
     let timestamp: bigint;
-    if (timestampType === TimestampType.REAL && realToElapsedTimeOffsetNs !== undefined && realToElapsedTimeOffsetNs != 0n) {
+    if (
+      timestampType === TimestampType.REAL &&
+      realToElapsedTimeOffsetNs !== undefined &&
+      realToElapsedTimeOffsetNs != 0n
+    ) {
       timestamp = realToElapsedTimeOffsetNs + BigInt(proto.elapsedRealtimeNanos);
       time = TimeUtils.format(new RealTimestamp(timestamp));
     } else {
@@ -60,23 +78,28 @@ class FormattedLogMessage extends LogMessage {
       time = TimeUtils.format(new ElapsedTimestamp(timestamp));
     }
 
-    super(
-      text,
-      time,
-      "INVALID",
-      "invalid",
-      "",
-      timestamp);
+    super(text, time, 'INVALID', 'invalid', '', timestamp);
   }
 }
 
 class UnformattedLogMessage extends LogMessage {
-  constructor(proto: any, timestampType: TimestampType, realToElapsedTimeOffsetNs: bigint|undefined, message: any) {
+  constructor(
+    proto: any,
+    timestampType: TimestampType,
+    realToElapsedTimeOffsetNs: bigint | undefined,
+    message: any
+  ) {
     let time: string;
     let timestamp: bigint;
-    if (timestampType === TimestampType.REAL && realToElapsedTimeOffsetNs !== undefined && realToElapsedTimeOffsetNs != 0n) {
+    if (
+      timestampType === TimestampType.REAL &&
+      realToElapsedTimeOffsetNs !== undefined &&
+      realToElapsedTimeOffsetNs != 0n
+    ) {
       timestamp = realToElapsedTimeOffsetNs + BigInt(proto.elapsedRealtimeNanos);
-      time = TimeUtils.format(new RealTimestamp(realToElapsedTimeOffsetNs + BigInt(proto.elapsedRealtimeNanos)));
+      time = TimeUtils.format(
+        new RealTimestamp(realToElapsedTimeOffsetNs + BigInt(proto.elapsedRealtimeNanos))
+      );
     } else {
       timestamp = BigInt(proto.elapsedRealtimeNanos);
       time = TimeUtils.format(new ElapsedTimestamp(timestamp));
@@ -94,7 +117,7 @@ class UnformattedLogMessage extends LogMessage {
 }
 
 function formatText(messageFormat: any, data: any) {
-  let out = "";
+  let out = '';
 
   const strParams: string[] = data.strParams;
   let strParamsIdx = 0;
@@ -105,44 +128,43 @@ function formatText(messageFormat: any, data: any) {
   const booleanParams: number[] = data.booleanParams;
   let booleanParamsIdx = 0;
 
-  for (let i = 0; i < messageFormat.length;) {
-    if (messageFormat[i] == "%") {
+  for (let i = 0; i < messageFormat.length; ) {
+    if (messageFormat[i] == '%') {
       if (i + 1 >= messageFormat.length) {
         // Should never happen - protologtool checks for that
-        throw new Error("Invalid format string");
+        throw new Error('Invalid format string');
       }
       switch (messageFormat[i + 1]) {
-      case "%":
-        out += "%";
-        break;
-      case "d":
-        out += getParam(sint64Params, sint64ParamsIdx++).toString(10);
-        break;
-      case "o":
-        out += getParam(sint64Params, sint64ParamsIdx++).toString(8);
-        break;
-      case "x":
-        out += getParam(sint64Params, sint64ParamsIdx++).toString(16);
-        break;
-      case "f":
-        out += getParam(doubleParams, doubleParamsIdx++).toFixed(6);
-        break;
-      case "e":
-        out += getParam(doubleParams, doubleParamsIdx++).toExponential();
-        break;
-      case "g":
-        out += getParam(doubleParams, doubleParamsIdx++).toString();
-        break;
-      case "s":
-        out += getParam(strParams, strParamsIdx++);
-        break;
-      case "b":
-        out += getParam(booleanParams, booleanParamsIdx++).toString();
-        break;
-      default:
-        // Should never happen - protologtool checks for that
-        throw new Error("Invalid format string conversion: " +
-            messageFormat[i + 1]);
+        case '%':
+          out += '%';
+          break;
+        case 'd':
+          out += getParam(sint64Params, sint64ParamsIdx++).toString(10);
+          break;
+        case 'o':
+          out += getParam(sint64Params, sint64ParamsIdx++).toString(8);
+          break;
+        case 'x':
+          out += getParam(sint64Params, sint64ParamsIdx++).toString(16);
+          break;
+        case 'f':
+          out += getParam(doubleParams, doubleParamsIdx++).toFixed(6);
+          break;
+        case 'e':
+          out += getParam(doubleParams, doubleParamsIdx++).toExponential();
+          break;
+        case 'g':
+          out += getParam(doubleParams, doubleParamsIdx++).toString();
+          break;
+        case 's':
+          out += getParam(strParams, strParamsIdx++);
+          break;
+        case 'b':
+          out += getParam(booleanParams, booleanParamsIdx++).toString();
+          break;
+        default:
+          // Should never happen - protologtool checks for that
+          throw new Error('Invalid format string conversion: ' + messageFormat[i + 1]);
       }
       i += 2;
     } else {
@@ -155,7 +177,7 @@ function formatText(messageFormat: any, data: any) {
 
 function getParam<T>(arr: T[], idx: number): T {
   if (arr.length <= idx) {
-    throw new Error("No param for format string conversion");
+    throw new Error('No param for format string conversion');
   }
   return arr[idx];
 }

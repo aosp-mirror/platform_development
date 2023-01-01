@@ -13,20 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ComponentFixture, TestBed} from "@angular/core/testing";
-import { CoordinatesTableComponent } from "./coordinates_table.component";
+import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {CoordinatesTableComponent} from './coordinates_table.component';
 
-describe("CoordinatesTableComponent", () => {
+describe('CoordinatesTableComponent', () => {
   let fixture: ComponentFixture<CoordinatesTableComponent>;
   let component: CoordinatesTableComponent;
   let htmlElement: HTMLElement;
 
   beforeAll(async () => {
     await TestBed.configureTestingModule({
-      declarations: [
-        CoordinatesTableComponent
-      ],
-      schemas: []
+      declarations: [CoordinatesTableComponent],
+      schemas: [],
     }).compileComponents();
   });
 
@@ -36,7 +34,7 @@ describe("CoordinatesTableComponent", () => {
     htmlElement = fixture.nativeElement;
   });
 
-  it("can be created", () => {
+  it('can be created', () => {
     expect(component).toBeTruthy();
   });
 });

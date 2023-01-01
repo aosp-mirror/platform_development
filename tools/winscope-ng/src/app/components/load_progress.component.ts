@@ -14,26 +14,25 @@
  * limitations under the License.
  */
 
-import {Component, Input} from "@angular/core";
+import {Component, Input} from '@angular/core';
 
 @Component({
-  selector: "load-progress",
+  selector: 'load-progress',
   template: `
     <div class="container-progress">
       <p class="mat-body-3">
-        <mat-icon fontIcon="sync">
-        </mat-icon>
+        <mat-icon fontIcon="sync"> </mat-icon>
       </p>
 
-      <mat-progress-bar *ngIf="progressPercentage === undefined"
-                        mode="indeterminate">
+      <mat-progress-bar *ngIf="progressPercentage === undefined" mode="indeterminate">
       </mat-progress-bar>
-      <mat-progress-bar *ngIf="progressPercentage !== undefined"
-                        mode="determinate"
-                        [value]="progressPercentage">
+      <mat-progress-bar
+        *ngIf="progressPercentage !== undefined"
+        mode="determinate"
+        [value]="progressPercentage">
       </mat-progress-bar>
 
-      <p class="mat-body-1">{{message}}</p>
+      <p class="mat-body-1">{{ message }}</p>
     </div>
   `,
   styles: [
@@ -60,10 +59,10 @@ import {Component, Input} from "@angular/core";
       mat-card-content {
         flex-grow: 1;
       }
-    `
-  ]
+    `,
+  ],
 })
 export class LoadProgressComponent {
   @Input() progressPercentage?: number;
-  @Input() message = "Loading...";
+  @Input() message = 'Loading...';
 }

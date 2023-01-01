@@ -13,28 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { CUSTOM_ELEMENTS_SCHEMA } from "@angular/core";
-import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from "@angular/core/testing";
-import {MatCardModule} from "@angular/material/card";
-import {ViewerScreenRecordingComponent} from "./viewer_screen_recording.component";
+import {CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
+import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {MatCardModule} from '@angular/material/card';
+import {ViewerScreenRecordingComponent} from './viewer_screen_recording.component';
 
-describe("ViewerScreenRecordingComponent", () => {
+describe('ViewerScreenRecordingComponent', () => {
   let fixture: ComponentFixture<ViewerScreenRecordingComponent>;
   let component: ViewerScreenRecordingComponent;
   let htmlElement: HTMLElement;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      providers: [
-        { provide: ComponentFixtureAutoDetect, useValue: true }
-      ],
-      imports: [
-        MatCardModule,
-      ],
-      declarations: [
-        ViewerScreenRecordingComponent,
-      ],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA]
+      providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
+      imports: [MatCardModule],
+      declarations: [ViewerScreenRecordingComponent],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ViewerScreenRecordingComponent);
@@ -44,23 +38,23 @@ describe("ViewerScreenRecordingComponent", () => {
     fixture.detectChanges();
   });
 
-  it("can be created", () => {
+  it('can be created', () => {
     expect(component).toBeTruthy();
   });
 
-  it("can be minimized and maximized", () => {
-    const buttonMinimize = htmlElement.querySelector(".button-minimize");
-    const videoContainer = htmlElement.querySelector(".video-container") as HTMLElement;
+  it('can be minimized and maximized', () => {
+    const buttonMinimize = htmlElement.querySelector('.button-minimize');
+    const videoContainer = htmlElement.querySelector('.video-container') as HTMLElement;
     expect(buttonMinimize).toBeTruthy();
     expect(videoContainer).toBeTruthy();
-    expect(videoContainer!.style.height).toEqual("");
+    expect(videoContainer!.style.height).toEqual('');
 
-    buttonMinimize!.dispatchEvent(new Event("click"));
+    buttonMinimize!.dispatchEvent(new Event('click'));
     fixture.detectChanges();
-    expect(videoContainer!.style.height).toEqual("0px");
+    expect(videoContainer!.style.height).toEqual('0px');
 
-    buttonMinimize!.dispatchEvent(new Event("click"));
+    buttonMinimize!.dispatchEvent(new Event('click'));
     fixture.detectChanges();
-    expect(videoContainer!.style.height).toEqual("");
+    expect(videoContainer!.style.height).toEqual('');
   });
 });

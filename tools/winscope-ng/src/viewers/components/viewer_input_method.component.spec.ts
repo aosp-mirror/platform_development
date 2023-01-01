@@ -13,35 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ComponentFixture, TestBed} from "@angular/core/testing";
-import { ViewerInputMethodComponent } from "./viewer_input_method.component";
-import { HierarchyComponent } from "viewers/components/hierarchy.component";
-import { PropertiesComponent } from "viewers/components/properties.component";
-import { MatDividerModule } from "@angular/material/divider";
-import { MatIconModule } from "@angular/material/icon";
-import { ComponentFixtureAutoDetect } from "@angular/core/testing";
-import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from "@angular/core";
+import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
+import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {MatDividerModule} from '@angular/material/divider';
+import {MatIconModule} from '@angular/material/icon';
+import {HierarchyComponent} from 'viewers/components/hierarchy.component';
+import {PropertiesComponent} from 'viewers/components/properties.component';
+import {ViewerInputMethodComponent} from './viewer_input_method.component';
 
-describe("ViewerInputMethodComponent", () => {
+describe('ViewerInputMethodComponent', () => {
   let fixture: ComponentFixture<ViewerInputMethodComponent>;
   let component: ViewerInputMethodComponent;
   let htmlElement: HTMLElement;
 
   beforeAll(async () => {
     await TestBed.configureTestingModule({
-      providers: [
-        { provide: ComponentFixtureAutoDetect, useValue: true }
-      ],
-      imports: [
-        MatIconModule,
-        MatDividerModule
-      ],
-      declarations: [
-        ViewerInputMethodComponent,
-        HierarchyComponent,
-        PropertiesComponent,
-      ],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA]
+      providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
+      imports: [MatIconModule, MatDividerModule],
+      declarations: [ViewerInputMethodComponent, HierarchyComponent, PropertiesComponent],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA],
     }).compileComponents();
   });
 
@@ -51,17 +41,17 @@ describe("ViewerInputMethodComponent", () => {
     htmlElement = fixture.nativeElement;
   });
 
-  it("can be created", () => {
+  it('can be created', () => {
     expect(component).toBeTruthy();
   });
 
-  it("creates hierarchy view", () => {
-    const hierarchyView = htmlElement.querySelector(".hierarchy-view");
+  it('creates hierarchy view', () => {
+    const hierarchyView = htmlElement.querySelector('.hierarchy-view');
     expect(hierarchyView).toBeTruthy();
   });
 
-  it("creates properties view", () => {
-    const propertiesView = htmlElement.querySelector(".properties-view");
+  it('creates properties view', () => {
+    const propertiesView = htmlElement.querySelector('.properties-view');
     expect(propertiesView).toBeTruthy();
   });
 });

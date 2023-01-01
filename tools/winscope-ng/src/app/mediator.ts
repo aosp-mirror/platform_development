@@ -14,25 +14,26 @@
  * limitations under the License.
  */
 
-import {TimelineData} from "./timeline_data";
-import {TraceData} from "./trace_data";
-import {Timestamp, TimestampType} from "common/trace/timestamp";
-import {TraceType} from "common/trace/trace_type";
-import {BuganizerAttachmentsDownloadEmitter} from "interfaces/buganizer_attachments_download_emitter";
-import {FilesDownloadListener} from "interfaces/files_download_listener";
-import {RemoteBugreportReceiver} from "interfaces/remote_bugreport_receiver";
-import {RemoteTimestampReceiver} from "interfaces/remote_timestamp_receiver";
-import {RemoteTimestampSender} from "interfaces/remote_timestamp_sender";
-import {Runnable} from "interfaces/runnable";
-import {TimestampChangeListener} from "interfaces/timestamp_change_listener";
-import {TraceDataListener} from "interfaces/trace_data_listener";
-import {Viewer} from "viewers/viewer";
-import {ViewerFactory} from "viewers/viewer_factory";
+import {Timestamp, TimestampType} from 'common/trace/timestamp';
+import {TraceType} from 'common/trace/trace_type';
+import {BuganizerAttachmentsDownloadEmitter} from 'interfaces/buganizer_attachments_download_emitter';
+import {FilesDownloadListener} from 'interfaces/files_download_listener';
+import {RemoteBugreportReceiver} from 'interfaces/remote_bugreport_receiver';
+import {RemoteTimestampReceiver} from 'interfaces/remote_timestamp_receiver';
+import {RemoteTimestampSender} from 'interfaces/remote_timestamp_sender';
+import {Runnable} from 'interfaces/runnable';
+import {TimestampChangeListener} from 'interfaces/timestamp_change_listener';
+import {TraceDataListener} from 'interfaces/trace_data_listener';
+import {Viewer} from 'viewers/viewer';
+import {ViewerFactory} from 'viewers/viewer_factory';
+import {TimelineData} from './timeline_data';
+import {TraceData} from './trace_data';
 
-export type CrossToolProtocolDependencyInversion =
-  RemoteBugreportReceiver & RemoteTimestampReceiver & RemoteTimestampSender;
-export type AbtChromeExtensionProtocolDependencyInversion =
-  BuganizerAttachmentsDownloadEmitter & Runnable;
+export type CrossToolProtocolDependencyInversion = RemoteBugreportReceiver &
+  RemoteTimestampReceiver &
+  RemoteTimestampSender;
+export type AbtChromeExtensionProtocolDependencyInversion = BuganizerAttachmentsDownloadEmitter &
+  Runnable;
 export type AppComponentDependencyInversion = TraceDataListener;
 export type TimelineComponentDependencyInversion = TimestampChangeListener;
 export type UploadTracesComponentDependencyInversion = FilesDownloadListener;
@@ -50,7 +51,7 @@ export class Mediator {
   private viewers: Viewer[] = [];
   private isChangingCurrentTimestamp = false;
   private isTraceDataVisualized = false;
-  private lastRemoteToolTimestampReceived: Timestamp|undefined;
+  private lastRemoteToolTimestampReceived: Timestamp | undefined;
 
   constructor(
     traceData: TraceData,
@@ -58,8 +59,8 @@ export class Mediator {
     abtChromeExtensionProtocol: AbtChromeExtensionProtocolDependencyInversion,
     crossToolProtocol: CrossToolProtocolDependencyInversion,
     appComponent: AppComponentDependencyInversion,
-    storage: Storage) {
-
+    storage: Storage
+  ) {
     this.traceData = traceData;
     this.timelineData = timelineData;
     this.abtChromeExtensionProtocol = abtChromeExtensionProtocol;
@@ -67,13 +68,15 @@ export class Mediator {
     this.appComponent = appComponent;
     this.storage = storage;
 
-    this.timelineData.setOnCurrentTimestampChanged(timestamp => {
+    this.timelineData.setOnCurrentTimestampChanged((timestamp) => {
       this.onWinscopeCurrentTimestampChanged(timestamp);
     });
 
-    this.crossToolProtocol.setOnBugreportReceived(async (bugreport: File, timestamp?: Timestamp) => {
-      await this.onRemoteBugreportReceived(bugreport, timestamp);
-    });
+    this.crossToolProtocol.setOnBugreportReceived(
+      async (bugreport: File, timestamp?: Timestamp) => {
+        await this.onRemoteBugreportReceived(bugreport, timestamp);
+      }
+    );
 
     this.crossToolProtocol.setOnTimestampReceived(async (timestamp: Timestamp) => {
       this.onRemoteTimestampReceived(timestamp);
@@ -83,18 +86,20 @@ export class Mediator {
       this.onBuganizerAttachmentsDownloadStart();
     });
 
-    this.abtChromeExtensionProtocol.setOnBuganizerAttachmentsDownloaded(async (attachments: File[]) => {
-      await this.onBuganizerAttachmentsDownloaded(attachments);
-    });
+    this.abtChromeExtensionProtocol.setOnBuganizerAttachmentsDownloaded(
+      async (attachments: File[]) => {
+        await this.onBuganizerAttachmentsDownloaded(attachments);
+      }
+    );
   }
 
   public setUploadTracesComponent(
-    uploadTracesComponent: UploadTracesComponentDependencyInversion|undefined
+    uploadTracesComponent: UploadTracesComponentDependencyInversion | undefined
   ) {
     this.uploadTracesComponent = uploadTracesComponent;
   }
 
-  public setTimelineComponent(timelineComponent: TimelineComponentDependencyInversion|undefined) {
+  public setTimelineComponent(timelineComponent: TimelineComponentDependencyInversion | undefined) {
     this.timelineComponent = timelineComponent;
   }
 
@@ -110,19 +115,19 @@ export class Mediator {
     this.processTraceData();
   }
 
-  public onWinscopeCurrentTimestampChanged(timestamp: Timestamp|undefined) {
+  public onWinscopeCurrentTimestampChanged(timestamp: Timestamp | undefined) {
     this.executeIgnoringRecursiveTimestampNotifications(() => {
       const entries = this.traceData.getTraceEntries(timestamp);
-      this.viewers.forEach(viewer => {
+      this.viewers.forEach((viewer) => {
         viewer.notifyCurrentTraceEntries(entries);
       });
 
       if (timestamp) {
         if (timestamp.getType() !== TimestampType.REAL) {
           console.warn(
-            "Cannot propagate timestamp change to remote tool." +
-            ` Remote tool expects timestamp type ${TimestampType.REAL},` +
-            ` but Winscope wants to notify timestamp type ${timestamp.getType()}.`
+            'Cannot propagate timestamp change to remote tool.' +
+              ` Remote tool expects timestamp type ${TimestampType.REAL},` +
+              ` but Winscope wants to notify timestamp type ${timestamp.getType()}.`
           );
         } else {
           this.crossToolProtocol.sendTimestamp(timestamp);
@@ -159,9 +164,9 @@ export class Mediator {
 
       if (this.timelineData.getTimestampType() !== timestamp.getType()) {
         console.warn(
-          "Cannot apply new timestamp received from remote tool." +
-          ` Remote tool notified timestamp type ${timestamp.getType()},` +
-          ` but Winscope is accepting timestamp type ${this.timelineData.getTimestampType()}.`
+          'Cannot apply new timestamp received from remote tool.' +
+            ` Remote tool notified timestamp type ${timestamp.getType()},` +
+            ` but Winscope is accepting timestamp type ${this.timelineData.getTimestampType()}.`
         );
         return;
       }
@@ -171,7 +176,7 @@ export class Mediator {
       }
 
       const entries = this.traceData.getTraceEntries(timestamp);
-      this.viewers.forEach(viewer => {
+      this.viewers.forEach((viewer) => {
         viewer.notifyCurrentTraceEntries(entries);
       });
 
@@ -200,7 +205,7 @@ export class Mediator {
   }
 
   private createViewers() {
-    const traceTypes = this.traceData.getLoadedTraces().map(trace => trace.type);
+    const traceTypes = this.traceData.getLoadedTraces().map((trace) => trace.type);
     this.viewers = new ViewerFactory().createViewers(new Set<TraceType>(traceTypes), this.storage);
 
     // Make sure to update the viewers active entries as soon as they are created.

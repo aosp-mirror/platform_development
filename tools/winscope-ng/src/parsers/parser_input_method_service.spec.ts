@@ -13,71 +13,65 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Timestamp, TimestampType} from "common/trace/timestamp";
-import {TraceType} from "common/trace/trace_type";
-import {Parser} from "./parser";
-import {UnitTestUtils} from "test/unit/utils";
+import {Timestamp, TimestampType} from 'common/trace/timestamp';
+import {TraceType} from 'common/trace/trace_type';
+import {UnitTestUtils} from 'test/unit/utils';
+import {Parser} from './parser';
 
-describe("ParserInputMethodService", () => {
-  describe("trace with elapsed + real timestamp", () => {
+describe('ParserInputMethodService', () => {
+  describe('trace with elapsed + real timestamp', () => {
     let parser: Parser;
 
     beforeAll(async () => {
-      parser = await UnitTestUtils.getParser("traces/elapsed_and_real_timestamp/InputMethodService.pb");
+      parser = await UnitTestUtils.getParser(
+        'traces/elapsed_and_real_timestamp/InputMethodService.pb'
+      );
     });
 
-    it("has expected trace type", () => {
+    it('has expected trace type', () => {
       expect(parser.getTraceType()).toEqual(TraceType.INPUT_METHOD_SERVICE);
     });
 
-    it("provides elapsed timestamps", () => {
-      const expected = [
-        new Timestamp(TimestampType.ELAPSED,  16578752896n),
-      ];
-      expect(parser.getTimestamps(TimestampType.ELAPSED))
-        .toEqual(expected);
+    it('provides elapsed timestamps', () => {
+      const expected = [new Timestamp(TimestampType.ELAPSED, 16578752896n)];
+      expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual(expected);
     });
 
-    it("provides real timestamps", () => {
-      const expected = [
-        new Timestamp(TimestampType.REAL, 1659107091180519857n),
-      ];
-      expect(parser.getTimestamps(TimestampType.REAL))
-        .toEqual(expected);
+    it('provides real timestamps', () => {
+      const expected = [new Timestamp(TimestampType.REAL, 1659107091180519857n)];
+      expect(parser.getTimestamps(TimestampType.REAL)).toEqual(expected);
     });
 
-    it("retrieves trace entry from elapsed timestamp", () => {
+    it('retrieves trace entry from elapsed timestamp', () => {
       const timestamp = new Timestamp(TimestampType.ELAPSED, 16578752896n);
-      expect(BigInt(parser.getTraceEntry(timestamp)!.elapsedRealtimeNanos))
-        .toEqual(16578752896n);
+      expect(BigInt(parser.getTraceEntry(timestamp)!.elapsedRealtimeNanos)).toEqual(16578752896n);
     });
 
-    it("retrieves trace entry from real timestamp", () => {
+    it('retrieves trace entry from real timestamp', () => {
       const timestamp = new Timestamp(TimestampType.REAL, 1659107091180519857n);
-      expect(BigInt(parser.getTraceEntry(timestamp)!.elapsedRealtimeNanos))
-        .toEqual(16578752896n);
+      expect(BigInt(parser.getTraceEntry(timestamp)!.elapsedRealtimeNanos)).toEqual(16578752896n);
     });
   });
 
-  describe("trace with elapsed (only) timestamp", () => {
+  describe('trace with elapsed (only) timestamp', () => {
     let parser: Parser;
 
     beforeAll(async () => {
-      parser = await UnitTestUtils.getParser("traces/elapsed_timestamp/InputMethodService.pb");
+      parser = await UnitTestUtils.getParser('traces/elapsed_timestamp/InputMethodService.pb');
     });
 
-    it("has expected trace type", () => {
+    it('has expected trace type', () => {
       expect(parser.getTraceType()).toEqual(TraceType.INPUT_METHOD_SERVICE);
     });
 
-    it("provides elapsed timestamps", () => {
-      expect(parser.getTimestamps(TimestampType.ELAPSED)![0])
-        .toEqual(new Timestamp(TimestampType.ELAPSED, 1149230019887n));
+    it('provides elapsed timestamps', () => {
+      expect(parser.getTimestamps(TimestampType.ELAPSED)![0]).toEqual(
+        new Timestamp(TimestampType.ELAPSED, 1149230019887n)
+      );
     });
 
     it("doesn't provide real timestamps", () => {
-      expect(parser.getTimestamps(TimestampType.REAL))
-        .toEqual(undefined);
+      expect(parser.getTimestamps(TimestampType.REAL)).toEqual(undefined);
     });
   });
 });

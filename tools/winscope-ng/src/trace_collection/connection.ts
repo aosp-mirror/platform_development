@@ -13,43 +13,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { ProxyClient } from "trace_collection/proxy_client";
-import { configMap } from "./trace_collection_utils";
+import {ProxyClient} from 'trace_collection/proxy_client';
+import {configMap} from './trace_collection_utils';
 
 export interface Device {
-  [key: string]: DeviceProperties
+  [key: string]: DeviceProperties;
 }
 
 export interface DeviceProperties {
   authorised: boolean;
-    model: string;
+  model: string;
 }
 
 export interface Connection {
-    adbSuccess: () => boolean;
-    setProxyKey?(key:string): any;
-    devices(): Device;
-    selectedDevice(): DeviceProperties;
-    selectedDeviceId(): string;
-    restart(): any;
-    selectDevice(id:string): any;
-    state(): any;
-    onConnectChange(newState: any): any;
-    resetLastDevice(): any;
-    isDevicesState(): boolean;
-    isStartTraceState(): boolean;
-    isErrorState(): boolean;
-    isEndTraceState(): boolean;
-    isLoadDataState(): boolean;
-    isConnectingState(): boolean;
-    throwNoTargetsError(): any;
-    startTrace(
-      reqEnableConfig?: Array<string>,
-      reqSelectedSfConfig?: configMap,
-      reqSelectedWmConfig?: configMap
-    ): any;
-    endTrace(): any;
-    adbData(): Array<File>;
-    dumpState(): any;
-    proxy?: ProxyClient;
+  adbSuccess: () => boolean;
+  setProxyKey?(key: string): any;
+  devices(): Device;
+  selectedDevice(): DeviceProperties;
+  selectedDeviceId(): string;
+  restart(): any;
+  selectDevice(id: string): any;
+  state(): any;
+  onConnectChange(newState: any): any;
+  resetLastDevice(): any;
+  isDevicesState(): boolean;
+  isStartTraceState(): boolean;
+  isErrorState(): boolean;
+  isEndTraceState(): boolean;
+  isLoadDataState(): boolean;
+  isConnectingState(): boolean;
+  throwNoTargetsError(): any;
+  startTrace(
+    reqEnableConfig?: Array<string>,
+    reqSelectedSfConfig?: configMap,
+    reqSelectedWmConfig?: configMap
+  ): any;
+  endTrace(): any;
+  adbData(): Array<File>;
+  dumpState(): any;
+  proxy?: ProxyClient;
 }

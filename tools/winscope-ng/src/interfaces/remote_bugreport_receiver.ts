@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {RealTimestamp} from "common/trace/timestamp";
+import {RealTimestamp} from 'common/trace/timestamp';
 
 export type OnBugreportReceived = (bugreport: File, timestamp?: RealTimestamp) => Promise<void>;
 

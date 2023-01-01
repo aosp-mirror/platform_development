@@ -18,38 +18,55 @@ import {
   ChangeDetectorRef,
   Component,
   EventEmitter,
-  Input,
   Inject,
-  Output,
-  OnInit,
-  OnDestroy,
+  Input,
   NgZone,
-  ViewEncapsulation
-} from "@angular/core";
-import { TraceFile} from "common/trace/trace";
-import { TraceData} from "app/trace_data";
-import { ProxyConnection } from "trace_collection/proxy_connection";
-import { Connection } from "trace_collection/connection";
-import { ProxyState } from "trace_collection/proxy_client";
-import { traceConfigurations, configMap, SelectionConfiguration, EnableConfiguration } from "trace_collection/trace_collection_utils";
-import { PersistentStore } from "common/utils/persistent_store";
-import { MatSnackBar } from "@angular/material/snack-bar";
-import { ParserErrorSnackBarComponent } from "./parser_error_snack_bar_component";
-import { TracingConfig } from "trace_collection/tracing_config";
+  OnDestroy,
+  OnInit,
+  Output,
+  ViewEncapsulation,
+} from '@angular/core';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {TraceData} from 'app/trace_data';
+import {TraceFile} from 'common/trace/trace';
+import {PersistentStore} from 'common/utils/persistent_store';
+import {Connection} from 'trace_collection/connection';
+import {ProxyState} from 'trace_collection/proxy_client';
+import {ProxyConnection} from 'trace_collection/proxy_connection';
+import {
+  configMap,
+  EnableConfiguration,
+  SelectionConfiguration,
+  traceConfigurations,
+} from 'trace_collection/trace_collection_utils';
+import {TracingConfig} from 'trace_collection/tracing_config';
+import {ParserErrorSnackBarComponent} from './parser_error_snack_bar_component';
 
 @Component({
-  selector: "collect-traces",
+  selector: 'collect-traces',
   template: `
     <mat-card class="collect-card">
       <mat-card-title class="title">Collect Traces</mat-card-title>
 
       <mat-card-content class="collect-card-content">
-        <p *ngIf="connect.isConnectingState()" class="connecting-message mat-body-1">Connecting...</p>
+        <p *ngIf="connect.isConnectingState()" class="connecting-message mat-body-1">
+          Connecting...
+        </p>
 
         <div *ngIf="!connect.adbSuccess()" class="set-up-adb">
-          <button class="proxy-tab" color="primary" mat-stroked-button [ngClass]="tabClass(true)" (click)="displayAdbProxyTab()">ADB Proxy</button>
+          <button
+            class="proxy-tab"
+            color="primary"
+            mat-stroked-button
+            [ngClass]="tabClass(true)"
+            (click)="displayAdbProxyTab()">
+            ADB Proxy
+          </button>
           <!-- <button class="web-tab" color="primary" mat-raised-button [ngClass]="tabClass(false)" (click)="displayWebAdbTab()">Web ADB</button> -->
-          <adb-proxy *ngIf="isAdbProxy" [(proxy)]="connect.proxy!" (addKey)="onAddKey($event)"></adb-proxy>
+          <adb-proxy
+            *ngIf="isAdbProxy"
+            [(proxy)]="connect.proxy!"
+            (addKey)="onAddKey($event)"></adb-proxy>
           <!-- <web-adb *ngIf="!isAdbProxy"></web-adb> TODO: fix web adb workflow -->
         </div>
 
@@ -64,41 +81,66 @@ import { TracingConfig } from "trace_collection/tracing_config";
               <mat-list-item
                 *ngFor="let deviceId of objectKeys(connect.devices())"
                 (click)="connect.selectDevice(deviceId)"
-                class="available-device"
-              >
+                class="available-device">
                 <mat-icon matListIcon>
-                  {{ connect.devices()[deviceId].authorised ? "smartphone" : "screen_lock_portrait" }}
+                  {{
+                    connect.devices()[deviceId].authorised ? 'smartphone' : 'screen_lock_portrait'
+                  }}
                 </mat-icon>
                 <p matLine>
-                  {{ connect.devices()[deviceId].authorised ? connect.devices()[deviceId]?.model : "unauthorised" }} ({{ deviceId }})
+                  {{
+                    connect.devices()[deviceId].authorised
+                      ? connect.devices()[deviceId]?.model
+                      : 'unauthorised'
+                  }}
+                  ({{ deviceId }})
                 </p>
               </mat-list-item>
             </mat-list>
           </div>
         </div>
 
-        <div *ngIf="connect.isStartTraceState() || connect.isEndTraceState() || connect.isLoadDataState()" class="trace-collection-config">
+        <div
+          *ngIf="
+            connect.isStartTraceState() || connect.isEndTraceState() || connect.isLoadDataState()
+          "
+          class="trace-collection-config">
           <mat-list>
             <mat-list-item>
               <mat-icon matListIcon>smartphone</mat-icon>
               <p matLine>
                 {{ connect.selectedDevice()?.model }} ({{ connect.selectedDeviceId() }})
 
-                <button color="primary" class="change-btn" mat-button (click)="connect.resetLastDevice()" [disabled]="connect.isEndTraceState() || connect.isLoadDataState()">Change device</button>
+                <button
+                  color="primary"
+                  class="change-btn"
+                  mat-button
+                  (click)="connect.resetLastDevice()"
+                  [disabled]="connect.isEndTraceState() || connect.isLoadDataState()">
+                  Change device
+                </button>
               </p>
             </mat-list-item>
           </mat-list>
 
           <mat-tab-group class="tracing-tabs">
-            <mat-tab label="Trace" [disabled]="connect.isEndTraceState() || connect.isLoadDataState()">
+            <mat-tab
+              label="Trace"
+              [disabled]="connect.isEndTraceState() || connect.isLoadDataState()">
               <div class="tabbed-section">
-                <div class="trace-section" *ngIf="tracingConfig.tracingConfigIsSet() && connect.isStartTraceState()">
+                <div
+                  class="trace-section"
+                  *ngIf="tracingConfig.tracingConfigIsSet() && connect.isStartTraceState()">
                   <trace-config [traces]="tracingConfig.getTracingConfig()"></trace-config>
                   <div class="start-btn">
-                    <button color="primary" mat-stroked-button (click)="startTracing()">Start trace</button>
+                    <button color="primary" mat-stroked-button (click)="startTracing()">
+                      Start trace
+                    </button>
                   </div>
                 </div>
-                <div class="loading-info" *ngIf="!tracingConfig.tracingConfigIsSet() && connect.isStartTraceState()">
+                <div
+                  class="loading-info"
+                  *ngIf="!tracingConfig.tracingConfigIsSet() && connect.isStartTraceState()">
                   <p class="mat-body-1">Loading tracing config...</p>
                 </div>
 
@@ -109,7 +151,9 @@ import { TracingConfig } from "trace_collection/tracing_config";
                     <p class="mat-body-1">Tracing...</p>
                   </div>
                   <div class="end-btn">
-                    <button color="primary" mat-raised-button (click)="endTrace()">End trace</button>
+                    <button color="primary" mat-raised-button (click)="endTrace()">
+                      End trace
+                    </button>
                   </div>
                 </div>
 
@@ -117,14 +161,20 @@ import { TracingConfig } from "trace_collection/tracing_config";
                   <load-progress [progressPercentage]="loadProgress" [message]="'Loading data...'">
                   </load-progress>
                   <div class="end-btn">
-                    <button color="primary" mat-raised-button (click)="endTrace()" disabled="true">End trace</button>
+                    <button color="primary" mat-raised-button (click)="endTrace()" disabled="true">
+                      End trace
+                    </button>
                   </div>
                 </div>
               </div>
             </mat-tab>
-            <mat-tab label="Dump" [disabled]="connect.isEndTraceState() || connect.isLoadDataState()">
+            <mat-tab
+              label="Dump"
+              [disabled]="connect.isEndTraceState() || connect.isLoadDataState()">
               <div class="tabbed-section">
-                <div class="dump-section" *ngIf="tracingConfig.tracingConfigIsSet() && connect.isStartTraceState()">
+                <div
+                  class="dump-section"
+                  *ngIf="tracingConfig.tracingConfigIsSet() && connect.isStartTraceState()">
                   <h3 class="mat-subheading-2">Dump targets</h3>
                   <div class="selection">
                     <mat-checkbox
@@ -132,10 +182,13 @@ import { TracingConfig } from "trace_collection/tracing_config";
                       color="primary"
                       class="dump-checkbox"
                       [(ngModel)]="tracingConfig.getDumpConfig()[dumpKey].run"
-                    >{{tracingConfig.getDumpConfig()[dumpKey].name}}</mat-checkbox>
+                      >{{ tracingConfig.getDumpConfig()[dumpKey].name }}</mat-checkbox
+                    >
                   </div>
                   <div class="dump-btn">
-                    <button color="primary" mat-stroked-button (click)="dumpState()">Dump state</button>
+                    <button color="primary" mat-stroked-button (click)="dumpState()">
+                      Dump state
+                    </button>
                   </div>
                 </div>
 
@@ -143,9 +196,10 @@ import { TracingConfig } from "trace_collection/tracing_config";
                   <p class="mat-body-1">Loading dumping config...</p>
                 </div>
 
-                <load-progress *ngIf="connect.isLoadDataState()"
-                               [progressPercentage]="loadProgress"
-                               [message]="'Loading data...'">
+                <load-progress
+                  *ngIf="connect.isLoadDataState()"
+                  [progressPercentage]="loadProgress"
+                  [message]="'Loading data...'">
                 </load-progress>
               </div>
             </mat-tab>
@@ -158,15 +212,17 @@ import { TracingConfig } from "trace_collection/tracing_config";
             Error:
           </p>
           <pre> {{ connect.proxy?.errorText }} </pre>
-          <button color="primary" class="retry-btn" mat-raised-button (click)="connect.restart()">Retry</button>
+          <button color="primary" class="retry-btn" mat-raised-button (click)="connect.restart()">
+            Retry
+          </button>
         </div>
-
       </mat-card-content>
     </mat-card>
   `,
   styles: [
     `
-      .change-btn, .retry-btn {
+      .change-btn,
+      .retry-btn {
         margin-left: 5px;
       }
       .mat-card.collect-card {
@@ -198,16 +254,25 @@ import { TracingConfig } from "trace_collection/tracing_config";
         flex-direction: column;
         gap: 10px;
       }
-      .trace-section, .dump-section, .end-tracing, .load-data {
+      .trace-section,
+      .dump-section,
+      .end-tracing,
+      .load-data {
         height: 100%;
       }
       .trace-collection-config {
         height: 100%;
       }
-      .proxy-tab, .web-tab, .start-btn, .dump-btn, .end-btn {
+      .proxy-tab,
+      .web-tab,
+      .start-btn,
+      .dump-btn,
+      .end-btn {
         align-self: flex-start;
       }
-      .start-btn, .dump-btn, .end-btn {
+      .start-btn,
+      .dump-btn,
+      .end-btn {
         margin: auto 0 0 0;
         padding: 1rem 0 0 0;
       }
@@ -232,7 +297,8 @@ import { TracingConfig } from "trace_collection/tracing_config";
         height: 100%;
       }
 
-      .no-device-detected p, .device-selection p.instruction {
+      .no-device-detected p,
+      .device-selection p.instruction {
         padding-top: 1rem;
         opacity: 0.6;
         font-size: 1.2rem;
@@ -272,7 +338,8 @@ import { TracingConfig } from "trace_collection/tracing_config";
         height: 100%;
       }
 
-      .load-data p, .end-tracing p {
+      .load-data p,
+      .end-tracing p {
         opacity: 0.7;
       }
 
@@ -292,9 +359,9 @@ import { TracingConfig } from "trace_collection/tracing_config";
       load-progress {
         height: 100%;
       }
-    `
+    `,
   ],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
 })
 export class CollectTracesComponent implements OnInit, OnDestroy {
   objectKeys = Object.keys;
@@ -364,24 +431,20 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   }
 
   public startTracing() {
-    console.log("begin tracing");
+    console.log('begin tracing');
     this.tracingConfig.requestedTraces = this.requestedTraces();
     const reqEnableConfig = this.requestedEnableConfig();
-    const reqSelectedSfConfig = this.requestedSelection("layers_trace");
-    const reqSelectedWmConfig = this.requestedSelection("window_trace");
+    const reqSelectedSfConfig = this.requestedSelection('layers_trace');
+    const reqSelectedWmConfig = this.requestedSelection('window_trace');
     if (this.tracingConfig.requestedTraces.length < 1) {
       this.connect.throwNoTargetsError();
       return;
     }
-    this.connect.startTrace(
-      reqEnableConfig,
-      reqSelectedSfConfig,
-      reqSelectedWmConfig
-    );
+    this.connect.startTrace(reqEnableConfig, reqSelectedSfConfig, reqSelectedWmConfig);
   }
 
   public async dumpState() {
-    console.log("begin dump");
+    console.log('begin dump');
     this.tracingConfig.requestedDumps = this.requestedDumps();
     const dumpSuccessful = await this.connect.dumpState();
     if (dumpSuccessful) {
@@ -392,7 +455,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   }
 
   public async endTrace() {
-    console.log("end tracing");
+    console.log('end tracing');
     await this.connect.endTrace();
     await this.loadFiles();
   }
@@ -400,11 +463,11 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   public tabClass(adbTab: boolean) {
     let isActive: string;
     if (adbTab) {
-      isActive = this.isAdbProxy ? "active" : "inactive";
+      isActive = this.isAdbProxy ? 'active' : 'inactive';
     } else {
-      isActive = !this.isAdbProxy ? "active" : "inactive";
+      isActive = !this.isAdbProxy ? 'active' : 'inactive';
     }
-    return ["tab", isActive];
+    return ['tab', isActive];
   }
 
   private onProxyChange(newState: ProxyState) {
@@ -414,47 +477,41 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   private requestedTraces() {
     const tracesFromCollection: Array<string> = [];
     const tracingConfig = this.tracingConfig.getTracingConfig();
-    const req = Object.keys(tracingConfig)
-      .filter((traceKey:string) => {
-        const traceConfig = tracingConfig[traceKey];
-        if (traceConfig.isTraceCollection) {
-          traceConfig.config?.enableConfigs.forEach((innerTrace:EnableConfiguration) => {
-            if (innerTrace.enabled) {
-              tracesFromCollection.push(innerTrace.key);
-            }
-          });
-          return false;
-        }
-        return traceConfig.run;
-      });
+    const req = Object.keys(tracingConfig).filter((traceKey: string) => {
+      const traceConfig = tracingConfig[traceKey];
+      if (traceConfig.isTraceCollection) {
+        traceConfig.config?.enableConfigs.forEach((innerTrace: EnableConfiguration) => {
+          if (innerTrace.enabled) {
+            tracesFromCollection.push(innerTrace.key);
+          }
+        });
+        return false;
+      }
+      return traceConfig.run;
+    });
     return req.concat(tracesFromCollection);
   }
 
   private requestedDumps() {
     const dumpConfig = this.tracingConfig.getDumpConfig();
-    return Object.keys(dumpConfig)
-      .filter((dumpKey:string) => {
-        return dumpConfig[dumpKey].run;
-      });
+    return Object.keys(dumpConfig).filter((dumpKey: string) => {
+      return dumpConfig[dumpKey].run;
+    });
   }
 
   private requestedEnableConfig(): Array<string> {
     const req: Array<string> = [];
     const tracingConfig = this.tracingConfig.getTracingConfig();
-    Object.keys(tracingConfig)
-      .forEach((traceKey:string) => {
-        const trace = tracingConfig[traceKey];
-        if(!trace.isTraceCollection
-              && trace.run
-              && trace.config
-              && trace.config.enableConfigs) {
-          trace.config.enableConfigs.forEach((con:EnableConfiguration) => {
-            if (con.enabled) {
-              req.push(con.key);
-            }
-          });
-        }
-      });
+    Object.keys(tracingConfig).forEach((traceKey: string) => {
+      const trace = tracingConfig[traceKey];
+      if (!trace.isTraceCollection && trace.run && trace.config && trace.config.enableConfigs) {
+        trace.config.enableConfigs.forEach((con: EnableConfiguration) => {
+          if (con.enabled) {
+            req.push(con.key);
+          }
+        });
+      }
+    });
     return req;
   }
 
@@ -464,22 +521,20 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
       return undefined;
     }
     const selected: configMap = {};
-    tracingConfig[traceType].config?.selectionConfigs.forEach(
-      (con: SelectionConfiguration) => {
-        selected[con.key] = con.value;
-      }
-    );
+    tracingConfig[traceType].config?.selectionConfigs.forEach((con: SelectionConfiguration) => {
+      selected[con.key] = con.value;
+    });
     return selected;
   }
 
   private async loadFiles() {
-    console.log("loading files", this.connect.adbData());
+    console.log('loading files', this.connect.adbData());
     this.traceData.clear();
-    const traceFiles = this.connect.adbData().map(file => new TraceFile(file));
+    const traceFiles = this.connect.adbData().map((file) => new TraceFile(file));
     const parserErrors = await this.traceData.loadTraces(traceFiles);
     ParserErrorSnackBarComponent.showIfNeeded(this.ngZone, this.snackBar, parserErrors);
     this.traceDataLoaded.emit();
-    console.log("finished loading data!");
+    console.log('finished loading data!');
   }
 
   private onLoadProgressUpdate(progress: number) {

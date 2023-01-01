@@ -15,7 +15,7 @@
  */
 
 export class MockStorage implements Storage {
-  private store: { [key: string]: string } = {};
+  private store: {[key: string]: string} = {};
 
   [name: string]: any;
   get length(): number {
@@ -23,7 +23,7 @@ export class MockStorage implements Storage {
   }
 
   clear(): void {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
   getItem(key: string): string | null {
     return this.store[key];
@@ -37,5 +37,4 @@ export class MockStorage implements Storage {
   setItem(key: string, value: string): void {
     this.store[key] = value;
   }
-
 }

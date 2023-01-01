@@ -13,25 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ComponentFixture, TestBed} from "@angular/core/testing";
-import { TreeNodeDataViewComponent } from "./tree_node_data_view.component";
-import { ComponentFixtureAutoDetect } from "@angular/core/testing";
-import { NO_ERRORS_SCHEMA } from "@angular/core";
+import {NO_ERRORS_SCHEMA} from '@angular/core';
+import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {TreeNodeDataViewComponent} from './tree_node_data_view.component';
 
-describe("TreeNodeDataViewComponent", () => {
+describe('TreeNodeDataViewComponent', () => {
   let fixture: ComponentFixture<TreeNodeDataViewComponent>;
   let component: TreeNodeDataViewComponent;
   let htmlElement: HTMLElement;
 
   beforeAll(async () => {
     await TestBed.configureTestingModule({
-      providers: [
-        { provide: ComponentFixtureAutoDetect, useValue: true }
-      ],
-      declarations: [
-        TreeNodeDataViewComponent
-      ],
-      schemas: [NO_ERRORS_SCHEMA]
+      providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
+      declarations: [TreeNodeDataViewComponent],
+      schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
   });
 
@@ -41,7 +36,7 @@ describe("TreeNodeDataViewComponent", () => {
     htmlElement = fixture.nativeElement;
   });
 
-  it("can be created", () => {
+  it('can be created', () => {
     expect(component).toBeTruthy();
   });
 });

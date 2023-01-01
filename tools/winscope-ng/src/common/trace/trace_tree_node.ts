@@ -26,8 +26,8 @@ export interface TraceTreeNode {
   inputMethodService?: any;
   inputMethodManagerService?: any;
   where?: string;
-  elapsedRealtimeNanos?: number|bigint;
-  clockTimeNanos?: number|bigint;
+  elapsedRealtimeNanos?: number | bigint;
+  clockTimeNanos?: number | bigint;
   shortName?: string;
   type?: string;
   id?: string | number;

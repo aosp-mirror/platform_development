@@ -22,12 +22,9 @@ const HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin
 const configProd = {
   mode: 'production',
   entry: {
-    polyfills: "./src/polyfills.ts",
-    styles: [
-      "./src/material-theme.scss",
-      "./src/styles.css"
-    ],
-    app: "./src/main.prod.ts"
+    polyfills: './src/polyfills.ts',
+    styles: ['./src/material-theme.scss', './src/styles.css'],
+    app: './src/main.prod.ts',
   },
   output: {
     path: path.resolve(__dirname, 'dist/prod'),
@@ -45,8 +42,7 @@ const configProd = {
         vendor: {
           test: /[\\/]node_modules[\\/]/,
           name(module) {
-            const packageName = module.context
-                .match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1];
+            const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1];
             return `npm.${packageName.replace('@', '')}`;
           },
         },
@@ -61,12 +57,12 @@ const configProd = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: "src/index.html",
-      inject: "body",
-      inlineSource: ".(css|js)$",
+      template: 'src/index.html',
+      inject: 'body',
+      inlineSource: '.(css|js)$',
     }),
     new HtmlWebpackInlineSourcePlugin(HtmlWebpackPlugin),
-  ]
+  ],
 };
 
 module.exports = merge(configCommon, configProd);

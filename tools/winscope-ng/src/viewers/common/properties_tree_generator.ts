@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-import {PropertiesTreeNode} from "./ui_tree_utils";
+import {PropertiesTreeNode} from './ui_tree_utils';
 
 class PropertiesTreeGenerator {
-  public generate(
-    key: string,
-    value: any,
-  ): PropertiesTreeNode {
+  public generate(key: string, value: any): PropertiesTreeNode {
     if (this.isLeaf(value)) {
       return {
         propertyKey: key,
@@ -31,15 +28,14 @@ class PropertiesTreeGenerator {
     let children: PropertiesTreeNode[];
 
     if (Array.isArray(value)) {
-      children = value.map((element, index) => this.generate("" + index, element));
-    }
-    else {
-      children = Object.keys(value).map(childName => this.generate(childName, value[childName]));
+      children = value.map((element, index) => this.generate('' + index, element));
+    } else {
+      children = Object.keys(value).map((childName) => this.generate(childName, value[childName]));
     }
 
     return {
       propertyKey: key,
-      children: children
+      children: children,
     };
   }
 
@@ -47,35 +43,37 @@ class PropertiesTreeGenerator {
     return this.leafToString(value) !== undefined;
   }
 
-  private leafToString(value: any): undefined|string {
+  private leafToString(value: any): undefined | string {
     if (value == null) {
-      return "";
+      return '';
     }
-    if (typeof value === "boolean") {
-      return "" + value;
+    if (typeof value === 'boolean') {
+      return '' + value;
     }
-    if (typeof value === "number") {
-      return "" + value;
+    if (typeof value === 'number') {
+      return '' + value;
     }
-    if (typeof value === "string") {
+    if (typeof value === 'string') {
       return value;
     }
     if (this.isLong(value)) {
       return value.toString();
     }
     if (Array.isArray(value) && value.length === 0) {
-      return "[]";
+      return '[]';
     }
-    if (typeof value === "object" && Object.keys(value).length === 0) {
-      return "{}";
+    if (typeof value === 'object' && Object.keys(value).length === 0) {
+      return '{}';
     }
     return undefined;
   }
 
   private isLong(value: any) {
-    return Object.prototype.hasOwnProperty.call(value, "high") &&
-      Object.prototype.hasOwnProperty.call(value, "low") &&
-      Object.prototype.hasOwnProperty.call(value, "unsigned");
+    return (
+      Object.prototype.hasOwnProperty.call(value, 'high') &&
+      Object.prototype.hasOwnProperty.call(value, 'low') &&
+      Object.prototype.hasOwnProperty.call(value, 'unsigned')
+    );
   }
 }
 

@@ -13,37 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {WindowManagerState} from "common/trace/flickerlib/windows/WindowManagerState";
-import {Timestamp, TimestampType} from "common/trace/timestamp";
-import {TraceType} from "common/trace/trace_type";
-import {Parser} from "./parser";
-import {UnitTestUtils} from "test/unit/utils";
+import {WindowManagerState} from 'common/trace/flickerlib/windows/WindowManagerState';
+import {Timestamp, TimestampType} from 'common/trace/timestamp';
+import {TraceType} from 'common/trace/trace_type';
+import {UnitTestUtils} from 'test/unit/utils';
+import {Parser} from './parser';
 
-describe("ParserWindowManagerDump", () => {
+describe('ParserWindowManagerDump', () => {
   let parser: Parser;
 
   beforeAll(async () => {
-    parser = await UnitTestUtils.getParser("traces/dump_WindowManager.pb");
+    parser = await UnitTestUtils.getParser('traces/dump_WindowManager.pb');
   });
 
-  it("has expected trace type", () => {
+  it('has expected trace type', () => {
     expect(parser.getTraceType()).toEqual(TraceType.WINDOW_MANAGER);
   });
 
-  it("provides elapsed timestamp (always zero)", () => {
-    const expected = [
-      new Timestamp(TimestampType.ELAPSED, 0n),
-    ];
-    expect(parser.getTimestamps(TimestampType.ELAPSED))
-      .toEqual(expected);
+  it('provides elapsed timestamp (always zero)', () => {
+    const expected = [new Timestamp(TimestampType.ELAPSED, 0n)];
+    expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual(expected);
   });
 
   it("doesn't provide real timestamp (never)", () => {
-    expect(parser.getTimestamps(TimestampType.REAL))
-      .toEqual(undefined);
+    expect(parser.getTimestamps(TimestampType.REAL)).toEqual(undefined);
   });
 
-  it("retrieves trace entry from elapsed timestamp", () => {
+  it('retrieves trace entry from elapsed timestamp', () => {
     const timestamp = new Timestamp(TimestampType.ELAPSED, 0n);
     const entry = parser.getTraceEntry(timestamp)!;
     expect(entry).toBeInstanceOf(WindowManagerState);

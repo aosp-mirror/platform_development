@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {FilesDownloadListener} from "interfaces/files_download_listener";
+import {FilesDownloadListener} from 'interfaces/files_download_listener';
 
 export class UploadTracesComponentStub implements FilesDownloadListener {
   onFilesDownloadStart() {

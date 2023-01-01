@@ -13,101 +13,105 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceTreeNode} from "common/trace/trace_tree_node";
-import {TreeUtils} from "common/utils/tree_utils";
-import {TreeTransformer} from "viewers/common/tree_transformer";
-import {DiffType, HierarchyTreeNode} from "viewers/common/ui_tree_utils";
+import {TraceTreeNode} from 'common/trace/trace_tree_node';
+import {TreeUtils} from 'common/utils/tree_utils';
+import {TreeTransformer} from 'viewers/common/tree_transformer';
+import {DiffType, HierarchyTreeNode} from 'viewers/common/ui_tree_utils';
 
-describe("TreeTransformer", () => {
+describe('TreeTransformer', () => {
   let entry: TraceTreeNode;
   let selectedTree: HierarchyTreeNode;
   beforeAll(async () => {
     entry = {
       id: 3,
-      name: "Child1",
+      name: 'Child1',
       stackId: 0,
       isVisible: true,
-      kind: "3",
-      stableId: "3 Child1",
+      kind: '3',
+      stableId: '3 Child1',
       proto: {
         barrierLayer: [],
         id: 3,
         parent: 1,
-        type: "ContainerLayer",
+        type: 'ContainerLayer',
       },
       parent: undefined,
-      children: [{
-        id: 2,
-        name: "Child2",
-        stackId: 0,
-        parent: undefined,
-        children: [],
-        kind: "2",
-        stableId: "2 Child2",
-        proto: {
-          barrierLayer: [],
+      children: [
+        {
           id: 2,
-          parent: 3,
-          type: "ContainerLayer",
+          name: 'Child2',
+          stackId: 0,
+          parent: undefined,
+          children: [],
+          kind: '2',
+          stableId: '2 Child2',
+          proto: {
+            barrierLayer: [],
+            id: 2,
+            parent: 3,
+            type: 'ContainerLayer',
+          },
+          isVisible: true,
         },
-        isVisible: true,
-      }],
+      ],
     };
 
     selectedTree = {
       id: 3,
-      name: "Child1",
+      name: 'Child1',
       stackId: 0,
       isVisible: true,
-      kind: "3",
-      stableId: "3 Child1",
+      kind: '3',
+      stableId: '3 Child1',
       showInFilteredView: true,
       skip: null,
       chips: [],
-      children: [{
-        id: 2,
-        name: "Child2",
-        stackId: 0,
-        children: [],
-        kind: "2",
-        stableId: "2 Child2",
-        isVisible: true,
-        showInFilteredView: true,
-        chips: [],
-      }],
+      children: [
+        {
+          id: 2,
+          name: 'Child2',
+          stackId: 0,
+          children: [],
+          kind: '2',
+          stableId: '2 Child2',
+          isVisible: true,
+          showInFilteredView: true,
+          chips: [],
+        },
+      ],
     };
   });
 
-  it("creates ordinary properties tree without show diff enabled", () => {
+  it('creates ordinary properties tree without show diff enabled', () => {
     const expected = {
-      kind: "",
-      name: "Child1",
-      stableId: "3 Child1",
+      kind: '',
+      name: 'Child1',
+      stableId: '3 Child1',
       children: [
         {
-          kind: "",
-          name: "id: 3",
-          stableId: "3 Child1.id",
+          kind: '',
+          name: 'id: 3',
+          stableId: '3 Child1.id',
           children: [],
           combined: true,
-          propertyKey: "id",
-          propertyValue: "3"
+          propertyKey: 'id',
+          propertyValue: '3',
         },
         {
-          kind: "",
-          name: "type: ContainerLayer",
-          stableId: "3 Child1.type",
+          kind: '',
+          name: 'type: ContainerLayer',
+          stableId: '3 Child1.type',
           children: [],
           combined: true,
-          propertyKey: "type",
-          propertyValue: "ContainerLayer"
+          propertyKey: 'type',
+          propertyValue: 'ContainerLayer',
         },
       ],
-      propertyKey: "Child1",
-      propertyValue: null
+      propertyKey: 'Child1',
+      propertyValue: null,
     };
 
-    const filter = TreeUtils.makeNodeFilter("");
+    const filter = TreeUtils.makeNodeFilter('');
     const transformer = new TreeTransformer(selectedTree, filter)
       .setOnlyProtoDump(true)
       .setProperties(entry);
@@ -116,39 +120,39 @@ describe("TreeTransformer", () => {
     expect(transformedTree).toEqual(expected);
   });
 
-  it("creates properties tree with show diff enabled, comparing to a null previous entry", () => {
+  it('creates properties tree with show diff enabled, comparing to a null previous entry', () => {
     const expected = {
-      kind: "",
-      name: "Child1",
-      stableId: "3 Child1",
+      kind: '',
+      name: 'Child1',
+      stableId: '3 Child1',
       children: [
         {
-          kind: "",
-          name: "id: 3",
+          kind: '',
+          name: 'id: 3',
           diffType: DiffType.ADDED,
-          stableId: "3 Child1.id",
+          stableId: '3 Child1.id',
           children: [],
           combined: true,
-          propertyKey: "id",
-          propertyValue: "3"
+          propertyKey: 'id',
+          propertyValue: '3',
         },
         {
-          kind: "",
-          name: "type: ContainerLayer",
+          kind: '',
+          name: 'type: ContainerLayer',
           diffType: DiffType.ADDED,
-          stableId: "3 Child1.type",
+          stableId: '3 Child1.type',
           children: [],
           combined: true,
-          propertyKey: "type",
-          propertyValue: "ContainerLayer"
+          propertyKey: 'type',
+          propertyValue: 'ContainerLayer',
         },
       ],
       diffType: DiffType.NONE,
-      propertyKey: "Child1",
+      propertyKey: 'Child1',
       propertyValue: null,
     };
 
-    const filter = TreeUtils.makeNodeFilter("");
+    const filter = TreeUtils.makeNodeFilter('');
     const transformer = new TreeTransformer(selectedTree, filter)
       .setIsShowDiff(true)
       .setOnlyProtoDump(true)

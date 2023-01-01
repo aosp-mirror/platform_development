@@ -13,49 +13,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  Component,
-  Input,
-} from "@angular/core";
-import { TRACE_INFO } from "app/trace_info";
-import { TraceType } from "common/trace/trace_type";
-import { PersistentStore } from "common/utils/persistent_store";
-import { ImeUiData } from "viewers/common/ime_ui_data";
+import {Component, Input} from '@angular/core';
+import {TRACE_INFO} from 'app/trace_info';
+import {TraceType} from 'common/trace/trace_type';
+import {PersistentStore} from 'common/utils/persistent_store';
+import {ImeUiData} from 'viewers/common/ime_ui_data';
 
 @Component({
-  selector: "viewer-input-method",
+  selector: 'viewer-input-method',
   template: `
-      <div class="card-grid">
-        <div class="left-views">
-          <hierarchy-view
-            class="hierarchy-view"
-            [tree]="inputData?.tree ?? null"
-            [dependencies]="inputData?.dependencies ?? []"
-            [highlightedItems]="inputData?.highlightedItems ?? []"
-            [pinnedItems]="inputData?.pinnedItems ?? []"
-            [tableProperties]="inputData?.hierarchyTableProperties"
-            [store]="store"
-            [userOptions]="inputData?.hierarchyUserOptions ?? {}"
-          ></hierarchy-view>
+    <div class="card-grid">
+      <div class="left-views">
+        <hierarchy-view
+          class="hierarchy-view"
+          [tree]="inputData?.tree ?? null"
+          [dependencies]="inputData?.dependencies ?? []"
+          [highlightedItems]="inputData?.highlightedItems ?? []"
+          [pinnedItems]="inputData?.pinnedItems ?? []"
+          [tableProperties]="inputData?.hierarchyTableProperties"
+          [store]="store"
+          [userOptions]="inputData?.hierarchyUserOptions ?? {}"></hierarchy-view>
 
-          <ng-container *ngIf="inputData?.additionalProperties">
-            <mat-divider></mat-divider>
+        <ng-container *ngIf="inputData?.additionalProperties">
+          <mat-divider></mat-divider>
 
-            <ime-additional-properties
-              class="ime-additional-properties"
-              [additionalProperties]="inputData?.additionalProperties!"
-            ></ime-additional-properties>
-          </ng-container>
-        </div>
-
-        <mat-divider [vertical]="true"></mat-divider>
-
-        <properties-view
-          class="properties-view"
-          [userOptions]="inputData?.propertiesUserOptions ?? {}"
-          [propertiesTree]="inputData?.propertiesTree ?? {}"
-        ></properties-view>
+          <ime-additional-properties
+            class="ime-additional-properties"
+            [additionalProperties]="inputData?.additionalProperties!"></ime-additional-properties>
+        </ng-container>
       </div>
+
+      <mat-divider [vertical]="true"></mat-divider>
+
+      <properties-view
+        class="properties-view"
+        [userOptions]="inputData?.propertiesUserOptions ?? {}"
+        [propertiesTree]="inputData?.propertiesTree ?? {}"></properties-view>
+    </div>
   `,
   styles: [
     `
@@ -65,7 +59,9 @@ import { ImeUiData } from "viewers/common/ime_ui_data";
         flex-direction: column;
       }
 
-      .hierarchy-view, .ime-additional-properties, .properties-view {
+      .hierarchy-view,
+      .ime-additional-properties,
+      .properties-view {
         flex: 1;
         padding: 16px;
         display: flex;
@@ -73,7 +69,7 @@ import { ImeUiData } from "viewers/common/ime_ui_data";
         overflow: auto;
       }
     `,
-  ]
+  ],
 })
 export class ViewerInputMethodComponent {
   @Input() inputData: ImeUiData | null = null;

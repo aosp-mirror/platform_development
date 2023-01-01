@@ -14,62 +14,58 @@
  * limitations under the License.
  */
 
-const HtmlWebpackPlugin = require("html-webpack-plugin");
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 const HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin');
 
 module.exports = {
   resolve: {
-    extensions: [".ts", ".js", ".css"],
-    modules: [
-      __dirname + "/../../../node_modules",
-      __dirname + "/../../../src",
-      __dirname
-    ]
+    extensions: ['.ts', '.js', '.css'],
+    modules: [__dirname + '/../../../node_modules', __dirname + '/../../../src', __dirname],
   },
 
   module: {
-    rules:[
+    rules: [
       {
         test: /\.ts$/,
-        use: ["ts-loader", "angular2-template-loader"]
+        use: ['ts-loader', 'angular2-template-loader'],
       },
       {
         test: /\.html$/,
-        use: ["html-loader"]
+        use: ['html-loader'],
       },
       {
         test: /\.css$/,
-        use: ["style-loader", "css-loader"]
+        use: ['style-loader', 'css-loader'],
       },
       {
         test: /\.s[ac]ss$/i,
-        use: ["style-loader", "css-loader", "sass-loader"]
-      }
-    ]
+        use: ['style-loader', 'css-loader', 'sass-loader'],
+      },
+    ],
   },
 
-  mode: "development",
+  mode: 'development',
 
   entry: {
-    polyfills: __dirname + "/polyfills.ts",
-    app: __dirname + "/main.ts"
+    polyfills: __dirname + '/polyfills.ts',
+    app: __dirname + '/main.ts',
   },
 
   output: {
-    path: __dirname + "/../../../dist/remote_tool_mock",
-    publicPath: "/",
-    filename: "js/[name].[hash].js",
-    chunkFilename: "js/[name].[id].[hash].chunk.js",
+    path: __dirname + '/../../../dist/remote_tool_mock',
+    publicPath: '/',
+    filename: 'js/[name].[hash].js',
+    chunkFilename: 'js/[name].[id].[hash].chunk.js',
   },
 
-  devtool: "source-map",
+  devtool: 'source-map',
 
   plugins: [
     new HtmlWebpackPlugin({
-      template: __dirname + "/index.html",
-      inject: "body",
-      inlineSource: ".(css|js)$",
+      template: __dirname + '/index.html',
+      inject: 'body',
+      inlineSource: '.(css|js)$',
     }),
     new HtmlWebpackInlineSourcePlugin(HtmlWebpackPlugin),
-  ]
+  ],
 };

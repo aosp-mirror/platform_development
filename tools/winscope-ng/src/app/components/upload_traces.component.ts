@@ -20,90 +20,83 @@ import {
   Inject,
   Input,
   NgZone,
-  Output
-} from "@angular/core";
-import {MatSnackBar} from "@angular/material/snack-bar";
-import {TraceData} from "app/trace_data";
-import {TRACE_INFO} from "app/trace_info";
-import {Trace, TraceFile} from "common/trace/trace";
-import {FileUtils, OnFile} from "common/utils/file_utils";
-import {ParserErrorSnackBarComponent} from "./parser_error_snack_bar_component";
-import {FilesDownloadListener} from "interfaces/files_download_listener";
+  Output,
+} from '@angular/core';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {TraceData} from 'app/trace_data';
+import {TRACE_INFO} from 'app/trace_info';
+import {Trace, TraceFile} from 'common/trace/trace';
+import {FileUtils, OnFile} from 'common/utils/file_utils';
+import {FilesDownloadListener} from 'interfaces/files_download_listener';
+import {ParserErrorSnackBarComponent} from './parser_error_snack_bar_component';
 
 @Component({
-  selector: "upload-traces",
+  selector: 'upload-traces',
   template: `
     <mat-card class="upload-card">
       <mat-card-title class="title">Upload Traces</mat-card-title>
 
       <mat-card-content
-          class="drop-box"
-          ref="drop-box"
-          (dragleave)="onFileDragOut($event)"
-          (dragover)="onFileDragIn($event)"
-          (drop)="onHandleFileDrop($event)"
-          (click)="fileDropRef.click()"
-      >
+        class="drop-box"
+        ref="drop-box"
+        (dragleave)="onFileDragOut($event)"
+        (dragover)="onFileDragIn($event)"
+        (drop)="onHandleFileDrop($event)"
+        (click)="fileDropRef.click()">
         <input
-            id="fileDropRef"
-            hidden
-            type="file"
-            multiple
-            #fileDropRef
-            (change)="onInputFiles($event)"
-        />
+          id="fileDropRef"
+          hidden
+          type="file"
+          multiple
+          #fileDropRef
+          (change)="onInputFiles($event)" />
 
-        <load-progress *ngIf="isLoadingFiles"
-                       [progressPercentage]="progressPercentage"
-                       [message]="progressMessage">
+        <load-progress
+          *ngIf="isLoadingFiles"
+          [progressPercentage]="progressPercentage"
+          [message]="progressMessage">
         </load-progress>
 
         <mat-list
-            *ngIf="!isLoadingFiles && this.traceData.getLoadedTraces().length > 0"
-            class="uploaded-files">
+          *ngIf="!isLoadingFiles && this.traceData.getLoadedTraces().length > 0"
+          class="uploaded-files">
           <mat-list-item *ngFor="let trace of this.traceData.getLoadedTraces()">
             <mat-icon matListIcon>
-              {{TRACE_INFO[trace.type].icon}}
+              {{ TRACE_INFO[trace.type].icon }}
             </mat-icon>
 
-            <p matLine>
-              {{trace.traceFile.file.name}} ({{TRACE_INFO[trace.type].name}})
-            </p>
+            <p matLine>{{ trace.traceFile.file.name }} ({{ TRACE_INFO[trace.type].name }})</p>
 
-            <button color="primary" mat-icon-button
-                    (click)="onRemoveTrace($event, trace)">
+            <button color="primary" mat-icon-button (click)="onRemoveTrace($event, trace)">
               <mat-icon>close</mat-icon>
             </button>
           </mat-list-item>
         </mat-list>
 
-        <div *ngIf="!isLoadingFiles && traceData.getLoadedTraces().length === 0"
-             class="drop-info">
+        <div *ngIf="!isLoadingFiles && traceData.getLoadedTraces().length === 0" class="drop-info">
           <p class="mat-body-3 icon">
             <mat-icon inline fontIcon="upload"></mat-icon>
           </p>
-          <p class="mat-body-1">
-            Drag your .winscope file(s) or click to upload
-          </p>
+          <p class="mat-body-1">Drag your .winscope file(s) or click to upload</p>
         </div>
       </mat-card-content>
 
-      <div *ngIf="!isLoadingFiles && traceData.getLoadedTraces().length > 0"
-           class="trace-actions-container">
-        <button color="primary" mat-raised-button class="load-btn"
-                (click)="onViewTracesButtonClick()">
+      <div
+        *ngIf="!isLoadingFiles && traceData.getLoadedTraces().length > 0"
+        class="trace-actions-container">
+        <button
+          color="primary"
+          mat-raised-button
+          class="load-btn"
+          (click)="onViewTracesButtonClick()">
           View traces
         </button>
 
-        <button color="primary" mat-stroked-button for="fileDropRef"
-                (click)="fileDropRef.click()">
+        <button color="primary" mat-stroked-button for="fileDropRef" (click)="fileDropRef.click()">
           Upload another file
         </button>
 
-        <button color="primary" mat-stroked-button
-                (click)="onClearButtonClick()">
-          Clear all
-        </button>
+        <button color="primary" mat-stroked-button (click)="onClearButtonClick()">Clear all</button>
       </div>
     </mat-card>
   `,
@@ -171,13 +164,13 @@ import {FilesDownloadListener} from "interfaces/files_download_listener";
       mat-card-content {
         flex-grow: 1;
       }
-    `
-  ]
+    `,
+  ],
 })
 export class UploadTracesComponent implements FilesDownloadListener {
   TRACE_INFO = TRACE_INFO;
   isLoadingFiles = false;
-  progressMessage = "";
+  progressMessage = '';
   progressPercentage?: number;
 
   @Input() traceData!: TraceData;
@@ -187,8 +180,7 @@ export class UploadTracesComponent implements FilesDownloadListener {
     @Inject(ChangeDetectorRef) private changeDetectorRef: ChangeDetectorRef,
     @Inject(MatSnackBar) private snackBar: MatSnackBar,
     @Inject(NgZone) private ngZone: NgZone
-  ) {
-  }
+  ) {}
 
   ngOnInit() {
     this.traceData.clear();
@@ -196,7 +188,7 @@ export class UploadTracesComponent implements FilesDownloadListener {
 
   public onFilesDownloadStart() {
     this.isLoadingFiles = true;
-    this.progressMessage = "Downloading files...";
+    this.progressMessage = 'Downloading files...';
     this.progressPercentage = undefined;
     this.changeDetectorRef.detectChanges();
   }
@@ -233,7 +225,7 @@ export class UploadTracesComponent implements FilesDownloadListener {
     e.preventDefault();
     e.stopPropagation();
     const droppedFiles = e.dataTransfer?.files;
-    if(!droppedFiles) return;
+    if (!droppedFiles) return;
     await this.processFiles(Array.from(droppedFiles));
   }
 
@@ -250,7 +242,7 @@ export class UploadTracesComponent implements FilesDownloadListener {
 
     const onProgressUpdate = (progress: number) => {
       const now = Date.now();
-      if ((Date.now() - lastUiProgressUpdate) < UI_PROGRESS_UPDATE_PERIOD_MS) {
+      if (Date.now() - lastUiProgressUpdate < UI_PROGRESS_UPDATE_PERIOD_MS) {
         // Let's limit the amount of UI updates, because the progress bar component
         // renders weird stuff when updated too frequently
         return;
@@ -267,11 +259,11 @@ export class UploadTracesComponent implements FilesDownloadListener {
     };
 
     this.isLoadingFiles = true;
-    this.progressMessage = "Unzipping files...";
+    this.progressMessage = 'Unzipping files...';
     this.changeDetectorRef.detectChanges();
     await FileUtils.unzipFilesIfNeeded(files, onFile, onProgressUpdate);
 
-    this.progressMessage = "Parsing files...";
+    this.progressMessage = 'Parsing files...';
     this.changeDetectorRef.detectChanges();
     const parserErrors = await this.traceData.loadTraces(traceFiles, onProgressUpdate);
 
