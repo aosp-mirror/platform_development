@@ -113,6 +113,7 @@ export class Presenter {
         rect.stableId = display.stableId;
         rect.displayId = display.id;
         rect.isDisplay = true;
+        rect.cornerRadius = 0;
         rect.isVirtual = false;
         return rect;
       }) ?? [];
@@ -124,6 +125,7 @@ export class Presenter {
           const rect = it.rect;
           rect.id = it.layerId;
           rect.displayId = it.displayId;
+          rect.cornerRadius = 0;
           if (!this.displayIds.includes(it.displayId)) {
             this.displayIds.push(it.displayId);
           }
