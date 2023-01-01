@@ -197,13 +197,6 @@ class AbiDiffHelper {
       std::deque<std::string> *type_queue,
       IRDiffDumper::DiffKind diff_kind);
 
-  bool CompareVTables(const RecordTypeIR *old_record,
-                      const RecordTypeIR *new_record);
-
-  bool CompareVTableComponents(
-      const VTableComponentIR &old_component,
-      const VTableComponentIR &new_component);
-
   DiffStatus CompareFunctionParameters(
       const std::vector<ParamIR> &old_parameters,
       const std::vector<ParamIR> &new_parameters,
