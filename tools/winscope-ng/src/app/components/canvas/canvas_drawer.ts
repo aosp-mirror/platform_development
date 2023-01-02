@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-import { CanvasMouseHandler } from "./canvas_mouse_handler";
+import {CanvasMouseHandler} from './canvas_mouse_handler';
 
-export type padding = {left: number, top: number, right: number, bottom: number};
+export type padding = {left: number; top: number; right: number; bottom: number};
 
 export interface CanvasDrawer {
   draw(): void;
-  handler: CanvasMouseHandler
-  canvas: HTMLCanvasElement
-  ctx: CanvasRenderingContext2D
-  padding: padding
-  getXScale(): number
-  getYScale(): number
-  getWidth(): number
-  getHeight(): number
+  handler: CanvasMouseHandler;
+  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
+  padding: padding;
+  getXScale(): number;
+  getYScale(): number;
+  getWidth(): number;
+  getHeight(): number;
 }

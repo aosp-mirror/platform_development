@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import {Timestamp, TimestampType} from "common/trace/timestamp";
-import {TraceFile} from "common/trace/trace";
-import {TraceType} from "common/trace/trace_type";
-import {Parser} from "./parser";
-import {AccessibilityTraceFileProto} from "./proto_types";
+import {Timestamp, TimestampType} from 'common/trace/timestamp';
+import {TraceFile} from 'common/trace/trace';
+import {TraceType} from 'common/trace/trace_type';
+import {Parser} from './parser';
+import {AccessibilityTraceFileProto} from './proto_types';
 
 class ParserAccessibility extends Parser {
   constructor(trace: TraceFile) {
@@ -36,21 +36,22 @@ class ParserAccessibility extends Parser {
 
   override decodeTrace(buffer: Uint8Array): any[] {
     const decoded = <any>AccessibilityTraceFileProto.decode(buffer);
-    if (Object.prototype.hasOwnProperty.call(decoded, "realToElapsedTimeOffsetNanos")) {
+    if (Object.prototype.hasOwnProperty.call(decoded, 'realToElapsedTimeOffsetNanos')) {
       this.realToElapsedTimeOffsetNs = BigInt(decoded.realToElapsedTimeOffsetNanos);
-    }
-    else {
+    } else {
       this.realToElapsedTimeOffsetNs = undefined;
     }
     return decoded.entry;
   }
 
-  override getTimestamp(type: TimestampType, entryProto: any): undefined|Timestamp {
+  override getTimestamp(type: TimestampType, entryProto: any): undefined | Timestamp {
     if (type === TimestampType.ELAPSED) {
       return new Timestamp(type, BigInt(entryProto.elapsedRealtimeNanos));
-    }
-    else if (type === TimestampType.REAL && this.realToElapsedTimeOffsetNs !== undefined) {
-      return new Timestamp(type, this.realToElapsedTimeOffsetNs + BigInt(entryProto.elapsedRealtimeNanos));
+    } else if (type === TimestampType.REAL && this.realToElapsedTimeOffsetNs !== undefined) {
+      return new Timestamp(
+        type,
+        this.realToElapsedTimeOffsetNs + BigInt(entryProto.elapsedRealtimeNanos)
+      );
     }
     return undefined;
   }
@@ -59,7 +60,7 @@ class ParserAccessibility extends Parser {
     return entryProto;
   }
 
-  private realToElapsedTimeOffsetNs: undefined|bigint;
+  private realToElapsedTimeOffsetNs: undefined | bigint;
   private static readonly MAGIC_NUMBER = [0x09, 0x41, 0x31, 0x31, 0x59, 0x54, 0x52, 0x41, 0x43]; // .A11YTRAC
 }
 

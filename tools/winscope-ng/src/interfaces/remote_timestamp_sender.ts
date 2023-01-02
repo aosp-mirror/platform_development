@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {RealTimestamp} from "common/trace/timestamp";
+import {RealTimestamp} from 'common/trace/timestamp';
 
 export interface RemoteTimestampSender {
   sendTimestamp(timestamp: RealTimestamp): void;

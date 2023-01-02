@@ -13,18 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  ChangeDetectionStrategy,
-  Component,
-  Input,
-} from "@angular/core";
-import { UiData } from "./ui_data";
-import { TRACE_INFO } from "app/trace_info";
-import { TraceType } from "common/trace/trace_type";
-import { PersistentStore } from "common/utils/persistent_store";
+import {ChangeDetectionStrategy, Component, Input} from '@angular/core';
+import {TRACE_INFO} from 'app/trace_info';
+import {TraceType} from 'common/trace/trace_type';
+import {PersistentStore} from 'common/utils/persistent_store';
+import {UiData} from './ui_data';
 
 @Component({
-  selector: "viewer-surface-flinger",
+  selector: 'viewer-surface-flinger',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="card-grid">
@@ -33,8 +29,7 @@ import { PersistentStore } from "common/utils/persistent_store";
         title="Layers"
         [rects]="inputData?.rects ?? []"
         [highlightedItems]="inputData?.highlightedItems ?? []"
-        [displayIds]="inputData?.displayIds ?? []"
-      ></rects-view>
+        [displayIds]="inputData?.displayIds ?? []"></rects-view>
       <mat-divider [vertical]="true"></mat-divider>
       <hierarchy-view
         class="hierarchy-view"
@@ -43,8 +38,7 @@ import { PersistentStore } from "common/utils/persistent_store";
         [highlightedItems]="inputData?.highlightedItems ?? []"
         [pinnedItems]="inputData?.pinnedItems ?? []"
         [store]="store"
-        [userOptions]="inputData?.hierarchyUserOptions ?? {}"
-      ></hierarchy-view>
+        [userOptions]="inputData?.hierarchyUserOptions ?? {}"></hierarchy-view>
       <mat-divider [vertical]="true"></mat-divider>
       <properties-view
         class="properties-view"
@@ -52,13 +46,14 @@ import { PersistentStore } from "common/utils/persistent_store";
         [propertiesTree]="inputData?.propertiesTree ?? {}"
         [selectedFlickerItem]="inputData?.selectedLayer ?? {}"
         [displayPropertyGroups]="inputData?.displayPropertyGroups"
-        [isProtoDump]="true"
-      ></properties-view>
+        [isProtoDump]="true"></properties-view>
     </div>
   `,
   styles: [
     `
-      .rects-view, .hierarchy-view, .properties-view {
+      .rects-view,
+      .hierarchy-view,
+      .properties-view {
         flex: 1;
         padding: 16px;
         display: flex;
@@ -66,7 +61,7 @@ import { PersistentStore } from "common/utils/persistent_store";
         overflow: auto;
       }
     `,
-  ]
+  ],
 })
 export class ViewerSurfaceFlingerComponent {
   @Input() inputData?: UiData;

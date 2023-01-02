@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2022 The Android Open Source Project
  *
@@ -14,20 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { PresenterInputMethod } from "viewers/common/presenter_input_method";
+import {PresenterInputMethod} from 'viewers/common/presenter_input_method';
 
 export class PresenterInputMethodClients extends PresenterInputMethod {
   protected updateHierarchyTableProperties() {
-    return {...new ImClientsTableProperties(
-      this.entry?.obj?.client?.inputMethodManager?.curId,
-      this.entry?.obj?.client?.editorInfo?.packageName,
-    )};
+    return {
+      ...new ImClientsTableProperties(
+        this.entry?.obj?.client?.inputMethodManager?.curId,
+        this.entry?.obj?.client?.editorInfo?.packageName
+      ),
+    };
   }
 }
 
 class ImClientsTableProperties {
-  constructor(
-    public inputMethodId: string | undefined,
-    public packageName: string | undefined,
-  ) {}
+  constructor(public inputMethodId: string | undefined, public packageName: string | undefined) {}
 }

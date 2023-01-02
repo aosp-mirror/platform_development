@@ -13,14 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceType} from "common/trace/trace_type";
-import {PresenterInputMethodClients} from "./presenter_input_method_clients";
-import {ViewerInputMethod} from "viewers/common/viewer_input_method";
-import {View, ViewType} from "viewers/viewer";
+import {TraceType} from 'common/trace/trace_type';
+import {ViewerInputMethod} from 'viewers/common/viewer_input_method';
+import {View, ViewType} from 'viewers/viewer';
+import {PresenterInputMethodClients} from './presenter_input_method_clients';
 
 class ViewerInputMethodClients extends ViewerInputMethod {
   override getViews(): View[] {
-    return [new View(ViewType.TAB, this.getDependencies(), this.htmlElement, "Input Method Clients")];
+    return [
+      new View(ViewType.TAB, this.getDependencies(), this.htmlElement, 'Input Method Clients'),
+    ];
   }
 
   override getDependencies(): TraceType[] {

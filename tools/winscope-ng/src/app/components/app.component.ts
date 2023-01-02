@@ -17,112 +17,100 @@
 import {
   ChangeDetectorRef,
   Component,
-  Injector,
   Inject,
+  Injector,
   ViewChild,
-  ViewEncapsulation
-} from "@angular/core";
-import { createCustomElement } from "@angular/elements";
-import { TimelineComponent} from "./timeline/timeline.component";
-import {AbtChromeExtensionProtocol} from "abt_chrome_extension/abt_chrome_extension_protocol";
-import {CrossToolProtocol} from "cross_tool/cross_tool_protocol";
-import { Mediator } from "app/mediator";
-import { TraceData } from "app/trace_data";
-import { PersistentStore } from "common/utils/persistent_store";
-import { Timestamp } from "common/trace/timestamp";
-import { FileUtils } from "common/utils/file_utils";
-import { proxyClient, ProxyState } from "trace_collection/proxy_client";
-import { ViewerInputMethodComponent } from "viewers/components/viewer_input_method.component";
-import { View, Viewer } from "viewers/viewer";
-import { ViewerProtologComponent} from "viewers/viewer_protolog/viewer_protolog.component";
-import { ViewerSurfaceFlingerComponent } from "viewers/viewer_surface_flinger/viewer_surface_flinger.component";
-import { ViewerWindowManagerComponent } from "viewers/viewer_window_manager/viewer_window_manager.component";
-import { ViewerTransactionsComponent } from "viewers/viewer_transactions/viewer_transactions.component";
-import { ViewerScreenRecordingComponent } from "viewers/viewer_screen_recording/viewer_screen_recording.component";
-import { TraceType } from "common/trace/trace_type";
-import { TimelineData } from "app/timeline_data";
-import { TracingConfig } from "trace_collection/tracing_config";
-import {TRACE_INFO} from "app/trace_info";
-import {UploadTracesComponent} from "./upload_traces.component";
-import {TraceDataListener} from "interfaces/trace_data_listener";
+  ViewEncapsulation,
+} from '@angular/core';
+import {createCustomElement} from '@angular/elements';
+import {AbtChromeExtensionProtocol} from 'abt_chrome_extension/abt_chrome_extension_protocol';
+import {Mediator} from 'app/mediator';
+import {TimelineData} from 'app/timeline_data';
+import {TraceData} from 'app/trace_data';
+import {TRACE_INFO} from 'app/trace_info';
+import {Timestamp} from 'common/trace/timestamp';
+import {TraceType} from 'common/trace/trace_type';
+import {FileUtils} from 'common/utils/file_utils';
+import {PersistentStore} from 'common/utils/persistent_store';
+import {CrossToolProtocol} from 'cross_tool/cross_tool_protocol';
+import {TraceDataListener} from 'interfaces/trace_data_listener';
+import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
+import {TracingConfig} from 'trace_collection/tracing_config';
+import {ViewerInputMethodComponent} from 'viewers/components/viewer_input_method.component';
+import {View, Viewer} from 'viewers/viewer';
+import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog.component';
+import {ViewerScreenRecordingComponent} from 'viewers/viewer_screen_recording/viewer_screen_recording.component';
+import {ViewerSurfaceFlingerComponent} from 'viewers/viewer_surface_flinger/viewer_surface_flinger.component';
+import {ViewerTransactionsComponent} from 'viewers/viewer_transactions/viewer_transactions.component';
+import {ViewerWindowManagerComponent} from 'viewers/viewer_window_manager/viewer_window_manager.component';
+import {TimelineComponent} from './timeline/timeline.component';
+import {UploadTracesComponent} from './upload_traces.component';
 
 @Component({
-  selector: "app-root",
+  selector: 'app-root',
   template: `
     <mat-toolbar class="toolbar">
       <span class="app-title">Winscope</span>
 
       <a href="http://go/winscope-legacy">
-        <button color="primary" mat-button>
-          Open legacy Winscope
-        </button>
+        <button color="primary" mat-button>Open legacy Winscope</button>
       </a>
 
       <div class="spacer">
         <span *ngIf="dataLoaded" class="active-trace-file-info mat-body-2">
-          {{activeTraceFileInfo}}
+          {{ activeTraceFileInfo }}
         </span>
       </div>
 
-      <button *ngIf="dataLoaded" color="primary" mat-stroked-button
-              (click)="mediator.onWinscopeUploadNew()">
+      <button
+        *ngIf="dataLoaded"
+        color="primary"
+        mat-stroked-button
+        (click)="mediator.onWinscopeUploadNew()">
         Upload New
       </button>
 
       <button
-          mat-icon-button
-          matTooltip="Report bug"
-          (click)="goToLink('https://b.corp.google.com/issues/new?component=909476')">
-        <mat-icon>
-          bug_report
-        </mat-icon>
+        mat-icon-button
+        matTooltip="Report bug"
+        (click)="goToLink('https://b.corp.google.com/issues/new?component=909476')">
+        <mat-icon> bug_report </mat-icon>
       </button>
 
       <button
-          mat-icon-button
-          matTooltip="Switch to {{ isDarkModeOn ? 'light' : 'dark'}} mode"
-          (click)="setDarkMode(!isDarkModeOn)">
+        mat-icon-button
+        matTooltip="Switch to {{ isDarkModeOn ? 'light' : 'dark' }} mode"
+        (click)="setDarkMode(!isDarkModeOn)">
         <mat-icon>
-          {{ isDarkModeOn ? "brightness_5" : "brightness_4" }}
+          {{ isDarkModeOn ? 'brightness_5' : 'brightness_4' }}
         </mat-icon>
       </button>
     </mat-toolbar>
 
     <mat-divider></mat-divider>
 
-    <mat-drawer-container class="example-container" autosize disableClose
-                          autoFocus>
-
+    <mat-drawer-container class="example-container" autosize disableClose autoFocus>
       <mat-drawer-content>
-
         <ng-container *ngIf="dataLoaded; else noLoadedTracesBlock">
-
           <trace-view
-              class="viewers"
-              [viewers]="viewers"
-              [store]="store"
-              (downloadTracesButtonClick)="onDownloadTracesButtonClick()"
-              (activeViewChanged)="onActiveViewChanged($event)"
-          ></trace-view>
+            class="viewers"
+            [viewers]="viewers"
+            [store]="store"
+            (downloadTracesButtonClick)="onDownloadTracesButtonClick()"
+            (activeViewChanged)="onActiveViewChanged($event)"></trace-view>
 
           <mat-divider></mat-divider>
-
         </ng-container>
-
       </mat-drawer-content>
 
-      <mat-drawer #drawer mode="overlay" opened="true"
-                  [baseHeight]="collapsedTimelineHeight">
-
+      <mat-drawer #drawer mode="overlay" opened="true" [baseHeight]="collapsedTimelineHeight">
         <timeline
-            *ngIf="dataLoaded"
-            [timelineData]="timelineData"
-            [activeViewTraceTypes]="activeView?.dependencies"
-            [availableTraces]="getLoadedTraceTypes()"
-            (collapsedTimelineSizeChanged)="onCollapsedTimelineSizeChanged($event)"
-        ></timeline>
+          *ngIf="dataLoaded"
+          [timelineData]="timelineData"
+          [activeViewTraceTypes]="activeView?.dependencies"
+          [availableTraces]="getLoadedTraceTypes()"
+          (collapsedTimelineSizeChanged)="onCollapsedTimelineSizeChanged($event)"></timeline>
       </mat-drawer>
-
     </mat-drawer-container>
 
     <ng-template #noLoadedTracesBlock>
@@ -134,17 +122,15 @@ import {TraceDataListener} from "interfaces/trace_data_listener";
 
           <div class="card-grid landing-grid">
             <collect-traces
-                class="collect-traces-card homepage-card"
-                [traceData]="traceData"
-                (traceDataLoaded)="mediator.onWinscopeTraceDataLoaded()"
-                [store]="store"
-            ></collect-traces>
+              class="collect-traces-card homepage-card"
+              [traceData]="traceData"
+              (traceDataLoaded)="mediator.onWinscopeTraceDataLoaded()"
+              [store]="store"></collect-traces>
 
             <upload-traces
-                class="upload-traces-card homepage-card"
-                [traceData]="traceData"
-                (traceDataLoaded)="mediator.onWinscopeTraceDataLoaded()"
-            ></upload-traces>
+              class="upload-traces-card homepage-card"
+              [traceData]="traceData"
+              (traceDataLoaded)="mediator.onWinscopeTraceDataLoaded()"></upload-traces>
           </div>
         </div>
       </div>
@@ -194,12 +180,12 @@ import {TraceDataListener} from "interfaces/trace_data_listener";
         flex-grow: 1;
         margin: auto;
       }
-    `
+    `,
   ],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
 })
 export class AppComponent implements TraceDataListener {
-  title = "winscope-ng";
+  title = 'winscope-ng';
   changeDetectorRef: ChangeDetectorRef;
   traceData = new TraceData();
   timelineData = new TimelineData();
@@ -220,7 +206,7 @@ export class AppComponent implements TraceDataListener {
   isDarkModeOn!: boolean;
   dataLoaded = false;
   activeView?: View;
-  activeTraceFileInfo = "";
+  activeTraceFileInfo = '';
   collapsedTimelineHeight = 0;
   @ViewChild(UploadTracesComponent) uploadTracesComponent?: UploadTracesComponent;
   @ViewChild(TimelineComponent) timelineComponent?: TimelineComponent;
@@ -231,33 +217,45 @@ export class AppComponent implements TraceDataListener {
   ) {
     this.changeDetectorRef = changeDetectorRef;
 
-    const storeDarkMode = this.store.get("dark-mode");
-    const prefersDarkQuery = window.matchMedia?.("(prefers-color-scheme: dark)");
-    this.setDarkMode(storeDarkMode != null ? storeDarkMode == "true" : prefersDarkQuery.matches);
+    const storeDarkMode = this.store.get('dark-mode');
+    const prefersDarkQuery = window.matchMedia?.('(prefers-color-scheme: dark)');
+    this.setDarkMode(storeDarkMode != null ? storeDarkMode == 'true' : prefersDarkQuery.matches);
 
-    if (!customElements.get("viewer-input-method")) {
-      customElements.define("viewer-input-method",
-        createCustomElement(ViewerInputMethodComponent, {injector}));
+    if (!customElements.get('viewer-input-method')) {
+      customElements.define(
+        'viewer-input-method',
+        createCustomElement(ViewerInputMethodComponent, {injector})
+      );
     }
-    if (!customElements.get("viewer-protolog")) {
-      customElements.define("viewer-protolog",
-        createCustomElement(ViewerProtologComponent, {injector}));
+    if (!customElements.get('viewer-protolog')) {
+      customElements.define(
+        'viewer-protolog',
+        createCustomElement(ViewerProtologComponent, {injector})
+      );
     }
-    if (!customElements.get("viewer-screen-recording")) {
-      customElements.define("viewer-screen-recording",
-        createCustomElement(ViewerScreenRecordingComponent, {injector}));
+    if (!customElements.get('viewer-screen-recording')) {
+      customElements.define(
+        'viewer-screen-recording',
+        createCustomElement(ViewerScreenRecordingComponent, {injector})
+      );
     }
-    if (!customElements.get("viewer-surface-flinger")) {
-      customElements.define("viewer-surface-flinger",
-        createCustomElement(ViewerSurfaceFlingerComponent, {injector}));
+    if (!customElements.get('viewer-surface-flinger')) {
+      customElements.define(
+        'viewer-surface-flinger',
+        createCustomElement(ViewerSurfaceFlingerComponent, {injector})
+      );
     }
-    if (!customElements.get("viewer-transactions")) {
-      customElements.define("viewer-transactions",
-        createCustomElement(ViewerTransactionsComponent, {injector}));
+    if (!customElements.get('viewer-transactions')) {
+      customElements.define(
+        'viewer-transactions',
+        createCustomElement(ViewerTransactionsComponent, {injector})
+      );
     }
-    if (!customElements.get("viewer-window-manager")) {
-      customElements.define("viewer-window-manager",
-        createCustomElement(ViewerWindowManagerComponent, {injector}));
+    if (!customElements.get('viewer-window-manager')) {
+      customElements.define(
+        'viewer-window-manager',
+        createCustomElement(ViewerWindowManagerComponent, {injector})
+      );
     }
 
     TracingConfig.getInstance().initialize(localStorage);
@@ -281,7 +279,7 @@ export class AppComponent implements TraceDataListener {
     return this.traceData.getLoadedTraces().map((trace) => trace.type);
   }
 
-  getVideoData(): Blob|undefined {
+  getVideoData(): Blob | undefined {
     return this.timelineData.getScreenRecordingVideo();
   }
 
@@ -298,17 +296,17 @@ export class AppComponent implements TraceDataListener {
   }
 
   public setDarkMode(enabled: boolean) {
-    document.body.classList.toggle("dark-mode", enabled);
-    this.store.add("dark-mode", `${enabled}`);
+    document.body.classList.toggle('dark-mode', enabled);
+    this.store.add('dark-mode', `${enabled}`);
     this.isDarkModeOn = enabled;
   }
 
   async onDownloadTracesButtonClick() {
     const traceFiles = await this.makeTraceFilesForDownload();
     const zipFileBlob = await FileUtils.createZipArchive(traceFiles);
-    const zipFileName = "winscope.zip";
+    const zipFileName = 'winscope.zip';
 
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     document.body.appendChild(a);
     const url = window.URL.createObjectURL(zipFileBlob);
     a.href = url;
@@ -324,18 +322,17 @@ export class AppComponent implements TraceDataListener {
     this.timelineData.setActiveViewTraceTypes(view.dependencies);
   }
 
-  goToLink(url: string){
-    window.open(url, "_blank");
+  goToLink(url: string) {
+    window.open(url, '_blank');
   }
 
   private makeActiveTraceFileInfo(view: View): string {
     const traceFile = this.traceData
       .getLoadedTraces()
-      .find(trace => trace.type === view.dependencies[0])
-      ?.traceFile;
+      .find((trace) => trace.type === view.dependencies[0])?.traceFile;
 
     if (!traceFile) {
-      return "";
+      return '';
     }
 
     if (!traceFile.parentArchive) {
@@ -346,9 +343,9 @@ export class AppComponent implements TraceDataListener {
   }
 
   private async makeTraceFilesForDownload(): Promise<File[]> {
-    return this.traceData.getLoadedTraces().map(trace => {
+    return this.traceData.getLoadedTraces().map((trace) => {
       const traceType = TRACE_INFO[trace.type].name;
-      const newName = traceType + "/" + FileUtils.removeDirFromFileName(trace.traceFile.file.name);
+      const newName = traceType + '/' + FileUtils.removeDirFromFileName(trace.traceFile.file.name);
       return new File([trace.traceFile.file], newName);
     });
   }

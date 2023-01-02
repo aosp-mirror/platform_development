@@ -13,26 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { ComponentFixture, TestBed, ComponentFixtureAutoDetect } from "@angular/core/testing";
-import { TreeComponent } from "./tree.component";
-import { Component, ViewChild, NO_ERRORS_SCHEMA } from "@angular/core";
-import { PersistentStore } from "common/utils/persistent_store";
-import { UiTreeNode } from "viewers/common/ui_tree_utils";
+import {Component, NO_ERRORS_SCHEMA, ViewChild} from '@angular/core';
+import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {PersistentStore} from 'common/utils/persistent_store';
+import {UiTreeNode} from 'viewers/common/ui_tree_utils';
+import {TreeComponent} from './tree.component';
 
-describe("TreeComponent", () => {
+describe('TreeComponent', () => {
   let fixture: ComponentFixture<TestHostComponent>;
   let component: TestHostComponent;
   let htmlElement: HTMLElement;
 
   beforeAll(async () => {
     await TestBed.configureTestingModule({
-      providers: [
-        { provide: ComponentFixtureAutoDetect, useValue: true }
-      ],
-      declarations: [
-        TreeComponent, TestHostComponent
-      ],
-      schemas: [NO_ERRORS_SCHEMA]
+      providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
+      declarations: [TreeComponent, TestHostComponent],
+      schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
   });
 
@@ -42,36 +38,35 @@ describe("TreeComponent", () => {
     htmlElement = fixture.nativeElement;
   });
 
-  it("can be created", () => {
+  it('can be created', () => {
     fixture.detectChanges();
     expect(component).toBeTruthy();
   });
 
   @Component({
-    selector: "host-component",
+    selector: 'host-component',
     template: `
-                <tree-view
-                  [item]="item"
-                  [store]="store"
-                  [isFlattened]="isFlattened"
-                  [diffClass]="diffClass"
-                  [isHighlighted]="isHighlighted"
-                  [hasChildren]="hasChildren"
-                ></tree-view>
-              `
+      <tree-view
+        [item]="item"
+        [store]="store"
+        [isFlattened]="isFlattened"
+        [diffClass]="diffClass"
+        [isHighlighted]="isHighlighted"
+        [hasChildren]="hasChildren"></tree-view>
+    `,
   })
   class TestHostComponent {
     isFlattened = true;
     item: UiTreeNode = {
       simplifyNames: false,
-      kind: "entry",
-      name: "BaseLayerTraceEntry",
-      shortName: "BLTE",
+      kind: 'entry',
+      name: 'BaseLayerTraceEntry',
+      shortName: 'BLTE',
       chips: [],
-      children: [{kind: "3", stableId: "3", name: "Child1"}],
+      children: [{kind: '3', stableId: '3', name: 'Child1'}],
     };
     store = new PersistentStore();
-    diffClass = jasmine.createSpy().and.returnValue("none");
+    diffClass = jasmine.createSpy().and.returnValue('none');
     isHighlighted = jasmine.createSpy().and.returnValue(false);
     hasChildren = jasmine.createSpy().and.returnValue(true);
 

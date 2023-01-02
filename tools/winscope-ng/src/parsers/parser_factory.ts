@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-import {TraceType} from "common/trace/trace_type";
-import {TraceFile} from "common/trace/trace";
-import {FunctionUtils, OnProgressUpdateType} from "common/utils/function_utils";
-import {Parser} from "./parser";
-import {ParserAccessibility} from "./parser_accessibility";
-import {ParserInputMethodClients} from "./parser_input_method_clients";
-import {ParserInputMethodManagerService} from "./parser_input_method_manager_service";
-import {ParserInputMethodService} from "./parser_input_method_service";
-import {ParserProtoLog} from "./parser_protolog";
-import {ParserScreenRecording} from "./parser_screen_recording";
-import {ParserScreenRecordingLegacy} from "./parser_screen_recording_legacy";
-import {ParserSurfaceFlinger} from "./parser_surface_flinger";
-import {ParserTransactions} from "./parser_transactions";
-import {ParserWindowManager} from "./parser_window_manager";
-import {ParserWindowManagerDump} from "./parser_window_manager_dump";
+import {TraceFile} from 'common/trace/trace';
+import {TraceType} from 'common/trace/trace_type';
+import {FunctionUtils, OnProgressUpdateType} from 'common/utils/function_utils';
+import {Parser} from './parser';
+import {ParserAccessibility} from './parser_accessibility';
+import {ParserInputMethodClients} from './parser_input_method_clients';
+import {ParserInputMethodManagerService} from './parser_input_method_manager_service';
+import {ParserInputMethodService} from './parser_input_method_service';
+import {ParserProtoLog} from './parser_protolog';
+import {ParserScreenRecording} from './parser_screen_recording';
+import {ParserScreenRecordingLegacy} from './parser_screen_recording_legacy';
+import {ParserSurfaceFlinger} from './parser_surface_flinger';
+import {ParserTransactions} from './parser_transactions';
+import {ParserWindowManager} from './parser_window_manager';
+import {ParserWindowManagerDump} from './parser_window_manager_dump';
 
 export class ParserFactory {
   static readonly PARSERS = [
@@ -49,8 +49,8 @@ export class ParserFactory {
 
   async createParsers(
     traceFiles: TraceFile[],
-    onProgressUpdate: OnProgressUpdateType = FunctionUtils.DO_NOTHING):
-    Promise<[Parser[], ParserError[]]> {
+    onProgressUpdate: OnProgressUpdateType = FunctionUtils.DO_NOTHING
+  ): Promise<[Parser[], ParserError[]]> {
     const errors: ParserError[] = [];
 
     if (traceFiles.length === 0) {
@@ -69,8 +69,7 @@ export class ParserFactory {
             this.parsers.set(parser.getTraceType(), parser);
           }
           break;
-        }
-        catch(error) {
+        } catch (error) {
           // skip current parser
         }
       }
@@ -80,7 +79,7 @@ export class ParserFactory {
         errors.push(new ParserError(ParserErrorType.UNSUPPORTED_FORMAT, traceFile.file));
       }
 
-      onProgressUpdate(100 * (index + 1) / traceFiles.length);
+      onProgressUpdate((100 * (index + 1)) / traceFiles.length);
     }
 
     return [Array.from(this.parsers.values()), errors];
@@ -89,30 +88,42 @@ export class ParserFactory {
   private shouldUseParser(newParser: Parser, errors: ParserError[]): boolean {
     const oldParser = this.parsers.get(newParser.getTraceType());
     if (!oldParser) {
-      console.log(`Loaded trace ${newParser.getTrace().traceFile.file.name} (trace type: ${newParser.getTraceType()})`);
+      console.log(
+        `Loaded trace ${
+          newParser.getTrace().traceFile.file.name
+        } (trace type: ${newParser.getTraceType()})`
+      );
       return true;
     }
 
     if (newParser.getEntriesLength() > oldParser.getEntriesLength()) {
       console.log(
-        `Loaded trace ${newParser.getTrace().traceFile.file.name} (trace type: ${newParser.getTraceType()}).` +
-        ` Replace trace ${oldParser.getTrace().traceFile.file.name}`
+        `Loaded trace ${
+          newParser.getTrace().traceFile.file.name
+        } (trace type: ${newParser.getTraceType()}).` +
+          ` Replace trace ${oldParser.getTrace().traceFile.file.name}`
       );
       errors.push(
         new ParserError(
-          ParserErrorType.OVERRIDE, oldParser.getTrace().traceFile.file, oldParser.getTraceType()
+          ParserErrorType.OVERRIDE,
+          oldParser.getTrace().traceFile.file,
+          oldParser.getTraceType()
         )
       );
       return true;
     }
 
     console.log(
-      `Skipping trace ${newParser.getTrace().traceFile.file.name} (trace type: ${newParser.getTraceType()}).` +
-      ` Keep trace ${oldParser.getTrace().traceFile.file.name}`
+      `Skipping trace ${
+        newParser.getTrace().traceFile.file.name
+      } (trace type: ${newParser.getTraceType()}).` +
+        ` Keep trace ${oldParser.getTrace().traceFile.file.name}`
     );
     errors.push(
       new ParserError(
-        ParserErrorType.OVERRIDE, newParser.getTrace().traceFile.file, newParser.getTraceType()
+        ParserErrorType.OVERRIDE,
+        newParser.getTrace().traceFile.file,
+        newParser.getTraceType()
       )
     );
     return false;
@@ -122,13 +133,13 @@ export class ParserFactory {
 export enum ParserErrorType {
   NO_INPUT_FILES,
   UNSUPPORTED_FORMAT,
-  OVERRIDE
+  OVERRIDE,
 }
 
 export class ParserError {
   constructor(
     public type: ParserErrorType,
-    public trace: File|undefined = undefined,
-    public traceType: TraceType|undefined = undefined) {
-  }
+    public trace: File | undefined = undefined,
+    public traceType: TraceType | undefined = undefined
+  ) {}
 }

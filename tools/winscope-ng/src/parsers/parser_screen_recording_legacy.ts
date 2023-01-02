@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import {Timestamp, TimestampType} from "common/trace/timestamp";
-import {TraceFile} from "common/trace/trace";
-import {TraceType} from "common/trace/trace_type";
-import {ArrayUtils} from "common/utils/array_utils";
-import {Parser} from "./parser";
-import {ScreenRecordingTraceEntry} from "common/trace/screen_recording";
+import {ScreenRecordingTraceEntry} from 'common/trace/screen_recording';
+import {Timestamp, TimestampType} from 'common/trace/timestamp';
+import {TraceFile} from 'common/trace/trace';
+import {TraceType} from 'common/trace/trace_type';
+import {ArrayUtils} from 'common/utils/array_utils';
+import {Parser} from './parser';
 
 class ParserScreenRecordingLegacy extends Parser {
   constructor(trace: TraceFile) {
@@ -40,25 +40,32 @@ class ParserScreenRecordingLegacy extends Parser {
     return this.parseTimestamps(videoData, posTimestamps, count);
   }
 
-  override getTimestamp(type: TimestampType, decodedEntry: Timestamp): undefined|Timestamp {
+  override getTimestamp(type: TimestampType, decodedEntry: Timestamp): undefined | Timestamp {
     if (type !== TimestampType.ELAPSED) {
       return undefined;
     }
     return decodedEntry;
   }
 
-  override processDecodedEntry(index: number, timestampType: TimestampType, entry: Timestamp): ScreenRecordingTraceEntry {
+  override processDecodedEntry(
+    index: number,
+    timestampType: TimestampType,
+    entry: Timestamp
+  ): ScreenRecordingTraceEntry {
     const currentTimestamp = entry;
     const initialTimestamp = this.getTimestamps(TimestampType.ELAPSED)![0];
     const videoTimeSeconds =
-      Number(currentTimestamp.getValueNs() - initialTimestamp.getValueNs()) / 1000000000
-      + ParserScreenRecordingLegacy.EPSILON;
+      Number(currentTimestamp.getValueNs() - initialTimestamp.getValueNs()) / 1000000000 +
+      ParserScreenRecordingLegacy.EPSILON;
     const videoData = this.trace.file;
     return new ScreenRecordingTraceEntry(videoTimeSeconds, videoData);
   }
 
   private searchMagicString(videoData: Uint8Array): number {
-    let pos = ArrayUtils.searchSubarray(videoData, ParserScreenRecordingLegacy.WINSCOPE_META_MAGIC_STRING);
+    let pos = ArrayUtils.searchSubarray(
+      videoData,
+      ParserScreenRecordingLegacy.WINSCOPE_META_MAGIC_STRING
+    );
     if (pos === undefined) {
       throw new TypeError("video data doesn't contain winscope magic string");
     }
@@ -66,30 +73,34 @@ class ParserScreenRecordingLegacy extends Parser {
     return pos;
   }
 
-  private parseFramesCount(videoData: Uint8Array, pos: number) : [number, number] {
+  private parseFramesCount(videoData: Uint8Array, pos: number): [number, number] {
     if (pos + 4 > videoData.length) {
-      throw new TypeError("Failed to parse frames count. Video data is too short.");
+      throw new TypeError('Failed to parse frames count. Video data is too short.');
     }
-    const framesCount = Number(ArrayUtils.toUintLittleEndian(videoData, pos, pos+4));
+    const framesCount = Number(ArrayUtils.toUintLittleEndian(videoData, pos, pos + 4));
     pos += 4;
     return [pos, framesCount];
   }
 
   private parseTimestamps(videoData: Uint8Array, pos: number, count: number): Timestamp[] {
     if (pos + count * 8 > videoData.length) {
-      throw new TypeError("Failed to parse timestamps. Video data is too short.");
+      throw new TypeError('Failed to parse timestamps. Video data is too short.');
     }
     const timestamps: Timestamp[] = [];
     for (let i = 0; i < count; ++i) {
-      const value = ArrayUtils.toUintLittleEndian(videoData, pos, pos+8) * 1000n;
+      const value = ArrayUtils.toUintLittleEndian(videoData, pos, pos + 8) * 1000n;
       pos += 8;
       timestamps.push(new Timestamp(TimestampType.ELAPSED, value));
     }
     return timestamps;
   }
 
-  private static readonly MPEG4_MAGIC_NMBER = [0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x6d, 0x70, 0x34, 0x32]; // ....ftypmp42
-  private static readonly WINSCOPE_META_MAGIC_STRING = [0x23, 0x56, 0x56, 0x31, 0x4e, 0x53, 0x43, 0x30, 0x50, 0x45, 0x54, 0x31, 0x4d, 0x45, 0x21, 0x23]; // #VV1NSC0PET1ME!#
+  private static readonly MPEG4_MAGIC_NMBER = [
+    0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x6d, 0x70, 0x34, 0x32,
+  ]; // ....ftypmp42
+  private static readonly WINSCOPE_META_MAGIC_STRING = [
+    0x23, 0x56, 0x56, 0x31, 0x4e, 0x53, 0x43, 0x30, 0x50, 0x45, 0x54, 0x31, 0x4d, 0x45, 0x21, 0x23,
+  ]; // #VV1NSC0PET1ME!#
   private static readonly EPSILON = 0.00001;
 }
 

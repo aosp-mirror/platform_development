@@ -13,57 +13,60 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input } from "@angular/core";
-import { treeNodeDataViewStyles } from "viewers/components/styles/tree_node_data_view.styles";
-import { Terminal, HierarchyTreeNode, UiTreeNode } from "viewers/common/ui_tree_utils";
-import Chip from "viewers/common/chip";
+import {Component, Input} from '@angular/core';
+import Chip from 'viewers/common/chip';
+import {HierarchyTreeNode, Terminal, UiTreeNode} from 'viewers/common/ui_tree_utils';
+import {treeNodeDataViewStyles} from 'viewers/components/styles/tree_node_data_view.styles';
 
 @Component({
-  selector: "tree-node-data-view",
+  selector: 'tree-node-data-view',
   template: `
     <span class="mat-body-1">
-      <span class="mat-body-2">{{item.kind}}</span>
+      <span class="mat-body-2">{{ item.kind }}</span>
       <ng-container *ngIf="item.kind && item.name">&ngsp;-&ngsp;</ng-container>
       <span *ngIf="showShortName()" [matTooltip]="itemTooltip()">{{ itemShortName() }}</span>
-      <ng-container *ngIf="!showShortName()">{{item.name}}</ng-container>
-      <div
-        *ngFor="let chip of chips()"
-        [class]="chipClass(chip)"
-        [matTooltip]="chip.long"
-      >{{chip.short}}</div>
+      <ng-container *ngIf="!showShortName()">{{ item.name }}</ng-container>
+      <div *ngFor="let chip of chips()" [class]="chipClass(chip)" [matTooltip]="chip.long">
+        {{ chip.short }}
+      </div>
     </span>
   `,
-  styles: [ treeNodeDataViewStyles ]
+  styles: [treeNodeDataViewStyles],
 })
-
 export class TreeNodeDataViewComponent {
   @Input() item!: UiTreeNode;
 
   public chips() {
-    return (this.item instanceof HierarchyTreeNode) ? this.item.chips : [];
+    return this.item instanceof HierarchyTreeNode ? this.item.chips : [];
   }
 
   public itemShortName() {
-    return (this.item instanceof HierarchyTreeNode && this.item.shortName) ? this.item.shortName : this.item.name;
+    return this.item instanceof HierarchyTreeNode && this.item.shortName
+      ? this.item.shortName
+      : this.item.name;
   }
 
   public itemTooltip() {
     if (this.item.name instanceof Terminal) {
-      return "";
+      return '';
     }
-    return this.item.name ?? "";
+    return this.item.name ?? '';
   }
 
   public showShortName() {
-    return (this.item instanceof HierarchyTreeNode) && this.item.simplifyNames && this.item.shortName && this.item.shortName !== this.item.name;
+    return (
+      this.item instanceof HierarchyTreeNode &&
+      this.item.simplifyNames &&
+      this.item.shortName &&
+      this.item.shortName !== this.item.name
+    );
   }
 
   public chipClass(chip: Chip) {
     return [
-      "tree-view-internal-chip",
-      "tree-view-chip",
-      "tree-view-chip" + "-" +
-        (chip.type.toString() || "default"),
+      'tree-view-internal-chip',
+      'tree-view-chip',
+      'tree-view-chip' + '-' + (chip.type.toString() || 'default'),
     ];
   }
 }

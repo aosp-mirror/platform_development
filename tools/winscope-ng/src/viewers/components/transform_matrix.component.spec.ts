@@ -13,25 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ComponentFixture, TestBed} from "@angular/core/testing";
-import { TransformMatrixComponent } from "./transform_matrix.component";
-import { ComponentFixtureAutoDetect } from "@angular/core/testing";
-import { NO_ERRORS_SCHEMA } from "@angular/core";
+import {NO_ERRORS_SCHEMA} from '@angular/core';
+import {ComponentFixture, ComponentFixtureAutoDetect, TestBed} from '@angular/core/testing';
+import {TransformMatrixComponent} from './transform_matrix.component';
 
-describe("TransformMatrixComponent", () => {
+describe('TransformMatrixComponent', () => {
   let fixture: ComponentFixture<TransformMatrixComponent>;
   let component: TransformMatrixComponent;
   let htmlElement: HTMLElement;
 
   beforeAll(async () => {
     await TestBed.configureTestingModule({
-      providers: [
-        { provide: ComponentFixtureAutoDetect, useValue: true }
-      ],
-      declarations: [
-        TransformMatrixComponent
-      ],
-      schemas: [NO_ERRORS_SCHEMA]
+      providers: [{provide: ComponentFixtureAutoDetect, useValue: true}],
+      declarations: [TransformMatrixComponent],
+      schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
   });
 
@@ -41,7 +36,7 @@ describe("TransformMatrixComponent", () => {
     htmlElement = fixture.nativeElement;
   });
 
-  it("can be created", () => {
+  it('can be created', () => {
     expect(component).toBeTruthy();
   });
 });

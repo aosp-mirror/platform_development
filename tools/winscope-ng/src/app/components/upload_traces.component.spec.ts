@@ -13,23 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ComponentFixture, TestBed} from "@angular/core/testing";
-import {UploadTracesComponent} from "./upload_traces.component";
-import { MatCardModule } from "@angular/material/card";
-import { MatSnackBar, MatSnackBarModule } from "@angular/material/snack-bar";
-import {TraceData} from "app/trace_data";
+import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {MatCardModule} from '@angular/material/card';
+import {MatSnackBar, MatSnackBarModule} from '@angular/material/snack-bar';
+import {TraceData} from 'app/trace_data';
+import {UploadTracesComponent} from './upload_traces.component';
 
-describe("UploadTracesComponent", () => {
+describe('UploadTracesComponent', () => {
   let fixture: ComponentFixture<UploadTracesComponent>;
   let component: UploadTracesComponent;
   let htmlElement: HTMLElement;
 
   beforeAll(async () => {
     await TestBed.configureTestingModule({
-      imports: [
-        MatCardModule,
-        MatSnackBarModule
-      ],
+      imports: [MatCardModule, MatSnackBarModule],
       providers: [MatSnackBar],
       declarations: [UploadTracesComponent],
     }).compileComponents();
@@ -43,8 +40,7 @@ describe("UploadTracesComponent", () => {
     component.traceData = traceData;
   });
 
-  it("can be created", () => {
+  it('can be created', () => {
     expect(component).toBeTruthy();
   });
-
 });

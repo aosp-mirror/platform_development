@@ -16,13 +16,13 @@
 
 import {
   ActiveBuffer,
-  Layer,
-  LayerProperties,
   EMPTY_COLOR,
   EMPTY_RECT,
   EMPTY_RECTF,
-  EMPTY_TRANSFORM
-} from "common/trace/flickerlib/common";
+  EMPTY_TRANSFORM,
+  Layer,
+  LayerProperties,
+} from 'common/trace/flickerlib/common';
 
 class LayerBuilder {
   setFlags(value: number): LayerBuilder {
@@ -40,7 +40,7 @@ class LayerBuilder {
       false /* isOpaque */,
       0 /* shadowRadius */,
       0 /* cornerRadius */,
-      "type" /* type */,
+      'type' /* type */,
       EMPTY_RECTF /* screenBounds */,
       EMPTY_TRANSFORM /* transform */,
       EMPTY_RECTF /* sourceBounds */,
@@ -62,7 +62,7 @@ class LayerBuilder {
     );
 
     return new Layer(
-      "name" /* name */,
+      'name' /* name */,
       0 /* id */,
       -1 /*parentId */,
       0 /* z */,

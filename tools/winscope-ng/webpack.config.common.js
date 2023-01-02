@@ -13,53 +13,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const path = require("path");
-const TerserPlugin = require("terser-webpack-plugin");
+const path = require('path');
+const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
   resolve: {
-    extensions: [".ts", ".js", ".css"],
-    modules: [
-      "node_modules",
-      "src",
-      "kotlin_build",
-      path.resolve(__dirname, "../../.."),
-    ]
+    extensions: ['.ts', '.js', '.css'],
+    modules: ['node_modules', 'src', 'kotlin_build', path.resolve(__dirname, '../../..')],
   },
 
   resolveLoader: {
-    modules: ["node_modules", path.resolve(__dirname, "loaders")],
+    modules: ['node_modules', path.resolve(__dirname, 'loaders')],
   },
 
   module: {
-    rules:[
+    rules: [
       {
         test: /\.ts$/,
-        use: ["ts-loader", "angular2-template-loader"]
+        use: ['ts-loader', 'angular2-template-loader'],
       },
       {
         test: /\.html$/,
-        use: ["html-loader"]
+        use: ['html-loader'],
       },
       {
         test: /\.css$/,
-        use: ["style-loader", "css-loader"]
+        use: ['style-loader', 'css-loader'],
       },
       {
         test: /\.s[ac]ss$/i,
-        use: ["style-loader", "css-loader", "sass-loader"]
+        use: ['style-loader', 'css-loader', 'sass-loader'],
       },
       {
         test: /\.proto$/,
-        loader: "proto-loader",
+        loader: 'proto-loader',
         options: {
           paths: [
-            path.resolve(__dirname, "../../.."),
-            path.resolve(__dirname, "../../../external/protobuf/src"),
-          ]
-        }
+            path.resolve(__dirname, '../../..'),
+            path.resolve(__dirname, '../../../external/protobuf/src'),
+          ],
+        },
       },
-    ]
+    ],
   },
 
   optimization: {

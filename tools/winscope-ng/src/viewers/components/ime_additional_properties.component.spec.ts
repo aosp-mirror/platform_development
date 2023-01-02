@@ -13,24 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ComponentFixture, TestBed} from "@angular/core/testing";
-import { ImeAdditionalPropertiesComponent } from "./ime_additional_properties.component";
-import { MatDividerModule } from "@angular/material/divider";
+import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {MatDividerModule} from '@angular/material/divider';
+import {ImeAdditionalPropertiesComponent} from './ime_additional_properties.component';
 
-describe("ImeAdditionalPropertiesComponent", () => {
+describe('ImeAdditionalPropertiesComponent', () => {
   let fixture: ComponentFixture<ImeAdditionalPropertiesComponent>;
   let component: ImeAdditionalPropertiesComponent;
   let htmlElement: HTMLElement;
 
   beforeAll(async () => {
     await TestBed.configureTestingModule({
-      imports: [
-        MatDividerModule
-      ],
-      declarations: [
-        ImeAdditionalPropertiesComponent
-      ],
-      schemas: []
+      imports: [MatDividerModule],
+      declarations: [ImeAdditionalPropertiesComponent],
+      schemas: [],
     }).compileComponents();
   });
 
@@ -40,7 +36,7 @@ describe("ImeAdditionalPropertiesComponent", () => {
     htmlElement = fixture.nativeElement;
   });
 
-  it("can be created", () => {
+  it('can be created', () => {
     expect(component).toBeTruthy();
   });
 });

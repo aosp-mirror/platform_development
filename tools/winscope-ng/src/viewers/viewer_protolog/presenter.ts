@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {UiData} from "./ui_data";
-import {ArrayUtils} from "common/utils/array_utils";
-import {LogMessage, ProtoLogTraceEntry} from "common/trace/protolog";
-import {TraceType} from "common/trace/trace_type";
+import {LogMessage, ProtoLogTraceEntry} from 'common/trace/protolog';
+import {TraceType} from 'common/trace/trace_type';
+import {ArrayUtils} from 'common/utils/array_utils';
+import {UiData} from './ui_data';
 
 export class Presenter {
-  constructor(
-    notifyUiDataCallback: (data: UiData) => void) {
+  constructor(notifyUiDataCallback: (data: UiData) => void) {
     this.notifyUiDataCallback = notifyUiDataCallback;
     this.originalIndicesOfFilteredOutputMessages = [];
     this.uiData = UiData.EMPTY;
@@ -72,36 +71,47 @@ export class Presenter {
 
     const allLogLevels = this.getUniqueMessageValues(
       this.entry!.messages,
-      (message: LogMessage) => message.level);
+      (message: LogMessage) => message.level
+    );
     const allTags = this.getUniqueMessageValues(
       this.entry!.messages,
-      (message: LogMessage) => message.tag);
+      (message: LogMessage) => message.tag
+    );
     const allSourceFiles = this.getUniqueMessageValues(
       this.entry!.messages,
-      (message: LogMessage) => message.at);
+      (message: LogMessage) => message.at
+    );
 
-    let filteredMessagesAndOriginalIndex: [number, LogMessage][] = [...this.entry!.messages.entries()];
+    let filteredMessagesAndOriginalIndex: [number, LogMessage][] = [
+      ...this.entry!.messages.entries(),
+    ];
 
     if (this.levels.length > 0) {
-      filteredMessagesAndOriginalIndex =
-        filteredMessagesAndOriginalIndex.filter(value => this.levels.includes(value[1].level));
+      filteredMessagesAndOriginalIndex = filteredMessagesAndOriginalIndex.filter((value) =>
+        this.levels.includes(value[1].level)
+      );
     }
 
     if (this.tags.length > 0) {
-      filteredMessagesAndOriginalIndex =
-        filteredMessagesAndOriginalIndex.filter(value => this.tags.includes(value[1].tag));
+      filteredMessagesAndOriginalIndex = filteredMessagesAndOriginalIndex.filter((value) =>
+        this.tags.includes(value[1].tag)
+      );
     }
 
     if (this.files.length > 0) {
-      filteredMessagesAndOriginalIndex =
-        filteredMessagesAndOriginalIndex.filter(value => this.files.includes(value[1].at));
+      filteredMessagesAndOriginalIndex = filteredMessagesAndOriginalIndex.filter((value) =>
+        this.files.includes(value[1].at)
+      );
     }
 
-    filteredMessagesAndOriginalIndex =
-      filteredMessagesAndOriginalIndex.filter(value => value[1].text.includes(this.searchString));
+    filteredMessagesAndOriginalIndex = filteredMessagesAndOriginalIndex.filter((value) =>
+      value[1].text.includes(this.searchString)
+    );
 
-    this.originalIndicesOfFilteredOutputMessages = filteredMessagesAndOriginalIndex.map(value => value[0]);
-    const filteredMessages = filteredMessagesAndOriginalIndex.map(value => value[1]);
+    this.originalIndicesOfFilteredOutputMessages = filteredMessagesAndOriginalIndex.map(
+      (value) => value[0]
+    );
+    const filteredMessages = filteredMessagesAndOriginalIndex.map((value) => value[1]);
 
     this.uiData = new UiData(allLogLevels, allTags, allSourceFiles, filteredMessages, 0);
   }
@@ -117,9 +127,12 @@ export class Presenter {
     );
   }
 
-  private getUniqueMessageValues(messages: LogMessage[], getValue: (message :LogMessage) => string): string[] {
+  private getUniqueMessageValues(
+    messages: LogMessage[],
+    getValue: (message: LogMessage) => string
+  ): string[] {
     const uniqueValues = new Set<string>();
-    messages.forEach(message => {
+    messages.forEach((message) => {
       uniqueValues.add(getValue(message));
     });
     const result = [...uniqueValues];
@@ -135,5 +148,5 @@ export class Presenter {
   private tags: string[] = [];
   private files: string[] = [];
   private levels: string[] = [];
-  private searchString = "";
+  private searchString = '';
 }

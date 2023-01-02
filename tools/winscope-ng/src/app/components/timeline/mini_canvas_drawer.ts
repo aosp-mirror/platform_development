@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-import { TRACE_INFO } from "app/trace_info";
-import { Color } from "../../colors";
-import { TraceType } from "common/trace/trace_type";
-import { CanvasDrawer } from "../canvas/canvas_drawer";
-import { DraggableCanvasObject } from "../canvas/draggable_canvas_object";
-import { CanvasMouseHandler } from "../canvas/canvas_mouse_handler";
-import { BigIntSegment, Segment, TimelineData } from "./utils";
+import {TRACE_INFO} from 'app/trace_info';
+import {TraceType} from 'common/trace/trace_type';
+import {Color} from '../../colors';
+import {CanvasDrawer} from '../canvas/canvas_drawer';
+import {CanvasMouseHandler} from '../canvas/canvas_mouse_handler';
+import {DraggableCanvasObject} from '../canvas/draggable_canvas_object';
+import {BigIntSegment, Segment, TimelineData} from './utils';
 
 export class MiniCanvasDrawerInput {
   constructor(
     public fullRange: BigIntSegment,
     public selectedPosition: bigint,
     public selection: BigIntSegment,
-    public timelineEntries: TimelineData,
+    public timelineEntries: TimelineData
   ) {}
 
   public transform(mapToRange: Segment): MiniCanvasDrawerData {
@@ -43,7 +43,7 @@ export class MiniCanvasDrawerInput {
     );
   }
 
-  private computeTransformedTraceSegments(transformer: Transformer):  Map<TraceType, number[]> {
+  private computeTransformedTraceSegments(transformer: Transformer): Map<TraceType, number[]> {
     const transformedTraceSegments = new Map<TraceType, number[]>();
 
     this.timelineEntries.forEach((entries, traceType) => {
@@ -75,20 +75,21 @@ export class Transformer {
   }
 
   public transform(x: bigint): number {
-    return this.toOffset + this.targetWidth * Number(x - this.fromOffset) / Number(this.fromWidth);
+    return (
+      this.toOffset + (this.targetWidth * Number(x - this.fromOffset)) / Number(this.fromWidth)
+    );
   }
 
   public untransform(x: number): bigint {
     x = Math.round(x);
-    return this.fromOffset + BigInt((x - this.toOffset)) * this.fromWidth / BigInt(this.targetWidth);
+    return (
+      this.fromOffset + (BigInt(x - this.toOffset) * this.fromWidth) / BigInt(this.targetWidth)
+    );
   }
 }
 
 class MiniCanvasDrawerOutput {
-  constructor(
-    public selectedPosition: bigint,
-    public selection: BigIntSegment,
-  ) {}
+  constructor(public selectedPosition: bigint, public selection: BigIntSegment) {}
 }
 
 class MiniCanvasDrawerData {
@@ -100,18 +101,14 @@ class MiniCanvasDrawerData {
   ) {}
 
   public toOutput(): MiniCanvasDrawerOutput {
-    return new MiniCanvasDrawerOutput(
-      this.transformer.untransform(this.selectedPosition),
-      {
-        from: this.transformer.untransform(this.selection.from),
-        to: this.transformer.untransform(this.selection.to),
-      }
-    );
+    return new MiniCanvasDrawerOutput(this.transformer.untransform(this.selectedPosition), {
+      from: this.transformer.untransform(this.selection.from),
+      to: this.transformer.untransform(this.selection.to),
+    });
   }
 }
 
 export class MiniCanvasDrawer implements CanvasDrawer {
-
   public ctx: CanvasRenderingContext2D;
   public handler: CanvasMouseHandler;
 
@@ -142,7 +139,7 @@ export class MiniCanvasDrawer implements CanvasDrawer {
   get usableRange() {
     return {
       from: this.padding.left,
-      to: this.getWidth() - this.padding.left - this.padding.right
+      to: this.getWidth() - this.padding.left - this.padding.right,
     };
   }
 
@@ -156,12 +153,12 @@ export class MiniCanvasDrawer implements CanvasDrawer {
     private onPointerPositionDragging: (pos: bigint) => void,
     private onPointerPositionChanged: (pos: bigint) => void,
     private onSelectionChanged: (selection: BigIntSegment) => void,
-    private onUnhandledClick: (pos: bigint) => void,
+    private onUnhandledClick: (pos: bigint) => void
   ) {
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext('2d');
 
     if (ctx === null) {
-      throw Error("MiniTimeline canvas context was null!");
+      throw Error('MiniTimeline canvas context was null!');
     }
 
     this.ctx = ctx;
@@ -169,7 +166,7 @@ export class MiniCanvasDrawer implements CanvasDrawer {
     const onUnhandledClickInternal = (x: number, y: number) => {
       this.onUnhandledClick(this.input.transformer.untransform(x));
     };
-    this.handler = new CanvasMouseHandler(this, "pointer", onUnhandledClickInternal);
+    this.handler = new CanvasMouseHandler(this, 'pointer', onUnhandledClickInternal);
 
     this.activePointer = new DraggableCanvasObject(
       this,
@@ -189,7 +186,7 @@ export class MiniCanvasDrawer implements CanvasDrawer {
       },
       {
         fillStyle: Color.ACTIVE_POINTER,
-        fill: true
+        fill: true,
       },
       (x) => {
         this.input.selectedPosition = x;
@@ -211,14 +208,14 @@ export class MiniCanvasDrawer implements CanvasDrawer {
       this.selection.from = x;
       this.onSelectionChanged({
         from: this.input.transformer.untransform(x),
-        to: this.input.transformer.untransform(this.selection.to)
+        to: this.input.transformer.untransform(this.selection.to),
       });
     };
     const onRightSelectionChanged = (x: number) => {
       this.selection.to = x;
       this.onSelectionChanged({
         from: this.input.transformer.untransform(this.selection.from),
-        to: this.input.transformer.untransform(x)
+        to: this.input.transformer.untransform(x),
       });
     };
 
@@ -246,7 +243,7 @@ export class MiniCanvasDrawer implements CanvasDrawer {
       () => {
         return {
           from: this.usableRange.from,
-          to: this.rightFocusSectionSelector.position - selectorArrowWidth - barWidth
+          to: this.rightFocusSectionSelector.position - selectorArrowWidth - barWidth,
         };
       }
     );
@@ -270,7 +267,7 @@ export class MiniCanvasDrawer implements CanvasDrawer {
       () => {
         return {
           from: this.leftFocusSectionSelector.position + selectorArrowWidth + barWidth,
-          to: this.usableRange.to
+          to: this.usableRange.to,
         };
       }
     );
@@ -323,14 +320,19 @@ export class MiniCanvasDrawer implements CanvasDrawer {
     this.ctx.globalAlpha = 0.8;
     this.ctx.fillStyle = Color.SELECTION_BACKGROUND;
     const width = this.selection.to - this.selection.from;
-    this.ctx.fillRect(this.selection.from, this.padding.top + triangleHeight / 2, width, this.innerHeight - triangleHeight / 2);
+    this.ctx.fillRect(
+      this.selection.from,
+      this.padding.top + triangleHeight / 2,
+      width,
+      this.innerHeight - triangleHeight / 2
+    );
     this.ctx.restore();
   }
 
   private drawTraceLines() {
     const lineHeight = this.innerHeight / 8;
 
-    let fromTop = this.padding.top + this.innerHeight * 2 / 3 - lineHeight;
+    let fromTop = this.padding.top + (this.innerHeight * 2) / 3 - lineHeight;
 
     this.timelineEntries.forEach((entries, traceType) => {
       // TODO: Only if active or a selected trace
@@ -343,45 +345,67 @@ export class MiniCanvasDrawer implements CanvasDrawer {
         this.ctx.globalAlpha = 1.0;
       }
 
-      fromTop -= lineHeight * 4/3;
+      fromTop -= (lineHeight * 4) / 3;
     });
   }
 
   private drawTimelineGuides() {
-    const edgeBarHeight = this.innerHeight * 1 / 2;
+    const edgeBarHeight = (this.innerHeight * 1) / 2;
     const edgeBarWidth = 4;
 
-    const boldBarHeight = this.innerHeight * 1 / 5;
+    const boldBarHeight = (this.innerHeight * 1) / 5;
     const boldBarWidth = edgeBarWidth;
 
-    const lightBarHeight = this.innerHeight * 1 / 6;
+    const lightBarHeight = (this.innerHeight * 1) / 6;
     const lightBarWidth = 2;
 
     const minSpacing = lightBarWidth * 7;
-    const barsInSetWidth = (9 * lightBarWidth + boldBarWidth);
-    const barSets = Math.floor((this.getWidth() - edgeBarWidth * 2 - minSpacing) / (barsInSetWidth + 10 * minSpacing));
+    const barsInSetWidth = 9 * lightBarWidth + boldBarWidth;
+    const barSets = Math.floor(
+      (this.getWidth() - edgeBarWidth * 2 - minSpacing) / (barsInSetWidth + 10 * minSpacing)
+    );
     const bars = barSets * 10;
 
     // Draw start bar
     this.ctx.fillStyle = Color.GUIDE_BAR;
-    this.ctx.fillRect(0, this.padding.top + this.innerHeight - edgeBarHeight, edgeBarWidth, edgeBarHeight);
+    this.ctx.fillRect(
+      0,
+      this.padding.top + this.innerHeight - edgeBarHeight,
+      edgeBarWidth,
+      edgeBarHeight
+    );
 
     // Draw end bar
     this.ctx.fillStyle = Color.GUIDE_BAR;
-    this.ctx.fillRect(this.getWidth() - edgeBarWidth, this.padding.top + this.innerHeight - edgeBarHeight, edgeBarWidth, edgeBarHeight);
+    this.ctx.fillRect(
+      this.getWidth() - edgeBarWidth,
+      this.padding.top + this.innerHeight - edgeBarHeight,
+      edgeBarWidth,
+      edgeBarHeight
+    );
 
-    const spacing = (this.getWidth() - barSets * barsInSetWidth - edgeBarWidth) / (bars);
+    const spacing = (this.getWidth() - barSets * barsInSetWidth - edgeBarWidth) / bars;
     let start = edgeBarWidth + spacing;
     for (let i = 1; i < bars; i++) {
       if (i % 10 == 0) {
         // Draw boldbar
         this.ctx.fillStyle = Color.GUIDE_BAR;
-        this.ctx.fillRect(start, this.padding.top + this.innerHeight - boldBarHeight, boldBarWidth, boldBarHeight);
+        this.ctx.fillRect(
+          start,
+          this.padding.top + this.innerHeight - boldBarHeight,
+          boldBarWidth,
+          boldBarHeight
+        );
         start += boldBarWidth; // TODO: Shift a bit
       } else {
         // Draw lightbar
         this.ctx.fillStyle = Color.GUIDE_BAR_LIGHT;
-        this.ctx.fillRect(start, this.padding.top + this.innerHeight - lightBarHeight, lightBarWidth, lightBarHeight);
+        this.ctx.fillRect(
+          start,
+          this.padding.top + this.innerHeight - lightBarHeight,
+          lightBarWidth,
+          lightBarHeight
+        );
         start += lightBarWidth;
       }
       start += spacing;

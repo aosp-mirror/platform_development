@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input } from "@angular/core";
+import {Component, Input} from '@angular/core';
 
 @Component({
-  selector: "coordinates-table",
+  selector: 'coordinates-table',
   template: `
     <p *ngIf="!hasCoordinates()" class="mat-body-1">null</p>
     <table *ngIf="hasCoordinates()" class="table">
@@ -67,15 +67,18 @@ import { Component, Input } from "@angular/core";
       .header-row td {
         color: gray;
       }
-    `
+    `,
   ],
 })
-
 export class CoordinatesTableComponent {
   @Input() coordinates!: any;
 
   hasCoordinates() {
-    return this.coordinates.left || this.coordinates.top ||
-        this.coordinates.right || this.coordinates.bottom;
+    return (
+      this.coordinates.left ||
+      this.coordinates.top ||
+      this.coordinates.right ||
+      this.coordinates.bottom
+    );
   }
 }

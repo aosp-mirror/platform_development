@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import { MockStorage } from "./mock_storage";
+import {MockStorage} from './mock_storage';
 
-describe("MockStorage", () => {
-  it("can store values", () => {
+describe('MockStorage', () => {
+  it('can store values', () => {
     const mockStorage = new MockStorage();
 
-    mockStorage.setItem("key", "value");
+    mockStorage.setItem('key', 'value');
 
-    expect(mockStorage.getItem("key")).toBe("value");
+    expect(mockStorage.getItem('key')).toBe('value');
   });
 });

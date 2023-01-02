@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Rectangle, Size} from "viewers/common/rectangle";
+import {Rectangle, Size} from 'viewers/common/rectangle';
 import {
   Box3D,
   ColorType,
@@ -23,8 +23,8 @@ import {
   Point3D,
   Rect3D,
   Scene3D,
-  Transform3D
-} from "./types3d";
+  Transform3D,
+} from './types3d';
 
 class Mapper3D {
   private static readonly CAMERA_ROTATION_FACTOR_INIT = 1;
@@ -43,7 +43,7 @@ class Mapper3D {
     tx: 0,
     dtdx: 0,
     dtdy: 1,
-    ty: 0
+    ty: 0,
   };
 
   private rects: Rectangle[] = [];
@@ -141,21 +141,21 @@ class Mapper3D {
         panScreenDistance: this.panScreenDistance,
       },
       rects: rects3d,
-      labels: labels3d
+      labels: labels3d,
     };
 
     return scene;
   }
 
   private selectRectsToDraw(rects: Rectangle[]): Rectangle[] {
-    rects = rects.filter(rect => rect.displayId == this.currentDisplayId);
+    rects = rects.filter((rect) => rect.displayId == this.currentDisplayId);
 
     if (this.showOnlyVisibleMode) {
-      rects = rects.filter(rect => rect.isVisible || rect.isDisplay);
+      rects = rects.filter((rect) => rect.isVisible || rect.isDisplay);
     }
 
     if (!this.showVirtualMode) {
-      rects = rects.filter(rect => !rect.isVirtual);
+      rects = rects.filter((rect) => !rect.isVirtual);
     }
 
     return rects;
@@ -167,7 +167,7 @@ class Mapper3D {
     let nonVisibleRectsSoFar = 0;
     let nonVisibleRectsTotal = 0;
 
-    rects2d.forEach(rect => {
+    rects2d.forEach((rect) => {
       if (rect.isVisible) {
         ++visibleRectsTotal;
       } else {
@@ -182,21 +182,21 @@ class Mapper3D {
     const rects3d = rects2d.map((rect2d): Rect3D => {
       z -= Mapper3D.Z_SPACING_MAX * this.zSpacingFactor;
 
-      const darkFactor = rect2d.isVisible ?
-        (visibleRectsTotal - visibleRectsSoFar++) / visibleRectsTotal :
-        (nonVisibleRectsTotal - nonVisibleRectsSoFar++) / nonVisibleRectsTotal;
+      const darkFactor = rect2d.isVisible
+        ? (visibleRectsTotal - visibleRectsSoFar++) / visibleRectsTotal
+        : (nonVisibleRectsTotal - nonVisibleRectsSoFar++) / nonVisibleRectsTotal;
 
       const rect = {
         id: rect2d.id,
         topLeft: {
           x: rect2d.topLeft.x,
           y: rect2d.topLeft.y,
-          z: z
+          z: z,
         },
         bottomRight: {
           x: rect2d.bottomRight.x,
           y: rect2d.bottomRight.y,
-          z: z
+          z: z,
         },
         isOversized: false,
         cornerRadius: rect2d.cornerRadius,
@@ -253,19 +253,18 @@ class Mapper3D {
       maxHeight = Math.max(
         ...displays.map((rect2d): number => Math.abs(rect2d.topLeft.y - rect2d.bottomRight.y))
       );
-
     }
     return {
       width: maxWidth,
-      height: maxHeight
-    }
+      height: maxHeight,
+    };
   }
 
   private cropOversizedRect(rect3d: Rect3D, maxDisplaySize: Size): Rect3D {
     // Arbitrary max size for a rect (2x the maximum display)
     let maxDimension = Number.MAX_VALUE;
     if (maxDisplaySize.height > 0) {
-      maxDimension = Math.max(maxDisplaySize.width, maxDisplaySize.height) * 2
+      maxDimension = Math.max(maxDisplaySize.width, maxDisplaySize.height) * 2;
     }
 
     const height = Math.abs(rect3d.topLeft.y - rect3d.bottomRight.y);
@@ -273,13 +272,13 @@ class Mapper3D {
 
     if (width > maxDimension) {
       rect3d.isOversized = true;
-      rect3d.topLeft.x = (maxDimension - (maxDisplaySize.width / 2)) * -1,
-      rect3d.bottomRight.x = maxDimension
+      (rect3d.topLeft.x = (maxDimension - maxDisplaySize.width / 2) * -1),
+        (rect3d.bottomRight.x = maxDimension);
     }
     if (height > maxDimension) {
       rect3d.isOversized = true;
-      rect3d.topLeft.y = (maxDimension - (maxDisplaySize.height / 2)) * -1
-      rect3d.bottomRight.y = maxDimension
+      rect3d.topLeft.y = (maxDimension - maxDisplaySize.height / 2) * -1;
+      rect3d.bottomRight.y = maxDimension;
     }
 
     return rect3d;
@@ -288,9 +287,12 @@ class Mapper3D {
   private computeLabels(rects2d: Rectangle[], rects3d: Rect3D[]): Label3D[] {
     const labels3d: Label3D[] = [];
 
-    let labelY = Math.max(...rects3d.map(rect => {
-      return this.matMultiply(rect.transform, rect.bottomRight).y;
-    })) + Mapper3D.LABEL_FIRST_Y_OFFSET;
+    let labelY =
+      Math.max(
+        ...rects3d.map((rect) => {
+          return this.matMultiply(rect.transform, rect.bottomRight).y;
+        })
+      ) + Mapper3D.LABEL_FIRST_Y_OFFSET;
 
     rects2d.forEach((rect2d, index) => {
       if (!rect2d.label) {
@@ -299,13 +301,21 @@ class Mapper3D {
 
       const rect3d = rects3d[index];
 
-      const bottomLeft: Point3D = { x: rect3d.topLeft.x, y: rect3d.bottomRight.y, z: rect3d.topLeft.z };
-      const topRight: Point3D = { x: rect3d.bottomRight.x, y: rect3d.topLeft.y, z: rect3d.bottomRight.z };
+      const bottomLeft: Point3D = {
+        x: rect3d.topLeft.x,
+        y: rect3d.bottomRight.y,
+        z: rect3d.topLeft.z,
+      };
+      const topRight: Point3D = {
+        x: rect3d.bottomRight.x,
+        y: rect3d.topLeft.y,
+        z: rect3d.bottomRight.z,
+      };
       const lineStarts = [
         this.matMultiply(rect3d.transform, rect3d.topLeft),
         this.matMultiply(rect3d.transform, rect3d.bottomRight),
         this.matMultiply(rect3d.transform, bottomLeft),
-        this.matMultiply(rect3d.transform, topRight)
+        this.matMultiply(rect3d.transform, topRight),
       ];
       let maxIndex = 0;
       for (let i = 1; i < lineStarts.length; i++) {
@@ -319,7 +329,7 @@ class Mapper3D {
       const lineEnd: Point3D = {
         x: lineStart.x,
         y: labelY,
-        z: lineStart.z
+        z: lineStart.z,
       };
 
       const isHighlighted = this.highlightedRectIds.includes(rect2d.id);
@@ -337,7 +347,7 @@ class Mapper3D {
         textCenter: lineEnd,
         text: rect2d.label,
         isHighlighted: isHighlighted,
-        rectId: rect2d.id
+        rectId: rect2d.id,
       };
       labels3d.push(label3d);
 
@@ -361,8 +371,8 @@ class Mapper3D {
         width: 1,
         height: 1,
         depth: 1,
-        center: { x: 0, y: 0, z: 0 },
-        diagonal: Math.sqrt(3)
+        center: {x: 0, y: 0, z: 0},
+        diagonal: Math.sqrt(3),
       };
     }
 
@@ -382,7 +392,7 @@ class Mapper3D {
       maxZ = Math.max(maxZ, point.z);
     };
 
-    rects.forEach(rect => {
+    rects.forEach((rect) => {
       /*const topLeft: Point3D = {
         x: rect.center.x - rect.width / 2,
         y: rect.center.y + rect.height / 2,
@@ -397,8 +407,8 @@ class Mapper3D {
       updateMinMaxCoordinates(rect.bottomRight);
     });
 
-    labels.forEach(label => {
-      label.linePoints.forEach(point => {
+    labels.forEach((label) => {
+      label.linePoints.forEach((point) => {
         updateMinMaxCoordinates(point);
       });
     });
@@ -406,7 +416,7 @@ class Mapper3D {
     const center: Point3D = {
       x: (minX + maxX) / 2,
       y: (minY + maxY) / 2,
-      z: (minZ + maxZ) / 2
+      z: (minZ + maxZ) / 2,
     };
 
     const width = maxX - minX;
@@ -418,9 +428,9 @@ class Mapper3D {
       height: height,
       depth: depth,
       center: center,
-      diagonal: Math.sqrt(width * width + height * height + depth * depth)
+      diagonal: Math.sqrt(width * width + height * height + depth * depth),
     };
   }
 }
 
-export { Mapper3D };
+export {Mapper3D};

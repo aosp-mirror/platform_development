@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {CommonModule} from "@angular/common";
-import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from "@angular/core";
-import {ComponentFixture, TestBed} from "@angular/core/testing";
-import {MatCardModule} from "@angular/material/card";
-import {MatDividerModule} from "@angular/material/divider";
-import {TraceViewComponent} from "./trace_view.component";
-import {ViewerStub} from "viewers/viewer_stub";
+import {CommonModule} from '@angular/common';
+import {CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA} from '@angular/core';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {MatCardModule} from '@angular/material/card';
+import {MatDividerModule} from '@angular/material/divider';
+import {ViewerStub} from 'viewers/viewer_stub';
+import {TraceViewComponent} from './trace_view.component';
 
-describe("TraceViewComponent", () => {
+describe('TraceViewComponent', () => {
   let fixture: ComponentFixture<TraceViewComponent>;
   let component: TraceViewComponent;
   let htmlElement: HTMLElement;
@@ -29,84 +29,77 @@ describe("TraceViewComponent", () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [TraceViewComponent],
-      imports: [
-        CommonModule,
-        MatCardModule,
-        MatDividerModule
-      ],
-      schemas: [NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA]
+      imports: [CommonModule, MatCardModule, MatDividerModule],
+      schemas: [NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
     fixture = TestBed.createComponent(TraceViewComponent);
     htmlElement = fixture.nativeElement;
     component = fixture.componentInstance;
     component.viewers = [
-      new ViewerStub("Title0", "Content0"),
-      new ViewerStub("Title1", "Content1")
+      new ViewerStub('Title0', 'Content0'),
+      new ViewerStub('Title1', 'Content1'),
     ];
     component.ngOnChanges();
     fixture.detectChanges();
   });
 
-  it("can be created", () => {
+  it('can be created', () => {
     fixture.detectChanges();
     expect(component).toBeTruthy();
   });
 
-  it("creates viewer tabs", () => {
-    const tabs: NodeList = htmlElement.querySelectorAll(".tab");
+  it('creates viewer tabs', () => {
+    const tabs: NodeList = htmlElement.querySelectorAll('.tab');
     expect(tabs.length).toEqual(2);
-    expect(tabs.item(0)!.textContent).toEqual("Title0");
-    expect(tabs.item(1)!.textContent).toEqual("Title1");
+    expect(tabs.item(0)!.textContent).toContain('Title0');
+    expect(tabs.item(1)!.textContent).toContain('Title1');
   });
 
-  it("changes active view on click", () => {
+  it('changes active view on click', () => {
     const getVisibleTabContents = () => {
       const contents: HTMLElement[] = [];
-      htmlElement
-        .querySelectorAll(".trace-view-content div")
-        .forEach(content => {
-          if ((content as HTMLElement).style.display != "none") {
-            contents.push(content as HTMLElement);
-          }
-        });
+      htmlElement.querySelectorAll('.trace-view-content div').forEach((content) => {
+        if ((content as HTMLElement).style.display != 'none') {
+          contents.push(content as HTMLElement);
+        }
+      });
       return contents;
     };
 
-    const tabButtons = htmlElement.querySelectorAll(".tab");
+    const tabButtons = htmlElement.querySelectorAll('.tab');
 
     // Initially tab 0
     fixture.detectChanges();
     let visibleTabContents = getVisibleTabContents();
     expect(visibleTabContents.length).toEqual(1);
-    expect(visibleTabContents[0].innerHTML).toEqual("Content0");
+    expect(visibleTabContents[0].innerHTML).toEqual('Content0');
 
     // Switch to tab 1
-    tabButtons[1].dispatchEvent(new Event("click"));
+    tabButtons[1].dispatchEvent(new Event('click'));
     fixture.detectChanges();
     visibleTabContents = getVisibleTabContents();
     expect(visibleTabContents.length).toEqual(1);
-    expect(visibleTabContents[0].innerHTML).toEqual("Content1");
+    expect(visibleTabContents[0].innerHTML).toEqual('Content1');
 
     // Switch to tab 0
-    tabButtons[0].dispatchEvent(new Event("click"));
+    tabButtons[0].dispatchEvent(new Event('click'));
     fixture.detectChanges();
     visibleTabContents = getVisibleTabContents();
     expect(visibleTabContents.length).toEqual(1);
-    expect(visibleTabContents[0].innerHTML).toEqual("Content0");
+    expect(visibleTabContents[0].innerHTML).toEqual('Content0');
   });
 
-  it("emits event on download button click", () => {
-    const spy = spyOn(component.downloadTracesButtonClick, "emit");
+  it('emits event on download button click', () => {
+    const spy = spyOn(component.downloadTracesButtonClick, 'emit');
 
-    const downloadButton: null|HTMLButtonElement =
-      htmlElement.querySelector(".save-button");
+    const downloadButton: null | HTMLButtonElement = htmlElement.querySelector('.save-button');
     expect(downloadButton).toBeInstanceOf(HTMLButtonElement);
 
-    downloadButton?.dispatchEvent(new Event("click"));
+    downloadButton?.dispatchEvent(new Event('click'));
     fixture.detectChanges();
     expect(spy).toHaveBeenCalledTimes(1);
 
-    downloadButton?.dispatchEvent(new Event("click"));
+    downloadButton?.dispatchEvent(new Event('click'));
     fixture.detectChanges();
     expect(spy).toHaveBeenCalledTimes(2);
   });

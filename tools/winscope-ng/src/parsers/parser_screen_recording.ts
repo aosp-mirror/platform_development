@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-import {Timestamp, TimestampType} from "common/trace/timestamp";
-import {TraceFile} from "common/trace/trace";
-import {TraceType} from "common/trace/trace_type";
-import {ArrayUtils} from "common/utils/array_utils";
-import {Parser} from "./parser";
-import {ScreenRecordingTraceEntry} from "common/trace/screen_recording";
-import {ScreenRecordingUtils} from "common/trace/screen_recording_utils";
+import {ScreenRecordingTraceEntry} from 'common/trace/screen_recording';
+import {ScreenRecordingUtils} from 'common/trace/screen_recording_utils';
+import {Timestamp, TimestampType} from 'common/trace/timestamp';
+import {TraceFile} from 'common/trace/trace';
+import {TraceType} from 'common/trace/trace_type';
+import {ArrayUtils} from 'common/utils/array_utils';
+import {Parser} from './parser';
 
 class ScreenRecordingMetadataEntry {
-  constructor(public timestampElapsedNs: bigint, public timestampRealtimeNs: bigint) {
-  }
+  constructor(public timestampElapsedNs: bigint, public timestampRealtimeNs: bigint) {}
 }
 
 class ParserScreenRecording extends Parser {
@@ -67,34 +66,48 @@ class ParserScreenRecording extends Parser {
     const timestampsElapsedNs = this.parseTimestampsElapsedNs(videoData, posTimestamps, count);
 
     return timestampsElapsedNs.map((timestampElapsedNs: bigint) => {
-      return new ScreenRecordingMetadataEntry(timestampElapsedNs, timestampElapsedNs + timeOffsetNs);
+      return new ScreenRecordingMetadataEntry(
+        timestampElapsedNs,
+        timestampElapsedNs + timeOffsetNs
+      );
     });
   }
 
-  override getTimestamp(type: TimestampType, decodedEntry: ScreenRecordingMetadataEntry): undefined|Timestamp {
+  override getTimestamp(
+    type: TimestampType,
+    decodedEntry: ScreenRecordingMetadataEntry
+  ): undefined | Timestamp {
     if (type !== TimestampType.ELAPSED && type !== TimestampType.REAL) {
       return undefined;
     }
     if (type === TimestampType.ELAPSED) {
       return new Timestamp(type, decodedEntry.timestampElapsedNs);
-    }
-    else if (type === TimestampType.REAL) {
+    } else if (type === TimestampType.REAL) {
       return new Timestamp(type, decodedEntry.timestampRealtimeNs);
     }
     return undefined;
   }
 
-  override processDecodedEntry(index: number, timestampType: TimestampType, entry: ScreenRecordingMetadataEntry): ScreenRecordingTraceEntry {
+  override processDecodedEntry(
+    index: number,
+    timestampType: TimestampType,
+    entry: ScreenRecordingMetadataEntry
+  ): ScreenRecordingTraceEntry {
     const initialTimestamp = this.getTimestamps(TimestampType.ELAPSED)![0];
     const currentTimestamp = new Timestamp(TimestampType.ELAPSED, entry.timestampElapsedNs);
-    const videoTimeSeconds =
-      ScreenRecordingUtils.timestampToVideoTimeSeconds(initialTimestamp, currentTimestamp);
+    const videoTimeSeconds = ScreenRecordingUtils.timestampToVideoTimeSeconds(
+      initialTimestamp,
+      currentTimestamp
+    );
     const videoData = this.trace.file;
     return new ScreenRecordingTraceEntry(videoTimeSeconds, videoData);
   }
 
   private searchMagicString(videoData: Uint8Array): number {
-    let pos = ArrayUtils.searchSubarray(videoData, ParserScreenRecording.WINSCOPE_META_MAGIC_STRING);
+    let pos = ArrayUtils.searchSubarray(
+      videoData,
+      ParserScreenRecording.WINSCOPE_META_MAGIC_STRING
+    );
     if (pos === undefined) {
       throw new TypeError("video data doesn't contain winscope magic string");
     }
@@ -102,48 +115,54 @@ class ParserScreenRecording extends Parser {
     return pos;
   }
 
-  private parseMetadataVersion(videoData: Uint8Array, pos: number) : [number, number] {
+  private parseMetadataVersion(videoData: Uint8Array, pos: number): [number, number] {
     if (pos + 4 > videoData.length) {
-      throw new TypeError("Failed to parse metadata version. Video data is too short.");
+      throw new TypeError('Failed to parse metadata version. Video data is too short.');
     }
-    const version = Number(ArrayUtils.toUintLittleEndian(videoData, pos, pos+4));
+    const version = Number(ArrayUtils.toUintLittleEndian(videoData, pos, pos + 4));
     pos += 4;
     return [pos, version];
   }
 
-  private parseRealToElapsedTimeOffsetNs(videoData: Uint8Array, pos: number) : [number, bigint] {
+  private parseRealToElapsedTimeOffsetNs(videoData: Uint8Array, pos: number): [number, bigint] {
     if (pos + 8 > videoData.length) {
-      throw new TypeError("Failed to parse realtime-to-elapsed time offset. Video data is too short.");
+      throw new TypeError(
+        'Failed to parse realtime-to-elapsed time offset. Video data is too short.'
+      );
     }
-    const offset = ArrayUtils.toIntLittleEndian(videoData, pos, pos+8);
+    const offset = ArrayUtils.toIntLittleEndian(videoData, pos, pos + 8);
     pos += 8;
     return [pos, offset];
   }
 
-  private parseFramesCount(videoData: Uint8Array, pos: number) : [number, number] {
+  private parseFramesCount(videoData: Uint8Array, pos: number): [number, number] {
     if (pos + 4 > videoData.length) {
-      throw new TypeError("Failed to parse frames count. Video data is too short.");
+      throw new TypeError('Failed to parse frames count. Video data is too short.');
     }
-    const count = Number(ArrayUtils.toUintLittleEndian(videoData, pos, pos+4));
+    const count = Number(ArrayUtils.toUintLittleEndian(videoData, pos, pos + 4));
     pos += 4;
     return [pos, count];
   }
 
-  private parseTimestampsElapsedNs(videoData: Uint8Array, pos: number, count: number) : bigint[] {
+  private parseTimestampsElapsedNs(videoData: Uint8Array, pos: number, count: number): bigint[] {
     if (pos + count * 8 > videoData.length) {
-      throw new TypeError("Failed to parse timestamps. Video data is too short.");
+      throw new TypeError('Failed to parse timestamps. Video data is too short.');
     }
     const timestamps: bigint[] = [];
     for (let i = 0; i < count; ++i) {
-      const timestamp = ArrayUtils.toUintLittleEndian(videoData, pos, pos+8);
+      const timestamp = ArrayUtils.toUintLittleEndian(videoData, pos, pos + 8);
       pos += 8;
       timestamps.push(timestamp);
     }
     return timestamps;
   }
 
-  private static readonly MPEG4_MAGIC_NMBER = [0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x6d, 0x70, 0x34, 0x32]; // ....ftypmp42
-  private static readonly WINSCOPE_META_MAGIC_STRING = [0x23, 0x56, 0x56, 0x31, 0x4e, 0x53, 0x43, 0x30, 0x50, 0x45, 0x54, 0x31, 0x4d, 0x45, 0x32, 0x23]; // #VV1NSC0PET1ME2#
+  private static readonly MPEG4_MAGIC_NMBER = [
+    0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x6d, 0x70, 0x34, 0x32,
+  ]; // ....ftypmp42
+  private static readonly WINSCOPE_META_MAGIC_STRING = [
+    0x23, 0x56, 0x56, 0x31, 0x4e, 0x53, 0x43, 0x30, 0x50, 0x45, 0x54, 0x31, 0x4d, 0x45, 0x32, 0x23,
+  ]; // #VV1NSC0PET1ME2#
 }
 
 export {ParserScreenRecording};

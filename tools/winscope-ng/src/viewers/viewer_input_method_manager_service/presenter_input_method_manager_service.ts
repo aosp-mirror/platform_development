@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2022 The Android Open Source Project
  *
@@ -14,25 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { PresenterInputMethod } from "viewers/common/presenter_input_method";
-import { ImeAdditionalProperties } from "viewers/common/ime_additional_properties";
-import { TraceTreeNode } from "common/trace/trace_tree_node";
-import { ImeUtils } from "viewers/common/ime_utils";
+import {TraceTreeNode} from 'common/trace/trace_tree_node';
+import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
+import {ImeUtils} from 'viewers/common/ime_utils';
+import {PresenterInputMethod} from 'viewers/common/presenter_input_method';
 
 export class PresenterInputMethodManagerService extends PresenterInputMethod {
   protected updateHierarchyTableProperties() {
-    return {...new ImManagerServiceTableProperties(
-      this.entry?.obj?.inputMethodManagerService?.curMethodId,
-      this.entry?.obj?.inputMethodManagerService?.curFocusedWindowName,
-      this.entry?.obj?.inputMethodManagerService?.lastImeTargetWindowName,
-      this.entry?.obj?.inputMethodManagerService?.inputShown ?? false,
-    )};
+    return {
+      ...new ImManagerServiceTableProperties(
+        this.entry?.obj?.inputMethodManagerService?.curMethodId,
+        this.entry?.obj?.inputMethodManagerService?.curFocusedWindowName,
+        this.entry?.obj?.inputMethodManagerService?.lastImeTargetWindowName,
+        this.entry?.obj?.inputMethodManagerService?.inputShown ?? false
+      ),
+    };
   }
 
-  protected override getAdditionalProperties(wmEntry: TraceTreeNode | undefined, sfEntry: TraceTreeNode | undefined) {
+  protected override getAdditionalProperties(
+    wmEntry: TraceTreeNode | undefined,
+    sfEntry: TraceTreeNode | undefined
+  ) {
     return new ImeAdditionalProperties(
       wmEntry ? ImeUtils.processWindowManagerTraceEntry(wmEntry) : undefined,
-      undefined,
+      undefined
     );
   }
 }
@@ -42,6 +46,6 @@ class ImManagerServiceTableProperties {
     public inputMethodId: string | undefined,
     public curFocusedWindow: string | undefined,
     public lastImeTargetWindow: string | undefined,
-    public inputShown: boolean,
+    public inputShown: boolean
   ) {}
 }

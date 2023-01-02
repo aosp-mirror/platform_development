@@ -15,13 +15,13 @@
  */
 
 class Events {
-  public static VSyncIdFilterChanged = "ViewerTransactionsEvent_VSyncIdFilterChanged";
-  public static PidFilterChanged = "ViewerTransactionsEvent_PidFilterChanged";
-  public static UidFilterChanged = "ViewerTransactionsEvent_UidFilterChanged";
-  public static TypeFilterChanged = "ViewerTransactionsEvent_TypeFilterChanged";
-  public static IdFilterChanged = "ViewerTransactionsEvent_IdFilterChanged";
-  public static WhatSearchStringChanged = "ViewerTransactionsEvent_WhatSearchStringChanged";
-  public static EntryClicked = "ViewerTransactionsEvent_EntryClicked";
+  public static VSyncIdFilterChanged = 'ViewerTransactionsEvent_VSyncIdFilterChanged';
+  public static PidFilterChanged = 'ViewerTransactionsEvent_PidFilterChanged';
+  public static UidFilterChanged = 'ViewerTransactionsEvent_UidFilterChanged';
+  public static TypeFilterChanged = 'ViewerTransactionsEvent_TypeFilterChanged';
+  public static IdFilterChanged = 'ViewerTransactionsEvent_IdFilterChanged';
+  public static WhatSearchStringChanged = 'ViewerTransactionsEvent_WhatSearchStringChanged';
+  public static EntryClicked = 'ViewerTransactionsEvent_EntryClicked';
 }
 
 export {Events};

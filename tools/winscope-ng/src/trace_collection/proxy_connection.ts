@@ -14,36 +14,28 @@
  * limitations under the License.
  */
 
-import {FunctionUtils, OnProgressUpdateType} from "common/utils/function_utils";
-import {
-  proxyRequest,
-  proxyClient,
-  ProxyState,
-  ProxyEndpoint
-} from "trace_collection/proxy_client";
-import { TracingConfig } from "./tracing_config";
-import { Connection, DeviceProperties } from "./connection";
-import { configMap } from "./trace_collection_utils";
+import {FunctionUtils, OnProgressUpdateType} from 'common/utils/function_utils';
+import {proxyClient, ProxyEndpoint, proxyRequest, ProxyState} from 'trace_collection/proxy_client';
+import {Connection, DeviceProperties} from './connection';
+import {configMap} from './trace_collection_utils';
+import {TracingConfig} from './tracing_config';
 
 export class ProxyConnection implements Connection {
   proxy = proxyClient;
   keep_alive_worker: any = null;
-  notConnected = [
-    ProxyState.NO_PROXY,
-    ProxyState.UNAUTH,
-    ProxyState.INVALID_VERSION,
-  ];
+  notConnected = [ProxyState.NO_PROXY, ProxyState.UNAUTH, ProxyState.INVALID_VERSION];
 
   constructor(
     private proxyStateChangeCallback: (state: ProxyState) => void,
-    private progressCallback: OnProgressUpdateType = FunctionUtils.DO_NOTHING) {
+    private progressCallback: OnProgressUpdateType = FunctionUtils.DO_NOTHING
+  ) {
     this.proxy.setState(ProxyState.CONNECTING);
     this.proxy.onProxyChange((newState) => this.onConnectChange(newState));
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has("token")) {
-      this.proxy.proxyKey = urlParams.get("token")!;
-    } else if (this.proxy.store.get("adb.proxyKey")) {
-      this.proxy.proxyKey = this.proxy.store.get("adb.proxyKey")!;
+    if (urlParams.has('token')) {
+      this.proxy.proxyKey = urlParams.get('token')!;
+    } else if (this.proxy.store.get('adb.proxyKey')) {
+      this.proxy.proxyKey = this.proxy.store.get('adb.proxyKey')!;
     }
     this.proxy.getDevices();
   }
@@ -85,12 +77,12 @@ export class ProxyConnection implements Connection {
   }
 
   public throwNoTargetsError() {
-    this.proxy.setState(ProxyState.ERROR, "No targets selected");
+    this.proxy.setState(ProxyState.ERROR, 'No targets selected');
   }
 
   public setProxyKey(key: string) {
     this.proxy.proxyKey = key;
-    this.proxy.store.add("adb.proxyKey", key);
+    this.proxy.store.add('adb.proxyKey', key);
     this.restart();
   }
 
@@ -111,7 +103,7 @@ export class ProxyConnection implements Connection {
   }
 
   public resetLastDevice() {
-    this.proxy.store.add("adb.lastDevice", "");
+    this.proxy.store.add('adb.lastDevice', '');
     this.restart();
   }
 
@@ -119,7 +111,7 @@ export class ProxyConnection implements Connection {
     this.proxy.selectDevice(id);
   }
 
-  public keepAliveTrace(view:ProxyConnection) {
+  public keepAliveTrace(view: ProxyConnection) {
     if (!view.isEndTraceState()) {
       clearInterval(view.keep_alive_worker);
       view.keep_alive_worker = null;
@@ -137,10 +129,18 @@ export class ProxyConnection implements Connection {
       proxyRequest.setEnabledConfig(this, reqEnableConfig);
     }
     if (reqSelectedSfConfig) {
-      proxyRequest.setSelectedConfig(ProxyEndpoint.SELECTED_SF_CONFIG_TRACE, this, reqSelectedSfConfig);
+      proxyRequest.setSelectedConfig(
+        ProxyEndpoint.SELECTED_SF_CONFIG_TRACE,
+        this,
+        reqSelectedSfConfig
+      );
     }
     if (reqSelectedWmConfig) {
-      proxyRequest.setSelectedConfig(ProxyEndpoint.SELECTED_WM_CONFIG_TRACE, this, reqSelectedWmConfig);
+      proxyRequest.setSelectedConfig(
+        ProxyEndpoint.SELECTED_WM_CONFIG_TRACE,
+        this,
+        reqSelectedWmConfig
+      );
     }
     proxyClient.setState(ProxyState.END_TRACE);
     proxyRequest.startTrace(this, TracingConfig.getInstance().requestedTraces);
@@ -155,19 +155,23 @@ export class ProxyConnection implements Connection {
   public async dumpState(): Promise<boolean> {
     this.progressCallback(0);
     if (TracingConfig.getInstance().requestedDumps.length < 1) {
-      console.error("No targets selected");
-      this.proxy.setState(ProxyState.ERROR, "No targets selected");
+      console.error('No targets selected');
+      this.proxy.setState(ProxyState.ERROR, 'No targets selected');
       return false;
     }
     this.proxy.setState(ProxyState.LOAD_DATA);
-    await proxyRequest.dumpState(this, TracingConfig.getInstance().requestedDumps, this.progressCallback);
+    await proxyRequest.dumpState(
+      this,
+      TracingConfig.getInstance().requestedDumps,
+      this.progressCallback
+    );
     return true;
   }
 
   public async isWaylandAvailable(): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      proxyRequest.call("GET", ProxyEndpoint.CHECK_WAYLAND, (request:XMLHttpRequest) => {
-        resolve(request.responseText == "true");
+      proxyRequest.call('GET', ProxyEndpoint.CHECK_WAYLAND, (request: XMLHttpRequest) => {
+        resolve(request.responseText == 'true');
       });
     });
   }

@@ -14,52 +14,52 @@
  * limitations under the License.
  */
 
-import { shortenName } from '../mixin'
-import { Task, toRect } from "../common"
-import WindowContainer from "./WindowContainer"
+import {Task, toRect} from '../common';
+import {shortenName} from '../mixin';
+import WindowContainer from './WindowContainer';
 
 Task.fromProto = function (proto: any, isActivityInTree: Boolean, nextSeq: () => number): Task {
-    if (proto == null) {
-        return null;
-    } else {
-        const windowContainerProto = proto.taskFragment?.windowContainer ?? proto.windowContainer;
-        const windowContainer = WindowContainer.fromProto(
-            /* proto */ windowContainerProto,
-            /* protoChildren */ windowContainerProto?.children ?? [],
-            /* isActivityInTree */ isActivityInTree,
-            /* computedZ */ nextSeq,
-        );
+  if (proto == null) {
+    return null;
+  } else {
+    const windowContainerProto = proto.taskFragment?.windowContainer ?? proto.windowContainer;
+    const windowContainer = WindowContainer.fromProto(
+      /* proto */ windowContainerProto,
+      /* protoChildren */ windowContainerProto?.children ?? [],
+      /* isActivityInTree */ isActivityInTree,
+      /* computedZ */ nextSeq
+    );
 
-        const entry = new Task(
-            proto.taskFragment?.activityType ?? proto.activityType,
-            proto.fillsParent,
-            toRect(proto.bounds),
-            proto.id,
-            proto.rootTaskId,
-            proto.taskFragment?.displayId,
-            toRect(proto.lastNonFullscreenBounds),
-            proto.realActivity,
-            proto.origActivity,
-            proto.resizeMode,
-            proto.resumedActivity?.title ?? "",
-            proto.animatingBounds,
-            proto.surfaceWidth,
-            proto.surfaceHeight,
-            proto.createdByOrganizer,
-            proto.taskFragment?.minWidth ?? proto.minWidth,
-            proto.taskFragment?.minHeight ?? proto.minHeight,
-            windowContainer
-        );
+    const entry = new Task(
+      proto.taskFragment?.activityType ?? proto.activityType,
+      proto.fillsParent,
+      toRect(proto.bounds),
+      proto.id,
+      proto.rootTaskId,
+      proto.taskFragment?.displayId,
+      toRect(proto.lastNonFullscreenBounds),
+      proto.realActivity,
+      proto.origActivity,
+      proto.resizeMode,
+      proto.resumedActivity?.title ?? '',
+      proto.animatingBounds,
+      proto.surfaceWidth,
+      proto.surfaceHeight,
+      proto.createdByOrganizer,
+      proto.taskFragment?.minWidth ?? proto.minWidth,
+      proto.taskFragment?.minHeight ?? proto.minHeight,
+      windowContainer
+    );
 
-        addAttributes(entry, proto);
-        return entry;
-    }
-}
+    addAttributes(entry, proto);
+    return entry;
+  }
+};
 
 function addAttributes(entry: Task, proto: any) {
-    entry.proto = proto;
-    entry.kind = entry.constructor.name;
-    entry.shortName = shortenName(entry.name);
+  entry.proto = proto;
+  entry.kind = entry.constructor.name;
+  entry.shortName = shortenName(entry.name);
 }
 
 export default Task;

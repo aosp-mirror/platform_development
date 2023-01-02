@@ -13,28 +13,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import * as protobuf from "protobufjs";
-import Long from "long";
+import Long from 'long';
+import * as protobuf from 'protobufjs';
 
 protobuf.util.Long = Long; // otherwise 64-bit types would be decoded as javascript number (only 53-bits precision)
 protobuf.configure();
 
-import accessibilityJson from "frameworks/base/core/proto/android/server/accessibilitytrace.proto";
-import inputMethodClientsJson from "frameworks/base/core/proto/android/view/inputmethod/inputmethodeditortrace.proto";
-import layersJson from "frameworks/native/services/surfaceflinger/layerproto/layerstrace.proto";
-import protoLogJson from "frameworks/base/core/proto/android/internal/protolog.proto";
-import transactionsJson from "frameworks/native/services/surfaceflinger/layerproto/transactions.proto";
-import windowManagerJson from "frameworks/base/core/proto/android/server/windowmanagertrace.proto";
+import protoLogJson from 'frameworks/base/core/proto/android/internal/protolog.proto';
+import accessibilityJson from 'frameworks/base/core/proto/android/server/accessibilitytrace.proto';
+import windowManagerJson from 'frameworks/base/core/proto/android/server/windowmanagertrace.proto';
+import inputMethodClientsJson from 'frameworks/base/core/proto/android/view/inputmethod/inputmethodeditortrace.proto';
+import layersJson from 'frameworks/native/services/surfaceflinger/layerproto/layerstrace.proto';
+import transactionsJson from 'frameworks/native/services/surfaceflinger/layerproto/transactions.proto';
 
-const AccessibilityTraceFileProto = protobuf.Root.fromJSON(accessibilityJson).lookupType("com.android.server.accessibility.AccessibilityTraceFileProto");
-const InputMethodClientsTraceFileProto = protobuf.Root.fromJSON(inputMethodClientsJson).lookupType("android.view.inputmethod.InputMethodClientsTraceFileProto");
-const InputMethodManagerServiceTraceFileProto = protobuf.Root.fromJSON(inputMethodClientsJson).lookupType("android.view.inputmethod.InputMethodManagerServiceTraceFileProto");
-const InputMethodServiceTraceFileProto = protobuf.Root.fromJSON(inputMethodClientsJson).lookupType("android.view.inputmethod.InputMethodServiceTraceFileProto");
-const LayersTraceFileProto = protobuf.Root.fromJSON(layersJson).lookupType("android.surfaceflinger.LayersTraceFileProto");
-const ProtoLogFileProto = protobuf.Root.fromJSON(protoLogJson).lookupType("com.android.internal.protolog.ProtoLogFileProto");
-const TransactionsTraceFileProto = protobuf.Root.fromJSON(transactionsJson).lookupType("android.surfaceflinger.proto.TransactionTraceFile");
-const WindowManagerServiceDumpProto = protobuf.Root.fromJSON(windowManagerJson).lookupType("com.android.server.wm.WindowManagerServiceDumpProto");
-const WindowManagerTraceFileProto = protobuf.Root.fromJSON(windowManagerJson).lookupType("com.android.server.wm.WindowManagerTraceFileProto");
+const AccessibilityTraceFileProto = protobuf.Root.fromJSON(accessibilityJson).lookupType(
+  'com.android.server.accessibility.AccessibilityTraceFileProto'
+);
+const InputMethodClientsTraceFileProto = protobuf.Root.fromJSON(inputMethodClientsJson).lookupType(
+  'android.view.inputmethod.InputMethodClientsTraceFileProto'
+);
+const InputMethodManagerServiceTraceFileProto = protobuf.Root.fromJSON(
+  inputMethodClientsJson
+).lookupType('android.view.inputmethod.InputMethodManagerServiceTraceFileProto');
+const InputMethodServiceTraceFileProto = protobuf.Root.fromJSON(inputMethodClientsJson).lookupType(
+  'android.view.inputmethod.InputMethodServiceTraceFileProto'
+);
+const LayersTraceFileProto = protobuf.Root.fromJSON(layersJson).lookupType(
+  'android.surfaceflinger.LayersTraceFileProto'
+);
+const ProtoLogFileProto = protobuf.Root.fromJSON(protoLogJson).lookupType(
+  'com.android.internal.protolog.ProtoLogFileProto'
+);
+const TransactionsTraceFileProto = protobuf.Root.fromJSON(transactionsJson).lookupType(
+  'android.surfaceflinger.proto.TransactionTraceFile'
+);
+const WindowManagerServiceDumpProto = protobuf.Root.fromJSON(windowManagerJson).lookupType(
+  'com.android.server.wm.WindowManagerServiceDumpProto'
+);
+const WindowManagerTraceFileProto = protobuf.Root.fromJSON(windowManagerJson).lookupType(
+  'com.android.server.wm.WindowManagerTraceFileProto'
+);
 
 export {
   AccessibilityTraceFileProto,
@@ -45,5 +63,5 @@ export {
   ProtoLogFileProto,
   TransactionsTraceFileProto,
   WindowManagerServiceDumpProto,
-  WindowManagerTraceFileProto
+  WindowManagerTraceFileProto,
 };

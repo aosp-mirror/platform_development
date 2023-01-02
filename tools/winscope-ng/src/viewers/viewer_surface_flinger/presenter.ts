@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { UiData } from "./ui_data";
-import { Rectangle, RectMatrix, RectTransform } from "viewers/common/rectangle";
-import { TraceType } from "common/trace/trace_type";
-import { TreeUtils, FilterType } from "common/utils/tree_utils";
-import { UserOptions } from "viewers/common/user_options";
-import { HierarchyTreeNode, PropertiesTreeNode } from "viewers/common/ui_tree_utils";
-import { TreeGenerator } from "viewers/common/tree_generator";
-import { TreeTransformer } from "viewers/common/tree_transformer";
-import { Layer, LayerTraceEntry } from "common/trace/flickerlib/common";
-import { PersistentStoreProxy } from "common/utils/persistent_store_proxy";
+import {Layer, LayerTraceEntry} from 'common/trace/flickerlib/common';
+import {TraceType} from 'common/trace/trace_type';
+import {PersistentStoreProxy} from 'common/utils/persistent_store_proxy';
+import {FilterType, TreeUtils} from 'common/utils/tree_utils';
+import {Rectangle, RectMatrix, RectTransform} from 'viewers/common/rectangle';
+import {TreeGenerator} from 'viewers/common/tree_generator';
+import {TreeTransformer} from 'viewers/common/tree_transformer';
+import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {UserOptions} from 'viewers/common/user_options';
+import {UiData} from './ui_data';
 
 type NotifyViewCallbackType = (uiData: UiData) => void;
 
@@ -35,8 +35,8 @@ export class Presenter {
 
   public updatePinnedItems(pinnedItem: HierarchyTreeNode) {
     const pinnedId = `${pinnedItem.id}`;
-    if (this.pinnedItems.map(item => `${item.id}`).includes(pinnedId)) {
-      this.pinnedItems = this.pinnedItems.filter(pinned => `${pinned.id}` != pinnedId);
+    if (this.pinnedItems.map((item) => `${item.id}`).includes(pinnedId)) {
+      this.pinnedItems = this.pinnedItems.filter((pinned) => `${pinned.id}` != pinnedId);
     } else {
       this.pinnedItems.push(pinnedItem);
     }
@@ -47,7 +47,7 @@ export class Presenter {
 
   public updateHighlightedItems(id: string) {
     if (this.highlightedItems.includes(id)) {
-      this.highlightedItems = this.highlightedItems.filter(hl => hl != id);
+      this.highlightedItems = this.highlightedItems.filter((hl) => hl != id);
     } else {
       this.highlightedItems = []; //if multi-select surfaces implemented, remove this line
       this.highlightedItems.push(id);
@@ -104,22 +104,23 @@ export class Presenter {
   }
 
   private generateRects(): Rectangle[] {
-    const displayRects = this.entry.displays.map((display: any) => {
-      const rect = display.layerStackSpace;
-      rect.label = "Display";
-      if (display.name) {
-        rect.label += ` - ${display.name}`;
-      }
-      rect.stableId = `Display - ${display.id}`;
-      rect.displayId = display.layerStackId;
-      rect.isDisplay = true;
-      rect.cornerRadius = 0;
-      rect.isVirtual = display.isVirtual ?? false;
-      rect.transform = {
-        matrix: display.transform.matrix
-      };
-      return rect;
-    }) ?? [];
+    const displayRects =
+      this.entry.displays.map((display: any) => {
+        const rect = display.layerStackSpace;
+        rect.label = 'Display';
+        if (display.name) {
+          rect.label += ` - ${display.name}`;
+        }
+        rect.stableId = `Display - ${display.id}`;
+        rect.displayId = display.layerStackId;
+        rect.isDisplay = true;
+        rect.cornerRadius = 0;
+        rect.isVirtual = display.isVirtual ?? false;
+        rect.transform = {
+          matrix: display.transform.matrix,
+        };
+        return rect;
+      }) ?? [];
     this.displayIds = [];
     const rects = this.getLayersForRectsView()
       .sort(this.compareLayerZ)
@@ -131,7 +132,7 @@ export class Presenter {
           this.displayIds.push(it.stackId);
         }
         rect.transform = {
-          matrix: rect.transform.matrix
+          matrix: rect.transform.matrix,
         };
         return rect;
       });
@@ -139,11 +140,12 @@ export class Presenter {
   }
 
   private getLayersForRectsView(): Layer[] {
-    const onlyVisible = this.hierarchyUserOptions["onlyVisible"]?.enabled ?? false;
+    const onlyVisible = this.hierarchyUserOptions['onlyVisible']?.enabled ?? false;
     // Show only visible layers or Visible + Occluded layers. Don't show all layers
     // (flattenedLayers) because container layers are never meant to be displayed
-    return this.entry.flattenedLayers
-      .filter((it: any) => it.isVisible || (!onlyVisible && it.occludedBy.length > 0));
+    return this.entry.flattenedLayers.filter(
+      (it: any) => it.isVisible || (!onlyVisible && it.occludedBy.length > 0)
+    );
   }
 
   private compareLayerZ(a: Layer, b: Layer): number {
@@ -159,7 +161,9 @@ export class Presenter {
 
   private updateSelectedTreeUiData() {
     if (this.selectedHierarchyTree) {
-      this.uiData.propertiesTree = this.getTreeWithTransformedProperties(this.selectedHierarchyTree);
+      this.uiData.propertiesTree = this.getTreeWithTransformedProperties(
+        this.selectedHierarchyTree
+      );
       this.uiData.selectedLayer = this.selectedLayer;
       this.uiData.displayPropertyGroups = this.shouldDisplayPropertyGroups(this.selectedLayer);
     }
@@ -172,15 +176,16 @@ export class Presenter {
     }
 
     const generator = new TreeGenerator(this.entry, this.hierarchyFilter, this.pinnedIds)
-      .setIsOnlyVisibleView(this.hierarchyUserOptions["onlyVisible"]?.enabled)
-      .setIsSimplifyNames(this.hierarchyUserOptions["simplifyNames"]?.enabled)
-      .setIsFlatView(this.hierarchyUserOptions["flat"]?.enabled)
+      .setIsOnlyVisibleView(this.hierarchyUserOptions['onlyVisible']?.enabled)
+      .setIsSimplifyNames(this.hierarchyUserOptions['simplifyNames']?.enabled)
+      .setIsFlatView(this.hierarchyUserOptions['flat']?.enabled)
       .withUniqueNodeId();
     let tree: HierarchyTreeNode | null;
-    if (!this.hierarchyUserOptions["showDiff"]?.enabled) {
+    if (!this.hierarchyUserOptions['showDiff']?.enabled) {
       tree = generator.generateTree();
     } else {
-      tree = generator.compareWith(this.previousEntry)
+      tree = generator
+        .compareWith(this.previousEntry)
         .withModifiedCheck()
         .generateFinalTreeWithDiff();
     }
@@ -206,7 +211,7 @@ export class Presenter {
           dtdx: t.dtdx,
           dtdy: t.dtdy,
           tx: t.tx,
-          ty: t.ty
+          ty: t.ty,
         };
         transform = {
           matrix: matrix,
@@ -225,7 +230,7 @@ export class Presenter {
         displayId: rect.displayId ?? rect.ref.stackId,
         isVirtual: rect.isVirtual ?? false,
         isClickable: !(rect.isDisplay ?? false),
-        cornerRadius: rect.cornerRadius
+        cornerRadius: rect.cornerRadius,
       };
       uiRects.push(newRect);
     });
@@ -234,7 +239,7 @@ export class Presenter {
 
   private updatePinnedIds(newId: string) {
     if (this.pinnedIds.includes(newId)) {
-      this.pinnedIds = this.pinnedIds.filter(pinned => pinned != newId);
+      this.pinnedIds = this.pinnedIds.filter((pinned) => pinned != newId);
     } else {
       this.pinnedIds.push(newId);
     }
@@ -243,8 +248,8 @@ export class Presenter {
   private getTreeWithTransformedProperties(selectedTree: HierarchyTreeNode): PropertiesTreeNode {
     const transformer = new TreeTransformer(selectedTree, this.propertiesFilter)
       .setOnlyProtoDump(true)
-      .setIsShowDefaults(this.propertiesUserOptions["showDefaults"]?.enabled)
-      .setIsShowDiff(this.propertiesUserOptions["showDiff"]?.enabled)
+      .setIsShowDefaults(this.propertiesUserOptions['showDefaults']?.enabled)
+      .setIsShowDiff(this.propertiesUserOptions['showDiff']?.enabled)
       .setTransformerOptions({skip: selectedTree.skip})
       .setProperties(this.entry)
       .setDiffProperties(this.previousEntry);
@@ -269,8 +274,8 @@ export class Presenter {
 
   private readonly notifyViewCallback: NotifyViewCallbackType;
   private uiData: UiData;
-  private hierarchyFilter: FilterType = TreeUtils.makeNodeFilter("");
-  private propertiesFilter: FilterType = TreeUtils.makeNodeFilter("");
+  private hierarchyFilter: FilterType = TreeUtils.makeNodeFilter('');
+  private propertiesFilter: FilterType = TreeUtils.makeNodeFilter('');
   private highlightedItems: Array<string> = [];
   private displayIds: Array<number> = [];
   private pinnedItems: Array<HierarchyTreeNode> = [];
@@ -279,38 +284,46 @@ export class Presenter {
   private selectedLayer: LayerTraceEntry | Layer | null = null;
   private previousEntry: LayerTraceEntry | null = null;
   private entry: LayerTraceEntry | null = null;
-  private hierarchyUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>("SfHierarchyOptions", {
-    showDiff: {
-      name: "Show diff", // TODO: PersistentStoreObject.Ignored("Show diff") or something like that to instruct to not store this info
-      enabled: false
+  private hierarchyUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
+    'SfHierarchyOptions',
+    {
+      showDiff: {
+        name: 'Show diff', // TODO: PersistentStoreObject.Ignored("Show diff") or something like that to instruct to not store this info
+        enabled: false,
+      },
+      simplifyNames: {
+        name: 'Simplify names',
+        enabled: true,
+      },
+      onlyVisible: {
+        name: 'Only visible',
+        enabled: false,
+      },
+      flat: {
+        name: 'Flat',
+        enabled: false,
+      },
     },
-    simplifyNames: {
-      name: "Simplify names",
-      enabled: true
-    },
-    onlyVisible: {
-      name: "Only visible",
-      enabled: false
-    },
-    flat: {
-      name: "Flat",
-      enabled: false
-    }
-  }, this.storage);
+    this.storage
+  );
 
-  private propertiesUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>("SfPropertyOptions", {
-    showDiff: {
-      name: "Show diff",
-      enabled: false
-    },
-    showDefaults: {
-      name: "Show defaults",
-      enabled: false,
-      tooltip: `
+  private propertiesUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
+    'SfPropertyOptions',
+    {
+      showDiff: {
+        name: 'Show diff',
+        enabled: false,
+      },
+      showDefaults: {
+        name: 'Show defaults',
+        enabled: false,
+        tooltip: `
                 If checked, shows the value of all properties.
                 Otherwise, hides all properties whose value is
                 the default for its data type.
-              `
+              `,
+      },
     },
-  }, this.storage);
+    this.storage
+  );
 }

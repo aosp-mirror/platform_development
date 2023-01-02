@@ -13,20 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input, Output, EventEmitter } from "@angular/core";
-import { nodeInnerItemStyles } from "viewers/components/styles/node.styles";
-import { UiTreeUtils, UiTreeNode, DiffType, HierarchyTreeNode } from "viewers/common/ui_tree_utils";
+import {Component, EventEmitter, Input, Output} from '@angular/core';
+import {DiffType, HierarchyTreeNode, UiTreeNode, UiTreeUtils} from 'viewers/common/ui_tree_utils';
+import {nodeInnerItemStyles} from 'viewers/components/styles/node.styles';
 
 @Component({
-  selector: "tree-node",
+  selector: 'tree-node',
   template: `
-    <button
-      *ngIf="showChevron()"
-      class="icon-button toggle-tree-btn"
-      (click)="toggleTree($event)"
-    >
+    <button *ngIf="showChevron()" class="icon-button toggle-tree-btn" (click)="toggleTree($event)">
       <mat-icon>
-        {{isCollapsed ? "arrow_drop_down" : "chevron_right"}}
+        {{ isCollapsed ? 'arrow_drop_down' : 'chevron_right' }}
       </mat-icon>
     </button>
 
@@ -34,41 +30,29 @@ import { UiTreeUtils, UiTreeNode, DiffType, HierarchyTreeNode } from "viewers/co
       <mat-icon class="leaf-node-icon"></mat-icon>
     </div>
 
-    <button
-      *ngIf="showPinNodeIcon()"
-      class="icon-button pin-node-btn"
-      (click)="pinNode($event)"
-    >
+    <button *ngIf="showPinNodeIcon()" class="icon-button pin-node-btn" (click)="pinNode($event)">
       <mat-icon>
-        {{isPinned ? "star" : "star_border"}}
+        {{ isPinned ? 'star' : 'star_border' }}
       </mat-icon>
     </button>
 
     <div class="description">
-      <tree-node-data-view
-        *ngIf="!isPropertiesTreeNode()"
-        [item]="item"
-      ></tree-node-data-view>
+      <tree-node-data-view *ngIf="!isPropertiesTreeNode()" [item]="item"></tree-node-data-view>
       <tree-node-properties-data-view
         *ngIf="isPropertiesTreeNode()"
-        [item]="item"
-      ></tree-node-properties-data-view>
+        [item]="item"></tree-node-properties-data-view>
     </div>
 
     <button
       *ngIf="hasChildren && !isCollapsed"
       class="icon-button expand-tree-btn"
       [class]="collapseDiffClass"
-      (click)="expandTree($event)"
-    >
-      <mat-icon aria-hidden="true">
-        more_horiz
-      </mat-icon>
+      (click)="expandTree($event)">
+      <mat-icon aria-hidden="true"> more_horiz </mat-icon>
     </button>
   `,
-  styles: [nodeInnerItemStyles]
+  styles: [nodeInnerItemStyles],
 })
-
 export class TreeNodeComponent {
   @Input() item!: UiTreeNode;
   @Input() isLeaf?: boolean;
@@ -83,7 +67,7 @@ export class TreeNodeComponent {
   @Output() expandTreeChange = new EventEmitter<boolean>();
   @Output() pinNodeChange = new EventEmitter<UiTreeNode>();
 
-  collapseDiffClass = "";
+  collapseDiffClass = '';
 
   ngOnChanges() {
     this.collapseDiffClass = this.updateCollapseDiffClass();
@@ -94,7 +78,9 @@ export class TreeNodeComponent {
   }
 
   public showPinNodeIcon() {
-    return (!this.isPropertiesTreeNode() && !UiTreeUtils.isParentNode(this.item.kind ?? "")) ?? false;
+    return (
+      (!this.isPropertiesTreeNode() && !UiTreeUtils.isParentNode(this.item.kind ?? '')) ?? false
+    );
   }
 
   public toggleTree(event: MouseEvent) {
@@ -124,7 +110,7 @@ export class TreeNodeComponent {
 
   public updateCollapseDiffClass() {
     if (this.isCollapsed) {
-      return "";
+      return '';
     }
 
     const childrenDiffClasses = this.getAllDiffTypesOfChildren(this.item);
@@ -133,7 +119,7 @@ export class TreeNodeComponent {
     childrenDiffClasses.delete(undefined);
 
     if (childrenDiffClasses.size === 0) {
-      return "";
+      return '';
     }
     if (childrenDiffClasses.size === 1) {
       const diffType = childrenDiffClasses.values().next().value;

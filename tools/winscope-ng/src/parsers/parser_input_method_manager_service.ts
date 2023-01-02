@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import {Timestamp, TimestampType} from "common/trace/timestamp";
-import {TraceFile} from "common/trace/trace";
-import {TraceType} from "common/trace/trace_type";
-import { TraceTreeNode } from "common/trace/trace_tree_node";
-import { TimeUtils } from "common/utils/time_utils";
-import {Parser} from "./parser";
-import {InputMethodManagerServiceTraceFileProto} from "./proto_types";
+import {Timestamp, TimestampType} from 'common/trace/timestamp';
+import {TraceFile} from 'common/trace/trace';
+import {TraceTreeNode} from 'common/trace/trace_tree_node';
+import {TraceType} from 'common/trace/trace_type';
+import {TimeUtils} from 'common/utils/time_utils';
+import {Parser} from './parser';
+import {InputMethodManagerServiceTraceFileProto} from './proto_types';
 
 class ParserInputMethodManagerService extends Parser {
   constructor(trace: TraceFile) {
@@ -38,60 +38,71 @@ class ParserInputMethodManagerService extends Parser {
 
   override decodeTrace(buffer: Uint8Array): any[] {
     const decoded = <any>InputMethodManagerServiceTraceFileProto.decode(buffer);
-    if (Object.prototype.hasOwnProperty.call(decoded, "realToElapsedTimeOffsetNanos")) {
+    if (Object.prototype.hasOwnProperty.call(decoded, 'realToElapsedTimeOffsetNanos')) {
       this.realToElapsedTimeOffsetNs = BigInt(decoded.realToElapsedTimeOffsetNanos);
-    }
-    else {
+    } else {
       this.realToElapsedTimeOffsetNs = undefined;
     }
     return decoded.entry;
   }
 
-  protected override getTimestamp(type: TimestampType, entryProto: any): undefined|Timestamp {
+  protected override getTimestamp(type: TimestampType, entryProto: any): undefined | Timestamp {
     if (type === TimestampType.ELAPSED) {
       return new Timestamp(TimestampType.ELAPSED, BigInt(entryProto.elapsedRealtimeNanos));
-    }
-    else if (type === TimestampType.REAL && this.realToElapsedTimeOffsetNs !== undefined) {
-      return new Timestamp(type, this.realToElapsedTimeOffsetNs + BigInt(entryProto.elapsedRealtimeNanos));
+    } else if (type === TimestampType.REAL && this.realToElapsedTimeOffsetNs !== undefined) {
+      return new Timestamp(
+        type,
+        this.realToElapsedTimeOffsetNs + BigInt(entryProto.elapsedRealtimeNanos)
+      );
     }
     return undefined;
   }
 
-  protected override processDecodedEntry(index: number, timestampType: TimestampType, entryProto: TraceTreeNode): TraceTreeNode {
+  protected override processDecodedEntry(
+    index: number,
+    timestampType: TimestampType,
+    entryProto: TraceTreeNode
+  ): TraceTreeNode {
     if (entryProto.elapsedRealtimeNanos === undefined) {
-      throw Error("Missing elapsedRealtimeNanos on entry");
+      throw Error('Missing elapsedRealtimeNanos on entry');
     }
 
-    let clockTimeNanos: bigint|undefined = undefined;
-    if (this.realToElapsedTimeOffsetNs !== undefined
-      && entryProto.elapsedRealtimeNanos !== undefined) {
+    let clockTimeNanos: bigint | undefined = undefined;
+    if (
+      this.realToElapsedTimeOffsetNs !== undefined &&
+      entryProto.elapsedRealtimeNanos !== undefined
+    ) {
       clockTimeNanos = BigInt(entryProto.elapsedRealtimeNanos) + this.realToElapsedTimeOffsetNs;
     }
 
-    const timestamp = Timestamp.from(timestampType, BigInt(entryProto.elapsedRealtimeNanos), this.realToElapsedTimeOffsetNs);
+    const timestamp = Timestamp.from(
+      timestampType,
+      BigInt(entryProto.elapsedRealtimeNanos),
+      this.realToElapsedTimeOffsetNs
+    );
 
     return {
-      name: TimeUtils.format(timestamp) + " - " + entryProto.where,
-      kind: "InputMethodManagerService entry",
+      name: TimeUtils.format(timestamp) + ' - ' + entryProto.where,
+      kind: 'InputMethodManagerService entry',
       children: [
         {
           obj: entryProto.inputMethodManagerService,
-          kind: "InputMethodManagerService",
-          name: "",
+          kind: 'InputMethodManagerService',
+          name: '',
           children: [],
-          stableId: "managerservice",
-          id: "managerservice",
-        }
+          stableId: 'managerservice',
+          id: 'managerservice',
+        },
       ],
       obj: entryProto,
-      stableId: "entry",
-      id: "entry",
+      stableId: 'entry',
+      id: 'entry',
       elapsedRealtimeNanos: entryProto.elapsedRealtimeNanos,
       clockTimeNanos,
     };
   }
 
-  private realToElapsedTimeOffsetNs: undefined|bigint;
+  private realToElapsedTimeOffsetNs: undefined | bigint;
   private static readonly MAGIC_NUMBER = [0x09, 0x49, 0x4d, 0x4d, 0x54, 0x52, 0x41, 0x43, 0x45]; // .IMMTRACE
 }
 

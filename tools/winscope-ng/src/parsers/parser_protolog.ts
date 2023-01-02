@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-import {FormattedLogMessage, LogMessage, ProtoLogTraceEntry, UnformattedLogMessage} from "common/trace/protolog";
-import {Timestamp, TimestampType} from "common/trace/timestamp";
-import {TraceFile} from "common/trace/trace";
-import {TraceType} from "common/trace/trace_type";
-import {Parser} from "./parser";
-import {ProtoLogFileProto} from "./proto_types";
-import configJson from "../../../../../frameworks/base/data/etc/services.core.protolog.json";
+import {
+  FormattedLogMessage,
+  LogMessage,
+  ProtoLogTraceEntry,
+  UnformattedLogMessage,
+} from 'common/trace/protolog';
+import {Timestamp, TimestampType} from 'common/trace/timestamp';
+import {TraceFile} from 'common/trace/trace';
+import {TraceType} from 'common/trace/trace_type';
+import configJson from '../../../../../frameworks/base/data/etc/services.core.protolog.json';
+import {Parser} from './parser';
+import {ProtoLogFileProto} from './proto_types';
 
 class ParserProtoLog extends Parser {
   constructor(trace: TraceFile) {
@@ -39,13 +44,13 @@ class ParserProtoLog extends Parser {
     const fileProto: any = ProtoLogFileProto.decode(buffer);
 
     if (fileProto.version !== ParserProtoLog.PROTOLOG_VERSION) {
-      const message = "Unsupported ProtoLog trace version";
+      const message = 'Unsupported ProtoLog trace version';
       console.log(message);
       throw new TypeError(message);
     }
 
     if (configJson.version !== ParserProtoLog.PROTOLOG_VERSION) {
-      const message = "Unsupported ProtoLog JSON config version";
+      const message = 'Unsupported ProtoLog JSON config version';
       console.log(message);
       throw new TypeError(message);
     }
@@ -59,17 +64,24 @@ class ParserProtoLog extends Parser {
     return fileProto.log;
   }
 
-  override getTimestamp(type: TimestampType, entryProto: any): undefined|Timestamp {
+  override getTimestamp(type: TimestampType, entryProto: any): undefined | Timestamp {
     if (type == TimestampType.ELAPSED) {
       return new Timestamp(type, BigInt(entryProto.elapsedRealtimeNanos));
     }
     if (type == TimestampType.REAL && this.realToElapsedTimeOffsetNs !== undefined) {
-      return new Timestamp(type, BigInt(entryProto.elapsedRealtimeNanos) + this.realToElapsedTimeOffsetNs);
+      return new Timestamp(
+        type,
+        BigInt(entryProto.elapsedRealtimeNanos) + this.realToElapsedTimeOffsetNs
+      );
     }
     return undefined;
   }
 
-  override processDecodedEntry(index: number, timestampType: TimestampType, entryProto: any): ProtoLogTraceEntry {
+  override processDecodedEntry(
+    index: number,
+    timestampType: TimestampType,
+    entryProto: any
+  ): ProtoLogTraceEntry {
     if (!this.decodedMessages || this.decodedTimestampType !== timestampType) {
       this.decodedTimestampType = timestampType;
       this.decodedMessages = this.decodedEntries.map((entryProto: any) => {
@@ -87,9 +99,13 @@ class ParserProtoLog extends Parser {
     }
 
     try {
-      return new UnformattedLogMessage(entryProto, timestampType, this.realToElapsedTimeOffsetNs, message);
-    }
-    catch (error) {
+      return new UnformattedLogMessage(
+        entryProto,
+        timestampType,
+        this.realToElapsedTimeOffsetNs,
+        message
+      );
+    } catch (error) {
       if (error instanceof FormatStringMismatchError) {
         return new FormattedLogMessage(entryProto, timestampType, this.realToElapsedTimeOffsetNs);
       }
@@ -99,9 +115,9 @@ class ParserProtoLog extends Parser {
 
   private decodedMessages?: LogMessage[];
   private decodedTimestampType?: TimestampType;
-  private realToElapsedTimeOffsetNs: undefined|bigint = undefined;
+  private realToElapsedTimeOffsetNs: undefined | bigint = undefined;
   private static readonly MAGIC_NUMBER = [0x09, 0x50, 0x52, 0x4f, 0x54, 0x4f, 0x4c, 0x4f, 0x47]; // .PROTOLOG
-  private static readonly PROTOLOG_VERSION = "1.0.0";
+  private static readonly PROTOLOG_VERSION = '1.0.0';
 }
 
 class FormatStringMismatchError extends Error {

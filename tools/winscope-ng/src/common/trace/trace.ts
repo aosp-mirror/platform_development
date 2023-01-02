@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {TraceType} from "./trace_type";
+import {TraceType} from './trace_type';
 
 export interface Trace {
   type: TraceType;
@@ -22,9 +22,5 @@ export interface Trace {
 }
 
 export class TraceFile {
-  constructor(
-    public file: File,
-    public parentArchive?: File
-  ) {
-  }
+  constructor(public file: File, public parentArchive?: File) {}
 }

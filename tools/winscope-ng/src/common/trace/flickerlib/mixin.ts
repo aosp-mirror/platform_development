@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import ObjectFormatter from "./ObjectFormatter"
+import ObjectFormatter from './ObjectFormatter';
 
 /**
  * Get the properties of a WM object for display.
@@ -23,39 +23,39 @@ import ObjectFormatter from "./ObjectFormatter"
  * @param proto Associated proto object
  */
 export function getPropertiesForDisplay(entry: any): any {
-    if (!entry) {
-        return
-    }
+  if (!entry) {
+    return;
+  }
 
-    let obj: any = {}
-    const properties = ObjectFormatter.getProperties(entry)
-    properties.forEach(prop => obj[prop] = entry[prop]);
+  let obj: any = {};
+  const properties = ObjectFormatter.getProperties(entry);
+  properties.forEach((prop) => (obj[prop] = entry[prop]));
 
-    // we remove the children property from the object to avoid it showing the
-    // the properties view of the element as we can always see those elements'
-    // properties by changing the target element in the hierarchy tree view.
-    if (obj.children) delete obj.children
-    if (obj.proto) delete obj.proto
+  // we remove the children property from the object to avoid it showing the
+  // the properties view of the element as we can always see those elements'
+  // properties by changing the target element in the hierarchy tree view.
+  if (obj.children) delete obj.children;
+  if (obj.proto) delete obj.proto;
 
-    obj.proto = Object.assign({}, entry.proto)
-    if (obj.proto.children) delete obj.proto.children
-    if (obj.proto.childWindows) delete obj.proto.childWindows
-    if (obj.proto.childrenWindows) delete obj.proto.childrenWindows
-    if (obj.proto.childContainers) delete obj.proto.childContainers
-    if (obj.proto.windowToken) delete obj.proto.windowToken
-    if (obj.proto.rootDisplayArea) delete obj.proto.rootDisplayArea
-    if (obj.proto.rootWindowContainer) delete obj.proto.rootWindowContainer
-    if (obj.proto.windowContainer?.children) delete obj.proto.windowContainer.children
-    obj = ObjectFormatter.format(obj)
+  obj.proto = Object.assign({}, entry.proto);
+  if (obj.proto.children) delete obj.proto.children;
+  if (obj.proto.childWindows) delete obj.proto.childWindows;
+  if (obj.proto.childrenWindows) delete obj.proto.childrenWindows;
+  if (obj.proto.childContainers) delete obj.proto.childContainers;
+  if (obj.proto.windowToken) delete obj.proto.windowToken;
+  if (obj.proto.rootDisplayArea) delete obj.proto.rootDisplayArea;
+  if (obj.proto.rootWindowContainer) delete obj.proto.rootWindowContainer;
+  if (obj.proto.windowContainer?.children) delete obj.proto.windowContainer.children;
+  obj = ObjectFormatter.format(obj);
 
-    return obj
+  return obj;
 }
 
 export function shortenName(name: any): string {
-    const classParts = (name + "").split(".")
-    if (classParts.length <= 3) {
-        return name
-    }
-    const className = classParts.slice(-1)[0] // last element
-    return `${classParts[0]}.${classParts[1]}.(...).${className}`
+  const classParts = (name + '').split('.');
+  if (classParts.length <= 3) {
+    return name;
+  }
+  const className = classParts.slice(-1)[0]; // last element
+  return `${classParts[0]}.${classParts[1]}.(...).${className}`;
 }

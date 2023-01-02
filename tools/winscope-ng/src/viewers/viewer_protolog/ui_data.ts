@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {LogMessage} from "common/trace/protolog";
+import {LogMessage} from 'common/trace/protolog';
 
 class UiData {
   constructor(
@@ -21,8 +21,8 @@ class UiData {
     public allTags: string[],
     public allSourceFiles: string[],
     public messages: LogMessage[],
-    public currentMessageIndex: undefined|number) {
-  }
+    public currentMessageIndex: undefined | number
+  ) {}
 
   public static EMPTY = new UiData([], [], [], [], undefined);
 }

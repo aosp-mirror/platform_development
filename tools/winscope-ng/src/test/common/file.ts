@@ -15,7 +15,7 @@
  */
 
 // This class is needed for testing because Node.js doesn't provide the Web API's File type
-import { Blob } from "./blob";
+import {Blob} from './blob';
 
 class File extends Blob {
   constructor(buffer: ArrayBuffer, fileName: string) {
@@ -25,7 +25,7 @@ class File extends Blob {
 
   readonly lastModified: number = 0;
   readonly name: string;
-  readonly webkitRelativePath: string = "";
+  readonly webkitRelativePath: string = '';
 }
 
 export {File};

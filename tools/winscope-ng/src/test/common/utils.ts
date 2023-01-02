@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import * as fs from "fs";
-import * as path from "path";
-import {Blob} from "./blob";
-import {File} from "./file";
+import * as fs from 'fs';
+import * as path from 'path';
+import {Blob} from './blob';
+import {File} from './file';
 
 class CommonTestUtils {
   static async getFixtureFile(filename: string): Promise<File> {
@@ -33,12 +33,12 @@ class CommonTestUtils {
     if (path.isAbsolute(filename)) {
       return filename;
     }
-    return path.join(CommonTestUtils.getProjectRootPath(), "src/test/fixtures", filename);
+    return path.join(CommonTestUtils.getProjectRootPath(), 'src/test/fixtures', filename);
   }
 
   static getProjectRootPath(): string {
     let root = __dirname;
-    while (path.basename(root) !== "winscope-ng") {
+    while (path.basename(root) !== 'winscope-ng') {
       root = path.dirname(root);
     }
     return root;
