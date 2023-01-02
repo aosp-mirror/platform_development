@@ -2,8 +2,10 @@
   "name": "winscope-ng",
   "version": "0.0.0",
   "scripts": {
-    "eslint": "npx eslint --ignore-pattern flickerlib src/",
-    "prettier": "npx prettier --write src/",
+    "format:check": "(ls *.js .*.js && find src/ -regextype egrep -regex '^.*(\\.ts|\\.js)$') |xargs npx prettier --check",
+    "format:fix": "(ls *.js .*.js && find src/ -regextype egrep -regex '^.*(\\.ts|\\.js)$') |xargs npx prettier --write",
+    "lint:check": "(ls *.js .*.js && find src/ -regextype egrep -regex '^.*(\\.ts|\\.js)$') |xargs npx eslint --format=unix",
+    "lint:fix": "(ls *.js .*.js && find src/ -regextype egrep -regex '^.*(\\.ts|\\.js)$') |xargs npx eslint --format=unix --fix",
     "start": "webpack serve --config webpack.config.dev.js --open --hot --port 8080",
     "start:remote_tool_mock": "webpack serve --config src/test/remote_tool_mock/webpack.config.js --open --hot --port 8081",
     "build:kotlin": "rm -rf kotlin_build && npx kotlinc-js -source-map -source-map-embed-sources always -module-kind commonjs -output kotlin_build/flicker.js ../../../platform_testing/libraries/flicker/src/com/android/server/wm/traces/common",
@@ -15,7 +17,7 @@
     "test:unit": "jasmine dist/unit.spec/bundle.js",
     "test:component": "npx karma start",
     "test:e2e": "npx protractor protractor.config.js",
-    "test:all": "npm run test:unit && npm run test:component && npm run test:e2e"
+    "test:all": "npm run test:unit && npm run test:component && npm run test:e2e && npm run format:check && npm run lint:check"
   },
   "private": true,
   "dependencies": {
@@ -75,6 +77,8 @@
     "@typescript-eslint/eslint-plugin": "^5.30.6",
     "@typescript-eslint/parser": "^5.30.6",
     "eslint": "^8.19.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.2.1",
     "jasmine": "~4.3.0",
     "jasmine-core": "~4.1.0",
     "karma": "~6.3.0",
@@ -82,7 +86,8 @@
     "karma-jasmine": "~5.0.0",
     "karma-sourcemap-loader": "^0.3.8",
     "karma-webpack": "^5.0.0",
-    "prettier": "^2.7.1",
+    "prettier": "^2.8.1",
+    "prettier-plugin-organize-imports": "^3.2.1",
     "protractor": "^7.0.0",
     "sass": "^1.56.1",
     "sass-loader": "^13.1.0",
