@@ -13,20 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ComponentFixture, TestBed} from "@angular/core/testing";
-import { PropertiesTableComponent } from "./properties_table.component";
+import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {PropertiesTableComponent} from './properties_table.component';
 
-describe("PropertiesTableComponent", () => {
+describe('PropertiesTableComponent', () => {
   let fixture: ComponentFixture<PropertiesTableComponent>;
   let component: PropertiesTableComponent;
   let htmlElement: HTMLElement;
 
   beforeAll(async () => {
     await TestBed.configureTestingModule({
-      declarations: [
-        PropertiesTableComponent
-      ],
-      schemas: []
+      declarations: [PropertiesTableComponent],
+      schemas: [],
     }).compileComponents();
   });
 
@@ -36,7 +34,7 @@ describe("PropertiesTableComponent", () => {
     htmlElement = fixture.nativeElement;
   });
 
-  it("can be created", () => {
+  it('can be created', () => {
     expect(component).toBeTruthy();
   });
 });

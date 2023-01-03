@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import {Timestamp} from "./timestamp";
+import {Timestamp} from './timestamp';
 
 class ScreenRecordingUtils {
   static timestampToVideoTimeSeconds(firstTimestamp: Timestamp, currentTimestamp: Timestamp) {
     if (firstTimestamp.getType() !== currentTimestamp.getType()) {
-      throw new Error("Attempted to use timestamps with different type");
+      throw new Error('Attempted to use timestamps with different type');
     }
     const videoTimeSeconds =
       Number(currentTimestamp.getValueNs() - firstTimestamp.getValueNs()) / 1000000000;

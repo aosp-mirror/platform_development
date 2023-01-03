@@ -14,31 +14,27 @@
  * limitations under the License.
  */
 
-import {Message, MessageBugReport, MessagePong, MessageTimestamp, MessageType} from "./messages";
-import {OriginAllowList} from "./origin_allow_list";
-import {RealTimestamp} from "common/trace/timestamp";
-import {FunctionUtils} from "common/utils/function_utils";
-import {RemoteBugreportReceiver, OnBugreportReceived} from "interfaces/remote_bugreport_receiver";
-import {RemoteTimestampReceiver, OnTimestampReceived} from "interfaces/remote_timestamp_receiver";
-import {RemoteTimestampSender} from "interfaces/remote_timestamp_sender";
+import {RealTimestamp} from 'common/trace/timestamp';
+import {FunctionUtils} from 'common/utils/function_utils';
+import {OnBugreportReceived, RemoteBugreportReceiver} from 'interfaces/remote_bugreport_receiver';
+import {OnTimestampReceived, RemoteTimestampReceiver} from 'interfaces/remote_timestamp_receiver';
+import {RemoteTimestampSender} from 'interfaces/remote_timestamp_sender';
+import {Message, MessageBugReport, MessagePong, MessageTimestamp, MessageType} from './messages';
+import {OriginAllowList} from './origin_allow_list';
 
 class RemoteTool {
-  constructor(
-    public readonly window: Window,
-    public readonly origin: string) {
-  }
+  constructor(public readonly window: Window, public readonly origin: string) {}
 }
 
-export class CrossToolProtocol implements
-  RemoteBugreportReceiver,
-  RemoteTimestampReceiver,
-  RemoteTimestampSender {
+export class CrossToolProtocol
+  implements RemoteBugreportReceiver, RemoteTimestampReceiver, RemoteTimestampSender
+{
   private remoteTool?: RemoteTool;
   private onBugreportReceived: OnBugreportReceived = FunctionUtils.DO_NOTHING_ASYNC;
   private onTimestampReceived: OnTimestampReceived = FunctionUtils.DO_NOTHING;
 
   constructor() {
-    window.addEventListener("message", async (event) => {
+    window.addEventListener('message', async (event) => {
       await this.onMessageReceived(event);
     });
   }
@@ -58,13 +54,18 @@ export class CrossToolProtocol implements
 
     const message = new MessageTimestamp(timestamp.getValueNs());
     this.remoteTool.window.postMessage(message, this.remoteTool.origin);
-    console.log("Cross-tool protocol sent timestamp message:", message);
+    console.log('Cross-tool protocol sent timestamp message:', message);
   }
 
   private async onMessageReceived(event: MessageEvent) {
     if (!OriginAllowList.isAllowed(event.origin)) {
-      console.log("Cross-tool protocol ignoring message from non-allowed origin.",
-        "Origin:", event.origin, "Message:", event.data);
+      console.log(
+        'Cross-tool protocol ignoring message from non-allowed origin.',
+        'Origin:',
+        event.origin,
+        'Message:',
+        event.data
+      );
       return;
     }
 
@@ -77,35 +78,34 @@ export class CrossToolProtocol implements
       this.remoteTool = new RemoteTool(event.source as Window, event.origin);
     }
 
-    switch(message.type) {
-    case MessageType.PING:
-      console.log("Cross-tool protocol received ping message:", message);
-      (event.source as Window).postMessage(new MessagePong(), event.origin);
-      break;
-    case MessageType.PONG:
-      console.log("Cross-tool protocol received unexpected pong message:", message);
-      break;
-    case MessageType.BUGREPORT:
-      console.log("Cross-tool protocol received bugreport message:", message);
-      await this.onMessageBugreportReceived(message as MessageBugReport);
-      break;
-    case MessageType.TIMESTAMP:
-      console.log("Cross-tool protocol received timestamp message:", message);
-      this.onMessageTimestampReceived(message as MessageTimestamp);
-      break;
-    case MessageType.FILES:
-      console.log("Cross-tool protocol received unexpected files message", message);
-      break;
-    default:
-      console.log("Cross-tool protocol received unsupported message type:", message);
-      break;
+    switch (message.type) {
+      case MessageType.PING:
+        console.log('Cross-tool protocol received ping message:', message);
+        (event.source as Window).postMessage(new MessagePong(), event.origin);
+        break;
+      case MessageType.PONG:
+        console.log('Cross-tool protocol received unexpected pong message:', message);
+        break;
+      case MessageType.BUGREPORT:
+        console.log('Cross-tool protocol received bugreport message:', message);
+        await this.onMessageBugreportReceived(message as MessageBugReport);
+        break;
+      case MessageType.TIMESTAMP:
+        console.log('Cross-tool protocol received timestamp message:', message);
+        this.onMessageTimestampReceived(message as MessageTimestamp);
+        break;
+      case MessageType.FILES:
+        console.log('Cross-tool protocol received unexpected files message', message);
+        break;
+      default:
+        console.log('Cross-tool protocol received unsupported message type:', message);
+        break;
     }
   }
 
   private async onMessageBugreportReceived(message: MessageBugReport) {
-    const timestamp = message.timestampNs !== undefined
-      ? new RealTimestamp(message.timestampNs)
-      : undefined;
+    const timestamp =
+      message.timestampNs !== undefined ? new RealTimestamp(message.timestampNs) : undefined;
     this.onBugreportReceived(message.file, timestamp);
   }
 

@@ -14,24 +14,33 @@
  * limitations under the License.
  */
 
-export type StoreObject = { [key: string|number]: StoreObject|string|boolean|undefined } | StoreObject[] | string[] | boolean[]
+export type StoreObject =
+  | {[key: string | number]: StoreObject | string | boolean | undefined}
+  | StoreObject[]
+  | string[]
+  | boolean[];
 
 export class PersistentStoreProxy {
   public static new<T extends StoreObject>(key: string, defaultState: T, storage: Storage): T {
-    const storedState = JSON.parse(storage.getItem(key) ?? "{}");
+    const storedState = JSON.parse(storage.getItem(key) ?? '{}');
     const currentState = mergeDeep({}, deepClone(defaultState));
     mergeDeepKeepingStructure(currentState, storedState);
     return wrapWithPersistentStoreProxy<T>(key, currentState, storage);
   }
 }
 
-function wrapWithPersistentStoreProxy<T extends StoreObject>(storeKey: string, object: T, storage: Storage, baseObject: T = object): T {
+function wrapWithPersistentStoreProxy<T extends StoreObject>(
+  storeKey: string,
+  object: T,
+  storage: Storage,
+  baseObject: T = object
+): T {
   const updatableProps: string[] = [];
 
-  let key: number|string;
+  let key: number | string;
   for (key in object) {
     const value = object[key];
-    if (typeof value === "string" || typeof value === "boolean" || value === undefined) {
+    if (typeof value === 'string' || typeof value === 'boolean' || value === undefined) {
       if (!Array.isArray(object)) {
         updatableProps.push(key);
       }
@@ -42,10 +51,10 @@ function wrapWithPersistentStoreProxy<T extends StoreObject>(storeKey: string, o
 
   const proxyObj = new Proxy(object, {
     set: (target, prop, newValue) => {
-      if (typeof prop === "symbol") {
+      if (typeof prop === 'symbol') {
         throw Error("Can't use symbol keys only strings");
       }
-      if (Array.isArray(target) && typeof prop === "number") {
+      if (Array.isArray(target) && typeof prop === 'number') {
         target[prop] = newValue;
         storage.setItem(storeKey, JSON.stringify(baseObject));
         return true;
@@ -55,15 +64,17 @@ function wrapWithPersistentStoreProxy<T extends StoreObject>(storeKey: string, o
         storage.setItem(storeKey, JSON.stringify(baseObject));
         return true;
       }
-      throw Error(`Object property '${prop}' is not updatable. Can only update leaf keys: [${updatableProps}]`);
-    }
+      throw Error(
+        `Object property '${prop}' is not updatable. Can only update leaf keys: [${updatableProps}]`
+      );
+    },
   });
 
   return proxyObj;
 }
 
 function isObject(item: any): boolean {
-  return (item && typeof item === "object" && !Array.isArray(item));
+  return item && typeof item === 'object' && !Array.isArray(item);
 }
 
 /**
@@ -85,7 +96,7 @@ function mergeDeepKeepingStructure(target: any, source: any): any {
       }
 
       if (!isObject(target[key]) && !isObject(source[key])) {
-        Object.assign(target, { [key]: source[key] });
+        Object.assign(target, {[key]: source[key]});
         continue;
       }
     }
@@ -101,10 +112,10 @@ function mergeDeep(target: any, ...sources: any): any {
   if (isObject(target) && isObject(source)) {
     for (const key in source) {
       if (isObject(source[key])) {
-        if (!target[key]) Object.assign(target, { [key]: {} });
+        if (!target[key]) Object.assign(target, {[key]: {}});
         mergeDeep(target[key], source[key]);
       } else {
-        Object.assign(target, { [key]: source[key] });
+        Object.assign(target, {[key]: source[key]});
       }
     }
   }

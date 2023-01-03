@@ -13,43 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input } from "@angular/core";
-import { Transform } from "common/trace/flickerlib/common";
+import {Component, Input} from '@angular/core';
+import {Transform} from 'common/trace/flickerlib/common';
 
 @Component({
-  selector: "transform-matrix",
+  selector: 'transform-matrix',
   template: `
-      <div *ngIf="transform" class="matrix" [matTooltip]="transform.getTypeAsString()">
-        <p class="mat-body-1">
-          {{ formatFloat(transform.matrix.dsdx) }}
-        </p>
-        <p class="mat-body-1">
-          {{ formatFloat(transform.matrix.dsdy) }}
-        </p>
-        <p class="mat-body-1" matTooltip="Translate x">
-          {{ formatFloat(transform.matrix.tx) }}
-        </p>
+    <div *ngIf="transform" class="matrix" [matTooltip]="transform.getTypeAsString()">
+      <p class="mat-body-1">
+        {{ formatFloat(transform.matrix.dsdx) }}
+      </p>
+      <p class="mat-body-1">
+        {{ formatFloat(transform.matrix.dsdy) }}
+      </p>
+      <p class="mat-body-1" matTooltip="Translate x">
+        {{ formatFloat(transform.matrix.tx) }}
+      </p>
 
-        <p class="mat-body-1">
-          {{ formatFloat(transform.matrix.dtdx) }}
-        </p>
-        <p class="mat-body-1">
-          {{ formatFloat(transform.matrix.dtdy) }}
-        </p>
-        <p class="mat-body-1" matTooltip="Translate y">
-          {{ formatFloat(transform.matrix.ty) }}
-        </p>
+      <p class="mat-body-1">
+        {{ formatFloat(transform.matrix.dtdx) }}
+      </p>
+      <p class="mat-body-1">
+        {{ formatFloat(transform.matrix.dtdy) }}
+      </p>
+      <p class="mat-body-1" matTooltip="Translate y">
+        {{ formatFloat(transform.matrix.ty) }}
+      </p>
 
-        <p class="mat-body-1">
-          0
-        </p>
-        <p class="mat-body-1">
-          0
-        </p>
-        <p class="mat-body-1">
-          1
-        </p>
-      </div>
+      <p class="mat-body-1">0</p>
+      <p class="mat-body-1">0</p>
+      <p class="mat-body-1">1</p>
+    </div>
   `,
   styles: [
     `
@@ -59,10 +53,9 @@ import { Transform } from "common/trace/flickerlib/common";
         grid-template-columns: repeat(3, 1fr);
         text-align: center;
       }
-    `
+    `,
   ],
 })
-
 export class TransformMatrixComponent {
   @Input() transform!: Transform;
   @Input() formatFloat!: (num: number) => number;

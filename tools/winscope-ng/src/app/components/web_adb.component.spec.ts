@@ -13,20 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ComponentFixture, TestBed} from "@angular/core/testing";
-import {WebAdbComponent} from "./web_adb.component";
-import { MatIconModule } from "@angular/material/icon";
+import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {MatIconModule} from '@angular/material/icon';
+import {WebAdbComponent} from './web_adb.component';
 
-describe("WebAdbComponent", () => {
+describe('WebAdbComponent', () => {
   let fixture: ComponentFixture<WebAdbComponent>;
   let component: WebAdbComponent;
   let htmlElement: HTMLElement;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [
-        MatIconModule
-      ],
+      imports: [MatIconModule],
       declarations: [WebAdbComponent],
     }).compileComponents();
     fixture = TestBed.createComponent(WebAdbComponent);
@@ -34,13 +32,13 @@ describe("WebAdbComponent", () => {
     htmlElement = fixture.nativeElement;
   });
 
-  it("can be created", () => {
+  it('can be created', () => {
     expect(component).toBeTruthy();
   });
 
-  it("renders the info message", () => {
+  it('renders the info message', () => {
     fixture.detectChanges();
-    expect(htmlElement.querySelector(".adb-info")?.innerHTML).toBe("Add new device");
-    expect(htmlElement.querySelector(".adb-icon")?.innerHTML).toBe("info");
+    expect(htmlElement.querySelector('.adb-info')?.innerHTML).toBe('Add new device');
+    expect(htmlElement.querySelector('.adb-icon')?.innerHTML).toBe('info');
   });
 });

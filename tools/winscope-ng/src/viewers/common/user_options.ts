@@ -15,8 +15,8 @@
  */
 export interface UserOptions {
   [key: string]: {
-    name: string,
-    enabled: boolean,
-    tooltip?: string
-  }
+    name: string;
+    enabled: boolean;
+    tooltip?: string;
+  };
 }

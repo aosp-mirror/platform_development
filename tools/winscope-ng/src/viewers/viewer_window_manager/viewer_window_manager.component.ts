@@ -13,48 +13,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  Component,
-  Input,
-} from "@angular/core";
-import {UiData} from "./ui_data";
-import { TRACE_INFO } from "app/trace_info";
-import { TraceType } from "common/trace/trace_type";
-import { PersistentStore } from "common/utils/persistent_store";
+import {Component, Input} from '@angular/core';
+import {TRACE_INFO} from 'app/trace_info';
+import {TraceType} from 'common/trace/trace_type';
+import {PersistentStore} from 'common/utils/persistent_store';
+import {UiData} from './ui_data';
 
 @Component({
-  selector: "viewer-window-manager",
+  selector: 'viewer-window-manager',
   template: `
-      <div class="card-grid">
-        <rects-view
-          class="rects-view"
-          title="Windows"
-          [rects]="inputData?.rects ?? []"
-          [displayIds]="inputData?.displayIds ?? []"
-          [highlightedItems]="inputData?.highlightedItems ?? []"
-        ></rects-view>
-        <mat-divider [vertical]="true"></mat-divider>
-        <hierarchy-view
-          class="hierarchy-view"
-          [tree]="inputData?.tree ?? null"
-          [dependencies]="inputData?.dependencies ?? []"
-          [highlightedItems]="inputData?.highlightedItems ?? []"
-          [pinnedItems]="inputData?.pinnedItems ?? []"
-          [store]="store"
-          [userOptions]="inputData?.hierarchyUserOptions ?? {}"
-        ></hierarchy-view>
-        <mat-divider [vertical]="true"></mat-divider>
-        <properties-view
-          class="properties-view"
-          [userOptions]="inputData?.propertiesUserOptions ?? {}"
-          [propertiesTree]="inputData?.propertiesTree ?? {}"
-          [isProtoDump]="true"
-        ></properties-view>
-      </div>
+    <div class="card-grid">
+      <rects-view
+        class="rects-view"
+        title="Windows"
+        [rects]="inputData?.rects ?? []"
+        [displayIds]="inputData?.displayIds ?? []"
+        [highlightedItems]="inputData?.highlightedItems ?? []"></rects-view>
+      <mat-divider [vertical]="true"></mat-divider>
+      <hierarchy-view
+        class="hierarchy-view"
+        [tree]="inputData?.tree ?? null"
+        [dependencies]="inputData?.dependencies ?? []"
+        [highlightedItems]="inputData?.highlightedItems ?? []"
+        [pinnedItems]="inputData?.pinnedItems ?? []"
+        [store]="store"
+        [userOptions]="inputData?.hierarchyUserOptions ?? {}"></hierarchy-view>
+      <mat-divider [vertical]="true"></mat-divider>
+      <properties-view
+        class="properties-view"
+        [userOptions]="inputData?.propertiesUserOptions ?? {}"
+        [propertiesTree]="inputData?.propertiesTree ?? {}"
+        [isProtoDump]="true"></properties-view>
+    </div>
   `,
   styles: [
     `
-      .rects-view, .hierarchy-view, .properties-view {
+      .rects-view,
+      .hierarchy-view,
+      .properties-view {
         flex: 1;
         padding: 16px;
         display: flex;
@@ -62,7 +58,7 @@ import { PersistentStore } from "common/utils/persistent_store";
         overflow: auto;
       }
     `,
-  ]
+  ],
 })
 export class ViewerWindowManagerComponent {
   @Input() inputData?: UiData;

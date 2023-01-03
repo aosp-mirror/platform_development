@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-import { Timestamp, TimestampType } from "./timestamp";
+import {Timestamp, TimestampType} from './timestamp';
 
-describe("Timestamp", () => {
-  describe("from", () => {
-    it("throws when missing elapsed timestamp", () => {
+describe('Timestamp', () => {
+  describe('from', () => {
+    it('throws when missing elapsed timestamp', () => {
       expect(() => {
         Timestamp.from(TimestampType.REAL, 100n);
       }).toThrow();
     });
 
-    it("can create real timestamp", () => {
+    it('can create real timestamp', () => {
       const timestamp = Timestamp.from(TimestampType.REAL, 100n, 500n);
       expect(timestamp.getType()).toBe(TimestampType.REAL);
       expect(timestamp.getValueNs()).toBe(600n);
     });
 
-    it("can create elapsed timestamp", () => {
+    it('can create elapsed timestamp', () => {
       let timestamp = Timestamp.from(TimestampType.ELAPSED, 100n, 500n);
       expect(timestamp.getType()).toBe(TimestampType.ELAPSED);
       expect(timestamp.getValueNs()).toBe(100n);

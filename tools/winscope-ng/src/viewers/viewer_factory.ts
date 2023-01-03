@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceType} from "common/trace/trace_type";
-import {Viewer} from "./viewer";
-import {ViewerInputMethodClients} from "./viewer_input_method_clients/viewer_input_method_clients";
-import {ViewerInputMethodService} from "./viewer_input_method_service/viewer_input_method_service";
-import {ViewerInputMethodManagerService} from "./viewer_input_method_manager_service/viewer_input_method_manager_service";
-import {ViewerProtoLog} from "./viewer_protolog/viewer_protolog";
-import {ViewerSurfaceFlinger} from "./viewer_surface_flinger/viewer_surface_flinger";
-import {ViewerWindowManager} from "./viewer_window_manager/viewer_window_manager";
-import {ViewerTransactions} from "./viewer_transactions/viewer_transactions";
-import {ViewerScreenRecording} from "./viewer_screen_recording/viewer_screen_recording";
+import {TraceType} from 'common/trace/trace_type';
+import {Viewer} from './viewer';
+import {ViewerInputMethodClients} from './viewer_input_method_clients/viewer_input_method_clients';
+import {ViewerInputMethodManagerService} from './viewer_input_method_manager_service/viewer_input_method_manager_service';
+import {ViewerInputMethodService} from './viewer_input_method_service/viewer_input_method_service';
+import {ViewerProtoLog} from './viewer_protolog/viewer_protolog';
+import {ViewerScreenRecording} from './viewer_screen_recording/viewer_screen_recording';
+import {ViewerSurfaceFlinger} from './viewer_surface_flinger/viewer_surface_flinger';
+import {ViewerTransactions} from './viewer_transactions/viewer_transactions';
+import {ViewerWindowManager} from './viewer_window_manager/viewer_window_manager';
 
 class ViewerFactory {
   // Note:

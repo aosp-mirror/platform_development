@@ -17,18 +17,17 @@
 export enum ColorType {
   VISIBLE,
   NOT_VISIBLE,
-  HIGHLIGHTED
+  HIGHLIGHTED,
 }
 
-export class Distance2D{
-  constructor(public dx: number, public dy: number) {
-  }
+export class Distance2D {
+  constructor(public dx: number, public dy: number) {}
 }
 
 export interface Box3D {
-  width: number,
-  height: number,
-  depth: number,
+  width: number;
+  height: number;
+  depth: number;
   center: Point3D;
   diagonal: number;
 }

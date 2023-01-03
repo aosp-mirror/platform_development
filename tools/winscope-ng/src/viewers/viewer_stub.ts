@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Viewer, View, ViewType} from "./viewer";
+import {View, Viewer, ViewType} from './viewer';
 
 class ViewerStub implements Viewer {
   constructor(title: string, viewContent?: string) {
     this.title = title;
 
     if (viewContent !== undefined) {
-      this.htmlElement = document.createElement("div");
+      this.htmlElement = document.createElement('div');
       this.htmlElement.innerText = viewContent;
     } else {
       this.htmlElement = undefined as unknown as HTMLElement;

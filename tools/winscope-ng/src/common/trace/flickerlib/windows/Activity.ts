@@ -14,42 +14,42 @@
  * limitations under the License.
  */
 
-import { shortenName } from '../mixin'
-import { Activity } from "../common"
-import WindowContainer from "./WindowContainer"
+import {Activity} from '../common';
+import {shortenName} from '../mixin';
+import WindowContainer from './WindowContainer';
 
 Activity.fromProto = function (proto: any, nextSeq: () => number): Activity {
-    if (proto == null) {
-        return null;
-    } else {
-        const windowContainer = WindowContainer.fromProto(
-            /* proto */ proto.windowToken.windowContainer,
-            /* protoChildren */ proto.windowToken.windowContainer?.children ?? [],
-            /* isActivityInTree */ true,
-            /* computedZ */ nextSeq,
-            /* nameOverride */ null,
-            /* identifierOverride */ proto.identifier,
-        );
+  if (proto == null) {
+    return null;
+  } else {
+    const windowContainer = WindowContainer.fromProto(
+      /* proto */ proto.windowToken.windowContainer,
+      /* protoChildren */ proto.windowToken.windowContainer?.children ?? [],
+      /* isActivityInTree */ true,
+      /* computedZ */ nextSeq,
+      /* nameOverride */ null,
+      /* identifierOverride */ proto.identifier
+    );
 
-        const entry = new Activity(
-            proto.name,
-            proto.state,
-            proto.visible,
-            proto.frontOfTask,
-            proto.procId,
-            proto.translucent,
-            windowContainer
-        );
+    const entry = new Activity(
+      proto.name,
+      proto.state,
+      proto.visible,
+      proto.frontOfTask,
+      proto.procId,
+      proto.translucent,
+      windowContainer
+    );
 
-        addAttributes(entry, proto);
-        return entry;
-    }
-}
+    addAttributes(entry, proto);
+    return entry;
+  }
+};
 
 function addAttributes(entry: Activity, proto: any) {
-    entry.proto = proto;
-    entry.kind = entry.constructor.name;
-    entry.shortName = shortenName(entry.name);
+  entry.proto = proto;
+  entry.kind = entry.constructor.name;
+  entry.shortName = shortenName(entry.name);
 }
 
 export default Activity;

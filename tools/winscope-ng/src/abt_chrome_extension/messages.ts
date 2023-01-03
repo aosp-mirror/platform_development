@@ -52,10 +52,10 @@ export declare interface OpenBuganizerResponse extends WebCommandMessage {
   issueId: string;
 
   /** issue title */
-  issueTitle: string|undefined;
+  issueTitle: string | undefined;
 
   /** issue access level */
-  issueAccessLevel: IssueAccessLimit|undefined;
+  issueAccessLevel: IssueAccessLimit | undefined;
 
   /** Attachment list. */
   attachments: AttachmentMetadata[];
@@ -96,9 +96,9 @@ export interface BugReportMetadata {
  * http://go/buganizer/concepts/access-control#accesslimit
  */
 export const enum IssueAccessLimit {
-  INTERNAL = "",
-  VISIBLE_TO_PARTNERS = "Visible to Partners",
-  VISIBLE_TO_PUBLIC = "Visible to Public",
+  INTERNAL = '',
+  VISIBLE_TO_PARTNERS = 'Visible to Partners',
+  VISIBLE_TO_PUBLIC = 'Visible to Public',
 }
 
 /**

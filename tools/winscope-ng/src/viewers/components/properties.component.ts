@@ -13,29 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Input, Inject, ElementRef } from "@angular/core";
-import { TraceTreeNode } from "common/trace/trace_tree_node";
-import { UserOptions } from "viewers/common/user_options";
-import { ViewerEvents } from "viewers/common/viewer_events";
-import { PropertiesTreeNode, Terminal} from "viewers/common/ui_tree_utils";
+import {Component, ElementRef, Inject, Input} from '@angular/core';
+import {TraceTreeNode} from 'common/trace/trace_tree_node';
+import {PropertiesTreeNode, Terminal} from 'viewers/common/ui_tree_utils';
+import {UserOptions} from 'viewers/common/user_options';
+import {ViewerEvents} from 'viewers/common/viewer_events';
 
 @Component({
-  selector: "properties-view",
+  selector: 'properties-view',
   template: `
-    <div class="view-header"
-         [class.view-header-with-property-groups]="displayPropertyGroups">
+    <div class="view-header" [class.view-header-with-property-groups]="displayPropertyGroups">
       <div class="title-filter">
         <h2 class="properties-title mat-title">Properties</h2>
 
         <mat-form-field>
           <mat-label>Filter...</mat-label>
 
-          <input
-            matInput
-            [(ngModel)]="filterString"
-            (ngModelChange)="filterTree()"
-            name="filter"
-          />
+          <input matInput [(ngModel)]="filterString" (ngModelChange)="filterTree()" name="filter" />
         </mat-form-field>
       </div>
 
@@ -46,21 +40,24 @@ import { PropertiesTreeNode, Terminal} from "viewers/common/ui_tree_utils";
           [(ngModel)]="userOptions[option].enabled"
           (ngModelChange)="updateTree()"
           [matTooltip]="userOptions[option].tooltip ?? ''"
-        >{{userOptions[option].name}}</mat-checkbox>
+          >{{ userOptions[option].name }}</mat-checkbox
+        >
       </div>
 
       <property-groups
         *ngIf="itemIsSelected() && displayPropertyGroups"
         class="property-groups"
-        [item]="selectedFlickerItem"
-      ></property-groups>
+        [item]="selectedFlickerItem"></property-groups>
     </div>
 
     <mat-divider></mat-divider>
 
     <div class="properties-content">
-      <h3 *ngIf="objectKeys(propertiesTree).length > 0 && isProtoDump"
-          class="properties-title mat-subheading-2">Properties - Proto Dump</h3>
+      <h3
+        *ngIf="objectKeys(propertiesTree).length > 0 && isProtoDump"
+        class="properties-title mat-subheading-2">
+        Properties - Proto Dump
+      </h3>
 
       <div class="tree-wrapper">
         <tree-view
@@ -68,8 +65,7 @@ import { PropertiesTreeNode, Terminal} from "viewers/common/ui_tree_utils";
           [item]="propertiesTree"
           [showNode]="showNode"
           [isLeaf]="isLeaf"
-          [isAlwaysCollapsed]="true"
-        ></tree-view>
+          [isAlwaysCollapsed]="true"></tree-view>
       </div>
     </div>
   `,
@@ -114,15 +110,14 @@ import { PropertiesTreeNode, Terminal} from "viewers/common/ui_tree_utils";
       }
 
       .tree-wrapper {
-        overflow: auto
+        overflow: auto;
       }
     `,
   ],
 })
-
 export class PropertiesComponent {
   objectKeys = Object.keys;
-  filterString = "";
+  filterString = '';
 
   @Input() userOptions: UserOptions = {};
   @Input() propertiesTree: PropertiesTreeNode = {};
@@ -130,39 +125,38 @@ export class PropertiesComponent {
   @Input() displayPropertyGroups = false;
   @Input() isProtoDump = false;
 
-  constructor(
-    @Inject(ElementRef) private elementRef: ElementRef,
-  ) {}
+  constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
   public filterTree() {
-    const event: CustomEvent = new CustomEvent(
-      ViewerEvents.PropertiesFilterChange,
-      {
-        bubbles: true,
-        detail: { filterString: this.filterString }
-      });
+    const event: CustomEvent = new CustomEvent(ViewerEvents.PropertiesFilterChange, {
+      bubbles: true,
+      detail: {filterString: this.filterString},
+    });
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
   public updateTree() {
-    const event: CustomEvent = new CustomEvent(
-      ViewerEvents.PropertiesUserOptionsChange,
-      {
-        bubbles: true,
-        detail: { userOptions: this.userOptions }
-      });
+    const event: CustomEvent = new CustomEvent(ViewerEvents.PropertiesUserOptionsChange, {
+      bubbles: true,
+      detail: {userOptions: this.userOptions},
+    });
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
   public showNode(item: any) {
-    return !(item instanceof Terminal)
-    && !(item.name instanceof Terminal)
-    && !(item.propertyKey instanceof Terminal);
+    return (
+      !(item instanceof Terminal) &&
+      !(item.name instanceof Terminal) &&
+      !(item.propertyKey instanceof Terminal)
+    );
   }
 
   public isLeaf(item: any) {
-    return !item.children || item.children.length === 0
-          || item.children.filter((c: any) => !(c instanceof Terminal)).length === 0;
+    return (
+      !item.children ||
+      item.children.length === 0 ||
+      item.children.filter((c: any) => !(c instanceof Terminal)).length === 0
+    );
   }
 
   public itemIsSelected() {

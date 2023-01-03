@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import {ArrayUtils} from "common/utils/array_utils";
-import {Timestamp, TimestampType} from "common/trace/timestamp";
-import {Trace, TraceFile} from "common/trace/trace";
-import {TraceType} from "common/trace/trace_type";
+import {Timestamp, TimestampType} from 'common/trace/timestamp';
+import {Trace, TraceFile} from 'common/trace/trace';
+import {TraceType} from 'common/trace/trace_type';
+import {ArrayUtils} from 'common/utils/array_utils';
 
 abstract class Parser {
   protected trace: TraceFile;
@@ -32,9 +32,11 @@ abstract class Parser {
     const traceBuffer = new Uint8Array(await this.trace.file.arrayBuffer());
 
     const magicNumber = this.getMagicNumber();
-    if (magicNumber !== undefined)
-    {
-      const bufferContainsMagicNumber = ArrayUtils.equal(magicNumber, traceBuffer.slice(0, magicNumber.length));
+    if (magicNumber !== undefined) {
+      const bufferContainsMagicNumber = ArrayUtils.equal(
+        magicNumber,
+        traceBuffer.slice(0, magicNumber.length)
+      );
       if (!bufferContainsMagicNumber) {
         throw TypeError("buffer doesn't contain expected magic number");
       }
@@ -68,7 +70,7 @@ abstract class Parser {
     }
 
     for (const fieldName in protoObj.$type.fields) {
-      if (protoObj.$type.fields.hasOwnProperty(fieldName)) {
+      if (Object.prototype.hasOwnProperty.call(protoObj.$type.fields, fieldName)) {
         const fieldProperties = protoObj.$type.fields[fieldName];
         const field = protoObj[fieldName];
 
@@ -84,7 +86,8 @@ abstract class Parser {
         }
 
         if (fieldProperties.resolvedType && fieldProperties.resolvedType.valuesById) {
-          protoObj[fieldName] = fieldProperties.resolvedType.valuesById[protoObj[fieldProperties.name]];
+          protoObj[fieldName] =
+            fieldProperties.resolvedType.valuesById[protoObj[fieldProperties.name]];
           continue;
         }
         this.addDefaultProtoFields(protoObj[fieldName]);
@@ -99,11 +102,11 @@ abstract class Parser {
   public getTrace(): Trace {
     return {
       type: this.getTraceType(),
-      traceFile: this.trace
+      traceFile: this.trace,
     };
   }
 
-  public getTimestamps(type: TimestampType): undefined|Timestamp[] {
+  public getTimestamps(type: TimestampType): undefined | Timestamp[] {
     return this.timestamps.get(type);
   }
 
@@ -115,7 +118,7 @@ abstract class Parser {
   //TODO (b/256564627):
   // - factor out timestamp search policy. Receive index parameter instead.
   // - make async for possible lazy disk reads in the future
-  public getTraceEntry(timestamp: Timestamp): undefined|any {
+  public getTraceEntry(timestamp: Timestamp): undefined | any {
     const timestamps = this.getTimestamps(timestamp.getType());
     if (timestamps === undefined) {
       throw TypeError(`Timestamps with type "${timestamp.getType()}" not available`);
@@ -128,10 +131,14 @@ abstract class Parser {
     return this.processDecodedEntry(index, timestamp.getType(), this.decodedEntries[index]);
   }
 
-  protected abstract getMagicNumber(): undefined|number[];
+  protected abstract getMagicNumber(): undefined | number[];
   protected abstract decodeTrace(trace: Uint8Array): any[];
-  protected abstract getTimestamp(type: TimestampType, decodedEntry: any): undefined|Timestamp;
-  protected abstract processDecodedEntry(index: number, timestampType: TimestampType, decodedEntry: any): any;
+  protected abstract getTimestamp(type: TimestampType, decodedEntry: any): undefined | Timestamp;
+  protected abstract processDecodedEntry(
+    index: number,
+    timestampType: TimestampType,
+    decodedEntry: any
+  ): any;
 }
 
 export {Parser};

@@ -1,21 +1,21 @@
-import { TraceType } from "common/trace/trace_type";
+import {TraceType} from 'common/trace/trace_type';
 
-const WINDOW_MANAGER_ICON = "view_compact";
-const SURFACE_FLINGER_ICON = "filter_none";
-const SCREEN_RECORDING_ICON = "videocam";
-const TRANSACTION_ICON = "timeline";
-const WAYLAND_ICON = "filter_none";
-const PROTO_LOG_ICON = "notes";
-const SYSTEM_UI_ICON = "filter_none";
-const LAUNCHER_ICON = "filter_none";
-const IME_ICON = "keyboard";
-const ACCESSIBILITY_ICON = "filter_none";
-const TAG_ICON = "details";
-const TRACE_ERROR_ICON = "warning";
+const WINDOW_MANAGER_ICON = 'view_compact';
+const SURFACE_FLINGER_ICON = 'filter_none';
+const SCREEN_RECORDING_ICON = 'videocam';
+const TRANSACTION_ICON = 'timeline';
+const WAYLAND_ICON = 'filter_none';
+const PROTO_LOG_ICON = 'notes';
+const SYSTEM_UI_ICON = 'filter_none';
+const LAUNCHER_ICON = 'filter_none';
+const IME_ICON = 'keyboard';
+const ACCESSIBILITY_ICON = 'filter_none';
+const TAG_ICON = 'details';
+const TRACE_ERROR_ICON = 'warning';
 
 type iconMap = {
-    [key: number]: string;
-}
+  [key: number]: string;
+};
 
 export const TRACE_ICONS: iconMap = {
   [TraceType.ACCESSIBILITY]: ACCESSIBILITY_ICON,

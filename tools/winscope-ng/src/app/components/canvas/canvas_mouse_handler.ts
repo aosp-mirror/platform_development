@@ -14,42 +14,49 @@
  * limitations under the License.
  */
 
-import { CanvasDrawer } from "./canvas_drawer";
-import { DraggableCanvasObject } from "./draggable_canvas_object";
+import {CanvasDrawer} from './canvas_drawer';
+import {DraggableCanvasObject} from './draggable_canvas_object';
 
 export type DragListener = (x: number, y: number) => void;
 export type DropListener = DragListener;
 
 export class CanvasMouseHandler {
-
   // Ordered top most element to bottom most
   private draggableObjects = new Array<DraggableCanvasObject>();
-  private draggingObject: DraggableCanvasObject|undefined = undefined;
+  private draggingObject: DraggableCanvasObject | undefined = undefined;
 
   private onDrag = new Map<DraggableCanvasObject, DragListener>();
   private onDrop = new Map<DraggableCanvasObject, DropListener>();
 
   constructor(
     private drawer: CanvasDrawer,
-    private defaultCursor: string = "auto",
+    private defaultCursor: string = 'auto',
     private onUnhandledMouseDown: (x: number, y: number) => void = (x, y) => {}
   ) {
-    this.drawer.canvas.addEventListener("mousemove", (event) => { this.handleMouseMove(event); });
-    this.drawer.canvas.addEventListener("mousedown", (event) => { this.handleMouseDown(event); });
-    this.drawer.canvas.addEventListener("mouseup", (event) => { this.handleMouseUp(event); });
-    this.drawer.canvas.addEventListener("mouseout", (event) => { this.handleMouseUp(event); });
+    this.drawer.canvas.addEventListener('mousemove', (event) => {
+      this.handleMouseMove(event);
+    });
+    this.drawer.canvas.addEventListener('mousedown', (event) => {
+      this.handleMouseDown(event);
+    });
+    this.drawer.canvas.addEventListener('mouseup', (event) => {
+      this.handleMouseUp(event);
+    });
+    this.drawer.canvas.addEventListener('mouseout', (event) => {
+      this.handleMouseUp(event);
+    });
   }
 
   public registerDraggableObject(
     draggableObject: DraggableCanvasObject,
     onDrag: DragListener,
-    onDrop: DropListener,
+    onDrop: DropListener
   ) {
     this.onDrag.set(draggableObject, onDrag);
     this.onDrop.set(draggableObject, onDrop);
   }
 
-  public notifyDrawnOnTop(draggableObject: DraggableCanvasObject,) {
+  public notifyDrawnOnTop(draggableObject: DraggableCanvasObject) {
     const foundIndex = this.draggableObjects.indexOf(draggableObject);
     if (foundIndex !== -1) {
       this.draggableObjects.splice(foundIndex, 1);
@@ -60,7 +67,7 @@ export class CanvasMouseHandler {
   private handleMouseDown(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    const { mouseX, mouseY } = this.getPos(e);
+    const {mouseX, mouseY} = this.getPos(e);
 
     const clickedObject = this.objectAt(mouseX, mouseY);
     if (clickedObject !== undefined) {
@@ -74,7 +81,7 @@ export class CanvasMouseHandler {
   private handleMouseMove(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    const { mouseX, mouseY } = this.getPos(e);
+    const {mouseX, mouseY} = this.getPos(e);
 
     if (this.draggingObject !== undefined) {
       const onDragCallback = this.onDrag.get(this.draggingObject);
@@ -89,7 +96,7 @@ export class CanvasMouseHandler {
   private handleMouseUp(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    const { mouseX, mouseY } = this.getPos(e);
+    const {mouseX, mouseY} = this.getPos(e);
 
     if (this.draggingObject !== undefined) {
       const onDropCallback = this.onDrop.get(this.draggingObject);
@@ -111,29 +118,34 @@ export class CanvasMouseHandler {
     }
 
     if (mouseX > this.drawer.getWidth() - this.drawer.padding.right) {
-      mouseX = this.drawer.getWidth()- this.drawer.padding.right;
+      mouseX = this.drawer.getWidth() - this.drawer.padding.right;
     }
 
-    return { mouseX, mouseY };
+    return {mouseX, mouseY};
   }
 
   private updateCursor(mouseX: number, mouseY: number) {
     const hoverObject = this.objectAt(mouseX, mouseY);
     if (hoverObject !== undefined) {
       if (hoverObject === this.draggingObject) {
-        this.drawer.canvas.style.cursor = "grabbing";
+        this.drawer.canvas.style.cursor = 'grabbing';
       } else {
-        this.drawer.canvas.style.cursor = "grab";
+        this.drawer.canvas.style.cursor = 'grab';
       }
     } else {
       this.drawer.canvas.style.cursor = this.defaultCursor;
     }
   }
 
-  private objectAt(mouseX: number, mouseY: number): DraggableCanvasObject|undefined {
+  private objectAt(mouseX: number, mouseY: number): DraggableCanvasObject | undefined {
     for (const object of this.draggableObjects) {
       object.definePath(this.drawer.ctx);
-      if (this.drawer.ctx.isPointInPath(mouseX * this.drawer.getXScale(), mouseY * this.drawer.getYScale())) {
+      if (
+        this.drawer.ctx.isPointInPath(
+          mouseX * this.drawer.getXScale(),
+          mouseY * this.drawer.getYScale()
+        )
+      ) {
         return object;
       }
     }
@@ -141,4 +153,3 @@ export class CanvasMouseHandler {
     return undefined;
   }
 }
-

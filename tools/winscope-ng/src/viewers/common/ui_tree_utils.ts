@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import Chip from "./chip";
+import Chip from './chip';
 
 export type UiTreeNode = HierarchyTreeNode | PropertiesTreeNode;
 
@@ -67,21 +67,20 @@ export interface PropertiesTreeNode {
 } //TODO: make specific
 
 export const DiffType = {
-  NONE: "none",
-  ADDED: "added",
-  DELETED: "deleted",
-  ADDED_MOVE: "addedMove",
-  DELETED_MOVE: "deletedMove",
-  MODIFIED: "modified",
+  NONE: 'none',
+  ADDED: 'added',
+  DELETED: 'deleted',
+  ADDED_MOVE: 'addedMove',
+  DELETED_MOVE: 'deletedMove',
+  MODIFIED: 'modified',
 };
 
 export class Terminal {}
 
-export class UiTreeUtils
-{
+export class UiTreeUtils {
   public static diffClass(item: UiTreeNode): string {
     const diffType = item.diffType;
-    return diffType ?? "";
+    return diffType ?? '';
   }
 
   public static isHighlighted(item: UiTreeNode, highlightedItems: Array<string>) {
@@ -89,7 +88,7 @@ export class UiTreeUtils
   }
 
   public static isVisibleNode(kind: string, type?: string) {
-    return kind === "WindowState" || kind === "Activity" || type?.includes("Layer");
+    return kind === 'WindowState' || kind === 'Activity' || type?.includes('Layer');
   }
 
   public static isParentNode(kind: string) {
@@ -97,10 +96,10 @@ export class UiTreeUtils
   }
 
   private static readonly PARENT_NODE_KINDS = [
-    "entry",
-    "WindowManagerState",
-    "InputMethodClient entry",
-    "InputMethodService entry",
-    "InputMethodManagerService entry"
+    'entry',
+    'WindowManagerState',
+    'InputMethodClient entry',
+    'InputMethodService entry',
+    'InputMethodManagerService entry',
   ];
 }

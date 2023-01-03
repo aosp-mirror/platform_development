@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Viewer} from "viewers/viewer";
+import {Viewer} from 'viewers/viewer';
 
 export interface TraceDataListener {
   onTraceDataUnloaded(): void;

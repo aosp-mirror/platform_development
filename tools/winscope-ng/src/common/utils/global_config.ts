@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-export type Schema = Omit<GlobalConfig, "set">;
+export type Schema = Omit<GlobalConfig, 'set'>;
 
 class GlobalConfig {
-  readonly MODE: "DEV"|"PROD" = "PROD" as const;
+  readonly MODE: 'DEV' | 'PROD' = 'PROD' as const;
 
   set(config: Schema) {
     Object.assign(this, config);

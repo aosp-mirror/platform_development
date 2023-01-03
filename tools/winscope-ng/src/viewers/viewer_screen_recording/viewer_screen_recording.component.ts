@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, ElementRef, Inject, Input} from "@angular/core";
-import {DomSanitizer, SafeUrl} from "@angular/platform-browser";
-import {ScreenRecordingTraceEntry} from "common/trace/screen_recording";
+import {Component, ElementRef, Inject, Input} from '@angular/core';
+import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
+import {ScreenRecordingTraceEntry} from 'common/trace/screen_recording';
 
 @Component({
-  selector: "viewer-screen-recording",
+  selector: 'viewer-screen-recording',
   template: `
     <mat-card class="container">
       <mat-card-title class="header">
@@ -27,26 +27,23 @@ import {ScreenRecordingTraceEntry} from "common/trace/screen_recording";
           <span class="mat-body-2">Screen recording</span>
         </button>
 
-        <button mat-button class="button-minimize"
-                (click)="onMinimizeButtonClick()">
+        <button mat-button class="button-minimize" (click)="onMinimizeButtonClick()">
           <mat-icon>
-            {{isMinimized ? "maximize" : "minimize"}}
+            {{ isMinimized ? 'maximize' : 'minimize' }}
           </mat-icon>
         </button>
       </mat-card-title>
       <div class="video-container" [style.height]="isMinimized ? '0px' : ''">
-        <ng-container
-          *ngIf="hasFrameToShow; then video; else noVideo">
-        </ng-container>
+        <ng-container *ngIf="hasFrameToShow; then video; else noVideo"> </ng-container>
       </div>
     </mat-card>
 
     <ng-template #video>
-      <video *ngIf="hasFrameToShow"
+      <video
+        *ngIf="hasFrameToShow"
         [currentTime]="videoCurrentTime"
-        [src]=videoUrl
-        cdkDragHandle>
-      </video>
+        [src]="videoUrl"
+        cdkDragHandle></video>
     </ng-template>
 
     <ng-template #noVideo>
@@ -88,7 +85,8 @@ import {ScreenRecordingTraceEntry} from "common/trace/screen_recording";
         flex-grow: 0;
       }
 
-      .video-container, video {
+      .video-container,
+      video {
         border: 1px solid var(--default-border);
         max-width: max(250px, 15vw);
         cursor: grab;
@@ -100,18 +98,19 @@ import {ScreenRecordingTraceEntry} from "common/trace/screen_recording";
         text-align: center;
       }
     `,
-  ]
+  ],
 })
 class ViewerScreenRecordingComponent {
   constructor(
     @Inject(ElementRef) elementRef: ElementRef,
-    @Inject(DomSanitizer) sanitizer: DomSanitizer) {
+    @Inject(DomSanitizer) sanitizer: DomSanitizer
+  ) {
     this.elementRef = elementRef;
     this.sanitizer = sanitizer;
   }
 
   @Input()
-  public set currentTraceEntry(entry: undefined|ScreenRecordingTraceEntry) {
+  public set currentTraceEntry(entry: undefined | ScreenRecordingTraceEntry) {
     if (entry === undefined) {
       this.videoCurrentTime = undefined;
       return;
@@ -128,8 +127,8 @@ class ViewerScreenRecordingComponent {
     this.isMinimized = !this.isMinimized;
   }
 
-  public videoUrl: undefined|SafeUrl = undefined;
-  public videoCurrentTime: number|undefined = undefined;
+  public videoUrl: undefined | SafeUrl = undefined;
+  public videoCurrentTime: number | undefined = undefined;
   public isMinimized = false;
 
   private elementRef: ElementRef;

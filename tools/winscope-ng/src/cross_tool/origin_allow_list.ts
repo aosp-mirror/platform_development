@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import {globalConfig} from "common/utils/global_config";
+import {globalConfig} from 'common/utils/global_config';
 
 export class OriginAllowList {
   private static readonly ALLOW_LIST_PROD = [
-    new RegExp("^https://([^\\/]*\\.)*googleplex\\.com$"),
-    new RegExp("^https://([^\\/]*\\.)*google\\.com$"),
+    new RegExp('^https://([^\\/]*\\.)*googleplex\\.com$'),
+    new RegExp('^https://([^\\/]*\\.)*google\\.com$'),
   ];
 
   private static readonly ALLOW_LIST_DEV = [
     ...OriginAllowList.ALLOW_LIST_PROD,
-    new RegExp("^(http|https)://localhost:8081$"), // remote tool mock
+    new RegExp('^(http|https)://localhost:8081$'), // remote tool mock
   ];
 
   static isAllowed(originUrl: string, mode = globalConfig.MODE): boolean {
@@ -40,13 +40,13 @@ export class OriginAllowList {
   }
 
   private static getList(mode: typeof globalConfig.MODE): RegExp[] {
-    switch(mode) {
-    case "DEV":
-      return OriginAllowList.ALLOW_LIST_DEV;
-    case "PROD":
-      return OriginAllowList.ALLOW_LIST_PROD;
-    default:
-      throw new Error(`Unhandled mode: ${globalConfig.MODE}`);
+    switch (mode) {
+      case 'DEV':
+        return OriginAllowList.ALLOW_LIST_DEV;
+      case 'PROD':
+        return OriginAllowList.ALLOW_LIST_PROD;
+      default:
+        throw new Error(`Unhandled mode: ${globalConfig.MODE}`);
     }
   }
 }

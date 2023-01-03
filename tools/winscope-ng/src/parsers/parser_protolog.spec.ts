@@ -13,70 +13,66 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Timestamp, TimestampType} from "common/trace/timestamp";
-import {TraceType} from "common/trace/trace_type";
-import {Parser} from "./parser";
-import {UnitTestUtils} from "test/unit/utils";
-import {LogMessage} from "../common/trace/protolog";
+import {Timestamp, TimestampType} from 'common/trace/timestamp';
+import {TraceType} from 'common/trace/trace_type';
+import {UnitTestUtils} from 'test/unit/utils';
+import {LogMessage} from '../common/trace/protolog';
+import {Parser} from './parser';
 
-describe("ParserProtoLog", () => {
+describe('ParserProtoLog', () => {
   let parser: Parser;
 
   const expectedFirstLogMessageElapsed = {
-    text: "InsetsSource updateVisibility for ITYPE_IME, serverVisible: false clientVisible: false",
-    time: "14m10s746ms266486ns",
-    tag: "WindowManager",
-    level: "DEBUG",
-    at: "com/android/server/wm/InsetsSourceProvider.java",
+    text: 'InsetsSource updateVisibility for ITYPE_IME, serverVisible: false clientVisible: false',
+    time: '14m10s746ms266486ns',
+    tag: 'WindowManager',
+    level: 'DEBUG',
+    at: 'com/android/server/wm/InsetsSourceProvider.java',
     timestamp: 850746266486n,
   };
 
   const expectedFirstLogMessageReal = {
-    text: "InsetsSource updateVisibility for ITYPE_IME, serverVisible: false clientVisible: false",
-    time: "2022-06-20T12:12:05.377266486",
-    tag: "WindowManager",
-    level: "DEBUG",
-    at: "com/android/server/wm/InsetsSourceProvider.java",
+    text: 'InsetsSource updateVisibility for ITYPE_IME, serverVisible: false clientVisible: false',
+    time: '2022-06-20T12:12:05.377266486',
+    tag: 'WindowManager',
+    level: 'DEBUG',
+    at: 'com/android/server/wm/InsetsSourceProvider.java',
     timestamp: 1655727125377266486n,
   };
 
   beforeAll(async () => {
-    parser = await UnitTestUtils.getParser("traces/elapsed_and_real_timestamp/ProtoLog.pb");
+    parser = await UnitTestUtils.getParser('traces/elapsed_and_real_timestamp/ProtoLog.pb');
   });
 
-  it("has expected trace type", () => {
+  it('has expected trace type', () => {
     expect(parser.getTraceType()).toEqual(TraceType.PROTO_LOG);
   });
 
-  it("provides elapsed timestamps", () => {
+  it('provides elapsed timestamps', () => {
     const timestamps = parser.getTimestamps(TimestampType.ELAPSED)!;
-    expect(timestamps.length)
-      .toEqual(50);
+    expect(timestamps.length).toEqual(50);
 
     const expected = [
       new Timestamp(TimestampType.ELAPSED, 850746266486n),
       new Timestamp(TimestampType.ELAPSED, 850746336718n),
       new Timestamp(TimestampType.ELAPSED, 850746350430n),
     ];
-    expect(timestamps.slice(0, 3))
-      .toEqual(expected);
+    expect(timestamps.slice(0, 3)).toEqual(expected);
   });
 
-  it("provides real timestamps", () => {
+  it('provides real timestamps', () => {
     const timestamps = parser.getTimestamps(TimestampType.REAL)!;
-    expect(timestamps.length)
-      .toEqual(50);
+    expect(timestamps.length).toEqual(50);
 
     const expected = [
       new Timestamp(TimestampType.REAL, 1655727125377266486n),
       new Timestamp(TimestampType.REAL, 1655727125377336718n),
       new Timestamp(TimestampType.REAL, 1655727125377350430n),
     ];
-    expect(timestamps.slice(0, 3))
-      .toEqual(expected);
+    expect(timestamps.slice(0, 3)).toEqual(expected);
   });
 
-  it("reconstructs human-readable log message (ELAPSED time)", () => {
+  it('reconstructs human-readable log message (ELAPSED time)', () => {
     const timestamp = new Timestamp(TimestampType.ELAPSED, 850746266486n);
     const entry = parser.getTraceEntry(timestamp)!;
 
@@ -89,7 +85,7 @@ describe("ParserProtoLog", () => {
     });
   });
 
-  it("reconstructs human-readable log message (REAL time)", () => {
+  it('reconstructs human-readable log message (REAL time)', () => {
     const timestamp = new Timestamp(TimestampType.REAL, 1655727125377266486n);
     const entry = parser.getTraceEntry(timestamp)!;
 

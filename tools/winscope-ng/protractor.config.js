@@ -21,16 +21,16 @@
 // and change the hardcoded version here
 
 exports.config = {
-  specs: ["dist/e2e.spec/e2e/*.spec.js"],
+  specs: ['dist/e2e.spec/e2e/*.spec.js'],
 
   directConnect: true,
   capabilities: {
-    browserName: "chrome",
+    browserName: 'chrome',
     chromeOptions: {
-      args: ["--headless", "--disable-gpu", "--window-size=1280x1024"]
-    }
+      args: ['--headless', '--disable-gpu', '--window-size=1280x1024'],
+    },
   },
-  chromeDriver: "./node_modules/webdriver-manager/selenium/chromedriver_108.0.5359.71",
+  chromeDriver: './node_modules/webdriver-manager/selenium/chromedriver_108.0.5359.71',
 
   allScriptsTimeout: 10000,
   getPageTimeout: 10000,
@@ -39,11 +39,11 @@ exports.config = {
     defaultTimeoutInterval: 10000,
   },
 
-  onPrepare: function() {
+  onPrepare: function () {
     // allow specifying the file protocol within browser.get(...)
     browser.ignoreSynchronization = true;
     browser.waitForAngular();
     browser.sleep(500);
-    browser.resetUrl = "file:///";
-  }
+    browser.resetUrl = 'file:///';
+  },
 };

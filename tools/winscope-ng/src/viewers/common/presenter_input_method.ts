@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2022 The Android Open Source Project
  *
@@ -14,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { ImeUiData } from "viewers/common/ime_ui_data";
-import { TraceType } from "common/trace/trace_type";
-import { UserOptions } from "viewers/common/user_options";
-import { HierarchyTreeNode, PropertiesTreeNode } from "viewers/common/ui_tree_utils";
-import { TreeGenerator } from "viewers/common/tree_generator";
-import { TreeTransformer } from "viewers/common/tree_transformer";
-import { TreeUtils, FilterType } from "common/utils/tree_utils";
-import { TraceTreeNode } from "common/trace/trace_tree_node";
-import { ImeLayers, ImeUtils, ProcessedWindowManagerState } from "viewers/common/ime_utils";
-import { ImeAdditionalProperties } from "viewers/common/ime_additional_properties";
-import { TableProperties } from "viewers/common/table_properties";
-import { PersistentStoreProxy } from "common/utils/persistent_store_proxy";
+import {TraceTreeNode} from 'common/trace/trace_tree_node';
+import {TraceType} from 'common/trace/trace_type';
+import {PersistentStoreProxy} from 'common/utils/persistent_store_proxy';
+import {FilterType, TreeUtils} from 'common/utils/tree_utils';
+import {ImeAdditionalProperties} from 'viewers/common/ime_additional_properties';
+import {ImeUiData} from 'viewers/common/ime_ui_data';
+import {ImeLayers, ImeUtils, ProcessedWindowManagerState} from 'viewers/common/ime_utils';
+import {TableProperties} from 'viewers/common/table_properties';
+import {TreeGenerator} from 'viewers/common/tree_generator';
+import {TreeTransformer} from 'viewers/common/tree_transformer';
+import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
+import {UserOptions} from 'viewers/common/user_options';
 
 type NotifyImeViewCallbackType = (uiData: ImeUiData) => void;
 
@@ -43,8 +42,8 @@ export abstract class PresenterInputMethod {
 
   public updatePinnedItems(pinnedItem: HierarchyTreeNode) {
     const pinnedId = `${pinnedItem.id}`;
-    if (this.pinnedItems.map(item => `${item.id}`).includes(pinnedId)) {
-      this.pinnedItems = this.pinnedItems.filter(pinned => `${pinned.id}` != pinnedId);
+    if (this.pinnedItems.map((item) => `${item.id}`).includes(pinnedId)) {
+      this.pinnedItems = this.pinnedItems.filter((pinned) => `${pinned.id}` != pinnedId);
     } else {
       this.pinnedItems.push(pinnedItem);
     }
@@ -55,7 +54,7 @@ export abstract class PresenterInputMethod {
 
   public updateHighlightedItems(id: string) {
     if (this.highlightedItems.includes(id)) {
-      this.highlightedItems = this.highlightedItems.filter(hl => hl != id);
+      this.highlightedItems = this.highlightedItems.filter((hl) => hl != id);
     } else {
       this.highlightedItems = []; //if multi-select surfaces implemented, remove this line
       this.highlightedItems.push(id);
@@ -95,12 +94,16 @@ export abstract class PresenterInputMethod {
   }
 
   public newAdditionalPropertiesTree(selectedItem: any) {
-    this.selectedHierarchyTree = new HierarchyTreeNode(selectedItem.name, "AdditionalProperty", "AdditionalProperty");
+    this.selectedHierarchyTree = new HierarchyTreeNode(
+      selectedItem.name,
+      'AdditionalProperty',
+      'AdditionalProperty'
+    );
     this.additionalPropertyEntry = {
       name: selectedItem.name,
-      kind: "AdditionalProperty",
+      kind: 'AdditionalProperty',
       children: [],
-      stableId: "AdditionalProperty",
+      stableId: 'AdditionalProperty',
       proto: selectedItem.proto,
     };
     this.updateSelectedTreeUiData();
@@ -130,7 +133,10 @@ export abstract class PresenterInputMethod {
     this.notifyViewCallback(this.uiData);
   }
 
-  protected getAdditionalProperties(wmEntry: TraceTreeNode | undefined, sfEntry: TraceTreeNode | undefined) {
+  protected getAdditionalProperties(
+    wmEntry: TraceTreeNode | undefined,
+    sfEntry: TraceTreeNode | undefined
+  ) {
     let wmProperties: ProcessedWindowManagerState | undefined;
     let sfProperties: ImeLayers | undefined;
     let sfSubtrees: any[];
@@ -143,19 +149,15 @@ export abstract class PresenterInputMethod {
         sfSubtrees = [sfProperties?.taskOfImeContainer, sfProperties?.taskOfImeSnapshot]
           .filter((node) => node) // filter away null values
           .map((node) => {
-            node.kind = "SF subtree - " + node.id;
+            node.kind = 'SF subtree - ' + node.id;
             return node;
           });
         this.entry?.children.push(...sfSubtrees);
       }
     }
 
-    return new ImeAdditionalProperties(
-      wmProperties,
-      sfProperties,
-    );
+    return new ImeAdditionalProperties(wmProperties, sfProperties);
   }
-
 
   protected generateTree() {
     if (!this.entry) {
@@ -163,9 +165,9 @@ export abstract class PresenterInputMethod {
     }
 
     const generator = new TreeGenerator(this.entry, this.hierarchyFilter, this.pinnedIds)
-      .setIsOnlyVisibleView(this.hierarchyUserOptions["onlyVisible"]?.enabled)
-      .setIsSimplifyNames(this.hierarchyUserOptions["simplifyNames"]?.enabled)
-      .setIsFlatView(this.hierarchyUserOptions["flat"]?.enabled)
+      .setIsOnlyVisibleView(this.hierarchyUserOptions['onlyVisible']?.enabled)
+      .setIsSimplifyNames(this.hierarchyUserOptions['simplifyNames']?.enabled)
+      .setIsFlatView(this.hierarchyUserOptions['flat']?.enabled)
       .withUniqueNodeId();
     const tree: HierarchyTreeNode | null = generator.generateTree();
     this.pinnedItems = generator.getPinnedItems();
@@ -175,13 +177,15 @@ export abstract class PresenterInputMethod {
 
   private updateSelectedTreeUiData() {
     if (this.selectedHierarchyTree) {
-      this.uiData.propertiesTree = this.getTreeWithTransformedProperties(this.selectedHierarchyTree);
+      this.uiData.propertiesTree = this.getTreeWithTransformedProperties(
+        this.selectedHierarchyTree
+      );
     }
     this.notifyViewCallback(this.uiData);
   }
   private updatePinnedIds(newId: string) {
     if (this.pinnedIds.includes(newId)) {
-      this.pinnedIds = this.pinnedIds.filter(pinned => pinned != newId);
+      this.pinnedIds = this.pinnedIds.filter((pinned) => pinned != newId);
     } else {
       this.pinnedIds.push(newId);
     }
@@ -190,15 +194,15 @@ export abstract class PresenterInputMethod {
   private getTreeWithTransformedProperties(selectedTree: HierarchyTreeNode): PropertiesTreeNode {
     const transformer = new TreeTransformer(selectedTree, this.propertiesFilter)
       .setOnlyProtoDump(this.additionalPropertyEntry != null)
-      .setIsShowDefaults(this.propertiesUserOptions["showDefaults"]?.enabled)
+      .setIsShowDefaults(this.propertiesUserOptions['showDefaults']?.enabled)
       .setTransformerOptions({skip: selectedTree.skip})
       .setProperties(this.additionalPropertyEntry ?? this.entry);
     const transformedTree = transformer.transform();
     return transformedTree;
   }
 
-  private hierarchyFilter: FilterType = TreeUtils.makeNodeFilter("");
-  private propertiesFilter: FilterType = TreeUtils.makeNodeFilter("");
+  private hierarchyFilter: FilterType = TreeUtils.makeNodeFilter('');
+  private propertiesFilter: FilterType = TreeUtils.makeNodeFilter('');
   private pinnedItems: Array<HierarchyTreeNode> = [];
   private pinnedIds: Array<string> = [];
   private selectedHierarchyTree: HierarchyTreeNode | null = null;
@@ -207,33 +211,41 @@ export abstract class PresenterInputMethod {
   protected readonly dependencies: Array<TraceType>;
   protected uiData: ImeUiData;
   protected highlightedItems: Array<string> = [];
-  protected entry: TraceTreeNode | null  = null;
+  protected entry: TraceTreeNode | null = null;
   protected additionalPropertyEntry: TraceTreeNode | null = null;
-  protected hierarchyUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>("ImeHierarchyOptions", {
-    simplifyNames: {
-      name: "Simplify names",
-      enabled: true
+  protected hierarchyUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
+    'ImeHierarchyOptions',
+    {
+      simplifyNames: {
+        name: 'Simplify names',
+        enabled: true,
+      },
+      onlyVisible: {
+        name: 'Only visible',
+        enabled: false,
+      },
+      flat: {
+        name: 'Flat',
+        enabled: false,
+      },
     },
-    onlyVisible: {
-      name: "Only visible",
-      enabled: false
-    },
-    flat: {
-      name: "Flat",
-      enabled: false
-    }
-  }, this.storage);
-  protected propertiesUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>("ImePropertiesOptions", {
-    showDefaults: {
-      name: "Show defaults",
-      enabled: false,
-      tooltip: `
+    this.storage
+  );
+  protected propertiesUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(
+    'ImePropertiesOptions',
+    {
+      showDefaults: {
+        name: 'Show defaults',
+        enabled: false,
+        tooltip: `
                 If checked, shows the value of all properties.
                 Otherwise, hides all properties whose value is
                 the default for its data type.
-              `
+              `,
+      },
     },
-  }, this.storage);
+    this.storage
+  );
 
   protected abstract updateHierarchyTableProperties(): TableProperties;
 }
