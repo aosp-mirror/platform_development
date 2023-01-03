@@ -185,7 +185,7 @@ import {UploadTracesComponent} from './upload_traces.component';
   encapsulation: ViewEncapsulation.None,
 })
 export class AppComponent implements TraceDataListener {
-  title = 'winscope-ng';
+  title = 'winscope';
   changeDetectorRef: ChangeDetectorRef;
   traceData = new TraceData();
   timelineData = new TimelineData();

@@ -1,5 +1,5 @@
 {
-  "name": "winscope-ng",
+  "name": "winscope",
   "version": "0.0.0",
   "scripts": {
     "format:check": "(ls *.js .*.js && find src/ -regextype egrep -regex '^.*(\\.ts|\\.js)$') |xargs npx prettier --check",

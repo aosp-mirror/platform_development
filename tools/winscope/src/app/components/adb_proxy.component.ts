@@ -29,7 +29,7 @@ import {proxyClient, ProxyClient, ProxyState} from 'trace_collection/proxy_clien
           <p class="mat-body-1">
             Run:
             <code>
-              python3 $ANDROID_BUILD_TOP/development/tools/winscope-ng/src/adb/winscope_proxy.py
+              python3 $ANDROID_BUILD_TOP/development/tools/winscope/src/adb/winscope_proxy.py
             </code>
           </p>
           <p class="mat-body-1">Or get it from the AOSP repository.</p>
@@ -55,7 +55,7 @@ import {proxyClient, ProxyClient, ProxyState} from 'trace_collection/proxy_clien
           <p class="mat-body-1">
             Run:
             <code>
-              python3 $ANDROID_BUILD_TOP/development/tools/winscope-ng/src/adb/winscope_proxy.py
+              python3 $ANDROID_BUILD_TOP/development/tools/winscope/src/adb/winscope_proxy.py
             </code>
           </p>
           <p class="mat-body-1">Or get it from the AOSP repository.</p>

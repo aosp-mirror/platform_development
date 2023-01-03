@@ -93,7 +93,7 @@ describe('AppComponent', () => {
   });
 
   it('has the expected title', () => {
-    expect(component.title).toEqual('winscope-ng');
+    expect(component.title).toEqual('winscope');
   });
 
   it('renders the page title', () => {

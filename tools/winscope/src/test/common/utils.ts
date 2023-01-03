@@ -38,7 +38,7 @@ class CommonTestUtils {
 
   static getProjectRootPath(): string {
     let root = __dirname;
-    while (path.basename(root) !== 'winscope-ng') {
+    while (path.basename(root) !== 'winscope') {
       root = path.dirname(root);
     }
     return root;
