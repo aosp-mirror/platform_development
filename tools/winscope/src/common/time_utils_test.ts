@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'common/trace/timestamp';
+import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'trace/timestamp';
 import {TimeUtils} from './time_utils';
 
 describe('TimeUtils', () => {

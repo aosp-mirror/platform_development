@@ -15,8 +15,8 @@
  */
 import {Component, Input} from '@angular/core';
 import {TRACE_INFO} from 'app/trace_info';
-import {TraceType} from 'common/trace/trace_type';
-import {PersistentStore} from 'common/utils/persistent_store';
+import {PersistentStore} from 'common/persistent_store';
+import {TraceType} from 'trace/trace_type';
 import {UiData} from './ui_data';
 
 @Component({

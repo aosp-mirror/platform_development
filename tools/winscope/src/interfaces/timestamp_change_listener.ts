@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Timestamp} from 'common/trace/timestamp';
+import {Timestamp} from 'trace/timestamp';
 
 export interface TimestampChangeListener {
   onCurrentTimestampChanged(timestamp: Timestamp | undefined): void;

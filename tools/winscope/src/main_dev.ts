@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
-import {globalConfig} from 'common/utils/global_config';
+import {globalConfig} from 'common/global_config';
 import {AppModule} from './app/app_module';
 
 globalConfig.set({

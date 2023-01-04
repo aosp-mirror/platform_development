@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 import {Component, ElementRef, Inject, Input} from '@angular/core';
-import {TraceType} from 'common/trace/trace_type';
-import {PersistentStore} from 'common/utils/persistent_store';
+import {PersistentStore} from 'common/persistent_store';
+import {TraceType} from 'trace/trace_type';
 import {TableProperties} from 'viewers/common/table_properties';
 import {HierarchyTreeNode, UiTreeNode, UiTreeUtils} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';

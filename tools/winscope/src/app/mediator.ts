@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import {Timestamp, TimestampType} from 'common/trace/timestamp';
-import {TraceType} from 'common/trace/trace_type';
 import {BuganizerAttachmentsDownloadEmitter} from 'interfaces/buganizer_attachments_download_emitter';
 import {FilesDownloadListener} from 'interfaces/files_download_listener';
 import {RemoteBugreportReceiver} from 'interfaces/remote_bugreport_receiver';
@@ -24,6 +22,8 @@ import {RemoteTimestampSender} from 'interfaces/remote_timestamp_sender';
 import {Runnable} from 'interfaces/runnable';
 import {TimestampChangeListener} from 'interfaces/timestamp_change_listener';
 import {TraceDataListener} from 'interfaces/trace_data_listener';
+import {Timestamp, TimestampType} from 'trace/timestamp';
+import {TraceType} from 'trace/trace_type';
 import {Viewer} from 'viewers/viewer';
 import {ViewerFactory} from 'viewers/viewer_factory';
 import {TimelineData} from './timeline_data';

@@ -30,10 +30,10 @@ import {FormControl, FormGroup, Validators} from '@angular/forms';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
-import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'common/trace/timestamp';
-import {TraceType} from 'common/trace/trace_type';
-import {TimeUtils} from 'common/utils/time_utils';
+import {TimeUtils} from 'common/time_utils';
 import {TimestampChangeListener} from 'interfaces/timestamp_change_listener';
+import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'trace/timestamp';
+import {TraceType} from 'trace/trace_type';
 import {MiniTimelineComponent} from './mini_timeline_component';
 
 @Component({

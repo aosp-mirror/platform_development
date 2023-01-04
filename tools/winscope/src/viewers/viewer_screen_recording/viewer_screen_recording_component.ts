@@ -15,7 +15,7 @@
  */
 import {Component, ElementRef, Inject, Input} from '@angular/core';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
-import {ScreenRecordingTraceEntry} from 'common/trace/screen_recording';
+import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
 
 @Component({
   selector: 'viewer-screen-recording',

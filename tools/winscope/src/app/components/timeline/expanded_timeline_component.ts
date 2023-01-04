@@ -27,7 +27,7 @@ import {
 } from '@angular/core';
 import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
-import {Timestamp} from 'common/trace/timestamp';
+import {Timestamp} from 'trace/timestamp';
 import {SingleTimelineComponent} from './single_timeline_component';
 
 @Component({

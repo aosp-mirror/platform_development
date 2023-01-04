@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import {Component, Input} from '@angular/core';
-import {Layer} from 'common/trace/flickerlib/common';
+import {Layer} from 'trace/flickerlib/common';
 
 @Component({
   selector: 'property-groups',

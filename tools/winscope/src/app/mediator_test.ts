@@ -15,11 +15,11 @@
  */
 
 import {AbtChromeExtensionProtocolStub} from 'abt_chrome_extension/abt_chrome_extension_protocol_stub';
-import {RealTimestamp} from 'common/trace/timestamp';
-import {TraceFile} from 'common/trace/trace';
 import {CrossToolProtocolStub} from 'cross_tool/cross_tool_protocol_stub';
 import {MockStorage} from 'test/unit/mock_storage';
 import {UnitTestUtils} from 'test/unit/utils';
+import {RealTimestamp} from 'trace/timestamp';
+import {TraceFile} from 'trace/trace';
 import {ViewerFactory} from 'viewers/viewer_factory';
 import {ViewerStub} from 'viewers/viewer_stub';
 import {AppComponentStub} from './components/app_component_stub';

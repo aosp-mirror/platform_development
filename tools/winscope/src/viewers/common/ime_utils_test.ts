@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceType} from 'common/trace/trace_type';
 import {UnitTestUtils} from 'test/unit/utils';
+import {TraceType} from 'trace/trace_type';
 import {ImeUtils} from './ime_utils';
 
 describe('ImeUtils', () => {

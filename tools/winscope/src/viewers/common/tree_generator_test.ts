@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceTreeNode} from 'common/trace/trace_tree_node';
-import {TreeUtils} from 'common/utils/tree_utils';
+import {TreeUtils} from 'common/tree_utils';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
+import {TraceTreeNode} from 'trace/trace_tree_node';
 import {TreeGenerator} from 'viewers/common/tree_generator';
 import {DiffType, HierarchyTreeNode} from 'viewers/common/ui_tree_utils';
 

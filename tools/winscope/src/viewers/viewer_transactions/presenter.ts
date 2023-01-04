@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import ObjectFormatter from 'common/trace/flickerlib/ObjectFormatter';
-import {ElapsedTimestamp, RealTimestamp, TimestampType} from 'common/trace/timestamp';
-import {TraceType} from 'common/trace/trace_type';
-import {TransactionsTraceEntry} from 'common/trace/transactions';
-import {ArrayUtils} from 'common/utils/array_utils';
-import {TimeUtils} from 'common/utils/time_utils';
+import {ArrayUtils} from 'common/array_utils';
+import {TimeUtils} from 'common/time_utils';
+import ObjectFormatter from 'trace/flickerlib/ObjectFormatter';
+import {ElapsedTimestamp, RealTimestamp, TimestampType} from 'trace/timestamp';
+import {TraceType} from 'trace/trace_type';
+import {TransactionsTraceEntry} from 'trace/transactions';
 import {PropertiesTreeGenerator} from 'viewers/common/properties_tree_generator';
 import {PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 import {UiData, UiDataEntry, UiDataEntryType} from './ui_data';

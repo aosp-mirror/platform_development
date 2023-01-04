@@ -30,8 +30,8 @@ import {
   MatDrawerContent,
 } from 'app/components/bottomnav/bottom_drawer_component';
 import {TimelineData} from 'app/timeline_data';
-import {RealTimestamp, Timestamp} from 'common/trace/timestamp';
-import {TraceType} from 'common/trace/trace_type';
+import {RealTimestamp, Timestamp} from 'trace/timestamp';
+import {TraceType} from 'trace/trace_type';
 import {ExpandedTimelineComponent} from './expanded_timeline_component';
 import {MiniTimelineComponent} from './mini_timeline_component';
 import {SingleTimelineComponent} from './single_timeline_component';

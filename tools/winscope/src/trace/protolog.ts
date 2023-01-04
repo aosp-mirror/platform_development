@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TimeUtils} from 'common/utils/time_utils';
-import configJson from '../../../../../../frameworks/base/data/etc/services.core.protolog.json';
+import {TimeUtils} from 'common/time_utils';
+import configJson from '../../../../../frameworks/base/data/etc/services.core.protolog.json';
 import {ElapsedTimestamp, RealTimestamp, TimestampType} from './timestamp';
 
 class ProtoLogTraceEntry {

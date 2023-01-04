@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Timestamp, TimestampType} from 'common/trace/timestamp';
-import {TraceType} from 'common/trace/trace_type';
 import {UnitTestUtils} from 'test/unit/utils';
+import {Timestamp, TimestampType} from 'trace/timestamp';
+import {TraceType} from 'trace/trace_type';
 import {Parser} from './parser';
 
 describe('ParserInputMethodService', () => {

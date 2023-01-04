@@ -25,8 +25,8 @@ import {
   ViewChild,
 } from '@angular/core';
 import {TimelineData} from 'app/timeline_data';
-import {Timestamp} from 'common/trace/timestamp';
-import {TraceType} from 'common/trace/trace_type';
+import {Timestamp} from 'trace/timestamp';
+import {TraceType} from 'trace/trace_type';
 import {MiniCanvasDrawer, MiniCanvasDrawerInput} from './mini_canvas_drawer';
 
 @Component({

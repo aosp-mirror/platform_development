@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {ElapsedTimestamp, RealTimestamp} from 'common/trace/timestamp';
-import {TimeUtils} from 'common/utils/time_utils';
+import {TimeUtils} from 'common/time_utils';
+import {ElapsedTimestamp, RealTimestamp} from 'trace/timestamp';
 import {
   Display,
   LayerTraceEntry,

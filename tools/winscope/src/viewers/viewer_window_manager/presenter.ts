@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import DisplayContent from 'common/trace/flickerlib/windows/DisplayContent';
-import {TraceTreeNode} from 'common/trace/trace_tree_node';
-import {TraceType} from 'common/trace/trace_type';
-import {PersistentStoreProxy} from 'common/utils/persistent_store_proxy';
-import {FilterType, TreeUtils} from 'common/utils/tree_utils';
+import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {FilterType, TreeUtils} from 'common/tree_utils';
+import DisplayContent from 'trace/flickerlib/windows/DisplayContent';
+import {TraceTreeNode} from 'trace/trace_tree_node';
+import {TraceType} from 'trace/trace_type';
 import {Rectangle, RectMatrix, RectTransform} from 'viewers/common/rectangle';
 import {TreeGenerator} from 'viewers/common/tree_generator';
 import {TreeTransformer} from 'viewers/common/tree_transformer';

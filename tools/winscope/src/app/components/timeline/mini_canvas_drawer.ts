@@ -15,7 +15,7 @@
  */
 
 import {TRACE_INFO} from 'app/trace_info';
-import {TraceType} from 'common/trace/trace_type';
+import {TraceType} from 'trace/trace_type';
 import {Color} from '../../colors';
 import {CanvasDrawer} from '../canvas/canvas_drawer';
 import {CanvasMouseHandler} from '../canvas/canvas_mouse_handler';

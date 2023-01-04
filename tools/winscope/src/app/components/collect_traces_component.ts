@@ -28,8 +28,8 @@ import {
 } from '@angular/core';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {TraceData} from 'app/trace_data';
-import {TraceFile} from 'common/trace/trace';
-import {PersistentStore} from 'common/utils/persistent_store';
+import {PersistentStore} from 'common/persistent_store';
+import {TraceFile} from 'trace/trace';
 import {Connection} from 'trace_collection/connection';
 import {ProxyState} from 'trace_collection/proxy_client';
 import {ProxyConnection} from 'trace_collection/proxy_connection';

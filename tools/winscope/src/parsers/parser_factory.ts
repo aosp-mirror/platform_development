@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import {TraceFile} from 'common/trace/trace';
-import {TraceType} from 'common/trace/trace_type';
-import {FunctionUtils, OnProgressUpdateType} from 'common/utils/function_utils';
+import {FunctionUtils, OnProgressUpdateType} from 'common/function_utils';
+import {TraceFile} from 'trace/trace';
+import {TraceType} from 'trace/trace_type';
 import {Parser} from './parser';
 import {ParserAccessibility} from './parser_accessibility';
 import {ParserInputMethodClients} from './parser_input_method_clients';

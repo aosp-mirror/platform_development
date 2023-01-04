@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import {Component, ElementRef, Inject, Input} from '@angular/core';
-import {TraceTreeNode} from 'common/trace/trace_tree_node';
+import {TraceTreeNode} from 'trace/trace_tree_node';
 import {PropertiesTreeNode, Terminal} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
 import {ViewerEvents} from 'viewers/common/viewer_events';

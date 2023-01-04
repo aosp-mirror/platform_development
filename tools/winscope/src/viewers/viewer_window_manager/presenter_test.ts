@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {WindowManagerState} from 'common/trace/flickerlib/common';
-import {TraceType} from 'common/trace/trace_type';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {MockStorage} from 'test/unit/mock_storage';
 import {UnitTestUtils} from 'test/unit/utils';
+import {WindowManagerState} from 'trace/flickerlib/common';
+import {TraceType} from 'trace/trace_type';
 import {VISIBLE_CHIP} from 'viewers/common/chip';
 import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';

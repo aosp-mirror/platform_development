@@ -15,7 +15,7 @@
  */
 
 import {ChangeDetectorRef, Component, Inject} from '@angular/core';
-import {FunctionUtils} from 'common/utils/function_utils';
+import {FunctionUtils} from 'common/function_utils';
 import {
   Message,
   MessageBugReport,

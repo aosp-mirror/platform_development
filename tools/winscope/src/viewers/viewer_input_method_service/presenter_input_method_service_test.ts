@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceType} from 'common/trace/trace_type';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
+import {TraceType} from 'trace/trace_type';
 import {executePresenterInputMethodTests} from 'viewers/common/presenter_input_method_test_utils';
 import {PresenterInputMethodService} from './presenter_input_method_service';
 

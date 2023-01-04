@@ -25,9 +25,9 @@ import {
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {TraceData} from 'app/trace_data';
 import {TRACE_INFO} from 'app/trace_info';
-import {Trace, TraceFile} from 'common/trace/trace';
-import {FileUtils, OnFile} from 'common/utils/file_utils';
+import {FileUtils, OnFile} from 'common/file_utils';
 import {FilesDownloadListener} from 'interfaces/files_download_listener';
+import {Trace, TraceFile} from 'trace/trace';
 import {ParserErrorSnackBarComponent} from './parser_error_snack_bar_component';
 
 @Component({
