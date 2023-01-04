@@ -13,9 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
-import {AppModule} from './app_module';
 
-platformBrowserDynamic()
-  .bootstrapModule(AppModule)
-  .catch((err) => console.error(err));
+import {CommonModule} from '@angular/common';
+import {NgModule} from '@angular/core';
+import {BrowserModule} from '@angular/platform-browser';
+import {AppComponent} from './app_component';
+
+@NgModule({
+  declarations: [AppComponent],
+  imports: [BrowserModule, CommonModule],
+  bootstrap: [AppComponent],
+})
+class AppModule {}
+
+export {AppModule};

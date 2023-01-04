@@ -14,7 +14,12 @@
  * limitations under the License.
  */
 import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
-import {AppModule} from './app_module';
+import {globalConfig} from 'common/utils/global_config';
+import {AppModule} from './app/app_module';
+
+globalConfig.set({
+  MODE: 'DEV',
+});
 
 platformBrowserDynamic()
   .bootstrapModule(AppModule)

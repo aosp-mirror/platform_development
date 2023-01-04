@@ -24,7 +24,7 @@ const configProd = {
   entry: {
     polyfills: './src/polyfills.ts',
     styles: ['./src/material-theme.scss', './src/styles.css'],
-    app: './src/main.prod.ts',
+    app: './src/main_prod.ts',
   },
   output: {
     path: path.resolve(__dirname, 'dist/prod'),

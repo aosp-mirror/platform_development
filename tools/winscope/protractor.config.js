@@ -21,7 +21,7 @@
 // and change the hardcoded version here
 
 exports.config = {
-  specs: ['dist/e2e.spec/e2e/*.spec.js'],
+  specs: ['dist/e2e_test/e2e/*_test.js'],
 
   directConnect: true,
   capabilities: {

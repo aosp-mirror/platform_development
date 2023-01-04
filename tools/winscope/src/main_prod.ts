@@ -13,8 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {enableProdMode} from '@angular/core';
 import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
-import {AppModule} from './app_module';
+import {AppModule} from './app/app_module';
+
+enableProdMode();
 
 platformBrowserDynamic()
   .bootstrapModule(AppModule)

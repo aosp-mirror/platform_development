@@ -2,7 +2,7 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "outDir": "../../../dist/e2e.spec",
+    "outDir": "../../../dist/e2e_test",
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "noImplicitOverride": true,
