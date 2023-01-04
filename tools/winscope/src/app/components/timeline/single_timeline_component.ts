@@ -48,7 +48,7 @@ export class SingleTimelineComponent {
   @Input() color = '#AF5CF7';
   @Input() start!: bigint;
   @Input() end!: bigint;
-  @Input() entries!: bigint[];
+  @Input() entries!: Array<bigint>;
 
   @Output() onTimestampChanged = new EventEmitter<bigint>();
 
@@ -74,7 +74,7 @@ export class SingleTimelineComponent {
   }
 
   ngOnInit() {
-    if (this.start == undefined || this.end == undefined || this.entries == undefined) {
+    if (this.start === undefined || this.end === undefined || this.entries === undefined) {
       throw Error('Not all required inputs have been set');
     }
   }
@@ -85,7 +85,7 @@ export class SingleTimelineComponent {
     this.initializeCanvas();
   }
 
-  public initializeCanvas() {
+  initializeCanvas() {
     // Reset any size before computing new size to avoid it interfering with size computations
     this.canvas.width = 0;
     this.canvas.height = 0;
@@ -96,7 +96,9 @@ export class SingleTimelineComponent {
     const width = this.wrapperRef.nativeElement.offsetWidth;
     const height =
       this.wrapperRef.nativeElement.offsetHeight -
+      // tslint:disable-next-line:ban
       parseFloat(computedStyle.paddingTop) -
+      // tslint:disable-next-line:ban
       parseFloat(computedStyle.paddingBottom);
 
     const HiPPIwidth = window.devicePixelRatio * width;
@@ -135,7 +137,7 @@ export class SingleTimelineComponent {
   }
 
   private handleMouseOut(e: MouseEvent) {
-    if (this.hoveringEntry != null) {
+    if (this.hoveringEntry !== null) {
       // If null there is no current hover effect so no need to clear
       this.redraw();
     }
@@ -162,7 +164,7 @@ export class SingleTimelineComponent {
 
   private drawEntryHover(mouseX: number, mouseY: number) {
     const currentHoverEntry = this.getEntryAt(mouseX, mouseY);
-    if (this.hoveringEntry == currentHoverEntry) {
+    if (this.hoveringEntry === currentHoverEntry) {
       return;
     }
 
@@ -212,7 +214,7 @@ export class SingleTimelineComponent {
   }
 
   private updateCursor(mouseX: number, mouseY: number) {
-    if (this.getEntryAt(mouseX, mouseY) != null) {
+    if (this.getEntryAt(mouseX, mouseY) !== null) {
       this.canvas.style.cursor = 'pointer';
     }
     this.canvas.style.cursor = 'auto';
@@ -227,7 +229,7 @@ export class SingleTimelineComponent {
     const clickedEntry = this.getEntryAt(mouseX, mouseY);
 
     if (clickedEntry != null) {
-      if (this.selected != clickedEntry) {
+      if (this.selected !== clickedEntry) {
         this.selected = clickedEntry;
         this.redraw();
         this.onTimestampChanged.emit(clickedEntry);

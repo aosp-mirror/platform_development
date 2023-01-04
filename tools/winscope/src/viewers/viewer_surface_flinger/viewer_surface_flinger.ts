@@ -20,7 +20,7 @@ import {Presenter} from './presenter';
 import {UiData} from './ui_data';
 
 class ViewerSurfaceFlinger implements Viewer {
-  public static readonly DEPENDENCIES: TraceType[] = [TraceType.SURFACE_FLINGER];
+  static readonly DEPENDENCIES: TraceType[] = [TraceType.SURFACE_FLINGER];
   private htmlElement: HTMLElement;
   private presenter: Presenter;
 
@@ -54,15 +54,15 @@ class ViewerSurfaceFlinger implements Viewer {
     );
   }
 
-  public notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
+  notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
     this.presenter.notifyCurrentTraceEntries(entries);
   }
 
-  public getViews(): View[] {
+  getViews(): View[] {
     return [new View(ViewType.TAB, this.getDependencies(), this.htmlElement, 'Surface Flinger')];
   }
 
-  public getDependencies(): TraceType[] {
+  getDependencies(): TraceType[] {
     return ViewerSurfaceFlinger.DEPENDENCIES;
   }
 }

@@ -35,7 +35,7 @@ class ParserWindowManager extends Parser {
   }
 
   override decodeTrace(buffer: Uint8Array): any[] {
-    const decoded = <any>WindowManagerTraceFileProto.decode(buffer);
+    const decoded = WindowManagerTraceFileProto.decode(buffer) as any;
     if (Object.prototype.hasOwnProperty.call(decoded, 'realToElapsedTimeOffsetNanos')) {
       this.realToElapsedTimeOffsetNs = BigInt(decoded.realToElapsedTimeOffsetNanos);
     } else {

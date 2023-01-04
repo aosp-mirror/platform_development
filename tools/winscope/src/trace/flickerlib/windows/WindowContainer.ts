@@ -24,15 +24,15 @@ import {
   WindowContainer,
 } from '../common';
 
-import Activity from './Activity';
-import DisplayArea from './DisplayArea';
-import DisplayContent from './DisplayContent';
-import Task from './Task';
-import TaskFragment from './TaskFragment';
-import WindowState from './WindowState';
-import WindowToken from './WindowToken';
+import {Activity} from './Activity';
+import {DisplayArea} from './DisplayArea';
+import {DisplayContent} from './DisplayContent';
+import {Task} from './Task';
+import {TaskFragment} from './TaskFragment';
+import {WindowState} from './WindowState';
+import {WindowToken} from './WindowToken';
 
-WindowContainer.fromProto = function (
+WindowContainer.fromProto = (
   proto: any,
   protoChildren: any[],
   isActivityInTree: boolean,
@@ -40,7 +40,7 @@ WindowContainer.fromProto = function (
   nameOverride: string | null = null,
   identifierOverride: string | null = null,
   tokenOverride: any = null
-): WindowContainer {
+): WindowContainer => {
   if (proto == null) {
     return null;
   }
@@ -87,11 +87,11 @@ type WindowContainerChildType =
   | WindowState
   | WindowContainer;
 
-WindowContainer.childrenFromProto = function (
+WindowContainer.childrenFromProto = (
   proto: any,
-  isActivityInTree: Boolean,
+  isActivityInTree: boolean,
   nextSeq: () => number
-): WindowContainerChildType {
+): WindowContainerChildType => {
   return (
     DisplayContent.fromProto(proto.displayContent, isActivityInTree, nextSeq) ??
     DisplayArea.fromProto(proto.displayArea, isActivityInTree, nextSeq) ??
@@ -147,4 +147,4 @@ function createWindowConfiguration(proto: any): WindowConfiguration {
   );
 }
 
-export default WindowContainer;
+export {WindowContainer};

@@ -127,7 +127,7 @@ export class PropertiesComponent {
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
-  public filterTree() {
+  filterTree() {
     const event: CustomEvent = new CustomEvent(ViewerEvents.PropertiesFilterChange, {
       bubbles: true,
       detail: {filterString: this.filterString},
@@ -135,7 +135,7 @@ export class PropertiesComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  public updateTree() {
+  updateTree() {
     const event: CustomEvent = new CustomEvent(ViewerEvents.PropertiesUserOptionsChange, {
       bubbles: true,
       detail: {userOptions: this.userOptions},
@@ -143,7 +143,7 @@ export class PropertiesComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  public showNode(item: any) {
+  showNode(item: any) {
     return (
       !(item instanceof Terminal) &&
       !(item.name instanceof Terminal) &&
@@ -151,7 +151,7 @@ export class PropertiesComponent {
     );
   }
 
-  public isLeaf(item: any) {
+  isLeaf(item: any) {
     return (
       !item.children ||
       item.children.length === 0 ||
@@ -159,7 +159,7 @@ export class PropertiesComponent {
     );
   }
 
-  public itemIsSelected() {
+  itemIsSelected() {
     return this.selectedFlickerItem && Object.keys(this.selectedFlickerItem).length > 0;
   }
 }

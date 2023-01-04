@@ -113,7 +113,7 @@ export class MiniTimelineComponent {
   }
 
   private getTimelinesToShow() {
-    const timelines = new Map<TraceType, bigint[]>();
+    const timelines = new Map<TraceType, Array<bigint>>();
     for (const type of this.selectedTraces) {
       timelines.set(
         type,

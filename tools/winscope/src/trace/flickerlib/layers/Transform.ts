@@ -16,7 +16,7 @@
 
 import {Matrix33, Transform} from '../common';
 
-Transform.fromProto = function (transformProto: any, positionProto: any): Transform {
+Transform.fromProto = (transformProto: any, positionProto: any): Transform => {
   const entry = new Transform(transformProto?.type ?? 0, getMatrix(transformProto, positionProto));
 
   return entry;
@@ -62,16 +62,16 @@ function getDefaultTransform(type: number, x: number, y: number): Matrix33 {
   throw new Error(`Unknown transform type ${type}`);
 }
 
-export function isFlagSet(type: number, bits: number): Boolean {
+export function isFlagSet(type: number, bits: number): boolean {
   type = type || 0;
   return (type & bits) === bits;
 }
 
-export function isFlagClear(type: number, bits: number): Boolean {
+export function isFlagClear(type: number, bits: number): boolean {
   return (type & bits) === 0;
 }
 
-export function isSimpleTransform(type: number): Boolean {
+export function isSimpleTransform(type: number): boolean {
   return isFlagClear(type, ROT_INVALID_VAL | SCALE_VAL);
 }
 
@@ -85,4 +85,4 @@ const FLIP_V_VAL = 0x0200; // (1 << 1 << 8)
 const ROT_90_VAL = 0x0400; // (1 << 2 << 8)
 const ROT_INVALID_VAL = 0x8000; // (0x80 << 8)
 
-export default Transform;
+export {Transform};

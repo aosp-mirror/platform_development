@@ -17,7 +17,7 @@
 import {PropertiesTreeNode} from './ui_tree_utils';
 
 class PropertiesTreeGenerator {
-  public generate(key: string, value: any): PropertiesTreeNode {
+  generate(key: string, value: any): PropertiesTreeNode {
     if (this.isLeaf(value)) {
       return {
         propertyKey: key,
@@ -35,7 +35,7 @@ class PropertiesTreeGenerator {
 
     return {
       propertyKey: key,
-      children: children,
+      children,
     };
   }
 

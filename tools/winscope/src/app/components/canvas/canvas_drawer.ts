@@ -16,14 +16,19 @@
 
 import {CanvasMouseHandler} from './canvas_mouse_handler';
 
-export type padding = {left: number; top: number; right: number; bottom: number};
+export interface Padding {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
 
 export interface CanvasDrawer {
   draw(): void;
   handler: CanvasMouseHandler;
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
-  padding: padding;
+  padding: Padding;
   getXScale(): number;
   getYScale(): number;
   getWidth(): number;

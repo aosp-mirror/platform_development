@@ -26,12 +26,12 @@ abstract class ViewerInputMethod implements Viewer {
     this.addViewerEventListeners();
   }
 
-  public notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
+  notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
     this.presenter.notifyCurrentTraceEntries(entries);
   }
 
-  public abstract getViews(): View[];
-  public abstract getDependencies(): TraceType[];
+  abstract getViews(): View[];
+  abstract getDependencies(): TraceType[];
 
   protected imeUiCallback = (uiData: ImeUiData) => {
     // Angular does not deep watch @Input properties. Clearing inputData to null before repopulating

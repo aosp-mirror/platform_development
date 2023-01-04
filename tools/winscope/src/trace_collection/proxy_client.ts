@@ -17,7 +17,7 @@
 import {OnProgressUpdateType} from 'common/function_utils';
 import {PersistentStore} from 'common/persistent_store';
 import {Device} from './connection';
-import {configMap} from './trace_collection_utils';
+import {ConfigMap} from './trace_collection_utils';
 
 export enum ProxyState {
   ERROR = 0,
@@ -118,7 +118,7 @@ class ProxyRequest {
     await proxyRequest.call('GET', ProxyEndpoint.DEVICES, proxyRequest.onSuccessGetDevices);
   }
 
-  async setEnabledConfig(view: any, req: Array<string>) {
+  async setEnabledConfig(view: any, req: string[]) {
     await proxyRequest.call(
       'POST',
       `${ProxyEndpoint.ENABLE_CONFIG_TRACE}${view.proxy.selectedDevice}/`,
@@ -128,7 +128,7 @@ class ProxyRequest {
     );
   }
 
-  async setSelectedConfig(endpoint: ProxyEndpoint, view: any, req: configMap) {
+  async setSelectedConfig(endpoint: ProxyEndpoint, view: any, req: ConfigMap) {
     await proxyRequest.call(
       'POST',
       `${endpoint}${view.proxy.selectedDevice}/`,
@@ -192,7 +192,7 @@ class ProxyRequest {
     );
   }
 
-  onSuccessGetDevices = function (request: XMLHttpRequest) {
+  onSuccessGetDevices = (request: XMLHttpRequest) => {
     const client = proxyClient;
     try {
       client.devices = JSON.parse(request.responseText);
@@ -225,7 +225,7 @@ class ProxyRequest {
           const resp = enc.decode(request.response);
           const filesByType = JSON.parse(resp);
 
-          for (const filetype in filesByType) {
+          for (const filetype of Object.keys(filesByType)) {
             const files = filesByType[filetype];
             for (const encodedFileBuffer of files) {
               const buffer = Uint8Array.from(atob(encodedFileBuffer), (c) => c.charCodeAt(0));
@@ -246,7 +246,7 @@ class ProxyRequest {
 export const proxyRequest = new ProxyRequest();
 
 interface AdbParams {
-  files: Array<string>;
+  files: string[];
   idx: number;
   traceType: string;
 }
@@ -256,12 +256,12 @@ export class ProxyClient {
   readonly WINSCOPE_PROXY_URL = 'http://localhost:5544';
   readonly VERSION = '1.0';
   state: ProxyState = ProxyState.CONNECTING;
-  stateChangeListeners: {(param: ProxyState, errorText: string): void}[] = [];
+  stateChangeListeners: Array<{(param: ProxyState, errorText: string): void}> = [];
   refresh_worker: NodeJS.Timer | null = null;
   devices: Device = {};
   selectedDevice = '';
   errorText = '';
-  adbData: Array<File> = [];
+  adbData: File[] = [];
   proxyKey = '';
   lastDevice = '';
   store = new PersistentStore();
@@ -298,11 +298,7 @@ export class ProxyClient {
     this.setState(ProxyState.START_TRACE);
   }
 
-  async updateAdbData(
-    files: Array<string>,
-    traceType: string,
-    progressCallback: OnProgressUpdateType
-  ) {
+  async updateAdbData(files: string[], traceType: string, progressCallback: OnProgressUpdateType) {
     for (let idx = 0; idx < files.length; idx++) {
       const adbParams = {
         files,

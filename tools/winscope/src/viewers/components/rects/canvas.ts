@@ -114,7 +114,7 @@ export class Canvas {
     this.labelRenderer.render(this.scene, this.camera);
   }
 
-  public getClickedRectId(x: number, y: number, z: number): undefined | string {
+  getClickedRectId(x: number, y: number, z: number): undefined | string {
     const clickPosition = new THREE.Vector3(x, y, z);
     const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(clickPosition, this.camera!);
@@ -231,7 +231,7 @@ export class Canvas {
       rectGeometry,
       new THREE.MeshBasicMaterial({
         color: this.getColor(rect),
-        opacity: opacity,
+        opacity,
         transparent: true,
       })
     );
@@ -279,30 +279,28 @@ export class Canvas {
   }
 
   private getColor(rect: Rect3D): THREE.Color {
-    let color: THREE.Color = Canvas.RECT_COLOR_HIGHLIGHTED;
     switch (rect.colorType) {
       case ColorType.VISIBLE: {
         // green (darkness depends on z order)
         const red = ((200 - 45) * rect.darkFactor + 45) / 255;
         const green = ((232 - 182) * rect.darkFactor + 182) / 255;
         const blue = ((183 - 44) * rect.darkFactor + 44) / 255;
-        color = new THREE.Color(red, green, blue);
-        break;
+        return new THREE.Color(red, green, blue);
       }
       case ColorType.NOT_VISIBLE: {
         // gray (darkness depends on z order)
         const lower = 120;
         const upper = 220;
         const darkness = ((upper - lower) * rect.darkFactor + lower) / 255;
-        color = new THREE.Color(darkness, darkness, darkness);
-        break;
+        return new THREE.Color(darkness, darkness, darkness);
       }
       case ColorType.HIGHLIGHTED: {
-        color = Canvas.RECT_COLOR_HIGHLIGHTED;
-        break;
+        return Canvas.RECT_COLOR_HIGHLIGHTED;
+      }
+      default: {
+        throw new Error(`Unexpected color type: ${rect.colorType}`);
       }
     }
-    return color;
   }
 
   private createRectBorders(rect: Rect3D, rectGeometry: THREE.ShapeGeometry): THREE.LineSegments {

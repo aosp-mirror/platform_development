@@ -73,42 +73,42 @@ export class TreeNodeComponent {
     this.collapseDiffClass = this.updateCollapseDiffClass();
   }
 
-  public isPropertiesTreeNode() {
+  isPropertiesTreeNode() {
     return !(this.item instanceof HierarchyTreeNode);
   }
 
-  public showPinNodeIcon() {
+  showPinNodeIcon() {
     return (
       (!this.isPropertiesTreeNode() && !UiTreeUtils.isParentNode(this.item.kind ?? '')) ?? false
     );
   }
 
-  public toggleTree(event: MouseEvent) {
+  toggleTree(event: MouseEvent) {
     if (!this.isAlwaysCollapsed) {
       event.stopPropagation();
       this.toggleTreeChange.emit();
     }
   }
 
-  public showChevron() {
+  showChevron() {
     return !this.isLeaf && !this.flattened && !this.isInPinnedSection;
   }
 
-  public showLeafNodeIcon() {
+  showLeafNodeIcon() {
     return !this.showChevron() && !this.isInPinnedSection;
   }
 
-  public expandTree(event: MouseEvent) {
+  expandTree(event: MouseEvent) {
     event.stopPropagation();
     this.expandTreeChange.emit();
   }
 
-  public pinNode(event: MouseEvent) {
+  pinNode(event: MouseEvent) {
     event.stopPropagation();
     this.pinNodeChange.emit(this.item);
   }
 
-  public updateCollapseDiffClass() {
+  updateCollapseDiffClass() {
     if (this.isCollapsed) {
       return '';
     }

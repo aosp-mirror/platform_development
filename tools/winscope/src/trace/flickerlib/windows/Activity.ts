@@ -16,9 +16,9 @@
 
 import {Activity} from '../common';
 import {shortenName} from '../mixin';
-import WindowContainer from './WindowContainer';
+import {WindowContainer} from './WindowContainer';
 
-Activity.fromProto = function (proto: any, nextSeq: () => number): Activity {
+Activity.fromProto = (proto: any, nextSeq: () => number): Activity => {
   if (proto == null) {
     return null;
   } else {
@@ -52,4 +52,4 @@ function addAttributes(entry: Activity, proto: any) {
   entry.shortName = shortenName(entry.name);
 }
 
-export default Activity;
+export {Activity};

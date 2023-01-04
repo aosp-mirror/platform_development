@@ -33,7 +33,7 @@ class TraceData {
   private parsers: Parser[] = [];
   private commonTimestampType?: TimestampType;
 
-  public async loadTraces(
+  async loadTraces(
     traceFiles: TraceFile[],
     onLoadProgressUpdate: OnProgressUpdateType = FunctionUtils.DO_NOTHING
   ): Promise<ParserError[]> {
@@ -45,15 +45,15 @@ class TraceData {
     return parserErrors;
   }
 
-  public removeTrace(type: TraceType) {
+  removeTrace(type: TraceType) {
     this.parsers = this.parsers.filter((parser) => parser.getTraceType() !== type);
   }
 
-  public getLoadedTraces(): Trace[] {
+  getLoadedTraces(): Trace[] {
     return this.parsers.map((parser: Parser) => parser.getTrace());
   }
 
-  public getTraceEntries(timestamp: Timestamp | undefined): Map<TraceType, any> {
+  getTraceEntries(timestamp: Timestamp | undefined): Map<TraceType, any> {
     const traceEntries: Map<TraceType, any> = new Map<TraceType, any>();
 
     if (!timestamp) {
@@ -86,19 +86,19 @@ class TraceData {
     return traceEntries;
   }
 
-  public getTimelines(): Timeline[] {
+  getTimelines(): Timeline[] {
     const timelines = this.parsers.map((parser): Timeline => {
       const timestamps = parser.getTimestamps(this.getCommonTimestampType());
       if (timestamps === undefined) {
         throw Error('Failed to get timestamps from parser');
       }
-      return {traceType: parser.getTraceType(), timestamps: timestamps};
+      return {traceType: parser.getTraceType(), timestamps};
     });
 
     return timelines;
   }
 
-  public getScreenRecordingVideo(): undefined | Blob {
+  getScreenRecordingVideo(): undefined | Blob {
     const parser = this.parsers.find(
       (parser) => parser.getTraceType() === TraceType.SCREEN_RECORDING
     );
@@ -114,7 +114,7 @@ class TraceData {
     return (parser.getTraceEntry(timestamps[0]) as ScreenRecordingTraceEntry)?.videoData;
   }
 
-  public clear() {
+  clear() {
     this.parserFactory = new ParserFactory();
     this.parsers = [];
     this.commonTimestampType = undefined;

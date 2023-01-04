@@ -33,7 +33,7 @@ class ViewerInputMethodService extends ViewerInputMethod {
     return new PresenterInputMethodService(this.imeUiCallback, this.getDependencies(), storage);
   }
 
-  public static readonly DEPENDENCIES: TraceType[] = [TraceType.INPUT_METHOD_SERVICE];
+  static readonly DEPENDENCIES: TraceType[] = [TraceType.INPUT_METHOD_SERVICE];
 }
 
 export {ViewerInputMethodService};

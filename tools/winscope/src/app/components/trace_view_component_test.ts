@@ -59,7 +59,7 @@ describe('TraceViewComponent', () => {
     const getVisibleTabContents = () => {
       const contents: HTMLElement[] = [];
       htmlElement.querySelectorAll('.trace-view-content div').forEach((content) => {
-        if ((content as HTMLElement).style.display != 'none') {
+        if ((content as HTMLElement).style.display !== 'none') {
           contents.push(content as HTMLElement);
         }
       });

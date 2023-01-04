@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import {FilterType, TreeNode} from 'common/tree_utils';
-import ObjectFormatter from 'trace/flickerlib/ObjectFormatter';
+import {ObjectFormatter} from 'trace/flickerlib/ObjectFormatter';
 import {TraceTreeNode} from 'trace/trace_tree_node';
 
 import {
@@ -58,22 +58,22 @@ export class TreeTransformer {
     this.setTransformerOptions({});
   }
 
-  public setOnlyProtoDump(onlyProto: boolean): TreeTransformer {
+  setOnlyProtoDump(onlyProto: boolean): TreeTransformer {
     this.onlyProtoDump = onlyProto;
     return this;
   }
 
-  public setIsShowDefaults(enabled: boolean): TreeTransformer {
+  setIsShowDefaults(enabled: boolean): TreeTransformer {
     this.isShowDefaults = enabled;
     return this;
   }
 
-  public setIsShowDiff(enabled: boolean): TreeTransformer {
+  setIsShowDiff(enabled: boolean): TreeTransformer {
     this.isShowDiff = enabled;
     return this;
   }
 
-  public setTransformerOptions(options: TreeTransformerOptions): TreeTransformer {
+  setTransformerOptions(options: TreeTransformerOptions): TreeTransformer {
     this.options = options;
     if (!this.options.formatter) {
       this.options.formatter = this.formatProto;
@@ -81,7 +81,7 @@ export class TreeTransformer {
     return this;
   }
 
-  public setProperties(currentEntry: TraceTreeNode | null): TreeTransformer {
+  setProperties(currentEntry: TraceTreeNode | null): TreeTransformer {
     const currFlickerItem = this.getOriginalFlickerItem(currentEntry, this.stableId);
     const target = currFlickerItem ? currFlickerItem.obj ?? currFlickerItem : null;
     ObjectFormatter.displayDefaults = this.isShowDefaults;
@@ -91,7 +91,7 @@ export class TreeTransformer {
     return this;
   }
 
-  public setDiffProperties(previousEntry: TraceTreeNode | null): TreeTransformer {
+  setDiffProperties(previousEntry: TraceTreeNode | null): TreeTransformer {
     if (this.isShowDiff) {
       const prevFlickerItem = this.findFlickerItem(previousEntry, this.stableId);
       const target = prevFlickerItem ? prevFlickerItem.obj ?? prevFlickerItem : null;
@@ -102,10 +102,7 @@ export class TreeTransformer {
     return this;
   }
 
-  public getOriginalFlickerItem(
-    entry: TraceTreeNode | null,
-    stableId: string
-  ): TraceTreeNode | null {
+  getOriginalFlickerItem(entry: TraceTreeNode | null, stableId: string): TraceTreeNode | null {
     return this.findFlickerItem(entry, stableId);
   }
 
@@ -151,7 +148,7 @@ export class TreeTransformer {
     return null;
   }
 
-  public transform(): PropertiesTreeNode {
+  transform(): PropertiesTreeNode {
     const {formatter} = this.options!;
     if (!formatter) {
       throw new Error('Missing formatter, please set with setOptions()');
@@ -249,7 +246,7 @@ export class TreeTransformer {
     }
 
     let transformedProperties: any;
-    if (children.length == 1 && children[0].children?.length == 0 && !children[0].combined) {
+    if (children.length === 1 && children[0].children?.length === 0 && !children[0].combined) {
       // Merge leaf key value pairs.
       const child = children[0];
 
@@ -276,7 +273,7 @@ export class TreeTransformer {
         const diffType = this.getDiff(name, compareWithName);
         transformedProperties.diffType = diffType;
 
-        if (diffType == DiffType.DELETED) {
+        if (diffType === DiffType.DELETED) {
           transformedProperties.name = compareWithName;
         }
       }
@@ -346,7 +343,7 @@ export class TreeTransformer {
 
   private filterMatches(item: PropertiesDump | null): boolean {
     //TODO: fix PropertiesDump type. What is it? Why does it declare only a "key" property and yet it is used as a TreeNode?
-    return this.filter(<TreeNode>item) ?? false;
+    return this.filter(item as TreeNode) ?? false;
   }
 
   private transformProperties(
@@ -357,27 +354,29 @@ export class TreeTransformer {
     const transformedProperties: PropertiesTreeNode = {
       properties: {},
     };
-    let formatted = undefined;
 
     if (skip && skip.includes(properties)) {
-      // skip
-    } else if ((formatted = formatter(properties))) {
+      return transformedProperties; // skip
+    }
+
+    const formatted = formatter(properties);
+    if (formatted) {
       // Obj has been formatted into a terminal node — has no children.
       transformedProperties.properties[formatted] = new Terminal();
     } else if (Array.isArray(properties)) {
       properties.forEach((e, i) => {
         transformedProperties.properties['' + i] = e;
       });
-    } else if (typeof properties == 'string') {
+    } else if (typeof properties === 'string') {
       // Object is a primitive type — has no children. Set to terminal
       // to differentiate between null object and Terminal element.
       transformedProperties.properties[properties] = new Terminal();
-    } else if (typeof properties == 'number' || typeof properties == 'boolean') {
+    } else if (typeof properties === 'number' || typeof properties === 'boolean') {
       // Similar to above — primitive type node has no children.
       transformedProperties.properties['' + properties] = new Terminal();
-    } else if (properties && typeof properties == 'object') {
+    } else if (properties && typeof properties === 'object') {
       // Empty objects
-      if (Object.keys(properties).length == 0) {
+      if (Object.keys(properties).length === 0) {
         transformedProperties.properties['[empty]'] = new Terminal();
       } else {
         // Non empty objects
@@ -400,7 +399,7 @@ export class TreeTransformer {
       return DiffType.ADDED;
     } else if (this.isTerminal(val) && compareVal) {
       return DiffType.DELETED;
-    } else if (compareVal != val) {
+    } else if (compareVal !== val) {
       return DiffType.MODIFIED;
     } else {
       return DiffType.NONE;

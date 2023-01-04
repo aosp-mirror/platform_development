@@ -42,7 +42,7 @@ class ViewerInputMethodManagerService extends ViewerInputMethod {
     );
   }
 
-  public static readonly DEPENDENCIES: TraceType[] = [TraceType.INPUT_METHOD_MANAGER_SERVICE];
+  static readonly DEPENDENCIES: TraceType[] = [TraceType.INPUT_METHOD_MANAGER_SERVICE];
 }
 
 export {ViewerInputMethodManagerService};

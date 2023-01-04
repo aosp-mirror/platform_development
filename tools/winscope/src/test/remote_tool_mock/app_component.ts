@@ -73,17 +73,17 @@ export class AppComponent {
     });
   }
 
-  public async onButtonOpenWinscopeClick() {
+  async onButtonOpenWinscopeClick() {
     this.openWinscope();
     await this.waitWinscopeUp();
   }
 
-  public async onUploadBugreport(event: Event) {
+  async onUploadBugreport(event: Event) {
     const [file, buffer] = await this.readInputFile(event);
     this.sendBugreport(file, buffer);
   }
 
-  public onButtonSendTimestampClick() {
+  onButtonSendTimestampClick() {
     const inputTimestampElement = document.querySelector('.input-timestamp')! as HTMLInputElement;
     this.sendTimestamp(BigInt(inputTimestampElement.value));
   }

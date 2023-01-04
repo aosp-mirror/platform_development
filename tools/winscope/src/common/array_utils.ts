@@ -31,7 +31,7 @@ class ArrayUtils {
     }
 
     for (let i = 0; i < a.length; i++) {
-      if (a[i] != b[i]) {
+      if (a[i] !== b[i]) {
         return false;
       }
     }
@@ -47,7 +47,7 @@ class ArrayUtils {
       let match = true;
 
       for (let j = 0; j < subarray.length; ++j) {
-        if (array[i + j] != subarray[j]) {
+        if (array[i + j] !== subarray[j]) {
           match = false;
           break;
         }
@@ -62,7 +62,7 @@ class ArrayUtils {
   }
 
   static binarySearchLowerOrEqual<T>(values: T[] | TypedArray, target: T): number | undefined {
-    if (values.length == 0) {
+    if (values.length === 0) {
       return undefined;
     }
 

@@ -93,29 +93,29 @@ export class Mediator {
     );
   }
 
-  public setUploadTracesComponent(
+  setUploadTracesComponent(
     uploadTracesComponent: UploadTracesComponentDependencyInversion | undefined
   ) {
     this.uploadTracesComponent = uploadTracesComponent;
   }
 
-  public setTimelineComponent(timelineComponent: TimelineComponentDependencyInversion | undefined) {
+  setTimelineComponent(timelineComponent: TimelineComponentDependencyInversion | undefined) {
     this.timelineComponent = timelineComponent;
   }
 
-  public onWinscopeInitialized() {
+  onWinscopeInitialized() {
     this.abtChromeExtensionProtocol.run();
   }
 
-  public onWinscopeUploadNew() {
+  onWinscopeUploadNew() {
     this.resetAppToInitialState();
   }
 
-  public onWinscopeTraceDataLoaded() {
+  onWinscopeTraceDataLoaded() {
     this.processTraceData();
   }
 
-  public onWinscopeCurrentTimestampChanged(timestamp: Timestamp | undefined) {
+  onWinscopeCurrentTimestampChanged(timestamp: Timestamp | undefined) {
     this.executeIgnoringRecursiveTimestampNotifications(() => {
       const entries = this.traceData.getTraceEntries(timestamp);
       this.viewers.forEach((viewer) => {

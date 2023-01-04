@@ -29,18 +29,7 @@ class UiData {
     public currentPropertiesTree: undefined | PropertiesTreeNode
   ) {}
 
-  public static EMPTY = new UiData(
-    [],
-    [],
-    [],
-    [],
-    [],
-    [],
-    undefined,
-    undefined,
-    undefined,
-    undefined
-  );
+  static EMPTY = new UiData([], [], [], [], [], [], undefined, undefined, undefined, undefined);
 }
 
 class UiDataEntry {
@@ -58,13 +47,13 @@ class UiDataEntry {
 }
 
 class UiDataEntryType {
-  public static DisplayAdded = 'DISPLAY_ADDED';
-  public static DisplayRemoved = 'DISPLAY_REMOVED';
-  public static DisplayChanged = 'DISPLAY_CHANGED';
-  public static LayerAdded = 'LAYER_ADDED';
-  public static LayerRemoved = 'LAYER_REMOVED';
-  public static LayerChanged = 'LAYER_CHANGED';
-  public static LayerHandleRemoved = 'LAYER_HANDLE_REMOVED';
+  static DISPLAY_ADDED = 'DISPLAY_ADDED';
+  static DISPLAY_REMOVED = 'DISPLAY_REMOVED';
+  static DISPLAY_CHANGED = 'DISPLAY_CHANGED';
+  static LAYER_ADDED = 'LAYER_ADDED';
+  static LAYER_REMOVED = 'LAYER_REMOVED';
+  static LAYER_CHANGED = 'LAYER_CHANGED';
+  static LAYER_HANDLE_REMOVED = 'LAYER_HANDLE_REMOVED';
 }
 
 export {UiData, UiDataEntry, UiDataEntryType};

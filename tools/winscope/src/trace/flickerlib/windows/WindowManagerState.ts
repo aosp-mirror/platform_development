@@ -25,15 +25,15 @@ import {
   WindowManagerTraceEntryBuilder,
 } from '../common';
 
-import WindowContainer from './WindowContainer';
+import {WindowContainer} from './WindowContainer';
 
-WindowManagerState.fromProto = function (
+WindowManagerState.fromProto = (
   proto: any,
   elapsedTimestamp: bigint = 0n,
   where: string = '',
   realToElapsedTimeOffsetNs: bigint | undefined = undefined,
   useElapsedTime = false
-): WindowManagerState {
+): WindowManagerState => {
   const inputMethodWIndowAppToken = '';
   if (proto.inputMethodWindow != null) {
     proto.inputMethodWindow.hashCode.toString(16);
@@ -73,7 +73,7 @@ function addAttributes(entry: WindowManagerState, proto: any, useElapsedTime = f
     entry.isIncompleteReason = entry.getIsIncompleteReason();
   }
   entry.proto = proto;
-  if (useElapsedTime || entry.clockTimestamp == undefined) {
+  if (useElapsedTime || entry.clockTimestamp === undefined) {
     entry.name = TimeUtils.format(new ElapsedTimestamp(BigInt(entry.elapsedTimestamp)));
     entry.shortName = entry.name;
   } else {
@@ -122,7 +122,7 @@ function createKeyguardControllerState(proto: any): KeyguardControllerState {
   if (proto) {
     proto.keyguardOccludedStates.forEach(
       (it: any) =>
-        (keyguardOccludedStates[<keyof typeof keyguardOccludedStates>it.displayId] =
+        (keyguardOccludedStates[it.displayId as keyof typeof keyguardOccludedStates] =
           it.keyguardOccluded)
     );
   }

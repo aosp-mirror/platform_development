@@ -23,7 +23,7 @@ import {Message, MessageBugReport, MessagePong, MessageTimestamp, MessageType} f
 import {OriginAllowList} from './origin_allow_list';
 
 class RemoteTool {
-  constructor(public readonly window: Window, public readonly origin: string) {}
+  constructor(readonly window: Window, readonly origin: string) {}
 }
 
 export class CrossToolProtocol

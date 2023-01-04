@@ -103,9 +103,9 @@ describe('ViewerTransactionsPresenter', () => {
     expect(outputUiData!.currentEntryIndex).toEqual(0);
     expect(outputUiData!.scrollToIndex).toEqual(0);
 
-    (<TransactionsTraceEntry>(
-      inputTraceEntriesElapsed.get(TraceType.TRANSACTIONS)[0]
-    )).currentEntryIndex = 10;
+    (
+      inputTraceEntriesElapsed.get(TraceType.TRANSACTIONS)[0] as TransactionsTraceEntry
+    ).currentEntryIndex = 10;
     presenter.notifyCurrentTraceEntries(inputTraceEntriesElapsed);
     expect(outputUiData!.currentEntryIndex).toEqual(13);
     expect(outputUiData!.scrollToIndex).toEqual(13);
@@ -164,22 +164,22 @@ describe('ViewerTransactionsPresenter', () => {
     presenter.onTypeFilterChanged([]);
     expect(new Set(outputUiData!.entries.map((entry) => entry.type))).toEqual(
       new Set([
-        UiDataEntryType.DisplayChanged,
-        UiDataEntryType.LayerAdded,
-        UiDataEntryType.LayerChanged,
-        UiDataEntryType.LayerRemoved,
-        UiDataEntryType.LayerHandleRemoved,
+        UiDataEntryType.DISPLAY_CHANGED,
+        UiDataEntryType.LAYER_ADDED,
+        UiDataEntryType.LAYER_CHANGED,
+        UiDataEntryType.LAYER_REMOVED,
+        UiDataEntryType.LAYER_HANDLE_REMOVED,
       ])
     );
 
-    presenter.onTypeFilterChanged([UiDataEntryType.LayerAdded]);
+    presenter.onTypeFilterChanged([UiDataEntryType.LAYER_ADDED]);
     expect(new Set(outputUiData!.entries.map((entry) => entry.type))).toEqual(
-      new Set([UiDataEntryType.LayerAdded])
+      new Set([UiDataEntryType.LAYER_ADDED])
     );
 
-    presenter.onTypeFilterChanged([UiDataEntryType.LayerAdded, UiDataEntryType.LayerRemoved]);
+    presenter.onTypeFilterChanged([UiDataEntryType.LAYER_ADDED, UiDataEntryType.LAYER_REMOVED]);
     expect(new Set(outputUiData!.entries.map((entry) => entry.type))).toEqual(
-      new Set([UiDataEntryType.LayerAdded, UiDataEntryType.LayerRemoved])
+      new Set([UiDataEntryType.LAYER_ADDED, UiDataEntryType.LAYER_REMOVED])
     );
   });
 
@@ -235,17 +235,17 @@ describe('ViewerTransactionsPresenter', () => {
     presenter.notifyCurrentTraceEntries(inputTraceEntriesElapsed);
     expect(outputUiData!.currentEntryIndex).toEqual(0);
 
-    (<TransactionsTraceEntry>(
-      inputTraceEntriesElapsed.get(TraceType.TRANSACTIONS)[0]
-    )).currentEntryIndex = 10;
+    (
+      inputTraceEntriesElapsed.get(TraceType.TRANSACTIONS)[0] as TransactionsTraceEntry
+    ).currentEntryIndex = 10;
     presenter.notifyCurrentTraceEntries(inputTraceEntriesElapsed);
     expect(outputUiData!.currentEntryIndex).toEqual(13);
   });
 
   it('updates current entry index when filters change', () => {
-    (<TransactionsTraceEntry>(
-      inputTraceEntriesElapsed.get(TraceType.TRANSACTIONS)[0]
-    )).currentEntryIndex = 10;
+    (
+      inputTraceEntriesElapsed.get(TraceType.TRANSACTIONS)[0] as TransactionsTraceEntry
+    ).currentEntryIndex = 10;
     presenter.notifyCurrentTraceEntries(inputTraceEntriesElapsed);
 
     presenter.onPidFilterChanged([]);
@@ -262,18 +262,18 @@ describe('ViewerTransactionsPresenter', () => {
   });
 
   it('formats real time', () => {
-    (<TransactionsTraceEntry>(
-      inputTraceEntriesReal.get(TraceType.TRANSACTIONS)[0]
-    )).currentEntryIndex = 10;
+    (
+      inputTraceEntriesReal.get(TraceType.TRANSACTIONS)[0] as TransactionsTraceEntry
+    ).currentEntryIndex = 10;
     presenter.notifyCurrentTraceEntries(inputTraceEntriesReal);
 
     expect(outputUiData!.entries[0].time).toEqual('2022-08-03T06:19:01.051480997');
   });
 
   it('formats elapsed time', () => {
-    (<TransactionsTraceEntry>(
-      inputTraceEntriesElapsed.get(TraceType.TRANSACTIONS)[0]
-    )).currentEntryIndex = 10;
+    (
+      inputTraceEntriesElapsed.get(TraceType.TRANSACTIONS)[0] as TransactionsTraceEntry
+    ).currentEntryIndex = 10;
     presenter.notifyCurrentTraceEntries(inputTraceEntriesElapsed);
 
     expect(outputUiData!.entries[0].time).toEqual('2s450ms981445ns');

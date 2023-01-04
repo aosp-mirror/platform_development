@@ -134,7 +134,7 @@ describe('ViewerProtoLogPresenter', () => {
     presenter.onLogLevelsFilterChanged([]);
     expect(outputUiData!.currentMessageIndex).toEqual(0);
 
-    (<ProtoLogTraceEntry>inputTraceEntries.get(TraceType.PROTO_LOG)[0]).currentMessageIndex = 1;
+    (inputTraceEntries.get(TraceType.PROTO_LOG)[0] as ProtoLogTraceEntry).currentMessageIndex = 1;
     presenter.notifyCurrentTraceEntries(inputTraceEntries);
     presenter.onLogLevelsFilterChanged([]);
     expect(outputUiData!.currentMessageIndex).toEqual(1);

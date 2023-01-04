@@ -16,13 +16,13 @@
 
 import {DisplayContent, DisplayCutout, PlatformConsts, Rect, toInsets, toRect} from '../common';
 import {shortenName} from '../mixin';
-import WindowContainer from './WindowContainer';
+import {WindowContainer} from './WindowContainer';
 
-DisplayContent.fromProto = function (
+DisplayContent.fromProto = (
   proto: any,
-  isActivityInTree: Boolean,
+  isActivityInTree: boolean,
   nextSeq: () => number
-): DisplayContent {
+): DisplayContent => {
   if (proto == null) {
     return null;
   } else {
@@ -88,4 +88,4 @@ function addAttributes(entry: DisplayContent, proto: any) {
   entry.shortName = shortenName(entry.name);
 }
 
-export default DisplayContent;
+export {DisplayContent};

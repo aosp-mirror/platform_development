@@ -287,8 +287,8 @@ import {MiniTimelineComponent} from './mini_timeline_component';
   ],
 })
 export class TimelineComponent implements TimestampChangeListener {
-  public readonly TOGGLE_BUTTON_CLASS: string = 'button-toggle-expansion';
-  public readonly MAX_SELECTED_TRACES = 3;
+  readonly TOGGLE_BUTTON_CLASS: string = 'button-toggle-expansion';
+  readonly MAX_SELECTED_TRACES = 3;
 
   @Input() set activeViewTraceTypes(types: TraceType[] | undefined) {
     if (!types) {
@@ -312,7 +312,7 @@ export class TimelineComponent implements TimestampChangeListener {
 
     this.selectedTracesFormControl.setValue(this.selectedTraces);
   }
-  public internalActiveTrace: TraceType | undefined = undefined;
+  internalActiveTrace: TraceType | undefined = undefined;
 
   @Input() timelineData!: TimelineData;
   @Input() availableTraces: TraceType[] = [];
@@ -458,15 +458,10 @@ export class TimelineComponent implements TimestampChangeListener {
 
   @HostListener('document:keydown', ['$event'])
   handleKeyboardEvent(event: KeyboardEvent) {
-    switch (event.key) {
-      case 'ArrowLeft': {
-        this.moveToPreviousEntry();
-        break;
-      }
-      case 'ArrowRight': {
-        this.moveToNextEntry();
-        break;
-      }
+    if (event.key === 'ArrowLeft') {
+      this.moveToPreviousEntry();
+    } else if (event.key === 'ArrowRight') {
+      this.moveToNextEntry();
     }
   }
 

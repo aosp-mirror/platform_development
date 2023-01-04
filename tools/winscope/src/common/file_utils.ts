@@ -61,7 +61,7 @@ class FileUtils {
         // Ignore directories
         continue;
       } else {
-        const name = this.removeDirFromFileName(filename);
+        const name = FileUtils.removeDirFromFileName(filename);
         const fileBlob = await file.async('blob');
         const unzippedFile = new File([fileBlob], name);
         unzippedFiles.push(unzippedFile);
@@ -96,7 +96,7 @@ class FileUtils {
   }
 
   static isZipFile(file: File) {
-    return this.getFileExtension(file) === 'zip';
+    return FileUtils.getFileExtension(file) === 'zip';
   }
 }
 

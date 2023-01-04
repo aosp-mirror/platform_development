@@ -20,9 +20,9 @@ import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_util
 import {UserOptions} from 'viewers/common/user_options';
 
 export class ImeUiData {
-  dependencies: Array<TraceType>;
-  highlightedItems: Array<string> = [];
-  pinnedItems: Array<HierarchyTreeNode> = [];
+  dependencies: TraceType[];
+  highlightedItems: string[] = [];
+  pinnedItems: HierarchyTreeNode[] = [];
   hierarchyUserOptions: UserOptions = {};
   propertiesUserOptions: UserOptions = {};
   tree: HierarchyTreeNode | null = null;
@@ -30,7 +30,7 @@ export class ImeUiData {
   hierarchyTableProperties: TableProperties | null = null;
   additionalProperties: ImeAdditionalProperties | null = null;
 
-  constructor(dependencies?: Array<TraceType>) {
+  constructor(dependencies?: TraceType[]) {
     this.dependencies = dependencies ?? [];
   }
 }
