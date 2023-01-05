@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {FunctionUtils, OnProgressUpdateType} from 'common/utils/function_utils';
+import {FunctionUtils, OnProgressUpdateType} from 'common/function_utils';
 import {proxyClient, ProxyEndpoint, proxyRequest, ProxyState} from 'trace_collection/proxy_client';
 import {Connection, DeviceProperties} from './connection';
 import {configMap} from './trace_collection_utils';

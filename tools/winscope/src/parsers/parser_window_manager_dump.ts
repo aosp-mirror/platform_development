@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import {WindowManagerState} from 'common/trace/flickerlib/windows/WindowManagerState';
-import {Timestamp, TimestampType} from 'common/trace/timestamp';
-import {TraceFile} from 'common/trace/trace';
-import {TraceType} from 'common/trace/trace_type';
+import {WindowManagerState} from 'trace/flickerlib/windows/WindowManagerState';
+import {Timestamp, TimestampType} from 'trace/timestamp';
+import {TraceFile} from 'trace/trace';
+import {TraceType} from 'trace/trace_type';
 import {Parser} from './parser';
 import {WindowManagerServiceDumpProto} from './proto_types';
 

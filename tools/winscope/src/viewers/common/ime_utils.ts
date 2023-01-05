@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {WindowContainer} from 'common/trace/flickerlib/common';
-import {Layer} from 'common/trace/flickerlib/layers/Layer';
-import {LayerTraceEntry} from 'common/trace/flickerlib/layers/LayerTraceEntry';
-import Activity from 'common/trace/flickerlib/windows/Activity';
-import {WindowManagerState} from 'common/trace/flickerlib/windows/WindowManagerState';
-import WindowState from 'common/trace/flickerlib/windows/WindowState';
-import {FilterType, TreeUtils} from 'common/utils/tree_utils';
+import {FilterType, TreeUtils} from 'common/tree_utils';
+import {WindowContainer} from 'trace/flickerlib/common';
+import {Layer} from 'trace/flickerlib/layers/Layer';
+import {LayerTraceEntry} from 'trace/flickerlib/layers/LayerTraceEntry';
+import Activity from 'trace/flickerlib/windows/Activity';
+import {WindowManagerState} from 'trace/flickerlib/windows/WindowManagerState';
+import WindowState from 'trace/flickerlib/windows/WindowState';
 
 class ProcessedWindowManagerState {
   constructor(

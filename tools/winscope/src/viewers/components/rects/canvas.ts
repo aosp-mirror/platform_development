@@ -249,26 +249,32 @@ export class Canvas {
     const bottomLeft: Point3D = {x: rect.topLeft.x, y: rect.bottomRight.y, z: rect.topLeft.z};
     const topRight: Point3D = {x: rect.bottomRight.x, y: rect.topLeft.y, z: rect.bottomRight.z};
 
+    // Limit corner radius if larger than height/2 (or width/2)
+    const height = rect.bottomRight.y - rect.topLeft.y;
+    const width = rect.bottomRight.x - rect.topLeft.x;
+    const minEdge = Math.min(height, width);
+    const cornerRadius = Math.min(rect.cornerRadius, minEdge / 2);
+
     // Create (rounded) rect shape
     return new THREE.Shape()
-      .moveTo(rect.topLeft.x, rect.topLeft.y + rect.cornerRadius)
-      .lineTo(bottomLeft.x, bottomLeft.y - rect.cornerRadius)
-      .quadraticCurveTo(bottomLeft.x, bottomLeft.y, bottomLeft.x + rect.cornerRadius, bottomLeft.y)
-      .lineTo(rect.bottomRight.x - rect.cornerRadius, rect.bottomRight.y)
+      .moveTo(rect.topLeft.x, rect.topLeft.y + cornerRadius)
+      .lineTo(bottomLeft.x, bottomLeft.y - cornerRadius)
+      .quadraticCurveTo(bottomLeft.x, bottomLeft.y, bottomLeft.x + cornerRadius, bottomLeft.y)
+      .lineTo(rect.bottomRight.x - cornerRadius, rect.bottomRight.y)
       .quadraticCurveTo(
         rect.bottomRight.x,
         rect.bottomRight.y,
         rect.bottomRight.x,
-        rect.bottomRight.y - rect.cornerRadius
+        rect.bottomRight.y - cornerRadius
       )
-      .lineTo(topRight.x, topRight.y + rect.cornerRadius)
-      .quadraticCurveTo(topRight.x, topRight.y, topRight.x - rect.cornerRadius, topRight.y)
-      .lineTo(rect.topLeft.x + rect.cornerRadius, rect.topLeft.y)
+      .lineTo(topRight.x, topRight.y + cornerRadius)
+      .quadraticCurveTo(topRight.x, topRight.y, topRight.x - cornerRadius, topRight.y)
+      .lineTo(rect.topLeft.x + cornerRadius, rect.topLeft.y)
       .quadraticCurveTo(
         rect.topLeft.x,
         rect.topLeft.y,
         rect.topLeft.x,
-        rect.topLeft.y + rect.cornerRadius
+        rect.topLeft.y + cornerRadius
       );
   }
 

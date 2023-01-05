@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {TraceType} from 'common/trace/trace_type';
+import {TraceType} from 'trace/trace_type';
 
 enum ViewType {
   TAB,

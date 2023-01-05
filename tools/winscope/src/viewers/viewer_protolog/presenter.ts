@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {LogMessage, ProtoLogTraceEntry} from 'common/trace/protolog';
-import {TraceType} from 'common/trace/trace_type';
-import {ArrayUtils} from 'common/utils/array_utils';
+import {ArrayUtils} from 'common/array_utils';
+import {LogMessage, ProtoLogTraceEntry} from 'trace/protolog';
+import {TraceType} from 'trace/trace_type';
 import {UiData} from './ui_data';
 
 export class Presenter {

@@ -22,7 +22,7 @@ import {
   EMPTY_TRANSFORM,
   Layer,
   LayerProperties,
-} from 'common/trace/flickerlib/common';
+} from 'trace/flickerlib/common';
 
 class LayerBuilder {
   setFlags(value: number): LayerBuilder {

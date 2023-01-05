@@ -22,7 +22,7 @@ const configDev = {
   entry: {
     polyfills: './src/polyfills.ts',
     styles: ['./src/material-theme.scss', './src/styles.css'],
-    app: './src/main.dev.ts',
+    app: './src/main_dev.ts',
   },
   devtool: 'source-map',
   plugins: [

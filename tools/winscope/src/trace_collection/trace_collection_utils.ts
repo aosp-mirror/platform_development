@@ -1,4 +1,4 @@
-import {StoreObject} from 'common/utils/persistent_store_proxy';
+import {StoreObject} from 'common/persistent_store_proxy';
 
 export type TraceConfiguration = {
   [key: string]: string | boolean | undefined | StoreObject;

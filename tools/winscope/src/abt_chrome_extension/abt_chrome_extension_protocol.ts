@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {FunctionUtils} from 'common/utils/function_utils';
+import {FunctionUtils} from 'common/function_utils';
 import {
   BuganizerAttachmentsDownloadEmitter,
   OnBuganizerAttachmentsDownloaded,

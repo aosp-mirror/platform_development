@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import ObjectFormatter from 'common/trace/flickerlib/ObjectFormatter';
-import {TraceTreeNode} from 'common/trace/trace_tree_node';
-import {FilterType, TreeNode} from 'common/utils/tree_utils';
+import {FilterType, TreeNode} from 'common/tree_utils';
+import ObjectFormatter from 'trace/flickerlib/ObjectFormatter';
+import {TraceTreeNode} from 'trace/trace_tree_node';
 import {
   GPU_CHIP,
   HWC_CHIP,

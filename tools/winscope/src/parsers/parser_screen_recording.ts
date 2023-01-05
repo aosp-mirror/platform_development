@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import {ScreenRecordingTraceEntry} from 'common/trace/screen_recording';
-import {ScreenRecordingUtils} from 'common/trace/screen_recording_utils';
-import {Timestamp, TimestampType} from 'common/trace/timestamp';
-import {TraceFile} from 'common/trace/trace';
-import {TraceType} from 'common/trace/trace_type';
-import {ArrayUtils} from 'common/utils/array_utils';
+import {ArrayUtils} from 'common/array_utils';
+import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
+import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
+import {Timestamp, TimestampType} from 'trace/timestamp';
+import {TraceFile} from 'trace/trace';
+import {TraceType} from 'trace/trace_type';
 import {Parser} from './parser';
 
 class ScreenRecordingMetadataEntry {
