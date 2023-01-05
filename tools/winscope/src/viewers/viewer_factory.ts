@@ -39,7 +39,7 @@ class ViewerFactory {
     ViewerScreenRecording,
   ];
 
-  public createViewers(activeTraceTypes: Set<TraceType>, storage: Storage): Viewer[] {
+  createViewers(activeTraceTypes: Set<TraceType>, storage: Storage): Viewer[] {
     const viewers: Viewer[] = [];
 
     for (const Viewer of ViewerFactory.VIEWERS) {

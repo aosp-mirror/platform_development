@@ -88,14 +88,14 @@ export class TreeComponent {
   // TODO (b/263779536): this array is passed down from viewers/presenters and is used to generate
   //  an identifier supposed to be unique for each viewer. Let's just use a proper identifier
   //  instead. Each viewer/presenter could pass down a random magic number, an UUID, ...
-  @Input() dependencies: Array<TraceType> = [];
+  @Input() dependencies: TraceType[] = [];
 
   @Input() item?: UiTreeNode;
   @Input() store!: PersistentStore;
   @Input() isFlattened? = false;
   @Input() initialDepth = 0;
-  @Input() highlightedItems: Array<string> = [];
-  @Input() pinnedItems?: Array<HierarchyTreeNode> = [];
+  @Input() highlightedItems: string[] = [];
+  @Input() pinnedItems?: HierarchyTreeNode[] = [];
   @Input() itemsClickable?: boolean;
   @Input() useGlobalCollapsedState?: boolean;
   @Input() isAlwaysCollapsed?: boolean;
@@ -117,7 +117,7 @@ export class TreeComponent {
   readonly levelOffset = 24;
   nodeElement: HTMLElement;
 
-  public childTrackById(index: number, child: UiTreeNode): string {
+  childTrackById(index: number, child: UiTreeNode): string {
     if (child.stableId !== undefined) {
       return child.stableId;
     }
@@ -156,7 +156,7 @@ export class TreeComponent {
     this.nodeElement?.removeEventListener('mouseleave', this.nodeMouseLeaveEventListener);
   }
 
-  public onNodeClick(event: MouseEvent) {
+  onNodeClick(event: MouseEvent) {
     event.preventDefault();
     if (window.getSelection()?.type === 'range') {
       return;
@@ -171,7 +171,7 @@ export class TreeComponent {
     }
   }
 
-  public nodeOffsetStyle() {
+  nodeOffsetStyle() {
     const offset = this.levelOffset * this.initialDepth + 'px';
 
     return {
@@ -186,38 +186,38 @@ export class TreeComponent {
     }
   }
 
-  public isPinned() {
+  isPinned() {
     if (this.item instanceof HierarchyTreeNode) {
       return this.pinnedItems?.map((item) => `${item.stableId}`).includes(`${this.item.stableId}`);
     }
     return false;
   }
 
-  public propagateNewHighlightedItem(newId: string) {
+  propagateNewHighlightedItem(newId: string) {
     this.highlightedItemChange.emit(newId);
   }
 
-  public propagateNewPinnedItem(newPinnedItem: UiTreeNode) {
+  propagateNewPinnedItem(newPinnedItem: UiTreeNode) {
     this.pinnedItemChange.emit(newPinnedItem);
   }
 
-  public propagateNewSelectedTree(newTree: UiTreeNode) {
+  propagateNewSelectedTree(newTree: UiTreeNode) {
     this.selectedTreeChange.emit(newTree);
   }
 
-  public isClickable() {
+  isClickable() {
     return !this.isLeaf(this.item) || this.itemsClickable;
   }
 
-  public toggleTree() {
+  toggleTree() {
     this.setCollapseValue(!this.isCollapsed());
   }
 
-  public expandTree() {
+  expandTree() {
     this.setCollapseValue(true);
   }
 
-  public isCollapsed() {
+  isCollapsed() {
     if (this.isAlwaysCollapsed || this.isLeaf(this.item)) {
       return true;
     }
@@ -231,11 +231,11 @@ export class TreeComponent {
     return this.localCollapsedState;
   }
 
-  public children(): UiTreeNode[] {
+  children(): UiTreeNode[] {
     return this.item?.children ?? [];
   }
 
-  public hasChildren() {
+  hasChildren() {
     if (!this.item) {
       return false;
     }

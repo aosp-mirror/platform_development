@@ -65,10 +65,10 @@ class ParserProtoLog extends Parser {
   }
 
   override getTimestamp(type: TimestampType, entryProto: any): undefined | Timestamp {
-    if (type == TimestampType.ELAPSED) {
+    if (type === TimestampType.ELAPSED) {
       return new Timestamp(type, BigInt(entryProto.elapsedRealtimeNanos));
     }
-    if (type == TimestampType.REAL && this.realToElapsedTimeOffsetNs !== undefined) {
+    if (type === TimestampType.REAL && this.realToElapsedTimeOffsetNs !== undefined) {
       return new Timestamp(
         type,
         BigInt(entryProto.elapsedRealtimeNanos) + this.realToElapsedTimeOffsetNs
@@ -93,7 +93,7 @@ class ParserProtoLog extends Parser {
   }
 
   private decodeProtoLogMessage(entryProto: any, timestampType: TimestampType): LogMessage {
-    const message = (<any>configJson).messages[entryProto.messageHash];
+    const message = (configJson as any).messages[entryProto.messageHash];
     if (!message) {
       return new FormattedLogMessage(entryProto, timestampType, this.realToElapsedTimeOffsetNs);
     }

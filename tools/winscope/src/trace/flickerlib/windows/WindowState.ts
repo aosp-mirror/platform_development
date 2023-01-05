@@ -16,13 +16,13 @@
 
 import {Size, toRect, WindowLayoutParams, WindowState} from '../common';
 import {shortenName} from '../mixin';
-import WindowContainer from './WindowContainer';
+import {WindowContainer} from './WindowContainer';
 
-WindowState.fromProto = function (
+WindowState.fromProto = (
   proto: any,
-  isActivityInTree: Boolean,
+  isActivityInTree: boolean,
   nextSeq: () => number
-): WindowState {
+): WindowState => {
   if (proto == null) {
     return null;
   } else {
@@ -137,4 +137,4 @@ function addAttributes(entry: WindowState, proto: any) {
   entry.shortName = shortenName(entry.name);
 }
 
-export default WindowState;
+export {WindowState};

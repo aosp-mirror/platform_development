@@ -1,41 +1,53 @@
-import {StoreObject} from 'common/persistent_store_proxy';
+/*
+ * Copyright (C) 2022 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-export type TraceConfiguration = {
-  [key: string]: string | boolean | undefined | StoreObject;
+export interface TraceConfiguration {
   name: string | undefined;
   run: boolean | undefined;
   isTraceCollection: boolean | undefined;
   config: ConfigurationOptions | undefined;
-};
+}
 
-export type TraceConfigurationMap = {
+export interface TraceConfigurationMap {
   [key: string]: TraceConfiguration;
-};
+}
 
-type ConfigurationOptions = {
-  [key: string]: string | boolean | undefined | StoreObject;
+interface ConfigurationOptions {
   enableConfigs: EnableConfiguration[];
   selectionConfigs: SelectionConfiguration[];
-};
+}
 
-export type EnableConfiguration = {
+export interface EnableConfiguration {
   name: string;
   key: string;
   enabled: boolean;
-};
+}
 
-export type SelectionConfiguration = {
+export interface SelectionConfiguration {
   key: string;
   name: string;
   options: string[];
   value: string;
-};
+}
 
-export type configMap = {
+export interface ConfigMap {
   [key: string]: string[] | string;
-};
+}
 
-const wmTraceSelectionConfigs: Array<SelectionConfiguration> = [
+const wmTraceSelectionConfigs: SelectionConfiguration[] = [
   {
     key: 'wmbuffersize',
     name: 'buffer size (KB)',
@@ -56,7 +68,7 @@ const wmTraceSelectionConfigs: Array<SelectionConfiguration> = [
   },
 ];
 
-const sfTraceEnableConfigs: Array<EnableConfiguration> = [
+const sfTraceEnableConfigs: EnableConfiguration[] = [
   {
     name: 'input',
     key: 'input',
@@ -89,7 +101,7 @@ const sfTraceEnableConfigs: Array<EnableConfiguration> = [
   },
 ];
 
-const sfTraceSelectionConfigs: Array<SelectionConfiguration> = [
+const sfTraceSelectionConfigs: SelectionConfiguration[] = [
   {
     key: 'sfbuffersize',
     name: 'buffer size (KB)',

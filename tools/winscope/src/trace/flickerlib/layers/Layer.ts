@@ -25,9 +25,9 @@ import {
   toRegion,
 } from '../common';
 import {shortenName} from '../mixin';
-import Transform from './Transform';
+import {Transform} from './Transform';
 
-Layer.fromProto = function (proto: any, excludesCompositionState = false): Layer {
+Layer.fromProto = (proto: any, excludesCompositionState = false): Layer => {
   const visibleRegion = toRegion(proto.visibleRegion);
   const activeBuffer = toActiveBuffer(proto.activeBuffer);
   const bounds = toRectF(proto.bounds);

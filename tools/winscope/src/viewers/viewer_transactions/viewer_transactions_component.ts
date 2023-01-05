@@ -221,8 +221,8 @@ import {UiData} from './ui_data';
   ],
 })
 class ViewerTransactionsComponent {
-  public uiData: UiData = UiData.EMPTY;
-  public whatSearchString = '';
+  uiData: UiData = UiData.EMPTY;
+  whatSearchString = '';
 
   @ViewChild(CdkVirtualScrollViewport) private scrollComponent?: CdkVirtualScrollViewport;
   private elementRef: ElementRef;
@@ -232,46 +232,46 @@ class ViewerTransactionsComponent {
   }
 
   @Input()
-  public set inputData(data: UiData) {
+  set inputData(data: UiData) {
     this.uiData = data;
     if (this.uiData.scrollToIndex !== undefined && this.scrollComponent) {
       this.scrollComponent.scrollToIndex(this.uiData.scrollToIndex);
     }
   }
 
-  public onVSyncIdFilterChanged(event: MatSelectChange) {
+  onVSyncIdFilterChanged(event: MatSelectChange) {
     this.emitEvent(Events.VSyncIdFilterChanged, event.value);
   }
 
-  public onPidFilterChanged(event: MatSelectChange) {
+  onPidFilterChanged(event: MatSelectChange) {
     this.emitEvent(Events.PidFilterChanged, event.value);
   }
 
-  public onUidFilterChanged(event: MatSelectChange) {
+  onUidFilterChanged(event: MatSelectChange) {
     this.emitEvent(Events.UidFilterChanged, event.value);
   }
 
-  public onTypeFilterChanged(event: MatSelectChange) {
+  onTypeFilterChanged(event: MatSelectChange) {
     this.emitEvent(Events.TypeFilterChanged, event.value);
   }
 
-  public onIdFilterChanged(event: MatSelectChange) {
+  onIdFilterChanged(event: MatSelectChange) {
     this.emitEvent(Events.IdFilterChanged, event.value);
   }
 
-  public onWhatSearchStringChange() {
+  onWhatSearchStringChange() {
     this.emitEvent(Events.WhatSearchStringChanged, this.whatSearchString);
   }
 
-  public onEntryClicked(index: number) {
+  onEntryClicked(index: number) {
     this.emitEvent(Events.EntryClicked, index);
   }
 
-  public isCurrentEntry(index: number): boolean {
+  isCurrentEntry(index: number): boolean {
     return index === this.uiData.currentEntryIndex;
   }
 
-  public isSelectedEntry(index: number): boolean {
+  isSelectedEntry(index: number): boolean {
     return index === this.uiData.selectedEntryIndex;
   }
 

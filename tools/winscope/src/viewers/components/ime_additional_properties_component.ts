@@ -321,25 +321,25 @@ import {ViewerEvents} from 'viewers/common/viewer_events';
 export class ImeAdditionalPropertiesComponent {
   @Input() additionalProperties!: ImeAdditionalProperties;
   @Input() isImeManagerService?: boolean;
-  @Input() highlightedItems: Array<string> = [];
+  @Input() highlightedItems: string[] = [];
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
-  public isHighlighted(item: any) {
+  isHighlighted(item: any) {
     return UiTreeUtils.isHighlighted(item, this.highlightedItems);
   }
 
-  public formatProto(item: any) {
+  formatProto(item: any) {
     if (item?.prettyPrint) {
       return item.prettyPrint();
     }
   }
 
-  public wmProtoOrNull() {
+  wmProtoOrNull() {
     return this.additionalProperties.wm?.proto;
   }
 
-  public wmInsetsSourceProviderOrNull() {
+  wmInsetsSourceProviderOrNull() {
     return this.additionalProperties.wm?.protoImeInsetsSourceProvider
       ? Object.assign(
           {name: 'Ime Insets Source Provider'},
@@ -348,56 +348,56 @@ export class ImeAdditionalPropertiesComponent {
       : null;
   }
 
-  public wmControlTargetFrameOrNull() {
+  wmControlTargetFrameOrNull() {
     return (
       this.additionalProperties.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider
         ?.controlTarget?.windowFrames?.frame || 'null'
     );
   }
 
-  public wmInsetsSourceProviderPositionOrNull() {
+  wmInsetsSourceProviderPositionOrNull() {
     return (
       this.additionalProperties.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider?.control
         ?.position || 'null'
     );
   }
 
-  public wmInsetsSourceProviderIsLeashReadyOrNull() {
+  wmInsetsSourceProviderIsLeashReadyOrNull() {
     return (
       this.additionalProperties.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider
         ?.isLeashReadyForDispatching || 'null'
     );
   }
 
-  public wmInsetsSourceProviderControllableOrNull() {
+  wmInsetsSourceProviderControllableOrNull() {
     return (
       this.additionalProperties.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider
         ?.controllable || 'null'
     );
   }
 
-  public wmInsetsSourceProviderSourceFrameOrNull() {
+  wmInsetsSourceProviderSourceFrameOrNull() {
     return (
       this.additionalProperties.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider?.source
         ?.frame || 'null'
     );
   }
 
-  public wmInsetsSourceProviderSourceVisibleOrNull() {
+  wmInsetsSourceProviderSourceVisibleOrNull() {
     return (
       this.additionalProperties.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider?.source
         ?.visible || 'null'
     );
   }
 
-  public wmInsetsSourceProviderSourceVisibleFrameOrNull() {
+  wmInsetsSourceProviderSourceVisibleFrameOrNull() {
     return (
       this.additionalProperties.wm?.protoImeInsetsSourceProvider?.insetsSourceProvider?.source
         ?.visibleFrame || 'null'
     );
   }
 
-  public wmImeControlTargetOrNull() {
+  wmImeControlTargetOrNull() {
     return this.additionalProperties?.wm?.protoImeControlTarget
       ? Object.assign(
           {name: 'IME Control Target'},
@@ -406,26 +406,26 @@ export class ImeAdditionalPropertiesComponent {
       : null;
   }
 
-  public wmImeControlTargetTitleOrNull() {
+  wmImeControlTargetTitleOrNull() {
     return (
       this.additionalProperties?.wm?.protoImeControlTarget?.windowContainer?.identifier?.title ||
       'null'
     );
   }
 
-  public wmImeInputTargetOrNull() {
+  wmImeInputTargetOrNull() {
     return this.additionalProperties?.wm?.protoImeInputTarget
       ? Object.assign({name: 'IME Input Target'}, this.additionalProperties.wm.protoImeInputTarget)
       : null;
   }
 
-  public wmImeInputTargetTitleOrNull() {
+  wmImeInputTargetTitleOrNull() {
     return (
       this.additionalProperties?.wm?.protoImeInputTarget?.windowContainer?.identifier?.title ||
       'null'
     );
   }
-  public wmImeLayeringTargetOrNull() {
+  wmImeLayeringTargetOrNull() {
     return this.additionalProperties?.wm?.protoImeLayeringTarget
       ? Object.assign(
           {name: 'IME Layering Target'},
@@ -434,22 +434,22 @@ export class ImeAdditionalPropertiesComponent {
       : null;
   }
 
-  public wmImeLayeringTargetTitleOrNull() {
+  wmImeLayeringTargetTitleOrNull() {
     return (
       this.additionalProperties?.wm?.protoImeLayeringTarget?.windowContainer?.identifier?.title ||
       'null'
     );
   }
 
-  public sfImeContainerScreenBoundsOrNull() {
+  sfImeContainerScreenBoundsOrNull() {
     return this.additionalProperties.sf?.inputMethodSurface?.screenBounds || 'null';
   }
 
-  public sfImeContainerRectOrNull() {
+  sfImeContainerRectOrNull() {
     return this.additionalProperties.sf?.inputMethodSurface?.rect || 'null';
   }
 
-  public isAllPropertiesNull() {
+  isAllPropertiesNull() {
     if (this.isImeManagerService) {
       return !this.additionalProperties.wm;
     } else {
@@ -457,7 +457,7 @@ export class ImeAdditionalPropertiesComponent {
     }
   }
 
-  public onClickShowInPropertiesPanel(item: any, name?: string) {
+  onClickShowInPropertiesPanel(item: any, name?: string) {
     if (item.id) {
       this.updateHighlightedItems(item.id);
     } else {
@@ -475,7 +475,7 @@ export class ImeAdditionalPropertiesComponent {
 
   private updateAdditionalPropertySelected(item: any, name?: string) {
     const itemWrapper = {
-      name: name,
+      name,
       proto: item,
     };
     const event: CustomEvent = new CustomEvent(ViewerEvents.AdditionalPropertySelected, {

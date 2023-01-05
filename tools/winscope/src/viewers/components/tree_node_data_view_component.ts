@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import {Component, Input} from '@angular/core';
-import Chip from 'viewers/common/chip';
+import {Chip} from 'viewers/common/chip';
 import {HierarchyTreeNode, Terminal, UiTreeNode} from 'viewers/common/ui_tree_utils';
 import {treeNodeDataViewStyles} from 'viewers/components/styles/tree_node_data_view.styles';
 
@@ -36,24 +36,24 @@ import {treeNodeDataViewStyles} from 'viewers/components/styles/tree_node_data_v
 export class TreeNodeDataViewComponent {
   @Input() item!: UiTreeNode;
 
-  public chips() {
+  chips() {
     return this.item instanceof HierarchyTreeNode ? this.item.chips : [];
   }
 
-  public itemShortName() {
+  itemShortName() {
     return this.item instanceof HierarchyTreeNode && this.item.shortName
       ? this.item.shortName
       : this.item.name;
   }
 
-  public itemTooltip() {
+  itemTooltip() {
     if (this.item.name instanceof Terminal) {
       return '';
     }
     return this.item.name ?? '';
   }
 
-  public showShortName() {
+  showShortName() {
     return (
       this.item instanceof HierarchyTreeNode &&
       this.item.simplifyNames &&
@@ -62,7 +62,7 @@ export class TreeNodeDataViewComponent {
     );
   }
 
-  public chipClass(chip: Chip) {
+  chipClass(chip: Chip) {
     return [
       'tree-view-internal-chip',
       'tree-view-chip',

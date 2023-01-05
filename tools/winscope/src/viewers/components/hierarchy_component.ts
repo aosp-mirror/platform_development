@@ -129,19 +129,19 @@ export class HierarchyComponent {
 
   @Input() tree!: HierarchyTreeNode | null;
   @Input() tableProperties?: TableProperties | null;
-  @Input() dependencies: Array<TraceType> = [];
-  @Input() highlightedItems: Array<string> = [];
-  @Input() pinnedItems: Array<HierarchyTreeNode> = [];
+  @Input() dependencies: TraceType[] = [];
+  @Input() highlightedItems: string[] = [];
+  @Input() pinnedItems: HierarchyTreeNode[] = [];
   @Input() store!: PersistentStore;
   @Input() userOptions: UserOptions = {};
 
   constructor(@Inject(ElementRef) private elementRef: ElementRef) {}
 
-  public isFlattened() {
+  isFlattened() {
     return this.userOptions['flat']?.enabled;
   }
 
-  public onPinnedNodeClick(event: MouseEvent, pinnedItem: HierarchyTreeNode) {
+  onPinnedNodeClick(event: MouseEvent, pinnedItem: HierarchyTreeNode) {
     event.preventDefault();
     if (window.getSelection()?.type === 'range') {
       return;
@@ -150,7 +150,7 @@ export class HierarchyComponent {
     this.selectedTreeChange(pinnedItem);
   }
 
-  public updateTree() {
+  updateTree() {
     const event: CustomEvent = new CustomEvent(ViewerEvents.HierarchyUserOptionsChange, {
       bubbles: true,
       detail: {userOptions: this.userOptions},
@@ -158,7 +158,7 @@ export class HierarchyComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  public filterTree() {
+  filterTree() {
     const event: CustomEvent = new CustomEvent(ViewerEvents.HierarchyFilterChange, {
       bubbles: true,
       detail: {filterString: this.filterString},
@@ -166,7 +166,7 @@ export class HierarchyComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  public highlightedItemChange(newId: string) {
+  highlightedItemChange(newId: string) {
     const event: CustomEvent = new CustomEvent(ViewerEvents.HighlightedChange, {
       bubbles: true,
       detail: {id: newId},
@@ -174,7 +174,7 @@ export class HierarchyComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  public selectedTreeChange(item: UiTreeNode) {
+  selectedTreeChange(item: UiTreeNode) {
     if (!(item instanceof HierarchyTreeNode)) {
       return;
     }
@@ -185,7 +185,7 @@ export class HierarchyComponent {
     this.elementRef.nativeElement.dispatchEvent(event);
   }
 
-  public pinnedItemChange(item: UiTreeNode) {
+  pinnedItemChange(item: UiTreeNode) {
     if (!(item instanceof HierarchyTreeNode)) {
       return;
     }

@@ -17,7 +17,7 @@
 import {FunctionUtils, OnProgressUpdateType} from 'common/function_utils';
 import {proxyClient, ProxyEndpoint, proxyRequest, ProxyState} from 'trace_collection/proxy_client';
 import {Connection, DeviceProperties} from './connection';
-import {configMap} from './trace_collection_utils';
+import {ConfigMap} from './trace_collection_utils';
 import {TracingConfig} from './tracing_config';
 
 export class ProxyConnection implements Connection {
@@ -40,78 +40,78 @@ export class ProxyConnection implements Connection {
     this.proxy.getDevices();
   }
 
-  public devices() {
+  devices() {
     return this.proxy.devices;
   }
 
-  public adbData() {
+  adbData() {
     return this.proxy.adbData;
   }
 
-  public state() {
+  state() {
     return this.proxy.state;
   }
 
-  public isDevicesState() {
+  isDevicesState() {
     return this.state() === ProxyState.DEVICES;
   }
 
-  public isStartTraceState() {
+  isStartTraceState() {
     return this.state() === ProxyState.START_TRACE;
   }
 
-  public isErrorState() {
+  isErrorState() {
     return this.state() === ProxyState.ERROR;
   }
 
-  public isEndTraceState() {
+  isEndTraceState() {
     return this.state() === ProxyState.END_TRACE;
   }
 
-  public isLoadDataState() {
+  isLoadDataState() {
     return this.state() === ProxyState.LOAD_DATA;
   }
 
-  public isConnectingState() {
+  isConnectingState() {
     return this.state() === ProxyState.CONNECTING;
   }
 
-  public throwNoTargetsError() {
+  throwNoTargetsError() {
     this.proxy.setState(ProxyState.ERROR, 'No targets selected');
   }
 
-  public setProxyKey(key: string) {
+  setProxyKey(key: string) {
     this.proxy.proxyKey = key;
     this.proxy.store.add('adb.proxyKey', key);
     this.restart();
   }
 
-  public adbSuccess() {
+  adbSuccess() {
     return !this.notConnected.includes(this.proxy.state);
   }
 
-  public selectedDevice(): DeviceProperties {
+  selectedDevice(): DeviceProperties {
     return this.proxy.devices[this.proxy.selectedDevice];
   }
 
-  public selectedDeviceId(): string {
+  selectedDeviceId(): string {
     return this.proxy.selectedDevice;
   }
 
-  public restart() {
+  restart() {
     this.proxy.setState(ProxyState.CONNECTING);
   }
 
-  public resetLastDevice() {
+  resetLastDevice() {
     this.proxy.store.add('adb.lastDevice', '');
     this.restart();
   }
 
-  public selectDevice(id: string) {
+  selectDevice(id: string) {
     this.proxy.selectDevice(id);
   }
 
-  public keepAliveTrace(view: ProxyConnection) {
+  keepAliveTrace(view: ProxyConnection) {
     if (!view.isEndTraceState()) {
       clearInterval(view.keep_alive_worker);
       view.keep_alive_worker = null;
@@ -120,10 +120,10 @@ export class ProxyConnection implements Connection {
     proxyRequest.keepTraceAlive(view);
   }
 
-  public startTrace(
-    reqEnableConfig?: Array<string>,
-    reqSelectedSfConfig?: configMap,
-    reqSelectedWmConfig?: configMap
+  startTrace(
+    reqEnableConfig?: string[],
+    reqSelectedSfConfig?: ConfigMap,
+    reqSelectedWmConfig?: ConfigMap
   ) {
     if (reqEnableConfig) {
       proxyRequest.setEnabledConfig(this, reqEnableConfig);
@@ -146,13 +146,13 @@ export class ProxyConnection implements Connection {
     proxyRequest.startTrace(this, TracingConfig.getInstance().requestedTraces);
   }
 
-  public async endTrace() {
+  async endTrace() {
     this.progressCallback(0);
     this.proxy.setState(ProxyState.LOAD_DATA);
     await proxyRequest.endTrace(this, this.progressCallback);
   }
 
-  public async dumpState(): Promise<boolean> {
+  async dumpState(): Promise<boolean> {
     this.progressCallback(0);
     if (TracingConfig.getInstance().requestedDumps.length < 1) {
       console.error('No targets selected');
@@ -168,15 +168,15 @@ export class ProxyConnection implements Connection {
     return true;
   }
 
-  public async isWaylandAvailable(): Promise<boolean> {
+  async isWaylandAvailable(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       proxyRequest.call('GET', ProxyEndpoint.CHECK_WAYLAND, (request: XMLHttpRequest) => {
-        resolve(request.responseText == 'true');
+        resolve(request.responseText === 'true');
       });
     });
   }
 
-  public async onConnectChange(newState: ProxyState) {
+  async onConnectChange(newState: ProxyState) {
     if (newState === ProxyState.CONNECTING) {
       proxyClient.getDevices();
     }

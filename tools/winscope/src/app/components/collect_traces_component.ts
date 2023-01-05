@@ -34,7 +34,7 @@ import {Connection} from 'trace_collection/connection';
 import {ProxyState} from 'trace_collection/proxy_client';
 import {ProxyConnection} from 'trace_collection/proxy_connection';
 import {
-  configMap,
+  ConfigMap,
   EnableConfiguration,
   SelectionConfiguration,
   traceConfigurations,
@@ -406,14 +406,14 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     this.connect.proxy?.removeOnProxyChange(this.onProxyChange);
   }
 
-  public onAddKey(key: string) {
+  onAddKey(key: string) {
     if (this.connect.setProxyKey) {
       this.connect.setProxyKey(key);
     }
     this.connect.restart();
   }
 
-  public displayAdbProxyTab() {
+  displayAdbProxyTab() {
     this.isAdbProxy = true;
     this.connect = new ProxyConnection(
       (newState) => this.changeDetectorRef.detectChanges(),
@@ -421,7 +421,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     );
   }
 
-  public displayWebAdbTab() {
+  displayWebAdbTab() {
     this.isAdbProxy = false;
     //TODO: change to WebAdbConnection
     this.connect = new ProxyConnection(
@@ -430,7 +430,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     );
   }
 
-  public startTracing() {
+  startTracing() {
     console.log('begin tracing');
     this.tracingConfig.requestedTraces = this.requestedTraces();
     const reqEnableConfig = this.requestedEnableConfig();
@@ -443,7 +443,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     this.connect.startTrace(reqEnableConfig, reqSelectedSfConfig, reqSelectedWmConfig);
   }
 
-  public async dumpState() {
+  async dumpState() {
     console.log('begin dump');
     this.tracingConfig.requestedDumps = this.requestedDumps();
     const dumpSuccessful = await this.connect.dumpState();
@@ -454,13 +454,13 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     }
   }
 
-  public async endTrace() {
+  async endTrace() {
     console.log('end tracing');
     await this.connect.endTrace();
     await this.loadFiles();
   }
 
-  public tabClass(adbTab: boolean) {
+  tabClass(adbTab: boolean) {
     let isActive: string;
     if (adbTab) {
       isActive = this.isAdbProxy ? 'active' : 'inactive';
@@ -475,7 +475,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   }
 
   private requestedTraces() {
-    const tracesFromCollection: Array<string> = [];
+    const tracesFromCollection: string[] = [];
     const tracingConfig = this.tracingConfig.getTracingConfig();
     const req = Object.keys(tracingConfig).filter((traceKey: string) => {
       const traceConfig = tracingConfig[traceKey];
@@ -499,8 +499,8 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     });
   }
 
-  private requestedEnableConfig(): Array<string> {
-    const req: Array<string> = [];
+  private requestedEnableConfig(): string[] {
+    const req: string[] = [];
     const tracingConfig = this.tracingConfig.getTracingConfig();
     Object.keys(tracingConfig).forEach((traceKey: string) => {
       const trace = tracingConfig[traceKey];
@@ -515,12 +515,12 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
     return req;
   }
 
-  private requestedSelection(traceType: string): configMap | undefined {
+  private requestedSelection(traceType: string): ConfigMap | undefined {
     const tracingConfig = this.tracingConfig.getTracingConfig();
     if (!tracingConfig[traceType].run) {
       return undefined;
     }
-    const selected: configMap = {};
+    const selected: ConfigMap = {};
     tracingConfig[traceType].config?.selectionConfigs.forEach((con: SelectionConfiguration) => {
       selected[con.key] = con.value;
     });

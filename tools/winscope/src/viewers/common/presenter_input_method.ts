@@ -31,7 +31,7 @@ type NotifyImeViewCallbackType = (uiData: ImeUiData) => void;
 export abstract class PresenterInputMethod {
   constructor(
     notifyViewCallback: NotifyImeViewCallbackType,
-    dependencies: Array<TraceType>,
+    dependencies: TraceType[],
     private storage: Storage
   ) {
     this.notifyViewCallback = notifyViewCallback;
@@ -40,10 +40,10 @@ export abstract class PresenterInputMethod {
     this.notifyViewCallback(this.uiData);
   }
 
-  public updatePinnedItems(pinnedItem: HierarchyTreeNode) {
+  updatePinnedItems(pinnedItem: HierarchyTreeNode) {
     const pinnedId = `${pinnedItem.id}`;
     if (this.pinnedItems.map((item) => `${item.id}`).includes(pinnedId)) {
-      this.pinnedItems = this.pinnedItems.filter((pinned) => `${pinned.id}` != pinnedId);
+      this.pinnedItems = this.pinnedItems.filter((pinned) => `${pinned.id}` !== pinnedId);
     } else {
       this.pinnedItems.push(pinnedItem);
     }
@@ -52,9 +52,9 @@ export abstract class PresenterInputMethod {
     this.notifyViewCallback(this.uiData);
   }
 
-  public updateHighlightedItems(id: string) {
+  updateHighlightedItems(id: string) {
     if (this.highlightedItems.includes(id)) {
-      this.highlightedItems = this.highlightedItems.filter((hl) => hl != id);
+      this.highlightedItems = this.highlightedItems.filter((hl) => hl !== id);
     } else {
       this.highlightedItems = []; //if multi-select surfaces implemented, remove this line
       this.highlightedItems.push(id);
@@ -63,37 +63,37 @@ export abstract class PresenterInputMethod {
     this.notifyViewCallback(this.uiData);
   }
 
-  public updateHierarchyTree(userOptions: UserOptions) {
+  updateHierarchyTree(userOptions: UserOptions) {
     this.hierarchyUserOptions = userOptions;
     this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
     this.uiData.tree = this.generateTree();
     this.notifyViewCallback(this.uiData);
   }
 
-  public filterHierarchyTree(filterString: string) {
+  filterHierarchyTree(filterString: string) {
     this.hierarchyFilter = TreeUtils.makeNodeFilter(filterString);
     this.uiData.tree = this.generateTree();
     this.notifyViewCallback(this.uiData);
   }
 
-  public updatePropertiesTree(userOptions: UserOptions) {
+  updatePropertiesTree(userOptions: UserOptions) {
     this.propertiesUserOptions = userOptions;
     this.uiData.propertiesUserOptions = this.propertiesUserOptions;
     this.updateSelectedTreeUiData();
   }
 
-  public filterPropertiesTree(filterString: string) {
+  filterPropertiesTree(filterString: string) {
     this.propertiesFilter = TreeUtils.makeNodeFilter(filterString);
     this.updateSelectedTreeUiData();
   }
 
-  public newPropertiesTree(selectedItem: HierarchyTreeNode) {
+  newPropertiesTree(selectedItem: HierarchyTreeNode) {
     this.additionalPropertyEntry = null;
     this.selectedHierarchyTree = selectedItem;
     this.updateSelectedTreeUiData();
   }
 
-  public newAdditionalPropertiesTree(selectedItem: any) {
+  newAdditionalPropertiesTree(selectedItem: any) {
     this.selectedHierarchyTree = new HierarchyTreeNode(
       selectedItem.name,
       'AdditionalProperty',
@@ -109,7 +109,7 @@ export abstract class PresenterInputMethod {
     this.updateSelectedTreeUiData();
   }
 
-  public notifyCurrentTraceEntries(entries: Map<TraceType, [any, any]>) {
+  notifyCurrentTraceEntries(entries: Map<TraceType, [any, any]>) {
     this.uiData = new ImeUiData(this.dependencies);
     this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
     this.uiData.propertiesUserOptions = this.propertiesUserOptions;
@@ -185,7 +185,7 @@ export abstract class PresenterInputMethod {
   }
   private updatePinnedIds(newId: string) {
     if (this.pinnedIds.includes(newId)) {
-      this.pinnedIds = this.pinnedIds.filter((pinned) => pinned != newId);
+      this.pinnedIds = this.pinnedIds.filter((pinned) => pinned !== newId);
     } else {
       this.pinnedIds.push(newId);
     }
@@ -203,14 +203,14 @@ export abstract class PresenterInputMethod {
 
   private hierarchyFilter: FilterType = TreeUtils.makeNodeFilter('');
   private propertiesFilter: FilterType = TreeUtils.makeNodeFilter('');
-  private pinnedItems: Array<HierarchyTreeNode> = [];
-  private pinnedIds: Array<string> = [];
+  private pinnedItems: HierarchyTreeNode[] = [];
+  private pinnedIds: string[] = [];
   private selectedHierarchyTree: HierarchyTreeNode | null = null;
 
   readonly notifyViewCallback: NotifyImeViewCallbackType;
-  protected readonly dependencies: Array<TraceType>;
+  protected readonly dependencies: TraceType[];
   protected uiData: ImeUiData;
-  protected highlightedItems: Array<string> = [];
+  protected highlightedItems: string[] = [];
   protected entry: TraceTreeNode | null = null;
   protected additionalPropertyEntry: TraceTreeNode | null = null;
   protected hierarchyUserOptions: UserOptions = PersistentStoreProxy.new<UserOptions>(

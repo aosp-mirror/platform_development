@@ -222,23 +222,23 @@ export class RectsComponent implements OnInit, OnDestroy {
     this.resizeObserver?.disconnect();
   }
 
-  public onSeparationSliderChange(factor: number) {
+  onSeparationSliderChange(factor: number) {
     this.mapper3d.setZSpacingFactor(factor);
     this.drawScene();
   }
 
-  public onRotationSliderChange(factor: number) {
+  onRotationSliderChange(factor: number) {
     this.mapper3d.setCameraRotationFactor(factor);
     this.drawScene();
   }
 
-  public resetCamera() {
+  resetCamera() {
     this.mapper3d.resetCamera();
     this.drawScene();
   }
 
   @HostListener('wheel', ['$event'])
-  public onScroll(event: WheelEvent) {
+  onScroll(event: WheelEvent) {
     if (event.deltaY > 0) {
       this.doZoomOut();
     } else {
@@ -246,46 +246,46 @@ export class RectsComponent implements OnInit, OnDestroy {
     }
   }
 
-  public onCanvasMouseDown(event: MouseEvent) {
+  onCanvasMouseDown(event: MouseEvent) {
     document.addEventListener('mousemove', this.mouseMoveListener);
     document.addEventListener('mouseup', this.mouseUpListener);
   }
 
-  public onMouseMove(event: MouseEvent) {
+  onMouseMove(event: MouseEvent) {
     const distance = new Distance2D(event.movementX, event.movementY);
     this.mapper3d.addPanScreenDistance(distance);
     this.drawScene();
   }
 
-  public onMouseUp(event: MouseEvent) {
+  onMouseUp(event: MouseEvent) {
     document.removeEventListener('mousemove', this.mouseMoveListener);
     document.removeEventListener('mouseup', this.mouseUpListener);
   }
 
-  public onZoomInClick() {
+  onZoomInClick() {
     this.doZoomIn();
   }
 
-  public onZoomOutClick() {
+  onZoomOutClick() {
     this.doZoomOut();
   }
 
-  public onShowOnlyVisibleModeChange(enabled: boolean) {
+  onShowOnlyVisibleModeChange(enabled: boolean) {
     this.mapper3d.setShowOnlyVisibleMode(enabled);
     this.drawScene();
   }
 
-  public onShowVirtualModeChange(enabled: boolean) {
+  onShowVirtualModeChange(enabled: boolean) {
     this.mapper3d.setShowVirtualMode(enabled);
     this.drawScene();
   }
 
-  public onDisplayIdChange(id: number) {
+  onDisplayIdChange(id: number) {
     this.mapper3d.setCurrentDisplayId(id);
     this.drawScene();
   }
 
-  public onRectClick(event: MouseEvent) {
+  onRectClick(event: MouseEvent) {
     event.preventDefault();
 
     const canvas = event.target as Element;
@@ -323,7 +323,7 @@ export class RectsComponent implements OnInit, OnDestroy {
   private notifyHighlightedItem(id: string) {
     const event: CustomEvent = new CustomEvent(ViewerEvents.HighlightedChange, {
       bubbles: true,
-      detail: {id: id},
+      detail: {id},
     });
     this.elementRef.nativeElement.dispatchEvent(event);
   }

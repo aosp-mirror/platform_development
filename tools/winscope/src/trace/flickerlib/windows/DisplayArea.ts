@@ -16,13 +16,13 @@
 
 import {DisplayArea} from '../common';
 import {shortenName} from '../mixin';
-import WindowContainer from './WindowContainer';
+import {WindowContainer} from './WindowContainer';
 
-DisplayArea.fromProto = function (
+DisplayArea.fromProto = (
   proto: any,
-  isActivityInTree: Boolean,
+  isActivityInTree: boolean,
   nextSeq: () => number
-): DisplayArea {
+): DisplayArea => {
   if (proto == null) {
     return null;
   } else {
@@ -47,4 +47,4 @@ function addAttributes(entry: DisplayArea, proto: any) {
   entry.shortName = shortenName(entry.name);
 }
 
-export default DisplayArea;
+export {DisplayArea};

@@ -33,10 +33,10 @@ export class Presenter {
     this.copyUiDataAndNotifyView();
   }
 
-  public updatePinnedItems(pinnedItem: HierarchyTreeNode) {
+  updatePinnedItems(pinnedItem: HierarchyTreeNode) {
     const pinnedId = `${pinnedItem.id}`;
     if (this.pinnedItems.map((item) => `${item.id}`).includes(pinnedId)) {
-      this.pinnedItems = this.pinnedItems.filter((pinned) => `${pinned.id}` != pinnedId);
+      this.pinnedItems = this.pinnedItems.filter((pinned) => `${pinned.id}` !== pinnedId);
     } else {
       this.pinnedItems.push(pinnedItem);
     }
@@ -45,9 +45,9 @@ export class Presenter {
     this.copyUiDataAndNotifyView();
   }
 
-  public updateHighlightedItems(id: string) {
+  updateHighlightedItems(id: string) {
     if (this.highlightedItems.includes(id)) {
-      this.highlightedItems = this.highlightedItems.filter((hl) => hl != id);
+      this.highlightedItems = this.highlightedItems.filter((hl) => hl !== id);
     } else {
       this.highlightedItems = []; //if multi-select surfaces implemented, remove this line
       this.highlightedItems.push(id);
@@ -56,36 +56,36 @@ export class Presenter {
     this.copyUiDataAndNotifyView();
   }
 
-  public updateHierarchyTree(userOptions: UserOptions) {
+  updateHierarchyTree(userOptions: UserOptions) {
     this.hierarchyUserOptions = userOptions;
     this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
     this.uiData.tree = this.generateTree();
     this.copyUiDataAndNotifyView();
   }
 
-  public filterHierarchyTree(filterString: string) {
+  filterHierarchyTree(filterString: string) {
     this.hierarchyFilter = TreeUtils.makeNodeFilter(filterString);
     this.uiData.tree = this.generateTree();
     this.copyUiDataAndNotifyView();
   }
 
-  public updatePropertiesTree(userOptions: UserOptions) {
+  updatePropertiesTree(userOptions: UserOptions) {
     this.propertiesUserOptions = userOptions;
     this.uiData.propertiesUserOptions = this.propertiesUserOptions;
     this.updateSelectedTreeUiData();
   }
 
-  public filterPropertiesTree(filterString: string) {
+  filterPropertiesTree(filterString: string) {
     this.propertiesFilter = TreeUtils.makeNodeFilter(filterString);
     this.updateSelectedTreeUiData();
   }
 
-  public newPropertiesTree(selectedItem: HierarchyTreeNode) {
+  newPropertiesTree(selectedItem: HierarchyTreeNode) {
     this.selectedHierarchyTree = selectedItem;
     this.updateSelectedTreeUiData();
   }
 
-  public notifyCurrentTraceEntries(entries: Map<TraceType, [any, any]>) {
+  notifyCurrentTraceEntries(entries: Map<TraceType, [any, any]>) {
     this.uiData = new UiData();
     this.uiData.hierarchyUserOptions = this.hierarchyUserOptions;
     this.uiData.propertiesUserOptions = this.propertiesUserOptions;
@@ -214,7 +214,7 @@ export class Presenter {
           ty: t.ty,
         };
         transform = {
-          matrix: matrix,
+          matrix,
         };
       }
 
@@ -222,7 +222,7 @@ export class Presenter {
         topLeft: {x: rect.left, y: rect.top},
         bottomRight: {x: rect.right, y: rect.bottom},
         label: rect.label,
-        transform: transform,
+        transform,
         isVisible: rect.ref?.isVisible ?? false,
         isDisplay: rect.isDisplay ?? false,
         ref: rect.ref,
@@ -239,7 +239,7 @@ export class Presenter {
 
   private updatePinnedIds(newId: string) {
     if (this.pinnedIds.includes(newId)) {
-      this.pinnedIds = this.pinnedIds.filter((pinned) => pinned != newId);
+      this.pinnedIds = this.pinnedIds.filter((pinned) => pinned !== newId);
     } else {
       this.pinnedIds.push(newId);
     }
@@ -276,10 +276,10 @@ export class Presenter {
   private uiData: UiData;
   private hierarchyFilter: FilterType = TreeUtils.makeNodeFilter('');
   private propertiesFilter: FilterType = TreeUtils.makeNodeFilter('');
-  private highlightedItems: Array<string> = [];
-  private displayIds: Array<number> = [];
-  private pinnedItems: Array<HierarchyTreeNode> = [];
-  private pinnedIds: Array<string> = [];
+  private highlightedItems: string[] = [];
+  private displayIds: number[] = [];
+  private pinnedItems: HierarchyTreeNode[] = [];
+  private pinnedIds: string[] = [];
   private selectedHierarchyTree: HierarchyTreeNode | null = null;
   private selectedLayer: LayerTraceEntry | Layer | null = null;
   private previousEntry: LayerTraceEntry | null = null;

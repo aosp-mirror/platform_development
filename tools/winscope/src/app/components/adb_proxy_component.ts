@@ -138,13 +138,13 @@ export class AdbProxyComponent {
   readonly downloadProxyUrl: string =
     'https://android.googlesource.com/platform/development/+/master/tools/winscope/adb_proxy/winscope_proxy.py';
 
-  public restart() {
+  restart() {
     this.addKey.emit(this.proxyKeyItem);
     this.proxy.setState(this.states.CONNECTING);
     this.proxyChange.emit(this.proxy);
   }
 
-  public downloadFromAosp() {
+  downloadFromAosp() {
     window.open(this.downloadProxyUrl, '_blank')?.focus();
   }
 }

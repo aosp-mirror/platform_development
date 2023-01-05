@@ -31,11 +31,11 @@ class UnitTestUtils extends CommonTestUtils {
   }
 
   static async getWindowManagerState(): Promise<WindowManagerState> {
-    return this.getTraceEntry('traces/elapsed_timestamp/WindowManager.pb');
+    return UnitTestUtils.getTraceEntry('traces/elapsed_timestamp/WindowManager.pb');
   }
 
   static async getLayerTraceEntry(): Promise<LayerTraceEntry> {
-    return await this.getTraceEntry('traces/elapsed_timestamp/SurfaceFlinger.pb');
+    return await UnitTestUtils.getTraceEntry('traces/elapsed_timestamp/SurfaceFlinger.pb');
   }
 
   static async getImeTraceEntries(): Promise<Map<TraceType, any>> {
@@ -55,15 +55,15 @@ class UnitTestUtils extends CommonTestUtils {
 
     const entries = new Map<TraceType, any>();
     entries.set(TraceType.INPUT_METHOD_CLIENTS, [
-      await this.getTraceEntry('traces/ime/InputMethodClients.pb'),
+      await UnitTestUtils.getTraceEntry('traces/ime/InputMethodClients.pb'),
       null,
     ]);
     entries.set(TraceType.INPUT_METHOD_MANAGER_SERVICE, [
-      await this.getTraceEntry('traces/ime/InputMethodManagerService.pb'),
+      await UnitTestUtils.getTraceEntry('traces/ime/InputMethodManagerService.pb'),
       null,
     ]);
     entries.set(TraceType.INPUT_METHOD_SERVICE, [
-      await this.getTraceEntry('traces/ime/InputMethodService.pb'),
+      await UnitTestUtils.getTraceEntry('traces/ime/InputMethodService.pb'),
       null,
     ]);
     entries.set(TraceType.SURFACE_FLINGER, [surfaceFlingerEntry, null]);
@@ -73,7 +73,7 @@ class UnitTestUtils extends CommonTestUtils {
   }
 
   private static async getTraceEntry(filename: string) {
-    const parser = await this.getParser(filename);
+    const parser = await UnitTestUtils.getParser(filename);
     const timestamp = parser.getTimestamps(TimestampType.ELAPSED)![0];
     return parser.getTraceEntry(timestamp);
   }

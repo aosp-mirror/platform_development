@@ -23,7 +23,7 @@ interface TreeNode {
 type FilterType = (node: TreeNode | undefined | null) => boolean;
 
 class TreeUtils {
-  public static findDescendantNode(node: TreeNode, isTargetNode: FilterType): TreeNode | undefined {
+  static findDescendantNode(node: TreeNode, isTargetNode: FilterType): TreeNode | undefined {
     if (isTargetNode(node)) {
       return node;
     }
@@ -33,7 +33,7 @@ class TreeUtils {
     }
 
     for (const child of node.children) {
-      const target = this.findDescendantNode(child, isTargetNode);
+      const target = TreeUtils.findDescendantNode(child, isTargetNode);
       if (target) {
         return target;
       }
@@ -42,7 +42,7 @@ class TreeUtils {
     return undefined;
   }
 
-  public static findAncestorNode(node: TreeNode, isTargetNode: FilterType): TreeNode | undefined {
+  static findAncestorNode(node: TreeNode, isTargetNode: FilterType): TreeNode | undefined {
     let ancestor = node.parent;
 
     while (ancestor && !isTargetNode(ancestor)) {
@@ -52,7 +52,7 @@ class TreeUtils {
     return ancestor;
   }
 
-  public static makeNodeFilter(filterString: string): FilterType {
+  static makeNodeFilter(filterString: string): FilterType {
     const filterStrings = filterString.split(',');
     const positive: any[] = [];
     const negative: any[] = [];

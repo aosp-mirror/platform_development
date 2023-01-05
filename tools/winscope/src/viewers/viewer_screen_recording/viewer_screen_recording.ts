@@ -22,25 +22,25 @@ class ViewerScreenRecording implements Viewer {
     this.htmlElement = document.createElement('viewer-screen-recording');
   }
 
-  public notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
+  notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
     const entry: undefined | ScreenRecordingTraceEntry = entries.get(TraceType.SCREEN_RECORDING)
       ? entries.get(TraceType.SCREEN_RECORDING)[0]
       : undefined;
 
-    (<any>this.htmlElement).currentTraceEntry = entry;
+    (this.htmlElement as any).currentTraceEntry = entry;
   }
 
-  public getViews(): View[] {
+  getViews(): View[] {
     return [
       new View(ViewType.OVERLAY, this.getDependencies(), this.htmlElement, 'ScreenRecording'),
     ];
   }
 
-  public getDependencies(): TraceType[] {
+  getDependencies(): TraceType[] {
     return ViewerScreenRecording.DEPENDENCIES;
   }
 
-  public static readonly DEPENDENCIES: TraceType[] = [TraceType.SCREEN_RECORDING];
+  static readonly DEPENDENCIES: TraceType[] = [TraceType.SCREEN_RECORDING];
   private htmlElement: HTMLElement;
 }
 

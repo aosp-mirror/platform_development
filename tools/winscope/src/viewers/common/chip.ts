@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-export default class Chip {
+export class Chip {
   short: string;
   long: string;
   type: string;

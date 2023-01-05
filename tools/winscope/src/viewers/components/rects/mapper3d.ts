@@ -134,7 +134,7 @@ class Mapper3D {
     const boundingBox = this.computeBoundingBox(rects3d, labels3d);
 
     const scene: Scene3D = {
-      boundingBox: boundingBox,
+      boundingBox,
       camera: {
         rotationFactor: this.cameraRotationFactor,
         zoomFactor: this.zoomFactor,
@@ -148,7 +148,7 @@ class Mapper3D {
   }
 
   private selectRectsToDraw(rects: Rectangle[]): Rectangle[] {
-    rects = rects.filter((rect) => rect.displayId == this.currentDisplayId);
+    rects = rects.filter((rect) => rect.displayId === this.currentDisplayId);
 
     if (this.showOnlyVisibleMode) {
       rects = rects.filter((rect) => rect.isVisible || rect.isDisplay);
@@ -191,16 +191,16 @@ class Mapper3D {
         topLeft: {
           x: rect2d.topLeft.x,
           y: rect2d.topLeft.y,
-          z: z,
+          z,
         },
         bottomRight: {
           x: rect2d.bottomRight.x,
           y: rect2d.bottomRight.y,
-          z: z,
+          z,
         },
         isOversized: false,
         cornerRadius: rect2d.cornerRadius,
-        darkFactor: darkFactor,
+        darkFactor,
         colorType: this.getColorType(rect2d),
         isClickable: rect2d.isClickable,
         transform: this.getTransform(rect2d),
@@ -346,7 +346,7 @@ class Mapper3D {
         linePoints: [lineStart, lineEnd],
         textCenter: lineEnd,
         text: rect2d.label,
-        isHighlighted: isHighlighted,
+        isHighlighted,
         rectId: rect2d.id,
       };
       labels3d.push(label3d);
@@ -366,7 +366,7 @@ class Mapper3D {
   }
 
   private computeBoundingBox(rects: Rect3D[], labels: Label3D[]): Box3D {
-    if (rects.length == 0) {
+    if (rects.length === 0) {
       return {
         width: 1,
         height: 1,
@@ -424,10 +424,10 @@ class Mapper3D {
     const depth = maxZ - minZ;
 
     return {
-      width: width,
-      height: height,
-      depth: depth,
-      center: center,
+      width,
+      height,
+      depth,
+      center,
       diagonal: Math.sqrt(width * width + height * height + depth * depth),
     };
   }
