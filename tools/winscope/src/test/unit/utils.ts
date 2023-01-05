@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import {LayerTraceEntry, WindowManagerState} from 'common/trace/flickerlib/common';
-import {Timestamp, TimestampType} from 'common/trace/timestamp';
-import {TraceFile} from 'common/trace/trace';
-import {TraceType} from 'common/trace/trace_type';
 import {Parser} from 'parsers/parser';
 import {ParserFactory} from 'parsers/parser_factory';
 import {CommonTestUtils} from 'test/common/utils';
+import {LayerTraceEntry, WindowManagerState} from 'trace/flickerlib/common';
+import {Timestamp, TimestampType} from 'trace/timestamp';
+import {TraceFile} from 'trace/trace';
+import {TraceType} from 'trace/trace_type';
 
 class UnitTestUtils extends CommonTestUtils {
   static async getParser(filename: string): Promise<Parser> {

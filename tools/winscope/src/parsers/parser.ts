@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import {Timestamp, TimestampType} from 'common/trace/timestamp';
-import {Trace, TraceFile} from 'common/trace/trace';
-import {TraceType} from 'common/trace/trace_type';
-import {ArrayUtils} from 'common/utils/array_utils';
+import {ArrayUtils} from 'common/array_utils';
+import {Timestamp, TimestampType} from 'trace/timestamp';
+import {Trace, TraceFile} from 'trace/trace';
+import {TraceType} from 'trace/trace_type';
 
 abstract class Parser {
   protected trace: TraceFile;

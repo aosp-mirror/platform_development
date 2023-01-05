@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import {Timestamp, TimestampType} from 'common/trace/timestamp';
-import {TraceFile} from 'common/trace/trace';
-import {TraceTreeNode} from 'common/trace/trace_tree_node';
-import {TraceType} from 'common/trace/trace_type';
-import {TimeUtils} from 'common/utils/time_utils';
+import {TimeUtils} from 'common/time_utils';
+import {Timestamp, TimestampType} from 'trace/timestamp';
+import {TraceFile} from 'trace/trace';
+import {TraceTreeNode} from 'trace/trace_tree_node';
+import {TraceType} from 'trace/trace_type';
 import {ImeUtils} from 'viewers/common/ime_utils';
 import {Parser} from './parser';
 import {InputMethodServiceTraceFileProto} from './proto_types';

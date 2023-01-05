@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import {ScreenRecordingUtils} from 'common/trace/screen_recording_utils';
-import {Timestamp, TimestampType} from 'common/trace/timestamp';
-import {TraceType} from 'common/trace/trace_type';
-import {ArrayUtils} from 'common/utils/array_utils';
-import {FunctionUtils} from 'common/utils/function_utils';
-import {TimeUtils} from 'common/utils/time_utils';
+import {ArrayUtils} from 'common/array_utils';
+import {FunctionUtils} from 'common/function_utils';
+import {TimeUtils} from 'common/time_utils';
+import {ScreenRecordingUtils} from 'trace/screen_recording_utils';
+import {Timestamp, TimestampType} from 'trace/timestamp';
+import {TraceType} from 'trace/trace_type';
 import {Timeline} from './trace_data';
 
 export type TimestampCallbackType = (timestamp: Timestamp | undefined) => void;

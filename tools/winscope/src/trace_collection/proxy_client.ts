@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {OnProgressUpdateType} from 'common/utils/function_utils';
-import {PersistentStore} from 'common/utils/persistent_store';
+import {OnProgressUpdateType} from 'common/function_utils';
+import {PersistentStore} from 'common/persistent_store';
 import {Device} from './connection';
 import {configMap} from './trace_collection_utils';
 

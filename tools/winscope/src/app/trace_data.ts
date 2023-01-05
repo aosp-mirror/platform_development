@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import {ScreenRecordingTraceEntry} from 'common/trace/screen_recording';
-import {Timestamp, TimestampType} from 'common/trace/timestamp';
-import {Trace, TraceFile} from 'common/trace/trace';
-import {TraceType} from 'common/trace/trace_type';
-import {ArrayUtils} from 'common/utils/array_utils';
-import {FunctionUtils, OnProgressUpdateType} from 'common/utils/function_utils';
+import {ArrayUtils} from 'common/array_utils';
+import {FunctionUtils, OnProgressUpdateType} from 'common/function_utils';
 import {Parser} from 'parsers/parser';
 import {ParserError, ParserFactory} from 'parsers/parser_factory';
+import {ScreenRecordingTraceEntry} from 'trace/screen_recording';
+import {Timestamp, TimestampType} from 'trace/timestamp';
+import {Trace, TraceFile} from 'trace/trace';
+import {TraceType} from 'trace/trace_type';
 
 interface Timeline {
   traceType: TraceType;

@@ -21,9 +21,9 @@ module.exports = (config) => {
   config.set({
     frameworks: ['jasmine', 'webpack'],
     plugins: ['karma-webpack', 'karma-chrome-launcher', 'karma-jasmine', 'karma-sourcemap-loader'],
-    files: [{pattern: 'src/main.component.spec.ts', watched: false}],
+    files: [{pattern: 'src/main_component_test.ts', watched: false}],
     preprocessors: {
-      'src/main.component.spec.ts': ['webpack', 'sourcemap'],
+      'src/main_component_test.ts': ['webpack', 'sourcemap'],
     },
     singleRun: true,
     browsers: ['ChromeHeadless'],

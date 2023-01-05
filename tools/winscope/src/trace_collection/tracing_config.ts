@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {PersistentStoreProxy} from 'common/utils/persistent_store_proxy';
+import {PersistentStoreProxy} from 'common/persistent_store_proxy';
 import {TraceConfigurationMap, TRACES} from './trace_collection_utils';
 
 export class TracingConfig {

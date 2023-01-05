@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {globalConfig} from 'common/utils/global_config';
+import {globalConfig} from 'common/global_config';
 
 export class OriginAllowList {
   private static readonly ALLOW_LIST_PROD = [

@@ -14,10 +14,10 @@
  * limitations under the License.d
  */
 
-import {TraceType} from 'common/trace/trace_type';
 import {HierarchyTreeBuilder} from 'test/unit/hierarchy_tree_builder';
 import {MockStorage} from 'test/unit/mock_storage';
 import {UnitTestUtils} from 'test/unit/utils';
+import {TraceType} from 'trace/trace_type';
 import {ImeUiData} from 'viewers/common/ime_ui_data';
 import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_utils';
 import {UserOptions} from 'viewers/common/user_options';
