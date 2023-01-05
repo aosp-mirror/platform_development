@@ -30,6 +30,7 @@ import {FormControl, FormGroup, Validators} from '@angular/forms';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {TimelineData} from 'app/timeline_data';
 import {TRACE_INFO} from 'app/trace_info';
+import {StringUtils} from 'common/string_utils';
 import {TimeUtils} from 'common/time_utils';
 import {TimestampChangeListener} from 'interfaces/timestamp_change_listener';
 import {ElapsedTimestamp, RealTimestamp, Timestamp, TimestampType} from 'trace/timestamp';
@@ -526,7 +527,10 @@ export class TimelineComponent implements TimestampChangeListener {
     }
     const target = event.target as HTMLInputElement;
 
-    const timestamp = new Timestamp(this.timelineData.getTimestampType()!, BigInt(target.value));
+    const timestamp = new Timestamp(
+      this.timelineData.getTimestampType()!,
+      StringUtils.parseBigIntStrippingUnit(target.value)
+    );
     this.timelineData.setCurrentTimestamp(timestamp);
     this.updateTimeInputValuesToCurrentTimestamp();
   }
