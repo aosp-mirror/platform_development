@@ -253,7 +253,12 @@ export class Canvas {
     const height = rect.bottomRight.y - rect.topLeft.y;
     const width = rect.bottomRight.x - rect.topLeft.x;
     const minEdge = Math.min(height, width);
-    const cornerRadius = Math.min(rect.cornerRadius, minEdge / 2);
+    let cornerRadius = Math.min(rect.cornerRadius, minEdge / 2);
+
+    // Force radius > 0, because radius === 0 could result in weird triangular shapes
+    // being drawn instead of rectangles. Seems like quadraticCurveTo() doesn't
+    // always handle properly the case with radius === 0.
+    cornerRadius = Math.max(cornerRadius, 0.01);
 
     // Create (rounded) rect shape
     return new THREE.Shape()
