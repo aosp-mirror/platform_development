@@ -32,12 +32,12 @@ import {proxyClient, ProxyClient, ProxyState} from 'trace_collection/proxy_clien
               python3 $ANDROID_BUILD_TOP/development/tools/winscope/src/adb/winscope_proxy.py
             </code>
           </p>
-          <p class="mat-body-1">Or get it from the AOSP repository.</p>
+          <p class="mat-body-1">Or get it from Code Search.</p>
         </div>
 
         <div class="further-adb-info-actions">
-          <button color="primary" mat-stroked-button (click)="downloadFromAosp()">
-            Download from AOSP
+          <button color="primary" mat-stroked-button (click)="downloadFromCodeSearch()">
+            Download from Code Search
           </button>
           <button color="primary" mat-stroked-button class="retry" (click)="restart()">
             Retry
@@ -58,12 +58,12 @@ import {proxyClient, ProxyClient, ProxyState} from 'trace_collection/proxy_clien
               python3 $ANDROID_BUILD_TOP/development/tools/winscope/src/adb/winscope_proxy.py
             </code>
           </p>
-          <p class="mat-body-1">Or get it from the AOSP repository.</p>
+          <p class="mat-body-1">Or get it from Code Search.</p>
         </div>
 
         <div class="further-adb-info-actions">
-          <button color="primary" mat-stroked-button (click)="downloadFromAosp()">
-            Download from AOSP
+          <button color="primary" mat-stroked-button (click)="downloadFromCodeSearch()">
+            Download from Code Search
           </button>
           <button color="primary" mat-stroked-button class="retry" (click)="restart()">
             Retry
@@ -136,7 +136,7 @@ export class AdbProxyComponent {
   proxyKeyItem = '';
   readonly proxyVersion = this.proxy.VERSION;
   readonly downloadProxyUrl: string =
-    'https://android.googlesource.com/platform/development/+/master/tools/winscope/adb_proxy/winscope_proxy.py';
+    'https://source.corp.google.com/android/development/tools/winscope/src/adb/winscope_proxy.py';
 
   restart() {
     this.addKey.emit(this.proxyKeyItem);
@@ -144,7 +144,7 @@ export class AdbProxyComponent {
     this.proxyChange.emit(this.proxy);
   }
 
-  downloadFromAosp() {
+  downloadFromCodeSearch() {
     window.open(this.downloadProxyUrl, '_blank')?.focus();
   }
 }
