@@ -43,7 +43,7 @@ export class TimeUtils {
     const units = TimeUtils.units;
 
     let leftNanos = timestampNanos;
-    const parts = units
+    const parts: Array<{value: bigint; unit: string}> = units
       .slice()
       .reverse()
       .map(({nanosInUnit, unit}) => {
@@ -52,7 +52,7 @@ export class TimeUtils {
           amountOfUnit = leftNanos / BigInt(nanosInUnit);
         }
         leftNanos = leftNanos % BigInt(nanosInUnit);
-        return `${amountOfUnit}${unit}`;
+        return {value: amountOfUnit, unit};
       });
 
     if (hideNs) {
@@ -60,11 +60,11 @@ export class TimeUtils {
     }
 
     // Remove all 0ed units at start
-    while (parts.length > 1 && parseInt(parts[0]) === 0) {
+    while (parts.length > 1 && parts[0].value === 0n) {
       parts.shift();
     }
 
-    return parts.join('');
+    return parts.map((part) => `${part.value}${part.unit}`).join('');
   }
 
   private static nanosecondsToHumanReal(timestampNanos: number | bigint, hideNs = true): string {
@@ -91,14 +91,14 @@ export class TimeUtils {
     const usedValues = timestampHuman
       .split(/[a-z]+/)
       .filter((it) => it !== '')
-      .map((it) => parseInt(it));
+      .map((it) => Math.floor(Number(it)));
 
     let ns = BigInt(0);
 
     for (let i = 0; i < usedUnits.length; i++) {
       const unit = usedUnits[i];
       const value = usedValues[i];
-      const unitData = units.find((it) => it.unit == unit)!;
+      const unitData = units.find((it) => it.unit === unit)!;
       ns += BigInt(unitData.nanosInUnit) * BigInt(value);
     }
 
@@ -111,7 +111,7 @@ export class TimeUtils {
     }
 
     // Add trailing Z if it isn't there yet
-    if (timestampHuman[timestampHuman.length - 1] != 'Z') {
+    if (timestampHuman[timestampHuman.length - 1] !== 'Z') {
       timestampHuman += 'Z';
     }
 
@@ -119,7 +119,7 @@ export class TimeUtils {
     let nanoSeconds = 0;
     if (timestampHuman.includes('.')) {
       const milliseconds = timestampHuman.split('.')[1].replace('Z', '');
-      nanoSeconds = parseInt(milliseconds.padEnd(9, '0').slice(3));
+      nanoSeconds = Math.floor(Number(milliseconds.padEnd(9, '0').slice(3)));
     }
 
     return new RealTimestamp(

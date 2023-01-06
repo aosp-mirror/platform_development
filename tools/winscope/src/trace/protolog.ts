@@ -69,7 +69,7 @@ class FormattedLogMessage extends LogMessage {
     if (
       timestampType === TimestampType.REAL &&
       realToElapsedTimeOffsetNs !== undefined &&
-      realToElapsedTimeOffsetNs != 0n
+      realToElapsedTimeOffsetNs !== 0n
     ) {
       timestamp = realToElapsedTimeOffsetNs + BigInt(proto.elapsedRealtimeNanos);
       time = TimeUtils.format(new RealTimestamp(timestamp));
@@ -94,7 +94,7 @@ class UnformattedLogMessage extends LogMessage {
     if (
       timestampType === TimestampType.REAL &&
       realToElapsedTimeOffsetNs !== undefined &&
-      realToElapsedTimeOffsetNs != 0n
+      realToElapsedTimeOffsetNs !== 0n
     ) {
       timestamp = realToElapsedTimeOffsetNs + BigInt(proto.elapsedRealtimeNanos);
       time = TimeUtils.format(
@@ -108,7 +108,7 @@ class UnformattedLogMessage extends LogMessage {
     super(
       formatText(message.message, proto),
       time,
-      (<any>configJson).groups[message.group].tag,
+      (configJson as any).groups[message.group].tag,
       message.level,
       message.at,
       timestamp
@@ -129,7 +129,7 @@ function formatText(messageFormat: any, data: any) {
   let booleanParamsIdx = 0;
 
   for (let i = 0; i < messageFormat.length; ) {
-    if (messageFormat[i] == '%') {
+    if (messageFormat[i] === '%') {
       if (i + 1 >= messageFormat.length) {
         // Should never happen - protologtool checks for that
         throw new Error('Invalid format string');

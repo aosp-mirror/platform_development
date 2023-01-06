@@ -219,7 +219,7 @@ export class AppComponent implements TraceDataListener {
 
     const storeDarkMode = this.store.get('dark-mode');
     const prefersDarkQuery = window.matchMedia?.('(prefers-color-scheme: dark)');
-    this.setDarkMode(storeDarkMode != null ? storeDarkMode == 'true' : prefersDarkQuery.matches);
+    this.setDarkMode(storeDarkMode ? storeDarkMode === 'true' : prefersDarkQuery.matches);
 
     if (!customElements.get('viewer-input-method')) {
       customElements.define(
@@ -283,19 +283,19 @@ export class AppComponent implements TraceDataListener {
     return this.timelineData.getScreenRecordingVideo();
   }
 
-  public onTraceDataLoaded(viewers: Viewer[]) {
+  onTraceDataLoaded(viewers: Viewer[]) {
     this.viewers = viewers;
     this.dataLoaded = true;
     this.changeDetectorRef.detectChanges();
   }
 
-  public onTraceDataUnloaded() {
+  onTraceDataUnloaded() {
     proxyClient.adbData = [];
     this.dataLoaded = false;
     this.changeDetectorRef.detectChanges();
   }
 
-  public setDarkMode(enabled: boolean) {
+  setDarkMode(enabled: boolean) {
     document.body.classList.toggle('dark-mode', enabled);
     this.store.add('dark-mode', `${enabled}`);
     this.isDarkModeOn = enabled;

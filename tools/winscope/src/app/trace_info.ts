@@ -29,15 +29,15 @@ const ACCESSIBILITY_ICON = 'accessibility_new';
 const TAG_ICON = 'details';
 const TRACE_ERROR_ICON = 'warning';
 
-type traceInfoMap = {
+interface TraceInfoMap {
   [key: number]: {
     name: string;
     icon: string;
     color: string;
   };
-};
+}
 
-export const TRACE_INFO: traceInfoMap = {
+export const TRACE_INFO: TraceInfoMap = {
   [TraceType.ACCESSIBILITY]: {
     name: 'Accessibility',
     icon: ACCESSIBILITY_ICON,

@@ -56,19 +56,19 @@ class ViewerTransactions implements Viewer {
     });
   }
 
-  public notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
+  notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
     this.presenter.notifyCurrentTraceEntries(entries);
   }
 
-  public getViews(): View[] {
+  getViews(): View[] {
     return [new View(ViewType.TAB, this.getDependencies(), this.htmlElement, 'Transactions')];
   }
 
-  public getDependencies(): TraceType[] {
+  getDependencies(): TraceType[] {
     return ViewerTransactions.DEPENDENCIES;
   }
 
-  public static readonly DEPENDENCIES: TraceType[] = [TraceType.TRANSACTIONS];
+  static readonly DEPENDENCIES: TraceType[] = [TraceType.TRANSACTIONS];
   private htmlElement: HTMLElement;
   private presenter: Presenter;
 }

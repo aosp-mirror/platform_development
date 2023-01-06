@@ -36,7 +36,7 @@ class ParserSurfaceFlinger extends Parser {
   }
 
   override decodeTrace(buffer: Uint8Array): any[] {
-    const decoded = <any>LayersTraceFileProto.decode(buffer);
+    const decoded = LayersTraceFileProto.decode(buffer) as any;
     if (Object.prototype.hasOwnProperty.call(decoded, 'realToElapsedTimeOffsetNanos')) {
       this.realToElapsedTimeOffsetNs = BigInt(decoded.realToElapsedTimeOffsetNanos);
     } else {

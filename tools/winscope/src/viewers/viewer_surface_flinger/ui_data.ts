@@ -20,11 +20,11 @@ import {HierarchyTreeNode, PropertiesTreeNode} from 'viewers/common/ui_tree_util
 import {UserOptions} from 'viewers/common/user_options';
 
 export class UiData {
-  dependencies: Array<TraceType>;
+  dependencies: TraceType[];
   rects: Rectangle[] = [];
   displayIds: number[] = [];
-  highlightedItems: Array<string> = [];
-  pinnedItems: Array<HierarchyTreeNode> = [];
+  highlightedItems: string[] = [];
+  pinnedItems: HierarchyTreeNode[] = [];
   hierarchyUserOptions: UserOptions = {};
   propertiesUserOptions: UserOptions = {};
   tree: HierarchyTreeNode | null = null;
@@ -32,7 +32,7 @@ export class UiData {
   selectedLayer: Layer = {};
   displayPropertyGroups = true;
 
-  constructor(dependencies?: Array<TraceType>) {
+  constructor(dependencies?: TraceType[]) {
     this.dependencies = dependencies ?? [];
   }
 }

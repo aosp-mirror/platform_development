@@ -160,30 +160,30 @@ export class ViewerProtologComponent {
   }
 
   @Input()
-  public set inputData(data: UiData) {
+  set inputData(data: UiData) {
     this.uiData = data;
     if (this.uiData.currentMessageIndex !== undefined && this.scrollComponent) {
       this.scrollComponent.scrollToIndex(this.uiData.currentMessageIndex);
     }
   }
 
-  public onLogLevelsChange(event: MatSelectChange) {
+  onLogLevelsChange(event: MatSelectChange) {
     this.emitEvent(Events.LogLevelsFilterChanged, event.value);
   }
 
-  public onTagsChange(event: MatSelectChange) {
+  onTagsChange(event: MatSelectChange) {
     this.emitEvent(Events.TagsFilterChanged, event.value);
   }
 
-  public onSourceFilesChange(event: MatSelectChange) {
+  onSourceFilesChange(event: MatSelectChange) {
     this.emitEvent(Events.SourceFilesFilterChanged, event.value);
   }
 
-  public onSearchStringChange() {
+  onSearchStringChange() {
     this.emitEvent(Events.SearchStringFilterChanged, this.searchString);
   }
 
-  public isCurrentMessage(index: number): boolean {
+  isCurrentMessage(index: number): boolean {
     return index === this.uiData.currentMessageIndex;
   }
 
@@ -197,7 +197,7 @@ export class ViewerProtologComponent {
 
   @ViewChild(CdkVirtualScrollViewport) scrollComponent!: CdkVirtualScrollViewport;
 
-  public uiData: UiData = UiData.EMPTY;
+  uiData: UiData = UiData.EMPTY;
   private searchString = '';
   private elementRef: ElementRef;
 }

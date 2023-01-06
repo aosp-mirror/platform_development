@@ -38,13 +38,14 @@ function readIntdefMap(): Map<string, string> {
   const keys = Object.keys(config.intDefColumn);
 
   keys.forEach((key) => {
-    const value = config.intDefColumn[<keyof typeof config.intDefColumn>key];
+    const value = config.intDefColumn[key as keyof typeof config.intDefColumn];
     map.set(key, value);
   });
 
   return map;
 }
-export default class ObjectFormatter {
+
+export class ObjectFormatter {
   static displayDefaults: boolean = false;
   private static INVALID_ELEMENT_PROPERTIES = config.invalidProperties;
 
@@ -77,7 +78,7 @@ export default class ObjectFormatter {
         // private kotlin variables from kotlin
         if (it.startsWith(`_`)) return false;
         // some predefined properties used only internally (e.g., children, ref, diff)
-        if (this.INVALID_ELEMENT_PROPERTIES.includes(it)) return false;
+        if (ObjectFormatter.INVALID_ELEMENT_PROPERTIES.includes(it)) return false;
 
         const value = entry[it];
         // only non-empty arrays of non-flicker objects (otherwise they are in hierarchy)
@@ -85,7 +86,7 @@ export default class ObjectFormatter {
         // non-flicker object
         return !value?.stableId;
       });
-      properties.forEach(function (prop) {
+      properties.forEach((prop) => {
         if (typeof entry[prop] !== 'function' && props.indexOf(prop) === -1) {
           props.push(prop);
         }
@@ -103,7 +104,7 @@ export default class ObjectFormatter {
    * @return The formatted object
    */
   static format(obj: any): PropertiesDump {
-    const properties = this.getProperties(obj);
+    const properties = ObjectFormatter.getProperties(obj);
     const sortedProperties = properties.sort();
 
     const result: PropertiesDump = {};
@@ -112,25 +113,25 @@ export default class ObjectFormatter {
       const value: any = obj[key];
 
       if (value === null || value === undefined) {
-        if (this.displayDefaults) {
+        if (ObjectFormatter.displayDefaults) {
           result[key] = value;
         }
         return;
       }
 
-      if (value || this.displayDefaults) {
+      if (value || ObjectFormatter.displayDefaults) {
         // raw values (e.g., false or 0)
         if (!value) {
           result[key] = value;
           // flicker obj
         } else if (value.prettyPrint) {
           const isEmpty = value.isEmpty === true;
-          if (!isEmpty || this.displayDefaults) {
+          if (!isEmpty || ObjectFormatter.displayDefaults) {
             result[key] = value.prettyPrint();
           }
         } else {
           // converted proto to flicker
-          const translatedObject = this.translateObject(key, value);
+          const translatedObject = ObjectFormatter.translateObject(key, value);
           if (translatedObject) {
             if (translatedObject.prettyPrint) {
               result[key] = translatedObject.prettyPrint();
@@ -138,15 +139,15 @@ export default class ObjectFormatter {
               result[key] = translatedObject;
             }
             // objects - recursive call
-          } else if (value && typeof value == `object`) {
-            const childObj = this.format(value) as any;
-            const isEmpty = Object.entries(childObj).length == 0 || childObj.isEmpty;
-            if (!isEmpty || this.displayDefaults) {
+          } else if (value && typeof value === `object`) {
+            const childObj = ObjectFormatter.format(value) as any;
+            const isEmpty = Object.entries(childObj).length === 0 || childObj.isEmpty;
+            if (!isEmpty || ObjectFormatter.displayDefaults) {
               result[key] = childObj;
             }
           } else {
             // values
-            result[key] = this.translateIntDef(obj, key, value);
+            result[key] = ObjectFormatter.translateIntDef(obj, key, value);
           }
         }
       }
@@ -192,9 +193,11 @@ export default class ObjectFormatter {
       case `TransformProto`:
         return toTransform(obj);
       case 'ColorTransformProto': {
-        const formatted = this.formatColorTransform(obj.val);
+        const formatted = ObjectFormatter.formatColorTransform(obj.val);
         return `${formatted}`;
       }
+      default:
+      // handle other cases below
     }
 
     // Raw long number (no type name, no constructor name, no useful toString() method)
@@ -256,16 +259,16 @@ export default class ObjectFormatter {
 
     let translatedValue: string = value;
     // Parse Flicker objects (no intdef annotation supported)
-    if (this.FLICKER_INTDEF_MAP.has(propertyPath)) {
-      translatedValue = this.getIntFlagsAsStrings(
+    if (ObjectFormatter.FLICKER_INTDEF_MAP.has(propertyPath)) {
+      translatedValue = ObjectFormatter.getIntFlagsAsStrings(
         value,
-        <string>this.FLICKER_INTDEF_MAP.get(propertyPath)
+        ObjectFormatter.FLICKER_INTDEF_MAP.get(propertyPath) as string
       );
     } else {
       // If it's a proto, search on the proto definition for the intdef type
-      const typeDefSpec = this.getTypeDefSpec(parentObj, propertyName);
+      const typeDefSpec = ObjectFormatter.getTypeDefSpec(parentObj, propertyName);
       if (typeDefSpec) {
-        translatedValue = this.getIntFlagsAsStrings(value, typeDefSpec);
+        translatedValue = ObjectFormatter.getIntFlagsAsStrings(value, typeDefSpec);
       }
     }
 
@@ -281,18 +284,18 @@ export default class ObjectFormatter {
   private static getIntFlagsAsStrings(intFlags: any, annotationType: string): string {
     const flags = [];
 
-    const mapping = intDefMapping[<keyof typeof intDefMapping>annotationType].values;
+    const mapping = intDefMapping[annotationType as keyof typeof intDefMapping].values;
     const knownFlagValues = Object.keys(mapping)
       .reverse()
-      .map((x) => parseInt(x));
+      .map((x) => Math.floor(Number(x)));
 
-    if (knownFlagValues.length == 0) {
+    if (knownFlagValues.length === 0) {
       console.warn('No mapping for type', annotationType);
       return intFlags + '';
     }
 
     // Will only contain bits that have not been associated with a flag.
-    const parsedIntFlags = parseInt(intFlags);
+    const parsedIntFlags = Math.floor(Number(intFlags));
     let leftOver = parsedIntFlags;
 
     for (const flagValue of knownFlagValues) {
@@ -300,7 +303,7 @@ export default class ObjectFormatter {
         (leftOver & flagValue && (intFlags & flagValue) === flagValue) ||
         (parsedIntFlags === 0 && flagValue === 0)
       ) {
-        flags.push(mapping[<keyof typeof mapping>flagValue]);
+        flags.push(mapping[flagValue as keyof typeof mapping]);
 
         leftOver = leftOver & ~flagValue;
       }

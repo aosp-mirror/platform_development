@@ -86,7 +86,7 @@ describe('TimelineComponent', () => {
       [
         {
           traceType: TraceType.SURFACE_FLINGER,
-          timestamps: timestamps,
+          timestamps,
         },
       ],
       undefined
@@ -117,7 +117,7 @@ describe('TimelineComponent', () => {
       [
         {
           traceType: TraceType.SURFACE_FLINGER,
-          timestamps: timestamps,
+          timestamps,
         },
       ],
       undefined

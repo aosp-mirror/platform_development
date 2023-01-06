@@ -186,42 +186,42 @@ export class UploadTracesComponent implements FilesDownloadListener {
     this.traceData.clear();
   }
 
-  public onFilesDownloadStart() {
+  onFilesDownloadStart() {
     this.isLoadingFiles = true;
     this.progressMessage = 'Downloading files...';
     this.progressPercentage = undefined;
     this.changeDetectorRef.detectChanges();
   }
 
-  public async onFilesDownloaded(files: File[]) {
+  async onFilesDownloaded(files: File[]) {
     await this.processFiles(files);
   }
 
-  public async onInputFiles(event: Event) {
+  async onInputFiles(event: Event) {
     const files = this.getInputFiles(event);
     await this.processFiles(files);
   }
 
-  public onViewTracesButtonClick() {
+  onViewTracesButtonClick() {
     this.traceDataLoaded.emit();
   }
 
-  public onClearButtonClick() {
+  onClearButtonClick() {
     this.traceData.clear();
     this.changeDetectorRef.detectChanges();
   }
 
-  public onFileDragIn(e: DragEvent) {
+  onFileDragIn(e: DragEvent) {
     e.preventDefault();
     e.stopPropagation();
   }
 
-  public onFileDragOut(e: DragEvent) {
+  onFileDragOut(e: DragEvent) {
     e.preventDefault();
     e.stopPropagation();
   }
 
-  public async onHandleFileDrop(e: DragEvent) {
+  async onHandleFileDrop(e: DragEvent) {
     e.preventDefault();
     e.stopPropagation();
     const droppedFiles = e.dataTransfer?.files;
@@ -229,7 +229,7 @@ export class UploadTracesComponent implements FilesDownloadListener {
     await this.processFiles(Array.from(droppedFiles));
   }
 
-  public onRemoveTrace(event: MouseEvent, trace: Trace) {
+  onRemoveTrace(event: MouseEvent, trace: Trace) {
     event.preventDefault();
     event.stopPropagation();
     this.traceData.removeTrace(trace.type);

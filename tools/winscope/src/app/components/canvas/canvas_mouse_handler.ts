@@ -22,7 +22,7 @@ export type DropListener = DragListener;
 
 export class CanvasMouseHandler {
   // Ordered top most element to bottom most
-  private draggableObjects = new Array<DraggableCanvasObject>();
+  private draggableObjects: DraggableCanvasObject[] = [];
   private draggingObject: DraggableCanvasObject | undefined = undefined;
 
   private onDrag = new Map<DraggableCanvasObject, DragListener>();
@@ -47,7 +47,7 @@ export class CanvasMouseHandler {
     });
   }
 
-  public registerDraggableObject(
+  registerDraggableObject(
     draggableObject: DraggableCanvasObject,
     onDrag: DragListener,
     onDrop: DropListener
@@ -56,7 +56,7 @@ export class CanvasMouseHandler {
     this.onDrop.set(draggableObject, onDrop);
   }
 
-  public notifyDrawnOnTop(draggableObject: DraggableCanvasObject) {
+  notifyDrawnOnTop(draggableObject: DraggableCanvasObject) {
     const foundIndex = this.draggableObjects.indexOf(draggableObject);
     if (foundIndex !== -1) {
       this.draggableObjects.splice(foundIndex, 1);

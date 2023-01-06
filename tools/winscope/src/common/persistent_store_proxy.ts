@@ -14,38 +14,30 @@
  * limitations under the License.
  */
 
-export type StoreObject =
-  | {[key: string | number]: StoreObject | string | boolean | undefined}
-  | StoreObject[]
-  | string[]
-  | boolean[];
-
 export class PersistentStoreProxy {
-  public static new<T extends StoreObject>(key: string, defaultState: T, storage: Storage): T {
+  static new<T extends object>(key: string, defaultState: T, storage: Storage): T {
     const storedState = JSON.parse(storage.getItem(key) ?? '{}');
-    const currentState = mergeDeep({}, deepClone(defaultState));
+    const currentState = mergeDeep({}, structuredClone(defaultState));
     mergeDeepKeepingStructure(currentState, storedState);
-    return wrapWithPersistentStoreProxy<T>(key, currentState, storage);
+    return wrapWithPersistentStoreProxy(key, currentState, storage) as T;
   }
 }
 
-function wrapWithPersistentStoreProxy<T extends StoreObject>(
+function wrapWithPersistentStoreProxy(
   storeKey: string,
-  object: T,
+  object: object,
   storage: Storage,
-  baseObject: T = object
-): T {
+  baseObject: object = object
+): object {
   const updatableProps: string[] = [];
 
-  let key: number | string;
-  for (key in object) {
-    const value = object[key];
+  for (const [key, value] of Object.entries(object)) {
     if (typeof value === 'string' || typeof value === 'boolean' || value === undefined) {
       if (!Array.isArray(object)) {
         updatableProps.push(key);
       }
     } else {
-      object[key] = wrapWithPersistentStoreProxy(storeKey, value, storage, baseObject);
+      (object as any)[key] = wrapWithPersistentStoreProxy(storeKey, value, storage, baseObject);
     }
   }
 
@@ -60,7 +52,7 @@ function wrapWithPersistentStoreProxy<T extends StoreObject>(
         return true;
       }
       if (!Array.isArray(target) && updatableProps.includes(prop)) {
-        target[prop] = newValue;
+        (target as any)[prop] = newValue;
         storage.setItem(storeKey, JSON.stringify(baseObject));
         return true;
       }
@@ -121,8 +113,4 @@ function mergeDeep(target: any, ...sources: any): any {
   }
 
   return mergeDeep(target, ...sources);
-}
-
-function deepClone(obj: StoreObject): StoreObject {
-  return JSON.parse(JSON.stringify(obj));
 }

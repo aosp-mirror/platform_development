@@ -16,6 +16,12 @@
 
 import {TraceType} from 'trace/trace_type';
 
-export type Segment = {from: number; to: number};
-export type BigIntSegment = {from: bigint; to: bigint};
-export type TimelineData = Map<TraceType, bigint[]>;
+export interface Segment {
+  from: number;
+  to: number;
+}
+export interface BigIntSegment {
+  from: bigint;
+  to: bigint;
+}
+export type TimelineData = Map<TraceType, Array<bigint>>;

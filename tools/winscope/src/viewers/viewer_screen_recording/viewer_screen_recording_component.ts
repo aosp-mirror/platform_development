@@ -110,7 +110,7 @@ class ViewerScreenRecordingComponent {
   }
 
   @Input()
-  public set currentTraceEntry(entry: undefined | ScreenRecordingTraceEntry) {
+  set currentTraceEntry(entry: undefined | ScreenRecordingTraceEntry) {
     if (entry === undefined) {
       this.videoCurrentTime = undefined;
       return;
@@ -123,13 +123,13 @@ class ViewerScreenRecordingComponent {
     this.videoCurrentTime = entry.videoTimeSeconds;
   }
 
-  public onMinimizeButtonClick() {
+  onMinimizeButtonClick() {
     this.isMinimized = !this.isMinimized;
   }
 
-  public videoUrl: undefined | SafeUrl = undefined;
-  public videoCurrentTime: number | undefined = undefined;
-  public isMinimized = false;
+  videoUrl: undefined | SafeUrl = undefined;
+  videoCurrentTime: number | undefined = undefined;
+  isMinimized = false;
 
   private elementRef: ElementRef;
   private sanitizer: DomSanitizer;

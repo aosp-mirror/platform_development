@@ -114,7 +114,7 @@ export class MatDrawer {
   @Input() mode: 'push' | 'overlay' = 'overlay';
   @Input() baseHeight = 0;
 
-  public getBaseHeight() {
+  getBaseHeight() {
     return this.baseHeight;
   }
 }
@@ -158,7 +158,7 @@ export class MatDrawerContent /*extends MatDrawerContentBase*/ {
     });
   }
 
-  public setMargins(margins: {top: number | null; bottom: number | null}) {
+  setMargins(margins: {top: number | null; bottom: number | null}) {
     this.contentMargins = margins;
   }
 }

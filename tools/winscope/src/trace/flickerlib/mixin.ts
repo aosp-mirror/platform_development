@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import ObjectFormatter from './ObjectFormatter';
+import {ObjectFormatter} from './ObjectFormatter';
 
 /**
  * Get the properties of a WM object for display.

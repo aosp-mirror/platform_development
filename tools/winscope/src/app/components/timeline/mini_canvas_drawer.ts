@@ -30,7 +30,7 @@ export class MiniCanvasDrawerInput {
     public timelineEntries: TimelineData
   ) {}
 
-  public transform(mapToRange: Segment): MiniCanvasDrawerData {
+  transform(mapToRange: Segment): MiniCanvasDrawerData {
     const transformer = new Transformer(this.fullRange, mapToRange);
     return new MiniCanvasDrawerData(
       transformer.transform(this.selectedPosition),
@@ -74,13 +74,13 @@ export class Transformer {
     this.toOffset = Math.round(this.toRange.from);
   }
 
-  public transform(x: bigint): number {
+  transform(x: bigint): number {
     return (
       this.toOffset + (this.targetWidth * Number(x - this.fromOffset)) / Number(this.fromWidth)
     );
   }
 
-  public untransform(x: number): bigint {
+  untransform(x: number): bigint {
     x = Math.round(x);
     return (
       this.fromOffset + (BigInt(x - this.toOffset) * this.fromWidth) / BigInt(this.targetWidth)
@@ -100,7 +100,7 @@ class MiniCanvasDrawerData {
     public transformer: Transformer
   ) {}
 
-  public toOutput(): MiniCanvasDrawerOutput {
+  toOutput(): MiniCanvasDrawerOutput {
     return new MiniCanvasDrawerOutput(this.transformer.untransform(this.selectedPosition), {
       from: this.transformer.untransform(this.selection.from),
       to: this.transformer.untransform(this.selection.to),
@@ -109,8 +109,8 @@ class MiniCanvasDrawerData {
 }
 
 export class MiniCanvasDrawer implements CanvasDrawer {
-  public ctx: CanvasRenderingContext2D;
-  public handler: CanvasMouseHandler;
+  ctx: CanvasRenderingContext2D;
+  handler: CanvasMouseHandler;
 
   private activePointer: DraggableCanvasObject;
   private leftFocusSectionSelector: DraggableCanvasObject;
@@ -120,19 +120,19 @@ export class MiniCanvasDrawer implements CanvasDrawer {
     return this.getHeight() / 6;
   }
 
-  public getXScale() {
+  getXScale() {
     return this.ctx.getTransform().m11;
   }
 
-  public getYScale() {
+  getYScale() {
     return this.ctx.getTransform().m22;
   }
 
-  public getWidth() {
+  getWidth() {
     return this.canvas.width / this.getXScale();
   }
 
-  public getHeight() {
+  getHeight() {
     return this.canvas.height / this.getYScale();
   }
 
@@ -298,7 +298,7 @@ export class MiniCanvasDrawer implements CanvasDrawer {
     return this.getHeight() - this.padding.top - this.padding.bottom;
   }
 
-  public draw() {
+  draw() {
     this.ctx.clearRect(0, 0, this.getWidth(), this.getHeight());
 
     this.drawSelectionBackground();
@@ -387,7 +387,7 @@ export class MiniCanvasDrawer implements CanvasDrawer {
     const spacing = (this.getWidth() - barSets * barsInSetWidth - edgeBarWidth) / bars;
     let start = edgeBarWidth + spacing;
     for (let i = 1; i < bars; i++) {
-      if (i % 10 == 0) {
+      if (i % 10 === 0) {
         // Draw boldbar
         this.ctx.fillStyle = Color.GUIDE_BAR;
         this.ctx.fillRect(

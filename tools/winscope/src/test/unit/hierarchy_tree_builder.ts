@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Chip from 'viewers/common/chip';
+import {Chip} from 'viewers/common/chip';
 import {HierarchyTreeNode} from 'viewers/common/ui_tree_utils';
 
 class HierarchyTreeBuilder {

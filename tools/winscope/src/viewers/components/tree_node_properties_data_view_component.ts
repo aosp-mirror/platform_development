@@ -33,20 +33,20 @@ import {treeNodePropertiesDataViewStyles} from 'viewers/components/styles/tree_n
 export class TreeNodePropertiesDataViewComponent {
   @Input() item!: PropertiesTreeNode;
 
-  public valueClass() {
+  valueClass() {
     if (!this.item.propertyValue) {
       return null;
     }
 
-    if (this.item.propertyValue == 'null') {
+    if (this.item.propertyValue === 'null') {
       return 'null';
     }
 
-    if (this.item.propertyValue == 'true') {
+    if (this.item.propertyValue === 'true') {
       return 'true';
     }
 
-    if (this.item.propertyValue == 'false') {
+    if (this.item.propertyValue === 'false') {
       return 'false';
     }
 

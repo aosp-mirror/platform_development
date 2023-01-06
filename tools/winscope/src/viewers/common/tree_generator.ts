@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import {FilterType, TreeNode} from 'common/tree_utils';
-import ObjectFormatter from 'trace/flickerlib/ObjectFormatter';
+import {ObjectFormatter} from 'trace/flickerlib/ObjectFormatter';
 import {TraceTreeNode} from 'trace/trace_tree_node';
 import {
   GPU_CHIP,
@@ -49,42 +49,42 @@ export class TreeGenerator {
   private isModified?: IsModifiedCallbackType;
   private newMapping: Map<string, TraceTreeNode> | null = null;
   private oldMapping: Map<string, TraceTreeNode> | null = null;
-  private readonly pinnedIds: Array<string>;
-  private pinnedItems: Array<HierarchyTreeNode> = [];
-  private relZParentIds: Array<string> = [];
-  private flattenedChildren: Array<HierarchyTreeNode> = [];
+  private readonly pinnedIds: string[];
+  private pinnedItems: HierarchyTreeNode[] = [];
+  private relZParentIds: string[] = [];
+  private flattenedChildren: HierarchyTreeNode[] = [];
 
-  constructor(inputEntry: TraceTreeNode, filter: FilterType, pinnedIds?: Array<string>) {
+  constructor(inputEntry: TraceTreeNode, filter: FilterType, pinnedIds?: string[]) {
     this.inputEntry = inputEntry;
     this.filter = filter;
     this.pinnedIds = pinnedIds ?? [];
   }
 
-  public setIsOnlyVisibleView(enabled: boolean): TreeGenerator {
+  setIsOnlyVisibleView(enabled: boolean): TreeGenerator {
     this.isOnlyVisibleView = enabled;
     return this;
   }
 
-  public setIsSimplifyNames(enabled: boolean): TreeGenerator {
+  setIsSimplifyNames(enabled: boolean): TreeGenerator {
     this.isSimplifyNames = enabled;
     return this;
   }
 
-  public setIsFlatView(enabled: boolean): TreeGenerator {
+  setIsFlatView(enabled: boolean): TreeGenerator {
     this.isFlatView = enabled;
     return this;
   }
 
-  public generateTree(): HierarchyTreeNode | null {
+  generateTree(): HierarchyTreeNode | null {
     return this.getCustomizedTree(this.inputEntry);
   }
 
-  public compareWith(previousEntry: TraceTreeNode | null): TreeGenerator {
+  compareWith(previousEntry: TraceTreeNode | null): TreeGenerator {
     this.previousEntry = previousEntry;
     return this;
   }
 
-  public withUniqueNodeId(getNodeId?: GetNodeIdCallbackType): TreeGenerator {
+  withUniqueNodeId(getNodeId?: GetNodeIdCallbackType): TreeGenerator {
     this.getNodeId = (node: TraceTreeNode | null) => {
       const id = getNodeId ? getNodeId(node) : this.defaultNodeIdCallback(node);
       if (id === null || id === undefined) {
@@ -96,12 +96,12 @@ export class TreeGenerator {
     return this;
   }
 
-  public withModifiedCheck(isModified?: IsModifiedCallbackType): TreeGenerator {
+  withModifiedCheck(isModified?: IsModifiedCallbackType): TreeGenerator {
     this.isModified = isModified ?? this.defaultModifiedCheck;
     return this;
   }
 
-  public generateFinalTreeWithDiff(): HierarchyTreeNode | null {
+  generateFinalTreeWithDiff(): HierarchyTreeNode | null {
     this.newMapping = this.generateIdToNodeMapping(this.inputEntry);
     this.oldMapping = this.previousEntry ? this.generateIdToNodeMapping(this.previousEntry) : null;
 
@@ -135,11 +135,11 @@ export class TreeGenerator {
     return Object.freeze(newTree);
   }
 
-  public getPinnedItems(): Array<HierarchyTreeNode> {
+  getPinnedItems(): HierarchyTreeNode[] {
     return this.pinnedItems;
   }
 
-  private flattenChildren(children: Array<HierarchyTreeNode>) {
+  private flattenChildren(children: HierarchyTreeNode[]) {
     for (let i = 0; i < children.length; i++) {
       const child = children[i];
       const childIsVisibleNode =
@@ -184,11 +184,11 @@ export class TreeGenerator {
   }
 
   private addChips(tree: HierarchyTreeNode): HierarchyTreeNode {
-    if (tree.hwcCompositionType == HwcCompositionType.CLIENT) {
+    if (tree.hwcCompositionType === HwcCompositionType.CLIENT) {
       tree.chips.push(GPU_CHIP);
     } else if (
-      tree.hwcCompositionType == HwcCompositionType.DEVICE ||
-      tree.hwcCompositionType == HwcCompositionType.SOLID_COLOR
+      tree.hwcCompositionType === HwcCompositionType.DEVICE ||
+      tree.hwcCompositionType === HwcCompositionType.SOLID_COLOR
     ) {
       tree.chips.push(HWC_CHIP);
     }
@@ -323,7 +323,7 @@ export class TreeGenerator {
     oldTree: TraceTreeNode | null,
     newTreeSiblings: Array<TraceTreeNode | null>,
     oldTreeSiblings: Array<TraceTreeNode | null>
-  ): Array<TraceTreeNode> {
+  ): TraceTreeNode[] {
     const diffTrees = [];
     // NOTE: A null ID represents a non existent node.
     if (!this.getNodeId) {
@@ -417,7 +417,7 @@ export class TreeGenerator {
   private visitChildren(
     newTree: TraceTreeNode | null,
     oldTree: TraceTreeNode | null
-  ): Array<TraceTreeNode> {
+  ): TraceTreeNode[] {
     // Recursively traverse all children of new and old tree.
     const diffChildren = [];
     const numOfChildren = Math.max(newTree?.children?.length ?? 0, oldTree?.children?.length ?? 0);
