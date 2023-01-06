@@ -62,6 +62,6 @@ describe('TreeNodeComponent', () => {
     };
 
     @ViewChild(TreeNodeComponent)
-    public treeNodeComponent!: TreeNodeComponent;
+    treeNodeComponent!: TreeNodeComponent;
   }
 });

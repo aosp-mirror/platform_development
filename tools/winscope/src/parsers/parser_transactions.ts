@@ -36,7 +36,7 @@ class ParserTransactions extends Parser {
   }
 
   override decodeTrace(buffer: Uint8Array): any[] {
-    const decodedProto = <any>TransactionsTraceFileProto.decode(buffer);
+    const decodedProto = TransactionsTraceFileProto.decode(buffer) as any;
     this.decodeWhatFields(decodedProto);
 
     if (Object.prototype.hasOwnProperty.call(decodedProto, 'realToElapsedTimeOffsetNanos')) {
@@ -51,22 +51,23 @@ class ParserTransactions extends Parser {
     const decodeBitset32 = (bitset: number, EnumProto: any) => {
       return Object.keys(EnumProto).filter((key) => {
         const value = EnumProto[key];
-        return (bitset & value) != 0;
+        return (bitset & value) !== 0;
       });
     };
 
     const concatBitsetTokens = (tokens: string[]) => {
-      if (tokens.length == 0) {
+      if (tokens.length === 0) {
         return '0';
       }
       return tokens.join(' | ');
     };
 
-    const LayerStateChangesLsbEnum = (<any>TransactionsTraceFileProto?.parent).LayerState
+    const LayerStateChangesLsbEnum = (TransactionsTraceFileProto?.parent as any).LayerState
       .ChangesLsb;
-    const LayerStateChangesMsbEnum = (<any>TransactionsTraceFileProto?.parent).LayerState
+    const LayerStateChangesMsbEnum = (TransactionsTraceFileProto?.parent as any).LayerState
       .ChangesMsb;
-    const DisplayStateChangesEnum = (<any>TransactionsTraceFileProto?.parent).DisplayState.Changes;
+    const DisplayStateChangesEnum = (TransactionsTraceFileProto?.parent as any).DisplayState
+      .Changes;
 
     decodedProto.entry.forEach((transactionTraceEntry: any) => {
       transactionTraceEntry.transactions.forEach((transactionState: any) => {

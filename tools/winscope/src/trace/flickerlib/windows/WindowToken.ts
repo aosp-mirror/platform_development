@@ -16,14 +16,14 @@
 
 import {WindowToken} from '../common';
 import {shortenName} from '../mixin';
-import WindowContainer from './WindowContainer';
+import {WindowContainer} from './WindowContainer';
 
-WindowToken.fromProto = function (
+WindowToken.fromProto = (
   proto: any,
-  isActivityInTree: Boolean,
+  isActivityInTree: boolean,
   nextSeq: () => number
-): WindowToken {
-  if (proto == null) {
+): WindowToken => {
+  if (!proto) {
     return null;
   }
 
@@ -43,4 +43,4 @@ WindowToken.fromProto = function (
   return entry;
 };
 
-export default WindowToken;
+export {WindowToken};

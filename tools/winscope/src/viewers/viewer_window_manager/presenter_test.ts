@@ -58,7 +58,7 @@ describe('PresenterWindowManager', () => {
   it('processes current trace entries', () => {
     presenter.notifyCurrentTraceEntries(entries);
     const filteredUiDataRectLabels = uiData.rects
-      ?.filter((rect) => rect.isVisible != undefined)
+      ?.filter((rect) => rect.isVisible !== undefined)
       .map((rect) => rect.label);
     const hierarchyOpts = uiData.hierarchyUserOptions
       ? Object.keys(uiData.hierarchyUserOptions)

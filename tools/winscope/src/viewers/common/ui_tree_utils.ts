@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import Chip from './chip';
+import {Chip} from './chip';
 
 export type UiTreeNode = HierarchyTreeNode | PropertiesTreeNode;
 
@@ -78,21 +78,21 @@ export const DiffType = {
 export class Terminal {}
 
 export class UiTreeUtils {
-  public static diffClass(item: UiTreeNode): string {
+  static diffClass(item: UiTreeNode): string {
     const diffType = item.diffType;
     return diffType ?? '';
   }
 
-  public static isHighlighted(item: UiTreeNode, highlightedItems: Array<string>) {
+  static isHighlighted(item: UiTreeNode, highlightedItems: string[]) {
     return item instanceof HierarchyTreeNode && highlightedItems.includes(`${item.stableId}`);
   }
 
-  public static isVisibleNode(kind: string, type?: string) {
+  static isVisibleNode(kind: string, type?: string) {
     return kind === 'WindowState' || kind === 'Activity' || type?.includes('Layer');
   }
 
-  public static isParentNode(kind: string) {
-    return this.PARENT_NODE_KINDS.includes(kind);
+  static isParentNode(kind: string) {
+    return UiTreeUtils.PARENT_NODE_KINDS.includes(kind);
   }
 
   private static readonly PARENT_NODE_KINDS = [

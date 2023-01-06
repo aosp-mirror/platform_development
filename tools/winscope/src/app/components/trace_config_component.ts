@@ -97,8 +97,8 @@ export class TraceConfigComponent {
   objectKeys = Object.keys;
   @Input() traces!: TraceConfigurationMap;
 
-  public advancedConfigTraces() {
-    const advancedConfigs: Array<string> = [];
+  advancedConfigTraces() {
+    const advancedConfigs: string[] = [];
     Object.keys(this.traces).forEach((traceKey: string) => {
       if (this.traces[traceKey].config) {
         advancedConfigs.push(traceKey);
@@ -107,7 +107,7 @@ export class TraceConfigComponent {
     return advancedConfigs;
   }
 
-  public traceEnableConfigs(trace: TraceConfiguration): Array<EnableConfiguration> {
+  traceEnableConfigs(trace: TraceConfiguration): EnableConfiguration[] {
     if (trace.config) {
       return trace.config.enableConfigs;
     } else {
@@ -115,7 +115,7 @@ export class TraceConfigComponent {
     }
   }
 
-  public traceSelectionConfigs(trace: TraceConfiguration): Array<SelectionConfiguration> {
+  traceSelectionConfigs(trace: TraceConfiguration): SelectionConfiguration[] {
     if (trace.config) {
       return trace.config.selectionConfigs;
     } else {
@@ -123,18 +123,18 @@ export class TraceConfigComponent {
     }
   }
 
-  public someTraces(trace: TraceConfiguration): boolean {
+  someTraces(trace: TraceConfiguration): boolean {
     return this.traceEnableConfigs(trace).filter((trace) => trace.enabled).length > 0 && !trace.run;
   }
 
-  public changeRunTrace(run: boolean, trace: TraceConfiguration): void {
+  changeRunTrace(run: boolean, trace: TraceConfiguration): void {
     trace.run = run;
     if (trace.isTraceCollection) {
       this.traceEnableConfigs(trace).forEach((c: EnableConfiguration) => (c.enabled = run));
     }
   }
 
-  public changeTraceCollectionConfig(trace: TraceConfiguration): void {
+  changeTraceCollectionConfig(trace: TraceConfiguration): void {
     if (trace.isTraceCollection) {
       trace.run = this.traceEnableConfigs(trace).every((c: EnableConfiguration) => c.enabled);
     }

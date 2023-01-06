@@ -101,7 +101,7 @@ export class TraceViewComponent {
 
   private elementRef: ElementRef;
 
-  public tabs: Tab[] = [];
+  tabs: Tab[] = [];
   private currentActiveTab: undefined | Tab;
 
   constructor(@Inject(ElementRef) elementRef: ElementRef) {
@@ -113,7 +113,7 @@ export class TraceViewComponent {
     this.renderViewsOverlay();
   }
 
-  public onTabClick(tab: Tab) {
+  onTabClick(tab: Tab) {
     this.showTab(tab);
   }
 
@@ -189,7 +189,7 @@ export class TraceViewComponent {
     this.activeViewChanged.emit(tab);
   }
 
-  public isCurrentActiveTab(tab: Tab) {
+  isCurrentActiveTab(tab: Tab) {
     return tab === this.currentActiveTab;
   }
 }

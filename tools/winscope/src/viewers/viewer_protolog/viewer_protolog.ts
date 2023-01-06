@@ -41,19 +41,19 @@ class ViewerProtoLog implements Viewer {
     });
   }
 
-  public notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
+  notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
     this.presenter.notifyCurrentTraceEntries(entries);
   }
 
-  public getViews(): View[] {
+  getViews(): View[] {
     return [new View(ViewType.TAB, this.getDependencies(), this.htmlElement, 'ProtoLog')];
   }
 
-  public getDependencies(): TraceType[] {
+  getDependencies(): TraceType[] {
     return ViewerProtoLog.DEPENDENCIES;
   }
 
-  public static readonly DEPENDENCIES: TraceType[] = [TraceType.PROTO_LOG];
+  static readonly DEPENDENCIES: TraceType[] = [TraceType.PROTO_LOG];
   private htmlElement: HTMLElement;
   private presenter: Presenter;
 }

@@ -27,7 +27,7 @@ import {
 import {getPropertiesForDisplay} from '../mixin';
 import {Layer} from './Layer';
 
-LayerTraceEntry.fromProto = function (
+LayerTraceEntry.fromProto = (
   protos: object[],
   displayProtos: object[],
   elapsedTimestamp: bigint,
@@ -37,7 +37,7 @@ LayerTraceEntry.fromProto = function (
   realToElapsedTimeOffsetNs: bigint | undefined = undefined,
   useElapsedTime = false,
   excludesCompositionState = false
-): LayerTraceEntry {
+): LayerTraceEntry => {
   const layers = protos.map((it) => Layer.fromProto(it, excludesCompositionState));
   const displays = (displayProtos || []).map((it) => newDisplay(it));
   const builder = new LayerTraceEntryBuilder(
@@ -67,7 +67,7 @@ function addAttributes(entry: LayerTraceEntry, protos: object[], useElapsedTime 
   if (newObj.physicalDisplayBounds) delete newObj.physicalDisplayBounds;
   if (newObj.isVisible) delete newObj.isVisible;
   entry.proto = newObj;
-  if (useElapsedTime || entry.clockTimestamp == undefined) {
+  if (useElapsedTime || entry.clockTimestamp === undefined) {
     entry.name = TimeUtils.format(new ElapsedTimestamp(BigInt(entry.elapsedTimestamp)));
     entry.shortName = entry.name;
   } else {

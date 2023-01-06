@@ -38,7 +38,7 @@ class ParserInputMethodService extends Parser {
   }
 
   override decodeTrace(buffer: Uint8Array): any[] {
-    const decoded = <any>InputMethodServiceTraceFileProto.decode(buffer);
+    const decoded = InputMethodServiceTraceFileProto.decode(buffer) as any;
     if (Object.prototype.hasOwnProperty.call(decoded, 'realToElapsedTimeOffsetNanos')) {
       this.realToElapsedTimeOffsetNs = BigInt(decoded.realToElapsedTimeOffsetNanos);
     } else {

@@ -15,7 +15,7 @@
  */
 
 import {MockStorage} from 'test/unit/mock_storage';
-import {PersistentStoreProxy, StoreObject} from './persistent_store_proxy';
+import {PersistentStoreProxy} from './persistent_store_proxy';
 
 describe('PersistentStoreObject', () => {
   it('uses defaults when no store is available', () => {
@@ -85,14 +85,14 @@ describe('PersistentStoreObject', () => {
   it("can't update non leaf configs", () => {
     const mockStorage = new MockStorage();
 
-    const defaultValues: StoreObject = {
+    const defaultValues = {
       key1: 'value',
       key2: {
         key3: true,
       },
     };
     const storeObject = PersistentStoreProxy.new('storeKey', defaultValues, mockStorage);
-    expect(() => (storeObject['key2'] = false)).toThrow();
+    expect(() => (storeObject['key2'] = {key3: false})).toThrow();
   });
 
   it('can get nested configs', () => {

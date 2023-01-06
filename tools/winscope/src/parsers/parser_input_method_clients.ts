@@ -38,20 +38,20 @@ class ParserInputMethodClients extends Parser {
   }
 
   override decodeTrace(buffer: Uint8Array): any[] {
-    const decoded = <any>InputMethodClientsTraceFileProto.decode(buffer);
+    const decoded = InputMethodClientsTraceFileProto.decode(buffer) as any;
     if (Object.prototype.hasOwnProperty.call(decoded, 'realToElapsedTimeOffsetNanos')) {
       this.realToElapsedTimeOffsetNs = BigInt(decoded.realToElapsedTimeOffsetNanos);
     } else {
       this.realToElapsedTimeOffsetNs = undefined;
     }
 
-    return (<any>InputMethodClientsTraceFileProto.decode(buffer)).entry;
+    return (InputMethodClientsTraceFileProto.decode(buffer) as any).entry;
   }
 
   override getTimestamp(type: TimestampType, entryProto: any): undefined | Timestamp {
     if (type === TimestampType.ELAPSED) {
       return new Timestamp(type, BigInt(entryProto.elapsedRealtimeNanos));
-    } else if (type === TimestampType.REAL && this.realToElapsedTimeOffsetNs != undefined) {
+    } else if (type === TimestampType.REAL && this.realToElapsedTimeOffsetNs !== undefined) {
       return new Timestamp(
         type,
         BigInt(entryProto.elapsedRealtimeNanos) + this.realToElapsedTimeOffsetNs

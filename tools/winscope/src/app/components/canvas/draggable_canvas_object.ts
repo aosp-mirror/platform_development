@@ -18,10 +18,10 @@ import {MathUtils} from 'three/src/Three';
 import {Segment} from '../timeline/utils';
 import {CanvasDrawer} from './canvas_drawer';
 
-export type drawConfig = {
+export interface DrawConfig {
   fillStyle: string;
   fill: boolean;
-};
+}
 
 export class DraggableCanvasObject {
   private draggingPosition: number | undefined;
@@ -30,7 +30,7 @@ export class DraggableCanvasObject {
     private drawer: CanvasDrawer,
     private positionGetter: () => number,
     private definePathFunc: (ctx: CanvasRenderingContext2D, position: number) => void,
-    private drawConfig: drawConfig,
+    private drawConfig: DrawConfig,
     private onDrag: (x: number) => void,
     private onDrop: (x: number) => void,
     private rangeGetter: () => Segment
@@ -58,11 +58,11 @@ export class DraggableCanvasObject {
     return this.draggingPosition !== undefined ? this.draggingPosition : this.positionGetter();
   }
 
-  public definePath(ctx: CanvasRenderingContext2D) {
+  definePath(ctx: CanvasRenderingContext2D) {
     this.definePathFunc(ctx, this.position);
   }
 
-  public draw(ctx: CanvasRenderingContext2D) {
+  draw(ctx: CanvasRenderingContext2D) {
     this.doDraw(ctx);
     this.drawer.handler.notifyDrawnOnTop(this);
   }

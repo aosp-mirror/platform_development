@@ -24,7 +24,7 @@ class UiData {
     public currentMessageIndex: undefined | number
   ) {}
 
-  public static EMPTY = new UiData([], [], [], [], undefined);
+  static EMPTY = new UiData([], [], [], [], undefined);
 }
 
 export {UiData};

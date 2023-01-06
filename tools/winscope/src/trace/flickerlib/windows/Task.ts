@@ -16,9 +16,9 @@
 
 import {Task, toRect} from '../common';
 import {shortenName} from '../mixin';
-import WindowContainer from './WindowContainer';
+import {WindowContainer} from './WindowContainer';
 
-Task.fromProto = function (proto: any, isActivityInTree: Boolean, nextSeq: () => number): Task {
+Task.fromProto = (proto: any, isActivityInTree: boolean, nextSeq: () => number): Task => {
   if (proto == null) {
     return null;
   } else {
@@ -62,4 +62,4 @@ function addAttributes(entry: Task, proto: any) {
   entry.shortName = shortenName(entry.name);
 }
 
-export default Task;
+export {Task};

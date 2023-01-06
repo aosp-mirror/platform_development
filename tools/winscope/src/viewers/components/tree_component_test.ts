@@ -71,6 +71,6 @@ describe('TreeComponent', () => {
     hasChildren = jasmine.createSpy().and.returnValue(true);
 
     @ViewChild(TreeComponent)
-    public treeComponent!: TreeComponent;
+    treeComponent!: TreeComponent;
   }
 });

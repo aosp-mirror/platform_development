@@ -43,15 +43,15 @@ export class Timestamp {
     }
   }
 
-  public getType(): TimestampType {
+  getType(): TimestampType {
     return this.type;
   }
 
-  public getValueNs(): bigint {
+  getValueNs(): bigint {
     return this.valueNs;
   }
 
-  public valueOf(): bigint {
+  valueOf(): bigint {
     return this.getValueNs();
   }
 

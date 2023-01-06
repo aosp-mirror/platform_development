@@ -49,7 +49,7 @@ export class ParserErrorSnackBarComponent {
   ) {}
 
   static showIfNeeded(ngZone: NgZone, snackBar: MatSnackBar, errors: ParserError[]) {
-    const messages = this.convertErrorsToMessages(errors);
+    const messages = ParserErrorSnackBarComponent.convertErrorsToMessages(errors);
 
     if (messages.length === 0) {
       return;
@@ -67,7 +67,7 @@ export class ParserErrorSnackBarComponent {
 
   private static convertErrorsToMessages(errors: ParserError[]): string[] {
     const messages: string[] = [];
-    const groups = this.groupErrorsByType(errors);
+    const groups = ParserErrorSnackBarComponent.groupErrorsByType(errors);
 
     for (const [type, groupedErrors] of groups) {
       const CROP_THRESHOLD = 5;
@@ -75,11 +75,11 @@ export class ParserErrorSnackBarComponent {
       const countCropped = groupedErrors.length - countUsed;
 
       groupedErrors.slice(0, countUsed).forEach((error) => {
-        messages.push(this.convertErrorToMessage(error));
+        messages.push(ParserErrorSnackBarComponent.convertErrorToMessage(error));
       });
 
       if (countCropped > 0) {
-        messages.push(this.makeCroppedMessage(type, countCropped));
+        messages.push(ParserErrorSnackBarComponent.makeCroppedMessage(type, countCropped));
       }
     }
 

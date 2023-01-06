@@ -15,7 +15,7 @@
  */
 import {ArrayUtils} from 'common/array_utils';
 import {TimeUtils} from 'common/time_utils';
-import ObjectFormatter from 'trace/flickerlib/ObjectFormatter';
+import {ObjectFormatter} from 'trace/flickerlib/ObjectFormatter';
 import {ElapsedTimestamp, RealTimestamp, TimestampType} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
 import {TransactionsTraceEntry} from 'trace/transactions';
@@ -44,7 +44,7 @@ export class Presenter {
   }
 
   //TODO: replace input with something like iterator/cursor (same for other viewers/presenters)
-  public notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
+  notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
     this.entry = entries.get(TraceType.TRANSACTIONS)
       ? entries.get(TraceType.TRANSACTIONS)[0]
       : undefined;
@@ -64,43 +64,43 @@ export class Presenter {
     this.notifyUiDataCallback(this.uiData);
   }
 
-  public onVSyncIdFilterChanged(vsyncIds: string[]) {
+  onVSyncIdFilterChanged(vsyncIds: string[]) {
     this.vsyncIdFilter = vsyncIds;
     this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
 
-  public onPidFilterChanged(pids: string[]) {
+  onPidFilterChanged(pids: string[]) {
     this.pidFilter = pids;
     this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
 
-  public onUidFilterChanged(uids: string[]) {
+  onUidFilterChanged(uids: string[]) {
     this.uidFilter = uids;
     this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
 
-  public onTypeFilterChanged(types: string[]) {
+  onTypeFilterChanged(types: string[]) {
     this.typeFilter = types;
     this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
 
-  public onIdFilterChanged(ids: string[]) {
+  onIdFilterChanged(ids: string[]) {
     this.idFilter = ids;
     this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
 
-  public onWhatSearchStringChanged(searchString: string) {
+  onWhatSearchStringChanged(searchString: string) {
     this.whatSearchString = searchString;
     this.computeUiData();
     this.notifyUiDataCallback(this.uiData);
   }
 
-  public onEntryClicked(index: number) {
+  onEntryClicked(index: number) {
     if (this.uiData.selectedEntryIndex === index) {
       this.uiData.selectedEntryIndex = undefined; // remove selection when clicked again
     } else {
@@ -230,7 +230,7 @@ export class Presenter {
               Number(entryProto.vsyncId),
               transactionStateProto.pid.toString(),
               transactionStateProto.uid.toString(),
-              UiDataEntryType.LayerChanged,
+              UiDataEntryType.LAYER_CHANGED,
               layerStateProto.layerId.toString(),
               layerStateProto.what,
               treeGenerator.generate('LayerState', ObjectFormatter.format(layerStateProto))
@@ -246,7 +246,7 @@ export class Presenter {
               Number(entryProto.vsyncId),
               transactionStateProto.pid.toString(),
               transactionStateProto.uid.toString(),
-              UiDataEntryType.DisplayChanged,
+              UiDataEntryType.DISPLAY_CHANGED,
               displayStateProto.id.toString(),
               displayStateProto.what,
               treeGenerator.generate('DisplayState', ObjectFormatter.format(displayStateProto))
@@ -263,7 +263,7 @@ export class Presenter {
             Number(entryProto.vsyncId),
             Presenter.VALUE_NA,
             Presenter.VALUE_NA,
-            UiDataEntryType.LayerAdded,
+            UiDataEntryType.LAYER_ADDED,
             layerCreationArgsProto.layerId.toString(),
             '',
             treeGenerator.generate(
@@ -282,7 +282,7 @@ export class Presenter {
             Number(entryProto.vsyncId),
             Presenter.VALUE_NA,
             Presenter.VALUE_NA,
-            UiDataEntryType.LayerRemoved,
+            UiDataEntryType.LAYER_REMOVED,
             removedLayerId.toString(),
             '',
             treeGenerator.generate('RemovedLayerId', ObjectFormatter.format(removedLayerId))
@@ -298,7 +298,7 @@ export class Presenter {
             Number(entryProto.vsyncId),
             Presenter.VALUE_NA,
             Presenter.VALUE_NA,
-            UiDataEntryType.DisplayAdded,
+            UiDataEntryType.DISPLAY_ADDED,
             displayStateProto.id.toString(),
             displayStateProto.what,
             treeGenerator.generate('DisplayState', ObjectFormatter.format(displayStateProto))
@@ -314,7 +314,7 @@ export class Presenter {
             Number(entryProto.vsyncId),
             Presenter.VALUE_NA,
             Presenter.VALUE_NA,
-            UiDataEntryType.DisplayRemoved,
+            UiDataEntryType.DISPLAY_REMOVED,
             removedDisplayId.toString(),
             '',
             treeGenerator.generate('RemovedDisplayId', ObjectFormatter.format(removedDisplayId))
@@ -330,7 +330,7 @@ export class Presenter {
             Number(entryProto.vsyncId),
             Presenter.VALUE_NA,
             Presenter.VALUE_NA,
-            UiDataEntryType.LayerHandleRemoved,
+            UiDataEntryType.LAYER_HANDLE_REMOVED,
             removedLayerHandleId.toString(),
             '',
             treeGenerator.generate(

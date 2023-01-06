@@ -16,13 +16,13 @@
 
 import {TaskFragment} from '../common';
 import {shortenName} from '../mixin';
-import WindowContainer from './WindowContainer';
+import {WindowContainer} from './WindowContainer';
 
-TaskFragment.fromProto = function (
+TaskFragment.fromProto = (
   proto: any,
-  isActivityInTree: Boolean,
+  isActivityInTree: boolean,
   nextSeq: () => number
-): TaskFragment {
+): TaskFragment => {
   if (proto == null) {
     return null;
   } else {
@@ -51,4 +51,4 @@ function addAttributes(entry: TaskFragment, proto: any) {
   entry.shortName = shortenName(entry.name);
 }
 
-export default TaskFragment;
+export {TaskFragment};

@@ -144,11 +144,15 @@ class ParserScreenRecording extends Parser {
     return [pos, count];
   }
 
-  private parseTimestampsElapsedNs(videoData: Uint8Array, pos: number, count: number): bigint[] {
+  private parseTimestampsElapsedNs(
+    videoData: Uint8Array,
+    pos: number,
+    count: number
+  ): Array<bigint> {
     if (pos + count * 8 > videoData.length) {
       throw new TypeError('Failed to parse timestamps. Video data is too short.');
     }
-    const timestamps: bigint[] = [];
+    const timestamps: Array<bigint> = [];
     for (let i = 0; i < count; ++i) {
       const timestamp = ArrayUtils.toUintLittleEndian(videoData, pos, pos + 8);
       pos += 8;

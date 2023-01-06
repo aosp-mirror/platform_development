@@ -27,7 +27,7 @@ export class Presenter {
   }
 
   //TODO: replace input with something like iterator/cursor (same for other viewers/presenters)
-  public notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
+  notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
     this.entry = entries.get(TraceType.PROTO_LOG) ? entries.get(TraceType.PROTO_LOG)[0] : undefined;
     if (this.uiData === UiData.EMPTY) {
       this.computeUiDataMessages();
@@ -36,28 +36,28 @@ export class Presenter {
     this.notifyUiDataCallback(this.uiData);
   }
 
-  public onLogLevelsFilterChanged(levels: string[]) {
+  onLogLevelsFilterChanged(levels: string[]) {
     this.levels = levels;
     this.computeUiDataMessages();
     this.computeUiDataCurrentMessageIndex();
     this.notifyUiDataCallback(this.uiData);
   }
 
-  public onTagsFilterChanged(tags: string[]) {
+  onTagsFilterChanged(tags: string[]) {
     this.tags = tags;
     this.computeUiDataMessages();
     this.computeUiDataCurrentMessageIndex();
     this.notifyUiDataCallback(this.uiData);
   }
 
-  public onSourceFilesFilterChanged(files: string[]) {
+  onSourceFilesFilterChanged(files: string[]) {
     this.files = files;
     this.computeUiDataMessages();
     this.computeUiDataCurrentMessageIndex();
     this.notifyUiDataCallback(this.uiData);
   }
 
-  public onSearchStringFilterChanged(searchString: string) {
+  onSearchStringFilterChanged(searchString: string) {
     this.searchString = searchString;
     this.computeUiDataMessages();
     this.computeUiDataCurrentMessageIndex();
@@ -82,7 +82,7 @@ export class Presenter {
       (message: LogMessage) => message.at
     );
 
-    let filteredMessagesAndOriginalIndex: [number, LogMessage][] = [
+    let filteredMessagesAndOriginalIndex: Array<[number, LogMessage]> = [
       ...this.entry!.messages.entries(),
     ];
 

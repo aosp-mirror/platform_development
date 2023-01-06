@@ -17,9 +17,9 @@ import {FilterType, TreeUtils} from 'common/tree_utils';
 import {WindowContainer} from 'trace/flickerlib/common';
 import {Layer} from 'trace/flickerlib/layers/Layer';
 import {LayerTraceEntry} from 'trace/flickerlib/layers/LayerTraceEntry';
-import Activity from 'trace/flickerlib/windows/Activity';
+import {Activity} from 'trace/flickerlib/windows/Activity';
 import {WindowManagerState} from 'trace/flickerlib/windows/WindowManagerState';
-import WindowState from 'trace/flickerlib/windows/WindowState';
+import {WindowState} from 'trace/flickerlib/windows/WindowState';
 
 class ProcessedWindowManagerState {
   constructor(
@@ -49,9 +49,7 @@ class ImeLayers {
 }
 
 class ImeUtils {
-  public static processWindowManagerTraceEntry(
-    entry: WindowManagerState
-  ): ProcessedWindowManagerState {
+  static processWindowManagerTraceEntry(entry: WindowManagerState): ProcessedWindowManagerState {
     const displayContent = entry.root.children[0];
 
     return new ProcessedWindowManagerState(
@@ -60,16 +58,16 @@ class ImeUtils {
       entry.focusedApp,
       entry.focusedWindow,
       entry.focusedActivity,
-      this.isInputMethodVisible(displayContent),
-      this.getImeControlTargetProperty(displayContent.proto),
-      this.getImeInputTargetProperty(displayContent.proto),
-      this.getImeLayeringTargetProperty(displayContent.proto),
+      ImeUtils.isInputMethodVisible(displayContent),
+      ImeUtils.getImeControlTargetProperty(displayContent.proto),
+      ImeUtils.getImeInputTargetProperty(displayContent.proto),
+      ImeUtils.getImeLayeringTargetProperty(displayContent.proto),
       displayContent.proto.imeInsetsSourceProvider,
       entry.proto
     );
   }
 
-  public static getImeLayers(
+  static getImeLayers(
     entry: LayerTraceEntry,
     processedWindowManagerState: ProcessedWindowManagerState
   ): ImeLayers | undefined {
@@ -91,12 +89,12 @@ class ImeUtils {
 
     // we want to see both ImeContainer and IME-snapshot if there are
     // cases where both exist
-    const taskLayerOfImeContainer = this.findAncestorTaskLayerOfImeLayer(
+    const taskLayerOfImeContainer = ImeUtils.findAncestorTaskLayerOfImeLayer(
       entry,
       TreeUtils.makeNodeFilter('ImeContainer')
     );
 
-    const taskLayerOfImeSnapshot = this.findAncestorTaskLayerOfImeLayer(
+    const taskLayerOfImeSnapshot = ImeUtils.findAncestorTaskLayerOfImeLayer(
       entry,
       TreeUtils.makeNodeFilter('IME-snapshot')
     );
@@ -111,7 +109,7 @@ class ImeUtils {
     );
   }
 
-  public static transformInputConnectionCall(entry: any) {
+  static transformInputConnectionCall(entry: any) {
     const obj = Object.assign({}, entry);
     if (obj.inputConnectionCall) {
       Object.getOwnPropertyNames(obj.inputConnectionCall).forEach((name) => {
@@ -132,7 +130,7 @@ class ImeUtils {
     }
 
     const isTaskLayer = TreeUtils.makeNodeFilter('Task, ImePlaceholder');
-    const taskLayer = <Layer>TreeUtils.findAncestorNode(imeLayer, isTaskLayer);
+    const taskLayer = TreeUtils.findAncestorNode(imeLayer, isTaskLayer) as Layer;
     if (!taskLayer) {
       return undefined;
     }
@@ -143,17 +141,17 @@ class ImeUtils {
 
   private static getImeControlTargetProperty(displayContentProto: any): any {
     const POSSIBLE_NAMES = ['inputMethodControlTarget', 'imeControlTarget'];
-    return this.findAnyPropertyWithMatchingName(displayContentProto, POSSIBLE_NAMES);
+    return ImeUtils.findAnyPropertyWithMatchingName(displayContentProto, POSSIBLE_NAMES);
   }
 
   private static getImeInputTargetProperty(displayContentProto: any): any {
     const POSSIBLE_NAMES = ['inputMethodInputTarget', 'imeInputTarget'];
-    return this.findAnyPropertyWithMatchingName(displayContentProto, POSSIBLE_NAMES);
+    return ImeUtils.findAnyPropertyWithMatchingName(displayContentProto, POSSIBLE_NAMES);
   }
 
   private static getImeLayeringTargetProperty(displayContentProto: any): any {
     const POSSIBLE_NAMES = ['inputMethodTarget', 'imeLayeringTarget'];
-    return this.findAnyPropertyWithMatchingName(displayContentProto, POSSIBLE_NAMES);
+    return ImeUtils.findAnyPropertyWithMatchingName(displayContentProto, POSSIBLE_NAMES);
   }
 
   private static findAnyPropertyWithMatchingName(object: any, possible_names: string[]): any {
@@ -163,10 +161,11 @@ class ImeUtils {
 
   private static isInputMethodVisible(displayContent: WindowContainer): boolean {
     const isInputMethod = TreeUtils.makeNodeFilter('InputMethod');
-    const inputMethodWindowOrLayer = <WindowContainer>(
-      TreeUtils.findDescendantNode(displayContent, isInputMethod)
-    );
-    return inputMethodWindowOrLayer?.isVisible == true;
+    const inputMethodWindowOrLayer = TreeUtils.findDescendantNode(
+      displayContent,
+      isInputMethod
+    ) as WindowContainer;
+    return inputMethodWindowOrLayer?.isVisible === true;
   }
 }
 

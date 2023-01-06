@@ -280,26 +280,26 @@ import {Layer} from 'trace/flickerlib/common';
 export class PropertyGroupsComponent {
   @Input() item!: Layer;
 
-  public hasInputChannel() {
+  hasInputChannel() {
     return this.item.proto?.inputWindowInfo;
   }
 
-  public getDestinationFrame() {
+  getDestinationFrame() {
     const frame = this.item.proto?.destinationFrame;
     if (frame) {
       return ` left: ${frame.left}, top: ${frame.top}, right: ${frame.right}, bottom: ${frame.bottom}`;
     } else return '';
   }
 
-  public hasIgnoreDestinationFrame() {
+  hasIgnoreDestinationFrame() {
     return (this.item.flags & 0x400) === 0x400;
   }
 
-  public formatFloat(num: number) {
+  formatFloat(num: number) {
     return Math.round(num * 100) / 100;
   }
 
-  public summary(): TreeSummary {
+  summary(): TreeSummary {
     const summary = [];
 
     if (this.item?.visibilityReason?.length > 0) {

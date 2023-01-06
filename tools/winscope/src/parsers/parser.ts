@@ -28,7 +28,7 @@ abstract class Parser {
     this.trace = trace;
   }
 
-  public async parse() {
+  async parse() {
     const traceBuffer = new Uint8Array(await this.trace.file.arrayBuffer());
 
     const magicNumber = this.getMagicNumber();
@@ -97,28 +97,28 @@ abstract class Parser {
     return protoObj;
   }
 
-  public abstract getTraceType(): TraceType;
+  abstract getTraceType(): TraceType;
 
-  public getTrace(): Trace {
+  getTrace(): Trace {
     return {
       type: this.getTraceType(),
       traceFile: this.trace,
     };
   }
 
-  public getTimestamps(type: TimestampType): undefined | Timestamp[] {
+  getTimestamps(type: TimestampType): undefined | Timestamp[] {
     return this.timestamps.get(type);
   }
 
   //TODO (b/256564627): include this into the new type/abstraction passed to viewers
-  public getEntriesLength(): number {
+  getEntriesLength(): number {
     return this.decodedEntries.length;
   }
 
   //TODO (b/256564627):
   // - factor out timestamp search policy. Receive index parameter instead.
   // - make async for possible lazy disk reads in the future
-  public getTraceEntry(timestamp: Timestamp): undefined | any {
+  getTraceEntry(timestamp: Timestamp): undefined | any {
     const timestamps = this.getTimestamps(timestamp.getType());
     if (timestamps === undefined) {
       throw TypeError(`Timestamps with type "${timestamp.getType()}" not available`);

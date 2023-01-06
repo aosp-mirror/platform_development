@@ -53,19 +53,19 @@ class ViewerWindowManager implements Viewer {
     );
   }
 
-  public notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
+  notifyCurrentTraceEntries(entries: Map<TraceType, any>): void {
     this.presenter.notifyCurrentTraceEntries(entries);
   }
 
-  public getViews(): View[] {
+  getViews(): View[] {
     return [new View(ViewType.TAB, this.getDependencies(), this.htmlElement, 'Window Manager')];
   }
 
-  public getDependencies(): TraceType[] {
+  getDependencies(): TraceType[] {
     return ViewerWindowManager.DEPENDENCIES;
   }
 
-  public static readonly DEPENDENCIES: TraceType[] = [TraceType.WINDOW_MANAGER];
+  static readonly DEPENDENCIES: TraceType[] = [TraceType.WINDOW_MANAGER];
   private htmlElement: HTMLElement;
   private presenter: Presenter;
 }

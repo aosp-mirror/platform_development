@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import {ProxyClient} from 'trace_collection/proxy_client';
-import {configMap} from './trace_collection_utils';
+import {ConfigMap} from './trace_collection_utils';
 
 export interface Device {
   [key: string]: DeviceProperties;
@@ -44,12 +44,12 @@ export interface Connection {
   isConnectingState(): boolean;
   throwNoTargetsError(): any;
   startTrace(
-    reqEnableConfig?: Array<string>,
-    reqSelectedSfConfig?: configMap,
-    reqSelectedWmConfig?: configMap
+    reqEnableConfig?: string[],
+    reqSelectedSfConfig?: ConfigMap,
+    reqSelectedWmConfig?: ConfigMap
   ): any;
   endTrace(): any;
-  adbData(): Array<File>;
+  adbData(): File[];
   dumpState(): any;
   proxy?: ProxyClient;
 }
