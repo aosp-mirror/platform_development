@@ -131,6 +131,7 @@ export class Presenter {
           }
           return rect;
         }) ?? [];
+    this.displayIds.sort();
     return this.rectsToUiData(rects.concat(displayRects));
   }
 

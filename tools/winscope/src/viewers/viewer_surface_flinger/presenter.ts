@@ -121,7 +121,8 @@ export class Presenter {
         };
         return rect;
       }) ?? [];
-    this.displayIds = [];
+    this.displayIds = this.entry.displays.map((it: any) => it.layerStackId)
+    this.displayIds.sort();
     const rects = this.getLayersForRectsView()
       .sort(this.compareLayerZ)
       .map((it: any) => {
@@ -136,6 +137,7 @@ export class Presenter {
         };
         return rect;
       });
+
     return this.rectsToUiData(rects.concat(displayRects));
   }
 
