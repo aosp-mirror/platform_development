@@ -131,7 +131,7 @@ MergeStatus ModuleMerger::MergeReferencingTypeInternal(
     // The type was already added to the parent graph. So change the
     // referenced type to the global type id.
     references_type->SetReferencedType(local_to_global_it->second.type_id_);
-    return local_to_global_it->second;
+    return MergeStatus(false, local_to_global_it->second.type_id_);
   }
 
   // If that did not go through, look at the addend's type_map_ and get the
@@ -470,7 +470,7 @@ MergeStatus ModuleMerger::MergeType(
   // parent graph. This does not add the node itself though.
   auto type_it = local_to_global_type_id_map->find(addend_node->GetSelfType());
   if (type_it != local_to_global_type_id_map->end()) {
-    return type_it->second;
+    return MergeStatus(false, type_it->second.type_id_);
   }
 
   MergeStatus merge_status = LookupType(
