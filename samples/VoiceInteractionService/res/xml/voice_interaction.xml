@@ -17,6 +17,7 @@
 <voice-interaction-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:sessionService=""
     android:hotwordDetectionService="com.example.android.voiceinteractor.SampleHotwordDetectionService"
+    android:visualQueryDetectionService="com.example.android.voiceinteractor.SampleVisualQueryDetectionService"
     android:recognitionService=""
     android:settingsActivity=""
     android:supportsAssist="true"

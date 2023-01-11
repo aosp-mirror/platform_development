@@ -54,7 +54,7 @@ public class MainActivity extends Activity {
                     return;
                 }
                 try {
-                    mService.mDetector.startRecognition();
+                    mService.mHotwordDetector.startRecognition();
                 } catch (HotwordDetector.IllegalDetectorStateException e) {
                     e.printStackTrace();
                 }
@@ -66,7 +66,7 @@ public class MainActivity extends Activity {
                 Log.e(TAG, "No service");
                 return;
             }
-            mService.mCallback.onDetected(mService.mLastPayload, true);
+            mService.mHotwordDetectorCallback.onDetected(mService.mLastPayload, true);
         });
     }
 
