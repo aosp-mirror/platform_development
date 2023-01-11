@@ -46,8 +46,8 @@ LOG_LEVEL = logging.DEBUG
 
 PORT = 5544
 
-# Keep in sync with WINSCOPE_PROXY_VERSION in Winscope DataAdb.vue
-VERSION = '0.8'
+# Keep in sync with ProxyClient#VERSION in Winscope
+VERSION = '1.0'
 
 WINSCOPE_VERSION_HEADER = "Winscope-Proxy-Version"
 WINSCOPE_TOKEN_HEADER = "Winscope-Token"
@@ -200,8 +200,7 @@ class SurfaceFlingerTraceConfig:
     """
 
     def __init__(self) -> None:
-        # default config flags CRITICAL | INPUT | SYNC
-        self.flags = 1 << 0 | 1 << 1 | 1 << 6
+        self.flags = 0
 
     def add(self, config: str) -> None:
         self.flags |= CONFIG_FLAG[config]
@@ -260,10 +259,12 @@ class WindowManagerTraceSelectedConfig:
 
 
 CONFIG_FLAG = {
+    "input": 1 << 1,
     "composition": 1 << 2,
     "metadata": 1 << 3,
     "hwc": 1 << 4,
-    "tracebuffers": 1 << 5
+    "tracebuffers": 1 << 5,
+    "virtualdisplays": 1 << 6
 }
 
 #Keep up to date with options in DataAdb.vue
@@ -547,7 +548,7 @@ class FetchFilesEndpoint(DeviceRequestEndpoint):
 
 def check_root(device_id):
     log.debug("Checking root access on {}".format(device_id))
-    return call_adb('shell su root id -u', device_id) == "0\n"
+    return int(call_adb('shell su root id -u', device_id)) == 0
 
 
 TRACE_THREADS = {}
