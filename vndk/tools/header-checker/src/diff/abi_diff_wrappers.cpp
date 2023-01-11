@@ -93,7 +93,8 @@ bool DiffWrapper<repr::FunctionIR>::DumpDiff(
     repr::FunctionIR new_function = *newp_;
     ReplaceTypeIdsWithTypeNames(old_types_, &old_function);
     ReplaceTypeIdsWithTypeNames(new_types_, &new_function);
-    repr::FunctionDiffIR function_diff_ir(&old_function, &new_function);
+    repr::FunctionDiffIR function_diff_ir(&old_function, &new_function,
+                                          function_type_diff.IsExtension());
     function_diff_ir.SetName(oldp_->GetName());
     return ir_diff_dumper_->AddDiffMessageIR(&function_diff_ir,
                                              Unwind(&type_queue), diff_kind);
