@@ -69,7 +69,7 @@
    "parameters" :
    [
     {
-     "referenced_type" : "_ZTIP18DefinedInOneHeader#ODR:/link_to_def2.h.sdump"
+     "referenced_type" : "_ZTIP18DefinedInOneHeader"
     }
    ],
    "return_type" : "_ZTIv",
