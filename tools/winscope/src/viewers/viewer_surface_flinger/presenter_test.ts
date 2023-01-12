@@ -213,4 +213,20 @@ describe('PresenterSurfaceFlinger', () => {
       ) ?? [];
     expect(nonTerminalChildren.length).toEqual(3);
   });
+
+  it('handles displays with no visible layers', async () => {
+    presenter.notifyCurrentTraceEntries(await getEntriesWithMultiDisplaySfTrace());
+    expect(uiData.displayIds.length).toEqual(5);
+    // we want the ids to be sorted
+    expect(uiData.displayIds).toEqual([0,2,3,4,5]);
+  });
+
+  async function getEntriesWithMultiDisplaySfTrace(): Promise<Map<TraceType, any>> {
+    const entries = new Map<TraceType, any>();
+    const entry: LayerTraceEntry = await UnitTestUtils.getMultiDisplayLayerTraceEntry();
+
+    entries.set(TraceType.SURFACE_FLINGER, [entry, null]);
+
+    return entries;
+  }
 });

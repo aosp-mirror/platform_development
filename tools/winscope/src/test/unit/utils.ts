@@ -38,6 +38,10 @@ class UnitTestUtils extends CommonTestUtils {
     return await UnitTestUtils.getTraceEntry('traces/elapsed_timestamp/SurfaceFlinger.pb');
   }
 
+  static async getMultiDisplayLayerTraceEntry(): Promise<LayerTraceEntry> {
+    return await UnitTestUtils.getTraceEntry('traces/elapsed_and_real_timestamp/SurfaceFlinger_multidisplay.pb');
+  }
+
   static async getImeTraceEntries(): Promise<Map<TraceType, any>> {
     let surfaceFlingerEntry: LayerTraceEntry | undefined;
     {
