@@ -259,7 +259,6 @@ developers/build/prebuilts/gradle/XYZTouristAttractions         samples/${PLATFO
 
 # Old sample tree
 development/samples/AccelerometerPlay          samples/${PLATFORM_NAME}/legacy/AccelerometerPlay
-development/samples/AndroidBeamDemo            samples/${PLATFORM_NAME}/legacy/AndroidBeamDemo
 development/samples/ApiDemos                   samples/${PLATFORM_NAME}/legacy/ApiDemos
 development/samples/AppNavigation              samples/${PLATFORM_NAME}/legacy/AppNavigation
 development/samples/BackupRestore              samples/${PLATFORM_NAME}/legacy/BackupRestore
