@@ -1,4 +1,6 @@
 setup:
+
+(If a log error "VisualQueryDetector is only available if multiple detectors are allowed" , set target_sdk_version: "10000" in Android.bp for now.)
 1. Set the KEYPHRASE constant in SampleVoiceInteractionService.java to something the device's
    default assistant supports.
 2. m -j SampleVoiceInteractor
