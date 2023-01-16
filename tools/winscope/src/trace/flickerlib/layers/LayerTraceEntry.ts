@@ -40,14 +40,14 @@ LayerTraceEntry.fromProto = (
 ): LayerTraceEntry => {
   const layers = protos.map((it) => Layer.fromProto(it, excludesCompositionState));
   const displays = (displayProtos || []).map((it) => newDisplay(it));
-  const builder = new LayerTraceEntryBuilder(
-    `${elapsedTimestamp}`,
-    layers,
-    displays,
-    vSyncId,
-    hwcBlob,
-    where,
-    `${realToElapsedTimeOffsetNs ?? 0}`
+  const builder = new LayerTraceEntryBuilder()
+    .setElapsedTimestamp(`${elapsedTimestamp}`)
+    .setLayers(layers)
+    .setDisplays(displays)
+    .setVSyncId(`${vSyncId}`)
+    .setHwcBlob(hwcBlob)
+    .setWhere(where)
+    .setRealToElapsedTimeOffsetNs(`${realToElapsedTimeOffsetNs ?? 0}`
   );
   const entry: LayerTraceEntry = builder.build();
 
