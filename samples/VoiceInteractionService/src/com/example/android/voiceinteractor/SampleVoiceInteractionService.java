@@ -35,6 +35,7 @@ import android.service.voice.AlwaysOnHotwordDetector.EventPayload;
 import android.service.voice.HotwordDetector;
 import android.service.voice.HotwordDetector.IllegalDetectorStateException;
 import android.service.voice.HotwordRejectedResult;
+import android.service.voice.VisualQueryDetector;
 import android.service.voice.VoiceInteractionService;
 import android.util.Log;
 
@@ -42,6 +43,7 @@ import androidx.annotation.NonNull;
 
 import java.time.Duration;
 import java.util.Locale;
+import java.util.concurrent.Executors;
 
 public class SampleVoiceInteractionService extends VoiceInteractionService {
     public static final String DSP_MODEL_KEYPHRASE = "X Google";
@@ -56,8 +58,10 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
 
     private final IBinder binder = new LocalBinder();
 
-    HotwordDetector mDetector;
-    Callback mCallback;
+    HotwordDetector mHotwordDetector;
+    VisualQueryDetector mVisualQueryDetector;
+    Callback mHotwordDetectorCallback;
+    VisualQueryDetector.Callback mVisualQueryDetectorCallback;
     Bundle mData = new Bundle();
     AudioFormat mAudioFormat;
     EventPayload mLastPayload;
@@ -94,9 +98,12 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
     public void onReady() {
         super.onReady();
         Log.i(TAG, "onReady");
-        mCallback = new Callback();
-        mDetector = createAlwaysOnHotwordDetector(DSP_MODEL_KEYPHRASE, DSP_MODEL_LOCALE, null, null,
-                mCallback);
+        mHotwordDetectorCallback = new Callback();
+        mVisualQueryDetectorCallback = new VisualQueryDetectorCallback();
+        mHotwordDetector = createAlwaysOnHotwordDetector(DSP_MODEL_KEYPHRASE, DSP_MODEL_LOCALE, null, null,
+                mHotwordDetectorCallback);
+        mVisualQueryDetector = createVisualQueryDetector(null, null,
+                Executors.newSingleThreadExecutor(), mVisualQueryDetectorCallback);
     }
 
     @Override
@@ -111,6 +118,38 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
             return SampleVoiceInteractionService.this;
         }
     }
+
+    static class VisualQueryDetectorCallback implements VisualQueryDetector.Callback {
+            @Override
+            public void onQueryDetected(@NonNull String partialQuery) {
+                Log.i(TAG, "VQD partial query detected: "+ partialQuery);
+            }
+
+            @Override
+            public void onQueryRejected() {
+                Log.i(TAG, "VQD query rejected");
+            }
+
+            @Override
+            public void onQueryFinished() {
+                Log.i(TAG, "VQD query finished");
+            }
+
+            @Override
+            public void onVisualQueryDetectionServiceInitialized(int status) {
+                Log.i(TAG,  "VQD init: "+ status);
+            }
+
+            @Override
+            public void onVisualQueryDetectionServiceRestarted() {
+                Log.i(TAG, "VQD restarted");
+            }
+
+            @Override
+            public void onError() {
+                Log.i(TAG, "VQD error");
+            }
+        };
 
     class Callback extends AlwaysOnHotwordDetector.Callback {
 
@@ -131,7 +170,7 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
             if (status == STATE_KEYPHRASE_UNENROLLED) {
                 Intent enrollIntent = null;
                 try {
-                    enrollIntent = ((AlwaysOnHotwordDetector) mDetector).createEnrollIntent();
+                    enrollIntent = ((AlwaysOnHotwordDetector) mHotwordDetector).createEnrollIntent();
                 } catch (IllegalDetectorStateException e) {
                     e.printStackTrace();
                 }
@@ -152,7 +191,7 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
         @Override
         public void onRejected(@NonNull HotwordRejectedResult result) {
             try {
-                mDetector.startRecognition();
+                mHotwordDetector.startRecognition();
             } catch (IllegalDetectorStateException e) {
                 e.printStackTrace();
             }
@@ -198,7 +237,7 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
                         record.getState());
                 Log.e(TAG, "Failed to init first AudioRecord.");
                 try {
-                    mDetector.startRecognition();
+                    mHotwordDetector.startRecognition();
                 } catch (IllegalDetectorStateException e) {
                     e.printStackTrace();
                 }
@@ -231,7 +270,7 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
             mLastPayload = eventPayload;
 
             try {
-                mDetector.startRecognition();
+                mHotwordDetector.startRecognition();
             } catch (IllegalDetectorStateException e) {
                 e.printStackTrace();
             }
@@ -241,7 +280,7 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
         public void onError() {
             Log.i(TAG, "onError");
             try {
-                mDetector.startRecognition();
+                mHotwordDetector.startRecognition();
             } catch (IllegalDetectorStateException e) {
                 e.printStackTrace();
             }
@@ -263,7 +302,7 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
                     + ". mAvailable=" + mAvailable);
             if (mAvailable) {
                 try {
-                    mDetector.startRecognition();
+                    mHotwordDetector.startRecognition();
                 } catch (IllegalDetectorStateException e) {
                     e.printStackTrace();
                 }
