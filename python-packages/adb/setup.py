@@ -24,6 +24,7 @@ setup(
     keywords='adb android',
     package_dir={'adb': ''},
     packages=['adb'],
+    package_data={'adb': ['py.typed']},
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
