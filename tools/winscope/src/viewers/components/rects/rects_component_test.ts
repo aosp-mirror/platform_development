@@ -120,13 +120,13 @@ describe('RectsComponent', () => {
 
     fixture.detectChanges();
 
-    const displayButtonContainer = htmlElement.querySelector(".display-button-container");
+    const displayButtonContainer = htmlElement.querySelector('.display-button-container');
     expect(displayButtonContainer).toBeTruthy();
 
     const buttons = Array.from(displayButtonContainer?.querySelectorAll('button') ?? []);
     expect(buttons.length).toBe(3);
 
     const buttonValues = buttons.map((it) => it.textContent?.trim());
-    expect(buttonValues).toEqual(["0", "1", "2"]);
-  })
+    expect(buttonValues).toEqual(['0', '1', '2']);
+  });
 });
