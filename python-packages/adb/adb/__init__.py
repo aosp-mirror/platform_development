@@ -13,12 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from __future__ import annotations
+
 import atexit
 import base64
 import logging
 import os
 import re
 import subprocess
+from typing import Any, Callable
 
 
 class FindDeviceError(RuntimeError):
@@ -26,19 +29,21 @@ class FindDeviceError(RuntimeError):
 
 
 class DeviceNotFoundError(FindDeviceError):
-    def __init__(self, serial):
+    def __init__(self, serial: str) -> None:
         self.serial = serial
         super(DeviceNotFoundError, self).__init__(
             'No device with serial {}'.format(serial))
 
 
 class NoUniqueDeviceError(FindDeviceError):
-    def __init__(self):
+    def __init__(self) -> None:
         super(NoUniqueDeviceError, self).__init__('No unique device')
 
 
 class ShellError(RuntimeError):
-    def __init__(self, cmd, stdout, stderr, exit_code):
+    def __init__(
+        self, cmd: list[str], stdout: str, stderr: str, exit_code: int
+    ) -> None:
         super(ShellError, self).__init__(
             '`{0}` exited with code {1}'.format(cmd, exit_code))
         self.cmd = cmd
@@ -47,7 +52,7 @@ class ShellError(RuntimeError):
         self.exit_code = exit_code
 
 
-def get_devices(adb_path='adb'):
+def get_devices(adb_path: str = 'adb') -> list[str]:
     with open(os.devnull, 'wb') as devnull:
         subprocess.check_call([adb_path, 'start-server'], stdout=devnull,
                               stderr=devnull)
@@ -68,21 +73,27 @@ def get_devices(adb_path='adb'):
     return devices
 
 
-def _get_unique_device(product=None, adb_path='adb'):
+def _get_unique_device(
+    product: str | None = None, adb_path: str = 'adb'
+) -> AndroidDevice:
     devices = get_devices(adb_path=adb_path)
     if len(devices) != 1:
         raise NoUniqueDeviceError()
     return AndroidDevice(devices[0], product, adb_path)
 
 
-def _get_device_by_serial(serial, product=None, adb_path='adb'):
+def _get_device_by_serial(
+    serial: str, product: str | None = None, adb_path: str = 'adb'
+) -> AndroidDevice:
     for device in get_devices(adb_path=adb_path):
         if device == serial:
             return AndroidDevice(serial, product, adb_path)
     raise DeviceNotFoundError(serial)
 
 
-def get_device(serial=None, product=None, adb_path='adb'):
+def get_device(
+    serial: str | None = None, product: str | None = None, adb_path: str = 'adb'
+) -> AndroidDevice:
     """Get a uniquely identified AndroidDevice if one is available.
 
     Raises:
@@ -113,7 +124,7 @@ def get_device(serial=None, product=None, adb_path='adb'):
     return _get_unique_device(product, adb_path=adb_path)
 
 
-def _get_device_by_type(flag, adb_path):
+def _get_device_by_type(flag: str, adb_path: str) -> AndroidDevice:
     with open(os.devnull, 'wb') as devnull:
         subprocess.check_call([adb_path, 'start-server'], stdout=devnull,
                               stderr=devnull)
@@ -127,7 +138,7 @@ def _get_device_by_type(flag, adb_path):
     return _get_device_by_serial(serial, adb_path=adb_path)
 
 
-def get_usb_device(adb_path='adb'):
+def get_usb_device(adb_path: str = 'adb') -> AndroidDevice:
     """Get the unique USB-connected AndroidDevice if it is available.
 
     Raises:
@@ -140,7 +151,7 @@ def get_usb_device(adb_path='adb'):
     return _get_device_by_type('-d', adb_path=adb_path)
 
 
-def get_emulator_device(adb_path='adb'):
+def get_emulator_device(adb_path: str = 'adb') -> AndroidDevice:
     """Get the unique emulator AndroidDevice if it is available.
 
     Raises:
@@ -153,74 +164,13 @@ def get_emulator_device(adb_path='adb'):
     return _get_device_by_type('-e', adb_path=adb_path)
 
 
-# If necessary, modifies subprocess.check_output() or subprocess.Popen() args
-# to run the subprocess via Windows PowerShell to work-around an issue in
-# Python 2's subprocess class on Windows where it doesn't support Unicode.
-def _get_subprocess_args(args):
-    # Only do this slow work-around if Unicode is in the cmd line on Windows.
-    # PowerShell takes 600-700ms to startup on a 2013-2014 machine, which is
-    # very slow.
-    if os.name != 'nt' or all(not isinstance(arg, unicode) for arg in args[0]):
-        return args
-
-    def escape_arg(arg):
-        # Escape for the parsing that the C Runtime does in Windows apps. In
-        # particular, this will take care of double-quotes.
-        arg = subprocess.list2cmdline([arg])
-        # Escape single-quote with another single-quote because we're about
-        # to...
-        arg = arg.replace(u"'", u"''")
-        # ...put the arg in a single-quoted string for PowerShell to parse.
-        arg = u"'" + arg + u"'"
-        return arg
-
-    # Escape command line args.
-    argv = map(escape_arg, args[0])
-    # Cause script errors (such as adb not found) to stop script immediately
-    # with an error.
-    ps_code = u'$ErrorActionPreference = "Stop"\r\n'
-    # Add current directory to the PATH var, to match cmd.exe/CreateProcess()
-    # behavior.
-    ps_code += u'$env:Path = ".;" + $env:Path\r\n'
-    # Precede by &, the PowerShell call operator, and separate args by space.
-    ps_code += u'& ' + u' '.join(argv)
-    # Make the PowerShell exit code the exit code of the subprocess.
-    ps_code += u'\r\nExit $LastExitCode'
-    # Encode as UTF-16LE (without Byte-Order-Mark) which Windows natively
-    # understands.
-    ps_code = ps_code.encode('utf-16le')
-
-    # Encode the PowerShell command as base64 and use the special
-    # -EncodedCommand option that base64 decodes. Base64 is just plain ASCII,
-    # so it should have no problem passing through Win32 CreateProcessA()
-    # (which python erroneously calls instead of CreateProcessW()).
-    return (['powershell.exe', '-NoProfile', '-NonInteractive',
-             '-EncodedCommand', base64.b64encode(ps_code)],) + args[1:]
-
-
-# Call this instead of subprocess.check_output() to work-around issue in Python
-# 2's subprocess class on Windows where it doesn't support Unicode.
-def _subprocess_check_output(*args, **kwargs):
-    try:
-        return subprocess.check_output(*_get_subprocess_args(args), **kwargs)
-    except subprocess.CalledProcessError as e:
-        # Show real command line instead of the powershell.exe command line.
-        raise subprocess.CalledProcessError(e.returncode, args[0],
-                                            output=e.output)
-
-
-# Call this instead of subprocess.Popen(). Like _subprocess_check_output().
-def _subprocess_Popen(*args, **kwargs):
-    return subprocess.Popen(*_get_subprocess_args(args), **kwargs)
-
-
-def split_lines(s):
+def split_lines(s: str) -> list[str]:
     """Splits lines in a way that works even on Windows and old devices.
 
     Windows will see \r\n instead of \n, old devices do the same, old devices
     on Windows will see \r\r\n.
     """
-    # rstrip is used here to workaround a difference between splineslines and
+    # rstrip is used here to workaround a difference between splitlines and
     # re.split:
     # >>> 'foo\n'.splitlines()
     # ['foo']
@@ -229,12 +179,11 @@ def split_lines(s):
     return re.split(r'[\r\n]+', s.rstrip())
 
 
-def version(adb_path=None):
+def version(adb_path: list[str] | None = None) -> int:
     """Get the version of adb (in terms of ADB_SERVER_VERSION)."""
 
     adb_path = adb_path if adb_path is not None else ['adb']
-    version_output = subprocess.check_output(adb_path + ['version'])
-    version_output = version_output.decode('utf-8')
+    version_output = subprocess.check_output(adb_path + ['version'], encoding='utf-8')
     pattern = r'^Android Debug Bridge version 1.0.(\d+)$'
     result = re.match(pattern, version_output.splitlines()[0])
     if not result:
@@ -259,28 +208,30 @@ class AndroidDevice(object):
     _RETURN_CODE_SEARCH_LENGTH = len(
         '{0}255\r\r\n'.format(_RETURN_CODE_DELIMITER))
 
-    def __init__(self, serial, product=None, adb_path='adb'):
+    def __init__(
+        self, serial: str | None, product: str | None = None, adb_path: str = 'adb'
+    ) -> None:
         self.serial = serial
         self.product = product
         self.adb_path = adb_path
         self.adb_cmd = [adb_path]
 
         if self.serial is not None:
-            self.adb_cmd.extend(['-s', serial])
+            self.adb_cmd.extend(['-s', self.serial])
         if self.product is not None:
-            self.adb_cmd.extend(['-p', product])
-        self._linesep = None
-        self._features = None
+            self.adb_cmd.extend(['-p', self.product])
+        self._linesep: str | None = None
+        self._features: list[str] | None = None
 
     @property
-    def linesep(self):
+    def linesep(self) -> str:
         if self._linesep is None:
             self._linesep = subprocess.check_output(
-                self.adb_cmd + ['shell', 'echo']).decode('utf-8')
+                self.adb_cmd + ['shell', 'echo'], encoding='utf-8')
         return self._linesep
 
     @property
-    def features(self):
+    def features(self) -> list[str]:
         if self._features is None:
             try:
                 self._features = split_lines(self._simple_call(['features']))
@@ -288,16 +239,16 @@ class AndroidDevice(object):
                 self._features = []
         return self._features
 
-    def has_shell_protocol(self):
+    def has_shell_protocol(self) -> bool:
         return version(self.adb_cmd) >= 35 and 'shell_v2' in self.features
 
-    def _make_shell_cmd(self, user_cmd):
+    def _make_shell_cmd(self, user_cmd: list[str]) -> list[str]:
         command = self.adb_cmd + ['shell'] + user_cmd
         if not self.has_shell_protocol():
             command += self._RETURN_CODE_PROBE
         return command
 
-    def _parse_shell_output(self, out):
+    def _parse_shell_output(self, out: str) -> tuple[int, str]:
         """Finds the exit code string from shell output.
 
         Args:
@@ -325,12 +276,12 @@ class AndroidDevice(object):
         out = out[:-len(partition[1]) - len(partition[2])]
         return result, out
 
-    def _simple_call(self, cmd):
+    def _simple_call(self, cmd: list[str]) -> str:
         logging.info(' '.join(self.adb_cmd + cmd))
-        return _subprocess_check_output(
+        return subprocess.check_output(
             self.adb_cmd + cmd, stderr=subprocess.STDOUT).decode('utf-8')
 
-    def shell(self, cmd):
+    def shell(self, cmd: list[str]) -> tuple[str, str]:
         """Calls `adb shell`
 
         Args:
@@ -348,7 +299,7 @@ class AndroidDevice(object):
             raise ShellError(cmd, stdout, stderr, exit_code)
         return stdout, stderr
 
-    def shell_nocheck(self, cmd):
+    def shell_nocheck(self, cmd: list[str]) -> tuple[int, str, str]:
         """Calls `adb shell`
 
         Args:
@@ -360,19 +311,23 @@ class AndroidDevice(object):
         """
         cmd = self._make_shell_cmd(cmd)
         logging.info(' '.join(cmd))
-        p = _subprocess_Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
         stdout, stderr = p.communicate()
-        stdout = stdout.decode('utf-8')
-        stderr = stderr.decode('utf-8')
         if self.has_shell_protocol():
             exit_code = p.returncode
         else:
             exit_code, stdout = self._parse_shell_output(stdout)
         return exit_code, stdout, stderr
 
-    def shell_popen(self, cmd, kill_atexit=True, preexec_fn=None,
-                    creationflags=0, **kwargs):
+    def shell_popen(
+        self,
+        cmd: list[str],
+        kill_atexit: bool = True,
+        preexec_fn: Callable[[], None] | None = None,
+        creationflags: int = 0,
+        **kwargs: Any,
+    ) -> subprocess.Popen[Any]:
         """Calls `adb shell` and returns a handle to the adb process.
 
         This function provides direct access to the subprocess used to run the
@@ -400,27 +355,27 @@ class AndroidDevice(object):
                 preexec_fn = os.setpgrp
             elif preexec_fn is not os.setpgrp:
                 fn = preexec_fn
-                def _wrapper():
+                def _wrapper() -> None:
                     fn()
                     os.setpgrp()
                 preexec_fn = _wrapper
 
-        p = _subprocess_Popen(command, creationflags=creationflags,
-                              preexec_fn=preexec_fn, **kwargs)
+        p = subprocess.Popen(command, creationflags=creationflags,
+                             preexec_fn=preexec_fn, **kwargs)
 
         if kill_atexit:
             atexit.register(p.kill)
 
         return p
 
-    def install(self, filename, replace=False):
+    def install(self, filename: str, replace: bool = False) -> str:
         cmd = ['install']
         if replace:
             cmd.append('-r')
         cmd.append(filename)
         return self._simple_call(cmd)
 
-    def push(self, local, remote, sync=False):
+    def push(self, local: str | list[str], remote: str, sync: bool = False) -> str:
         """Transfer a local file or directory to the device.
 
         Args:
@@ -430,7 +385,7 @@ class AndroidDevice(object):
                   those on the device. If False, transfers all files.
 
         Returns:
-            Exit status of the push command.
+            Output of the command.
         """
         cmd = ['push']
         if sync:
@@ -444,73 +399,73 @@ class AndroidDevice(object):
 
         return self._simple_call(cmd)
 
-    def pull(self, remote, local):
+    def pull(self, remote: str, local: str) -> str:
         return self._simple_call(['pull', remote, local])
 
-    def sync(self, directory=None):
+    def sync(self, directory: str | None = None) -> str:
         cmd = ['sync']
         if directory is not None:
             cmd.append(directory)
         return self._simple_call(cmd)
 
-    def tcpip(self, port):
+    def tcpip(self, port: str) -> str:
         return self._simple_call(['tcpip', port])
 
-    def usb(self):
+    def usb(self) -> str:
         return self._simple_call(['usb'])
 
-    def reboot(self):
+    def reboot(self) -> str:
         return self._simple_call(['reboot'])
 
-    def remount(self):
+    def remount(self) -> str:
         return self._simple_call(['remount'])
 
-    def root(self):
+    def root(self) -> str:
         return self._simple_call(['root'])
 
-    def unroot(self):
+    def unroot(self) -> str:
         return self._simple_call(['unroot'])
 
-    def connect(self, host):
+    def connect(self, host: str) -> str:
         return self._simple_call(['connect', host])
 
-    def disconnect(self, host):
+    def disconnect(self, host: str) -> str:
         return self._simple_call(['disconnect', host])
 
-    def forward(self, local, remote):
+    def forward(self, local: str, remote: str) -> str:
         return self._simple_call(['forward', local, remote])
 
-    def forward_list(self):
+    def forward_list(self) -> str:
         return self._simple_call(['forward', '--list'])
 
-    def forward_no_rebind(self, local, remote):
+    def forward_no_rebind(self, local: str, remote: str) -> str:
         return self._simple_call(['forward', '--no-rebind', local, remote])
 
-    def forward_remove(self, local):
+    def forward_remove(self, local: str) -> str:
         return self._simple_call(['forward', '--remove', local])
 
-    def forward_remove_all(self):
+    def forward_remove_all(self) -> str:
         return self._simple_call(['forward', '--remove-all'])
 
-    def reverse(self, remote, local):
+    def reverse(self, remote: str, local: str) -> str:
         return self._simple_call(['reverse', remote, local])
 
-    def reverse_list(self):
+    def reverse_list(self) -> str:
         return self._simple_call(['reverse', '--list'])
 
-    def reverse_no_rebind(self, local, remote):
+    def reverse_no_rebind(self, local: str, remote: str) -> str:
         return self._simple_call(['reverse', '--no-rebind', local, remote])
 
-    def reverse_remove_all(self):
+    def reverse_remove_all(self) -> str:
         return self._simple_call(['reverse', '--remove-all'])
 
-    def reverse_remove(self, remote):
+    def reverse_remove(self, remote: str) -> str:
         return self._simple_call(['reverse', '--remove', remote])
 
-    def wait(self):
+    def wait(self) -> str:
         return self._simple_call(['wait-for-device'])
 
-    def get_prop(self, prop_name):
+    def get_prop(self, prop_name: str) -> str | None:
         output = split_lines(self.shell(['getprop', prop_name])[0])
         if len(output) != 1:
             raise RuntimeError('Too many lines in getprop output:\n' +
@@ -520,7 +475,7 @@ class AndroidDevice(object):
             return None
         return value
 
-    def set_prop(self, prop_name, value):
+    def set_prop(self, prop_name: str, value: str) -> None:
         self.shell(['setprop', prop_name, value])
 
     def logcat(self) -> str:
