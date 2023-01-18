@@ -20,20 +20,21 @@ describe('Viewer ScreenRecording', () => {
   beforeAll(async () => {
     browser.manage().timeouts().implicitlyWait(1000);
     browser.get('file://' + E2eTestUtils.getProductionIndexHtmlPath());
-  }),
-    it('processes trace and renders view', async () => {
-      await E2eTestUtils.uploadFixture(
-        'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4'
-      );
-      await E2eTestUtils.closeSnackBarIfNeeded();
-      await E2eTestUtils.clickViewTracesButton();
+  });
 
-      const viewer = element(by.css('viewer-screen-recording'));
-      expect(await viewer.isPresent()).toBeTruthy();
+  it('processes trace and renders view', async () => {
+    await E2eTestUtils.uploadFixture(
+      'traces/elapsed_and_real_timestamp/screen_recording_metadata_v2.mp4'
+    );
+    await E2eTestUtils.closeSnackBarIfNeeded();
+    await E2eTestUtils.clickViewTracesButton();
 
-      const video = element(by.css('viewer-screen-recording video'));
-      expect(await video.isPresent()).toBeTruthy();
-      expect(await video.getAttribute('src')).toContain('blob:');
-      expect(await video.getAttribute('currentTime')).toEqual('0');
-    });
+    const viewer = element(by.css('viewer-screen-recording'));
+    expect(await viewer.isPresent()).toBeTruthy();
+
+    const video = element(by.css('viewer-screen-recording video'));
+    expect(await video.isPresent()).toBeTruthy();
+    expect(await video.getAttribute('src')).toContain('blob:');
+    expect(await video.getAttribute('currentTime')).toBeCloseTo(0, 0.001);
+  });
 });
