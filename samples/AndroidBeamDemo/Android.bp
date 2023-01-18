@@ -1,0 +1,13 @@
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+android_test {
+    name: "AndroidBeamDemo",
+    // Only compile source java files in this apk.
+    srcs: ["src/**/*.java"],
+    sdk_version: "current",
+    dex_preopt: {
+        enabled: false,
+    },
+}
