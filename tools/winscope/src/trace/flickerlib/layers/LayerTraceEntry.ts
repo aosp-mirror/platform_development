@@ -47,8 +47,7 @@ LayerTraceEntry.fromProto = (
     .setVSyncId(`${vSyncId}`)
     .setHwcBlob(hwcBlob)
     .setWhere(where)
-    .setRealToElapsedTimeOffsetNs(`${realToElapsedTimeOffsetNs ?? 0}`
-  );
+    .setRealToElapsedTimeOffsetNs(`${realToElapsedTimeOffsetNs ?? 0}`);
   const entry: LayerTraceEntry = builder.build();
 
   addAttributes(entry, protos, realToElapsedTimeOffsetNs === undefined || useElapsedTime);
