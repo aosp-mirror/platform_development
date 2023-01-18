@@ -385,6 +385,7 @@ TypeAndCreationStatus ABIWrapper::SetTypeKind(
   }
   if (type_ptr->isArrayType()) {
     auto array_type_ir = std::make_unique<repr::ArrayTypeIR>();
+    array_type_ir->SetUnknownBound(type_ptr->isIncompleteArrayType());
     array_type_ir->SetSourceFile(source_file);
     return TypeAndCreationStatus(std::move(array_type_ir));
   }
