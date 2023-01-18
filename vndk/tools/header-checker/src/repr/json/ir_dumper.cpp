@@ -265,6 +265,7 @@ IRToJsonConverter::ConvertBuiltinTypeIR(const BuiltinTypeIR *builtin_typep) {
 JsonObject
 IRToJsonConverter::ConvertArrayTypeIR(const ArrayTypeIR *array_typep) {
   JsonObject array_type;
+  array_type.Set("is_of_unknown_bound", array_typep->IsOfUnknownBound());
   AddTypeInfo(array_type, array_typep);
   return array_type;
 }

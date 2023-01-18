@@ -27,6 +27,7 @@ message BasicNamedAndTypedDecl {
 
 message ArrayType {
   optional BasicNamedAndTypedDecl type_info = 1;
+  optional bool is_of_unknown_bound = 2;
 }
 
 message PointerType {
