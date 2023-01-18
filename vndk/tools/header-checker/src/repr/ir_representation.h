@@ -508,9 +508,18 @@ class EnumTypeIR : public TypeIR {
 
 class ArrayTypeIR : public TypeIR {
  public:
+  void SetUnknownBound(bool is_of_unknown_bound) {
+    is_of_unknown_bound_ = is_of_unknown_bound;
+  }
+
+  bool IsOfUnknownBound() const { return is_of_unknown_bound_; }
+
   LinkableMessageKind GetKind() const override {
     return LinkableMessageKind::ArrayTypeKind;
   }
+
+ private:
+  bool is_of_unknown_bound_ = false;
 };
 
 class PointerTypeIR : public TypeIR {
