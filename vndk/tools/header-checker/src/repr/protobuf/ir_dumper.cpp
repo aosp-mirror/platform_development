@@ -269,6 +269,7 @@ abi_dump::BuiltinType IRToProtobufConverter::ConvertBuiltinTypeIR(
 abi_dump::ArrayType IRToProtobufConverter::ConvertArrayTypeIR(
     const ArrayTypeIR *array_typep) {
   abi_dump::ArrayType added_array_type;
+  added_array_type.set_is_of_unknown_bound(array_typep->IsOfUnknownBound());
   if (!AddTypeInfo(added_array_type.mutable_type_info(), array_typep)) {
     llvm::errs() << "ArrayTypeIR could not be converted\n";
     ::exit(1);
