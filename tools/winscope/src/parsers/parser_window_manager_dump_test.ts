@@ -35,8 +35,9 @@ describe('ParserWindowManagerDump', () => {
     expect(parser.getTimestamps(TimestampType.ELAPSED)).toEqual(expected);
   });
 
-  it("doesn't provide real timestamp (never)", () => {
-    expect(parser.getTimestamps(TimestampType.REAL)).toEqual(undefined);
+  it('provides real timestamp (always zero)', () => {
+    const expected = [new Timestamp(TimestampType.REAL, 0n)];
+    expect(parser.getTimestamps(TimestampType.REAL)).toEqual(expected);
   });
 
   it('retrieves trace entry from elapsed timestamp', () => {

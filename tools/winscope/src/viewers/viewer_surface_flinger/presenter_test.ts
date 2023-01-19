@@ -218,7 +218,7 @@ describe('PresenterSurfaceFlinger', () => {
     presenter.notifyCurrentTraceEntries(await getEntriesWithMultiDisplaySfTrace());
     expect(uiData.displayIds.length).toEqual(5);
     // we want the ids to be sorted
-    expect(uiData.displayIds).toEqual([0,2,3,4,5]);
+    expect(uiData.displayIds).toEqual([0, 2, 3, 4, 5]);
   });
 
   async function getEntriesWithMultiDisplaySfTrace(): Promise<Map<TraceType, any>> {

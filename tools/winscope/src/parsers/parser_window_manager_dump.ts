@@ -48,10 +48,12 @@ class ParserWindowManagerDump extends Parser {
   }
 
   override getTimestamp(type: TimestampType, entryProto: any): undefined | Timestamp {
-    if (type !== TimestampType.ELAPSED) {
-      return undefined;
+    if (type === TimestampType.ELAPSED) {
+      return new Timestamp(TimestampType.ELAPSED, 0n);
+    } else if (type === TimestampType.REAL) {
+      return new Timestamp(TimestampType.REAL, 0n);
     }
-    return new Timestamp(TimestampType.ELAPSED, 0n);
+    return undefined;
   }
 
   override processDecodedEntry(
