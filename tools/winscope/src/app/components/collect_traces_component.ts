@@ -131,7 +131,7 @@ import {ParserErrorSnackBarComponent} from './parser_error_snack_bar_component';
                 <div
                   class="trace-section"
                   *ngIf="tracingConfig.tracingConfigIsSet() && connect.isStartTraceState()">
-                  <trace-config [traces]="tracingConfig.getTracingConfig()"></trace-config>
+                  <trace-config></trace-config>
                   <div class="start-btn">
                     <button color="primary" mat-stroked-button (click)="startTracing()">
                       Start trace

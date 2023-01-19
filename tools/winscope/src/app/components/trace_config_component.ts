@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {ChangeDetectorRef, Component, Inject, Input} from '@angular/core';
+import {Component} from '@angular/core';
 import {
   EnableConfiguration,
   SelectionConfiguration,
   TraceConfiguration,
-  TraceConfigurationMap,
 } from 'trace_collection/trace_collection_utils';
+import {TracingConfig} from 'trace_collection/tracing_config';
 
 @Component({
   selector: 'trace-config',
@@ -95,9 +95,7 @@ import {
 })
 export class TraceConfigComponent {
   objectKeys = Object.keys;
-  @Input() traces!: TraceConfigurationMap;
-
-  constructor(@Inject(ChangeDetectorRef) private cdr: ChangeDetectorRef) { }
+  traces = TracingConfig.getInstance().getTracingConfig();
 
   advancedConfigTraces() {
     const advancedConfigs: string[] = [];
@@ -134,13 +132,11 @@ export class TraceConfigComponent {
     if (trace.isTraceCollection) {
       this.traceEnableConfigs(trace).forEach((c: EnableConfiguration) => (c.enabled = run));
     }
-    this.cdr.detectChanges();
   }
 
   changeTraceCollectionConfig(trace: TraceConfiguration): void {
     if (trace.isTraceCollection) {
       trace.run = this.traceEnableConfigs(trace).every((c: EnableConfiguration) => c.enabled);
     }
-    this.cdr.detectChanges();
   }
 }
