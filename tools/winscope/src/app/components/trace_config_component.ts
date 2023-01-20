@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Component, Input} from '@angular/core';
+import {ChangeDetectorRef, Component, Inject, Input} from '@angular/core';
 import {
   EnableConfiguration,
   SelectionConfiguration,
@@ -50,7 +50,7 @@ import {
           class="enable-config"
           [disabled]="!traces[traceKey].run && !traces[traceKey].isTraceCollection"
           [(ngModel)]="enableConfig.enabled"
-          (ngModelChange)="changeTraceCollectionConfig(traces[traceKey])"
+          (change)="changeTraceCollectionConfig(traces[traceKey])"
           >{{ enableConfig.name }}</mat-checkbox
         >
       </div>
@@ -97,6 +97,8 @@ export class TraceConfigComponent {
   objectKeys = Object.keys;
   @Input() traces!: TraceConfigurationMap;
 
+  constructor(@Inject(ChangeDetectorRef) private cdr: ChangeDetectorRef) { }
+
   advancedConfigTraces() {
     const advancedConfigs: string[] = [];
     Object.keys(this.traces).forEach((traceKey: string) => {
@@ -132,11 +134,13 @@ export class TraceConfigComponent {
     if (trace.isTraceCollection) {
       this.traceEnableConfigs(trace).forEach((c: EnableConfiguration) => (c.enabled = run));
     }
+    this.cdr.detectChanges();
   }
 
   changeTraceCollectionConfig(trace: TraceConfiguration): void {
     if (trace.isTraceCollection) {
       trace.run = this.traceEnableConfigs(trace).every((c: EnableConfiguration) => c.enabled);
     }
+    this.cdr.detectChanges();
   }
 }
