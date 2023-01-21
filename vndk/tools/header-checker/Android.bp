@@ -36,7 +36,6 @@ cc_defaults {
     cppflags: [
         "-fno-exceptions",
         "-fno-rtti",
-        "-std=c++14",
     ],
 
     target: {
