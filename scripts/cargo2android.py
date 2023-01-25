@@ -71,6 +71,7 @@ RENAME_MAP = {
     # This map includes all changes to the default rust module names
     # to resolve name conflicts, avoid confusion, or work as plugin.
     'libash': 'libash_rust',
+    'libatomic': 'libatomic_rust',
     'libbacktrace': 'libbacktrace_rust',
     'libbase': 'libbase_rust',
     'libbase64': 'libbase64_rust',
