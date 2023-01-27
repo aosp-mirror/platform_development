@@ -523,23 +523,23 @@ def find_files_in_props(target_arch, arch_install_dir, variation, name, props, f
     logging.debug('{} {} {} {} {}'.format(
         target_arch, arch_install_dir, variation, name, props))
 
-    def add_info(file, name, variation, arch, is_cfi, is_header):
-        info = (name, variation, arch, is_cfi, is_header)
+    def add_info(file, name, variation, arch, is_sanitized, is_header):
+        info = (name, variation, arch, is_sanitized, is_header)
         info_list = file_to_info.get(file)
         if not info_list:
             info_list = []
             file_to_info[file] = info_list
         info_list.append(info)
 
-    def find_file_in_list(dict, key, is_cfi):
+    def find_file_in_list(dict, key, is_sanitized):
         list = dict.get(key)
         logging.debug('    {} {}'.format(key, list))
         if list:
             for item in list:
                 item_path = os.path.join(arch_install_dir, item)
-                add_info(item_path, name, variation, arch, is_cfi, False)
+                add_info(item_path, name, variation, arch, is_sanitized, False)
 
-    def find_file_in_dirs(dict, key, is_cfi, is_header):
+    def find_file_in_dirs(dict, key, is_sanitized, is_header):
         dirs = dict.get(key)
         logging.debug('    {} {}'.format(key, dirs))
         if dirs:
@@ -549,30 +549,30 @@ def find_files_in_props(target_arch, arch_install_dir, variation, name, props, f
                 for root, _, files in os.walk(dir_path, followlinks = True):
                     for file_name in sorted(files):
                         item_path = os.path.join(root, file_name)
-                        add_info(item_path, name, variation, arch, is_cfi, is_header)
+                        add_info(item_path, name, variation, arch, is_sanitized, is_header)
 
-    def find_file_in_dict(dict, is_cfi):
+    def find_file_in_dict(dict, is_sanitized):
         logging.debug('    arch {}'.format(arch))
         logging.debug('    name {}'.format( name))
-        logging.debug('    is_cfi {}'.format(is_cfi))
+        logging.debug('    is_sanitized {}'.format(is_sanitized))
 
         src = dict.get('src')
         logging.debug('    src {}'.format(src))
         if src:
             src_path = os.path.join(arch_install_dir, src)
-            add_info(src_path, name, variation, arch, is_cfi, False)
+            add_info(src_path, name, variation, arch, is_sanitized, False)
 
         notice = dict.get('notice')
         logging.debug('    notice {}'.format(notice))
         if notice:
             notice_path = os.path.join(arch_install_dir, notice)
-            add_info(notice_path, name, variation, arch, is_cfi, False)
+            add_info(notice_path, name, variation, arch, is_sanitized, False)
 
-        find_file_in_list(dict, 'init_rc', is_cfi)
-        find_file_in_list(dict, 'vintf_fragments', is_cfi)
+        find_file_in_list(dict, 'init_rc', is_sanitized)
+        find_file_in_list(dict, 'vintf_fragments', is_sanitized)
 
-        find_file_in_dirs(dict, 'export_include_dirs', is_cfi, True)
-        find_file_in_dirs(dict, 'export_system_include_dirs', is_cfi, True)
+        find_file_in_dirs(dict, 'export_include_dirs', is_sanitized, True)
+        find_file_in_dirs(dict, 'export_system_include_dirs', is_sanitized, True)
 
     for arch in sorted(props):
         name = props[arch]['name']
@@ -580,6 +580,9 @@ def find_files_in_props(target_arch, arch_install_dir, variation, name, props, f
         cfi = props[arch].get('cfi')
         if cfi:
             find_file_in_dict(cfi, True)
+        hwasan = props[arch].get('hwasan')
+        if hwasan:
+            find_file_in_dict(hwasan, True)
 
 
 def find_all_props_files(install_dir):
@@ -713,7 +716,7 @@ def check_module_usage(install_dir, ninja_binary, image, ninja_file, goals,
     for f, i in sorted(used_file_to_info.items()):
         logging.debug('{} {}'.format(f, i))
         for m in i:
-            (name, variation, arch, is_cfi, is_header) = m
+            (name, variation, arch, is_sanitized, is_header) = m
             if not is_header:
                 used_modules.add(name)
 
