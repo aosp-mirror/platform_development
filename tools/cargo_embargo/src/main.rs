@@ -162,7 +162,7 @@ fn main() -> Result<()> {
         let mut paths = std::env::split_paths(&path).collect::<VecDeque<_>>();
         paths.push_front(cargo_bin);
         let new_path = std::env::join_paths(paths)?;
-        std::env::set_var("PATH", &new_path);
+        std::env::set_var("PATH", new_path);
     }
 
     let cargo_out_path = "cargo.out";
@@ -236,7 +236,7 @@ fn generate_cargo_out(cfg: &Config, cargo_out_path: &str, cargo_metadata_path: &
     let target_dir_args = ["--target-dir", "target.tmp"];
 
     // cargo clean
-    run_cargo(&mut cargo_out_file, Command::new("cargo").arg("clean").args(&target_dir_args))?;
+    run_cargo(&mut cargo_out_file, Command::new("cargo").arg("clean").args(target_dir_args))?;
 
     let default_target = "x86_64-unknown-linux-gnu";
     let feature_args = if cfg.features.is_empty() {
@@ -274,8 +274,8 @@ fn generate_cargo_out(cfg: &Config, cargo_out_path: &str, cargo_metadata_path: &
         &mut cargo_out_file,
         Command::new("cargo")
             .args(["build", "--target", default_target])
-            .args(&verbose_args)
-            .args(&target_dir_args)
+            .args(verbose_args)
+            .args(target_dir_args)
             .args(&workspace_args)
             .args(&feature_args),
     )?;
@@ -286,8 +286,8 @@ fn generate_cargo_out(cfg: &Config, cargo_out_path: &str, cargo_metadata_path: &
             &mut cargo_out_file,
             Command::new("cargo")
                 .args(["build", "--target", default_target, "--tests"])
-                .args(&verbose_args)
-                .args(&target_dir_args)
+                .args(verbose_args)
+                .args(target_dir_args)
                 .args(&workspace_args)
                 .args(&feature_args),
         )?;
@@ -339,7 +339,7 @@ fn write_android_bp(
             let mut outs: Vec<String> = Vec::new();
             for f in out_files.iter() {
                 let dest = out_dir.join(f.file_name().unwrap());
-                std::fs::copy(&f, &dest).expect("failed to copy out file");
+                std::fs::copy(f, dest).expect("failed to copy out file");
                 outs.push(f.file_name().unwrap().to_str().unwrap().to_string());
             }
 
@@ -444,7 +444,7 @@ fn crate_to_bp_modules(
                 ("rust_proc_macro".to_string(), stem.clone(), stem)
             }
             "test" => {
-                let suffix = crate_.main_src.to_string_lossy().to_owned();
+                let suffix = crate_.main_src.to_string_lossy().into_owned();
                 let suffix = suffix.replace('/', "_").replace(".rs", "");
                 let stem = crate_.package_name.clone() + "_test_" + &suffix;
                 ("rust_test".to_string() + host, stem.clone(), stem)
