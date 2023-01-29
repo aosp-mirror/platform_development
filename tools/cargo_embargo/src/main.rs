@@ -339,7 +339,7 @@ fn write_android_bp(
             let mut outs: Vec<String> = Vec::new();
             for f in out_files.iter() {
                 let dest = out_dir.join(f.file_name().unwrap());
-                std::fs::copy(f, &dest).expect("failed to copy out file");
+                std::fs::copy(f, dest).expect("failed to copy out file");
                 outs.push(f.file_name().unwrap().to_str().unwrap().to_string());
             }
 
