@@ -191,7 +191,41 @@ class Bazel(object):
                 return True
         return False
 
-    def query_rdep_tests_dirs(self, modules, path):
+    # Return all the TEST_MAPPING files within a given path.
+    def find_all_test_mapping_files(self, path):
+        result = []
+        for root, dirs, files in os.walk(path):
+            if "TEST_MAPPING" in files:
+                result.append(os.path.join(root, "TEST_MAPPING"))
+        return result
+
+    # For a given test, return the TEST_MAPPING file where the test is mapped.
+    # This limits the search to the directory specified in "path" along with its subdirs.
+    def test_to_test_mapping(self, env, path, test):
+        test_mapping_files = self.find_all_test_mapping_files(env.ANDROID_BUILD_TOP + path)
+        for file in test_mapping_files:
+            with open(file) as fd:
+                if "\""+ test + "\"" in fd.read():
+                    mapping_path = file.split("/TEST_MAPPING")[0].split("//")[1]
+                    return mapping_path
+
+        return None
+
+    # Returns:
+    # rdep_test: for tests specified locally.
+    # rdep_dirs: for paths to TEST_MAPPING files for reverse dependencies.
+    #
+    # We import directories for non-local tests because including tests directly has proven to be
+    # fragile and burdensome. For example, whenever a project removes or renames a test, all the
+    # TEST_MAPPING files for its reverse dependencies must be updated or we get test breakages.
+    # That can be many tens of projects that must updated to prevent the reported breakage of tests
+    # that no longer exist. Similarly when a test is added, it won't be run when the reverse
+    # dependencies change unless/until update_crate_tests.py is run for its depenencies.
+    # Importing TEST_MAPPING files instead of tests solves both of these problems. When tests are
+    # removed, renamed, or added, only files local to the project need to be modified.
+    # The downside is that we potentially miss some tests. But this seems like a reasonable
+    # tradeoff.
+    def query_rdep_tests_dirs(self, env, modules, path, exclude_dir):
         """Returns all reverse dependency tests for modules in this package."""
         rdep_tests = set()
         rdep_dirs = set()
@@ -204,7 +238,15 @@ class Bazel(object):
                         continue
                     path_match = path_pat.match(mod)
                     if path_match or not EXTERNAL_PAT.match(mod):
-                        rdep_tests.add(mod.split(":")[1].split("--")[0])
+                        rdep_path = mod.split(":")[0]
+                        rdep_test = mod.split(":")[1].split("--")[0]
+                        mapping_path = self.test_to_test_mapping(env, rdep_path, rdep_test)
+                        # Only include tests directly if they're local to the project.
+                        if (mapping_path is not None) and exclude_dir.endswith(mapping_path):
+                            rdep_tests.add(rdep_test)
+                        # All other tests are included by path.
+                        elif mapping_path is not None:
+                            rdep_dirs.add(mapping_path)
                     else:
                         label_match = LABEL_PAT.match(mod)
                         if label_match:
@@ -248,7 +290,8 @@ class Package(object):
         # Move to the package_directory.
         os.chdir(self.dir)
         modules = bazel.query_modules(self.dir_rel)
-        (self.rdep_tests, self.rdep_dirs) = bazel.query_rdep_tests_dirs(modules, self.dir_rel)
+        (self.rdep_tests, self.rdep_dirs) = bazel.query_rdep_tests_dirs(env, modules,
+                                                                        self.dir_rel, self.dir)
 
     def get_rdep_tests_dirs(self):
         return (self.rdep_tests, self.rdep_dirs)
@@ -337,7 +380,6 @@ def parse_args():
                         action='store_true',
                         help='Pushes change to Gerrit.')
     return parser.parse_args()
-
 
 def main():
     args = parse_args()
