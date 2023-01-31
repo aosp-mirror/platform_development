@@ -128,20 +128,13 @@ import {ParserErrorSnackBarComponent} from './parser_error_snack_bar_component';
               label="Trace"
               [disabled]="connect.isEndTraceState() || connect.isLoadDataState()">
               <div class="tabbed-section">
-                <div
-                  class="trace-section"
-                  *ngIf="tracingConfig.tracingConfigIsSet() && connect.isStartTraceState()">
+                <div class="trace-section" *ngIf="connect.isStartTraceState()">
                   <trace-config></trace-config>
                   <div class="start-btn">
                     <button color="primary" mat-stroked-button (click)="startTracing()">
                       Start trace
                     </button>
                   </div>
-                </div>
-                <div
-                  class="loading-info"
-                  *ngIf="!tracingConfig.tracingConfigIsSet() && connect.isStartTraceState()">
-                  <p class="mat-body-1">Loading tracing config...</p>
                 </div>
 
                 <div *ngIf="connect.isEndTraceState()" class="end-tracing">
@@ -172,9 +165,7 @@ import {ParserErrorSnackBarComponent} from './parser_error_snack_bar_component';
               label="Dump"
               [disabled]="connect.isEndTraceState() || connect.isLoadDataState()">
               <div class="tabbed-section">
-                <div
-                  class="dump-section"
-                  *ngIf="tracingConfig.tracingConfigIsSet() && connect.isStartTraceState()">
+                <div class="dump-section" *ngIf="connect.isStartTraceState()">
                   <h3 class="mat-subheading-2">Dump targets</h3>
                   <div class="selection">
                     <mat-checkbox
@@ -190,10 +181,6 @@ import {ParserErrorSnackBarComponent} from './parser_error_snack_bar_component';
                       Dump state
                     </button>
                   </div>
-                </div>
-
-                <div class="loading-info" *ngIf="!tracingConfig.tracingConfigIsSet()">
-                  <p class="mat-body-1">Loading dumping config...</p>
                 </div>
 
                 <load-progress
@@ -476,7 +463,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
 
   private requestedTraces() {
     const tracesFromCollection: string[] = [];
-    const tracingConfig = this.tracingConfig.getTracingConfig();
+    const tracingConfig = this.tracingConfig.getTraceConfig();
     const req = Object.keys(tracingConfig).filter((traceKey: string) => {
       const traceConfig = tracingConfig[traceKey];
       if (traceConfig.isTraceCollection) {
@@ -501,7 +488,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
 
   private requestedEnableConfig(): string[] {
     const req: string[] = [];
-    const tracingConfig = this.tracingConfig.getTracingConfig();
+    const tracingConfig = this.tracingConfig.getTraceConfig();
     Object.keys(tracingConfig).forEach((traceKey: string) => {
       const trace = tracingConfig[traceKey];
       if (!trace.isTraceCollection && trace.run && trace.config && trace.config.enableConfigs) {
@@ -516,7 +503,7 @@ export class CollectTracesComponent implements OnInit, OnDestroy {
   }
 
   private requestedSelection(traceType: string): ConfigMap | undefined {
-    const tracingConfig = this.tracingConfig.getTracingConfig();
+    const tracingConfig = this.tracingConfig.getTraceConfig();
     if (!tracingConfig[traceType].run) {
       return undefined;
     }

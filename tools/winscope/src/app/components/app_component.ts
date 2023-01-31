@@ -35,7 +35,6 @@ import {TraceDataListener} from 'interfaces/trace_data_listener';
 import {Timestamp} from 'trace/timestamp';
 import {TraceType} from 'trace/trace_type';
 import {proxyClient, ProxyState} from 'trace_collection/proxy_client';
-import {TracingConfig} from 'trace_collection/tracing_config';
 import {ViewerInputMethodComponent} from 'viewers/components/viewer_input_method_component';
 import {View, Viewer} from 'viewers/viewer';
 import {ViewerProtologComponent} from 'viewers/viewer_protolog/viewer_protolog_component';
@@ -257,8 +256,6 @@ export class AppComponent implements TraceDataListener {
         createCustomElement(ViewerWindowManagerComponent, {injector})
       );
     }
-
-    TracingConfig.getInstance().initialize(localStorage);
   }
 
   ngAfterViewInit() {
