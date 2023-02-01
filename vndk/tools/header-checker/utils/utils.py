@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import gzip
 import os
 import re
 import shutil
@@ -29,7 +28,6 @@ BUILTIN_HEADERS_DIR = (
 SO_EXT = '.so'
 SOURCE_ABI_DUMP_EXT_END = '.lsdump'
 SOURCE_ABI_DUMP_EXT = SO_EXT + SOURCE_ABI_DUMP_EXT_END
-COMPRESSED_SOURCE_ABI_DUMP_EXT = SOURCE_ABI_DUMP_EXT + '.gz'
 VENDOR_SUFFIX = '.vendor'
 
 DEFAULT_CPPFLAGS = ['-x', 'c++', '-std=c++11']
@@ -83,24 +81,27 @@ class Target(object):
 def _validate_dump_content(dump_path):
     """Make sure that the dump contains relative source paths."""
     with open(dump_path, 'r') as f:
-        if AOSP_DIR in f.read():
-            raise ValueError(
-                dump_path + ' contains absolute path to $ANDROID_BUILD_TOP.')
+        for line_number, line in enumerate(f, 1):
+            start = 0
+            while True:
+                start = line.find(AOSP_DIR, start)
+                if start < 0:
+                    break
+                # The substring is not preceded by a common path character.
+                if start == 0 or not (line[start - 1].isalnum() or
+                                      line[start - 1] in '.-_/'):
+                    raise ValueError(f'{dump_path} contains absolute path to '
+                                     f'$ANDROID_BUILD_TOP at line '
+                                     f'{line_number}:\n{line}')
+                start += len(AOSP_DIR)
 
 
-def copy_reference_dump(lib_path, reference_dump_dir, compress):
+def copy_reference_dump(lib_path, reference_dump_dir):
     reference_dump_path = os.path.join(
         reference_dump_dir, os.path.basename(lib_path))
-    if compress:
-        reference_dump_path += '.gz'
     os.makedirs(os.path.dirname(reference_dump_path), exist_ok=True)
     _validate_dump_content(lib_path)
-    if compress:
-        with open(lib_path, 'rb') as src_file:
-            with gzip.open(reference_dump_path, 'wb') as dst_file:
-                shutil.copyfileobj(src_file, dst_file)
-    else:
-        shutil.copyfile(lib_path, reference_dump_path)
+    shutil.copyfile(lib_path, reference_dump_path)
     print('Created abi dump at', reference_dump_path)
     return reference_dump_path
 
@@ -161,10 +162,11 @@ def make_tree(product, variant):
     return make_targets(product, variant, ['findlsdumps'])
 
 
-def make_libraries(product, variant, vndk_version, targets, libs):
+def make_libraries(product, variant, vndk_version, targets, libs,
+                   exclude_tags):
     """Build lsdump files for specific libs."""
     lsdump_paths = read_lsdump_paths(product, variant, vndk_version, targets,
-                                     build=True)
+                                     exclude_tags, build=True)
     make_target_paths = []
     for name in libs:
         if not (name in lsdump_paths and lsdump_paths[name]):
@@ -195,13 +197,16 @@ def _get_module_variant_dir_name(tag, vndk_version, arch_cpu_str):
     For example, android_x86_shared, android_vendor.R_arm_armv7-a-neon_shared.
     """
     if tag in ('LLNDK', 'NDK', 'PLATFORM'):
-        return 'android_%s_shared' % arch_cpu_str
-    if tag.startswith('VNDK'):
-        return 'android_vendor.%s_%s_shared' % (vndk_version, arch_cpu_str)
+        return f'android_{arch_cpu_str}_shared'
+    if tag.startswith('VNDK') or tag == 'VENDOR':
+        return f'android_vendor.{vndk_version}_{arch_cpu_str}_shared'
+    if tag == 'PRODUCT':
+        return f'android_product.{vndk_version}_{arch_cpu_str}_shared'
     raise ValueError(tag + ' is not a known tag.')
 
 
-def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, targets):
+def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, targets,
+                       exclude_tags):
     """Read lsdump paths from lsdump_paths.txt for each libname and variant.
 
     This function returns a dictionary, {lib_name: {arch_cpu: {tag: path}}}.
@@ -221,7 +226,7 @@ def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, targets):
     with open(lsdump_paths_file_path, 'r') as lsdump_paths_file:
         for line in lsdump_paths_file:
             tag, path = (x.strip() for x in line.split(':', 1))
-            if not path:
+            if not path or tag in exclude_tags:
                 continue
             dirname, filename = os.path.split(path)
             if not filename.endswith(SOURCE_ABI_DUMP_EXT):
@@ -248,14 +253,17 @@ def _read_lsdump_paths(lsdump_paths_file_path, vndk_version, targets):
     return lsdump_paths
 
 
-def read_lsdump_paths(product, variant, vndk_version, targets, build=True):
+def read_lsdump_paths(product, variant, vndk_version, targets, exclude_tags,
+                      build):
     """Build lsdump_paths.txt and read the paths."""
     lsdump_paths_file_path = get_lsdump_paths_file_path(product, variant)
-    if build:
-        make_targets(product, variant, [lsdump_paths_file_path])
     lsdump_paths_file_abspath = os.path.join(AOSP_DIR, lsdump_paths_file_path)
+    if build:
+        if os.path.lexists(lsdump_paths_file_abspath):
+            os.unlink(lsdump_paths_file_abspath)
+        make_targets(product, variant, [lsdump_paths_file_path])
     return _read_lsdump_paths(lsdump_paths_file_abspath, vndk_version,
-                              targets)
+                              targets, exclude_tags)
 
 
 def find_lib_lsdumps(lsdump_paths, libs, target):
@@ -297,12 +305,13 @@ def run_abi_diff(old_test_dump_path, new_test_dump_path, arch, lib_name,
             abi_diff_cmd += ['-input-format-old', DEFAULT_FORMAT]
         if '-input-format-new' not in flags:
             abi_diff_cmd += ['-input-format-new', DEFAULT_FORMAT]
-        try:
-            subprocess.check_call(abi_diff_cmd)
-        except subprocess.CalledProcessError as err:
-            return err.returncode
 
-    return 0
+        result = subprocess.run(abi_diff_cmd)
+        output = ""
+        if os.path.isfile(output_name):
+            with open(output_name, 'r') as output_file:
+                output = output_file.read()
+    return result.returncode, output
 
 
 def get_build_vars_for_product(names, product=None, variant=None):

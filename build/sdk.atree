@@ -91,7 +91,7 @@ development/tools/templates/ic_launcher_hdpi.png            platforms/${PLATFORM
 development/tools/templates/ic_launcher_xhdpi.png           platforms/${PLATFORM_NAME}/templates/ic_launcher_xhdpi.png
 
 # API database for tools such as lint
-${OUT_DIR}/target/common/obj/PACKAGING/framework-doc-stubs_generated-api-versions.xml  platforms/${PLATFORM_NAME}/data/api-versions.xml
+${OUT_DIR}/target/common/obj/PACKAGING/api_versions_public_generated-api-versions.xml  platforms/${PLATFORM_NAME}/data/api-versions.xml
 
 # API annotations database for lint
 prebuilts/sdk/sdk-annotations/annotations.zip platforms/${PLATFORM_NAME}/data/annotations.zip
@@ -174,7 +174,6 @@ developers/build/prebuilts/gradle/AdvancedImmersiveMode/                     sam
 developers/build/prebuilts/gradle/ImmersiveMode/                             samples/${PLATFORM_NAME}/ui/ImmersiveMode
 developers/build/prebuilts/gradle/RepeatingAlarm/                            samples/${PLATFORM_NAME}/background/RepeatingAlarm
 developers/build/prebuilts/gradle/TextLinkify/                               samples/${PLATFORM_NAME}/ui/TextLinkify
-developers/build/prebuilts/gradle/BasicRenderScript                          samples/${PLATFORM_NAME}/renderscript/BasicRenderScript
 developers/build/prebuilts/gradle/RenderScriptIntrinsic                      samples/${PLATFORM_NAME}/renderscript/RenderScriptIntrinsic
 developers/build/prebuilts/gradle/SlidingTabsBasic                           samples/${PLATFORM_NAME}/ui/SlidingTabsBasic
 developers/build/prebuilts/gradle/SlidingTabsColors                          samples/${PLATFORM_NAME}/ui/SlidingTabsColors
@@ -199,7 +198,6 @@ developers/build/prebuilts/gradle/ElevationBasic                             sam
 developers/build/prebuilts/gradle/ElevationDrag                              samples/${PLATFORM_NAME}/ui/views/Elevation/ElevationDrag
 developers/build/prebuilts/gradle/ClippingBasic                              samples/${PLATFORM_NAME}/ui/views/Clipping/ClippingBasic
 developers/build/prebuilts/gradle/JobScheduler                               samples/${PLATFORM_NAME}/background/JobScheduler
-developers/build/prebuilts/gradle/HdrViewfinder                              samples/${PLATFORM_NAME}/media/HdrViewfinder
 developers/build/prebuilts/gradle/DocumentCentricApps                        samples/${PLATFORM_NAME}/ui/activitytasks/DocumentCentricApps
 developers/build/prebuilts/gradle/DocumentCentricRelinquishIdentity          samples/${PLATFORM_NAME}/ui/activitytasks/DocumentCentricRelinquishIdentity
 developers/build/prebuilts/gradle/AppRestrictionEnforcer                     samples/${PLATFORM_NAME}/admin/AppRestrictionEnforcer
@@ -261,7 +259,6 @@ developers/build/prebuilts/gradle/XYZTouristAttractions         samples/${PLATFO
 
 # Old sample tree
 development/samples/AccelerometerPlay          samples/${PLATFORM_NAME}/legacy/AccelerometerPlay
-development/samples/AndroidBeamDemo            samples/${PLATFORM_NAME}/legacy/AndroidBeamDemo
 development/samples/ApiDemos                   samples/${PLATFORM_NAME}/legacy/ApiDemos
 development/samples/AppNavigation              samples/${PLATFORM_NAME}/legacy/AppNavigation
 development/samples/BackupRestore              samples/${PLATFORM_NAME}/legacy/BackupRestore
@@ -304,7 +301,6 @@ development/samples/WiFiDirectServiceDiscovery samples/${PLATFORM_NAME}/legacy/W
 development/samples/Wiktionary                 samples/${PLATFORM_NAME}/legacy/Wiktionary
 development/samples/WiktionarySimple           samples/${PLATFORM_NAME}/legacy/WiktionarySimple
 development/samples/XmlAdapters                samples/${PLATFORM_NAME}/legacy/XmlAdapters
-development/samples/RenderScript/HelloCompute  samples/${PLATFORM_NAME}/legacy/RenderScript/HelloCompute
 
 # NOTICE files are copied by build/core/Makefile from sdk.git
 development/sdk/sdk_files_NOTICE.txt           samples/${PLATFORM_NAME}/NOTICE.txt

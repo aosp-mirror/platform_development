@@ -22,8 +22,8 @@ EXPORTED_HEADER_DIRS = (INPUT_DIR,)
 REF_DUMP_DIR = os.path.join(SCRIPT_DIR, 'reference_dumps')
 
 
-def make_and_copy_reference_dumps(module, reference_dump_dir=REF_DUMP_DIR):
-    dump_dir = os.path.join(reference_dump_dir, module.arch)
+def make_and_copy_dump(module, dump_dir):
+    dump_dir = os.path.join(dump_dir, module.arch)
     os.makedirs(dump_dir, exist_ok=True)
     dump_path = os.path.join(dump_dir, module.get_dump_name())
     module.make_dump(dump_path)
@@ -78,18 +78,23 @@ class HeaderCheckerTest(unittest.TestCase):
 
     def run_and_compare_abi_diff(self, old_dump, new_dump, lib, arch,
                                  expected_return_code, flags=[]):
-        actual_output = run_abi_diff(old_dump, new_dump, arch, lib, flags)
-        self.assertEqual(actual_output, expected_return_code)
+        return_code, output = run_abi_diff(old_dump, new_dump, arch, lib,
+                                           flags)
+        self.assertEqual(return_code, expected_return_code)
+        return output
 
     def prepare_and_run_abi_diff(self, old_ref_dump_path, new_ref_dump_path,
                                  target_arch, expected_return_code, flags=[]):
-        self.run_and_compare_abi_diff(old_ref_dump_path, new_ref_dump_path,
-                                      'test', target_arch,
-                                      expected_return_code, flags)
+        return self.run_and_compare_abi_diff(
+            old_ref_dump_path, new_ref_dump_path, 'test', target_arch,
+            expected_return_code, flags)
 
-    def get_or_create_ref_dump(self, module, create):
+    def get_or_create_dump(self, module, create):
         if create:
-            return make_and_copy_reference_dumps(module, self.get_tmp_dir())
+            return make_and_copy_dump(module, self.get_tmp_dir())
+        self.assertTrue(module.has_reference_dump,
+                        f'Module {module.name} is not configured to generate '
+                        f'reference dump.')
         return os.path.join(REF_DUMP_DIR, module.arch, module.get_dump_name())
 
     def prepare_and_run_abi_diff_all_archs(self, old_lib, new_lib,
@@ -98,16 +103,18 @@ class HeaderCheckerTest(unittest.TestCase):
         old_modules = Module.get_test_modules_by_name(old_lib)
         new_modules = Module.get_test_modules_by_name(new_lib)
         self.assertEqual(len(old_modules), len(new_modules))
+        self.assertTrue(len(old_modules))
 
         for old_module, new_module in zip(old_modules, new_modules):
             self.assertEqual(old_module.arch, new_module.arch)
-            old_ref_dump_path = self.get_or_create_ref_dump(old_module,
-                                                            create_old)
-            new_ref_dump_path = self.get_or_create_ref_dump(new_module,
-                                                            create_new)
-            self.prepare_and_run_abi_diff(
-                old_ref_dump_path, new_ref_dump_path, new_module.arch,
+            old_dump_path = self.get_or_create_dump(old_module, create_old)
+            new_dump_path = self.get_or_create_dump(new_module, create_new)
+            output = self.prepare_and_run_abi_diff(
+                old_dump_path, new_dump_path, new_module.arch,
                 expected_return_code, flags)
+        # Since most test cases are independent of architecture, verifying one
+        # of the reports is sufficient.
+        return output
 
     def prepare_and_absolute_diff_all_archs(self, old_lib, new_lib):
         old_modules = Module.get_test_modules_by_name(old_lib)
@@ -116,10 +123,10 @@ class HeaderCheckerTest(unittest.TestCase):
 
         for old_module, new_module in zip(old_modules, new_modules):
             self.assertEqual(old_module.arch, new_module.arch)
-            old_ref_dump_path = self.get_or_create_ref_dump(old_module, False)
-            new_ref_dump_path = self.get_or_create_ref_dump(new_module, True)
-            self.assertEqual(_read_output_content(old_ref_dump_path),
-                             _read_output_content(new_ref_dump_path))
+            old_dump_path = self.get_or_create_dump(old_module, False)
+            new_dump_path = self.get_or_create_dump(new_module, True)
+            self.assertEqual(_read_output_content(old_dump_path),
+                             _read_output_content(new_dump_path))
 
     def test_example1_cpp(self):
         self.run_and_compare_name_cpp('example1.cpp')
@@ -132,14 +139,6 @@ class HeaderCheckerTest(unittest.TestCase):
 
     def test_example3_h(self):
         self.run_and_compare_name_cpp('example3.h')
-
-    def test_undeclared_types_h(self):
-        self.prepare_and_absolute_diff_all_archs(
-            'undeclared_types.h', 'undeclared_types.h')
-
-    def test_known_issues_h(self):
-        self.prepare_and_absolute_diff_all_archs(
-            'known_issues.h', 'known_issues.h')
 
     def test_libc_and_cpp(self):
         self.prepare_and_run_abi_diff_all_archs(
@@ -157,7 +156,11 @@ class HeaderCheckerTest(unittest.TestCase):
     def test_libc_and_cpp_and_libc_and_cpp_with_unused_struct_check_all(self):
         self.prepare_and_run_abi_diff_all_archs(
             "libc_and_cpp", "libc_and_cpp_with_unused_struct", 1,
-            ['-check-all-apis'])
+            ["-check-all-apis"])
+        self.prepare_and_run_abi_diff_all_archs(
+            "libc_and_cpp", "libc_and_cpp_with_unused_struct", 0,
+            ["-check-all-apis",
+             "-ignore-linker-set-key", "_ZTI12UnusedStruct"])
 
     def test_libc_and_cpp_with_unused_struct_and_libc_and_cpp_with_unused_cstruct(
             self):
@@ -181,6 +184,10 @@ class HeaderCheckerTest(unittest.TestCase):
     def test_libgolden_cpp_return_type_diff(self):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp", "libgolden_cpp_return_type_diff", 8)
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp", "libgolden_cpp_return_type_diff", 0,
+            ["-ignore-linker-set-key", "_ZN17HighVolumeSpeaker6ListenEv",
+             "-ignore-linker-set-key", "_ZN16LowVolumeSpeaker6ListenEv"])
 
     def test_libgolden_cpp_add_odr(self):
         self.prepare_and_run_abi_diff_all_archs(
@@ -234,6 +241,9 @@ class HeaderCheckerTest(unittest.TestCase):
     def test_libgolden_cpp_member_diff(self):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp", "libgolden_cpp_member_diff", 8)
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp", "libgolden_cpp_member_diff", 0,
+            ["-ignore-linker-set-key", "_ZTI16LowVolumeSpeaker"])
 
     def test_libgolden_cpp_change_member_access(self):
         self.prepare_and_run_abi_diff_all_archs(
@@ -246,6 +256,9 @@ class HeaderCheckerTest(unittest.TestCase):
     def test_libgolden_cpp_enum_diff(self):
         self.prepare_and_run_abi_diff_all_archs(
             "libgolden_cpp", "libgolden_cpp_enum_diff", 8)
+        self.prepare_and_run_abi_diff_all_archs(
+            "libgolden_cpp", "libgolden_cpp_enum_diff", 0,
+            ["-ignore-linker-set-key", "_ZTIN12SuperSpeaker6VolumeE"])
 
     def test_libgolden_cpp_member_fake_diff(self):
         self.prepare_and_run_abi_diff_all_archs(
@@ -308,18 +321,17 @@ class HeaderCheckerTest(unittest.TestCase):
              "-input-format-new", "Json"])
 
     def test_opaque_type_self_diff(self):
-        lsdump = os.path.join(
-            SCRIPT_DIR, "abi_dumps", "opaque_ptr_types.lsdump")
-        self.run_and_compare_abi_diff(
-            lsdump, lsdump, "libexample", "arm64", 0,
+        self.prepare_and_run_abi_diff_all_archs(
+            "libopaque_type", "libopaque_type", 0,
             ["-input-format-old", "Json", "-input-format-new", "Json",
-             "-consider-opaque-types-different"])
+             "-consider-opaque-types-different"],
+            create_old=False, create_new=False)
 
     def test_allow_adding_removing_weak_symbols(self):
         module_old = Module.get_test_modules_by_name("libweak_symbols_old")[0]
         module_new = Module.get_test_modules_by_name("libweak_symbols_new")[0]
-        lsdump_old = self.get_or_create_ref_dump(module_old, False)
-        lsdump_new = self.get_or_create_ref_dump(module_new, False)
+        lsdump_old = self.get_or_create_dump(module_old, False)
+        lsdump_new = self.get_or_create_dump(module_new, False)
 
         options = ["-input-format-old", "Json", "-input-format-new", "Json"]
 
@@ -346,8 +358,8 @@ class HeaderCheckerTest(unittest.TestCase):
 
         for module_name in cases:
             module = Module.get_test_modules_by_name(module_name)[0]
-            example_lsdump_old = self.get_or_create_ref_dump(module, False)
-            example_lsdump_new = self.get_or_create_ref_dump(module, True)
+            example_lsdump_old = self.get_or_create_dump(module, False)
+            example_lsdump_new = self.get_or_create_dump(module, True)
             self.run_and_compare_abi_diff(
                 example_lsdump_old, example_lsdump_new,
                 module_name, "arm64", 0,
@@ -385,6 +397,11 @@ class HeaderCheckerTest(unittest.TestCase):
     def test_merge_multi_definitions(self):
         self.prepare_and_absolute_diff_all_archs(
             "libmerge_multi_definitions", "libmerge_multi_definitions")
+        self.prepare_and_run_abi_diff_all_archs(
+            "libmerge_multi_definitions", "libdiff_multi_definitions", 0,
+            flags=["-input-format-new", "Json", "-input-format-old", "Json",
+                   "-consider-opaque-types-different"],
+            create_old=False, create_new=False)
 
     def test_print_resource_dir(self):
         dumper_path = shutil.which("header-abi-dumper")
@@ -394,9 +411,50 @@ class HeaderCheckerTest(unittest.TestCase):
         resource_dir = subprocess.check_output(
             ["header-abi-dumper", "-print-resource-dir"], text=True,
             stderr=subprocess.DEVNULL).strip()
-        self.assertEqual(os.path.dirname(resource_dir),
-                         os.path.join(common_dir, "lib64", "clang"))
+        self.assertIn(os.path.dirname(resource_dir),
+                      (os.path.join(common_dir, "lib64", "clang"),
+                       os.path.join(common_dir, "lib", "clang")))
         self.assertRegex(os.path.basename(resource_dir), r"^[\d.]+$")
+
+    def test_struct_extensions(self):
+        output = self.prepare_and_run_abi_diff_all_archs(
+            "libstruct_extensions", "liballowed_struct_extensions", 4,
+            flags=["-input-format-new", "Json", "-input-format-old", "Json"],
+            create_old=False, create_new=False)
+        self.assertEqual(output.count("record_type_extension_diffs"), 6)
+
+        output = self.prepare_and_run_abi_diff_all_archs(
+            "liballowed_struct_extensions", "libstruct_extensions", 8,
+            flags=["-input-format-new", "Json", "-input-format-old", "Json"],
+            create_old=False, create_new=False)
+        self.assertEqual(output.count("record_type_diffs"), 6)
+
+    def test_param_size_diff(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libpass_by_value", "libparam_size_diff", 8,
+            flags=["-input-format-new", "Json", "-input-format-old", "Json"],
+            create_old=False, create_new=False)
+
+    def test_return_size_diff(self):
+        self.prepare_and_run_abi_diff_all_archs(
+            "libpass_by_value", "libreturn_size_diff", 8,
+            flags=["-input-format-new", "Json", "-input-format-old", "Json"],
+            create_old=False, create_new=False)
+
+    def test_function_extensions(self):
+        diff = self.prepare_and_run_abi_diff_all_archs(
+            "libfunction_extensions", "liballowed_function_extensions", 4,
+            flags=["-input-format-new", "Json", "-input-format-old", "Json"],
+            create_old=False, create_new=False)
+        self.assertEqual(6, diff.count('function_extension_diffs'))
+
+        diff = self.prepare_and_run_abi_diff_all_archs(
+            "liballowed_function_extensions", "libfunction_extensions", 8,
+            flags=["-input-format-new", "Json", "-input-format-old", "Json"],
+            create_old=False, create_new=False)
+        # Adding and removing __restrict__ at the first level are extensions.
+        self.assertEqual(1, diff.count('function_extension_diffs'))
+        self.assertEqual(5, diff.count('function_diffs'))
 
 
 if __name__ == '__main__':
