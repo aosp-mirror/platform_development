@@ -1,7 +1,7 @@
-VNDK Header Checker
+Header ABI Checker
 ===================
 
-The VNDK header checker consists of 3 tools:
+The header ABI checker consists of 3 tools:
 [header-abi-dumper](#Header-ABI-Dumper),
 [header-abi-linker](#Header-ABI-Linker), and
 [header-abi-diff](#Header-ABI-Diff).  The first two commands generate ABI dumps
@@ -78,36 +78,157 @@ For more command line options, run `header-abi-diff --help`.
 * `16`: ELF incompatible (Some symbols in the `.dynsym` table, not exported by
   public headers, were removed.)
 
+### Configuration
+header-abi-diff reads a config file named `config.json`. The config file must
+be placed in the dump directory, such as
+`prebuilts/abi-dumps/platform/33/64/x86_64/source-based/config.json`.
+The file consists of multiple sections. There are two types of sections: global
+config section and library config section. Each library config section contains
+flags for a specific version and a library. header-abi-diff chooses the library
+config section by command line options `-target-version` and `-lib`.
 
-## Create Reference ABI Dumps
+#### Format
+Here is an example of a config.json.
+```json
+{
+  "global": {
+    "flags": {
+      "allow_adding_removing_weak_symbols": true,
+    },
+  },
+  "libfoo": [
+    {
+      "target_version": "current",
+      "flags": {
+        "check_all_apis": true,
+      },
+    },
+    {
+      "target_version": "34",
+      "ignore_linker_set_keys": [
+        "_ZTI14internal_state",
+      ],
+      "flags": {
+        "allow_extensions": true,
+      }
+    }
+  ]
+}
+```
 
-`utils/create_reference_dumps.py` may be used to create reference ABI dumps.
+#### Library Config Section
+A library config section includes members: "target_version",
+"ignore_linker_set_keys" and "flags". header-abi-diff selects the config
+section that matches the target version given by CLI.
+Take above config as an example, if `-target-version 34` and `-lib libfoo` are
+specified, the selected config section is:
+```json
+{
+  "target_version": "34",
+  "ignore_linker_set_keys": [
+    "_ZTI14internal_state",
+  ],
+  "flags": {
+    "allow_extensions": true,
+  }
+}
+```
 
-#For VNDK libraries
+#### Flags
 
-For example, the command below creates reference ABI dumps for all VNDK shared
-libraries on arm, arm64, x86, and x86_64 architectures:
+The config file and the header-abi-diff CLI support the same set of `flags`. If
+a flag is present in both CLI and config sections, the library config section
+takes priority, then the global config section and the CLI.
+
+## How to Resolve ABI Difference
+
+Android build system runs the ABI checker automatically when it builds the
+ABI-monitored libraries. Currently the build system compares the ABI of the
+source code with two sets of reference dumps: the **current version** and the
+**previous version**. The ABI difference is propagated as build errors. This
+section describes the common methods to resolve them.
+
+### Update Reference ABI Dumps
+
+When the build system finds difference between the source code and the ABI
+reference dumps for the **current** version, it instructs you to run
+`create_reference_dumps.py` to update the dumps.
+
+The command below updates the reference ABI dumps for all monitored libraries
+on arm, arm64, x86, and x86_64 architectures:
 
 ```
-$ python3 create_reference_dumps.py
+$ python3 utils/create_reference_dumps.py
 ```
 
-To create reference ABI dumps for a specific library, run the command below:
+To update reference ABI dumps for a specific library, `libfoo` for example,
+run the command below:
 
 ```
-$ python3 create_reference_dumps.py -l libfoo
+$ python3 utils/create_reference_dumps.py -l libfoo
 ```
 
-This will create reference dumps for `libfoo`, assuming `libfoo` is a VNDK
-library.
-
-# For LLNDK libraries
+For more command line options, run:
 
 ```
-$ python3 create_reference_dumps.py -l libfoo --llndk
+utils/create_reference_dumps.py --help
 ```
-This will create reference dumps for `libfoo`, assuming `libfoo` is an LLNDK
-library.
 
+### Configure Cross-Version ABI Check
 
-For more command line options, run `utils/create_reference_dumps.py --help`.
+When the build system finds incompatibility between the source code and the ABI
+of the **previous version**, it instructs you to follow this document to
+resolve it.
+
+If the ABI difference is intended, you may configure the ABI tools to ignore
+it. The following example shows how to make an exception for the ABI difference
+in `libfoo` between the current source and the previous version, `33`:
+
+1. Open `libfoo.so.33.abidiff` which is located in
+   `$OUT_DIR/soong/.intermediates` or `$DIST_DIR/abidiffs`. Find out the
+   `linker_set_key` of the type that has ABI difference. Here is a sample
+   abidiff file:
+
+   ```
+   lib_name: "libfoo"
+   arch: "x86_64"
+   record_type_diffs {
+     name: "bar"
+     ...
+     linker_set_key: "_ZTI3bar"
+   }
+   compatibility_status: INCOMPATIBLE
+   ```
+
+2. Find the reference dump directories by
+
+   `find $ANDROID_BUILD_TOP/prebuilts/abi-dumps/*/33 -name libfoo.so.lsdump -exec dirname {} +`
+
+   The command should show 6 directories for different architectures.
+
+3. Create or edit `config.json` in every directory, for instance,
+
+   `prebuilts/abi-dumps/ndk/33/64/x86_64/source-based/config.json`
+
+   ```
+   {
+     "libfoo": [
+       {
+         "target_version": "34",
+         "ignore_linker_set_keys": [
+           "_ZTI3bar",
+         ],
+       },
+     ],
+   }
+   ```
+
+   The config above makes the ABI tools ignore the difference in type
+   `_ZTI3bar` in `libfoo`. If the API level of this branch has been finalized
+   (i.e., PLATFORM_VERSION_CODENAME=REL), `target_version` must be set to the
+   API level. Otherwise, `target_version` must be set to
+   **the previous finalized API level + 1** so that the config will continue
+   being effective after finalization.
+
+For more information about the config files, please refer to
+[Configuration](#Configuration).

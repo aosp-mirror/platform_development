@@ -29,7 +29,7 @@ import WindowContainer from "./WindowContainer"
         const name = getName(identifierName);
         const windowContainer = WindowContainer.fromProto(
             /* proto */ proto.windowContainer,
-            /* protoChildren */ proto.windowContainer.children.reverse(),
+            /* protoChildren */ proto.windowContainer?.children.reverse() ?? [],
             /* isActivityInTree */ isActivityInTree,
             /* nameOverride */ name,
             /* identifierOverride */ proto.identifier

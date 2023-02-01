@@ -19,27 +19,34 @@
       <div class="md-title">Open files</div>
     </md-card-header>
     <md-card-content>
-      <div class="dropbox">
-        <md-list style="background: none">
+      <div class="dropbox" @click="$refs.fileUpload.click()" ref="dropbox">
+        <md-list
+          class="uploaded-files"
+          v-show="Object.keys(dataFiles).length > 0"
+        >
           <md-list-item v-for="file in dataFiles" v-bind:key="file.filename">
             <md-icon>{{FILE_ICONS[file.type]}}</md-icon>
             <span class="md-list-item-text">{{file.filename}} ({{file.type}})
             </span>
             <md-button
               class="md-icon-button md-accent"
-              @click="onRemoveFile(file.type)"
+              @click="e => {
+                e.stopPropagation()
+                onRemoveFile(file.type)
+              }"
             >
               <md-icon>close</md-icon>
             </md-button>
           </md-list-item>
         </md-list>
-        <md-progress-spinner
-          :md-diameter="30"
-          :md-stroke="3"
-          md-mode="indeterminate"
-          v-show="loadingFiles"
-          class="progress-spinner"
-        />
+        <div class="progress-spinner-wrapper" v-show="loadingFiles">
+          <md-progress-spinner
+            :md-diameter="30"
+            :md-stroke="3"
+            md-mode="indeterminate"
+            class="progress-spinner"
+          />
+        </div>
         <input
           type="file"
           @change="onLoadFile"
@@ -49,8 +56,8 @@
           v-show="false"
           multiple
         />
-          <p v-if="!dataReady">
-            Drag your <b>.winscope</b> or <b>.zip</b> file(s) here to begin
+          <p v-if="!dataReady && !loadingFiles">
+            Drag your <b>.winscope</b> or <b>.zip</b> file(s) or click here to begin
           </p>
         </div>
 
@@ -137,12 +144,19 @@ export default {
       snackbarDuration: 3500,
       snackbarText: '',
       fetchingSnackbarText: 'Fetching files...',
+      traceName: undefined,
     };
   },
   props: ['store'],
   created() {
     // Attempt to load files from extension if present
     this.loadFilesFromExtension();
+  },
+  mounted() {
+    this.handleDropboxDragEvents();
+  },
+  beforeUnmount() {
+
   },
   methods: {
     showSnackbarMessage(message, duration) {
@@ -152,7 +166,7 @@ export default {
     },
     hideSnackbarMessage() {
       this.showSnackbar = false;
-      this.buttonClicked("Hide Snackbar Message")
+      this.recordButtonClickedEvent("Hide Snackbar Message")
     },
     getFetchFilesLoadingAnimation() {
       let frame = 0;
@@ -171,6 +185,32 @@ export default {
           this.showFetchingSnackbar = false;
           clearInterval(interval);
         },
+      });
+    },
+    handleDropboxDragEvents() {
+      // Counter used to keep track of when we actually exit the dropbox area
+      // When we drag over a child of the dropbox area the dragenter event will
+      // be called again and subsequently the dragleave so we don't want to just
+      // remove the class on the dragleave event.
+      let dropboxDragCounter = 0;
+
+      console.log(this.$refs["dropbox"])
+
+      this.$refs["dropbox"].addEventListener('dragenter', e => {
+        dropboxDragCounter++;
+        this.$refs["dropbox"].classList.add('dragover');
+      });
+
+      this.$refs["dropbox"].addEventListener('dragleave', e => {
+        dropboxDragCounter--;
+        if (dropboxDragCounter == 0) {
+          this.$refs["dropbox"].classList.remove('dragover');
+        }
+      });
+
+      this.$refs["dropbox"].addEventListener('drop', e => {
+        dropboxDragCounter = 0;
+        this.$refs["dropbox"].classList.remove('dragover');
       });
     },
     /**
@@ -247,16 +287,31 @@ export default {
       let droppedFiles = e.dataTransfer.files;
       if(!droppedFiles) return;
       // Record analytics event
-      this.draggedAndDropped(droppedFiles);
+      this.recordDragAndDropFileEvent(droppedFiles);
 
       this.processFiles(droppedFiles);
     },
     onLoadFile(e) {
       const files = event.target.files || event.dataTransfer.files;
-      this.uploadedFileThroughFilesystem(files);
+      this.recordFileUploadEvent(files);
       this.processFiles(files);
     },
     async processFiles(files) {
+      console.log("Object.keys(this.dataFiles).length", Object.keys(this.dataFiles).length)
+      // The trace name to use if we manage to load the archive without errors.
+      let tmpTraceName;
+
+      if (Object.keys(this.dataFiles).length > 0) {
+        // We have already loaded some files so only want to use the name of
+        // this archive as the name of the trace if we override all loaded files
+      } else {
+        // No files have been uploaded yet so if we are uploading only 1 archive
+        // we want to use it's name as the trace name
+        if (files.length == 1 && this.isArchive(files[0])) {
+          tmpTraceName = this.getFileNameWithoutZipExtension(files[0])
+        }
+      }
+
       let error;
       const decodedFiles = [];
       for (const file of files) {
@@ -301,8 +356,12 @@ export default {
         }
         decodedFileTypes.add(dataType);
 
+        const frozenData = Object.freeze(decodedFile.data.data);
+        delete decodedFile.data.data;
+        decodedFile.data.data = frozenData;
+
         this.$set(this.dataFiles,
-            dataType, decodedFile.data);
+            dataType, Object.freeze(decodedFile.data));
       }
 
       // TODO(b/169305853): Remove this once we have magic numbers or another
@@ -314,7 +373,11 @@ export default {
 
           const selectedFile =
               this.getMostLikelyCandidateFile(dataType, files);
-          this.$set(this.dataFiles, dataType, selectedFile);
+          if (selectedFile.data) {
+            selectedFile.data = Object.freeze(selectedFile.data);
+          }
+
+          this.$set(this.dataFiles, dataType, Object.freeze(selectedFile));
 
           // Remove selected file from overriden list
           const index = files.indexOf(selectedFile);
@@ -324,6 +387,19 @@ export default {
 
       if (overriddenFileTypes.size > 0) {
         this.displayFilesOverridenWarning(overriddenFiles);
+      }
+
+      if (tmpTraceName !== undefined) {
+        this.traceName = tmpTraceName;
+      }
+    },
+
+    getFileNameWithoutZipExtension(file) {
+      const fileNameSplitOnDot = file.name.split('.')
+      if (fileNameSplitOnDot.slice(-1)[0] == 'zip') {
+        return fileNameSplitOnDot.slice(0,-1).join('.');
+      } else {
+        return file.name;
       }
     },
 
@@ -444,8 +520,8 @@ export default {
 
       return undefined;
     },
-    async addFile(file) {
-      const decodedFiles = [];
+
+    isArchive(file) {
       const type = this.fileType;
 
       const extension = this.getFileExtensions(file);
@@ -454,9 +530,15 @@ export default {
       // 'application/zip' because when loaded from the extension the type is
       // incorrect. See comment in loadFilesFromExtension() for more
       // information.
-      if (type === 'bugreport' ||
+      return type === 'bugreport' ||
           (type === 'auto' && (extension === 'zip' ||
-            file.type === 'application/zip'))) {
+            file.type === 'application/zip'))
+    },
+
+    async addFile(file) {
+      const decodedFiles = [];
+
+      if (this.isArchive(file)) {
         const results = await this.decodeArchive(file);
         decodedFiles.push(...results);
       } else {
@@ -492,6 +574,14 @@ export default {
 
       return {filetype, data};
     },
+    /**
+     * Decode a zip file
+     *
+     * Load all files that can be decoded, even if some failures occur.
+     * For example, a zip file with an mp4 recorded via MediaProjection
+     * doesn't include the winscope metadata (b/140855415), but the trace
+     * files within the zip should be nevertheless readable
+     */
     async decodeArchive(archive) {
       const buffer = await this.readFile(archive);
 
@@ -500,32 +590,41 @@ export default {
 
       const decodedFiles = [];
 
+      let lastError;
       for (const filename in content.files) {
-        if (content.files.hasOwnProperty(filename)) {
-          const file = content.files[filename];
-          if (file.dir) {
-            // Ignore directories
-            continue;
+        const file = content.files[filename];
+        if (file.dir) {
+          // Ignore directories
+          continue;
+        }
+
+        const fileBlob = await file.async('blob');
+        // Get only filename and remove rest of path
+        fileBlob.name = filename.split('/').slice(-1).pop();
+
+        try {
+          const decodedFile = await this.decodeFile(fileBlob);
+
+          decodedFiles.push(decodedFile);
+        } catch (e) {
+          if (!(e instanceof UndetectableFileType)) {
+            lastError = e;
           }
 
-          const fileBlob = await file.async('blob');
-          // Get only filename and remove rest of path
-          fileBlob.name = filename.split('/').slice(-1).pop();
-
-          try {
-            const decodedFile = await this.decodeFile(fileBlob);
-
-            decodedFiles.push(decodedFile);
-          } catch (e) {
-            if (!(e instanceof UndetectableFileType)) {
-              throw e;
-            }
-          }
+          console.error(e);
         }
       }
 
       if (decodedFiles.length == 0) {
+        if (lastError) {
+          throw lastError;
+        }
         throw new Error('No matching files found in archive', archive);
+      } else {
+        if (lastError) {
+          this.showSnackbarMessage(
+            'Unable to parse all files, check log for more details', 3500);
+        }
       }
 
       return decodedFiles;
@@ -534,7 +633,7 @@ export default {
       this.$delete(this.dataFiles, typeName);
     },
     onSubmit() {
-      this.$emit('dataReady',
+      this.$emit('dataReady', this.formattedTraceName,
           Object.keys(this.dataFiles).map((key) => this.dataFiles[key]));
     },
   },
@@ -542,6 +641,14 @@ export default {
     dataReady: function() {
       return Object.keys(this.dataFiles).length > 0;
     },
+
+    formattedTraceName() {
+      if (this.traceName === undefined) {
+        return 'winscope-trace';
+      } else {
+        return this.traceName;
+      }
+    }
   },
   components: {
     'flat-card': FlatCard,
@@ -550,15 +657,9 @@ export default {
 
 </script>
 <style>
-  .dropbox:hover {
+  .dropbox:hover, .dropbox.dragover {
       background: rgb(224, 224, 224);
     }
-
-  .dropbox p {
-    font-size: 1.2em;
-    text-align: center;
-    padding: 50px 10px;
-  }
 
   .dropbox {
     outline: 2px dashed #448aff; /* the dash box */
@@ -569,9 +670,29 @@ export default {
     min-height: 200px; /* minimum height */
     position: relative;
     cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-items: center;
   }
 
-  .progress-spinner {
+  .dropbox p, .dropbox .progress-spinner-wrapper {
+    font-size: 1.2em;
+    margin: auto;
+  }
+
+  .progress-spinner-wrapper, .progress-spinner {
+    width: fit-content;
+    height: fit-content;
     display: block;
+  }
+
+  .progress-spinner-wrapper {
+    padding: 1.5rem 0 1.5rem 0;
+  }
+
+  .dropbox .uploaded-files {
+    background: none!important;
+    width: 100%;
   }
 </style>

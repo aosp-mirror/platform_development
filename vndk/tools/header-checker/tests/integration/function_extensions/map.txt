@@ -1,0 +1,9 @@
+libfunction_extensions {
+  global:
+    ConstParameter;
+    VolatileParameter;
+    Restrict;
+    MultipleConst;
+    _Z11ConstReturnv;
+    _Z14VolatileReturnv;
+};
