@@ -72,7 +72,8 @@ function newDisplay(proto: any): Display {
         proto.layerStack,
         toSize(proto.size),
         toRect(proto.layerStackSpaceRect),
-        toTransform(proto.transform)
+        toTransform(proto.transform),
+        proto.isVirtual
     )
 }
 

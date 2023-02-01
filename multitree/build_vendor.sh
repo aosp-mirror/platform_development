@@ -15,18 +15,55 @@
 # limitations under the License.
 #
 
-export ALLOW_MISSING_DEPENDENCIES=true
+function usage() {
+  cat <<EOF
+Usage: $0 -d device-name -p product-name -r dist-dir -i build-id [targets]
+Builds a vendor image for given product and analyze ninja inputs.
 
-build/soong/soong_ui.bash --make-mode vendorimage collect_ninja_inputs \
-  TARGET_PRODUCT=cf_x86_64_phone TARGET_BUILD_VARIANT=userdebug
+  -d  device name to build (e.g. vsoc_x86_64)
+  -p  product name to build (e.g. cf_x86_64_phone)
+  -r  directory for dist (e.g. out/dist)
+  -i  build ID
+  -u  whether it is an unbundled build
+  -h  display this help and exit
 
-mkdir -p $DIST_DIR/soong
+EOF
+  exit 1
+}
 
-for f in out/*.ninja out/soong/build.ninja; do
-  gzip -c $f > $DIST_DIR/${f#out/}.gz
+while getopts d:p:r:i:uh flag
+do
+    case "${flag}" in
+        d) device=${OPTARG};;
+        p) product=${OPTARG};;
+        r) dist_dir=${OPTARG};;
+        i) build_id=${OPTARG};;
+        u) unbundled_build=true;;
+        h) usage;;
+        *) usage;;
+    esac
 done
 
-cp out/target/product/vsoc_x86_64/vendor.img $DIST_DIR
+extra_targets=${@: ${OPTIND}}
+
+if [[ -z "$device" || -z "$product" || -z "$dist_dir" || -z "$build_id" ]]; then
+  echo "missing arguments"
+  usage
+fi
+
+if [[ "$unbundled_build" = true ]]; then
+  export TARGET_BUILD_UNBUNDLED_IMAGE=true
+fi
+
+export ALLOW_MISSING_DEPENDENCIES=true
+export SKIP_VNDK_VARIANTS_CHECK=true
+export DIST_DIR=$dist_dir
+
+build/soong/soong_ui.bash --make-mode vendorimage collect_ninja_inputs dist $extra_targets \
+  TARGET_PRODUCT=$product TARGET_BUILD_VARIANT=userdebug
+
+cp out/target/product/$device/vendor.img $dist_dir
 
 out/host/linux-x86/bin/collect_ninja_inputs -n prebuilts/build-tools/linux-x86/bin/ninja \
-  -f out/combined-cf_x86_64_phone.ninja -t vendorimage > $DIST_DIR/ninja_inputs.json
+  -f out/combined-$product.ninja -t vendorimage -m $dist_dir/manifest_$build_id.xml \
+  --out $dist_dir/logs/ninja_inputs

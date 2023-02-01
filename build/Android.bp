@@ -60,7 +60,6 @@ android_sdk_repo_host {
                 "bcc_compat",
                 "d8",
                 "dexdump",
-                "libaapt2_jni",
                 "llvm-rs-cc",
                 "split-select",
                 "zipalign",
@@ -100,7 +99,6 @@ android_sdk_repo_host {
                         "bcc_compat",
                         "d8",
                         "dexdump",
-                        "libaapt2_jni",
                         "libwinpthread-1",
                         "lld",
                         "llvm-rs-cc",
@@ -110,7 +108,6 @@ android_sdk_repo_host {
                 },
                 lib64: {
                     deps: [
-                        "libaapt2_jni",
                         "libwinpthread-1",
                     ],
                 },
@@ -219,21 +216,15 @@ android_sdk_repo_host {
             strip_files: ["lib64/*.dylib"],
         },
         not_windows: {
-            deps: [
-                "e2fsdroid",
-                "sload_f2fs",
-            ],
             strip_files: [
                 "adb",
                 "dmtracedump",
-                "e2fsdroid",
                 "etc1tool",
                 "fastboot",
                 "hprof-conv",
                 "make_f2fs_casefold",
                 "make_f2fs",
                 "mke2fs",
-                "sload_f2fs",
                 "sqlite3",
             ],
         },
