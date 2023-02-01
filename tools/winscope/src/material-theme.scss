@@ -1,0 +1,67 @@
+/*
+ * Copyright (C) 2022 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+@use 'sass:map';
+@use '@angular/material' as mat;
+
+@import 'https://fonts.googleapis.com/icon?family=Material+Icons';
+@import '//fonts.googleapis.com/css2?family=Google+Sans';
+
+$typography: mat.define-typography-config(
+    $font-family: 'Roboto, sans-serif'
+);
+
+$primary: mat.define-palette(mat.$blue-palette, 700);
+$accent: mat.define-palette(mat.$pink-palette, A200, A100, A400);
+$warn: mat.define-palette(mat.$red-palette);
+
+$light-theme: mat.define-light-theme((
+ color: (
+   primary: $primary,
+   accent: $accent,
+   warn: $warn,
+ ),
+ density: 0,
+ typography: null, // Set typography on mat.core() only, to avoid duplicates.
+));
+
+$dark-theme: mat.define-dark-theme((
+  color: (
+    primary: $primary,
+    accent: $accent,
+    warn: $warn,
+  )
+));
+
+@mixin border-color($theme) {
+  $color: mat.get-color-config($theme);
+  $foreground: map.get($color, 'foreground');
+
+  & {
+    --border-color: #{mat.get-color-from-palette($foreground, divider)};
+  }
+}
+
+@include mat.core($typography);
+@include mat.all-component-themes($light-theme);
+
+body:not(.dark-mode) {
+  @include border-color($light-theme);
+}
+
+body.dark-mode {
+  @include mat.all-component-colors($dark-theme);
+  @include border-color($dark-theme);
+}

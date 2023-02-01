@@ -208,6 +208,9 @@ void HeaderASTConsumer::HandleTranslationUnit(clang::ASTContext &ctx) {
   // names to avoid inconsistency between C and C++ (for C++ files, this is true
   // by default)
   policy.SuppressTagKeyword = true;
+  // Hide the location of the anonymous or unnamed structures entity while
+  // getting QualType string names to avoid automerge conflict
+  policy.AnonymousTagLocations = false;
   PrintNormalizedPath callbacks(options_.root_dirs_);
   policy.Callbacks = &callbacks;
   ctx.setPrintingPolicy(policy);

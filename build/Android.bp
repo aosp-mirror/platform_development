@@ -219,21 +219,15 @@ android_sdk_repo_host {
             strip_files: ["lib64/*.dylib"],
         },
         not_windows: {
-            deps: [
-                "e2fsdroid",
-                "sload_f2fs",
-            ],
             strip_files: [
                 "adb",
                 "dmtracedump",
-                "e2fsdroid",
                 "etc1tool",
                 "fastboot",
                 "hprof-conv",
                 "make_f2fs_casefold",
                 "make_f2fs",
                 "mke2fs",
-                "sload_f2fs",
                 "sqlite3",
             ],
         },

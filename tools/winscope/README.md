@@ -8,18 +8,17 @@ and `frameworks/native/services/surfaceflinger/layerproto/layerstrace.proto`
 contain the proto definitions for their internal states.
 
 ### Checking out code and setting up environment
-* Install [Yarn](https://yarnpkg.com), a JS package manager
 * [Download Android source](https://source.android.com/setup/build/downloading)
 * Navigate to `development/tools/winscope`
-* Run `yarn install`
+* Run `npm install`
 
-### Building & testing changes
+### Build & test & deploy changes
 * Navigate to `development/tools/winscope`
-* Run `yarn run dev`
+* Run `npm run` to get the list of available commands
 
 ### Update IntDefMapping
 * Build `framework-minus-apex-intdefs` module and a preprocessor will
-generate the latest IntDefMapping. From the `ANDROID_ROOT` run:
+  generate the latest IntDefMapping. From the `ANDROID_ROOT` run:
 ```
 . build/envsetup.sh
 m framework-minus-apex-intdefs

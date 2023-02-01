@@ -125,7 +125,15 @@ def send_flush_signal(pids=None):
         logging.warning(
             f'couldn\'t find any process with handler for signal 37')
 
-    adb_shell(['kill', '-37'] + pids)
+    # Some processes may have exited after we run `ps` command above - ignore failures when
+    # sending flush signal.
+    # We rely on kill(1) sending the signal to all pids on the command line even if some don't
+    # exist.  This is true of toybox and "probably implied" by POSIX, even if not explicitly called 
+    # out [https://pubs.opengroup.org/onlinepubs/9699919799/utilities/kill.html].
+    try:
+        adb_shell(['kill', '-37'] + pids)
+    except subprocess.CalledProcessError:
+        logging.warning('Sending flush signal failed - some pids no longer active')
 
 
 def do_clean_device(args):

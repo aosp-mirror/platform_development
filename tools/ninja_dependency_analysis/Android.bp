@@ -1,0 +1,23 @@
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+python_binary_host {
+    name: "collect_ninja_inputs",
+    srcs: [
+        "collect_ninja_inputs.py",
+        "ninja_metrics_proto/ninja_metrics.py",
+        "ninja_metrics_proto/ninja_metrics.proto",
+    ],
+    libs: [
+        "libprotobuf-python",
+    ],
+    proto: {
+        canonical_path_from_root: false,
+    },
+    version: {
+        py3: {
+            embedded_launcher: true,
+        },
+    }
+}
