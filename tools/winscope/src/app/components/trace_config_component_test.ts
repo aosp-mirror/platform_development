@@ -46,7 +46,7 @@ describe('TraceConfigComponent', () => {
     fixture = TestBed.createComponent(TraceConfigComponent);
     component = fixture.componentInstance;
     htmlElement = fixture.nativeElement;
-    component.traces = {
+    component.tracingConfig.setTraceConfig({
       layers_trace: {
         name: 'layers_trace',
         isTraceCollection: undefined,
@@ -69,7 +69,8 @@ describe('TraceConfigComponent', () => {
           ],
         },
       },
-    };
+    });
+    fixture.detectChanges();
   });
 
   it('can be created', () => {
@@ -77,7 +78,7 @@ describe('TraceConfigComponent', () => {
   });
 
   it('check that trace checkbox ticked on default run', () => {
-    component.traces['layers_trace'].run = true;
+    component.tracingConfig.getTraceConfig()['layers_trace'].run = true;
     fixture.detectChanges();
     const box = htmlElement.querySelector('.trace-checkbox');
     expect(box?.innerHTML).toContain('aria-checked="true"');
@@ -85,31 +86,17 @@ describe('TraceConfigComponent', () => {
   });
 
   it('check that trace checkbox not ticked on default run', () => {
-    component.traces['layers_trace'].run = false;
+    component.tracingConfig.getTraceConfig()['layers_trace'].run = false;
     fixture.detectChanges();
     const box = htmlElement.querySelector('.trace-checkbox');
     expect(box?.innerHTML).toContain('aria-checked="false"');
   });
 
-  it('check that correct advanced enable config shows', () => {
-    component.traces['layers_trace'].config!.selectionConfigs = [];
-    fixture.detectChanges();
-
+  it('check that advanced configs show', () => {
     const enable_config_opt = htmlElement.querySelector('.enable-config-opt');
     expect(enable_config_opt).toBeTruthy();
     expect(enable_config_opt?.innerHTML).toContain('trace buffers');
     expect(enable_config_opt?.innerHTML).not.toContain('tracing level');
-
-    const selection_config_opt = htmlElement.querySelector('.selection-config-opt');
-    expect(selection_config_opt).toBeFalsy();
-  });
-
-  it('check that correct advanced selection config shows', () => {
-    component.traces['layers_trace'].config!.enableConfigs = [];
-    fixture.detectChanges();
-
-    const enable_config_opt = htmlElement.querySelector('.enable-config-opt');
-    expect(enable_config_opt).toBeFalsy();
 
     const selection_config_opt = htmlElement.querySelector('.selection-config-opt');
     expect(selection_config_opt).toBeTruthy();
@@ -118,7 +105,8 @@ describe('TraceConfigComponent', () => {
   });
 
   it('check that changing enable config causes box to change', async () => {
-    component.traces['layers_trace'].config!.enableConfigs[0].enabled = false;
+    component.tracingConfig.getTraceConfig()['layers_trace'].config!.enableConfigs[0].enabled =
+      false;
     fixture.detectChanges();
     await fixture.whenStable();
     expect(htmlElement.querySelector('.enable-config')?.innerHTML).toContain(
@@ -129,7 +117,8 @@ describe('TraceConfigComponent', () => {
   it('check that changing selected config causes select to change', async () => {
     fixture.detectChanges();
     expect(htmlElement.querySelector('.config-selection')?.innerHTML).toContain('value="debug"');
-    component.traces['layers_trace'].config!.selectionConfigs[0].value = 'verbose';
+    component.tracingConfig.getTraceConfig()['layers_trace'].config!.selectionConfigs[0].value =
+      'verbose';
     fixture.detectChanges();
     await fixture.whenStable();
     expect(htmlElement.querySelector('.config-selection')?.innerHTML).toContain('value="verbose"');

@@ -13,28 +13,64 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {globalConfig} from 'common/global_config';
 import {PersistentStoreProxy} from 'common/persistent_store_proxy';
+import {MockStorage} from 'test/unit/mock_storage';
 import {TraceConfigurationMap, TRACES} from './trace_collection_utils';
 
 export class TracingConfig {
   requestedTraces: string[] = [];
   requestedDumps: string[] = [];
 
-  private storage: Storage | undefined;
-  private tracingConfig: TraceConfigurationMap | undefined;
-  private dumpConfig: TraceConfigurationMap | undefined;
+  private storage: Storage;
+  private traceConfig: TraceConfigurationMap;
+  private dumpConfig: TraceConfigurationMap;
+
+  private static instance: TracingConfig | undefined;
 
   static getInstance(): TracingConfig {
-    return setTracesInstance;
+    if (!TracingConfig.instance) {
+      TracingConfig.instance = new TracingConfig();
+    }
+    return TracingConfig.instance;
   }
 
-  initialize(storage: Storage) {
-    this.storage = storage;
-    this.tracingConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
+  setTraceConfigForAvailableTraces(isWaylandAvailable = false) {
+    const availableTracesConfig = TRACES['default'];
+    if (isWaylandAvailable) {
+      Object.assign(availableTracesConfig, TRACES['arc']);
+    }
+    this.setTraceConfig(availableTracesConfig);
+  }
+
+  setTraceConfig(traceConfig: TraceConfigurationMap) {
+    this.traceConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
+      'TraceConfiguration',
+      traceConfig,
+      this.storage
+    );
+  }
+
+  getTraceConfig(): TraceConfigurationMap {
+    return this.traceConfig;
+  }
+
+  getDumpConfig(): TraceConfigurationMap {
+    if (this.dumpConfig === undefined) {
+      throw Error('Dump config not initialized yet');
+    }
+    return this.dumpConfig;
+  }
+
+  private constructor() {
+    this.storage = globalConfig.MODE === 'PROD' ? localStorage : new MockStorage();
+
+    this.traceConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
       'TracingSettings',
       TRACES['default'],
       this.storage
     );
+
     this.dumpConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
       'DumpSettings',
       {
@@ -54,43 +90,4 @@ export class TracingConfig {
       this.storage
     );
   }
-
-  setTracingConfigForAvailableTraces(isWaylandAvailable = false) {
-    const availableTracesConfig = TRACES['default'];
-    if (isWaylandAvailable) {
-      Object.assign(availableTracesConfig, TRACES['arc']);
-    }
-    this.setTracingConfig(availableTracesConfig);
-  }
-
-  tracingConfigIsSet(): boolean {
-    return this.tracingConfig !== undefined;
-  }
-
-  getTracingConfig(): TraceConfigurationMap {
-    if (this.tracingConfig === undefined) {
-      throw Error('Tracing config not initialized yet');
-    }
-    return this.tracingConfig;
-  }
-
-  private setTracingConfig(traceConfig: TraceConfigurationMap) {
-    if (this.storage === undefined) {
-      throw Error('not initialized');
-    }
-    this.tracingConfig = PersistentStoreProxy.new<TraceConfigurationMap>(
-      'TraceConfiguration',
-      traceConfig,
-      this.storage
-    );
-  }
-
-  getDumpConfig(): TraceConfigurationMap {
-    if (this.dumpConfig === undefined) {
-      throw Error('Dump config not initialized yet');
-    }
-    return this.dumpConfig;
-  }
 }
-
-const setTracesInstance = new TracingConfig();
