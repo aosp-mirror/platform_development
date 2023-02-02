@@ -748,6 +748,19 @@ DiffStatus AbiDiffHelper::CompareQualifiedTypes(
                                 type_queue, diff_kind);
 }
 
+DiffStatus AbiDiffHelper::CompareArrayTypes(const ArrayTypeIR *old_type,
+                                            const ArrayTypeIR *new_type,
+                                            std::deque<std::string> *type_queue,
+                                            DiffMessageIR::DiffKind diff_kind) {
+  if (!CompareSizeAndAlignment(old_type, new_type) ||
+      old_type->IsOfUnknownBound() != new_type->IsOfUnknownBound()) {
+    return DiffStatus::kDirectDiff;
+  }
+  return CompareAndDumpTypeDiff(old_type->GetReferencedType(),
+                                new_type->GetReferencedType(), type_queue,
+                                diff_kind);
+}
+
 DiffStatus AbiDiffHelper::ComparePointerTypes(
     const PointerTypeIR *old_type,
     const PointerTypeIR *new_type,
@@ -970,65 +983,59 @@ DiffStatus AbiDiffHelper::CompareAndDumpTypeDiff(
     return DiffStatus::kNoDiff;
   }
 
-  if (kind == LinkableMessageKind::BuiltinTypeKind) {
-    return CompareBuiltinTypes(
-        static_cast<const BuiltinTypeIR *>(old_type),
-        static_cast<const BuiltinTypeIR *>(new_type));
-  }
+  switch (kind) {
+    case LinkableMessageKind::BuiltinTypeKind:
+      return CompareBuiltinTypes(static_cast<const BuiltinTypeIR *>(old_type),
+                                 static_cast<const BuiltinTypeIR *>(new_type));
+    case LinkableMessageKind::QualifiedTypeKind:
+      return CompareQualifiedTypes(
+          static_cast<const QualifiedTypeIR *>(old_type),
+          static_cast<const QualifiedTypeIR *>(new_type), type_queue,
+          diff_kind);
+    case LinkableMessageKind::ArrayTypeKind:
+      return CompareArrayTypes(static_cast<const ArrayTypeIR *>(old_type),
+                               static_cast<const ArrayTypeIR *>(new_type),
+                               type_queue, diff_kind);
+    case LinkableMessageKind::EnumTypeKind:
+      return CompareEnumTypes(static_cast<const EnumTypeIR *>(old_type),
+                              static_cast<const EnumTypeIR *>(new_type),
+                              type_queue, diff_kind);
 
-  if (kind == LinkableMessageKind::QualifiedTypeKind) {
-    return CompareQualifiedTypes(
-        static_cast<const QualifiedTypeIR *>(old_type),
-        static_cast<const QualifiedTypeIR *>(new_type),
-        type_queue, diff_kind);
-  }
+    case LinkableMessageKind::LvalueReferenceTypeKind:
+      return CompareLvalueReferenceTypes(
+          static_cast<const LvalueReferenceTypeIR *>(old_type),
+          static_cast<const LvalueReferenceTypeIR *>(new_type), type_queue,
+          diff_kind);
+    case LinkableMessageKind::RvalueReferenceTypeKind:
+      return CompareRvalueReferenceTypes(
+          static_cast<const RvalueReferenceTypeIR *>(old_type),
+          static_cast<const RvalueReferenceTypeIR *>(new_type), type_queue,
+          diff_kind);
+    case LinkableMessageKind::PointerTypeKind:
+      return ComparePointerTypes(static_cast<const PointerTypeIR *>(old_type),
+                                 static_cast<const PointerTypeIR *>(new_type),
+                                 type_queue, diff_kind);
 
-  if (kind == LinkableMessageKind::EnumTypeKind) {
-    return CompareEnumTypes(
-        static_cast<const EnumTypeIR *>(old_type),
-        static_cast<const EnumTypeIR *>(new_type),
-        type_queue, diff_kind);
-  }
+    case LinkableMessageKind::RecordTypeKind:
+      return CompareRecordTypes(static_cast<const RecordTypeIR *>(old_type),
+                                static_cast<const RecordTypeIR *>(new_type),
+                                type_queue, diff_kind);
 
-  if (kind == LinkableMessageKind::LvalueReferenceTypeKind) {
-    return CompareLvalueReferenceTypes(
-        static_cast<const LvalueReferenceTypeIR *>(old_type),
-        static_cast<const LvalueReferenceTypeIR *>(new_type),
-        type_queue, diff_kind);
-  }
-
-  if (kind == LinkableMessageKind::RvalueReferenceTypeKind) {
-    return CompareRvalueReferenceTypes(
-        static_cast<const RvalueReferenceTypeIR *>(old_type),
-        static_cast<const RvalueReferenceTypeIR *>(new_type),
-        type_queue, diff_kind);
-  }
-
-  if (kind == LinkableMessageKind::PointerTypeKind) {
-    return ComparePointerTypes(
-        static_cast<const PointerTypeIR *>(old_type),
-        static_cast<const PointerTypeIR *>(new_type),
-        type_queue, diff_kind);
-  }
-
-  if (kind == LinkableMessageKind::RecordTypeKind) {
-    return CompareRecordTypes(
-        static_cast<const RecordTypeIR *>(old_type),
-        static_cast<const RecordTypeIR *>(new_type),
-        type_queue, diff_kind);
-  }
-
-  if (kind == LinkableMessageKind::FunctionTypeKind) {
-    DiffStatus result = CompareFunctionTypes(
-        static_cast<const FunctionTypeIR *>(old_type),
-        static_cast<const FunctionTypeIR *>(new_type), type_queue, diff_kind);
-    // Do not allow extending function pointers, function references, etc.
-    if (result.IsExtension()) {
-      result.CombineWith(DiffStatus::kDirectDiff);
+    case LinkableMessageKind::FunctionTypeKind: {
+      DiffStatus result = CompareFunctionTypes(
+          static_cast<const FunctionTypeIR *>(old_type),
+          static_cast<const FunctionTypeIR *>(new_type), type_queue, diff_kind);
+      // Do not allow extending function pointers, function references, etc.
+      if (result.IsExtension()) {
+        result.CombineWith(DiffStatus::kDirectDiff);
+      }
+      return result;
     }
-    return result;
+    case LinkableMessageKind::FunctionKind:
+    case LinkableMessageKind::GlobalVarKind:
+      llvm::errs() << "Unexpected LinkableMessageKind: " << kind << "\n";
+      ::exit(1);
   }
-  return DiffStatus::kNoDiff;
 }
 
 static DiffStatus CompareDistinctKindMessages(
