@@ -390,15 +390,11 @@ AbiDiffHelper::CompareCommonRecordFields(
   return std::make_pair(field_diff_status, nullptr);
 }
 
-
-GenericFieldDiffInfo<RecordFieldIR, RecordFieldDiffIR>
-AbiDiffHelper::CompareRecordFields(
+RecordFieldDiffResult AbiDiffHelper::CompareRecordFields(
     const std::vector<RecordFieldIR> &old_fields,
     const std::vector<RecordFieldIR> &new_fields,
-    std::deque<std::string> *type_queue,
-    DiffMessageIR::DiffKind diff_kind) {
-  GenericFieldDiffInfo<RecordFieldIR, RecordFieldDiffIR>
-      diffed_removed_added_fields;
+    std::deque<std::string> *type_queue, DiffMessageIR::DiffKind diff_kind) {
+  RecordFieldDiffResult result;
   AbiElementMap<const RecordFieldIR *> old_fields_map;
   AbiElementMap<const RecordFieldIR *> new_fields_map;
   std::map<uint64_t, const RecordFieldIR *> old_fields_offset_map;
@@ -458,8 +454,8 @@ AbiDiffHelper::CompareRecordFields(
           std::bind(predicate, std::placeholders::_1, old_fields_offset_map)),
       added_fields.end());
 
-  diffed_removed_added_fields.removed_fields_ = std::move(removed_fields);
-  diffed_removed_added_fields.added_fields_ = std::move(added_fields);
+  result.removed_fields = std::move(removed_fields);
+  result.added_fields = std::move(added_fields);
 
   std::vector<std::pair<
       const RecordFieldIR *, const RecordFieldIR *>> cf =
@@ -472,24 +468,23 @@ AbiDiffHelper::CompareRecordFields(
       common_field_diff_exists = true;
     }
     if (diffed_field_ptr.second != nullptr) {
-      diffed_removed_added_fields.diffed_fields_.emplace_back(
+      result.diffed_fields.emplace_back(
           std::move(*(diffed_field_ptr.second.release())));
     }
   }
 
-  DiffStatus &diff_status = diffed_removed_added_fields.diff_status_;
+  DiffStatus &diff_status = result.status;
   diff_status = DiffStatus::kNoDiff;
-  if (diffed_removed_added_fields.diffed_fields_.size() != 0 ||
-      diffed_removed_added_fields.removed_fields_.size() != 0) {
+  if (result.diffed_fields.size() != 0 || result.removed_fields.size() != 0) {
     diff_status.CombineWith(DiffStatus::kDirectDiff);
   }
-  if (diffed_removed_added_fields.added_fields_.size() != 0) {
+  if (result.added_fields.size() != 0) {
     diff_status.CombineWith(DiffStatus::kDirectExt);
   }
   if (common_field_diff_exists) {
     diff_status.CombineWith(DiffStatus::kIndirectDiff);
   }
-  return diffed_removed_added_fields;
+  return result;
 }
 
 bool AbiDiffHelper::CompareBaseSpecifiers(
@@ -662,9 +657,9 @@ DiffStatus AbiDiffHelper::CompareRecordTypes(
 
   auto &old_fields_dup = old_type->GetFields();
   auto &new_fields_dup = new_type->GetFields();
-  auto field_status_and_diffs = CompareRecordFields(
+  RecordFieldDiffResult field_status_and_diffs = CompareRecordFields(
       old_fields_dup, new_fields_dup, type_queue, diff_kind);
-  final_diff_status.CombineWith(field_status_and_diffs.diff_status_);
+  final_diff_status.CombineWith(field_status_and_diffs.status);
 
   std::vector<CXXBaseSpecifierIR> old_bases = old_type->GetBases();
   std::vector<CXXBaseSpecifierIR> new_bases = new_type->GetBases();
@@ -680,20 +675,18 @@ DiffStatus AbiDiffHelper::CompareRecordTypes(
     // Make copies of the fields removed and diffed, since we have to change
     // type ids -> type strings.
     std::vector<std::pair<RecordFieldIR, RecordFieldIR>> field_diff_dups =
-        FixupDiffedFieldTypeIds(field_status_and_diffs.diffed_fields_);
+        FixupDiffedFieldTypeIds(field_status_and_diffs.diffed_fields);
     std::vector<RecordFieldDiffIR> field_diffs_fixed =
         ConvertToDiffContainerVector<RecordFieldDiffIR,
                                      RecordFieldIR>(field_diff_dups);
 
-    std::vector<RecordFieldIR> field_removed_dups =
-        FixupRemovedFieldTypeIds(field_status_and_diffs.removed_fields_,
-                                 old_types_);
+    std::vector<RecordFieldIR> field_removed_dups = FixupRemovedFieldTypeIds(
+        field_status_and_diffs.removed_fields, old_types_);
     std::vector<const RecordFieldIR *> fields_removed_fixed =
         ConvertToConstPtrVector(field_removed_dups);
 
-    std::vector<RecordFieldIR> field_added_dups =
-        FixupRemovedFieldTypeIds(field_status_and_diffs.added_fields_,
-                                 new_types_);
+    std::vector<RecordFieldIR> field_added_dups = FixupRemovedFieldTypeIds(
+        field_status_and_diffs.added_fields, new_types_);
     std::vector<const RecordFieldIR *> fields_added_fixed =
         ConvertToConstPtrVector(field_added_dups);
 
