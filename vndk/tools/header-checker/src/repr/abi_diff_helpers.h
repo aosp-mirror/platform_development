@@ -139,6 +139,11 @@ class AbiDiffHelper {
                                    std::deque<std::string> *type_queue,
                                    IRDiffDumper::DiffKind diff_kind);
 
+  DiffStatus CompareArrayTypes(const ArrayTypeIR *old_type,
+                               const ArrayTypeIR *new_type,
+                               std::deque<std::string> *type_queue,
+                               IRDiffDumper::DiffKind diff_kind);
+
   DiffStatus ComparePointerTypes(const PointerTypeIR *old_type,
                                  const PointerTypeIR *new_type,
                                  std::deque<std::string> *type_queue,

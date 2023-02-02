@@ -754,6 +754,24 @@ TEST_MODULES = [
         linker_flags=['-output-format', 'Json'],
         has_reference_dump=True,
     ),
+    LsdumpModule(
+        name='libarray',
+        arch='arm64',
+        srcs=['integration/array/include/base.h'],
+        version_script='integration/array/map.txt',
+        export_include_dirs=['integration/array/include'],
+        linker_flags=['-output-format', 'Json'],
+        has_reference_dump=True,
+    ),
+    LsdumpModule(
+        name='libarray_diff',
+        arch='arm64',
+        srcs=['integration/array/include/diff.h'],
+        version_script='integration/array/map.txt',
+        export_include_dirs=['integration/array/include'],
+        linker_flags=['-output-format', 'Json'],
+        has_reference_dump=True,
+    ),
 ]
 
 TEST_MODULES = {m.name: m for m in TEST_MODULES}
