@@ -1201,7 +1201,7 @@ class Runner(object):
     if os.path.isfile(path2global):
       # try to find: RustDefaultVersion = "1.44.0"
       version_pat = re.compile(
-          r'\s*RustDefaultVersion\s*=\s*"([0-9]+\.[0-9]+\.[0-9]+)".*$')
+          r'\s*RustDefaultVersion\s*=\s*"([0-9]+\.[0-9]+\.[0-9]+).*"')
       with open(path2global, 'r') as inf:
         for line in inf:
           result = version_pat.match(line)
