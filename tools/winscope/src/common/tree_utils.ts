@@ -53,25 +53,11 @@ class TreeUtils {
   }
 
   static makeNodeFilter(filterString: string): FilterType {
-    const filterStrings = filterString.split(',');
-    const positive: any[] = [];
-    const negative: any[] = [];
-    filterStrings.forEach((f) => {
-      f = f.trim();
-      if (f.startsWith('!')) {
-        const regex = new RegExp(f.substring(1), 'i');
-        negative.push((s: any) => !regex.test(s));
-      } else {
-        const regex = new RegExp(f, 'i');
-        positive.push((s: any) => regex.test(s));
-      }
-    });
     const filter = (item: TreeNode | undefined | null) => {
       if (item) {
-        const apply = (f: any) => f(`${item.name}`);
+        const regex = new RegExp(filterString, 'i');
         return (
-          (positive.length === 0 || positive.some(apply)) &&
-          (negative.length === 0 || negative.every(apply))
+          (filterString.length === 0 || regex.test(`${item.name}`))
         );
       }
       return false;
