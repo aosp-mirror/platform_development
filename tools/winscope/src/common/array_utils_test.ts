@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import {ArrayUtils} from './array_utils';
 
 describe('ArrayUtils', () => {
@@ -55,35 +56,65 @@ describe('ArrayUtils', () => {
     expect(ArrayUtils.searchSubarray([0, 1, 2], [2, 3])).toEqual(undefined);
   });
 
-  it('binarySearchLowerOrEqual', () => {
+  it('binarySearchFirstGreaterOrEqual', () => {
     // no match
-    expect(ArrayUtils.binarySearchLowerOrEqual([], 5)).toBeUndefined();
-    expect(ArrayUtils.binarySearchLowerOrEqual([6], 5)).toBeUndefined();
-    expect(ArrayUtils.binarySearchLowerOrEqual([6, 7], 5)).toBeUndefined();
-    expect(ArrayUtils.binarySearchLowerOrEqual([6, 7, 8], 5)).toBeUndefined();
+    expect(ArrayUtils.binarySearchFirstGreaterOrEqual([], 9)).toBeUndefined();
+    expect(ArrayUtils.binarySearchFirstGreaterOrEqual([8], 9)).toBeUndefined();
+    expect(ArrayUtils.binarySearchFirstGreaterOrEqual([7, 8], 9)).toBeUndefined();
+    expect(ArrayUtils.binarySearchFirstGreaterOrEqual([6, 7, 8], 9)).toBeUndefined();
 
-    // match (lower)
-    expect(ArrayUtils.binarySearchLowerOrEqual([4], 5)).toEqual(0);
-    expect(ArrayUtils.binarySearchLowerOrEqual([3, 4], 5)).toEqual(1);
-    expect(ArrayUtils.binarySearchLowerOrEqual([2, 3, 4], 5)).toEqual(2);
-    expect(ArrayUtils.binarySearchLowerOrEqual([2, 3, 4, 6], 5)).toEqual(2);
-    expect(ArrayUtils.binarySearchLowerOrEqual([2, 3, 4, 6, 7], 5)).toEqual(2);
+    // match (greater)
+    expect(ArrayUtils.binarySearchFirstGreaterOrEqual([6], 5)).toEqual(0);
+    expect(ArrayUtils.binarySearchFirstGreaterOrEqual([6, 7], 5)).toEqual(0);
+    expect(ArrayUtils.binarySearchFirstGreaterOrEqual([4, 6], 5)).toEqual(1);
+    expect(ArrayUtils.binarySearchFirstGreaterOrEqual([4, 6, 7, 8], 5)).toEqual(1);
+    expect(ArrayUtils.binarySearchFirstGreaterOrEqual([3, 4, 6, 7, 8], 5)).toEqual(2);
 
     // match (equal)
-    expect(ArrayUtils.binarySearchLowerOrEqual([5], 5)).toEqual(0);
-    expect(ArrayUtils.binarySearchLowerOrEqual([5, 6], 5)).toEqual(0);
-    expect(ArrayUtils.binarySearchLowerOrEqual([4, 5], 5)).toEqual(1);
-    expect(ArrayUtils.binarySearchLowerOrEqual([3, 4, 5], 5)).toEqual(2);
-    expect(ArrayUtils.binarySearchLowerOrEqual([3, 4, 5, 6], 5)).toEqual(2);
-    expect(ArrayUtils.binarySearchLowerOrEqual([3, 4, 5, 6, 7], 5)).toEqual(2);
+    expect(ArrayUtils.binarySearchFirstGreaterOrEqual([5], 5)).toEqual(0);
+    expect(ArrayUtils.binarySearchFirstGreaterOrEqual([5, 6], 5)).toEqual(0);
+    expect(ArrayUtils.binarySearchFirstGreaterOrEqual([4, 5], 5)).toEqual(1);
+    expect(ArrayUtils.binarySearchFirstGreaterOrEqual([3, 4, 5], 5)).toEqual(2);
+    expect(ArrayUtils.binarySearchFirstGreaterOrEqual([3, 4, 5, 6], 5)).toEqual(2);
+    expect(ArrayUtils.binarySearchFirstGreaterOrEqual([3, 4, 5, 6, 7], 5)).toEqual(2);
 
     // match (equal with repeated values)
-    expect(ArrayUtils.binarySearchLowerOrEqual([5, 5], 5)).toEqual(0);
-    expect(ArrayUtils.binarySearchLowerOrEqual([5, 5, 5], 5)).toEqual(0);
-    expect(ArrayUtils.binarySearchLowerOrEqual([5, 5, 5, 5], 5)).toEqual(0);
-    expect(ArrayUtils.binarySearchLowerOrEqual([4, 5, 5, 6], 5)).toEqual(1);
-    expect(ArrayUtils.binarySearchLowerOrEqual([4, 4, 5, 5, 5, 6], 5)).toEqual(2);
-    expect(ArrayUtils.binarySearchLowerOrEqual([4, 4, 4, 5, 5, 5, 5, 6], 5)).toEqual(3);
+    expect(ArrayUtils.binarySearchFirstGreaterOrEqual([5, 5], 5)).toEqual(0);
+    expect(ArrayUtils.binarySearchFirstGreaterOrEqual([5, 5, 5], 5)).toEqual(0);
+    expect(ArrayUtils.binarySearchFirstGreaterOrEqual([5, 5, 5, 5], 5)).toEqual(0);
+    expect(ArrayUtils.binarySearchFirstGreaterOrEqual([4, 5, 5, 6], 5)).toEqual(1);
+    expect(ArrayUtils.binarySearchFirstGreaterOrEqual([4, 4, 5, 5, 5, 6], 5)).toEqual(2);
+    expect(ArrayUtils.binarySearchFirstGreaterOrEqual([4, 4, 4, 5, 5, 5, 5, 6], 5)).toEqual(3);
+  });
+
+  it('binarySearchFirstGreater', () => {
+    // no match
+    expect(ArrayUtils.binarySearchFirstGreater([], 9)).toBeUndefined();
+    expect(ArrayUtils.binarySearchFirstGreater([8], 9)).toBeUndefined();
+    expect(ArrayUtils.binarySearchFirstGreater([7, 8], 9)).toBeUndefined();
+    expect(ArrayUtils.binarySearchFirstGreater([6, 7, 8], 9)).toBeUndefined();
+
+    // match
+    expect(ArrayUtils.binarySearchFirstGreater([6], 5)).toEqual(0);
+    expect(ArrayUtils.binarySearchFirstGreater([6, 7], 5)).toEqual(0);
+    expect(ArrayUtils.binarySearchFirstGreater([4, 6], 5)).toEqual(1);
+    expect(ArrayUtils.binarySearchFirstGreater([4, 6, 7, 8], 5)).toEqual(1);
+    expect(ArrayUtils.binarySearchFirstGreater([3, 4, 6, 7, 8], 5)).toEqual(2);
+
+    // match (ignore equal)
+    expect(ArrayUtils.binarySearchFirstGreater([5], 5)).toEqual(undefined);
+    expect(ArrayUtils.binarySearchFirstGreater([5, 6], 5)).toEqual(1);
+    expect(ArrayUtils.binarySearchFirstGreater([4, 5, 6], 5)).toEqual(2);
+    expect(ArrayUtils.binarySearchFirstGreater([3, 4, 5, 6], 5)).toEqual(3);
+    expect(ArrayUtils.binarySearchFirstGreater([3, 4, 5, 6, 7], 5)).toEqual(3);
+
+    // match (with repeated values)
+    expect(ArrayUtils.binarySearchFirstGreater([6, 6], 5)).toEqual(0);
+    expect(ArrayUtils.binarySearchFirstGreater([6, 6, 6], 5)).toEqual(0);
+    expect(ArrayUtils.binarySearchFirstGreater([6, 6, 6, 6], 5)).toEqual(0);
+    expect(ArrayUtils.binarySearchFirstGreater([5, 6, 6, 7], 5)).toEqual(1);
+    expect(ArrayUtils.binarySearchFirstGreater([5, 5, 6, 6, 6, 7], 5)).toEqual(2);
+    expect(ArrayUtils.binarySearchFirstGreater([5, 5, 5, 6, 6, 6, 6, 7], 5)).toEqual(3);
   });
 
   it('toUintLittleEndian', () => {
