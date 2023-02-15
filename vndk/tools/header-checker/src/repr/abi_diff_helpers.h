@@ -188,6 +188,11 @@ class AbiDiffHelper {
       std::deque<std::string> *type_queue,
       IRDiffDumper::DiffKind diff_kind);
 
+  void FilterOutRenamedRecordFields(
+      std::deque<std::string> *type_queue, DiffMessageIR::DiffKind diff_kind,
+      std::vector<const RecordFieldIR *> &old_fields,
+      std::vector<const RecordFieldIR *> &new_fields);
+
   RecordFieldDiffResult CompareRecordFields(
       const std::vector<RecordFieldIR> &old_fields,
       const std::vector<RecordFieldIR> &new_fields,
