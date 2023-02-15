@@ -390,16 +390,75 @@ AbiDiffHelper::CompareCommonRecordFields(
   return std::make_pair(field_diff_status, nullptr);
 }
 
+// This function filters out the pairs of old and new fields that meet the
+// following conditions:
+//   The old field's (offset, type) is unique in old_fields.
+//   The new field's (offset, type) is unique in new_fields.
+//   The two fields have compatible attributes except the name.
+void AbiDiffHelper::FilterOutRenamedRecordFields(
+    std::deque<std::string> *type_queue, DiffMessageIR::DiffKind diff_kind,
+    std::vector<const RecordFieldIR *> &old_fields,
+    std::vector<const RecordFieldIR *> &new_fields) {
+  const auto old_end = old_fields.end();
+  const auto new_end = new_fields.end();
+  auto is_less = [](const RecordFieldIR *first, const RecordFieldIR *second) {
+    if (first->GetOffset() != second->GetOffset()) {
+      return first->GetOffset() < second->GetOffset();
+    }
+    return first->GetReferencedType() < second->GetReferencedType();
+  };
+  std::sort(old_fields.begin(), old_end, is_less);
+  std::sort(new_fields.begin(), new_end, is_less);
+
+  std::vector<const RecordFieldIR *> out_old_fields;
+  std::vector<const RecordFieldIR *> out_new_fields;
+  auto old_it = old_fields.begin();
+  auto new_it = new_fields.begin();
+  while (old_it != old_end && new_it != new_end) {
+    auto next_old_it = std::next(old_it);
+    while (next_old_it != old_end && !is_less(*old_it, *next_old_it)) {
+      next_old_it++;
+    }
+    if (is_less(*old_it, *new_it) || next_old_it - old_it > 1) {
+      out_old_fields.insert(out_old_fields.end(), old_it, next_old_it);
+      old_it = next_old_it;
+      continue;
+    }
+
+    auto next_new_it = std::next(new_it);
+    while (next_new_it != new_end && !is_less(*new_it, *next_new_it)) {
+      next_new_it++;
+    }
+    if (is_less(*new_it, *old_it) || next_new_it - new_it > 1) {
+      out_new_fields.insert(out_new_fields.end(), new_it, next_new_it);
+      new_it = next_new_it;
+      continue;
+    }
+
+    auto comparison_result =
+        CompareCommonRecordFields(*old_it, *new_it, type_queue, diff_kind);
+    if (comparison_result.second != nullptr) {
+      out_old_fields.emplace_back(*old_it);
+      out_new_fields.emplace_back(*new_it);
+    }
+    old_it = next_old_it;
+    new_it = next_new_it;
+  }
+  out_old_fields.insert(out_old_fields.end(), old_it, old_end);
+  out_new_fields.insert(out_new_fields.end(), new_it, new_end);
+
+  old_fields = std::move(out_old_fields);
+  new_fields = std::move(out_new_fields);
+}
+
 RecordFieldDiffResult AbiDiffHelper::CompareRecordFields(
     const std::vector<RecordFieldIR> &old_fields,
     const std::vector<RecordFieldIR> &new_fields,
     std::deque<std::string> *type_queue, DiffMessageIR::DiffKind diff_kind) {
   RecordFieldDiffResult result;
+  // Map names to RecordFieldIR.
   AbiElementMap<const RecordFieldIR *> old_fields_map;
   AbiElementMap<const RecordFieldIR *> new_fields_map;
-  std::map<uint64_t, const RecordFieldIR *> old_fields_offset_map;
-  std::map<uint64_t, const RecordFieldIR *> new_fields_offset_map;
-
   utils::AddToMap(
       &old_fields_map, old_fields,
       [](const RecordFieldIR *f) {return f->GetName();},
@@ -408,55 +467,14 @@ RecordFieldDiffResult AbiDiffHelper::CompareRecordFields(
       &new_fields_map, new_fields,
       [](const RecordFieldIR *f) {return f->GetName();},
       [](const RecordFieldIR *f) {return f;});
-  utils::AddToMap(
-      &old_fields_offset_map, old_fields,
-      [](const RecordFieldIR *f) {return f->GetOffset();},
-      [](const RecordFieldIR *f) {return f;});
-  utils::AddToMap(
-      &new_fields_offset_map, new_fields,
-      [](const RecordFieldIR *f) {return f->GetOffset();},
-      [](const RecordFieldIR *f) {return f;});
-  // If a field is removed from the map field_name -> offset see if another
-  // field is present at the same offset and compare the size and type etc,
-  // remove it from the removed fields if they're compatible.
-  std::vector<const RecordFieldIR *> removed_fields =
+  // Compare the fields whose names are not present in both records.
+  result.removed_fields =
       utils::FindRemovedElements(old_fields_map, new_fields_map);
-
-  std::vector<const RecordFieldIR *> added_fields =
+  result.added_fields =
       utils::FindRemovedElements(new_fields_map, old_fields_map);
-
-  auto predicate =
-      [&](const RecordFieldIR *removed_field,
-          std::map<uint64_t, const RecordFieldIR *> &field_off_map) {
-        uint64_t old_field_offset = removed_field->GetOffset();
-        auto corresponding_field_at_same_offset =
-            field_off_map.find(old_field_offset);
-        // Correctly reported as removed, so do not remove.
-        if (corresponding_field_at_same_offset == field_off_map.end()) {
-          return false;
-        }
-
-        auto comparison_result = CompareCommonRecordFields(
-            removed_field, corresponding_field_at_same_offset->second,
-            type_queue, diff_kind);
-        // No actual diff, so remove it.
-        return (comparison_result.second == nullptr);
-      };
-
-  removed_fields.erase(
-      std::remove_if(
-          removed_fields.begin(), removed_fields.end(),
-          std::bind(predicate, std::placeholders::_1, new_fields_offset_map)),
-      removed_fields.end());
-  added_fields.erase(
-      std::remove_if(
-          added_fields.begin(), added_fields.end(),
-          std::bind(predicate, std::placeholders::_1, old_fields_offset_map)),
-      added_fields.end());
-
-  result.removed_fields = std::move(removed_fields);
-  result.added_fields = std::move(added_fields);
-
+  FilterOutRenamedRecordFields(type_queue, diff_kind, result.removed_fields,
+                               result.added_fields);
+  // Compare the fields whose names are present in both records.
   std::vector<std::pair<
       const RecordFieldIR *, const RecordFieldIR *>> cf =
       utils::FindCommonElements(old_fields_map, new_fields_map);
@@ -472,7 +490,7 @@ RecordFieldDiffResult AbiDiffHelper::CompareRecordFields(
           std::move(*(diffed_field_ptr.second.release())));
     }
   }
-
+  // Determine DiffStatus.
   DiffStatus &diff_status = result.status;
   diff_status = DiffStatus::kNoDiff;
   if (result.diffed_fields.size() != 0 || result.removed_fields.size() != 0) {
