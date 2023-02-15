@@ -11,7 +11,7 @@
     "deps_graph:check_cycles": "count=$(npx madge --extensions ts,js src/ --circular 2>&1 | awk '/Found.*circular dependencies/ {print $3}'); test ${count:-0} -le 10",
     "start": "webpack serve --config webpack.config.dev.js --open --hot --port 8080",
     "start:remote_tool_mock": "webpack serve --config src/test/remote_tool_mock/webpack.config.js --open --hot --port 8081",
-    "build:kotlin": "rm -rf kotlin_build && npx kotlinc-js -source-map -source-map-embed-sources always -module-kind commonjs -output kotlin_build/flicker.js ../../../platform_testing/libraries/flicker/src/com/android/server/wm/traces/common",
+    "build:kotlin": "rm -rf kotlin_build && JAVA_OPTS='-Xmx2g -Xms1g' npx kotlinc-js -source-map -source-map-embed-sources always -module-kind commonjs -output kotlin_build/flicker.js ../../../platform_testing/libraries/flicker/src/com/android/server/wm/traces/common",
     "build:prod": "webpack --config webpack.config.prod.js --progress",
     "build:remote_tool_mock": "webpack --config src/test/remote_tool_mock/webpack.config.js --progress",
     "build:all": "npm run build:kotlin && npm run build:prod && npm run build:remote_tool_mock",
