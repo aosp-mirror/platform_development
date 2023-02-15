@@ -41,7 +41,7 @@ android_sdk_repo_host {
             strip_files: [
                 "lib64/*.so",
                 "lld-bin/lld",
-                "lib64/libc++.so.1",
+                "lib/x86_64-unknown-linux-gnu/libc++.so.1",
             ],
         },
         darwin: {
@@ -93,7 +93,6 @@ android_sdk_repo_host {
                 lib32: {
                     deps: [
                         "aapt",
-                        "aapt2",
                         "aidl",
                         "apksigner",
                         "bcc_compat",
@@ -108,6 +107,7 @@ android_sdk_repo_host {
                 },
                 lib64: {
                     deps: [
+                        "aapt2",
                         "libwinpthread-1",
                     ],
                 },
