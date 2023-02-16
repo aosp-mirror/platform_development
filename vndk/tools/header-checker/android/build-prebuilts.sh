@@ -143,15 +143,12 @@ cp -R "${SOONG_HOST_OUT}/lib"* "${SOONG_DIST}"
 
 # Copy clang header and share files
 CLANG_DIR="prebuilts/clang/host/${OS}-x86/${LLVM_PREBUILTS_VERSION}"
-CLANG_LIB_DIR="${CLANG_DIR}/lib64/clang/${LLVM_RELEASE_VERSION}"
-CLANG_LIB_DIR_OUT="${SOONG_DIST}/lib64/clang/${LLVM_RELEASE_VERSION}"
+CLANG_LIB_DIR="${CLANG_DIR}/lib/clang/${LLVM_RELEASE_VERSION}"
+CLANG_LIB_DIR_OUT="${SOONG_DIST}/lib/clang/${LLVM_RELEASE_VERSION}"
 mkdir -p "${CLANG_LIB_DIR_OUT}"
 cp -R "${CLANG_LIB_DIR}/share" "${CLANG_LIB_DIR_OUT}/share"
 cp -R "${CLANG_LIB_DIR}/include" "${CLANG_LIB_DIR_OUT}/include"
-ln -s "lib64/clang/${LLVM_RELEASE_VERSION}/include" "${SOONG_DIST}/clang-headers"
-# create symlink lib -> lib64 as toolchain libraries have a RUNPATH pointing to
-# $ORIGIN/../lib instead of lib64
-ln -s "lib64" "${SOONG_DIST}/lib"
+ln -s "lib/clang/${LLVM_RELEASE_VERSION}/include" "${SOONG_DIST}/clang-headers"
 
 # Normalize library file names.  All library file names must match their soname.
 function extract_soname () {
