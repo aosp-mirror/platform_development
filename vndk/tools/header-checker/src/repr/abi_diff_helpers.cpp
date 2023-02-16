@@ -366,28 +366,19 @@ static bool CompareSizeAndAlignment(const TypeIR *old_type,
       old_type->GetAlignment() == new_type->GetAlignment();
 }
 
-DiffStatusPair<std::unique_ptr<RecordFieldDiffIR>>
-AbiDiffHelper::CompareCommonRecordFields(
-    const RecordFieldIR *old_field,
-    const RecordFieldIR *new_field,
-    std::deque<std::string> *type_queue,
-    DiffMessageIR::DiffKind diff_kind) {
-
-  DiffStatus field_diff_status =
-      CompareAndDumpTypeDiff(old_field->GetReferencedType(),
-                             new_field->GetReferencedType(),
-                             type_queue, diff_kind);
-
+DiffStatus AbiDiffHelper::CompareCommonRecordFields(
+    const RecordFieldIR *old_field, const RecordFieldIR *new_field,
+    std::deque<std::string> *type_queue, DiffMessageIR::DiffKind diff_kind) {
+  DiffStatus field_diff_status = CompareAndDumpTypeDiff(
+      old_field->GetReferencedType(), new_field->GetReferencedType(),
+      type_queue, diff_kind);
   if (old_field->GetOffset() != new_field->GetOffset() ||
       // TODO: Should this be an inquality check instead ? Some compilers can
       // make signatures dependant on absolute values of access specifiers.
-      IsAccessDowngraded(old_field->GetAccess(), new_field->GetAccess()) ||
-      field_diff_status.IsDirectDiff()) {
-    return std::make_pair(
-        DiffStatus::kDirectDiff,
-        std::make_unique<RecordFieldDiffIR>(old_field, new_field));
+      IsAccessDowngraded(old_field->GetAccess(), new_field->GetAccess())) {
+    field_diff_status.CombineWith(DiffStatus::kDirectDiff);
   }
-  return std::make_pair(field_diff_status, nullptr);
+  return field_diff_status;
 }
 
 // This function filters out the pairs of old and new fields that meet the
@@ -435,9 +426,8 @@ void AbiDiffHelper::FilterOutRenamedRecordFields(
       continue;
     }
 
-    auto comparison_result =
-        CompareCommonRecordFields(*old_it, *new_it, type_queue, diff_kind);
-    if (comparison_result.second != nullptr) {
+    if (CompareCommonRecordFields(*old_it, *new_it, type_queue, diff_kind)
+            .IsDirectDiff()) {
       out_old_fields.emplace_back(*old_it);
       out_new_fields.emplace_back(*new_it);
     }
@@ -480,14 +470,14 @@ RecordFieldDiffResult AbiDiffHelper::CompareRecordFields(
       utils::FindCommonElements(old_fields_map, new_fields_map);
   bool common_field_diff_exists = false;
   for (auto &&common_fields : cf) {
-    auto diffed_field_ptr = CompareCommonRecordFields(
+    DiffStatus field_diff_status = CompareCommonRecordFields(
         common_fields.first, common_fields.second, type_queue, diff_kind);
-    if (diffed_field_ptr.first.HasDiff()) {
+    if (field_diff_status.HasDiff()) {
       common_field_diff_exists = true;
     }
-    if (diffed_field_ptr.second != nullptr) {
-      result.diffed_fields.emplace_back(
-          std::move(*(diffed_field_ptr.second.release())));
+    if (field_diff_status.IsDirectDiff()) {
+      result.diffed_fields.emplace_back(common_fields.first,
+                                        common_fields.second);
     }
   }
   // Determine DiffStatus.
