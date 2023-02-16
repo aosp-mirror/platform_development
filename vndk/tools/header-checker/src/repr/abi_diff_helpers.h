@@ -63,9 +63,6 @@ class DiffStatus {
   Status status_;
 };
 
-template <typename T>
-using DiffStatusPair = std::pair<DiffStatus, T>;
-
 struct RecordFieldDiffResult {
   DiffStatus status = DiffStatus::kNoDiff;
   std::vector<RecordFieldDiffIR> diffed_fields;
@@ -181,12 +178,10 @@ class AbiDiffHelper {
   FixupDiffedFieldTypeIds(
       const std::vector<RecordFieldDiffIR> &field_diffs);
 
-  DiffStatusPair<std::unique_ptr<RecordFieldDiffIR>>
-  CompareCommonRecordFields(
-      const RecordFieldIR *old_field,
-      const RecordFieldIR *new_field,
-      std::deque<std::string> *type_queue,
-      IRDiffDumper::DiffKind diff_kind);
+  DiffStatus CompareCommonRecordFields(const RecordFieldIR *old_field,
+                                       const RecordFieldIR *new_field,
+                                       std::deque<std::string> *type_queue,
+                                       IRDiffDumper::DiffKind diff_kind);
 
   void FilterOutRenamedRecordFields(
       std::deque<std::string> *type_queue, DiffMessageIR::DiffKind diff_kind,
