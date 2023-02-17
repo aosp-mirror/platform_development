@@ -117,13 +117,53 @@ def load_auth_credentials(cookie_file_path):
         return load_auth_credentials_from_file(cookie_file)
 
 
+def _domain_matches(domain_name, domain_pattern):
+    """Returns whether `domain_name` matches `domain_pattern` under the
+    definition of RFC 6265 (Section 4.1.2.3 and 5.1.3).
+
+    Pattern matching rule defined by Section 5.1.3:
+
+        >>> _domain_matches('example.com', 'example.com')
+        True
+        >>> _domain_matches('a.example.com', 'example.com')
+        True
+        >>> _domain_matches('aaaexample.com', 'example.com')
+        False
+
+    If the domain pattern starts with '.', '.' is ignored (Section 4.1.2.3):
+
+        >>> _domain_matches('a.example.com', '.example.com')
+        True
+        >>> _domain_matches('example.com', '.example.com')
+        True
+
+    See also:
+        https://datatracker.ietf.org/doc/html/rfc6265#section-4.1.2.3
+        https://datatracker.ietf.org/doc/html/rfc6265#section-5.1.3
+    """
+    domain_pattern = domain_pattern.removeprefix('.')
+    return (domain_name == domain_pattern or
+            (domain_name.endswith(domain_pattern) and
+             domain_name[-len(domain_pattern) - 1] == '.'))
+
+
+def _find_auth_credentials(credentials, domain):
+    """Find the first set of login credentials (username, password)
+    that `domain` matches.
+    """
+    for domain_pattern, login in credentials.items():
+        if _domain_matches(domain, domain_pattern):
+            return login
+    raise KeyError('Domain {} not found'.format(domain))
+
+
 def create_url_opener(cookie_file_path, domain):
     """Load username and password from .gitcookies and return a URL opener with
     an authentication handler."""
 
     # Load authentication credentials
     credentials = load_auth_credentials(cookie_file_path)
-    username, password = credentials[domain]
+    username, password = _find_auth_credentials(credentials, domain)
 
     # Create URL opener with authentication handler
     auth_handler = HTTPBasicAuthHandler()
