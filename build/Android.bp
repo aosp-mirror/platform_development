@@ -41,7 +41,7 @@ android_sdk_repo_host {
             strip_files: [
                 "lib64/*.so",
                 "lld-bin/lld",
-                "lib/x86_64-unknown-linux-gnu/libc++.so.1",
+                "lib64/libc++.so.1",
             ],
         },
         darwin: {
