@@ -103,6 +103,9 @@ struct Config {
     /// Modules in this list will not be generated.
     #[serde(default)]
     module_blocklist: Vec<String>,
+    /// Modules name => Soong "visibility" property.
+    #[serde(default)]
+    module_visibility: BTreeMap<String, Vec<String>>,
 }
 
 /// Options that apply to everything in a package (i.e. everything associated with a particular
@@ -567,6 +570,10 @@ fn crate_to_bp_modules(
             && ["lib", "rlib", "dylib", "staticlib", "cdylib"].contains(&crate_type.as_str())
         {
             m.props.set("apex_available", cfg.apex_available.clone());
+        }
+
+        if let Some(visibility) = cfg.module_visibility.get(module_name) {
+            m.props.set("visibility", visibility.clone());
         }
 
         if let Some(path) = &package_cfg.add_module_block {
