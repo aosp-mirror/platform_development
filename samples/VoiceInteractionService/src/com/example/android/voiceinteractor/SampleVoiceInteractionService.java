@@ -32,6 +32,7 @@ import android.os.IBinder;
 import android.os.Trace;
 import android.service.voice.AlwaysOnHotwordDetector;
 import android.service.voice.AlwaysOnHotwordDetector.EventPayload;
+import android.service.voice.DetectorFailure;
 import android.service.voice.HotwordDetector;
 import android.service.voice.HotwordDetector.IllegalDetectorStateException;
 import android.service.voice.HotwordRejectedResult;
@@ -158,7 +159,7 @@ public class SampleVoiceInteractionService extends VoiceInteractionService {
             }
 
             @Override
-            public void onError() {
+            public void onFailure(@NonNull DetectorFailure detectorFailure) {
                 Log.i(TAG, "VQD error");
             }
         };
