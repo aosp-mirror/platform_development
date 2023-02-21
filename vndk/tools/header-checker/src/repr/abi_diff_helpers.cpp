@@ -372,7 +372,10 @@ DiffStatus AbiDiffHelper::CompareCommonRecordFields(
   DiffStatus field_diff_status = CompareAndDumpTypeDiff(
       old_field->GetReferencedType(), new_field->GetReferencedType(),
       type_queue, diff_kind);
-  if (old_field->GetOffset() != new_field->GetOffset() ||
+  // CompareAndDumpTypeDiff should not return kDirectExt.
+  // In case it happens, report an incompatible diff for review.
+  if (field_diff_status.IsExtension() ||
+      old_field->GetOffset() != new_field->GetOffset() ||
       // TODO: Should this be an inquality check instead ? Some compilers can
       // make signatures dependant on absolute values of access specifiers.
       IsAccessDowngraded(old_field->GetAccess(), new_field->GetAccess())) {
@@ -386,10 +389,14 @@ DiffStatus AbiDiffHelper::CompareCommonRecordFields(
 //   The old field's (offset, type) is unique in old_fields.
 //   The new field's (offset, type) is unique in new_fields.
 //   The two fields have compatible attributes except the name.
-void AbiDiffHelper::FilterOutRenamedRecordFields(
+//
+// This function returns either kNoDiff or kIndirectDiff. It is the status of
+// the field pairs that are filtered out.
+DiffStatus AbiDiffHelper::FilterOutRenamedRecordFields(
     std::deque<std::string> *type_queue, DiffMessageIR::DiffKind diff_kind,
     std::vector<const RecordFieldIR *> &old_fields,
     std::vector<const RecordFieldIR *> &new_fields) {
+  DiffStatus diff_status = DiffStatus::kNoDiff;
   const auto old_end = old_fields.end();
   const auto new_end = new_fields.end();
   auto is_less = [](const RecordFieldIR *first, const RecordFieldIR *second) {
@@ -426,10 +433,13 @@ void AbiDiffHelper::FilterOutRenamedRecordFields(
       continue;
     }
 
-    if (CompareCommonRecordFields(*old_it, *new_it, type_queue, diff_kind)
-            .IsDirectDiff()) {
+    DiffStatus field_diff_status =
+        CompareCommonRecordFields(*old_it, *new_it, type_queue, diff_kind);
+    if (field_diff_status.IsDirectDiff()) {
       out_old_fields.emplace_back(*old_it);
       out_new_fields.emplace_back(*new_it);
+    } else {
+      diff_status.CombineWith(field_diff_status);
     }
     old_it = next_old_it;
     new_it = next_new_it;
@@ -439,6 +449,7 @@ void AbiDiffHelper::FilterOutRenamedRecordFields(
 
   old_fields = std::move(out_old_fields);
   new_fields = std::move(out_new_fields);
+  return diff_status;
 }
 
 RecordFieldDiffResult AbiDiffHelper::CompareRecordFields(
@@ -446,6 +457,8 @@ RecordFieldDiffResult AbiDiffHelper::CompareRecordFields(
     const std::vector<RecordFieldIR> &new_fields,
     std::deque<std::string> *type_queue, DiffMessageIR::DiffKind diff_kind) {
   RecordFieldDiffResult result;
+  DiffStatus &diff_status = result.status;
+  diff_status = DiffStatus::kNoDiff;
   // Map names to RecordFieldIR.
   AbiElementMap<const RecordFieldIR *> old_fields_map;
   AbiElementMap<const RecordFieldIR *> new_fields_map;
@@ -462,35 +475,25 @@ RecordFieldDiffResult AbiDiffHelper::CompareRecordFields(
       utils::FindRemovedElements(old_fields_map, new_fields_map);
   result.added_fields =
       utils::FindRemovedElements(new_fields_map, old_fields_map);
-  FilterOutRenamedRecordFields(type_queue, diff_kind, result.removed_fields,
-                               result.added_fields);
-  // Compare the fields whose names are present in both records.
-  std::vector<std::pair<
-      const RecordFieldIR *, const RecordFieldIR *>> cf =
-      utils::FindCommonElements(old_fields_map, new_fields_map);
-  bool common_field_diff_exists = false;
-  for (auto &&common_fields : cf) {
-    DiffStatus field_diff_status = CompareCommonRecordFields(
-        common_fields.first, common_fields.second, type_queue, diff_kind);
-    if (field_diff_status.HasDiff()) {
-      common_field_diff_exists = true;
-    }
-    if (field_diff_status.IsDirectDiff()) {
-      result.diffed_fields.emplace_back(common_fields.first,
-                                        common_fields.second);
-    }
-  }
-  // Determine DiffStatus.
-  DiffStatus &diff_status = result.status;
-  diff_status = DiffStatus::kNoDiff;
-  if (result.diffed_fields.size() != 0 || result.removed_fields.size() != 0) {
+  diff_status.CombineWith(FilterOutRenamedRecordFields(
+      type_queue, diff_kind, result.removed_fields, result.added_fields));
+  if (result.removed_fields.size() != 0) {
     diff_status.CombineWith(DiffStatus::kDirectDiff);
   }
   if (result.added_fields.size() != 0) {
     diff_status.CombineWith(DiffStatus::kDirectExt);
   }
-  if (common_field_diff_exists) {
-    diff_status.CombineWith(DiffStatus::kIndirectDiff);
+  // Compare the fields whose names are present in both records.
+  std::vector<std::pair<const RecordFieldIR *, const RecordFieldIR *>> cf =
+      utils::FindCommonElements(old_fields_map, new_fields_map);
+  for (auto &&common_fields : cf) {
+    DiffStatus field_diff_status = CompareCommonRecordFields(
+        common_fields.first, common_fields.second, type_queue, diff_kind);
+    diff_status.CombineWith(field_diff_status);
+    if (field_diff_status.IsDirectDiff()) {
+      result.diffed_fields.emplace_back(common_fields.first,
+                                        common_fields.second);
+    }
   }
   return result;
 }
