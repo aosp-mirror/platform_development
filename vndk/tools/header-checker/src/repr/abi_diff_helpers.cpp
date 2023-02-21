@@ -38,19 +38,6 @@ std::string Unwind(const std::deque<std::string> *type_queue) {
   return stack_str;
 }
 
-static void TypeQueueCheckAndPushBack(std::deque<std::string> *type_queue,
-                                      const std::string &str) {
-  if (type_queue) {
-    type_queue->push_back(str);
-  }
-}
-
-static void TypeQueueCheckAndPop(std::deque<std::string> *type_queue) {
-  if (type_queue && !type_queue->empty()) {
-    type_queue->pop_back();
-  }
-}
-
 static std::string ConvertTypeIdToString(
     const AbiElementMap<const TypeIR *> &type_graph,
     const std::string &type_id) {
@@ -1067,8 +1054,8 @@ DiffStatus AbiDiffHelper::CompareAndDumpTypeDiff(
     return DiffStatus::kNoDiff;
   }
 
-  TypeQueueCheckAndPushBack(
-      type_queue, ConvertTypeIdToString(old_types_,old_type_id));
+  TypeStackGuard guard(type_queue,
+                       ConvertTypeIdToString(old_types_, old_type_id));
 
   AbiElementMap<const TypeIR *>::const_iterator old_it =
       old_types_.find(old_type_id);
@@ -1076,7 +1063,6 @@ DiffStatus AbiDiffHelper::CompareAndDumpTypeDiff(
       new_types_.find(new_type_id);
 
   if (old_it == old_types_.end() || new_it == new_types_.end()) {
-    TypeQueueCheckAndPop(type_queue);
     // One of the types were hidden, we cannot compare further.
     return AreOpaqueTypesEqual(old_type_id, new_type_id)
                ? DiffStatus::kNoDiff
@@ -1092,8 +1078,6 @@ DiffStatus AbiDiffHelper::CompareAndDumpTypeDiff(
     diff_status = CompareAndDumpTypeDiff(old_it->second , new_it->second ,
                                          old_kind, type_queue, diff_kind);
   }
-
-  TypeQueueCheckAndPop(type_queue);
   return diff_status;
 }
 
