@@ -25,6 +25,7 @@ namespace diff {
 
 using repr::AbiElementMap;
 using repr::DiffStatus;
+using repr::TypeStackGuard;
 using repr::Unwind;
 
 
@@ -56,7 +57,7 @@ template <>
 bool DiffWrapper<repr::GlobalVarIR>::DumpDiff(
     repr::DiffMessageIR::DiffKind diff_kind) {
   std::deque<std::string> type_queue;
-  type_queue.push_back(oldp_->GetName());
+  TypeStackGuard guard(&type_queue, oldp_->GetName());
   DiffStatus type_diff = CompareAndDumpTypeDiff(oldp_->GetReferencedType(),
                                                 newp_->GetReferencedType(),
                                                 &type_queue, diff_kind);
@@ -78,7 +79,7 @@ template <>
 bool DiffWrapper<repr::FunctionIR>::DumpDiff(
     repr::DiffMessageIR::DiffKind diff_kind) {
   std::deque<std::string> type_queue;
-  type_queue.push_back(oldp_->GetName());
+  TypeStackGuard guard(&type_queue, oldp_->GetName());
 
   DiffStatus function_type_diff =
       CompareFunctionTypes(oldp_, newp_, &type_queue, diff_kind);
