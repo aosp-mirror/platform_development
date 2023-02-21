@@ -139,7 +139,10 @@ build/soong/soong_ui.bash --make-mode --skip-config --soong-only "${binaries[@]}
 SOONG_DIST="${SOONG_OUT}/dist"
 mkdir -p "${SOONG_DIST}/bin"
 cp "${binaries[@]}" "${SOONG_DIST}/bin"
-cp -R "${SOONG_HOST_OUT}/lib"* "${SOONG_DIST}"
+cp -R "${SOONG_HOST_OUT}/lib64" "${SOONG_DIST}"
+# create symlink lib -> lib64 as toolchain libraries have a RUNPATH pointing to
+# $ORIGIN/../lib instead of lib64
+ln -s "lib64" "${SOONG_DIST}/lib"
 
 # Copy clang header and share files
 CLANG_DIR="prebuilts/clang/host/${OS}-x86/${LLVM_PREBUILTS_VERSION}"
