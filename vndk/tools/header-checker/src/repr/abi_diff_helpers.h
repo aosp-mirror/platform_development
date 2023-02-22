@@ -70,6 +70,26 @@ struct RecordFieldDiffResult {
   std::vector<const RecordFieldIR *> added_fields;
 };
 
+class TypeStackGuard {
+ public:
+  TypeStackGuard(std::deque<std::string> *type_stack,
+                 const std::string &type_name) {
+    type_stack_ = type_stack;
+    if (type_stack_) {
+      type_stack_->push_back(type_name);
+    }
+  }
+
+  ~TypeStackGuard() {
+    if (type_stack_ && !type_stack_->empty()) {
+      type_stack_->pop_back();
+    }
+  }
+
+ private:
+  std::deque<std::string> *type_stack_;
+};
+
 std::string Unwind(const std::deque<std::string> *type_queue);
 
 struct DiffPolicyOptions {
