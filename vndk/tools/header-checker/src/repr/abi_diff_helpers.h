@@ -63,14 +63,31 @@ class DiffStatus {
   Status status_;
 };
 
-template <typename T>
-using DiffStatusPair = std::pair<DiffStatus, T>;
-
 struct RecordFieldDiffResult {
   DiffStatus status = DiffStatus::kNoDiff;
   std::vector<RecordFieldDiffIR> diffed_fields;
   std::vector<const RecordFieldIR *> removed_fields;
   std::vector<const RecordFieldIR *> added_fields;
+};
+
+class TypeStackGuard {
+ public:
+  TypeStackGuard(std::deque<std::string> *type_stack,
+                 const std::string &type_name) {
+    type_stack_ = type_stack;
+    if (type_stack_) {
+      type_stack_->push_back(type_name);
+    }
+  }
+
+  ~TypeStackGuard() {
+    if (type_stack_ && !type_stack_->empty()) {
+      type_stack_->pop_back();
+    }
+  }
+
+ private:
+  std::deque<std::string> *type_stack_;
 };
 
 std::string Unwind(const std::deque<std::string> *type_queue);
@@ -181,12 +198,15 @@ class AbiDiffHelper {
   FixupDiffedFieldTypeIds(
       const std::vector<RecordFieldDiffIR> &field_diffs);
 
-  DiffStatusPair<std::unique_ptr<RecordFieldDiffIR>>
-  CompareCommonRecordFields(
-      const RecordFieldIR *old_field,
-      const RecordFieldIR *new_field,
-      std::deque<std::string> *type_queue,
-      IRDiffDumper::DiffKind diff_kind);
+  DiffStatus CompareCommonRecordFields(const RecordFieldIR *old_field,
+                                       const RecordFieldIR *new_field,
+                                       std::deque<std::string> *type_queue,
+                                       IRDiffDumper::DiffKind diff_kind);
+
+  DiffStatus FilterOutRenamedRecordFields(
+      std::deque<std::string> *type_queue, DiffMessageIR::DiffKind diff_kind,
+      std::vector<const RecordFieldIR *> &old_fields,
+      std::vector<const RecordFieldIR *> &new_fields);
 
   RecordFieldDiffResult CompareRecordFields(
       const std::vector<RecordFieldIR> &old_fields,

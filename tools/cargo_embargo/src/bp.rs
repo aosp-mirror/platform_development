@@ -118,6 +118,7 @@ impl BpProperties {
             "target",
             "ld_flags",
             "apex_available",
+            "visibility",
         ];
         let mut props: Vec<(&String, &BpValue)> = self.map.iter().collect();
         props.sort_by_key(|(k, _)| {
