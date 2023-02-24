@@ -32,8 +32,8 @@ import sys
 import xml.dom.minidom
 
 from gerrit import (
-    create_url_opener_from_args, find_gerrit_name, normalize_gerrit_name,
-    query_change_lists, run
+    add_common_parse_args, create_url_opener_from_args, find_gerrit_name,
+    normalize_gerrit_name, query_change_lists, run
 )
 from subprocess import PIPE
 
@@ -366,18 +366,10 @@ def _parse_args():
 
     parser.add_argument('command', choices=['pull', 'bash', 'json'],
                         help='Commands')
+    add_common_parse_args(parser)
 
-    parser.add_argument('query', help='Change list query string')
-    parser.add_argument('-g', '--gerrit', help='Gerrit review URL')
 
-    parser.add_argument('--gitcookies',
-                        default=os.path.expanduser('~/.gitcookies'),
-                        help='Gerrit cookie file')
     parser.add_argument('--manifest', help='Manifest')
-    parser.add_argument('--limits', default=1000, type=int,
-                        help='Max number of change lists')
-    parser.add_argument('--start', default=0, type=int,
-                        help='Skip first N changes in query')
 
     parser.add_argument('-m', '--merge',
                         choices=sorted(_MERGE_COMMANDS.keys()),
