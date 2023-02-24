@@ -15,10 +15,3 @@
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
-
-python_library_host {
-  name: "adb_py",
-  srcs: [
-    "adb/*.py",
-  ],
-}

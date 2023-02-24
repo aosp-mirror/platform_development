@@ -44,6 +44,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.Switch;
+import android.window.OnBackInvokedDispatcher;
 
 import com.example.android.apis.R;
 
@@ -54,6 +55,7 @@ public class PictureInPicture extends Activity {
     private static final String EXTRA_ENABLE_AUTO_PIP = "auto_pip";
     private static final String EXTRA_ENABLE_SOURCE_RECT_HINT = "source_rect_hint";
     private static final String EXTRA_ENABLE_SEAMLESS_RESIZE = "seamless_resize";
+    private static final String EXTRA_ENTER_PIP_ON_BACK = "enter_pip_on_back";
     private static final String EXTRA_CURRENT_POSITION = "current_position";
 
     private static final int TABLET_BREAK_POINT_DP = 700;
@@ -98,6 +100,7 @@ public class PictureInPicture extends Activity {
     private Switch mAutoPipToggle;
     private Switch mSourceRectHintToggle;
     private Switch mSeamlessResizeToggle;
+    private Switch mEnterPipOnBackToggle;
     private RadioGroup mCurrentPositionGroup;
     private List<RemoteAction> mPipActions;
     private RemoteAction mCloseAction;
@@ -114,6 +117,7 @@ public class PictureInPicture extends Activity {
         mAutoPipToggle = findViewById(R.id.auto_pip_toggle);
         mSourceRectHintToggle = findViewById(R.id.source_rect_hint_toggle);
         mSeamlessResizeToggle = findViewById(R.id.seamless_resize_toggle);
+        mEnterPipOnBackToggle = findViewById(R.id.enter_pip_on_back);
         mCurrentPositionGroup = findViewById(R.id.current_position);
 
         // Attach listeners
@@ -121,6 +125,15 @@ public class PictureInPicture extends Activity {
         mAutoPipToggle.setOnCheckedChangeListener(mOnToggleChangedListener);
         mSourceRectHintToggle.setOnCheckedChangeListener(mOnToggleChangedListener);
         mSeamlessResizeToggle.setOnCheckedChangeListener(mOnToggleChangedListener);
+        mEnterPipOnBackToggle.setOnCheckedChangeListener(mOnToggleChangedListener);
+        getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                OnBackInvokedDispatcher.PRIORITY_DEFAULT, () -> {
+                    if (mEnterPipOnBackToggle.isChecked()) {
+                        enterPictureInPictureMode();
+                    } else {
+                        finish();
+                    }
+                });
         mCurrentPositionGroup.setOnCheckedChangeListener(mOnPositionChangedListener);
         findViewById(R.id.enter_pip_button).setOnClickListener(v -> enterPictureInPictureMode());
         findViewById(R.id.enter_content_pip_button).setOnClickListener(v -> enterContentPip());
@@ -132,6 +145,8 @@ public class PictureInPicture extends Activity {
                 intent.getBooleanExtra(EXTRA_ENABLE_SOURCE_RECT_HINT, false));
         mSeamlessResizeToggle.setChecked(
                 intent.getBooleanExtra(EXTRA_ENABLE_SEAMLESS_RESIZE, false));
+        mEnterPipOnBackToggle.setChecked(
+                intent.getBooleanExtra(EXTRA_ENTER_PIP_ON_BACK, false));
         final int positionId = "end".equalsIgnoreCase(
                 intent.getStringExtra(EXTRA_CURRENT_POSITION))
                 ? R.id.radio_current_end
