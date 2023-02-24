@@ -71,7 +71,7 @@ MergeStatus ModuleMerger::LookupUserDefinedType(
     const repr::TypeIR *contender_ud = definition.type_ir_;
     repr::DiffStatus result = diff_helper.CompareAndDumpTypeDiff(
         contender_ud->GetSelfType(), ud_type->GetSelfType());
-    if (result == repr::DiffStatus::no_diff) {
+    if (!result.HasDiff()) {
       local_to_global_type_id_map_->emplace(
           ud_type->GetSelfType(),
           MergeStatus(false, contender_ud->GetSelfType()));
@@ -131,7 +131,7 @@ MergeStatus ModuleMerger::MergeReferencingTypeInternal(
     // The type was already added to the parent graph. So change the
     // referenced type to the global type id.
     references_type->SetReferencedType(local_to_global_it->second.type_id_);
-    return local_to_global_it->second;
+    return MergeStatus(false, local_to_global_it->second.type_id_);
   }
 
   // If that did not go through, look at the addend's type_map_ and get the
@@ -470,7 +470,7 @@ MergeStatus ModuleMerger::MergeType(
   // parent graph. This does not add the node itself though.
   auto type_it = local_to_global_type_id_map->find(addend_node->GetSelfType());
   if (type_it != local_to_global_type_id_map->end()) {
-    return type_it->second;
+    return MergeStatus(false, type_it->second.type_id_);
   }
 
   MergeStatus merge_status = LookupType(

@@ -61,6 +61,7 @@
             android:icon="@drawable/app_sample_code"
             android:hardwareAccelerated="true"
             android:supportsRtl="true"
+            android:enableOnBackInvokedCallback="true"
             android:theme="@android:style/Theme.Material.Light.DarkActionBar">
 
         <!-- This is how we can request a library but still allow the app

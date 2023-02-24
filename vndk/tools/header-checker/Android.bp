@@ -36,7 +36,6 @@ cc_defaults {
     cppflags: [
         "-fno-exceptions",
         "-fno-rtti",
-        "-std=c++14",
     ],
 
     target: {
@@ -143,7 +142,6 @@ cc_library_host_static {
     srcs: [
         "src/repr/abi_diff_helpers.cpp",
         "src/repr/ir_diff_dumper.cpp",
-        "src/repr/ir_diff_representation.cpp",
         "src/repr/ir_dumper.cpp",
         "src/repr/ir_reader.cpp",
         "src/repr/ir_representation.cpp",
@@ -165,6 +163,7 @@ cc_library_host_static {
     ],
 
     static_libs: [
+        "libbase",
         "libheader-checker-proto",
         "libjsoncpp",
     ],

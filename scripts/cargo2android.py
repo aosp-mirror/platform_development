@@ -39,6 +39,15 @@ The Cargo.toml file should work at least for the host platform.
       --cargo "build --target x86_64-unknown-linux-gnu"
       --cargo "build --tests --target x86_64-unknown-linux-gnu"
 
+(4) To build variants of the same crate include a list of variant
+    entries under the 'variants' key inside cargo2android.json
+    config file. Each entry should contain a 'suffix' key along with
+    any required keys. The 'suffix' key must be a unique suffix to
+    be concatenated to the stem/module name.
+
+    Note that keys specified inside each variant entry will overwrite the
+    values on the existing keys in cargo2android.json.
+
 If there are rustc warning messages, this script will add
 a warning comment to the owner crate module in Android.bp.
 """
@@ -62,6 +71,7 @@ RENAME_MAP = {
     # This map includes all changes to the default rust module names
     # to resolve name conflicts, avoid confusion, or work as plugin.
     'libash': 'libash_rust',
+    'libatomic': 'libatomic_rust',
     'libbacktrace': 'libbacktrace_rust',
     'libbase': 'libbase_rust',
     'libbase64': 'libbase64_rust',
@@ -132,7 +142,7 @@ CARGO_TEST_LIST_END_PAT = re.compile('^(\d+) tests?, (\d+) benchmarks$')
 CARGO2ANDROID_RUNNING_PAT = re.compile('^### Running: .*$')
 
 # Rust package name with suffix -d1.d2.d3(+.*)?.
-VERSION_SUFFIX_PAT = re.compile(r'^(.*)-[0-9]+\.[0-9]+\.[0-9]+(?:\+.*)?$')
+VERSION_SUFFIX_PAT = re.compile(r'^(.*)-[0-9]+\.[0-9]+\.[0-9]+(?:-(alpha|beta)\.[0-9]+)?(?:\+.*)?$')
 
 # Crate types corresponding to a C ABI library
 C_LIBRARY_CRATE_TYPES = ['staticlib', 'cdylib']
@@ -242,6 +252,7 @@ class Crate(object):
     self.target = ''  # follows --target
     self.cargo_env_compat = True
     self.cargo_pkg_version = ''  # value extracted from Cargo.toml version field
+    self.variant_num = int(runner.variant_num)
 
   def write(self, s):
     # convenient way to output one line at a time with EOL.
@@ -445,9 +456,9 @@ class Crate(object):
                                self.main_src)
         self.find_cargo_dir()
         if self.cargo_dir:  # for a subdirectory
-          if self.runner.args.no_subdir:  # all .bp content to /dev/null
+          if self.runner.variant_args.no_subdir:  # all .bp content to /dev/null
             self.outf_name = '/dev/null'
-          elif not self.runner.args.onefile:
+          elif not self.runner.variant_args.onefile:
             # Write to Android.bp in the subdirectory with Cargo.toml.
             self.outf_name = self.cargo_dir + '/Android.bp'
             self.main_src = self.main_src[len(self.cargo_dir) + 1:]
@@ -476,11 +487,11 @@ class Crate(object):
       self.root_pkg = self.crate_name
 
     # get the package version from running cargo metadata
-    if not self.runner.args.no_pkg_vers and not self.skip_crate():
+    if not self.runner.variant_args.no_pkg_vers and not self.skip_crate():
         self.get_pkg_version()
 
-    self.device_supported = self.runner.args.device
-    self.host_supported = not self.runner.args.no_host
+    self.device_supported = self.runner.variant_args.device
+    self.host_supported = not self.runner.variant_args.no_host
     self.cfgs = sorted(set(self.cfgs))
     self.features = sorted(set(self.features))
     self.codegens = sorted(set(self.codegens))
@@ -651,8 +662,8 @@ class Crate(object):
     self.defaults = name
     self.write('\nrust_defaults {')
     self.write('    name: "' + name + '",')
-    if self.runner.args.global_defaults:
-      self.write('    defaults: ["' + self.runner.args.global_defaults + '"],')
+    if self.runner.variant_args.global_defaults:
+      self.write('    defaults: ["' + self.runner.variant_args.global_defaults + '"],')
     self.write('    crate_name: "' + self.crate_name + '",')
     if len(self.srcs) == 1:  # only one source file; share it in defaults
       self.default_srcs = True
@@ -661,7 +672,7 @@ class Crate(object):
       self.dump_srcs_list()
     if self.cargo_env_compat:
       self.write('    cargo_env_compat: true,')
-      if not self.runner.args.no_pkg_vers:
+      if not self.runner.variant_args.no_pkg_vers:
         self.write('    cargo_pkg_version: "' + self.cargo_pkg_version + '",')
     if 'test' in self.crate_types:
       self.write('    test_suites: ["general-tests"],')
@@ -704,43 +715,43 @@ class Crate(object):
     self.dump_android_core_properties()
     if not self.defaults:
       self.dump_edition_flags_libs()
-    if self.runner.args.host_first_multilib and self.host_supported and crate_type != 'test':
+    if self.runner.variant_args.host_first_multilib and self.host_supported and crate_type != 'test':
       self.write('    compile_multilib: "first",')
-    if self.runner.args.exported_c_header_dir and crate_type in C_LIBRARY_CRATE_TYPES:
+    if self.runner.variant_args.exported_c_header_dir and crate_type in C_LIBRARY_CRATE_TYPES:
       self.write('    include_dirs: [')
-      for header_dir in self.runner.args.exported_c_header_dir:
+      for header_dir in self.runner.variant_args.exported_c_header_dir:
         self.write('        "%s",' % header_dir)
       self.write('    ],')
-    if crate_type in LIBRARY_CRATE_TYPES:
+    if crate_type in LIBRARY_CRATE_TYPES and self.device_supported:
       self.write('    apex_available: [')
-      if self.runner.args.apex_available is None:
+      if self.runner.variant_args.apex_available is None:
         # If apex_available is not explicitly set, make it available to all
         # apexes.
         self.write('        "//apex_available:platform",')
         self.write('        "//apex_available:anyapex",')
       else:
-        for apex in self.runner.args.apex_available:
+        for apex in self.runner.variant_args.apex_available:
           self.write('        "%s",' % apex)
       self.write('    ],')
     if crate_type != 'test':
-      if self.runner.args.native_bridge_supported:
+      if self.runner.variant_args.native_bridge_supported:
         self.write('    native_bridge_supported: true,')
-      if self.runner.args.product_available:
+      if self.runner.variant_args.product_available:
         self.write('    product_available: true,')
-      if self.runner.args.recovery_available:
+      if self.runner.variant_args.recovery_available:
         self.write('    recovery_available: true,')
-      if self.runner.args.vendor_available:
+      if self.runner.variant_args.vendor_available:
         self.write('    vendor_available: true,')
-      if self.runner.args.vendor_ramdisk_available:
+      if self.runner.variant_args.vendor_ramdisk_available:
         self.write('    vendor_ramdisk_available: true,')
-      if self.runner.args.ramdisk_available:
+      if self.runner.variant_args.ramdisk_available:
         self.write('    ramdisk_available: true,')
-    if self.runner.args.min_sdk_version and crate_type in LIBRARY_CRATE_TYPES:
-      self.write('    min_sdk_version: "%s",' % self.runner.args.min_sdk_version)
+    if self.runner.variant_args.min_sdk_version and crate_type in LIBRARY_CRATE_TYPES and self.device_supported:
+      self.write('    min_sdk_version: "%s",' % self.runner.variant_args.min_sdk_version)
     if crate_type == 'test' and not self.default_srcs:
       self.dump_test_data()
-    if self.runner.args.add_module_block:
-      with open(self.runner.args.add_module_block, 'r') as f:
+    if self.runner.variant_args.add_module_block:
+      with open(self.runner.variant_args.add_module_block, 'r') as f:
         self.write('    %s,' % f.read().replace('\n', '\n    '))
     self.write('}')
 
@@ -759,21 +770,21 @@ class Crate(object):
     if self.edition:
       self.write('    edition: "' + self.edition + '",')
     self.dump_android_property_list('features', '"%s"', self.features)
-    cfgs = [cfg for cfg in self.cfgs if not cfg in self.runner.args.cfg_blocklist]
+    cfgs = [cfg for cfg in self.cfgs if not cfg in self.runner.variant_args.cfg_blocklist]
     self.dump_android_property_list('cfgs', '"%s"', cfgs)
     self.dump_android_flags()
     if self.externs:
       self.dump_android_externs()
-    all_static_libs = [lib for lib in self.static_libs if not lib in self.runner.args.lib_blocklist]
-    static_libs = [lib for lib in all_static_libs if not lib in self.runner.args.whole_static_libs]
+    all_static_libs = [lib for lib in self.static_libs if not lib in self.runner.variant_args.lib_blocklist]
+    static_libs = [lib for lib in all_static_libs if not lib in self.runner.variant_args.whole_static_libs]
     self.dump_android_property_list('static_libs', '"lib%s"', static_libs)
-    whole_static_libs = [lib for lib in all_static_libs if lib in self.runner.args.whole_static_libs]
+    whole_static_libs = [lib for lib in all_static_libs if lib in self.runner.variant_args.whole_static_libs]
     self.dump_android_property_list('whole_static_libs', '"lib%s"', whole_static_libs)
-    shared_libs = [lib for lib in self.shared_libs if not lib in self.runner.args.lib_blocklist]
+    shared_libs = [lib for lib in self.shared_libs if not lib in self.runner.variant_args.lib_blocklist]
     self.dump_android_property_list('shared_libs', '"lib%s"', shared_libs)
 
   def dump_test_data(self):
-    data = [data for (name, data) in map(lambda kv: kv.split('=', 1), self.runner.args.test_data)
+    data = [data for (name, data) in map(lambda kv: kv.split('=', 1), self.runner.variant_args.test_data)
             if self.srcs == [name]]
     if data:
       self.dump_android_property_list('data', '"%s"', data)
@@ -795,35 +806,36 @@ class Crate(object):
   def decide_one_module_type(self, crate_type):
     """Decide which Android module type to use."""
     host = '' if self.device_supported else '_host'
-    rlib = '_rlib' if self.runner.args.force_rlib else ''
+    rlib = '_rlib' if self.runner.variant_args.force_rlib else ''
+    suffix = self.runner.variant_args.suffix if 'suffix' in self.runner.variant_args else ''
     if crate_type == 'bin':  # rust_binary[_host]
       self.module_type = 'rust_binary' + host
       # In rare cases like protobuf-codegen, the output binary name must
       # be renamed to use as a plugin for protoc.
-      self.stem = altered_stem(self.crate_name)
-      self.module_name = altered_name(self.crate_name)
+      self.stem = altered_stem(self.crate_name) + suffix
+      self.module_name = altered_name(self.stem)
     elif crate_type == 'lib':  # rust_library[_host]
       # TODO(chh): should this be rust_library[_host]?
       # Assuming that Cargo.toml do not use both 'lib' and 'rlib',
       # because we map them both to rlib.
       self.module_type = 'rust_library' + rlib + host
-      self.stem = 'lib' + self.crate_name
+      self.stem = 'lib' + self.crate_name + suffix
       self.module_name = altered_name(self.stem)
     elif crate_type == 'rlib':  # rust_library[_host]
       self.module_type = 'rust_library' + rlib + host
-      self.stem = 'lib' + self.crate_name
+      self.stem = 'lib' + self.crate_name + suffix
       self.module_name = altered_name(self.stem)
     elif crate_type == 'dylib':  # rust_library[_host]_dylib
       self.module_type = 'rust_library' + host + '_dylib'
-      self.stem = 'lib' + self.crate_name
+      self.stem = 'lib' + self.crate_name + suffix
       self.module_name = altered_name(self.stem) + '_dylib'
     elif crate_type == 'cdylib':  # rust_library[_host]_shared
       self.module_type = 'rust_ffi' + host + '_shared'
-      self.stem = 'lib' + self.crate_name
+      self.stem = 'lib' + self.crate_name + suffix
       self.module_name = altered_name(self.stem) + '_shared'
     elif crate_type == 'staticlib':  # rust_library[_host]_static
       self.module_type = 'rust_ffi' + host + '_static'
-      self.stem = 'lib' + self.crate_name
+      self.stem = 'lib' + self.crate_name + suffix
       self.module_name = altered_name(self.stem) + '_static'
     elif crate_type == 'test':  # rust_test[_host]
       self.module_type = 'rust_test' + host
@@ -846,7 +858,7 @@ class Crate(object):
         self.stem = self.module_name
     elif crate_type == 'proc-macro':  # rust_proc_macro
       self.module_type = 'rust_proc_macro'
-      self.stem = 'lib' + self.crate_name
+      self.stem = 'lib' + self.crate_name + suffix
       self.module_name = altered_name(self.stem)
     else:  # unknown module type, rust_prebuilt_dylib? rust_library[_host]?
       self.module_type = ''
@@ -874,8 +886,8 @@ class Crate(object):
     # see properties shared by dump_defaults_module
     if self.defaults:
       self.write('    defaults: ["' + self.defaults + '"],')
-    elif self.runner.args.global_defaults:
-      self.write('    defaults: ["' + self.runner.args.global_defaults + '"],')
+    elif self.runner.variant_args.global_defaults:
+      self.write('    defaults: ["' + self.runner.variant_args.global_defaults + '"],')
     if self.stem != self.module_name:
       self.write('    stem: "' + self.stem + '",')
     if self.has_warning and not self.cap_lints and not self.default_srcs:
@@ -886,7 +898,7 @@ class Crate(object):
       self.write('    crate_name: "' + self.crate_name + '",')
     if not self.defaults and self.cargo_env_compat:
       self.write('    cargo_env_compat: true,')
-      if not self.runner.args.no_pkg_vers:
+      if not self.runner.variant_args.no_pkg_vers:
         self.write('    cargo_pkg_version: "' + self.cargo_pkg_version + '",')
     if not self.default_srcs:
       self.dump_srcs_list()
@@ -904,7 +916,7 @@ class Crate(object):
       self.write('    auto_gen_config: true,')
     if 'test' in self.crate_types and self.host_supported:
       self.write('    test_options: {')
-      if self.runner.args.no_presubmit:
+      if self.runner.variant_args.no_presubmit:
         self.write('        unit_test: false,')
       else:
         self.write('        unit_test: true,')
@@ -924,7 +936,7 @@ class Crate(object):
         lib_name = groups.group(1)
       else:
         lib_name = re.sub(' .*$', '', lib)
-      if lib_name in self.runner.args.dependency_blocklist:
+      if lib_name in self.runner.variant_args.dependency_blocklist:
         continue
       if lib.endswith('.rlib') or lib.endswith('.rmeta'):
         # On MacOS .rmeta is used when Linux uses .rlib or .rmeta.
@@ -1018,7 +1030,7 @@ class ARObject(object):
     self.runner.init_bp_file(self.outf_name)
     with open(self.outf_name, 'a') as outf:
       self.outf = outf
-      if self.runner.args.debug:
+      if self.runner.variant_args.debug:
         self.dump_debug_info()
       self.dump_android_lib()
 
@@ -1096,7 +1108,7 @@ class CCObject(object):
 
   def dump(self):
     """Dump only error/debug info to the output .bp file."""
-    if not self.runner.args.debug:
+    if not self.runner.variant_args.debug:
       return
     self.runner.init_bp_file(self.outf_name)
     with open(self.outf_name, 'a') as outf:
@@ -1121,6 +1133,8 @@ class Runner(object):
     self.root_pkg = ''  # name of package in ./Cargo.toml
     # Saved flags, modes, and data.
     self.args = args
+    self.variant_args = args
+    self.variant_num = 0
     self.dry_run = not args.run
     self.skip_cargo = args.skipcargo
     self.cargo_path = './cargo'  # path to cargo, will be set later
@@ -1187,7 +1201,7 @@ class Runner(object):
     if os.path.isfile(path2global):
       # try to find: RustDefaultVersion = "1.44.0"
       version_pat = re.compile(
-          r'\s*RustDefaultVersion\s*=\s*"([0-9]+\.[0-9]+\.[0-9]+)".*$')
+          r'\s*RustDefaultVersion\s*=\s*"([0-9]+\.[0-9]+\.[0-9]+).*"')
       with open(path2global, 'r') as inf:
         for line in inf:
           result = version_pat.match(line)
@@ -1322,81 +1336,95 @@ class Runner(object):
         else:
           in_pkg = pkg_section.match(line) is not None
 
+  def update_variant_args(self, variant_num):
+    if 'variants' in self.args:
+      # Resolve - and _ for Namespace usage
+      variant_data = {k.replace('-', '_') : v for k, v in self.args.variants[variant_num].items()}
+      # Merge and overwrite variant args
+      self.variant_args = argparse.Namespace(**vars(self.args) | variant_data)
+
   def run_cargo(self):
-    """Calls cargo -v and save its output to ./cargo.out."""
+    """Calls cargo -v and save its output to ./cargo{_variant_num}.out."""
     if self.skip_cargo:
       return self
-    cargo_toml = './Cargo.toml'
-    cargo_out = './cargo.out'
-    # Do not use Cargo.lock, because .bp rules are designed to
-    # run with "latest" crates avaialable on Android.
-    cargo_lock = './Cargo.lock'
-    cargo_lock_saved = './cargo.lock.saved'
-    had_cargo_lock = os.path.exists(cargo_lock)
-    if not os.access(cargo_toml, os.R_OK):
-      print('ERROR: Cannot find or read', cargo_toml)
-      return self
-    if not self.dry_run:
-      if os.path.exists(cargo_out):
-        os.remove(cargo_out)
-      if not self.args.use_cargo_lock and had_cargo_lock:  # save it
-        os.rename(cargo_lock, cargo_lock_saved)
-    cmd_tail_target = ' --target-dir ' + TARGET_TMP
-    cmd_tail_redir = ' >> ' + cargo_out + ' 2>&1'
-    # set up search PATH for cargo to find the correct rustc
-    saved_path = os.environ['PATH']
-    os.environ['PATH'] = os.path.dirname(self.cargo_path) + ':' + saved_path
-    # Add [workspace] to Cargo.toml if it is not there.
-    added_workspace = False
-    if self.args.add_workspace:
-      with open(cargo_toml, 'r') as in_file:
-        cargo_toml_lines = in_file.readlines()
-      found_workspace = '[workspace]\n' in cargo_toml_lines
-      if found_workspace:
-        print('### WARNING: found [workspace] in Cargo.toml')
-      else:
-        with open(cargo_toml, 'a') as out_file:
-          out_file.write('\n\n[workspace]\n')
-          added_workspace = True
-          if self.args.verbose:
-            print('### INFO: added [workspace] to Cargo.toml')
-    for c in self.cargo:
-      features = ''
-      if c != 'clean':
-        if self.args.features is not None:
-          features = ' --no-default-features'
-        if self.args.features:
-          features += ' --features ' + self.args.features
-      cmd_v_flag = ' -vv ' if self.args.vv else ' -v '
-      cmd = self.cargo_path + cmd_v_flag
-      cmd += c + features + cmd_tail_target + cmd_tail_redir
-      if self.args.rustflags and c != 'clean':
-        cmd = 'RUSTFLAGS="' + self.args.rustflags + '" ' + cmd
-      self.run_cmd(cmd, cargo_out)
-    if self.args.tests:
-      cmd = self.cargo_path + ' test' + features + cmd_tail_target + ' -- --list' + cmd_tail_redir
-      self.run_cmd(cmd, cargo_out)
-    if added_workspace:  # restore original Cargo.toml
-      with open(cargo_toml, 'w') as out_file:
-        out_file.writelines(cargo_toml_lines)
-      if self.args.verbose:
-        print('### INFO: restored original Cargo.toml')
-    os.environ['PATH'] = saved_path
-    if not self.dry_run:
-      if not had_cargo_lock:  # restore to no Cargo.lock state
-        if os.path.exists(cargo_lock):
-          os.remove(cargo_lock)
-      elif not self.args.use_cargo_lock:  # restore saved Cargo.lock
-        os.rename(cargo_lock_saved, cargo_lock)
+    num_variants = len(self.args.variants) if 'variants' in self.args else 1
+    for variant_num in range(num_variants):
+      cargo_toml = './Cargo.toml'
+      cargo_out = './cargo.out'
+      if variant_num > 0:
+        cargo_out = f'./cargo_{variant_num}.out'
+      self.variant_num = variant_num
+      self.update_variant_args(variant_num=variant_num)
+
+      # Do not use Cargo.lock, because .bp rules are designed to
+      # run with "latest" crates available on Android.
+      cargo_lock = './Cargo.lock'
+      cargo_lock_saved = './cargo.lock.saved'
+      had_cargo_lock = os.path.exists(cargo_lock)
+      if not os.access(cargo_toml, os.R_OK):
+        print('ERROR: Cannot find or read', cargo_toml)
+        return self
+      if not self.dry_run:
+        if os.path.exists(cargo_out):
+          os.remove(cargo_out)
+        if not self.variant_args.use_cargo_lock and had_cargo_lock:  # save it
+          os.rename(cargo_lock, cargo_lock_saved)
+      cmd_tail_target = ' --target-dir ' + TARGET_TMP
+      cmd_tail_redir = ' >> ' + cargo_out + ' 2>&1'
+      # set up search PATH for cargo to find the correct rustc
+      saved_path = os.environ['PATH']
+      os.environ['PATH'] = os.path.dirname(self.cargo_path) + ':' + saved_path
+      # Add [workspace] to Cargo.toml if it is not there.
+      added_workspace = False
+      if self.variant_args.add_workspace:
+        with open(cargo_toml, 'r') as in_file:
+          cargo_toml_lines = in_file.readlines()
+        found_workspace = '[workspace]\n' in cargo_toml_lines
+        if found_workspace:
+          print('### WARNING: found [workspace] in Cargo.toml')
+        else:
+          with open(cargo_toml, 'a') as out_file:
+            out_file.write('\n\n[workspace]\n')
+            added_workspace = True
+            if self.variant_args.verbose:
+              print('### INFO: added [workspace] to Cargo.toml')
+      for c in self.cargo:
+        features = ''
+        if c != 'clean':
+          if self.variant_args.features is not None:
+            features = ' --no-default-features'
+          if self.variant_args.features:
+            features += ' --features ' + self.variant_args.features
+        cmd_v_flag = ' -vv ' if self.variant_args.vv else ' -v '
+        cmd = self.cargo_path + cmd_v_flag
+        cmd += c + features + cmd_tail_target + cmd_tail_redir
+        if self.variant_args.rustflags and c != 'clean':
+          cmd = 'RUSTFLAGS="' + self.variant_args.rustflags + '" ' + cmd
+        self.run_cmd(cmd, cargo_out)
+      if self.variant_args.tests:
+        cmd = self.cargo_path + ' test' + features + cmd_tail_target + ' -- --list' + cmd_tail_redir
+        self.run_cmd(cmd, cargo_out)
+      if added_workspace:  # restore original Cargo.toml
+        with open(cargo_toml, 'w') as out_file:
+          out_file.writelines(cargo_toml_lines)
+        if self.variant_args.verbose:
+          print('### INFO: restored original Cargo.toml')
+      os.environ['PATH'] = saved_path
+      if not self.dry_run:
+        if not had_cargo_lock:  # restore to no Cargo.lock state
+          if os.path.exists(cargo_lock):
+            os.remove(cargo_lock)
+        elif not self.variant_args.use_cargo_lock:  # restore saved Cargo.lock
+          os.rename(cargo_lock_saved, cargo_lock)
     return self
 
   def run_cmd(self, cmd, cargo_out):
     if self.dry_run:
       print('Dry-run skip:', cmd)
     else:
-      if self.args.verbose:
+      if self.variant_args.verbose:
         print('Running:', cmd)
-      with open(cargo_out, 'a') as out_file:
+      with open(cargo_out, 'a+') as out_file:
         out_file.write('### Running: ' + cmd + '\n')
       ret = os.system(cmd)
       if ret != 0:
@@ -1405,7 +1433,7 @@ class Runner(object):
 
   def dump_pkg_obj2cc(self):
     """Dump debug info of the pkg_obj2cc map."""
-    if not self.args.debug:
+    if not self.variant_args.debug:
       return
     self.init_bp_file('Android.bp')
     with open('Android.bp', 'a') as outf:
@@ -1445,28 +1473,36 @@ class Runner(object):
       elif self.find_out_files() and self.has_used_out_dir():
         print('WARNING: ' + self.root_pkg + ' has cargo output files; ' +
               'please rerun with the --copy-out flag.')
-      with open(CARGO_OUT, 'r') as cargo_out:
-        self.parse(cargo_out, 'Android.bp')
-        self.crates.sort(key=get_module_name)
-        for obj in self.cc_objects:
-          obj.dump()
-        self.dump_pkg_obj2cc()
-        for crate in self.crates:
-          crate.dump()
-        dumped_libs = set()
-        for lib in self.ar_objects:
-          if lib.pkg == self.root_pkg:
-            lib_name = file_base_name(lib.lib)
-            if lib_name not in dumped_libs:
-              dumped_libs.add(lib_name)
-              lib.dump()
-        if self.args.add_toplevel_block:
-          with open(self.args.add_toplevel_block, 'r') as f:
-            self.append_to_bp('\n' + f.read() + '\n')
-        if self.errors:
-          self.append_to_bp('\n' + ERRORS_LINE + '\n' + self.errors)
-        if self.test_errors:
-          self.append_to_bp('\n// Errors when listing tests:\n' + self.test_errors)
+      num_variants = len(self.args.variants) if 'variants' in self.args else 1
+      for variant_num in range(num_variants):
+        cargo_out_path = CARGO_OUT
+        if variant_num > 0:
+          cargo_out_path = f'./cargo_{variant_num}.out'
+        self.variant_num = variant_num
+        self.update_variant_args(variant_num=variant_num)
+        with open(cargo_out_path, 'r') as cargo_out:
+          self.parse(cargo_out, 'Android.bp')
+      self.crates.sort(key=get_module_name)
+      for obj in self.cc_objects:
+        obj.dump()
+      self.dump_pkg_obj2cc()
+      for crate in self.crates:
+        self.update_variant_args(variant_num=crate.variant_num)
+        crate.dump()
+      dumped_libs = set()
+      for lib in self.ar_objects:
+        if lib.pkg == self.root_pkg:
+          lib_name = file_base_name(lib.lib)
+          if lib_name not in dumped_libs:
+            dumped_libs.add(lib_name)
+            lib.dump()
+      if self.args.add_toplevel_block:
+        with open(self.args.add_toplevel_block, 'r') as f:
+          self.append_to_bp('\n' + f.read() + '\n')
+      if self.errors:
+        self.append_to_bp('\n' + ERRORS_LINE + '\n' + self.errors)
+      if self.test_errors:
+        self.append_to_bp('\n// Errors when listing tests:\n' + self.test_errors)
     return self
 
   def add_ar_object(self, obj):
