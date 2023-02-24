@@ -73,6 +73,7 @@ function addAttributes(entry: LayerTraceEntry, protos: object[], useElapsedTime 
     entry.name = TimeUtils.format(new RealTimestamp(entry.clockTimestamp));
     entry.shortName = entry.name;
   }
+  entry.isVisible = true;
 }
 
 function newDisplay(proto: any): Display {

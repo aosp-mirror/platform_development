@@ -18,7 +18,7 @@ import {TimeUtils} from 'common/time_utils';
 import {ElapsedTimestamp, RealTimestamp} from 'trace/timestamp';
 import {
   KeyguardControllerState,
-  Rotation,
+  PlatformConsts,
   RootWindowContainer,
   WindowManagerPolicy,
   WindowManagerState,
@@ -80,6 +80,7 @@ function addAttributes(entry: WindowManagerState, proto: any, useElapsedTime = f
     entry.name = TimeUtils.format(new RealTimestamp(BigInt(entry.clockTimestamp)));
     entry.shortName = entry.name;
   }
+  entry.isVisible = true;
 }
 
 function createWindowManagerPolicy(proto: any): WindowManagerPolicy {
@@ -93,7 +94,7 @@ function createWindowManagerPolicy(proto: any): WindowManagerPolicy {
     proto.keyguardOccludedPending,
     proto.lastSystemUiFlags,
     proto.orientation,
-    Rotation.Companion.getByValue(proto.rotation),
+    PlatformConsts.Rotation.Companion.getByValue(proto.rotation),
     proto.rotationMode,
     proto.screenOnFully,
     proto.windowManagerDrawComplete

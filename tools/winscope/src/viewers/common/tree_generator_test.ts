@@ -25,8 +25,8 @@ describe('TreeGenerator', () => {
   beforeAll(async () => {
     entry = {
       kind: 'entry',
-      name: 'LayerTraceEntry',
-      stableId: 'LayerTraceEntry',
+      name: 'BaseLayerTraceEntry',
+      stableId: 'BaseLayerTraceEntry',
       id: 0,
       parent: undefined,
       children: [
@@ -53,9 +53,9 @@ describe('TreeGenerator', () => {
 
   it('generates tree', () => {
     const expected: HierarchyTreeNode = new HierarchyTreeBuilder()
-      .setName('LayerTraceEntry')
+      .setName('BaseLayerTraceEntry')
       .setKind('entry')
-      .setStableId('LayerTraceEntry')
+      .setStableId('BaseLayerTraceEntry')
       .setChildren([
         new HierarchyTreeBuilder()
           .setName('Child1')
@@ -82,9 +82,9 @@ describe('TreeGenerator', () => {
 
   it('generates diff tree with no diff', () => {
     const expected: HierarchyTreeNode = new HierarchyTreeBuilder()
-      .setName('LayerTraceEntry')
+      .setName('BaseLayerTraceEntry')
       .setKind('entry')
-      .setStableId('LayerTraceEntry')
+      .setStableId('BaseLayerTraceEntry')
       .setChildren([
         new HierarchyTreeBuilder()
           .setName('Child1')
@@ -121,8 +121,8 @@ describe('TreeGenerator', () => {
   it('generates diff tree with moved node', () => {
     const prevEntry: TraceTreeNode = {
       kind: 'entry',
-      name: 'LayerTraceEntry',
-      stableId: 'LayerTraceEntry',
+      name: 'BaseLayerTraceEntry',
+      stableId: 'BaseLayerTraceEntry',
       id: 0,
       parent: undefined,
       children: [
@@ -146,9 +146,9 @@ describe('TreeGenerator', () => {
     };
 
     const expected: HierarchyTreeNode = new HierarchyTreeBuilder()
-      .setName('LayerTraceEntry')
+      .setName('BaseLayerTraceEntry')
       .setKind('entry')
-      .setStableId('LayerTraceEntry')
+      .setStableId('BaseLayerTraceEntry')
       .setChildren([
         new HierarchyTreeBuilder()
           .setName('Child1')

@@ -60,8 +60,8 @@ describe('TreeComponent', () => {
     item: UiTreeNode = {
       simplifyNames: false,
       kind: 'entry',
-      name: 'LayerTraceEntry',
-      shortName: 'LTE',
+      name: 'BaseLayerTraceEntry',
+      shortName: 'BLTE',
       chips: [],
       children: [{kind: '3', stableId: '3', name: 'Child1'}],
     };

@@ -56,8 +56,8 @@ describe('TreeNodeComponent', () => {
     item = {
       simplifyNames: false,
       kind: 'entry',
-      name: 'LayerTraceEntry',
-      shortName: 'LTE',
+      name: 'BaseLayerTraceEntry',
+      shortName: 'BLTE',
       chips: [],
     };
 
