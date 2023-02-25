@@ -31,9 +31,9 @@ except ImportError:
     from urllib2 import HTTPError  # PY2
 
 from gerrit import (
-    abandon, add_reviewers, create_url_opener_from_args, delete_reviewer,
-    delete_topic, find_gerrit_name, normalize_gerrit_name, query_change_lists,
-    restore, set_hashtags, set_review, set_topic, submit
+    abandon, add_common_parse_args, add_reviewers, create_url_opener_from_args,
+    delete_reviewer, delete_topic, find_gerrit_name, normalize_gerrit_name,
+    query_change_lists, restore, set_hashtags, set_review, set_topic, submit
 )
 
 
@@ -86,17 +86,7 @@ def _confirm(question):
 def _parse_args():
     """Parse command line options."""
     parser = argparse.ArgumentParser()
-
-    parser.add_argument('query', help='Change list query string')
-    parser.add_argument('-g', '--gerrit', help='Gerrit review URL')
-
-    parser.add_argument('--gitcookies',
-                        default=os.path.expanduser('~/.gitcookies'),
-                        help='Gerrit cookie file')
-    parser.add_argument('--limits', default=1000, type=int,
-                        help='Max number of change lists')
-    parser.add_argument('--start', default=0, type=int,
-                        help='Skip first N changes in query')
+    add_common_parse_args(parser)
 
     parser.add_argument('-l', '--label', nargs=2, action='append',
                         help='Labels to be added')
