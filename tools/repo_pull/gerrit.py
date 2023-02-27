@@ -28,19 +28,47 @@ import sys
 import xml.dom.minidom
 
 try:
+    import ssl
+    _HAS_SSL = True
+except ImportError:
+    _HAS_SSL = False
+
+try:
     # PY3
     from urllib.error import HTTPError
     from urllib.parse import urlencode, urlparse
     from urllib.request import (
-        HTTPBasicAuthHandler, Request, build_opener
+        HTTPBasicAuthHandler, HTTPHandler, OpenerDirector, Request,
+        build_opener
     )
+    if _HAS_SSL:
+        from urllib.request import HTTPSHandler
 except ImportError:
     # PY2
     from urllib import urlencode
     from urllib2 import (
-        HTTPBasicAuthHandler, HTTPError, Request, build_opener
+        HTTPBasicAuthHandler, HTTPError, HTTPHandler, OpenerDirector, Request,
+        build_opener
     )
+    if _HAS_SSL:
+        from urllib2 import HTTPSHandler
     from urlparse import urlparse
+
+try:
+    from http.client import HTTPResponse
+except ImportError:
+    from httplib import HTTPResponse
+
+try:
+    from urllib import addinfourl
+    _HAS_ADD_INFO_URL = True
+except ImportError:
+    _HAS_ADD_INFO_URL = False
+
+try:
+    from io import BytesIO
+except ImportError:
+    from StringIO import StringIO as BytesIO
 
 try:
     # PY3.5
@@ -82,6 +110,107 @@ except ImportError:
         if check and returncode:
             raise CalledProcessError(returncode, args, stdout)
         return CompletedProcess(args, returncode, stdout, stderr)
+
+
+class CurlSocket(object):
+    """A mock socket object that loads the response from a curl output file."""
+
+    def __init__(self, file_obj):
+        self._file_obj = file_obj
+
+    def makefile(self, *args):
+        return self._file_obj
+
+    def close(self):
+        self._file_obj = None
+
+
+def _build_curl_command_for_request(curl_command_name, req):
+    """Build the curl command line for an HTTP/HTTPS request."""
+
+    cmd = [curl_command_name]
+
+    # Adds `--no-progress-meter` to hide the progress bar.
+    cmd.append('--no-progress-meter')
+
+    # Adds `-i` to print the HTTP response headers to stdout.
+    cmd.append('-i')
+
+    # Uses HTTP 1.1.  The `http.client` module can only parse HTTP 1.1 headers.
+    cmd.append('--http1.1')
+
+    # Specifies the request method.
+    cmd.append('-X')
+    cmd.append(req.get_method())
+
+    # Adds the request headers.
+    for name, value in req.headers.items():
+        cmd.append('-H')
+        cmd.append(name + ': ' + value)
+
+    # Adds the request data.
+    if req.data:
+        cmd.append('-d')
+        cmd.append('@-')
+
+    # Adds the request full URL.
+    cmd.append(req.get_full_url())
+    return cmd
+
+
+def _handle_open_with_curl(curl_command_name, req):
+    """Send the HTTP request with CURL and return a response object that can be
+    handled by urllib."""
+
+    # Runs the curl command.
+    cmd = _build_curl_command_for_request(curl_command_name, req)
+    proc = run(cmd, stdout=PIPE, input=req.data, check=True)
+
+    # Wraps the curl output with a socket-like object.
+    outfile = BytesIO(proc.stdout)
+    socket = CurlSocket(outfile)
+
+    response = HTTPResponse(socket)
+    try:
+        # Parses the response header.
+        response.begin()
+    except:
+        response.close()
+        raise
+
+    # Overrides `Transfer-Encoding: chunked` because curl combines chunks.
+    response.chunked = False
+    response.chunk_left = None
+
+    if _HAS_ADD_INFO_URL:
+        # PY2 urllib2 expects a different return object.
+        result = addinfourl(outfile, response.msg, req.get_full_url())
+        result.code = response.status
+        result.msg = response.reason
+        return result
+
+    return response  # PY3
+
+
+class CurlHTTPHandler(HTTPHandler):
+    """CURL HTTP handler."""
+
+    def __init__(self, curl_command_name):
+        self._curl_command_name = curl_command_name
+
+    def http_open(self, req):
+        return _handle_open_with_curl(self._curl_command_name, req)
+
+
+if _HAS_SSL:
+    class CurlHTTPSHandler(HTTPSHandler):
+        """CURL HTTPS handler."""
+
+        def __init__(self, curl_command_name):
+            self._curl_command_name = curl_command_name
+
+        def https_open(self, req):
+            return _handle_open_with_curl(self._curl_command_name, req)
 
 
 def load_auth_credentials_from_file(cookie_file):
@@ -173,6 +302,15 @@ def create_url_opener(cookie_file_path, domain):
 
 def create_url_opener_from_args(args):
     """Create URL opener from command line arguments."""
+
+    if args.use_curl:
+        handlers = []
+        handlers.append(CurlHTTPHandler(args.use_curl))
+        if _HAS_SSL:
+            handlers.append(CurlHTTPSHandler(args.use_curl))
+
+        opener = build_opener(*handlers)
+        return opener
 
     domain = urlparse(args.gerrit).netloc
 
@@ -443,13 +581,9 @@ def normalize_gerrit_name(gerrit):
     redundant trailing slashes."""
     return gerrit.rstrip('/')
 
-def _parse_args():
-    """Parse command line options."""
-    parser = argparse.ArgumentParser()
-
+def add_common_parse_args(parser):
     parser.add_argument('query', help='Change list query string')
     parser.add_argument('-g', '--gerrit', help='Gerrit review URL')
-
     parser.add_argument('--gitcookies',
                         default=os.path.expanduser('~/.gitcookies'),
                         help='Gerrit cookie file')
@@ -457,10 +591,17 @@ def _parse_args():
                         help='Max number of change lists')
     parser.add_argument('--start', default=0, type=int,
                         help='Skip first N changes in query')
+    parser.add_argument(
+        '--use-curl',
+        help='Send requests with the specified curl command (e.g. `curl`)')
+
+def _parse_args():
+    """Parse command line options."""
+    parser = argparse.ArgumentParser()
+    add_common_parse_args(parser)
     parser.add_argument('--format', default='json',
                         choices=['json', 'oneline'],
                         help='Print format')
-
     return parser.parse_args()
 
 def main():
